@@ -11,11 +11,7 @@ const {
 const EventEmitter = require("devtools/shared/event-emitter");
 const { ThreadStateTypes } = require("devtools/shared/client/constants");
 
-loader.lazyRequireGetter(
-  this,
-  "ObjectClient",
-  "devtools/shared/client/object-client"
-);
+loader.lazyRequireGetter(this, "ObjectFront", "devtools/shared/client/object");
 loader.lazyRequireGetter(
   this,
   "SourceFront",
@@ -292,7 +288,7 @@ ThreadClient.prototype = {
   },
 
   /**
-   * Return a ObjectClient object for the given object grip.
+   * Return a ObjectFront object for the given object grip.
    *
    * @param grip object
    *        A pause-lifetime object grip returned by the protocol.
@@ -302,18 +298,18 @@ ThreadClient.prototype = {
       return this._pauseGrips[grip.actor];
     }
 
-    const client = new ObjectClient(this.client, grip);
-    this._pauseGrips[grip.actor] = client;
-    return client;
+    const objectFront = new ObjectFront(this.client, grip);
+    this._pauseGrips[grip.actor] = objectFront;
+    return objectFront;
   },
 
   /**
-   * Clear and invalidate all the grip clients from the given cache.
+   * Clear and invalidate all the grip fronts from the given cache.
    *
    * @param gripCacheName
    *        The property name of the grip cache we want to clear.
    */
-  _clearObjectClients: function(gripCacheName) {
+  _clearObjectFronts: function(gripCacheName) {
     for (const id in this[gripCacheName]) {
       this[gripCacheName][id].valid = false;
     }
@@ -325,7 +321,7 @@ ThreadClient.prototype = {
    * clients.
    */
   _clearPauseGrips: function() {
-    this._clearObjectClients("_pauseGrips");
+    this._clearObjectFronts("_pauseGrips");
   },
 
   /**
@@ -333,7 +329,7 @@ ThreadClient.prototype = {
    * clients.
    */
   _clearThreadGrips: function() {
-    this._clearObjectClients("_threadGrips");
+    this._clearObjectFronts("_threadGrips");
   },
 
   /**

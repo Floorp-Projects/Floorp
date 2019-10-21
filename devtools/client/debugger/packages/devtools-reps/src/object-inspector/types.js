@@ -69,7 +69,7 @@ export type PropertiesIterator = {
   slice: (start: number, count: number) => Promise<GripProperties>,
 };
 
-export type ObjectClient = {
+export type ObjectFront = {
   enumEntries: () => Promise<PropertiesIterator>,
   enumProperties: (options: Object) => Promise<PropertiesIterator>,
   enumSymbols: () => Promise<PropertiesIterator>,
@@ -89,7 +89,7 @@ export type LongStringClient = {
   ) => void,
 };
 
-export type CreateObjectClient = RdpGrip => ObjectClient;
+export type CreateObjectFront = RdpGrip => ObjectFront;
 
 export type CreateLongStringClient = RdpGrip => LongStringClient;
 
@@ -117,7 +117,7 @@ export type Props = {
   disableWrap: boolean,
   dimTopLevelWindow: boolean,
   releaseActor: string => void,
-  createObjectClient: CreateObjectClient,
+  createObjectFront: CreateObjectFront,
   createLongStringClient: CreateLongStringClient,
   onFocus: ?(Node) => any,
   onActivate: ?(Node) => any,

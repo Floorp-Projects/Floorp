@@ -11,7 +11,7 @@ const stub = gripStubs.get("testProxy");
 const proxySlots = gripStubs.get("testProxySlots");
 const { formatObjectInspector } = require("../test-utils");
 
-const ObjectClient = require("../__mocks__/object-client");
+const ObjectFront = require("../__mocks__/object-front");
 function generateDefaults(overrides) {
   return {
     roots: [
@@ -43,8 +43,8 @@ function mount(props, { initialState } = {}) {
   const getProxySlots = getProxySlotsMock();
 
   const client = {
-    createObjectClient: grip =>
-      ObjectClient(grip, { enumProperties, getProxySlots }),
+    createObjectFront: grip =>
+      ObjectFront(grip, { enumProperties, getProxySlots }),
   };
 
   const obj = mountObjectInspector({

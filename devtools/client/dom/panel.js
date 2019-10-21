@@ -4,7 +4,7 @@
 "use strict";
 
 const { Cu } = require("chrome");
-const ObjectClient = require("devtools/shared/client/object-client");
+const ObjectFront = require("devtools/shared/fronts/object");
 
 const EventEmitter = require("devtools/shared/event-emitter");
 loader.lazyRequireGetter(
@@ -161,8 +161,8 @@ DomPanel.prototype = {
 
     // If no request is in progress create a new one.
     if (!request) {
-      const client = new ObjectClient(this.target.client, grip);
-      request = client.getPrototypeAndProperties();
+      const objectFront = new ObjectFront(this.target.client, grip);
+      request = objectFront.getPrototypeAndProperties();
       this.pendingRequests.set(grip.actor, request);
     }
 

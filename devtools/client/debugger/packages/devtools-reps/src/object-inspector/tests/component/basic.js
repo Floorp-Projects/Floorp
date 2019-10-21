@@ -13,7 +13,7 @@ const {
   waitForDispatch,
   waitForLoadedProperties,
 } = require("../test-utils");
-const ObjectClient = require("../__mocks__/object-client");
+const ObjectFront = require("../__mocks__/object-front");
 const gripRepStubs = require(`${repsPath}/stubs/grip`);
 
 function generateDefaults(overrides) {
@@ -25,7 +25,7 @@ function generateDefaults(overrides) {
 
 function mountOI(props, { initialState } = {}) {
   const client = {
-    createObjectClient: grip => ObjectClient(grip),
+    createObjectFront: grip => ObjectFront(grip),
   };
 
   const obj = mountObjectInspector({

@@ -5,7 +5,7 @@
 
 "use strict";
 
-const ObjectClient = require("devtools/shared/client/object-client");
+const ObjectFront = require("devtools/shared/fronts/object");
 
 const {
   gDevToolsBrowser,
@@ -72,12 +72,12 @@ async function testBackEnd(hud, actor) {
   // Check that inspecting an object with CPOW doesn't throw in the server.
   // This would be done in a mochitest-chrome suite, but that doesn't run in
   // e10s, so it's harder to get ahold of a CPOW.
-  info("Creating an ObjectClient with: " + actor);
-  const objectClient = new ObjectClient(hud.ui.proxy.client, { actor });
+  info("Creating an ObjectFront with: " + actor);
+  const objectFront = new ObjectFront(hud.ui.proxy.client, { actor });
 
   // Before the fix for Bug 1382833, this wouldn't resolve due to a CPOW error
   // in the ObjectActor.
-  const prototypeAndProperties = await objectClient.getPrototypeAndProperties();
+  const prototypeAndProperties = await objectFront.getPrototypeAndProperties();
 
   // The CPOW is in the "cpow" property.
   const cpow = prototypeAndProperties.ownProperties.cpow.value;
@@ -85,7 +85,7 @@ async function testBackEnd(hud, actor) {
   is(cpow.class, "CPOW", "The CPOW grip has the right class.");
 
   // Check that various protocol request methods work for the CPOW.
-  const objClient = new ObjectClient(hud.ui.proxy.client, cpow);
+  const objClient = new ObjectFront(hud.ui.proxy.client, cpow);
 
   let response = await objClient.getPrototypeAndProperties();
   is(
