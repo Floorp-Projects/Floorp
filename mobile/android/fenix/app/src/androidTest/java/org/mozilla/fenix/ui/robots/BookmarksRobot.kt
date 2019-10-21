@@ -101,7 +101,7 @@ private fun folderTitle() = onView(withId(R.id.title))
 
 private fun addFolderButton() = onView(withId(R.id.add_bookmark_folder))
 
-private fun addFolderTitleField() = onView(withId(R.id.bookmarkAddFolderTitleEdit))
+private fun addFolderTitleField() = onView(withId(R.id.bookmarkNameEdit))
 
 private fun saveFolderButton() = onView(withId(R.id.confirm_add_folder_button))
 
@@ -151,7 +151,7 @@ private fun assertBookmarkNameEditBox() =
         .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 
 private fun assertBookmarkFolderSelector() =
-    onView(withId(R.id.bookmarkFolderSelector))
+    onView(withId(R.id.bookmarkParentFolderSelector))
         .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 
 private fun assertBookmarkURLEditBox() =

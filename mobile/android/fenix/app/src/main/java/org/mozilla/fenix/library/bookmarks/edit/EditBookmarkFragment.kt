@@ -99,13 +99,13 @@ class EditBookmarkFragment : Fragment(R.layout.fragment_edit_bookmark) {
                 bookmarkUrlEdit.setText(bookmarkNode.url)
 
                 if (sharedViewModel.selectedFolder != null && bookmarkNode.title != null) {
-                    updateBookmarkNode(bookmarkNode.title to bookmarkNode.url)
+                    updateBookmarkNode(bookmarkNode.title, bookmarkNode.url)
                 }
             }
 
             bookmarkParent?.let { node ->
-                    bookmarkFolderSelector.text = node.title
-                    bookmarkFolderSelector.setOnClickListener {
+                    bookmarkParentFolderSelector.text = node.title
+                    bookmarkParentFolderSelector.setOnClickListener {
                         sharedViewModel.selectedFolder = null
                         nav(
                             R.id.bookmarkEditFragment,
@@ -132,13 +132,13 @@ class EditBookmarkFragment : Fragment(R.layout.fragment_edit_bookmark) {
             BiFunction { name: CharSequence, url: CharSequence ->
                 Pair(name.toString(), url.toString())
             })
-            .filter { it.first.isNotBlank() }
+            .filter { (name) -> name.isNotBlank() }
             .debounce(debouncePeriodInMs, TimeUnit.MILLISECONDS)
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .`as`(AutoDispose.autoDisposable(AndroidLifecycleScopeProvider.from(this@EditBookmarkFragment)))
-            .subscribe {
-                updateBookmarkNode(it)
+            .subscribe { (name, url) ->
+                updateBookmarkNode(name, url)
             }
     }
 
@@ -190,28 +190,28 @@ class EditBookmarkFragment : Fragment(R.layout.fragment_edit_bookmark) {
         }
     }
 
-    private fun updateBookmarkNode(pair: Pair<String?, String?>) {
+    private fun updateBookmarkNode(title: String?, url: String?) {
         lifecycleScope.launch(IO) {
             try {
-                requireComponents.let {
-                    if (pair != Pair(bookmarkNode?.title, bookmarkNode?.url)) {
-                        it.analytics.metrics.track(Event.EditedBookmark)
+                requireComponents.let { components ->
+                    if (title != bookmarkNode?.title || url != bookmarkNode?.url) {
+                        components.analytics.metrics.track(Event.EditedBookmark)
                     }
                     if (sharedViewModel.selectedFolder != null) {
-                        it.analytics.metrics.track(Event.MovedBookmark)
+                        components.analytics.metrics.track(Event.MovedBookmark)
                     }
-                    it.core.bookmarksStorage.updateNode(
+                    components.core.bookmarksStorage.updateNode(
                         guidToEdit,
                         BookmarkInfo(
                             sharedViewModel.selectedFolder?.guid ?: bookmarkNode!!.parentGuid,
                             bookmarkNode?.position,
-                            pair.first,
-                            if (bookmarkNode?.type == BookmarkNodeType.ITEM) pair.second else null
+                            title,
+                            if (bookmarkNode?.type == BookmarkNodeType.ITEM) url else null
                         )
                     )
                 }
             } catch (e: UrlParseFailed) {
-                launch(Main) {
+                withContext(Main) {
                     bookmarkUrlEdit.error = getString(R.string.bookmark_invalid_url_error)
                 }
             }

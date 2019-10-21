@@ -8,16 +8,19 @@ import android.os.Bundle
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
+import android.view.View
+import android.view.View.GONE
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.Navigation
-import kotlinx.android.synthetic.main.fragment_add_bookmark_folder.*
+import kotlinx.android.synthetic.main.fragment_edit_bookmark.*
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import mozilla.appservices.places.BookmarkRoot
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
@@ -28,7 +31,7 @@ import org.mozilla.fenix.library.bookmarks.BookmarksSharedViewModel
 /**
  * Menu to create a new bookmark folder.
  */
-class AddBookmarkFolderFragment : Fragment(R.layout.fragment_add_bookmark_folder) {
+class AddBookmarkFolderFragment : Fragment(R.layout.fragment_edit_bookmark) {
 
     private val sharedViewModel: BookmarksSharedViewModel by activityViewModels {
         ViewModelProvider.NewInstanceFactory() // this is a workaround for #4652
@@ -39,27 +42,36 @@ class AddBookmarkFolderFragment : Fragment(R.layout.fragment_add_bookmark_folder
         setHasOptionsMenu(true)
     }
 
+    /**
+     * Hides fields for bookmark items present in the shared layout file.
+     */
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        bookmarkUrlLabel.visibility = GONE
+        bookmarkUrlEdit.visibility = GONE
+    }
+
     override fun onResume() {
         super.onResume()
         (activity as AppCompatActivity).title =
             getString(R.string.bookmark_add_folder_fragment_label)
         (activity as AppCompatActivity).supportActionBar?.show()
 
-        lifecycleScope.launch(IO) {
-            sharedViewModel.selectedFolder = sharedViewModel.selectedFolder
-                ?: requireComponents.core.bookmarksStorage.getTree(BookmarkRoot.Mobile.id)
-            launch(Main) {
-                bookmarkAddFolderParentSelector.text = sharedViewModel.selectedFolder!!.title
-                bookmarkAddFolderParentSelector.setOnClickListener {
-                    nav(
-                        R.id.bookmarkAddFolderFragment,
-                        AddBookmarkFolderFragmentDirections
-                            .actionBookmarkAddFolderFragmentToBookmarkSelectFolderFragment(
-                                BookmarkRoot.Root.id,
-                                true
-                            )
-                    )
-                }
+        lifecycleScope.launch(Main) {
+            sharedViewModel.selectedFolder = withContext(IO) {
+                sharedViewModel.selectedFolder
+                    ?: requireComponents.core.bookmarksStorage.getTree(BookmarkRoot.Mobile.id)
+            }
+
+            bookmarkParentFolderSelector.text = sharedViewModel.selectedFolder!!.title
+            bookmarkParentFolderSelector.setOnClickListener {
+                nav(
+                    R.id.bookmarkAddFolderFragment,
+                    AddBookmarkFolderFragmentDirections
+                        .actionBookmarkAddFolderFragmentToBookmarkSelectFolderFragment(
+                            BookmarkRoot.Root.id,
+                            true
+                        )
+                )
             }
         }
     }
@@ -71,18 +83,18 @@ class AddBookmarkFolderFragment : Fragment(R.layout.fragment_add_bookmark_folder
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.confirm_add_folder_button -> {
-                if (bookmarkAddFolderTitleEdit.text.isNullOrBlank()) {
-                    bookmarkAddFolderTitleEdit.error =
+                if (bookmarkNameEdit.text.isNullOrBlank()) {
+                    bookmarkNameEdit.error =
                         getString(R.string.bookmark_empty_title_error)
                     return true
                 }
                 lifecycleScope.launch(IO) {
                     val newGuid = requireComponents.core.bookmarksStorage.addFolder(
-                        sharedViewModel.selectedFolder!!.guid, bookmarkAddFolderTitleEdit.text.toString(), null
+                        sharedViewModel.selectedFolder!!.guid, bookmarkNameEdit.text.toString(), null
                     )
                     sharedViewModel.selectedFolder = requireComponents.core.bookmarksStorage.getTree(newGuid)
                     requireComponents.analytics.metrics.track(Event.AddBookmarkFolder)
-                    launch(Main) {
+                    withContext(Main) {
                         Navigation.findNavController(requireActivity(), R.id.container).popBackStack()
                     }
                 }
