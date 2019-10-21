@@ -36,6 +36,11 @@ class SpeechGrammar final : public nsISupports, public nsWrapperCache {
   static already_AddRefed<SpeechGrammar> Constructor(
       const GlobalObject& aGlobal);
 
+  static already_AddRefed<SpeechGrammar> WebkitSpeechGrammar(
+      const GlobalObject& aGlobal, ErrorResult& aRv) {
+    return Constructor(aGlobal);
+  }
+
   void GetSrc(nsString& aRetVal, ErrorResult& aRv) const;
 
   void SetSrc(const nsAString& aArg, ErrorResult& aRv);

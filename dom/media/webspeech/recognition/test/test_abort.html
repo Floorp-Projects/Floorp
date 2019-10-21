@@ -60,7 +60,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=650295
       eventsToRequest: [],
       expectedEvents,
       doneFunc: (nextEventIdx < eventsToAbortOn.length) ? doNextTest : SimpleTest.finish,
-      prefs: [["media.webspeech.test.fake_fsm_events", true], ["media.webspeech.test.fake_recognition_service", true]]
+      prefs: [["media.webspeech.test.fake_fsm_events", true],
+              ["media.webspeech.test.fake_recognition_service", true],
+              ["media.webspeech.recognition.timeout", 100000]]
     });
   }
 

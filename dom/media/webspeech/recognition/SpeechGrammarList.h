@@ -35,6 +35,11 @@ class SpeechGrammarList final : public nsISupports, public nsWrapperCache {
   static already_AddRefed<SpeechGrammarList> Constructor(
       const GlobalObject& aGlobal);
 
+  static already_AddRefed<SpeechGrammarList> WebkitSpeechGrammarList(
+      const GlobalObject& aGlobal, ErrorResult& aRv) {
+    return Constructor(aGlobal);
+  }
+
   nsISupports* GetParentObject() const;
 
   JSObject* WrapObject(JSContext* aCx,

@@ -163,7 +163,16 @@ function performTest(options) {
   );
 
   SpecialPowers.pushPrefEnv({ set: prefs }, function() {
-    var sr = new SpeechRecognition();
+    var sr;
+    if (!options.webkit) {
+      sr = new SpeechRecognition();
+    } else {
+      sr = new webkitSpeechRecognition();
+      var grammar = new webkitSpeechGrammar();
+      var speechrecognitionlist = new webkitSpeechGrammarList();
+      speechrecognitionlist.addFromString("", 1);
+      sr.grammars = speechrecognitionlist;
+    }
     var em = new EventManager(sr);
 
     for (var eventName in options.expectedEvents) {

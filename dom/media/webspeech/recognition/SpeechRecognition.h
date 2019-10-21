@@ -32,6 +32,10 @@
 
 namespace mozilla {
 
+namespace media {
+class ShutdownBlocker;
+}
+
 namespace dom {
 
 #define SPEECH_RECOGNITION_TEST_EVENT_REQUEST_TOPIC \
@@ -40,7 +44,6 @@ namespace dom {
 
 class GlobalObject;
 class AudioStreamTrack;
-class SpeechRecognitionShutdownBlocker;
 class SpeechEvent;
 class SpeechTrackListener;
 
@@ -62,8 +65,6 @@ class SpeechRecognition final : public DOMEventTargetHelper,
 
   NS_DECL_NSIOBSERVER
 
-  nsISupports* GetParentObject() const;
-
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
 
@@ -71,6 +72,11 @@ class SpeechRecognition final : public DOMEventTargetHelper,
 
   static already_AddRefed<SpeechRecognition> Constructor(
       const GlobalObject& aGlobal, ErrorResult& aRv);
+
+  static already_AddRefed<SpeechRecognition> WebkitSpeechRecognition(
+      const GlobalObject& aGlobal, ErrorResult& aRv) {
+    return Constructor(aGlobal, aRv);
+  }
 
   already_AddRefed<SpeechGrammarList> Grammars() const;
 
@@ -89,6 +95,8 @@ class SpeechRecognition final : public DOMEventTargetHelper,
   void SetInterimResults(bool aArg);
 
   uint32_t MaxAlternatives() const;
+
+  TaskQueue* GetTaskQueueForEncoding() const;
 
   void SetMaxAlternatives(uint32_t aArg);
 
@@ -153,6 +161,7 @@ class SpeechRecognition final : public DOMEventTargetHelper,
     STATE_WAITING_FOR_SPEECH,
     STATE_RECOGNIZING,
     STATE_WAITING_FOR_RESULT,
+    STATE_ABORTING,
     STATE_COUNT
   };
 
@@ -163,7 +172,7 @@ class SpeechRecognition final : public DOMEventTargetHelper,
   bool ValidateAndSetGrammarList(ErrorResult& aRv);
 
   NS_IMETHOD StartRecording(RefPtr<AudioStreamTrack>& aDOMStream);
-  NS_IMETHOD StopRecording();
+  RefPtr<GenericNonExclusivePromise> StopRecording();
 
   uint32_t ProcessAudioSegment(AudioSegment* aSegment, TrackRate aTrackRate);
   void NotifyError(SpeechEvent* aEvent);
@@ -186,9 +195,19 @@ class SpeechRecognition final : public DOMEventTargetHelper,
 
   RefPtr<DOMMediaStream> mStream;
   RefPtr<AudioStreamTrack> mTrack;
+  bool mTrackIsOwned = false;
+  RefPtr<GenericNonExclusivePromise> mStopRecordingPromise;
   RefPtr<SpeechTrackListener> mSpeechListener;
-  RefPtr<SpeechRecognitionShutdownBlocker> mShutdownBlocker;
   nsCOMPtr<nsISpeechRecognitionService> mRecognitionService;
+  RefPtr<media::ShutdownBlocker> mShutdownBlocker;
+  // TaskQueue responsible for pre-processing the samples by the service
+  // it runs in a separate thread from the main thread
+  RefPtr<TaskQueue> mEncodeTaskQueue;
+
+  // A generation ID of the MediaStream a started session is for, so that
+  // a gUM request that resolves after the session has stopped, and a new
+  // one has started, can exit early. Main thread only. Can wrap.
+  uint8_t mStreamGeneration = 0;
 
   FSMState mCurrentState;
 
@@ -196,6 +215,10 @@ class SpeechRecognition final : public DOMEventTargetHelper,
   uint32_t mEstimationSamples;
 
   uint32_t mAudioSamplesPerChunk;
+
+  // maximum amount of seconds the engine will wait for voice
+  // until returning a 'no speech detected' error
+  uint32_t mSpeechDetectionTimeoutMs;
 
   // buffer holds one chunk of mAudioSamplesPerChunk
   // samples before feeding it to mEndpointer
@@ -208,6 +231,10 @@ class SpeechRecognition final : public DOMEventTargetHelper,
   nsString mLang;
 
   RefPtr<SpeechGrammarList> mSpeechGrammarList;
+
+  // private flag used to hold if the user called the setContinuous() method
+  // of the API
+  bool mContinuous;
 
   // WebSpeechAPI (http://bit.ly/1gIl7DC) states:
   //

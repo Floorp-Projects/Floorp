@@ -30,6 +30,7 @@ FakeSpeechRecognitionService::~FakeSpeechRecognitionService() = default;
 NS_IMETHODIMP
 FakeSpeechRecognitionService::Initialize(
     WeakPtr<SpeechRecognition> aSpeechRecognition) {
+  MOZ_ASSERT(NS_IsMainThread());
   mRecognition = aSpeechRecognition;
   nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
   obs->AddObserver(this, SPEECH_RECOGNITION_TEST_EVENT_REQUEST_TOPIC, false);
@@ -40,11 +41,15 @@ FakeSpeechRecognitionService::Initialize(
 NS_IMETHODIMP
 FakeSpeechRecognitionService::ProcessAudioSegment(AudioSegment* aAudioSegment,
                                                   int32_t aSampleRate) {
+  MOZ_ASSERT(!NS_IsMainThread());
   return NS_OK;
 }
 
 NS_IMETHODIMP
-FakeSpeechRecognitionService::SoundEnd() { return NS_OK; }
+FakeSpeechRecognitionService::SoundEnd() {
+  MOZ_ASSERT(NS_IsMainThread());
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 FakeSpeechRecognitionService::ValidateAndSetGrammarList(
@@ -53,7 +58,10 @@ FakeSpeechRecognitionService::ValidateAndSetGrammarList(
 }
 
 NS_IMETHODIMP
-FakeSpeechRecognitionService::Abort() { return NS_OK; }
+FakeSpeechRecognitionService::Abort() {
+  MOZ_ASSERT(NS_IsMainThread());
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 FakeSpeechRecognitionService::Observe(nsISupports* aSubject, const char* aTopic,
@@ -85,7 +93,6 @@ FakeSpeechRecognitionService::Observe(nsISupports* aSubject, const char* aTopic,
     event->mRecognitionResultList = BuildMockResultList();
     NS_DispatchToMainThread(event);
   }
-
   return NS_OK;
 }
 
