@@ -19,6 +19,7 @@ class TrackingProtectionBlockingFragment : Fragment(R.layout.fragment_tracking_p
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        category_fingerprinters.isVisible = args.strictMode
         category_tracking_content.isVisible = args.strictMode
     }
 
