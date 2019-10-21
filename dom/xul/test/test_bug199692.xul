@@ -11,18 +11,22 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=199692
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
-  <vbox hidden="true">
-    <bindings xmlns="http://www.mozilla.org/xbl"
-                xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-      <binding id="anon">
-        <content>
-          <xul:label id="anon-label" value="ANON"/>
-        </content>
-      </binding>
-    </bindings>
-  </vbox>
-
+  <script type="text/javascript">
+  <![CDATA[
+  customElements.define("test-xul-element", class CustomElement extends XULElement {
+    constructor() {
+      super();
+      const template = document.getElementById("template");
+      const shadowRoot = this.attachShadow({mode: "open"})
+        .appendChild(template.content.cloneNode(true));
+    }
+  });
+  ]]>
+  </script>
 <body id="body" xmlns="http://www.w3.org/1999/xhtml">
+<template id="template">
+  <xul:label id="anon-label" value="ANON"/>
+</template>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=199692">Mozilla Bug 199692</a>
 
 <vbox id="content" style="position: relative;"
@@ -34,7 +38,7 @@ xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
     <xul:radio id="selected-radio" label="Violet" selected="true"/>
     <xul:radio id="disabled-radio" label="Yellow" disabled="true"/>
   </xul:radiogroup>
-  <hbox id="bound" style="-moz-binding:url('#anon'); border: 2px solid green;"></hbox>
+  <test-xul-element id="bound" style="border: 2px solid green;"></test-xul-element>
 </vbox>
 <pre id="test">
   <script class="testbody" type="text/javascript">
@@ -78,7 +82,7 @@ xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
     test(lower_right, 'textbox', "Point on textbox's scrollbar should return textbox element");
     test(scrollbar_button, 'textbox', "Point on textbox's scrollbar button should return textbox element");
     test(middle, 'non-anon-label', "Point on label should return label");
-    test(upper_left, 'bound', "Point on XBL content should return element with -moz-binding style");
+    test(upper_left, 'bound', "Point on custom element content should return custom element");
 
     SimpleTest.finish();
   }
