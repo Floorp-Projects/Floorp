@@ -10,10 +10,8 @@ A fake ADB binary
 from __future__ import absolute_import
 
 import os
-import socket
 import SocketServer
 import sys
-import thread
 
 HOST = '127.0.0.1'
 PORT = 5037
@@ -33,19 +31,14 @@ class ADBRequestHandler(SocketServer.BaseRequestHandler):
             sent_length = sent_length + sent
 
     def handle(self):
-        if server.is_shuttingdown:
-            return
-
         while True:
             data = self.request.recv(4096)
             if 'host:kill' in data:
-                def shutdown(server):
-                    server.shutdown()
-                    thread.exit()
-                server.is_shuttingdown = True
                 self.sendData('')
-                self.request.close()
-                thread.start_new_thread(shutdown, (server, ))
+                # Implicitly close all open sockets by exiting the program.
+                # This should be done ASAP, because upon receiving the OKAY,
+                # the client expects adb to have released the server's port.
+                os._exit(0)
                 break
             elif 'host:version' in data:
                 self.sendData('001F')
@@ -63,7 +56,6 @@ class ADBServer(SocketServer.TCPServer):
                                         server_address, \
                                         ADBRequestHandler, \
                                         bind_and_activate = False)
-        self.is_shuttingdown = False
 
 if len(sys.argv) == 2 and sys.argv[1] == 'start-server':
     # daemonize
