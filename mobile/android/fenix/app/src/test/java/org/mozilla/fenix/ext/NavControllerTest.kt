@@ -9,6 +9,7 @@ import androidx.navigation.Navigator.Extras
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.TestApplication
@@ -20,55 +21,51 @@ import org.robolectric.annotation.Config
 
 class NavControllerTest {
 
-    val navController: NavController = mockk(relaxed = true)
-    val navDirections = mockk<NavDirections>(relaxed = true)
-    val mockDestination: NavDestination = mockk(relaxed = true)
-    val mockExtras: Extras = mockk(relaxed = true)
-    val mockOptions: NavOptions = mockk(relaxed = true)
-    val mockBundle: Bundle = mockk(relaxed = true)
+    private val navController: NavController = mockk(relaxed = true)
+    private val navDirections = mockk<NavDirections>(relaxed = true)
+    private val mockDestination: NavDestination = mockk(relaxed = true)
+    private val mockExtras: Extras = mockk(relaxed = true)
+    private val mockOptions: NavOptions = mockk(relaxed = true)
+    private val mockBundle: Bundle = mockk(relaxed = true)
+
+    @Before
+    fun setUp() {
+        every { (navController.currentDestination) } returns mockDestination
+        every { (mockDestination.id) } returns 4
+    }
 
     @Test
     fun `Nav with id and directions args`() {
-        every { (navController.getCurrentDestination()) } returns mockDestination
-        every { (mockDestination.getId()) } returns 4
         navController.nav(4, navDirections)
-        verify { (navController.getCurrentDestination()) }
+        verify { (navController.currentDestination) }
         verify { (navController.navigate(navDirections)) }
     }
 
     @Test
     fun `Nav with id, directions, and extras args`() {
-        every { (navController.getCurrentDestination()) } returns mockDestination
-        every { (mockDestination.getId()) } returns 4
         navController.nav(4, navDirections, mockExtras)
-        verify { (navController.getCurrentDestination()) }
+        verify { (navController.currentDestination) }
         verify { (navController.navigate(navDirections, mockExtras)) }
     }
 
     @Test
     fun `Nav with id, directions, and options args`() {
-        every { (navController.getCurrentDestination()) } returns mockDestination
-        every { (mockDestination.getId()) } returns 4
         navController.nav(4, navDirections, mockOptions)
-        verify { (navController.getCurrentDestination()) }
+        verify { (navController.currentDestination) }
         verify { (navController.navigate(navDirections, mockOptions)) }
     }
 
     @Test
     fun `Nav with id, destId, bundle, options, and extras args`() {
-        every { (navController.getCurrentDestination()) } returns mockDestination
-        every { (mockDestination.getId()) } returns 4
         navController.nav(4, 5, mockBundle, mockOptions, mockExtras)
-        verify { (navController.getCurrentDestination()) }
+        verify { (navController.currentDestination) }
         verify { (navController.navigate(5, mockBundle, mockOptions, mockExtras)) }
     }
 
     @Test
     fun `Test error response for id exception in-block`() {
-        every { (navController.getCurrentDestination()) } returns mockDestination
-        every { (mockDestination.getId()) } returns 4
         navController.nav(7, navDirections)
-        verify { (recordIdException(mockDestination.getId(), 7)) }
+        verify { (recordIdException(mockDestination.id, 7)) }
     }
 
     // TO-DO Not Working
