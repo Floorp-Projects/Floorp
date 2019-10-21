@@ -149,6 +149,9 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // are styled to look like search engine results instead of the usual history
   // results.
   ["restyleSearches", false],
+
+  // If true, we strip https:// instead of http:// from URLs in the results view.
+  ["view.stripHttps", false],
 ]);
 const PREF_OTHER_DEFAULTS = new Map([
   ["keyword.enabled", true],
