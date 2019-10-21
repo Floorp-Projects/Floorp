@@ -128,6 +128,17 @@
   caret-color: transparent;
 }
 
+#urlbar.megabar > #urlbar-input-container > #urlbar-search-icon {
+  width: calc(16px + 2 * @identityBoxPaddingInline@);
+  margin-inline-end: @identityBoxMarginInlineEnd@;
+  background-image: url(chrome://browser/skin/search-glass.svg);
+  background-repeat: no-repeat;
+  background-position: center;
+  -moz-context-properties: fill, fill-opacity;
+  fill: var(--lwt-toolbarbutton-icon-fill, currentColor);
+  fill-opacity: .6;
+}
+
 /**
  * The urlbar background is a separate element so we can animate it
  * independently from the content. It's positioned absolutely and stretched to
@@ -143,10 +154,8 @@
 #urlbar.megabar > #urlbar-background {
   display: block;
   position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  inset: 0;
+  inset-inline-start: calc(16px + 2 * @identityBoxPaddingInline@);
 }
 
 #urlbar.megabar > #urlbar-input-container {
@@ -189,6 +198,7 @@
 
 #urlbar[breakout][breakout-extend] > #urlbar-background {
   box-shadow: 0 5px 18px rgba(0, 0, 0, .2);
+  inset-inline-start: 0;
 }
 
 #urlbar[breakout][breakout-extend] > #urlbar-input-container {

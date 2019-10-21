@@ -5,8 +5,6 @@
 %endif
 
 %filter substitution
-%define identityBoxPaddingInline 6px
-%define identityBoxMarginInlineEnd 2px
 
 #identity-box {
   padding-inline: @identityBoxPaddingInline@;
@@ -28,6 +26,7 @@
   padding-inline-start: 8px;
 }
 
+#urlbar.megabar > #urlbar-input-container > #identity-box[pageproxystate="invalid"],
 #identity-box[pageproxystate="invalid"] > #permissions-granted-icon,
 #identity-box[pageproxystate="invalid"] > #blocked-permissions-container,
 #identity-box[pageproxystate="invalid"] > #notification-popup-box,
@@ -36,7 +35,7 @@
   display: none;
 }
 
-#identity-box[pageproxystate="invalid"] {
+#urlbar:not(.megabar) > #urlbar-input-container > #identity-box[pageproxystate="invalid"] {
   pointer-events: none;
   -moz-user-focus: ignore;
 }
@@ -141,7 +140,7 @@
   list-style-image: url(chrome://branding/content/identity-icons-brand.svg);
 }
 
-#identity-box[pageproxystate="invalid"] > #identity-icon {
+#urlbar:not(.megabar) > #urlbar-input-container > #identity-box[pageproxystate="invalid"] > #identity-icon {
   list-style-image: url(chrome://browser/skin/search-glass.svg);
   fill-opacity: .4;
 }

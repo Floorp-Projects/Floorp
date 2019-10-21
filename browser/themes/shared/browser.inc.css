@@ -6,6 +6,8 @@
 %include addons/extension-controlled.inc.css
 
 %filter substitution
+%define identityBoxPaddingInline 6px
+%define identityBoxMarginInlineEnd 2px
 %define themeTransition background-color 0.1s cubic-bezier(.17,.67,.83,.67)
 %define lwtPopupBrighttextLinkColor #45a1ff
 
