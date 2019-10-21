@@ -286,14 +286,27 @@ already_AddRefed<File> DataTransferItem::GetAsFile(
 
     if (RefPtr<Blob> blob = do_QueryObject(supports)) {
       mCachedFile = blob->ToFile();
-    } else if (nsCOMPtr<BlobImpl> blobImpl = do_QueryInterface(supports)) {
-      MOZ_ASSERT(blobImpl->IsFile());
-      mCachedFile = File::Create(mDataTransfer, blobImpl);
-    } else if (nsCOMPtr<nsIFile> ifile = do_QueryInterface(supports)) {
-      mCachedFile = File::CreateFromFile(mDataTransfer, ifile);
     } else {
-      MOZ_ASSERT(false, "One of the above code paths should be taken");
-      return nullptr;
+      nsCOMPtr<nsIGlobalObject> global = GetGlobalFromDataTransfer();
+      if (NS_WARN_IF(!global)) {
+        return nullptr;
+      }
+
+      if (nsCOMPtr<BlobImpl> blobImpl = do_QueryInterface(supports)) {
+        MOZ_ASSERT(blobImpl->IsFile());
+        mCachedFile = File::Create(global, blobImpl);
+        if (NS_WARN_IF(!mCachedFile)) {
+          return nullptr;
+        }
+      } else if (nsCOMPtr<nsIFile> ifile = do_QueryInterface(supports)) {
+        mCachedFile = File::CreateFromFile(global, ifile);
+        if (NS_WARN_IF(!mCachedFile)) {
+          return nullptr;
+        }
+      } else {
+        MOZ_ASSERT(false, "One of the above code paths should be taken");
+        return nullptr;
+      }
     }
   }
 
@@ -308,20 +321,8 @@ already_AddRefed<FileSystemEntry> DataTransferItem::GetAsEntry(
     return nullptr;
   }
 
-  nsCOMPtr<nsIGlobalObject> global;
-  // This is annoying, but DataTransfer may have various things as parent.
-  nsCOMPtr<EventTarget> target =
-      do_QueryInterface(mDataTransfer->GetParentObject());
-  if (target) {
-    global = target->GetOwnerGlobal();
-  } else {
-    RefPtr<Event> event = do_QueryObject(mDataTransfer->GetParentObject());
-    if (event) {
-      global = event->GetParentObject();
-    }
-  }
-
-  if (!global) {
+  nsCOMPtr<nsIGlobalObject> global = GetGlobalFromDataTransfer();
+  if (NS_WARN_IF(!global)) {
     return nullptr;
   }
 
@@ -390,7 +391,12 @@ already_AddRefed<File> DataTransferItem::CreateFileFromInputStream(
     return nullptr;
   }
 
-  return File::CreateMemoryFile(mDataTransfer, data, available, fileName, mType,
+  nsCOMPtr<nsIGlobalObject> global = GetGlobalFromDataTransfer();
+  if (NS_WARN_IF(!global)) {
+    return nullptr;
+  }
+
+  return File::CreateMemoryFile(global, data, available, fileName, mType,
                                 PR_Now());
 }
 
@@ -549,6 +555,24 @@ already_AddRefed<nsIVariant> DataTransferItem::Data(nsIPrincipal* aPrincipal,
   }
 
   return variant.forget();
+}
+
+already_AddRefed<nsIGlobalObject>
+DataTransferItem::GetGlobalFromDataTransfer() {
+  nsCOMPtr<nsIGlobalObject> global;
+  // This is annoying, but DataTransfer may have various things as parent.
+  nsCOMPtr<EventTarget> target =
+      do_QueryInterface(mDataTransfer->GetParentObject());
+  if (target) {
+    global = target->GetOwnerGlobal();
+  } else {
+    RefPtr<Event> event = do_QueryObject(mDataTransfer->GetParentObject());
+    if (event) {
+      global = event->GetParentObject();
+    }
+  }
+
+  return global.forget();
 }
 
 }  // namespace dom

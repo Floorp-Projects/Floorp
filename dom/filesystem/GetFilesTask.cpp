@@ -32,8 +32,7 @@ already_AddRefed<GetFilesTaskChild> GetFilesTaskChild::Create(
   MOZ_ASSERT(aDirectory);
   aFileSystem->AssertIsOnOwningThread();
 
-  nsCOMPtr<nsIGlobalObject> globalObject =
-      do_QueryInterface(aFileSystem->GetParentObject());
+  nsCOMPtr<nsIGlobalObject> globalObject = aFileSystem->GetParentObject();
   if (NS_WARN_IF(!globalObject)) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
@@ -107,12 +106,19 @@ void GetFilesTaskChild::SetSuccessRequestResult(
     return;
   }
 
+  nsCOMPtr<nsIGlobalObject> globalObject = mFileSystem->GetParentObject();
+  MOZ_ASSERT(globalObject);
+
   for (uint32_t i = 0; i < r.data().Length(); ++i) {
     const FileSystemFileResponse& data = r.data()[i];
     RefPtr<BlobImpl> blobImpl = IPCBlobUtils::Deserialize(data.blob());
     MOZ_ASSERT(blobImpl);
 
-    mTargetData[i] = File::Create(mFileSystem->GetParentObject(), blobImpl);
+    mTargetData[i] = File::Create(globalObject, blobImpl);
+    if (NS_WARN_IF(!mTargetData[i])) {
+      aRv.Throw(NS_ERROR_FAILURE);
+      return;
+    }
   }
 }
 

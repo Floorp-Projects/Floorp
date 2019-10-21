@@ -31,8 +31,8 @@ class MutableBlobStorageCallback {
  public:
   NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
 
-  virtual void BlobStoreCompleted(MutableBlobStorage* aBlobStorage, Blob* aBlob,
-                                  nsresult aRv) = 0;
+  virtual void BlobStoreCompleted(MutableBlobStorage* aBlobStorage,
+                                  BlobImpl* aBlob, nsresult aRv) = 0;
 };
 
 // This class is must be created and used on main-thread, except for Append()
@@ -53,9 +53,9 @@ class MutableBlobStorage final {
   nsresult Append(const void* aData, uint32_t aLength);
 
   // This method can be called just once.
-  // The callback will be called when the Blob is ready.
-  void GetBlobWhenReady(nsISupports* aParent, const nsACString& aContentType,
-                        MutableBlobStorageCallback* aCallback);
+  // The callback will be called when the BlobImpl is ready.
+  void GetBlobImplWhenReady(const nsACString& aContentType,
+                            MutableBlobStorageCallback* aCallback);
 
   void TemporaryFileCreated(PRFileDesc* aFD);
 
@@ -117,7 +117,6 @@ class MutableBlobStorage final {
   RefPtr<TaskQueue> mTaskQueue;
   nsCOMPtr<nsIEventTarget> mEventTarget;
 
-  nsCOMPtr<nsISupports> mPendingParent;
   nsCString mPendingContentType;
   RefPtr<MutableBlobStorageCallback> mPendingCallback;
 
