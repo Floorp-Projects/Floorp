@@ -495,9 +495,10 @@ nsresult HTMLEditor::DoInsertHTMLWithContext(
                   pointToInsert.GetContainer()->GetParentNode(),
                   "Insertion point is out of the DOM tree");
               if (pointToInsert.GetContainer()->GetParentNode()) {
-                DeleteNodeWithTransaction(
-                    MOZ_KnownLive(*pointToInsert.GetContainer()));
                 pointToInsert.Set(pointToInsert.GetContainer());
+                AutoEditorDOMPointChildInvalidator lockOffset(pointToInsert);
+                DeleteNodeWithTransaction(
+                    MOZ_KnownLive(*pointToInsert.GetChild()));
               }
             }
           }

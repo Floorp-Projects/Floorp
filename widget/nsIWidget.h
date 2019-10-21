@@ -1713,6 +1713,15 @@ class nsIWidget : public nsISupports {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
+  // Get rectangle of the screen where the window is placed.
+  // It's used to detect popup overflow under Wayland because
+  // Screenmanager does not work under it.
+#ifdef MOZ_WAYLAND
+  virtual nsresult GetScreenRect(LayoutDeviceIntRect* aRect) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+#endif
+
  private:
   class LongTapInfo {
    public:

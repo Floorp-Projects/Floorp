@@ -16,7 +16,7 @@ registerCleanupFunction(() => {
 add_task(
   threadFrontTest(async ({ threadFront, debuggee, client }) => {
     return new Promise(resolve => {
-      threadFront.once("paused", function(packet) {
+      threadFront.once("paused", async function(packet) {
         const [f, s, ne, e] = packet.frame.arguments;
         const [
           fClient,
@@ -37,7 +37,8 @@ add_task(
         Assert.ok(e.extensible);
         Assert.ok(eClient.isExtensible);
 
-        threadFront.resume().then(resolve);
+        await threadFront.resume();
+        resolve();
       });
 
       debuggee.eval(

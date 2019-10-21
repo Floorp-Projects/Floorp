@@ -38,7 +38,7 @@ enum MozContentPolicyType {
 };
 
 /**
- * String versions of CLASSIFIED_* tracking flags from nsHttpChannel.idl
+ * String versions of CLASSIFIED_* tracking flags from nsIClassifiedChannel.idl
  */
 enum MozUrlClassificationFlags {
   "fingerprinting",

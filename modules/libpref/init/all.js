@@ -670,6 +670,7 @@ pref("gfx.webrender.debug.gpu-sample-queries", false);
 pref("gfx.webrender.debug.disable-batching", false);
 pref("gfx.webrender.debug.epochs", false);
 pref("gfx.webrender.debug.compact-profiler", false);
+pref("gfx.webrender.debug.smart-profiler", false);
 pref("gfx.webrender.debug.echo-driver-messages", false);
 pref("gfx.webrender.debug.new-frame-indicator", false);
 pref("gfx.webrender.debug.new-scene-indicator", false);
@@ -954,7 +955,6 @@ pref("dom.allow_scripts_to_close_windows",          false);
 
 pref("dom.require_user_interaction_for_beforeunload", true);
 
-pref("dom.popup_maximum",                           20);
 pref("dom.popup_allowed_events", "change click dblclick auxclick mouseup pointerup notificationclick reset submit touchend contextmenu");
 
 pref("dom.serviceWorkers.disable_open_click_delay", 1000);
@@ -1251,9 +1251,6 @@ pref("network.protocol-handler.external.le", false);   // file
 // This pref controls the default settings.  Per protocol settings can be used
 // to override this value.
 pref("network.protocol-handler.expose-all", true);
-
-// Warning for about:networking page
-pref("network.warnOnAboutNetworking", false);
 
 // Example: make IMAP an exposed protocol
 // pref("network.protocol-handler.expose.imap", true);
@@ -3994,11 +3991,10 @@ pref("network.tcp.tcp_fastopen_http_check_for_stalls_only_if_idle_for", 10);
 pref("network.tcp.tcp_fastopen_http_stalls_limit", 3);
 pref("network.tcp.tcp_fastopen_http_stalls_timeout", 20);
 
-#ifdef MOZ_X11
-  #ifdef MOZ_WIDGET_GTK
-    pref("gfx.xrender.enabled",false);
-    pref("widget.content.allow-gtk-dark-theme", false);
-  #endif
+#ifdef MOZ_WIDGET_GTK
+  pref("gfx.xrender.enabled",false);
+  pref("widget.content.allow-gtk-dark-theme", false);
+  pref("widget.content.gtk-theme-override", "");
 #endif
 #ifdef MOZ_WAYLAND
   pref("widget.wayland_dmabuf_backend.enabled", false);
@@ -4277,6 +4273,9 @@ pref("network.trr.max-fails", 5);
 // Comma separated list of domains that we should not use TRR for
 pref("network.trr.excluded-domains", "");
 pref("network.trr.builtin-excluded-domains", "localhost,local");
+// When true, the DNS+TRR cache will be cleared when a relevant TRR pref
+// changes. (uri, bootstrapAddress, excluded-domains)
+pref("network.trr.clear-cache-on-pref-change", true);
 
 pref("captivedetect.canonicalURL", "http://detectportal.firefox.com/success.txt");
 pref("captivedetect.canonicalContent", "success\n");
@@ -4450,6 +4449,7 @@ pref("browser.search.geoSpecificDefaults", false);
 pref("browser.search.geoip.url", "https://location.services.mozilla.com/v1/country?key=%MOZILLA_API_KEY%");
 pref("browser.search.geoip.timeout", 3000);
 pref("browser.search.separatePrivateDefault", false);
+pref("browser.search.separatePrivateDefault.ui.enabled", false);
 
 #ifdef MOZ_OFFICIAL_BRANDING
   // {moz:official} expands to "official"

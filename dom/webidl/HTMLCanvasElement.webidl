@@ -13,9 +13,10 @@
 interface nsISupports;
 interface Variant;
 
-[HTMLConstructor,
- Exposed=Window]
+[Exposed=Window]
 interface HTMLCanvasElement : HTMLElement {
+  [HTMLConstructor] constructor();
+
   [CEReactions, Pure, SetterThrows]
            attribute unsigned long width;
   [CEReactions, Pure, SetterThrows]

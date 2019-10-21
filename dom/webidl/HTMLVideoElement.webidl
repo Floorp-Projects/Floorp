@@ -11,9 +11,10 @@
  * and create derivative works of this document.
  */
 
-[HTMLConstructor,
- Exposed=Window]
+[Exposed=Window]
 interface HTMLVideoElement : HTMLMediaElement {
+  [HTMLConstructor] constructor();
+
   [CEReactions, SetterThrows]
            attribute unsigned long width;
   [CEReactions, SetterThrows]

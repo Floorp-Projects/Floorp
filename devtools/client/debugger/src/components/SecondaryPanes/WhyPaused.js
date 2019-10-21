@@ -6,6 +6,13 @@
 import React, { PureComponent } from "react";
 import { connect } from "../../utils/connect";
 import AccessibleImage from "../shared/AccessibleImage";
+import actions from "../../actions";
+
+import Reps from "devtools-reps";
+const {
+  REPS: { Rep },
+  MODE,
+} = Reps;
 
 import { getPauseReason } from "../../utils/pause";
 import {
@@ -24,6 +31,9 @@ type Props = {
   endPanelCollapsed: boolean,
   +delay: ?number,
   why: ?Why,
+  openElementInInspector: typeof actions.openElementInInspectorCommand,
+  highlightDomElement: typeof actions.highlightDomElement,
+  unHighlightDomElement: typeof actions.unHighlightDomElement,
 };
 
 type State = {
@@ -62,15 +72,65 @@ class WhyPaused extends PureComponent<Props, State> {
   }
 
   renderMessage(why: Why) {
-    if (why.type == "exception" && why.exception) {
+    const { type, exception, message } = why;
+
+    if (type == "exception" && exception) {
       // Our types for 'Why' are too general because 'type' can be 'string'.
       // $FlowFixMe - We should have a proper discriminating union of reasons.
-      const summary = this.renderExceptionSummary(why.exception);
+      const summary = this.renderExceptionSummary(exception);
       return <div className="message warning">{summary}</div>;
     }
 
-    if (typeof why.message == "string") {
-      return <div className="message">{why.message}</div>;
+    if (type === "mutationBreakpoint" && why.nodeGrip) {
+      const { nodeGrip, ancestorGrip, action } = why;
+      const {
+        openElementInInspector,
+        highlightDomElement,
+        unHighlightDomElement,
+      } = this.props;
+
+      const targetRep = Rep({
+        object: nodeGrip,
+        mode: MODE.TINY,
+        onDOMNodeClick: () => openElementInInspector(nodeGrip),
+        onInspectIconClick: () => openElementInInspector(nodeGrip),
+        onDOMNodeMouseOver: () => highlightDomElement(nodeGrip),
+        onDOMNodeMouseOut: () => unHighlightDomElement(),
+      });
+
+      const ancestorRep = ancestorGrip
+        ? Rep({
+            object: ancestorGrip,
+            mode: MODE.TINY,
+            onDOMNodeClick: () => openElementInInspector(ancestorGrip),
+            onInspectIconClick: () => openElementInInspector(ancestorGrip),
+            onDOMNodeMouseOver: () => highlightDomElement(ancestorGrip),
+            onDOMNodeMouseOut: () => unHighlightDomElement(),
+          })
+        : null;
+
+      return (
+        <div>
+          <div className="message">{why.message}</div>
+          <div className="mutationNode">
+            {ancestorRep}
+            {ancestorGrip ? (
+              <span className="why-paused-ancestor">
+                {action === "remove"
+                  ? L10N.getStr("whyPaused.mutationBreakpointRemoved")
+                  : L10N.getStr("whyPaused.mutationBreakpointAdded")}
+                {targetRep}
+              </span>
+            ) : (
+              targetRep
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    if (typeof message == "string") {
+      return <div className="message">{message}</div>;
     }
 
     return null;
@@ -105,4 +165,11 @@ const mapStateToProps = state => ({
   why: getWhy(state, getCurrentThread(state)),
 });
 
-export default connect<Props, OwnProps, _, _, _, _>(mapStateToProps)(WhyPaused);
+export default connect<Props, OwnProps, _, _, _, _>(
+  mapStateToProps,
+  {
+    openElementInInspector: actions.openElementInInspectorCommand,
+    highlightDomElement: actions.highlightDomElement,
+    unHighlightDomElement: actions.unHighlightDomElement,
+  }
+)(WhyPaused);

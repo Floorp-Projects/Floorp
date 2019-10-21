@@ -1327,9 +1327,9 @@ interface TestWorkerExposedInterface {
   [NeedsSubjectPrincipal=NonSystem] attribute boolean needsNonSystemSubjectPrincipalAttr;
 };
 
-[HTMLConstructor,
- Exposed=Window]
+[Exposed=Window]
 interface TestHTMLConstructorInterface {
+  [HTMLConstructor] constructor();
 };
 
 [Exposed=Window]

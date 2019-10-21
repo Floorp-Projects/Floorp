@@ -25,9 +25,6 @@
 #include "mozilla/gfx/GPUParent.h"  // for GPUParent
 #include "mozilla/gfx/Logging.h"    // for gfx::TreeLog
 #include "mozilla/gfx/Point.h"      // for Point
-#ifdef MOZ_WIDGET_ANDROID
-#  include "mozilla/jni/Utils.h"  // for jni::IsFennec
-#endif
 #include "mozilla/layers/APZSampler.h"      // for APZSampler
 #include "mozilla/layers/APZThreadUtils.h"  // for AssertOnControllerThread, etc
 #include "mozilla/layers/APZUpdater.h"      // for APZUpdater
@@ -282,8 +279,8 @@ APZCTreeManager::APZCTreeManager(LayersId aRootLayersId)
       [self] { self->mFlushObserver = new CheckerboardFlushObserver(self); }));
   AsyncPanZoomController::InitializeGlobalState();
   mApzcTreeLog.ConditionOnPrefFunction(StaticPrefs::apz_printtree);
-#if defined(MOZ_WIDGET_ANDROID)
-  if (jni::IsFennec()) {
+#ifdef MOZ_WIDGET_ANDROID
+  if (AndroidDynamicToolbarAnimator::IsEnabled()) {
     mToolbarAnimator = new AndroidDynamicToolbarAnimator(this);
   }
 #endif  // (MOZ_WIDGET_ANDROID)

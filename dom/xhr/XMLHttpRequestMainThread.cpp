@@ -1701,7 +1701,7 @@ XMLHttpRequestMainThread::OnDataAvailable(nsIRequest* request,
       rv = NS_GetBlobForBlobURI(blobURI, getter_AddRefs(blobImpl));
       if (NS_SUCCEEDED(rv)) {
         if (blobImpl) {
-          mResponseBlob = Blob::Create(GetOwner(), blobImpl);
+          mResponseBlob = Blob::Create(GetOwnerGlobal(), blobImpl);
         }
         if (!mResponseBlob) {
           rv = NS_ERROR_FILE_NOT_FOUND;
@@ -2143,7 +2143,7 @@ XMLHttpRequestMainThread::OnStopRequest(nsIRequest* request, nsresult status) {
     // mBlobStorage can be null if the channel is non-file non-cacheable
     // and if the response length is zero.
     MaybeCreateBlobStorage();
-    mBlobStorage->GetBlobWhenReady(GetOwner(), contentType, this);
+    mBlobStorage->GetBlobImplWhenReady(contentType, this);
     waitingForBlobCreation = true;
 
     NS_ASSERTION(mResponseBody.IsEmpty(), "mResponseBody should be empty");
@@ -3583,7 +3583,7 @@ void XMLHttpRequestMainThread::MaybeCreateBlobStorage() {
 }
 
 void XMLHttpRequestMainThread::BlobStoreCompleted(
-    MutableBlobStorage* aBlobStorage, Blob* aBlob, nsresult aRv) {
+    MutableBlobStorage* aBlobStorage, BlobImpl* aBlobImpl, nsresult aRv) {
   // Ok, the state is changed...
   if (mBlobStorage != aBlobStorage || NS_FAILED(aRv)) {
     return;
@@ -3591,7 +3591,7 @@ void XMLHttpRequestMainThread::BlobStoreCompleted(
 
   MOZ_ASSERT(mState != XMLHttpRequest_Binding::DONE);
 
-  mResponseBlob = aBlob;
+  mResponseBlob = Blob::Create(GetOwnerGlobal(), aBlobImpl);
   mBlobStorage = nullptr;
 
   ChangeStateToDone(mFlagSyncLooping);

@@ -614,6 +614,7 @@ add_task(async function setup() {
     "keyword.enabled",
     "browser.fixup.domainwhitelist.whitelisted",
     "browser.search.separatePrivateDefault",
+    "browser.search.separatePrivateDefault.ui.enabled",
   ];
   for (let pref of prefList) {
     Services.prefs.setBoolPref(pref, true);
@@ -666,6 +667,9 @@ add_task(async function setup() {
     Services.prefs.clearUserPref("browser.fixup.typo.scheme");
     Services.prefs.clearUserPref(kForceHostLookup);
     Services.prefs.clearUserPref("browser.search.separatePrivateDefault");
+    Services.prefs.clearUserPref(
+      "browser.search.separatePrivateDefault.ui.enabled"
+    );
   });
 });
 

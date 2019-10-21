@@ -561,10 +561,18 @@ class ParentDevToolsInspectorSidebar extends BaseDevToolsPanel {
 
     const oldActor = _lastObjectValueGrip && _lastObjectValueGrip.actor;
     const newActor = newObjectValueGrip && newObjectValueGrip.actor;
+    const client = this.toolbox.target.client;
 
     // Release the previously active actor on the remote debugging server.
     if (oldActor && oldActor !== newActor) {
-      this.toolbox.target.client.release(oldActor);
+      const objFront = client.getFrontByID(oldActor);
+      if (objFront) {
+        objFront.release();
+        return;
+      }
+
+      // In case there's no object front, use the client's release method.
+      client.release(oldActor).catch(() => {});
     }
   }
 }

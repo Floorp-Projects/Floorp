@@ -14,6 +14,7 @@
         'pk11_aes_cmac_unittest.cc',
         'pk11_aes_gcm_unittest.cc',
         'pk11_aeskeywrap_unittest.cc',
+        'pk11_aeskeywrappad_unittest.cc',
         'pk11_cbc_unittest.cc',
         'pk11_chacha20poly1305_unittest.cc',
         'pk11_cipherop_unittest.cc',

@@ -153,7 +153,7 @@ function checkConsoleAPICache() {
 }
 
 function onAttach1(state, response) {
-  state.client.getCachedMessages(["ConsoleAPI"])
+  state.webConsoleFront.getCachedMessages(["ConsoleAPI"])
     .then(onCachedConsoleAPI.bind(null, state));
 }
 
@@ -191,7 +191,7 @@ function testPageErrors() {
 }
 
 function onAttach2(state, response) {
-  state.client.getCachedMessages(["PageError"])
+  state.webConsoleFront.getCachedMessages(["PageError"])
     .then(onCachedPageErrors.bind(null, state));
 }
 

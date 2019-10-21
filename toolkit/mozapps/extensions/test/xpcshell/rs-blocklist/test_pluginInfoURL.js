@@ -25,6 +25,7 @@ const PLUGINS = [
   new MockPlugin("test_no_infoURL", "5", Ci.nsIPluginTag.STATE_ENABLED),
   new MockPlugin("test_newVersion", "1", Ci.nsIPluginTag.STATE_ENABLED),
   new MockPlugin("test_newVersion", "3", Ci.nsIPluginTag.STATE_ENABLED),
+  new MockPlugin("test_noBlockID", "3", Ci.nsIPluginTag.STATE_ENABLED),
 ];
 
 const BLOCKLIST_DATA = [
@@ -95,6 +96,21 @@ const BLOCKLIST_DATA = [
     blockID: "test_plugin_newVersion",
     infoURL: "http://test.url2.com/",
   },
+  {
+    matchName: "^test_noBlockID",
+    versionRange: [
+      {
+        targetApplication: [
+          {
+            guid: "xpcshell@tests.mozilla.org",
+            maxVersion: "*",
+            minVersion: "1",
+          },
+        ],
+      },
+    ],
+    infoURL: "http://test.url.com/",
+  },
 ];
 
 /**
@@ -164,5 +180,22 @@ add_task(async function test_intoURL_newVersion() {
     await Blocklist.getPluginBlockURL(PLUGINS[4]),
     null,
     "New plugin should not match"
+  );
+});
+
+/**
+ * Test that the blocklist service correctly loads and returns the infoURL for
+ * a plugin that matches the last entry in the blocklist, despite it not having
+ * a blockID property
+ */
+add_task(async function test_infoURL() {
+  // The testInfoURL must match the value within the
+  // infoURL info in the pluginInfoURL_block blocklist data
+  let testInfoURL = "http://test.url.com/";
+
+  Assert.strictEqual(
+    await Blocklist.getPluginBlockURL(PLUGINS[5]),
+    testInfoURL,
+    "Should be the provided url when the infoURL is available and blockID isn't"
   );
 });

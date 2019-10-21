@@ -234,17 +234,11 @@ class HttpBaseChannel : public nsHashPropertyBag,
   NS_IMETHOD SetTopLevelContentWindowId(uint64_t aContentWindowId) override;
   NS_IMETHOD GetTopLevelOuterContentWindowId(uint64_t* aWindowId) override;
   NS_IMETHOD SetTopLevelOuterContentWindowId(uint64_t aWindowId) override;
-  NS_IMETHOD IsTrackingResource(bool* aIsTrackingResource) override;
-  NS_IMETHOD IsThirdPartyTrackingResource(bool* aIsTrackingResource) override;
-  NS_IMETHOD GetClassificationFlags(uint32_t* aIsClassificationFlags) override;
-  NS_IMETHOD GetFirstPartyClassificationFlags(
-      uint32_t* aIsClassificationFlags) override;
-  NS_IMETHOD GetThirdPartyClassificationFlags(
-      uint32_t* aIsClassificationFlags) override;
+
   NS_IMETHOD GetFlashPluginState(
       nsIHttpChannel::FlashPluginState* aState) override;
 
-  using nsIHttpChannel::IsThirdPartyTrackingResource;
+  using nsIClassifiedChannel::IsThirdPartyTrackingResource;
 
   virtual void SetSource(UniqueProfilerBacktrace aSource) override {
     mSource = std::move(aSource);

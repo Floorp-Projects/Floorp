@@ -183,7 +183,7 @@ class PushMessageData final : public nsISupports, public nsWrapperCache {
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
 
-  nsISupports* GetParentObject() const { return mOwner; }
+  nsIGlobalObject* GetParentObject() const { return mOwner; }
 
   void Json(JSContext* cx, JS::MutableHandle<JS::Value> aRetval,
             ErrorResult& aRv);
@@ -192,10 +192,10 @@ class PushMessageData final : public nsISupports, public nsWrapperCache {
                    ErrorResult& aRv);
   already_AddRefed<mozilla::dom::Blob> Blob(ErrorResult& aRv);
 
-  PushMessageData(nsISupports* aOwner, nsTArray<uint8_t>&& aBytes);
+  PushMessageData(nsIGlobalObject* aOwner, nsTArray<uint8_t>&& aBytes);
 
  private:
-  nsCOMPtr<nsISupports> mOwner;
+  nsCOMPtr<nsIGlobalObject> mOwner;
   nsTArray<uint8_t> mBytes;
   nsString mDecodedText;
   ~PushMessageData();

@@ -20,6 +20,13 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 // by setting UrlbarView.removeStaleRowsTimeout.
 const DEFAULT_REMOVE_STALE_ROWS_TIMEOUT = 400;
 
+// The classNames of view elements that can be selected.
+const SELECTABLE_ELEMENTS = [
+  "urlbarView-row",
+  "urlbarView-tip-button",
+  "urlbarView-tip-help",
+];
+
 /**
  * Receives and displays address bar autocomplete results.
  */
@@ -741,6 +748,7 @@ class UrlbarView {
     let content = this._createElement("span");
     content.className = "urlbarView-row-inner";
     item.appendChild(content);
+    item._elements.set("rowInner", content);
 
     let typeIcon = this._createElement("span");
     typeIcon.className = "urlbarView-type-icon";
@@ -757,17 +765,26 @@ class UrlbarView {
     item._elements.set("title", title);
 
     if (type == UrlbarUtils.RESULT_TYPE.TIP) {
+      // We use role="group" so screen readers will read the group's label
+      // when a button inside it gets focus. (Screen readers don't do this for
+      // role="option".)
+      // we set aria-labelledby for the group in _updateIndices.
+      content.setAttribute("role", "group");
       let buttonSpacer = this._createElement("span");
       buttonSpacer.className = "urlbarView-tip-button-spacer";
       content.appendChild(buttonSpacer);
 
       let tipButton = this._createElement("span");
       tipButton.className = "urlbarView-tip-button";
+      tipButton.setAttribute("role", "button");
       content.appendChild(tipButton);
       item._elements.set("tipButton", tipButton);
 
       let helpIcon = this._createElement("span");
       helpIcon.className = "urlbarView-tip-help";
+      helpIcon.setAttribute("role", "button");
+      helpIcon.setAttribute("data-l10n-id", "urlbar-tip-help-icon");
+      item._elements.set("helpButton", helpIcon);
       content.appendChild(helpIcon);
     } else {
       let tagsContainer = this._createElement("span");
@@ -943,6 +960,16 @@ class UrlbarView {
       let item = this._rows.children[i];
       item.result.rowIndex = i;
       item.id = "urlbarView-row-" + i;
+      if (item.result.type == UrlbarUtils.RESULT_TYPE.TIP) {
+        let title = item._elements.get("title");
+        title.id = item.id + "-title";
+        let content = item._elements.get("rowInner");
+        content.setAttribute("aria-labelledby", title.id);
+        let tipButton = item._elements.get("tipButton");
+        tipButton.id = item.id + "-tip-button";
+        let helpButton = item._elements.get("helpButton");
+        helpButton.id = item.id + "-tip-help";
+      }
     }
     let selectableElement = this._getFirstSelectableElement();
     let uiIndex = 0;
@@ -1040,9 +1067,7 @@ class UrlbarView {
       firstElementChild.result &&
       firstElementChild.result.type == UrlbarUtils.RESULT_TYPE.TIP
     ) {
-      firstElementChild = firstElementChild.querySelector(
-        ".urlbarView-tip-button"
-      );
+      firstElementChild = firstElementChild._elements.get("tipButton");
     }
     return firstElementChild;
   }
@@ -1064,7 +1089,7 @@ class UrlbarView {
       lastElementChild.result &&
       lastElementChild.result.type == UrlbarUtils.RESULT_TYPE.TIP
     ) {
-      lastElementChild = lastElementChild.querySelector(".urlbarView-tip-help");
+      lastElementChild = lastElementChild._elements.get("helpButton");
     }
 
     return lastElementChild;
@@ -1078,9 +1103,7 @@ class UrlbarView {
   _getNextSelectableElement(element) {
     let next;
     if (element.classList.contains("urlbarView-tip-button")) {
-      next = element
-        .closest(".urlbarView-row")
-        .querySelector(".urlbarView-tip-help");
+      next = element.closest(".urlbarView-row")._elements.get("helpButton");
     } else if (element.classList.contains("urlbarView-tip-help")) {
       next = element.closest(".urlbarView-row").nextElementSibling;
     } else {
@@ -1092,7 +1115,7 @@ class UrlbarView {
     }
 
     if (next.result && next.result.type == UrlbarUtils.RESULT_TYPE.TIP) {
-      next = next.querySelector(".urlbarView-tip-button");
+      next = next._elements.get("tipButton");
     }
 
     return next;
@@ -1108,9 +1131,7 @@ class UrlbarView {
     if (element.classList.contains("urlbarView-tip-button")) {
       previous = element.closest(".urlbarView-row").previousElementSibling;
     } else if (element.classList.contains("urlbarView-tip-help")) {
-      previous = element
-        .closest(".urlbarView-row")
-        .querySelector(".urlbarView-tip-button");
+      previous = element.closest(".urlbarView-row")._elements.get("tipButton");
     } else {
       previous = element.previousElementSibling;
     }
@@ -1123,7 +1144,7 @@ class UrlbarView {
       previous.result &&
       previous.result.type == UrlbarUtils.RESULT_TYPE.TIP
     ) {
-      previous = previous.querySelector(".urlbarView-tip-help");
+      previous = previous._elements.get("helpButton");
     }
 
     return previous;
@@ -1297,11 +1318,11 @@ class UrlbarView {
       // Ignore right clicks.
       return;
     }
-    let row = event.target;
-    while (!row.classList.contains("urlbarView-row")) {
-      row = row.parentNode;
+    let target = event.target;
+    while (!SELECTABLE_ELEMENTS.includes(target.className)) {
+      target = target.parentNode;
     }
-    this._selectElement(row, { updateInput: false });
+    this._selectElement(target, { updateInput: false });
     this.controller.speculativeConnect(
       this.selectedResult,
       this._queryContext,

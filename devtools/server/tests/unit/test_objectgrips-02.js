@@ -12,24 +12,23 @@ registerCleanupFunction(() => {
 add_task(
   threadFrontTest(async ({ threadFront, debuggee, client }) => {
     return new Promise(resolve => {
-      threadFront.once("paused", function(packet) {
+      threadFront.once("paused", async function(packet) {
         const args = packet.frame.arguments;
 
         Assert.equal(args[0].class, "Object");
 
         const objClient = threadFront.pauseGrip(args[0]);
-        objClient.getPrototype(function(response) {
-          Assert.ok(response.prototype != undefined);
+        let response = await objClient.getPrototype();
+        Assert.ok(response.prototype != undefined);
 
-          const protoClient = threadFront.pauseGrip(response.prototype);
-          protoClient.getOwnPropertyNames(function(response) {
-            Assert.equal(response.ownPropertyNames.length, 2);
-            Assert.equal(response.ownPropertyNames[0], "b");
-            Assert.equal(response.ownPropertyNames[1], "c");
+        const protoClient = threadFront.pauseGrip(response.prototype);
+        response = await protoClient.getOwnPropertyNames();
+        Assert.equal(response.ownPropertyNames.length, 2);
+        Assert.equal(response.ownPropertyNames[0], "b");
+        Assert.equal(response.ownPropertyNames[1], "c");
 
-            threadFront.resume().then(resolve);
-          });
-        });
+        await threadFront.resume();
+        resolve();
       });
 
       debuggee.eval(

@@ -8,7 +8,10 @@
 
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.search.separatePrivateDefault", false]],
+    set: [
+      ["browser.search.separatePrivateDefault.ui.enabled", true],
+      ["browser.search.separatePrivateDefault", false],
+    ],
   });
 
   const engine = await Services.search.addEngineWithDetails("MozSearch", {

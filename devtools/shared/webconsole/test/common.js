@@ -88,16 +88,16 @@ var _attachConsole = async function(listeners, attachToTab, attachToWorker) {
     const [, threadFront] = await target.attachThread();
     await threadFront.resume();
 
-    const webConsoleClient = target.activeConsole;
+    const webConsoleFront = target.activeConsole;
 
     // By default the console isn't listening for anything,
     // request listeners from here
-    const response = await webConsoleClient.startListeners(listeners);
+    const response = await webConsoleFront.startListeners(listeners);
     return {
       state: {
         dbgClient: client,
-        client: webConsoleClient,
-        actor: webConsoleClient.actor,
+        webConsoleFront,
+        actor: webConsoleFront.actor,
         // Keep a strong reference to the Worker to avoid it being
         // GCd during the test (bug 1237492).
         // eslint-disable-next-line camelcase

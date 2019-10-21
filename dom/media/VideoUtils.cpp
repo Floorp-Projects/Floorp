@@ -189,24 +189,25 @@ bool IsVideoContentType(const nsCString& aContentType) {
 bool IsValidVideoRegion(const gfx::IntSize& aFrame,
                         const gfx::IntRect& aPicture,
                         const gfx::IntSize& aDisplay) {
-  return aFrame.width <= PlanarYCbCrImage::MAX_DIMENSION &&
+  return aFrame.width > 0 && aFrame.width <= PlanarYCbCrImage::MAX_DIMENSION &&
+         aFrame.height > 0 &&
          aFrame.height <= PlanarYCbCrImage::MAX_DIMENSION &&
          aFrame.width * aFrame.height <= MAX_VIDEO_WIDTH * MAX_VIDEO_HEIGHT &&
-         aFrame.width * aFrame.height != 0 &&
+         aPicture.width > 0 &&
          aPicture.width <= PlanarYCbCrImage::MAX_DIMENSION &&
          aPicture.x < PlanarYCbCrImage::MAX_DIMENSION &&
          aPicture.x + aPicture.width < PlanarYCbCrImage::MAX_DIMENSION &&
+         aPicture.height > 0 &&
          aPicture.height <= PlanarYCbCrImage::MAX_DIMENSION &&
          aPicture.y < PlanarYCbCrImage::MAX_DIMENSION &&
          aPicture.y + aPicture.height < PlanarYCbCrImage::MAX_DIMENSION &&
          aPicture.width * aPicture.height <=
              MAX_VIDEO_WIDTH * MAX_VIDEO_HEIGHT &&
-         aPicture.width * aPicture.height != 0 &&
+         aDisplay.width > 0 &&
          aDisplay.width <= PlanarYCbCrImage::MAX_DIMENSION &&
+         aDisplay.height > 0 &&
          aDisplay.height <= PlanarYCbCrImage::MAX_DIMENSION &&
-         aDisplay.width * aDisplay.height <=
-             MAX_VIDEO_WIDTH * MAX_VIDEO_HEIGHT &&
-         aDisplay.width * aDisplay.height != 0;
+         aDisplay.width * aDisplay.height <= MAX_VIDEO_WIDTH * MAX_VIDEO_HEIGHT;
 }
 
 already_AddRefed<SharedThreadPool> GetMediaThreadPool(MediaThreadType aType) {

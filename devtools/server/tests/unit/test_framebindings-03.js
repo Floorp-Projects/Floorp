@@ -36,7 +36,7 @@ function run_test() {
 }
 
 function test_pause_frame() {
-  gThreadFront.once("paused", function(packet) {
+  gThreadFront.once("paused", async function(packet) {
     const env = packet.frame.environment;
     Assert.notEqual(env, undefined);
 
@@ -54,16 +54,14 @@ function test_pause_frame() {
     Assert.ok(!!vars.arguments.value.actor);
 
     const objClient = gThreadFront.pauseGrip(env.object);
-    objClient.getPrototypeAndProperties(function(response) {
-      Assert.equal(response.ownProperties.PI.value, Math.PI);
-      Assert.equal(response.ownProperties.cos.value.type, "object");
-      Assert.equal(response.ownProperties.cos.value.class, "Function");
-      Assert.ok(!!response.ownProperties.cos.value.actor);
+    const response = await objClient.getPrototypeAndProperties();
+    Assert.equal(response.ownProperties.PI.value, Math.PI);
+    Assert.equal(response.ownProperties.cos.value.type, "object");
+    Assert.equal(response.ownProperties.cos.value.class, "Function");
+    Assert.ok(!!response.ownProperties.cos.value.actor);
 
-      gThreadFront.resume().then(function() {
-        finishClient(gClient);
-      });
-    });
+    await gThreadFront.resume();
+    finishClient(gClient);
   });
 
   /* eslint-disable */

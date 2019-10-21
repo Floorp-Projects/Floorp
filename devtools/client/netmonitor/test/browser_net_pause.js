@@ -80,7 +80,7 @@ async function performRequestAndWait(tab, monitor) {
  * Execute simple GET request
  */
 async function performPausedRequest(connector, tab, monitor) {
-  const wait = connector.connector.webConsoleClient.once("networkEvent");
+  const wait = connector.connector.webConsoleFront.once("networkEvent");
   await ContentTask.spawn(tab.linkedBrowser, SIMPLE_SJS, async function(url) {
     await content.wrappedJSObject.performRequests(url);
   });

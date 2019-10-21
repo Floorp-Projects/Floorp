@@ -6,6 +6,10 @@ const { E10SUtils } = ChromeUtils.import(
 );
 
 let PREF_NAME = "browser.tabs.remote.useHTTPResponseProcessSelection";
+const PRINT_POSTDATA = httpURL("print_postdata.sjs");
+const FILE_DUMMY = fileURL("dummy_page.html");
+const DATA_URL = "data:text/html,Hello%2C World!";
+const DATA_STRING = "Hello, World!";
 
 async function performLoad(browser, opts, action) {
   let loadedPromise = BrowserTestUtils.browserLoaded(
@@ -30,7 +34,10 @@ const EXTENSION_DATA = {
 
   files: {
     "dummy.html": "<html>webext dummy</html>",
+    "redirect.html": "<html>webext redirect</html>",
   },
+
+  extUrl: "",
 
   async background() {
     browser.test.log("background script running");
@@ -49,19 +56,34 @@ const EXTENSION_DATA = {
       { urls: ["*://*/*"] },
       ["blocking"]
     );
+    browser.webRequest.onBeforeRequest.addListener(
+      async details => {
+        browser.test.log("webRequest onBeforeRequest");
+        let isRedirect =
+          details.originUrl == browser.extension.getURL("redirect.html") &&
+          details.url.endsWith("print_postdata.sjs");
+        let url = this.extUrl ? this.extUrl : details.url + "?redirected";
+        return isRedirect ? { redirectUrl: url } : {};
+      },
+      { urls: ["*://*/*"] },
+      ["blocking"]
+    );
+    browser.test.onMessage.addListener(async ({ method, url }) => {
+      if (method == "setRedirectUrl") {
+        this.extUrl = url;
+      }
+      browser.test.sendMessage("done");
+    });
   },
 };
 
 async function withExtensionDummy(callback) {
   let extension = ExtensionTestUtils.loadExtension(EXTENSION_DATA);
   await extension.startup();
-  let rv = await callback(`moz-extension://${extension.uuid}/dummy.html`);
+  let rv = await callback(`moz-extension://${extension.uuid}/`, extension);
   await extension.unload();
   return rv;
 }
-
-const PRINT_POSTDATA = httpURL("print_postdata.sjs");
-const FILE_DUMMY = fileURL("dummy_page.html");
 
 async function postFrom(start, target) {
   return BrowserTestUtils.withNewTab(
@@ -70,7 +92,7 @@ async function postFrom(start, target) {
       url: start,
     },
     async function(browser) {
-      info("Test tab ready: " + start);
+      info("Test tab ready: postFrom " + start);
 
       // Create the form element in our loaded URI.
       await ContentTask.spawn(browser, { target }, function({ target }) {
@@ -90,7 +112,14 @@ async function postFrom(start, target) {
         browser,
         {
           url(url) {
-            return url == PRINT_POSTDATA || url == target;
+            let enable =
+              url.startsWith(PRINT_POSTDATA) ||
+              url == target ||
+              url == DATA_URL;
+            if (!enable) {
+              info(`url ${url} is invalid to perform load`);
+            }
+            return enable;
           },
           maybeErrorPage: true,
         },
@@ -114,6 +143,79 @@ async function postFrom(start, target) {
   );
 }
 
+async function loadAndGetProcessID(browser, target, expectedProcessSwitch) {
+  info(`Performing GET load: ${target}`);
+  await performLoad(
+    browser,
+    {
+      maybeErrorPage: true,
+    },
+    async () => {
+      BrowserTestUtils.loadURI(browser, target);
+      if (expectedProcessSwitch) {
+        await BrowserTestUtils.waitForEvent(
+          gBrowser.getTabForBrowser(browser),
+          "SSTabRestored"
+        );
+      }
+    }
+  );
+
+  info(`Navigated to: ${target}`);
+  browser = gBrowser.selectedBrowser;
+  let processID = await ContentTask.spawn(browser, null, () => {
+    return Services.appinfo.processID;
+  });
+  return processID;
+}
+
+async function testLoadAndRedirect(
+  target,
+  expectedProcessSwitch,
+  testRedirect
+) {
+  let start = httpURL(`dummy_page.html`);
+  return BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: start,
+    },
+    async function(_browser) {
+      info("Test tab ready: getFrom " + start);
+
+      let browser = gBrowser.selectedBrowser;
+      let firstProcessID = await ContentTask.spawn(browser, null, () => {
+        return Services.appinfo.processID;
+      });
+
+      info(`firstProcessID: ${firstProcessID}`);
+
+      let secondProcessID = await loadAndGetProcessID(
+        browser,
+        target,
+        expectedProcessSwitch
+      );
+
+      info(`secondProcessID: ${secondProcessID}`);
+      Assert.equal(firstProcessID != secondProcessID, expectedProcessSwitch);
+
+      if (!testRedirect) {
+        return;
+      }
+
+      let thirdProcessID = await loadAndGetProcessID(
+        browser,
+        add307(target),
+        expectedProcessSwitch
+      );
+
+      info(`thirdProcessID: ${thirdProcessID}`);
+      Assert.equal(firstProcessID != thirdProcessID, expectedProcessSwitch);
+      Assert.ok(secondProcessID == thirdProcessID);
+    }
+  );
+}
+
 add_task(async function test_disabled() {
   await SpecialPowers.pushPrefEnv({ set: [[PREF_NAME, false]] });
 
@@ -133,15 +235,31 @@ add_task(async function test_disabled() {
 
   // With the pref disabled, extension URIs should fail to POST, but correctly
   // switch processes.
-  await withExtensionDummy(async dummy => {
+  await withExtensionDummy(async extOrigin => {
     info("DISABLED -- EXTENSION -- raw URI load");
-    let respExt = await postFrom(dummy, PRINT_POSTDATA);
+    let respExt = await postFrom(extOrigin + "dummy.html", PRINT_POSTDATA);
     ok(E10SUtils.isWebRemoteType(respExt.remoteType), "process switch");
     is(respExt.location, PRINT_POSTDATA, "correct location");
     is(respExt.body, "", "no POST body");
 
+    info("DISABLED -- EXTENSION -- extension-redirect URI load");
+    let respExtRedirect = await postFrom(
+      extOrigin + "redirect.html",
+      PRINT_POSTDATA
+    );
+    ok(E10SUtils.isWebRemoteType(respExtRedirect.remoteType), "process switch");
+    is(
+      respExtRedirect.location,
+      PRINT_POSTDATA + "?redirected",
+      "correct location"
+    );
+    is(respExtRedirect.body, "redirected", "no POST body");
+
     info("DISABLED -- EXTENSION -- 307-redirect URI load");
-    let respExt307 = await postFrom(dummy, add307(PRINT_POSTDATA));
+    let respExt307 = await postFrom(
+      extOrigin + "dummy.html",
+      add307(PRINT_POSTDATA)
+    );
     ok(E10SUtils.isWebRemoteType(respExt307.remoteType), "process switch");
     is(respExt307.location, PRINT_POSTDATA, "correct location");
     is(respExt307.body, "", "no POST body");
@@ -166,17 +284,67 @@ add_task(async function test_enabled() {
   is(resp307.body, "initialRemoteType=file", "correct POST body");
 
   // Same with extensions
-  await withExtensionDummy(async dummy => {
+  await withExtensionDummy(async extOrigin => {
     info("ENABLED -- EXTENSION -- raw URI load");
-    let respExt = await postFrom(dummy, PRINT_POSTDATA);
+    let respExt = await postFrom(extOrigin + "dummy.html", PRINT_POSTDATA);
     ok(E10SUtils.isWebRemoteType(respExt.remoteType), "process switch");
     is(respExt.location, PRINT_POSTDATA, "correct location");
     is(respExt.body, "initialRemoteType=extension", "correct POST body");
 
+    info("ENABLED -- EXTENSION -- extension-redirect URI load");
+    let respExtRedirect = await postFrom(
+      extOrigin + "redirect.html",
+      PRINT_POSTDATA
+    );
+    ok(E10SUtils.isWebRemoteType(respExtRedirect.remoteType), "process switch");
+    is(
+      respExtRedirect.location,
+      PRINT_POSTDATA + "?redirected",
+      "correct location"
+    );
+    is(
+      respExtRedirect.body,
+      "initialRemoteType=extension?redirected",
+      "correct POST body"
+    );
+
     info("ENABLED -- EXTENSION -- 307-redirect URI load");
-    let respExt307 = await postFrom(dummy, add307(PRINT_POSTDATA));
+    let respExt307 = await postFrom(
+      extOrigin + "dummy.html",
+      add307(PRINT_POSTDATA)
+    );
     ok(E10SUtils.isWebRemoteType(respExt307.remoteType), "process switch");
     is(respExt307.location, PRINT_POSTDATA, "correct location");
     is(respExt307.body, "initialRemoteType=extension", "correct POST body");
+  });
+});
+
+async function sendMessage(ext, method, url) {
+  ext.sendMessage({ method, url });
+  await ext.awaitMessage("done");
+}
+
+// TODO: Currently no test framework for ftp://.
+add_task(async function test_protocol() {
+  await SpecialPowers.pushPrefEnv({ set: [[PREF_NAME, true]] });
+
+  // TODO: Processes should be switched due to navigation of different origins.
+  await testLoadAndRedirect("data:,foo", false, true);
+
+  // Redirecting to file:// is not allowed.
+  await testLoadAndRedirect(FILE_DUMMY, true, false);
+
+  await withExtensionDummy(async (extOrigin, extension) => {
+    await sendMessage(extension, "setRedirectUrl", DATA_URL);
+
+    let respExtRedirect = await postFrom(
+      extOrigin + "redirect.html",
+      PRINT_POSTDATA
+    );
+
+    // TODO: Processes should be switched due to navigation of different origins.
+    is(respExtRedirect.remoteType, "extension", "process switch");
+    is(respExtRedirect.location, DATA_URL, "correct location");
+    is(respExtRedirect.body, DATA_STRING, "correct POST body");
   });
 });

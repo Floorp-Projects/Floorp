@@ -33,8 +33,6 @@ this.ContentSearchUIController = (function() {
    *        This will be sent with the search data for FHR to record the search.
    * @param searchPurpose
    *        Sent with search data, see nsISearchEngine.getSubmission.
-   * @param isPrivateWindow
-   *        Set to true if this instance is in a private window
    * @param idPrefix
    *        The IDs of elements created by the object will be prefixed with this
    *        string.
@@ -44,14 +42,13 @@ this.ContentSearchUIController = (function() {
     tableParent,
     healthReportKey,
     searchPurpose,
-    isPrivateWindow,
     idPrefix = ""
   ) {
     this.input = inputElement;
     this._idPrefix = idPrefix;
     this._healthReportKey = healthReportKey;
     this._searchPurpose = searchPurpose;
-    this._isPrivateWindow = isPrivateWindow;
+    this._isPrivateWindow = false;
 
     let tableID = idPrefix + "searchSuggestionTable";
     this.input.autocomplete = "off";
@@ -632,6 +629,11 @@ this.ContentSearchUIController = (function() {
     },
 
     _onMsgState(state) {
+      // Not all state messages broadcast the windows' privateness info.
+      if ("isPrivateWindow" in state) {
+        this._isPrivateWindow = state.isPrivateWindow;
+      }
+
       this.engines = state.engines;
 
       let currentEngine = state.currentEngine;

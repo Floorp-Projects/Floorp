@@ -3248,7 +3248,14 @@ RefPtr<MediaManager::DevicesPromise> MediaManager::EnumerateDevices(
                               devices)
       ->Then(
           GetCurrentThreadSerialEventTarget(), __func__,
-          [windowListener, sourceListener, devices](bool) {
+          [self = RefPtr<MediaManager>(this), this, windowListener,
+           sourceListener, devices](bool) {
+            if (!IsWindowListenerStillActive(windowListener)) {
+              MOZ_ASSERT(!windowListener->Remove(sourceListener));
+              return DevicesPromise::CreateAndReject(
+                  MakeRefPtr<MediaMgrError>(MediaMgrError::Name::AbortError),
+                  __func__);
+            }
             DebugOnly<bool> rv = windowListener->Remove(sourceListener);
             MOZ_ASSERT(rv);
             return DevicesPromise::CreateAndResolve(devices, __func__);
@@ -3256,9 +3263,7 @@ RefPtr<MediaManager::DevicesPromise> MediaManager::EnumerateDevices(
           [windowListener, sourceListener](RefPtr<MediaMgrError>&& aError) {
             // This may fail, if a new doc has been set the OnNavigation
             // method should have removed all previous active listeners.
-            // Attempt to clean it here, just in case, but ignore the return
-            // value.
-            Unused << windowListener->Remove(sourceListener);
+            MOZ_ASSERT(!windowListener->Remove(sourceListener));
             return DevicesPromise::CreateAndReject(std::move(aError), __func__);
           });
 }

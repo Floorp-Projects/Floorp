@@ -306,6 +306,14 @@ const walkerSpec = generateActorSpec({
         nodeFront: RetVal("nullable:disconnectedNode"),
       },
     },
+    getNodeActorFromContentDomReference: {
+      request: {
+        contentDomReference: Arg(0, "json"),
+      },
+      response: {
+        nodeFront: RetVal("nullable:disconnectedNode"),
+      },
+    },
     getStyleSheetOwnerNode: {
       request: {
         styleSheetActorID: Arg(0, "string"),

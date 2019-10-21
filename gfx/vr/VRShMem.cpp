@@ -27,11 +27,6 @@
 
 using namespace mozilla::gfx;
 
-// TODO: we might need to use different names for the mutexes
-// and mapped files if we have both release and nightlies
-// running at the same time? Or...what if we have multiple
-// release builds running on same machine? (Bug 1563232)
-#define SHMEM_VERSION "0.0.2"
 #ifdef XP_WIN
 static const char* kShmemName = "moz.gecko.vr_ext." SHMEM_VERSION;
 static LPCTSTR kMutexName = TEXT("mozilla::vr::ShmemMutex" SHMEM_VERSION);
@@ -647,5 +642,51 @@ void VRShMem::PullWindowState(VRWindowState& aState) {
     memcpy((void*)&aState, (void*)&(mExternalShmem->windowState),
            sizeof(VRWindowState));
   }
+#endif  // defined(XP_WIN)
+}
+
+void VRShMem::SendIMEState(uint64_t aWindowID,
+                           mozilla::gfx::VRFxIMEState aImeState) {
+  MOZ_ASSERT(!HasExternalShmem());
+  if (JoinShMem()) {
+    mozilla::gfx::VRWindowState windowState = {0};
+    PullWindowState(windowState);
+    windowState.windowID = aWindowID;
+    windowState.eventType = mozilla::gfx::VRFxEventType::FxEvent_IME;
+    windowState.imeState = aImeState;
+    PushWindowState(windowState);
+    LeaveShMem();
+
+#if defined(XP_WIN)
+    // Notify the waiting host process that the data is now available
+    HANDLE hSignal = ::OpenEventA(EVENT_ALL_ACCESS,       // dwDesiredAccess
+                                  FALSE,                  // bInheritHandle
+                                  windowState.signalName  // lpName
+    );
+    ::SetEvent(hSignal);
+    ::CloseHandle(hSignal);
+#endif  // defined(XP_WIN)
+  }
+}
+
+// Note: this should be called from the VRShMem instance that created
+// the external shmem rather than joined it.
+void VRShMem::SendShutdowmState(uint64_t aWindowID) {
+  MOZ_ASSERT(HasExternalShmem());
+
+  mozilla::gfx::VRWindowState windowState = {0};
+  PullWindowState(windowState);
+  windowState.windowID = aWindowID;
+  windowState.eventType = mozilla::gfx::VRFxEventType::FxEvent_SHUTDOWN;
+  PushWindowState(windowState);
+
+#if defined(XP_WIN)
+  // Notify the waiting host process that the data is now available
+  HANDLE hSignal = ::OpenEventA(EVENT_ALL_ACCESS,       // dwDesiredAccess
+                                FALSE,                  // bInheritHandle
+                                windowState.signalName  // lpName
+  );
+  ::SetEvent(hSignal);
+  ::CloseHandle(hSignal);
 #endif  // defined(XP_WIN)
 }

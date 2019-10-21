@@ -703,6 +703,18 @@ SSLExp_DelegateCredential(const CERTCertificate *cert,
     if (rv != SECSuccess) {
         goto loser;
     }
+
+    if (dc->alg == ssl_sig_none) {
+        SECOidTag spkiOid = SECOID_GetAlgorithmTag(&cert->subjectPublicKeyInfo.algorithm);
+        /* If the Cert SPKI contained an AlgorithmIdentifier of "rsaEncryption", set a
+         * default rsa_pss_rsae_sha256 scheme. */
+        if (spkiOid == SEC_OID_PKCS1_RSA_ENCRYPTION) {
+            SSLSignatureScheme scheme = ssl_sig_rsa_pss_rsae_sha256;
+            if (ssl_SignatureSchemeValid(scheme, spkiOid, PR_TRUE /* isTls13 */)) {
+                dc->alg = scheme;
+            }
+        }
+    }
     PORT_Assert(dc->alg != ssl_sig_none);
 
     rv = tls13_AppendCredentialParams(&dcBuf, dc);

@@ -998,6 +998,11 @@ void nsContentSink::ProcessOfflineManifest(const nsAString& aManifestSpec) {
     return;
   }
 
+  // If offline storage is disabled skip processing
+  if (!StaticPrefs::browser_cache_offline_storage_enable()) {
+    return;
+  }
+
   // If this document has been interecepted, let's skip the processing of the
   // manifest.
   if (mDocument->GetController().isSome()) {

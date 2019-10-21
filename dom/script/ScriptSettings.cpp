@@ -11,7 +11,6 @@
 #include "mozilla/dom/WorkerPrivate.h"
 
 #include "jsapi.h"
-#include "js/StableStringChars.h"
 #include "js/Warnings.h"  // JS::{Get,}WarningReporter
 #include "xpcpublic.h"
 #include "nsIGlobalObject.h"
@@ -623,21 +622,21 @@ void AutoEntryScript::DocshellEntryMonitor::Entry(
   }
 
   nsCOMPtr<nsIDocShell> docShellForJSRunToCompletion = window->GetDocShell();
-  nsString filename;
-  uint32_t lineNumber = 0;
 
-  JS::AutoStableStringChars functionName(aCx);
+  nsAutoJSString functionName;
   if (rootedFunction) {
     JS::Rooted<JSString*> displayId(aCx,
                                     JS_GetFunctionDisplayId(rootedFunction));
     if (displayId) {
-      if (!functionName.initTwoByte(aCx, displayId)) {
+      if (!functionName.init(aCx, displayId)) {
         JS_ClearPendingException(aCx);
         return;
       }
     }
   }
 
+  nsString filename;
+  uint32_t lineNumber = 0;
   if (!rootedScript) {
     rootedScript = JS_GetFunctionScript(aCx, rootedFunction);
   }
@@ -646,13 +645,9 @@ void AutoEntryScript::DocshellEntryMonitor::Entry(
     lineNumber = JS_GetScriptBaseLineNumber(aCx, rootedScript);
   }
 
-  if (!filename.IsEmpty() || functionName.isTwoByte()) {
-    const char16_t* functionNameChars =
-        functionName.isTwoByte() ? functionName.twoByteChars() : nullptr;
-
+  if (!filename.IsEmpty() || !functionName.IsEmpty()) {
     docShellForJSRunToCompletion->NotifyJSRunToCompletionStart(
-        mReason, functionNameChars, filename.BeginReading(), lineNumber,
-        aAsyncStack, aAsyncCause);
+        mReason, functionName, filename, lineNumber, aAsyncStack, aAsyncCause);
   }
 }
 

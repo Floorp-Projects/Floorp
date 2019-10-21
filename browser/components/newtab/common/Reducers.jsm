@@ -19,8 +19,6 @@ const INITIAL_STATE = {
   App: {
     // Have we received real data from the app yet?
     initialized: false,
-    // Are we in permanentPrivateBrowsing mode?
-    permanentPrivateBrowsing: false,
   },
   ASRouter: { initialized: false },
   Snippets: { initialized: false },

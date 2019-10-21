@@ -356,6 +356,50 @@ function elemSection(elemArrays) {
     return { name: elemId, body };
 }
 
+// For now, the encoding spec is here:
+// https://github.com/WebAssembly/bulk-memory-operations/issues/98#issuecomment-507330729
+
+const LegacyActiveExternVal = 0;
+const PassiveExternVal = 1;
+const ActiveExternVal = 2;
+const DeclaredExternVal = 3;
+const LegacyActiveElemExpr = 4;
+const PassiveElemExpr = 5;
+const ActiveElemExpr = 6;
+const DeclaredElemExpr = 7;
+
+function generalElemSection(elemObjs) {
+    let body = [];
+    body.push(...varU32(elemObjs.length));
+    for (let elemObj of elemObjs) {
+        body.push(elemObj.flag);
+        if ((elemObj.flag & 3) == 2)
+            body.push(...varU32(elemObj.table));
+        // TODO: This is not very flexible
+        if ((elemObj.flag & 1) == 0) {
+            body.push(...varU32(I32ConstCode));
+            body.push(...varS32(elemObj.offset));
+            body.push(...varU32(EndCode));
+        }
+        if (elemObj.flag & 4) {
+            if (elemObj.flag & 3)
+                body.push(elemObj.typeCode & 255);
+            // Each element is an array of bytes
+            body.push(...varU32(elemObj.elems.length));
+            for (let elemBytes of elemObj.elems)
+                body.push(...elemBytes);
+        } else {
+            if (elemObj.flag & 3)
+                body.push(elemObj.externKind & 255);
+            // Each element is a putative function index
+            body.push(...varU32(elemObj.elems.length));
+            for (let elem of elemObj.elems)
+                body.push(...varU32(elem));
+        }
+    }
+    return { name: elemId, body };
+}
+
 function moduleNameSubsection(moduleName) {
     var body = [];
     body.push(...varU32(nameTypeModule));

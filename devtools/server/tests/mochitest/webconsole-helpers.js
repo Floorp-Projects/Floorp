@@ -30,7 +30,7 @@ if (!DebuggerServer.initialized) {
  *         The Promise resolves with an object containing :
  *           - tab: the attached tab
  *           - targetFront: the target front
- *           - consoleClient: the console client
+ *           - webConsoleFront: the console front
  *           - cleanup: a generator function which can be called to close
  *             the opened tab and disconnect its debugger client.
  */
@@ -39,7 +39,7 @@ async function attachURL(url) {
   const target = await TargetFactory.forTab(tab);
   await target.attach();
   return {
-    consoleClient: target.activeConsole,
+    webConsoleFront: target.activeConsole,
   };
 }
 

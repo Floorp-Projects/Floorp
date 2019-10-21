@@ -11,9 +11,10 @@
  * and create derivative works of this document.
  */
 
-[HTMLConstructor,
- Exposed=Window]
-interface HTMLDivElement : HTMLElement {};
+[Exposed=Window]
+interface HTMLDivElement : HTMLElement {
+  [HTMLConstructor] constructor();
+};
 
 partial interface HTMLDivElement {
   [CEReactions, SetterThrows]

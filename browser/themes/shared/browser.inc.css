@@ -252,10 +252,6 @@ menupopup::part(drop-indicator) {
   width: 343px;
 }
 
-#contextual-feature-recommendation-notification:not([hidden]) {
-  display: block;
-}
-
 #contextual-feature-recommendation-notification[data-notification-bucket="CFR_MILESTONE_MESSAGE"] {
   background: radial-gradient(circle farthest-side at top right, var(--short-notification-gradient), var(--short-notification-background));
   width: unset;
@@ -417,18 +413,13 @@ menupopup::part(drop-indicator) {
 }
 
 #cfr-notification-feature-steps li {
-  padding-inline-start: 9px;
+  margin-inline-start: 10px;
   position: relative;
+  display: list-item;
 }
 
 #cfr-notification-feature-steps li:not(:last-child) {
   margin-bottom: 5px;
-}
-
-#cfr-notification-feature-steps li:before {
-  content: "\2022";
-  position: absolute;
-  inset-inline-start: 0;
 }
 
 #contextual-feature-recommendation-notification[data-notification-category="message_and_animation"] #cfr-notification-footer-text {

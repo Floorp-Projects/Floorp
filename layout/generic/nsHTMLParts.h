@@ -100,10 +100,8 @@ nsIFrame* NS_NewContinuingTextFrame(mozilla::PresShell* aPresShell,
                                     mozilla::ComputedStyle* aStyle);
 nsIFrame* NS_NewEmptyFrame(mozilla::PresShell* aPresShell,
                            mozilla::ComputedStyle* aStyle);
-inline nsIFrame* NS_NewWBRFrame(mozilla::PresShell* aPresShell,
-                                mozilla::ComputedStyle* aStyle) {
-  return NS_NewEmptyFrame(aPresShell, aStyle);
-}
+nsIFrame* NS_NewWBRFrame(mozilla::PresShell* aPresShell,
+                         mozilla::ComputedStyle* aStyle);
 
 nsBlockFrame* NS_NewColumnSetWrapperFrame(mozilla::PresShell* aPresShell,
                                           mozilla::ComputedStyle* aStyle,

@@ -879,13 +879,6 @@ void LongTaskMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter,
   aWriter.StringProperty("category", "LongTask");
 }
 
-UniqueFreePtr<const char16_t> mTypeName;
-UniqueFreePtr<const char> mClassName;
-UniqueFreePtr<const char16_t> mDescriptiveTypeName;
-const char* mCoarseType;
-uint64_t mSize;
-bool mInNursery;
-
 BlocksRingBuffer::Length JsAllocationMarkerPayload::TagAndSerializationBytes()
     const {
   return CommonPropsTagAndSerializationBytes() +

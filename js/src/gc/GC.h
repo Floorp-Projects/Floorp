@@ -77,8 +77,8 @@ typedef void (*IterateZoneCallback)(JSRuntime* rt, void* data, JS::Zone* zone);
 typedef void (*IterateArenaCallback)(JSRuntime* rt, void* data,
                                      gc::Arena* arena, JS::TraceKind traceKind,
                                      size_t thingSize);
-typedef void (*IterateCellCallback)(JSRuntime* rt, void* data, void* thing,
-                                    JS::TraceKind traceKind, size_t thingSize);
+typedef void (*IterateCellCallback)(JSRuntime* rt, void* data,
+                                    JS::GCCellPtr cellptr, size_t thingSize);
 
 /*
  * This function calls |zoneCallback| on every zone, |realmCallback| on

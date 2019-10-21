@@ -10,23 +10,11 @@
     <head>
         <meta http-equiv="Content-Security-Policy" content="default-src chrome:; object-src 'none'" />
         <title data-l10n-id="title"/>
-        <link rel="stylesheet" href="chrome://mozapps/skin/aboutNetworking.css" type="text/css" />
+        <link rel="stylesheet" href="chrome://global/skin/aboutNetworking.css" type="text/css" />
         <script src="chrome://global/content/aboutNetworking.js" />
         <link rel="localization"  href="toolkit/about/aboutNetworking.ftl"/>
     </head>
     <body id="body">
-        <div id="warning_message" class="warningBackground" hidden="true">
-            <div class="container">
-                <h1 class="title" data-l10n-id="warning"/>
-                <div class="toggle-container-with-text">
-                    <input id="warncheck" type="checkbox" checked="yes" role="checkbox" />
-                    <label for="warncheck" data-l10n-id="show-next-time-checkbox"/>
-                </div>
-                <div>
-                    <button id="confpref" autofocus="autofocus" data-l10n-id="ok"/>
-                </div>
-            </div>
-        </div>
         <div id="categories">
             <div class="category" selected="true" id="category-http">
                 <span class="category-name" data-l10n-id="http"/>
@@ -97,6 +85,15 @@
           </div>
 
           <div id="dns" class="tab" hidden="true">
+              <table>
+                  <thead>
+                      <tr>
+                          <th data-l10n-id="dnssuffix"/>
+                      </tr>
+                  </thead>
+                  <tbody id="dns_suffix_content" />
+              </table>
+              <br/><br/>
               <table>
                   <thead>
                       <tr>

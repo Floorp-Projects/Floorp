@@ -12,6 +12,10 @@ import { isFirefox } from "devtools-environment";
 import { scrollList } from "../result-list.js";
 
 describe("scrollList", () => {
+  beforeEach(() => {
+    jest.useFakeTimers();
+  });
+
   it("just returns if element not found", () => {
     const li = document.createElement("li");
     scrollList([li], 1);
@@ -26,6 +30,9 @@ describe("scrollList", () => {
     isFirefox.mockImplementation(() => true);
 
     scrollList([li], 0);
+
+    jest.runAllTimers();
+
     expect(li.scrollIntoView).toHaveBeenCalled();
   });
 

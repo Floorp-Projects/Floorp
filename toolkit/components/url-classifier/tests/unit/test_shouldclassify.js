@@ -141,7 +141,9 @@ add_task(async function testShouldClassify() {
       channel.asyncOpen({
         onStartRequest: (request, context) => {
           Assert.equal(
-            request.QueryInterface(Ci.nsIHttpChannel).isTrackingResource(),
+            request
+              .QueryInterface(Ci.nsIClassifiedChannel)
+              .isTrackingResource(),
             getExpectedResult(params)
           );
           request.cancel(Cr.NS_ERROR_ABORT);

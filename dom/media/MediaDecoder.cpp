@@ -1356,7 +1356,7 @@ RefPtr<GenericPromise> MediaDecoder::RequestDebugInfo(
           SystemGroup::AbstractMainThreadFor(TaskCategory::Other), __func__,
           []() { return GenericPromise::CreateAndResolve(true, __func__); },
           []() {
-            UNREACHABLE();
+            MOZ_ASSERT_UNREACHABLE("Unexpected RequestDebugInfo() rejection");
             return GenericPromise::CreateAndResolve(false, __func__);
           });
 }

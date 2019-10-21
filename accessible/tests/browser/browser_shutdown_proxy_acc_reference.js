@@ -8,7 +8,9 @@ add_task(async function() {
   // Making sure that the e10s is enabled on Windows for testing.
   await setE10sPrefs();
 
-  let a11yInit = initPromise();
+  const [a11yInitObserver, a11yInit] = initAccService();
+  await a11yInitObserver;
+
   let accService = Cc["@mozilla.org/accessibilityService;1"].getService(
     Ci.nsIAccessibilityService
   );
@@ -39,8 +41,10 @@ add_task(async function() {
       forceGC();
 
       let canShutdown = false;
-      let a11yShutdown = new Promise((resolve, reject) =>
-        shutdownPromise().then(flag =>
+      const [a11yShutdownObserver, a11yShutdownPromise] = shutdownAccService();
+      await a11yShutdownObserver;
+      const a11yShutdown = new Promise((resolve, reject) =>
+        a11yShutdownPromise.then(flag =>
           canShutdown
             ? resolve()
             : reject("Accessible service was shut down incorrectly")

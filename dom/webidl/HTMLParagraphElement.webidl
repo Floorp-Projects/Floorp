@@ -12,9 +12,10 @@
  */
 
 // http://www.whatwg.org/specs/web-apps/current-work/#the-p-element
-[HTMLConstructor,
- Exposed=Window]
+[Exposed=Window]
 interface HTMLParagraphElement : HTMLElement {
+  [HTMLConstructor] constructor();
+
 };
 
 // http://www.whatwg.org/specs/web-apps/current-work/#other-elements,-attributes-and-apis

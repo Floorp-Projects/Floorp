@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<title>Service Worker: Disconnected Global Update()</title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script src="/service-workers/service-worker/resources/test-helpers.sub.js"></script>
+<script>
+'use strict';
+
+/**
+ * Gecko-only pseudo-crash-test to verify that if we call
+ * ServiceWorkerRegistration.update() from a global that will be destroyed
+ * before any IPC call could return that we don't crash.
+ *
+ * We use an iframe to create a global that we can destroy on demand.
+ */
+promise_test(async function(t) {
+  const scope = 'resources/blank.html';
+  const sw_url = 'resources/empty.js';
+
+  let reg = await service_worker_unregister_and_register(t, sw_url, scope);
+  t.add_cleanup(function() {
+    return service_worker_unregister(t, scope);
+  });
+
+  // Wait for the worker to be activated so that we are in a known state.
+  await wait_for_state(t, reg.installing, 'activated');
+
+  let f = await with_iframe(scope);
+  let f_global = f.contentWindow;
+  // The frame should be controlled, although it's not necessary for the test.
+  assert_true(!!f_global.navigator.serviceWorker.controller);
+  t.add_cleanup(function() {
+    if (f) {
+      f.remove();
+    }
+  });
+
+  // Get a registration object that lives in the iframe's global.
+  let f_reg = await f_global.navigator.serviceWorker.getRegistration(reg.scope);
+  assert_true(!!f_reg, 'got registration');
+  assert_equals(reg.scope, f_reg.scope, 'Right registration');
+
+  // Trigger the update and destroy the global.
+  let update_resolved = false;
+  let update_rejected = false;
+
+  let update_promise = f_reg.update();
+  update_promise.then(
+    () => { update_resolved = true; }, () => { update_rejected = true; });
+
+  f.remove();
+  f = null;
+  f_global = null;
+
+  // Now we want to wait on an update call that should fire strictly after the
+  // update call above.
+  await reg.update();
+
+  assert_false(update_resolved, "frame update() should not have resolved");
+  assert_true(update_rejected, "frame update() should have rejected");
+}, 'ServiceWorkerRegistration.update() concluding in a disconnected global');
+
+</script>

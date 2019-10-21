@@ -149,13 +149,15 @@ export function makeIdentity(): ResourceIdentity {
   return ({}: any);
 }
 
-export function getResourcePair<R: ResourceBound>(
+export function getValidatedResource<R: ResourceBound>(
   state: ResourceState<R>,
   id: Id<R>
-): {
-  value: R,
-  identity: ResourceIdentity,
-} | null {
+):
+  | (ResourceState<R> & {
+      values: Array<R>,
+      identity: Array<string>,
+    })
+  | null {
   const value = state.values[id];
   const identity = state.identity[id];
   if ((value && !identity) || (!value && identity)) {
@@ -164,7 +166,7 @@ export function getResourcePair<R: ResourceBound>(
     );
   }
 
-  return value ? { value, identity } : null;
+  return value ? (state: any) : null;
 }
 
 export function getResourceValues<R: ResourceBound>(

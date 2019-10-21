@@ -21,6 +21,7 @@ DevToolsModules(
     'css-properties.js',
     'device.js',
     'emulation.js',
+    'environment.js',
     'framerate.js',
     'highlighters.js',
     'inspector.js',
@@ -32,7 +33,7 @@ DevToolsModules(
     'performance-recording.js',
     'performance.js',
     'preference.js',
-    'promises.js',
+    'property-iterator.js',
     'reflow.js',
     'root.js',
     'screenshot.js',
@@ -41,7 +42,8 @@ DevToolsModules(
     'string.js',
     'styles.js',
     'stylesheets.js',
+    'symbol-iterator.js',
     'thread.js',
     'webconsole.js',
-    'websocket.js',
+    'websocket.js'
 )

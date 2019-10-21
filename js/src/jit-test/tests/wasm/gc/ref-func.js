@@ -1,5 +1,7 @@
 // |jit-test| skip-if: !wasmReftypesEnabled()
 
+load(libdir + "wasm-binary.js");
+
 // 'ref.func' parses, validates and returns a non-null value
 wasmFullPass(`
 	(module
@@ -71,10 +73,10 @@ assertErrorMessage(() => {
 	`);
 }, WebAssembly.CompileError, /function index out of range/);
 
-function validFuncRefText(forwardDeclare) {
+function validFuncRefText(forwardDeclare, tbl_type) {
 	return wasmEvalText(`
 		(module
-			(table 1 funcref)
+			(table 1 ${tbl_type})
 			(func $test (result funcref) ref.func $referenced)
 			(func $referenced)
 			${forwardDeclare}
@@ -83,13 +85,53 @@ function validFuncRefText(forwardDeclare) {
 }
 
 // referenced function must be forward declared somehow
-assertErrorMessage(() => validFuncRefText(''), WebAssembly.CompileError, /function index is not in an element segment/);
+assertErrorMessage(() => validFuncRefText('', 'funcref'), WebAssembly.CompileError, /function index is not in an element segment/);
 
 // referenced function can be forward declared via segments
-assertEq(validFuncRefText('(elem 0 (i32.const 0) func $referenced)') instanceof WebAssembly.Instance, true);
-assertEq(validFuncRefText('(elem func $referenced)') instanceof WebAssembly.Instance, true);
-assertEq(validFuncRefText('(elem declared $referenced)') instanceof WebAssembly.Instance, true);
+assertEq(validFuncRefText('(elem 0 (i32.const 0) func $referenced)', 'funcref') instanceof WebAssembly.Instance, true);
+assertEq(validFuncRefText('(elem func $referenced)', 'funcref') instanceof WebAssembly.Instance, true);
+assertEq(validFuncRefText('(elem declared $referenced)', 'funcref') instanceof WebAssembly.Instance, true);
+
+// also when the segment is passive or active 'anyref'
+assertEq(validFuncRefText('(elem 0 (i32.const 0) anyref (ref.func $referenced))', 'anyref') instanceof WebAssembly.Instance, true);
+assertEq(validFuncRefText('(elem anyref (ref.func $referenced))', 'anyref') instanceof WebAssembly.Instance, true);
 
 // referenced function cannot be forward declared via start section or export
-assertErrorMessage(() => validFuncRefText('(start $referenced)'), WebAssembly.CompileError, /function index is not in an element segment/);
-assertErrorMessage(() => validFuncRefText('(export "referenced" $referenced)'), WebAssembly.CompileError, /function index is not in an element segment/);
+assertErrorMessage(() => validFuncRefText('(start $referenced)', 'funcref'),
+                   WebAssembly.CompileError,
+                   /function index is not in an element segment/);
+assertErrorMessage(() => validFuncRefText('(export "referenced" $referenced)', 'funcref'),
+                   WebAssembly.CompileError,
+                   /function index is not in an element segment/);
+
+// Tests not expressible in the text format.
+
+// element segment with elemexpr can carry non-reference type, but this must be
+// rejected.
+
+assertErrorMessage(() => new WebAssembly.Module(
+    moduleWithSections([generalElemSection([{ flag: PassiveElemExpr,
+                                              typeCode: I32Code,
+                                              elems: [] }])])),
+                   WebAssembly.CompileError,
+                   /segments with element expressions can only contain references/);
+
+// declared element segment with elemexpr can carry type anyref, but this must be rejected.
+
+assertErrorMessage(() => new WebAssembly.Module(
+    moduleWithSections([generalElemSection([{ flag: DeclaredElemExpr,
+                                              typeCode: AnyrefCode,
+                                              elems: [] }])])),
+                   WebAssembly.CompileError,
+                   /declared segment's element type must be subtype of funcref/);
+
+// declared element segment of type funcref with elemexpr can carry a null
+// value, but the null value must be rejected.
+
+assertErrorMessage(() => new WebAssembly.Module(
+    moduleWithSections([generalElemSection([{ flag: DeclaredElemExpr,
+                                              typeCode: AnyFuncCode,
+                                              elems: [[RefNullCode]] }])])),
+                   WebAssembly.CompileError,
+                   /declared element segments cannot contain ref.null/);
+

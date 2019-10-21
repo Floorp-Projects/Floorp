@@ -320,10 +320,10 @@ var classifierTester = {
           url
         );
 
-        ContentTask.spawn(
+        await SpecialPowers.spawn(
           tab.linkedBrowser,
-          { iframeId: classifierTester.IFRAME_ID, url, depth },
-          async function({ iframeId, url, depth }) {
+          [classifierTester.IFRAME_ID, url, depth],
+          (iframeId, url, depth) => {
             let doc = content.document;
             for (let i = 0; i < depth; ++i) {
               doc = doc.getElementById(iframeId).contentDocument;
@@ -340,10 +340,10 @@ var classifierTester = {
   },
 
   getPluginInfo(browser, depth) {
-    return ContentTask.spawn(
+    return SpecialPowers.spawn(
       browser,
-      { iframeId: classifierTester.IFRAME_ID, depth },
-      async function({ iframeId, depth }) {
+      [classifierTester.IFRAME_ID, depth],
+      (iframeId, depth) => {
         let doc = content.document;
         let win = content.window;
         for (let i = 0; i < depth; ++i) {

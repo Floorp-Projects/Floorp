@@ -18,6 +18,7 @@
 #include "nsWrapperCache.h"
 #include "nsWeakReference.h"
 
+class nsIGlobalObject;
 class nsIInputStream;
 
 namespace mozilla {
@@ -48,19 +49,16 @@ class Blob : public nsIMutable,
   typedef OwningArrayBufferViewOrArrayBufferOrBlobOrUSVString BlobPart;
 
   // This creates a Blob or a File based on the type of BlobImpl.
-  static Blob* Create(nsISupports* aParent, BlobImpl* aImpl);
+  static Blob* Create(nsIGlobalObject* aGlobal, BlobImpl* aImpl);
 
-  static already_AddRefed<Blob> CreateEmptyBlob(nsISupports* aParent,
-                                                const nsAString& aContentType);
-
-  static already_AddRefed<Blob> CreateStringBlob(nsISupports* aParent,
+  static already_AddRefed<Blob> CreateStringBlob(nsIGlobalObject* aGlobal,
                                                  const nsACString& aData,
                                                  const nsAString& aContentType);
 
   // The returned Blob takes ownership of aMemoryBuffer. aMemoryBuffer will be
   // freed by free so it must be allocated by malloc or something
   // compatible with it.
-  static already_AddRefed<Blob> CreateMemoryBlob(nsISupports* aParent,
+  static already_AddRefed<Blob> CreateMemoryBlob(nsIGlobalObject* aGlobal,
                                                  void* aMemoryBuffer,
                                                  uint64_t aLength,
                                                  const nsAString& aContentType);
@@ -97,7 +95,7 @@ class Blob : public nsIMutable,
   static void MakeValidBlobType(nsAString& aType);
 
   // WebIDL methods
-  nsISupports* GetParentObject() const { return mParent; }
+  nsIGlobalObject* GetParentObject() const { return mGlobal; }
 
   bool IsMemoryFile() const;
 
@@ -132,7 +130,7 @@ class Blob : public nsIMutable,
 
  protected:
   // File constructor should never be used directly. Use Blob::Create instead.
-  Blob(nsISupports* aParent, BlobImpl* aImpl);
+  Blob(nsIGlobalObject* aGlobal, BlobImpl* aImpl);
   virtual ~Blob();
 
   virtual bool HasFileInterface() const { return false; }
@@ -147,7 +145,7 @@ class Blob : public nsIMutable,
   RefPtr<BlobImpl> mImpl;
 
  private:
-  nsCOMPtr<nsISupports> mParent;
+  nsCOMPtr<nsIGlobalObject> mGlobal;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(Blob, NS_DOM_BLOB_IID)

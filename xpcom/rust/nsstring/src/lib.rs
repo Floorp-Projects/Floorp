@@ -1086,8 +1086,13 @@ define_string_types! {
 }
 
 impl nsACString {
+    #[inline]
     pub unsafe fn as_str_unchecked(&self) -> &str {
-        str::from_utf8_unchecked(self)
+        if cfg!(debug_assertions) {
+            str::from_utf8(self).expect("Should be utf-8")
+        } else {
+            str::from_utf8_unchecked(self)
+        }
     }
 }
 

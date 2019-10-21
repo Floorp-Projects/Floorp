@@ -21,7 +21,6 @@
 
 namespace js {
 
-class Debugger;
 class TypedObjectModuleObject;
 class LexicalEnvironmentObject;
 class RegExpStatics;
@@ -88,7 +87,6 @@ class GlobalObject : public NativeObject {
     REQUESTED_MODULE_PROTO,
     REGEXP_STATICS,
     RUNTIME_CODEGEN_ENABLED,
-    DEBUGGERS,
     INTRINSICS,
     FOR_OF_PIC_CHAIN,
     WINDOW_PROXY,
@@ -821,20 +819,9 @@ class GlobalObject : public NativeObject {
                                       Handle<GlobalObject*> global,
                                       const JSFunctionSpec* builtins);
 
-  using DebuggerVector = Vector<WeakHeapPtr<Debugger*>, 0, ZoneAllocPolicy>;
-
-  /*
-   * The collection of Debugger objects debugging this global. If this global
-   * is not a debuggee, this returns either nullptr or an empty vector.
-   */
-  DebuggerVector* getDebuggers() const;
-
-  /*
-   * The same, but create the empty vector if one does not already
-   * exist. Returns nullptr only on OOM.
-   */
-  static DebuggerVector* getOrCreateDebuggers(JSContext* cx,
-                                              Handle<GlobalObject*> global);
+  Realm::DebuggerVector& getDebuggers() const {
+    return realm()->getDebuggers();
+  }
 
   inline NativeObject* getForOfPICObject() {
     Value forOfPIC = getReservedSlot(FOR_OF_PIC_CHAIN);

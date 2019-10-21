@@ -6,10 +6,12 @@
 interface nsIDocShell;
 interface nsIWebNavigation;
 
-[HTMLConstructor, Func="IsChromeOrXBL",
+[Func="IsChromeOrXBL",
  Exposed=Window]
 interface XULFrameElement : XULElement
 {
+  [HTMLConstructor] constructor();
+
   readonly attribute nsIDocShell? docShell;
   readonly attribute nsIWebNavigation? webNavigation;
 

@@ -7,6 +7,7 @@
 
 #include "nsIContentSecurityPolicy.idl"
 #include "nsISerializable.idl"
+#include "nsIAboutModule.idl"
 
 %{C++
 struct JSPrincipals;
@@ -213,6 +214,12 @@ interface nsIPrincipal : nsISerializable
         return ret;
       }
     %}
+
+    /**
+     * Returns the Flags of the Principals 
+     * associated AboutModule, in case there is one.
+     */
+    uint32_t GetAboutModuleFlags();
 
     /**
      * The base part of |origin| without the concatenation with |originSuffix|.

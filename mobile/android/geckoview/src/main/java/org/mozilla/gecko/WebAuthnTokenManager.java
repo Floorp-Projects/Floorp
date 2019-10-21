@@ -74,8 +74,8 @@ public class WebAuthnTokenManager {
 
         // TODO: Return a GeckoResult instead, Bug 1550116
 
-        if (!GeckoAppShell.isFennec()) {
-            Log.w(LOGTAG, "Currently only supported on Fennec");
+        if (true) {
+            Log.w(LOGTAG, "Currently not supported");
             webAuthnMakeCredentialReturnError("NOT_SUPPORTED_ERR");
             return;
         }
@@ -149,8 +149,8 @@ public class WebAuthnTokenManager {
 
         // TODO: Return a GeckoResult instead, Bug 1550116
 
-        if (!GeckoAppShell.isFennec()) {
-            Log.w(LOGTAG, "Currently only supported on Fennec");
+        if (true) {
+            Log.w(LOGTAG, "Currently not supported");
             webAuthnGetAssertionReturnError("NOT_SUPPORTED_ERR");
             return;
         }

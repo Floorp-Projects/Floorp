@@ -235,7 +235,10 @@ p {
   /* min-width and min-height override values set on button elements. */
   min-width: 28px;
   min-height: 28px;
+  /* Forcing height and line-height ensure the button hover is displayed correctly
+     as a square box (and focus box). No text gets displayed here so that's ok. */
   height: 28px;
+  line-height: 0;
   margin: 16px;
   padding: 0;
   background-color: inherit;

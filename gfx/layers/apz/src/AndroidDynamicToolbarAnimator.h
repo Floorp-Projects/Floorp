@@ -50,8 +50,13 @@ class CompositorOGL;
  * See Bug 1335895 for more details.
  */
 
-class AndroidDynamicToolbarAnimator {
+class AndroidDynamicToolbarAnimator final {
  public:
+  // Whether to use the dynamic toolbar animator. Fennec is no longer in the
+  // tree, and Fenix doesn't yet have a dynamic toolbar, so for now this always
+  // returns false.
+  static bool IsEnabled() { return false; }
+
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AndroidDynamicToolbarAnimator);
   explicit AndroidDynamicToolbarAnimator(APZCTreeManager* aApz);
   void Initialize(LayersId aRootLayerTreeId);

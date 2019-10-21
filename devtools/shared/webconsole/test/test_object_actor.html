@@ -27,7 +27,7 @@ function startTest() {
 
 function onAttach(state, response) {
   onConsoleCall = onConsoleCall.bind(null, state);
-  state.client.on("consoleAPICall", onConsoleCall);
+  state.webConsoleFront.on("consoleAPICall", onConsoleCall);
 
   let longString = (new Array(DebuggerServer.LONG_STRING_LENGTH + 3)).join("\u0629");
 
@@ -146,14 +146,14 @@ function onConsoleCall(state, aPacket) {
     }],
   });
 
-  state.client.off("consoleAPICall", onConsoleCall);
+  state.webConsoleFront.off("consoleAPICall", onConsoleCall);
 
   info("inspecting object properties");
   let args = aPacket.message.arguments;
   onProperties = onProperties.bind(null, state);
 
   let client = new ObjectClient(state.dbgClient, args[1]);
-  client.getPrototypeAndProperties(onProperties);
+  client.getPrototypeAndProperties().then(onProperties);
 }
 
 function onProperties(state, response) {

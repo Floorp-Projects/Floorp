@@ -12,9 +12,10 @@
  */
 
 // http://www.whatwg.org/specs/web-apps/current-work/#the-pre-element
-[HTMLConstructor,
- Exposed=Window]
+[Exposed=Window]
 interface HTMLPreElement : HTMLElement {
+  [HTMLConstructor] constructor();
+
 };
 
 // http://www.whatwg.org/specs/web-apps/current-work/#other-elements,-attributes-and-apis

@@ -699,14 +699,6 @@ static inline MIRType ScalarTypeToMIRType(Scalar::Type type) {
   MOZ_CRASH("unexpected kind");
 }
 
-static inline const char* PropertyNameToExtraName(PropertyName* name) {
-  JS::AutoCheckCannotGC nogc;
-  if (!name->hasLatin1Chars()) {
-    return nullptr;
-  }
-  return reinterpret_cast<const char*>(name->latin1Chars(nogc));
-}
-
 #ifdef DEBUG
 
 // Track the pipeline of opcodes which has produced a snapshot.

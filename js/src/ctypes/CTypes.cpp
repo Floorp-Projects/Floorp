@@ -8694,7 +8694,7 @@ bool Int64::Join(JSContext* cx, unsigned argc, Value* vp) {
     return ArgumentConvError(cx, args[1], "Int64.join", 1);
   }
 
-  int64_t i = (int64_t(hi) << 32) + int64_t(lo);
+  int64_t i = mozilla::WrapToSigned((uint64_t(hi) << 32) + lo);
 
   // Get Int64.prototype from the function's reserved slot.
   JSObject* callee = &args.callee();

@@ -345,15 +345,10 @@ this.tabs = class extends ExtensionAPI {
           tabListener.initTabReady();
           options.triggeringPrincipal = principal;
 
-          let nativeTab;
-          if (Services.androidBridge.isFennec) {
-            nativeTab = BrowserApp.addTab(url, options);
-          } else {
-            options.extensionId = context.extension.id;
-            options.url = url;
-            nativeTab = await GeckoViewTabBridge.createNewTab(options);
-          }
+          options.extensionId = context.extension.id;
+          options.url = url;
 
+          let nativeTab = await GeckoViewTabBridge.createNewTab(options);
           if (createProperties.url) {
             tabListener.initializingTabs.add(nativeTab);
           }
@@ -366,31 +361,19 @@ this.tabs = class extends ExtensionAPI {
             tabs = [tabs];
           }
 
-          if (!Services.androidBridge.isFennec) {
-            await Promise.all(
-              tabs.map(async tabId => {
-                const windowId = GeckoViewTabBridge.tabIdToWindowId(tabId);
-                const window = windowTracker.getWindow(
-                  windowId,
-                  context,
-                  false
-                );
-                if (!window) {
-                  throw new ExtensionError(`Invalid tab ID ${tabId}`);
-                }
-                await GeckoViewTabBridge.closeTab({
-                  window,
-                  extensionId: context.extension.id,
-                });
-              })
-            );
-            return;
-          }
-
-          for (let tabId of tabs) {
-            let nativeTab = tabTracker.getTab(tabId);
-            nativeTab.browser.ownerGlobal.BrowserApp.closeTab(nativeTab);
-          }
+          await Promise.all(
+            tabs.map(async tabId => {
+              const windowId = GeckoViewTabBridge.tabIdToWindowId(tabId);
+              const window = windowTracker.getWindow(windowId, context, false);
+              if (!window) {
+                throw new ExtensionError(`Invalid tab ID ${tabId}`);
+              }
+              await GeckoViewTabBridge.closeTab({
+                window,
+                extensionId: context.extension.id,
+              });
+            })
+          );
         },
 
         async update(tabId, updateProperties) {

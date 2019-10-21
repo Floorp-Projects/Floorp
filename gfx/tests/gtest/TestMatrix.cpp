@@ -59,3 +59,12 @@ TEST(Matrix, TransformAndClipRect)
   EXPECT_TRUE(NudgedToInt(m.TransformAndClipBounds(Rect(150, 50, 100, 200), c))
                   .IsEqualInterior(Rect(150, 100, 50, 100)));
 }
+
+TEST(Matrix4x4Flagged, Mult)
+{
+  Matrix4x4Flagged a = Matrix4x4::Translation(Point(42, 42));
+  Matrix4x4 b = Matrix4x4::Scaling(2, 2, 1);
+  Matrix4x4Flagged actual = a * b;
+  Matrix4x4Flagged expected(2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 1, 0, 84, 84, 0, 1);
+  EXPECT_EQ(expected, actual);
+}

@@ -18,7 +18,7 @@ let gWin;
 let tests;
 
 function evaluateJS(input) {
-  return gState.client.evaluateJS(input);
+  return gState.webConsoleFront.evaluateJS(input);
 }
 
 function startTest() {

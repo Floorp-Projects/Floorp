@@ -672,21 +672,38 @@ class Package(MachCommandBase):
         return ret
 
 
+def _get_android_install_parser():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--app', default='org.mozilla.geckoview_example',
+                        help='Android package to install '
+                             '(default: org.mozilla.geckoview_example)')
+    parser.add_argument('--verbose', '-v', action='store_true',
+                        help='Print verbose output when installing.')
+    return parser
+
+
+def setup_install_parser():
+    build = MozbuildObject.from_environment(cwd=here)
+    if conditions.is_android(build):
+        return _get_android_install_parser()
+    return argparse.ArgumentParser()
+
+
 @CommandProvider
 class Install(MachCommandBase):
     """Install a package."""
 
     @Command('install', category='post-build',
              conditions=[conditions.has_build],
+             parser=setup_install_parser,
              description='Install the package on the machine (or device in the case of Android).')
-    @CommandArgument('--verbose', '-v', action='store_true',
-                     help='Print verbose output when installing.')
-    def install(self, verbose=False):
+    def install(self, **kwargs):
         if conditions.is_android(self):
             from mozrunner.devices.android_device import verify_android_device
-            verify_android_device(self, verbose=verbose)
+            ret = verify_android_device(self, install=True, **kwargs) == 0
+        else:
+            ret = self._run_make(directory=".", target='install', ensure_exit_code=False)
 
-        ret = self._run_make(directory=".", target='install', ensure_exit_code=False)
         if ret == 0:
             self.notify('Install complete')
         return ret

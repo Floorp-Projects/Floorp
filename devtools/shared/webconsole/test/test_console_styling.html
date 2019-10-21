@@ -89,7 +89,7 @@ function startTest()
 function onAttach(aState, aResponse)
 {
   onConsoleAPICall = onConsoleAPICall.bind(null, aState);
-  aState.client.on("consoleAPICall", onConsoleAPICall);
+  aState.webConsoleFront.on("consoleAPICall", onConsoleAPICall);
   doConsoleCalls(aState.actor);
 }
 
@@ -104,7 +104,7 @@ function onConsoleAPICall(aState, aPacket)
     return;
   }
 
-  aState.client.off("consoleAPICall", onConsoleAPICall);
+  aState.webConsoleFront.off("consoleAPICall", onConsoleAPICall);
 
   expectedConsoleCalls.forEach(function(aMessage, aIndex) {
     info("checking received console call #" + aIndex);

@@ -339,17 +339,18 @@ function test_windowToWindow() {
 // PostMessage to iframe
 function test_windowToIframe() {
   info("Testing window to iframe");
-  test_windowToIframeURL('iframe_postMessages.html');
+  test_windowToIframeURL('iframe_postMessages.html', true);
 }
 
 // PostMessage to cross-origin iframe
 function test_windowToCrossOriginIframe() {
   info("Testing window to cross-origin iframe");
-  test_windowToIframeURL('http://example.com/tests/dom/base/test/iframe_postMessages.html');
+  test_windowToIframeURL('http://example.com/tests/dom/base/test/iframe_postMessages.html',
+                         !SpecialPowers.useRemoteSubframes);
 }
 
 // iframe helper class
-function test_windowToIframeURL(url) {
+function test_windowToIframeURL(url, clonableObjectsSameProcess) {
   var resolve;
 
   onmessage = function(e) {
@@ -368,7 +369,7 @@ function test_windowToIframeURL(url) {
   ifr.onload = function() {
     runTests({
       clonableObjectsEveryWhere: true,
-      clonableObjectsSameProcess: true,
+      clonableObjectsSameProcess,
       transferableObjects: true,
       send(what, ports) {
         return new Promise(function(r, rr) {

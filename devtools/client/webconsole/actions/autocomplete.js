@@ -26,7 +26,10 @@ function autocompleteUpdate(force, getterPath) {
     }
 
     const inputValue = hud.getInputValue();
-    const { frameActor: frameActorId, client } = webConsoleUI.getFrameActor();
+    const {
+      frameActor: frameActorId,
+      webConsoleFront,
+    } = webConsoleUI.getFrameActor();
     const cursor = webConsoleUI.getInputCursor();
 
     const state = getState().autocomplete;
@@ -76,7 +79,7 @@ function autocompleteUpdate(force, getterPath) {
       autocompleteDataFetch({
         input,
         frameActorId,
-        client,
+        webConsoleFront,
         authorizedEvaluations,
         force,
       })
@@ -118,7 +121,7 @@ function generateRequestId() {
  *        - {String} input: the expression that we want to complete.
  *        - {String} frameActorId: The id of the frame we want to autocomplete in.
  *        - {Boolean} force: true if the user forced an autocompletion (with Ctrl+Space).
- *        - {WebConsoleClient} client: The webconsole client.
+ *        - {WebConsoleFront} client: The webconsole front.
  *        - {Array} authorizedEvaluations: Array of the properties access which can be
  *                  executed by the engine.
  *                   Example: [["x", "myGetter"], ["x", "myGetter", "y", "glitter"]]
@@ -128,14 +131,14 @@ function autocompleteDataFetch({
   input,
   frameActorId,
   force,
-  client,
+  webConsoleFront,
   authorizedEvaluations,
 }) {
   return ({ dispatch, webConsoleUI }) => {
     const selectedNodeActor = webConsoleUI.getSelectedNodeActor();
     const id = generateRequestId();
     dispatch({ type: AUTOCOMPLETE_PENDING_REQUEST, id });
-    client
+    webConsoleFront
       .autocomplete(
         input,
         undefined,

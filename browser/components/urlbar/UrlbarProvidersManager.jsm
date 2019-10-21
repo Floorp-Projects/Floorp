@@ -455,8 +455,13 @@ function getAcceptableMatchSources(context) {
       case UrlbarUtils.RESULT_SOURCE.SEARCH:
         if (
           restrictTokenType === UrlbarTokenizer.TYPE.RESTRICT_SEARCH ||
-          (!restrictTokenType && UrlbarPrefs.get("suggest.searches"))
+          !restrictTokenType
         ) {
+          // We didn't check browser.urlbar.suggest.searches here, because it
+          // just controls search suggestions. If a search suggestion arrives
+          // here, we lost already, because we broke user's privacy by hitting
+          // the network. Thus, it's better to leave things go through and
+          // notice the bug, rather than hiding it with a filter.
           acceptedSources.push(source);
         }
         break;

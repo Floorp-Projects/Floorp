@@ -8,37 +8,38 @@
 loadScripts({ name: "role.js", dir: MOCHITESTS_DIR });
 
 // Test ARIA Dialog
-addAccessibleTask("doc_treeupdate_ariadialog.html", async function(
-  browser,
-  accDoc
-) {
-  testAccessibleTree(accDoc, {
-    role: ROLE_DOCUMENT,
-    children: [],
-  });
+addAccessibleTask(
+  "doc_treeupdate_ariadialog.html",
+  async function(browser, accDoc) {
+    testAccessibleTree(accDoc, {
+      role: ROLE_DOCUMENT,
+      children: [],
+    });
 
-  // Make dialog visible and update its inner content.
-  let onShow = waitForEvent(EVENT_SHOW, "dialog");
-  await ContentTask.spawn(browser, {}, () => {
-    content.document.getElementById("dialog").style.display = "block";
-  });
-  await onShow;
+    // Make dialog visible and update its inner content.
+    let onShow = waitForEvent(EVENT_SHOW, "dialog");
+    await invokeContentTask(browser, [], () => {
+      content.document.getElementById("dialog").style.display = "block";
+    });
+    await onShow;
 
-  testAccessibleTree(accDoc, {
-    role: ROLE_DOCUMENT,
-    children: [
-      {
-        role: ROLE_DIALOG,
-        children: [
-          {
-            role: ROLE_PUSHBUTTON,
-            children: [{ role: ROLE_TEXT_LEAF }],
-          },
-          {
-            role: ROLE_ENTRY,
-          },
-        ],
-      },
-    ],
-  });
-});
+    testAccessibleTree(accDoc, {
+      role: ROLE_DOCUMENT,
+      children: [
+        {
+          role: ROLE_DIALOG,
+          children: [
+            {
+              role: ROLE_PUSHBUTTON,
+              children: [{ role: ROLE_TEXT_LEAF }],
+            },
+            {
+              role: ROLE_ENTRY,
+            },
+          ],
+        },
+      ],
+    });
+  },
+  { iframe: true }
+);

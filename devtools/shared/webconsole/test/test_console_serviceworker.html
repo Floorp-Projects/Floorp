@@ -116,7 +116,7 @@ addEventListener("load", startTest);
 
 let onAttach = async function (state, response) {
   onConsoleAPICall = onConsoleAPICall.bind(null, state);
-  state.client.on("consoleAPICall", onConsoleAPICall);
+  state.webConsoleFront.on("consoleAPICall", onConsoleAPICall);
 
   let currentFrame;
   try {
@@ -174,7 +174,7 @@ let onAttach = async function (state, response) {
     await unregisterServiceWorker(currentFrame.contentWindow);
 
     info('Service worker unregistered.  Checking console calls.');
-    state.client.off("consoleAPICall", onConsoleAPICall);
+    state.webConsoleFront.off("consoleAPICall", onConsoleAPICall);
     checkConsoleAPICalls(consoleCalls, expectedConsoleCalls);
   } catch(error) {
     ok(false, 'unexpected error: ' + error);

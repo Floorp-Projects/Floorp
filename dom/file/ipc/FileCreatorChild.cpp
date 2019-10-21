@@ -40,6 +40,11 @@ mozilla::ipc::IPCResult FileCreatorChild::Recv__delete__(
       aResult.get_FileCreationSuccessResult().blob());
 
   RefPtr<File> file = File::Create(promise->GetParentObject(), impl);
+  if (NS_WARN_IF(!file)) {
+    promise->MaybeReject(NS_ERROR_FAILURE);
+    return IPC_OK();
+  }
+
   promise->MaybeResolve(file);
   return IPC_OK();
 }

@@ -58,10 +58,10 @@ class FirefoxConnector {
     // The owner object (NetMonitorAPI) received all events.
     this.owner = connection.owner;
 
-    this.webConsoleClient = this.tabTarget.activeConsole;
+    this.webConsoleFront = this.tabTarget.activeConsole;
 
     this.dataProvider = new FirefoxDataProvider({
-      webConsoleClient: this.webConsoleClient,
+      webConsoleFront: this.webConsoleFront,
       actions: this.actions,
       owner: this.owner,
     });
@@ -111,7 +111,7 @@ class FirefoxConnector {
       this.tabTarget = null;
     }
 
-    this.webConsoleClient = null;
+    this.webConsoleFront = null;
     this.dataProvider = null;
   }
 
@@ -125,12 +125,12 @@ class FirefoxConnector {
 
   async addListeners() {
     this.tabTarget.on("close", this.disconnect);
-    this.webConsoleClient.on("networkEvent", this.dataProvider.onNetworkEvent);
-    this.webConsoleClient.on(
+    this.webConsoleFront.on("networkEvent", this.dataProvider.onNetworkEvent);
+    this.webConsoleFront.on(
       "networkEventUpdate",
       this.dataProvider.onNetworkEventUpdate
     );
-    this.webConsoleClient.on("documentEvent", this.onDocEvent);
+    this.webConsoleFront.on("documentEvent", this.onDocEvent);
 
     // Support for WebSocket monitoring is currently hidden behind this pref.
     if (Services.prefs.getBoolPref("devtools.netmonitor.features.webSockets")) {
@@ -159,7 +159,7 @@ class FirefoxConnector {
 
     // The console actor supports listening to document events like
     // DOMContentLoaded and load.
-    await this.webConsoleClient.startListeners(["DocumentEvents"]);
+    await this.webConsoleFront.startListeners(["DocumentEvents"]);
   }
 
   removeListeners() {
@@ -181,16 +181,16 @@ class FirefoxConnector {
         this.webSocketFront.off("frameSent", this.dataProvider.onFrameSent);
       }
     }
-    if (this.webConsoleClient) {
-      this.webConsoleClient.off(
+    if (this.webConsoleFront) {
+      this.webConsoleFront.off(
         "networkEvent",
         this.dataProvider.onNetworkEvent
       );
-      this.webConsoleClient.off(
+      this.webConsoleFront.off(
         "networkEventUpdate",
         this.dataProvider.onNetworkEventUpdate
       );
-      this.webConsoleClient.off("docEvent", this.onDocEvent);
+      this.webConsoleFront.off("docEvent", this.onDocEvent);
     }
   }
 
@@ -252,7 +252,7 @@ class FirefoxConnector {
    * Display any network events already in the cache.
    */
   displayCachedEvents() {
-    for (const networkInfo of this.webConsoleClient.getNetworkEvents()) {
+    for (const networkInfo of this.webConsoleFront.getNetworkEvents()) {
       // First add the request to the timeline.
       this.dataProvider.onNetworkEvent(networkInfo);
       // Then replay any updates already received.
@@ -285,7 +285,7 @@ class FirefoxConnector {
    * @param {function} callback callback will be invoked after the request finished
    */
   sendHTTPRequest(data, callback) {
-    this.webConsoleClient.sendHTTPRequest(data).then(callback);
+    this.webConsoleFront.sendHTTPRequest(data).then(callback);
   }
 
   /**
@@ -294,7 +294,7 @@ class FirefoxConnector {
    * @param {object} filter request filter specifying what to block
    */
   blockRequest(filter) {
-    return this.webConsoleClient.blockRequest(filter);
+    return this.webConsoleFront.blockRequest(filter);
   }
 
   /**
@@ -303,7 +303,7 @@ class FirefoxConnector {
    * @param {object} filter request filter specifying what to unblock
    */
   unblockRequest(filter) {
-    return this.webConsoleClient.unblockRequest(filter);
+    return this.webConsoleFront.unblockRequest(filter);
   }
 
   /**
@@ -312,7 +312,7 @@ class FirefoxConnector {
    * @param {object} urls An array of URL strings
    */
   setBlockedUrls(urls) {
-    return this.webConsoleClient.setBlockedUrls(urls);
+    return this.webConsoleFront.setBlockedUrls(urls);
   }
 
   /**
@@ -322,7 +322,7 @@ class FirefoxConnector {
    * @param {function} callback callback will be invoked after the request finished
    */
   setPreferences(request) {
-    return this.webConsoleClient.setPreferences(request);
+    return this.webConsoleFront.setPreferences(request);
   }
 
   /**

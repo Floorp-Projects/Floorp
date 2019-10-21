@@ -32,7 +32,7 @@ under _remote/test/browser_:
 	% ./mach mochitest remote/test/browser/browser_cdp.js
 
 The functional tests will appear under the `M` (for _mochitest_)
-category in the `bc` (_browser-chrome_) jobs on Treeherder.
+category in the `remote` jobs on Treeherder.
 
 As the functional tests will sporadically pop up new Firefox
 application windows, a helpful tip is to run them in [headless

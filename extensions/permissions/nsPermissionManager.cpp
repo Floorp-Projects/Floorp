@@ -34,9 +34,6 @@
 #include "nsIEffectiveTLDService.h"
 #include "nsPIDOMWindow.h"
 #include "mozilla/dom/Document.h"
-#ifdef ANDROID
-#  include "mozilla/jni/Utils.h"  // for jni::IsFennec
-#endif
 #include "mozilla/net/NeckoMessageUtils.h"
 #include "mozilla/Preferences.h"
 #include "nsReadLine.h"

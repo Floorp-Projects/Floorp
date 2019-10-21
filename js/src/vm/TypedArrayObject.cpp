@@ -2295,44 +2295,42 @@ bool js::IsBufferSource(JSObject* object, SharedMem<uint8_t*>* dataPointer,
 }
 
 template <typename CharT>
-bool js::StringIsTypedArrayIndex(const CharT* s, size_t length,
+bool js::StringIsTypedArrayIndex(mozilla::Range<const CharT> s,
                                  uint64_t* indexp) {
-  const CharT* end = s + length;
+  mozilla::RangedPtr<const CharT> cp = s.begin();
+  const mozilla::RangedPtr<const CharT> end = s.end();
 
-  if (s == end) {
-    return false;
-  }
+  MOZ_ASSERT(cp < end, "caller must check for empty strings");
 
   bool negative = false;
-  if (*s == '-') {
+  if (*cp == '-') {
     negative = true;
-    if (++s == end) {
+    if (++cp == end) {
       return false;
     }
   }
 
-  if (!IsAsciiDigit(*s)) {
+  if (!IsAsciiDigit(*cp)) {
     return false;
   }
 
-  uint64_t index = 0;
-  uint32_t digit = AsciiDigitToNumber(*s++);
+  uint32_t digit = AsciiDigitToNumber(*cp++);
 
-  /* Don't allow leading zeros. */
-  if (digit == 0 && s != end) {
+  // Don't allow leading zeros.
+  if (digit == 0 && cp != end) {
     return false;
   }
 
-  index = digit;
+  uint64_t index = digit;
 
-  for (; s < end; s++) {
-    if (!IsAsciiDigit(*s)) {
+  for (; cp < end; cp++) {
+    if (!IsAsciiDigit(*cp)) {
       return false;
     }
 
-    digit = AsciiDigitToNumber(*s);
+    digit = AsciiDigitToNumber(*cp);
 
-    /* Watch for overflows. */
+    // Watch for overflows.
     if ((UINT64_MAX - digit) / 10 < index) {
       index = UINT64_MAX;
     } else {
@@ -2348,10 +2346,10 @@ bool js::StringIsTypedArrayIndex(const CharT* s, size_t length,
   return true;
 }
 
-template bool js::StringIsTypedArrayIndex(const char16_t* s, size_t length,
+template bool js::StringIsTypedArrayIndex(mozilla::Range<const char16_t> s,
                                           uint64_t* indexp);
 
-template bool js::StringIsTypedArrayIndex(const Latin1Char* s, size_t length,
+template bool js::StringIsTypedArrayIndex(mozilla::Range<const Latin1Char> s,
                                           uint64_t* indexp);
 
 bool js::SetTypedArrayElement(JSContext* cx, Handle<TypedArrayObject*> obj,

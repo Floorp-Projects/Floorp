@@ -4,17 +4,12 @@
 
 @namespace xul url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-* {
-  margin: 0;
-  padding: 0;
+html, body {
+  height: 100%;
 }
 
-body {
-  max-width: 1600px;
-  min-width: 1600px;
-  max-height: 800px;
-  min-height: 800px;
 
+body {
   display: flex;
   flex-direction: column;
 }
@@ -51,7 +46,6 @@ body {
 .icon_disabled_hide:disabled {
   display:none;
 }
-
 .icon_backward {
   background-image: url("assets/icon-backward.svg");
 }
@@ -66,6 +60,9 @@ body {
 }
 .icon_home {
   background-image: url("assets/icon-home.svg");
+}
+.icon_prefs {
+  background-image: url("assets/icon-settings.svg");
 }
 
 .urlbar_container {
@@ -111,7 +108,25 @@ body {
   width: 100%;
   flex-grow: 1;
 }
-xul|browser {
+
+.browser_instance {
   width: 100%;
   height: 100%;
+}
+
+/* Hide the navbar when in fullscreen so that <browser> can
+ * fill the entire viewport
+ */
+:root[inFullScreen] .navbar_container {
+  display:none;
+}
+
+.browser_settings {
+  width: 600px;
+  height: 400px;
+  border-radius: 20px;
+}
+
+.modal_mask:not([hidden]) {
+  background-color: var(--num13_alpha);
 }

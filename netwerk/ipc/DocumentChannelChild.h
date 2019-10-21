@@ -69,6 +69,8 @@ class DocumentChannelChild final : public PDocumentChannelChild,
       const Maybe<nsString>& aContentDispositionFilename,
       RedirectToRealChannelResolver&& aResolve);
 
+  mozilla::ipc::IPCResult RecvNotifyClassificationFlags(
+      const uint32_t& aClassificationFlags);
   mozilla::ipc::IPCResult RecvNotifyChannelClassifierProtectionDisabled(
       const uint32_t& aAcceptedReason);
   mozilla::ipc::IPCResult RecvNotifyCookieAllowed();
@@ -103,6 +105,7 @@ class DocumentChannelChild final : public PDocumentChannelChild,
   nsTArray<DocumentChannelRedirect> mRedirects;
 
   // Classified channel's matched information
+  uint32_t mThirdPartyClassificationFlags = 0;
   nsCString mMatchedList;
   nsCString mMatchedProvider;
   nsCString mMatchedFullHash;

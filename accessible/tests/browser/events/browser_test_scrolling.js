@@ -14,7 +14,7 @@ addAccessibleTask(
       [EVENT_SCROLLING, accDoc],
       [EVENT_SCROLLING_END, accDoc],
     ]);
-    await ContentTask.spawn(browser, null, () => {
+    await SpecialPowers.spawn(browser, [], () => {
       content.location.hash = "#two";
     });
     let [scrollEvent1, scrollEndEvent1] = await onScrolling;
@@ -33,7 +33,7 @@ addAccessibleTask(
       [EVENT_SCROLLING, accDoc],
       [EVENT_SCROLLING_END, accDoc],
     ]);
-    await ContentTask.spawn(browser, null, () => {
+    await SpecialPowers.spawn(browser, [], () => {
       content.location.hash = "#three";
     });
     let [scrollEvent2, scrollEndEvent2] = await onScrolling;
@@ -52,7 +52,7 @@ addAccessibleTask(
       [EVENT_SCROLLING, accDoc],
       [EVENT_SCROLLING_END, accDoc],
     ]);
-    await ContentTask.spawn(browser, null, () => {
+    await SpecialPowers.spawn(browser, [], () => {
       content.scrollTo(10, 0);
     });
     let [scrollEvent3, scrollEndEvent3] = await onScrolling;

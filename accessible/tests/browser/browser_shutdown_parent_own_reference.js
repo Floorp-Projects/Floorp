@@ -25,10 +25,16 @@ add_task(async function() {
         "Creating a service in parent and waiting for service to be created " +
           "in content"
       );
+      await loadContentScripts(browser, "Common.jsm");
       // Create a11y service in the main process. This will trigger creating of
       // the a11y service in parent as well.
-      let parentA11yInit = initPromise();
-      let contentA11yInit = initPromise(browser);
+      const [parentA11yInitObserver, parentA11yInit] = initAccService();
+      const [contentA11yInitObserver, contentA11yInit] = initAccService(
+        browser
+      );
+
+      await Promise.all([parentA11yInitObserver, contentA11yInitObserver]);
+
       let accService = Cc["@mozilla.org/accessibilityService;1"].getService(
         Ci.nsIAccessibilityService
       );
@@ -40,12 +46,9 @@ add_task(async function() {
           "process"
       );
       // Add a new reference to the a11y service inside the content process.
-      loadFrameScripts(
-        browser,
-        `let accService = Components.classes[
-      '@mozilla.org/accessibilityService;1'].getService(
-        Components.interfaces.nsIAccessibilityService);`
-      );
+      await SpecialPowers.spawn(browser, [], () => {
+        content.CommonUtils.accService;
+      });
 
       info(
         "Trying to shut down a service in content and making sure it stays " +
@@ -55,8 +58,13 @@ add_task(async function() {
       // This promise will resolve only if contentCanShutdown flag is set to true.
       // If 'a11y-init-or-shutdown' event with '0' flag (in content) comes before
       // it can be shut down, the promise will reject.
-      let contentA11yShutdown = new Promise((resolve, reject) =>
-        shutdownPromise(browser).then(flag =>
+      const [
+        contentA11yShutdownObserver,
+        contentA11yShutdownPromise,
+      ] = shutdownAccService(browser);
+      await contentA11yShutdownObserver;
+      const contentA11yShutdown = new Promise((resolve, reject) =>
+        contentA11yShutdownPromise.then(flag =>
           contentCanShutdown
             ? resolve()
             : reject("Accessible service was shut down incorrectly")
@@ -65,10 +73,9 @@ add_task(async function() {
       // Remove a11y service reference in content and force garbage collection.
       // This should not trigger shutdown since a11y was originally initialized by
       // the main process.
-      loadFrameScripts(
-        browser,
-        `accService = null; Components.utils.forceGC();`
-      );
+      await SpecialPowers.spawn(browser, [], () => {
+        content.CommonUtils.clearAccService();
+      });
 
       // Have some breathing room between a11y service shutdowns.
       await new Promise(resolve => executeSoon(resolve));
@@ -77,7 +84,12 @@ add_task(async function() {
       // Now allow a11y service to shutdown in content.
       contentCanShutdown = true;
       // Remove the a11y service reference in the main process.
-      let parentA11yShutdown = shutdownPromise();
+      const [
+        parentA11yShutdownObserver,
+        parentA11yShutdown,
+      ] = shutdownAccService();
+      await parentA11yShutdownObserver;
+
       accService = null;
       ok(!accService, "Service is removed in parent");
       // Force garbage collection that should trigger shutdown in both parent and

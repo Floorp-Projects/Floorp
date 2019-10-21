@@ -210,7 +210,6 @@ UNIFIED_SOURCES += [
     'PuppetBidiKeyboard.cpp',
     'PuppetWidget.cpp',
     'Screen.cpp',
-    'ScreenManager.cpp',
     'SharedWidgetUtils.cpp',
     'TextEventDispatcher.cpp',
     'VsyncDispatcher.cpp',
@@ -242,6 +241,7 @@ if CONFIG['MOZ_XUL'] and CONFIG['NS_PRINTING']:
 SOURCES += [
     'nsBaseDragService.cpp',
     'nsBaseWidget.cpp',
+    'ScreenManager.cpp',
 ]
 
 if CONFIG['MOZ_INSTRUMENT_EVENT_LOOP']:

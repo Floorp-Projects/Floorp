@@ -1,0 +1,73 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+html {
+  height: 100%;
+}
+
+body {
+  display: flex;
+  align-items: stretch;
+  height: 100%;
+}
+
+#sectionTitle {
+  float: inline-start;
+}
+
+#refreshDiv {
+  justify-content: flex-end;
+  margin-bottom: 0.5em;
+}
+
+#refreshButton {
+  margin-top: 0;
+}
+
+/** Categories **/
+
+.category {
+  cursor: pointer;
+  /* Center category names */
+  display: flex;
+  align-items: center;
+}
+
+.category .category-name {
+  pointer-events: none;
+}
+
+#categories hr {
+  border-top-color: rgba(255,255,255,0.15);
+}
+
+/** Content area **/
+
+.main-content {
+  flex: 1;
+}
+
+.tab {
+  padding: 0.5em 0;
+}
+
+.tab table {
+  width: 100%;
+}
+
+th, td, table {
+  border-collapse: collapse;
+  border: none;
+  text-align: start;
+}
+
+th {
+  padding-bottom: 0.5em;
+  font-size: larger;
+}
+
+td {
+  padding-bottom: 0.25em;
+  border-bottom: 1px solid var(--in-content-box-border-color);
+}

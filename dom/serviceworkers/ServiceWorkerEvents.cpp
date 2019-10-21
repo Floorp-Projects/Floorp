@@ -1051,7 +1051,7 @@ nsresult ExtractBytesFromData(
 }
 }  // namespace
 
-PushMessageData::PushMessageData(nsISupports* aOwner,
+PushMessageData::PushMessageData(nsIGlobalObject* aOwner,
                                  nsTArray<uint8_t>&& aBytes)
     : mOwner(aOwner), mBytes(std::move(aBytes)) {}
 
@@ -1149,7 +1149,7 @@ already_AddRefed<PushEvent> PushEvent::Constructor(
       aRv.Throw(rv);
       return nullptr;
     }
-    e->mData = new PushMessageData(aOwner, std::move(bytes));
+    e->mData = new PushMessageData(aOwner->GetOwnerGlobal(), std::move(bytes));
   }
   return e.forget();
 }

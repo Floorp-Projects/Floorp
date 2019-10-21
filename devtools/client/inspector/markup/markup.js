@@ -731,6 +731,10 @@ MarkupView.prototype = {
    *         requests queued up
    */
   _hideBoxModel: function(forceHide) {
+    if (!this._highlightedNodeFront) {
+      return Promise.resolve();
+    }
+
     return this._highlightedNodeFront.highlighterFront
       .unhighlight(forceHide)
       .catch(this._handleRejectionIfNotDestroyed);

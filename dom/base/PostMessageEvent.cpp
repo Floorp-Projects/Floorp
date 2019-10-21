@@ -164,7 +164,7 @@ PostMessageEvent::Run() {
 
   StructuredCloneHolder* holder;
   if (mHolder.constructed<StructuredCloneHolder>()) {
-    mHolder.ref<StructuredCloneHolder>().Read(ToSupports(targetWindow), cx,
+    mHolder.ref<StructuredCloneHolder>().Read(targetWindow->AsGlobal(), cx,
                                               &messageData, rv);
     holder = &mHolder.ref<StructuredCloneHolder>();
   } else {
