@@ -13,13 +13,17 @@ permalink: /changelog/
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
 * **browser-menu**
-   * Adds the ability to create a BrowserMenuCategory, a menu item that defines a category for other menu items
+  * Adds the ability to create a BrowserMenuCategory, a menu item that defines a category for other menu items
 
 * **concept-engine**
-   * Adds the setting `forceUserScalableContent`.
+  * Adds the setting `forceUserScalableContent`.
 
 * **engine-gecko-nightly**
-   * Implements the setting `forceUserScalableContent`.
+  * Implements the setting `forceUserScalableContent`.
+
+* **feature-prompts**
+  * Deprecated `PromptFeature` constructor that has parameters for both `Activity` and `Fragment`. Use the constructors that just take either one instead.
+  * Changed `sessionId` parameter name to `customTabId`.
 
 # 17.0.0
 

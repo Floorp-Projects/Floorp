@@ -388,6 +388,7 @@ class PromptFeatureTest {
         feature.handleDialogsRequest(mock<PromptRequest.File>(), mock())
     }
 
+    @Suppress("Deprecation")
     @Test(expected = IllegalStateException::class)
     fun `Initializing a PromptFeature without giving an activity or fragment reference will throw an exception`() {
         PromptFeature(null, null, store, null, fragmentManager) { }
@@ -409,7 +410,7 @@ class PromptFeatureTest {
         intent.data = mock()
         store.dispatch(ContentAction.UpdatePromptRequestAction(tabId, filePickerRequest)).joinBlocking()
 
-        feature.onActivityResult(PromptFeature.FILE_PICKER_ACTIVITY_REQUEST_CODE, RESULT_OK, intent)
+        feature.onActivityResult(R.id.mozac_feature_prompts_file_picker_activity_request_code, RESULT_OK, intent)
         processActions()
         assertTrue(onSingleFileSelectionWasCalled)
         assertNull(tab()?.content?.promptRequest)
@@ -441,7 +442,7 @@ class PromptFeatureTest {
 
         store.dispatch(ContentAction.UpdatePromptRequestAction(tabId, filePickerRequest)).joinBlocking()
 
-        feature.onActivityResult(PromptFeature.FILE_PICKER_ACTIVITY_REQUEST_CODE, RESULT_OK, intent)
+        feature.onActivityResult(R.id.mozac_feature_prompts_file_picker_activity_request_code, RESULT_OK, intent)
         processActions()
         assertTrue(onMultipleFileSelectionWasCalled)
         assertNull(tab()?.content?.promptRequest)
@@ -461,7 +462,7 @@ class PromptFeatureTest {
 
         store.dispatch(ContentAction.UpdatePromptRequestAction(tabId, filePickerRequest)).joinBlocking()
 
-        feature.onActivityResult(PromptFeature.FILE_PICKER_ACTIVITY_REQUEST_CODE, RESULT_CANCELED, intent)
+        feature.onActivityResult(R.id.mozac_feature_prompts_file_picker_activity_request_code, RESULT_CANCELED, intent)
         processActions()
         assertTrue(onDismissWasCalled)
         assertNull(tab()?.content?.promptRequest)
@@ -475,18 +476,18 @@ class PromptFeatureTest {
         var onDismissWasCalled = false
 
         val promptRequest = Authentication(
-            "title",
-            "message",
-            "username",
-            "password",
-            HOST,
-            NONE,
-            false,
-            false,
-            false,
-            { _, _ -> onConfirmWasCalled = true }) {
-            onDismissWasCalled = true
-        }
+            title = "title",
+            message = "message",
+            userName = "username",
+            password = "password",
+            method = HOST,
+            level = NONE,
+            onlyShowPassword = false,
+            previousFailed = false,
+            isCrossOrigin = false,
+            onConfirm = { _, _ -> onConfirmWasCalled = true },
+            onDismiss = { onDismissWasCalled = true }
+        )
 
         feature.start()
 
@@ -510,18 +511,18 @@ class PromptFeatureTest {
         var onDismissWasCalled = false
 
         val promptRequest = Authentication(
-            "title",
-            "message",
-            "username",
-            "password",
-            HOST,
-            NONE,
-            false,
-            false,
-            false,
-            { _, _ -> }) {
-            onDismissWasCalled = true
-        }
+            title = "title",
+            message = "message",
+            userName = "username",
+            password = "password",
+            method = HOST,
+            level = NONE,
+            onlyShowPassword = false,
+            previousFailed = false,
+            isCrossOrigin = false,
+            onConfirm = { _, _ -> },
+            onDismiss = { onDismissWasCalled = true }
+        )
 
         feature.start()
 

@@ -23,34 +23,18 @@ import mozilla.components.support.ktx.android.content.isPermissionGranted
 typealias OnNeedToRequestPermissions = (permissions: Array<String>) -> Unit
 
 /**
- * @property activity The [Activity] which hosts the file picker.
- * @property fragment The [Fragment] which hosts the file picker.
+ * @property container The [Activity] or [Fragment] which hosts the file picker.
  * @property store The [BrowserStore] this feature should subscribe to.
  * @property onNeedToRequestPermissions a callback invoked when permissions
  * need to be requested before a prompt (e.g. a file picker) can be displayed.
  * Once the request is completed, [onPermissionsResult] needs to be invoked.
  */
-internal class FilePicker private constructor(
-    private val activity: Activity? = null,
-    private val fragment: Fragment? = null,
+internal class FilePicker(
+    private val container: PromptContainer,
     private val store: BrowserStore,
     private var sessionId: String? = null,
     override val onNeedToRequestPermissions: OnNeedToRequestPermissions
 ) : PermissionsFeature {
-    constructor(
-        activity: Activity,
-        store: BrowserStore,
-        sessionId: String? = null,
-        onNeedToRequestPermissions: OnNeedToRequestPermissions
-    ) : this(activity, null, store, sessionId, onNeedToRequestPermissions)
-    constructor(
-        fragment: Fragment,
-        store: BrowserStore,
-        sessionId: String? = null,
-        onNeedToRequestPermissions: OnNeedToRequestPermissions
-    ) : this(null, fragment, store, sessionId, onNeedToRequestPermissions)
-
-    private val context get() = activity ?: requireNotNull(fragment).requireContext()
 
     /**
      * The image capture intent doesn't return the URI where the image is saved,
@@ -68,20 +52,20 @@ internal class FilePicker private constructor(
 
         // Compare the accepted values against image/*, video/*, and audio/*
         for (type in MimeType.values()) {
-            val hasPermission = context.isPermissionGranted(type.permission)
+            val hasPermission = container.context.isPermissionGranted(type.permission)
             // The captureMode attribute can be used if the accepted types are exactly for
             // image/*, video/*, or audio/*.
             if (hasPermission && type.shouldCapture(promptRequest.mimeTypes, promptRequest.captureMode)) {
-                type.buildIntent(context, promptRequest)?.also {
+                type.buildIntent(container.context, promptRequest)?.also {
                     saveCaptureUriIfPresent(it)
-                    startActivityForResult(it, FILE_PICKER_ACTIVITY_REQUEST_CODE)
+                    container.startActivityForResult(it, R.id.mozac_feature_prompts_file_picker_activity_request_code)
                     return
                 }
             }
             // Otherwise, build the intent and create a chooser later
             if (type.matches(promptRequest.mimeTypes)) {
                 if (hasPermission) {
-                    type.buildIntent(context, promptRequest)?.also {
+                    type.buildIntent(container.context, promptRequest)?.also {
                         saveCaptureUriIfPresent(it)
                         intents.add(it)
                     }
@@ -100,7 +84,7 @@ internal class FilePicker private constructor(
                 putExtra(EXTRA_INITIAL_INTENTS, intents.toTypedArray())
             }
 
-            startActivityForResult(chooser, FILE_PICKER_ACTIVITY_REQUEST_CODE)
+            container.startActivityForResult(chooser, R.id.mozac_feature_prompts_file_picker_activity_request_code)
         } else {
             onNeedToRequestPermissions(neededPermissions.toTypedArray())
         }
@@ -114,7 +98,7 @@ internal class FilePicker private constructor(
      * @param intent The result of the request.
      */
     fun onActivityResult(requestCode: Int, resultCode: Int, intent: Intent?) {
-        if (requestCode == FILE_PICKER_ACTIVITY_REQUEST_CODE) {
+        if (requestCode == R.id.mozac_feature_prompts_file_picker_activity_request_code) {
             store.consumePromptFrom(sessionId) {
                 val request = it as File
 
@@ -174,28 +158,16 @@ internal class FilePicker private constructor(
         if (intent?.clipData != null && request.isMultipleFilesSelection) {
             intent.clipData?.run {
                 val uris = Array<Uri>(itemCount) { index -> getItemAt(index).uri }
-                request.onMultipleFilesSelected(context, uris)
+                request.onMultipleFilesSelected(container.context, uris)
             }
         } else {
             val uri = intent?.data ?: captureUri
             uri?.let {
-                request.onSingleFileSelected(context, it)
+                request.onSingleFileSelected(container.context, it)
             } ?: request.onDismiss
         }
     }
 
     private fun saveCaptureUriIfPresent(intent: Intent) =
         intent.getParcelableExtra<Uri>(EXTRA_OUTPUT)?.let { captureUri = it }
-
-    internal fun startActivityForResult(intent: Intent, code: Int) {
-        if (activity != null) {
-            activity.startActivityForResult(intent, code)
-        } else {
-            requireNotNull(fragment).startActivityForResult(intent, code)
-        }
-    }
-
-    companion object {
-        const val FILE_PICKER_ACTIVITY_REQUEST_CODE = 1234
-    }
 }

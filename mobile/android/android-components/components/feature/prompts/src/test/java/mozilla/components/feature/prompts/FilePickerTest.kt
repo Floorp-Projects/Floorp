@@ -5,7 +5,6 @@
 package mozilla.components.feature.prompts
 
 import android.Manifest
-import android.app.Activity
 import android.app.Activity.RESULT_CANCELED
 import android.app.Activity.RESULT_OK
 import android.content.ClipData
@@ -14,7 +13,6 @@ import android.content.Intent
 import android.content.pm.PackageManager.PERMISSION_DENIED
 import android.content.pm.PackageManager.PERMISSION_GRANTED
 import android.net.Uri
-import androidx.fragment.app.Fragment
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.state.action.ContentAction
@@ -52,7 +50,7 @@ class FilePickerTest {
         onDismiss = {}
     )
 
-    private lateinit var fragment: Fragment
+    private lateinit var fragment: PromptContainer
     private lateinit var store: BrowserStore
     private lateinit var state: BrowserState
     private lateinit var filePicker: FilePicker
@@ -74,29 +72,13 @@ class FilePickerTest {
 
         whenever(state.customTabs).thenReturn(listOf(customTab))
         filePicker = FilePicker(fragment, store, customTab.id) { }
-        filePicker.onActivityResult(FilePicker.FILE_PICKER_ACTIVITY_REQUEST_CODE, 0, null)
+        filePicker.onActivityResult(R.id.mozac_feature_prompts_file_picker_activity_request_code, 0, null)
         verify(store).dispatch(ContentAction.ConsumePromptRequestAction(customTab.id))
 
         val selected = prepareSelectedSession(request)
         filePicker = FilePicker(fragment, store) { }
-        filePicker.onActivityResult(FilePicker.FILE_PICKER_ACTIVITY_REQUEST_CODE, 0, null)
+        filePicker.onActivityResult(R.id.mozac_feature_prompts_file_picker_activity_request_code, 0, null)
         verify(store).dispatch(ContentAction.ConsumePromptRequestAction(selected.id))
-    }
-
-    @Test
-    fun `startActivityForResult must delegate its calls either to an activity or a fragment`() {
-        val mockActivity: Activity = mock()
-        val mockFragment: Fragment = mock()
-        val intent = Intent()
-        val code = 1
-
-        filePicker = FilePicker(mockActivity, store) { }
-        filePicker.startActivityForResult(intent, code)
-        verify(mockActivity).startActivityForResult(intent, code)
-
-        filePicker = FilePicker(mockFragment, store) { }
-        filePicker.startActivityForResult(intent, code)
-        verify(mockFragment).startActivityForResult(intent, code)
     }
 
     @Test
@@ -108,7 +90,7 @@ class FilePickerTest {
             onRequestPermissionWasCalled = true
         }
 
-        doReturn(context).`when`(fragment).requireContext()
+        doReturn(context).`when`(fragment).context
 
         filePicker.handleFileRequest(request)
 
@@ -118,7 +100,7 @@ class FilePickerTest {
 
     @Test
     fun `handleFilePickerRequest with the required permission will call startActivityForResult`() {
-        val mockFragment: Fragment = mock()
+        val mockFragment: PromptContainer = mock()
         var onRequestPermissionWasCalled = false
         val context = ApplicationProvider.getApplicationContext<Context>()
 
@@ -126,7 +108,7 @@ class FilePickerTest {
             onRequestPermissionWasCalled = true
         }
 
-        doReturn(context).`when`(mockFragment).requireContext()
+        doReturn(context).`when`(mockFragment).context
 
         grantPermission(Manifest.permission.READ_EXTERNAL_STORAGE)
 
@@ -181,7 +163,7 @@ class FilePickerTest {
 
         stubContext()
 
-        filePicker.onActivityResult(PromptFeature.FILE_PICKER_ACTIVITY_REQUEST_CODE, RESULT_OK, intent)
+        filePicker.onActivityResult(R.id.mozac_feature_prompts_file_picker_activity_request_code, RESULT_OK, intent)
 
         assertTrue(onSingleFileSelectionWasCalled)
         verify(store).dispatch(ContentAction.ConsumePromptRequestAction(selected.id))
@@ -215,7 +197,7 @@ class FilePickerTest {
 
         stubContext()
 
-        filePicker.onActivityResult(PromptFeature.FILE_PICKER_ACTIVITY_REQUEST_CODE, RESULT_OK, intent)
+        filePicker.onActivityResult(R.id.mozac_feature_prompts_file_picker_activity_request_code, RESULT_OK, intent)
 
         assertTrue(onMultipleFileSelectionWasCalled)
         verify(store).dispatch(ContentAction.ConsumePromptRequestAction(selected.id))
@@ -232,7 +214,7 @@ class FilePickerTest {
         val selected = prepareSelectedSession(filePickerRequest)
         val intent = Intent()
 
-        filePicker.onActivityResult(PromptFeature.FILE_PICKER_ACTIVITY_REQUEST_CODE, RESULT_CANCELED, intent)
+        filePicker.onActivityResult(R.id.mozac_feature_prompts_file_picker_activity_request_code, RESULT_CANCELED, intent)
 
         assertTrue(onDismissWasCalled)
         verify(store).dispatch(ContentAction.ConsumePromptRequestAction(selected.id))
@@ -267,7 +249,7 @@ class FilePickerTest {
 
     private fun stubContext() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        doReturn(context).`when`(fragment).requireContext()
+        doReturn(context).`when`(fragment).context
         filePicker = FilePicker(fragment, store) {}
     }
 }

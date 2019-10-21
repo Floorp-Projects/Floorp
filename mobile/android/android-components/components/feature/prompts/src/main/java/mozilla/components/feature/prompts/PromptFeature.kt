@@ -55,19 +55,12 @@ internal const val FRAGMENT_TAG = "mozac_feature_prompt_dialog"
  * onActivityResult in your [Activity] or [Fragment] and forward its calls
  * to [onActivityResult].
  *
- * This feature will subscribe to the currently selected [Session] and display
+ * This feature will subscribe to the currently selected session and display
  * a suitable native dialog based on [Session.Observer.onPromptRequested] events.
  * Once the dialog is closed or the user selects an item from the dialog
  * the related [PromptRequest] will be consumed.
  *
- * @property activity The [Activity] which hosts this feature. If hosted by a
- * [Fragment], this parameter can be ignored. Note that an
- * [IllegalStateException] will be thrown if neither an active nor a fragment
- * is specified.
- * @property fragment The [Fragment] which hosts this feature. If hosted by an
- * [Activity], this parameter can be ignored. Note that an
- * [IllegalStateException] will be thrown if neither an active nor a fragment
- * is specified.
+ * @property container The [Activity] or [Fragment] which hosts this feature.
  * @property store The [BrowserStore] this feature should subscribe to.
  * @property customTabId Optional id of a custom tab. Instead of showing context
  * menus for the currently selected tab this feature will show only context menus
@@ -79,9 +72,8 @@ internal const val FRAGMENT_TAG = "mozac_feature_prompt_dialog"
  * Once the request is completed, [onPermissionsResult] needs to be invoked.
  */
 @Suppress("TooManyFunctions")
-class PromptFeature(
-    private val activity: Activity? = null,
-    private val fragment: Fragment? = null,
+class PromptFeature internal constructor(
+    private val container: PromptContainer,
     private val store: BrowserStore,
     private var customTabId: String? = null,
     private val fragmentManager: FragmentManager,
@@ -95,38 +87,43 @@ class PromptFeature(
     constructor(
         activity: Activity,
         store: BrowserStore,
-        sessionId: String? = null,
+        customTabId: String? = null,
         fragmentManager: FragmentManager,
         onNeedToRequestPermissions: OnNeedToRequestPermissions
     ) : this(
-        activity, null, store, sessionId, fragmentManager, onNeedToRequestPermissions
+        PromptContainer.Activity(activity), store, customTabId, fragmentManager, onNeedToRequestPermissions
     )
     constructor(
         fragment: Fragment,
         store: BrowserStore,
-        sessionId: String? = null,
+        customTabId: String? = null,
         fragmentManager: FragmentManager,
         onNeedToRequestPermissions: OnNeedToRequestPermissions
     ) : this(
-        null, fragment, store, sessionId, fragmentManager, onNeedToRequestPermissions
+        PromptContainer.Fragment(fragment), store, customTabId, fragmentManager, onNeedToRequestPermissions
     )
-
-    init {
-        if (activity == null && fragment == null) {
-            throw IllegalStateException(
+    @Deprecated("Pass only activity or fragment instead")
+    constructor(
+        activity: Activity? = null,
+        fragment: Fragment? = null,
+        store: BrowserStore,
+        customTabId: String? = null,
+        fragmentManager: FragmentManager,
+        onNeedToRequestPermissions: OnNeedToRequestPermissions
+    ) : this(
+        activity?.let { PromptContainer.Activity(it) }
+            ?: fragment?.let { PromptContainer.Fragment(it) }
+            ?: throw IllegalStateException(
                 "activity and fragment references " +
                     "must not be both null, at least one must be initialized."
-            )
-        }
-    }
+            ),
+        store,
+        customTabId,
+        fragmentManager,
+        onNeedToRequestPermissions
+    )
 
-    private val context get() = activity ?: requireNotNull(fragment).requireContext()
-
-    private val filePicker = if (activity != null) {
-        FilePicker(activity, store, customTabId, onNeedToRequestPermissions)
-    } else {
-        FilePicker(requireNotNull(fragment), store, customTabId, onNeedToRequestPermissions)
-    }
+    private val filePicker = FilePicker(container, store, customTabId, onNeedToRequestPermissions)
 
     override val onNeedToRequestPermissions
         get() = filePicker.onNeedToRequestPermissions
@@ -248,23 +245,21 @@ class PromptFeature(
                 is MultipleChoice -> it.onConfirm(value as Array<Choice>)
 
                 is Authentication -> {
-                    val pair = value as Pair<String, String>
-                    it.onConfirm(pair.first, pair.second)
+                    val (user, password) = value as Pair<String, String>
+                    it.onConfirm(user, password)
                 }
 
                 is TextPrompt -> {
-                    val pair = value as Pair<Boolean, String>
+                    val (shouldNotShowMoreDialogs, text) = value as Pair<Boolean, String>
 
-                    val shouldNotShowMoreDialogs = pair.first
                     promptAbuserDetector.userWantsMoreDialogs(!shouldNotShowMoreDialogs)
-                    it.onConfirm(!shouldNotShowMoreDialogs, pair.second)
+                    it.onConfirm(!shouldNotShowMoreDialogs, text)
                 }
 
                 is PromptRequest.Confirm -> {
-                    val pair = value as Pair<Boolean, MultiButtonDialogFragment.ButtonType>
-                    val isCheckBoxChecked = pair.first
+                    val (isCheckBoxChecked, buttonType) = value as Pair<Boolean, MultiButtonDialogFragment.ButtonType>
                     promptAbuserDetector.userWantsMoreDialogs(!isCheckBoxChecked)
-                    when (pair.second) {
+                    when (buttonType) {
                         MultiButtonDialogFragment.ButtonType.POSITIVE ->
                             it.onConfirmPositiveButton(!isCheckBoxChecked)
                         MultiButtonDialogFragment.ButtonType.NEGATIVE ->
@@ -392,9 +387,9 @@ class PromptFeature(
 
             is PromptRequest.Popup -> {
 
-                val title = context.getString(R.string.mozac_feature_prompts_popup_dialog_title)
-                val positiveLabel = context.getString(R.string.mozac_feature_prompts_allow)
-                val negativeLabel = context.getString(R.string.mozac_feature_prompts_deny)
+                val title = container.getString(R.string.mozac_feature_prompts_popup_dialog_title)
+                val positiveLabel = container.getString(R.string.mozac_feature_prompts_allow)
+                val negativeLabel = container.getString(R.string.mozac_feature_prompts_deny)
 
                 ConfirmDialogFragment.newInstance(
                     sessionId = session.id,
@@ -408,12 +403,12 @@ class PromptFeature(
             is PromptRequest.Confirm -> {
                 with(promptRequest) {
                     val positiveButton = if (positiveButtonTitle.isEmpty()) {
-                        context.getString(R.string.mozac_feature_prompts_ok)
+                        container.getString(R.string.mozac_feature_prompts_ok)
                     } else {
                         positiveButtonTitle
                     }
                     val negativeButton = if (positiveButtonTitle.isEmpty()) {
-                        context.getString(R.string.mozac_feature_prompts_cancel)
+                        container.getString(R.string.mozac_feature_prompts_cancel)
                     } else {
                         positiveButtonTitle
                     }
@@ -456,10 +451,6 @@ class PromptFeature(
             is PromptRequest.Popup -> true
             is Alert, is TextPrompt, is PromptRequest.Confirm -> promptAbuserDetector.shouldShowMoreDialogs
         }
-    }
-
-    companion object {
-        const val FILE_PICKER_ACTIVITY_REQUEST_CODE = 1234
     }
 }
 
