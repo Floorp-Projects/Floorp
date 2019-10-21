@@ -334,17 +334,6 @@ void WinCompositorWidget::UpdateCompositorWndSizeIfNecessary() {
     return;
   }
 
-  // This code is racing with the compositor, which needs to reparent
-  // the compositor surface to the actual window (mWnd). To avoid racing
-  // mutations, we refuse to proceed until GetParent returns the
-  // expected result. It's ok to fail to resize here since this function is
-  // called pretty frequently, and the reparenting race only happens when the
-  // window is being created for the first time.
-  HWND realParent = ::GetParent(mCompositorWnds.mCompositorWnd);
-  if (realParent != mWnd) {
-    return;
-  }
-
   LayoutDeviceIntSize size = GetClientSize();
   if (mLastCompositorWndSize == size) {
     return;
@@ -353,7 +342,7 @@ void WinCompositorWidget::UpdateCompositorWndSizeIfNecessary() {
   // Force a resize and redraw (but not a move, activate, etc.).
   if (!::SetWindowPos(mCompositorWnds.mCompositorWnd, nullptr, 0, 0, size.width,
                       size.height,
-                      SWP_NOACTIVATE | SWP_NOCOPYBITS |
+                      SWP_NOMOVE | SWP_NOACTIVATE | SWP_NOCOPYBITS |
                           SWP_NOOWNERZORDER | SWP_NOZORDER)) {
     return;
   }
