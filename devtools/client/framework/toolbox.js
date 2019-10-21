@@ -175,6 +175,13 @@ loader.lazyRequireGetter(
   true
 );
 
+loader.lazyRequireGetter(
+  this,
+  "NodeFront",
+  "devtools/shared/fronts/node",
+  true
+);
+
 /**
  * A "Toolbox" is the component that holds all the tools for one specific
  * target. Visually, it's a document that includes the tools tabs and all
@@ -3410,8 +3417,6 @@ Toolbox.prototype = {
    * An helper function that returns an object contain a highlighter and unhighlighter
    * function.
    *
-   * @param {Boolean} isGrip: Set to true if the `highlight` function is going to be
-   *                          called with a Grip (and not from a NodeFront).
    * @returns {Object} an object of the following shape:
    *   - {AsyncFunction} highlight: A function that will initialize the highlighter front
    *                                and call highlighter.highlight with the provided node
@@ -3423,7 +3428,7 @@ Toolbox.prototype = {
    *                                  then unhighlight to prevent zombie highlighters.
    *
    */
-  getHighlighter(fromGrip = false) {
+  getHighlighter() {
     let pendingHighlight;
     let currentHighlighterFront;
 
@@ -3432,7 +3437,7 @@ Toolbox.prototype = {
         pendingHighlight = (async () => {
           let nodeFront = object;
 
-          if (fromGrip) {
+          if (!(nodeFront instanceof NodeFront)) {
             const inspectorFront = await this.target.getFront("inspector");
             nodeFront = await inspectorFront.getNodeFrontFromNodeGrip(object);
           }
