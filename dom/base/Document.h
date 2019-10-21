@@ -573,6 +573,8 @@ class Document : public nsINode,
     return mIntrinsicStoragePrincipal;
   }
 
+  void ClearActiveStoragePrincipal() { mActiveStoragePrincipal = nullptr; }
+
   nsIPrincipal* GetContentBlockingAllowListPrincipal() const {
     return mContentBlockingAllowListPrincipal;
   }
@@ -5342,6 +5344,11 @@ class Document : public nsINode,
 
   // The principal to use for the storage area of this document.
   nsCOMPtr<nsIPrincipal> mIntrinsicStoragePrincipal;
+
+  // The cached storage principal for this document.
+  // This is mutable so that we can keep EffectiveStoragePrincipal() const
+  // which is required due to its CloneDocHelper() call site.  :-(
+  mutable nsCOMPtr<nsIPrincipal> mActiveStoragePrincipal;
 
   // The principal to use for the content blocking allow list.
   nsCOMPtr<nsIPrincipal> mContentBlockingAllowListPrincipal;

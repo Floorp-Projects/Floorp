@@ -7147,6 +7147,11 @@ void nsGlobalWindowInner::StorageAccessGranted() {
 
   // Reset DOM Cache
   mCacheStorage = nullptr;
+
+  // Reset the active storage principal
+  if (mDoc) {
+    mDoc->ClearActiveStoragePrincipal();
+  }
 }
 
 mozilla::dom::TabGroup* nsPIDOMWindowInner::TabGroup() {
@@ -7213,6 +7218,17 @@ void nsPIDOMWindowInner::SaveStorageAccessGranted(
   if (!HasStorageAccessGranted(aPermissionKey)) {
     mStorageAccessGranted.AppendElement(aPermissionKey);
   }
+
+  nsGlobalWindowInner::Cast(this)->ClearActiveStoragePrincipal();
+}
+
+void nsGlobalWindowInner::ClearActiveStoragePrincipal() {
+  Document* doc = GetExtantDoc();
+  if (doc) {
+    doc->ClearActiveStoragePrincipal();
+  }
+
+  CallOnChildren(&nsGlobalWindowInner::ClearActiveStoragePrincipal);
 }
 
 bool nsPIDOMWindowInner::HasStorageAccessGranted(
