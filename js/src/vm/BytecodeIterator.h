@@ -39,8 +39,9 @@ class BytecodeIterator {
 
   // Post-increment
   BytecodeIterator operator++(int) {
+    BytecodeIterator previous(*this);
     current_ = current_.next();
-    return *this;
+    return previous;
   }
 };
 
