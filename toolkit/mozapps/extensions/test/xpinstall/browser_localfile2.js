@@ -26,30 +26,29 @@ add_task(async function test() {
   }
 
   let URI = TESTROOT + "installtrigger.html?" + triggers;
-  await BrowserTestUtils.withNewTab(
-    { gBrowser, url: "about:blank" },
-    async function(browser) {
-      await ContentTask.spawn(browser, URI, async function(URI) {
-        content.location.href = URI;
+  await BrowserTestUtils.withNewTab({ gBrowser, url: TESTROOT }, async function(
+    browser
+  ) {
+    await ContentTask.spawn(browser, URI, async function(URI) {
+      content.location.href = URI;
 
-        let loaded = ContentTaskUtils.waitForEvent(this, "load", true);
-        let installTriggered = ContentTaskUtils.waitForEvent(
-          this,
-          "InstallTriggered",
-          true,
-          null,
-          true
-        );
-        await Promise.all([loaded, installTriggered]);
+      let loaded = ContentTaskUtils.waitForEvent(this, "load", true);
+      let installTriggered = ContentTaskUtils.waitForEvent(
+        this,
+        "InstallTriggered",
+        true,
+        null,
+        true
+      );
+      await Promise.all([loaded, installTriggered]);
 
-        let doc = content.document;
-        is(
-          doc.getElementById("return").textContent,
-          "exception",
-          "installTrigger should have failed"
-        );
-      });
-    }
-  );
+      let doc = content.document;
+      is(
+        doc.getElementById("return").textContent,
+        "exception",
+        "installTrigger should have failed"
+      );
+    });
+  });
 });
 // ----------------------------------------------------------------------------
