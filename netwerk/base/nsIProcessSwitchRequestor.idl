@@ -42,4 +42,11 @@ interface nsIProcessSwitchRequestor : nsISupports
    * @throws NS_ERROR_NOT_AVAILABLE if we don't have a responseHead
    */
   [must_use] boolean hasCrossOriginOpenerPolicyMismatch();
+
+  /**
+   * Returns a cached CrossOriginOpenerPolicy that is computed just before we
+   * determine if there is a policy mismatch.
+   * @throws NS_ERROR_NOT_AVAILABLE if it has not been computed yet
+   */
+  [must_use] readonly attribute nsILoadInfo_CrossOriginOpenerPolicy crossOriginOpenerPolicy;
 };
