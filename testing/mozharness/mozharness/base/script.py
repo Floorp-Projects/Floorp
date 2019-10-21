@@ -119,7 +119,20 @@ class PlatformMixin(object):
         if sys.platform.startswith("linux"):
             return True
 
-    def _is_redhat(self):
+    def _is_debian(self):
+        """ check if the current operating system is explicitly Debian.
+        This intentionally doesn't count Debian derivatives like Ubuntu.
+
+        Returns:
+            bool: True if the current platform is debian, False otherwise
+        """
+        if not self._is_linux():
+            return False
+        self.info(mozinfo.linux_distro)
+        re_debian_distro = re.compile('debian')
+        return re_debian_distro.match(mozinfo.linux_distro) is not None
+
+    def _is_redhat_based(self):
         """ check if the current operating system is a Redhat derived Linux distribution.
 
         Returns:

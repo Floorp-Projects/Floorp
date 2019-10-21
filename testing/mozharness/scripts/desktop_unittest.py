@@ -196,6 +196,7 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin,
                 'clobber',
                 'download-and-extract',
                 'create-virtualenv',
+                'start-pulseaudio',
                 'install',
                 'stage-files',
                 'run-tests',
@@ -608,6 +609,27 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin,
                                  if self._query_specified_suites(cat) is not None]
         super(DesktopUnittest, self).download_and_extract(extract_dirs=extract_dirs,
                                                           suite_categories=target_categories)
+
+    def start_pulseaudio(self):
+        command = []
+        if (os.environ.get('NEED_PULSEAUDIO') == 'true' and self._is_debian()):
+            # Debian platform requires additional idle timer specification so
+            # that it will not terminate the process on its own.
+            command.extend([
+                'pulseaudio',
+                '--daemonize',
+                '--log-level=4',
+                '--log-time=1',
+                '-vvvvv',
+                '--exit-idle-time=-1'
+            ])
+
+        # Instantiate pulseaudio.
+        if self._is_debian():
+            self._kill_named_proc('pulseaudio')
+            self.run_command(command)
+        self.run_command('pactl load-module module-null-sink')
+        self.run_command('pactl list modules short')
 
     def stage_files(self):
         for category in SUITE_CATEGORIES:
