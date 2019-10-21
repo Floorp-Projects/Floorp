@@ -30,13 +30,9 @@ using namespace mozilla::ipc;
 namespace mozilla {
 namespace dom {
 
-BrowserBridgeChild::BrowserBridgeChild(nsFrameLoader* aFrameLoader,
-                                       BrowsingContext* aBrowsingContext,
+BrowserBridgeChild::BrowserBridgeChild(BrowsingContext* aBrowsingContext,
                                        TabId aId)
-    : mId{aId},
-      mLayersId{0},
-      mFrameLoader(aFrameLoader),
-      mBrowsingContext(aBrowsingContext) {}
+    : mId{aId}, mLayersId{0}, mBrowsingContext(aBrowsingContext) {}
 
 BrowserBridgeChild::~BrowserBridgeChild() {
 #if defined(ACCESSIBILITY) && defined(XP_WIN)
@@ -46,7 +42,11 @@ BrowserBridgeChild::~BrowserBridgeChild() {
 #endif
 }
 
-already_AddRefed<BrowserBridgeHost> BrowserBridgeChild::FinishInit() {
+already_AddRefed<BrowserBridgeHost> BrowserBridgeChild::FinishInit(
+    nsFrameLoader* aFrameLoader) {
+  MOZ_DIAGNOSTIC_ASSERT(!mFrameLoader);
+  mFrameLoader = aFrameLoader;
+
   RefPtr<Element> owner = mFrameLoader->GetOwnerContent();
   nsCOMPtr<nsIDocShell> docShell = do_GetInterface(owner->GetOwnerGlobal());
   MOZ_DIAGNOSTIC_ASSERT(docShell);
