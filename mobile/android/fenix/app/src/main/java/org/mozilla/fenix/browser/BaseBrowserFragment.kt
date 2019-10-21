@@ -80,6 +80,7 @@ import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.ext.getRootView
 import org.mozilla.fenix.isInExperiment
 import org.mozilla.fenix.quickactionsheet.QuickActionSheetBehavior
 import org.mozilla.fenix.settings.SupportUtils
@@ -165,8 +166,17 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler, SessionManager.Obs
 
         return getSessionById()?.also { session ->
 
+            // We need to show the snackbar while the browsing data is deleting(if "Delete
+            // browsing data on quit" is activated). After the deletion is over, the snackbar
+            // is dismissed.
+            val snackbar: FenixSnackbar? = requireActivity().getRootView()?.let { v ->
+                FenixSnackbar.make(v, Snackbar.LENGTH_INDEFINITE)
+                    .setText(v.context.getString(R.string.deleting_browsing_data_in_progress))
+            }
+
             val browserToolbarController = DefaultBrowserToolbarController(
                 requireActivity(),
+                snackbar,
                 findNavController(),
                 (activity as HomeActivity).browsingModeManager,
                 findInPageLauncher = { findInPageIntegration.withFeature { it.launch() } },

@@ -10,6 +10,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import io.mockk.verifyOrder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.ObsoleteCoroutinesApi
@@ -28,6 +29,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.TestApplication
+import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.PermissionStorage
 import org.mozilla.fenix.ext.clearAndCommit
 import org.mozilla.fenix.ext.components
@@ -49,6 +51,7 @@ class DeleteAndQuitTest {
     private val permissionStorage: PermissionStorage = mockk(relaxed = true)
     private val engine: Engine = mockk(relaxed = true)
     private val removeAllTabsUseCases: TabsUseCases.RemoveAllTabsUseCase = mockk(relaxed = true)
+    private val snackbar = mockk<FenixSnackbar>(relaxed = true)
 
     @Before
     fun setUp() {
@@ -80,10 +83,12 @@ class DeleteAndQuitTest {
         // When
         settings.setDeleteDataOnQuit(DeleteBrowsingDataOnQuitType.TABS, true)
 
-        deleteAndQuit(activity, this)
+        deleteAndQuit(activity, this, snackbar)
 
-        verify {
+        verifyOrder {
+            snackbar.show()
             removeAllTabsUseCases.invoke()
+            snackbar.dismiss()
             activity.finish()
         }
 
@@ -110,9 +115,11 @@ class DeleteAndQuitTest {
             settings.setDeleteDataOnQuit(it, true)
         }
 
-        deleteAndQuit(activity, this)
+        deleteAndQuit(activity, this, snackbar)
 
         verify(exactly = 1) {
+            snackbar.show()
+
             engine.clearData(Engine.BrowsingData.allCaches())
 
             removeAllTabsUseCases.invoke()
@@ -133,6 +140,8 @@ class DeleteAndQuitTest {
             engine.clearData(Engine.BrowsingData.select(Engine.BrowsingData.DOM_STORAGES))
 
             historyStorage
+
+            snackbar.dismiss()
 
             activity.finish()
         }

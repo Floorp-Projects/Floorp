@@ -10,15 +10,18 @@ import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.ext.settings
 
 /**
  * Deletes selected browsing data and finishes the activity.
  */
-fun deleteAndQuit(activity: Activity, coroutineScope: CoroutineScope) {
+fun deleteAndQuit(activity: Activity, coroutineScope: CoroutineScope, snackbar: FenixSnackbar?) {
     coroutineScope.launch {
         val settings = activity.settings()
         val controller = DefaultDeleteBrowsingDataController(activity, coroutineContext)
+
+        snackbar?.show()
 
         DeleteBrowsingDataOnQuitType.values().map { type ->
             launch {
@@ -27,6 +30,8 @@ fun deleteAndQuit(activity: Activity, coroutineScope: CoroutineScope) {
                 }
             }
         }.joinAll()
+
+        snackbar?.dismiss()
 
         activity.finish()
     }

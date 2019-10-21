@@ -42,6 +42,7 @@ import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 import org.mozilla.fenix.collections.CreateCollectionViewModel
 import org.mozilla.fenix.components.Analytics
+import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.components
@@ -77,6 +78,7 @@ class DefaultBrowserToolbarControllerTest {
     private val sessionUseCases: SessionUseCases = mockk(relaxed = true)
     private val scope: LifecycleCoroutineScope = mockk(relaxed = true)
     private val adjustBackgroundAndNavigate: (NavDirections) -> Unit = mockk(relaxed = true)
+    private val snackbar = mockk<FenixSnackbar>(relaxed = true)
 
     private lateinit var controller: DefaultBrowserToolbarController
 
@@ -86,6 +88,7 @@ class DefaultBrowserToolbarControllerTest {
 
         controller = DefaultBrowserToolbarController(
             activity = activity,
+            snackbar = snackbar,
             navController = navController,
             browsingModeManager = browsingModeManager,
             findInPageLauncher = findInPageLauncher,
@@ -109,7 +112,7 @@ class DefaultBrowserToolbarControllerTest {
         mockkStatic(
             "org.mozilla.fenix.settings.deletebrowsingdata.DeleteAndQuitKt"
         )
-        every { deleteAndQuit(any(), any()) } just Runs
+        every { deleteAndQuit(any(), any(), snackbar) } just Runs
 
         every { activity.components.analytics } returns analytics
         every { analytics.metrics } returns metrics
@@ -429,6 +432,7 @@ class DefaultBrowserToolbarControllerTest {
     fun handleToolbarOpenInFenixPress() {
         controller = DefaultBrowserToolbarController(
             activity = activity,
+            snackbar = snackbar,
             navController = navController,
             browsingModeManager = browsingModeManager,
             findInPageLauncher = findInPageLauncher,
@@ -466,6 +470,6 @@ class DefaultBrowserToolbarControllerTest {
 
         controller.handleToolbarItemInteraction(item)
 
-        verify { deleteAndQuit(activity, scope) }
+        verify { deleteAndQuit(activity, scope, snackbar) }
     }
 }

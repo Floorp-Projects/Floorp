@@ -32,6 +32,7 @@ import org.mozilla.fenix.browser.BrowserFragmentDirections
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 import org.mozilla.fenix.collections.CreateCollectionViewModel
+import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
@@ -54,6 +55,7 @@ interface BrowserToolbarController {
 @Suppress("LargeClass")
 class DefaultBrowserToolbarController(
     private val activity: Activity,
+    private val snackbar: FenixSnackbar?,
     private val navController: NavController,
     private val browsingModeManager: BrowsingModeManager,
     private val findInPageLauncher: () -> Unit,
@@ -206,7 +208,7 @@ class DefaultBrowserToolbarController(
                 // Close this activity since it is no longer displaying any session
                 activity.finish()
             }
-            ToolbarMenu.Item.Quit -> deleteAndQuit(activity, scope)
+            ToolbarMenu.Item.Quit -> deleteAndQuit(activity, scope, snackbar)
         }
     }
 

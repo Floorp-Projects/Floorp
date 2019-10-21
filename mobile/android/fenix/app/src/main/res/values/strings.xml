@@ -740,6 +740,8 @@
     <string name="delete_browsing_data_prompt_allow">Delete</string>
     <!-- Text for the snackbar confirmation that the data was deleted -->
     <string name="preferences_delete_browsing_data_snackbar">Browsing data deleted</string>
+    <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
+    <string name="deleting_browsing_data_in_progress">Deleting browsing data&#8230;</string>
 
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message

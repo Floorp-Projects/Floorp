@@ -693,10 +693,18 @@ class HomeFragment : Fragment() {
                         from = BrowserDirection.FromHome
                     )
                 }
+                // We need to show the snackbar while the browsing data is deleting(if "Delete
+                // browsing data on quit" is activated). After the deletion is over, the snackbar
+                // is dismissed.
                 HomeMenu.Item.Quit -> activity?.let { activity ->
                     deleteAndQuit(
                         activity,
-                        lifecycleScope
+                        lifecycleScope,
+                        view?.let { view ->
+                            FenixSnackbar.make(view, Snackbar.LENGTH_INDEFINITE)
+                                .setText(view.context.getString(R.string.deleting_browsing_data_in_progress))
+                                .setAnchorView(bottom_bar)
+                        }
                     )
                 }
             }
