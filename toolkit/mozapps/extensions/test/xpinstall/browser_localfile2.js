@@ -27,7 +27,7 @@ add_task(async function test() {
 
   let URI = TESTROOT + "installtrigger.html?" + triggers;
   await BrowserTestUtils.withNewTab(
-    { gBrowser, url: TESTROOT },
+    { gBrowser, url: "about:blank" },
     async function(browser) {
       await ContentTask.spawn(browser, URI, async function(URI) {
         content.location.href = URI;
