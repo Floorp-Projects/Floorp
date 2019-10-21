@@ -7,34 +7,20 @@
 const { shallow } = require("enzyme");
 const { createFactory } = require("react");
 // Import test helpers
-const {
-  flushPromises,
-  setupStore,
-} = require("devtools/client/application/test/node/helpers");
+const { setupStore } = require("devtools/client/application/test/node/helpers");
 // Import fixtures
 const {
   MANIFEST_NO_ISSUES,
 } = require("devtools/client/application/test/node/fixtures/data/constants");
 
-// Import app modules
-const {
-  ManifestDevToolsError,
-  services,
-} = require("devtools/client/application/src/modules/services");
-
-const {
-  FETCH_MANIFEST_FAILURE,
-  FETCH_MANIFEST_START,
-  FETCH_MANIFEST_SUCCESS,
-} = require("devtools/client/application/src/constants");
+const manifestActions = require("devtools/client/application/src/actions/manifest");
+// NOTE: we need to spy on the action before we load the component, so it gets
+//       bound to the spy, not the original implementation
+const fetchManifestActionSpy = jest.spyOn(manifestActions, "fetchManifest");
 
 const ManifestLoader = createFactory(
   require("devtools/client/application/src/components/manifest/ManifestLoader")
 );
-
-/**
- * Test for ManifestPage.js component
- */
 
 describe("ManifestLoader", () => {
   function buildStore({ manifest, errorMessage, isLoading }) {
@@ -50,64 +36,19 @@ describe("ManifestLoader", () => {
     return setupStore({ manifest: manifestState });
   }
 
-  it("loads a manifest when mounted and triggers actions when loading is OK", async () => {
-    const fetchManifestSpy = jest
-      .spyOn(services, "fetchManifest")
-      .mockResolvedValue(MANIFEST_NO_ISSUES);
-
-    const store = buildStore({});
-
-    shallow(ManifestLoader({ store })).dive();
-    await flushPromises();
-
-    expect(store.getActions()).toEqual([
-      { type: FETCH_MANIFEST_START },
-      { type: FETCH_MANIFEST_SUCCESS, manifest: MANIFEST_NO_ISSUES },
-    ]);
-
-    fetchManifestSpy.mockRestore();
+  afterAll(() => {
+    fetchManifestActionSpy.mockRestore();
   });
 
-  it("loads a manifest when mounted and triggers actions when loading fails", async () => {
-    const fetchManifestSpy = jest
-      .spyOn(services, "fetchManifest")
-      .mockRejectedValue(new Error("lorem ipsum"));
+  it("loads a manifest when mounted", async () => {
+    fetchManifestActionSpy.mockReturnValue({ type: "foo" });
 
     const store = buildStore({});
 
     shallow(ManifestLoader({ store })).dive();
-    await flushPromises();
 
-    expect(store.getActions()).toEqual([
-      { type: FETCH_MANIFEST_START },
-      { type: FETCH_MANIFEST_FAILURE, error: "lorem ipsum" },
-    ]);
-
-    fetchManifestSpy.mockRestore();
-  });
-
-  it("loads a manifest when mounted and triggers actions when loading fails due to devtools", async () => {
-    const error = new ManifestDevToolsError(":(");
-    const fetchManifestSpy = jest
-      .spyOn(services, "fetchManifest")
-      .mockRejectedValue(error);
-    const consoleErrorSpy = jest
-      .spyOn(console, "error")
-      .mockImplementation(() => {});
-
-    const store = buildStore({});
-
-    shallow(ManifestLoader({ store })).dive();
-    await flushPromises();
-
-    expect(store.getActions()).toEqual([
-      { type: FETCH_MANIFEST_START },
-      { type: FETCH_MANIFEST_FAILURE, error: "manifest-loaded-devtools-error" },
-    ]);
-    expect(consoleErrorSpy).toHaveBeenCalledWith(error);
-
-    fetchManifestSpy.mockRestore();
-    consoleErrorSpy.mockRestore();
+    expect(manifestActions.fetchManifest).toHaveBeenCalled();
+    fetchManifestActionSpy.mockReset();
   });
 
   it("renders a message when it is loading", async () => {
