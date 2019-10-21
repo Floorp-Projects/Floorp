@@ -1540,12 +1540,6 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
       return;
     }
 
-    // Make sure to pass the opener's top ID in case it was in a frame.
-    let openerTopWindowID = null;
-    if (win.opener) {
-      openerTopWindowID = win.opener.top.windowUtils.outerWindowID;
-    }
-
     let autoFilledLogin = this.stateForDocument(doc).fillsByRootElement.get(
       form.rootElement
     );
@@ -1556,7 +1550,6 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
       usernameField: mockUsername,
       newPasswordField: mockPassword,
       oldPasswordField: mockOldPassword,
-      openerTopWindowID,
       dismissedPrompt,
     });
   }
@@ -1648,13 +1641,8 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
       return;
     }
 
-    let openerTopWindowID = null;
-    if (win.opener) {
-      openerTopWindowID = win.opener.top.windowUtils.outerWindowID;
-    }
     this.sendAsyncMessage("PasswordManager:onGeneratedPasswordFilledOrEdited", {
       formActionOrigin,
-      openerTopWindowID,
       password: passwordField.value,
       username: (usernameField && usernameField.value) || "",
     });

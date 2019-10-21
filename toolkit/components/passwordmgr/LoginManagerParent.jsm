@@ -534,22 +534,16 @@ class LoginManagerParent extends JSWindowActorParent {
     return generatedPW.value;
   }
 
-  _getPrompter(browser, openerTopWindowID) {
+  _getPrompter(browser) {
     let prompterSvc = Cc[
       "@mozilla.org/login-manager/prompter;1"
     ].createInstance(Ci.nsILoginManagerPrompter);
     prompterSvc.init(browser.ownerGlobal);
     prompterSvc.browser = browser;
 
-    for (let win of Services.wm.getEnumerator(null)) {
-      let tabbrowser = win.gBrowser;
-      if (tabbrowser) {
-        let browser = tabbrowser.getBrowserForOuterWindowID(openerTopWindowID);
-        if (browser) {
-          prompterSvc.openerBrowser = browser;
-          break;
-        }
-      }
+    let opener = this.browsingContext.opener;
+    if (opener) {
+      prompterSvc.openerBrowser = opener.top.embedderElement;
     }
 
     return prompterSvc;
@@ -564,7 +558,6 @@ class LoginManagerParent extends JSWindowActorParent {
       usernameField,
       newPasswordField,
       oldPasswordField,
-      openerTopWindowID,
       dismissedPrompt,
     }
   ) {
@@ -629,7 +622,7 @@ class LoginManagerParent extends JSWindowActorParent {
     // password, allow the user to select from a list of applicable
     // logins to update the password for.
     if (!usernameField && oldPasswordField && logins.length) {
-      let prompter = this._getPrompter(browser, openerTopWindowID);
+      let prompter = this._getPrompter(browser);
 
       if (logins.length == 1) {
         let oldLogin = logins[0];
@@ -706,7 +699,7 @@ class LoginManagerParent extends JSWindowActorParent {
       // Change password if needed.
       if (existingLogin.password != formLogin.password) {
         log("...passwords differ, prompting to change.");
-        let prompter = this._getPrompter(browser, openerTopWindowID);
+        let prompter = this._getPrompter(browser);
         prompter.promptToChangePassword(
           existingLogin,
           formLogin,
@@ -716,7 +709,7 @@ class LoginManagerParent extends JSWindowActorParent {
         );
       } else if (!existingLogin.username && formLogin.username) {
         log("...empty username update, prompting to change.");
-        let prompter = this._getPrompter(browser, openerTopWindowID);
+        let prompter = this._getPrompter(browser);
         prompter.promptToChangePassword(
           existingLogin,
           formLogin,
@@ -732,13 +725,12 @@ class LoginManagerParent extends JSWindowActorParent {
     }
 
     // Prompt user to save login (via dialog or notification bar)
-    let prompter = this._getPrompter(browser, openerTopWindowID);
+    let prompter = this._getPrompter(browser);
     prompter.promptToSavePassword(formLogin, dismissedPrompt);
   }
 
   _onGeneratedPasswordFilledOrEdited({
     formActionOrigin,
-    openerTopWindowID,
     password,
     username = "",
   }) {
@@ -925,7 +917,7 @@ class LoginManagerParent extends JSWindowActorParent {
       );
     }
     let browser = this.getRootBrowser();
-    let prompter = this._getPrompter(browser, openerTopWindowID);
+    let prompter = this._getPrompter(browser);
 
     if (loginToChange) {
       // Show a change doorhanger to allow modifying an already-saved login
