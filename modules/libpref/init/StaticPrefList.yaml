@@ -1914,6 +1914,12 @@
   value: false
   mirror: always
 
+# Overridden in all.js on RELEASE_OR_BETA in order to add the locked attribute.
+- name: dom.postMessage.sharedArrayBuffer.bypassCOOP_COEP.insecure.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # Presentation API
 - name: dom.presentation.enabled
   type: bool
