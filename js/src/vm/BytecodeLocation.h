@@ -35,6 +35,7 @@ class BytecodeLocation {
 #ifdef DEBUG
   const JSScript* debugOnlyScript_;
 #endif
+
   // Construct a new BytecodeLocation, while borrowing scriptIdentity
   // from some other BytecodeLocation.
   BytecodeLocation(const BytecodeLocation& loc, RawBytecode pc)
@@ -73,6 +74,19 @@ class BytecodeLocation {
 
   uint32_t bytecodeToOffset(const JSScript* script) const;
 
+  uint32_t tableSwitchCaseOffset(const JSScript* script,
+                                 uint32_t caseIndex) const;
+
+  uint32_t getJumpTargetOffset(const JSScript* script) const;
+
+  uint32_t getTableSwitchDefaultOffset(const JSScript* script) const;
+
+  uint32_t useCount() const;
+
+  uint32_t defCount() const;
+
+  int32_t jumpOffset() const { return GET_JUMP_OFFSET(rawBytecode_); }
+
   PropertyName* getPropertyName(const JSScript* script) const;
 
 #ifdef DEBUG
@@ -80,6 +94,8 @@ class BytecodeLocation {
     return debugOnlyScript_ == other.debugOnlyScript_;
   }
 #endif
+
+  // Overloaded operators
 
   bool operator==(const BytecodeLocation& other) const {
     MOZ_ASSERT(this->debugOnlyScript_ == other.debugOnlyScript_);
@@ -123,6 +139,10 @@ class BytecodeLocation {
     MOZ_ASSERT(isInBounds());
     return getOp() == op;
   }
+
+  // Accessors:
+
+  uint32_t length() const { return GetBytecodeLength(rawBytecode_); }
 
   bool isJumpTarget() const { return BytecodeIsJumpTarget(getOp()); }
 

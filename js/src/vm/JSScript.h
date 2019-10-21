@@ -2958,6 +2958,10 @@ class JSScript : public js::BaseScript {
     return js::BytecodeLocation(this, codeEnd());
   }
 
+  js::BytecodeLocation offsetToLocation(uint32_t offset) const {
+    return js::BytecodeLocation(this, offsetToPC(offset));
+  }
+
   /*
    * computedSizeOfData() is the in-use size of all the data sections.
    * sizeOfData() is the size of the block allocated to hold all the data

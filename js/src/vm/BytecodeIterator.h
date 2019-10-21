@@ -19,6 +19,8 @@ class BytecodeIterator {
 
   explicit BytecodeIterator(BytecodeLocation loc) : current_(loc) {}
 
+  BytecodeIterator& operator=(const BytecodeIterator&) = default;
+
   bool operator==(const BytecodeIterator& other) const {
     return other.current_ == current_;
   }
