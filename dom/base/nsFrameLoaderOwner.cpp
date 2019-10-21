@@ -90,34 +90,42 @@ void nsFrameLoaderOwner::ChangeRemotenessCommon(
   doc->BlockOnload();
   auto cleanup = MakeScopeExit([&]() { doc->UnblockOnload(false); });
 
-  // If we already have a Frameloader, destroy it, possibly preserving its
-  // browsing context.
-  if (mFrameLoader) {
-    if (aPreserveContext) {
-      bc = mFrameLoader->GetBrowsingContext();
-      mFrameLoader->SkipBrowsingContextDetach();
+  {
+    // Introduce a script blocker to ensure no JS is executed during the
+    // nsFrameLoader teardown & recreation process. Unload listeners will be run
+    // for the previous document, and the load will be started for the new one,
+    // at the end of this block.
+    nsAutoScriptBlocker sb;
+
+    // If we already have a Frameloader, destroy it, possibly preserving its
+    // browsing context.
+    if (mFrameLoader) {
+      if (aPreserveContext) {
+        bc = mFrameLoader->GetBrowsingContext();
+        mFrameLoader->SkipBrowsingContextDetach();
+      }
+
+      // Preserve the networkCreated status, as nsDocShells created after a
+      // process swap may shouldn't change their dynamically-created status.
+      networkCreated = mFrameLoader->IsNetworkCreated();
+      mFrameLoader->Destroy();
+      mFrameLoader = nullptr;
     }
 
-    // Preserve the networkCreated status, as nsDocShells created after a
-    // process swap may shouldn't change their dynamically-created status.
-    networkCreated = mFrameLoader->IsNetworkCreated();
-    mFrameLoader->Destroy();
-    mFrameLoader = nullptr;
-  }
+    mFrameLoader =
+        nsFrameLoader::Recreate(owner, bc, aRemoteType, networkCreated);
+    if (NS_WARN_IF(!mFrameLoader)) {
+      aRv.Throw(NS_ERROR_FAILURE);
+      return;
+    }
 
-  mFrameLoader =
-      nsFrameLoader::Recreate(owner, bc, aRemoteType, networkCreated);
-  if (NS_WARN_IF(!mFrameLoader)) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return;
-  }
-
-  // Invoke the frame loader initialization callback to perform setup on our new
-  // nsFrameLoader. This may cause our ErrorResult to become errored, so
-  // double-check after calling.
-  aFrameLoaderInit();
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
+    // Invoke the frame loader initialization callback to perform setup on our
+    // new nsFrameLoader. This may cause our ErrorResult to become errored, so
+    // double-check after calling.
+    aFrameLoaderInit();
+    if (NS_WARN_IF(aRv.Failed())) {
+      return;
+    }
   }
 
   // Now that we've got a new FrameLoader, we need to reset our
