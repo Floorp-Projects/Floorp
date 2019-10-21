@@ -2729,6 +2729,10 @@ class MacroAssembler : public MacroAssemblerSpecific {
                           const ValueOperand& dest, bool allowDouble,
                           Register temp, Label* fail);
 
+  template <typename T>
+  void loadFromTypedBigIntArray(Scalar::Type arrayType, const T& src,
+                                Register bigInt, Register64 temp);
+
   template <typename S, typename T>
   void storeToTypedIntArray(Scalar::Type arrayType, const S& value,
                             const T& dest) {

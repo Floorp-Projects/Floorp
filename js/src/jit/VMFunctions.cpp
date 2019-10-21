@@ -2049,5 +2049,10 @@ bool DoToNumeric(JSContext* cx, HandleValue arg, MutableHandleValue ret) {
   return ToNumeric(cx, ret);
 }
 
+void* AllocateBigIntNoGC(JSContext* cx) {
+  AutoUnsafeCallWithABI unsafe;
+  return js::Allocate<BigInt, NoGC>(cx);
+}
+
 }  // namespace jit
 }  // namespace js
