@@ -11,6 +11,7 @@
  */
 
 [Pref="media.webspeech.recognition.enable",
+ NamedConstructor=webkitSpeechRecognition,
  Func="SpeechRecognition::IsAuthorized",
  Exposed=Window]
 interface SpeechRecognition : EventTarget {
