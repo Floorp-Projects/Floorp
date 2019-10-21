@@ -15,46 +15,6 @@ var { XPCOMUtils } = ChromeUtils.import(
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   ContentMetaHandler: "resource:///modules/ContentMetaHandler.jsm",
-  LoginFormFactory: "resource://gre/modules/LoginFormFactory.jsm",
-  LoginManagerChild: "resource://gre/modules/LoginManagerChild.jsm",
-  InsecurePasswordUtils: "resource://gre/modules/InsecurePasswordUtils.jsm",
-});
-
-function shouldIgnoreLoginManagerEvent(event) {
-  let nodePrincipal = event.target.nodePrincipal;
-  // If we have a system or null principal then prevent any more password manager code from running and
-  // incorrectly using the document `location`. Also skip password manager for about: pages.
-  return (
-    nodePrincipal.isSystemPrincipal ||
-    nodePrincipal.isNullPrincipal ||
-    nodePrincipal.schemeIs("about")
-  );
-}
-
-addEventListener("DOMFormBeforeSubmit", function(event) {
-  if (shouldIgnoreLoginManagerEvent(event)) {
-    return;
-  }
-  let window = event.target.ownerGlobal;
-  LoginManagerChild.forWindow(window).onDOMFormBeforeSubmit(event);
-});
-addEventListener("DOMFormHasPassword", function(event) {
-  if (shouldIgnoreLoginManagerEvent(event)) {
-    return;
-  }
-  let window = event.target.ownerGlobal;
-  LoginManagerChild.forWindow(window).onDOMFormHasPassword(event);
-  let formLike = LoginFormFactory.createFromForm(event.originalTarget);
-  InsecurePasswordUtils.reportInsecurePasswords(formLike);
-});
-addEventListener("DOMInputPasswordAdded", function(event) {
-  if (shouldIgnoreLoginManagerEvent(event)) {
-    return;
-  }
-  let window = event.target.ownerGlobal;
-  LoginManagerChild.forWindow(window).onDOMInputPasswordAdded(event, content);
-  let formLike = LoginFormFactory.createFromField(event.originalTarget);
-  InsecurePasswordUtils.reportInsecurePasswords(formLike);
 });
 
 ContentMetaHandler.init(this);

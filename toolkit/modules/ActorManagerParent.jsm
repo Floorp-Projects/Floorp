@@ -291,6 +291,11 @@ let ACTORS = {
     },
     child: {
       moduleURI: "resource://gre/modules/LoginManagerChild.jsm",
+      events: {
+        DOMFormBeforeSubmit: {},
+        DOMFormHasPassword: {},
+        DOMInputPasswordAdded: {},
+      },
       messages: [
         "PasswordManager:fillForm",
         "PasswordManager:fillGeneratedPassword",
