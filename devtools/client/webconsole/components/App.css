@@ -282,7 +282,7 @@ body {
 }
 
 [dir="rtl"] .jsterm-editor .webconsole-editor-toolbar .webconsole-editor-toolbar-executeButton::before {
-  rotate: 180deg;
+  transform: rotate(180deg);
 }
 
 .jsterm-editor .webconsole-editor-toolbar .webconsole-editor-toolbar-history-prevExpressionButton {
