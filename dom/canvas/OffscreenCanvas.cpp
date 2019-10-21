@@ -229,12 +229,16 @@ already_AddRefed<Promise> OffscreenCanvas::ToBlob(JSContext* aCx,
         : mGlobal(aGlobal), mPromise(aPromise) {}
 
     // This is called on main thread.
-    nsresult ReceiveBlob(already_AddRefed<Blob> aBlob) override {
-      RefPtr<Blob> blob = aBlob;
+    nsresult ReceiveBlobImpl(already_AddRefed<BlobImpl> aBlobImpl) override {
+      RefPtr<BlobImpl> blobImpl = aBlobImpl;
 
       if (mPromise) {
-        RefPtr<Blob> newBlob = Blob::Create(mGlobal, blob->Impl());
-        mPromise->MaybeResolve(newBlob);
+        RefPtr<Blob> blob = Blob::Create(mGlobal, blobImpl);
+        if (NS_WARN_IF(!blob)) {
+          mPromise->MaybeReject(NS_ERROR_FAILURE);
+        } else {
+          mPromise->MaybeResolve(blob);
+        }
       }
 
       mGlobal = nullptr;

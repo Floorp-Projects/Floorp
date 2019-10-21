@@ -755,7 +755,10 @@ void BodyConsumer::ContinueConsumeBlobBody(BlobImpl* aBlobImpl,
 
   if (!aShuttingDown) {
     RefPtr<dom::Blob> blob = dom::Blob::Create(mGlobal, aBlobImpl);
-    MOZ_ASSERT(blob);
+    if (NS_WARN_IF(!blob)) {
+      localPromise->MaybeReject(NS_ERROR_FAILURE);
+      return;
+    }
 
     localPromise->MaybeResolve(blob);
   }

@@ -256,6 +256,10 @@ class MOZ_STACK_CLASS FormDataParser {
           mParentObject, reinterpret_cast<void*>(copy), body.Length(),
           NS_ConvertUTF8toUTF16(mFilename), NS_ConvertUTF8toUTF16(mContentType),
           /* aLastModifiedDate */ 0);
+      if (NS_WARN_IF(!file)) {
+        return false;
+      }
+
       Optional<nsAString> dummy;
       ErrorResult rv;
       mFormData->Append(name, *file, dummy, rv);

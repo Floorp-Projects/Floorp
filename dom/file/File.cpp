@@ -29,6 +29,11 @@ File* File::Create(nsIGlobalObject* aGlobal, BlobImpl* aImpl) {
   MOZ_ASSERT(aImpl);
   MOZ_ASSERT(aImpl->IsFile());
 
+  MOZ_ASSERT(aGlobal);
+  if (NS_WARN_IF(!aGlobal)) {
+    return nullptr;
+  }
+
   return new File(aGlobal, aImpl);
 }
 
@@ -38,6 +43,11 @@ already_AddRefed<File> File::Create(nsIGlobalObject* aGlobal,
                                     const nsAString& aContentType,
                                     uint64_t aLength,
                                     int64_t aLastModifiedDate) {
+  MOZ_ASSERT(aGlobal);
+  if (NS_WARN_IF(!aGlobal)) {
+    return nullptr;
+  }
+
   RefPtr<File> file = new File(
       aGlobal, new BaseBlobImpl(NS_LITERAL_STRING("BaseBlobImpl"), aName,
                                 aContentType, aLength, aLastModifiedDate));
@@ -51,6 +61,11 @@ already_AddRefed<File> File::CreateMemoryFile(nsIGlobalObject* aGlobal,
                                               const nsAString& aName,
                                               const nsAString& aContentType,
                                               int64_t aLastModifiedDate) {
+  MOZ_ASSERT(aGlobal);
+  if (NS_WARN_IF(!aGlobal)) {
+    return nullptr;
+  }
+
   RefPtr<File> file =
       new File(aGlobal, new MemoryBlobImpl(aMemoryBuffer, aLength, aName,
                                            aContentType, aLastModifiedDate));
@@ -61,6 +76,12 @@ already_AddRefed<File> File::CreateMemoryFile(nsIGlobalObject* aGlobal,
 already_AddRefed<File> File::CreateFromFile(nsIGlobalObject* aGlobal,
                                             nsIFile* aFile) {
   MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
+
+  MOZ_ASSERT(aGlobal);
+  if (NS_WARN_IF(!aGlobal)) {
+    return nullptr;
+  }
+
   RefPtr<File> file = new File(aGlobal, new FileBlobImpl(aFile));
   return file.forget();
 }
@@ -71,6 +92,12 @@ already_AddRefed<File> File::CreateFromFile(nsIGlobalObject* aGlobal,
                                             const nsAString& aName,
                                             const nsAString& aContentType) {
   MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
+
+  MOZ_ASSERT(aGlobal);
+  if (NS_WARN_IF(!aGlobal)) {
+    return nullptr;
+  }
+
   RefPtr<File> file =
       new File(aGlobal, new FileBlobImpl(aFile, aName, aContentType));
   return file.forget();
@@ -146,6 +173,12 @@ already_AddRefed<Promise> File::CreateFromNsIFile(
     ErrorResult& aRv) {
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
 
+  MOZ_ASSERT(global);
+  if (NS_WARN_IF(!global)) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
   RefPtr<Promise> promise =
       FileCreatorHelper::CreateFile(global, aData, aBag, true, aRv);
   return promise.forget();
@@ -163,6 +196,12 @@ already_AddRefed<Promise> File::CreateFromFileName(
   }
 
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
+
+  MOZ_ASSERT(global);
+  if (NS_WARN_IF(!global)) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
 
   RefPtr<Promise> promise =
       FileCreatorHelper::CreateFile(global, file, aBag, false, aRv);

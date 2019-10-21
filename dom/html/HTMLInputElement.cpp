@@ -243,12 +243,19 @@ class DispatchChangeEventCallback final : public GetFilesCallback {
     MOZ_ASSERT(aInputElement);
   }
 
-  virtual void Callback(nsresult aStatus,
-                        const Sequence<RefPtr<File>>& aFiles) override {
+  virtual void Callback(
+      nsresult aStatus,
+      const FallibleTArray<RefPtr<BlobImpl>>& aBlobImpls) override {
     nsTArray<OwningFileOrDirectory> array;
-    for (uint32_t i = 0; i < aFiles.Length(); ++i) {
+    for (uint32_t i = 0; i < aBlobImpls.Length(); ++i) {
       OwningFileOrDirectory* element = array.AppendElement();
-      element->SetAsFile() = aFiles[i];
+      RefPtr<File> file =
+          File::Create(mInputElement->GetOwnerGlobal(), aBlobImpls[i]);
+      if (NS_WARN_IF(!file)) {
+        break;
+      }
+
+      element->SetAsFile() = file;
     }
 
     mInputElement->SetFilesOrDirectories(array, true);
@@ -2002,7 +2009,9 @@ void HTMLInputElement::MozSetFileArray(
   nsTArray<OwningFileOrDirectory> files;
   for (uint32_t i = 0; i < aFiles.Length(); ++i) {
     RefPtr<File> file = File::Create(global, aFiles[i].get()->Impl());
-    MOZ_ASSERT(file);
+    if (NS_WARN_IF(!file)) {
+      return;
+    }
 
     OwningFileOrDirectory* element = files.AppendElement();
     element->SetAsFile() = file;
@@ -2050,6 +2059,10 @@ void HTMLInputElement::MozSetFileNameArray(const Sequence<nsString>& aFileNames,
     }
 
     RefPtr<File> domFile = File::CreateFromFile(global, file);
+    if (NS_WARN_IF(!domFile)) {
+      aRv.Throw(NS_ERROR_FAILURE);
+      return;
+    }
 
     OwningFileOrDirectory* element = files.AppendElement();
     element->SetAsFile() = domFile;
@@ -6113,7 +6126,9 @@ static nsTArray<OwningFileOrDirectory> RestoreFileContentData(
       }
 
       RefPtr<File> file = File::Create(aWindow->AsGlobal(), it.get_BlobImpl());
-      MOZ_ASSERT(file);
+      if (NS_WARN_IF(!file)) {
+        continue;
+      }
 
       OwningFileOrDirectory* element = res.AppendElement();
       element->SetAsFile() = file;
@@ -7135,17 +7150,10 @@ GetFilesHelper* HTMLInputElement::GetOrCreateGetFilesHelper(bool aRecursiveFlag,
                                                             ErrorResult& aRv) {
   MOZ_ASSERT(mFileData);
 
-  nsCOMPtr<nsIGlobalObject> global = OwnerDoc()->GetScopeObject();
-  MOZ_ASSERT(global);
-  if (!global) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
   if (aRecursiveFlag) {
     if (!mFileData->mGetFilesRecursiveHelper) {
       mFileData->mGetFilesRecursiveHelper = GetFilesHelper::Create(
-          global, GetFilesOrDirectoriesInternal(), aRecursiveFlag, aRv);
+          GetFilesOrDirectoriesInternal(), aRecursiveFlag, aRv);
       if (NS_WARN_IF(aRv.Failed())) {
         return nullptr;
       }
@@ -7156,7 +7164,7 @@ GetFilesHelper* HTMLInputElement::GetOrCreateGetFilesHelper(bool aRecursiveFlag,
 
   if (!mFileData->mGetFilesNonRecursiveHelper) {
     mFileData->mGetFilesNonRecursiveHelper = GetFilesHelper::Create(
-        global, GetFilesOrDirectoriesInternal(), aRecursiveFlag, aRv);
+        GetFilesOrDirectoriesInternal(), aRecursiveFlag, aRv);
     if (NS_WARN_IF(aRv.Failed())) {
       return nullptr;
     }

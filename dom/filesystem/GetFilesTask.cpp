@@ -115,6 +115,10 @@ void GetFilesTaskChild::SetSuccessRequestResult(
     MOZ_ASSERT(blobImpl);
 
     mTargetData[i] = File::Create(globalObject, blobImpl);
+    if (NS_WARN_IF(!mTargetData[i])) {
+      aRv.Throw(NS_ERROR_FAILURE);
+      return;
+    }
   }
 }
 

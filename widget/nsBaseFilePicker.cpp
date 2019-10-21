@@ -54,6 +54,10 @@ nsresult LocalFileToDirectoryOrBlob(nsPIDOMWindowInner* aWindow,
   }
 
   RefPtr<File> file = File::CreateFromFile(aWindow->AsGlobal(), aFile);
+  if (NS_WARN_IF(!file)) {
+    return NS_ERROR_FAILURE;
+  }
+
   file.forget(aResult);
   return NS_OK;
 }

@@ -285,7 +285,9 @@ nsresult nsDOMDataChannel::DoOnMessageAvailable(const nsACString& aData,
     if (mBinaryType == DC_BINARY_TYPE_BLOB) {
       RefPtr<Blob> blob =
           Blob::CreateStringBlob(GetOwnerGlobal(), aData, EmptyString());
-      MOZ_ASSERT(blob);
+      if (NS_WARN_IF(!blob)) {
+        return NS_ERROR_FAILURE;
+      }
 
       if (!ToJSValue(cx, blob, &jsData)) {
         return NS_ERROR_FAILURE;

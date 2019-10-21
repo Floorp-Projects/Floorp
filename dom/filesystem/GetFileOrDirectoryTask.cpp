@@ -94,7 +94,9 @@ void GetFileOrDirectoryTaskChild::SetSuccessRequestResult(
       MOZ_ASSERT(globalObject);
 
       mResultFile = File::Create(globalObject, blobImpl);
-      MOZ_ASSERT(mResultFile);
+      if (NS_WARN_IF(!mResultFile)) {
+        aRv.Throw(NS_ERROR_FAILURE);
+      }
       break;
     }
     case FileSystemResponseValue::TFileSystemDirectoryResponse: {
