@@ -1617,23 +1617,27 @@ inline nsLineList_const_iterator& nsLineList_const_iterator::operator=(
   ASSIGN_FROM(aOther)
 }
 
-inline nsLineList_const_reverse_iterator& nsLineList_const_reverse_iterator::
-operator=(const nsLineList_iterator& aOther) {
+inline nsLineList_const_reverse_iterator&
+nsLineList_const_reverse_iterator::operator=(
+    const nsLineList_iterator& aOther) {
   ASSIGN_FROM(aOther)
 }
 
-inline nsLineList_const_reverse_iterator& nsLineList_const_reverse_iterator::
-operator=(const nsLineList_reverse_iterator& aOther) {
+inline nsLineList_const_reverse_iterator&
+nsLineList_const_reverse_iterator::operator=(
+    const nsLineList_reverse_iterator& aOther) {
   ASSIGN_FROM(aOther)
 }
 
-inline nsLineList_const_reverse_iterator& nsLineList_const_reverse_iterator::
-operator=(const nsLineList_const_iterator& aOther) {
+inline nsLineList_const_reverse_iterator&
+nsLineList_const_reverse_iterator::operator=(
+    const nsLineList_const_iterator& aOther) {
   ASSIGN_FROM(aOther)
 }
 
-inline nsLineList_const_reverse_iterator& nsLineList_const_reverse_iterator::
-operator=(const nsLineList_const_reverse_iterator& aOther) {
+inline nsLineList_const_reverse_iterator&
+nsLineList_const_reverse_iterator::operator=(
+    const nsLineList_const_reverse_iterator& aOther) {
   ASSIGN_FROM(aOther)
 }
 

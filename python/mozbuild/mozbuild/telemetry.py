@@ -17,7 +17,7 @@ import pprint
 import sys
 from datetime import datetime
 
-from six import string_types
+from six import string_types, PY3
 from voluptuous import (
     Any,
     Optional,
@@ -96,7 +96,11 @@ def get_client_id(state_dir):
     import uuid
     # uuid4 is random, other uuid types may include identifiers from the local system.
     client_id = str(uuid.uuid4())
-    with open(path, 'wb') as f:
+    if PY3:
+        file_mode = 'w'
+    else:
+        file_mode = 'wb'
+    with open(path, file_mode) as f:
         json.dump({'client_id': client_id}, f)
     return client_id
 
@@ -239,7 +243,9 @@ def get_build_attrs(attrs):
         res['clobber'] = clobber
     usage = attrs.get('usage')
     if usage:
-        res['cpu_percent'] = int(round(usage['cpu_percent']))
+        cpu_percent = usage.get('cpu_percent')
+        if cpu_percent:
+            res['cpu_percent'] = int(round(cpu_percent))
     return res
 
 

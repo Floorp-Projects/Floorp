@@ -2494,6 +2494,7 @@ describe("ASRouter", () => {
           document: { getElementById },
           promiseDocumentFlushed: sandbox.stub().resolves([{ width: 0 }]),
           setTimeout: sandbox.stub(),
+          A11yUtils: { announce: sandbox.stub() },
         };
         const firstMessage = { ...FAKE_RECOMMENDATION, id: "first_message" };
         const secondMessage = { ...FAKE_RECOMMENDATION, id: "second_message" };

@@ -940,6 +940,14 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
 
   void store64(Register64 src, Address address) { storePtr(src.reg, address); }
 
+  void store64(Register64 src, const BaseIndex& address) {
+    storePtr(src.reg, address);
+  }
+
+  void store64(Imm64 imm, const BaseIndex& address) {
+    storePtr(ImmWord(imm.value), address);
+  }
+
   // StackPointer manipulation.
   inline void addToStackPtr(Register src);
   inline void addToStackPtr(Imm32 imm);
@@ -1193,6 +1201,9 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
     ldr(ARMRegister(dest, 32), MemOperand(scratch64));
   }
   void load64(const Address& address, Register64 dest) {
+    loadPtr(address, dest.reg);
+  }
+  void load64(const BaseIndex& address, Register64 dest) {
     loadPtr(address, dest.reg);
   }
 

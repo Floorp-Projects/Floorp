@@ -170,7 +170,7 @@ async function doTest(aBrowser) {
     urlPrefix: TEST_DOMAIN + TEST_PATH,
   };
 
-  await ContentTask.spawn(aBrowser, argObj, async function(arg) {
+  await SpecialPowers.spawn(aBrowser, [argObj], async function(arg) {
     let videoURL = arg.urlPrefix + "file_thirdPartyChild.video.ogv";
     let audioURL = arg.urlPrefix + "file_thirdPartyChild.audio.ogg";
     let trackURL = arg.urlPrefix + "file_thirdPartyChild.track.vtt";
@@ -183,12 +183,12 @@ async function doTest(aBrowser) {
     let audioTrack = content.document.createElement("track");
 
     // Append the audio and track element into the body, and wait until they're finished.
-    await new Promise(resolve => {
+    await new content.Promise(resolve => {
       let audioLoaded = false;
       let trackLoaded = false;
 
       let audioListener = () => {
-        info(`Audio suspended: ${audioURL + URLSuffix}`);
+        Assert.ok(true, `Audio suspended: ${audioURL + URLSuffix}`);
         audio.removeEventListener("suspend", audioListener);
 
         audioLoaded = true;
@@ -198,7 +198,7 @@ async function doTest(aBrowser) {
       };
 
       let trackListener = () => {
-        info(`Audio track loaded: ${audioURL + URLSuffix}`);
+        Assert.ok(true, `Audio track loaded: ${audioURL + URLSuffix}`);
         audioTrack.removeEventListener("load", trackListener);
 
         trackLoaded = true;
@@ -207,7 +207,7 @@ async function doTest(aBrowser) {
         }
       };
 
-      info(`Loading audio: ${audioURL + URLSuffix}`);
+      Assert.ok(true, `Loading audio: ${audioURL + URLSuffix}`);
 
       // Add the event listeners before everything in case we lose events.
       audioTrack.addEventListener("load", trackListener);
@@ -228,14 +228,14 @@ async function doTest(aBrowser) {
     });
 
     // Append the video element into the body, and wait until it's finished.
-    await new Promise(resolve => {
+    await new content.Promise(resolve => {
       let listener = () => {
-        info(`Video suspended: ${videoURL + URLSuffix}`);
+        Assert.ok(true, `Video suspended: ${videoURL + URLSuffix}`);
         video.removeEventListener("suspend", listener);
         resolve();
       };
 
-      info(`Loading video: ${videoURL + URLSuffix}`);
+      Assert.ok(true, `Loading video: ${videoURL + URLSuffix}`);
 
       // Add the event listener before everything in case we lose the event.
       video.addEventListener("suspend", listener);

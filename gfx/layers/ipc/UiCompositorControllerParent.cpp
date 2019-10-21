@@ -14,6 +14,7 @@
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/LayerManagerComposite.h"
 #include "mozilla/layers/UiCompositorControllerMessageTypes.h"
+#include "mozilla/layers/WebRenderBridgeParent.h"
 #include "mozilla/gfx/Types.h"
 #include "mozilla/Move.h"
 #include "mozilla/Unused.h"
@@ -175,6 +176,9 @@ UiCompositorControllerParent::RecvRequestScreenPixels() {
     state->mLayerManager->RequestScreenPixels(this);
     state->mParent->Invalidate();
     state->mParent->ScheduleComposition();
+  } else if (state && state->mWrBridge) {
+    state->mWrBridge->RequestScreenPixels(this);
+    state->mWrBridge->ScheduleForcedGenerateFrame();
   }
 #endif  // defined(MOZ_WIDGET_ANDROID)
 

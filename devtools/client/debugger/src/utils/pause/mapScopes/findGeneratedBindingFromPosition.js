@@ -11,7 +11,7 @@ import type { BindingContents } from "../../../types";
 // eslint-disable-next-line max-len
 import type { ApplicableBinding } from "./getApplicableBindingsForOriginalPosition";
 
-import { createObjectClient } from "../../../client/firefox";
+import { createObjectFront } from "../../../client/firefox";
 
 export type GeneratedDescriptor = {
   name: string,
@@ -324,6 +324,6 @@ async function readDescriptorProperty(
     return desc;
   }
 
-  const objectClient = createObjectClient(desc.value);
-  return (await objectClient.getProperty(property)).descriptor;
+  const objectFront = createObjectFront(desc.value);
+  return (await objectFront.getProperty(property)).descriptor;
 }

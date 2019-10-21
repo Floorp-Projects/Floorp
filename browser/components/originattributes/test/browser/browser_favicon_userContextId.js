@@ -176,11 +176,15 @@ async function generateCookies(aHost) {
   let tabInfoA = await openTabInUserContext(aHost, USER_CONTEXT_ID_PERSONAL);
   let tabInfoB = await openTabInUserContext(aHost, USER_CONTEXT_ID_WORK);
 
-  await ContentTask.spawn(tabInfoA.browser, cookies[0], async function(value) {
+  await SpecialPowers.spawn(tabInfoA.browser, [cookies[0]], async function(
+    value
+  ) {
     content.document.cookie = value;
   });
 
-  await ContentTask.spawn(tabInfoB.browser, cookies[1], async function(value) {
+  await SpecialPowers.spawn(tabInfoB.browser, [cookies[1]], async function(
+    value
+  ) {
     content.document.cookie = value;
   });
 

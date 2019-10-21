@@ -365,7 +365,7 @@ class VirtualenvMixin(object):
         # imports to fail. See
         # https://github.com/pypa/virtualenv/issues/565. Therefore
         # only use --alway-copy when not using Redhat.
-        if self._is_redhat():
+        if self._is_redhat_based():
             self.warning("creating virtualenv without --always-copy "
                          "due to issues on Redhat derived distros")
         else:

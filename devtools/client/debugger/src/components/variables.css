@@ -36,3 +36,10 @@
   --theme-inline-preview-label-color: #dfccff;
   --theme-inline-preview-label-background: #3f2e5f;
 }
+
+/* Animations */
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}

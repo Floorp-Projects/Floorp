@@ -1,13 +1,13 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`ObjectInspector - entries calls ObjectClient.enumEntries when expected 1`] = `
+exports[`ObjectInspector - entries calls ObjectFront.enumEntries when expected 1`] = `
 "
 ▼ Map(11)
 |  ▶︎ <entries>
 "
 `;
 
-exports[`ObjectInspector - entries calls ObjectClient.enumEntries when expected 2`] = `
+exports[`ObjectInspector - entries calls ObjectFront.enumEntries when expected 2`] = `
 "
   ▼ Map(11)
 [ |  ▼ <entries> ]
@@ -25,14 +25,14 @@ exports[`ObjectInspector - entries calls ObjectClient.enumEntries when expected 
 "
 `;
 
-exports[`ObjectInspector - entries calls ObjectClient.enumEntries when expected 3`] = `
+exports[`ObjectInspector - entries calls ObjectFront.enumEntries when expected 3`] = `
 "
   ▼ Map(11)
 [ |  ▶︎ <entries> ]
 "
 `;
 
-exports[`ObjectInspector - entries calls ObjectClient.enumEntries when expected 4`] = `
+exports[`ObjectInspector - entries calls ObjectFront.enumEntries when expected 4`] = `
 "
   ▼ Map(11)
 [ |  ▼ <entries> ]

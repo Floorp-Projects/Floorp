@@ -905,11 +905,9 @@ NS_IMETHODIMP
 GfxInfo::GetDisplayInfo(nsTArray<nsString>& aDisplayInfo) {
   for (auto displayInfo : mDisplayInfo) {
     nsString value;
-    value.AppendPrintf(
-      "%dx%d@%dHz %s",
-      displayInfo.mScreenWidth, displayInfo.mScreenHeight,
-      displayInfo.mRefreshRate, displayInfo.mIsPseudoDisplay ? "Pseudo Display" : ""
-    );
+    value.AppendPrintf("%dx%d@%dHz %s", displayInfo.mScreenWidth,
+                       displayInfo.mScreenHeight, displayInfo.mRefreshRate,
+                       displayInfo.mIsPseudoDisplay ? "Pseudo Display" : "");
 
     aDisplayInfo.AppendElement(value);
   }
@@ -1800,33 +1798,36 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
         (nsAString&)GfxDriverInfo::GetDeviceVendor(VendorIntel),
         (nsAString&)GfxDriverInfo::GetDriverVendor(DriverVendorAll),
         GfxDriverInfo::allDevices, nsIGfxInfo::FEATURE_WEBRENDER,
-        nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION,
-        DRIVER_BETWEEN_INCLUSIVE, V(10, 18, 15, 4256), V(10, 18, 15, 4281),
-        "FEATURE_FAILURE_WEBRENDER_INTEL_BAD_DRIVER", "Intel driver >= 21.20.16.4590");
+        nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION, DRIVER_BETWEEN_INCLUSIVE,
+        V(10, 18, 15, 4256), V(10, 18, 15, 4281),
+        "FEATURE_FAILURE_WEBRENDER_INTEL_BAD_DRIVER",
+        "Intel driver >= 21.20.16.4590");
     APPEND_TO_DRIVER_BLOCKLIST_RANGE(
         OperatingSystem::Windows,
         (nsAString&)GfxDriverInfo::GetDeviceVendor(VendorIntel),
         (nsAString&)GfxDriverInfo::GetDriverVendor(DriverVendorAll),
         GfxDriverInfo::allDevices, nsIGfxInfo::FEATURE_WEBRENDER,
-        nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION,
-        DRIVER_BETWEEN_INCLUSIVE, V(20, 19, 15, 4285), V(20, 19, 15, 4835),
-        "FEATURE_FAILURE_WEBRENDER_INTEL_BAD_DRIVER", "Intel driver >= 21.20.16.4590");
+        nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION, DRIVER_BETWEEN_INCLUSIVE,
+        V(20, 19, 15, 4285), V(20, 19, 15, 4835),
+        "FEATURE_FAILURE_WEBRENDER_INTEL_BAD_DRIVER",
+        "Intel driver >= 21.20.16.4590");
     APPEND_TO_DRIVER_BLOCKLIST_RANGE(
         OperatingSystem::Windows,
         (nsAString&)GfxDriverInfo::GetDeviceVendor(VendorIntel),
         (nsAString&)GfxDriverInfo::GetDriverVendor(DriverVendorAll),
         GfxDriverInfo::allDevices, nsIGfxInfo::FEATURE_WEBRENDER,
-        nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION,
-        DRIVER_BETWEEN_INCLUSIVE, V(21, 20, 16, 4471), V(21, 20, 16, 4565),
-        "FEATURE_FAILURE_WEBRENDER_INTEL_BAD_DRIVER", "Intel driver >= 21.20.16.4590");
+        nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION, DRIVER_BETWEEN_INCLUSIVE,
+        V(21, 20, 16, 4471), V(21, 20, 16, 4565),
+        "FEATURE_FAILURE_WEBRENDER_INTEL_BAD_DRIVER",
+        "Intel driver >= 21.20.16.4590");
 #else
     APPEND_TO_DRIVER_BLOCKLIST2(
         OperatingSystem::Windows,
         (nsAString&)GfxDriverInfo::GetDeviceVendor(VendorIntel),
         (nsAString&)GfxDriverInfo::GetDriverVendor(DriverVendorAll),
         GfxDriverInfo::allDevices, nsIGfxInfo::FEATURE_WEBRENDER,
-        nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION,
-        DRIVER_LESS_THAN, V(21, 20, 16, 4590), "Intel driver >= 21.20.16.4590");
+        nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION, DRIVER_LESS_THAN,
+        V(21, 20, 16, 4590), "Intel driver >= 21.20.16.4590");
 #endif
   }
   return *sDriverInfo;
@@ -1908,16 +1909,20 @@ nsresult GfxInfo::FindMonitors(JSContext* aCx, JS::HandleObject aOutArray) {
   for (auto displayInfo : mDisplayInfo) {
     JS::Rooted<JSObject*> obj(aCx, JS_NewPlainObject(aCx));
 
-    JS::Rooted<JS::Value> screenWidth(aCx, JS::Int32Value(displayInfo.mScreenWidth));
+    JS::Rooted<JS::Value> screenWidth(aCx,
+                                      JS::Int32Value(displayInfo.mScreenWidth));
     JS_SetProperty(aCx, obj, "screenWidth", screenWidth);
 
-    JS::Rooted<JS::Value> screenHeight(aCx, JS::Int32Value(displayInfo.mScreenHeight));
+    JS::Rooted<JS::Value> screenHeight(
+        aCx, JS::Int32Value(displayInfo.mScreenHeight));
     JS_SetProperty(aCx, obj, "screenHeight", screenHeight);
 
-    JS::Rooted<JS::Value> refreshRate(aCx, JS::Int32Value(displayInfo.mRefreshRate));
+    JS::Rooted<JS::Value> refreshRate(aCx,
+                                      JS::Int32Value(displayInfo.mRefreshRate));
     JS_SetProperty(aCx, obj, "refreshRate", refreshRate);
 
-    JS::Rooted<JS::Value> pseudoDisplay(aCx, JS::BooleanValue(displayInfo.mIsPseudoDisplay));
+    JS::Rooted<JS::Value> pseudoDisplay(
+        aCx, JS::BooleanValue(displayInfo.mIsPseudoDisplay));
     JS_SetProperty(aCx, obj, "pseudoDisplay", pseudoDisplay);
 
     JS::Rooted<JS::Value> element(aCx, JS::ObjectValue(*obj));

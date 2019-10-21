@@ -273,7 +273,7 @@ async function test_unsafe_grips(
           check_display_string(response.displayString, data, isUnsafe);
 
           if (data.isFunction && isUnsafe) {
-            // For function-related methods, object-client.js checks that the class
+            // For function-related methods, the object front checks that the class
             // of the grip is "Function", and if it's not, the method in object.js
             // is not called. But some tests have a grip with a class that is not
             // "Function" (e.g. it's "Proxy") but the DebuggerObject has a "Function"

@@ -7,8 +7,8 @@ DevTools has a client module that allows applications to be written that debug o
 In order to communicate, a client and a server instance must be created and a protocol connection must be established. The connection can be either over a TCP socket or an nsIPipe. The `start` function displayed below establishes an nsIPipe-backed connection:
 
 ```javascript
-Components.utils.import("resource://gre/modules/devtools/dbg-server.jsm");
-Components.utils.import("resource://gre/modules/devtools/dbg-client.jsm");
+const { DebuggerServer } = require("devtools/server/debugger-server");
+const { DebuggerClient } = require("devtools/shared/client/debugger-client");
 
 function start() {
   // Start the server.
@@ -31,8 +31,8 @@ function start() {
 If a TCP socket is required, the function should be split in two parts, a server-side and a client-side, like this:
 
 ```javascript
-Components.utils.import("resource://gre/modules/devtools/dbg-server.jsm");
-Components.utils.import("resource://gre/modules/devtools/dbg-client.jsm");
+const { DebuggerServer } = require("devtools/server/debugger-server");
+const { DebuggerClient } = require("devtools/shared/client/debugger-client");
 
 function startServer() {
   // Start the server.
@@ -140,8 +140,8 @@ Here is the source code for a complete debugger application:
  * Try it in Scratchpad with Environment -> Browser, using
  * http://htmlpad.org/debugger/ as the current page.
  */
-Components.utils.import("resource://gre/modules/devtools/dbg-server.jsm");
-Components.utils.import("resource://gre/modules/devtools/dbg-client.jsm");
+const { DebuggerServer } = require("devtools/server/debugger-server");
+const { DebuggerClient } = require("devtools/shared/client/debugger-client");
 
 let client;
 let threadFront;

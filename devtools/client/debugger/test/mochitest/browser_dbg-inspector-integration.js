@@ -5,38 +5,121 @@
 // Tests that clicking the DOM node button in any ObjectInspect
 // opens the Inspector panel
 
+// Import helpers registering the test-actor in remote targets
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/devtools/client/shared/test/test-actor-registry.js",
+  this
+);
+
 add_task(async function() {
   // Ensures the end panel is wide enough to show the inspector icon
   await pushPref("devtools.debugger.end-panel-size", 600);
+  // Disable 3-pane inspector as it might trigger unwanted server communication.
+  await pushPref("devtools.inspector.three-pane-enabled", false);
 
   const dbg = await initDebugger("doc-script-switching.html");
   const { toolbox } = dbg;
+  await registerTestActor(toolbox.target.client);
+  const testActor = await getTestActor(toolbox);
 
+  // Bug 1562165: the WhyPaused element is displayed for a few hundred ms when adding an
+  // expression, which can break synthesizeMouseAtCenter. So here we wait for the
+  // whyPaused element to be displayed then hidden before testing the highlight feature.
+  const onWhyPausedDisplayed = waitUntil(() =>
+    dbg.win.document.querySelector(".why-paused")
+  );
   await addExpression(dbg, "window.document.querySelector('button')");
+  // TODO: Remove when Bug 1562165 lands.
+  await onWhyPausedDisplayed;
+  // TODO: Remove when Bug 1562165 lands.
+  waitUntil(() => !dbg.win.document.querySelector(".why-paused"));
 
-  await waitForElement(dbg, "openInspector");
-
-  const inspectorNode = findElement(dbg, "openInspector");
-
-  // Ensure hovering over button highlights the node in content pane
-  const view = inspectorNode.ownerDocument.defaultView;
+  info(
+    "Check that hovering over DOM element highlights the node in content panel"
+  );
   const inspectorFront = await toolbox.target.getFront("inspector");
-  const onNodeHighlight = inspectorFront.highlighter.once("node-highlight");
+  let onNodeHighlight = inspectorFront.highlighter.once("node-highlight");
+
+  info("Mouseover the open in inspector button");
+  const inspectorNode = await waitUntilPredicate(() =>
+    findElement(dbg, "openInspector")
+  );
+  const view = inspectorNode.ownerDocument.defaultView;
+  EventUtils.synthesizeMouseAtCenter(
+    inspectorNode,
+    { type: "mouseover" },
+    view
+  );
+
+  info("Wait for node-highlight");
+  const nodeFront = await onNodeHighlight;
+  is(nodeFront.displayName, "button", "The correct node was highlighted");
+  isVisible = await testActor.isHighlighting();
+  ok(isVisible, "Highlighter is displayed");
+
+  info("Check that moving the mouse away from the node hides the highlighter");
+  let onNodeUnhighlight = inspectorFront.highlighter.once("node-unhighlight");
+  const nonHighlightEl = inspectorNode.closest(".object-node");
+  EventUtils.synthesizeMouseAtCenter(
+    nonHighlightEl,
+    { type: "mouseover" },
+    view
+  );
+
+  await onNodeUnhighlight;
+  isVisible = await testActor.isHighlighting();
+  is(isVisible, false, "The highlighter is not displayed anymore");
+
+  info("Check we don't have zombie highlighters when briefly hovering a node");
+  onNodeHighlight = inspectorFront.highlighter.once("node-highlight");
+  onNodeUnhighlight = inspectorFront.highlighter.once("node-unhighlight");
+
+  // Move hover the node and then, right after, move out.
   EventUtils.synthesizeMouseAtCenter(
     inspectorNode,
     { type: "mousemove" },
     view
   );
-  const nodeFront = await onNodeHighlight;
-  is(nodeFront.displayName, "button", "The correct node was highlighted");
+  EventUtils.synthesizeMouseAtCenter(
+    nonHighlightEl,
+    { type: "mousemove" },
+    view
+  );
 
-  // Ensure panel changes when button is clicked
+  await Promise.all([onNodeHighlight, onNodeUnhighlight]);
+  isVisible = await testActor.isHighlighting();
+  is(isVisible, false, "The highlighter is not displayed anymore - no zombie");
+
+  info("Ensure panel changes when button is clicked");
+  // Loading the inspector panel at first, to make it possible to listen for
+  // new node selections
+  await toolbox.loadTool("inspector");
+  const inspector = toolbox.getPanel("inspector");
+
+  const onInspectorSelected = toolbox.once("inspector-selected");
+  const onInspectorUpdated = inspector.once("inspector-updated");
+  const onNewNode = toolbox.selection.once("new-node-front");
+
   inspectorNode.click();
-  await waitForInspectorPanelChange(dbg);
+
+  await onInspectorSelected;
+  await onInspectorUpdated;
+  const inspectorNodeFront = await onNewNode;
+
+  ok(true, "Inspector selected and new node got selected");
+  is(
+    inspectorNodeFront.displayName,
+    "button",
+    "The expected node was selected"
+  );
 });
 
 add_task(async function() {
+  // Disable 3-pane inspector as it might trigger unwanted server communication.
+  await pushPref("devtools.inspector.three-pane-enabled", false);
+
   const dbg = await initDebugger("doc-event-handler.html");
+  const { toolbox } = dbg;
 
   invokeInTab("synthesizeClick");
   await waitForPaused(dbg);
@@ -49,7 +132,21 @@ add_task(async function() {
 
   // Click the first inspector buttom to view node in inspector
   await waitForElement(dbg, "openInspector");
+
+  // Loading the inspector panel at first, to make it possible to listen for
+  // new node selections
+  await toolbox.loadTool("inspector");
+  const inspector = toolbox.getPanel("inspector");
+
+  const onInspectorSelected = toolbox.once("inspector-selected");
+  const onInspectorUpdated = inspector.once("inspector-updated");
+  const onNewNode = toolbox.selection.once("new-node-front");
+
   findElement(dbg, "openInspector").click();
 
-  await waitForInspectorPanelChange(dbg);
+  await onInspectorSelected;
+  await onInspectorUpdated;
+  await onNewNode;
+
+  ok(true, "Inspector selected and new node got selected");
 });
