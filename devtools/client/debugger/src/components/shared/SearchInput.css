@@ -2,15 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-@keyframes search-loader-rotate {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
 .search-outline {
   border: 1px solid var(--theme-toolbar-background);
   border-bottom: 1px solid var(--theme-splitter-color);
@@ -59,7 +50,6 @@
   width: 24px;
   height: 24px;
   margin-inline-end: 4px;
-  animation: search-loader-rotate 0.5s linear infinite;
 }
 
 .search-field input {

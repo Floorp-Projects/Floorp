@@ -171,6 +171,10 @@ html[dir="rtl"] .img.more-tabs {
   mask-image: url(resource://devtools/client/debugger/images/help.svg);
 }
 
+.img.spin {
+  animation: spin 0.5s linear infinite;
+}
+
 .img.stepIn {
   mask-image: url(resource://devtools/client/debugger/images/stepIn.svg);
 }

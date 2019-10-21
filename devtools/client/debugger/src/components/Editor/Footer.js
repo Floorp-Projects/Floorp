@@ -102,8 +102,8 @@ class SourceFooter extends PureComponent<Props, State> {
 
     if (!selectedSource.content && selectedSource.isPrettyPrinted) {
       return (
-        <div className="loader" key="pretty-loader">
-          <AccessibleImage className="loader" />
+        <div className="action" key="pretty-loader">
+          <AccessibleImage className="loader spin" />
         </div>
       );
     }

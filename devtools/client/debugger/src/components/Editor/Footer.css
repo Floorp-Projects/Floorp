@@ -59,12 +59,6 @@
   fill: var(--theme-selection-color);
 }
 
-.source-footer .commands div.loader {
-  vertical-align: top;
-  width: 20px;
-  margin: 0 4px;
-}
-
 .source-footer .blackboxed .img.blackBox {
   background-color: var(--theme-icon-checked-color);
 }
