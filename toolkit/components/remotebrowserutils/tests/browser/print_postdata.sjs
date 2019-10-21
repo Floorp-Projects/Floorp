@@ -17,6 +17,9 @@ function handleRequest(request, response) {
       Array.prototype.push.apply(bytes, body.readByteArray(avail));
 
     var data = String.fromCharCode.apply(null, bytes);
+    if (request.queryString) {
+      data = data + "?" + request.queryString;
+    }
     response.bodyOutputStream.write(data, data.length);
   }
 }

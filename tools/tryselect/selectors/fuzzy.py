@@ -10,6 +10,7 @@ import re
 import subprocess
 import sys
 from distutils.spawn import find_executable
+from distutils.version import StrictVersion
 from datetime import datetime, timedelta
 import requests
 import json
@@ -48,6 +49,21 @@ Could not find the `fzf` binary.
 
 The `mach try fuzzy` command depends on fzf. Please install it following the
 appropriate instructions for your platform:
+
+    https://github.com/junegunn/fzf#installation
+
+Only the binary is required, if you do not wish to install the shell and
+editor integrations, download the appropriate binary and put it on your $PATH:
+
+    https://github.com/junegunn/fzf-bin/releases
+""".lstrip()
+
+FZF_VERSION_FAILED = """
+Could not obtain the 'fzf' version.
+
+The 'mach try fuzzy' command depends on fzf, and requires version > 0.18.0
+for some of the features. Please install it following the appropriate
+instructions for your platform:
 
     https://github.com/junegunn/fzf#installation
 
@@ -235,6 +251,25 @@ def run_fzf_install_script(fzf_path):
         sys.exit(1)
 
 
+def should_force_fzf_update(fzf_bin):
+    cmd = [fzf_bin, '--version']
+    try:
+        fzf_version = subprocess.check_output(cmd)
+    except subprocess.CalledProcessError:
+        print(FZF_VERSION_FAILED)
+        sys.exit(1)
+
+    # Some fzf versions have extra, e.g 0.18.0 (ff95134)
+    fzf_version = fzf_version.split()[0]
+
+    # 0.18.0 introduced FZF_PREVIEW_COLUMNS as an env variable
+    # in preview subprocesses, which is a feature we use.
+    if StrictVersion(fzf_version) < StrictVersion('0.18.0'):
+        print("fzf version is old, forcing update.")
+        return True
+    return False
+
+
 def fzf_bootstrap(update=False):
     """Bootstrap fzf if necessary and return path to the executable.
 
@@ -265,10 +300,10 @@ def fzf_bootstrap(update=False):
 
     if os.path.isdir(fzf_path):
         fzf_bin = get_fzf()
-        if fzf_bin:
-            return fzf_bin
-        # Fzf is cloned, but binary doesn't exist. Try running the install script
-        return fzf_bootstrap(update=True)
+        if not fzf_bin or should_force_fzf_update(fzf_bin):
+            return fzf_bootstrap(update=True)
+
+        return fzf_bin
 
     install = raw_input("Could not detect fzf, install it now? [y/n]: ")
     if install.lower() != 'y':

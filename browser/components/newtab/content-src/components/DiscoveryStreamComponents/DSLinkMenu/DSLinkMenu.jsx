@@ -40,7 +40,6 @@ export class DSLinkMenu extends React.PureComponent {
   render() {
     const { index, dispatch } = this.props;
     const TOP_STORIES_CONTEXT_MENU_OPTIONS = [
-      "ShowPrivacyInfo",
       "CheckBookmarkOrArchive",
       "CheckSavedToPocket",
       "Separator",
@@ -48,6 +47,7 @@ export class DSLinkMenu extends React.PureComponent {
       "OpenInPrivateWindow",
       "Separator",
       "BlockUrl",
+      ...(this.props.campaignId ? ["ShowPrivacyInfo"] : []),
     ];
     const type = this.props.type || "DISCOVERY_STREAM";
     const title = this.props.title || this.props.source;

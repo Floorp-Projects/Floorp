@@ -11,7 +11,9 @@
  * and create derivative works of this document.
  */
 
-[HTMLConstructor, NamedConstructor=Audio(optional DOMString src),
+[NamedConstructor=Audio(optional DOMString src),
  Exposed=Window]
-interface HTMLAudioElement : HTMLMediaElement {};
+interface HTMLAudioElement : HTMLMediaElement {
+  [HTMLConstructor] constructor();
+};
 

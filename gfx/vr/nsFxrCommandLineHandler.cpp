@@ -84,6 +84,12 @@ nsFxrCommandLineHandler::Handle(nsICommandLine* aCmdLine) {
     nsPIDOMWindowOuter* newWindowOuter = nsPIDOMWindowOuter::From(newWindow);
     FxRWindowManager::GetInstance()->AddWindow(newWindowOuter);
 
+    // Set ForceFullScreenInWidget so that full-screen (in an FxR window)
+    // fills only the window and thus the same texture that will already be
+    // shared with the host. Also, this is set here per-window because
+    // changing the related pref would impact all browser window instances.
+    newWindowOuter->ForceFullScreenInWidget();
+
     // Send the window's HWND to vrhost through VRShMem
     mozilla::gfx::VRShMem shmem(nullptr, true /*aRequiresMutex*/);
     if (shmem.JoinShMem()) {

@@ -35,7 +35,7 @@ function run_test() {
 }
 
 function test_pause_frame() {
-  gThreadFront.once("paused", function(packet) {
+  gThreadFront.once("paused", async function(packet) {
     let parentEnv = packet.frame.environment.parent;
     const bindings = parentEnv.bindings;
     const args = bindings.arguments;
@@ -50,15 +50,13 @@ function test_pause_frame() {
     parentEnv = parentEnv.parent.parent;
     Assert.notEqual(parentEnv, undefined);
     const objClient = gThreadFront.pauseGrip(parentEnv.object);
-    objClient.getPrototypeAndProperties(function(response) {
-      Assert.equal(response.ownProperties.Object.value.type, "object");
-      Assert.equal(response.ownProperties.Object.value.class, "Function");
-      Assert.ok(!!response.ownProperties.Object.value.actor);
+    const response = await objClient.getPrototypeAndProperties();
+    Assert.equal(response.ownProperties.Object.value.type, "object");
+    Assert.equal(response.ownProperties.Object.value.class, "Function");
+    Assert.ok(!!response.ownProperties.Object.value.actor);
 
-      gThreadFront.resume().then(function() {
-        finishClient(gClient);
-      });
-    });
+    await gThreadFront.resume();
+    finishClient(gClient);
   });
 
   /* eslint-disable */

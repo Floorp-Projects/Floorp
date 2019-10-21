@@ -472,8 +472,6 @@ function startup() {
       name: "GeckoViewNavigation",
       onInit: {
         resource: "resource://gre/modules/GeckoViewNavigation.jsm",
-        // TODO: frameScript only needed for Fennec
-        frameScript: "chrome://geckoview/content/GeckoViewNavigationChild.js",
       },
     },
     {

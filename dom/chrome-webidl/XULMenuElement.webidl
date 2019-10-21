@@ -5,9 +5,10 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-[HTMLConstructor, Func="IsChromeOrXBL",
+[Func="IsChromeOrXBL",
  Exposed=Window]
 interface XULMenuElement : XULElement {
+  [HTMLConstructor] constructor();
 
   attribute Element? activeChild;
 

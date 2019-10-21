@@ -6,7 +6,7 @@
 from marionette_harness import BaseMarionetteTestRunner
 from testcase import TelemetryTestCase
 
-SERVER_URL = "http://127.0.0.1:8000"
+SERVER_URL = "http://localhost:8000"
 
 
 class TelemetryTestRunner(BaseMarionetteTestRunner):

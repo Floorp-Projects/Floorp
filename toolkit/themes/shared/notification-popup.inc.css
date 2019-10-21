@@ -7,3 +7,10 @@
   /* Make multiple popupnotifications stack vertically. */
   flex-direction: column;
 }
+
+.popup-notification-panel > popupnotification:not([hidden]) {
+  /* Since the anonymous parent (::part(arrowcontent)) has display: flex, sizing
+   * computations work better with display: block; than with the XUL default
+   * display: -moz-box; */
+  display: block;
+}

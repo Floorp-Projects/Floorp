@@ -9,16 +9,16 @@ loadScripts(
   { name: "states.js", dir: MOCHITESTS_DIR },
   { name: "role.js", dir: MOCHITESTS_DIR }
 );
-ChromeUtils.defineModuleGetter(
-  this,
-  "PlacesTestUtils",
-  "resource://testing-common/PlacesTestUtils.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "PlacesUtils",
-  "resource://gre/modules/PlacesUtils.jsm"
-);
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+  PlacesTestUtils: "resource://testing-common/PlacesTestUtils.jsm",
+  PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
+  UrlbarProvider: "resource:///modules/UrlbarUtils.jsm",
+  UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.jsm",
+  UrlbarResult: "resource:///modules/UrlbarResult.jsm",
+  UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.jsm",
+  UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
+});
 
 function isEventForAutocompleteItem(event) {
   return event.accessible.role == ROLE_COMBOBOX_OPTION;
@@ -46,31 +46,62 @@ function isEventForMenuItem(event) {
   return event.accessible.role == ROLE_MENUITEM;
 }
 
+function isEventForTipButton(event) {
+  let parent = event.accessible.parent;
+  return (
+    event.accessible.role == ROLE_PUSHBUTTON &&
+    parent &&
+    parent.role == ROLE_GROUPING &&
+    parent.name
+  );
+}
+
 /**
- * Wait for an autocomplete search to finish.
- * This is necessary to ensure predictable results, as these searches are
- * async. Pressing down arrow will use results from the previous input if the
- * search isn't finished yet.
+ * A test provider.
  */
-function waitForSearchFinish() {
-  return Promise.all([
-    gURLBar.lastQueryContextPromise,
-    BrowserTestUtils.waitForCondition(() => gURLBar.view.isOpen),
-  ]);
+class TipTestProvider extends UrlbarProvider {
+  constructor(matches) {
+    super();
+    this._matches = matches;
+  }
+  get name() {
+    return "TipTestProvider";
+  }
+  get type() {
+    return UrlbarUtils.PROVIDER_TYPE.PROFILE;
+  }
+  isActive(context) {
+    return true;
+  }
+  isRestricting(context) {
+    return true;
+  }
+  async startQuery(context, addCallback) {
+    this._context = context;
+    for (const match of this._matches) {
+      addCallback(this, match);
+    }
+  }
+  cancelQuery(context) {}
+  pickResult(result, details) {}
 }
 
 // Check that the URL bar manages accessibility focus appropriately.
 async function runTests() {
   registerCleanupFunction(async function() {
+    await UrlbarTestUtils.promisePopupClose(window);
     await PlacesUtils.history.clear();
   });
 
   await PlacesTestUtils.addVisits([
-    { uri: makeURI("http://example1.com/blah") },
-    { uri: makeURI("http://example2.com/blah") },
-    { uri: makeURI("http://example1.com/") },
-    { uri: makeURI("http://example2.com/") },
+    "http://example1.com/blah",
+    "http://example2.com/blah",
+    "http://example1.com/",
+    "http://example2.com/",
   ]);
+
+  // Ensure initial state.
+  await UrlbarTestUtils.promisePopupClose(window);
 
   let focused = waitForEvent(
     EVENT_FOCUS,
@@ -87,15 +118,19 @@ async function runTests() {
   EventUtils.synthesizeKey("KEY_Escape");
 
   info("Ensuring no focus change when first text is typed");
-  EventUtils.sendString("example");
-  await waitForSearchFinish();
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    waitForFocus,
+    value: "example",
+    fireInputEvent: true,
+  });
   // Wait a tick for a11y events to fire.
   await TestUtils.waitForTick();
   testStates(textBox, STATE_FOCUSED);
 
   info("Ensuring no focus change on backspace");
   EventUtils.synthesizeKey("KEY_Backspace");
-  await waitForSearchFinish();
+  await UrlbarTestUtils.promiseSearchComplete(window);
   // Wait a tick for a11y events to fire.
   await TestUtils.waitForTick();
   testStates(textBox, STATE_FOCUSED);
@@ -103,7 +138,7 @@ async function runTests() {
   info("Ensuring no focus change on text selection and delete");
   EventUtils.synthesizeKey("KEY_ArrowLeft", { shiftKey: true });
   EventUtils.synthesizeKey("KEY_Delete");
-  await waitForSearchFinish();
+  await UrlbarTestUtils.promiseSearchComplete(window);
   // Wait a tick for a11y events to fire.
   await TestUtils.waitForTick();
   testStates(textBox, STATE_FOCUSED);
@@ -113,6 +148,20 @@ async function runTests() {
   EventUtils.synthesizeKey("KEY_ArrowDown");
   event = await focused;
   testStates(event.accessible, STATE_FOCUSED);
+
+  info("Ensuring focus of another autocomplete item on down arrow");
+  focused = waitForEvent(EVENT_FOCUS, isEventForAutocompleteItem);
+  EventUtils.synthesizeKey("KEY_ArrowDown");
+  event = await focused;
+  testStates(event.accessible, STATE_FOCUSED);
+
+  info("Ensuring previous arrow selection state doesn't get stale on input");
+  focused = waitForEvent(EVENT_FOCUS, textBox);
+  EventUtils.sendString("z");
+  await focused;
+  EventUtils.synthesizeKey("KEY_Backspace");
+  await UrlbarTestUtils.promiseSearchComplete(window);
+  testStates(textBox, STATE_FOCUSED);
 
   info("Ensuring focus of another autocomplete item on down arrow");
   focused = waitForEvent(EVENT_FOCUS, isEventForAutocompleteItem);
@@ -145,6 +194,7 @@ async function runTests() {
   EventUtils.synthesizeKey("KEY_ArrowLeft");
   await focused;
   testStates(textBox, STATE_FOCUSED);
+
   gURLBar.view.close();
   // On Mac, down arrow when not at the end of the field moves to the end.
   // Move back to the end so the next press of down arrow opens the popup.
@@ -168,7 +218,7 @@ async function runTests() {
   await focused;
   testStates(textBox, STATE_FOCUSED);
   EventUtils.synthesizeKey("KEY_Backspace");
-  await waitForSearchFinish();
+  await UrlbarTestUtils.promiseSearchComplete(window);
 
   info("Ensuring autocomplete focus on down arrow (3)");
   focused = waitForEvent(EVENT_FOCUS, isEventForAutocompleteItem);
@@ -181,12 +231,19 @@ async function runTests() {
   EventUtils.synthesizeKey("KEY_Backspace");
   await focused;
   testStates(textBox, STATE_FOCUSED);
+  await UrlbarTestUtils.promiseSearchComplete(window);
 
   info("Ensuring autocomplete focus on arrow down (4)");
   focused = waitForEvent(EVENT_FOCUS, isEventForAutocompleteItem);
   EventUtils.synthesizeKey("KEY_ArrowDown");
   event = await focused;
   testStates(event.accessible, STATE_FOCUSED);
+
+  // Arrow down to the last result.
+  const resultCount = UrlbarTestUtils.getResultCount(window);
+  while (UrlbarTestUtils.getSelectedRowIndex(window) != resultCount - 1) {
+    EventUtils.synthesizeKey("KEY_ArrowDown");
+  }
 
   info("Ensuring one-off search button focus on arrow down");
   focused = waitForEvent(EVENT_FOCUS, isEventForOneOffEngine);
@@ -247,4 +304,106 @@ async function runTests() {
   testStates(textBox, STATE_FOCUSED);
 }
 
+// We test TIP results in their own test so the spoofed results don't interfere
+// with the main test.
+async function runTipTests() {
+  let matches = [
+    new UrlbarResult(
+      UrlbarUtils.RESULT_TYPE.URL,
+      UrlbarUtils.RESULT_SOURCE.HISTORY,
+      { url: "http://mozilla.org/a" }
+    ),
+    new UrlbarResult(
+      UrlbarUtils.RESULT_TYPE.TIP,
+      UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+      {
+        icon: "",
+        text: "This is a test intervention.",
+        buttonText: "Done",
+        data: "test",
+        helpUrl: "about:blank",
+        buttonUrl: "about:mozilla",
+      }
+    ),
+    new UrlbarResult(
+      UrlbarUtils.RESULT_TYPE.URL,
+      UrlbarUtils.RESULT_SOURCE.HISTORY,
+      { url: "http://mozilla.org/b" }
+    ),
+    new UrlbarResult(
+      UrlbarUtils.RESULT_TYPE.URL,
+      UrlbarUtils.RESULT_SOURCE.HISTORY,
+      { url: "http://mozilla.org/c" }
+    ),
+  ];
+
+  let provider = new TipTestProvider(matches);
+  UrlbarProvidersManager.registerProvider(provider);
+
+  registerCleanupFunction(async function() {
+    UrlbarProvidersManager.unregisterProvider(provider);
+  });
+
+  let focused = waitForEvent(
+    EVENT_FOCUS,
+    event => event.accessible.role == ROLE_ENTRY
+  );
+  gURLBar.focus();
+  let event = await focused;
+  let textBox = event.accessible;
+
+  EventUtils.synthesizeKey("KEY_Escape");
+  EventUtils.synthesizeKey("KEY_Escape");
+
+  info("Ensuring no focus change when first text is typed");
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    waitForFocus,
+    value: "example",
+    fireInputEvent: true,
+  });
+  // Wait a tick for a11y events to fire.
+  await TestUtils.waitForTick();
+  testStates(textBox, STATE_FOCUSED);
+
+  info("Ensuring autocomplete focus on down arrow (1)");
+  focused = waitForEvent(EVENT_FOCUS, isEventForAutocompleteItem);
+  EventUtils.synthesizeKey("KEY_ArrowDown");
+  event = await focused;
+  testStates(event.accessible, STATE_FOCUSED);
+
+  info("Ensuring the tip button is focused on down arrow");
+  info("Also ensuring that the tip button is a part of a labelled group");
+  focused = waitForEvent(EVENT_FOCUS, isEventForTipButton);
+  EventUtils.synthesizeKey("KEY_ArrowDown");
+  event = await focused;
+  testStates(event.accessible, STATE_FOCUSED);
+
+  info("Ensuring the help button is focused on down arrow");
+  info("Also ensuring that the help button is a part of a labelled group");
+  focused = waitForEvent(EVENT_FOCUS, isEventForTipButton);
+  EventUtils.synthesizeKey("KEY_ArrowDown");
+  event = await focused;
+  testStates(event.accessible, STATE_FOCUSED);
+
+  info("Ensuring autocomplete focus on down arrow (2)");
+  focused = waitForEvent(EVENT_FOCUS, isEventForAutocompleteItem);
+  EventUtils.synthesizeKey("KEY_ArrowDown");
+  event = await focused;
+  testStates(event.accessible, STATE_FOCUSED);
+
+  info("Ensuring the help button is focused on up arrow");
+  focused = waitForEvent(EVENT_FOCUS, isEventForTipButton);
+  EventUtils.synthesizeKey("KEY_ArrowUp");
+  event = await focused;
+  testStates(event.accessible, STATE_FOCUSED);
+
+  info("Ensuring text box focus on left arrow, and not back to the tip button");
+  focused = waitForEvent(EVENT_FOCUS, textBox);
+  EventUtils.synthesizeKey("KEY_ArrowLeft");
+  await focused;
+  testStates(textBox, STATE_FOCUSED);
+}
+
 addAccessibleTask(``, runTests);
+addAccessibleTask(``, runTipTests);

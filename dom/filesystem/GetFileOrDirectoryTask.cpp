@@ -30,8 +30,7 @@ GetFileOrDirectoryTaskChild::Create(FileSystemBase* aFileSystem,
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
   MOZ_ASSERT(aFileSystem);
 
-  nsCOMPtr<nsIGlobalObject> globalObject =
-      do_QueryInterface(aFileSystem->GetParentObject());
+  nsCOMPtr<nsIGlobalObject> globalObject = aFileSystem->GetParentObject();
   if (NS_WARN_IF(!globalObject)) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
@@ -91,8 +90,13 @@ void GetFileOrDirectoryTaskChild::SetSuccessRequestResult(
       RefPtr<BlobImpl> blobImpl = IPCBlobUtils::Deserialize(r.blob());
       MOZ_ASSERT(blobImpl);
 
-      mResultFile = File::Create(mFileSystem->GetParentObject(), blobImpl);
-      MOZ_ASSERT(mResultFile);
+      nsCOMPtr<nsIGlobalObject> globalObject = mFileSystem->GetParentObject();
+      MOZ_ASSERT(globalObject);
+
+      mResultFile = File::Create(globalObject, blobImpl);
+      if (NS_WARN_IF(!mResultFile)) {
+        aRv.Throw(NS_ERROR_FAILURE);
+      }
       break;
     }
     case FileSystemResponseValue::TFileSystemDirectoryResponse: {

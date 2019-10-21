@@ -13,7 +13,7 @@ import { getURL } from "./getURL";
 const IGNORED_URLS = ["debugger eval code", "XStringBundle"];
 
 export function nodeHasChildren(item: TreeNode): boolean {
-  return Array.isArray(item.contents) && item.type == "directory";
+  return item.type == "directory" && Array.isArray(item.contents);
 }
 
 export function isExactUrlMatch(pathPart: string, debuggeeUrl: string) {
@@ -22,19 +22,47 @@ export function isExactUrlMatch(pathPart: string, debuggeeUrl: string) {
   if (!host) {
     return false;
   }
-  return host.replace(/^www\./, "") === pathPart.replace(/^www\./, "");
+  return (
+    host === pathPart ||
+    host.replace(/^www\./, "") === pathPart.replace(/^www\./, "")
+  );
 }
 
 export function isPathDirectory(path: string) {
   // Assume that all urls point to files except when they end with '/'
   // Or directory node has children
-  const parts = path.split("/").filter(p => p !== "");
-  return parts.length === 0 || path.slice(-1) === "/";
+
+  if (path.endsWith("/")) {
+    return true;
+  }
+
+  let separators = 0;
+  for (let i = 0; i < path.length - 1; ++i) {
+    if (path[i] === "/") {
+      if (path[i + i] !== "/") {
+        return false;
+      }
+
+      ++separators;
+    }
+  }
+
+  switch (separators) {
+    case 0: {
+      return false;
+    }
+    case 1: {
+      return !path.startsWith("/");
+    }
+    default: {
+      return true;
+    }
+  }
 }
 
 export function isDirectory(item: TreeNode) {
   return (
-    (isPathDirectory(item.path) || item.type === "directory") &&
+    (item.type === "directory" || isPathDirectory(item.path)) &&
     item.name != "(index)"
   );
 }
@@ -51,11 +79,13 @@ export function isSource(item: TreeNode) {
 }
 
 export function getFileExtension(source: Source): string {
-  const parsedUrl = getURL(source).path;
-  if (!parsedUrl) {
+  const { path } = getURL(source);
+  if (!path) {
     return "";
   }
-  return parsedUrl.split(".").pop();
+
+  const lastIndex = path.lastIndexOf(".");
+  return lastIndex !== -1 ? path.slice(lastIndex + 1) : "";
 }
 
 export function isNotJavaScript(source: Source): boolean {
@@ -64,17 +94,17 @@ export function isNotJavaScript(source: Source): boolean {
 
 export function isInvalidUrl(url: Object, source: Source) {
   return (
-    IGNORED_URLS.includes(url) ||
     !source.url ||
     !url.group ||
-    isPretty(source) ||
-    isNotJavaScript(source)
+    isNotJavaScript(source) ||
+    IGNORED_URLS.includes(url) ||
+    isPretty(source)
   );
 }
 
 export function partIsFile(index: number, parts: Array<string>, url: Object) {
   const isLastPart = index === parts.length - 1;
-  return !isDirectory(url) && isLastPart;
+  return isLastPart && !isDirectory(url);
 }
 
 export function createDirectoryNode(
@@ -129,9 +159,9 @@ export function getRelativePath(url: string) {
   if (!pathname) {
     return url;
   }
-  const path = pathname.split("/");
-  path.shift();
-  return path.join("/");
+  const index = pathname.indexOf("/");
+
+  return index !== -1 ? pathname.slice(index + 1) : "";
 }
 
 export function getPathWithoutThread(path: string) {

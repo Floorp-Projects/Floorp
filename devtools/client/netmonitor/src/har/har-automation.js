@@ -65,7 +65,7 @@ HarAutomation.prototype = {
     }
 
     this.debuggerClient = client;
-    this.webConsoleClient = this.toolbox.target.activeConsole;
+    this.webConsoleFront = this.toolbox.target.activeConsole;
 
     this.tabWatcher = new TabWatcher(this.toolbox, this);
     this.tabWatcher.connect();
@@ -83,7 +83,7 @@ HarAutomation.prototype = {
     // A page is about to be loaded, start collecting HTTP
     // data from events sent from the backend.
     this.collector = new HarCollector({
-      webConsoleClient: this.webConsoleClient,
+      webConsoleFront: this.webConsoleFront,
       debuggerClient: this.debuggerClient,
     });
 
@@ -196,7 +196,7 @@ HarAutomation.prototype = {
    * Fetches the full text of a string.
    */
   getString: function(stringGrip) {
-    return this.webConsoleClient.getString(stringGrip);
+    return this.webConsoleFront.getString(stringGrip);
   },
 };
 

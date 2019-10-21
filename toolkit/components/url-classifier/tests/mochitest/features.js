@@ -248,8 +248,10 @@ function runTests(flag, prefs, trackingResource) {
 
     function onExamResp(subject, topic, data) {
       let channel = subject.QueryInterface(Ci.nsIHttpChannel);
+      let classifiedChannel = subject.QueryInterface(Ci.nsIClassifiedChannel);
       if (
         !channel ||
+        !classifiedChannel ||
         !channel.URI.spec.startsWith(
           "http://example.com/tests/toolkit/components/url-classifier/tests/mochitest/raptor.jpg"
         )
@@ -259,8 +261,8 @@ function runTests(flag, prefs, trackingResource) {
 
       // eslint-disable-next-line no-undef
       sendAsyncMessage("last-channel-flags", {
-        classificationFlags: channel.classificationFlags,
-        isTrackingResource: channel.isTrackingResource(),
+        classificationFlags: classifiedChannel.classificationFlags,
+        isTrackingResource: classifiedChannel.isTrackingResource(),
       });
     }
 

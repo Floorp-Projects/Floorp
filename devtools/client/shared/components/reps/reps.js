@@ -2359,7 +2359,8 @@ function getChildren(options) {
 
 function getPathExpression(item) {
   if (item && item.parent) {
-    return `${getPathExpression(item.parent)}.${item.name}`;
+    let parent = nodeIsBucket(item.parent) ? item.parent.parent : item.parent;
+    return `${getPathExpression(parent)}.${item.name}`;
   }
 
   return item.name;
@@ -3956,40 +3957,51 @@ const {
 function loadItemProperties(item, client, loadedProperties) {
   const gripItem = getClosestGripNode(item);
   const value = getValue(gripItem);
+
   const [start, end] = item.meta ? [item.meta.startIndex, item.meta.endIndex] : [];
   const promises = [];
   let objectClient;
+  
+  if (value && client && client.getFrontByID) {
+    objectClient = client.getFrontByID(value.actor);
+  }
 
-  const getObjectClient = () => objectClient || client.createObjectClient(value);
+  const getObjectClient = function() {
+    if (!objectClient) {
+      objectClient = client.createObjectClient(value);
+    }
+
+    return objectClient;
+  }
 
   if (shouldLoadItemIndexedProperties(item, loadedProperties)) {
     promises.push(enumIndexedProperties(getObjectClient(), start, end));
   }
-
+  
   if (shouldLoadItemNonIndexedProperties(item, loadedProperties)) {
     promises.push(enumNonIndexedProperties(getObjectClient(), start, end));
   }
-
+  
   if (shouldLoadItemEntries(item, loadedProperties)) {
     promises.push(enumEntries(getObjectClient(), start, end));
   }
-
+  
   if (shouldLoadItemPrototype(item, loadedProperties)) {
     promises.push(getPrototype(getObjectClient()));
   }
-
+  
   if (shouldLoadItemSymbols(item, loadedProperties)) {
     promises.push(enumSymbols(getObjectClient(), start, end));
   }
-
+  
   if (shouldLoadItemFullText(item, loadedProperties)) {
     promises.push(getFullText(client.createLongStringClient(value), item));
   }
-
+  
   if (shouldLoadItemProxySlots(item, loadedProperties)) {
     promises.push(getProxySlots(getObjectClient()));
   }
-
+  
   return Promise.all(promises).then(mergeResponses);
 }
 
@@ -4089,9 +4101,7 @@ const {
 
 async function enumIndexedProperties(objectClient, start, end) {
   try {
-    const {
-      iterator
-    } = await objectClient.enumProperties({
+    const iterator = await objectClient.enumProperties({
       ignoreNonIndexedProperties: true
     });
     const response = await iteratorSlice(iterator, start, end);
@@ -4104,9 +4114,7 @@ async function enumIndexedProperties(objectClient, start, end) {
 
 async function enumNonIndexedProperties(objectClient, start, end) {
   try {
-    const {
-      iterator
-    } = await objectClient.enumProperties({
+    const iterator = await objectClient.enumProperties({
       ignoreIndexedProperties: true
     });
     const response = await iteratorSlice(iterator, start, end);
@@ -4119,9 +4127,7 @@ async function enumNonIndexedProperties(objectClient, start, end) {
 
 async function enumEntries(objectClient, start, end) {
   try {
-    const {
-      iterator
-    } = await objectClient.enumEntries();
+    const iterator = await objectClient.enumEntries();
     const response = await iteratorSlice(iterator, start, end);
     return response;
   } catch (e) {
@@ -4132,9 +4138,7 @@ async function enumEntries(objectClient, start, end) {
 
 async function enumSymbols(objectClient, start, end) {
   try {
-    const {
-      iterator
-    } = await objectClient.enumSymbols();
+    const iterator = await objectClient.enumSymbols();
     const response = await iteratorSlice(iterator, start, end);
     return response;
   } catch (e) {
@@ -7907,7 +7911,8 @@ const {
 
 const {
   getPathExpression,
-  getValue
+  getValue,
+  nodeIsBucket
 } = __webpack_require__(114);
 
 const {
@@ -7996,7 +8001,11 @@ function addWatchpoint(item, watchpoint) {
       parent,
       name
     } = item;
-    const object = getValue(parent);
+    let object = getValue(parent);
+
+    if (nodeIsBucket(parent)) {
+      object = getValue(parent.parent);
+    }
 
     if (!object) {
       return;
@@ -8028,9 +8037,18 @@ function removeWatchpoint(item) {
     dispatch,
     client
   }) {
-    const object = getValue(item.parent);
-    const property = item.name;
-    const path = item.parent.path;
+    const {
+      parent,
+      name
+    } = item;
+    let object = getValue(parent);
+
+    if (nodeIsBucket(parent)) {
+      object = getValue(parent.parent);
+    }
+
+    const property = name;
+    const path = parent.path;
     const actor = object.actor;
     await client.removeWatchpoint(object, property);
     dispatch({

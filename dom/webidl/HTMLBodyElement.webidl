@@ -11,9 +11,10 @@
  * and create derivative works of this document.
  */
 
-[HTMLConstructor,
- Exposed=Window]
+[Exposed=Window]
 interface HTMLBodyElement : HTMLElement {
+  [HTMLConstructor] constructor();
+
 };
 
 partial interface HTMLBodyElement {

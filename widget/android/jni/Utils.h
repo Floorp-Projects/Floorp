@@ -138,12 +138,6 @@ jclass GetClassRef(JNIEnv* aEnv, const char* aClassName);
 
 void DispatchToGeckoPriorityQueue(already_AddRefed<nsIRunnable> aCall);
 
-/**
- * Returns whether Gecko is running in a Fennec environment, as determined by
- * the presence of the GeckoApp class.
- */
-bool IsFennec();
-
 int GetAPIVersion();
 
 pid_t GetUIThreadId();

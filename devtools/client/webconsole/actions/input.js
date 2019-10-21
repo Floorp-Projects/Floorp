@@ -72,13 +72,13 @@ function evaluateExpression(expression) {
       ? mappedExpressionRes.expression
       : expression;
 
-    const { frameActor, client } = webConsoleUI.getFrameActor();
+    const { frameActor, webConsoleFront } = webConsoleUI.getFrameActor();
 
     // Even if the evaluation fails,
     // we still need to pass the error response to onExpressionEvaluated.
     const onSettled = res => res;
 
-    const response = await client
+    const response = await webConsoleFront
       .evaluateJSAsync(expression, {
         frameActor,
         selectedNodeActor: webConsoleUI.getSelectedNodeActor(),

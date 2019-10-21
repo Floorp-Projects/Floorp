@@ -858,31 +858,6 @@ bool js::DefineToStringTag(JSContext* cx, HandleObject obj, JSAtom* tag) {
   return DefineDataProperty(cx, obj, toStringTagId, tagString, JSPROP_READONLY);
 }
 
-GlobalObject::DebuggerVector* GlobalObject::getDebuggers() const {
-  Value debuggers = getReservedSlot(DEBUGGERS);
-  if (debuggers.isUndefined()) {
-    return nullptr;
-  }
-  return DebugAPI::getGlobalDebuggers(&debuggers.toObject());
-}
-
-/* static */ GlobalObject::DebuggerVector* GlobalObject::getOrCreateDebuggers(
-    JSContext* cx, Handle<GlobalObject*> global) {
-  cx->check(global);
-  DebuggerVector* debuggers = global->getDebuggers();
-  if (debuggers) {
-    return debuggers;
-  }
-
-  JSObject* obj = DebugAPI::newGlobalDebuggersHolder(cx);
-  if (!obj) {
-    return nullptr;
-  }
-
-  global->setReservedSlot(DEBUGGERS, ObjectValue(*obj));
-  return global->getDebuggers();
-}
-
 /* static */
 NativeObject* GlobalObject::getOrCreateForOfPICObject(
     JSContext* cx, Handle<GlobalObject*> global) {

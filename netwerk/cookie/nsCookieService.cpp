@@ -19,6 +19,7 @@
 
 #include "nsCookieService.h"
 #include "nsContentUtils.h"
+#include "nsIClassifiedChannel.h"
 #include "nsIServiceManager.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIWebProgressListener.h"
@@ -2012,15 +2013,16 @@ nsresult nsCookieService::GetCookieStringCommon(nsIURI* aHostURI,
   bool isTrackingResource = false;
   bool firstPartyStorageAccessGranted = false;
   uint32_t rejectedReason = 0;
-  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
-  if (httpChannel) {
-    isTrackingResource = httpChannel->IsTrackingResource();
+  nsCOMPtr<nsIClassifiedChannel> classifiedChannel =
+      do_QueryInterface(aChannel);
+  if (classifiedChannel) {
+    isTrackingResource = classifiedChannel->IsTrackingResource();
 
     // Check first-party storage access even for non-tracking resources, since
     // we will need the result when computing the access rights for the reject
     // foreign cookie behavior mode.
     if (AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
-            httpChannel, aHostURI, &rejectedReason)) {
+            aChannel, aHostURI, &rejectedReason)) {
       firstPartyStorageAccessGranted = true;
     }
   }
@@ -2134,15 +2136,16 @@ nsresult nsCookieService::SetCookieStringCommon(nsIURI* aHostURI,
   bool isTrackingResource = false;
   bool firstPartyStorageAccessGranted = false;
   uint32_t rejectedReason = 0;
-  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
-  if (httpChannel) {
-    isTrackingResource = httpChannel->IsTrackingResource();
+  nsCOMPtr<nsIClassifiedChannel> classifiedChannel =
+      do_QueryInterface(aChannel);
+  if (classifiedChannel) {
+    isTrackingResource = classifiedChannel->IsTrackingResource();
 
     // Check first-party storage access even for non-tracking resources, since
     // we will need the result when computing the access rights for the reject
     // foreign cookie behavior mode.
     if (AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
-            httpChannel, aHostURI, &rejectedReason)) {
+            aChannel, aHostURI, &rejectedReason)) {
       firstPartyStorageAccessGranted = true;
     }
   }

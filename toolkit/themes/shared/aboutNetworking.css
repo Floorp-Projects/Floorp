@@ -48,61 +48,6 @@ body {
   border-top-color: rgba(255,255,255,0.15);
 }
 
-/** Warning container **/
-
-/* XXX: a lot of this is duplicated from info-pages.css since that stylesheet
-   is incompatible with this type of layout */
-.warningBackground:not([hidden]) {
-  display: flex;
-}
-
-.warningBackground {
-  flex-direction: column;
-  box-sizing: border-box;
-  min-height: 100vh;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 100%;
-  z-index: 10;
-  top: 0;
-  left: 0;
-  position: fixed;
-  background: var(--in-content-page-background);
-}
-
-.title {
-  position: relative;
-  border-bottom: 1px solid var(--in-content-box-border-color);
-  margin-bottom: 1em;
-  padding-bottom: 0.5em;
-}
-
-.title::before {
-  content: "";
-  left: -2.3em;
-  top: 0;
-  position: absolute;
-  display: block;
-  width: 1.6em;
-  height: 1.6em;
-  background: url("chrome://global/skin/icons/warning.svg") no-repeat left center;
-  background-size: 1.6em;
-  -moz-context-properties: fill;
-  fill: #fcd100;
-}
-
-.title:dir(rtl)::before {
-  left: auto;
-  right: -2.3em;
-}
-
-.warningBackground button {
-  margin-top: 1em;
-  margin-left: 0;
-  min-width: 100px;
-}
-
 /** Content area **/
 
 .main-content {

@@ -74,7 +74,7 @@ use crate::picture::{RecordedDirtyRegion, TILE_SIZE_LARGE, TILE_SIZE_SMALL};
 use crate::prim_store::DeferredResolve;
 use crate::profiler::{BackendProfileCounters, FrameProfileCounters, TimeProfileCounter,
                GpuProfileTag, RendererProfileCounters, RendererProfileTimers};
-use crate::profiler::{Profiler, ChangeIndicator};
+use crate::profiler::{Profiler, ChangeIndicator, ProfileStyle};
 use crate::device::query::{GpuProfiler, GpuDebugMethod};
 use rayon::{ThreadPool, ThreadPoolBuilder};
 use crate::record::ApiRecordingReceiver;
@@ -3033,6 +3033,14 @@ impl Renderer {
             if let Some(device_size) = device_size {
                 //TODO: take device/pixel ratio into equation?
                 if let Some(debug_renderer) = self.debug.get_mut(&mut self.device) {
+                    let style = if self.debug_flags.contains(DebugFlags::SMART_PROFILER) {
+                        ProfileStyle::Smart
+                    } else if self.debug_flags.contains(DebugFlags::COMPACT_PROFILER) {
+                        ProfileStyle::Compact
+                    } else {
+                        ProfileStyle::Full
+                    };
+
                     let screen_fraction = 1.0 / device_size.to_f32().area();
                     self.profiler.draw_profile(
                         &frame_profiles,
@@ -3042,7 +3050,7 @@ impl Renderer {
                         &profile_samplers,
                         screen_fraction,
                         debug_renderer,
-                        self.debug_flags.contains(DebugFlags::COMPACT_PROFILER),
+                        style,
                     );
                 }
             }
@@ -3173,7 +3181,7 @@ impl Renderer {
                 .update(&mut self.device, &update_list);
         }
 
-        let mut upload_time = TimeProfileCounter::new("GPU cache upload time", false);
+        let mut upload_time = TimeProfileCounter::new("GPU cache upload time", false, Some(0.0..2.0));
         let updated_rows = upload_time.profile(|| {
             return self.gpu_cache_texture.flush(&mut self.device);
         });
@@ -3212,7 +3220,7 @@ impl Renderer {
         let _gm = self.gpu_profile.start_marker("texture cache update");
         let mut pending_texture_updates = mem::replace(&mut self.pending_texture_updates, vec![]);
 
-        let mut upload_time = TimeProfileCounter::new("Resource upload time", false);
+        let mut upload_time = TimeProfileCounter::new("Resource upload time", false, Some(0.0..2.0));
         upload_time.profile(|| {
             for update_list in pending_texture_updates.drain(..) {
                 for allocation in update_list.allocations {
@@ -3632,6 +3640,7 @@ impl Renderer {
         render_tasks: &RenderTaskGraph,
         stats: &mut RendererStats,
     ) {
+        self.profile_counters.rendered_picture_cache_tiles.inc();
         self.profile_counters.color_targets.inc();
         let _gm = self.gpu_profile.start_marker("picture cache target");
         let framebuffer_kind = FramebufferKind::Other;
@@ -4056,6 +4065,12 @@ impl Renderer {
             &projection,
             &mut self.renderer_errors
         );
+
+        // We are only interested in tiles backed with actual cached pixels so we don't
+        // count clear tiles here.
+        let num_tiles = composite_state.opaque_tiles.len()
+            + composite_state.alpha_tiles.len();
+        self.profile_counters.total_picture_cache_tiles.set(num_tiles);
 
         // Draw opaque tiles first, front-to-back to get maxmum
         // z-reject efficiency.

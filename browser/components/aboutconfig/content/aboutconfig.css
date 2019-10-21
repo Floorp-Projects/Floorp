@@ -132,12 +132,23 @@
   word-break: break-all;
 }
 
+tr:not(.deleted) > .cell-value {
+  /* Always display the text in the value cell using left-to-right rules, but
+     align it according to the page direction. This doesn't apply to the radio
+     buttons shown for deleted preferences. */
+  direction: ltr;
+  text-align: match-parent;
+}
+
 td.cell-value > form > input[type="text"],
 td.cell-value > form > input[type="number"] {
   -moz-appearance: textfield;
   margin: 0;
   width: 100%;
   box-sizing: border-box;
+  /* Align the text inside the input field in the same way as the table cell,
+     for both the left-to-right and right-to-left directions. */
+  text-align: match-parent;
 }
 
 .button-add,

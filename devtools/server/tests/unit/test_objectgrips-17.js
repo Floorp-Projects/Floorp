@@ -167,8 +167,9 @@ function check_proxy_grip(debuggee, testOptions, grip) {
   } else if (!subsumes) {
     // The proxy belongs to compartment not subsumed by the debuggee.
     strictEqual(grip.class, "Restricted", "The grip has a Restricted class.");
-    ok(
-      !("ownPropertyLength" in grip),
+    strictEqual(
+      grip.ownPropertyLength,
+      undefined,
       "The grip doesn't know the number of properties."
     );
   } else if (globalIsInvisible) {
@@ -201,7 +202,7 @@ function check_proxy_slots(debuggee, testOptions, grip, proxySlots) {
   if (grip.class !== "Proxy") {
     strictEqual(
       proxySlots,
-      undefined,
+      null,
       "Slots can only be retrived for Proxy grips."
     );
   } else if (global === debuggee) {

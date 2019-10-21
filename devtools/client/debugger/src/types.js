@@ -294,7 +294,12 @@ export type Why =
   | ExceptionReason
   | {
       type: string,
+      message?: string,
       frameFinished?: Object,
+      nodeGrip?: Object,
+      ancestorGrip?: Object,
+      exception?: string,
+      action?: string,
     };
 
 /**

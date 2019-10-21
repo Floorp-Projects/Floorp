@@ -46,6 +46,9 @@ class VRShMem final {
   void PushWindowState(VRWindowState& aState);
   void PullWindowState(VRWindowState& aState);
 
+  void SendIMEState(uint64_t aWindowID, mozilla::gfx::VRFxIMEState aImeState);
+  void SendShutdowmState(uint64_t aWindowID);
+
   bool HasExternalShmem() const { return mExternalShmem != nullptr; }
   bool IsSharedExternalShmem() const { return mIsSharedExternalShmem; }
   volatile VRExternalShmem* GetExternalShmem() const;

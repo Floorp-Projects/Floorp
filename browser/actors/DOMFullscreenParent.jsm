@@ -22,7 +22,7 @@ class DOMFullscreenParent extends JSWindowActorParent {
       }
       case "DOMFullscreen:NewOrigin": {
         // Don't show the warning if we've already exited fullscreen.
-        if (window.fullscreen) {
+        if (window.document.fullscreen) {
           window.PointerlockFsWarning.showFullScreen(
             aMessage.data.originNoSuffix
           );
@@ -71,13 +71,15 @@ class DOMFullscreenParent extends JSWindowActorParent {
         // Addon installation should be cancelled when entering fullscreen for security and usability reasons.
         // Installation prompts in fullscreen can trick the user into installing unwanted addons.
         // In fullscreen the notification box does not have a clear visual association with its parent anymore.
-        window.gXPInstallObserver.removeAllNotifications(browser);
+        if (window.gXPInstallObserver) {
+          window.gXPInstallObserver.removeAllNotifications(browser);
+        }
 
         TelemetryStopwatch.start("FULLSCREEN_CHANGE_MS");
         window.FullScreen.enterDomFullscreen(browser, this);
         break;
       }
-      case "MozDOMFullscreen:Exited":
+      case "MozDOMFullscreen:Exited": {
         TelemetryStopwatch.start("FULLSCREEN_CHANGE_MS");
         if (!this.requestOrigin) {
           this.requestOrigin = this;
@@ -85,6 +87,7 @@ class DOMFullscreenParent extends JSWindowActorParent {
         window.FullScreen.cleanupDomFullscreen(this);
         this.removeListeners(window);
         break;
+      }
     }
   }
 

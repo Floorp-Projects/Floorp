@@ -36,19 +36,23 @@ CaptureTask::CaptureTask(dom::ImageCapture* aImageCapture)
       mImageGrabbedOrTrackEnd(false),
       mPrincipalChanged(false) {}
 
-nsresult CaptureTask::TaskComplete(already_AddRefed<dom::Blob> aBlob,
+nsresult CaptureTask::TaskComplete(already_AddRefed<dom::BlobImpl> aBlobImpl,
                                    nsresult aRv) {
   MOZ_ASSERT(NS_IsMainThread());
 
   DetachTrack();
 
   nsresult rv;
-  RefPtr<dom::Blob> blob(aBlob);
+  RefPtr<dom::BlobImpl> blobImpl(aBlobImpl);
 
   // We have to set the parent because the blob has been generated with a valid
   // one.
-  if (blob) {
-    blob = dom::Blob::Create(mImageCapture->GetParentObject(), blob->Impl());
+  RefPtr<dom::Blob> blob;
+  if (blobImpl) {
+    blob = dom::Blob::Create(mImageCapture->GetOwnerGlobal(), blobImpl);
+    if (NS_WARN_IF(!blob)) {
+      return NS_ERROR_FAILURE;
+    }
   }
 
   if (mPrincipalChanged) {
@@ -104,9 +108,10 @@ void CaptureTask::NotifyRealtimeTrackData(MediaTrackGraph* aGraph,
    public:
     explicit EncodeComplete(CaptureTask* aTask) : mTask(aTask) {}
 
-    nsresult ReceiveBlob(already_AddRefed<dom::Blob> aBlob) override {
-      RefPtr<dom::Blob> blob(aBlob);
-      mTask->TaskComplete(blob.forget(), NS_OK);
+    nsresult ReceiveBlobImpl(
+        already_AddRefed<dom::BlobImpl> aBlobImpl) override {
+      RefPtr<dom::BlobImpl> blobImpl(aBlobImpl);
+      mTask->TaskComplete(blobImpl.forget(), NS_OK);
       mTask = nullptr;
       return NS_OK;
     }

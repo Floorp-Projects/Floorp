@@ -59,8 +59,11 @@ const TOGGLES = [
   "-moz-windows-classic",
   "-moz-windows-glass",
   "-moz-swipe-animation-enabled",
-  "-moz-touch-enabled",
 ];
+
+if (SpecialPowers.getBoolPref("layout.css.moz-touch-enabled.enabled")) {
+  TOGGLES.push("-moz-touch-enabled");
+}
 
 for (let i = 0; i < TOGGLES.length; ++i) {
   testToggle(TOGGLES[i])

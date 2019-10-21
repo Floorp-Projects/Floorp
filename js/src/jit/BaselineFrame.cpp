@@ -119,7 +119,7 @@ void BaselineFrame::setInterpreterFields(JSScript* script, jsbytecode* pc) {
   interpreterICEntry_ = jitScript->interpreterICEntryFromPCOffset(pcOffset);
 }
 
-void BaselineFrame::setInterpreterFieldsForPrologueBailout(JSScript* script) {
+void BaselineFrame::setInterpreterFieldsForPrologue(JSScript* script) {
   JitScript* jitScript = script->jitScript();
   interpreterScript_ = script;
   interpreterPC_ = script->code();

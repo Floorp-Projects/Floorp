@@ -116,15 +116,59 @@ assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
                    WebAssembly.CompileError,
                    /expression has type anyref but expected funcref/);
 
-// Wasm: element segments targeting table-of-anyref is forbidden
+// Wasm: Element segments can target tables of anyref whether the element type
+// is anyref or funcref.
+
+for (let elem_ty of ["funcref", "anyref"]) {
+    let ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(
+    `(module
+       (func $f1 (export "f") (result i32) (i32.const 0))
+       (func $f2 (result i32) (i32.const 0)) ;; on purpose not exported
+       (table (export "t") 10 anyref)
+       (elem (table 0) (i32.const 0) ${elem_ty} (ref.func $f1) (ref.func $f2))
+       )`)));
+    let t = ins.exports.t;
+    let f = ins.exports.f;
+    assertEq(t.get(0), f);
+    assertEq(t.get(2), null);  // not much of a test since that's the default value
+}
+
+// Wasm: Element segments of anyref can't target tables of funcref
 
 assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
     `(module
        (func $f1 (result i32) (i32.const 0))
-       (table 10 anyref)
-       (elem 0 (i32.const 0) func $f1))`)),
+       (table (export "t") 10 funcref)
+       (elem 0 (i32.const 0) anyref (ref.func $f1)))`)),
                    WebAssembly.CompileError,
-                   /only tables of 'funcref' may have element segments/);
+                   /segment's element type must be subtype of table's element type/);
+
+// Wasm: table.init on table-of-anyref is allowed whether the segment has
+// anyrefs or funcrefs.
+
+for (let elem_ty of ["funcref", "anyref"]) {
+    let ins = new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(
+    `(module
+       (func $f1 (result i32) (i32.const 0))
+       (table (export "t") 10 anyref)
+       (elem ${elem_ty} (ref.func $f1))
+       (func (export "f")
+         (table.init 0 (i32.const 2) (i32.const 0) (i32.const 1))))`)));
+    ins.exports.f();
+    assertEq(typeof ins.exports.t.get(2), "function");
+}
+
+// Wasm: table.init on table-of-funcref is not allowed when the segment has
+// anyref.
+
+assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
+    `(module
+       (table 10 funcref)
+       (elem anyref (ref.null))
+       (func
+         (table.init 0 (i32.const 0) (i32.const 0) (i32.const 0))))`)),
+                   WebAssembly.CompileError,
+                   /expression has type anyref but expected funcref/);
 
 // Wasm: table types must match at link time
 
@@ -459,19 +503,3 @@ let VALUES = [null,
     t.grow(0, 1789);
     assertEq(t.get(0), 1337);
 }
-
-// Currently 'anyref' segments are not allowed whether passive or active,
-// though that will change
-
-assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
-    `(module
-       (elem (i32.const 0) anyref (ref.null)))`)),
-                   SyntaxError,
-                   /parsing wasm text/);
-
-
-assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
-    `(module
-       (elem anyref (ref.null)))`)),
-                   SyntaxError,
-                   /parsing wasm text/);

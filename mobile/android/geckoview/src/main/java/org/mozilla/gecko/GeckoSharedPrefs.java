@@ -176,7 +176,8 @@ public final class GeckoSharedPrefs {
      */
     @SuppressWarnings("try")
     private static synchronized void migrateIfNecessary(final Context context) {
-        if (!GeckoAppShell.isFennec()) {
+        // FIXME(emilio): What do we want to do about this?
+        if (true) {
             return;
         }
 

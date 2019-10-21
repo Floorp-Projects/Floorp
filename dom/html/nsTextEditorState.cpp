@@ -64,18 +64,17 @@ inline nsresult SetEditorFlagsIfNecessary(EditorBase& aEditorBase,
 class MOZ_STACK_CLASS AutoInputEventSuppresser final {
  public:
   explicit AutoInputEventSuppresser(TextEditor* aTextEditor)
-      : mTextEditor(aTextEditor)
+      : mTextEditor(aTextEditor),
         // To protect against a reentrant call to SetValue, we check whether
         // another SetValue is already happening for this editor.  If it is,
         // we must wait until we unwind to re-enable oninput events.
-        ,
         mOuterTransaction(aTextEditor->IsSuppressingDispatchingInputEvent()) {
-    MOZ_ASSERT(aTextEditor);
+    MOZ_ASSERT(mTextEditor);
+    mTextEditor->SuppressDispatchingInputEvent(true);
   }
   ~AutoInputEventSuppresser() {
     mTextEditor->SuppressDispatchingInputEvent(mOuterTransaction);
   }
-  void Init() { mTextEditor->SuppressDispatchingInputEvent(true); }
 
  private:
   RefPtr<TextEditor> mTextEditor;
@@ -2280,7 +2279,6 @@ bool nsTextEditorState::SetValue(const nsAString& aValue,
     // this is necessary to avoid infinite recursion
     if (!currentValue.Equals(newValue)) {
       RefPtr<TextEditor> textEditor = mTextEditor;
-      AutoInputEventSuppresser suppressInputEventDispatching(textEditor);
 
       nsCOMPtr<Document> document = textEditor->GetDocument();
       if (NS_WARN_IF(!document)) {
@@ -2307,10 +2305,6 @@ bool nsTextEditorState::SetValue(const nsAString& aValue,
         {
           AutoRestoreEditorState restoreState(textEditor);
 
-          mTextListener->SettingValue(true);
-          bool notifyValueChanged = !!(aFlags & eSetValue_Notify);
-          mTextListener->SetValueChanged(notifyValueChanged);
-
           if (aFlags & eSetValue_BySetUserInput) {
             // If the caller inserts text as part of user input, for example,
             // autocomplete, we need to replace the text as "insert string"
@@ -2318,103 +2312,108 @@ bool nsTextEditorState::SetValue(const nsAString& aValue,
             // transactions typed by user shouldn't be merged with this).
             // In this case, we need to dispatch "input" event because
             // web apps may need to know the user's operation.
-            RefPtr<nsRange> range;  // See bug 1506439
             // In this case, we need to dispatch "beforeinput" events since
             // we're emulating the user's input.  Passing nullptr as
             // nsIPrincipal means that that may be user's input.  So, let's
             // do it.
             DebugOnly<nsresult> rv =
-                textEditor->ReplaceTextAsAction(newValue, range, nullptr);
+                textEditor->ReplaceTextAsAction(newValue, nullptr, nullptr);
             NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                                  "Failed to set the new value");
-          } else if (aFlags & eSetValue_ForXUL) {
-            // When setting value of XUL <textbox>, we shouldn't dispatch
-            // "input" event.
-            suppressInputEventDispatching.Init();
-
-            // On XUL <textbox> element, we need to preserve existing undo
-            // transactions.
-            // XXX Do we really need to do such complicated optimization?
-            //     This was landed for web pages which set <textarea> value
-            //     per line (bug 518122).  For example:
-            //       for (;;) {
-            //         textarea.value += oneLineText + "\n";
-            //       }
-            //     However, this path won't be used in web content anymore.
-            nsCOMPtr<nsISelectionController> kungFuDeathGrip = mSelCon.get();
-            uint32_t currentLength = currentValue.Length();
-            uint32_t newlength = newValue.Length();
-            if (!currentLength || !StringBeginsWith(newValue, currentValue)) {
-              // Replace the whole text.
-              currentLength = 0;
-              kungFuDeathGrip->SelectAll();
-            } else {
-              // Collapse selection to the end so that we can append data.
-              mBoundFrame->SelectAllOrCollapseToEndOfText(false);
-            }
-            const nsAString& insertValue =
-                StringTail(newValue, newlength - currentLength);
-
-            if (insertValue.IsEmpty()) {
-              // In this case, we makes the editor stop dispatching "input"
-              // event so that passing nullptr as nsIPrincipal is safe for
-              // now.
-              DebugOnly<nsresult> rv = textEditor->DeleteSelectionAsAction(
-                  nsIEditor::eNone, nsIEditor::eStrip, nullptr);
-              NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                                   "Failed to remove the text");
-            } else {
-              // In this case, we makes the editor stop dispatching "input"
-              // event so that passing nullptr as nsIPrincipal is safe for
-              // now.
-              DebugOnly<nsresult> rv =
-                  textEditor->InsertTextAsAction(insertValue, nullptr);
-              NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                                   "Failed to insert the new value");
-            }
           } else {
-            // When setting value of <input>, we shouldn't dispatch "input"
-            // event.
-            suppressInputEventDispatching.Init();
+            // If we're emulating user input, we don't need to manage
+            // mTextListener state since it should use same path as user
+            // typing something.  On the other hand, if we're setting value
+            // programatically, we need to manage mTextListener by ourselves
+            // and suppress "input" events.
+            mTextListener->SettingValue(true);
+            bool notifyValueChanged = !!(aFlags & eSetValue_Notify);
+            mTextListener->SetValueChanged(notifyValueChanged);
 
-            // On <input> or <textarea>, we shouldn't preserve existing undo
-            // transactions because other browsers do not preserve them too
-            // and not preserving transactions makes setting value faster.
-            AutoDisableUndo disableUndo(textEditor);
-            if (selection) {
-              // Since we don't use undo transaction, we don't need to store
-              // selection state.  SetText will set selection to tail.
-              // Note that textEditor will collapse selection to the end.
-              // Therefore, it's safe to use RemoveAllRangesTemporarily() here.
-              selection->RemoveAllRangesTemporarily();
+            AutoInputEventSuppresser suppressInputEventDispatching(textEditor);
+
+            if (aFlags & eSetValue_ForXUL) {
+              // On XUL <textbox> element, we need to preserve existing undo
+              // transactions.
+              // XXX Do we really need to do such complicated optimization?
+              //     This was landed for web pages which set <textarea> value
+              //     per line (bug 518122).  For example:
+              //       for (;;) {
+              //         textarea.value += oneLineText + "\n";
+              //       }
+              //     However, this path won't be used in web content anymore.
+              nsCOMPtr<nsISelectionController> kungFuDeathGrip = mSelCon.get();
+              uint32_t currentLength = currentValue.Length();
+              uint32_t newlength = newValue.Length();
+              if (!currentLength || !StringBeginsWith(newValue, currentValue)) {
+                // Replace the whole text.
+                currentLength = 0;
+                kungFuDeathGrip->SelectAll();
+              } else {
+                // Collapse selection to the end so that we can append data.
+                mBoundFrame->SelectAllOrCollapseToEndOfText(false);
+              }
+              const nsAString& insertValue =
+                  StringTail(newValue, newlength - currentLength);
+
+              if (insertValue.IsEmpty()) {
+                // In this case, we makes the editor stop dispatching "input"
+                // event so that passing nullptr as nsIPrincipal is safe for
+                // now.
+                DebugOnly<nsresult> rv = textEditor->DeleteSelectionAsAction(
+                    nsIEditor::eNone, nsIEditor::eStrip, nullptr);
+                NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                                     "Failed to remove the text");
+              } else {
+                // In this case, we makes the editor stop dispatching "input"
+                // event so that passing nullptr as nsIPrincipal is safe for
+                // now.
+                DebugOnly<nsresult> rv =
+                    textEditor->InsertTextAsAction(insertValue, nullptr);
+                NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                                     "Failed to insert the new value");
+              }
+            } else {
+              // On <input> or <textarea>, we shouldn't preserve existing undo
+              // transactions because other browsers do not preserve them too
+              // and not preserving transactions makes setting value faster.
+              AutoDisableUndo disableUndo(textEditor);
+              if (selection) {
+                // Since we don't use undo transaction, we don't need to store
+                // selection state.  SetText will set selection to tail.
+                // Note that textEditor will collapse selection to the end.
+                // Therefore, it's safe to use RemoveAllRangesTemporarily()
+                // here.
+                selection->RemoveAllRangesTemporarily();
+              }
+
+              // In this case, we makes the editor stop dispatching "input"
+              // event so that passing nullptr as nsIPrincipal is safe for now.
+              textEditor->SetTextAsAction(newValue, nullptr);
+
+              // Call the listener's HandleValueChanged() callback manually,
+              // since we don't use the transaction manager in this path and it
+              // could be that the editor would bypass calling the listener for
+              // that reason.
+              mTextListener->HandleValueChanged();
             }
 
-            // In this case, we makes the editor stop dispatching "input" event
-            // so that passing nullptr as nsIPrincipal is safe for now.
-            textEditor->SetTextAsAction(newValue, nullptr);
-
-            // Call the listener's HandleValueChanged() callback manually, since
-            // we don't use the transaction manager in this path and it could be
-            // that the editor would bypass calling the listener for that
-            // reason.
-            mTextListener->HandleValueChanged();
-          }
-
-          mTextListener->SetValueChanged(true);
-          mTextListener->SettingValue(false);
-
-          if (!notifyValueChanged) {
-            // Listener doesn't update frame, but it is required for placeholder
-            ValueWasChanged(true);
+            mTextListener->SetValueChanged(true);
+            mTextListener->SettingValue(false);
+            if (!notifyValueChanged) {
+              // Listener doesn't update frame, but it is required for
+              // placeholder
+              ValueWasChanged(true);
+            }
           }
         }
 
         if (!weakFrame.IsAlive()) {
           // If the frame was destroyed because of a flush somewhere inside
-          // InsertText, mBoundFrame here will be false.  But it's also possible
-          // for the frame to go away because of another reason (such as
-          // deleting the existing selection -- see bug 574558), in which case
-          // we don't need to reset the value here.
+          // InsertText, mBoundFrame here will be nullptr.  But it's also
+          // possible for the frame to go away because of another reason (such
+          // as deleting the existing selection -- see bug 574558), in which
+          // case we don't need to reset the value here.
           if (!mBoundFrame) {
             return SetValue(newValue, aFlags & eSetValue_Notify);
           }

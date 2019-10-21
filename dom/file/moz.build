@@ -14,6 +14,7 @@ EXPORTS.mozilla.dom += [
     'Blob.h',
     'BlobImpl.h',
     'BlobSet.h',
+    'EmptyBlobImpl.h',
     'File.h',
     'FileBlobImpl.h',
     'FileCreatorHelper.h',

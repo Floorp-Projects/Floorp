@@ -65,10 +65,11 @@ function amManager() {
 
   Services.mm.loadFrameScript(CHILD_SCRIPT, true, true);
   Services.mm.addMessageListener(MSG_INSTALL_ENABLED, this);
-  Services.mm.addMessageListener(MSG_INSTALL_ADDON, this);
   Services.mm.addMessageListener(MSG_PROMISE_REQUEST, this);
   Services.mm.addMessageListener(MSG_INSTALL_CLEANUP, this);
   Services.mm.addMessageListener(MSG_ADDON_EVENT_REQ, this);
+
+  Services.ppmm.addMessageListener(MSG_INSTALL_ADDON, this);
 
   Services.obs.addObserver(this, "message-manager-close");
   Services.obs.addObserver(this, "message-manager-disconnect");
@@ -219,9 +220,11 @@ amManager.prototype = {
         return AddonManager.isInstallEnabled(payload.mimetype);
 
       case MSG_INSTALL_ADDON: {
+        let browser = payload.browsingContext.top.embedderElement;
+
         let callback = null;
         if (payload.callbackID != -1) {
-          let mm = aMessage.target.messageManager;
+          let mm = browser.messageManager;
           callback = {
             onInstallEnded(url, status) {
               mm.sendAsyncMessage(MSG_INSTALL_CALLBACK, {
@@ -233,7 +236,7 @@ amManager.prototype = {
           };
         }
 
-        return this.installAddonFromWebpage(payload, aMessage.target, callback);
+        return this.installAddonFromWebpage(payload, browser, callback);
       }
 
       case MSG_PROMISE_REQUEST: {

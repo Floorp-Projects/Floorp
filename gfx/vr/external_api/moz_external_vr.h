@@ -40,7 +40,15 @@ enum class GamepadCapabilityFlags : uint16_t;
 #endif  //  MOZILLA_INTERNAL_API
 namespace gfx {
 
-static const int32_t kVRExternalVersion = 9;
+// If there is any change of "SHMEM_VERSION" or "kVRExternalVersion",
+// we need to change both of them at the same time.
+
+// TODO: we might need to use different names for the mutexes
+// and mapped files if we have both release and nightlies
+// running at the same time? Or...what if we have multiple
+// release builds running on same machine? (Bug 1563232)
+#define SHMEM_VERSION "0.0.3"
+static const int32_t kVRExternalVersion = 10;
 
 // We assign VR presentations to groups with a bitmask.
 // Currently, we will only display either content or chrome.
@@ -430,6 +438,15 @@ struct VRSystemState {
   VRControllerState controllerState[kVRControllerMaxCount];
 };
 
+enum class VRFxEventType : uint8_t {
+  FxEvent_NONE = 0,
+  FxEvent_IME,
+  FxEvent_SHUTDOWN,
+  FxEvent_TOTAL
+};
+
+enum class VRFxIMEState : uint8_t { Blur, Focus };
+
 // Data shared via shmem for running Firefox in a VR windowed environment
 struct VRWindowState {
   // State from Firefox
@@ -437,6 +454,9 @@ struct VRWindowState {
   uint32_t widthFx;
   uint32_t heightFx;
   VRLayerTextureHandle textureFx;
+  uint32_t windowID;
+  VRFxEventType eventType;
+  VRFxIMEState imeState;
 
   // State from VRHost
   uint32_t dxgiAdapterHost;

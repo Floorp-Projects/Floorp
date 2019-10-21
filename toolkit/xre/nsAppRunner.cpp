@@ -223,7 +223,6 @@
 
 #ifdef MOZ_WIDGET_ANDROID
 #  include "GeneratedJNIWrappers.h"
-#  include "mozilla/jni/Utils.h"  // for mozilla::jni::IsFennec()
 #endif
 
 #if defined(MOZ_SANDBOX)
@@ -4906,8 +4905,8 @@ GeckoProcessType XRE_GetProcessType() {
 
 bool XRE_IsE10sParentProcess() {
 #ifdef MOZ_WIDGET_ANDROID
-  return XRE_IsParentProcess() && mozilla::jni::IsAvailable() &&
-         !mozilla::jni::IsFennec() && BrowserTabsRemoteAutostart();
+  return XRE_IsParentProcess() && BrowserTabsRemoteAutostart() &&
+         mozilla::jni::IsAvailable();
 #else
   return XRE_IsParentProcess() && BrowserTabsRemoteAutostart();
 #endif

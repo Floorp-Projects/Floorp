@@ -256,6 +256,10 @@ class ServiceWorkerManager final : public nsIServiceWorkerManager,
       const ClientInfo& aClientInfo,
       ServiceWorkerRegistrationInfo** aRegistrationInfo);
 
+  void UpdateControlledClient(const ClientInfo& aOldClientInfo,
+                              const ClientInfo& aNewClientInfo,
+                              const ServiceWorkerDescriptor& aServiceWorker);
+
  private:
   struct RegistrationDataPerPrincipal;
 

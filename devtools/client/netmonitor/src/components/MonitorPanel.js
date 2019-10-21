@@ -172,7 +172,7 @@ class MonitorPanel extends Component {
       className: "devtools-responsive-container",
       initialWidth,
       initialHeight,
-      minSize: "50px",
+      minSize: "250px",
       maxSize: "80%",
       splitterSize: panelOpen ? 1 : 0,
       startPanel:

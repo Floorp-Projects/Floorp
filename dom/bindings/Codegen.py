@@ -15744,8 +15744,13 @@ class CGBindingImplClass(CGClass):
         return None
 
     def getGetParentObjectReturnType(self):
-        return ("// TODO: return something sensible here, and change the return type\n"
-                "%s*" % self.descriptor.nativeType.split('::')[-1])
+        # The lack of newline before the end of the string is on purpose.
+        return dedent(
+            """
+            // This should return something that eventually allows finding a
+            // path to the global this object is associated with.  Most simply,
+            // returning an actual global works.
+            nsIGlobalObject*""")
 
     def getGetParentObjectBody(self):
         return None

@@ -16,7 +16,7 @@ class ConsoleCommands {
   }
 
   evaluateJSAsync(expression, options) {
-    return this.proxy.webConsoleClient.evaluateJSAsync(expression, options);
+    return this.proxy.webConsoleFront.evaluateJSAsync(expression, options);
   }
 
   createObjectClient(object) {
@@ -32,12 +32,18 @@ class ConsoleCommands {
       return null;
     }
 
-    return this.debuggerClient.release(actor);
+    const objFront = this.debuggerClient.getFrontByID(actor);
+    if (objFront) {
+      return objFront.release();
+    }
+
+    // In case there's no object front, use the client's release method.
+    return this.debuggerClient.release(actor).catch(() => {});
   }
 
   async fetchObjectProperties(grip, ignoreNonIndexedProperties) {
     const client = new ObjectClient(this.currentTarget.client, grip);
-    const { iterator } = await client.enumProperties({
+    const iterator = await client.enumProperties({
       ignoreNonIndexedProperties,
     });
     const { ownProperties } = await iterator.slice(0, iterator.count);
@@ -46,7 +52,7 @@ class ConsoleCommands {
 
   async fetchObjectEntries(grip) {
     const client = new ObjectClient(this.currentTarget.client, grip);
-    const { iterator } = await client.enumEntries();
+    const iterator = await client.enumEntries();
     const { ownProperties } = await iterator.slice(0, iterator.count);
     return ownProperties;
   }

@@ -34,26 +34,16 @@ nsresult nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType,
 
 nsresult nsOSHelperAppService::OSProtocolHandlerExists(const char* aScheme,
                                                        bool* aExists) {
-  if (!mozilla::jni::IsFennec()) {
-    // We don't want to get protocol handlers from the OS in GV; the app
-    // should take care of that in NavigationDelegate.onLoadRequest().
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-
-  *aExists = mozilla::AndroidBridge::Bridge()->GetHandlersForURL(
-      NS_ConvertUTF8toUTF16(aScheme));
-  return NS_OK;
+  // We don't want to get protocol handlers from the OS in GV; the app
+  // should take care of that in NavigationDelegate.onLoadRequest().
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsresult nsOSHelperAppService::GetProtocolHandlerInfoFromOS(
     const nsACString& aScheme, bool* found, nsIHandlerInfo** info) {
-  if (!mozilla::jni::IsFennec()) {
-    // We don't want to get protocol handlers from the OS in GV; the app
-    // should take care of that in NavigationDelegate.onLoadRequest().
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-
-  return nsMIMEInfoAndroid::GetMimeInfoForURL(aScheme, found, info);
+  // We don't want to get protocol handlers from the OS in GV; the app
+  // should take care of that in NavigationDelegate.onLoadRequest().
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsIHandlerApp* nsOSHelperAppService::CreateAndroidHandlerApp(

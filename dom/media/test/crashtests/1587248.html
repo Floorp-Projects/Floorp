@@ -1,0 +1,23 @@
+<html class="reftest-wait">
+<head>
+<script>
+function start () {
+  const audio = document.getElementById('id_4')
+  const doc = new Document()
+  const stream = new MediaStream()
+  const track = document.createElementNS('http://www.w3.org/1999/xhtml', 'track')
+  audio.srcObject = stream
+  track.textContent = '�'
+  setTimeout(() => {
+    track.replaceChild(audio, track.childNodes[0])
+    audio.play().then(function (arg4) { })
+    document.documentElement.removeAttribute("class")
+  }, 157)
+  doc.adoptNode(audio)
+}
+
+document.addEventListener('DOMContentLoaded', start)
+</script>
+</head>
+<audio class="" id="id_4" itemscope></audio>
+</html>

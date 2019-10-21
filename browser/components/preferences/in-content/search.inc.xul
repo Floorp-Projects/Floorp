@@ -24,7 +24,7 @@
     <!-- Default Search Engine -->
     <groupbox id="defaultEngineGroup" data-category="paneSearch" hidden="true">
       <label><html:h2 data-l10n-id="search-engine-default-header" /></label>
-      <description data-l10n-id="search-engine-default-desc" />
+      <description data-l10n-id="search-engine-default-desc-2" />
 
       <hbox id="browserDefaultSearchExtensionContent"
             align="center" hidden="true" class="extension-controlled">
@@ -43,7 +43,7 @@
                 data-l10n-id="search-separate-default-engine"
                 hidden="true"/>
       <vbox id="browserPrivateEngineSelection" class="indent" hidden="true">
-        <description data-l10n-id="search-engine-default-private-desc" />
+        <description data-l10n-id="search-engine-default-private-desc-2" />
         <hbox>
           <!-- Please don't remove the wrapping hbox/vbox/box for these elements. It's used to properly compute the search tooltip position. -->
           <hbox>

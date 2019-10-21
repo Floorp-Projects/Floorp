@@ -19,7 +19,7 @@ async function testImageMap(browser, accDoc) {
 
   /* ================= Insert area ========================================== */
   let onReorder = waitForEvent(EVENT_REORDER, id);
-  await ContentTask.spawn(browser, {}, () => {
+  await invokeContentTask(browser, [], () => {
     let areaElm = content.document.createElement("area");
     let mapNode = content.document.getElementById("map");
     areaElm.setAttribute(
@@ -43,7 +43,7 @@ async function testImageMap(browser, accDoc) {
 
   /* ================= Append area ========================================== */
   onReorder = waitForEvent(EVENT_REORDER, id);
-  await ContentTask.spawn(browser, {}, () => {
+  await invokeContentTask(browser, [], () => {
     let areaElm = content.document.createElement("area");
     let mapNode = content.document.getElementById("map");
     areaElm.setAttribute(
@@ -68,7 +68,7 @@ async function testImageMap(browser, accDoc) {
 
   /* ================= Remove area ========================================== */
   onReorder = waitForEvent(EVENT_REORDER, id);
-  await ContentTask.spawn(browser, {}, () => {
+  await invokeContentTask(browser, [], () => {
     let mapNode = content.document.getElementById("map");
     mapNode.removeChild(mapNode.firstElementChild);
   });
@@ -100,13 +100,19 @@ async function testContainer(browser) {
   onReorder = waitForEvent(EVENT_REORDER, id);
   await invokeSetAttribute(browser, "map", "name", "atoz_map");
   // XXX: force repainting of the image (see bug 745788 for details).
-  await BrowserTestUtils.synthesizeMouse(
-    "#imgmap",
-    10,
-    10,
-    { type: "mousemove" },
-    browser
-  );
+  await invokeContentTask(browser, [], () => {
+    const { ContentTaskUtils } = ChromeUtils.import(
+      "resource://testing-common/ContentTaskUtils.jsm"
+    );
+    const EventUtils = ContentTaskUtils.getEventUtils(content);
+    EventUtils.synthesizeMouse(
+      content.document.getElementById("imgmap"),
+      10,
+      10,
+      { type: "mousemove" },
+      content
+    );
+  });
   await onReorder;
 
   tree = {
@@ -120,7 +126,7 @@ async function testContainer(browser) {
 
   /* ================= Remove map =========================================== */
   onReorder = waitForEvent(EVENT_REORDER, id);
-  await ContentTask.spawn(browser, {}, () => {
+  await invokeContentTask(browser, [], () => {
     let mapNode = content.document.getElementById("map");
     mapNode.remove();
   });
@@ -133,7 +139,7 @@ async function testContainer(browser) {
 
   /* ================= Insert map =========================================== */
   onReorder = waitForEvent(EVENT_REORDER, id);
-  await ContentTask.spawn(browser, id, contentId => {
+  await invokeContentTask(browser, [id], contentId => {
     let map = content.document.createElement("map");
     let area = content.document.createElement("area");
 
@@ -179,21 +185,28 @@ async function waitForImageMap(browser, accDoc) {
 
   const onReorder = waitForEvent(EVENT_REORDER, id);
   // Wave over image map
-  await BrowserTestUtils.synthesizeMouse(
-    `#${id}`,
-    10,
-    10,
-    { type: "mousemove" },
-    browser
-  );
+  await invokeContentTask(browser, [id], contentId => {
+    const { ContentTaskUtils } = ChromeUtils.import(
+      "resource://testing-common/ContentTaskUtils.jsm"
+    );
+    const EventUtils = ContentTaskUtils.getEventUtils(content);
+    EventUtils.synthesizeMouse(
+      content.document.getElementById(contentId),
+      10,
+      10,
+      { type: "mousemove" },
+      content
+    );
+  });
   await onReorder;
 }
 
-addAccessibleTask("doc_treeupdate_imagemap.html", async function(
-  browser,
-  accDoc
-) {
-  await waitForImageMap(browser, accDoc);
-  await testImageMap(browser, accDoc);
-  await testContainer(browser);
-});
+addAccessibleTask(
+  "doc_treeupdate_imagemap.html",
+  async function(browser, accDoc) {
+    await waitForImageMap(browser, accDoc);
+    await testImageMap(browser, accDoc);
+    await testContainer(browser);
+  },
+  { iframe: true }
+);

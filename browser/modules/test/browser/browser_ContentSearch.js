@@ -22,6 +22,7 @@ add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["browser.newtab.preload", false],
+      ["browser.search.separatePrivateDefault.ui.enabled", true],
       ["browser.search.separatePrivateDefault", true],
     ],
   });
@@ -57,7 +58,7 @@ add_task(async function GetState() {
   let msg = await waitForTestMsg(mm, "State");
   checkMsg(msg, {
     type: "State",
-    data: await currentStateObj(),
+    data: await currentStateObj(false),
   });
 
   ok(arrayBufferIconTested, "ArrayBuffer path for the iconData was tested");
@@ -397,7 +398,7 @@ async function addTab() {
   return { browser: tab.linkedBrowser, mm };
 }
 
-var currentStateObj = async function() {
+var currentStateObj = async function(isPrivateWindowValue) {
   let state = {
     engines: [],
     currentEngine: await constructEngineObj(await Services.search.getDefault()),
@@ -413,6 +414,9 @@ var currentStateObj = async function() {
       hidden: false,
       identifier: engine.identifier,
     });
+  }
+  if (typeof isPrivateWindowValue == "boolean") {
+    state.isPrivateWindow = isPrivateWindowValue;
   }
   return state;
 };

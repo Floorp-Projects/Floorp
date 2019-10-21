@@ -25,16 +25,29 @@ add_task(async function() {
         "Creating a service in parent and waiting for service to be created " +
           "in content"
       );
+      await loadContentScripts(browser, "Common.jsm");
       // Create a11y service in the main process. This will trigger creating of
       // the a11y service in parent as well.
-      let parentA11yInit = initPromise();
-      let contentA11yInit = initPromise(browser);
-      let parentConsumersChanged = a11yConsumersChangedPromise();
-      let contentConsumersChanged = ContentTask.spawn(
-        browser,
-        {},
-        a11yConsumersChangedPromise
+      const [parentA11yInitObserver, parentA11yInit] = initAccService();
+      const [contentA11yInitObserver, contentA11yInit] = initAccService(
+        browser
       );
+      let [
+        parentConsumersChangedObserver,
+        parentConsumersChanged,
+      ] = accConsumersChanged();
+      let [
+        contentConsumersChangedObserver,
+        contentConsumersChanged,
+      ] = accConsumersChanged(browser);
+
+      await Promise.all([
+        parentA11yInitObserver,
+        contentA11yInitObserver,
+        parentConsumersChangedObserver,
+        contentConsumersChangedObserver,
+      ]);
+
       let accService = Cc["@mozilla.org/accessibilityService;1"].getService(
         Ci.nsIAccessibilityService
       );
@@ -78,14 +91,30 @@ add_task(async function() {
           "down in content"
       );
       // Remove a11y service reference in the main process.
-      let parentA11yShutdown = shutdownPromise();
-      let contentA11yShutdown = shutdownPromise(browser);
-      parentConsumersChanged = a11yConsumersChangedPromise();
-      contentConsumersChanged = ContentTask.spawn(
-        browser,
-        {},
-        a11yConsumersChangedPromise
-      );
+      const [
+        parentA11yShutdownObserver,
+        parentA11yShutdown,
+      ] = shutdownAccService();
+      const [
+        contentA11yShutdownObserver,
+        contentA11yShutdown,
+      ] = shutdownAccService(browser);
+      [
+        parentConsumersChangedObserver,
+        parentConsumersChanged,
+      ] = accConsumersChanged();
+      [
+        contentConsumersChangedObserver,
+        contentConsumersChanged,
+      ] = accConsumersChanged(browser);
+
+      await Promise.all([
+        parentA11yShutdownObserver,
+        contentA11yShutdownObserver,
+        parentConsumersChangedObserver,
+        contentConsumersChangedObserver,
+      ]);
+
       accService = null;
       ok(!accService, "Service is removed in parent");
       // Force garbage collection that should trigger shutdown in both main and

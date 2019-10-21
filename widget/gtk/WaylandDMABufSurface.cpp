@@ -28,17 +28,7 @@
 #include "mozilla/layers/LayersSurfaces.h"
 
 /*
-TODO
-
-Lock/Unlock:
-An important detail is that you *must* use DMA_BUF_IOCTL_SYNC to
-bracket your actual CPU read/write sequences to the dmabuf. That ioctl
-will ensure the appropriate caches are flushed correctly (you might not
-notice anything wrong on x86, but on other hardware forgetting to do
-that can randomly result in bad data), and I think it also waits for
-implicit fences (e.g. if you had GPU write to the dmabuf earlier, to
-ensure the operation finished).
-
+TODO:
 DRM device selection:
 https://lists.freedesktop.org/archives/wayland-devel/2018-November/039660.html
 */
@@ -293,6 +283,7 @@ bool WaylandDMABufSurface::IsEGLSupported(mozilla::gl::GLContext* aGLContext) {
 bool WaylandDMABufSurface::CreateEGLImage(mozilla::gl::GLContext* aGLContext) {
   MOZ_ASSERT(mGbmBufferObject, "Can't create EGLImage, missing dmabuf object!");
   MOZ_ASSERT(mBufferPlaneCount == 1, "Modifiers are not supported yet!");
+  MOZ_ASSERT(!mEGLImage && !mGLFbo, "EGLImage is already created!");
 
   nsTArray<EGLint> attribs;
   attribs.AppendElement(LOCAL_EGL_WIDTH);

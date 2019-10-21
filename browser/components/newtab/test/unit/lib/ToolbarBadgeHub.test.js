@@ -247,7 +247,7 @@ describe("ToolbarBadgeHub", () => {
       );
       assert.calledWithExactly(
         fakeElement.addEventListener,
-        "click",
+        "keypress",
         instance.removeAllNotifications
       );
     });
@@ -536,7 +536,7 @@ describe("ToolbarBadgeHub", () => {
       );
       assert.calledWithExactly(
         fakeEvent.target.removeEventListener,
-        "click",
+        "keypress",
         instance.removeAllNotifications
       );
     });
@@ -566,7 +566,7 @@ describe("ToolbarBadgeHub", () => {
       );
       assert.calledWithExactly(
         fakeEvent.target.removeEventListener,
-        "click",
+        "keypress",
         instance.removeAllNotifications
       );
     });

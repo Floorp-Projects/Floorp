@@ -165,7 +165,6 @@ export type TabPayload = {
   performanceActor: ActorId,
   performanceEntriesActor: ActorId,
   profilerActor: ActorId,
-  promisesActor: ActorId,
   reflowActor: ActorId,
   storageActor: ActorId,
   styleEditorActor: ActorId,
@@ -231,9 +230,9 @@ export type Target = {
   isContentProcess: boolean,
   isWorkerTarget: boolean,
   traits: Object,
-  chrome: Boolean,
+  chrome: boolean,
   url: string,
-  isAddon: Boolean,
+  isAddon: boolean,
 };
 
 /**
@@ -263,6 +262,7 @@ export type DebuggerClient = {
   attachConsole: (actor: String, listeners: Array<*>) => Promise<*>,
   createObjectClient: (grip: Grip) => ObjectClient,
   release: (actor: String) => {},
+  getFrontByID: (actor: String) => { release: () => Promise<*> },
 };
 
 type ProcessDescriptor = Object;

@@ -39,7 +39,7 @@ var L10N = new LocalizationHelper(DBG_STRINGS_URI);
  *        Options for configuring the controller. Supported options:
  *        - getObjectClient: @see this._setClientGetters
  *        - getLongStringClient: @see this._setClientGetters
- *        - getEnvironmentClient: @see this._setClientGetters
+ *        - getEnvironmentFront: @see this._setClientGetters
  *        - releaseActor: @see this._setClientGetters
  *        - overrideValueEvalMacro: @see _setEvaluationMacros
  *        - getterOrSetterEvalMacro: @see _setEvaluationMacros
@@ -80,7 +80,7 @@ VariablesViewController.prototype = {
    *        Options for getting the client grips. Supported options:
    *        - getObjectClient: callback for creating an object grip client
    *        - getLongStringClient: callback for creating a long string grip client
-   *        - getEnvironmentClient: callback for creating an environment client
+   *        - getEnvironmentFront: callback for creating an environment front
    *        - releaseActor: callback for releasing an actor when it's no longer needed
    */
   _setClientGetters: function(aOptions) {
@@ -90,8 +90,8 @@ VariablesViewController.prototype = {
     if (aOptions.getLongStringClient) {
       this._getLongStringClient = aOptions.getLongStringClient;
     }
-    if (aOptions.getEnvironmentClient) {
-      this._getEnvironmentClient = aOptions.getEnvironmentClient;
+    if (aOptions.getEnvironmentFront) {
+      this._getEnvironmentFront = aOptions.getEnvironmentFront;
     }
     if (aOptions.releaseActor) {
       this._releaseActor = aOptions.releaseActor;
@@ -253,7 +253,7 @@ VariablesViewController.prototype = {
         ignoreNonIndexedProperties: true,
         query: aQuery,
       };
-      objectClient.enumProperties(options, ({ iterator }) => {
+      objectClient.enumProperties(options).then(iterator => {
         const sliceGrip = {
           type: "property-iterator",
           propertyIterator: iterator,
@@ -267,7 +267,7 @@ VariablesViewController.prototype = {
             sort: true,
             query: aQuery,
           };
-          objectClient.enumProperties(options, ({ iterator }) => {
+          objectClient.enumProperties(options).then(iterator => {
             const sliceGrip = {
               type: "property-iterator",
               propertyIterator: iterator,
@@ -279,19 +279,17 @@ VariablesViewController.prototype = {
         });
       });
     } else {
+      const options = { sort: true, query: aQuery };
       // For objects, we just enumerate all the properties sorted by name.
-      objectClient.enumProperties(
-        { sort: true, query: aQuery },
-        ({ iterator }) => {
-          const sliceGrip = {
-            type: "property-iterator",
-            propertyIterator: iterator,
-            start: 0,
-            count: iterator.count,
-          };
-          deferred.resolve(this._populatePropertySlices(aTarget, sliceGrip));
-        }
-      );
+      objectClient.enumProperties(options).then(iterator => {
+        const sliceGrip = {
+          type: "property-iterator",
+          propertyIterator: iterator,
+          start: 0,
+          count: iterator.count,
+        };
+        deferred.resolve(this._populatePropertySlices(aTarget, sliceGrip));
+      });
     }
     return deferred.promise;
   },
@@ -326,7 +324,7 @@ VariablesViewController.prototype = {
       // Refuse to play the proxy's stupid game and just expose the target and handler.
       const deferred = defer();
       const objectClient = this._getObjectClient(aGrip);
-      objectClient.getProxySlots(aResponse => {
+      objectClient.getProxySlots().then(aResponse => {
         const target = aTarget.addItem(
           "<target>",
           { value: aResponse.proxyTarget },
@@ -383,7 +381,7 @@ VariablesViewController.prototype = {
       return this._populateFromObjectWithIterator(aTarget, aGrip).then(() => {
         const deferred = defer();
         const objectClient = this._getObjectClient(aGrip);
-        objectClient.getPrototype(({ prototype }) => {
+        objectClient.getPrototype().then(prototype => {
           this._populateObjectPrototype(aTarget, prototype);
           deferred.resolve();
         });
@@ -398,7 +396,7 @@ VariablesViewController.prototype = {
     const deferred = defer();
 
     const objectClient = this._getObjectClient(aGrip);
-    objectClient.getPrototypeAndProperties(aResponse => {
+    objectClient.getPrototypeAndProperties().then(aResponse => {
       const ownProperties = aResponse.ownProperties || {};
       const prototype = aResponse.prototype || null;
       // 'safeGetterValues' is new and isn't necessary defined on old actors.
@@ -431,7 +429,7 @@ VariablesViewController.prototype = {
       // If the object is a function we need to fetch its scope chain
       // to show them as closures for the respective function.
       if (aGrip.class == "Function") {
-        objectClient.getScope(aResponse => {
+        objectClient.getScope().then(aResponse => {
           if (aResponse.error) {
             // This function is bound to a built-in object or it's not present
             // in the current scope chain. Not necessarily an actual error,
@@ -481,10 +479,12 @@ VariablesViewController.prototype = {
       } else {
         const deferred = defer();
         objectScopes.push(deferred.promise);
-        this._getEnvironmentClient(environment).getBindings(response => {
-          this._populateWithEnvironmentBindings(closure, response.bindings);
-          deferred.resolve();
-        });
+        this._getEnvironmentFront(environment)
+          .getBindings()
+          .then(response => {
+            this._populateWithEnvironmentBindings(closure, response.bindings);
+            deferred.resolve();
+          });
       }
     } while ((environment = environment.parent));
 
@@ -534,7 +534,7 @@ VariablesViewController.prototype = {
 
     // eslint-disable-next-line new-cap
     return new promise((resolve, reject) => {
-      objectClient.enumEntries(response => {
+      objectClient.enumEntries().then(response => {
         if (response.error) {
           // Older server might not support the enumEntries method
           console.warn(response.error + ": " + response.message);

@@ -320,8 +320,6 @@ void DispatchToGeckoPriorityQueue(already_AddRefed<nsIRunnable> aCall) {
   nsAppShell::PostEvent(MakeUnique<RunnableEvent>(std::move(aCall)));
 }
 
-bool IsFennec() { return false; }
-
 int GetAPIVersion() {
   static int32_t apiVersion = 0;
   if (!apiVersion && IsAvailable()) {

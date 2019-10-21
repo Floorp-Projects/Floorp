@@ -518,53 +518,6 @@ DebuggerMemory& Debugger::memory() const {
       .as<DebuggerMemory>();
 }
 
-/*** DebuggerVectorHolder *****************************************************/
-
-static void GlobalDebuggerVectorHolder_finalize(JSFreeOp* fop, JSObject* obj) {
-  MOZ_ASSERT(fop->maybeOnHelperThread());
-  void* ptr = obj->as<NativeObject>().getPrivate();
-  auto debuggers = static_cast<GlobalObject::DebuggerVector*>(ptr);
-  fop->delete_(obj, debuggers, MemoryUse::GlobalDebuggerVector);
-}
-
-static const JSClassOps GlobalDebuggerVectorHolder_classOps = {
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
-    GlobalDebuggerVectorHolder_finalize};
-
-static const JSClass GlobalDebuggerVectorHolder_class = {
-    "GlobalDebuggerVectorHolder",
-    JSCLASS_HAS_PRIVATE | JSCLASS_BACKGROUND_FINALIZE,
-    &GlobalDebuggerVectorHolder_classOps};
-
-/* static */
-JSObject* DebugAPI::newGlobalDebuggersHolder(JSContext* cx) {
-  NativeObject* obj = NewNativeObjectWithGivenProto(
-      cx, &GlobalDebuggerVectorHolder_class, nullptr);
-  if (!obj) {
-    return nullptr;
-  }
-
-  GlobalObject::DebuggerVector* debuggers =
-      cx->new_<GlobalObject::DebuggerVector>(cx->zone());
-  if (!debuggers) {
-    return nullptr;
-  }
-
-  InitObjectPrivate(obj, debuggers, MemoryUse::GlobalDebuggerVector);
-  return obj;
-}
-
-/* static */
-GlobalObject::DebuggerVector* DebugAPI::getGlobalDebuggers(JSObject* holder) {
-  MOZ_ASSERT(holder->getClass() == &GlobalDebuggerVectorHolder_class);
-  return (GlobalObject::DebuggerVector*)holder->as<NativeObject>().getPrivate();
-}
-
 /*** Debugger accessors *******************************************************/
 
 bool Debugger::getFrame(JSContext* cx, const FrameIter& iter,
@@ -665,13 +618,12 @@ static bool DebuggerExists(
   // explicitly.
   JS::AutoSuppressGCAnalysis nogc;
 
-  if (GlobalObject::DebuggerVector* debuggers = global->getDebuggers()) {
-    for (auto p = debuggers->begin(); p != debuggers->end(); p++) {
-      // Callbacks should not create new references to the debugger, so don't
-      // use a barrier. This allows this method to be called during GC.
-      if (predicate(p->unbarrieredGet())) {
-        return true;
-      }
+  Realm::DebuggerVector& debuggers = global->getDebuggers();
+  for (auto p = debuggers.begin(); p != debuggers.end(); p++) {
+    // Callbacks should not create new references to the debugger, so don't
+    // use a barrier. This allows this method to be called during GC.
+    if (predicate(p->unbarrieredGet())) {
+      return true;
     }
   }
   return false;
@@ -815,26 +767,24 @@ ResumeMode DebugAPI::slowPathOnResumeFrame(JSContext* cx,
   // For each debugger, if there is an existing Debugger.Frame object for the
   // resumed `frame`, update it with the new frame pointer and make sure the
   // frame is observable.
-  if (GlobalObject::DebuggerVector* debuggers =
-          frame.global()->getDebuggers()) {
-    for (Debugger* dbg : *debuggers) {
-      if (Debugger::GeneratorWeakMap::Ptr entry =
-              dbg->generatorFrames.lookup(genObj)) {
-        DebuggerFrame* frameObj = &entry->value()->as<DebuggerFrame>();
-        MOZ_ASSERT(&frameObj->unwrappedGenerator() == genObj);
-        if (!dbg->frames.putNew(frame, frameObj)) {
-          ReportOutOfMemory(cx);
-          return ResumeMode::Throw;
-        }
+  Realm::DebuggerVector& debuggers = frame.global()->getDebuggers();
+  for (Debugger* dbg : debuggers) {
+    if (Debugger::GeneratorWeakMap::Ptr entry =
+            dbg->generatorFrames.lookup(genObj)) {
+      DebuggerFrame* frameObj = &entry->value()->as<DebuggerFrame>();
+      MOZ_ASSERT(&frameObj->unwrappedGenerator() == genObj);
+      if (!dbg->frames.putNew(frame, frameObj)) {
+        ReportOutOfMemory(cx);
+        return ResumeMode::Throw;
+      }
 
-        FrameIter iter(cx);
-        MOZ_ASSERT(iter.abstractFramePtr() == frame);
-        if (!frameObj->resume(iter)) {
-          return ResumeMode::Throw;
-        }
-        if (!Debugger::ensureExecutionObservabilityOfFrame(cx, frame)) {
-          return ResumeMode::Throw;
-        }
+      FrameIter iter(cx);
+      MOZ_ASSERT(iter.abstractFramePtr() == frame);
+      if (!frameObj->resume(iter)) {
+        return ResumeMode::Throw;
+      }
+      if (!Debugger::ensureExecutionObservabilityOfFrame(cx, frame)) {
+        return ResumeMode::Throw;
       }
     }
   }
@@ -2292,13 +2242,12 @@ ResumeMode Debugger::dispatchHook(JSContext* cx, HookIsEnabledFun hookIsEnabled,
   // different compartments--every compartment *except* this one.
   RootedValueVector triggered(cx);
   Handle<GlobalObject*> global = cx->global();
-  if (GlobalObject::DebuggerVector* debuggers = global->getDebuggers()) {
-    for (auto p = debuggers->begin(); p != debuggers->end(); p++) {
-      Debugger* dbg = *p;
-      if (hookIsEnabled(dbg)) {
-        if (!triggered.append(ObjectValue(*dbg->toJSObject()))) {
-          return ResumeMode::Terminate;
-        }
+  Realm::DebuggerVector& debuggers = global->getDebuggers();
+  for (auto p = debuggers.begin(); p != debuggers.end(); p++) {
+    Debugger* dbg = *p;
+    if (hookIsEnabled(dbg)) {
+      if (!triggered.append(ObjectValue(*dbg->toJSObject()))) {
+        return ResumeMode::Terminate;
       }
     }
   }
@@ -2564,46 +2513,45 @@ ResumeMode DebugAPI::onSingleStep(JSContext* cx, MutableHandleValue vp) {
     uint32_t suspendedStepperCount = 0;
     JSScript* trappingScript = iter.script();
     GlobalObject* global = cx->global();
-    if (GlobalObject::DebuggerVector* debuggers = global->getDebuggers()) {
-      for (auto p = debuggers->begin(); p != debuggers->end(); p++) {
-        Debugger* dbg = *p;
-        for (Debugger::FrameMap::Range r = dbg->frames.all(); !r.empty();
-             r.popFront()) {
-          AbstractFramePtr frame = r.front().key();
-          NativeObject* frameobj = r.front().value();
-          if (frame.isWasmDebugFrame()) {
-            continue;
-          }
-          if (frame.script() == trappingScript &&
-              !frameobj->getReservedSlot(DebuggerFrame::ONSTEP_HANDLER_SLOT)
-                   .isUndefined()) {
-            liveStepperCount++;
-          }
+    Realm::DebuggerVector& debuggers = global->getDebuggers();
+    for (auto p = debuggers.begin(); p != debuggers.end(); p++) {
+      Debugger* dbg = *p;
+      for (Debugger::FrameMap::Range r = dbg->frames.all(); !r.empty();
+           r.popFront()) {
+        AbstractFramePtr frame = r.front().key();
+        NativeObject* frameobj = r.front().value();
+        if (frame.isWasmDebugFrame()) {
+          continue;
+        }
+        if (frame.script() == trappingScript &&
+            !frameobj->getReservedSlot(DebuggerFrame::ONSTEP_HANDLER_SLOT)
+                 .isUndefined()) {
+          liveStepperCount++;
+        }
+      }
+
+      // Also count hooks set on suspended generator frames.
+      for (Debugger::GeneratorWeakMap::Range r = dbg->generatorFrames.all();
+           !r.empty(); r.popFront()) {
+        AbstractGeneratorObject& genObj =
+            r.front().key()->as<AbstractGeneratorObject>();
+        DebuggerFrame& frameObj = r.front().value()->as<DebuggerFrame>();
+        MOZ_ASSERT(&frameObj.unwrappedGenerator() == &genObj);
+
+        // Live Debugger.Frames were already counted in dbg->frames loop.
+        if (frameObj.isLive()) {
+          continue;
         }
 
-        // Also count hooks set on suspended generator frames.
-        for (Debugger::GeneratorWeakMap::Range r = dbg->generatorFrames.all();
-             !r.empty(); r.popFront()) {
-          AbstractGeneratorObject& genObj =
-              r.front().key()->as<AbstractGeneratorObject>();
-          DebuggerFrame& frameObj = r.front().value()->as<DebuggerFrame>();
-          MOZ_ASSERT(&frameObj.unwrappedGenerator() == &genObj);
+        // If a frame isn't live, but it has an entry in generatorFrames,
+        // it had better be suspended.
+        MOZ_ASSERT(genObj.isSuspended());
 
-          // Live Debugger.Frames were already counted in dbg->frames loop.
-          if (frameObj.isLive()) {
-            continue;
-          }
-
-          // If a frame isn't live, but it has an entry in generatorFrames,
-          // it had better be suspended.
-          MOZ_ASSERT(genObj.isSuspended());
-
-          if (!genObj.callee().isInterpretedLazy() &&
-              genObj.callee().nonLazyScript() == trappingScript &&
-              !frameObj.getReservedSlot(DebuggerFrame::ONSTEP_HANDLER_SLOT)
-                   .isUndefined()) {
-            suspendedStepperCount++;
-          }
+        if (!genObj.callee().isInterpretedLazy() &&
+            genObj.callee().nonLazyScript() == trappingScript &&
+            !frameObj.getReservedSlot(DebuggerFrame::ONSTEP_HANDLER_SLOT)
+                 .isUndefined()) {
+          suspendedStepperCount++;
         }
       }
     }
@@ -2752,10 +2700,9 @@ void DebugAPI::slowPathOnNewGlobalObject(JSContext* cx,
 }
 
 /* static */
-void DebugAPI::slowPathNotifyParticipatesInGC(
-    uint64_t majorGCNumber, GlobalObject::DebuggerVector& dbgs) {
-  for (GlobalObject::DebuggerVector::Range r = dbgs.all(); !r.empty();
-       r.popFront()) {
+void DebugAPI::slowPathNotifyParticipatesInGC(uint64_t majorGCNumber,
+                                              Realm::DebuggerVector& dbgs) {
+  for (Realm::DebuggerVector::Range r = dbgs.all(); !r.empty(); r.popFront()) {
     if (!r.front().unbarrieredGet()->debuggeeIsBeingCollected(majorGCNumber)) {
 #ifdef DEBUG
       fprintf(stderr,
@@ -2770,19 +2717,19 @@ void DebugAPI::slowPathNotifyParticipatesInGC(
 
 /* static */
 Maybe<double> DebugAPI::allocationSamplingProbability(GlobalObject* global) {
-  GlobalObject::DebuggerVector* dbgs = global->getDebuggers();
-  if (!dbgs || dbgs->empty()) {
+  Realm::DebuggerVector& dbgs = global->getDebuggers();
+  if (dbgs.empty()) {
     return Nothing();
   }
 
-  DebugOnly<WeakHeapPtr<Debugger*>*> begin = dbgs->begin();
+  DebugOnly<WeakHeapPtr<Debugger*>*> begin = dbgs.begin();
 
   double probability = 0;
   bool foundAnyDebuggers = false;
-  for (auto p = dbgs->begin(); p < dbgs->end(); p++) {
+  for (auto p = dbgs.begin(); p < dbgs.end(); p++) {
     // The set of debuggers had better not change while we're iterating,
     // such that the vector gets reallocated.
-    MOZ_ASSERT(dbgs->begin() == begin);
+    MOZ_ASSERT(dbgs.begin() == begin);
     // Use unbarrieredGet() to prevent triggering read barrier while collecting,
     // this is safe as long as dbgp does not escape.
     Debugger* dbgp = p->unbarrieredGet();
@@ -2800,7 +2747,7 @@ Maybe<double> DebugAPI::allocationSamplingProbability(GlobalObject* global) {
 bool DebugAPI::slowPathOnLogAllocationSite(JSContext* cx, HandleObject obj,
                                            HandleSavedFrame frame,
                                            mozilla::TimeStamp when,
-                                           GlobalObject::DebuggerVector& dbgs) {
+                                           Realm::DebuggerVector& dbgs) {
   MOZ_ASSERT(!dbgs.empty());
   mozilla::DebugOnly<WeakHeapPtr<Debugger*>*> begin = dbgs.begin();
 
@@ -3277,12 +3224,11 @@ template <typename FrameFn>
 /* static */
 void Debugger::forEachDebuggerFrame(AbstractFramePtr frame, FrameFn fn) {
   GlobalObject* global = frame.global();
-  if (GlobalObject::DebuggerVector* debuggers = global->getDebuggers()) {
-    for (auto p = debuggers->begin(); p != debuggers->end(); p++) {
-      Debugger* dbg = *p;
-      if (FrameMap::Ptr entry = dbg->frames.lookup(frame)) {
-        fn(entry->value());
-      }
+  Realm::DebuggerVector& debuggers = global->getDebuggers();
+  for (auto p = debuggers.begin(); p != debuggers.end(); p++) {
+    Debugger* dbg = *p;
+    if (FrameMap::Ptr entry = dbg->frames.lookup(frame)) {
+      fn(entry->value());
     }
   }
 }
@@ -3501,14 +3447,13 @@ bool Debugger::cannotTrackAllocations(const GlobalObject& global) {
 /* static */
 bool DebugAPI::isObservedByDebuggerTrackingAllocations(
     const GlobalObject& debuggee) {
-  if (auto* v = debuggee.getDebuggers()) {
-    for (auto p = v->begin(); p != v->end(); p++) {
-      // Use unbarrieredGet() to prevent triggering read barrier while
-      // collecting, this is safe as long as dbg does not escape.
-      Debugger* dbg = p->unbarrieredGet();
-      if (dbg->trackingAllocationSites) {
-        return true;
-      }
+  auto& v = debuggee.getDebuggers();
+  for (auto p = v.begin(); p != v.end(); p++) {
+    // Use unbarrieredGet() to prevent triggering read barrier while
+    // collecting, this is safe as long as dbg does not escape.
+    Debugger* dbg = p->unbarrieredGet();
+    if (dbg->trackingAllocationSites) {
+      return true;
     }
   }
 
@@ -3745,11 +3690,8 @@ bool DebugAPI::markIteratively(GCMarker* marker) {
         continue;
       }
 
-      // Every debuggee has at least one debugger, so in this case
-      // getDebuggers can't return nullptr.
-      const GlobalObject::DebuggerVector* debuggers = global->getDebuggers();
-      MOZ_ASSERT(debuggers);
-      for (auto p = debuggers->begin(); p != debuggers->end(); p++) {
+      const Realm::DebuggerVector& debuggers = global->getDebuggers();
+      for (auto p = debuggers.begin(); p != debuggers.end(); p++) {
         Debugger* dbg = p->unbarrieredGet();
 
         // dbg is a Debugger with at least one debuggee. Check three things:
@@ -3920,11 +3862,11 @@ void DebugAPI::sweepAll(JSFreeOp* fop) {
 /* static */
 void Debugger::detachAllDebuggersFromGlobal(JSFreeOp* fop,
                                             GlobalObject* global) {
-  const GlobalObject::DebuggerVector* debuggers = global->getDebuggers();
-  MOZ_ASSERT(!debuggers->empty());
-  while (!debuggers->empty()) {
-    debuggers->back()->removeDebuggeeGlobal(fop, global, nullptr,
-                                            Debugger::FromSweep::No);
+  const Realm::DebuggerVector& debuggers = global->getDebuggers();
+  MOZ_ASSERT(!debuggers.empty());
+  while (!debuggers.empty()) {
+    debuggers.back()->removeDebuggeeGlobal(fop, global, nullptr,
+                                           Debugger::FromSweep::No);
   }
 }
 
@@ -4398,7 +4340,7 @@ bool Debugger::CallData::removeDebuggee() {
     // Only update the realm if there are no Debuggers left, as it's
     // expensive to check if no other Debugger has a live script or frame
     // hook on any of the current on-stack debuggee frames.
-    if (global->getDebuggers()->empty() && !obs.add(global->realm())) {
+    if (global->getDebuggers().empty() && !obs.add(global->realm())) {
       return false;
     }
     if (!updateExecutionObservability(cx, obs, NotObserving)) {
@@ -4419,7 +4361,7 @@ bool Debugger::CallData::removeAllDebuggees() {
                               FromSweep::No);
 
     // See note about adding to the observable set in removeDebuggee.
-    if (global->getDebuggers()->empty() && !obs.add(global->realm())) {
+    if (global->getDebuggers().empty() && !obs.add(global->realm())) {
       return false;
     }
   }
@@ -4617,8 +4559,8 @@ bool Debugger::addDebuggeeGlobal(JSContext* cx, Handle<GlobalObject*> global) {
     // Find all realms containing debuggers debugging realm's global object.
     // Add those realms to visited.
     if (realm->isDebuggee()) {
-      GlobalObject::DebuggerVector* v = realm->maybeGlobal()->getDebuggers();
-      for (auto p = v->begin(); p != v->end(); p++) {
+      Realm::DebuggerVector& v = realm->getDebuggers();
+      for (auto p = v.begin(); p != v.end(); p++) {
         Realm* next = (*p)->object->realm();
         if (Find(visited, next) == visited.end() && !visited.append(next)) {
           return false;
@@ -4642,16 +4584,12 @@ bool Debugger::addDebuggeeGlobal(JSContext* cx, Handle<GlobalObject*> global) {
   Zone* zone = global->zone();
 
   // (1)
-  auto* globalDebuggers = GlobalObject::getOrCreateDebuggers(cx, global);
-  if (!globalDebuggers) {
-    return false;
-  }
-  if (!globalDebuggers->append(this)) {
+  auto& globalDebuggers = global->getDebuggers();
+  if (!globalDebuggers.append(this)) {
     ReportOutOfMemory(cx);
     return false;
   }
-  auto globalDebuggersGuard =
-      MakeScopeExit([&] { globalDebuggers->popBack(); });
+  auto globalDebuggersGuard = MakeScopeExit([&] { globalDebuggers.popBack(); });
 
   // (2)
   if (!debuggees.put(global)) {
@@ -4729,14 +4667,14 @@ static T* findDebuggerInVector(Debugger* dbg, Vector<T, 0, AP>* vec) {
 // TODO: Bug 1515934 - findDebuggerInVector<T> triggers read barriers.
 template <typename AP>
 static WeakHeapPtr<Debugger*>* findDebuggerInVector(
-    Debugger* dbg, Vector<WeakHeapPtr<Debugger*>, 0, AP>* vec) {
+    Debugger* dbg, Vector<WeakHeapPtr<Debugger*>, 0, AP>& vec) {
   WeakHeapPtr<Debugger*>* p;
-  for (p = vec->begin(); p != vec->end(); p++) {
+  for (p = vec.begin(); p != vec.end(); p++) {
     if (p->unbarrieredGet() == dbg) {
       break;
     }
   }
-  MOZ_ASSERT(p != vec->end());
+  MOZ_ASSERT(p != vec.end());
   return p;
 }
 
@@ -4789,7 +4727,7 @@ void Debugger::removeDebuggeeGlobal(JSFreeOp* fop, GlobalObject* global,
     }
   }
 
-  auto* globalDebuggersVector = global->getDebuggers();
+  auto& globalDebuggersVector = global->getDebuggers();
 
   // The relation must be removed from up to three places:
   // globalDebuggersVector and debuggees for sure, and possibly the
@@ -4800,7 +4738,7 @@ void Debugger::removeDebuggeeGlobal(JSFreeOp* fop, GlobalObject* global,
   // the same zone. If after recomputing the debuggee zone set, this global's
   // zone is not in the set, then we must remove ourselves from the zone's
   // vector of observing debuggers.
-  globalDebuggersVector->erase(
+  globalDebuggersVector.erase(
       findDebuggerInVector(this, globalDebuggersVector));
 
   if (debugEnum) {
@@ -4838,7 +4776,7 @@ void Debugger::removeDebuggeeGlobal(JSFreeOp* fop, GlobalObject* global,
     Debugger::removeAllocationsTracking(*global);
   }
 
-  if (global->getDebuggers()->empty()) {
+  if (global->realm()->getDebuggers().empty()) {
     global->realm()->unsetIsDebuggee();
   } else {
     global->realm()->updateDebuggerObservesAllExecution();

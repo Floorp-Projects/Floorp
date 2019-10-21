@@ -94,8 +94,7 @@ export class _Search extends React.PureComponent {
         input,
         input.parentNode,
         healthReportKey,
-        searchSource,
-        this.props.permanentPrivateBrowsing
+        searchSource
       );
       addEventListener("ContentSearchClient", this);
     } else {
@@ -187,7 +186,4 @@ export class _Search extends React.PureComponent {
   }
 }
 
-const getState = state => ({
-  permanentPrivateBrowsing: state.App.permanentPrivateBrowsing,
-});
-export const Search = connect(getState)(_Search);
+export const Search = connect()(_Search);

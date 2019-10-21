@@ -22,7 +22,7 @@ def add_notifications(config, jobs):
     for job in jobs:
         label = '{}-{}'.format(config.kind, job['name'])
 
-        notifications = job.get('notifications')
+        notifications = job.pop('notifications')
         if notifications:
             resolve_keyed_by(notifications, 'emails', label, project=config.params['project'])
             emails = notifications['emails']
@@ -34,8 +34,6 @@ def add_notifications(config, jobs):
             subject = notifications['subject'].format(**format_kwargs)
             message = notifications['message'].format(**format_kwargs)
             emails = [email.format(**format_kwargs) for email in emails]
-            # Don't need this any more
-            del job['notifications']
 
             # We only send mail on success to avoid messages like 'blah is in the
             # candidates dir' when cancelling graphs, dummy job failure, etc

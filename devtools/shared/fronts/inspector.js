@@ -182,6 +182,21 @@ class WalkerFront extends FrontClassWithSpec(walkerSpec) {
     });
   }
 
+  getNodeActorFromContentDomReference(contentDomReference) {
+    if (!this.traits.retrieveNodeFromContentDomReference) {
+      console.error(
+        "The server is too old to retrieve a node from a contentDomReference"
+      );
+      return Promise.resolve(null);
+    }
+
+    return super
+      .getNodeActorFromContentDomReference(contentDomReference)
+      .then(response => {
+        return response ? response.node : null;
+      });
+  }
+
   getStyleSheetOwnerNode(styleSheetActorID) {
     return super.getStyleSheetOwnerNode(styleSheetActorID).then(response => {
       return response ? response.node : null;
@@ -639,6 +654,48 @@ class InspectorFront extends FrontClassWithSpec(inspectorSpec) {
   async getAllInspectorFronts() {
     const remoteInspectors = await this.getChildInspectors();
     return [this, ...remoteInspectors];
+  }
+
+  /**
+   * Given a node grip, return a NodeFront on the right context.
+   *
+   * @param {Object} grip: The node grip.
+   * @returns {Promise<NodeFront|null>} A promise that resolves with  a NodeFront or null
+   *                                    if the NodeFront couldn't be created/retrieved.
+   */
+  async getNodeFrontFromNodeGrip(grip) {
+    const gripHasContentDomReference = "contentDomReference" in grip;
+
+    if (!gripHasContentDomReference) {
+      // Backward compatibility ( < Firefox 71):
+      // If the grip does not have a contentDomReference, we can't know in which browsing
+      // context id the node lives. We fall back on gripToNodeFront that might retrieve
+      // the expected nodeFront.
+      return this.walker.gripToNodeFront(grip);
+    }
+
+    const { contentDomReference } = grip;
+    const { browsingContextId } = contentDomReference;
+
+    // If the grip lives in the same browsing context id than the current one, we can
+    // directly use the current walker.
+    // TODO: When Bug 1578745 lands, we might want to force using `this.walker` as well
+    // when the new pref is set to false.
+    if (this.targetFront.browsingContextID === browsingContextId) {
+      return this.walker.getNodeActorFromContentDomReference(
+        contentDomReference
+      );
+    }
+
+    // If the contentDomReference has a different browsing context than the current one,
+    // we are either in Fission or in the Omniscient Browser Toolbox, so we need to
+    // retrieve the walker of the BrowsingContextTarget.
+    const descriptor = await this.targetFront.client.mainRoot.getBrowsingContextDescriptor(
+      browsingContextId
+    );
+    const target = await descriptor.getTarget();
+    const { walker } = await target.getFront("inspector");
+    return walker.getNodeActorFromContentDomReference(contentDomReference);
   }
 }
 

@@ -17,5 +17,6 @@ addAccessibleTask(
       showEvent.accessibleDocument instanceof nsIAccessibleDocument,
       "Accessible document not present."
     );
-  }
+  },
+  { iframe: true }
 );

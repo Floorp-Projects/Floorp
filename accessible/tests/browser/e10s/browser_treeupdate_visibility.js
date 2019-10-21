@@ -49,7 +49,7 @@ async function test3(browser, accessible) {
   testAccessibleTree(accessible, tree);
 
   let onReorder = waitForEvent(EVENT_REORDER, "t3_container");
-  await ContentTask.spawn(browser, {}, () => {
+  await invokeContentTask(browser, [], () => {
     let doc = content.document;
     doc.getElementById("t3_container").style.color = "red";
     doc.getElementById("t3_parent").style.visibility = "hidden";
@@ -84,7 +84,7 @@ async function test4(browser, accessible) {
   testAccessibleTree(accessible, tree);
 
   let onReorder = waitForEvent(EVENT_REORDER, "t4_parent");
-  await ContentTask.spawn(browser, {}, () => {
+  await invokeContentTask(browser, [], () => {
     let doc = content.document;
     doc.getElementById("t4_container").style.color = "red";
     doc.getElementById("t4_child").style.visibility = "visible";
@@ -117,225 +117,226 @@ async function test4(browser, accessible) {
   testAccessibleTree(accessible, tree);
 }
 
-addAccessibleTask("doc_treeupdate_visibility.html", async function(
-  browser,
-  accDoc
-) {
-  let t3Container = findAccessibleChildByID(accDoc, "t3_container");
-  let t4Container = findAccessibleChildByID(accDoc, "t4_container");
+addAccessibleTask(
+  "doc_treeupdate_visibility.html",
+  async function(browser, accDoc) {
+    let t3Container = findAccessibleChildByID(accDoc, "t3_container");
+    let t4Container = findAccessibleChildByID(accDoc, "t4_container");
 
-  await testTreeOnHide(
-    browser,
-    accDoc,
-    "t1_container",
-    "t1_parent",
-    {
-      SECTION: [
-        {
-          SECTION: [
-            {
-              SECTION: [{ TEXT_LEAF: [] }],
-            },
-          ],
-        },
-      ],
-    },
-    {
-      SECTION: [
-        {
-          SECTION: [{ TEXT_LEAF: [] }],
-        },
-      ],
-    }
-  );
+    await testTreeOnHide(
+      browser,
+      accDoc,
+      "t1_container",
+      "t1_parent",
+      {
+        SECTION: [
+          {
+            SECTION: [
+              {
+                SECTION: [{ TEXT_LEAF: [] }],
+              },
+            ],
+          },
+        ],
+      },
+      {
+        SECTION: [
+          {
+            SECTION: [{ TEXT_LEAF: [] }],
+          },
+        ],
+      }
+    );
 
-  await testTreeOnHide(
-    browser,
-    accDoc,
-    "t2_container",
-    "t2_grandparent",
-    {
-      SECTION: [
-        {
-          // container
-          SECTION: [
-            {
-              // grand parent
-              SECTION: [
-                {
-                  SECTION: [
-                    {
-                      // child
-                      TEXT_LEAF: [],
-                    },
-                  ],
-                },
-                {
-                  SECTION: [
-                    {
-                      // child2
-                      TEXT_LEAF: [],
-                    },
-                  ],
-                },
-              ],
-            },
-          ],
-        },
-      ],
-    },
-    {
-      SECTION: [
-        {
-          // container
-          SECTION: [
-            {
-              // child
-              TEXT_LEAF: [],
-            },
-          ],
-        },
-        {
-          SECTION: [
-            {
-              // child2
-              TEXT_LEAF: [],
-            },
-          ],
-        },
-      ],
-    }
-  );
+    await testTreeOnHide(
+      browser,
+      accDoc,
+      "t2_container",
+      "t2_grandparent",
+      {
+        SECTION: [
+          {
+            // container
+            SECTION: [
+              {
+                // grand parent
+                SECTION: [
+                  {
+                    SECTION: [
+                      {
+                        // child
+                        TEXT_LEAF: [],
+                      },
+                    ],
+                  },
+                  {
+                    SECTION: [
+                      {
+                        // child2
+                        TEXT_LEAF: [],
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+      {
+        SECTION: [
+          {
+            // container
+            SECTION: [
+              {
+                // child
+                TEXT_LEAF: [],
+              },
+            ],
+          },
+          {
+            SECTION: [
+              {
+                // child2
+                TEXT_LEAF: [],
+              },
+            ],
+          },
+        ],
+      }
+    );
 
-  await test3(browser, t3Container);
-  await test4(browser, t4Container);
+    await test3(browser, t3Container);
+    await test4(browser, t4Container);
 
-  await testTreeOnHide(
-    browser,
-    accDoc,
-    "t5_container",
-    "t5_subcontainer",
-    {
-      SECTION: [
-        {
-          // container
-          SECTION: [
-            {
-              // subcontainer
-              TABLE: [
-                {
-                  ROW: [
-                    {
-                      CELL: [
-                        {
-                          SECTION: [
-                            {
-                              // child
-                              TEXT_LEAF: [],
-                            },
-                          ],
-                        },
-                      ],
-                    },
-                  ],
-                },
-              ],
-            },
-          ],
-        },
-      ],
-    },
-    {
-      SECTION: [
-        {
-          // container
-          SECTION: [
-            {
-              // child
-              TEXT_LEAF: [],
-            },
-          ],
-        },
-      ],
-    }
-  );
+    await testTreeOnHide(
+      browser,
+      accDoc,
+      "t5_container",
+      "t5_subcontainer",
+      {
+        SECTION: [
+          {
+            // container
+            SECTION: [
+              {
+                // subcontainer
+                TABLE: [
+                  {
+                    ROW: [
+                      {
+                        CELL: [
+                          {
+                            SECTION: [
+                              {
+                                // child
+                                TEXT_LEAF: [],
+                              },
+                            ],
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+      {
+        SECTION: [
+          {
+            // container
+            SECTION: [
+              {
+                // child
+                TEXT_LEAF: [],
+              },
+            ],
+          },
+        ],
+      }
+    );
 
-  await testTreeOnHide(
-    browser,
-    accDoc,
-    "t6_container",
-    "t6_subcontainer",
-    {
-      SECTION: [
-        {
-          // container
-          SECTION: [
-            {
-              // subcontainer
-              TABLE: [
-                {
-                  ROW: [
-                    {
-                      CELL: [
-                        {
-                          TABLE: [
-                            {
-                              // nested table
-                              ROW: [
-                                {
-                                  CELL: [
-                                    {
-                                      SECTION: [
-                                        {
-                                          // child
-                                          TEXT_LEAF: [],
-                                        },
-                                      ],
-                                    },
-                                  ],
-                                },
-                              ],
-                            },
-                          ],
-                        },
-                      ],
-                    },
-                  ],
-                },
-              ],
-            },
-            {
-              SECTION: [
-                {
-                  // child2
-                  TEXT_LEAF: [],
-                },
-              ],
-            },
-          ],
-        },
-      ],
-    },
-    {
-      SECTION: [
-        {
-          // container
-          SECTION: [
-            {
-              // child
-              TEXT_LEAF: [],
-            },
-          ],
-        },
-        {
-          SECTION: [
-            {
-              // child2
-              TEXT_LEAF: [],
-            },
-          ],
-        },
-      ],
-    }
-  );
-});
+    await testTreeOnHide(
+      browser,
+      accDoc,
+      "t6_container",
+      "t6_subcontainer",
+      {
+        SECTION: [
+          {
+            // container
+            SECTION: [
+              {
+                // subcontainer
+                TABLE: [
+                  {
+                    ROW: [
+                      {
+                        CELL: [
+                          {
+                            TABLE: [
+                              {
+                                // nested table
+                                ROW: [
+                                  {
+                                    CELL: [
+                                      {
+                                        SECTION: [
+                                          {
+                                            // child
+                                            TEXT_LEAF: [],
+                                          },
+                                        ],
+                                      },
+                                    ],
+                                  },
+                                ],
+                              },
+                            ],
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              },
+              {
+                SECTION: [
+                  {
+                    // child2
+                    TEXT_LEAF: [],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+      {
+        SECTION: [
+          {
+            // container
+            SECTION: [
+              {
+                // child
+                TEXT_LEAF: [],
+              },
+            ],
+          },
+          {
+            SECTION: [
+              {
+                // child2
+                TEXT_LEAF: [],
+              },
+            ],
+          },
+        ],
+      }
+    );
+  },
+  { iframe: true }
+);

@@ -2446,13 +2446,12 @@ inline bool OpIter<Policy>::readMemOrTableInit(bool isMem, uint32_t* segIndex,
     }
     *dstTableIndex = memOrTableIndex;
 
-    // Element segments must carry functions exclusively and funcref is not
-    // yet a subtype of anyref.
-    if (env_.tables[*dstTableIndex].kind != TableKind::FuncRef) {
-      return fail("only tables of 'funcref' may have element segments");
-    }
     if (*segIndex >= env_.elemSegments.length()) {
       return fail("table.init segment index out of range");
+    }
+    if (!checkIsSubtypeOf(env_.elemSegments[*segIndex]->elemType(),
+                          ToElemValType(env_.tables[*dstTableIndex].kind))) {
+      return false;
     }
   }
 

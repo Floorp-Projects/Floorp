@@ -41,6 +41,17 @@ class Pkcs11CbcPadTest : public ::testing::TestWithParam<CK_MECHANISM_TYPE> {
     }
     return false;
   }
+  uint32_t GetUnpaddedParam() const {
+    switch (GetParam()) {
+      case CKM_AES_CBC_PAD:
+        return CKM_AES_CBC;
+      case CKM_DES3_CBC_PAD:
+        return CKM_DES3_CBC;
+      default:
+        ADD_FAILURE() << "Unknown padded mechanism " << GetParam();
+    }
+    return 0;
+  }
 
   size_t block_size() const {
     return static_cast<size_t>(PK11_GetBlockSize(GetParam(), nullptr));
@@ -338,6 +349,139 @@ TEST_P(Pkcs11CbcPadTest, ContextFailDecryptInvalidBlockSize) {
   // Because PK11_CipherOp is partial, it can return data on failure.
   // This means that it needs to reset its output length to 0 when it starts.
   EXPECT_EQ(0, output_len) << "output_len is reset";
+}
+
+TEST_P(Pkcs11CbcPadTest, EncryptDecrypt_PaddingTooLong) {
+  if (!is_padded()) {
+    return;
+  }
+
+  // Padding that's over the block size
+  const std::vector<uint8_t> input = {
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x20,
+      0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,
+      0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,
+      0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20};
+  std::vector<uint8_t> encrypted(input.size());
+  uint32_t encrypted_len = 0;
+
+  ScopedPK11SymKey ek = MakeKey(CKA_ENCRYPT);
+  SECStatus rv = PK11_Encrypt(ek.get(), GetUnpaddedParam(), GetIv(),
+                              encrypted.data(), &encrypted_len,
+                              encrypted.size(), input.data(), input.size());
+  ASSERT_EQ(SECSuccess, rv);
+  EXPECT_EQ(input.size(), encrypted_len);
+
+  std::vector<uint8_t> decrypted(input.size());
+  uint32_t decrypted_len = 0;
+  ScopedPK11SymKey dk = MakeKey(CKA_DECRYPT);
+  rv = PK11_Decrypt(dk.get(), GetParam(), GetIv(), decrypted.data(),
+                    &decrypted_len, decrypted.size(), encrypted.data(),
+                    encrypted_len);
+  EXPECT_EQ(SECFailure, rv);
+  EXPECT_EQ(0U, decrypted_len);
+}
+
+TEST_P(Pkcs11CbcPadTest, EncryptDecrypt_BadPadding1) {
+  if (!is_padded()) {
+    return;
+  }
+
+  // Padding that's one byte short
+  const std::vector<uint8_t> input = {
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+      0x00, 0x00, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08};
+  std::vector<uint8_t> encrypted(input.size());
+  uint32_t encrypted_len = 0;
+
+  ScopedPK11SymKey ek = MakeKey(CKA_ENCRYPT);
+  SECStatus rv = PK11_Encrypt(ek.get(), GetUnpaddedParam(), GetIv(),
+                              encrypted.data(), &encrypted_len,
+                              encrypted.size(), input.data(), input.size());
+  ASSERT_EQ(SECSuccess, rv);
+  EXPECT_EQ(input.size(), encrypted_len);
+
+  std::vector<uint8_t> decrypted(input.size());
+  uint32_t decrypted_len = 0;
+  ScopedPK11SymKey dk = MakeKey(CKA_DECRYPT);
+  rv = PK11_Decrypt(dk.get(), GetParam(), GetIv(), decrypted.data(),
+                    &decrypted_len, decrypted.size(), encrypted.data(),
+                    encrypted_len);
+  EXPECT_EQ(SECFailure, rv);
+  EXPECT_EQ(0U, decrypted_len);
+}
+
+TEST_P(Pkcs11CbcPadTest, EncryptDecrypt_BadPadding2) {
+  if (!is_padded()) {
+    return;
+  }
+
+  // Padding that's one byte short
+  const std::vector<uint8_t> input = {
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x02};
+  std::vector<uint8_t> encrypted(input.size());
+  uint32_t encrypted_len = 0;
+
+  ScopedPK11SymKey ek = MakeKey(CKA_ENCRYPT);
+  SECStatus rv = PK11_Encrypt(ek.get(), GetUnpaddedParam(), GetIv(),
+                              encrypted.data(), &encrypted_len,
+                              encrypted.size(), input.data(), input.size());
+  ASSERT_EQ(SECSuccess, rv);
+  EXPECT_EQ(input.size(), encrypted_len);
+
+  std::vector<uint8_t> decrypted(input.size());
+  uint32_t decrypted_len = 0;
+  ScopedPK11SymKey dk = MakeKey(CKA_DECRYPT);
+  rv = PK11_Decrypt(dk.get(), GetParam(), GetIv(), decrypted.data(),
+                    &decrypted_len, decrypted.size(), encrypted.data(),
+                    encrypted_len);
+  EXPECT_EQ(SECFailure, rv);
+  EXPECT_EQ(0U, decrypted_len);
+}
+
+TEST_P(Pkcs11CbcPadTest, EncryptDecrypt_ShortValidPadding) {
+  if (!is_padded()) {
+    return;
+  }
+
+  // Minimal valid padding
+  const std::vector<uint8_t> input = {
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01};
+  std::vector<uint8_t> encrypted(input.size());
+  uint32_t encrypted_len = 0;
+
+  ScopedPK11SymKey ek = MakeKey(CKA_ENCRYPT);
+  SECStatus rv = PK11_Encrypt(ek.get(), GetUnpaddedParam(), GetIv(),
+                              encrypted.data(), &encrypted_len,
+                              encrypted.size(), input.data(), input.size());
+  ASSERT_EQ(SECSuccess, rv);
+  EXPECT_EQ(input.size(), encrypted_len);
+
+  std::vector<uint8_t> decrypted(input.size());
+  uint32_t decrypted_len = 0;
+  ScopedPK11SymKey dk = MakeKey(CKA_DECRYPT);
+  rv = PK11_Decrypt(dk.get(), GetParam(), GetIv(), decrypted.data(),
+                    &decrypted_len, decrypted.size(), encrypted.data(),
+                    encrypted_len);
+  EXPECT_EQ(SECSuccess, rv);
+  EXPECT_EQ(input.size() - 1, decrypted_len);
+  EXPECT_EQ(0, memcmp(decrypted.data(), input.data(), decrypted_len));
 }
 
 INSTANTIATE_TEST_CASE_P(EncryptDecrypt, Pkcs11CbcPadTest,

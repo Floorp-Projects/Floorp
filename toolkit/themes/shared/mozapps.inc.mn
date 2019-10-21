@@ -27,7 +27,6 @@
 #ifndef ANDROID
   skin/classic/mozapps/extensions/rating-star.svg            (../../shared/extensions/rating-star.svg)
 #endif
-  skin/classic/mozapps/aboutNetworking.css                   (../../shared/aboutNetworking.css)
 #ifndef ANDROID
   skin/classic/mozapps/aboutProfiles.css                     (../../shared/aboutProfiles.css)
 #endif

@@ -70,17 +70,17 @@ class WebConsoleUI {
   }
 
   /**
-   * Getter for the debugger WebConsoleClient.
+   * Getter for the WebConsoleFront.
    * @type object
    */
-  get webConsoleClient() {
+  get webConsoleFront() {
     const proxy = this.getProxy();
 
     if (!proxy) {
       return null;
     }
 
-    return proxy.webConsoleClient;
+    return proxy.webConsoleFront;
   }
 
   /**
@@ -112,7 +112,7 @@ class WebConsoleUI {
     // Ignore Fronts that are already destroyed
     if (filterDisconnectedProxies) {
       proxies = proxies.filter(proxy => {
-        return proxy.webConsoleClient && !!proxy.webConsoleClient.actorID;
+        return proxy.webConsoleFront && !!proxy.webConsoleFront.actorID;
       });
     }
 
@@ -238,13 +238,13 @@ class WebConsoleUI {
 
   clearNetworkRequests() {
     for (const proxy of this.getAllProxies()) {
-      proxy.webConsoleClient.clearNetworkRequests();
+      proxy.webConsoleFront.clearNetworkRequests();
     }
   }
 
   clearMessagesCache() {
     for (const proxy of this.getAllProxies()) {
-      proxy.webConsoleClient.clearMessagesCache();
+      proxy.webConsoleFront.clearMessagesCache();
     }
   }
 
@@ -291,7 +291,7 @@ class WebConsoleUI {
    *        The new value you want to set.
    */
   async setSaveRequestAndResponseBodies(value) {
-    if (!this.webConsoleClient) {
+    if (!this.webConsoleFront) {
       // Don't continue if the webconsole disconnected.
       return null;
     }
@@ -302,7 +302,7 @@ class WebConsoleUI {
     };
 
     // Make sure the web console client connection is established first.
-    return this.webConsoleClient.setPreferences(toSet);
+    return this.webConsoleFront.setPreferences(toSet);
   }
 
   /**
@@ -507,14 +507,11 @@ class WebConsoleUI {
    * @returns {Promise}
    */
   evaluateJSAsync(expression, options) {
-    return this.getProxy().webConsoleClient.evaluateJSAsync(
-      expression,
-      options
-    );
+    return this.getProxy().webConsoleFront.evaluateJSAsync(expression, options);
   }
 
   getLongString(grip) {
-    this.getProxy().webConsoleClient.getString(grip);
+    this.getProxy().webConsoleFront.getString(grip);
   }
 
   /**
@@ -573,27 +570,26 @@ class WebConsoleUI {
    * Retrieve the FrameActor ID given a frame depth, or the selected one if no
    * frame depth given.
    *
-   * @return { frameActor: String|null, client: Object }:
+   * @return { frameActor: String|null, webConsoleFront: WebConsoleFront }:
    *         frameActor is the FrameActor ID for the given frame depth
    *         (or the selected frame if it exists), null if no frame was found.
-   *         client is the WebConsole client for the thread the frame is
-   *         associated with.
+   *         webConsoleFront is the front for the thread the frame is associated with.
    */
   getFrameActor() {
     const state = this.hud.getDebuggerFrames();
     if (!state) {
-      return { frameActor: null, client: this.webConsoleClient };
+      return { frameActor: null, webConsoleFront: this.webConsoleFront };
     }
 
     const grip = state.frames[state.selected];
 
     if (!grip) {
-      return { frameActor: null, client: this.webConsoleClient };
+      return { frameActor: null, webConsoleFront: this.webConsoleFront };
     }
 
     return {
       frameActor: grip.actor,
-      client: state.target.activeConsole,
+      webConsoleFront: state.target.activeConsole,
     };
   }
 

@@ -13,9 +13,10 @@
  */
 
 // http://www.whatwg.org/specs/web-apps/current-work/#the-param-element
-[HTMLConstructor,
- Exposed=Window]
+[Exposed=Window]
 interface HTMLParamElement : HTMLElement {
+  [HTMLConstructor] constructor();
+
            [CEReactions, SetterThrows, Pure]
            attribute DOMString name;
            [CEReactions, SetterThrows, Pure]

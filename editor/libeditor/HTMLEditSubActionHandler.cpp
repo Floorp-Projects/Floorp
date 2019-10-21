@@ -4970,6 +4970,100 @@ EditActionResult HTMLEditor::IndentAsSubAction() {
   return result.SetResult(rv);
 }
 
+// Helper for Handle[CSS|HTML]IndentAtSelectionInternal
+nsresult HTMLEditor::IndentListChild(RefPtr<Element>* aCurList,
+                                     const EditorDOMPoint& aCurPoint,
+                                     OwningNonNull<nsINode>& aCurNode) {
+  MOZ_ASSERT(HTMLEditUtils::IsList(aCurPoint.GetContainer()),
+             "unexpected container");
+  MOZ_ASSERT(IsTopLevelEditSubActionDataAvailable());
+
+  // some logic for putting list items into nested lists...
+
+  // Check for whether we should join a list that follows aCurNode.
+  // We do this if the next element is a list, and the list is of the
+  // same type (li/ol) as aCurNode was a part it.
+  if (nsIContent* nextEditableSibling =
+          GetNextHTMLSibling(aCurNode, SkipWhitespace::Yes)) {
+    if (HTMLEditUtils::IsList(nextEditableSibling) &&
+        aCurPoint.GetContainer()->NodeInfo()->NameAtom() ==
+            nextEditableSibling->NodeInfo()->NameAtom() &&
+        aCurPoint.GetContainer()->NodeInfo()->NamespaceID() ==
+            nextEditableSibling->NodeInfo()->NamespaceID()) {
+      nsresult rv =
+          MoveNodeWithTransaction(MOZ_KnownLive(*aCurNode->AsContent()),
+                                  EditorDOMPoint(nextEditableSibling, 0));
+      if (NS_WARN_IF(Destroyed())) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                           "MoveNodeWithTransaction() failed");
+      return rv;
+    }
+  }
+
+  // Check for whether we should join a list that preceeds aCurNode.
+  // We do this if the previous element is a list, and the list is of
+  // the same type (li/ol) as aCurNode was a part of.
+  if (nsCOMPtr<nsIContent> previousEditableSibling =
+          GetPriorHTMLSibling(aCurNode, SkipWhitespace::Yes)) {
+    if (HTMLEditUtils::IsList(previousEditableSibling) &&
+        aCurPoint.GetContainer()->NodeInfo()->NameAtom() ==
+            previousEditableSibling->NodeInfo()->NameAtom() &&
+        aCurPoint.GetContainer()->NodeInfo()->NamespaceID() ==
+            previousEditableSibling->NodeInfo()->NamespaceID()) {
+      nsresult rv =
+          MoveNodeToEndWithTransaction(MOZ_KnownLive(*aCurNode->AsContent()),
+                                       *previousEditableSibling);
+      if (NS_WARN_IF(Destroyed())) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                           "MoveNodeToEndWithTransaction() failed");
+      return rv;
+    }
+  }
+
+  // check to see if aCurList is still appropriate.  Which it is if
+  // aCurNode is still right after it in the same list.
+  nsIContent* previousEditableSibling =
+      *aCurList ? GetPriorHTMLSibling(aCurNode, SkipWhitespace::Yes) : nullptr;
+  if (!*aCurList ||
+      (previousEditableSibling && previousEditableSibling != *aCurList)) {
+    nsAtom* containerName =
+        aCurPoint.GetContainer()->NodeInfo()->NameAtom();
+    // Create a new nested list of correct type.
+    SplitNodeResult splitNodeResult =
+        MaybeSplitAncestorsForInsertWithTransaction(
+            MOZ_KnownLive(*containerName), aCurPoint);
+    if (NS_WARN_IF(splitNodeResult.Failed())) {
+      return splitNodeResult.Rv();
+    }
+    *aCurList = CreateNodeWithTransaction(MOZ_KnownLive(*containerName),
+                                          splitNodeResult.SplitPoint());
+    if (NS_WARN_IF(Destroyed())) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
+    if (NS_WARN_IF(!*aCurList)) {
+      return NS_ERROR_FAILURE;
+    }
+    // aCurList is now the correct thing to put aCurNode in
+    // remember our new block for postprocessing
+    TopLevelEditSubActionDataRef().mNewBlockElement = *aCurList;
+  }
+  // tuck the node into the end of the active list
+  RefPtr<nsINode> container = *aCurList;
+  nsresult rv =
+      MoveNodeToEndWithTransaction(MOZ_KnownLive(*aCurNode->AsContent()),
+                                   *container);
+  if (NS_WARN_IF(Destroyed())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "MoveNodeToEndWithTransaction() failed");
+  return rv;
+}
+
 EditActionResult HTMLEditor::HandleIndentAtSelection() {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
@@ -5144,88 +5238,9 @@ nsresult HTMLEditor::HandleCSSIndentAtSelectionInternal() {
       continue;
     }
 
-    // some logic for putting list items into nested lists...
     if (HTMLEditUtils::IsList(atCurNode.GetContainer())) {
-      // Check for whether we should join a list that follows curNode.
-      // We do this if the next element is a list, and the list is of the
-      // same type (li/ol) as curNode was a part it.
-      // XXX We also check namespace of the element here, but we don't do
-      //     that in other places.
-      if (nsIContent* nextEditableSibling = GetNextHTMLSibling(curNode)) {
-        if (HTMLEditUtils::IsList(nextEditableSibling) &&
-            atCurNode.GetContainer()->NodeInfo()->NameAtom() ==
-                nextEditableSibling->NodeInfo()->NameAtom() &&
-            atCurNode.GetContainer()->NodeInfo()->NamespaceID() ==
-                nextEditableSibling->NodeInfo()->NamespaceID()) {
-          nsresult rv =
-              MoveNodeWithTransaction(MOZ_KnownLive(*curNode->AsContent()),
-                                      EditorDOMPoint(nextEditableSibling, 0));
-          if (NS_WARN_IF(Destroyed())) {
-            return NS_ERROR_EDITOR_DESTROYED;
-          }
-          if (NS_WARN_IF(NS_FAILED(rv))) {
-            return rv;
-          }
-          continue;
-        }
-      }
-
-      // Check for whether we should join a list that preceeds curNode.
-      // We do this if the previous element is a list, and the list is of
-      // the same type (li/ol) as curNode was a part of.
-      if (nsCOMPtr<nsIContent> previousEditableSibling =
-              GetPriorHTMLSibling(curNode)) {
-        if (HTMLEditUtils::IsList(previousEditableSibling) &&
-            atCurNode.GetContainer()->NodeInfo()->NameAtom() ==
-                previousEditableSibling->NodeInfo()->NameAtom() &&
-            atCurNode.GetContainer()->NodeInfo()->NamespaceID() ==
-                previousEditableSibling->NodeInfo()->NamespaceID()) {
-          nsresult rv = MoveNodeToEndWithTransaction(
-              MOZ_KnownLive(*curNode->AsContent()), *previousEditableSibling);
-          if (NS_WARN_IF(Destroyed())) {
-            return NS_ERROR_EDITOR_DESTROYED;
-          }
-          if (NS_WARN_IF(NS_FAILED(rv))) {
-            return rv;
-          }
-          continue;
-        }
-      }
-
-      // check to see if curList is still appropriate.  Which it is if
-      // curNode is still right after it in the same list.
-      nsIContent* previousEditableSibling =
-          curList ? GetPriorHTMLSibling(curNode) : nullptr;
-      if (!curList ||
-          (previousEditableSibling && previousEditableSibling != curList)) {
-        nsAtom* containerName =
-            atCurNode.GetContainer()->NodeInfo()->NameAtom();
-        // Create a new nested list of correct type.
-        SplitNodeResult splitNodeResult =
-            MaybeSplitAncestorsForInsertWithTransaction(
-                MOZ_KnownLive(*containerName), atCurNode);
-        if (NS_WARN_IF(splitNodeResult.Failed())) {
-          return splitNodeResult.Rv();
-        }
-        curList = CreateNodeWithTransaction(MOZ_KnownLive(*containerName),
-                                            splitNodeResult.SplitPoint());
-        if (NS_WARN_IF(Destroyed())) {
-          return NS_ERROR_EDITOR_DESTROYED;
-        }
-        if (NS_WARN_IF(!curList)) {
-          return NS_ERROR_FAILURE;
-        }
-        // curList is now the correct thing to put curNode in
-        // remember our new block for postprocessing
-        TopLevelEditSubActionDataRef().mNewBlockElement = curList;
-      }
-      // tuck the node into the end of the active list
-      nsresult rv = MoveNodeToEndWithTransaction(
-          MOZ_KnownLive(*curNode->AsContent()), *curList);
-      if (NS_WARN_IF(Destroyed())) {
-        return NS_ERROR_EDITOR_DESTROYED;
-      }
-      if (NS_WARN_IF(NS_FAILED(rv))) {
+      nsresult rv = IndentListChild(&curList, atCurNode, curNode);
+      if (NS_FAILED(rv)) {
         return rv;
       }
       continue;
@@ -5409,90 +5424,13 @@ nsresult HTMLEditor::HandleHTMLIndentAtSelectionInternal() {
       continue;
     }
 
-    // some logic for putting list items into nested lists...
     if (HTMLEditUtils::IsList(atCurNode.GetContainer())) {
-      // Check for whether we should join a list that follows curNode.
-      // We do this if the next element is a list, and the list is of the
-      // same type (li/ol) as curNode was a part it.
-      if (nsIContent* nextEditableSibling = GetNextHTMLSibling(curNode)) {
-        if (HTMLEditUtils::IsList(nextEditableSibling) &&
-            atCurNode.GetContainer()->NodeInfo()->NameAtom() ==
-                nextEditableSibling->NodeInfo()->NameAtom() &&
-            atCurNode.GetContainer()->NodeInfo()->NamespaceID() ==
-                nextEditableSibling->NodeInfo()->NamespaceID()) {
-          rv = MoveNodeWithTransaction(MOZ_KnownLive(*curNode->AsContent()),
-                                       EditorDOMPoint(nextEditableSibling, 0));
-          if (NS_WARN_IF(Destroyed())) {
-            return NS_ERROR_EDITOR_DESTROYED;
-          }
-          if (NS_WARN_IF(NS_FAILED(rv))) {
-            return rv;
-          }
-          continue;
-        }
-      }
-
-      // Check for whether we should join a list that preceeds curNode.
-      // We do this if the previous element is a list, and the list is of
-      // the same type (li/ol) as curNode was a part of.
-      if (nsCOMPtr<nsIContent> previousEditableSibling =
-              GetPriorHTMLSibling(curNode)) {
-        if (HTMLEditUtils::IsList(previousEditableSibling) &&
-            atCurNode.GetContainer()->NodeInfo()->NameAtom() ==
-                previousEditableSibling->NodeInfo()->NameAtom() &&
-            atCurNode.GetContainer()->NodeInfo()->NamespaceID() ==
-                previousEditableSibling->NodeInfo()->NamespaceID()) {
-          rv = MoveNodeToEndWithTransaction(
-              MOZ_KnownLive(*curNode->AsContent()), *previousEditableSibling);
-          if (NS_WARN_IF(Destroyed())) {
-            return NS_ERROR_EDITOR_DESTROYED;
-          }
-          if (NS_WARN_IF(NS_FAILED(rv))) {
-            return rv;
-          }
-          continue;
-        }
-      }
-
-      // check to see if curList is still appropriate.  Which it is if
-      // curNode is still right after it in the same list.
-      nsIContent* previousEditableSibling =
-          curList ? GetPriorHTMLSibling(curNode) : nullptr;
-      if (!curList ||
-          (previousEditableSibling && previousEditableSibling != curList)) {
-        nsAtom* containerName =
-            atCurNode.GetContainer()->NodeInfo()->NameAtom();
-        // Create a new nested list of correct type.
-        SplitNodeResult splitNodeResult =
-            MaybeSplitAncestorsForInsertWithTransaction(
-                MOZ_KnownLive(*containerName), atCurNode);
-        if (NS_WARN_IF(splitNodeResult.Failed())) {
-          return splitNodeResult.Rv();
-        }
-        curList = CreateNodeWithTransaction(MOZ_KnownLive(*containerName),
-                                            splitNodeResult.SplitPoint());
-        if (NS_WARN_IF(Destroyed())) {
-          return NS_ERROR_EDITOR_DESTROYED;
-        }
-        if (NS_WARN_IF(!curList)) {
-          return NS_ERROR_FAILURE;
-        }
-        // curList is now the correct thing to put curNode in
-        // remember our new block for postprocessing
-        TopLevelEditSubActionDataRef().mNewBlockElement = curList;
-      }
-      // tuck the node into the end of the active list
-      rv = MoveNodeToEndWithTransaction(MOZ_KnownLive(*curNode->AsContent()),
-                                        *curList);
-      if (NS_WARN_IF(Destroyed())) {
-        return NS_ERROR_EDITOR_DESTROYED;
-      }
-      if (NS_WARN_IF(NS_FAILED(rv))) {
+      nsresult rv = IndentListChild(&curList, atCurNode, curNode);
+      if (NS_FAILED(rv)) {
         return rv;
       }
       // forget curQuote, if any
       curQuote = nullptr;
-
       continue;
     }
 

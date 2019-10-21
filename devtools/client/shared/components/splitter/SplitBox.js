@@ -182,7 +182,7 @@ class SplitBox extends Component {
         : x - nodeBounds.left;
 
       this.setState({
-        width: size,
+        width: this.getConstrainedSizeInPx(size, nodeBounds.width),
       });
     } else {
       size = endPanelControl
@@ -190,9 +190,32 @@ class SplitBox extends Component {
         : y - nodeBounds.top;
 
       this.setState({
-        height: size,
+        height: this.getConstrainedSizeInPx(size, nodeBounds.height),
       });
     }
+  }
+
+  /**
+   * Calculates the constrained size taking into account the minimum width or
+   * height passed via this.props.minSize.
+   *
+   * @param {Number} requestedSize
+   *        The requested size
+   * @param {Number} splitBoxWidthOrHeight
+   *        The width or height of the splitBox
+   *
+   * @return {Number}
+   *         The constrained size
+   */
+  getConstrainedSizeInPx(requestedSize, splitBoxWidthOrHeight) {
+    let minSize = this.props.minSize + "";
+
+    if (minSize.endsWith("%")) {
+      minSize = (parseFloat(minSize) / 100) * splitBoxWidthOrHeight;
+    } else if (minSize.endsWith("px")) {
+      minSize = parseFloat(minSize);
+    }
+    return Math.max(requestedSize, minSize);
   }
 
   // Rendering

@@ -50,6 +50,13 @@ add_task(async function setup() {
     template: templatePrivate + "{searchTerms}",
   });
 
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.search.separatePrivateDefault.ui.enabled", true],
+      ["browser.search.separatePrivateDefault", false],
+    ],
+  });
+
   let originalEngine = await Services.search.getDefault();
   let originalPrivateEngine = await Services.search.getDefaultPrivate();
 

@@ -32,6 +32,7 @@ class GridElementWidthResizer extends Component {
     this.onMove = this.onMove.bind(this);
     this.state = {
       dragging: false,
+      isRTLElement: false,
       defaultCursor: null,
       defaultWidth: null,
     };
@@ -66,6 +67,10 @@ class GridElementWidthResizer extends Component {
 
     this.setState({
       dragging: true,
+      isRTLElement:
+        controlledElementNode.ownerDocument.defaultView.getComputedStyle(
+          controlledElementNode
+        ).direction === "rtl",
       defaultCursor,
       defaultWidth,
     });
@@ -99,10 +104,15 @@ class GridElementWidthResizer extends Component {
       return;
     }
     const nodeBounds = controlledElementNode.getBoundingClientRect();
+    const { isRTLElement } = this.state;
+    const { position } = this.props;
+
     const size =
-      this.props.position === "end"
-        ? x - nodeBounds.left
-        : nodeBounds.width + (nodeBounds.left - x);
+      (isRTLElement && position === "end") ||
+      (!isRTLElement && position === "start")
+        ? nodeBounds.width + (nodeBounds.left - x)
+        : x - nodeBounds.left;
+
     controlledElementNode.style.width = `${size}px`;
   }
 
