@@ -514,7 +514,9 @@ class JS::Realm : public JS::shadow::Realm {
   inline js::GlobalObject* maybeGlobal() const;
 
   /* An unbarriered getter for use while tracing. */
-  inline js::GlobalObject* unsafeUnbarrieredMaybeGlobal() const;
+  js::GlobalObject* unsafeUnbarrieredMaybeGlobal() const {
+    return global_.unbarrieredGet();
+  }
 
   inline js::LexicalEnvironmentObject* unbarrieredLexicalEnvironment() const;
 

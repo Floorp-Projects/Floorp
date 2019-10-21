@@ -30,10 +30,6 @@ js::GlobalObject* JS::Realm::maybeGlobal() const {
   return global_;
 }
 
-js::GlobalObject* JS::Realm::unsafeUnbarrieredMaybeGlobal() const {
-  return *global_.unsafeGet();
-}
-
 js::LexicalEnvironmentObject* JS::Realm::unbarrieredLexicalEnvironment() const {
   return *lexicalEnv_.unsafeGet();
 }
