@@ -88,11 +88,8 @@
                            class="protections-popup-category" align="center"
                            wrap="true">
               <image class="protections-popup-category-icon thirdpartycookies-icon"/>
-              <label flex="1" id="protections-popup-cookies-category-label-disabled"
-                     class="protections-popup-category-label">&contentBlocking.cookies2.label;</label>
-              <label flex="1" id="protections-popup-cookies-category-label-enabled"
-                     class="protections-popup-category-label"
-                     hidden="true"></label>
+              <label flex="1" id="protections-popup-cookies-category-label"
+                     class="protections-popup-category-label"/>
             </toolbarbutton>
             <!-- wrap=true is needed for descriptionheightworkaround, see bug 1564077 -->
             <toolbarbutton id="protections-popup-category-cryptominers"
