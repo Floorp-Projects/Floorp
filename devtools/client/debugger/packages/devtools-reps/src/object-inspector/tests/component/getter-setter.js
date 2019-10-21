@@ -11,19 +11,19 @@ const {
 
 const { makeNodesForProperties } = require("../../utils/node");
 const accessorStubs = require("../../../reps/stubs/accessor");
-const ObjectClient = require("../__mocks__/object-client");
+const ObjectFront = require("../__mocks__/object-front");
 
 function generateDefaults(overrides) {
   return {
     autoExpandDepth: 1,
-    createObjectClient: grip => ObjectClient(grip),
+    createObjectFront: grip => ObjectFront(grip),
     mode: MODE.LONG,
     ...overrides,
   };
 }
 
 function mount(stub, propsOverride = {}) {
-  const client = { createObjectClient: grip => ObjectClient(grip) };
+  const client = { createObjectFront: grip => ObjectFront(grip) };
 
   const root = { path: "root", name: "root" };
   const nodes = makeNodesForProperties(

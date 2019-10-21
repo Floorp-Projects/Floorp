@@ -10,8 +10,8 @@ import { features, prefs } from "../utils/prefs";
 import type { Grip } from "../types";
 let DebuggerClient;
 
-function createObjectClient(grip: Grip) {
-  return DebuggerClient.createObjectClient(grip);
+function createObjectFront(grip: Grip) {
+  return DebuggerClient.createObjectFront(grip);
 }
 
 export async function onConnect(connection: any, actions: Object) {
@@ -76,4 +76,4 @@ export async function onConnect(connection: any, actions: Object) {
   await clientCommands.checkIfAlreadyPaused();
 }
 
-export { createObjectClient, clientCommands, clientEvents };
+export { createObjectFront, clientCommands, clientEvents };

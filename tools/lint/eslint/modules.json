@@ -43,8 +43,6 @@
   "cookies.js": ["Cookies"],
   "CoverageUtils.jsm": ["CoverageCollector"],
   "CrashManagerTest.jsm": ["configureLogging", "getManager", "sleep", "TestingCrashManager"],
-  "dbg-client.jsm": ["DebuggerTransport", "DebuggerClient", "RootClient", "LongStringClient", "EnvironmentClient", "ObjectClient"],
-  "dbg-server.jsm": ["DebuggerServer", "ActorPool", "OriginalLocation"],
   "declined.js": ["DeclinedEngines"],
   "distribution.js": ["DistributionCustomizer"],
   "DNSTypes.jsm": ["DNS_QUERY_RESPONSE_CODES", "DNS_AUTHORITATIVE_ANSWER_CODES", "DNS_CLASS_CODES", "DNS_RECORD_TYPES"],
