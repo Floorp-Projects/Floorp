@@ -167,6 +167,7 @@ static const char kFontMenlo[] = "Menlo";
 static const char kFontMicrosoftTaiLe[] = "Microsoft Tai Le";
 static const char kFontMingLiUExtB[] = "MingLiU-ExtB";
 static const char kFontMyanmarMN[] = "Myanmar MN";
+static const char kFontNotoSansMongolian[] = "Noto Sans Mongolian";
 static const char kFontPlantagenetCherokee[] = "Plantagenet Cherokee";
 static const char kFontSimSunExtB[] = "SimSun-ExtB";
 static const char kFontSongtiSC[] = "Songti SC";
@@ -242,7 +243,7 @@ void gfxPlatformMac::GetCommonFallbackFonts(uint32_t aCh, uint32_t aNextCh,
         aFontList.AppendElement(kFontGeneva);
         break;
       case 0x18:  // Mongolian, UCAS
-        aFontList.AppendElement(kFontSTHeiti);
+        aFontList.AppendElement(kFontNotoSansMongolian);
         aFontList.AppendElement(kFontEuphemiaUCAS);
         break;
       case 0x19:  // Khmer
