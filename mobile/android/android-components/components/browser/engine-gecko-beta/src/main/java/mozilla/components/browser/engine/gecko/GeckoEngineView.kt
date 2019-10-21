@@ -141,6 +141,10 @@ class GeckoEngineView @JvmOverloads constructor(
         currentGeckoView.setVerticalClipping(clippingHeight)
     }
 
+    override fun setDynamicToolbarMaxHeight(height: Int) {
+        // no-op
+    }
+
     override fun captureThumbnail(onFinish: (Bitmap?) -> Unit) {
         val geckoResult = currentGeckoView.capturePixels()
         geckoResult.then({ bitmap ->

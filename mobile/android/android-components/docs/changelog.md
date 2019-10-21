@@ -42,6 +42,9 @@ permalink: /changelog/
 
     sitePermissions[Permission.LOCATION] //  ALLOWED will be returned
   ```
+* **engine-gecko-nightly**
+  * Adds setDynamicToolbarMaxHeight ApI.
+
 
 # 20.0.0
 

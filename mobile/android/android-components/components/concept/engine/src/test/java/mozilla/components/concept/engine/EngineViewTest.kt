@@ -61,6 +61,7 @@ class EngineViewTest {
 
     open class DummyEngineView(context: Context) : FrameLayout(context), EngineView {
         override fun setVerticalClipping(clippingHeight: Int) {}
+        override fun setDynamicToolbarMaxHeight(height: Int) {}
         override fun captureThumbnail(onFinish: (Bitmap?) -> Unit) = Unit
         override fun render(session: EngineSession) {}
         override fun release() {}
@@ -69,6 +70,7 @@ class EngineViewTest {
     // Class it not actually a View!
     open class BrokenEngineView : EngineView {
         override fun setVerticalClipping(clippingHeight: Int) {}
+        override fun setDynamicToolbarMaxHeight(height: Int) {}
         override fun captureThumbnail(onFinish: (Bitmap?) -> Unit) = Unit
         override fun render(session: EngineSession) {}
         override fun release() {}
