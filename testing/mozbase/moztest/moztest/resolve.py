@@ -13,7 +13,6 @@ from collections import defaultdict
 import manifestparser
 import mozpack.path as mozpath
 from mozbuild.base import MozbuildObject
-from mozbuild.frontend.reader import BuildReader, EmptyConfig
 from mozbuild.util import OrderedDefaultDict
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -665,8 +664,7 @@ class TestResolver(MozbuildObject):
         paths, tags, flavors = set(), set(), set()
         changed_files = self.repository.get_outgoing_files('AM')
         if changed_files:
-            config = EmptyConfig(self.topsrcdir)
-            reader = BuildReader(config)
+            reader = self.mozbuild_reader(config_mode='empty')
             files_info = reader.files_info(changed_files)
 
             for path, info in files_info.items():
