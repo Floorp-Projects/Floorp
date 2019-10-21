@@ -1338,11 +1338,7 @@ set_define('MOZ_BUNDLED_FONTS',
 # XBL
 # ==============================================================
 
-@depends(build_project)
-def xbl_default(project):
-    return project != 'mobile/android'
-
-option('--enable-xbl', default=xbl_default,
+option('--enable-xbl', default=False,
        help='{Enable|Disable} support for XBL (XML Binding Language)')
 set_define('MOZ_XBL', depends_if('--enable-xbl')(lambda _: True))
 set_config('MOZ_XBL', depends_if('--enable-xbl')(lambda _: True))
