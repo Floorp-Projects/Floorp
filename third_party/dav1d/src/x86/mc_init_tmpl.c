@@ -88,7 +88,11 @@ decl_blend_dir_fn(dav1d_blend_h_avx2);
 decl_blend_dir_fn(dav1d_blend_h_ssse3);
 
 decl_warp8x8_fn(dav1d_warp_affine_8x8_avx2);
+decl_warp8x8_fn(dav1d_warp_affine_8x8_sse4);
+decl_warp8x8_fn(dav1d_warp_affine_8x8_ssse3);
 decl_warp8x8t_fn(dav1d_warp_affine_8x8t_avx2);
+decl_warp8x8t_fn(dav1d_warp_affine_8x8t_sse4);
+decl_warp8x8t_fn(dav1d_warp_affine_8x8t_ssse3);
 
 decl_emu_edge_fn(dav1d_emu_edge_avx2);
 decl_emu_edge_fn(dav1d_emu_edge_ssse3);
@@ -134,7 +138,19 @@ COLD void bitfn(dav1d_mc_dsp_init_x86)(Dav1dMCDSPContext *const c) {
     c->blend = dav1d_blend_ssse3;
     c->blend_v = dav1d_blend_v_ssse3;
     c->blend_h = dav1d_blend_h_ssse3;
+
+    c->warp8x8  = dav1d_warp_affine_8x8_ssse3;
+    c->warp8x8t = dav1d_warp_affine_8x8t_ssse3;
+
     c->emu_edge = dav1d_emu_edge_ssse3;
+#endif
+
+    if(!(flags & DAV1D_X86_CPU_FLAG_SSE41))
+        return;
+
+#if BITDEPTH == 8
+    c->warp8x8  = dav1d_warp_affine_8x8_sse4;
+    c->warp8x8t = dav1d_warp_affine_8x8t_sse4;
 #endif
 
     if (!(flags & DAV1D_X86_CPU_FLAG_AVX2))

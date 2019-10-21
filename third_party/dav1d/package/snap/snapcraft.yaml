@@ -17,7 +17,7 @@ apps:
 parts:
   dav1d:
     plugin: meson
-    source: .
+    source: ../../
     build-packages: [ 'nasm' ]
     meson-parameters:
       - --prefix=/usr
