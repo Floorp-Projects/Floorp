@@ -34,6 +34,12 @@
 #define UNIT_TEST 1
 #include "src/fg_apply_tmpl.c"
 
+static const char ss_name[][4] = {
+    [DAV1D_PIXEL_LAYOUT_I420 - 1] = "420",
+    [DAV1D_PIXEL_LAYOUT_I422 - 1] = "422",
+    [DAV1D_PIXEL_LAYOUT_I444 - 1] = "444",
+};
+
 static void check_gen_grny(const Dav1dFilmGrainDSPContext *const dsp) {
     entry grain_lut_c[GRAIN_HEIGHT][GRAIN_WIDTH];
     entry grain_lut_a[GRAIN_HEIGHT + 1][GRAIN_WIDTH];
@@ -70,6 +76,64 @@ static void check_gen_grny(const Dav1dFilmGrainDSPContext *const dsp) {
     }
 
     report("gen_grain_y");
+}
+
+static void check_gen_grnuv(const Dav1dFilmGrainDSPContext *const dsp) {
+    entry grain_lut_y[GRAIN_HEIGHT + 1][GRAIN_WIDTH];
+    entry grain_lut_c[GRAIN_HEIGHT][GRAIN_WIDTH];
+    entry grain_lut_a[GRAIN_HEIGHT + 1][GRAIN_WIDTH];
+
+    declare_func(void, entry grain_lut[][GRAIN_WIDTH],
+                 const entry grain_lut_y[][GRAIN_WIDTH],
+                 const Dav1dFilmGrainData *data, intptr_t uv HIGHBD_DECL_SUFFIX);
+
+    for (int layout_idx = 0; layout_idx < 3; layout_idx++) {
+        const enum Dav1dPixelLayout layout = layout_idx + 1;
+        const int ss_x = layout != DAV1D_PIXEL_LAYOUT_I444;
+        const int ss_y = layout == DAV1D_PIXEL_LAYOUT_I420;
+
+        for (int i = 0; i < 4; i++) {
+            if (check_func(dsp->generate_grain_uv[layout_idx],
+                           "gen_grain_uv_ar%d_%dbpc_%s",
+                           i, BITDEPTH, ss_name[layout_idx]))
+            {
+                Dav1dFilmGrainData fg_data;
+                fg_data.seed = rnd() & 0xFFFF;
+
+#if BITDEPTH == 16
+                const int bitdepth_max = rnd() & 1 ? 0x3ff : 0xfff;
+#endif
+
+                fg_data.num_y_points = rnd() & 1;
+                fg_data.grain_scale_shift = rnd() & 3;
+                fg_data.ar_coeff_shift = (rnd() & 3) + 6;
+                fg_data.ar_coeff_lag = i;
+                const int num_y_pos = 2 * fg_data.ar_coeff_lag * (fg_data.ar_coeff_lag + 1);
+                for (int n = 0; n < num_y_pos; n++)
+                    fg_data.ar_coeffs_y[n] = (rnd() & 0xff) - 128;
+                dsp->generate_grain_y(grain_lut_y, &fg_data HIGHBD_TAIL_SUFFIX);
+
+                const int uv = rnd() & 1;
+                const int num_uv_pos = num_y_pos + !!fg_data.num_y_points;
+                for (int n = 0; n < num_uv_pos; n++)
+                    fg_data.ar_coeffs_uv[uv][n] = (rnd() & 0xff) - 128;
+                if (!fg_data.num_y_points)
+                    fg_data.ar_coeffs_uv[uv][num_uv_pos] = 0;
+                memset(grain_lut_c, 0xff, sizeof(grain_lut_c));
+                memset(grain_lut_a, 0xff, sizeof(grain_lut_a));
+                call_ref(grain_lut_c, grain_lut_y, &fg_data, uv HIGHBD_TAIL_SUFFIX);
+                call_new(grain_lut_a, grain_lut_y, &fg_data, uv HIGHBD_TAIL_SUFFIX);
+                int diff = 0, w = ss_x ? 44 : GRAIN_WIDTH;
+                for (int y = 0; y < (ss_y ? 38 : GRAIN_HEIGHT); y++)
+                    diff |= memcmp(grain_lut_a[y], grain_lut_c[y], w * sizeof(entry));
+                if (diff) fail();
+
+                bench_new(grain_lut_a, grain_lut_y, &fg_data, uv HIGHBD_TAIL_SUFFIX);
+            }
+        }
+    }
+
+    report("gen_grain_uv");
 }
 
 static void check_fgy_sbrow(const Dav1dFilmGrainDSPContext *const dsp) {
@@ -157,11 +221,6 @@ static void check_fguv_sbrow(const Dav1dFilmGrainDSPContext *const dsp) {
                  int is_identity HIGHBD_DECL_SUFFIX);
 
     for (int layout_idx = 0; layout_idx < 3; layout_idx++) {
-        const char ss_name[][4] = {
-            [DAV1D_PIXEL_LAYOUT_I420 - 1] = "420",
-            [DAV1D_PIXEL_LAYOUT_I422 - 1] = "422",
-            [DAV1D_PIXEL_LAYOUT_I444 - 1] = "444",
-        };
         const enum Dav1dPixelLayout layout = layout_idx + 1;
         const int ss_x = layout != DAV1D_PIXEL_LAYOUT_I444;
         const int ss_y = layout == DAV1D_PIXEL_LAYOUT_I420;
@@ -264,6 +323,7 @@ void bitfn(checkasm_check_filmgrain)(void) {
     bitfn(dav1d_film_grain_dsp_init)(&c);
 
     check_gen_grny(&c);
+    check_gen_grnuv(&c);
     check_fgy_sbrow(&c);
     check_fguv_sbrow(&c);
 }

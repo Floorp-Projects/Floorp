@@ -286,7 +286,6 @@ static inline void mask_edges_chroma(uint16_t (*const masks)[32][2][2],
 void dav1d_create_lf_mask_intra(Av1Filter *const lflvl,
                                 uint8_t (*const level_cache)[4],
                                 const ptrdiff_t b4_stride,
-                                const Dav1dFrameHeader *const hdr,
                                 const uint8_t (*filter_level)[8][2],
                                 const int bx, const int by,
                                 const int iw, const int ih,
@@ -297,9 +296,6 @@ void dav1d_create_lf_mask_intra(Av1Filter *const lflvl,
                                 uint8_t *const ay, uint8_t *const ly,
                                 uint8_t *const auv, uint8_t *const luv)
 {
-    if (!hdr->loopfilter.level_y[0] && !hdr->loopfilter.level_y[1])
-        return;
-
     const uint8_t *const b_dim = dav1d_block_dimensions[bs];
     const int bw4 = imin(iw - bx, b_dim[0]);
     const int bh4 = imin(ih - by, b_dim[1]);
@@ -350,7 +346,6 @@ void dav1d_create_lf_mask_intra(Av1Filter *const lflvl,
 void dav1d_create_lf_mask_inter(Av1Filter *const lflvl,
                                 uint8_t (*const level_cache)[4],
                                 const ptrdiff_t b4_stride,
-                                const Dav1dFrameHeader *const hdr,
                                 const uint8_t (*filter_level)[8][2],
                                 const int bx, const int by,
                                 const int iw, const int ih,
@@ -361,9 +356,6 @@ void dav1d_create_lf_mask_inter(Av1Filter *const lflvl,
                                 uint8_t *const ay, uint8_t *const ly,
                                 uint8_t *const auv, uint8_t *const luv)
 {
-    if (!hdr->loopfilter.level_y[0] && !hdr->loopfilter.level_y[1])
-        return;
-
     const uint8_t *const b_dim = dav1d_block_dimensions[bs];
     const int bw4 = imin(iw - bx, b_dim[0]);
     const int bh4 = imin(ih - by, b_dim[1]);

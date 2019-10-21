@@ -28,6 +28,7 @@
 #include "vcs_version.h"
 
 #include <getopt.h>
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
@@ -48,6 +49,9 @@
  */
 typedef struct {
     const char *inputfile;
+    int highquality;
+    int untimed;
+    int zerocopy;
 } Dav1dPlaySettings;
 
 #define WINDOW_WIDTH  910
@@ -156,9 +160,13 @@ typedef struct rdr_info
     // Callback to destroy the renderer
     void (*destroy_renderer)(void *cookie);
     // Callback to the render function that renders a prevously sent frame
-    void (*render)(void *cookie);
+    void (*render)(void *cookie, const Dav1dPlaySettings *settings);
     // Callback to the send frame function
-    int (*update_frame)(void *cookie, Dav1dPicture *dav1d_pic);
+    int (*update_frame)(void *cookie, Dav1dPicture *dav1d_pic,
+                        const Dav1dPlaySettings *settings);
+    // Callback for alloc/release pictures (optional)
+    int (*alloc_pic)(Dav1dPicture *pic, void *cookie);
+    void (*release_pic)(Dav1dPicture *pic, void *cookie);
 } Dav1dPlayRenderInfo;
 
 #ifdef HAVE_PLACEBO_VULKAN
@@ -325,7 +333,7 @@ static void placebo_renderer_destroy(void *cookie)
     pl_context_destroy(&(rd_priv_ctx->ctx));
 }
 
-static void placebo_render(void *cookie)
+static void placebo_render(void *cookie, const Dav1dPlaySettings *settings)
 {
     Dav1dPlayRendererPrivateContext *rd_priv_ctx = cookie;
     assert(rd_priv_ctx != NULL);
@@ -358,8 +366,9 @@ static void placebo_render(void *cookie)
         .height     = img->params.h,
     };
 
-    struct pl_render_params render_params = pl_render_default_params;
-    //render_params.upscaler = &pl_filter_ewa_lanczos;
+    struct pl_render_params render_params = {0};
+    if (settings->highquality)
+        render_params = pl_render_default_params;
 
     struct pl_render_target target;
     pl_render_target_from_swapchain(&target, &frame);
@@ -385,7 +394,8 @@ static void placebo_render(void *cookie)
     SDL_UnlockMutex(rd_priv_ctx->lock);
 }
 
-static int placebo_upload_planes(void *cookie, Dav1dPicture *dav1d_pic)
+static int placebo_upload_planes(void *cookie, Dav1dPicture *dav1d_pic,
+                                 const Dav1dPlaySettings *settings)
 {
     Dav1dPlayRendererPrivateContext *rd_priv_ctx = cookie;
     assert(rd_priv_ctx != NULL);
@@ -413,7 +423,6 @@ static int placebo_upload_planes(void *cookie, Dav1dPicture *dav1d_pic)
         .height         = height,
         .pixel_stride   = 1,
         .row_stride     = dav1d_pic->stride[0],
-        .pixels         = dav1d_pic->data[0],
         .component_size = {8},
         .component_map  = {0},
     };
@@ -424,7 +433,6 @@ static int placebo_upload_planes(void *cookie, Dav1dPicture *dav1d_pic)
         .height         = height/2,
         .pixel_stride   = 1,
         .row_stride     = dav1d_pic->stride[1],
-        .pixels         = dav1d_pic->data[1],
         .component_size = {8},
         .component_map  = {1},
     };
@@ -435,10 +443,22 @@ static int placebo_upload_planes(void *cookie, Dav1dPicture *dav1d_pic)
         .height         = height/2,
         .pixel_stride   = 1,
         .row_stride     = dav1d_pic->stride[1],
-        .pixels         = dav1d_pic->data[2],
         .component_size = {8},
         .component_map  = {2},
     };
+
+    if (settings->zerocopy) {
+        const struct pl_buf *buf = dav1d_pic->allocator_data;
+        assert(buf);
+        data_y.buf = data_u.buf = data_v.buf = buf;
+        data_y.buf_offset = (uintptr_t) dav1d_pic->data[0] - (uintptr_t) buf->data;
+        data_u.buf_offset = (uintptr_t) dav1d_pic->data[1] - (uintptr_t) buf->data;
+        data_v.buf_offset = (uintptr_t) dav1d_pic->data[2] - (uintptr_t) buf->data;
+    } else {
+        data_y.pixels = dav1d_pic->data[0];
+        data_u.pixels = dav1d_pic->data[1];
+        data_v.pixels = dav1d_pic->data[2];
+    }
 
     bool ok = true;
     ok &= pl_upload_plane(rd_priv_ctx->vk->gpu, &(rd_priv_ctx->y_plane), &(rd_priv_ctx->y_tex), &data_y);
@@ -456,11 +476,106 @@ static int placebo_upload_planes(void *cookie, Dav1dPicture *dav1d_pic)
     return !ok;
 }
 
+// Align to power of 2
+#define ALIGN2(x, align) (((x) + (align) - 1) & ~((align) - 1))
+
+static int placebo_alloc_pic(Dav1dPicture *const p, void *cookie)
+{
+    Dav1dPlayRendererPrivateContext *rd_priv_ctx = cookie;
+    assert(rd_priv_ctx != NULL);
+    SDL_LockMutex(rd_priv_ctx->lock);
+
+    const struct pl_gpu *gpu = rd_priv_ctx->vk->gpu;
+    int ret = DAV1D_ERR(ENOMEM);
+
+    // Copied from dav1d_default_picture_alloc
+    const int hbd = p->p.bpc > 8;
+    const int aligned_w = ALIGN2(p->p.w, 128);
+    const int aligned_h = ALIGN2(p->p.h, 128);
+    const int has_chroma = p->p.layout != DAV1D_PIXEL_LAYOUT_I400;
+    const int ss_ver = p->p.layout == DAV1D_PIXEL_LAYOUT_I420;
+    const int ss_hor = p->p.layout != DAV1D_PIXEL_LAYOUT_I444;
+    p->stride[0] = aligned_w << hbd;
+    p->stride[1] = has_chroma ? (aligned_w >> ss_hor) << hbd : 0;
+
+    // Align strides up to multiples of the GPU performance hints
+    p->stride[0] = ALIGN2(p->stride[0], gpu->limits.align_tex_xfer_stride);
+    p->stride[1] = ALIGN2(p->stride[1], gpu->limits.align_tex_xfer_stride);
+
+    // Aligning offsets to 4 also implicity aligns to the texel size (1 or 2)
+    size_t off_align = ALIGN2(gpu->limits.align_tex_xfer_offset, 4);
+    const size_t y_sz = ALIGN2(p->stride[0] * aligned_h, off_align);
+    const size_t uv_sz = ALIGN2(p->stride[1] * (aligned_h >> ss_ver), off_align);
+
+    // The extra DAV1D_PICTURE_ALIGNMENTs are to brute force plane alignment,
+    // even in the case that the driver gives us insane alignments
+    const size_t pic_size = y_sz + 2 * uv_sz;
+    const size_t total_size = pic_size + DAV1D_PICTURE_ALIGNMENT * 4;
+
+    // Validate size limitations
+    if (total_size > gpu->limits.max_xfer_size) {
+        printf("alloc of %zu bytes exceeds limits\n", total_size);
+        goto err;
+    }
+
+    const struct pl_buf *buf = pl_buf_create(gpu, &(struct pl_buf_params) {
+        .type = PL_BUF_TEX_TRANSFER,
+        .host_mapped = true,
+        .size = total_size,
+        .memory_type = PL_BUF_MEM_HOST,
+        .user_data = p,
+    });
+
+    if (!buf) {
+        printf("alloc of GPU mapped buffer failed\n");
+        goto err;
+    }
+
+    assert(buf->data);
+    uintptr_t base = (uintptr_t) buf->data, data[3];
+    data[0] = ALIGN2(base, DAV1D_PICTURE_ALIGNMENT);
+    data[1] = ALIGN2(data[0] + y_sz, DAV1D_PICTURE_ALIGNMENT);
+    data[2] = ALIGN2(data[1] + uv_sz, DAV1D_PICTURE_ALIGNMENT);
+
+    // Sanity check offset alignment for the sake of debugging
+    if (data[0] - base != ALIGN2(data[0] - base, off_align) ||
+        data[1] - base != ALIGN2(data[1] - base, off_align) ||
+        data[2] - base != ALIGN2(data[2] - base, off_align))
+    {
+        printf("GPU buffer horribly misaligned, expect slowdown!\n");
+    }
+
+    p->allocator_data = (void *) buf;
+    p->data[0] = (void *) data[0];
+    p->data[1] = (void *) data[1];
+    p->data[2] = (void *) data[2];
+    ret = 0;
+
+    // fall through
+err:
+    SDL_UnlockMutex(rd_priv_ctx->lock);
+    return ret;
+}
+
+static void placebo_release_pic(Dav1dPicture *pic, void *cookie)
+{
+    Dav1dPlayRendererPrivateContext *rd_priv_ctx = cookie;
+    assert(rd_priv_ctx != NULL);
+    assert(pic->allocator_data);
+
+    SDL_LockMutex(rd_priv_ctx->lock);
+    const struct pl_gpu *gpu = rd_priv_ctx->vk->gpu;
+    pl_buf_destroy(gpu, (const struct pl_buf **) &pic->allocator_data);
+    SDL_UnlockMutex(rd_priv_ctx->lock);
+}
+
 static const Dav1dPlayRenderInfo renderer_info = {
     .create_renderer = placebo_renderer_create,
     .destroy_renderer = placebo_renderer_destroy,
     .render = placebo_render,
-    .update_frame = placebo_upload_planes
+    .update_frame = placebo_upload_planes,
+    .alloc_pic = placebo_alloc_pic,
+    .release_pic = placebo_release_pic,
 };
 
 #else
@@ -516,7 +631,7 @@ static void sdl_renderer_destroy(void *cookie)
     free(rd_priv_ctx);
 }
 
-static void sdl_render(void *cookie)
+static void sdl_render(void *cookie, const Dav1dPlaySettings *settings)
 {
     Dav1dPlayRendererPrivateContext *rd_priv_ctx = cookie;
     assert(rd_priv_ctx != NULL);
@@ -536,7 +651,8 @@ static void sdl_render(void *cookie)
     SDL_UnlockMutex(rd_priv_ctx->lock);
 }
 
-static int sdl_update_texture(void *cookie, Dav1dPicture *dav1d_pic)
+static int sdl_update_texture(void *cookie, Dav1dPicture *dav1d_pic,
+                              const Dav1dPlaySettings *settings)
 {
     Dav1dPlayRendererPrivateContext *rd_priv_ctx = cookie;
     assert(rd_priv_ctx != NULL);
@@ -647,8 +763,11 @@ static void dp_settings_print_usage(const char *const app,
     fprintf(stderr, "Usage: %s [options]\n\n", app);
     fprintf(stderr, "Supported options:\n"
             " --input/-i  $file:    input file\n"
+            " --untimed/-u:         ignore PTS, render as fast as possible\n"
             " --framethreads $num:  number of frame threads (default: 1)\n"
             " --tilethreads $num:   number of tile threads (default: 1)\n"
+            " --highquality:        enable high quality rendering\n"
+            " --zerocopy/-z:        enable zero copy upload path\n"
             " --version/-v:         print version and exit\n");
     exit(1);
 }
@@ -672,19 +791,23 @@ static void dp_rd_ctx_parse_args(Dav1dPlayRenderContext *rd_ctx,
     Dav1dSettings *lib_settings = &rd_ctx->lib_settings;
 
     // Short options
-    static const char short_opts[] = "i:v";
+    static const char short_opts[] = "i:vuz";
 
     enum {
         ARG_FRAME_THREADS = 256,
         ARG_TILE_THREADS,
+        ARG_HIGH_QUALITY,
     };
 
     // Long options
     static const struct option long_opts[] = {
         { "input",          1, NULL, 'i' },
         { "version",        0, NULL, 'v' },
+        { "untimed",        0, NULL, 'u' },
         { "framethreads",   1, NULL, ARG_FRAME_THREADS },
         { "tilethreads",    1, NULL, ARG_TILE_THREADS },
+        { "highquality",    0, NULL, ARG_HIGH_QUALITY },
+        { "zerocopy",       0, NULL, 'z' },
         { NULL,             0, NULL, 0 },
     };
 
@@ -696,6 +819,21 @@ static void dp_rd_ctx_parse_args(Dav1dPlayRenderContext *rd_ctx,
             case 'v':
                 fprintf(stderr, "%s\n", dav1d_version());
                 exit(0);
+            case 'u':
+                settings->untimed = true;
+                break;
+            case ARG_HIGH_QUALITY:
+                settings->highquality = true;
+#ifndef HAVE_PLACEBO_VULKAN
+                fprintf(stderr, "warning: --highquality requires libplacebo\n");
+#endif
+                break;
+            case 'z':
+                settings->zerocopy = true;
+#ifndef HAVE_PLACEBO_VULKAN
+                fprintf(stderr, "warning: --zerocopy requires libplacebo\n");
+#endif
+                break;
             case ARG_FRAME_THREADS:
                 lib_settings->n_frame_threads =
                     parse_unsigned(optarg, ARG_FRAME_THREADS, argv[0]);
@@ -811,7 +949,7 @@ static void dp_rd_ctx_post_event(Dav1dPlayRenderContext *rd_ctx, uint32_t code)
 static void dp_rd_ctx_update_with_dav1d_picture(Dav1dPlayRenderContext *rd_ctx,
     Dav1dPicture *dav1d_pic)
 {
-    renderer_info.update_frame(rd_ctx->rd_priv, dav1d_pic);
+    renderer_info.update_frame(rd_ctx->rd_priv, dav1d_pic, &rd_ctx->settings);
     rd_ctx->current_pts = dav1d_pic->m.timestamp;
 }
 
@@ -853,16 +991,20 @@ static void dp_rd_ctx_render(Dav1dPlayRenderContext *rd_ctx)
     int32_t wait_time = (pts_diff * rd_ctx->timebase) * 1000 - ticks_diff;
     rd_ctx->last_pts = rd_ctx->current_pts;
 
+    // In untimed mode, simply don't wait
+    if (rd_ctx->settings.untimed)
+        wait_time = 0;
+
     // This way of timing the playback is not accurate, as there is no guarantee
     // that SDL_Delay will wait for exactly the requested amount of time so in a
     // accurate player this would need to be done in a better way.
-    if (wait_time >= 0) {
+    if (wait_time > 0) {
         SDL_Delay(wait_time);
     } else if (wait_time < -10) { // Do not warn for minor time drifts
         fprintf(stderr, "Frame displayed %f seconds too late\n", wait_time/(float)1000);
     }
 
-    renderer_info.render(rd_ctx->rd_priv);
+    renderer_info.render(rd_ctx->rd_priv, &rd_ctx->settings);
 
     rd_ctx->last_ticks = SDL_GetTicks();
 }
@@ -1045,6 +1187,18 @@ int main(int argc, char **argv)
 
     // Parse and validate arguments
     dp_rd_ctx_parse_args(rd_ctx, argc, argv);
+
+    if (rd_ctx->settings.zerocopy) {
+        if (renderer_info.alloc_pic) {
+            rd_ctx->lib_settings.allocator = (Dav1dPicAllocator) {
+                .cookie = rd_ctx->rd_priv,
+                .alloc_picture_callback = renderer_info.alloc_pic,
+                .release_picture_callback = renderer_info.release_pic,
+            };
+        } else {
+            fprintf(stderr, "--zerocopy unsupported by compiled renderer\n");
+        }
+    }
 
     // Start decoder thread
     decoder_thread = SDL_CreateThread(decoder_thread_main, "Decoder thread", rd_ctx);

@@ -27,7 +27,7 @@
 #include "src/cpu.h"
 #include "src/cdef.h"
 
-#if BITDEPTH == 8 && ARCH_AARCH64
+#if BITDEPTH == 8
 decl_cdef_dir_fn(dav1d_cdef_find_dir_neon);
 
 void dav1d_cdef_padding4_neon(uint16_t *tmp, const pixel *src,
@@ -58,8 +58,8 @@ cdef_filter_##w##x##h##_neon(pixel *dst,                                     \
                              const int damping,                              \
                              const enum CdefEdgeFlags edges)                 \
 {                                                                            \
-    ALIGN_STK_16(uint16_t, tmp_buf, 12*tmp_stride,);                         \
-    uint16_t *tmp = tmp_buf + 2 * tmp_stride + 2;                            \
+    ALIGN_STK_16(uint16_t, tmp_buf, 12*tmp_stride + 8,);                     \
+    uint16_t *tmp = tmp_buf + 2 * tmp_stride + 8;                            \
     dav1d_cdef_padding##w##_neon(tmp, dst, stride, left, top, h, edges);     \
     dav1d_cdef_filter##w##_neon(dst, stride, tmp, pri_strength,              \
                                 sec_strength, dir, damping, h);              \
@@ -76,7 +76,7 @@ COLD void bitfn(dav1d_cdef_dsp_init_arm)(Dav1dCdefDSPContext *const c) {
 
     if (!(flags & DAV1D_ARM_CPU_FLAG_NEON)) return;
 
-#if BITDEPTH == 8 && ARCH_AARCH64
+#if BITDEPTH == 8
     c->dir = dav1d_cdef_find_dir_neon;
     c->fb[0] = cdef_filter_8x8_neon;
     c->fb[1] = cdef_filter_4x8_neon;
