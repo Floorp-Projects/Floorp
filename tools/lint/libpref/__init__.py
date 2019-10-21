@@ -101,8 +101,7 @@ def evaluate_pref(value):
 def checkdupes(paths, config, **kwargs):
     results = []
     errors = []
-    topdir = os.path.join(kwargs['root'], "modules", "libpref", "init")
-    pref_names = get_names(os.path.join(topdir, "StaticPrefList.yaml"))
+    pref_names = get_names(config['support-files'][0])
     files = list(expand_exclusions(paths, config, kwargs['root']))
     for file in files:
         errors.extend(check_against(file, pref_names))
