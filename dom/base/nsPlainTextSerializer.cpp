@@ -68,7 +68,6 @@ static int32_t GetUnicharStringWidth(const nsString& aString);
 
 // Someday may want to make this non-const:
 static const uint32_t TagStackSize = 500;
-static const uint32_t OLStackSize = 100;
 
 static bool gPreferenceInitialized = false;
 static bool gAlwaysIncludeRuby = false;
@@ -264,10 +263,6 @@ nsPlainTextSerializer::nsPlainTextSerializer()
   mTagStackIndex = 0;
   mIgnoreAboveIndex = (uint32_t)kNotFound;
 
-  // initialize the OL stack, where numbers for ordered lists are kept
-  mOLStack = new int32_t[OLStackSize];
-  mOLStackIndex = 0;
-
   mULCount = 0;
 
   mIgnoredChildNodeLevel = 0;
@@ -281,7 +276,6 @@ nsPlainTextSerializer::nsPlainTextSerializer()
 
 nsPlainTextSerializer::~nsPlainTextSerializer() {
   delete[] mTagStack;
-  delete[] mOLStack;
   NS_WARNING_ASSERTION(mHeadLevel == 0, "Wrong head level!");
 }
 
@@ -374,6 +368,8 @@ nsPlainTextSerializer::Init(const uint32_t aFlags, uint32_t aWrapColumn,
   mFloatingLines = -1;
 
   mPreformattedBlockBoundary = false;
+
+  MOZ_ASSERT(mOLStack.IsEmpty());
 
   return NS_OK;
 }
@@ -610,6 +606,8 @@ nsPlainTextSerializer::AppendDocumentStart(Document* aDocument) {
   return NS_OK;
 }
 
+constexpr int32_t kOlStackDummyValue = 0;
+
 nsresult nsPlainTextSerializer::DoOpenContainer(const nsAtom* aTag) {
   if (IsIgnorableRubyAnnotation(aTag)) {
     // Ignorable ruby annotation shouldn't be replaced by a placeholder
@@ -751,33 +749,35 @@ nsresult nsPlainTextSerializer::DoOpenContainer(const nsAtom* aTag) {
     EnsureVerticalSpace(IsInOlOrUl() ? 0 : 1);
     if (mSettings.HasFlag(nsIDocumentEncoder::OutputFormatted)) {
       // Must end the current line before we change indention
-      if (mOLStackIndex < OLStackSize) {
-        nsAutoString startAttr;
-        int32_t startVal = 1;
-        if (NS_SUCCEEDED(GetAttributeValue(nsGkAtoms::start, startAttr))) {
-          nsresult rv = NS_OK;
-          startVal = startAttr.ToInteger(&rv);
-          if (NS_FAILED(rv)) startVal = 1;
+      nsAutoString startAttr;
+      int32_t startVal = 1;
+      if (NS_SUCCEEDED(GetAttributeValue(nsGkAtoms::start, startAttr))) {
+        nsresult rv = NS_OK;
+        startVal = startAttr.ToInteger(&rv);
+        if (NS_FAILED(rv)) {
+          startVal = 1;
         }
-        mOLStack[mOLStackIndex++] = startVal;
       }
+      mOLStack.AppendElement(startVal);
     } else {
-      mOLStackIndex++;
+      mOLStack.AppendElement(kOlStackDummyValue);
     }
     mCurrentLine.mIndentation.mLength += kIndentSizeList;  // see ul
   } else if (aTag == nsGkAtoms::li &&
              mSettings.HasFlag(nsIDocumentEncoder::OutputFormatted)) {
     if (mTagStackIndex > 1 && IsInOL()) {
-      if (mOLStackIndex > 0) {
+      if (!mOLStack.IsEmpty()) {
         nsAutoString valueAttr;
         if (NS_SUCCEEDED(GetAttributeValue(nsGkAtoms::value, valueAttr))) {
           nsresult rv = NS_OK;
           int32_t valueAttrVal = valueAttr.ToInteger(&rv);
-          if (NS_SUCCEEDED(rv)) mOLStack[mOLStackIndex - 1] = valueAttrVal;
+          if (NS_SUCCEEDED(rv)) {
+            mOLStack.LastElement() = valueAttrVal;
+          }
         }
         // This is what nsBulletFrame does for OLs:
-        mCurrentLine.mIndentation.mHeader.AppendInt(
-            mOLStack[mOLStackIndex - 1]++, 10);
+        mCurrentLine.mIndentation.mHeader.AppendInt(mOLStack.LastElement(), 10);
+        mOLStack.LastElement()++;
       } else {
         mCurrentLine.mIndentation.mHeader.Append(char16_t('#'));
       }
@@ -983,8 +983,8 @@ nsresult nsPlainTextSerializer::DoCloseContainer(const nsAtom* aTag) {
     mOutputManager->Flush(mCurrentLine);  // Doing this after decreasing
                                           // OLStackIndex would be wrong.
     mCurrentLine.mIndentation.mLength -= kIndentSizeList;
-    NS_ASSERTION(mOLStackIndex, "Wrong OLStack level!");
-    mOLStackIndex--;
+    MOZ_ASSERT(!mOLStack.IsEmpty(), "Wrong OLStack level!");
+    mOLStack.RemoveLastElement();
     if (!IsInOlOrUl()) {
       mFloatingLines = 1;
       mLineBreakDue = true;
@@ -1767,7 +1767,7 @@ bool nsPlainTextSerializer::IsInOL() const {
 }
 
 bool nsPlainTextSerializer::IsInOlOrUl() const {
-  return (mULCount > 0) || (mOLStackIndex > 0);
+  return (mULCount > 0) || !mOLStack.IsEmpty();
 }
 
 /*
