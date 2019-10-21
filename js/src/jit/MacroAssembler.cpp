@@ -803,6 +803,11 @@ void MacroAssembler::newGCFatInlineString(Register result, Register temp,
                  attemptNursery ? gc::DefaultHeap : gc::TenuredHeap, fail);
 }
 
+void MacroAssembler::newGCBigInt(Register result, Register temp, Label* fail) {
+  checkAllocatorState(fail);
+  freeListAllocate(result, temp, gc::AllocKind::BIGINT, fail);
+}
+
 void MacroAssembler::copySlotsFromTemplate(
     Register obj, const NativeTemplateObject& templateObj, uint32_t start,
     uint32_t end) {
@@ -1495,6 +1500,56 @@ void MacroAssembler::loadBigInt64(Register bigInt, Register64 dest) {
   branchTest32(Assembler::Zero, Address(bigInt, BigInt::offsetOfFlags()),
                Imm32(BigInt::signBitMask()), &done);
   neg64(dest);
+
+  bind(&done);
+}
+
+void MacroAssembler::initializeBigInt64(Scalar::Type type, Register bigInt,
+                                        Register64 val) {
+  MOZ_ASSERT(Scalar::isBigIntType(type));
+
+  store32(Imm32(0), Address(bigInt, BigInt::offsetOfFlags()));
+
+  Label done, nonZero;
+  branch64(Assembler::NotEqual, val, Imm64(0), &nonZero);
+  {
+    store32(Imm32(0), Address(bigInt, BigInt::offsetOfLength()));
+    jump(&done);
+  }
+  bind(&nonZero);
+
+  if (type == Scalar::BigInt64) {
+    // Set the sign-bit for negative values and then continue with the two's
+    // complement.
+    Label isPositive;
+    branch64(Assembler::GreaterThan, val, Imm64(0), &isPositive);
+    {
+      store32(Imm32(BigInt::signBitMask()),
+              Address(bigInt, BigInt::offsetOfFlags()));
+      neg64(val);
+    }
+    bind(&isPositive);
+  }
+
+  store32(Imm32(1), Address(bigInt, BigInt::offsetOfLength()));
+
+  static_assert(sizeof(BigInt::Digit) == sizeof(uintptr_t),
+                "BigInt Digit size matches uintptr_t, so there's a single "
+                "store on 64-bit and up to two stores on 32-bit");
+
+#ifndef JS_PUNBOX64
+  Label singleDigit;
+  branchTest32(Assembler::Zero, val.high, val.high, &singleDigit);
+  store32(Imm32(2), Address(bigInt, BigInt::offsetOfLength()));
+  bind(&singleDigit);
+
+  // We can perform a single store64 on 32-bit platforms, because inline
+  // storage can store at least two 32-bit integers.
+  static_assert(BigInt::inlineDigitsLength() >= 2,
+                "BigInt inline storage can store at least two digits");
+#endif
+
+  store64(val, Address(bigInt, js::BigInt::offsetOfInlineDigits()));
 
   bind(&done);
 }

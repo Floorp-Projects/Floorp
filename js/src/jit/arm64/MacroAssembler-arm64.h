@@ -1203,6 +1203,9 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
   void load64(const Address& address, Register64 dest) {
     loadPtr(address, dest.reg);
   }
+  void load64(const BaseIndex& address, Register64 dest) {
+    loadPtr(address, dest.reg);
+  }
 
   void load8SignExtend(const Address& address, Register dest) {
     Ldrsb(ARMRegister(dest, 32), toMemOperand(address));
