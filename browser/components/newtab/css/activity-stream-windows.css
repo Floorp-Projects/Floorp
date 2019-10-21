@@ -2659,24 +2659,24 @@ main {
     .ds-card .img img {
       border-radius: 4px;
       box-shadow: inset 0 0 0 0.5px rgba(0, 0, 0, 0.15); }
-  .ds-card:not(.placeholder):hover .ds-card-link {
-    box-shadow: 0 0 0 5px #D7D7DB;
-    transition: box-shadow 150ms;
-    border-radius: 4px;
-    outline: none; }
-    [lwt-newtab-brighttext] .ds-card:not(.placeholder):hover .ds-card-link {
-      box-shadow: 0 0 0 5px #4A4A4F;
-      transition: box-shadow 150ms;
-      border-radius: 4px;
-      outline: none; }
-    .ds-card:not(.placeholder):hover .ds-card-link header {
-      color: #0060DF; }
-      [lwt-newtab-brighttext] .ds-card:not(.placeholder):hover .ds-card-link header {
-        color: #45A1FF; }
   .ds-card .ds-card-link {
     height: 100%;
     display: flex;
     flex-direction: column; }
+    .ds-card .ds-card-link:hover {
+      box-shadow: 0 0 0 5px #D7D7DB;
+      transition: box-shadow 150ms;
+      border-radius: 4px;
+      outline: none; }
+      [lwt-newtab-brighttext] .ds-card .ds-card-link:hover {
+        box-shadow: 0 0 0 5px #4A4A4F;
+        transition: box-shadow 150ms;
+        border-radius: 4px;
+        outline: none; }
+      .ds-card .ds-card-link:hover header {
+        color: #0060DF; }
+        [lwt-newtab-brighttext] .ds-card .ds-card-link:hover header {
+          color: #45A1FF; }
     .ds-card .ds-card-link:focus {
       box-shadow: 0 0 0 5px rgba(10, 132, 255, 0.3);
       transition: box-shadow 150ms;
@@ -2691,10 +2691,20 @@ main {
         color: #0060DF; }
         [lwt-newtab-brighttext] .ds-card .ds-card-link:focus header {
           color: #45A1FF; }
-    .ds-card .ds-card-link:active header {
-      color: #003EAA; }
-      [lwt-newtab-brighttext] .ds-card .ds-card-link:active header {
-        color: #0A84FF; }
+    .ds-card .ds-card-link:active {
+      box-shadow: 0 0 0 5px #D7D7DB;
+      transition: box-shadow 150ms;
+      border-radius: 4px;
+      outline: none; }
+      [lwt-newtab-brighttext] .ds-card .ds-card-link:active {
+        box-shadow: 0 0 0 5px #4A4A4F;
+        transition: box-shadow 150ms;
+        border-radius: 4px;
+        outline: none; }
+      .ds-card .ds-card-link:active header {
+        color: #003EAA; }
+        [lwt-newtab-brighttext] .ds-card .ds-card-link:active header {
+          color: #0A84FF; }
   .ds-card .meta {
     display: flex;
     flex-direction: column;
@@ -3042,8 +3052,6 @@ main {
 .ds-dismiss-ds-text-promo {
   width: 744px;
   margin: auto; }
-  .ds-dismiss-ds-text-promo .ds-dismiss-button {
-    margin: 16px; }
 
 .ds-text-promo {
   display: flex;
@@ -4310,7 +4318,7 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
     background-size: contain; }
     .fullpage-wrapper .fullpage-icon:dir(rtl) {
       background-position-x: right; }
-    @media screen and (max-width: 850px) {
+    @media screen and (max-width: 975px) {
       .fullpage-wrapper .fullpage-icon {
         background-position: center; } }
   .fullpage-wrapper .brand-logo {
@@ -4321,7 +4329,7 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
   .fullpage-wrapper .welcome-subtitle {
     align-self: center;
     margin: 0; }
-    @media screen and (max-width: 850px) {
+    @media screen and (max-width: 975px) {
       .fullpage-wrapper .welcome-title,
       .fullpage-wrapper .welcome-subtitle {
         text-align: center; } }
@@ -4338,19 +4346,19 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
     display: flex;
     align-self: center;
     padding: 50px 0; }
-    @media screen and (max-width: 850px) {
+    @media screen and (max-width: 975px) {
       .fullpage-wrapper .container {
         flex-direction: column;
-        width: 352px;
+        width: 300px;
         text-align: center; } }
   .fullpage-wrapper .fullpage-left-section {
     position: relative;
     width: 538px;
     font-size: 18px;
     line-height: 30px; }
-    @media screen and (max-width: 850px) {
+    @media screen and (max-width: 975px) {
       .fullpage-wrapper .fullpage-left-section {
-        width: 352px; } }
+        width: 300px; } }
     .fullpage-wrapper .fullpage-left-section .fullpage-left-content {
       color: #4A4A4F;
       display: inline;
@@ -4377,7 +4385,7 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
     position: relative;
     text-align: center;
     margin-inline-start: 36px; }
-    @media screen and (max-width: 850px) {
+    @media screen and (max-width: 975px) {
       .fullpage-wrapper .fullpage-form {
         margin-inline-start: 0; } }
     .fullpage-wrapper .fullpage-form .fxaSignupForm {
@@ -4450,6 +4458,6 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
       height: 112px;
       width: 154px;
       background-size: 154px; }
-    @media screen and (max-width: 850px) {
+    @media screen and (max-width: 975px) {
       .fullpage-wrapper .trailheadCard {
-        width: 352px; } }
+        width: 300px; } }

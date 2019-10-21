@@ -120,7 +120,7 @@ load 1494073.html
 skip-if(Android) load 1526044.html # Bug 1528391
 skip-if(Android&&AndroidVersion<21) load encrypted-track-with-bad-sample-description-index.mp4 # Bug 1533211, unkip after bug 1550912
 load encrypted-track-without-tenc.mp4 # Bug 1533215
-load encrypted-track-with-sample-missing-cenc-aux.mp4 # Bug 1533625
+asserts-if(Android,0-1) load encrypted-track-with-sample-missing-cenc-aux.mp4 # Bug 1533625, bug 1588967
 load 1533909.html
 load 1538727.html
 load empty-samples.webm # Bug 1540580
@@ -132,3 +132,4 @@ load 1547899.html
 load 1569645.html
 load 1575271.html
 load 1577184.html
+pref(media.autoplay.default,0) load 1587248.html

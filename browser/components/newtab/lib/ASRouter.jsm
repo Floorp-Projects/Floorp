@@ -62,11 +62,17 @@ const TRAILHEAD_CONFIG = {
   INTERRUPTS_EXPERIMENT_PREF: "trailhead.firstrun.interruptsExperiment",
   TRIPLETS_ENROLLED_PREF: "trailhead.firstrun.tripletsEnrolled",
   BRANCHES: {
-    interrupts: [["join"], ["sync"], ["nofirstrun"], ["cards"]],
+    interrupts: [
+      ["modal_control"],
+      ["modal_variant_a"],
+      ["modal_variant_b"],
+      ["modal_variant_c"],
+      ["full_page_d"],
+      ["full_page_e"],
+    ],
     triplets: [["supercharge"], ["payoff"], ["multidevice"], ["privacy"]],
   },
-  LOCALES: ["en-US", "en-GB", "en-CA", "de", "de-DE", "fr", "fr-FR"],
-  EXPERIMENT_RATIOS: [["", 0], ["interrupts", 1], ["triplets", 3]],
+  EXPERIMENT_RATIOS: [["", 0], ["interrupts", 1], ["triplets", 0]],
   // Per bug 1574003, for those who meet the targeting criteria of extended
   // triplets, 95% users (control group) will see the extended triplets, and
   // the rest 5% (holdback group) won't.
@@ -1022,35 +1028,28 @@ class _ASRouter {
       return { experiment, interrupt, triplet: triplet || "" };
     }
 
-    const locale = Services.locale.appLocaleAsLangTag;
+    const { userId } = ClientEnvironment;
+    experiment = await chooseBranch(
+      `${userId}-trailhead-experiments`,
+      TRAILHEAD_CONFIG.EXPERIMENT_RATIOS
+    );
 
-    if (TRAILHEAD_CONFIG.LOCALES.includes(locale)) {
-      const { userId } = ClientEnvironment;
-      experiment = await chooseBranch(
-        `${userId}-trailhead-experiments`,
-        TRAILHEAD_CONFIG.EXPERIMENT_RATIOS
+    // For the interrupts experiment,
+    // we randomly assign an interrupt and always use the "supercharge" triplet.
+    if (experiment === "interrupts") {
+      interrupt = await chooseBranch(
+        `${userId}-interrupts-branch`,
+        TRAILHEAD_CONFIG.BRANCHES.interrupts
       );
-
-      // For the interrupts experiment,
-      // we randomly assign an interrupt and always use the "supercharge" triplet.
-      if (experiment === "interrupts") {
-        interrupt = await chooseBranch(
-          `${userId}-interrupts-branch`,
-          TRAILHEAD_CONFIG.BRANCHES.interrupts
-        );
-        if (["join", "sync", "cards"].includes(interrupt)) {
-          triplet = "supercharge";
-        }
-
-        // For the triplets experiment or non-experiment experience,
-        // we randomly assign a triplet and always use the "join" interrupt.
-      } else {
-        interrupt = "join";
-        triplet = await chooseBranch(
-          `${userId}-triplets-branch`,
-          TRAILHEAD_CONFIG.BRANCHES.triplets
-        );
-      }
+      triplet = "supercharge";
+      // For the triplets experiment or non-experiment experience,
+      // we randomly assign a triplet and always use the "join" interrupt.
+    } else if (experiment === "triplets") {
+      interrupt = "join";
+      triplet = await chooseBranch(
+        `${userId}-triplets-branch`,
+        TRAILHEAD_CONFIG.BRANCHES.triplets
+      );
     } else {
       // If the user is not in a trailhead-compabtible locale, return the join + supercharge (default) experience and no experiment.
       interrupt = "join";

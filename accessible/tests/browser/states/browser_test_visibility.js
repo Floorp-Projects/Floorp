@@ -24,7 +24,7 @@ async function runTest(browser, accDoc) {
   testStates(lastLi, STATE_OFFSCREEN, 0, STATE_INVISIBLE);
 
   // scroll into view the item
-  await ContentTask.spawn(browser, {}, () => {
+  await SpecialPowers.spawn(browser, [], () => {
     content.document.getElementById("li_last").scrollIntoView(true);
   });
   testStates(lastLi, 0, 0, STATE_OFFSCREEN | STATE_INVISIBLE);

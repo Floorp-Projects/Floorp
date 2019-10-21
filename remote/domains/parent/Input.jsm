@@ -7,6 +7,7 @@
 var EXPORTED_SYMBOLS = ["Input"];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
 const { Domain } = ChromeUtils.import(
   "chrome://remote/content/domains/Domain.jsm"
 );
@@ -26,11 +27,16 @@ class Input extends Domain {
    *        - modifiers
    *        - text (not supported)
    *        - type
-   *        - unmodifiedTest (not supported)
+   *        - unmodifiedText (not supported)
    *        - windowsVirtualKeyCode
+   *        - nativeVirtualKeyCode (not supported)
+   *        - keyIdentifier (not supported)
+   *        - isSystemKey (not supported)
    */
   async dispatchKeyEvent(options) {
+    // missing code, text, unmodifiedText, autorepeat, location, iskeypad
     const { key, modifiers, type, windowsVirtualKeyCode } = options;
+    const { alt, ctrl, meta, shift } = Input.Modifier;
 
     let domType;
     if (type == "keyDown" || type == "rawKeyDown") {
@@ -62,24 +68,46 @@ class Input extends Domain {
     } else {
       // Non printable keys should be prefixed with `KEY_`
       const eventUtilsKey = key.length == 1 ? key : "KEY_" + key;
-      EventUtils.synthesizeKey(
-        eventUtilsKey,
-        {
-          keyCode: windowsVirtualKeyCode,
-          type: domType,
-          altKey: !!(modifiers & 1),
-          ctrlKey: !!(modifiers & 2),
-          metaKey: !!(modifiers & 4),
-          shiftKey: !!(modifiers & 8),
-        },
-        browserWindow
-      );
+      const eventInfo = {
+        keyCode: windowsVirtualKeyCode,
+        type: domType,
+        altKey: !!(modifiers & alt),
+        ctrlKey: !!(modifiers & ctrl),
+        metaKey: !!(modifiers & meta),
+        shiftKey: !!(modifiers & shift),
+      };
+      EventUtils.synthesizeKey(eventUtilsKey, eventInfo, browserWindow);
     }
 
+    // Temporary workaround to handle certain native key bindings than cannot
+    // be synthesized with EventUtils: dispatch editor command directly
+    if (domType == "keydown") {
+      switch (Services.appinfo.OS) {
+        case "Linux":
+          if (modifiers == ctrl && key == "Backspace") {
+            await this.executeInChild(
+              "doDocShellCommand",
+              "cmd_deleteWordBackward"
+            );
+          }
+          break;
+        case "Darwin":
+          if (modifiers == meta && key == "Backspace") {
+            await this.executeInChild(
+              "doDocShellCommand",
+              "cmd_deleteToBeginningOfLine"
+            );
+          }
+      }
+    }
+
+    // TODO in case of workaround for native key bindings: wait for input event?
     await this.executeInChild("waitForContentEvent", eventId);
   }
 
   async dispatchMouseEvent({ type, button, x, y, modifiers, clickCount }) {
+    const { alt, ctrl, meta, shift } = Input.Modifier;
+
     if (type == "mousePressed") {
       type = "mousedown";
     } else if (type == "mouseReleased") {
@@ -93,34 +121,18 @@ class Input extends Domain {
     if (type === "mousedown" && button === "right") {
       type = "contextmenu";
     }
-    if (button == undefined || button == "none" || button == "left") {
-      button = 0;
-    } else if (button == "middle") {
-      button = 1;
-    } else if (button == "right") {
-      button = 2;
-    } else if (button == "back") {
-      button = 3;
-    } else if (button == "forward") {
-      button = 4;
-    } else {
-      throw new Error(`Mouse button is not supported: ${button}`);
-    }
-
-    // Gutenberg test packages/e2e-tests/specs/blocks/list.test.js:
-    // "can be created by converting multiple paragraphs"
-    // Works better with EventUtils, in order to make the Shift+Click to work
+    const buttonID = Input.Button[button] || Input.Button.left;
     const { browser } = this.session.target;
     const currentWindow = browser.ownerGlobal;
     const EventUtils = this._getEventUtils(currentWindow);
     EventUtils.synthesizeMouse(browser, x, y, {
       type,
-      button,
+      button: buttonID,
       clickCount: clickCount || 1,
-      altKey: !!(modifiers & 1),
-      ctrlKey: !!(modifiers & 2),
-      metaKey: !!(modifiers & 4),
-      shiftKey: !!(modifiers & 8),
+      altKey: !!(modifiers & alt),
+      ctrlKey: !!(modifiers & ctrl),
+      metaKey: !!(modifiers & meta),
+      shiftKey: !!(modifiers & shift),
     });
   }
 
@@ -143,3 +155,18 @@ class Input extends Domain {
     return this._eventUtils;
   }
 }
+
+Input.Button = {
+  left: 0,
+  middle: 1,
+  right: 2,
+  back: 3,
+  forward: 4,
+};
+
+Input.Modifier = {
+  alt: 1,
+  ctrl: 2,
+  meta: 4,
+  shift: 8,
+};

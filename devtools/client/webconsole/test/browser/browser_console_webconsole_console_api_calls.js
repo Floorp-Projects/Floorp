@@ -148,5 +148,9 @@ async function checkContentConsoleApiMessages(nonPrimitiveVariablesDisplayed) {
 
   info("Clear and close the Browser Console");
   await clearOutput(hud);
+  // We use waitForTick here because of a race condition. Otherwise, the test
+  // would occassionally fail because the transport is closed before pending server
+  // responses have been sent.
+  await waitForTick();
   await BrowserConsoleManager.toggleBrowserConsole();
 }

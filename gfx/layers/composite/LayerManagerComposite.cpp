@@ -1272,9 +1272,9 @@ bool LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion,
         &widgetContext, LayoutDeviceIntRect::FromUnknownRect(bounds));
 
 #if defined(MOZ_WIDGET_ANDROID)
-    // Depending on the content shift the toolbar may be rendered on top of
-    // some of the content so it must be rendered after the content.
-    if (jni::IsFennec()) {
+    if (AndroidDynamicToolbarAnimator::IsEnabled()) {
+      // Depending on the content shift the toolbar may be rendered on top of
+      // some of the content so it must be rendered after the content.
       RenderToolbar();
     }
     HandlePixelsTarget();
@@ -1448,11 +1448,11 @@ void LayerManagerComposite::RenderToPresentationSurface() {
 
 ScreenCoord LayerManagerComposite::GetContentShiftForToolbar() {
   ScreenCoord result(0.0f);
-  // If we're not in Fennec, we don't have a dynamic toolbar so there isn't a
-  // content offset.
-  if (!jni::IsFennec()) {
+
+  if (!AndroidDynamicToolbarAnimator::IsEnabled()) {
     return result;
   }
+
   // If mTarget not null we are not drawing to the screen so
   // there will not be any content offset.
   if (mTarget) {

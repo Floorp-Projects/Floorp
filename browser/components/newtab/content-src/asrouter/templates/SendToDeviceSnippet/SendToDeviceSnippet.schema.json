@@ -130,10 +130,6 @@
           "type": "string",
           "enum": ["snippets"]
         },
-        "service": {
-          "type": "string",
-          "enum": ["sync"]
-        },
         "utm_content": {
           "type": "string",
           "description": "Firefox version number"

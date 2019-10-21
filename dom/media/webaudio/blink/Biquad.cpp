@@ -104,7 +104,6 @@ void Biquad::setLowpassParams(double cutoff, double resonance) {
     setNormalizedCoefficients(1, 0, 0, 1, 0, 0);
   } else if (cutoff > 0) {
     // Compute biquad coefficients for lowpass filter
-    resonance = std::max(0.0, resonance);  // can't go negative
     double g = pow(10.0, -0.05 * resonance);
     double w0 = M_PI * cutoff;
     double cos_w0 = cos(w0);
@@ -134,7 +133,6 @@ void Biquad::setHighpassParams(double cutoff, double resonance) {
     setNormalizedCoefficients(0, 0, 0, 1, 0, 0);
   } else if (cutoff > 0) {
     // Compute biquad coefficients for highpass filter
-    resonance = std::max(0.0, resonance);  // can't go negative
     double g = pow(10.0, -0.05 * resonance);
     double w0 = M_PI * cutoff;
     double cos_w0 = cos(w0);

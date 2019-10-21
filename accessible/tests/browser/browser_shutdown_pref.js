@@ -16,7 +16,9 @@ add_task(async function testForceDisable() {
   Services.prefs.clearUserPref(PREF_ACCESSIBILITY_FORCE_DISABLED);
 
   info("Enable accessibility service via XPCOM");
-  let a11yInit = initPromise();
+  let [a11yInitObserver, a11yInit] = initAccService();
+  await a11yInitObserver;
+
   let accService = Cc["@mozilla.org/accessibilityService;1"].getService(
     Ci.nsIAccessibilityService
   );
@@ -24,7 +26,9 @@ add_task(async function testForceDisable() {
   ok(Services.appinfo.accessibilityEnabled, "Accessibility is enabled");
 
   info("Force disable a11y service via preference");
-  let a11yShutdown = shutdownPromise();
+  let [a11yShutdownObserver, a11yShutdown] = shutdownAccService();
+  await a11yShutdownObserver;
+
   Services.prefs.setIntPref(PREF_ACCESSIBILITY_FORCE_DISABLED, 1);
   await a11yShutdown;
   ok(!Services.appinfo.accessibilityEnabled, "Accessibility is disabled");
@@ -48,7 +52,9 @@ add_task(async function testForceDisable() {
   Services.prefs.clearUserPref(PREF_ACCESSIBILITY_FORCE_DISABLED);
 
   info("Create a11y service again");
-  a11yInit = initPromise();
+  [a11yInitObserver, a11yInit] = initAccService();
+  await a11yInitObserver;
+
   accService = Cc["@mozilla.org/accessibilityService;1"].getService(
     Ci.nsIAccessibilityService
   );
@@ -56,7 +62,9 @@ add_task(async function testForceDisable() {
   ok(Services.appinfo.accessibilityEnabled, "Accessibility is enabled");
 
   info("Remove all references to a11y service");
-  a11yShutdown = shutdownPromise();
+  [a11yShutdownObserver, a11yShutdown] = shutdownAccService();
+  await a11yShutdownObserver;
+
   accService = null;
   forceGC();
   await a11yShutdown;

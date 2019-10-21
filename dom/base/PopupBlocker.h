@@ -64,6 +64,11 @@ class PopupBlocker final {
   // Reset the last external protocol iframe timestamp.
   static void ResetLastExternalProtocolIframeAllowed();
 
+  // These method track the number of popup which is considered as a spam popup.
+  static void RegisterOpenPopupSpam();
+  static void UnregisterOpenPopupSpam();
+  static uint32_t GetOpenPopupSpamCount();
+
   static void Initialize();
   static void Shutdown();
 };

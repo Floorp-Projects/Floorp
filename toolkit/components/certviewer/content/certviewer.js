@@ -36,7 +36,11 @@ export const updateSelectedItem = (() => {
 })();
 
 const createEntryItem = (labelId, info) => {
-  if (labelId == null || info == null) {
+  if (
+    labelId == null ||
+    info == null ||
+    (Array.isArray(info) && !info.length)
+  ) {
     return null;
   }
   return {

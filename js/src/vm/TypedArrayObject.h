@@ -241,7 +241,7 @@ inline size_t TypedArrayObject::bytesPerElement() const {
 // integer which is not representable as a uint64_t, the return value is true
 // and the resulting index is UINT64_MAX.
 template <typename CharT>
-bool StringIsTypedArrayIndex(const CharT* s, size_t length, uint64_t* indexp);
+bool StringIsTypedArrayIndex(mozilla::Range<const CharT> s, uint64_t* indexp);
 
 inline bool IsTypedArrayIndex(jsid id, uint64_t* indexp) {
   if (JSID_IS_INT(id)) {
@@ -257,21 +257,23 @@ inline bool IsTypedArrayIndex(jsid id, uint64_t* indexp) {
 
   JS::AutoCheckCannotGC nogc;
   JSAtom* atom = JSID_TO_ATOM(id);
-  size_t length = atom->length();
-
-  if (atom->hasLatin1Chars()) {
-    const Latin1Char* s = atom->latin1Chars(nogc);
-    if (!mozilla::IsAsciiDigit(*s) && *s != '-') {
-      return false;
-    }
-    return StringIsTypedArrayIndex(s, length, indexp);
-  }
-
-  const char16_t* s = atom->twoByteChars(nogc);
-  if (!mozilla::IsAsciiDigit(*s) && *s != '-') {
+  if (atom->length() == 0) {
     return false;
   }
-  return StringIsTypedArrayIndex(s, length, indexp);
+
+  if (atom->hasLatin1Chars()) {
+    mozilla::Range<const Latin1Char> chars = atom->latin1Range(nogc);
+    if (!mozilla::IsAsciiDigit(chars[0]) && chars[0] != '-') {
+      return false;
+    }
+    return StringIsTypedArrayIndex(chars, indexp);
+  }
+
+  mozilla::Range<const char16_t> chars = atom->twoByteRange(nogc);
+  if (!mozilla::IsAsciiDigit(chars[0]) && chars[0] != '-') {
+    return false;
+  }
+  return StringIsTypedArrayIndex(chars, indexp);
 }
 
 bool SetTypedArrayElement(JSContext* cx, Handle<TypedArrayObject*> obj,

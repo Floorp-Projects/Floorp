@@ -356,11 +356,13 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
     const windows = this.inspector.targetActor.windows;
     let fontsList = [];
     for (const win of windows) {
-      fontsList = [
-        ...fontsList,
-        ...this.getUsedFontFaces(win.document.body, options),
-      ];
+      // Fall back to the documentElement for XUL documents.
+      const node = win.document.body
+        ? win.document.body
+        : win.document.documentElement;
+      fontsList = [...fontsList, ...this.getUsedFontFaces(node, options)];
     }
+
     return fontsList;
   },
 

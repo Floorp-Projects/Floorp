@@ -134,7 +134,6 @@ describe("<DSLinkMenu>", () => {
         .simulate("click", { preventDefault: () => {} });
       const linkMenuProps = wrapper.find(LinkMenu).props();
       assert.deepEqual(linkMenuProps.options, [
-        "ShowPrivacyInfo",
         "CheckBookmarkOrArchive",
         "CheckSavedToPocket",
         "Separator",
@@ -142,6 +141,26 @@ describe("<DSLinkMenu>", () => {
         "OpenInPrivateWindow",
         "Separator",
         "BlockUrl",
+      ]);
+    });
+
+    it("should pass through the correct menu options to LinkMenu for spocs", () => {
+      wrapper = shallow(
+        <DSLinkMenu {...ValidDSLinkMenuProps} campaignId="1234" />
+      );
+      wrapper
+        .find(ContextMenuButton)
+        .simulate("click", { preventDefault: () => {} });
+      const linkMenuProps = wrapper.find(LinkMenu).props();
+      assert.deepEqual(linkMenuProps.options, [
+        "CheckBookmarkOrArchive",
+        "CheckSavedToPocket",
+        "Separator",
+        "OpenInNewWindow",
+        "OpenInPrivateWindow",
+        "Separator",
+        "BlockUrl",
+        "ShowPrivacyInfo",
       ]);
     });
   });

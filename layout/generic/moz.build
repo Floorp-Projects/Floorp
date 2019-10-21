@@ -28,6 +28,9 @@ with Files('nsInlineFrame.*'):
 with Files('BRFrame.*'):
     BUG_COMPONENT = ('Core', 'Layout: Block and Inline')
 
+with Files('WBRFrame.*'):
+    BUG_COMPONENT = ('Core', 'Layout: Block and Inline')
+
 with Files('nsBulletFrame.*'):
     BUG_COMPONENT = ('Core', 'Layout: Block and Inline')
 
@@ -218,6 +221,7 @@ UNIFIED_SOURCES += [
     'StickyScrollContainer.cpp',
     'TextOverflow.cpp',
     'ViewportFrame.cpp',
+    'WBRFrame.cpp'
 ]
 
 # nsPluginFrame.cpp needs to be built separately because of name clashes in the OS X headers.

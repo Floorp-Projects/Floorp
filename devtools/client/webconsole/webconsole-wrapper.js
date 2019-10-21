@@ -71,13 +71,13 @@ class WebConsoleWrapper {
     const { webConsoleUI } = this;
     const debuggerClient = this.hud.currentTarget.client;
 
-    const webConsoleClient = await this.hud.currentTarget.getFront("console");
+    const webConsoleFront = await this.hud.currentTarget.getFront("console");
 
     this.networkDataProvider = new DataProvider({
       actions: {
         updateRequest: (id, data) => this.batchedRequestUpdates({ id, data }),
       },
-      webConsoleClient,
+      webConsoleFront,
     });
 
     return new Promise(resolve => {

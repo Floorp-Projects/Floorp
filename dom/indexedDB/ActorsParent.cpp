@@ -26082,13 +26082,16 @@ nsresult Cursor::OpenOp::DoIndexDatabaseWork(DatabaseConnection* aConnection) {
 
   NS_NAMED_LITERAL_CSTRING(sortColumn, "sort_column");
 
-  const nsCString sortColumnAlias =
-      NS_LITERAL_CSTRING("SELECT ") +
-      MakeColumnPairSelectionList(
-          NS_LITERAL_CSTRING("index_table.value"),
-          NS_LITERAL_CSTRING("index_table.value_locale"), sortColumn,
-          mCursor->IsLocaleAware()) +
-      NS_LITERAL_CSTRING(", ");
+  // The result of MakeColumnPairSelectionList is stored in a local variable,
+  // since inlining it into the next statement causes a crash on some Mac OS X
+  // builds (see https://bugzilla.mozilla.org/show_bug.cgi?id=1168606#c110).
+  const auto columnPairSelectionList = MakeColumnPairSelectionList(
+      NS_LITERAL_CSTRING("index_table.value"),
+      NS_LITERAL_CSTRING("index_table.value_locale"), sortColumn,
+      mCursor->IsLocaleAware());
+  const nsCString sortColumnAlias = NS_LITERAL_CSTRING("SELECT ") +
+                                    columnPairSelectionList +
+                                    NS_LITERAL_CSTRING(", ");
 
   nsAutoCString queryStart = sortColumnAlias +
                              NS_LITERAL_CSTRING(
@@ -26201,12 +26204,15 @@ nsresult Cursor::OpenOp::DoIndexKeyDatabaseWork(
 
   NS_NAMED_LITERAL_CSTRING(sortColumn, "sort_column");
 
-  const nsCString sortColumnAlias =
-      NS_LITERAL_CSTRING("SELECT ") +
-      MakeColumnPairSelectionList(NS_LITERAL_CSTRING("value"),
-                                  NS_LITERAL_CSTRING("value_locale"),
-                                  sortColumn, mCursor->IsLocaleAware()) +
-      NS_LITERAL_CSTRING(", ");
+  // The result of MakeColumnPairSelectionList is stored in a local variable,
+  // since inlining it into the next statement causes a crash on some Mac OS X
+  // builds (see https://bugzilla.mozilla.org/show_bug.cgi?id=1168606#c110).
+  const auto columnPairSelectionList = MakeColumnPairSelectionList(
+      NS_LITERAL_CSTRING("value"), NS_LITERAL_CSTRING("value_locale"),
+      sortColumn, mCursor->IsLocaleAware());
+  const nsCString sortColumnAlias = NS_LITERAL_CSTRING("SELECT ") +
+                                    columnPairSelectionList +
+                                    NS_LITERAL_CSTRING(", ");
 
   nsAutoCString queryStart = sortColumnAlias +
                              NS_LITERAL_CSTRING(

@@ -12,9 +12,10 @@
 
 // https://html.spec.whatwg.org/multipage/obsolete.html#the-marquee-element
 
-[HTMLConstructor,
- Exposed=Window]
+[Exposed=Window]
 interface HTMLMarqueeElement : HTMLElement {
+  [HTMLConstructor] constructor();
+
   [CEReactions, SetterThrows] attribute DOMString behavior;
   [CEReactions, SetterThrows] attribute DOMString bgColor;
   [CEReactions, SetterThrows] attribute DOMString direction;

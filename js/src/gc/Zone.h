@@ -315,8 +315,6 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   void sweepWeakMaps();
   void sweepCompartments(JSFreeOp* fop, bool keepAtleastOne, bool lastGC);
 
-  using DebuggerVector = js::Vector<js::Debugger*, 0, js::SystemAllocPolicy>;
-
  private:
   js::jit::JitZone* createJitZone(JSContext* cx);
 

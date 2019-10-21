@@ -16,7 +16,7 @@ registerCleanupFunction(() => {
 add_task(
   threadFrontTest(async ({ threadFront, debuggee, client }) => {
     return new Promise(resolve => {
-      threadFront.once("paused", function(packet) {
+      threadFront.once("paused", async function(packet) {
         const obj1 = packet.frame.arguments[0];
         Assert.ok(obj1.frozen);
 
@@ -29,7 +29,8 @@ add_task(
         const obj2Client = threadFront.pauseGrip(obj2);
         Assert.ok(!obj2Client.isFrozen);
 
-        threadFront.resume().then(resolve);
+        await threadFront.resume();
+        resolve();
       });
 
       debuggee.eval(

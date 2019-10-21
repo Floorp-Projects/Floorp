@@ -145,6 +145,14 @@ class TransportSecurityInfo : public nsITransportSecurityInfo,
   static nsresult ConvertCertListToCertArray(
       const nsCOMPtr<nsIX509CertList>& aCertList,
       nsTArray<RefPtr<nsIX509Cert>>& aCertArray);
+
+  // This function is used to read the binary that are serialized
+  // by using nsIX509CertList
+  nsresult ReadCertList(nsIObjectInputStream* aStream,
+                        nsTArray<RefPtr<nsIX509Cert>>& aCertList);
+  nsresult ReadCertificatesFromStream(nsIObjectInputStream* aStream,
+                                      uint32_t aSize,
+                                      nsTArray<RefPtr<nsIX509Cert>>& aCertList);
 };
 
 class RememberCertErrorsTable {

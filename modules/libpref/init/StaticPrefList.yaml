@@ -967,11 +967,15 @@
   value: false
   mirror: always
 
+# The percentage of the screen that needs to be scrolled before toolbar
+# manipulation is allowed.
 - name: browser.ui.scroll-toolbar-threshold
   type: RelaxedAtomicInt32
   value: 10
   mirror: always
 
+# When true, zooming will be enabled on all sites, even ones that declare
+# user-scalable=no.
 - name: browser.ui.zoom.force-user-scalable
   type: RelaxedAtomicBool
   value: false
@@ -1311,6 +1315,13 @@
 - name: dom.block_multiple_popups
   type: bool
   value: true
+  mirror: always
+
+# The maximum number of popup that is allowed to be opened. Set to -1 for no
+# limit.
+- name: dom.popup_maximum
+  type: int32_t
+  value: 20
   mirror: always
 
 # Whether window.location.reload() and window.history.go(0) should be blocked
@@ -3116,6 +3127,7 @@
   value: true
   mirror: once
 
+# Allow 24-bit colour when the hardware supports it.
 - name: gfx.android.rgb16.force
   type: bool
   value: false
@@ -3458,6 +3470,7 @@
   value: false
   mirror: once
 
+# Use SurfaceTextures as preferred backend for TextureClient/Host.
 - name: gfx.use-surfacetexture-textures
   type: bool
   value: false
@@ -4803,6 +4816,13 @@
   value: false
   mirror: always
 
+# Expose the media query -moz-touch-enabled to web content.
+- name: layout.css.moz-touch-enabled.enabled
+  type: RelaxedAtomicBool
+  value: @IS_NOT_NIGHTLY_BUILD@
+  mirror: always
+  rust: true
+
 # Pref to control whether the ::marker property restrictions defined in [1]
 # apply.
 #
@@ -4888,13 +4908,6 @@
   type: bool
   value: true
   mirror: always
-
-# Are "-webkit-{min|max}-device-pixel-ratio" media queries supported?
-- name: layout.css.prefixes.device-pixel-ratio-webkit
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-  rust: true
 
 # Is support for -moz-prefixed font feature properties enabled?
 - name: layout.css.prefixes.font-features
@@ -5347,6 +5360,18 @@
 # Whether to disable legacy names "thickmathspace", "mediummathspace",
 # "thickmathspace" etc for length attributes.
 - name: mathml.mathspace_names.disabled
+  type: bool
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
+
+# Whether to disable the mfrac bevelled  attribute.
+- name: mathml.mfrac_bevelled_attribute.disabled
+  type: bool
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
+
+# Whether to disable the mfenced element.
+- name: mathml.mfenced_element.disabled
   type: bool
   value: @IS_NIGHTLY_BUILD@
   mirror: always
@@ -6763,6 +6788,9 @@
 
 # Whether to spoof user locale to English (used as part of Resist
 # Fingerprinting).
+# 0 - will prompt
+# 1 - don't spoof
+# 2 - spoof
 - name: privacy.spoof_english
   type: RelaxedAtomicUint32
   value: 0

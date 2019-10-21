@@ -1844,7 +1844,9 @@ nsresult WebSocket::CreateAndDispatchMessageEvent(const nsACString& aData,
 
       RefPtr<Blob> blob =
           Blob::CreateStringBlob(GetOwnerGlobal(), aData, EmptyString());
-      MOZ_ASSERT(blob);
+      if (NS_WARN_IF(!blob)) {
+        return NS_ERROR_FAILURE;
+      }
 
       if (!ToJSValue(cx, blob, &jsData)) {
         return NS_ERROR_FAILURE;

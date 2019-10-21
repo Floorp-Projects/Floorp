@@ -37,45 +37,42 @@ function run_test() {
 }
 
 function test_pause_frame() {
-  gThreadFront.once("paused", function(packet) {
+  gThreadFront.once("paused", async function(packet) {
     const env = packet.frame.environment;
     Assert.notEqual(env, undefined);
 
     const objClient = gThreadFront.pauseGrip(env.object);
-    objClient.getPrototypeAndProperties(function(response) {
-      Assert.equal(response.ownProperties.one.value, 1);
-      Assert.equal(response.ownProperties.two.value, 2);
-      Assert.equal(response.ownProperties.foo, undefined);
+    let response = await objClient.getPrototypeAndProperties();
+    Assert.equal(response.ownProperties.one.value, 1);
+    Assert.equal(response.ownProperties.two.value, 2);
+    Assert.equal(response.ownProperties.foo, undefined);
 
-      let parentEnv = env.parent;
-      Assert.notEqual(parentEnv, undefined);
+    let parentEnv = env.parent;
+    Assert.notEqual(parentEnv, undefined);
 
-      const parentClient = gThreadFront.pauseGrip(parentEnv.object);
-      parentClient.getPrototypeAndProperties(function(response) {
-        Assert.equal(response.ownProperties.PI.value, Math.PI);
-        Assert.equal(response.ownProperties.cos.value.type, "object");
-        Assert.equal(response.ownProperties.cos.value.class, "Function");
-        Assert.ok(!!response.ownProperties.cos.value.actor);
+    const parentClient = gThreadFront.pauseGrip(parentEnv.object);
+    response = await parentClient.getPrototypeAndProperties();
+    Assert.equal(response.ownProperties.PI.value, Math.PI);
+    Assert.equal(response.ownProperties.cos.value.type, "object");
+    Assert.equal(response.ownProperties.cos.value.class, "Function");
+    Assert.ok(!!response.ownProperties.cos.value.actor);
 
-        parentEnv = parentEnv.parent;
-        Assert.notEqual(parentEnv, undefined);
+    parentEnv = parentEnv.parent;
+    Assert.notEqual(parentEnv, undefined);
 
-        const bindings = parentEnv.bindings;
-        const args = bindings.arguments;
-        const vars = bindings.variables;
-        Assert.equal(args.length, 1);
-        Assert.equal(args[0].number.value, 10);
-        Assert.equal(vars.r.value, 10);
-        Assert.equal(vars.a.value, Math.PI * 100);
-        Assert.equal(vars.arguments.value.class, "Arguments");
-        Assert.ok(!!vars.arguments.value.actor);
-        Assert.equal(vars.foo.value, 2 * Math.PI);
+    const bindings = parentEnv.bindings;
+    const args = bindings.arguments;
+    const vars = bindings.variables;
+    Assert.equal(args.length, 1);
+    Assert.equal(args[0].number.value, 10);
+    Assert.equal(vars.r.value, 10);
+    Assert.equal(vars.a.value, Math.PI * 100);
+    Assert.equal(vars.arguments.value.class, "Arguments");
+    Assert.ok(!!vars.arguments.value.actor);
+    Assert.equal(vars.foo.value, 2 * Math.PI);
 
-        gThreadFront.resume().then(function() {
-          finishClient(gClient);
-        });
-      });
-    });
+    await gThreadFront.resume();
+    finishClient(gClient);
   });
 
   /* eslint-disable */

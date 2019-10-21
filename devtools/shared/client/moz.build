@@ -9,10 +9,7 @@ DevToolsModules(
     'constants.js',
     'debugger-client.js',
     'deprecated-thread-client.js',
-    'environment-client.js',
     'event-source.js',
     'long-string-client.js',
     'object-client.js',
-    'property-iterator-client.js',
-    'symbol-iterator-client.js',
 )

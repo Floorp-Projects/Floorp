@@ -25,9 +25,9 @@ class File final : public Blob {
  public:
   // Note: BlobImpl must be a File in order to use this method.
   // Check impl->IsFile().
-  static File* Create(nsISupports* aParent, BlobImpl* aImpl);
+  static File* Create(nsIGlobalObject* aGlobal, BlobImpl* aImpl);
 
-  static already_AddRefed<File> Create(nsISupports* aParent,
+  static already_AddRefed<File> Create(nsIGlobalObject* aGlobal,
                                        const nsAString& aName,
                                        const nsAString& aContentType,
                                        uint64_t aLength,
@@ -36,7 +36,7 @@ class File final : public Blob {
   // The returned File takes ownership of aMemoryBuffer. aMemoryBuffer will be
   // freed by free so it must be allocated by malloc or something
   // compatible with it.
-  static already_AddRefed<File> CreateMemoryFile(nsISupports* aParent,
+  static already_AddRefed<File> CreateMemoryFile(nsIGlobalObject* aGlobal,
                                                  void* aMemoryBuffer,
                                                  uint64_t aLength,
                                                  const nsAString& aName,
@@ -49,10 +49,10 @@ class File final : public Blob {
   // order to use nsIMIMEService.
   // Would be nice if we try to avoid to use this method outside the
   // main-thread to avoid extra runnables.
-  static already_AddRefed<File> CreateFromFile(nsISupports* aParent,
+  static already_AddRefed<File> CreateFromFile(nsIGlobalObject* aGlobal,
                                                nsIFile* aFile);
 
-  static already_AddRefed<File> CreateFromFile(nsISupports* aParent,
+  static already_AddRefed<File> CreateFromFile(nsIGlobalObject* aGlobal,
                                                nsIFile* aFile,
                                                const nsAString& aName,
                                                const nsAString& aContentType);
@@ -98,7 +98,7 @@ class File final : public Blob {
  private:
   // File constructor should never be used directly. Use Blob::Create or
   // File::Create.
-  File(nsISupports* aParent, BlobImpl* aImpl);
+  File(nsIGlobalObject* aGlobal, BlobImpl* aImpl);
   ~File();
 };
 

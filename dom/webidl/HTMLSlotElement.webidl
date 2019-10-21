@@ -11,8 +11,10 @@
  * and create derivative works of this document.
  */
 
-[Exposed=Window, HTMLConstructor]
+[Exposed=Window]
 interface HTMLSlotElement : HTMLElement {
+  [HTMLConstructor] constructor();
+
   [CEReactions, SetterThrows] attribute DOMString name;
   sequence<Node> assignedNodes(optional AssignedNodesOptions options = {});
   sequence<Element> assignedElements(optional AssignedNodesOptions options = {});

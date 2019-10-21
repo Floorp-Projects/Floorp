@@ -22,7 +22,6 @@ export const FXASignupSnippet = props => {
       action: "email",
       context: "fx_desktop_v3",
       entrypoint: "snippets",
-      service: "sync",
       utm_source: "snippet",
       utm_content: firefox_version,
       utm_campaign: props.content.utm_campaign,

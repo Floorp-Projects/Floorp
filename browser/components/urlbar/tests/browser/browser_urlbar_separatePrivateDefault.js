@@ -119,6 +119,22 @@ add_task(async function test_search() {
   await AssertPrivateResult(window, await Services.search.getDefault(), false);
 });
 
+add_task(async function test_search_disabled_suggestions() {
+  info(
+    "Test that 'Search in a Private Window' appears if suggestions are disabled"
+  );
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.suggest.searches", false]],
+  });
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    waitForFocus,
+    value: "unique198273982173",
+  });
+  await AssertPrivateResult(window, await Services.search.getDefault(), false);
+  await SpecialPowers.popPrefEnv();
+});
+
 add_task(async function test_oneoff_selected_keyboard() {
   info(
     "Test that 'Search in a Private Window' with keyboard opens the selected one-off engine if there's no private engine"

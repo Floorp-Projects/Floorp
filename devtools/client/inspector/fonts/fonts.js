@@ -373,11 +373,11 @@ class FontInspector {
       return [];
     }
 
-    let allFonts = await this.pageStyle
-      .getAllUsedFontFaces(options)
-      .catch(console.error);
-    if (!allFonts) {
-      allFonts = [];
+    const inspectorFronts = await this.inspector.inspectorFront.getAllInspectorFronts();
+
+    let allFonts = [];
+    for (const { pageStyle } of inspectorFronts) {
+      allFonts = allFonts.concat(await pageStyle.getAllUsedFontFaces(options));
     }
 
     return allFonts;
@@ -485,7 +485,7 @@ class FontInspector {
     switch (unit) {
       case "rem":
         // Regardless of CSS property, always use the root document element for "rem".
-        node = await this.inspector.walker.documentElement();
+        node = await this.node.walkerFront.documentElement();
         break;
     }
 
@@ -859,7 +859,7 @@ class FontInspector {
       if (show) {
         const node = isForCurrentElement
           ? this.node
-          : this.inspector.walker.rootNode;
+          : this.node.walkerFront.rootNode;
 
         await this.fontsHighlighter.show(node, {
           CSSFamilyName: font.CSSFamilyName,

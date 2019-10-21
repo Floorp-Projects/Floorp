@@ -21,6 +21,7 @@
 #include "mozIThirdPartyUtil.h"
 #include "nsContentUtils.h"
 #include "nsGlobalWindowInner.h"
+#include "nsIClassifiedChannel.h"
 #include "nsICookiePermission.h"
 #include "nsICookieService.h"
 #include "nsIDocShell.h"
@@ -892,22 +893,23 @@ void NotifyBlockingDecisionInternal(
       nsIWebProgressListener::STATE_COOKIES_LOADED, aReportingChannel, false,
       aURI, aTrackingChannel);
 
-  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aTrackingChannel);
-  if (!httpChannel) {
+  nsCOMPtr<nsIClassifiedChannel> classifiedChannel =
+      do_QueryInterface(aTrackingChannel);
+  if (!classifiedChannel) {
     return;
   }
 
   uint32_t classificationFlags =
-      httpChannel->GetThirdPartyClassificationFlags();
+      classifiedChannel->GetThirdPartyClassificationFlags();
   if (classificationFlags &
-      nsIHttpChannel::ClassificationFlags::CLASSIFIED_TRACKING) {
+      nsIClassifiedChannel::ClassificationFlags::CLASSIFIED_TRACKING) {
     aWindow->NotifyContentBlockingEvent(
         nsIWebProgressListener::STATE_COOKIES_LOADED_TRACKER, aReportingChannel,
         false, aURI, aTrackingChannel);
   }
 
   if (classificationFlags &
-      nsIHttpChannel::ClassificationFlags::CLASSIFIED_SOCIALTRACKING) {
+      nsIClassifiedChannel::ClassificationFlags::CLASSIFIED_SOCIALTRACKING) {
     aWindow->NotifyContentBlockingEvent(
         nsIWebProgressListener::STATE_COOKIES_LOADED_SOCIALTRACKER,
         aReportingChannel, false, aURI, aTrackingChannel);
@@ -1683,15 +1685,19 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
       nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER;
 
   // Not a tracker.
+  nsCOMPtr<nsIClassifiedChannel> classifiedChannel =
+      do_QueryInterface(aChannel);
   if (behavior == nsICookieService::BEHAVIOR_REJECT_TRACKER) {
-    if (httpChannel && !httpChannel->IsThirdPartyTrackingResource()) {
+    if (classifiedChannel &&
+        !classifiedChannel->IsThirdPartyTrackingResource()) {
       LOG(("Our channel isn't a third-party tracking channel"));
       return true;
     }
   } else {
     MOZ_ASSERT(behavior ==
                nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN);
-    if (httpChannel && httpChannel->IsThirdPartyTrackingResource()) {
+    if (classifiedChannel &&
+        classifiedChannel->IsThirdPartyTrackingResource()) {
       // fall through
     } else if (nsContentUtils::IsThirdPartyWindowOrChannel(nullptr, aChannel,
                                                            aURI)) {

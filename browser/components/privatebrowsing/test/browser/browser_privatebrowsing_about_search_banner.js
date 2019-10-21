@@ -15,13 +15,16 @@ const { RemotePages } = ChromeUtils.import(
 const PREF_UI_ENABLED = "browser.search.separatePrivateDefault.ui.enabled";
 const PREF_BANNER_SHOWN =
   "browser.search.separatePrivateDefault.ui.banner.shown";
-const MAX_SEARCH_BANNER_SHOW_COUNT = 5;
+const PREF_MAX_SEARCH_BANNER_SHOW_COUNT =
+  "browser.search.separatePrivateDefault.ui.banner.max";
+const MAX_SHOW_COUNT = 5;
 
 add_task(async function setup() {
   SpecialPowers.pushPrefEnv({
     set: [
       [PREF_UI_ENABLED, false],
       [PREF_BANNER_SHOWN, 0],
+      [PREF_MAX_SEARCH_BANNER_SHOW_COUNT, MAX_SHOW_COUNT],
       ["browser.urlbar.disableExtendForTests", true],
     ],
   });
@@ -30,6 +33,37 @@ add_task(async function setup() {
 });
 
 add_task(async function test_not_shown_if_pref_off() {
+  SpecialPowers.pushPrefEnv({
+    set: [[PREF_UI_ENABLED, false], [PREF_MAX_SEARCH_BANNER_SHOW_COUNT, 5]],
+  });
+
+  const { win, tab } = await openAboutPrivateBrowsing();
+
+  await ContentTask.spawn(tab, null, async function() {
+    await ContentTaskUtils.waitForCondition(
+      () =>
+        content.document.documentElement.hasAttribute(
+          "SearchBannerInitialized"
+        ),
+      "Should have initialized"
+    );
+    ok(
+      content.document.getElementById("search-banner").hasAttribute("hidden"),
+      "should be hiding the in-content search banner"
+    );
+  });
+
+  await BrowserTestUtils.closeWindow(win);
+});
+
+add_task(async function test_not_shown_if_max_count_0() {
+  // To avoid having to restart Firefox and slow down tests, we manually reset
+  // the session pref.
+  AboutPrivateBrowsingHandler._searchBannerShownThisSession = false;
+
+  SpecialPowers.pushPrefEnv({
+    set: [[PREF_UI_ENABLED, true], [PREF_MAX_SEARCH_BANNER_SHOW_COUNT, 0]],
+  });
   const { win, tab } = await openAboutPrivateBrowsing();
 
   await ContentTask.spawn(tab, null, async function() {
@@ -50,8 +84,15 @@ add_task(async function test_not_shown_if_pref_off() {
 });
 
 add_task(async function test_show_banner_first() {
+  // To avoid having to restart Firefox and slow down tests, we manually reset
+  // the session pref.
+  AboutPrivateBrowsingHandler._searchBannerShownThisSession = false;
+
   SpecialPowers.pushPrefEnv({
-    set: [[PREF_UI_ENABLED, true]],
+    set: [
+      [PREF_UI_ENABLED, true],
+      [PREF_MAX_SEARCH_BANNER_SHOW_COUNT, MAX_SHOW_COUNT],
+    ],
   });
 
   let prefChanged = TestUtils.waitForPrefChange(PREF_BANNER_SHOWN);
@@ -109,7 +150,7 @@ add_task(async function test_show_banner_first() {
 
 add_task(async function test_show_banner_max_times() {
   // We've already shown the UI once, so show it a few more times.
-  for (let i = 1; i < MAX_SEARCH_BANNER_SHOW_COUNT; i++) {
+  for (let i = 1; i < MAX_SHOW_COUNT; i++) {
     // To avoid having to restart Firefox and slow down tests, we manually reset
     // the session pref.
     AboutPrivateBrowsingHandler._searchBannerShownThisSession = false;
@@ -205,7 +246,7 @@ add_task(async function test_show_banner_close_no_more() {
 
   Assert.equal(
     Services.prefs.getIntPref(PREF_BANNER_SHOWN, -1),
-    MAX_SEARCH_BANNER_SHOW_COUNT,
+    MAX_SHOW_COUNT,
     "Should have set the shown preference to the maximum"
   );
 });
@@ -268,7 +309,7 @@ add_task(async function test_show_banner_open_preferences_and_no_more() {
 
   Assert.equal(
     Services.prefs.getIntPref(PREF_BANNER_SHOWN, -1),
-    MAX_SEARCH_BANNER_SHOW_COUNT,
+    MAX_SHOW_COUNT,
     "Should have set the shown preference to the maximum"
   );
 });

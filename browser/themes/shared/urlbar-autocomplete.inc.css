@@ -9,7 +9,8 @@
 %define urlbarViewIconMarginEnd (@identityBoxPaddingInline@ + @identityBoxMarginInlineEnd@)
 %define urlbarViewFaviconOffset (@urlbarViewPadding@ + 16px /* type icon width */ + @urlbarViewIconMarginEnd@)
 %define urlbarViewMarginInline 5px
-%define urlbarViewItemPaddingStart (@urlbarBreakoutHorizontalExtend@ - @urlbarViewMarginInline@ - (/* type icon: */ 16px + @urlbarViewIconMarginEnd@) + /* favicon margin: */ @identityBoxPaddingInline@)
+%define urlbarViewPaddingInline 30px
+%define urlbarViewItemPaddingStart (@urlbarViewPaddingInline@ - (/* type icon: */ 16px + @urlbarViewIconMarginEnd@))
 
 :root {
   --autocomplete-popup-background: var(--arrowpanel-background);
@@ -80,7 +81,7 @@
   padding-top: 24px;
   padding-bottom: 24px;
   padding-inline-start: calc(@urlbarViewItemPaddingStart@);
-  padding-inline-end: calc(@urlbarBreakoutHorizontalExtend@ - @urlbarViewMarginInline@);
+  padding-inline-end: @urlbarViewPaddingInline@;
 }
 
 .urlbarView:not(.megabar) #urlbar-contextual-tip {
@@ -131,10 +132,8 @@
   border-radius: 2px;
   fill: currentColor;
   fill-opacity: .6;
-  padding-top: 6px;
-  padding-bottom: 6px;
+  padding-block: 6px;
   padding-inline-start: calc(@urlbarViewItemPaddingStart@);
-  padding-inline-end: calc(@urlbarBreakoutHorizontalExtend@ - @urlbarViewMarginInline@);
 }
 
 .urlbarView:not(.megabar) .urlbarView-row {
@@ -143,8 +142,7 @@
 }
 
 :root[uidensity=touch] .urlbarView-row {
-  padding-top: 11px;
-  padding-bottom: 11px;
+  padding-block: 11px;
 }
 
 .urlbarView-row-inner {
@@ -247,8 +245,9 @@
 
 .urlbarView-row[type=tip] {
   border-bottom: 1px solid var(--panel-separator-color);
-  padding-block: 24px;
   margin-bottom: 4px;
+  padding-block: 24px;
+  padding-inline-end: @urlbarViewPaddingInline@;
 }
 
 .urlbarView-row[type=tip]:not(:first-child) {
@@ -388,8 +387,7 @@
 }
 
 .urlbarView.megabar .search-one-offs {
-  padding-inline-start: @urlbarBreakoutHorizontalExtend@;
-  padding-inline-end: calc(@urlbarBreakoutHorizontalExtend@ - @urlbarViewMarginInline@);
+  padding-inline: @urlbarViewPaddingInline@;
 }
 
 #urlbar:not(.megabar) .search-one-offs {

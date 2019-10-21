@@ -12,9 +12,10 @@
  */
 
 // http://www.whatwg.org/specs/web-apps/current-work/#the-menuitem-element
-[HTMLConstructor,
- Exposed=Window]
+[Exposed=Window]
 interface HTMLMenuItemElement : HTMLElement {
+  [HTMLConstructor] constructor();
+
            [CEReactions, SetterThrows]
            attribute DOMString type;
            [CEReactions, SetterThrows]

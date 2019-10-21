@@ -5,7 +5,7 @@
 // @flow
 
 import {
-  getResourcePair,
+  getValidatedResource,
   getResourceValues,
   type ResourceState,
   type Id,
@@ -22,7 +22,7 @@ export function hasResource<R: ResourceBound>(
   state: ResourceState<R>,
   id: Id<R>
 ): boolean %checks {
-  return !!getResourcePair(state, id);
+  return !!getValidatedResource(state, id);
 }
 
 export function getResourceIds<R: ResourceBound>(
@@ -35,11 +35,11 @@ export function getResource<R: ResourceBound>(
   state: ResourceState<R>,
   id: Id<R>
 ): R {
-  const pair = getResourcePair(state, id);
-  if (!pair) {
+  const validatedState = getValidatedResource(state, id);
+  if (!validatedState) {
     throw new Error(`Resource ${id} does not exist`);
   }
-  return pair.value;
+  return validatedState.values[id];
 }
 
 export function getMappedResource<R: ResourceBound, Mapped>(
@@ -47,10 +47,10 @@ export function getMappedResource<R: ResourceBound, Mapped>(
   id: Id<R>,
   map: ResourceMap<R, Mapped>
 ): Mapped {
-  const pair = getResourcePair(state, id);
-  if (!pair) {
+  const validatedState = getValidatedResource(state, id);
+  if (!validatedState) {
     throw new Error(`Resource ${id} does not exist`);
   }
 
-  return map(pair.value, pair.identity);
+  return map(validatedState.values[id], validatedState.identity[id]);
 }

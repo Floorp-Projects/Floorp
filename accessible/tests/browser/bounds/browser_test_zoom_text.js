@@ -44,20 +44,20 @@ async function runTests(browser, accDoc) {
     );
   }
 
-  loadFrameScripts(browser, { name: "layout.js", dir: MOCHITESTS_DIR });
+  await loadContentScripts(browser, "Layout.jsm");
 
   await testTextNode("p1");
   await testTextNode("p2");
   await testEmptyInputNode("i1");
 
-  await ContentTask.spawn(browser, {}, () => {
-    zoomDocument(content.document, 2.0);
+  await SpecialPowers.spawn(browser, [], () => {
+    content.Layout.zoomDocument(content.document, 2.0);
   });
 
   await testTextNode("p1");
 
-  await ContentTask.spawn(browser, {}, () => {
-    zoomDocument(content.document, 1.0);
+  await SpecialPowers.spawn(browser, [], () => {
+    content.Layout.zoomDocument(content.document, 1.0);
   });
 }
 

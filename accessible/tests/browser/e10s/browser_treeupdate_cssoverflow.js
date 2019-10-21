@@ -31,7 +31,7 @@ addAccessibleTask(
     testAccessibleTree(container, tree);
 
     let onReorder = waitForEvent(EVENT_REORDER, id1);
-    await ContentTask.spawn(browser, id1, id => {
+    await invokeContentTask(browser, [id1], id => {
       let doc = content.document;
       doc.getElementById("scrollarea").style.width = "20px";
       doc.getElementById(id).appendChild(doc.createElement("input"));
@@ -55,5 +55,6 @@ addAccessibleTask(
       ],
     };
     testAccessibleTree(container, tree);
-  }
+  },
+  { iframe: true }
 );

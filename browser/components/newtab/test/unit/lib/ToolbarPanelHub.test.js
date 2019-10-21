@@ -699,7 +699,22 @@ describe("ToolbarPanelHub", () => {
       assert.callCount(fakeElementById.toggleAttribute, 6);
     });
     it("should open link on click (separate link element)", async () => {
+      const sendTelemetryStub = sandbox.stub(
+        instance,
+        "sendUserEventTelemetry"
+      );
+      const onboardingMsgs = await OnboardingMessageProvider.getUntranslatedMessages();
+      const msg = onboardingMsgs.find(m => m.template === "protections_panel");
+
       await fakeInsert();
+
+      assert.calledOnce(sendTelemetryStub);
+      assert.calledWithExactly(
+        sendTelemetryStub,
+        fakeWindow,
+        "IMPRESSION",
+        msg
+      );
 
       eventListeners.mouseup();
 

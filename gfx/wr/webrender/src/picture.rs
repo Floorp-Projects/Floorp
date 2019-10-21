@@ -2,6 +2,63 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+//! A picture represents a dynamically rendered image.
+//!
+//! # Overview
+//!
+//! Pictures consists of:
+//!
+//! - A number of primitives that are drawn onto the picture.
+//! - A composite operation describing how to composite this
+//!   picture into its parent.
+//! - A configuration describing how to draw the primitives on
+//!   this picture (e.g. in screen space or local space).
+//!
+//! The tree of pictures are generated during scene building.
+//!
+//! Depending on their composite operations pictures can be rendered into
+//! intermediate targets or folded into their parent picture.
+//!
+//! ## Picture caching
+//!
+//! Pictures can be cached to reduce the amount of rasterization happening per
+//! frame.
+//!
+//! When picture caching is enabled, the scene is cut into a small number of slices,
+//! typically:
+//!
+//! - content slice
+//! - UI slice
+//! - background UI slice which is hidden by the other two slices most of the time.
+//!
+//! Each of these slice is made up of fixed-size large tiles of 2048x512 pixels
+//! (or 128x128 for the UI slice).
+//!
+//! Tiles can be either cached rasterized content into a texture or "clear tiles"
+//! that contain only a solid color rectangle rendered directly during the composite
+//! pass.
+//!
+//! ## Invalidation
+//!
+//! Each tile keeps track of the elements that affect it, which can be:
+//!
+//! - primitives
+//! - clips
+//! - image keys
+//! - opacity bindings
+//! - transforms
+//!
+//! These dependency lists are built each frame and compared to the previous frame to
+//! see if the tile changed.
+//!
+//! The tile's primitive dependency information is organized in a quadtree, each node
+//! storing an index buffer of tile primitive dependencies.
+//!
+//! The union of the invalidated leaves of each quadtree produces a per-tile dirty rect
+//! which defines the scissor rect used when replaying the tile's drawing commands and
+//! can be used for partial present.
+//!
+
 use api::{MixBlendMode, PipelineId, PremultipliedColorF, FilterPrimitiveKind};
 use api::{PropertyBinding, PropertyBindingId, FilterPrimitive, FontRenderMode};
 use api::{DebugFlags, RasterSpace, ImageKey, ColorF, PrimitiveFlags};
@@ -39,16 +96,6 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use crate::texture_cache::TextureCacheHandle;
 use crate::util::{TransformedRectKind, MatrixHelpers, MaxRect, scale_factors, VecHelper};
 use crate::filterdata::{FilterDataHandle};
-
-/*
- A picture represents a dynamically rendered image. It consists of:
-
- * A number of primitives that are drawn onto the picture.
- * A composite operation describing how to composite this
-   picture into its parent.
- * A configuration describing how to draw the primitives on
-   this picture (e.g. in screen space or local space).
- */
 
 /// Specify whether a surface allows subpixel AA text rendering.
 #[derive(Debug, Copy, Clone, PartialEq)]

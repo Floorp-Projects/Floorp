@@ -116,46 +116,6 @@ async function createTabMemoryFront() {
 }
 
 /**
- * Create a PromisesFront for a fake test tab.
- */
-async function createTabPromisesFront() {
-  const title = "test_promises";
-  const target = await createTargetForFakeTab(title);
-
-  // Retrieve the debuggee create by createTargetForFakeTab
-  const debuggee = DebuggerServer.getTestGlobal(title);
-
-  const promisesFront = await target.getFront("promises");
-
-  registerCleanupFunction(async () => {
-    // On XPCShell, the target isn't for a local tab and so target.destroy
-    // won't close the client. So do it so here. It will automatically destroy the target.
-    await target.client.close();
-  });
-
-  return { debuggee, client: target.client, promisesFront };
-}
-
-/**
- * Create a PromisesFront for the main process target actor.
- */
-async function createMainProcessPromisesFront() {
-  const target = await createTargetForMainProcess();
-
-  const promisesFront = await target.getFront("promises");
-
-  registerCleanupFunction(async () => {
-    // For XPCShell, the main process target actor is ContentProcessTargetActor
-    // which doesn't expose any `detach` method. So that the target actor isn't
-    // destroyed when calling target.destroy.
-    // Close the client to cleanup everything.
-    await target.client.close();
-  });
-
-  return { client: target.client, promisesFront };
-}
-
-/**
  * Same as createTabMemoryFront but attaches the MemoryFront to the MemoryActor
  * scoped to the full runtime rather than to a tab.
  */
@@ -276,9 +236,7 @@ function setBreakpoint(threadFront, location) {
 function getPrototypeAndProperties(objClient) {
   dump("getting prototype and properties.\n");
 
-  return new Promise(resolve => {
-    objClient.getPrototypeAndProperties(response => resolve(response));
-  });
+  return objClient.getPrototypeAndProperties();
 }
 
 function dumpn(msg) {

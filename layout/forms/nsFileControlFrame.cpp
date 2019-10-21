@@ -331,7 +331,7 @@ static void AppendBlobImplAsDirectory(nsTArray<OwningFileOrDirectory>& aArray,
     return;
   }
 
-  RefPtr<Directory> directory = Directory::Create(inner, file);
+  RefPtr<Directory> directory = Directory::Create(inner->AsGlobal(), file);
   MOZ_ASSERT(directory);
 
   OwningFileOrDirectory* element = aArray.AppendElement();

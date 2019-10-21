@@ -10,14 +10,17 @@
 /* exported Logger, MOCHITESTS_DIR, invokeSetAttribute, invokeFocus,
             invokeSetStyle, getAccessibleDOMNodeID, getAccessibleTagName,
             addAccessibleTask, findAccessibleChildByID, isDefunct,
-            CURRENT_CONTENT_DIR, loadScripts, loadFrameScripts, snippetToURL,
-            Cc, Cu, arrayFromChildren, forceGC, contentSpawnMutation */
+            CURRENT_CONTENT_DIR, loadScripts, loadContentScripts, snippetToURL,
+            Cc, Cu, arrayFromChildren, forceGC, contentSpawnMutation,
+            FISSION_IFRAME_ID, DEFAULT_FISSION_DOC_BODY_ID, invokeContentTask,
+            matchContentDoc, currentContentDoc */
+
+const CURRENT_FILE_DIR = "/browser/accessible/tests/browser/";
 
 /**
  * Current browser test directory path used to load subscripts.
  */
-const CURRENT_DIR =
-  "chrome://mochitests/content/browser/accessible/tests/browser/";
+const CURRENT_DIR = `chrome://mochitests/content${CURRENT_FILE_DIR}`;
 /**
  * A11y mochitest directory where we find common files used in both browser and
  * plain tests.
@@ -27,10 +30,34 @@ const MOCHITESTS_DIR =
 /**
  * A base URL for test files used in content.
  */
-const CURRENT_CONTENT_DIR =
-  "http://example.com/browser/accessible/tests/browser/";
+const CURRENT_CONTENT_DIR = `http://example.com${CURRENT_FILE_DIR}`;
 
-const LOADED_FRAMESCRIPTS = new Map();
+const LOADED_CONTENT_SCRIPTS = new Map();
+
+const DEFAULT_CONTENT_DOC_BODY_ID = "body";
+const FISSION_IFRAME_ID = "fission-iframe";
+const DEFAULT_FISSION_DOC_BODY_ID = "fission-body";
+
+let gIsFission = false;
+
+function currentContentDoc() {
+  return gIsFission ? DEFAULT_FISSION_DOC_BODY_ID : DEFAULT_CONTENT_DOC_BODY_ID;
+}
+
+/**
+ * Accessible event match criteria based on the id of the current document
+ * accessible in test.
+ *
+ * @param   {nsIAccessibleEvent}  event
+ *        Accessible event to be tested for a match.
+ *
+ * @return  {Boolean}
+ *          True if accessible event's accessible object ID matches current
+ *          document accessible ID.
+ */
+function matchContentDoc(event) {
+  return getAccessibleDOMNodeID(event.accessible) === currentContentDoc();
+}
 
 /**
  * Used to dump debug information.
@@ -98,10 +125,11 @@ function invokeSetAttribute(browser, id, attr, value) {
   } else {
     Logger.log(`Removing ${attr} attribute from node with id: ${id}`);
   }
-  return ContentTask.spawn(
+
+  return invokeContentTask(
     browser,
     [id, attr, value],
-    ([contentId, contentAttr, contentValue]) => {
+    (contentId, contentAttr, contentValue) => {
       let elm = content.document.getElementById(contentId);
       if (contentValue) {
         elm.setAttribute(contentAttr, contentValue);
@@ -114,7 +142,8 @@ function invokeSetAttribute(browser, id, attr, value) {
 
 /**
  * Asynchronously set or remove content element's style (in content process if
- * e10s is enabled).
+ * e10s is enabled, or in fission process if fission is enabled and a fission
+ * frame is present).
  * @param  {Object}  browser  current "tabbrowser" element
  * @param  {String}  id       content element id
  * @param  {String}  aStyle   style property name
@@ -128,11 +157,12 @@ function invokeSetStyle(browser, id, style, value) {
   } else {
     Logger.log(`Removing ${style} style from node with id: ${id}`);
   }
-  return ContentTask.spawn(
+
+  return invokeContentTask(
     browser,
     [id, style, value],
-    ([contentId, contentStyle, contentValue]) => {
-      let elm = content.document.getElementById(contentId);
+    (contentId, contentStyle, contentValue) => {
+      const elm = content.document.getElementById(contentId);
       if (contentValue) {
         elm.style[contentStyle] = contentValue;
       } else {
@@ -144,20 +174,52 @@ function invokeSetStyle(browser, id, style, value) {
 
 /**
  * Asynchronously set focus on a content element (in content process if e10s is
- * enabled).
+ * enabled, or in fission process if fission is enabled and a fission frame is
+ * present).
  * @param  {Object}  browser  current "tabbrowser" element
  * @param  {String}  id       content element id
  * @return {Promise} promise  indicating that focus is set
  */
 function invokeFocus(browser, id) {
   Logger.log(`Setting focus on a node with id: ${id}`);
-  return ContentTask.spawn(browser, id, contentId => {
-    let elm = content.document.getElementById(contentId);
+
+  return invokeContentTask(browser, [id], contentId => {
+    const elm = content.document.getElementById(contentId);
     if (elm.editor) {
       elm.selectionStart = elm.selectionEnd = elm.value.length;
     }
+
     elm.focus();
   });
+}
+
+/**
+ * Asynchronously perform a task in content (in content process if e10s is
+ * enabled, or in fission process if fission is enabled and a fission frame is
+ * present).
+ * @param  {Object}    browser  current "tabbrowser" element
+ * @param  {Array}     args     arguments for the content task
+ * @param  {Function}  task     content task function
+ *
+ * @return {Promise} promise  indicating that content task is complete
+ */
+function invokeContentTask(browser, args, task) {
+  return SpecialPowers.spawn(
+    browser,
+    [FISSION_IFRAME_ID, task.toString(), ...args],
+    (fissionFrameId, contentTask, ...contentArgs) => {
+      // eslint-disable-next-line no-eval
+      const runnableTask = eval(`
+      (() => {
+        return (${contentTask});
+      })();`);
+      const frame = content.document.getElementById(fissionFrameId);
+
+      return frame
+        ? SpecialPowers.spawn(frame, contentArgs, runnableTask)
+        : runnableTask.call(this, ...contentArgs);
+    }
+  );
 }
 
 /**
@@ -175,84 +237,119 @@ function loadScripts(...scripts) {
 }
 
 /**
- * Load a list of frame scripts into test's content.
- * @param {Object} browser   browser element that content belongs to
- * @param {Array}  scripts   a list of scripts to load into content
+ * Load a list of scripts into target's content.
+ * @param {Object} target
+ *        target for loading scripts into
+ * @param {Array}  scripts
+ *        a list of scripts to load into content
  */
-function loadFrameScripts(browser, ...scripts) {
-  let mm = browser.messageManager;
+async function loadContentScripts(target, ...scripts) {
   for (let script of scripts) {
-    let frameScript;
+    let contentScript;
     if (typeof script === "string") {
-      if (script.includes(".js")) {
-        // If script string includes a .js extention, assume it is a script
-        // path.
-        frameScript = `${CURRENT_DIR}${script}`;
-      } else {
-        // Otherwise it is a serealized script.
-        frameScript = `data:,${script}`;
-      }
+      // If script string includes a .jsm extention, assume it is a module path.
+      contentScript = `${CURRENT_DIR}${script}`;
     } else {
       // Script is a object that has { dir, name } format.
-      frameScript = `${script.dir}${script.name}`;
+      contentScript = `${script.dir}${script.name}`;
     }
 
-    let loadedScriptSet = LOADED_FRAMESCRIPTS.get(frameScript);
+    let loadedScriptSet = LOADED_CONTENT_SCRIPTS.get(contentScript);
     if (!loadedScriptSet) {
       loadedScriptSet = new WeakSet();
-      LOADED_FRAMESCRIPTS.set(frameScript, loadedScriptSet);
-    } else if (loadedScriptSet.has(browser)) {
+      LOADED_CONTENT_SCRIPTS.set(contentScript, loadedScriptSet);
+    } else if (loadedScriptSet.has(target)) {
       continue;
     }
 
-    mm.loadFrameScript(frameScript, false, true);
-    loadedScriptSet.add(browser);
+    await SpecialPowers.spawn(target, [contentScript], async _contentScript => {
+      ChromeUtils.import(_contentScript, content.window);
+    });
+    loadedScriptSet.add(target);
   }
 }
 
-/**
- * Takes an HTML snippet and returns an encoded URI for a full document
- * with the snippet.
- * @param {String} snippet   a markup snippet.
- * @param {Object} bodyAttrs extra attributes to use in the body tag. Default is
- *                           { id: "body "}.
- * @return {String} a base64 encoded data url of the document container the
- *                  snippet.
- **/
-function snippetToURL(snippet, bodyAttrs = {}) {
-  let attrs = Object.assign({}, { id: "body" }, bodyAttrs);
-  let attrsString = Object.entries(attrs)
+function attrsToString(attrs) {
+  return Object.entries(attrs)
     .map(([attr, value]) => `${attr}=${JSON.stringify(value)}`)
     .join(" ");
-  let encodedDoc = encodeURIComponent(
+}
+
+function wrapWithFissionIFrame(doc, options = {}) {
+  const srcURL = new URL(`${CURRENT_CONTENT_DIR}fission_document_builder.sjs`);
+  if (doc.endsWith("html")) {
+    srcURL.searchParams.append("file", `${CURRENT_FILE_DIR}e10s/${doc}`);
+  } else {
+    const { fissionDocBodyAttrs = {} } = options;
+    const attrs = {
+      id: DEFAULT_FISSION_DOC_BODY_ID,
+      ...fissionDocBodyAttrs,
+    };
+
+    srcURL.searchParams.append(
+      "html",
+      `<html>
+        <head>
+          <meta charset="utf-8"/>
+          <title>Accessibility Fission Test</title>
+        </head>
+        <body ${attrsToString(attrs)}>${doc}</body>
+      </html>`
+    );
+  }
+
+  return `<iframe id="${FISSION_IFRAME_ID}" src="${srcURL.href}"/>`;
+}
+
+/**
+ * Takes an HTML snippet or HTML doc url and returns an encoded URI for a full
+ * document with the snippet or the URL as a source for the IFRAME.
+ * @param {String} doc
+ *        a markup snippet or url.
+ * @param {Object} options
+ *        additonal options:
+ *        - {Boolean} fission
+ *          true if the content document should be wrapped inside a fission
+ *          iframe
+ *        - {Object} contentDocBodyAttrs
+ *          a set of attributes to be applied to a top level content document
+ *          body
+ *        - {Object} fissionDocBodyAttrs
+ *          a set of attributes to be applied to a fission content document body
+ * @return {String}
+ *        a base64 encoded data url of the document container the snippet.
+ **/
+function snippetToURL(doc, options = {}) {
+  const { contentDocBodyAttrs = {} } = options;
+  const attrs = {
+    id: DEFAULT_CONTENT_DOC_BODY_ID,
+    ...contentDocBodyAttrs,
+  };
+
+  if (options.fission) {
+    doc = wrapWithFissionIFrame(doc, options);
+  }
+
+  const encodedDoc = encodeURIComponent(
     `<html>
       <head>
         <meta charset="utf-8"/>
         <title>Accessibility Test</title>
       </head>
-      <body ${attrsString}>${snippet}</body>
+      <body ${attrsToString(attrs)}>${doc}</body>
     </html>`
   );
 
   return `data:text/html;charset=utf-8,${encodedDoc}`;
 }
 
-/**
- * A wrapper around browser test add_task that triggers an accessible test task
- * as a new browser test task with given document, data URL or markup snippet.
- * @param  {String}                 doc  URL (relative to current directory) or
- *                                       data URL or markup snippet that is used
- *                                       to test content with
- * @param  {Function|AsyncFunction} task a generator or a function with tests to
- *                                       run
- */
-function addAccessibleTask(doc, task) {
-  add_task(async function() {
+function accessibleTask(doc, task, options = {}) {
+  return async function() {
     let url;
-    if (doc.includes("doc_")) {
+    if (doc.endsWith("html") && !options.fission) {
       url = `${CURRENT_CONTENT_DIR}e10s/${doc}`;
     } else {
-      url = snippetToURL(doc);
+      url = snippetToURL(doc, options);
     }
 
     registerCleanupFunction(() => {
@@ -263,7 +360,21 @@ function addAccessibleTask(doc, task) {
       }
     });
 
-    let onDocLoad = waitForEvent(EVENT_DOCUMENT_LOAD_COMPLETE, "body");
+    const onContentDocLoad = waitForEvent(
+      EVENT_DOCUMENT_LOAD_COMPLETE,
+      DEFAULT_CONTENT_DOC_BODY_ID
+    );
+
+    let onFissionDocLoad;
+    if (options.fission) {
+      gIsFission = true;
+      if (gFissionBrowser) {
+        onFissionDocLoad = waitForEvent(
+          EVENT_DOCUMENT_LOAD_COMPLETE,
+          DEFAULT_FISSION_DOC_BODY_ID
+        );
+      }
+    }
 
     await BrowserTestUtils.withNewTab(
       {
@@ -281,23 +392,61 @@ function addAccessibleTask(doc, task) {
         });
 
         await SimpleTest.promiseFocus(browser);
-
-        loadFrameScripts(
-          browser,
-          "let { document, window, navigator } = content;",
-          { name: "common.js", dir: MOCHITESTS_DIR }
-        );
+        await loadContentScripts(browser, "Common.jsm");
 
         Logger.log(
           `e10s enabled: ${Services.appinfo.browserTabsRemoteAutostart}`
         );
         Logger.log(`Actually remote browser: ${browser.isRemoteBrowser}`);
 
-        let event = await onDocLoad;
-        await task(browser, event.accessible);
+        const { accessible: docAccessible } = await onContentDocLoad;
+        let fissionDocAccessible;
+        if (options.fission) {
+          fissionDocAccessible = gFissionBrowser
+            ? (await onFissionDocLoad).accessible
+            : findAccessibleChildByID(docAccessible, FISSION_IFRAME_ID)
+                .firstChild;
+        }
+
+        await task(
+          browser,
+          fissionDocAccessible || docAccessible,
+          fissionDocAccessible && docAccessible
+        );
       }
     );
-  });
+  };
+}
+
+/**
+ * A wrapper around browser test add_task that triggers an accessible test task
+ * as a new browser test task with given document, data URL or markup snippet.
+ * @param  {String} doc
+ *         URL (relative to current directory) or data URL or markup snippet
+ *         that is used to test content with
+ * @param  {Function|AsyncFunction} task
+ *         a generator or a function with tests to run
+ * @param  {null|Object} options
+ *         Options for running accessibility test tasks:
+ *         - {Boolean} topLevel
+ *           Flag to run the test with content in the top level content process.
+ *           Default is true.
+ *         - {Boolean} iframe
+ *           Flag to run the test with content wrapped in an iframe. Default is
+ *           false.
+ */
+function addAccessibleTask(
+  doc,
+  task,
+  { topLevel = true, iframe = false } = {}
+) {
+  if (topLevel) {
+    add_task(accessibleTask(doc, task));
+  }
+
+  if (iframe) {
+    add_task(accessibleTask(doc, task, { fission: true }));
+  }
 }
 
 /**
@@ -396,7 +545,7 @@ function forceGC() {
  * do this advancing the layout refresh to flush the relocations/insertions
  * queue.
  */
-async function contentSpawnMutation(browser, waitFor, func, args = null) {
+async function contentSpawnMutation(browser, waitFor, func, args = []) {
   let onReorders = waitForEvents({ expected: waitFor.expected || [] });
   let unexpectedListener = new UnexpectedEvents(waitFor.unexpected || []);
 
@@ -409,20 +558,20 @@ async function contentSpawnMutation(browser, waitFor, func, args = null) {
 
   // This stops the refreh driver from doing its regular ticks, and leaves
   // us in control.
-  await ContentTask.spawn(browser, null, tick);
+  await invokeContentTask(browser, [], tick);
 
   // Perform the tree mutation.
-  await ContentTask.spawn(browser, args, func);
+  await invokeContentTask(browser, args, func);
 
   // Do one tick to flush our queue (insertions, relocations, etc.)
-  await ContentTask.spawn(browser, null, tick);
+  await invokeContentTask(browser, [], tick);
 
   let events = await onReorders;
 
   unexpectedListener.stop();
 
   // Go back to normal refresh driver ticks.
-  await ContentTask.spawn(browser, null, function() {
+  await invokeContentTask(browser, [], function() {
     content.windowUtils.restoreNormalRefresh();
   });
 

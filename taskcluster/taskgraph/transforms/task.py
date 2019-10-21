@@ -777,6 +777,9 @@ def build_docker_worker_payload(config, task, task_def):
     Required('chain-of-trust'): bool,
     Optional('taskcluster-proxy'): bool,
 
+    # the exit status code(s) that indicates the task should be retried
+    Optional('retry-exit-status'): [int],
+
     # Wether any artifacts are assigned to this worker
     Optional('skip-artifacts'): bool,
 })
@@ -798,6 +801,9 @@ def build_generic_worker_payload(config, task, task_def):
                 3221225786,  # sigint (any interrupt)
             ]
         }
+    if 'retry-exit-status' in worker:
+        task_def['payload'].setdefault(
+            'onExitStatus', {}).setdefault('retry', []).extend(worker['retry-exit-status'])
 
     env = worker.get('env', {})
 

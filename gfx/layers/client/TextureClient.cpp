@@ -54,6 +54,7 @@
 #  include <gtk/gtkx.h>
 #  include "mozilla/widget/nsWaylandDisplay.h"
 #  include "mozilla/layers/WaylandDMABUFTextureClientOGL.h"
+#  include "gfxPlatformGtk.h"
 #endif
 
 #ifdef XP_MACOSX
@@ -282,9 +283,9 @@ static TextureType GetTextureType(gfx::SurfaceFormat aFormat,
 #endif
 
 #ifdef MOZ_WAYLAND
-  if (aLayersBackend == LayersBackend::LAYERS_OPENGL &&
-      !GDK_IS_X11_DISPLAY(gdk_display_get_default()) &&
-      widget::nsWaylandDisplay::IsDMABufEnabled() &&
+  if ((aLayersBackend == LayersBackend::LAYERS_OPENGL ||
+       aLayersBackend == LayersBackend::LAYERS_WR) &&
+      gfxPlatformGtk::GetPlatform()->UseWaylandDMABufSurfaces() &&
       aFormat != SurfaceFormat::A8) {
     return TextureType::WaylandDMABUF;
   }

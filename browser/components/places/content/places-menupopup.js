@@ -47,6 +47,13 @@
     `;
     }
 
+    initShadowDOM() {
+      super.initShadowDOM();
+      if (this.closest("#BMB_bookmarksPopup")) {
+        this.scrollBox.classList.add("in-bookmarks-menu");
+      }
+    }
+
     connectedCallback() {
       if (this.delayConnectedCallback()) {
         return;

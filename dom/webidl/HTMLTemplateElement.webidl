@@ -9,9 +9,10 @@
  * liability, trademark and document use rules apply.
  */
 
-[HTMLConstructor,
- Exposed=Window]
+[Exposed=Window]
 interface HTMLTemplateElement : HTMLElement {
+  [HTMLConstructor] constructor();
+
     readonly attribute DocumentFragment content;
 };
 

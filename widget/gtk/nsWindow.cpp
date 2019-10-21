@@ -1294,10 +1294,14 @@ static void NativeMoveResizeWaylandPopupCallback(
     GdkWindow* window, const GdkRectangle* flipped_rect,
     const GdkRectangle* final_rect, gboolean flipped_x, gboolean flipped_y,
     void* aWindow) {
-  LOG(("%s [%p] flipped %d %d\n", __FUNCTION__, aWindow, flipped_rect->x,
-       flipped_rect->y));
-  LOG(("%s [%p] final %d %d\n", __FUNCTION__, aWindow, final_rect->x,
-       final_rect->y));
+  LOG(("%s [%p] flipped_x %d flipped_y %d\n", __FUNCTION__, aWindow, flipped_x,
+       flipped_y));
+
+  LOG(("%s [%p] flipped %d %d w:%d h:%d\n", __FUNCTION__, aWindow,
+       flipped_rect->x, flipped_rect->y, flipped_rect->width,
+       flipped_rect->height));
+  LOG(("%s [%p] final %d %d w:%d h:%d\n", __FUNCTION__, aWindow, final_rect->x,
+       final_rect->y, final_rect->width, final_rect->height));
 }
 #endif
 
@@ -1384,6 +1388,16 @@ void nsWindow::NativeMoveResizeWaylandPopup(GdkPoint* aPosition,
     HideWaylandWindow();
   }
 
+  LOG(
+      ("nsWindow::NativeMoveResizeWaylandPopup [%p]: requested rect: x%d y%d "
+       "w%d h%d\n",
+       this, rect.x, rect.y, rect.width, rect.height));
+  if (aSize) {
+    LOG(("  aSize: x%d y%d w%d h%d\n", aSize->x, aSize->y, aSize->width,
+         aSize->height));
+  } else {
+    LOG(("  No aSize given"));
+  }
   sGdkWindowMoveToRect(gdkWindow, &rect, rectAnchor, menuAnchor, hints, 0, 0);
 
   if (isWidgetVisible) {
@@ -1399,7 +1413,8 @@ void nsWindow::NativeMove() {
   LOG(("nsWindow::NativeMove [%p] %d %d\n", (void*)this, point.x, point.y));
 
   if (IsWaylandPopup()) {
-    NativeMoveResizeWaylandPopup(&point, nullptr);
+    GdkRectangle size = DevicePixelsToGdkSizeRoundUp(mBounds.Size());
+    NativeMoveResizeWaylandPopup(&point, &size);
   } else if (mIsTopLevel) {
     gtk_window_move(GTK_WINDOW(mShell), point.x, point.y);
   } else if (mGdkWindow) {
@@ -6724,6 +6739,16 @@ void nsWindow::SetDrawsInTitlebar(bool aState) {
   }
 }
 
+GtkWindow* nsWindow::GetCurrentTopmostWindow() {
+  GtkWindow* parentWindow = GTK_WINDOW(GetGtkWidget());
+  GtkWindow* topmostParentWindow;
+  while (parentWindow) {
+    topmostParentWindow = parentWindow;
+    parentWindow = gtk_window_get_transient_for(parentWindow);
+  }
+  return topmostParentWindow;
+}
+
 gint nsWindow::GdkScaleFactor() {
   GdkWindow* scaledGdkWindow = mGdkWindow;
   if (!mIsX11Display) {
@@ -6732,12 +6757,7 @@ gint nsWindow::GdkScaleFactor() {
     // not updated during it's hidden.
     if (mWindowType == eWindowType_popup || mWindowType == eWindowType_dialog) {
       // Get toplevel window for scale factor:
-      GtkWindow* parentWindow = GTK_WINDOW(GetGtkWidget());
-      GtkWindow* topmostParentWindow;
-      while (parentWindow) {
-        topmostParentWindow = parentWindow;
-        parentWindow = gtk_window_get_transient_for(parentWindow);
-      }
+      GtkWindow* topmostParentWindow = GetCurrentTopmostWindow();
       if (topmostParentWindow) {
         scaledGdkWindow =
             gtk_widget_get_window(GTK_WIDGET(topmostParentWindow));
@@ -7267,6 +7287,41 @@ already_AddRefed<nsIWidget> nsIWidget::CreateChildWindow() {
   nsCOMPtr<nsIWidget> window = new nsWindow();
   return window.forget();
 }
+
+#ifdef MOZ_WAYLAND
+nsresult nsWindow::GetScreenRect(LayoutDeviceIntRect* aRect) {
+  typedef struct _GdkMonitor GdkMonitor;
+  static auto s_gdk_display_get_monitor_at_window =
+      (GdkMonitor * (*)(GdkDisplay*, GdkWindow*))
+          dlsym(RTLD_DEFAULT, "gdk_display_get_monitor_at_window");
+
+  static auto s_gdk_monitor_get_workarea =
+      (void (*)(GdkMonitor*, GdkRectangle*))dlsym(RTLD_DEFAULT,
+                                                  "gdk_monitor_get_workarea");
+
+  if (!s_gdk_display_get_monitor_at_window || !s_gdk_monitor_get_workarea) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  GtkWindow* topmostParentWindow = GetCurrentTopmostWindow();
+  GdkWindow* gdkWindow = gtk_widget_get_window(GTK_WIDGET(topmostParentWindow));
+
+  GdkMonitor* monitor =
+      s_gdk_display_get_monitor_at_window(gdk_display_get_default(), gdkWindow);
+  if (monitor) {
+    GdkRectangle workArea;
+    s_gdk_monitor_get_workarea(monitor, &workArea);
+    aRect->x = workArea.x;
+    aRect->y = workArea.y;
+    aRect->width = workArea.width;
+    aRect->height = workArea.height;
+    LOG(("  workarea for [%p], monitor %p: x%d y%d w%d h%d\n", this, monitor,
+         workArea.x, workArea.y, workArea.width, workArea.height));
+    return NS_OK;
+  }
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+#endif
 
 bool nsWindow::GetTopLevelWindowActiveState(nsIFrame* aFrame) {
   // Used by window frame and button box rendering. We can end up in here in

@@ -28,7 +28,7 @@ function onAttach(aState, aResponse)
   info("test network POST request");
 
   onNetworkEvent = onNetworkEvent.bind(null, aState);
-  aState.client.on("serverNetworkEvent", onNetworkEvent);
+  aState.webConsoleFront.on("serverNetworkEvent", onNetworkEvent);
   onNetworkEventUpdate = onNetworkEventUpdate.bind(null, aState);
   aState.dbgClient.on("networkEventUpdate", onNetworkEventUpdate);
 
@@ -51,7 +51,7 @@ function onNetworkEvent(aState, aPacket)
 
   aState.netActor = netActor.actor;
 
-  aState.client.off("serverNetworkEvent", onNetworkEvent);
+  aState.webConsoleFront.off("serverNetworkEvent", onNetworkEvent);
 }
 
 let updates = [];
@@ -130,7 +130,7 @@ function onNetworkEventUpdate(aState, aPacket)
                                     onNetworkEvent);
 
     onRequestHeaders = onRequestHeaders.bind(null, aState);
-    aState.client.getRequestHeaders(aState.netActor,
+    aState.webConsoleFront.getRequestHeaders(aState.netActor,
                                     onRequestHeaders);
   }
 }
@@ -154,7 +154,7 @@ function onRequestHeaders(aState, aResponse)
   });
 
   onRequestCookies = onRequestCookies.bind(null, aState);
-  aState.client.getRequestCookies(aState.netActor,
+  aState.webConsoleFront.getRequestCookies(aState.netActor,
                                   onRequestCookies);
 }
 
@@ -171,7 +171,7 @@ function onRequestCookies(aState, aResponse)
   });
 
   onRequestPostData = onRequestPostData.bind(null, aState);
-  aState.client.getRequestPostData(aState.netActor,
+  aState.webConsoleFront.getRequestPostData(aState.netActor,
                                    onRequestPostData);
 }
 
@@ -189,7 +189,7 @@ function onRequestPostData(aState, aResponse)
   is(aResponse.postData.text.length, 552, "postData text length");
 
   onResponseHeaders = onResponseHeaders.bind(null, aState);
-  aState.client.getResponseHeaders(aState.netActor,
+  aState.webConsoleFront.getResponseHeaders(aState.netActor,
                                    onResponseHeaders);
 }
 
@@ -212,7 +212,7 @@ function onResponseHeaders(aState, aResponse)
   });
 
   onResponseCookies = onResponseCookies.bind(null, aState);
-  aState.client.getResponseCookies(aState.netActor,
+  aState.webConsoleFront.getResponseCookies(aState.netActor,
                                   onResponseCookies);
 }
 
@@ -223,7 +223,7 @@ function onResponseCookies(aState, aResponse)
   is(aResponse.cookies.length, 0, "response cookies length");
 
   onResponseContent = onResponseContent.bind(null, aState);
-  aState.client.getResponseContent(aState.netActor,
+  aState.webConsoleFront.getResponseContent(aState.netActor,
                                    onResponseContent);
 }
 
@@ -239,7 +239,7 @@ function onResponseContent(aState, aResponse)
   });
 
   onEventTimings = onEventTimings.bind(null, aState);
-  aState.client.getEventTimings(aState.netActor,
+  aState.webConsoleFront.getEventTimings(aState.netActor,
                                 onEventTimings);
 }
 

@@ -8,6 +8,7 @@
 
 #include "mozilla/AntiTrackingCommon.h"
 #include "mozilla/net/UrlClassifierCommon.h"
+#include "nsIClassifiedChannel.h"
 #include "nsContentUtils.h"
 #include "nsNetUtil.h"
 
@@ -135,19 +136,19 @@ UrlClassifierFeatureSocialTrackingAnnotation::ProcessChannel(
   static std::vector<UrlClassifierCommon::ClassificationData>
       sClassificationData = {
           {NS_LITERAL_CSTRING("social-tracking-protection-facebook-"),
-           nsIHttpChannel::ClassificationFlags::
+           nsIClassifiedChannel::ClassificationFlags::
                CLASSIFIED_SOCIALTRACKING_FACEBOOK},
           {NS_LITERAL_CSTRING("social-tracking-protection-linkedin-"),
-           nsIHttpChannel::ClassificationFlags::
+           nsIClassifiedChannel::ClassificationFlags::
                CLASSIFIED_SOCIALTRACKING_LINKEDIN},
           {NS_LITERAL_CSTRING("social-tracking-protection-twitter-"),
-           nsIHttpChannel::ClassificationFlags::
+           nsIClassifiedChannel::ClassificationFlags::
                CLASSIFIED_SOCIALTRACKING_TWITTER},
       };
 
   uint32_t flags = UrlClassifierCommon::TablesToClassificationFlags(
       aList, sClassificationData,
-      nsIHttpChannel::ClassificationFlags::CLASSIFIED_SOCIALTRACKING);
+      nsIClassifiedChannel::ClassificationFlags::CLASSIFIED_SOCIALTRACKING);
 
   UrlClassifierCommon::AnnotateChannel(
       aChannel, flags,

@@ -41,8 +41,10 @@ def read_build_config(docdir):
     class fakeconfig(object):
         topsrcdir = build.topsrcdir
 
+    variables = ('SPHINX_TREES', 'SPHINX_PYTHON_PACKAGE_DIRS')
     reader = BuildReader(fakeconfig())
-    for path, name, key, value in reader.find_sphinx_variables(relevant_mozbuild_path):
+    result = reader.find_variables_from_ast(variables, path=relevant_mozbuild_path)
+    for path, name, key, value in result:
         reldir = os.path.dirname(path)
 
         if name == 'SPHINX_TREES':

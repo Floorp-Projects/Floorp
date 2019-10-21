@@ -32,6 +32,10 @@
 #include "setupapi.h"
 #include "cfgmgr32.h"
 
+#include "FxRWindowManager.h"
+#include "VRShMem.h"
+#include "moz_external_vr.h"
+
 const char* kOskPathPrefName = "ui.osk.on_screen_keyboard_path";
 const char* kOskEnabled = "ui.osk.enabled";
 const char* kOskDetectPhysicalKeyboard = "ui.osk.detect_physical_keyboard";
@@ -737,6 +741,14 @@ void IMEHandler::SetInputScopeForIMM32(nsWindow* aWindow,
 
 // static
 void IMEHandler::MaybeShowOnScreenKeyboard() {
+#ifdef NIGHTLY_BUILD
+  if (FxRWindowManager::GetInstance()->IsFxRWindow(sFocusedWindow)) {
+    mozilla::gfx::VRShMem shmem(nullptr, true /*aRequiresMutex*/);
+    shmem.SendIMEState(FxRWindowManager::GetInstance()->GetWindowID(),
+                       mozilla::gfx::VRFxIMEState::Focus);
+    return;
+  }
+#endif  // NIGHTLY_BUILD
   if (sPluginHasFocus || !IsWin8OrLater() ||
       !Preferences::GetBool(kOskEnabled, true) || GetOnScreenKeyboardWindow() ||
       !IMEHandler::NeedOnScreenKeyboard()) {
@@ -759,10 +771,16 @@ void IMEHandler::MaybeShowOnScreenKeyboard() {
 
 // static
 void IMEHandler::MaybeDismissOnScreenKeyboard(nsWindow* aWindow) {
+#ifdef NIGHTLY_BUILD
+  if (FxRWindowManager::GetInstance()->IsFxRWindow(aWindow)) {
+    mozilla::gfx::VRShMem shmem(nullptr, true /*aRequiresMutex*/);
+    shmem.SendIMEState(FxRWindowManager::GetInstance()->GetWindowID(),
+                       mozilla::gfx::VRFxIMEState::Blur);
+  }
+#endif  // NIGHTLY_BUILD
   if (sPluginHasFocus || !IsWin8OrLater()) {
     return;
   }
-
   ::PostMessage(aWindow->GetWindowHandle(), MOZ_WM_DISMISS_ONSCREEN_KEYBOARD, 0,
                 0);
 }

@@ -1,0 +1,81 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>Testcase for bug </title>
+<style>
+html,body {
+  color:black; background-color:white; font:10px/1 monospace; padding:0; margin:0;
+}
+
+li::before { content: " list-item counter:" counters(list-item,".") " "; }
+ol,ul { border:1px solid; margin: 0; }
+div > ul { counter-reset: list-item 7; }
+</style>
+</head>
+<body>
+
+<div contenteditable>
+<ol start=8>
+  <li>A</li>
+  <ol></ol>
+  <li class="indent">B</li>
+  <li>C</li>
+</ol>
+</div>
+
+<div contenteditable>
+<ol start=8>
+  <li>A</li>
+  <li class="indent">B</li>
+  <ol></ol>
+  <li>C</li>
+</ol>
+</div>
+
+<div contenteditable>
+<ul>
+  <li>A</li>
+  <ul></ul>
+  <li class="indent">B</li>
+  <li>C</li>
+</ul>
+</div>
+
+<div contenteditable>
+<ul>
+  <li>A</li>
+  <li class="indent">B</li>
+  <ul></ul>
+  <li>C</li>
+</ul>
+</div>
+
+<!-- now the same as above without whitespace: -->
+
+<div contenteditable><ol start=8><li>A</li><ol></ol><li class="indent">B</li><li>C</li></ol></div>
+<div contenteditable><ol start=8><li>A</li><li class="indent">B</li><ol></ol><li>C</li></ol></div>
+<div contenteditable><ul><li>A</li><ul></ul><li class="indent">B</li><li>C</li></ul></div>
+<div contenteditable><ul><li>A</li><li class="indent">B</li><ul></ul><li>C</li></ul></div>
+
+<script>
+function test() {
+  [...document.querySelectorAll('.indent')].forEach(function(elm) {
+    var r = document.createRange();
+    r.setStart(elm.firstChild,0)
+    r.setEnd(elm.firstChild,0)
+    window.getSelection().addRange(r);
+    document.execCommand("indent");
+    window.getSelection().removeAllRanges();
+  });
+}
+
+test();
+document.activeElement.blur();
+</script>
+
+</body>
+</html>

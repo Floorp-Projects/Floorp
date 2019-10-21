@@ -182,8 +182,12 @@ function onCheckboxClick(aPartId) {
 
 function onRadioClick(aPartId) {
   var radioGroup = document.getElementById(aPartId + "RadioGroup");
-  var id = radioGroup.selectedItem ? radioGroup.selectedItem.id : "#1";
-  var permission = parseInt(id.split("#")[1]);
+  let permission;
+  if (radioGroup.selectedItem) {
+    permission = parseInt(radioGroup.selectedItem.id.split("#")[1]);
+  } else {
+    permission = SitePermissions.getDefault(aPartId);
+  }
   SitePermissions.setForPrincipal(gPermPrincipal, aPartId, permission);
 }
 

@@ -4,7 +4,8 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-[HTMLConstructor,
- Exposed=Window]
+[Exposed=Window]
 interface HTMLPictureElement : HTMLElement {
+  [HTMLConstructor] constructor();
+
 };

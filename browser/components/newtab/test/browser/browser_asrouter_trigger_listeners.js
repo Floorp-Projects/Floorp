@@ -181,20 +181,36 @@ add_task(async function check_trackingProtection_listener() {
   const TEST_URL =
     "https://example.com/browser/browser/components/newtab/test/browser/red_page.html";
 
-  const contentBlockingEvent = 1234;
+  const event1 = 0x0001;
+  const event2 = 0x0010;
+  const event3 = 0x0100;
+  const event4 = 0x1000;
+
+  // Initialise listener to listen 2 events, for any incoming event e,
+  // it will be triggered if and only if:
+  // 1. (e & event1) && (e & event2)
+  // 2. (e & event3)
+  const bindEvents = [event1 | event2, event3];
+
   let observerEvent = 0;
   let pageLoadSum = 0;
   const triggerHandler = (target, trigger) => {
     const {
       id,
-      param: { host },
+      param: { host, type },
       context: { pageLoad },
     } = trigger;
     is(id, "trackingProtection", "should match event name");
     is(host, TEST_URL, "should match test URL");
+    is(
+      bindEvents.filter(e => (type & e) === e).length,
+      1,
+      `event ${type} is valid`
+    );
+    ok(pageLoadSum <= pageLoad, "pageLoad is non-decreasing");
 
     observerEvent += 1;
-    pageLoadSum += pageLoad;
+    pageLoadSum = pageLoad;
   };
   const trackingProtectionListener = ASRouterTriggerListeners.get(
     "trackingProtection"
@@ -203,8 +219,7 @@ add_task(async function check_trackingProtection_listener() {
   // Previously initialized by the Router
   trackingProtectionListener.uninit();
 
-  // Initialise listener
-  await trackingProtectionListener.init(triggerHandler, [contentBlockingEvent]);
+  await trackingProtectionListener.init(triggerHandler, bindEvents);
 
   await BrowserTestUtils.withNewTab(
     TEST_URL,
@@ -214,7 +229,7 @@ add_task(async function check_trackingProtection_listener() {
           wrappedJSObject: {
             browser,
             host: TEST_URL,
-            event: contentBlockingEvent + 1,
+            event: event1, // won't trigger
           },
         },
         "SiteProtection:ContentBlockingEvent"
@@ -233,7 +248,7 @@ add_task(async function check_trackingProtection_listener() {
           wrappedJSObject: {
             browser,
             host: TEST_URL,
-            event: contentBlockingEvent,
+            event: event3, // will trigger
           },
         },
         "SiteProtection:ContentBlockingEvent"
@@ -245,6 +260,39 @@ add_task(async function check_trackingProtection_listener() {
       );
       is(observerEvent, 1, "should receive observer notification");
       is(pageLoadSum, 2, "should receive observer notification");
+
+      Services.obs.notifyObservers(
+        {
+          wrappedJSObject: {
+            browser,
+            host: TEST_URL,
+            event: event1 | event2 | event4, // still trigger
+          },
+        },
+        "SiteProtection:ContentBlockingEvent"
+      );
+
+      await BrowserTestUtils.waitForCondition(
+        () => observerEvent !== 1,
+        "Wait for the observer notification to run"
+      );
+      is(observerEvent, 2, "should receive another observer notification");
+      is(pageLoadSum, 2, "should receive another observer notification");
+
+      Services.obs.notifyObservers(
+        {
+          wrappedJSObject: {
+            browser,
+            host: TEST_URL,
+            event: event1, // no trigger
+          },
+        },
+        "SiteProtection:ContentBlockingEvent"
+      );
+
+      await new Promise(resolve => executeSoon(resolve));
+      is(observerEvent, 2, "shouldn't receive unrelated notification");
+      is(pageLoadSum, 2, "shouldn't receive unrelated notification");
     }
   );
 
@@ -259,13 +307,14 @@ add_task(async function check_trackingProtection_listener() {
           wrappedJSObject: {
             browser,
             host: TEST_URL,
-            event: contentBlockingEvent,
+            event: event3, // wont trigger after uninit
           },
         },
         "SiteProtection:ContentBlockingEvent"
       );
       await new Promise(resolve => executeSoon(resolve));
-      is(observerEvent, 1, "shouldn't receive obs. notification after uninit");
+      is(observerEvent, 2, "shouldn't receive obs. notification after uninit");
+      is(pageLoadSum, 2, "shouldn't receive obs. notification after uninit");
     }
   );
 });

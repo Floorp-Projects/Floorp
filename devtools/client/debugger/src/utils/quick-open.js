@@ -3,7 +3,6 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 // @flow
-import classnames from "classnames";
 import { endTruncateStr } from "./utils";
 import {
   isPretty,
@@ -30,15 +29,18 @@ export const MODIFIERS = {
 };
 
 export function parseQuickOpenQuery(query: string): QuickOpenType {
-  const modifierPattern = /^@|#|:|\?$/;
-  const gotoSourcePattern = /^(\w+)\:/;
-  const startsWithModifier = modifierPattern.test(query[0]);
-  const isGotoSource = gotoSourcePattern.test(query);
+  const startsWithModifier =
+    query[0] === "@" ||
+    query[0] === "#" ||
+    query[0] === ":" ||
+    query[0] === "?";
 
   if (startsWithModifier) {
     const modifier = query[0];
     return MODIFIERS[modifier];
   }
+
+  const isGotoSource = query.includes(":", 1);
 
   if (isGotoSource) {
     return "gotoSource";
@@ -75,7 +77,7 @@ export function formatSourcesForList(
     subtitle,
     icon: tabUrls.has(source.url)
       ? "tab result-item-icon"
-      : classnames(getSourceClassnames(source), "result-item-icon"),
+      : `result-item-icon ${getSourceClassnames(source)}`,
     id: source.id,
     url: source.url,
   };
@@ -143,8 +145,15 @@ export function formatSources(
   sources: Source[],
   tabUrls: Set<$PropertyType<Tab, "url">>
 ): Array<QuickOpenResult> {
-  return sources
-    .filter(source => !isPretty(source))
-    .filter(source => !!source.relativeUrl && !isPretty(source))
-    .map(source => formatSourcesForList(source, tabUrls));
+  const formattedSources: Array<QuickOpenResult> = [];
+
+  for (let i = 0; i < sources.length; ++i) {
+    const source = sources[i];
+
+    if (!!source.relativeUrl && !isPretty(source)) {
+      formattedSources.push(formatSourcesForList(source, tabUrls));
+    }
+  }
+
+  return formattedSources;
 }

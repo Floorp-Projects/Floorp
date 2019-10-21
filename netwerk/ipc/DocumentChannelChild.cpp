@@ -427,6 +427,12 @@ IPCResult DocumentChannelChild::RecvConfirmRedirect(
   return IPC_OK();
 }
 
+IPCResult DocumentChannelChild::RecvNotifyClassificationFlags(
+    const uint32_t& aClassificationFlags) {
+  mThirdPartyClassificationFlags |= aClassificationFlags;
+  return IPC_OK();
+}
+
 IPCResult DocumentChannelChild::RecvNotifyChannelClassifierProtectionDisabled(
     const uint32_t& aAcceptedReason) {
   UrlClassifierCommon::NotifyChannelClassifierProtectionDisabled(
@@ -564,6 +570,35 @@ DocumentChannelChild::Resume() {
   }
 
   mEventQueue->Resume();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+DocumentChannelChild::IsTrackingResource(bool* aIsTrackingResource) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+DocumentChannelChild::IsThirdPartyTrackingResource(bool* aIsTrackingResource) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+DocumentChannelChild::GetClassificationFlags(uint32_t* aClassificationFlags) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+DocumentChannelChild::GetFirstPartyClassificationFlags(
+    uint32_t* aClassificationFlags) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+DocumentChannelChild::GetThirdPartyClassificationFlags(
+    uint32_t* aClassificationFlags) {
+  MOZ_ASSERT(aClassificationFlags);
+  *aClassificationFlags = mThirdPartyClassificationFlags;
   return NS_OK;
 }
 

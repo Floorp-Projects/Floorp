@@ -93,6 +93,11 @@ if CONFIG['OS_ARCH'] == 'WINNT' and CONFIG['NIGHTLY_BUILD']:
     ]
 
 if CONFIG['OS_ARCH'] == 'WINNT':
+    LOCAL_INCLUDES += [
+      '/layout/generic',
+      '/widget',
+      '/widget/windows'
+    ]
     SOURCES += [
       'FxROutputHandler.cpp',
       'FxRWindowManager.cpp'

@@ -70,9 +70,10 @@ function createObjectClient(grip: Grip) {
 
 async function loadObjectProperties(root: Node) {
   const utils = Reps.objectInspector.utils;
-  const properties = await utils.loadProperties.loadItemProperties(root, {
-    createObjectClient,
-  });
+  const properties = await utils.loadProperties.loadItemProperties(
+    root,
+    debuggerClient
+  );
   return utils.node.getChildren({
     item: root,
     loadedProperties: new Map([[root.path, properties]]),
@@ -84,7 +85,11 @@ function releaseActor(actor: String) {
     return;
   }
 
-  return debuggerClient.release(actor);
+  const objFront = debuggerClient.getFrontByID(actor);
+
+  if (objFront) {
+    return objFront.release().catch(() => {});
+  }
 }
 
 function sendPacket(packet: Object) {
@@ -536,6 +541,10 @@ async function getSourceActorBreakableLines({
   return actorLines;
 }
 
+function getFrontByID(actorID: String) {
+  return debuggerClient.getFrontByID(actorID);
+}
+
 const clientCommands = {
   autocomplete,
   blackBox,
@@ -582,6 +591,7 @@ const clientCommands = {
   getEventListenerBreakpointTypes,
   detachWorkers,
   lookupTarget,
+  getFrontByID,
 };
 
 export { setupCommands, clientCommands };

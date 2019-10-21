@@ -1062,6 +1062,9 @@ nsresult nsFtpState::S_list() {
 FTP_STATE
 nsFtpState::R_list() {
   if (mResponseCode / 100 == 1) {
+    Telemetry::ScalarAdd(
+        Telemetry::ScalarID::NETWORKING_FTP_OPENED_CHANNELS_LISTINGS, 1);
+
     mRlist1xxReceived = true;
 
     // OK, time to start reading from the data connection.
@@ -1072,9 +1075,6 @@ nsFtpState::R_list() {
 
   if (mResponseCode / 100 == 2 && mRlist1xxReceived) {
     //(DONE)
-    Telemetry::ScalarAdd(
-        Telemetry::ScalarID::NETWORKING_FTP_OPENED_CHANNELS_LISTINGS, 1);
-
     mNextState = FTP_COMPLETE;
     mRlist1xxReceived = false;
     return FTP_COMPLETE;
@@ -1096,14 +1096,14 @@ FTP_STATE
 nsFtpState::R_retr() {
   if (mResponseCode / 100 == 2) {
     //(DONE)
-    Telemetry::ScalarAdd(
-        Telemetry::ScalarID::NETWORKING_FTP_OPENED_CHANNELS_FILES, 1);
-
     mNextState = FTP_COMPLETE;
     return FTP_COMPLETE;
   }
 
   if (mResponseCode / 100 == 1) {
+    Telemetry::ScalarAdd(
+        Telemetry::ScalarID::NETWORKING_FTP_OPENED_CHANNELS_FILES, 1);
+
     if (mDataStream && HasPendingCallback())
       mDataStream->AsyncWait(this, 0, 0, CallbackTarget());
     return FTP_READ_BUF;
@@ -1174,9 +1174,6 @@ FTP_STATE
 nsFtpState::R_stor() {
   if (mResponseCode / 100 == 2) {
     //(DONE)
-    Telemetry::ScalarAdd(
-        Telemetry::ScalarID::NETWORKING_FTP_OPENED_CHANNELS_FILES, 1);
-
     mNextState = FTP_COMPLETE;
     mStorReplyReceived = true;
 
@@ -1187,6 +1184,9 @@ nsFtpState::R_stor() {
   }
 
   if (mResponseCode / 100 == 1) {
+    Telemetry::ScalarAdd(
+        Telemetry::ScalarID::NETWORKING_FTP_OPENED_CHANNELS_FILES, 1);
+
     LOG(("FTP:(%p) writing on DT\n", this));
     return FTP_READ_BUF;
   }

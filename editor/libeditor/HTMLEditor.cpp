@@ -3789,30 +3789,22 @@ nsresult HTMLEditor::RemoveBlockContainerWithTransaction(Element& aElement) {
   return NS_OK;
 }
 
-/**
- * GetPriorHTMLSibling() returns the previous editable sibling, if there is
- * one within the parent.
- */
-nsIContent* HTMLEditor::GetPriorHTMLSibling(nsINode* aNode) {
+nsIContent* HTMLEditor::GetPriorHTMLSibling(nsINode* aNode, SkipWhitespace aSkipWS) {
   MOZ_ASSERT(aNode);
 
   nsIContent* node = aNode->GetPreviousSibling();
-  while (node && !IsEditable(node)) {
+  while (node && (!IsEditable(node) || SkippableWhitespace(node, aSkipWS))) {
     node = node->GetPreviousSibling();
   }
 
   return node;
 }
 
-/**
- * GetNextHTMLSibling() returns the next editable sibling, if there is
- * one within the parent.
- */
-nsIContent* HTMLEditor::GetNextHTMLSibling(nsINode* aNode) {
+nsIContent* HTMLEditor::GetNextHTMLSibling(nsINode* aNode, SkipWhitespace aSkipWS) {
   MOZ_ASSERT(aNode);
 
   nsIContent* node = aNode->GetNextSibling();
-  while (node && !IsEditable(node)) {
+  while (node && (!IsEditable(node) || SkippableWhitespace(node, aSkipWS))) {
     node = node->GetNextSibling();
   }
 

@@ -167,7 +167,7 @@ XPCOMUtils.defineLazyGetter(this, "KeyShortcuts", function() {
     // Key for opening the Debugger
     {
       toolId: "jsdebugger",
-      shortcut: KeyShortcutsBundle.GetStringFromName("jsdebugger.commandkey"),
+      shortcut: KeyShortcutsBundle.GetStringFromName("jsdebugger.commandkey2"),
       modifiers,
     },
     // Key for opening the Network Monitor

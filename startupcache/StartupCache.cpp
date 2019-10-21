@@ -454,6 +454,12 @@ size_t StartupCache::HeapSizeOfIncludingThis(
   size_t n = aMallocSizeOf(this);
 
   n += mTable.shallowSizeOfExcludingThis(aMallocSizeOf);
+  for (auto iter = mTable.iter(); !iter.done(); iter.next()) {
+    if (iter.get().value().mData) {
+      n += aMallocSizeOf(iter.get().value().mData.get());
+    }
+    n += iter.get().key().SizeOfExcludingThisIfUnshared(aMallocSizeOf);
+  }
 
   return n;
 }

@@ -14,6 +14,7 @@
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/ContentProcessManager.h"
 #include "mozilla/dom/ipc/IdType.h"
+#include "mozilla/dom/ServiceWorkerManager.h"
 #include "mozilla/net/HttpChannelParent.h"
 #include "mozilla/net/RedirectChannelRegistrar.h"
 #include "nsDocShell.h"
@@ -532,6 +533,34 @@ void DocumentChannelParent::TriggerRedirectToRealChannel(
                     Get<1>(aResponse), getter_AddRefs(newLoadInfo)));
 
                 if (newLoadInfo) {
+                  // Since the old reservedClientInfo might be controlled by a
+                  // ServiceWorker when opening the channel, we need to update
+                  // the controlled ClientInfo in ServiceWorkerManager to make
+                  // sure the same origin subresource load can be intercepted by
+                  // the ServiceWorker.
+                  nsCOMPtr<nsILoadInfo> oldLoadInfo;
+                  self->mChannel->GetLoadInfo(getter_AddRefs(oldLoadInfo));
+                  MOZ_ASSERT(oldLoadInfo);
+                  Maybe<ClientInfo> oldClientInfo =
+                      oldLoadInfo->GetReservedClientInfo();
+                  Maybe<ServiceWorkerDescriptor> oldController =
+                      oldLoadInfo->GetController();
+                  Maybe<ClientInfo> newClientInfo =
+                      newLoadInfo->GetReservedClientInfo();
+                  Maybe<ServiceWorkerDescriptor> newController =
+                      newLoadInfo->GetController();
+
+                  if (oldClientInfo.isSome() && newClientInfo.isSome() &&
+                      newController.isSome() && oldController.isSome() &&
+                      newController.ref() == oldController.ref()) {
+                    RefPtr<ServiceWorkerManager> swMgr =
+                        ServiceWorkerManager::GetInstance();
+                    MOZ_ASSERT(swMgr);
+                    swMgr->UpdateControlledClient(oldClientInfo.ref(),
+                                                  newClientInfo.ref(),
+                                                  newController.ref());
+                  }
+
                   self->mChannel->SetLoadInfo(newLoadInfo);
                 }
               }
@@ -736,6 +765,10 @@ DocumentChannelParent::SetClassifierMatchedTrackingInfo(
 NS_IMETHODIMP
 DocumentChannelParent::NotifyClassificationFlags(uint32_t aClassificationFlags,
                                                  bool aIsThirdParty) {
+  if (aIsThirdParty && CanSend()) {
+    Unused << SendNotifyClassificationFlags(aClassificationFlags);
+  }
+
   mIParentChannelFunctions.AppendElement(IParentChannelFunction{
       VariantIndex<3>{},
       ClassificationFlagsParams{aClassificationFlags, aIsThirdParty}});

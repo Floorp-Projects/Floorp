@@ -4,7 +4,7 @@
 
 :host {
   overflow: auto;
-  display: flex;
+  padding: 40px;
 
   --reveal-checkbox-opacity: .8;
   --reveal-checkbox-opacity-hover: .6;
@@ -26,8 +26,9 @@
 }
 
 .container {
-  flex-basis: 700px;
-  padding: 40px;
+  box-sizing: border-box;
+  height: 100%;
+  max-width: 700px;
   display: flex;
   flex-direction: column;
 }

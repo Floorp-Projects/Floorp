@@ -90,7 +90,6 @@ export class FxASignupForm extends React.PureComponent {
           rel="noopener noreferrer"
           onSubmit={this.onSubmit}
         >
-          <input name="service" type="hidden" value="sync" />
           <input name="action" type="hidden" value="email" />
           <input name="context" type="hidden" value="fx_desktop_v3" />
           <input

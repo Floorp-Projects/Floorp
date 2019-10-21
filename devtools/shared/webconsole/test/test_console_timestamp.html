@@ -21,7 +21,7 @@ window.onload = async function () {
       (consoleState, response) => resolve(consoleState)
     ));
     state = await onAttachConsole;
-    const consoleFront = state.client;
+    const consoleFront = state.webConsoleFront;
 
     info("Testing console.log packet timestamp correctness");
     const clientLogTimestamp = Date.now();

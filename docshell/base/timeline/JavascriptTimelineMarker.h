@@ -21,8 +21,8 @@ class JavascriptTimelineMarker : public TimelineMarker {
  public:
   // The caller owns |aAsyncCause| here, so we must copy it into a separate
   // string for use later on.
-  JavascriptTimelineMarker(const char* aReason, const char16_t* aFunctionName,
-                           const char16_t* aFileName, uint32_t aLineNumber,
+  JavascriptTimelineMarker(const char* aReason, const nsAString& aFunctionName,
+                           const nsAString& aFileName, uint32_t aLineNumber,
                            MarkerTracingType aTracingType,
                            JS::Handle<JS::Value> aAsyncStack,
                            const char* aAsyncCause)

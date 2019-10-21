@@ -16,7 +16,7 @@ fuzzy-if(skiaContent,0-2,0-529) == 393760-2.xml 393760-2-ref.xml
 == 414123.xhtml 414123-ref.xhtml
 == dir-1.html dir-1-ref.html
 pref(mathml.deprecated_alignment_attributes.disabled,false) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == dir-2.html dir-2-ref.html # Bug 1392106
-random-if(gtkWidget) == dir-3.html dir-3-ref.html # bug 1309426
+pref(mathml.mfrac_bevelled_attribute.disabled,false) random-if(gtkWidget) == dir-3.html dir-3-ref.html # bug 1309426
 pref(mathml.deprecated_menclose_notation_radical.disabled,false) == dir-4.html dir-4-ref.html
 == dir-5.html dir-5-ref.html
 fuzzy-if(cocoaWidget,0-135,0-56) == dir-6a.html dir-6a-ref.html
@@ -30,26 +30,26 @@ random-if(smallScreen&&Android) fuzzy(0-255,0-200) fuzzy-if(geckoview&&webrender
 == dynamic-mi.xhtml dynamic-mi-ref.xhtml
 == mphantom-1.html mphantom-1-ref.html
 == mphantom-2.html mphantom-2-ref.html
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mfenced-1.xhtml mfenced-1-ref.xhtml # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mfenced-2a.xhtml mfenced-2-ref.xhtml # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mfenced-2b.xhtml mfenced-2-ref.xhtml # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mfenced-3a.xhtml mfenced-3-ref.xhtml # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mfenced-3b.xhtml mfenced-3-ref.xhtml # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mfenced-3c.xhtml mfenced-3-ref.xhtml # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mfenced-3d.xhtml mfenced-3-ref.xhtml # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mfenced-4a.xhtml mfenced-4-ref.xhtml # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mfenced-4b.xhtml mfenced-4-ref.xhtml # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mfenced-5a.xhtml mfenced-5-ref.xhtml # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mfenced-5b.xhtml mfenced-5-ref.xhtml # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mfenced-5c.xhtml mfenced-5-ref.xhtml # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mfenced-5d.xhtml mfenced-5-ref.xhtml # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mfenced-6.html mfenced-6-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mfenced-7.html mfenced-7-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) != mfenced-8.html mfenced-8-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mfenced-9.html mfenced-9-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mfenced-10.html mfenced-10-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mfenced-11.html mfenced-11-ref.html # bug 670592, bug 1328771, Bug 1392106
-fails-if(gtkWidget) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mfenced-12.html mfenced-12-ref.html # bug 670592, bug 1328771, Bug 1392106
+pref(mathml.mfenced_element.disabled,false) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mfenced-1.xhtml mfenced-1-ref.xhtml # Bug 1392106
+pref(mathml.mfenced_element.disabled,false) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mfenced-2a.xhtml mfenced-2-ref.xhtml # Bug 1392106
+pref(mathml.mfenced_element.disabled,false) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mfenced-2b.xhtml mfenced-2-ref.xhtml # Bug 1392106
+pref(mathml.mfenced_element.disabled,false) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mfenced-3a.xhtml mfenced-3-ref.xhtml # Bug 1392106
+pref(mathml.mfenced_element.disabled,false) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mfenced-3b.xhtml mfenced-3-ref.xhtml # Bug 1392106
+pref(mathml.mfenced_element.disabled,false) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mfenced-3c.xhtml mfenced-3-ref.xhtml # Bug 1392106
+pref(mathml.mfenced_element.disabled,false) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mfenced-3d.xhtml mfenced-3-ref.xhtml # Bug 1392106
+pref(mathml.mfenced_element.disabled,false) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mfenced-4a.xhtml mfenced-4-ref.xhtml # Bug 1392106
+pref(mathml.mfenced_element.disabled,false) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mfenced-4b.xhtml mfenced-4-ref.xhtml # Bug 1392106
+pref(mathml.mfenced_element.disabled,false) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mfenced-5a.xhtml mfenced-5-ref.xhtml # Bug 1392106
+pref(mathml.mfenced_element.disabled,false) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mfenced-5b.xhtml mfenced-5-ref.xhtml # Bug 1392106
+pref(mathml.mfenced_element.disabled,false) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mfenced-5c.xhtml mfenced-5-ref.xhtml # Bug 1392106
+pref(mathml.mfenced_element.disabled,false) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mfenced-5d.xhtml mfenced-5-ref.xhtml # Bug 1392106
+pref(mathml.mfenced_element.disabled,false) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mfenced-6.html mfenced-6-ref.html # Bug 1392106
+pref(mathml.mfenced_element.disabled,false) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mfenced-7.html mfenced-7-ref.html # Bug 1392106
+pref(mathml.mfenced_element.disabled,false) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) != mfenced-8.html mfenced-8-ref.html # Bug 1392106
+pref(mathml.mfenced_element.disabled,false) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mfenced-9.html mfenced-9-ref.html # Bug 1392106
+pref(mathml.mfenced_element.disabled,false) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mfenced-10.html mfenced-10-ref.html # Bug 1392106
+pref(mathml.mfenced_element.disabled,false) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mfenced-11.html mfenced-11-ref.html # bug 670592, bug 1328771, Bug 1392106
+pref(mathml.mfenced_element.disabled,false) fails-if(gtkWidget) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mfenced-12.html mfenced-12-ref.html # bug 670592, bug 1328771, Bug 1392106
 == mi-mathvariant-1.xhtml mi-mathvariant-1-ref.xhtml
 == mi-mathvariant-2.xhtml mi-mathvariant-2-ref.xhtml
 != mi-mathvariant-3.html mi-mathvariant-3-ref.html
@@ -77,14 +77,14 @@ fails-if(gtkWidget) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mfen
 == stretchy-msup-1b.html stretchy-msup-1-ref.html
 == stretchy-msup-1c.html stretchy-msup-1-ref.html
 == stretchy-msup-1d.html stretchy-msup-1-ref.html
-!= stretchy-mfenced-1a.html stretchy-mfenced-1-ref.html
-!= stretchy-mfenced-1b.html stretchy-mfenced-1-ref.html
-== stretchy-mfenced-2a.html stretchy-mfenced-2-ref.html
-!= stretchy-mfenced-2b.html stretchy-mfenced-2-ref.html
-!= stretchy-mfenced-3a.html stretchy-mfenced-3-ref.html
-!= stretchy-mfenced-3b.html stretchy-mfenced-3-ref.html
-fails-if(geckoview) == stretchy-mfenced-4a.html stretchy-mfenced-4-ref.html # Bug 1558513 for GV
-fails-if(geckoview) == stretchy-mfenced-4b.html stretchy-mfenced-4-ref.html # Bug 1558513 for GV
+pref(mathml.mfenced_element.disabled,false) != stretchy-mfenced-1a.html stretchy-mfenced-1-ref.html
+pref(mathml.mfenced_element.disabled,false) != stretchy-mfenced-1b.html stretchy-mfenced-1-ref.html
+pref(mathml.mfenced_element.disabled,false) == stretchy-mfenced-2a.html stretchy-mfenced-2-ref.html
+pref(mathml.mfenced_element.disabled,false) != stretchy-mfenced-2b.html stretchy-mfenced-2-ref.html
+pref(mathml.mfenced_element.disabled,false) != stretchy-mfenced-3a.html stretchy-mfenced-3-ref.html
+pref(mathml.mfenced_element.disabled,false) != stretchy-mfenced-3b.html stretchy-mfenced-3-ref.html
+pref(mathml.mfenced_element.disabled,false) fails-if(geckoview) == stretchy-mfenced-4a.html stretchy-mfenced-4-ref.html # Bug 1558513 for GV
+pref(mathml.mfenced_element.disabled,false) fails-if(geckoview) == stretchy-mfenced-4b.html stretchy-mfenced-4-ref.html # Bug 1558513 for GV
 == stretchy-mover-1a.html stretchy-mover-1-ref.html
 == stretchy-mover-1b.html stretchy-mover-1-ref.html
 fails == stretchy-mover-2a.html stretchy-mover-2-ref.html
@@ -93,7 +93,7 @@ fails == stretchy-mover-2a.html stretchy-mover-2-ref.html
 == stretchy-largeop-1.html stretchy-largeop-1-ref.html
 == stretchy-largeop-2.html stretchy-largeop-2-ref.html
 == stretchy-largeop-3.html stretchy-largeop-3-ref.html
-== table-width-1.xhtml table-width-1-ref.xhtml
+pref(mathml.mfrac_bevelled_attribute.disabled,false) == table-width-1.xhtml table-width-1-ref.xhtml
 == table-width-2.html table-width-2-ref.html
 == table-width-3.html table-width-3-ref.html
 == table-width-4.html table-width-4-ref.html
@@ -185,9 +185,9 @@ pref(mathml.mathspace_names.disabled,false) == positive-namedspace.html positive
 == maction-dynamic-1.html maction-dynamic-1-ref.html # bug 773482
 == maction-dynamic-2.html maction-dynamic-2-ref.html
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mo-lspace-rspace.html mo-lspace-rspace-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mo-lspace-rspace-2.html mo-lspace-rspace-2-ref.html # Bug 1392106
+pref(mathml.mfenced_element.disabled,false) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mo-lspace-rspace-2.html mo-lspace-rspace-2-ref.html # Bug 1392106
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mo-lspace-rspace-3.html mo-lspace-rspace-3-ref.html # Bug 1392106
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mo-lspace-rspace-4.html mo-lspace-rspace-4-ref.html # Bug 1392106
+pref(mathml.mfrac_bevelled_attribute.disabled,false) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mo-lspace-rspace-4.html mo-lspace-rspace-4-ref.html # Bug 1392106
 == mo-invisibleoperators.html mo-invisibleoperators-ref.html
 == mo-invisibleoperators-2.html mo-invisibleoperators-2-ref.html
 random-if(gtkWidget) == mo-glyph-size.html mo-glyph-size-ref.html # bug 1309426
@@ -340,7 +340,7 @@ random-if(gtkWidget) == rowlines-3-2.html rowlines-3-2-ref.html # bug 1309426
 != op-dict-11.html op-dict-11-ref.html
 == op-dict-12.html op-dict-12-ref.html
 != op-dict-13.html op-dict-13-ref.html
-== mfrac-A-1.html mfrac-A-1-ref.html
+pref(mathml.mfrac_bevelled_attribute.disabled,false) == mfrac-A-1.html mfrac-A-1-ref.html
 pref(mathml.deprecated_alignment_attributes.disabled,false) == mfrac-A-2.html mfrac-A-2-ref.html
 pref(mathml.deprecated_alignment_attributes.disabled,false) == mfrac-A-3.html mfrac-A-3-ref.html
 == mfrac-A-4.html mfrac-A-4-ref.html
@@ -348,18 +348,18 @@ pref(mathml.mfrac_linethickness_names.disabled,false) random-if(/^Windows\x20NT\
 pref(mathml.deprecated_alignment_attributes.disabled,false) == mfrac-A-6.html mfrac-A-6-ref.html
 pref(mathml.deprecated_alignment_attributes.disabled,false) == mfrac-A-7.html mfrac-A-7-ref.html
 == mfrac-A-8.html mfrac-A-8-ref.html
-== mfrac-B-1.html mfrac-B-1-ref.html
+pref(mathml.mfrac_bevelled_attribute.disabled,false) == mfrac-B-1.html mfrac-B-1-ref.html
 pref(mathml.mfrac_linethickness_names.disabled,false) == mfrac-B-2.html mfrac-B-2-3-ref.html
 pref(mathml.mfrac_linethickness_names.disabled,false) == mfrac-B-3.html mfrac-B-2-3-ref.html
 pref(mathml.deprecated_alignment_attributes.disabled,false)  fuzzy-if(geckoview&&webrender,0-239,0-781) == mfrac-B-4.html mfrac-B-4-5-ref.html
 pref(mathml.deprecated_alignment_attributes.disabled,false)  == mfrac-B-5.html mfrac-B-4-5-ref.html
 pref(mathml.deprecated_alignment_attributes.disabled,false) fuzzy-if(geckoview&&webrender,0-239,0-781) == mfrac-B-6.html mfrac-B-6-7-ref.html
 pref(mathml.deprecated_alignment_attributes.disabled,false) == mfrac-B-7.html mfrac-B-6-7-ref.html
-fuzzy-if(OSX,0-1,0-100) fuzzy-if(skiaContent,0-1,0-14) == mfrac-C-1.html mfrac-C-1-ref.html
+pref(mathml.mfrac_bevelled_attribute.disabled,false) fuzzy-if(OSX,0-1,0-100) fuzzy-if(skiaContent,0-1,0-14) == mfrac-C-1.html mfrac-C-1-ref.html
 pref(mathml.mfrac_linethickness_names.disabled,false) == mfrac-C-2.html mfrac-C-2-ref.html
 pref(mathml.deprecated_alignment_attributes.disabled,false) fuzzy-if(geckoview&&webrender,0-239,0-776) == mfrac-C-3.html mfrac-C-3-ref.html
 pref(mathml.deprecated_alignment_attributes.disabled,false) fuzzy-if(geckoview&&webrender,0-239,0-271) == mfrac-C-4.html mfrac-C-4-ref.html
-fuzzy-if(OSX,0-1,0-100) fuzzy-if(skiaContent,0-1,0-14) == mfrac-D-1.html mfrac-D-1-ref.html
+pref(mathml.mfrac_bevelled_attribute.disabled,false) fuzzy-if(OSX,0-1,0-100) fuzzy-if(skiaContent,0-1,0-14) == mfrac-D-1.html mfrac-D-1-ref.html
 pref(mathml.mfrac_linethickness_names.disabled,false) == mfrac-D-2.html mfrac-D-2-ref.html
 pref(mathml.deprecated_alignment_attributes.disabled,false) fuzzy-if(geckoview&&webrender,0-239,0-776) == mfrac-D-3.html mfrac-D-3-ref.html
 pref(mathml.deprecated_alignment_attributes.disabled,false) fuzzy-if(geckoview&&webrender,0-239,0-271) == mfrac-D-4.html mfrac-D-4-ref.html

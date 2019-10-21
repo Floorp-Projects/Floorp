@@ -146,6 +146,7 @@ body {
   grid-column: 1 / 2;
   grid-row: -1 / -2;
   border-top: 1px solid var(--theme-splitter-color);
+  border-inline-end: 1px solid var(--theme-splitter-color);
 }
 
 .sidebar {
@@ -153,6 +154,7 @@ body {
   grid-row: 1 / -1;
   grid-column: -1 / -2;
   grid-template-rows: subgrid;
+  border-inline-start: 1px solid var(--theme-splitter-color);
   background-color: var(--theme-sidebar-background);
   width: 200px;
   min-width: 150px;
@@ -160,7 +162,6 @@ body {
 }
 
 .sidebar-resizer {
-  /* We want the splitter to cover the whole column (minus self-xss message) */
   grid-row: 1 / -1;
   grid-column: -1 / -2;
 }
@@ -244,6 +245,7 @@ body {
 .jsterm-editor .webconsole-editor-toolbar {
   grid-column: 1 / 2;
   grid-row: 2 / 3;
+  border-inline-end: 1px solid var(--theme-splitter-color);
   display: grid;
   align-items: center;
   /*
@@ -253,9 +255,9 @@ body {
      *   - A separator
      *   - The close button
      *
-     * +------------------------------------------+
-     * | ▶︎ Run                          ˄ ˅ 🔍 | ✖️ |
-     * +------------------------------------------+
+     * +-------------------------------------------+
+     * | ▶︎ Run                          ˄ ˅ 🔍 | ✕ |
+     * +-------------------------------------------+
      *
      */
   grid-template-columns: auto 1fr auto auto auto auto auto;
@@ -263,16 +265,24 @@ body {
 }
 
 .jsterm-editor .webconsole-editor-toolbar .webconsole-editor-toolbar-executeButton {
-  background-image: url("chrome://devtools/skin/images/webconsole/run.svg");
-  -moz-context-properties: fill;
-  fill: currentColor;
-  padding-inline-start: 22px;
-  background-repeat: no-repeat;
-  background-position: 4px center;
-  padding-inline-end: 8px;
+  padding-inline: 4px 8px;
   height: 20px;
   margin-inline-start: 5px;
-  background-size: 16px 16px;
+  display: flex;
+  align-items: center;
+}
+
+.jsterm-editor .webconsole-editor-toolbar .webconsole-editor-toolbar-executeButton::before {
+  content: url("chrome://devtools/skin/images/webconsole/run.svg");
+  height: 16px;
+  width: 16px;
+  -moz-context-properties: fill;
+  fill: currentColor;
+  margin-inline-end: 2px;
+}
+
+[dir="rtl"] .jsterm-editor .webconsole-editor-toolbar .webconsole-editor-toolbar-executeButton::before {
+  rotate: 180deg;
 }
 
 .jsterm-editor .webconsole-editor-toolbar .webconsole-editor-toolbar-history-prevExpressionButton {
@@ -327,8 +337,10 @@ body {
   grid-column: 1 / 2;
   grid-row: 3 / 5;
   width: 30vw;
-  min-width: 150px;
+  /* Don't allow the input to be narrower than the grid-column it's in  */
+  min-width: 100%;
   border-top: none;
+  border-inline-end: 1px solid var(--theme-splitter-color);
   padding: 0;
   /* Needed as we might have the onboarding UI displayed */
   display: flex;
@@ -336,8 +348,8 @@ body {
 }
 
 .jsterm-editor #webconsole-notificationbox {
-  grid-row: 1 / 2;
   grid-column: -1 / 1;
+  grid-row: 1 / 2;
 }
 
 .jsterm-editor .jsterm-input-container > .CodeMirror {
@@ -369,7 +381,7 @@ body {
 .jsterm-editor .editor-onboarding {
   display: grid;
   /**
-   * Here's the design we want: 
+   * Here's the design we want:
    * ┌──────┬────────────────────────┐
    * │ Icon │    Onboarding text     │
    * ├──────┼────────────────────────┤

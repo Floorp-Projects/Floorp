@@ -8,9 +8,10 @@
  * http://www.whatwg.org/specs/web-apps/current-work/#other-elements,-attributes-and-apis
  */
 
-[HTMLConstructor,
- Exposed=Window]
+[Exposed=Window]
 interface HTMLStyleElement : HTMLElement {
+  [HTMLConstructor] constructor();
+
            [Pure]
            attribute boolean disabled;
            [CEReactions, SetterThrows, Pure]

@@ -116,18 +116,12 @@ async function checkContextMenu(
     "Check that search context menu item is enabled"
   );
 
-  let searchTab = await BrowserTestUtils.openNewForegroundTab(
+  let loaded = BrowserTestUtils.waitForNewTab(
     win.gBrowser,
-    () => {
-      searchItem.click();
-    }
+    expectedBaseUrl + "?test=test+search&ie=utf-8&channel=contextsearch"
   );
-
-  Assert.equal(
-    win.gBrowser.currentURI.spec,
-    expectedBaseUrl + "?test=test+search&ie=utf-8&channel=contextsearch",
-    "Checking context menu search URL"
-  );
+  searchItem.click();
+  let searchTab = await loaded;
 
   searchItem = contextMenu.getElementsByAttribute(
     "id",

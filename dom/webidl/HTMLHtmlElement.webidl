@@ -13,9 +13,10 @@
  */
 
 // http://www.whatwg.org/specs/web-apps/current-work/#the-html-element
-[HTMLConstructor,
- Exposed=Window]
-interface HTMLHtmlElement : HTMLElement {};
+[Exposed=Window]
+interface HTMLHtmlElement : HTMLElement {
+  [HTMLConstructor] constructor();
+};
 
 // http://www.whatwg.org/specs/web-apps/current-work/#other-elements,-attributes-and-apis
 partial interface HTMLHtmlElement {

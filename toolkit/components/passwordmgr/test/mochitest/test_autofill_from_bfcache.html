@@ -24,7 +24,7 @@ runInParent(function initLogins() {
 <p id="display"></p>
 
 <div id="content">
-  <a id="next" href="https://example.org/" target="loginWin">Next</a>
+  <a id="next" href="https://example.org/tests/toolkit/components/passwordmgr/test/mochitest/file_history_back.html" target="loginWin">Next</a>
 </div>
 
 <pre id="test">
@@ -49,9 +49,8 @@ add_task(async function test_crossOriginBfcacheRestore() {
   await SimpleTest.promiseFocus(win);
   ok(pageHideEvent.persisted, "First document should have been persisted in bfcache");
 
-  info("go back to the first page (login form)");
+  info("loaded page will go back to the first page (login form)");
   processedPromise = promiseFormsProcessed();
-  SpecialPowers.wrap(win).history.back();
   await processedPromise;
   checkLoginForm(uname, "autofilled", pword, "pass1");
   win.close();

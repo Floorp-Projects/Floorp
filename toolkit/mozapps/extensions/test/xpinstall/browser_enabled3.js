@@ -13,7 +13,7 @@ function test() {
       "Unsigned XPI": TESTROOT + "amosigned.xpi",
     })
   );
-  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, TESTROOT);
 
   ContentTask.spawn(
     gBrowser.selectedBrowser,

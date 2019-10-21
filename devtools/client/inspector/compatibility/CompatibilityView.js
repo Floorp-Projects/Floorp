@@ -18,12 +18,22 @@ const CompatibilityApp = createFactory(
 
 class CompatibilityView {
   constructor(inspector, window) {
+    this._onNewNode = this._onNewNode.bind(this);
     this.inspector = inspector;
 
     this._init();
   }
 
-  destroy() {}
+  destroy() {
+    this.inspector.selection.off("new-node-front", this._onNewNode);
+    this.inspector.sidebar.off("compatibilityview-selected", this._onNewNode);
+
+    if (this._ruleView) {
+      this._ruleView.off("ruleview-changed", this._onNewNode);
+    }
+
+    this.inspector = null;
+  }
 
   _init() {
     const compatibilityApp = new CompatibilityApp();
@@ -37,8 +47,44 @@ class CompatibilityView {
       compatibilityApp
     );
 
+    this.inspector.selection.on("new-node-front", this._onNewNode);
+    this.inspector.sidebar.on("compatibilityview-selected", this._onNewNode);
+
+    if (this._ruleView) {
+      this._ruleView.on("ruleview-changed", this._onNewNode);
+    } else {
+      this.inspector.on(
+        "ruleview-added",
+        () => {
+          this._ruleView.on("ruleview-changed", this._onNewNode);
+        },
+        { once: true }
+      );
+    }
+  }
+
+  _isVisible() {
+    return (
+      this.inspector &&
+      this.inspector.sidebar &&
+      this.inspector.sidebar.getCurrentTabID() === "compatibilityview"
+    );
+  }
+
+  _onNewNode() {
+    if (!this._isVisible()) {
+      return;
+    }
+
     this.inspector.store.dispatch(
       updateSelectedNode(this.inspector.selection.nodeFront)
+    );
+  }
+
+  get _ruleView() {
+    return (
+      this.inspector.hasPanel("ruleview") &&
+      this.inspector.getPanel("ruleview").view
     );
   }
 }

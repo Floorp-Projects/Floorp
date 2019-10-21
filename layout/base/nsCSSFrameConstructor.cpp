@@ -30,6 +30,7 @@
 #include "mozilla/ServoBindings.h"
 #include "mozilla/ServoStyleSetInlines.h"
 #include "mozilla/StaticPrefs_layout.h"
+#include "mozilla/StaticPrefs_mathml.h"
 #include "mozilla/Unused.h"
 #include "RetainedDisplayListBuilder.h"
 #include "nsAbsoluteContainingBlock.h"
@@ -2185,8 +2186,7 @@ static inline bool NeedFrameFor(const nsFrameConstructorState& aState,
   // list.
   if (!aParentFrame ||
       !aParentFrame->IsFrameOfType(nsIFrame::eExcludesIgnorableWhitespace) ||
-      aParentFrame->IsGeneratedContentFrame() ||
-      !aChildContent->IsText()) {
+      aParentFrame->IsGeneratedContentFrame() || !aChildContent->IsText()) {
     return true;
   }
 
@@ -2314,13 +2314,12 @@ nsIFrame* nsCSSFrameConstructor::ConstructDocElementFrame(
     return nullptr;
   }
 
-  if (aDocElement->IsHTMLElement() &&
-      mDocElementContainingBlock->IsCanvasFrame()) {
+  if (mDocElementContainingBlock->IsCanvasFrame()) {
     // This implements "The Principal Writing Mode".
     // https://drafts.csswg.org/css-writing-modes-3/#principal-flow
     //
-    // If there's a <body> element, its writing-mode, direction, and
-    // text-orientation override the root element's used value.
+    // If there's a <body> element in an HTML document, its writing-mode,
+    // direction, and text-orientation override the root element's used value.
     //
     // We need to copy <body>'s WritingMode to mDocElementContainingBlock before
     // construct mRootElementFrame so that anonymous internal frames such as
@@ -2330,12 +2329,13 @@ nsIFrame* nsCSSFrameConstructor::ConstructDocElementFrame(
                "We need to copy <body>'s principal writing-mode before "
                "constructing mRootElementFrame.");
 
+    const WritingMode docElementWM(computedStyle);
     Element* body = mDocument->GetBodyElement();
     if (body) {
       RefPtr<ComputedStyle> bodyStyle = ResolveComputedStyle(body);
-      WritingMode bodyWM(bodyStyle);
+      const WritingMode bodyWM(bodyStyle);
 
-      if (bodyWM != mDocElementContainingBlock->GetWritingMode()) {
+      if (bodyWM != docElementWM) {
         nsContentUtils::ReportToConsole(
             nsIScriptError::warningFlag, NS_LITERAL_CSTRING("Layout"),
             mDocument, nsContentUtils::eLAYOUT_PROPERTIES,
@@ -2346,7 +2346,7 @@ nsIFrame* nsCSSFrameConstructor::ConstructDocElementFrame(
           bodyWM);
     } else {
       mDocElementContainingBlock->PropagateWritingModeToSelfAndAncestors(
-          mDocElementContainingBlock->GetWritingMode());
+          docElementWM);
     }
   }
 
@@ -4863,6 +4863,16 @@ nsCSSFrameConstructor::FindMathMLData(const Element& aElement,
     return &sInlineMathData;
   }
 
+  if (!StaticPrefs::mathml_mfenced_element_disabled() &&
+      tag == nsGkAtoms::mfenced_) {
+    // These flags are the same as those of SIMPLE_MATHML_CREATE.
+    static const FrameConstructionData sMathFencedData = FCDATA_DECL(
+        FCDATA_DISALLOW_OUT_OF_FLOW | FCDATA_FORCE_NULL_ABSPOS_CONTAINER |
+            FCDATA_WRAP_KIDS_IN_BLOCKS,
+        NS_NewMathMLmfencedFrame);
+    return &sMathFencedData;
+  }
+
   static const FrameConstructionDataByTag sMathMLData[] = {
       SIMPLE_MATHML_CREATE(annotation_, NS_NewMathMLTokenFrame),
       SIMPLE_MATHML_CREATE(annotation_xml_, NS_NewMathMLmrowFrame),
@@ -4883,7 +4893,7 @@ nsCSSFrameConstructor::FindMathMLData(const Element& aElement,
       SIMPLE_MATHML_CREATE(mspace_, NS_NewMathMLmspaceFrame),
       SIMPLE_MATHML_CREATE(none, NS_NewMathMLmspaceFrame),
       SIMPLE_MATHML_CREATE(mprescripts_, NS_NewMathMLmspaceFrame),
-      SIMPLE_MATHML_CREATE(mfenced_, NS_NewMathMLmfencedFrame),
+      SIMPLE_MATHML_CREATE(mfenced_, NS_NewMathMLmrowFrame),
       SIMPLE_MATHML_CREATE(mmultiscripts_, NS_NewMathMLmmultiscriptsFrame),
       SIMPLE_MATHML_CREATE(mstyle_, NS_NewMathMLmrowFrame),
       SIMPLE_MATHML_CREATE(msqrt_, NS_NewMathMLmsqrtFrame),
@@ -5556,8 +5566,7 @@ void nsCSSFrameConstructor::AddFrameConstructionItemsInternal(
     aItems.SetParentHasNoXBLChildren(!iter.XBLInvolved());
 
     CreateGeneratedContentItem(aState, aParentFrame, *aContent->AsElement(),
-                               *aComputedStyle, PseudoStyleType::after,
-                               aItems);
+                               *aComputedStyle, PseudoStyleType::after, aItems);
     return;
   }
 

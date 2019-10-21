@@ -1074,23 +1074,23 @@ static void DumpHeapVisitArena(JSRuntime* rt, void* data, gc::Arena* arena,
           unsigned(arena->getAllocKind()), unsigned(thingSize));
 }
 
-static void DumpHeapVisitCell(JSRuntime* rt, void* data, void* thing,
-                              JS::TraceKind traceKind, size_t thingSize) {
+static void DumpHeapVisitCell(JSRuntime* rt, void* data, JS::GCCellPtr cellptr,
+                              size_t thingSize) {
   DumpHeapTracer* dtrc = static_cast<DumpHeapTracer*>(data);
   char cellDesc[1024 * 32];
-  JS_GetTraceThingInfo(cellDesc, sizeof(cellDesc), dtrc, thing, traceKind,
-                       true);
+  JS_GetTraceThingInfo(cellDesc, sizeof(cellDesc), dtrc, cellptr.asCell(),
+                       cellptr.kind(), true);
 
-  fprintf(dtrc->output, "%p %c %s", thing, MarkDescriptor(thing), cellDesc);
+  fprintf(dtrc->output, "%p %c %s", cellptr.asCell(),
+          MarkDescriptor(cellptr.asCell()), cellDesc);
   if (dtrc->mallocSizeOf) {
-    auto size =
-        JS::ubi::Node(JS::GCCellPtr(thing, traceKind)).size(dtrc->mallocSizeOf);
+    auto size = JS::ubi::Node(cellptr).size(dtrc->mallocSizeOf);
     fprintf(dtrc->output, " SIZE:: %" PRIu64 "\n", size);
   } else {
     fprintf(dtrc->output, "\n");
   }
 
-  js::TraceChildren(dtrc, thing, traceKind);
+  js::TraceChildren(dtrc, cellptr.asCell(), cellptr.kind());
 }
 
 bool DumpHeapTracer::onChild(const JS::GCCellPtr& thing) {

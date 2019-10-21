@@ -156,15 +156,11 @@ bool js::intl_GetCalendarInfo(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-static void ReportBadKey(JSContext* cx,
-                         const Range<const JS::Latin1Char>& range) {
-  JS_ReportErrorNumberLatin1(cx, GetErrorMessage, nullptr, JSMSG_INVALID_KEY,
-                             range.begin().get());
-}
-
-static void ReportBadKey(JSContext* cx, const Range<const char16_t>& range) {
-  JS_ReportErrorNumberUC(cx, GetErrorMessage, nullptr, JSMSG_INVALID_KEY,
-                         range.begin().get());
+static void ReportBadKey(JSContext* cx, HandleString key) {
+  if (UniqueChars chars = QuoteString(cx, key, '"')) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INVALID_KEY,
+                              chars.get());
+  }
 }
 
 template <typename ConstChar>
@@ -200,22 +196,23 @@ template <typename ConstChar>
 static JSString* ComputeSingleDisplayName(JSContext* cx, UDateFormat* fmt,
                                           UDateTimePatternGenerator* dtpg,
                                           DisplayNameStyle style,
-                                          const Range<ConstChar>& pattern) {
+                                          const Range<ConstChar>& pattern,
+                                          HandleString patternString) {
   RangedPtr<ConstChar> iter = pattern.begin();
   const RangedPtr<ConstChar> end = pattern.end();
 
-  auto MatchSlash = [cx, pattern, &iter, end]() {
+  auto MatchSlash = [cx, patternString, &iter, end]() {
     if (MOZ_LIKELY(iter != end && *iter == '/')) {
       iter++;
       return true;
     }
 
-    ReportBadKey(cx, pattern);
+    ReportBadKey(cx, patternString);
     return false;
   };
 
   if (!MatchPart(&iter, end, "dates")) {
-    ReportBadKey(cx, pattern);
+    ReportBadKey(cx, patternString);
     return nullptr;
   }
 
@@ -239,13 +236,13 @@ static JSString* ComputeSingleDisplayName(JSContext* cx, UDateFormat* fmt,
     } else if (MatchPart(&iter, end, "day")) {
       fieldType = UDATPG_DAY_FIELD;
     } else {
-      ReportBadKey(cx, pattern);
+      ReportBadKey(cx, patternString);
       return nullptr;
     }
 
     // This part must be the final part with no trailing data.
     if (iter != end) {
-      ReportBadKey(cx, pattern);
+      ReportBadKey(cx, patternString);
       return nullptr;
     }
 
@@ -308,7 +305,7 @@ static JSString* ComputeSingleDisplayName(JSContext* cx, UDateFormat* fmt,
       } else if (MatchPart(&iter, end, "december")) {
         index = UCAL_DECEMBER;
       } else {
-        ReportBadKey(cx, pattern);
+        ReportBadKey(cx, patternString);
         return nullptr;
       }
     } else if (MatchPart(&iter, end, "weekdays")) {
@@ -345,7 +342,7 @@ static JSString* ComputeSingleDisplayName(JSContext* cx, UDateFormat* fmt,
       } else if (MatchPart(&iter, end, "sunday")) {
         index = UCAL_SUNDAY;
       } else {
-        ReportBadKey(cx, pattern);
+        ReportBadKey(cx, patternString);
         return nullptr;
       }
     } else if (MatchPart(&iter, end, "dayperiods")) {
@@ -360,17 +357,17 @@ static JSString* ComputeSingleDisplayName(JSContext* cx, UDateFormat* fmt,
       } else if (MatchPart(&iter, end, "pm")) {
         index = UCAL_PM;
       } else {
-        ReportBadKey(cx, pattern);
+        ReportBadKey(cx, patternString);
         return nullptr;
       }
     } else {
-      ReportBadKey(cx, pattern);
+      ReportBadKey(cx, patternString);
       return nullptr;
     }
 
     // This part must be the final part with no trailing data.
     if (iter != end) {
-      ReportBadKey(cx, pattern);
+      ReportBadKey(cx, patternString);
       return nullptr;
     }
 
@@ -380,7 +377,7 @@ static JSString* ComputeSingleDisplayName(JSContext* cx, UDateFormat* fmt,
     });
   }
 
-  ReportBadKey(cx, pattern);
+  ReportBadKey(cx, patternString);
   return nullptr;
 }
 
@@ -466,9 +463,11 @@ bool js::intl_ComputeDisplayNames(JSContext* cx, unsigned argc, Value* vp) {
     JSString* displayName =
         stablePatternChars.isLatin1()
             ? ComputeSingleDisplayName(cx, fmt, dtpg, dnStyle,
-                                       stablePatternChars.latin1Range())
+                                       stablePatternChars.latin1Range(),
+                                       keyValStr)
             : ComputeSingleDisplayName(cx, fmt, dtpg, dnStyle,
-                                       stablePatternChars.twoByteRange());
+                                       stablePatternChars.twoByteRange(),
+                                       keyValStr);
     if (!displayName) {
       return false;
     }

@@ -437,17 +437,18 @@ class WebConsole {
       "inspector",
       "inspect_dom"
     );
-    // TODO: Bug1574506 - Use the contextual WalkerFront for gripToNodeFront.
-    const walkerFront = (await this.toolbox.target.getFront("inspector"))
-      .walker;
-    const onGripNodeToFront = walkerFront.gripToNodeFront(grip);
-    const [front, inspector] = await Promise.all([
-      onGripNodeToFront,
+
+    const onNodeFront = this.toolbox.target
+      .getFront("inspector")
+      .then(inspectorFront => inspectorFront.getNodeFrontFromNodeGrip(grip));
+
+    const [nodeFront, inspectorPanel] = await Promise.all([
+      onNodeFront,
       onSelectInspector,
     ]);
 
-    const onInspectorUpdated = inspector.once("inspector-updated");
-    const onNodeFrontSet = this.toolbox.selection.setNodeFront(front, {
+    const onInspectorUpdated = inspectorPanel.once("inspector-updated");
+    const onNodeFrontSet = this.toolbox.selection.setNodeFront(nodeFront, {
       reason: "console",
     });
 

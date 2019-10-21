@@ -30,8 +30,6 @@ class FileCallbackRunnable final : public Runnable {
     // Here we clone the File object.
 
     RefPtr<File> file = File::Create(mFile->GetParentObject(), mFile->Impl());
-    MOZ_ASSERT(file);
-
     mCallback->Call(*file);
     return NS_OK;
   }

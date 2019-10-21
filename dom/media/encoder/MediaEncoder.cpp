@@ -19,7 +19,6 @@
 #include "mozilla/dom/VideoStreamTrack.h"
 #include "mozilla/gfx/Point.h"  // IntSize
 #include "mozilla/Logging.h"
-#include "mozilla/media/MediaUtils.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/StaticPtr.h"
@@ -56,12 +55,11 @@ class MediaEncoder::AudioTrackListener : public DirectMediaTrackListener {
         mRemoved(false),
         mDriftCompensator(aDriftCompensator),
         mEncoder(aEncoder),
-        mEncoderThread(aEncoderThread) {
+        mEncoderThread(aEncoderThread),
+        mShutdownPromise(mShutdownHolder.Ensure(__func__)) {
     MOZ_ASSERT(mEncoder);
     MOZ_ASSERT(mEncoderThread);
   }
-
-  void NotifyShutdown() { mShutdown = true; }
 
   void NotifyDirectListenerInstalled(InstallationResult aResult) override {
     if (aResult == InstallationResult::SUCCESS) {
@@ -88,10 +86,6 @@ class MediaEncoder::AudioTrackListener : public DirectMediaTrackListener {
     MOZ_ASSERT(mEncoder);
     MOZ_ASSERT(mEncoderThread);
 
-    if (mShutdown) {
-      return;
-    }
-
     if (!mInitialized) {
       mDriftCompensator->NotifyAudioStart(TimeStamp::Now());
       mInitialized = true;
@@ -116,10 +110,6 @@ class MediaEncoder::AudioTrackListener : public DirectMediaTrackListener {
     MOZ_ASSERT(mEncoder);
     MOZ_ASSERT(mEncoderThread);
 
-    if (mShutdown) {
-      return;
-    }
-
     nsresult rv = mEncoderThread->Dispatch(
         NewRunnableMethod("mozilla::AudioTrackEncoder::NotifyEndOfStream",
                           mEncoder, &AudioTrackEncoder::NotifyEndOfStream));
@@ -128,13 +118,11 @@ class MediaEncoder::AudioTrackListener : public DirectMediaTrackListener {
   }
 
   void NotifyRemoved(MediaTrackGraph* aGraph) override {
-    if (!mShutdown) {
-      nsresult rv = mEncoderThread->Dispatch(
-          NewRunnableMethod("mozilla::AudioTrackEncoder::NotifyEndOfStream",
-                            mEncoder, &AudioTrackEncoder::NotifyEndOfStream));
-      MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-      Unused << rv;
-    }
+    nsresult rv = mEncoderThread->Dispatch(
+        NewRunnableMethod("mozilla::AudioTrackEncoder::NotifyEndOfStream",
+                          mEncoder, &AudioTrackEncoder::NotifyEndOfStream));
+    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+    Unused << rv;
 
     mRemoved = true;
 
@@ -142,17 +130,23 @@ class MediaEncoder::AudioTrackListener : public DirectMediaTrackListener {
       mEncoder = nullptr;
       mEncoderThread = nullptr;
     }
+
+    mShutdownHolder.Resolve(true, __func__);
+  }
+
+  const RefPtr<GenericNonExclusivePromise>& OnShutdown() const {
+    return mShutdownPromise;
   }
 
  private:
-  // True when MediaEncoder has shutdown and destroyed the TaskQueue.
-  Atomic<bool> mShutdown;
   bool mDirectConnected;
   bool mInitialized;
   bool mRemoved;
   const RefPtr<DriftCompensator> mDriftCompensator;
   RefPtr<AudioTrackEncoder> mEncoder;
   RefPtr<TaskQueue> mEncoderThread;
+  MozPromiseHolder<GenericNonExclusivePromise> mShutdownHolder;
+  const RefPtr<GenericNonExclusivePromise> mShutdownPromise;
 };
 
 class MediaEncoder::VideoTrackListener : public DirectMediaTrackListener {
@@ -162,12 +156,11 @@ class MediaEncoder::VideoTrackListener : public DirectMediaTrackListener {
         mInitialized(false),
         mRemoved(false),
         mEncoder(aEncoder),
-        mEncoderThread(aEncoderThread) {
+        mEncoderThread(aEncoderThread),
+        mShutdownPromise(mShutdownHolder.Ensure(__func__)) {
     MOZ_ASSERT(mEncoder);
     MOZ_ASSERT(mEncoderThread);
   }
-
-  void NotifyShutdown() { mShutdown = true; }
 
   void NotifyDirectListenerInstalled(InstallationResult aResult) override {
     if (aResult == InstallationResult::SUCCESS) {
@@ -195,10 +188,6 @@ class MediaEncoder::VideoTrackListener : public DirectMediaTrackListener {
     MOZ_ASSERT(mEncoder);
     MOZ_ASSERT(mEncoderThread);
 
-    if (mShutdown) {
-      return;
-    }
-
     const TimeStamp now = TimeStamp::Now();
     if (!mInitialized) {
       nsresult rv = mEncoderThread->Dispatch(NewRunnableMethod<TimeStamp>(
@@ -223,10 +212,6 @@ class MediaEncoder::VideoTrackListener : public DirectMediaTrackListener {
     MOZ_ASSERT(mEncoderThread);
     MOZ_ASSERT(aMedia.GetType() == MediaSegment::VIDEO);
 
-    if (mShutdown) {
-      return;
-    }
-
     const VideoSegment& video = static_cast<const VideoSegment&>(aMedia);
     VideoSegment copy;
     for (VideoSegment::ConstChunkIterator iter(video); !iter.IsEnded();
@@ -250,10 +235,6 @@ class MediaEncoder::VideoTrackListener : public DirectMediaTrackListener {
     MOZ_ASSERT(mEncoder);
     MOZ_ASSERT(mEncoderThread);
 
-    if (mShutdown) {
-      return;
-    }
-
     nsresult rv;
     if (aEnabled) {
       rv = mEncoderThread->Dispatch(NewRunnableMethod<TimeStamp>(
@@ -272,10 +253,6 @@ class MediaEncoder::VideoTrackListener : public DirectMediaTrackListener {
     MOZ_ASSERT(mEncoder);
     MOZ_ASSERT(mEncoderThread);
 
-    if (mShutdown) {
-      return;
-    }
-
     nsresult rv = mEncoderThread->Dispatch(
         NewRunnableMethod("mozilla::VideoTrackEncoder::NotifyEndOfStream",
                           mEncoder, &VideoTrackEncoder::NotifyEndOfStream));
@@ -284,13 +261,11 @@ class MediaEncoder::VideoTrackListener : public DirectMediaTrackListener {
   }
 
   void NotifyRemoved(MediaTrackGraph* aGraph) override {
-    if (!mShutdown) {
-      nsresult rv = mEncoderThread->Dispatch(
-          NewRunnableMethod("mozilla::VideoTrackEncoder::NotifyEndOfStream",
-                            mEncoder, &VideoTrackEncoder::NotifyEndOfStream));
-      MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-      Unused << rv;
-    }
+    nsresult rv = mEncoderThread->Dispatch(
+        NewRunnableMethod("mozilla::VideoTrackEncoder::NotifyEndOfStream",
+                          mEncoder, &VideoTrackEncoder::NotifyEndOfStream));
+    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+    Unused << rv;
 
     mRemoved = true;
 
@@ -298,16 +273,22 @@ class MediaEncoder::VideoTrackListener : public DirectMediaTrackListener {
       mEncoder = nullptr;
       mEncoderThread = nullptr;
     }
+
+    mShutdownHolder.Resolve(true, __func__);
+  }
+
+  const RefPtr<GenericNonExclusivePromise>& OnShutdown() const {
+    return mShutdownPromise;
   }
 
  private:
-  // True when MediaEncoder has shutdown and destroyed the TaskQueue.
-  Atomic<bool> mShutdown;
   bool mDirectConnected;
   bool mInitialized;
   bool mRemoved;
   RefPtr<VideoTrackEncoder> mEncoder;
   RefPtr<TaskQueue> mEncoderThread;
+  MozPromiseHolder<GenericNonExclusivePromise> mShutdownHolder;
+  const RefPtr<GenericNonExclusivePromise> mShutdownPromise;
 };
 
 class MediaEncoder::EncoderListener : public TrackEncoderListener {
@@ -404,7 +385,6 @@ MediaEncoder::MediaEncoder(TaskQueue* aEncoderThread,
       mInitialized(false),
       mCompleted(false),
       mError(false),
-      mCanceled(false),
       mShutdown(false) {
   if (mAudioEncoder) {
     mAudioListener = MakeAndAddRef<AudioTrackListener>(
@@ -778,43 +758,45 @@ nsresult MediaEncoder::GetEncodedData(
   return rv;
 }
 
-void MediaEncoder::Shutdown() {
+RefPtr<GenericNonExclusivePromise> MediaEncoder::Shutdown() {
   MOZ_ASSERT(mEncoderThread->IsCurrentThreadIn());
-  if (mShutdown) {
-    return;
+  if (mShutdownPromise) {
+    return mShutdownPromise;
   }
-  mShutdown = true;
 
-  LOG(LogLevel::Info, ("MediaEncoder has been shut down."));
+  LOG(LogLevel::Info, ("MediaEncoder is shutting down."));
   if (mAudioEncoder) {
     mAudioEncoder->UnregisterListener(mEncoderListener);
-  }
-  if (mAudioListener) {
-    mAudioListener->NotifyShutdown();
   }
   if (mVideoEncoder) {
     mVideoEncoder->UnregisterListener(mEncoderListener);
   }
-  if (mVideoListener) {
-    mVideoListener->NotifyShutdown();
-  }
   mEncoderListener->Forget();
 
-  if (mCanceled) {
-    // Shutting down after being canceled. We cannot use the encoder thread.
-    return;
+  AutoTArray<RefPtr<GenericNonExclusivePromise>, 2> shutdownPromises;
+  if (mAudioListener) {
+    shutdownPromises.AppendElement(mAudioListener->OnShutdown());
+  }
+  if (mVideoListener) {
+    shutdownPromises.AppendElement(mVideoListener->OnShutdown());
   }
 
-  auto listeners(mListeners);
-  for (auto& l : listeners) {
-    // We dispatch here since this method is typically called from
-    // a DataAvailable() handler.
-    nsresult rv = mEncoderThread->Dispatch(
-        NewRunnableMethod("mozilla::MediaEncoderListener::Shutdown", l,
-                          &MediaEncoderListener::Shutdown));
-    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-    Unused << rv;
-  }
+  return mShutdownPromise =
+             GenericNonExclusivePromise::All(mEncoderThread, shutdownPromises)
+                 ->Then(mEncoderThread, __func__,
+                        [self = RefPtr<MediaEncoder>(this), this](
+                            const GenericNonExclusivePromise::AllPromiseType::
+                                ResolveOrRejectValue& aValue) {
+                          MOZ_DIAGNOSTIC_ASSERT(aValue.IsResolve());
+                          LOG(LogLevel::Info, ("MediaEncoder has shut down."));
+                          mShutdown = true;
+                          auto listeners(mListeners);
+                          for (auto& l : listeners) {
+                            l->Shutdown();
+                          }
+                          return GenericNonExclusivePromise::CreateAndResolve(
+                              true, __func__);
+                        });
 }
 
 bool MediaEncoder::IsShutdown() {
@@ -822,26 +804,21 @@ bool MediaEncoder::IsShutdown() {
   return mShutdown;
 }
 
-void MediaEncoder::Cancel() {
+RefPtr<GenericNonExclusivePromise> MediaEncoder::Cancel() {
   MOZ_ASSERT(NS_IsMainThread());
 
   Stop();
 
-  RefPtr<MediaEncoder> self = this;
-  nsresult rv = mEncoderThread->Dispatch(NewRunnableFrom([self]() mutable {
-    self->mCanceled = true;
-
-    if (self->mAudioEncoder) {
-      self->mAudioEncoder->Cancel();
-    }
-    if (self->mVideoEncoder) {
-      self->mVideoEncoder->Cancel();
-    }
-    self->Shutdown();
-    return NS_OK;
-  }));
-  MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-  Unused << rv;
+  return InvokeAsync(mEncoderThread, __func__,
+                     [self = RefPtr<MediaEncoder>(this), this]() {
+                       if (mAudioEncoder) {
+                         mAudioEncoder->Cancel();
+                       }
+                       if (mVideoEncoder) {
+                         mVideoEncoder->Cancel();
+                       }
+                       return Shutdown();
+                     });
 }
 
 bool MediaEncoder::HasError() {

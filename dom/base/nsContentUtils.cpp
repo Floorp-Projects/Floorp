@@ -169,6 +169,7 @@
 #include "nsIForm.h"
 #include "nsIFragmentContentSink.h"
 #include "nsContainerFrame.h"
+#include "nsIClassifiedChannel.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsIIdleService.h"
 #include "nsIImageLoadingContent.h"
@@ -7993,13 +7994,13 @@ bool nsContentUtils::IsTrackingResourceWindow(nsPIDOMWindowInner* aWindow) {
     return false;
   }
 
-  nsCOMPtr<nsIHttpChannel> httpChannel =
+  nsCOMPtr<nsIClassifiedChannel> classifiedChannel =
       do_QueryInterface(document->GetChannel());
-  if (!httpChannel) {
+  if (!classifiedChannel) {
     return false;
   }
 
-  return httpChannel->IsTrackingResource();
+  return classifiedChannel->IsTrackingResource();
 }
 
 // static public
@@ -8012,13 +8013,13 @@ bool nsContentUtils::IsThirdPartyTrackingResourceWindow(
     return false;
   }
 
-  nsCOMPtr<nsIHttpChannel> httpChannel =
+  nsCOMPtr<nsIClassifiedChannel> classifiedChannel =
       do_QueryInterface(document->GetChannel());
-  if (!httpChannel) {
+  if (!classifiedChannel) {
     return false;
   }
 
-  return httpChannel->IsThirdPartyTrackingResource();
+  return classifiedChannel->IsThirdPartyTrackingResource();
 }
 
 namespace {

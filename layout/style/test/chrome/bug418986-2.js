@@ -61,7 +61,6 @@ var suppressed_toggles = [
   "-moz-scrollbar-start-backward",
   "-moz-scrollbar-start-forward",
   "-moz-scrollbar-thumb-proportional",
-  "-moz-touch-enabled",
   "-moz-windows-compositor",
   "-moz-windows-default-theme",
   "-moz-windows-glass",
@@ -74,7 +73,11 @@ var suppressed_toggles = [
   "-moz-gtk-csd-reversed-placement",
 ];
 
-var toggles_enabled_in_content = ["-moz-touch-enabled"];
+var toggles_enabled_in_content = [];
+if (SpecialPowers.getBoolPref("layout.css.moz-touch-enabled.enabled")) {
+  suppressed_toggles.push("-moz-touch-enabled");
+  toggles_enabled_in_content.push("-moz-touch-enabled");
+}
 
 // Possible values for '-moz-os-version'
 var windows_versions = ["windows-win7", "windows-win8", "windows-win10"];

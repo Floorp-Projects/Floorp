@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=448587.xul
+-->
+<window title="Mozilla Bug 503926"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=448587"
+     target="_blank">Mozilla Bug 448587</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+
+  // Bonus test - collaborate with test_bug361111.xhtml to make sure that
+  // flushPrefEnv is appropriately called.
+  ok(!SpecialPowers.Services.prefs.prefHasUserValue('testing.some_arbitrary_pref'),
+     "Pref shouldn't carry over from previous test!");
+
+
+  /** Test for Bug 448587 **/
+  var sandbox = new Cu.Sandbox("about:blank");
+  var fwrapper = Cu.evalInSandbox("function f() {} f", sandbox);
+  is(Cu.unwaiveXrays(Cu.waiveXrays(fwrapper).prototype), Cu.evalInSandbox("f.prototype", sandbox),
+     ".prototype visible through .wrappedJSObject");
+  is(fwrapper.prototype, undefined, ".prototype invisible through Xrays");
+  ]]>
+  </script>
+</window>

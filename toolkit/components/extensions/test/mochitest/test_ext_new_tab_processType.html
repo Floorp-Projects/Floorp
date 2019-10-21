@@ -28,7 +28,7 @@ function promiseObserved(topic, check) {
 }
 
 add_task(async function test_target_blank_link() {
-  const linkURL = "http://example.com/";
+  const linkURL = "http://mochi.test:8888/tests/toolkit/";
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
@@ -60,14 +60,19 @@ add_task(async function test_target_blank_link() {
   await new Promise(resolve => iframe.addEventListener("load", () => setTimeout(resolve, 0), {once: true}));
 
   let win = SpecialPowers.wrap(iframe).contentWindow;
-  let link = win.document.getElementById("link");
 
   {
     // Flush layout so that synthesizeMouseAtCenter on a cross-origin iframe
     // works as expected.
     document.body.getBoundingClientRect();
-    synthesizeMouseAtCenter(link, {}, iframe.contentWindow);
-    let {subject: doc} = await promiseObserved("document-element-inserted", doc => doc.documentURI === linkURL);
+
+    let promise = promiseObserved("document-element-inserted", doc => doc.documentURI === linkURL);
+
+    await SpecialPowers.spawn(iframe, [], async () => {
+      this.content.document.getElementById("link").click();
+    });
+
+    let {subject: doc} = await promise;
     info("Link opened");
     doc.defaultView.close();
     info("Window closed");

@@ -11,9 +11,10 @@
  * and create derivative works of this document.
  */
 
-[HTMLConstructor,
- Exposed=Window]
+[Exposed=Window]
 interface HTMLFieldSetElement : HTMLElement {
+  [HTMLConstructor] constructor();
+
   [CEReactions, SetterThrows]
            attribute boolean disabled;
   readonly attribute HTMLFormElement? form;

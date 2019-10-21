@@ -6,9 +6,11 @@
 
 interface XULControllers;
 
-[HTMLConstructor, Func="IsChromeOrXBL",
+[Func="IsChromeOrXBL",
  Exposed=Window]
 interface XULElement : Element {
+  [HTMLConstructor] constructor();
+
   // Layout properties
   [SetterThrows]
   attribute DOMString align;

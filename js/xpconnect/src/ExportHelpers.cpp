@@ -116,6 +116,10 @@ class MOZ_STACK_CLASS StackScopedCloneData : public StructuredCloneHolderBase {
       JS::Rooted<JS::Value> val(aCx);
       {
         RefPtr<Blob> blob = Blob::Create(global, mBlobImpls[idx]);
+        if (NS_WARN_IF(!blob)) {
+          return nullptr;
+        }
+
         if (!ToJSValue(aCx, blob, &val)) {
           return nullptr;
         }

@@ -21,6 +21,7 @@
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
 #include "nsIChannel.h"
+#include "nsIClassifiedChannel.h"
 #include "nsIHttpChannel.h"
 #include "nsCookiePermission.h"
 #include "nsIEffectiveTLDService.h"
@@ -143,14 +144,15 @@ void CookieServiceChild::TrackCookieLoad(nsIChannel* aChannel) {
   if (RequireThirdPartyCheck(loadInfo)) {
     mThirdPartyUtil->IsThirdPartyChannel(aChannel, uri, &isForeign);
   }
-  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
-  if (httpChannel) {
-    isTrackingResource = httpChannel->IsTrackingResource();
+  nsCOMPtr<nsIClassifiedChannel> classifiedChannel =
+      do_QueryInterface(aChannel);
+  if (classifiedChannel) {
+    isTrackingResource = classifiedChannel->IsTrackingResource();
     // Check first-party storage access even for non-tracking resources, since
     // we will need the result when computing the access rights for the reject
     // foreign cookie behavior mode.
     if (isForeign && AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
-                         httpChannel, uri, &rejectedReason)) {
+                         aChannel, uri, &rejectedReason)) {
       firstPartyStorageAccessGranted = true;
     }
 
@@ -471,14 +473,15 @@ nsresult CookieServiceChild::GetCookieStringInternal(
   bool isTrackingResource = false;
   bool firstPartyStorageAccessGranted = false;
   uint32_t rejectedReason = 0;
-  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
-  if (httpChannel) {
-    isTrackingResource = httpChannel->IsTrackingResource();
+  nsCOMPtr<nsIClassifiedChannel> classifiedChannel =
+      do_QueryInterface(aChannel);
+  if (classifiedChannel) {
+    isTrackingResource = classifiedChannel->IsTrackingResource();
     // Check first-party storage access even for non-tracking resources, since
     // we will need the result when computing the access rights for the reject
     // foreign cookie behavior mode.
     if (isForeign && AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
-                         httpChannel, aHostURI, &rejectedReason)) {
+                         aChannel, aHostURI, &rejectedReason)) {
       firstPartyStorageAccessGranted = true;
     }
   }
@@ -515,14 +518,15 @@ nsresult CookieServiceChild::SetCookieStringInternal(
   bool isTrackingResource = false;
   bool firstPartyStorageAccessGranted = false;
   uint32_t rejectedReason = 0;
-  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
-  if (httpChannel) {
-    isTrackingResource = httpChannel->IsTrackingResource();
+  nsCOMPtr<nsIClassifiedChannel> classifiedChannel =
+      do_QueryInterface(aChannel);
+  if (classifiedChannel) {
+    isTrackingResource = classifiedChannel->IsTrackingResource();
     // Check first-party storage access even for non-tracking resources, since
     // we will need the result when computing the access rights for the reject
     // foreign cookie behavior mode.
     if (isForeign && AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
-                         httpChannel, aHostURI, &rejectedReason)) {
+                         aChannel, aHostURI, &rejectedReason)) {
       firstPartyStorageAccessGranted = true;
     }
   }

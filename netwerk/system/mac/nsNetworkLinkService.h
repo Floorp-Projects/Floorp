@@ -7,6 +7,7 @@
 
 #include "nsINetworkLinkService.h"
 #include "nsIObserver.h"
+#include "nsITimer.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/SHA1.h"
@@ -16,11 +17,14 @@
 
 using prefix_and_netmask = std::pair<in6_addr, in6_addr>;
 
-class nsNetworkLinkService : public nsINetworkLinkService, public nsIObserver {
+class nsNetworkLinkService : public nsINetworkLinkService,
+                             public nsIObserver,
+                             public nsITimerCallback {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSINETWORKLINKSERVICE
   NS_DECL_NSIOBSERVER
+  NS_DECL_NSITIMERCALLBACK
 
   nsNetworkLinkService();
 
@@ -49,7 +53,7 @@ class nsNetworkLinkService : public nsINetworkLinkService, public nsIObserver {
                                   SCNetworkConnectionFlags flags, void* info);
   static void IPConfigChanged(SCDynamicStoreRef store, CFArrayRef changedKeys,
                               void* info);
-  void calculateNetworkId(void);
+  void calculateNetworkIdWithDelay(uint32_t aDelay);
   void calculateNetworkIdInternal(void);
 
   mozilla::Mutex mMutex;
@@ -57,6 +61,10 @@ class nsNetworkLinkService : public nsINetworkLinkService, public nsIObserver {
 
   // Time stamp of last NS_NETWORK_LINK_DATA_CHANGED event
   mozilla::TimeStamp mNetworkChangeTime;
+
+  // The timer used to delay the calculation of network id since it takes some
+  // time to discover the gateway's MAC address.
+  nsCOMPtr<nsITimer> mNetworkIdTimer;
 };
 
 #endif /* NSNETWORKLINKSERVICEMAC_H_ */

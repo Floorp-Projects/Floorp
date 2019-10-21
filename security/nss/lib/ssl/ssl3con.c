@@ -4255,7 +4255,7 @@ ssl_SignatureSchemeMatchesSpkiOid(SSLSignatureScheme scheme, SECOidTag spkiOid)
 }
 
 /* Validate that the signature scheme works for the given key type. */
-static PRBool
+PRBool
 ssl_SignatureSchemeValid(SSLSignatureScheme scheme, SECOidTag spkiOid,
                          PRBool isTls13)
 {

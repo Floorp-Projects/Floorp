@@ -919,6 +919,8 @@ class nsPIDOMWindowOuter : public mozIDOMWindowProxy {
    */
   virtual void FinishFullscreenChange(bool aIsFullscreen) = 0;
 
+  virtual void ForceFullScreenInWidget() = 0;
+
   // XXX: These focus methods all forward to the inner, could we change
   // consumers to call these on the inner directly?
 

@@ -50,6 +50,7 @@ child:
   // AsyncOpen of nsHttpChannel on the parent.
   async FailedAsyncOpen(nsresult status);
 
+  async NotifyClassificationFlags(uint32_t classificationFlags);
   async NotifyChannelClassifierProtectionDisabled(uint32_t acceptedReason);
   async NotifyCookieAllowed();
   async NotifyCookieBlocked(uint32_t rejectedReason);

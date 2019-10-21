@@ -1,0 +1,2 @@
+6856b110d025599a243f0b0128c7f39572a9ead0 - Kai Engert - Bug 1581890 - remove whitespace from end of line in h/c/cpp. r=glandium 
+b2e285dc48be27713b3c648de3cf33f8637a3e94 - Kai Engert - Bug 1581890 - formatted code with artistic style utility. r=glandium

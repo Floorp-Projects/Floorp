@@ -35,6 +35,7 @@ from collections import (
 from io import StringIO
 from itertools import chain
 from multiprocessing import cpu_count
+from six import string_types
 
 from mozbuild.util import (
     EmptyValue,
@@ -906,42 +907,48 @@ class BuildReader(object):
         for path, f in self._relevant_mozbuild_finder.find('**/moz.build'):
             yield path
 
-    def find_sphinx_variables(self, path=None):
-        """This function finds all assignments of Sphinx documentation variables.
+    def find_variables_from_ast(self, variables, path=None):
+        """Finds all assignments to the specified variables by parsing
+        moz.build abstract syntax trees.
 
-        This is a generator of tuples of (moz.build path, var, key, value). For
-        variables that assign to keys in objects, key will be defined.
+        This function only supports two cases, as detailed below.
 
-        With a little work, this function could be made more generic. But if we
-        end up writing a lot of ast code, it might be best to import a
-        high-level AST manipulation library into the tree.
+        1) A dict. Keys and values should both be strings, e.g:
+
+            VARIABLE['foo'] = 'bar'
+
+        This is an `Assign` node with a `Subscript` target. The `Subscript`'s
+        value is a `Name` node with id "VARIABLE". The slice of this target is
+        an `Index` node and its value is a `Str` with value "foo".
+
+        2) A simple list. Values should be strings, e.g: The target of the
+        assignment should be a Name node. Values should be a List node,
+        whose elements are Str nodes. e.g:
+
+            VARIABLE += ['foo']
+
+        This is an `AugAssign` node with a `Name` target with id "VARIABLE".
+        The value is a `List` node containing one `Str` element whose value is
+        "foo".
+
+        With a little work, this function could support other types of
+        assignment. But if we end up writing a lot of AST code, it might be
+        best to import a high-level AST manipulation library into the tree.
+
+        Args:
+            variables (list): A list of variable assignments to capture.
+            path (str): A path relative to the source dir. If specified, only
+                `moz.build` files relevant to this path will be parsed. Otherwise
+                all `moz.build` files are parsed.
+
+        Returns:
+            A generator that generates tuples of the form `(<moz.build path>,
+            <variable name>, <key>, <value>)`. The `key` will only be
+            defined if the variable is an object, otherwise it is `None`.
         """
-        # This function looks for assignments to SPHINX_TREES and
-        # SPHINX_PYTHON_PACKAGE_DIRS variables.
-        #
-        # SPHINX_TREES is a dict. Keys and values should both be strings. The
-        # target of the assignment should be a Subscript node. The value
-        # assigned should be a Str node. e.g.
-        #
-        #  SPHINX_TREES['foo'] = 'bar'
-        #
-        # This is an Assign node with a Subscript target. The Subscript's value
-        # is a Name node with id "SPHINX_TREES." The slice of this target
-        # is an Index node and its value is a Str with value "foo."
-        #
-        # SPHINX_PYTHON_PACKAGE_DIRS is a simple list. The target of the
-        # assignment should be a Name node. Values should be a List node, whose
-        # elements are Str nodes. e.g.
-        #
-        #  SPHINX_PYTHON_PACKAGE_DIRS += ['foo']
-        #
-        # This is an AugAssign node with a Name target with id
-        # "SPHINX_PYTHON_PACKAGE_DIRS." The value is a List node containing 1
-        # Str elt whose value is "foo."
-        relevant = [
-            'SPHINX_TREES',
-            'SPHINX_PYTHON_PACKAGE_DIRS',
-        ]
+
+        if isinstance(variables, string_types):
+            variables = [variables]
 
         def assigned_variable(node):
             # This is not correct, but we don't care yet.
@@ -963,7 +970,7 @@ class BuildReader(object):
             else:
                 return None, None
 
-            if name not in relevant:
+            if name not in variables:
                 return None, None
 
             key = None

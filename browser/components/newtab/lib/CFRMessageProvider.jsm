@@ -641,14 +641,18 @@ const CFR_MESSAGES = [
         ],
       },
     },
-    targeting: "pageLoad >= 4",
+    targeting: "pageLoad >= 4 && firefoxVersion >= 71",
     frequency: {
       lifetime: 2,
       custom: [{ period: 2 * 86400 * 1000, cap: 1 }],
     },
     trigger: {
       id: "trackingProtection",
-      params: [Ci.nsIWebProgressListener.STATE_BLOCKED_SOCIALTRACKING_CONTENT],
+      params: [
+        Ci.nsIWebProgressListener.STATE_BLOCKED_SOCIALTRACKING_CONTENT,
+        Ci.nsIWebProgressListener.STATE_LOADED_SOCIALTRACKING_CONTENT |
+          Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_TRACKER,
+      ],
     },
   },
   {
@@ -687,7 +691,7 @@ const CFR_MESSAGES = [
         ],
       },
     },
-    targeting: "pageLoad >= 4",
+    targeting: "pageLoad >= 4 && firefoxVersion >= 71",
     frequency: {
       lifetime: 2,
       custom: [{ period: 2 * 86400 * 1000, cap: 1 }],
@@ -733,7 +737,7 @@ const CFR_MESSAGES = [
         ],
       },
     },
-    targeting: "pageLoad >= 4",
+    targeting: "pageLoad >= 4 && && firefoxVersion >= 71",
     frequency: {
       lifetime: 2,
       custom: [{ period: 2 * 86400 * 1000, cap: 1 }],

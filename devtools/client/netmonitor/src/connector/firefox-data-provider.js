@@ -21,13 +21,13 @@ class FirefoxDataProvider {
   /**
    * Constructor for data provider
    *
-   * @param {Object} webConcoleClient represents the client object for Console actor.
+   * @param {Object} webConsoleFront represents the client object for Console actor.
    * @param {Object} actions set of actions fired during data fetching process
    * @params {Object} owner all events are fired on this object
    */
-  constructor({ webConsoleClient, actions, owner }) {
+  constructor({ webConsoleFront, actions, owner }) {
     // Options
-    this.webConsoleClient = webConsoleClient;
+    this.webConsoleFront = webConsoleFront;
     this.actions = actions || {};
     this.actionsEnabled = true;
     this.owner = owner;
@@ -326,7 +326,7 @@ class FirefoxDataProvider {
    * @return {object} networkInfo data packet
    */
   getNetworkRequest(id) {
-    return this.webConsoleClient.getNetworkRequest(id);
+    return this.webConsoleFront.getNetworkRequest(id);
   }
 
   /**
@@ -341,7 +341,7 @@ class FirefoxDataProvider {
    *         are available, or rejected if something goes wrong.
    */
   getLongString(stringGrip) {
-    return this.webConsoleClient.getString(stringGrip).then(payload => {
+    return this.webConsoleFront.getString(stringGrip).then(payload => {
       this.emitForTests(EVENTS.LONGSTRING_RESOLVED, { payload });
       return payload;
     });
@@ -609,10 +609,10 @@ class FirefoxDataProvider {
 
     let response = await new Promise((resolve, reject) => {
       // Do a RDP request to fetch data from the actor.
-      if (typeof this.webConsoleClient[clientMethodName] === "function") {
+      if (typeof this.webConsoleFront[clientMethodName] === "function") {
         // Make sure we fetch the real actor data instead of cloned actor
         // e.g. CustomRequestPanel will clone a request with additional '-clone' actor id
-        this.webConsoleClient[clientMethodName](
+        this.webConsoleFront[clientMethodName](
           actor.replace("-clone", ""),
           res => {
             if (res.error) {

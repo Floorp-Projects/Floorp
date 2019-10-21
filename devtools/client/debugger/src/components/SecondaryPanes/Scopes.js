@@ -119,12 +119,7 @@ class Scopes extends PureComponent<Props, State> {
   onContextMenu = (event: any, item: any) => {
     const { addWatchpoint, removeWatchpoint } = this.props;
 
-    if (
-      !features.watchpoints ||
-      !item.parent ||
-      !item.parent.contents ||
-      !item.contents.configurable
-    ) {
+    if (!features.watchpoints || !item.parent || !item.contents.configurable) {
       return;
     }
 

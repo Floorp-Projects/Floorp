@@ -67,6 +67,7 @@ const KNOWN_SEARCH_SOURCES = [
   "contextmenu",
   "newtab",
   "searchbar",
+  "system",
   "urlbar",
   "webextension",
 ];
@@ -598,6 +599,7 @@ let BrowserUsageTelemetry = {
         this._recordSearch(engine, "about_newtab", "enter");
         break;
       case "contextmenu":
+      case "system":
       case "webextension":
         this._recordSearch(engine, source);
         break;

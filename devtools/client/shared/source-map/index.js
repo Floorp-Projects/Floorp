@@ -768,8 +768,8 @@ function originalToGeneratedId(sourceId) {
     return sourceId;
   }
 
-  const match = sourceId.match(/(.*)\/originalSource/);
-  return match ? match[1] : "";
+  const lastIndex = sourceId.lastIndexOf("/originalSource");
+  return lastIndex !== -1 ? sourceId.slice(0, lastIndex) : "";
 }
 
 const getMd5 = memoize(url => md5(url));
@@ -779,7 +779,7 @@ function generatedToOriginalId(generatedId, url) {
 }
 
 function isOriginalId(id) {
-  return /\/originalSource/.test(id);
+  return id.includes("/originalSource");
 }
 
 function isGeneratedId(id) {
@@ -792,11 +792,14 @@ function isGeneratedId(id) {
 
 function trimUrlQuery(url) {
   const length = url.length;
-  const q1 = url.indexOf("?");
-  const q2 = url.indexOf("&");
-  const q3 = url.indexOf("#");
-  const q = Math.min(q1 != -1 ? q1 : length, q2 != -1 ? q2 : length, q3 != -1 ? q3 : length);
-  return url.slice(0, q);
+
+  for (let i = 0; i < length; ++i) {
+    if (url[i] === "?" || url[i] === "&" || url[i] === "#") {
+      return url.slice(0, i);
+    }
+  }
+
+  return url;
 } // Map suffix to content type.
 
 
