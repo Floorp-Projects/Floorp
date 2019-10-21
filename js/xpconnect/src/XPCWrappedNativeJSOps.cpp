@@ -194,7 +194,7 @@ static JSObject* GetDoubleWrappedJSObject(XPCCallContext& ccx,
   RootedObject obj(ccx);
   {
     nsCOMPtr<nsIXPConnectWrappedJS> underware =
-      do_QueryInterface(wrapper->GetIdentityObject());
+        do_QueryInterface(wrapper->GetIdentityObject());
     if (!underware) {
       return nullptr;
     }

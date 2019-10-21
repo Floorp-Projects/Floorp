@@ -14,9 +14,9 @@
 TEST(DOM_Base_ContentUtils, StringifyJSON_EmptyValue)
 {
   JS::RootedObject globalObject(
-    mozilla::dom::RootingCx(),
-    mozilla::dom::SimpleGlobalObject::Create(
-      mozilla::dom::SimpleGlobalObject::GlobalType::BindingDetail));
+      mozilla::dom::RootingCx(),
+      mozilla::dom::SimpleGlobalObject::Create(
+          mozilla::dom::SimpleGlobalObject::GlobalType::BindingDetail));
   mozilla::dom::AutoJSAPI jsAPI;
   ASSERT_TRUE(jsAPI.Init(globalObject));
   JSContext* cx = jsAPI.cx();
@@ -31,9 +31,9 @@ TEST(DOM_Base_ContentUtils, StringifyJSON_EmptyValue)
 TEST(DOM_Base_ContentUtils, StringifyJSON_Object)
 {
   JS::RootedObject globalObject(
-    mozilla::dom::RootingCx(),
-    mozilla::dom::SimpleGlobalObject::Create(
-      mozilla::dom::SimpleGlobalObject::GlobalType::BindingDetail));
+      mozilla::dom::RootingCx(),
+      mozilla::dom::SimpleGlobalObject::Create(
+          mozilla::dom::SimpleGlobalObject::GlobalType::BindingDetail));
   mozilla::dom::AutoJSAPI jsAPI;
   ASSERT_TRUE(jsAPI.Init(globalObject));
   JSContext* cx = jsAPI.cx();
