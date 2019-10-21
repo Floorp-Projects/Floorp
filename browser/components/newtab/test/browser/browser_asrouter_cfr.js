@@ -15,65 +15,72 @@ const createDummyRecommendation = ({
   layout,
   skip_address_bar_notifier,
   template,
-}) => ({
-  template,
-  content: {
-    layout: layout || "addon_recommendation",
-    category,
-    anchor_id: "page-action-buttons",
-    skip_address_bar_notifier,
-    notification_text: "Mochitest",
-    heading_text: heading_text || "Mochitest",
-    info_icon: {
-      label: { attributes: { tooltiptext: "Why am I seeing this" } },
-      sumo_path: "extensionrecommendations",
-    },
-    icon: "foo",
-    icon_dark_theme: "bar",
-    learn_more: "extensionrecommendations",
-    addon: {
-      id: "addon-id",
-      title: "Addon name",
-      icon: "foo",
-      author: "Author name",
-      amo_url: "https://example.com",
-    },
-    descriptionDetails: { steps: [] },
-    text: "Mochitest",
-    buttons: {
-      primary: {
-        label: {
-          value: "OK",
-          attributes: { accesskey: "O" },
-        },
-        action: {
-          type: action.type,
-          data: {},
-        },
+}) => {
+  let recommendation = {
+    template,
+    content: {
+      layout: layout || "addon_recommendation",
+      category,
+      anchor_id: "page-action-buttons",
+      skip_address_bar_notifier,
+      heading_text: heading_text || "Mochitest",
+      info_icon: {
+        label: { attributes: { tooltiptext: "Why am I seeing this" } },
+        sumo_path: "extensionrecommendations",
       },
-      secondary: [
-        {
+      icon: "foo",
+      icon_dark_theme: "bar",
+      learn_more: "extensionrecommendations",
+      addon: {
+        id: "addon-id",
+        title: "Addon name",
+        icon: "foo",
+        author: "Author name",
+        amo_url: "https://example.com",
+      },
+      descriptionDetails: { steps: [] },
+      text: "Mochitest",
+      buttons: {
+        primary: {
           label: {
-            value: "Cancel",
-            attributes: { accesskey: "C" },
+            value: "OK",
+            attributes: { accesskey: "O" },
+          },
+          action: {
+            type: action.type,
+            data: {},
           },
         },
-        {
-          label: {
-            value: "Cancel 1",
-            attributes: { accesskey: "A" },
+        secondary: [
+          {
+            label: {
+              value: "Cancel",
+              attributes: { accesskey: "C" },
+            },
           },
-        },
-        {
-          label: {
-            value: "Cancel 2",
-            attributes: { accesskey: "B" },
+          {
+            label: {
+              value: "Cancel 1",
+              attributes: { accesskey: "A" },
+            },
           },
-        },
-      ],
+          {
+            label: {
+              value: "Cancel 2",
+              attributes: { accesskey: "B" },
+            },
+          },
+        ],
+      },
     },
-  },
-});
+  };
+  recommendation.content.notification_text = new String("Mochitest"); // eslint-disable-line
+  recommendation.content.notification_text.attributes = {
+    tooltiptext: "Mochitest tooltip",
+    "a11y-announcement": "Mochitest announcement",
+  };
+  return recommendation;
+};
 
 function checkCFRFeaturesElements(notification) {
   Assert.ok(notification.hidden === false, "Panel should be visible");

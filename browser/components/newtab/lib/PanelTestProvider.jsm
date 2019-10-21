@@ -143,7 +143,7 @@ const MESSAGES = () => [
     content: {
       layout: "icon_and_message",
       category: "cfrFeatures",
-      notification_text: { string_id: "cfr-doorhanger-extension-notification" },
+      notification_text: { string_id: "cfr-doorhanger-feature-notification" },
       heading_text: { string_id: "cfr-doorhanger-sync-bookmarks-header" },
       info_icon: {
         label: { string_id: "cfr-doorhanger-extension-sumo-link" },
