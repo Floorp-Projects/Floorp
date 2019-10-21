@@ -1015,9 +1015,26 @@ class HTMLEditor final : public TextEditor,
   SplitAncestorStyledInlineElementsAt(const EditorDOMPoint& aPointToSplit,
                                       nsAtom* aProperty, nsAtom* aAttribute);
 
-  nsIContent* GetPriorHTMLSibling(nsINode* aNode);
+  /**
+   * GetPriorHTMLSibling() returns the previous editable sibling, if there is
+   * one within the parent, optionally skipping text nodes that are only
+   * whitespace.
+   */
+  enum class SkipWhitespace { Yes, No };
+  nsIContent* GetPriorHTMLSibling(nsINode* aNode, SkipWhitespace = SkipWhitespace::No);
 
-  nsIContent* GetNextHTMLSibling(nsINode* aNode);
+  /**
+   * GetNextHTMLSibling() returns the next editable sibling, if there is
+   * one within the parent, optionally skipping text nodes that are only
+   * whitespace.
+   */
+  nsIContent* GetNextHTMLSibling(nsINode* aNode, SkipWhitespace = SkipWhitespace::No);
+
+  // Helper for GetPriorHTMLSibling/GetNextHTMLSibling.
+  static bool SkippableWhitespace(nsINode* aNode, SkipWhitespace aSkipWS) {
+    return aSkipWS == SkipWhitespace::Yes &&
+      aNode->IsText() && aNode->AsText()->TextIsOnlyWhitespace();
+  }
 
   /**
    * GetPreviousHTMLElementOrText*() methods are similar to
@@ -4311,6 +4328,12 @@ class HTMLEditor final : public TextEditor,
   }
 
  protected:
+  // Helper for Handle[CSS|HTML]IndentAtSelectionInternal
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  IndentListChild(RefPtr<Element>* aCurList,
+                  const EditorDOMPoint& aCurPoint,
+                  OwningNonNull<nsINode>& aCurNode);
+
   RefPtr<TypeInState> mTypeInState;
   RefPtr<ComposerCommandsUpdater> mComposerCommandsUpdater;
 

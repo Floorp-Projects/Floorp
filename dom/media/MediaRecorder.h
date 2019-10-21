@@ -121,7 +121,7 @@ class MediaRecorder final : public DOMEventTargetHelper,
 
   MediaRecorder& operator=(const MediaRecorder& x) = delete;
   // Create dataavailable event with Blob data and it runs in main thread
-  nsresult CreateAndDispatchBlobEvent(Blob* aBlob);
+  nsresult CreateAndDispatchBlobEvent(BlobImpl* aBlobImpl);
   // Creating a simple event to notify UA simple event.
   void DispatchSimpleEvent(const nsAString& aStr);
   // Creating a error event with message.

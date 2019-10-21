@@ -37,12 +37,8 @@ GetDirectoryListingTaskChild::Create(FileSystemBase* aFileSystem,
   MOZ_ASSERT(aDirectory);
   aFileSystem->AssertIsOnOwningThread();
 
-  nsCOMPtr<nsIGlobalObject> globalObject =
-      do_QueryInterface(aFileSystem->GetParentObject());
-  if (NS_WARN_IF(!globalObject)) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
+  nsCOMPtr<nsIGlobalObject> globalObject = aFileSystem->GetParentObject();
+  MOZ_ASSERT(globalObject);
 
   RefPtr<GetDirectoryListingTaskChild> task = new GetDirectoryListingTaskChild(
       globalObject, aFileSystem, aDirectory, aTargetPath, aFilters);
@@ -123,8 +119,10 @@ void GetDirectoryListingTaskChild::SetSuccessRequestResult(
       RefPtr<BlobImpl> blobImpl = IPCBlobUtils::Deserialize(d.blob());
       MOZ_ASSERT(blobImpl);
 
-      RefPtr<File> file =
-          File::Create(mFileSystem->GetParentObject(), blobImpl);
+      nsCOMPtr<nsIGlobalObject> globalObject = mFileSystem->GetParentObject();
+      MOZ_ASSERT(globalObject);
+
+      RefPtr<File> file = File::Create(globalObject, blobImpl);
       MOZ_ASSERT(file);
 
       ofd->SetAsFile() = file;
