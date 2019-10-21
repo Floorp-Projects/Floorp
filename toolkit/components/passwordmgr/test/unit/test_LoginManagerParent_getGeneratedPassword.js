@@ -5,7 +5,7 @@
 "use strict";
 
 const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
-const { LoginManagerParent: LMP } = ChromeUtils.import(
+const { LoginManagerParent } = ChromeUtils.import(
   "resource://gre/modules/LoginManagerParent.jsm"
 );
 
@@ -14,23 +14,28 @@ add_task(async function test_getGeneratedPassword() {
   Services.prefs.setBoolPref("signon.generation.available", true);
   Services.prefs.setBoolPref("signon.generation.enabled", true);
 
+  let LMP = new LoginManagerParent();
+
   ok(LMP.getGeneratedPassword, "LMP.getGeneratedPassword exists");
   equal(
-    LMP._generatedPasswordsByPrincipalOrigin.size,
+    LoginManagerParent.getGeneratedPasswordsByPrincipalOrigin().size,
     0,
     "Empty cache to start"
   );
 
   equal(LMP.getGeneratedPassword(99), null, "Null with no BrowsingContext");
 
-  ok(LMP._browsingContextGlobal, "Check _browsingContextGlobal exists");
   ok(
-    !LMP._browsingContextGlobal.get(99),
+    LoginManagerParent._browsingContextGlobal,
+    "Check _browsingContextGlobal exists"
+  );
+  ok(
+    !LoginManagerParent._browsingContextGlobal.get(99),
     "BrowsingContext 99 shouldn't exist yet"
   );
   info("Stubbing BrowsingContext.get(99)");
   sinon
-    .stub(LMP._browsingContextGlobal, "get")
+    .stub(LoginManagerParent._browsingContextGlobal, "get")
     .withArgs(99)
     .callsFake(() => {
       return {
@@ -42,7 +47,7 @@ add_task(async function test_getGeneratedPassword() {
       };
     });
   ok(
-    LMP._browsingContextGlobal.get(99),
+    LoginManagerParent._browsingContextGlobal.get(99),
     "Checking BrowsingContext.get(99) stub"
   );
 
@@ -53,9 +58,13 @@ add_task(async function test_getGeneratedPassword() {
     LoginTestUtils.generation.LENGTH,
     "Check password length"
   );
-  equal(LMP._generatedPasswordsByPrincipalOrigin.size, 1, "1 added to cache");
   equal(
-    LMP._generatedPasswordsByPrincipalOrigin.get(
+    LoginManagerParent.getGeneratedPasswordsByPrincipalOrigin().size,
+    1,
+    "1 added to cache"
+  );
+  equal(
+    LoginManagerParent.getGeneratedPasswordsByPrincipalOrigin().get(
       "https://www.example.com^userContextId=6"
     ).value,
     password1,
@@ -69,9 +78,9 @@ add_task(async function test_getGeneratedPassword() {
   );
 
   info("Changing the documentPrincipal to simulate a navigation in the frame");
-  LMP._browsingContextGlobal.get.restore();
+  LoginManagerParent._browsingContextGlobal.get.restore();
   sinon
-    .stub(LMP._browsingContextGlobal, "get")
+    .stub(LoginManagerParent._browsingContextGlobal, "get")
     .withArgs(99)
     .callsFake(() => {
       return {

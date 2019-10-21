@@ -505,7 +505,8 @@ LoginAutoComplete.prototype = {
       previousResult = null;
     }
 
-    let acLookupPromise = (this._autoCompleteLookupPromise = LoginManagerContent._autoCompleteSearchAsync(
+    let loginManager = LoginManagerContent.forWindow(aElement.ownerGlobal);
+    let acLookupPromise = (this._autoCompleteLookupPromise = loginManager._autoCompleteSearchAsync(
       aSearchString,
       previousResult,
       aElement

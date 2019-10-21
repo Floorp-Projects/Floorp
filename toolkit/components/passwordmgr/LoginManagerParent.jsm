@@ -52,29 +52,46 @@ XPCOMUtils.defineLazyPreferenceGetter(
 
 const EXPORTED_SYMBOLS = ["LoginManagerParent"];
 
-this.LoginManagerParent = {
-  /**
-   * A map of a principal's origin (including suffixes) to a generated password string and filled flag
-   * so that we can offer the same password later (e.g. in a confirmation field).
-   *
-   * We don't currently evict from this cache so entries should last until the end of the browser
-   * session. That may change later but for now a typical session would max out at a few entries.
-   */
-  _generatedPasswordsByPrincipalOrigin: new Map(),
+let gLoginManagerParentSingleton = null;
 
-  /**
-   * Reference to the default LoginRecipesParent (instead of the initialization promise) for
-   * synchronous access. This is a temporary hack and new consumers should yield on
-   * recipeParentPromise instead.
-   *
-   * @type LoginRecipesParent
-   * @deprecated
-   */
-  _recipeManager: null,
+/**
+ * A map of a principal's origin (including suffixes) to a generated password string and filled flag
+ * so that we can offer the same password later (e.g. in a confirmation field).
+ *
+ * We don't currently evict from this cache so entries should last until the end of the browser
+ * session. That may change later but for now a typical session would max out at a few entries.
+ */
+let gGeneratedPasswordsByPrincipalOrigin = new Map();
 
-  // Tracks the last time the user cancelled the master password prompt,
-  // to avoid spamming master password prompts on autocomplete searches.
-  _lastMPLoginCancelled: Math.NEGATIVE_INFINITY,
+/**
+ * Reference to the default LoginRecipesParent (instead of the initialization promise) for
+ * synchronous access. This is a temporary hack and new consumers should yield on
+ * recipeParentPromise instead.
+ *
+ * @type LoginRecipesParent
+ * @deprecated
+ */
+let gRecipeManager = null;
+
+class LoginManagerParent {
+  constructor() {
+    // Tracks the last time the user cancelled the master password prompt,
+    // to avoid spamming master password prompts on autocomplete searches.
+    this._lastMPLoginCancelled = Math.NEGATIVE_INFINITY;
+  }
+
+  // Some unit tests need to access this.
+  static getGeneratedPasswordsByPrincipalOrigin() {
+    return gGeneratedPasswordsByPrincipalOrigin;
+  }
+
+  static getLoginManagerParent() {
+    // For now, this is a singleton.
+    if (!gLoginManagerParentSingleton) {
+      gLoginManagerParentSingleton = new LoginManagerParent();
+    }
+    return gLoginManagerParentSingleton;
+  }
 
   /**
    * @param {origin} formOrigin
@@ -134,7 +151,11 @@ this.LoginManagerParent = {
       formOrigin,
       formActionOrigin
     );
-  },
+  }
+
+  static receiveMessage(msg) {
+    LoginManagerParent.getLoginManagerParent().receiveMessage(msg);
+  }
 
   // Listeners are added in BrowserGlue.jsm on desktop
   // and in BrowserCLH.js on mobile.
@@ -155,7 +176,7 @@ this.LoginManagerParent = {
 
       case "PasswordManager:findRecipes": {
         let formHost = new URL(data.formOrigin).host;
-        return this._recipeManager.getRecipesForHost(formHost);
+        return gRecipeManager.getRecipesForHost(formHost);
       }
 
       case "PasswordManager:onFormSubmit": {
@@ -190,7 +211,7 @@ this.LoginManagerParent = {
     }
 
     return undefined;
-  },
+  }
 
   // Observers are added in BrowserGlue.jsm on desktop
   observe(subject, topic, data) {
@@ -199,7 +220,7 @@ this.LoginManagerParent = {
       (topic == "passwordmgr-storage-changed" && data == "removeLogin")
     ) {
       let { origin, guid } = subject;
-      let generatedPW = this._generatedPasswordsByPrincipalOrigin.get(origin);
+      let generatedPW = gGeneratedPasswordsByPrincipalOrigin.get(origin);
 
       // in the case where an autosaved login removed or merged into an existing login,
       // clear the guid associated with the generated-password cache entry
@@ -215,7 +236,7 @@ this.LoginManagerParent = {
         generatedPW.storageGUID = null;
       }
     }
-  },
+  }
 
   /**
    * Trigger a login form fill and send relevant data (e.g. logins and recipes)
@@ -227,7 +248,7 @@ this.LoginManagerParent = {
       let formHost;
       try {
         formHost = new URL(loginFormOrigin).host;
-        let recipeManager = await this.recipeParentPromise;
+        let recipeManager = await LoginManagerParent.recipeParentPromise;
         recipes = recipeManager.getRecipesForHost(formHost);
       } catch (ex) {
         // Some schemes e.g. chrome aren't supported by URL
@@ -244,7 +265,7 @@ this.LoginManagerParent = {
       logins: jsLogins,
       recipes,
     });
-  },
+  }
 
   /**
    * Send relevant data (e.g. logins and recipes) to the child process (LoginManagerContent).
@@ -261,7 +282,7 @@ this.LoginManagerParent = {
       let formHost;
       try {
         formHost = new URL(formOrigin).host;
-        let recipeManager = await this.recipeParentPromise;
+        let recipeManager = await LoginManagerParent.recipeParentPromise;
         recipes = recipeManager.getRecipesForHost(formHost);
       } catch (ex) {
         // Some schemes e.g. chrome aren't supported by URL
@@ -351,7 +372,7 @@ this.LoginManagerParent = {
       logins: jsLogins,
       recipes,
     });
-  },
+  }
 
   doAutocompleteSearch(
     {
@@ -448,14 +469,14 @@ this.LoginManagerParent = {
         logins: jsLogins,
       }
     );
-  },
+  }
 
   /**
    * Expose `BrowsingContext` so we can stub it in tests.
    */
-  get _browsingContextGlobal() {
+  static get _browsingContextGlobal() {
     return BrowsingContext;
-  },
+  }
 
   getGeneratedPassword(browsingContextId) {
     if (
@@ -474,7 +495,7 @@ this.LoginManagerParent = {
       browsingContext.currentWindowGlobal.documentPrincipal.origin;
     // Use the same password if we already generated one for this origin so that it doesn't change
     // with each search/keystroke and the user can easily re-enter a password in a confirmation field.
-    let generatedPW = this._generatedPasswordsByPrincipalOrigin.get(
+    let generatedPW = gGeneratedPasswordsByPrincipalOrigin.get(
       framePrincipalOrigin
     );
     if (generatedPW) {
@@ -493,12 +514,9 @@ this.LoginManagerParent = {
       storageGUID: null,
       value: PasswordGenerator.generatePassword(),
     };
-    this._generatedPasswordsByPrincipalOrigin.set(
-      framePrincipalOrigin,
-      generatedPW
-    );
+    gGeneratedPasswordsByPrincipalOrigin.set(framePrincipalOrigin, generatedPW);
     return generatedPW.value;
-  },
+  }
 
   _getPrompter(browser, openerTopWindowID) {
     let prompterSvc = Cc[
@@ -519,7 +537,7 @@ this.LoginManagerParent = {
     }
 
     return prompterSvc;
-  },
+  }
 
   onFormSubmit(
     browser,
@@ -585,7 +603,7 @@ this.LoginManagerParent = {
       formActionOrigin,
     });
 
-    let generatedPW = this._generatedPasswordsByPrincipalOrigin.get(origin);
+    let generatedPW = gGeneratedPasswordsByPrincipalOrigin.get(origin);
     let autoSavedStorageGUID = "";
     if (generatedPW && generatedPW.storageGUID) {
       autoSavedStorageGUID = generatedPW.storageGUID;
@@ -700,7 +718,7 @@ this.LoginManagerParent = {
     // Prompt user to save login (via dialog or notification bar)
     let prompter = this._getPrompter(browser, openerTopWindowID);
     prompter.promptToSavePassword(formLogin, dismissedPrompt);
-  },
+  }
 
   _onGeneratedPasswordFilledOrEdited({
     browsingContextId,
@@ -742,7 +760,7 @@ this.LoginManagerParent = {
 
     let framePrincipalOrigin =
       browsingContext.currentWindowGlobal.documentPrincipal.origin;
-    let generatedPW = this._generatedPasswordsByPrincipalOrigin.get(
+    let generatedPW = gGeneratedPasswordsByPrincipalOrigin.get(
       framePrincipalOrigin
     );
 
@@ -916,22 +934,21 @@ this.LoginManagerParent = {
       true, // dismissed prompt
       shouldAutoSaveLogin // notifySaved
     );
-  },
-};
-
-XPCOMUtils.defineLazyGetter(
-  LoginManagerParent,
-  "recipeParentPromise",
-  function() {
-    const { LoginRecipesParent } = ChromeUtils.import(
-      "resource://gre/modules/LoginRecipes.jsm"
-    );
-    this._recipeManager = new LoginRecipesParent({
-      defaults: Services.prefs.getStringPref("signon.recipes.path"),
-    });
-    return this._recipeManager.initializationPromise;
   }
-);
+
+  static get recipeParentPromise() {
+    if (!gRecipeManager) {
+      const { LoginRecipesParent } = ChromeUtils.import(
+        "resource://gre/modules/LoginRecipes.jsm"
+      );
+      gRecipeManager = new LoginRecipesParent({
+        defaults: Services.prefs.getStringPref("signon.recipes.path"),
+      });
+    }
+
+    return gRecipeManager.initializationPromise;
+  }
+}
 
 XPCOMUtils.defineLazyPreferenceGetter(
   LoginManagerParent,

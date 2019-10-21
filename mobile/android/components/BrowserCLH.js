@@ -228,7 +228,7 @@ BrowserCLH.prototype = {
       if (shouldIgnoreLoginManagerEvent(event)) {
         return;
       }
-      this.LoginManagerContent.onDOMFormBeforeSubmit(event);
+      this.LoginManagerContent.forWindow(aWindow).onDOMFormBeforeSubmit(event);
     });
     aWindow.addEventListener(
       "DOMFormHasPassword",
@@ -236,7 +236,7 @@ BrowserCLH.prototype = {
         if (shouldIgnoreLoginManagerEvent(event)) {
           return;
         }
-        this.LoginManagerContent.onDOMFormHasPassword(event);
+        this.LoginManagerContent.forWindow(aWindow).onDOMFormHasPassword(event);
       },
       options
     );
@@ -247,7 +247,7 @@ BrowserCLH.prototype = {
         if (shouldIgnoreLoginManagerEvent(event)) {
           return;
         }
-        this.LoginManagerContent.onDOMInputPasswordAdded(
+        this.LoginManagerContent.forWindow(aWindow).onDOMInputPasswordAdded(
           event,
           event.target.ownerGlobal.top
         );
@@ -260,7 +260,7 @@ BrowserCLH.prototype = {
       event => {
         // XXXbz what about non-HTML documents??
         if (ChromeUtils.getClassName(event.target) == "HTMLDocument") {
-          this.LoginManagerContent.onPageShow(event);
+          this.LoginManagerContent.forWindow(aWindow).onPageShow(event);
         }
       },
       options
