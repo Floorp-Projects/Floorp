@@ -231,11 +231,14 @@ class AboutLoginsChild extends ActorChild {
         this.sendToContent("SetBreaches", message.data);
         break;
       case "AboutLogins:Setup":
-        this.sendToContent("Setup", message.data);
-        Cu.waiveXrays(this.content).AboutLoginsUtils.masterPasswordEnabled =
+        let waivedContent = Cu.waiveXrays(this.content);
+        waivedContent.AboutLoginsUtils.masterPasswordEnabled =
           message.data.masterPasswordEnabled;
-        Cu.waiveXrays(this.content).AboutLoginsUtils.passwordRevealVisible =
+        waivedContent.AboutLoginsUtils.passwordRevealVisible =
           message.data.passwordRevealVisible;
+        waivedContent.AboutLoginsUtils.importVisible =
+          message.data.importVisible;
+        this.sendToContent("Setup", message.data);
         break;
       case "AboutLogins:ShowLoginItemError":
         this.sendToContent("ShowLoginItemError", message.data);
