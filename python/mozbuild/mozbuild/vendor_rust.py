@@ -53,6 +53,13 @@ directory = "@top_srcdir@/@VENDORED_DIRECTORY@"
 '''
 
 
+CARGO_LOCK_NOTICE = '''
+NOTE: `cargo vendor` may have made changes to your Cargo.lock. To restore your
+Cargo.lock to the HEAD version, run `git checkout -- Cargo.lock` or
+`hg revert Cargo.lock`.
+'''
+
+
 class VendorRust(MozbuildObject):
     def get_cargo_path(self):
         try:
@@ -424,7 +431,10 @@ license file's hash.
         if not self._check_licenses(vendor_dir):
             self.log(
                 logging.ERROR, 'license_check_failed', {},
-                '''The changes from `mach vendor rust` will NOT be added to version control.''')
+                '''The changes from `mach vendor rust` will NOT be added to version control.
+
+{notice}'''.format(notice=CARGO_LOCK_NOTICE))
+            self.repository.clean_directory(vendor_dir)
             sys.exit(1)
 
         self.repository.add_remove_files(vendor_dir)
@@ -452,8 +462,11 @@ Please find a way to reduce the sizes of these files or talk to a build
 peer about the particular large files you are adding.
 
 The changes from `mach vendor rust` will NOT be added to version control.
-'''.format(files='\n'.join(sorted(large_files)), size=FILESIZE_LIMIT))
+
+{notice}'''.format(files='\n'.join(sorted(large_files)), size=FILESIZE_LIMIT,
+                   notice=CARGO_LOCK_NOTICE))
             self.repository.forget_add_remove_files(vendor_dir)
+            self.repository.clean_directory(vendor_dir)
             sys.exit(1)
 
         # Only warn for large imports, since we may just have large code
