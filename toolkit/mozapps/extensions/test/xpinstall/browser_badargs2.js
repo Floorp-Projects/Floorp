@@ -11,7 +11,7 @@ function test() {
       },
     })
   );
-  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser);
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, TESTROOT);
 
   ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
     return new Promise(resolve => {
