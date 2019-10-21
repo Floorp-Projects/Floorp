@@ -2127,13 +2127,13 @@ already_AddRefed<RemoteBrowser> ContentChild::CreateBrowser(
 
   TabId tabId(nsContentUtils::GenerateTabId());
   RefPtr<BrowserBridgeChild> browserBridge =
-      new BrowserBridgeChild(aBrowsingContext, tabId);
+      new BrowserBridgeChild(aFrameLoader, aBrowsingContext, tabId);
 
   browserChild->SendPBrowserBridgeConstructor(
       browserBridge, PromiseFlatString(aContext.PresentationURL()), aRemoteType,
       aBrowsingContext, chromeFlags, tabId);
 
-  return browserBridge->FinishInit(aFrameLoader);
+  return browserBridge->FinishInit();
 }
 
 PScriptCacheChild* ContentChild::AllocPScriptCacheChild(
