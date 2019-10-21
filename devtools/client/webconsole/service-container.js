@@ -53,7 +53,7 @@ function setupServiceContainer({
   };
 
   if (toolbox) {
-    const { highlight, unhighlight } = toolbox.getHighlighter(true);
+    const { highlight, unhighlight } = toolbox.getHighlighter();
 
     Object.assign(serviceContainer, {
       sourceMapService: toolbox.sourceMapURLService,
