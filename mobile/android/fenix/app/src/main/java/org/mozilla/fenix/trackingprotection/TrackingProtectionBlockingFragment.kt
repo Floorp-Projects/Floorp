@@ -13,7 +13,8 @@ import androidx.navigation.fragment.navArgs
 import kotlinx.android.synthetic.main.fragment_tracking_protection_blocking.*
 import org.mozilla.fenix.R
 
-class TrackingProtectionBlockingFragment : Fragment(R.layout.fragment_tracking_protection_blocking) {
+class TrackingProtectionBlockingFragment :
+    Fragment(R.layout.fragment_tracking_protection_blocking) {
 
     private val args: TrackingProtectionBlockingFragmentArgs by navArgs()
 
@@ -25,11 +26,15 @@ class TrackingProtectionBlockingFragment : Fragment(R.layout.fragment_tracking_p
 
     override fun onResume() {
         super.onResume()
-        (activity as AppCompatActivity).title =
-            getString(
-                if (args.strictMode) R.string.preference_enhanced_tracking_protection_strict else
-                    R.string.preference_enhanced_tracking_protection_standard
-            )
+        (activity as AppCompatActivity).title = getTitle()
         (activity as AppCompatActivity).supportActionBar?.show()
+    }
+
+    private fun getTitle(): String {
+        return if (args.strictMode) {
+            getString(R.string.preference_enhanced_tracking_protection_strict_default)
+        } else {
+            getString(R.string.preference_enhanced_tracking_protection_standard_option)
+        }
     }
 }
