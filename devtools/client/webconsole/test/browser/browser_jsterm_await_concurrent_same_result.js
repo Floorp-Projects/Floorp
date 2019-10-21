@@ -11,7 +11,6 @@ const TEST_URI =
 
 add_task(async function() {
   // Enable editor mode as we'll be able to quicly trigger multiple evaluations.
-  await pushPref("devtools.webconsole.features.editor", true);
   await pushPref("devtools.webconsole.input.editor", true);
 
   const hud = await openNewTabAndConsole(TEST_URI);
@@ -36,6 +35,5 @@ add_task(async function() {
   );
   ok(true, "There are as many results as commands");
 
-  Services.prefs.clearUserPref("devtools.webconsole.features.editor");
   Services.prefs.clearUserPref("devtools.webconsole.input.editor");
 });

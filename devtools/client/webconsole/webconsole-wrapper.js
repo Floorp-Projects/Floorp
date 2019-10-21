@@ -113,7 +113,6 @@ class WebConsoleWrapper {
 
       const { prefs } = store.getState();
       const autocomplete = prefs.autocomplete;
-      const editorFeatureEnabled = prefs.editor;
 
       const app = App({
         serviceContainer,
@@ -121,7 +120,6 @@ class WebConsoleWrapper {
         onFirstMeaningfulPaint: resolve,
         closeSplitConsole: this.closeSplitConsole.bind(this),
         autocomplete,
-        editorFeatureEnabled,
         hidePersistLogsCheckbox:
           webConsoleUI.isBrowserConsole || webConsoleUI.isBrowserToolboxConsole,
         hideShowContentMessagesCheckbox:
