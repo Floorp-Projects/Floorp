@@ -7,36 +7,52 @@ add_task(async function test_profile_single_frame_page_info() {
     return;
   }
   Assert.ok(!Services.profiler.IsActive());
-  // Clear all pages in case we have some pages registered before.
+  info("Clear the previous pages just in case we still some open tabs.");
   await Services.profiler.ClearAllPages();
+
+  info(
+    "Start the profiler to test the page information with single frame page."
+  );
   startProfiler();
 
+  info("Open a tab with single_frame.html in it.");
   const url = BASE_URL + "single_frame.html";
-  let contentPid;
   await BrowserTestUtils.withNewTab(url, async function(contentBrowser) {
-    contentPid = await ContentTask.spawn(contentBrowser, null, () => {
+    const contentPid = await ContentTask.spawn(contentBrowser, null, () => {
       return Services.appinfo.processID;
     });
-  });
 
-  const profile = await Services.profiler.getProfileDataAsync();
-  Services.profiler.StopProfiler();
+    info("Capture the profile data.");
+    const profile = await Services.profiler.getProfileDataAsync();
+    Services.profiler.StopProfiler();
 
-  let pageFound = false;
-  // We need to find the correct content process for that tab.
-  let contentProcess = profile.processes.find(
-    p => p.threads[0].pid == contentPid
-  );
-  for (const page of contentProcess.pages) {
-    if (page.url == url) {
-      Assert.equal(page.url, url);
-      Assert.equal(typeof page.browsingContextID, "number");
-      Assert.equal(typeof page.innerWindowID, "number");
-      // Top level document will have no embedder.
-      Assert.equal(page.embedderInnerWindowID, 0);
-      pageFound = true;
-      break;
+    let pageFound = false;
+    // We need to find the correct content process for that tab.
+    let contentProcess = profile.processes.find(
+      p => p.threads[0].pid == contentPid
+    );
+
+    if (!contentProcess) {
+      throw new Error(
+        `Could not find the content process with given pid: ${contentPid}`
+      );
     }
-  }
-  Assert.equal(pageFound, true);
+
+    info(
+      "Check if the captured page is the one with correct values we created."
+    );
+
+    for (const page of contentProcess.pages) {
+      if (page.url == url) {
+        Assert.equal(page.url, url);
+        Assert.equal(typeof page.browsingContextID, "number");
+        Assert.equal(typeof page.innerWindowID, "number");
+        // Top level document will have no embedder.
+        Assert.equal(page.embedderInnerWindowID, 0);
+        pageFound = true;
+        break;
+      }
+    }
+    Assert.equal(pageFound, true);
+  });
 });
