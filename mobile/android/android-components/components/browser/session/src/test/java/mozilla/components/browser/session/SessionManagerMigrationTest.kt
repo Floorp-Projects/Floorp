@@ -49,6 +49,34 @@ class SessionManagerMigrationTest {
     }
 
     @Test
+    fun `Add session with parent`() {
+        val store = BrowserStore()
+
+        val sessionManager = SessionManager(engine = mock(), store = store)
+
+        assertTrue(sessionManager.sessions.isEmpty())
+        assertTrue(store.state.tabs.isEmpty())
+
+        val parent = Session("https://www.mozilla.org")
+        sessionManager.add(parent)
+        assertEquals(1, sessionManager.sessions.size)
+        assertEquals(1, store.state.tabs.size)
+
+        sessionManager.add(Session("https://getpocket.com"))
+
+        // Make sure child tab was added next to parent
+        val child = Session("https://www.firefox.com")
+        sessionManager.add(child, parent = parent)
+        assertEquals(3, sessionManager.sessions.size)
+        assertEquals(parent, sessionManager.all.toTypedArray()[0])
+        assertEquals(child, sessionManager.all.toTypedArray()[1])
+
+        assertEquals(3, store.state.tabs.size)
+        assertEquals("https://www.mozilla.org", store.state.tabs[0].content.url)
+        assertEquals("https://www.firefox.com", store.state.tabs[1].content.url)
+    }
+
+    @Test
     fun `Add custom tab session`() {
         val store = BrowserStore()
 
