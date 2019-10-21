@@ -9,10 +9,6 @@ const TEST_URI =
   "data:text/html,<meta charset=utf8>Testing jsterm with no input";
 
 add_task(async function() {
-  // For now, let's disable editor as we don't know what the final placement of the
-  // open editor button (which may impact this test).
-  await pushPref("devtools.webconsole.features.editor", false);
-
   const hud = await openNewTabAndConsole(TEST_URI);
   const jsterm = hud.jsterm;
 
@@ -30,11 +26,20 @@ add_task(async function() {
   ok(!isInputFocused(hud), "input isn't focused anymore");
   ok(
     hasFocus(
+      hud.ui.outputNode.querySelector(".webconsole-input-openEditorButton")
+    ),
+    `The "Toggle Editor" button is now focused`
+  );
+
+  info("Check that hitting Shift+Tab again place the focus on the filter bar");
+  EventUtils.synthesizeKey("KEY_Tab", { shiftKey: true });
+  ok(
+    hasFocus(
       hud.ui.outputNode.querySelector(
         ".webconsole-console-settings-menu-button"
       )
     ),
-    `The "Console Settings" menu button is now focused`
+    `The "Console Settings" button is now focused`
   );
 
   info("Check that hitting Tab when input is not empty insert a tab");

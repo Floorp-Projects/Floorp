@@ -27,7 +27,6 @@ pref("devtools.webconsole.groupWarningMessages", false);
 pref("devtools.webconsole.input.editor", false);
 pref("devtools.webconsole.input.autocomplete", true);
 pref("devtools.browserconsole.contentMessages", true);
-pref("devtools.webconsole.features.editor", true);
 pref("devtools.webconsole.input.editorWidth", 800);
 pref("devtools.webconsole.input.editorOnboarding", true);
 
