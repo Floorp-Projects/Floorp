@@ -1,0 +1,13 @@
+<html><body>
+
+<button onclick="window.location = 'about:blank'">Next</button>
+<iframe src="https://test2.example.org:443/browser/toolkit/components/passwordmgr/test/browser/form_crossframe_inner.html"
+        width="300" height="300"></iframe>
+<form id="outer-form" action="formsubmit.sjs">
+  <input id="outer-username" name="outer-username">
+  <input id="outer-password" name="outer-password" type="password">
+  <input id="outer-submit" type="submit">
+  <button id="outer-gobutton" onclick="this.location = 'about:blank'">Go</button>
+</form>
+
+</body></html>

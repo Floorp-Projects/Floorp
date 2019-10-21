@@ -247,7 +247,9 @@ class LoginManagerParent extends JSWindowActorParent {
           formid: data.formid,
         });
         if (gListenerForTests) {
-          gListenerForTests("FormProcessed", {});
+          gListenerForTests("FormProcessed", {
+            browsingContext: this.browsingContext,
+          });
         }
         break;
       }
