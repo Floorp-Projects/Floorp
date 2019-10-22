@@ -297,7 +297,7 @@ sealed class Event {
         }
 
         override val extras: Map<Events.browserMenuActionKeys, String>?
-            get() = mapOf(Events.browserMenuActionKeys.item to item.toString().toLowerCase())
+            get() = mapOf(Events.browserMenuActionKeys.item to item.toString().toLowerCase(Locale.ROOT))
     }
 
     sealed class Search
