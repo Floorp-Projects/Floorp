@@ -107,6 +107,7 @@ add_task(async function test_initialializeWithAuthErrorAndDeletedAccount() {
 
   let signCertificateCalled = false;
   let accountStatusCalled = false;
+  let sessionStatusCalled = false;
 
   let AuthErrorMockFxAClient = function() {
     FxAccountsClient.apply(this);
@@ -124,6 +125,10 @@ add_task(async function test_initialializeWithAuthErrorAndDeletedAccount() {
       accountStatusCalled = true;
       return Promise.resolve(false);
     },
+    sessionStatus() {
+      sessionStatusCalled = true;
+      return Promise.resolve(false);
+    },
   };
 
   let mockFxAClient = new AuthErrorMockFxAClient();
@@ -136,6 +141,7 @@ add_task(async function test_initialializeWithAuthErrorAndDeletedAccount() {
   );
 
   Assert.ok(signCertificateCalled);
+  Assert.ok(sessionStatusCalled);
   Assert.ok(accountStatusCalled);
   Assert.ok(!browseridManager._token);
   Assert.ok(!browseridManager._hasValidToken());
