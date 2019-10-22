@@ -561,6 +561,11 @@ pref("media.cubeb.logging_level", "");
   pref("media.audioipc.pool_size", 1);
   // 64 * 4 kB stack per pool thread.
   pref("media.audioipc.stack_size", 262144);
+#elif defined(NIGHTLY_BUILD) && defined(XP_WIN) && !defined(_ARM64_)
+  pref("media.cubeb.sandbox", true);
+  pref("media.audioipc.pool_size", 1);
+  // 64 * 4 kB stack per pool thread.
+  pref("media.audioipc.stack_size", 262144);
 #else
   pref("media.cubeb.sandbox", false);
 #endif
