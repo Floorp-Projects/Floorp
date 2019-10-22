@@ -156,10 +156,6 @@ void ServiceWorkerManagerService::PropagateUnregister(
     const nsAString& aScope) {
   AssertIsOnBackgroundThread();
 
-  if (ServiceWorkerParentInterceptEnabled()) {
-    return;
-  }
-
   RefPtr<dom::ServiceWorkerRegistrar> service =
       dom::ServiceWorkerRegistrar::Get();
   MOZ_ASSERT(service);
@@ -168,6 +164,18 @@ void ServiceWorkerManagerService::PropagateUnregister(
   // scope but we still need to unregister it from the ServiceWorkerRegistrar.
   service->UnregisterServiceWorker(aPrincipalInfo,
                                    NS_ConvertUTF16toUTF8(aScope));
+
+  // There is no longer any point to propagating because the only sender is the
+  // one and only ServiceWorkerManager, but it is necessary for us to have run
+  // the unregister call above because until Bug 1183245 is fixed,
+  // nsIServiceWorkerManager.propagateUnregister() is a de facto API for
+  // clearing ServiceWorker registrations by Sanitizer.jsm via
+  // ServiceWorkerCleanUp.jsm, as well as devtools "unregister" affordance and
+  // the no-longer-relevant about:serviceworkers UI.
+
+  if (ServiceWorkerParentInterceptEnabled()) {
+    return;
+  }
 
   DebugOnly<bool> parentFound = false;
   for (auto iter = mAgents.Iter(); !iter.Done(); iter.Next()) {
