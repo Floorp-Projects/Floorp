@@ -2,4 +2,4 @@
 
 # engineSessionState
 
-`val engineSessionState: `[`EngineSessionState`](../../../../mozilla.components.concept.engine/-engine-session-state/index.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/SessionManager.kt#L324)
+`val engineSessionState: `[`EngineSessionState`](../../../../mozilla.components.concept.engine/-engine-session-state/index.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/SessionManager.kt#L332)

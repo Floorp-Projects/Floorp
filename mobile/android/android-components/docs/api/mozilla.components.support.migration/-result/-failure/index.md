@@ -1,8 +1,8 @@
-[android-components](../../../index.md) / [mozilla.components.support.migration](../../index.md) / [MigrationResult](../index.md) / [Failure](./index.md)
+[android-components](../../../index.md) / [mozilla.components.support.migration](../../index.md) / [Result](../index.md) / [Failure](./index.md)
 
 # Failure
 
-`class Failure<T> : `[`MigrationResult`](../index.md)`<`[`T`](index.md#T)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/MigrationResult.kt#L25)
+`class Failure<T> : `[`Result`](../index.md)`<`[`T`](index.md#T)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/Result.kt#L25)
 
 Failed migration.
 
