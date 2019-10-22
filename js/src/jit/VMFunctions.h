@@ -130,7 +130,7 @@ enum MaybeTailCall : bool { TailCall, NonTailCall };
 
 // Data for a VM function. All VMFunctionDatas are stored in a constexpr array.
 struct VMFunctionData {
-#if defined(JS_JITSPEW) || defined(JS_TRACE_LOGGING)
+#if defined(DEBUG) || defined(JS_JITSPEW) || defined(JS_TRACE_LOGGING)
   // Informative name of the wrapped function. The name should not be present
   // in release builds in order to save memory.
   const char* name_;
@@ -225,7 +225,7 @@ struct VMFunctionData {
     return ((argumentPassedInFloatRegs >> explicitArg) & 1) == 1;
   }
 
-#if defined(JS_JITSPEW) || defined(JS_TRACE_LOGGING)
+#if defined(DEBUG) || defined(JS_JITSPEW) || defined(JS_TRACE_LOGGING)
   const char* name() const { return name_; }
 #endif
 
@@ -300,7 +300,7 @@ struct VMFunctionData {
                            uint8_t extraValuesToPop = 0,
                            MaybeTailCall expectTailCall = NonTailCall)
       :
-#if defined(JS_JITSPEW) || defined(JS_TRACE_LOGGING)
+#if defined(DEBUG) || defined(JS_JITSPEW) || defined(JS_TRACE_LOGGING)
         name_(name),
 #endif
         argumentRootTypes(argRootTypes),

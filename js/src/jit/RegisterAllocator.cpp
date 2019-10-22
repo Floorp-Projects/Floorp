@@ -410,7 +410,7 @@ bool AllocationIntegrityState::addPredecessor(LBlock* block, uint32_t vreg,
 }
 
 void AllocationIntegrityState::dump() {
-#ifdef DEBUG
+#ifdef JS_JITSPEW
   fprintf(stderr, "Register Allocation Integrity State:\n");
 
   for (size_t blockIndex = 0; blockIndex < graph.numBlocks(); blockIndex++) {
