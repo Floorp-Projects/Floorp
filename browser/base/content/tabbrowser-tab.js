@@ -70,8 +70,8 @@
     }
 
     get fragment() {
-      if (!this._fragment) {
-        this._fragment = MozXULElement.parseXULToFragment(`
+      if (!this.constructor.hasOwnProperty("_fragment")) {
+        this.constructor._fragment = MozXULElement.parseXULToFragment(`
         <stack class="tab-stack" flex="1">
           <vbox class="tab-background">
             <hbox class="tab-line"/>
@@ -97,7 +97,7 @@
         </stack>
       `);
       }
-      return this.ownerDocument.importNode(this._fragment, true);
+      return document.importNode(this.constructor._fragment, true);
     }
 
     connectedCallback() {
