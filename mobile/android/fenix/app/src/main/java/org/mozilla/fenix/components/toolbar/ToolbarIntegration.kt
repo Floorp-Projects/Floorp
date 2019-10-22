@@ -85,7 +85,6 @@ class ToolbarIntegration(
                         trackingProtectionNothingBlocked = AppCompatResources.getDrawable(
                             context,
                             R.drawable.ic_tracking_protection_enabled
-
                         )!!,
                         trackingProtectionException = AppCompatResources.getDrawable(
                             context,
