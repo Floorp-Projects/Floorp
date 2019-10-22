@@ -9,7 +9,10 @@ from setuptools import setup
 PACKAGE_VERSION = "1.1.0"
 
 # dependencies
-deps = ["mozfile >= 0.12"]
+deps = [
+    "mozfile >= 0.12",
+    "distro == 1.4.0",
+]
 
 setup(
     name="mozinfo",

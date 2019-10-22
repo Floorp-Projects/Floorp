@@ -1,0 +1,4 @@
+#!/bin/sh
+
+echo "NetBSD 7.1.1"
+

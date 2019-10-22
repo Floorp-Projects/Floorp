@@ -1,0 +1,9 @@
+NAME=CoreOS
+ID=coreos
+VERSION=899.15.0
+VERSION_ID=899.15.0
+BUILD_ID=2016-04-05-1035
+PRETTY_NAME="CoreOS 899.15.0"
+ANSI_COLOR="1;32"
+HOME_URL="https://coreos.com/"
+BUG_REPORT_URL="https://github.com/coreos/bugs/issues"

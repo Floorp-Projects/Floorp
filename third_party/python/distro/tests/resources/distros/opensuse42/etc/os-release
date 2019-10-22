@@ -1,0 +1,10 @@
+NAME="openSUSE Leap"
+VERSION="42.1"
+VERSION_ID="42.1"
+PRETTY_NAME="openSUSE Leap 42.1 (x86_64)"
+ID=opensuse
+ANSI_COLOR="0;32"
+CPE_NAME="cpe:/o:opensuse:opensuse:42.1"
+BUG_REPORT_URL="https://bugs.opensuse.org"
+HOME_URL="https://opensuse.org/"
+ID_LIKE="suse"

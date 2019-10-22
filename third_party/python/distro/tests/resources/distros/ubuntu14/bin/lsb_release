@@ -1,0 +1,39 @@
+#!/bin/bash
+#
+# lsb_release command for testing the ld module.
+# Only the -a option is supported.
+#
+# This version of the lsb_release command reads an lsb-release file.
+#
+# The lsb-release file has the usual format, e.g.:
+#   DISTRIB_ID=Ubuntu
+#   DISTRIB_RELEASE=14.04
+#   DISTRIB_CODENAME=trusty
+#   DISTRIB_DESCRIPTION="Ubuntu 14.04.3 LTS"
+# Where each line is optional. If a line is missing, the default value
+# will be the empty string.
+#
+
+if [[ "$@" != "-a" ]]; then
+  echo "Usage: lsb_release -a"
+  exit 2
+fi
+
+# Because the PATH is set to just this directory, we cannot use 'dirname'
+# or other external programs, but need to use built-in abilities of bash.
+LSB_FILE="${0%/*}/../etc/lsb-release"
+
+if [[ ! -f $LSB_FILE ]]; then
+  echo "Error: LSB release file does not exist: $LSB_FILE"
+  exit 1
+fi
+
+source $LSB_FILE
+
+echo "No LSB modules are available."
+echo "Distributor ID:	${DISTRIB_ID:-}"
+echo "Description:	${DISTRIB_DESCRIPTION:-}"
+echo "Release:	${DISTRIB_RELEASE:-}"
+echo "Codename:	${DISTRIB_CODENAME:-}"
+
+exit 0

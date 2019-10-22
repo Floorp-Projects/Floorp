@@ -1,0 +1,21 @@
+#!/bin/bash
+#
+# lsb_release command for testing the ld module.
+# Only the -a option is supported.
+#
+# This version of the lsb_release command works without a corresponding
+# etc/lsb-release file.
+#
+
+if [[ "$@" != "-a" ]]; then
+  echo "Usage: lsb_release -a"
+  exit 2
+fi
+
+echo "LSB Version:	n/a"
+echo "Distributor ID:	SUSE LINUX"
+echo "Description:	SUSE Linux Enterprise Server 12 SP1"
+echo "Release:	12.1"
+echo "Codename:	n/a"
+
+exit 0
