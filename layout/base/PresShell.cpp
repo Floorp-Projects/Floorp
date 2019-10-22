@@ -10503,12 +10503,25 @@ RefPtr<MobileViewportManager> PresShell::GetMobileViewportManager() const {
   return mMobileViewportManager;
 }
 
+bool UseMobileViewportManager(PresShell* aPresShell, Document* aDocument) {
+  // If we're not using APZ, we won't be able to zoom, so there is no
+  // point in having an MVM.
+  if (nsPresContext* presContext = aPresShell->GetPresContext()) {
+    if (nsIWidget* widget = presContext->GetNearestWidget()) {
+      if (!widget->AsyncPanZoomEnabled()) {
+        return false;
+      }
+    }
+  }
+  return nsLayoutUtils::ShouldHandleMetaViewport(aDocument) ||
+         nsLayoutUtils::AllowZoomingForDocument(aDocument);
+}
+
 void PresShell::UpdateViewportOverridden(bool aAfterInitialization) {
   // Determine if we require a MobileViewportManager. We need one any
   // time we allow resolution zooming for a document, and any time we
   // want to obey <meta name="viewport"> tags for it.
-  bool needMVM = nsLayoutUtils::ShouldHandleMetaViewport(mDocument) ||
-                 nsLayoutUtils::AllowZoomingForDocument(mDocument);
+  bool needMVM = UseMobileViewportManager(this, mDocument);
 
   if (needMVM == !!mMobileViewportManager) {
     // Either we've need one and we've already got it, or we don't need one
