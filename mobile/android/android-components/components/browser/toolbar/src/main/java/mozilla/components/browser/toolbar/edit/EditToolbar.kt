@@ -4,186 +4,266 @@
 
 package mozilla.components.browser.toolbar.edit
 
-import android.annotation.SuppressLint
 import android.content.Context
-import android.text.InputType
-import android.view.Gravity
+import android.graphics.Typeface
+import android.graphics.drawable.Drawable
 import android.view.KeyEvent
 import android.view.View
-import android.view.ViewGroup
-import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.ImageView
+import androidx.annotation.ColorInt
+import androidx.annotation.VisibleForTesting
+import androidx.annotation.VisibleForTesting.PRIVATE
 import androidx.core.content.ContextCompat
+import androidx.core.view.inputmethod.EditorInfoCompat
 import androidx.core.view.isVisible
-import androidx.core.view.setPadding
+import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.asCoroutineDispatcher
+import mozilla.components.browser.toolbar.AsyncFilterListener
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.browser.toolbar.R
 import mozilla.components.browser.toolbar.facts.emitCommitFact
-import mozilla.components.browser.toolbar.internal.ActionWrapper
-import mozilla.components.browser.toolbar.internal.invalidateActions
-import mozilla.components.browser.toolbar.internal.measureActions
-import mozilla.components.browser.toolbar.internal.wrapAction
+import mozilla.components.browser.toolbar.internal.ActionContainer
+import mozilla.components.concept.toolbar.AutocompleteDelegate
 import mozilla.components.concept.toolbar.Toolbar
+import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.android.view.showKeyboard
-import mozilla.components.support.ktx.android.widget.adjustMaxTextSize
 import mozilla.components.ui.autocomplete.InlineAutocompleteEditText
+import java.util.concurrent.Executors
+
+private const val AUTOCOMPLETE_QUERY_THREADS = 3
 
 /**
- * Sub-component of the browser toolbar responsible for allowing the user to edit the URL.
+ * Sub-component of the browser toolbar responsible for allowing the user to edit the URL ("edit mode").
  *
  * Structure:
- * +---------------------------------+---------+------+
- * |                 url             | actions | exit |
- * +---------------------------------+---------+------+
+ * +------+---------------------------+---------+------+
+ * | icon |           url             | actions | exit |
+ * +------+---------------------------+---------+------+
  *
+ * - icon: Optional icon that will be shown in front of the URL.
  * - url: Editable URL of the currently displayed website
  * - actions: Optional action icons injected by other components (e.g. barcode scanner)
- * - exit: Button that switches back to display mode.
+ * - exit: Button that switches back to display mode or invoke an app-defined callback.
  */
-@SuppressLint("ViewConstructor") // This view is only instantiated in code
-internal class EditToolbar(
+@Suppress("TooManyFunctions")
+class EditToolbar internal constructor(
     context: Context,
-    private val toolbar: BrowserToolbar
-) : ViewGroup(context) {
-    internal val urlView = InlineAutocompleteEditText(context).apply {
-        id = R.id.mozac_browser_toolbar_edit_url_view
-        imeOptions = EditorInfo.IME_ACTION_GO or EditorInfo.IME_FLAG_NO_EXTRACT_UI or EditorInfo.IME_FLAG_NO_FULLSCREEN
-        gravity = Gravity.CENTER_VERTICAL
-        background = null
-        textSize = BrowserToolbar.URL_TEXT_SIZE_SP
-        inputType = InputType.TYPE_TEXT_VARIATION_URI or InputType.TYPE_CLASS_TEXT
-        setSingleLine()
+    private val toolbar: BrowserToolbar,
+    internal val rootView: View
+) {
+    private val logger = Logger("EditToolbar")
 
-        val horizontalPadding = resources.getDimensionPixelSize(R.dimen.mozac_browser_toolbar_url_horizontal_padding)
-        val verticalPadding = resources.getDimensionPixelSize(R.dimen.mozac_browser_toolbar_url_vertical_padding)
+    /**
+     * Data class holding the customizable colors in "edit mode".
+     *
+     * @property clear Color tint used for the "cancel" icon to leave "edit mode".
+     * @property icon Color tint of the icon displayed in front of the URL.
+     * @property hint Text color of the hint shown when the URL field is empty.
+     * @property text Text color of the URL.
+     * @property suggestionBackground The background color used for autocomplete suggestions.
+     * @property suggestionForeground The foreground color used for autocomplete suggestions.
+     */
+    data class Colors(
+        @ColorInt val clear: Int,
+        @ColorInt val icon: Int?,
+        @ColorInt val hint: Int,
+        @ColorInt val text: Int,
+        @ColorInt val suggestionBackground: Int,
+        @ColorInt val suggestionForeground: Int?
+    )
 
-        setPadding(horizontalPadding, verticalPadding, horizontalPadding, verticalPadding)
-
-        setOnCommitListener {
-            // We emit the fact before notifying the listener because otherwise the listener may cause a focus
-            // change which may reset the autocomplete state that we want to report here.
-            emitCommitFact(autocompleteResult)
-
-            toolbar.onUrlEntered(text.toString())
+    private val autocompleteDispatcher = SupervisorJob() +
+        Executors.newFixedThreadPool(AUTOCOMPLETE_QUERY_THREADS).asCoroutineDispatcher() +
+        CoroutineExceptionHandler { _, throwable ->
+            logger.error("Error while processing autocomplete input", throwable)
         }
 
-        setOnTextChangeListener { text, _ ->
-            updateClearViewVisibility(text)
-            editListener?.onTextChanged(text)
-        }
-
-        setOnDispatchKeyEventPreImeListener { event ->
-            if (event?.keyCode == KeyEvent.KEYCODE_BACK) {
-                toolbar.onEditCancelled()
+    @VisibleForTesting(otherwise = PRIVATE)
+    internal val views = EditToolbarViews(
+        background = rootView.findViewById<ImageView>(R.id.mozac_browser_toolbar_background),
+        icon = rootView.findViewById<ImageView>(R.id.mozac_browser_toolbar_edit_icon),
+        editActions = rootView.findViewById<ActionContainer>(R.id.mozac_browser_toolbar_edit_actions),
+        clear = rootView.findViewById<ImageView>(R.id.mozac_browser_toolbar_clear_view).apply {
+            setOnClickListener {
+                onClear()
             }
-            false
+        },
+        url = rootView.findViewById<InlineAutocompleteEditText>(
+            R.id.mozac_browser_toolbar_edit_url_view
+        ).apply {
+            setOnCommitListener {
+                // We emit the fact before notifying the listener because otherwise the listener may cause a focus
+                // change which may reset the autocomplete state that we want to report here.
+                emitCommitFact(autocompleteResult)
+
+                toolbar.onUrlEntered(text.toString())
+            }
+
+            setOnTextChangeListener { text, _ ->
+                onTextChanged(text)
+            }
+
+            setOnDispatchKeyEventPreImeListener { event ->
+                if (event?.keyCode == KeyEvent.KEYCODE_BACK && editListener?.onCancelEditing() != false) {
+                    toolbar.displayMode()
+                }
+                false
+            }
         }
+    )
+
+    /**
+     * Customizable colors in "edit mode".
+     */
+    var colors: Colors = Colors(
+        clear = ContextCompat.getColor(context, R.color.photonWhite),
+        icon = null,
+        hint = views.url.currentHintTextColor,
+        text = views.url.currentTextColor,
+        suggestionBackground = views.url.autoCompleteBackgroundColor,
+        suggestionForeground = views.url.autoCompleteForegroundColor
+    )
+    set(value) {
+        field = value
+
+        views.clear.setColorFilter(value.clear)
+
+        if (value.icon != null) {
+            views.icon.setColorFilter(value.icon)
+        }
+
+        views.url.setHintTextColor(value.hint)
+        views.url.setTextColor(value.text)
+        views.url.autoCompleteBackgroundColor = value.suggestionBackground
+        views.url.autoCompleteForegroundColor = value.suggestionForeground
     }
 
-    private val defaultColor = ContextCompat.getColor(context, R.color.photonWhite)
+    /**
+     * Sets the background that will be drawn behind the URL, icon and edit actions.
+     */
+    fun setUrlBackground(background: Drawable?) {
+        views.background.setImageDrawable(background)
+    }
 
-    internal var clearViewColor = defaultColor
+    /**
+     * Sets an icon that will be drawn in front of the URL.
+     */
+    fun setIcon(icon: Drawable, contentDescription: String) {
+        views.icon.setImageDrawable(icon)
+        views.icon.contentDescription = contentDescription
+        views.icon.visibility = View.VISIBLE
+    }
+
+    /**
+     * Sets the text to be displayed when the URL of the toolbar is empty.
+     */
+    var hint: String
+        get() = views.url.hint.toString()
+        set(value) { views.url.hint = value }
+
+    /**
+     * Sets the size of the text for the URL/search term displayed in the toolbar.
+     */
+    var textSize: Float
+        get() = views.url.textSize
         set(value) {
-            field = value
-            clearView.setColorFilter(value)
+            views.url.textSize = value
         }
 
-    internal fun updateClearViewVisibility(text: String) {
-        clearView.isVisible = text.isNotBlank()
+    /**
+     * Sets the typeface of the text for the URL/search term displayed in the toolbar.
+     */
+    var typeface: Typeface
+        get() = views.url.typeface
+        set(value) { views.url.typeface = value }
+
+    /**
+     * Sets a listener to be invoked when focus of the URL input view (in edit mode) changed.
+     */
+    internal fun setOnEditFocusChangeListener(listener: (Boolean) -> Unit) {
+        views.url.onFocusChangeListener = View.OnFocusChangeListener { _, hasFocus ->
+            listener.invoke(hasFocus)
+        }
     }
 
-    private val clearView = ImageView(context).apply {
-        visibility = View.GONE
-        id = R.id.mozac_browser_toolbar_clear_view
-        setPadding(resources.getDimensionPixelSize(R.dimen.mozac_browser_toolbar_cancel_padding))
-        setImageResource(mozilla.components.ui.icons.R.drawable.mozac_ic_clear)
-        contentDescription = context.getString(R.string.mozac_clear_button_description)
-        scaleType = ImageView.ScaleType.CENTER
+    /**
+     * Focuses the url input field and shows the virtual keyboard if needed.
+     */
+    fun focus() {
+        views.url.showKeyboard(flags = InputMethodManager.SHOW_FORCED)
+    }
 
-        setOnClickListener {
-            // We set text to an empty string instead of using clear to avoid #3612.
-            urlView.setText("")
-        }
+    internal fun stopEditing() {
+        editListener?.onStopEditing()
+    }
+
+    internal fun startEditing() {
+        editListener?.onStartEditing()
     }
 
     internal var editListener: Toolbar.OnEditListener? = null
 
-    private val editActions: MutableList<ActionWrapper> = mutableListOf()
+    internal fun setAutocompleteListener(filter: suspend (String, AutocompleteDelegate) -> Unit) {
+        views.url.setOnFilterListener(
+            AsyncFilterListener(views.url, autocompleteDispatcher, filter)
+        )
+    }
 
-    init {
-        addView(urlView)
-        addView(clearView)
+    internal fun invalidateActions() {
+        views.editActions.invalidateActions()
+    }
+
+    internal fun addEditAction(action: Toolbar.Action) {
+        views.editActions.addAction(action)
+    }
+
+    internal fun updateUrl(url: String, shouldAutoComplete: Boolean = false) {
+        views.url.setText(url, shouldAutoComplete)
     }
 
     /**
-     * Updates the URL. This should only be called if the toolbar is not in editing mode. Otherwise
-     * this might override the URL the user is currently typing.
+     * Select the entire text in the URL input field.
      */
-    fun updateUrl(url: String, shouldAutoComplete: Boolean = false) {
-        urlView.setText(url, shouldAutoComplete)
+    internal fun selectAll() {
+        views.url.selectAll()
     }
 
     /**
-     * Focus the URL editing component and show the virtual keyboard if needed.
+     * Sets/gets private mode.
+     *
+     * In private mode the IME should not update any personalized data such as typing history and personalized language
+     * model based on what the user typed.
      */
-    fun focus() {
-        urlView.showKeyboard(flags = InputMethodManager.SHOW_FORCED)
-    }
-
-    /**
-     * Adds an action to be displayed on the right of the URL in edit mode.
-     */
-    fun addEditAction(action: Toolbar.Action) {
-        editActions.add(wrapAction(action))
-    }
-
-    /**
-     * Declare that the actions (navigation actions, browser actions, page actions) have changed and
-     * should be updated if needed.
-     */
-    fun invalidateActions() {
-        invalidateActions(editActions)
-    }
-
-    // We measure the views manually to avoid overhead by using complex ViewGroup implementations
-    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        // This toolbar is using the full size provided by the parent
-        val width = MeasureSpec.getSize(widthMeasureSpec)
-        val height = MeasureSpec.getSize(heightMeasureSpec)
-
-        setMeasuredDimension(width, height)
-
-        val actionsWidth = measureActions(editActions, height)
-
-        // The icon fills the whole height and has a square shape
-        val iconSquareSpec = MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY)
-        clearView.measure(iconSquareSpec, iconSquareSpec)
-
-        val urlWidthSpec = MeasureSpec.makeMeasureSpec(
-            width - clearView.measuredWidth - actionsWidth,
-            MeasureSpec.EXACTLY)
-
-        urlView.measure(urlWidthSpec, heightMeasureSpec)
-        urlView.adjustMaxTextSize(heightMeasureSpec)
-    }
-
-    // We layout the toolbar ourselves to avoid the overhead from using complex ViewGroup implementations
-    override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
-        clearView.layout(measuredWidth - clearView.measuredWidth, 0, measuredWidth, measuredHeight)
-
-        urlView.layout(0, 0, 0 + urlView.measuredWidth, bottom)
-
-        editActions
-            .asSequence()
-            .mapNotNull { it.view }
-            .fold(urlView.measuredWidth) { usedWidth, view ->
-                val viewLeft = usedWidth
-                val viewRight = viewLeft + view.measuredWidth
-
-                view.layout(viewLeft, 0, viewRight, measuredHeight)
-
-                usedWidth + view.measuredWidth
+    internal var private: Boolean
+        get() = (views.url.imeOptions and EditorInfoCompat.IME_FLAG_NO_PERSONALIZED_LEARNING) != 0
+        set(value) {
+            views.url.imeOptions = if (value) {
+                views.url.imeOptions or EditorInfoCompat.IME_FLAG_NO_PERSONALIZED_LEARNING
+            } else {
+                views.url.imeOptions and (EditorInfoCompat.IME_FLAG_NO_PERSONALIZED_LEARNING.inv())
             }
+        }
+
+    private fun onClear() {
+        // We set text to an empty string instead of using clear to avoid #3612.
+        views.url.setText("")
+    }
+
+    private fun onTextChanged(text: String) {
+        views.clear.isVisible = text.isNotBlank()
+        editListener?.onTextChanged(text)
     }
 }
+
+/**
+ * Internal holder for view references.
+ */
+internal class EditToolbarViews(
+    val background: ImageView,
+    val icon: ImageView,
+    val editActions: ActionContainer,
+    val clear: ImageView,
+    val url: InlineAutocompleteEditText
+)

@@ -26,9 +26,10 @@ enum class ToolbarConfiguration(val label: String) {
     DEFAULT("Default"),
     FOCUS_TABLET("Firefox Focus (Tablet)"),
     FOCUS_PHONE("Firefox Focus (Phone)"),
-    SEEDLING("Seedling"),
     CUSTOM_MENU("Custom Menu"),
-    PRIVATE_MODE("Private Mode")
+    PRIVATE_MODE("Private Mode"),
+    FENIX("Fenix"),
+    FENIX_CUSTOMTAB("Fenix (Custom Tab)")
 }
 
 class ConfigurationAdapter(

@@ -62,7 +62,7 @@ class CustomTabsToolbarFeature(
     internal fun initialize(session: Session): Boolean {
         session.customTabConfig?.let { config ->
             // Don't allow clickable toolbar so a custom tab can't switch to edit mode.
-            toolbar.onUrlClicked = { false }
+            toolbar.display.onUrlClicked = { false }
 
             // If it's available, hold on to the readable colour for other assets.
             config.toolbarColor?.let {
@@ -92,6 +92,7 @@ class CustomTabsToolbarFeature(
 
             return true
         }
+
         return false
     }
 
@@ -99,11 +100,15 @@ class CustomTabsToolbarFeature(
     internal fun updateToolbarColor(@ColorInt toolbarColor: Int?, @ColorInt navigationBarColor: Int?) {
         toolbarColor?.let { color ->
             toolbar.setBackgroundColor(color)
-            toolbar.textColor = readableColor
-            toolbar.titleColor = readableColor
-            toolbar.siteSecurityColor = readableColor to readableColor
-            toolbar.trackingProtectionColor = readableColor
-            toolbar.menuViewColor = readableColor
+
+            toolbar.display.colors = toolbar.display.colors.copy(
+                text = readableColor,
+                title = readableColor,
+                securityIconSecure = readableColor,
+                securityIconInsecure = readableColor,
+                trackingProtection = readableColor,
+                menu = readableColor
+            )
 
             window?.setStatusBarTheme(color)
         }
@@ -202,21 +207,29 @@ class CustomTabsToolbarFeature(
                 builder.extras + Pair("customTab", true)
             }
 
-            toolbar.setMenuBuilder(BrowserMenuBuilder(combinedItems, combinedExtras ?: emptyMap()))
+            toolbar.display.menuBuilder = BrowserMenuBuilder(combinedItems, combinedExtras ?: emptyMap())
         }
     }
 
     private val sessionObserver = object : Session.Observer {
-        override fun onTitleChanged(session: Session, title: String) {
-            // Empty title check can be removed when the engine observer issue is fixed
-            // https://github.com/mozilla-mobile/android-components/issues/2898
-            if (title.isNotEmpty()) {
-                // Only shrink the urlTextSize if a title is displayed
-                toolbar.textSize = URL_TEXT_SIZE
-                toolbar.titleTextSize = TITLE_TEXT_SIZE
+        private var receivedTitle = false
 
-                // Explicitly set the title regardless of the customTabConfig settings
+        override fun onUrlChanged(session: Session, url: String) {
+            // If we showed a title once in a custom tab then we are going to continue displaying
+            // a title (to avoid the layout bouncing around). However if no title is available then
+            // we just use the URL.
+            if (receivedTitle && session.title.isEmpty()) {
+                toolbar.title = url
+            }
+        }
+
+        override fun onTitleChanged(session: Session, title: String) {
+            if (title.isNotEmpty()) {
                 toolbar.title = title
+                receivedTitle = true
+            } else if (receivedTitle) {
+                // See comment in OnUrlChanged().
+                toolbar.title = session.url
             }
         }
     }
@@ -243,10 +256,5 @@ class CustomTabsToolbarFeature(
                 true
             }
         }
-    }
-
-    companion object {
-        const val TITLE_TEXT_SIZE = 15f
-        const val URL_TEXT_SIZE = 12f
     }
 }

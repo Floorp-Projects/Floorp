@@ -58,7 +58,7 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         val layout = inflater.inflate(R.layout.fragment_browser, container, false)
 
-        layout.toolbar.setMenuBuilder(components.menuBuilder)
+        layout.toolbar.display.menuBuilder = components.menuBuilder
 
         sessionFeature.set(
             feature = SessionFeature(

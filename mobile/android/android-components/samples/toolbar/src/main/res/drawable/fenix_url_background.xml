@@ -3,7 +3,11 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android">
-    <size android:width="@dimen/mozac_browser_toolbar_icons_separator_width"
-            android:height="@dimen/mozac_browser_toolbar_icons_separator_height" />
-    <solid android:color="#aaaaaa" />
+    <solid android:color="#E6E8E8" />
+
+    <corners
+        android:bottomLeftRadius="8dp"
+        android:bottomRightRadius="8dp"
+        android:topLeftRadius="8dp"
+        android:topRightRadius="8dp" />
 </shape>

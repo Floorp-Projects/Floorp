@@ -5,46 +5,32 @@
 package mozilla.components.browser.toolbar
 
 import android.content.Context
-import android.graphics.Color
-import android.graphics.Typeface
 import android.graphics.drawable.Drawable
 import android.util.AttributeSet
+import android.view.LayoutInflater
 import android.view.View
-import android.view.View.OnFocusChangeListener
 import android.view.ViewGroup
 import android.widget.ImageButton
-import androidx.annotation.ColorInt
 import androidx.annotation.DrawableRes
 import androidx.annotation.VisibleForTesting
+import androidx.annotation.VisibleForTesting.PRIVATE
 import androidx.core.view.forEach
-import androidx.core.view.inputmethod.EditorInfoCompat
-import androidx.core.view.isVisible
-import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.toolbar.display.DisplayToolbar
-import mozilla.components.browser.toolbar.display.DisplayToolbar.Companion.BOTTOM_PROGRESS_BAR
-import mozilla.components.browser.toolbar.display.TrackingProtectionIconView
 import mozilla.components.browser.toolbar.edit.EditToolbar
 import mozilla.components.concept.toolbar.AutocompleteDelegate
 import mozilla.components.concept.toolbar.AutocompleteResult
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.support.base.android.Padding
 import mozilla.components.support.base.log.logger.Logger
-import mozilla.components.support.ktx.android.content.res.resolveAttribute
 import mozilla.components.ui.autocomplete.AutocompleteView
 import mozilla.components.ui.autocomplete.InlineAutocompleteEditText
 import mozilla.components.ui.autocomplete.OnFilterListener
-import java.util.concurrent.Executors
 import kotlin.coroutines.CoroutineContext
-
-private const val AUTOCOMPLETE_QUERY_THREADS = 3
 
 /**
  * A customizable toolbar for browsers.
@@ -71,445 +57,91 @@ class BrowserToolbar @JvmOverloads constructor(
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
 ) : ViewGroup(context, attrs, defStyleAttr), Toolbar {
-    private val logger = Logger("BrowserToolbar")
-
-    // displayToolbar and editToolbar are only visible internally and mutable so that we can mock
-    // them in tests.
-    @VisibleForTesting internal var displayToolbar = DisplayToolbar(context, this)
-    @VisibleForTesting internal var editToolbar = EditToolbar(context, this)
-
-    private val autocompleteExceptionHandler = CoroutineExceptionHandler { _, throwable ->
-        logger.error("Error while processing autocomplete input", throwable)
-    }
-
-    private val autocompleteSupervisorJob = SupervisorJob()
-    private val autocompleteDispatcher = autocompleteSupervisorJob +
-        Executors.newFixedThreadPool(AUTOCOMPLETE_QUERY_THREADS).asCoroutineDispatcher() +
-        autocompleteExceptionHandler
-
-    /**
-     * Sets/gets private mode.
-     *
-     * In private mode the IME should not update any personalized data such as typing history and personalized language
-     * model based on what the user typed.
-     */
-    override var private: Boolean
-        get() = (editToolbar.urlView.imeOptions and EditorInfoCompat.IME_FLAG_NO_PERSONALIZED_LEARNING) != 0
-        set(value) {
-            editToolbar.urlView.imeOptions = if (value) {
-                editToolbar.urlView.imeOptions or EditorInfoCompat.IME_FLAG_NO_PERSONALIZED_LEARNING
-            } else {
-                editToolbar.urlView.imeOptions and (EditorInfoCompat.IME_FLAG_NO_PERSONALIZED_LEARNING.inv())
-            }
-        }
-
-    /**
-     * Set/Get whether a separator view should be visible between the tracking protection icon and
-     * the security indicator icon.
-     */
-    var displaySeparatorView: Boolean
-        get() = displayToolbar.displaySeparatorView
-        set(value) {
-            displayToolbar.displaySeparatorView = value
-        }
-
-    /**
-     * Set/Get whether a site security icon (usually a lock or globe icon) should be visible next to the URL.
-     */
-    var displaySiteSecurityIcon: Boolean
-        get() = displayToolbar.siteSecurityIconView.isVisible
-        set(value) {
-            displayToolbar.siteSecurityIconView.isVisible = value
-        }
-
-    /**
-     * Set/Get the site security icon (usually a lock and globe icon). It uses a
-     * [android.graphics.drawable.StateListDrawable] where "state_site_secure" represents the secure
-     * icon and empty state represents the insecure icon.
-     */
-    var siteSecurityIcon
-        get() = displayToolbar.securityIcon
-        set(value) { displayToolbar.securityIcon = value }
-
-    /**
-     * Set/Get the site security icon colours. It uses a pair of color integers
-     * which represent the insecure and secure colours respectively.
-     */
-    var siteSecurityColor: Pair<Int, Int>
-        get() = displayToolbar.securityIconColor
-        set(value) { displayToolbar.securityIconColor = value }
-
-    /**
-     * Gets/Sets a custom view that will be drawn as behind the URL and page actions in display mode.
-     */
-    var urlBoxView: View?
-        get() = displayToolbar.urlBoxView
-        set(value) { displayToolbar.urlBoxView = value }
-
-    /**
-     * Gets/Sets the color tint of the menu button.
-     */
-    var menuViewColor: Int
-        get() = displayToolbar.menuViewColor
-        set(value) { displayToolbar.menuViewColor = value }
-
-    /**
-     * Gets/Sets the color tint of the cancel button.
-     */
-    var clearViewColor: Int
-        get() = editToolbar.clearViewColor
-        set(value) { editToolbar.clearViewColor = value }
-
-    /**
-     * Gets/Sets the margin to be used between browser actions.
-     */
-    var browserActionMargin: Int
-        get() = displayToolbar.browserActionMargin
-        set(value) { displayToolbar.browserActionMargin = value }
-
-    /**
-     * Gets/Sets horizontal margin of the URL box (surrounding URL and page actions) in display mode.
-     */
-    var urlBoxMargin: Int
-        get() = displayToolbar.urlBoxMargin
-        set(value) { displayToolbar.urlBoxMargin = value }
-
-    /**
-     * Sets a lambda that will be invoked whenever the URL in display mode was clicked. Only if this
-     * lambda returns <code>true</code> the toolbar will switch to editing mode. Return
-     * <code>false</code> to not switch to editing mode and handle the click manually.
-     */
-    var onUrlClicked: () -> Boolean
-        get() = displayToolbar.onUrlClicked
-        set(value) { displayToolbar.onUrlClicked = value }
-
-    /**
-     * Sets the text to be displayed when the URL of the toolbar is empty.
-     */
-    var hint: String
-        get() = displayToolbar.urlView.hint.toString()
-        set(value) {
-            displayToolbar.urlView.hint = value
-            editToolbar.urlView.hint = value
-        }
-
-    /**
-     * Sets the colour of the text to be displayed when the URL of the toolbar is empty.
-     */
-    var hintColor: Int
-        get() = displayToolbar.urlView.currentHintTextColor
-        set(value) {
-            displayToolbar.urlView.setHintTextColor(value)
-            editToolbar.urlView.setHintTextColor(value)
-        }
-
-    /**
-     * Set progress bar to be at the top of the toolbar. It's on bottom by default.
-     */
-    var progressBarGravity: Int
-        get() = displayToolbar.progressBarGravity
-        set(value) {
-            displayToolbar.progressBarGravity = value
-        }
-
-    /**
-     * Sets the colour of the text for title displayed in the toolbar.
-     */
-    var titleColor: Int
-        get() = displayToolbar.urlView.currentTextColor
-        set(value) {
-            displayToolbar.titleView.setTextColor(value)
-        }
-
-    /**
-     * Sets the colour of the text for the URL/search term displayed in the toolbar.
-     */
-    var textColor: Int
-        get() = displayToolbar.urlView.currentTextColor
-        set(value) {
-            displayToolbar.urlView.setTextColor(value)
-            editToolbar.urlView.setTextColor(value)
-        }
-
-    /**
-     * Sets the colour of the tracking protection icon.
-     */
-    var trackingProtectionColor: Int
-        get() = displayToolbar.trackingProtectionViewColor
-        set(value) {
-            displayToolbar.trackingProtectionViewColor = value
-        }
-
-    /**
-     * Sets the different icons that the tracking protection icon could has depending of its
-     * [Toolbar.siteTrackingProtection]
-     * @param iconOnNoTrackersBlocked icon for when the site is on the state
-     * [Toolbar.SiteTrackingProtection.ON_NO_TRACKERS_BLOCKED]
-     * @param iconOnTrackersBlocked icon for when the site is on the state
-     * [Toolbar.SiteTrackingProtection.ON_TRACKERS_BLOCKED]
-     * @param iconDisabledForSite icon for when the site is on the state
-     * [Toolbar.SiteTrackingProtection.OFF_FOR_A_SITE]
-     */
-    fun setTrackingProtectionIcons(
-        iconOnNoTrackersBlocked: Drawable = requireNotNull(
-            context.getDrawable(
-                TrackingProtectionIconView.DEFAULT_ICON_ON_NO_TRACKERS_BLOCKED
-            )
-        ),
-        iconOnTrackersBlocked: Drawable = requireNotNull(
-            context.getDrawable(
-                TrackingProtectionIconView.DEFAULT_ICON_ON_TRACKERS_BLOCKED
-            )
-        ),
-        iconDisabledForSite: Drawable = requireNotNull(
-            context.getDrawable(
-                TrackingProtectionIconView.DEFAULT_ICON_OFF_FOR_A_SITE
-            )
-        )
-    ) {
-        displayToolbar.setTrackingProtectionIcons(
-            iconOnNoTrackersBlocked,
-            iconOnTrackersBlocked,
-            iconDisabledForSite
-        )
-    }
-
-    /**
-     * Sets the colour of the vertical separator between the tracking protection icon and the
-     * security indicator icon.
-     */
-    @get:ColorInt
-    var separatorColor: Int
-        get() = displayToolbar.separatorColor
-        set(@ColorInt value) {
-            displayToolbar.separatorColor = value
-        }
-
-    /**
-     * Sets the size of the text for the title displayed in the toolbar.
-     */
-    var titleTextSize: Float
-        get() = displayToolbar.titleView.textSize
-        set(value) {
-            displayToolbar.titleView.textSize = value
-        }
-
-    /**
-     * Sets the size of the text for the URL/search term displayed in the toolbar.
-     */
-    var textSize: Float
-        get() = displayToolbar.urlView.textSize
-        set(value) {
-            displayToolbar.urlView.textSize = value
-            editToolbar.urlView.textSize = value
-        }
-
-    /**
-     * The background color used for autocomplete suggestions in edit mode.
-     */
-    var suggestionBackgroundColor: Int
-        get() = editToolbar.urlView.autoCompleteBackgroundColor
-        set(value) { editToolbar.urlView.autoCompleteBackgroundColor = value }
-
-    /**
-     * The foreground color used for autocomplete suggestions in edit mode.
-     */
-    var suggestionForegroundColor: Int?
-        get() = editToolbar.urlView.autoCompleteForegroundColor
-        set(value) { editToolbar.urlView.autoCompleteForegroundColor = value }
-
-    /**
-     * Sets the typeface of the text for the URL/search term displayed in the toolbar.
-     */
-    var typeface: Typeface
-        get() = displayToolbar.urlView.typeface
-        set(value) {
-            displayToolbar.urlView.typeface = value
-            editToolbar.urlView.typeface = value
-        }
-
-    /**
-     * Sets a listener to be invoked when focus of the URL input view (in edit mode) changed.
-     */
-    fun setOnEditFocusChangeListener(listener: (Boolean) -> Unit) {
-        editToolbar.urlView.onFocusChangeListener = OnFocusChangeListener { _, hasFocus ->
-            listener.invoke(hasFocus)
-        }
-    }
-
-    /**
-     * Sets a listener to be invoked when the site security indicator icon is clicked.
-     */
-    fun setOnSiteSecurityClickedListener(listener: (() -> Unit)?) {
-        if (listener == null) {
-            displayToolbar.siteSecurityIconView.setOnClickListener(null)
-            displayToolbar.siteSecurityIconView.background = null
-        } else {
-            displayToolbar.siteSecurityIconView.setOnClickListener {
-                listener.invoke()
-            }
-
-            displayToolbar.siteSecurityIconView.setBackgroundResource(
-                context.theme.resolveAttribute(android.R.attr.selectableItemBackgroundBorderless)
-            )
-        }
-    }
-
-    /**
-     * Sets a listener to be invoked when the site tracking protection indicator icon is clicked.
-     */
-    fun setOnTrackingProtectionClickedListener(listener: (() -> Unit)?) {
-        if (listener == null) {
-            displayToolbar.trackingProtectionIconView.setOnClickListener(null)
-            displayToolbar.trackingProtectionIconView.background = null
-        } else {
-            displayToolbar.trackingProtectionIconView.setOnClickListener {
-                listener.invoke()
-            }
-
-            displayToolbar.trackingProtectionIconView.setBackgroundResource(
-                context.theme.resolveAttribute(android.R.attr.selectableItemBackgroundBorderless)
-            )
-        }
-    }
-
-    override fun setOnEditListener(listener: Toolbar.OnEditListener) {
-        editToolbar.editListener = listener
-    }
-
-    override fun setAutocompleteListener(filter: suspend (String, AutocompleteDelegate) -> Unit) {
-        // Our 'filter' knows how to autocomplete, and the 'urlView' knows how to apply results of
-        // autocompletion. Which gives us a lovely delegate chain!
-        // urlView decides when it's appropriate to ask for autocompletion, and in turn we invoke
-        // our 'filter' and send results back to 'urlView'.
-        editToolbar.urlView.setOnFilterListener(
-            AsyncFilterListener(editToolbar.urlView, autocompleteDispatcher, filter)
-        )
-    }
-
-    /**
-     * Sets the padding to be applied to the URL text (in display mode).
-     */
-    fun setUrlTextPadding(
-        left: Int = displayToolbar.urlView.paddingLeft,
-        top: Int = displayToolbar.urlView.paddingTop,
-        right: Int = displayToolbar.urlView.paddingRight,
-        bottom: Int = displayToolbar.urlView.paddingBottom
-    ) = displayToolbar.urlView.setPadding(left, top, right, bottom)
-
     private var state: State = State.DISPLAY
     private var searchTerms: String = ""
     private var urlCommitListener: ((String) -> Boolean)? = null
 
-    override var title: String = ""
-        set(value) {
-            displayToolbar.updateTitle(value)
+    /**
+     * Toolbar in "display mode".
+     */
+    var display = DisplayToolbar(
+        context,
+        this,
+        LayoutInflater.from(context).inflate(
+            R.layout.mozac_browser_toolbar_displaytoolbar,
+            this,
+            false
+        )
+    )
+    @VisibleForTesting(otherwise = PRIVATE) internal set
 
-            field = value
-        }
+    /**
+     * Toolbar in "edit mode".
+     */
+    var edit = EditToolbar(
+        context,
+        this,
+        LayoutInflater.from(context).inflate(
+            R.layout.mozac_browser_toolbar_edittoolbar,
+            this,
+            false
+        )
+    )
+    @VisibleForTesting(otherwise = PRIVATE) internal set
 
-    override var url: CharSequence = ""
+    override var title: String
+        get() = display.title
+        set(value) { display.title = value }
+
+    override var url: CharSequence
+        get() = display.url.toString()
         set(value) {
             // We update the display toolbar immediately. We do not do that for the edit toolbar to not
             // mess with what the user is entering. Instead we will remember the value and update the
             // edit toolbar whenever we switch to it.
-            displayToolbar.updateUrl(value)
-
-            field = value
+            display.url = value
         }
 
-    override var siteSecure: Toolbar.SiteSecurity = Toolbar.SiteSecurity.INSECURE
-        set(value) {
-            displayToolbar.setSiteSecurity(value)
-            field = value
-        }
+    override var siteSecure: Toolbar.SiteSecurity
+        get() = display.siteSecurity
+        set(value) { display.siteSecurity = value }
 
     override var siteTrackingProtection: Toolbar.SiteTrackingProtection =
         Toolbar.SiteTrackingProtection.OFF_GLOBALLY
         set(value) {
             if (field != value) {
-                displayToolbar.setTrackingProtectionState(value)
+                display.setTrackingProtectionState(value)
                 field = value
             }
         }
 
+    override var private: Boolean
+        get() = edit.private
+        set(value) { edit.private = value }
+
     /**
-     * Set/Get whether a tracking protection icon (usually a shield icon) should be visible.
+     * Registers the given listener to be invoked when the user edits the URL.
      */
-    var displayTrackingProtectionIcon: Boolean = displayToolbar.displayTrackingProtectionIcon
-        get() = displayToolbar.displayTrackingProtectionIcon
-        set(value) {
-            displayToolbar.displayTrackingProtectionIcon = value
-            field = value
-        }
+    override fun setOnEditListener(listener: Toolbar.OnEditListener) {
+        edit.editListener = listener
+    }
+
+    /**
+     * Registers the given function to be invoked when users changes text in the toolbar.
+     *
+     * @param filter A function which will perform autocompletion and send results to [AutocompleteDelegate].
+     */
+    override fun setAutocompleteListener(filter: suspend (String, AutocompleteDelegate) -> Unit) {
+        // Our 'filter' knows how to autocomplete, and the 'urlView' knows how to apply results of
+        // autocompletion. Which gives us a lovely delegate chain!
+        // urlView decides when it's appropriate to ask for autocompletion, and in turn we invoke
+        // our 'filter' and send results back to 'urlView'.
+        edit.setAutocompleteListener(filter)
+    }
 
     init {
-        context.obtainStyledAttributes(attrs, R.styleable.BrowserToolbar, defStyleAttr, 0).run {
-            attrs?.let {
-                progressBarGravity = getInt(
-                    R.styleable.BrowserToolbar_browserToolbarProgressBarGravity,
-                    BOTTOM_PROGRESS_BAR
-                )
-                hintColor = getColor(
-                    R.styleable.BrowserToolbar_browserToolbarHintColor,
-                    hintColor
-                )
-                textColor = getColor(
-                    R.styleable.BrowserToolbar_browserToolbarTextColor,
-                    textColor
-                )
-                textSize = getDimension(
-                    R.styleable.BrowserToolbar_browserToolbarTextSize,
-                    textSize
-                ) / resources.displayMetrics.density
-                menuViewColor = getColor(
-                    R.styleable.BrowserToolbar_browserToolbarMenuColor,
-                    displayToolbar.menuViewColor
-                )
-                clearViewColor = getColor(
-                    R.styleable.BrowserToolbar_browserToolbarClearColor,
-                    editToolbar.clearViewColor
-                )
-
-                separatorColor = getColor(
-                    R.styleable.BrowserToolbar_browserToolbarTrackingProtectionAndSecurityIndicatorSeparatorColor,
-                    displayToolbar.separatorColor
-                )
-
-                if (peekValue(R.styleable.BrowserToolbar_browserToolbarSuggestionForegroundColor) != null) {
-                    suggestionForegroundColor = getColor(
-                        R.styleable.BrowserToolbar_browserToolbarSuggestionForegroundColor,
-                        // Default color should not be used since we are checking for a value before using it.
-                        Color.CYAN)
-                }
-                suggestionBackgroundColor = getColor(
-                    R.styleable.BrowserToolbar_browserToolbarSuggestionBackgroundColor,
-                    suggestionBackgroundColor
-                )
-                siteSecurityIcon = getDrawable(R.styleable.BrowserToolbar_browserToolbarSecurityIcon)
-                    ?: displayToolbar.securityIcon
-                val insecureColor = getColor(
-                    R.styleable.BrowserToolbar_browserToolbarInsecureColor,
-                    displayToolbar.defaultColor
-                )
-                val secureColor = getColor(
-                    R.styleable.BrowserToolbar_browserToolbarInsecureColor,
-                    displayToolbar.defaultColor
-                )
-                siteSecurityColor = insecureColor to secureColor
-                val fadingEdgeLength = getDimensionPixelSize(
-                    R.styleable.BrowserToolbar_browserToolbarFadingEdgeSize,
-                    resources.getDimensionPixelSize(R.dimen.mozac_browser_toolbar_url_fading_edge_size)
-                )
-                displayToolbar.urlView.setFadingEdgeLength(fadingEdgeLength)
-                displayToolbar.urlView.isHorizontalFadingEdgeEnabled = fadingEdgeLength > 0
-                displayToolbar.titleView.setFadingEdgeLength(fadingEdgeLength)
-                displayToolbar.titleView.isHorizontalFadingEdgeEnabled = fadingEdgeLength > 0
-            }
-            recycle()
-        }
-        addView(displayToolbar)
-        addView(editToolbar)
+        addView(display.rootView)
+        addView(edit.rootView)
 
         updateState(State.DISPLAY)
     }
@@ -557,7 +189,7 @@ class BrowserToolbar @JvmOverloads constructor(
     }
 
     override fun onStop() {
-        displayToolbar.onStop()
+        display.onStop()
     }
 
     override fun setSearchTerms(searchTerms: String) {
@@ -565,7 +197,7 @@ class BrowserToolbar @JvmOverloads constructor(
     }
 
     override fun displayProgress(progress: Int) {
-        displayToolbar.updateProgress(progress)
+        display.updateProgress(progress)
     }
 
     override fun setOnUrlCommitListener(listener: (String) -> Boolean) {
@@ -581,8 +213,8 @@ class BrowserToolbar @JvmOverloads constructor(
      * called on every visible action to update its view.
      */
     override fun invalidateActions() {
-        displayToolbar.invalidateActions()
-        editToolbar.invalidateActions()
+        display.invalidateActions()
+        edit.invalidateActions()
     }
 
     /**
@@ -596,7 +228,7 @@ class BrowserToolbar @JvmOverloads constructor(
      * https://developer.mozilla.org/en-US/Add-ons/WebExtensions/user_interface/Browser_action
      */
     override fun addBrowserAction(action: Toolbar.Action) {
-        displayToolbar.addBrowserAction(action)
+        display.addBrowserAction(action)
     }
 
     /**
@@ -606,7 +238,7 @@ class BrowserToolbar @JvmOverloads constructor(
      * https://developer.mozilla.org/en-US/Add-ons/WebExtensions/user_interface/Page_actions
      */
     override fun addPageAction(action: Toolbar.Action) {
-        displayToolbar.addPageAction(action)
+        display.addPageAction(action)
     }
 
     /**
@@ -614,21 +246,14 @@ class BrowserToolbar @JvmOverloads constructor(
      * on larger devices for navigation actions like "back" and "forward".
      */
     override fun addNavigationAction(action: Toolbar.Action) {
-        displayToolbar.addNavigationAction(action)
+        display.addNavigationAction(action)
     }
 
     /**
      * Adds an action to be displayed on the right of the URL in edit mode.
      */
     override fun addEditAction(action: Toolbar.Action) {
-        editToolbar.addEditAction(action)
-    }
-
-    /**
-     * Focuses the editToolbar if already in edit mode
-     */
-    fun focus() {
-        editToolbar.focus()
+        edit.addEditAction(action)
     }
 
     /**
@@ -639,10 +264,10 @@ class BrowserToolbar @JvmOverloads constructor(
         // Don't autocomplete search terms as they could be substrings of a suggested url
         val shouldAutoComplete = searchTerms.isEmpty()
 
-        editToolbar.updateUrl(urlValue.toString(), shouldAutoComplete)
+        edit.updateUrl(urlValue.toString(), shouldAutoComplete)
         updateState(State.EDIT)
-        editToolbar.focus()
-        editToolbar.urlView.selectAll()
+        edit.focus()
+        edit.selectAll()
     }
 
     /**
@@ -650,21 +275,6 @@ class BrowserToolbar @JvmOverloads constructor(
      */
     override fun displayMode() {
         updateState(State.DISPLAY)
-    }
-
-    /**
-     * Sets a BrowserMenuBuilder that will be used to create a menu when the menu button is clicked.
-     * The menu button will only be visible if a builder has been set.
-     */
-    fun setMenuBuilder(menuBuilder: BrowserMenuBuilder) {
-        displayToolbar.menuBuilder = menuBuilder
-    }
-
-    /**
-     * Set a LongClickListener to the urlView of the toolbar.
-     */
-    fun setOnUrlLongClickListener(handler: ((View) -> Boolean)?) {
-        displayToolbar.setOnUrlLongClickListener(handler)
     }
 
     internal fun onUrlEntered(url: String) {
@@ -675,23 +285,17 @@ class BrowserToolbar @JvmOverloads constructor(
         }
     }
 
-    internal fun onEditCancelled() {
-        if (editToolbar.editListener?.onCancelEditing() != false) {
-            displayMode()
-        }
-    }
-
     private fun updateState(state: State) {
         this.state = state
 
         val (show, hide) = when (state) {
             State.DISPLAY -> {
-                editToolbar.editListener?.onStopEditing()
-                Pair(displayToolbar, editToolbar)
+                edit.stopEditing()
+                Pair(display.rootView, edit.rootView)
             }
             State.EDIT -> {
-                editToolbar.editListener?.onStartEditing()
-                Pair(editToolbar, displayToolbar)
+                edit.startEditing()
+                Pair(edit.rootView, display.rootView)
             }
         }
 
@@ -807,7 +411,6 @@ class BrowserToolbar @JvmOverloads constructor(
         internal const val ACTION_PADDING_DP = 16
         internal val DEFAULT_PADDING =
             Padding(ACTION_PADDING_DP, ACTION_PADDING_DP, ACTION_PADDING_DP, ACTION_PADDING_DP)
-        internal const val URL_TEXT_SIZE_SP = 15f
     }
 }
 
@@ -836,7 +439,7 @@ class AsyncFilterListener(
  * An autocomplete delegate which is aware of its parent scope (to check for cancellations).
  * Responsible for processing autocompletion results and discarding stale results when [urlView] moved on.
  */
-class AsyncAutocompleteDelegate(
+private class AsyncAutocompleteDelegate(
     private val urlView: AutocompleteView,
     private val parentScope: CoroutineScope,
     override val coroutineContext: CoroutineContext,

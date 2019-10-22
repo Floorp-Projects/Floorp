@@ -28,6 +28,7 @@ import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -61,7 +62,8 @@ class CustomTabsToolbarFeatureTest {
     fun `start calls initialize with the sessionId`() {
         val sessionManager: SessionManager = mock()
         val session: Session = mock()
-        val feature = spy(CustomTabsToolbarFeature(sessionManager, mock(), "") {})
+        val toolbar = BrowserToolbar(testContext)
+        val feature = spy(CustomTabsToolbarFeature(sessionManager, toolbar, "") {})
 
         `when`(sessionManager.findSessionById(anyString())).thenReturn(session)
         `when`(session.customTabConfig).thenReturn(mock())
@@ -82,10 +84,11 @@ class CustomTabsToolbarFeatureTest {
     fun `stop calls unregister`() {
         val sessionManager: SessionManager = mock()
         val session: Session = mock()
-        val feature = CustomTabsToolbarFeature(sessionManager, mock(), "") {}
+        val toolbar = BrowserToolbar(testContext)
 
         `when`(sessionManager.findSessionById(anyString())).thenReturn(session)
 
+        val feature = CustomTabsToolbarFeature(sessionManager, toolbar, "") {}
         feature.stop()
 
         verify(session).unregister(any())
@@ -118,7 +121,7 @@ class CustomTabsToolbarFeatureTest {
 
         feature.initialize(session)
 
-        assertFalse(toolbar.onUrlClicked.invoke())
+        assertFalse(toolbar.display.onUrlClicked.invoke())
     }
 
     @Test
@@ -138,28 +141,29 @@ class CustomTabsToolbarFeatureTest {
     @Test
     fun `updateToolbarColor changes background and textColor`() {
         val session: Session = mock()
-        val toolbar: BrowserToolbar = mock()
+        val toolbar = spy(BrowserToolbar(testContext))
         `when`(session.customTabConfig).thenReturn(mock())
 
         val feature = spy(CustomTabsToolbarFeature(mock(), toolbar, "") {})
 
+        val colors = toolbar.display.colors
+
         feature.updateToolbarColor(null, null)
 
-        verify(toolbar, never()).setBackgroundColor(anyInt())
-        verify(toolbar, never()).textColor = anyInt()
-        verify(toolbar, never()).trackingProtectionColor = anyInt()
+        assertEquals(colors, toolbar.display.colors)
+        assertNotEquals(Color.WHITE, toolbar.display.colors.title)
+        assertNotEquals(Color.WHITE, toolbar.display.colors.text)
 
         feature.updateToolbarColor(123, 456)
 
-        verify(toolbar).setBackgroundColor(anyInt())
-        verify(toolbar).trackingProtectionColor = anyInt()
-        verify(toolbar).textColor = anyInt()
+        assertEquals(Color.WHITE, toolbar.display.colors.title)
+        assertEquals(Color.WHITE, toolbar.display.colors.text)
     }
 
     @Test
     fun `updateToolbarColor changes status bar color`() {
         val session: Session = mock()
-        val toolbar: BrowserToolbar = mock()
+        val toolbar: BrowserToolbar = BrowserToolbar(testContext)
         val window: Window = mock()
         `when`(session.customTabConfig).thenReturn(mock())
         `when`(window.decorView).thenReturn(mock())
@@ -388,7 +392,6 @@ class CustomTabsToolbarFeatureTest {
         val session: Session = mock()
         val toolbar = spy(BrowserToolbar(testContext))
         val feature = spy(CustomTabsToolbarFeature(mock(), toolbar, "") {})
-        val captor = argumentCaptor<BrowserMenuBuilder>()
         val customTabConfig: CustomTabConfig = mock()
 
         `when`(session.customTabConfig).thenReturn(customTabConfig)
@@ -396,8 +399,8 @@ class CustomTabsToolbarFeatureTest {
 
         feature.addMenuItems(session, listOf(CustomTabMenuItem("Share", mock())), 0)
 
-        verify(toolbar).setMenuBuilder(captor.capture())
-        assertEquals(1, captor.value.items.size)
+        val menuBuilder = toolbar.display.menuBuilder
+        assertEquals(1, menuBuilder!!.items.size)
     }
 
     @Test
@@ -406,7 +409,6 @@ class CustomTabsToolbarFeatureTest {
         val toolbar = spy(BrowserToolbar(testContext))
         val builder: BrowserMenuBuilder = mock()
         val feature = spy(CustomTabsToolbarFeature(mock(), toolbar, "", builder) {})
-        val captor = argumentCaptor<BrowserMenuBuilder>()
         val customTabConfig: CustomTabConfig = mock()
         `when`(session.customTabConfig).thenReturn(customTabConfig)
         `when`(customTabConfig.menuItems).thenReturn(emptyList())
@@ -414,9 +416,8 @@ class CustomTabsToolbarFeatureTest {
 
         feature.addMenuItems(session, listOf(CustomTabMenuItem("Share", mock())), 0)
 
-        verify(toolbar).setMenuBuilder(captor.capture())
-
-        assertEquals(3, captor.value.items.size)
+        val menuBuilder = toolbar.display.menuBuilder!!
+        assertEquals(3, menuBuilder.items.size)
     }
 
     @Test
@@ -425,7 +426,6 @@ class CustomTabsToolbarFeatureTest {
         val toolbar = spy(BrowserToolbar(testContext))
         val builder: BrowserMenuBuilder = mock()
         val feature = spy(CustomTabsToolbarFeature(mock(), toolbar, "", builder) {})
-        val captor = argumentCaptor<BrowserMenuBuilder>()
         val customTabConfig: CustomTabConfig = mock()
         `when`(session.customTabConfig).thenReturn(customTabConfig)
         `when`(customTabConfig.menuItems).thenReturn(emptyList())
@@ -433,10 +433,10 @@ class CustomTabsToolbarFeatureTest {
 
         feature.addMenuItems(session, listOf(CustomTabMenuItem("Share", mock())), 1)
 
-        verify(toolbar).setMenuBuilder(captor.capture())
+        val menuBuilder = toolbar.display.menuBuilder!!
 
-        assertEquals(3, captor.value.items.size)
-        assertTrue(captor.value.items[1] is SimpleBrowserMenuItem)
+        assertEquals(3, menuBuilder.items.size)
+        assertTrue(menuBuilder.items[1] is SimpleBrowserMenuItem)
     }
 
     @Test
@@ -445,7 +445,6 @@ class CustomTabsToolbarFeatureTest {
         val toolbar = spy(BrowserToolbar(testContext))
         val builder: BrowserMenuBuilder = mock()
         val feature = spy(CustomTabsToolbarFeature(mock(), toolbar, "", builder) {})
-        val captor = argumentCaptor<BrowserMenuBuilder>()
         val customTabConfig: CustomTabConfig = mock()
         `when`(session.customTabConfig).thenReturn(customTabConfig)
         `when`(customTabConfig.menuItems).thenReturn(emptyList())
@@ -453,10 +452,10 @@ class CustomTabsToolbarFeatureTest {
 
         feature.addMenuItems(session, listOf(CustomTabMenuItem("Share", mock())), 4)
 
-        verify(toolbar).setMenuBuilder(captor.capture())
+        val menuBuilder = toolbar.display.menuBuilder!!
 
-        assertEquals(3, captor.value.items.size)
-        assertTrue(captor.value.items[2] is SimpleBrowserMenuItem)
+        assertEquals(3, menuBuilder.items.size)
+        assertTrue(menuBuilder.items[2] is SimpleBrowserMenuItem)
     }
 
     @Test
@@ -465,7 +464,6 @@ class CustomTabsToolbarFeatureTest {
         val toolbar = spy(BrowserToolbar(testContext))
         val builder: BrowserMenuBuilder = mock()
         val feature = spy(CustomTabsToolbarFeature(mock(), toolbar, "", builder) {})
-        val captor = argumentCaptor<BrowserMenuBuilder>()
         val customTabConfig: CustomTabConfig = mock()
         `when`(session.customTabConfig).thenReturn(customTabConfig)
         `when`(customTabConfig.menuItems).thenReturn(emptyList())
@@ -473,10 +471,10 @@ class CustomTabsToolbarFeatureTest {
 
         feature.addMenuItems(session, listOf(CustomTabMenuItem("Share", mock())), -4)
 
-        verify(toolbar).setMenuBuilder(captor.capture())
+        val menuBuilder = toolbar.display.menuBuilder!!
 
-        assertEquals(3, captor.value.items.size)
-        assertTrue(captor.value.items[2] is SimpleBrowserMenuItem)
+        assertEquals(3, menuBuilder.items.size)
+        assertTrue(menuBuilder.items[2] is SimpleBrowserMenuItem)
     }
 
     @Test
@@ -583,6 +581,45 @@ class CustomTabsToolbarFeatureTest {
         assertEquals(title, toolbar.title)
     }
 
+    @Test
+    fun `Will use URL as title if title was shown once and is now empty`() {
+        val sessionManager = SessionManager(mock())
+        val toolbar = BrowserToolbar(testContext)
+        val session = Session("https://mozilla.org").also {
+            it.customTabConfig = mock()
+            sessionManager.add(it)
+        }
+        val feature = spy(CustomTabsToolbarFeature(sessionManager, toolbar, session.id) {})
+
+        feature.start()
+
+        assertEquals("", toolbar.title)
+
+        session.url = "https://www.mozilla.org/en-US/firefox/"
+
+        assertEquals("", toolbar.title)
+
+        session.title = "Firefox - Protect your life online with privacy-first products"
+
+        assertEquals("Firefox - Protect your life online with privacy-first products", toolbar.title)
+
+        session.url = "https://github.com/mozilla-mobile/android-components"
+
+        assertEquals("Firefox - Protect your life online with privacy-first products", toolbar.title)
+
+        session.title = ""
+
+        assertEquals("https://github.com/mozilla-mobile/android-components", toolbar.title)
+
+        session.title = "A collection of Android libraries to build browsers or browser-like applications."
+
+        assertEquals("A collection of Android libraries to build browsers or browser-like applications.", session.title)
+
+        session.title = ""
+
+        assertEquals("https://github.com/mozilla-mobile/android-components", toolbar.title)
+    }
+
     private fun extractActionView(
         browserToolbar: BrowserToolbar,
         contentDescription: String
@@ -592,10 +629,14 @@ class CustomTabsToolbarFeatureTest {
         browserToolbar.forEach { group ->
             val viewGroup = group as ViewGroup
 
-            viewGroup.forEach inner@{
-                if (it is ImageButton && it.contentDescription == contentDescription) {
-                    actionView = it
-                    return@inner
+            viewGroup.forEach inner@{ subGroup ->
+                if (subGroup is ViewGroup) {
+                    subGroup.forEach {
+                        if (it is ImageButton && it.contentDescription == contentDescription) {
+                            actionView = it
+                            return@inner
+                        }
+                    }
                 }
             }
         }

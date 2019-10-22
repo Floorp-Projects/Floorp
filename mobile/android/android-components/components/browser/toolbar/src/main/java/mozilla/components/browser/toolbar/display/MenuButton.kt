@@ -6,13 +6,14 @@ package mozilla.components.browser.toolbar.display
 
 import android.content.Context
 import android.content.res.ColorStateList
+import android.util.AttributeSet
 import android.view.View
 import android.widget.FrameLayout
+import android.widget.ImageView
 import androidx.annotation.ColorInt
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.widget.AppCompatImageView
 import androidx.core.content.ContextCompat
-import androidx.core.view.setPadding
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.item.BrowserMenuHighlightableItem
@@ -21,17 +22,25 @@ import mozilla.components.browser.toolbar.facts.emitOpenMenuFact
 import mozilla.components.support.ktx.android.content.res.resolveAttribute
 
 @Suppress("ViewConstructor") // This view is only instantiated in code
-internal class MenuButton(
+internal class MenuButton @JvmOverloads constructor(
     context: Context,
-    private val parent: View
-) : FrameLayout(context) {
+    attrs: AttributeSet? = null,
+    defStyleAttr: Int = 0
+) : FrameLayout(context, attrs, defStyleAttr) {
 
     @VisibleForTesting internal var menu: BrowserMenu? = null
 
     internal val menuIcon = AppCompatImageView(context).apply {
-        setPadding(resources.getDimensionPixelSize(R.dimen.mozac_browser_toolbar_menu_padding))
-        setImageResource(mozilla.components.ui.icons.R.drawable.mozac_ic_menu)
+        setImageResource(R.drawable.mozac_ic_menu)
+        scaleType = ImageView.ScaleType.CENTER
         contentDescription = context.getString(R.string.mozac_browser_toolbar_menu_button)
+    }
+
+    internal val highlightView = AppCompatImageView(context).apply {
+        setImageResource(R.drawable.mozac_menu_indicator)
+        scaleType = ImageView.ScaleType.CENTER
+        importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
+        visibility = View.GONE
     }
 
     init {
@@ -47,7 +56,7 @@ internal class MenuButton(
                 val endAlwaysVisible = menuBuilder?.endOfMenuAlwaysVisible ?: false
                 menu?.show(
                     anchor = this,
-                    orientation = BrowserMenu.determineMenuOrientation(parent),
+                    orientation = BrowserMenu.determineMenuOrientation(parent as View?),
                     endOfMenuAlwaysVisible = endAlwaysVisible
                 ) { menu = null }
 
@@ -57,6 +66,7 @@ internal class MenuButton(
             }
         }
 
+        addView(highlightView)
         addView(menuIcon)
     }
 
@@ -89,10 +99,10 @@ internal class MenuButton(
         // If a highlighted item is found, show the indicator.
         if (highlightColorResource != null) {
             val color = ContextCompat.getColor(context, highlightColorResource)
-            menuIcon.setBackgroundResource(R.drawable.mozac_menu_indicator)
-            menuIcon.backgroundTintList = ColorStateList.valueOf(color)
+            highlightView.imageTintList = ColorStateList.valueOf(color)
+            highlightView.visibility = View.VISIBLE
         } else {
-            menuIcon.setBackgroundResource(0)
+            highlightView.visibility = View.GONE
         }
     }
 
