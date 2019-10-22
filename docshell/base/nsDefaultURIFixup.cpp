@@ -262,7 +262,7 @@ nsDefaultURIFixup::GetFixupURIInfo(const nsACString& aStringURI,
 
   if (info->mFixedURI && ourHandler == extHandler &&
       StaticPrefs::keyword_enabled() &&
-      (aFixupFlags & FIXUP_FLAG_FIX_SCHEME_TYPOS)) {
+      (aFixupFlags & FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP)) {
     nsCOMPtr<nsIExternalProtocolService> extProtService =
         do_GetService(NS_EXTERNALPROTOCOLSERVICE_CONTRACTID);
     if (extProtService) {
