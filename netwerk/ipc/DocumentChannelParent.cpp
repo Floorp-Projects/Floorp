@@ -69,15 +69,15 @@ bool DocumentChannelParent::Init(const DocumentChannelCreationArgs& aArgs) {
   bool result = nsDocShell::CreateChannelForLoadState(
       loadState, loadInfo, mListener, nullptr,
       aArgs.initiatorType().ptrOr(nullptr), aArgs.loadFlags(), aArgs.loadType(),
-      aArgs.cacheKey(), aArgs.isActive(), aArgs.isTopLevelDoc(),
-      aArgs.hasNonEmptySandboxingFlags(), rv, getter_AddRefs(mChannel));
+      aArgs.cacheKey(), aArgs.isActive(), aArgs.isTopLevelDoc(), rv,
+      getter_AddRefs(mChannel));
   if (!result) {
     return SendFailedAsyncOpen(rv);
   }
 
-  nsDocShell::ConfigureChannel(
-      mChannel, loadState, aArgs.initiatorType().ptrOr(nullptr),
-      aArgs.loadType(), aArgs.cacheKey(), aArgs.hasNonEmptySandboxingFlags());
+  nsDocShell::ConfigureChannel(mChannel, loadState,
+                               aArgs.initiatorType().ptrOr(nullptr),
+                               aArgs.loadType(), aArgs.cacheKey());
 
   // Computation of the top window uses the docshell tree, so only
   // works in the source process. We compute it manually and override
@@ -800,17 +800,6 @@ DocumentChannelParent::AsyncOnChannelRedirect(
   // a copy of it now.
   aNewChannel->GetOriginalURI(getter_AddRefs(mChannelCreationURI));
 
-  // Since we're redirecting away from aOldChannel, we should check if it
-  // had a COOP mismatch, since we want the final result for this to
-  // include the state of all channels we redirected through.
-  nsCOMPtr<nsHttpChannel> httpChannel = do_QueryInterface(aOldChannel);
-  if (httpChannel) {
-    bool mismatch = false;
-    MOZ_ALWAYS_SUCCEEDS(
-        httpChannel->HasCrossOriginOpenerPolicyMismatch(&mismatch));
-    mHasCrossOriginOpenerPolicyMismatch |= mismatch;
-  }
-
   // We don't need to confirm internal redirects or record any
   // history for them, so just immediately verify and return.
   if (aFlags & nsIChannelEventSink::REDIRECT_INTERNAL) {
@@ -903,13 +892,6 @@ DocumentChannelParent::HasCrossOriginOpenerPolicyMismatch(bool* aMismatch) {
 
   if (!aMismatch) {
     return NS_ERROR_INVALID_ARG;
-  }
-
-  // If we found a COOP mismatch on an earlier channel and then
-  // redirected away from that, we should use that result.
-  if (mHasCrossOriginOpenerPolicyMismatch) {
-    *aMismatch = true;
-    return NS_OK;
   }
 
   nsCOMPtr<nsHttpChannel> channel = do_QueryInterface(mChannel);
