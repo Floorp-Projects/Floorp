@@ -160,24 +160,7 @@ class SpecialPowersParent extends JSWindowActorParent {
               },
               type: permission.type,
             };
-            this._self.sendAsyncMessage("specialpowers-" + aTopic, msg);
-            return;
-          case "csp-on-violate-policy":
-            // the subject is either an nsIURI or an nsISupportsCString
-            let subject = null;
-            if (aSubject instanceof Ci.nsIURI) {
-              subject = aSubject.asciiSpec;
-            } else if (aSubject instanceof Ci.nsISupportsCString) {
-              subject = aSubject.data;
-            } else {
-              throw new Error("Subject must be nsIURI or nsISupportsCString");
-            }
-            msg = {
-              subject,
-              data: aData,
-            };
-            this._self.sendAsyncMessage("specialpowers-" + aTopic, msg);
-            return;
+          // fall through
           default:
             this._self.sendAsyncMessage("specialpowers-" + aTopic, msg);
         }

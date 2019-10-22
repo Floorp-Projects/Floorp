@@ -3286,6 +3286,21 @@ nsresult Document::InitCSP(nsIChannel* aChannel) {
     SetPrincipals(principal, principal);
   }
 
+  // ----- Enforce frame-ancestor policy on any applied policies
+  nsCOMPtr<nsIDocShell> docShell(mDocumentContainer);
+  if (docShell) {
+    bool safeAncestry = false;
+
+    // PermitsAncestry sends violation reports when necessary
+    rv = mCSP->PermitsAncestry(docShell, &safeAncestry);
+
+    if (NS_FAILED(rv) || !safeAncestry) {
+      MOZ_LOG(gCspPRLog, LogLevel::Debug,
+              ("CSP doesn't like frame's ancestry, not loading."));
+      // stop!  ERROR page!
+      aChannel->Cancel(NS_ERROR_CSP_FRAME_ANCESTOR_VIOLATION);
+    }
+  }
   ApplySettingsFromCSP(false);
   return NS_OK;
 }
