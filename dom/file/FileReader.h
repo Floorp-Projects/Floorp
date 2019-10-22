@@ -27,6 +27,7 @@ namespace dom {
 
 class Blob;
 class DOMException;
+class OwningStringOrArrayBuffer;
 class StrongWorkerRef;
 class WeakWorkerRef;
 
@@ -93,8 +94,7 @@ class FileReader final : public DOMEventTargetHelper,
 
   DOMException* GetError() const { return mError; }
 
-  void GetResult(JSContext* aCx, JS::MutableHandle<JS::Value> aResult,
-                 ErrorResult& aRv);
+  void GetResult(JSContext* aCx, Nullable<OwningStringOrArrayBuffer>& aResult);
 
   IMPL_EVENT_HANDLER(loadstart)
   IMPL_EVENT_HANDLER(progress)
