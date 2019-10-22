@@ -1185,15 +1185,19 @@ class FunctionCompiler {
   }
 
  public:
-  void pushDefs(const DefVector& defs) {
+  MOZ_MUST_USE bool pushDefs(const DefVector& defs) {
     if (inDeadCode()) {
-      return;
+      return true;
     }
     MOZ_ASSERT(numPushed(curBlock_) == 0);
+    if (!curBlock_->ensureHasSlots(defs.length())) {
+      return false;
+    }
     for (MDefinition* def : defs) {
       MOZ_ASSERT(def->type() != MIRType::None);
       curBlock_->push(def);
     }
+    return true;
   }
 
   bool popPushedDefs(DefVector* defs) {
@@ -1210,12 +1214,12 @@ class FunctionCompiler {
   }
 
  private:
-  void addJoinPredecessor(const DefVector& defs, MBasicBlock** joinPred) {
+  bool addJoinPredecessor(const DefVector& defs, MBasicBlock** joinPred) {
     *joinPred = curBlock_;
     if (inDeadCode()) {
-      return;
+      return true;
     }
-    pushDefs(defs);
+    return pushDefs(defs);
   }
 
  public:
@@ -1249,7 +1253,9 @@ class FunctionCompiler {
     if (!elseBlock) {
       *thenJoinPred = nullptr;
     } else {
-      addJoinPredecessor(values, thenJoinPred);
+      if (!addJoinPredecessor(values, thenJoinPred)) {
+        return false;
+      }
 
       curBlock_ = elseBlock;
       mirGraph().moveBlockToEnd(curBlock_);
@@ -1269,7 +1275,9 @@ class FunctionCompiler {
     }
 
     MBasicBlock* elseJoinPred;
-    addJoinPredecessor(values, &elseJoinPred);
+    if (!addJoinPredecessor(values, &elseJoinPred)) {
+      return false;
+    }
 
     mozilla::Array<MBasicBlock*, 2> blocks;
     size_t numJoinPreds = 0;
@@ -1484,7 +1492,9 @@ class FunctionCompiler {
       return false;
     }
 
-    pushDefs(values);
+    if (!pushDefs(values)) {
+      return false;
+    }
 
     curBlock_->end(jump);
     curBlock_ = nullptr;
@@ -1507,7 +1517,9 @@ class FunctionCompiler {
       return false;
     }
 
-    pushDefs(values);
+    if (!pushDefs(values)) {
+      return false;
+    }
 
     curBlock_->end(test);
     curBlock_ = joinBlock;
@@ -1568,7 +1580,9 @@ class FunctionCompiler {
       }
     }
 
-    pushDefs(values);
+    if (!pushDefs(values)) {
+      return false;
+    }
 
     curBlock_->end(table);
     curBlock_ = nullptr;
@@ -1791,7 +1805,9 @@ static bool EmitElse(FunctionCompiler& f) {
     return false;
   }
 
-  f.pushDefs(thenValues);
+  if (!f.pushDefs(thenValues)) {
+    return false;
+  }
 
   if (!f.switchToElse(f.iter().controlItem(), &f.iter().controlItem())) {
     return false;
@@ -1811,7 +1827,9 @@ static bool EmitEnd(FunctionCompiler& f) {
   MBasicBlock* block = f.iter().controlItem();
   f.iter().popEnd();
 
-  f.pushDefs(preJoinDefs);
+  if (!f.pushDefs(preJoinDefs)) {
+    return false;
+  }
 
   DefVector postJoinDefs;
   switch (kind) {
