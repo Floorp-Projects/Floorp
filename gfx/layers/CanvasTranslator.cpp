@@ -187,6 +187,13 @@ void CanvasTranslator::RemoveDrawTarget(gfx::ReferencePtr aDrawTarget) {
   gfx::AutoSerializeWithMoz2D serializeWithMoz2D(
       GetReferenceDrawTarget()->GetBackendType());
   mTextureDatas.erase(aDrawTarget);
+
+  // It is possible that the texture from the content process has never been
+  // forwarded to the GPU process, so we have to make sure it is removed here
+  // otherwise if the same pointer gets used for a DrawTarget again in the
+  // content process then it could pick up the old (now invalid) descriptor.
+  MonitorAutoLock lock(mSurfaceDescriptorsMonitor);
+  mSurfaceDescriptors.erase(aDrawTarget);
 }
 
 TextureData* CanvasTranslator::LookupTextureData(
