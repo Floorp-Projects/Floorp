@@ -77,6 +77,7 @@
   const a_policy = {
     createHTML: id,
     createScriptURL: id,
+    createURL: id,
     createScript: id,
   };
 
@@ -126,9 +127,9 @@
 
   promise_test(t => {
     let p = promise_violation("trusted-types two")();
-    expect_throws(_ => document.getElementById("script").src = url);
+    expect_throws(_ => document.getElementById("anchor").href = url);
     return p;
-  }, "Trusted Type violation report: assign string to script url");
+  }, "Trusted Type violation report: assign string to url");
 
   promise_test(t => {
     let p = promise_violation("trusted-types two")();
@@ -138,10 +139,10 @@
 
   promise_test(t => {
     let p = promise_flush()();
-    document.getElementById("script").text = policy_one.createScript("2+2;");
+    document.getElementById("anchor").href = policy_one.createURL("#");
     flush();
     return p;
-  }, "Trusted Type violation report: assign trusted script to script; no report");
+  }, "Trusted Type violation report: assign trusted URL to url; no report");
 
   promise_test(t => {
     let p = promise_flush()();
@@ -164,10 +165,10 @@
     let p = Promise.resolve()
         .then(promise_violation("trusted-types two"))
         .then(expect_blocked_uri("trusted-types-sink"))
-        .then(expect_sample("HTMLScriptElement.src"));
-      expect_throws(_ => { document.getElementById("script").src = "" });
+        .then(expect_sample("HTMLAnchorElement.href"));
+      expect_throws(_ => { document.getElementById("anchor").href = "" });
     return p;
-  }, "Trusted Type violation report: sample for script.src assignment");
+  }, "Trusted Type violation report: sample for .href assignment");
 
   promise_test(t => {
     let p = Promise.resolve()
@@ -209,24 +210,24 @@
   // refer to the DOM elements being modified, so that Custom Elements cannot
   // "mask" the underlying DOM mechanism (for reporting).
   if (customElements) {
-    class CustomScript extends HTMLScriptElement {};
-    customElements.define("custom-script", CustomScript, { extends: "script" });
+    class CustomLink extends HTMLAnchorElement {};
+    customElements.define("custom-link", CustomLink, { extends: "a" });
 
     promise_test(t => {
       let p = Promise.resolve()
           .then(promise_violation("trusted-types one"))
           .then(expect_blocked_uri("trusted-types-sink"))
-          .then(expect_sample("HTMLScriptElement.src"))
+          .then(expect_sample("HTMLAnchorElement.href"))
           .then(expect_sample("abc"));
-      expect_throws(_ => document.getElementById("customscript").src = "abc");
+      expect_throws(_ => document.getElementById("customlink").href = "abc");
       return p;
     }, "Trusted Type violation report: sample for custom element assignment");
   }
-
   </script>
 
   <!-- Some elements for the tests to act on. -->
+  <a id="anchor" href="">anchor</a>
   <div id="div"></div>
   <script id="script"></script>
-  <script id="customscript" is="custom-script" src="a"></script>
+  <a id="customlink" is="custom-link" href="a"></a>
 </body>
