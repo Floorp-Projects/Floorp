@@ -262,10 +262,6 @@ nsStyleMargin::nsStyleMargin(const nsStyleMargin& aSrc)
 
 nsChangeHint nsStyleMargin::CalcDifference(
     const nsStyleMargin& aNewData) const {
-  if (mMargin == aNewData.mMargin && mScrollMargin == aNewData.mScrollMargin) {
-    return nsChangeHint(0);
-  }
-
   nsChangeHint hint = nsChangeHint(0);
 
   if (mMargin != aNewData.mMargin) {
@@ -296,11 +292,6 @@ nsStylePadding::nsStylePadding(const nsStylePadding& aSrc)
 
 nsChangeHint nsStylePadding::CalcDifference(
     const nsStylePadding& aNewData) const {
-  if (mPadding == aNewData.mPadding &&
-      mScrollPadding == aNewData.mScrollPadding) {
-    return nsChangeHint(0);
-  }
-
   nsChangeHint hint = nsChangeHint(0);
 
   if (mPadding != aNewData.mPadding) {
