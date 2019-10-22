@@ -16,21 +16,17 @@ var webconsole = null;
 var messages_seen = 0;
 var expected_messages = 50;
 
-function on_new_message(new_messages) {
-  for (let message of new_messages) {
-    let elem = message.node;
-    let text = elem.textContent;
-    if (text.match("Cross-Origin Request Blocked:")) {
-      ok(true, "message is: " + text);
-      messages_seen++;
-    }
+function on_new_message(msgObj) {
+  let text = msgObj.message;
+
+  if (text.match("Cross-Origin Request Blocked:")) {
+    ok(true, "message is: " + text);
+    messages_seen++;
   }
 }
 
 async function do_cleanup() {
-  if (webconsole) {
-    webconsole.ui.off("new-messages", on_new_message);
-  }
+  Services.console.unregisterListener(on_new_message);
   await unsetCookiePref();
 }
 
@@ -68,6 +64,7 @@ add_task(async function() {
   requestLongerTimeout(4);
   registerCleanupFunction(do_cleanup);
   await setCookiePref();
+  Services.console.registerListener(on_new_message);
 
   let test_uri =
     "http://mochi.test:8888/browser/dom/security/test/cors/file_cors_logging_test.html";
@@ -76,17 +73,6 @@ add_task(async function() {
     gBrowser,
     "about:blank"
   );
-
-  let toolbox = await openToolboxForTab(tab, "webconsole");
-  ok(toolbox, "Got toolbox");
-  let hud = toolbox.getCurrentPanel().hud;
-  ok(hud, "Got hud");
-
-  if (!webconsole) {
-    registerCleanupFunction(do_cleanup);
-    hud.ui.on("new-messages", on_new_message);
-    webconsole = hud;
-  }
 
   BrowserTestUtils.loadURI(gBrowser, test_uri);
 
