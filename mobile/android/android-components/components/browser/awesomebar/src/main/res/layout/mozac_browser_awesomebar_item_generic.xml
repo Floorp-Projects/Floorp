@@ -10,6 +10,7 @@
     android:background="?android:attr/selectableItemBackground"
     android:clickable="true"
     android:focusable="true"
+    android:clipToPadding="false"
     android:paddingStart="20dp"
     android:paddingEnd="16dp">
 
