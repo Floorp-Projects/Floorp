@@ -109,7 +109,6 @@
 #include "DecoderDoctorLogger.h"
 #include "MediaDecoder.h"
 #include "mozilla/ClearSiteData.h"
-#include "mozilla/dom/DOMSecurityManager.h"
 #include "mozilla/EditorController.h"
 #include "mozilla/Fuzzyfox.h"
 #include "mozilla/HTMLEditorController.h"
@@ -308,8 +307,6 @@ nsresult nsLayoutStatics::Initialize() {
   mozilla::Fuzzyfox::Start();
 
   ClearSiteData::Initialize();
-
-  DOMSecurityManager::Initialize();
 
   // Reporting API.
   ReportingHeader::Initialize();
