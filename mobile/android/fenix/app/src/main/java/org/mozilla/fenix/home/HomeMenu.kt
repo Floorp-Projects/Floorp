@@ -6,6 +6,7 @@ package org.mozilla.fenix.home
 
 import android.content.Context
 import mozilla.components.browser.menu.BrowserMenuBuilder
+import mozilla.components.browser.menu.item.BrowserMenuCategory
 import mozilla.components.browser.menu.item.BrowserMenuDivider
 import mozilla.components.browser.menu.item.BrowserMenuHighlightableItem
 import mozilla.components.browser.menu.item.BrowserMenuImageText
@@ -23,6 +24,8 @@ class HomeMenu(
         object Help : Item()
         object Settings : Item()
         object Library : Item()
+        object History : Item()
+        object Bookmarks : Item()
         object Quit : Item()
     }
 
@@ -30,29 +33,35 @@ class HomeMenu(
 
     private val menuItems by lazy {
         val items = mutableListOf(
+            BrowserMenuCategory(
+                context.getString(R.string.browser_menu_your_library),
+                textColorResource = ThemeManager.resolveAttribute(R.attr.menuCategoryText, context)
+            ),
+
+            BrowserMenuImageText(
+                context.getString(R.string.library_bookmarks),
+                R.drawable.ic_bookmark_outline,
+                ThemeManager.resolveAttribute(R.attr.primaryText, context)
+            ) {
+                onItemTapped.invoke(Item.Bookmarks)
+            },
+
+            BrowserMenuImageText(
+                context.getString(R.string.library_history),
+                R.drawable.ic_history,
+                ThemeManager.resolveAttribute(R.attr.primaryText, context)
+            ) {
+                onItemTapped.invoke(Item.History)
+            },
+
+            BrowserMenuDivider(),
+
             BrowserMenuImageText(
                 context.getString(R.string.browser_menu_settings),
                 R.drawable.ic_settings,
                 ThemeManager.resolveAttribute(R.attr.primaryText, context)
             ) {
                 onItemTapped.invoke(Item.Settings)
-            },
-
-            BrowserMenuImageText(
-                context.getString(R.string.browser_menu_your_library),
-                R.drawable.ic_library,
-                ThemeManager.resolveAttribute(R.attr.primaryText, context)
-            ) {
-                onItemTapped.invoke(Item.Library)
-            },
-
-            BrowserMenuDivider(),
-            BrowserMenuImageText(
-                context.getString(R.string.browser_menu_help),
-                R.drawable.ic_help,
-                ThemeManager.resolveAttribute(R.attr.primaryText, context)
-            ) {
-                onItemTapped.invoke(Item.Help)
             },
 
             BrowserMenuHighlightableItem(
@@ -69,8 +78,17 @@ class HomeMenu(
                 isHighlighted = { WhatsNew.shouldHighlightWhatsNew(context) }
             ) {
                 onItemTapped.invoke(Item.WhatsNew)
+            },
+
+            BrowserMenuImageText(
+                context.getString(R.string.browser_menu_help),
+                R.drawable.ic_help,
+                ThemeManager.resolveAttribute(R.attr.primaryText, context)
+            ) {
+                onItemTapped.invoke(Item.Help)
             }
-        )
+
+            )
 
         if (Settings.getInstance(context).shouldDeleteBrowsingDataOnQuit) {
             items.add(
