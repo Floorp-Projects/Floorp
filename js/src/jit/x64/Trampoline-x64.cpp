@@ -13,7 +13,9 @@
 #endif
 #include "jit/VMFunctions.h"
 #include "jit/x64/SharedICHelpers-x64.h"
-#include "vtune/VTuneWrapper.h"
+#ifdef MOZ_VTUNE
+#  include "vtune/VTuneWrapper.h"
+#endif
 
 #include "jit/MacroAssembler-inl.h"
 

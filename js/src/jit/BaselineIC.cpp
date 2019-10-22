@@ -42,7 +42,9 @@
 #include "vm/Opcodes.h"
 #include "vm/SelfHosting.h"
 #include "vm/TypedArrayObject.h"
-#include "vtune/VTuneWrapper.h"
+#ifdef MOZ_VTUNE
+#  include "vtune/VTuneWrapper.h"
+#endif
 
 #include "builtin/Boolean-inl.h"
 

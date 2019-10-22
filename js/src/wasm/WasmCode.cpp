@@ -25,7 +25,9 @@
 #ifdef JS_ION_PERF
 #  include "jit/PerfSpewer.h"
 #endif
-#include "vtune/VTuneWrapper.h"
+#ifdef MOZ_VTUNE
+#  include "vtune/VTuneWrapper.h"
+#endif
 #include "wasm/WasmModule.h"
 #include "wasm/WasmProcess.h"
 #include "wasm/WasmSerialize.h"

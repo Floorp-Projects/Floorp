@@ -15,8 +15,6 @@
 #include "vm/Realm.h"
 #include "vm/Shape.h"
 
-#ifdef MOZ_VTUNE
-
 namespace js {
 namespace vtune {
 
@@ -165,5 +163,3 @@ void UnmarkBytes(void* bytes, unsigned size) {
 
 }  // namespace vtune
 }  // namespace js
-
-#endif  // MOZ_VTUNE

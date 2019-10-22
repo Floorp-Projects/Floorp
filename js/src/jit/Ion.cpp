@@ -51,7 +51,9 @@
 #include "vm/HelperThreads.h"
 #include "vm/Realm.h"
 #include "vm/TraceLogging.h"
-#include "vtune/VTuneWrapper.h"
+#ifdef MOZ_VTUNE
+#  include "vtune/VTuneWrapper.h"
+#endif
 
 #include "debugger/DebugAPI-inl.h"
 #include "gc/PrivateIterators-inl.h"

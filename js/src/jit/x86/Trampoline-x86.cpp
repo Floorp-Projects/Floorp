@@ -18,7 +18,9 @@
 #include "jit/VMFunctions.h"
 #include "jit/x86/SharedICHelpers-x86.h"
 #include "vm/Realm.h"
-#include "vtune/VTuneWrapper.h"
+#ifdef MOZ_VTUNE
+#  include "vtune/VTuneWrapper.h"
+#endif
 
 #include "jit/MacroAssembler-inl.h"
 #include "vm/JSScript-inl.h"
