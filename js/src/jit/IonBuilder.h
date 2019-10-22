@@ -836,7 +836,7 @@ class IonBuilder : public MIRGenerator,
   InliningResult inlineIsObject(CallInfo& callInfo);
   InliningResult inlineToObject(CallInfo& callInfo);
   InliningResult inlineIsCrossRealmArrayConstructor(CallInfo& callInfo);
-  InliningResult inlineToInteger(CallInfo& callInfo);
+  InliningResult inlineToIntegerPositiveZero(CallInfo& callInfo);
   InliningResult inlineToString(CallInfo& callInfo);
   InliningResult inlineDump(CallInfo& callInfo);
   InliningResult inlineHasClass(CallInfo& callInfo, const JSClass* clasp,
