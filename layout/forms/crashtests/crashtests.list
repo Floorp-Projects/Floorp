@@ -25,7 +25,6 @@ skip-if(!xbl) load 375299.html
 load 378369.html
 load 378413-1.xhtml
 load 380116-1.xhtml
-load 382212-1.xhtml
 load 382610-1.html
 load 383887-1.html
 load 386554-1.html
@@ -43,7 +42,6 @@ load 451316.html
 load 455451-1.html
 load 457537-1.html
 load 457537-2.html
-load 478219-1.xhtml
 load 498698-1.html
 load 513113-1.html
 load 538062-1.xhtml
