@@ -3,7 +3,7 @@
 function toint32() {
 
     // The test case to trigger MToNumberInt32 operation.
-    var ToInteger = getSelfHostedValue("ToInteger");
+    var ToInteger = getSelfHostedValue("ToIntegerPositiveZero");
 
     // Case1: The input operand is constant int32.
     var result = ToInteger(1);

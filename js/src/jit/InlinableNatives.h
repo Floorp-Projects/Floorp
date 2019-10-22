@@ -114,7 +114,7 @@
   _(IntrinsicToObject)                             \
   _(IntrinsicIsObject)                             \
   _(IntrinsicIsCrossRealmArrayConstructor)         \
-  _(IntrinsicToInteger)                            \
+  _(IntrinsicToIntegerPositiveZero)                \
   _(IntrinsicToString)                             \
   _(IntrinsicIsConstructing)                       \
   _(IntrinsicSubstringKernel)                      \
