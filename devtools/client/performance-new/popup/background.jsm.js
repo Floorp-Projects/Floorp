@@ -83,6 +83,16 @@ const lazyReceiveProfile = requireLazy(() => {
   return browserModule.receiveProfile;
 });
 
+const lazyPreferenceManagement = requireLazy(() => {
+  const { require } = ChromeUtils.import(
+    "resource://devtools/shared/Loader.jsm"
+  );
+
+  /** @type {import("devtools/client/performance-new/preference-management")} */
+  const preferenceManagementModule = require("devtools/client/performance-new/preference-management");
+  return preferenceManagementModule;
+});
+
 /**
  * This Map caches the symbols from the shared libraries.
  * @type {Map<string, { path: string, debugPath: string }>}
@@ -160,13 +170,14 @@ async function captureProfile() {
  * starting the profiler using the shortcut keys, through toggleProfiler below.
  */
 function startProfiler() {
+  const { translatePreferencesToState } = lazyPreferenceManagement();
   const {
     entries,
     interval,
     features,
     threads,
     duration,
-  } = getRecordingPreferencesFromBrowser();
+  } = translatePreferencesToState(getRecordingPreferencesFromBrowser());
 
   Services.profiler.StartProfiler(
     entries,
@@ -316,8 +327,7 @@ function getRecordingPreferencesFromBrowser() {
 
   return {
     entries,
-    // The pref stores the value in usec.
-    interval: interval / 1000,
+    interval,
     // Validate the features before passing them to the profiler.
     features: features.filter(feature => supportedFeatures.has(feature)),
     threads,
@@ -331,8 +341,7 @@ function getRecordingPreferencesFromBrowser() {
  */
 function setRecordingPreferencesOnBrowser(settings) {
   Services.prefs.setIntPref(ENTRIES_PREF, settings.entries);
-  // The interval pref stores the value in microseconds for extra precision.
-  Services.prefs.setIntPref(INTERVAL_PREF, settings.interval * 1000);
+  Services.prefs.setIntPref(INTERVAL_PREF, settings.interval);
   Services.prefs.setCharPref(FEATURES_PREF, JSON.stringify(settings.features));
   Services.prefs.setCharPref(THREADS_PREF, JSON.stringify(settings.threads));
   Services.prefs.setCharPref(OBJDIRS_PREF, JSON.stringify(settings.objdirs));

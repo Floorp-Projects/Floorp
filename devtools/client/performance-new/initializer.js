@@ -8,6 +8,7 @@
 /**
  * @typedef {import("./@types/perf").PerfFront} PerfFront
  * @typedef {import("./@types/perf").PreferenceFront} PreferenceFront
+ * @typedef {import("./@types/perf").RecordingStateFromPreferences} RecordingStateFromPreferences
  */
 
 const { BrowserLoader } = ChromeUtils.import(
@@ -61,17 +62,20 @@ async function gInit(perfFront, preferenceFront) {
       // according to what's in the target's preferences. This way the preferences are
       // stored on the target. This could be useful for something like Android where you
       // might want to tweak the settings.
-      recordingSettingsFromPreferences: await getRecordingPreferencesFromDebuggee(
+      recordingPreferences: await getRecordingPreferencesFromDebuggee(
         preferenceFront,
         getDefaultRecordingPreferences()
       ),
 
       // Go ahead and hide the implementation details for the component on how the
       // preference information is stored
-      setRecordingPreferences: () =>
+      /**
+       * @param {RecordingStateFromPreferences} recordingPreferences
+       */
+      setRecordingPreferences: recordingPreferences =>
         setRecordingPreferencesOnDebuggee(
           preferenceFront,
-          selectors.getRecordingSettings(store.getState())
+          recordingPreferences
         ),
 
       // Configure the getSymbolTable function for the DevTools workflow.
