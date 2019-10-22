@@ -283,12 +283,22 @@ If the environment variable `JAVA_HOME` is not defined, you will need to set it.
 Once the environment variable is set, you can import the project into Android Studio with the default wizard options.
 
 ## Style ##
-We follow the style enforced by [ktlint](https://ktlint.github.io/). See [how to configure Android Studio appropriately](https://github.com/pinterest/ktlint#option-1-recommended).
+We follow the style enforced by [ktlint](https://ktlint.github.io/) and [detekt](https://arturbosch.github.io/detekt/). See [how to configure Android Studio appropriately](https://github.com/pinterest/ktlint#option-1-recommended).
 
 To check your style, run:
 
 ```
 ./gradlew ktlint
+./gradlew detekt
+```
+
+## Testing ##
+You are expected to both add tests for code that you write and make sure that your changes do not
+cause existing tests to fail. You may find these command lines helpful:
+
+```
+./gradlew test                            # Run all tests
+./gradlew :support-ktx:testdebugunittest  # Run unit tests for a specific component
 ```
 
 # License
