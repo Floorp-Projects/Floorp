@@ -68,7 +68,7 @@ function isSupportedPlatform(state = null, action) {
  * The setting for the recording interval. Defaults to 1ms.
  * @type {Reducer<number>}
  */
-function interval(state = 1000, action) {
+function interval(state = 1, action) {
   switch (action.type) {
     case "CHANGE_INTERVAL":
       return action.interval;
