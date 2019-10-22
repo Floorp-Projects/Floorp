@@ -30,15 +30,13 @@ void FramingChecker::ReportError(const char* aMessageTag,
   }
 
   Document* parentDocument = aParentDocShellItem->GetDocument();
-  nsCOMPtr<nsIURI> parentURI;
-  parentDocument->NodePrincipal()->GetURI(getter_AddRefs(parentURI));
   MOZ_ASSERT(!parentDocument->NodePrincipal()->IsSystemPrincipal(),
              "Should not get system principal here.");
 
   // Get the parent URL spec
   nsAutoCString parentSpec;
   nsresult rv;
-  rv = parentURI->GetAsciiSpec(parentSpec);
+  rv = parentDocument->NodePrincipal()->GetAsciiSpec(parentSpec);
   if (NS_FAILED(rv)) {
     return;
   }

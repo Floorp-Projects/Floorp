@@ -629,12 +629,8 @@ static void LogPrincipal(nsIPrincipal* aPrincipal,
                origin.get()));
       return;
     }
-    nsCOMPtr<nsIURI> principalURI;
     nsAutoCString principalSpec;
-    aPrincipal->GetURI(getter_AddRefs(principalURI));
-    if (principalURI) {
-      principalURI->GetSpec(principalSpec);
-    }
+    aPrincipal->GetAsciiSpec(principalSpec);
     MOZ_LOG(sCSMLog, LogLevel::Debug,
             ("  %s: %s\n", NS_ConvertUTF16toUTF8(aPrincipalName).get(),
              principalSpec.get()));
