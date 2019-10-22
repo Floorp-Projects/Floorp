@@ -3689,11 +3689,7 @@ IonBuilder::InliningResult IonBuilder::inlineToIntegerPositiveZero(
   }
 
   if (returnType == MIRType::Int32) {
-    if (input->mightBeType(MIRType::Undefined)) {
-      return InliningStatus_NotInlined;
-    }
-
-    auto* toInt32 = MToNumberInt32::New(alloc(), input);
+    auto* toInt32 = MToIntegerInt32::New(alloc(), input);
     current->add(toInt32);
     current->push(toInt32);
   } else {
