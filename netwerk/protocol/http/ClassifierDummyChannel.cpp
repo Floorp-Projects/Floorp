@@ -645,7 +645,7 @@ bool ClassifierDummyChannel::GetHasNonEmptySandboxingFlag() { return false; }
 void ClassifierDummyChannel::SetHasNonEmptySandboxingFlag(
     bool aHasNonEmptySandboxingFlag) {}
 
-NS_IMETHODIMP ClassifierDummyChannel::GetCrossOriginOpenerPolicy(
+NS_IMETHODIMP ClassifierDummyChannel::ComputeCrossOriginOpenerPolicy(
     nsILoadInfo::CrossOriginOpenerPolicy aInitiatorPolicy,
     nsILoadInfo::CrossOriginOpenerPolicy* aOutPolicy) {
   return NS_ERROR_NOT_IMPLEMENTED;
