@@ -93,6 +93,7 @@ async function AssertPrivateResult(win, engine, isPrivateEngine) {
     engine.name,
     "Check the search engine"
   );
+  return result;
 }
 
 add_task(async function test_nonsearch() {
@@ -358,7 +359,7 @@ add_task(async function test_oneoff_selected_with_private_engine_keyboard() {
 
 add_task(async function test_alias() {
   info(
-    "Test that 'Search in a Private Window' doesn's appear if an alias is typed"
+    "Test that 'Search in a Private Window' doesn't appear if an alias is typed"
   );
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
@@ -373,4 +374,52 @@ add_task(async function test_alias() {
     value: "alias something",
   });
   await AssertNoPrivateResult(window);
+});
+
+add_task(async function test_restrict() {
+  info(
+    "Test that 'Search in a Private Window' doesn's appear for just the restriction token"
+  );
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    waitForFocus,
+    value: UrlbarTokenizer.RESTRICT.SEARCH,
+  });
+  await AssertNoPrivateResult(window);
+
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    waitForFocus,
+    value: UrlbarTokenizer.RESTRICT.SEARCH + " ",
+  });
+  await AssertNoPrivateResult(window);
+
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    waitForFocus,
+    value: " " + UrlbarTokenizer.RESTRICT.SEARCH,
+  });
+  await AssertNoPrivateResult(window);
+});
+
+add_task(async function test_restrict_search() {
+  info(
+    "Test that 'Search in a Private Window' has the right string with the restriction token"
+  );
+  let engine = await Services.search.getDefaultPrivate();
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    waitForFocus,
+    value: UrlbarTokenizer.RESTRICT.SEARCH + "test",
+  });
+  let result = await AssertPrivateResult(window, engine, true);
+  Assert.equal(result.searchParams.query, "test");
+
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    waitForFocus,
+    value: "test" + UrlbarTokenizer.RESTRICT.SEARCH,
+  });
+  result = await AssertPrivateResult(window, engine, true);
+  Assert.equal(result.searchParams.query, "test");
 });
