@@ -1012,6 +1012,9 @@ pref("browser.bookmarks.editDialog.showForNewBookmarks", true);
 // bookmarking dialog
 pref("browser.bookmarks.editDialog.firstEditField", "namePicker");
 
+// The number of recently selected folders in the edit bookmarks dialog.
+pref("browser.bookmarks.editDialog.maxRecentFolders", 7);
+
 pref("dom.ipc.plugins.flash.disable-protected-mode", false);
 
 // Feature-disable the protected-mode auto-flip
