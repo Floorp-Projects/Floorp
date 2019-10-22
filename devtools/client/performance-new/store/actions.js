@@ -5,6 +5,10 @@
 "use strict";
 
 const selectors = require("devtools/client/performance-new/store/selectors");
+const {
+  translatePreferencesToState,
+  translatePreferencesFromState,
+} = require("devtools/client/performance-new/preference-management");
 
 /**
  * @typedef {import("../@types/perf").Action} Action
@@ -17,7 +21,7 @@ const selectors = require("devtools/client/performance-new/store/selectors");
 /**
  * @template T
  * @typedef {import("../@types/perf").ThunkAction<T>} ThunkAction<T>
- *
+ */
 
 /**
  * The recording state manages the current state of the recording panel.
@@ -65,7 +69,7 @@ function _dispatchAndUpdatePreferences(action) {
       getState()
     );
     const recordingSettings = selectors.getRecordingSettings(getState());
-    setRecordingPreferences(recordingSettings);
+    setRecordingPreferences(translatePreferencesFromState(recordingSettings));
   };
 }
 
@@ -125,15 +129,21 @@ exports.changeObjdirs = objdirs =>
   });
 
 /**
- * Receive the values to intialize the store. See the reducer for what values
+ * Receive the values to initialize the store. See the reducer for what values
  * are expected.
  * @param {object} values
  * @return {ThunkAction<void>}
  */
-exports.initializeStore = values => ({
-  type: "INITIALIZE_STORE",
-  ...values,
-});
+exports.initializeStore = values => {
+  const { recordingPreferences, ...initValues } = values;
+  return {
+    ...initValues,
+    type: "INITIALIZE_STORE",
+    recordingSettingsFromPreferences: translatePreferencesToState(
+      recordingPreferences
+    ),
+  };
+};
 
 /**
  * Start a new recording with the perfFront and update the internal recording state.
