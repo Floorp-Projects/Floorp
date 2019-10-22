@@ -462,6 +462,7 @@ void SnapshotReader::readTrackSnapshot() {
 }
 
 void SnapshotReader::spewBailingFrom() const {
+#ifdef JS_JITSPEW
   if (JitSpewEnabled(JitSpew_IonBailouts)) {
     JitSpewHeader(JitSpew_IonBailouts);
     Fprinter& out = JitSpewPrinter();
@@ -472,6 +473,7 @@ void SnapshotReader::spewBailingFrom() const {
     out.printf(" [%u]", lirId_);
     out.printf("\n");
   }
+#endif
 }
 #endif
 

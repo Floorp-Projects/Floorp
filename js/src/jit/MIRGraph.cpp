@@ -1581,7 +1581,7 @@ void MBasicBlock::dumpStack() {
 }
 
 void MIRGraph::dump(GenericPrinter& out) {
-#ifdef DEBUG
+#ifdef JS_JITSPEW
   for (MBasicBlockIterator iter(begin()); iter != end(); iter++) {
     iter->dump(out);
     out.printf("\n");
@@ -1596,7 +1596,7 @@ void MIRGraph::dump() {
 }
 
 void MBasicBlock::dump(GenericPrinter& out) {
-#ifdef DEBUG
+#ifdef JS_JITSPEW
   out.printf("block%u:%s%s%s\n", id(), isLoopHeader() ? " (loop header)" : "",
              unreachable() ? " (unreachable)" : "",
              isMarked() ? " (marked)" : "");
