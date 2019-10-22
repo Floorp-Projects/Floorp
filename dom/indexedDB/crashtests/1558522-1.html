@@ -1,0 +1,40 @@
+<html>
+<head>
+    <script id='worker' type='javascript/worker'>
+      onmessage = function (e) {
+        const file = e.data[0]
+        const db = indexedDB.open('', {})
+        db.onupgradeneeded = function (event) {
+          const store = event.target.result.createObjectStore('IDBStore_0', {})
+          store.add({}, '')
+        }
+        db.onsuccess = function (event) {
+          const transaction = event.target.result.transaction('IDBStore_0', 'readwrite')
+          const store = transaction.objectStore('IDBStore_0')
+          const cursor = store.openCursor()
+          cursor.onsuccess = function (event) {
+            event.target.result.update({
+              data: file
+            })
+            event.target.result.advance(1)
+          }
+
+          event.target.result.close()
+        }
+      }
+
+    </script>
+    <script>
+      let worker;
+
+      function start () {
+        const file = new File([], 'x')
+        const blob = new Blob([document.getElementById('worker').textContent], { type: 'text/javascript' })
+        worker = new Worker(window.URL.createObjectURL(blob))
+        worker.postMessage([file], [])
+      }
+
+      document.addEventListener('DOMContentLoaded', start)
+    </script>
+</head>
+</html>

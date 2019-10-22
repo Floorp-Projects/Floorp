@@ -1072,6 +1072,9 @@ void IDBDatabase::LastRelease() {
 
   CloseInternal();
 
+  // If the database was already closed, CloseInternal does not expire file
+  // actors, which might have been acquired after the close actually happened,
+  // so we expire them here again to be safe (cf. bug 1558522).
   ExpireFileActors(/* aExpireAll */ true);
 
   if (mBackgroundActor) {
