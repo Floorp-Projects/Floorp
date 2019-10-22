@@ -29,7 +29,7 @@ use cranelift_codegen::ir::{self, constant::ConstantOffset, stackslot::StackSize
 use cranelift_codegen::isa::TargetIsa;
 use cranelift_codegen::CodegenResult;
 use cranelift_codegen::Context;
-use cranelift_wasm::{FuncIndex, FuncTranslator, WasmResult};
+use cranelift_wasm::{FuncIndex, FuncTranslator, WasmResult, ModuleTranslationState};
 
 use crate::bindings;
 use crate::isa::make_isa;
@@ -89,6 +89,7 @@ pub struct BatchCompiler<'a, 'b> {
     environ: bindings::ModuleEnvironment<'b>,
     isa: Box<dyn TargetIsa>,
     context: Context,
+    dummy_module_state: ModuleTranslationState,
     trans: FuncTranslator,
     pub current_func: CompiledFunc,
 }
@@ -104,6 +105,8 @@ impl<'a, 'b> BatchCompiler<'a, 'b> {
             environ,
             isa: make_isa(static_environ)?,
             context: Context::new(),
+            // TODO for Cranelift to support multi-value, feed it the real type section here.
+            dummy_module_state: ModuleTranslationState::new(),
             trans: FuncTranslator::new(),
             current_func: CompiledFunc::new(),
         })
@@ -130,6 +133,7 @@ impl<'a, 'b> BatchCompiler<'a, 'b> {
         self.context.func.name = wasm_function_name(index);
 
         self.trans.translate(
+            &self.dummy_module_state,
             func.bytecode(),
             func.offset_in_module as usize,
             &mut self.context.func,
