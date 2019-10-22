@@ -720,10 +720,11 @@ class MOZ_STACK_CLASS OpIter : private Policy {
   MOZ_MUST_USE bool readFunctionStart(uint32_t funcIndex);
   MOZ_MUST_USE bool readFunctionEnd(const uint8_t* bodyEnd);
   MOZ_MUST_USE bool readReturn(ValueVector* values);
-  MOZ_MUST_USE bool readBlock();
-  MOZ_MUST_USE bool readLoop();
-  MOZ_MUST_USE bool readIf(Value* condition);
-  MOZ_MUST_USE bool readElse(ResultType* thenType, ValueVector* thenValues);
+  MOZ_MUST_USE bool readBlock(ResultType* paramType);
+  MOZ_MUST_USE bool readLoop(ResultType* paramType);
+  MOZ_MUST_USE bool readIf(ResultType* paramType, Value* condition);
+  MOZ_MUST_USE bool readElse(ResultType* paramType, ResultType* resultType,
+                             ValueVector* thenValues);
   MOZ_MUST_USE bool readEnd(LabelKind* kind, ResultType* type,
                             ValueVector* values);
   void popEnd();
@@ -1262,7 +1263,7 @@ inline bool OpIter<Policy>::readReturn(ValueVector* values) {
 }
 
 template <typename Policy>
-inline bool OpIter<Policy>::readBlock() {
+inline bool OpIter<Policy>::readBlock(ResultType* paramType) {
   MOZ_ASSERT(Classify(op_) == OpKind::Block);
 
   BlockType type;
@@ -1270,11 +1271,12 @@ inline bool OpIter<Policy>::readBlock() {
     return false;
   }
 
+  *paramType = type.params();
   return pushControl(LabelKind::Block, type);
 }
 
 template <typename Policy>
-inline bool OpIter<Policy>::readLoop() {
+inline bool OpIter<Policy>::readLoop(ResultType* paramType) {
   MOZ_ASSERT(Classify(op_) == OpKind::Loop);
 
   BlockType type;
@@ -1282,11 +1284,12 @@ inline bool OpIter<Policy>::readLoop() {
     return false;
   }
 
+  *paramType = type.params();
   return pushControl(LabelKind::Loop, type);
 }
 
 template <typename Policy>
-inline bool OpIter<Policy>::readIf(Value* condition) {
+inline bool OpIter<Policy>::readIf(ResultType* paramType, Value* condition) {
   MOZ_ASSERT(Classify(op_) == OpKind::If);
 
   BlockType type;
@@ -1302,12 +1305,14 @@ inline bool OpIter<Policy>::readIf(Value* condition) {
     return false;
   }
 
+  *paramType = type.params();
   size_t paramsLength = type.params().length();
   return thenParamStack_.append(valueStack_.end() - paramsLength, paramsLength);
 }
 
 template <typename Policy>
-inline bool OpIter<Policy>::readElse(ResultType* thenType,
+inline bool OpIter<Policy>::readElse(ResultType* paramType,
+                                     ResultType* resultType,
                                      ValueVector* values) {
   MOZ_ASSERT(Classify(op_) == OpKind::Else);
 
@@ -1316,7 +1321,8 @@ inline bool OpIter<Policy>::readElse(ResultType* thenType,
     return fail("else can only be used within an if");
   }
 
-  if (!checkStackAtEndOfBlock(thenType, values)) {
+  *paramType = block.type().params();
+  if (!checkStackAtEndOfBlock(resultType, values)) {
     return false;
   }
 
@@ -1347,7 +1353,8 @@ inline bool OpIter<Policy>::readEnd(LabelKind* kind, ResultType* type,
 
   // If an `if` block ends with `end` instead of `else`, then we must
   // additionally validate that the then-block doesn't push anything.
-  if (block.kind() == LabelKind::Then && !block.resultType().empty()) {
+  if (block.kind() == LabelKind::Then &&
+      block.type().params() != block.type().results()) {
     return fail("if without else with a result value");
   }
 
