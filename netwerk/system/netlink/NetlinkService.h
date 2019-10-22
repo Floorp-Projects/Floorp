@@ -55,6 +55,7 @@ class NetlinkService : public nsIRunnable {
   nsresult Shutdown();
   void GetNetworkID(nsACString& aNetworkID);
   void GetIsLinkUp(bool* aIsUp);
+  nsresult GetDnsSuffixList(nsTArray<nsCString>& aDnsSuffixList);
 
  private:
   void EnqueueGenMsg(uint16_t aMsgType, uint8_t aFamily);
@@ -76,6 +77,7 @@ class NetlinkService : public nsIRunnable {
   int GetPollWait();
   bool CalculateIDForFamily(uint8_t aFamily, mozilla::SHA1Sum* aSHA1);
   void CalculateNetworkID();
+  void ComputeDNSSuffixList();
 
   nsCOMPtr<nsIThread> mThread;
 
@@ -108,6 +110,7 @@ class NetlinkService : public nsIRunnable {
   mozilla::TimeStamp mTriggerTime;
 
   nsCString mNetworkId;
+  nsTArray<nsCString> mDNSSuffixList;
 
   class LinkInfo {
    public:
