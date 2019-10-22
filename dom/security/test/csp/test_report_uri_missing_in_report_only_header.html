@@ -21,13 +21,23 @@ var stringBundleService = SpecialPowers.Cc["@mozilla.org/intl/stringbundle;1"]
                           .getService(SpecialPowers.Ci.nsIStringBundleService);
 var localizer = stringBundleService.createBundle("chrome://global/locale/security/csp.properties");
 var warningMsg = localizer.formatStringFromName("reportURInotInReportOnlyHeader", [window.location.origin]);
+
 function cleanup() {
   SpecialPowers.postConsoleSentinel();
   SimpleTest.finish();
 }
 
+// Since Bug 1584993 we parse the CSP in the parent too, hence the
+// same error message appears twice in the console. 
+var recordConsoleMsgOnce = false;
+
 SpecialPowers.registerConsoleListener(function ConsoleMsgListener(aMsg) {
   if (aMsg.message.indexOf(warningMsg) > -1) {
+    if (recordConsoleMsgOnce) {
+      return;
+    }
+    recordConsoleMsgOnce = true;
+
     ok(true, "report-uri not specified in Report-Only should throw a CSP warning.");
     SimpleTest.executeSoon(cleanup);
     return;
