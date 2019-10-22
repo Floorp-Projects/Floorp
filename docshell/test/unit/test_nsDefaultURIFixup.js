@@ -55,23 +55,6 @@ var data = [
 
 var len = data.length;
 
-add_task(async function setup() {
-  // Simulate a search engine being available. This shouldn't change results.
-  Services.prefs.setBoolPref("keyword.enabled", true);
-  // Shut up warnings about the geoip URL being malformed
-  Services.prefs.setCharPref("browser.search.geoip.url", "http://localhost/");
-
-  const kSearchEngineID = "test_urifixup_search_engine";
-  const kSearchEngineURL = "http://localhost/?search={searchTerms}";
-  let engine = await Services.search.addEngineWithDetails(kSearchEngineID, {
-    name: "Foo",
-    method: "get",
-    template: kSearchEngineURL,
-  });
-
-  await Services.search.setDefault(engine);
-});
-
 // Make sure we fix what needs fixing when there is no pref set.
 add_task(function test_unset_pref_fixes_typos() {
   Services.prefs.clearUserPref(pref);
