@@ -165,20 +165,25 @@ void nsFrameLoaderOwner::ChangeRemoteness(
     const mozilla::dom::RemotenessOptions& aOptions, mozilla::ErrorResult& rv) {
   std::function<void()> frameLoaderInit = [&] {
     if (aOptions.mError.WasPassed()) {
-      nsCOMPtr<nsIURI> uri;
-      rv = NS_NewURI(getter_AddRefs(uri), "about:blank");
-      if (NS_WARN_IF(rv.Failed())) {
-        return;
-      }
+      RefPtr<nsFrameLoader> frameLoader = mFrameLoader;
+      nsresult error = static_cast<nsresult>(aOptions.mError.Value());
+      nsContentUtils::AddScriptRunner(NS_NewRunnableFunction(
+          "nsFrameLoaderOwner::DisplayLoadError", [frameLoader, error]() {
+            nsCOMPtr<nsIURI> uri;
+            nsresult rv = NS_NewURI(getter_AddRefs(uri), "about:blank");
+            if (NS_WARN_IF(NS_FAILED(rv))) {
+              return;
+            }
 
-      nsDocShell* docShell = mFrameLoader->GetDocShell(rv);
-      if (NS_WARN_IF(rv.Failed())) {
-        return;
-      }
-      bool displayed = false;
-      docShell->DisplayLoadError(static_cast<nsresult>(aOptions.mError.Value()),
-                                 uri, u"about:blank", nullptr, &displayed);
-
+            RefPtr<nsDocShell> docShell =
+                frameLoader->GetDocShell(IgnoreErrors());
+            if (NS_WARN_IF(!docShell)) {
+              return;
+            }
+            bool displayed = false;
+            docShell->DisplayLoadError(error, uri, u"about:blank", nullptr,
+                                       &displayed);
+          }));
     } else if (aOptions.mPendingSwitchID.WasPassed()) {
       mFrameLoader->ResumeLoad(aOptions.mPendingSwitchID.Value());
     } else {
