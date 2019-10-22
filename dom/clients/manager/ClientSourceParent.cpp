@@ -241,7 +241,7 @@ bool ClientSourceParent::IsFrozen() const { return mFrozen; }
 
 bool ClientSourceParent::ExecutionReady() const { return mExecutionReady; }
 
-RefPtr<GenericNonExclusivePromise> ClientSourceParent::ExecutionReadyPromise() {
+RefPtr<GenericPromise> ClientSourceParent::ExecutionReadyPromise() {
   // Only call if ClientSourceParent::ExecutionReady() is false; otherwise,
   // the promise will never resolve
   MOZ_ASSERT(!mExecutionReady);

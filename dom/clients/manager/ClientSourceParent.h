@@ -68,7 +68,7 @@ class ClientSourceParent final : public PClientSourceParent {
 
   bool ExecutionReady() const;
 
-  RefPtr<GenericNonExclusivePromise> ExecutionReadyPromise();
+  RefPtr<GenericPromise> ExecutionReadyPromise();
 
   const Maybe<ServiceWorkerDescriptor>& GetController() const;
 
