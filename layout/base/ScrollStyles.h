@@ -23,24 +23,12 @@ struct ScrollStyles {
   StyleOverflow mHorizontal;
   StyleOverflow mVertical;
 
-  // FIXME(emilio): we shouldn't propagate this.
-  StyleOverscrollBehavior mOverscrollBehaviorX;
-  StyleOverscrollBehavior mOverscrollBehaviorY;
-
   ScrollStyles(StyleOverflow aH, StyleOverflow aV)
-      : mHorizontal(aH),
-        mVertical(aV),
-        mOverscrollBehaviorX(StyleOverscrollBehavior::Auto),
-        mOverscrollBehaviorY(StyleOverscrollBehavior::Auto) {}
+      : mHorizontal(aH), mVertical(aV) {}
 
-  ScrollStyles(WritingMode aWritingMode, const nsStyleDisplay* aDisplay);
-  ScrollStyles(WritingMode aWritingMode, StyleOverflow aH, StyleOverflow aV,
-               const nsStyleDisplay* aDisplay);
+  explicit ScrollStyles(const nsStyleDisplay&);
   bool operator==(const ScrollStyles& aStyles) const {
-    return aStyles.mHorizontal == mHorizontal &&
-           aStyles.mVertical == mVertical &&
-           aStyles.mOverscrollBehaviorX == mOverscrollBehaviorX &&
-           aStyles.mOverscrollBehaviorY == mOverscrollBehaviorY;
+    return aStyles.mHorizontal == mHorizontal && aStyles.mVertical == mVertical;
   }
   bool operator!=(const ScrollStyles& aStyles) const {
     return !(*this == aStyles);

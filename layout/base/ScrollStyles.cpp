@@ -10,18 +10,7 @@
 
 namespace mozilla {
 
-ScrollStyles::ScrollStyles(WritingMode aWritingMode, StyleOverflow aH,
-                           StyleOverflow aV, const nsStyleDisplay* aDisplay)
-    : mHorizontal(aH),
-      mVertical(aV),
-      mOverscrollBehaviorX(aDisplay->mOverscrollBehaviorX),
-      mOverscrollBehaviorY(aDisplay->mOverscrollBehaviorY) {}
-
-ScrollStyles::ScrollStyles(WritingMode aWritingMode,
-                           const nsStyleDisplay* aDisplay)
-    : mHorizontal(aDisplay->mOverflowX),
-      mVertical(aDisplay->mOverflowY),
-      mOverscrollBehaviorX(aDisplay->mOverscrollBehaviorX),
-      mOverscrollBehaviorY(aDisplay->mOverscrollBehaviorY) {}
+ScrollStyles::ScrollStyles(const nsStyleDisplay& aDisplay)
+    : mHorizontal(aDisplay.mOverflowX), mVertical(aDisplay.mOverflowY) {}
 
 }  // namespace mozilla
