@@ -197,7 +197,7 @@ TASK_LABELS = [
 ]
 
 
-class Base(unittest.TestCase):
+class TestTestResolver(unittest.TestCase):
     FAKE_TOPSRCDIR = '/firefox'
 
     def setUp(self):
@@ -214,7 +214,7 @@ class Base(unittest.TestCase):
         self._temp_files = []
         self._temp_dirs = []
 
-    def _get_resolver(self):
+    def get_resolver(self):
         topobjdir = tempfile.mkdtemp()
         self._temp_dirs.append(topobjdir)
 
@@ -228,54 +228,46 @@ class Base(unittest.TestCase):
         # Monkey patch the test resolver to avoid tests failing to find make
         # due to our fake topscrdir.
         TestResolver._run_make = lambda *a, **b: None
+        resolver = o._spawn(TestResolver)
+        resolver._puppeteer_loaded = True
+        resolver._wpt_loaded = True
+        return resolver
 
-        return o._spawn(TestResolver)
-
-    def _get_test_metadata(self):
-        resolver = self._get_resolver()
-        rv = resolver._tests
-        # Avoid loading wpt or puppeteer manifests.
-        rv._wpt_loaded = True
-        rv._puppeteer_loaded = True
-        return rv
-
-
-class TestTestMetadata(Base):
     def test_load(self):
-        t = self._get_test_metadata()
-        self.assertEqual(len(t.tests_by_path), 8)
+        r = self.get_resolver()
+        self.assertEqual(len(r.tests_by_path), 8)
 
-        self.assertEqual(len(t.tests_by_flavor['xpcshell']), 3)
-        self.assertEqual(len(t.tests_by_flavor['mochitest-plain']), 0)
+        self.assertEqual(len(r.tests_by_flavor['xpcshell']), 3)
+        self.assertEqual(len(r.tests_by_flavor['mochitest-plain']), 0)
 
     def test_resolve_all(self):
-        t = self._get_test_metadata()
-        self.assertEqual(len(list(t.resolve_tests())), 9)
+        r = self.get_resolver()
+        self.assertEqual(len(list(r._resolve())), 9)
 
     def test_resolve_filter_flavor(self):
-        t = self._get_test_metadata()
-        self.assertEqual(len(list(t.resolve_tests(flavor='xpcshell'))), 4)
+        r = self.get_resolver()
+        self.assertEqual(len(list(r._resolve(flavor='xpcshell'))), 4)
 
     def test_resolve_by_dir(self):
-        t = self._get_test_metadata()
-        self.assertEqual(len(list(t.resolve_tests(paths=['services/common']))), 2)
+        r = self.get_resolver()
+        self.assertEqual(len(list(r._resolve(paths=['services/common']))), 2)
 
     def test_resolve_under_path(self):
-        t = self._get_test_metadata()
-        self.assertEqual(len(list(t.resolve_tests(under_path='services'))), 2)
+        r = self.get_resolver()
+        self.assertEqual(len(list(r._resolve(under_path='services'))), 2)
 
-        self.assertEqual(len(list(t.resolve_tests(flavor='xpcshell',
+        self.assertEqual(len(list(r._resolve(flavor='xpcshell',
             under_path='services'))), 2)
 
     def test_resolve_multiple_paths(self):
-        t = self._get_test_metadata()
-        result = list(t.resolve_tests(paths=['services', 'toolkit']))
+        r = self.get_resolver()
+        result = list(r.resolve_tests(paths=['services', 'toolkit']))
         self.assertEqual(len(result), 4)
 
     def test_resolve_support_files(self):
         expected_support_files = "\ndata/**\nxpcshell_updater.ini"
-        t = self._get_test_metadata()
-        result = list(t.resolve_tests(paths=['toolkit']))
+        r = self.get_resolver()
+        result = list(r.resolve_tests(paths=['toolkit']))
         self.assertEqual(len(result), 2)
 
         for test in result:
@@ -283,16 +275,13 @@ class TestTestMetadata(Base):
                              expected_support_files)
 
     def test_resolve_path_prefix(self):
-        t = self._get_test_metadata()
-        result = list(t.resolve_tests(paths=['image']))
+        r = self.get_resolver()
+        result = list(r._resolve(paths=['image']))
         self.assertEqual(len(result), 1)
-
-
-class TestTestResolver(Base):
 
     def test_cwd_children_only(self):
         """If cwd is defined, only resolve tests under the specified cwd."""
-        r = self._get_resolver()
+        r = self.get_resolver()
 
         # Pretend we're under '/services' and ask for 'common'. This should
         # pick up all tests from '/services/common'
@@ -309,7 +298,7 @@ class TestTestResolver(Base):
     def test_various_cwd(self):
         """Test various cwd conditions are all equal."""
 
-        r = self._get_resolver()
+        r = self.get_resolver()
 
         expected = list(r.resolve_tests(paths=['services']))
         actual = list(r.resolve_tests(paths=['services'], cwd='/'))
@@ -324,7 +313,7 @@ class TestTestResolver(Base):
     def test_subsuites(self):
         """Test filtering by subsuite."""
 
-        r = self._get_resolver()
+        r = self.get_resolver()
 
         tests = list(r.resolve_tests(paths=['mobile']))
         self.assertEqual(len(tests), 2)
@@ -340,7 +329,7 @@ class TestTestResolver(Base):
     def test_wildcard_patterns(self):
         """Test matching paths by wildcard."""
 
-        r = self._get_resolver()
+        r = self.get_resolver()
 
         tests = list(r.resolve_tests(paths=['mobile/**']))
         self.assertEqual(len(tests), 2)
@@ -355,7 +344,7 @@ class TestTestResolver(Base):
 
     def test_resolve_metadata(self):
         """Test finding metadata from outgoing files."""
-        r = self._get_resolver()
+        r = self.get_resolver()
 
         suites, tests = r.resolve_metadata(['bc'])
         assert suites == {'mochitest-browser-chrome'}
