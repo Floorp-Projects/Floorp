@@ -135,6 +135,7 @@ add_task(async function resume_and_suspend_background_video_decoding() {
   info("- open new background tab -");
   let tab = BrowserTestUtils.addTab(window.gBrowser, "about:blank");
   let browser = tab.linkedBrowser;
+  await BrowserTestUtils.browserLoaded(browser);
 
   info("- before loading media, we shoudn't send the tab hover msg for tab -");
   await check_should_not_send_unselected_tab_hover_msg(browser);
