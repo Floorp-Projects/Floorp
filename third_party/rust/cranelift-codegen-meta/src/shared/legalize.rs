@@ -1,10 +1,11 @@
 use crate::cdsl::ast::{var, ExprBuilder, Literal};
-use crate::cdsl::instructions::{Instruction, InstructionGroup};
+use crate::cdsl::instructions::{Bindable, Instruction, InstructionGroup};
 use crate::cdsl::xform::{TransformGroupBuilder, TransformGroups};
 
 use crate::shared::immediates::Immediates;
 use crate::shared::types::Float::{F32, F64};
 use crate::shared::types::Int::{I128, I16, I32, I64, I8};
+use cranelift_codegen_shared::condcodes::{CondCode, IntCC};
 
 pub(crate) fn define(insts: &InstructionGroup, imm: &Immediates) -> TransformGroups {
     let mut narrow = TransformGroupBuilder::new(
@@ -114,6 +115,7 @@ pub(crate) fn define(insts: &InstructionGroup, imm: &Immediates) -> TransformGro
     let uextend = insts.by_name("uextend");
     let uload8 = insts.by_name("uload8");
     let uload16 = insts.by_name("uload16");
+    let umulhi = insts.by_name("umulhi");
     let ushr = insts.by_name("ushr");
     let ushr_imm = insts.by_name("ushr_imm");
     let urem = insts.by_name("urem");
@@ -257,7 +259,7 @@ pub(crate) fn define(insts: &InstructionGroup, imm: &Immediates) -> TransformGro
                 )
             ),
             def!(c = band(a, b)),
-            def!(brz(c, ebb, vararg)),
+            def!(brnz(c, ebb, vararg)),
         ],
     );
 
@@ -271,6 +273,88 @@ pub(crate) fn define(insts: &InstructionGroup, imm: &Immediates) -> TransformGro
             def!(brnz(xh, ebb1, vararg)),
         ],
     );
+
+    // TODO(ryzokuken): benchmark this and decide if branching is a faster
+    // approach than evaluating boolean expressions.
+
+    narrow.custom_legalize(icmp_imm, "narrow_icmp_imm");
+
+    let intcc_eq = Literal::enumerator_for(&imm.intcc, "eq");
+    let intcc_ne = Literal::enumerator_for(&imm.intcc, "ne");
+    for &(int_ty, int_ty_half) in &[(I64, I32), (I128, I64)] {
+        narrow.legalize(
+            def!(b = icmp.int_ty(intcc_eq, x, y)),
+            vec![
+                def!((xl, xh) = isplit(x)),
+                def!((yl, yh) = isplit(y)),
+                def!(b1 = icmp.int_ty_half(intcc_eq, xl, yl)),
+                def!(b2 = icmp.int_ty_half(intcc_eq, xh, yh)),
+                def!(b = band(b1, b2)),
+            ],
+        );
+
+        narrow.legalize(
+            def!(b = icmp.int_ty(intcc_ne, x, y)),
+            vec![
+                def!((xl, xh) = isplit(x)),
+                def!((yl, yh) = isplit(y)),
+                def!(b1 = icmp.int_ty_half(intcc_ne, xl, yl)),
+                def!(b2 = icmp.int_ty_half(intcc_ne, xh, yh)),
+                def!(b = bor(b1, b2)),
+            ],
+        );
+
+        use IntCC::*;
+        for cc in &[
+            SignedGreaterThan,
+            SignedGreaterThanOrEqual,
+            SignedLessThan,
+            SignedLessThanOrEqual,
+            UnsignedGreaterThan,
+            UnsignedGreaterThanOrEqual,
+            UnsignedLessThan,
+            UnsignedLessThanOrEqual,
+        ] {
+            let intcc_cc = Literal::enumerator_for(&imm.intcc, cc.to_static_str());
+            let cc1 = Literal::enumerator_for(&imm.intcc, cc.without_equal().to_static_str());
+            let cc2 =
+                Literal::enumerator_for(&imm.intcc, cc.inverse().without_equal().to_static_str());
+            let cc3 = Literal::enumerator_for(&imm.intcc, cc.unsigned().to_static_str());
+            narrow.legalize(
+                def!(b = icmp.int_ty(intcc_cc, x, y)),
+                vec![
+                    def!((xl, xh) = isplit(x)),
+                    def!((yl, yh) = isplit(y)),
+                    // X = cc1 || (!cc2 && cc3)
+                    def!(b1 = icmp.int_ty_half(cc1, xh, yh)),
+                    def!(b2 = icmp.int_ty_half(cc2, xh, yh)),
+                    def!(b3 = icmp.int_ty_half(cc3, xl, yl)),
+                    def!(c1 = bnot(b2)),
+                    def!(c2 = band(c1, b3)),
+                    def!(b = bor(b1, c2)),
+                ],
+            );
+        }
+    }
+
+    // TODO(ryzokuken): explore the perf diff w/ x86_umulx and consider have a
+    // separate legalization for x86.
+    for &ty in &[I64, I128] {
+        narrow.legalize(
+            def!(a = imul.ty(x, y)),
+            vec![
+                def!((xl, xh) = isplit(x)),
+                def!((yl, yh) = isplit(y)),
+                def!(a1 = imul(xh, yl)),
+                def!(a2 = imul(xl, yh)),
+                def!(a3 = iadd(a1, a2)),
+                def!(a4 = umulhi(xl, yl)),
+                def!(ah = iadd(a3, a4)),
+                def!(al = imul(xl, yl)),
+                def!(a = iconcat(al, ah)),
+            ],
+        );
+    }
 
     // Widen instructions with one input operand.
     for &op in &[bnot, popcnt] {

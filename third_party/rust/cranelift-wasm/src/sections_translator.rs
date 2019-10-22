@@ -8,6 +8,7 @@
 //! is handled, according to the semantics of WebAssembly, to only specific expressions that are
 //! interpreted on the fly.
 use crate::environ::{ModuleEnvironment, WasmResult};
+use crate::state::ModuleTranslationState;
 use crate::translation_utils::{
     tabletype_to_type, type_to_type, FuncIndex, Global, GlobalIndex, GlobalInit, Memory,
     MemoryIndex, SignatureIndex, Table, TableElementType, TableIndex,
@@ -29,16 +30,19 @@ use wasmparser::{
 /// Parses the Type section of the wasm module.
 pub fn parse_type_section(
     types: TypeSectionReader,
+    module_translation_state: &mut ModuleTranslationState,
     environ: &mut dyn ModuleEnvironment,
 ) -> WasmResult<()> {
-    environ.reserve_signatures(types.get_count())?;
+    let count = types.get_count();
+    module_translation_state.wasm_types.reserve(count as usize);
+    environ.reserve_signatures(count)?;
 
     for entry in types {
         match entry? {
             FuncType {
                 form: wasmparser::Type::Func,
-                ref params,
-                ref returns,
+                params,
+                returns,
             } => {
                 let mut sig = Signature::new(environ.target_config().default_call_conv);
                 sig.params.extend(params.iter().map(|ty| {
@@ -52,6 +56,7 @@ pub fn parse_type_section(
                     AbiParam::new(cret_arg)
                 }));
                 environ.declare_signature(sig)?;
+                module_translation_state.wasm_types.push((params, returns));
             }
             ty => {
                 return Err(wasm_unsupported!(
@@ -323,13 +328,14 @@ pub fn parse_element_section<'data>(
 /// Parses the Code section of the wasm module.
 pub fn parse_code_section<'data>(
     code: CodeSectionReader<'data>,
+    module_translation_state: &ModuleTranslationState,
     environ: &mut dyn ModuleEnvironment<'data>,
 ) -> WasmResult<()> {
     for body in code {
         let mut reader = body?.get_binary_reader();
         let size = reader.bytes_remaining();
         let offset = reader.original_position();
-        environ.define_function_body(reader.read_bytes(size)?, offset)?;
+        environ.define_function_body(module_translation_state, reader.read_bytes(size)?, offset)?;
     }
     Ok(())
 }

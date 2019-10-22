@@ -3,6 +3,8 @@
 use crate::iter::{Iter, IterMut};
 use crate::keys::Keys;
 use crate::EntityRef;
+use alloc::vec::Vec;
+use core::cmp::min;
 use core::marker::PhantomData;
 use core::ops::{Index, IndexMut};
 use core::slice;
@@ -12,8 +14,6 @@ use serde::{
     ser::{SerializeSeq, Serializer},
     Deserialize, Serialize,
 };
-use std::cmp::min;
-use std::vec::Vec;
 
 /// A mapping `K -> V` for densely indexed entity references.
 ///
@@ -222,7 +222,7 @@ where
     where
         D: Deserializer<'de>,
     {
-        use std::fmt;
+        use alloc::fmt;
         struct SecondaryMapVisitor<K, V> {
             unused: PhantomData<fn(K) -> V>,
         }

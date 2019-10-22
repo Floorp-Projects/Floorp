@@ -5,7 +5,6 @@
 
 use crate::entity::SecondaryMap;
 use crate::ir::entities::AnyEntity;
-use crate::ir::immediates::V128Imm;
 use crate::ir::{
     DataFlowGraph, DisplayFunctionAnnotations, Ebb, Function, Inst, SigRef, Type, Value, ValueDef,
     ValueLoc,
@@ -13,10 +12,10 @@ use crate::ir::{
 use crate::isa::{RegInfo, TargetIsa};
 use crate::packed_option::ReservedValue;
 use crate::value_label::ValueLabelsRanges;
+use crate::HashSet;
+use alloc::string::String;
+use alloc::vec::Vec;
 use core::fmt::{self, Write};
-use std::collections::HashSet;
-use std::string::String;
-use std::vec::Vec;
 
 /// A `FuncWriter` used to decorate functions during printing.
 pub trait FuncWriter {
@@ -508,16 +507,14 @@ pub fn write_operands(
         UnaryConst {
             constant_handle, ..
         } => {
-            let data = dfg.constants.get(constant_handle);
-            let v128 = V128Imm::from(&data[..]);
-            write!(w, " {}", v128)
+            let constant_data = dfg.constants.get(constant_handle);
+            write!(w, " {}", constant_data)
         }
         Shuffle { mask, args, .. } => {
             let data = dfg.immediates.get(mask).expect(
                 "Expected the shuffle mask to already be inserted into the immediates table",
             );
-            let v128 = V128Imm::from(&data[..]);
-            write!(w, " {}, {}, {}", args[0], args[1], v128)
+            write!(w, " {}, {}, {}", args[0], args[1], data)
         }
         IntCompare { cond, args, .. } => write!(w, " {} {}, {}", cond, args[0], args[1]),
         IntCompareImm { cond, arg, imm, .. } => write!(w, " {} {}, {}", cond, arg, imm),
@@ -759,7 +756,7 @@ mod tests {
     use crate::cursor::{Cursor, CursorPosition, FuncCursor};
     use crate::ir::types;
     use crate::ir::{ExternalName, Function, InstBuilder, StackSlotData, StackSlotKind};
-    use std::string::ToString;
+    use alloc::string::ToString;
 
     #[test]
     fn basic() {

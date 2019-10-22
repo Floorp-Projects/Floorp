@@ -1,6 +1,7 @@
 //! A frontend for building Cranelift IR from other languages.
 use crate::ssa::{Block, SSABuilder, SideEffects};
 use crate::variable::Variable;
+use alloc::vec::Vec;
 use cranelift_codegen::cursor::{Cursor, FuncCursor};
 use cranelift_codegen::entity::{EntitySet, SecondaryMap};
 use cranelift_codegen::ir;
@@ -13,7 +14,6 @@ use cranelift_codegen::ir::{
 };
 use cranelift_codegen::isa::{TargetFrontendConfig, TargetIsa};
 use cranelift_codegen::packed_option::PackedOption;
-use std::vec::Vec;
 
 /// Structure used for translating a series of functions into Cranelift IR.
 ///
@@ -341,7 +341,7 @@ impl<'a> FunctionBuilder<'a> {
     /// This will not do anything unless `func.dfg.collect_debug_info` is called first.
     pub fn set_val_label(&mut self, val: Value, label: ValueLabel) {
         if let Some(values_labels) = self.func.dfg.values_labels.as_mut() {
-            use std::collections::hash_map::Entry;
+            use crate::hash_map::Entry;
 
             let start = ValueLabelStart {
                 from: self.srcloc,
@@ -893,13 +893,13 @@ mod tests {
     use super::greatest_divisible_power_of_two;
     use crate::frontend::{FunctionBuilder, FunctionBuilderContext};
     use crate::Variable;
+    use alloc::string::ToString;
     use cranelift_codegen::entity::EntityRef;
     use cranelift_codegen::ir::types::*;
     use cranelift_codegen::ir::{AbiParam, ExternalName, Function, InstBuilder, Signature};
     use cranelift_codegen::isa::CallConv;
     use cranelift_codegen::settings;
     use cranelift_codegen::verifier::verify_function;
-    use std::string::ToString;
 
     fn sample_function(lazy_seal: bool) {
         let mut sig = Signature::new(CallConv::SystemV);
