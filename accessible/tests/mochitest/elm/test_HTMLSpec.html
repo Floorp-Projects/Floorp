@@ -581,13 +581,11 @@
         };
       }
 
-      const headingChangesEnabled = SpecialPowers.getBoolPref("accessibility.heading-element-level-changes.enabled");
       for (let level = 1; level <= 6; ++level) {
         testElm("h" + level, headingWithLevel(level));
-        let expectedLevelWithAncestors = headingChangesEnabled ? level + 1 : level;
         for (const ancestor of ["section", "article", "aside", "nav"]) {
-          testElm("h" + level + "_in_" + ancestor, headingWithLevel(level == 1 ? expectedLevelWithAncestors : level));
-          testElm("h" + level + "_in_" + ancestor + "_in_hgroup", headingWithLevel(expectedLevelWithAncestors));
+          testElm("h" + level + "_in_" + ancestor, headingWithLevel(level));
+          testElm("h" + level + "_in_" + ancestor + "_in_hgroup", headingWithLevel(level));
         }
       }
 
