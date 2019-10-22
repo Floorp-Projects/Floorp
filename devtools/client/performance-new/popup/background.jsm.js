@@ -265,7 +265,7 @@ function getDefaultRecordingPreferences() {
       entries: 10000000, // ~80mb,
       // Do not expire markers, let them roll off naturally from the circular buffer.
       duration: 0,
-      interval: 1, // milliseconds
+      interval: 1000, // 1000µs = 1ms
       features: ["js", "leaf", "responsiveness", "stackwalk"],
       threads: ["GeckoMain", "Compositor"],
       objdirs: [],
