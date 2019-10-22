@@ -22,6 +22,7 @@
 #include "nsQueryObject.h"
 #include "nsSerializationHelper.h"
 #include "nsStringStream.h"
+#include "mozilla/dom/nsCSPContext.h"
 
 using namespace mozilla::dom;
 using namespace mozilla::ipc;
@@ -258,23 +259,28 @@ IPCResult DocumentChannelChild::RecvRedirectToRealChannel(
   RefPtr<dom::Document> loadingDocument;
   mLoadInfo->GetLoadingDocument(getter_AddRefs(loadingDocument));
 
-  nsCOMPtr<nsILoadInfo> loadInfo;
-  nsresult rv = LoadInfoArgsToLoadInfo(aLoadInfo, loadingDocument,
-                                       getter_AddRefs(loadInfo));
-  if (NS_FAILED(rv)) {
-    MOZ_DIAGNOSTIC_ASSERT(false, "LoadInfoArgsToLoadInfo failed");
-    return IPC_OK();
+  RefPtr<dom::Document> cspToInheritLoadingDocument;
+  nsCOMPtr<nsIContentSecurityPolicy> policy = mLoadInfo->GetCspToInherit();
+  if (policy) {
+    nsWeakPtr ctx =
+        static_cast<nsCSPContext*>(policy.get())->GetLoadingContext();
+    cspToInheritLoadingDocument = do_QueryReferent(ctx);
   }
+  nsCOMPtr<nsILoadInfo> loadInfo;
+  MOZ_ALWAYS_SUCCEEDS(LoadInfoArgsToLoadInfo(aLoadInfo, loadingDocument,
+                                             cspToInheritLoadingDocument,
+                                             getter_AddRefs(loadInfo)));
 
   mRedirects = std::move(aRedirects);
   mRedirectResolver = std::move(aResolve);
 
   nsCOMPtr<nsIChannel> newChannel;
-  rv = NS_NewChannelInternal(getter_AddRefs(newChannel), aURI, loadInfo,
-                             nullptr,     // PerformanceStorage
-                             mLoadGroup,  // aLoadGroup
-                             nullptr,     // aCallbacks
-                             aNewLoadFlags);
+  nsresult rv =
+      NS_NewChannelInternal(getter_AddRefs(newChannel), aURI, loadInfo,
+                            nullptr,     // PerformanceStorage
+                            mLoadGroup,  // aLoadGroup
+                            nullptr,     // aCallbacks
+                            aNewLoadFlags);
 
   RefPtr<HttpChannelChild> httpChild = do_QueryObject(newChannel);
   RefPtr<nsIChildChannel> childChannel = do_QueryObject(newChannel);
@@ -408,8 +414,16 @@ IPCResult DocumentChannelChild::RecvConfirmRedirect(
   // This just checks CSP thus far, hopefully there's not much else needed.
   RefPtr<dom::Document> loadingDocument;
   mLoadInfo->GetLoadingDocument(getter_AddRefs(loadingDocument));
+  RefPtr<dom::Document> cspToInheritLoadingDocument;
+  nsCOMPtr<nsIContentSecurityPolicy> policy = mLoadInfo->GetCspToInherit();
+  if (policy) {
+    nsWeakPtr ctx =
+        static_cast<nsCSPContext*>(policy.get())->GetLoadingContext();
+    cspToInheritLoadingDocument = do_QueryReferent(ctx);
+  }
   nsCOMPtr<nsILoadInfo> loadInfo;
   MOZ_ALWAYS_SUCCEEDS(LoadInfoArgsToLoadInfo(Some(aLoadInfo), loadingDocument,
+                                             cspToInheritLoadingDocument,
                                              getter_AddRefs(loadInfo)));
 
   nsCOMPtr<nsIURI> originalUri;
@@ -421,7 +435,7 @@ IPCResult DocumentChannelChild::RecvConfirmRedirect(
   }
 
   Maybe<nsresult> cancelCode;
-  rv = CSPService::ConsultCSPForRedirect(originalUri, aNewUri, loadInfo,
+  rv = CSPService::ConsultCSPForRedirect(originalUri, aNewUri, mLoadInfo,
                                          cancelCode);
   aResolve(Tuple<const nsresult&, const Maybe<nsresult>&>(rv, cancelCode));
   return IPC_OK();
