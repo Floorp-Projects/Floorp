@@ -931,11 +931,7 @@
 # If set, use DocumentChannel with nsDocShell in place of HttpChannel.
 - name: browser.tabs.documentchannel
   type: bool
-#if !defined(ANDROID)
-  value: @IS_NIGHTLY_BUILD@
-#else
-  value: false  # See bug 1589982.
-#endif
+  value: false
   mirror: always
 
 - name: browser.tabs.remote.desktopbehavior
