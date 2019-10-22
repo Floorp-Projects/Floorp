@@ -320,7 +320,13 @@ class MOZ_NON_MEMMOVABLE Heap : public js::HeapBase<T, Heap<T>> {
    * that will be used for both lvalue and rvalue copies, so we can simply
    * omit the rvalue variant.
    */
-  explicit Heap(const Heap<T>& p) { init(p.ptr); }
+  explicit Heap(const Heap<T>& other) { init(other.ptr); }
+
+  Heap& operator=(Heap<T>&& other) {
+    set(other.unbarrieredGet());
+    other.set(SafelyInitialized<T>());
+    return *this;
+  }
 
   ~Heap() { postWriteBarrier(ptr, SafelyInitialized<T>()); }
 
