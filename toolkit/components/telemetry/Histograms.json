@@ -2140,7 +2140,7 @@
     "products": ["firefox", "fennec", "geckoview"],
     "expires_in_version": "never",
     "bug_numbers": [1499149],
-    "alert_emails": ["hurley@mozilla.com"],
+    "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
     "kind": "enumerated",
     "n_values": 5,
     "description": "How many alt-svc productions were seen in a single Alt-Svc header"
@@ -2150,7 +2150,7 @@
     "products": ["firefox", "fennec", "geckoview"],
     "expires_in_version": "never",
     "bug_numbers": [1499149],
-    "alert_emails": ["hurley@mozilla.com"],
+    "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
     "kind": "boolean",
     "description": "Whether or not a new alt-svc mapping would change the target hostname of the existing mapping"
   },
