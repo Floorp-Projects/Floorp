@@ -82,7 +82,7 @@ let SyncedTabsInternal = {
 
   _tabMatchesFilter(tab, filter) {
     let reFilter = new RegExp(escapeRegExp(filter), "i");
-    return tab.url.match(reFilter) || tab.title.match(reFilter);
+    return reFilter.test(tab.url) || reFilter.test(tab.title);
   },
 
   async getTabClients(filter) {

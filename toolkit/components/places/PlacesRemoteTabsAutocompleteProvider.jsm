@@ -127,7 +127,7 @@ observe(null, "nsPref:changed", PREF_SHOW_REMOTE_TABS);
 // This public object is a static singleton.
 var PlacesRemoteTabsAutocompleteProvider = {
   // a promise that resolves with an array of matching remote tabs.
-  async getMatches(searchString) {
+  async getMatches(searchString, maxMatches) {
     // If Sync isn't configured we bail early.
     if (
       !weaveXPCService ||
@@ -137,7 +137,7 @@ var PlacesRemoteTabsAutocompleteProvider = {
       return [];
     }
 
-    if (!showRemoteTabs) {
+    if (!showRemoteTabs || !maxMatches) {
       return [];
     }
 
@@ -145,19 +145,17 @@ var PlacesRemoteTabsAutocompleteProvider = {
     let matches = [];
     let tabsData = await ensureItems();
     for (let { tab, client } of tabsData) {
-      let url = tab.url;
-      let title = tab.title;
-      if (url.match(re) || (title && title.match(re))) {
-        let icon = showRemoteIcons ? tab.icon : null;
-        // create the record we return for auto-complete.
-        let record = {
-          url,
-          title,
-          icon,
+      if (re.test(tab.url) || (tab.title && re.test(tab.title))) {
+        matches.push({
+          url: tab.url,
+          title: tab.title,
+          icon: showRemoteIcons ? tab.icon : null,
           deviceName: client.name,
           lastUsed: tab.lastUsed * 1000,
-        };
-        matches.push(record);
+        });
+        if (matches.length == maxMatches) {
+          break;
+        }
       }
     }
 
