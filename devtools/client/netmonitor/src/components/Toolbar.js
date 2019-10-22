@@ -561,6 +561,7 @@ class Toolbar extends Component {
             this.renderSeparator(),
             this.renderToggleRecordingButton(recording, toggleRecording),
             this.renderSearchButton(toggleSearchPanel),
+            this.renderBlockingButton(toggleSearchPanel),
             this.renderSeparator(),
             this.renderPersistlogCheckbox(
               persistentLogsEnabled,
