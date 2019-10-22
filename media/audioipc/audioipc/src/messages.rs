@@ -5,12 +5,12 @@
 
 use crate::PlatformHandle;
 use crate::PlatformHandleType;
-#[cfg(target_os = "linux")]
-use audio_thread_priority::RtPriorityThreadInfo;
 use cubeb::{self, ffi};
 use std::ffi::{CStr, CString};
 use std::os::raw::{c_char, c_int, c_uint};
 use std::ptr;
+#[cfg(target_os = "linux")]
+use audio_thread_priority::RtPriorityThreadInfo;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Device {

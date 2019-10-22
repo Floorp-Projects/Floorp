@@ -128,8 +128,10 @@ impl rpc::Server for CallbackServer {
                 let user_ptr = self.user_ptr;
                 let cb = self.state_cb.unwrap();
                 self.cpu_pool.spawn_fn(move || {
-                    run_in_callback(|| unsafe {
-                        cb(ptr::null_mut(), user_ptr as *mut _, state);
+                    run_in_callback(|| {
+                        unsafe {
+                            cb(ptr::null_mut(), user_ptr as *mut _, state);
+                        }
                     });
 
                     Ok(CallbackResp::State)
