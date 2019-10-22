@@ -1922,65 +1922,26 @@ HuffmanLookupResult GenericHuffmanTable::lookup(HuffmanLookup key) const {
       });
 }
 
-template <int N>
-JS::Result<Ok> NaiveHuffmanTable<N>::initWithSingleValue(
-    JSContext* cx, const BinASTSymbol& value) {
-  MOZ_ASSERT(values_.empty());  // Make sure that we're initializing.
-  if (MOZ_UNLIKELY(!values_.append(HuffmanEntry(0, 0, value)))) {
-    return cx->alreadyReportedError();
-  }
-  return Ok();
-}
-
-template <int N>
-JS::Result<Ok> NaiveHuffmanTable<N>::initStart(JSContext* cx,
-                                               size_t numberOfSymbols,
-                                               uint8_t) {
-  MOZ_ASSERT(values_.empty());  // Make sure that we're initializing.
-  if (MOZ_UNLIKELY(!values_.initCapacity(numberOfSymbols))) {
-    return cx->alreadyReportedError();
-  }
-  return Ok();
-}
-
-template <int N>
-JS::Result<Ok> NaiveHuffmanTable<N>::initComplete() {
-  MOZ_ASSERT(values_.length() <= N);
-  return Ok();
-}
-
-template <int N>
-JS::Result<Ok> NaiveHuffmanTable<N>::addSymbol(uint32_t bits, uint8_t bitLength,
-                                               const BinASTSymbol& value) {
-  MOZ_ASSERT(bitLength != 0,
-             "Adding a symbol with a bitLength of 0 doesn't make sense.");
-  MOZ_ASSERT(values_.empty() || values_.back().key().bitLength_ <= bitLength,
-             "Symbols must be ranked by increasing bits length");
-  MOZ_ASSERT_IF(bitLength != 32 /* >> 32 is UB */, bits >> bitLength == 0);
-  // Memory was reserved in `init()`.
-  MOZ_ALWAYS_TRUE(values_.emplaceBack(bits, bitLength, value));
-
-  return Ok();
-}
-
-template <int N>
-HuffmanLookupResult NaiveHuffmanTable<N>::lookup(HuffmanLookup key) const {
-  // This current implementation is O(length) and designed mostly for testing.
-  // Future versions will presumably adapt the underlying data structure to
-  // provide bounded-time lookup.
-  for (const auto& iter : values_) {
-    if (iter.key().bitLength_ > key.bitLength_) {
-      // We can't find the entry.
-      break;
-    }
-
-    const uint32_t keyBits = key.leadingBits(iter.key().bitLength_);
-    if (keyBits == iter.key().bits_) {
-      return HuffmanLookupResult::found(iter.key().bitLength_, &iter.value());
-    }
-  }
-
-  return HuffmanLookupResult::notFound();
+size_t GenericHuffmanTable::length() const {
+  return implementation_.match(
+      [](const SingleEntryHuffmanTable& implementation) -> size_t {
+        return implementation.length();
+      },
+      [](const TwoEntriesHuffmanTable& implementation) -> size_t {
+        return implementation.length();
+      },
+      [](const SingleLookupHuffmanTable& implementation) -> size_t {
+        return implementation.length();
+      },
+      [](const TwoLookupsHuffmanTable& implementation) -> size_t {
+        return implementation.length();
+      },
+      [](const ThreeLookupsHuffmanTable& implementation) -> size_t {
+        return implementation.length();
+      },
+      [](const HuffmanTableUnreachable& implementation) -> size_t {
+        MOZ_CRASH("GenericHuffmanTable is unitialized!");
+      });
 }
 
 SingleEntryHuffmanTable::Iterator::Iterator(const BinASTSymbol* position)
@@ -2051,8 +2012,7 @@ JS::Result<Ok> TwoEntriesHuffmanTable::initComplete() {
 
 JS::Result<Ok> TwoEntriesHuffmanTable::addSymbol(uint32_t bits,
                                                  uint8_t bitLength,
-                                                 const BinASTSymbol& value,
-                                                 reporter) {
+                                                 const BinASTSymbol& value) {
   MOZ_ASSERT(length_ < 2);
   // Symbols must be ranked by increasing bits length
   MOZ_ASSERT_IF(length_ == 0, bits == 0);
