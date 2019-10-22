@@ -43,16 +43,16 @@ async function doAtLeastOnePeriodicSample() {
 }
 
 /**
- * This is a helper function that will stop the profiler of the browser
- * running with PID contentPid. The profiler in that PID
- * will not stop until there is at least one periodic sample taken, though.
+ * This is a helper function that will stop the profiler of the browser running
+ * with PID contentPid.
+ * This happens immediately, without waiting for any sampling to happen or
+ * finish. Use stopProfilerAndGetThreads (without "Now") below instead to wait
+ * for samples before stopping.
  *
  * @param {number} contentPid
  * @returns {Promise}
  */
-async function stopProfilerAndGetThreads(contentPid) {
-  await doAtLeastOnePeriodicSample();
-
+async function stopProfilerNowAndGetThreads(contentPid) {
   const profile = await Services.profiler.getProfileDataAsync();
   Services.profiler.StopProfiler();
 
@@ -74,6 +74,21 @@ async function stopProfilerAndGetThreads(contentPid) {
   }
 
   return { parentThread, contentThread };
+}
+
+/**
+ * This is a helper function that will stop the profiler of the browser running
+ * with PID contentPid.
+ * As opposed to stopProfilerNowAndGetThreads (with "Now") above, the profiler
+ * in that PID will not stop until there is at least one periodic sample taken.
+ *
+ * @param {number} contentPid
+ * @returns {Promise}
+ */
+async function stopProfilerAndGetThreads(contentPid) {
+  await doAtLeastOnePeriodicSample();
+
+  return stopProfilerNowAndGetThreads(contentPid);
 }
 
 /**
