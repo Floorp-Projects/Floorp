@@ -182,12 +182,6 @@
   value: false
   mirror: always
 
-# Whether the changes in https://github.com/whatwg/html/issues/5002 are in effect.
-- name: accessibility.heading-element-level-changes.enabled
-  type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
-  mirror: always
-
 #ifdef ANDROID
   #---------------------------------------------------------------------------
   # Prefs starting with "android."
