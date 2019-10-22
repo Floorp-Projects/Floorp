@@ -89,6 +89,11 @@ function it(message, f) {
 // Currently document.write() is used to make everything synchronous, which
 // is just needed for running the existing Jest-based tests easily.
 function parseFromString(mapString, mapBaseURL) {
+  // We can't test data: base URLs because <base> rejects data: URLs.
+  if (new URL(mapBaseURL).protocol === 'data:') {
+    throw Error('test helper does not support data: base URLs');
+  }
+
   const iframe = document.createElement('iframe');
   document.body.appendChild(iframe);
   iframe.contentDocument.write(`
