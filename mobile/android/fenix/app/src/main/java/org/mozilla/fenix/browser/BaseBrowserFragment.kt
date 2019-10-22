@@ -300,7 +300,7 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler, SessionManager.Obs
                 feature = PromptFeature(
                     fragment = this,
                     store = store,
-                    sessionId = customTabSessionId,
+                    customTabId = customTabSessionId,
                     fragmentManager = parentFragmentManager,
                     onNeedToRequestPermissions = { permissions ->
                         requestPermissions(permissions, REQUEST_CODE_PROMPT_PERMISSIONS)
