@@ -58,7 +58,7 @@ const {Element, Literal} = ListFormatParts;
     const list = ["A", "B", "C", "D"];
 
     const testData = {
-        "ar": [Element("A"), Literal("، "), Element("B"), Literal("، "), Element("C"), Literal("، و"), Element("D")],
+        "ar": [Element("A"), Literal(" و"), Element("B"), Literal(" و"), Element("C"), Literal(" و"), Element("D")],
         "de": [Element("A"), Literal(", "), Element("B"), Literal(", "), Element("C"), Literal(" und "), Element("D")],
         "en": [Element("A"), Literal(", "), Element("B"), Literal(", "), Element("C"), Literal(", and "), Element("D")],
         "es": [Element("A"), Literal(", "), Element("B"), Literal(", "), Element("C"), Literal(" y "), Element("D")],

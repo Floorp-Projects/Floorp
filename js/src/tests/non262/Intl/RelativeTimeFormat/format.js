@@ -56,13 +56,13 @@ var rtf;
   assertEq(rtf.format(-1, "second"), "1 second ago");
   assertEq(rtf.format(1, "second"), "in 1 second");
 
-  assertEq(rtf.format(0, "minute"), "in 0 minutes");
-  assertEq(rtf.format(-0, "minute"), "0 minutes ago");
+  assertEq(rtf.format(0, "minute"), "this minute");
+  assertEq(rtf.format(-0, "minute"), "this minute");
   assertEq(rtf.format(-1, "minute"), "1 minute ago");
   assertEq(rtf.format(1, "minute"), "in 1 minute");
 
-  assertEq(rtf.format(0, "hour"), "in 0 hours");
-  assertEq(rtf.format(-0, "hour"), "0 hours ago");
+  assertEq(rtf.format(0, "hour"), "this hour");
+  assertEq(rtf.format(-0, "hour"), "this hour");
   assertEq(rtf.format(-1, "hour"), "1 hour ago");
   assertEq(rtf.format(1, "hour"), "in 1 hour");
 
