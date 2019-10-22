@@ -6,7 +6,7 @@
 //!
 //! [Wasmtime]: https://github.com/CraneStation/wasmtime
 
-use crate::state::TranslationState;
+use crate::state::{FuncTranslationState, ModuleTranslationState};
 use crate::translation_utils::{
     FuncIndex, Global, GlobalIndex, Memory, MemoryIndex, SignatureIndex, Table, TableIndex,
 };
@@ -281,7 +281,7 @@ pub trait FuncEnvironment {
         &mut self,
         _op: &Operator,
         _builder: &mut FunctionBuilder,
-        _state: &TranslationState,
+        _state: &FuncTranslationState,
     ) -> WasmResult<()> {
         Ok(())
     }
@@ -292,7 +292,7 @@ pub trait FuncEnvironment {
         &mut self,
         _op: &Operator,
         _builder: &mut FunctionBuilder,
-        _state: &TranslationState,
+        _state: &FuncTranslationState,
     ) -> WasmResult<()> {
         Ok(())
     }
@@ -449,6 +449,7 @@ pub trait ModuleEnvironment<'data> {
     /// functions is already provided by `reserve_func_types`.
     fn define_function_body(
         &mut self,
+        module_translation_state: &ModuleTranslationState,
         body_bytes: &'data [u8],
         body_offset: usize,
     ) -> WasmResult<()>;

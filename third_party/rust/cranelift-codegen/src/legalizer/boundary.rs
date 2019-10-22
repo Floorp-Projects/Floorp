@@ -27,8 +27,8 @@ use crate::ir::{
 };
 use crate::isa::TargetIsa;
 use crate::legalizer::split::{isplit, vsplit};
+use alloc::vec::Vec;
 use log::debug;
-use std::vec::Vec;
 
 /// Legalize all the function signatures in `func`.
 ///

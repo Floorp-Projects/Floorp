@@ -1586,8 +1586,6 @@ pub(crate) fn define(
     let x = &operand("x", Int);
     let y = &operand("y", Int);
 
-    // TODO(ryzokuken): Add documentation for unsigned overflow.
-    // TODO(ryzokuken): Add documentation for signed overflow.
     ig.push(
         Inst::new(
             "icmp",
@@ -1597,16 +1595,21 @@ pub(crate) fn define(
         The condition code determines if the operands are interpreted as signed
         or unsigned integers.
 
-        ====== ======== =========
-        Signed Unsigned Condition
-        ====== ======== =========
-        eq     eq       Equal
-        ne     ne       Not equal
-        slt    ult      Less than
-        sge    uge      Greater than or equal
-        sgt    ugt      Greater than
-        sle    ule      Less than or equal
-        ====== ======== =========
+        | Signed | Unsigned | Condition             |
+        |--------|----------|-----------------------|
+        | eq     | eq       | Equal                 |
+        | ne     | ne       | Not equal             |
+        | slt    | ult      | Less than             |
+        | sge    | uge      | Greater than or equal |
+        | sgt    | ugt      | Greater than          |
+        | sle    | ule      | Less than or equal    |
+        | of     | *        | Overflow              |
+        | nof    | *        | No Overflow           |
+
+        \* The unsigned version of overflow conditions have ISA-specific
+        semantics and thus have been kept as methods on the TargetIsa trait as
+        [unsigned_add_overflow_condition][isa::TargetIsa::unsigned_add_overflow_condition] and
+        [unsigned_sub_overflow_condition][isa::TargetIsa::unsigned_sub_overflow_condition].
 
         When this instruction compares integer vectors, it returns a boolean
         vector of lane-wise comparisons.
@@ -1689,6 +1692,38 @@ pub(crate) fn define(
 
     ig.push(
         Inst::new(
+            "uadd_sat",
+            r#"
+        Add with unsigned saturation.
+
+        This is similar to `iadd` but the operands are interpreted as unsigned integers and their 
+        summed result, instead of wrapping, will be saturated to the highest unsigned integer for
+        the controlling type (e.g. `0xFF` for i8).
+        "#,
+        )
+        .operands_in(vec![x, y])
+        .operands_out(vec![a]),
+    );
+
+    ig.push(
+        Inst::new(
+            "sadd_sat",
+            r#"
+        Add with signed saturation.
+
+        This is similar to `iadd` but the operands are interpreted as signed integers and their 
+        summed result, instead of wrapping, will be saturated to the lowest or highest 
+        signed integer for the controlling type (e.g. `0x80` or `0x7F` for i8). For example, 
+        since an `iadd_ssat.i8` of `0x70` and `0x70` is greater than `0x7F`, the result will be 
+        clamped to `0x7F`.
+        "#,
+        )
+        .operands_in(vec![x, y])
+        .operands_out(vec![a]),
+    );
+
+    ig.push(
+        Inst::new(
             "isub",
             r#"
         Wrapping integer subtraction: `a := x - y \pmod{2^B}`.
@@ -1703,13 +1738,53 @@ pub(crate) fn define(
 
     ig.push(
         Inst::new(
+            "usub_sat",
+            r#"
+        Subtract with unsigned saturation.
+
+        This is similar to `isub` but the operands are interpreted as unsigned integers and their 
+        difference, instead of wrapping, will be saturated to the lowest unsigned integer for
+        the controlling type (e.g. `0x00` for i8).
+        "#,
+        )
+        .operands_in(vec![x, y])
+        .operands_out(vec![a]),
+    );
+
+    ig.push(
+        Inst::new(
+            "ssub_sat",
+            r#"
+        Subtract with signed saturation.
+
+        This is similar to `isub` but the operands are interpreted as signed integers and their 
+        difference, instead of wrapping, will be saturated to the lowest or highest 
+        signed integer for the controlling type (e.g. `0x80` or `0x7F` for i8).
+        "#,
+        )
+        .operands_in(vec![x, y])
+        .operands_out(vec![a]),
+    );
+
+    ig.push(
+        Inst::new(
+            "ineg",
+            r#"
+        Integer negation: `a := -x \pmod{2^B}`.
+        "#,
+        )
+        .operands_in(vec![x])
+        .operands_out(vec![a]),
+    );
+
+    ig.push(
+        Inst::new(
             "imul",
             r#"
         Wrapping integer multiplication: `a := x y \pmod{2^B}`.
 
         This instruction does not depend on the signed/unsigned interpretation
-        of the
-        operands.
+        of the operands.
 
         Polymorphic over all integer types (vector and scalar).
         "#,

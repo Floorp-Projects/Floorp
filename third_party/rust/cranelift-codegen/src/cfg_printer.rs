@@ -1,7 +1,7 @@
 //! The `CFGPrinter` utility.
 
+use alloc::vec::Vec;
 use core::fmt::{Display, Formatter, Result, Write};
-use std::vec::Vec;
 
 use crate::entity::SecondaryMap;
 use crate::flowgraph::{BasicBlock, ControlFlowGraph};

@@ -2,8 +2,8 @@
 
 use crate::keys::Keys;
 use crate::EntityRef;
+use alloc::vec::Vec;
 use core::marker::PhantomData;
-use std::vec::Vec;
 
 /// A set of `K` for densely indexed entity references.
 ///

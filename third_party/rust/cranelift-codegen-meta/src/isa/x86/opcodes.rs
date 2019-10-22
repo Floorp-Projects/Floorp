@@ -251,6 +251,21 @@ pub static PADDQ: [u8; 3] = [0x66, 0x0f, 0xd4];
 /// Add packed word integers from xmm2/m128 and xmm1 (SSE2).
 pub static PADDW: [u8; 3] = [0x66, 0x0f, 0xfd];
 
+/// Add packed signed byte integers from xmm2/m128 and xmm1 saturate the results (SSE).
+pub static PADDSB: [u8; 3] = [0x66, 0x0f, 0xec];
+
+/// Add packed signed word integers from xmm2/m128 and xmm1 saturate the results (SSE).
+pub static PADDSW: [u8; 3] = [0x66, 0x0f, 0xed];
+
+/// Add packed unsigned byte integers from xmm2/m128 and xmm1 saturate the results (SSE).
+pub static PADDUSB: [u8; 3] = [0x66, 0x0f, 0xdc];
+
+/// Add packed unsigned word integers from xmm2/m128 and xmm1 saturate the results (SSE).
+pub static PADDUSW: [u8; 3] = [0x66, 0x0f, 0xdd];
+
+/// Bitwise AND of xmm2/m128 and xmm1 (SSE2).
+pub static PAND: [u8; 3] = [0x66, 0x0f, 0xdb];
+
 /// Compare packed data for equal (SSE2).
 pub static PCMPEQB: [u8; 3] = [0x66, 0x0f, 0x74];
 
@@ -269,8 +284,8 @@ pub static PEXTR: [u8; 4] = [0x66, 0x0f, 0x3a, 0x16];
 /// Extract byte (SSE4.1).
 pub static PEXTRB: [u8; 4] = [0x66, 0x0f, 0x3a, 0x14];
 
-/// Extract word (SSE2). There is a 4-byte SSE4.1 variant that can also move to m/16.
-pub static PEXTRW_SSE2: [u8; 3] = [0x66, 0x0f, 0xc5];
+/// Extract word (SSE4.1). There is a 3-byte SSE2 variant that can also move to m/16.
+pub static PEXTRW: [u8; 4] = [0x66, 0x0f, 0x3a, 0x15];
 
 /// Insert doubleword or quadword, depending on REX.W (SSE4.1).
 pub static PINSR: [u8; 4] = [0x66, 0x0f, 0x3a, 0x22];
@@ -281,11 +296,22 @@ pub static PINSRB: [u8; 4] = [0x66, 0x0f, 0x3a, 0x20];
 /// Insert word (SSE2).
 pub static PINSRW: [u8; 3] = [0x66, 0x0f, 0xc4];
 
+/// Multiply the packed signed word integers in xmm1 and xmm2/m128, and store the low 16 bits of
+/// the results in xmm1 (SSE2).
+pub static PMULLW: [u8; 3] = [0x66, 0x0f, 0xd5];
+
+/// Multiply the packed doubleword signed integers in xmm1 and xmm2/m128 and store the low 32
+/// bits of each product in xmm1 (SSE4.1).
+pub static PMULLD: [u8; 4] = [0x66, 0x0f, 0x38, 0x40];
+
 /// Pop top of stack into r{16,32,64}; increment stack pointer.
 pub static POP_REG: [u8; 1] = [0x58];
 
 /// Returns the count of number of bits set to 1.
 pub static POPCNT: [u8; 3] = [0xf3, 0x0f, 0xb8];
+
+/// Bitwise OR of xmm2/m128 and xmm1 (SSE2).
+pub static POR: [u8; 3] = [0x66, 0x0f, 0xeb];
 
 /// Shuffle bytes in xmm1 according to contents of xmm2/m128 (SSE3).
 pub static PSHUFB: [u8; 4] = [0x66, 0x0f, 0x38, 0x00];
@@ -293,6 +319,58 @@ pub static PSHUFB: [u8; 4] = [0x66, 0x0f, 0x38, 0x00];
 /// Shuffle the doublewords in xmm2/m128 based on the encoding in imm8 and
 /// store the result in xmm1 (SSE2).
 pub static PSHUFD: [u8; 3] = [0x66, 0x0f, 0x70];
+
+/// Shift words in xmm1 left by xmm2/m128 while shifting in 0s (SSE2).
+pub static PSLLW: [u8; 3] = [0x66, 0x0f, 0xf1];
+
+/// Shift doublewords in xmm1 left by xmm2/m128 while shifting in 0s (SSE2).
+pub static PSLLD: [u8; 3] = [0x66, 0x0f, 0xf2];
+
+/// Shift quadwords in xmm1 left by xmm2/m128 while shifting in 0s (SSE2).
+pub static PSLLQ: [u8; 3] = [0x66, 0x0f, 0xf3];
+
+/// Shift words in xmm1 right by xmm2/m128 while shifting in 0s (SSE2).
+pub static PSRLW: [u8; 3] = [0x66, 0x0f, 0xd1];
+
+/// Shift doublewords in xmm1 right by xmm2/m128 while shifting in 0s (SSE2).
+pub static PSRLD: [u8; 3] = [0x66, 0x0f, 0xd2];
+
+/// Shift quadwords in xmm1 right by xmm2/m128 while shifting in 0s (SSE2).
+pub static PSRLQ: [u8; 3] = [0x66, 0x0f, 0xd3];
+
+/// Shift words in xmm1 right by xmm2/m128 while shifting in sign bits (SSE2).
+pub static PSRAW: [u8; 3] = [0x66, 0x0f, 0xe1];
+
+/// Shift doublewords in xmm1 right by xmm2/m128 while shifting in sign bits (SSE2).
+pub static PSRAD: [u8; 3] = [0x66, 0x0f, 0xe2];
+
+/// Subtract packed byte integers in xmm2/m128 from packed byte integers in xmm1 (SSE2).
+pub static PSUBB: [u8; 3] = [0x66, 0x0f, 0xf8];
+
+/// Subtract packed word integers in xmm2/m128 from packed word integers in xmm1 (SSE2).
+pub static PSUBW: [u8; 3] = [0x66, 0x0f, 0xf9];
+
+/// Subtract packed doubleword integers in xmm2/m128 from doubleword byte integers in xmm1 (SSE2).
+pub static PSUBD: [u8; 3] = [0x66, 0x0f, 0xfa];
+
+/// Subtract packed quadword integers in xmm2/m128 from xmm1 (SSE2).
+pub static PSUBQ: [u8; 3] = [0x66, 0x0f, 0xfb];
+
+/// Subtract packed signed byte integers in xmm2/m128 from packed signed byte integers in xmm1
+/// and saturate results (SSE2).
+pub static PSUBSB: [u8; 3] = [0x66, 0x0f, 0xe8];
+
+/// Subtract packed signed word integers in xmm2/m128 from packed signed word integers in xmm1
+/// and saturate results (SSE2).
+pub static PSUBSW: [u8; 3] = [0x66, 0x0f, 0xe9];
+
+/// Subtract packed unsigned byte integers in xmm2/m128 from packed unsigned byte integers in xmm1
+/// and saturate results (SSE2).
+pub static PSUBUSB: [u8; 3] = [0x66, 0x0f, 0xd8];
+
+/// Subtract packed unsigned word integers in xmm2/m128 from packed unsigned word integers in xmm1
+/// and saturate results (SSE2).
+pub static PSUBUSW: [u8; 3] = [0x66, 0x0f, 0xd9];
 
 /// Push r{16,32,64}.
 pub static PUSH_REG: [u8; 1] = [0x50];
