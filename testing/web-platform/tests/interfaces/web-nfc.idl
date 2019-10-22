@@ -10,7 +10,7 @@ interface NDEFMessage {
 };
 
 dictionary NDEFMessageInit {
-  sequence<NDEFRecordInit> records;
+  required sequence<NDEFRecordInit> records;
 };
 
 [Exposed=Window]
@@ -28,7 +28,7 @@ interface NDEFRecord {
 };
 
 dictionary NDEFRecordInit {
-  NDEFRecordType recordType;
+  required NDEFRecordType recordType;
   USVString mediaType;
   USVString id;
 
@@ -84,6 +84,7 @@ dictionary NFCPushOptions {
   NFCPushTarget target = "any";
   unrestricted double timeout = Infinity;
   boolean ignoreRead = true;
+  boolean overwrite = true;
   AbortSignal? signal;
 };
 
