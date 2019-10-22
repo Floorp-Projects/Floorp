@@ -135,7 +135,7 @@ class DownloadsFeatureTest {
         val feature = DownloadsFeature(
             testContext,
             store,
-            useCases = mock(),
+            useCases = DownloadsUseCases(store),
             downloadManager = downloadManager
         )
 
@@ -143,7 +143,7 @@ class DownloadsFeatureTest {
 
         verify(downloadManager, never()).download(any(), anyString())
 
-        val download: DownloadState = mock()
+        val download = DownloadState(url = "https://www.mozilla.org")
         store.dispatch(ContentAction.UpdateDownloadAction("test-tab", download))
             .joinBlocking()
 
@@ -166,7 +166,7 @@ class DownloadsFeatureTest {
         val feature = DownloadsFeature(
             testContext,
             store,
-            useCases = mock(),
+            useCases = DownloadsUseCases(store),
             fragmentManager = fragmentManager,
             downloadManager = downloadManager
         )
@@ -187,6 +187,8 @@ class DownloadsFeatureTest {
 
         verify(fragmentManager, never()).beginTransaction()
         verify(downloadManager).download(eq(download), anyString())
+
+        assertNull(store.state.findTab("test-tab")!!.content.download)
     }
 
     @Test
@@ -224,7 +226,7 @@ class DownloadsFeatureTest {
 
     @Test
     fun `onPermissionsResult will start download if permissions were granted`() {
-        val download: DownloadState = mock()
+        val download = DownloadState(url = "https://www.mozilla.org")
         store.dispatch(ContentAction.UpdateDownloadAction("test-tab", download = download))
             .joinBlocking()
 
@@ -236,7 +238,7 @@ class DownloadsFeatureTest {
         val feature = DownloadsFeature(
             testContext,
             store,
-            useCases = mock(),
+            useCases = DownloadsUseCases(store),
             downloadManager = downloadManager
         )
 
@@ -330,7 +332,7 @@ class DownloadsFeatureTest {
         val feature = spy(DownloadsFeature(
             testContext,
             store,
-            useCases = mock(),
+            useCases = DownloadsUseCases(store),
             downloadManager = downloadManager
         ))
 
@@ -341,7 +343,7 @@ class DownloadsFeatureTest {
         verify(downloadManager, never()).download(any(), anyString())
         verify(feature, never()).showDownloadNotSupportedError()
 
-        val download: DownloadState = mock()
+        val download = DownloadState(url = "https://www.mozilla.org")
         store.dispatch(ContentAction.UpdateDownloadAction("test-tab", download))
             .joinBlocking()
 
