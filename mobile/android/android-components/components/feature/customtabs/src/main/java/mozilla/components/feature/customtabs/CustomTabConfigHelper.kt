@@ -35,6 +35,7 @@ import mozilla.components.browser.state.state.CustomTabActionButtonConfig
 import mozilla.components.browser.state.state.CustomTabConfig
 import mozilla.components.browser.state.state.CustomTabConfig.Companion.EXTRA_NAVIGATION_BAR_COLOR
 import mozilla.components.browser.state.state.CustomTabMenuItem
+import mozilla.components.browser.state.state.ExternalAppType
 import mozilla.components.support.utils.SafeIntent
 import mozilla.components.support.utils.toSafeBundle
 import mozilla.components.support.utils.toSafeIntent
@@ -101,7 +102,8 @@ fun createCustomTabConfigFromIntent(
             CustomTabsSessionToken.getSessionTokenFromIntent(intent)
         } else {
             null
-        }
+        },
+        externalAppType = ExternalAppType.CUSTOM_TAB
     )
 }
 
