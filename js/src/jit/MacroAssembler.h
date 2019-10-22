@@ -3141,6 +3141,16 @@ class MacroAssembler : public MacroAssemblerSpecific {
                          temp, output, fail);
   }
 
+  // Truncates, i.e. removes any fractional parts, but doesn't wrap around to
+  // the int32 range.
+  void truncateNoWrapValueToInt32(ValueOperand value, MDefinition* input,
+                                  FloatRegister temp, Register output,
+                                  Label* truncateDoubleSlow, Label* fail) {
+    convertValueToInt(value, input, nullptr, nullptr, truncateDoubleSlow,
+                      InvalidReg, temp, output, fail,
+                      IntConversionBehavior::TruncateNoWrap);
+  }
+
   // Convenience functions for clamping values to uint8.
   void clampValueToUint8(ValueOperand value, MDefinition* input,
                          Label* handleStringEntry, Label* handleStringRejoin,
