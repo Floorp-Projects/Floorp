@@ -3668,29 +3668,50 @@ IonBuilder::InliningResult IonBuilder::inlineToIntegerPositiveZero(
 
   MDefinition* input = callInfo.getArg(0);
 
-  // Only optimize cases where input contains only number, null or boolean
+  // Only optimize cases where |input| contains only number, null, undefined, or
+  // boolean.
   if (input->mightBeType(MIRType::Object) ||
       input->mightBeType(MIRType::String) ||
       input->mightBeType(MIRType::Symbol) ||
-      input->mightBeType(MIRType::BigInt) ||
-      input->mightBeType(MIRType::Undefined) || input->mightBeMagicType()) {
+      input->mightBeType(MIRType::BigInt) || input->mightBeMagicType()) {
     return InliningStatus_NotInlined;
   }
 
   MOZ_ASSERT(input->type() == MIRType::Value ||
              input->type() == MIRType::Null ||
+             input->type() == MIRType::Undefined ||
              input->type() == MIRType::Boolean || IsNumberType(input->type()));
 
-  // Only optimize cases where output is int32
-  if (getInlineReturnType() != MIRType::Int32) {
+  // Only optimize cases where the output is int32 or double.
+  MIRType returnType = getInlineReturnType();
+  if (returnType != MIRType::Int32 && returnType != MIRType::Double) {
     return InliningStatus_NotInlined;
   }
 
-  callInfo.setImplicitlyUsedUnchecked();
+  if (returnType == MIRType::Int32) {
+    if (input->mightBeType(MIRType::Undefined)) {
+      return InliningStatus_NotInlined;
+    }
 
-  auto* toInt32 = MToNumberInt32::New(alloc(), callInfo.getArg(0));
-  current->add(toInt32);
-  current->push(toInt32);
+    auto* toInt32 = MToNumberInt32::New(alloc(), input);
+    current->add(toInt32);
+    current->push(toInt32);
+  } else {
+    MInstruction* ins;
+    if (MNearbyInt::HasAssemblerSupport(RoundingMode::TowardsZero)) {
+      ins = MNearbyInt::New(alloc(), input, MIRType::Double,
+                            RoundingMode::TowardsZero);
+    } else {
+      ins = MMathFunction::New(alloc(), input, MMathFunction::Trunc);
+    }
+    current->add(ins);
+
+    auto* nanToZero = MNaNToZero::New(alloc(), ins);
+    current->add(nanToZero);
+    current->push(nanToZero);
+  }
+
+  callInfo.setImplicitlyUsedUnchecked();
   return InliningStatus_Inlined;
 }
 
