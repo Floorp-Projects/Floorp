@@ -62,14 +62,14 @@ describe('Relative URL scope keys', () => {
 });
 
 describe('Absolute URL scope keys', () => {
-  it('should only accept absolute URL scope keys with fetch schemes', () => {
+  it('should accept all absolute URL scope keys, with or without fetch schemes', () => {
     expectScopes(
       [
         'about:good',
         'blob:good',
         'data:good',
         'file:///good',
-        'filesystem:good',
+        'filesystem:http://example.com/good/',
         'http://good/',
         'https://good/',
         'ftp://good/',
@@ -84,17 +84,16 @@ describe('Absolute URL scope keys', () => {
         'blob:good',
         'data:good',
         'file:///good',
-        'filesystem:good',
+        'filesystem:http://example.com/good/',
         'http://good/',
         'https://good/',
-        'ftp://good/'
+        'ftp://good/',
+        'import:bad',
+        'mailto:bad',
+        'javascript:bad',
+        'wss://ba/'
       ],
-      [
-        'Invalid scope "import:bad". Scope URLs must have a fetch scheme.',
-        'Invalid scope "mailto:bad". Scope URLs must have a fetch scheme.',
-        'Invalid scope "javascript:bad". Scope URLs must have a fetch scheme.',
-        'Invalid scope "wss://ba/". Scope URLs must have a fetch scheme.'
-      ]
+      []
     );
   });
 
