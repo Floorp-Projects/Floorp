@@ -9734,13 +9734,13 @@ static bool HasHttpScheme(nsIURI* aURI) {
     nsDocShellLoadState* aLoadState, LoadInfo* aLoadInfo,
     nsIInterfaceRequestor* aCallbacks, nsDocShell* aDocShell,
     const nsString* aInitiatorType, nsLoadFlags aLoadFlags, uint32_t aLoadType,
-    uint32_t aCacheKey, bool aIsActive, bool aIsTopLevelDoc,
-    bool aHasNonEmptySandboxingFlags, nsresult& aRv, nsIChannel** aChannel) {
+    uint32_t aCacheKey, bool aIsActive, bool aIsTopLevelDoc, nsresult& aRv,
+    nsIChannel** aChannel) {
   if (StaticPrefs::browser_tabs_documentchannel() && XRE_IsContentProcess() &&
       HasHttpScheme(aLoadState->URI())) {
     RefPtr<DocumentChannelChild> child = new DocumentChannelChild(
         aLoadState, aLoadInfo, aInitiatorType, aLoadFlags, aLoadType, aCacheKey,
-        aIsActive, aIsTopLevelDoc, aHasNonEmptySandboxingFlags);
+        aIsActive, aIsTopLevelDoc);
     child->SetNotificationCallbacks(aCallbacks);
     child.forget(aChannel);
     aRv = NS_OK;
@@ -9806,6 +9806,36 @@ static bool HasHttpScheme(nsIURI* aURI) {
     nsCOMPtr<nsIInputStreamChannel> isc = do_QueryInterface(channel);
     MOZ_ASSERT(isc);
     isc->SetBaseURI(baseURI);
+  }
+
+  nsCOMPtr<nsIContentSecurityPolicy> csp = aLoadState->Csp();
+  if (csp) {
+    // Navigational requests that are same origin need to be upgraded in case
+    // upgrade-insecure-requests is present.
+    bool upgradeInsecureRequests = false;
+    csp->GetUpgradeInsecureRequests(&upgradeInsecureRequests);
+    if (upgradeInsecureRequests) {
+      // only upgrade if the navigation is same origin
+      nsCOMPtr<nsIPrincipal> resultPrincipal;
+      aRv = nsContentUtils::GetSecurityManager()->GetChannelResultPrincipal(
+          channel, getter_AddRefs(resultPrincipal));
+      NS_ENSURE_SUCCESS(aRv, false);
+      if (IsConsideredSameOriginForUIR(aLoadState->TriggeringPrincipal(),
+                                       resultPrincipal)) {
+        aLoadInfo->SetUpgradeInsecureRequests();
+      }
+    }
+
+    // For document loads we store the CSP that potentially needs to
+    // be inherited by the new document, e.g. in case we are loading
+    // an opaque origin like a data: URI. The actual inheritance
+    // check happens within Document::InitCSP().
+    // Please create an actual copy of the CSP (do not share the same
+    // reference) otherwise a Meta CSP of an opaque origin will
+    // incorrectly be propagated to the embedding document.
+    RefPtr<nsCSPContext> cspToInherit = new nsCSPContext();
+    cspToInherit->InitFromOther(static_cast<nsCSPContext*>(csp.get()));
+    aLoadInfo->SetCSPToInherit(cspToInherit);
   }
 
   nsCOMPtr<nsIApplicationCacheChannel> appCacheChannel =
@@ -9902,8 +9932,7 @@ static bool HasHttpScheme(nsIURI* aURI) {
 
 /* static */ nsresult nsDocShell::ConfigureChannel(
     nsIChannel* aChannel, nsDocShellLoadState* aLoadState,
-    const nsString* aInitiatorType, uint32_t aLoadType, uint32_t aCacheKey,
-    bool aHasNonEmptySandboxingFlags) {
+    const nsString* aInitiatorType, uint32_t aLoadType, uint32_t aCacheKey) {
   nsCOMPtr<nsIWritablePropertyBag2> props(do_QueryInterface(aChannel));
   if (props) {
     nsCOMPtr<nsIURI> referrer;
@@ -10036,34 +10065,6 @@ static bool HasHttpScheme(nsIURI* aURI) {
   if (csp) {
     nsCOMPtr<nsILoadInfo> loadInfo;
     MOZ_ALWAYS_SUCCEEDS(aChannel->GetLoadInfo(getter_AddRefs(loadInfo)));
-
-    // Navigational requests that are same origin need to be upgraded in case
-    // upgrade-insecure-requests is present.
-    bool upgradeInsecureRequests = false;
-    csp->GetUpgradeInsecureRequests(&upgradeInsecureRequests);
-    if (upgradeInsecureRequests) {
-      // only upgrade if the navigation is same origin
-      nsCOMPtr<nsIPrincipal> resultPrincipal;
-      rv = nsContentUtils::GetSecurityManager()->GetChannelResultPrincipal(
-          aChannel, getter_AddRefs(resultPrincipal));
-      NS_ENSURE_SUCCESS(rv, rv);
-      if (IsConsideredSameOriginForUIR(aLoadState->TriggeringPrincipal(),
-                                       resultPrincipal)) {
-        static_cast<LoadInfo*>(loadInfo.get())->SetUpgradeInsecureRequests();
-      }
-    }
-
-    // For document loads we store the CSP that potentially needs to
-    // be inherited by the new document, e.g. in case we are loading
-    // an opaque origin like a data: URI. The actual inheritance
-    // check happens within Document::InitCSP().
-    // Please create an actual copy of the CSP (do not share the same
-    // reference) otherwise a Meta CSP of an opaque origin will
-    // incorrectly be propagated to the embedding document.
-    RefPtr<nsCSPContext> cspToInherit = new nsCSPContext();
-    cspToInherit->InitFromOther(static_cast<nsCSPContext*>(csp.get()));
-    static_cast<LoadInfo*>(loadInfo.get())->SetCSPToInherit(cspToInherit);
-
     // Check CSP navigate-to
     bool allowsNavigateTo = false;
     rv = csp->GetAllowsNavigateTo(aLoadState->URI(), loadInfo,
@@ -10076,14 +10077,6 @@ static bool HasHttpScheme(nsIURI* aURI) {
       return NS_ERROR_CSP_NAVIGATE_TO_VIOLATION;
     }
   }
-
-  if (aHasNonEmptySandboxingFlags) {
-    nsCOMPtr<nsIHttpChannelInternal> httpChannel(do_QueryInterface(aChannel));
-    if (httpChannel) {
-      httpChannel->SetHasNonEmptySandboxingFlag(true);
-    }
-  }
-
   return rv;
 }
 
@@ -10384,10 +10377,9 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
 
   bool isActive =
       mIsActive || (mLoadType & (LOAD_CMD_NORMAL | LOAD_CMD_HISTORY));
-  if (!CreateChannelForLoadState(aLoadState, loadInfo, this, this,
-                                 initiatorType, loadFlags, mLoadType, cacheKey,
-                                 isActive, isTopLevelDoc, mSandboxFlags, rv,
-                                 getter_AddRefs(channel))) {
+  if (!CreateChannelForLoadState(
+          aLoadState, loadInfo, this, this, initiatorType, loadFlags, mLoadType,
+          cacheKey, isActive, isTopLevelDoc, rv, getter_AddRefs(channel))) {
     return rv;
   }
 
@@ -10397,8 +10389,8 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
     NS_ADDREF(*aRequest = channel);
   }
 
-  rv = ConfigureChannel(channel, aLoadState, initiatorType, mLoadType, cacheKey,
-                        mSandboxFlags);
+  rv =
+      ConfigureChannel(channel, aLoadState, initiatorType, mLoadType, cacheKey);
   NS_ENSURE_SUCCESS(rv, rv);
 
   const nsACString& typeHint = aLoadState->TypeHint();
@@ -10528,6 +10520,13 @@ nsresult nsDocShell::DoChannelLoad(nsIChannel* aChannel,
 
   if (SandboxFlagsImplyCookies(mSandboxFlags)) {
     loadFlags |= nsIRequest::LOAD_DOCUMENT_NEEDS_COOKIE;
+  }
+
+  if (mSandboxFlags) {
+    nsCOMPtr<nsIHttpChannelInternal> httpChannel(do_QueryInterface(aChannel));
+    if (httpChannel) {
+      httpChannel->SetHasNonEmptySandboxingFlag(true);
+    }
   }
 
   // Load attributes depend on load type...
