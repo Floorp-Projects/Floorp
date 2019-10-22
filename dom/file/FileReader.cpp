@@ -143,20 +143,31 @@ FileReader::GetInterface(const nsIID& aIID, void** aResult) {
   return QueryInterface(aIID, aResult);
 }
 
-void FileReader::GetResult(JSContext* aCx,
-                           Nullable<OwningStringOrArrayBuffer>& aResult) {
+void FileReader::GetResult(JSContext* aCx, JS::MutableHandle<JS::Value> aResult,
+                           ErrorResult& aRv) {
   JS::Rooted<JS::Value> result(aCx);
 
   if (mDataFormat == FILE_AS_ARRAYBUFFER) {
-    if (mReadyState != DONE || !mResultArrayBuffer ||
-        !aResult.SetValue().SetAsArrayBuffer().Init(mResultArrayBuffer)) {
-      aResult.SetNull();
+    if (mReadyState == DONE && mResultArrayBuffer) {
+      result.setObject(*mResultArrayBuffer);
+    } else {
+      result.setNull();
     }
 
+    if (!JS_WrapValue(aCx, &result)) {
+      aRv.Throw(NS_ERROR_FAILURE);
+      return;
+    }
+
+    aResult.set(result);
     return;
   }
 
-  aResult.SetValue().SetAsString() = mResult;
+  nsString tmpResult = mResult;
+  if (!xpc::StringToJsval(aCx, tmpResult, aResult)) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
 }
 
 void FileReader::OnLoadEndArrayBuffer() {
