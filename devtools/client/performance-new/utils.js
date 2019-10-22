@@ -143,21 +143,24 @@ function scaleRangeWithClamping(
  * @param {string[]} features - List of the selected features.
  */
 function calculateOverhead(interval, bufferSize, features) {
-  const overheadFromSampling =
-    scaleRangeWithClamping(
-      Math.log(interval),
-      Math.log(0.05),
-      Math.log(1),
-      1,
-      0
-    ) +
-    scaleRangeWithClamping(
-      Math.log(interval),
-      Math.log(1),
-      Math.log(100),
-      0.1,
-      0
-    );
+  // NOT "nostacksampling" (double negative) means periodic sampling is on.
+  const periodicSampling = !features.includes("nostacksampling");
+  const overheadFromSampling = periodicSampling
+    ? scaleRangeWithClamping(
+        Math.log(interval),
+        Math.log(0.05),
+        Math.log(1),
+        1,
+        0
+      ) +
+      scaleRangeWithClamping(
+        Math.log(interval),
+        Math.log(1),
+        Math.log(100),
+        0.1,
+        0
+      )
+    : 0;
   const overheadFromBuffersize = scaleRangeWithClamping(
     Math.log(bufferSize),
     Math.log(10),
@@ -165,8 +168,10 @@ function calculateOverhead(interval, bufferSize, features) {
     0,
     0.1
   );
-  const overheadFromStackwalk = features.includes("stackwalk") ? 0.05 : 0;
-  const overheadFromJavaScrpt = features.includes("js") ? 0.05 : 0;
+  const overheadFromStackwalk =
+    features.includes("stackwalk") && periodicSampling ? 0.05 : 0;
+  const overheadFromJavaScript =
+    features.includes("js") && periodicSampling ? 0.05 : 0;
   const overheadFromTaskTracer = features.includes("tasktracer") ? 0.05 : 0;
   const overheadFromJSTracer = features.includes("jstracer") ? 0.05 : 0;
   const overheadFromJSAllocations = features.includes("jsallocations")
@@ -180,7 +185,7 @@ function calculateOverhead(interval, bufferSize, features) {
     overheadFromSampling +
       overheadFromBuffersize +
       overheadFromStackwalk +
-      overheadFromJavaScrpt +
+      overheadFromJavaScript +
       overheadFromTaskTracer +
       overheadFromJSTracer +
       overheadFromJSAllocations +
