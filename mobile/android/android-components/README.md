@@ -282,6 +282,8 @@ If the environment variable `JAVA_HOME` is not defined, you will need to set it.
 
 Once the environment variable is set, you can import the project into Android Studio with the default wizard options.
 
+# Coding Standards #
+
 ## Style ##
 We follow the style enforced by [ktlint](https://ktlint.github.io/) and [detekt](https://arturbosch.github.io/detekt/). See [how to configure Android Studio appropriately](https://github.com/pinterest/ktlint#option-1-recommended).
 
