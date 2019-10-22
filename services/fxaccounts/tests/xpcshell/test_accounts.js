@@ -69,8 +69,26 @@ MockStorageManager.prototype = {
     return Promise.resolve();
   },
 
-  getAccountData() {
-    return Promise.resolve(this.accountData);
+  getAccountData(fields = null) {
+    let result;
+    if (!this.accountData) {
+      result = null;
+    } else if (fields == null) {
+      // can't use cloneInto as the keys get upset...
+      result = {};
+      for (let field of Object.keys(this.accountData)) {
+        result[field] = this.accountData[field];
+      }
+    } else {
+      if (!Array.isArray(fields)) {
+        fields = [fields];
+      }
+      result = {};
+      for (let field of fields) {
+        result[field] = this.accountData[field];
+      }
+    }
+    return Promise.resolve(result);
   },
 
   updateAccountData(updatedFields) {
@@ -242,17 +260,26 @@ add_task(async function test_get_signed_in_user_initially_unset() {
   Assert.equal(histogram.snapshot().sum, 1);
   histogram.clear();
 
+  // getSignedInUser only returns a subset.
   result = await account.getSignedInUser();
-  Assert.equal(result.email, credentials.email);
-  Assert.equal(result.assertion, credentials.assertion);
-  Assert.equal(result.kSync, credentials.kSync);
-  Assert.equal(result.kXCS, credentials.kXCS);
-  Assert.equal(result.kExtSync, credentials.kExtSync);
-  Assert.equal(result.kExtKbHash, credentials.kExtKbHash);
+  Assert.deepEqual(result.email, credentials.email);
+  Assert.deepEqual(result.assertion, undefined);
+  Assert.deepEqual(result.kSync, undefined);
+  Assert.deepEqual(result.kXCS, undefined);
+  Assert.deepEqual(result.kExtSync, undefined);
+  Assert.deepEqual(result.kExtKbHash, undefined);
+  // for the sake of testing, use the low-level function to check it's all there
+  result = await account._internal.currentAccountState.getUserAccountData();
+  Assert.deepEqual(result.email, credentials.email);
+  Assert.deepEqual(result.assertion, credentials.assertion);
+  Assert.deepEqual(result.kSync, credentials.kSync);
+  Assert.deepEqual(result.kXCS, credentials.kXCS);
+  Assert.deepEqual(result.kExtSync, credentials.kExtSync);
+  Assert.deepEqual(result.kExtKbHash, credentials.kExtKbHash);
 
   // Delete the memory cache and force the user
   // to be read and parsed from storage (e.g. disk via JSONStorage).
-  result = await account.getSignedInUser();
+  result = await account._internal.currentAccountState.getUserAccountData();
   Assert.equal(result.email, credentials.email);
   Assert.equal(result.assertion, credentials.assertion);
   Assert.equal(result.kSync, credentials.kSync);
@@ -316,7 +343,7 @@ add_task(async function test_update_account_data() {
   };
   await account._internal.updateUserAccountData(newCreds);
   Assert.equal(
-    (await account.getSignedInUser()).assertion,
+    (await account._internal.getUserAccountData()).assertion,
     "new_assertion",
     "new field value was saved"
   );
@@ -773,7 +800,7 @@ add_test(function test_getKeys() {
   user.verified = true;
 
   fxa.setSignedInUser(user).then(() => {
-    fxa.getSignedInUser().then(user2 => {
+    fxa._internal.getUserAccountData().then(user2 => {
       // Before getKeys, we have no keys
       Assert.equal(!!user2.kSync, false);
       Assert.equal(!!user2.kXCS, false);
@@ -784,7 +811,7 @@ add_test(function test_getKeys() {
       Assert.equal(!!user2.unwrapBKey, true);
 
       fxa.keys.getKeys().then(() => {
-        fxa.getSignedInUser().then(user3 => {
+        fxa._internal.getUserAccountData().then(user3 => {
           // Now we should have keys
           Assert.equal(fxa._internal.isUserEmailVerified(user3), true);
           Assert.equal(!!user3.verified, true);
@@ -812,7 +839,7 @@ add_task(async function test_getKeys_kb_migration() {
 
   await fxa.setSignedInUser(user);
   await fxa.keys.getKeys();
-  let newUser = await fxa.getSignedInUser();
+  let newUser = await fxa._internal.getUserAccountData();
   Assert.equal(newUser.kA, null);
   Assert.equal(newUser.kB, null);
   Assert.equal(
@@ -1111,7 +1138,7 @@ add_task(async function test_getAssertion() {
   _("ASSERTION: " + assertion + "\n");
   let pieces = assertion.split("~");
   Assert.equal(pieces[0], "cert1");
-  let userData = await fxa.getSignedInUser();
+  let userData = await fxa._internal.getUserAccountData();
   let keyPair = userData.keyPair;
   let cert = userData.cert;
   Assert.notEqual(keyPair, undefined);
@@ -1160,7 +1187,7 @@ add_task(async function test_getAssertion() {
   // expiration time of the assertion should be different.  We compare this to
   // the initial start time, to which they are relative, not the current value
   // of "now".
-  userData = await fxa.getSignedInUser();
+  userData = await fxa._internal.getUserAccountData();
 
   keyPair = userData.keyPair;
   cert = userData.cert;
@@ -1184,7 +1211,7 @@ add_task(async function test_getAssertion() {
   header = JSON.parse(atob(p2[0]));
   payload = JSON.parse(atob(p2[1]));
   Assert.equal(payload.aud, "fourth.example.com");
-  userData = await fxa.getSignedInUser();
+  userData = await fxa._internal.getUserAccountData();
   keyPair = userData.keyPair;
   cert = userData.cert;
   Assert.equal(keyPair.validUntil, now + KEY_LIFETIME);
@@ -1583,7 +1610,7 @@ add_task(async function test_listAttachedOAuthClients() {
   ]);
 });
 
-add_test(function test_getSignedInUserProfile() {
+add_task(async function test_getSignedInUserProfile() {
   let alice = getTestUser("alice");
   alice.verified = true;
 
@@ -1604,17 +1631,14 @@ add_test(function test_getSignedInUserProfile() {
     },
   });
 
-  fxa._internal.setSignedInUser(alice).then(() => {
-    fxa._internal._profile = mockProfile;
-    fxa.getSignedInUserProfile().then(result => {
-      Assert.ok(!!result);
-      Assert.equal(result.avatar, "image");
-      run_next_test();
-    });
-  });
+  await fxa._internal.setSignedInUser(alice);
+  fxa._internal._profile = mockProfile;
+  let result = await fxa.getSignedInUser();
+  Assert.ok(!!result);
+  Assert.equal(result.avatar, "image");
 });
 
-add_test(function test_getSignedInUserProfile_error_uses_account_data() {
+add_task(async function test_getSignedInUserProfile_error_uses_account_data() {
   let fxa = new MockFxAccounts();
   let alice = getTestUser("alice");
   alice.verified = true;
@@ -1622,26 +1646,21 @@ add_test(function test_getSignedInUserProfile_error_uses_account_data() {
   fxa._internal.getSignedInUser = function() {
     return Promise.resolve({ email: "foo@bar.com" });
   };
+  fxa._internal._profile = {
+    getProfile() {
+      return Promise.reject("boom");
+    },
+    tearDown() {
+      teardownCalled = true;
+    },
+  };
 
   let teardownCalled = false;
-  fxa.setSignedInUser(alice).then(() => {
-    fxa._internal._profile = {
-      getProfile() {
-        return Promise.reject("boom");
-      },
-      tearDown() {
-        teardownCalled = true;
-      },
-    };
-
-    fxa.getSignedInUserProfile().catch(error => {
-      Assert.equal(error.message, "UNKNOWN_ERROR");
-      fxa.signOut().then(() => {
-        Assert.ok(teardownCalled);
-        run_next_test();
-      });
-    });
-  });
+  await fxa.setSignedInUser(alice);
+  let result = await fxa.getSignedInUser();
+  Assert.deepEqual(result.avatar, null);
+  await fxa.signOut();
+  Assert.ok(teardownCalled);
 });
 
 add_task(async function test_checkVerificationStatusFailed() {

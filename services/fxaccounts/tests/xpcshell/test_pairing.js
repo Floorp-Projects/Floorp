@@ -66,7 +66,7 @@ const fxAccounts = {
   authorizeOAuthCode() {
     return { code: "mycode", state: "mystate" };
   },
-  getSignedInUserProfile() {
+  getSignedInUser() {
     return {
       uid: UID,
       email: EMAIL,
