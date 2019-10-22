@@ -33,7 +33,7 @@ must read::
 
 * The scheduler url to use is: ``https://sccache1.corpdmz.<OFFICE>.mozilla.com``,
   where <OFFICE> is, for instance, sfo1. A complete list of office short names
-  to be used can be found `here <https://docs.google.com/spreadsheets/d/1alscUTcfFyu3L0vs_S_cGi9JxF4uPrfsmwJko9annWE/edit#gid=0>`_
+  to be used can be found in the `Office Addressing Schemes spreadsheet <https://docs.google.com/spreadsheets/d/1alscUTcfFyu3L0vs_S_cGi9JxF4uPrfsmwJko9annWE/edit#gid=0>`_.
 
 * To use distributed sccache from a Mozilla office, you must be on the corporate
   network. Use the ``Mozilla`` ssid for wireless. The corp vlan is the default
