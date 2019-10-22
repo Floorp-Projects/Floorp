@@ -46,6 +46,13 @@ You can choose to use a different default selector by configuring your ``~/.mozb
     [try]
     default=fuzzy
 
+.. rubric:: Attaching new jobs from a review
+
+For every patch submitted for review in Phabricator, a new Try run is automatically created.
+A link called ``Treeherder Jobs`` can be found in the ``Diff Detail`` section of the review in
+Phabricator.
+This run is created for static analysis, linting and other tasks. Attaching new jobs to the run is
+easy and doesn't require more actions from the developer.
 
 .. toctree::
   :caption: Table of Contents
