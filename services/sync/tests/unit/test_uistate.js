@@ -61,9 +61,13 @@ add_task(async function test_refreshState_signedin() {
 
   UIStateInternal.fxAccounts = {
     getSignedInUser: () =>
-      Promise.resolve({ verified: true, uid: "123", email: "foo@bar.com" }),
-    getSignedInUserProfile: () =>
-      Promise.resolve({ displayName: "Foo Bar", avatar: "https://foo/bar" }),
+      Promise.resolve({
+        verified: true,
+        uid: "123",
+        email: "foo@bar.com",
+        displayName: "Foo Bar",
+        avatar: "https://foo/bar",
+      }),
     hasLocalSession: () => Promise.resolve(true),
   };
 
@@ -120,9 +124,14 @@ add_task(async function test_refreshState_signedin_profile_unavailable() {
   UIStateInternal.fxAccounts = {
     getSignedInUser: () =>
       Promise.resolve({ verified: true, uid: "123", email: "foo@bar.com" }),
-    getSignedInUserProfile: () =>
-      Promise.reject(new Error("Profile unavailable")),
     hasLocalSession: () => Promise.resolve(true),
+    _internal: {
+      profile: {
+        getProfile: () => {
+          return Promise.reject(new Error("Profile unavailable"));
+        },
+      },
+    },
   };
 
   let state = await UIState.refresh();
@@ -140,38 +149,13 @@ add_task(async function test_refreshState_signedin_profile_unavailable() {
   Services.prefs.clearUserPref("services.sync.username");
 });
 
-add_task(async function test_refreshState_unconfigured() {
-  UIState.reset();
-  const fxAccountsOrig = UIStateInternal.fxAccounts;
-
-  let getSignedInUserProfile = sinon.spy();
-  UIStateInternal.fxAccounts = {
-    getSignedInUser: () => Promise.resolve(null),
-    getSignedInUserProfile,
-  };
-
-  let state = await UIState.refresh();
-
-  equal(state.status, UIState.STATUS_NOT_CONFIGURED);
-  equal(state.email, undefined);
-  equal(state.displayName, undefined);
-  equal(state.avatarURL, undefined);
-  equal(state.lastSync, undefined);
-
-  ok(!getSignedInUserProfile.called);
-
-  UIStateInternal.fxAccounts = fxAccountsOrig;
-});
-
 add_task(async function test_refreshState_unverified() {
   UIState.reset();
   const fxAccountsOrig = UIStateInternal.fxAccounts;
 
-  let getSignedInUserProfile = sinon.spy();
   UIStateInternal.fxAccounts = {
     getSignedInUser: () =>
       Promise.resolve({ verified: false, uid: "123", email: "foo@bar.com" }),
-    getSignedInUserProfile,
     hasLocalSession: () => Promise.resolve(true),
   };
 
@@ -184,8 +168,6 @@ add_task(async function test_refreshState_unverified() {
   equal(state.avatarURL, undefined);
   equal(state.lastSync, undefined);
 
-  ok(!getSignedInUserProfile.called);
-
   UIStateInternal.fxAccounts = fxAccountsOrig;
 });
 
@@ -193,11 +175,9 @@ add_task(async function test_refreshState_unverified_nosession() {
   UIState.reset();
   const fxAccountsOrig = UIStateInternal.fxAccounts;
 
-  let getSignedInUserProfile = sinon.spy();
   UIStateInternal.fxAccounts = {
     getSignedInUser: () =>
       Promise.resolve({ verified: false, uid: "123", email: "foo@bar.com" }),
-    getSignedInUserProfile,
     hasLocalSession: () => Promise.resolve(false),
   };
 
@@ -211,8 +191,6 @@ add_task(async function test_refreshState_unverified_nosession() {
   equal(state.avatarURL, undefined);
   equal(state.lastSync, undefined);
 
-  ok(!getSignedInUserProfile.called);
-
   UIStateInternal.fxAccounts = fxAccountsOrig;
 });
 
@@ -223,11 +201,9 @@ add_task(async function test_refreshState_loginFailed() {
   let loginFailed = sinon.stub(UIStateInternal, "_loginFailed");
   loginFailed.returns(true);
 
-  let getSignedInUserProfile = sinon.spy();
   UIStateInternal.fxAccounts = {
     getSignedInUser: () =>
       Promise.resolve({ verified: true, uid: "123", email: "foo@bar.com" }),
-    getSignedInUserProfile,
   };
 
   let state = await UIState.refresh();
@@ -238,8 +214,6 @@ add_task(async function test_refreshState_loginFailed() {
   equal(state.displayName, undefined);
   equal(state.avatarURL, undefined);
   equal(state.lastSync, undefined);
-
-  ok(!getSignedInUserProfile.called);
 
   loginFailed.restore();
   UIStateInternal.fxAccounts = fxAccountsOrig;
@@ -281,8 +255,6 @@ async function configureUIState(syncing, lastSync = new Date()) {
   UIStateInternal.fxAccounts = {
     getSignedInUser: () =>
       Promise.resolve({ verified: true, uid: "123", email: "foo@bar.com" }),
-    getSignedInUserProfile: () =>
-      Promise.resolve({ displayName: "Foo Bar", avatar: "https://foo/bar" }),
     hasLocalSession: () => Promise.resolve(true),
   };
   await UIState.refresh();
