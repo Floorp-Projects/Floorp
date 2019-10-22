@@ -251,7 +251,7 @@ def use_fetches(config, jobs):
                                 kind=kind,
                                 label=dependencies[kind],
                                 tasks="no tasks"
-                                if len(dep_dep_tasks) == 0
+                                if len(dep_tasks) == 0
                                 else "multiple tasks",
                             )
                         )
