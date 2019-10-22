@@ -8,8 +8,6 @@
 <script>
 let immersiveTestName = "XRSession resetpose from a device properly fires off " +
   "the right events for immersive sessions";
-let nonImmersiveTestName = "XRSession resetpose from a device properly fires off " +
-  "the right events for non-immersive sessions";
 
 let watcherDone = new Event("watcherdone");
 
@@ -49,9 +47,5 @@ let testFunction = function(session, fakeDeviceController, t) {
 
 xr_session_promise_test(
   immersiveTestName, testFunction, fakeDeviceInitParams, 'immersive-vr');
-xr_session_promise_test(
-  nonImmersiveTestName, testFunction, fakeDeviceInitParams, 'inline', {
-    requiredFeatures: ['local'],
-  });
 
 </script>
