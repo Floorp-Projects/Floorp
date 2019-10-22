@@ -48,7 +48,10 @@ const EmulationActor = protocol.ActorClassWithSpec(emulationSpec, {
   },
 
   destroy() {
-    this.stopPrintMediaSimulation();
+    if (this._printSimulationEnabled) {
+      this.stopPrintMediaSimulation();
+    }
+
     this.clearDPPXOverride();
     this.clearNetworkThrottling();
     this.clearTouchEventsOverride();
