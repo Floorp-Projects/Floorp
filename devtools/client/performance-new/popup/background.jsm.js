@@ -127,6 +127,8 @@ async function getSymbolsFromThisBrowser(debugName, breakpadId) {
 }
 
 /**
+ * This function is called directly by devtools/startup/DevToolsStartup.jsm when
+ * using the shortcut keys to capture a profile.
  * @type {() => Promise<void>}
  */
 async function captureProfile() {
@@ -153,6 +155,10 @@ async function captureProfile() {
   Services.profiler.StopProfiler();
 }
 
+/**
+ * This function is only called by devtools/startup/DevToolsStartup.jsm when
+ * starting the profiler using the shortcut keys, through toggleProfiler below.
+ */
 function startProfiler() {
   const {
     entries,
@@ -172,6 +178,8 @@ function startProfiler() {
 }
 
 /**
+ * This function is called directly by devtools/startup/DevToolsStartup.jsm when
+ * using the shortcut keys to capture a profile.
  * @type {() => void}
  */
 function stopProfiler() {
@@ -179,6 +187,8 @@ function stopProfiler() {
 }
 
 /**
+ * This function is called directly by devtools/startup/DevToolsStartup.jsm when
+ * using the shortcut keys to start and stop the profiler.
  * @type {() => void}
  */
 function toggleProfiler() {
