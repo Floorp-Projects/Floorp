@@ -39,7 +39,7 @@ def create_manifest(path):
 def compress_manifest(path):
     for args in [["gzip", "-k", "-f", "--best"],
                  ["bzip2", "-k", "-f", "--best"],
-                 ["zstd", "-k", "-f", "--ultra", "-22"]]:
+                 ["zstd", "-k", "-f", "--ultra", "-22", "-q"]]:
         run(args + [path])
 
 
