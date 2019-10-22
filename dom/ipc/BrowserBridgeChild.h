@@ -56,7 +56,7 @@ class BrowserBridgeChild : public PBrowserBridgeChild {
 
   void SetIsUnderHiddenEmbedderElement(bool aIsUnderHiddenEmbedderElement);
 
-  already_AddRefed<BrowserBridgeHost> FinishInit();
+  already_AddRefed<BrowserBridgeHost> FinishInit(nsFrameLoader* aFrameLoader);
 
 #if defined(ACCESSIBILITY) && defined(XP_WIN)
   a11y::RemoteIframeDocProxyAccessibleWrap* GetEmbeddedDocAccessible() {
@@ -68,8 +68,7 @@ class BrowserBridgeChild : public PBrowserBridgeChild {
 
   static BrowserBridgeChild* GetFrom(nsIContent* aContent);
 
-  BrowserBridgeChild(nsFrameLoader* aFrameLoader,
-                     BrowsingContext* aBrowsingContext, TabId aId);
+  BrowserBridgeChild(BrowsingContext* aBrowsingContext, TabId aId);
 
  protected:
   friend class ContentChild;
