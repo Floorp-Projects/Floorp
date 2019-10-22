@@ -544,7 +544,7 @@ class HuffmanPreludeReader {
     auto& table = dictionary_.tableForField(identity);
     if (table.is<HuffmanTableUnreachable>()) {
       // Effectively, an `Interface` is a sum with a single entry.
-      HuffmanTableIndexedSymbolsSum sum(cx_);
+      HuffmanTableIndexedSymbolsSum sum;
       MOZ_TRY(sum.initWithSingleValue(
           cx_, BinASTSymbol::fromKind(BinASTKind(interface.kind_))));
       table = {mozilla::VariantType<HuffmanTableIndexedSymbolsSum>{},
@@ -855,7 +855,7 @@ class HuffmanPreludeReader {
     switch (headerByte) {
       case TableHeader::SingleValue: {
         // Construct in-place.
-        table = {mozilla::VariantType<typename Entry::Table>{}, cx_};
+        table = {mozilla::VariantType<typename Entry::Table>{}};
         auto& tableRef = table.template as<typename Entry::Table>();
 
         // The table contains a single value.
@@ -865,7 +865,7 @@ class HuffmanPreludeReader {
       case TableHeader::MultipleValues: {
         // Table contains multiple values.
         // Construct in-place.
-        table = {mozilla::VariantType<typename Entry::Table>{}, cx_};
+        table = {mozilla::VariantType<typename Entry::Table>{}};
         auto& tableRef = table.template as<typename Entry::Table>();
 
         MOZ_TRY((readMultipleValuesTable<Entry>(tableRef, entry)));
@@ -1050,7 +1050,6 @@ BinASTTokenReaderContext::BinASTTokenReaderContext(JSContext* cx,
                                                    const size_t length)
     : BinASTTokenReaderBase(cx, er, start, length),
       metadata_(nullptr),
-      dictionary_(cx),
       posBeforeTree_(nullptr) {
   MOZ_ASSERT(er);
 }
@@ -1736,7 +1735,7 @@ const BinASTSymbol* GenericHuffmanTable::Iterator::operator->() const {
       });
 }
 
-GenericHuffmanTable::GenericHuffmanTable(JSContext*)
+GenericHuffmanTable::GenericHuffmanTable()
     : implementation_(HuffmanTableUnreachable{}) {}
 
 JS::Result<Ok> GenericHuffmanTable::initComplete(JSContext* cx) {
@@ -1849,7 +1848,7 @@ JS::Result<Ok> GenericHuffmanTable::initStart(JSContext* cx,
   // `largestBitLength`.
   // ...hopefully, only one lookup.
   if (largestBitLength <= SingleLookupHuffmanTable::MAX_BIT_LENGTH) {
-    implementation_ = {mozilla::VariantType<SingleLookupHuffmanTable>{}, cx,
+    implementation_ = {mozilla::VariantType<SingleLookupHuffmanTable>{},
                        SingleLookupHuffmanTable::Use::ToplevelTable};
     return implementation_.template as<SingleLookupHuffmanTable>().initStart(
         cx, numberOfSymbols, largestBitLength);
@@ -1858,13 +1857,13 @@ JS::Result<Ok> GenericHuffmanTable::initStart(JSContext* cx,
   // ...if a single-lookup table would be too large, let's see if
   // we can fit in a two-lookup table.
   if (largestBitLength <= TwoLookupsHuffmanTable::MAX_BIT_LENGTH) {
-    implementation_ = {mozilla::VariantType<TwoLookupsHuffmanTable>{}, cx};
+    implementation_ = {mozilla::VariantType<TwoLookupsHuffmanTable>{}};
     return implementation_.template as<TwoLookupsHuffmanTable>().initStart(
         cx, numberOfSymbols, largestBitLength);
   }
 
   // ...otherwise, we'll need three lookups.
-  implementation_ = {mozilla::VariantType<ThreeLookupsHuffmanTable>{}, cx};
+  implementation_ = {mozilla::VariantType<ThreeLookupsHuffmanTable>{}};
   return implementation_.template as<ThreeLookupsHuffmanTable>().initStart(
       cx, numberOfSymbols, largestBitLength);
 }
@@ -2286,7 +2285,7 @@ JS::Result<Ok> MultiLookupHuffmanTable<Subtable, PrefixBitLength>::initComplete(
   // We may now create the subtables.
   size_t i = 0;
   for (auto& bucket : buckets) {
-    new (mozilla::KnownNotNull, &suffixTables_[i]) Subtable(cx);
+    new (mozilla::KnownNotNull, &suffixTables_[i]) Subtable();
     suffixTablesIndices[i] = 0;
 
     if (bucket.numberOfSymbols_ != 0) {
@@ -2829,7 +2828,7 @@ HuffmanPreludeReader::readSingleValueTable<UnsignedLong>(
   return Ok();
 }
 
-HuffmanDictionary::HuffmanDictionary(JSContext* cx)
+HuffmanDictionary::HuffmanDictionary()
     : fields_(BINAST_PARAM_NUMBER_OF_INTERFACE_AND_FIELD(
           mozilla::AsVariant(HuffmanTableUnreachable()))),
       listLengths_(BINAST_PARAM_NUMBER_OF_LIST_TYPES(
