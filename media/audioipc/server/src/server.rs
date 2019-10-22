@@ -3,6 +3,8 @@
 // This program is made available under an ISC-style license.  See the
 // accompanying file LICENSE for details
 
+#[cfg(target_os = "linux")]
+use audio_thread_priority::{promote_thread_to_real_time, RtPriorityThreadInfo};
 use audioipc;
 use audioipc::codec::LengthDelimitedCodec;
 use audioipc::frame::{framed, Framed};
@@ -30,8 +32,6 @@ use std::rc::Rc;
 use std::{panic, slice};
 use tokio::reactor;
 use tokio::runtime::current_thread;
-#[cfg(target_os = "linux")]
-use audio_thread_priority::{RtPriorityThreadInfo, promote_thread_to_real_time};
 
 use crate::errors::*;
 
@@ -152,8 +152,7 @@ struct CubebContextState {
     manager: CubebDeviceCollectionManager,
 }
 
-type ContextKey = RefCell<Option<CubebContextState>>;
-thread_local!(static CONTEXT_KEY:ContextKey = RefCell::new(None));
+thread_local!(static CONTEXT_KEY: RefCell<Option<CubebContextState>> = RefCell::new(None));
 
 fn with_local_context<T, F>(f: F) -> T
 where
@@ -243,8 +242,11 @@ impl ServerStreamCallbacks {
                 frames
             }
             _ => {
-                debug!("Unexpected message {:?} during data_callback", r);
-                -1
+                error!("Unexpected message {:?} during data_callback", r);
+                // TODO: Return a CUBEB_ERROR result here once
+                // https://github.com/kinetiknz/cubeb/issues/553 is
+                // fixed.
+                0
             }
         }
     }
@@ -512,15 +514,14 @@ impl CubebServer {
                 }
             }
 
-            ServerMessage::ContextRegisterDeviceCollectionChanged(device_type, enable) => {
-                self.process_register_device_collection_changed(
+            ServerMessage::ContextRegisterDeviceCollectionChanged(device_type, enable) => self
+                .process_register_device_collection_changed(
                     context,
                     manager,
                     cubeb::DeviceType::from_bits_truncate(device_type),
                     enable,
                 )
-                .unwrap_or_else(error)
-            },
+                .unwrap_or_else(error),
 
             #[cfg(target_os = "linux")]
             ServerMessage::PromoteThreadToRealTime(thread_info) => {
@@ -534,8 +535,7 @@ impl CubebServer {
                     }
                 }
                 ClientMessage::ThreadPromoted
-            },
-
+            }
         };
 
         trace!("process_msg: req={:?}, resp={:?}", msg, resp);
@@ -597,10 +597,11 @@ impl CubebServer {
 
         let (stm1, stm2) = MessageStream::anonymous_ipc_pair()?;
         debug!("Created callback pair: {:?}-{:?}", stm1, stm2);
-        let (input_shm, input_file) =
-            SharedMemWriter::new(&audioipc::get_shm_path("input"), audioipc::SHM_AREA_SIZE)?;
-        let (output_shm, output_file) =
-            SharedMemReader::new(&audioipc::get_shm_path("output"), audioipc::SHM_AREA_SIZE)?;
+        let mut shm_path = audioipc::get_shm_path();
+        shm_path.set_extension("input");
+        let (input_shm, input_file) = SharedMemWriter::new(&shm_path, audioipc::SHM_AREA_SIZE)?;
+        shm_path.set_extension("output");
+        let (output_shm, output_file) = SharedMemReader::new(&shm_path, audioipc::SHM_AREA_SIZE)?;
 
         // This code is currently running on the Client/Server RPC
         // handling thread.  We need to move the registration of the
@@ -722,6 +723,8 @@ unsafe extern "C" fn data_cb_c(
         };
         cbs.data_callback(input, output, nframes as isize) as c_long
     });
+    // TODO: Return a CUBEB_ERROR result here once
+    // https://github.com/kinetiknz/cubeb/issues/553 is fixed.
     ok.unwrap_or(0)
 }
 
