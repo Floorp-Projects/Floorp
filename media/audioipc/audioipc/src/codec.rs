@@ -58,8 +58,12 @@ pub struct LengthDelimitedCodec<In, Out> {
 
 enum State {
     Length,
-    Data(u16),
+    Data(usize),
 }
+
+const MAX_MESSAGE_LEN: u64 = 1024 * 1024;
+const MESSAGE_LENGTH_SIZE: usize = std::mem::size_of::<u32>();
+// TODO: static assert that MAX_MESSAGE_LEN can be encoded into MESSAGE_LENGTH_SIZE.
 
 impl<In, Out> Default for LengthDelimitedCodec<In, Out> {
     fn default() -> Self {
@@ -72,28 +76,27 @@ impl<In, Out> Default for LengthDelimitedCodec<In, Out> {
 }
 
 impl<In, Out> LengthDelimitedCodec<In, Out> {
-    // Lengths are encoded as little endian u16
-    fn decode_length(&mut self, buf: &mut BytesMut) -> io::Result<Option<u16>> {
-        if buf.len() < 2 {
+    // Lengths are encoded as little endian u32
+    fn decode_length(&mut self, buf: &mut BytesMut) -> io::Result<Option<usize>> {
+        if buf.len() < MESSAGE_LENGTH_SIZE {
             // Not enough data
             return Ok(None);
         }
 
-        let n = LittleEndian::read_u16(buf.as_ref());
+        let n = LittleEndian::read_u32(buf.as_ref());
 
         // Consume the length field
-        let _ = buf.split_to(2);
+        let _ = buf.split_to(MESSAGE_LENGTH_SIZE);
 
-        Ok(Some(n))
+        Ok(Some(n as usize))
     }
 
-    fn decode_data(&mut self, buf: &mut BytesMut, n: u16) -> io::Result<Option<Out>>
+    fn decode_data(&mut self, buf: &mut BytesMut, n: usize) -> io::Result<Option<Out>>
     where
         Out: DeserializeOwned + Debug,
     {
         // At this point, the buffer has already had the required capacity
         // reserved. All there is to do is read.
-        let n = n as usize;
         if buf.len() < n {
             return Ok(None);
         }
@@ -128,7 +131,7 @@ where
 
                         // Ensure that the buffer has enough space to read the
                         // incoming payload
-                        buf.reserve(n as usize);
+                        buf.reserve(n);
 
                         n
                     }
@@ -144,7 +147,7 @@ where
                 self.state = State::Length;
 
                 // Make sure the buffer has enough space to read the next head
-                buf.reserve(2);
+                buf.reserve(MESSAGE_LENGTH_SIZE);
 
                 Ok(Some(data))
             }
@@ -155,16 +158,17 @@ where
     fn encode(&mut self, item: Self::In, buf: &mut BytesMut) -> io::Result<()> {
         trace!("Attempting to encode");
         let encoded_len = serialized_size(&item).unwrap();
-        if encoded_len > 8 * 1024 {
+        if encoded_len > MAX_MESSAGE_LEN {
+            trace!("oversized message {}", encoded_len);
             return Err(io::Error::new(
                 io::ErrorKind::InvalidInput,
                 "encoded message too big",
             ));
         }
 
-        buf.reserve((encoded_len + 2) as usize);
+        buf.reserve((encoded_len as usize) + MESSAGE_LENGTH_SIZE);
 
-        buf.put_u16_le(encoded_len as u16);
+        buf.put_u32_le(encoded_len as u32);
 
         if let Err(e) = bincode::config()
             .limit(encoded_len)

@@ -8,8 +8,6 @@
 extern crate error_chain;
 #[macro_use]
 extern crate log;
-#[macro_use]
-extern crate lazy_static;
 
 use audio_thread_priority::promote_current_thread_to_real_time;
 use audioipc::core;
@@ -18,6 +16,7 @@ use audioipc::rpc;
 use audioipc::{MessageStream, PlatformHandle, PlatformHandleType};
 use futures::sync::oneshot;
 use futures::Future;
+use once_cell::sync::Lazy;
 use std::error::Error;
 use std::ffi::{CStr, CString};
 use std::os::raw::c_void;
@@ -32,12 +31,12 @@ struct CubebContextParams {
     backend_name: Option<CString>,
 }
 
-lazy_static! {
-    static ref G_CUBEB_CONTEXT_PARAMS: Mutex<CubebContextParams> = Mutex::new(CubebContextParams {
+static G_CUBEB_CONTEXT_PARAMS: Lazy<Mutex<CubebContextParams>> = Lazy::new(|| {
+    Mutex::new(CubebContextParams {
         context_name: CString::new("AudioIPC Server").unwrap(),
         backend_name: None,
-    });
-}
+    })
+});
 
 #[allow(deprecated)]
 pub mod errors {
