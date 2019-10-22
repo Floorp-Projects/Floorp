@@ -30,9 +30,9 @@ static bool TryPreserveReflector(JSContext* cx, HandleObject obj) {
 static MOZ_ALWAYS_INLINE bool WeakCollectionPutEntryInternal(
     JSContext* cx, Handle<WeakCollectionObject*> obj, HandleObject key,
     HandleValue value) {
-  ObjectValueMap* map = obj->getMap();
+  ObjectValueWeakMap* map = obj->getMap();
   if (!map) {
-    auto newMap = cx->make_unique<ObjectValueMap>(cx, obj.get());
+    auto newMap = cx->make_unique<ObjectValueWeakMap>(cx, obj.get());
     if (!newMap) {
       return false;
     }

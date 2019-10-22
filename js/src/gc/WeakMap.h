@@ -247,7 +247,7 @@ class WeakMap
   bool keyNeedsMark(GCMarker* marker, LazyScript* script) const;
 
   bool findSweepGroupEdges() override {
-    // This is overridden by ObjectValueMap and DebuggerWeakMap.
+    // This is overridden by ObjectValueWeakMap and DebuggerWeakMap.
     return true;
   }
 
@@ -272,9 +272,9 @@ class WeakMap
 #endif
 };
 
-class ObjectValueMap : public WeakMap<HeapPtr<JSObject*>, HeapPtr<Value>> {
+class ObjectValueWeakMap : public WeakMap<HeapPtr<JSObject*>, HeapPtr<Value>> {
  public:
-  ObjectValueMap(JSContext* cx, JSObject* obj) : WeakMap(cx, obj) {}
+  ObjectValueWeakMap(JSContext* cx, JSObject* obj) : WeakMap(cx, obj) {}
 
   bool findSweepGroupEdges() override;
 
@@ -283,7 +283,7 @@ class ObjectValueMap : public WeakMap<HeapPtr<JSObject*>, HeapPtr<Value>> {
 
 // Generic weak map for mapping objects to other objects.
 class ObjectWeakMap {
-  ObjectValueMap map;
+  ObjectValueWeakMap map;
 
  public:
   explicit ObjectWeakMap(JSContext* cx);
@@ -310,8 +310,8 @@ class ObjectWeakMap {
 namespace JS {
 
 template <>
-struct DeletePolicy<js::ObjectValueMap>
-    : public js::GCManagedDeletePolicy<js::ObjectValueMap> {};
+struct DeletePolicy<js::ObjectValueWeakMap>
+    : public js::GCManagedDeletePolicy<js::ObjectValueWeakMap> {};
 
 } /* namespace JS */
 
