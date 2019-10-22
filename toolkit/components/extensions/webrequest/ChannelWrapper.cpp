@@ -907,13 +907,12 @@ void FillClassification(
 void ChannelWrapper::GetUrlClassification(
     dom::Nullable<dom::MozUrlClassification>& aRetVal, ErrorResult& aRv) const {
   MozUrlClassification classification;
-  nsCOMPtr<nsIHttpChannel> chan = MaybeHttpChannel();
-  nsCOMPtr<nsIClassifiedChannel> classified = do_QueryInterface(chan);
-  MOZ_DIAGNOSTIC_ASSERT(
-      classified,
-      "Must be an object inheriting from both nsIHttpChannel and "
-      "nsIClassifiedChannel");
-  if (classified) {
+  if (nsCOMPtr<nsIHttpChannel> chan = MaybeHttpChannel()) {
+    nsCOMPtr<nsIClassifiedChannel> classified = do_QueryInterface(chan);
+    MOZ_DIAGNOSTIC_ASSERT(
+        classified,
+        "Must be an object inheriting from both nsIHttpChannel and "
+        "nsIClassifiedChannel");
     uint32_t classificationFlags;
     classified->GetFirstPartyClassificationFlags(&classificationFlags);
     FillClassification(classification.mFirstParty, classificationFlags, aRv);
