@@ -283,7 +283,8 @@ Result<Ok, nsresult> StartupCache::LoadArchive() {
   headerSize = LittleEndian::readUint32(data.get());
   data += sizeof(headerSize);
 
-  if (data + headerSize > end) {
+  if (headerSize > end - data) {
+    MOZ_ASSERT(false, "StartupCache file is corrupt.");
     return Err(NS_ERROR_UNEXPECTED);
   }
 
@@ -312,7 +313,8 @@ Result<Ok, nsresult> StartupCache::LoadArchive() {
       buf.codeUint32(uncompressedSize);
       buf.codeString(key);
 
-      if (data + offset + compressedSize > end) {
+      if (offset + compressedSize > end - data) {
+        MOZ_ASSERT(false, "StartupCache file is corrupt.");
         return Err(NS_ERROR_UNEXPECTED);
       }
 
