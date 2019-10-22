@@ -1,0 +1,5 @@
+#!/bin/bash
+rc=255
+msg="Exit code out of range"
+echo "Test failure - exiting with $rc ($msg)"
+exit $rc

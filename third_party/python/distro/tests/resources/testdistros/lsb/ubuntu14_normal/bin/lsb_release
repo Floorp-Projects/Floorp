@@ -1,0 +1,7 @@
+#!/bin/bash
+/bin/cat <<'EOT'
+Distributor ID:	Ubuntu
+Description:	Ubuntu 14.04.3 LTS
+Release:	14.04
+Codename:	trusty
+EOT

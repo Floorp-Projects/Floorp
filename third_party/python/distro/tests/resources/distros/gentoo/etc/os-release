@@ -1,0 +1,7 @@
+NAME=Gentoo
+ID=gentoo
+PRETTY_NAME="Gentoo/Linux"
+ANSI_COLOR="1;32"
+HOME_URL="http://www.gentoo.org/"
+SUPPORT_URL="http://www.gentoo.org/main/en/support.xml"
+BUG_REPORT_URL="https://bugs.gentoo.org/"
