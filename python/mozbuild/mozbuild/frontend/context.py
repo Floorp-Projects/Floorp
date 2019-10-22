@@ -401,7 +401,6 @@ class LinkFlags(BaseCompileFlags):
             ('OPTIMIZE', (context.config.substs.get('MOZ_OPTIMIZE_LDFLAGS', []) if
                           context.config.substs.get('MOZ_OPTIMIZE') else []),
              ('LDFLAGS',)),
-            ('COVERAGE_LDFLAGS', context.config.substs.get('COVERAGE_LDFLAGS'), ('LDFLAGS',)),
         )
         BaseCompileFlags.__init__(self, context)
 
@@ -473,7 +472,7 @@ class CompileFlags(BaseCompileFlags):
              ('CFLAGS', 'C_LDFLAGS')),
             ('MOZBUILD_CFLAGS', None, ('CFLAGS',)),
             ('MOZBUILD_CXXFLAGS', None, ('CXXFLAGS',)),
-            ('COVERAGE_CFLAGS', context.config.substs.get('COVERAGE_CFLAGS'), ('CXXFLAGS', 'CFLAGS')),
+            ('COVERAGE', context.config.substs.get('COVERAGE_CFLAGS'), ('CXXFLAGS', 'CFLAGS')),
         )
 
         BaseCompileFlags.__init__(self, context)
