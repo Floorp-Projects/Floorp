@@ -267,19 +267,16 @@ async function getRecordingPreferencesFromDebuggee(
  * debuggee, and some of them on the host browser instance.
  *
  * @param {PreferenceFront} preferenceFront
- * @param {RecordingStateFromPreferences} settings
+ * @param {RecordingStateFromPreferences} prefs
  */
-async function setRecordingPreferencesOnDebuggee(preferenceFront, settings) {
+async function setRecordingPreferencesOnDebuggee(preferenceFront, prefs) {
   const { Services } = lazyServices();
   await Promise.all([
-    preferenceFront.setIntPref(ENTRIES_PREF, settings.entries),
-    preferenceFront.setIntPref(INTERVAL_PREF, settings.interval),
-    preferenceFront.setCharPref(
-      FEATURES_PREF,
-      JSON.stringify(settings.features)
-    ),
-    preferenceFront.setCharPref(THREADS_PREF, JSON.stringify(settings.threads)),
-    Services.prefs.setCharPref(OBJDIRS_PREF, JSON.stringify(settings.objdirs)),
+    preferenceFront.setIntPref(ENTRIES_PREF, prefs.entries),
+    preferenceFront.setIntPref(INTERVAL_PREF, prefs.interval),
+    preferenceFront.setCharPref(FEATURES_PREF, JSON.stringify(prefs.features)),
+    preferenceFront.setCharPref(THREADS_PREF, JSON.stringify(prefs.threads)),
+    Services.prefs.setCharPref(OBJDIRS_PREF, JSON.stringify(prefs.objdirs)),
   ]);
 }
 
