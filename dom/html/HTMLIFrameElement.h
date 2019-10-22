@@ -200,6 +200,12 @@ class HTMLIFrameElement final : public nsGenericHTMLFrameElement {
    */
   void AfterMaybeChangeAttr(int32_t aNamespaceID, nsAtom* aName, bool aNotify);
 
+  /**
+   * Feature policy inheritance is broken in cross process model, so we may
+   * have to store feature policy in browsingContext when neccesary.
+   */
+  void MaybeStoreCrossOriginFeaturePolicy();
+
   RefPtr<dom::FeaturePolicy> mFeaturePolicy;
   RefPtr<nsDOMTokenList> mSandbox;
 };
