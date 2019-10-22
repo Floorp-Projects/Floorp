@@ -437,10 +437,6 @@ ignore-flag(--more-compartments) script test262/built-ins/Proxy/construct/return
 skip script test262/intl402/DateTimeFormat/numbering-system-calendar-options.js
 skip script test262/intl402/NumberFormat/numbering-system-options.js
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1570245
-skip script test262/intl402/RelativeTimeFormat/prototype/format/en-us-numeric-auto.js
-skip script test262/intl402/RelativeTimeFormat/prototype/formatToParts/en-us-numeric-auto.js
-
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1277801
 skip script test262/built-ins/Object/prototype/toString/symbol-tag-non-str-builtin.js
 

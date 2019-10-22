@@ -108,8 +108,7 @@ const testcases = [
             {value: -1, string: "($1.00)",
              parts: [Literal("("), Currency("$"), Integer("1"), Decimal("."), Fraction("00"), Literal(")")]},
 
-            // ICU bug: https://unicode-org.atlassian.net/projects/ICU/issues/ICU-20708
-            {value:  Infinity, string: "$∞", parts: [Currency("$"), Inf("∞")]},
+            {value:  Infinity, string: "+$∞", parts: [PlusSign("+"), Currency("$"), Inf("∞")]},
             {value: -Infinity, string: "($∞)", parts: [Literal("("), Currency("$"), Inf("∞"), Literal(")")]},
 
             {value:  NaN, string: "$NaN", parts: [Currency("$"), Nan("NaN")]},

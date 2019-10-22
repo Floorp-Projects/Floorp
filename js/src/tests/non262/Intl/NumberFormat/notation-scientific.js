@@ -40,11 +40,11 @@ const testcases = [
             {value: 0.000001, string: "1E-6", parts: [Integer("1"), ExponentSeparator("E"), ExponentMinusSign("-"), ExponentInteger("6")]},
             {value: 0.0000001, string: "1E-7", parts: [Integer("1"), ExponentSeparator("E"), ExponentMinusSign("-"), ExponentInteger("7")]},
 
-            {value:  Infinity, string: "∞E0", parts: [Inf("∞"), ExponentSeparator("E"), ExponentInteger("0")]},
-            {value: -Infinity, string: "-∞E0", parts: [MinusSign("-"), Inf("∞"), ExponentSeparator("E"), ExponentInteger("0")]},
+            {value:  Infinity, string: "∞", parts: [Inf("∞")]},
+            {value: -Infinity, string: "-∞", parts: [MinusSign("-"), Inf("∞")]},
 
-            {value:  NaN, string: "NaNE0", parts: [Nan("NaN"), ExponentSeparator("E"), ExponentInteger("0")]},
-            {value: -NaN, string: "NaNE0", parts: [Nan("NaN"), ExponentSeparator("E"), ExponentInteger("0")]},
+            {value:  NaN, string: "NaN", parts: [Nan("NaN")]},
+            {value: -NaN, string: "NaN", parts: [Nan("NaN")]},
         ],
     },
 
