@@ -334,3 +334,55 @@ add_task(async function test_many_remotetab_matches() {
     ],
   });
 });
+
+add_task(async function test_maxResults() {
+  await PlacesUtils.history.clear();
+
+  let url = "http://foo.remote.com/";
+
+  // Add 10 mock remote tabs.  Important: We set `lastUsed` so that these tabs
+  // are newer than RECENT_REMOTE_TAB_THRESHOLD_MS in UnifiedComplete.  That way
+  // they are added immediately in _matchRemoteTabs rather than being pushed
+  // onto _extraRemoteTabRows and then added later in execute().  The former
+  // does not check maxResults, but the latter does, and in this test, we want
+  // to verify that PlacesRemoteTabsAutocompleteProvider.getMatches returns at
+  // most maxResults tabs.
+  configureEngine({
+    guid_mobile: {
+      id: "mobile",
+      tabs: Array(10)
+        .fill(0)
+        .map((e, i) => ({
+          urlHistory: [`${url}${i}`],
+          title: "A title",
+          lastUsed: Date.now() - i,
+        })),
+    },
+  });
+
+  // Set maxResults to 5 in our search.  6 results total should be returned: the
+  // heuristic followed by maxResults remote tabs.
+  await check_autocomplete({
+    search: "rem",
+    searchParam: "enable-actions max-results:5",
+    checkSorting: true,
+    matches: [
+      makeSearchMatch("rem", { heuristic: true }),
+      makeRemoteTabMatch("http://foo.remote.com/0", "My Phone", {
+        title: "A title",
+      }),
+      makeRemoteTabMatch("http://foo.remote.com/1", "My Phone", {
+        title: "A title",
+      }),
+      makeRemoteTabMatch("http://foo.remote.com/2", "My Phone", {
+        title: "A title",
+      }),
+      makeRemoteTabMatch("http://foo.remote.com/3", "My Phone", {
+        title: "A title",
+      }),
+      makeRemoteTabMatch("http://foo.remote.com/4", "My Phone", {
+        title: "A title",
+      }),
+    ],
+  });
+});
