@@ -1,0 +1,202 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "DOMSecurityManager.h"
+#include "nsCSPContext.h"
+#include "mozilla/dom/WindowGlobalParent.h"
+
+#include "nsIMultiPartChannel.h"
+#include "nsIObserverService.h"
+#include "nsIHttpProtocolHandler.h"
+
+using namespace mozilla;
+
+namespace {
+StaticRefPtr<DOMSecurityManager> gDOMSecurityManager;
+}  // namespace
+
+static nsresult GetHttpChannelHelper(nsIChannel* aChannel,
+                                     nsIHttpChannel** aHttpChannel) {
+  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
+  if (httpChannel) {
+    httpChannel.forget(aHttpChannel);
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIMultiPartChannel> multipart = do_QueryInterface(aChannel);
+  if (!multipart) {
+    *aHttpChannel = nullptr;
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIChannel> baseChannel;
+  nsresult rv = multipart->GetBaseChannel(getter_AddRefs(baseChannel));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  httpChannel = do_QueryInterface(baseChannel);
+  httpChannel.forget(aHttpChannel);
+
+  return NS_OK;
+}
+
+NS_INTERFACE_MAP_BEGIN(DOMSecurityManager)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIObserver)
+  NS_INTERFACE_MAP_ENTRY(nsIObserver)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_ADDREF(DOMSecurityManager)
+NS_IMPL_RELEASE(DOMSecurityManager)
+
+/* static */
+void DOMSecurityManager::Initialize() {
+  MOZ_ASSERT(!gDOMSecurityManager);
+
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (!XRE_IsParentProcess()) {
+    return;
+  }
+
+  RefPtr<DOMSecurityManager> service = new DOMSecurityManager();
+
+  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+  if (NS_WARN_IF(!obs)) {
+    return;
+  }
+
+  obs->AddObserver(service, NS_HTTP_ON_EXAMINE_RESPONSE_TOPIC, false);
+  obs->AddObserver(service, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
+  gDOMSecurityManager = service.forget();
+}
+
+/* static */
+void DOMSecurityManager::Shutdown() {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (!gDOMSecurityManager) {
+    return;
+  }
+
+  RefPtr<DOMSecurityManager> service = gDOMSecurityManager.forget();
+
+  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+  if (NS_WARN_IF(!obs)) {
+    return;
+  }
+
+  obs->RemoveObserver(service, NS_HTTP_ON_EXAMINE_RESPONSE_TOPIC);
+  obs->RemoveObserver(service, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+}
+
+NS_IMETHODIMP
+DOMSecurityManager::Observe(nsISupports* aSubject, const char* aTopic,
+                            const char16_t* aData) {
+  if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
+    Shutdown();
+    return NS_OK;
+  }
+
+  MOZ_ASSERT(!strcmp(aTopic, NS_HTTP_ON_EXAMINE_RESPONSE_TOPIC));
+
+  nsCOMPtr<nsIChannel> channel = do_QueryInterface(aSubject);
+  if (NS_WARN_IF(!channel)) {
+    return NS_OK;
+  }
+
+  nsresult rv = ParseCSPAndEnforceFrameAncestorCheck(channel);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
+nsresult DOMSecurityManager::ParseCSPAndEnforceFrameAncestorCheck(
+    nsIChannel* aChannel) {
+  MOZ_ASSERT(aChannel);
+
+  // CSP can only hang off an http channel, if this channel is not
+  // an http channel then there is nothing to do here.
+  nsCOMPtr<nsIHttpChannel> httpChannel;
+  nsresult rv = GetHttpChannelHelper(aChannel, getter_AddRefs(httpChannel));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (!httpChannel) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+  nsContentPolicyType contentType = loadInfo->GetExternalContentPolicyType();
+  // frame-ancestor check only makes sense for subdocument loads, if this is
+  // not a load of such type, there is nothing to do here.
+  if (contentType != nsIContentPolicy::TYPE_SUBDOCUMENT) {
+    return NS_OK;
+  }
+
+  nsAutoCString tCspHeaderValue, tCspROHeaderValue;
+
+  Unused << httpChannel->GetResponseHeader(
+      NS_LITERAL_CSTRING("content-security-policy"), tCspHeaderValue);
+
+  Unused << httpChannel->GetResponseHeader(
+      NS_LITERAL_CSTRING("content-security-policy-report-only"),
+      tCspROHeaderValue);
+
+  // if there are no CSP values, then there is nothing to do here.
+  if (tCspHeaderValue.IsEmpty() && tCspROHeaderValue.IsEmpty()) {
+    return NS_OK;
+  }
+
+  NS_ConvertASCIItoUTF16 cspHeaderValue(tCspHeaderValue);
+  NS_ConvertASCIItoUTF16 cspROHeaderValue(tCspROHeaderValue);
+
+  RefPtr<nsCSPContext> csp = new nsCSPContext();
+  nsCOMPtr<nsIPrincipal> resultPrincipal;
+  rv = nsContentUtils::GetSecurityManager()->GetChannelResultPrincipal(
+      aChannel, getter_AddRefs(resultPrincipal));
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIURI> selfURI;
+  aChannel->GetURI(getter_AddRefs(selfURI));
+
+  nsCOMPtr<nsIReferrerInfo> referrerInfo = httpChannel->GetReferrerInfo();
+  nsAutoString referrerSpec;
+  referrerInfo->GetComputedReferrerSpec(referrerSpec);
+  uint64_t innerWindowID = loadInfo->GetInnerWindowID();
+
+  rv = csp->SetRequestContextWithPrincipal(resultPrincipal, selfURI,
+                                           referrerSpec, innerWindowID);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  // ----- if there's a full-strength CSP header, apply it.
+  if (!cspHeaderValue.IsEmpty()) {
+    rv = CSP_AppendCSPFromHeader(csp, cspHeaderValue, false);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // ----- if there's a report-only CSP header, apply it.
+  if (!cspROHeaderValue.IsEmpty()) {
+    rv = CSP_AppendCSPFromHeader(csp, cspROHeaderValue, true);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // ----- Enforce frame-ancestor policy on any applied policies
+  bool safeAncestry = false;
+  // PermitsAncestry sends violation reports when necessary
+  rv = csp->PermitsAncestry(loadInfo, &safeAncestry);
+
+  if (NS_FAILED(rv) || !safeAncestry) {
+    // stop!  ERROR page!
+    aChannel->Cancel(NS_ERROR_CSP_FRAME_ANCESTOR_VIOLATION);
+  }
+
+  return NS_OK;
+}

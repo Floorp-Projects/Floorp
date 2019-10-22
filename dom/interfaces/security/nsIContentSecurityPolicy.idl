@@ -6,8 +6,8 @@
 #include "nsIContentPolicy.idl"
 
 interface nsIURI;
-interface nsIDocShell;
 interface nsIEventTarget;
+interface nsILoadInfo;
 interface nsIPrincipal;
 interface nsICSPEventListener;
 
@@ -275,14 +275,14 @@ interface nsIContentSecurityPolicy : nsISerializable
    * NOTE: Calls to this may trigger violation reports when queried, so this
    * value should not be cached.
    *
-   * @param docShell
-   *    containing the protected resource
+   * @param aLoadInfo
+   *    The loadinfo of the channel containing the protected resource
    * @return
    *    true if the frame's ancestors are all allowed by policy (except for
    *    report-only policies, which will send reports and then return true
    *    here when violated).
    */
-  boolean permitsAncestry(in nsIDocShell docShell);
+  boolean permitsAncestry(in nsILoadInfo aLoadInfo);
 
 
   /**
