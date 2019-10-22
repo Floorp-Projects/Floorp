@@ -82,6 +82,20 @@ must read::
 
     ac_add_options CCACHE=/path/to/sccache
 
+  If you're compiling from a macOS client, you might need some additional configuration::
+
+    # Set the target flag to Darwin
+    export CFLAGS="--target=x86_64-apple-darwin16.0.0"
+    export CXXFLAGS="--target=x86_64-apple-darwin16.0.0"
+    export HOST_CFLAGS="--target=x86_64-apple-darwin16.0.0"
+    export HOST_CXXFLAGS="--target=x86_64-apple-darwin16.0.0"
+
+    # Specify the macOS SDK to use
+    ac_add_options --with-macos-sdk=/path/to/MacOSX-SDKs/MacOSX10.11.sdk
+
+  You can get the right macOS SDK from the `MacOSX-SDKs repository <https://github.com/phracker/MacOSX-SDKs/>`_
+  or by downloading an old version of XCode from `developer.apple.com <https://developer.apple.com>`_ and unpacking the SKD from it.
+
 * When attempting to get your client running, the output of ``sccache -s`` should
   be consulted to confirm compilations are being distributed. To receive helpful
   logging from the local daemon in case they aren't, run
