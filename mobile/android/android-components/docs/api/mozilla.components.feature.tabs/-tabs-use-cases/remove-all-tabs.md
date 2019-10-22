@@ -2,4 +2,4 @@
 
 # removeAllTabs
 
-`val removeAllTabs: `[`RemoveAllTabsUseCase`](-remove-all-tabs-use-case/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/tabs/src/main/java/mozilla/components/feature/tabs/TabsUseCases.kt#L162)
+`val removeAllTabs: `[`RemoveAllTabsUseCase`](-remove-all-tabs-use-case/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/tabs/src/main/java/mozilla/components/feature/tabs/TabsUseCases.kt#L164)
