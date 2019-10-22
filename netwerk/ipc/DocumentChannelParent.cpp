@@ -904,5 +904,22 @@ DocumentChannelParent::HasCrossOriginOpenerPolicyMismatch(bool* aMismatch) {
   return channel->HasCrossOriginOpenerPolicyMismatch(aMismatch);
 }
 
+NS_IMETHODIMP
+DocumentChannelParent::GetCrossOriginOpenerPolicy(
+    nsILoadInfo::CrossOriginOpenerPolicy* aPolicy) {
+  MOZ_ASSERT(aPolicy);
+  if (!aPolicy) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  nsCOMPtr<nsHttpChannel> channel = do_QueryInterface(mChannel);
+  if (!channel) {
+    *aPolicy = nsILoadInfo::OPENER_POLICY_NULL;
+    return NS_OK;
+  }
+
+  return channel->GetCrossOriginOpenerPolicy(aPolicy);
+}
+
 }  // namespace net
 }  // namespace mozilla
