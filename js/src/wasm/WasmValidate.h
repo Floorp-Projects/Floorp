@@ -71,6 +71,7 @@ struct CompilerEnvironment {
       DebugEnabled debug_;
       bool refTypes_;
       bool gcTypes_;
+      bool multiValues_;
       bool hugeMemory_;
     };
   };
@@ -120,6 +121,10 @@ struct CompilerEnvironment {
   bool refTypes() const {
     MOZ_ASSERT(isComputed());
     return refTypes_;
+  }
+  bool multiValues() const {
+    MOZ_ASSERT(isComputed());
+    return multiValues_;
   }
   bool hugeMemory() const {
     MOZ_ASSERT(isComputed());
@@ -209,6 +214,7 @@ struct ModuleEnvironment {
   }
   bool gcTypesEnabled() const { return compilerEnv->gcTypes(); }
   bool refTypesEnabled() const { return compilerEnv->refTypes(); }
+  bool multiValuesEnabled() const { return compilerEnv->multiValues(); }
   bool usesMemory() const { return memoryUsage != MemoryUsage::None; }
   bool usesSharedMemory() const { return memoryUsage == MemoryUsage::Shared; }
   bool isAsmJS() const { return kind == ModuleKind::AsmJS; }
