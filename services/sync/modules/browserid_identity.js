@@ -377,10 +377,11 @@ this.BrowserIDManager.prototype = {
   // Refresh the sync token for our user. Returns a promise that resolves
   // with a token, or rejects with an error.
   async _fetchTokenForUser() {
+    const fxa = this._fxaService;
     // We need keys for things to work.  If we don't have them, just
     // return null for the token - sync calling unlockAndVerifyAuthState()
     // before actually syncing will setup the error states if necessary.
-    if (!(await this._fxaService.keys.canGetKeys())) {
+    if (!(await fxa.keys.canGetKeys())) {
       this._log.info(
         "Unable to fetch keys (master-password locked?), so aborting token fetch"
       );
@@ -388,13 +389,13 @@ this.BrowserIDManager.prototype = {
     }
 
     // Do the assertion/certificate/token dance, with a retry.
-    let getToken = async () => {
+    let getToken = async keys => {
       this._log.info("Getting an assertion from", this._tokenServerUrl);
       const audience = Services.io.newURI(this._tokenServerUrl).prePath;
-      const assertion = await this._fxaService._internal.getAssertion(audience);
+      const assertion = await fxa._internal.getAssertion(audience);
 
       this._log.debug("Getting a token");
-      const headers = { "X-Client-State": (await this.getSignedInUser()).kXCS };
+      const headers = { "X-Client-State": keys.kXCS };
       const token = await this._tokenServerClient.getTokenFromBrowserIDAssertion(
         this._tokenServerUrl,
         assertion,
@@ -404,12 +405,13 @@ this.BrowserIDManager.prototype = {
       return token;
     };
 
-    let token;
     try {
+      let token;
+      let keys;
       try {
         this._log.info("Getting keys");
-        await this._fxaService.keys.getKeys(); // throws if the user changed.
-        token = await getToken();
+        keys = await fxa.keys.getKeys(); // throws if the user changed.
+        token = await getToken(keys);
       } catch (err) {
         // If we get a 401 fetching the token it may be that our certificate
         // needs to be regenerated.
@@ -419,8 +421,9 @@ this.BrowserIDManager.prototype = {
         this._log.warn(
           "Token server returned 401, refreshing certificate and retrying token fetch"
         );
-        await this._fxaService.keys.invalidateCertificate();
-        token = await getToken();
+        await fxa.keys.invalidateCertificate();
+        keys = await fxa.keys.getKeys();
+        token = await getToken(keys);
       }
       // TODO: Make it be only 80% of the duration, so refresh the token
       // before it actually expires. This is to avoid sync storage errors
@@ -428,9 +431,7 @@ this.BrowserIDManager.prototype = {
       // (XXX - the above may no longer be true - someone should check ;)
       token.expiration = this._now() + token.duration * 1000 * 0.8;
       if (!this._syncKeyBundle) {
-        this._syncKeyBundle = BulkKeyBundle.fromHexKey(
-          (await this.getSignedInUser()).kSync
-        );
+        this._syncKeyBundle = BulkKeyBundle.fromHexKey(keys.kSync);
       }
       Weave.Status.login = LOGIN_SUCCEEDED;
       this._token = token;

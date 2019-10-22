@@ -547,29 +547,32 @@ class FxAccounts {
   }
 
   /**
-   * Get the user currently signed in to Firefox Accounts.
+   * Get details about the user currently signed in to Firefox Accounts.
    *
    * @return Promise
    *        The promise resolves to the credentials object of the signed-in user:
    *        {
-   *          email: The user's email address
-   *          uid: The user's unique id
-   *          sessionToken: Session for the FxA server
-   *          kSync: An encryption key for Sync
-   *          kXCS: A key hash of kB for the X-Client-State header
-   *          kExtSync: An encryption key for WebExtensions syncing
-   *          kExtKbHash: A key hash of kB for WebExtensions syncing
-   *          verified: email verification status
-   *          authAt: The time (seconds since epoch) that this record was
-   *                  authenticated
+   *          email: String: The user's email address
+   *          uid: String: The user's unique id
+   *          verified: Boolean: email verification status
+   *          displayName: String or null if not known.
+   *          avatar: URL of the avatar for the user. May be the default
+   *                  avatar, or null in edge-cases (eg, if there's an account
+   *                  issue, etc
+   *          avatarDefault: boolean - whether `avatar` is specific to the user
+   *                         or the default avatar.
    *        }
-   *        or null if no user is signed in.
+   *
+   *        or null if no user is signed in. This function never fails except
+   *        in pathological cases (eg, file-system errors, etc)
    */
-  // XXX - for the public API we should consolidate this with
-  // getSignedInUserProfile - bug 1574052.
   getSignedInUser() {
+    // Note we don't return the session token, but use it to see if we
+    // should fetch the profile.
+    const ACCT_DATA_FIELDS = ["email", "uid", "verified", "sessionToken"];
+    const PROFILE_FIELDS = ["displayName", "avatar", "avatarDefault"];
     return this._withCurrentAccountState(async currentState => {
-      const data = await currentState.getUserAccountData();
+      const data = await currentState.getUserAccountData(ACCT_DATA_FIELDS);
       if (!data) {
         return null;
       }
@@ -583,39 +586,26 @@ class FxAccounts {
         // that might not be fulfilled for a long time.
         this._internal.startVerifiedCheck(data);
       }
-      return data;
-    });
-  }
 
-  // XXX - consolidate with getSignedInUser - bug 1574052.
-  /**
-   * Get the user's account and profile data if it is locally cached. If
-   * not cached it will return null, but cause the profile data to be fetched
-   * in the background, after which a ON_PROFILE_CHANGE_NOTIFICATION
-   * observer notification will be sent, at which time this can be called
-   * again to obtain the most recent profile info.
-   *
-   * @return Promise.<object | Error>
-   *        The promise resolves to an accountData object with extra profile
-   *        information such as profileImageUrl, or rejects with
-   *        an error object ({error: ERROR, details: {}}) of the following:
-   *          INVALID_PARAMETER
-   *          NO_ACCOUNT
-   *          UNVERIFIED_ACCOUNT
-   *          NETWORK_ERROR
-   *          AUTH_ERROR
-   *          UNKNOWN_ERROR
-   */
-  getSignedInUserProfile() {
-    return this._withCurrentAccountState(async currentState => {
-      try {
-        let profileData = await this._internal.profile.getProfile();
-        let profile = Cu.cloneInto(profileData, {});
-        return profile;
-      } catch (error) {
-        log.error("Could not retrieve profile data", error);
-        throw this._internal._errorToErrorClass(error);
+      let profileData = null;
+      if (data.sessionToken) {
+        delete data.sessionToken;
+        try {
+          profileData = await this._internal.profile.getProfile();
+        } catch (error) {
+          log.error("Could not retrieve profile data", error);
+        }
       }
+      for (let field of PROFILE_FIELDS) {
+        data[field] = profileData ? profileData[field] : null;
+      }
+      // and email is a special case - if we have profile data we prefer the
+      // email from that, as the email we stored for the account itself might
+      // not have been updated if the email changed since the user signed in.
+      if (profileData && profileData.email) {
+        data.email = profileData.email;
+      }
+      return data;
     });
   }
 
@@ -650,9 +640,11 @@ class FxAccounts {
    *
    * XXX - this will be refactored in bug 1574051.
    */
-  async hasLocalSession() {
-    let data = await this.getSignedInUser();
-    return data && data.sessionToken;
+  hasLocalSession() {
+    return this._withCurrentAccountState(async state => {
+      let data = await state.getUserAccountData(["sessionToken"]);
+      return !!(data && data.sessionToken);
+    });
   }
 
   /**

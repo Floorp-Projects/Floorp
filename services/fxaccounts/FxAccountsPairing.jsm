@@ -368,7 +368,7 @@ this.FxAccountsPairingFlow = class FxAccountsPairingFlow {
             email,
             avatar,
             displayName,
-          } = await this._fxa.getSignedInUserProfile();
+          } = await this._fxa.getSignedInUser();
           const deviceName = this._weave.Service.clientsEngine.localName;
           await this._pairingChannel.send({
             message: "pair:auth:metadata",

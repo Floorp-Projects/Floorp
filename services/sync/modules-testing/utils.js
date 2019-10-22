@@ -66,8 +66,26 @@ MockFxaStorageManager.prototype = {
     return Promise.resolve();
   },
 
-  getAccountData() {
-    return Promise.resolve(this.accountData);
+  getAccountData(fields = null) {
+    let result;
+    if (!this.accountData) {
+      result = null;
+    } else if (fields == null) {
+      // can't use cloneInto as the keys get upset...
+      result = {};
+      for (let field of Object.keys(this.accountData)) {
+        result[field] = this.accountData[field];
+      }
+    } else {
+      if (!Array.isArray(fields)) {
+        fields = [fields];
+      }
+      result = {};
+      for (let field of fields) {
+        result[field] = this.accountData[field];
+      }
+    }
+    return Promise.resolve(result);
   },
 
   updateAccountData(updatedFields) {
