@@ -26,6 +26,12 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/DebugOnly.h"
 
+#if defined(HAVE_RES_NINIT)
+#  include <netinet/in.h>
+#  include <arpa/nameser.h>
+#  include <resolv.h>
+#endif
+
 /* a shorter name that better explains what it does */
 #define EINTR_RETRY(x) MOZ_TEMP_FAILURE_RETRY(x)
 
@@ -1711,6 +1717,26 @@ bool NetlinkService::CalculateIDForFamily(uint8_t aFamily, SHA1Sum* aSHA1) {
   return retval;
 }
 
+void NetlinkService::ComputeDNSSuffixList() {
+  MOZ_ASSERT(!NS_IsMainThread(), "Must not be called on the main thread");
+#if defined(HAVE_RES_NINIT)
+  nsTArray<nsCString> suffixList;
+  struct __res_state res;
+  if (res_ninit(&res) == 0) {
+    for (int i = 0; i < MAXDNSRCH; i++) {
+      if (!res.dnsrch[i]) {
+        break;
+      }
+      suffixList.AppendElement(nsCString(res.dnsrch[i]));
+    }
+    res_nclose(&res);
+  }
+
+  MutexAutoLock lock(mMutex);
+  mDNSSuffixList = std::move(suffixList);
+#endif
+}
+
 // Figure out the "network identification".
 void NetlinkService::CalculateNetworkID() {
   LOG(("NetlinkService::CalculateNetworkID"));
@@ -1723,6 +1749,7 @@ void NetlinkService::CalculateNetworkID() {
   SHA1Sum sha1;
 
   UpdateLinkStatus();
+  ComputeDNSSuffixList();
 
   bool idChanged = false;
   bool found4 = CalculateIDForFamily(AF_INET, &sha1);
@@ -1791,6 +1818,16 @@ void NetlinkService::CalculateNetworkID() {
 void NetlinkService::GetNetworkID(nsACString& aNetworkID) {
   MutexAutoLock lock(mMutex);
   aNetworkID = mNetworkId;
+}
+
+nsresult NetlinkService::GetDnsSuffixList(nsTArray<nsCString>& aDnsSuffixList) {
+#if defined(HAVE_RES_NINIT)
+  MutexAutoLock lock(mMutex);
+  aDnsSuffixList = mDNSSuffixList;
+  return NS_OK;
+#else
+  return NS_ERROR_NOT_IMPLEMENTED;
+#endif
 }
 
 void NetlinkService::GetIsLinkUp(bool* aIsUp) {

@@ -60,7 +60,12 @@ nsNetworkLinkService::GetNetworkID(nsACString& aNetworkID) {
 
 NS_IMETHODIMP
 nsNetworkLinkService::GetDnsSuffixList(nsTArray<nsCString>& aDnsSuffixList) {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (!mNetlinkSvc) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  mNetlinkSvc->GetDnsSuffixList(aDnsSuffixList);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
