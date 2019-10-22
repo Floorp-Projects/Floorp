@@ -1206,6 +1206,21 @@ Range* Range::NaNToZero(TempAllocator& alloc, const Range* op) {
   return copy;
 }
 
+Range* Range::toIntegerInt32(TempAllocator& alloc, const Range* op) {
+  Range* copy = new (alloc) Range(*op);
+  copy->canHaveFractionalPart_ = ExcludesFractionalParts;
+  if (copy->canBeNaN()) {
+    copy->max_exponent_ = Range::IncludesInfinity;
+    if (!copy->canBeZero()) {
+      Range zero;
+      zero.setDoubleSingleton(0);
+      copy->unionWith(&zero);
+    }
+  }
+  copy->refineToExcludeNegativeZero();
+  return copy;
+}
+
 bool Range::negativeZeroMul(const Range* lhs, const Range* rhs) {
   // The result can only be negative zero if both sides are finite and they
   // have differing signs.
@@ -1705,6 +1720,11 @@ void MToNumeric::computeRange(TempAllocator& alloc) {
 void MToNumberInt32::computeRange(TempAllocator& alloc) {
   // No clamping since this computes the range *before* bailouts.
   setRange(new (alloc) Range(getOperand(0)));
+}
+
+void MToIntegerInt32::computeRange(TempAllocator& alloc) {
+  Range other(input());
+  setRange(Range::toIntegerInt32(alloc, &other));
 }
 
 void MLimitedTruncate::computeRange(TempAllocator& alloc) {

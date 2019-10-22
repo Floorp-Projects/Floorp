@@ -2962,7 +2962,7 @@ class LValueToFloat32 : public LInstructionHelper<1, BOX_PIECES, 0> {
 // This instruction requires a temporary float register.
 class LValueToInt32 : public LInstructionHelper<1, BOX_PIECES, 2> {
  public:
-  enum Mode { NORMAL, TRUNCATE };
+  enum Mode { NORMAL, TRUNCATE, TRUNCATE_NOWRAP };
 
  private:
   Mode mode_;
@@ -2979,7 +2979,9 @@ class LValueToInt32 : public LInstructionHelper<1, BOX_PIECES, 2> {
   }
 
   const char* extraName() const {
-    return mode() == NORMAL ? "Normal" : "Truncate";
+    return mode() == NORMAL
+               ? "Normal"
+               : mode() == TRUNCATE ? "Truncate" : "TruncateNoWrap";
   }
 
   static const size_t Input = 0;
@@ -2994,6 +2996,10 @@ class LValueToInt32 : public LInstructionHelper<1, BOX_PIECES, 2> {
   MTruncateToInt32* mirTruncate() const {
     MOZ_ASSERT(mode_ == TRUNCATE);
     return mir_->toTruncateToInt32();
+  }
+  MToIntegerInt32* mirTruncateNoWrap() const {
+    MOZ_ASSERT(mode_ == TRUNCATE_NOWRAP);
+    return mir_->toToIntegerInt32();
   }
   MInstruction* mir() const { return mir_->toInstruction(); }
 };
@@ -3028,6 +3034,40 @@ class LFloat32ToInt32 : public LInstructionHelper<1, 1, 0> {
   }
 
   MToNumberInt32* mir() const { return mir_->toToNumberInt32(); }
+};
+
+// Truncates a double to an int32.
+//   Input: floating-point register
+//   Output: 32-bit integer
+//   Bailout: if the double when converted to an integer exceeds the int32
+//            bounds. No bailout for NaN or negative zero.
+class LDoubleToIntegerInt32 : public LInstructionHelper<1, 1, 0> {
+ public:
+  LIR_HEADER(DoubleToIntegerInt32)
+
+  explicit LDoubleToIntegerInt32(const LAllocation& in)
+      : LInstructionHelper(classOpcode) {
+    setOperand(0, in);
+  }
+
+  MToIntegerInt32* mir() const { return mir_->toToIntegerInt32(); }
+};
+
+// Truncates a float to an int32.
+//   Input: floating-point register
+//   Output: 32-bit integer
+//   Bailout: if the double when converted to an integer exceeds the int32
+//            bounds. No bailout for NaN or negative zero.
+class LFloat32ToIntegerInt32 : public LInstructionHelper<1, 1, 0> {
+ public:
+  LIR_HEADER(Float32ToIntegerInt32)
+
+  explicit LFloat32ToIntegerInt32(const LAllocation& in)
+      : LInstructionHelper(classOpcode) {
+    setOperand(0, in);
+  }
+
+  MToIntegerInt32* mir() const { return mir_->toToIntegerInt32(); }
 };
 
 // Convert a double to a truncated int32.

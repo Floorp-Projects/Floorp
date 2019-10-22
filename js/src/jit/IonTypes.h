@@ -428,8 +428,9 @@ enum class IntConversionBehavior {
   // will fail if the resulting int32 isn't strictly equal to the input.
   Normal,             // Succeeds on -0: converts to 0.
   NegativeZeroCheck,  // Fails on -0.
-  // These two will convert the input to an int32 with loss of precision.
+  // These three will convert the input to an int32 with loss of precision.
   Truncate,
+  TruncateNoWrap,
   ClampToUint8,
 };
 

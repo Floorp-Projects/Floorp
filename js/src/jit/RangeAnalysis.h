@@ -467,6 +467,7 @@ class Range : public TempObject {
   static Range* ceil(TempAllocator& alloc, const Range* op);
   static Range* sign(TempAllocator& alloc, const Range* op);
   static Range* NaNToZero(TempAllocator& alloc, const Range* op);
+  static Range* toIntegerInt32(TempAllocator& alloc, const Range* op);
 
   static MOZ_MUST_USE bool negativeZeroMul(const Range* lhs, const Range* rhs);
 
