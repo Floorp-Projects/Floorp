@@ -136,7 +136,7 @@
   background-position: center;
   -moz-context-properties: fill, fill-opacity;
   fill: var(--lwt-toolbarbutton-icon-fill, currentColor);
-  fill-opacity: .6;
+  fill-opacity: var(--toolbarbutton-icon-fill-opacity);
 }
 
 /**
