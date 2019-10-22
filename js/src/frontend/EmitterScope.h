@@ -61,7 +61,6 @@ class EmitterScope : public Nestable<EmitterScope> {
 
   MOZ_MUST_USE bool ensureCache(BytecodeEmitter* bce);
 
-  template <typename BindingIter>
   MOZ_MUST_USE bool checkSlotLimits(BytecodeEmitter* bce,
                                     const BindingIter& bi);
 
