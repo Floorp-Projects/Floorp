@@ -381,7 +381,7 @@ var StarUI = {
     } else if (index == -1) {
       lastUsedFolderGuids.unshift(selectedFolderGuid);
     }
-    if (lastUsedFolderGuids.length > 5) {
+    while (lastUsedFolderGuids.length > PlacesUIUtils.maxRecentFolders) {
       lastUsedFolderGuids.pop();
     }
 
