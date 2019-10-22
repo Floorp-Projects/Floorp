@@ -15,8 +15,8 @@ function ArrayIndexOf(searchElement/*, fromIndex*/) {
     if (len === 0)
         return -1;
 
-    // Steps 4-5.  Add zero to convert -0 to +0, per step 7.a.
-    var n = arguments.length > 1 ? ToInteger(arguments[1]) + 0 : 0;
+    // Steps 4-5.  Convert -0 to +0, per step 7.a.
+    var n = arguments.length > 1 ? ToIntegerPositiveZero(arguments[1]) : 0;
 
     // Step 6.
     if (n >= len)
@@ -59,8 +59,8 @@ function ArrayLastIndexOf(searchElement/*, fromIndex*/) {
     if (len === 0)
         return -1;
 
-    // Step 4.  Add zero to convert -0 to +0, per step 5.a.
-    var n = arguments.length > 1 ? ToInteger(arguments[1]) + 0 : len - 1;
+    // Step 4.  Convert -0 to +0, per step 5.a.
+    var n = arguments.length > 1 ? ToIntegerPositiveZero(arguments[1]) : len - 1;
 
     // Steps 5-6.
     var k;
@@ -483,14 +483,14 @@ function ArrayCopyWithin(target, start, end = undefined) {
     var len = ToLength(O.length);
 
     // Step 3.
-    var relativeTarget = ToInteger(target);
+    var relativeTarget = ToIntegerPositiveZero(target);
 
     // Step 4.
     var to = relativeTarget < 0 ? std_Math_max(len + relativeTarget, 0)
                                 : std_Math_min(relativeTarget, len);
 
     // Step 5.
-    var relativeStart = ToInteger(start);
+    var relativeStart = ToIntegerPositiveZero(start);
 
     // Step 6.
     var from = relativeStart < 0 ? std_Math_max(len + relativeStart, 0)
@@ -498,7 +498,7 @@ function ArrayCopyWithin(target, start, end = undefined) {
 
     // Step 7.
     var relativeEnd = end === undefined ? len
-                                        : ToInteger(end);
+                                        : ToIntegerPositiveZero(end);
 
     // Step 8.
     var final = relativeEnd < 0 ? std_Math_max(len + relativeEnd, 0)
@@ -552,7 +552,7 @@ function ArrayFill(value, start = 0, end = undefined) {
     var len = ToLength(O.length);
 
     // Step 3.
-    var relativeStart = ToInteger(start);
+    var relativeStart = ToIntegerPositiveZero(start);
 
     // Step 4.
     var k = relativeStart < 0
@@ -560,7 +560,7 @@ function ArrayFill(value, start = 0, end = undefined) {
             : std_Math_min(relativeStart, len);
 
     // Step 5.
-    var relativeEnd = end === undefined ? len : ToInteger(end);
+    var relativeEnd = end === undefined ? len : ToIntegerPositiveZero(end);
 
     // Step 6.
     var final = relativeEnd < 0
@@ -590,7 +590,7 @@ function ArrayIncludes(searchElement, fromIndex = 0) {
         return false;
 
     // Steps 4-5.
-    var n = ToInteger(fromIndex);
+    var n = ToIntegerPositiveZero(fromIndex);
 
     // Steps 6-7.
     var k;
@@ -1075,7 +1075,7 @@ function ArrayFlat(/* depth */) {
 
     // Step 4.
     if (arguments.length > 0 && arguments[0] !== undefined)
-        depthNum = ToInteger(arguments[0]);
+        depthNum = ToIntegerPositiveZero(arguments[0]);
 
     // Step 5.
     var A = ArraySpeciesCreate(O, 0);
