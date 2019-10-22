@@ -21,7 +21,6 @@ logger = logging.getLogger(__name__)
 class Status(object):
     SUCCESS = 0
     FAIL = 1
-    NEUTRAL = 0
 
 
 def run(cmd, return_stdout=False, **kwargs):
@@ -157,35 +156,22 @@ def create_release(manifest_path, owner, repo, sha, tag, summary, body):
     return success
 
 
-def should_run_action():
+def should_dry_run():
     with open(os.environ["GITHUB_EVENT_PATH"]) as f:
         event = json.load(f)
         logger.info(json.dumps(event, indent=2))
 
     if "pull_request" in event:
-        logger.info("Not tagging for PR")
-        return False
+        logger.info("Dry run for PR")
+        return True
     if event.get("ref") != "refs/heads/master":
-        logger.info("Not tagging for ref %s" % event.get("ref"))
-        return False
-    return True
+        logger.info("Dry run for ref %s" % event.get("ref"))
+        return True
+    return False
 
 
 def main():
-    repo_key = "GITHUB_REPOSITORY"
-
-    if not should_run_action():
-        return Status.NEUTRAL
-
-    owner, repo = os.environ[repo_key].split("/", 1)
-
-    git = get_git_cmd(wpt_root)
-    head_rev = git("rev-parse", "HEAD")
-
-    pr = get_pr(owner, repo, head_rev)
-    if pr is None:
-        return Status.FAIL
-    tag_name = "merge_pr_%s" % pr
+    dry_run = should_dry_run()
 
     manifest_path = os.path.expanduser(os.path.join("~", "meta", "MANIFEST.json"))
 
@@ -195,12 +181,24 @@ def main():
 
     compress_manifest(manifest_path)
 
+    owner, repo = os.environ["GITHUB_REPOSITORY"].split("/", 1)
+
+    git = get_git_cmd(wpt_root)
+    head_rev = git("rev-parse", "HEAD")
+    summary = git("show", "--no-patch", '--format="%s"', "HEAD")
+    body = git("show", "--no-patch", '--format="%b"', "HEAD")
+
+    if dry_run:
+        return Status.SUCCESS
+
+    pr = get_pr(owner, repo, head_rev)
+    if pr is None:
+        return Status.FAIL
+    tag_name = "merge_pr_%s" % pr
+
     tagged = tag(owner, repo, head_rev, tag_name)
     if not tagged:
         return Status.FAIL
-
-    summary = git("show", "--no-patch", '--format="%s"', "HEAD")
-    body = git("show", "--no-patch", '--format="%b"', "HEAD")
 
     if not create_release(manifest_path, owner, repo, head_rev, tag_name, summary, body):
         return Status.FAIL

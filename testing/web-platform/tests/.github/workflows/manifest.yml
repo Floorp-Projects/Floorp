@@ -2,6 +2,9 @@ on:
   push:
     branches:
       - master
+  pull_request:
+    paths:
+      - 'tools/**'
 name: manifest
 jobs:
   build-and-tag:
