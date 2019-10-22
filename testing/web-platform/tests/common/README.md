@@ -1,7 +1,6 @@
 The files in this directory are non-infrastructure support files that can be used by tests.
 
 * `blank.html` - An empty HTML document.
-* `css-red.txt` - A text/plain "CSS" document.
 * `domain-setter.sub.html` - An HTML document that sets `document.domain`.
 * `dummy.xhtml` - An XHTML document.
 * `dummy.xml` - An XML document.
