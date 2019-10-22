@@ -212,7 +212,7 @@ function createPerfComponent() {
       actions.initializeStore({
         perfFront: perfFrontMock,
         receiveProfile: receiveProfileMock,
-        recordingSettingsFromPreferences: getDefaultRecordingPreferences(),
+        recordingPreferences: getDefaultRecordingPreferences(),
         setRecordingPreferences: recordingPreferencesMock,
         getSymbolTableGetter: () => noop,
       })

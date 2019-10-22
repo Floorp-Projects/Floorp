@@ -43,7 +43,7 @@
 
         is(selectors.getInterval(getState()), scaledValue,
           "The interval was changed according to a logarithmic scale.");
-        is(recordingPreferencesCalls[0].interval, scaledValue,
+        is(recordingPreferencesCalls[0].interval, scaledValue * 1000,
           "The preference was recorded.");
 
         // Start the profiler by clicking the start button, and flushing the async
