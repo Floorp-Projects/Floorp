@@ -114,7 +114,7 @@ MockStorageManager.prototype = {
 function MockFxAccountsClient() {
   this._email = "nobody@example.com";
   this._verified = false;
-  this._deletedOnServer = false; // for testing accountStatus
+  this._deletedOnServer = false; // for our accountStatus mock
 
   // mock calls up to the auth server to determine whether the
   // user account has been verified
@@ -128,6 +128,13 @@ function MockFxAccountsClient() {
 
   this.accountStatus = async function(uid) {
     return !!uid && !this._deletedOnServer;
+  };
+
+  this.sessionStatus = async function() {
+    // If the sessionStatus check says an account is OK, we typically will not
+    // end up calling accountStatus - so this must return false if accountStatus
+    // would.
+    return !this._deletedOnServer;
   };
 
   this.accountKeys = function(keyFetchToken) {
@@ -865,6 +872,7 @@ add_task(async function test_getKeys_nonexistent_account() {
 
   let client = fxa._internal.fxAccountsClient;
   client.accountStatus = () => Promise.resolve(false);
+  client.sessionStatus = () => Promise.resolve(false);
   client.accountKeys = () => {
     return Promise.reject({
       code: 401,
@@ -896,7 +904,8 @@ add_task(async function test_getKeys_invalid_token() {
   let yusuf = getTestUser("yusuf");
 
   let client = fxa._internal.fxAccountsClient;
-  client.accountStatus = () => Promise.resolve(true);
+  client.accountStatus = () => Promise.resolve(true); // account exists.
+  client.sessionStatus = () => Promise.resolve(false); // session is invalid.
   client.accountKeys = () => {
     return Promise.reject({
       code: 401,
@@ -1070,6 +1079,7 @@ add_task(async function test_getAssertion_invalid_token() {
 
   let client = fxa._internal.fxAccountsClient;
   client.accountStatus = () => Promise.resolve(true);
+  client.sessionStatus = () => Promise.resolve(false);
 
   let creds = {
     sessionToken: "sessionToken",
@@ -1237,30 +1247,23 @@ add_task(async function test_resend_email_not_signed_in() {
   do_throw("Should not be able to resend email when nobody is signed in");
 });
 
-add_test(function test_accountStatus() {
+add_task(async function test_accountStatus() {
   let fxa = new MockFxAccounts();
   let alice = getTestUser("alice");
 
   // If we have no user, we have no account server-side
-  fxa
-    .accountStatus()
-    .then(result => {
-      Assert.ok(!result);
-    })
-    .then(() => {
-      fxa.setSignedInUser(alice).then(() => {
-        fxa.accountStatus().then(result => {
-          // FxAccounts.accountStatus() should match Client.accountStatus()
-          Assert.ok(result);
-          fxa._internal.fxAccountsClient._deletedOnServer = true;
-          fxa.accountStatus().then(result2 => {
-            Assert.ok(!result2);
-            fxa._internal.fxAccountsClient._deletedOnServer = false;
-            fxa.signOut().then(run_next_test);
-          });
-        });
-      });
-    });
+  let result = await fxa.checkAccountStatus();
+  Assert.ok(!result);
+  // Set a user - the fxAccountsClient mock will say "ok".
+  await fxa.setSignedInUser(alice);
+  result = await fxa.checkAccountStatus();
+  Assert.ok(result);
+  // flag the item as deleted on the server.
+  fxa._internal.fxAccountsClient._deletedOnServer = true;
+  result = await fxa.checkAccountStatus();
+  Assert.ok(!result);
+  fxa._internal.fxAccountsClient._deletedOnServer = false;
+  await fxa.signOut();
 });
 
 add_task(async function test_resend_email_invalid_token() {
@@ -1275,7 +1278,15 @@ add_task(async function test_resend_email_invalid_token() {
       errno: ERRNO_INVALID_AUTH_TOKEN,
     });
   };
-  client.accountStatus = () => Promise.resolve(true);
+  // This test wants the account to exist but the local session invalid.
+  client.accountStatus = uid => {
+    Assert.ok(uid, "got a uid to check");
+    return Promise.resolve(true);
+  };
+  client.sessionStatus = token => {
+    Assert.ok(token, "got a token to check");
+    return Promise.resolve(false);
+  };
 
   await fxa.setSignedInUser(sophia);
   let user = await fxa._internal.getUserAccountData();
@@ -1676,6 +1687,7 @@ add_task(async function test_checkVerificationStatusFailed() {
     });
   };
   client.accountStatus = () => Promise.resolve(true);
+  client.sessionStatus = () => Promise.resolve(false);
 
   await fxa.setSignedInUser(alice);
   let user = await fxa._internal.getUserAccountData();

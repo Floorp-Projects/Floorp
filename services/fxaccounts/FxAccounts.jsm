@@ -610,19 +610,31 @@ class FxAccounts {
   }
 
   /**
-   * Checks if the current account still exists.
+   * Checks the status of the account. Resolves with Promise<boolean>, where
+   * true indicates the account status is OK and false indicates there's some
+   * issue with the account - either that there's no user currently signed in,
+   * the entire account has been deleted (in which case there will be no user
+   * signed in after this call returns), or that the user must reauthenticate (in
+   * which case `this.hasLocalSession()` will return `false` after this call
+   * returns).
+   *
+   * Typically used when some external code which uses, for example, oauth tokens
+   * received a 401 error using the token, or that this external code has some
+   * other reason to believe the account status may be bad. Note that this will
+   * be called automatically in many cases - for example, if calls to fetch the
+   * profile, or fetch keys, etc return a 401, there's no need to call this
+   * function.
+   *
+   * Because this hits the server, you should only call this method when you have
+   * good reason to believe the session very recently became invalid (eg, because
+   * you saw an auth related exception from a remote service.)
    */
-  // This should be killed as part of bug 1574051 - we are doing something wrong
-  // if our public API says a user is logged in, but to an account which doesn't
-  // exist!
-  accountStatus() {
-    return this._withCurrentAccountState(async state => {
-      let data = await state.getUserAccountData();
-      if (!data) {
-        return false;
-      }
-      return this._internal.fxAccountsClient.accountStatus(data.uid);
-    });
+  checkAccountStatus() {
+    // Note that we don't use _withCurrentAccountState here because that will
+    // cause an exception to be thrown if we end up signing out due to the
+    // account not existing, which isn't what we want here.
+    let state = this._internal.currentAccountState;
+    return this._internal.checkAccountStatus(state);
   }
 
   /**
@@ -634,33 +646,15 @@ class FxAccounts {
    *        with the content server to obtain one.
    *        Note that this only checks local state, although typically that's
    *        OK, because we drop the local session information whenever we detect
-   *        we are in this state. However, see sessionStatus() for a way to
-   *        check the session token with the server, which can be considered the
-   *        canonical way to determine if we have a valid local session.
-   *
-   * XXX - this will be refactored in bug 1574051.
+   *        we are in this state. However, see checkAccountStatus() for a way to
+   *        check the account and session status with the server, which can be
+   *        considered the canonical, albiet expensive, way to determine the
+   *        status of the account.
    */
   hasLocalSession() {
     return this._withCurrentAccountState(async state => {
       let data = await state.getUserAccountData(["sessionToken"]);
       return !!(data && data.sessionToken);
-    });
-  }
-
-  /**
-   *
-   * @return Promise
-   *        Resolves with a boolean indicating if the session is still valid.
-   *
-   * Because this hits the server, you should only call this method when you have
-   * reason to believe the session very recently became invalid (eg, because
-   * you saw an auth related exception from a remote service.)
-   *
-   * XXX - this will be refactored in bug 1574051.
-   */
-  sessionStatus() {
-    return this._withCurrentAccountState(async currentState => {
-      return this._internal.sessionStatus(currentState);
     });
   }
 
@@ -919,14 +913,6 @@ FxAccountsInternal.prototype = {
     return this.fxAccountsClient.localtimeOffsetMsec;
   },
 
-  async sessionStatus(currentState) {
-    let data = await currentState.getUserAccountData();
-    if (!data.sessionToken) {
-      throw new Error("sessionStatus called without a session token");
-    }
-    return this.fxAccountsClient.sessionStatus(data.sessionToken);
-  },
-
   /**
    * Ask the server whether the user's email has been verified
    */
@@ -1111,15 +1097,6 @@ FxAccountsInternal.prototype = {
     // We "abort" the accountState and assume our caller is about to throw it
     // away and replace it with a new one.
     return this.currentAccountState.abort();
-  },
-
-  accountStatus: function accountStatus() {
-    return this.currentAccountState.getUserAccountData().then(data => {
-      if (!data) {
-        return false;
-      }
-      return this.fxAccountsClient.accountStatus(data.uid);
-    });
   },
 
   async checkVerificationStatus() {
@@ -1796,23 +1773,50 @@ FxAccountsInternal.prototype = {
     return state.updateUserAccountData(updateData);
   },
 
+  async checkAccountStatus(state) {
+    log.info("checking account status...");
+    let data = await state.getUserAccountData(["uid", "sessionToken"]);
+    if (!data) {
+      log.info("account status: no user");
+      return false;
+    }
+    // If we have a session token, then check if that remains valid - if this
+    // works we know the account must also be OK.
+    if (data.sessionToken) {
+      if (await this.fxAccountsClient.sessionStatus(data.sessionToken)) {
+        log.info("account status: ok");
+        return true;
+      }
+    }
+    let exists = await this.fxAccountsClient.accountStatus(data.uid);
+    if (!exists) {
+      // Delete all local account data. Since the account no longer
+      // exists, we can skip the remote calls.
+      log.info("account status: deleted");
+      await this._handleAccountDestroyed(data.uid);
+    } else {
+      // Note that we may already have been in a "needs reauth" state (ie, if
+      // this function was called when we already had no session token), but
+      // that's OK - re-notifying etc should cause no harm.
+      log.info("account status: needs reauthentication");
+      await this.dropCredentials(this.currentAccountState);
+      // Notify the account state has changed so the UI updates.
+      await this.notifyObservers(ON_ACCOUNT_STATE_CHANGE_NOTIFICATION);
+    }
+    return false;
+  },
+
   async _handleTokenError(err) {
     if (!err || err.code != 401 || err.errno != ERRNO_INVALID_AUTH_TOKEN) {
       throw err;
     }
     log.warn("handling invalid token error", err);
-    let exists = await this.accountStatus();
-    if (!exists) {
-      // Delete all local account data. Since the account no longer
-      // exists, we can skip the remote calls.
-      log.info("token invalidated because the account no longer exists");
-      await this.signOut(true);
-    } else {
-      // Account still exists - presumably a password change, so force a reauth.
-      log.info("clearing credentials to handle invalid token error");
-      await this.dropCredentials(this.currentAccountState);
-      // Notify the account state has changed so the UI updates.
-      await this.notifyObservers(ON_ACCOUNT_STATE_CHANGE_NOTIFICATION);
+    // Note that we don't use `withCurrentAccountState` here as that will cause
+    // an error to be thrown if we sign out due to the account not existing.
+    let state = this.currentAccountState;
+    let ok = await this.checkAccountStatus(state);
+    if (ok) {
+      log.warn("invalid token error, but account state appears ok?");
     }
     // always re-throw the error.
     throw err;

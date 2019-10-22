@@ -177,7 +177,7 @@ var AboutProtectionsHandler = {
     let hasFxa = false;
 
     try {
-      if ((hasFxa = await fxAccounts.accountStatus())) {
+      if ((hasFxa = !!(await fxAccounts.getSignedInUser()))) {
         await fxAccounts.device.refreshDeviceList();
       }
     } catch (e) {
@@ -215,7 +215,7 @@ var AboutProtectionsHandler = {
     let token = await this.getMonitorScopedOAuthToken();
 
     try {
-      if ((await fxAccounts.accountStatus()) && token) {
+      if (token) {
         monitorData = await this.fetchUserBreachStats(token);
 
         // Get the stats for number of potentially breached Lockwise passwords if no master

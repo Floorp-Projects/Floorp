@@ -8,7 +8,6 @@ const {
   FXA_PUSH_SCOPE_ACCOUNT_UPDATE,
   ONLOGOUT_NOTIFICATION,
   ON_ACCOUNT_DESTROYED_NOTIFICATION,
-  ON_ACCOUNT_STATE_CHANGE_NOTIFICATION,
   ON_COLLECTION_CHANGED_NOTIFICATION,
   ON_COMMAND_RECEIVED_NOTIFICATION,
   ON_DEVICE_CONNECTED_NOTIFICATION,
@@ -244,13 +243,7 @@ FxAccountsPushService.prototype = {
    */
   _onPasswordChanged() {
     return this.fxai.withCurrentAccountState(async state => {
-      if (!(await this.fxai.sessionStatus(state))) {
-        await this.fxai.dropCredentials(state);
-        Services.obs.notifyObservers(
-          null,
-          ON_ACCOUNT_STATE_CHANGE_NOTIFICATION
-        );
-      }
+      return this.fxai.checkAccountStatus(state);
     });
   },
   /**
