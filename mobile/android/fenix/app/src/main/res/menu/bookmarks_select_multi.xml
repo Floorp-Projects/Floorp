@@ -5,10 +5,10 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
-        android:id="@+id/edit_bookmark_multi_select"
-        android:icon="@drawable/ic_edit"
+        android:id="@+id/share_bookmark_multi_select"
+        android:icon="@drawable/ic_hollow_share"
         app:iconTint="@color/white_color"
-        android:title="@string/bookmark_edit"
+        android:title="@string/browser_menu_share"
         app:showAsAction="ifRoom" />
     <item
         android:id="@+id/open_bookmarks_in_new_tabs_multi_select"
