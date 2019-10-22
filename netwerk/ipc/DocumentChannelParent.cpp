@@ -800,6 +800,17 @@ DocumentChannelParent::AsyncOnChannelRedirect(
   // a copy of it now.
   aNewChannel->GetOriginalURI(getter_AddRefs(mChannelCreationURI));
 
+  // Since we're redirecting away from aOldChannel, we should check if it
+  // had a COOP mismatch, since we want the final result for this to
+  // include the state of all channels we redirected through.
+  nsCOMPtr<nsHttpChannel> httpChannel = do_QueryInterface(aOldChannel);
+  if (httpChannel) {
+    bool mismatch = false;
+    MOZ_ALWAYS_SUCCEEDS(
+        httpChannel->HasCrossOriginOpenerPolicyMismatch(&mismatch));
+    mHasCrossOriginOpenerPolicyMismatch |= mismatch;
+  }
+
   // We don't need to confirm internal redirects or record any
   // history for them, so just immediately verify and return.
   if (aFlags & nsIChannelEventSink::REDIRECT_INTERNAL) {
@@ -892,6 +903,13 @@ DocumentChannelParent::HasCrossOriginOpenerPolicyMismatch(bool* aMismatch) {
 
   if (!aMismatch) {
     return NS_ERROR_INVALID_ARG;
+  }
+
+  // If we found a COOP mismatch on an earlier channel and then
+  // redirected away from that, we should use that result.
+  if (mHasCrossOriginOpenerPolicyMismatch) {
+    *aMismatch = true;
+    return NS_OK;
   }
 
   nsCOMPtr<nsHttpChannel> channel = do_QueryInterface(mChannel);
