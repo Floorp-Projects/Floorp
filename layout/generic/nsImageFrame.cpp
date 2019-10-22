@@ -897,7 +897,6 @@ void nsImageFrame::EnsureIntrinsicSizeAndRatio() {
   UpdateIntrinsicRatio(mImage);
 }
 
-/* virtual */
 LogicalSize nsImageFrame::ComputeSize(
     gfxContext* aRenderingContext, WritingMode aWM, const LogicalSize& aCBSize,
     nscoord aAvailableISize, const LogicalSize& aMargin,
@@ -933,7 +932,6 @@ nscoord nsImageFrame::GetContinuationOffset() const {
   return offset;
 }
 
-/* virtual */
 nscoord nsImageFrame::GetMinISize(gfxContext* aRenderingContext) {
   // XXX The caller doesn't account for constraints of the block-size,
   // min-block-size, and max-block-size properties.
@@ -945,7 +943,6 @@ nscoord nsImageFrame::GetMinISize(gfxContext* aRenderingContext) {
   return iSize.valueOr(0);
 }
 
-/* virtual */
 nscoord nsImageFrame::GetPrefISize(gfxContext* aRenderingContext) {
   // XXX The caller doesn't account for constraints of the block-size,
   // min-block-size, and max-block-size properties.
@@ -1262,14 +1259,14 @@ class nsDisplayAltFeedback final : public nsPaintedDisplayItem {
   nsDisplayAltFeedback(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
       : nsPaintedDisplayItem(aBuilder, aFrame) {}
 
-  virtual nsDisplayItemGeometry* AllocateGeometry(
-      nsDisplayListBuilder* aBuilder) override {
+  nsDisplayItemGeometry* AllocateGeometry(
+      nsDisplayListBuilder* aBuilder) final {
     return new nsDisplayItemGenericImageGeometry(this, aBuilder);
   }
 
-  virtual void ComputeInvalidationRegion(
-      nsDisplayListBuilder* aBuilder, const nsDisplayItemGeometry* aGeometry,
-      nsRegion* aInvalidRegion) const override {
+  void ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
+                                 const nsDisplayItemGeometry* aGeometry,
+                                 nsRegion* aInvalidRegion) const final {
     auto geometry =
         static_cast<const nsDisplayItemGenericImageGeometry*>(aGeometry);
 
@@ -1283,14 +1280,12 @@ class nsDisplayAltFeedback final : public nsPaintedDisplayItem {
                                              aInvalidRegion);
   }
 
-  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder,
-                           bool* aSnap) const override {
+  nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) const final {
     *aSnap = false;
     return mFrame->GetVisualOverflowRectRelativeToSelf() + ToReferenceFrame();
   }
 
-  virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     gfxContext* aCtx) override {
+  void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) final {
     // Always sync decode, because these icons are UI, and since they're not
     // discardable we'll pay the price of sync decoding at most once.
     uint32_t flags = imgIContainer::FLAG_SYNC_DECODE;
@@ -1307,7 +1302,7 @@ class nsDisplayAltFeedback final : public nsPaintedDisplayItem {
       mozilla::wr::IpcResourceUpdateQueue& aResources,
       const StackingContextHelper& aSc,
       mozilla::layers::RenderRootStateManager* aManager,
-      nsDisplayListBuilder* aDisplayListBuilder) override {
+      nsDisplayListBuilder* aDisplayListBuilder) final {
     uint32_t flags = imgIContainer::FLAG_ASYNC_NOTIFY;
     nsImageFrame* f = static_cast<nsImageFrame*>(mFrame);
     ImgDrawResult result = f->DisplayAltFeedbackWithoutLayer(
@@ -1857,7 +1852,6 @@ LayerState nsDisplayImage::GetLayerState(
   return LayerState::LAYER_ACTIVE;
 }
 
-/* virtual */
 nsRegion nsDisplayImage::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
                                          bool* aSnap) const {
   *aSnap = false;
@@ -2650,7 +2644,6 @@ static bool IsInAutoWidthTableCellForQuirk(nsIFrame* aFrame) {
   return false;
 }
 
-/* virtual */
 void nsImageFrame::AddInlineMinISize(gfxContext* aRenderingContext,
                                      nsIFrame::InlineMinISizeData* aData) {
   nscoord isize = nsLayoutUtils::IntrinsicForContainer(
