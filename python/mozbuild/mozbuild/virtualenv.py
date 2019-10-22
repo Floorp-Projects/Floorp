@@ -199,7 +199,6 @@ class VirtualenvManager(object):
         write output to.
         """
         env = dict(os.environ)
-        env.pop('PYTHONDONTWRITEBYTECODE', None)
 
         args = [python, self.virtualenv_script_path,
                 # Without this, virtualenv.py may attempt to contact the outside
@@ -379,8 +378,7 @@ class VirtualenvManager(object):
         # configure or a mozconfig activated in the current shell. We trust
         # Python is smart enough to find a proper compiler and to use the
         # proper compiler flags. If it isn't your Python is likely broken.
-        IGNORE_ENV_VARIABLES = ('CC', 'CXX', 'CFLAGS', 'CXXFLAGS', 'LDFLAGS',
-                                'PYTHONDONTWRITEBYTECODE')
+        IGNORE_ENV_VARIABLES = ('CC', 'CXX', 'CFLAGS', 'CXXFLAGS', 'LDFLAGS')
 
         try:
             old_target = os.environ.get('MACOSX_DEPLOYMENT_TARGET', None)
