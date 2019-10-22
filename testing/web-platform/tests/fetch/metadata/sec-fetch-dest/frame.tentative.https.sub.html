@@ -12,7 +12,7 @@
 
   function create_test(host, user_activated, expectations) {
     async_test(t => {
-      let i = document.createElement('iframe');
+      let i = document.createElement('frame');
       window.addEventListener('message', t.step_func(e => {
         if (e.source != i.contentWindow)
           return;
@@ -41,15 +41,15 @@
     }, `{{host}} -> ${host} iframe: ${user_activated ? "user-activated" : "forced"}`);
   }
 
-  create_test("{{host}}:{{ports[https][0]}}", FORCED, "iframe");
+  create_test("{{host}}:{{ports[https][0]}}", FORCED, "frame");
 
-  create_test("{{hosts[][www]}}:{{ports[https][0]}}", FORCED, "iframe");
+  create_test("{{hosts[][www]}}:{{ports[https][0]}}", FORCED, "frame");
 
-  create_test("{{hosts[alt][www]}}:{{ports[https][0]}}", FORCED, "iframe");
+  create_test("{{hosts[alt][www]}}:{{ports[https][0]}}", FORCED, "frame");
 
-  create_test("{{host}}:{{ports[https][0]}}", USER, "iframe");
+  create_test("{{host}}:{{ports[https][0]}}", USER, "frame");
 
-  create_test("{{hosts[][www]}}:{{ports[https][0]}}", USER, "iframe");
+  create_test("{{hosts[][www]}}:{{ports[https][0]}}", USER, "frame");
 
-  create_test("{{hosts[alt][www]}}:{{ports[https][0]}}", USER, "iframe");
+  create_test("{{hosts[alt][www]}}:{{ports[https][0]}}", USER, "frame");
 </script>
