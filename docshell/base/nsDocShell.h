@@ -479,12 +479,14 @@ class nsDocShell final : public nsDocLoader,
       nsIInterfaceRequestor* aCallbacks, nsDocShell* aDocShell,
       const nsString* aInitiatorType, nsLoadFlags aLoadFlags,
       uint32_t aLoadType, uint32_t aCacheKey, bool aIsActive,
-      bool aIsTopLevelDoc, nsresult& rv, nsIChannel** aChannel);
+      bool aIsTopLevelDoc, bool aHasNonEmptySandboxingFlags, nsresult& rv,
+      nsIChannel** aChannel);
 
   static nsresult ConfigureChannel(nsIChannel* aChannel,
                                    nsDocShellLoadState* aLoadState,
                                    const nsString* aInitiatorType,
-                                   uint32_t aLoadType, uint32_t aCacheKey);
+                                   uint32_t aLoadType, uint32_t aCacheKey,
+                                   bool aHasNonEmptySandboxingFlags);
 
   // Notify consumers of a search being loaded through the observer service:
   static void MaybeNotifyKeywordSearchLoading(const nsString& aProvider,
