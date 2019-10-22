@@ -2903,8 +2903,8 @@ nsChangeHint nsStyleDisplay::CalcDifference(
     } else {
       // Otherwise this is a change between visible and
       // -moz-hidden-unscrollable. Here only whether we have a clip changes, so
-      // just repaint in that case.
-      hint |= nsChangeHint_RepaintFrame;
+      // just repaint and update our overflow areas in that case.
+      hint |= nsChangeHint_UpdateOverflow | nsChangeHint_RepaintFrame;
     }
   }
 
