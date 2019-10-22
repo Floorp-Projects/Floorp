@@ -40,7 +40,6 @@ bool EmitterScope::ensureCache(BytecodeEmitter* bce) {
   return nameCache_.acquire(bce->cx);
 }
 
-template <typename BindingIter>
 bool EmitterScope::checkSlotLimits(BytecodeEmitter* bce,
                                    const BindingIter& bi) {
   if (bi.nextFrameSlot() >= LOCALNO_LIMIT ||
