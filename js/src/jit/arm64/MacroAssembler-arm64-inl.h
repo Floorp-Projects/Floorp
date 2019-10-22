@@ -1061,7 +1061,7 @@ void MacroAssembler::branchTruncateFloat32MaybeModUint32(FloatRegister src,
 
 void MacroAssembler::branchTruncateFloat32ToInt32(FloatRegister src,
                                                   Register dest, Label* fail) {
-  convertFloat32ToInt32(src, dest, fail);
+  convertFloat32ToInt32(src, dest, fail, false);
 }
 
 void MacroAssembler::branchDouble(DoubleCondition cond, FloatRegister lhs,
@@ -1106,7 +1106,7 @@ void MacroAssembler::branchTruncateDoubleMaybeModUint32(FloatRegister src,
 
 void MacroAssembler::branchTruncateDoubleToInt32(FloatRegister src,
                                                  Register dest, Label* fail) {
-  convertDoubleToInt32(src, dest, fail);
+  convertDoubleToInt32(src, dest, fail, false);
 }
 
 template <typename T>
