@@ -19,6 +19,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   SkippableTimer: "resource:///modules/UrlbarUtils.jsm",
   UrlbarProvider: "resource:///modules/UrlbarUtils.jsm",
   UrlbarResult: "resource:///modules/UrlbarResult.jsm",
+  UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
 
@@ -76,7 +77,11 @@ class ProviderPrivateSearch extends UrlbarProvider {
    * @returns {boolean} Whether this provider should be invoked for the search.
    */
   isActive(queryContext) {
-    return separatePrivateDefaultUIEnabled && !queryContext.isPrivate;
+    return (
+      separatePrivateDefaultUIEnabled &&
+      !queryContext.isPrivate &&
+      queryContext.tokens.length
+    );
   }
 
   /**
@@ -99,6 +104,24 @@ class ProviderPrivateSearch extends UrlbarProvider {
    */
   async startQuery(queryContext, addCallback) {
     logger.info(`Starting query for ${queryContext.searchString}`);
+
+    let searchString = queryContext.searchString.trim();
+    if (
+      queryContext.tokens.some(
+        t => t.type == UrlbarTokenizer.TYPE.RESTRICT_SEARCH
+      )
+    ) {
+      if (queryContext.tokens.length == 1) {
+        // There's only the restriction token, bail out.
+        return;
+      }
+      // Remove the restriction char from the search string.
+      searchString = queryContext.tokens
+        .filter(t => t.type != UrlbarTokenizer.TYPE.RESTRICT_SEARCH)
+        .map(t => t.value)
+        .join(" ");
+    }
+
     let instance = {};
     this.queries.set(queryContext, instance);
 
@@ -122,7 +145,7 @@ class ProviderPrivateSearch extends UrlbarProvider {
       UrlbarUtils.RESULT_SOURCE.SEARCH,
       ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
         engine: [engine.name, UrlbarUtils.HIGHLIGHT.TYPED],
-        query: [queryContext.searchString.trim(), UrlbarUtils.HIGHLIGHT.TYPED],
+        query: [searchString, UrlbarUtils.HIGHLIGHT.TYPED],
         icon: [engine.iconURI ? engine.iconURI.spec : null],
         inPrivateWindow: true,
         isPrivateEngine,
