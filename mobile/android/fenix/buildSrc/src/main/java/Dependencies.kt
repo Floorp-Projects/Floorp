@@ -44,6 +44,8 @@ object Versions {
     // sync with the version used by android-components above.
     const val mozilla_appservices = "0.42.0"
 
+    const val mozilla_glean = "19.0.0"
+
     const val autodispose = "1.1.0"
     const val adjust = "4.11.4"
     const val installreferrer = "1.0"
@@ -137,6 +139,7 @@ object Deps {
     const val mozilla_service_firefox_accounts = "org.mozilla.components:service-firefox-accounts:${Versions.mozilla_android_components}"
     const val mozilla_service_fretboard = "org.mozilla.components:service-fretboard:${Versions.mozilla_android_components}"
     const val mozilla_service_glean = "org.mozilla.components:service-glean:${Versions.mozilla_android_components}"
+    const val mozilla_service_glean_forUnitTests = "org.mozilla.telemetry:glean-forUnitTests:${Versions.mozilla_glean}"
     const val mozilla_service_experiments = "org.mozilla.components:service-experiments:${Versions.mozilla_android_components}"
 
     const val mozilla_ui_colors = "org.mozilla.components:ui-colors:${Versions.mozilla_android_components}"
