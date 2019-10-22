@@ -241,7 +241,7 @@ build-ubuntu-snap:
         - debian
         - amd64
     script:
-        - cd package/snap && snapcraft snap
+        - snapcraft snap
         - |
            if [ "$CI_PROJECT_NAMESPACE" = "videolan" ]; then
             echo $SNAP_LOGIN | base64 --decode | snapcraft login --with -
@@ -251,7 +251,7 @@ build-ubuntu-snap:
     artifacts:
         name: "$CI_JOB_NAME-$CI_COMMIT_REF_SLUG"
         paths:
-            - package/snap/dav1d_*.snap
+            - dav1d_*.snap
         expire_in: 1 week
     allow_failure: true
 
