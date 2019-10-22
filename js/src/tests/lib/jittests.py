@@ -545,8 +545,7 @@ def check_output(out, err, rc, timed_out, test, options):
 
         # Allow a non-zero exit code if we want to allow unhandlable OOM, but
         # only if we actually got unhandlable OOM.
-        if test.allow_unhandlable_oom \
-           and 'Assertion failure: [unhandlable oom]' in err:
+        if test.allow_unhandlable_oom and 'MOZ_CRASH([unhandlable oom]' in err:
             return True
 
         # Allow a non-zero exit code if we want to all too-much-recursion and
