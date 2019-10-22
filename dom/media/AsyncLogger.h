@@ -183,12 +183,6 @@ class AsyncLogger {
   explicit AsyncLogger(const char* aLogModuleName)
       : mThread(nullptr), mLogModule(aLogModuleName), mRunning(false) {}
 
-  ~AsyncLogger() {
-    if (Enabled()) {
-      Stop();
-    }
-  }
-
   void Start() {
     MOZ_ASSERT(!mRunning, "Double calls to AsyncLogger::Start");
     if (Enabled()) {
