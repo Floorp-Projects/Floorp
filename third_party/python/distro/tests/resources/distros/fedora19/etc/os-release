@@ -1,0 +1,7 @@
+NAME=Fedora
+VERSION="19 (Schrödinger’s Cat)"
+ID=fedora
+VERSION_ID=19
+PRETTY_NAME="Fedora 19 (Schrödinger’s Cat)"
+ANSI_COLOR="0;34"
+CPE_NAME="cpe:/o:fedoraproject:fedora:19"

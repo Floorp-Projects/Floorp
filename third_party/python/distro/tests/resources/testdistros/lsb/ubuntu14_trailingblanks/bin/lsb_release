@@ -1,0 +1,8 @@
+#!/bin/bash
+/bin/cat <<'EOT'
+No LSB modules are available.
+Distributor ID:	Ubuntu 
+Description:	Ubuntu 14.04.3 LTS 
+Release:	14.04 
+Codename:	trusty 
+EOT

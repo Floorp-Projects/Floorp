@@ -1,0 +1,5 @@
+#!/bin/bash
+rc=130
+msg="Signal 2 - Script terminated with Ctrl-C"
+echo "Test failure - exiting with $rc ($msg)"
+exit $rc
