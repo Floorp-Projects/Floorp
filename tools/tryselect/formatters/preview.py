@@ -15,7 +15,8 @@ import argparse
 def process_args():
     argparser = argparse.ArgumentParser()
     argparser.add_argument('-d', '--durations-file', type=str, default=None)
-    argparser.add_argument('-g', '--graph_cache', type=str, default=None)
+    argparser.add_argument('-g', '--graph-cache', type=str, default=None)
+    argparser.add_argument('-q', '--quantiles-file', type=str, default=None)
     argparser.add_argument('tasklist', type=str)
     return argparser.parse_args()
 
@@ -54,7 +55,23 @@ def find_longest_path(graph, tasklist, durations):
     return max(longest_paths)
 
 
-def duration_data(durations_file, graph_cache_file, tasklist):
+def determine_quantile(quantiles_file, duration):
+
+    duration = duration.total_seconds()
+
+    with open(quantiles_file) as f:
+        f.readline()  # skip header
+        boundaries = [float(l.strip()) for l in f.readlines()]
+        boundaries.sort()
+
+    for i, v in enumerate(boundaries):
+        if duration < v:
+            break
+    # In case we weren't given 100 elements
+    return int(100 * i / len(boundaries))
+
+
+def duration_data(durations_file, graph_cache_file, quantiles_file, tasklist):
     tasklist = [t.strip("'") for t in tasklist.split()]
     with open(durations_file) as f:
         durations = json.load(f)
@@ -95,6 +112,14 @@ def duration_data(durations_file, graph_cache_file, tasklist):
     output += "\nSelected tasks take {}\n".format(total_requested_duration)
     output += "+{} dependencies, total {}\n".format(
         len(dependencies), total_dependency_duration + total_requested_duration)
+
+    quantile = None
+    if quantiles_file and os.path.isfile(quantiles_file):
+        quantile = 100 - determine_quantile(quantiles_file,
+                                            total_dependency_duration + total_requested_duration)
+    if quantile:
+        output += "This is in the top {}% of requests\n".format(quantile)
+
     output += "Estimated finish in {} at {}".format(
         timedelta(seconds=int(longest_path)),
         (datetime.now()+timedelta(seconds=longest_path)).strftime("%H:%M"))
@@ -104,6 +129,6 @@ def duration_data(durations_file, graph_cache_file, tasklist):
 if __name__ == "__main__":
     args = process_args()
     if args.durations_file and os.path.isfile(args.durations_file):
-        duration_data(args.durations_file, args.graph_cache, args.tasklist)
+        duration_data(args.durations_file, args.graph_cache, args.quantiles_file, args.tasklist)
     else:
         plain_data(args.tasklist)
