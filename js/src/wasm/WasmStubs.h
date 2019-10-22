@@ -20,9 +20,226 @@
 #define wasm_stubs_h
 
 #include "wasm/WasmGenerator.h"
+#include "wasm/WasmOpIter.h"
 
 namespace js {
 namespace wasm {
+
+// ValType and location for a single result: either in a register or on the
+// stack.
+
+class ABIResult {
+  ValType type_;
+  enum class Location { Gpr, Gpr64, Fpr, Stack } loc_;
+  union {
+    Register gpr_;
+    Register64 gpr64_;
+    FloatRegister fpr_;
+    uint32_t stackOffset_;
+  };
+
+  void validate() {
+#ifdef DEBUG
+    if (onStack()) {
+      return;
+    }
+    MOZ_ASSERT(inRegister());
+    switch (type_.code()) {
+      case ValType::I32:
+        MOZ_ASSERT(loc_ == Location::Gpr);
+        break;
+      case ValType::I64:
+        MOZ_ASSERT(loc_ == Location::Gpr64);
+        break;
+      case ValType::F32:
+      case ValType::F64:
+        MOZ_ASSERT(loc_ == Location::Fpr);
+        break;
+      case ValType::AnyRef:
+      case ValType::FuncRef:
+      case ValType::Ref:
+        MOZ_ASSERT(loc_ == Location::Gpr);
+        break;
+      default:
+        MOZ_CRASH("bad value type");
+    }
+#endif
+  }
+
+  friend class ABIResultIter;
+  ABIResult(){};
+
+ public:
+  // Sizes of items in the stack area.
+  //
+  // The size values come from the implementations of Push() in
+  // MacroAssembler-x86-shared.cpp and MacroAssembler-arm-shared.cpp, and from
+  // VFPRegister::size() in Architecture-arm.h.
+  //
+  // On ARM unlike on x86 we push a single for float.
+
+  static constexpr size_t StackSizeOfPtr = sizeof(intptr_t);
+  static constexpr size_t StackSizeOfInt32 = StackSizeOfPtr;
+  static constexpr size_t StackSizeOfInt64 = sizeof(int64_t);
+#if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS32)
+  static constexpr size_t StackSizeOfFloat = sizeof(float);
+#else
+  static constexpr size_t StackSizeOfFloat = sizeof(double);
+#endif
+  static constexpr size_t StackSizeOfDouble = sizeof(double);
+
+  ABIResult(ValType type, Register gpr)
+      : type_(type), loc_(Location::Gpr), gpr_(gpr) {
+    validate();
+  }
+  ABIResult(ValType type, Register64 gpr64)
+      : type_(type), loc_(Location::Gpr64), gpr64_(gpr64) {
+    validate();
+  }
+  ABIResult(ValType type, FloatRegister fpr)
+      : type_(type), loc_(Location::Fpr), fpr_(fpr) {
+    validate();
+  }
+  ABIResult(ValType type, uint32_t stackOffset)
+      : type_(type), loc_(Location::Stack), stackOffset_(stackOffset) {
+    validate();
+  }
+
+  ValType type() const { return type_; }
+  bool onStack() const { return loc_ == Location::Stack; }
+  bool inRegister() const { return !onStack(); }
+  Register gpr() const {
+    MOZ_ASSERT(loc_ == Location::Gpr);
+    return gpr_;
+  }
+  Register64 gpr64() const {
+    MOZ_ASSERT(loc_ == Location::Gpr64);
+    return gpr64_;
+  }
+  FloatRegister fpr() const {
+    MOZ_ASSERT(loc_ == Location::Fpr);
+    return fpr_;
+  }
+  // Offset from SP.
+  uint32_t stackOffset() const {
+    MOZ_ASSERT(loc_ == Location::Stack);
+    return stackOffset_;
+  }
+  uint32_t size() const;
+};
+
+// Just as WebAssembly functions can take multiple arguments, they can also
+// return multiple results.  As with a call, a limited number of results will be
+// located in registers, and the rest will be stored in a stack area.  The
+// |ABIResultIter| computes result locations, given a |ResultType|.
+//
+// Recall that a |ResultType| represents a sequence of value types t1..tN,
+// indexed from 1 to N.  In principle it doesn't matter how we decide which
+// results get to be in registers and which go to the stack.  To better
+// harmonize with WebAssembly's abstract stack machine, whose properties are
+// taken advantage of by the baseline compiler, our strategy is to start
+// allocating result locations in "reverse" order: from result N down to 1.
+//
+// If a result with index I is in a register, then all results with index J > I
+// are also in registers.  If a result I is on the stack, then all results with
+// index K < I are also on the stack, farther away from the stack pointer than
+// result I.
+//
+// Currently only a single result is ever stored in a register, though this may
+// change in the future on register-rich platforms.
+//
+// NB: The baseline compiler also uses thie ABI for locations of block
+// parameters and return values, within individual WebAssembly functions.
+
+class ABIResultIter {
+  ResultType type_;
+  uint32_t count_;
+  uint32_t index_;
+  uint32_t nextStackOffset_;
+  enum { Next, Prev } direction_;
+  ABIResult cur_;
+
+  void settleRegister(ValType type);
+  void settleNext();
+  void settlePrev();
+
+  static constexpr size_t RegisterResultCount = 1;
+
+ public:
+  explicit ABIResultIter(const ResultType& type)
+      : type_(type), count_(type.length()) {
+    reset();
+  }
+
+  void reset() {
+    index_ = nextStackOffset_ = 0;
+    direction_ = Next;
+    if (!done()) {
+      settleNext();
+    }
+  }
+  bool done() const { return index_ == count_; }
+  uint32_t index() const { return index_; }
+  uint32_t count() const { return count_; }
+  uint32_t remaining() const { return count_ - index_; }
+  void switchToNext() {
+    MOZ_ASSERT(direction_ == Prev);
+    if (!done() && cur().onStack()) {
+      nextStackOffset_ += cur().size();
+    }
+    index_ = count_ - index_;
+    direction_ = Next;
+    if (!done()) {
+      settleNext();
+    }
+  }
+  void switchToPrev() {
+    MOZ_ASSERT(direction_ == Next);
+    if (!done() && cur().onStack()) {
+      nextStackOffset_ -= cur().size();
+    }
+    index_ = count_ - index_;
+    direction_ = Prev;
+    if (!done()) settlePrev();
+  }
+  void next() {
+    MOZ_ASSERT(direction_ == Next);
+    MOZ_ASSERT(!done());
+    index_++;
+    if (!done()) {
+      settleNext();
+    }
+  }
+  void prev() {
+    MOZ_ASSERT(direction_ == Prev);
+    MOZ_ASSERT(!done());
+    index_++;
+    if (!done()) {
+      settlePrev();
+    }
+  }
+  const ABIResult& cur() const {
+    MOZ_ASSERT(!done());
+    return cur_;
+  }
+
+  uint32_t stackBytesConsumedSoFar() const { return nextStackOffset_; }
+
+  static inline bool HasStackResults(const ResultType& type) {
+    return type.length() > RegisterResultCount;
+  }
+
+  static uint32_t MeasureStackBytes(const ResultType& type) {
+    if (!HasStackResults(type)) {
+      return 0;
+    }
+    ABIResultIter iter(type);
+    while (!iter.done()) {
+      iter.next();
+    }
+    return iter.stackBytesConsumedSoFar();
+  }
+};
 
 extern bool GenerateBuiltinThunk(jit::MacroAssembler& masm,
                                  jit::ABIFunctionType abiType,
