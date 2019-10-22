@@ -588,7 +588,14 @@ void MacroAssembler::branchTruncateFloat32MaybeModUint32(FloatRegister src,
 void MacroAssembler::branchTruncateFloat32ToInt32(FloatRegister src,
                                                   Register dest, Label* fail) {
   branchTruncateFloat32ToPtr(src, dest, fail);
-  branch32(Assembler::Above, dest, Imm32(0xffffffff), fail);
+
+  // Check that the result is in the int32_t range.
+  ScratchRegisterScope scratch(*this);
+  move32To64SignExtend(dest, Register64(scratch));
+  cmpPtr(dest, scratch);
+  j(Assembler::NotEqual, fail);
+
+  movl(dest, dest);  // Zero upper 32-bits.
 }
 
 void MacroAssembler::branchTruncateDoubleToPtr(FloatRegister src, Register dest,
@@ -612,7 +619,14 @@ void MacroAssembler::branchTruncateDoubleMaybeModUint32(FloatRegister src,
 void MacroAssembler::branchTruncateDoubleToInt32(FloatRegister src,
                                                  Register dest, Label* fail) {
   branchTruncateDoubleToPtr(src, dest, fail);
-  branch32(Assembler::Above, dest, Imm32(0xffffffff), fail);
+
+  // Check that the result is in the int32_t range.
+  ScratchRegisterScope scratch(*this);
+  move32To64SignExtend(dest, Register64(scratch));
+  cmpPtr(dest, scratch);
+  j(Assembler::NotEqual, fail);
+
+  movl(dest, dest);  // Zero upper 32-bits.
 }
 
 void MacroAssembler::branchTest32(Condition cond, const AbsoluteAddress& lhs,
