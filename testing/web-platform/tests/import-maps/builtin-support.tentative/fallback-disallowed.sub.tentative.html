@@ -2,7 +2,7 @@
 <meta name="timeout" content="long">
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
-<script src="resources/test-helper.js"></script>
+<script src="../resources/test-helper.js"></script>
 
 <script>
 // Fallbacks from external URLs (such as HTTPS URLs) are
@@ -18,51 +18,51 @@
 const importMap = `
 {
   "imports": {
-    "bare": "./resources/log.js?pipe=sub&name=bare",
+    "bare": "../resources/log.js?pipe=sub&name=bare",
 
-    "./resources/log.js?pipe=sub&name=http-to-builtin": [
-      "./resources/log.js?pipe=sub&name=http-to-builtin",
+    "../resources/log.js?pipe=sub&name=http-to-builtin": [
+      "../resources/log.js?pipe=sub&name=http-to-builtin",
       "@std/blank"
     ],
 
-    "./resources/log.js?pipe=sub&name=fallback-to-different-url-1": [
+    "../resources/log.js?pipe=sub&name=fallback-to-different-url-1": [
       "@std/blank",
-      "./resources/log.js?pipe=sub&name=something-different"
+      "../resources/log.js?pipe=sub&name=something-different"
     ],
-    "./resources/log.js?pipe=sub&name=fallback-to-different-url-2": [
+    "../resources/log.js?pipe=sub&name=fallback-to-different-url-2": [
       "@std/none",
-      "./resources/log.js?pipe=sub&name=something-different2"
+      "../resources/log.js?pipe=sub&name=something-different2"
     ],
-    "./resources/log.js?pipe=sub&name=fallback-to-different-origin-1": [
+    "../resources/log.js?pipe=sub&name=fallback-to-different-origin-1": [
       "@std/blank",
       "https://{{domains[www1]}}:{{ports[https][0]}}/import-maps/resources/log.js?pipe=sub&name=fallback-to-different-origin-1"
     ],
-    "./resources/log.js?pipe=sub&name=fallback-to-different-origin-2": [
+    "../resources/log.js?pipe=sub&name=fallback-to-different-origin-2": [
       "@std/none",
       "https://{{domains[www1]}}:{{ports[https][0]}}/import-maps/resources/log.js?pipe=sub&name=fallback-to-different-origin-2"
     ],
 
-    "./resources/log.js?pipe=sub&name=more-than-two-values-1": [
+    "../resources/log.js?pipe=sub&name=more-than-two-values-1": [
       "@std/none",
       "@std/blank",
-      "./resources/log.js?pipe=sub&name=more-than-two-values-1"
+      "../resources/log.js?pipe=sub&name=more-than-two-values-1"
     ],
-    "./resources/log.js?pipe=sub&name=more-than-two-values-2": [
+    "../resources/log.js?pipe=sub&name=more-than-two-values-2": [
       "@std/none",
-      "./resources/log.js?pipe=sub&name=more-than-two-values-2",
+      "../resources/log.js?pipe=sub&name=more-than-two-values-2",
       "@std/blank"
     ],
-    "./resources/log.js?pipe=sub&name=fallback-from-http": [
-      "./resources/log.js?pipe=sub&name=non-built-in",
-      "./resources/log.js?pipe=sub&name=fallback-from-http"
+    "../resources/log.js?pipe=sub&name=fallback-from-http": [
+      "../resources/log.js?pipe=sub&name=non-built-in",
+      "../resources/log.js?pipe=sub&name=fallback-from-http"
     ],
-    "./resources/log.js?pipe=sub&name=fallback-from-data-1": [
+    "../resources/log.js?pipe=sub&name=fallback-from-data-1": [
       "data:text/plain,",
-      "./resources/log.js?pipe=sub&name=fallback-from-http"
+      "../resources/log.js?pipe=sub&name=fallback-from-http"
     ],
-    "./resources/log.js?pipe=sub&name=fallback-from-data-2": [
+    "../resources/log.js?pipe=sub&name=fallback-from-data-2": [
       "data:text/javascript,log.push('dataURL')",
-      "./resources/log.js?pipe=sub&name=fallback-from-http"
+      "../resources/log.js?pipe=sub&name=fallback-from-http"
     ]
   }
 }
