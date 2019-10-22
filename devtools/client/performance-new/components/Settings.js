@@ -147,6 +147,11 @@ const featureCheckboxes = [
       "useful on platforms that do not support stack walking.",
   },
   {
+    name: "No Periodic Sampling",
+    value: "nostacksampling",
+    title: "Disable interval-based stack sampling",
+  },
+  {
     name: "Main Thread IO",
     value: "mainthreadio",
     title: "Record main thread I/O markers.",
