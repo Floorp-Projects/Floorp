@@ -4,12 +4,12 @@
 // accompanying file LICENSE for details
 
 use mio_named_pipes;
-use std::os::windows::fs::*;
 use std::os::windows::io::{AsRawHandle, FromRawHandle, IntoRawHandle, RawHandle};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use tokio_io::{AsyncRead, AsyncWrite};
 use tokio_named_pipes;
 use winapi::um::winbase::FILE_FLAG_OVERLAPPED;
+use std::os::windows::fs::*;
 
 #[derive(Debug)]
 pub struct MessageStream(miow::pipe::NamedPipe);
@@ -30,7 +30,9 @@ impl MessageStream {
                 .write(true)
                 .custom_flags(FILE_FLAG_OVERLAPPED);
             let file = opts.open(&pipe_name)?;
-            unsafe { miow::pipe::NamedPipe::from_raw_handle(file.into_raw_handle()) }
+            unsafe {
+                miow::pipe::NamedPipe::from_raw_handle(file.into_raw_handle())
+            }
         };
         Ok((MessageStream::new(pipe1), MessageStream::new(pipe2)))
     }
@@ -43,7 +45,9 @@ impl MessageStream {
         self,
         handle: &tokio::reactor::Handle,
     ) -> std::result::Result<AsyncMessageStream, std::io::Error> {
-        let pipe = unsafe { mio_named_pipes::NamedPipe::from_raw_handle(self.into_raw_handle()) };
+        let pipe = unsafe {
+            mio_named_pipes::NamedPipe::from_raw_handle(self.into_raw_handle())
+        };
         Ok(AsyncMessageStream::new(
             tokio_named_pipes::NamedPipe::from_pipe(pipe, handle)?,
         ))
