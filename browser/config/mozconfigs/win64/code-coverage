@@ -18,13 +18,6 @@ export MOZILLA_OFFICIAL=1
 # Package js shell.
 export MOZ_PACKAGE_JSSHELL=1
 
-if [ -d "$MOZ_FETCHES_DIR/clang" ]; then
-    CLANG_LIB_DIR="$(cd $MOZ_FETCHES_DIR/clang/lib/clang/* && cd lib/windows && pwd)"
-
-    export LIB=$LIB:$CLANG_LIB_DIR
-    export LDFLAGS="clang_rt.profile-x86_64.lib"
-fi
-
 export RUSTFLAGS="-Ccodegen-units=1 -Zprofile -Zno-landing-pads -Clink-dead-code -Coverflow-checks=off"
 
 . "$topsrcdir/build/mozconfig.common.override"
