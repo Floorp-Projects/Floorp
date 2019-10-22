@@ -3114,15 +3114,12 @@ bool NS_ShouldClassifyChannel(nsIChannel* aChannel) {
   }
 
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
-  if (loadInfo) {
-    nsContentPolicyType type = loadInfo->GetExternalContentPolicyType();
-
-    // Skip classifying channel triggered by system unless it is a top-level
-    // load.
-    if (nsContentUtils::IsSystemPrincipal(loadInfo->TriggeringPrincipal()) &&
-        nsIContentPolicy::TYPE_DOCUMENT != type) {
-      return false;
-    }
+  nsContentPolicyType type = loadInfo->GetExternalContentPolicyType();
+  // Skip classifying channel triggered by system unless it is a top-level
+  // load.
+  if (nsContentUtils::IsSystemPrincipal(loadInfo->TriggeringPrincipal()) &&
+      nsIContentPolicy::TYPE_DOCUMENT != type) {
+    return false;
   }
 
   return true;
