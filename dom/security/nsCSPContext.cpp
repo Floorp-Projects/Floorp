@@ -16,8 +16,6 @@
 #include "nsError.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
 #include "nsIClassInfoImpl.h"
-#include "nsIDocShell.h"
-#include "nsIDocShellTreeItem.h"
 #include "mozilla/dom/Document.h"
 #include "nsIHttpChannel.h"
 #include "nsIInterfaceRequestor.h"
@@ -1522,79 +1520,52 @@ nsresult nsCSPContext::AsyncReportViolation(
 }
 
 /**
- * Based on the given docshell, determines if this CSP context allows the
+ * Based on the given loadinfo, determines if this CSP context allows the
  * ancestry.
  *
  * In order to determine the URI of the parent document (one causing the load
- * of this protected document), this function obtains the docShellTreeItem,
- * then walks up the hierarchy until it finds a privileged (chrome) tree item.
- * Getting the a tree item's URI looks like this in pseudocode:
- *
- * nsIDocShellTreeItem->GetDocument()->GetDocumentURI();
- *
- * aDocShell is the docShell for the protected document.
+ * of this protected document), this function traverses all Browsing Contexts
+ * until it reaches the top level browsing context.
  */
 NS_IMETHODIMP
-nsCSPContext::PermitsAncestry(nsIDocShell* aDocShell,
+nsCSPContext::PermitsAncestry(nsILoadInfo* aLoadInfo,
                               bool* outPermitsAncestry) {
-  nsresult rv;
+  MOZ_ASSERT(XRE_IsParentProcess(), "frame-ancestor check only in parent");
 
-  // Can't check ancestry without a docShell.
-  if (aDocShell == nullptr) {
-    return NS_ERROR_FAILURE;
-  }
+  nsresult rv;
 
   *outPermitsAncestry = true;
 
+  RefPtr<mozilla::dom::BrowsingContext> ctx;
+  aLoadInfo->GetBrowsingContext(getter_AddRefs(ctx));
+
   // extract the ancestry as an array
   nsCOMArray<nsIURI> ancestorsArray;
-
-  nsCOMPtr<nsIInterfaceRequestor> ir(do_QueryInterface(aDocShell));
-  nsCOMPtr<nsIDocShellTreeItem> treeItem(do_GetInterface(ir));
-  nsCOMPtr<nsIDocShellTreeItem> parentTreeItem;
-  nsCOMPtr<nsIURI> currentURI;
   nsCOMPtr<nsIURI> uriClone;
 
-  // iterate through each docShell parent item
-  while (NS_SUCCEEDED(
-             treeItem->GetInProcessParent(getter_AddRefs(parentTreeItem))) &&
-         parentTreeItem != nullptr) {
-    // stop when reaching chrome
-    if (parentTreeItem->ItemType() == nsIDocShellTreeItem::typeChrome) {
-      break;
-    }
+  while (ctx) {
+    WindowGlobalParent* window = ctx->Canonical()->GetCurrentWindowGlobal();
+    if (window) {
+      nsCOMPtr<nsIURI> currentURI = window->GetDocumentURI();
+      if (currentURI) {
+        nsAutoCString spec;
+        currentURI->GetSpec(spec);
+        // delete the userpass from the URI.
+        rv = NS_MutateURI(currentURI)
+                 .SetRef(EmptyCString())
+                 .SetUserPass(EmptyCString())
+                 .Finalize(uriClone);
 
-    Document* doc = parentTreeItem->GetDocument();
-    NS_ASSERTION(doc,
-                 "Could not get Document from nsIDocShellTreeItem in "
-                 "nsCSPContext::PermitsAncestry");
-    NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
-
-    currentURI = doc->GetDocumentURI();
-
-    if (currentURI) {
-      // delete the userpass from the URI.
-      rv = NS_MutateURI(currentURI)
-               .SetRef(EmptyCString())
-               .SetUserPass(EmptyCString())
-               .Finalize(uriClone);
-
-      // If setUserPass fails for some reason, just return a clone of the
-      // current URI
-      if (NS_FAILED(rv)) {
-        rv = NS_GetURIWithoutRef(currentURI, getter_AddRefs(uriClone));
-        NS_ENSURE_SUCCESS(rv, rv);
+        // If setUserPass fails for some reason, just return a clone of the
+        // current URI
+        if (NS_FAILED(rv)) {
+          rv = NS_GetURIWithoutRef(currentURI, getter_AddRefs(uriClone));
+          NS_ENSURE_SUCCESS(rv, rv);
+        }
+        ancestorsArray.AppendElement(uriClone);
       }
-
-      if (CSPCONTEXTLOGENABLED()) {
-        CSPCONTEXTLOG(("nsCSPContext::PermitsAncestry, found ancestor: %s",
-                       uriClone->GetSpecOrDefault().get()));
-      }
-      ancestorsArray.AppendElement(uriClone);
     }
-
-    // next ancestor
-    treeItem = parentTreeItem;
+    ctx = ctx->GetParent();
   }
 
   nsAutoString violatedDirective;
