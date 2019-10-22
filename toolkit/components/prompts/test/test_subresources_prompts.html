@@ -18,7 +18,7 @@
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=625187">Mozilla Bug 625187</a>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1230462">Mozilla Bug 1230462</a>
 
-<p><button onclick="alert('hello world')">Button</button></p>
+<p><button id="topbutton" onclick="alert('hello world')">Button</button></p>
 
 <iframe id="iframe_diff_origin" src="http://example.com/tests/toolkit/components/prompts/test/bug625187_iframe.html"></iframe>
 
@@ -66,11 +66,9 @@ add_task(async function runTest() {
 
   let promptDone = handlePrompt(state, action);
 
-  var button = document.querySelector("button");
-  dispatchMouseEvent(button, "click");
+  await SpecialPowers.spawn(window, ["topbutton", "click"], dispatchMouseEvent);
 
   await promptDone;
-
 
   // mostly reusing same state/action
   state.titleHidden = false;
@@ -78,11 +76,9 @@ add_task(async function runTest() {
   promptDone = handlePrompt(state, action);
 
   var iframe = document.getElementById("iframe_diff_origin");
-  button = SpecialPowers.wrap(iframe.contentWindow).document.getElementById("btn1");
-  dispatchMouseEvent(button, "click");
+  await SpecialPowers.spawn(iframe.contentWindow, ["btn1", "click"], dispatchMouseEvent);
 
   await promptDone;
-
 
   // mostly reusing same state/action
   state.titleHidden = true;
@@ -90,18 +86,14 @@ add_task(async function runTest() {
   promptDone = handlePrompt(state, action);
 
   iframe = document.getElementById("iframe_same_origin");
-  button = iframe.contentWindow.document.getElementById("btn1");
-  dispatchMouseEvent(button, "click");
+  await SpecialPowers.spawn(iframe.contentWindow, ["btn1", "click"], dispatchMouseEvent);
 
   await promptDone;
-
 
   // mostly reusing same state/action
   state.msg = "hello world 3";
   promptDone = handlePrompt(state, action);
-
-  button = iframe.contentWindow.document.getElementById("btn2");
-  dispatchMouseEvent(button, "click");
+  await SpecialPowers.spawn(iframe.contentWindow, ["btn2", "click"], dispatchMouseEvent);
 
   await promptDone;
 });
@@ -186,13 +178,25 @@ add_task(async function runTestAuth() {
                             iframe_prompt);
 });
 
-function dispatchMouseEvent(target, type) {
-  var win = SpecialPowers.unwrap(target.ownerDocument.defaultView);
-  var e = document.createEvent("MouseEvent");
-  e.initEvent(type, false, false, win, 0, 1, 1, 1, 1,
-              false, false, false, false, 0, null);
-  var utils = SpecialPowers.getDOMWindowUtils(win);
-  utils.dispatchDOMEventViaPresShell(SpecialPowers.unwrap(target), e);
+/**
+ * Function to be passed to SpecialPowers.spawn that dispatches a MouseEvent
+ * of a certain type to some element in a subframe.
+ *
+ * @param {String} targetID The ID of the element that will have the event
+ * dispatched on.
+ * @param {String} type The type of MouseEvent.
+ * @returns Promise
+ * @resolves Once the event has been dispatched.
+ */
+async function dispatchMouseEvent(targetID, type) {
+  /* eslint-disable no-undef */
+  let document = content.document;
+  let element = document.getElementById(targetID);
+  let event = document.createEvent("MouseEvent");
+  event.initEvent(type, false, false, content, 0, 1, 1, 1, 1,
+                  false, false, false, false, 0, null);
+  content.windowUtils.dispatchDOMEventViaPresShell(element, event);
+  /* eslint-enable no-undef */
 }
 </script>
 </body>
