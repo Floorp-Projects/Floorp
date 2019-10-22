@@ -48,6 +48,10 @@ bool ClientInfo::operator==(const ClientInfo& aRight) const {
   return *mData == *aRight.mData;
 }
 
+bool ClientInfo::operator!=(const ClientInfo& aRight) const {
+  return *mData != *aRight.mData;
+}
+
 const nsID& ClientInfo::Id() const { return mData->id(); }
 
 void ClientInfo::SetAgentClusterId(const nsID& aId) {

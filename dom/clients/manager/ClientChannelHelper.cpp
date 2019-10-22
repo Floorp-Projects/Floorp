@@ -83,13 +83,16 @@ class ClientChannelHelper final : public nsIInterfaceRequestor,
     if (NS_SUCCEEDED(rv)) {
       // If we're running in the child, but redirects are handled by the parent
       // then our reserved/initial info should already have been moved to the
-      // new channel via the parent. If they still match, then we can copy our
-      // reserved client source to the new channel, since that isn't passed
-      // between processes.
+      // new channel via the parent. If they don't match, then we need to create
+      // a new reserved client for the specified info, otherwise we can copy our
+      // reserved client source to the new channel.
       if (mMode == Mode::Mode_Child) {
         Maybe<ClientInfo> newClientInfo = newLoadInfo->GetReservedClientInfo();
-        if (reservedClient && newClientInfo &&
-            reservedClient->Info() == *newClientInfo) {
+        if (newClientInfo) {
+          if (!reservedClient || reservedClient->Info() != *newClientInfo) {
+            reservedClient = ClientManager::CreateSourceFromInfo(*newClientInfo,
+                                                                 mEventTarget);
+          }
           newLoadInfo->GiveReservedClientSource(std::move(reservedClient));
         }
       } else {
