@@ -1,6 +1,6 @@
 [package]
 name = "cranelift-wasm"
-version = "0.44.0"
+version = "0.46.1"
 authors = ["The Cranelift Project Developers"]
 description = "Translator from WebAssembly to Cranelift IR"
 repository = "https://github.com/CraneStation/cranelift"
@@ -11,11 +11,11 @@ keywords = ["webassembly", "wasm"]
 edition = "2018"
 
 [dependencies]
-wasmparser = { version = "0.39.1", default-features = false }
-cranelift-codegen = { path = "../cranelift-codegen", version = "0.44.0", default-features = false }
-cranelift-entity = { path = "../cranelift-entity", version = "0.44.0", default-features = false }
-cranelift-frontend = { path = "../cranelift-frontend", version = "0.44.0", default-features = false }
-hashmap_core = { version = "0.1.9", optional = true }
+wasmparser = { version = "0.39.2", default-features = false }
+cranelift-codegen = { path = "../cranelift-codegen", version = "0.46.1", default-features = false }
+cranelift-entity = { path = "../cranelift-entity", version = "0.46.1" }
+cranelift-frontend = { path = "../cranelift-frontend", version = "0.46.1", default-features = false }
+hashbrown = { version = "0.6", optional = true }
 failure = { version = "0.1.1", default-features = false, features = ["derive"] }
 failure_derive = { version = "0.1.1", default-features = false }
 log = { version = "0.4.6", default-features = false }
@@ -26,9 +26,9 @@ wabt = "0.9.1"
 target-lexicon = "0.8.1"
 
 [features]
-default = ["std"]
+default = ["std", "basic-blocks"]
 std = ["cranelift-codegen/std", "cranelift-frontend/std", "wasmparser/std"]
-core = ["hashmap_core", "cranelift-codegen/core", "cranelift-frontend/core", "wasmparser/core"]
+core = ["hashbrown", "cranelift-codegen/core", "cranelift-frontend/core", "wasmparser/core"]
 enable-serde = ["serde"]
 
 # Temporary feature that enforces basic block semantics.

@@ -35,22 +35,23 @@
         clippy::nonminimal_bool,
         clippy::option_map_unwrap_or,
         clippy::option_map_unwrap_or_else,
-        clippy::print_stdout,
+        clippy::print_allocout,
         clippy::unicode_not_nfc,
         clippy::use_self
     )
 )]
 #![no_std]
 
-#[cfg(not(feature = "std"))]
+#[allow(unused_imports)] // #[macro_use] is required for no_std
 #[macro_use]
-extern crate alloc as std;
+extern crate alloc;
+
 #[cfg(feature = "std")]
 #[macro_use]
 extern crate std;
 
 #[cfg(not(feature = "std"))]
-use hashmap_core::{map as hash_map, HashMap, HashSet};
+use hashbrown::{hash_map, HashMap, HashSet};
 #[cfg(feature = "std")]
 use std::collections::{hash_map, HashMap, HashSet};
 

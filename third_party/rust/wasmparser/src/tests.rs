@@ -314,7 +314,6 @@ mod simple_tests {
         }
         assert_eq!(1, tests_count);
     }
-
 }
 
 #[cfg(feature = "std")]
@@ -371,6 +370,9 @@ mod wast_tests {
         let mut features = Features::new();
         if config.operator_config.enable_simd {
             features.enable_simd();
+        }
+        if config.operator_config.enable_multi_value {
+            features.enable_multi_value();
         }
         if config.operator_config.enable_reference_types {
             features.enable_reference_types();
@@ -475,6 +477,16 @@ mod wast_tests {
                 | ("simd_load.wast", _) => true,
                 _ => false,
             },
+        );
+
+        run_proposal_tests(
+            "multi-value",
+            {
+                let mut config: ValidatingParserConfig = default_config();
+                config.operator_config.enable_multi_value = true;
+                config
+            },
+            |_name, _line| false,
         );
 
         run_proposal_tests(

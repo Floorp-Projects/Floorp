@@ -689,9 +689,9 @@ impl OperatorValidator {
                 }
                 if {
                     let last_block = &self.func_state.last_block();
-                    last_block.is_else_allowed && !last_block.return_types.is_empty()
+                    last_block.is_else_allowed && last_block.start_types != last_block.return_types
                 } {
-                    return Err("else is expected: if block has type");
+                    return Err("else is expected: if block has a type that can't be implemented with a no-op");
                 }
                 self.func_state.pop_block()
             }

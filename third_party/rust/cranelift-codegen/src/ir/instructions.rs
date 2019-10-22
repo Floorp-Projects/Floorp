@@ -6,10 +6,10 @@
 //! A large part of this module is auto-generated from the instruction descriptions in the meta
 //! directory.
 
+use alloc::vec::Vec;
 use core::fmt::{self, Display, Formatter};
 use core::ops::{Deref, DerefMut};
 use core::str::FromStr;
-use std::vec::Vec;
 
 use crate::ir;
 use crate::ir::types;
@@ -560,7 +560,7 @@ pub enum ResolvedConstraint {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::string::ToString;
+    use alloc::string::ToString;
 
     #[test]
     fn opcodes() {

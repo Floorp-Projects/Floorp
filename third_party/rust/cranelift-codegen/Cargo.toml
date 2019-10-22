@@ -1,7 +1,7 @@
 [package]
 authors = ["The Cranelift Project Developers"]
 name = "cranelift-codegen"
-version = "0.44.0"
+version = "0.46.1"
 description = "Low-level code generator library"
 license = "Apache-2.0 WITH LLVM-exception"
 documentation = "https://cranelift.readthedocs.io/"
@@ -13,12 +13,12 @@ build = "build.rs"
 edition = "2018"
 
 [dependencies]
-cranelift-codegen-shared = { path = "./shared", version = "0.44.0" }
-cranelift-entity = { path = "../cranelift-entity", version = "0.44.0", default-features = false }
-cranelift-bforest = { path = "../cranelift-bforest", version = "0.44.0", default-features = false }
+cranelift-codegen-shared = { path = "./shared", version = "0.46.1" }
+cranelift-entity = { path = "../cranelift-entity", version = "0.46.1" }
+cranelift-bforest = { path = "../cranelift-bforest", version = "0.46.1" }
 failure = { version = "0.1.1", default-features = false, features = ["derive"] }
 failure_derive = { version = "0.1.1", default-features = false }
-hashmap_core = { version = "0.1.9", optional = true }
+hashbrown = { version = "0.6", optional = true }
 target-lexicon = "0.8.1"
 log = { version = "0.4.6", default-features = false }
 serde = { version = "1.0.94", features = ["derive"], optional = true }
@@ -29,26 +29,19 @@ smallvec = { version = "0.6.10" }
 # accomodated in `tests`.
 
 [build-dependencies]
-cranelift-codegen-meta = { path = "meta", version = "0.44.0", default-features = false }
+cranelift-codegen-meta = { path = "meta", version = "0.46.1" }
 
 [features]
-default = ["std"]
+default = ["std", "basic-blocks"]
 
 # The "std" feature enables use of libstd. The "core" feature enables use
 # of some minimal std-like replacement libraries. At least one of these two
 # features need to be enabled.
-std = [
-    "cranelift-entity/std",
-    "cranelift-bforest/std",
-    "cranelift-codegen-meta/std"
-]
+std = []
 
-# The "core" features enables use of "hashmap_core" since core doesn't have
+# The "core" features enables use of "hashbrown" since core doesn't have
 # a HashMap implementation, and a workaround for Cargo #4866.
-core = [
-    "hashmap_core",
-    "cranelift-codegen-meta/core"
-]
+core = ["hashbrown"]
 
 # This enables some additional functions useful for writing tests, but which
 # can significantly increase the size of the library.

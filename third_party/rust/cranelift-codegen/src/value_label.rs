@@ -1,12 +1,13 @@
 use crate::ir::{Function, SourceLoc, Value, ValueLabel, ValueLabelAssignments, ValueLoc};
 use crate::isa::TargetIsa;
 use crate::regalloc::{Context, RegDiversions};
-use std::cmp::Ordering;
-use std::collections::{BTreeMap, HashMap};
-use std::iter::Iterator;
-use std::ops::Bound::*;
-use std::ops::Deref;
-use std::vec::Vec;
+use crate::HashMap;
+use alloc::collections::BTreeMap;
+use alloc::vec::Vec;
+use core::cmp::Ordering;
+use core::iter::Iterator;
+use core::ops::Bound::*;
+use core::ops::Deref;
 
 #[cfg(feature = "enable-serde")]
 use serde::{Deserialize, Serialize};
@@ -97,7 +98,6 @@ where
     let encinfo = isa.encoding_info();
     let values_locations = &func.locations;
     let liveness_ranges = regalloc.liveness().ranges();
-    let liveness_forest = regalloc.liveness().forest();
 
     let mut ranges = HashMap::new();
     let mut add_range = |label, range: (u32, u32), loc: ValueLoc| {
@@ -126,10 +126,7 @@ where
             // Remove killed values.
             tracked_values.retain(|(x, label, start_offset, last_loc)| {
                 let range = liveness_ranges.get(*x);
-                if range
-                    .expect("value")
-                    .killed_at(inst, ebb, &liveness_forest, &func.layout)
-                {
+                if range.expect("value").killed_at(inst, ebb, &func.layout) {
                     add_range(*label, (*start_offset, end_offset), *last_loc);
                     return false;
                 }
@@ -176,7 +173,7 @@ where
                 // Ignore dead/inactive Values.
                 let range = liveness_ranges.get(*v);
                 match range {
-                    Some(r) => r.reaches_use(inst, ebb, &liveness_forest, &func.layout),
+                    Some(r) => r.reaches_use(inst, ebb, &func.layout),
                     None => false,
                 }
             });

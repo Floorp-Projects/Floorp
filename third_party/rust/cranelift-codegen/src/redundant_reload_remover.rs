@@ -12,9 +12,9 @@ use crate::ir::{
 };
 use crate::isa::{RegInfo, RegUnit, TargetIsa};
 use crate::regalloc::RegDiversions;
+use alloc::vec::Vec;
 use core::convert::TryInto;
 use cranelift_entity::{PrimaryMap, SecondaryMap};
-use std::vec::Vec;
 
 // =============================================================================================
 // A description of the redundant-fill-removal algorithm
@@ -887,7 +887,7 @@ impl RedundantReloadRemover {
             cur: EncCursor::new(func, isa),
             reginfo: isa.register_info(),
             cfg: cfg,
-            state: &mut RedundantReloadRemover::new(),
+            state: self,
         };
         let mut total_regunits = 0;
         for rb in isa.register_info().banks {

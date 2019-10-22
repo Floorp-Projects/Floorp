@@ -3,10 +3,10 @@
 use super::{Comparator, Forest, Node, NodeData, NodePool, Path, INNER_SIZE};
 use crate::packed_option::PackedOption;
 #[cfg(test)]
+use alloc::string::String;
+#[cfg(test)]
 use core::fmt;
 use core::marker::PhantomData;
-#[cfg(test)]
-use std::string::String;
 
 /// Tag type defining forest types for a map.
 struct MapTypes<K, V>(PhantomData<(K, V)>);
@@ -231,7 +231,7 @@ where
 
     /// Get a text version of the path to `key`.
     fn tpath<C: Comparator<K>>(&self, key: K, forest: &MapForest<K, V>, comp: &C) -> String {
-        use std::string::ToString;
+        use alloc::string::ToString;
         match self.root.expand() {
             None => "map(empty)".to_string(),
             Some(root) => {
@@ -420,7 +420,7 @@ where
 
     /// Get a text version of the path to the current position.
     fn tpath(&self) -> String {
-        use std::string::ToString;
+        use alloc::string::ToString;
         self.path.to_string()
     }
 }
@@ -429,8 +429,8 @@ where
 mod tests {
     use super::super::NodeData;
     use super::*;
+    use alloc::vec::Vec;
     use core::mem;
-    use std::vec::Vec;
 
     #[test]
     fn node_size() {

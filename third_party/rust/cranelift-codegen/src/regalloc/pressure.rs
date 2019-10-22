@@ -36,31 +36,32 @@
 // Remove once we're using the pressure tracker.
 #![allow(dead_code)]
 
-use crate::isa::registers::{RegClass, RegClassMask, RegInfo, MAX_TRACKED_TOPRCS};
+use crate::isa::registers::{RegClass, RegClassMask, RegInfo};
 use crate::regalloc::RegisterSet;
 use core::cmp::min;
 use core::fmt;
 use core::iter::ExactSizeIterator;
+use cranelift_codegen_shared::constants::MAX_TRACKED_TOP_RCS;
 
 /// Information per top-level register class.
 ///
 /// Everything but the counts is static information computed from the constructor arguments.
 #[derive(Default)]
 struct TopRC {
-    // Number of registers currently used from this register class.
+    /// Number of registers currently used from this register class.
     base_count: u32,
     transient_count: u32,
 
-    // Max number of registers that can be allocated.
+    /// Max number of registers that can be allocated.
     limit: u32,
 
-    // Register units per register.
+    /// Register units per register.
     width: u8,
 
-    // The first aliasing top-level RC.
+    /// The first aliasing top-level RC.
     first_toprc: u8,
 
-    // The number of aliasing top-level RCs.
+    /// The number of aliasing top-level RCs.
     num_toprcs: u8,
 }
 
@@ -71,12 +72,12 @@ impl TopRC {
 }
 
 pub struct Pressure {
-    // Bit mask of top-level register classes that are aliased by other top-level register classes.
-    // Unaliased register classes can use a simpler interference algorithm.
+    /// Bit mask of top-level register classes that are aliased by other top-level register classes.
+    /// Unaliased register classes can use a simpler interference algorithm.
     aliased: RegClassMask,
 
-    // Current register counts per top-level register class.
-    toprc: [TopRC; MAX_TRACKED_TOPRCS],
+    /// Current register counts per top-level register class.
+    toprc: [TopRC; MAX_TRACKED_TOP_RCS],
 }
 
 impl Pressure {
@@ -105,7 +106,7 @@ impl Pressure {
             } else {
                 // This bank has no pressure tracking, so its top-level register classes may exceed
                 // `MAX_TRACKED_TOPRCS`. Fill in dummy entries.
-                for rc in &mut p.toprc[first..min(first + num, MAX_TRACKED_TOPRCS)] {
+                for rc in &mut p.toprc[first..min(first + num, MAX_TRACKED_TOP_RCS)] {
                     // These aren't used if we don't set the `aliased` bit.
                     rc.first_toprc = !0;
                     rc.limit = !0;
@@ -275,9 +276,9 @@ mod tests {
     use super::Pressure;
     use crate::isa::{RegClass, TargetIsa};
     use crate::regalloc::RegisterSet;
+    use alloc::boxed::Box;
     use core::borrow::Borrow;
     use core::str::FromStr;
-    use std::boxed::Box;
     use target_lexicon::triple;
 
     // Make an arm32 `TargetIsa`, if possible.
