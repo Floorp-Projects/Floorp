@@ -58,7 +58,7 @@ add_task(async function test_profile_feature_preferencereads() {
     // Check that some PreferenceRead profile markers were generated when the
     // feature is enabled.
     {
-      const { contentThread } = await stopProfilerAndGetThreads(contentPid);
+      const { contentThread } = await stopProfilerNowAndGetThreads(contentPid);
 
       const timesReadDpiInContent = countDpiPrefReadsInThread(contentThread);
 
@@ -87,9 +87,10 @@ add_task(async function test_profile_feature_preferencereads() {
     // Check that no PreferenceRead markers were recorded when the feature
     // is turned off.
     {
-      const { parentThread, contentThread } = await stopProfilerAndGetThreads(
-        contentPid
-      );
+      const {
+        parentThread,
+        contentThread,
+      } = await stopProfilerNowAndGetThreads(contentPid);
       Assert.equal(
         getPayloadsOfType(parentThread, "PreferenceRead").length,
         0,
