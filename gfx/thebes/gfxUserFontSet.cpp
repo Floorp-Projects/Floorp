@@ -1374,18 +1374,15 @@ void gfxUserFontSet::UserFontCache::Entry::ReportMemory(
       path.AppendPrintf(", url=%s", spec.get());
     }
     if (mPrincipal) {
-      nsCOMPtr<nsIURI> uri;
-      mPrincipal->get()->GetURI(getter_AddRefs(uri));
-      if (uri) {
-        nsCString spec = uri->GetSpecOrDefault();
-        if (!spec.IsEmpty()) {
-          // Include a clue as to who loaded this resource. (Note
-          // that because of font entry sharing, other pages may now
-          // be using this resource, and the original page may not
-          // even be loaded any longer.)
-          spec.ReplaceChar('/', '\\');
-          path.AppendPrintf(", principal=%s", spec.get());
-        }
+      nsAutoCString spec;
+      mPrincipal->get()->GetAsciiSpec(spec);
+      if (!spec.IsEmpty()) {
+        // Include a clue as to who loaded this resource. (Note
+        // that because of font entry sharing, other pages may now
+        // be using this resource, and the original page may not
+        // even be loaded any longer.)
+        spec.ReplaceChar('/', '\\');
+        path.AppendPrintf(", principal=%s", spec.get());
       }
     }
   }
