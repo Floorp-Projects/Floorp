@@ -118,12 +118,7 @@ def tag(owner, repo, sha, tag):
     return True
 
 
-def create_release(manifest_path, owner, repo, sha, tag, summary, body):
-    if body:
-        body = "%s\n%s" % (summary, body)
-    else:
-        body = summary
-
+def create_release(manifest_path, owner, repo, sha, tag, body):
     create_url = "https://api.github.com/repos/%s/%s/releases" % (owner, repo)
     create_data = {"tag_name": tag,
                    "name": tag,
@@ -185,8 +180,7 @@ def main():
 
     git = get_git_cmd(wpt_root)
     head_rev = git("rev-parse", "HEAD")
-    summary = git("show", "--no-patch", '--format="%s"', "HEAD")
-    body = git("show", "--no-patch", '--format="%b"', "HEAD")
+    body = git("show", "--no-patch", "--format=%B", "HEAD")
 
     if dry_run:
         return Status.SUCCESS
@@ -200,7 +194,7 @@ def main():
     if not tagged:
         return Status.FAIL
 
-    if not create_release(manifest_path, owner, repo, head_rev, tag_name, summary, body):
+    if not create_release(manifest_path, owner, repo, head_rev, tag_name, body):
         return Status.FAIL
 
     return Status.SUCCESS
