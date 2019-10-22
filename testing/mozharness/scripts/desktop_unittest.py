@@ -612,9 +612,8 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin,
 
     def start_pulseaudio(self):
         command = []
-        if (os.environ.get('NEED_PULSEAUDIO') == 'true' and self._is_debian()):
-            # Debian platform requires additional idle timer specification so
-            # that it will not terminate the process on its own.
+        # Implies that underlying system is Linux.
+        if (os.environ.get('NEED_PULSEAUDIO') == 'true'):
             command.extend([
                 'pulseaudio',
                 '--daemonize',
@@ -624,12 +623,16 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin,
                 '--exit-idle-time=-1'
             ])
 
-        # Instantiate pulseaudio.
-        if self._is_debian():
-            self._kill_named_proc('pulseaudio')
-            self.run_command(command)
-        self.run_command('pactl load-module module-null-sink')
-        self.run_command('pactl list modules short')
+            # Only run the initialization for Debian.
+            # Ubuntu appears to have an alternate method of starting pulseaudio.
+            if self._is_debian():
+                self._kill_named_proc('pulseaudio')
+                self.run_command(command)
+
+            # All Linux systems need module-null-sink to be loaded, otherwise
+            # media tests fail.
+            self.run_command('pactl load-module module-null-sink')
+            self.run_command('pactl list modules short')
 
     def stage_files(self):
         for category in SUITE_CATEGORIES:
