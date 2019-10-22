@@ -578,13 +578,13 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
                               &nothing));
       }
       case uint16_t(Op::Block):
-        CHECK(iter.readBlock(&unusedType));
+        CHECK(iter.readBlock());
       case uint16_t(Op::Loop):
-        CHECK(iter.readLoop(&unusedType));
+        CHECK(iter.readLoop());
       case uint16_t(Op::If):
-        CHECK(iter.readIf(&unusedType, &nothing));
+        CHECK(iter.readIf(&nothing));
       case uint16_t(Op::Else):
-        CHECK(iter.readElse(&unusedType, &unusedType, &nothings));
+        CHECK(iter.readElse(&unusedType, &nothings));
       case uint16_t(Op::I32Clz):
       case uint16_t(Op::I32Ctz):
       case uint16_t(Op::I32Popcnt):
