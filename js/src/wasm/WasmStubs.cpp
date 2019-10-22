@@ -39,6 +39,93 @@ typedef Vector<jit::MIRType, 8, SystemAllocPolicy> MIRTypeVector;
 typedef jit::ABIArgIter<MIRTypeVector> ABIArgMIRTypeIter;
 typedef jit::ABIArgIter<ValTypeVector> ABIArgValTypeIter;
 
+/*****************************************************************************/
+// ABIResultIter implementation
+
+static uint32_t ResultStackSize(ValType type) {
+  switch (type.code()) {
+    case ValType::I32:
+      return ABIResult::StackSizeOfInt32;
+    case ValType::I64:
+      return ABIResult::StackSizeOfInt64;
+    case ValType::F32:
+      return ABIResult::StackSizeOfFloat;
+    case ValType::F64:
+      return ABIResult::StackSizeOfDouble;
+    case ValType::Ref:
+    case ValType::FuncRef:
+    case ValType::AnyRef:
+      return ABIResult::StackSizeOfPtr;
+    case ValType::NullRef:
+    default:
+      MOZ_CRASH("Unexpected result type");
+  }
+}
+
+uint32_t ABIResult::size() const { return ResultStackSize(type()); }
+
+void ABIResultIter::settleRegister(ValType type) {
+  MOZ_ASSERT(!done());
+  MOZ_ASSERT(index() < RegisterResultCount);
+  static_assert(RegisterResultCount == 1, "expected a single register result");
+
+  switch (type.code()) {
+    case ValType::I32:
+      cur_ = ABIResult(type, ReturnReg);
+      break;
+    case ValType::I64:
+      cur_ = ABIResult(type, ReturnReg64);
+      break;
+    case ValType::F32:
+      cur_ = ABIResult(type, ReturnFloat32Reg);
+      break;
+    case ValType::F64:
+      cur_ = ABIResult(type, ReturnDoubleReg);
+      break;
+    case ValType::Ref:
+    case ValType::FuncRef:
+    case ValType::AnyRef:
+      cur_ = ABIResult(type, ReturnReg);
+      break;
+    case ValType::NullRef:
+    default:
+      MOZ_CRASH("Unexpected result type");
+  }
+}
+
+void ABIResultIter::settleNext() {
+  MOZ_ASSERT(direction_ == Next);
+  MOZ_ASSERT(!done());
+
+  uint32_t typeIndex = count_ - index_ - 1;
+  ValType type = type_[typeIndex];
+
+  if (index_ < RegisterResultCount) {
+    settleRegister(type);
+    return;
+  }
+
+  cur_ = ABIResult(type, nextStackOffset_);
+  nextStackOffset_ += ResultStackSize(type);
+}
+
+void ABIResultIter::settlePrev() {
+  MOZ_ASSERT(direction_ == Prev);
+  MOZ_ASSERT(!done());
+  uint32_t typeIndex = index_;
+  ValType type = type_[typeIndex];
+
+  if (count_ - index_ - 1 < RegisterResultCount) {
+    settleRegister(type);
+    return;
+  }
+
+  uint32_t size = ResultStackSize(type);
+  MOZ_ASSERT(nextStackOffset_ >= size);
+  nextStackOffset_ -= size;
+  cur_ = ABIResult(type, nextStackOffset_);
+}
+
 #ifdef WASM_CODEGEN_DEBUG
 template <class Closure>
 static void GenPrint(DebugChannel channel, MacroAssembler& masm,
