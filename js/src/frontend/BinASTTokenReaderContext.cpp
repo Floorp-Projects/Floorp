@@ -741,6 +741,9 @@ class HuffmanPreludeReader {
   MOZ_MUST_USE JS::Result<typename Entry::Indexed>
   readMultipleValuesTableAndAssignCode(typename Entry::Table& table,
                                        Entry entry, uint32_t numberOfSymbols) {
+    // In this case, `numberOfSymbols` is actually an upper bound,
+    // rather than an actual number of symbols.
+
     // Data is presented in an order that doesn't match our memory
     // representation, so we need to copy `numberOfSymbols` entries.
     // We use an auxiliary vector to avoid allocating each time.
@@ -767,6 +770,15 @@ class HuffmanPreludeReader {
           largestBitLength = bitLength;
         }
       }
+    }
+
+    if (auxStorageLength_.length() == 1) {
+      // We have only one symbol, so let's use an optimized table.
+      BINJS_MOZ_TRY_DECL(symbol,
+                         readSymbol<Entry>(entry, auxStorageLength_[0].index_));
+      MOZ_TRY(table.initWithSingleValue(cx_, symbol));
+      auxStorageLength_.clear();
+      return Ok();
     }
 
     // Sort by length then webidl order (which is also the index).
@@ -803,11 +815,8 @@ class HuffmanPreludeReader {
       MOZ_ASSERT(bitLength <= nextBitLength);
 
       // Read symbol from memory and add it.
-      BINJS_MOZ_TRY_DECL(
-          symbol,
-          readSymbol<Entry>(
-              entry,
-              auxStorageLength_[i].index_));  // Symbol is read from memory.
+      BINJS_MOZ_TRY_DECL(symbol,
+                         readSymbol<Entry>(entry, auxStorageLength_[i].index_));
 
       MOZ_TRY(table.addSymbol(code, bitLength, symbol));
 
@@ -1787,8 +1796,13 @@ JS::Result<Ok> GenericHuffmanTable::initStart(JSContext* cx,
   // Make sure that we have a way to represent all legal bit lengths.
   static_assert(MAX_CODE_BIT_LENGTH <= ThreeLookupsHuffmanTable::MAX_BIT_LENGTH,
                 "ThreeLookupsHuffmanTable cannot hold all bit lengths");
+
   // Make sure that we're initializing.
   MOZ_ASSERT(implementation_.template is<HuffmanTableUnreachable>());
+
+  // Make sure we don't accidentally end up with only one symbol.
+  MOZ_ASSERT(numberOfSymbols != 1,
+             "Should have used `initWithSingleValue` instead");
 
   // Find the (hopefully) fastest implementation of HuffmanTable for
   // `largestBitLength`.
