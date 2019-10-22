@@ -91,6 +91,7 @@ class AwesomeBarView(
     private val shortcutsEnginePickerProvider: ShortcutsSuggestionProvider
     private val bookmarksStorageSuggestionProvider: BookmarksStorageSuggestionProvider
     private val defaultSearchSuggestionProvider: SearchSuggestionProvider
+    private val searchSuggestionProviderMap: MutableMap<SearchEngine, SearchSuggestionProvider>
     private var providersInUse = mutableSetOf<AwesomeBar.SuggestionProvider>()
 
     private val loadUrlUseCase = object : SessionUseCases.LoadUrlUseCase {
@@ -171,12 +172,12 @@ class AwesomeBarView(
                 )
         }
 
+        searchSuggestionProviderMap = HashMap()
         searchShortcutsButton.setOnClickListener {
             interactor.onSearchShortcutsButtonClicked()
         }
     }
 
-    @SuppressWarnings("ComplexMethod")
     fun update(state: SearchFragmentState) {
         updateSearchShortcutsIcon(state)
 
@@ -201,56 +202,22 @@ class AwesomeBarView(
         }
     }
 
-    @Suppress("ComplexMethod")
     private fun updateSuggestionProvidersVisibility(state: SearchFragmentState) {
-        val providersToAdd = mutableSetOf<AwesomeBar.SuggestionProvider>()
-        val providersToRemove = mutableSetOf<AwesomeBar.SuggestionProvider>()
-
         if (state.showSearchShortcuts) {
             handleDisplayShortcutsProviders()
             return
         }
 
-        providersToRemove.add(shortcutsEnginePickerProvider)
+        val providersToAdd = getProvidersToAdd(state)
+        val providersToRemove = getProvidersToRemove(state)
 
-        if (state.showHistorySuggestions) {
-            providersToAdd.add(historyStorageProvider)
-        } else {
-            providersToRemove.add(historyStorageProvider)
-        }
+        performProviderListChanges(providersToAdd, providersToRemove)
+    }
 
-        if (state.showBookmarkSuggestions) {
-            providersToAdd.add(bookmarksStorageSuggestionProvider)
-        } else {
-            providersToRemove.add(bookmarksStorageSuggestionProvider)
-        }
-
-        if (state.showSearchSuggestions) {
-            providersToAdd.add(
-                when (state.searchEngineSource) {
-                    is SearchEngineSource.Default -> defaultSearchSuggestionProvider
-                    is SearchEngineSource.Shortcut -> createSuggestionProviderForEngine(
-                        state.searchEngineSource.searchEngine
-                    )
-                }
-            )
-        } else {
-            providersToRemove.add(
-                when (state.searchEngineSource) {
-                    is SearchEngineSource.Default -> defaultSearchSuggestionProvider
-                    is SearchEngineSource.Shortcut -> createSuggestionProviderForEngine(
-                        state.searchEngineSource.searchEngine
-                    )
-                }
-            )
-        }
-
-        if ((container.context.asActivity() as? HomeActivity)?.browsingModeManager?.mode?.isPrivate == false) {
-            providersToAdd.add(sessionProvider)
-        } else {
-            providersToRemove.add(sessionProvider)
-        }
-
+    private fun performProviderListChanges(
+        providersToAdd: MutableSet<AwesomeBar.SuggestionProvider>,
+        providersToRemove: MutableSet<AwesomeBar.SuggestionProvider>
+    ) {
         for (provider in providersToAdd) {
             if (providersInUse.find { it.id == provider.id } == null) {
                 providersInUse.add(provider)
@@ -266,6 +233,70 @@ class AwesomeBarView(
         }
     }
 
+    private fun getProvidersToAdd(state: SearchFragmentState): MutableSet<AwesomeBar.SuggestionProvider> {
+        val providersToAdd = mutableSetOf<AwesomeBar.SuggestionProvider>()
+
+        if (state.showHistorySuggestions) {
+            providersToAdd.add(historyStorageProvider)
+        }
+
+        if (state.showBookmarkSuggestions) {
+            providersToAdd.add(bookmarksStorageSuggestionProvider)
+        }
+
+        if (state.showSearchSuggestions) {
+            getSelectedSearchSuggestionProvider(state)?.let {
+                providersToAdd.add(it)
+            }
+        }
+
+        if (!isBrowsingModePrivate()) {
+            providersToAdd.add(sessionProvider)
+        }
+
+        return providersToAdd
+    }
+
+    private fun getProvidersToRemove(state: SearchFragmentState): MutableSet<AwesomeBar.SuggestionProvider> {
+        val providersToRemove = mutableSetOf<AwesomeBar.SuggestionProvider>()
+
+        providersToRemove.add(shortcutsEnginePickerProvider)
+
+        if (!state.showHistorySuggestions) {
+            providersToRemove.add(historyStorageProvider)
+        }
+
+        if (!state.showBookmarkSuggestions) {
+            providersToRemove.add(bookmarksStorageSuggestionProvider)
+        }
+
+        if (!state.showSearchSuggestions) {
+            getSelectedSearchSuggestionProvider(state)?.let {
+                providersToRemove.add(it)
+            }
+        }
+
+        if (isBrowsingModePrivate()) {
+            providersToRemove.add(sessionProvider)
+        }
+
+        return providersToRemove
+    }
+
+    private fun isBrowsingModePrivate(): Boolean {
+        return (container.context.asActivity() as? HomeActivity)?.browsingModeManager?.mode?.isPrivate
+            ?: false
+    }
+
+    private fun getSelectedSearchSuggestionProvider(state: SearchFragmentState): SearchSuggestionProvider? {
+        return when (state.searchEngineSource) {
+            is SearchEngineSource.Default -> defaultSearchSuggestionProvider
+            is SearchEngineSource.Shortcut -> getSuggestionProviderForEngine(
+                state.searchEngineSource.searchEngine
+            )
+        }
+    }
+
     private fun handleDisplayShortcutsProviders() {
         view.removeAllProviders()
         providersInUse.clear()
@@ -273,19 +304,28 @@ class AwesomeBarView(
         view.addProviders(shortcutsEnginePickerProvider)
     }
 
-    private fun createSuggestionProviderForEngine(engine: SearchEngine): SearchSuggestionProvider {
-        return with(container.context) {
-            val draw = getDrawable(R.drawable.ic_search)
-            draw?.colorFilter = PorterDuffColorFilter(getColorFromAttr(R.attr.primaryText), SRC_IN)
+    private fun getSuggestionProviderForEngine(engine: SearchEngine): SearchSuggestionProvider? {
+        if (!searchSuggestionProviderMap.containsKey(engine)) {
+            with(container.context) {
+                val draw = getDrawable(R.drawable.ic_search)
+                draw?.colorFilter =
+                    PorterDuffColorFilter(getColorFromAttr(R.attr.primaryText), SRC_IN)
 
-            SearchSuggestionProvider(
-                components.search.searchEngineManager.getDefaultSearchEngine(this, engine.name),
-                shortcutSearchUseCase,
-                components.core.client,
-                limit = 3,
-                mode = SearchSuggestionProvider.Mode.MULTIPLE_SUGGESTIONS,
-                icon = draw?.toBitmap()
-            )
+                searchSuggestionProviderMap.put(
+                    engine, SearchSuggestionProvider(
+                        components.search.searchEngineManager.getDefaultSearchEngine(
+                            this,
+                            engine.name
+                        ),
+                        shortcutSearchUseCase,
+                        components.core.client,
+                        limit = 3,
+                        mode = SearchSuggestionProvider.Mode.MULTIPLE_SUGGESTIONS,
+                        icon = draw?.toBitmap()
+                    )
+                )
+            }
         }
+        return searchSuggestionProviderMap[engine]
     }
 }
