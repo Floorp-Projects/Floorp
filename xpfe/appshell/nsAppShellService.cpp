@@ -41,6 +41,7 @@
 #include "mozilla/StartupTimeline.h"
 #include "mozilla/StaticPrefs_fission.h"
 #include "mozilla/intl/LocaleService.h"
+#include "mozilla/dom/BrowsingContext.h"
 
 #include "nsEmbedCID.h"
 #include "nsIWebBrowser.h"
