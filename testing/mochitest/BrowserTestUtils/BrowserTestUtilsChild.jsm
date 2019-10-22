@@ -106,6 +106,19 @@ class BrowserTestUtilsChild extends JSWindowActorChild {
     return undefined;
   }
 
+  handleEvent(aEvent) {
+    switch (aEvent.type) {
+      case "DOMContentLoaded":
+      case "load": {
+        this.sendAsyncMessage(aEvent.type, {
+          internalURL: aEvent.target.documentURI,
+          visibleURL: aEvent.target.location.href,
+        });
+        break;
+      }
+    }
+  }
+
   synthesizeMouse(data, window) {
     let target = data.target;
     if (typeof target == "string") {
