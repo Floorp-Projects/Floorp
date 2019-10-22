@@ -44,8 +44,15 @@ var processes = new Set();
  *        A function called when the process stops running.
  * @param function onRun [optional]
  *        A function called when the process starts running.
+ * @param boolean overwritePreferences [optional]
+ *        Set to force overwriting the toolbox profile's preferences with the
+ *        current set of preferences.
  */
-this.BrowserToolboxProcess = function BrowserToolboxProcess(onClose, onRun) {
+this.BrowserToolboxProcess = function BrowserToolboxProcess(
+  onClose,
+  onRun,
+  overwritePreferences
+) {
   const emitter = new EventEmitter();
   this.on = emitter.on.bind(emitter);
   this.off = emitter.off.bind(emitter);
@@ -68,7 +75,7 @@ this.BrowserToolboxProcess = function BrowserToolboxProcess(onClose, onRun) {
   this.close = this.close.bind(this);
   Services.obs.addObserver(this.close, "quit-application");
   this._initServer();
-  this._initProfile();
+  this._initProfile(overwritePreferences);
   this._create();
 
   processes.add(this);
@@ -80,7 +87,7 @@ EventEmitter.decorate(BrowserToolboxProcess);
  * Initializes and starts a chrome toolbox process.
  * @return object
  */
-BrowserToolboxProcess.init = function(onClose, onRun) {
+BrowserToolboxProcess.init = function(onClose, onRun, overwritePreferences) {
   if (
     !Services.prefs.getBoolPref("devtools.chrome.enabled") ||
     !Services.prefs.getBoolPref("devtools.debugger.remote-enabled")
@@ -88,7 +95,7 @@ BrowserToolboxProcess.init = function(onClose, onRun) {
     console.error("Could not start Browser Toolbox, you need to enable it.");
     return null;
   }
-  return new BrowserToolboxProcess(onClose, onRun);
+  return new BrowserToolboxProcess(onClose, onRun, overwritePreferences);
 };
 
 /**
@@ -161,7 +168,7 @@ BrowserToolboxProcess.prototype = {
   /**
    * Initializes a profile for the remote debugger process.
    */
-  _initProfile: function() {
+  _initProfile(overwritePreferences) {
     dumpn("Initializing the chrome toolbox user profile.");
 
     // We used to use `ProfLD` instead of `ProfD`, so migrate old profiles if they exist.
@@ -172,14 +179,17 @@ BrowserToolboxProcess.prototype = {
     try {
       debuggingProfileDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0o755);
     } catch (ex) {
-      // Don't re-copy over the prefs again if this profile already exists
       if (ex.result === Cr.NS_ERROR_FILE_ALREADY_EXISTS) {
-        this._dbgProfilePath = debuggingProfileDir.path;
+        if (!overwritePreferences) {
+          this._dbgProfilePath = debuggingProfileDir.path;
+          return;
+        }
+        // Fall through and copy the current set of prefs to the profile.
       } else {
         dumpn("Error trying to create a profile directory, failing.");
         dumpn("Error: " + (ex.message || ex));
+        return;
       }
-      return;
     }
 
     this._dbgProfilePath = debuggingProfileDir.path;
