@@ -8,15 +8,18 @@
 <body>
 <div id="target"></div>
 <script>
+
   const policy = trustedTypes.createPolicy("anythinggoes", {
     "createHTML": x => x,
     "createScript": x => x,
+    "createURL": x => x,
     "createScriptURL": x => x,
   });
 
   const create_value = {
     "TrustedHTML": policy.createHTML("hello"),
     "TrustedScript": policy.createScript("x => x + x"),
+    "TrustedURL": policy.createURL("https://url.invalid/"),
     "TrustedScriptURL": policy.createScriptURL("https://url.invalid/blubb.js"),
     null: "empty",
   };
@@ -31,7 +34,8 @@
   // Also add several event handlers (onclick).
   let elements = ['madeup', 'b'];
   let properties = ['madeup', 'id', "onerror", "onclick"];
-  const types = [null, "TrustedHTML", "TrustedScript", "TrustedScriptURL"];
+  const types = [null, "TrustedHTML", "TrustedScript", "TrustedScriptURL",
+                 "TrustedURL"];
 
   // We'll wrap construction of the elements/properties list in a test, mainly
   // so we'll get decent error messages when it might fail.
@@ -108,11 +112,6 @@
               // return and hence skip the result comparison.
               case "outerHTML":
                 return;
-              // URL-typed accessors
-              case "src":
-                if (elem == "iframe")
-                  return;
-                break;
               // Properties starting with "on" are usually error handlers,
               // which will parse their input as a function. In this case,
               // also skip the result comparison.
@@ -143,5 +142,6 @@
       }
     }
   }
+
 </script>
 </body>
