@@ -120,12 +120,12 @@ const testcases = [
             {value: 1000e7, string: "100\u4EBF", parts: [Integer("100"), Compact("\u4EBF")]},
             {value: 10000e7, string: "1000\u4EBF", parts: [Integer("1000"), Compact("\u4EBF")]},
 
-            {value: 10e11, string: "1\u5146", parts: [Integer("1"), Compact("\u5146")]},
-            {value: 100e11, string: "10\u5146", parts: [Integer("10"), Compact("\u5146")]},
-            {value: 1000e11, string: "100\u5146", parts: [Integer("100"), Compact("\u5146")]},
-            {value: 10000e11, string: "1000\u5146", parts: [Integer("1000"), Compact("\u5146")]},
+            {value: 10e11, string: "1\u4E07\u4EBF", parts: [Integer("1"), Compact("\u4E07\u4EBF")]},
+            {value: 100e11, string: "10\u4E07\u4EBF", parts: [Integer("10"), Compact("\u4E07\u4EBF")]},
+            {value: 1000e11, string: "100\u4E07\u4EBF", parts: [Integer("100"), Compact("\u4E07\u4EBF")]},
+            {value: 10000e11, string: "1000\u4E07\u4EBF", parts: [Integer("1000"), Compact("\u4E07\u4EBF")]},
 
-            {value: 100000e11, string: "10,000\u5146", parts: [Integer("10"), Group(","), Integer("000"), Compact("\u5146")]},
+            {value: 100000e11, string: "10,000\u4E07\u4EBF", parts: [Integer("10"), Group(","), Integer("000"), Compact("\u4E07\u4EBF")]},
         ],
     },
 ];
