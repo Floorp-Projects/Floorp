@@ -71,26 +71,27 @@ class ExtensionSidebar {
           },
           serviceContainer: {
             highlightDomElement: async (grip, options = {}) => {
-              const nodeFront = await this.inspector.inspectorFront.getNodeFrontFromNodeGrip(
+              // TODO: Bug1574506 - Use the contextual WalkerFront for gripToNodeFront.
+              const nodeFront = await this.inspector.walker.gripToNodeFront(
                 grip
               );
               return nodeFront.highlighterFront.highlight(nodeFront, options);
             },
             unHighlightDomElement: async grip => {
-              const nodeFront = await this.inspector.inspectorFront.getNodeFrontFromNodeGrip(
+              // TODO: Bug1574506 - Use the contextual WalkerFront for gripToNodeFront.
+              const nodeFront = await this.inspector.walker.gripToNodeFront(
                 grip
               );
               return nodeFront.highlighterFront.unhighlight();
             },
             openNodeInInspector: async grip => {
-              const nodeFront = await this.inspector.inspectFront.getNodeFrontFromNodeGrip(
-                grip
-              );
+              const { walker } = this.inspector;
+              const front = await walker.gripToNodeFront(grip);
               const onInspectorUpdated = this.inspector.once(
                 "inspector-updated"
               );
               const onNodeFrontSet = this.inspector.toolbox.selection.setNodeFront(
-                nodeFront,
+                front,
                 {
                   reason: "inspector-extension-sidebar",
                 }
