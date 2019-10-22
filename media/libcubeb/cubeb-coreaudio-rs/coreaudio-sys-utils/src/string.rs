@@ -81,7 +81,9 @@ fn utf8_from_cfstringref(string_ref: CFStringRef) -> Vec<u8> {
     assert!(!string_ref.is_null());
 
     let length: CFIndex = unsafe { CFStringGetLength(string_ref) };
-    assert!(length > 0);
+    if length == 0 {
+        return Vec::new();
+    }
 
     // Get the buffer size of the string.
     let range: CFRange = CFRange {
@@ -126,10 +128,9 @@ fn utf8_from_cfstringref(string_ref: CFStringRef) -> Vec<u8> {
 mod test {
     use super::*;
 
-    const STATIC_STRING: &str = "static string for testing";
-
     #[test]
     fn test_create_static_cfstring_ref() {
+        const STATIC_STRING: &str = "static string for testing";
         let stringref =
             StringRef::new(cfstringref_from_static_string(STATIC_STRING) as CFStringRef);
         assert_eq!(STATIC_STRING, stringref.to_string());
@@ -141,8 +142,30 @@ mod test {
     }
 
     #[test]
+    fn test_create_static_empty_cfstring_ref() {
+        const STATIC_EMPTY_STRING: &str = "";
+        let stringref =
+            StringRef::new(cfstringref_from_static_string(STATIC_EMPTY_STRING) as CFStringRef);
+        assert_eq!(STATIC_EMPTY_STRING, stringref.to_string());
+        assert_eq!(
+            CString::new(STATIC_EMPTY_STRING).unwrap(),
+            stringref.into_cstring()
+        );
+        // TODO: Find a way to check the string's inner pointer is same.
+    }
+
+    #[test]
     fn test_create_cfstring_ref() {
         let expected = "Rustaceans 🦀";
+        let stringref = StringRef::new(cfstringref_from_string(expected) as CFStringRef);
+        assert_eq!(expected, stringref.to_string());
+        assert_eq!(CString::new(expected).unwrap(), stringref.into_cstring());
+        // TODO: Find a way to check the string's inner pointer is different.
+    }
+
+    #[test]
+    fn test_create_empty_cfstring_ref() {
+        let expected = "";
         let stringref = StringRef::new(cfstringref_from_string(expected) as CFStringRef);
         assert_eq!(expected, stringref.to_string());
         assert_eq!(CString::new(expected).unwrap(), stringref.into_cstring());
