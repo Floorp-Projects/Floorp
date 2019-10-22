@@ -1905,6 +1905,7 @@ void nsFrameLoader::DestroyDocShell() {
   }
 
   mBrowsingContext = nullptr;
+  mDocShell = nullptr;
 
   if (mChildMessageManager) {
     // Stop handling events in the in-process frame script.
@@ -2014,6 +2015,7 @@ nsresult nsFrameLoader::MaybeCreateDocShell() {
   // context inside of nsDocShell::Create
   RefPtr<nsDocShell> docShell = nsDocShell::Create(mBrowsingContext);
   NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
+  mDocShell = docShell;
 
   mBrowsingContext->SetEmbedderElement(mOwnerContent);
 

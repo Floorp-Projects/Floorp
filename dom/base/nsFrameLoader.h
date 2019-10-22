@@ -124,9 +124,7 @@ class nsFrameLoader final : public nsStubMutationObserver,
   void StartDestroy();
   void DestroyDocShell();
   void DestroyComplete();
-  nsIDocShell* GetExistingDocShell() const {
-    return mBrowsingContext ? mBrowsingContext->GetDocShell() : nullptr;
-  }
+  nsIDocShell* GetExistingDocShell() const { return mDocShell; }
   mozilla::dom::InProcessBrowserChildMessageManager*
   GetBrowserChildMessageManager() const {
     return mChildMessageManager;
@@ -429,10 +427,7 @@ class nsFrameLoader final : public nsStubMutationObserver,
   nsresult MaybeCreateDocShell();
   nsresult EnsureMessageManager();
   nsresult ReallyLoadFrameScripts();
-  nsDocShell* GetDocShell() const {
-    return mBrowsingContext ? nsDocShell::Cast(mBrowsingContext->GetDocShell())
-                            : nullptr;
-  }
+  nsDocShell* GetDocShell() const { return mDocShell; }
 
   // Updates the subdocument position and size. This gets called only
   // when we have our own in-process DocShell.
@@ -508,6 +503,7 @@ class nsFrameLoader final : public nsStubMutationObserver,
 
   uint64_t mChildID;
   RefPtr<mozilla::dom::RemoteBrowser> mRemoteBrowser;
+  RefPtr<nsDocShell> mDocShell;
 
   // Holds the last known size of the frame.
   mozilla::ScreenIntSize mLazySize;
