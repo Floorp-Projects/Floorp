@@ -59,55 +59,52 @@ class nsListControlFrame final : public nsHTMLScrollFrame,
   NS_DECL_FRAMEARENA_HELPERS(nsListControlFrame)
 
   // nsIFrame
-  virtual nsresult HandleEvent(nsPresContext* aPresContext,
-                               mozilla::WidgetGUIEvent* aEvent,
-                               nsEventStatus* aEventStatus) override;
+  nsresult HandleEvent(nsPresContext* aPresContext,
+                       mozilla::WidgetGUIEvent* aEvent,
+                       nsEventStatus* aEventStatus) final;
 
-  virtual void SetInitialChildList(ChildListID aListID,
-                                   nsFrameList& aChildList) override;
+  void SetInitialChildList(ChildListID aListID, nsFrameList& aChildList) final;
 
-  virtual nscoord GetPrefISize(gfxContext* aRenderingContext) override;
-  virtual nscoord GetMinISize(gfxContext* aRenderingContext) override;
+  nscoord GetPrefISize(gfxContext* aRenderingContext) final;
+  nscoord GetMinISize(gfxContext* aRenderingContext) final;
 
-  virtual void Reflow(nsPresContext* aCX, ReflowOutput& aDesiredSize,
-                      const ReflowInput& aReflowInput,
-                      nsReflowStatus& aStatus) override;
+  void Reflow(nsPresContext* aCX, ReflowOutput& aDesiredSize,
+              const ReflowInput& aReflowInput, nsReflowStatus& aStatus) final;
 
-  virtual void Init(nsIContent* aContent, nsContainerFrame* aParent,
-                    nsIFrame* aPrevInFlow) override;
+  void Init(nsIContent* aContent, nsContainerFrame* aParent,
+            nsIFrame* aPrevInFlow) final;
 
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  virtual void DidReflow(nsPresContext* aPresContext,
-                         const ReflowInput* aReflowInput) override;
-  virtual void DestroyFrom(nsIFrame* aDestructRoot,
-                           PostDestroyData& aPostDestroyData) override;
+  void DidReflow(nsPresContext* aPresContext,
+                 const ReflowInput* aReflowInput) final;
+  void DestroyFrom(nsIFrame* aDestructRoot,
+                   PostDestroyData& aPostDestroyData) final;
 
-  virtual void BuildDisplayList(nsDisplayListBuilder* aBuilder,
-                                const nsDisplayListSet& aLists) override;
+  void BuildDisplayList(nsDisplayListBuilder* aBuilder,
+                        const nsDisplayListSet& aLists) final;
 
-  virtual nsContainerFrame* GetContentInsertionFrame() override;
+  nsContainerFrame* GetContentInsertionFrame() final;
 
-  virtual bool IsFrameOfType(uint32_t aFlags) const override {
+  bool IsFrameOfType(uint32_t aFlags) const final {
     return nsHTMLScrollFrame::IsFrameOfType(
         aFlags & ~(nsIFrame::eReplaced | nsIFrame::eReplacedContainsBlock));
   }
 
 #ifdef DEBUG_FRAME_DUMP
-  virtual nsresult GetFrameName(nsAString& aResult) const override;
+  nsresult GetFrameName(nsAString& aResult) const final;
 #endif
 
   // nsIFormControlFrame
-  virtual nsresult SetFormProperty(nsAtom* aName,
-                                   const nsAString& aValue) override;
+  nsresult SetFormProperty(nsAtom* aName, const nsAString& aValue) final;
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  virtual void SetFocus(bool aOn = true, bool aRepaint = false) override;
+  void SetFocus(bool aOn = true, bool aRepaint = false) final;
 
-  virtual mozilla::ScrollStyles GetScrollStyles() const override;
-  virtual bool ShouldPropagateComputedBSizeToScrolledContent() const override;
+  mozilla::ScrollStyles GetScrollStyles() const final;
+  bool ShouldPropagateComputedBSizeToScrolledContent() const final;
 
   // for accessibility purposes
 #ifdef ACCESSIBILITY
-  virtual mozilla::a11y::AccType AccessibleType() override;
+  mozilla::a11y::AccType AccessibleType() final;
 #endif
 
   void SetComboboxFrame(nsIFrame* aComboboxFrame);
@@ -146,20 +143,20 @@ class nsListControlFrame final : public nsHTMLScrollFrame,
   MOZ_CAN_RUN_SCRIPT_BOUNDARY void OnContentReset();
 
   // nsISelectControlFrame
-  NS_IMETHOD AddOption(int32_t index) override;
-  NS_IMETHOD RemoveOption(int32_t index) override;
+  NS_IMETHOD AddOption(int32_t index) final;
+  NS_IMETHOD RemoveOption(int32_t index) final;
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  NS_IMETHOD DoneAddingChildren(bool aIsDone) override;
+  NS_IMETHOD DoneAddingChildren(bool aIsDone) final;
 
   /**
    * Gets the content (an option) by index and then set it as
    * being selected or not selected.
    */
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  NS_IMETHOD OnOptionSelected(int32_t aIndex, bool aSelected) override;
+  NS_IMETHOD OnOptionSelected(int32_t aIndex, bool aSelected) final;
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   NS_IMETHOD_(void)
-  OnSetSelectedIndex(int32_t aOldIndex, int32_t aNewIndex) override;
+  OnSetSelectedIndex(int32_t aOldIndex, int32_t aNewIndex) final;
 
   /**
    * Mouse event listeners.
@@ -395,8 +392,8 @@ class nsListControlFrame final : public nsHTMLScrollFrame,
    */
   uint32_t GetNumberOfRows();
 
-  nsView* GetViewInternal() const override { return mView; }
-  void SetViewInternal(nsView* aView) override { mView = aView; }
+  nsView* GetViewInternal() const final { return mView; }
+  void SetViewInternal(nsView* aView) final { mView = aView; }
 
   // Data Members
   int32_t mStartSelectionIndex;
