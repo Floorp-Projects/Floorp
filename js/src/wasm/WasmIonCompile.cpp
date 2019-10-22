@@ -1764,11 +1764,13 @@ static bool EmitF64Const(FunctionCompiler& f) {
 }
 
 static bool EmitBlock(FunctionCompiler& f) {
-  return f.iter().readBlock() && f.startBlock();
+  ResultType params;
+  return f.iter().readBlock(&params) && f.startBlock();
 }
 
 static bool EmitLoop(FunctionCompiler& f) {
-  if (!f.iter().readLoop()) {
+  ResultType params;
+  if (!f.iter().readLoop(&params)) {
     return false;
   }
 
@@ -1784,8 +1786,9 @@ static bool EmitLoop(FunctionCompiler& f) {
 }
 
 static bool EmitIf(FunctionCompiler& f) {
+  ResultType params;
   MDefinition* condition = nullptr;
-  if (!f.iter().readIf(&condition)) {
+  if (!f.iter().readIf(&params, &condition)) {
     return false;
   }
 
@@ -1799,9 +1802,10 @@ static bool EmitIf(FunctionCompiler& f) {
 }
 
 static bool EmitElse(FunctionCompiler& f) {
-  ResultType thenType;
+  ResultType paramType;
+  ResultType resultType;
   DefVector thenValues;
-  if (!f.iter().readElse(&thenType, &thenValues)) {
+  if (!f.iter().readElse(&paramType, &resultType, &thenValues)) {
     return false;
   }
 
