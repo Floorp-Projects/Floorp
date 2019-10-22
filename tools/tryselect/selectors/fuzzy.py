@@ -30,8 +30,11 @@ build = MozbuildObject.from_environment(cwd=here)
 
 PREVIEW_SCRIPT = os.path.join(build.topsrcdir, 'tools/tryselect/formatters/preview.py')
 TASK_DURATION_URL = 'https://storage.googleapis.com/mozilla-mach-data/task_duration_history.json'
+GRAPH_QUANTILES_URL = 'https://storage.googleapis.com/mozilla-mach-data/machtry_quantiles.csv'
 TASK_DURATION_CACHE = os.path.join(get_state_dir(
     srcdir=True), 'cache', 'task_duration_history.json')
+GRAPH_QUANTILE_CACHE = os.path.join(get_state_dir(
+    srcdir=True), 'cache', 'graph_quantile_cache.csv')
 TASK_DURATION_TAG_FILE = os.path.join(get_state_dir(
     srcdir=True), 'cache', 'task_duration_tag.json')
 
@@ -125,6 +128,8 @@ def check_downloaded_history():
 
     if not os.path.isfile(TASK_DURATION_CACHE):
         return False
+    if not os.path.isfile(GRAPH_QUANTILE_CACHE):
+        return False
 
     return True
 
@@ -138,13 +143,15 @@ def download_task_history_data():
     try:
         os.unlink(TASK_DURATION_TAG_FILE)
         os.unlink(TASK_DURATION_CACHE)
+        os.unlink(GRAPH_QUANTILE_CACHE)
     except OSError:
         print("No existing task history to clean up.")
 
     try:
         r = requests.get(TASK_DURATION_URL, stream=True)
-    except:  # noqa
-        # This is fine, the results just won't be in the preview window.
+    except requests.exceptions.RequestException as exc:
+        # This is fine, the durations just won't be in the preview window.
+        print("Error fetching task duration cache from {}: {}".format(TASK_DURATION_URL, exc))
         return
 
     # The data retrieved from google storage is a newline-separated
@@ -155,6 +162,17 @@ def download_task_history_data():
 
     with open(TASK_DURATION_CACHE, 'w') as f:
         json.dump(duration_data, f, indent=4)
+
+    try:
+        r = requests.get(GRAPH_QUANTILES_URL, stream=True)
+    except requests.exceptions.RequestException as exc:
+        # This is fine, the percentile just won't be in the preview window.
+        print("Error fetching task group percentiles from {}: {}".format(GRAPH_QUANTILES_URL, exc))
+        return
+
+    with open(GRAPH_QUANTILE_CACHE, 'w') as f:
+        f.write(r.content)
+
     with open(TASK_DURATION_TAG_FILE, 'w') as f:
         json.dump({
             'download_date': datetime.now().strftime('%Y-%m-%d')
@@ -393,8 +411,8 @@ def run(update=False, query=None, intersect_query=None, try_config=None, full=Fa
 
     if show_estimates and os.path.isfile(TASK_DURATION_CACHE):
         base_cmd.extend([
-            '--preview', 'python {} -g {} -d {} "{{+}}"'.format(
-                PREVIEW_SCRIPT, dep_cache, TASK_DURATION_CACHE),
+            '--preview', 'python {} -g {} -d {} -q {} "{{+}}"'.format(
+                PREVIEW_SCRIPT, dep_cache, TASK_DURATION_CACHE, GRAPH_QUANTILE_CACHE),
         ])
     else:
         base_cmd.extend([
