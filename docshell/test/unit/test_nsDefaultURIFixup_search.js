@@ -174,9 +174,7 @@ add_task(async function setup() {
 add_task(function test_fix_unknown_schemes() {
   for (let i = 0; i < len; ++i) {
     let item = data[i];
-    let flags =
-      Services.uriFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS |
-      Services.uriFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP;
+    let flags = Services.uriFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS;
     if (item.inPrivateBrowsing) {
       flags |= Services.uriFixup.FIXUP_FLAG_PRIVATE_CONTEXT;
     }

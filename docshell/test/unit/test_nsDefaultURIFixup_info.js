@@ -28,6 +28,9 @@ var flagInputs = [
     Services.uriFixup.FIXUP_FLAG_PRIVATE_CONTEXT,
   Services.uriFixup.FIXUP_FLAGS_MAKE_ALTERNATE_URI,
   Services.uriFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS,
+  // This should not really generate a search, but it does, see Bug 1588118.
+  Services.uriFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS |
+    Services.uriFixup.FIXUP_FLAG_PRIVATE_CONTEXT,
 ];
 
 /*
