@@ -4112,6 +4112,50 @@ class MToNumberInt32 : public MUnaryInstruction, public ToInt32Policy::Data {
   ALLOW_CLONE(MToNumberInt32)
 };
 
+// Applies ECMA's ToInteger on a primitive (either typed or untyped) and expects
+// the result to be precisely representable as an Int32, otherwise bails.
+//
+// NB: Negative zero doesn't lead to a bailout, but instead will be treated the
+// same as positive zero for this operation.
+//
+// If the input is not primitive at runtime, a bailout occurs. If the input
+// cannot be converted to an int32 without loss (i.e. 2e10 or Infinity) then a
+// bailout occurs.
+class MToIntegerInt32 : public MUnaryInstruction, public ToInt32Policy::Data {
+  explicit MToIntegerInt32(MDefinition* def)
+      : MUnaryInstruction(classOpcode, def) {
+    setResultType(MIRType::Int32);
+    setMovable();
+
+    // An object might have "valueOf", which means it is effectful.
+    // ToInteger(symbol) and ToInteger(BigInt) throw.
+    if (def->mightBeType(MIRType::Object) ||
+        def->mightBeType(MIRType::Symbol) ||
+        def->mightBeType(MIRType::BigInt)) {
+      setGuard();
+    }
+  }
+
+ public:
+  INSTRUCTION_HEADER(ToIntegerInt32)
+  TRIVIAL_NEW_WRAPPERS
+
+  MDefinition* foldsTo(TempAllocator& alloc) override;
+
+  bool congruentTo(const MDefinition* ins) const override {
+    return congruentIfOperandsEqual(ins);
+  }
+
+  AliasSet getAliasSet() const override { return AliasSet::None(); }
+  void computeRange(TempAllocator& alloc) override;
+
+#ifdef DEBUG
+  bool isConsistentFloat32Use(MUse* use) const override { return true; }
+#endif
+
+  ALLOW_CLONE(MToIntegerInt32)
+};
+
 // Converts a value or typed input to a truncated int32, for use with bitwise
 // operations. This is an infallible ValueToECMAInt32.
 class MTruncateToInt32 : public MUnaryInstruction, public ToInt32Policy::Data {
