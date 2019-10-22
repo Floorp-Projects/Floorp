@@ -440,8 +440,10 @@ DIRS += [
     'gc',
     'jit',
     'wasm',
-    'zydis',
 ]
+
+if CONFIG['JS_JITSPEW']:
+    DIRS += ['zydis']
 
 FINAL_LIBRARY = 'js'
 
