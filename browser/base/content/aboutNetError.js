@@ -372,31 +372,34 @@ async function setNetErrorMessageFromCode() {
   }
 
   let desc = document.getElementById("errorShortDescText");
-  let errorCodeStr = securityInfo.errorCodeString;
-  try {
-    let [errorCodeMsg] = await document.l10n.formatValues([
-      {
-        id: errorCodeStr
-          .split("_")
-          .join("-")
-          .toLowerCase(),
-      },
-    ]);
-    document.l10n.setAttributes(desc, "ssl-connection-error", {
-      errorMessage: errorCodeMsg,
-      hostname: hostString,
-    });
-    let desc2 = document.getElementById("errorShortDescText2");
-    document.l10n.setAttributes(desc2, "cert-error-code-prefix", {
-      error: errorCodeStr,
-    });
-  } catch (e) {
+  let errorCodeStr = securityInfo.errorCodeString || "";
+
+  let [errorCodeMsg] = await document.l10n.formatValues([
+    {
+      id: errorCodeStr
+        .split("_")
+        .join("-")
+        .toLowerCase(),
+    },
+  ]);
+
+  if (!errorCodeMsg) {
     console.error("No strings exist for this error type");
     document.l10n.setAttributes(desc, "ssl-connection-error", {
       errorMessage: errorCodeStr,
       hostname: hostString,
     });
+    return;
   }
+
+  document.l10n.setAttributes(desc, "ssl-connection-error", {
+    errorMessage: errorCodeMsg,
+    hostname: hostString,
+  });
+  let desc2 = document.getElementById("errorShortDescText2");
+  document.l10n.setAttributes(desc2, "cert-error-code-prefix", {
+    error: errorCodeStr,
+  });
 }
 
 // This function centers the error container after its content updates.
