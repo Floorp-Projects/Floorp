@@ -3778,11 +3778,9 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
         // confirmation does not arrive within the timeout period). Otherwise,
         // APZ's fallback behaviour of scrolling the enclosing scroll frame
         // would violate the specified overscroll-behavior.
-        ScrollStyles scrollStyles = GetScrollStylesFromFrame();
-        if (scrollStyles.mOverscrollBehaviorX !=
-                StyleOverscrollBehavior::Auto ||
-            scrollStyles.mOverscrollBehaviorY !=
-                StyleOverscrollBehavior::Auto) {
+        auto overscroll = GetOverscrollBehaviorInfo();
+        if (overscroll.mBehaviorX != OverscrollBehavior::Auto ||
+            overscroll.mBehaviorY != OverscrollBehavior::Auto) {
           info += CompositorHitTestFlags::eRequiresTargetConfirmation;
         }
         nsDisplayCompositorHitTestInfo* hitInfo =
@@ -4097,6 +4095,17 @@ static void HandleScrollPref(nsIScrollable* aScrollable, int32_t aOrientation,
   }
 }
 
+OverscrollBehaviorInfo ScrollFrameHelper::GetOverscrollBehaviorInfo() const {
+  nsIFrame* frame = GetFrameForStyle();
+  if (!frame) {
+    return {};
+  }
+
+  auto& disp = *frame->StyleDisplay();
+  return OverscrollBehaviorInfo::FromStyleConstants(disp.mOverscrollBehaviorX,
+                                                    disp.mOverscrollBehaviorY);
+}
+
 ScrollStyles ScrollFrameHelper::GetScrollStylesFromFrame() const {
   nsPresContext* presContext = mOuter->PresContext();
   if (!presContext->IsDynamic() &&
@@ -4105,8 +4114,7 @@ ScrollStyles ScrollFrameHelper::GetScrollStylesFromFrame() const {
   }
 
   if (!mIsRoot) {
-    const nsStyleDisplay* disp = mOuter->StyleDisplay();
-    return ScrollStyles(mOuter->GetWritingMode(), disp);
+    return ScrollStyles(*mOuter->StyleDisplay());
   }
 
   ScrollStyles result = presContext->GetViewportScrollStylesOverride();

@@ -67,11 +67,20 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
   virtual nsIFrame* GetScrolledFrame() const = 0;
 
   /**
-   * Get the styles (StyleOverflow::Scroll, StyleOverflow::Hidden,
-   * or StyleOverflow::Auto) governing the horizontal and vertical
-   * scrollbars for this frame.
+   * Get the overflow styles (StyleOverflow::Scroll, StyleOverflow::Hidden, or
+   * StyleOverflow::Auto) governing the horizontal and vertical scrollbars for
+   * this frame.
+   *
+   * This is special because they can be propagated from the <body> element,
+   * unlike other styles.
    */
   virtual mozilla::ScrollStyles GetScrollStyles() const = 0;
+
+  /**
+   * Get the overscroll-behavior styles.
+   */
+  virtual mozilla::layers::OverscrollBehaviorInfo GetOverscrollBehaviorInfo()
+      const = 0;
 
   enum { HORIZONTAL = 0x01, VERTICAL = 0x02 };
   /**
