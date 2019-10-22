@@ -3,11 +3,10 @@ set -e
 
 cp -p $1/LICENSE .
 cp -p $1/Cargo.toml .
+cp -r $1/coreaudio-sys-utils .
 test -d src || mkdir -p src
 # Copy all the files under src folder, except tests.
 rsync -av --progress $1/src/ src/ --exclude backend/tests
-# Separate build settings of coreaudio-sys-utils in gecko for now (Bug 1569003).
-rsync -av --progress $1/coreaudio-sys-utils . --exclude Cargo.toml
 
 if [ -d $1/.git ]; then
   rev=$(cd $1 && git rev-parse --verify HEAD)
