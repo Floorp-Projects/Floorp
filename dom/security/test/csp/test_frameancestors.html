@@ -51,10 +51,14 @@ var framesThatShouldLoad = {
 // Number of tests that pass for this file should be 12 (8 violations 4 loads)
 var expectedViolationsLeft = 8;
 
+// CSP frame-ancestor checks happen in the parent, hence we have to
+// proxy the csp violation notifications.
+SpecialPowers.registerObservers("csp-on-violate-policy");
+
 // This is used to watch the blocked data bounce off CSP and allowed data
 // get sent out to the wire.
 function examiner() {
-  SpecialPowers.addObserver(this, "csp-on-violate-policy");
+  SpecialPowers.addObserver(this, "specialpowers-csp-on-violate-policy");
 }
 examiner.prototype  = {
   observe(subject, topic, data) {
@@ -81,7 +85,7 @@ examiner.prototype  = {
     }
 
 
-    if (topic === "csp-on-violate-policy") {
+    if (topic === "specialpowers-csp-on-violate-policy") {
       //these were blocked... record that they were blocked
       window.frameBlocked(asciiSpec, data);
     }
@@ -90,7 +94,7 @@ examiner.prototype  = {
   // must eventually call this to remove the listener,
   // or mochitests might get borked.
   remove() {
-    SpecialPowers.removeObserver(this, "csp-on-violate-policy");
+    SpecialPowers.removeObserver(this, "specialpowers-csp-on-violate-policy");
   }
 }
 
