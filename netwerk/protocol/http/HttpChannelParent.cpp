@@ -1803,10 +1803,18 @@ mozilla::ipc::IPCResult HttpChannelParent::RecvOpenAltDataCacheInputStream(
 NS_IMETHODIMP
 HttpChannelParent::OnProgress(nsIRequest* aRequest, nsISupports* aContext,
                               int64_t aProgress, int64_t aProgressMax) {
-  LOG(("HttpChannelParent::OnStatus [this=%p progress=%" PRId64 "max=%" PRId64
+  LOG(("HttpChannelParent::OnProgress [this=%p progress=%" PRId64 "max=%" PRId64
        "]\n",
        this, aProgress, aProgressMax));
   MOZ_ASSERT(NS_IsMainThread());
+  // Either IPC channel is closed or background channel
+  // is ready to send OnProgress.
+  MOZ_ASSERT(mIPCClosed || mBgParent);
+
+  // If IPC channel is closed, there is nothing we can do. Just return NS_OK.
+  if (mIPCClosed || !mBgParent) {
+    return NS_OK;
+  }
 
   // If it indicates this precedes OnDataAvailable, child can derive the value
   // in ODA.
@@ -1815,15 +1823,10 @@ HttpChannelParent::OnProgress(nsIRequest* aRequest, nsISupports* aContext,
     return NS_OK;
   }
 
-  // Either IPC channel is closed or background channel
-  // is ready to send OnProgress.
-  MOZ_ASSERT(mIPCClosed || mBgParent);
-
   // Send OnProgress events to the child for data upload progress notifications
   // (i.e. status == NS_NET_STATUS_SENDING_TO) or if the channel has
   // LOAD_BACKGROUND set.
-  if (mIPCClosed || !mBgParent ||
-      !mBgParent->OnProgress(aProgress, aProgressMax)) {
+  if (!mBgParent->OnProgress(aProgress, aProgressMax)) {
     return NS_ERROR_UNEXPECTED;
   }
 
@@ -1836,6 +1839,14 @@ HttpChannelParent::OnStatus(nsIRequest* aRequest, nsISupports* aContext,
   LOG(("HttpChannelParent::OnStatus [this=%p status=%" PRIx32 "]\n", this,
        static_cast<uint32_t>(aStatus)));
   MOZ_ASSERT(NS_IsMainThread());
+  // Either IPC channel is closed or background channel
+  // is ready to send OnStatus.
+  MOZ_ASSERT(mIPCClosed || mBgParent);
+
+  // If IPC channel is closed, there is nothing we can do. Just return NS_OK.
+  if (mIPCClosed || !mBgParent) {
+    return NS_OK;
+  }
 
   // If this precedes OnDataAvailable, transportStatus will be derived in ODA.
   if (aStatus == NS_NET_STATUS_RECEIVING_FROM ||
@@ -1847,12 +1858,8 @@ HttpChannelParent::OnStatus(nsIRequest* aRequest, nsISupports* aContext,
     return NS_OK;
   }
 
-  // Either IPC channel is closed or background channel
-  // is ready to send OnStatus.
-  MOZ_ASSERT(mIPCClosed || mBgParent);
-
   // Otherwise, send to child now
-  if (mIPCClosed || !mBgParent || !mBgParent->OnStatus(aStatus)) {
+  if (!mBgParent->OnStatus(aStatus)) {
     return NS_ERROR_UNEXPECTED;
   }
 
