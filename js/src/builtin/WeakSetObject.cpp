@@ -71,10 +71,10 @@ bool WeakSetObject::add(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   // Steps 5-6.
-  if (ObjectValueMap* map =
+  if (ObjectValueWeakMap* map =
           args.thisv().toObject().as<WeakSetObject>().getMap()) {
     JSObject* value = &args[0].toObject();
-    if (ObjectValueMap::Ptr ptr = map->lookup(value)) {
+    if (ObjectValueWeakMap::Ptr ptr = map->lookup(value)) {
       map->remove(ptr);
       args.rval().setBoolean(true);
       return true;
@@ -107,7 +107,7 @@ bool WeakSetObject::delete_(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   // Steps 4, 6.
-  if (ObjectValueMap* map =
+  if (ObjectValueWeakMap* map =
           args.thisv().toObject().as<WeakSetObject>().getMap()) {
     JSObject* value = &args[0].toObject();
     if (map->has(value)) {

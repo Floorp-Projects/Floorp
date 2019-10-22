@@ -129,11 +129,12 @@ void WeakMapBase::restoreMarkedWeakMaps(WeakMapSet& markedWeakMaps) {
   }
 }
 
-size_t ObjectValueMap::sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) {
+size_t ObjectValueWeakMap::sizeOfIncludingThis(
+    mozilla::MallocSizeOf mallocSizeOf) {
   return mallocSizeOf(this) + shallowSizeOfExcludingThis(mallocSizeOf);
 }
 
-bool ObjectValueMap::findSweepGroupEdges() {
+bool ObjectValueWeakMap::findSweepGroupEdges() {
   /*
    * For unmarked weakmap keys with delegates in a different zone, add a zone
    * edge to ensure that the delegate zone finishes marking before the key
@@ -163,7 +164,7 @@ bool ObjectValueMap::findSweepGroupEdges() {
 ObjectWeakMap::ObjectWeakMap(JSContext* cx) : map(cx, nullptr) {}
 
 JSObject* ObjectWeakMap::lookup(const JSObject* obj) {
-  if (ObjectValueMap::Ptr p = map.lookup(const_cast<JSObject*>(obj))) {
+  if (ObjectValueWeakMap::Ptr p = map.lookup(const_cast<JSObject*>(obj))) {
     return &p->value().toObject();
   }
   return nullptr;
@@ -191,7 +192,7 @@ size_t ObjectWeakMap::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) {
 
 #ifdef JSGC_HASH_TABLE_CHECKS
 void ObjectWeakMap::checkAfterMovingGC() {
-  for (ObjectValueMap::Range r = map.all(); !r.empty(); r.popFront()) {
+  for (ObjectValueWeakMap::Range r = map.all(); !r.empty(); r.popFront()) {
     CheckGCThingAfterMovingGC(r.front().key().get());
     CheckGCThingAfterMovingGC(&r.front().value().toObject());
   }
