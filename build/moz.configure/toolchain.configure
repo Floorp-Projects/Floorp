@@ -304,7 +304,7 @@ js_option(env='RUSTC_WRAPPER', nargs=1,
 @imports(_from='textwrap', _import='dedent')
 @imports('os')
 def check_sccache_version(ccache, ccache_is_sccache, rustc_wrapper):
-    sccache_min_version = Version('0.2.10')
+    sccache_min_version = Version('0.2.12')
 
     def check_version(path):
         out = check_cmd_output(path, '--version')
