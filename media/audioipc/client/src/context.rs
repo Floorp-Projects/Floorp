@@ -3,13 +3,13 @@
 // This program is made available under an ISC-style license.  See the
 // accompanying file LICENSE for details
 
-use crate::stream;
 use crate::{assert_not_in_callback, run_in_callback};
-use crate::{ClientStream, AUDIOIPC_INIT_PARAMS};
-#[cfg(target_os = "linux")]
-use audio_thread_priority::get_current_thread_info;
+use crate::stream;
+use crate::{ClientStream, G_SERVER_FD, CPUPOOL_INIT_PARAMS};
 #[cfg(not(target_os = "linux"))]
 use audio_thread_priority::promote_current_thread_to_real_time;
+#[cfg(target_os = "linux")]
+use audio_thread_priority::get_current_thread_info;
 use audioipc::codec::LengthDelimitedCodec;
 use audioipc::frame::{framed, Framed};
 use audioipc::platformhandle_passing::{framed_with_platformhandles, FramedWithPlatformHandles};
@@ -77,8 +77,23 @@ impl ClientContext {
     }
 }
 
+// TODO: encapsulate connect, etc inside audioipc.
+fn open_server_stream() -> io::Result<audioipc::MessageStream> {
+    unsafe {
+        if let Some(fd) = G_SERVER_FD {
+            return Ok(audioipc::MessageStream::from_raw_fd(fd.as_raw()));
+        }
+
+        Err(io::Error::new(
+            io::ErrorKind::Other,
+            "Failed to get server connection.",
+        ))
+    }
+}
+
 #[cfg(target_os = "linux")]
-fn promote_thread(rpc: &rpc::ClientProxy<ServerMessage, ClientMessage>) {
+fn promote_thread(rpc: &rpc::ClientProxy<ServerMessage, ClientMessage>)
+{
     match get_current_thread_info() {
         Ok(info) => {
             let bytes = info.serialize();
@@ -92,7 +107,8 @@ fn promote_thread(rpc: &rpc::ClientProxy<ServerMessage, ClientMessage>) {
 }
 
 #[cfg(not(target_os = "linux"))]
-fn promote_thread(_rpc: &rpc::ClientProxy<ServerMessage, ClientMessage>) {
+fn promote_thread(_rpc: &rpc::ClientProxy<ServerMessage, ClientMessage>)
+{
     match promote_current_thread_to_real_time(0, 48000) {
         Ok(_) => {
             info!("Audio thread promoted to real-time.");
@@ -111,10 +127,8 @@ fn register_thread(callback: Option<extern "C" fn(*const ::std::os::raw::c_char)
     }
 }
 
-fn promote_and_register_thread(
-    rpc: &rpc::ClientProxy<ServerMessage, ClientMessage>,
-    callback: Option<extern "C" fn(*const ::std::os::raw::c_char)>,
-) {
+fn promote_and_register_thread(rpc: &rpc::ClientProxy<ServerMessage, ClientMessage>,
+    callback: Option<extern "C" fn(*const ::std::os::raw::c_char)>) {
     promote_thread(rpc);
     register_thread(callback);
 }
@@ -159,10 +173,9 @@ impl rpc::Server for DeviceCollectionServer {
 
                 self.cpu_pool.spawn_fn(move || {
                     run_in_callback(|| {
+
                         if devtype.contains(cubeb_backend::DeviceType::INPUT) {
-                            unsafe {
-                                input_cb.unwrap()(ptr::null_mut(), input_user_ptr as *mut c_void)
-                            }
+                            unsafe { input_cb.unwrap()(ptr::null_mut(), input_user_ptr as *mut c_void) }
                         }
                         if devtype.contains(cubeb_backend::DeviceType::OUTPUT) {
                             unsafe {
@@ -196,18 +209,15 @@ impl ContextOps for ClientContext {
 
         let (tx_rpc, rx_rpc) = mpsc::channel();
 
-        let params = AUDIOIPC_INIT_PARAMS.with(|p| p.replace(None).unwrap());
-
-        let server_stream =
-            unsafe { audioipc::MessageStream::from_raw_fd(params.server_connection) };
+        let params = CPUPOOL_INIT_PARAMS.with(|p| p.replace(None).unwrap());
 
         let core = core::spawn_thread("AudioIPC Client RPC", move || {
             let handle = reactor::Handle::default();
 
             register_thread(params.thread_create_callback);
 
-            server_stream
-                .into_tokio_ipc(&handle)
+            open_server_stream()
+                .and_then(|stream| stream.into_tokio_ipc(&handle))
                 .and_then(|stream| bind_and_send_client(stream, &tx_rpc))
         })
         .map_err(|_| Error::default())?;
@@ -423,6 +433,11 @@ impl Drop for ClientContext {
     fn drop(&mut self) {
         debug!("ClientContext dropped...");
         let _ = send_recv!(self.rpc(), ClientDisconnect => ClientDisconnected);
+        unsafe {
+            if G_SERVER_FD.is_some() {
+                G_SERVER_FD.take().unwrap().close();
+            }
+        }
     }
 }
 
