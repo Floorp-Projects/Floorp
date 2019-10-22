@@ -1165,6 +1165,10 @@ inline bool OpIter<Policy>::readBlockType(BlockType* type) {
   }
 
 #ifdef ENABLE_WASM_MULTI_VALUE
+  if (!env_.multiValuesEnabled()) {
+    return fail("invalid block type reference");
+  }
+
   int32_t x;
   if (!d_.readVarS32(&x) || x < 0 || uint32_t(x) >= env_.types.length()) {
     return fail("invalid block type type index");

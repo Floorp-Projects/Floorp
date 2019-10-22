@@ -447,6 +447,7 @@ CompilerEnvironment::CompilerEnvironment(CompileMode mode, Tier tier,
       debug_(debugEnabled),
       refTypes_(refTypesConfigured),
       gcTypes_(gcTypesConfigured),
+      multiValues_(true),
       hugeMemory_(hugeMemory) {}
 
 void CompilerEnvironment::computeParameters(bool gcFeatureOptIn) {
@@ -503,6 +504,7 @@ void CompilerEnvironment::computeParameters(Decoder& d, bool gcFeatureOptIn) {
   debug_ = debugEnabled ? DebugEnabled::True : DebugEnabled::False;
   gcTypes_ = gcEnabled;
   refTypes_ = !craneliftEnabled;
+  multiValues_ = !craneliftEnabled;
   hugeMemory_ = hugeMemory;
   state_ = Computed;
 }
