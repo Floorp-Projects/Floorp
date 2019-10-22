@@ -22,8 +22,11 @@ class Input extends ContentProcessDomain {
   }
 
   /**
-   * Not a CDP method.
-   *
+   * Internal methods: the following methods are not part of CDP;
+   * note the _ prefix.
+   */
+
+  /**
    * Add an event listener in the content page for the provided eventName.
    * This method will return a unique handler id that can be used to wait
    * for the event.
@@ -34,7 +37,7 @@ class Input extends ContentProcessDomain {
    *   // do something that triggers a click in content
    *   await this.executeInChild("waitForContentEvent", id);
    */
-  addContentEventListener(eventName) {
+  _addContentEventListener(eventName) {
     const eventPromise = new Promise(r => {
       this.chromeEventHandler.addEventListener(eventName, r, {
         mozSystemGroup: true,
@@ -47,11 +50,9 @@ class Input extends ContentProcessDomain {
   }
 
   /**
-   * Not a CDP method.
-   *
    * Wait for an event listener added via `addContentEventListener` to be fired.
    */
-  async waitForContentEvent(eventId) {
+  async _waitForContentEvent(eventId) {
     const eventPromise = this._eventPromises.get(eventId);
     if (!eventPromise) {
       throw new Error("No event promise found for id " + eventId);
@@ -61,12 +62,10 @@ class Input extends ContentProcessDomain {
   }
 
   /**
-   * Not a CDP method.
-   *
    * Expose docShell.doCommand to parent domain.
    * Used in temporary workaround for emulating certain native key bindings
    */
-  doDocShellCommand(command) {
+  _doDocShellCommand(command) {
     this.docShell.doCommand(command);
   }
 }

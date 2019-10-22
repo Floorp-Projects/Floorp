@@ -57,7 +57,7 @@ class Input extends Domain {
 
     const EventUtils = this._getEventUtils(browserWindow);
     const eventId = await this.executeInChild(
-      "addContentEventListener",
+      "_addContentEventListener",
       domType
     );
 
@@ -86,7 +86,7 @@ class Input extends Domain {
         case "Linux":
           if (modifiers == ctrl && key == "Backspace") {
             await this.executeInChild(
-              "doDocShellCommand",
+              "_doDocShellCommand",
               "cmd_deleteWordBackward"
             );
           }
@@ -94,7 +94,7 @@ class Input extends Domain {
         case "Darwin":
           if (modifiers == meta && key == "Backspace") {
             await this.executeInChild(
-              "doDocShellCommand",
+              "_doDocShellCommand",
               "cmd_deleteToBeginningOfLine"
             );
           }
@@ -102,7 +102,7 @@ class Input extends Domain {
     }
 
     // TODO in case of workaround for native key bindings: wait for input event?
-    await this.executeInChild("waitForContentEvent", eventId);
+    await this.executeInChild("_waitForContentEvent", eventId);
   }
 
   async dispatchMouseEvent({ type, button, x, y, modifiers, clickCount }) {
