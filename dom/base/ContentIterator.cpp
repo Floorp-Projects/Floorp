@@ -262,7 +262,7 @@ nsresult ContentIteratorBase::InitInternal(const RawRangeBoundary& aStart,
           NS_WARNING_ASSERTION(mLast, "PrevNode returned null");
           if (mLast && mLast != mFirst &&
               NS_WARN_IF(!NodeIsInTraversalRange(
-                  mLast, mPre, RawRangeBoundary(mFirst, 0), aEnd))) {
+                  mLast, mPre, RawRangeBoundary(mFirst, 0u), aEnd))) {
             mLast = nullptr;
           }
         } else {
@@ -558,8 +558,8 @@ nsresult ContentIteratorBase::PositionAt(nsINode* aCurNode) {
 
   // Check to see if the node falls within the traversal range.
 
-  RawRangeBoundary first(mFirst, 0);
-  RawRangeBoundary last(mLast, 0);
+  RawRangeBoundary first(mFirst, 0u);
+  RawRangeBoundary last(mLast, 0u);
 
   if (mFirst && mLast) {
     if (mPre) {

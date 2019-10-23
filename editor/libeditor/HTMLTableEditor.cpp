@@ -523,7 +523,7 @@ nsresult HTMLEditor::InsertTableColumnsWithTransaction(
       // Simply set selection to the current cell. So, we can let
       // InsertTableCellsWithTransaction() do the work.  Insert a new cell
       // before current one.
-      SelectionRefPtr()->Collapse(RawRangeBoundary(cellData.mElement, 0),
+      SelectionRefPtr()->Collapse(RawRangeBoundary(cellData.mElement, 0u),
                                   ignoredError);
       NS_WARNING_ASSERTION(!ignoredError.Failed(),
                            "Failed to collapse Selection into the cell");
@@ -570,7 +570,7 @@ nsresult HTMLEditor::InsertTableColumnsWithTransaction(
     // cell indexes for current cell, the effects of colspan > 1 in some cells
     // makes this futile.  We must use NormalizeTableInternal() first to assure
     // that there are cells in each cellmap location.
-    SelectionRefPtr()->Collapse(RawRangeBoundary(lastCellNode, 0),
+    SelectionRefPtr()->Collapse(RawRangeBoundary(lastCellNode, 0u),
                                 ignoredError);
     NS_WARNING_ASSERTION(!ignoredError.Failed(),
                          "Failed to collapse Selection into the cell");
