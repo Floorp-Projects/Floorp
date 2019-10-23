@@ -490,8 +490,18 @@ function submitForm(formNum) {
       // from an HTTPS domain in an iframe.
       if (nextFormNum == 100) {
         ok(true, "submitting iframe test " + nextFormNum);
-        SpecialPowers.wrap(document.getElementById("iframe").contentWindow)
-        .wrappedJSObject.clickButton(nextFormNum);
+
+        // Need to call checkSubmit first, as the iframe's document can be in another
+        // process and won't be able to notify back before the submit occurs.
+        checkSubmit(100);
+
+        let browsingContext = SpecialPowers.unwrap(
+          SpecialPowers.wrap(document.getElementById("iframe")).browsingContext);
+        SpecialPowers.spawn(browsingContext, [], () => {
+          /* eslint-disable no-undef */
+          content.document.querySelectorAll("button")[0].click();
+          /* eslint-enable no-undef */
+        });
       } else {
         let button = getFormSubmitButton(nextFormNum);
         button.click();
