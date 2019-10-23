@@ -495,11 +495,9 @@ async function testFileAccess() {
       func: statPath,
     });
 
-    // Test that we can stat /Library at level 3, but can't
-    // stat something within /Library. This test uses "/Library"
-    // because it's a path that is expected to always be present
-    // and isn't something content processes have read access to
-    // (just read-metadata).
+    // Test that we can stat /Library at level 3, but can't get a
+    // directory listing of /Library. This test uses "/Library"
+    // because it's a path that is expected to always be present.
     let libraryDir = GetDir("/Library");
     tests.push({
       desc: "/Library",
@@ -517,15 +515,6 @@ async function testFileAccess() {
       minLevel: minHomeReadSandboxLevel(),
       func: readDir,
     });
-    let libraryWidgetsDir = GetDir("/Library/Widgets");
-    tests.push({
-      desc: "/Library/Widgets",
-      ok: false,
-      browser: webBrowser,
-      file: libraryWidgetsDir,
-      minLevel: minHomeReadSandboxLevel(),
-      func: statPath,
-    });
 
     // Similarly, test that we can stat /private, but not /private/etc.
     let privateDir = GetDir("/private");
@@ -534,15 +523,6 @@ async function testFileAccess() {
       ok: true,
       browser: webBrowser,
       file: privateDir,
-      minLevel: minHomeReadSandboxLevel(),
-      func: statPath,
-    });
-    let privateEtcDir = GetFile("/private/etc");
-    tests.push({
-      desc: "/private/etc",
-      ok: false,
-      browser: webBrowser,
-      file: privateEtcDir,
       minLevel: minHomeReadSandboxLevel(),
       func: statPath,
     });
