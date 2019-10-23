@@ -71,7 +71,7 @@ def _extract_command(run):
 
 def _generate_secret_command(secret):
     secret_command = [
-        "automation/taskcluster/helper/get-secret.py",
+        "taskcluster/scripts/get-secret.py",
         "-s", secret["name"],
         "-k", secret["key"],
         "-f", secret["path"],
