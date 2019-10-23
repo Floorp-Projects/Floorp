@@ -184,6 +184,10 @@ class DebuggerFrame : public NativeObject {
                                            bool checkLive);
 
   bool isLive() const;
+
+  // Like isLive, but works even in the midst of a relocating GC.
+  bool isLiveMaybeForwarded() const;
+
   OnStepHandler* onStepHandler() const;
   OnPopHandler* onPopHandler() const;
   void setOnPopHandler(JSContext* cx, OnPopHandler* handler);
