@@ -37,6 +37,11 @@ interface PushProcessor {
      */
     fun onError(error: PushError)
 
+    /**
+     * Requests the [PushService] to renew it's registration with it's provider.
+     */
+    fun renewRegistration()
+
     companion object {
         /**
          * Initialize and installs the PushProcessor into the application.

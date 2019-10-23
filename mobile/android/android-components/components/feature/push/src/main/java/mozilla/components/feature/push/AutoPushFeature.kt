@@ -245,7 +245,7 @@ class AutoPushFeature(
      *
      * [0]: https://github.com/mozilla-mobile/android-components/issues/3173
      */
-    fun forceRegistrationRenewal() {
+    override fun renewRegistration() {
         logger.warn("Forcing registration renewal by deleting our (cached) token.")
 
         // Remove the cached token we have.
@@ -254,6 +254,9 @@ class AutoPushFeature(
         // Tell the service to delete the token as well, which will trigger a new token to be
         // retrieved the next time it hits the server.
         service.deleteToken()
+
+        // Starts the service if needed to trigger a new registration.
+        service.start(context)
     }
 
     private fun CoroutineScope.launchAndTry(block: suspend CoroutineScope.() -> Unit) {

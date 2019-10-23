@@ -49,5 +49,7 @@ class PushProcessorTest {
         override fun onMessageReceived(message: EncryptedPushMessage) {}
 
         override fun onError(error: PushError) {}
+
+        override fun renewRegistration() {}
     }
 }

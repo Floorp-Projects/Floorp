@@ -14,6 +14,9 @@ permalink: /changelog/
 
 * **browser-toolbar**
   * ⚠️ **This is a breaking change**: Refactored the internals to use `ConstraintLayout`. As part of this change the public API was simplified and unused methods/properties have been removed.
+  
+* **feature-accounts**
+  * Add new `FxaPushSupportFeature` for some underlying support when connecting push and fxa accounts together.
 
 * **browser-state**
   * Added `externalAppType` to `CustomTabConfig` to indicate how the session is being used.
@@ -151,6 +154,7 @@ permalink: /changelog/
   * Behavior change: In a collection List<TabEntity> is now ordered descending by creation date (newest tab in a collection on top)
 * **feature-session**, **engine-gecko-nightly** and **engine-gecko-beta**
   * Added api to manage the tracking protection exception list, any session added to the list will be ignored and the the current tracking policy will not be applied.
+  
   ```kotlin
     val useCase = TrackingProtectionUseCases(sessionManager,engine)
 
@@ -207,6 +211,7 @@ permalink: /changelog/
 
 * **feature-session**, **engine-gecko-nightly** and **engine-gecko-beta**
   * Added a way to exposes the same amount of trackers as Firefox desktop has in it tracking protection panel via TrackingProtectionUseCases.
+  
   ```kotlin
     val useCase = TrackingProtectionUseCases(sessionManager,engine)
     useCase.fetchTrackingLogs(
