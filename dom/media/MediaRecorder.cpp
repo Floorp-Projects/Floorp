@@ -1613,14 +1613,16 @@ void MediaRecorder::Pause(ErrorResult& aResult) {
   // 3. Set state to paused, and queue a task, using the DOM manipulation task
   //    source, that runs the following steps:
   mState = RecordingState::Paused;
-  MOZ_ASSERT(!mSessions.IsEmpty());
-  NS_DispatchToMainThread(NS_NewRunnableFunction(
-      "MediaRecorder::Pause", [session = mSessions.LastElement(),
-                               recorder = RefPtr<MediaRecorder>(this)] {
-        // 1. Stop gathering data into blob (but keep it available so that
-        //    recording can be resumed in the future).
-        session->Pause();
 
+  // XXX - We pause synchronously pending spec issue
+  //       https://github.com/w3c/mediacapture-record/issues/131
+  //   1. Stop gathering data into blob (but keep it available so that
+  //      recording can be resumed in the future).
+  MOZ_ASSERT(!mSessions.IsEmpty());
+  mSessions.LastElement()->Pause();
+
+  NS_DispatchToMainThread(NS_NewRunnableFunction(
+      "MediaRecorder::Pause", [recorder = RefPtr<MediaRecorder>(this)] {
         // 2. Let target be the MediaRecorder context object. Fire an event
         //    named pause at target.
         recorder->DispatchSimpleEvent(NS_LITERAL_STRING("pause"));
@@ -1652,13 +1654,15 @@ void MediaRecorder::Resume(ErrorResult& aResult) {
   // 3. Set state to recording, and queue a task, using the DOM manipulation
   //    task source, that runs the following steps:
   mState = RecordingState::Recording;
-  MOZ_ASSERT(!mSessions.IsEmpty());
-  NS_DispatchToMainThread(NS_NewRunnableFunction(
-      "MediaRecorder::Resume", [session = mSessions.LastElement(),
-                                recorder = RefPtr<MediaRecorder>(this)] {
-        // 1. Resume (or continue) gathering data into the current blob.
-        session->Resume();
 
+  // XXX - We resume synchronously pending spec issue
+  //       https://github.com/w3c/mediacapture-record/issues/131
+  //   1. Resume (or continue) gathering data into the current blob.
+  MOZ_ASSERT(!mSessions.IsEmpty());
+  mSessions.LastElement()->Resume();
+
+  NS_DispatchToMainThread(NS_NewRunnableFunction(
+      "MediaRecorder::Resume", [recorder = RefPtr<MediaRecorder>(this)] {
         // 2. Let target be the MediaRecorder context object. Fire an event
         //    named resume at target.
         recorder->DispatchSimpleEvent(NS_LITERAL_STRING("resume"));
