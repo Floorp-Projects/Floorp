@@ -10,27 +10,42 @@ loader.lazyGetter(this, "mdnCompatibility", () => {
   return new MDNCompatibility(cssPropertiesCompatData);
 });
 
-const { COMPATIBILITY_UPDATE_SELECTED_NODE } = require("../actions/index");
+const {
+  COMPATIBILITY_UPDATE_SELECTED_NODE,
+  COMPATIBILITY_UPDATE_TARGET_BROWSERS,
+} = require("../actions/index");
 
 const INITIAL_STATE = {
   selectedNodeIssues: [],
+  declarationBlocks: [],
+  targetBrowsers: [],
 };
 
 const reducers = {
-  [COMPATIBILITY_UPDATE_SELECTED_NODE](state, { declarationBlocks }) {
-    const issues = [];
-
-    for (const declarationBlock of declarationBlocks) {
-      issues.push(
-        ...mdnCompatibility.getCSSDeclarationBlockIssues(declarationBlock, [])
-      );
-    }
-
-    return Object.assign({}, state, {
-      selectedNodeIssues: issues,
-    });
+  [COMPATIBILITY_UPDATE_SELECTED_NODE](state, data) {
+    return updateSelectedNodeIssues(state, data);
+  },
+  [COMPATIBILITY_UPDATE_TARGET_BROWSERS](state, data) {
+    return updateSelectedNodeIssues(state, data);
   },
 };
+
+function updateSelectedNodeIssues(state, data) {
+  const declarationBlocks = data.declarationBlocks || state.declarationBlocks;
+  const targetBrowsers = data.targetBrowsers || state.targetBrowsers;
+
+  const selectedNodeIssues = [];
+  for (const declarationBlock of declarationBlocks) {
+    selectedNodeIssues.push(
+      ...mdnCompatibility.getCSSDeclarationBlockIssues(
+        declarationBlock,
+        targetBrowsers
+      )
+    );
+  }
+
+  return { selectedNodeIssues, declarationBlocks, targetBrowsers };
+}
 
 module.exports = function(state = INITIAL_STATE, action) {
   const reducer = reducers[action.type];

@@ -4,7 +4,10 @@
 
 "use strict";
 
-const { COMPATIBILITY_UPDATE_SELECTED_NODE } = require("./index");
+const {
+  COMPATIBILITY_UPDATE_SELECTED_NODE,
+  COMPATIBILITY_UPDATE_TARGET_BROWSERS,
+} = require("./index");
 
 function updateSelectedNode(nodeFront) {
   return async ({ dispatch }) => {
@@ -18,6 +21,14 @@ function updateSelectedNode(nodeFront) {
   };
 }
 
+function updateTargetBrowsers(targetBrowsers) {
+  return {
+    type: COMPATIBILITY_UPDATE_TARGET_BROWSERS,
+    targetBrowsers,
+  };
+}
+
 module.exports = {
   updateSelectedNode,
+  updateTargetBrowsers,
 };

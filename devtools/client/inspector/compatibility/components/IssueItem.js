@@ -30,7 +30,7 @@ class IssueItem extends PureComponent {
             "data-qa-key": key,
             "data-qa-value": `${value}`,
           },
-          `${key}:${value}`
+          `${key}:${JSON.stringify(value)}`
         )
       )
     );
