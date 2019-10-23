@@ -57,7 +57,7 @@ async function assertSitesListed(blocked) {
   let change = waitForSecurityChange(1);
   let timeoutPromise = new Promise(resolve => setTimeout(resolve, 1000));
 
-  await ContentTask.spawn(tab.linkedBrowser, {}, function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], function() {
     content.postMessage("more-tracking", "*");
   });
 
