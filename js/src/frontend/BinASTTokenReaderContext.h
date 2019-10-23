@@ -781,7 +781,7 @@ using ThreeLookupsHuffmanTable =
 // error. This is the default value for `HuffmanTableValue` and represents all
 // states that may not be reached.
 //
-// Part of variants `HuffmanTableValue`, `HuffmanTableListLength` and
+// Part of variants `HuffmanTableValue` and
 // `GenericHuffmanTable::implementation`.
 struct HuffmanTableUnreachable {};
 
@@ -880,15 +880,13 @@ struct GenericHuffmanTable {
 //
 // Attempting to get a value from this table is an internal error.
 //
-// Part of variants `HuffmanTableValue` and `HuffmanTableListLength`.
+// Part of variants `HuffmanTableValue`.
 struct HuffmanTableInitializing {};
 
 // A single Huffman table, used for values.
 using HuffmanTableValue =
     mozilla::Variant<HuffmanTableUnreachable,  // Default value.
                      HuffmanTableInitializing, GenericHuffmanTable>;
-
-using HuffmanTableListLength = HuffmanTableValue;
 
 // A Huffman dictionary for the current file.
 //
@@ -900,7 +898,7 @@ class HuffmanDictionary {
   HuffmanDictionary();
 
   HuffmanTableValue& tableForField(NormalizedInterfaceAndField index);
-  HuffmanTableListLength& tableForListLength(BinASTList list);
+  HuffmanTableValue& tableForListLength(BinASTList list);
 
  private:
   // Huffman tables for `(Interface, Field)` pairs, used to decode the value of
@@ -918,8 +916,7 @@ class HuffmanDictionary {
   //
   // The mapping from `List -> index` is extracted statically from the webidl
   // specs.
-  mozilla::Array<HuffmanTableListLength, BINAST_NUMBER_OF_LIST_TYPES>
-      listLengths_;
+  mozilla::Array<HuffmanTableValue, BINAST_NUMBER_OF_LIST_TYPES> listLengths_;
 };
 
 /**
