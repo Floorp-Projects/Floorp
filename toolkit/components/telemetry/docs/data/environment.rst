@@ -14,7 +14,6 @@ This currently affects the following sections:
 
 - profile
 - add-ons
-- services
 
 
 Structure:
@@ -86,13 +85,6 @@ Structure:
         sandbox: {
           effectiveContentProcessLevel: <integer>,
         }
-      },
-      // Optional, missing if fetching the information failed or had not yet completed.
-      services: {
-        // True if the user has a firefox account
-        accountEnabled: <bool>,
-        // True if the user has sync enabled.
-        syncEnabled: <bool>
       },
       profile: {
         creationDate: <integer>, // integer days since UNIX epoch, e.g. 16446
