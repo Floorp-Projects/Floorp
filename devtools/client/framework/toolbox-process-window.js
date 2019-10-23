@@ -4,7 +4,7 @@
 
 "use strict";
 
-var { loader, require } = ChromeUtils.import(
+var { loader, require, DevToolsLoader } = ChromeUtils.import(
   "resource://devtools/shared/Loader.jsm"
 );
 
@@ -198,26 +198,31 @@ async function openToolbox(target) {
     Toolbox.HostType.CUSTOM,
     toolboxOptions
   );
-  onNewToolbox(toolbox);
+  await onNewToolbox(toolbox);
 }
 
-function onNewToolbox(toolbox) {
+async function onNewToolbox(toolbox) {
   gToolbox = toolbox;
   bindToolboxHandlers();
   raise();
-  const env = Cc["@mozilla.org/process/environment;1"].getService(
-    Ci.nsIEnvironment
-  );
-  const testScript = env.get("MOZ_TOOLBOX_TEST_SCRIPT");
-  if (testScript) {
-    // Only allow executing random chrome scripts when a special
-    // test-only pref is set
-    const prefName = "devtools.browser-toolbox.allow-unsafe-script";
-    if (
-      Services.prefs.getPrefType(prefName) == Services.prefs.PREF_BOOL &&
-      Services.prefs.getBoolPref(prefName) === true
-    ) {
+
+  // Enable some testing features if a testing-only pref is set.
+  const prefName = "devtools.browser-toolbox.allow-unsafe-script";
+  if (
+    Services.prefs.getPrefType(prefName) == Services.prefs.PREF_BOOL &&
+    Services.prefs.getBoolPref(prefName) === true
+  ) {
+    // Execute any test script provided by an environment variable.
+    const env = Cc["@mozilla.org/process/environment;1"].getService(
+      Ci.nsIEnvironment
+    );
+    const testScript = env.get("MOZ_TOOLBOX_TEST_SCRIPT");
+    if (testScript) {
       evaluateTestScript(testScript, toolbox);
+    } else {
+      // If there is no testing script, setup a server so that the test can
+      // evaluate messages in this process.
+      installTestingServer(toolbox);
     }
   }
 }
@@ -228,6 +233,32 @@ function evaluateTestScript(script, toolbox) {
   sandbox.toolbox = toolbox;
   sandbox.ChromeUtils = ChromeUtils;
   Cu.evalInSandbox(script, sandbox);
+}
+
+function installTestingServer(toolbox) {
+  // Install a DebuggerServer in this process and inform the server of its
+  // location. Tests operating on the browser toolbox run in the server
+  // (the firefox parent process) and can connect to this new server using
+  // initBrowserToolboxTask(), allowing them to evaluate scripts here.
+
+  const testLoader = new DevToolsLoader({
+    invisibleToDebugger: true,
+  });
+  const { DebuggerServer } = testLoader.require(
+    "devtools/server/debugger-server"
+  );
+  const { SocketListener } = testLoader.require(
+    "devtools/shared/security/socket"
+  );
+
+  DebuggerServer.init();
+  DebuggerServer.registerAllActors();
+  DebuggerServer.allowChromeProcess = true;
+
+  // Use a fixed port which initBrowserToolboxTask can look for.
+  const socketOptions = { portOrPath: 6001 };
+  const listener = new SocketListener(DebuggerServer, socketOptions);
+  listener.open();
 }
 
 async function bindToolboxHandlers() {
