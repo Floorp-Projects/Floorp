@@ -190,10 +190,6 @@ PasswordStore.prototype = {
       return x == undefined ? null : x;
     }
 
-    function stringifyNullUndefined(x) {
-      return x == undefined || x == null ? "" : x;
-    }
-
     if (record.formSubmitURL && record.httpRealm) {
       this._log.warn(
         "Record " +
@@ -210,7 +206,7 @@ PasswordStore.prototype = {
       record.hostname,
       nullUndefined(record.formSubmitURL),
       nullUndefined(record.httpRealm),
-      stringifyNullUndefined(record.username),
+      record.username,
       record.password,
       record.usernameField,
       record.passwordField
