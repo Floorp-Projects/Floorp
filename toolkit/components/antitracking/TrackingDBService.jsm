@@ -51,14 +51,18 @@ XPCOMUtils.defineLazyPreferenceGetter(
   0
 );
 
-ChromeUtils.defineModuleGetter(
+// How often we check if the user is eligible for seeing a "milestone"
+// doorhanger. 24 hours by default.
+XPCOMUtils.defineLazyPreferenceGetter(
   this,
-  "AsyncShutdown",
-  "resource://gre/modules/AsyncShutdown.jsm"
+  "MILESTONE_UPDATE_INTERVAL",
+  "browser.contentblocking.cfr-milestone.update-interval",
+  24 * 60 * 60 * 1000
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   readAsyncStream: "resource://gre/modules/AsyncStreamReader.jsm",
+  AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
 });
 
 /**
@@ -280,10 +284,11 @@ TrackingDBService.prototype = {
     }
 
     // If milestone CFR messaging is not enabled we don't need to update the milestone pref or send the event.
-    // If we have checked in the last 24 hours, don't bother checking again. Exit early.
+    // We don't do this check too frequently, for performance reasons.
     if (
       !milestoneMessagingEnabled ||
-      (this.lastChecked && Date.now() - this.lastChecked < 24 * 60 * 60 * 1000)
+      (this.lastChecked &&
+        Date.now() - this.lastChecked < MILESTONE_UPDATE_INTERVAL)
     ) {
       return;
     }
