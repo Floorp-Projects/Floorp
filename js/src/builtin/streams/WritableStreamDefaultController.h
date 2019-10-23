@@ -32,7 +32,13 @@ class WritableStreamDefaultController : public StreamController {
    * exists, but WritableByteStreamController does not.)
    */
   enum Slots {
+    /**
+     * The stream that this controller controls.  Stream and controller are
+     * initialized at the same time underneath the |WritableStream| constructor,
+     * so they are same-compartment with each other.
+     */
     Slot_Stream = StreamController::SlotCount,
+
     Slot_UnderlyingSink,
 
     /** Number stored as DoubleValue. */

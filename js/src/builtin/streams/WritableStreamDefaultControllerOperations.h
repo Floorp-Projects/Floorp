@@ -59,7 +59,7 @@ extern double WritableStreamDefaultControllerGetDesiredSize(
     const WritableStreamDefaultController* controller);
 
 extern bool WritableStreamDefaultControllerGetBackpressure(
-    const WritableStreamDefaultController* controller);
+    const WritableStreamDefaultController* unwrappedController);
 
 }  // namespace js
 

@@ -22,10 +22,14 @@
 #include "builtin/streams/WritableStreamDefaultWriter.h"  // js::WritableStreamDefaultWriter
 #include "builtin/streams/WritableStreamOperations.h"  // js::WritableStreamCloseQueuedOrInFlight
 #include "js/Value.h"  // JS::Value, JS::{Int32,Null}Value
+#include "vm/Compartment.h"  // JS::Compartment
+#include "vm/JSContext.h"    // JSContext
 
 #include "builtin/streams/WritableStream-inl.h"  // js::WritableStream::setCloseRequest
-#include "builtin/streams/WritableStreamDefaultWriter-inl.h"  // js::WritableStreamDefaultWriter::stream
+#include "builtin/streams/WritableStreamDefaultWriter-inl.h"  // js::UnwrapStreamFromWriter
 #include "vm/Compartment-inl.h"  // js::UnwrapAndTypeCheckThis
+#include "vm/JSContext-inl.h"    // JSContext::check
+#include "vm/Realm-inl.h"        // js::AutoRealm
 
 using JS::Handle;
 using JS::Int32Value;
@@ -48,7 +52,11 @@ JSObject* js::WritableStreamDefaultWriterClose(
   // Step 1: Let stream be writer.[[ownerWritableStream]].
   // Step 2: Assert: stream is not undefined.
   MOZ_ASSERT(unwrappedWriter->hasStream());
-  Rooted<WritableStream*> unwrappedStream(cx, unwrappedWriter->stream());
+  Rooted<WritableStream*> unwrappedStream(
+      cx, UnwrapStreamFromWriter(cx, unwrappedWriter));
+  if (!unwrappedStream) {
+    return PromiseRejectedWithPendingError(cx);
+  }
 
   // Step 3: Let state be stream.[[state]].
   // Step 4: If state is "closed" or "errored", return a promise rejected with a
@@ -72,7 +80,15 @@ JSObject* js::WritableStreamDefaultWriterClose(
   }
 
   // Step 8: Set stream.[[closeRequest]] to promise.
-  unwrappedStream->setCloseRequest(promise);
+  {
+    AutoRealm ar(cx, unwrappedStream);
+    Rooted<JSObject*> closeRequest(cx, promise);
+    if (!cx->compartment()->wrap(cx, &closeRequest)) {
+      return nullptr;
+    }
+
+    unwrappedStream->setCloseRequest(closeRequest);
+  }
 
   // Step 9: If stream.[[backpressure]] is true and state is "writable", resolve
   //         writer.[[readyPromise]] with undefined.
@@ -103,25 +119,32 @@ JSObject* js::WritableStreamDefaultWriterClose(
  * Streams spec, 4.6.7.
  * WritableStreamDefaultWriterGetDesiredSize ( writer )
  */
-Value js::WritableStreamDefaultWriterGetDesiredSize(
-    const WritableStreamDefaultWriter* unwrappedWriter) {
+bool js::WritableStreamDefaultWriterGetDesiredSize(
+    JSContext* cx, Handle<WritableStreamDefaultWriter*> unwrappedWriter,
+    MutableHandle<Value> size) {
   // Step 1: Let stream be writer.[[ownerWritableStream]].
-  const WritableStream* unwrappedStream = unwrappedWriter->stream();
+  const WritableStream* unwrappedStream =
+      UnwrapStreamFromWriter(cx, unwrappedWriter);
+  if (!unwrappedStream) {
+    return false;
+  }
 
   // Step 2: Let state be stream.[[state]].
   // Step 3: If state is "errored" or "erroring", return null.
   if (unwrappedStream->errored() || unwrappedStream->erroring()) {
-    return NullValue();
+    size.setNull();
   }
-
   // Step 4: If state is "closed", return 0.
-  if (unwrappedStream->closed()) {
-    return Int32Value(0);
+  else if (unwrappedStream->closed()) {
+    size.setInt32(0);
   }
-
   // Step 5: Return
   //         ! WritableStreamDefaultControllerGetDesiredSize(
   //             stream.[[writableStreamController]]).
-  return NumberValue(WritableStreamDefaultControllerGetDesiredSize(
-      unwrappedStream->controller()));
+  else {
+    size.setNumber(WritableStreamDefaultControllerGetDesiredSize(
+        unwrappedStream->controller()));
+  }
+
+  return true;
 }
