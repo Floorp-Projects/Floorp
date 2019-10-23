@@ -294,3 +294,38 @@ add_task(async function test_track_ad_click() {
 
   BrowserTestUtils.removeTab(tab);
 });
+
+add_task(async function test_track_ad_click_with_location_change_same_doc() {
+  searchCounts.clear();
+  Services.telemetry.clearScalars();
+  const url = getSERPUrl(getPageUrl(false, true));
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
+
+  await assertTelemetry(
+    { "example.in-content:sap:ff": 1 },
+    {
+      "browser.search.with_ads": { example: 1 },
+    }
+  );
+
+  // Simulate a LOCATION_CHANGE_SAME_DOCUMENT
+  await ContentTask.spawn(tab.linkedBrowser, { url }, args => {
+    content.history.pushState({}, "", args.url);
+  });
+
+  let pageLoadPromise = BrowserTestUtils.waitForLocationChange(gBrowser);
+  await ContentTask.spawn(tab.linkedBrowser, {}, () => {
+    content.document.getElementById("ad1").click();
+  });
+  await pageLoadPromise;
+
+  await assertTelemetry(
+    { "example.in-content:sap:ff": 1 },
+    {
+      "browser.search.with_ads": { example: 1 },
+      "browser.search.ad_clicks": { example: 1 },
+    }
+  );
+
+  BrowserTestUtils.removeTab(tab);
+});
