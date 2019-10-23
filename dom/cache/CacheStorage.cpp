@@ -470,9 +470,8 @@ already_AddRefed<CacheStorage> CacheStorage::Constructor(
   static_assert(
       CHROME_ONLY_NAMESPACE == (uint32_t)CacheStorageNamespace::Chrome,
       "Chrome namespace should match webidl Chrome enum");
-  static_assert(
-      NUMBER_OF_NAMESPACES == (uint32_t)CacheStorageNamespace::EndGuard_,
-      "Number of namespace should match webidl endguard enum");
+  static_assert(NUMBER_OF_NAMESPACES == CacheStorageNamespaceValues::Count,
+                "Number of namespace should match webidl count");
 
   Namespace ns = static_cast<Namespace>(aNamespace);
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());

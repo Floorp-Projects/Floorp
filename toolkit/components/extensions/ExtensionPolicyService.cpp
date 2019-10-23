@@ -350,12 +350,13 @@ nsresult ExtensionPolicyService::InjectContentScripts(
           DocInfo docInfo(win);
 
           using RunAt = dom::ContentScriptRunAt;
+          namespace RunAtValues = dom::ContentScriptRunAtValues;
           using Scripts = AutoTArray<RefPtr<WebExtensionContentScript>, 8>;
 
-          constexpr uint8_t n = uint8_t(RunAt::EndGuard_);
-          Scripts scripts[n];
+          Scripts scripts[RunAtValues::Count];
 
           auto GetScripts = [&](RunAt aRunAt) -> Scripts&& {
+            static_assert(sizeof(aRunAt) == 1, "Our cast is wrong");
             return std::move(scripts[uint8_t(aRunAt)]);
           };
 
