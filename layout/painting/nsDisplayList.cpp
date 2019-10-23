@@ -87,6 +87,7 @@
 #include "ActiveLayerTracker.h"
 #include "nsPrintfCString.h"
 #include "UnitTransforms.h"
+#include "LayerAnimationInfo.h"
 #include "LayersLogging.h"
 #include "FrameLayerBuilder.h"
 #include "mozilla/EventStateManager.h"
