@@ -64,13 +64,13 @@ class RangeBoundaryBase {
     }
   }
 
-  RangeBoundaryBase(nsINode* aContainer, int32_t aOffset)
+  RangeBoundaryBase(nsINode* aContainer, uint32_t aOffset)
       : mParent(aContainer), mRef(nullptr), mOffset(mozilla::Some(aOffset)) {
     if (mParent && mParent->IsContainerNode()) {
       // Find a reference node
-      if (aOffset == static_cast<int32_t>(mParent->GetChildCount())) {
+      if (aOffset == mParent->GetChildCount()) {
         mRef = mParent->GetLastChild();
-      } else if (aOffset != 0) {
+      } else if (aOffset > 0) {
         mRef = mParent->GetChildAt_Deprecated(aOffset - 1);
       }
 

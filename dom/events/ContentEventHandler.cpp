@@ -355,7 +355,7 @@ nsresult ContentEventHandler::InitCommon(SelectionType aSelectionType,
 
   // But otherwise, we need to assume that there is a selection range at the
   // beginning of the root content if aSelectionType is eNormal.
-  rv = mFirstSelectedRawRange.CollapseTo(RawRangeBoundary(mRootContent, 0));
+  rv = mFirstSelectedRawRange.CollapseTo(RawRangeBoundary(mRootContent, 0u));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return NS_ERROR_UNEXPECTED;
   }
@@ -1012,7 +1012,7 @@ nsresult ContentEventHandler::SetRawRangeFromFlatTextOffset(
 
   // Special case like <br contenteditable>
   if (!mRootContent->HasChildren()) {
-    nsresult rv = aRawRange->CollapseTo(RawRangeBoundary(mRootContent, 0));
+    nsresult rv = aRawRange->CollapseTo(RawRangeBoundary(mRootContent, 0u));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -2853,7 +2853,7 @@ nsresult ContentEventHandler::AdjustCollapsedRangeMaybeIntoTextNode(
       return NS_OK;
     }
     nsresult rv = aRawRange.CollapseTo(
-        RawRangeBoundary(startPoint.Container()->GetFirstChild(), 0));
+        RawRangeBoundary(startPoint.Container()->GetFirstChild(), 0u));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }

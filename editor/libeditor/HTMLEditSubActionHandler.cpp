@@ -241,7 +241,7 @@ nsresult HTMLEditor::InitEditorContentAndSelection() {
   }
 
   rv = InsertBRElementToEmptyListItemsAndTableCellsInRange(
-      RawRangeBoundary(bodyOrDocumentElement, 0),
+      RawRangeBoundary(bodyOrDocumentElement, 0u),
       RawRangeBoundary(bodyOrDocumentElement,
                        bodyOrDocumentElement->GetChildCount()));
   if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
@@ -7464,9 +7464,8 @@ void HTMLEditor::SelectBRElementIfCollapsedInEmptyBlock(
   bool isEmptyNode = false;
   IsEmptyNode(block, &isEmptyNode, true, false);
   if (isEmptyNode) {
-    aStartRef = {block, 0};
-    const CheckedInt<int32_t> offset{block->Length()};
-    aEndRef = {block, offset.value()};
+    aStartRef = {block, 0u};
+    aEndRef = {block, block->Length()};
   }
 }
 
@@ -8213,7 +8212,7 @@ nsresult HTMLEditor::HandleInsertParagraphInHeadingElement(Element& aHeader,
 
   // Put selection at front of righthand heading
   ErrorResult error;
-  SelectionRefPtr()->Collapse(RawRangeBoundary(&aHeader, 0), error);
+  SelectionRefPtr()->Collapse(RawRangeBoundary(&aHeader, 0u), error);
   if (NS_WARN_IF(Destroyed())) {
     error.SuppressException();
     return NS_ERROR_EDITOR_DESTROYED;
@@ -8556,7 +8555,7 @@ nsresult HTMLEditor::HandleInsertParagraphInListItemElement(Element& aListItem,
         return rv;
       }
       ErrorResult error;
-      SelectionRefPtr()->Collapse(RawRangeBoundary(&aListItem, 0), error);
+      SelectionRefPtr()->Collapse(RawRangeBoundary(&aListItem, 0u), error);
       if (NS_WARN_IF(Destroyed())) {
         error.SuppressException();
         return NS_ERROR_EDITOR_DESTROYED;
@@ -10268,7 +10267,7 @@ nsresult HTMLEditor::EnsureSelectionInBodyOrDocumentElement() {
   // If we aren't in the <body> element, force the issue.
   if (!temp) {
     IgnoredErrorResult ignoredError;
-    SelectionRefPtr()->Collapse(RawRangeBoundary(bodyOrDocumentElement, 0),
+    SelectionRefPtr()->Collapse(RawRangeBoundary(bodyOrDocumentElement, 0u),
                                 ignoredError);
     if (NS_WARN_IF(Destroyed())) {
       return NS_ERROR_EDITOR_DESTROYED;
@@ -10295,7 +10294,7 @@ nsresult HTMLEditor::EnsureSelectionInBodyOrDocumentElement() {
   // If we aren't in the <body> element, force the issue.
   if (!temp) {
     IgnoredErrorResult ignoredError;
-    SelectionRefPtr()->Collapse(RawRangeBoundary(bodyOrDocumentElement, 0),
+    SelectionRefPtr()->Collapse(RawRangeBoundary(bodyOrDocumentElement, 0u),
                                 ignoredError);
     if (NS_WARN_IF(Destroyed())) {
       return NS_ERROR_EDITOR_DESTROYED;
@@ -10808,7 +10807,7 @@ nsresult HTMLEditor::MoveSelectedContentsToDivElementToMakeItAbsolutePosition(
     // Don't restore the selection
     restoreSelectionLater.Abort();
     ErrorResult error;
-    SelectionRefPtr()->Collapse(RawRangeBoundary(newDivElement, 0), error);
+    SelectionRefPtr()->Collapse(RawRangeBoundary(newDivElement, 0u), error);
     if (NS_WARN_IF(Destroyed())) {
       error.SuppressException();
       return NS_ERROR_EDITOR_DESTROYED;

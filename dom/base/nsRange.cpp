@@ -459,7 +459,7 @@ void nsRange::CharacterDataChanged(nsIContent* aContent,
           "only a split can start before the end");
       NS_ASSERTION(mStart.Offset() <= aInfo.mChangeEnd + 1,
                    "mStart.Offset() is beyond the end of this node");
-      int32_t newStartOffset = mStart.Offset() - aInfo.mChangeStart;
+      const uint32_t newStartOffset = mStart.Offset() - aInfo.mChangeStart;
       newStart = {aInfo.mDetails->mNextSibling, newStartOffset};
       if (MOZ_UNLIKELY(aContent == mRoot)) {
         newRoot = RangeUtils::ComputeRootNode(newStart.Container());
@@ -479,12 +479,18 @@ void nsRange::CharacterDataChanged(nsIContent* aContent,
     } else {
       // If boundary is inside changed text, position it before change
       // else adjust start offset for the change in length.
-      int32_t newStartOffset = mStart.Offset() <= aInfo.mChangeEnd
-                                   ? aInfo.mChangeStart
-                                   : mStart.Offset() + aInfo.mChangeStart -
-                                         aInfo.mChangeEnd +
-                                         aInfo.mReplaceLength;
-      newStart = {mStart.Container(), newStartOffset};
+      CheckedUint32 newStartOffset{0};
+      if (mStart.Offset() <= aInfo.mChangeEnd) {
+        newStartOffset = aInfo.mChangeStart;
+      } else {
+        newStartOffset = mStart.Offset();
+        newStartOffset -= aInfo.LengthOfRemovedText();
+        newStartOffset += aInfo.mReplaceLength;
+      }
+
+      // newStartOffset.isValid() isn't checked explicitly here, because
+      // newStartOffset.value() contains an assertion.
+      newStart = {mStart.Container(), newStartOffset.value()};
     }
   }
 
@@ -500,9 +506,8 @@ void nsRange::CharacterDataChanged(nsIContent* aContent,
       MOZ_ASSERT(mEnd.Offset() <= aInfo.mChangeEnd + 1,
                  "mEnd.Offset() is beyond the end of this node");
 
-      const CheckedInt<int32_t> newEndOffset{mEnd.Offset() -
-                                             aInfo.mChangeStart};
-      newEnd = {aInfo.mDetails->mNextSibling, newEndOffset.value()};
+      const uint32_t newEndOffset{mEnd.Offset() - aInfo.mChangeStart};
+      newEnd = {aInfo.mDetails->mNextSibling, newEndOffset};
 
       bool isCommonAncestor =
           IsInSelection() && mStart.Container() == mEnd.Container();
@@ -516,11 +521,18 @@ void nsRange::CharacterDataChanged(nsIContent* aContent,
         newEnd.Container()->SetDescendantOfCommonAncestorForRangeInSelection();
       }
     } else {
-      int32_t newEndOffset = mEnd.Offset() <= aInfo.mChangeEnd
-                                 ? aInfo.mChangeStart
-                                 : mEnd.Offset() + aInfo.mChangeStart -
-                                       aInfo.mChangeEnd + aInfo.mReplaceLength;
-      newEnd = {mEnd.Container(), newEndOffset};
+      CheckedUint32 newEndOffset{0};
+      if (mEnd.Offset() <= aInfo.mChangeEnd) {
+        newEndOffset = aInfo.mChangeStart;
+      } else {
+        newEndOffset = mEnd.Offset();
+        newEndOffset -= aInfo.LengthOfRemovedText();
+        newEndOffset += aInfo.mReplaceLength;
+      }
+
+      // newEndOffset.isValid() isn't checked explicitly here, because
+      // newEndOffset.value() contains an assertion.
+      newEnd = {mEnd.Container(), newEndOffset.value()};
     }
   }
 
@@ -530,17 +542,22 @@ void nsRange::CharacterDataChanged(nsIContent* aContent,
     // that will be removed
     nsIContent* removed = aInfo.mDetails->mNextSibling;
     if (removed == mStart.Container()) {
-      const CheckedInt<int32_t> newStartOffset{mStart.Offset() +
-                                               aInfo.mChangeStart};
+      CheckedUint32 newStartOffset{mStart.Offset()};
+      newStartOffset += aInfo.mChangeStart;
+
+      // newStartOffset.isValid() isn't checked explicitly here, because
+      // newStartOffset.value() contains an assertion.
       newStart = {aContent, newStartOffset.value()};
       if (MOZ_UNLIKELY(removed == mRoot)) {
         newRoot = RangeUtils::ComputeRootNode(newStart.Container());
       }
     }
     if (removed == mEnd.Container()) {
-      const CheckedInt<int32_t> newEndOffset{mEnd.Offset() +
-                                             aInfo.mChangeStart};
+      CheckedUint32 newEndOffset{mEnd.Offset()};
+      newEndOffset += aInfo.mChangeStart;
 
+      // newEndOffset.isValid() isn't checked explicitly here, because
+      // newEndOffset.value() contains an assertion.
       newEnd = {aContent, newEndOffset.value()};
       if (MOZ_UNLIKELY(removed == mRoot)) {
         newRoot = RangeUtils::ComputeRootNode(newEnd.Container());
@@ -556,14 +573,12 @@ void nsRange::CharacterDataChanged(nsIContent* aContent,
     if (parentNode == mStart.Container() && mStart.Offset() > 0 &&
         mStart.Offset() < parentNode->GetChildCount() &&
         removed == mStart.GetChildAtOffset()) {
-      const CheckedInt<int32_t> newStartOffset{aInfo.mChangeStart};
-      newStart = {aContent, newStartOffset.value()};
+      newStart = {aContent, aInfo.mChangeStart};
     }
     if (parentNode == mEnd.Container() && mEnd.Offset() > 0 &&
         mEnd.Offset() < parentNode->GetChildCount() &&
         removed == mEnd.GetChildAtOffset()) {
-      const CheckedInt<int32_t> newEndOffset{aInfo.mChangeEnd};
-      newEnd = {aContent, newEndOffset.value()};
+      newEnd = {aContent, aInfo.mChangeEnd};
     }
   }
 
@@ -1262,7 +1277,7 @@ void nsRange::SelectNodeContents(nsINode& aNode, ErrorResult& aRv) {
   }
 
   AutoInvalidateSelection atEndOfBlock(this);
-  DoSetRange(RawRangeBoundary(&aNode, 0),
+  DoSetRange(RawRangeBoundary(&aNode, 0u),
              RawRangeBoundary(&aNode, aNode.Length()), newRoot);
 }
 
