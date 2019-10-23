@@ -51,7 +51,7 @@ class MediaSession final : public nsISupports, public nsWrapperCache {
   nsCOMPtr<nsPIDOMWindowInner> mParent;
 
   RefPtr<MediaMetadata> mMediaMetadata;
-  static const size_t ACTIONS = ArrayLength(MediaSessionActionValues::strings);
+  static const size_t ACTIONS = MediaSessionActionValues::Count;
   RefPtr<MediaSessionActionHandler> mActionHandlers[ACTIONS] = {nullptr};
 };
 

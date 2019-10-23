@@ -229,7 +229,7 @@ static_assert(int(HeadersGuardEnum::None) == 0 &&
                   int(HeadersGuardEnum::Request_no_cors) == 2 &&
                   int(HeadersGuardEnum::Response) == 3 &&
                   int(HeadersGuardEnum::Immutable) == 4 &&
-                  int(HeadersGuardEnum::EndGuard_) == 5,
+                  HeadersGuardEnumValues::Count == 5,
               "HeadersGuardEnum values are as expected");
 static_assert(int(ReferrerPolicy::_empty) == 0 &&
                   int(ReferrerPolicy::No_referrer) == 1 &&
@@ -240,18 +240,18 @@ static_assert(int(ReferrerPolicy::_empty) == 0 &&
                   int(ReferrerPolicy::Same_origin) == 6 &&
                   int(ReferrerPolicy::Strict_origin) == 7 &&
                   int(ReferrerPolicy::Strict_origin_when_cross_origin) == 8 &&
-                  int(ReferrerPolicy::EndGuard_) == 9,
+                  ReferrerPolicyValues::Count == 9,
               "ReferrerPolicy values are as expected");
 static_assert(int(RequestMode::Same_origin) == 0 &&
                   int(RequestMode::No_cors) == 1 &&
                   int(RequestMode::Cors) == 2 &&
                   int(RequestMode::Navigate) == 3 &&
-                  int(RequestMode::EndGuard_) == 4,
+                  RequestModeValues::Count == 4,
               "RequestMode values are as expected");
 static_assert(int(RequestCredentials::Omit) == 0 &&
                   int(RequestCredentials::Same_origin) == 1 &&
                   int(RequestCredentials::Include) == 2 &&
-                  int(RequestCredentials::EndGuard_) == 3,
+                  RequestCredentialsValues::Count == 3,
               "RequestCredentials values are as expected");
 static_assert(int(RequestCache::Default) == 0 &&
                   int(RequestCache::No_store) == 1 &&
@@ -259,19 +259,19 @@ static_assert(int(RequestCache::Default) == 0 &&
                   int(RequestCache::No_cache) == 3 &&
                   int(RequestCache::Force_cache) == 4 &&
                   int(RequestCache::Only_if_cached) == 5 &&
-                  int(RequestCache::EndGuard_) == 6,
+                  RequestCacheValues::Count == 6,
               "RequestCache values are as expected");
 static_assert(int(RequestRedirect::Follow) == 0 &&
                   int(RequestRedirect::Error) == 1 &&
                   int(RequestRedirect::Manual) == 2 &&
-                  int(RequestRedirect::EndGuard_) == 3,
+                  RequestRedirectValues::Count == 3,
               "RequestRedirect values are as expected");
 static_assert(int(ResponseType::Basic) == 0 && int(ResponseType::Cors) == 1 &&
                   int(ResponseType::Default) == 2 &&
                   int(ResponseType::Error) == 3 &&
                   int(ResponseType::Opaque) == 4 &&
                   int(ResponseType::Opaqueredirect) == 5 &&
-                  int(ResponseType::EndGuard_) == 6,
+                  ResponseTypeValues::Count == 6,
               "ResponseType values are as expected");
 
 // If the static_asserts below fails, it means that you have changed the
