@@ -476,7 +476,7 @@ class HuffmanPreludeReader {
       table = {mozilla::VariantType<HuffmanTableInitializing>{}};
 
       // Read the lengths immediately.
-      MOZ_TRY((readTable<HuffmanTableValue, List>(table, list)));
+      MOZ_TRY((readTable<List>(table, list)));
     }
 
     // Spec:
@@ -816,14 +816,14 @@ class HuffmanPreludeReader {
   template <typename Entry>
   MOZ_MUST_USE JS::Result<Ok> readTable(Entry entry) {
     auto& table = dictionary_.tableForField(entry.identity_);
-    return readTable<HuffmanTableValue, Entry>(table, entry);
+    return readTable<Entry>(table, entry);
   }
 
   // Two-arguments version: pass table explicitly. Generally called from single-
   // argument version, but may be called manually, e.g. for list lengths, as
   // their tables don't appear in `dictionary_.tableForField`.
-  template <typename HuffmanTable, typename Entry>
-  MOZ_MUST_USE JS::Result<Ok> readTable(HuffmanTable& table, Entry entry) {
+  template <typename Entry>
+  MOZ_MUST_USE JS::Result<Ok> readTable(HuffmanTableValue& table, Entry entry) {
     if (MOZ_UNLIKELY(!table.template is<HuffmanTableInitializing>())) {
       // We're attempting to re-read a table that has already been read.
       // FIXME: Shouldn't this be a MOZ_CRASH?
