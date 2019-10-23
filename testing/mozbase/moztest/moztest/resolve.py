@@ -389,11 +389,12 @@ class TestResolver(MozbuildObject):
         MozbuildObject.__init__(self, *args, **kwargs)
         self.load_tests = self._spawn(TestLoader)
 
-        self._tests = None
+        self._tests = []
         self._reset_state()
 
         # These suites aren't registered in moz.build so require special handling.
         self._puppeteer_loaded = False
+        self._tests_loaded = False
         self._wpt_loaded = False
 
     def _reset_state(self):
@@ -403,8 +404,10 @@ class TestResolver(MozbuildObject):
 
     @property
     def tests(self):
-        if not self._tests:
+        if not self._tests_loaded:
+            self._reset_state()
             self._tests = list(self.load_tests())
+            self._tests_loaded = True
         return self._tests
 
     @property
