@@ -1237,13 +1237,14 @@ class BreakpointSite {
   size_t allocSize();
 
  protected:
+  BreakpointSite(Type type);
+  virtual ~BreakpointSite() {}
+
   virtual void recompile(JSFreeOp* fop) = 0;
   bool isEnabled() const { return enabledCount > 0; }
 
  public:
-  BreakpointSite(Type type);
   Breakpoint* firstBreakpoint() const;
-  virtual ~BreakpointSite() {}
   bool hasBreakpoint(Breakpoint* bp);
   Type type() const { return type_; }
 
