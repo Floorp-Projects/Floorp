@@ -11,11 +11,11 @@
 #ifndef nsStyleTransformMatrix_h_
 #define nsStyleTransformMatrix_h_
 
-#include "gfxPoint.h"
 #include "mozilla/gfx/Matrix.h"
 #include "mozilla/EnumeratedArray.h"
+#include "mozilla/ServoStyleConsts.h"
 #include "nsSize.h"
-
+#include "Units.h"  // for CSSPoint
 #include <limits>
 
 class nsIFrame;

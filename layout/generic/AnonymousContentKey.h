@@ -9,6 +9,9 @@
 #ifndef mozilla_AnonymousContentKey_h
 #define mozilla_AnonymousContentKey_h
 
+#include "mozilla/TypedEnumBits.h"
+#include <stdint.h>
+
 namespace mozilla {
 
 // clang-format off
