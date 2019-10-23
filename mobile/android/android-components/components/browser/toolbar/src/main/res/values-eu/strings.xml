@@ -6,9 +6,9 @@
     <!-- Content description: For the tracking protection toolbar icon, it is set when the site has tracking protection enabled, but none trackers have been blocked or detected. -->
     <string name="mozac_browser_toolbar_content_description_tracking_protection_on_no_trackers_blocked">Jarraipenaren babesa gaituta dago</string>
     <!-- Content description: For the tracking protection toolbar icon, it is set when the site has tracking protection enabled, and trackers have been blocked or detected.-->
-    <string name="mozac_browser_toolbar_content_description_tracking_protection_on_trackers_blocked">Jarraipenaren babesa gaituta jarraipen-elementuak blokeatzen</string>
+    <string name="mozac_browser_toolbar_content_description_tracking_protection_on_trackers_blocked1">Jarraipenaren babesak jarraipen-elementuak blokeatu ditu</string>
     <!-- Content description: For the tracking protection toolbar icon, it is set when the site has tracking protection disabled.-->
-    <string name="mozac_browser_toolbar_content_description_tracking_protection_off_for_a_site">Jarraipenaren babesa desgaituta dago gune honetarako</string>
+    <string name="mozac_browser_toolbar_content_description_tracking_protection_off_for_a_site1">Jarraipenaren babesa desgaituta dago webgune honetarako</string>
     <!-- Announcement made by the screen reader when the progress bar is shown and a page is loading -->
     <string name="mozac_browser_toolbar_progress_loading">Kargatzen</string>
 </resources>
