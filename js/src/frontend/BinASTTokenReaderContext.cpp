@@ -495,7 +495,7 @@ class HuffmanPreludeReader {
       table = {mozilla::VariantType<HuffmanTableInitializing>{}};
 
       // Read the lengths immediately.
-      MOZ_TRY((readTable<HuffmanTableListLength, List>(table, list)));
+      MOZ_TRY((readTable<HuffmanTableValue, List>(table, list)));
     }
 
     // Spec:
@@ -2817,7 +2817,7 @@ HuffmanTableValue& HuffmanDictionary::tableForField(
   return fields_[static_cast<size_t>(index.identity_)];
 }
 
-HuffmanTableListLength& HuffmanDictionary::tableForListLength(BinASTList list) {
+HuffmanTableValue& HuffmanDictionary::tableForListLength(BinASTList list) {
   return listLengths_[static_cast<size_t>(list)];
 }
 
