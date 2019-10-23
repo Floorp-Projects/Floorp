@@ -31,8 +31,8 @@ Allowed actions, and subfields:
 
   test_end
       test - ID for the test
-      status [PASS | FAIL | OK | ERROR |
-              TIMEOUT | CRASH | ASSERT | SKIP] - test status
+      status [PASS | FAIL | OK | ERROR | TIMEOUT | CRASH |
+              ASSERT PRECONDITION_FAILED | SKIP] - test status
       expected [As for status] - Status that the test was expected to get,
                                  or absent if the test got the expected status
       extra - Dictionary of harness-specific extra information e.g. debug info
@@ -42,7 +42,8 @@ Allowed actions, and subfields:
   test_status
       test - ID for the test
       subtest - Name of the subtest
-      status [PASS | FAIL | TIMEOUT | NOTRUN | SKIP] - test status
+      status [PASS | FAIL | TIMEOUT |
+              PRECONDITION_FAILED | NOTRUN | SKIP] - test status
       expected [As for status] - Status that the subtest was expected to get,
                                  or absent if the subtest got the expected status
       known_intermittent - List of known intermittent statuses that should
