@@ -22,7 +22,7 @@ x = null;
 // deserialization because the memory has become unmapped.
 
 for (let i=0 ; i < 50 ; i++ ) {
-    let obj = deserialize(y);
+    let obj = deserialize(y, {SharedArrayBuffer: 'allow'});
     let z = new Int8Array(obj);
     z[0] = 0;
 }
