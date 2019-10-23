@@ -1811,12 +1811,12 @@ def code_coverage(value):
 set_config('MOZ_CODE_COVERAGE', code_coverage)
 set_define('MOZ_CODE_COVERAGE', code_coverage)
 
-@depends(target, c_compiler, vc_path, check_build_environment, mozbuild_state_path, when=code_coverage)
+@depends(target, c_compiler, vc_path, check_build_environment, when=code_coverage)
 @imports('os')
 @imports('re')
 @imports('mozpack.path')
 @imports(_from='__builtin__', _import='open')
-def coverage_flags(target, c_compiler, vc_path, build_env, mozbuild_state_path):
+def coverage_flags(target, c_compiler, vc_path, build_env):
     cflags = ['--coverage']
 
     if c_compiler.type in ('clang', 'clang-cl'):
