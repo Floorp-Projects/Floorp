@@ -541,8 +541,8 @@ dialog:root /* override :root from above */ {
 
 /********** wizard **********/
 
-wizard {
-  -moz-box-flex: 1;
+wizard,
+wizard:root /* override :root from above */ {
   -moz-box-orient: vertical;
   width: 40em;
   height: 30em;
