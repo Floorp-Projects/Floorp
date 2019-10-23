@@ -4378,10 +4378,9 @@ void nsWindow::HideWaylandWindow() {
   if (mContainer && moz_container_has_wl_egl_window(mContainer)) {
     // Because wl_egl_window is destroyed on moz_container_unmap(),
     // the current compositor cannot use it anymore. To avoid crash,
-    // destroy the compositor & recreate a new compositor with paused state.
-    // Compositor restart composite on next initial_draw_callback.
-    mCompositorInitiallyPaused = true;
-    GPUProcessManager::Get()->ResetCompositors();
+    // destroy the compositor & recreate a new compositor on next
+    // expose event.
+    DestroyLayerManager();
   }
 #endif
   gtk_widget_hide(mShell);
