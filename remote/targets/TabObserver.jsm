@@ -61,17 +61,11 @@ class WindowObserver {
   // nsIWindowMediatorListener
 
   async onOpenWindow(xulWindow) {
-    const window = xulWindow
-      .QueryInterface(Ci.nsIInterfaceRequestor)
-      .getInterface(Ci.nsIDOMWindow);
-    await this.onOpenDOMWindow(window);
+    await this.onOpenDOMWindow(xulWindow.docShell.domWindow);
   }
 
   onCloseWindow(xulWindow) {
-    const window = xulWindow
-      .QueryInterface(Ci.nsIInterfaceRequestor)
-      .getInterface(Ci.nsIDOMWindow);
-    this.emit("close", window);
+    this.emit("close", xulWindow.docShell.domWindow);
   }
 
   // XPCOM
@@ -115,7 +109,7 @@ class TabObserver {
 
     // Stop listening for events on still opened windows
     for (const window of Services.wm.getEnumerator("navigator:browser")) {
-      this.onWindowClose(window);
+      this.onWindowClose("close", window);
     }
   }
 
@@ -130,6 +124,7 @@ class TabObserver {
   // WindowObserver
 
   async onWindowOpen(eventName, window) {
+    // Return early if it's not a browser window
     if (!window.gBrowser) {
       return;
     }
@@ -147,8 +142,22 @@ class TabObserver {
     window.addEventListener("TabClose", this.onTabClose);
   }
 
-  onWindowClose(window) {
-    // TODO(ato): Is TabClose fired when the window closes?
+  onWindowClose(eventName, window) {
+    // Return early if it's not a browser window
+    if (!window.gBrowser) {
+      return;
+    }
+
+    for (const tab of window.gBrowser.tabs) {
+      // a missing linkedBrowser means the tab is still initialising
+      if (!tab.linkedBrowser) {
+        continue;
+      }
+
+      // Emulate custom "TabClose" events because that event is not
+      // fired for each of the tabs when the window closes.
+      this.onTabClose({ target: tab });
+    }
 
     window.removeEventListener("TabOpen", this.onTabOpen);
     window.removeEventListener("TabClose", this.onTabClose);
