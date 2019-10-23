@@ -104,6 +104,10 @@ class StructuredCloneHolderBase {
   // aValue.
   bool Read(JSContext* aCx, JS::MutableHandle<JS::Value> aValue);
 
+  // Like Read() but it supports handling of clone policy.
+  bool Read(JSContext* aCx, JS::MutableHandle<JS::Value> aValue,
+            JS::CloneDataPolicy aCloneDataPolicy);
+
   bool HasData() const { return !!mBuffer; }
 
   JSStructuredCloneData& BufferData() const {
@@ -164,6 +168,10 @@ class StructuredCloneHolder : public StructuredCloneHolderBase {
 
   void Read(nsIGlobalObject* aGlobal, JSContext* aCx,
             JS::MutableHandle<JS::Value> aValue, ErrorResult& aRv);
+
+  void Read(nsIGlobalObject* aGlobal, JSContext* aCx,
+            JS::MutableHandle<JS::Value> aValue,
+            JS::CloneDataPolicy aCloneDataPolicy, ErrorResult& aRv);
 
   // Call this method to know if this object is keeping some DOM object alive.
   bool HasClonedDOMObjects() const {

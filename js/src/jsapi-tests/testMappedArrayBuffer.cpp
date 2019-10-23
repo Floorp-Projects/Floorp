@@ -137,7 +137,7 @@ bool TestCloneObject() {
   JS::RootedValue v1(cx, JS::ObjectValue(*obj1));
   CHECK(cloned_buffer.write(cx, v1, nullptr, nullptr));
   JS::RootedValue v2(cx);
-  CHECK(cloned_buffer.read(cx, &v2, nullptr, nullptr));
+  CHECK(cloned_buffer.read(cx, &v2, JS::CloneDataPolicy(), nullptr, nullptr));
   JS::RootedObject obj2(cx, v2.toObjectOrNull());
   CHECK(VerifyObject(obj2, 8, 12, false));
 
@@ -173,10 +173,10 @@ bool TestTransferObject() {
 
   JSAutoStructuredCloneBuffer cloned_buffer(
       JS::StructuredCloneScope::SameProcessSameThread, nullptr, nullptr);
-  CHECK(cloned_buffer.write(cx, v1, transferable, JS::CloneDataPolicy(),
-                            nullptr, nullptr));
+  JS::CloneDataPolicy policy;
+  CHECK(cloned_buffer.write(cx, v1, transferable, policy, nullptr, nullptr));
   JS::RootedValue v2(cx);
-  CHECK(cloned_buffer.read(cx, &v2, nullptr, nullptr));
+  CHECK(cloned_buffer.read(cx, &v2, policy, nullptr, nullptr));
   JS::RootedObject obj2(cx, v2.toObjectOrNull());
   CHECK(VerifyObject(obj2, 8, 12, true));
   CHECK(JS::IsDetachedArrayBufferObject(obj1));
