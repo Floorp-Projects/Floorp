@@ -1249,7 +1249,12 @@ class BreakpointSite {
   void inc(JSFreeOp* fop);
   void dec(JSFreeOp* fop);
   bool isEmpty() const;
-  virtual void destroyIfEmpty(JSFreeOp* fop) = 0;
+  virtual void remove(JSFreeOp* fop) = 0;
+  void destroyIfEmpty(JSFreeOp* fop) {
+    if (isEmpty()) {
+      remove(fop);
+    }
+  }
 
   inline JSBreakpointSite* asJS();
   inline WasmBreakpointSite* asWasm();
@@ -1319,7 +1324,7 @@ class JSBreakpointSite : public BreakpointSite {
  public:
   JSBreakpointSite(JSScript* script, jsbytecode* pc);
 
-  void destroyIfEmpty(JSFreeOp* fop) override;
+  void remove(JSFreeOp* fop) override;
 };
 
 inline JSBreakpointSite* BreakpointSite::asJS() {
@@ -1338,7 +1343,7 @@ class WasmBreakpointSite : public BreakpointSite {
  public:
   WasmBreakpointSite(WasmInstanceObject* instanceObject, uint32_t offset);
 
-  void destroyIfEmpty(JSFreeOp* fop) override;
+  void remove(JSFreeOp* fop) override;
 
   wasm::Instance& instance() { return instanceObject->instance(); }
 };
