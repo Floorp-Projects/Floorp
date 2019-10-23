@@ -60,6 +60,10 @@ MOZ_MUST_USE bool js::CreateAlgorithmFromUnderlyingMethod(
     JSContext* cx, Handle<Value> underlyingObject,
     const char* methodNameForErrorMessage, Handle<PropertyName*> methodName,
     MutableHandle<Value> method) {
+  cx->check(underlyingObject);
+  cx->check(methodName);
+  cx->check(method);
+
   // Step 1: Assert: underlyingObject is not undefined.
   MOZ_ASSERT(!underlyingObject.isUndefined());
 
@@ -193,6 +197,8 @@ MOZ_MUST_USE bool js::ValidateAndNormalizeHighWaterMark(
  */
 MOZ_MUST_USE bool js::MakeSizeAlgorithmFromSizeFunction(JSContext* cx,
                                                         Handle<Value> size) {
+  cx->check(size);
+
   // Step 1: If size is undefined, return an algorithm that returns 1.
   if (size.isUndefined()) {
     // Deferred. Size algorithm users must check for undefined.

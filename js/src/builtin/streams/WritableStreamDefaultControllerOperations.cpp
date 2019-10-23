@@ -28,6 +28,7 @@
 #include "vm/Runtime.h"     // JSAtomState
 
 #include "builtin/streams/HandlerFunction-inl.h"  // js::TargetFromHandler
+#include "vm/JSContext-inl.h"                     // JSContext::check
 #include "vm/JSObject-inl.h"  // js::NewBuiltinClassInstance, js::NewObjectWithClassProto
 
 using JS::CallArgs;
@@ -259,6 +260,10 @@ MOZ_MUST_USE bool js::SetUpWritableStreamDefaultController(
 MOZ_MUST_USE bool js::SetUpWritableStreamDefaultControllerFromUnderlyingSink(
     JSContext* cx, Handle<WritableStream*> stream, Handle<Value> underlyingSink,
     double highWaterMark, Handle<Value> sizeAlgorithm) {
+  cx->check(stream);
+  cx->check(underlyingSink);
+  cx->check(sizeAlgorithm);
+
   // Step 1: Assert: underlyingSink is not undefined.
   MOZ_ASSERT(!underlyingSink.isUndefined());
 
@@ -386,6 +391,7 @@ MOZ_MUST_USE bool WritableStreamDefaultControllerAdvanceQueueIfNeeded(
  *      WritableStreamDefaultControllerGetBackpressure ( controller )
  */
 bool js::WritableStreamDefaultControllerGetBackpressure(
-    const WritableStreamDefaultController* controller) {
-  return WritableStreamDefaultControllerGetDesiredSize(controller) <= 0.0;
+    const WritableStreamDefaultController* unwrappedController) {
+  return WritableStreamDefaultControllerGetDesiredSize(unwrappedController) <=
+         0.0;
 }

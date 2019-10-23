@@ -21,10 +21,13 @@
 #include "vm/Compartment.h"  // JS::Compartment
 #include "vm/JSContext.h"    // JSContext
 
-#include "builtin/streams/WritableStream-inl.h"  // js::WritableStream::writer
+#include "builtin/streams/WritableStream-inl.h"  // js::UnwrapWriterFromStream
+#include "builtin/streams/WritableStreamDefaultWriter-inl.h"  // js::WritableStreamDefaultWriter::closedPromise
 #include "vm/Compartment-inl.h"  // JS::Compartment::wrap
+#include "vm/JSContext-inl.h"    // JSContext::check
 #include "vm/JSObject-inl.h"     // js::NewObjectWithClassProto
 #include "vm/List-inl.h"         // js::StoreNewListInFixedSlot
+#include "vm/Realm-inl.h"        // js::AutoRealm
 
 using js::WritableStream;
 
@@ -40,11 +43,12 @@ using JS::Value;
 /**
  * Streams spec, 4.3.4. InitializeWritableStream ( stream )
  */
-MOZ_MUST_USE /* static */
-    WritableStream*
-    WritableStream::create(
-        JSContext* cx, void* nsISupportsObject_alreadyAddreffed /* = nullptr */,
-        Handle<JSObject*> proto /* = nullptr */) {
+/* static */ MOZ_MUST_USE
+WritableStream* WritableStream::create(
+    JSContext* cx, void* nsISupportsObject_alreadyAddreffed /* = nullptr */,
+    Handle<JSObject*> proto /* = nullptr */) {
+  cx->check(proto);
+
   // In the spec, InitializeWritableStream is always passed a newly created
   // WritableStream object. We instead create it here and return it below.
   Rooted<WritableStream*> stream(
@@ -106,6 +110,8 @@ void WritableStream::clearInFlightWriteRequest(JSContext* cx) {
 MOZ_MUST_USE bool js::WritableStreamDealWithRejection(
     JSContext* cx, Handle<WritableStream*> unwrappedStream,
     Handle<Value> error) {
+  cx->check(error);
+
   // Step 1: Let state be stream.[[state]].
   // Step 2: If state is "writable",
   if (unwrappedStream->writable()) {
@@ -128,6 +134,8 @@ MOZ_MUST_USE bool js::WritableStreamDealWithRejection(
 MOZ_MUST_USE bool js::WritableStreamStartErroring(
     JSContext* cx, Handle<WritableStream*> unwrappedStream,
     Handle<Value> reason) {
+  cx->check(reason);
+
   // Step 1: Assert: stream.[[storedError]] is undefined.
   MOZ_ASSERT(unwrappedStream->storedError().isUndefined());
 
@@ -144,7 +152,14 @@ MOZ_MUST_USE bool js::WritableStreamStartErroring(
   unwrappedStream->setErroring();
 
   // Step 6: Set stream.[[storedError]] to reason.
-  unwrappedStream->setStoredError(reason);
+  {
+    AutoRealm ar(cx, unwrappedStream);
+    Rooted<Value> wrappedReason(cx, reason);
+    if (!cx->compartment()->wrap(cx, &wrappedReason)) {
+      return false;
+    }
+    unwrappedStream->setStoredError(wrappedReason);
+  }
 
   // Step 7: Let writer be stream.[[writer]].
   // Step 8: If writer is not undefined, perform
@@ -241,6 +256,8 @@ MOZ_MUST_USE bool js::WritableStreamFinishInFlightWrite(
 MOZ_MUST_USE bool js::WritableStreamFinishInFlightWriteWithError(
     JSContext* cx, Handle<WritableStream*> unwrappedStream,
     Handle<Value> error) {
+  cx->check(error);
+
   // Step 1: Assert: stream.[[inFlightWriteRequest]] is not undefined.
   MOZ_ASSERT(unwrappedStream->haveInFlightWriteRequest());
 
@@ -324,8 +341,16 @@ MOZ_MUST_USE bool js::WritableStreamFinishInFlightClose(
   // Step 9: If writer is not undefined, resolve writer.[[closedPromise]] with
   //         undefined.
   if (unwrappedStream->hasWriter()) {
-    Rooted<JSObject*> closedPromise(cx,
-                                    unwrappedStream->writer()->closedPromise());
+    Rooted<JSObject*> closedPromise(cx);
+    {
+      WritableStreamDefaultWriter* unwrappedWriter =
+          UnwrapWriterFromStream(cx, unwrappedStream);
+      if (!unwrappedWriter) {
+        return false;
+      }
+
+      closedPromise = unwrappedWriter->closedPromise();
+    }
     if (!cx->compartment()->wrap(cx, &closedPromise)) {
       return false;
     }
