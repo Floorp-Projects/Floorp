@@ -37,7 +37,7 @@ Before you attempt to make a contribution please read the [Community Participati
 
 * Browse our [current Issues](https://github.com/mozilla-mobile/fenix/issues), or [file a security issue][sec issue].
 
-* IRC: [#fenix (irc.mozilla.org)](https://wiki.mozilla.org/IRC) | [view logs](https://mozilla.logbot.info/fenix/)
+* Slack: [#fenix on mozilla-android.slack.com](mozilla-android.slack.com) | [Join here](https://join.slack.com/t/mozilla-android/shared_invite/enQtNzk3NDczMzc0ODMzLWNjYTQ5MjA3ZDI0NzNhOTBjMWUyMmNmZDcwM2ZhY2YxZjdjMWIwZWY1YmQ3NjJmMDNkODYxMmRmNTdjNGJmMTU)
 (**We're available Monday-Friday, GMT and PST working hours**).
 
 * Check out the [project wiki](https://github.com/mozilla-mobile/fenix/wiki) for more information.
