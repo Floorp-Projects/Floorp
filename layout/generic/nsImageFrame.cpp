@@ -2290,6 +2290,11 @@ Maybe<nsIFrame::Cursor> nsImageFrame::GetCursor(const nsPoint& aPoint) {
   // Use the cursor from the style of the *area* element.
   RefPtr<ComputedStyle> areaStyle =
       PresShell()->StyleSet()->ResolveStyleLazily(*area);
+
+  // This is one of the cases, like the <xul:tree> pseudo-style stuff, where we
+  // get styles out of the blue and expect to trigger image loads for those.
+  areaStyle->StartImageLoads(*PresContext()->Document());
+
   StyleCursorKind kind = areaStyle->StyleUI()->mCursor;
   if (kind == StyleCursorKind::Auto) {
     kind = StyleCursorKind::Default;
