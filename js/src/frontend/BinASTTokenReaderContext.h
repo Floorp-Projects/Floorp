@@ -888,10 +888,7 @@ using HuffmanTableValue =
     mozilla::Variant<HuffmanTableUnreachable,  // Default value.
                      HuffmanTableInitializing, GenericHuffmanTable>;
 
-// A single Huffman table, specialized for list lengths.
-using HuffmanTableListLength =
-    mozilla::Variant<HuffmanTableUnreachable,  // Default value.
-                     HuffmanTableInitializing, GenericHuffmanTable>;
+using HuffmanTableListLength = HuffmanTableValue;
 
 // A Huffman dictionary for the current file.
 //
