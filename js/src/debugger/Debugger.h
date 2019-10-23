@@ -1208,6 +1208,39 @@ struct Handler {
 class JSBreakpointSite;
 class WasmBreakpointSite;
 
+/**
+ * Breakpoint GC rules:
+ *
+ * BreakpointSites and Breakpoints are owned by the code in which they are set.
+ * Tracing a JSScript or WasmInstance traces all BreakpointSites set in it,
+ * which traces all Breakpoints; and if the code is garbage collected, the
+ * BreakpointSite and the Breakpoints set at it are freed as well. Doing so is
+ * not observable to JS, since the handlers would never fire, and there is no
+ * way to enumerate all breakpoints without specifying a specific script, in
+ * which case it must not have been GC'd.
+ *
+ * Although BreakpointSites and Breakpoints are not GC things, they should be
+ * treated as belonging to the code's compartment. This means that the
+ * BreakpointSite concrete subclasses' pointers to the code are not
+ * cross-compartment references, but a Breakpoint's pointers to its handler and
+ * owning Debugger are cross-compartment references, and go through
+ * cross-compartment wrappers.
+ */
+
+/**
+ * A location in a JSScript or WasmInstance at which we have breakpoints. A
+ * BreakpointSite owns a linked list of all the breakpoints set at its location.
+ * In general, this list contains breakpoints set by multiple Debuggers in
+ * various compartments.
+ *
+ * BreakpointSites are created only as needed, for locations at which
+ * breakpoints are currently set. When the last breakpoint is removed from a
+ * location, the BreakpointSite is removed as well.
+ *
+ * This is an abstract base class, with subclasses specialized for the different
+ * sorts of code a breakpoint might be set in. JSBreakpointSite manages sites in
+ * JSScripts, and WasmBreakpointSite manages sites in WasmInstances.
+ */
 class BreakpointSite {
   friend class DebugAPI;
   friend class Breakpoint;
@@ -1231,11 +1264,12 @@ class BreakpointSite {
       mozilla::DoublyLinkedList<js::Breakpoint, SiteLinkAccess<js::Breakpoint>>;
   BreakpointList breakpoints;
 
-  gc::Cell* owningCellUnbarriered();
+  gc::Cell* owningCell();
 
  protected:
   BreakpointSite(Type type);
   virtual ~BreakpointSite() {}
+  void finalize(JSFreeOp* fop);
 
  public:
   Breakpoint* firstBreakpoint() const;
@@ -1243,6 +1277,7 @@ class BreakpointSite {
   Type type() const { return type_; }
 
   bool isEmpty() const;
+  virtual void trace(JSTracer* trc);
   virtual void remove(JSFreeOp* fop) = 0;
   void destroyIfEmpty(JSFreeOp* fop) {
     if (isEmpty()) {
@@ -1255,22 +1290,9 @@ class BreakpointSite {
 };
 
 /*
- * Each Breakpoint is a member of two linked lists: its debugger's list and its
- * site's list.
- *
- * GC rules:
- *   - script is live and breakpoint exists
- *      ==> debugger is live
- *   - script is live, breakpoint exists, and debugger is live
- *      ==> retain the breakpoint and the handler object is live
- *
- * Debugger::markIteratively implements these two rules. It uses
- * Debugger::hasAnyLiveHooks to check for rule 1.
- *
- * Nothing else causes a breakpoint to be retained, so if its script or
- * debugger is collected, the breakpoint is destroyed during GC sweep phase,
- * even if the debugger compartment isn't being GC'd. This is implemented in
- * Zone::sweepBreakpoints.
+ * A breakpoint set at a given BreakpointSite, indicating the owning debugger
+ * and the handler object. A Breakpoint is a member of two linked lists: its
+ * owning debugger's list and its site's list.
  */
 class Breakpoint {
   friend class DebugAPI;
@@ -1278,15 +1300,35 @@ class Breakpoint {
   friend class BreakpointSite;
 
  public:
+  /* Our owning debugger. */
   Debugger* const debugger;
+
+  /**
+   * A cross-compartment wrapper for our owning debugger's object, a CCW in the
+   * code's compartment to the Debugger object in its own compartment. Holding
+   * this lets the GC know about the effective cross-compartment reference from
+   * the code to the debugger; see "Breakpoint GC Rules", above.
+   *
+   * This is almost redundant with the `debugger` field, except that we need
+   * access to our owning `Debugger` regardless of the relative privilege levels
+   * of debugger and debuggee, regardless of whether we're in the midst of a GC,
+   * and so on - unwrapping is just too entangled.
+   */
+  HeapPtr<JSObject*> wrappedDebugger;
+
+  /* The site at which we're inserted. */
   BreakpointSite* const site;
 
  private:
-  /*
-   * |handler| is marked unconditionally during minor GC so a post barrier is
-   * not required.
+  /**
+   * The breakpoint handler object, via a cross-compartment wrapper in the
+   * code's compartment.
+   *
+   * Although eventually we would like this to be a `js::Handler` instance, for
+   * now it is just cross-compartment wrapper for the JS object supplied to
+   * `setBreakpoint`, hopefully with a callable `hit` property.
    */
-  js::PreBarrieredObject handler;
+  HeapPtr<JSObject*> handler;
 
   /**
    * Link elements for each list this breakpoint can be in.
@@ -1294,8 +1336,11 @@ class Breakpoint {
   mozilla::DoublyLinkedListElement<Breakpoint> debuggerLink;
   mozilla::DoublyLinkedListElement<Breakpoint> siteLink;
 
+  void trace(JSTracer* trc);
+
  public:
-  Breakpoint(Debugger* debugger, BreakpointSite* site, JSObject* handler);
+  Breakpoint(Debugger* debugger, HandleObject wrappedDebugger,
+             BreakpointSite* site, HandleObject handler);
 
   enum MayDestroySite { False, True };
 
@@ -1320,17 +1365,18 @@ class Breakpoint {
   Breakpoint* nextInDebugger();
   Breakpoint* nextInSite();
   JSObject* getHandler() const { return handler; }
-  PreBarrieredObject& getHandlerRef() { return handler; }
 };
 
 class JSBreakpointSite : public BreakpointSite {
  public:
-  JSScript* script;
+  HeapPtr<JSScript*> script;
   jsbytecode* const pc;
 
  public:
   JSBreakpointSite(JSScript* script, jsbytecode* pc);
 
+  void trace(JSTracer* trc) override;
+  void delete_(JSFreeOp* fop);
   void remove(JSFreeOp* fop) override;
 };
 
@@ -1341,12 +1387,14 @@ inline JSBreakpointSite* BreakpointSite::asJS() {
 
 class WasmBreakpointSite : public BreakpointSite {
  public:
-  WasmInstanceObject* instanceObject;
+  HeapPtr<WasmInstanceObject*> instanceObject;
   uint32_t offset;
 
  public:
   WasmBreakpointSite(WasmInstanceObject* instanceObject, uint32_t offset);
 
+  void trace(JSTracer* trc) override;
+  void delete_(JSFreeOp* fop);
   void remove(JSFreeOp* fop) override;
 
   wasm::Instance& instance() { return instanceObject->instance(); }

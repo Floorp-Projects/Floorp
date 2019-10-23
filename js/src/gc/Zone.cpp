@@ -154,35 +154,6 @@ void Zone::setNeedsIncrementalBarrier(bool needs) {
 
 void Zone::beginSweepTypes() { types.beginSweep(); }
 
-void Zone::sweepBreakpoints(JSFreeOp* fop) {
-  if (fop->runtime()->debuggerList().isEmpty()) {
-    return;
-  }
-
-  /*
-   * Sweep all compartments in a zone at the same time, since there is no way
-   * to iterate over the scripts belonging to a single compartment in a zone.
-   */
-
-  MOZ_ASSERT(isGCSweepingOrCompacting());
-  for (auto iter = cellIterUnsafe<JSScript>(); !iter.done(); iter.next()) {
-    JSScript* script = iter;
-    DebugAPI::sweepBreakpoints(fop, script);
-  }
-
-  for (RealmsInZoneIter realms(this); !realms.done(); realms.next()) {
-    for (wasm::Instance* instance : realms->wasm.instances()) {
-      if (!instance->debugEnabled()) {
-        continue;
-      }
-      if (!IsAboutToBeFinalized(&instance->object_)) {
-        continue;
-      }
-      instance->debug().clearAllBreakpoints(fop, instance->objectUnbarriered());
-    }
-  }
-}
-
 static void SweepWeakEntryVectorWhileMinorSweeping(
     js::gc::WeakEntryVector& entries) {
   EraseIf(entries, [](js::gc::WeakMarkable& markable) -> bool {
