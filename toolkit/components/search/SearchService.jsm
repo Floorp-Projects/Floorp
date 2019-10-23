@@ -3046,13 +3046,6 @@ SearchService.prototype = {
           break;
         }
       }
-
-      for (let engineName of this._searchOrder) {
-        if (engineData.name == engineName) {
-          sendSubmissionURL = true;
-          break;
-        }
-      }
     }
 
     if (!sendSubmissionURL) {
