@@ -30,7 +30,7 @@ class RemoteDecoderParent : public PRemoteDecoderParent {
 
   // PRemoteDecoderParent
   IPCResult RecvInit(InitResolver&& aResolver);
-  IPCResult RecvDecode(const MediaRawDataIPDL& aData,
+  IPCResult RecvDecode(nsTArray<MediaRawDataIPDL>&& aData,
                        DecodeResolver&& aResolver);
   IPCResult RecvFlush(FlushResolver&& aResolver);
   IPCResult RecvDrain(DrainResolver&& aResolver);
@@ -55,6 +55,9 @@ class RemoteDecoderParent : public PRemoteDecoderParent {
   RefPtr<MediaDataDecoder> mDecoder;
 
  private:
+  void DecodeNextSample(nsTArray<MediaRawDataIPDL>&& aData,
+                        DecodedOutputIPDL&& aOutput,
+                        DecodeResolver&& aResolver);
   void ReleaseBuffer(ShmemBuffer&& aBuffer);
   void ReleaseUsedShmems();
   RefPtr<RemoteDecoderParent> mIPDLSelfRef;

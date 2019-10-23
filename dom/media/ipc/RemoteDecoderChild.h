@@ -29,7 +29,7 @@ class RemoteDecoderChild : public PRemoteDecoderChild,
   // IRemoteDecoderChild
   RefPtr<MediaDataDecoder::InitPromise> Init() override;
   RefPtr<MediaDataDecoder::DecodePromise> Decode(
-      MediaRawData* aSample) override;
+      const nsTArray<RefPtr<MediaRawData>>& aSamples) override;
   RefPtr<MediaDataDecoder::DecodePromise> Drain() override;
   RefPtr<MediaDataDecoder::FlushPromise> Flush() override;
   RefPtr<mozilla::ShutdownPromise> Shutdown() override;

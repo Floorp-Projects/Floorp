@@ -21,7 +21,7 @@ class IRemoteDecoderChild {
 
   virtual RefPtr<MediaDataDecoder::InitPromise> Init() = 0;
   virtual RefPtr<MediaDataDecoder::DecodePromise> Decode(
-      MediaRawData* aSample) = 0;
+      const nsTArray<RefPtr<MediaRawData>>& aSamples) = 0;
   virtual RefPtr<MediaDataDecoder::DecodePromise> Drain() = 0;
   virtual RefPtr<MediaDataDecoder::FlushPromise> Flush() = 0;
   virtual RefPtr<ShutdownPromise> Shutdown() = 0;
