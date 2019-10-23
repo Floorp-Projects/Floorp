@@ -131,7 +131,7 @@ already_AddRefed<Response> Response::Redirect(const GlobalObject& aGlobal,
       return nullptr;
     }
 
-    url->Stringify(parsedURL);
+    url->GetHref(parsedURL);
   }
 
   if (aStatus != 301 && aStatus != 302 && aStatus != 303 && aStatus != 307 &&

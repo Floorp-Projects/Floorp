@@ -75,9 +75,8 @@ class nsDOMTokenList : public nsISupports, public nsWrapperCache {
               mozilla::ErrorResult& aError);
   bool Supports(const nsAString& aToken, mozilla::ErrorResult& aError);
 
-  void GetValue(nsAString& aResult) { Stringify(aResult); }
+  void GetValue(nsAString& aResult);
   void SetValue(const nsAString& aValue, mozilla::ErrorResult& rv);
-  void Stringify(nsAString& aResult);
 
  protected:
   virtual ~nsDOMTokenList();
