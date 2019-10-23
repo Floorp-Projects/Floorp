@@ -238,6 +238,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "compositor"
+version = "0.1.0"
+dependencies = [
+ "compositor-windows 0.1.0",
+ "gleam 0.6.17 (registry+https://github.com/rust-lang/crates.io-index)",
+ "webrender 0.60.0",
+]
+
+[[package]]
+name = "compositor-windows"
+version = "0.1.0"
+dependencies = [
+ "cc 1.0.15 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
 name = "core-foundation"
 version = "0.6.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"

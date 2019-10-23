@@ -35,4 +35,5 @@ pushd examples
 cargo build ${CARGOFLAGS}
 popd
 
-cargo test ${CARGOFLAGS} --all
+cargo test ${CARGOFLAGS} \
+    --all --exclude compositor-windows --exclude compositor

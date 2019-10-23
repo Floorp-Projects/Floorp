@@ -41,4 +41,5 @@ pushd examples
 cargo check ${CARGOFLAGS}
 popd
 
-cargo test ${CARGOFLAGS} ${CARGOTESTFLAGS} --all
+cargo test ${CARGOFLAGS} ${CARGOTESTFLAGS} \
+    --all --exclude compositor-windows --exclude compositor
