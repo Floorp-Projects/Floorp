@@ -104,9 +104,20 @@ class Front extends Pool {
     this._frontListeners.emit(front.typeName, front);
   }
 
+  async unmanage(front) {
+    super.unmanage(front);
+
+    // Call listeners registered via `onFrontDestroyed` method
+    // TODO: to be implemented differently in bug 1590401.
+    this._frontListeners.emit(front.typeName + ":destroyed", front);
+  }
+
   /**
    * Register an event listener that will be called on every front of this type
    * that currently exists, and on every instantiation of front type in the future.
+   *
+   * TODO: A special typeName is use to implement onFrontDestroyed:
+   * `${typeName}:destroyed`. This should be cleaned up by bug 1590401.
    *
    * @param String typeName
    *   Actor type to watch.
@@ -134,6 +145,32 @@ class Front extends Pool {
    */
   offFront(typeName, callback) {
     this._frontListeners.off(typeName, callback);
+  }
+
+  /**
+   * Register an event listener that will be called evertype a front of this type
+   * is destroyed.
+   *
+   * @param String typeName
+   *   Actor type to watch.
+   * @param Function callback
+   *   Function that will process the event.
+   */
+  onFrontDestroyed(typeName, callback) {
+    // TODO: to be implemented differently in bug 1590401.
+    this.onFront(typeName + ":destroyed", callback);
+  }
+
+  /**
+   * Unregister an event listener which was set via `Front.onFrontDestroyed`.
+   *
+   * @param String typeName
+   *   Actor type to stop watching.
+   * @param Function callback
+   *   Function that was processing the event.
+   */
+  offFrontDestroyed(typeName, callback) {
+    this.offFront(typeName + ":destroyed", callback);
   }
 
   /**
