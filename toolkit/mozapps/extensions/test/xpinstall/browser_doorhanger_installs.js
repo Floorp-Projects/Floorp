@@ -5,6 +5,9 @@
 const { AddonTestUtils } = ChromeUtils.import(
   "resource://testing-common/AddonTestUtils.jsm"
 );
+const { ExtensionPermissions } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionPermissions.jsm"
+);
 
 const SECUREROOT =
   "https://example.com/browser/toolkit/mozapps/extensions/test/xpinstall/";
@@ -120,7 +123,7 @@ async function waitForProgressNotification(
 
 function acceptAppMenuNotificationWhenShown(
   id,
-  { dismiss = false, checkIncognito = false } = {}
+  { dismiss = false, checkIncognito = false, incognitoChecked = false } = {}
 ) {
   const { AppMenuNotifications } = ChromeUtils.import(
     "resource://gre/modules/AppMenuNotifications.jsm"
@@ -160,10 +163,8 @@ function acceptAppMenuNotificationWhenShown(
         allowPrivate && !checkIncognito,
         "checkbox visibility is correct"
       );
-      is(checkbox.checked, false, "checkbox is not initially checked");
-      if (checkIncognito) {
-        checkbox.checked = true;
-      }
+      is(checkbox.checked, incognitoChecked, "checkbox is marked as expected");
+      checkbox.checked = checkIncognito;
 
       if (dismiss) {
         // Dismiss the panel by clicking on the appMenu button.
@@ -298,8 +299,9 @@ function setupRedirect(aSettings) {
 
 var TESTS = [
   async function test_disabledInstall() {
-    Services.prefs.setBoolPref("xpinstall.enabled", false);
-
+    SpecialPowers.pushPrefEnv({
+      set: [["xpinstall.enabled", false]],
+    });
     let notificationPromise = waitForNotification("xpinstall-disabled");
     let triggers = encodeURIComponent(
       JSON.stringify({
@@ -340,6 +342,7 @@ var TESTS = [
     BrowserTestUtils.removeTab(gBrowser.selectedTab);
     let installs = await AddonManager.getAllInstalls();
     is(installs.length, 0, "Shouldn't be any pending installs");
+    await SpecialPowers.popPrefEnv();
   },
 
   async function test_blockedInstall() {
@@ -469,10 +472,10 @@ var TESTS = [
   },
 
   async function test_whitelistedInstall() {
-    Services.prefs.setBoolPref(
-      "extensions.allowPrivateBrowsingByDefault",
-      false
-    );
+    SpecialPowers.pushPrefEnv({
+      set: [["extensions.allowPrivateBrowsingByDefault", false]],
+    });
+
     let originalTab = gBrowser.selectedTab;
     let tab;
     gBrowser.selectedTab = originalTab;
@@ -682,10 +685,9 @@ var TESTS = [
   },
 
   async function test_urlBar() {
-    Services.prefs.setBoolPref(
-      "extensions.allowPrivateBrowsingByDefault",
-      false
-    );
+    SpecialPowers.pushPrefEnv({
+      set: [["extensions.allowPrivateBrowsingByDefault", false]],
+    });
     let progressPromise = waitForProgressNotification();
     let dialogPromise = waitForInstallDialog();
 
@@ -878,7 +880,10 @@ var TESTS = [
   },
 
   async function test_failedSecurity() {
-    Services.prefs.setBoolPref(PREF_INSTALL_REQUIREBUILTINCERTS, false);
+    SpecialPowers.pushPrefEnv({
+      set: [[PREF_INSTALL_REQUIREBUILTINCERTS, false]],
+    });
+
     setupRedirect({
       Location: TESTROOT + "amosigned.xpi",
     });
@@ -936,8 +941,85 @@ var TESTS = [
       "Should have seen the install fail"
     );
 
-    Services.prefs.setBoolPref(PREF_INSTALL_REQUIREBUILTINCERTS, true);
     await removeTabAndWaitForNotificationClose();
+    await SpecialPowers.popPrefEnv();
+  },
+
+  async function test_incognito_checkbox() {
+    SpecialPowers.pushPrefEnv({
+      set: [["extensions.allowPrivateBrowsingByDefault", false]],
+    });
+    // Grant permission up front.
+    const permissionName = "internal:privateBrowsingAllowed";
+    let incognitoPermission = {
+      permissions: [permissionName],
+      origins: [],
+    };
+    await ExtensionPermissions.add(
+      "amosigned-xpi@tests.mozilla.org",
+      incognitoPermission
+    );
+
+    let progressPromise = waitForProgressNotification();
+    let dialogPromise = waitForInstallDialog();
+
+    gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:blank");
+    await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+    gURLBar.value = TESTROOT + "amosigned.xpi";
+    gURLBar.focus();
+    EventUtils.synthesizeKey("KEY_Enter");
+
+    await progressPromise;
+    let installDialog = await dialogPromise;
+
+    let notificationPromise = acceptAppMenuNotificationWhenShown(
+      "addon-installed",
+      { incognitoChecked: true }
+    );
+    installDialog.button.click();
+    await notificationPromise;
+
+    let installs = await AddonManager.getAllInstalls();
+    is(installs.length, 0, "Should be no pending installs");
+
+    let addon = await AddonManager.getAddonByID(
+      "amosigned-xpi@tests.mozilla.org"
+    );
+    // The panel is reloading the addon due to the permission change, we need some way
+    // to wait for the reload to finish. addon.startupPromise doesn't do it for
+    // us, so we'll just restart again.
+    await AddonTestUtils.promiseWebExtensionStartup(
+      "amosigned-xpi@tests.mozilla.org"
+    );
+
+    // This addon should no longer have private browsing permission.
+    let policy = WebExtensionPolicy.getByID(addon.id);
+    ok(!policy.privateBrowsingAllowed, "private browsing permission removed");
+
+    // Verify that the expected telemetry event has been collected for the extension allowed on
+    // PB windows from the "post install" notification doorhanger.
+    assertActionAMTelemetryEvent(
+      [
+        {
+          method: "action",
+          object: "doorhanger",
+          value: "off",
+          extra: {
+            action: "privateBrowsingAllowed",
+            view: "postInstall",
+            addonId: addon.id,
+            type: "extension",
+          },
+        },
+      ],
+      "Expect telemetry events for privateBrowsingAllowed action",
+      { actionType: "privateBrowsingAllowed" }
+    );
+
+    addon.uninstall();
+
+    await removeTabAndWaitForNotificationClose();
+    await SpecialPowers.popPrefEnv();
   },
 ];
 
@@ -963,10 +1045,14 @@ var XPInstallObserver = {
 add_task(async function() {
   requestLongerTimeout(4);
 
-  Services.prefs.setBoolPref("extensions.logging.enabled", true);
-  Services.prefs.setBoolPref("extensions.strictCompatibility", true);
-  Services.prefs.setBoolPref("extensions.install.requireSecureOrigin", false);
-  Services.prefs.setIntPref("security.dialog_enable_delay", 0);
+  SpecialPowers.pushPrefEnv({
+    set: [
+      ["extensions.logging.enabled", true],
+      ["extensions.strictCompatibility", true],
+      ["extensions.install.requireSecureOrigin", false],
+      ["security.dialog_enable_delay", 0],
+    ],
+  });
 
   Services.obs.addObserver(XPInstallObserver, "addon-install-started");
   Services.obs.addObserver(XPInstallObserver, "addon-install-blocked");
@@ -980,12 +1066,6 @@ add_task(async function() {
     aInstalls.forEach(function(aInstall) {
       aInstall.cancel();
     });
-
-    Services.prefs.clearUserPref("extensions.logging.enabled");
-    Services.prefs.clearUserPref("extensions.strictCompatibility");
-    Services.prefs.clearUserPref("extensions.install.requireSecureOrigin");
-    Services.prefs.clearUserPref("security.dialog_enable_delay");
-    Services.prefs.clearUserPref("extensions.allowPrivateBrowsingByDefault");
 
     Services.obs.removeObserver(XPInstallObserver, "addon-install-started");
     Services.obs.removeObserver(XPInstallObserver, "addon-install-blocked");
