@@ -350,14 +350,6 @@ inline gc::Cell* BreakpointSite::owningCellUnbarriered() {
   return asWasm()->instanceObject;
 }
 
-inline size_t BreakpointSite::allocSize() {
-  if (type() == Type::JS) {
-    return sizeof(Breakpoint);
-  }
-
-  return sizeof(WasmBreakpoint);
-}
-
 Breakpoint::Breakpoint(Debugger* debugger, BreakpointSite* site,
                        JSObject* handler)
     : debugger(debugger), site(site), handler(handler) {
@@ -372,11 +364,10 @@ void Breakpoint::destroy(JSFreeOp* fop,
   debugger->breakpoints.remove(this);
   site->breakpoints.remove(this);
   gc::Cell* cell = site->owningCellUnbarriered();
-  size_t size = site->allocSize();
   if (mayDestroySite == MayDestroySite::True) {
     site->destroyIfEmpty(fop);
   }
-  fop->delete_(cell, this, size, MemoryUse::Breakpoint);
+  fop->delete_(cell, this, MemoryUse::Breakpoint);
 }
 
 Breakpoint* Breakpoint::nextInDebugger() { return debuggerLink.mNext; }
@@ -689,7 +680,7 @@ bool Debugger::hasAnyLiveHooks(JSRuntime* rt) const {
         }
         break;
       case BreakpointSite::Type::Wasm:
-        if (IsMarkedUnbarriered(rt, &bp->asWasm()->wasmInstance)) {
+        if (IsMarkedUnbarriered(rt, &bp->site->asWasm()->instanceObject)) {
           return true;
         }
         break;
@@ -3748,7 +3739,8 @@ bool DebugAPI::markIteratively(GCMarker* marker) {
                 }
                 break;
               case BreakpointSite::Type::Wasm:
-                if (IsMarkedUnbarriered(rt, &bp->asWasm()->wasmInstance)) {
+                if (IsMarkedUnbarriered(rt,
+                                        &bp->site->asWasm()->instanceObject)) {
                   // The debugger and the wasm instance are both live.
                   // Therefore the breakpoint handler is live.
                   if (!IsMarked(rt, &bp->getHandlerRef())) {
@@ -3794,8 +3786,6 @@ void Debugger::traceForMovingGC(JSTracer* trc) {
                                    "breakpoint script");
         break;
       case BreakpointSite::Type::Wasm:
-        TraceManuallyBarrieredEdge(trc, &bp->asWasm()->wasmInstance,
-                                   "breakpoint wasm instance");
         TraceManuallyBarrieredEdge(trc, &bp->site->asWasm()->instanceObject,
                                    "breakpoint wasm instance");
         break;
@@ -4785,7 +4775,7 @@ void Debugger::removeDebuggeeGlobal(JSFreeOp* fop, GlobalObject* global,
         }
         break;
       case BreakpointSite::Type::Wasm:
-        if (bp->asWasm()->wasmInstance->realm() == global->realm()) {
+        if (bp->site->asWasm()->instanceObject->realm() == global->realm()) {
           bp->destroy(fop);
         }
         break;

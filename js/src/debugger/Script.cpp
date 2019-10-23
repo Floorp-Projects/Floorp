@@ -2107,10 +2107,8 @@ struct DebuggerScript::SetBreakpointMatcher {
       return false;
     }
     site->inc(cx_->runtime()->defaultFreeOp());
-    if (cx_->zone()->new_<WasmBreakpoint>(dbg_, site, handler_,
-                                          instance.object())) {
-      AddCellMemory(wasmInstance, sizeof(WasmBreakpoint),
-                    MemoryUse::Breakpoint);
+    if (cx_->zone()->new_<Breakpoint>(dbg_, site, handler_)) {
+      AddCellMemory(wasmInstance, sizeof(Breakpoint), MemoryUse::Breakpoint);
       return true;
     }
     site->dec(cx_->runtime()->defaultFreeOp());
