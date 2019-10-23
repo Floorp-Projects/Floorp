@@ -143,7 +143,9 @@ nsresult DOMSecurityManager::ParseCSPAndEnforceFrameAncestorCheck(
 
   nsCOMPtr<nsIReferrerInfo> referrerInfo = httpChannel->GetReferrerInfo();
   nsAutoString referrerSpec;
-  referrerInfo->GetComputedReferrerSpec(referrerSpec);
+  if (referrerInfo) {
+    referrerInfo->GetComputedReferrerSpec(referrerSpec);
+  }
   uint64_t innerWindowID = loadInfo->GetInnerWindowID();
 
   rv = csp->SetRequestContextWithPrincipal(resultPrincipal, selfURI,
