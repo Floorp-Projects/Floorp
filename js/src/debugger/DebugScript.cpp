@@ -179,7 +179,7 @@ void DebugScript::clearBreakpointsIn(JSFreeOp* fop, JSScript* script,
         nextbp = bp->nextInSite();
         if ((!dbg || bp->debugger == dbg) &&
             (!handler || bp->getHandler() == handler)) {
-          bp->destroy(fop);
+          bp->remove(fop);
         }
       }
     }
@@ -331,7 +331,7 @@ void DebugAPI::sweepBreakpointsSlow(JSFreeOp* fop, JSScript* script) {
       bool dying = scriptGone || IsAboutToBeFinalized(&dbgobj);
       MOZ_ASSERT_IF(!dying, !IsAboutToBeFinalized(&bp->getHandlerRef()));
       if (dying) {
-        bp->destroy(fop);
+        bp->remove(fop);
       }
     }
   }

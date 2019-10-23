@@ -248,7 +248,7 @@ void DebugState::clearBreakpointsIn(JSFreeOp* fop, WasmInstanceObject* instance,
       if (bp->site->asWasm()->instanceObject == instance &&
           (!dbg || bp->debugger == dbg) &&
           (!handler || bp->getHandler() == handler)) {
-        bp->destroy(fop, Breakpoint::MayDestroySite::False);
+        bp->delete_(fop);
       }
     }
     if (site->isEmpty()) {
