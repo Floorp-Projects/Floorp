@@ -17,7 +17,7 @@ import java.lang.Exception
 /**
  * Helper for importing/migrating "open tabs" from Fennec.
  */
-object FennecSessionMigration {
+internal object FennecSessionMigration {
     private val logger = Logger("FennecSessionImporter")
 
     /**
