@@ -77,6 +77,23 @@ class DebugAPI {
   /*** Methods for interaction with the GC. ***********************************/
 
   /*
+   * Trace (inferred) owning edges from stack frames to Debugger.Frames, as part
+   * of root marking.
+   *
+   * Even if a Debugger.Frame for a live stack frame is entirely unreachable
+   * from JS, if it has onStep or onPop hooks set, then collecting it would have
+   * observable side effects - namely, the hooks would fail to run. The effect
+   * is the same as if the stack frame held an owning edge to its
+   * Debugger.Frame.
+   *
+   * Debugger.Frames must also be retained if the Debugger to which they belong
+   * is reachable, even if they have no hooks set, but we handle that elsewhere;
+   * this function is only concerned with the inferred roots from stack frames
+   * to Debugger.Frames that have hooks set.
+   */
+  static void traceFramesWithLiveHooks(JSTracer* tracer);
+
+  /*
    * A Debugger object is live if:
    *   * the Debugger JSObject is live (Debugger::trace handles this case); OR
    *   * it is in the middle of dispatching an event (the event dispatching
