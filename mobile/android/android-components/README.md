@@ -284,6 +284,8 @@ Once the environment variable is set, you can import the project into Android St
 
 # Coding Standards #
 
+Before making a pull request, please make sure your code is up to these standards.
+
 ## Style ##
 We follow the style enforced by [ktlint](https://ktlint.github.io/) and [detekt](https://arturbosch.github.io/detekt/). See [how to configure Android Studio appropriately](https://github.com/pinterest/ktlint#option-1-recommended).
 
@@ -294,6 +296,17 @@ To check your style, run:
 ./gradlew detekt
 ```
 
+## Documentation ##
+We use `README.md` files and [Dokka](https://github.com/Kotlin/dokka), which you can generate with:
+
+```
+./gradlew dokka                          # Generate dokka for the entire repo
+./gradlew :browser-icons:dokka
+
+```
+
+If you fix a bug or change an API, you should update [docs/changelog.md](https://github.com/mozilla-mobile/android-components/blob/master/docs/changelog.md).
+
 ## Testing ##
 You are expected to both add tests for code that you write and make sure that your changes do not
 cause existing tests to fail. You may find these command lines helpful:
@@ -302,6 +315,11 @@ cause existing tests to fail. You may find these command lines helpful:
 ./gradlew test                            # Run all tests
 ./gradlew :support-ktx:testdebugunittest  # Run unit tests for a specific component
 ```
+
+## Accessibility ##
+Your code should follow [Android accessibility best practices](https://github.com/mozilla-mobile/shared-docs/blob/master/android/accessibility_guide.md) if it contains user-facing
+features.
+
 
 # License
 
