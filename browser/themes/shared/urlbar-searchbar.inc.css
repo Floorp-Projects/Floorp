@@ -115,7 +115,7 @@
 #urlbar:not(.megabar)[focused="true"]:-moz-lwtheme,
 #urlbar.megabar[focused="true"]:-moz-lwtheme > #urlbar-background,
 #navigator-toolbox #searchbar:focus-within:-moz-lwtheme {
-  background-color: var(--lwt-toolbar-field-focus, var(--lwt-toolbar-field-background-color, white));
+  background-color: var(--lwt-toolbar-field-focus);
 }
 
 :root[lwt-selection] #urlbar-input:-moz-lwtheme::selection,
