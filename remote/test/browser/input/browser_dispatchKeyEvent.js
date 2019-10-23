@@ -3,8 +3,8 @@
 
 "use strict";
 
-add_task(async function testTypingPrintableCharacters() {
-  const { client } = await setupForInput(toDataURL("<input>"));
+add_task(async function testTypingPrintableCharacters(client) {
+  await setupForInput(toDataURL("<input>"));
   const { Input } = client;
 
   info("Write 'h'");
@@ -22,12 +22,10 @@ add_task(async function testTypingPrintableCharacters() {
     key: "’",
   });
   await checkInputContent("hH’", 3);
-
-  await teardown(client);
 });
 
-add_task(async function testArrowKeys() {
-  const { client } = await setupForInput(toDataURL("<input>"));
+add_task(async function testArrowKeys(client) {
+  await setupForInput(toDataURL("<input>"));
   const { Input } = client;
 
   await sendText(Input, "hH’");
@@ -59,12 +57,10 @@ add_task(async function testArrowKeys() {
   await dispatchKeyEvent(Input, "ArrowRight", "keyUp");
   await dispatchKeyEvent(Input, modKey, "keyUp");
   await checkInputContent("haHa’", 5);
-
-  await teardown(client);
 });
 
-add_task(async function testBackspace() {
-  const { client } = await setupForInput(toDataURL("<input>"));
+add_task(async function testBackspace(client) {
+  await setupForInput(toDataURL("<input>"));
   const { Input } = client;
 
   await sendText(Input, "haHa’");
@@ -75,12 +71,10 @@ add_task(async function testBackspace() {
   await checkBackspace(Input, "ha");
   await checkBackspace(Input, "h");
   await checkBackspace(Input, "");
-
-  await teardown(client);
 });
 
-add_task(async function testShiftSelect() {
-  const { client } = await setupForInput(toDataURL("<input>"));
+add_task(async function testShiftSelect(client) {
+  await setupForInput(toDataURL("<input>"));
   const { Input } = client;
   await resetInput("word 2 word3");
 
@@ -101,12 +95,10 @@ add_task(async function testShiftSelect() {
   await sendTextKey(Input, "H");
   await checkInputContent("word 2 H", 8);
   await dispatchKeyEvent(Input, "Shift", "keyUp");
-
-  await teardown(client);
 });
 
-add_task(async function testSelectWord() {
-  const { client } = await setupForInput(toDataURL("<input>"));
+add_task(async function testSelectWord(client) {
+  await setupForInput(toDataURL("<input>"));
   const { Input } = client;
   await resetInput("word 2 word3");
 
@@ -121,12 +113,10 @@ add_task(async function testSelectWord() {
   await dispatchKeyEvent(Input, primaryKey, "keyUp");
   info("(deleteContentBackward)");
   await checkBackspace(Input, "word ");
-
-  await teardown(client);
 });
 
-add_task(async function testSelectDelete() {
-  const { client } = await setupForInput(toDataURL("<input>"));
+add_task(async function testSelectDelete(client) {
+  await setupForInput(toDataURL("<input>"));
   const { Input } = client;
   await resetInput("word 2 word3");
 
@@ -149,12 +139,10 @@ add_task(async function testSelectDelete() {
     await dispatchKeyEvent(Input, "Meta", "keyUp");
     await checkInputContent("d4", 0);
   }
-
-  await teardown(client);
 });
 
-add_task(async function testCtrlShiftArrows() {
-  const { client } = await setupForURL(
+add_task(async function testCtrlShiftArrows(client) {
+  await loadURL(
     toDataURL('<select multiple size="3"><option>a<option>b<option>c</select>')
   );
   const { Input } = client;
@@ -178,5 +166,4 @@ add_task(async function testCtrlShiftArrows() {
     ok(select[1].selected, "Second option should be selected");
     ok(!select[2].selected, "Third option should not be selected");
   });
-  await teardown(client);
 });

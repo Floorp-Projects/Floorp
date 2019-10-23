@@ -4,10 +4,7 @@
 "use strict";
 
 // Test the Target closeTarget method and the targetDestroyed event.
-add_task(async function() {
-  const CDP = await getCDP();
-  const client = await CDP({});
-
+add_task(async function(client) {
   info("Setup Target domain");
   const { Target } = client;
 
@@ -45,7 +42,4 @@ add_task(async function() {
 
   await targetDestroyed;
   ok(true, "Received the expected Target.targetDestroyed event");
-
-  await client.close();
-  ok(true, "The client is closed");
 });

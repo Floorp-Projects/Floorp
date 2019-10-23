@@ -3,14 +3,9 @@
 
 "use strict";
 
-const FIRST_DOC = toDataURL("default-test-page");
-const SECOND_DOC = toDataURL("other-test-page");
-
 // Test that javascript dialog events are emitted by the page domain only if
 // the dialog is created for the window of the target.
-add_task(async function() {
-  const { client, tab } = await setupForURL(FIRST_DOC);
-
+add_task(async function(client) {
   const { Page } = client;
 
   info("Enable the page domain");
@@ -24,7 +19,7 @@ add_task(async function() {
   info("Open another tab");
   const otherTab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
-    SECOND_DOC
+    toDataURL("test-page")
   );
   is(gBrowser.selectedTab, otherTab, "Selected tab is now the new tab");
 
@@ -50,8 +45,4 @@ add_task(async function() {
   await Page.bringToFront();
 
   BrowserTestUtils.removeTab(otherTab);
-  await client.close();
-  ok(true, "The client is closed");
-
-  BrowserTestUtils.removeTab(tab);
 });

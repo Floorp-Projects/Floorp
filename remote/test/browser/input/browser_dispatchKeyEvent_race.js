@@ -29,9 +29,8 @@
 const PAGE_URL =
   "http://example.com/browser/remote/test/browser/input/doc_dispatchKeyEvent_race.html";
 
-add_task(async function() {
-  const { client, tab } = await setupForURL(PAGE_URL);
-  is(gBrowser.selectedTab, tab, "Selected tab is the target tab");
+add_task(async function(client) {
+  await loadURL(PAGE_URL);
 
   const { Input, Runtime } = client;
 
@@ -70,11 +69,6 @@ add_task(async function() {
   ]);
   await dispatchKeyEvent(Input, "a", 65, "keyUp");
   await checkWindowTestValue("hhhhhhaaaaaa", context.id, Runtime);
-
-  await client.close();
-  ok(true, "The client is closed");
-
-  BrowserTestUtils.removeTab(tab);
 });
 
 function dispatchKeyEvent(Input, key, keyCode, type, modifiers = 0) {

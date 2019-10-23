@@ -13,8 +13,8 @@ const RANDOM_ID_DOC = toDataURL(
 const promises = new Set();
 const resolutions = new Map();
 
-add_task(async function() {
-  const { client } = await setupForURL(INITIAL_DOC);
+add_task(async function(client) {
+  await loadURL(INITIAL_DOC);
 
   const { Page } = client;
 
@@ -99,11 +99,6 @@ add_task(async function() {
     randomId2,
     "Test tab randomId has been updated after reload"
   );
-
-  await client.close();
-  ok(true, "The client is closed");
-
-  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 async function assertNavigationEvents({ url, frameId }) {

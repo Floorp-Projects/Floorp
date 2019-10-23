@@ -5,9 +5,7 @@
 
 // Test the Runtime remote object
 
-add_task(async function() {
-  const { client } = await setup();
-
+add_task(async function(client) {
   const firstContext = await testRuntimeEnable(client);
   const contextId = firstContext.id;
 
@@ -15,11 +13,6 @@ add_task(async function() {
   await testGetCustomProperty(client, contextId);
   await testGetPrototypeProperties(client, contextId);
   await testGetGetterSetterProperties(client, contextId);
-
-  await client.close();
-  ok(true, "The client is closed");
-
-  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 async function testRuntimeEnable({ Runtime }) {
