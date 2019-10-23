@@ -1234,7 +1234,6 @@ class MOZ_STACK_CLASS BinASTTokenReaderContext : public BinASTTokenReaderBase {
   MOZ_MUST_USE JS::Result<BinASTKind> readTagFromTable(
       const BinASTInterfaceAndField&);
 
-  template <typename Table>
   MOZ_MUST_USE JS::Result<BinASTSymbol> readFieldFromTable(
       const BinASTInterfaceAndField&);
 

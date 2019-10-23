@@ -1347,17 +1347,16 @@ JS::Result<BinASTKind> BinASTTokenReaderContext::readTagFromTable(
   return result.value().toKind();
 }
 
-template <typename Table>
 JS::Result<BinASTSymbol> BinASTTokenReaderContext::readFieldFromTable(
     const BinASTInterfaceAndField& identity) {
   // Extract the table.
   const auto& table =
       dictionary_.tableForField(NormalizedInterfaceAndField(identity));
-  if (MOZ_UNLIKELY(!table.is<Table>())) {
+  if (MOZ_UNLIKELY(!table.is<GenericHuffmanTable>())) {
     return raiseNotInPrelude();
   }
   BINJS_MOZ_TRY_DECL(bits_, bitBuffer.getHuffmanLookup<Compression::No>(*this));
-  const auto result = table.as<Table>().lookup(bits_);
+  const auto result = table.as<GenericHuffmanTable>().lookup(bits_);
   if (MOZ_UNLIKELY(!result.isFound())) {
     return raiseInvalidValue();
   }
@@ -1367,29 +1366,25 @@ JS::Result<BinASTSymbol> BinASTTokenReaderContext::readFieldFromTable(
 
 JS::Result<bool> BinASTTokenReaderContext::readBool(
     const FieldContext& context) {
-  BINJS_MOZ_TRY_DECL(
-      result, readFieldFromTable<GenericHuffmanTable>(context.position_));
+  BINJS_MOZ_TRY_DECL(result, readFieldFromTable(context.position_));
   return result.toBool();
 }
 
 JS::Result<double> BinASTTokenReaderContext::readDouble(
     const FieldContext& context) {
-  BINJS_MOZ_TRY_DECL(
-      result, readFieldFromTable<GenericHuffmanTable>(context.position_));
+  BINJS_MOZ_TRY_DECL(result, readFieldFromTable(context.position_));
   return result.toDouble();
 }
 
 JS::Result<JSAtom*> BinASTTokenReaderContext::readMaybeAtom(
     const FieldContext& context) {
-  BINJS_MOZ_TRY_DECL(
-      result, readFieldFromTable<GenericHuffmanTable>(context.position_));
+  BINJS_MOZ_TRY_DECL(result, readFieldFromTable(context.position_));
   return result.toAtom();
 }
 
 JS::Result<JSAtom*> BinASTTokenReaderContext::readAtom(
     const FieldContext& context) {
-  BINJS_MOZ_TRY_DECL(
-      result, readFieldFromTable<GenericHuffmanTable>(context.position_));
+  BINJS_MOZ_TRY_DECL(result, readFieldFromTable(context.position_));
   return result.toAtom();
 }
 
@@ -1415,22 +1410,19 @@ JS::Result<Ok> BinASTTokenReaderContext::readChars(Chars& out,
 
 JS::Result<BinASTVariant> BinASTTokenReaderContext::readVariant(
     const ListContext& context) {
-  BINJS_MOZ_TRY_DECL(
-      result, readFieldFromTable<GenericHuffmanTable>(context.position_));
+  BINJS_MOZ_TRY_DECL(result, readFieldFromTable(context.position_));
   return result.toVariant();
 }
 
 JS::Result<BinASTVariant> BinASTTokenReaderContext::readVariant(
     const FieldContext& context) {
-  BINJS_MOZ_TRY_DECL(
-      result, readFieldFromTable<GenericHuffmanTable>(context.position_));
+  BINJS_MOZ_TRY_DECL(result, readFieldFromTable(context.position_));
   return result.toVariant();
 }
 
 JS::Result<uint32_t> BinASTTokenReaderContext::readUnsignedLong(
     const FieldContext& context) {
-  BINJS_MOZ_TRY_DECL(
-      result, readFieldFromTable<GenericHuffmanTable>(context.position_));
+  BINJS_MOZ_TRY_DECL(result, readFieldFromTable(context.position_));
   return result.toUnsignedLong();
 }
 
