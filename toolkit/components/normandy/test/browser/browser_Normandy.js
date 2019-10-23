@@ -7,7 +7,6 @@ ChromeUtils.import("resource://normandy/lib/PreferenceExperiments.jsm", this);
 ChromeUtils.import("resource://normandy/lib/PreferenceRollouts.jsm", this);
 ChromeUtils.import("resource://normandy/lib/RecipeRunner.jsm", this);
 ChromeUtils.import("resource://normandy/lib/TelemetryEvents.jsm", this);
-ChromeUtils.import("resource://normandy-content/AboutPages.jsm", this);
 
 const experimentPref1 = "test.initExperimentPrefs1";
 const experimentPref2 = "test.initExperimentPrefs2";
@@ -16,7 +15,6 @@ const experimentPref4 = "test.initExperimentPrefs4";
 
 function withStubInits(testFunction) {
   return decorate(
-    withStub(AboutPages, "init"),
     withStub(AddonRollouts, "init"),
     withStub(AddonStudies, "init"),
     withStub(PreferenceRollouts, "init"),
@@ -198,7 +196,6 @@ decorate_task(
 decorate_task(withStubInits, async function testStartup() {
   const initObserved = TestUtils.topicObserved("shield-init-complete");
   await Normandy.finishInit();
-  ok(AboutPages.init.called, "startup calls AboutPages.init");
   ok(AddonStudies.init.called, "startup calls AddonStudies.init");
   ok(
     PreferenceExperiments.init.called,
@@ -212,23 +209,6 @@ decorate_task(withStubInits, async function testStartupPrefInitFail() {
   PreferenceExperiments.init.rejects();
 
   await Normandy.finishInit();
-  ok(AboutPages.init.called, "startup calls AboutPages.init");
-  ok(AddonStudies.init.called, "startup calls AddonStudies.init");
-  ok(AddonRollouts.init.called, "startup calls AddonRollouts.init");
-  ok(
-    PreferenceExperiments.init.called,
-    "startup calls PreferenceExperiments.init"
-  );
-  ok(RecipeRunner.init.called, "startup calls RecipeRunner.init");
-  ok(TelemetryEvents.init.called, "startup calls TelemetryEvents.init");
-  ok(PreferenceRollouts.init.called, "startup calls PreferenceRollouts.init");
-});
-
-decorate_task(withStubInits, async function testStartupAboutPagesInitFail() {
-  AboutPages.init.rejects();
-
-  await Normandy.finishInit();
-  ok(AboutPages.init.called, "startup calls AboutPages.init");
   ok(AddonStudies.init.called, "startup calls AddonStudies.init");
   ok(AddonRollouts.init.called, "startup calls AddonRollouts.init");
   ok(
@@ -244,7 +224,6 @@ decorate_task(withStubInits, async function testStartupAddonStudiesInitFail() {
   AddonStudies.init.rejects();
 
   await Normandy.finishInit();
-  ok(AboutPages.init.called, "startup calls AboutPages.init");
   ok(AddonStudies.init.called, "startup calls AddonStudies.init");
   ok(AddonRollouts.init.called, "startup calls AddonRollouts.init");
   ok(
@@ -262,7 +241,6 @@ decorate_task(
     TelemetryEvents.init.throws();
 
     await Normandy.finishInit();
-    ok(AboutPages.init.called, "startup calls AboutPages.init");
     ok(AddonStudies.init.called, "startup calls AddonStudies.init");
     ok(AddonRollouts.init.called, "startup calls AddonRollouts.init");
     ok(
@@ -281,7 +259,6 @@ decorate_task(
     PreferenceRollouts.init.throws();
 
     await Normandy.finishInit();
-    ok(AboutPages.init.called, "startup calls AboutPages.init");
     ok(AddonStudies.init.called, "startup calls AddonStudies.init");
     ok(AddonRollouts.init.called, "startup calls AddonRollouts.init");
     ok(
