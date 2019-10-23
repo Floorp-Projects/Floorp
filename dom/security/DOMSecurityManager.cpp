@@ -6,6 +6,7 @@
 
 #include "DOMSecurityManager.h"
 #include "nsCSPContext.h"
+#include "nsContentSecurityUtils.h"
 #include "mozilla/dom/WindowGlobalParent.h"
 
 #include "nsIMultiPartChannel.h"
@@ -17,32 +18,6 @@ using namespace mozilla;
 namespace {
 StaticRefPtr<DOMSecurityManager> gDOMSecurityManager;
 }  // namespace
-
-static nsresult GetHttpChannelHelper(nsIChannel* aChannel,
-                                     nsIHttpChannel** aHttpChannel) {
-  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
-  if (httpChannel) {
-    httpChannel.forget(aHttpChannel);
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIMultiPartChannel> multipart = do_QueryInterface(aChannel);
-  if (!multipart) {
-    *aHttpChannel = nullptr;
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIChannel> baseChannel;
-  nsresult rv = multipart->GetBaseChannel(getter_AddRefs(baseChannel));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  httpChannel = do_QueryInterface(baseChannel);
-  httpChannel.forget(aHttpChannel);
-
-  return NS_OK;
-}
 
 NS_INTERFACE_MAP_BEGIN(DOMSecurityManager)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIObserver)
@@ -123,7 +98,8 @@ nsresult DOMSecurityManager::ParseCSPAndEnforceFrameAncestorCheck(
   // CSP can only hang off an http channel, if this channel is not
   // an http channel then there is nothing to do here.
   nsCOMPtr<nsIHttpChannel> httpChannel;
-  nsresult rv = GetHttpChannelHelper(aChannel, getter_AddRefs(httpChannel));
+  nsresult rv = nsContentSecurityUtils::GetHttpChannelFromPotentialMultiPart(
+      aChannel, getter_AddRefs(httpChannel));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
