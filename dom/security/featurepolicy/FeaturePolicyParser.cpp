@@ -20,6 +20,10 @@ namespace {
 
 void ReportToConsoleUnsupportedFeature(Document* aDocument,
                                        const nsString& aFeatureName) {
+  if (!aDocument) {
+    return;
+  }
+
   AutoTArray<nsString, 1> params = {aFeatureName};
 
   nsContentUtils::ReportToConsole(
@@ -30,6 +34,10 @@ void ReportToConsoleUnsupportedFeature(Document* aDocument,
 
 void ReportToConsoleInvalidEmptyAllowValue(Document* aDocument,
                                            const nsString& aFeatureName) {
+  if (!aDocument) {
+    return;
+  }
+
   AutoTArray<nsString, 1> params = {aFeatureName};
 
   nsContentUtils::ReportToConsole(
@@ -40,6 +48,10 @@ void ReportToConsoleInvalidEmptyAllowValue(Document* aDocument,
 
 void ReportToConsoleInvalidAllowValue(Document* aDocument,
                                       const nsString& aValue) {
+  if (!aDocument) {
+    return;
+  }
+
   AutoTArray<nsString, 1> params = {aValue};
 
   nsContentUtils::ReportToConsole(
