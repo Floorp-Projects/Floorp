@@ -1380,7 +1380,9 @@ class UrlbarView {
     // When switching to another browser window, open tabs, history or other
     // data sources are likely to change, so make sure we don't re-show stale
     // results when switching back.
-    this.clear();
+    if (!UrlbarPrefs.get("ui.popup.disable_autohide")) {
+      this.clear();
+    }
   }
 
   _on_TabSelect() {
