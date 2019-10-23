@@ -186,15 +186,17 @@ class PageAction {
       recommendation.content.notification_text
     );
     this.label.value = notificationText;
-    this.button.setAttribute(
-      "tooltiptext",
-      notificationText.attributes.tooltiptext
-    );
-    // For a11y, we want the more descriptive text.
-    this.container.setAttribute(
-      "aria-label",
-      notificationText.attributes.tooltiptext
-    );
+    if (notificationText.attributes) {
+      this.button.setAttribute(
+        "tooltiptext",
+        notificationText.attributes.tooltiptext
+      );
+      // For a11y, we want the more descriptive text.
+      this.container.setAttribute(
+        "aria-label",
+        notificationText.attributes.tooltiptext
+      );
+    }
     this.button.setAttribute(
       "data-cfr-icon",
       CATEGORY_ICONS[recommendation.content.category]
@@ -222,10 +224,12 @@ class PageAction {
       this.addImpression(recommendation);
     }
 
-    this.window.A11yUtils.announce({
-      raw: notificationText.attributes["a11y-announcement"],
-      source: this.container,
-    });
+    if (notificationText.attributes) {
+      this.window.A11yUtils.announce({
+        raw: notificationText.attributes["a11y-announcement"],
+        source: this.container,
+      });
+    }
   }
 
   hideAddressBarNotifier() {
