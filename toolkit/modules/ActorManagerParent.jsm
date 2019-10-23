@@ -263,6 +263,20 @@ let ACTORS = {
     allFrames: true,
   },
 
+  FormHistory: {
+    parent: {
+      moduleURI: "resource://gre/actors/FormHistoryParent.jsm",
+    },
+    child: {
+      moduleURI: "resource://gre/actors/FormHistoryChild.jsm",
+      events: {
+        DOMFormBeforeSubmit: {},
+      },
+    },
+
+    allFrames: true,
+  },
+
   InlineSpellChecker: {
     parent: {
       moduleURI: "resource://gre/actors/InlineSpellCheckerParent.jsm",
@@ -364,16 +378,6 @@ let LEGACY_ACTORS = {
     child: {
       module: "resource://gre/actors/ControllersChild.jsm",
       messages: ["ControllerCommands:Do", "ControllerCommands:DoWithParams"],
-    },
-  },
-
-  FormSubmit: {
-    child: {
-      module: "resource://gre/actors/FormSubmitChild.jsm",
-      allFrames: true,
-      events: {
-        DOMFormBeforeSubmit: {},
-      },
     },
   },
 
