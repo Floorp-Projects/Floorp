@@ -17,17 +17,27 @@
  * Tools -> Web Developer -> Enable Profiler Toolbar Icon
  */
 
-/**
- * Initialize the require function through a BrowserLoader. This loader ensures
- * that the popup can use require and has access to the window object.
- */
-const { BrowserLoader } = ChromeUtils.import(
-  "resource://devtools/client/shared/browser-loader.js"
-);
-const { require } = BrowserLoader({
-  baseURI: "resource://devtools/client/performance-new/popup/",
-  window,
-});
+{
+  // Create the browser loader, but take care not to conflict with
+  // TypeScript. See devtools/client/performance-new/typescript.md and
+  // the section on "Do not overload require" for more information.
+
+  const { BrowserLoader } = ChromeUtils.import(
+    "resource://devtools/client/shared/browser-loader.js"
+  );
+  const browserLoader = BrowserLoader({
+    baseURI: "resource://devtools/client/performance-new/popup",
+    window,
+  });
+
+  /**
+   * @type {any} - Coerce the current scope into an `any`, and assign the
+   *     loaders to the scope. They can then be used freely below.
+   */
+  const scope = this;
+  scope.require = browserLoader.require;
+  scope.loader = browserLoader.loader;
+}
 
 /**
  * The background.jsm.js manages the profiler state, and can be loaded multiple time
