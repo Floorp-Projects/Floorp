@@ -765,8 +765,9 @@ DocumentChannelParent::SetClassifierMatchedTrackingInfo(
 NS_IMETHODIMP
 DocumentChannelParent::NotifyClassificationFlags(uint32_t aClassificationFlags,
                                                  bool aIsThirdParty) {
-  if (aIsThirdParty && CanSend()) {
-    Unused << SendNotifyClassificationFlags(aClassificationFlags);
+  if (CanSend()) {
+    Unused << SendNotifyClassificationFlags(aClassificationFlags,
+                                            aIsThirdParty);
   }
 
   mIParentChannelFunctions.AppendElement(IParentChannelFunction{
