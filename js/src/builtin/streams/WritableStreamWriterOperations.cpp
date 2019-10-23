@@ -25,6 +25,7 @@
 #include "vm/Compartment.h"  // JS::Compartment
 #include "vm/JSContext.h"    // JSContext
 
+#include "builtin/streams/MiscellaneousOperations-inl.h"  // js::ResolveUnwrappedPromiseWithUndefined
 #include "builtin/streams/WritableStream-inl.h"  // js::WritableStream::setCloseRequest
 #include "builtin/streams/WritableStreamDefaultWriter-inl.h"  // js::UnwrapStreamFromWriter
 #include "vm/Compartment-inl.h"  // js::UnwrapAndTypeCheckThis
@@ -93,11 +94,8 @@ JSObject* js::WritableStreamDefaultWriterClose(
   // Step 9: If stream.[[backpressure]] is true and state is "writable", resolve
   //         writer.[[readyPromise]] with undefined.
   if (unwrappedStream->backpressure() && unwrappedStream->writable()) {
-    Rooted<JSObject*> readyPromise(cx, unwrappedWriter->readyPromise());
-    if (!cx->compartment()->wrap(cx, &readyPromise)) {
-      return nullptr;
-    }
-    if (!ResolvePromise(cx, readyPromise, UndefinedHandleValue)) {
+    if (!ResolveUnwrappedPromiseWithUndefined(
+            cx, unwrappedWriter->readyPromise())) {
       return nullptr;
     }
   }
