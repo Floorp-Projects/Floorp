@@ -7,6 +7,7 @@ package mozilla.components.concept.engine.manifest
 import android.graphics.Color
 import android.graphics.Color.rgb
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import mozilla.components.support.test.file.loadResourceAsString
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -580,12 +581,7 @@ class WebAppManifestParserTest {
     }
 
     private fun loadManifestAsString(fileName: String): String =
-        javaClass.getResourceAsStream("/manifests/$fileName")!!
-            .bufferedReader().use {
-                it.readText()
-            }.also {
-                assertNotNull(it)
-            }
+        loadResourceAsString("/manifests/$fileName")
 
     private fun loadManifest(fileName: String): JSONObject =
         JSONObject(loadManifestAsString(fileName))
