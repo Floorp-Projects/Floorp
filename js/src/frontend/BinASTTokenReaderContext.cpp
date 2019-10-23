@@ -297,7 +297,7 @@ class HuffmanPreludeReader {
   // `ListContents` to read the model for the contents of the list.
   struct List : EntryExplicit {
     // The table for the length of the list.
-    using Table = HuffmanTableExplicitSymbolsListLength;
+    using Table = GenericHuffmanTable;
 
     // The type of the list, e.g. list of numbers.
     // All lists with the same type share a model for their length.
@@ -502,7 +502,7 @@ class HuffmanPreludeReader {
     // 3. If the field has a FrozenArray type
     //   a. Determine if the array type is always empty
     //   b. If so, stop
-    auto& lengthTable = table.as<HuffmanTableExplicitSymbolsListLength>();
+    auto& lengthTable = table.as<GenericHuffmanTable>();
     bool empty = true;
     for (auto iter : lengthTable) {
       if (iter->toListLength() > 0) {
@@ -1517,8 +1517,7 @@ JS::Result<Ok> BinASTTokenReaderContext::enterList(uint32_t& items,
   const auto identity = context.content_;
   const auto& table = dictionary_.tableForListLength(identity);
   BINJS_MOZ_TRY_DECL(bits_, bitBuffer.getHuffmanLookup<Compression::No>(*this));
-  const auto& tableForLookup =
-      table.as<HuffmanTableExplicitSymbolsListLength>();
+  const auto& tableForLookup = table.as<GenericHuffmanTable>();
   const auto result = tableForLookup.lookup(bits_);
   if (MOZ_UNLIKELY(!result.isFound())) {
     return raiseInvalidValue();
@@ -2650,7 +2649,7 @@ MOZ_MUST_USE JS::Result<BinASTSymbol> HuffmanPreludeReader::readSymbol(
 // Reading a single-value table of list lengths.
 template <>
 MOZ_MUST_USE JS::Result<Ok> HuffmanPreludeReader::readSingleValueTable<List>(
-    HuffmanTableExplicitSymbolsListLength& table, const List& list) {
+    GenericHuffmanTable& table, const List& list) {
   BINJS_MOZ_TRY_DECL(length, reader_.readUnpackedLong());
   if (MOZ_UNLIKELY(length > MAX_LIST_LENGTH)) {
     return raiseInvalidTableData(list.identity_);
