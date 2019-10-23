@@ -5,7 +5,7 @@
 
 // Test very basic CDP features.
 
-add_task(async function() {
+add_task(async function(_client, CDP) {
   const { mainProcessTarget } = RemoteAgent.targets;
   ok(
     mainProcessTarget,
@@ -14,27 +14,29 @@ add_task(async function() {
 
   const targetURL = mainProcessTarget.wsDebuggerURL;
 
-  const CDP = await getCDP();
-
   const client = await CDP({ target: targetURL });
   ok(true, "CDP client has been instantiated");
 
-  const { Browser, Target } = client;
-  ok(Browser, "The main process target exposes Browser domain");
-  ok(Target, "The main process target exposes Target domain");
+  try {
+    const { Browser, Target } = client;
+    ok(Browser, "The main process target exposes Browser domain");
+    ok(Target, "The main process target exposes Target domain");
 
-  const version = await Browser.getVersion();
+    const version = await Browser.getVersion();
 
-  const { isHeadless } = Cc["@mozilla.org/gfx/info;1"].getService(
-    Ci.nsIGfxInfo
-  );
-  const expectedProduct = isHeadless ? "Headless Firefox" : "Firefox";
-  is(version.product, expectedProduct, "Browser.getVersion works");
+    const { isHeadless } = Cc["@mozilla.org/gfx/info;1"].getService(
+      Ci.nsIGfxInfo
+    );
+    const expectedProduct = isHeadless ? "Headless Firefox" : "Firefox";
+    is(version.product, expectedProduct, "Browser.getVersion works");
 
-  const { webSocketDebuggerUrl } = await CDP.Version();
-  is(
-    webSocketDebuggerUrl,
-    targetURL,
-    "Version endpoint refers to the same Main process target"
-  );
+    const { webSocketDebuggerUrl } = await CDP.Version();
+    is(
+      webSocketDebuggerUrl,
+      targetURL,
+      "Version endpoint refers to the same Main process target"
+    );
+  } finally {
+    await client.close();
+  }
 });

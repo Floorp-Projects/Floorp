@@ -3,8 +3,8 @@
 
 "use strict";
 
-add_task(async function testDispatchMouseEvent() {
-  const { client } = await setupForURL(toDataURL("<div>foo</div>"));
+add_task(async function testDispatchMouseEvent(client) {
+  await loadURL(toDataURL("<div>foo</div>"));
 
   const { Input } = client;
 
@@ -52,5 +52,5 @@ add_task(async function testDispatchMouseEvent() {
     return this.clickPromise;
   });
 
-  await teardown(client);
+  ok(true, "All events detected");
 });

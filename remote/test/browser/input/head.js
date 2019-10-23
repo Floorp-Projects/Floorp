@@ -40,7 +40,7 @@ const KEYCODES = {
 };
 
 async function setupForInput(url) {
-  const { client, tab } = await setupForURL(url);
+  await loadURL(url);
   info("Focus the input on the page");
   await ContentTask.spawn(gBrowser.selectedBrowser, null, function() {
     const input = content.document.querySelector("input");
@@ -49,7 +49,6 @@ async function setupForInput(url) {
     is(input.value, "", "Check input content");
     is(input.selectionStart, 0, "Check position of input caret");
   });
-  return { client, tab };
 }
 
 async function withModifier(Input, modKey, mod, key) {

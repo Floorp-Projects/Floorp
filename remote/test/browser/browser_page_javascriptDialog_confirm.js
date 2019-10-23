@@ -5,9 +5,7 @@
 
 // Test for window.confirm(). Check that the dialog is correctly detected and that it can
 // be rejected or accepted.
-add_task(async function() {
-  const { client, tab } = await setup();
-
+add_task(async function(client) {
   const { Page } = client;
 
   info("Enable the page domain");
@@ -31,11 +29,6 @@ add_task(async function() {
   await Page.handleJavaScriptDialog({ accept: false });
   isConfirmed = await getContentProperty("isConfirmed");
   ok(!isConfirmed, "The confirm dialog was rejected");
-
-  await client.close();
-  ok(true, "The client is closed");
-
-  BrowserTestUtils.removeTab(tab);
 });
 
 function createConfirmDialog(Page) {

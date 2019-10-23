@@ -4,7 +4,7 @@
 "use strict";
 
 // Test beforeunload dialog events.
-add_task(async function() {
+add_task(async function(client, _, tab) {
   info("Allow to trigger onbeforeunload without user interaction");
   await new Promise(resolve => {
     const options = {
@@ -12,8 +12,6 @@ add_task(async function() {
     };
     SpecialPowers.pushPrefEnv(options, resolve);
   });
-
-  const { client, tab } = await setup();
 
   const { Page } = client;
 
@@ -35,9 +33,6 @@ add_task(async function() {
 
   info("Wait for the TabClose event");
   await onTabClose;
-
-  await client.close();
-  ok(true, "The client is closed");
 });
 
 function triggerBeforeUnload(Page, tab, accept) {

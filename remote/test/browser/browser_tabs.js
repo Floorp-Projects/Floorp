@@ -7,9 +7,7 @@
 
 const TEST_URL = toDataURL("default-test-page");
 
-add_task(async function() {
-  const CDP = await getCDP();
-
+add_task(async function(_, CDP) {
   // Use gBrowser.addTab instead of BrowserTestUtils as it creates the tab differently.
   // It demonstrates a race around tab.linkedBrowser.browsingContext being undefined
   // when accessing this property early.

@@ -12,10 +12,9 @@ const IFRAME_DOC = toDataURL(
 const promises = new Set();
 const resolutions = new Map();
 
-add_task(async function() {
-  const { client } = await setupForURL(toDataURL("default-test-page"));
-
+add_task(async function(client) {
   const { Page } = client;
+
   await Page.enable();
 
   // Store all frameNavigated events in an array
@@ -33,9 +32,4 @@ add_task(async function() {
     frameId,
     "Received the correct frameId for the frameNavigated event"
   );
-
-  await client.close();
-  ok(true, "The client is closed");
-
-  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
