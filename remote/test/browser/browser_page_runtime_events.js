@@ -10,8 +10,9 @@
 
 const TEST_DOC = toDataURL("default-test-page");
 
-add_task(async function testCDP() {
-  const { client } = await setupForURL(TEST_DOC);
+add_task(async function testCDP(client) {
+  await loadURL(TEST_DOC);
+
   const { Page, Runtime } = client;
 
   const events = [];
@@ -122,9 +123,4 @@ add_task(async function testCDP() {
     ["executionContextDestroyed", "frameNavigated", "executionContextCreated"],
     "Received frameNavigated between the two execution context events during navigation to another URL"
   );
-
-  await client.close();
-  ok(true, "The client is closed");
-
-  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });

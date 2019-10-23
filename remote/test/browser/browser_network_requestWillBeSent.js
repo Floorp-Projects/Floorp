@@ -10,9 +10,7 @@ const PAGE_URL =
 const JS_URL =
   "http://example.com/browser/remote/test/browser/file_network_requestWillBeSent.js";
 
-add_task(async function() {
-  const { client } = await setupForURL(toDataURL("default-test-page"));
-
+add_task(async function(client) {
   const { Page, Network } = client;
 
   await Network.enable();
@@ -47,9 +45,4 @@ add_task(async function() {
 
   info("Wait for Network.requestWillBeSent events");
   await onRequests;
-
-  await client.close();
-  ok(true, "The client is closed");
-
-  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });

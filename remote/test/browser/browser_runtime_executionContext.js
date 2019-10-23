@@ -7,8 +7,8 @@
 
 const TEST_DOC = toDataURL("default-test-page");
 
-add_task(async function() {
-  const { client } = await setupForURL(TEST_DOC);
+add_task(async function(client) {
+  await loadURL(TEST_DOC);
 
   const firstContext = await testRuntimeEnable(client);
   await testEvaluate(client, firstContext);
@@ -16,11 +16,6 @@ add_task(async function() {
   await testNavigateBack(client, firstContext, secondContext);
   const thirdContext = await testNavigateViaLocation(client, firstContext);
   await testReload(client, thirdContext);
-
-  await client.close();
-  ok(true, "The client is closed");
-
-  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 async function testRuntimeEnable({ Runtime }) {

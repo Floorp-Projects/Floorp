@@ -5,9 +5,7 @@
 
 // Test a browser alert is detected via Page.javascriptDialogOpening and can be
 // closed with Page.handleJavaScriptDialog
-add_task(async function() {
-  const { client, tab } = await setup();
-
+add_task(async function(client) {
   const { Page } = client;
 
   info("Enable the page domain");
@@ -44,11 +42,6 @@ add_task(async function() {
 
   alertIsClosed = await getContentProperty("alertIsClosed");
   ok(alertIsClosed, "The content process is no longer blocked on the alert");
-
-  await client.close();
-  ok(true, "The client is closed");
-
-  BrowserTestUtils.removeTab(tab);
 });
 
 function createAlertDialog(Page) {

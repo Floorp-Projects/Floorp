@@ -42,11 +42,11 @@ async function getViewportRect() {
   });
 }
 
-add_task(async function testScreenshotWithDocumentSmallerThanViewport() {
-  const doc = toDataURL("<div>Hello world");
-  const { client, tab } = await setupForURL(doc);
+add_task(async function documentSmallerThanViewport(client) {
+  loadURL(toDataURL("<div>Hello world"));
 
   const { Page } = client;
+
   info("Check that captureScreenshot() captures the viewport by default");
   const screenshot = await Page.captureScreenshot();
 
@@ -56,18 +56,13 @@ add_task(async function testScreenshotWithDocumentSmallerThanViewport() {
 
   is(width, (viewportRect.width - viewportRect.left) * scale);
   is(height, (viewportRect.height - viewportRect.top) * scale);
-
-  await client.close();
-  ok(true, "The client is closed");
-
-  BrowserTestUtils.removeTab(tab);
 });
 
-add_task(async function testScreenshotWithDocumentLargerThanViewport() {
-  const doc = toDataURL("<div style='margin: 100vh 100vw'>Hello world");
-  const { client, tab } = await setupForURL(doc);
+add_task(async function documentLargerThanViewport(client) {
+  loadURL(toDataURL("<div style='margin: 100vh 100vw'>Hello world"));
 
   const { Page } = client;
+
   info("Check that captureScreenshot() captures the viewport by default");
   const screenshot = await Page.captureScreenshot();
 
@@ -77,9 +72,4 @@ add_task(async function testScreenshotWithDocumentLargerThanViewport() {
 
   is(width, (viewportRect.width - viewportRect.left) * scale);
   is(height, (viewportRect.height - viewportRect.top) * scale);
-
-  await client.close();
-  ok(true, "The client is closed");
-
-  BrowserTestUtils.removeTab(tab);
 });

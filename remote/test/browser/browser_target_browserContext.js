@@ -5,9 +5,7 @@
 
 // Test the Target domain
 
-add_task(async function() {
-  const CDP = await getCDP();
-
+add_task(async function(_, CDP) {
   // Connect to the server
   const { webSocketDebuggerUrl } = await CDP.Version();
   const client = await CDP({ target: webSocketDebuggerUrl });

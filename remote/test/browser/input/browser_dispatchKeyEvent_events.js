@@ -6,8 +6,8 @@
 const PAGE_URL =
   "http://example.com/browser/remote/test/browser/input/doc_events.html";
 
-add_task(async function testShiftEvents() {
-  const { client } = await setupForInput(PAGE_URL);
+add_task(async function testShiftEvents(client) {
+  await setupForInput(PAGE_URL);
   const { Input } = client;
   await resetEvents();
 
@@ -34,12 +34,10 @@ add_task(async function testShiftEvents() {
     const input = content.document.querySelector("input");
     isnot(input, content.document.activeElement, "input should lose focus");
   });
-
-  await teardown(client);
 });
 
-add_task(async function testAltEvents() {
-  const { client } = await setupForInput(PAGE_URL);
+add_task(async function testAltEvents(client) {
+  await setupForInput(PAGE_URL);
   const { Input } = client;
 
   await withModifier(Input, "Alt", "alt", "a");
@@ -51,11 +49,10 @@ add_task(async function testAltEvents() {
   let events = await getEvents();
   checkEvent(events[1], "keydown", "a", "alt", true);
   checkEvent(events[events.length - 1], "keyup", "Alt", "alt", false);
-  await teardown(client);
 });
 
-add_task(async function testControlEvents() {
-  const { client } = await setupForInput(PAGE_URL);
+add_task(async function testControlEvents(client) {
+  await setupForInput(PAGE_URL);
   const { Input } = client;
 
   await withModifier(Input, "Control", "ctrl", "`");
@@ -63,14 +60,13 @@ add_task(async function testControlEvents() {
   // no keypress or input event
   checkEvent(events[1], "keydown", "`", "ctrl", true);
   checkEvent(events[events.length - 1], "keyup", "Control", "ctrl", false);
-  await teardown(client);
 });
 
-add_task(async function testMetaEvents() {
+add_task(async function testMetaEvents(client) {
   if (!isMac) {
     return;
   }
-  const { client } = await setupForInput(PAGE_URL);
+  await setupForInput(PAGE_URL);
   const { Input } = client;
 
   await withModifier(Input, "Meta", "meta", "a");
@@ -78,12 +74,10 @@ add_task(async function testMetaEvents() {
   // no keypress or input event
   checkEvent(events[1], "keydown", "a", "meta", true);
   checkEvent(events[events.length - 1], "keyup", "Meta", "meta", false);
-
-  await teardown(client);
 });
 
-add_task(async function testShiftClick() {
-  const { client } = await setupForURL(PAGE_URL);
+add_task(async function testShiftClick(client) {
+  await loadURL(PAGE_URL);
   const { Input } = client;
   await resetEvents();
 
@@ -104,8 +98,6 @@ add_task(async function testShiftClick() {
   await dispatchKeyEvent(Input, "Shift", "keyUp", shift);
   let events = await getEvents();
   checkProperties({ type: "click", shiftKey: true, button: 0 }, events[2]);
-
-  await teardown(client);
 });
 
 async function getEvents() {
