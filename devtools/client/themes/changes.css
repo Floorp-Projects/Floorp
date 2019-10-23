@@ -101,7 +101,12 @@
   border-radius: 3px;
   color: var(--theme-body-color);
   fill: currentColor;
-  padding: 4px 5px 4px 25px;
+  padding-block: 4px;
+  padding-inline: 25px 5px;
+}
+
+.changes__copy-all-changes-button:dir(rtl) {
+  background-position-x: right 4px;
 }
 
 .changes__copy-all-changes-button:hover,
