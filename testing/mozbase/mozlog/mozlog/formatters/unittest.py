@@ -31,11 +31,10 @@ class UnittestFormatter(base.BaseFormatter):
         if "expected" in data:
             status = data["status"]
             char = {"FAIL": "F",
-                    "PRECONDITION_FAILED": "F",
                     "ERROR": "E",
                     "PASS": "X"}[status]
 
-            if status == "FAIL" or status == "PRECONDITION_FAILED":
+            if status == "FAIL":
                 self.fails.append(data)
             elif status == "ERROR":
                 self.errors.append(data)
