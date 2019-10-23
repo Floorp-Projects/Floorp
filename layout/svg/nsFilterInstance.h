@@ -24,6 +24,7 @@
 class gfxContext;
 class nsIFrame;
 class nsSVGFilterPaintCallback;
+struct WrFiltersHolder;
 
 namespace mozilla {
 namespace dom {

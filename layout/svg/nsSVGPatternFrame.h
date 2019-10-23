@@ -81,16 +81,18 @@ class nsSVGPatternFrame final : public nsSVGPaintServerFrame {
   mozilla::SVGAnimatedTransformList* GetPatternTransformList(
       nsIContent* aDefault);
   gfxMatrix GetPatternTransform();
-  const SVGAnimatedViewBox& GetViewBox(nsIContent* aDefault);
-  const SVGAnimatedViewBox& GetViewBox() { return GetViewBox(mContent); }
-  const SVGAnimatedPreserveAspectRatio& GetPreserveAspectRatio(
+  const mozilla::SVGAnimatedViewBox& GetViewBox(nsIContent* aDefault);
+  const mozilla::SVGAnimatedViewBox& GetViewBox() {
+    return GetViewBox(mContent);
+  }
+  const mozilla::SVGAnimatedPreserveAspectRatio& GetPreserveAspectRatio(
       nsIContent* aDefault);
-  const SVGAnimatedPreserveAspectRatio& GetPreserveAspectRatio() {
+  const mozilla::SVGAnimatedPreserveAspectRatio& GetPreserveAspectRatio() {
     return GetPreserveAspectRatio(mContent);
   }
-  const SVGAnimatedLength* GetLengthValue(uint32_t aIndex,
-                                          nsIContent* aDefault);
-  const SVGAnimatedLength* GetLengthValue(uint32_t aIndex) {
+  const mozilla::SVGAnimatedLength* GetLengthValue(uint32_t aIndex,
+                                                   nsIContent* aDefault);
+  const mozilla::SVGAnimatedLength* GetLengthValue(uint32_t aIndex) {
     return GetLengthValue(aIndex, mContent);
   }
 
@@ -112,7 +114,7 @@ class nsSVGPatternFrame final : public nsSVGPaintServerFrame {
 
   gfxRect GetPatternRect(uint16_t aPatternUnits, const gfxRect& bbox,
                          const Matrix& aTargetCTM, nsIFrame* aTarget);
-  gfxMatrix ConstructCTM(const SVGAnimatedViewBox& aViewBox,
+  gfxMatrix ConstructCTM(const mozilla::SVGAnimatedViewBox& aViewBox,
                          uint16_t aPatternContentUnits, uint16_t aPatternUnits,
                          const gfxRect& callerBBox, const Matrix& callerCTM,
                          nsIFrame* aTarget);
