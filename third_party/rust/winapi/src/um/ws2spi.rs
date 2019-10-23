@@ -267,7 +267,7 @@ FN!{stdcall LPWSPSTRINGTOADDRESS(
     lpAddressLength: LPINT,
     lpErrno: LPINT,
 ) -> c_int}
-STRUCT!{struct WSPPROC_TABLE{
+STRUCT!{struct WSPPROC_TABLE {
     lpWSPAccept: LPWSPACCEPT,
     lpWSPAddressToString: LPWSPADDRESSTOSTRING,
     lpWSPAsyncSelect: LPWSPASYNCSELECT,

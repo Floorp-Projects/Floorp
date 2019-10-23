@@ -37,22 +37,30 @@ DEFINE_GUID!{GUID_DEVINTERFACE_SES,
     0x1790c9ec, 0x47d5, 0x4df3, 0xb5, 0xaf, 0x9a, 0xdf, 0x3c, 0xf2, 0x3e, 0x48}
 DEFINE_GUID!{WDI_STORAGE_PREDICT_FAILURE_DPS_GUID,
     0xe9f2d03a, 0x747c, 0x41c2, 0xbb, 0x9a, 0x02, 0xc6, 0x2b, 0x6d, 0x5f, 0xcb}
+DEFINE_GUID!{GUID_DEVINTERFACE_SERVICE_VOLUME,
+    0x6ead3d82, 0x25ec, 0x46bc, 0xb7, 0xfd, 0xc1, 0xf0, 0xdf, 0x8f, 0x50, 0x37}
 DEFINE_GUID!{GUID_DEVINTERFACE_HIDDEN_VOLUME,
     0x7f108a28, 0x9833, 0x4b3b, 0xb7, 0x80, 0x2c, 0x6b, 0x5f, 0xa5, 0xc0, 0x62}
 DEFINE_GUID!{GUID_DEVINTERFACE_UNIFIED_ACCESS_RPMB,
     0x27447c21, 0xbcc3, 0x4d07, 0xa0, 0x5b, 0xa3, 0x39, 0x5b, 0xb4, 0xee, 0xe7}
+DEFINE_GUID!{GUID_DEVINTERFACE_SCM_PHYSICAL_DEVICE,
+    0x4283609d, 0x4dc2, 0x43be, 0xbb, 0xb4, 0x4f, 0x15, 0xdf, 0xce, 0x2c, 0x61}
+DEFINE_GUID!{GUID_SCM_PD_HEALTH_NOTIFICATION,
+    0x9da2d386, 0x72f5, 0x4ee3, 0x81, 0x55, 0xec, 0xa0, 0x67, 0x8e, 0x3b, 0x06}
+DEFINE_GUID!{GUID_SCM_PD_PASSTHROUGH_INVDIMM,
+    0x4309AC30, 0x0D11, 0x11E4, 0x91, 0x91, 0x08, 0x00, 0x20, 0x0C, 0x9A, 0x66}
 DEFINE_GUID!{GUID_DEVINTERFACE_COMPORT,
     0x86E0D1E0, 0x8089, 0x11D0, 0x9C, 0xE4, 0x08, 0x00, 0x3E, 0x30, 0x1F, 0x73}
 DEFINE_GUID!{GUID_DEVINTERFACE_SERENUM_BUS_ENUMERATOR,
     0x4D36E978, 0xE325, 0x11CE, 0xBF, 0xC1, 0x08, 0x00, 0x2B, 0xE1, 0x03, 0x18}
-// Some obsolete definitions
-// 108
+//146
 DEFINE_DEVPROPKEY!{DEVPKEY_Storage_Portable,
     0x4d1ebee8, 0x803, 0x4774, 0x98, 0x42, 0xb7, 0x7d, 0xb5, 0x2, 0x65, 0xe9, 2}
 DEFINE_DEVPROPKEY!{DEVPKEY_Storage_Removable_Media,
     0x4d1ebee8, 0x803, 0x4774, 0x98, 0x42, 0xb7, 0x7d, 0xb5, 0x2, 0x65, 0xe9, 3}
 DEFINE_DEVPROPKEY!{DEVPKEY_Storage_System_Critical,
     0x4d1ebee8, 0x803, 0x4774, 0x98, 0x42, 0xb7, 0x7d, 0xb5, 0x2, 0x65, 0xe9, 4}
+//177
 pub type DEVICE_TYPE = DWORD;
 pub const FILE_DEVICE_BEEP: DEVICE_TYPE = 0x00000001;
 pub const FILE_DEVICE_CD_ROM: DEVICE_TYPE = 0x00000002;
@@ -134,17 +142,26 @@ pub const FILE_DEVICE_STORAGE_REPLICATION: DEVICE_TYPE = 0x00000055;
 pub const FILE_DEVICE_TRUST_ENV: DEVICE_TYPE = 0x00000056;
 pub const FILE_DEVICE_UCM: DEVICE_TYPE = 0x00000057;
 pub const FILE_DEVICE_UCMTCPCI: DEVICE_TYPE = 0x00000058;
-//224
+#[inline]
+pub fn CTL_CODE(
+    DeviceType: DWORD,
+    Function: DWORD,
+    Method: DWORD,
+    Access: DWORD,
+) -> DWORD {
+    (DeviceType << 16) | (Access << 14) | (Function << 2) | Method
+}
+//288
 pub const METHOD_BUFFERED: DWORD = 0;
 pub const METHOD_IN_DIRECT: DWORD = 1;
 pub const METHOD_OUT_DIRECT: DWORD = 2;
 pub const METHOD_NEITHER: DWORD = 3;
-//253
+//317
 pub const FILE_ANY_ACCESS: DWORD = 0;
 pub const FILE_SPECIAL_ACCESS: DWORD = FILE_ANY_ACCESS;
 pub const FILE_READ_ACCESS: DWORD = 0x0001;
 pub const FILE_WRITE_ACCESS: DWORD = 0x0002;
-//281
+//347
 pub const IOCTL_STORAGE_BASE: DWORD = FILE_DEVICE_MASS_STORAGE;
 pub const IOCTL_STORAGE_CHECK_VERIFY: DWORD = CTL_CODE!(IOCTL_STORAGE_BASE, 0x0200,
     METHOD_BUFFERED, FILE_READ_ACCESS);
@@ -236,7 +253,74 @@ pub const IOCTL_STORAGE_POWER_IDLE: DWORD = CTL_CODE!(IOCTL_STORAGE_BASE, 0x0723
     METHOD_BUFFERED, FILE_ANY_ACCESS);
 pub const IOCTL_STORAGE_EVENT_NOTIFICATION: DWORD = CTL_CODE!(IOCTL_STORAGE_BASE, 0x0724,
     METHOD_BUFFERED, FILE_ANY_ACCESS);
-//2627
+//565
+STRUCT!{struct STORAGE_DEVICE_NUMBER {
+    DeviceType: DEVICE_TYPE,
+    DeviceNumber: DWORD,
+    PartitionNumber: DWORD,
+}}
+pub type PSTORAGE_DEVICE_NUMBER = *mut STORAGE_DEVICE_NUMBER;
+STRUCT!{struct STORAGE_DEVICE_NUMBERS {
+    NumberOfDevices: DWORD,
+    Devices: [STORAGE_DEVICE_NUMBER; ANYSIZE_ARRAY],
+}}
+pub type PSTORAGE_DEVICE_NUMBERS = *mut STORAGE_DEVICE_NUMBERS;
+//1040
+ENUM!{enum STORAGE_QUERY_TYPE {
+    PropertyStandardQuery = 0,
+    PropertyExistsQuery,
+    PropertyMaskQuery,
+    PropertyQueryMaxDefined,
+}}
+pub type PSTORAGE_QUERY_TYPE = *mut STORAGE_QUERY_TYPE;
+ENUM!{enum STORAGE_PROPERTY_ID {
+    StorageDeviceProperty = 0,
+    StorageAdapterProperty,
+    StorageDeviceIdProperty,
+    StorageDeviceUniqueIdProperty,
+    StorageDeviceWriteCacheProperty,
+    StorageMiniportProperty,
+    StorageAccessAlignmentProperty,
+    StorageDeviceSeekPenaltyProperty,
+    StorageDeviceTrimProperty,
+    StorageDeviceWriteAggregationProperty,
+    StorageDeviceDeviceTelemetryProperty,
+    StorageDeviceLBProvisioningProperty,
+    StorageDevicePowerProperty,
+    StorageDeviceCopyOffloadProperty,
+    StorageDeviceResiliencyProperty,
+    StorageDeviceMediumProductType,
+    StorageAdapterCryptoProperty,
+    StorageDeviceIoCapabilityProperty = 48,
+    StorageAdapterProtocolSpecificProperty,
+    StorageDeviceProtocolSpecificProperty,
+    StorageAdapterTemperatureProperty,
+    StorageDeviceTemperatureProperty,
+    StorageAdapterPhysicalTopologyProperty,
+    StorageDevicePhysicalTopologyProperty,
+    StorageDeviceAttributesProperty,
+    StorageDeviceManagementStatus,
+    StorageAdapterSerialNumberProperty,
+    StorageDeviceLocationProperty,
+    StorageDeviceNumaProperty,
+    StorageDeviceZonedDeviceProperty,
+    StorageDeviceUnsafeShutdownCount,
+}}
+pub type PSTORAGE_PROPERTY_ID = *mut STORAGE_PROPERTY_ID;
+STRUCT!{struct STORAGE_PROPERTY_QUERY {
+    PropertyId: STORAGE_PROPERTY_ID,
+    QueryType: STORAGE_QUERY_TYPE,
+    AdditionalParameters: [BYTE; 1],
+}}
+pub type PSTORAGE_PROPERTY_QUERY = *mut STORAGE_PROPERTY_QUERY;
+//1574
+STRUCT!{struct DEVICE_TRIM_DESCRIPTOR {
+    Version: DWORD,
+    Size: DWORD,
+    TrimEnabled: BOOLEAN,
+}}
+pub type PDEVICE_TRIM_DESCRIPTOR = *mut DEVICE_TRIM_DESCRIPTOR;
+//7540
 pub const IOCTL_DISK_BASE: DWORD = FILE_DEVICE_DISK;
 pub const IOCTL_DISK_GET_DRIVE_GEOMETRY: DWORD = CTL_CODE!(IOCTL_DISK_BASE, 0x0000,
     METHOD_BUFFERED, FILE_ANY_ACCESS);
@@ -340,7 +424,7 @@ pub const IOCTL_DISK_SET_DISK_ATTRIBUTES: DWORD = CTL_CODE!(IOCTL_DISK_BASE, 0x0
     METHOD_BUFFERED, FILE_READ_ACCESS | FILE_WRITE_ACCESS);
 pub const IOCTL_DISK_RESET_SNAPSHOT_INFO: DWORD = CTL_CODE!(IOCTL_DISK_BASE, 0x0084,
     METHOD_BUFFERED, FILE_READ_ACCESS | FILE_WRITE_ACCESS);
-//2879
+//7810
 ENUM!{enum MEDIA_TYPE {
     Unknown,
     F5_1Pt2_512,
@@ -370,60 +454,7 @@ ENUM!{enum MEDIA_TYPE {
     F3_32M_512,
 }}
 pub type PMEDIA_TYPE = *mut MEDIA_TYPE;
-ENUM!{enum STORAGE_PROPERTY_ID {
-    StorageDeviceProperty = 0,
-    StorageAdapterProperty,
-    StorageDeviceIdProperty,
-    StorageDeviceUniqueIdProperty,
-    StorageDeviceWriteCacheProperty,
-    StorageMiniportProperty,
-    StorageAccessAlignmentProperty,
-    StorageDeviceSeekPenaltyProperty,
-    StorageDeviceTrimProperty,
-    StorageDeviceWriteAggregationProperty,
-    StorageDeviceDeviceTelemetryProperty,
-    StorageDeviceLBProvisioningProperty,
-    StorageDevicePowerProperty,
-    StorageDeviceCopyOffloadProperty,
-    StorageDeviceResiliencyProperty,
-    StorageDeviceMediumProductType,
-    StorageAdapterCryptoProperty,
-    StorageDeviceIoCapabilityProperty = 48,
-    StorageAdapterProtocolSpecificProperty,
-    StorageDeviceProtocolSpecificProperty,
-    StorageAdapterTemperatureProperty,
-    StorageDeviceTemperatureProperty,
-    StorageAdapterPhysicalTopologyProperty,
-    StorageDevicePhysicalTopologyProperty,
-    StorageDeviceAttributesProperty,
-    StorageDeviceManagementStatus,
-    StorageAdapterSerialNumberProperty,
-    StorageDeviceLocationProperty,
-    StorageDeviceNumaProperty,
-    StorageDeviceZonedDeviceProperty,
-    StorageDeviceUnsafeShutdownCount,
-}}
-pub type PSTORAGE_PROPERTY_ID = *mut STORAGE_PROPERTY_ID;
-ENUM!{enum STORAGE_QUERY_TYPE {
-    PropertyStandardQuery = 0,
-    PropertyExistsQuery,
-    PropertyMaskQuery,
-    PropertyQueryMaxDefined,
-}}
-pub type PSTORAGE_QUERY_TYPE = *mut STORAGE_QUERY_TYPE;
-STRUCT!{struct STORAGE_PROPERTY_QUERY {
-    PropertyId: STORAGE_PROPERTY_ID,
-    QueryType: STORAGE_QUERY_TYPE,
-    AdditionalParameters: [BYTE; 1],
-}}
-pub type PSTORAGE_PROPERTY_QUERY = *mut STORAGE_PROPERTY_QUERY;
-STRUCT!{struct DEVICE_TRIM_DESCRIPTOR {
-    Version: DWORD,
-    Size: DWORD,
-    TrimEnabled: BOOLEAN,
-}}
-pub type PDEVICE_TRIM_DESCRIPTOR = *mut DEVICE_TRIM_DESCRIPTOR;
-//2953
+//7884
 STRUCT!{struct DISK_GEOMETRY {
     Cylinders: LARGE_INTEGER,
     MediaType: MEDIA_TYPE,
@@ -432,6 +463,8 @@ STRUCT!{struct DISK_GEOMETRY {
     BytesPerSector: DWORD,
 }}
 pub type PDISK_GEOMETRY = *mut DISK_GEOMETRY;
+DEFINE_GUID!{WMI_DISK_GEOMETRY_GUID,
+    0x25007f51, 0x57c2, 0x11d1, 0xa5, 0x28, 0x00, 0xa0, 0xc9, 0x06, 0x29, 0x10}
 STRUCT!{struct PARTITION_INFORMATION {
     StartingOffset: LARGE_INTEGER,
     PartitionLength: LARGE_INTEGER,
@@ -482,6 +515,7 @@ STRUCT!{struct PARTITION_INFORMATION_GPT {
     Name: [WCHAR; 36],
 }}
 pub type PPARTITION_INFORMATION_GPT = *mut PARTITION_INFORMATION_GPT;
+//8059
 STRUCT!{struct PARTITION_INFORMATION_MBR {
     PartitionType: BYTE,
     BootIndicator: BOOLEAN,
@@ -562,7 +596,13 @@ UNION! {union DRIVE_LAYOUT_INFORMATION_EX_u {
     Mbr Mbr_mut: DRIVE_LAYOUT_INFORMATION_MBR,
     Gpt Gpt_mut: DRIVE_LAYOUT_INFORMATION_GPT,
 }}
-//3907
+//8350
+STRUCT!{struct DISK_GEOMETRY_EX {
+    Geometry: DISK_GEOMETRY,
+    DiskSize: LARGE_INTEGER,
+    Data: [BYTE; 1],
+}}
+//8933
 pub const IOCTL_CHANGER_BASE: DWORD = FILE_DEVICE_CHANGER;
 pub const IOCTL_CHANGER_GET_PARAMETERS: DWORD = CTL_CODE!(IOCTL_CHANGER_BASE, 0x0000,
     METHOD_BUFFERED, FILE_READ_ACCESS);
@@ -596,7 +636,7 @@ pub const IOCTL_SERENUM_PORT_DESC: DWORD = CTL_CODE!(FILE_DEVICE_SERENUM, 130,
     METHOD_BUFFERED, FILE_ANY_ACCESS);
 pub const IOCTL_SERENUM_GET_PORT_NAME: DWORD = CTL_CODE!(FILE_DEVICE_SERENUM, 131,
     METHOD_BUFFERED, FILE_ANY_ACCESS);
-//4690
+//9717
 pub const FSCTL_REQUEST_OPLOCK_LEVEL_1: DWORD = CTL_CODE!(FILE_DEVICE_FILE_SYSTEM, 0,
     METHOD_BUFFERED, FILE_ANY_ACCESS);
 pub const FSCTL_REQUEST_OPLOCK_LEVEL_2: DWORD = CTL_CODE!(FILE_DEVICE_FILE_SYSTEM, 1,
@@ -1011,7 +1051,7 @@ STRUCT!{struct MOVE_FILE_RECORD_DATA {
     TargetFileRecord: LARGE_INTEGER,
 }}
 pub type PMOVE_FILE_RECORD_DATA = *mut MOVE_FILE_RECORD_DATA;
-//9207
+//15468
 pub const IOCTL_VOLUME_BASE: DWORD = 0x00000056;
 pub const IOCTL_VOLUME_GET_VOLUME_DISK_EXTENTS: DWORD = CTL_CODE!(IOCTL_VOLUME_BASE, 0,
     METHOD_BUFFERED, FILE_ANY_ACCESS);

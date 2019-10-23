@@ -6989,3 +6989,18 @@ extern "system" {
         hProcess: HANDLE,
     ) -> BOOL;
 }
+pub const MAX_STR_BLOCKREASON: usize = 256;
+extern "system" {
+    pub fn ShutdownBlockReasonCreate(
+        hWnd: HWND,
+        pwszReason: LPCWSTR,
+    ) -> BOOL;
+    pub fn ShutdownBlockReasonQuery(
+        hWnd: HWND,
+        pwszBuff: LPWSTR,
+        pcchBuff: *mut DWORD,
+    ) -> BOOL;
+    pub fn ShutdownBlockReasonDestroy(
+        hWnd: HWND,
+    ) -> BOOL;
+}

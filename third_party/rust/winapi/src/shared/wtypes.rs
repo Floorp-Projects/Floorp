@@ -336,7 +336,7 @@ UNION!{union uCLSSPEC_u {
     ByName ByName_mut: uCLSSPEC_ByName,
     ByObjectId ByObjectId_mut: uCLSSPEC_ByObjectId,
 }}
-STRUCT!{struct uCLSSPEC{
+STRUCT!{struct uCLSSPEC {
     tyspec: DWORD,
     u: uCLSSPEC_u,
 }}
