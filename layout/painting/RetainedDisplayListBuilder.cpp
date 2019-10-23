@@ -9,6 +9,8 @@
 
 #include "DisplayListChecker.h"
 #include "mozilla/StaticPrefs_layout.h"
+#include "nsIFrame.h"
+#include "nsIFrameInlines.h"
 #include "nsPlaceholderFrame.h"
 #include "nsSubDocumentFrame.h"
 #include "nsViewManager.h"
