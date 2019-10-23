@@ -69,56 +69,79 @@ mozilla::ipc::IPCResult RemoteDecoderParent::RecvInit(
   return IPC_OK();
 }
 
+void RemoteDecoderParent::DecodeNextSample(nsTArray<MediaRawDataIPDL>&& aData,
+                                           DecodedOutputIPDL&& aOutput,
+                                           DecodeResolver&& aResolver) {
+  if (aData.IsEmpty()) {
+    aResolver(std::move(aOutput));
+    return;
+  }
+
+  const MediaRawDataIPDL& rawData = aData[0];
+  RefPtr<MediaRawData> data = new MediaRawData(
+      rawData.buffer().get<uint8_t>(),
+      std::min((unsigned long)rawData.bufferSize(),
+               (unsigned long)rawData.buffer().Size<uint8_t>()));
+  if (rawData.buffer().Size<uint8_t>() && !data->Data()) {
+    // OOM
+    ReleaseUsedShmems();
+    aResolver(MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__));
+    return;
+  }
+  data->mOffset = rawData.base().offset();
+  data->mTime = rawData.base().time();
+  data->mTimecode = rawData.base().timecode();
+  data->mDuration = rawData.base().duration();
+  data->mKeyframe = rawData.base().keyframe();
+  data->mEOS = rawData.eos();
+  data->mDiscardPadding = rawData.discardPadding();
+
+  aData.RemoveElementAt(0);
+
+  RefPtr<RemoteDecoderParent> self = this;
+  mDecoder->Decode(data)->Then(
+      mManagerTaskQueue, __func__,
+      [self, this, aData = std::move(aData), output = std::move(aOutput),
+       resolver = std::move(aResolver)](
+          MediaDataDecoder::DecodePromise::ResolveOrRejectValue&&
+              aValue) mutable {
+        if (!CanRecv()) {
+          ReleaseUsedShmems();
+          return;
+        }
+        if (aValue.IsReject()) {
+          ReleaseUsedShmems();
+          resolver(aValue.RejectValue());
+          return;
+        }
+
+        MediaResult rv = ProcessDecodedData(aValue.ResolveValue(), output);
+        if (NS_FAILED(rv)) {
+          ReleaseUsedShmems();
+          resolver(rv);
+        } else {
+          // Call again in case we have more data to decode.
+          DecodeNextSample(std::move(aData), std::move(output),
+                           std::move(resolver));
+        }
+      });
+}
+
 mozilla::ipc::IPCResult RemoteDecoderParent::RecvDecode(
-    const MediaRawDataIPDL& aData, DecodeResolver&& aResolver) {
+    nsTArray<MediaRawDataIPDL>&& aData, DecodeResolver&& aResolver) {
   MOZ_ASSERT(OnManagerThread());
   // XXX: This copies the data into a buffer owned by the MediaRawData. Ideally
   // we'd just take ownership of the shmem.
   // Use the passed bufferSize in MediaRawDataIPDL since we can get a Shmem
   // buffer from ShmemPool larger than the requested size.
-  RefPtr<MediaRawData> data =
-      new MediaRawData(aData.buffer().get<uint8_t>(),
-                       std::min((unsigned long)aData.bufferSize(),
-                                (unsigned long)aData.buffer().Size<uint8_t>()));
-  if (aData.buffer().Size<uint8_t>() && !data->Data()) {
-    // OOM
-    aResolver(MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__));
-    return IPC_OK();
-  }
-  data->mOffset = aData.base().offset();
-  data->mTime = aData.base().time();
-  data->mTimecode = aData.base().timecode();
-  data->mDuration = aData.base().duration();
-  data->mKeyframe = aData.base().keyframe();
-  data->mEOS = aData.eos();
-  data->mDiscardPadding = aData.discardPadding();
 
-  RefPtr<RemoteDecoderParent> self = this;
-  mDecoder->Decode(data)->Then(
-      mManagerTaskQueue, __func__,
-      [self, this, resolver = std::move(aResolver)](
-          MediaDataDecoder::DecodePromise::ResolveOrRejectValue&& aValue) {
-        // If we are here, we know all previously returned DecodedOutputIPDL got
-        // used by the child. We can mark all previously sent ShmemBuffer as
-        // available again.
-        ReleaseUsedShmems();
+  // If we are here, we know all previously returned DecodedOutputIPDL got
+  // used by the child. We can mark all previously sent ShmemBuffer as
+  // available again.
+  ReleaseUsedShmems();
+  DecodedOutputIPDL output;
+  DecodeNextSample(std::move(aData), std::move(output), std::move(aResolver));
 
-        if (!self->CanRecv()) {
-          // Avoid unnecessarily creating shmem objects later.
-          return;
-        }
-        if (aValue.IsReject()) {
-          resolver(aValue.RejectValue());
-          return;
-        }
-        DecodedOutputIPDL output;
-        MediaResult rv = ProcessDecodedData(aValue.ResolveValue(), output);
-        if (NS_FAILED(rv)) {
-          resolver(rv);
-        } else {
-          resolver(std::move(output));
-        }
-      });
   return IPC_OK();
 }
 
