@@ -1460,6 +1460,7 @@ Toolbox.prototype = {
       isCurrentlyVisible,
       isChecked,
       onKeyDown,
+      experimentalURL,
     } = options;
     const toolbox = this;
     const button = {
@@ -1496,6 +1497,7 @@ Toolbox.prototype = {
       // The toolbar has a container at the start and end of the toolbar for
       // holding buttons. By default the buttons are placed in the end container.
       isInStartContainer: !!isInStartContainer,
+      experimentalURL,
     };
     if (typeof setup == "function") {
       const onChange = () => {

@@ -217,6 +217,25 @@ OptionsPanel.prototype = {
 
       checkboxLabel.appendChild(checkboxInput);
       checkboxLabel.appendChild(checkboxSpanLabel);
+
+      if (button.id === "command-button-replay") {
+        const experimentalLink = this.panelDoc.createElement("a");
+        experimentalLink.title = experimentalLink.href = button.experimentalURL;
+        experimentalLink.textContent = L10N.getStr(
+          "options.experimentalNotice"
+        );
+        // Cannot use a real link when we are in the Browser Toolbox.
+        experimentalLink.addEventListener("click", e => {
+          e.preventDefault();
+          openDocLink(button.experimentalURL, { relatedToCurrent: true });
+        });
+
+        const checkbox = this.panelDoc.createElement("span");
+        checkbox.className = "experimental-notice";
+        checkboxLabel.appendChild(checkbox);
+        checkbox.appendChild(experimentalLink);
+      }
+
       return checkboxLabel;
     };
 

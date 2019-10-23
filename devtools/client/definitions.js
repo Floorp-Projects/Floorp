@@ -574,6 +574,8 @@ exports.ToolboxButtons = [
       target.isLocalTab,
     onClick: () => reloadAndRecordTab(),
     isChecked: () => false,
+    experimentalURL:
+      "https://developer.mozilla.org/en-US/docs/Mozilla/Projects/WebReplay",
   },
   {
     id: "command-button-stop-replay",
