@@ -13,6 +13,13 @@
   --breakpoint-active-color-hover: rgba(0,255,175,.7);
 }
 
+/* We don't want the focus style to be displayed on the CodeMirror scrollbars.
+ * See Bug 1590707.
+ */
+.CodeMirror-vscrollbar, .CodeMirror-hscrollbar {
+  outline: none !important;
+}
+
 .CodeMirror .errors {
   width: 16px;
 }
