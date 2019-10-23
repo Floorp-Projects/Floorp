@@ -398,10 +398,6 @@ class UrlbarView {
     this.input.removeAttribute("open");
     this.input.endLayoutExtend();
 
-    if (!this.input.megabar && this.input._toolbar) {
-      this.input._toolbar.removeAttribute("urlbar-exceeds-toolbar-bounds");
-    }
-
     this.window.removeEventListener("resize", this);
 
     this.controller.notify(this.controller.NOTIFICATIONS.VIEW_CLOSE);
@@ -614,13 +610,6 @@ class UrlbarView {
       );
 
       this._mainContainer.style.maxWidth = px(width);
-
-      if (this.input._toolbar) {
-        this.input._toolbar.setAttribute(
-          "urlbar-exceeds-toolbar-bounds",
-          "true"
-        );
-      }
     }
     this.panel.removeAttribute("hidden");
     this.input.inputField.setAttribute("aria-expanded", "true");
