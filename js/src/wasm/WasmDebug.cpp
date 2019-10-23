@@ -198,7 +198,7 @@ WasmBreakpointSite* DebugState::getOrCreateBreakpointSite(JSContext* cx,
 
   WasmBreakpointSiteMap::AddPtr p = breakpointSites_.lookupForAdd(offset);
   if (!p) {
-    site = cx->new_<WasmBreakpointSite>(instance, offset);
+    site = cx->new_<WasmBreakpointSite>(instance->object(), offset);
     if (!site) {
       return nullptr;
     }
