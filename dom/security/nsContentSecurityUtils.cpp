@@ -9,6 +9,9 @@
 #include "nsContentSecurityUtils.h"
 
 #include "nsIContentSecurityPolicy.h"
+#include "nsIChannel.h"
+#include "nsIHttpChannel.h"
+#include "nsIMultiPartChannel.h"
 #include "nsIURI.h"
 
 #include "mozilla/dom/Document.h"
@@ -481,6 +484,33 @@ void nsContentSecurityUtils::NotifyEvalUsage(bool aIsSystemPrincipal,
     return;
   }
   console->LogMessage(error);
+}
+
+/* static */
+nsresult nsContentSecurityUtils::GetHttpChannelFromPotentialMultiPart(
+    nsIChannel* aChannel, nsIHttpChannel** aHttpChannel) {
+  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
+  if (httpChannel) {
+    httpChannel.forget(aHttpChannel);
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIMultiPartChannel> multipart = do_QueryInterface(aChannel);
+  if (!multipart) {
+    *aHttpChannel = nullptr;
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIChannel> baseChannel;
+  nsresult rv = multipart->GetBaseChannel(getter_AddRefs(baseChannel));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  httpChannel = do_QueryInterface(baseChannel);
+  httpChannel.forget(aHttpChannel);
+
+  return NS_OK;
 }
 
 #if defined(DEBUG)
