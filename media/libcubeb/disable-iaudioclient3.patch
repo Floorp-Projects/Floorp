@@ -1,0 +1,64 @@
+diff --git a/media/libcubeb/src/cubeb_wasapi.cpp b/media/libcubeb/src/cubeb_wasapi.cpp
+--- a/media/libcubeb/src/cubeb_wasapi.cpp
++++ b/media/libcubeb/src/cubeb_wasapi.cpp
+@@ -1916,24 +1916,24 @@ int setup_wasapi_stream_one_side(cubeb_s
+           LOG("Could not get default %s endpoint, error: %lx\n", DIRECTION_NAME, hr);
+         }
+         return CUBEB_ERROR;
+       }
+     }
+ 
+     /* Get a client. We will get all other interfaces we need from
+      * this pointer. */
+-    hr = device->Activate(__uuidof(IAudioClient3),
+-                          CLSCTX_INPROC_SERVER,
+-                          NULL, audio_client.receive_vpp());
+-    if (hr == E_NOINTERFACE) {
++    // hr = device->Activate(__uuidof(IAudioClient3),
++    //                       CLSCTX_INPROC_SERVER,
++    //                       NULL, audio_client.receive_vpp());
++    // if (hr == E_NOINTERFACE) {
+       hr = device->Activate(__uuidof(IAudioClient),
+                             CLSCTX_INPROC_SERVER,
+                             NULL, audio_client.receive_vpp());
+-    }
++    //}
+ 
+     if (FAILED(hr)) {
+       LOG("Could not activate the device to get an audio"
+           " client for %s: error: %lx\n", DIRECTION_NAME, hr);
+       // A particular device can't be activated because it has been
+       // unplugged, try fall back to the default audio device.
+       if (devid && hr == AUDCLNT_E_DEVICE_INVALIDATED) {
+         LOG("Trying again with the default %s audio device.", DIRECTION_NAME);
+@@ -1989,26 +1989,26 @@ int setup_wasapi_stream_one_side(cubeb_s
+   // Check if a loopback device should be requested. Note that event callbacks
+   // do not work with loopback devices, so only request these if not looping.
+   if (is_loopback) {
+     flags |= AUDCLNT_STREAMFLAGS_LOOPBACK;
+   } else {
+     flags |= AUDCLNT_STREAMFLAGS_EVENTCALLBACK;
+   }
+ 
+-  if (initialize_iaudioclient3(audio_client, stm, mix_format, flags, direction)) {
+-    LOG("Initialized with IAudioClient3");
+-  } else {
++  // if (initialize_iaudioclient3(audio_client, stm, mix_format, flags, direction)) {
++  //   LOG("Initialized with IAudioClient3");
++  // } else {
+     hr = audio_client->Initialize(AUDCLNT_SHAREMODE_SHARED,
+                                   flags,
+                                   frames_to_hns(stm, stm->latency),
+                                   0,
+                                   mix_format.get(),
+                                   NULL);
+-  }
++  // }
+   if (FAILED(hr)) {
+     LOG("Unable to initialize audio client for %s: %lx.", DIRECTION_NAME, hr);
+     return CUBEB_ERROR;
+   }
+ 
+   hr = audio_client->GetBufferSize(buffer_frame_count);
+   if (FAILED(hr)) {
+     LOG("Could not get the buffer size from the client"
