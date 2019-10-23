@@ -24,6 +24,7 @@ enum Transport {
     "usb"
 };
 
+[GenerateToJSON]
 dictionary U2FClientData {
     DOMString             typ; // Spelling is from the specification
     DOMString             challenge;

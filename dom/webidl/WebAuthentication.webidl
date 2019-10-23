@@ -135,6 +135,7 @@ dictionary AuthenticationExtensionsClientOutputs {
 
 typedef record<DOMString, DOMString> AuthenticationExtensionsAuthenticatorInputs;
 
+[GenerateToJSON]
 dictionary CollectedClientData {
     required DOMString           type;
     required DOMString           challenge;

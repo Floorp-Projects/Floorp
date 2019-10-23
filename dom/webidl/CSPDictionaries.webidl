@@ -32,6 +32,7 @@ dictionary CSP {
   sequence<DOMString> worker-src;
 };
 
+[GenerateToJSON]
 dictionary CSPPolicies {
   sequence<CSP> csp-policies;
 };

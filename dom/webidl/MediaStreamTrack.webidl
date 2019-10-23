@@ -85,6 +85,7 @@ dictionary MediaTrackConstraintSet {
     ConstrainLong channelCount;
 };
 
+[GenerateToJSON]
 dictionary MediaTrackConstraints : MediaTrackConstraintSet {
     sequence<MediaTrackConstraintSet> advanced;
 };

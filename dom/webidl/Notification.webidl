@@ -76,6 +76,7 @@ dictionary GetNotificationOptions {
   DOMString tag = "";
 };
 
+[GenerateToJSON]
 dictionary NotificationBehavior {
   boolean noscreen = false;
   boolean noclear = false;

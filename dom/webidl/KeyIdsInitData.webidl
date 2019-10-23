@@ -6,6 +6,7 @@
 
 // "KeyIds" EME init data format definition/parser, as defined by
 // https://w3c.github.io/encrypted-media/format-registry/initdata/keyids.html
+[GenerateInitFromJSON]
 dictionary KeyIdsInitData {
   required sequence<DOMString> kids;
 };

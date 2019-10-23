@@ -52,6 +52,7 @@ dictionary PaymentDetailsInit : PaymentDetailsBase {
   required PaymentItem total;
 };
 
+[GenerateInitFromJSON, GenerateToJSON]
 dictionary AddressErrors {
   DOMString addressLine;
   DOMString city;
@@ -73,6 +74,7 @@ dictionary PaymentValidationErrors {
   object paymentMethod;
 };
 
+[GenerateInitFromJSON, GenerateToJSON]
 dictionary PayerErrors {
   DOMString email;
   DOMString name;

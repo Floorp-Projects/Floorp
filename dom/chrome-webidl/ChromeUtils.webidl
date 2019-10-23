@@ -559,6 +559,7 @@ dictionary IOActivityDataDictionary {
  *     serialization, deserialization, and inheritance.
  * (3) Update the methods on mozilla::OriginAttributesPattern, including matching.
  */
+[GenerateInitFromJSON]
 dictionary OriginAttributesDictionary {
   unsigned long userContextId = 0;
   boolean inIsolatedMozBrowser = false;
@@ -566,6 +567,8 @@ dictionary OriginAttributesDictionary {
   DOMString firstPartyDomain = "";
   DOMString geckoViewSessionContextId = "";
 };
+
+[GenerateInitFromJSON, GenerateToJSON]
 dictionary OriginAttributesPatternDictionary {
   unsigned long userContextId;
   boolean inIsolatedMozBrowser;

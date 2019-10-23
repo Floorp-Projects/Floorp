@@ -123,6 +123,7 @@ dictionary RsaOtherPrimesInfo {
   required DOMString t;
 };
 
+[GenerateInitFromJSON, GenerateToJSON]
 dictionary JsonWebKey {
   // The following fields are defined in Section 3.1 of JSON Web Key
   required DOMString kty;

@@ -16,7 +16,7 @@ enum MediaKeySystemStatus {
 /* Note: This dictionary and enum is only used by Gecko to convey messages
  * to chrome JS code. It is not exposed to the web.
  */
-
+[GenerateToJSON]
 dictionary RequestMediaKeySystemAccessNotification {
   required DOMString keySystem;
   required MediaKeySystemStatus status;
