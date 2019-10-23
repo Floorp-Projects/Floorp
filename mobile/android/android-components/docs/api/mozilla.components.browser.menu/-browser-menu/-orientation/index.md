@@ -2,7 +2,7 @@
 
 # Orientation
 
-`enum class Orientation` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/BrowserMenu.kt#L128)
+`enum class Orientation` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/menu/src/main/java/mozilla/components/browser/menu/BrowserMenu.kt#L132)
 
 ### Enum Values
 

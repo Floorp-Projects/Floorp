@@ -24,4 +24,4 @@ A popup menu composed of BrowserMenuItem objects.
 
 | Name | Summary |
 |---|---|
-| [determineMenuOrientation](determine-menu-orientation.md) | `fun determineMenuOrientation(parent: <ERROR CLASS>): `[`Orientation`](-orientation/index.md)<br>Determines the orientation to be used for a menu based on the positioning of the [parent](determine-menu-orientation.md#mozilla.components.browser.menu.BrowserMenu.Companion$determineMenuOrientation()/parent) in the layout. |
+| [determineMenuOrientation](determine-menu-orientation.md) | `fun determineMenuOrientation(parent: <ERROR CLASS>?): `[`Orientation`](-orientation/index.md)<br>Determines the orientation to be used for a menu based on the positioning of the [parent](determine-menu-orientation.md#mozilla.components.browser.menu.BrowserMenu.Companion$determineMenuOrientation()/parent) in the layout. |
