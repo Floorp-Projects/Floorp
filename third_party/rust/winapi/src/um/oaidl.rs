@@ -626,7 +626,7 @@ interface IDispatch(IDispatchVtbl): IUnknown(IUnknownVtbl) {
 // IEnumVARIANT_RemoteNext_Proxy
 // IEnumVARIANT_RemoteNext_Stub
 RIDL!{#[uuid(0x0000002F, 0x0000, 0x0000, 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46)]
-interface IRecordInfo(IRecordInfoVtbl): IUnknown(IUnknownVtbl){
+interface IRecordInfo(IRecordInfoVtbl): IUnknown(IUnknownVtbl) {
     fn RecordInit(
         pvNew: PVOID,
     ) -> HRESULT,
