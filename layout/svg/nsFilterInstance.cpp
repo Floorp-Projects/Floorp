@@ -28,6 +28,7 @@
 #include "nsSVGDisplayableFrame.h"
 #include "nsSVGFilterInstance.h"
 #include "nsSVGFilterPaintCallback.h"
+#include "nsSVGIntegrationUtils.h"
 #include "nsSVGUtils.h"
 
 using namespace mozilla;
