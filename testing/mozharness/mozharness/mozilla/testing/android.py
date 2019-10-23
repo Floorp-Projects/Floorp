@@ -347,6 +347,23 @@ class AndroidMixin(object):
                        (type(e).__name__, os.path.basename(apk)),
                        EXIT_STATUS_DICT[TBPL_RETRY])
 
+    def uninstall_apk(self):
+        """
+           Uninstall the app associated with the configured apk, if it is
+           installed.
+        """
+        import mozdevice
+        try:
+            package_name = self.query_package_name()
+            self.device.uninstall_app(package_name)
+        except (mozdevice.ADBError, mozdevice.ADBTimeoutError) as e:
+            self.info('Failed to uninstall %s from %s: %s %s' %
+                      (package_name, self.device_name,
+                       type(e).__name__, e))
+            self.fatal('INFRA-ERROR: %s Failed to install %s' %
+                       (type(e).__name__, package_name),
+                       EXIT_STATUS_DICT[TBPL_RETRY])
+
     def is_boot_completed(self):
         import mozdevice
         try:
