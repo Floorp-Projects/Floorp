@@ -12,26 +12,35 @@
 #include "builtin/streams/WritableStream.h"
 
 #include "mozilla/Assertions.h"  // MOZ_ASSERT
+#include "mozilla/Attributes.h"  // MOZ_MUST_USE
 
 #include "builtin/Promise.h"                              // js::PromiseObject
 #include "builtin/streams/WritableStreamDefaultWriter.h"  // js::WritableStreamDefaultWriter
+#include "js/RootingAPI.h"                                // JS::Handle
 #include "js/Value.h"                                     // JS::{,Object}Value
 
-inline js::WritableStreamDefaultWriter* js::WritableStream::writer() const {
-  MOZ_ASSERT(hasWriter());
-  return &getFixedSlot(Slot_Writer)
-              .toObject()
-              .as<WritableStreamDefaultWriter>();
+#include "vm/Compartment-inl.h"  // js::UnwrapInternalSlot
+
+struct JSContext;
+
+namespace js {
+
+/**
+ * Returns the writer associated with the given stream.
+ *
+ * Must only be called on WritableStreams that already have a writer
+ * associated with them.
+ *
+ * If the writer is a wrapper, it will be unwrapped, so the result might not be
+ * an object from the currently active compartment.
+ */
+inline MOZ_MUST_USE WritableStreamDefaultWriter* UnwrapWriterFromStream(
+    JSContext* cx, JS::Handle<WritableStream*> unwrappedStream) {
+  MOZ_ASSERT(unwrappedStream->hasWriter());
+  return UnwrapInternalSlot<WritableStreamDefaultWriter>(
+      cx, unwrappedStream, WritableStream::Slot_Writer);
 }
 
-inline void js::WritableStream::setWriter(WritableStreamDefaultWriter* writer) {
-  setFixedSlot(Slot_Writer, JS::ObjectValue(*writer));
-}
-
-inline void js::WritableStream::setCloseRequest(PromiseObject* closeRequest) {
-  MOZ_ASSERT(!haveCloseRequestOrInFlightCloseRequest());
-  setFixedSlot(Slot_CloseRequest, JS::ObjectValue(*closeRequest));
-  MOZ_ASSERT(!haveInFlightCloseRequest());
-}
+}  // namespace js
 
 #endif  // builtin_streams_WritableStream_inl_h

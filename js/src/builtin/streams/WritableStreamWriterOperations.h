@@ -9,6 +9,8 @@
 #ifndef builtin_streams_WritableStreamWriterOperations_h
 #define builtin_streams_WritableStreamWriterOperations_h
 
+#include "mozilla/Attributes.h"  // MOZ_MUST_USE
+
 #include "js/RootingAPI.h"  // JS::{,Mutable}Handle
 #include "js/Value.h"       // JS::Value
 
@@ -22,8 +24,9 @@ class WritableStreamDefaultWriter;
 extern JSObject* WritableStreamDefaultWriterClose(
     JSContext* cx, JS::Handle<WritableStreamDefaultWriter*> unwrappedWriter);
 
-extern JS::Value WritableStreamDefaultWriterGetDesiredSize(
-    const WritableStreamDefaultWriter* unwrappedWriter);
+extern MOZ_MUST_USE bool WritableStreamDefaultWriterGetDesiredSize(
+    JSContext* cx, JS::Handle<WritableStreamDefaultWriter*> unwrappedWriter,
+    JS::MutableHandle<JS::Value> size);
 
 }  // namespace js
 
