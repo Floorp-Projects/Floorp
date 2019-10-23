@@ -10,7 +10,7 @@
     <string name="mozac_browser_errorpages_page_go_back">Gå tillbaka</string>
 
     <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
-    <string name="mozac_browser_errorpages_generic_title">Kan inte slutföra begäran</string>
+    <string name="mozac_browser_errorpages_generic_title">Begäran kan inte slutföras</string>
     <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
     <string name="mozac_browser_errorpages_generic_message"><![CDATA[
       <p>Ytterligare information om detta problem eller fel är för närvarande inte tillgänglig.</p>
