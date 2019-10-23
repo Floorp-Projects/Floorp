@@ -172,8 +172,14 @@ class WebGLImageConverter {
     MOZ_ASSERT(
         mSrcStride % sizeof(SrcType) == 0 && mDstStride % sizeof(DstType) == 0,
         "Unsupported: texture stride is not a multiple of sizeof(type)");
-    const ptrdiff_t srcStrideInElements = mSrcStride / sizeof(SrcType);
-    const ptrdiff_t dstStrideInElements = mDstStride / sizeof(DstType);
+    const ptrdiff_t srcStrideInElements =
+        mSrcStride / static_cast<ptrdiff_t>(sizeof(SrcType));
+    const ptrdiff_t dstStrideInElements =
+        mDstStride / static_cast<ptrdiff_t>(sizeof(DstType));
+    // Pop quiz: What's `ptrdiff_t(-16) / sizeof(int32_t)`?
+    // Did you guess +4611686018427387900?
+    MOZ_ASSERT(bool(srcStrideInElements < 0) == bool(mSrcStride < 0));
+    MOZ_ASSERT(bool(dstStrideInElements < 0) == bool(mDstStride < 0));
 
     const SrcType* srcRowStart = static_cast<const SrcType*>(mSrcStart);
     DstType* dstRowStart = static_cast<DstType*>(mDstStart);
