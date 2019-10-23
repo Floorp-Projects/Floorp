@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-const pdfjsVersion = '2.4.43';
-const pdfjsBuild = '16ae7c69';
+const pdfjsVersion = '2.4.71';
+const pdfjsBuild = 'd7f651aa';
 
 const pdfjsCoreWorker = __w_pdfjs_require__(1);
 
@@ -225,7 +225,7 @@ var WorkerMessageHandler = {
     var WorkerTasks = [];
     const verbosity = (0, _util.getVerbosityLevel)();
     const apiVersion = docParams.apiVersion;
-    const workerVersion = '2.4.43';
+    const workerVersion = '2.4.71';
 
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
@@ -398,28 +398,24 @@ var WorkerMessageHandler = {
         });
       }
 
-      function onFailure(e) {
+      function onFailure(ex) {
         ensureNotTerminated();
 
-        if (e instanceof _util.PasswordException) {
-          var task = new WorkerTask('PasswordException: response ' + e.code);
+        if (ex instanceof _util.PasswordException) {
+          var task = new WorkerTask(`PasswordException: response ${ex.code}`);
           startWorkerTask(task);
-          handler.sendWithPromise('PasswordRequest', e).then(function (data) {
+          handler.sendWithPromise('PasswordRequest', ex).then(function (data) {
             finishWorkerTask(task);
             pdfManager.updatePassword(data.password);
             pdfManagerReady();
-          }).catch(function (boundException) {
+          }).catch(function () {
             finishWorkerTask(task);
-            handler.send('PasswordException', boundException);
-          }.bind(null, e));
-        } else if (e instanceof _util.InvalidPDFException) {
-          handler.send('InvalidPDF', e);
-        } else if (e instanceof _util.MissingPDFException) {
-          handler.send('MissingPDF', e);
-        } else if (e instanceof _util.UnexpectedResponseException) {
-          handler.send('UnexpectedResponse', e);
+            handler.send('DocException', ex);
+          });
+        } else if (ex instanceof _util.InvalidPDFException || ex instanceof _util.MissingPDFException || ex instanceof _util.UnexpectedResponseException || ex instanceof _util.UnknownErrorException) {
+          handler.send('DocException', ex);
         } else {
-          handler.send('UnknownError', new _util.UnknownErrorException(e.message, e.toString()));
+          handler.send('DocException', new _util.UnknownErrorException(ex.message, ex.toString()));
         }
       }
 
@@ -4927,7 +4923,7 @@ var XRef = function XRefClosure() {
           const num = m[1] | 0,
                 gen = m[2] | 0;
 
-          if (typeof this.entries[num] === 'undefined') {
+          if (!this.entries[num] || this.entries[num].gen === gen) {
             this.entries[num] = {
               offset: position - stream.start,
               gen,
@@ -25029,8 +25025,8 @@ var Font = function FontClosure() {
       this.remeasure = Object.keys(this.widths).length > 0;
 
       if (isStandardFont && type === 'CIDFontType2' && this.cidEncoding.startsWith('Identity-')) {
-        var GlyphMapForStandardFonts = (0, _standard_fonts.getGlyphMapForStandardFonts)();
-        var map = [];
+        const GlyphMapForStandardFonts = (0, _standard_fonts.getGlyphMapForStandardFonts)();
+        const map = [];
 
         for (charCode in GlyphMapForStandardFonts) {
           map[+charCode] = GlyphMapForStandardFonts[charCode];
@@ -25071,7 +25067,8 @@ var Font = function FontClosure() {
       } else if (isStandardFont) {
         this.toFontChar = buildToFontChar(this.defaultEncoding, (0, _glyphlist.getGlyphsUnicode)(), this.differences);
       } else {
-        var glyphsUnicodeMap = (0, _glyphlist.getGlyphsUnicode)();
+        const glyphsUnicodeMap = (0, _glyphlist.getGlyphsUnicode)();
+        const map = [];
         this.toUnicode.forEach((charCode, unicodeCharCode) => {
           if (!this.composite) {
             var glyphName = this.differences[charCode] || this.defaultEncoding[charCode];
@@ -25082,8 +25079,20 @@ var Font = function FontClosure() {
             }
           }
 
-          this.toFontChar[charCode] = unicodeCharCode;
+          map[+charCode] = unicodeCharCode;
         });
+
+        if (this.composite && this.toUnicode instanceof IdentityToUnicodeMap) {
+          if (/Verdana/i.test(name)) {
+            const GlyphMapForStandardFonts = (0, _standard_fonts.getGlyphMapForStandardFonts)();
+
+            for (charCode in GlyphMapForStandardFonts) {
+              map[+charCode] = GlyphMapForStandardFonts[charCode];
+            }
+          }
+        }
+
+        this.toFontChar = map;
       }
 
       this.loadedName = fontName.split('-')[0];
@@ -25620,9 +25629,8 @@ var Font = function FontClosure() {
         }
 
         var numGlyphsOut = dupFirstEntry ? numGlyphs + 1 : numGlyphs;
-        var locaData = loca.data;
         var locaDataSize = itemSize * (1 + numGlyphsOut);
-        locaData = new Uint8Array(locaDataSize);
+        var locaData = new Uint8Array(locaDataSize);
         locaData.set(loca.data.subarray(0, locaDataSize));
         loca.data = locaData;
         var oldGlyfData = glyf.data;
