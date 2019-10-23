@@ -2089,9 +2089,7 @@ void GCRuntime::sweepTypesAfterCompacting(Zone* zone) {
 
 void GCRuntime::sweepZoneAfterCompacting(MovingTracer* trc, Zone* zone) {
   MOZ_ASSERT(zone->isCollecting());
-  JSFreeOp* fop = rt->defaultFreeOp();
   sweepTypesAfterCompacting(zone);
-  zone->sweepBreakpoints(fop);
   zone->sweepWeakMaps();
   for (auto* cache : zone->weakCaches()) {
     cache->sweep();
@@ -5220,15 +5218,6 @@ void GCRuntime::sweepDebuggerOnMainThread(JSFreeOp* fop) {
     gcstats::AutoPhase ap2(stats(), gcstats::PhaseKind::SWEEP_MISC);
     for (SweepGroupRealmsIter r(rt); !r.done(); r.next()) {
       r->sweepDebugEnvironments();
-    }
-  }
-
-  // Sweep breakpoints. This is done here to be with the other debug sweeping,
-  // although note that it can cause JIT code to be patched.
-  {
-    gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::SWEEP_BREAKPOINT);
-    for (SweepGroupZonesIter zone(this); !zone.done(); zone.next()) {
-      zone->sweepBreakpoints(fop);
     }
   }
 }

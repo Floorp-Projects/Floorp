@@ -1496,6 +1496,10 @@ void Instance::tracePrivate(JSTracer* trc) {
 
   TraceNullableEdge(trc, &memory_, "wasm buffer");
   structTypeDescrs_.trace(trc);
+
+  if (maybeDebug_) {
+    maybeDebug_->trace(trc);
+  }
 }
 
 void Instance::trace(JSTracer* trc) {
