@@ -38,8 +38,6 @@ add_task(async function() {
 
   await client.close();
   ok(true, "The client is closed");
-
-  await RemoteAgent.close();
 });
 
 function triggerBeforeUnload(Page, tab, accept) {

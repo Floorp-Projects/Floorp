@@ -30,8 +30,6 @@ add_task(async function testBringToFrontUpdatesSelectedTab() {
 
   BrowserTestUtils.removeTab(tab);
   BrowserTestUtils.removeTab(otherTab);
-
-  await RemoteAgent.close();
 });
 
 add_task(async function testBringToFrontUpdatesFocusedWindow() {
@@ -58,7 +56,6 @@ add_task(async function testBringToFrontUpdatesFocusedWindow() {
   ok(true, "The client is closed");
 
   BrowserTestUtils.removeTab(tab);
-  await RemoteAgent.close();
 
   info("Close the additional window");
   await BrowserTestUtils.closeWindow(otherWindow);
