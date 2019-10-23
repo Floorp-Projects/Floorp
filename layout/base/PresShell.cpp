@@ -10506,12 +10506,10 @@ RefPtr<MobileViewportManager> PresShell::GetMobileViewportManager() const {
 bool UseMobileViewportManager(PresShell* aPresShell, Document* aDocument) {
   // If we're not using APZ, we won't be able to zoom, so there is no
   // point in having an MVM.
-  if (nsViewManager* viewManager = aPresShell->GetViewManager()) {
-    if (nsView* view = viewManager->GetRootView()) {
-      if (nsIWidget* widget = view->GetNearestWidget(nullptr)) {
-        if (!widget->AsyncPanZoomEnabled()) {
-          return false;
-        }
+  if (nsPresContext* presContext = aPresShell->GetPresContext()) {
+    if (nsIWidget* widget = presContext->GetNearestWidget()) {
+      if (!widget->AsyncPanZoomEnabled()) {
+        return false;
       }
     }
   }
