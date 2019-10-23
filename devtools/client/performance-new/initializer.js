@@ -3,21 +3,36 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 // @ts-check
 /* exported gInit, gDestroy, loader */
-"use strict";
 
 /**
  * @typedef {import("./@types/perf").PerfFront} PerfFront
  * @typedef {import("./@types/perf").PreferenceFront} PreferenceFront
  * @typedef {import("./@types/perf").RecordingStateFromPreferences} RecordingStateFromPreferences
  */
+"use strict";
 
-const { BrowserLoader } = ChromeUtils.import(
-  "resource://devtools/client/shared/browser-loader.js"
-);
-const { require, loader } = BrowserLoader({
-  baseURI: "resource://devtools/client/performance-new/",
-  window,
-});
+{
+  // Create the browser loader, but take care not to conflict with
+  // TypeScript. See devtools/client/performance-new/typescript.md and
+  // the section on "Do not overload require" for more information.
+
+  const { BrowserLoader } = ChromeUtils.import(
+    "resource://devtools/client/shared/browser-loader.js"
+  );
+  const browserLoader = BrowserLoader({
+    baseURI: "resource://devtools/client/performance-new/",
+    window,
+  });
+
+  /**
+   * @type {any} - Coerce the current scope into an `any`, and assign the
+   *     loaders to the scope. They can then be used freely below.
+   */
+  const scope = this;
+  scope.require = browserLoader.require;
+  scope.loader = browserLoader.loader;
+}
+
 const Perf = require("devtools/client/performance-new/components/Perf");
 const ReactDOM = require("devtools/client/shared/vendor/react-dom");
 const React = require("devtools/client/shared/vendor/react");
