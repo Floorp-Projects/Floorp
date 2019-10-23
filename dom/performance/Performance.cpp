@@ -170,6 +170,9 @@ void Performance::GetEntriesByName(
     return;
   }
 
+  // ::Measure expects that results from this function are already
+  // passed through ReduceTimePrecision. mResourceEntries and mUserEntries
+  // are, so the invariant holds.
   for (PerformanceEntry* entry : mResourceEntries) {
     if (entry->GetName().Equals(aName) &&
         (!aEntryType.WasPassed() ||
@@ -273,13 +276,9 @@ void Performance::Measure(const nsAString& aName,
 
   DOMHighResTimeStamp startTime;
   DOMHighResTimeStamp endTime;
-  DOMHighResTimeStamp startTimeUnfuzzed;
-  DOMHighResTimeStamp endTimeUnfuzzed;
 
   if (aStartMark.WasPassed()) {
-    startTimeUnfuzzed = ResolveTimestampFromName(aStartMark.Value(), aRv);
-    startTime = nsRFPService::ReduceTimePrecisionAsMSecs(
-        startTimeUnfuzzed, GetRandomTimelineSeed());
+    startTime = ResolveTimestampFromName(aStartMark.Value(), aRv);
     if (NS_WARN_IF(aRv.Failed())) {
       return;
     }
@@ -288,19 +287,15 @@ void Performance::Measure(const nsAString& aName,
     // in relation to navigation start, this will be zero if a name is not
     // passed.
     startTime = 0;
-    startTimeUnfuzzed = 0;
   }
 
   if (aEndMark.WasPassed()) {
-    endTimeUnfuzzed = ResolveTimestampFromName(aEndMark.Value(), aRv);
-    endTime = nsRFPService::ReduceTimePrecisionAsMSecs(endTimeUnfuzzed,
-                                                       GetRandomTimelineSeed());
+    endTime = ResolveTimestampFromName(aEndMark.Value(), aRv);
     if (NS_WARN_IF(aRv.Failed())) {
       return;
     }
   } else {
     endTime = Now();
-    endTimeUnfuzzed = Now();
   }
 
   RefPtr<PerformanceMeasure> performanceMeasure =
@@ -310,9 +305,9 @@ void Performance::Measure(const nsAString& aName,
 #ifdef MOZ_GECKO_PROFILER
   if (profiler_can_accept_markers()) {
     TimeStamp startTimeStamp =
-        CreationTimeStamp() + TimeDuration::FromMilliseconds(startTimeUnfuzzed);
+        CreationTimeStamp() + TimeDuration::FromMilliseconds(startTime);
     TimeStamp endTimeStamp =
-        CreationTimeStamp() + TimeDuration::FromMilliseconds(endTimeUnfuzzed);
+        CreationTimeStamp() + TimeDuration::FromMilliseconds(endTime);
 
     // Convert to Maybe values so that Optional types do not need to be used in
     // the profiler.
