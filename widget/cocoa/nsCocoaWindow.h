@@ -389,6 +389,7 @@ class nsCocoaWindow final : public nsBaseWidget, public nsPIWidgetCocoa {
   bool mInReportMoveEvent;  // true if in a call to ReportMoveEvent().
   bool mInResize;           // true if in a call to DoResize().
   bool mWindowTransformIsIdentity;
+  bool mAlwaysOnTop;
 
   int32_t mNumModalDescendents;
   InputContext mInputContext;
