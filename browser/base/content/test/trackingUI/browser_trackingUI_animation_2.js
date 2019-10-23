@@ -134,7 +134,7 @@ async function testTrackingProtectionAnimation(tabbrowser) {
   info("Inject tracking cookie inside tracking tab");
   securityChanged = waitForSecurityChange(1, tabbrowser.ownerGlobal);
   let timeoutPromise = new Promise(resolve => setTimeout(resolve, 500));
-  await ContentTask.spawn(tabbrowser.selectedBrowser, {}, function() {
+  await SpecialPowers.spawn(tabbrowser.selectedBrowser, [], function() {
     content.postMessage("cookie", "*");
   });
   let result = await Promise.race([securityChanged, timeoutPromise]);
@@ -149,7 +149,7 @@ async function testTrackingProtectionAnimation(tabbrowser) {
   info("Inject tracking element inside tracking tab");
   securityChanged = waitForSecurityChange(1, tabbrowser.ownerGlobal);
   timeoutPromise = new Promise(resolve => setTimeout(resolve, 500));
-  await ContentTask.spawn(tabbrowser.selectedBrowser, {}, function() {
+  await SpecialPowers.spawn(tabbrowser.selectedBrowser, [], function() {
     content.postMessage("tracking", "*");
   });
   result = await Promise.race([securityChanged, timeoutPromise]);
@@ -166,7 +166,7 @@ async function testTrackingProtectionAnimation(tabbrowser) {
   info("Inject tracking cookie inside tracking cookies tab");
   securityChanged = waitForSecurityChange(1, tabbrowser.ownerGlobal);
   timeoutPromise = new Promise(resolve => setTimeout(resolve, 500));
-  await ContentTask.spawn(tabbrowser.selectedBrowser, {}, function() {
+  await SpecialPowers.spawn(tabbrowser.selectedBrowser, [], function() {
     content.postMessage("cookie", "*");
   });
   result = await Promise.race([securityChanged, timeoutPromise]);
@@ -181,7 +181,7 @@ async function testTrackingProtectionAnimation(tabbrowser) {
   info("Inject tracking element inside tracking cookies tab");
   securityChanged = waitForSecurityChange(1, tabbrowser.ownerGlobal);
   timeoutPromise = new Promise(resolve => setTimeout(resolve, 500));
-  await ContentTask.spawn(tabbrowser.selectedBrowser, {}, function() {
+  await SpecialPowers.spawn(tabbrowser.selectedBrowser, [], function() {
     content.postMessage("tracking", "*");
   });
   result = await Promise.race([securityChanged, timeoutPromise]);

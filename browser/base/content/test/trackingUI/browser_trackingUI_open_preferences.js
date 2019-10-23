@@ -22,16 +22,16 @@ async function waitAndAssertPreferencesShown(_spotlight, identityPopup) {
     "Should open about:preferences."
   );
 
-  await ContentTask.spawn(
+  await SpecialPowers.spawn(
     gBrowser.selectedBrowser,
-    { spotlight: _spotlight },
-    async function({ spotlight }) {
+    [_spotlight],
+    async spotlight => {
       let doc = content.document;
       let section = await ContentTaskUtils.waitForCondition(
         () => doc.querySelector(".spotlight"),
         "The spotlight should appear."
       );
-      is(
+      Assert.equal(
         section.getAttribute("data-subcategory"),
         spotlight,
         "The correct section is spotlighted."

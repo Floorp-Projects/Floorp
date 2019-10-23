@@ -10,7 +10,7 @@ add_task(async function test_fetch() {
     newTabBrowser
   ) {
     let contentBlockingEvent = waitForContentBlockingEvent();
-    await ContentTask.spawn(newTabBrowser, null, async function() {
+    await SpecialPowers.spawn(newTabBrowser, [], async function() {
       await content.wrappedJSObject
         .test_fetch()
         .then(response => Assert.ok(false, "should have denied the request"))

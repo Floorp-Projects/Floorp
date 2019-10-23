@@ -63,7 +63,7 @@ async function testIdentityState(hasException) {
 
   promise = waitForContentBlockingEvent();
 
-  await ContentTask.spawn(tab.linkedBrowser, {}, function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], function() {
     content.postMessage("fingerprinting", "*");
   });
 
@@ -137,7 +137,7 @@ async function testCategoryItem() {
 
   promise = waitForContentBlockingEvent();
 
-  await ContentTask.spawn(tab.linkedBrowser, {}, function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], function() {
     content.postMessage("fingerprinting", "*");
   });
 
@@ -189,7 +189,7 @@ async function testSubview(hasException) {
   }
 
   promise = waitForContentBlockingEvent();
-  await ContentTask.spawn(tab.linkedBrowser, {}, function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], function() {
     content.postMessage("fingerprinting", "*");
   });
   await promise;
