@@ -445,8 +445,12 @@ IPCResult DocumentChannelChild::RecvConfirmRedirect(
 }
 
 IPCResult DocumentChannelChild::RecvNotifyClassificationFlags(
-    const uint32_t& aClassificationFlags) {
-  mThirdPartyClassificationFlags |= aClassificationFlags;
+    const uint32_t& aClassificationFlags, const bool& aIsThirdParty) {
+  if (aIsThirdParty) {
+    mThirdPartyClassificationFlags |= aClassificationFlags;
+  } else {
+    mFirstPartyClassificationFlags |= aClassificationFlags;
+  }
   return IPC_OK();
 }
 
@@ -592,23 +596,41 @@ DocumentChannelChild::Resume() {
 
 NS_IMETHODIMP
 DocumentChannelChild::IsTrackingResource(bool* aIsTrackingResource) {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  MOZ_ASSERT(!mFirstPartyClassificationFlags ||
+             !mThirdPartyClassificationFlags);
+  *aIsTrackingResource = UrlClassifierCommon::IsTrackingClassificationFlag(
+                             mThirdPartyClassificationFlags) ||
+                         UrlClassifierCommon::IsTrackingClassificationFlag(
+                             mFirstPartyClassificationFlags);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 DocumentChannelChild::IsThirdPartyTrackingResource(bool* aIsTrackingResource) {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  MOZ_ASSERT(
+      !(mFirstPartyClassificationFlags && mThirdPartyClassificationFlags));
+  *aIsTrackingResource = UrlClassifierCommon::IsTrackingClassificationFlag(
+      mThirdPartyClassificationFlags);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 DocumentChannelChild::GetClassificationFlags(uint32_t* aClassificationFlags) {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  MOZ_ASSERT(aClassificationFlags);
+  if (mThirdPartyClassificationFlags) {
+    *aClassificationFlags = mThirdPartyClassificationFlags;
+  } else {
+    *aClassificationFlags = mFirstPartyClassificationFlags;
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 DocumentChannelChild::GetFirstPartyClassificationFlags(
     uint32_t* aClassificationFlags) {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  MOZ_ASSERT(aClassificationFlags);
+  *aClassificationFlags = mFirstPartyClassificationFlags;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
