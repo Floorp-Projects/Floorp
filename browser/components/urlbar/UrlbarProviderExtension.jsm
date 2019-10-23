@@ -220,11 +220,9 @@ class UrlbarProviderExtension extends UrlbarProvider {
    *
    * @param {UrlbarResult} result
    *   The result that was picked.
-   * @param {object} details
-   *   Details about the pick, depending on the result type.
    */
-  pickResult(result, details) {
-    this._notifyListener("resultPicked", result.payload, details);
+  pickResult(result) {
+    this._notifyListener("resultPicked", result.payload);
   }
 
   /**
@@ -232,19 +230,19 @@ class UrlbarProviderExtension extends UrlbarProvider {
    *
    * @param {string} eventName
    *   The name of the listener to call (i.e., the name of the event to fire).
-   * @param {arguments} args
-   *   The arguments to pass to the listener.
+   * @param {UrlbarQueryContext} context
+   *   The query context relevant to the event.
    * @returns {*}
    *   The value returned by the listener function, if any.
    */
-  async _notifyListener(eventName, ...args) {
+  async _notifyListener(eventName, context) {
     let listener = this._eventListeners.get(eventName);
     if (!listener) {
       return undefined;
     }
     let result;
     try {
-      result = listener(...args);
+      result = listener(context);
     } catch (error) {
       Cu.reportError(error);
       return undefined;

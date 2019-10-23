@@ -844,7 +844,7 @@ class TipTestProvider extends UrlbarProvider {
     }
   }
   cancelQuery(context) {}
-  pickResult(result, details) {}
+  pickResult(result) {}
 }
 
 let tipMatches = [

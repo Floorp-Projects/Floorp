@@ -66,7 +66,7 @@ class DelayedProvider extends UrlbarProvider {
       this._resultsAdded();
     }
   }
-  pickResult(result, details) {}
+  pickResult(result) {}
 }
 
 /**
