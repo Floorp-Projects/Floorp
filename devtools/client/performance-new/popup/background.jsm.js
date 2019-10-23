@@ -98,6 +98,11 @@ const lazyPreferenceManagement = requireLazy(() => {
  * @type {Map<string, { path: string, debugPath: string }>}
  */
 const symbolCache = new Map();
+
+/**
+ * @param {string} debugName
+ * @param {string} breakpadId
+ */
 async function getSymbolsFromThisBrowser(debugName, breakpadId) {
   if (symbolCache.size === 0) {
     // Prime the symbols cache.
