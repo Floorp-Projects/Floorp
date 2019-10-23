@@ -138,6 +138,15 @@ const toolkitVariableMap = [
     "--lwt-toolbar-field-focus",
     {
       lwtProperty: "toolbar_field_focus",
+      fallbackProperty: "toolbar_field",
+      processColor(rgbaChannels, element) {
+        // Ensure minimum opacity as this is used behind address bar results.
+        if (!rgbaChannels) {
+          return "white";
+        }
+        let { r, g, b, a } = rgbaChannels;
+        return `rgba(${r}, ${g}, ${b}, ${Math.max(a, 0.7)})`;
+      },
     },
   ],
   [
@@ -396,6 +405,7 @@ function _setProperties(root, active, themeData) {
     for (let [cssVarName, definition] of map) {
       const {
         lwtProperty,
+        fallbackProperty,
         optionalElementID,
         processColor,
         isColor = true,
@@ -406,6 +416,12 @@ function _setProperties(root, active, themeData) {
       let val = themeData[lwtProperty];
       if (isColor) {
         val = _sanitizeCSSColor(root.ownerDocument, val);
+        if (!val && fallbackProperty) {
+          val = _sanitizeCSSColor(
+            root.ownerDocument,
+            themeData[fallbackProperty]
+          );
+        }
         if (processColor) {
           val = processColor(_parseRGBA(val), elem);
         }
