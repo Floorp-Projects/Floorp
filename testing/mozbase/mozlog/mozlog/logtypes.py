@@ -190,7 +190,8 @@ class TestId(DataType):
 
 
 class Status(DataType):
-    allowed = ["PASS", "FAIL", "OK", "ERROR", "TIMEOUT", "CRASH", "ASSERT", "SKIP"]
+    allowed = ["PASS", "FAIL", "OK", "ERROR", "TIMEOUT", "CRASH", "ASSERT", "PRECONDITION_FAILED",
+               "SKIP"]
 
     def convert(self, data):
         value = data.upper()
@@ -200,7 +201,8 @@ class Status(DataType):
 
 
 class SubStatus(Status):
-    allowed = ["PASS", "FAIL", "ERROR", "TIMEOUT", "ASSERT", "NOTRUN", "SKIP"]
+    allowed = ["PASS", "FAIL", "ERROR", "TIMEOUT", "ASSERT", "PRECONDITION_FAILED", "NOTRUN",
+               "SKIP"]
 
 
 class Dict(ContainerType):
