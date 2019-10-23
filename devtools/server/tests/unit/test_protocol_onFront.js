@@ -95,14 +95,15 @@ add_task(async function run_test() {
   const rootFront = new RootFront(client);
 
   const fronts = [];
-  rootFront.onFront("childActor", front => {
+  const listener = front => {
     equal(
       front.foo,
       "bar",
       "Front's form is set before onFront listeners are called"
     );
     fronts.push(front);
-  });
+  };
+  rootFront.onFront("childActor", listener);
 
   const firstChild = await rootFront.createChild();
   ok(
@@ -146,6 +147,16 @@ add_task(async function run_test() {
     "After a second call to createChild, two fronts are reported"
   );
   equal(fronts[1], secondChild, "And the new front is the right instance");
+
+  // Test unregistering a front listener
+  rootFront.offFront("childActor", listener);
+
+  await rootFront.createChild();
+  equal(
+    fronts.length,
+    2,
+    "After calling offFront, the listener is no longer called"
+  );
 
   trace.close();
   await client.close();
