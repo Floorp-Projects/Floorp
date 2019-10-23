@@ -13,6 +13,7 @@
 
 #include "jsapi.h"  // JS_ReportErrorASCII, JS_SetPrivate
 
+#include "builtin/Promise.h"                 // js::PromiseObject
 #include "builtin/streams/WritableStream.h"  // js::WritableStream
 #include "builtin/streams/WritableStreamDefaultController.h"  // js::WritableStreamDefaultController, js::WritableStream::controller
 #include "js/Promise.h"      // JS::{Reject,Resolve}Promise
@@ -27,9 +28,10 @@
 #include "vm/Compartment-inl.h"  // JS::Compartment::wrap
 #include "vm/JSContext-inl.h"    // JSContext::check
 #include "vm/JSObject-inl.h"     // js::NewObjectWithClassProto
-#include "vm/List-inl.h"         // js::StoreNewListInFixedSlot
+#include "vm/List-inl.h"         // js::{AppendTo,StoreNew}ListInFixedSlot
 #include "vm/Realm-inl.h"        // js::AutoRealm
 
+using js::PromiseObject;
 using js::WritableStream;
 
 using JS::Handle;
@@ -103,6 +105,34 @@ void WritableStream::clearInFlightWriteRequest(JSContext* cx) {
 }
 
 /*** 4.4. Writable stream abstract operations used by controllers ***********/
+
+/**
+ * Streams spec, 4.4.1.
+ *      WritableStreamAddWriteRequest ( stream )
+ */
+MOZ_MUST_USE PromiseObject* js::WritableStreamAddWriteRequest(
+    JSContext* cx, Handle<WritableStream*> unwrappedStream) {
+  // Step 1: Assert: ! IsWritableStreamLocked(stream) is true.
+  MOZ_ASSERT(unwrappedStream->isLocked());
+
+  // Step 2: Assert: stream.[[state]] is "writable".
+  MOZ_ASSERT(unwrappedStream->writable());
+
+  // Step 3: Let promise be a new promise.
+  Rooted<PromiseObject*> promise(cx, PromiseObject::createSkippingExecutor(cx));
+  if (!promise) {
+    return nullptr;
+  }
+
+  // Step 4: Append promise as the last element of stream.[[writeRequests]].
+  if (!AppendToListInFixedSlot(cx, unwrappedStream,
+                               WritableStream::Slot_WriteRequests, promise)) {
+    return nullptr;
+  }
+
+  // Step 5: Return promise.
+  return promise;
+}
 
 /**
  * Streams spec, 4.4.2.

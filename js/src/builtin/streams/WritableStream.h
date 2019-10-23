@@ -232,6 +232,7 @@ class WritableStream : public NativeObject {
   }
 
   bool hasWriter() const { return !getFixedSlot(Slot_Writer).isUndefined(); }
+  bool isLocked() const { return hasWriter(); }
   void setWriter(JSObject* writer) {
     MOZ_ASSERT(!hasWriter());
     setFixedSlot(Slot_Writer, JS::ObjectValue(*writer));

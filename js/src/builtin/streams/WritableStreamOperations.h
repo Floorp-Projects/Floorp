@@ -18,7 +18,11 @@ struct JSContext;
 
 namespace js {
 
+class PromiseObject;
 class WritableStream;
+
+extern MOZ_MUST_USE PromiseObject* WritableStreamAddWriteRequest(
+    JSContext* cx, JS::Handle<WritableStream*> unwrappedStream);
 
 extern MOZ_MUST_USE bool WritableStreamDealWithRejection(
     JSContext* cx, JS::Handle<WritableStream*> unwrappedStream,
