@@ -10,6 +10,7 @@ module.exports = {
   moduleNameMapper: {
     // Map all require("devtools/...") to the real devtools root.
     "^devtools\\/(.*)": `${__dirname}/../../../../../$1`,
+    "^Services": `${__dirname}/fixtures/Services`,
   },
   setupFiles: ["<rootDir>setup.js"],
   snapshotSerializers: ["enzyme-to-json/serializer"],
