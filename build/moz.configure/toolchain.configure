@@ -1812,11 +1812,10 @@ set_config('MOZ_CODE_COVERAGE', code_coverage)
 set_define('MOZ_CODE_COVERAGE', code_coverage)
 
 @depends(target, c_compiler, vc_path, check_build_environment, when=code_coverage)
-@imports('os')
 @imports('re')
 @imports('mozpack.path')
 @imports(_from='__builtin__', _import='open')
-def coverage_flags(target, c_compiler, vc_path, build_env):
+def coverage_cflags(target, c_compiler, vc_path, build_env):
     cflags = ['--coverage']
 
     if c_compiler.type in ('clang', 'clang-cl'):
@@ -1844,28 +1843,9 @@ def coverage_flags(target, c_compiler, vc_path, build_env):
     with open(response_file_path, 'w') as f:
         f.write(' '.join(cflags))
 
-    cflags = ['@{}'.format(response_file_path)]
+    return ['@{}'.format(response_file_path)]
 
-    if target.os == 'WINNT':
-        if c_compiler.type == 'clang-cl':
-            if target.cpu == 'x86_64':
-                ldflags = ['clang_rt.profile-x86_64.lib']
-            elif target.cpu == 'x86':
-                ldflags = ['clang_rt.profile-i386.lib']
-            else:
-                ldflags = None
-    elif target.os == 'OSX':
-        ldflags = ['-coverage']
-    else:
-        ldflags = ['--coverage']
-
-    return namespace(
-        cflags=cflags,
-        ldflags=ldflags,
-    )
-
-set_config('COVERAGE_CFLAGS', coverage_flags.cflags)
-set_config('COVERAGE_LDFLAGS', coverage_flags.ldflags)
+set_config('COVERAGE_CFLAGS', coverage_cflags)
 
 # ==============================================================
 
