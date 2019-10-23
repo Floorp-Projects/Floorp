@@ -3498,7 +3498,8 @@ static bool Deserialize(JSContext* cx, unsigned argc, Value* vp) {
 
   RootedValue deserialized(cx);
   if (!JS_ReadStructuredClone(cx, *obj->data(), JS_STRUCTURED_CLONE_VERSION,
-                              scope, &deserialized, nullptr, nullptr)) {
+                              scope, &deserialized, JS::CloneDataPolicy(),
+                              nullptr, nullptr)) {
     return false;
   }
   args.rval().set(deserialized);

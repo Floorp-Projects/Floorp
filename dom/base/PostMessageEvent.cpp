@@ -162,7 +162,6 @@ PostMessageEvent::Run() {
   nsCOMPtr<mozilla::dom::EventTarget> eventTarget =
       do_QueryObject(targetWindow);
 
-  // XXX cloneDataPolicy will be used in P3
   JS::CloneDataPolicy cloneDataPolicy;
   MOZ_DIAGNOSTIC_ASSERT(targetWindow);
   if (mCallerAgentClusterId.isSome() &&
@@ -173,7 +172,7 @@ PostMessageEvent::Run() {
   StructuredCloneHolder* holder;
   if (mHolder.constructed<StructuredCloneHolder>()) {
     mHolder.ref<StructuredCloneHolder>().Read(targetWindow->AsGlobal(), cx,
-                                              &messageData, rv);
+                                              &messageData, cloneDataPolicy, rv);
     holder = &mHolder.ref<StructuredCloneHolder>();
   } else {
     MOZ_ASSERT(mHolder.constructed<ipc::StructuredCloneData>());
