@@ -966,6 +966,10 @@ Result<Completion> DebuggerFrame::eval(JSContext* cx, HandleDebuggerFrame frame,
 /* static */
 bool DebuggerFrame::isLive() const { return !!getPrivate(); }
 
+bool DebuggerFrame::isLiveMaybeForwarded() const {
+  return !!getPrivate(numFixedSlotsMaybeForwarded());
+}
+
 OnStepHandler* DebuggerFrame::onStepHandler() const {
   Value value = getReservedSlot(ONSTEP_HANDLER_SLOT);
   return value.isUndefined() ? nullptr
