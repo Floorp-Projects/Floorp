@@ -24,10 +24,9 @@ async function getNodeFront(gripOrFront, toolbox) {
   if ("actorID" in gripOrFront) {
     return new Promise(resolve => resolve(gripOrFront));
   }
-  // TODO: Bug1574506 - Use the contextual WalkerFront for gripToNodeFront.
-  // Given a grip
-  const walkerFront = (await toolbox.target.getFront("inspector")).walker;
-  return walkerFront.gripToNodeFront(gripOrFront);
+
+  const inspectorFront = await toolbox.target.getFront("inspector");
+  return inspectorFront.getNodeFrontFromNodeGrip(gripOrFront);
 }
 
 DebuggerPanel.prototype = {
