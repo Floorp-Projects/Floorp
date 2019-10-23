@@ -54,6 +54,7 @@ class MOZ_RAII MmapAccessScope {
 
   void SetThreadLocalScope();
   bool IsInsideBuffer(void* aPtr);
+  void CrashWithInfo(void* aPtr);
 
   // sigsetjmp cannot be called from a method that returns before calling
   // siglongjmp, so the macro must call sigsetjmp directly and mJmpBuf must be
