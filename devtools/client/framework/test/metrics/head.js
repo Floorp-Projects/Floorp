@@ -103,6 +103,7 @@ function getDuplicatedModules(loaders) {
     if (uniqueModules.has(mod)) {
       duplicatedModules.add(mod);
     }
+
     uniqueModules.add(mod);
   }
 
@@ -122,6 +123,21 @@ function getDuplicatedModules(loaders) {
  *        duplicated modules.
  */
 function runDuplicatedModulesTest(loaders, whitelist) {
+  const { AppConstants } = require("resource://gre/modules/AppConstants.jsm");
+  if (AppConstants.DEBUG_JS_MODULES) {
+    // DevTools load different modules when DEBUG_JS_MODULES is true, which
+    // makes the hardcoded whitelists incorrect. Fail the test early and return.
+    // See https://bugzilla.mozilla.org/show_bug.cgi?id=1590630.
+    ok(
+      false,
+      "The DevTools metrics tests should not run with " +
+        "`--enable-debug-js-modules`. Please disable this option " +
+        "and run the test again."
+    );
+    // early return to avoid polluting the logs with irrelevant errors.
+    return;
+  }
+
   const duplicatedModules = getDuplicatedModules(loaders);
 
   // Remove whitelisted entries, and fail if a whitelisted entry is not found.
