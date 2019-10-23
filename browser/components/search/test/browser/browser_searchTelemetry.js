@@ -295,7 +295,7 @@ add_task(async function test_track_ad_click() {
   BrowserTestUtils.removeTab(tab);
 });
 
-add_task(async function test_track_ad_click_with_location_change_same_doc() {
+add_task(async function test_track_ad_click_with_location_change_other_tab() {
   searchCounts.clear();
   Services.telemetry.clearScalars();
   const url = getSERPUrl(getPageUrl(false, true));
@@ -308,10 +308,12 @@ add_task(async function test_track_ad_click_with_location_change_same_doc() {
     }
   );
 
-  // Simulate a LOCATION_CHANGE_SAME_DOCUMENT
-  await ContentTask.spawn(tab.linkedBrowser, { url }, args => {
-    content.history.pushState({}, "", args.url);
-  });
+  const newTab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "https://example.com"
+  );
+
+  await BrowserTestUtils.switchTab(gBrowser, tab);
 
   let pageLoadPromise = BrowserTestUtils.waitForLocationChange(gBrowser);
   await ContentTask.spawn(tab.linkedBrowser, {}, () => {
@@ -327,5 +329,6 @@ add_task(async function test_track_ad_click_with_location_change_same_doc() {
     }
   );
 
+  BrowserTestUtils.removeTab(newTab);
   BrowserTestUtils.removeTab(tab);
 });
