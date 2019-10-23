@@ -186,7 +186,6 @@ class HuffmanPreludeReader {
   // A string.
   // May be a literal string, identifier name or property key. May not be null.
   struct String : EntryExplicit {
-    using Table = GenericHuffmanTable;
     explicit String(const NormalizedInterfaceAndField identity)
         : EntryExplicit(identity) {}
   };
@@ -196,7 +195,6 @@ class HuffmanPreludeReader {
   // An optional string.
   // May be a literal string, identifier name or property key.
   struct MaybeString : EntryExplicit {
-    using Table = GenericHuffmanTable;
     explicit MaybeString(const NormalizedInterfaceAndField identity)
         : EntryExplicit(identity) {}
   };
@@ -205,22 +203,18 @@ class HuffmanPreludeReader {
 
   // A JavaScript number. May not be null.
   struct Number : EntryExplicit {
-    using Table = GenericHuffmanTable;
     explicit Number(const NormalizedInterfaceAndField identity)
         : EntryExplicit(identity) {}
   };
 
   // A 32-bit integer. May not be null.
   struct UnsignedLong : EntryExplicit {
-    using Table = GenericHuffmanTable;
     explicit UnsignedLong(const NormalizedInterfaceAndField identity)
         : EntryExplicit(identity) {}
   };
 
   // A boolean. May not be null.
   struct Boolean : EntryIndexed {
-    using Table = GenericHuffmanTable;
-
     explicit Boolean(const NormalizedInterfaceAndField identity)
         : EntryIndexed(identity) {}
 
@@ -260,7 +254,6 @@ class HuffmanPreludeReader {
 
   // An optional value of a given interface.
   struct MaybeInterface : EntryIndexed {
-    using Table = GenericHuffmanTable;
     // The kind of the interface.
     const BinASTKind kind_;
 
@@ -296,9 +289,6 @@ class HuffmanPreludeReader {
   // Once we have read the model for the length of the list, we push a
   // `ListContents` to read the model for the contents of the list.
   struct List : EntryExplicit {
-    // The table for the length of the list.
-    using Table = GenericHuffmanTable;
-
     // The type of the list, e.g. list of numbers.
     // All lists with the same type share a model for their length.
     const BinASTList contents_;
@@ -325,9 +315,6 @@ class HuffmanPreludeReader {
 
   // A choice between several interfaces. May not be null.
   struct Sum : EntryIndexed {
-    // The type of table used for this entry.
-    using Table = GenericHuffmanTable;
-
     // The type of values in the sum.
     const BinASTSum contents_;
 
@@ -365,10 +352,6 @@ class HuffmanPreludeReader {
 
   // An optional choice between several interfaces.
   struct MaybeSum : EntryIndexed {
-    // The type of table used for this entry.
-    // We use `BinASTKind::_Null` to represent the null case.
-    using Table = GenericHuffmanTable;
-
     // The type of values in the sum.
     // We use `BinASTKind::_Null` to represent the null case.
     const BinASTSum contents_;
@@ -406,8 +389,6 @@ class HuffmanPreludeReader {
 
   // A choice between several strings. May not be null.
   struct StringEnum : EntryIndexed {
-    using Table = GenericHuffmanTable;
-
     // Comparing string enums alphabetically.
     inline bool lessThan(uint32_t aIndex, uint32_t bIndex) {
       MOZ_ASSERT(aIndex <= maxNumberOfSymbols());
@@ -630,7 +611,7 @@ class HuffmanPreludeReader {
 
   // Read a table in the optimized "only one value" format.
   template <typename Entry>
-  MOZ_MUST_USE JS::Result<Ok> readSingleValueTable(typename Entry::Table&,
+  MOZ_MUST_USE JS::Result<Ok> readSingleValueTable(GenericHuffmanTable&,
                                                    const Entry&);
 
   // Read a table in the non-optimized format.
@@ -640,7 +621,7 @@ class HuffmanPreludeReader {
   // for a discussion on each order.
   template <typename Entry>
   MOZ_MUST_USE JS::Result<Ok> readMultipleValuesTable(
-      typename Entry::Table& table, Entry entry) {
+      GenericHuffmanTable& table, Entry entry) {
     // Get the number of symbols.
     // If `Entry` is an indexed type, this is fetched from the grammar.
     BINJS_MOZ_TRY_DECL(numberOfSymbols, readNumberOfSymbols<Entry>(entry));
@@ -675,8 +656,8 @@ class HuffmanPreludeReader {
 
   template <typename Entry>
   MOZ_MUST_USE JS::Result<typename Entry::Explicit>
-  readMultipleValuesTableAndAssignCode(typename Entry::Table& table,
-                                       Entry entry, uint32_t numberOfSymbols) {
+  readMultipleValuesTableAndAssignCode(GenericHuffmanTable& table, Entry entry,
+                                       uint32_t numberOfSymbols) {
     // Explicit entry:
     // - All symbols must be read from disk.
     // - Lengths read from disk are bit lengths.
@@ -739,8 +720,8 @@ class HuffmanPreludeReader {
 
   template <typename Entry>
   MOZ_MUST_USE JS::Result<typename Entry::Indexed>
-  readMultipleValuesTableAndAssignCode(typename Entry::Table& table,
-                                       Entry entry, uint32_t numberOfSymbols) {
+  readMultipleValuesTableAndAssignCode(GenericHuffmanTable& table, Entry entry,
+                                       uint32_t numberOfSymbols) {
     // In this case, `numberOfSymbols` is actually an upper bound,
     // rather than an actual number of symbols.
 
@@ -854,8 +835,8 @@ class HuffmanPreludeReader {
     switch (headerByte) {
       case TableHeader::SingleValue: {
         // Construct in-place.
-        table = {mozilla::VariantType<typename Entry::Table>{}};
-        auto& tableRef = table.template as<typename Entry::Table>();
+        table = {mozilla::VariantType<GenericHuffmanTable>{}};
+        auto& tableRef = table.template as<GenericHuffmanTable>();
 
         // The table contains a single value.
         MOZ_TRY((readSingleValueTable<Entry>(tableRef, entry)));
@@ -864,8 +845,8 @@ class HuffmanPreludeReader {
       case TableHeader::MultipleValues: {
         // Table contains multiple values.
         // Construct in-place.
-        table = {mozilla::VariantType<typename Entry::Table>{}};
-        auto& tableRef = table.template as<typename Entry::Table>();
+        table = {mozilla::VariantType<GenericHuffmanTable>{}};
+        auto& tableRef = table.template as<GenericHuffmanTable>();
 
         MOZ_TRY((readMultipleValuesTable<Entry>(tableRef, entry)));
         return Ok();
@@ -2461,7 +2442,7 @@ MOZ_MUST_USE JS::Result<BinASTSymbol> HuffmanPreludeReader::readSymbol(
 // Reading a single-value table of booleans
 template <>
 MOZ_MUST_USE JS::Result<Ok> HuffmanPreludeReader::readSingleValueTable<Boolean>(
-    Boolean::Table& table, const Boolean& entry) {
+    GenericHuffmanTable& table, const Boolean& entry) {
   uint8_t indexByte;
   MOZ_TRY_VAR(indexByte, reader_.readByte<Compression::No>());
   if (MOZ_UNLIKELY(indexByte >= 2)) {
@@ -2497,7 +2478,7 @@ MOZ_MUST_USE JS::Result<BinASTSymbol> HuffmanPreludeReader::readSymbol(
 template <>
 MOZ_MUST_USE JS::Result<Ok>
 HuffmanPreludeReader::readSingleValueTable<MaybeInterface>(
-    MaybeInterface::Table& table, const MaybeInterface& entry) {
+    GenericHuffmanTable& table, const MaybeInterface& entry) {
   uint8_t indexByte;
   MOZ_TRY_VAR(indexByte, reader_.readByte<Compression::No>());
   if (MOZ_UNLIKELY(indexByte >= 2)) {
