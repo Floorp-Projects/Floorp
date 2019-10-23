@@ -1230,7 +1230,6 @@ class BreakpointSite {
   using BreakpointList =
       mozilla::DoublyLinkedList<js::Breakpoint, SiteLinkAccess<js::Breakpoint>>;
   BreakpointList breakpoints;
-  size_t enabledCount; /* number of breakpoints in the list that are enabled */
 
   gc::Cell* owningCellUnbarriered();
 
@@ -1238,16 +1237,11 @@ class BreakpointSite {
   BreakpointSite(Type type);
   virtual ~BreakpointSite() {}
 
-  virtual void recompile(JSFreeOp* fop) = 0;
-  bool isEnabled() const { return enabledCount > 0; }
-
  public:
   Breakpoint* firstBreakpoint() const;
   bool hasBreakpoint(Breakpoint* bp);
   Type type() const { return type_; }
 
-  void inc(JSFreeOp* fop);
-  void dec(JSFreeOp* fop);
   bool isEmpty() const;
   virtual void remove(JSFreeOp* fop) = 0;
   void destroyIfEmpty(JSFreeOp* fop) {
@@ -1318,9 +1312,6 @@ class JSBreakpointSite : public BreakpointSite {
   JSScript* script;
   jsbytecode* const pc;
 
- protected:
-  void recompile(JSFreeOp* fop) override;
-
  public:
   JSBreakpointSite(JSScript* script, jsbytecode* pc);
 
@@ -1336,9 +1327,6 @@ class WasmBreakpointSite : public BreakpointSite {
  public:
   WasmInstanceObject* instanceObject;
   uint32_t offset;
-
- private:
-  void recompile(JSFreeOp* fop) override;
 
  public:
   WasmBreakpointSite(WasmInstanceObject* instanceObject, uint32_t offset);

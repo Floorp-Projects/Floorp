@@ -211,6 +211,8 @@ WasmBreakpointSite* DebugState::getOrCreateBreakpointSite(JSContext* cx,
 
     AddCellMemory(instance->object(), sizeof(WasmBreakpointSite),
                   MemoryUse::BreakpointSite);
+
+    toggleBreakpointTrap(cx->runtime(), offset, true);
   } else {
     site = p->value();
   }
@@ -228,6 +230,7 @@ void DebugState::destroyBreakpointSite(JSFreeOp* fop, Instance* instance,
   fop->delete_(instance->objectUnbarriered(), p->value(),
                MemoryUse::BreakpointSite);
   breakpointSites_.remove(p);
+  toggleBreakpointTrap(fop->runtime(), offset, false);
 }
 
 void DebugState::clearBreakpointsIn(JSFreeOp* fop, WasmInstanceObject* instance,

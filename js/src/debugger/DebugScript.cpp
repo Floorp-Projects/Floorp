@@ -123,6 +123,10 @@ JSBreakpointSite* DebugScript::getOrCreateBreakpointSite(JSContext* cx,
     }
     debug->numSites++;
     AddCellMemory(script, sizeof(JSBreakpointSite), MemoryUse::BreakpointSite);
+
+    if (script->hasBaselineScript()) {
+      script->baselineScript()->toggleDebugTraps(script, pc);
+    }
   }
 
   return site;
@@ -142,6 +146,10 @@ void DebugScript::destroyBreakpointSite(JSFreeOp* fop, JSScript* script,
   debug->numSites--;
   if (!debug->needed()) {
     DebugAPI::destroyDebugScript(fop, script);
+  }
+
+  if (script->hasBaselineScript()) {
+    script->baselineScript()->toggleDebugTraps(script, pc);
   }
 }
 
@@ -337,7 +345,7 @@ bool DebugAPI::stepModeEnabledSlow(JSScript* script) {
 /* static */
 bool DebugAPI::hasBreakpointsAtSlow(JSScript* script, jsbytecode* pc) {
   JSBreakpointSite* site = DebugScript::getBreakpointSite(script, pc);
-  return site && site->enabledCount > 0;
+  return !!site;
 }
 
 }  // namespace js
