@@ -9,6 +9,7 @@ use std::env::var;
 // (header name, &[header dependencies], &[library dependencies])
 const DATA: &'static [(&'static str, &'static [&'static str], &'static [&'static str])] = &[
     // km
+    ("d3dkmthk", &["basetsd", "d3dukmdt", "minwindef", "ntdef", "windef"], &[]),
     // mmos
     // shared
     ("basetsd", &[], &[]),
@@ -19,6 +20,8 @@ const DATA: &'static [(&'static str, &'static [&'static str], &'static [&'static
     ("d3d9", &["basetsd", "d3d9caps", "d3d9types", "guiddef", "minwindef", "unknwnbase", "windef", "wingdi", "winnt"], &["d3d9"]),
     ("d3d9caps", &["d3d9types", "guiddef", "minwindef", "winnt"], &[]),
     ("d3d9types", &["basetsd", "guiddef", "minwindef", "windef", "winnt"], &[]),
+    ("d3dkmdt", &["basetsd", "minwindef", "ntdef"], &[]),
+    ("d3dukmdt", &["basetsd", "guiddef", "minwindef", "ntdef"], &[]),
     ("dcomptypes", &["dxgitype", "minwindef", "winnt"], &[]),
     ("devguid", &[], &[]),
     ("devpkey", &["devpropdef"], &[]),

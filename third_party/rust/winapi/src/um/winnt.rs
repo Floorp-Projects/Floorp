@@ -4759,7 +4759,7 @@ STRUCT!{struct CM_POWER_DATA {
     PD_DeepestSystemWake: SYSTEM_POWER_STATE,
 }}
 pub type PCM_POWER_DATA = *mut CM_POWER_DATA;
-ENUM!{enum POWER_INFORMATION_LEVEL{
+ENUM!{enum POWER_INFORMATION_LEVEL {
     SystemPowerPolicyAc,
     SystemPowerPolicyDc,
     VerifySystemPolicyAc,
