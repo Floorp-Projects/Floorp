@@ -32,9 +32,9 @@ add_task(function test() {
     "The initial state has the default interval."
   );
   Assert.equal(
-    getRecordingPreferencesFromBrowser().features.includes("stackwalk"),
-    getDefaultRecordingPreferences().features.includes("stackwalk"),
-    "The stackwalk feature is initialized to the default."
+    getRecordingPreferencesFromBrowser().features.includes("js"),
+    getDefaultRecordingPreferences().features.includes("js"),
+    "The js feature is initialized to the default."
   );
   revertRecordingPreferences();
 });
@@ -52,14 +52,12 @@ add_task(function test() {
   } = setupBackgroundJsm();
 
   Assert.ok(
-    getRecordingPreferencesFromBrowser().features.includes("stackwalk"),
-    "The stackwalk preference is present initially."
+    getRecordingPreferencesFromBrowser().features.includes("js"),
+    "The js preference is present initially."
   );
 
   const settings = getRecordingPreferencesFromBrowser();
-  settings.features = settings.features.filter(
-    feature => feature !== "stackwalk"
-  );
+  settings.features = settings.features.filter(feature => feature !== "js");
   settings.features.push("UNKNOWN_FEATURE_FOR_TESTS");
   setRecordingPreferencesOnBrowser(settings);
 
@@ -70,8 +68,8 @@ add_task(function test() {
     "The unknown feature is removed."
   );
   Assert.ok(
-    !getRecordingPreferencesFromBrowser().features.includes("stackwalk"),
-    "The stackwalk preference is still flipped from the default."
+    !getRecordingPreferencesFromBrowser().features.includes("js"),
+    "The js preference is still flipped from the default."
   );
   revertRecordingPreferences();
 });
