@@ -17,11 +17,11 @@
 }
 
 .config-background {
-  background-image: url("chrome://browser/content/aboutconfig/background.svg");
-  background-repeat: no-repeat;
-  background-position: center center;
-  background-size: 400px;
-  height: 350px;
+  background: url("chrome://browser/content/aboutconfig/background.svg") no-repeat;
+  height: 182px;
+  margin-block: 32px;
+  margin-inline: auto;
+  width: 235px;
 }
 
 .config-help-text {
