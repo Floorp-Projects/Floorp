@@ -18,10 +18,10 @@ import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.Until
 import org.hamcrest.Matchers.allOf
-import org.junit.Assert.assertNotNull
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.click
+import org.mozilla.fenix.helpers.ext.waitNotNull
 import org.mozilla.fenix.share.ShareFragment
 
 /**
@@ -39,7 +39,7 @@ class ThreeDotMenuMainRobot {
     fun verifyShareButton() = assertShareButton()
     fun clickShareButton() {
         shareButton().click()
-        assertNotNull(mDevice.wait(Until.findObject(By.text("SHARE A LINK")), waitingTime))
+        mDevice.waitNotNull(Until.findObject(By.text("SHARE A LINK")), waitingTime)
     }
 
     fun verifyShareTabButton() = assertShareTabButton()
@@ -55,7 +55,7 @@ class ThreeDotMenuMainRobot {
         private val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
 
         fun openSettings(interact: SettingsRobot.() -> Unit): SettingsRobot.Transition {
-            assertNotNull(mDevice.wait(Until.findObject(By.text("Settings")), waitingTime))
+            mDevice.waitNotNull(Until.findObject(By.text("Settings")), waitingTime)
             settingsButton().click()
 
             SettingsRobot().interact()
@@ -63,7 +63,7 @@ class ThreeDotMenuMainRobot {
         }
 
         fun openLibrary(interact: LibraryRobot.() -> Unit): LibraryRobot.Transition {
-            assertNotNull(mDevice.wait(Until.findObject(By.text("Your Library")), waitingTime))
+            mDevice.waitNotNull(Until.findObject(By.text("Your Library")), waitingTime)
             libraryButton().click()
 
             LibraryRobot().interact()
@@ -71,7 +71,7 @@ class ThreeDotMenuMainRobot {
         }
 
         fun openHelp(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
-            assertNotNull(mDevice.wait(Until.findObject(By.text("Help")), waitingTime))
+            mDevice.waitNotNull(Until.findObject(By.text("Help")), waitingTime)
             helpButton().click()
 
             BrowserRobot().interact()
@@ -79,7 +79,7 @@ class ThreeDotMenuMainRobot {
         }
 
         fun goForward(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
-            assertNotNull(mDevice.wait(Until.findObject(By.desc("Forward")), waitingTime))
+            mDevice.waitNotNull(Until.findObject(By.desc("Forward")), waitingTime)
             forwardButton().click()
 
             BrowserRobot().interact()
@@ -87,7 +87,7 @@ class ThreeDotMenuMainRobot {
         }
 
         fun goBack(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
-            assertNotNull(mDevice.wait(Until.findObject(By.desc("Back")), waitingTime))
+            mDevice.waitNotNull(Until.findObject(By.desc("Back")), waitingTime)
             backButton().click()
 
             BrowserRobot().interact()
@@ -95,7 +95,7 @@ class ThreeDotMenuMainRobot {
         }
 
         fun refreshPage(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
-            assertNotNull(mDevice.wait(Until.findObject(By.desc("Refresh")), waitingTime))
+            mDevice.waitNotNull(Until.findObject(By.desc("Refresh")), waitingTime)
             refreshButton().click()
 
             BrowserRobot().interact()
@@ -103,7 +103,7 @@ class ThreeDotMenuMainRobot {
         }
 
         fun closeAllTabs(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition {
-            assertNotNull(mDevice.wait(Until.findObject(By.text("Close all tabs")), waitingTime))
+            mDevice.waitNotNull(Until.findObject(By.text("Close all tabs")), waitingTime)
             closeAllTabsButton().click()
 
             HomeScreenRobot().interact()
@@ -111,7 +111,7 @@ class ThreeDotMenuMainRobot {
         }
 
         fun openFindInPage(interact: FindInPageRobot.() -> Unit): FindInPageRobot.Transition {
-            assertNotNull(mDevice.wait(Until.findObject(By.text("Find in page")), waitingTime))
+            mDevice.waitNotNull(Until.findObject(By.text("Find in page")), waitingTime)
             findInPageButton().click()
 
             FindInPageRobot().interact()
@@ -119,7 +119,7 @@ class ThreeDotMenuMainRobot {
         }
 
         fun openWhatsNew(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
-            assertNotNull(mDevice.wait(Until.findObject(By.text("What's New")), waitingTime))
+            mDevice.waitNotNull(Until.findObject(By.text("What's New")), waitingTime)
             whatsNewButton().click()
 
             BrowserRobot().interact()

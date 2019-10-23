@@ -27,7 +27,7 @@ import androidx.test.uiautomator.Until
 import org.hamcrest.Matchers.allOf
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.TestAssetHelper
-import org.junit.Assert.assertNotNull
+import org.mozilla.fenix.helpers.ext.waitNotNull
 
 @Suppress("RECEIVER_NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
 class SyncIntegrationTest {
@@ -111,7 +111,7 @@ class SyncIntegrationTest {
     }
 
     fun tapOnSignIn() {
-        assertNotNull(mDevice.wait(Until.findObjects(By.text("Sign in")), TestAssetHelper.waitingTimeShort))
+        mDevice.waitNotNull(Until.findObjects(By.text("Sign in")))
         // Let's tap on enter, sometimes depending on the device the sign in button is
         // hidden by the keyboard
         mDevice.pressEnter()
@@ -133,7 +133,7 @@ class SyncIntegrationTest {
     }
 
     fun seeBookmark() {
-        assertNotNull(mDevice.wait(Until.findObjects(By.text("Bookmark")), TestAssetHelper.waitingTime))
+        mDevice.waitNotNull(Until.findObjects(By.text("Bookmark")), TestAssetHelper.waitingTime)
         val bookmarkButton = mDevice.findObject(By.text("Bookmark"))
         bookmarkButton.click()
     }

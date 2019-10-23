@@ -27,9 +27,9 @@ import androidx.test.uiautomator.Until
 import org.hamcrest.CoreMatchers.allOf
 import org.hamcrest.CoreMatchers.startsWith
 import org.hamcrest.Matchers
-import org.junit.Assert.assertNotNull
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.TestAssetHelper
+import org.mozilla.fenix.helpers.ext.waitNotNull
 
 /**
  * Implementation of Robot Pattern for the search fragment.
@@ -65,7 +65,7 @@ class SearchRobot {
     }
 
     fun clickDuckDuckGoResult() {
-        assertNotNull(mDevice.wait(Until.findObjects(By.text("DuckDuckGo")), TestAssetHelper.waitingTime))
+        mDevice.waitNotNull(Until.findObjects(By.text("DuckDuckGo")), TestAssetHelper.waitingTime)
         awesomeBar().perform(RecyclerViewActions.actionOnItemAtPosition<RecyclerView.ViewHolder>(0, click()))
     }
 
@@ -101,29 +101,29 @@ private fun awesomeBar() = onView(withId(R.id.awesomeBar))
 private fun browserToolbarEditView() = onView(Matchers.allOf(withId(R.id.mozac_browser_toolbar_edit_url_view)))
 
 private fun duckDuckGoEngineButton(): ViewInteraction {
-    assertNotNull(mDevice.wait(Until.findObject(By.text("DuckDuckGo")), TestAssetHelper.waitingTime))
+    mDevice.waitNotNull(Until.findObject(By.text("DuckDuckGo")), TestAssetHelper.waitingTime)
     return onView(Matchers.allOf(withText("DuckDuckGo")))
 }
 
 private fun denyPermissionButton(): UiObject {
-    assertNotNull(mDevice.wait(Until.findObjects(By.text("Deny")), TestAssetHelper.waitingTime))
+    mDevice.waitNotNull(Until.findObjects(By.text("Deny")), TestAssetHelper.waitingTime)
     return mDevice.findObject(UiSelector().text("Deny"))
 }
 
 private fun allowPermissionButton(): UiObject {
-    assertNotNull(mDevice.wait(Until.findObjects(By.text("Allow")), TestAssetHelper.waitingTime))
+    mDevice.waitNotNull(Until.findObjects(By.text("Allow")), TestAssetHelper.waitingTime)
     return mDevice.findObject(UiSelector().text("Allow"))
 }
 
 private fun scanButton(): ViewInteraction {
-    assertNotNull(mDevice.wait(Until.findObject(By.res("org.mozilla.fenix.debug:id/search_scan_button")), TestAssetHelper.waitingTime))
+    mDevice.waitNotNull(Until.findObject(By.res("org.mozilla.fenix.debug:id/search_scan_button")), TestAssetHelper.waitingTime)
     return onView(allOf(withId(R.id.searchScanButton)))
 }
 
 private fun clearButton() = onView(withId(R.id.mozac_browser_toolbar_clear_view))
 
 private fun assertDuckDuckGoURL() {
-    assertNotNull(mDevice.wait(Until.findObject(By.textContains("https://duckduckgo.com/?q=mozilla")), TestAssetHelper.waitingTime))
+    mDevice.waitNotNull(Until.findObject(By.textContains("https://duckduckgo.com/?q=mozilla")), TestAssetHelper.waitingTime)
     onView(allOf(withText(startsWith("https://duckduckgo.com"))))
         .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 }

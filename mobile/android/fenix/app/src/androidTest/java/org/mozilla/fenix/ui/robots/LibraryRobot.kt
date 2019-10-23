@@ -18,10 +18,10 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.Until
 import org.hamcrest.CoreMatchers.allOf
-import org.junit.Assert.assertNotNull
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.click
+import org.mozilla.fenix.helpers.ext.waitNotNull
 
 /**
  * Implementation of Robot Pattern for the your library menu.
@@ -52,7 +52,7 @@ class LibraryRobot {
         }
 
         fun openBookmarks(interact: BookmarksRobot.() -> Unit): BookmarksRobot.Transition {
-            assertNotNull(mDevice.wait(Until.findObject(By.text("Bookmarks")), TestAssetHelper.waitingTime))
+            mDevice.waitNotNull(Until.findObject(By.text("Bookmarks")), TestAssetHelper.waitingTime)
             bookmarksButton().click()
 
             BookmarksRobot().interact()
@@ -60,7 +60,7 @@ class LibraryRobot {
         }
 
         fun openHistory(interact: HistoryRobot.() -> Unit): HistoryRobot.Transition {
-            assertNotNull(mDevice.wait(Until.findObject(By.text("History")), TestAssetHelper.waitingTime))
+            mDevice.waitNotNull(Until.findObject(By.text("History")), TestAssetHelper.waitingTime)
             historyButton().click()
 
             HistoryRobot().interact()

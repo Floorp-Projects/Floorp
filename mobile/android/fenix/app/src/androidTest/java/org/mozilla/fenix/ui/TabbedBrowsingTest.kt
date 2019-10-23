@@ -9,12 +9,12 @@ import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.Until
 import okhttp3.mockwebserver.MockWebServer
-import org.junit.Assert.assertNotNull
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
+import org.mozilla.fenix.helpers.ext.waitNotNull
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.ui.robots.homeScreen
@@ -76,7 +76,7 @@ class TabbedBrowsingTest {
 
         homeScreen {
             // Timing issue on slow devices on Firebase
-            assertNotNull(mDevice.wait(Until.findObjects(By.res("org.mozilla.fenix.debug:id/item_tab")), TestAssetHelper.waitingTime))
+            mDevice.waitNotNull(Until.findObjects(By.res("org.mozilla.fenix.debug:id/item_tab")), TestAssetHelper.waitingTime)
             verifyExistingTabList()
 
         }.openTabsListThreeDotMenu {
@@ -106,7 +106,7 @@ class TabbedBrowsingTest {
             verifyTabCounter("1")
         }.openHomeScreen {
             // Timing issue on slow devices on Firebase
-            assertNotNull(mDevice.wait(Until.findObjects(By.res("org.mozilla.fenix.debug:id/item_tab")), TestAssetHelper.waitingTime))
+            mDevice.waitNotNull(Until.findObjects(By.res("org.mozilla.fenix.debug:id/item_tab")), TestAssetHelper.waitingTime)
             verifyExistingTabList()
             verifyShareTabsButton(true)
             verifyCloseTabsButton(true)
@@ -135,7 +135,7 @@ class TabbedBrowsingTest {
 
         homeScreen {
             // Timing issue on slow devices on Firebase
-            assertNotNull(mDevice.wait(Until.findObjects(By.res("org.mozilla.fenix.debug:id/item_tab")), TestAssetHelper.waitingTime))
+            mDevice.waitNotNull(Until.findObjects(By.res("org.mozilla.fenix.debug:id/item_tab")), TestAssetHelper.waitingTime)
             verifyExistingTabList()
         }.openTabsListThreeDotMenu {
             verifyCloseAllTabsButton()

@@ -17,10 +17,10 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.Until
-import org.junit.Assert.assertNotNull
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.click
+import org.mozilla.fenix.helpers.ext.waitNotNull
 
 /**
  * Implementation of Robot Pattern for the find in page UI.
@@ -34,15 +34,15 @@ class FindInPageRobot {
     fun verifyFindInPageCloseButton() = assertFindInPageCloseButton()!!
 
     fun enterFindInPageQuery(expectedText: String) {
-        assertNotNull(mDevice.wait(Until.findObject(By.res("org.mozilla.fenix.debug:id/find_in_page_query_text")), waitingTime))
+        mDevice.waitNotNull(Until.findObject(By.res("org.mozilla.fenix.debug:id/find_in_page_query_text")), waitingTime)
         findInPageQuery().perform(clearText())
-        assertNotNull(mDevice.wait(Until.gone(By.res("org.mozilla.fenix.debug:id/find_in_page_result_text")), waitingTime))
+        mDevice.waitNotNull(Until.gone(By.res("org.mozilla.fenix.debug:id/find_in_page_result_text")), waitingTime)
         findInPageQuery().perform(typeText(expectedText))
-        assertNotNull(mDevice.wait(Until.findObject(By.res("org.mozilla.fenix.debug:id/find_in_page_result_text")), waitingTime))
+        mDevice.waitNotNull(Until.findObject(By.res("org.mozilla.fenix.debug:id/find_in_page_result_text")), waitingTime)
     }
 
     fun verifyFindNextInPageResult(ratioCounter: String) {
-        assertNotNull(mDevice.wait(Until.findObject(By.text(ratioCounter)), waitingTime))
+        mDevice.waitNotNull(Until.findObject(By.text(ratioCounter)), waitingTime)
         val element = mDevice.findObject(By.text(ratioCounter))
         findInPageResult().check(matches(withText((ratioCounter))))
         findInPageNextButton().click()
@@ -50,7 +50,7 @@ class FindInPageRobot {
     }
 
     fun verifyFindPrevInPageResult(ratioCounter: String) {
-        assertNotNull(mDevice.wait(Until.findObject(By.text(ratioCounter)), waitingTime))
+        mDevice.waitNotNull(Until.findObject(By.text(ratioCounter)), waitingTime)
         val element = mDevice.findObject(By.text(ratioCounter))
         findInPageResult().check(matches(withText((ratioCounter))))
         findInPagePrevButton().click()
