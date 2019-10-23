@@ -966,13 +966,35 @@ bool gfxPlatformFontList::FindAndAddFamilies(
     // since reading name table entries is expensive.
     // Although ASCII localized family names are possible they don't occur
     // in practice, so avoid pulling in names at startup.
-    if (!mOtherFamilyNamesInitialized && !IsAscii(aFamily)) {
-      InitOtherFamilyNames(
-          !(aFlags & FindFamiliesFlags::eForceOtherFamilyNamesLoading));
-      family = SharedFontList()->FindFamily(key);
-      if (family) {
-        aOutput->AppendElement(FamilyAndGeneric(family, aGeneric));
-        return true;
+    if (!mOtherFamilyNamesInitialized) {
+      bool triggerLoading = true;
+      bool mayDefer =
+          !(aFlags & FindFamiliesFlags::eForceOtherFamilyNamesLoading);
+      if (IsAscii(key)) {
+        // If `key` is an ASCII name, only trigger loading if it includes a
+        // space, and the "base" name (up to the last space) exists as a known
+        // family, so that this might be a legacy styled-family name.
+        const char* data = key.BeginReading();
+        int32_t index = key.Length();
+        while (--index > 0) {
+          if (data[index] == ' ') {
+            break;
+          }
+        }
+        nsAutoCString base(Substring(key, 0, index));
+        if (index > 0 && SharedFontList()->FindFamily(base)) {
+          mayDefer = false;
+        } else {
+          triggerLoading = false;
+        }
+      }
+      if (triggerLoading) {
+        InitOtherFamilyNames(mayDefer);
+        family = SharedFontList()->FindFamily(key);
+        if (family) {
+          aOutput->AppendElement(FamilyAndGeneric(family, aGeneric));
+          return true;
+        }
       }
       if (!family && !mOtherFamilyNamesInitialized &&
           !(aFlags & FindFamiliesFlags::eNoAddToNamesMissedWhenSearching)) {
