@@ -1245,14 +1245,14 @@ function addAutofillTasks(origins) {
   // Config:
   //   suggest.history = true
   //   suggest.bookmark = false
-  //   search for: bookmark
+  //   search for: unvisited bookmark
   //   prefix search: no
   //   prefix matches search: n/a
   //   origin matches search: yes
   //
   // Expected result:
   //   should autofill: no
-  add_task(async function suggestBookmarkFalse_bookmark() {
+  add_task(async function suggestBookmarkFalse_unvisitedBookmark() {
     await addBookmark({
       uri: "http://" + url,
     });
@@ -1281,14 +1281,14 @@ function addAutofillTasks(origins) {
   // Config:
   //   suggest.history = true
   //   suggest.bookmark = false
-  //   search for: bookmark
+  //   search for: unvisited bookmark
   //   prefix search: yes
   //   prefix matches search: yes
   //   origin matches search: yes
   //
   // Expected result:
   //   should autofill: no
-  add_task(async function suggestBookmarkFalse_bookmark_prefix() {
+  add_task(async function suggestBookmarkFalse_unvisitedBookmark_prefix_0() {
     await addBookmark({
       uri: "http://" + url,
     });
@@ -1308,6 +1308,544 @@ function addAutofillTasks(origins) {
     await check_autocomplete({
       search: "http://" + search,
       matches: [],
+    });
+    await cleanup();
+  });
+
+  // Tests interaction between the suggest.history and suggest.bookmark prefs.
+  //
+  // Config:
+  //   suggest.history = true
+  //   suggest.bookmark = false
+  //   search for: unvisited bookmark
+  //   prefix search: yes
+  //   prefix matches search: no
+  //   origin matches search: yes
+  //
+  // Expected result:
+  //   should autofill: no
+  add_task(async function suggestBookmarkFalse_unvisitedBookmark_prefix_1() {
+    await addBookmark({
+      uri: "ftp://" + url,
+    });
+    Services.prefs.setBoolPref("browser.urlbar.suggest.bookmark", false);
+    await check_autocomplete({
+      search: "http://" + search,
+      matches: [],
+    });
+    await cleanup();
+  });
+
+  // Tests interaction between the suggest.history and suggest.bookmark prefs.
+  //
+  // Config:
+  //   suggest.history = true
+  //   suggest.bookmark = false
+  //   search for: unvisited bookmark
+  //   prefix search: yes
+  //   prefix matches search: yes
+  //   origin matches search: no
+  //
+  // Expected result:
+  //   should autofill: no
+  add_task(async function suggestBookmarkFalse_unvisitedBookmark_prefix_2() {
+    await addBookmark({
+      uri: "http://non-matching-" + url,
+    });
+    Services.prefs.setBoolPref("browser.urlbar.suggest.bookmark", false);
+    await check_autocomplete({
+      search: "http://" + search,
+      matches: [],
+    });
+    await cleanup();
+  });
+
+  // Tests interaction between the suggest.history and suggest.bookmark prefs.
+  //
+  // Config:
+  //   suggest.history = true
+  //   suggest.bookmark = false
+  //   search for: unvisited bookmark
+  //   prefix search: yes
+  //   prefix matches search: no
+  //   origin matches search: no
+  //
+  // Expected result:
+  //   should autofill: no
+  add_task(async function suggestBookmarkFalse_unvisitedBookmark_prefix_3() {
+    await addBookmark({
+      uri: "ftp://non-matching-" + url,
+    });
+    Services.prefs.setBoolPref("browser.urlbar.suggest.bookmark", false);
+    await check_autocomplete({
+      search: "http://" + search,
+      matches: [],
+    });
+    await cleanup();
+  });
+
+  // Tests interaction between the suggest.history and suggest.bookmark prefs.
+  //
+  // Config:
+  //   suggest.history = true
+  //   suggest.bookmark = false
+  //   search for: visited bookmark above autofill threshold
+  //   prefix search: no
+  //   prefix matches search: n/a
+  //   origin matches search: yes
+  //
+  // Expected result:
+  //   should autofill: yes
+  add_task(async function suggestBookmarkFalse_visitedBookmark_above() {
+    await PlacesTestUtils.addVisits("http://" + url);
+    await addBookmark({
+      uri: "http://" + url,
+    });
+    Services.prefs.setBoolPref("browser.urlbar.suggest.bookmark", false);
+    await check_autocomplete({
+      search,
+      autofilled: url,
+      completed: "http://" + url,
+      matches: [
+        {
+          value: url,
+          comment,
+          style: ["autofill", "heuristic"],
+        },
+      ],
+    });
+    await cleanup();
+  });
+
+  // Tests interaction between the suggest.history and suggest.bookmark prefs.
+  //
+  // Config:
+  //   suggest.history = true
+  //   suggest.bookmark = false
+  //   search for: visited bookmark above autofill threshold
+  //   prefix search: yes
+  //   prefix matches search: yes
+  //   origin matches search: yes
+  //
+  // Expected result:
+  //   should autofill: yes
+  add_task(async function suggestBookmarkFalse_visitedBookmarkAbove_prefix_0() {
+    await PlacesTestUtils.addVisits("http://" + url);
+    await addBookmark({
+      uri: "http://" + url,
+    });
+    Services.prefs.setBoolPref("browser.urlbar.suggest.bookmark", false);
+    await check_autocomplete({
+      search: "http://" + search,
+      autofilled: "http://" + url,
+      completed: "http://" + url,
+      matches: [
+        {
+          value: "http://" + url,
+          comment,
+          style: ["autofill", "heuristic"],
+        },
+      ],
+    });
+    await cleanup();
+  });
+
+  // Tests interaction between the suggest.history and suggest.bookmark prefs.
+  //
+  // Config:
+  //   suggest.history = true
+  //   suggest.bookmark = false
+  //   search for: visited bookmark above autofill threshold
+  //   prefix search: yes
+  //   prefix matches search: no
+  //   origin matches search: yes
+  //
+  // Expected result:
+  //   should autofill: no
+  add_task(async function suggestBookmarkFalse_visitedBookmarkAbove_prefix_1() {
+    await PlacesTestUtils.addVisits("ftp://" + url);
+    await addBookmark({
+      uri: "ftp://" + url,
+    });
+    Services.prefs.setBoolPref("browser.urlbar.suggest.bookmark", false);
+    await check_autocomplete({
+      search: "http://" + search,
+      matches: [
+        {
+          value: "ftp://" + url,
+          comment: "A bookmark",
+          style: ["favicon"],
+        },
+      ],
+    });
+    await cleanup();
+  });
+
+  // Tests interaction between the suggest.history and suggest.bookmark prefs.
+  //
+  // Config:
+  //   suggest.history = true
+  //   suggest.bookmark = false
+  //   search for: visited bookmark above autofill threshold
+  //   prefix search: yes
+  //   prefix matches search: yes
+  //   origin matches search: no
+  //
+  // Expected result:
+  //   should autofill: no
+  add_task(async function suggestBookmarkFalse_visitedBookmarkAbove_prefix_2() {
+    await PlacesTestUtils.addVisits("http://non-matching-" + url);
+    await addBookmark({
+      uri: "http://non-matching-" + url,
+    });
+    Services.prefs.setBoolPref("browser.urlbar.suggest.bookmark", false);
+    await check_autocomplete({
+      search: "http://" + search,
+      matches: [
+        {
+          value: "http://non-matching-" + url,
+          comment: "A bookmark",
+          style: ["favicon"],
+        },
+      ],
+    });
+    await cleanup();
+  });
+
+  // Tests interaction between the suggest.history and suggest.bookmark prefs.
+  //
+  // Config:
+  //   suggest.history = true
+  //   suggest.bookmark = false
+  //   search for: visited bookmark above autofill threshold
+  //   prefix search: yes
+  //   prefix matches search: no
+  //   origin matches search: no
+  //
+  // Expected result:
+  //   should autofill: no
+  add_task(async function suggestBookmarkFalse_visitedBookmarkAbove_prefix_3() {
+    await PlacesTestUtils.addVisits("ftp://non-matching-" + url);
+    await addBookmark({
+      uri: "ftp://non-matching-" + url,
+    });
+    Services.prefs.setBoolPref("browser.urlbar.suggest.bookmark", false);
+    await check_autocomplete({
+      search: "http://" + search,
+      matches: [
+        {
+          value: "ftp://non-matching-" + url,
+          comment: "A bookmark",
+          style: ["favicon"],
+        },
+      ],
+    });
+    await cleanup();
+  });
+
+  // The following suggestBookmarkFalse_visitedBookmarkBelow* tests are similar
+  // to the suggestBookmarkFalse_visitedBookmarkAbove* tests, but instead of
+  // checking visited bookmarks above the autofill threshold, they check visited
+  // bookmarks below the threshold.  These tests don't make sense for URL
+  // queries (as opposed to origin queries) because URL queries don't use the
+  // same autofill threshold, so we skip them when !origins.
+
+  // Tests interaction between the suggest.history and suggest.bookmark prefs.
+  //
+  // Config:
+  //   suggest.history = true
+  //   suggest.bookmark = false
+  //   search for: visited bookmark below autofill threshold
+  //   prefix search: no
+  //   prefix matches search: n/a
+  //   origin matches search: yes
+  //
+  // Expected result:
+  //   should autofill: no
+  add_task(async function suggestBookmarkFalse_visitedBookmarkBelow() {
+    if (!origins) {
+      // See comment above suggestBookmarkFalse_visitedBookmarkBelow.
+      return;
+    }
+    // First, make sure that `url` is below the autofill threshold.
+    await PlacesTestUtils.addVisits("http://" + url);
+    for (let i = 0; i < 3; i++) {
+      await PlacesTestUtils.addVisits("http://some-other-" + url);
+    }
+    await check_autocomplete({
+      search,
+      matches: [
+        {
+          value: "http://some-other-" + url,
+          comment: "test visit for http://some-other-" + url,
+          style: ["favicon"],
+        },
+        {
+          value: "http://" + url,
+          comment: "test visit for http://" + url,
+          style: ["favicon"],
+        },
+      ],
+    });
+    // Now bookmark it and set suggest.bookmark to false.
+    await addBookmark({
+      uri: "http://" + url,
+    });
+    Services.prefs.setBoolPref("browser.urlbar.suggest.bookmark", false);
+    await check_autocomplete({
+      search,
+      matches: [
+        {
+          value: "http://some-other-" + url,
+          comment: "test visit for http://some-other-" + url,
+          style: ["favicon"],
+        },
+        {
+          value: "http://" + url,
+          comment: "A bookmark",
+          style: ["favicon"],
+        },
+      ],
+    });
+    await cleanup();
+  });
+
+  // Tests interaction between the suggest.history and suggest.bookmark prefs.
+  //
+  // Config:
+  //   suggest.history = true
+  //   suggest.bookmark = false
+  //   search for: visited bookmark below autofill threshold
+  //   prefix search: yes
+  //   prefix matches search: yes
+  //   origin matches search: yes
+  //
+  // Expected result:
+  //   should autofill: no
+  add_task(async function suggestBookmarkFalse_visitedBookmarkBelow_prefix_0() {
+    if (!origins) {
+      // See comment above suggestBookmarkFalse_visitedBookmarkBelow.
+      return;
+    }
+    // First, make sure that `url` is below the autofill threshold.
+    await PlacesTestUtils.addVisits("http://" + url);
+    for (let i = 0; i < 3; i++) {
+      await PlacesTestUtils.addVisits("http://some-other-" + url);
+    }
+    await check_autocomplete({
+      search: "http://" + search,
+      matches: [
+        {
+          value: "http://some-other-" + url,
+          comment: "test visit for http://some-other-" + url,
+          style: ["favicon"],
+        },
+        {
+          value: "http://" + url,
+          comment: "test visit for http://" + url,
+          style: ["favicon"],
+        },
+      ],
+    });
+    // Now bookmark it and set suggest.bookmark to false.
+    await addBookmark({
+      uri: "http://" + url,
+    });
+    Services.prefs.setBoolPref("browser.urlbar.suggest.bookmark", false);
+    await check_autocomplete({
+      search: "http://" + search,
+      matches: [
+        {
+          value: "http://some-other-" + url,
+          comment: "test visit for http://some-other-" + url,
+          style: ["favicon"],
+        },
+        {
+          value: "http://" + url,
+          comment: "A bookmark",
+          style: ["favicon"],
+        },
+      ],
+    });
+    await cleanup();
+  });
+
+  // Tests interaction between the suggest.history and suggest.bookmark prefs.
+  //
+  // Config:
+  //   suggest.history = true
+  //   suggest.bookmark = false
+  //   search for: visited bookmark below autofill threshold
+  //   prefix search: yes
+  //   prefix matches search: no
+  //   origin matches search: yes
+  //
+  // Expected result:
+  //   should autofill: no
+  add_task(async function suggestBookmarkFalse_visitedBookmarkBelow_prefix_1() {
+    if (!origins) {
+      // See comment above suggestBookmarkFalse_visitedBookmarkBelow.
+      return;
+    }
+    // First, make sure that `url` is below the autofill threshold.
+    await PlacesTestUtils.addVisits("ftp://" + url);
+    for (let i = 0; i < 3; i++) {
+      await PlacesTestUtils.addVisits("ftp://some-other-" + url);
+    }
+    await check_autocomplete({
+      search: "http://" + search,
+      matches: [
+        {
+          value: "ftp://some-other-" + url,
+          comment: "test visit for ftp://some-other-" + url,
+          style: ["favicon"],
+        },
+        {
+          value: "ftp://" + url,
+          comment: "test visit for ftp://" + url,
+          style: ["favicon"],
+        },
+      ],
+    });
+    // Now bookmark it and set suggest.bookmark to false.
+    await addBookmark({
+      uri: "ftp://" + url,
+    });
+    Services.prefs.setBoolPref("browser.urlbar.suggest.bookmark", false);
+    await check_autocomplete({
+      search: "http://" + search,
+      matches: [
+        {
+          value: "ftp://some-other-" + url,
+          comment: "test visit for ftp://some-other-" + url,
+          style: ["favicon"],
+        },
+        {
+          value: "ftp://" + url,
+          comment: "A bookmark",
+          style: ["favicon"],
+        },
+      ],
+    });
+    await cleanup();
+  });
+
+  // Tests interaction between the suggest.history and suggest.bookmark prefs.
+  //
+  // Config:
+  //   suggest.history = true
+  //   suggest.bookmark = false
+  //   search for: visited bookmark below autofill threshold
+  //   prefix search: yes
+  //   prefix matches search: yes
+  //   origin matches search: no
+  //
+  // Expected result:
+  //   should autofill: no
+  add_task(async function suggestBookmarkFalse_visitedBookmarkBelow_prefix_2() {
+    if (!origins) {
+      // See comment above suggestBookmarkFalse_visitedBookmarkBelow.
+      return;
+    }
+    // First, make sure that `url` is below the autofill threshold.
+    await PlacesTestUtils.addVisits("http://non-matching-" + url);
+    for (let i = 0; i < 3; i++) {
+      await PlacesTestUtils.addVisits("http://some-other-" + url);
+    }
+    await check_autocomplete({
+      search: "http://" + search,
+      matches: [
+        {
+          value: "http://some-other-" + url,
+          comment: "test visit for http://some-other-" + url,
+          style: ["favicon"],
+        },
+        {
+          value: "http://non-matching-" + url,
+          comment: "test visit for http://non-matching-" + url,
+          style: ["favicon"],
+        },
+      ],
+    });
+    // Now bookmark it and set suggest.bookmark to false.
+    await addBookmark({
+      uri: "http://non-matching-" + url,
+    });
+    Services.prefs.setBoolPref("browser.urlbar.suggest.bookmark", false);
+    await check_autocomplete({
+      search: "http://" + search,
+      matches: [
+        {
+          value: "http://some-other-" + url,
+          comment: "test visit for http://some-other-" + url,
+          style: ["favicon"],
+        },
+        {
+          value: "http://non-matching-" + url,
+          comment: "A bookmark",
+          style: ["favicon"],
+        },
+      ],
+    });
+    await cleanup();
+  });
+
+  // Tests interaction between the suggest.history and suggest.bookmark prefs.
+  //
+  // Config:
+  //   suggest.history = true
+  //   suggest.bookmark = false
+  //   search for: visited bookmark below autofill threshold
+  //   prefix search: yes
+  //   prefix matches search: no
+  //   origin matches search: no
+  //
+  // Expected result:
+  //   should autofill: no
+  add_task(async function suggestBookmarkFalse_visitedBookmarkBelow_prefix_3() {
+    if (!origins) {
+      // See comment above suggestBookmarkFalse_visitedBookmarkBelow.
+      return;
+    }
+    // First, make sure that `url` is below the autofill threshold.
+    await PlacesTestUtils.addVisits("ftp://non-matching-" + url);
+    for (let i = 0; i < 3; i++) {
+      await PlacesTestUtils.addVisits("ftp://some-other-" + url);
+    }
+    await check_autocomplete({
+      search: "http://" + search,
+      matches: [
+        {
+          value: "ftp://some-other-" + url,
+          comment: "test visit for ftp://some-other-" + url,
+          style: ["favicon"],
+        },
+        {
+          value: "ftp://non-matching-" + url,
+          comment: "test visit for ftp://non-matching-" + url,
+          style: ["favicon"],
+        },
+      ],
+    });
+    // Now bookmark it and set suggest.bookmark to false.
+    await addBookmark({
+      uri: "ftp://non-matching-" + url,
+    });
+    Services.prefs.setBoolPref("browser.urlbar.suggest.bookmark", false);
+    await check_autocomplete({
+      search: "http://" + search,
+      matches: [
+        {
+          value: "ftp://some-other-" + url,
+          comment: "test visit for ftp://some-other-" + url,
+          style: ["favicon"],
+        },
+        {
+          value: "ftp://non-matching-" + url,
+          comment: "A bookmark",
+          style: ["favicon"],
+        },
+      ],
     });
     await cleanup();
   });

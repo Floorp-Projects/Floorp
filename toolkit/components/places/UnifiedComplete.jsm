@@ -178,7 +178,7 @@ const SQL_AUTOFILL_FRECENCY_THRESHOLD = `(
   SELECT value FROM autofill_frecency_threshold
 )`;
 
-function originQuery(conditions = "") {
+function originQuery({ select = "", where = "", having = "" }) {
   return `${SQL_AUTOFILL_WITH}
           SELECT :query_type,
                  fixed_up_host || '/',
@@ -195,12 +195,13 @@ function originQuery(conditions = "") {
                      FROM moz_places
                      WHERE moz_places.origin_id = moz_origins.id
                    ) AS bookmarked
+                   ${select}
             FROM moz_origins
             WHERE host BETWEEN :searchString AND :searchString || X'FFFF'
-                  ${conditions}
+                  ${where}
             GROUP BY host
             HAVING host_frecency >= ${SQL_AUTOFILL_FRECENCY_THRESHOLD}
-                   OR bookmarked
+                   ${having}
             UNION ALL
             SELECT host,
                    fixup_url(host) AS fixed_up_host,
@@ -210,44 +211,62 @@ function originQuery(conditions = "") {
                      FROM moz_places
                      WHERE moz_places.origin_id = moz_origins.id
                    ) AS bookmarked
+                   ${select}
             FROM moz_origins
             WHERE host BETWEEN 'www.' || :searchString AND 'www.' || :searchString || X'FFFF'
-                  ${conditions}
+                  ${where}
             GROUP BY host
             HAVING host_frecency >= ${SQL_AUTOFILL_FRECENCY_THRESHOLD}
-                   OR bookmarked
+                   ${having}
           ) AS grouped_hosts
           JOIN moz_origins ON moz_origins.host = grouped_hosts.host
           ORDER BY frecency DESC, id DESC
           LIMIT 1 `;
 }
 
-const SQL_ORIGIN_QUERY = originQuery();
+const QUERY_ORIGIN_HISTORY_BOOKMARK = originQuery({
+  having: `OR bookmarked`,
+});
 
-const SQL_ORIGIN_PREFIX_QUERY = originQuery(
-  `AND prefix BETWEEN :prefix AND :prefix || X'FFFF'`
-);
+const QUERY_ORIGIN_PREFIX_HISTORY_BOOKMARK = originQuery({
+  where: `AND prefix BETWEEN :prefix AND :prefix || X'FFFF'`,
+  having: `OR bookmarked`,
+});
 
-const SQL_ORIGIN_NOT_BOOKMARKED_QUERY = originQuery(`AND NOT bookmarked`);
+const QUERY_ORIGIN_HISTORY = originQuery({
+  select: `, (
+    SELECT TOTAL(visit_count) > 0
+    FROM moz_places
+    WHERE moz_places.origin_id = moz_origins.id
+   ) AS visited`,
+  having: `AND (visited OR NOT bookmarked)`,
+});
 
-const SQL_ORIGIN_PREFIX_NOT_BOOKMARKED_QUERY = originQuery(
-  `AND NOT bookmarked
-   AND prefix BETWEEN :prefix AND :prefix || X'FFFF'`
-);
+const QUERY_ORIGIN_PREFIX_HISTORY = originQuery({
+  select: `, (
+    SELECT TOTAL(visit_count) > 0
+    FROM moz_places
+    WHERE moz_places.origin_id = moz_origins.id
+   ) AS visited`,
+  where: `AND prefix BETWEEN :prefix AND :prefix || X'FFFF'`,
+  having: `AND (visited OR NOT bookmarked)`,
+});
 
-const SQL_ORIGIN_BOOKMARKED_QUERY = originQuery(`AND bookmarked`);
+const QUERY_ORIGIN_BOOKMARK = originQuery({
+  having: `AND bookmarked`,
+});
 
-const SQL_ORIGIN_PREFIX_BOOKMARKED_QUERY = originQuery(
-  `AND bookmarked
-   AND prefix BETWEEN :prefix AND :prefix || X'FFFF'`
-);
+const QUERY_ORIGIN_PREFIX_BOOKMARK = originQuery({
+  where: `AND prefix BETWEEN :prefix AND :prefix || X'FFFF'`,
+  having: `AND bookmarked`,
+});
 
 // Result row indexes for urlQuery()
 const QUERYINDEX_URL_URL = 1;
 const QUERYINDEX_URL_STRIPPED_URL = 2;
 const QUERYINDEX_URL_FRECENCY = 3;
 
-function urlQuery(conditions1, conditions2) {
+function urlQuery(where1, where2) {
   // We limit the search to places that are either bookmarked or have a frecency
   // over some small, arbitrary threshold (20) in order to avoid scanning as few
   // rows as possible.  Keep in mind that we run this query every time the user
@@ -258,58 +277,66 @@ function urlQuery(conditions1, conditions2) {
                  :strippedURL,
                  frecency,
                  foreign_count > 0 AS bookmarked,
+                 visit_count > 0 AS visited,
                  id
           FROM moz_places
           WHERE rev_host = :revHost
-                AND (bookmarked OR frecency > 20)
-                ${conditions1}
+                ${where1}
           UNION ALL
           SELECT :query_type,
                  url,
                  :strippedURL,
                  frecency,
                  foreign_count > 0 AS bookmarked,
+                 visit_count > 0 AS visited,
                  id
           FROM moz_places
           WHERE rev_host = :revHost || 'www.'
-                AND (bookmarked OR frecency > 20)
-                ${conditions2}
+                ${where2}
           ORDER BY frecency DESC, id DESC
           LIMIT 1 `;
 }
 
-const SQL_URL_QUERY = urlQuery(
-  `AND strip_prefix_and_userinfo(url) BETWEEN :strippedURL AND :strippedURL || X'FFFF'`,
-  `AND strip_prefix_and_userinfo(url) BETWEEN 'www.' || :strippedURL AND 'www.' || :strippedURL || X'FFFF'`
-);
-
-const SQL_URL_PREFIX_QUERY = urlQuery(
-  `AND url BETWEEN :prefix || :strippedURL AND :prefix || :strippedURL || X'FFFF'`,
-  `AND url BETWEEN :prefix || 'www.' || :strippedURL AND :prefix || 'www.' || :strippedURL || X'FFFF'`
-);
-
-const SQL_URL_NOT_BOOKMARKED_QUERY = urlQuery(
-  `AND NOT bookmarked
+const QUERY_URL_HISTORY_BOOKMARK = urlQuery(
+  `AND (bookmarked OR frecency > 20)
    AND strip_prefix_and_userinfo(url) BETWEEN :strippedURL AND :strippedURL || X'FFFF'`,
-  `AND NOT bookmarked
+  `AND (bookmarked OR frecency > 20)
    AND strip_prefix_and_userinfo(url) BETWEEN 'www.' || :strippedURL AND 'www.' || :strippedURL || X'FFFF'`
 );
 
-const SQL_URL_PREFIX_NOT_BOOKMARKED_QUERY = urlQuery(
-  `AND NOT bookmarked
+const QUERY_URL_PREFIX_HISTORY_BOOKMARK = urlQuery(
+  `AND (bookmarked OR frecency > 20)
    AND url BETWEEN :prefix || :strippedURL AND :prefix || :strippedURL || X'FFFF'`,
-  `AND NOT bookmarked
+  `AND (bookmarked OR frecency > 20)
    AND url BETWEEN :prefix || 'www.' || :strippedURL AND :prefix || 'www.' || :strippedURL || X'FFFF'`
 );
 
-const SQL_URL_BOOKMARKED_QUERY = urlQuery(
+const QUERY_URL_HISTORY = urlQuery(
+  `AND (visited OR NOT bookmarked)
+   AND frecency > 20
+   AND strip_prefix_and_userinfo(url) BETWEEN :strippedURL AND :strippedURL || X'FFFF'`,
+  `AND (visited OR NOT bookmarked)
+   AND frecency > 20
+   AND strip_prefix_and_userinfo(url) BETWEEN 'www.' || :strippedURL AND 'www.' || :strippedURL || X'FFFF'`
+);
+
+const QUERY_URL_PREFIX_HISTORY = urlQuery(
+  `AND (visited OR NOT bookmarked)
+   AND frecency > 20
+   AND url BETWEEN :prefix || :strippedURL AND :prefix || :strippedURL || X'FFFF'`,
+  `AND (visited OR NOT bookmarked)
+   AND frecency > 20
+   AND url BETWEEN :prefix || 'www.' || :strippedURL AND :prefix || 'www.' || :strippedURL || X'FFFF'`
+);
+
+const QUERY_URL_BOOKMARK = urlQuery(
   `AND bookmarked
    AND strip_prefix_and_userinfo(url) BETWEEN :strippedURL AND :strippedURL || X'FFFF'`,
   `AND bookmarked
    AND strip_prefix_and_userinfo(url) BETWEEN 'www.' || :strippedURL AND 'www.' || :strippedURL || X'FFFF'`
 );
 
-const SQL_URL_PREFIX_BOOKMARKED_QUERY = urlQuery(
+const QUERY_URL_PREFIX_BOOKMARK = urlQuery(
   `AND bookmarked
    AND url BETWEEN :prefix || :strippedURL AND :prefix || :strippedURL || X'FFFF'`,
   `AND bookmarked
@@ -2623,23 +2650,25 @@ Search.prototype = {
 
     if (this.hasBehavior("history") && this.hasBehavior("bookmark")) {
       return [
-        this._strippedPrefix ? SQL_ORIGIN_PREFIX_QUERY : SQL_ORIGIN_QUERY,
+        this._strippedPrefix
+          ? QUERY_ORIGIN_PREFIX_HISTORY_BOOKMARK
+          : QUERY_ORIGIN_HISTORY_BOOKMARK,
         opts,
       ];
     }
     if (this.hasBehavior("history")) {
       return [
         this._strippedPrefix
-          ? SQL_ORIGIN_PREFIX_NOT_BOOKMARKED_QUERY
-          : SQL_ORIGIN_NOT_BOOKMARKED_QUERY,
+          ? QUERY_ORIGIN_PREFIX_HISTORY
+          : QUERY_ORIGIN_HISTORY,
         opts,
       ];
     }
     if (this.hasBehavior("bookmark")) {
       return [
         this._strippedPrefix
-          ? SQL_ORIGIN_PREFIX_BOOKMARKED_QUERY
-          : SQL_ORIGIN_BOOKMARKED_QUERY,
+          ? QUERY_ORIGIN_PREFIX_BOOKMARK
+          : QUERY_ORIGIN_BOOKMARK,
         opts,
       ];
     }
@@ -2693,23 +2722,21 @@ Search.prototype = {
 
     if (this.hasBehavior("history") && this.hasBehavior("bookmark")) {
       return [
-        this._strippedPrefix ? SQL_URL_PREFIX_QUERY : SQL_URL_QUERY,
+        this._strippedPrefix
+          ? QUERY_URL_PREFIX_HISTORY_BOOKMARK
+          : QUERY_URL_HISTORY_BOOKMARK,
         opts,
       ];
     }
     if (this.hasBehavior("history")) {
       return [
-        this._strippedPrefix
-          ? SQL_URL_PREFIX_NOT_BOOKMARKED_QUERY
-          : SQL_URL_NOT_BOOKMARKED_QUERY,
+        this._strippedPrefix ? QUERY_URL_PREFIX_HISTORY : QUERY_URL_HISTORY,
         opts,
       ];
     }
     if (this.hasBehavior("bookmark")) {
       return [
-        this._strippedPrefix
-          ? SQL_URL_PREFIX_BOOKMARKED_QUERY
-          : SQL_URL_BOOKMARKED_QUERY,
+        this._strippedPrefix ? QUERY_URL_PREFIX_BOOKMARK : QUERY_URL_BOOKMARK,
         opts,
       ];
     }
