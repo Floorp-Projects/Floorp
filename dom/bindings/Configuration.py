@@ -832,17 +832,6 @@ def getTypesFromDescriptor(descriptor):
     return types
 
 
-def getFlatTypes(types):
-    retval = set()
-    for type in types:
-        type = type.unroll()
-        if type.isUnion():
-            retval |= set(type.flatMemberTypes)
-        else:
-            retval.add(type)
-    return retval
-
-
 def getTypesFromDictionary(dictionary):
     """
     Get all member types for this dictionary

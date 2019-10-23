@@ -7,6 +7,7 @@
 // Interfaces and structures for use by the debugger and other devtools.
 
 // Data sent to the devtools when new data has been received in an HTML parse.
+[GenerateToJSON]
 dictionary HTMLContent {
   DOMString parserID;
   DOMString uri;

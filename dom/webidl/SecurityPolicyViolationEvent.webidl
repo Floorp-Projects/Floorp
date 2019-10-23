@@ -27,6 +27,7 @@ interface SecurityPolicyViolationEvent : Event
     readonly attribute long           columnNumber;
 };
 
+[GenerateInitFromJSON, GenerateToJSON]
 dictionary SecurityPolicyViolationEventInit : EventInit
 {
     DOMString      documentURI = "";
