@@ -885,7 +885,7 @@ class AsyncPanZoomController {
    * NOTE: This must be converted to LayoutDevicePoint relative to the child
    * document before sending over IPC to a child process.
    */
-  bool ConvertToGecko(const ScreenIntPoint& aPoint, LayoutDevicePoint* aOut);
+  Maybe<LayoutDevicePoint> ConvertToGecko(const ScreenIntPoint& aPoint);
 
   enum AxisLockMode {
     FREE,     /* No locking at all */
