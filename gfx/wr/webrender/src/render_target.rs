@@ -16,7 +16,7 @@ use crate::gpu_cache::{GpuCache, GpuCacheAddress};
 use crate::gpu_types::{BorderInstance, SvgFilterInstance, BlurDirection, BlurInstance, PrimitiveHeaders, ScalingInstance};
 use crate::gpu_types::{TransformPalette, ZBufferIdGenerator};
 use crate::internal_types::{FastHashMap, TextureSource, LayerIndex, Swizzle, SavedTargetIndex};
-use crate::picture::SurfaceInfo;
+use crate::picture::{SurfaceInfo, ResolvedSurfaceTexture};
 use crate::prim_store::{PrimitiveStore, DeferredResolve, PrimitiveScratchBuffer, PrimitiveVisibilityMask};
 use crate::prim_store::gradient::GRADIENT_FP_STOPS;
 use crate::render_backend::DataStores;
@@ -719,8 +719,7 @@ impl RenderTarget for AlphaRenderTarget {
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct PictureCacheTarget {
-    pub texture: TextureSource,
-    pub layer: usize,
+    pub surface: ResolvedSurfaceTexture,
     pub alpha_batch_container: AlphaBatchContainer,
     pub clear_color: Option<ColorF>,
 }

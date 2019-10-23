@@ -201,6 +201,7 @@ pub extern crate api;
 extern crate webrender_build;
 
 #[doc(hidden)]
+pub use crate::composite::{Compositor, NativeSurfaceId};
 pub use crate::device::{build_shader_strings, UploadMethod, VertexUsageHint, get_gl_target};
 pub use crate::device::{ProgramBinary, ProgramCache, ProgramCacheObserver, FormatDesc};
 pub use crate::device::Device;
