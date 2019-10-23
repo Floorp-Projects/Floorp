@@ -883,17 +883,6 @@ struct GenericHuffmanTable {
 // Part of variants `HuffmanTableValue` and `HuffmanTableListLength`.
 struct HuffmanTableInitializing {};
 
-// These classes are all parts of variant `HuffmanTableValue`.
-
-using HuffmanTableExplicitSymbolsF64 = GenericHuffmanTable;
-using HuffmanTableExplicitSymbolsU32 = GenericHuffmanTable;
-using HuffmanTableIndexedSymbolsSum = GenericHuffmanTable;
-using HuffmanTableIndexedSymbolsBool = GenericHuffmanTable;
-using HuffmanTableIndexedSymbolsMaybeInterface = GenericHuffmanTable;
-using HuffmanTableIndexedSymbolsStringEnum = GenericHuffmanTable;
-using HuffmanTableIndexedSymbolsLiteralString = GenericHuffmanTable;
-using HuffmanTableIndexedSymbolsOptionalLiteralString = GenericHuffmanTable;
-
 // A single Huffman table, used for values.
 using HuffmanTableValue =
     mozilla::Variant<HuffmanTableUnreachable,  // Default value.
