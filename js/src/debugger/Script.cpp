@@ -2078,12 +2078,14 @@ struct DebuggerScript::SetBreakpointMatcher {
     if (!site) {
       return false;
     }
-    if (cx_->zone()->new_<Breakpoint>(dbg_, site, handler_)) {
-      AddCellMemory(script, sizeof(Breakpoint), MemoryUse::Breakpoint);
-      return true;
+
+    if (!cx_->zone()->new_<Breakpoint>(dbg_, site, handler_)) {
+      site->destroyIfEmpty(cx_->runtime()->defaultFreeOp());
+      return false;
     }
-    site->destroyIfEmpty(cx_->runtime()->defaultFreeOp());
-    return false;
+    AddCellMemory(script, sizeof(Breakpoint), MemoryUse::Breakpoint);
+
+    return true;
   }
   ReturnType match(Handle<LazyScript*> lazyScript) {
     RootedScript script(cx_, DelazifyScript(cx_, lazyScript));
@@ -2104,12 +2106,14 @@ struct DebuggerScript::SetBreakpointMatcher {
     if (!site) {
       return false;
     }
-    if (cx_->zone()->new_<Breakpoint>(dbg_, site, handler_)) {
-      AddCellMemory(wasmInstance, sizeof(Breakpoint), MemoryUse::Breakpoint);
-      return true;
+
+    if (!cx_->zone()->new_<Breakpoint>(dbg_, site, handler_)) {
+      site->destroyIfEmpty(cx_->runtime()->defaultFreeOp());
+      return false;
     }
-    site->destroyIfEmpty(cx_->runtime()->defaultFreeOp());
-    return false;
+    AddCellMemory(wasmInstance, sizeof(Breakpoint), MemoryUse::Breakpoint);
+
+    return true;
   }
 };
 
