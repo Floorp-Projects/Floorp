@@ -63,7 +63,7 @@ async function testIdentityState(hasException) {
 
   promise = waitForContentBlockingEvent();
 
-  await ContentTask.spawn(tab.linkedBrowser, {}, function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], function() {
     content.postMessage("cryptomining", "*");
   });
 
@@ -118,7 +118,7 @@ async function testSubview(hasException) {
   }
 
   promise = waitForContentBlockingEvent();
-  await ContentTask.spawn(tab.linkedBrowser, {}, function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], function() {
     content.postMessage("cryptomining", "*");
   });
   await promise;
@@ -211,7 +211,7 @@ async function testCategoryItem() {
 
   promise = waitForContentBlockingEvent();
 
-  await ContentTask.spawn(tab.linkedBrowser, {}, function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], function() {
     content.postMessage("cryptomining", "*");
   });
 
