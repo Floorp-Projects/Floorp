@@ -875,25 +875,24 @@ struct AtomizeUTF8OrWTF8CharsWrapper {
       : utf8(chars), encoding(minEncode) {}
 };
 
-// MakeFlatStringForAtomization has 4 variants.
+// MakeLinearStringForAtomization has 4 variants.
 // This is used by Latin1Char and char16_t.
 template <typename CharT>
-static MOZ_ALWAYS_INLINE JSFlatString* MakeFlatStringForAtomization(
+static MOZ_ALWAYS_INLINE JSLinearString* MakeLinearStringForAtomization(
     JSContext* cx, const CharT* chars, size_t length) {
   return NewStringCopyN<NoGC>(cx, chars, length);
 }
 
-// MakeFlatStringForAtomization has one further variant -- a non-template
+// MakeLinearStringForAtomization has one further variant -- a non-template
 // overload accepting LittleEndianChars.
-static MOZ_ALWAYS_INLINE JSFlatString* MakeFlatStringForAtomization(
+static MOZ_ALWAYS_INLINE JSLinearString* MakeLinearStringForAtomization(
     JSContext* cx, LittleEndianChars chars, size_t length) {
   return NewStringFromLittleEndianNoGC(cx, chars, length);
 }
 
 template <typename CharT, typename WrapperT>
-static MOZ_ALWAYS_INLINE JSFlatString* MakeUTF8AtomHelper(JSContext* cx,
-                                                          const WrapperT* chars,
-                                                          size_t length) {
+static MOZ_ALWAYS_INLINE JSLinearString* MakeUTF8AtomHelper(
+    JSContext* cx, const WrapperT* chars, size_t length) {
   if (JSInlineString::lengthFits<CharT>(length)) {
     CharT* storage;
     JSInlineString* str = AllocateInlineString<NoGC>(cx, length, &storage);
@@ -919,13 +918,13 @@ static MOZ_ALWAYS_INLINE JSFlatString* MakeUTF8AtomHelper(JSContext* cx,
   InflateUTF8CharsToBufferAndTerminate(chars->utf8, newStr.get(), length,
                                        chars->encoding);
 
-  return JSFlatString::new_<NoGC>(cx, std::move(newStr), length);
+  return JSLinearString::new_<NoGC>(cx, std::move(newStr), length);
 }
 
-// Another 2 variants of MakeFlatStringForAtomization.
+// Another 2 variants of MakeLinearStringForAtomization.
 // This is used by AtomizeUTF8OrWTF8CharsWrapper with UTF8Chars or WTF8Chars.
 template <typename InputCharsT>
-/* static */ MOZ_ALWAYS_INLINE JSFlatString* MakeFlatStringForAtomization(
+/* static */ MOZ_ALWAYS_INLINE JSLinearString* MakeLinearStringForAtomization(
     JSContext* cx, const AtomizeUTF8OrWTF8CharsWrapper<InputCharsT>* chars,
     size_t length) {
   if (length == 0) {
@@ -944,15 +943,15 @@ static MOZ_ALWAYS_INLINE JSAtom* AllocateNewAtom(
     const Maybe<uint32_t>& indexValue, const AtomHasher::Lookup& lookup) {
   AutoAllocInAtomsZone ac(cx);
 
-  JSFlatString* flat = MakeFlatStringForAtomization(cx, chars, length);
-  if (!flat) {
+  JSLinearString* linear = MakeLinearStringForAtomization(cx, chars, length);
+  if (!linear) {
     // Grudgingly forgo last-ditch GC. The alternative would be to release
     // the lock, manually GC here, and retry from the top.
     ReportOutOfMemory(cx);
     return nullptr;
   }
 
-  JSAtom* atom = flat->morphAtomizedStringIntoAtom(lookup.hash);
+  JSAtom* atom = linear->morphAtomizedStringIntoAtom(lookup.hash);
   MOZ_ASSERT(atom->hash() == lookup.hash);
 
   if (pin) {

@@ -3638,9 +3638,9 @@ bool js::str_fromCodePoint(JSContext* cx, unsigned argc, Value* vp) {
   // Step 3.
   static_assert(
       ARGS_LENGTH_MAX < std::numeric_limits<decltype(args.length())>::max() / 2,
-      "|args.length() * 2 + 1| does not overflow");
-  auto elements = cx->make_pod_array<char16_t>(args.length() * 2 + 1,
-                                               js::StringBufferArena);
+      "|args.length() * 2| does not overflow");
+  auto elements =
+      cx->make_pod_array<char16_t>(args.length() * 2, js::StringBufferArena);
   if (!elements) {
     return false;
   }
@@ -3657,7 +3657,6 @@ bool js::str_fromCodePoint(JSContext* cx, unsigned argc, Value* vp) {
     // Step 5.e.
     unicode::UTF16Encode(codePoint, elements.get(), &length);
   }
-  elements[length] = 0;
 
   // Step 6.
   JSString* str = NewString<CanGC>(cx, std::move(elements), length);

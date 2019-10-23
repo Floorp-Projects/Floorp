@@ -2003,7 +2003,7 @@ static bool PrepareAndExecuteRegExp(
   }
 
   // Check for a linear input string.
-  masm.branchIfRopeOrExternal(input, temp1, failure);
+  masm.branchIfRope(input, failure);
 
   // Get the RegExpShared for the RegExp.
   masm.loadPtr(Address(regexp, NativeObject::getFixedSlotOffset(
@@ -2282,7 +2282,7 @@ void CreateDependentString::generate(MacroAssembler& masm,
                          ? JSString::INIT_THIN_INLINE_FLAGS
                          : kind == FallbackKind::FatInlineString
                                ? JSString::INIT_FAT_INLINE_FLAGS
-                               : JSString::DEPENDENT_FLAGS;
+                               : JSString::INIT_DEPENDENT_FLAGS;
     if (encoding_ == CharEncoding::Latin1) {
       flags |= JSString::LATIN1_CHARS_BIT;
     }
@@ -2386,9 +2386,6 @@ void CreateDependentString::generate(MacroAssembler& masm,
 
     CopyStringChars(masm, string_, temp2_, temp1_, base, encoding_);
 
-    // Null-terminate.
-    masm.storeChar(Imm32(0), Address(string_, 0), encoding_);
-
     masm.pop(base);
     masm.pop(string_);
 
@@ -2418,8 +2415,8 @@ void CreateDependentString::generate(MacroAssembler& masm,
     Label noBase;
     masm.load32(Address(base, JSString::offsetOfFlags()), temp2_);
     masm.and32(Imm32(JSString::TYPE_FLAGS_MASK), temp2_);
-    masm.branch32(Assembler::NotEqual, temp2_, Imm32(JSString::DEPENDENT_FLAGS),
-                  &noBase);
+    masm.branchTest32(Assembler::Zero, temp2_, Imm32(JSString::DEPENDENT_BIT),
+                      &noBase);
     masm.loadDependentStringBase(base, temp1_);
     masm.storeDependentStringBase(temp1_, string_);
     masm.bind(&noBase);
@@ -8736,9 +8733,6 @@ static void ConcatInlineString(MacroAssembler& masm, Register lhs, Register rhs,
   // Copy rhs chars. Clobbers the rhs register.
   copyChars(rhs);
 
-  // Null-terminate.
-  masm.storeChar(Imm32(0), Address(temp2, 0), encoding);
-
   masm.ret();
 }
 
@@ -8779,7 +8773,7 @@ void CodeGenerator::visitSubstr(LSubstr* lir) {
 
   // Use slow path for ropes.
   masm.bind(&nonZero);
-  masm.branchIfRopeOrExternal(string, temp, slowPath);
+  masm.branchIfRope(string, slowPath);
 
   // Handle inlined strings by creating a FatInlineString.
   masm.branchTest32(Assembler::Zero, stringFlags,
@@ -8802,7 +8796,6 @@ void CodeGenerator::visitSubstr(LSubstr* lir) {
     masm.loadInlineStringCharsForStore(output, temp2);
     CopyStringChars(masm, temp2, temp, length, temp3, encoding);
     masm.loadStringLength(output, length);
-    masm.storeChar(Imm32(0), Address(temp2, 0), encoding);
     if (temp2 == string) {
       masm.pop(string);
     }
@@ -8821,7 +8814,7 @@ void CodeGenerator::visitSubstr(LSubstr* lir) {
   masm.storeDependentStringBase(string, output);
 
   auto initializeDependentString = [&](CharEncoding encoding) {
-    uint32_t flags = JSString::DEPENDENT_FLAGS;
+    uint32_t flags = JSString::INIT_DEPENDENT_FLAGS;
     if (encoding == CharEncoding::Latin1) {
       flags |= JSString::LATIN1_CHARS_BIT;
     }
@@ -9187,9 +9180,6 @@ void CodeGenerator::visitFromCodePoint(LFromCodePoint* lir) {
 
       masm.store16(codePoint, Address(temp1, 0));
 
-      // Null-terminate.
-      masm.store16(Imm32(0), Address(temp1, sizeof(char16_t)));
-
       masm.jump(done);
     }
     masm.bind(&isSupplementary);
@@ -9214,9 +9204,6 @@ void CodeGenerator::visitFromCodePoint(LFromCodePoint* lir) {
       masm.or32(Imm32(unicode::TrailSurrogateMin), temp2);
 
       masm.store16(temp2, Address(temp1, sizeof(char16_t)));
-
-      // Null-terminate.
-      masm.store16(Imm32(0), Address(temp1, 2 * sizeof(char16_t)));
     }
   }
 
