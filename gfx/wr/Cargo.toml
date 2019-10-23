@@ -5,6 +5,7 @@ members = [
     "webrender",
     "webrender_api",
     "wrench",
+    "example-compositor/compositor",
 ]
 
 [profile.release]
