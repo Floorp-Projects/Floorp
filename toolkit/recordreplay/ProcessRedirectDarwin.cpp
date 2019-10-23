@@ -2092,6 +2092,7 @@ static SystemRedirection gSystemRedirections[] = {
     {"AcquireFirstMatchingEventInQueue", RR_ScalarRval},
     {"CFArrayAppendValue"},
     {"CFArrayCreate", RR_ScalarRval, nullptr, MM_CFArrayCreate},
+    {"CFArrayCreateMutable", RR_ScalarRval},
     {"CFArrayGetCount", RR_ScalarRval, nullptr, MM_CFTypeArg<0>},
     {"CFArrayGetValueAtIndex", RR_ScalarRval, nullptr,
      MM_CFArrayGetValueAtIndex},
