@@ -607,8 +607,7 @@ class UrlbarInput {
         break;
       }
       case UrlbarUtils.RESULT_TYPE.TIP: {
-        let helpPicked = element.classList.contains("urlbarView-tip-help");
-        if (helpPicked) {
+        if (element.classList.contains("urlbarView-tip-help")) {
           url = result.payload.helpUrl;
         }
         if (!url) {
@@ -625,7 +624,7 @@ class UrlbarInput {
             Cu.reportError(`Provider not found: ${result.providerName}`);
             return;
           }
-          provider.pickResult(result, { helpPicked });
+          provider.pickResult(result);
           return;
         }
         break;
