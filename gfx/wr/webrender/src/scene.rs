@@ -5,6 +5,7 @@
 use api::{BuiltDisplayList, ColorF, DynamicProperties, Epoch, FontRenderMode};
 use api::{PipelineId, PropertyBinding, PropertyBindingId, MixBlendMode, StackingContext};
 use api::units::*;
+use crate::composite::CompositeMode;
 use crate::clip::{ClipStore, ClipDataStore};
 use crate::clip_scroll_tree::ClipScrollTree;
 use crate::frame_builder::{ChasePrimitive, FrameBuilderConfig};
@@ -251,6 +252,7 @@ impl BuiltScene {
                 advanced_blend_is_coherent: false,
                 batch_lookback_count: 0,
                 background_color: None,
+                composite_mode: CompositeMode::Draw,
             },
         }
     }

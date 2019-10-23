@@ -1224,13 +1224,12 @@ impl BatchBuilder {
                                                 z_id,
                                             });
                                         }
-                                        TileSurface::Texture { handle, .. } => {
-                                            let cache_item = ctx.resource_cache.texture_cache.get(handle);
+                                        TileSurface::Texture { descriptor, .. } => {
+                                            let surface = descriptor.resolve(ctx.resource_cache);
 
                                             let composite_tile = CompositeTile {
                                                 surface: CompositeTileSurface::Texture {
-                                                    texture_id: cache_item.texture_id,
-                                                    texture_layer: cache_item.texture_layer,
+                                                    surface,
                                                 },
                                                 rect: device_rect,
                                                 dirty_rect,
