@@ -43,33 +43,42 @@ class FrameDescriptorFront extends FrontClassWithSpec(frameDescriptorSpec) {
   }
 
   async getTarget() {
+    // Only return the cached Target if it is still alive.
+    // It may have been destroyed in case of navigation trigerring a load in another
+    // process.
     if (this._frameTargetFront && this._frameTargetFront.actorID) {
       return this._frameTargetFront;
     }
+    // Otherwise, ensure that we don't try to spawn more than one Target by
+    // returning the pending promise
     if (this._targetFrontPromise) {
       return this._targetFrontPromise;
     }
     this._targetFrontPromise = (async () => {
+      let target = null;
       try {
         const targetForm = await super.getTarget();
+        // getTarget uses 'json' in the specification type and this prevents converting
+        // actor exception into front exceptions
         if (targetForm.error) {
-          this._targetFrontPromise = null;
-          return null;
+          throw new Error(targetForm.error);
         }
-        this._frameTargetFront = await this._createFrameTarget(targetForm);
-        await this._frameTargetFront.attach();
-        // clear the promise if we are finished so that we can re-connect if
-        // necessary
-        this._targetFrontPromise = null;
-        return this._frameTargetFront;
+        target = await this._createFrameTarget(targetForm);
+        await target.attach();
       } catch (e) {
         // This is likely to happen if we get a lot of events which drop previous
         // frames.
         console.log(
           `Request to connect to frameDescriptor "${this.id}" failed: ${e}`
         );
-        return null;
       }
+      // Save the reference to the target only after the call to attach
+      // so that getTarget always returns the attached target in case of concurrent calls
+      this._frameTargetFront = target;
+      // clear the promise if we are finished so that we can re-connect if
+      // necessary
+      this._targetFrontPromise = null;
+      return target;
     })();
     return this._targetFrontPromise;
   }
