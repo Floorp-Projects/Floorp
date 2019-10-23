@@ -14,7 +14,7 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(FeaturePolicy, mParentNode)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(FeaturePolicy)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(FeaturePolicy)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(FeaturePolicy)
 
@@ -82,11 +82,20 @@ void FeaturePolicy::SetDeclaredPolicy(Document* aDocument,
                                       nsIPrincipal* aSrcOrigin) {
   ResetDeclaredPolicy();
 
+  mDeclaredString = aPolicyString;
+  mSelfOrigin = aSelfOrigin;
+  mSrcOrigin = aSrcOrigin;
+
   Unused << NS_WARN_IF(!FeaturePolicyParser::ParseString(
       aPolicyString, aDocument, aSelfOrigin, aSrcOrigin, mFeatures));
 }
 
-void FeaturePolicy::ResetDeclaredPolicy() { mFeatures.Clear(); }
+void FeaturePolicy::ResetDeclaredPolicy() {
+  mFeatures.Clear();
+  mDeclaredString.Truncate();
+  mSelfOrigin = nullptr;
+  mSrcOrigin = nullptr;
+}
 
 JSObject* FeaturePolicy::WrapObject(JSContext* aCx,
                                     JS::Handle<JSObject*> aGivenProto) {

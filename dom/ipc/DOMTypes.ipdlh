@@ -115,6 +115,15 @@ struct FrameScriptInfo
   bool runInGlobalScope;
 };
 
+struct FeaturePolicyInfo
+{
+  nsString[]   inheritedDeniedFeatureNames;
+  nsString     declaredString;
+  nsIPrincipal defaultOrigin;
+  nsIPrincipal selfOrigin;
+  nsIPrincipal srcOrigin;
+};
+
 /**
  * The information required to complete a window creation request.
  */
