@@ -3803,7 +3803,7 @@ void Debugger::trace(JSTracer* trc) {
   for (FrameMap::Range r = frames.all(); !r.empty(); r.popFront()) {
     HeapPtr<DebuggerFrame*>& frameobj = r.front().value();
     TraceEdge(trc, &frameobj, "live Debugger.Frame");
-    MOZ_ASSERT(frameobj->getPrivate(frameobj->numFixedSlotsMaybeForwarded()));
+    MOZ_ASSERT(frameobj->isLiveMaybeForwarded());
   }
 
   allocationsLog.trace(trc);
