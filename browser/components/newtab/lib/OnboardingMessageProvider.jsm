@@ -173,6 +173,16 @@ const ONBOARDING_MESSAGES = () => [
     },
   },
   {
+    id: "TRAILHEAD_9",
+    targeting: "trailheadInterrupt == 'modal_variant_f'",
+    utm_term: "trailhead-modal_variant_f",
+    ...TRAILHEAD_ONBOARDING_TEMPLATE,
+    content: {
+      ...JOIN_CONTENT,
+      form: TRAILHEAD_MODAL_VARIANT_CONTENT.form,
+    },
+  },
+  {
     id: "FULL_PAGE_1",
     targeting: "trailheadInterrupt == 'full_page_d'",
     utm_term: "trailhead-full_page_d",
