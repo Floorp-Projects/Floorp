@@ -68,13 +68,14 @@ use crate::clip::{ClipStore, ClipChainInstance, ClipDataHandle, ClipChainId};
 use crate::clip_scroll_tree::{ROOT_SPATIAL_NODE_INDEX,
     ClipScrollTree, CoordinateSpaceMapping, SpatialNodeIndex, VisibleFace, CoordinateSystemId
 };
+use crate::composite::{CompositeMode, CompositeState, NativeSurfaceId};
 use crate::debug_colors;
 use euclid::{vec3, Point2D, Scale, Size2D, Vector2D, Rect};
 use euclid::approxeq::ApproxEq;
 use crate::filterdata::SFilterData;
 use crate::frame_builder::{FrameVisibilityContext, FrameVisibilityState};
 use crate::intern::ItemUid;
-use crate::internal_types::{FastHashMap, FastHashSet, PlaneSplitter, Filter, PlaneSplitAnchor};
+use crate::internal_types::{FastHashMap, FastHashSet, PlaneSplitter, Filter, PlaneSplitAnchor, TextureSource};
 use crate::frame_builder::{FrameBuildingContext, FrameBuildingState, PictureState, PictureContext};
 use crate::gpu_cache::{GpuCache, GpuCacheAddress, GpuCacheHandle};
 use crate::gpu_types::UvRectKind;
@@ -339,6 +340,9 @@ struct TilePostUpdateContext<'a> {
 struct TilePostUpdateState<'a> {
     /// Allow access to the texture cache for requesting tiles
     resource_cache: &'a ResourceCache,
+
+    /// Current configuration and setup for compositing all the picture cache tiles in renderer.
+    composite_state: &'a mut CompositeState,
 }
 
 /// Information about the dependencies of a single primitive instance.
@@ -392,16 +396,84 @@ impl PrimitiveDependencyInfo {
     }
 }
 
-/// A stable ID for a given tile, to help debugging.
+/// A stable ID for a given tile, to help debugging. These are also used
+/// as unique identfiers for tile surfaces when using a native compositor.
 #[derive(Debug, Copy, Clone, PartialEq)]
-pub struct TileId(usize);
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+pub struct TileId(pub usize);
+
+/// A descriptor for the kind of texture that a picture cache tile will
+/// be drawn into.
+#[derive(Debug)]
+pub enum SurfaceTextureDescriptor {
+    /// When using the WR compositor, the tile is drawn into an entry
+    /// in the WR texture cache.
+    TextureCache {
+        handle: TextureCacheHandle
+    },
+    /// When using an OS compositor, the tile is drawn into a native
+    /// surface identified by arbitrary id.
+    NativeSurface {
+        /// The arbitrary id of this surface.
+        id: NativeSurfaceId,
+        /// Size in device pixels of the native surface.
+        size: DeviceIntSize,
+    },
+}
+
+/// This is the same as a `SurfaceTextureDescriptor` but has been resolved
+/// into a texture cache handle (if appropriate) that can be used by the
+/// batching and compositing code in the renderer.
+#[derive(Clone, Debug)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+pub enum ResolvedSurfaceTexture {
+    TextureCache {
+        /// The texture ID to draw to.
+        texture: TextureSource,
+        /// Slice index in the texture array to draw to.
+        layer: i32,
+    },
+    NativeSurface {
+        /// The arbitrary id of this surface.
+        id: NativeSurfaceId,
+        /// Size in device pixels of the native surface.
+        size: DeviceIntSize,
+    }
+}
+
+impl SurfaceTextureDescriptor {
+    /// Create a resolved surface texture for this descriptor
+    pub fn resolve(
+        &self,
+        resource_cache: &ResourceCache,
+    ) -> ResolvedSurfaceTexture {
+        match self {
+            SurfaceTextureDescriptor::TextureCache { handle } => {
+                let cache_item = resource_cache.texture_cache.get(handle);
+
+                ResolvedSurfaceTexture::TextureCache {
+                    texture: cache_item.texture_id,
+                    layer: cache_item.texture_layer,
+                }
+            }
+            SurfaceTextureDescriptor::NativeSurface { id, size } => {
+                ResolvedSurfaceTexture::NativeSurface {
+                    id: *id,
+                    size: *size,
+                }
+            }
+        }
+    }
+}
 
 /// The backing surface for this tile.
 #[derive(Debug)]
 pub enum TileSurface {
     Texture {
-        /// Handle to the texture cache entry which gets drawn to.
-        handle: TextureCacheHandle,
+        /// Descriptor for the surface that this tile draws into.
+        descriptor: SurfaceTextureDescriptor,
         /// Bitfield specifying the dirty region(s) that are relevant to this tile.
         visibility_mask: PrimitiveVisibilityMask,
     },
@@ -668,25 +740,40 @@ impl Tile {
             return false;
         }
 
-        // For small tiles, only allow splitting once, since otherwise we
-        // end up splitting into tiny dirty rects that aren't saving much
-        // in the way of pixel work.
-        let max_split_level = if ctx.current_tile_size == TILE_SIZE_LARGE {
-            3
-        } else {
-            1
-        };
+        // If we are using native composite mode, we don't currently support
+        // dirty rects and must update the entire tile. A simple way to
+        // achieve this is to never consider splitting the dirty rect!
+        // TODO(gw): Support dirty rect updates for native compositor mode
+        //           on operating systems that support this.
+        // TODO(gw): Consider using smaller tiles and/or tile splits for
+        //           native compositors that don't support dirty rects.
+        if state.composite_state.composite_mode == CompositeMode::Draw {
+            // For small tiles, only allow splitting once, since otherwise we
+            // end up splitting into tiny dirty rects that aren't saving much
+            // in the way of pixel work.
+            let max_split_level = if ctx.current_tile_size == TILE_SIZE_LARGE {
+                3
+            } else {
+                1
+            };
 
-        // Consider splitting / merging dirty regions
-        self.root.maybe_merge_or_split(
-            0,
-            &self.current_descriptor.prims,
-            max_split_level,
-        );
+            // Consider splitting / merging dirty regions
+            self.root.maybe_merge_or_split(
+                0,
+                &self.current_descriptor.prims,
+                max_split_level,
+            );
+        }
 
         // See if this tile is a simple color, in which case we can just draw
         // it as a rect, and avoid allocating a texture surface and drawing it.
-        let is_simple_prim = self.current_descriptor.prims.len() == 1 && self.is_opaque;
+        // TODO(gw): Initial native compositor interface doesn't support simple
+        //           color tiles. We can definitely support this in DC, so this
+        //           should be added as a follow up.
+        let is_simple_prim =
+            self.current_descriptor.prims.len() == 1 &&
+            self.is_opaque &&
+            state.composite_state.composite_mode == CompositeMode::Draw;
 
         // Set up the backing surface for this tile.
         let surface = if is_simple_prim {
@@ -713,8 +800,30 @@ impl Tile {
                     old_surface
                 }
                 Some(TileSurface::Color { .. }) | Some(TileSurface::Clear) | None => {
+                    // This is the case where we are constructing a tile surface that
+                    // involves drawing to a texture. Create the correct surface
+                    // descriptor depending on the compositing mode that will read
+                    // the output.
+                    let descriptor = match state.composite_state.composite_mode {
+                        CompositeMode::Draw => {
+                            // For a texture cache entry, create an invalid handle that
+                            // will be allocated when update_picture_cache is called.
+                            SurfaceTextureDescriptor::TextureCache {
+                                handle: TextureCacheHandle::invalid(),
+                            }
+                        }
+                        CompositeMode::Native => {
+                            // For a new native OS surface, we need to queue up creation
+                            // of a native surface to be passed to the compositor interface.
+                            state.composite_state.create_surface(
+                                NativeSurfaceId(self.id.0 as u64),
+                                ctx.current_tile_size,
+                            )
+                        }
+                    };
+
                     TileSurface::Texture {
-                        handle: TextureCacheHandle::invalid(),
+                        descriptor,
                         visibility_mask: PrimitiveVisibilityMask::empty(),
                     }
                 }
@@ -1290,6 +1399,11 @@ impl TileCacheInstance {
         //           threshold above. If we ever see this happening we can improve
         //           the theshold logic above.
         if desired_tile_size != self.current_tile_size {
+            // Destroy any native surfaces on the tiles that will be dropped due
+            // to resizing.
+            frame_state.composite_state.destroy_native_surfaces(
+                self.tiles.values(),
+            );
             self.tiles.clear();
             self.current_tile_size = desired_tile_size;
         }
@@ -1446,6 +1560,14 @@ impl TileCacheInstance {
                 self.tiles.insert(key, tile);
             }
         }
+
+        // Any old tiles that remain after the loop above are going to be dropped. For
+        // simple composite mode, the texture cache handle will expire and be collected
+        // by the texture cache. For native compositor mode, we need to explicitly
+        // invoke a callback to the client to destroy that surface.
+        frame_state.composite_state.destroy_native_surfaces(
+            old_tiles.values(),
+        );
 
         world_culling_rect
     }
@@ -1763,6 +1885,7 @@ impl TileCacheInstance {
 
         let mut state = TilePostUpdateState {
             resource_cache: frame_state.resource_cache,
+            composite_state: frame_state.composite_state,
         };
 
         // Step through each tile and invalidate if the dependencies have changed.
@@ -3038,7 +3161,7 @@ impl PicturePrimitive {
                                 }
                             }
 
-                            if let TileSurface::Texture { ref handle, .. } = surface {
+                            if let TileSurface::Texture { descriptor: SurfaceTextureDescriptor::TextureCache { ref handle, .. }, .. } = surface {
                                 // Invalidate if the backing texture was evicted.
                                 if frame_state.resource_cache.texture_cache.is_allocated(handle) {
                                     // Request the backing texture so it won't get evicted this frame.
@@ -3066,13 +3189,15 @@ impl PicturePrimitive {
                             }
 
                             // Ensure that this texture is allocated.
-                            if let TileSurface::Texture { ref mut handle, ref mut visibility_mask } = surface {
-                                if !frame_state.resource_cache.texture_cache.is_allocated(handle) {
-                                    frame_state.resource_cache.texture_cache.update_picture_cache(
-                                        tile_cache.current_tile_size,
-                                        handle,
-                                        frame_state.gpu_cache,
-                                    );
+                            if let TileSurface::Texture { ref mut descriptor, ref mut visibility_mask } = surface {
+                                if let SurfaceTextureDescriptor::TextureCache { ref mut handle } = descriptor {
+                                    if !frame_state.resource_cache.texture_cache.is_allocated(handle) {
+                                        frame_state.resource_cache.texture_cache.update_picture_cache(
+                                            tile_cache.current_tile_size,
+                                            handle,
+                                            frame_state.gpu_cache,
+                                        );
+                                    }
                                 }
 
                                 *visibility_mask = PrimitiveVisibilityMask::empty();
@@ -3115,13 +3240,12 @@ impl PicturePrimitive {
                                 // CPUs). Round the rect here before casting to integer device pixels
                                 // to ensure the scissor rect is correct.
                                 let scissor_rect = (scissor_rect * device_pixel_scale).round();
-                                let cache_item = frame_state.resource_cache.texture_cache.get(handle);
+                                let surface = descriptor.resolve(frame_state.resource_cache);
 
                                 let task = RenderTask::new_picture(
                                     RenderTaskLocation::PictureCache {
-                                        texture: cache_item.texture_id,
-                                        layer: cache_item.texture_layer,
                                         size: tile_cache.current_tile_size,
+                                        surface,
                                     },
                                     tile_cache.current_tile_size.to_f32(),
                                     pic_index,
@@ -4517,6 +4641,29 @@ impl TileNode {
                 } else {
                     *dirty_rect = self.rect.union(dirty_rect);
                     *dirty_tracker = *dirty_tracker | 1;
+                }
+            }
+        }
+    }
+}
+
+impl CompositeState {
+    // A helper function to destroy all native surfaces for a given list of tiles
+    fn destroy_native_surfaces<'a, I: Iterator<Item = &'a Tile>>(
+        &mut self,
+        tiles_iter: I,
+    ) {
+        // Any old tiles that remain after the loop above are going to be dropped. For
+        // simple composite mode, the texture cache handle will expire and be collected
+        // by the texture cache. For native compositor mode, we need to explicitly
+        // invoke a callback to the client to destroy that surface.
+        if let CompositeMode::Native = self.composite_mode {
+            for tile in tiles_iter {
+                // Only destroy native surfaces that have been allocated. It's
+                // possible for display port tiles to be created that never
+                // come on screen, and thus never get a native surface allocated.
+                if let Some(TileSurface::Texture { descriptor: SurfaceTextureDescriptor::NativeSurface { id, .. }, .. }) = tile.surface {
+                    self.destroy_surface(id);
                 }
             }
         }

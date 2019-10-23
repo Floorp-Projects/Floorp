@@ -8,7 +8,7 @@ use api::units::*;
 use crate::batch::{BatchBuilder, AlphaBatchBuilder, AlphaBatchContainer};
 use crate::clip::{ClipStore, ClipChainStack};
 use crate::clip_scroll_tree::{ClipScrollTree, ROOT_SPATIAL_NODE_INDEX, SpatialNodeIndex};
-use crate::composite::CompositeState;
+use crate::composite::{CompositeMode, CompositeState};
 use crate::debug_render::DebugItem;
 use crate::gpu_cache::{GpuCache, GpuCacheHandle};
 use crate::gpu_types::{PrimitiveHeaders, TransformPalette, UvRectKind, ZBufferIdGenerator};
@@ -64,6 +64,7 @@ pub struct FrameBuilderConfig {
     pub advanced_blend_is_coherent: bool,
     pub batch_lookback_count: usize,
     pub background_color: Option<ColorF>,
+    pub composite_mode: CompositeMode,
 }
 
 /// A set of common / global resources that are retained between
@@ -479,7 +480,7 @@ impl FrameBuilder {
 
         let output_size = scene.output_rect.size.to_i32();
         let screen_world_rect = (scene.output_rect.to_f32() / global_device_pixel_scale).round_out();
-        let mut composite_state = CompositeState::new();
+        let mut composite_state = CompositeState::new(scene.config.composite_mode);
 
         let main_render_task_id = self.build_layer_screen_rects_and_cull_layers(
             scene,
@@ -842,7 +843,7 @@ pub fn build_render_pass(
                     let (target_rect, _) = task.get_target_rect();
 
                     match task.location {
-                        RenderTaskLocation::PictureCache { texture, layer, .. } => {
+                        RenderTaskLocation::PictureCache { ref surface, .. } => {
                             // TODO(gw): The interface here is a bit untidy since it's
                             //           designed to support batch merging, which isn't
                             //           relevant for picture cache targets. We
@@ -862,8 +863,7 @@ pub fn build_render_pass(
                             debug_assert!(batch_containers.is_empty());
 
                             let target = PictureCacheTarget {
-                                texture,
-                                layer: layer as usize,
+                                surface: surface.clone(),
                                 clear_color,
                                 alpha_batch_container,
                             };
