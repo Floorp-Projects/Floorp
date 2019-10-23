@@ -7615,10 +7615,6 @@ def getUnionMemberName(type):
     return type.name
 
 
-class MethodNotNewObjectError(Exception):
-    def __init__(self, typename):
-        self.typename = typename
-
 # A counter for making sure that when we're wrapping up things in
 # nested sequences we don't use the same variable name to iterate over
 # different sequences.
@@ -8092,14 +8088,9 @@ class CGPerSignatureCall(CGThing):
             # Otherwise, just use "obj" for lack of anything better.
             'obj': "conversionScope" if self.setSlot else "obj"
         }
-        try:
-            wrapCode += wrapForType(self.returnType, self.descriptor, resultTemplateValues)
-        except MethodNotNewObjectError as err:
-            assert not returnsNewObject
-            raise TypeError("%s being returned from non-NewObject method or property %s.%s" %
-                            (err.typename,
-                             self.descriptor.interface.identifier.name,
-                             self.idlNode.identifier.name))
+
+        wrapCode += wrapForType(self.returnType, self.descriptor, resultTemplateValues)
+
         if self.setSlot:
             if self.idlNode.isStatic():
                 raise TypeError(
@@ -10432,6 +10423,7 @@ class CGUnionStruct(CGThing):
                                                           "return true;\n")))
 
         hasObjectType = any(t.isObject() for t in self.type.flatMemberTypes)
+        skipToJSVal = False
         for t in self.type.flatMemberTypes:
             vars = getUnionTypeTemplateVars(self.type,
                                             t, self.descriptorProvider,
@@ -10537,16 +10529,14 @@ class CGUnionStruct(CGThing):
                 fill("UnionMember<${structType} > m${name}", **vars))
             enumValues.append("e" + vars["name"])
 
-            skipToJSVal = False
-            try:
+            conversionToJS = self.getConversionToJS(vars, t)
+            if conversionToJS:
                 toJSValCases.append(
                     CGCase("e" + vars["name"],
-                           self.getConversionToJS(vars, t)))
-            except MethodNotNewObjectError:
-                # If we can't have a ToJSVal() because one of our members can
-                # only be returned from [NewObject] methods, then just skip
-                # generating ToJSVal.
+                           conversionToJS))
+            else:
                 skipToJSVal = True
+
             destructorCases.append(
                 CGCase("e" + vars["name"],
                        CGGeneric("Destroy%s();\n" % vars["name"])))
@@ -13986,17 +13976,13 @@ class CGDictionary(CGThing):
         if (canBeRepresentedAsJSON and
             d.getExtendedAttribute("GenerateInitFromJSON")):
             methods.append(self.initFromJSONMethod())
-        try:
-            methods.append(self.toObjectInternalMethod())
-            if (canBeRepresentedAsJSON and
-                d.getExtendedAttribute("GenerateToJSON")):
-                methods.append(self.toJSONMethod())
-        except MethodNotNewObjectError:
-            # If we can't have a ToObjectInternal() because one of our members
-            # can only be returned from [NewObject] methods, then just skip
-            # generating ToObjectInternal() and ToJSON (since the latter depens
-            # on the former).
-            pass
+
+        methods.append(self.toObjectInternalMethod())
+
+        if (canBeRepresentedAsJSON and
+            d.getExtendedAttribute("GenerateToJSON")):
+            methods.append(self.toJSONMethod())
+
         methods.append(self.traceDictionaryMethod())
 
         try:
@@ -16888,24 +16874,19 @@ class CallbackMember(CGNativeMember):
             result = argval
             prepend = ""
 
-        try:
-            conversion = prepend + wrapForType(
-                arg.type, self.descriptorProvider,
-                {
-                    'result': result,
-                    'successCode': "continue;\n" if arg.variadic else "break;\n",
-                    'jsvalRef': "argv[%s]" % jsvalIndex,
-                    'jsvalHandle': "argv[%s]" % jsvalIndex,
-                    'obj': self.wrapScope,
-                    'returnsNewObject': False,
-                    'exceptionCode': self.exceptionCode,
-                    'spiderMonkeyInterfacesAreStructs': self.spiderMonkeyInterfacesAreStructs
-                })
-        except MethodNotNewObjectError as err:
-            raise TypeError("%s being passed as an argument to %s but is not "
-                            "wrapper cached, so can't be reliably converted to "
-                            "a JS object." %
-                            (err.typename, self.getPrettyName()))
+        conversion = prepend + wrapForType(
+            arg.type, self.descriptorProvider,
+            {
+                'result': result,
+                'successCode': "continue;\n" if arg.variadic else "break;\n",
+                'jsvalRef': "argv[%s]" % jsvalIndex,
+                'jsvalHandle': "argv[%s]" % jsvalIndex,
+                'obj': self.wrapScope,
+                'returnsNewObject': False,
+                'exceptionCode': self.exceptionCode,
+                'spiderMonkeyInterfacesAreStructs': self.spiderMonkeyInterfacesAreStructs
+            })
+
         if arg.variadic:
             conversion = fill(
                 """
