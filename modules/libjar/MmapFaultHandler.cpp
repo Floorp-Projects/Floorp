@@ -25,6 +25,10 @@ static void MmapSIGBUSHandler(int signum, siginfo_t* info, void* context) {
   MmapAccessScope* mas = sMmapAccessScope.get();
 
   if (mas && mas->IsInsideBuffer(info->si_addr)) {
+    // Temporarily instead of handling the signal, we crash intentionally and
+    // send some diagnostic information to find out why the signal is received.
+    mas->CrashWithInfo(info->si_addr);
+
     // The address is inside the buffer, handle the failure.
     siglongjmp(mas->mJmpBuf, signum);
     return;
@@ -136,6 +140,37 @@ bool MmapAccessScope::IsInsideBuffer(void* aPtr) {
   }
 
   return isIn;
+}
+
+void MmapAccessScope::CrashWithInfo(void* aPtr) {
+  if (!mZipHandle) {
+    // All we have is the buffer and the crashing address.
+    MOZ_CRASH_UNSAFE_PRINTF(
+        "SIGBUS received when accessing mmaped zip file [buffer=%p, "
+        "buflen=%" PRIu32 ", address=%p]",
+        mBuf, mBufLen, aPtr);
+  }
+
+  nsCOMPtr<nsIFile> file = mZipHandle->mFile.GetBaseFile();
+  nsCString fileName;
+  file->GetNativeLeafName(fileName);
+
+  // Get current file size
+  int fileSize = -1;
+  if (PR_Seek64(mZipHandle->mNSPRFileDesc, 0, PR_SEEK_SET) != -1) {
+    fileSize = PR_Available64(mZipHandle->mNSPRFileDesc);
+  }
+
+  // MOZ_CRASH_UNSAFE_PRINTF has limited number of arguments, so append fileSize
+  // to fileName
+  fileName.Append(", filesize=");
+  fileName.AppendInt(fileSize);
+
+  MOZ_CRASH_UNSAFE_PRINTF(
+      "SIGBUS received when accessing mmaped zip file [file=%s, buffer=%p, "
+      "buflen=%" PRIu32 ", address=%p]",
+      fileName.get(), (char*)mZipHandle->mFileStart, mZipHandle->mTotalLen,
+      aPtr);
 }
 
 #endif
