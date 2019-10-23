@@ -8448,11 +8448,6 @@ class MOZ_STACK_CLASS DatabaseMaintenance::AutoProgressHandler final
   void operator delete[](void*) = delete;
 };
 
-class IntString : public nsAutoString {
- public:
-  explicit IntString(int64_t aInteger) { AppendInt(aInteger); }
-};
-
 #ifdef DEBUG
 
 class DEBUGThreadSlower final : public nsIThreadObserver {

@@ -162,6 +162,16 @@ void StringifyTableKeys(const T& aTable, nsACString& aResult) {
   }
 }
 
+class IntString : public nsAutoString {
+ public:
+  explicit IntString(int64_t aInteger) { AppendInt(aInteger); }
+};
+
+class IntCString : public nsAutoCString {
+ public:
+  explicit IntCString(int64_t aInteger) { AppendInt(aInteger); }
+};
+
 }  // namespace quota
 }  // namespace dom
 }  // namespace mozilla
