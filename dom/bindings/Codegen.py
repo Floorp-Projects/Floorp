@@ -10098,25 +10098,17 @@ class CGEnum(CGThing):
             """
             extern const EnumEntry ${entry_array}[${entry_count}];
 
-            static constexpr size_t Count = ${real_entry_count};
-
-            // Our "${entry_array}" contains an extra entry with a null string.
-            static_assert(mozilla::ArrayLength(${entry_array}) - 1 == Count,
-                          "Mismatch between enum strings and enum count");
-
-            static_assert(static_cast<size_t>(${name}::EndGuard_) == Count,
-                          "Mismatch between enum value and enum count");
+            static_assert(static_cast<size_t>(${name}::EndGuard_) == ${entry_count} - 1,
+                          "Mismatch between enum strings and enum values");
 
             inline Span<const char> GetString(${name} stringId) {
-              MOZ_ASSERT(static_cast<${type}>(stringId) < Count);
+              MOZ_ASSERT(static_cast<${type}>(stringId) < static_cast<${type}>(${name}::EndGuard_));
               const EnumEntry& entry = ${entry_array}[static_cast<${type}>(stringId)];
               return MakeSpan(entry.value, entry.length);
             }
             """,
             entry_array=ENUM_ENTRY_VARIABLE_NAME,
             entry_count=self.nEnumStrings(),
-            # -1 because nEnumStrings() includes a string for EndGuard_
-            real_entry_count=self.nEnumStrings() - 1,
             name=self.enum.identifier.name,
             type=self.underlyingType())
         strings = CGNamespace(
@@ -14939,7 +14931,6 @@ class CGBindingRoot(CGThing):
         cgthings.extend(CGEnum(e) for e in enums)
 
         bindingDeclareHeaders["mozilla/Span.h"] = enums
-        bindingDeclareHeaders["mozilla/ArrayUtils.h"] = enums
 
         hasCode = (descriptors or callbackDescriptors or dictionaries or
                    callbacks)

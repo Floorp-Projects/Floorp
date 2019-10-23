@@ -127,7 +127,7 @@ static_assert(
         static_cast<uint32_t>(RequestRedirect::Manual),
     "RequestRedirect enumeration value should make Necko Redirect mode value.");
 static_assert(
-    3 == RequestRedirectValues::Count,
+    3 == static_cast<uint32_t>(RequestRedirect::EndGuard_),
     "RequestRedirect enumeration value should make Necko Redirect mode value.");
 
 static_assert(
@@ -155,7 +155,7 @@ static_assert(
         static_cast<uint32_t>(RequestCache::Only_if_cached),
     "RequestCache enumeration value should match Necko Cache mode value.");
 static_assert(
-    6 == RequestCacheValues::Count,
+    6 == static_cast<uint32_t>(RequestCache::EndGuard_),
     "RequestCache enumeration value should match Necko Cache mode value.");
 
 static_assert(static_cast<uint16_t>(ServiceWorkerUpdateViaCache::Imports) ==
