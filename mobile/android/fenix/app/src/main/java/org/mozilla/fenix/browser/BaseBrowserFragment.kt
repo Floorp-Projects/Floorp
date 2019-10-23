@@ -17,8 +17,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.activityViewModels
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavDirections
 import androidx.navigation.fragment.findNavController
@@ -60,7 +58,6 @@ import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.IntentReceiverActivity
 import org.mozilla.fenix.R
-import org.mozilla.fenix.collections.CreateCollectionViewModel
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.FindInPageIntegration
 import org.mozilla.fenix.components.StoreProvider
@@ -114,10 +111,6 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler, SessionManager.Obs
 
     private var browserInitialized: Boolean = false
     private var initUIJob: Job? = null
-
-    val viewModel: CreateCollectionViewModel by activityViewModels {
-        ViewModelProvider.NewInstanceFactory() // this is a workaround for #4652
-    }
 
     @CallSuper
     override fun onCreateView(
@@ -185,7 +178,6 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler, SessionManager.Obs
                 swipeRefresh = swipeRefresh,
                 adjustBackgroundAndNavigate = ::adjustBackgroundAndNavigate,
                 customTabSession = customTabSessionId?.let { sessionManager.findSessionById(it) },
-                viewModel = viewModel,
                 getSupportUrl = {
                     SupportUtils.getSumoURLForTopic(
                         context,

@@ -11,7 +11,6 @@ import androidx.core.view.isGone
 import androidx.core.view.isInvisible
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
-import io.reactivex.Observer
 import kotlinx.android.synthetic.main.collection_tab_list_row.view.*
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
@@ -19,7 +18,7 @@ import org.mozilla.fenix.ext.loadIntoView
 import org.mozilla.fenix.home.sessioncontrol.Tab
 
 class CollectionCreationTabListAdapter(
-    val actionEmitter: Observer<CollectionCreationAction>
+    private val interactor: CollectionCreationInteractor
 ) : RecyclerView.Adapter<TabViewHolder>() {
     private var tabs: List<Tab> = listOf()
     private var selectedTabs: MutableSet<Tab> = mutableSetOf()
@@ -54,14 +53,13 @@ class CollectionCreationTabListAdapter(
         val tab = tabs[position]
         val isSelected = selectedTabs.contains(tab)
         holder.itemView.tab_selected_checkbox.setOnCheckedChangeListener { _, isChecked ->
-            val action = if (isChecked) {
+            if (isChecked) {
                 selectedTabs.add(tab)
-                CollectionCreationAction.AddTabToSelection(tab)
+                interactor.addTabToSelection(tab)
             } else {
                 selectedTabs.remove(tab)
-                CollectionCreationAction.RemoveTabFromSelection(tab)
+                interactor.removeTabFromSelection(tab)
             }
-            actionEmitter.onNext(action)
         }
         holder.bind(tab, isSelected, hideCheckboxes)
     }

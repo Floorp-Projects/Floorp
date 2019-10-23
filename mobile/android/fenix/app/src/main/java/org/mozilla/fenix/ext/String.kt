@@ -7,6 +7,7 @@ package org.mozilla.fenix.ext
 import android.content.Context
 import androidx.core.net.toUri
 import kotlinx.coroutines.runBlocking
+import mozilla.components.lib.publicsuffixlist.PublicSuffixList
 import mozilla.components.support.ktx.android.net.hostWithoutCommonPrefixes
 import java.net.MalformedURLException
 import java.net.URL
@@ -33,11 +34,17 @@ fun String.tryGetHostFromUrl(): String = try {
 /**
  * Trim a host's prefix and suffix
  */
-fun String.urlToTrimmedHost(context: Context): String {
+fun String.urlToTrimmedHost(context: Context): String =
+    this.urlToTrimmedHost(context.components.publicSuffixList)
+
+/**
+ * Trim a host's prefix and suffix
+ */
+fun String.urlToTrimmedHost(publicSuffixList: PublicSuffixList): String {
     return try {
         val host = toUri().hostWithoutCommonPrefixes ?: return this
         runBlocking {
-            context.components.publicSuffixList.stripPublicSuffix(host).await()
+            publicSuffixList.stripPublicSuffix(host).await()
         }
     } catch (e: MalformedURLException) {
         this

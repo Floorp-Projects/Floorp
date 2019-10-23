@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.components.toolbar
 
+import android.content.Context
 import android.content.Intent
 import android.view.ViewGroup
 import androidx.core.widget.NestedScrollView
@@ -40,7 +41,7 @@ import org.mozilla.fenix.browser.BrowserFragment
 import org.mozilla.fenix.browser.BrowserFragmentDirections
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
-import org.mozilla.fenix.collections.CreateCollectionViewModel
+import org.mozilla.fenix.collections.SaveCollectionStep
 import org.mozilla.fenix.components.Analytics
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.metrics.Event
@@ -67,7 +68,6 @@ class DefaultBrowserToolbarControllerTest {
     private var findInPageLauncher: () -> Unit = mockk(relaxed = true)
     private val engineView: EngineView = mockk(relaxed = true)
     private val currentSession: Session = mockk(relaxed = true)
-    private val viewModel: CreateCollectionViewModel = mockk(relaxed = true)
     private val getSupportUrl: () -> String = { "https://supportUrl.org" }
     private val openInFenixIntent: Intent = mockk(relaxed = true)
     private val currentSessionAsTab: Tab = mockk(relaxed = true)
@@ -95,7 +95,6 @@ class DefaultBrowserToolbarControllerTest {
             engineView = engineView,
             adjustBackgroundAndNavigate = adjustBackgroundAndNavigate,
             customTabSession = null,
-            viewModel = viewModel,
             getSupportUrl = getSupportUrl,
             openInFenixIntent = openInFenixIntent,
             bottomSheetBehavior = bottomSheetBehavior,
@@ -107,7 +106,7 @@ class DefaultBrowserToolbarControllerTest {
         mockkStatic(
             "org.mozilla.fenix.ext.SessionKt"
         )
-        every { any<Session>().toTab(any()) } returns currentSessionAsTab
+        every { any<Session>().toTab(any<Context>()) } returns currentSessionAsTab
 
         mockkStatic(
             "org.mozilla.fenix.settings.deletebrowsingdata.DeleteAndQuitKt"
@@ -414,16 +413,13 @@ class DefaultBrowserToolbarControllerTest {
         verify { metrics.track(Event.BrowserMenuItemTapped(Event.BrowserMenuItemTapped.Item.SAVE_TO_COLLECTION)) }
         verify { metrics.track(Event.CollectionSaveButtonPressed(DefaultBrowserToolbarController.TELEMETRY_BROWSER_IDENTIFIER)) }
         verify {
-            viewModel.saveTabToCollection(
-                listOf(currentSessionAsTab),
-                currentSessionAsTab,
-                cachedTabCollections
-            )
-        }
-        verify { viewModel.previousFragmentId = R.id.browserFragment }
-        verify {
-            val directions = BrowserFragmentDirections
-                .actionBrowserFragmentToSearchFragment(sessionId = null)
+            val directions =
+                BrowserFragmentDirections.actionBrowserFragmentToCreateCollectionFragment(
+                    previousFragmentId = R.id.browserFragment,
+                    saveCollectionStep = SaveCollectionStep.SelectCollection,
+                    tabIds = arrayOf(currentSession.id),
+                    selectedTabIds = arrayOf(currentSession.id)
+                )
             navController.nav(R.id.browserFragment, directions)
         }
     }
@@ -439,7 +435,6 @@ class DefaultBrowserToolbarControllerTest {
             engineView = engineView,
             adjustBackgroundAndNavigate = adjustBackgroundAndNavigate,
             customTabSession = currentSession,
-            viewModel = viewModel,
             getSupportUrl = getSupportUrl,
             openInFenixIntent = openInFenixIntent,
             bottomSheetBehavior = bottomSheetBehavior,

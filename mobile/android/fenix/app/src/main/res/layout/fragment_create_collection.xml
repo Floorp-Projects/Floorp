@@ -10,6 +10,6 @@
     android:layout_height="match_parent"
     android:background="@drawable/scrim_background"
     android:fitsSystemWindows="true"
-    tools:context="org.mozilla.fenix.collections.CreateCollectionFragment">
+    tools:context="org.mozilla.fenix.collections.CollectionCreationFragment">
 
 </FrameLayout>

@@ -7,13 +7,17 @@ package org.mozilla.fenix.ext
 import android.content.Context
 import mozilla.components.browser.session.Session
 import mozilla.components.feature.media.state.MediaState
+import mozilla.components.lib.publicsuffixlist.PublicSuffixList
 import org.mozilla.fenix.home.sessioncontrol.Tab
 
-fun Session.toTab(context: Context, selected: Boolean? = null, mediaState: MediaState? = null): Tab {
+fun Session.toTab(context: Context, selected: Boolean? = null, mediaState: MediaState? = null): Tab =
+    this.toTab(context.components.publicSuffixList, selected, mediaState)
+
+fun Session.toTab(publicSuffixList: PublicSuffixList, selected: Boolean? = null, mediaState: MediaState? = null): Tab {
     return Tab(
         this.id,
         this.url,
-        this.url.urlToTrimmedHost(context),
+        this.url.urlToTrimmedHost(publicSuffixList),
         this.title,
         selected,
         mediaState,

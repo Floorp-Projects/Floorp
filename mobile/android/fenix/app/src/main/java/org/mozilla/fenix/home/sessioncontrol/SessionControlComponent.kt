@@ -11,6 +11,7 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import io.reactivex.Observer
 import mozilla.components.browser.session.Session
+import mozilla.components.browser.session.SessionManager
 import mozilla.components.feature.media.state.MediaState
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.home.Mode
@@ -55,10 +56,13 @@ data class Tab(
     val icon: Bitmap? = null
 )
 
-fun List<Tab>.toSessionBundle(context: Context): MutableList<Session> {
+fun List<Tab>.toSessionBundle(context: Context): MutableList<Session> =
+    this.toSessionBundle(context.components.core.sessionManager)
+
+fun List<Tab>.toSessionBundle(sessionManager: SessionManager): MutableList<Session> {
     val sessionBundle = mutableListOf<Session>()
     this.forEach {
-        context.components.core.sessionManager.findSessionById(it.sessionId)?.let { session ->
+        sessionManager.findSessionById(it.sessionId)?.let { session ->
             sessionBundle.add(session)
         }
     }

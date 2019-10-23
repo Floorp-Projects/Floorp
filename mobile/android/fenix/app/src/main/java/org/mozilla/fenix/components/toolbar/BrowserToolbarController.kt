@@ -31,12 +31,11 @@ import org.mozilla.fenix.browser.BrowserFragment
 import org.mozilla.fenix.browser.BrowserFragmentDirections
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
-import org.mozilla.fenix.collections.CreateCollectionViewModel
 import org.mozilla.fenix.components.FenixSnackbar
+import org.mozilla.fenix.collections.SaveCollectionStep
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
-import org.mozilla.fenix.ext.toTab
 import org.mozilla.fenix.lib.Do
 import org.mozilla.fenix.quickactionsheet.QuickActionSheetBehavior
 import org.mozilla.fenix.settings.deletebrowsingdata.deleteAndQuit
@@ -64,7 +63,6 @@ class DefaultBrowserToolbarController(
     private val adjustBackgroundAndNavigate: (NavDirections) -> Unit,
     private val swipeRefresh: SwipeRefreshLayout,
     private val customTabSession: Session?,
-    private val viewModel: CreateCollectionViewModel,
     private val getSupportUrl: () -> String,
     private val openInFenixIntent: Intent,
     private val bottomSheetBehavior: QuickActionSheetBehavior<NestedScrollView>,
@@ -181,16 +179,13 @@ class DefaultBrowserToolbarController(
                 activity.components.analytics.metrics
                     .track(Event.CollectionSaveButtonPressed(TELEMETRY_BROWSER_IDENTIFIER))
 
-                currentSession?.toTab(activity)?.let { currentSessionAsTab ->
-                    viewModel.saveTabToCollection(
-                        tabs = listOf(currentSessionAsTab),
-                        selectedTab = currentSessionAsTab,
-                        cachedTabCollections = activity.components.core.tabCollectionStorage.cachedTabCollections
+                currentSession?.let { currentSession ->
+                    val directions = BrowserFragmentDirections.actionBrowserFragmentToCreateCollectionFragment(
+                        previousFragmentId = R.id.browserFragment,
+                        tabIds = arrayOf(currentSession.id),
+                        selectedTabIds = arrayOf(currentSession.id),
+                        saveCollectionStep = SaveCollectionStep.SelectCollection
                     )
-                    viewModel.previousFragmentId = R.id.browserFragment
-
-                    val directions =
-                        BrowserFragmentDirections.actionBrowserFragmentToCreateCollectionFragment()
                     navController.nav(R.id.browserFragment, directions)
                 }
             }

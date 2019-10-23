@@ -9,7 +9,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import io.reactivex.Observer
 import kotlinx.android.synthetic.main.collections_list_item.view.*
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.description
@@ -18,7 +17,7 @@ import org.mozilla.fenix.home.sessioncontrol.Tab
 import org.mozilla.fenix.home.sessioncontrol.TabCollection
 
 class SaveCollectionListAdapter(
-    val actionEmitter: Observer<CollectionCreationAction>
+    private val interactor: CollectionCreationInteractor
 ) : RecyclerView.Adapter<CollectionViewHolder>() {
 
     private var tabCollections = listOf<TabCollection>()
@@ -35,8 +34,7 @@ class SaveCollectionListAdapter(
         val collection = tabCollections[position]
         holder.bind(collection)
         holder.itemView.setOnClickListener {
-            val action = CollectionCreationAction.SelectCollection(collection, selectedTabs.toList())
-            actionEmitter.onNext(action)
+            interactor.selectCollection(collection, selectedTabs.toList())
         }
     }
 

@@ -65,7 +65,6 @@ import org.mozilla.fenix.FenixViewModelProvider
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
-import org.mozilla.fenix.collections.CreateCollectionViewModel
 import org.mozilla.fenix.collections.SaveCollectionStep
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.PrivateShortcutCreateManager
@@ -515,10 +514,16 @@ class HomeFragment : Fragment() {
             }
             is CollectionAction.AddTab -> {
                 requireComponents.analytics.metrics.track(Event.CollectionAddTabPressed)
-                updateCollection(action.collection, SaveCollectionStep.SelectTabs)
+                showCollectionCreationFragment(
+                    step = SaveCollectionStep.SelectTabs,
+                    selectedTabCollectionId = action.collection.id
+                )
             }
             is CollectionAction.Rename -> {
-                updateCollection(action.collection, SaveCollectionStep.RenameCollection)
+                showCollectionCreationFragment(
+                    step = SaveCollectionStep.RenameCollection,
+                    selectedTabCollectionId = action.collection.id
+                )
                 requireComponents.analytics.metrics.track(Event.CollectionRenamePressed)
             }
             is CollectionAction.OpenTab -> {
@@ -805,48 +810,40 @@ class HomeFragment : Fragment() {
     }
 
     private fun showCollectionCreationFragment(
-        setupViewModel: (CreateCollectionViewModel, tabs: List<Tab>, cachedTabCollections: List<TabCollection>) -> Unit
+        step: SaveCollectionStep,
+        selectedTabIds: Array<String>? = null,
+        selectedTabCollectionId: Long? = null
     ) {
-        if (findNavController().currentDestination?.id == R.id.createCollectionFragment) return
+        if (findNavController().currentDestination?.id == R.id.collectionCreationFragment) return
 
-        val viewModel: CreateCollectionViewModel by activityViewModels {
-            ViewModelProvider.NewInstanceFactory() // this is a workaround for #4652
-        }
-
-        val tabs = getListOfSessions().toTabs()
         val storage = requireComponents.core.tabCollectionStorage
-        setupViewModel(viewModel, tabs, storage.cachedTabCollections)
-
-        viewModel.previousFragmentId = R.id.homeFragment
-
         // Only register the observer right before moving to collection creation
         storage.register(collectionStorageObserver, this)
 
+        val tabIds = getListOfSessions().toTabs().map { it.sessionId }.toTypedArray()
         view?.let {
-            val directions = HomeFragmentDirections.actionHomeFragmentToCreateCollectionFragment()
+            val directions = HomeFragmentDirections.actionHomeFragmentToCreateCollectionFragment(
+                tabIds = tabIds,
+                previousFragmentId = R.id.homeFragment,
+                saveCollectionStep = step,
+                selectedTabIds = selectedTabIds,
+                selectedTabCollectionId = selectedTabCollectionId ?: -1
+            )
             nav(R.id.homeFragment, directions)
         }
     }
 
     private fun saveTabToCollection(selectedTabId: String?) {
-        showCollectionCreationFragment { viewModel, tabs, cachedTabCollections ->
-            viewModel.saveTabToCollection(
-                tabs = tabs,
-                selectedTab = tabs.find { it.sessionId == selectedTabId } ?: if (tabs.size == 1) tabs[0] else null,
-                cachedTabCollections = cachedTabCollections
-            )
-        }
-    }
+        val tabs = getListOfSessions().toTabs()
+        val storage = requireComponents.core.tabCollectionStorage
 
-    private fun updateCollection(selectedTabCollection: TabCollection, step: SaveCollectionStep) {
-        showCollectionCreationFragment { viewModel, tabs, cachedTabCollections ->
-            viewModel.updateCollection(
-                tabs = tabs,
-                saveCollectionStep = step,
-                selectedTabCollection = selectedTabCollection,
-                cachedTabCollections = cachedTabCollections
-            )
+        val step = when {
+            tabs.size > 1 -> SaveCollectionStep.SelectTabs
+            storage.cachedTabCollections.isNotEmpty() -> SaveCollectionStep.SelectCollection
+            else -> SaveCollectionStep.NameCollection
         }
+
+        showCollectionCreationFragment(step, selectedTabId?.let { arrayOf(it) })
     }
 
     private fun share(url: String? = null, tabs: List<ShareTab>? = null) {
