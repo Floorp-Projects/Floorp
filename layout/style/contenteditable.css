@@ -76,10 +76,6 @@ input[contenteditable="true"][type="hidden"] {
   visibility: visible !important;
 }
 
-label:-moz-read-write {
-  user-select: all;
-}
-
 *|*::-moz-display-comboboxcontrol-frame {
   user-select: text;
 }
