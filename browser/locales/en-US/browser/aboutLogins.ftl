@@ -70,7 +70,6 @@ login-intro-description = If you saved your logins to { -brand-product-name } on
 login-intro-instruction-fxa = Create or sign in to your { -fxaccount-brand-name } on the device where your logins are saved
 login-intro-instruction-fxa-settings = Make sure you’ve selected the Logins checkbox in { -sync-brand-short-name } Settings
 about-logins-intro-instruction-help = Visit <a data-l10n-name="help-link">{ -lockwise-brand-short-name } Support</a> for more help
-about-logins-intro-import = If your logins are saved in another browser, you can <a data-l10n-name="import-link">import them into { -lockwise-brand-short-name }</a>
 
 ## Login
 
@@ -106,7 +105,11 @@ master-password-reload-button =
   .label = Log in
   .accesskey = L
 
-## Password Sync notification
+## Dialogs
+
+confirmation-dialog-cancel-button = Cancel
+confirmation-dialog-dismiss-button =
+  .title = Cancel
 
 enable-password-sync-notification-message =
   { PLATFORM() ->
@@ -120,15 +123,6 @@ enable-password-sync-preferences-button =
        *[other] Visit { -sync-brand-short-name } Preferences
     }
   .accesskey = V
-about-logins-enable-password-sync-dont-ask-again-button =
-  .label = Don’t ask me again
-  .accesskey = D
-
-## Dialogs
-
-confirmation-dialog-cancel-button = Cancel
-confirmation-dialog-dismiss-button =
-  .title = Cancel
 
 confirm-delete-dialog-title = Delete this login?
 confirm-delete-dialog-message = This action cannot be undone.
