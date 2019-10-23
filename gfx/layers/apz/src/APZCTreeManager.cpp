@@ -1881,7 +1881,7 @@ APZEventResult APZCTreeManager::ProcessTouchInput(MultiTouchInput& aInput) {
         touchData.mScreenPoint = *untransformedScreenPoint;
         if (mFixedPosSidesForInputBlock != eSideBitsNone) {
           RecursiveMutexAutoLock lock(mTreeLock);
-          touchData.mScreenPoint +=
+          touchData.mScreenPoint -=
               RoundedToInt(AsyncCompositionManager::ComputeFixedMarginsOffset(
                   mFixedLayerMargins, mFixedPosSidesForInputBlock));
         }
