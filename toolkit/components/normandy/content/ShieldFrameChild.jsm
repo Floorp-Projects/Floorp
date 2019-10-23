@@ -10,14 +10,8 @@ var EXPORTED_SYMBOLS = ["ShieldFrameChild"];
  * privileged actions in response to them. If we need to do anything that the
  * content process can't handle (such as reading IndexedDB), we send a message
  * to the parent process and handle it there.
- *
- * This file is loaded as a frame script. It will be loaded once per tab that
- * is opened.
  */
 
-const { ActorChild } = ChromeUtils.import(
-  "resource://gre/modules/ActorChild.jsm"
-);
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
@@ -43,41 +37,58 @@ XPCOMUtils.defineLazyGetter(this, "gStringBundle", function() {
 });
 
 /**
- * Handles incoming events from the parent process and about:studies.
- * @implements nsIMessageListener
- * @implements EventListener
+ * Listen for DOM events bubbling up from the about:studies page, and perform
+ * privileged actions in response to them. If we need to do anything that the
+ * content process can't handle (such as reading IndexedDB), we send a message
+ * to the parent process and handle it there.
  */
-class ShieldFrameChild extends ActorChild {
-  handleEvent(event) {
-    // We waited until after we received an event to register message listeners
-    // in order to save resources for tabs that don't ever load about:studies.
-    this.mm.addMessageListener("Shield:ShuttingDown", this);
-    this.mm.addMessageListener("Shield:ReceiveAddonStudyList", this);
-    this.mm.addMessageListener("Shield:ReceivePreferenceStudyList", this);
-    this.mm.addMessageListener("Shield:ReceiveStudiesEnabled", this);
+class ShieldFrameChild extends JSWindowActorChild {
+  async handleEvent(event) {
+    // On page show or page hide,
+    // add this child to the WeakSet in AboutStudies.
+    switch (event.type) {
+      case "pageshow":
+        this.sendAsyncMessage("Shield:AddToWeakSet");
+        return;
 
+      case "pagehide":
+        this.sendAsyncMessage("Shield:RemoveFromWeakSet");
+        return;
+    }
     switch (event.detail.action) {
       // Actions that require the parent process
       case "GetRemoteValue:AddonStudyList":
-        this.mm.sendAsyncMessage("Shield:GetAddonStudyList");
+        let addonStudies = await this.sendQuery("Shield:GetAddonStudyList");
+        this.triggerPageCallback(
+          "ReceiveRemoteValue:AddonStudyList",
+          addonStudies
+        );
         break;
       case "GetRemoteValue:PreferenceStudyList":
-        this.mm.sendAsyncMessage("Shield:GetPreferenceStudyList");
+        let prefStudies = await this.sendQuery("Shield:GetPreferenceStudyList");
+        this.triggerPageCallback(
+          "ReceiveRemoteValue:PreferenceStudyList",
+          prefStudies
+        );
         break;
       case "RemoveAddonStudy":
-        this.mm.sendAsyncMessage("Shield:RemoveAddonStudy", event.detail.data);
+        this.sendAsyncMessage("Shield:RemoveAddonStudy", event.detail.data);
         break;
       case "RemovePreferenceStudy":
-        this.mm.sendAsyncMessage(
+        this.sendAsyncMessage(
           "Shield:RemovePreferenceStudy",
           event.detail.data
         );
         break;
       case "GetRemoteValue:StudiesEnabled":
-        this.mm.sendAsyncMessage("Shield:GetStudiesEnabled");
+        let studiesEnabled = await this.sendQuery("Shield:GetStudiesEnabled");
+        this.triggerPageCallback(
+          "ReceiveRemoteValue:StudiesEnabled",
+          studiesEnabled
+        );
         break;
       case "NavigateToDataPreferences":
-        this.mm.sendAsyncMessage("Shield:OpenDataPreferences");
+        this.sendAsyncMessage("Shield:OpenDataPreferences");
         break;
       // Actions that can be performed in the content process
       case "GetRemoteValue:ShieldLearnMoreHref":
@@ -105,56 +116,30 @@ class ShieldFrameChild extends ActorChild {
     }
   }
 
-  /**
-   * Handle messages from the parent process.
-   * @param {Object} message
-   *   See the nsIMessageListener docs.
-   */
-  receiveMessage(message) {
-    switch (message.name) {
-      case "Shield:ReceiveAddonStudyList":
-        this.triggerPageCallback(
-          "ReceiveRemoteValue:AddonStudyList",
-          message.data.studies
-        );
+  receiveMessage(msg) {
+    switch (msg.name) {
+      case "Shield:UpdateAddonStudyList":
+        this.triggerPageCallback("ReceiveRemoteValue:AddonStudyList", msg.data);
         break;
-      case "Shield:ReceivePreferenceStudyList":
+      case "Shield:UpdatePreferenceStudyList":
         this.triggerPageCallback(
           "ReceiveRemoteValue:PreferenceStudyList",
-          message.data.studies
+          msg.data
         );
-        break;
-      case "Shield:ReceiveStudiesEnabled":
-        this.triggerPageCallback(
-          "ReceiveRemoteValue:StudiesEnabled",
-          message.data.studiesEnabled
-        );
-        break;
-      case "Shield:ShuttingDown":
-        this.onShutdown();
         break;
     }
   }
-
   /**
-   * Trigger an event to communicate with the unprivileged about: page.
-   * @param {String} type
-   * @param {Object} detail
+   * Trigger an event to communicate with the unprivileged about:studies page.
+   * @param {String} type The type of event to trigger.
+   * @param {Object} detail The data to pass along to the event.
    */
   triggerPageCallback(type, detail) {
-    let { content } = this.mm;
-
     // Clone details and use the event class from the unprivileged context.
-    const event = new content.document.defaultView.CustomEvent(type, {
+    const event = new this.document.defaultView.CustomEvent(type, {
       bubbles: true,
-      detail: Cu.cloneInto(detail, content.document.defaultView),
+      detail: Cu.cloneInto(detail, this.document.defaultView),
     });
-    content.document.dispatchEvent(event);
-  }
-
-  onShutdown() {
-    this.mm.removeMessageListener("Shield:SendStudyList", this);
-    this.mm.removeMessageListener("Shield:ShuttingDown", this);
-    this.mm.removeEventListener("Shield", this);
+    this.document.dispatchEvent(event);
   }
 }

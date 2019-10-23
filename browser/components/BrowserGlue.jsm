@@ -147,6 +147,21 @@ let ACTORS = {
     allFrames: true,
   },
 
+  ShieldFrame: {
+    parent: {
+      moduleURI: "resource://normandy-content/ShieldFrameParent.jsm",
+    },
+    child: {
+      moduleURI: "resource://normandy-content/ShieldFrameChild.jsm",
+      events: {
+        pageshow: {},
+        pagehide: {},
+        ShieldPageEvent: { wantUntrusted: true },
+      },
+    },
+    matches: ["about:studies"],
+  },
+
   SwitchDocumentDirection: {
     child: {
       moduleURI: "resource:///actors/SwitchDocumentDirectionChild.jsm",
@@ -319,16 +334,6 @@ let LEGACY_ACTORS = {
         DOMContentLoaded: {},
         pageshow: { mozSystemGroup: true },
       },
-    },
-  },
-
-  ShieldFrame: {
-    child: {
-      module: "resource://normandy-content/ShieldFrameChild.jsm",
-      events: {
-        ShieldPageEvent: { wantUntrusted: true },
-      },
-      matches: ["about:studies"],
     },
   },
 
