@@ -52,11 +52,6 @@ add_task(async function test_login_syncing_disabled() {
     set: [["services.sync.engine.passwords", false]],
   });
   Services.obs.notifyObservers(null, UIState.ON_UPDATE);
-  registerCleanupFunction(() => {
-    Services.prefs.clearUserPref(
-      "signon.management.page.showPasswordSyncNotification"
-    );
-  });
 
   let browser = gBrowser.selectedBrowser;
   await ContentTask.spawn(browser, null, async () => {
@@ -82,26 +77,13 @@ add_task(async function test_login_syncing_disabled() {
   ok(notification, "enable-password-sync notification should be visible");
 
   let buttons = notification.querySelectorAll(".notification-button");
-  is(buttons.length, 2, "Should have two buttons.");
+  is(buttons.length, 1, "Should have one button.");
 
-  // Clicking the Sync options button requires an actual signed in account, not a faked
+  // Clicking the button requires an actual signed in account, not a faked
   // one as we have done here since a unique URL is generated. Therefore,
-  // this test skips clicking the Sync options button.
+  // this test skips clicking the button.
 
-  let neverAskAgainButton = buttons[1];
-  ok(
-    Services.prefs.getBoolPref(
-      "signon.management.page.showPasswordSyncNotification"
-    ),
-    "the pref to show the notification should be set to true"
-  );
-  neverAskAgainButton.click();
-  ok(
-    !Services.prefs.getBoolPref(
-      "signon.management.page.showPasswordSyncNotification"
-    ),
-    "the pref to show the notification should be set to false after clicking the 'never ask' button"
-  );
+  await SpecialPowers.popPrefEnv();
 
   await BrowserTestUtils.waitForCondition(
     () =>
@@ -110,9 +92,7 @@ add_task(async function test_login_syncing_disabled() {
         .getNotificationWithValue("enable-password-sync"),
     "waiting for enable-password-sync notification to get dismissed"
   );
-  ok(true, "notification is dismissed after the 'never ask' button is clicked");
-
-  await SpecialPowers.popPrefEnv();
+  ok(true, "notification is dismissed after the pref is reverted");
 });
 
 add_task(async function test_login_syncing_enabled() {
