@@ -8937,6 +8937,8 @@ class CGSpecializedMethod(CGAbstractStaticMethod):
 
     @staticmethod
     def makeNativeName(descriptor, method):
+        if method.underlyingAttr:
+            return CGSpecializedGetter.makeNativeName(descriptor, method.underlyingAttr)
         name = method.identifier.name
         return MakeNativeName(descriptor.binaryNameFor(name))
 
@@ -13326,10 +13328,6 @@ class CGDescriptor(CGThing):
             elif m.isMaplikeOrSetlike():
                 cgThings.append(CGMaplikeOrSetlikeHelperGenerator(descriptor, m))
             elif m.isAttr():
-                if m.stringifier:
-                    raise TypeError("Stringifier attributes not supported yet. "
-                                    "See bug 824857.\n"
-                                    "%s" % m.location)
                 if m.getExtendedAttribute("Unscopable"):
                     assert not m.isStatic()
                     unscopableNames.append(m.identifier.name)

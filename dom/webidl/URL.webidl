@@ -17,14 +17,8 @@ interface URL {
   [Throws]
   constructor(USVString url, optional USVString base);
 
-  // Bug 824857: no support for stringifier attributes yet.
-  //  stringifier attribute USVString href;
-
-  // Bug 824857 should remove this.
-  stringifier;
-
   [SetterThrows]
-  attribute USVString href;
+  stringifier attribute USVString href;
   [GetterThrows]
   readonly attribute USVString origin;
   [SetterThrows]

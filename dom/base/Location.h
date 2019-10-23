@@ -108,12 +108,6 @@ class Location final : public nsISupports,
   void SetHash(const nsAString& aHash, nsIPrincipal& aSubjectPrincipal,
                ErrorResult& aError);
 
-  void Stringify(nsAString& aRetval, nsIPrincipal& aSubjectPrincipal,
-                 ErrorResult& aError) {
-    // GetHref checks CallerSubsumes.
-    GetHref(aRetval, aSubjectPrincipal, aError);
-  }
-
   nsPIDOMWindowInner* GetParentObject() const { return mInnerWindow; }
 
   virtual JSObject* WrapObject(JSContext* aCx,

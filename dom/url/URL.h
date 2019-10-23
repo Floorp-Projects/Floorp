@@ -109,8 +109,6 @@ class URL final : public URLSearchParamsObserver, public nsWrapperCache {
 
   void SetHash(const nsAString& aHash);
 
-  void Stringify(nsAString& aRetval) const { GetHref(aRetval); }
-
   void ToJSON(nsAString& aResult) const { GetHref(aResult); }
 
   // URLSearchParamsObserver

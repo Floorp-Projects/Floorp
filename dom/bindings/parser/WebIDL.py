@@ -760,6 +760,8 @@ class IDLInterfaceOrInterfaceMixinOrNamespace(IDLObjectWithScope, IDLExposureMix
             # specified, it already has a nonempty exposure global names set.
             if len(m._exposureGlobalNames) == 0:
                 m._exposureGlobalNames.update(self._exposureGlobalNames)
+            if m.isAttr() and m.stringifier:
+                m.expand(self.members)
 
         # resolve() will modify self.members, so we need to iterate
         # over a copy of the member list here.
@@ -4612,6 +4614,40 @@ class IDLAttribute(IDLInterfaceMember):
     def _getDependentObjects(self):
         return set([self.type])
 
+    def expand(self, members):
+        assert self.stringifier
+        if not self.type.isDOMString() and not self.type.isUSVString():
+            raise WebIDLError("The type of a stringifer attribute must be "
+                              "either DOMString or USVString",
+                              [self.location])
+        identifier = IDLUnresolvedIdentifier(self.location, "__stringifier",
+                                             allowDoubleUnderscore=True)
+        method = IDLMethod(self.location,
+                           identifier,
+                           returnType=self.type, arguments=[],
+                           stringifier=True, underlyingAttr=self)
+        allowedExtAttrs = ["Throws", "NeedsSubjectPrincipal"]
+        # Safe to ignore these as they are only meaningful for attributes
+        attributeOnlyExtAttrs = [
+            "CEReactions",
+            "CrossOriginWritable",
+            "SetterThrows",
+        ]
+        for (key, value) in self._extendedAttrDict.items():
+            if key in allowedExtAttrs:
+                if value is not True:
+                    raise WebIDLError("[%s] with a value is currently "
+                                      "unsupported in stringifier attributes, "
+                                      "please file a bug to add support" % key,
+                                      [self.location])
+                method.addExtendedAttributes([IDLExtendedAttribute(self.location, (key,))])
+            elif not key in attributeOnlyExtAttrs:
+                raise WebIDLError("[%s] is currently unsupported in "
+                                  "stringifier attributes, please file a bug "
+                                  "to add support" % key,
+                                  [self.location])
+        members.append(method)
+
 
 class IDLArgument(IDLObjectWithIdentifier):
     def __init__(self, location, identifier, type, optional=False, defaultValue=None, variadic=False, dictionaryMember=False, allowTypeAttributes=False):
@@ -4857,7 +4893,8 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
                  static=False, getter=False, setter=False,
                  deleter=False, specialType=NamedOrIndexed.Neither,
                  legacycaller=False, stringifier=False,
-                 maplikeOrSetlikeOrIterable=None):
+                 maplikeOrSetlikeOrIterable=None,
+                 underlyingAttr=None):
         # REVIEW: specialType is NamedOrIndexed -- wow, this is messed up.
         IDLInterfaceMember.__init__(self, location, identifier,
                                     IDLInterfaceMember.Tags.Method)
@@ -4884,6 +4921,7 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
         assert maplikeOrSetlikeOrIterable is None or isinstance(maplikeOrSetlikeOrIterable, IDLMaplikeOrSetlikeOrIterableBase)
         self.maplikeOrSetlikeOrIterable = maplikeOrSetlikeOrIterable
         self._htmlConstructor = False
+        self.underlyingAttr = underlyingAttr
         self._specialType = specialType
         self._unforgeable = False
         self.dependsOn = "Everything"
@@ -4923,7 +4961,8 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
             assert len(self._overloads) == 1
             overload = self._overloads[0]
             assert len(overload.arguments) == 0
-            assert overload.returnType == BuiltinTypes[IDLBuiltinType.Types.domstring]
+            if not self.underlyingAttr:
+                assert overload.returnType == BuiltinTypes[IDLBuiltinType.Types.domstring]
 
     def isStatic(self):
         return self._static
