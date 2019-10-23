@@ -24,7 +24,9 @@ describe("IssueItem component", () => {
         url: "test-url",
         deprecated: false,
         experimental: false,
-        unsupportedBrowsers: [],
+        unsupportedBrowsers: [
+          { id: "firefox", name: "Firefox", version: "70", status: "nightly" },
+        ],
       })
     );
     expect(item).toMatchSnapshot();

@@ -42,10 +42,10 @@ exports[`IssueItem component renders an issue of CSS property 1`] = `
   </div>
   <div
     data-qa-key="unsupportedBrowsers"
-    data-qa-value="[]"
+    data-qa-value="[{\\"id\\":\\"firefox\\",\\"name\\":\\"Firefox\\",\\"version\\":\\"70\\",\\"status\\":\\"nightly\\"}]"
     key="unsupportedBrowsers"
   >
-    unsupportedBrowsers:[]
+    unsupportedBrowsers:[{"id":"firefox","name":"Firefox","version":"70","status":"nightly"}]
   </div>
 </li>
 `;
