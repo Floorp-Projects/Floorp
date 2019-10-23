@@ -2073,7 +2073,7 @@ struct DebuggerScript::SetBreakpointMatcher {
     }
 
     jsbytecode* pc = script->offsetToPC(offset_);
-    BreakpointSite* site =
+    JSBreakpointSite* site =
         DebugScript::getOrCreateBreakpointSite(cx_, script, pc);
     if (!site) {
       return false;
@@ -2167,7 +2167,7 @@ bool DebuggerScript::CallData::getBreakpoints() {
   }
 
   for (unsigned i = 0; i < script->length(); i++) {
-    BreakpointSite* site =
+    JSBreakpointSite* site =
         DebugScript::getBreakpointSite(script, script->offsetToPC(i));
     if (!site) {
       continue;
