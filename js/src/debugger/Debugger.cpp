@@ -343,15 +343,18 @@ Breakpoint::Breakpoint(Debugger* debugger, BreakpointSite* site,
   site->breakpoints.pushBack(this);
 }
 
-void Breakpoint::destroy(JSFreeOp* fop,
-                         MayDestroySite mayDestroySite /* true */) {
+void Breakpoint::delete_(JSFreeOp* fop) {
   debugger->breakpoints.remove(this);
   site->breakpoints.remove(this);
   gc::Cell* cell = site->owningCellUnbarriered();
-  if (mayDestroySite == MayDestroySite::True) {
-    site->destroyIfEmpty(fop);
-  }
   fop->delete_(cell, this, MemoryUse::Breakpoint);
+}
+
+void Breakpoint::remove(JSFreeOp* fop) {
+  BreakpointSite* savedSite = site;
+  delete_(fop);
+
+  savedSite->destroyIfEmpty(fop);
 }
 
 Breakpoint* Breakpoint::nextInDebugger() { return debuggerLink.mNext; }
@@ -4741,12 +4744,12 @@ void Debugger::removeDebuggeeGlobal(JSFreeOp* fop, GlobalObject* global,
     switch (bp->site->type()) {
       case BreakpointSite::Type::JS:
         if (bp->site->asJS()->script->realm() == global->realm()) {
-          bp->destroy(fop);
+          bp->remove(fop);
         }
         break;
       case BreakpointSite::Type::Wasm:
         if (bp->site->asWasm()->instanceObject->realm() == global->realm()) {
-          bp->destroy(fop);
+          bp->remove(fop);
         }
         break;
       default:

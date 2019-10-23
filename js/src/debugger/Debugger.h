@@ -1298,8 +1298,24 @@ class Breakpoint {
   Breakpoint(Debugger* debugger, BreakpointSite* site, JSObject* handler);
 
   enum MayDestroySite { False, True };
-  void destroy(JSFreeOp* fop,
-               MayDestroySite mayDestroySite = MayDestroySite::True);
+
+  /**
+   * Unlink this breakpoint from its Debugger's and and BreakpointSite's lists,
+   * and free its memory.
+   *
+   * This is the low-level primitive shared by breakpoint removal and script
+   * finalization code. It is only concerned with cleaning up this Breakpoint;
+   * it does not check for now-empty BreakpointSites, unneeded DebugScripts, or
+   * the like.
+   */
+  void delete_(JSFreeOp* fop);
+
+  /**
+   * Remove this breakpoint. Unlink it from its Debugger's and BreakpointSite's
+   * lists, and if the BreakpointSite is now empty, clean that up and update JIT
+   * code as necessary.
+   */
+  void remove(JSFreeOp* fop);
 
   Breakpoint* nextInDebugger();
   Breakpoint* nextInSite();
