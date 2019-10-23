@@ -1862,12 +1862,8 @@ nsEventStatus AsyncPanZoomController::HandleEndOfPan() {
 bool AsyncPanZoomController::ConvertToGecko(const ScreenIntPoint& aPoint,
                                             LayoutDevicePoint* aOut) {
   if (APZCTreeManager* treeManagerLocal = GetApzcTreeManager()) {
-    ScreenToScreenMatrix4x4 transformScreenToGecko =
-        treeManagerLocal->GetScreenToApzcTransform(this) *
-        treeManagerLocal->GetApzcToGeckoTransform(this);
-
     Maybe<ScreenIntPoint> layoutPoint =
-        UntransformBy(transformScreenToGecko, aPoint);
+        treeManagerLocal->ConvertToGecko(aPoint, this);
     if (!layoutPoint) {
       return false;
     }

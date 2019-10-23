@@ -592,6 +592,13 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
   ScreenPoint GetCurrentMousePosition() const;
 
   /**
+   * Convert a screen point of an event targeting |aApzc| to Gecko
+   * coordinates.
+   */
+  Maybe<ScreenIntPoint> ConvertToGecko(const ScreenIntPoint& aPoint,
+                                       AsyncPanZoomController* aApzc);
+
+  /**
    * Process a movement of the dynamic toolbar by |aDeltaY| over the time
    * period from |aStartTimestampMs| to |aEndTimestampMs|.
    * This is used to track velocities accurately in the presence of movement
