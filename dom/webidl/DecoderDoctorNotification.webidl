@@ -14,6 +14,7 @@ enum DecoderDoctorNotificationType {
   "decode-warning",
 };
 
+[GenerateToJSON]
 dictionary DecoderDoctorNotification {
   required DecoderDoctorNotificationType type;
   // True when the issue has been solved.
