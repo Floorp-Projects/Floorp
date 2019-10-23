@@ -19,7 +19,7 @@ class Realm;
 
 namespace js {
 
-class BreakpointSite;
+class JSBreakpointSite;
 class Debugger;
 
 // DebugScript manages the internal debugger state for a JSScript, which may be
@@ -55,11 +55,11 @@ class DebugScript {
 
   /*
    * Breakpoints set in our script. For speed and simplicity, this array is
-   * parallel to script->code(): the BreakpointSite for the opcode at
+   * parallel to script->code(): the JSBreakpointSite for the opcode at
    * script->code()[offset] is debugScript->breakpoints[offset]. Naturally,
    * this array's true length is script->length().
    */
-  BreakpointSite* breakpoints[1];
+  JSBreakpointSite* breakpoints[1];
 
   /*
    * True if this DebugScript carries any useful information. If false, it
@@ -71,17 +71,17 @@ class DebugScript {
 
   static size_t allocSize(size_t codeLength) {
     return offsetof(DebugScript, breakpoints) +
-           codeLength * sizeof(BreakpointSite*);
+           codeLength * sizeof(JSBreakpointSite*);
   }
 
   static DebugScript* get(JSScript* script);
   static DebugScript* getOrCreate(JSContext* cx, JSScript* script);
 
  public:
-  static BreakpointSite* getBreakpointSite(JSScript* script, jsbytecode* pc);
-  static BreakpointSite* getOrCreateBreakpointSite(JSContext* cx,
-                                                   JSScript* script,
-                                                   jsbytecode* pc);
+  static JSBreakpointSite* getBreakpointSite(JSScript* script, jsbytecode* pc);
+  static JSBreakpointSite* getOrCreateBreakpointSite(JSContext* cx,
+                                                     JSScript* script,
+                                                     jsbytecode* pc);
   static void destroyBreakpointSite(JSFreeOp* fop, JSScript* script,
                                     jsbytecode* pc);
 
