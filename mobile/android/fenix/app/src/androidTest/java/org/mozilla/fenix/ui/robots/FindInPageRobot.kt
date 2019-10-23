@@ -17,6 +17,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.Until
+import org.junit.Assert.assertNotNull
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.click
@@ -33,15 +34,15 @@ class FindInPageRobot {
     fun verifyFindInPageCloseButton() = assertFindInPageCloseButton()!!
 
     fun enterFindInPageQuery(expectedText: String) {
-        mDevice.wait(Until.findObject(By.res("find_in_page_query_text")), waitingTime)
+        assertNotNull(mDevice.wait(Until.findObject(By.res("org.mozilla.fenix.debug:id/find_in_page_query_text")), waitingTime))
         findInPageQuery().perform(clearText())
-        mDevice.wait(Until.gone(By.res("find_in_page_result_text")), waitingTime)
+        assertNotNull(mDevice.wait(Until.gone(By.res("org.mozilla.fenix.debug:id/find_in_page_result_text")), waitingTime))
         findInPageQuery().perform(typeText(expectedText))
-        mDevice.wait(Until.findObject(By.res("find_in_page_result_text")), waitingTime)
+        assertNotNull(mDevice.wait(Until.findObject(By.res("org.mozilla.fenix.debug:id/find_in_page_result_text")), waitingTime))
     }
 
     fun verifyFindNextInPageResult(ratioCounter: String) {
-        mDevice.wait(Until.findObject(By.text(ratioCounter)), waitingTime)
+        assertNotNull(mDevice.wait(Until.findObject(By.text(ratioCounter)), waitingTime))
         val element = mDevice.findObject(By.text(ratioCounter))
         findInPageResult().check(matches(withText((ratioCounter))))
         findInPageNextButton().click()
@@ -49,7 +50,7 @@ class FindInPageRobot {
     }
 
     fun verifyFindPrevInPageResult(ratioCounter: String) {
-        mDevice.wait(Until.findObject(By.text(ratioCounter)), waitingTime)
+        assertNotNull(mDevice.wait(Until.findObject(By.text(ratioCounter)), waitingTime))
         val element = mDevice.findObject(By.text(ratioCounter))
         findInPageResult().check(matches(withText((ratioCounter))))
         findInPagePrevButton().click()

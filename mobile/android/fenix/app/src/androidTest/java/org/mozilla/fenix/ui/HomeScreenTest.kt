@@ -5,6 +5,7 @@
 package org.mozilla.fenix.ui
 
 import androidx.test.uiautomator.UiDevice
+import org.junit.Assert.assertNotNull
 import org.junit.Rule
 import org.junit.Test
 import org.junit.Ignore
@@ -121,7 +122,7 @@ class HomeScreenTest {
         homeScreen {
             // To deal with the race condition where multiple "add tab" buttons are present,
             // we need to wait until previous HomeFragment View objects are gone.
-            mDevice.wait(Until.gone(By.text(PRIVATE_SESSION_MESSAGE)), waitingTime)
+            assertNotNull(mDevice.wait(Until.gone(By.text(PRIVATE_SESSION_MESSAGE)), waitingTime))
             verifyHomeScreen()
             verifyNavigationToolbar()
             verifyHomePrivateBrowsingButton()

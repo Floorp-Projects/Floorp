@@ -27,6 +27,7 @@ import androidx.test.uiautomator.Until
 import org.hamcrest.Matchers.allOf
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.TestAssetHelper
+import org.junit.Assert.assertNotNull
 
 @Suppress("RECEIVER_NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
 class SyncIntegrationTest {
@@ -96,7 +97,7 @@ class SyncIntegrationTest {
     }
 
     fun tapOnContinueButton() {
-        val continueButton = mDevice.findObject(By.res("submit-btn"))
+        val continueButton = mDevice.findObject(By.res("org.mozilla.fenix.debug:id/submit-btn"))
         continueButton.clickAndWait(Until.newWindow(), TestAssetHelper.waitingTime)
     }
 
@@ -110,7 +111,7 @@ class SyncIntegrationTest {
     }
 
     fun tapOnSignIn() {
-        mDevice.wait(Until.findObjects(By.text("Sign in")), TestAssetHelper.waitingTimeShort)
+        assertNotNull(mDevice.wait(Until.findObjects(By.text("Sign in")), TestAssetHelper.waitingTimeShort))
         // Let's tap on enter, sometimes depending on the device the sign in button is
         // hidden by the keyboard
         mDevice.pressEnter()
@@ -132,7 +133,7 @@ class SyncIntegrationTest {
     }
 
     fun seeBookmark() {
-        mDevice.wait(Until.findObjects(By.text("Bookmark")), TestAssetHelper.waitingTime)
+        assertNotNull(mDevice.wait(Until.findObjects(By.text("Bookmark")), TestAssetHelper.waitingTime))
         val bookmarkButton = mDevice.findObject(By.text("Bookmark"))
         bookmarkButton.click()
     }

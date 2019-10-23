@@ -15,6 +15,7 @@ import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.Until
 import org.hamcrest.CoreMatchers.containsString
+import org.junit.Assert.assertNotNull
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.click
@@ -24,7 +25,7 @@ class BrowserRobot {
     fun verifyHelpUrl() {
         val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         val redirectUrl = "https://support.mozilla.org/"
-        mDevice.wait(Until.findObject(By.res("mozac_browser_toolbar_url_view")), TestAssetHelper.waitingTime)
+        assertNotNull(mDevice.wait(Until.findObject(By.res("org.mozilla.fenix.debug:id/mozac_browser_toolbar_url_view")), TestAssetHelper.waitingTime))
         onView(withId(R.id.mozac_browser_toolbar_url_view))
             .check(matches(withText(containsString(redirectUrl))))
     }
@@ -32,8 +33,7 @@ class BrowserRobot {
     fun verifyWhatsNewURL() {
         val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         val redirectUrl = "https://support.mozilla.org/"
-
-        mDevice.wait(Until.findObject(By.res("mozac_browser_toolbar_url_view")), TestAssetHelper.waitingTime)
+        assertNotNull(mDevice.wait(Until.findObject(By.res("org.mozilla.fenix.debug:id/mozac_browser_toolbar_url_view")), TestAssetHelper.waitingTime))
         onView(withId(R.id.mozac_browser_toolbar_url_view))
             .check(matches(withText(containsString(redirectUrl))))
     }
@@ -43,7 +43,7 @@ class BrowserRobot {
     */
     fun verifyPageContent(expectedText: String) {
         val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
-        mDevice.wait(Until.findObject(By.res(expectedText)), TestAssetHelper.waitingTime)
+        assertNotNull(mDevice.wait(Until.findObject(By.text(expectedText)), TestAssetHelper.waitingTime))
     }
 
     fun verifyTabCounter(expectedText: String) {
@@ -67,19 +67,19 @@ class BrowserRobot {
 
             tabsCounter().click()
 
-            mDevice.wait(
-                Until.findObject(By.res("R.id.header_text")),
+            assertNotNull(mDevice.wait(
+                Until.findObject(By.res("org.mozilla.fenix.debug:id/header_text")),
                 TestAssetHelper.waitingTime
-            )
+            ))
 
             HomeScreenRobot().interact()
             return HomeScreenRobot.Transition()
         }
 
         fun openQuickActionBar(interact: QuickActionBarRobot.() -> Unit): QuickActionBarRobot.Transition {
-            mDevice.wait(Until.gone(By.res("org.mozilla.fenix.nightly:id/quick_action_sheet")),
+            assertNotNull(mDevice.wait(Until.gone(By.res("org.mozilla.fenix.debug:id/quick_action_sheet")),
                 TestAssetHelper.waitingTime
-            )
+            ))
             quickActionBarHandle().click()
 
             QuickActionBarRobot().interact()

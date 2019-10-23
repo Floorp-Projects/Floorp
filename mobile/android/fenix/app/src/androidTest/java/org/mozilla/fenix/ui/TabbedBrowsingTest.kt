@@ -9,6 +9,7 @@ import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.Until
 import okhttp3.mockwebserver.MockWebServer
+import org.junit.Assert.assertNotNull
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
@@ -74,7 +75,8 @@ class TabbedBrowsingTest {
         }.openHomeScreen { }
 
         homeScreen {
-            mDevice.wait(Until.findObject(By.res("R.id.item_tab")), TestAssetHelper.waitingTime)
+            // Timing issue on slow devices on Firebase
+            assertNotNull(mDevice.wait(Until.findObjects(By.res("org.mozilla.fenix.debug:id/item_tab")), TestAssetHelper.waitingTime))
             verifyExistingTabList()
 
         }.openTabsListThreeDotMenu {
@@ -103,7 +105,8 @@ class TabbedBrowsingTest {
             verifyPageContent(defaultWebPage.content)
             verifyTabCounter("1")
         }.openHomeScreen {
-            mDevice.wait(Until.findObject(By.res("R.id.item_tab")), TestAssetHelper.waitingTime)
+            // Timing issue on slow devices on Firebase
+            assertNotNull(mDevice.wait(Until.findObjects(By.res("org.mozilla.fenix.debug:id/item_tab")), TestAssetHelper.waitingTime))
             verifyExistingTabList()
             verifyShareTabsButton(true)
             verifyCloseTabsButton(true)
@@ -131,7 +134,8 @@ class TabbedBrowsingTest {
         }.openHomeScreen { }
 
         homeScreen {
-            mDevice.wait(Until.findObject(By.res("R.id.item_tab")), TestAssetHelper.waitingTime)
+            // Timing issue on slow devices on Firebase
+            assertNotNull(mDevice.wait(Until.findObjects(By.res("org.mozilla.fenix.debug:id/item_tab")), TestAssetHelper.waitingTime))
             verifyExistingTabList()
         }.openTabsListThreeDotMenu {
             verifyCloseAllTabsButton()
