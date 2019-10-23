@@ -104,8 +104,15 @@ class Front extends Pool {
     this._frontListeners.emit(front.typeName, front);
   }
 
-  // Run callback on every front of this type that currently exists, and on every
-  // instantiation of front type in the future.
+  /**
+   * Register an event listener that will be called on every front of this type
+   * that currently exists, and on every instantiation of front type in the future.
+   *
+   * @param String typeName
+   *   Actor type to watch.
+   * @param Function callback
+   *   Function that will process the event.
+   */
   onFront(typeName, callback) {
     // First fire the callback on already instantiated fronts
     for (const front of this.poolChildren()) {
@@ -115,6 +122,18 @@ class Front extends Pool {
     }
     // Then register the callback for fronts instantiated in the future
     this._frontListeners.on(typeName, callback);
+  }
+
+  /**
+   * Unregister an event listener which was set via `Front.onFront`.
+   *
+   * @param String typeName
+   *   Actor type to stop watching.
+   * @param Function callback
+   *   Function that was processing the event.
+   */
+  offFront(typeName, callback) {
+    this._frontListeners.off(typeName, callback);
   }
 
   /**
