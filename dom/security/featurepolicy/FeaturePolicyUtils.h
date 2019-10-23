@@ -10,8 +10,6 @@
 #include "nsString.h"
 #include <functional>
 
-#include "mozilla/dom/FeaturePolicy.h"
-
 namespace mozilla {
 namespace dom {
 
@@ -52,23 +50,6 @@ class FeaturePolicyUtils final {
 };
 
 }  // namespace dom
-
-namespace ipc {
-
-class IProtocol;
-
-template <typename T>
-struct IPDLParamTraits;
-
-template <>
-struct IPDLParamTraits<mozilla::dom::FeaturePolicy*> {
-  static void Write(IPC::Message* aMsg, IProtocol* aActor,
-                    mozilla::dom::FeaturePolicy* aParam);
-  static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
-                   IProtocol* aActor,
-                   RefPtr<mozilla::dom::FeaturePolicy>* aResult);
-};
-}  // namespace ipc
 }  // namespace mozilla
 
 #endif  // mozilla_dom_FeaturePolicyUtils_h
