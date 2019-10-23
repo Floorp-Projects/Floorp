@@ -13,7 +13,7 @@ const TEST_URI = `
     color: blue;
     border-block-color: lime;
     user-modify: read-only;
-   }
+  }
   </style>
   <body></body>
 `;
@@ -25,7 +25,6 @@ const TEST_DATA = [
     url: "https://developer.mozilla.org/docs/Web/CSS/border-block-color",
     deprecated: false,
     experimental: true,
-    unsupportedBrowsers: [],
   },
   {
     type: MDNCompatibility.ISSUE_TYPE.CSS_PROPERTY_ALIASES,
@@ -34,7 +33,6 @@ const TEST_DATA = [
     aliases: ["user-modify"],
     deprecated: true,
     experimental: false,
-    unsupportedBrowsers: [],
   },
 ];
 

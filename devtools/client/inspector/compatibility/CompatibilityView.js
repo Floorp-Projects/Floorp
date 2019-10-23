@@ -10,7 +10,16 @@ const {
 } = require("devtools/client/shared/vendor/react");
 const { Provider } = require("devtools/client/shared/vendor/react-redux");
 
-const { updateSelectedNode } = require("./actions/compatibility");
+loader.lazyRequireGetter(
+  this,
+  "browsersDataset",
+  "devtools/client/inspector/compatibility/lib/dataset/browsers.json"
+);
+
+const {
+  updateSelectedNode,
+  updateTargetBrowsers,
+} = require("./actions/compatibility");
 
 const CompatibilityApp = createFactory(
   require("./components/CompatibilityApp")
@@ -61,6 +70,14 @@ class CompatibilityView {
         { once: true }
       );
     }
+
+    this._initTargetBrowsers();
+  }
+
+  async _initTargetBrowsers() {
+    this.inspector.store.dispatch(
+      updateTargetBrowsers(_getDefaultTargetBrowsers())
+    );
   }
 
   _isVisible() {
@@ -87,6 +104,45 @@ class CompatibilityView {
       this.inspector.getPanel("ruleview").view
     );
   }
+}
+
+/**
+ * Return target browsers that will be checked as default.
+ * The default target browsers includes major browsers that have been releasing as `esr`,
+ * `release`, `beta` or `nightly`.
+ *
+ * @return e.g, [{ id: "firefox", name: "Firefox", version: "70", status: "nightly"},...]
+ */
+function _getDefaultTargetBrowsers() {
+  const TARGET_BROWSER_ID = [
+    "firefox",
+    "firefox_android",
+    "chrome",
+    "chrome_android",
+    "safari",
+    "safari_ios",
+    "edge",
+    "edge_mobile",
+  ];
+  const TARGET_BROWSER_STATUS = ["esr", "current", "beta", "nightly"];
+
+  // Retrieve the information that matches to the browser id and the status
+  // from the browsersDataset.
+  // For the structure of then browsersDataset,
+  // see https://github.com/mdn/browser-compat-data/blob/master/browsers/firefox.json
+  const targets = [];
+  for (const id of TARGET_BROWSER_ID) {
+    const { name, releases } = browsersDataset[id];
+
+    for (const version in releases) {
+      const { status } = releases[version];
+
+      if (TARGET_BROWSER_STATUS.includes(status)) {
+        targets.push({ id, name, version, status });
+      }
+    }
+  }
+  return targets;
 }
 
 module.exports = CompatibilityView;
