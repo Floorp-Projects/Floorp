@@ -1003,6 +1003,9 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
    * @param aCallerDocumentURI [out] The URI of the document of the incumbent
    * global if it's a Window, null otherwise.
    *
+   * @param aCallerAgentCluterId [out] If a non-nullptr is passed, it would
+   * return the caller's agent cluster id.
+   *
    * @param aError [out] The error, if any.
    *
    * @return Whether the postMessage call should continue or return now.
@@ -1012,7 +1015,7 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
       mozilla::dom::BrowsingContext** aSource, nsAString& aOrigin,
       nsIURI** aTargetOriginURI, nsIPrincipal** aCallerPrincipal,
       nsGlobalWindowInner** aCallerInnerWindow, nsIURI** aCallerDocumentURI,
-      mozilla::ErrorResult& aError);
+      Maybe<nsID>* aCallerAgentClusterId, mozilla::ErrorResult& aError);
 
   // Ask the user if further dialogs should be blocked, if dialogs are currently
   // being abused. This is used in the cases where we have no modifiable UI to

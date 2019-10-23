@@ -8,6 +8,7 @@
 
 #include "MessageEvent.h"
 #include "mozilla/dom/BlobBinding.h"
+#include "mozilla/dom/DocGroup.h"
 #include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/FileList.h"
@@ -31,19 +32,18 @@
 namespace mozilla {
 namespace dom {
 
-PostMessageEvent::PostMessageEvent(BrowsingContext* aSource,
-                                   const nsAString& aCallerOrigin,
-                                   nsGlobalWindowOuter* aTargetWindow,
-                                   nsIPrincipal* aProvidedPrincipal,
-                                   const Maybe<uint64_t>& aCallerWindowID,
-                                   nsIURI* aCallerDocumentURI,
-                                   bool aIsFromPrivateWindow)
+PostMessageEvent::PostMessageEvent(
+    BrowsingContext* aSource, const nsAString& aCallerOrigin,
+    nsGlobalWindowOuter* aTargetWindow, nsIPrincipal* aProvidedPrincipal,
+    const Maybe<uint64_t>& aCallerWindowID, nsIURI* aCallerDocumentURI,
+    bool aIsFromPrivateWindow, const Maybe<nsID>& aCallerAgentClusterId)
     : Runnable("dom::PostMessageEvent"),
       mSource(aSource),
       mCallerOrigin(aCallerOrigin),
       mTargetWindow(aTargetWindow),
       mProvidedPrincipal(aProvidedPrincipal),
       mCallerWindowID(aCallerWindowID),
+      mCallerAgentClusterId(aCallerAgentClusterId),
       mCallerDocumentURI(aCallerDocumentURI),
       mIsFromPrivateWindow(aIsFromPrivateWindow) {}
 
@@ -161,6 +161,14 @@ PostMessageEvent::Run() {
   JS::Rooted<JS::Value> messageData(cx);
   nsCOMPtr<mozilla::dom::EventTarget> eventTarget =
       do_QueryObject(targetWindow);
+
+  // XXX cloneDataPolicy will be used in P3
+  JS::CloneDataPolicy cloneDataPolicy;
+  MOZ_DIAGNOSTIC_ASSERT(targetWindow);
+  if (mCallerAgentClusterId.isSome() &&
+      targetWindow->CanShareMemory(mCallerAgentClusterId.ref())) {
+    cloneDataPolicy.allowSharedMemory();
+  }
 
   StructuredCloneHolder* holder;
   if (mHolder.constructed<StructuredCloneHolder>()) {
