@@ -10,21 +10,21 @@ exports[`IssueItem component renders an issue of CSS property 1`] = `
     data-qa-value="CSS_PROPERTY"
     key="type"
   >
-    type:CSS_PROPERTY
+    type:"CSS_PROPERTY"
   </div>
   <div
     data-qa-key="property"
     data-qa-value="test-property"
     key="property"
   >
-    property:test-property
+    property:"test-property"
   </div>
   <div
     data-qa-key="url"
     data-qa-value="test-url"
     key="url"
   >
-    url:test-url
+    url:"test-url"
   </div>
   <div
     data-qa-key="deprecated"
@@ -45,7 +45,7 @@ exports[`IssueItem component renders an issue of CSS property 1`] = `
     data-qa-value=""
     key="unsupportedBrowsers"
   >
-    unsupportedBrowsers:
+    unsupportedBrowsers:[]
   </div>
 </li>
 `;

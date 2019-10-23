@@ -10,6 +10,9 @@ createEnum(
   [
     // Updates the selected node.
     "COMPATIBILITY_UPDATE_SELECTED_NODE",
+
+    // Updates the target browsers.
+    "COMPATIBILITY_UPDATE_TARGET_BROWSERS",
   ],
   module.exports
 );
