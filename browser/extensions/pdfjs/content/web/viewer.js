@@ -2195,7 +2195,7 @@ function webViewerKeyDown(evt) {
   let curElement = document.activeElement || document.querySelector(':focus');
   let curElementTagName = curElement && curElement.tagName.toUpperCase();
 
-  if (curElementTagName === 'INPUT' || curElementTagName === 'TEXTAREA' || curElementTagName === 'SELECT') {
+  if (curElementTagName === 'INPUT' || curElementTagName === 'TEXTAREA' || curElementTagName === 'SELECT' || curElement && curElement.isContentEditable) {
     if (evt.keyCode !== 27) {
       return;
     }
@@ -8683,7 +8683,7 @@ class BaseViewer {
           this.findController.setDocument(pdfDocument);
         }
 
-        if (pdfDocument.loadingParams['disableAutoFetch']) {
+        if (pdfDocument.loadingParams['disableAutoFetch'] || pagesCount > 7500) {
           pagesCapability.resolve();
           return;
         }

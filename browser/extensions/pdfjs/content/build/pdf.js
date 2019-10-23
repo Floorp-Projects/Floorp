@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.4.43';
-var pdfjsBuild = '16ae7c69';
+var pdfjsVersion = '2.4.71';
+var pdfjsBuild = 'd7f651aa';
 
 var pdfjsSharedUtil = __w_pdfjs_require__(1);
 
@@ -1271,7 +1271,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise('GetDocRequest', {
     docId,
-    apiVersion: '2.4.43',
+    apiVersion: '2.4.71',
     source: {
       data: source.data,
       url: source.url,
@@ -2514,6 +2514,33 @@ class WorkerTransport {
 
       loadingTask._capability.resolve(new PDFDocumentProxy(pdfInfo, this));
     });
+    messageHandler.on('DocException', function (ex) {
+      let reason;
+
+      switch (ex.name) {
+        case 'PasswordException':
+          reason = new _util.PasswordException(ex.message, ex.code);
+          break;
+
+        case 'InvalidPDFException':
+          reason = new _util.InvalidPDFException(ex.message);
+          break;
+
+        case 'MissingPDFException':
+          reason = new _util.MissingPDFException(ex.message);
+          break;
+
+        case 'UnexpectedResponseException':
+          reason = new _util.UnexpectedResponseException(ex.message, ex.status);
+          break;
+
+        case 'UnknownErrorException':
+          reason = new _util.UnknownErrorException(ex.message, ex.details);
+          break;
+      }
+
+      loadingTask._capability.reject(reason);
+    });
     messageHandler.on('PasswordRequest', exception => {
       this._passwordCapability = (0, _util.createPromiseCapability)();
 
@@ -2534,21 +2561,6 @@ class WorkerTransport {
       }
 
       return this._passwordCapability.promise;
-    });
-    messageHandler.on('PasswordException', function (exception) {
-      loadingTask._capability.reject(new _util.PasswordException(exception.message, exception.code));
-    });
-    messageHandler.on('InvalidPDF', function (exception) {
-      loadingTask._capability.reject(new _util.InvalidPDFException(exception.message));
-    });
-    messageHandler.on('MissingPDF', function (exception) {
-      loadingTask._capability.reject(new _util.MissingPDFException(exception.message));
-    });
-    messageHandler.on('UnexpectedResponse', function (exception) {
-      loadingTask._capability.reject(new _util.UnexpectedResponseException(exception.message, exception.status));
-    });
-    messageHandler.on('UnknownError', function (exception) {
-      loadingTask._capability.reject(new _util.UnknownErrorException(exception.message, exception.details));
     });
     messageHandler.on('DataLoaded', data => {
       if (loadingTask.onProgress) {
@@ -3174,9 +3186,9 @@ const InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-const version = '2.4.43';
+const version = '2.4.71';
 exports.version = version;
-const build = '16ae7c69';
+const build = 'd7f651aa';
 exports.build = build;
 
 /***/ }),
