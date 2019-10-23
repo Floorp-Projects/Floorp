@@ -284,8 +284,6 @@
  * is not usually necessary and should be done with caution.
  */
 
-class JSFlatString;
-
 namespace js {
 
 class NativeObject;
@@ -1031,7 +1029,6 @@ using GCPtrArrayObject = GCPtr<ArrayObject*>;
 using GCPtrBaseShape = GCPtr<BaseShape*>;
 using GCPtrAtom = GCPtr<JSAtom*>;
 using GCPtrBigInt = GCPtr<BigInt*>;
-using GCPtrFlatString = GCPtr<JSFlatString*>;
 using GCPtrFunction = GCPtr<JSFunction*>;
 using GCPtrLinearString = GCPtr<JSLinearString*>;
 using GCPtrObject = GCPtr<JSObject*>;

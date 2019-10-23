@@ -22,8 +22,8 @@ if (this.getBuildConfiguration) {
 
 function makeString() {
     x += 1;
-    const extensible = ensureFlatString("aaaaaaaaaaaaaaaaaaaaaaaaaaaaa" + x);
-    return ensureFlatString(newRope(extensible, "bbbbbbbbbbbbbbb"));
+    const extensible = ensureLinearString("aaaaaaaaaaaaaaaaaaaaaaaaaaaaa" + x);
+    return ensureLinearString(newRope(extensible, "bbbbbbbbbbbbbbb"));
 }
 
 function f(arr) {

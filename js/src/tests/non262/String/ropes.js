@@ -3,8 +3,8 @@ print("Stress test of ropes");
 if (typeof newRope === "undefined") {
     var newRope = SpecialPowers.Cu.getJSTestingFunctions().newRope;
 }
-if (typeof ensureFlatString === "undefined") {
-    var ensureFlatString = SpecialPowers.Cu.getJSTestingFunctions().ensureFlatString;
+if (typeof ensureLinearString === "undefined") {
+    var ensureLinearString = SpecialPowers.Cu.getJSTestingFunctions().ensureLinearString;
 }
 
 function createRopes() {
@@ -44,7 +44,7 @@ const ropes = createRopes();
 
 // Flatten them all.
 for (const [name, rope] of Object.entries(ropes))
-    ensureFlatString(rope);
+    ensureLinearString(rope);
 
 // GC with them all live.
 let ropes2 = createRopes();

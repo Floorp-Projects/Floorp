@@ -1422,10 +1422,9 @@ void AssertValidStringPtr(JSContext* cx, JSString* str) {
     MOZ_ASSERT(kind == gc::AllocKind::EXTERNAL_STRING);
   } else if (str->isAtom()) {
     MOZ_ASSERT(kind == gc::AllocKind::ATOM);
-  } else if (str->isFlat()) {
+  } else if (str->isLinear()) {
     MOZ_ASSERT(kind == gc::AllocKind::STRING ||
-               kind == gc::AllocKind::FAT_INLINE_STRING ||
-               kind == gc::AllocKind::EXTERNAL_STRING);
+               kind == gc::AllocKind::FAT_INLINE_STRING);
   } else {
     MOZ_ASSERT(kind == gc::AllocKind::STRING);
   }

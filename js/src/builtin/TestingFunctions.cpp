@@ -1976,21 +1976,21 @@ static bool IsRope(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-static bool EnsureFlatString(JSContext* cx, unsigned argc, Value* vp) {
+static bool EnsureLinearString(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   if (args.length() != 1 || !args[0].isString()) {
-    JS_ReportErrorASCII(cx,
-                        "ensureFlatString takes exactly one string argument.");
+    JS_ReportErrorASCII(
+        cx, "ensureLinearString takes exactly one string argument.");
     return false;
   }
 
-  JSFlatString* flat = args[0].toString()->ensureFlat(cx);
-  if (!flat) {
+  JSLinearString* linear = args[0].toString()->ensureLinear(cx);
+  if (!linear) {
     return false;
   }
 
-  args.rval().setString(flat);
+  args.rval().setString(linear);
   return true;
 }
 
@@ -6288,9 +6288,9 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
 "newMaybeExternalString(str)",
 "  Like newExternalString but uses the JS_NewMaybeExternalString API."),
 
-    JS_FN_HELP("ensureFlatString", EnsureFlatString, 1, 0,
-"ensureFlatString(str)",
-"  Ensures str is a flat (null-terminated) string and returns it."),
+    JS_FN_HELP("ensureLinearString", EnsureLinearString, 1, 0,
+"ensureLinearString(str)",
+"  Ensures str is a linear (non-rope) string and returns it."),
 
     JS_FN_HELP("representativeStringArray", RepresentativeStringArray, 0, 0,
 "representativeStringArray()",

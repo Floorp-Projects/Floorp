@@ -136,7 +136,7 @@ class StringBuffer {
   MOZ_MUST_USE bool inflateChars();
 
   template <typename CharT>
-  JSFlatString* finishStringInternal(JSContext* cx);
+  JSLinearString* finishStringInternal(JSContext* cx);
 
  public:
   explicit StringBuffer(JSContext* cx,
@@ -329,7 +329,7 @@ class JSStringBuilder : public StringBuffer {
    * Creates a string from the characters in this buffer, then (regardless
    * whether string creation succeeded or failed) empties the buffer.
    */
-  JSFlatString* finishString();
+  JSLinearString* finishString();
 };
 
 inline bool StringBuffer::append(const char16_t* begin, const char16_t* end) {

@@ -45,7 +45,7 @@ else
 function copyString(str) {
   if (str.length == 0)
     return str; // Nothing we can do here
-  return ensureFlatString(str.substr(0, 1) + str.substr(1));
+  return ensureLinearString(str.substr(0, 1) + str.substr(1));
 }
 
 // Return the nursery byte size of |str|.
@@ -65,17 +65,16 @@ function tByteSize(str) {
   return byteSize(str);
 }
 
-// There are four representations of flat strings, with the following capacities
-// (excluding a terminating null character):
+// There are four representations of linear strings, with the following
+// capacities:
 //
 //                      32-bit                  64-bit                test
 // representation       Latin-1   char16_t      Latin-1   char16_t    label
 // ========================================================================
 // JSExternalString            (cannot be tested in shell)            -
-// JSThinInlineString   7         3             15        7           T
-// JSFatInlineString    23        11            23        11          F
+// JSThinInlineString   8         4             16        8           T
+// JSFatInlineString    24        12            24        12          F
 // JSExtensibleString          - limited by available memory -        X
-// JSUndependedString          - same as JSExtensibleString -
 
 // Notes:
 //  - labels are suffixed with A for atoms and N for non-atoms
@@ -102,24 +101,32 @@ const Nursery = m32 ? s => s + 4 + 4 : s => s + 8 + 0;
 assertEq(tByteSize(""),                                               s(TA, TA));
 assertEq(tByteSize("1"),                                              s(TA, TA));
 assertEq(tByteSize("1234567"),                                        s(TN, TN));
-assertEq(tByteSize("12345678"),                                       s(FN, TN));
+assertEq(tByteSize("12345678"),                                       s(TN, TN));
+assertEq(tByteSize("123456789"),                                      s(FN, TN));
 assertEq(tByteSize("123456789.12345"),                                s(FN, TN));
-assertEq(tByteSize("123456789.123456"),                               s(FN, FN));
+assertEq(tByteSize("123456789.123456"),                               s(FN, TN));
+assertEq(tByteSize("123456789.1234567"),                              s(FN, FN));
 assertEq(tByteSize("123456789.123456789.123"),                        s(FN, FN));
-assertEq(tByteSize("123456789.123456789.1234"),                       s(XN+32, XN+32));
+assertEq(tByteSize("123456789.123456789.1234"),                       s(FN, FN));
+assertEq(tByteSize("123456789.123456789.12345"),                      s(XN+32, XN+32));
 assertEq(tByteSize("123456789.123456789.123456789.1"),                s(XN+32, XN+32));
-assertEq(tByteSize("123456789.123456789.123456789.12"),               s(XN+64, XN+64));
+assertEq(tByteSize("123456789.123456789.123456789.12"),               s(XN+32, XN+32));
+assertEq(tByteSize("123456789.123456789.123456789.123"),              s(XN+64, XN+64));
 
 assertEq(nByteSize(""),                                               s(TA, TA));
 assertEq(nByteSize("1"),                                              s(TA, TA));
 assertEq(nByteSize("1234567"),                                        s(Nursery(TN), Nursery(TN)));
-assertEq(nByteSize("12345678"),                                       s(Nursery(FN), Nursery(TN)));
+assertEq(nByteSize("12345678"),                                       s(Nursery(TN), Nursery(TN)));
+assertEq(nByteSize("123456789"),                                      s(Nursery(FN), Nursery(TN)));
 assertEq(nByteSize("123456789.12345"),                                s(Nursery(FN), Nursery(TN)));
-assertEq(nByteSize("123456789.123456"),                               s(Nursery(FN), Nursery(FN)));
+assertEq(nByteSize("123456789.123456"),                               s(Nursery(FN), Nursery(TN)));
+assertEq(nByteSize("123456789.1234567"),                              s(Nursery(FN), Nursery(FN)));
 assertEq(nByteSize("123456789.123456789.123"),                        s(Nursery(FN), Nursery(FN)));
-assertEq(nByteSize("123456789.123456789.1234"),                       s(Nursery(XN)+32,Nursery(XN)+32));
+assertEq(nByteSize("123456789.123456789.1234"),                       s(Nursery(FN), Nursery(FN)));
+assertEq(nByteSize("123456789.123456789.12345"),                      s(Nursery(XN)+32,Nursery(XN)+32));
 assertEq(nByteSize("123456789.123456789.123456789.1"),                s(Nursery(XN)+32,Nursery(XN)+32));
-assertEq(nByteSize("123456789.123456789.123456789.12"),               s(Nursery(XN)+64,Nursery(XN)+64));
+assertEq(nByteSize("123456789.123456789.123456789.12"),               s(Nursery(XN)+32,Nursery(XN)+32));
+assertEq(nByteSize("123456789.123456789.123456789.123"),              s(Nursery(XN)+64,Nursery(XN)+64));
 
 // Inline char16_t atoms.
 // "Impassionate gods have never seen the red that is the Tatsuta River."
@@ -127,15 +134,18 @@ assertEq(nByteSize("123456789.123456789.123456789.12"),               s(Nursery(
 assertEq(tByteSize("千"),						s(TA, TA));
 assertEq(tByteSize("千早"),						s(TN, TN));
 assertEq(tByteSize("千早ぶ"),						s(TN, TN));
-assertEq(tByteSize("千早ぶる"),						s(FN, TN));
+assertEq(tByteSize("千早ぶる"),						s(TN, TN));
 assertEq(tByteSize("千早ぶる神"),						s(FN, TN));
 assertEq(tByteSize("千早ぶる神代"),					s(FN, TN));
 assertEq(tByteSize("千早ぶる神代も"),					s(FN, TN));
-assertEq(tByteSize("千早ぶる神代もき"),					s(FN, FN));
+assertEq(tByteSize("千早ぶる神代もき"),					s(FN, TN));
+assertEq(tByteSize("千早ぶる神代もきか"),					s(FN, FN));
 assertEq(tByteSize("千早ぶる神代もきかず龍"),				s(FN, FN));
-assertEq(tByteSize("千早ぶる神代もきかず龍田"),				s(XN+32, XN+32));
+assertEq(tByteSize("千早ぶる神代もきかず龍田"),				s(FN, FN));
+assertEq(tByteSize("千早ぶる神代もきかず龍田川"),				s(XN+32, XN+32));
 assertEq(tByteSize("千早ぶる神代もきかず龍田川 か"),				s(XN+32, XN+32));
-assertEq(tByteSize("千早ぶる神代もきかず龍田川 から"),			s(XN+64, XN+64));
+assertEq(tByteSize("千早ぶる神代もきかず龍田川 から"),			s(XN+32, XN+32));
+assertEq(tByteSize("千早ぶる神代もきかず龍田川 からく"),		s(XN+64, XN+64));
 assertEq(tByteSize("千早ぶる神代もきかず龍田川 からくれなゐに水く"),		s(XN+64, XN+64));
 assertEq(tByteSize("千早ぶる神代もきかず龍田川 からくれなゐに水くく"),		s(XN+64, XN+64));
 assertEq(tByteSize("千早ぶる神代もきかず龍田川 からくれなゐに水くくるとは"),	s(XN+64, XN+64));
@@ -143,15 +153,18 @@ assertEq(tByteSize("千早ぶる神代もきかず龍田川 からくれなゐ�
 assertEq(nByteSize("千"),						s(TA, TA));
 assertEq(nByteSize("千早"),						s(Nursery(TN), Nursery(TN)));
 assertEq(nByteSize("千早ぶ"),						s(Nursery(TN), Nursery(TN)));
-assertEq(nByteSize("千早ぶる"),						s(Nursery(FN), Nursery(TN)));
+assertEq(nByteSize("千早ぶる"),						s(Nursery(TN), Nursery(TN)));
 assertEq(nByteSize("千早ぶる神"),						s(Nursery(FN), Nursery(TN)));
 assertEq(nByteSize("千早ぶる神代"),					s(Nursery(FN), Nursery(TN)));
 assertEq(nByteSize("千早ぶる神代も"),					s(Nursery(FN), Nursery(TN)));
-assertEq(nByteSize("千早ぶる神代もき"),					s(Nursery(FN), Nursery(FN)));
+assertEq(nByteSize("千早ぶる神代もき"),					s(Nursery(FN), Nursery(TN)));
+assertEq(nByteSize("千早ぶる神代もきか"),					s(Nursery(FN), Nursery(FN)));
 assertEq(nByteSize("千早ぶる神代もきかず龍"),				s(Nursery(FN), Nursery(FN)));
-assertEq(nByteSize("千早ぶる神代もきかず龍田"),				s(Nursery(XN)+32, Nursery(XN)+32));
+assertEq(nByteSize("千早ぶる神代もきかず龍田"),				s(Nursery(FN), Nursery(FN)));
+assertEq(nByteSize("千早ぶる神代もきかず龍田川"),				s(Nursery(XN)+32, Nursery(XN)+32));
 assertEq(nByteSize("千早ぶる神代もきかず龍田川 か"),				s(Nursery(XN)+32, Nursery(XN)+32));
-assertEq(nByteSize("千早ぶる神代もきかず龍田川 から"),			s(Nursery(XN)+64, Nursery(XN)+64));
+assertEq(nByteSize("千早ぶる神代もきかず龍田川 から"),			s(Nursery(XN)+32, Nursery(XN)+32));
+assertEq(nByteSize("千早ぶる神代もきかず龍田川 からく"),		s(Nursery(XN)+64, Nursery(XN)+64));
 assertEq(nByteSize("千早ぶる神代もきかず龍田川 からくれなゐに水く"),		s(Nursery(XN)+64, Nursery(XN)+64));
 assertEq(nByteSize("千早ぶる神代もきかず龍田川 からくれなゐに水くく"),		s(Nursery(XN)+64, Nursery(XN)+64));
 assertEq(nByteSize("千早ぶる神代もきかず龍田川 からくれなゐに水くくるとは"),	s(Nursery(XN)+64, Nursery(XN)+64));
