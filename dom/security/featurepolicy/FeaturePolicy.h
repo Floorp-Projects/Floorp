@@ -120,22 +120,6 @@ class FeaturePolicy final : public nsISupports, public nsWrapperCache {
   void GetAllowlistForFeature(const nsAString& aFeatureName,
                               nsTArray<nsString>& aList) const;
 
-  void GetInheritedDeniedFeatureNames(
-      nsTArray<nsString>& aInheritedDeniedFeatureNames) {
-    aInheritedDeniedFeatureNames = mInheritedDeniedFeatureNames;
-  }
-
-  void SetInheritedDeniedFeatureNames(
-      const nsTArray<nsString>& aInheritedDeniedFeatureNames) {
-    mInheritedDeniedFeatureNames = aInheritedDeniedFeatureNames;
-  }
-
-  void GetDeclaredString(nsAString& aDeclaredString) {
-    aDeclaredString = mDeclaredString;
-  }
-  nsIPrincipal* GetSelfOrigin() const { return mSelfOrigin; }
-  nsIPrincipal* GetSrcOrigin() const { return mSrcOrigin; }
-
  private:
   ~FeaturePolicy() = default;
 
@@ -153,7 +137,7 @@ class FeaturePolicy final : public nsISupports, public nsWrapperCache {
   // This returns true if we have a declared feature policy for aFeatureName.
   bool HasDeclaredFeature(const nsAString& aFeatureName) const;
 
-  nsINode* mParentNode;
+  nsCOMPtr<nsINode> mParentNode;
 
   // This is set in sub-contexts when the parent blocks some feature for the
   // current context.
@@ -162,12 +146,7 @@ class FeaturePolicy final : public nsISupports, public nsWrapperCache {
   // Feature policy for the current context.
   nsTArray<Feature> mFeatures;
 
-  // Declared string represents Feature policy.
-  nsString mDeclaredString;
-
   nsCOMPtr<nsIPrincipal> mDefaultOrigin;
-  nsCOMPtr<nsIPrincipal> mSelfOrigin;
-  nsCOMPtr<nsIPrincipal> mSrcOrigin;
 };
 
 }  // namespace dom
