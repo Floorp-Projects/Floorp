@@ -385,10 +385,8 @@ void JSBreakpointSite::recompile(JSFreeOp* fop) {
   }
 }
 
-void JSBreakpointSite::destroyIfEmpty(JSFreeOp* fop) {
-  if (isEmpty()) {
-    DebugScript::destroyBreakpointSite(fop, script, pc);
-  }
+void JSBreakpointSite::remove(JSFreeOp* fop) {
+  DebugScript::destroyBreakpointSite(fop, script, pc);
 }
 
 WasmBreakpointSite::WasmBreakpointSite(WasmInstanceObject* instanceObject_,
@@ -404,10 +402,8 @@ void WasmBreakpointSite::recompile(JSFreeOp* fop) {
   instance().debug().toggleBreakpointTrap(fop->runtime(), offset, isEnabled());
 }
 
-void WasmBreakpointSite::destroyIfEmpty(JSFreeOp* fop) {
-  if (isEmpty()) {
-    instance().destroyBreakpointSite(fop, offset);
-  }
+void WasmBreakpointSite::remove(JSFreeOp* fop) {
+  instance().destroyBreakpointSite(fop, offset);
 }
 
 /*** Debugger hook dispatch *************************************************/
