@@ -4,6 +4,7 @@
 
 "use strict";
 
+const Services = require("Services");
 const { PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 
@@ -16,23 +17,38 @@ class IssueItem extends PureComponent {
     };
   }
 
+  _isTesting() {
+    return Services.prefs.getBoolPref("devtools.testing", false);
+  }
+
   render() {
     const { property, type } = this.props;
+
+    const qaDatasetForLi = this._isTesting()
+      ? { "data-qa-property": property }
+      : {};
+
     return dom.li(
       {
         key: `${property}:${type}`,
-        "data-qa-property": property,
+        ...qaDatasetForLi,
       },
-      Object.entries(this.props).map(([key, value]) =>
-        dom.div(
+      Object.entries(this.props).map(([key, value]) => {
+        const qaDatasetForField = this._isTesting()
+          ? {
+              "data-qa-key": key,
+              "data-qa-value": JSON.stringify(value),
+            }
+          : {};
+
+        return dom.div(
           {
             key,
-            "data-qa-key": key,
-            "data-qa-value": `${value}`,
+            ...qaDatasetForField,
           },
           `${key}:${JSON.stringify(value)}`
-        )
-      )
+        );
+      })
     );
   }
 }

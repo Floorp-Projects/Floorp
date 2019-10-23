@@ -55,7 +55,11 @@ async function assertIssueList(panel, expectedIssues) {
     for (const [key, value] of Object.entries(expectedIssue)) {
       const fieldEl = issueEl.querySelector(`[data-qa-key=${key}]`);
       ok(fieldEl, `The element for ${key} is displayed`);
-      is(fieldEl.dataset.qaValue, `${value}`, "The value is correct");
+      is(
+        fieldEl.dataset.qaValue,
+        JSON.stringify(value),
+        "The value is correct"
+      );
     }
   }
 }
