@@ -43,18 +43,6 @@ nsParentalControlsService::Log(int16_t aEntryType, bool aBlocked,
 }
 
 NS_IMETHODIMP
-nsParentalControlsService::RequestURIOverride(
-    nsIURI* aTarget, nsIInterfaceRequestor* aWindowContext, bool* _retval) {
-  return NS_ERROR_NOT_AVAILABLE;
-}
-
-NS_IMETHODIMP
-nsParentalControlsService::RequestURIOverrides(
-    nsIArray* aTargets, nsIInterfaceRequestor* aWindowContext, bool* _retval) {
-  return NS_ERROR_NOT_AVAILABLE;
-}
-
-NS_IMETHODIMP
 nsParentalControlsService::IsAllowed(int16_t aAction, nsIURI* aUri,
                                      bool* _retval) {
   nsresult rv = NS_OK;

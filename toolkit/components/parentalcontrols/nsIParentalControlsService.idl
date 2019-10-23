@@ -62,19 +62,6 @@ interface nsIParentalControlsService : nsISupports
    boolean isAllowed(in short aAction, [optional] in nsIURI aUri);
 
   /**
-   * Request that blocked URI(s) be allowed through parental
-   * control filters. Returns true if the URI was successfully
-   * overriden. Note, may block while native UI is shown.
-   *
-   * @param aTarget(s)          URI to be overridden. In the case of
-   *                            multiple URI, the first URI in the array
-   *                            should be the root URI of the site.
-   * @param window              Window that generates the event.
-   */
-  boolean requestURIOverride(in nsIURI aTarget, [optional] in nsIInterfaceRequestor aWindowContext);
-  boolean requestURIOverrides(in nsIArray aTargets, [optional] in nsIInterfaceRequestor aWindowContext);
-
-  /**
    * @returns true if the current user account has parental controls
    * logging enabled. If true, applications should log relevent events
    * using 'log'.
