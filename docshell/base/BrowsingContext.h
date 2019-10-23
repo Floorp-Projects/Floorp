@@ -14,7 +14,6 @@
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/LoadURIOptionsBinding.h"
 #include "mozilla/dom/LocationBase.h"
-#include "mozilla/dom/FeaturePolicyUtils.h"
 #include "mozilla/dom/UserActivation.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"

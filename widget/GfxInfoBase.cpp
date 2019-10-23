@@ -1390,20 +1390,19 @@ bool GfxInfoBase::BuildFeatureStateLog(JSContext* aCx,
 void GfxInfoBase::DescribeFeatures(JSContext* aCx, JS::Handle<JSObject*> aObj) {
   JS::Rooted<JSObject*> obj(aCx);
 
-  gfx::FeatureStatus gpuProcess =
-      gfxConfig::GetValue(gfx::Feature::GPU_PROCESS);
+  gfx::FeatureStatus gpuProcess = gfxConfig::GetValue(Feature::GPU_PROCESS);
   InitFeatureObject(aCx, aObj, "gpuProcess", gpuProcess, &obj);
 
   gfx::FeatureStatus wrQualified =
-      gfxConfig::GetValue(gfx::Feature::WEBRENDER_QUALIFIED);
+      gfxConfig::GetValue(Feature::WEBRENDER_QUALIFIED);
   InitFeatureObject(aCx, aObj, "wrQualified", wrQualified, &obj);
 
-  gfx::FeatureStatus webrender = gfxConfig::GetValue(gfx::Feature::WEBRENDER);
+  gfx::FeatureStatus webrender = gfxConfig::GetValue(Feature::WEBRENDER);
   InitFeatureObject(aCx, aObj, "webrender", webrender, &obj);
 
   // Only include AL if the platform attempted to use it.
   gfx::FeatureStatus advancedLayers =
-      gfxConfig::GetValue(gfx::Feature::ADVANCED_LAYERS);
+      gfxConfig::GetValue(Feature::ADVANCED_LAYERS);
   if (advancedLayers != FeatureStatus::Unused) {
     InitFeatureObject(aCx, aObj, "advancedLayers", advancedLayers, &obj);
 
@@ -1489,14 +1488,14 @@ GfxInfoBase::GetContentUsesTiling(bool* aUsesTiling) {
 
 NS_IMETHODIMP
 GfxInfoBase::GetOffMainThreadPaintEnabled(bool* aOffMainThreadPaintEnabled) {
-  *aOffMainThreadPaintEnabled = gfxConfig::IsEnabled(gfx::Feature::OMTP);
+  *aOffMainThreadPaintEnabled = gfxConfig::IsEnabled(Feature::OMTP);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 GfxInfoBase::GetOffMainThreadPaintWorkerCount(
     int32_t* aOffMainThreadPaintWorkerCount) {
-  if (gfxConfig::IsEnabled(gfx::Feature::OMTP)) {
+  if (gfxConfig::IsEnabled(Feature::OMTP)) {
     *aOffMainThreadPaintWorkerCount =
         layers::PaintThread::CalculatePaintWorkerCount();
   } else {
@@ -1561,13 +1560,13 @@ GfxInfoBase::ControlGPUProcessForXPCShell(bool aEnable, bool* _retval) {
 
   GPUProcessManager* gpm = GPUProcessManager::Get();
   if (aEnable) {
-    if (!gfxConfig::IsEnabled(gfx::Feature::GPU_PROCESS)) {
-      gfxConfig::UserForceEnable(gfx::Feature::GPU_PROCESS, "xpcshell-test");
+    if (!gfxConfig::IsEnabled(Feature::GPU_PROCESS)) {
+      gfxConfig::UserForceEnable(Feature::GPU_PROCESS, "xpcshell-test");
     }
     gpm->LaunchGPUProcess();
     gpm->EnsureGPUReady();
   } else {
-    gfxConfig::UserDisable(gfx::Feature::GPU_PROCESS, "xpcshell-test");
+    gfxConfig::UserDisable(Feature::GPU_PROCESS, "xpcshell-test");
     gpm->KillProcess();
   }
 
