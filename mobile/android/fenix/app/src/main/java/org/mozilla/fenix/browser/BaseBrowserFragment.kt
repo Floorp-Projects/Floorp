@@ -76,6 +76,7 @@ import org.mozilla.fenix.ext.enterToImmersiveMode
 import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
+import org.mozilla.fenix.ext.sessionsOfType
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.getRootView
 import org.mozilla.fenix.isInExperiment
@@ -511,12 +512,18 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler, SessionManager.Obs
     }
 
     /**
-     * Removes the session if it was opened by an ACTION_VIEW intent.
+     * Removes the session if it was opened by an ACTION_VIEW intent
+     * or if it has no more history
      */
     protected open fun removeSessionIfNeeded(): Boolean {
         getSessionById()?.let { session ->
+            val sessionManager = requireComponents.core.sessionManager
             if (session.source == Session.Source.ACTION_VIEW) {
-                requireComponents.core.sessionManager.remove(session)
+                sessionManager.remove(session)
+            } else {
+                val isLastSession = sessionManager.sessionsOfType(private = session.private).count() == 1
+                sessionManager.remove(session, true)
+                return !isLastSession // Jump to tab overview if last session was removed
             }
         }
         return false
