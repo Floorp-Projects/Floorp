@@ -10,13 +10,13 @@ assertEq(o[ext2], 4);
 
 eval(newExternalString("assertEq(1, 1)"));
 
-// Make sure ensureFlat does the right thing for external strings.
+// Make sure ensureLinearString does the right thing for external strings.
 ext = newExternalString("abc\0defg\0");
-assertEq(ensureFlatString(ext), "abc\0defg\0");
-assertEq(ensureFlatString(ext), "abc\0defg\0");
+assertEq(ensureLinearString(ext), "abc\0defg\0");
+assertEq(ensureLinearString(ext), "abc\0defg\0");
 
 for (var s of representativeStringArray())
-    assertEq(ensureFlatString(s), s);
+    assertEq(ensureLinearString(s), s);
 
 for (var s of representativeStringArray())
     assertEq(newExternalString(s), s);
@@ -40,7 +40,7 @@ function testMaybeExternal() {
         var s = "abcdef4321" + i;
         assertEq(newMaybeExternalString(s), s);
         if ((i % 2) === 0)
-            assertEq(ensureFlatString(newMaybeExternalString(s)), s);
+            assertEq(ensureLinearString(newMaybeExternalString(s)), s);
     }
 }
 testMaybeExternal();

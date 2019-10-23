@@ -164,9 +164,6 @@ bool js::IsTracerKind(JSTracer* trc, JS::CallbackTracer::TracerKind kind) {
 bool ThingIsPermanentAtomOrWellKnownSymbol(JSString* str) {
   return str->isPermanentAtom();
 }
-bool ThingIsPermanentAtomOrWellKnownSymbol(JSFlatString* str) {
-  return str->isPermanentAtom();
-}
 bool ThingIsPermanentAtomOrWellKnownSymbol(JSLinearString* str) {
   return str->isPermanentAtom();
 }
@@ -3276,15 +3273,10 @@ size_t js::TenuringTracer::moveStringToTenured(JSString* dst, JSString* src,
   MOZ_ASSERT(OffsetToChunkEnd(src) >= ptrdiff_t(size));
   js_memcpy(dst, src, size);
 
-  if (!src->isInline() && src->isLinear()) {
-    if (src->isUndepended() || !src->hasBase()) {
-      void* chars = src->asLinear().nonInlineCharsRaw();
-      nursery().removeMallocedBuffer(chars);
-    }
-  }
-
-  if (dst->isFlat() && !dst->isInline()) {
-    AddCellMemory(dst, dst->asFlat().allocSize(), MemoryUse::StringContents);
+  if (src->ownsMallocedChars()) {
+    void* chars = src->asLinear().nonInlineCharsRaw();
+    nursery().removeMallocedBuffer(chars);
+    AddCellMemory(dst, dst->asLinear().allocSize(), MemoryUse::StringContents);
   }
 
   return size;

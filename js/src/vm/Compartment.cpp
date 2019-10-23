@@ -121,7 +121,7 @@ static JSString* CopyStringPure(JSContext* cx, JSString* str) {
 
   if (str->hasLatin1Chars()) {
     UniquePtr<Latin1Char[], JS::FreePolicy> copiedChars =
-        str->asRope().copyLatin1CharsZ(cx, js::StringBufferArena);
+        str->asRope().copyLatin1Chars(cx, js::StringBufferArena);
     if (!copiedChars) {
       return nullptr;
     }
@@ -130,7 +130,7 @@ static JSString* CopyStringPure(JSContext* cx, JSString* str) {
   }
 
   UniqueTwoByteChars copiedChars =
-      str->asRope().copyTwoByteCharsZ(cx, js::StringBufferArena);
+      str->asRope().copyTwoByteChars(cx, js::StringBufferArena);
   if (!copiedChars) {
     return nullptr;
   }
