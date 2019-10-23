@@ -21,6 +21,7 @@
 #include "vm/Compartment.h"  // JS::Compartment
 #include "vm/JSContext.h"    // JSContext
 
+#include "builtin/streams/MiscellaneousOperations-inl.h"  // js::ResolveUnwrappedPromiseWithUndefined, js::RejectUnwrappedPromiseWithError
 #include "builtin/streams/WritableStream-inl.h"  // js::UnwrapWriterFromStream
 #include "builtin/streams/WritableStreamDefaultWriter-inl.h"  // js::WritableStreamDefaultWriter::closedPromise
 #include "vm/Compartment-inl.h"  // JS::Compartment::wrap
@@ -233,12 +234,8 @@ MOZ_MUST_USE bool js::WritableStreamFinishInFlightWrite(
   MOZ_ASSERT(unwrappedStream->haveInFlightWriteRequest());
 
   // Step 2: Resolve stream.[[inFlightWriteRequest]] with undefined.
-  Rooted<JSObject*> writeRequest(
-      cx, &unwrappedStream->inFlightWriteRequest().toObject());
-  if (!cx->compartment()->wrap(cx, &writeRequest)) {
-    return false;
-  }
-  if (!ResolvePromise(cx, writeRequest, UndefinedHandleValue)) {
+  if (!ResolveUnwrappedPromiseWithUndefined(
+          cx, &unwrappedStream->inFlightWriteRequest().toObject())) {
     return false;
   }
 
@@ -262,12 +259,8 @@ MOZ_MUST_USE bool js::WritableStreamFinishInFlightWriteWithError(
   MOZ_ASSERT(unwrappedStream->haveInFlightWriteRequest());
 
   // Step 2:  Reject stream.[[inFlightWriteRequest]] with error.
-  Rooted<JSObject*> writeRequest(
-      cx, &unwrappedStream->inFlightWriteRequest().toObject());
-  if (!cx->compartment()->wrap(cx, &writeRequest)) {
-    return false;
-  }
-  if (!RejectPromise(cx, writeRequest, error)) {
+  if (!RejectUnwrappedPromiseWithError(
+          cx, &unwrappedStream->inFlightWriteRequest().toObject(), error)) {
     return false;
   }
 
@@ -291,15 +284,9 @@ MOZ_MUST_USE bool js::WritableStreamFinishInFlightClose(
   MOZ_ASSERT(unwrappedStream->haveInFlightCloseRequest());
 
   // Step 2: Resolve stream.[[inFlightCloseRequest]] with undefined.
-  {
-    Rooted<JSObject*> inFlightCloseRequest(
-        cx, &unwrappedStream->inFlightCloseRequest().toObject());
-    if (!cx->compartment()->wrap(cx, &inFlightCloseRequest)) {
-      return false;
-    }
-    if (!ResolvePromise(cx, inFlightCloseRequest, UndefinedHandleValue)) {
-      return false;
-    }
+  if (!ResolveUnwrappedPromiseWithUndefined(
+          cx, &unwrappedStream->inFlightCloseRequest().toObject())) {
+    return false;
   }
 
   // Step 3: Set stream.[[inFlightCloseRequest]] to undefined.
@@ -319,13 +306,8 @@ MOZ_MUST_USE bool js::WritableStreamFinishInFlightClose(
     if (unwrappedStream->hasPendingAbortRequest()) {
       // Step 6.b.i: Resolve stream.[[pendingAbortRequest]].[[promise]] with
       //             undefined.
-      Rooted<JSObject*> pendingAbortRequestPromise(
-          cx, unwrappedStream->pendingAbortRequestPromise());
-      if (!cx->compartment()->wrap(cx, &pendingAbortRequestPromise)) {
-        return false;
-      }
-      if (!ResolvePromise(cx, pendingAbortRequestPromise,
-                          UndefinedHandleValue)) {
+      if (!ResolveUnwrappedPromiseWithUndefined(
+              cx, unwrappedStream->pendingAbortRequestPromise())) {
         return false;
       }
 
@@ -341,20 +323,14 @@ MOZ_MUST_USE bool js::WritableStreamFinishInFlightClose(
   // Step 9: If writer is not undefined, resolve writer.[[closedPromise]] with
   //         undefined.
   if (unwrappedStream->hasWriter()) {
-    Rooted<JSObject*> closedPromise(cx);
-    {
-      WritableStreamDefaultWriter* unwrappedWriter =
-          UnwrapWriterFromStream(cx, unwrappedStream);
-      if (!unwrappedWriter) {
-        return false;
-      }
-
-      closedPromise = unwrappedWriter->closedPromise();
-    }
-    if (!cx->compartment()->wrap(cx, &closedPromise)) {
+    WritableStreamDefaultWriter* unwrappedWriter =
+        UnwrapWriterFromStream(cx, unwrappedStream);
+    if (!unwrappedWriter) {
       return false;
     }
-    if (!ResolvePromise(cx, closedPromise, UndefinedHandleValue)) {
+
+    if (!ResolveUnwrappedPromiseWithUndefined(
+            cx, unwrappedWriter->closedPromise())) {
       return false;
     }
   }
