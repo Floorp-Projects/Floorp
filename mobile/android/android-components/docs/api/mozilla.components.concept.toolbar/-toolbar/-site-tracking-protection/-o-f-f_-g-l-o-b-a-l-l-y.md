@@ -2,7 +2,7 @@
 
 # OFF_GLOBALLY
 
-`OFF_GLOBALLY` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/toolbar/src/main/java/mozilla/components/concept/toolbar/Toolbar.kt#L389)
+`OFF_GLOBALLY` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/toolbar/src/main/java/mozilla/components/concept/toolbar/Toolbar.kt#L391)
 
 Tracking protection has been disabled for all sites.
 

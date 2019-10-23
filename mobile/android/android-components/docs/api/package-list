@@ -112,6 +112,8 @@ mozilla.components.browser.tabstray
 mozilla.components.browser.tabstray.thumbnail
 mozilla.components.browser.toolbar
 mozilla.components.browser.toolbar.behavior
+mozilla.components.browser.toolbar.display
+mozilla.components.browser.toolbar.edit
 mozilla.components.browser.toolbar.facts
 mozilla.components.concept.awesomebar
 mozilla.components.concept.engine
