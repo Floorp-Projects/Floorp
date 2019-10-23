@@ -694,14 +694,6 @@ bool Debugger::hasAnyLiveHooks(JSRuntime* rt) const {
     }
   }
 
-  // Check for hooks in live stack frames.
-  for (FrameMap::Range r = frames.all(); !r.empty(); r.popFront()) {
-    DebuggerFrame& frameObj = r.front().value()->as<DebuggerFrame>();
-    if (frameObj.hasAnyLiveHooks()) {
-      return true;
-    }
-  }
-
   // Check for hooks set on suspended generator frames.
   for (GeneratorWeakMap::Range r = generatorFrames.all(); !r.empty();
        r.popFront()) {
@@ -3664,6 +3656,32 @@ bool DebugAPI::edgeIsInDebuggerWeakmap(JSRuntime* rt, JSObject* src,
 
 #endif
 
+/* See comments in DebugAPI.h. */
+void DebugAPI::traceFramesWithLiveHooks(JSTracer* tracer) {
+  JSRuntime* rt = tracer->runtime();
+
+  // Note that we must loop over all Debuggers here, not just those known to be
+  // reachable from JavaScript. The existence of hooks set on a Debugger.Frame
+  // for a live stack frame makes the Debuger.Frame (and hence its Debugger)
+  // reachable.
+  for (Debugger* dbg : rt->debuggerList()) {
+    // Callback tracers set their own traversal boundaries, but otherwise we're
+    // only interested in Debugger.Frames participating in the collection.
+    if (!dbg->zone()->isGCMarking() && !tracer->isCallbackTracer()) {
+      continue;
+    }
+
+    for (Debugger::FrameMap::Range r = dbg->frames.all(); !r.empty();
+         r.popFront()) {
+      HeapPtr<DebuggerFrame*>& frameobj = r.front().value();
+      MOZ_ASSERT(frameobj->isLiveMaybeForwarded());
+      if (frameobj->hasAnyLiveHooks()) {
+        TraceEdge(tracer, &frameobj, "Debugger.Frame with live hooks");
+      }
+    }
+  }
+}
+
 /*
  * This method has two tasks:
  *   1. Mark Debugger objects that are unreachable except for debugger hooks
@@ -3795,8 +3813,12 @@ void Debugger::trace(JSTracer* trc) {
 
   TraceNullableEdge(trc, &uncaughtExceptionHook, "hooks");
 
-  // Mark Debugger.Frame objects. These are all reachable from JS, because the
-  // corresponding JS frames are still on the stack.
+  // Mark Debugger.Frame objects. Since the Debugger is reachable, JS could call
+  // getNewestFrame and then walk the stack, so these are all reachable from JS.
+  //
+  // Note that if a Debugger.Frame has hooks set, it must be retained even if
+  // its Debugger is unreachable, since JS could observe that its hooks did not
+  // fire. That case is handled by DebugAPI::traceFrames.
   //
   // (We have weakly-referenced Debugger.Frame objects as well, for suspended
   // generator frames; these are traced via generatorFrames just below.)
