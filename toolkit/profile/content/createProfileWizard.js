@@ -153,8 +153,7 @@ function chooseProfileFolder() {
 
 // Checks the current user input for validity and triggers an error message accordingly.
 function checkCurrentInput(currentInput) {
-  let wizard = document.querySelector("wizard");
-  var finishButton = wizard.getButton("finish");
+  var finishButton = document.documentElement.getButton("finish");
   var finishText = document.getElementById("finishText");
   var canAdvance;
 
@@ -178,7 +177,7 @@ function checkCurrentInput(currentInput) {
     canAdvance = false;
   }
 
-  wizard.canAdvance = canAdvance;
+  document.documentElement.canAdvance = canAdvance;
   finishButton.disabled = !canAdvance;
 
   updateProfileDisplay();
@@ -227,7 +226,7 @@ function profileExists(aName) {
 
 // Called when the first wizard page is shown.
 function enableNextButton() {
-  document.querySelector("wizard").canAdvance = true;
+  document.documentElement.canAdvance = true;
 }
 
 function onFinish(event) {

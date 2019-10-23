@@ -1266,6 +1266,7 @@ STATIC_ATOMS = [
     Atom("headerWindowTarget", "window-target"),
     Atom("windowtype", "windowtype"),
     Atom("withParam", "with-param"),
+    Atom("wizard", "wizard"),
     Atom("wrap", "wrap"),
     Atom("headerDNSPrefetchControl", "x-dns-prefetch-control"),
     Atom("headerCSP", "content-security-policy"),
