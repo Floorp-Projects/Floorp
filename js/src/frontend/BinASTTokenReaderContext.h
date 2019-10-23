@@ -851,6 +851,22 @@ struct GenericHuffmanTable {
   // `result.key().bitLength_` bits.
   HuffmanLookupResult lookup(HuffmanLookup key) const;
 
+  // `true` if this table only contains values for `null` for maybe-interface
+  // table.
+  // This method MUST be used only for maybe-interface table.
+  bool isMaybeInterfaceAlwaysNull() const {
+    MOZ_ASSERT(length() == 1 || length() == 2);
+
+    // By definition, we have either 1 or 2 values.
+    // By definition, if we have 2 values, one of them is not null.
+    if (length() == 2) {
+      return false;
+    }
+
+    // Otherwise, check the single value.
+    return begin()->toKind() == BinASTKind::_Null;
+  }
+
  private:
   mozilla::Variant<SingleEntryHuffmanTable, TwoEntriesHuffmanTable,
                    SingleLookupHuffmanTable, TwoLookupsHuffmanTable,
@@ -873,27 +889,7 @@ using HuffmanTableExplicitSymbolsF64 = GenericHuffmanTable;
 using HuffmanTableExplicitSymbolsU32 = GenericHuffmanTable;
 using HuffmanTableIndexedSymbolsSum = GenericHuffmanTable;
 using HuffmanTableIndexedSymbolsBool = GenericHuffmanTable;
-
-// A Huffman table that may only ever contain two values:
-// `BinASTKind::_Null` and another `BinASTKind`.
-struct HuffmanTableIndexedSymbolsMaybeInterface : GenericHuffmanTable {
-  HuffmanTableIndexedSymbolsMaybeInterface() : GenericHuffmanTable() {}
-
-  // `true` if this table only contains values for `null`.
-  bool isAlwaysNull() const {
-    MOZ_ASSERT(length() == 1 || length() == 2);
-
-    // By definition, we have either 1 or 2 values.
-    // By definition, if we have 2 values, one of them is not null.
-    if (length() == 2) {
-      return false;
-    }
-
-    // Otherwise, check the single value.
-    return begin()->toKind() == BinASTKind::_Null;
-  }
-};
-
+using HuffmanTableIndexedSymbolsMaybeInterface = GenericHuffmanTable;
 using HuffmanTableIndexedSymbolsStringEnum = GenericHuffmanTable;
 using HuffmanTableIndexedSymbolsLiteralString = GenericHuffmanTable;
 using HuffmanTableIndexedSymbolsOptionalLiteralString = GenericHuffmanTable;
@@ -901,8 +897,7 @@ using HuffmanTableIndexedSymbolsOptionalLiteralString = GenericHuffmanTable;
 // A single Huffman table, used for values.
 using HuffmanTableValue =
     mozilla::Variant<HuffmanTableUnreachable,  // Default value.
-                     HuffmanTableInitializing, GenericHuffmanTable,
-                     HuffmanTableIndexedSymbolsMaybeInterface>;
+                     HuffmanTableInitializing, GenericHuffmanTable>;
 
 struct HuffmanTableExplicitSymbolsListLength : GenericHuffmanTable {
   HuffmanTableExplicitSymbolsListLength() : GenericHuffmanTable() {}
