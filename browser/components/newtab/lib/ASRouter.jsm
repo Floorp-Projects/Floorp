@@ -67,6 +67,7 @@ const TRAILHEAD_CONFIG = {
       ["modal_variant_a"],
       ["modal_variant_b"],
       ["modal_variant_c"],
+      ["modal_variant_f"],
       ["full_page_d"],
       ["full_page_e"],
     ],
