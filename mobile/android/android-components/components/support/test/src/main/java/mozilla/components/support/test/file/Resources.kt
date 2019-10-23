@@ -7,7 +7,7 @@ package mozilla.components.support.test.file
 import org.junit.Assert
 
 /**
- * Loads a file from the resources folder and return its content as a string object.
+ * Loads a file from the resources folder and returns its content as a string object.
  * @param path The path where the file is located
  */
 fun Any.loadResourceAsString(path: String): String {

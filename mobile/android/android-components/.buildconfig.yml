@@ -128,6 +128,10 @@ projects:
     path: components/feature/webcompat
     description: 'Feature that provides hotfixes for websites from Mozillas Web Compatibility team'
     publish: true
+  feature-addons:
+    path: components/feature/addons
+    description: 'A feature that provides for managing add-ons.'
+    publish: true
   browser-awesomebar:
     path: components/browser/awesomebar
     description: 'A customizable awesomebar component for browsers.'
