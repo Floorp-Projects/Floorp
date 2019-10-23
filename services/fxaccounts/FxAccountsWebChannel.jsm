@@ -549,7 +549,12 @@ this.FxAccountsWebChannelHelpers.prototype = {
     let signedInUser = null;
 
     if (this.shouldAllowFxaStatus(service, sendingContext, isPairing)) {
-      const userData = await this._fxAccounts.getSignedInUser();
+      const userData = await this._fxAccounts._internal.getUserAccountData([
+        "email",
+        "sessionToken",
+        "uid",
+        "verified",
+      ]);
       if (userData) {
         signedInUser = {
           email: userData.email,
