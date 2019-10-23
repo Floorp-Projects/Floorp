@@ -10,6 +10,7 @@
 
 #include "mozilla/Maybe.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs_layout.h"
 #include "nsLineLayout.h"
 
 namespace mozilla {
