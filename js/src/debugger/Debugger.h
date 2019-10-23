@@ -1206,7 +1206,6 @@ struct Handler {
 };
 
 class JSBreakpointSite;
-class WasmBreakpoint;
 class WasmBreakpointSite;
 
 class BreakpointSite {
@@ -1234,7 +1233,6 @@ class BreakpointSite {
   size_t enabledCount; /* number of breakpoints in the list that are enabled */
 
   gc::Cell* owningCellUnbarriered();
-  size_t allocSize();
 
  protected:
   BreakpointSite(Type type);
@@ -1308,8 +1306,6 @@ class Breakpoint {
   Breakpoint* nextInSite();
   JSObject* getHandler() const { return handler; }
   PreBarrieredObject& getHandlerRef() { return handler; }
-
-  inline WasmBreakpoint* asWasm();
 };
 
 class JSBreakpointSite : public BreakpointSite {
@@ -1350,20 +1346,6 @@ class WasmBreakpointSite : public BreakpointSite {
 inline WasmBreakpointSite* BreakpointSite::asWasm() {
   MOZ_ASSERT(type() == Type::Wasm);
   return static_cast<WasmBreakpointSite*>(this);
-}
-
-class WasmBreakpoint : public Breakpoint {
- public:
-  WasmInstanceObject* wasmInstance;
-
-  WasmBreakpoint(Debugger* debugger, WasmBreakpointSite* site,
-                 JSObject* handler, WasmInstanceObject* wasmInstance_)
-      : Breakpoint(debugger, site, handler), wasmInstance(wasmInstance_) {}
-};
-
-inline WasmBreakpoint* Breakpoint::asWasm() {
-  MOZ_ASSERT(site && site->type() == BreakpointSite::Type::Wasm);
-  return static_cast<WasmBreakpoint*>(this);
 }
 
 Breakpoint* Debugger::firstBreakpoint() const {
