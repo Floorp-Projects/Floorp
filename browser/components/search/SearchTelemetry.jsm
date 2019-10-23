@@ -92,6 +92,19 @@ XPCOMUtils.defineLazyPreferenceGetter(
  */
 class TelemetryHandler {
   constructor() {
+    // _browserInfoByUrl is a map of tracked search urls to objects containing:
+    // * {object} info
+    //   the search provider information associated with the url.
+    // * {WeakSet} browsers
+    //   a weak set of browsers that have the url loaded.
+    // * {integer} count
+    //   a manual count of browsers logged.
+    // We keep a weak set of browsers, in case we miss something on our counts
+    // and cause a memory leak - worst case our map is slightly bigger than it
+    // needs to be.
+    // The manual count is because WeakSet doesn't give us size/length
+    // information, but we want to know when we can clean up our associated
+    // entry.
     this._browserInfoByUrl = new Map();
     this._initialized = false;
     this.__searchProviderInfo = null;
@@ -195,10 +208,12 @@ class TelemetryHandler {
       let item = this._browserInfoByUrl.get(url);
       if (item) {
         item.browsers.add(browser);
+        item.count++;
       } else {
         this._browserInfoByUrl.set(url, {
-          browser: new WeakSet([browser]),
+          browsers: new WeakSet([browser]),
           info,
+          count: 1,
         });
       }
     }
@@ -212,9 +227,12 @@ class TelemetryHandler {
    */
   stopTrackingBrowser(browser) {
     for (let [url, item] of this._browserInfoByUrl) {
-      item.browser.delete(browser);
+      if (item.browsers.has(browser)) {
+        item.browsers.delete(browser);
+        item.count--;
+      }
 
-      if (!item.browser.length) {
+      if (!item.count) {
         this._browserInfoByUrl.delete(url);
       }
     }
