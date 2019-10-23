@@ -568,14 +568,20 @@ exports.ToolboxButtons = [
   {
     id: "command-button-replay",
     description: l10n("toolbox.buttons.replay"),
-    isTargetSupported: target => !target.canRewind && target.isLocalTab,
+    isTargetSupported: target =>
+      Services.prefs.getBoolPref("devtools.recordreplay.enabled") &&
+      !target.canRewind &&
+      target.isLocalTab,
     onClick: () => reloadAndRecordTab(),
     isChecked: () => false,
   },
   {
     id: "command-button-stop-replay",
     description: l10n("toolbox.buttons.stopReplay"),
-    isTargetSupported: target => target.canRewind && target.isLocalTab,
+    isTargetSupported: target =>
+      Services.prefs.getBoolPref("devtools.recordreplay.enabled") &&
+      target.canRewind &&
+      target.isLocalTab,
     onClick: () => reloadAndStopRecordingTab(),
     isChecked: () => true,
   },
