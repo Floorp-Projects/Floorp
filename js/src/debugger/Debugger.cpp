@@ -347,7 +347,7 @@ inline gc::Cell* BreakpointSite::owningCellUnbarriered() {
     return asJS()->script;
   }
 
-  return asWasm()->instance->objectUnbarriered();
+  return asWasm()->instanceObject;
 }
 
 inline size_t BreakpointSite::allocSize() {
@@ -400,20 +400,22 @@ void JSBreakpointSite::destroyIfEmpty(JSFreeOp* fop) {
   }
 }
 
-WasmBreakpointSite::WasmBreakpointSite(wasm::Instance* instance_,
+WasmBreakpointSite::WasmBreakpointSite(WasmInstanceObject* instanceObject_,
                                        uint32_t offset_)
-    : BreakpointSite(Type::Wasm), instance(instance_), offset(offset_) {
-  MOZ_ASSERT(instance);
-  MOZ_ASSERT(instance->debugEnabled());
+    : BreakpointSite(Type::Wasm),
+      instanceObject(instanceObject_),
+      offset(offset_) {
+  MOZ_ASSERT(instanceObject_);
+  MOZ_ASSERT(instanceObject_->instance().debugEnabled());
 }
 
 void WasmBreakpointSite::recompile(JSFreeOp* fop) {
-  instance->debug().toggleBreakpointTrap(fop->runtime(), offset, isEnabled());
+  instance().debug().toggleBreakpointTrap(fop->runtime(), offset, isEnabled());
 }
 
 void WasmBreakpointSite::destroyIfEmpty(JSFreeOp* fop) {
   if (isEmpty()) {
-    instance->destroyBreakpointSite(fop, offset);
+    instance().destroyBreakpointSite(fop, offset);
   }
 }
 
@@ -2399,8 +2401,7 @@ ResumeMode DebugAPI::onTrap(JSContext* cx, MutableHandleValue vp) {
   for (Breakpoint* bp = site->firstBreakpoint(); bp; bp = bp->nextInSite()) {
     // Skip a breakpoint that is not set for the current wasm::Instance --
     // single wasm::Code can handle breakpoints for mutiple instances.
-    if (!isJS &&
-        &bp->asWasm()->wasmInstance->instance() != iter.wasmInstance()) {
+    if (!isJS && &bp->site->asWasm()->instance() != iter.wasmInstance()) {
       continue;
     }
     if (!triggered.append(bp)) {
@@ -3794,6 +3795,8 @@ void Debugger::traceForMovingGC(JSTracer* trc) {
         break;
       case BreakpointSite::Type::Wasm:
         TraceManuallyBarrieredEdge(trc, &bp->asWasm()->wasmInstance,
+                                   "breakpoint wasm instance");
+        TraceManuallyBarrieredEdge(trc, &bp->site->asWasm()->instanceObject,
                                    "breakpoint wasm instance");
         break;
     }
