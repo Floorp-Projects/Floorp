@@ -6,10 +6,6 @@
 // Test the Target domain
 
 add_task(async function() {
-  // Start the CDP server
-  await RemoteAgent.listen(Services.io.newURI("http://localhost:9222"));
-
-  // Retrieve the chrome-remote-interface library object
   const CDP = await getCDP();
 
   // Connect to the server
@@ -59,6 +55,4 @@ add_task(async function() {
 
   await client.close();
   ok(true, "The client is closed");
-
-  await RemoteAgent.close();
 });

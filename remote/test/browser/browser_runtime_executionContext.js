@@ -21,8 +21,6 @@ add_task(async function() {
   ok(true, "The client is closed");
 
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
-
-  await RemoteAgent.close();
 });
 
 async function testRuntimeEnable({ Runtime }) {

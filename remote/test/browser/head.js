@@ -17,6 +17,9 @@ const { RemoteAgentError } = ChromeUtils.import(
 const original_add_task = add_task.bind(this);
 this.add_task = function(test) {
   original_add_task(async function() {
+    info("Start the CDP server");
+    await RemoteAgent.listen(Services.io.newURI("http://localhost:9222"));
+
     try {
       await test();
     } catch (e) {
@@ -27,6 +30,9 @@ this.add_task = function(test) {
       } else {
         throw e;
       }
+    } finally {
+      info("Stop the CDP server");
+      await RemoteAgent.close();
     }
   });
 };
@@ -118,9 +124,7 @@ async function setupForURL(url) {
   const tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
   is(gBrowser.selectedTab, tab, "Selected tab is the target tab");
 
-  await RemoteAgent.listen(Services.io.newURI("http://localhost:9222"));
   const CDP = await getCDP();
-
   const client = await CDP({
     target(list) {
       // ensure we are debugging the right target, i.e. the requested URL

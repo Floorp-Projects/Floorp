@@ -127,6 +127,4 @@ add_task(async function testCDP() {
   ok(true, "The client is closed");
 
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
-
-  await RemoteAgent.close();
 });
