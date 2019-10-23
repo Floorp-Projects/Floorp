@@ -82,8 +82,15 @@ class nsImageFrame : public nsAtomicContainerFrame, public nsIReflowCallback {
                                 const nsDisplayListSet& aLists) override;
   virtual nscoord GetMinISize(gfxContext* aRenderingContext) override;
   virtual nscoord GetPrefISize(gfxContext* aRenderingContext) override;
-  virtual mozilla::IntrinsicSize GetIntrinsicSize() override;
-  virtual mozilla::AspectRatio GetIntrinsicRatio() override;
+  virtual mozilla::IntrinsicSize GetIntrinsicSize() override {
+    return mIntrinsicSize;
+  }
+  mozilla::AspectRatio GetComputedIntrinsicRatio() const {
+    return mIntrinsicRatio;
+  }
+  virtual mozilla::AspectRatio GetIntrinsicRatio() override {
+    return GetComputedIntrinsicRatio();
+  }
   virtual void Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
                       const ReflowInput& aReflowInput,
                       nsReflowStatus& aStatus) override;
