@@ -188,20 +188,12 @@ bool PerformanceMainThread::IsPerformanceTimingAttribute(
 
 DOMHighResTimeStamp PerformanceMainThread::GetPerformanceTimingFromString(
     const nsAString& aProperty) {
+  // ::Measure expects the values returned from this function to be passed
+  // through ReduceTimePrecision already.
   if (!IsPerformanceTimingAttribute(aProperty)) {
     return 0;
   }
-  if (aProperty.EqualsLiteral("navigationStart")) {
-    // DOMHighResTimeStamp is in relation to navigationStart, so this will be
-    // zero.
-    return GetDOMTiming()->GetNavigationStart();
-  }
-  if (aProperty.EqualsLiteral("unloadEventStart")) {
-    return GetDOMTiming()->GetUnloadEventStart();
-  }
-  if (aProperty.EqualsLiteral("unloadEventEnd")) {
-    return GetDOMTiming()->GetUnloadEventEnd();
-  }
+  // Values from Timing() are already reduced
   if (aProperty.EqualsLiteral("redirectStart")) {
     return Timing()->RedirectStart();
   }
@@ -235,31 +227,38 @@ DOMHighResTimeStamp PerformanceMainThread::GetPerformanceTimingFromString(
   if (aProperty.EqualsLiteral("responseEnd")) {
     return Timing()->ResponseEnd();
   }
-  if (aProperty.EqualsLiteral("domLoading")) {
-    return GetDOMTiming()->GetDomLoading();
+  // Values from GetDOMTiming() are not.
+  DOMHighResTimeStamp retValue;
+  if (aProperty.EqualsLiteral("navigationStart")) {
+    // DOMHighResTimeStamp is in relation to navigationStart, so this will be
+    // zero.
+    retValue = GetDOMTiming()->GetNavigationStart();
+  } else if (aProperty.EqualsLiteral("unloadEventStart")) {
+    retValue = GetDOMTiming()->GetUnloadEventStart();
+  } else if (aProperty.EqualsLiteral("unloadEventEnd")) {
+    retValue = GetDOMTiming()->GetUnloadEventEnd();
+  } else if (aProperty.EqualsLiteral("domLoading")) {
+    retValue = GetDOMTiming()->GetDomLoading();
+  } else if (aProperty.EqualsLiteral("domInteractive")) {
+    retValue = GetDOMTiming()->GetDomInteractive();
+  } else if (aProperty.EqualsLiteral("domContentLoadedEventStart")) {
+    retValue = GetDOMTiming()->GetDomContentLoadedEventStart();
+  } else if (aProperty.EqualsLiteral("domContentLoadedEventEnd")) {
+    retValue = GetDOMTiming()->GetDomContentLoadedEventEnd();
+  } else if (aProperty.EqualsLiteral("domComplete")) {
+    retValue = GetDOMTiming()->GetDomComplete();
+  } else if (aProperty.EqualsLiteral("loadEventStart")) {
+    retValue = GetDOMTiming()->GetLoadEventStart();
+  } else if (aProperty.EqualsLiteral("loadEventEnd")) {
+    retValue = GetDOMTiming()->GetLoadEventEnd();
+  } else {
+    MOZ_CRASH(
+        "IsPerformanceTimingAttribute and GetPerformanceTimingFromString are "
+        "out "
+        "of sync");
   }
-  if (aProperty.EqualsLiteral("domInteractive")) {
-    return GetDOMTiming()->GetDomInteractive();
-  }
-  if (aProperty.EqualsLiteral("domContentLoadedEventStart")) {
-    return GetDOMTiming()->GetDomContentLoadedEventStart();
-  }
-  if (aProperty.EqualsLiteral("domContentLoadedEventEnd")) {
-    return GetDOMTiming()->GetDomContentLoadedEventEnd();
-  }
-  if (aProperty.EqualsLiteral("domComplete")) {
-    return GetDOMTiming()->GetDomComplete();
-  }
-  if (aProperty.EqualsLiteral("loadEventStart")) {
-    return GetDOMTiming()->GetLoadEventStart();
-  }
-  if (aProperty.EqualsLiteral("loadEventEnd")) {
-    return GetDOMTiming()->GetLoadEventEnd();
-  }
-  MOZ_CRASH(
-      "IsPerformanceTimingAttribute and GetPerformanceTimingFromString are out "
-      "of sync");
-  return 0;
+  return nsRFPService::ReduceTimePrecisionAsMSecs(retValue,
+                                                  GetRandomTimelineSeed());
 }
 
 void PerformanceMainThread::InsertUserEntry(PerformanceEntry* aEntry) {
