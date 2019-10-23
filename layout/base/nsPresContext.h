@@ -192,7 +192,7 @@ class nsPresContext : public nsISupports,
   nsPresContext* GetToplevelContentDocumentPresContext();
 
   /**
-   * Returns the nearest widget for the root frame of this.
+   * Returns the nearest widget for the root frame or view of this.
    *
    * @param aOffset     If non-null the offset from the origin of the root
    *                    frame's view to the widget's origin (usually positive)
