@@ -3,18 +3,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// http://dev.w3.org/csswg/cssom/#the-medialist-interface
+// https://drafts.csswg.org/cssom/#the-medialist-interface
 
 [Exposed=Window]
 interface MediaList {
-  // Bug 824857: no support for stringifier attributes yet.
-  //   [TreatNullAs=EmptyString]
-  // stringifier attribute DOMString        mediaText;
-
-  // Bug 824857 should remove this.
-  stringifier;
-
-           attribute [TreatNullAs=EmptyString] DOMString        mediaText;
+  stringifier attribute [TreatNullAs=EmptyString] DOMString        mediaText;
 
   readonly attribute unsigned long    length;
   getter DOMString?  item(unsigned long index);

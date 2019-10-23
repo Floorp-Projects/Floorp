@@ -213,7 +213,7 @@ void GetRequestURLFromWorker(const GlobalObject& aGlobal,
   }
 
   url->SetHash(EmptyString());
-  url->Stringify(aRequestURL);
+  url->GetHref(aRequestURL);
 }
 
 class ReferrerSameOriginChecker final : public WorkerMainThreadRunnable {
@@ -375,7 +375,7 @@ already_AddRefed<Request> Request::Constructor(const GlobalObject& aGlobal,
           aRv.ThrowTypeError<MSG_INVALID_REFERRER_URL>(referrer);
           return nullptr;
         }
-        url->Stringify(referrerURL);
+        url->GetHref(referrerURL);
         if (!referrerURL.EqualsLiteral(kFETCH_CLIENT_REFERRER_STR)) {
           WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
           nsresult rv = NS_OK;

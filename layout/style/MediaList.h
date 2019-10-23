@@ -49,7 +49,6 @@ class MediaList final : public nsISupports, public nsWrapperCache {
   void SetStyleSheet(StyleSheet* aSheet);
 
   // WebIDL
-  void Stringify(nsAString& aString) { GetMediaText(aString); }
   void GetMediaText(nsAString& aMediaText);
   void SetMediaText(const nsAString& aMediaText);
   uint32_t Length();

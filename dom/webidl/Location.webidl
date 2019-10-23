@@ -4,7 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * The origin of this IDL file is
- * http://www.whatwg.org/specs/web-apps/current-work/#the-location-interface
+ * https://html.spec.whatwg.org/multipage/history.html#the-location-interface
  *
  * © Copyright 2004-2011 Apple Computer, Inc., Mozilla Foundation, and
  * Opera Software ASA. You are granted a license to use, reproduce
@@ -14,15 +14,8 @@
 [Unforgeable,
  Exposed=Window]
 interface Location {
-  // Bug 824857: no support for stringifier attributes yet.
-  //  stringifier attribute USVString href;
-
-  // Bug 824857 should remove this.
-  [Throws, NeedsSubjectPrincipal]
-  stringifier;
-
   [Throws, CrossOriginWritable, NeedsSubjectPrincipal]
-           attribute USVString href;
+  stringifier attribute USVString href;
   [Throws, NeedsSubjectPrincipal]
   readonly attribute USVString origin;
   [Throws, NeedsSubjectPrincipal]
