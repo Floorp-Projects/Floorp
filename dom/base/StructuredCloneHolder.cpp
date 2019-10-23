@@ -172,14 +172,14 @@ bool StructuredCloneHolderBase::Write(JSContext* aCx,
 bool StructuredCloneHolderBase::Write(JSContext* aCx,
                                       JS::Handle<JS::Value> aValue,
                                       JS::Handle<JS::Value> aTransfer,
-                                      JS::CloneDataPolicy cloneDataPolicy) {
+                                      JS::CloneDataPolicy aCloneDataPolicy) {
   MOZ_ASSERT(!mBuffer, "Double Write is not allowed");
   MOZ_ASSERT(!mClearCalled, "This method cannot be called after Clear.");
 
   mBuffer = MakeUnique<JSAutoStructuredCloneBuffer>(
       mStructuredCloneScope, &StructuredCloneHolder::sCallbacks, this);
 
-  if (!mBuffer->write(aCx, aValue, aTransfer, cloneDataPolicy,
+  if (!mBuffer->write(aCx, aValue, aTransfer, aCloneDataPolicy,
                       &StructuredCloneHolder::sCallbacks, this)) {
     mBuffer = nullptr;
     return false;
