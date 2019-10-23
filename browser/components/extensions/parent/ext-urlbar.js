@@ -197,14 +197,11 @@ this.urlbar = class extends ExtensionAPI {
           name: "urlbar.onResultPicked",
           register: (fire, providerName) => {
             let provider = UrlbarProviderExtension.getOrCreate(providerName);
-            provider.setEventListener(
-              "resultPicked",
-              async (resultPayload, details) => {
-                return fire.async(resultPayload, details).catch(error => {
-                  throw context.normalizeError(error);
-                });
-              }
-            );
+            provider.setEventListener("resultPicked", async resultPayload => {
+              return fire.async(resultPayload).catch(error => {
+                throw context.normalizeError(error);
+              });
+            });
             return () => provider.setEventListener("resultPicked", null);
           },
         }).api(),

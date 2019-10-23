@@ -91,7 +91,7 @@ var UrlbarUtils = {
     // Payload: { url, icon, device, title }
     REMOTE_TAB: 6,
     // An actionable message to help the user with their query.
-    // Payload: { text, buttonText, [buttonUrl], data, helpUrl }
+    // Payload: { text, buttonText, data, [buttonUrl], [helpUrl] }
     TIP: 7,
   },
 
@@ -692,11 +692,9 @@ class UrlbarProvider {
    * currently only for tip results.  The provider should handle the pick.
    * @param {UrlbarResult} result
    *   The result that was picked.
-   * @param {object} details
-   *   Details about the pick, depending on the result type.
    * @abstract
    */
-  pickResult(result, details) {
+  pickResult(result) {
     throw new Error("Trying to access the base class, must be overridden");
   }
 }
