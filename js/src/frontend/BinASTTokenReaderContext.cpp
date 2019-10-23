@@ -186,7 +186,7 @@ class HuffmanPreludeReader {
   // A string.
   // May be a literal string, identifier name or property key. May not be null.
   struct String : EntryExplicit {
-    using Table = HuffmanTableIndexedSymbolsLiteralString;
+    using Table = GenericHuffmanTable;
     explicit String(const NormalizedInterfaceAndField identity)
         : EntryExplicit(identity) {}
   };
@@ -196,7 +196,7 @@ class HuffmanPreludeReader {
   // An optional string.
   // May be a literal string, identifier name or property key.
   struct MaybeString : EntryExplicit {
-    using Table = HuffmanTableIndexedSymbolsOptionalLiteralString;
+    using Table = GenericHuffmanTable;
     explicit MaybeString(const NormalizedInterfaceAndField identity)
         : EntryExplicit(identity) {}
   };
@@ -205,21 +205,21 @@ class HuffmanPreludeReader {
 
   // A JavaScript number. May not be null.
   struct Number : EntryExplicit {
-    using Table = HuffmanTableExplicitSymbolsF64;
+    using Table = GenericHuffmanTable;
     explicit Number(const NormalizedInterfaceAndField identity)
         : EntryExplicit(identity) {}
   };
 
   // A 32-bit integer. May not be null.
   struct UnsignedLong : EntryExplicit {
-    using Table = HuffmanTableExplicitSymbolsU32;
+    using Table = GenericHuffmanTable;
     explicit UnsignedLong(const NormalizedInterfaceAndField identity)
         : EntryExplicit(identity) {}
   };
 
   // A boolean. May not be null.
   struct Boolean : EntryIndexed {
-    using Table = HuffmanTableIndexedSymbolsBool;
+    using Table = GenericHuffmanTable;
 
     explicit Boolean(const NormalizedInterfaceAndField identity)
         : EntryIndexed(identity) {}
@@ -260,7 +260,7 @@ class HuffmanPreludeReader {
 
   // An optional value of a given interface.
   struct MaybeInterface : EntryIndexed {
-    using Table = HuffmanTableIndexedSymbolsMaybeInterface;
+    using Table = GenericHuffmanTable;
     // The kind of the interface.
     const BinASTKind kind_;
 
@@ -326,7 +326,7 @@ class HuffmanPreludeReader {
   // A choice between several interfaces. May not be null.
   struct Sum : EntryIndexed {
     // The type of table used for this entry.
-    using Table = HuffmanTableIndexedSymbolsSum;
+    using Table = GenericHuffmanTable;
 
     // The type of values in the sum.
     const BinASTSum contents_;
@@ -367,7 +367,7 @@ class HuffmanPreludeReader {
   struct MaybeSum : EntryIndexed {
     // The type of table used for this entry.
     // We use `BinASTKind::_Null` to represent the null case.
-    using Table = HuffmanTableIndexedSymbolsSum;
+    using Table = GenericHuffmanTable;
 
     // The type of values in the sum.
     // We use `BinASTKind::_Null` to represent the null case.
@@ -406,7 +406,7 @@ class HuffmanPreludeReader {
 
   // A choice between several strings. May not be null.
   struct StringEnum : EntryIndexed {
-    using Table = HuffmanTableIndexedSymbolsStringEnum;
+    using Table = GenericHuffmanTable;
 
     // Comparing string enums alphabetically.
     inline bool lessThan(uint32_t aIndex, uint32_t bIndex) {
@@ -544,11 +544,10 @@ class HuffmanPreludeReader {
     auto& table = dictionary_.tableForField(identity);
     if (table.is<HuffmanTableUnreachable>()) {
       // Effectively, an `Interface` is a sum with a single entry.
-      HuffmanTableIndexedSymbolsSum sum;
+      GenericHuffmanTable sum;
       MOZ_TRY(sum.initWithSingleValue(
           cx_, BinASTSymbol::fromKind(BinASTKind(interface.kind_))));
-      table = {mozilla::VariantType<HuffmanTableIndexedSymbolsSum>{},
-               std::move(sum)};
+      table = {mozilla::VariantType<GenericHuffmanTable>{}, std::move(sum)};
     }
 
     // Spec:
@@ -937,8 +936,7 @@ class HuffmanPreludeReader {
       if (table.is<HuffmanTableUnreachable>()) {
         return Ok();
       }
-      const auto& tableRef =
-          table.as<HuffmanTableIndexedSymbolsMaybeInterface>();
+      const auto& tableRef = table.as<GenericHuffmanTable>();
       if (!tableRef.isMaybeInterfaceAlwaysNull()) {
         MOZ_TRY(owner.pushFields(entry.kind_));
       }
@@ -959,7 +957,7 @@ class HuffmanPreludeReader {
       if (table.is<HuffmanTableInitializing>()) {
         return Ok();
       }
-      const auto& tableRef = table.as<HuffmanTableIndexedSymbolsSum>();
+      const auto& tableRef = table.as<GenericHuffmanTable>();
 
       for (auto iter : tableRef) {
         MOZ_TRY(owner.pushValue(entry.identity_,
@@ -983,7 +981,7 @@ class HuffmanPreludeReader {
       if (table.is<HuffmanTableUnreachable>()) {
         return Ok();
       }
-      const auto& tableRef = table.as<HuffmanTableIndexedSymbolsSum>();
+      const auto& tableRef = table.as<GenericHuffmanTable>();
 
       for (auto iter : tableRef) {
         MOZ_TRY(owner.pushValue(entry.identity_,
@@ -1388,32 +1386,29 @@ JS::Result<BinASTSymbol> BinASTTokenReaderContext::readFieldFromTable(
 
 JS::Result<bool> BinASTTokenReaderContext::readBool(
     const FieldContext& context) {
-  BINJS_MOZ_TRY_DECL(result, readFieldFromTable<HuffmanTableIndexedSymbolsBool>(
-                                 context.position_));
+  BINJS_MOZ_TRY_DECL(
+      result, readFieldFromTable<GenericHuffmanTable>(context.position_));
   return result.toBool();
 }
 
 JS::Result<double> BinASTTokenReaderContext::readDouble(
     const FieldContext& context) {
-  BINJS_MOZ_TRY_DECL(result, readFieldFromTable<HuffmanTableExplicitSymbolsF64>(
-                                 context.position_));
+  BINJS_MOZ_TRY_DECL(
+      result, readFieldFromTable<GenericHuffmanTable>(context.position_));
   return result.toDouble();
 }
 
 JS::Result<JSAtom*> BinASTTokenReaderContext::readMaybeAtom(
     const FieldContext& context) {
   BINJS_MOZ_TRY_DECL(
-      result,
-      readFieldFromTable<HuffmanTableIndexedSymbolsOptionalLiteralString>(
-          context.position_));
+      result, readFieldFromTable<GenericHuffmanTable>(context.position_));
   return result.toAtom();
 }
 
 JS::Result<JSAtom*> BinASTTokenReaderContext::readAtom(
     const FieldContext& context) {
   BINJS_MOZ_TRY_DECL(
-      result, readFieldFromTable<HuffmanTableIndexedSymbolsLiteralString>(
-                  context.position_));
+      result, readFieldFromTable<GenericHuffmanTable>(context.position_));
   return result.toAtom();
 }
 
@@ -1439,24 +1434,22 @@ JS::Result<Ok> BinASTTokenReaderContext::readChars(Chars& out,
 
 JS::Result<BinASTVariant> BinASTTokenReaderContext::readVariant(
     const ListContext& context) {
-  BINJS_MOZ_TRY_DECL(result,
-                     readFieldFromTable<HuffmanTableIndexedSymbolsStringEnum>(
-                         context.position_));
+  BINJS_MOZ_TRY_DECL(
+      result, readFieldFromTable<GenericHuffmanTable>(context.position_));
   return result.toVariant();
 }
 
 JS::Result<BinASTVariant> BinASTTokenReaderContext::readVariant(
     const FieldContext& context) {
-  BINJS_MOZ_TRY_DECL(result,
-                     readFieldFromTable<HuffmanTableIndexedSymbolsStringEnum>(
-                         context.position_));
+  BINJS_MOZ_TRY_DECL(
+      result, readFieldFromTable<GenericHuffmanTable>(context.position_));
   return result.toVariant();
 }
 
 JS::Result<uint32_t> BinASTTokenReaderContext::readUnsignedLong(
     const FieldContext& context) {
-  BINJS_MOZ_TRY_DECL(result, readFieldFromTable<HuffmanTableExplicitSymbolsU32>(
-                                 context.position_));
+  BINJS_MOZ_TRY_DECL(
+      result, readFieldFromTable<GenericHuffmanTable>(context.position_));
   return result.toUnsignedLong();
 }
 
@@ -2540,7 +2533,7 @@ MOZ_MUST_USE JS::Result<BinASTSymbol> HuffmanPreludeReader::readSymbol(
 // Reading a single-value table of sums of interfaces.
 template <>
 MOZ_MUST_USE JS::Result<Ok> HuffmanPreludeReader::readSingleValueTable<Sum>(
-    HuffmanTableIndexedSymbolsSum& table, const Sum& sum) {
+    GenericHuffmanTable& table, const Sum& sum) {
   BINJS_MOZ_TRY_DECL(index, reader_.readVarU32<Compression::No>());
   if (MOZ_UNLIKELY(index >= sum.maxNumberOfSymbols())) {
     return raiseInvalidTableData(sum.identity_);
@@ -2574,8 +2567,8 @@ MOZ_MUST_USE JS::Result<BinASTSymbol> HuffmanPreludeReader::readSymbol(
 // Reading a single-value table of sums of interfaces.
 template <>
 MOZ_MUST_USE JS::Result<Ok>
-HuffmanPreludeReader::readSingleValueTable<MaybeSum>(
-    HuffmanTableIndexedSymbolsSum& table, const MaybeSum& sum) {
+HuffmanPreludeReader::readSingleValueTable<MaybeSum>(GenericHuffmanTable& table,
+                                                     const MaybeSum& sum) {
   BINJS_MOZ_TRY_DECL(index, reader_.readVarU32<Compression::No>());
   if (MOZ_UNLIKELY(index >= sum.maxNumberOfSymbols())) {
     return raiseInvalidTableData(sum.identity_);
@@ -2623,7 +2616,7 @@ MOZ_MUST_USE JS::Result<BinASTSymbol> HuffmanPreludeReader::readSymbol(
 // Reading a single-value table of numbers.
 template <>
 MOZ_MUST_USE JS::Result<Ok> HuffmanPreludeReader::readSingleValueTable<Number>(
-    HuffmanTableExplicitSymbolsF64& table, const Number& number) {
+    GenericHuffmanTable& table, const Number& number) {
   BINJS_MOZ_TRY_DECL(value, readSymbol(number, 0 /* ignored */));
   MOZ_TRY(table.initWithSingleValue(cx_, value));
   return Ok();
@@ -2695,7 +2688,7 @@ MOZ_MUST_USE JS::Result<BinASTSymbol> HuffmanPreludeReader::readSymbol(
 // Reading a single-value table of string indices.
 template <>
 MOZ_MUST_USE JS::Result<Ok> HuffmanPreludeReader::readSingleValueTable<String>(
-    HuffmanTableIndexedSymbolsLiteralString& table, const String& entry) {
+    GenericHuffmanTable& table, const String& entry) {
   BINJS_MOZ_TRY_DECL(index, reader_.readVarU32<Compression::No>());
   if (MOZ_UNLIKELY(index > reader_.metadata_->numStrings())) {
     return raiseInvalidTableData(entry.identity_);
@@ -2739,8 +2732,7 @@ MOZ_MUST_USE JS::Result<BinASTSymbol> HuffmanPreludeReader::readSymbol(
 template <>
 MOZ_MUST_USE JS::Result<Ok>
 HuffmanPreludeReader::readSingleValueTable<MaybeString>(
-    HuffmanTableIndexedSymbolsOptionalLiteralString& table,
-    const MaybeString& entry) {
+    GenericHuffmanTable& table, const MaybeString& entry) {
   BINJS_MOZ_TRY_DECL(index, reader_.readVarU32<Compression::No>());
   if (MOZ_UNLIKELY(index > reader_.metadata_->numStrings() + 1)) {
     return raiseInvalidTableData(entry.identity_);
@@ -2771,7 +2763,7 @@ MOZ_MUST_USE JS::Result<BinASTSymbol> HuffmanPreludeReader::readSymbol(
 template <>
 MOZ_MUST_USE JS::Result<Ok>
 HuffmanPreludeReader::readSingleValueTable<StringEnum>(
-    HuffmanTableIndexedSymbolsStringEnum& table, const StringEnum& entry) {
+    GenericHuffmanTable& table, const StringEnum& entry) {
   BINJS_MOZ_TRY_DECL(index, reader_.readVarU32<Compression::No>());
   if (MOZ_UNLIKELY(index > entry.maxNumberOfSymbols())) {
     return raiseInvalidTableData(entry.identity_);
@@ -2808,7 +2800,7 @@ MOZ_MUST_USE JS::Result<BinASTSymbol> HuffmanPreludeReader::readSymbol(
 template <>
 MOZ_MUST_USE JS::Result<Ok>
 HuffmanPreludeReader::readSingleValueTable<UnsignedLong>(
-    HuffmanTableExplicitSymbolsU32& table, const UnsignedLong& entry) {
+    GenericHuffmanTable& table, const UnsignedLong& entry) {
   BINJS_MOZ_TRY_DECL(index, reader_.readUnpackedLong());
   MOZ_TRY(
       table.initWithSingleValue(cx_, BinASTSymbol::fromUnsignedLong(index)));
