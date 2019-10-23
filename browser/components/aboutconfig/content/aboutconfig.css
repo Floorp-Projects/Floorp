@@ -2,6 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+:root {
+  --prefs-table-border-width: 1px;
+  --prefs-table-border: var(--prefs-table-border-width) solid var(--in-content-box-border-color);
+}
+
 .hidden {
   display: none;
 }
@@ -73,7 +78,7 @@
   width: calc(100% - 20px);
   min-width: 644px;
   /* To stay consistent with about:preferences (664px - 20px margin). */
-  border: 1px solid var(--in-content-box-border-color);
+  border: var(--prefs-table-border);
   border-radius: 2px;
   border-spacing: 0;
 }
@@ -194,7 +199,26 @@ td.cell-value > form > input[type="number"] {
   transform: scaleX(-1);
 }
 
+/* The ::before creates a blank space between the last visible pref and the add row. */
+#prefs[has-visible-prefs] > .add > th::before,
+#prefs[has-visible-prefs] > .add > td::before {
+  content: "";
+  display: block;
+  position: absolute;
+  top: 0;
+  /* Make it wider by the border width so the border-inline is hidden. */
+  left: calc(var(--prefs-table-border-width) * -1);
+  right: calc(var(--prefs-table-border-width) * -1);
+  height: 12px;
+  background-color: var(--in-content-page-background);
+  /* This is visually the top border on the add row. */
+  border-bottom: var(--prefs-table-border);
+}
+
 #prefs[has-visible-prefs] > .add > th,
 #prefs[has-visible-prefs] > .add > td {
-  border-top: 1px solid var(--in-content-box-border-color);
+  /* This is the border underneath the last existing pref row. */
+  border-top: var(--prefs-table-border);
+  padding-top: 14px;
+  position: relative;
 }
