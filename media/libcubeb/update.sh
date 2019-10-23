@@ -89,3 +89,5 @@ fi
 
 echo "Applying disable-assert.patch on top of $rev"
 patch -p3 < disable-assert.patch
+echo "Applying disable-iaudioclient3.patch on top of $rev"
+patch -p3 < disable-iaudioclient3.patch
