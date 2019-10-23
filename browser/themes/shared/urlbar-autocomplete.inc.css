@@ -384,6 +384,7 @@
   display: flex;
   align-items: start;
   padding-block: 16px;
+  flex-wrap: wrap;
 }
 
 .urlbarView.megabar .search-one-offs {
@@ -395,11 +396,9 @@
   padding-inline-end: var(--item-padding-end, 5px);
 }
 
-#urlbar .search-panel-one-offs {
-  padding-inline-start: 12px;
-  /* Make sure we can fit at least three buttons horizontally. */
-  min-width: 120px;
-  box-sizing: content-box;
+#urlbar .search-panel-one-offs-container {
+  /* Make sure horizontally we can fit three buttons, empty space, settings. */
+  min-width: 200px;
 }
 
 #urlbar .search-panel-header {
@@ -411,6 +410,8 @@
 }
 
 #urlbar .search-panel-one-offs-header-label {
+  white-space: nowrap;
+  padding-inline-end: 12px;
   margin: 0;
 }
 

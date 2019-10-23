@@ -62,12 +62,17 @@
   border-bottom: 1px solid var(--panel-separator-color);
 }
 
+.search-panel-one-offs,
+.search-panel-one-offs-container {
+  display: flex;
+  flex-direction: row;
+  flex-grow: 1;
+}
+
 .search-panel-one-offs {
   margin: 0 !important;
   /* Bug 1108841: prevent font-size from affecting the layout */
   line-height: 0;
-  display: flex;
-  flex-direction: row;
   flex-wrap: wrap;
 }
 
@@ -207,6 +212,7 @@
   max-height: 32px;
   /* For alignment with the Urlbar Go button. */
   margin-inline-end: -2px !important;
+  align-self: end;
 }
 
 .search-setting-button:hover,
