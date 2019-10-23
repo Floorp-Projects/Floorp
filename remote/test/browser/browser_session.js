@@ -4,7 +4,6 @@
 "use strict";
 
 add_task(async function() {
-  await RemoteAgent.listen(Services.io.newURI("http://localhost:9222"));
   const CDP = await getCDP();
   const { webSocketDebuggerUrl } = await CDP.Version();
   const client = await CDP({ target: webSocketDebuggerUrl });
@@ -21,5 +20,4 @@ add_task(async function() {
   }
 
   await client.close();
-  await RemoteAgent.close();
 });

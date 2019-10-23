@@ -5,8 +5,6 @@
 
 // Test the Target closeTarget method and the targetDestroyed event.
 add_task(async function() {
-  info("Start the CDP server");
-  RemoteAgent.listen(Services.io.newURI("http://localhost:9222"));
   const CDP = await getCDP();
   const client = await CDP({});
 
@@ -50,6 +48,4 @@ add_task(async function() {
 
   await client.close();
   ok(true, "The client is closed");
-
-  await RemoteAgent.close();
 });

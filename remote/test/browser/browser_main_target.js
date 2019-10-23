@@ -6,9 +6,6 @@
 // Test very basic CDP features.
 
 add_task(async function() {
-  // Start the CDP server
-  await RemoteAgent.listen(Services.io.newURI("http://localhost:9222"));
-
   const { mainProcessTarget } = RemoteAgent.targets;
   ok(
     mainProcessTarget,
@@ -40,6 +37,4 @@ add_task(async function() {
     targetURL,
     "Version endpoint refers to the same Main process target"
   );
-
-  await RemoteAgent.close();
 });

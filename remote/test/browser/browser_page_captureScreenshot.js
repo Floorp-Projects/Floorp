@@ -61,8 +61,6 @@ add_task(async function testScreenshotWithDocumentSmallerThanViewport() {
   ok(true, "The client is closed");
 
   BrowserTestUtils.removeTab(tab);
-
-  await RemoteAgent.close();
 });
 
 add_task(async function testScreenshotWithDocumentLargerThanViewport() {
@@ -84,6 +82,4 @@ add_task(async function testScreenshotWithDocumentLargerThanViewport() {
   ok(true, "The client is closed");
 
   BrowserTestUtils.removeTab(tab);
-
-  await RemoteAgent.close();
 });
