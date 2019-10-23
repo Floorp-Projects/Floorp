@@ -75,6 +75,9 @@ extern "C" const char* __tsan_default_suppressions() {
          // Bug 1587513
          "race:std::sync::mutex::Mutex\n"
 
+         // Bug 1590423
+         "race:sync..Arc\n"
+
       // End of suppressions.
       ;  // Please keep this semicolon.
 }
