@@ -12,6 +12,7 @@ import android.os.Build
 import android.os.Build.VERSION.SDK_INT
 import androidx.core.net.toUri
 import mozilla.components.browser.state.state.CustomTabConfig
+import mozilla.components.browser.state.state.ExternalAppType
 import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.support.utils.ColorUtils.isDark
 
@@ -42,7 +43,8 @@ fun WebAppManifest.toCustomTabConfig(): CustomTabConfig {
         actionButtonConfig = null,
         showCloseButton = false,
         showShareMenuItem = true,
-        menuItems = emptyList()
+        menuItems = emptyList(),
+        externalAppType = ExternalAppType.PROGRESSIVE_WEB_APP
     )
 }
 

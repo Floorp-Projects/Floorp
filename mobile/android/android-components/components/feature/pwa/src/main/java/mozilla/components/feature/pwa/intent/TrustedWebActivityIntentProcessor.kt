@@ -18,6 +18,7 @@ import kotlinx.coroutines.launch
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.state.state.CustomTabConfig.Companion.EXTRA_ADDITIONAL_TRUSTED_ORIGINS
+import mozilla.components.browser.state.state.ExternalAppType
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.fetch.Client
 import mozilla.components.feature.customtabs.createCustomTabConfigFromIntent
@@ -58,7 +59,7 @@ class TrustedWebActivityIntentProcessor(
         return if (!url.isNullOrEmpty() && matches(intent)) {
             val session = Session(url, private = false, source = Session.Source.HOME_SCREEN)
             val customTabConfig = createCustomTabConfigFromIntent(intent, null)
-            session.customTabConfig = customTabConfig
+            session.customTabConfig = customTabConfig.copy(externalAppType = ExternalAppType.TRUSTED_WEB_ACTIVITY)
 
             sessionManager.add(session)
             loadUrlUseCase(url, session, EngineSession.LoadUrlFlags.external())

@@ -10,6 +10,9 @@ import androidx.core.net.toUri
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runBlockingTest
+import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.state.state.ExternalAppType
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.feature.intent.ext.getSessionId
 import mozilla.components.feature.pwa.ManifestStorage
@@ -70,5 +73,27 @@ class WebAppIntentProcessorTest {
         assertTrue(processor.process(intent))
         assertNotNull(intent.getSessionId())
         assertEquals(manifest, intent.getWebAppManifest())
+    }
+
+    @Test
+    fun `process adds custom tab config`() = runBlockingTest {
+        val intent = Intent(ACTION_VIEW_PWA, "https://mozilla.com".toUri())
+
+        val storage: ManifestStorage = mock()
+        val store = BrowserStore()
+        val sessionManager = SessionManager(mock(), store)
+
+        val manifest = WebAppManifest(
+            name = "Test Manifest",
+            startUrl = "https://mozilla.com"
+        )
+        `when`(storage.loadManifest("https://mozilla.com")).thenReturn(manifest)
+
+        val processor = WebAppIntentProcessor(sessionManager, mock(), storage)
+
+        assertTrue(processor.process(intent))
+        val sessionState = store.state.customTabs.first()
+        assertNotNull(sessionState.config)
+        assertEquals(ExternalAppType.PROGRESSIVE_WEB_APP, sessionState.config.externalAppType)
     }
 }
