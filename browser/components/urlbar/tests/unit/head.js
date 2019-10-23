@@ -134,7 +134,7 @@ class TestProvider extends UrlbarProvider {
       this._cancelCallback();
     }
   }
-  pickResult(result, details) {}
+  pickResult(result) {}
 }
 
 /**

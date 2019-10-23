@@ -107,7 +107,7 @@ class TipTestProvider extends UrlbarProvider {
     }
   }
   cancelQuery(context) {}
-  pickResult(result, details) {}
+  pickResult(result) {}
 }
 
 const matches = [
