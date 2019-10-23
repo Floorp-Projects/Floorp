@@ -56,7 +56,7 @@ ConsoleLogLevel PrefToValue(const nsAString& aPref) {
     return ConsoleLogLevel::All;
   }
 
-  MOZ_ASSERT(index < ConsoleLogLevelValues::Count);
+  MOZ_ASSERT(index < (int)ConsoleLogLevel::EndGuard_);
   return static_cast<ConsoleLogLevel>(index);
 }
 

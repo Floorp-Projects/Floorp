@@ -43,7 +43,7 @@ static_assert(nsIServiceWorkerInfo::STATE_REDUNDANT ==
               "ServiceWorkerState enumeration value should match state values "
               "from nsIServiceWorkerInfo.");
 static_assert(nsIServiceWorkerInfo::STATE_UNKNOWN ==
-                  ServiceWorkerStateValues::Count,
+                  static_cast<uint16_t>(ServiceWorkerState::EndGuard_),
               "ServiceWorkerState enumeration value should match state values "
               "from nsIServiceWorkerInfo.");
 

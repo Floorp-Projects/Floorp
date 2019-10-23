@@ -539,7 +539,8 @@ already_AddRefed<Promise> WebAuthnManager::GetAssertion(
           NS_ConvertUTF16toUTF8 cStr(str);
           int i = FindEnumStringIndexImpl(
               cStr.get(), cStr.Length(), AuthenticatorTransportValues::strings);
-          if (i < 0) {
+          if (i < 0 ||
+              i >= static_cast<int>(AuthenticatorTransport::EndGuard_)) {
             continue;  // Unknown enum
           }
           AuthenticatorTransport t = static_cast<AuthenticatorTransport>(i);

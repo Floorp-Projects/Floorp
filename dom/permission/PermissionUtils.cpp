@@ -19,7 +19,9 @@ static const nsLiteralCString kPermissionTypes[] = {
     // clang-format on
 };
 
-const size_t kPermissionNameCount = PermissionNameValues::Count;
+// `-1` for the last null entry.
+const size_t kPermissionNameCount =
+    MOZ_ARRAY_LENGTH(PermissionNameValues::strings) - 1;
 
 static_assert(MOZ_ARRAY_LENGTH(kPermissionTypes) == kPermissionNameCount,
               "kPermissionTypes and PermissionName count should match");
