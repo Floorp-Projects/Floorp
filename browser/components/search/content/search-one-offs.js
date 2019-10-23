@@ -21,12 +21,14 @@ class SearchOneOffs {
       <hbox class="search-panel-one-offs-header search-panel-header search-panel-current-input">
         <label class="search-panel-one-offs-header-label" data-l10n-id="search-one-offs-with-title"/>
       </hbox>
-      <hbox class="search-panel-one-offs" role="group"/>
+      <box class="search-panel-one-offs-container">
+        <hbox class="search-panel-one-offs" role="group"/>
+        <hbox class="search-one-offs-spacer"/>
+        <button class="searchbar-engine-one-off-item search-setting-button-compact" data-l10n-id="search-one-offs-change-settings-compact-button"/>
+      </box>
       <vbox class="search-add-engines"/>
-      <hbox class="search-one-offs-spacer"/>
-      <button class="searchbar-engine-one-off-item search-setting-button-compact" data-l10n-id="search-one-offs-change-settings-compact-button"/>
       <button class="search-setting-button" data-l10n-id="search-one-offs-change-settings-button"/>
-      <box style="visibiltiy:collapse">
+      <box>
         <menupopup class="search-one-offs-context-menu">
           <menuitem class="search-one-offs-context-open-in-new-tab" data-l10n-id="search-one-offs-context-open-new-tab"/>
           <menuitem class="search-one-offs-context-set-default" data-l10n-id="search-one-offs-context-set-as-default"/>
