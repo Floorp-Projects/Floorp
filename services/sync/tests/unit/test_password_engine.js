@@ -271,6 +271,198 @@ add_task(async function test_password_dupe() {
   }
 });
 
+add_task(async function test_updated_null_password_sync() {
+  _("Ensure updated null login username is converted to a string");
+
+  let engine = Service.engineManager.get("passwords");
+
+  let server = await serverForFoo(engine);
+  await SyncTestingInfrastructure(server);
+  let collection = server.user("foo").collection("passwords");
+
+  let guid1 = Utils.makeGUID();
+  let guid2 = Utils.makeGUID();
+  let remoteDetails = {
+    formSubmitURL: "https://www.nullupdateexample.com",
+    hostname: "https://www.nullupdateexample.com",
+    httpRealm: null,
+    username: null,
+    password: "bar",
+    usernameField: "username-field",
+    passwordField: "password-field",
+    timeCreated: Date.now(),
+    timePasswordChanged: Date.now(),
+  };
+  let localDetails = {
+    formSubmitURL: "https://www.nullupdateexample.com",
+    hostname: "https://www.nullupdateexample.com",
+    httpRealm: null,
+    username: "foo",
+    password: "foobar",
+    usernameField: "username-field",
+    passwordField: "password-field",
+    timeCreated: Date.now(),
+    timePasswordChanged: Date.now(),
+  };
+
+  _("Create remote record with same details and guid1");
+  collection.insertRecord(Object.assign({}, remoteDetails, { id: guid1 }));
+
+  try {
+    _("Create local updated login with null password");
+    await engine._store.update(Object.assign({}, localDetails, { id: guid2 }));
+
+    _("Perform sync");
+    await sync_engine_and_validate_telem(engine, false);
+
+    let logins = Services.logins.findLogins(
+      "https://www.nullupdateexample.com",
+      "",
+      ""
+    );
+
+    equal(logins.length, 1);
+    equal(logins[0].QueryInterface(Ci.nsILoginMetaInfo).guid, guid1);
+  } finally {
+    await cleanup(engine, server);
+  }
+});
+
+add_task(async function test_updated_undefined_password_sync() {
+  _("Ensure updated undefined login username is converted to a string");
+
+  let engine = Service.engineManager.get("passwords");
+
+  let server = await serverForFoo(engine);
+  await SyncTestingInfrastructure(server);
+  let collection = server.user("foo").collection("passwords");
+
+  let guid1 = Utils.makeGUID();
+  let guid2 = Utils.makeGUID();
+  let remoteDetails = {
+    formSubmitURL: "https://www.undefinedupdateexample.com",
+    hostname: "https://www.undefinedupdateexample.com",
+    httpRealm: null,
+    username: undefined,
+    password: "bar",
+    usernameField: "username-field",
+    passwordField: "password-field",
+    timeCreated: Date.now(),
+    timePasswordChanged: Date.now(),
+  };
+  let localDetails = {
+    formSubmitURL: "https://www.undefinedupdateexample.com",
+    hostname: "https://www.undefinedupdateexample.com",
+    httpRealm: null,
+    username: "foo",
+    password: "foobar",
+    usernameField: "username-field",
+    passwordField: "password-field",
+    timeCreated: Date.now(),
+    timePasswordChanged: Date.now(),
+  };
+
+  _("Create remote record with same details and guid1");
+  collection.insertRecord(Object.assign({}, remoteDetails, { id: guid1 }));
+
+  try {
+    _("Create local updated login with undefined password");
+    await engine._store.update(Object.assign({}, localDetails, { id: guid2 }));
+
+    _("Perform sync");
+    await sync_engine_and_validate_telem(engine, false);
+
+    let logins = Services.logins.findLogins(
+      "https://www.undefinedupdateexample.com",
+      "",
+      ""
+    );
+
+    equal(logins.length, 1);
+    equal(logins[0].QueryInterface(Ci.nsILoginMetaInfo).guid, guid1);
+  } finally {
+    await cleanup(engine, server);
+  }
+});
+
+add_task(async function test_new_null_password_sync() {
+  _("Ensure new null login username is converted to a string");
+
+  let engine = Service.engineManager.get("passwords");
+
+  let server = await serverForFoo(engine);
+  await SyncTestingInfrastructure(server);
+
+  let guid1 = Utils.makeGUID();
+  let details = {
+    formSubmitURL: "https://www.example.com",
+    hostname: "https://www.example.com",
+    httpRealm: null,
+    username: null,
+    password: "bar",
+    usernameField: "username-field",
+    passwordField: "password-field",
+    timeCreated: Date.now(),
+    timePasswordChanged: Date.now(),
+  };
+
+  try {
+    _("Create local login with null password");
+    await engine._store.create(Object.assign({}, details, { id: guid1 }));
+
+    _("Perform sync");
+    await sync_engine_and_validate_telem(engine, false);
+
+    let logins = Services.logins.findLogins("https://www.example.com", "", "");
+
+    equal(logins.length, 1);
+    notEqual(logins[0].QueryInterface(Ci.nsILoginMetaInfo).username, null);
+    notEqual(logins[0].QueryInterface(Ci.nsILoginMetaInfo).username, undefined);
+    equal(logins[0].QueryInterface(Ci.nsILoginMetaInfo).username, "");
+  } finally {
+    await cleanup(engine, server);
+  }
+});
+
+add_task(async function test_new_undefined_password_sync() {
+  _("Ensure new undefined login username is converted to a string");
+
+  let engine = Service.engineManager.get("passwords");
+
+  let server = await serverForFoo(engine);
+  await SyncTestingInfrastructure(server);
+
+  let guid1 = Utils.makeGUID();
+  let details = {
+    formSubmitURL: "https://www.example.com",
+    hostname: "https://www.example.com",
+    httpRealm: null,
+    username: undefined,
+    password: "bar",
+    usernameField: "username-field",
+    passwordField: "password-field",
+    timeCreated: Date.now(),
+    timePasswordChanged: Date.now(),
+  };
+
+  try {
+    _("Create local login with undefined password");
+    await engine._store.create(Object.assign({}, details, { id: guid1 }));
+
+    _("Perform sync");
+    await sync_engine_and_validate_telem(engine, false);
+
+    let logins = Services.logins.findLogins("https://www.example.com", "", "");
+
+    equal(logins.length, 1);
+    notEqual(logins[0].QueryInterface(Ci.nsILoginMetaInfo).username, null);
+    notEqual(logins[0].QueryInterface(Ci.nsILoginMetaInfo).username, undefined);
+    equal(logins[0].QueryInterface(Ci.nsILoginMetaInfo).username, "");
+  } finally {
+    await cleanup(engine, server);
+  }
+});
+
 add_task(async function test_sync_password_validation() {
   // This test isn't in test_password_validator to avoid duplicating cleanup.
   _("Ensure that if a password validation happens, it ends up in the ping");
