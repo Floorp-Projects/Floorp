@@ -2078,12 +2078,10 @@ struct DebuggerScript::SetBreakpointMatcher {
     if (!site) {
       return false;
     }
-    site->inc(cx_->runtime()->defaultFreeOp());
     if (cx_->zone()->new_<Breakpoint>(dbg_, site, handler_)) {
       AddCellMemory(script, sizeof(Breakpoint), MemoryUse::Breakpoint);
       return true;
     }
-    site->dec(cx_->runtime()->defaultFreeOp());
     site->destroyIfEmpty(cx_->runtime()->defaultFreeOp());
     return false;
   }
@@ -2106,12 +2104,10 @@ struct DebuggerScript::SetBreakpointMatcher {
     if (!site) {
       return false;
     }
-    site->inc(cx_->runtime()->defaultFreeOp());
     if (cx_->zone()->new_<Breakpoint>(dbg_, site, handler_)) {
       AddCellMemory(wasmInstance, sizeof(Breakpoint), MemoryUse::Breakpoint);
       return true;
     }
-    site->dec(cx_->runtime()->defaultFreeOp());
     site->destroyIfEmpty(cx_->runtime()->defaultFreeOp());
     return false;
   }

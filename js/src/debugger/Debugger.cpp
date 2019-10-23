@@ -306,22 +306,7 @@ bool js::ParseEvalOptions(JSContext* cx, HandleValue value,
 
 /*** Breakpoints ************************************************************/
 
-BreakpointSite::BreakpointSite(Type type) : type_(type), enabledCount(0) {}
-
-void BreakpointSite::inc(JSFreeOp* fop) {
-  enabledCount++;
-  if (enabledCount == 1) {
-    recompile(fop);
-  }
-}
-
-void BreakpointSite::dec(JSFreeOp* fop) {
-  MOZ_ASSERT(enabledCount > 0);
-  enabledCount--;
-  if (enabledCount == 0) {
-    recompile(fop);
-  }
-}
+BreakpointSite::BreakpointSite(Type type) : type_(type) {}
 
 bool BreakpointSite::isEmpty() const { return breakpoints.isEmpty(); }
 
@@ -360,7 +345,6 @@ Breakpoint::Breakpoint(Debugger* debugger, BreakpointSite* site,
 
 void Breakpoint::destroy(JSFreeOp* fop,
                          MayDestroySite mayDestroySite /* true */) {
-  site->dec(fop);
   debugger->breakpoints.remove(this);
   site->breakpoints.remove(this);
   gc::Cell* cell = site->owningCellUnbarriered();
@@ -379,12 +363,6 @@ JSBreakpointSite::JSBreakpointSite(JSScript* script, jsbytecode* pc)
   MOZ_ASSERT(!DebugAPI::hasBreakpointsAt(script, pc));
 }
 
-void JSBreakpointSite::recompile(JSFreeOp* fop) {
-  if (script->hasBaselineScript()) {
-    script->baselineScript()->toggleDebugTraps(script, pc);
-  }
-}
-
 void JSBreakpointSite::remove(JSFreeOp* fop) {
   DebugScript::destroyBreakpointSite(fop, script, pc);
 }
@@ -396,10 +374,6 @@ WasmBreakpointSite::WasmBreakpointSite(WasmInstanceObject* instanceObject_,
       offset(offset_) {
   MOZ_ASSERT(instanceObject_);
   MOZ_ASSERT(instanceObject_->instance().debugEnabled());
-}
-
-void WasmBreakpointSite::recompile(JSFreeOp* fop) {
-  instance().debug().toggleBreakpointTrap(fop->runtime(), offset, isEnabled());
 }
 
 void WasmBreakpointSite::remove(JSFreeOp* fop) {
