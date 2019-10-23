@@ -43,6 +43,20 @@ DebugState::DebugState(const Code& code, const Module& module)
   MOZ_ASSERT(code.metadata().debugEnabled);
 }
 
+void DebugState::trace(JSTracer* trc) {
+  for (auto iter = breakpointSites_.iter(); !iter.done(); iter.next()) {
+    WasmBreakpointSite* site = iter.get().value();
+    site->trace(trc);
+  }
+}
+
+void DebugState::finalize(JSFreeOp* fop) {
+  for (auto iter = breakpointSites_.iter(); !iter.done(); iter.next()) {
+    WasmBreakpointSite* site = iter.get().value();
+    site->delete_(fop);
+  }
+}
+
 static const uint32_t DefaultBinarySourceColumnNumber = 1;
 
 static const CallSite* SlowCallSiteSearchByOffset(const MetadataTier& metadata,
@@ -236,6 +250,11 @@ void DebugState::destroyBreakpointSite(JSFreeOp* fop, Instance* instance,
 void DebugState::clearBreakpointsIn(JSFreeOp* fop, WasmInstanceObject* instance,
                                     js::Debugger* dbg, JSObject* handler) {
   MOZ_ASSERT(instance);
+
+  // Breakpoints hold wrappers in the instance's compartment for the handler.
+  // Make sure we don't try to search for the unwrapped handler.
+  MOZ_ASSERT_IF(handler, instance->compartment() == handler->compartment());
+
   if (breakpointSites_.empty()) {
     return;
   }

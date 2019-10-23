@@ -74,6 +74,9 @@ class DebugScript {
            codeLength * sizeof(JSBreakpointSite*);
   }
 
+  void trace(JSTracer* trc, JSScript* owner);
+  void delete_(JSFreeOp* fop, JSScript* owner);
+
   static DebugScript* get(JSScript* script);
   static DebugScript* getOrCreate(JSContext* cx, JSScript* script);
 

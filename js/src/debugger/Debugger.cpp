@@ -310,6 +310,18 @@ BreakpointSite::BreakpointSite(Type type) : type_(type) {}
 
 bool BreakpointSite::isEmpty() const { return breakpoints.isEmpty(); }
 
+void BreakpointSite::trace(JSTracer* trc) {
+  for (auto p = breakpoints.begin(); p; p++) {
+    p->trace(trc);
+  }
+}
+
+void BreakpointSite::finalize(JSFreeOp* fop) {
+  while (!breakpoints.isEmpty()) {
+    breakpoints.begin()->delete_(fop);
+  }
+}
+
 Breakpoint* BreakpointSite::firstBreakpoint() const {
   if (isEmpty()) {
     return nullptr;
@@ -327,7 +339,7 @@ bool BreakpointSite::hasBreakpoint(Breakpoint* toFind) {
   return false;
 }
 
-inline gc::Cell* BreakpointSite::owningCellUnbarriered() {
+inline gc::Cell* BreakpointSite::owningCell() {
   if (type() == Type::JS) {
     return asJS()->script;
   }
@@ -335,18 +347,28 @@ inline gc::Cell* BreakpointSite::owningCellUnbarriered() {
   return asWasm()->instanceObject;
 }
 
-Breakpoint::Breakpoint(Debugger* debugger, BreakpointSite* site,
-                       JSObject* handler)
-    : debugger(debugger), site(site), handler(handler) {
-  MOZ_ASSERT(handler->compartment() == debugger->object->compartment());
+Breakpoint::Breakpoint(Debugger* debugger, HandleObject wrappedDebugger,
+                       BreakpointSite* site, HandleObject handler)
+    : debugger(debugger),
+      wrappedDebugger(wrappedDebugger),
+      site(site),
+      handler(handler) {
+  MOZ_ASSERT(UncheckedUnwrap(wrappedDebugger) == debugger->object);
+  MOZ_ASSERT(handler->compartment() == wrappedDebugger->compartment());
+
   debugger->breakpoints.pushBack(this);
   site->breakpoints.pushBack(this);
+}
+
+void Breakpoint::trace(JSTracer* trc) {
+  TraceEdge(trc, &wrappedDebugger, "breakpoint owner");
+  TraceEdge(trc, &handler, "breakpoint handler");
 }
 
 void Breakpoint::delete_(JSFreeOp* fop) {
   debugger->breakpoints.remove(this);
   site->breakpoints.remove(this);
-  gc::Cell* cell = site->owningCellUnbarriered();
+  gc::Cell* cell = site->owningCell();
   fop->delete_(cell, this, MemoryUse::Breakpoint);
 }
 
@@ -370,6 +392,17 @@ void JSBreakpointSite::remove(JSFreeOp* fop) {
   DebugScript::destroyBreakpointSite(fop, script, pc);
 }
 
+void JSBreakpointSite::trace(JSTracer* trc) {
+  BreakpointSite::trace(trc);
+  TraceEdge(trc, &script, "breakpoint script");
+}
+
+void JSBreakpointSite::delete_(JSFreeOp* fop) {
+  BreakpointSite::finalize(fop);
+
+  fop->delete_(script, this, MemoryUse::BreakpointSite);
+}
+
 WasmBreakpointSite::WasmBreakpointSite(WasmInstanceObject* instanceObject_,
                                        uint32_t offset_)
     : BreakpointSite(Type::Wasm),
@@ -379,8 +412,19 @@ WasmBreakpointSite::WasmBreakpointSite(WasmInstanceObject* instanceObject_,
   MOZ_ASSERT(instanceObject_->instance().debugEnabled());
 }
 
+void WasmBreakpointSite::trace(JSTracer* trc) {
+  BreakpointSite::trace(trc);
+  TraceEdge(trc, &instanceObject, "breakpoint Wasm instance");
+}
+
 void WasmBreakpointSite::remove(JSFreeOp* fop) {
   instance().destroyBreakpointSite(fop, offset);
+}
+
+void WasmBreakpointSite::delete_(JSFreeOp* fop) {
+  BreakpointSite::finalize(fop);
+
+  fop->delete_(instanceObject, this, MemoryUse::BreakpointSite);
 }
 
 /*** Debugger hook dispatch *************************************************/
@@ -432,6 +476,11 @@ Debugger::Debugger(JSContext* cx, NativeObject* dbg)
 Debugger::~Debugger() {
   MOZ_ASSERT(debuggees.empty());
   allocationsLog.clear();
+
+  // Breakpoints should hold us alive, so any breakpoints remaining must be set
+  // in dying JSScripts. We should clean them up, but this never asserts. I'm
+  // not sure why.
+  MOZ_ASSERT(breakpoints.isEmpty());
 
   // We don't have to worry about locking here since Debugger is not
   // background finalized.
@@ -642,22 +691,6 @@ bool Debugger::hasAnyLiveHooks(JSRuntime* rt) const {
   if (getHook(OnDebuggerStatement) || getHook(OnExceptionUnwind) ||
       getHook(OnNewScript) || getHook(OnEnterFrame)) {
     return true;
-  }
-
-  // If any breakpoints are in live scripts, return true.
-  for (Breakpoint* bp = firstBreakpoint(); bp; bp = bp->nextInDebugger()) {
-    switch (bp->site->type()) {
-      case BreakpointSite::Type::JS:
-        if (IsMarkedUnbarriered(rt, &bp->site->asJS()->script)) {
-          return true;
-        }
-        break;
-      case BreakpointSite::Type::Wasm:
-        if (IsMarkedUnbarriered(rt, &bp->site->asWasm()->instanceObject)) {
-          return true;
-        }
-        break;
-    }
   }
 
   // Check for hooks set on suspended generator frames.
@@ -2361,6 +2394,10 @@ ResumeMode DebugAPI::onTrap(JSContext* cx, MutableHandleValue vp) {
   }
 
   // Build list of breakpoint handlers.
+  //
+  // This does not need to be rooted: since the JSScript/WasmInstance is on the
+  // stack, the Breakpoints will not be GC'd. However, they may be deleted, and
+  // we check for that case below.
   Vector<Breakpoint*> triggered(cx);
   for (Breakpoint* bp = site->firstBreakpoint(); bp; bp = bp->nextInSite()) {
     // Skip a breakpoint that is not set for the current wasm::Instance --
@@ -2407,8 +2444,17 @@ ResumeMode DebugAPI::onTrap(JSContext* cx, MutableHandleValue vp) {
         if (!dbg->getFrame(cx, iter, &scriptFrame)) {
           return dbg->reportUncaughtException(ar);
         }
-        RootedValue rv(cx);
+
+        // Re-wrap the breakpoint's handler for the Debugger's compartment. When
+        // the handler and the Debugger are in the same compartment (the usual
+        // case), this actually unwraps it, but there's no requirement that they
+        // be in the same compartment, so we can't be sure.
         Rooted<JSObject*> handler(cx, bp->handler);
+        if (!cx->compartment()->wrap(cx, &handler)) {
+          return dbg->reportUncaughtException(ar);
+        }
+
+        RootedValue rv(cx);
         bool ok = CallMethodIfPresent(cx, handler, "hit", 1,
                                       scriptFrame.address(), &rv);
         ResumeMode resumeMode = dbg->processHandlerResult(
@@ -3694,38 +3740,6 @@ bool DebugAPI::markIteratively(GCMarker* marker) {
           markedAny = true;
           dbgMarked = true;
         }
-
-        if (dbgMarked) {
-          // Search for breakpoints to mark.
-          for (Breakpoint* bp = dbg->firstBreakpoint(); bp;
-               bp = bp->nextInDebugger()) {
-            switch (bp->site->type()) {
-              case BreakpointSite::Type::JS:
-                if (IsMarkedUnbarriered(rt, &bp->site->asJS()->script)) {
-                  // The debugger and the script are both live.
-                  // Therefore the breakpoint handler is live.
-                  if (!IsMarked(rt, &bp->getHandlerRef())) {
-                    TraceEdge(marker, &bp->getHandlerRef(),
-                              "breakpoint handler");
-                    markedAny = true;
-                  }
-                }
-                break;
-              case BreakpointSite::Type::Wasm:
-                if (IsMarkedUnbarriered(rt,
-                                        &bp->site->asWasm()->instanceObject)) {
-                  // The debugger and the wasm instance are both live.
-                  // Therefore the breakpoint handler is live.
-                  if (!IsMarked(rt, &bp->getHandlerRef())) {
-                    TraceEdge(marker, &bp->getHandlerRef(),
-                              "wasm breakpoint handler");
-                    markedAny = true;
-                  }
-                }
-                break;
-            }
-          }
-        }
       }
     }
   }
@@ -3750,20 +3764,6 @@ void Debugger::traceForMovingGC(JSTracer* trc) {
 
   for (WeakGlobalObjectSet::Enum e(debuggees); !e.empty(); e.popFront()) {
     TraceEdge(trc, &e.mutableFront(), "Global Object");
-  }
-
-  for (Breakpoint* bp = firstBreakpoint(); bp; bp = bp->nextInDebugger()) {
-    switch (bp->site->type()) {
-      case BreakpointSite::Type::JS:
-        TraceManuallyBarrieredEdge(trc, &bp->site->asJS()->script,
-                                   "breakpoint script");
-        break;
-      case BreakpointSite::Type::Wasm:
-        TraceManuallyBarrieredEdge(trc, &bp->site->asWasm()->instanceObject,
-                                   "breakpoint wasm instance");
-        break;
-    }
-    TraceEdge(trc, &bp->getHandlerRef(), "breakpoint handler");
   }
 }
 

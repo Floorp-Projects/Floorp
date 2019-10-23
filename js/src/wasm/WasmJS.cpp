@@ -1271,6 +1271,9 @@ void WasmInstanceObject::finalize(JSFreeOp* fop, JSObject* obj) {
   fop->delete_(obj, &instance.indirectGlobals(),
                MemoryUse::WasmInstanceGlobals);
   if (!instance.isNewborn()) {
+    if (instance.instance().debugEnabled()) {
+      instance.instance().debug().finalize(fop);
+    }
     fop->delete_(obj, &instance.instance(), MemoryUse::WasmInstanceInstance);
   }
 }

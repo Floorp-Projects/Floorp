@@ -4875,6 +4875,10 @@ void JSScript::traceChildren(JSTracer* trc) {
     TraceManuallyBarrieredEdge(trc, &lazyScript, "lazyScript");
   }
 
+  if (hasDebugScript()) {
+    DebugAPI::traceDebugScript(trc, this);
+  }
+
   if (trc->isMarkingTracer()) {
     GCMarker::fromTracer(trc)->markImplicitEdges(this);
   }
