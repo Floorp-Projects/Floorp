@@ -84,8 +84,7 @@ add_task(async function testOnResultPicked_mainButton_noURL_enter() {
   });
   EventUtils.synthesizeKey("KEY_ArrowDown");
   EventUtils.synthesizeKey("KEY_Enter");
-  let details = await ext.awaitMessage("onResultPicked received");
-  Assert.deepEqual(details, { helpPicked: false });
+  await ext.awaitMessage("onResultPicked received");
   await ext.unload();
 });
 
@@ -102,8 +101,7 @@ add_task(async function testOnResultPicked_mainButton_noURL_mouse() {
   );
   Assert.ok(mainButton);
   EventUtils.synthesizeMouseAtCenter(mainButton, {});
-  let details = await ext.awaitMessage("onResultPicked received");
-  Assert.deepEqual(details, { helpPicked: false });
+  await ext.awaitMessage("onResultPicked received");
   await ext.unload();
 });
 
@@ -154,40 +152,6 @@ add_task(async function testOnResultPicked_mainButton_url_mouse() {
     await loadedPromise;
     Assert.equal(gBrowser.currentURI.spec, "http://example.com/");
   });
-  await ext.unload();
-});
-
-// Loads an extension without a help button URL and presses enter on the help
-// button.
-add_task(async function testOnResultPicked_helpButton_noURL_enter() {
-  let ext = await loadExtension();
-  await UrlbarTestUtils.promiseAutocompleteResultPopup({
-    window,
-    waitForFocus,
-    value: "test",
-  });
-  EventUtils.synthesizeKey("KEY_ArrowDown", { repeat: 2 });
-  EventUtils.synthesizeKey("KEY_Enter");
-  let details = await ext.awaitMessage("onResultPicked received");
-  Assert.deepEqual(details, { helpPicked: true });
-  await ext.unload();
-});
-
-// Loads an extension without a help button URL and clicks the help button.
-add_task(async function testOnResultPicked_helpButton_noURL_mouse() {
-  let ext = await loadExtension();
-  await UrlbarTestUtils.promiseAutocompleteResultPopup({
-    window,
-    waitForFocus,
-    value: "test",
-  });
-  let helpButton = document.querySelector(
-    "#urlbarView-row-0 .urlbarView-tip-help"
-  );
-  Assert.ok(helpButton);
-  EventUtils.synthesizeMouseAtCenter(helpButton, {});
-  let details = await ext.awaitMessage("onResultPicked received");
-  Assert.deepEqual(details, { helpPicked: true });
   await ext.unload();
 });
 

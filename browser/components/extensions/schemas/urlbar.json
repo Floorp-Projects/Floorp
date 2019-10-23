@@ -182,11 +182,6 @@
             "name": "payload",
             "type": "object",
             "description": "The payload of the result that was picked."
-          },
-          {
-            "name": "details",
-            "type": "object",
-            "description": "Details about the pick. The specific properties depend on the result type."
           }
         ],
         "extraParameters": [

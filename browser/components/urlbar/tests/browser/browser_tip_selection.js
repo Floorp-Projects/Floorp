@@ -37,7 +37,7 @@ class TipTestProvider extends UrlbarProvider {
     }
   }
   cancelQuery(context) {}
-  pickResult(result, details) {}
+  pickResult(result) {}
 }
 
 add_task(async function tipIsSecondResult() {
@@ -222,6 +222,92 @@ add_task(async function tipIsOnlyResult() {
       "urlbarView-tip-help"
     ),
     "The selected element should be the tip help button."
+  );
+
+  gURLBar.view.close();
+  UrlbarProvidersManager.unregisterProvider(provider);
+});
+
+add_task(async function tipHasNoHelpButton() {
+  let matches = [
+    new UrlbarResult(
+      UrlbarUtils.RESULT_TYPE.URL,
+      UrlbarUtils.RESULT_SOURCE.HISTORY,
+      { url: "http://mozilla.org/a" }
+    ),
+    new UrlbarResult(
+      UrlbarUtils.RESULT_TYPE.TIP,
+      UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+      {
+        icon: "",
+        text: "This is a test intervention.",
+        buttonText: "Done",
+        data: "test",
+      }
+    ),
+  ];
+
+  let provider = new TipTestProvider(matches);
+  UrlbarProvidersManager.registerProvider(provider);
+
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    value: "test",
+    window,
+    waitForFocus: SimpleTest.waitForFocus,
+  });
+
+  Assert.equal(
+    UrlbarTestUtils.getResultCount(window),
+    2,
+    "There should be two results in the view."
+  );
+  let secondResult = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
+  Assert.equal(
+    secondResult.type,
+    UrlbarUtils.RESULT_TYPE.TIP,
+    "The second result should be a tip."
+  );
+
+  EventUtils.synthesizeKey("KEY_ArrowDown");
+  Assert.equal(
+    UrlbarTestUtils.getSelectedElementIndex(window),
+    0,
+    "The first element should be selected."
+  );
+
+  EventUtils.synthesizeKey("KEY_ArrowDown");
+  Assert.ok(
+    UrlbarTestUtils.getSelectedElement(window).classList.contains(
+      "urlbarView-tip-button"
+    ),
+    "The selected element should be the tip button."
+  );
+  Assert.equal(
+    UrlbarTestUtils.getSelectedElementIndex(window),
+    1,
+    "The first element should be selected."
+  );
+
+  EventUtils.synthesizeKey("KEY_ArrowDown");
+  await BrowserTestUtils.waitForCondition(() => {
+    info("Waiting for one-off to become selected.");
+    let oneOff = document.querySelector(
+      ".urlbarView .search-panel-one-offs .searchbar-engine-one-off-item:first-child"
+    );
+    return oneOff.hasAttribute("selected");
+  });
+  Assert.equal(
+    UrlbarTestUtils.getSelectedElementIndex(window),
+    -1,
+    "No results should be selected."
+  );
+
+  EventUtils.synthesizeKey("KEY_ArrowUp");
+  Assert.ok(
+    UrlbarTestUtils.getSelectedElement(window).classList.contains(
+      "urlbarView-tip-button"
+    ),
+    "The selected element should be the tip button."
   );
 
   gURLBar.view.close();
