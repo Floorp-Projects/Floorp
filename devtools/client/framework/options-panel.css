@@ -5,6 +5,16 @@
   user-select: none;
 }
 
+.theme-light {
+  --experimental-background: #E0EEFF;
+  --experimental-color: #436286;
+}
+
+.theme-dark {
+  --experimental-background: #436286;
+  --experimental-color: #E0EEFF;
+}
+
 #options-panel-container {
   overflow: auto;
 }
@@ -141,5 +151,34 @@
   color: currentColor;
 }
 .deprecation-notice a:hover{
+  text-decoration: underline;
+}
+
+.experimental-notice::before {
+  mask-image: url("chrome://devtools/skin/images/filter-small.svg");
+  mask-size: 15px;
+  transform: scaleY(-1);
+  background-color: var(--experimental-color);
+  display: inline-block;
+  content: "";
+  flex-shrink: 0;
+  height: 15px;
+  margin-inline-end: 5px;
+  width: 15px;
+}
+
+.experimental-notice {
+  background-color: var(--experimental-background);
+  color: var(--experimental-color);
+  outline: var(--experimental-background) solid 4px;
+  align-items: center;
+  display: flex;
+  margin-inline-start: 8px;
+}
+
+.experimental-notice a {
+  color: currentColor;
+}
+.experimental-notice a:hover{
   text-decoration: underline;
 }
