@@ -410,6 +410,10 @@ void js::gc::GCRuntime::traceRuntimeCommon(JSTracer* trc,
   // Trace helper thread roots.
   HelperThreadState().trace(trc);
 
+  // Trace Debugger.Frames that have live hooks, since dropping them would be
+  // observable. In effect, they are rooted by the stack frames.
+  DebugAPI::traceFramesWithLiveHooks(trc);
+
   // Trace the embedding's black and gray roots.
   if (!JS::RuntimeHeapIsMinorCollecting()) {
     gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::MARK_EMBEDDING);
