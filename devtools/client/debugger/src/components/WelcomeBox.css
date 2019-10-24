@@ -46,12 +46,17 @@
 }
 
 .shortcutKey {
-  text-align: end;
+  direction: ltr;
+  text-align: right;
   padding-right: 10px;
   font-family: var(--monospace-font-family);
   font-size: 14px;
   line-height: 18px;
   color: var(--theme-body-color);
+}
+
+.shortcutKey:dir(rtl) {
+  text-align: left;
 }
 
 :root[platform="mac"] .welcomebox .shortcutKey,
