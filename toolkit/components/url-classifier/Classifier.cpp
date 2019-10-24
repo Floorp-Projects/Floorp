@@ -19,6 +19,7 @@
 #include "mozilla/EndianUtils.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/IntegerPrintfMacros.h"
+#include "mozilla/LazyIdleThread.h"
 #include "mozilla/Logging.h"
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/Base64.h"
@@ -42,8 +43,20 @@ extern mozilla::LazyLogModule gUrlClassifierDbServiceLog;
 #define V4_METADATA_SUFFIX NS_LITERAL_CSTRING(".metadata")
 #define V2_METADATA_SUFFIX NS_LITERAL_CSTRING(".sbstore")
 
+// The amount of time, in milliseconds, that our IO thread will stay alive after
+// the last event it processes.
+#define DEFAULT_THREAD_TIMEOUT_MS 5000
+
 namespace mozilla {
 namespace safebrowsing {
+
+bool Classifier::OnUpdateThread() const {
+  bool onthread = false;
+  if (mUpdateThread) {
+    mUpdateThread->IsOnCurrentThread(&onthread);
+  }
+  return onthread;
+}
 
 void Classifier::SplitTables(const nsACString& str,
                              nsTArray<nsCString>& tables) {
@@ -129,11 +142,20 @@ Classifier::Classifier()
     : mIsTableRequestResultOutdated(true),
       mUpdateInterrupted(true),
       mIsClosed(false) {
-  NS_NewNamedThread(NS_LITERAL_CSTRING("Classifier Update"),
-                    getter_AddRefs(mUpdateThread));
+  // Make a lazy thread for any IO
+  mUpdateThread = new LazyIdleThread(
+      DEFAULT_THREAD_TIMEOUT_MS, NS_LITERAL_CSTRING("Classifier Update"),
+      LazyIdleThread::ShutdownMethod::ManualShutdown);
 }
 
-Classifier::~Classifier() { Close(); }
+Classifier::~Classifier() {
+  if (mUpdateThread) {
+    mUpdateThread->Shutdown();
+    mUpdateThread = nullptr;
+  }
+
+  Close();
+}
 
 nsresult Classifier::SetupPathNames() {
   // Get the root directory where to store all the databases.
@@ -306,8 +328,7 @@ void Classifier::Close() {
 }
 
 void Classifier::Reset() {
-  MOZ_ASSERT(NS_GetCurrentThread() != mUpdateThread,
-             "Reset() MUST NOT be called on update thread");
+  MOZ_ASSERT(!OnUpdateThread(), "Reset() MUST NOT be called on update thread");
 
   LOG(("Reset() is called so we interrupt the update."));
   mUpdateInterrupted = true;
@@ -589,7 +610,7 @@ void Classifier::RemoveUpdateIntermediaries() {
 }
 
 void Classifier::CopyAndInvalidateFullHashCache() {
-  MOZ_ASSERT(NS_GetCurrentThread() != mUpdateThread,
+  MOZ_ASSERT(!OnUpdateThread(),
              "CopyAndInvalidateFullHashCache cannot be called on update thread "
              "since it mutates mLookupCaches which is only safe on "
              "worker thread.");
@@ -615,7 +636,7 @@ void Classifier::CopyAndInvalidateFullHashCache() {
 }
 
 void Classifier::MergeNewLookupCaches() {
-  MOZ_ASSERT(NS_GetCurrentThread() != mUpdateThread,
+  MOZ_ASSERT(!OnUpdateThread(),
              "MergeNewLookupCaches cannot be called on update thread "
              "since it mutates mLookupCaches which is only safe on "
              "worker thread.");
@@ -722,14 +743,13 @@ nsresult Classifier::AsyncApplyUpdates(const TableUpdateArray& aUpdates,
   }
 
   nsCOMPtr<nsIThread> callerThread = NS_GetCurrentThread();
-  MOZ_ASSERT(callerThread != mUpdateThread);
+  MOZ_ASSERT(!OnUpdateThread());
 
   RefPtr<Classifier> self = this;
   nsCOMPtr<nsIRunnable> bgRunnable = NS_NewRunnableFunction(
       "safebrowsing::Classifier::AsyncApplyUpdates",
       [self, aUpdates, aCallback, callerThread] {
-        MOZ_ASSERT(NS_GetCurrentThread() == self->mUpdateThread,
-                   "MUST be on update thread");
+        MOZ_ASSERT(self->OnUpdateThread(), "MUST be on update thread");
 
         nsresult bgRv;
         nsTArray<nsCString> failedTableNames;
@@ -881,7 +901,7 @@ nsresult Classifier::ApplyUpdatesForeground(
 }
 
 nsresult Classifier::ApplyFullHashes(ConstTableUpdateArray& aUpdates) {
-  MOZ_ASSERT(NS_GetCurrentThread() != mUpdateThread,
+  MOZ_ASSERT(!OnUpdateThread(),
              "ApplyFullHashes() MUST NOT be called on update thread");
   MOZ_ASSERT(
       !NS_IsMainThread(),
@@ -1512,7 +1532,7 @@ nsresult Classifier::UpdateCache(RefPtr<const TableUpdate> aUpdate) {
 RefPtr<LookupCache> Classifier::GetLookupCache(const nsACString& aTable,
                                                bool aForUpdate) {
   // GetLookupCache(aForUpdate==true) can only be called on update thread.
-  MOZ_ASSERT_IF(aForUpdate, NS_GetCurrentThread() == mUpdateThread);
+  MOZ_ASSERT_IF(aForUpdate, OnUpdateThread());
 
   LookupCacheArray& lookupCaches =
       aForUpdate ? mNewLookupCaches : mLookupCaches;
