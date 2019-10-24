@@ -32,5 +32,5 @@ info: |
 $DONOTEVALUATE();
 
 async function fn() {
-  for await ([arguments] of [[]])
+  for await ([arguments] of [[]]) {}
 }

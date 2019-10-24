@@ -6,6 +6,7 @@
 /*---
 description: |
     Test if a given function is a constructor function.
+defines: [isConstructor]
 ---*/
 
 function isConstructor(f) {

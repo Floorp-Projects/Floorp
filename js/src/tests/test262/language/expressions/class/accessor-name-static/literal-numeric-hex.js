@@ -4,6 +4,7 @@
 /*---
 description: Computed values as accessor property names (numeric literal in hexadecimal notation) (Class expression, static method)
 esid: sec-runtime-semantics-classdefinitionevaluation
+features: [class]
 flags: [generated]
 info: |
     [...]
@@ -13,6 +14,7 @@ info: |
         b. Else,
            a. Let status be the result of performing PropertyDefinitionEvaluation
               for m with arguments F and false.
+
 
     12.2.6.7 Runtime Semantics: Evaluation
 

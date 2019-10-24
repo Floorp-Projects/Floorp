@@ -5,6 +5,10 @@
 /*---
 description: |
     Collection of functions used to assert the correctness of SharedArrayBuffer objects.
+defines:
+  - testWithAtomicsOutOfBoundsIndices
+  - testWithAtomicsInBoundsIndices
+  - testWithAtomicsNonViewValues
 ---*/
 
 
@@ -126,6 +130,13 @@ function testWithAtomicsNonViewValues(f) {
 /*---
 description: |
     Collection of functions used to assert the correctness of TypedArray objects.
+defines:
+  - typedArrayConstructors
+  - floatArrayConstructors
+  - intArrayConstructors
+  - TypedArray
+  - testWithTypedArrayConstructors
+  - testTypedArrayConversions
 ---*/
 
 /**

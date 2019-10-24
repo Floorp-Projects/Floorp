@@ -20,7 +20,7 @@ info: |
   PrivateBrandCheck(O, P)
     1. If O.[[PrivateBrands]] does not contain an entry e such that SameValue(e, P.[[Brand]]) is true,
       a. Throw a TypeError exception.
-features: [class, class-static-methods-private]
+features: [class, class-static-methods-private, cross-realm]
 flags: [noStrict]
 ---*/
 
@@ -33,7 +33,7 @@ let classStringExpression = `(
 class {
   static #m() { return 'test262'; }
 
-  access() {
+  static access() {
     return this.#m();
   }
 }
