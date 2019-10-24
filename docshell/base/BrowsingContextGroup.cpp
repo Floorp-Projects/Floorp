@@ -133,6 +133,19 @@ JSObject* BrowsingContextGroup::WrapObject(JSContext* aCx,
   return BrowsingContextGroup_Binding::Wrap(aCx, this, aGivenProto);
 }
 
+static StaticRefPtr<BrowsingContextGroup> sChromeGroup;
+
+/* static */
+BrowsingContextGroup* BrowsingContextGroup::GetChromeGroup() {
+  MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
+  if (!sChromeGroup && XRE_IsParentProcess()) {
+    sChromeGroup = new BrowsingContextGroup();
+    ClearOnShutdown(&sChromeGroup);
+  }
+
+  return sChromeGroup;
+}
+
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(BrowsingContextGroup, mContexts,
                                       mToplevels, mSubscribers, mCachedContexts)
 
