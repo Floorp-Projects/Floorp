@@ -9,9 +9,11 @@ const {
   createNode,
 } = require("./utils/markup");
 
-const { LocalizationHelper } = require("devtools/shared/l10n");
-const STRINGS_URI = "devtools/client/locales/debugger.properties";
-const L10N = new LocalizationHelper(STRINGS_URI);
+loader.lazyGetter(this, "L10N", () => {
+  const { LocalizationHelper } = require("devtools/shared/l10n");
+  const STRINGS_URI = "devtools/client/locales/debugger.properties";
+  return new LocalizationHelper(STRINGS_URI);
+});
 
 /**
  * The PausedDebuggerOverlay is a class that displays a semi-transparent mask on top of
@@ -207,6 +209,19 @@ PausedDebuggerOverlay.prototype = {
       return false;
     }
 
+    let reason;
+    try {
+      reason = L10N.getStr(`whyPaused.${options.reason}`);
+    } catch (e) {
+      // This is a temporary workaround to be uplifted to Firefox 71.
+      // This actors relies on a client side properties file. This file will not
+      // be available when debugging Firefox for Android / Gecko View.
+      // The highlighter also shows buttons that use client only images and are
+      // therefore invisible when remote debugging a mobile Firefox.
+      // Should be fixed in Bug 1591025.
+      return false;
+    }
+
     // Only track mouse movement when the the overlay is shown
     // Prevents mouse tracking when the user isn't paused
     const { pageListenerTarget } = this.env;
@@ -219,9 +234,7 @@ PausedDebuggerOverlay.prototype = {
 
     // Set the text to appear in the toolbar.
     const toolbar = this.getElement("toolbar");
-    this.getElement("reason").setTextContent(
-      L10N.getStr(`whyPaused.${options.reason}`)
-    );
+    this.getElement("reason").setTextContent(reason);
     toolbar.removeAttribute("hidden");
 
     this.env.window.document.setSuppressedEventListener(this);
