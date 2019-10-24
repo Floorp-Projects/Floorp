@@ -137,7 +137,7 @@ function GenerateClearKeyLicense(licenseRequest, keyStore) {
 
   return new TextEncoder().encode(
     JSON.stringify({
-      keys: keys,
+      keys,
       type: msg.type || "temporary",
     })
   );
@@ -165,9 +165,8 @@ function UpdateSessionFunc(test, token, sessionType, resolve, reject) {
 function MaybeCrossOriginURI(test, uri) {
   if (test.crossOrigin) {
     return "https://example.com:443/tests/dom/media/test/allowed.sjs?" + uri;
-  } else {
-    return uri;
   }
+  return uri;
 }
 
 function AppendTrack(test, ms, track, token) {

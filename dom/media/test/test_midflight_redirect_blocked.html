@@ -34,12 +34,12 @@
           element.addEventListener("loadedmetadata", ()=>{
             resolve(true);
             removeNodeAndSource(element);
-          }, false);
+          });
 
           element.addEventListener("error", ()=>{
             resolve(false);
             removeNodeAndSource(element);
-          }, false);
+          });
 
           var noise = Math.floor(Math.random() * 100000000);
           // Note: request redirect before the end of metadata, otherwise we won't

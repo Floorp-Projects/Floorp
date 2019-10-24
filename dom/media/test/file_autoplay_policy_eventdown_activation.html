@@ -41,7 +41,7 @@
                   let p = await element.play().then(() => true, () => false);
                   ok(p, "Expect to be activated already in " + eventName);
                   resolve();
-                }, false);
+                });
               });
             });
 
