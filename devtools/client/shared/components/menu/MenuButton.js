@@ -42,8 +42,8 @@ const omit = (obj, fields) => {
 class MenuButton extends PureComponent {
   static get propTypes() {
     return {
-      // The document to be used for rendering the menu popup.
-      doc: PropTypes.object.isRequired,
+      // The toolbox document that will be used for rendering the menu popup.
+      toolboxDoc: PropTypes.object.isRequired,
 
       // A text content for the button.
       label: PropTypes.string,
@@ -94,7 +94,7 @@ class MenuButton extends PureComponent {
       expanded: false,
       // In tests, initialize the menu immediately.
       isMenuInitialized: flags.testing || false,
-      win: props.doc.defaultView.top,
+      win: props.toolboxDoc.defaultView.top,
     };
     this.ignoreNextClick = false;
 
@@ -122,9 +122,9 @@ class MenuButton extends PureComponent {
     // If the window changes, we need to regenerate the HTMLTooltip or else the
     // XUL wrapper element will appear above (in terms of z-index) the old
     // window, and not the new.
-    const win = nextProps.doc.defaultView.top;
+    const win = nextProps.toolboxDoc.defaultView.top;
     if (
-      nextProps.doc !== this.props.doc ||
+      nextProps.toolboxDoc !== this.props.toolboxDoc ||
       this.state.win !== win ||
       nextProps.menuId !== this.props.menuId
     ) {
@@ -158,7 +158,7 @@ class MenuButton extends PureComponent {
       tooltipProps.id = this.props.menuId;
     }
 
-    this.tooltip = new HTMLTooltip(this.props.doc, tooltipProps);
+    this.tooltip = new HTMLTooltip(this.props.toolboxDoc, tooltipProps);
     this.tooltip.on("hidden", this.onHidden);
   }
 
@@ -351,7 +351,8 @@ class MenuButton extends PureComponent {
     }
 
     const isButtonFocussed =
-      this.props.doc && this.props.doc.activeElement === this.buttonRef.current;
+      this.props.toolboxDoc &&
+      this.props.toolboxDoc.activeElement === this.buttonRef.current;
 
     switch (e.key) {
       case "Escape":

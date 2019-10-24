@@ -146,7 +146,7 @@ class AccessibilityTreeFilter extends Component {
       MenuButton(
         {
           menuId: "accessibility-tree-filters-menu",
-          doc: document,
+          toolboxDoc: document,
           className: `devtools-button badge toolbar-menu-button filters`,
           label,
         },
