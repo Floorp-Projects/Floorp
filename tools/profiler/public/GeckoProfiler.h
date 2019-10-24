@@ -751,7 +751,11 @@ void profiler_add_marker(const char* aMarkerName,
 void profiler_add_js_marker(const char* aMarkerName);
 void profiler_add_js_allocation_marker(JS::RecordAllocationInfo&& info);
 void profiler_add_native_allocation_marker(int64_t aSize);
-bool profiler_could_be_locked_on_current_thread();
+
+// Returns true if the profiler lock is currently held *on the current thread*.
+// This may be used by re-entrant code that may call profiler functions while
+// the profiler already has the lock (which would deadlock).
+bool profiler_is_locked_on_current_thread();
 
 // Insert a marker in the profile timeline for a specified thread.
 void profiler_add_marker_for_thread(
