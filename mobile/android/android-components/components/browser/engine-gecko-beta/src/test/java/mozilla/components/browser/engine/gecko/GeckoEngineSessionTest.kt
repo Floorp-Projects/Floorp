@@ -221,7 +221,7 @@ class GeckoEngineSessionTest {
         val mockedRuntime = mock<GeckoRuntime>()
         val mockedContentBlockingController = mock<ContentBlockingController>()
         val engineSession = GeckoEngineSession(mockedRuntime,
-            geckoSessionProvider = geckoSessionProvider)
+                geckoSessionProvider = geckoSessionProvider)
 
         var observedUrl = ""
         var observedCanGoBack = false
@@ -522,7 +522,7 @@ class GeckoEngineSessionTest {
         val mockedRuntime = mock<GeckoRuntime>()
         val mockedContentBlockingController = mock<ContentBlockingController>()
         val engineSession = GeckoEngineSession(mockedRuntime,
-            geckoSessionProvider = geckoSessionProvider)
+                geckoSessionProvider = geckoSessionProvider)
 
         var observedUrl = ""
         engineSession.register(object : EngineSession.Observer {
@@ -1459,10 +1459,8 @@ class GeckoEngineSessionTest {
         val defaultSettings =
             DefaultSettings(trackingProtectionPolicy = TrackingProtectionPolicy.recommended())
 
-        GeckoEngineSession(
-            runtime, geckoSessionProvider = geckoSessionProvider,
-            privateMode = false, defaultSettings = defaultSettings
-        )
+        GeckoEngineSession(runtime, geckoSessionProvider = geckoSessionProvider,
+            privateMode = false, defaultSettings = defaultSettings)
 
         verify(geckoSession.settings).useTrackingProtection = false
     }
