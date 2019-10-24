@@ -25,33 +25,43 @@ def plain_data(tasklist):
     print("\n".join(sorted(s.strip("'") for s in tasklist.split())))
 
 
-def find_dependencies(graph, task):
-    dependencies = set()
-    dependencies.add(task)
-    for dep in graph.get(task, list()):
-        dependencies.update(find_dependencies(graph, dep))
-    return dependencies
-
-
 def find_all_dependencies(graph, tasklist):
+    all_dependencies = dict()
+
+    def find_dependencies(task):
+        dependencies = set()
+        dependencies.add(task)
+        if task in all_dependencies:
+            return all_dependencies[task]
+        for dep in graph.get(task, list()):
+            all_dependencies[task] = find_dependencies(dep)
+            dependencies.update(all_dependencies[task])
+        return dependencies
+
     full_deps = set()
     for task in tasklist:
-        full_deps.update(find_dependencies(graph, task))
+        full_deps.update(find_dependencies(task))
 
     # Since these have been asked for, they're not inherited dependencies.
     return sorted(full_deps - set(tasklist))
 
 
-def find_dependency_durations(graph, task, current_duration, durations):
-    current_duration += durations.get(task, 0.0)
-    durations = [find_dependency_durations(graph, dep, current_duration, durations)
-                 for dep in graph.get(task, list())]
-    durations.append(current_duration)
-    return max(durations)
+def find_longest_path(graph, tasklist, duration_data):
 
+    dep_durations = dict()
 
-def find_longest_path(graph, tasklist, durations):
-    longest_paths = [find_dependency_durations(graph, task, 0.0, durations) for task in tasklist]
+    def find_dependency_durations(task):
+        if task in dep_durations:
+            return dep_durations[task]
+
+        durations = [find_dependency_durations(dep)
+                     for dep in graph.get(task, list())]
+        durations.append(0.0)
+        md = max(durations) + duration_data.get(task, 0.0)
+        dep_durations[task] = md
+        return md
+
+    longest_paths = [find_dependency_durations(task) for task in tasklist]
     return max(longest_paths)
 
 
@@ -88,23 +98,13 @@ def duration_data(durations_file, graph_cache_file, quantiles_file, tasklist):
         dependency_duration += int(durations.get(task, 0.0))
 
     total_requested_duration = 0.0
+    for task in tasklist:
+        duration = int(durations.get(task, 0.0))
+        total_requested_duration += duration
     output = ""
     duration_width = 5  # show five numbers at most.
 
     max_columns = int(os.environ['FZF_PREVIEW_COLUMNS'])
-
-    output = "{:>{width}}\n".format("Duration", width=max_columns)
-    for task in tasklist:
-        duration = int(durations.get(task, 0.0))
-        total_requested_duration += duration
-        output += "{:{align}{width}} {:{nalign}{nwidth}}s\n".format(
-            task,
-            duration,
-            align='<',
-            width=max_columns-(duration_width+2),  # 2: space and 's'
-            nalign='>',
-            nwidth=duration_width,
-        )
 
     total_requested_duration = timedelta(seconds=total_requested_duration)
     total_dependency_duration = timedelta(seconds=dependency_duration)
@@ -123,6 +123,19 @@ def duration_data(durations_file, graph_cache_file, quantiles_file, tasklist):
     output += "Estimated finish in {} at {}".format(
         timedelta(seconds=int(longest_path)),
         (datetime.now()+timedelta(seconds=longest_path)).strftime("%H:%M"))
+
+    output += "{:>{width}}\n".format("Duration", width=max_columns)
+    for task in tasklist:
+        duration = int(durations.get(task, 0.0))
+        output += "{:{align}{width}} {:{nalign}{nwidth}}s\n".format(
+            task,
+            duration,
+            align='<',
+            width=max_columns-(duration_width+2),  # 2: space and 's'
+            nalign='>',
+            nwidth=duration_width,
+        )
+
     print(output)
 
 
