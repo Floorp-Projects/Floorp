@@ -19,12 +19,12 @@ var vout = document.getElementById('vout');
 var vout_untilended = document.getElementById('vout_untilended');
 
 function dumpEvent(event) {
-  var v = event.target;
-  info(v.name + " GOT EVENT " + event.type +
-       " currentTime=" + v.currentTime +
-       " paused=" + v.paused +
-       " ended=" + v.ended +
-       " readyState=" + v.readyState);
+  var video = event.target;
+  info(video.name + " GOT EVENT " + event.type +
+       " currentTime=" + video.currentTime +
+       " paused=" + video.paused +
+       " ended=" + video.ended +
+       " readyState=" + video.readyState);
 }
 
 var events = ["timeupdate", "seeking", "seeked", "ended", "playing", "pause"];

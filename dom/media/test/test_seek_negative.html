@@ -36,8 +36,8 @@ function startTest(test, token) {
                  "loadedmetadata", "loadeddata", "playing", "ended", "error",
                  "stalled", "emptied", "abort", "waiting", "pause" ];
   function logEvent(e) {
-    var v = e.target;
-    Log(e.target.token, "got " + e.type + " with currentTime = " + v.currentTime);
+    var video = e.target;
+    Log(e.target.token, "got " + e.type + " with currentTime = " + video.currentTime);
   }
   events.forEach(function(e) {
     v.addEventListener(e, logEvent);
