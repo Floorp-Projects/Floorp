@@ -2128,7 +2128,12 @@ pref("devtools.netmonitor.enabled", true);
 #else
   pref("devtools.netmonitor.features.search", false);
 #endif
-pref("devtools.netmonitor.features.requestBlocking", false);
+
+#if defined(NIGHTLY_BUILD) || defined(MOZ_DEV_EDITION)
+  pref("devtools.netmonitor.features.requestBlocking", true);
+#else
+  pref("devtools.netmonitor.features.requestBlocking", false);
+#endif
 
 // Enable the Application panel
 pref("devtools.application.enabled", false);
