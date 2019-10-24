@@ -29,7 +29,7 @@ var tests = [
     name: 'v1',
     preload: 'none',
     expectedSuspendCount: 2,
-    onsuspend: function(evt) {
+    onsuspend(evt) {
       checkSuspendCount(evt);
       if (evt.target.suspendCount == 1) {
         evt.target.preload = 'auto';
@@ -53,7 +53,7 @@ var tests = [
     name: 'v4',
     preload: 'none',
     expectedSuspendCount: 2,
-    onsuspend: function(evt) {
+    onsuspend(evt) {
       checkSuspendCount(evt);
       if (evt.target.suspendCount == 1) {
         evt.target.play();
@@ -76,7 +76,7 @@ var tests = [
     name: 'v6',
     preload: 'none',
     expectedSuspendCount: 2,
-    onsuspend: function(evt) {
+    onsuspend(evt) {
       checkSuspendCount(evt);
       if (evt.target.suspendCount == 1) {
         evt.target.autoplay = true;

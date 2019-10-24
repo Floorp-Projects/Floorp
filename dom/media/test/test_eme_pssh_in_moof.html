@@ -117,7 +117,7 @@
         session.generateRequest(event.initDataType, event.initData);
       }
 
-      video.addEventListener("encrypted", handleEncrypted, false);
+      video.addEventListener("encrypted", handleEncrypted);
 
       video.addEventListener("ended", () => {
         let expectedEncryptedEvents =

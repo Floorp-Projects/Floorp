@@ -9,10 +9,10 @@ video.mozRequestDebugInfo().then(debugInfo => {
     }
     JSONDebugInfo = JSONDebugInfo.slice(0, JSONDebugInfo.length - 1);
     JSONDebugInfo += "}";
-    result["mozRequestDebugInfo"] = JSON.parse(JSONDebugInfo);
+    result.mozRequestDebugInfo = JSON.parse(JSONDebugInfo);
   } catch (err) {
     console.log(`Error '${err.toString()} in JSON.parse(${debugInfo})`);
-    result["mozRequestDebugInfo"] = debugInfo;
+    result.mozRequestDebugInfo = debugInfo;
   }
   resolve(result);
 });
