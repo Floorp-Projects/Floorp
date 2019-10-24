@@ -29,6 +29,8 @@ class OriginAttributes : public dom::OriginAttributesDictionary {
                            bool aForced = false);
   void SetFirstPartyDomain(const bool aIsTopLevelDocument,
                            const nsACString& aDomain);
+  void SetFirstPartyDomain(const bool aIsTopLevelDocument,
+                           const nsAString& aDomain);
 
   enum {
     STRIP_FIRST_PARTY_DOMAIN = 0x01,

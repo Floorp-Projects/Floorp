@@ -492,6 +492,20 @@ ShowInfo BrowserParent::GetShowInfo() {
                   mDefaultScale.scale);
 }
 
+already_AddRefed<nsIPrincipal> BrowserParent::GetContentPrincipal() const {
+  nsCOMPtr<nsIBrowser> browser =
+      mFrameElement ? mFrameElement->AsBrowser() : nullptr;
+  NS_ENSURE_TRUE(browser, nullptr);
+
+  RefPtr<nsIPrincipal> principal;
+
+  nsresult rv;
+  rv = browser->GetContentPrincipal(getter_AddRefs(principal));
+  NS_ENSURE_SUCCESS(rv, nullptr);
+
+  return principal.forget();
+}
+
 void BrowserParent::SetOwnerElement(Element* aElement) {
   // If we held previous content then unregister for its events.
   RemoveWindowListeners();
