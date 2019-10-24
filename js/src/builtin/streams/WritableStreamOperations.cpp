@@ -424,7 +424,49 @@ void js::WritableStreamMarkCloseRequestInFlight(
  */
 MOZ_MUST_USE bool js::WritableStreamUpdateBackpressure(
     JSContext* cx, Handle<WritableStream*> unwrappedStream, bool backpressure) {
-  // XXX jwalden flesh me out!
-  JS_ReportErrorASCII(cx, "epic fail");
-  return false;
+  // Step 1: Assert: stream.[[state]] is "writable".
+  MOZ_ASSERT(unwrappedStream->writable());
+
+  // Step 2: Assert: ! WritableStreamCloseQueuedOrInFlight(stream) is false.
+  MOZ_ASSERT(!WritableStreamCloseQueuedOrInFlight(unwrappedStream));
+
+  // Step 3: Let writer be stream.[[writer]].
+  // Step 4: If writer is not undefined and backpressure is not
+  //         stream.[[backpressure]],
+  if (unwrappedStream->hasWriter() &&
+      backpressure != unwrappedStream->backpressure()) {
+    Rooted<WritableStreamDefaultWriter*> unwrappedWriter(
+        cx, UnwrapWriterFromStream(cx, unwrappedStream));
+    if (!unwrappedWriter) {
+      return false;
+    }
+
+    // Step 4.a: If backpressure is true, set writer.[[readyPromise]] to a new
+    //           promise.
+    if (backpressure) {
+      Rooted<JSObject*> promise(cx, PromiseObject::createSkippingExecutor(cx));
+      if (!promise) {
+        return false;
+      }
+
+      AutoRealm ar(cx, unwrappedWriter);
+      if (!cx->compartment()->wrap(cx, &promise)) {
+        return false;
+      }
+      unwrappedWriter->setReadyPromise(promise);
+    } else {
+      // Step 4.b: Otherwise,
+      // Step 4.b.i: Assert: backpressure is false.  (guaranteed by type)
+      // Step 4.b.ii: Resolve writer.[[readyPromise]] with undefined.
+      if (!ResolveUnwrappedPromiseWithUndefined(
+              cx, unwrappedWriter->readyPromise())) {
+        return false;
+      }
+    }
+  }
+
+  // Step 5: Set stream.[[backpressure]] to backpressure.
+  unwrappedStream->setBackpressure(backpressure);
+
+  return true;
 }
