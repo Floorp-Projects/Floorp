@@ -7496,6 +7496,16 @@
   value: false
   mirror: always
 
+# Preference to disable dark scrollbar implementation.
+# This is mainly for testing because dark scrollbars have to be semi-
+# transparent, but many reftests expect scrollbars to look identical
+# among different backgrounds.
+# However, some users may want to disable this as well.
+- name: widget.disable-dark-scrollbar
+  type: bool
+  value: false
+  mirror: always
+
 - name: widget.window-transforms.disabled
   type: RelaxedAtomicBool
   value: false
