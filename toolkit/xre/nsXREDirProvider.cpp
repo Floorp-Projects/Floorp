@@ -45,7 +45,6 @@
 #include "mozilla/Omnijar.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
-#include "nsPrintfCString.h"
 
 #include <stdlib.h>
 
@@ -104,7 +103,7 @@ nsCOMPtr<nsIFile> gDataDirProfile = nullptr;
 
 // These are required to allow nsXREDirProvider to be usable in xpcshell tests.
 // where gAppData is null.
-#if defined(XP_MACOSX) || defined(XP_WIN) || defined(XP_UNIX)
+#if defined(XP_MACOSX) || defined(XP_WIN)
 static const char* GetAppName() {
   if (gAppData) {
     return gAppData->name;
@@ -462,14 +461,6 @@ nsXREDirProvider::GetFile(const char* aProperty, bool* aPersistent,
 #endif
   } else if (!strcmp(aProperty, XRE_USER_SYS_EXTENSION_DEV_DIR)) {
     return GetSysUserExtensionsDevDirectory(aFile);
-  } else if (!strcmp(aProperty, XRE_USER_RUNTIME_DIR)) {
-#ifdef MOZ_WIDGET_GTK
-    nsPrintfCString path("/run/user/%d/%s/", getuid(), GetAppName());
-    ToLowerCase(path);
-    return NS_NewNativeLocalFile(path, false, aFile);
-#else
-    return NS_ERROR_FAILURE;
-#endif
   } else if (!strcmp(aProperty, XRE_APP_DISTRIBUTION_DIR)) {
     bool persistent = false;
     rv = GetFile(NS_GRE_DIR, &persistent, getter_AddRefs(file));
