@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- App name for private browsing mode, only the "(Private)" portion should be localized. -->
+    <string name="app_name_private">Firefox Preview (pribatua)</string>
+
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">Aukera gehiago</string>
@@ -18,11 +21,6 @@
     <!-- Title for private session option -->
     <string name="private_browsing_title">Saio pribatuan zaude</string>
 
-    <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
-        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="private_browsing_placeholder">
-         %1$s(e)k zure bilaketa- eta nabigazio-historia garbitzen du aplikazioa ixtean edo nabigatze pribatuko fitxa guztiak ixtean. Honek ez zaitu anonimo egiten webguneen edo zure interneteko zerbitzu-hornitzailearen aurrean baina erraztu egiten du ordenagailu hau erabiltzen duten beste erabiltzaileengandik online duzun jarduera pribatu mantentzen.
-    </string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Ezabatu saioa</string>
 
@@ -92,10 +90,6 @@
     <string name="preferences_category_basics">Oinarrizkoak</string>
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">Honi buruz</string>
-    <!-- Preference for settings related to changing the default search engine -->
-    <string name="preferences_search_engine">Bilaketa-motorra</string>
-    <!-- Preference for showing visited sites and bookmarks in awesomebar -->
-    <string name="preference_show_visited_sites_bookmarks">Erakutsi bisitatutako gune eta laster-markak</string>
     <!-- Preference linking to help about Fenix -->
     <string name="preferences_help">Laguntza</string>
     <!-- Preference link to rating Fenix on the Play Store -->
@@ -208,8 +202,7 @@
     <string name="preferences_tracking_protection_exceptions_description">Jarraipenaren babesa desgaituta dago gune hauetarako</string>
     <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
     <string name="preferences_tracking_protection_exceptions_turn_on_for_all">Gaitu gune guztietarako</string>
-    <!-- Text displayed when there are no exceptions, includes a learn more link that brings users to a tracking protection SUMO page -->
-    <string name="exceptions_empty_message">Salbuespenen bitartez jarraipenaren babesa desgai daiteke gune jakinetarako.\n\nArgibide gehiago</string>
+
     <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
     <string name="preferences_tracking_protection_turned_off_globally">Modu globalean desgaituta; gaitzeko, joan ezarpenetara.</string>
 
@@ -573,7 +566,6 @@
     <!-- Confirmation dialog button -->
     <string name="sync_confirmation_button">Ulertuta</string>
 
-    <!-- Notifications -->
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">Bilduma ezabatuta</string>
     <!-- Text shown in snackbar when user renames a collection -->
@@ -659,8 +651,6 @@
 
     <!-- Dialog message to the user asking to delete browsing data. -->
     <string name="delete_browsing_data_prompt_message">Zure nabigatze-datu guztiak ezabatuko ditu honek.</string>
-    <!-- Dialog message to the user asking to delete browsing data. -->
-    <string name="delete_browsing_data_prompt_message_2">Ziur zaude hautatutako nabigazio-datuak ezabatu nahi dituzula?</string>
     <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
     <string name="delete_browsing_data_prompt_message_3">%s(e)k hautatutako nabigazio datuak ezabatuko ditu.</string>
     <!-- Text for the cancel button for the data deletion dialog -->
@@ -824,4 +814,5 @@
     <string name="tab_counter_content_description_one_tab">Fitxa bat</string>
     <!-- Content description of the tab counter toolbar button when multiple tabs are open. First parameter will be replaced with the number of tabs (always more than one) -->
     <string name="tab_counter_content_description_multi_tab">%d fitxa</string>
-</resources>
+  
+    </resources>

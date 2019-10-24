@@ -498,6 +498,10 @@
     <string name="permissions_header">Oikeudet</string>
     <!-- Button label that take the user to the Android App setting -->
     <string name="phone_feature_go_to_settings">Siirry asetuksiin</string>
+    <!-- Content description (not visible, for screen readers etc.): Quick settings sheet
+        to give users access to site specific information / settings. For example:
+        Secure settings status and a button to modify site permissions -->
+    <string name="quick_settings_sheet">Pika-asetuslomake</string>
     <!-- Label that indicates that this option it the recommended one -->
     <string name="phone_feature_recommended">Suositeltu</string>
     <!-- button that allows editing site permissions settings -->
@@ -660,6 +664,8 @@
     <!-- Message for copying the URL via long press on the toolbar -->
     <string name="url_copied">Osoite kopioitu</string>
 
+    <!-- Sample text for accessibility font size -->
+    <string name="accessibility_text_size_sample_text">On sangen hauskaa, että polkupyörä on maanteiden jokapäiväinen ilmiö. On sangen hauskaa, että polkupyörä on maanteiden jokapäiväinen ilmiö.</string>
     <!-- Summary for Accessibility Text Size Scaling Preference -->
     <string name="preference_accessibility_text_size_summary">Tee verkkosivujen tekstistä suurempaa tai pienempää</string>
     <!-- Title for Accessibility Text Size Scaling Preference -->
@@ -849,16 +855,24 @@
     <string name="enhanced_tracking_protection_allowed">Sallittu</string>
     <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_social_media_trackers_title">Sosiaalisen median seuraimet</string>
+    <!-- Description of social media trackers that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_social_media_trackers_description">Rajoittaa sosiaalisten verkostojen kykyä seurata selailutoimintaa verkossa.</string>
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_title">Sivustorajat ylittävät seurainevästeet</string>
+    <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_description">Estää evästeet, joita mainosverkot ja analytiikkayritykset käyttävät kerätäksesi selaustietojasi yli sivustorajojen.</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">Kryptolouhijat</string>
     <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_description">Estää haitallisia komentosarjoja pääsemästä laitteellesi, jotta ne eivät voi louhia virtuaalivaluuttoja.</string>
     <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_fingerprinters_title">Yksilöijät</string>
+    <!-- Description of fingerprinters that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_fingerprinters_description">Estää keräämästä laitteestasi yksilöitävissä olevia tietoja, joita voidaan käyttää seurantatarkoituksiin.</string>
     <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_title">Seurantaan tarkoitettu sisältö</string>
+    <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_tracking_content_description">Estää lataamasta ulkopuolisia mainoksia, videoita ja muuta sisältöä, joka sisältää seurantakoodin. Voi vaikuttaa joidenkin verkkosivustojen toimimiseen.</string>
     <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
     <string name="etp_onboarding_message">Kun kilven väri vaihtuu, %s estää sivulla olevia seuraimia. Napauta kilpeä nähdäksesi mitä estetään.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->

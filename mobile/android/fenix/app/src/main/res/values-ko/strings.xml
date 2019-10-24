@@ -2,6 +2,9 @@
 <resources>
 
 
+    <!-- App name for private browsing mode, only the "(Private)" portion should be localized. -->
+    <string name="app_name_private">Firefox Preview (비공개)</string>
+
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">옵션 더보기</string>
@@ -24,8 +27,19 @@
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">세션 삭제</string>
 
+    <!-- Private mode shortcut "contextual feature recommender" (CFR) -->
+    <!-- Text for the main message -->
+    <string name="cfr_message">홈 화면에서 사생활 보호 탭을 열기 위한 바로가기 추가.</string>
+    <!-- Text for the positive button -->
+    <string name="cfr_pos_button_text">바로가기 추가</string>
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">아니오</string>
+
+    <!-- Home screen icons - Long press shortcuts -->
+    <!-- Shortcut action to open new tab -->
+    <string name="home_screen_shortcut_open_new_tab_2">새 탭</string>
+    <!-- Shortcut action to open new private tab -->
+    <string name="home_screen_shortcut_open_new_private_tab_2">새 사생활 보호 탭</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -48,6 +62,8 @@
     <string name="browser_menu_your_library">내 라이브러리</string>
     <!-- Browser menu toggle that requests a desktop site -->
     <string name="browser_menu_desktop_site">데스크탑 사이트</string>
+    <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
+    <string name="browser_menu_add_to_homescreen">홈 화면에 추가</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">페이지내 검색</string>
     <!-- Browser menu button that creates a private tab -->
@@ -96,6 +112,8 @@
     <string name="preferences_category_basics">기본</string>
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">소개</string>
+    <!-- Preference for settings related to changing the default search engine -->
+    <string name="preferences_default_search_engine">기본 검색 엔진</string>
     <!-- Preference for settings related to Search -->
     <string name="preferences_search">검색</string>
     <!-- Preference linking to help about Fenix -->
@@ -121,6 +139,8 @@
     <string name="preferences_category_privacy">개인 정보</string>
     <!-- Preference for advanced site permissions -->
     <string name="preferences_site_permissions">사이트 권한</string>
+    <!-- Preference for launching links in a private tab-->
+    <string name="preferences_launch_links_in_private_mode">사생활 보호 탭에서 링크 열기</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">접근성</string>
     <!-- Preference category for account information -->
@@ -729,22 +749,48 @@
     <!-- Enhanced Tracking Protection -->
     <!-- Link displayed in enhanced tracking protection panel to access tracking protection settings -->
     <string name="etp_settings">보호 설정</string>
+    <!-- Preference title for enhanced tracking protection settings -->
+    <string name="preference_enhanced_tracking_protection">향상된 추적 방지</string>
+    <!-- Title for the description of enhanced tracking protection -->
+    <string name="preference_enhanced_tracking_protection_explanation_title">추적되지 않는 탐색</string>
+    <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="preference_enhanced_tracking_protection_explanation">자신의 데이터를 보호하세요. %s는 온라인에서 하는 일을 추적하는 가장 일반적인 많은 추적기로부터 사용자를 보호합니다.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">더 알아보기</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_option">표준</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard">표준 (추천)</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description">보호와 성능사이에서 균형이 잡혀있습니다.</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description_2">페이지는 정상적으로 로드되지만, 더 적은 추적기를 차단합니다.</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">엄격</string>
+    <!-- Preference for enhanced tracking protection for the strict protection settings, default setting -->
+    <string name="preference_enhanced_tracking_protection_strict_default">엄격(기본값)</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_default_description">더 강력한 추적 방지와 더 빠른 성능을 갖지만, 일부 사이트는 제대로 동작하지 않을 수 있습니다.</string>
+    <!-- Preference for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_recommended">엄격(권장)</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict_description">더 강력한 보호를 제공하지만, 일부 사이트 또는 컨텐츠의 손상을 야기할 수 있습니다.</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
-    <string name="enhanced_tracking_protection_blocked">차단</string>
+    <string name="enhanced_tracking_protection_blocked">차단됨</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_allowed">허용됨</string>
+    <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_social_media_trackers_title">소셜 미디어 추적기</string>
+    <!-- Description of social media trackers that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_social_media_trackers_description">소셜 네트워크가 웹에서 탐색 활동을 추적하는 기능을 제한합니다.</string>
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_title">교차 사이트 추적 쿠키</string>
+    <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_description">광고 네트워크 및 분석 회사가 여러 사이트에서 인터넷 사용 데이터를 컴파일하는 데 사용하는 쿠키를 차단합니다.</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">크립토마이너</string>
+    <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cryptominers_description">악의적인 스크립트가 디지털 통화를 채굴하기 위해 장치에 액세스하는 것을 방지합니다.</string>
     <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_fingerprinters_title">핑거프린터</string>
     <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
