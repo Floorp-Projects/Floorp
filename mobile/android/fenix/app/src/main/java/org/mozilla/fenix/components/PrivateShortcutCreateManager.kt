@@ -39,8 +39,8 @@ object PrivateShortcutCreateManager {
 
         val icon = IconCompat.createWithResource(context, R.mipmap.ic_launcher_private_round)
         val shortcut = ShortcutInfoCompat.Builder(context, UUID.randomUUID().toString())
-            .setShortLabel(context.getString(R.string.app_name_private))
-            .setLongLabel(context.getString(R.string.app_name_private))
+            .setShortLabel(context.getString(R.string.app_name_private_2))
+            .setLongLabel(context.getString(R.string.app_name_private_2))
             .setIcon(icon)
             .setIntent(Intent(context, HomeActivity::class.java).apply {
                 action = Intent.ACTION_VIEW

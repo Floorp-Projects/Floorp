@@ -124,7 +124,7 @@
         <!-- Launch in private mode alias -->
         <activity-alias
             android:name="org.mozilla.fenix.alias.IntentReceiverActivity"
-            android:label="@string/app_name_private"
+            android:label="@string/app_name_private_2"
             android:icon="@mipmap/ic_launcher_private"
             android:roundIcon="@mipmap/ic_launcher_private_round"
             android:targetActivity=".IntentReceiverActivity">

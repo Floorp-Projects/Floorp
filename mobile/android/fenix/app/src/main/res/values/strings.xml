@@ -2,8 +2,8 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <resources>
-    <!-- App name for private browsing mode, only the "(Private)" portion should be localized. -->
-    <string name="app_name_private">Private Firefox Preview</string>
+    <!-- App name for private browsing mode, only the "Private" portion should be localized. -->
+    <string name="app_name_private_2">Private Firefox Preview</string>
 
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
@@ -174,7 +174,7 @@
     <string name="developer_tools_category">Developer tools</string>
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">Remote debugging via USB</string>
-    <!-- Preference title for switch preference to show search suggestions -->
+    <!-- Preference title for switch preference to show search shortcuts -->
     <string name="preferences_show_search_shortcuts">Show search shortcuts</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Show search suggestions</string>
@@ -891,7 +891,7 @@
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">Stops outside ads, videos, and other content from loading that contains tracking code. May affect some website functionality.</string>
     <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="etp_onboarding_message_2">%s is blocking trackers on this site when the shield is purple. Tap it to see what\'s blocked.</string>
+    <string name="etp_onboarding_message_2">%s is blocking trackers on this site when the shield is purple. Tap it to see what’s blocked.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">Protections are ON for this site</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
