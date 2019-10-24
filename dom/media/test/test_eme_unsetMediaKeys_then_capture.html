@@ -48,8 +48,8 @@ function startTest(test, token)
         var gotTypeError = false;
         try {
           ctx2d.drawImage(v, 0, 0);
-        } catch (e) {
-          if (e instanceof TypeError) {
+        } catch (ex) {
+          if (ex instanceof TypeError) {
             gotTypeError = true;
           }
         }

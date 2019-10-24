@@ -382,5 +382,31 @@ module.exports = {
     "rules": {
       "mozilla/prefer-boolean-length-check": "off",
     }
+  }, {
+    "files": [
+      "dom/media/**",
+    ],
+    "rules": {
+      "consistent-return": "off",
+      "curly": "off",
+      "dot-notation": "off",
+      "mozilla/consistent-if-bracing": "off",
+      "mozilla/no-useless-parameters": "off",
+      "mozilla/use-default-preference-values": "off",
+      "mozilla/use-services": "off",
+      "no-array-constructor": "off",
+      "no-async-promise-executor": "off",
+      "no-else-return": "off",
+      "no-redeclare": "off",
+      "no-nested-ternary": "off",
+      "no-self-assign": "off",
+      "no-new-object": "off",
+      "no-undef": "off",
+      "no-unsanitized/property": "off",
+      "no-unused-vars": "off",
+      "no-useless-return": "off",
+      "object-shorthand": "off",
+      "prettier/prettier": "off",
+    }
   }]
 };

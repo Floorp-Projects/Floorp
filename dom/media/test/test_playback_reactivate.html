@@ -20,22 +20,22 @@
 var manager = new MediaTestManager;
 
 function startTest(test, token) {
-  var v = document.createElement('video');
-  v.preload = "metadata";
-  v.token = token;
+  var video = document.createElement('video');
+  video.preload = "metadata";
+  video.token = token;
 
   var handler = {
     "ontimeout": function() {
-      Log(token, "timed out: ended=" + v.seenEnded + ", suspend=" + v.seenSuspend);
+      Log(token, "timed out: ended=" + video.seenEnded + ", suspend=" + video.seenSuspend);
     }
   };
   manager.started(token, handler);
 
-  v.src = test.name;
-  v.name = test.name;
+  video.src = test.name;
+  video.name = test.name;
 
-  var check = function(test, v) { return function() {
-    is(test.name, v.name, test.name + ": Name should match #1");
+  var check = function(t, v) { return function() {
+    is(t.name, v.name, t.name + ": Name should match #1");
     Log(v.token, "removeChild: " + v.name);
     document.body.removeChild(v);
     var appendAndPlayElement = function() {
@@ -45,28 +45,28 @@ function startTest(test, token) {
       v.play();
     }
     setTimeout(appendAndPlayElement, 2000);
-  }}(test, v);
+  }}(test, video);
 
   var finish = function() {
-    v.finished = true;
-    removeNodeAndSource(v);
-    manager.finished(v.token);
+    video.finished = true;
+    removeNodeAndSource(video);
+    manager.finished(video.token);
   }
 
-  var checkEnded = function(test, v) { return function() {
-    is(test.name, v.name, test.name + ": Name should match #2");
-    checkMetadata(test.name, v, test);
-    is(v.readyState, v.HAVE_CURRENT_DATA, test.name + " checking readyState");
-    ok(v.ended, test.name + " checking playback has ended");
+  var checkEnded = function(t, v) { return function() {
+    is(t.name, v.name, t.name + ": Name should match #2");
+    checkMetadata(t.name, v, t);
+    is(v.readyState, v.HAVE_CURRENT_DATA, t.name + " checking readyState");
+    ok(v.ended, t.name + " checking playback has ended");
 
     finish();
-  }}(test, v);
+  }}(test, video);
 
 
-  v.addEventListener("loadedmetadata", check);
-  v.addEventListener("ended", checkEnded);
+  video.addEventListener("loadedmetadata", check);
+  video.addEventListener("ended", checkEnded);
 
-  document.body.appendChild(v);
+  document.body.appendChild(video);
 }
 
 manager.runTests(gSmallTests, startTest);

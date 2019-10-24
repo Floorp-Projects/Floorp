@@ -15,12 +15,12 @@ SimpleTest.waitForExplicitFinish();
 let v = document.getElementById('v');
 
 function dumpEvent(event) {
-  let v = event.target;
-  info(v.name + " GOT EVENT " + event.type +
-       " currentTime=" + v.currentTime +
-       " paused=" + v.paused +
-       " ended=" + v.ended +
-       " readyState=" + v.readyState);
+  let video = event.target;
+  info(video.name + " GOT EVENT " + event.type +
+       " currentTime=" + video.currentTime +
+       " paused=" + video.paused +
+       " ended=" + video.ended +
+       " readyState=" + video.readyState);
 }
 
 let events = ["timeupdate", "seeking", "seeked", "ended", "playing", "pause"];

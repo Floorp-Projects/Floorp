@@ -11,10 +11,6 @@
 # Exclude expected objdirs.
 obj*/
 
-# dom/ exclusions which should be removed (aka ESLint enabled)
-dom/media/test/
-!dom/media/test/marionette/yttest/*.js
-
 # build/ third-party code
 build/pgo/js-input/
 
@@ -159,6 +155,8 @@ dom/encoding/test/file_utf16_be_bom.js
 dom/encoding/test/file_utf16_le_bom.js
 
 # Not parsable
+dom/media/test/marionette/yttest/duration_test.js
+dom/media/test/marionette/yttest/until_end_test.js
 dom/tests/mochitest/general/test_focusrings.xul
 dom/html/test/test_bug677658.html
 

@@ -38,11 +38,11 @@ function tryClone(e) {
                 "loadeddata", "playing", "ended", "error", "stalled", "emptied", "abort",
                 "waiting", "pause"];
   function logEvent(evt) {
-    var e = evt.target;
-    info(`${e.token} got ${evt.type}`);
+    var event = evt.target;
+    info(`${event.token} got ${evt.type}`);
   }
-  events.forEach(function(e) {
-    clone.addEventListener(e, logEvent);
+  events.forEach(function(event) {
+    clone.addEventListener(event, logEvent);
   });
 
 

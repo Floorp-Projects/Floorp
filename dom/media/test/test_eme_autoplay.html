@@ -44,8 +44,8 @@ function startTest(test, token)
 
   var eventCounts = { play: 0, playing: 0};
   function ForbiddenEvents(e) {
-    var v = e.target;
-    ok(v.readyState >= v.HAVE_FUTURE_DATA, "Must not have received event too early");
+    var video = e.target;
+    ok(video.readyState >= video.HAVE_FUTURE_DATA, "Must not have received event too early");
     is(eventCounts[e.type], 0, "event should have only be fired once");
     eventCounts[e.type]++;
   }
