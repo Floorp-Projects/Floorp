@@ -5,11 +5,11 @@ var config = {
   HD: true,
   LQ: false,
   ID: "auto-hd-lq-for-ytb",
-  type: function(t) {
+  type(t) {
     config.HD = t === "hd";
     config.LQ = t === "lq";
   },
-  quality: function() {
+  quality() {
     if (config.HD || config.LQ) {
       var youtubePlayerListener = function(LQ, HD) {
         return function(e) {
