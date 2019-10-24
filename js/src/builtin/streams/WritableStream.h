@@ -217,6 +217,12 @@ class WritableStream : public NativeObject {
   bool haveInFlightWriteRequest() const {
     return flags() & HaveInFlightWriteRequest;
   }
+  void setHaveInFlightWriteRequest() {
+    MOZ_ASSERT(!haveInFlightWriteRequest());
+    MOZ_ASSERT(writeRequests()->length() > 0);
+    setFlag(HaveInFlightWriteRequest, true);
+  }
+
   bool haveInFlightCloseRequest() const {
     return flags() & HaveInFlightCloseRequest;
   }
