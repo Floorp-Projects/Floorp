@@ -54,15 +54,30 @@
   background-repeat: no-repeat;
   background-position: 9px center;
   background-size: 12px 12px;
-  padding-inline-start: 30px;
   z-index: 1;
   /* Set horizontal margin to 0 to ensure alignment with table. */
-  margin-right: 0;
-  margin-left: 0;
+  margin-inline: 0;
+  text-align: match-parent;
+  /* All prefs must be left-to-right. */
+  direction: ltr;
 }
 
-#about-config-search:dir(rtl) {
+#about-config-search:placeholder-shown {
+  /* Display the placeholder in its natural directionality,
+   * even if the user changes the text direction manually
+   * (e.g. via RightCtrl+Shift). */
+  direction: inherit;
+}
+
+:root:dir(ltr) #about-config-search {
+  /* Be explicit about padding direction since
+   * `about-config-search` is forced to be LTR. */
+  padding-left: 30px;
+}
+
+:root:dir(rtl) #about-config-search {
   background-position-x: right 9px;
+  padding-right: 30px;
 }
 
 #show-all {
@@ -116,8 +131,17 @@
 }
 
 #prefs > tr > th {
-  text-align: unset;
-  padding-inline-start: 30px;
+  direction: ltr;
+  text-align: match-parent;
+}
+
+#prefs > tr:dir(ltr) > th {
+  /* Be explicit about padding direction since `th` is forced to be LTR. */
+  padding-left: 30px;
+}
+
+#prefs > tr:dir(rtl) > th {
+  padding-right: 30px;
 }
 
 #prefs > tr.deleted > th {
