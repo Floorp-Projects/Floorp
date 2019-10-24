@@ -5,7 +5,7 @@
 #ifndef GECKOVIEWHISTORY_H
 #define GECKOVIEWHISTORY_H
 
-#include "IHistory.h"
+#include "mozilla/IHistory.h"
 #include "nsDataHashtable.h"
 #include "nsTObserverArray.h"
 #include "nsURIHashKey.h"
