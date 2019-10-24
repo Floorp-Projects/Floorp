@@ -24,10 +24,9 @@ function test_seek6(v, seekTime, is, ok, finish) {
 var seekCount = 0;
 var completed = false;
 var interval;
-var sum = 0;
 
 function poll() {
-  sum += v.currentTime;
+  v.currentTime;
 }
 
 function startTest() {

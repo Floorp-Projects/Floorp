@@ -97,6 +97,7 @@ function createSrcBuffer() {
 }
 
 function createAudioElement() {
+  /* global audio */
   window.audio = document.createElement("audio");
   audio.src = URL.createObjectURL(new Blob([createSrcBuffer()],
                                   { type: 'audio/wav' }));
@@ -115,6 +116,7 @@ async function playAudioAndStartAnalyzingWaveData(audio) {
 }
 
 function createAudioWaveAnalyser(source) {
+  /* global ac, analyser */
   window.ac = new AudioContext();
   window.analyser = ac.createAnalyser();
   analyser.frequencyBuf = new Float32Array(analyser.frequencyBinCount);

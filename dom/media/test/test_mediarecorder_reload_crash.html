@@ -11,13 +11,15 @@
 a Bug 894348</a>
 <pre id="test">
 <script class="testbody" type="text/javascript">
-  for (i = 0; i< 5; i++) {
+  for (let i = 0; i< 5; i++) {
+    /* eslint-disable no-undef */
     try { o0 = document.createElement('audio') } catch(e) { }
     try { o0.src = "sound.ogg" } catch(e) { }
     try { (document.body || document.documentElement).appendChild(o0) } catch(e) { }
     try { o1 = o0.mozCaptureStreamUntilEnded(); } catch(e) { }
     try { o2 = new MediaRecorder(o1) } catch(e) { }
     try { o2.start(0) } catch(e) { }
+    /* eslint-enable no-undef */
     SpecialPowers.gc();
   }
   ok(true, "pass the crash test");

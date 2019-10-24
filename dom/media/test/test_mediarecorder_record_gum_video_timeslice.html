@@ -20,7 +20,7 @@ async function startTest() {
     let onDataAvailableFirst = false;
     const expectedMimeType = 'video/webm; codecs="vp8, opus"';
 
-    mediaRecorder = new MediaRecorder(stream);
+    let mediaRecorder = new MediaRecorder(stream);
     is(mediaRecorder.stream, stream,
        'Media recorder stream = element stream at the start of recording');
     mediaRecorder.onwarning = function() {

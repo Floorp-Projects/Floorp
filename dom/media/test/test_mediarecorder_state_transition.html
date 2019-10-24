@@ -223,12 +223,12 @@ var operationTests = [
  *                                 operation tests
  */
 function runStateTransitionTests(testStream) {
-  for (operationTest of operationTests) {
+  for (const operationTest of operationTests) {
     var mediaRecorder = new MediaRecorder(testStream);
     var operationsString = operationTest.operations.toString();
 
     try {
-      for (operation of operationTest.operations) {
+      for (const operation of operationTest.operations) {
         if (operationTest.timeSlice && operation === 'start') {
           operationsString += ' with timeslice ' + operationTest.timeSlice;
           mediaRecorder[operation](operationTest.timeSlice);
@@ -256,7 +256,6 @@ function runStateTransitionTests(testStream) {
  */
 function startTest(test, token) {
   var element = document.createElement('audio');
-  var expectedMimeType = test.type.substring(0, test.type.indexOf(';'));
 
   element.token = token;
   manager.started(token);
