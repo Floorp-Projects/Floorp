@@ -354,6 +354,8 @@ class RefTest(object):
             prefs['reftest.repeat'] = options.repeat
         if options.runUntilFailure:
             prefs['reftest.runUntilFailure'] = True
+            if not options.repeat:
+                prefs['reftest.repeat'] = 30
         if options.verify:
             prefs['reftest.verify'] = True
         if options.cleanupCrashes:
