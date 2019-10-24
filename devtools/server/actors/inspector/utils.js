@@ -19,20 +19,12 @@ loader.lazyRequireGetter(
   "nodeFilterConstants",
   "devtools/shared/dom-node-filter-constants"
 );
-
 loader.lazyRequireGetter(
   this,
   "isNativeAnonymous",
   "devtools/shared/layout/utils",
   true
 );
-loader.lazyRequireGetter(
-  this,
-  "isXBLAnonymous",
-  "devtools/shared/layout/utils",
-  true
-);
-
 loader.lazyRequireGetter(
   this,
   "CssLogic",
@@ -165,13 +157,10 @@ function standardTreeWalkerFilter(node) {
       : nodeFilterConstants.FILTER_SKIP;
   }
 
-  // Ignore all native and XBL anonymous content inside a non-XUL document.
+  // Ignore all native anonymous content inside a non-XUL document.
   // We need to do this to skip things like form controls, scrollbars,
   // video controls, etc (see bug 1187482).
-  if (
-    !isInXULDocument(node) &&
-    (isXBLAnonymous(node) || isNativeAnonymous(node))
-  ) {
+  if (!isInXULDocument(node) && isNativeAnonymous(node)) {
     return nodeFilterConstants.FILTER_SKIP;
   }
 
