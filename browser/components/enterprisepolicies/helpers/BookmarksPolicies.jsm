@@ -206,13 +206,11 @@ async function insertBookmark(bookmark) {
   });
 
   if (bookmark.Favicon) {
-    await setFaviconForBookmark(bookmark).catch(() =>
-      log.error(`Error setting favicon for ${bookmark.Title}`)
-    );
+    setFaviconForBookmark(bookmark);
   }
 }
 
-async function setFaviconForBookmark(bookmark) {
+function setFaviconForBookmark(bookmark) {
   let faviconURI;
   let nullPrincipal = Services.scriptSecurityManager.createNullPrincipal({});
 
@@ -238,19 +236,17 @@ async function setFaviconForBookmark(bookmark) {
 
     default:
       log.error(`Bad URL given for favicon on bookmark "${bookmark.Title}"`);
-      return Promise.resolve();
+      return;
   }
 
-  return new Promise(resolve => {
-    PlacesUtils.favicons.setAndFetchFaviconForPage(
-      Services.io.newURI(bookmark.URL.href),
-      faviconURI,
-      false /* forceReload */,
-      PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
-      resolve,
-      nullPrincipal
-    );
-  });
+  PlacesUtils.favicons.setAndFetchFaviconForPage(
+    Services.io.newURI(bookmark.URL.href),
+    faviconURI,
+    false /* forceReload */,
+    PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
+    null,
+    nullPrincipal
+  );
 }
 
 // Cache of folder names to guids to be used by the getParentGuid
