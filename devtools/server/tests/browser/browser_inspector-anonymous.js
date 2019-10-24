@@ -114,7 +114,6 @@ async function testPseudoElements(walker) {
 
   const before = children.nodes[0];
   ok(before.isAnonymous, "Child is anonymous");
-  ok(!before._form.isXBLAnonymous, "Child is not XBL anonymous");
   ok(!before._form.isShadowAnonymous, "Child is not shadow anonymous");
   ok(before._form.isNativeAnonymous, "Child is native anonymous");
 
@@ -123,7 +122,6 @@ async function testPseudoElements(walker) {
 
   const after = children.nodes[2];
   ok(after.isAnonymous, "Child is anonymous");
-  ok(!after._form.isXBLAnonymous, "Child is not XBL anonymous");
   ok(!after._form.isShadowAnonymous, "Child is not shadow anonymous");
   ok(after._form.isNativeAnonymous, "Child is native anonymous");
 }
@@ -144,7 +142,6 @@ async function testEmptyWithPseudo(walker) {
 
   const before = children.nodes[0];
   ok(before.isAnonymous, "Child is anonymous");
-  ok(!before._form.isXBLAnonymous, "Child is not XBL anonymous");
   ok(!before._form.isShadowAnonymous, "Child is not shadow anonymous");
   ok(before._form.isNativeAnonymous, "Child is native anonymous");
 }
@@ -165,14 +162,12 @@ async function testShadowAnonymous(walker) {
 
   const before = children.nodes[0];
   ok(before.isAnonymous, "Child is anonymous");
-  ok(!before._form.isXBLAnonymous, "Child is not XBL anonymous");
   ok(!before._form.isShadowAnonymous, "Child is not shadow anonymous");
   ok(before._form.isNativeAnonymous, "Child is native anonymous");
 
   // <h3>Shadow <em>DOM</em></h3>
   const shadowChild1 = children.nodes[1];
   ok(shadowChild1.isAnonymous, "Child is anonymous");
-  ok(!shadowChild1._form.isXBLAnonymous, "Child is not XBL anonymous");
   ok(shadowChild1._form.isShadowAnonymous, "Child is shadow anonymous");
   ok(!shadowChild1._form.isNativeAnonymous, "Child is not native anonymous");
 
@@ -183,14 +178,12 @@ async function testShadowAnonymous(walker) {
   // <em>DOM</em>
   const shadowSubChild = children.nodes[1];
   ok(shadowSubChild.isAnonymous, "Child is anonymous");
-  ok(!shadowSubChild._form.isXBLAnonymous, "Child is not XBL anonymous");
   ok(shadowSubChild._form.isShadowAnonymous, "Child is shadow anonymous");
   ok(!shadowSubChild._form.isNativeAnonymous, "Child is not native anonymous");
 
   // <select multiple></select>
   const shadowChild2 = children.nodes[2];
   ok(shadowChild2.isAnonymous, "Child is anonymous");
-  ok(!shadowChild2._form.isXBLAnonymous, "Child is not XBL anonymous");
   ok(shadowChild2._form.isShadowAnonymous, "Child is shadow anonymous");
   ok(!shadowChild2._form.isNativeAnonymous, "Child is not native anonymous");
 }

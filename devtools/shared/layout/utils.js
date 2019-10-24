@@ -494,7 +494,7 @@ const hasBindingParent = node => !!getBindingParent(node);
 
 /**
  * Determine whether a node is native anonymous content (as opposed
- * to XBL anonymous or shadow DOM).
+ * to shadow DOM).
  * Native anonymous content includes elements like internals to form
  * controls and ::before/::after.
  *
@@ -503,29 +503,9 @@ const hasBindingParent = node => !!getBindingParent(node);
  *
  */
 const isNativeAnonymous = node =>
-  hasBindingParent(node) && !(isXBLAnonymous(node) || isShadowAnonymous(node));
+  hasBindingParent(node) && !isShadowAnonymous(node);
 
 exports.isNativeAnonymous = isNativeAnonymous;
-
-/**
- * Determine whether a node is XBL anonymous content (as opposed
- * to native anonymous or shadow DOM).
- * See https://developer.mozilla.org/en-US/docs/XBL/XBL_1.0_Reference/Anonymous_Content.
- *
- * @param {DOMNode} node
- * @return {Boolean}
- *
- */
-function isXBLAnonymous(node) {
-  const parent = getBindingParent(node);
-  if (!parent) {
-    return false;
-  }
-
-  const anonNodes = [...(node.ownerDocument.getAnonymousNodes(parent) || [])];
-  return anonNodes.indexOf(node) > -1;
-}
-exports.isXBLAnonymous = isXBLAnonymous;
 
 /**
  * Determine whether a node is a child of a shadow root.
