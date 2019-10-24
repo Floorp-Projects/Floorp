@@ -15,7 +15,6 @@
 #include "js/SourceText.h"
 #include "MessageEventRunnable.h"
 #include "mozilla/ScopeExit.h"
-#include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/dom/BlobURLProtocolHandler.h"
 #include "mozilla/dom/CallbackDebuggerNotification.h"
@@ -4991,84 +4990,6 @@ bool WorkerPrivate::CanShareMemory(const nsID& aAgentClusterId) {
 
   return AgentClusterOpenerPolicy() ==
          nsILoadInfo::OPENER_POLICY_SAME_ORIGIN_EMBEDDER_POLICY_REQUIRE_CORP;
-}
-
-Maybe<nsILoadInfo::CrossOriginEmbedderPolicy> WorkerPrivate::GetEmbedderPolicy()
-    const {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  if (!StaticPrefs::browser_tabs_remote_useCrossOriginEmbedderPolicy()) {
-    return Some(nsILoadInfo::EMBEDDER_POLICY_NULL);
-  }
-
-  return mEmbedderPolicy;
-}
-
-Result<Ok, nsresult> WorkerPrivate::SetEmbedderPolicy(
-    nsILoadInfo::CrossOriginEmbedderPolicy aPolicy) {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  if (!StaticPrefs::browser_tabs_remote_useCrossOriginEmbedderPolicy()) {
-    return Ok();
-  }
-
-  if (GetOwnerEmbedderPolicy().valueOr(aPolicy) != aPolicy) {
-    return Err(NS_ERROR_BLOCKED_BY_POLICY);
-  }
-
-  mEmbedderPolicy.emplace(aPolicy);
-
-  return Ok();
-}
-
-void WorkerPrivate::InheritOwnerEmbedderPolicyOrNull(nsIRequest* aRequest) {
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aRequest);
-
-  auto coep = GetOwnerEmbedderPolicy();
-
-  if (coep.isSome()) {
-    nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
-    MOZ_ASSERT(channel);
-
-    nsCOMPtr<nsIURI> scriptURI;
-    MOZ_ALWAYS_SUCCEEDS(channel->GetURI(getter_AddRefs(scriptURI)));
-
-    bool isLocalScriptURI = false;
-    MOZ_ALWAYS_SUCCEEDS(NS_URIChainHasFlags(
-        scriptURI, nsIProtocolHandler::URI_IS_LOCAL_RESOURCE,
-        &isLocalScriptURI));
-
-    MOZ_RELEASE_ASSERT(isLocalScriptURI);
-  }
-
-  mEmbedderPolicy.emplace(coep.valueOr(nsILoadInfo::EMBEDDER_POLICY_NULL));
-}
-
-bool WorkerPrivate::MatchEmbedderPolicy(
-    nsILoadInfo::CrossOriginEmbedderPolicy aPolicy) const {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  if (!StaticPrefs::browser_tabs_remote_useCrossOriginEmbedderPolicy()) {
-    return true;
-  }
-
-  return mEmbedderPolicy.value() == aPolicy;
-}
-
-Maybe<nsILoadInfo::CrossOriginEmbedderPolicy>
-WorkerPrivate::GetOwnerEmbedderPolicy() const {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  if (GetParent()) {
-    return GetParent()->GetEmbedderPolicy();
-  }
-
-  if (GetWindow() && GetWindow()->GetBrowsingContext()) {
-    return Some(GetWindow()->GetBrowsingContext()->GetEmbedderPolicy());
-  }
-
-  return Nothing();
 }
 
 NS_IMPL_ADDREF(WorkerPrivate::EventTarget)
