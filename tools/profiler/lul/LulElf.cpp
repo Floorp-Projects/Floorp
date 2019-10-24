@@ -72,6 +72,12 @@
 #  define SHT_ARM_EXIDX (SHT_LOPROC + 1)
 #endif
 
+#if (defined(GP_PLAT_amd64_linux) || defined(GP_PLAT_amd64_android)) && \
+    !defined(SHT_X86_64_UNWIND)
+// This is sometimes necessary on x86_64-android and x86_64-linux.
+#  define SHT_X86_64_UNWIND 0x70000001
+#endif
+
 // Old Linux header doesn't define EM_AARCH64
 #ifndef EM_AARCH64
 #  define EM_AARCH64 183
@@ -395,6 +401,15 @@ bool LoadSymbols(const string& obj_file, const bool big_endian,
   const Shdr* eh_frame_section =
       FindElfSectionByName<ElfClass>(".eh_frame", SHT_PROGBITS, sections, names,
                                      names_end, elf_header->e_shnum);
+#if defined(GP_PLAT_amd64_linux) || defined(GP_PLAT_amd64_android)
+  if (!eh_frame_section) {
+    // Possibly depending on which linker created libxul.so, on x86_64-linux
+    // and -android, .eh_frame may instead have the SHT_X86_64_UNWIND type.
+    eh_frame_section =
+        FindElfSectionByName<ElfClass>(".eh_frame", SHT_X86_64_UNWIND, sections,
+                                       names, names_end, elf_header->e_shnum);
+  }
+#endif
   if (eh_frame_section) {
     // Pointers in .eh_frame data may be relative to the base addresses of
     // certain sections. Provide those sections if present.
