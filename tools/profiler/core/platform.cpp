@@ -959,6 +959,8 @@ class ActivePS {
     }
   }
 
+  PS_GET(ProfilerIOInterposeObserver*, InterposeObserver)
+
   PS_GET_AND_SET(bool, IsPaused)
 
 #if defined(GP_OS_linux)
@@ -2308,7 +2310,7 @@ profiler_code_address_service_for_presymbolication() {
 static void locked_profiler_stream_json_for_this_process(
     PSLockRef aLock, SpliceableJSONWriter& aWriter, double aSinceTime,
     bool aIsShuttingDown, ProfilerCodeAddressService* aService) {
-  LOG("locked_profiler_stream_json_for_this_process");
+  LOG_LOCKED(aLock, "locked_profiler_stream_json_for_this_process");
 
   MOZ_RELEASE_ASSERT(CorePS::Exists() && ActivePS::Exists(aLock));
 
@@ -2443,15 +2445,8 @@ bool profiler_stream_json_for_this_process(
     return false;
   }
 
-#if !defined(RELEASE_OR_BETA)
-  ActivePS::PauseIOInterposer(lock);
-#endif
-
   locked_profiler_stream_json_for_this_process(lock, aWriter, aSinceTime,
                                                aIsShuttingDown, aService);
-#if !defined(RELEASE_OR_BETA)
-  ActivePS::ResumeIOInterposer(lock);
-#endif
 
   return true;
 }
@@ -2841,7 +2836,9 @@ void SamplerThread::Run() {
             auto state = localBlocksRingBuffer.GetState();
             if (NS_WARN_IF(state.mClearedBlockCount !=
                            previousState.mClearedBlockCount)) {
-              LOG("Stack sample too big for local storage, needed %u bytes",
+              LOG_LOCKED(
+                  lock,
+                  "Stack sample too big for local storage, needed %u bytes",
                   unsigned(state.mRangeEnd.ConvertToU64() -
                            previousState.mRangeEnd.ConvertToU64()));
               // There *must* be a CompactStack after a TimeBeforeCompactStack,
@@ -2852,7 +2849,9 @@ void SamplerThread::Run() {
             } else if (state.mRangeEnd.ConvertToU64() -
                            previousState.mRangeEnd.ConvertToU64() >=
                        CorePS::CoreBlocksRingBuffer().BufferLength()->Value()) {
-              LOG("Stack sample too big for profiler storage, needed %u bytes",
+              LOG_LOCKED(
+                  lock,
+                  "Stack sample too big for profiler storage, needed %u bytes",
                   unsigned(state.mRangeEnd.ConvertToU64() -
                            previousState.mRangeEnd.ConvertToU64()));
               // There *must* be a CompactStack after a TimeBeforeCompactStack,
@@ -3211,7 +3210,7 @@ void profiler_init(void* aStackTop) {
       return;
     }
 
-    LOG("- MOZ_PROFILER_STARTUP is set");
+    LOG_LOCKED(lock, "- MOZ_PROFILER_STARTUP is set");
 
     // Startup default capacity may be different.
     capacity = PROFILER_DEFAULT_STARTUP_ENTRIES;
@@ -3227,10 +3226,12 @@ void profiler_init(void* aStackTop) {
           static_cast<uint64_t>(capacityLong) <=
               static_cast<uint64_t>(INT32_MAX)) {
         capacity = PowerOfTwo32(static_cast<uint32_t>(capacityLong));
-        LOG("- MOZ_PROFILER_STARTUP_ENTRIES = %u", unsigned(capacity.Value()));
+        LOG_LOCKED(lock, "- MOZ_PROFILER_STARTUP_ENTRIES = %u",
+                   unsigned(capacity.Value()));
       } else {
-        LOG("- MOZ_PROFILER_STARTUP_ENTRIES not a valid integer: %s",
-            startupCapacity);
+        LOG_LOCKED(lock,
+                   "- MOZ_PROFILER_STARTUP_ENTRIES not a valid integer: %s",
+                   startupCapacity);
         PrintUsageThenExit(1);
       }
     }
@@ -3243,10 +3244,11 @@ void profiler_init(void* aStackTop) {
         if (durationVal > 0.0) {
           duration = Some(durationVal);
         }
-        LOG("- MOZ_PROFILER_STARTUP_DURATION = %f", durationVal);
+        LOG_LOCKED(lock, "- MOZ_PROFILER_STARTUP_DURATION = %f", durationVal);
       } else {
-        LOG("- MOZ_PROFILER_STARTUP_DURATION not a valid float: %s",
-            startupDuration);
+        LOG_LOCKED(lock,
+                   "- MOZ_PROFILER_STARTUP_DURATION not a valid float: %s",
+                   startupDuration);
         PrintUsageThenExit(1);
       }
     }
@@ -3256,10 +3258,11 @@ void profiler_init(void* aStackTop) {
       errno = 0;
       interval = PR_strtod(startupInterval, nullptr);
       if (errno == 0 && interval > 0.0 && interval <= PROFILER_MAX_INTERVAL) {
-        LOG("- MOZ_PROFILER_STARTUP_INTERVAL = %f", interval);
+        LOG_LOCKED(lock, "- MOZ_PROFILER_STARTUP_INTERVAL = %f", interval);
       } else {
-        LOG("- MOZ_PROFILER_STARTUP_INTERVAL not a valid float: %s",
-            startupInterval);
+        LOG_LOCKED(lock,
+                   "- MOZ_PROFILER_STARTUP_INTERVAL not a valid float: %s",
+                   startupInterval);
         PrintUsageThenExit(1);
       }
     }
@@ -3272,9 +3275,12 @@ void profiler_init(void* aStackTop) {
       errno = 0;
       features = strtol(startupFeaturesBitfield, nullptr, 10);
       if (errno == 0 && features != 0) {
-        LOG("- MOZ_PROFILER_STARTUP_FEATURES_BITFIELD = %d", features);
+        LOG_LOCKED(lock, "- MOZ_PROFILER_STARTUP_FEATURES_BITFIELD = %d",
+                   features);
       } else {
-        LOG("- MOZ_PROFILER_STARTUP_FEATURES_BITFIELD not a valid integer: %s",
+        LOG_LOCKED(
+            lock,
+            "- MOZ_PROFILER_STARTUP_FEATURES_BITFIELD not a valid integer: %s",
             startupFeaturesBitfield);
         PrintUsageThenExit(1);
       }
@@ -3289,14 +3295,14 @@ void profiler_init(void* aStackTop) {
         features = ParseFeaturesFromStringArray(featureStringArray.begin(),
                                                 featureStringArray.length(),
                                                 /* aIsStartup */ true);
-        LOG("- MOZ_PROFILER_STARTUP_FEATURES = %d", features);
+        LOG_LOCKED(lock, "- MOZ_PROFILER_STARTUP_FEATURES = %d", features);
       }
     }
 
     const char* startupFilters = getenv("MOZ_PROFILER_STARTUP_FILTERS");
     if (startupFilters && startupFilters[0] != '\0') {
       filters = SplitAtCommas(startupFilters, filterStorage);
-      LOG("- MOZ_PROFILER_STARTUP_FILTERS = %s", startupFilters);
+      LOG_LOCKED(lock, "- MOZ_PROFILER_STARTUP_FILTERS = %s", startupFilters);
     }
 
     locked_profiler_start(lock, capacity, interval, features, filters.begin(),
@@ -3548,9 +3554,13 @@ Vector<nsCString> profiler_move_exit_profiles() {
 static void locked_profiler_save_profile_to_file(PSLockRef aLock,
                                                  const char* aFilename,
                                                  bool aIsShuttingDown = false) {
-  LOG("locked_profiler_save_profile_to_file(%s)", aFilename);
+  LOG_LOCKED(aLock, "locked_profiler_save_profile_to_file(%s)", aFilename);
 
   MOZ_RELEASE_ASSERT(CorePS::Exists() && ActivePS::Exists(aLock));
+
+#if !defined(RELEASE_OR_BETA)
+  ActivePS::PauseIOInterposer(aLock);
+#endif
 
   std::ofstream stream;
   stream.open(aFilename);
@@ -3574,6 +3584,10 @@ static void locked_profiler_save_profile_to_file(PSLockRef aLock,
 
     stream.close();
   }
+
+#if !defined(RELEASE_OR_BETA)
+  ActivePS::ResumeIOInterposer(aLock);
+#endif
 }
 
 void profiler_save_profile_to_file(const char* aFilename) {
@@ -3648,14 +3662,14 @@ static void locked_profiler_start(PSLockRef aLock, PowerOfTwo32 aCapacity,
                                   const char** aFilters, uint32_t aFilterCount,
                                   const Maybe<double>& aDuration) {
   if (LOG_TEST) {
-    LOG("locked_profiler_start");
-    LOG("- capacity  = %u", unsigned(aCapacity.Value()));
-    LOG("- duration  = %.2f", aDuration ? *aDuration : -1);
-    LOG("- interval = %.2f", aInterval);
+    LOG_LOCKED(aLock, "locked_profiler_start");
+    LOG_LOCKED(aLock, "- capacity  = %u", unsigned(aCapacity.Value()));
+    LOG_LOCKED(aLock, "- duration  = %.2f", aDuration ? *aDuration : -1);
+    LOG_LOCKED(aLock, "- interval = %.2f", aInterval);
 
 #define LOG_FEATURE(n_, str_, Name_, desc_)     \
   if (ProfilerFeature::Has##Name_(aFeatures)) { \
-    LOG("- feature  = %s", str_);               \
+    LOG_LOCKED(aLock, "- feature  = %s", str_); \
   }
 
     PROFILER_FOR_EACH_FEATURE(LOG_FEATURE)
@@ -3663,7 +3677,7 @@ static void locked_profiler_start(PSLockRef aLock, PowerOfTwo32 aCapacity,
 #undef LOG_FEATURE
 
     for (uint32_t i = 0; i < aFilterCount; i++) {
-      LOG("- threads  = %s", aFilters[i]);
+      LOG_LOCKED(aLock, "- threads  = %s", aFilters[i]);
     }
   }
 
@@ -3872,7 +3886,7 @@ void profiler_ensure_started(PowerOfTwo32 aCapacity, double aInterval,
 }
 
 static MOZ_MUST_USE SamplerThread* locked_profiler_stop(PSLockRef aLock) {
-  LOG("locked_profiler_stop");
+  LOG_LOCKED(aLock, "locked_profiler_stop");
 
   MOZ_RELEASE_ASSERT(CorePS::Exists() && ActivePS::Exists(aLock));
 
@@ -4094,7 +4108,7 @@ void profiler_unregister_thread() {
   if (registeredThread) {
     RefPtr<ThreadInfo> info = registeredThread->Info();
 
-    DEBUG_LOG("profiler_unregister_thread: %s", info->Name());
+    DEBUG_LOG_LOCKED(lock, "profiler_unregister_thread: %s", info->Name());
 
     if (ActivePS::Exists(lock)) {
       ActivePS::UnregisterThread(lock, registeredThread);

@@ -330,8 +330,8 @@ bool EHInterp::unwind() {
   checkStack();
   while (!mFailed) {
     uint8_t insn = next();
-#if DEBUG_EHABI_UNWIND
-    LOG("unwind insn = %02x", (unsigned)insn);
+#ifdef DEBUG_EHABI_UNWIND
+    NS_WARNING("unwind insn = %02x", (unsigned)insn);
 #endif
     // Try to put the common cases first.
 
@@ -457,7 +457,7 @@ bool EHInterp::unwind() {
 
     // unhandled instruction
 #ifdef DEBUG_EHABI_UNWIND
-    LOG("Unhandled EHABI instruction 0x%02x", insn);
+    NS_WARNING("Unhandled EHABI instruction 0x%02x", insn);
 #endif
     mFailed = true;
   }
