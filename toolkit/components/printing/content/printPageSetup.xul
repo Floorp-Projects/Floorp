@@ -31,8 +31,8 @@
     </tabs>
     <tabpanels flex="1">
       <vbox>
-        <groupbox>
-          <caption><label data-l10n-id="format-group-label"/></caption>
+        <html:fieldset>
+          <html:legend><label data-l10n-id="format-group-label"/></html:legend>
           <vbox class="groupbox-body">
             <hbox align="center">
               <label control="orientation" data-l10n-id="orientation-label"/>
@@ -59,17 +59,17 @@
                         oncommand="gDialog.scalingInput.disabled = gDialog.scalingLabel.disabled = this.checked"/>
             </hbox>
           </vbox>
-        </groupbox>
-        <groupbox>
-          <caption><label data-l10n-id="options-group-label"/></caption>
+        </html:fieldset>
+        <html:fieldset>
+          <html:legend><label data-l10n-id="options-group-label"/></html:legend>
           <checkbox id="printBG"
                     class="groupbox-body"
                     data-l10n-id="print-bg"/>
-        </groupbox>
+        </html:fieldset>
       </vbox>
       <vbox>
-        <groupbox>
-          <caption><label id="marginGroup" data-l10n-id="margin-group-label"/></caption>
+        <html:fieldset>
+          <html:legend><label id="marginGroup" data-l10n-id="margin-group-label"/></html:legend>
           <vbox class="groupbox-body">
             <hbox align="center">
               <spacer flex="1"/>
@@ -124,9 +124,9 @@
               <spacer flex="1"/>
             </hbox>
           </vbox>
-        </groupbox>
-        <groupbox>
-          <caption><label data-l10n-id="header-footer-label"/></caption>
+        </html:fieldset>
+        <html:fieldset>
+          <html:legend><label data-l10n-id="header-footer-label"/></html:legend>
           <box id="header-footer-grid" class="groupbox-body" dir="ltr">
             <menulist id="hLeftOption" oncommand="customize(this)" data-l10n-id="header-left-tip">
               <menupopup>
@@ -204,7 +204,7 @@
               </menupopup>
             </menulist>
           </box>
-        </groupbox>
+        </html:fieldset>
       </vbox>
     </tabpanels>
   </tabbox>
