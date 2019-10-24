@@ -294,6 +294,7 @@ class WritableStream : public NativeObject {
 
   void clearCloseRequest() {
     MOZ_ASSERT(!haveInFlightCloseRequest());
+    MOZ_ASSERT(!getFixedSlot(Slot_CloseRequest).isUndefined());
     setFixedSlot(Slot_CloseRequest, JS::UndefinedValue());
   }
 
