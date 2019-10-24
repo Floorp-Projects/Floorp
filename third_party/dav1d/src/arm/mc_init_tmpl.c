@@ -107,9 +107,7 @@ void bitfn(dav1d_mc_dsp_init_arm)(Dav1dMCDSPContext *const c) {
     c->w_mask[0] = dav1d_w_mask_444_8bpc_neon;
     c->w_mask[1] = dav1d_w_mask_422_8bpc_neon;
     c->w_mask[2] = dav1d_w_mask_420_8bpc_neon;
-#if ARCH_AARCH64
     c->warp8x8 = dav1d_warp_affine_8x8_8bpc_neon;
     c->warp8x8t = dav1d_warp_affine_8x8t_8bpc_neon;
-#endif
 #endif
 }

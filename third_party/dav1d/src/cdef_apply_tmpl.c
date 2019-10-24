@@ -33,6 +33,12 @@
 
 #include "src/cdef_apply.h"
 
+
+enum Backup2x8Flags {
+    BACKUP_2X8_Y = 1 << 0,
+    BACKUP_2X8_UV = 1 << 1,
+};
+
 static void backup2lines(pixel *const dst[3][2],
                          /*const*/ pixel *const src[3],
                          const ptrdiff_t src_stride[2], int y_off, int w,
@@ -56,13 +62,18 @@ static void backup2lines(pixel *const dst[3][2],
 static void backup2x8(pixel dst[3][8][2],
                       /*const*/ pixel *const src[3],
                       const ptrdiff_t src_stride[2], int x_off,
-                      const enum Dav1dPixelLayout layout)
+                      const enum Dav1dPixelLayout layout,
+                      const enum Backup2x8Flags flag)
 {
     ptrdiff_t y_off = 0;
-    for (int y = 0; y < 8; y++, y_off += PXSTRIDE(src_stride[0]))
-        pixel_copy(dst[0][y], &src[0][y_off + x_off - 2], 2);
+    if (flag & BACKUP_2X8_Y) {
+        for (int y = 0; y < 8; y++, y_off += PXSTRIDE(src_stride[0]))
+            pixel_copy(dst[0][y], &src[0][y_off + x_off - 2], 2);
+    }
 
-    if (layout == DAV1D_PIXEL_LAYOUT_I400) return;
+    if (layout == DAV1D_PIXEL_LAYOUT_I400 || !(flag & BACKUP_2X8_UV))
+        return;
+
     const int ss_ver = layout == DAV1D_PIXEL_LAYOUT_I420;
     const int ss_hor = layout != DAV1D_PIXEL_LAYOUT_I444;
 
@@ -98,13 +109,9 @@ void bytefn(dav1d_cdef_brow)(Dav1dFrameContext *const f,
     const int ss_ver = layout == DAV1D_PIXEL_LAYOUT_I420;
     const int ss_hor = layout != DAV1D_PIXEL_LAYOUT_I444;
 
-    // FIXME a design improvement that could be made here is to keep a set of
-    // flags for each block position on whether the block was filtered; if not,
-    // the backup of pre-filter data is empty, and the restore is therefore
-    // unnecessary as well.
-
     for (int bit = 0, by = by_start; by < by_end; by += 2, edges |= CDEF_HAVE_TOP) {
         const int tf = f->lf.top_pre_cdef_toggle;
+        const int by_idx = by & 30;
         if (by + 2 >= f->bh) edges &= ~CDEF_HAVE_BOTTOM;
 
         if (edges & CDEF_HAVE_BOTTOM) {
@@ -117,6 +124,7 @@ void bytefn(dav1d_cdef_brow)(Dav1dFrameContext *const f,
         pixel *iptrs[3] = { ptrs[0], ptrs[1], ptrs[2] };
         edges &= ~CDEF_HAVE_LEFT;
         edges |= CDEF_HAVE_RIGHT;
+        enum Backup2x8Flags prev_flag = 0;
         for (int sbx = 0, last_skip = 1; sbx < sb64w; sbx++, edges |= CDEF_HAVE_LEFT) {
             const int sb128x = sbx >>1;
             const int sb64_idx = ((by & sbsz) >> 3) + (sbx & 1);
@@ -131,6 +139,8 @@ void bytefn(dav1d_cdef_brow)(Dav1dFrameContext *const f,
 
             const int y_lvl = f->frame_hdr->cdef.y_strength[cdef_idx];
             const int uv_lvl = f->frame_hdr->cdef.uv_strength[cdef_idx];
+            const enum Backup2x8Flags flag = !!y_lvl + (!!uv_lvl << 1);
+
             pixel *bptrs[3] = { iptrs[0], iptrs[1], iptrs[2] };
             for (int bx = sbx * sbsz; bx < imin((sbx + 1) * sbsz, f->bw);
                  bx += 2, edges |= CDEF_HAVE_LEFT)
@@ -140,22 +150,23 @@ void bytefn(dav1d_cdef_brow)(Dav1dFrameContext *const f,
                 // check if this 8x8 block had any coded coefficients; if not,
                 // go to the next block
                 const unsigned bx_mask = 3U << (bx & 14);
-                const int by_idx = by & 30, bx_idx = (bx & 16) >> 4;
+                const int bx_idx = (bx & 16) >> 4;
                 if (!((lflvl[sb128x].noskip_mask[by_idx + 0][bx_idx] |
                        lflvl[sb128x].noskip_mask[by_idx + 1][bx_idx]) & bx_mask))
                 {
                     last_skip = 1;
                     goto next_b;
                 }
-
-                if (last_skip && edges & CDEF_HAVE_LEFT) {
+                const int do_left = last_skip ? flag : (prev_flag ^ flag) & flag;
+                prev_flag = flag;
+                if (do_left && edges & CDEF_HAVE_LEFT) {
                     // we didn't backup the prefilter data because it wasn't
                     // there, so do it here instead
-                    backup2x8(lr_bak[bit], bptrs, f->cur.stride, 0, layout);
+                    backup2x8(lr_bak[bit], bptrs, f->cur.stride, 0, layout, do_left);
                 }
                 if (edges & CDEF_HAVE_RIGHT) {
                     // backup pre-filter data for next iteration
-                    backup2x8(lr_bak[!bit], bptrs, f->cur.stride, 8, layout);
+                    backup2x8(lr_bak[!bit], bptrs, f->cur.stride, 8, layout, flag);
                 }
 
                 // the actual filter

@@ -324,44 +324,37 @@ static void ipred_smooth_h_c(pixel *dst, const ptrdiff_t stride,
     }
 }
 
-static int get_filter_strength(const unsigned blk_wh, const unsigned d,
-                               const int type)
-{
-    int strength = 0;
-
-    if (type == 0) {
-        if (blk_wh <= 8) {
-            if (d >= 56) strength = 1;
-        } else if (blk_wh <= 12) {
-            if (d >= 40) strength = 1;
-        } else if (blk_wh <= 16) {
-            if (d >= 40) strength = 1;
-        } else if (blk_wh <= 24) {
-            if (d >= 8) strength = 1;
-            if (d >= 16) strength = 2;
-            if (d >= 32) strength = 3;
-        } else if (blk_wh <= 32) {
-            if (d >= 1) strength = 1;
-            if (d >= 4) strength = 2;
-            if (d >= 32) strength = 3;
+static int get_filter_strength(const int wh, const int angle, const int is_sm) {
+    if (is_sm) {
+        if (wh <= 8) {
+            if (angle >= 64) return 2;
+            if (angle >= 40) return 1;
+        } else if (wh <= 16) {
+            if (angle >= 48) return 2;
+            if (angle >= 20) return 1;
+        } else if (wh <= 24) {
+            if (angle >=  4) return 3;
         } else {
-            if (d >= 1) strength = 3;
+            return 3;
         }
     } else {
-        if (blk_wh <= 8) {
-            if (d >= 40) strength = 1;
-            if (d >= 64) strength = 2;
-        } else if (blk_wh <= 16) {
-            if (d >= 20) strength = 1;
-            if (d >= 48) strength = 2;
-        } else if (blk_wh <= 24) {
-            if (d >= 4) strength = 3;
+        if (wh <= 8) {
+            if (angle >= 56) return 1;
+        } else if (wh <= 16) {
+            if (angle >= 40) return 1;
+        } else if (wh <= 24) {
+            if (angle >= 32) return 3;
+            if (angle >= 16) return 2;
+            if (angle >=  8) return 1;
+        } else if (wh <= 32) {
+            if (angle >= 32) return 3;
+            if (angle >=  4) return 2;
+            return 1;
         } else {
-            if (d >= 1) strength = 3;
+            return 3;
         }
     }
-
-    return strength;
+    return 0;
 }
 
 static void filter_edge(pixel *const out, const int sz,
@@ -451,12 +444,12 @@ static void ipred_z1_c(pixel *dst, const ptrdiff_t stride,
     for (int y = 0, xpos = dx; y < height;
          y++, dst += PXSTRIDE(stride), xpos += dx)
     {
-        const int frac = (xpos >> 1) & 0x1F;
+        const int frac = xpos & 0x3E;
 
         for (int x = 0, base = xpos >> 6; x < width; x++, base += base_inc) {
             if (base < max_base_x) {
-                const int v = top[base] * (32 - frac) + top[base + 1] * frac;
-                dst[x] = iclip_pixel((v + 16) >> 5);
+                const int v = top[base] * (64 - frac) + top[base + 1] * frac;
+                dst[x] = (v + 32) >> 6;
             } else {
                 pixel_set(&dst[x], top[max_base_x], width - x);
                 break;
@@ -518,30 +511,29 @@ static void ipred_z2_c(pixel *dst, const ptrdiff_t stride,
     }
     *topleft = *topleft_in;
 
-    const int min_base_x = -(1 + upsample_above);
     const int base_inc_x = 1 + upsample_above;
     const pixel *const left = &topleft[-(1 + upsample_left)];
-    const pixel *const top = &topleft[1 + upsample_above];
-    for (int y = 0, xpos = -dx; y < height;
+    for (int y = 0, xpos = ((1 + upsample_above) << 6) - dx; y < height;
          y++, xpos -= dx, dst += PXSTRIDE(stride))
     {
         int base_x = xpos >> 6;
-        const int frac_x = (xpos >> 1) & 0x1F;
+        const int frac_x = xpos & 0x3E;
 
         for (int x = 0, ypos = (y << (6 + upsample_left)) - dy; x < width;
              x++, base_x += base_inc_x, ypos -= dy)
         {
             int v;
-
-            if (base_x >= min_base_x) {
-                v = top[base_x] * (32 - frac_x) + top[base_x + 1] * frac_x;
+            if (base_x >= 0) {
+                v = topleft[base_x] * (64 - frac_x) +
+                    topleft[base_x + 1] * frac_x;
             } else {
                 const int base_y = ypos >> 6;
                 assert(base_y >= -(1 + upsample_left));
-                const int frac_y = (ypos >> 1) & 0x1F;
-                v = left[-base_y] * (32 - frac_y) + left[-(base_y + 1)] * frac_y;
+                const int frac_y = ypos & 0x3E;
+                v = left[-base_y] * (64 - frac_y) +
+                    left[-(base_y + 1)] * frac_y;
             }
-            dst[x] = iclip_pixel((v + 16) >> 5);
+            dst[x] = (v + 32) >> 6;
         }
     }
 }
@@ -588,13 +580,13 @@ static void ipred_z3_c(pixel *dst, const ptrdiff_t stride,
     }
     const int base_inc = 1 + upsample_left;
     for (int x = 0, ypos = dy; x < width; x++, ypos += dy) {
-        const int frac = (ypos >> 1) & 0x1F;
+        const int frac = ypos & 0x3E;
 
         for (int y = 0, base = ypos >> 6; y < height; y++, base += base_inc) {
             if (base < max_base_y) {
-                const int v = left[-base] * (32 - frac) +
+                const int v = left[-base] * (64 - frac) +
                               left[-(base + 1)] * frac;
-                dst[y * PXSTRIDE(stride) + x] = iclip_pixel((v + 16) >> 5);
+                dst[y * PXSTRIDE(stride) + x] = (v + 32) >> 6;
             } else {
                 do {
                     dst[y * PXSTRIDE(stride) + x] = left[-max_base_y];
@@ -604,6 +596,22 @@ static void ipred_z3_c(pixel *dst, const ptrdiff_t stride,
         }
     }
 }
+
+#if ARCH_X86
+#define FILTER(flt_ptr, p0, p1, p2, p3, p4, p5, p6) \
+    flt_ptr[ 0] * p0 + flt_ptr[ 1] * p1 +           \
+    flt_ptr[16] * p2 + flt_ptr[17] * p3 +           \
+    flt_ptr[32] * p4 + flt_ptr[33] * p5 +           \
+    flt_ptr[48] * p6
+#define FLT_INCR 2
+#else
+#define FILTER(flt_ptr, p0, p1, p2, p3, p4, p5, p6) \
+    flt_ptr[ 0] * p0 + flt_ptr[ 8] * p1 +           \
+    flt_ptr[16] * p2 + flt_ptr[24] * p3 +           \
+    flt_ptr[32] * p4 + flt_ptr[40] * p5 +           \
+    flt_ptr[48] * p6
+#define FLT_INCR 1
+#endif
 
 /* Up to 32x32 only */
 static void ipred_filter_c(pixel *dst, const ptrdiff_t stride,
@@ -633,11 +641,8 @@ static void ipred_filter_c(pixel *dst, const ptrdiff_t stride,
             const int8_t *flt_ptr = filter;
 
             for (int yy = 0; yy < 2; yy++) {
-                for (int xx = 0; xx < 4; xx++, flt_ptr += 2) {
-                    int acc = flt_ptr[ 0] * p0 + flt_ptr[ 1] * p1 +
-                              flt_ptr[16] * p2 + flt_ptr[17] * p3 +
-                              flt_ptr[32] * p4 + flt_ptr[33] * p5 +
-                              flt_ptr[48] * p6;
+                for (int xx = 0; xx < 4; xx++, flt_ptr += FLT_INCR) {
+                    int acc = FILTER(flt_ptr, p0, p1, p2, p3, p4, p5, p6);
                     ptr[xx] = iclip_pixel((acc + 8) >> 4);
                 }
                 ptr += PXSTRIDE(stride);
@@ -751,7 +756,11 @@ COLD void bitfn(dav1d_intra_pred_dsp_init)(Dav1dIntraPredDSPContext *const c) {
 
     c->pal_pred = pal_pred_c;
 
-#if HAVE_ASM && ARCH_X86
+#if HAVE_ASM
+#if ARCH_AARCH64 || ARCH_ARM
+    bitfn(dav1d_intra_pred_dsp_init_arm)(c);
+#elif ARCH_X86
     bitfn(dav1d_intra_pred_dsp_init_x86)(c);
+#endif
 #endif
 }

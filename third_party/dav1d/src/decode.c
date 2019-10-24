@@ -1176,14 +1176,18 @@ static int decode_b(Dav1dTileContext *const t,
             f->bd_fn.recon_b_intra(t, bs, intra_edge_flags, b);
         }
 
-        dav1d_create_lf_mask_intra(t->lf_mask, f->lf.level, f->b4_stride,
-                                   f->frame_hdr, (const uint8_t (*)[8][2])
-                                   &ts->lflvl[b->seg_id][0][0][0],
-                                   t->bx, t->by, f->w4, f->h4, bs,
-                                   b->tx, b->uvtx, f->cur.p.layout,
-                                   &t->a->tx_lpf_y[bx4], &t->l.tx_lpf_y[by4],
-                                   has_chroma ? &t->a->tx_lpf_uv[cbx4] : NULL,
-                                   has_chroma ? &t->l.tx_lpf_uv[cby4] : NULL);
+        if (f->frame_hdr->loopfilter.level_y[0] ||
+            f->frame_hdr->loopfilter.level_y[1])
+        {
+            dav1d_create_lf_mask_intra(t->lf_mask, f->lf.level, f->b4_stride,
+                                       (const uint8_t (*)[8][2])
+                                       &ts->lflvl[b->seg_id][0][0][0],
+                                       t->bx, t->by, f->w4, f->h4, bs,
+                                       b->tx, b->uvtx, f->cur.p.layout,
+                                       &t->a->tx_lpf_y[bx4], &t->l.tx_lpf_y[by4],
+                                       has_chroma ? &t->a->tx_lpf_uv[cbx4] : NULL,
+                                       has_chroma ? &t->l.tx_lpf_uv[cby4] : NULL);
+        }
 
         // update contexts
 #define set_ctx(type, dir, diridx, off, mul, rep_macro) \
@@ -1859,17 +1863,21 @@ static int decode_b(Dav1dTileContext *const t,
             if (f->bd_fn.recon_b_inter(t, bs, b)) return -1;
         }
 
-        const int is_globalmv =
-            b->inter_mode == (is_comp ? GLOBALMV_GLOBALMV : GLOBALMV);
-        const uint8_t (*const lf_lvls)[8][2] = (const uint8_t (*)[8][2])
-            &ts->lflvl[b->seg_id][0][b->ref[0] + 1][!is_globalmv];
-        dav1d_create_lf_mask_inter(t->lf_mask, f->lf.level, f->b4_stride,
-                                   f->frame_hdr, lf_lvls, t->bx, t->by,
-                                   f->w4, f->h4, b->skip, bs, b->tx_split,
-                                   b->uvtx, f->cur.p.layout,
-                                   &t->a->tx_lpf_y[bx4], &t->l.tx_lpf_y[by4],
-                                   has_chroma ? &t->a->tx_lpf_uv[cbx4] : NULL,
-                                   has_chroma ? &t->l.tx_lpf_uv[cby4] : NULL);
+        if (f->frame_hdr->loopfilter.level_y[0] ||
+            f->frame_hdr->loopfilter.level_y[1])
+        {
+            const int is_globalmv =
+                b->inter_mode == (is_comp ? GLOBALMV_GLOBALMV : GLOBALMV);
+            const uint8_t (*const lf_lvls)[8][2] = (const uint8_t (*)[8][2])
+                &ts->lflvl[b->seg_id][0][b->ref[0] + 1][!is_globalmv];
+            dav1d_create_lf_mask_inter(t->lf_mask, f->lf.level, f->b4_stride,
+                                       lf_lvls, t->bx, t->by, f->w4, f->h4,
+                                       b->skip, bs, b->tx_split, b->uvtx,
+                                       f->cur.p.layout,
+                                       &t->a->tx_lpf_y[bx4], &t->l.tx_lpf_y[by4],
+                                       has_chroma ? &t->a->tx_lpf_uv[cbx4] : NULL,
+                                       has_chroma ? &t->l.tx_lpf_uv[cby4] : NULL);
+        }
 
         // context updates
         if (is_comp) {
@@ -2339,7 +2347,7 @@ static void setup_tile(Dav1dTileState *const ts,
                    ((ts->tiling.col_start & 16) >> 4);
     }
     for (int p = 0; p < 3; p++) {
-        if (f->frame_hdr->restoration.type[p] == DAV1D_RESTORATION_NONE)
+        if (!((f->lf.restore_planes >> p) & 1U))
             continue;
 
         if (f->frame_hdr->super_res.enabled) {
@@ -2503,7 +2511,7 @@ int dav1d_decode_tile_sbrow(Dav1dTileContext *const t) {
         }
         // Restoration filter
         for (int p = 0; p < 3; p++) {
-            if (f->frame_hdr->restoration.type[p] == DAV1D_RESTORATION_NONE)
+            if (!((f->lf.restore_planes >> p) & 1U))
                 continue;
 
             const int ss_ver = p && f->cur.p.layout == DAV1D_PIXEL_LAYOUT_I420;
@@ -2817,6 +2825,10 @@ int dav1d_decode_frame(Dav1dFrameContext *const f) {
         }
         f->lf.lr_mask_sz = lr_mask_sz;
     }
+    f->lf.restore_planes =
+        ((f->frame_hdr->restoration.type[0] != DAV1D_RESTORATION_NONE) << 0) +
+        ((f->frame_hdr->restoration.type[1] != DAV1D_RESTORATION_NONE) << 1) +
+        ((f->frame_hdr->restoration.type[2] != DAV1D_RESTORATION_NONE) << 2);
     if (f->frame_hdr->loopfilter.sharpness != f->lf.last_sharpness) {
         dav1d_calc_eih(&f->lf.lim_lut, f->frame_hdr->loopfilter.sharpness);
         f->lf.last_sharpness = f->frame_hdr->loopfilter.sharpness;

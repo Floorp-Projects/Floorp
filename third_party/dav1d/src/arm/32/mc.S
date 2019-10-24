@@ -2971,3 +2971,206 @@ endfunc
 
 filter_fn put,  r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, 10
 filter_fn prep, r0, r7, r1, r2, r3, r4, r5, r6, r8, r9, 6
+
+.macro load_filter_ptr src
+        asr             r12, \src, #10
+        add             r12, r11, r12, lsl #3
+.endm
+
+.macro load_filter_coef dst, src, inc
+        vld1.8          {\dst}, [r12, :64]
+        add             \src, \src, \inc
+.endm
+
+.macro load_filter_row dst, src, inc
+        load_filter_ptr \src
+        load_filter_coef \dst, \src, \inc
+.endm
+
+function warp_filter_horz_neon
+        load_filter_ptr r5                  // filter 0
+        vld1.16         {q7}, [r2], r3
+
+        load_filter_coef d0, r5,  r7        // filter 0
+        vmovl.u8        q6,  d14            // original pixels
+        load_filter_row d2,  r5,  r7        // filter 1
+        vmovl.u8        q7,  d15            // original pixels
+        load_filter_row d4,  r5,  r7        // filter 2
+        vmovl.s8        q0,  d0             // filter 0
+        vext.8          q3,  q6,  q7,  #2*1 // filter 1 pixels
+        load_filter_ptr r5                  // filter 3
+        vmovl.s8        q1,  d2             // filter 1
+        vmul.i16        q5,  q6,  q0        // filter 0 output
+        load_filter_coef d0, r5,  r7        // filter 3
+        vmovl.s8        q2,  d4             // filter 2
+        load_filter_ptr r5                  // filter 4
+        vext.8          q4,  q6,  q7,  #2*2 // filter 2 pixels
+        vmul.i16        q3,  q3,  q1        // filter 1 output
+        load_filter_coef d2, r5,  r7        // filter 4
+        vmul.i16        q4,  q4,  q2        // filter 2 output
+        vext.8          q2,  q6,  q7,  #2*3 // filter 3 pixels
+        vmovl.s8        q0,  d0             // filter 3
+        vpaddl.s16      q5,  q5             // pixel 0 (4x32)
+        vpaddl.s16      q3,  q3             // pixel 1 (4x32)
+        vmul.i16        q0,  q2,  q0        // filter 3 output
+        load_filter_ptr r5                  // filter 5
+        vext.8          q2,  q6,  q7,  #2*4 // filter 4 pixels
+        vmovl.s8        q1,  d2             // filter 4
+        vpaddl.s16      q4,  q4             // pixel 2 (4x32)
+        vpadd.s32       d10, d10, d11       // pixel 0 (2x32)
+        vpadd.s32       d11, d6,  d7        // pixel 1 (2x32)
+        load_filter_coef d6, r5,  r7        // filter 5
+        vmul.i16        q1,  q2,  q1        // filter 4 output
+        vpadd.s32       d8,  d8,  d9        // pixel 2 (2x32)
+        load_filter_ptr r5                  // filter 6
+        vpaddl.s16      q0,  q0             // pixel 3 (4x32)
+        vpadd.s32       d10, d10, d11       // pixel 0,1
+        vext.8          q2,  q6,  q7,  #2*5 // filter 5 pixels
+        vmovl.s8        q3,  d6             // filter 5
+        vpaddl.s16      q1,  q1             // pixel 4 (4x32)
+        vpadd.s32       d9,  d0,  d1        // pixel 3 (2x32)
+        load_filter_coef d0, r5,  r7        // filter 6
+        vmul.i16        q2,  q2,  q3        // filter 5 output
+        vpadd.s32       d11, d8,  d9        // pixel 2,3
+        load_filter_ptr r5                  // filter 7
+        vpaddl.s16      q2,  q2             // pixel 5 (4x32)
+        vpadd.s32       d8,  d2,  d3        // pixel 4 (2x32)
+        vext.8          q3,  q6,  q7,  #2*6 // filter 6 pixels
+        vmovl.s8        q0,  d0             // filter 6
+        vpadd.s32       d9,  d4,  d5        // pixel 5 (2x32)
+        load_filter_coef d4, r5,  r7        // filter 7
+        vpadd.s32       d8,  d8,  d9        // pixel 4,5
+        vext.8          q1,  q6,  q7,  #2*7 // filter 7 pixels
+        vmovl.s8        q2,  d4             // filter 7
+        vmul.i16        q3,  q3,  q0        // filter 6 output
+        vmul.i16        q1,  q1,  q2        // filter 7 output
+        sub             r5,  r5,  r7, lsl #3
+        vpaddl.s16      q3,  q3             // pixel 6 (4x32)
+        vpaddl.s16      q1,  q1             // pixel 7 (4x32)
+        vpadd.s32       d6,  d6,  d7        // pixel 6 (2x32)
+        vpadd.s32       d2,  d2,  d3        // pixel 7 (2x32)
+        vpadd.s32       d9,  d6,  d2        // pixel 6,7
+
+        add             r5,  r5,  r8
+
+        vrshrn.s32      d10, q5,  #3
+        vrshrn.s32      d11, q4,  #3
+
+        bx              lr
+endfunc
+
+// void dav1d_warp_affine_8x8_8bpc_neon(
+//         pixel *dst, const ptrdiff_t dst_stride,
+//         const pixel *src, const ptrdiff_t src_stride,
+//         const int16_t *const abcd, int mx, int my)
+.macro warp t, shift
+function warp_affine_8x8\t\()_8bpc_neon, export=1
+        push            {r4-r11,lr}
+        vpush           {q4-q7}
+        ldrd            r4,  r5,  [sp, #100]
+        ldr             r6,  [sp, #108]
+        ldrd            r8,  r9,  [r4]
+        sxth            r7,  r8
+        asr             r8,  r8, #16
+        asr             r4,  r9, #16
+        sxth            r9,  r9
+        mov             r10, #8
+        sub             r2,  r2,  r3, lsl #1
+        sub             r2,  r2,  r3
+        sub             r2,  r2,  #3
+        movrel          r11, X(mc_warp_filter), 64*8
+.ifnb \t
+        lsl             r1,  r1,  #1
+.endif
+        add             r5,  r5,  #512
+        add             r6,  r6,  #512
+
+        bl              warp_filter_horz_neon
+        vmov            q8,  q5
+        bl              warp_filter_horz_neon
+        vmov            q9,  q5
+        bl              warp_filter_horz_neon
+        vmov            q10, q5
+        bl              warp_filter_horz_neon
+        vmov            q11, q5
+        bl              warp_filter_horz_neon
+        vmov            q12, q5
+        bl              warp_filter_horz_neon
+        vmov            q13, q5
+        bl              warp_filter_horz_neon
+        vmov            q14, q5
+
+1:
+        bl              warp_filter_horz_neon
+        vmov            q15, q5
+
+        load_filter_row d8,  r6,  r9
+        load_filter_row d9,  r6,  r9
+        load_filter_row d10, r6,  r9
+        load_filter_row d11, r6,  r9
+        load_filter_row d12, r6,  r9
+        load_filter_row d13, r6,  r9
+        load_filter_row d14, r6,  r9
+        load_filter_row d15, r6,  r9
+        transpose_8x8b  q4,  q5,  q6,  q7,  d8,  d9,  d10, d11, d12, d13, d14, d15
+        vmovl.s8        q1,  d8
+        vmovl.s8        q2,  d9
+        vmovl.s8        q3,  d10
+        vmovl.s8        q4,  d11
+        vmovl.s8        q5,  d12
+        vmovl.s8        q6,  d13
+
+        sub             r6,  r6,  r9, lsl #3
+
+        // This ordering of vmull/vmlal is highly beneficial for
+        // Cortex A8/A9/A53 here, but harmful for Cortex A7.
+        vmull.s16       q0,  d16,  d2
+        vmlal.s16       q0,  d18,  d4
+        vmlal.s16       q0,  d20,  d6
+        vmlal.s16       q0,  d22,  d8
+        vmlal.s16       q0,  d24,  d10
+        vmlal.s16       q0,  d26,  d12
+        vmull.s16       q1,  d17,  d3
+        vmlal.s16       q1,  d19,  d5
+        vmlal.s16       q1,  d21,  d7
+        vmlal.s16       q1,  d23,  d9
+        vmlal.s16       q1,  d25,  d11
+        vmlal.s16       q1,  d27,  d13
+
+        vmovl.s8        q2,  d14
+        vmovl.s8        q3,  d15
+
+        vmlal.s16       q0,  d28,  d4
+        vmlal.s16       q0,  d30,  d6
+        vmlal.s16       q1,  d29,  d5
+        vmlal.s16       q1,  d31,  d7
+
+        vmov            q8,  q9
+        vmov            q9,  q10
+        vqrshrn.s32     d0,  q0,  #\shift
+        vmov            q10, q11
+        vqrshrn.s32     d1,  q1,  #\shift
+        vmov            q11, q12
+        vmov            q12, q13
+.ifb \t
+        vqmovun.s16     d0,  q0
+.endif
+        vmov            q13, q14
+        vmov            q14, q15
+        subs            r10, r10, #1
+.ifnb \t
+        vst1.16         {q0}, [r0, :128], r1
+.else
+        vst1.8          {d0}, [r0, :64], r1
+.endif
+
+        add             r6,  r6,  r4
+        bgt             1b
+
+        vpop            {q4-q7}
+        pop             {r4-r11,pc}
+endfunc
+.endm
+
+warp  , 11
+warp t, 7

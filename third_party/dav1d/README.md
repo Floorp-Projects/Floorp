@@ -73,28 +73,15 @@ The [VideoLAN Code of Conduct](https://wiki.videolan.org/CoC) applies to this pr
 # Compile
 
 1. Install [Meson](https://mesonbuild.com/) (0.47 or higher), [Ninja](https://ninja-build.org/), and, for x86\* targets, [nasm](https://nasm.us/) (2.13.02 or higher)
-2. Run `meson build --buildtype release`
-3. Build with `ninja -C build`
+2. Run `mkdir build && cd build` to create a build directory and enter it
+3. Run `meson ..` to configure meson, add `--default-library=static` if static linking is desired
+4. Run `ninja` to compile
 
 # Run tests
 
-1. During initial build dir setup or `meson configure` specify `-Denable_tests=true`
-2. In the build directory run `meson test` optionally with `-v` for more verbose output, especially useful
-   for checkasm
-
-# Run testdata based tests
-
-1. Checkout the test data repository
-
-   ```
-   git clone https://code.videolan.org/videolan/dav1d-test-data.git tests/dav1d-test-data
-   ```
-2. During initial build dir setup or `meson configure` specify `-Denable_tests=true` and `-Dtestdata_tests=true`
-
-   ```
-   meson .test -Denable_tests=true -Dtestdata_tests=true
-   ```
-3. In the build directory run `meson test` optionally with `-v` for more verbose output
+1. In the root directory, run `git clone https://code.videolan.org/videolan/dav1d-test-data.git tests/dav1d-test-data` to fetch the test data repository
+2. During meson configuration, specify `-Dtestdata_tests=true`
+3. Run `meson test -v` after compiling
 
 # Support
 
