@@ -1865,6 +1865,8 @@ nscoord nsFlexContainerFrame::MeasureFlexItemContentBSize(
 
   if (aForceBResizeForMeasuringReflow) {
     childRIForMeasuringBSize.SetBResize(true);
+    // Not 100% sure this is needed, but be conservative for now:
+    childRIForMeasuringBSize.mFlags.mIsBResizeForPercentages = true;
   }
 
   const CachedMeasuringReflowResult& reflowResult =
@@ -4232,6 +4234,8 @@ void nsFlexContainerFrame::SizeItemInCrossAxis(
     // (Note: we know that the cross axis is the item's *block* axis -- if it
     // weren't, then we would've taken the early-return above.)
     aChildReflowInput.SetBResize(true);
+    // Not 100% sure this is needed, but be conservative for now:
+    aChildReflowInput.mFlags.mIsBResizeForPercentages = true;
   }
 
   // Potentially reflow the item, and get the sizing info.
@@ -5248,6 +5252,7 @@ void nsFlexContainerFrame::ReflowFlexItem(
     }
     if (didOverrideComputedBSize) {
       childReflowInput.SetBResize(true);
+      childReflowInput.mFlags.mIsBResizeForPercentages = true;
     }
   }
   // NOTE: Be very careful about doing anything else with childReflowInput
