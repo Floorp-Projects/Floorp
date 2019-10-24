@@ -4,6 +4,7 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/collection_item_tab"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -29,10 +30,11 @@
             android:adjustViewBounds="true"
             android:importantForAccessibility="no"
             android:scaleType="fitCenter"
-            app:layout_constraintDimensionRatio="1:1"
             app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintDimensionRatio="1:1"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            tools:srcCompat="@tools:sample/avatars" />
 
         <TextView
             android:id="@+id/hostname"
@@ -45,24 +47,26 @@
             android:textSize="12sp"
             android:textStyle="bold"
             app:layout_constraintStart_toEndOf="@id/favicon_image"
-            app:layout_constraintTop_toTopOf="@id/favicon_image" />
+            app:layout_constraintTop_toTopOf="@id/favicon_image"
+            tools:text="@tools:sample/lorem" />
 
         <TextView
             android:id="@+id/tab_title"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
             android:layout_marginStart="8dp"
+            android:layout_marginTop="4dp"
             android:layout_marginBottom="8dp"
             android:ellipsize="end"
             android:maxLines="2"
             android:minLines="2"
             android:textColor="?primaryText"
             android:textSize="15sp"
-            app:layout_constraintStart_toEndOf="@id/favicon_image"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@id/tab_selected_checkbox"
+            app:layout_constraintStart_toEndOf="@id/favicon_image"
             app:layout_constraintTop_toBottomOf="@id/hostname"
-            app:layout_constraintBottom_toBottomOf="parent"/>
+            tools:text="@tools:sample/lorem/random" />
 
         <CheckBox
             android:id="@+id/tab_selected_checkbox"
@@ -74,6 +78,7 @@
             android:elevation="1dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="​" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.cardview.widget.CardView>

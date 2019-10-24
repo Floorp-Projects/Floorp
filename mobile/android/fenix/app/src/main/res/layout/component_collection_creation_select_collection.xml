@@ -52,7 +52,8 @@
         app:layout_constraintBottom_toTopOf="@id/bottom_button_bar_layout"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/back_button" />
+        app:layout_constraintTop_toBottomOf="@id/back_button"
+        tools:listitem="@layout/collections_list_item" />
 
     <EditText
         android:id="@+id/name_collection_edittext"
@@ -90,7 +91,8 @@
         app:layout_constraintBottom_toTopOf="@+id/bottom_button_bar_layout"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/back_button" />
+        app:layout_constraintTop_toBottomOf="@id/back_button"
+        tools:listitem="@layout/collection_tab_list_row" />
 
     <View
         android:id="@+id/tab_list_dim"
