@@ -58,8 +58,8 @@ async function testSteps() {
 
   createTestingEnvironment();
 
-  let request = await initChromeOrigin("persistent");
-  ok(request.resultCode == Cr.NS_OK, "Initialization succeed");
+  let request = initChromeOrigin("persistent");
+  await requestFinished(request);
 
   let testingFiles = getTestingFiles();
   ok(!testingFiles.dbFile.exists(), "The obsolete database file doesn't exist");
