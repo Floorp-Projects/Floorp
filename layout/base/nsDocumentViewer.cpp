@@ -2826,14 +2826,6 @@ nsDocumentViewer::SetFullZoom(float aFullZoom) {
   }
 
   bool fullZoomChange = (mPageZoom != aFullZoom);
-
-  // Dispatch PreFullZoomChange event only if fullzoom value really has changed.
-  if (fullZoomChange) {
-    nsContentUtils::DispatchChromeEvent(mDocument, ToSupports(mDocument),
-                                        NS_LITERAL_STRING("PreFullZoomChange"),
-                                        CanBubble::eYes, Cancelable::eYes);
-  }
-
   mPageZoom = aFullZoom;
 
   PropagateToPresContextsHelper(
