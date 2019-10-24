@@ -18,8 +18,8 @@ var EXPORTED_SYMBOLS = ["DeferredTask"];
  * every time the data changes, using asynchronous calls, and multiple changes
  * to the data may happen within a short time:
  *
- *   let saveDeferredTask = new DeferredTask(function* () {
- *     yield OS.File.writeAtomic(...);
+ *   let saveDeferredTask = new DeferredTask(async function() {
+ *     await OS.File.writeAtomic(...);
  *     // Any uncaught exception will be reported.
  *   }, 2000);
  *
@@ -33,7 +33,7 @@ var EXPORTED_SYMBOLS = ["DeferredTask"];
  *
  *   // The task will be executed in 2 seconds from now.
  *
- *   yield waitOneSecond();
+ *   await waitOneSecond();
  *   saveDeferredTask.arm();
  *
  *   // The task will be executed in 1 second from now.
@@ -122,7 +122,7 @@ var DeferredTask = function(aTaskFn, aDelayMs, aIdleTimeoutMs) {
 
 this.DeferredTask.prototype = {
   /**
-   * Function or generator function to execute.
+   * Function to execute.
    */
   _taskFn: null,
 
@@ -143,7 +143,7 @@ this.DeferredTask.prototype = {
   /**
    * Indicates whether the task is currently running.  This is always true when
    * read from code inside the task function, but can also be true when read
-   * from external code, in case the task is an asynchronous generator function.
+   * from external code, in case the task is an asynchronous function.
    */
   get isRunning() {
     return !!this._runningPromise;
