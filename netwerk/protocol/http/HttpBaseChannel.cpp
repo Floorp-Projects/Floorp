@@ -4413,17 +4413,24 @@ void HttpBaseChannel::SetIPv4Disabled() { mCaps |= NS_HTTP_DISABLE_IPV4; }
 
 void HttpBaseChannel::SetIPv6Disabled() { mCaps |= NS_HTTP_DISABLE_IPV6; }
 
-NS_IMETHODIMP HttpBaseChannel::GetResponseEmbedderPolicy(
-    nsILoadInfo::CrossOriginEmbedderPolicy* aOutPolicy) {
+nsresult HttpBaseChannel::GetResponseEmbedderPolicy(
+    nsILoadInfo::CrossOriginEmbedderPolicy* aResponseEmbedderPolicy) {
   if (!mResponseHead) {
     return NS_ERROR_NOT_AVAILABLE;
   }
+
+  nsILoadInfo::CrossOriginEmbedderPolicy policy =
+      nsILoadInfo::EMBEDDER_POLICY_NULL;
 
   nsAutoCString content;
   Unused << mResponseHead->GetHeader(nsHttp::Cross_Origin_Embedder_Policy,
                                      content);
 
-  *aOutPolicy = NS_GetCrossOriginEmbedderPolicyFromHeader(content);
+  if (content.EqualsLiteral("require-corp")) {
+    policy = nsILoadInfo::EMBEDDER_POLICY_REQUIRE_CORP;
+  }
+
+  *aResponseEmbedderPolicy = policy;
   return NS_OK;
 }
 
