@@ -371,7 +371,7 @@ class LoginManagerParent extends JSWindowActorParent {
       logins = this._searchAndDedupeLogins(formOrigin, {
         formActionOrigin: actionOrigin,
         ignoreActionAndRealm: true,
-        acceptDifferentSubdomains: INCLUDE_OTHER_SUBDOMAINS_IN_LOOKUP, // TODO: for TAB case
+        acceptDifferentSubdomains: INCLUDE_OTHER_SUBDOMAINS_IN_LOOKUP,
       });
     }
 
