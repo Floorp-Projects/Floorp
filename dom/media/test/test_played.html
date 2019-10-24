@@ -202,7 +202,7 @@ function createTestArray() {
   var A = [];
   for (var i=0; i<tests.length; i++) {
     for (var k=0; k<gPlayedTests.length; k++) {
-      var t = new Object();
+      var t = {};
       t.setup = tests[i].setup;
       t.name = tests[i].name + "-" + gPlayedTests[k].name;
       t.type = gPlayedTests[k].type;
