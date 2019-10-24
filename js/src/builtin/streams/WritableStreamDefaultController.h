@@ -99,10 +99,13 @@ class WritableStreamDefaultController : public StreamController {
   }
 
   void setWriteMethod(const JS::Value& writeMethod) {}
+  void clearWriteMethod() { setWriteMethod(JS::UndefinedValue()); }
 
   void setCloseMethod(const JS::Value& closeMethod) {}
+  void clearCloseMethod() { setCloseMethod(JS::UndefinedValue()); }
 
   void setAbortMethod(const JS::Value& abortMethod) {}
+  void clearAbortMethod() { setAbortMethod(JS::UndefinedValue()); }
 
   double strategyHWM() const {
     return getFixedSlot(Slot_StrategyHWM).toDouble();
@@ -112,6 +115,7 @@ class WritableStreamDefaultController : public StreamController {
   }
 
   void setStrategySize(const JS::Value& size) {}
+  void clearStrategySize() { setStrategySize(JS::UndefinedValue()); }
 
   uint32_t flags() const { return getFixedSlot(Slot_Flags).toInt32(); }
   void setFlags(uint32_t flags) { setFixedSlot(Slot_Flags, Int32Value(flags)); }
