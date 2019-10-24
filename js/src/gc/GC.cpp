@@ -6224,14 +6224,15 @@ IncrementalProgress GCRuntime::performSweepActions(SliceBudget& budget) {
   gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::SWEEP);
   JSFreeOp fop(rt);
 
-  // Drain the mark stack, except in the first sweep slice where we must not
-  // yield to the mutator until we've starting sweeping a sweep group.
+  // Kick off a parallel task to drain the mark stack, except in the first sweep
+  // slice where we must not yield to the mutator until we've starting sweeping
+  // a sweep group. The stack must be empty in that case.
   MOZ_ASSERT(initialState <= State::Sweep);
-  if (initialState != State::Sweep) {
-    MOZ_ASSERT(marker.isDrained());
-  } else {
-    MOZ_ASSERT(!sweepMarkTask.isRunning());
+  MOZ_ASSERT_IF(initialState != State::Sweep, marker.isDrained());
+  MOZ_ASSERT(!sweepMarkTaskStarted);
+  if (initialState == State::Sweep && !marker.isDrained()) {
     AutoLockHelperThreadState lock;
+    MOZ_ASSERT(!sweepMarkTask.isRunningWithLockHeld(lock));
     sweepMarkTask.setBudget(budget);
     sweepMarkTask.startOrRunIfIdle(lock);
     sweepMarkTaskStarted = true;
