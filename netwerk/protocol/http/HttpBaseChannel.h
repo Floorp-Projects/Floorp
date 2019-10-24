@@ -316,8 +316,6 @@ class HttpBaseChannel : public nsHashPropertyBag,
   NS_IMETHOD ComputeCrossOriginOpenerPolicy(
       nsILoadInfo::CrossOriginOpenerPolicy aInitiatorPolicy,
       nsILoadInfo::CrossOriginOpenerPolicy* aOutPolicy) override;
-  NS_IMETHOD GetResponseEmbedderPolicy(
-      nsILoadInfo::CrossOriginEmbedderPolicy* aOutPolicy) override;
   virtual bool GetHasNonEmptySandboxingFlag() override {
     return mHasNonEmptySandboxingFlag;
   }
@@ -588,6 +586,9 @@ class HttpBaseChannel : public nsHashPropertyBag,
 
   bool MaybeWaitForUploadStreamLength(nsIStreamListener* aListener,
                                       nsISupports* aContext);
+
+  nsresult GetResponseEmbedderPolicy(
+      nsILoadInfo::CrossOriginEmbedderPolicy* aResponseEmbedderPolicy);
 
   friend class PrivateBrowsingChannel<HttpBaseChannel>;
   friend class InterceptFailedOnStop;
