@@ -669,17 +669,15 @@ add_test(function test_helpers_open_sync_preferences() {
 add_task(async function test_helpers_getFxAStatus_extra_engines() {
   let helpers = new FxAccountsWebChannelHelpers({
     fxAccounts: {
-      getSignedInUser() {
-        return Promise.resolve({
-          email: "testuser@testuser.com",
-          kSync: "kSync",
-          kXCS: "kXCS",
-          kExtSync: "kExtSync",
-          kExtKbHash: "kExtKbHash",
-          sessionToken: "sessionToken",
-          uid: "uid",
-          verified: true,
-        });
+      _internal: {
+        getUserAccountData() {
+          return Promise.resolve({
+            email: "testuser@testuser.com",
+            sessionToken: "sessionToken",
+            uid: "uid",
+            verified: true,
+          });
+        }
       },
     },
     privateBrowsingUtils: {
@@ -701,24 +699,22 @@ add_task(async function test_helpers_getFxAStatus_extra_engines() {
 
 add_task(async function test_helpers_getFxaStatus_allowed_signedInUser() {
   let wasCalled = {
-    getSignedInUser: false,
+    getUserAccountData: false,
     shouldAllowFxaStatus: false,
   };
 
   let helpers = new FxAccountsWebChannelHelpers({
     fxAccounts: {
-      getSignedInUser() {
-        wasCalled.getSignedInUser = true;
-        return Promise.resolve({
-          email: "testuser@testuser.com",
-          kSync: "kSync",
-          kXCS: "kXCS",
-          kExtSync: "kExtSync",
-          kExtKbHash: "kExtKbHash",
-          sessionToken: "sessionToken",
-          uid: "uid",
-          verified: true,
-        });
+      _internal: {
+        getUserAccountData() {
+          wasCalled.getUserAccountData = true;
+          return Promise.resolve({
+            email: "testuser@testuser.com",
+            sessionToken: "sessionToken",
+            uid: "uid",
+            verified: true,
+          });
+        }
       },
     },
   });
@@ -733,7 +729,7 @@ add_task(async function test_helpers_getFxaStatus_allowed_signedInUser() {
 
   return helpers.getFxaStatus("sync", mockSendingContext).then(fxaStatus => {
     Assert.ok(!!fxaStatus);
-    Assert.ok(wasCalled.getSignedInUser);
+    Assert.ok(wasCalled.getUserAccountData);
     Assert.ok(wasCalled.shouldAllowFxaStatus);
 
     Assert.ok(!!fxaStatus.signedInUser);
@@ -755,15 +751,17 @@ add_task(async function test_helpers_getFxaStatus_allowed_signedInUser() {
 
 add_task(async function test_helpers_getFxaStatus_allowed_no_signedInUser() {
   let wasCalled = {
-    getSignedInUser: false,
+    getUserAccountData: false,
     shouldAllowFxaStatus: false,
   };
 
   let helpers = new FxAccountsWebChannelHelpers({
     fxAccounts: {
-      getSignedInUser() {
-        wasCalled.getSignedInUser = true;
-        return Promise.resolve(null);
+      _internal: {
+        getUserAccountData() {
+          wasCalled.getUserAccountData = true;
+          return Promise.resolve(null);
+        },
       },
     },
   });
@@ -778,7 +776,7 @@ add_task(async function test_helpers_getFxaStatus_allowed_no_signedInUser() {
 
   return helpers.getFxaStatus("sync", mockSendingContext).then(fxaStatus => {
     Assert.ok(!!fxaStatus);
-    Assert.ok(wasCalled.getSignedInUser);
+    Assert.ok(wasCalled.getUserAccountData);
     Assert.ok(wasCalled.shouldAllowFxaStatus);
 
     Assert.equal(null, fxaStatus.signedInUser);
@@ -787,15 +785,17 @@ add_task(async function test_helpers_getFxaStatus_allowed_no_signedInUser() {
 
 add_task(async function test_helpers_getFxaStatus_not_allowed() {
   let wasCalled = {
-    getSignedInUser: false,
+    getUserAccountData: false,
     shouldAllowFxaStatus: false,
   };
 
   let helpers = new FxAccountsWebChannelHelpers({
     fxAccounts: {
-      getSignedInUser() {
-        wasCalled.getSignedInUser = true;
-        return Promise.resolve(null);
+      _internal: {
+        getUserAccountData() {
+          wasCalled.getUserAccountData = true;
+          return Promise.resolve(null);
+        },
       },
     },
   });
@@ -810,7 +810,7 @@ add_task(async function test_helpers_getFxaStatus_not_allowed() {
 
   return helpers.getFxaStatus("sync", mockSendingContext).then(fxaStatus => {
     Assert.ok(!!fxaStatus);
-    Assert.ok(!wasCalled.getSignedInUser);
+    Assert.ok(!wasCalled.getUserAccountData);
     Assert.ok(wasCalled.shouldAllowFxaStatus);
 
     Assert.equal(null, fxaStatus.signedInUser);
