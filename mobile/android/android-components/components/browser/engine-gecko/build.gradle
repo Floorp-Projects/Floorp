@@ -2,6 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+plugins {
+    id "com.jetbrains.python.envs" version "0.0.26"
+}
+
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
@@ -26,6 +30,13 @@ android {
     }
 }
 
+// Set configuration for the Glean parser to extract metrics.yaml
+// file from AAR dependencies of this project rather than look
+// for it into the project directory.
+ext.allowMetricsFromAAR = true
+// Generate markdown docs for the collected Gecko metrics.
+ext.gleanGenerateMarkdownDocs = true
+
 dependencies {
     implementation project(':concept-engine')
     implementation project(':concept-fetch')
@@ -45,11 +56,18 @@ dependencies {
     testImplementation project(':support-test')
     testImplementation project(':tooling-fetch-tests')
 
+    // We only compile against Glean. It's up to the app to add those dependencies
+    // if it wants to collect GeckoView telemetry through the Glean SDK.
+    compileOnly project(":service-glean")
+    testImplementation project(":service-glean")
+    testImplementation Dependencies.androidx_work_testing
+
     androidTestImplementation Dependencies.androidx_test_core
     androidTestImplementation Dependencies.androidx_test_runner
     androidTestImplementation Dependencies.androidx_test_rules
     androidTestImplementation project(':tooling-fetch-tests')
 }
 
+apply from: '../../../components/service/glean/scripts/sdk_generator.gradle'
 apply from: '../../../publish.gradle'
 ext.configurePublish(config.componentsGroupId, archivesBaseName, project.ext.description)
