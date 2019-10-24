@@ -145,6 +145,10 @@ tr:not(.deleted) > .cell-value {
   text-align: match-parent;
 }
 
+#form-edit > label {
+  padding-inline-end: 10px;
+}
+
 td.cell-value > form > input[type="text"],
 td.cell-value > form > input[type="number"] {
   -moz-appearance: textfield;
