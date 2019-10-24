@@ -50,7 +50,7 @@
         android:layout_marginBottom="30dp"
         android:gravity="end|center_vertical"
         android:paddingStart="16dp"
-        android:text="200%"
+        tools:text="200%"
         android:textColor="?attr/primaryText"
         android:textSize="16sp"
         app:layout_constraintBottom_toTopOf="@+id/sampleText"
