@@ -70,13 +70,14 @@ add_task(async function test_systemRecord_updateQuota() {
 
 function testPermissionCheck(props) {
   let record = new PushRecord(props);
+  let originSuffix;
   equal(
     record.uri.spec,
     props.scope,
     `Record URI should match scope URL for ${JSON.stringify(props)}`
   );
   if (props.originAttributes) {
-    let originSuffix = ChromeUtils.originAttributesToSuffix(
+    originSuffix = ChromeUtils.originAttributesToSuffix(
       record.principal.originAttributes
     );
     equal(
@@ -89,9 +90,9 @@ function testPermissionCheck(props) {
     !record.hasPermission(),
     `Record ${JSON.stringify(props)} should not have permission yet`
   );
-  let permURI = Services.io.newURI(props.scope);
+  // Adding permission from origin string
   PermissionTestUtils.add(
-    permURI,
+    props.scope + (originSuffix || ""),
     "desktop-notification",
     Ci.nsIPermissionManager.ALLOW_ACTION
   );
@@ -101,7 +102,10 @@ function testPermissionCheck(props) {
       `Record ${JSON.stringify(props)} should have permission`
     );
   } finally {
-    PermissionTestUtils.remove(permURI, "desktop-notification");
+    PermissionTestUtils.remove(
+      props.scope + (originSuffix || ""),
+      "desktop-notification"
+    );
   }
 }
 

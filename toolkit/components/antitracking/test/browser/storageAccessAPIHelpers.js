@@ -142,18 +142,27 @@ async function callRequestStorageAccess(callback, expectFail) {
   return [threw, rejected];
 }
 
+// Creates principal with private browsing id OA where applicable
+function createPrincipal(url) {
+  let oa = {};
+  if (SpecialPowers.isContentWindowPrivate(window)) {
+    oa.privateBrowsingId = 1;
+  }
+  return SpecialPowers.Services.scriptSecurityManager.createContentPrincipal(
+    SpecialPowers.Services.io.newURI(url),
+    oa
+  );
+}
+
 async function waitUntilPermission(url, name) {
+  let principal = createPrincipal(url);
   await new Promise(resolve => {
     let id = setInterval(_ => {
-      let Services = SpecialPowers.Services;
-      let uri = Services.io.newURI(url);
-      let principal = Services.scriptSecurityManager.createContentPrincipal(
-        uri,
-        {}
-      );
       if (
-        Services.perms.testPermissionFromPrincipal(principal, name) ==
-        Services.perms.ALLOW_ACTION
+        SpecialPowers.Services.perms.testPermissionFromPrincipal(
+          principal,
+          name
+        ) == SpecialPowers.Services.perms.ALLOW_ACTION
       ) {
         clearInterval(id);
         resolve();
@@ -178,11 +187,7 @@ async function interactWithTracker() {
 
 function isOnContentBlockingAllowList() {
   let url = new URL(SpecialPowers.wrap(top).location.href);
-  let origin = SpecialPowers.Services.io.newURI("https://" + url.host);
-  let principal = SpecialPowers.Services.scriptSecurityManager.createContentPrincipal(
-    origin,
-    {}
-  );
+  let principal = createPrincipal("https://" + url.host);
   let types = ["trackingprotection", "trackingprotection-pb"];
   return types.some(type => {
     return (

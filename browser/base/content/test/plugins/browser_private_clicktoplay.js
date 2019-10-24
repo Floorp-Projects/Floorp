@@ -41,6 +41,14 @@ add_task(async function test() {
       Ci.nsIPluginTag.STATE_ENABLED;
   });
 
+  // This test works under the assumption that private browsing windows
+  // share permissions with regular windows. Setting a pref to revert to this
+  // behavior. The test should be updated and the pref overwrite removed.
+  // See Bug 1588457
+  await SpecialPowers.pushPrefEnv({
+    set: [["permissions.isolateBy.privateBrowsing", false]],
+  });
+
   let newTab = BrowserTestUtils.addTab(gBrowser);
   gBrowser.selectedTab = newTab;
   gTestBrowser = gBrowser.selectedBrowser;
