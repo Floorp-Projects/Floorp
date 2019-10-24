@@ -50,44 +50,16 @@ extern mozilla::LazyLogModule gProfilerLog;
 // These are for MOZ_LOG="prof:3" or higher. It's the default logging level for
 // the profiler, and should be used sparingly.
 #define LOG_TEST MOZ_LOG_TEST(gProfilerLog, mozilla::LogLevel::Info)
-// Use LOG() from any function/scope that does not own the profiler mutex.
-#define LOG(arg, ...)                                                     \
-  do {                                                                    \
-    gPSMutex.AssertCurrentThreadDoesNotOwn(); /* See LOG_LOCKED() */      \
-    MOZ_LOG(gProfilerLog, mozilla::LogLevel::Info,                        \
-            ("[%d] " arg, profiler_current_process_id(), ##__VA_ARGS__)); \
-  } while (false)
-// Use LOG_LOCKED() from any function/scope that owns the profiler mutex.
-// This is to avoid deadlocks if the I/O interposer intercepted the logging
-// operation, and tried to lock again when recording its stack trace.
-#define LOG_LOCKED(lock, arg, ...)                                          \
-  do {                                                                      \
-    if (!(ActivePS::Exists(lock) && ActivePS::InterposeObserver(lock))) {   \
-      MOZ_LOG(gProfilerLog, mozilla::LogLevel::Info,                        \
-              ("[%d] " arg, profiler_current_process_id(), ##__VA_ARGS__)); \
-    }                                                                       \
-  } while (false)
+#define LOG(arg, ...)                            \
+  MOZ_LOG(gProfilerLog, mozilla::LogLevel::Info, \
+          ("[%d] " arg, profiler_current_process_id(), ##__VA_ARGS__))
 
 // These are for MOZ_LOG="prof:4" or higher. It should be used for logging that
 // is somewhat more verbose than LOG.
 #define DEBUG_LOG_TEST MOZ_LOG_TEST(gProfilerLog, mozilla::LogLevel::Debug)
-// Use DEBUG_LOG() from any function/scope that does not own the profiler mutex.
-#define DEBUG_LOG(arg, ...)                                                \
-  do {                                                                     \
-    gPSMutex.AssertCurrentThreadDoesNotOwn(); /* See DEBUG_LOG_LOCKED() */ \
-    MOZ_LOG(gProfilerLog, mozilla::LogLevel::Debug,                        \
-            ("[%d] " arg, profiler_current_process_id(), ##__VA_ARGS__));  \
-  } while (false)
-// Use DEBUG_LOG_LOCKED() from any function/scope that owns the profiler mutex.
-// This is to avoid deadlocks if the I/O interposer intercepted the logging
-// operation, and tried to lock again when recording its stack trace.
-#define DEBUG_LOG_LOCKED(lock, arg, ...)                                    \
-  do {                                                                      \
-    if (!(ActivePS::Exists(lock) && ActivePS::InterposeObserver(lock))) {   \
-      MOZ_LOG(gProfilerLog, mozilla::LogLevel::Debug,                       \
-              ("[%d] " arg, profiler_current_process_id(), ##__VA_ARGS__)); \
-    }                                                                       \
-  } while (false)
+#define DEBUG_LOG(arg, ...)                       \
+  MOZ_LOG(gProfilerLog, mozilla::LogLevel::Debug, \
+          ("[%d] " arg, profiler_current_process_id(), ##__VA_ARGS__))
 
 typedef uint8_t* Address;
 
