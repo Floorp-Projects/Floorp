@@ -33,7 +33,7 @@
           let child = window.open(child_url, "", "width=500,height=500");
           await once(child, "load");
           child.postMessage("run test", window.origin);
-          let result = await nextWindowMessage();
+          await nextWindowMessage();
           child.close();
           SimpleTest.finish();
         }

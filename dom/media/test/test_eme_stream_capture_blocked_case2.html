@@ -25,7 +25,7 @@ function startTest(test, token)
     var threw = false;
     try {
       var context = new AudioContext();
-      var node = context.createMediaElementSource(v2);
+      context.createMediaElementSource(v2);
     } catch (e) {
       threw = true;
     }

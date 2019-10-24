@@ -22,6 +22,7 @@ SimpleTest.waitForExplicitFinish();
 var audio = document.createElement("audio");
 
 // Check leaking on TextTrackList objects.
+/* global ttl, ttc */
 window.ttl = audio.textTracks;
 ttl.addEventListener("click", function(){});
 
