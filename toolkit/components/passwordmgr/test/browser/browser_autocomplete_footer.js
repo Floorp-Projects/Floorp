@@ -20,22 +20,6 @@ function loginList() {
   ];
 }
 
-async function openPopup(popup, browser) {
-  let promiseShown = BrowserTestUtils.waitForEvent(popup, "popupshown");
-
-  await SimpleTest.promiseFocus(browser);
-  info("content window focused");
-
-  // Focus the username field to open the popup.
-  await ContentTask.spawn(browser, null, function openAutocomplete() {
-    content.document.getElementById("form-basic-username").focus();
-  });
-
-  let shown = await promiseShown;
-  ok(shown, "autocomplete popup shown");
-  return shown;
-}
-
 /**
  * Initialize logins and set prefs needed for the test.
  */
@@ -61,7 +45,7 @@ add_task(async function test_autocomplete_footer_onclick() {
       let popup = document.getElementById("PopupAutoComplete");
       ok(popup, "Got popup");
 
-      await openPopup(popup, browser);
+      await openACPopup(popup, browser, "#form-basic-username");
 
       let footer = popup.querySelector(`[originaltype="loginsFooter"]`);
       ok(footer, "Got footer richlistitem");
@@ -92,7 +76,7 @@ add_task(async function test_autocomplete_footer_onclick() {
       );
 
       await passwordManager.close();
-      popup.hidePopup();
+      await closePopup(popup);
     }
   );
 });
@@ -108,7 +92,7 @@ add_task(async function test_autocomplete_footer_keydown() {
       let popup = document.getElementById("PopupAutoComplete");
       ok(popup, "Got popup");
 
-      await openPopup(popup, browser);
+      await openACPopup(popup, browser, "#form-basic-username");
 
       let footer = popup.querySelector(`[originaltype="loginsFooter"]`);
       ok(footer, "Got footer richlistitem");
@@ -139,7 +123,7 @@ add_task(async function test_autocomplete_footer_keydown() {
       );
 
       await passwordManager.close();
-      popup.hidePopup();
+      await closePopup(popup);
     }
   );
 });

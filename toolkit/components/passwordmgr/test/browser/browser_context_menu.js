@@ -47,7 +47,7 @@ add_task(async function test_context_menu_populate_password_noSchemeUpgrades() {
       let popupMenu = document.getElementById("fill-login-popup");
       checkMenu(popupMenu, 2);
 
-      CONTEXT_MENU.hidePopup();
+      await closePopup(CONTEXT_MENU);
     }
   );
 });
@@ -70,7 +70,7 @@ add_task(async function test_context_menu_populate_password_schemeUpgrades() {
       let popupMenu = document.getElementById("fill-login-popup");
       checkMenu(popupMenu, 3);
 
-      CONTEXT_MENU.hidePopup();
+      await closePopup(CONTEXT_MENU);
     }
   );
 });
@@ -97,7 +97,7 @@ add_task(
         let popupMenu = document.getElementById("fill-login-popup");
         checkMenu(popupMenu, 2);
 
-        CONTEXT_MENU.hidePopup();
+        await closePopup(CONTEXT_MENU);
       }
     );
   }
@@ -124,7 +124,7 @@ add_task(
         let popupMenu = document.getElementById("fill-login-popup");
         checkMenu(popupMenu, 3);
 
-        CONTEXT_MENU.hidePopup();
+        await closePopup(CONTEXT_MENU);
       }
     );
   }
@@ -192,7 +192,7 @@ add_task(async function test_context_menu_password_fill() {
               if (inputDisabled) {
                 Assert.ok(!POPUP_HEADER.hidden, "Popup menu is not hidden.");
                 Assert.ok(POPUP_HEADER.disabled, "Popup menu is disabled.");
-                CONTEXT_MENU.hidePopup();
+                await closePopup(CONTEXT_MENU);
               }
 
               return !inputDisabled;
@@ -217,7 +217,7 @@ add_task(async function test_context_menu_password_fill() {
             );
           });
 
-          CONTEXT_MENU.hidePopup();
+          await closePopup(CONTEXT_MENU);
         }
       }
     }
@@ -317,7 +317,7 @@ add_task(async function test_context_menu_username_login_fill() {
               );
 
               if (!shouldContinue) {
-                CONTEXT_MENU.hidePopup();
+                await closePopup(CONTEXT_MENU);
               }
 
               return shouldContinue;
@@ -363,7 +363,7 @@ add_task(async function test_context_menu_username_login_fill() {
             }
           });
 
-          CONTEXT_MENU.hidePopup();
+          await closePopup(CONTEXT_MENU);
         }
       }
     }
@@ -396,7 +396,7 @@ add_task(async function test_context_menu_open_management() {
       );
 
       await passwordManager.close();
-      CONTEXT_MENU.hidePopup();
+      await closePopup(CONTEXT_MENU);
     }
   );
 });

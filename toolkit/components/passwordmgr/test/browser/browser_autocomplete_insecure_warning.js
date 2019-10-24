@@ -18,19 +18,7 @@ add_task(async function test_clickInsecureFieldWarning() {
     async function(browser) {
       let popup = document.getElementById("PopupAutoComplete");
       ok(popup, "Got popup");
-
-      let promiseShown = BrowserTestUtils.waitForEvent(popup, "popupshown");
-
-      await SimpleTest.promiseFocus(browser);
-      info("content window focused");
-
-      // Focus the username field to open the popup.
-      await ContentTask.spawn(browser, null, function openAutocomplete() {
-        content.document.getElementById("form-basic-username").focus();
-      });
-
-      await promiseShown;
-      ok(promiseShown, "autocomplete shown");
+      await openACPopup(popup, browser, "#form-basic-username");
 
       let warningItem = popup.querySelector(`[type="insecureWarning"]`);
       ok(warningItem, "Got warning richlistitem");
@@ -48,6 +36,7 @@ add_task(async function test_clickInsecureFieldWarning() {
       EventUtils.synthesizeMouseAtCenter(warningItem, {});
       let supportTab = await supportTabPromise;
       ok(supportTab, "Support tab opened");
+      await closePopup(popup);
       BrowserTestUtils.removeTab(supportTab);
     }
   );

@@ -38,7 +38,8 @@ registerCleanupFunction(
     while ((notif = PopupNotifications.getNotification("password"))) {
       notif.remove();
     }
-    await Promise.resolve();
+    await closePopup(document.getElementById("contentAreaContextMenu"));
+    await closePopup(document.getElementById("PopupAutoComplete"));
   }
 );
 
@@ -304,6 +305,25 @@ async function getCaptureDoorhangerThatMayOpen(
   return notif;
 }
 
+async function waitForDoorhanger(browser, type) {
+  await TestUtils.waitForCondition(() => {
+    let notif = PopupNotifications.getNotification("password", browser);
+    return notif && notif.options.passwordNotificationType == type;
+  }, `Waiting for a ${type} notification`);
+}
+
+async function hideDoorhangerPopup() {
+  info("hideDoorhangerPopup");
+  if (!PopupNotifications.isPanelOpen) {
+    return;
+  }
+  let { panel } = PopupNotifications;
+  let promiseHidden = BrowserTestUtils.waitForEvent(panel, "popuphidden");
+  panel.hidePopup();
+  await promiseHidden;
+  info("got popuphidden from notification panel");
+}
+
 function getDoorhangerButton(aPopup, aButtonIndex) {
   let notifications = aPopup.owner.panel.children;
   ok(!!notifications.length, "at least one notification displayed");
@@ -385,9 +405,16 @@ async function checkDoorhangerUsernamePassword(username, password) {
  *        An optional string value to replace whatever is in the password field
  * @param {string} [newValues.username = undefined]
  *        An optional string value to replace whatever is in the username field
+ * @param {Object} [popupNotifications = PopupNotifications]
  */
-async function updateDoorhangerInputValues(newValues) {
-  let { panel } = PopupNotifications;
+async function updateDoorhangerInputValues(
+  newValues,
+  popupNotifications = PopupNotifications
+) {
+  let { panel } = popupNotifications;
+  if (popupNotifications.panel.state !== "open") {
+    await BrowserTestUtils.waitForEvent(popupNotifications.panel, "popupshown");
+  }
   is(panel.state, "open", "Check the doorhanger is already open");
 
   let notifElem = panel.childNodes[0];
@@ -497,6 +524,16 @@ async function openACPopup(popup, browser, inputSelector) {
   let shown = await promiseShown;
   ok(shown, "autocomplete popup shown");
   return shown;
+}
+
+async function closePopup(popup) {
+  if (popup.state == "closed") {
+    await Promise.resolve();
+  } else {
+    let promiseHidden = BrowserTestUtils.waitForEvent(popup, "popuphidden");
+    popup.hidePopup();
+    await promiseHidden;
+  }
 }
 
 // Contextmenu functions //
