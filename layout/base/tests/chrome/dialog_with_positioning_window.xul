@@ -3,7 +3,7 @@
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="setTimeout(runTest, 0)">
   <vbox>
-    <text value="powered by example.com" style="padding: 16px;"/>
+    <label value="powered by example.com" style="padding: 16px;"/>
   </vbox>
   <hbox id="t" style="display: block; position: fixed; right: 16px; bottom: 16px;">
     <button label="OK"/>
