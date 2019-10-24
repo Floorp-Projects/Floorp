@@ -89,16 +89,14 @@ function prependSource(src, type) {
 var gTests = [
   {
     // Test 0: adding video to doc, then setting src should load implicitly.
-    create:
-      function(src, type) {
+    create(src, type) {
         document.body.appendChild(gMedia);
         gMedia.src = src;
       },
     expectedEvents: ['loadstart', 'durationchange', 'loadedmetadata', 'loadeddata']
   }, {
     // Test 1: adding video to doc, then adding source.
-    create:
-      function(src, type) {
+    create(src, type) {
         document.body.appendChild(gMedia);
         addSource(src, type);
       },
@@ -106,8 +104,7 @@ var gTests = [
   },{
     // Test 2: video with multiple source, the first of which are bad, we should load the last,
     // and receive error events for failed loads on the source children.
-    create:
-      function(src, type) {
+    create(src, type) {
         document.body.appendChild(gMedia);
         addSource("404a", type);
         addSource("404b", type);
@@ -116,8 +113,7 @@ var gTests = [
     expectedEvents: ['loadstart', 'source_error', 'source_error', 'durationchange', 'loadedmetadata', 'loadeddata']
   }, {
     // Test 3:  video with bad src, good <source>, ensure that <source> aren't used.
-    create:
-      function(src, type) {
+    create(src, type) {
         gMedia.src = "404a";
         addSource(src, type);
         document.body.appendChild(gMedia);
@@ -126,8 +122,7 @@ var gTests = [
   }, {
     // Test 4:  video with only bad source, loading, then adding a good source
     // -  should resume load.
-    create:
-      function(src, type) {
+    create(src, type) {
         addSource("404a", type);
         var s2 = addSource("404b", type);
         s2.addEventListener("error",
@@ -143,8 +138,7 @@ var gTests = [
     // a good <source> to the video, it shouldn't be selected, because the
     // "pointer" should be after the last child - the bad source.
     prepended: false,
-    create:
-      function(src, type) {
+    create(src, type) {
         var prepended = false;
         addSource("404a", type);
         var s2 = addSource("404b", type);
@@ -162,8 +156,7 @@ var gTests = [
   }, {
     // Test 6: (Bug 1165203) preload="none" then followed by an explicit
     // call to load() should load metadata
-    create:
-      function(src, type) {
+    create(src, type) {
         gMedia.preload = "none";
         gMedia.src = src;
         document.body.appendChild(gMedia);
