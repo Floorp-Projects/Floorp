@@ -133,7 +133,7 @@ class HTMLFormatter(base.BaseFormatter):
 
         self.test_count[status_name] += 1
 
-        if status in ['SKIP', 'FAIL', 'ERROR']:
+        if status in ['SKIP', 'FAIL', 'PRECONDITION_FAILED', 'ERROR']:
             if debug.get('differences'):
                 images = [
                     ('image1', 'Image 1 (test)'),
