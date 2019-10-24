@@ -49,7 +49,6 @@ function setupTestPreferences() {
 }
 
 function createAudioContext() {
-  /* global ac */
   window.ac = new AudioContext();
 
   ac.allowedToStart = new Promise(resolve => {

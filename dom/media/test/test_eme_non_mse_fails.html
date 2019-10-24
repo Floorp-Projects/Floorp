@@ -10,10 +10,9 @@
 <body>
 <pre id="test">
 <script class="testbody" type="text/javascript">
-/* import-globals-from eme.js */
 var manager = new MediaTestManager;
 
-function DoSetMediaKeys(v, test, token)
+function DoSetMediaKeys(v, test)
 {
   var options = [{
     initDataTypes: ["cenc"],
@@ -70,7 +69,7 @@ function TestSetSrc(test, token)
     manager.finished(token);
   });
 
-  DoSetMediaKeys(v, test, token)
+  DoSetMediaKeys(v, test)
 
   .then(function() {
     v.src = test.name;
@@ -101,3 +100,4 @@ if (!IsMacOSSnowLeopardOrEarlier()) {
 </pre>
 </body>
 </html>
+

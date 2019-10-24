@@ -1,35 +1,33 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-// This file expects manager to be defined in the global scope.
-/* global manager */
-/* import-globals-from manifest.js */
+/* jshint esversion: 6, -W097 */
+/* globals SimpleTest, SpecialPowers, document, info, is, manager, ok */
 
 "use strict";
 
 function startTest(test) {
   info(test.desc);
   SimpleTest.waitForExplicitFinish();
-  SpecialPowers.pushPrefEnv({ set: test.prefs }, () => {
+  SpecialPowers.pushPrefEnv({ 'set': test.prefs }, () => {
     manager.runTests(test.tests, test.runTest);
   });
 }
 
 function nextVideoEnded(video) {
-  return nextEvent(video, "ended");
+  return nextEvent(video, 'ended');
 }
 
 function nextVideoPlaying(video) {
-  return nextEvent(video, "playing");
+  return nextEvent(video, 'playing');
 }
 
 function nextVideoResumes(video) {
-  return nextEvent(video, "mozexitvideosuspend");
+  return nextEvent(video, 'mozexitvideosuspend');
 }
 
 function nextVideoSuspends(video) {
-  return nextEvent(video, "mozentervideosuspend");
+  return nextEvent(video, 'mozentervideosuspend');
 }
 
 /**
@@ -38,14 +36,10 @@ function nextVideoSuspends(video) {
  */
 function appendVideoToDoc(url, token, width, height) {
   // Default size of (160, 120) is used by other media tests.
-  if (width === undefined) {
-    width = 160;
-  }
-  if (height === undefined) {
-    height = (3 * width) / 4;
-  }
+  if (width === undefined) { width = 160; }
+  if (height === undefined) { height = 3 * width / 4; }
 
-  let v = document.createElement("video");
+  let v = document.createElement('video');
   v.token = token;
   v.width = width;
   v.height = height;
@@ -56,14 +50,10 @@ function appendVideoToDoc(url, token, width, height) {
 
 function appendVideoToDocWithoutLoad(token, width, height) {
   // Default size of (160, 120) is used by other media tests.
-  if (width === undefined) {
-    width = 160;
-  }
-  if (height === undefined) {
-    height = (3 * width) / 4;
-  }
+  if (width === undefined) { width = 160; }
+  if (height === undefined) { height = 3*width/4; }
 
-  let v = document.createElement("video");
+  let v = document.createElement('video');
   v.token = token;
   document.body.appendChild(v);
   v.width = width;
@@ -74,13 +64,7 @@ function appendVideoToDocWithoutLoad(token, width, height) {
 function loadAndWaitUntilLoadedmetadata(video, url, preloadType = "metadata") {
   return new Promise((resolve, reject) => {
     video.preload = preloadType;
-    video.addEventListener(
-      "loadedmetadata",
-      () => {
-        resolve();
-      },
-      true
-    );
+    video.addEventListener("loadedmetadata", () => { resolve(); }, true);
     video.src = url;
   });
 }
@@ -111,9 +95,7 @@ function waitUntilVisible(video) {
  * @returns {Promise} Promise that is resolved when video 'playing' event fires.
  */
 function waitUntilPlaying(video) {
-  var p = once(video, "playing", () => {
-    ok(true, `${video.token} played.`);
-  });
+  var p = once(video, 'playing', () => { ok(true, `${video.token} played.`); });
   Log(video.token, "Start playing");
   video.play();
   return p;
@@ -130,9 +112,7 @@ function waitUntilEnded(video) {
     return Promise.resolve();
   }
 
-  return once(video, "ended", () => {
-    ok(true, `${video.token} ended`);
-  });
+  return once(video, 'ended', () => { ok(true, `${video.token} ended`); });
 }
 
 /**
@@ -141,10 +121,10 @@ function waitUntilEnded(video) {
  *                    suspend timer.
  */
 function testSuspendTimerStartedWhenHidden(video) {
-  var p = once(video, "mozstartvideosuspendtimer").then(() => {
-    ok(true, `${video.token} suspend begins`);
+  var p = once(video, 'mozstartvideosuspendtimer').then(() => {
+    ok(true, `${video.token} suspend begins`)
   });
-  Log(video.token, "Set Hidden");
+  Log(video.token, 'Set Hidden');
   video.setVisible(false);
   return p;
 }
@@ -154,7 +134,7 @@ function testSuspendTimerStartedWhenHidden(video) {
  * @returns {Promise} Promise that is resolved when video decode suspends.
  */
 function testVideoSuspendsWhenHidden(video) {
-  let p = once(video, "mozentervideosuspend").then(() => {
+  let p = once(video, 'mozentervideosuspend').then(() => {
     ok(true, `${video.token} suspends`);
   });
   Log(video.token, "Set hidden");
@@ -167,7 +147,7 @@ function testVideoSuspendsWhenHidden(video) {
  * @returns {Promise} Promise that is resolved when video decode resumes.
  */
 function testVideoResumesWhenShown(video) {
-  var p = once(video, "mozexitvideosuspend").then(() => {
+  var p = once(video, 'mozexitvideosuspend').then(() => {
     ok(true, `${video.token} resumes`);
   });
   Log(video.token, "Set visible");
@@ -180,7 +160,7 @@ function testVideoResumesWhenShown(video) {
  * @returns {Promise} Promise that is resolved when video decode resumes.
  */
 function testVideoOnlySeekCompletedWhenShown(video) {
-  var p = once(video, "mozvideoonlyseekcompleted").then(() => {
+  var p = once(video, 'mozvideoonlyseekcompleted').then(() => {
     ok(true, `${video.token} resumes`);
   });
   Log(video.token, "Set visible");
@@ -194,12 +174,8 @@ function testVideoOnlySeekCompletedWhenShown(video) {
  */
 function checkVideoDoesntSuspend(video) {
   let p = Promise.race([
-    waitUntilEnded(video).then(() => {
-      ok(true, `${video.token} ended before decode was suspended`);
-    }),
-    once(video, "mozentervideosuspend", () => {
-      Promise.reject(new Error(`${video.token} suspended`));
-    }),
+    waitUntilEnded(video).then(() => { ok(true, `${video.token} ended before decode was suspended`) }),
+    once(video, 'mozentervideosuspend', () => { Promise.reject(new Error(`${video.token} suspended`)) })
   ]);
   Log(video.token, "Set hidden.");
   video.setVisible(false);
@@ -214,7 +190,7 @@ function checkVideoDoesntSuspend(video) {
 function waitTil(video, time) {
   Log(video.token, `Waiting for time to reach ${time}s`);
   return new Promise(resolve => {
-    video.addEventListener("timeupdate", function timeUpdateEvent() {
+    video.addEventListener('timeupdate', function timeUpdateEvent() {
       if (video.currentTime > time) {
         video.removeEventListener(name, timeUpdateEvent);
         resolve();
