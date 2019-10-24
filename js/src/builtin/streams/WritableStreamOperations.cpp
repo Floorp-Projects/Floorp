@@ -483,6 +483,60 @@ void js::WritableStreamMarkFirstWriteRequestInFlight(
 }
 
 /**
+ * Streams spec, 4.4.13.
+ *      WritableStreamRejectCloseAndClosedPromiseIfNeeded ( stream )
+ */
+MOZ_MUST_USE bool js::WritableStreamRejectCloseAndClosedPromiseIfNeeded(
+    JSContext* cx, Handle<WritableStream*> unwrappedStream) {
+  // Step 1: Assert: stream.[[state]] is "errored".
+  MOZ_ASSERT(unwrappedStream->errored());
+
+  Rooted<Value> storedError(cx, unwrappedStream->storedError());
+  if (!cx->compartment()->wrap(cx, &storedError)) {
+    return false;
+  }
+
+  // Step 2: If stream.[[closeRequest]] is not undefined,
+  if (!unwrappedStream->closeRequest().isUndefined()) {
+    // Step 2.a: Assert: stream.[[inFlightCloseRequest]] is undefined.
+    MOZ_ASSERT(unwrappedStream->inFlightCloseRequest().isUndefined());
+
+    // Step 2.b: Reject stream.[[closeRequest]] with stream.[[storedError]].
+    if (!RejectUnwrappedPromiseWithError(
+            cx, &unwrappedStream->closeRequest().toObject(), storedError)) {
+      return false;
+    }
+
+    // Step 2.c: Set stream.[[closeRequest]] to undefined.
+    unwrappedStream->clearCloseRequest();
+  }
+
+  // Step 3: Let writer be stream.[[writer]].
+  // Step 4: If writer is not undefined,
+  if (unwrappedStream->hasWriter()) {
+    Rooted<WritableStreamDefaultWriter*> unwrappedWriter(
+        cx, UnwrapWriterFromStream(cx, unwrappedStream));
+    if (!unwrappedWriter) {
+      return false;
+    }
+
+    // Step 4.a: Reject writer.[[closedPromise]] with stream.[[storedError]].
+    if (!RejectUnwrappedPromiseWithError(cx, unwrappedWriter->closedPromise(),
+                                         storedError)) {
+      return false;
+    }
+
+    // Step 4.b: Set writer.[[closedPromise]].[[PromiseIsHandled]] to true.
+    Rooted<PromiseObject*> unwrappedClosedPromise(
+        cx, unwrappedWriter->closedPromise());
+    unwrappedClosedPromise->setHandled();
+    cx->runtime()->removeUnhandledRejectedPromise(cx, unwrappedClosedPromise);
+  }
+
+  return true;
+}
+
+/**
  * Streams spec, 4.4.14.
  *      WritableStreamUpdateBackpressure ( stream, backpressure )
  */
