@@ -33,10 +33,10 @@ add_task(async function check_sanity() {
   await new Promise(resolve => setTimeout(resolve, 200));
 
   await SpecialPowers.pushPermissions([{'type': 'popup', 'remove': true, 'context': document}]);
-  ok(SpecialPowers.testPermission('popup', UNKNOWN_ACTION, document), 'popup value should have UNKNOWN permission');
+  ok(await SpecialPowers.testPermission('popup', UNKNOWN_ACTION, document), 'popup value should have UNKNOWN permission');
 
   await SpecialPowers.pushPermissions([{'type': 'popup', 'allow': true, 'context': document}]);
-  ok(SpecialPowers.testPermission('popup', ALLOW_ACTION, document), 'popup value should have ALLOW permission');
+  ok(await SpecialPowers.testPermission('popup', ALLOW_ACTION, document), 'popup value should have ALLOW permission');
 
   await SpecialPowers.pushPrefEnv({"set": [["dom.disable_open_during_load", true],
                                      ["dom.popup_allowed_events", "click mouseup"],
