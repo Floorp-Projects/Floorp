@@ -28,7 +28,6 @@ function observe() {
 
 function Test(test) {
   var p = test.prefs ? SetPrefs(test.prefs) : Promise.resolve();
-  observedStatus = "nothing";
   var name = "'" + test.keySystem + "'";
 
   var res = observe().then((status) => {

@@ -106,7 +106,7 @@ function checkCueSizeAndPosition() {
     cue[prop] = initialVal;
     is(cue[prop], initialVal, `Cue's ${prop} should initially be ${initialVal}`);
     [ 101, -1 ].forEach(function(val) {
-      exceptionHappened = false;
+      let exceptionHappened = false;
       try {
         cue[prop] = val;
       } catch(e) {
@@ -270,7 +270,6 @@ async function checkCActiveCuesDuringVideoPlaying() {
 
   video.addEventListener("timeupdate", function() {
     let activeCues = trackElement.track.activeCues,
-        found = false,
         playbackTime = video.currentTime;
 
     for (let i = 0; i < cueInfo.length; i++) {

@@ -388,7 +388,7 @@ var tests = [
       v.addEventListener("loadstart", function(e){v._gotLoadStart = true;});
       v.addEventListener("suspend", this.suspend);
       document.body.appendChild(v); // Causes implicit load, should load according to preload none
-      var s = document.createElement("source");
+      document.createElement("source");
     },
 
     name: "test13",

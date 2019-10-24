@@ -12,6 +12,8 @@
 <div id="content">
 </div>
 <script>
+/* import-globals-from ../../canvas/test/captureStream_common.js */
+/* import-globals-from ../tests/mochitest/head.js */
 SimpleTest.waitForExplicitFinish();
 runTestWhenReady(async () => {
   const canvas = document.createElement("canvas");
@@ -33,7 +35,7 @@ runTestWhenReady(async () => {
 
   const blobs = [];
 
-  mediaRecorder = new MediaRecorder(stream);
+  let mediaRecorder = new MediaRecorder(stream);
   is(mediaRecorder.stream, stream,
      "Media recorder stream = constructed stream at the start of recording");
 

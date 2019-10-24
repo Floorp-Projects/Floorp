@@ -23,7 +23,7 @@ function startTest(test, token)
     ok(true, TimeStamp(case3token) + " should reach loadeddata");
     var threw = false;
     try {
-      var stream = v3.mozCaptureStreamUntilEnded();
+      v3.mozCaptureStreamUntilEnded();
     } catch (e) {
       threw = true;
     }
