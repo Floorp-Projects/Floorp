@@ -239,6 +239,9 @@ BROWSER_PROCESS += [
     # Versions before 18.1.11.0 cause severe performance problems.
     A11yBlocklistEntry("dtvhooks.dll", (18, 1, 10, 0xffff)),
     A11yBlocklistEntry("dtvhooks64.dll", (18, 1, 10, 0xffff)),
+
+    # SolidWorks Windows Explorer integration causes crashes, bug 1566109
+    DllBlocklistEntry("Database.dll", (27, 3, 0, 59)),
 ]
 
 CHILD_PROCESSES += [
