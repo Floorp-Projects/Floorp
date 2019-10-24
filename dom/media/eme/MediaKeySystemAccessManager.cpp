@@ -103,19 +103,26 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 MediaKeySystemAccessManager::MediaKeySystemAccessManager(
     nsPIDOMWindowInner* aWindow)
-    : mWindow(aWindow), mAddedObservers(false) {}
+    : mWindow(aWindow), mAddedObservers(false) {
+  MOZ_ASSERT(NS_IsMainThread());
+}
 
-MediaKeySystemAccessManager::~MediaKeySystemAccessManager() { Shutdown(); }
+MediaKeySystemAccessManager::~MediaKeySystemAccessManager() {
+  MOZ_ASSERT(NS_IsMainThread());
+  Shutdown();
+}
 
 void MediaKeySystemAccessManager::Request(
     DetailedPromise* aPromise, const nsAString& aKeySystem,
     const Sequence<MediaKeySystemConfiguration>& aConfigs) {
+  MOZ_ASSERT(NS_IsMainThread());
   CheckDoesWindowSupportProtectedMedia(
       MakeUnique<PendingRequest>(aPromise, aKeySystem, aConfigs));
 }
 
 void MediaKeySystemAccessManager::CheckDoesWindowSupportProtectedMedia(
     UniquePtr<PendingRequest> aRequest) {
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aRequest);
   MKSAM_LOG_DEBUG("aRequest->mKeySystem=%s",
                   NS_ConvertUTF16toUTF8(aRequest->mKeySystem).get());
@@ -160,6 +167,7 @@ void MediaKeySystemAccessManager::CheckDoesWindowSupportProtectedMedia(
 
 void MediaKeySystemAccessManager::OnDoesWindowSupportProtectedMedia(
     bool aIsSupportedInWindow, UniquePtr<PendingRequest> aRequest) {
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aRequest);
   MKSAM_LOG_DEBUG("aIsSupportedInWindow=%s aRequest->mKeySystem=%s",
                   aIsSupportedInWindow ? "true" : "false",
@@ -176,6 +184,7 @@ void MediaKeySystemAccessManager::OnDoesWindowSupportProtectedMedia(
 
 void MediaKeySystemAccessManager::RequestMediaKeySystemAccess(
     UniquePtr<PendingRequest> aRequest) {
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aRequest);
   MKSAM_LOG_DEBUG("aIsSupportedInWindow=%s",
                   NS_ConvertUTF16toUTF8(aRequest->mKeySystem).get());
@@ -352,6 +361,7 @@ void MediaKeySystemAccessManager::RequestMediaKeySystemAccess(
 
 bool MediaKeySystemAccessManager::AwaitInstall(
     UniquePtr<PendingRequest> aRequest) {
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aRequest);
   MKSAM_LOG_DEBUG("aRequest->mKeySystem=%s",
                   NS_ConvertUTF16toUTF8(aRequest->mKeySystem).get());
@@ -384,6 +394,7 @@ bool MediaKeySystemAccessManager::AwaitInstall(
 
 void MediaKeySystemAccessManager::RetryRequest(
     UniquePtr<PendingRequest> aRequest) {
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aRequest);
   MKSAM_LOG_DEBUG("aRequest->mKeySystem=%s",
                   NS_ConvertUTF16toUTF8(aRequest->mKeySystem).get());
@@ -397,6 +408,7 @@ void MediaKeySystemAccessManager::RetryRequest(
 nsresult MediaKeySystemAccessManager::Observe(nsISupports* aSubject,
                                               const char* aTopic,
                                               const char16_t* aData) {
+  MOZ_ASSERT(NS_IsMainThread());
   MKSAM_LOG_DEBUG("%s", aTopic);
 
   if (!strcmp(aTopic, "gmp-changed")) {
@@ -441,6 +453,7 @@ nsresult MediaKeySystemAccessManager::Observe(nsISupports* aSubject,
 }
 
 bool MediaKeySystemAccessManager::EnsureObserversAdded() {
+  MOZ_ASSERT(NS_IsMainThread());
   if (mAddedObservers) {
     return true;
   }
@@ -456,6 +469,7 @@ bool MediaKeySystemAccessManager::EnsureObserversAdded() {
 }
 
 void MediaKeySystemAccessManager::Shutdown() {
+  MOZ_ASSERT(NS_IsMainThread());
   MKSAM_LOG_DEBUG("");
   for (const UniquePtr<PendingRequest>& installRequest :
        mPendingInstallRequests) {

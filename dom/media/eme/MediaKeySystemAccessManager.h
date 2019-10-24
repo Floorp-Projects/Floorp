@@ -21,7 +21,9 @@ class TestGMPVideoDecoder;
  * MediaKeySystemAccessManager implements the functionality for
  * Navigator.requestMediaKeySystemAccess(). The navigator may perform its own
  * logic before passing the request to this class, but the majority of
- * processing happens the MediaKeySystemAccessManager.
+ * processing happens the MediaKeySystemAccessManager. The manager is expected
+ * to be run entirely on the main thread of the content process for whichever
+ * window it is associated with.
  *
  * As well as implementing the Navigator.requestMediaKeySystemAccess()
  * algorithm, the manager performs Gecko specific logic. For example, the EME
