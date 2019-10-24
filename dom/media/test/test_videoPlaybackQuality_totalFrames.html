@@ -19,10 +19,10 @@ var startTest = function(test, token) {
   v.src = test.name;
 
   function ended(event) {
-    var v = event.target;
-    is(v.getVideoPlaybackQuality().totalVideoFrames, test.totalFrameCount,test.name+ " totalFrames should match!");
-    removeNodeAndSource(v);
-    manager.finished(v.token);
+    var video = event.target;
+    is(video.getVideoPlaybackQuality().totalVideoFrames, test.totalFrameCount,test.name+ " totalFrames should match!");
+    removeNodeAndSource(video);
+    manager.finished(video.token);
   }
   v.addEventListener("ended", ended);
   v.play();

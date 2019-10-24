@@ -24,8 +24,8 @@ function ended(e) {
   ok(v.counter["timeupdate"] > 0, v._name + " should see at least one timeupdate: " + v.currentTime);
 
   // Rest event counters for we don't allow events after ended.
-  eventsToLog.forEach(function(e) {
-    v.counter[e] = 0;
+  eventsToLog.forEach(function(event) {
+    v.counter[event] = 0;
   });
 
   // Finish the test after 500ms. We shouldn't receive any timeupdate events
@@ -39,8 +39,8 @@ function ended(e) {
       // invoked when it's removed from a document), and we don't want those
       // confusing the test results.
       v.removeEventListener("ended", ended);
-      eventsToLog.forEach(function(e) {
-        v.removeEventListener(e, logEvent);
+      eventsToLog.forEach(function(event) {
+        v.removeEventListener(event, logEvent);
       });
       removeNodeAndSource(v);
       manager.finished(v.token);
