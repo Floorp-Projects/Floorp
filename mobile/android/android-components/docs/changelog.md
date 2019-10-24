@@ -25,6 +25,12 @@ permalink: /changelog/
    * The Rust implementation of the Glean SDK is now being used.
    * ⚠️ **This is a breaking change**: the `GleanDebugActivity` is no longer exposed from service-glean. Users need to use the one in `mozilla.telemetry.glean.debug.GleanDebugActivity` from the `adb` command line.
 
+* **browser-engine-gecko**, **browser-engine-gecko-beta**, **browser-engine-gecko-nightly**
+  * **Merge day!**
+    * `browser-engine-gecko-release`: GeckoView 71.0
+    * `browser-engine-gecko-beta`: GeckoView 71.0
+    * `browser-engine-gecko-nightly`: GeckoView 72.0
+
 # 18.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v17.0.0...v18.0.0)
