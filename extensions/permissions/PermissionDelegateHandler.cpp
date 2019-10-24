@@ -82,7 +82,8 @@ nsresult PermissionDelegateHandler::GetPermissionForPermissionsAPI(
     return permMgr->TestPermissionFromPrincipal(principal, aType, aPermission);
   }
 
-  if (info->mPolicy == DelegatePolicy::eDelegateUseIframeOrigin) {
+  if (mDocument->GetWindow()->IsTopLevelWindow() ||
+      info->mPolicy == DelegatePolicy::eDelegateUseIframeOrigin) {
     return permMgr->TestPermissionFromPrincipal(principal, aType, aPermission);
   }
 
