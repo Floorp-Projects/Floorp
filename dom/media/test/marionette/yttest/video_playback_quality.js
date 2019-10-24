@@ -1,2 +1,1 @@
-/* global video */
-var result = { getVideoPlaybackQuality: video.getVideoPlaybackQuality() };
+var result = {"getVideoPlaybackQuality": video.getVideoPlaybackQuality()};

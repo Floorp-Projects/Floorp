@@ -13,68 +13,68 @@
 var manager = new MediaTestManager;
 
 function startTest(test, token) {
-  var video = document.createElement('video');
-  video.preload = "metadata";
-  video.token = token;
-  video.seenSeeking = false;
-  video.seenEnded = false;
+  var v = document.createElement('video');
+  v.preload = "metadata";
+  v.token = token;
+  v.seenSeeking = false;
+  v.seenEnded = false;
 
   var handler = {
     "ontimeout": function() {
-      Log(token, "timed out: ended=" + video.seenEnded);
+      Log(token, "timed out: ended=" + v.seenEnded);
     }
   };
   manager.started(token, handler);
 
-  video.src = test.name;
-  video.name = test.name;
+  v.src = test.name;
+  v.name = test.name;
 
   function callSeekToNextFrame() {
-    video.seekToNextFrame().then(
+    v.seekToNextFrame().then(
       () => {
-        if (!video.seenSeeking) {
-          ok(false, video.token + ": Should have already received seeking event.");
+        if (!v.seenSeeking) {
+          ok(false, v.token + ": Should have already received seeking event.");
         }
-        video.seenSeeking = false;
-        if (!video.ended) {
+        v.seenSeeking = false;
+        if (!v.ended) {
           callSeekToNextFrame();
         }
       },
       () => {
-        ok(false, video.token + ": seekToNextFrame() failed.");
+        ok(false, v.token + ": seekToNextFrame() failed.");
       }
     );
   }
 
-  var onLoadedmetadata = function(t, v) { return function() {
+  var onLoadedmetadata = function(test, v) { return function() {
     callSeekToNextFrame();
-  }}(test, video);
+  }}(test, v);
 
   var finish = function() {
-    video.finished = true;
-    video.removeEventListener("loadedmetadata", onLoadedmetadata);
-    video.removeEventListener("seeking", onSeeking);
-    removeNodeAndSource(video);
-    manager.finished(video.token);
+    v.finished = true;
+    v.removeEventListener("loadedmetadata", onLoadedmetadata);
+    v.removeEventListener("seeking", onSeeking);
+    removeNodeAndSource(v);
+    manager.finished(v.token);
   }
 
-  var onEnded = function(t, v) { return function() {
+  var onEnded = function(test, v) { return function() {
     v.seenEnded = true;
     finish();
-  }}(test, video);
+  }}(test, v);
 
-  var onSeeking = function(t, v) { return function() {
+  var onSeeking = function(test, v) { return function() {
     if (v.seenSeeking) {
       ok(false, v.token + ": Should yet receive seeking event.");
     }
     v.seenSeeking = true;
-  }}(test, video);
+  }}(test, v);
 
-  video.addEventListener("loadedmetadata", onLoadedmetadata);
-  video.addEventListener("seeking", onSeeking);
-  video.addEventListener("ended", onEnded);
+  v.addEventListener("loadedmetadata", onLoadedmetadata);
+  v.addEventListener("seeking", onSeeking);
+  v.addEventListener("ended", onEnded);
 
-  document.body.appendChild(video);
+  document.body.appendChild(v);
 }
 
 SimpleTest.waitForExplicitFinish();

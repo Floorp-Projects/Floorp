@@ -20,6 +20,7 @@ const SEEK_TEST_NUMBER = 3;
 function test_seek3(v, seekTime, is, ok, finish) {
 
 // Test seeking works if current time is set but video is not played.
+var startPassed = false;
 var completed = false;
 var gotTimeupdate = false;
 
@@ -41,6 +42,7 @@ function seekStarted() {
 
   ok(v.currentTime >= seekTime - 0.1, "Video currentTime should be around " + seekTime + ": " + v.currentTime);
   v.addEventListener("timeupdate", timeupdate);
+  startPassed = true;
 }
 
 function seekEnded() {

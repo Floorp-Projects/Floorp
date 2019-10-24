@@ -29,8 +29,7 @@ SpecialPowers.pushPrefEnv({"set": [["media.webvtt.regions.enabled", true]]},
 
     video.addEventListener("loadedmetadata", function metadata() {
       if (trackElement.readyState <= 1) {
-        setTimeout(metadata, 0);
-        return;
+        return setTimeout(metadata, 0);
       }
       is(video.textTracks.length, 1, "Length should be 1.");
       is(video.textTracks[0].cues.length, 6, "Cue length should be 6.");
@@ -51,3 +50,4 @@ SpecialPowers.pushPrefEnv({"set": [["media.webvtt.regions.enabled", true]]},
 </pre>
 </body>
 </html>
+

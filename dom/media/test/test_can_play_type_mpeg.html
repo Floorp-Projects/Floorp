@@ -131,7 +131,11 @@ function IsLinux() {
 }
 
 function getPref(name) {
-  return SpecialPowers.getBoolPref(name, false);
+  var pref = false;
+  try {
+    pref = SpecialPowers.getBoolPref(name);
+  } catch(ex) { }
+  return pref;
 }
 
 function IsSupportedAndroid() {
