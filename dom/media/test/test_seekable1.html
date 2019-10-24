@@ -39,7 +39,7 @@ setup(element) {
 function createTestArray() {
   var A = [];
     for (var k=0; k < gProgressTests.length; k++) {
-      var t = new Object();
+      var t = {};
       t.setup = tests[0].setup;
       t.name = gProgressTests[k].name;
       t.type = gProgressTests[k].type;

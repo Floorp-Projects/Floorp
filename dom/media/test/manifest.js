@@ -1981,6 +1981,7 @@ function TimeStamp(token) {
     "." +
     ms +
     "]" +
+    // eslint-disable-next-line no-nested-ternary
     (ms < 10 ? "  " : ms < 100 ? " " : "");
   return token ? time + " " + token : time;
 }

@@ -14,7 +14,7 @@ function createTestArray() {
       continue;
     }
 
-    var t = new Object();
+    var t = {};
     t.name = test.name;
     t.type = test.type;
     t.duration = test.duration;
