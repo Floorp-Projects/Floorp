@@ -17,7 +17,9 @@ var manager = new MediaTestManager;
 
 function drawVideoToCanvas(v) {
   console.log('drawVideoToCanvas');
-  let c = document.createElement('canvas');
+  let w = v.width,
+      h = v.height,
+      c = document.createElement('canvas');
   c.width = 4;
   c.height = 4;
   c.style.width = 64;

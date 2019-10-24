@@ -35,8 +35,7 @@ video.addEventListener("loadedmetadata", function run_tests() {
   // Re-queue run_tests() at the end of the event loop until the track
   // element has loaded its data.
   if (trackElement.readyState == 1) {
-    setTimeout(run_tests, 0);
-    return;
+    return setTimeout(run_tests, 0);
   }
   is(trackElement.readyState, 2, "Track::ReadyState should be set to LOADED.");
   ok('oncuechange' in trackElement.track, "Track::OnCueChange should exist.");

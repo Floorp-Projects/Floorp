@@ -26,7 +26,7 @@ function startTest(test, token) {
   // Tags should not be available immediately.
   var exception_fired = false;
   try {
-    a.mozGetMetadata();
+    var m = a.mozGetMetadata();
   } catch (e) {
     is(e.name, 'InvalidStateError',
        "early mozGetMetadata() should throw InvalidStateError");
@@ -38,7 +38,7 @@ function startTest(test, token) {
   // Wait until metadata has loaded.
   a.addEventListener('loadedmetadata', function() {
     // read decoded tags
-    let tags = a.mozGetMetadata();
+    tags = a.mozGetMetadata();
     ok(tags, "mozGetMetadata() should return a truthy value");
     // Dump them out.
     var d = document.getElementById('output');
@@ -47,7 +47,7 @@ function startTest(test, token) {
     html += ' on '+test.name+'</p></caption>\n';
     html += '<tr><th>tag</th>';
     html += '<th>decoded value</th><th>expected value</th></tr>\n';
-    for (let tag in tags) {
+    for (tag in tags) {
       html += '<tr><td>'+tag+'</td>';
       html += '<td>'+tags[tag]+'</td>';
       html += '<td>'+test.tags[tag]+'</td>';
@@ -58,15 +58,14 @@ function startTest(test, token) {
     }
     html += '</table>\n';
     var div = document.createElement('div');
-    // eslint-disable-next-line no-unsanitized/property
     div.innerHTML = html;
     d.appendChild(div);
     // Verify decoded tag values.
-    for (let tag in tags) {
+    for (tag in tags) {
       is(tags[tag], test.tags[tag], "Tag '"+tag+"' should match");
     }
     // Verify expected tag values
-    for (let tag in test.tags) {
+    for (tag in test.tags) {
       is(tags[tag], test.tags[tag], "Tag '"+tag+"' should match");
     }
     removeNodeAndSource(a);

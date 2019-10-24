@@ -24,6 +24,7 @@ function startTest(test, token) {
 
 function runTest(test, token, bitrate) {
   var element = document.createElement('video');
+  var expectedMimeType = test.type.substring(0, test.type.indexOf(';'));
 
   element.token = token;
 
