@@ -82,7 +82,7 @@
 #include "nsTransitionManager.h"
 
 #if defined(MOZ_WIDGET_ANDROID)
-#  include "VRManager.h"
+#  include "VRManagerChild.h"
 #endif  // defined(MOZ_WIDGET_ANDROID)
 
 #ifdef MOZ_XUL
@@ -1817,7 +1817,15 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime) {
     return;
   }
 
-  if (IsWaitingForPaint(aNowTime)) {
+  bool isPresentingInVR = false;
+#if defined(MOZ_WIDGET_ANDROID)
+  isPresentingInVR = gfx::VRManagerChild::IsPresenting();
+#endif // defined(MOZ_WIDGET_ANDROID)
+
+  if (!isPresentingInVR && IsWaitingForPaint(aNowTime)) {
+    // In immersive VR mode, we do not get notifications when frames are
+    // presented, so we do not wait for the compositor in that mode.
+
     // We're currently suspended waiting for earlier Tick's to
     // be completed (on the Compositor). Mark that we missed the paint
     // and keep waiting.
@@ -2133,11 +2141,10 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime) {
 
     mViewManagerFlushIsPending = false;
     RefPtr<nsViewManager> vm = mPresContext->GetPresShell()->GetViewManager();
-    bool skipPaint = false;
-#if defined(MOZ_WIDGET_ANDROID)
-    gfx::VRManager* vrm = gfx::VRManager::Get();
-    skipPaint = vrm->IsPresenting();
-#endif  // defined(MOZ_WIDGET_ANDROID)
+    const bool skipPaint = isPresentingInVR;
+    // Skip the paint in immersive VR mode because whatever we paint here will
+    // not end up on the screen. The screen is displaying WebGL content from a
+    // single canvas in that mode.
     if (!skipPaint) {
       PaintTelemetry::AutoRecordPaint record;
       vm->ProcessPendingUpdates();
