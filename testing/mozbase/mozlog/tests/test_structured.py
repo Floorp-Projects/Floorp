@@ -101,6 +101,18 @@ class TestStatusHandler(BaseStructuredTest):
         self.assertEqual(3, summary.action_counts['test_status'])
         self.assertEqual(1, summary.action_counts['test_end'])
 
+    def test_precondition_failed_run(self):
+        self.logger.suite_start([])
+        self.logger.test_start("test1")
+        self.logger.test_end("test1", status='PRECONDITION_FAILED')
+        self.logger.test_start("test2")
+        self.logger.test_status("test2", "sub1", status='PRECONDITION_FAILED')
+        self.logger.test_end("test2", status='OK')
+        self.logger.suite_end()
+        summary = self.handler.summarize()
+        self.assertEqual(1, summary.expected_statuses['OK'])
+        self.assertEqual(2, summary.unexpected_statuses['PRECONDITION_FAILED'])
+
     def test_error_run(self):
         self.logger.suite_start([])
         self.logger.test_start("test1")
@@ -150,6 +162,27 @@ class TestSummaryHandler(BaseStructuredTest):
         self.assertIn('test1', logs)
         self.assertEqual(1, len(logs['test1']))
         self.assertEqual('sub2', logs['test1'][0]['subtest'])
+
+    def test_precondition_failed_run(self):
+        self.logger.suite_start([])
+        self.logger.test_start("test1")
+        self.logger.test_status("test1", "sub1", status='PASS')
+        self.logger.test_end("test1", status='PRECONDITION_FAILED')
+        self.logger.test_start("test2")
+        self.logger.test_status("test2", "sub1", status='PRECONDITION_FAILED')
+        self.logger.test_status("test2", "sub2", status='PRECONDITION_FAILED')
+        self.logger.test_end("test2", status='OK')
+        self.logger.suite_end()
+
+        counts = self.handler.current['counts']
+        self.assertIn('precondition_failed', counts['test']['unexpected'])
+        self.assertEqual(1, counts['test']['unexpected']['precondition_failed'])
+        self.assertIn('pass', counts['subtest']['expected'])
+        self.assertEqual(1, counts['subtest']['expected']['pass'])
+        self.assertIn('ok', counts['test']['expected'])
+        self.assertEqual(1, counts['test']['expected']['ok'])
+        self.assertIn('precondition_failed', counts['subtest']['unexpected'])
+        self.assertEqual(2, counts['subtest']['unexpected']['precondition_failed'])
 
 
 class TestStructuredLog(BaseStructuredTest):
