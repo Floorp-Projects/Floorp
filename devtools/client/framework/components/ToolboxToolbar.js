@@ -266,7 +266,7 @@ class ToolboxToolbar extends Component {
         id,
         disabled,
         menuId: id + "-panel",
-        doc: toolbox.doc,
+        toolboxDoc: toolbox.doc,
         className: `devtools-button command-button ${
           isChecked ? "checked" : ""
         }`,
@@ -402,7 +402,7 @@ class ToolboxToolbar extends Component {
       {
         id: meatballMenuButtonId,
         menuId: meatballMenuButtonId + "-panel",
-        doc: toolbox.doc,
+        toolboxDoc: toolbox.doc,
         onFocus: () => focusButton(meatballMenuButtonId),
         className: "devtools-button",
         title: L10N.getStr("toolbox.meatballMenu.button.tooltip"),

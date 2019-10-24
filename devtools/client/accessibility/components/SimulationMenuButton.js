@@ -145,7 +145,7 @@ class SimulationMenuButton extends Component {
           className: `devtools-button toolbar-menu-button simulation${
             currSimulation ? " active" : ""
           }`,
-          doc: document,
+          toolboxDoc: document,
           label: L10N.getStr(
             SIMULATION_MENU_LABELS[currSimulation ? currSimulation[0] : "NONE"]
           ),
