@@ -214,7 +214,9 @@ ThirdPartyUtil::IsThirdPartyWindow(mozIDOMWindowProxy* aWindow, nsIURI* aURI,
     NS_ENSURE_SUCCESS(rv, rv);
     // Determine whether aURI is foreign with respect to the current principal.
     rv = prin->IsThirdPartyURI(aURI, &result);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
 
     if (result) {
       *aResult = true;
