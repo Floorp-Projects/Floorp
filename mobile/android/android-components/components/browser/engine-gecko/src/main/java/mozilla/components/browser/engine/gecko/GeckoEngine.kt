@@ -12,22 +12,29 @@ import mozilla.components.browser.engine.gecko.mediaquery.toGeckoValue
 import mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
-import mozilla.components.concept.engine.EngineSession.SafeBrowsingPolicy
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
+import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.TrackingCategory
+import mozilla.components.concept.engine.EngineSession.SafeBrowsingPolicy
 import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.concept.engine.Settings
+import mozilla.components.concept.engine.content.blocking.TrackerLog
+import mozilla.components.concept.engine.content.blocking.TrackingProtectionExceptionStorage
 import mozilla.components.concept.engine.history.HistoryTrackingDelegate
 import mozilla.components.concept.engine.mediaquery.PreferredColorScheme
 import mozilla.components.concept.engine.utils.EngineVersion
 import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.concept.engine.webextension.WebExtensionDelegate
 import org.json.JSONObject
+import org.mozilla.geckoview.ContentBlocking
+import org.mozilla.geckoview.ContentBlockingController
+import org.mozilla.geckoview.ContentBlockingController.Event
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoRuntimeSettings
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoWebExecutor
+import org.mozilla.geckoview.WebExtensionController
 import java.lang.IllegalStateException
 
 /**
@@ -37,7 +44,9 @@ class GeckoEngine(
     context: Context,
     private val defaultSettings: Settings? = null,
     private val runtime: GeckoRuntime = GeckoRuntime.getDefault(context),
-    executorProvider: () -> GeckoWebExecutor = { GeckoWebExecutor(runtime) }
+    executorProvider: () -> GeckoWebExecutor = { GeckoWebExecutor(runtime) },
+    override val trackingProtectionExceptionStore: TrackingProtectionExceptionStorage =
+        TrackingProtectionExceptionFileStorage(context, runtime)
 ) : Engine {
     private val executor by lazy { executorProvider.invoke() }
     private val localeUpdater = LocaleSettingUpdater(context, runtime)
@@ -53,6 +62,38 @@ class GeckoEngine(
             @Suppress("TooGenericExceptionThrown")
             throw RuntimeException("GeckoRuntime is shutting down")
         }
+        trackingProtectionExceptionStore.restore()
+    }
+
+    /**
+     * Fetch a list of trackers logged for a given [session] .
+     *
+     * @param session the session where the trackers were logged.
+     * @param onSuccess callback invoked if the data was fetched successfully.
+     * @param onError (optional) callback invoked if fetching the data caused an exception.
+     */
+    override fun getTrackersLog(
+        session: EngineSession,
+        onSuccess: (List<TrackerLog>) -> Unit,
+        onError: (Throwable) -> Unit
+    ) {
+        val geckoSession = (session as GeckoEngineSession).geckoSession
+        runtime.contentBlockingController.getLog(geckoSession).then({ contentLogList ->
+            val list = contentLogList ?: emptyList()
+            val logs = list.map { logEntry ->
+                logEntry.toTrackerLog()
+            }.filterNot {
+                !it.cookiesHasBeenBlocked &&
+                    it.blockedCategories.isEmpty() &&
+                    it.loadedCategories.isEmpty()
+            }
+
+            onSuccess(logs)
+            GeckoResult<Void>()
+        }, { throwable ->
+            onError(throwable)
+            GeckoResult<Void>()
+        })
     }
 
     /**
@@ -115,6 +156,21 @@ class GeckoEngine(
         webExtensionDelegate: WebExtensionDelegate
     ) {
         this.webExtensionDelegate = webExtensionDelegate
+
+        val tabsDelegate = object : WebExtensionController.TabDelegate {
+            override fun onNewTab(
+                webExtension: org.mozilla.geckoview.WebExtension?,
+                url: String?
+            ): GeckoResult<GeckoSession>? {
+                val geckoEngineSession = GeckoEngineSession(runtime, openGeckoSession = false)
+                val geckoWebExtension = webExtension?.let { GeckoWebExtension(it.id, it.location) }
+                webExtensionDelegate.onNewTab(geckoWebExtension, url ?: "", geckoEngineSession)
+
+                return GeckoResult.fromValue(geckoEngineSession.geckoSession)
+            }
+        }
+
+        runtime.webExtensionController.tabDelegate = tabsDelegate
     }
 
     /**
@@ -171,30 +227,36 @@ class GeckoEngine(
         override var safeBrowsingPolicy: Array<SafeBrowsingPolicy> =
             arrayOf(SafeBrowsingPolicy.RECOMMENDED)
             set(value) {
-                val safeBrowsingCategories = value.sumBy { it.id }
-                val trackingCategories =
-                    trackingProtectionPolicy?.trackingCategories?.sumBy { it.id }
-                        ?: SafeBrowsingPolicy.NONE.id
-
-                runtime.settings.contentBlocking.categories =
-                    safeBrowsingCategories + trackingCategories
+                val policy = value.sumBy { it.id }
+                runtime.settings.contentBlocking.setSafeBrowsing(policy)
                 field = value
             }
 
         override var trackingProtectionPolicy: TrackingProtectionPolicy? = null
             set(value) {
                 value?.let { policy ->
-
-                    val trackingCategories = policy.getAntiTrackingPolicy() +
-                        safeBrowsingPolicy.sumBy { it.id }
-
-                    runtime.settings.contentBlocking.categories = trackingCategories
-                    runtime.settings.contentBlocking.cookieBehavior = policy.cookiePolicy.id
+                    val activateStrictSocialTracking =
+                        policy.strictSocialTrackingProtection ?: policy.trackingCategories.contains(
+                            TrackingCategory.STRICT
+                        )
+                    val etpLevel =
+                        when {
+                            policy.trackingCategories.contains(TrackingCategory.STRICT) ->
+                                ContentBlocking.EtpLevel.STRICT
+                            policy.trackingCategories.contains(TrackingCategory.RECOMMENDED) ->
+                                ContentBlocking.EtpLevel.DEFAULT
+                            else -> ContentBlocking.EtpLevel.NONE
+                        }
+                    runtime.settings.contentBlocking.setEnhancedTrackingProtectionLevel(etpLevel)
+                    runtime.settings.contentBlocking.setStrictSocialTrackingProtection(
+                        activateStrictSocialTracking
+                    )
+                    runtime.settings.contentBlocking.setAntiTracking(policy.getAntiTrackingPolicy())
+                    runtime.settings.contentBlocking.setCookieBehavior(policy.cookiePolicy.id)
                     defaultSettings?.trackingProtectionPolicy = value
                     field = value
                 }
             }
-
         private fun TrackingProtectionPolicy.getAntiTrackingPolicy(): Int {
             /**
              * The [TrackingProtectionPolicy.TrackingCategory.SCRIPTS_AND_SUB_RESOURCES] is an
@@ -203,8 +265,7 @@ class GeckoEngine(
              * remove its value from the valid anti tracking categories, when is present.
              */
             val total = trackingCategories.sumBy { it.id }
-
-            return if (contains(TrackingProtectionPolicy.TrackingCategory.SCRIPTS_AND_SUB_RESOURCES)) {
+            return if (contains(TrackingCategory.SCRIPTS_AND_SUB_RESOURCES)) {
                 total - TrackingProtectionPolicy.TrackingCategory.SCRIPTS_AND_SUB_RESOURCES.id
             } else {
                 total
@@ -278,6 +339,7 @@ class GeckoEngine(
             this.automaticFontSizeAdjustment = it.automaticFontSizeAdjustment
             this.automaticLanguageAdjustment = it.automaticLanguageAdjustment
             this.trackingProtectionPolicy = it.trackingProtectionPolicy
+            this.safeBrowsingPolicy = arrayOf(SafeBrowsingPolicy.RECOMMENDED)
             this.remoteDebuggingEnabled = it.remoteDebuggingEnabled
             this.testingModeEnabled = it.testingModeEnabled
             this.userAgentString = it.userAgentString
@@ -288,4 +350,42 @@ class GeckoEngine(
             this.fontSizeFactor = it.fontSizeFactor
         }
     }
+}
+
+internal fun ContentBlockingController.LogEntry.BlockingData.hasBlockedCookies(): Boolean {
+    return category == Event.COOKIES_BLOCKED_BY_PERMISSION ||
+        category == Event.COOKIES_BLOCKED_TRACKER ||
+        category == Event.COOKIES_BLOCKED_ALL ||
+        category == Event.COOKIES_PARTITIONED_FOREIGN ||
+        category == Event.COOKIES_BLOCKED_FOREIGN
+}
+
+internal fun ContentBlockingController.LogEntry.BlockingData.getBlockedCategory(): TrackingCategory {
+    return when (category) {
+        Event.BLOCKED_FINGERPRINTING_CONTENT -> TrackingCategory.FINGERPRINTING
+        Event.BLOCKED_CRYPTOMINING_CONTENT -> TrackingCategory.CRYPTOMINING
+        Event.BLOCKED_SOCIALTRACKING_CONTENT -> TrackingCategory.MOZILLA_SOCIAL
+        Event.BLOCKED_TRACKING_CONTENT -> TrackingCategory.SCRIPTS_AND_SUB_RESOURCES
+        else -> TrackingCategory.NONE
+    }
+}
+
+internal fun ContentBlockingController.LogEntry.BlockingData.getLoadedCategory(): TrackingCategory {
+    return when (category) {
+        Event.LOADED_FINGERPRINTING_CONTENT -> TrackingCategory.FINGERPRINTING
+        Event.LOADED_CRYPTOMINING_CONTENT -> TrackingCategory.CRYPTOMINING
+        Event.LOADED_SOCIALTRACKING_CONTENT -> TrackingCategory.MOZILLA_SOCIAL
+        Event.LOADED_TRACKING_CONTENT -> TrackingCategory.SCRIPTS_AND_SUB_RESOURCES
+        else -> TrackingCategory.NONE
+    }
+}
+
+internal fun ContentBlockingController.LogEntry.toTrackerLog(): TrackerLog {
+    val cookiesHasBeenBlocked = this.blockingData.any { it.hasBlockedCookies() }
+    return TrackerLog(
+        url = origin,
+        loadedCategories = blockingData.map { it.getLoadedCategory() }.filterNot { it == TrackingCategory.NONE },
+        blockedCategories = blockingData.map { it.getBlockedCategory() }.filterNot { it == TrackingCategory.NONE },
+        cookiesHasBeenBlocked = cookiesHasBeenBlocked
+    )
 }

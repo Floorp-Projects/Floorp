@@ -44,11 +44,11 @@ class GeckoWebExtensionTest {
         val message: Any = mock()
         val sender: WebExtension.MessageSender = mock()
         whenever(messageHandler.onMessage(eq(message), eq(null))).thenReturn("result")
-        assertNotNull(messageDelegateCaptor.value.onMessage(message, sender))
+        assertNotNull(messageDelegateCaptor.value.onMessage("mozacTest", message, sender))
         verify(messageHandler).onMessage(eq(message), eq(null))
 
         whenever(messageHandler.onMessage(eq(message), eq(null))).thenReturn(null)
-        assertNull(messageDelegateCaptor.value.onMessage(message, sender))
+        assertNull(messageDelegateCaptor.value.onMessage("mozacTest", message, sender))
         verify(messageHandler, times(2)).onMessage(eq(message), eq(null))
 
         // Verify port is connected and forwarded to message handler
@@ -95,11 +95,11 @@ class GeckoWebExtensionTest {
         val message: Any = mock()
         val sender: WebExtension.MessageSender = mock()
         whenever(messageHandler.onMessage(eq(message), eq(session))).thenReturn("result")
-        assertNotNull(messageDelegateCaptor.value.onMessage(message, sender))
+        assertNotNull(messageDelegateCaptor.value.onMessage("mozacTest", message, sender))
         verify(messageHandler).onMessage(eq(message), eq(session))
 
         whenever(messageHandler.onMessage(eq(message), eq(session))).thenReturn(null)
-        assertNull(messageDelegateCaptor.value.onMessage(message, sender))
+        assertNull(messageDelegateCaptor.value.onMessage("mozacTest", message, sender))
         verify(messageHandler, times(2)).onMessage(eq(message), eq(session))
 
         // Verify port is connected and forwarded to message handler

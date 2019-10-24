@@ -61,7 +61,12 @@ class GeckoWebExtension(
                 messageHandler.onPortConnected(geckoPort)
             }
 
-            override fun onMessage(message: Any, sender: GeckoNativeWebExtension.MessageSender): GeckoResult<Any>? {
+            override fun onMessage(
+                // We don't use the same delegate instance for multiple apps so we don't need to verify the name.
+                name: String,
+                message: Any,
+                sender: GeckoNativeWebExtension.MessageSender
+            ): GeckoResult<Any>? {
                 val response = messageHandler.onMessage(message, null)
                 return response?.let { GeckoResult.fromValue(it) }
             }
@@ -96,7 +101,12 @@ class GeckoWebExtension(
                 messageHandler.onPortConnected(geckoPort)
             }
 
-            override fun onMessage(message: Any, sender: GeckoNativeWebExtension.MessageSender): GeckoResult<Any>? {
+            override fun onMessage(
+                // We don't use the same delegate instance for multiple apps so we don't need to verify the name.
+                name: String,
+                message: Any,
+                sender: GeckoNativeWebExtension.MessageSender
+            ): GeckoResult<Any>? {
                 val response = messageHandler.onMessage(message, session)
                 return response?.let { GeckoResult.fromValue(it) }
             }

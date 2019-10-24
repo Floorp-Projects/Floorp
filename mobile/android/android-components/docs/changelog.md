@@ -32,6 +32,12 @@ permalink: /changelog/
   * Added new feature for private browsing mode.
   * Added `SecureWindowFeature` to prevent screenshots in private browsing mode.
 
+* **browser-engine-gecko**, **browser-engine-gecko-beta**, **browser-engine-gecko-nightly**
+  * **Merge day!**
+    * `browser-engine-gecko-release`: GeckoView 71.0
+    * `browser-engine-gecko-beta`: GeckoView 71.0
+    * `browser-engine-gecko-nightly`: GeckoView 72.0
+
 # 18.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v17.0.0...v18.0.0)

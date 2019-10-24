@@ -14,6 +14,8 @@ import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
 import mozilla.components.concept.engine.EngineSession.SafeBrowsingPolicy
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.CookiePolicy
 import mozilla.components.concept.engine.UnsupportedSettingException
+import mozilla.components.concept.engine.content.blocking.TrackerLog
+import mozilla.components.concept.engine.content.blocking.TrackingProtectionExceptionStorage
 import mozilla.components.concept.engine.mediaquery.PreferredColorScheme
 import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.concept.engine.webextension.WebExtensionDelegate
@@ -21,8 +23,9 @@ import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
-import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.whenever
+import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.test.ReflectionUtils
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -36,14 +39,17 @@ import org.mockito.ArgumentMatchers.anyFloat
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 import org.mozilla.geckoview.ContentBlocking
+import org.mozilla.geckoview.ContentBlockingController
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoRuntimeSettings
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoWebExecutor
 import org.mozilla.geckoview.StorageController
+import org.mozilla.geckoview.WebExtensionController
 import org.robolectric.Robolectric
 import java.io.IOException
+import java.lang.Exception
 import org.mozilla.geckoview.WebExtension as GeckoWebExtension
 
 @RunWith(AndroidJUnit4::class)
@@ -142,21 +148,20 @@ class GeckoEngineTest {
 
         val trackingStrictCategories = TrackingProtectionPolicy.strict().trackingCategories.sumBy { it.id }
         val artificialCategory =
-            TrackingProtectionPolicy.TrackingCategory.SCRIPTS_AND_SUB_RESOURCES.id +
-                // This category isn't on stable yet we have to remove it
-                TrackingProtectionPolicy.TrackingCategory.MOZILLA_SOCIAL.id
-
+            TrackingProtectionPolicy.TrackingCategory.SCRIPTS_AND_SUB_RESOURCES.id
         assertEquals(
-            (trackingStrictCategories - artificialCategory) + engine.settings.safeBrowsingPolicy.sumBy { it.id },
-            contentBlockingSettings.categories
+            trackingStrictCategories - artificialCategory,
+            contentBlockingSettings.antiTrackingCategories
         )
 
         val safeStrictBrowsingCategories = SafeBrowsingPolicy.RECOMMENDED.id
-        assertEquals(safeStrictBrowsingCategories, ContentBlocking.SB_ALL)
-        assertEquals(contentBlockingSettings.cookieBehavior, CookiePolicy.ACCEPT_NON_TRACKERS.id)
+        assertEquals(safeStrictBrowsingCategories, contentBlockingSettings.safeBrowsingCategories)
 
         engine.settings.safeBrowsingPolicy = arrayOf(SafeBrowsingPolicy.PHISHING)
-        assertTrue(contentBlockingSettings.contains(SafeBrowsingPolicy.PHISHING))
+        assertEquals(SafeBrowsingPolicy.PHISHING.id, contentBlockingSettings.safeBrowsingCategories)
+
+        assertEquals(defaultSettings.trackingProtectionPolicy, TrackingProtectionPolicy.strict())
+        assertEquals(contentBlockingSettings.cookieBehavior, CookiePolicy.ACCEPT_NON_TRACKERS.id)
 
         try {
             engine.settings.domStorageEnabled
@@ -180,25 +185,125 @@ class GeckoEngineTest {
 
         val trackingStrictCategories = TrackingProtectionPolicy.strict().trackingCategories.sumBy { it.id }
         val artificialCategory =
-            TrackingProtectionPolicy.TrackingCategory.SCRIPTS_AND_SUB_RESOURCES.id +
-                // This category isn't on stable yet we have to remove it
-                TrackingProtectionPolicy.TrackingCategory.MOZILLA_SOCIAL.id
+            TrackingProtectionPolicy.TrackingCategory.SCRIPTS_AND_SUB_RESOURCES.id
 
         assertEquals(
-            (trackingStrictCategories - artificialCategory) + engine.settings.safeBrowsingPolicy.sumBy { it.id },
-            geckoRunTime.settings.contentBlocking.categories
+            trackingStrictCategories - artificialCategory,
+            geckoRunTime.settings.contentBlocking.antiTrackingCategories
         )
 
-        geckoRunTime.settings.contentBlocking.categories = 0
+        geckoRunTime.settings.contentBlocking.setAntiTracking(0)
 
         engine.settings.trackingProtectionPolicy = TrackingProtectionPolicy.select(
             arrayOf(TrackingProtectionPolicy.TrackingCategory.SCRIPTS_AND_SUB_RESOURCES)
         )
 
-        assertEquals(
-            engine.settings.safeBrowsingPolicy.sumBy { it.id },
-            geckoRunTime.settings.contentBlocking.categories
+        assertEquals(0, geckoRunTime.settings.contentBlocking.antiTrackingCategories)
+    }
+
+    @Test
+    fun `WHEN a strict tracking protection policy is set THEN the strict social list must be activated`() {
+        val mockRuntime = mock<GeckoRuntime>()
+        whenever(mockRuntime.settings).thenReturn(mock())
+        whenever(mockRuntime.settings.contentBlocking).thenReturn(mock())
+
+        val engine = GeckoEngine(testContext, runtime = mockRuntime)
+
+        engine.settings.trackingProtectionPolicy = TrackingProtectionPolicy.strict()
+
+        verify(mockRuntime.settings.contentBlocking).setStrictSocialTrackingProtection(true)
+    }
+
+    @Test
+    fun `WHEN a strict tracking protection policy is set THEN the setEnhancedTrackingProtectionLevel must be STRICT`() {
+        val mockRuntime = mock<GeckoRuntime>()
+        whenever(mockRuntime.settings).thenReturn(mock())
+        whenever(mockRuntime.settings.contentBlocking).thenReturn(mock())
+
+        val engine = GeckoEngine(testContext, runtime = mockRuntime)
+
+        engine.settings.trackingProtectionPolicy = TrackingProtectionPolicy.strict()
+
+        verify(mockRuntime.settings.contentBlocking).setEnhancedTrackingProtectionLevel(
+            ContentBlocking.EtpLevel.STRICT
         )
+    }
+
+    @Test
+    fun `WHEN a recommended tracking protection policy is set  THEN the setEnhancedTrackingProtectionLevel must be DEFAULT`() {
+        val mockRuntime = mock<GeckoRuntime>()
+        whenever(mockRuntime.settings).thenReturn(mock())
+        whenever(mockRuntime.settings.contentBlocking).thenReturn(mock())
+
+        val engine = GeckoEngine(testContext, runtime = mockRuntime)
+
+        engine.settings.trackingProtectionPolicy = TrackingProtectionPolicy.recommended()
+
+        verify(mockRuntime.settings.contentBlocking).setEnhancedTrackingProtectionLevel(
+            ContentBlocking.EtpLevel.DEFAULT
+        )
+    }
+
+    @Test
+    fun `WHEN a tracking protection policy other than recommended or strict is set THEN the setEnhancedTrackingProtectionLevel must be NONE`() {
+        val mockRuntime = mock<GeckoRuntime>()
+        whenever(mockRuntime.settings).thenReturn(mock())
+        whenever(mockRuntime.settings.contentBlocking).thenReturn(mock())
+
+        val engine = GeckoEngine(testContext, runtime = mockRuntime)
+
+        engine.settings.trackingProtectionPolicy = TrackingProtectionPolicy.select(
+            trackingCategories = arrayOf(
+                TrackingProtectionPolicy.TrackingCategory.CRYPTOMINING
+            )
+        )
+
+        verify(mockRuntime.settings.contentBlocking).setEnhancedTrackingProtectionLevel(
+            ContentBlocking.EtpLevel.NONE
+        )
+    }
+
+    @Test
+    fun `WHEN a non strict tracking protection policy is set THEN the strict social list must be disabled`() {
+        val mockRuntime = mock<GeckoRuntime>()
+        whenever(mockRuntime.settings).thenReturn(mock())
+        whenever(mockRuntime.settings.contentBlocking).thenReturn(mock())
+
+        val engine = GeckoEngine(testContext, runtime = mockRuntime)
+
+        engine.settings.trackingProtectionPolicy = TrackingProtectionPolicy.recommended()
+
+        verify(mockRuntime.settings.contentBlocking).setStrictSocialTrackingProtection(false)
+    }
+
+    @Test
+    fun `WHEN strict social tracking protection is set to true THEN the strict social list must be activated`() {
+        val mockRuntime = mock<GeckoRuntime>()
+        whenever(mockRuntime.settings).thenReturn(mock())
+        whenever(mockRuntime.settings.contentBlocking).thenReturn(mock())
+
+        val engine = GeckoEngine(testContext, runtime = mockRuntime)
+
+        engine.settings.trackingProtectionPolicy = TrackingProtectionPolicy.select(
+            strictSocialTrackingProtection = true
+        )
+
+        verify(mockRuntime.settings.contentBlocking).setStrictSocialTrackingProtection(true)
+    }
+
+    @Test
+    fun `WHEN strict social tracking protection is set to false THEN the strict social list must be disabled`() {
+        val mockRuntime = mock<GeckoRuntime>()
+        whenever(mockRuntime.settings).thenReturn(mock())
+        whenever(mockRuntime.settings.contentBlocking).thenReturn(mock())
+
+        val engine = GeckoEngine(testContext, runtime = mockRuntime)
+
+        engine.settings.trackingProtectionPolicy = TrackingProtectionPolicy.select(
+            strictSocialTrackingProtection = false
+        )
+
+        verify(mockRuntime.settings.contentBlocking).setStrictSocialTrackingProtection(false)
     }
 
     @Test
@@ -236,37 +341,44 @@ class GeckoEngineTest {
         verify(runtimeSettings).remoteDebuggingEnabled = true
         verify(runtimeSettings).autoplayDefault = GeckoRuntimeSettings.AUTOPLAY_DEFAULT_BLOCKED
 
-        engine.settings.trackingProtectionPolicy = TrackingProtectionPolicy.strict()
         val trackingStrictCategories = TrackingProtectionPolicy.strict().trackingCategories.sumBy { it.id }
         val artificialCategory =
-            TrackingProtectionPolicy.TrackingCategory.SCRIPTS_AND_SUB_RESOURCES.id +
-                // This category isn't on stable yet we have to remove it
-                TrackingProtectionPolicy.TrackingCategory.MOZILLA_SOCIAL.id
-
+            TrackingProtectionPolicy.TrackingCategory.SCRIPTS_AND_SUB_RESOURCES.id
         assertEquals(
-            (trackingStrictCategories - artificialCategory) + engine.settings.safeBrowsingPolicy.sumBy { it.id },
-            contentBlockingSettings.categories
+            trackingStrictCategories - artificialCategory,
+            contentBlockingSettings.antiTrackingCategories
         )
 
-        assertTrue(contentBlockingSettings.contains(SafeBrowsingPolicy.RECOMMENDED))
+        assertEquals(SafeBrowsingPolicy.RECOMMENDED.id, contentBlockingSettings.safeBrowsingCategories)
 
-        val safeStrictBrowsingCategories = SafeBrowsingPolicy.RECOMMENDED.id
-        assertEquals(safeStrictBrowsingCategories, ContentBlocking.SB_ALL)
-
-        assertEquals(contentBlockingSettings.cookieBehavior, CookiePolicy.ACCEPT_NON_TRACKERS.id)
+        assertEquals(CookiePolicy.ACCEPT_NON_TRACKERS.id, contentBlockingSettings.cookieBehavior)
         assertTrue(engine.settings.testingModeEnabled)
         assertEquals("test-ua", engine.settings.userAgentString)
         assertEquals(PreferredColorScheme.Light, engine.settings.preferredColorScheme)
         assertFalse(engine.settings.allowAutoplayMedia)
         assertTrue(engine.settings.suspendMediaWhenInactive)
 
+        engine.settings.safeBrowsingPolicy = arrayOf(SafeBrowsingPolicy.PHISHING)
         engine.settings.trackingProtectionPolicy =
             TrackingProtectionPolicy.select(
                 trackingCategories = arrayOf(TrackingProtectionPolicy.TrackingCategory.AD),
                 cookiePolicy = CookiePolicy.ACCEPT_ONLY_FIRST_PARTY
             )
 
-        assertEquals(CookiePolicy.ACCEPT_ONLY_FIRST_PARTY.id, contentBlockingSettings.cookieBehavior)
+        assertEquals(
+            TrackingProtectionPolicy.TrackingCategory.AD.id,
+            contentBlockingSettings.antiTrackingCategories
+        )
+
+        assertEquals(
+            SafeBrowsingPolicy.PHISHING.id,
+            contentBlockingSettings.safeBrowsingCategories
+        )
+
+        assertEquals(
+            CookiePolicy.ACCEPT_ONLY_FIRST_PARTY.id,
+            contentBlockingSettings.cookieBehavior
+        )
 
         engine.settings.trackingProtectionPolicy = TrackingProtectionPolicy.none()
 
@@ -282,6 +394,63 @@ class GeckoEngineTest {
         engine.speculativeConnect("https://www.mozilla.org")
 
         verify(executor).speculativeConnect("https://www.mozilla.org")
+    }
+
+    @Test
+    fun `fetch trackers logged successfully`() {
+        val runtime = mock<GeckoRuntime>()
+        val engine = GeckoEngine(context, runtime = runtime)
+        var onSuccessCalled = false
+        var onErrorCalled = false
+        val mockSession = mock<GeckoEngineSession>()
+        var trackersLog: List<TrackerLog>? = null
+
+        val mockContentBlockingController = mock<ContentBlockingController>()
+        var logEntriesResult = GeckoResult<List<ContentBlockingController.LogEntry>>()
+
+        whenever(runtime.contentBlockingController).thenReturn(mockContentBlockingController)
+        whenever(mockContentBlockingController.getLog(any())).thenReturn(logEntriesResult)
+
+        engine.getTrackersLog(
+            mockSession,
+            onSuccess = {
+                trackersLog = it
+                onSuccessCalled = true
+            },
+            onError = { onErrorCalled = true }
+        )
+
+        logEntriesResult.complete(createDummyLogEntryList())
+
+        val trackerLog = trackersLog!!.first()
+        assertTrue(trackerLog.cookiesHasBeenBlocked)
+        assertEquals("www.tracker.com", trackerLog.url)
+        assertTrue(trackerLog.blockedCategories.contains(TrackingProtectionPolicy.TrackingCategory.SCRIPTS_AND_SUB_RESOURCES))
+        assertTrue(trackerLog.blockedCategories.contains(TrackingProtectionPolicy.TrackingCategory.FINGERPRINTING))
+        assertTrue(trackerLog.blockedCategories.contains(TrackingProtectionPolicy.TrackingCategory.CRYPTOMINING))
+        assertTrue(trackerLog.blockedCategories.contains(TrackingProtectionPolicy.TrackingCategory.MOZILLA_SOCIAL))
+
+        assertTrue(trackerLog.loadedCategories.contains(TrackingProtectionPolicy.TrackingCategory.SCRIPTS_AND_SUB_RESOURCES))
+        assertTrue(trackerLog.loadedCategories.contains(TrackingProtectionPolicy.TrackingCategory.FINGERPRINTING))
+        assertTrue(trackerLog.loadedCategories.contains(TrackingProtectionPolicy.TrackingCategory.CRYPTOMINING))
+        assertTrue(trackerLog.loadedCategories.contains(TrackingProtectionPolicy.TrackingCategory.MOZILLA_SOCIAL))
+
+        assertTrue(onSuccessCalled)
+        assertFalse(onErrorCalled)
+
+        logEntriesResult = GeckoResult()
+        whenever(mockContentBlockingController.getLog(any())).thenReturn(logEntriesResult)
+        logEntriesResult.completeExceptionally(Exception())
+
+        engine.getTrackersLog(
+            mockSession,
+            onSuccess = {
+                trackersLog = it
+                onSuccessCalled = true
+            },
+            onError = { onErrorCalled = true }
+        )
+        assertTrue(onErrorCalled)
     }
 
     @Test
@@ -358,11 +527,38 @@ class GeckoEngineTest {
     }
 
     @Test
-    fun `register web extension delegate`() {
+    fun `register web extension tab delegate`() {
         val runtime: GeckoRuntime = mock()
+        val webExtensionController: WebExtensionController = mock()
+        whenever(runtime.webExtensionController).thenReturn(webExtensionController)
+
         val webExtensionsDelegate: WebExtensionDelegate = mock()
         val engine = GeckoEngine(context, runtime = runtime)
         engine.registerWebExtensionDelegate(webExtensionsDelegate)
+        val captor = argumentCaptor<WebExtensionController.TabDelegate>()
+        verify(webExtensionController).tabDelegate = captor.capture()
+
+        val engineSessionCaptor = argumentCaptor<GeckoEngineSession>()
+        captor.value.onNewTab(null, null)
+        verify(webExtensionsDelegate).onNewTab(eq(null), eq(""), engineSessionCaptor.capture())
+        assertNotNull(engineSessionCaptor.value)
+        assertFalse(engineSessionCaptor.value.geckoSession.isOpen)
+
+        captor.value.onNewTab(null, "https://www.mozilla.org")
+        verify(webExtensionsDelegate).onNewTab(eq(null), eq("https://www.mozilla.org"),
+            engineSessionCaptor.capture())
+        assertNotNull(engineSessionCaptor.value)
+        assertFalse(engineSessionCaptor.value.geckoSession.isOpen)
+
+        val webExt = org.mozilla.geckoview.WebExtension("test")
+        val geckoExtCap = argumentCaptor<mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension>()
+        captor.value.onNewTab(webExt, "https://test-moz.org")
+        verify(webExtensionsDelegate).onNewTab(geckoExtCap.capture(), eq("https://test-moz.org"),
+            engineSessionCaptor.capture())
+        assertNotNull(geckoExtCap.value)
+        assertEquals(geckoExtCap.value.id, webExt.id)
+        assertNotNull(engineSessionCaptor.value)
+        assertFalse(engineSessionCaptor.value.geckoSession.isOpen)
 
         // Verify we notify onInstalled
         val result = GeckoResult<Void>()
@@ -488,6 +684,51 @@ class GeckoEngineTest {
         assertTrue(version.isAtLeast(69, 0, 0))
     }
 
-    private fun ContentBlocking.Settings.contains(vararg safeBrowsingPolicies: SafeBrowsingPolicy) =
-        (safeBrowsingPolicies.sumBy { it.id } and this.categories) != 0
+    @Test
+    fun `after init is called the trackingProtectionExceptionStore must be restored`() {
+        val mockStore: TrackingProtectionExceptionStorage = mock()
+        val runtime: GeckoRuntime = mock()
+        GeckoEngine(context, runtime = runtime, trackingProtectionExceptionStore = mockStore)
+
+        verify(mockStore).restore()
+    }
+
+    private fun createDummyLogEntryList(): List<ContentBlockingController.LogEntry> {
+        val addLogEntry = object : ContentBlockingController.LogEntry() {}
+
+        ReflectionUtils.setField(addLogEntry, "origin", "www.tracker.com")
+        val blockedCookiePermission = createBlockingData(ContentBlockingController.Event.COOKIES_BLOCKED_BY_PERMISSION)
+
+        val blockedTrackingContent = createBlockingData(ContentBlockingController.Event.BLOCKED_TRACKING_CONTENT)
+        val blockedFingerprintingContent = createBlockingData(ContentBlockingController.Event.BLOCKED_FINGERPRINTING_CONTENT)
+        val blockedCyptominingContent = createBlockingData(ContentBlockingController.Event.BLOCKED_CRYPTOMINING_CONTENT)
+        val blockedSocialContent = createBlockingData(ContentBlockingController.Event.BLOCKED_SOCIALTRACKING_CONTENT)
+
+        val loadedTrackingContent = createBlockingData(ContentBlockingController.Event.LOADED_TRACKING_CONTENT)
+        val loadedFingerprintingContent = createBlockingData(ContentBlockingController.Event.LOADED_FINGERPRINTING_CONTENT)
+        val loadedCyptominingContent = createBlockingData(ContentBlockingController.Event.LOADED_CRYPTOMINING_CONTENT)
+        val loadedSocialContent = createBlockingData(ContentBlockingController.Event.LOADED_SOCIALTRACKING_CONTENT)
+
+        val contentBlockingList = listOf(
+            blockedTrackingContent,
+            loadedTrackingContent,
+            blockedFingerprintingContent,
+            loadedFingerprintingContent,
+            blockedCyptominingContent,
+            loadedCyptominingContent,
+            blockedCookiePermission,
+            blockedSocialContent,
+            loadedSocialContent
+        )
+
+        ReflectionUtils.setField(addLogEntry, "blockingData", contentBlockingList)
+
+        return listOf(addLogEntry)
+    }
+
+    private fun createBlockingData(category: Int): ContentBlockingController.LogEntry.BlockingData {
+        val blockingData = object : ContentBlockingController.LogEntry.BlockingData() {}
+        ReflectionUtils.setField(blockingData, "category", category)
+        return blockingData
+    }
 }
