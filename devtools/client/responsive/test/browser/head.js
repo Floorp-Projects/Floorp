@@ -749,3 +749,34 @@ async function testViewportZoomWidthAndHeight(
     }
   }
 }
+
+function promiseContentReflow(ui) {
+  return ContentTask.spawn(ui.getViewportBrowser(), {}, async function() {
+    return new Promise(resolve => {
+      content.window.requestAnimationFrame(resolve);
+    });
+  });
+}
+
+// This function returns a promise that will be resolved when the
+// RDM zoom has been set and the content has finished rescaling
+// to the new size.
+function promiseRDMZoom(ui, browser, zoom) {
+  return new Promise(resolve => {
+    const currentZoom = ZoomManager.getZoomForBrowser(browser);
+    if (currentZoom == zoom) {
+      resolve();
+      return;
+    }
+
+    ZoomManager.setZoomForBrowser(browser, zoom);
+
+    // Await the zoom complete event, then reflow.
+    BrowserTestUtils.waitForContentEvent(
+      ui.getViewportBrowser(),
+      "ZoomComplete"
+    )
+      .then(promiseContentReflow(ui))
+      .then(resolve);
+  });
+}
