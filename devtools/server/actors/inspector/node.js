@@ -91,12 +91,6 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
-  "isXBLAnonymous",
-  "devtools/shared/layout/utils",
-  true
-);
-loader.lazyRequireGetter(
-  this,
   "isRemoteFrame",
   "devtools/shared/layout/utils",
   true
@@ -248,7 +242,6 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
       isAfterPseudoElement: isAfterPseudoElement(this.rawNode),
       isAnonymous: isAnonymous(this.rawNode),
       isNativeAnonymous: isNativeAnonymous(this.rawNode),
-      isXBLAnonymous: isXBLAnonymous(this.rawNode),
       isShadowAnonymous: isShadowAnonymous(this.rawNode),
       isShadowRoot: shadowRoot,
       shadowRootMode: getShadowRootMode(this.rawNode),

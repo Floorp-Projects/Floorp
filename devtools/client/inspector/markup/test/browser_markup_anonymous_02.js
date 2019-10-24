@@ -22,7 +22,6 @@ add_task(async function() {
 
   for (const node of children.nodes) {
     ok(node.isAnonymous, "Child is anonymous");
-    ok(node._form.isXBLAnonymous, "Child is XBL anonymous");
     ok(!node._form.isShadowAnonymous, "Child is not shadow anonymous");
     ok(!node._form.isNativeAnonymous, "Child is not native anonymous");
     await isEditingMenuDisabled(node, inspector);
