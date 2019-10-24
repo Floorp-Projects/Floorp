@@ -96,9 +96,9 @@ Please restart bootstrap and create that directory when prompted.
 '''
 
 STYLE_NODEJS_REQUIRES_CLONE = '''
-Installing Stylo and NodeJS packages requires a checkout of mozilla-central.
-Once you have such a checkout, please re-run `./mach bootstrap` from the
-checkout directory.
+Installing Stylo and NodeJS packages requires a checkout of mozilla-central
+(or mozilla-unified). Once you have such a checkout, please re-run
+`./mach bootstrap` from the checkout directory.
 '''
 
 FINISHED = '''
@@ -128,7 +128,8 @@ Would you like to run a configuration wizard to ensure Mercurial is
 optimally configured?'''
 
 CONFIGURE_GIT = '''
-Mozilla recommends using git-cinnabar to work with mozilla-central.
+Mozilla recommends using git-cinnabar to work with mozilla-central (or
+mozilla-unified).
 
 Would you like to run a few configuration steps to ensure Git is
 optimally configured?'''
@@ -649,7 +650,7 @@ def current_firefox_checkout(check_output, env, hg=None):
     Returns one of None, ``git``, or ``hg``.
     """
     HG_ROOT_REVISIONS = set([
-        # From mozilla-central.
+        # From mozilla-unified.
         '8ba995b74e18334ab3707f27e9eb8f4e37ba3d29',
     ])
 
@@ -672,7 +673,7 @@ def current_firefox_checkout(check_output, env, hg=None):
                 pass
 
         # Just check for known-good files in the checkout, to prevent attempted
-        # foot-shootings.  Determining a canonical git checkout of mozilla-central
+        # foot-shootings.  Determining a canonical git checkout of mozilla-unified
         # is...complicated
         elif os.path.exists(git_dir):
             moz_configure = os.path.join(path, 'moz.configure')
