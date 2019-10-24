@@ -71,6 +71,8 @@
 #include "mozilla/dom/SRILogHelper.h"
 #include "mozilla/dom/ServiceWorkerBinding.h"
 #include "mozilla/dom/ServiceWorkerManager.h"
+#include "mozilla/Result.h"
+#include "mozilla/ResultExtensions.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_security.h"
 #include "mozilla/UniquePtr.h"
@@ -491,8 +493,8 @@ class CacheScriptLoader final : public PromiseNativeHandler,
 
   ScriptLoadInfo& mLoadInfo;
   uint32_t mIndex;
-  RefPtr<ScriptLoaderRunnable> mRunnable;
-  bool mIsWorkerScript;
+  const RefPtr<ScriptLoaderRunnable> mRunnable;
+  const bool mIsWorkerScript;
   bool mFailed;
   const ServiceWorkerState mState;
   nsCOMPtr<nsIInputStreamPump> mPump;
@@ -567,13 +569,86 @@ class LoaderListener final : public nsIStreamLoaderObserver,
 
 NS_IMPL_ISUPPORTS(LoaderListener, nsIStreamLoaderObserver, nsIRequestObserver)
 
+class ScriptResponseHeaderProcessor final : public nsIRequestObserver {
+ public:
+  NS_DECL_ISUPPORTS
+
+  ScriptResponseHeaderProcessor(WorkerPrivate* aWorkerPrivate,
+                                bool aIsMainScript)
+      : mWorkerPrivate(aWorkerPrivate), mIsMainScript(aIsMainScript) {
+    AssertIsOnMainThread();
+  }
+
+  NS_IMETHOD OnStartRequest(nsIRequest* aRequest) override {
+    nsresult rv = ProcessCrossOriginEmbedderPolicyHeader(aRequest);
+
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      aRequest->Cancel(rv);
+    }
+
+    return rv;
+  }
+
+  NS_IMETHOD OnStopRequest(nsIRequest* aRequest,
+                           nsresult aStatusCode) override {
+    MOZ_DIAGNOSTIC_ASSERT_IF(NS_SUCCEEDED(aStatusCode),
+                             mWorkerPrivate->GetEmbedderPolicy().isSome());
+
+    return NS_OK;
+  }
+
+  static nsresult ProcessCrossOriginEmbedderPolicyHeader(
+      WorkerPrivate* aWorkerPrivate,
+      nsILoadInfo::CrossOriginEmbedderPolicy aPolicy, bool aIsMainScript) {
+    MOZ_ASSERT(aWorkerPrivate);
+
+    if (aIsMainScript) {
+      MOZ_TRY(aWorkerPrivate->SetEmbedderPolicy(aPolicy));
+    } else if (!aWorkerPrivate->MatchEmbedderPolicy(aPolicy)) {
+      return NS_ERROR_BLOCKED_BY_POLICY;
+    }
+
+    return NS_OK;
+  }
+
+ private:
+  ~ScriptResponseHeaderProcessor() = default;
+
+  nsresult ProcessCrossOriginEmbedderPolicyHeader(nsIRequest* aRequest) {
+    MOZ_ASSERT_IF(!mIsMainScript, mWorkerPrivate->GetEmbedderPolicy().isSome());
+
+    nsCOMPtr<nsIHttpChannelInternal> httpChannel = do_QueryInterface(aRequest);
+
+    // NOTE: the spec doesn't say what to do with non-HTTP workers.
+    // See: https://github.com/whatwg/html/issues/4916
+    if (!httpChannel) {
+      if (mIsMainScript) {
+        mWorkerPrivate->InheritOwnerEmbedderPolicyOrNull(aRequest);
+      }
+
+      return NS_OK;
+    }
+
+    nsILoadInfo::CrossOriginEmbedderPolicy coep;
+    MOZ_TRY(httpChannel->GetResponseEmbedderPolicy(&coep));
+
+    return ProcessCrossOriginEmbedderPolicyHeader(mWorkerPrivate, coep,
+                                                  mIsMainScript);
+  }
+
+  WorkerPrivate* const mWorkerPrivate;
+  const bool mIsMainScript;
+};
+
+NS_IMPL_ISUPPORTS(ScriptResponseHeaderProcessor, nsIRequestObserver);
+
 class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
   friend class ScriptExecutorRunnable;
   friend class CachePromiseHandler;
   friend class CacheScriptLoader;
   friend class LoaderListener;
 
-  WorkerPrivate* mWorkerPrivate;
+  WorkerPrivate* const mWorkerPrivate;
   UniquePtr<SerializedStackHolder> mOriginStack;
   nsString mOriginStackJSON;
   nsCOMPtr<nsIEventTarget> mSyncLoopTarget;
@@ -581,7 +656,7 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
   RefPtr<CacheCreator> mCacheCreator;
   Maybe<ClientInfo> mClientInfo;
   Maybe<ServiceWorkerDescriptor> mController;
-  bool mIsMainScript;
+  const bool mIsMainScript;
   WorkerScriptType mWorkerScriptType;
   bool mCanceledMainThread;
   ErrorResult& mRv;
@@ -680,13 +755,22 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
   }
 
   nsresult OnStartRequest(nsIRequest* aRequest, uint32_t aIndex) {
+    nsresult rv = OnStartRequestInternal(aRequest, aIndex);
+
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      aRequest->Cancel(rv);
+    }
+
+    return rv;
+  }
+
+  nsresult OnStartRequestInternal(nsIRequest* aRequest, uint32_t aIndex) {
     AssertIsOnMainThread();
     MOZ_ASSERT(aIndex < mLoadInfos.Length());
 
     // If one load info cancels or hits an error, it can race with the start
     // callback coming from another load info.
     if (mCanceledMainThread || !mCacheCreator) {
-      aRequest->Cancel(NS_ERROR_FAILURE);
       return NS_ERROR_FAILURE;
     }
 
@@ -715,7 +799,6 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
             nsTArray<nsString>{NS_ConvertUTF8toUTF16(scope),
                                NS_ConvertUTF8toUTF16(mimeType), loadInfo.mURL});
 
-        channel->Cancel(NS_ERROR_DOM_NETWORK_ERR);
         return NS_ERROR_DOM_NETWORK_ERR;
       }
     }
@@ -745,19 +828,11 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
     NS_ASSERTION(ssm, "Should never be null!");
 
     nsCOMPtr<nsIPrincipal> channelPrincipal;
-    nsresult rv = ssm->GetChannelResultPrincipal(
-        channel, getter_AddRefs(channelPrincipal));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      channel->Cancel(rv);
-      return rv;
-    }
+    MOZ_TRY(ssm->GetChannelResultPrincipal(channel,
+                                           getter_AddRefs(channelPrincipal)));
 
     UniquePtr<PrincipalInfo> principalInfo(new PrincipalInfo());
-    rv = PrincipalToPrincipalInfo(channelPrincipal, principalInfo.get());
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      channel->Cancel(rv);
-      return rv;
-    }
+    MOZ_TRY(PrincipalToPrincipalInfo(channelPrincipal, principalInfo.get()));
 
     ir->SetPrincipalInfo(std::move(principalInfo));
     ir->Headers()->FillResponseHeaders(loadInfo.mChannel);
@@ -781,9 +856,7 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
         mCacheCreator->Cache_()->Put(jsapi.cx(), request, *response, error);
     error.WouldReportJSException();
     if (NS_WARN_IF(error.Failed())) {
-      nsresult rv = error.StealNSResult();
-      channel->Cancel(rv);
-      return rv;
+      return error.StealNSResult();
     }
 
     RefPtr<CachePromiseHandler> promiseHandler =
@@ -1016,10 +1089,17 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
     // where to put the result.
     RefPtr<LoaderListener> listener = new LoaderListener(this, aIndex);
 
-    // We don't care about progress so just use the simple stream loader for
-    // OnStreamComplete notification only.
+    RefPtr<ScriptResponseHeaderProcessor> headerProcessor = nullptr;
+
+    // For each debugger script, a non-debugger script load of the same script
+    // should have occured prior that processed the headers.
+    if (!IsDebuggerScript()) {
+      headerProcessor = MakeRefPtr<ScriptResponseHeaderProcessor>(
+          mWorkerPrivate, mIsMainScript);
+    }
+
     nsCOMPtr<nsIStreamLoader> loader;
-    rv = NS_NewStreamLoader(getter_AddRefs(loader), listener);
+    rv = NS_NewStreamLoader(getter_AddRefs(loader), listener, headerProcessor);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -1748,6 +1828,25 @@ void CacheScriptLoader::ResolvedCallback(JSContext* aCx,
                mCSPReportOnlyHeaderValue, IgnoreErrors());
   headers->Get(NS_LITERAL_CSTRING("referrer-policy"),
                mReferrerPolicyHeaderValue, IgnoreErrors());
+
+  nsAutoCString coepHeader;
+  headers->Get(NS_LITERAL_CSTRING("cross-origin-embedder-policy"), coepHeader,
+               IgnoreErrors());
+
+  nsILoadInfo::CrossOriginEmbedderPolicy coep =
+      nsILoadInfo::EMBEDDER_POLICY_NULL;
+
+  if (coepHeader.EqualsLiteral("require-corp")) {
+    coep = nsILoadInfo::EMBEDDER_POLICY_REQUIRE_CORP;
+  }
+
+  rv = ScriptResponseHeaderProcessor::ProcessCrossOriginEmbedderPolicyHeader(
+      mRunnable->mWorkerPrivate, coep, mRunnable->mIsMainScript);
+
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    Fail(rv);
+    return;
+  }
 
   nsCOMPtr<nsIInputStream> inputStream;
   response->GetBody(getter_AddRefs(inputStream));
