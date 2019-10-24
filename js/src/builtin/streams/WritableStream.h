@@ -199,8 +199,6 @@ class WritableStream : public NativeObject {
                  JS::Int32Value(mozilla::AssertedCast<int32_t>(newValue)));
   }
 
-  void setBackpressure(bool pressure) { setFlag(Backpressure, pressure); }
-
  public:
   bool writable() const { return state() == Writable; }
 
@@ -214,6 +212,7 @@ class WritableStream : public NativeObject {
   void setErrored() { setState(Errored); }
 
   bool backpressure() const { return flags() & Backpressure; }
+  void setBackpressure(bool pressure) { setFlag(Backpressure, pressure); }
 
   bool haveInFlightWriteRequest() const {
     return flags() & HaveInFlightWriteRequest;
