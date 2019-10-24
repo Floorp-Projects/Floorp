@@ -1353,9 +1353,11 @@ inline bool OpIter<Policy>::readEnd(LabelKind* kind, ResultType* type,
 
   // If an `if` block ends with `end` instead of `else`, then we must
   // additionally validate that the then-block doesn't push anything.
-  if (block.kind() == LabelKind::Then &&
-      block.type().params() != block.type().results()) {
-    return fail("if without else with a result value");
+  if (block.kind() == LabelKind::Then) {
+    if (block.type().params() != block.type().results()) {
+      return fail("if without else with a result value");
+    }
+    thenParamStack_.shrinkBy(block.type().params().length());
   }
 
   *kind = block.kind();
