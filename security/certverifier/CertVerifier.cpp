@@ -447,6 +447,7 @@ Result CertVerifier::VerifyCert(
     const char* hostname,
     /*out*/ UniqueCERTCertList& builtChain,
     /*optional*/ const Flags flags,
+    /*optional*/ const Maybe<nsTArray<nsTArray<uint8_t>>>& extraCertificates,
     /*optional*/ const Maybe<nsTArray<uint8_t>>& stapledOCSPResponseArg,
     /*optional*/ const Maybe<nsTArray<uint8_t>>& sctsFromTLS,
     /*optional*/ const OriginAttributes& originAttributes,
@@ -544,7 +545,8 @@ Result CertVerifier::VerifyCert(
           MIN_RSA_BITS_WEAK, ValidityCheckingMode::CheckingOff,
           SHA1Mode::Allowed, NetscapeStepUpPolicy::NeverMatch,
           mDistrustedCAPolicy, originAttributes, mThirdPartyRootInputs,
-          mThirdPartyIntermediateInputs, builtChain, nullptr, nullptr);
+          mThirdPartyIntermediateInputs, extraCertificates, builtChain, nullptr,
+          nullptr);
       rv = BuildCertChain(
           trustDomain, certDER, time, EndEntityOrCA::MustBeEndEntity,
           KeyUsage::digitalSignature, KeyPurposeId::id_kp_clientAuth,
@@ -617,8 +619,8 @@ Result CertVerifier::VerifyCert(
             MIN_RSA_BITS, ValidityCheckingMode::CheckForEV,
             sha1ModeConfigurations[i], mNetscapeStepUpPolicy,
             mDistrustedCAPolicy, originAttributes, mThirdPartyRootInputs,
-            mThirdPartyIntermediateInputs, builtChain, pinningTelemetryInfo,
-            hostname);
+            mThirdPartyIntermediateInputs, extraCertificates, builtChain,
+            pinningTelemetryInfo, hostname);
         rv = BuildCertChainForOneKeyUsage(
             trustDomain, certDER, time,
             KeyUsage::digitalSignature,  // (EC)DHE
@@ -699,8 +701,8 @@ Result CertVerifier::VerifyCert(
               mPinningMode, keySizeOptions[i],
               ValidityCheckingMode::CheckingOff, sha1ModeConfigurations[j],
               mNetscapeStepUpPolicy, mDistrustedCAPolicy, originAttributes,
-              mThirdPartyRootInputs, mThirdPartyIntermediateInputs, builtChain,
-              pinningTelemetryInfo, hostname);
+              mThirdPartyRootInputs, mThirdPartyIntermediateInputs,
+              extraCertificates, builtChain, pinningTelemetryInfo, hostname);
           rv = BuildCertChainForOneKeyUsage(
               trustDomain, certDER, time,
               KeyUsage::digitalSignature,  //(EC)DHE
@@ -769,7 +771,8 @@ Result CertVerifier::VerifyCert(
           MIN_RSA_BITS_WEAK, ValidityCheckingMode::CheckingOff,
           SHA1Mode::Allowed, mNetscapeStepUpPolicy, mDistrustedCAPolicy,
           originAttributes, mThirdPartyRootInputs,
-          mThirdPartyIntermediateInputs, builtChain, nullptr, nullptr);
+          mThirdPartyIntermediateInputs, extraCertificates, builtChain, nullptr,
+          nullptr);
       rv = BuildCertChain(trustDomain, certDER, time, EndEntityOrCA::MustBeCA,
                           KeyUsage::keyCertSign, KeyPurposeId::id_kp_serverAuth,
                           CertPolicyId::anyPolicy, stapledOCSPResponse);
@@ -783,7 +786,8 @@ Result CertVerifier::VerifyCert(
           MIN_RSA_BITS_WEAK, ValidityCheckingMode::CheckingOff,
           SHA1Mode::Allowed, NetscapeStepUpPolicy::NeverMatch,
           mDistrustedCAPolicy, originAttributes, mThirdPartyRootInputs,
-          mThirdPartyIntermediateInputs, builtChain, nullptr, nullptr);
+          mThirdPartyIntermediateInputs, extraCertificates, builtChain, nullptr,
+          nullptr);
       rv = BuildCertChain(
           trustDomain, certDER, time, EndEntityOrCA::MustBeEndEntity,
           KeyUsage::digitalSignature, KeyPurposeId::id_kp_emailProtection,
@@ -807,7 +811,8 @@ Result CertVerifier::VerifyCert(
           MIN_RSA_BITS_WEAK, ValidityCheckingMode::CheckingOff,
           SHA1Mode::Allowed, NetscapeStepUpPolicy::NeverMatch,
           mDistrustedCAPolicy, originAttributes, mThirdPartyRootInputs,
-          mThirdPartyIntermediateInputs, builtChain, nullptr, nullptr);
+          mThirdPartyIntermediateInputs, extraCertificates, builtChain, nullptr,
+          nullptr);
       rv = BuildCertChain(trustDomain, certDER, time,
                           EndEntityOrCA::MustBeEndEntity,
                           KeyUsage::keyEncipherment,  // RSA
@@ -852,14 +857,15 @@ static bool CertIsSelfSigned(const UniqueCERTCertificate& cert, void* pinarg) {
 }
 
 Result CertVerifier::VerifySSLServerCert(
-    const UniqueCERTCertificate& peerCert,
-    /*optional*/ const Maybe<nsTArray<uint8_t>>& stapledOCSPResponse,
-    /*optional*/ const Maybe<nsTArray<uint8_t>>& sctsFromTLS, Time time,
+    const UniqueCERTCertificate& peerCert, Time time,
     /*optional*/ void* pinarg, const nsACString& hostname,
     /*out*/ UniqueCERTCertList& builtChain,
-    /*optional*/ bool saveIntermediatesInPermanentDatabase,
     /*optional*/ Flags flags,
+    /*optional*/ const Maybe<nsTArray<nsTArray<uint8_t>>>& extraCertificates,
+    /*optional*/ const Maybe<nsTArray<uint8_t>>& stapledOCSPResponse,
+    /*optional*/ const Maybe<nsTArray<uint8_t>>& sctsFromTLS,
     /*optional*/ const OriginAttributes& originAttributes,
+    /*optional*/ bool saveIntermediatesInPermanentDatabase,
     /*optional out*/ SECOidTag* evOidPolicy,
     /*optional out*/ OCSPStaplingStatus* ocspStaplingStatus,
     /*optional out*/ KeySizeStatus* keySizeStatus,
@@ -883,9 +889,9 @@ Result CertVerifier::VerifySSLServerCert(
   Result rv =
       VerifyCert(peerCert.get(), certificateUsageSSLServer, time, pinarg,
                  PromiseFlatCString(hostname).get(), builtChain, flags,
-                 stapledOCSPResponse, sctsFromTLS, originAttributes,
-                 evOidPolicy, ocspStaplingStatus, keySizeStatus, sha1ModeResult,
-                 pinningTelemetryInfo, ctInfo);
+                 extraCertificates, stapledOCSPResponse, sctsFromTLS,
+                 originAttributes, evOidPolicy, ocspStaplingStatus,
+                 keySizeStatus, sha1ModeResult, pinningTelemetryInfo, ctInfo);
   if (rv != Success) {
     if (rv == Result::ERROR_UNKNOWN_ISSUER &&
         CertIsSelfSigned(peerCert, pinarg)) {
