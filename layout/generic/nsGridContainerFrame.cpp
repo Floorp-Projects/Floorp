@@ -4634,6 +4634,8 @@ static nscoord MeasuringReflow(nsIFrame* aChild,
   // child does some of the things that are affected by
   // ReflowInput::COMPUTE_SIZE_USE_AUTO_BSIZE.
   childRI.SetBResize(true);
+  // Not 100% sure this is needed, but be conservative for now:
+  childRI.mFlags.mIsBResizeForPercentages = true;
 
   ReflowOutput childSize(childRI);
   nsReflowStatus childStatus;
@@ -6379,6 +6381,7 @@ void nsGridContainerFrame::ReflowInFlowChild(
   // does some of the things that are affected by
   // ReflowInput::COMPUTE_SIZE_USE_AUTO_BSIZE.
   childRI.SetBResize(true);
+  childRI.mFlags.mIsBResizeForPercentages = true;
 
   // A table-wrapper needs to propagate the CB size we give it to its
   // inner table frame later.  @see nsTableWrapperFrame::InitChildReflowInput.
