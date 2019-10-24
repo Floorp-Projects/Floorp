@@ -131,6 +131,20 @@ const emulationSpec = generateActorSpec({
       response: {},
     },
 
+    getEmulatedColorScheme: {
+      request: {},
+      response: {
+        emulated: RetVal("nullable:string"),
+      },
+    },
+
+    setEmulatedColorScheme: {
+      request: {
+        scheme: Arg(0, "nullable:string"),
+      },
+      response: {},
+    },
+
     getIsPrintSimulationEnabled: {
       request: {},
       response: {
