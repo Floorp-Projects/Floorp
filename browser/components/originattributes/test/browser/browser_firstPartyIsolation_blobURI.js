@@ -27,11 +27,11 @@ add_task(async function test_blob_uri_inherit_oa_from_content() {
   await BrowserTestUtils.browserLoaded(browser);
 
   // Then navigate to the blob: URI.
-  await ContentTask.spawn(
+  await SpecialPowers.spawn(
     browser,
-    { firstPartyDomain: BASE_DOMAIN },
+    [{ firstPartyDomain: BASE_DOMAIN }],
     async function(attrs) {
-      info("origin " + content.document.nodePrincipal.origin);
+      Assert.ok(true, "origin " + content.document.nodePrincipal.origin);
       Assert.equal(
         content.document.nodePrincipal.originAttributes.firstPartyDomain,
         attrs.firstPartyDomain,
@@ -59,15 +59,15 @@ add_task(async function test_blob_uri_inherit_oa_from_content() {
 
   // We verify the blob document has correct origin attributes.
   // Then we inject an iframe to it.
-  await ContentTask.spawn(
+  await SpecialPowers.spawn(
     browser,
-    { firstPartyDomain: BASE_DOMAIN },
+    [{ firstPartyDomain: BASE_DOMAIN }],
     async function(attrs) {
       Assert.ok(
         content.document.documentURI.startsWith("blob:http://mochi.test:8888/"),
         "the document URI should be a blob URI."
       );
-      info("origin " + content.document.nodePrincipal.origin);
+      Assert.ok(true, "origin " + content.document.nodePrincipal.origin);
       Assert.equal(
         content.document.nodePrincipal.originAttributes.firstPartyDomain,
         attrs.firstPartyDomain,
@@ -78,26 +78,35 @@ add_task(async function test_blob_uri_inherit_oa_from_content() {
       iframe.src = "http://example.com";
       iframe.id = "iframe1";
       content.document.body.appendChild(iframe);
+
+      // Wait for the iframe to be loaded.
+      await new content.Promise(done => {
+        iframe.addEventListener(
+          "load",
+          function() {
+            done();
+          },
+          { capture: true, once: true }
+        );
+      });
     }
   );
 
-  // Wait for the iframe to be loaded.
-  //  yield BrowserTestUtils.browserLoaded(browser, true, function(url) {
-  //    info("BrowserTestUtils.browserLoaded iframe url=" + url);
-  //    return url == "http://example.com/";
-  //  });
-
   // Finally we verify the iframe has correct origin attributes.
-  await ContentTask.spawn(
+  await SpecialPowers.spawn(
     browser,
-    { firstPartyDomain: BASE_DOMAIN },
+    [{ firstPartyDomain: BASE_DOMAIN }],
     async function(attrs) {
       let iframe = content.document.getElementById("iframe1");
-      Assert.equal(
-        iframe.contentDocument.nodePrincipal.originAttributes.firstPartyDomain,
-        attrs.firstPartyDomain,
-        "iframe should inherit firstPartyDomain from blob: URI"
-      );
+      await SpecialPowers.spawn(iframe, [attrs.firstPartyDomain], function(
+        firstPartyDomain
+      ) {
+        Assert.equal(
+          content.document.nodePrincipal.originAttributes.firstPartyDomain,
+          firstPartyDomain,
+          "iframe should inherit firstPartyDomain from blob: URI"
+        );
+      });
     }
   );
 
