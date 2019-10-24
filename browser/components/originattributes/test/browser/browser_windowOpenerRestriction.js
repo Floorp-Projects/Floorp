@@ -32,15 +32,17 @@ async function testPref(aIsPrefEnabled) {
   let browser = gBrowser.getBrowserForTab(tab);
   await BrowserTestUtils.browserLoaded(browser);
 
-  await ContentTask.spawn(
+  await SpecialPowers.spawn(
     browser,
-    { cookieStr, page: TARGET_PAGE, isPrefEnabled: aIsPrefEnabled },
+    [{ cookieStr, page: TARGET_PAGE, isPrefEnabled: aIsPrefEnabled }],
     async function(obj) {
       // Acquire the iframe element.
       let childFrame = content.document.getElementById("child");
 
       // Insert a cookie into this iframe.
-      childFrame.contentDocument.cookie = obj.cookieStr;
+      await SpecialPowers.spawn(childFrame, [obj.cookieStr], aCookieStr => {
+        content.document.cookie = aCookieStr;
+      });
 
       // Open the tab here and focus on it.
       let openedPath = obj.page;
@@ -51,8 +53,8 @@ async function testPref(aIsPrefEnabled) {
       }
 
       // Issue the opener page to open the target page and focus on it.
-      this.openedWindow = content.open(openedPath);
-      this.openedWindow.focus();
+      content.openedWindow = content.open(openedPath);
+      content.openedWindow.focus();
     }
   );
 
@@ -68,8 +70,8 @@ async function testPref(aIsPrefEnabled) {
   );
 
   // Close Tabs.
-  await ContentTask.spawn(browser, null, async function() {
-    this.openedWindow.close();
+  await SpecialPowers.spawn(browser, [], async function() {
+    content.openedWindow.close();
   });
   BrowserTestUtils.removeTab(tab);
 
