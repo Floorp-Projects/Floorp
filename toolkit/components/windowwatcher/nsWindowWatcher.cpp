@@ -1608,7 +1608,7 @@ nsWindowWatcher::GetWindowByName(const nsAString& aTargetName,
       GetBrowsingContextByName(aTargetName, false, currentContext);
 
   if (context) {
-    *aResult = context->GetDOMWindow();
+    *aResult = do_AddRef(context->GetDOMWindow()).take();
     MOZ_ASSERT(*aResult);
   }
 
@@ -2007,34 +2007,26 @@ already_AddRefed<BrowsingContext> nsWindowWatcher::GetBrowsingContextByName(
     return nullptr;
   }
 
-  if (aForceNoOpener) {
-    if (!aName.LowerCaseEqualsLiteral("_self") &&
-        !aName.LowerCaseEqualsLiteral("_top") &&
-        !aName.LowerCaseEqualsLiteral("_parent")) {
-      // Ignore all other names in the noopener case.
-      return nullptr;
-    }
-  }
-
-  RefPtr<BrowsingContext> currentContext(aCurrentContext);
-  if (!currentContext) {
-    if (aName.LowerCaseEqualsLiteral("_blank") ||
-        aName.LowerCaseEqualsLiteral("_top") ||
-        aName.LowerCaseEqualsLiteral("_parent") ||
-        aName.LowerCaseEqualsLiteral("_self")) {
-      return nullptr;
-    }
-
-    // If we are looking for an item and we don't have a docshell we are
-    // checking on, let's just look in the chrome tab group!
-    currentContext =
-        BrowsingContextGroup::GetChromeGroup()->Toplevels().SafeElementAt(0);
+  if (aForceNoOpener && !nsContentUtils::IsSpecialName(aName)) {
+    // Ignore all other names in the noopener case.
+    return nullptr;
   }
 
   RefPtr<BrowsingContext> foundContext;
-  if (currentContext) {
-    foundContext = currentContext->FindWithName(aName);
+  if (aCurrentContext) {
+    foundContext = aCurrentContext->FindWithName(aName);
+  } else if (!nsContentUtils::IsSpecialName(aName)) {
+    // If we are looking for an item and we don't have a docshell we are
+    // checking on, let's just look in the chrome browsing context group!
+    for (RefPtr<BrowsingContext> toplevel :
+         BrowsingContextGroup::GetChromeGroup()->Toplevels()) {
+      foundContext = toplevel->FindWithNameInSubtree(aName, *toplevel);
+      if (foundContext) {
+        break;
+      }
+    }
   }
+
   return foundContext.forget();
 }
 
