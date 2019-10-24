@@ -4,8 +4,8 @@
 onload = function() {
   var count = 20000000;
   var el = document.createElement("span");
-  // The shortest string we can't fit in a single-byte inline string (16 chars).
-  el.id = "aaaaaaaaaaaaaaaa";
+  // The shortest string we can't fit in a single-byte inline string (17 chars).
+  el.id = "aaaaaaaaaaaaaaaaa";
   var getter = Object.getOwnPropertyDescriptor(Element.prototype, "id").get;
   perf_start();
   for (var i = 0; i < count; ++i) {
