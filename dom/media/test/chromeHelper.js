@@ -8,6 +8,7 @@
 
 "use strict";
 
+// eslint-disable-next-line mozilla/use-services
 const dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(
   Ci.nsIProperties
 );

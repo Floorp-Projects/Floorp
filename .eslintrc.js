@@ -382,21 +382,5 @@ module.exports = {
     "rules": {
       "mozilla/prefer-boolean-length-check": "off",
     }
-  }, {
-    "files": [
-      "dom/media/**",
-    ],
-    "rules": {
-      "consistent-return": "off",
-      "mozilla/use-default-preference-values": "off",
-      "mozilla/use-services": "off",
-      "no-array-constructor": "off",
-      "no-async-promise-executor": "off",
-      "no-redeclare": "off",
-      "no-nested-ternary": "off",
-      "no-self-assign": "off",
-      "no-new-object": "off",
-      "no-unsanitized/property": "off",
-    }
   }]
 };

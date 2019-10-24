@@ -13,7 +13,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=478957
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=478957">Mozilla Bug 478957</a>
 <p id="display"></p>
 <div id="content" style="display: none">
-  
+
 </div>
 
 <div id="log" style="font-size: small;"></div>
@@ -42,7 +42,7 @@ function createTestArray() {
         continue;
       }
 
-      var t = new Object;
+      var t = {};
       t.name = test.src;
       t.type = test.type;
 
@@ -55,6 +55,7 @@ function createTestArray() {
 function log(msg) {
   info(msg);
   var l = document.getElementById('log');
+  // eslint-disable-next-line no-unsanitized/property
   l.innerHTML += msg + "<br>";
 }
 
@@ -91,7 +92,7 @@ function listener(evt) {
     // other events to come in. Note: we don't expect any events to come
     // in, unless we've leaked some info, and 1 second should be enough time
     // for the leak to show up.
-    setTimeout(function() {finish(v);}, 1000); 
+    setTimeout(function() {finish(v);}, 1000);
   }
 }
 
@@ -134,7 +135,7 @@ function filename(uri) {
 }
 
 function checkState(v) {
-  test_ok(v.networkState <= HTMLMediaElement.NETWORK_LOADING || 
+  test_ok(v.networkState <= HTMLMediaElement.NETWORK_LOADING ||
           v.networkState == HTMLMediaElement.NETWORK_NO_SOURCE,
           "NetworkState of " + v.networkState + " was leaked.");
   test_ok(v.readyState == HTMLMediaElement.HAVE_NOTHING,
@@ -159,7 +160,7 @@ function checkState(v) {
 function startTest(test, token) {
   manager.started(token);
   log("Testing: " + test.type + " @ " + test.name);
-  createMedia(test.type, test.name, token);  
+  createMedia(test.type, test.name, token);
 }
 
 SimpleTest.waitForExplicitFinish();
