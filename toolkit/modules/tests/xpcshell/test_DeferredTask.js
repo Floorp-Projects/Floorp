@@ -191,18 +191,6 @@ add_test(function test_arm_async() {
 });
 
 /**
- * Checks that "arm" accepts a Task.jsm async function.
- */
-add_test(function test_arm_async_function() {
-  let deferredTask = new DeferredTask(async function() {
-    await Promise.resolve();
-    run_next_test();
-  }, 50);
-
-  deferredTask.arm();
-});
-
-/**
  * Checks that an armed task can be disarmed.
  */
 add_test(function test_disarm() {
