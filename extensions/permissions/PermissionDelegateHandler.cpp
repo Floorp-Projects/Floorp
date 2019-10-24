@@ -89,7 +89,7 @@ nsresult PermissionDelegateHandler::GetPermissionForPermissionsAPI(
 
   nsPIDOMWindowInner* window = mDocument->GetInnerWindow();
   nsGlobalWindowInner* innerWindow = nsGlobalWindowInner::Cast(window);
-  nsIPrincipal* topPrincipal = innerWindow->GetTopLevelPrincipal();
+  nsIPrincipal* topPrincipal = innerWindow->GetTopLevelAntiTrackingPrincipal();
 
   // Permission is delegated in same origin
   if (principal->Subsumes(topPrincipal)) {
