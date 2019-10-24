@@ -11,10 +11,10 @@ function check_dash(v, enabled) {
   check("application/dash+xml; codecs=vorbis", "probably");
   check("application/dash+xml; codecs=vorbis,vp8", "probably");
   check("application/dash+xml; codecs=vorbis,vp8.0", "probably");
-  check("application/dash+xml; codecs=\"vorbis,vp8\"", "probably");
-  check("application/dash+xml; codecs=\"vorbis,vp8.0\"", "probably");
-  check("application/dash+xml; codecs=\"vp8, vorbis\"", "probably");
-  check("application/dash+xml; codecs=\"vp8.0, vorbis\"", "probably");
+  check('application/dash+xml; codecs="vorbis,vp8"', "probably");
+  check('application/dash+xml; codecs="vorbis,vp8.0"', "probably");
+  check('application/dash+xml; codecs="vp8, vorbis"', "probably");
+  check('application/dash+xml; codecs="vp8.0, vorbis"', "probably");
   check("application/dash+xml; codecs=vp8", "probably");
   check("application/dash+xml; codecs=vp8.0", "probably");
 
