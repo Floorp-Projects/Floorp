@@ -11,6 +11,7 @@
 #include "nsLayoutUtils.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/ServoBindings.h"
+#include "mozilla/dom/BrowsingContext.h"
 
 namespace mozilla {
 namespace dom {
