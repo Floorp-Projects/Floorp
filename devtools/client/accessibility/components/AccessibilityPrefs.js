@@ -64,7 +64,7 @@ class AccessibilityTreeFilter extends Component {
     return MenuButton(
       {
         menuId: "accessibility-tree-filters-prefs-menu",
-        doc: document,
+        toolboxDoc: document,
         className: `devtools-button badge toolbar-menu-button prefs`,
         title: L10N.getStr("accessibility.tree.filters.prefs"),
       },
