@@ -66,14 +66,6 @@ class nsWindowWatcher : public nsIWindowWatcher,
   nsWatcherWindowEntry* FindWindowEntry(mozIDOMWindowProxy* aWindow);
   nsresult RemoveWindow(nsWatcherWindowEntry* aInfo);
 
-  // Get the caller tree item.  Look on the JS stack, then fall back
-  // to the parent if there's nothing there.
-  already_AddRefed<nsIDocShellTreeItem> GetCallerTreeItem(
-      nsIDocShellTreeItem* aParentItem);
-
-  mozilla::dom::BrowsingContext* GetCallerBrowsingContext(
-      mozilla::dom::BrowsingContext* aParent);
-
   // Will first look for a caller on the JS stack, and then fall back on
   // aCurrentContext if it can't find one.
   // It also knows to not look for things if aForceNoOpener is set.

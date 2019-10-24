@@ -108,6 +108,8 @@ class BrowsingContextGroup final : public nsWrapperCache {
     }
   }
 
+  static BrowsingContextGroup* GetChromeGroup();
+
  private:
   friend class CanonicalBrowsingContext;
 
