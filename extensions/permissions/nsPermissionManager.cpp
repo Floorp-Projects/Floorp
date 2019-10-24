@@ -158,12 +158,18 @@ bool IsPreloadPermission(const nsACString& aType) {
 // Strip private browsing and user context (if enabled by pref)
 // Flipping these prefs changes the suffix being hashed.
 void MaybeStripOAs(OriginAttributes& aOriginAttributes) {
+  uint32_t flags = 0;
+
   if (!StaticPrefs::permissions_isolateBy_privateBrowsing()) {
-    aOriginAttributes.mPrivateBrowsingId = 0;
+    flags |= OriginAttributes::STRIP_PRIVATE_BROWSING_ID;
   }
 
   if (!StaticPrefs::permissions_isolateBy_userContext()) {
-    aOriginAttributes.StripAttributes(OriginAttributes::STRIP_USER_CONTEXT_ID);
+    flags |= OriginAttributes::STRIP_USER_CONTEXT_ID;
+  }
+
+  if (flags != 0) {
+    aOriginAttributes.StripAttributes(flags);
   }
 }
 

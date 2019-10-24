@@ -261,6 +261,8 @@ interface nsIScriptSecurityManager : nsISupports
 
     const unsigned long DEFAULT_USER_CONTEXT_ID = 0;
 
+    const unsigned long DEFAULT_PRIVATE_BROWSING_ID = 0;
+
     /**
      * Per-domain controls to enable and disable script. This system is designed
      * to be used by at most one consumer, and enforces this with its semantics.
