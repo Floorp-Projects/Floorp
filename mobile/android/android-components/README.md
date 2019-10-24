@@ -313,6 +313,8 @@ cause existing tests to fail. You may find these command lines helpful:
 ./gradlew :support-ktx:testdebugunittest  # Run unit tests for a specified module
 ```
 
+See also [how to measure code coverage](https://mozac.org/contributing/code-coverage).
+
 ## Accessibility ##
 If your code has user-facing changes, follow [Android accessibility best practices](https://github.com/mozilla-mobile/shared-docs/blob/master/android/accessibility_guide.md).
 
