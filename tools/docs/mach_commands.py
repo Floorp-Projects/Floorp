@@ -60,7 +60,14 @@ class Documentation(MachCommandBase):
         from mozfile import which
 
         if not which('jsdoc'):
-            return die('jsdoc not found - please install from npm.')
+            return die("""\
+JSDoc is required to build the docs but was not found on your system. Please \
+install it globally by running:
+
+    $ npm install -g jsdoc
+
+Bug 1498604 tracks bootstrapping jsdoc properly.
+""")
 
         self.activate_pipenv(os.path.join(here, 'Pipfile'))
 
