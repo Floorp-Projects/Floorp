@@ -35,7 +35,7 @@ function onLoadedData_Audio(e) {
   var c = document.getElementsByTagName("canvas")[0].getContext("2d");
   try {
     c.drawImage(t, 0, 0, t.videoHeight, t.videoWidth);
-  } catch (e) {
+  } catch (ex) {
     ok(true, t.name + ": Trying to draw to a canvas should throw, since we don't have a frame anymore");
     finish(t);
     return;

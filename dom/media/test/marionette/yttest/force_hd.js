@@ -12,7 +12,7 @@ var config = {
   "quality": function () {
     if (config.HD || config.LQ) {
       var youtubePlayerListener = function (LQ, HD) {
-        return function youtubePlayerListener (e) {
+        return function (e) {
           if (e === 1) {
             var player = document.getElementById('movie_player');
             if (player) {
@@ -70,4 +70,3 @@ var config = {
     /*  */
     observer.observe(content, {"childList": true, "subtree": true});
   }
-

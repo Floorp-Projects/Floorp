@@ -21,25 +21,25 @@ function createTestArray() {
 }
 
 function startTest(test, token) {
-  var v = document.createElement('video');
-  v.token = token += "-seek" + test.number + ".js";
-  manager.started(v.token);
-  v.src = test.name;
-  v.preload = "metadata";
-  document.body.appendChild(v);
+  var video = document.createElement('video');
+  video.token = token += "-seek" + test.number + ".js";
+  manager.started(video.token);
+  video.src = test.name;
+  video.preload = "metadata";
+  document.body.appendChild(video);
   var name = test.name + " seek test " + test.number;
-  var localIs = function(name) { return function(a, b, msg) {
-    is(a, b, name + ": " + msg);
+  var localIs = function(n) { return function(a, b, msg) {
+    is(a, b, n + ": " + msg);
   }}(name);
-  var localOk = function(name) { return function(a, msg) {
-    ok(a, name + ": " + msg);
+  var localOk = function(n) { return function(a, msg) {
+    ok(a, n + ": " + msg);
   }}(name);
-  var localFinish = function(v, manager) { return function() {
+  var localFinish = function(v, m) { return function() {
     v.onerror = null;
     removeNodeAndSource(v);
     dump("SEEK-TEST: Finished " + name + " token: " + v.token + "\n");
-    manager.finished(v.token);
-  }}(v, manager);
+    m.finished(v.token);
+  }}(video, manager);
   dump("SEEK-TEST: Started " + name + "\n");
-  window['test_seek' + test.number](v, test.duration/2, localIs, localOk, localFinish);
+  window['test_seek' + test.number](video, test.duration/2, localIs, localOk, localFinish);
 }

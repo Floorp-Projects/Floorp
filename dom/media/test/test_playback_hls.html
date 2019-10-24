@@ -13,74 +13,74 @@
 var manager = new MediaTestManager;
 
 function startTest(test, token) {
-  var v = document.createElement('video');
-  v.preload = "metadata";
-  v.token = token;
-  v.prevTime = 0;
-  v.seenEnded = false;
+  var video = document.createElement('video');
+  video.preload = "metadata";
+  video.token = token;
+  video.prevTime = 0;
+  video.seenEnded = false;
 
   var handler = {
     "ontimeout": function() {
-      Log(token, "timed out: ended=" + v.seenEnded);
+      Log(token, "timed out: ended=" + video.seenEnded);
     }
   };
   manager.started(token, handler);
 
-  v.src = test.name;
-  v.name = test.name;
+  video.src = test.name;
+  video.name = test.name;
 
-  var check = function(test, v) { return function() {
-    is(test.name, v.name, test.name + ": Name should match #1");
-    checkMetadata(test.name, v, test);
-  }}(test, v);
+  var check = function(t, v) { return function() {
+    is(t.name, v.name, t.name + ": Name should match #1");
+    checkMetadata(t.name, v, t);
+  }}(test, video);
 
-  var noLoad = function(test, v) { return function() {
-    ok(false, test.name + " should not fire 'load' event");
-  }}(test, v);
+  var noLoad = function(t, v) { return function() {
+    ok(false, t.name + " should not fire 'load' event");
+  }}(test, video);
 
   var finish = function() {
-    v.finished = true;
-    v.removeEventListener("timeupdate", timeUpdate);
-    removeNodeAndSource(v);
-    manager.finished(v.token);
+    video.finished = true;
+    video.removeEventListener("timeupdate", timeUpdate);
+    removeNodeAndSource(video);
+    manager.finished(video.token);
   }
 
   // We should get "ended" events to finish the test.
   var mayFinish = function() {
-    if (v.seenEnded) {
+    if (video.seenEnded) {
       finish();
     }
   }
 
-  var checkEnded = function(test, v) { return function() {
-    is(test.name, v.name, test.name + ": Name should match #2");
-    checkMetadata(test.name, v, test);
-    is(v.readyState, v.HAVE_CURRENT_DATA, test.name + " checking readyState");
-    ok(v.ended, test.name + " checking playback has ended");
-    ok(!v.finished, test.name + " shouldn't be finished");
-    ok(!v.seenEnded, test.name + " shouldn't be ended");
+  var checkEnded = function(t, v) { return function() {
+    is(t.name, v.name, t.name + ": Name should match #2");
+    checkMetadata(t.name, v, test);
+    is(v.readyState, v.HAVE_CURRENT_DATA, t.name + " checking readyState");
+    ok(v.ended, t.name + " checking playback has ended");
+    ok(!v.finished, t.name + " shouldn't be finished");
+    ok(!v.seenEnded, t.name + " shouldn't be ended");
 
     v.seenEnded = true;
     mayFinish();
-  }}(test, v);
+  }}(test, video);
 
-  var timeUpdate = function(test, v) { return function() {
+  var timeUpdate = function(t, v) { return function() {
     if (v.prevTime > v.currentTime) {
-      ok(false, test.name + " time should run forwards: p=" +
+      ok(false, t.name + " time should run forwards: p=" +
                 v.prevTime + " c=" + v.currentTime);
     }
     v.prevTime = v.currentTime;
-  }}(test, v);
+  }}(test, video);
 
-  v.addEventListener("load", noLoad);
-  v.addEventListener("loadedmetadata", check);
-  v.addEventListener("timeupdate", timeUpdate);
+  video.addEventListener("load", noLoad);
+  video.addEventListener("loadedmetadata", check);
+  video.addEventListener("timeupdate", timeUpdate);
 
   // We should get "ended" events for the hls resource
-  v.addEventListener("ended", checkEnded);
+  video.addEventListener("ended", checkEnded);
 
-  document.body.appendChild(v);
-  v.play();
+  document.body.appendChild(video);
+  video.play();
 }
 
 manager.runTests(gHLSTests, startTest);

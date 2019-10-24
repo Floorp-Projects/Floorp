@@ -20,9 +20,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=975270
   a._abort = 0;
   a._emptied = 0;
   a.preload = "metadata"; // On B2G we default to preload:none.
-  
+
   is(a.networkState, HTMLMediaElement.NETWORK_EMPTY, "Shouldn't be loading");
-  
+
   a.addEventListener("abort", function(e) { a._abort++; });
   a.addEventListener("emptied", function(e) { a._emptied++; });
   a.addEventListener("loadedmetadata",
@@ -31,7 +31,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=975270
       is(a._emptied, 0, "Should not have received 'emptied' before 'loadedmetadata");
 
       a.addEventListener("loadstart",
-        function(e) {
+        function() {
           is(a._abort, 1, "Should have received 'abort' before 'loadstart");
           is(a._emptied, 1, "Should  have received 'emptied' before 'loadstart");
           SimpleTest.finish();
@@ -41,9 +41,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=975270
       is(a._abort, 0, "Should not have received 'abort' during setting a.src=''");
       is(a._emptied, 0, "Should not have received 'emptied' during setting a.src=''");
     });
-  
+
   a.src = getPlayableAudio(gSmallTests).name;
-    
+
   </script>
 </head>
 <body>
