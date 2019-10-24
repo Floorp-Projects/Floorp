@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+
+<window title="Cross chrome and content node adoption test"
+  onload="setTimeout(runTest, 0);"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <browser xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" id="content" type="content" src="about:blank"/>
+
+<script>
+
+SimpleTest.waitForExplicitFinish();
+function runTest()
+{
+  let browserElement = document.getElementById("content");
+  try {
+    document.adoptNode(browserElement.contentDocument.documentElement);
+    SimpleTest.ok(false, "Cross chrome and content node adoption should fail");
+  } catch (SecurityError) {
+    SimpleTest.ok(true, "Cross chrome and content node adoption fails as expected");
+  }
+  SimpleTest.finish();
+}
+</script>
+</window>
+

@@ -13,6 +13,7 @@
 #include "mozilla/dom/Document.h"
 #include "js/TypeDecls.h"
 #include "nsCOMArray.h"
+#include "nsContentUtils.h"
 
 struct CharacterDataChangeInfo;
 template <class E>
@@ -206,13 +207,20 @@ class nsNodeUtils {
                     nsCOMArray<nsINode>& aNodesWithProperties,
                     mozilla::ErrorResult& aError) {
     if (aNode && aNewNodeInfoManager) {
-      mozilla::dom::Document* newDoc = aNewNodeInfoManager->GetDocument();
-      mozilla::dom::Document* oldDoc = aNode->OwnerDoc();
-      if (newDoc && oldDoc &&
-          (oldDoc->GetDocGroup() != newDoc->GetDocGroup())) {
-        MOZ_ASSERT(false, "Cross docGroup adoption is not allowed");
-        aError.Throw(NS_ERROR_DOM_SECURITY_ERR);
-        return;
+      mozilla::dom::Document* afterAdoptDoc =
+          aNewNodeInfoManager->GetDocument();
+      mozilla::dom::Document* beforeAdoptDoc = aNode->OwnerDoc();
+
+      if (afterAdoptDoc && beforeAdoptDoc &&
+          (afterAdoptDoc->GetDocGroup() != beforeAdoptDoc->GetDocGroup())) {
+        // This is a temporary solution for Bug 1590526 to only limit
+        // the restriction to chrome level documents because web extensions
+        // rely on content to content node adoption.
+        if (nsContentUtils::IsChromeDoc(afterAdoptDoc) ||
+            nsContentUtils::IsChromeDoc(beforeAdoptDoc)) {
+          aError.Throw(NS_ERROR_DOM_SECURITY_ERR);
+          return;
+        }
       }
     }
 
