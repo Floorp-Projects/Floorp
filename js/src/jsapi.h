@@ -211,17 +211,6 @@ typedef size_t (*JSSizeOfIncludingThisCompartmentCallback)(
     mozilla::MallocSizeOf mallocSizeOf, JS::Compartment* compartment);
 
 /**
- * Callback used by memory reporting to ask the embedder how much memory an
- * external string is keeping alive.  The embedder is expected to return a value
- * that corresponds to the size of the allocation that will be released by the
- * JSStringFinalizer passed to JS_NewExternalString for this string.
- *
- * Implementations of this callback MUST NOT do anything that can cause GC.
- */
-using JSExternalStringSizeofCallback =
-    size_t (*)(JSString* str, mozilla::MallocSizeOf mallocSizeOf);
-
-/**
  * Callback used to intercept JavaScript errors.
  */
 struct JSErrorInterceptor {
@@ -427,9 +416,6 @@ extern JS_PUBLIC_API void JS_SetSizeOfIncludingThisCompartmentCallback(
 
 extern JS_PUBLIC_API void JS_SetWrapObjectCallbacks(
     JSContext* cx, const JSWrapObjectCallbacks* callbacks);
-
-extern JS_PUBLIC_API void JS_SetExternalStringSizeofCallback(
-    JSContext* cx, JSExternalStringSizeofCallback callback);
 
 #if defined(NIGHTLY_BUILD)
 

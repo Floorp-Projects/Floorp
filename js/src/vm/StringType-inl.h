@@ -358,19 +358,18 @@ MOZ_ALWAYS_INLINE char16_t* JSFatInlineString::init<char16_t>(size_t length) {
   return d.inlineStorageTwoByte;
 }
 
-MOZ_ALWAYS_INLINE void JSExternalString::init(const char16_t* chars,
-                                              size_t length,
-                                              const JSStringFinalizer* fin) {
-  MOZ_ASSERT(fin);
-  MOZ_ASSERT(fin->finalize);
+MOZ_ALWAYS_INLINE void JSExternalString::init(
+    const char16_t* chars, size_t length,
+    const JSExternalStringCallbacks* callbacks) {
+  MOZ_ASSERT(callbacks);
   setLengthAndFlags(length, EXTERNAL_FLAGS);
   d.s.u2.nonInlineCharsTwoByte = chars;
-  d.s.u3.externalFinalizer = fin;
+  d.s.u3.externalCallbacks = callbacks;
 }
 
 MOZ_ALWAYS_INLINE JSExternalString* JSExternalString::new_(
     JSContext* cx, const char16_t* chars, size_t length,
-    const JSStringFinalizer* fin) {
+    const JSExternalStringCallbacks* callbacks) {
   if (!validateLength(cx, length)) {
     return nullptr;
   }
@@ -378,7 +377,7 @@ MOZ_ALWAYS_INLINE JSExternalString* JSExternalString::new_(
   if (!str) {
     return nullptr;
   }
-  str->init(chars, length, fin);
+  str->init(chars, length, callbacks);
   size_t nbytes = length * sizeof(char16_t);
 
   MOZ_ASSERT(str->isTenured());
@@ -452,8 +451,7 @@ inline void JSExternalString::finalize(JSFreeOp* fop) {
   size_t nbytes = length() * sizeof(char16_t);
   fop->removeCellMemory(this, nbytes, js::MemoryUse::StringContents);
 
-  const JSStringFinalizer* fin = externalFinalizer();
-  fin->finalize(fin, const_cast<char16_t*>(rawTwoByteChars()));
+  callbacks()->finalize(const_cast<char16_t*>(rawTwoByteChars()));
 }
 
 #endif /* vm_StringType_inl_h */
