@@ -317,6 +317,10 @@ static void DecommitPages(void* addr, size_t bytes) {
   }
 }
 #else  // !XP_WIN
+#  ifndef MAP_NORESERVE
+#    define MAP_NORESERVE 0
+#  endif
+
 static void* ComputeRandomAllocationAddress() {
   uint64_t rand = js::GenerateRandomSeed();
 
