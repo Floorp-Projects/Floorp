@@ -32,8 +32,7 @@ void RunTestInNewThread(Function&& aFunction) {
   testingThread->Shutdown();
 }
 
-nsresult SyncApplyUpdates(RefPtr<Classifier> aClassifier,
-                          TableUpdateArray& aUpdates) {
+nsresult SyncApplyUpdates(TableUpdateArray& aUpdates) {
   // We need to spin a new thread specifically because the callback
   // will be on the caller thread. If we call Classifier::AsyncApplyUpdates
   // and wait on the same thread, this function will never return.
@@ -51,8 +50,14 @@ nsresult SyncApplyUpdates(RefPtr<Classifier> aClassifier,
     NS_DispatchToMainThread(r);
   };
 
+  nsCOMPtr<nsIFile> file;
+  NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(file));
+
   nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction("SyncApplyUpdates", [&]() {
-    nsresult rv = aClassifier->AsyncApplyUpdates(aUpdates, onUpdateComplete);
+    RefPtr<Classifier> classifier = new Classifier();
+    classifier->Open(*file);
+
+    nsresult rv = classifier->AsyncApplyUpdates(aUpdates, onUpdateComplete);
     if (NS_FAILED(rv)) {
       onUpdateComplete(rv);
     }
@@ -91,18 +96,12 @@ already_AddRefed<nsIFile> GetFile(const nsTArray<nsString>& path) {
 }
 
 void ApplyUpdate(TableUpdateArray& updates) {
-  nsCOMPtr<nsIFile> file;
-  NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(file));
-
-  RefPtr<Classifier> classifier = new Classifier();
-  classifier->Open(*file);
-
   // Force nsUrlClassifierUtils loading on main thread
   // because nsIUrlClassifierDBService will not run in advance
   // in gtest.
   nsUrlClassifierUtils::GetInstance();
 
-  SyncApplyUpdates(classifier, updates);
+  SyncApplyUpdates(updates);
 }
 
 void ApplyUpdate(TableUpdate* update) {
