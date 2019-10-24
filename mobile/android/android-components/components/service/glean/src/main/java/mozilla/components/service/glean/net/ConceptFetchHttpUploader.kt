@@ -13,6 +13,8 @@ import mozilla.components.concept.fetch.Request
 import mozilla.components.concept.fetch.isClientError
 import mozilla.components.concept.fetch.isSuccess
 import mozilla.components.support.base.log.logger.Logger
+import mozilla.telemetry.glean.net.HeadersList
+import mozilla.telemetry.glean.net.PingUploader
 import java.io.IOException
 import java.util.concurrent.TimeUnit
 

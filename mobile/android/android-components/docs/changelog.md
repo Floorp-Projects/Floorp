@@ -21,6 +21,10 @@ permalink: /changelog/
 * **browser-state**
   * Added `externalAppType` to `CustomTabConfig` to indicate how the session is being used.
 
+* **service-glean**
+   * The Rust implementation of the Glean SDK is now being used.
+   * ⚠️ **This is a breaking change**: the `GleanDebugActivity` is no longer exposed from service-glean. Users need to use the one in `mozilla.telemetry.glean.debug.GleanDebugActivity` from the `adb` command line.
+
 # 18.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v17.0.0...v18.0.0)
