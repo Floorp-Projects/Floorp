@@ -19,6 +19,7 @@ var config = {
               var levels = player.getAvailableQualityLevels();
               if (levels.length) {
                 var q =
+                  // eslint-disable-next-line no-nested-ternary
                   HD && levels[0]
                     ? levels[0]
                     : LQ && levels[levels.length - 2]
