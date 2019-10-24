@@ -46,7 +46,7 @@ function generateHash(aString) {
 }
 
 /**
- * Trims the query paramters from a url
+ * Trims the query parameters from a url
  */
 function stripQuery(url) {
   return url.split("?")[0];
@@ -70,10 +70,18 @@ class Manifest {
     // However arbitrary urls are not safe file paths so lets hash it.
     const fileName = generateHash(manifestUrl) + ".json";
     this._path = OS.Path.join(MANIFESTS_DIR, fileName);
-    this._browser = browser;
+    this.browser = browser;
   }
 
-  async initialise() {
+  get browser() {
+    return this._browser;
+  }
+
+  set browser(aBrowser) {
+    this._browser = aBrowser;
+  }
+
+  async initialize() {
     this._store = new JSONFile({ path: this._path, saveDelayMs: 100 });
     await this._store.load();
   }
@@ -155,12 +163,13 @@ class Manifest {
  * Manifests maintains the list of installed manifests
  */
 var Manifests = {
-  async initialise() {
-    if (this.started) {
-      return this.started;
+  async _initialize() {
+    if (this._readyPromise) {
+      return this._readyPromise;
     }
 
-    this.started = (async () => {
+    // Prevent multiple initializations
+    this._readyPromise = (async () => {
       // Make sure the manifests have the folder needed to save into
       await OS.File.makeDir(MANIFESTS_DIR, { ignoreExisting: true });
 
@@ -169,21 +178,20 @@ var Manifests = {
       this._store = new JSONFile({ path: this._path });
       await this._store.load();
 
-      // If we dont have any existing data, initialise empty
+      // If we don't have any existing data, initialize empty
       if (!this._store.data.hasOwnProperty("scopes")) {
         this._store.data.scopes = new Map();
       }
-
-      // Cache the Manifest objects creates as they are references to files
-      // and we do not want multiple file handles
-      this.manifestObjs = {};
     })();
 
-    return this.started;
+    // Cache the Manifest objects creates as they are references to files
+    // and we do not want multiple file handles
+    this.manifestObjs = new Map();
+    return this._readyPromise;
   },
 
   // When a manifest is installed, we save its scope so we can determine if
-  // fiture visits fall within this manifests scope
+  // future visits fall within this manifests scope
   manifestInstalled(manifest) {
     this._store.data.scopes[manifest.scope] = manifest.url;
     this._store.saveSoon();
@@ -204,7 +212,9 @@ var Manifests = {
   // tied to the current page
   async getManifest(browser, manifestUrl) {
     // Ensure we have all started up
-    await this.initialise();
+    if (!this._readyPromise) {
+      await this._initialize();
+    }
 
     // If the client does not already know its manifestUrl, we take the
     // url of the client and see if it matches the scope of any installed
@@ -220,14 +230,19 @@ var Manifests = {
     }
 
     // If we have already created this manifest return cached
-    if (manifestUrl in this.manifestObjs) {
-      return this.manifestObjs[manifestUrl];
+    if (this.manifestObjs.has(manifestUrl)) {
+      const manifest = this.manifestObjs.get(manifestUrl);
+      if (manifest.browser !== browser) {
+        manifest.browser = browser;
+      }
+      return manifest;
     }
 
     // Otherwise create a new manifest object
-    this.manifestObjs[manifestUrl] = new Manifest(browser, manifestUrl);
-    await this.manifestObjs[manifestUrl].initialise();
-    return this.manifestObjs[manifestUrl];
+    const manifest = new Manifest(browser, manifestUrl);
+    this.manifestObjs.set(manifestUrl, manifest);
+    await manifest.initialize();
+    return manifest;
   },
 };
 

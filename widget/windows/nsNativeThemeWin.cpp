@@ -1514,9 +1514,26 @@ static bool IsScrollbarWidthThin(nsIFrame* aFrame) {
   return IsScrollbarWidthThin(style);
 }
 
-static bool ShouldDrawCustomScrollbar(ComputedStyle* aStyle) {
-  return aStyle->StyleUI()->HasCustomScrollbars() ||
-         IsScrollbarWidthThin(aStyle);
+// Returns the style for custom scrollbar if the scrollbar part frame should
+// use the custom drawing path, nullptr otherwise.
+//
+// Optionally the caller can pass a pointer to aForDarkBg for whether custom
+// scrollbar may be drawn due to dark background.
+static ComputedStyle* GetCustomScrollbarStyle(nsIFrame* aFrame,
+                                              bool* aDarkScrollbar = nullptr) {
+  ComputedStyle* style = nsLayoutUtils::StyleForScrollbar(aFrame);
+  if (style->StyleUI()->HasCustomScrollbars()) {
+    return style;
+  }
+  bool useDarkScrollbar = !StaticPrefs::widget_disable_dark_scrollbar() &&
+                          nsNativeTheme::IsDarkBackground(aFrame);
+  if (useDarkScrollbar || IsScrollbarWidthThin(style)) {
+    if (aDarkScrollbar) {
+      *aDarkScrollbar = useDarkScrollbar;
+    }
+    return style;
+  }
+  return nullptr;
 }
 
 NS_IMETHODIMP
@@ -1530,10 +1547,9 @@ nsNativeThemeWin::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
   }
 
   if (IsWidgetScrollbarPart(aAppearance)) {
-    ComputedStyle* style = nsLayoutUtils::StyleForScrollbar(aFrame);
-    if (ShouldDrawCustomScrollbar(style)) {
-      return DrawCustomScrollbarPart(aContext, aFrame, style, aAppearance,
-                                     aRect, aDirtyRect);
+    if (MayDrawCustomScrollbarPart(aContext, aFrame, aAppearance, aRect,
+                                   aDirtyRect)) {
+      return NS_OK;
     }
   }
 
@@ -2659,8 +2675,7 @@ nsITheme::ThemeGeometryType nsNativeThemeWin::ThemeGeometryTypeForWidget(
 nsITheme::Transparency nsNativeThemeWin::GetWidgetTransparency(
     nsIFrame* aFrame, StyleAppearance aAppearance) {
   if (IsWidgetScrollbarPart(aAppearance)) {
-    ComputedStyle* style = nsLayoutUtils::StyleForScrollbar(aFrame);
-    if (ShouldDrawCustomScrollbar(style)) {
+    if (ComputedStyle* style = GetCustomScrollbarStyle(aFrame)) {
       auto* ui = style->StyleUI();
       if (ui->mScrollbarColor.IsAuto() ||
           ui->mScrollbarColor.AsColors().track.MaybeTransparent()) {
@@ -4158,9 +4173,17 @@ static nscolor AdjustScrollbarFaceColor(nscolor aFaceColor,
 }
 
 // This tries to draw a Windows 10 style scrollbar with given colors.
-nsresult nsNativeThemeWin::DrawCustomScrollbarPart(
-    gfxContext* aContext, nsIFrame* aFrame, ComputedStyle* aStyle,
-    StyleAppearance aAppearance, const nsRect& aRect, const nsRect& aClipRect) {
+bool nsNativeThemeWin::MayDrawCustomScrollbarPart(gfxContext* aContext,
+                                                  nsIFrame* aFrame,
+                                                  StyleAppearance aAppearance,
+                                                  const nsRect& aRect,
+                                                  const nsRect& aClipRect) {
+  bool darkScrollbar = false;
+  ComputedStyle* style = GetCustomScrollbarStyle(aFrame, &darkScrollbar);
+  if (!style) {
+    return false;
+  }
+
   EventStates eventStates = GetContentState(aFrame, aAppearance);
 
   gfxContextAutoSaveRestore autoSave(aContext);
@@ -4172,11 +4195,12 @@ nsresult nsNativeThemeWin::DrawCustomScrollbarPart(
   gfxRect rect =
       ThebesRect(LayoutDevicePixel::FromAppUnits(aRect, p2a).ToUnknownRect());
 
-  const nsStyleUI* ui = aStyle->StyleUI();
+  const nsStyleUI* ui = style->StyleUI();
   auto* customColors =
       ui->mScrollbarColor.IsAuto() ? nullptr : &ui->mScrollbarColor.AsColors();
-  nscolor trackColor = customColors ? customColors->track.CalcColor(*aStyle)
-                                    : NS_RGB(240, 240, 240);
+  nscolor trackColor = customColors ? customColors->track.CalcColor(*style)
+                                    : (darkScrollbar ? NS_RGBA(20, 20, 25, 77)
+                                                     : NS_RGB(240, 240, 240));
   switch (aAppearance) {
     case StyleAppearance::ScrollbarHorizontal:
     case StyleAppearance::ScrollbarVertical:
@@ -4184,7 +4208,7 @@ nsresult nsNativeThemeWin::DrawCustomScrollbarPart(
       ctx->SetColor(Color::FromABGR(trackColor));
       ctx->Rectangle(rect);
       ctx->Fill();
-      return NS_OK;
+      return true;
     }
     default:
       break;
@@ -4211,8 +4235,10 @@ nsresult nsNativeThemeWin::DrawCustomScrollbarPart(
   switch (aAppearance) {
     case StyleAppearance::ScrollbarthumbVertical:
     case StyleAppearance::ScrollbarthumbHorizontal: {
-      nscolor faceColor = customColors ? customColors->thumb.CalcColor(*aStyle)
-                                       : NS_RGB(205, 205, 205);
+      nscolor faceColor = customColors
+                              ? customColors->thumb.CalcColor(*style)
+                              : (darkScrollbar ? NS_RGBA(249, 249, 250, 102)
+                                               : NS_RGB(205, 205, 205));
       faceColor = AdjustScrollbarFaceColor(faceColor, eventStates);
       ctx->SetColor(Color::FromABGR(faceColor));
       ctx->Rectangle(bgRect);
@@ -4276,7 +4302,7 @@ nsresult nsNativeThemeWin::DrawCustomScrollbarPart(
     default:
       MOZ_ASSERT_UNREACHABLE("Unknown widget type");
   }
-  return NS_OK;
+  return true;
 }
 
 ///////////////////////////////////////////

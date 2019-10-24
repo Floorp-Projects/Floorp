@@ -106,8 +106,8 @@ emitted:
     Name of the subtest (string).
 
   ``status``
-    Result of the test (string enum; ``PASS``, ``FAIL``, ``TIMEOUT``,
-    ``NOTRUN``)
+    Result of the test (string enum; ``PASS``, ``FAIL``,
+    ``PRECONDITION_FAILED``, ``TIMEOUT``, ``NOTRUN``)
 
   ``expected``
     Expected result of the test. Omitted if the expected result is the
@@ -126,10 +126,11 @@ emitted:
 
   ``status``
     Either result of the test (if there are no subtests) in which case
-    (string enum ``PASS``, ``FAIL``, ``TIMEOUT``, ``CRASH``,
-    ``ASSERT``, ``SKIP``) or the status of the overall file where
-    there are subtests (string enum ``OK``, ``ERROR``, ``TIMEOUT``,
-    ``CRASH``, ``ASSERT``, ``SKIP``).
+    (string enum ``PASS``, ``FAIL``, ``PRECONDITION_FAILED``,
+    ``TIMEOUT``, ``CRASH``, ``ASSERT``, , ``SKIP``) or the status of
+    the overall file where there are subtests (string enum ``OK``,
+    ``PRECONDITION_FAILED``, ``ERROR``, ``TIMEOUT``, ``CRASH``,
+    ``ASSERT``, ``SKIP``).
 
   ``expected``
     The expected status, or omitted if the expected status matches the

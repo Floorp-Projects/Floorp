@@ -137,6 +137,58 @@ test_baz
 """.lstrip(b'\n')),
     ],
 
+    'PRECONDITION_FAILED': [
+        ('mach', {}, b"""
+ 0:00.00 SUITE_START: running 2 tests
+ 0:00.00 TEST_START: test_foo
+ 0:00.00 TEST_END: PRECONDITION_FAILED, expected OK
+ 0:00.00 TEST_START: test_bar
+ 0:00.00 TEST_END: Test OK. Subtests passed 1/2. Unexpected 1
+PRECONDITION_FAILED another subtest
+ 0:00.00 SUITE_END
+
+suite 1
+~~~~~~~
+Ran 4 checks (2 subtests, 2 tests)
+Expected results: 2
+Unexpected results: 2
+  test: 1 (1 precondition_failed)
+  subtest: 1 (1 precondition_failed)
+
+Unexpected Results
+------------------
+test_foo
+  PRECONDITION_FAILED test_foo
+test_bar
+  PRECONDITION_FAILED another subtest
+""".lstrip(b'\n')),
+        ('mach', {'verbose': True}, b"""
+ 0:00.00 SUITE_START: running 2 tests
+ 0:00.00 TEST_START: test_foo
+ 0:00.00 TEST_END: PRECONDITION_FAILED, expected OK
+ 0:00.00 TEST_START: test_bar
+ 0:00.00 PASS a subtest
+ 0:00.00 PRECONDITION_FAILED another subtest
+ 0:00.00 TEST_END: Test OK. Subtests passed 1/2. Unexpected 1
+ 0:00.00 SUITE_END
+
+suite 1
+~~~~~~~
+Ran 4 checks (2 subtests, 2 tests)
+Expected results: 2
+Unexpected results: 2
+  test: 1 (1 precondition_failed)
+  subtest: 1 (1 precondition_failed)
+
+Unexpected Results
+------------------
+test_foo
+  PRECONDITION_FAILED test_foo
+test_bar
+  PRECONDITION_FAILED another subtest
+""".lstrip(b'\n')),
+    ],
+
     'KNOWN-INTERMITTENT': [
         ('mach', {}, b"""
  0:00.00 SUITE_START: running 3 tests
@@ -260,6 +312,28 @@ def test_fail(name, opts, expected):
     logger.test_end('test_bar', 'OK')
     logger.test_start('test_baz')
     logger.test_end('test_baz', 'PASS', 'FAIL')
+    logger.suite_end()
+
+    result = buf.getvalue()
+    print("Dumping result for copy/paste:")
+    print(result)
+    assert result == expected
+
+@pytest.mark.parametrize("name,opts,expected", FORMATS['PRECONDITION_FAILED'],
+                         ids=ids('PRECONDITION_FAILED'))
+def test_precondition_failed(name, opts, expected):
+    buf = BytesIO()
+    fmt = formatters[name](**opts)
+    logger = StructuredLogger('test_logger')
+    logger.add_handler(StreamHandler(buf, fmt))
+
+    logger.suite_start(['test_foo', 'test_bar'])
+    logger.test_start('test_foo')
+    logger.test_end('test_foo', 'PRECONDITION_FAILED')
+    logger.test_start('test_bar')
+    logger.test_status('test_bar', 'a subtest', 'PASS')
+    logger.test_status('test_bar', 'another subtest', 'PRECONDITION_FAILED')
+    logger.test_end('test_bar', 'OK')
     logger.suite_end()
 
     result = buf.getvalue()

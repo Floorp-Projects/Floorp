@@ -4150,15 +4150,22 @@ class BaseCompiler final : public BaseCompilerInterface {
 
   void popBlockResults(ResultType type, StackHeight stackBase,
                        ContinuationKind kind) {
-    if (type.empty()) {
-      return;
+    if (!type.empty()) {
+      ABIResultIter iter(type);
+      popRegisterResults(iter);
+      if (!iter.done()) {
+        popStackResults(iter, stackBase);
+        // Because popStackResults might clobber the stack, it leaves the stack
+        // pointer already in the right place for the continuation, whether the
+        // continuation is a jump or fallthrough.
+        return;
+      }
     }
-
-    ABIResultIter iter(type);
-    popRegisterResults(iter);
-    if (!iter.done()) {
-      popStackResults(iter, stackBase);
-    } else if (kind == ContinuationKind::Jump) {
+    // We get here if there are no stack results.  For a fallthrough, the stack
+    // is already at the right height.  For a jump, we may need to pop the stack
+    // pointer if the continuation's stack height is lower than the current
+    // stack height.
+    if (kind == ContinuationKind::Jump) {
       fr.popStackBeforeBranch(stackBase, type);
     }
   }

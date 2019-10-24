@@ -272,7 +272,7 @@ class ToolboxTabs extends Component {
         id: "tools-chevron-menu-button",
         menuId: "tools-chevron-menu-button-panel",
         className: "devtools-button tools-chevron-menu",
-        doc: toolbox.doc,
+        toolboxDoc: toolbox.doc,
       },
       this.renderToolsChevronMenuList()
     );

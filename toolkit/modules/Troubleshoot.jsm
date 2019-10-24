@@ -118,7 +118,12 @@ PREFS_GETTERS[Ci.nsIPrefBranch.PREF_INT] = (prefs, name) =>
 PREFS_GETTERS[Ci.nsIPrefBranch.PREF_BOOL] = (prefs, name) =>
   prefs.getBoolPref(name);
 
-const kURLDecorationPref = "privacy.restrict3rdpartystorage.url_decorations";
+// List of unimportant locked prefs (won't be shown on the troubleshooting
+// session)
+const PREFS_UNIMPORTANT_LOCKED = [
+  "dom.postMessage.sharedArrayBuffer.bypassCOOP_COEP.insecure.enabled",
+  "privacy.restrict3rdpartystorage.url_decorations",
+];
 
 // Return the preferences filtered by PREFS_BLACKLIST and PREFS_WHITELIST lists
 // and also by the custom 'filter'-ing function.
@@ -392,11 +397,11 @@ var dataProviders = {
   },
 
   lockedPreferences: function lockedPreferences(done) {
-    // The URL Decoration pref isn't an important locked pref, so there is no
-    // good reason to report it.
     done(
       getPrefList(
-        name => name != kURLDecorationPref && Services.prefs.prefIsLocked(name)
+        name =>
+          !PREFS_UNIMPORTANT_LOCKED.includes(name) &&
+          Services.prefs.prefIsLocked(name)
       )
     );
   },

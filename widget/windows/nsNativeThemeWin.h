@@ -105,11 +105,9 @@ class nsNativeThemeWin : private nsNativeTheme, public nsITheme {
                                   StyleAppearance aAppearance);
   void DrawCheckedRect(HDC hdc, const RECT& rc, int32_t fore, int32_t back,
                        HBRUSH defaultBack);
-  nsresult DrawCustomScrollbarPart(gfxContext* aContext, nsIFrame* aFrame,
-                                   mozilla::ComputedStyle* aStyle,
-                                   StyleAppearance aAppearance,
-                                   const nsRect& aRect,
-                                   const nsRect& aClipRect);
+  bool MayDrawCustomScrollbarPart(gfxContext* aContext, nsIFrame* aFrame,
+                                  StyleAppearance aAppearance,
+                                  const nsRect& aRect, const nsRect& aClipRect);
   uint32_t GetWidgetNativeDrawingFlags(StyleAppearance aAppearance);
   int32_t StandardGetState(nsIFrame* aFrame, StyleAppearance aAppearance,
                            bool wantFocused);

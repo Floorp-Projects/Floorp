@@ -7,6 +7,8 @@
 #ifndef nsSegmentedBuffer_h__
 #define nsSegmentedBuffer_h__
 
+class nsIEventTarget;
+
 class nsSegmentedBuffer {
  public:
   nsSegmentedBuffer()
@@ -72,6 +74,11 @@ class nsSegmentedBuffer {
   uint32_t mSegmentArrayCount;
   int32_t mFirstSegmentIndex;
   int32_t mLastSegmentIndex;
+
+ private:
+  void FreeOMT(void* aPtr);
+
+  nsCOMPtr<nsIEventTarget> mIOThread;
 };
 
 // NS_SEGMENTARRAY_INITIAL_SIZE: This number needs to start out as a
