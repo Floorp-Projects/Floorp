@@ -1038,7 +1038,7 @@ void nsSHEntry::EvictContentViewer() {
   }
 }
 
-nsLegacySHEntry::nsLegacySHEntry(nsSHistory* aHistory, uint64_t aID)
+nsLegacySHEntry::nsLegacySHEntry(nsISHistory* aHistory, uint64_t aID)
     : nsSHEntry(new nsSHEntryShared(aHistory, aID)) {}
 
 NS_IMETHODIMP

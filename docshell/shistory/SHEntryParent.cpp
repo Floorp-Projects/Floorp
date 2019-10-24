@@ -46,8 +46,11 @@ MaybeNewPSHEntryParent LegacySHEntry::GetOrCreateActor(
     return AsVariant(static_cast<PSHEntryParent*>(mActor));
   }
 
-  return AsVariant(NewPSHEntry{
-      aContentParent->OpenPSHEntryEndpoint(CreateActor()), mShared->mID});
+  nsCOMPtr<nsISHistory> shistory = do_QueryReferent(mShared->mSHistory);
+  return AsVariant(
+      NewPSHEntry{aContentParent->OpenPSHEntryEndpoint(CreateActor()),
+                  static_cast<LegacySHistory*>(shistory.get())->GetActor(),
+                  nullptr, mShared->mID});
 }
 
 void LegacySHEntry::AbandonBFCacheEntry(uint64_t aNewSharedID) {

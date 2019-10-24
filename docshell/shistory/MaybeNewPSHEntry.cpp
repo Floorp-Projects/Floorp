@@ -19,6 +19,7 @@ struct IPDLParamTraits<dom::NewPSHEntry> {
     MOZ_RELEASE_ASSERT(aActor->GetSide() == ParentSide, "wrong side!");
 
     WriteIPDLParam(aMsg, aActor, std::move(aEntry.mEndpoint));
+    WriteIPDLParam(aMsg, aActor, aEntry.mSHistoryParent);
     WriteIPDLParam(aMsg, aActor, aEntry.mSharedID);
   }
 
@@ -27,6 +28,7 @@ struct IPDLParamTraits<dom::NewPSHEntry> {
     MOZ_RELEASE_ASSERT(aActor->GetSide() == ChildSide, "wrong side!");
 
     return ReadIPDLParam(aMsg, aIter, aActor, &aEntry->mEndpoint) &&
+           ReadIPDLParam(aMsg, aIter, aActor, &aEntry->mSHistoryChild) &&
            ReadIPDLParam(aMsg, aIter, aActor, &aEntry->mSharedID);
   }
 };
@@ -65,8 +67,9 @@ bool IPDLParamTraits<dom::CrossProcessSHEntry*>::Read(
         return true;
       },
       [&](dom::NewPSHEntry& newEntry) {
-        RefPtr<dom::SHEntryChild> entry =
-            new dom::SHEntryChild(newEntry.mSharedID);
+        RefPtr<dom::SHEntryChild> entry = new dom::SHEntryChild(
+            static_cast<dom::SHistoryChild*>(newEntry.mSHistoryChild),
+            newEntry.mSharedID);
         dom::ContentChild::GetSingleton()->BindPSHEntryEndpoint(
             std::move(newEntry.mEndpoint), do_AddRef(entry).take());
         *aEntry = entry.forget();
