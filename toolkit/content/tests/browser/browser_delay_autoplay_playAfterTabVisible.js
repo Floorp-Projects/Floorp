@@ -42,7 +42,8 @@ add_task(async function setup_test_preference() {
  */
 add_task(async function media_should_be_able_to_play_in_visible_tab() {
   info("- open new background tab, and check tab's media pause state -");
-  let tab = BrowserTestUtils.addTab(window.gBrowser, PAGE);
+  let tab = BrowserTestUtils.addTab(window.gBrowser, "about:blank");
+  BrowserTestUtils.loadURI(tab.linkedBrowser, PAGE);
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
   await ContentTask.spawn(tab.linkedBrowser, true, check_audio_pause_state);
 
