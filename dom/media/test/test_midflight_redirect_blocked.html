@@ -56,14 +56,11 @@
       let v = document.createElement("video");
       const testCases = gSmallTests.filter(t => v.canPlayType(t.type));
 
-      function testMediaLoad(expectedToLoad, message, useCors) {
-        return new Promise(async function(resolve, reject) {
-          for (let test of testCases) {
-            let loaded = await testIfLoadsToMetadata(test, useCors);
-            is(loaded, expectedToLoad, test.name + " " + message);
-          }
-          resolve();
-        });
+      async function testMediaLoad(expectedToLoad, message, useCors) {
+        for (let test of testCases) {
+          let loaded = await testIfLoadsToMetadata(test, useCors);
+          is(loaded, expectedToLoad, test.name + " " + message);
+        }
       }
 
       async function runTest() {

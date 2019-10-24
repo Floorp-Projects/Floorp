@@ -24,18 +24,16 @@ function check_ogg(v, enabled, finish) {
   // Verify Opus support
   function verify_opus_support() {
     return new Promise(function(resolve, reject) {
-      var OpusEnabled = undefined;
-      try {
-        OpusEnabled = SpecialPowers.getBoolPref("media.opus.enabled");
-      } catch (ex) {
-        // SpecialPowers failed, perhaps because Opus isn't compiled in
-        console.log(
-          "media.opus.enabled pref not found; skipping Opus validation"
-        );
-      }
+      var OpusEnabled = SpecialPowers.getBoolPref(
+        "media.opus.enabled",
+        undefined
+      );
       if (OpusEnabled != undefined) {
         resolve();
       } else {
+        console.log(
+          "media.opus.enabled pref not found; skipping Opus validation"
+        );
         reject();
       }
     });

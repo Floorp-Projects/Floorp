@@ -41,8 +41,10 @@ function receiveMessage(event)
     return;
   }
 
-  if (event.data.done == "true")
-    return done();
+  if (event.data.done == "true") {
+    done();
+    return;
+  }
 
   ok(event.data.result, event.data.message);
 }
