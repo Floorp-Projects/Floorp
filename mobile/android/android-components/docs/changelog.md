@@ -24,6 +24,9 @@ permalink: /changelog/
 * **service-glean**
    * The Rust implementation of the Glean SDK is now being used.
    * ⚠️ **This is a breaking change**: the `GleanDebugActivity` is no longer exposed from service-glean. Users need to use the one in `mozilla.telemetry.glean.debug.GleanDebugActivity` from the `adb` command line.
+   
+* **lib-push-firebase**
+   * Fixes a potential bug where we receive a message for another push service that we cannot process.
 
 # 18.0.0
 
