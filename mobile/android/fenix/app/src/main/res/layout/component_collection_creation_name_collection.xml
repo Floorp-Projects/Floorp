@@ -18,7 +18,7 @@
         android:background="?android:attr/selectableItemBackgroundBorderless"
         android:drawableStart="@drawable/mozac_ic_back"
         android:drawablePadding="8dp"
-        android:drawableTint="@color/neutral_text"
+        app:drawableTint="@color/neutral_text"
         android:gravity="start|center_vertical"
         android:text="@string/create_collection_name_collection"
         android:textAppearance="@style/HeaderTextStyle"

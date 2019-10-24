@@ -3,12 +3,12 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:layout_margin="16dp"
-    android:orientation="vertical">
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_margin="16dp"
+        android:orientation="vertical">
 
     <TextView
         android:id="@+id/bookmark_name_label"
@@ -78,9 +78,9 @@
         android:layout_marginTop="8dp"
         android:drawableStart="@drawable/ic_folder_icon"
         android:drawablePadding="10dp"
-        app:drawableTint="?primaryText"
         android:textColor="?secondaryText"
         android:textSize="16sp"
+        app:drawableTint="?primaryText"
         tools:text="Mobile Bookmarks" />
 
 </LinearLayout>

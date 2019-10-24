@@ -19,7 +19,7 @@
         android:drawableStart="@drawable/mozac_ic_back"
         android:drawablePadding="8dp"
         android:gravity="start|center_vertical"
-        android:drawableTint="@color/neutral_text"
+        app:drawableTint="@color/neutral_text"
         android:text="@string/create_collection_select_collection"
         android:textAppearance="@style/HeaderTextStyle"
         android:textColor="@color/neutral_text"
