@@ -56,7 +56,7 @@ struct LoadedLibraryInfo {
 };
 
 #if defined(GP_OS_android)
-static void outputMapperLog(const char* aBuf) { LOG("%s", aBuf); }
+static void outputMapperLog(const char* aBuf) { NS_WARNING("%s", aBuf); }
 #endif
 
 static nsCString IDtoUUIDString(
@@ -161,7 +161,7 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf() {
     // readlink failed for whatever reason.  Note this, but keep going.
     exeName[0] = '\0';
     exeNameLen = 0;
-    LOG("SharedLibraryInfo::GetInfoForSelf(): readlink failed");
+    NS_WARNING("SharedLibraryInfo::GetInfoForSelf(): readlink failed");
   } else {
     // Assert no buffer overflow.
     MOZ_RELEASE_ASSERT(exeNameLen >= 0 &&
@@ -203,7 +203,8 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf() {
       continue;
     }
     if (ret != 5 && ret != 4) {
-      LOG("SharedLibraryInfo::GetInfoForSelf(): "
+      NS_WARNING(
+          "SharedLibraryInfo::GetInfoForSelf(): "
           "reading /proc/self/maps failed");
       continue;
     }
@@ -220,7 +221,8 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf() {
       info.AddSharedLibrary(
           SharedLibraryAtPath(modulePath, start, end, offset));
       if (info.GetSize() > 10000) {
-        LOG("SharedLibraryInfo::GetInfoForSelf(): "
+        NS_WARNING(
+            "SharedLibraryInfo::GetInfoForSelf(): "
             "implausibly large number of mappings acquired");
         break;
       }
