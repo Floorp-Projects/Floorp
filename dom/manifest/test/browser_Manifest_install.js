@@ -28,12 +28,13 @@ add_task(async function() {
 
   await BrowserTestUtils.withNewTab(tabOptions, async function(browser) {
     let manifest = await Manifests.getManifest(browser, manifestUrl);
-    is(manifest.installed, false, "We havent installed this manifest yet");
+    is(manifest.installed, false, "We haven't installed this manifest yet");
 
     await manifest.install(browser);
     is(manifest.name, "hello World", "Manifest has correct name");
     is(manifest.installed, true, "Manifest is installed");
     is(manifest.url, manifestUrl, "has correct url");
+    is(manifest.browser, browser, "has correct browser");
 
     manifest = await Manifests.getManifest(browser, manifestUrl);
     is(manifest.installed, true, "New instances are installed");
@@ -48,5 +49,10 @@ add_task(async function() {
 
     foundManifest = Manifests.findManifestUrl("http://example.org/");
     is(foundManifest, null, "Does not find manifests outside scope");
+  });
+  // Get the cached one now
+  await BrowserTestUtils.withNewTab(tabOptions, async browser => {
+    const manifest = await Manifests.getManifest(browser, manifestUrl);
+    is(manifest.browser, browser, "has updated browser object");
   });
 });
