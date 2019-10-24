@@ -9862,17 +9862,6 @@ static bool HasHttpScheme(nsIURI* aURI) {
     MOZ_ASSERT(NS_SUCCEEDED(aRv));
   }
 
-  nsCOMPtr<nsIURI> rpURI;
-  aLoadInfo->GetResultPrincipalURI(getter_AddRefs(rpURI));
-  Maybe<nsCOMPtr<nsIURI>> originalResultPrincipalURI;
-  aLoadState->GetMaybeResultPrincipalURI(originalResultPrincipalURI);
-  if (originalResultPrincipalURI &&
-      (!aLoadState->KeepResultPrincipalURIIfSet() || !rpURI)) {
-    // Unconditionally override, we want the replay to be equal to what has
-    // been captured.
-    aLoadInfo->SetResultPrincipalURI(originalResultPrincipalURI.ref());
-  }
-
   if (httpChannel) {
     if (aLoadState->HeadersStream()) {
       aRv = AddHeadersToChannel(aLoadState->HeadersStream(), httpChannel);
@@ -9916,6 +9905,20 @@ static bool HasHttpScheme(nsIURI* aURI) {
     // Currently only http and ftp channels support this.
     props->SetPropertyAsInterface(
         NS_LITERAL_STRING("docshell.internalReferrer"), referrer);
+  }
+
+  nsCOMPtr<nsILoadInfo> loadInfo;
+  MOZ_ALWAYS_SUCCEEDS(aChannel->GetLoadInfo(getter_AddRefs(loadInfo)));
+
+  nsCOMPtr<nsIURI> rpURI;
+  loadInfo->GetResultPrincipalURI(getter_AddRefs(rpURI));
+  Maybe<nsCOMPtr<nsIURI>> originalResultPrincipalURI;
+  aLoadState->GetMaybeResultPrincipalURI(originalResultPrincipalURI);
+  if (originalResultPrincipalURI &&
+      (!aLoadState->KeepResultPrincipalURIIfSet() || !rpURI)) {
+    // Unconditionally override, we want the replay to be equal to what has
+    // been captured.
+    loadInfo->SetResultPrincipalURI(originalResultPrincipalURI.ref());
   }
 
   nsresult rv = NS_OK;
@@ -10034,9 +10037,6 @@ static bool HasHttpScheme(nsIURI* aURI) {
 
   nsCOMPtr<nsIContentSecurityPolicy> csp = aLoadState->Csp();
   if (csp) {
-    nsCOMPtr<nsILoadInfo> loadInfo;
-    MOZ_ALWAYS_SUCCEEDS(aChannel->GetLoadInfo(getter_AddRefs(loadInfo)));
-
     // Navigational requests that are same origin need to be upgraded in case
     // upgrade-insecure-requests is present.
     bool upgradeInsecureRequests = false;
