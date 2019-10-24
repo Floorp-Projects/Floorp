@@ -24,6 +24,7 @@ const {
 } = require("./actions/pseudo-classes");
 const {
   updateAddRuleEnabled,
+  updateColorSchemeSimulationHidden,
   updateHighlightedSelector,
   updatePrintSimulationHidden,
   updateRules,
@@ -66,6 +67,12 @@ loader.lazyRequireGetter(
   "devtools/client/shared/inplace-editor",
   true
 );
+loader.lazyRequireGetter(
+  this,
+  "COLOR_SCHEMES",
+  "devtools/client/inspector/rules/constants",
+  true
+);
 
 const PREF_UA_STYLES = "devtools.inspector.showUserAgentStyles";
 
@@ -93,6 +100,9 @@ class RulesView {
     );
     this.onToggleDeclaration = this.onToggleDeclaration.bind(this);
     this.onTogglePrintSimulation = this.onTogglePrintSimulation.bind(this);
+    this.onToggleColorSchemeSimulation = this.onToggleColorSchemeSimulation.bind(
+      this
+    );
     this.onTogglePseudoClass = this.onTogglePseudoClass.bind(this);
     this.onToolChanged = this.onToolChanged.bind(this);
     this.onToggleSelectorHighlighter = this.onToggleSelectorHighlighter.bind(
@@ -129,6 +139,7 @@ class RulesView {
       onOpenSourceLink: this.onOpenSourceLink,
       onSetClassState: this.onSetClassState,
       onToggleClassPanelExpanded: this.onToggleClassPanelExpanded,
+      onToggleColorSchemeSimulation: this.onToggleColorSchemeSimulation,
       onToggleDeclaration: this.onToggleDeclaration,
       onTogglePrintSimulation: this.onTogglePrintSimulation,
       onTogglePseudoClass: this.onTogglePseudoClass,
@@ -139,7 +150,7 @@ class RulesView {
       showSelectorEditor: this.showSelectorEditor,
     });
 
-    this.initPrintSimulation();
+    this.initSimulationFeatures();
 
     const provider = createElement(
       Provider,
@@ -156,18 +167,33 @@ class RulesView {
     this.provider = provider;
   }
 
-  async initPrintSimulation() {
-    const target = this.inspector.currentTarget;
-
+  async initSimulationFeatures() {
     // In order to query if the emulation actor's print simulation methods are supported,
     // we have to call the emulation front so that the actor is lazily loaded. This allows
     // us to use `actorHasMethod`. Please see `getActorDescription` for more information.
-    this.emulationFront = await target.getFront("emulation");
+    this.emulationFront = await this.currentTarget.getFront("emulation");
 
-    if (!target.chrome) {
+    if (!this.currentTarget.chrome) {
       this.store.dispatch(updatePrintSimulationHidden(false));
     } else {
       this.store.dispatch(updatePrintSimulationHidden(true));
+    }
+
+    // Show the color scheme simulation toggle button if:
+    // - The feature pref is enabled.
+    // - Color scheme simulation is supported for the current target.
+    if (
+      Services.prefs.getBoolPref(
+        "devtools.inspector.color-scheme-simulation.enabled"
+      ) &&
+      (await this.currentTarget.actorHasMethod(
+        "emulation",
+        "getEmulatedColorScheme"
+      ))
+    ) {
+      this.store.dispatch(updateColorSchemeSimulationHidden(false));
+    } else {
+      this.store.dispatch(updateColorSchemeSimulationHidden(true));
     }
   }
 
@@ -245,6 +271,16 @@ class RulesView {
 
     return this._classList;
   }
+
+  /**
+   * Get the current target the toolbox is debugging.
+   *
+   * @return {Target}
+   */
+  get currentTarget() {
+    return this.inspector.currentTarget;
+  }
+
   /**
    * Creates a dummy element in the document that helps get the computed style in
    * TextProperty.
@@ -370,15 +406,12 @@ class RulesView {
    */
   async onOpenSourceLink(ruleId) {
     const rule = this.elementStyle.getRule(ruleId);
-    if (
-      !rule ||
-      !Tools.styleEditor.isTargetSupported(this.inspector.currentTarget)
-    ) {
+    if (!rule || !Tools.styleEditor.isTargetSupported(this.currentTarget)) {
       return;
     }
 
     const toolbox = await gDevTools.showToolbox(
-      this.inspector.currentTarget,
+      this.currentTarget,
       "styleeditor"
     );
     const styleEditor = toolbox.getCurrentPanel();
@@ -451,6 +484,17 @@ class RulesView {
     this.telemetry.recordEvent("edit_rule", "ruleview", null, {
       session_id: this.toolbox.sessionId,
     });
+  }
+
+  /**
+   * Handler for toggling color scheme simulation.
+   */
+  async onToggleColorSchemeSimulation() {
+    const currentState = await this.emulationFront.getEmulatedColorScheme();
+    const index = COLOR_SCHEMES.indexOf(currentState);
+    const nextState = COLOR_SCHEMES[(index + 1) % COLOR_SCHEMES.length];
+    await this.emulationFront.setEmulatedColorScheme(nextState);
+    await this.updateElementStyle();
   }
 
   /**
