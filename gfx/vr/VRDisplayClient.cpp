@@ -269,6 +269,10 @@ bool VRDisplayClient::GetIsConnected() const {
   return mDisplayInfo.GetIsConnected();
 }
 
+bool VRDisplayClient::IsPresenting() {
+  return mDisplayInfo.mPresentingGroups != 0;
+}
+
 void VRDisplayClient::NotifyDisconnected() {
   mDisplayInfo.mDisplayState.isConnected = false;
 }

@@ -73,6 +73,7 @@ class VRManagerChild : public PVRManagerChild {
   static void ShutDown();
 
   static bool IsCreated();
+  static bool IsPresenting();
 
   PVRLayerChild* CreateVRLayer(uint32_t aDisplayID, nsIEventTarget* aTarget,
                                uint32_t aGroup);
