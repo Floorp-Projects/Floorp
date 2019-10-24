@@ -30,17 +30,17 @@ function startTest(test, token) {
     clone.token = evt.target.token;
     clone.play();
 
-    clone.onloadstart = function(evt) {
-      info("cloned " + evt.target.token + " start loading.");
-      evt.target.onloadstart = null;
+    clone.onloadstart = function(event) {
+      info("cloned " + event.target.token + " start loading.");
+      event.target.onloadstart = null;
       removeNodeAndSource(v);
     }
 
-    clone.onended = function(evt) {
-      ok(true, "cloned " + evt.target.token + " ended.");
-      evt.target.onended = null;
-      removeNodeAndSource(evt.target);
-      manager.finished(evt.target.token);
+    clone.onended = function(event) {
+      ok(true, "cloned " + event.target.token + " ended.");
+      event.target.onended = null;
+      removeNodeAndSource(event.target);
+      manager.finished(event.target.token);
     }
   }
 }

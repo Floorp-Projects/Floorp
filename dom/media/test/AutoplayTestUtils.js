@@ -1,3 +1,5 @@
+/* import-globals-from manifest.js */
+
 function playAndPostResult(muted, parent_window) {
   let element = document.createElement("video");
   element.preload = "auto";
@@ -7,13 +9,13 @@ function playAndPostResult(muted, parent_window) {
   document.body.appendChild(element);
   let allowedToPlay = element.allowedToPlay;
   element.play().then(
-      () => {
-        parent_window.postMessage({played: true, allowedToPlay}, "*");
-      },
-      () => {
-        parent_window.postMessage({played: false, allowedToPlay}, "*");
-      }
-    );
+    () => {
+      parent_window.postMessage({ played: true, allowedToPlay }, "*");
+    },
+    () => {
+      parent_window.postMessage({ played: false, allowedToPlay }, "*");
+    }
+  );
 }
 
 function nextWindowMessage() {
@@ -30,10 +32,15 @@ const autoplayPermission = "autoplay-media";
 
 async function pushAutoplayAllowedPermission() {
   return new Promise((resolve, reject) => {
-    SpecialPowers.pushPermissions([{
-      'type': autoplayPermission,
-      'allow': true,
-      'context': document
-    }], resolve);
+    SpecialPowers.pushPermissions(
+      [
+        {
+          type: autoplayPermission,
+          allow: true,
+          context: document,
+        },
+      ],
+      resolve
+    );
   });
 }

@@ -13,6 +13,7 @@
 SimpleTest.waitForExplicitFinish();
 
 function doTest() {
+  /* global v */
   window.oak = v.mozCaptureStreamUntilEnded();
   v.mozCaptureStreamUntilEnded();
   v.play();

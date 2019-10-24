@@ -39,7 +39,7 @@ function testWebM2(e) {
   ok(v.buffered.length >= 1, "Should have a buffered range");
   var halfBuffered = v.buffered.end(0) / 2;
 
-  function startTest() {
+  function start() {
     if (completed)
       return;
 
@@ -80,7 +80,7 @@ function testWebM2(e) {
   v.addEventListener("seeking", seekStarted);
   v.addEventListener("seeked", seekEnded);
 
-  startTest();
+  start();
 }
 
 // Fetch the media resource using XHR so we can be sure the entire

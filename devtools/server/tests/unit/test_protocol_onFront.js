@@ -12,6 +12,12 @@ const { RetVal } = protocol;
 
 const childSpec = protocol.generateActorSpec({
   typeName: "childActor",
+
+  methods: {
+    release: {
+      release: true,
+    },
+  },
 });
 
 const ChildActor = protocol.ActorClassWithSpec(childSpec, {
@@ -19,6 +25,8 @@ const ChildActor = protocol.ActorClassWithSpec(childSpec, {
     protocol.Actor.prototype.initialize.call(this, conn);
     this.childID = id;
   },
+
+  release() {},
 
   form: function() {
     return {
@@ -95,14 +103,15 @@ add_task(async function run_test() {
   const rootFront = new RootFront(client);
 
   const fronts = [];
-  rootFront.onFront("childActor", front => {
+  const listener = front => {
     equal(
       front.foo,
       "bar",
       "Front's form is set before onFront listeners are called"
     );
     fronts.push(front);
-  });
+  };
+  rootFront.onFront("childActor", listener);
 
   const firstChild = await rootFront.createChild();
   ok(
@@ -146,6 +155,29 @@ add_task(async function run_test() {
     "After a second call to createChild, two fronts are reported"
   );
   equal(fronts[1], secondChild, "And the new front is the right instance");
+
+  // Test unregistering a front listener
+  rootFront.offFront("childActor", listener);
+
+  const thirdChild = await rootFront.createChild();
+  equal(
+    fronts.length,
+    2,
+    "After calling offFront, the listener is no longer called"
+  );
+
+  // Test front destruction
+  const destroyed = [];
+  rootFront.onFrontDestroyed("childActor", front => {
+    destroyed.push(front);
+  });
+  await thirdChild.release();
+  equal(
+    destroyed.length,
+    1,
+    "After the destruction of the front, one destruction is reported"
+  );
+  equal(destroyed[0], thirdChild, "And the destroyed front is the right one");
 
   trace.close();
   await client.close();

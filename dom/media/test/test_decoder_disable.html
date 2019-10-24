@@ -24,11 +24,11 @@ function e(id) {
   return document.getElementById(id);
 }
 
-var gLoadError = new Object();
+var gLoadError = {};
 
-gLoadError['video1'] = 0; 
-gLoadError['video2'] = 0;
-gLoadError['video3'] = 0;
+gLoadError.video1 = 0;
+gLoadError.video2 = 0;
+gLoadError.video3 = 0;
 
 var gErrorCount = 0;
 
@@ -45,9 +45,9 @@ function finishTest() {
      filename(e('video3').src),
      'video3 currentSrc should match src');
 
-  is(gLoadError['video1'], 2, "Expect one error per invalid source child on video1");
-  is(gLoadError['video2'], 1, "Expect one error on video2");
-  is(gLoadError['video3'], 1, "Expect one error on video3");
+  is(gLoadError.video1, 2, "Expect one error per invalid source child on video1");
+  is(gLoadError.video2, 1, "Expect one error on video2");
+  is(gLoadError.video3, 1, "Expect one error on video3");
 
   SimpleTest.finish();
 }

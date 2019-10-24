@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
 job-defaults:
-    max-run-time: 1800
+    max-run-time: 3600
     suite: raptor
     workdir: /builds/worker
     run-on-projects:

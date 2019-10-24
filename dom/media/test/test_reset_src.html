@@ -35,7 +35,7 @@ function onLoadedData_Audio(e) {
   var c = document.getElementsByTagName("canvas")[0].getContext("2d");
   try {
     c.drawImage(t, 0, 0, t.videoHeight, t.videoWidth);
-  } catch (e) {
+  } catch (ex) {
     ok(true, t.name + ": Trying to draw to a canvas should throw, since we don't have a frame anymore");
     finish(t);
     return;
@@ -56,6 +56,7 @@ function onTimeUpdate_Video(e) {
   ok(t.mozFrameDelay >= 0, t.name + ": mozFrameDelay should be positive or zero, is " + t.mozFrameDelay + ".");
 
   if (t._firstTime) {
+    // eslint-disable-next-line no-self-assign
     t.src = t.src;
     t._firstTime = false;
   } else {

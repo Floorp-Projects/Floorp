@@ -16,7 +16,6 @@ function testTracks(tracks, hasTrack, kind, src) {
   for (var i = 0; i < tracks.length; ++i) {
     var track = tracks[i];
     is(track.kind, kind, "Correct track kind for track " + i + " of " + src);
-    var id = track.id;
     ok(/\{........-....-....-....-............\}/.test(track.id),
        "id " + track.id + " for track " + i + " of " + src + " has correct form");
   }

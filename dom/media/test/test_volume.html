@@ -23,9 +23,9 @@ function test(element, value, shouldThrow) {
 }
 
 
-var ids = new Array(document.getElementById('v1'), document.getElementById('a1'));
+var ids = [document.getElementById('v1'), document.getElementById('a1')];
 
-for (i=0; i<ids.length; i++) {
+for (let i=0; i<ids.length; i++) {
   var element = ids[i];
   test(element, 0.0, null);
   test(element, 1.0, null);
@@ -33,8 +33,8 @@ for (i=0; i<ids.length; i++) {
   test(element, 1.1, "IndexSizeError");
   test(element, undefined, "TypeError");
   test(element, NaN, "TypeError");
-}  
- 
+}
+
 </script>
 </pre>
 </body>

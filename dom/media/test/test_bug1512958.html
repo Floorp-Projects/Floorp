@@ -27,7 +27,7 @@ for (let ev of events) {
   a.addEventListener(ev, dumpEvent);
 }
 
-(async _ => {
+(async () => {
   try {
     SimpleTest.waitForExplicitFinish();
     SimpleTest.requestFlakyTimeout("Timeouts for shortcutting test-timeout");
@@ -42,7 +42,7 @@ for (let ev of events) {
     a.src = test.name;
     a.name = test.name;
     const ac = new AudioContext();
-    const src = ac.createMediaElementSource(a);
+    ac.createMediaElementSource(a);
     a.play();
     do {
       await new Promise(r => a.ontimeupdate = r);
@@ -60,7 +60,7 @@ for (let ev of events) {
     a.currentTime = test.duration - 1;
     await Promise.race([
       new Promise(res => a.onended = res),
-      wait(30000).then(_ => Promise.reject(new Error("Timeout"))),
+      wait(30000).then(() => Promise.reject(new Error("Timeout"))),
     ]);
   } catch(e) {
     ok(false, e);

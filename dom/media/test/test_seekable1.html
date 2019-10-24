@@ -23,7 +23,7 @@ function finish_test(element) {
 var tests = [
 // Test using a finite media stream, and a server supporting range requests
 {
-setup : function(element) {
+setup(element) {
           is(element.seekable.length, 0, "seekable.length should be initialy 0.");
           element.addEventListener("loadedmetadata", function() {
               is(element.seekable.length, 1, "seekable.length should be 1 for a server supporting range requests.");
@@ -39,7 +39,7 @@ setup : function(element) {
 function createTestArray() {
   var A = [];
     for (var k=0; k < gProgressTests.length; k++) {
-      var t = new Object();
+      var t = {};
       t.setup = tests[0].setup;
       t.name = gProgressTests[k].name;
       t.type = gProgressTests[k].type;

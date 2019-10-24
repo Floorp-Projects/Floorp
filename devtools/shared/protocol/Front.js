@@ -104,8 +104,26 @@ class Front extends Pool {
     this._frontListeners.emit(front.typeName, front);
   }
 
-  // Run callback on every front of this type that currently exists, and on every
-  // instantiation of front type in the future.
+  async unmanage(front) {
+    super.unmanage(front);
+
+    // Call listeners registered via `onFrontDestroyed` method
+    // TODO: to be implemented differently in bug 1590401.
+    this._frontListeners.emit(front.typeName + ":destroyed", front);
+  }
+
+  /**
+   * Register an event listener that will be called on every front of this type
+   * that currently exists, and on every instantiation of front type in the future.
+   *
+   * TODO: A special typeName is use to implement onFrontDestroyed:
+   * `${typeName}:destroyed`. This should be cleaned up by bug 1590401.
+   *
+   * @param String typeName
+   *   Actor type to watch.
+   * @param Function callback
+   *   Function that will process the event.
+   */
   onFront(typeName, callback) {
     // First fire the callback on already instantiated fronts
     for (const front of this.poolChildren()) {
@@ -115,6 +133,44 @@ class Front extends Pool {
     }
     // Then register the callback for fronts instantiated in the future
     this._frontListeners.on(typeName, callback);
+  }
+
+  /**
+   * Unregister an event listener which was set via `Front.onFront`.
+   *
+   * @param String typeName
+   *   Actor type to stop watching.
+   * @param Function callback
+   *   Function that was processing the event.
+   */
+  offFront(typeName, callback) {
+    this._frontListeners.off(typeName, callback);
+  }
+
+  /**
+   * Register an event listener that will be called evertype a front of this type
+   * is destroyed.
+   *
+   * @param String typeName
+   *   Actor type to watch.
+   * @param Function callback
+   *   Function that will process the event.
+   */
+  onFrontDestroyed(typeName, callback) {
+    // TODO: to be implemented differently in bug 1590401.
+    this.onFront(typeName + ":destroyed", callback);
+  }
+
+  /**
+   * Unregister an event listener which was set via `Front.onFrontDestroyed`.
+   *
+   * @param String typeName
+   *   Actor type to stop watching.
+   * @param Function callback
+   *   Function that was processing the event.
+   */
+  offFrontDestroyed(typeName, callback) {
+    this.offFront(typeName + ":destroyed", callback);
   }
 
   /**

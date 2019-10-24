@@ -68,8 +68,8 @@ async function startTest(test, token) {
       new Promise(r => vout.onended = r),
       new Promise(r => v.onended = r),
     ]),
-    new Promise((_, r) => vout.onerror = _ => r(new Error(vout.error.message))),
-    new Promise((_, r) => v.onerror = _ => r(new Error(v.error.message))),
+    new Promise((res, rej) => vout.onerror = () => rej(new Error(vout.error.message))),
+    new Promise((res, rej) => v.onerror = () => rej(new Error(v.error.message))),
   ]);
 
   let duration = test.duration;

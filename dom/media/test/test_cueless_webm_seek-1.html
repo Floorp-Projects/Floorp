@@ -42,7 +42,7 @@ function testWebM1(e) {
   ok(v.buffered.length >= 1, "Should have a buffered range");
   var halfBuffered = v.buffered.end(0) / 2;
 
-  function startTest() {
+  function start() {
     is(v.seekable.start(0), v.buffered.start(0), "Seekable start should be buffered start");
     is(v.seekable.end(0), v.buffered.end(0), "Seekable end should be buffered end");
     ok(!completed, "Should not be completed yet");
@@ -51,8 +51,8 @@ function testWebM1(e) {
       v.seeking = true;
       readonly = v.seeking === false;
     }
-    catch(e) {
-      readonly = "threw exception: " + e;
+    catch(ex) {
+      readonly = "threw exception: " + ex;
     }
     is(readonly, true, "seeking should be readonly");
 
@@ -90,7 +90,7 @@ function testWebM1(e) {
   once(v, "seeking", seekStarted);
   once(v, "seeked", seekEnded);
 
-  startTest();
+  start();
 }
 
 // Fetch the media resource using XHR so we can be sure the entire

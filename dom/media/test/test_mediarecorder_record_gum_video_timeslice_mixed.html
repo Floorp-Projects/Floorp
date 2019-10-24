@@ -13,7 +13,7 @@ function unexpected({type}) {
   ok(false, `${type} unexpectedly fired`);
 }
 
-(async _ => {
+(async () => {
   SimpleTest.waitForExplicitFinish();
   let blobUrl = null;
   let stream = null;
@@ -32,7 +32,7 @@ function unexpected({type}) {
       {audio: true, video: true});
     const blobs = [];
 
-    mediaRecorder = new MediaRecorder(stream);
+    let mediaRecorder = new MediaRecorder(stream);
     is(mediaRecorder.stream, stream,
        "Media recorder stream = element stream at the start of recording");
     mediaRecorder.start();
@@ -78,7 +78,7 @@ function unexpected({type}) {
 
     await Promise.race([
       new Promise(res => video.onended = res),
-      new Promise((_, rej) => video.onerror = _ => rej(video.error.message)),
+      new Promise((res, rej) => video.onerror = () => rej(video.error.message)),
     ]);
   } catch (e) {
     ok(false, e);

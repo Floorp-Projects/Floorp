@@ -55,31 +55,35 @@ class ProcessDescriptorFront extends FrontClassWithSpec(processDescriptorSpec) {
   }
 
   async getTarget() {
+    // Only return the cached Target if it is still alive.
     if (this._processTargetFront && this._processTargetFront.actorID) {
       return this._processTargetFront;
     }
+    // Otherwise, ensure that we don't try to spawn more than one Target by
+    // returning the pending promise
     if (this._targetFrontPromise) {
       return this._targetFrontPromise;
     }
     this._targetFrontPromise = (async () => {
+      let targetFront = null;
       try {
         const targetForm = await super.getTarget();
-        this._processTargetFront = await this._createProcessTargetFront(
-          targetForm
-        );
-        await this._processTargetFront.attach();
-        // clear the promise if we are finished so that we can re-connect if
-        // necessary
-        this._targetFrontPromise = null;
-        return this._processTargetFront;
+        targetFront = await this._createProcessTargetFront(targetForm);
+        await targetFront.attach();
       } catch (e) {
         // This is likely to happen if we get a lot of events which drop previous
         // processes.
         console.log(
           `Request to connect to ProcessDescriptor "${this.id}" failed: ${e}`
         );
-        return null;
       }
+      // Save the reference to the target only after the call to attach
+      // so that getTarget always returns the attached target in case of concurrent calls
+      this._processTargetFront = targetFront;
+      // clear the promise if we are finished so that we can re-connect if
+      // necessary
+      this._targetFrontPromise = null;
+      return targetFront;
     })();
     return this._targetFrontPromise;
   }

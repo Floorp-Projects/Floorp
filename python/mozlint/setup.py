@@ -5,7 +5,7 @@
 from setuptools import setup
 
 VERSION = 0.1
-DEPS = ["mozlog>=3.4"]
+DEPS = ['mozlog >= 5.0']
 
 setup(
     name='mozlint',

@@ -36,12 +36,12 @@
 
           let x = eventNames.map(
             (eventName) => {
-              return new Promise(async function (resolve, reject) {
+              return new Promise(function (resolve, reject) {
                 window.addEventListener(eventName, async function (event) {
-                  let played = await element.play().then(() => true, () => false);
-                  ok(played, "Expect to be activated already in " + eventName);
+                  let p = await element.play().then(() => true, () => false);
+                  ok(p, "Expect to be activated already in " + eventName);
                   resolve();
-                }, false);
+                });
               });
             });
 

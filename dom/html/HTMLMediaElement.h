@@ -603,10 +603,6 @@ class HTMLMediaElement : public nsGenericHTMLElement,
 
   bool IsEventAttributeNameInternal(nsAtom* aName) override;
 
-  // Returns the principal of the "top level" document; the origin displayed
-  // in the URL bar of the browser window.
-  already_AddRefed<nsIPrincipal> GetTopLevelPrincipal();
-
   bool ContainsRestrictedContent();
 
   void NotifyWaitingForKey() override;

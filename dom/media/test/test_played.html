@@ -32,7 +32,7 @@ function check_full_file_played(element) {
 var tests = [
 // Without playing, check that player.played.length == 0.
 {
-  setup : function(element) {
+  setup(element) {
     element.addEventListener("loadedmetadata", function() {
       is(element.played.length, 0, element.token + ": initial played.length equals zero");
       finish_test(element);
@@ -42,7 +42,7 @@ var tests = [
 },
 // Play the file, test the range we have.
 {
-  setup : function(element) {
+  setup(element) {
     check_full_file_played(element);
     element.play();
   },
@@ -52,7 +52,7 @@ var tests = [
 // Play the second half of the file, pause, play
 // an check we have only one range.
 {
-  setup : function (element) {
+  setup (element) {
     element.onended = function (e) {
       var t = e.target;
       t.onended = null;
@@ -72,7 +72,7 @@ var tests = [
 // Play the first half of the file, seek back, while
 // continuing to play. We shall have only one range.
 {
-  setup : function (element) {
+  setup (element) {
     let onTimeUpdate = function() {
       if (element.currentTime > element.duration / 2) {
         info(element.token + ": currentTime=" + element.currentTime + ", duration=" + element.duration);
@@ -95,7 +95,7 @@ var tests = [
 // Play and seek to have two ranges, and check that, as well a
 // boundaries.
 {
-  setup : function (element) {
+  setup (element) {
     let seekTarget = 0;
     let onTimeUpdate = function() {
       if (element.currentTime > element.duration / 2) {
@@ -132,7 +132,7 @@ var tests = [
 
 // Play to create two ranges, in the reverse order. check that they are sorted.
 {
-  setup : function (element) {
+  setup (element) {
     function end() {
       element.pause();
       let p = element.played;
@@ -178,7 +178,7 @@ var tests = [
 },
 // Seek repeatedly without playing. No range should appear.
 {
-  setup : function(element) {
+  setup(element) {
     let index = 1;
 
     element.addEventListener('seeked', function() {
@@ -202,7 +202,7 @@ function createTestArray() {
   var A = [];
   for (var i=0; i<tests.length; i++) {
     for (var k=0; k<gPlayedTests.length; k++) {
-      var t = new Object();
+      var t = {};
       t.setup = tests[i].setup;
       t.name = tests[i].name + "-" + gPlayedTests[k].name;
       t.type = gPlayedTests[k].type;

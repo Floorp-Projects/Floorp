@@ -44,7 +44,7 @@ function createTestArray() {
 
     for (var fragNum=0; fragNum<gFragmentParams.length; fragNum++) {
       var p = gFragmentParams[fragNum];
-      var t = new Object;
+      var t = {};
       t.name = test.name + p.fragment;
       t.type = test.type;
       t.duration = test.duration;
@@ -62,25 +62,25 @@ function startTest(test, token) {
     todo(false, test.todo);
     return;
   }
-  var v = document.createElement('video');
+  var video = document.createElement('video');
   manager.started(token);
-  v.preload = "metadata";
-  v.src = test.name;
-  v.token = token;
-  v.controls = true;
-  document.body.appendChild(v);
+  video.preload = "metadata";
+  video.src = test.name;
+  video.token = token;
+  video.controls = true;
+  document.body.appendChild(video);
   var name = test.name + " fragment test";
-  var localIs = function(name) { return function(a, b, msg) {
-    is(a, b, name + ": " + msg);
+  var localIs = function(n) { return function(a, b, msg) {
+    is(a, b, n + ": " + msg);
   }}(name);
-  var localOk = function(name) { return function(a, msg) {
-    ok(a, name + ": " + msg);
+  var localOk = function(n) { return function(a, msg) {
+    ok(a, n + ": " + msg);
   }}(name);
-  var localFinish = function(v, manager) { return function() {
+  var localFinish = function(v, m) { return function() {
     removeNodeAndSource(v);
-    manager.finished(v.token);
-  }}(v, manager);
-  window['test_fragment_play'](v, test.start, test.end, localIs, localOk, localFinish);
+    m.finished(v.token);
+  }}(video, manager);
+  window.test_fragment_play(video, test.start, test.end, localIs, localOk, localFinish);
 }
 
 manager.runTests(createTestArray(), startTest);

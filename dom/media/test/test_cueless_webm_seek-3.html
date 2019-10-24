@@ -32,14 +32,13 @@ function testWebM3(e) {
   var v = e.target;
   v.removeEventListener('loadeddata', testWebM3);
 
-  var startPassed = false;
   var completed = false;
   var gotTimeupdate = false;
 
   ok(v.buffered.length >= 1, "Should have a buffered range");
   var halfBuffered = v.buffered.end(0) / 2;
 
-  function startTest() {
+  function start() {
     if (completed)
       return;
 
@@ -58,7 +57,6 @@ function testWebM3(e) {
       return;
 
     v.addEventListener("timeupdate", timeupdate);
-    startPassed = true;
   }
 
   function seekEnded() {
@@ -76,7 +74,7 @@ function testWebM3(e) {
   v.addEventListener("seeking", seekStarted);
   v.addEventListener("seeked", seekEnded);
 
-  startTest()
+  start()
 }
 
 // Fetch the media resource using XHR so we can be sure the entire

@@ -192,6 +192,9 @@ class BrowserParent final : public PBrowserParent,
 
   ShowInfo GetShowInfo();
 
+  // Get the content principal from the owner element.
+  already_AddRefed<nsIPrincipal> GetContentPrincipal() const;
+
   /**
    * Let managees query if Destroy() is already called so they don't send out
    * messages when the PBrowser actor is being destroyed.

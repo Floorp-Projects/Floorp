@@ -51,6 +51,7 @@ function setupTestPreferences() {
 }
 
 function createAudioContext() {
+  /* global ac */
   window.ac = new AudioContext();
 
   ac.allowedToStart = new Promise(resolve => {
@@ -101,7 +102,7 @@ function createAudioParams(nodeType) {
       return [ac.createStereoPanner().pan];
     default:
       ok(false, `non-defined node type ${nodeType}.`);
-      return;
+      return [];
   }
 }
 

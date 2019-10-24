@@ -10,6 +10,7 @@
 <body>
 <pre id="test">
 <script class="testbody" type="text/javascript">
+/* import-globals-from eme.js */
 var manager = new MediaTestManager;
 
 function ArrayBuffersEqual(a, b) {
@@ -33,12 +34,12 @@ function KeysChangeFunc(session, keys, token) {
     session.keyIdsReceived[keyid] = false;
   }
   return function(ev) {
-    var session = ev.target;
-    session.gotKeysChanged = true;
+    var s = ev.target;
+    s.gotKeysChanged = true;
 
     var keyList = [];
     var valueList = [];
-    var map = session.keyStatuses;
+    var map = s.keyStatuses;
 
     // Test that accessing keys not known to the CDM has expected behaviour.
     var absentKey = new Uint8Array([0xeb, 0xdd, 0x62, 0xf1, 0x68, 0x14, 0xd2, 0x7b,
@@ -47,7 +48,7 @@ function KeysChangeFunc(session, keys, token) {
     is(map.get(absentKey), undefined, "Unknown keys should undefined status");
 
     // Verify known keys have expected status.
-    for (var [key, val] of map.entries()) {
+    for (let [key, val] of map.entries()) {
       is(key.constructor, ArrayBuffer, "keyId should be ArrayBuffer");
       ok(map.has(key), "MediaKeyStatusMap.has() should work.");
       is(map.get(key), val, "MediaKeyStatusMap.get() should work.");
@@ -55,8 +56,8 @@ function KeysChangeFunc(session, keys, token) {
       valueList.push(val);
       is(val, "usable", token + ": key status should be usable");
       var kid = Base64ToHex(window.btoa(ArrayBufferToString(key)));
-      ok(kid in session.keyIdsReceived, TimeStamp(token) + " session[" + session.sessionId + "].keyIdsReceived contained " + kid + " as expected.");
-      session.keyIdsReceived[kid] = true;
+      ok(kid in s.keyIdsReceived, TimeStamp(token) + " session[" + s.sessionId + "].keyIdsReceived contained " + kid + " as expected.");
+      s.keyIdsReceived[kid] = true;
     }
 
     var index = 0;
@@ -65,7 +66,7 @@ function KeysChangeFunc(session, keys, token) {
       index++;
     }
     index = 0;
-    for (var val of map.values()) {
+    for (let val of map.values()) {
       is(val, valueList[index], "MediaKeyStatusMap.values() should correspond to entries");
       index++;
     }
@@ -142,7 +143,7 @@ function startTest(test, token)
       ok(session.gotKeysChanged,
          TimeStamp(token) + " session[" + session.sessionId
          + "] should have received at least one keychange event");
-      for (var kid in session.keyIdsReceived) {
+      for (let kid in session.keyIdsReceived) {
         Log(token, "session[" + session.sessionId + "] key " + kid + " = " + (session.keyIdsReceived[kid] ? "true" : "false"));
         if (session.keyIdsReceived[kid]) { keyIdsReceived[kid] = true; }
       }
@@ -154,7 +155,7 @@ function startTest(test, token)
       is(session.numMessageEvents, session.numOnMessageEvents,
          TimeStamp(token) + " should have as many message event listener calls as event handler calls.");
     }
-    for (var kid in keyIdsReceived) {
+    for (let kid in keyIdsReceived) {
       ok(keyIdsReceived[kid], TimeStamp(token) + " key with id " + kid + " was usable as expected");
     }
 

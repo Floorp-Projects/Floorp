@@ -24,11 +24,11 @@ runInParent(function addLogins() {
   let nsLoginInfo = Components.Constructor("@mozilla.org/login-manager/loginInfo;1",
                                            Ci.nsILoginInfo, "init");
 
-  let login0 = new nsLoginInfo("https://example.org", "https://example.org", null,
-                               "name", "pass", "uname", "pword");
+  let login0 = new nsLoginInfo("https://example.com", "https://example.com", null,
+                               "name", "pass");
 
-  let login1 = new nsLoginInfo("https://example.org", "https://example.org", null,
-                               "name1", "pass1", "uname", "pword");
+  let login1 = new nsLoginInfo("https://example.com", "https://example.com", null,
+                               "name1", "pass1");
 
   try {
     Services.logins.addLogin(login0);
@@ -51,7 +51,7 @@ let iframe = document.getElementsByTagName("iframe")[0];
 let iframeDoc, hostname;
 
 add_task(async function setup() {
-  iframe.src = "https://example.org/tests/toolkit/components/passwordmgr/test/mochitest/form_autofocus_js.html";
+  iframe.src = "/tests/toolkit/components/passwordmgr/test/mochitest/form_autofocus_js.html";
   await new Promise(resolve => {
     iframe.addEventListener("load", function() {
       resolve();
