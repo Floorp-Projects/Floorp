@@ -29,11 +29,12 @@ function test() {
   Harness.finalContentEvent = "InstallComplete";
   Harness.setup();
 
-  PermissionTestUtils.add(
-    "http://example.com/",
-    "install",
-    Services.perms.ALLOW_ACTION
+  let principal = Services.scriptSecurityManager.createContentPrincipal(
+    Services.io.newURI("http://example.com/"),
+    { userContextId: MY_CONTEXT }
   );
+
+  PermissionTestUtils.add(principal, "install", Services.perms.ALLOW_ACTION);
 
   var triggers = encodeURIComponent(
     JSON.stringify({

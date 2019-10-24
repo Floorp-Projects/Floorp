@@ -31,11 +31,12 @@ async function test() {
   gPrivateWin = await BrowserTestUtils.openNewBrowserWindow({ private: true });
   Harness.setup(gPrivateWin);
 
-  PermissionTestUtils.add(
-    "http://example.com/",
-    "install",
-    Services.perms.ALLOW_ACTION
+  let principal = Services.scriptSecurityManager.createContentPrincipal(
+    Services.io.newURI("http://example.com/"),
+    { privateBrowsingId: 1 }
   );
+
+  PermissionTestUtils.add(principal, "install", Services.perms.ALLOW_ACTION);
 
   var triggers = encodeURIComponent(
     JSON.stringify({
