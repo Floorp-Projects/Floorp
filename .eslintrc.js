@@ -388,9 +388,7 @@ module.exports = {
     ],
     "rules": {
       "consistent-return": "off",
-      "curly": "off",
       "dot-notation": "off",
-      "mozilla/consistent-if-bracing": "off",
       "mozilla/no-useless-parameters": "off",
       "mozilla/use-default-preference-values": "off",
       "mozilla/use-services": "off",
@@ -406,7 +404,6 @@ module.exports = {
       "no-unused-vars": "off",
       "no-useless-return": "off",
       "object-shorthand": "off",
-      "prettier/prettier": "off",
     }
   }]
 };
