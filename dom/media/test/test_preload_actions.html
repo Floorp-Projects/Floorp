@@ -13,7 +13,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=548523
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=548523">Mozilla Bug 548523</a>
 <p id="display"></p>
 <div id="content" style="display: none">
-  
+
 </div>
 <!-- <button onClick="SimpleTest.finish();">Finish</button> -->
 <div>Tests complete: <span id="log" style="font-size: small;"></span></div>
@@ -247,7 +247,7 @@ var tests = [
     suspend:
     function(e) {
       var v = e.target;
-      if (v._gotSuspend) 
+      if (v._gotSuspend)
         return; // We can receive multiple suspend events, like the one after download completes.
       v._gotSuspend = true;
       is(v._gotLoadStart, true, "(7) Must get loadstart.");
@@ -262,7 +262,7 @@ var tests = [
     function(e) {
       ok(true, "(7) Got playback ended");
       var v = e.target;
-      is(v._gotErrorEvent, true, "(7) Should get error event from first source load failure");      
+      is(v._gotErrorEvent, true, "(7) Should get error event from first source load failure");
       maybeFinish(v, 7);
     },
 
@@ -479,7 +479,6 @@ var tests = [
                     "loadeddata", "playing", "ended", "error", "stalled", "emptied", "abort",
                     "waiting", "pause"];
       function logEvent(e) {
-        var v = e.target;
         info(e.target.token + ": got " + e.type);
       }
       events.forEach(function(e) {
@@ -591,18 +590,18 @@ var tests = [
 ];
 
 var iterationCount = 0;
-function startTest(test, token) {
-  if (test == tests[0]) {
+function startTest(t, token) {
+  if (t == tests[0]) {
     ++iterationCount;
     info("iterationCount=" + iterationCount);
   }
   if (iterationCount == 2) {
     // Do this series of tests on logically different resources
-    test.name = baseName + "?" + Math.floor(Math.random()*100000);
+    t.name = baseName + "?" + Math.floor(Math.random()*100000);
   }
   var v = document.createElement("video");
   v.token = token;
-  test.setup(v);
+  t.setup(v);
   manager.started(token);
 }
 
