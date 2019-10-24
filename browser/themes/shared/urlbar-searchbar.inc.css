@@ -135,7 +135,7 @@
   background-repeat: no-repeat;
   background-position: center;
   -moz-context-properties: fill, fill-opacity;
-  fill: var(--lwt-toolbarbutton-icon-fill, currentColor);
+  fill: var(--lwt-toolbarbutton-icon-fill, var(--toolbar-color));
   fill-opacity: var(--toolbarbutton-icon-fill-opacity);
 }
 
@@ -205,6 +205,10 @@
   height: var(--urlbar-toolbar-height);
   padding-block: calc((var(--urlbar-toolbar-height) - var(--urlbar-height)) / 2);
   padding-inline: @urlbarMarginInline@;
+}
+
+#urlbar[breakout][breakout-extend] > #urlbar-input-container > #urlbar-search-icon {
+  fill: currentColor;
 }
 
 @keyframes urlbar-grow {

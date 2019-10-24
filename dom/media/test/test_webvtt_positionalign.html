@@ -52,7 +52,7 @@ function runTest() {
   info("--- check the cue's computed position alignment ---");
   // The "computedPositionAlign" is the chrome-only attributes, we need to get
   // the chrome privilege for cues.
-  cuesChrome = SpecialPowers.wrap(cues);
+  let cuesChrome = SpecialPowers.wrap(cues);
   expectedAlignment.push("line-left", "line-right", "center");
   for (;idx < expectedAlignment.length; idx++) {
     is(cuesChrome[idx].computedPositionAlign, expectedAlignment[idx],

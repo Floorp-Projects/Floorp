@@ -109,15 +109,15 @@
         Log(token, "encrypted event => len=" + initData.length + " " + hexStr);
         let session = event.target.mediaKeys.createSession();
         initDatas.set(hexStr, session);
-        session.addEventListener("message", event => {
-          event.target.update(
-            GenerateClearKeyLicense(event.message, test.keys));
+        session.addEventListener("message", e => {
+          e.target.update(
+            GenerateClearKeyLicense(e.message, test.keys));
         });
 
         session.generateRequest(event.initDataType, event.initData);
       }
 
-      video.addEventListener("encrypted", handleEncrypted, false);
+      video.addEventListener("encrypted", handleEncrypted);
 
       video.addEventListener("ended", () => {
         let expectedEncryptedEvents =

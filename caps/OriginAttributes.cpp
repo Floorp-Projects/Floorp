@@ -104,6 +104,11 @@ void OriginAttributes::SetFirstPartyDomain(const bool aIsTopLevelDocument,
 
 void OriginAttributes::SetFirstPartyDomain(const bool aIsTopLevelDocument,
                                            const nsACString& aDomain) {
+  SetFirstPartyDomain(aIsTopLevelDocument, NS_ConvertUTF8toUTF16(aDomain));
+}
+
+void OriginAttributes::SetFirstPartyDomain(const bool aIsTopLevelDocument,
+                                           const nsAString& aDomain) {
   bool isFirstPartyEnabled = IsFirstPartyEnabled();
 
   // If the pref is off or this is not a top level load, bail out.
@@ -111,7 +116,7 @@ void OriginAttributes::SetFirstPartyDomain(const bool aIsTopLevelDocument,
     return;
   }
 
-  mFirstPartyDomain = NS_ConvertUTF8toUTF16(aDomain);
+  mFirstPartyDomain = aDomain;
 }
 
 void OriginAttributes::CreateSuffix(nsACString& aStr) const {

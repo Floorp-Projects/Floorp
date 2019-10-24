@@ -13,7 +13,7 @@
 
 var iframes = [];
 
-for (var i=0; i<gSmallTests.length; ++i) {
+for (let i=0; i<gSmallTests.length; ++i) {
   var test = gSmallTests[i];
 
   // We can't play WAV files in stand alone documents, so just don't
@@ -21,8 +21,8 @@ for (var i=0; i<gSmallTests.length; ++i) {
   var tag = getMajorMimeType(test.type);
   if (tag != "video" || !document.createElement("video").canPlayType(test.type))
     continue;
-  
-  var f = document.createElement("iframe");
+
+  let f = document.createElement("iframe");
   f.src = test.name;
   f._test = test;
   f.id = "frame" + i;
@@ -37,8 +37,8 @@ function filename(uri) {
 
 function doTest()
 {
-  for (var i=0; i<iframes.length; ++i) {
-    var f = document.getElementById(iframes[i].id);
+  for (let i=0; i<iframes.length; ++i) {
+    let f = document.getElementById(iframes[i].id);
     var v = f.contentDocument.body.firstChild;
     is(v.tagName.toLowerCase(), "video", "Is video element");
     var src = filename(v.currentSrc);

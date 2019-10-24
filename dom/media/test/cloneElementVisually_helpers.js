@@ -1,5 +1,7 @@
-const TEST_VIDEO_1 = "http://mochi.test:8888/tests/dom/media/test/bipbop_225w_175kbps.mp4";
-const TEST_VIDEO_2 = "http://mochi.test:8888/tests/dom/media/test/pixel_aspect_ratio.mp4";
+const TEST_VIDEO_1 =
+  "http://mochi.test:8888/tests/dom/media/test/bipbop_225w_175kbps.mp4";
+const TEST_VIDEO_2 =
+  "http://mochi.test:8888/tests/dom/media/test/pixel_aspect_ratio.mp4";
 const LONG_VIDEO = "http://mochi.test:8888/tests/dom/media/test/gizmo.mp4";
 
 /**
@@ -9,11 +11,11 @@ const LONG_VIDEO = "http://mochi.test:8888/tests/dom/media/test/gizmo.mp4";
 async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [
-      [ "media.test.video-suspend", true ],
-      [ "media.suspend-bkgnd-video.enabled", true ],
-      [ "media.suspend-bkgnd-video.delay-ms", 500 ],
-      [ "media.dormant-on-pause-timeout-ms", 0 ],
-      [ "media.cloneElementVisually.testing", true ],
+      ["media.test.video-suspend", true],
+      ["media.suspend-bkgnd-video.enabled", true],
+      ["media.suspend-bkgnd-video.delay-ms", 500],
+      ["media.dormant-on-pause-timeout-ms", 0],
+      ["media.cloneElementVisually.testing", true],
     ],
   });
 
@@ -89,11 +91,19 @@ async function assertVideosMatch(video1, video2) {
   let video2Frame = captureFrameImageData(video2);
 
   let left = document.getElementById("left");
-  let leftCtx = getWrappedScaledCanvasContext(left, video1Frame.width, video1Frame.height);
+  let leftCtx = getWrappedScaledCanvasContext(
+    left,
+    video1Frame.width,
+    video1Frame.height
+  );
   leftCtx.putImageData(video1Frame, 0, 0);
 
   let right = document.getElementById("right");
-  let rightCtx = getWrappedScaledCanvasContext(right, video2Frame.width, video2Frame.height);
+  let rightCtx = getWrappedScaledCanvasContext(
+    right,
+    video2Frame.width,
+    video2Frame.height
+  );
   rightCtx.putImageData(video2Frame, 0, 0);
 
   if (video1Frame.data.length != video2Frame.data.length) {
@@ -210,7 +220,7 @@ async function ensureVideoSuspendable(video) {
   video.setVisible(false);
   await suspendPromise;
   ok(true, "Suspended after the video was made invisible.");
-  video.setVisible(true)
+  video.setVisible(true);
 
   ok(!video.hasSuspendTaint(), "Should still be suspendable.");
 
@@ -220,5 +230,3 @@ async function ensureVideoSuspendable(video) {
   ok(true, "Shutdown decoder after the video was paused.");
   await video.play();
 }
-
-

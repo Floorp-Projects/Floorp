@@ -20,7 +20,7 @@ async function startTest() {
     let onDataAvailableFirst = false;
     const expectedMimeType = 'video/webm; codecs="vp8, opus"';
 
-    mediaRecorder = new MediaRecorder(stream);
+    let mediaRecorder = new MediaRecorder(stream);
     is(mediaRecorder.stream, stream,
        'Media recorder stream = element stream at the start of recording');
     mediaRecorder.onwarning = function() {
@@ -49,7 +49,7 @@ async function startTest() {
 
       // We'll stop recording upon the 1st blob being received
       if (dataAvailableCount === 1) {
-        mediaRecorder.onstop = function (evt) {
+        mediaRecorder.onstop = function (event) {
           info('onstop fired');
 
           if (!onDataAvailableFirst) {

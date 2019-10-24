@@ -31,7 +31,7 @@
             let child = window.open(child_url, "", "width=500,height=500");
             await once(child, "load");
             child.postMessage("run keydown test", window.origin);
-            let result = await nextWindowMessage();
+            await nextWindowMessage();
             child.close();
           }
 
@@ -39,7 +39,7 @@
             let child = window.open(child_url, "", "width=500,height=500");
             await once(child, "load");
             child.postMessage("run mousedown test", window.origin);
-            let result = await nextWindowMessage();
+            await nextWindowMessage();
             child.close();
           }
 

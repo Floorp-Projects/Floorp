@@ -16,6 +16,8 @@
 */
 SimpleTest.waitForExplicitFinish();
 
+/* global a, b */
+
 function areChannelsInverted(b1, b2) {
   for (var i = 0; i < b1.length; i++) {
     if (Math.abs(b1[i] + b2[i]) > 9e-2) {

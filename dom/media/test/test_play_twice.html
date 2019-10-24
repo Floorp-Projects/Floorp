@@ -13,21 +13,21 @@
 var manager = new MediaTestManager;
 
 function startTest(test, token) {
-  var v = document.createElement('video');
-  v.token = token;
+  var video = document.createElement('video');
+  video.token = token;
   manager.started(token);
-  v.src = test.name;
-  v.name = test.name;
-  v.playingCount = 0;
-  v._playedOnce = false;
+  video.src = test.name;
+  video.name = test.name;
+  video.playingCount = 0;
+  video._playedOnce = false;
 
-  var check = function(test, v) { return function() {
-    checkMetadata(test.name, v, test);
-  }}(test, v);
+  var check = function(t, v) { return function() {
+    checkMetadata(t.name, v, test);
+  }}(test, video);
 
-  var noLoad = function(test, v) { return function() {
-    ok(false, test.name + " should not fire 'load' event");
-  }}(test, v);
+  var noLoad = function(t, v) { return function() {
+    ok(false, t.name + " should not fire 'load' event");
+  }}(test, video);
 
   function finish(v) {
     removeNodeAndSource(v);
@@ -40,14 +40,14 @@ function startTest(test, token) {
     }
   }
 
-  var checkEnded = function(test, v) { return function() {
-    if (test.duration) {
-      ok(Math.abs(v.currentTime - test.duration) < 0.1,
-         test.name + " current time at end: " + v.currentTime);
+  var checkEnded = function(t, v) { return function() {
+    if (t.duration) {
+      ok(Math.abs(v.currentTime - t.duration) < 0.1,
+         t.name + " current time at end: " + v.currentTime);
     }
 
-    is(v.readyState, v.HAVE_CURRENT_DATA, test.name + " checking readyState");
-    ok(v.ended, test.name + " checking playback has ended");
+    is(v.readyState, v.HAVE_CURRENT_DATA, t.name + " checking readyState");
+    ok(v.ended, t.name + " checking playback has ended");
     ok(v.playingCount > 0, "Expect at least one playing event");
     v.playingCount = 0;
 
@@ -58,33 +58,33 @@ function startTest(test, token) {
       v._playedOnce = true;
       v.play();
     }
-  }}(test, v);
+  }}(test, video);
 
-  var checkSuspended = function(test, v) { return function() {
+  var checkSuspended = function(t, v) { return function() {
     if (v.seenSuspend) {
       return;
     }
 
     v.seenSuspend = true;
-    ok(true, test.name + " got suspend");
+    ok(true, t.name + " got suspend");
     mayFinish(v);
-  }}(test, v);
+  }}(test, video);
 
-  var checkPlaying = function(test, v) { return function() {
-    is(test.name, v.name, "Should be testing file we think we're testing...");
+  var checkPlaying = function(t, v) { return function() {
+    is(t.name, v.name, "Should be testing file we think we're testing...");
     v.playingCount++;
-  }}(test, v);
+  }}(test, video);
 
-  v.addEventListener("load", noLoad);
-  v.addEventListener("loadedmetadata", check);
-  v.addEventListener("playing", checkPlaying);
+  video.addEventListener("load", noLoad);
+  video.addEventListener("loadedmetadata", check);
+  video.addEventListener("playing", checkPlaying);
 
   // We should get "ended" and "suspend" events for every resource
-  v.addEventListener("ended", checkEnded);
-  v.addEventListener("suspend", checkSuspended);
+  video.addEventListener("ended", checkEnded);
+  video.addEventListener("suspend", checkSuspended);
 
-  document.body.appendChild(v);
-  v.play();
+  document.body.appendChild(video);
+  video.play();
 }
 
 manager.runTests(gReplayTests, startTest);
