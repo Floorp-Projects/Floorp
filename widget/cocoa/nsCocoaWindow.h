@@ -306,6 +306,7 @@ class nsCocoaWindow final : public nsBaseWidget, public nsPIWidgetCocoa {
   virtual nsresult SynthesizeNativeMouseEvent(LayoutDeviceIntPoint aPoint, uint32_t aNativeMessage,
                                               uint32_t aModifierFlags,
                                               nsIObserver* aObserver) override;
+  virtual void LockAspectRatio(bool aShouldLock) override;
 
   void DispatchSizeModeEvent();
   void DispatchOcclusionEvent();
@@ -366,6 +367,7 @@ class nsCocoaWindow final : public nsBaseWidget, public nsPIWidgetCocoa {
   int32_t mShadowStyle;
 
   CGFloat mBackingScaleFactor;
+  CGFloat mAspectRatio;
 
   WindowAnimationType mAnimationType;
 
@@ -390,6 +392,7 @@ class nsCocoaWindow final : public nsBaseWidget, public nsPIWidgetCocoa {
   bool mInResize;           // true if in a call to DoResize().
   bool mWindowTransformIsIdentity;
   bool mAlwaysOnTop;
+  bool mAspectRatioLocked;
 
   int32_t mNumModalDescendents;
   InputContext mInputContext;
