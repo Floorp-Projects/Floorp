@@ -58,6 +58,9 @@ extern void WritableStreamMarkCloseRequestInFlight(
 extern void WritableStreamMarkFirstWriteRequestInFlight(
     WritableStream* unwrappedStream);
 
+extern MOZ_MUST_USE bool WritableStreamRejectCloseAndClosedPromiseIfNeeded(
+    JSContext* cx, JS::Handle<WritableStream*> unwrappedStream);
+
 extern MOZ_MUST_USE bool WritableStreamUpdateBackpressure(
     JSContext* cx, JS::Handle<WritableStream*> unwrappedStream,
     bool backpressure);
