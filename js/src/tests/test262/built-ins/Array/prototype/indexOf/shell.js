@@ -6,6 +6,7 @@
 description: |
     Used to assert the correctness of object behavior in the presence
     and context of Proxy objects.
+defines: [allowProxyTraps]
 ---*/
 
 function allowProxyTraps(overrides) {

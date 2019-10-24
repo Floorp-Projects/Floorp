@@ -11,7 +11,7 @@ info: |
     a. Let valuesArray be ! CreateArrayFromList(values).
     b. Return ? Call(promiseCapability.[[Resolve]], undefined, « valuesArray »).
 flags: [async]
-includes: [compareArray.js, promiseHelper.js]
+includes: [promiseHelper.js]
 features: [Promise.allSettled]
 ---*/
 
