@@ -9,17 +9,26 @@ async function pushGetUserMediaTestPrefs({
   fakeAudio = false,
   fakeVideo = false,
   loopbackAudio = false,
-  loopbackVideo = false}) {
+  loopbackVideo = false,
+}) {
   // Make sure we have sensical arguments
   if (!fakeAudio && !loopbackAudio) {
-    throw new Error("pushGetUserMediaTestPrefs: Should have fake or loopback audio!");
+    throw new Error(
+      "pushGetUserMediaTestPrefs: Should have fake or loopback audio!"
+    );
   } else if (fakeAudio && loopbackAudio) {
-    throw new Error("pushGetUserMediaTestPrefs: Should not have both fake and loopback audio!");
+    throw new Error(
+      "pushGetUserMediaTestPrefs: Should not have both fake and loopback audio!"
+    );
   }
   if (!fakeVideo && !loopbackVideo) {
-    throw new Error("pushGetUserMediaTestPrefs: Should have fake or loopback video!");
+    throw new Error(
+      "pushGetUserMediaTestPrefs: Should have fake or loopback video!"
+    );
   } else if (fakeVideo && loopbackVideo) {
-    throw new Error("pushGetUserMediaTestPrefs: Should not have both fake and loopback video!");
+    throw new Error(
+      "pushGetUserMediaTestPrefs: Should not have both fake and loopback video!"
+    );
   }
 
   let testPrefs = [];
@@ -32,10 +41,15 @@ async function pushGetUserMediaTestPrefs({
   if (loopbackAudio) {
     // If audio loopback is requested we expect the test harness to have set
     // the loopback device pref, make sure it's set
-    let audioLoopDev = SpecialPowers.getCharPref("media.audio_loopback_dev", "");
+    let audioLoopDev = SpecialPowers.getCharPref(
+      "media.audio_loopback_dev",
+      ""
+    );
     if (!audioLoopDev) {
-      throw new Error("pushGetUserMediaTestPrefs: Loopback audio requested but " +
-        "media.audio_loopback_dev does not appear to be set!");
+      throw new Error(
+        "pushGetUserMediaTestPrefs: Loopback audio requested but " +
+          "media.audio_loopback_dev does not appear to be set!"
+      );
     }
   }
   if (fakeVideo) {
@@ -47,18 +61,23 @@ async function pushGetUserMediaTestPrefs({
   if (loopbackVideo) {
     // If video loopback is requested we expect the test harness to have set
     // the loopback device pref, make sure it's set
-    let videoLoopDev = SpecialPowers.getCharPref("media.video_loopback_dev", "");
+    let videoLoopDev = SpecialPowers.getCharPref(
+      "media.video_loopback_dev",
+      ""
+    );
     if (!videoLoopDev) {
-      throw new Error("pushGetUserMediaTestPrefs: Loopback video requested but " +
-        "media.video_loopback_dev does not appear to be set!");
+      throw new Error(
+        "pushGetUserMediaTestPrefs: Loopback video requested but " +
+          "media.video_loopback_dev does not appear to be set!"
+      );
     }
   }
   if (loopbackAudio || loopbackVideo) {
     // Prevent gUM permission prompt. Since loopback devices are considered
     // real devices we need to set prefs so the gUM prompt isn't presented.
-    testPrefs.push(['media.navigator.permission.disabled', true]);
+    testPrefs.push(["media.navigator.permission.disabled", true]);
   }
-  return SpecialPowers.pushPrefEnv({set: testPrefs});
+  return SpecialPowers.pushPrefEnv({ set: testPrefs });
 }
 
 // Setup preconditions for tests using getUserMedia. This function will
@@ -66,7 +85,7 @@ async function pushGetUserMediaTestPrefs({
 // names already set in the prefs. If no loopback device name can be found then
 // prefs are setup such that a fake device is used.
 async function setupGetUserMediaTestPrefs() {
-  prefRequests = {};
+  let prefRequests = {};
   let audioLoopDev = SpecialPowers.getCharPref("media.audio_loopback_dev", "");
   if (audioLoopDev) {
     prefRequests.fakeAudio = false;

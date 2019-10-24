@@ -13,7 +13,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=548523
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=548523">Mozilla Bug 548523</a>
 <p id="display"></p>
 <div id="content" style="display: none">
-  
+
 </div>
 <!-- <button onClick="SimpleTest.finish();">Finish</button> -->
 <div>Tests complete: <span id="log" style="font-size: small;"></span></div>
@@ -41,6 +41,7 @@ addLoadEvent(function() {gotLoadEvent=true;});
 
 function log(m) {
   var l = document.getElementById("log");
+  // eslint-disable-next-line no-unsanitized/property
   l.innerHTML += m;
 }
 
@@ -65,8 +66,7 @@ var tests = [
     // after receiving a suspend event. Should not receive loaded events until after we call load().
     // Note the suspend event is explictly sent by our "stop the load" code, but other tests can't rely
     // on it for the preload:metadata case, as there can be multiple suspend events when loading metadata.
-    suspend:
-    function(e) {
+    suspend(e) {
       var v = e.target;
       is(v._gotLoadStart, true, "(1) Must get loadstart.");
       is(v._gotLoadedMetaData, false, "(1) Must not get loadedmetadata.");
@@ -76,8 +76,7 @@ var tests = [
       maybeFinish(v, 1);
     },
 
-    setup:
-    function(v) {
+    setup(v) {
       v._gotLoadStart = false;
       v._gotLoadedMetaData = false;
       v.preload = "none";
@@ -93,8 +92,7 @@ var tests = [
   {
     // 2. Add preload:metadata video with src to document. Should halt with NETWORK_IDLE, HAVE_CURRENT_DATA
     // after suspend event and after loadedmetadata.
-    loadeddata:
-    function(e) {
+    loadeddata(e) {
       var v = e.target;
       is(v._gotLoadStart, true, "(2) Must get loadstart.");
       is(v._gotLoadedMetaData, true, "(2) Must get loadedmetadata.");
@@ -104,8 +102,7 @@ var tests = [
       maybeFinish(v, 2);
     },
 
-    setup:
-    function(v) {
+    setup(v) {
       v._gotLoadStart = false;
       v._gotLoadedMetaData = false;
       v.preload = "metadata";
@@ -121,16 +118,14 @@ var tests = [
   },
   {
     // 3. Add preload:auto to document. Should receive canplaythrough eventually.
-    canplaythrough:
-    function(e) {
+    canplaythrough(e) {
       var v = e.target;
       is(v._gotLoadStart, true, "(3) Must get loadstart.");
       is(v._gotLoadedMetaData, true, "(3) Must get loadedmetadata.");
       maybeFinish(v, 3);
     },
 
-    setup:
-    function(v) {
+    setup(v) {
       v._gotLoadStart = false;
       v._gotLoadedMetaData = false;
       v.preload = "auto";
@@ -145,8 +140,7 @@ var tests = [
   },
   {
     // 4. Add preload:none video to document. Call play(), should load then play through.
-    suspend:
-    function(e) {
+    suspend(e) {
       var v = e.target;
       if (v._gotSuspend) {
         return; // We can receive multiple suspend events, like the one after download completes.
@@ -160,14 +154,12 @@ var tests = [
       v.play(); // Should load and play through.
     },
 
-    ended:
-    function(e) {
+    ended(e) {
       ok(true, "(4) Got playback ended");
       maybeFinish(e.target, 4);
     },
 
-    setup:
-    function(v) {
+    setup(v) {
       v._gotLoadStart = false;
       v._gotLoadedMetaData = false;
       v._gotSuspend = false;
@@ -185,8 +177,7 @@ var tests = [
   {
     // 5. preload:none video without resource, add to document, will implicitly start a
     // preload:none load. Add a src, it shouldn't load.
-    suspend:
-    function(e) {
+    suspend(e) {
       var v = e.target;
       is(v._gotLoadStart, true, "(5) Must get loadstart.");
       is(v._gotLoadedMetaData, false, "(5) Must not get loadedmetadata.");
@@ -196,8 +187,7 @@ var tests = [
       maybeFinish(v, 5);
     },
 
-    setup:
-    function(v) {
+    setup(v) {
       v._gotLoadStart = false;
       v._gotLoadedMetaData = false;
       v.preload = "none";
@@ -213,8 +203,7 @@ var tests = [
   {
     // 6. preload:none video without resource, add to document, will implicitly start a
     // preload:none load. Add a source, it shouldn't load.
-    suspend:
-    function(e) {
+    suspend(e) {
       var v = e.target;
       is(v._gotLoadStart, true, "(6) Must get loadstart.");
       is(v._gotLoadedMetaData, false, "(6) Must not get loadedmetadata.");
@@ -224,8 +213,7 @@ var tests = [
       maybeFinish(v, 6);
     },
 
-    setup:
-    function(v) {
+    setup(v) {
       v._gotLoadStart = false;
       v._gotLoadedMetaData = false;
       v.preload = "none";
@@ -244,10 +232,9 @@ var tests = [
   {
     // 7. create a preload:none document with multiple sources, the first of which is invalid.
     // Add to document, then play. It should load and play through the second source.
-    suspend:
-    function(e) {
+    suspend(e) {
       var v = e.target;
-      if (v._gotSuspend) 
+      if (v._gotSuspend)
         return; // We can receive multiple suspend events, like the one after download completes.
       v._gotSuspend = true;
       is(v._gotLoadStart, true, "(7) Must get loadstart.");
@@ -258,16 +245,14 @@ var tests = [
       v.play(); // Should load and play through.
     },
 
-    ended:
-    function(e) {
+    ended(e) {
       ok(true, "(7) Got playback ended");
       var v = e.target;
-      is(v._gotErrorEvent, true, "(7) Should get error event from first source load failure");      
+      is(v._gotErrorEvent, true, "(7) Should get error event from first source load failure");
       maybeFinish(v, 7);
     },
 
-    setup:
-    function(v) {
+    setup(v) {
       v._gotLoadStart = false;
       v._gotLoadedMetaData = false;
       v.preload = "none";
@@ -292,8 +277,7 @@ var tests = [
   },
   {
     // 8. Change preload value from none to metadata should cause metadata to be loaded.
-    loadeddata:
-    function(e) {
+    loadeddata(e) {
       var v = e.target;
       is(v._gotLoadedMetaData, true, "(8) Must get loadedmetadata.");
       ok(v.readyState >= v.HAVE_CURRENT_DATA, "(8) ReadyState must be >= HAVE_CURRENT_DATA on suspend.");
@@ -302,8 +286,7 @@ var tests = [
       maybeFinish(v, 8);
     },
 
-    setup:
-    function(v) {
+    setup(v) {
       v._gotLoadedMetaData = false;
       v.preload = "none";
       v.addEventListener("loadstart", function(e){v.preload = "metadata";});
@@ -342,15 +325,13 @@ var tests = [
   },*/
   {
     // 10. Change preload value from none to auto should cause entire media to be loaded.
-    canplaythrough:
-    function(e) {
+    canplaythrough(e) {
       var v = e.target;
       is(v._gotLoadedMetaData, true, "(10) Must get loadedmetadata.");
       maybeFinish(v, 10);
     },
 
-    setup:
-    function(v) {
+    setup(v) {
       v._gotLoadedMetaData = false;
       v.preload = "none";
       v.addEventListener("loadstart", function(e){v.preload = "auto";});
@@ -364,8 +345,7 @@ var tests = [
   },
   {
     // 11. Change preload value from none to metadata should cause metadata to load.
-    loadeddata:
-    function(e) {
+    loadeddata(e) {
       var v = e.target;
       is(v._gotLoadedMetaData, true, "(11) Must get loadedmetadata.");
       ok(v.readyState >= v.HAVE_CURRENT_DATA, "(11) ReadyState must be >= HAVE_CURRENT_DATA.");
@@ -374,8 +354,7 @@ var tests = [
       maybeFinish(v, 11);
     },
 
-    setup:
-    function(v) {
+    setup(v) {
       v._gotLoadedMetaData = false;
       v.preload = "none";
       v.addEventListener("loadstart", function(e){v.preload = "metadata";});
@@ -390,8 +369,7 @@ var tests = [
   {
     // 13. Change preload value from auto to none after specifying a src
     // should load according to preload none, no buffering should have taken place
-    suspend:
-    function(e) {
+    suspend(e) {
       var v = e.target;
       is(v._gotLoadStart, true, "(13) Must get loadstart.");
       is(v._gotLoadedMetaData, false, "(13) Must not get loadedmetadata.");
@@ -401,8 +379,7 @@ var tests = [
       maybeFinish(v, 13);
     },
 
-    setup:
-    function(v) {
+    setup(v) {
       v._gotLoadStart = false;
       v._gotLoadedMetaData = false;
       v.preload = "auto";
@@ -412,15 +389,14 @@ var tests = [
       v.addEventListener("loadstart", function(e){v._gotLoadStart = true;});
       v.addEventListener("suspend", this.suspend);
       document.body.appendChild(v); // Causes implicit load, should load according to preload none
-      var s = document.createElement("source");
+      document.createElement("source");
     },
 
     name: "test13",
   },
   {
     // 14. Add preload:metadata video with src to document. Play(), should play through.
-    loadeddata:
-    function(e) {
+    loadeddata(e) {
       var v = e.target;
       is(v._gotLoadStart, true, "(14) Must get loadstart.");
       is(v._gotLoadedMetaData, true, "(14) Must get loadedmetadata.");
@@ -430,15 +406,13 @@ var tests = [
       v.play();
     },
 
-    ended:
-    function(e) {
+    ended(e) {
       ok(true, "(14) Got playback ended");
       var v = e.target;
       maybeFinish(v, 14);
     },
 
-    setup:
-    function(v) {
+    setup(v) {
       v._gotLoadStart = false;
       v._gotLoadedMetaData = false;
       v.preload = "metadata";
@@ -455,15 +429,13 @@ var tests = [
   },
   {
     // 15. Autoplay should override preload:none.
-    ended:
-    function(e) {
+    ended(e) {
       ok(true, "(15) Got playback ended.");
       var v = e.target;
       maybeFinish(v, 15);
     },
 
-    setup:
-    function(v) {
+    setup(v) {
       v._gotLoadStart = false;
       v._gotLoadedMetaData = false;
       v.preload = "none";
@@ -479,7 +451,6 @@ var tests = [
                     "loadeddata", "playing", "ended", "error", "stalled", "emptied", "abort",
                     "waiting", "pause"];
       function logEvent(e) {
-        var v = e.target;
         info(e.target.token + ": got " + e.type);
       }
       events.forEach(function(e) {
@@ -491,15 +462,13 @@ var tests = [
   },
   {
     // 16. Autoplay should override preload:metadata.
-    ended:
-    function(e) {
+    ended(e) {
       ok(true, "(16) Got playback ended.");
       var v = e.target;
       maybeFinish(v, 16);
     },
 
-    setup:
-    function(v) {
+    setup(v) {
       v.preload = "metadata";
       v.autoplay = true;
       v.addEventListener("ended", this.ended);
@@ -511,15 +480,13 @@ var tests = [
   },
   {
     // 17. On a preload:none video, adding autoplay should disable preload none, i.e. don't break autoplay!
-    ended:
-    function(e) {
+    ended(e) {
       ok(true, "(17) Got playback ended.");
       var v = e.target;
       maybeFinish(v, 17);
     },
 
-    setup:
-    function(v) {
+    setup(v) {
       v.addEventListener("ended", this.ended);
       v.preload = "none";
       document.body.appendChild(v); // Causes implicit load, which will be halted due to preload:none.
@@ -532,15 +499,13 @@ var tests = [
   {
     // 18. On a preload='none' video, call play() before load algorithms's sync
     // has run, the play() call should override preload='none'.
-    ended:
-    function(e) {
+    ended(e) {
       ok(true, "(18) Got playback ended.");
       var v = e.target;
       maybeFinish(v, 18);
     },
 
-    setup:
-    function(v) {
+    setup(v) {
       v.addEventListener("ended", this.ended);
       v.preload = "none";
       v.src = test.name; // Schedules async section to continue load algorithm.
@@ -553,8 +518,7 @@ var tests = [
   {
     // 19. Set preload='auto' on first video source then switching preload='none' and swapping the video source to another.
     // The second video should not start playing as it's preload state has been changed to 'none' from 'auto'
-    setup:
-    function(v) {
+    setup(v) {
       v.preload = "auto";
       v.src = test.name;
       // add a listener for when the video has loaded, so we know preload auto has worked
@@ -591,18 +555,18 @@ var tests = [
 ];
 
 var iterationCount = 0;
-function startTest(test, token) {
-  if (test == tests[0]) {
+function startTest(t, token) {
+  if (t == tests[0]) {
     ++iterationCount;
     info("iterationCount=" + iterationCount);
   }
   if (iterationCount == 2) {
     // Do this series of tests on logically different resources
-    test.name = baseName + "?" + Math.floor(Math.random()*100000);
+    t.name = baseName + "?" + Math.floor(Math.random()*100000);
   }
   var v = document.createElement("video");
   v.token = token;
-  test.setup(v);
+  t.setup(v);
   manager.started(token);
 }
 

@@ -18,8 +18,8 @@ var EXPORTED_SYMBOLS = ["DeferredTask"];
  * every time the data changes, using asynchronous calls, and multiple changes
  * to the data may happen within a short time:
  *
- *   let saveDeferredTask = new DeferredTask(function* () {
- *     yield OS.File.writeAtomic(...);
+ *   let saveDeferredTask = new DeferredTask(async function() {
+ *     await OS.File.writeAtomic(...);
  *     // Any uncaught exception will be reported.
  *   }, 2000);
  *
@@ -33,7 +33,7 @@ var EXPORTED_SYMBOLS = ["DeferredTask"];
  *
  *   // The task will be executed in 2 seconds from now.
  *
- *   yield waitOneSecond();
+ *   await waitOneSecond();
  *   saveDeferredTask.arm();
  *
  *   // The task will be executed in 1 second from now.
@@ -122,7 +122,7 @@ var DeferredTask = function(aTaskFn, aDelayMs, aIdleTimeoutMs) {
 
 this.DeferredTask.prototype = {
   /**
-   * Function or generator function to execute.
+   * Function to execute.
    */
   _taskFn: null,
 
@@ -143,7 +143,7 @@ this.DeferredTask.prototype = {
   /**
    * Indicates whether the task is currently running.  This is always true when
    * read from code inside the task function, but can also be true when read
-   * from external code, in case the task is an asynchronous generator function.
+   * from external code, in case the task is an asynchronous function.
    */
   get isRunning() {
     return !!this._runningPromise;
@@ -165,11 +165,31 @@ this.DeferredTask.prototype = {
    * Actually starts the timer with the delay specified on construction.
    */
   _startTimer() {
-    this._timer = new Timer(
-      this._timerCallback.bind(this),
-      this._delayMs,
-      Ci.nsITimer.TYPE_ONE_SHOT
-    );
+    let callback, timer;
+    if (this._timeoutMs === 0) {
+      callback = () => this._timerCallback();
+    } else {
+      callback = () => {
+        this._startIdleDispatch(() => {
+          // _timer could have changed by now:
+          // - to null if disarm() or finalize() has been called.
+          // - to a new nsITimer if disarm() was called, followed by arm().
+          // In either case, don't invoke _timerCallback any more.
+          if (this._timer === timer) {
+            this._timerCallback();
+          }
+        }, this._timeoutMs);
+      };
+    }
+    timer = new Timer(callback, this._delayMs, Ci.nsITimer.TYPE_ONE_SHOT);
+    this._timer = timer;
+  },
+
+  /**
+   * Dispatches idle task. Can be overridden for testing by test_DeferredTask.
+   */
+  _startIdleDispatch(callback, timeout) {
+    ChromeUtils.idleDispatch(callback, { timeout });
   },
 
   /**
@@ -249,7 +269,8 @@ this.DeferredTask.prototype = {
     this._finalized = true;
 
     // If the timer is armed, it means that the task is not running but it is
-    // scheduled for execution.  Cancel the timer and run the task immediately.
+    // scheduled for execution.  Cancel the timer and run the task immediately,
+    // so we don't risk blocking async shutdown longer than necessary.
     if (this._timer) {
       this.disarm();
       this._timerCallback();
@@ -305,17 +326,11 @@ this.DeferredTask.prototype = {
   },
 
   /**
-   * Executes the associated task in an idle callback and catches exceptions.
+   * Executes the associated task and catches exceptions.
    */
   async _runTask() {
     try {
-      // If we're being finalized, execute the task immediately, so we don't
-      // risk blocking async shutdown longer than necessary.
-      if (this._finalized || this._timeoutMs === 0) {
-        await this._taskFn();
-      } else {
-        await PromiseUtils.idleDispatch(this._taskFn, this._timeoutMs);
-      }
+      await this._taskFn();
     } catch (ex) {
       Cu.reportError(ex);
     }

@@ -107,8 +107,8 @@ for (var i = 0; i < gSmallTests.length; ++i) {
   // The following nested function hack is to ensure that 'test' is correctly
   // captured in the closure and we don't end up getting the value 'test'
   // had in the last iteration of the loop. I blame Brendan.
-  var check = function(test) { return function (e) {
-    checkMetadata(test.name, e, test);
+  var check = function(t) { return function (e) {
+    checkMetadata(t.name, e, t);
   }}(test);
 
   var otherType = type.match(/^video\//) ? "audio/x-wav" : "video/ogg";
@@ -130,8 +130,8 @@ for (var i = 0; i < gSmallTests.length; ++i) {
                 maketest(late_add_sources_first, src, type, check));
 }
 
-function startTest(test, token) {
-  test(token);
+function startTest(t, token) {
+  t(token);
 }
 
 manager.runTests(subtests, startTest);

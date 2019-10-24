@@ -24,16 +24,15 @@ is(v1.childNodes.length, 0, "should have no children");
 is(a1.childNodes.length, 0, "should have no children");
 
 function newSource(filter) {
-  var test = null;
   var candidates = gSmallTests.filter(function(x){return filter.test(x.type);});
   if (candidates.length > 0) {
     var e = document.createElement("source");
     e.type = candidates[0].type;
     e.src = candidates[0].name;
     return e;
-  } else {
-    return null
   }
+    return null
+
 }
 
 var audioLoaded = false;

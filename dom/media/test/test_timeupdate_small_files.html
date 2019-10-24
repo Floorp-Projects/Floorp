@@ -19,13 +19,13 @@ var manager = new MediaTestManager;
 
 function ended(e) {
   var v = e.target;
-  ++v.counter["ended"];
-  is(v.counter["ended"], 1, v._name + " should see ended only once");
-  ok(v.counter["timeupdate"] > 0, v._name + " should see at least one timeupdate: " + v.currentTime);
+  ++v.counter.ended;
+  is(v.counter.ended, 1, v._name + " should see ended only once");
+  ok(v.counter.timeupdate > 0, v._name + " should see at least one timeupdate: " + v.currentTime);
 
   // Rest event counters for we don't allow events after ended.
-  eventsToLog.forEach(function(e) {
-    v.counter[e] = 0;
+  eventsToLog.forEach(function(event) {
+    v.counter[event] = 0;
   });
 
   // Finish the test after 500ms. We shouldn't receive any timeupdate events
@@ -39,8 +39,8 @@ function ended(e) {
       // invoked when it's removed from a document), and we don't want those
       // confusing the test results.
       v.removeEventListener("ended", ended);
-      eventsToLog.forEach(function(e) {
-        v.removeEventListener(e, logEvent);
+      eventsToLog.forEach(function(event) {
+        v.removeEventListener(event, logEvent);
       });
       removeNodeAndSource(v);
       manager.finished(v.token);
@@ -55,7 +55,7 @@ var eventsToLog = ["play", "canplay", "canplaythrough", "loadstart", "loadedmeta
 function logEvent(event) {
   var v = event.target;
   ++v.counter[event.type];
-  if (v.counter["ended"] > 0) {
+  if (v.counter.ended > 0) {
     is(v.counter[event.type], 0, v._name + " got unexpected " + event.type + " after ended");
   }
 }
@@ -75,7 +75,7 @@ function startTest(test, token) {
     v.counter[e] = 0;
   });
   v.addEventListener("ended", ended);
-  v.counter["ended"] = 0;
+  v.counter.ended = 0;
   document.body.appendChild(v);
   v.play();
 }

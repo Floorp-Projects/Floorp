@@ -2,23 +2,29 @@
 // https://addons.mozilla.org/en-US/firefox/addon/youtube-auto-hd-lq/
 // licence: MPL 2.0
 var config = {
-  "HD": true,
-  "LQ": false,
-  "ID": "auto-hd-lq-for-ytb",
-  "type": function (t) {
-    config.HD = t === 'hd';
-    config.LQ = t === 'lq';
+  HD: true,
+  LQ: false,
+  ID: "auto-hd-lq-for-ytb",
+  type(t) {
+    config.HD = t === "hd";
+    config.LQ = t === "lq";
   },
-  "quality": function () {
+  quality() {
     if (config.HD || config.LQ) {
-      var youtubePlayerListener = function (LQ, HD) {
-        return function youtubePlayerListener (e) {
+      var youtubePlayerListener = function(LQ, HD) {
+        return function(e) {
           if (e === 1) {
-            var player = document.getElementById('movie_player');
+            var player = document.getElementById("movie_player");
             if (player) {
               var levels = player.getAvailableQualityLevels();
               if (levels.length) {
-                var q = (HD && levels[0]) ? levels[0] : ((LQ && levels[levels.length - 2]) ? levels[levels.length - 2] : null);
+                var q =
+                  // eslint-disable-next-line no-nested-ternary
+                  HD && levels[0]
+                    ? levels[0]
+                    : LQ && levels[levels.length - 2]
+                    ? levels[levels.length - 2]
+                    : null;
                 if (q) {
                   player.setPlaybackQuality(q);
                   player.setPlaybackQualityRange(q, q);
@@ -26,15 +32,17 @@ var config = {
               }
             }
           }
-        }
-      }
+        };
+      };
       /*  */
-      var inject = function () {
-        var action = function () {
-          var player = document.getElementById('movie_player');
+      var inject = function() {
+        var action = function() {
+          var player = document.getElementById("movie_player");
           if (player && player.addEventListener && player.getPlayerState) {
             player.addEventListener("onStateChange", "youtubePlayerListener");
-          } else window.setTimeout(action, 1000);
+          } else {
+            window.setTimeout(action, 1000);
+          }
         };
         /*  */
         action();
@@ -47,27 +55,37 @@ var config = {
         document.documentElement.appendChild(script);
       }
       /*  */
-      script.textContent = "var youtubePlayerListener = (" + youtubePlayerListener + ')(' + config.LQ + ',' + config.HD  + ');(' + inject + ')();';
+      script.textContent =
+        "var youtubePlayerListener = (" +
+        youtubePlayerListener +
+        ")(" +
+        config.LQ +
+        "," +
+        config.HD +
+        ");(" +
+        inject +
+        ")();";
     }
-  }
+  },
 };
 
-  if (/^https?:\/\/www\.youtube.com\/watch\?/.test(document.location.href)) config.quality();
-  var content = document.getElementById('content');
-  if (content) {
-    var observer = new window.MutationObserver(function (e) {
-      e.forEach(function (m) {
-        if (m.addedNodes !== null) {
-          for (var i = 0; i < m.addedNodes.length; i++) {
-            if (m.addedNodes[i].id === 'movie_player') {
-              config.quality();
-              return;
-            }
+if (/^https?:\/\/www\.youtube.com\/watch\?/.test(document.location.href)) {
+  config.quality();
+}
+var content = document.getElementById("content");
+if (content) {
+  var observer = new window.MutationObserver(function(e) {
+    e.forEach(function(m) {
+      if (m.addedNodes !== null) {
+        for (var i = 0; i < m.addedNodes.length; i++) {
+          if (m.addedNodes[i].id === "movie_player") {
+            config.quality();
+            return;
           }
         }
-      });
+      }
     });
-    /*  */
-    observer.observe(content, {"childList": true, "subtree": true});
-  }
-
+  });
+  /*  */
+  observer.observe(content, { childList: true, subtree: true });
+}

@@ -11,7 +11,7 @@ PACKAGE_VERSION = '1.1.0'
 
 # dependencies
 deps = ['mozfile >= 1.0',
-        'mozlog >= 3.0']
+        'mozlog >= 5.0']
 
 setup(name=PACKAGE_NAME,
       version=PACKAGE_VERSION,

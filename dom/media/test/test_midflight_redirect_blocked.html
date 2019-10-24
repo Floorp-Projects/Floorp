@@ -34,14 +34,13 @@
           element.addEventListener("loadedmetadata", ()=>{
             resolve(true);
             removeNodeAndSource(element);
-          }, false);
+          });
 
           element.addEventListener("error", ()=>{
             resolve(false);
             removeNodeAndSource(element);
-          }, false);
+          });
 
-          var noise = Math.floor(Math.random() * 100000000);
           // Note: request redirect before the end of metadata, otherwise we won't
           // error before metadata has loaded if mixed origins are allowed.
           element.src = "midflight-redirect.sjs?resource=" + test.name
@@ -57,14 +56,11 @@
       let v = document.createElement("video");
       const testCases = gSmallTests.filter(t => v.canPlayType(t.type));
 
-      function testMediaLoad(expectedToLoad, message, useCors) {
-        return new Promise(async function(resolve, reject) {
-          for (let test of testCases) {
-            let loaded = await testIfLoadsToMetadata(test, useCors);
-            is(loaded, expectedToLoad, test.name + " " + message);
-          }
-          resolve();
-        });
+      async function testMediaLoad(expectedToLoad, message, useCors) {
+        for (let test of testCases) {
+          let loaded = await testIfLoadsToMetadata(test, useCors);
+          is(loaded, expectedToLoad, test.name + " " + message);
+        }
       }
 
       async function runTest() {
