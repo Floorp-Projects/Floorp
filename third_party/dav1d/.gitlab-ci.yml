@@ -178,7 +178,7 @@ build-debian-aarch64:
         - aarch64
         - debian
     script:
-        - meson build --buildtype release --werror
+        - meson build --buildtype debugoptimized --werror
         - ninja -C build
         - cd build && meson test -v
 
@@ -219,7 +219,7 @@ build-debian-armv7:
         - armv7
         - debian
     script:
-        - meson build --buildtype release --werror
+        - meson build --buildtype debugoptimized --werror
         - ninja -C build
         - cd build && meson test -v
 
@@ -241,7 +241,7 @@ build-ubuntu-snap:
         - debian
         - amd64
     script:
-        - snapcraft snap
+        - cd package/snap && snapcraft snap
         - |
            if [ "$CI_PROJECT_NAMESPACE" = "videolan" ]; then
             echo $SNAP_LOGIN | base64 --decode | snapcraft login --with -
@@ -251,7 +251,7 @@ build-ubuntu-snap:
     artifacts:
         name: "$CI_JOB_NAME-$CI_COMMIT_REF_SLUG"
         paths:
-            - dav1d_*.snap
+            - package/snap/dav1d_*.snap
         expire_in: 1 week
     allow_failure: true
 

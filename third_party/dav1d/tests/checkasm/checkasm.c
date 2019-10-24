@@ -142,6 +142,7 @@ static struct {
     unsigned int seed;
     int bench_c;
     int verbose;
+    int function_listing;
 } state;
 
 /* float compare support code */
@@ -365,6 +366,14 @@ static void print_benchs(const CheckasmFunc *const f) {
 }
 #endif
 
+static void print_functions(const CheckasmFunc *const f) {
+    if (f) {
+        print_functions(f->child[0]);
+        printf("%s\n", f->name);
+        print_functions(f->child[1]);
+    }
+}
+
 #define is_digit(x) ((x) >= '0' && (x) <= '9')
 
 /* ASCIIbetical sort except preserving natural order for numbers */
@@ -515,7 +524,8 @@ int main(int argc, char *argv[]) {
                     "Options:\n"
                     "    --test=<test_name>  Test only <test_name>\n"
                     "    --bench=<pattern>   Test and benchmark the functions matching <pattern>\n"
-                    "    --list              List the available tests\n"
+                    "    --list-functions    List available functions\n"
+                    "    --list-tests        List available tests\n"
                     "    --bench-c           Benchmark the C-only functions\n"
                     "    --verbose -v        Print failures verbosely\n");
             return 0;
@@ -534,11 +544,11 @@ int main(int argc, char *argv[]) {
                 state.bench_pattern = "";
         } else if (!strncmp(argv[1], "--test=", 7)) {
             state.test_name = argv[1] + 7;
-        } else if (!strcmp(argv[1], "--list")) {
-            fprintf(stderr, "checkasm: available tests [");
-            for (int i = 0; tests[i].func; i++)
-                fprintf(stderr, "%s%s", i ? ", ": "", tests[i].name);
-            fprintf(stderr, "]\n");
+        } else if (!strcmp(argv[1], "--list-functions")) {
+            state.function_listing = 1;
+        } else if (!strcmp(argv[1], "--list-tests")) {
+            for (int i = 0; tests[i].name; i++)
+                printf("%s\n", tests[i].name);
             return 0;
         } else if (!strcmp(argv[1], "--verbose") || !strcmp(argv[1], "-v")) {
             state.verbose = 1;
@@ -553,24 +563,28 @@ int main(int argc, char *argv[]) {
     fprintf(stderr, "checkasm: using random seed %u\n", state.seed);
 
     check_cpu_flag(NULL, 0);
-    for (int i = 0; cpus[i].flag; i++)
-        check_cpu_flag(cpus[i].name, cpus[i].flag);
-
-    if (!state.num_checked) {
-        fprintf(stderr, "checkasm: no tests to perform\n");
-    } else if (state.num_failed) {
-        fprintf(stderr, "checkasm: %d of %d tests have failed\n",
-                state.num_failed, state.num_checked);
-        ret = 1;
+    if (state.function_listing) {
+        print_functions(state.funcs);
     } else {
-        fprintf(stderr, "checkasm: all %d tests passed\n", state.num_checked);
+        for (int i = 0; cpus[i].flag; i++)
+            check_cpu_flag(cpus[i].name, cpus[i].flag);
+
+        if (!state.num_checked) {
+            fprintf(stderr, "checkasm: no tests to perform\n");
+        } else if (state.num_failed) {
+            fprintf(stderr, "checkasm: %d of %d tests have failed\n",
+                    state.num_failed, state.num_checked);
+            ret = 1;
+        } else {
+            fprintf(stderr, "checkasm: all %d tests passed\n", state.num_checked);
 #ifdef readtime
-        if (state.bench_pattern) {
-            state.nop_time = measure_nop_time();
-            printf("nop: %d.%d\n", state.nop_time/10, state.nop_time%10);
-            print_benchs(state.funcs);
-        }
+            if (state.bench_pattern) {
+                state.nop_time = measure_nop_time();
+                printf("nop: %d.%d\n", state.nop_time/10, state.nop_time%10);
+                print_benchs(state.funcs);
+            }
 #endif
+        }
     }
 
     destroy_func_tree(state.funcs);
@@ -592,6 +606,10 @@ void *checkasm_check_func(void *const func, const char *const name, ...) {
         return NULL;
 
     state.current_func = get_func(&state.funcs, name_buf);
+
+    if (state.function_listing) /* Save function names without running tests */
+        return NULL;
+
     state.funcs->color = 1;
     CheckasmFuncVersion *v = &state.current_func->versions;
     void *ref = func;

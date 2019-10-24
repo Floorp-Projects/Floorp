@@ -192,7 +192,7 @@ static const EnumParseTable cpu_mask_tbl[] = {
 #if ARCH_AARCH64 || ARCH_ARM
     { "neon", DAV1D_ARM_CPU_FLAG_NEON },
 #elif ARCH_X86
-    { "sse2",   X86_CPU_MASK_SSE },
+    { "sse2",   X86_CPU_MASK_SSE2 },
     { "ssse3",  X86_CPU_MASK_SSSE3 },
     { "sse41",  X86_CPU_MASK_SSE41 },
     { "avx2",   X86_CPU_MASK_AVX2 },
