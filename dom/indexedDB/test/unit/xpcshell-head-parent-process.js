@@ -252,6 +252,13 @@ function setTimeout(fun, timeout) {
   return timer;
 }
 
+function initChromeOrigin(persistence) {
+  let principal = Cc["@mozilla.org/systemprincipal;1"].createInstance(
+    Ci.nsIPrincipal
+  );
+  return Services.qms.initStoragesForPrincipal(principal, persistence);
+}
+
 function resetOrClearAllDatabases(callback, clear) {
   if (!SpecialPowers.isMainProcess()) {
     throw new Error("clearAllDatabases not implemented for child processes!");
@@ -284,14 +291,16 @@ function resetOrClearAllDatabases(callback, clear) {
   }
 
   request.callback = callback;
+
+  return request;
 }
 
 function resetAllDatabases(callback) {
-  resetOrClearAllDatabases(callback, false);
+  return resetOrClearAllDatabases(callback, false);
 }
 
 function clearAllDatabases(callback) {
-  resetOrClearAllDatabases(callback, true);
+  return resetOrClearAllDatabases(callback, true);
 }
 
 function installPackagedProfile(packageName) {
@@ -546,6 +555,19 @@ function getPrincipal(url) {
   return Services.scriptSecurityManager.createContentPrincipal(uri, {});
 }
 
+function requestFinished(request) {
+  return new Promise(function(resolve, reject) {
+    request.callback = function(req) {
+      if (req.resultCode == Cr.NS_OK) {
+        resolve(req.result);
+      } else {
+        reject(req.resultCode);
+      }
+    };
+  });
+}
+
+// TODO: Rename to openDBRequestSucceeded ?
 function expectingSuccess(request) {
   return new Promise(function(resolve, reject) {
     request.onerror = function(event) {
@@ -562,6 +584,7 @@ function expectingSuccess(request) {
   });
 }
 
+// TODO: Rename to openDBRequestUpgradeNeeded ?
 function expectingUpgrade(request) {
   return new Promise(function(resolve, reject) {
     request.onerror = function(event) {
@@ -578,14 +601,14 @@ function expectingUpgrade(request) {
   });
 }
 
-function initChromeOrigin(persistence) {
-  let principal = Cc["@mozilla.org/systemprincipal;1"].createInstance(
-    Ci.nsIPrincipal
-  );
-  return new Promise(function(resolve) {
-    let request = Services.qms.initStoragesForPrincipal(principal, persistence);
-    request.callback = function() {
-      return resolve(request);
+function requestSucceeded(request) {
+  return new Promise(function(resolve, reject) {
+    request.onerror = function(event) {
+      ok(false, "indexedDB error, '" + event.target.error.name + "'");
+      reject(event);
+    };
+    request.onsuccess = function(event) {
+      resolve(event);
     };
   });
 }
