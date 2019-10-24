@@ -10,26 +10,26 @@
 >
   <scrollbox>
    <vbox style="background-color:white;">
-      <text value="hahaha  0"/>
-      <text value="hahaha  1"/>
-      <text value="hahaha  2"/>
-      <text value="hahaha  3"/>
-      <text value="hahaha  4"/>
-      <text value="hahaha  5"/>
-      <text value="hahaha  6"/>
-      <text value="hahaha  7"/>
-      <text value="hahaha  8"/>
-      <text value="hahaha  9"/>
-      <text value="hahaha 10"/>
-      <text value="hahaha 11"/>
-      <text value="hahaha 12"/>
-      <text value="hahaha 13"/>
-      <text value="hahaha 14"/>
-      <text value="hahaha 15"/>
-      <text value="hahaha 16"/>
-      <text value="hahaha 17"/>
-      <text value="hahaha 18"/>
-      <text value="hahaha 19"/>
+      <label value="hahaha  0"/>
+      <label value="hahaha  1"/>
+      <label value="hahaha  2"/>
+      <label value="hahaha  3"/>
+      <label value="hahaha  4"/>
+      <label value="hahaha  5"/>
+      <label value="hahaha  6"/>
+      <label value="hahaha  7"/>
+      <label value="hahaha  8"/>
+      <label value="hahaha  9"/>
+      <label value="hahaha 10"/>
+      <label value="hahaha 11"/>
+      <label value="hahaha 12"/>
+      <label value="hahaha 13"/>
+      <label value="hahaha 14"/>
+      <label value="hahaha 15"/>
+      <label value="hahaha 16"/>
+      <label value="hahaha 17"/>
+      <label value="hahaha 18"/>
+      <label value="hahaha 19"/>
    </vbox>
 <scrollbar
     id="identifier"

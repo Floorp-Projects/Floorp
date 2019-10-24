@@ -6,7 +6,7 @@
 <vbox id="under">
 <vbox id="strike">
 <label       value="No overline."/>
-<text        value="Orange underline."/>
+<label       value="Orange underline."/>
 <description value="Blue strikethrough."/>
 </vbox>
 </vbox>

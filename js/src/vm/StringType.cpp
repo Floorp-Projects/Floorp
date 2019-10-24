@@ -80,16 +80,12 @@ size_t JSString::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) {
     return 0;
   }
 
-  // JSExternalString: Ask the embedding to tell us what's going on.  If it
-  // doesn't want to say, don't count, the chars could be stored anywhere.
+  // JSExternalString: Ask the embedding to tell us what's going on.
   if (isExternal()) {
-    if (auto* cb =
-            runtimeFromMainThread()->externalStringSizeofCallback.ref()) {
-      // Our callback isn't supposed to cause GC.
-      JS::AutoSuppressGCAnalysis nogc;
-      return cb(this, mallocSizeOf);
-    }
-    return 0;
+    // Our callback isn't supposed to cause GC.
+    JS::AutoSuppressGCAnalysis nogc;
+    return asExternal().callbacks()->sizeOfBuffer(asExternal().twoByteChars(),
+                                                  mallocSizeOf);
   }
 
   // JSExtensibleString: count the full capacity, not just the used space.
@@ -1506,8 +1502,8 @@ void JSExternalString::dumpRepresentation(js::GenericPrinter& out,
   dumpRepresentationHeader(out, "JSExternalString");
   indent += 2;
 
-  out.printf("%*sfinalizer: ((JSStringFinalizer*) %p)\n", indent, "",
-             externalFinalizer());
+  out.printf("%*sfinalizer: ((JSExternalStringCallbacks*) %p)\n", indent, "",
+             callbacks());
   dumpRepresentationChars(out, indent);
 }
 #endif /* defined(DEBUG) || defined(JS_JITSPEW) */
@@ -1916,7 +1912,7 @@ MOZ_ALWAYS_INLINE void ExternalStringCache::put(JSString* str) {
 }
 
 JSString* NewMaybeExternalString(JSContext* cx, const char16_t* s, size_t n,
-                                 const JSStringFinalizer* fin,
+                                 const JSExternalStringCallbacks* callbacks,
                                  bool* allocatedExternal) {
   if (JSString* str = TryEmptyOrStaticString(cx, s, n)) {
     *allocatedExternal = false;
@@ -1936,7 +1932,7 @@ JSString* NewMaybeExternalString(JSContext* cx, const char16_t* s, size_t n,
     return str;
   }
 
-  JSString* str = JSExternalString::new_(cx, s, n, fin);
+  JSString* str = JSExternalString::new_(cx, s, n, callbacks);
   if (!str) {
     return nullptr;
   }
@@ -1976,17 +1972,18 @@ void JSLinearString::dumpRepresentation(js::GenericPrinter& out,
 }
 #endif
 
-static void FinalizeRepresentativeExternalString(const JSStringFinalizer* fin,
-                                                 char16_t* chars);
+struct RepresentativeExternalString : public JSExternalStringCallbacks {
+  void finalize(char16_t* chars) const override {
+    // Constant chars, nothing to do.
+  }
+  size_t sizeOfBuffer(const char16_t* chars,
+                      mozilla::MallocSizeOf mallocSizeOf) const override {
+    // This string's buffer is not heap-allocated, so its malloc size is 0.
+    return 0;
+  }
+};
 
-static const JSStringFinalizer RepresentativeExternalStringFinalizer = {
-    FinalizeRepresentativeExternalString};
-
-static void FinalizeRepresentativeExternalString(const JSStringFinalizer* fin,
-                                                 char16_t* chars) {
-  // Constant chars, nothing to free.
-  MOZ_ASSERT(fin == &RepresentativeExternalStringFinalizer);
-}
+static const RepresentativeExternalString RepresentativeExternalStringCallbacks;
 
 template <typename CheckString, typename CharT>
 static bool FillWithRepresentatives(JSContext* cx, HandleArrayObject array,
@@ -2082,14 +2079,14 @@ static bool FillWithRepresentatives(JSContext* cx, HandleArrayObject array,
   RootedString external1(cx), external2(cx);
   if (IsSame<CharT, char16_t>::value) {
     external1 = JS_NewExternalString(cx, (const char16_t*)chars, len,
-                                     &RepresentativeExternalStringFinalizer);
+                                     &RepresentativeExternalStringCallbacks);
     if (!external1 || !AppendString(cx, array, index, external1)) {
       return false;
     }
     MOZ_ASSERT(external1->isExternal());
 
     external2 = JS_NewExternalString(cx, (const char16_t*)chars, 2,
-                                     &RepresentativeExternalStringFinalizer);
+                                     &RepresentativeExternalStringCallbacks);
     if (!external2 || !AppendString(cx, array, index, external2)) {
       return false;
     }

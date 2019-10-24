@@ -51,6 +51,7 @@ class GroupingFormatter(base.BaseFormatter):
             'OK': 0,
             'PASS': 0,
             'FAIL': 0,
+            'PRECONDITION_FAILED': 0,
             'ERROR': 0,
             'TIMEOUT': 0,
             'SKIP': 0,
@@ -61,6 +62,7 @@ class GroupingFormatter(base.BaseFormatter):
             'OK': [],
             'PASS': [],
             'FAIL': [],
+            'PRECONDITION_FAILED': [],
             'ERROR': [],
             'TIMEOUT': [],
             'CRASH': [],
@@ -305,6 +307,8 @@ class GroupingFormatter(base.BaseFormatter):
         output += text_for_unexpected_list(u"crashed unexpectedly", 'CRASH')
         output += text_for_unexpected_list(u"had errors unexpectedly", 'ERROR')
         output += text_for_unexpected_list(u"failed unexpectedly", 'FAIL')
+        output += text_for_unexpected_list(u"precondition failed unexpectedly",
+                                           'PRECONDITION_FAILED')
         output += text_for_unexpected_list(u"timed out unexpectedly", 'TIMEOUT')
         output += text_for_unexpected_list(u"passed unexpectedly", 'PASS')
         output += text_for_unexpected_list(u"unexpectedly okay", 'OK')

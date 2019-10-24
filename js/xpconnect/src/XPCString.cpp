@@ -27,35 +27,59 @@
 
 using namespace JS;
 
-// static
-void XPCStringConvert::FinalizeLiteral(const JSStringFinalizer* fin,
-                                       char16_t* chars) {}
+const XPCStringConvert::LiteralExternalString
+    XPCStringConvert::sLiteralExternalString;
 
-const JSStringFinalizer XPCStringConvert::sLiteralFinalizer = {
-    XPCStringConvert::FinalizeLiteral};
+const XPCStringConvert::DOMStringExternalString
+    XPCStringConvert::sDOMStringExternalString;
 
-// static
-void XPCStringConvert::FinalizeDOMString(const JSStringFinalizer* fin,
-                                         char16_t* chars) {
-  nsStringBuffer* buf = nsStringBuffer::FromData(chars);
+const XPCStringConvert::DynamicAtomExternalString
+    XPCStringConvert::sDynamicAtomExternalString;
+
+void XPCStringConvert::LiteralExternalString::finalize(char16_t* aChars) const {
+  // Nothing to do.
+}
+
+size_t XPCStringConvert::LiteralExternalString::sizeOfBuffer(
+    const char16_t* aChars, mozilla::MallocSizeOf aMallocSizeOf) const {
+  // This string's buffer is not heap-allocated, so its malloc size is 0.
+  return 0;
+}
+
+void XPCStringConvert::DOMStringExternalString::finalize(
+    char16_t* aChars) const {
+  nsStringBuffer* buf = nsStringBuffer::FromData(aChars);
   buf->Release();
 }
 
-const JSStringFinalizer XPCStringConvert::sDOMStringFinalizer = {
-    XPCStringConvert::FinalizeDOMString};
+size_t XPCStringConvert::DOMStringExternalString::sizeOfBuffer(
+    const char16_t* aChars, mozilla::MallocSizeOf aMallocSizeOf) const {
+  // We promised the JS engine we would not GC.  Enforce that:
+  JS::AutoCheckCannotGC autoCannotGC;
 
-// static
-void XPCStringConvert::FinalizeDynamicAtom(const JSStringFinalizer* fin,
-                                           char16_t* chars) {
-  nsDynamicAtom* atom = nsDynamicAtom::FromChars(chars);
+  const nsStringBuffer* buf =
+      nsStringBuffer::FromData(const_cast<char16_t*>(aChars));
+  // We want sizeof including this, because the entire string buffer is owned by
+  // the external string.  But only report here if we're unshared; if we're
+  // shared then we don't know who really owns this data.
+  return buf->SizeOfIncludingThisIfUnshared(aMallocSizeOf);
+}
+
+void XPCStringConvert::DynamicAtomExternalString::finalize(
+    char16_t* aChars) const {
+  nsDynamicAtom* atom = nsDynamicAtom::FromChars(aChars);
   // nsDynamicAtom::Release is always-inline and defined in a translation unit
   // we can't get to here.  So we need to go through nsAtom::Release to call
   // it.
   static_cast<nsAtom*>(atom)->Release();
 }
 
-const JSStringFinalizer XPCStringConvert::sDynamicAtomFinalizer = {
-    XPCStringConvert::FinalizeDynamicAtom};
+size_t XPCStringConvert::DynamicAtomExternalString::sizeOfBuffer(
+    const char16_t* aChars, mozilla::MallocSizeOf aMallocSizeOf) const {
+  // We return 0 here because NS_AddSizeOfAtoms reports all memory associated
+  // with atoms in the atom table.
+  return 0;
+}
 
 // convert a readable to a JSString, copying string data
 // static

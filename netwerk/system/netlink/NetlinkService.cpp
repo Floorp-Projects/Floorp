@@ -243,6 +243,7 @@ class NetlinkLink {
   bool IsTypeEther() const { return mIface.ifi_type == ARPHRD_ETHER; }
   uint32_t GetIndex() const { return mIface.ifi_index; }
   uint32_t GetFlags() const { return mIface.ifi_flags; }
+  uint16_t GetType() const { return mIface.ifi_type; }
 
   bool Init(struct nlmsghdr* aNlh) {
     struct ifinfomsg* iface;
@@ -763,13 +764,13 @@ void NetlinkService::OnLinkMessage(struct nlmsghdr* aNlh) {
 
   if (aNlh->nlmsg_type == RTM_NEWLINK) {
     if (!linkInfo) {
-      LOG(("Creating new link [index=%u, name=%s, flags=%u]", linkIndex,
-           linkName.get(), link->GetFlags()));
+      LOG(("Creating new link [index=%u, name=%s, flags=%u, type=%u]",
+           linkIndex, linkName.get(), link->GetFlags(), link->GetType()));
       linkInfo = new LinkInfo(link.forget());
       mLinks.Put(linkIndex, linkInfo);
     } else {
-      LOG(("Updating link [index=%u, name=%s, flags=%u]", linkIndex,
-           linkName.get(), link->GetFlags()));
+      LOG(("Updating link [index=%u, name=%s, flags=%u, type=%u]", linkIndex,
+           linkName.get(), link->GetFlags(), link->GetType()));
 
       // Check whether administrative state has changed.
       if (linkInfo->mLink->GetFlags() & IFF_UP &&
@@ -1066,6 +1067,16 @@ void NetlinkService::OnNeighborMessage(struct nlmsghdr* aNlh) {
 #else
     LOG(("Cannot find link info [ifIdx=%u, key=%s", neigh->GetIndex(),
          key.get()));
+#endif
+    return;
+  }
+
+  if (!linkInfo->mLink->IsTypeEther()) {
+#ifdef NL_DEBUG_LOG
+    LOG(("Ignoring message on non-ethernet link: %s", neighDbgStr.get()));
+#else
+    LOG(("Ignoring message on non-ethernet link [ifIdx=%u, key=%s",
+         neigh->GetIndex(), key.get()));
 #endif
     return;
   }
@@ -1447,6 +1458,11 @@ bool NetlinkService::CalculateIDForFamily(uint8_t aFamily, SHA1Sum* aSHA1) {
       continue;
     }
 
+    if (!linkInfo->mLink->IsTypeEther()) {
+      LOG((" %s is not ethernet link", linkName.get()));
+      continue;
+    }
+
     LOG((" checking link %s", linkName.get()));
 
     // Check all default routes and try to get MAC of the gateway
@@ -1509,6 +1525,7 @@ bool NetlinkService::CalculateIDForFamily(uint8_t aFamily, SHA1Sum* aSHA1) {
     retval = true;
   }
 
+  nsTArray<nsCString> linkNamesToHash;
   if (!gwNeighbors.Length()) {
     // If we don't know MAC of the gateway and link is up, it's probably not
     // an ethernet link. If the name of the link begins with "rmnet_data" then
@@ -1518,7 +1535,6 @@ bool NetlinkService::CalculateIDForFamily(uint8_t aFamily, SHA1Sum* aSHA1) {
     // still be detected below.
 
     // TODO: maybe we could get operator name via AndroidBridge
-    nsTArray<nsCString> linkNames;
     for (auto iter = mLinks.ConstIter(); !iter.Done(); iter.Next()) {
       LinkInfo* linkInfo = iter.Data();
       if (linkInfo->mIsUp) {
@@ -1530,7 +1546,7 @@ bool NetlinkService::CalculateIDForFamily(uint8_t aFamily, SHA1Sum* aSHA1) {
           for (uint32_t i = 0; i < linkInfo->mAddresses.Length(); ++i) {
             if (linkInfo->mAddresses[i]->Family() == aFamily &&
                 linkInfo->mAddresses[i]->ScopeIsUniverse()) {
-              linkNames.AppendElement(linkName);
+              linkNamesToHash.AppendElement(linkName);
               break;
             }
           }
@@ -1539,11 +1555,11 @@ bool NetlinkService::CalculateIDForFamily(uint8_t aFamily, SHA1Sum* aSHA1) {
     }
 
     // Sort link names to ensure consistent results
-    linkNames.Sort(LinknameComparator());
+    linkNamesToHash.Sort(LinknameComparator());
 
-    for (uint32_t i = 0; i < linkNames.Length(); ++i) {
-      LOG(("Hashing name of adapter: %s", linkNames[i].get()));
-      aSHA1->update(linkNames[i].get(), linkNames[i].Length());
+    for (uint32_t i = 0; i < linkNamesToHash.Length(); ++i) {
+      LOG(("Hashing name of adapter: %s", linkNamesToHash[i].get()));
+      aSHA1->update(linkNamesToHash[i].get(), linkNamesToHash[i].Length());
       retval = true;
     }
   }
@@ -1624,10 +1640,15 @@ bool NetlinkService::CalculateIDForFamily(uint8_t aFamily, SHA1Sum* aSHA1) {
       size_t addrSize = (aFamily == AF_INET) ? sizeof(addrPtr->addr4)
                                              : sizeof(addrPtr->addr6);
 
-      LOG(("Hashing link name %s and GW address %s", routeCheckLinkName.get(),
-           addrStr.get()));
+      LOG(("Hashing link name %s", routeCheckLinkName.get()));
       aSHA1->update(routeCheckLinkName.get(), routeCheckLinkName.Length());
-      aSHA1->update(addrPtr, addrSize);
+
+      // Don't hash GW address if it's rmnet_data device.
+      if (!linkNamesToHash.Contains(routeCheckLinkName)) {
+        LOG(("Hashing GW address %s", addrStr.get()));
+        aSHA1->update(addrPtr, addrSize);
+      }
+
       retval = true;
     } else {
       // The traffic is routed directly via an interface. Hash the name of the

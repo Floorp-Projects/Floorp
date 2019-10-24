@@ -132,7 +132,7 @@ class ConsoleSettings extends Component {
     return MenuButton(
       {
         menuId: "webconsole-console-settings-menu-button",
-        doc: toolbox ? toolbox.doc : doc,
+        toolboxDoc: toolbox ? toolbox.doc : doc,
         className: "devtools-button webconsole-console-settings-menu-button",
         title: l10n.getStr("webconsole.console.settings.menu.button.tooltip"),
       },

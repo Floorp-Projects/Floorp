@@ -10,7 +10,7 @@ window {
   padding: 8px;
   background-color: white;
 }
-label, text, description {
+label, description {
   color: black;
   font: normal normal normal 12pt/14pt serif;
   height: 30px;

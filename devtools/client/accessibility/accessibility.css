@@ -4,7 +4,6 @@
 
 :root {
   --accessibility-font-size: 12px;
-  --accessibility-toolbar-height: 24px;
   --accessibility-toolbar-height-tall: 35px;
   --accessibility-toolbar-focus: var(--blue-50);
   --accessibility-toolbar-focus-alpha30: rgba(10, 132, 255, 0.3);
@@ -12,7 +11,12 @@
   --accessibility-horizontal-padding: 5px;
   --accessibility-horizontal-indent: 20px;
   --accessibility-properties-item-width: calc(100% - var(--accessibility-horizontal-indent));
-  --accessibility-tree-height: calc(100vh - var(--accessibility-toolbar-height) * 2 - 1px);
+  /* The main content can use the full height minus the height of the toolbar
+     (including 1px border bottom) */
+  --accessibility-main-height: calc(100vh - var(--theme-toolbar-height) - 1px);
+  /* The tree can use the main content height minus the height of the tree
+     header, which has the same height as the toolbar and a 1px border bottom */
+  --accessibility-tree-height: calc(var(--accessibility-main-height) - var(--theme-toolbar-height) - 1px);
   --accessibility-arrow-horizontal-padding: 4px;
   --accessibility-tree-row-height: 21px;
   --accessibility-unfocused-tree-focused-node-background: var(--grey-20);
@@ -98,7 +102,7 @@ body {
 }
 
 .split-box.horz {
-  height: calc(100vh - var(--accessibility-toolbar-height));
+  height: var(--accessibility-main-height);
 }
 
 .mainFrame .devtools-button,
@@ -425,7 +429,7 @@ body {
   background: var(--theme-toolbar-background);
   font: message-box;
   font-size: var(--accessibility-font-size);
-  height: var(--accessibility-toolbar-height);
+  height: var(--theme-toolbar-height);
   color: var(--theme-toolbar-color);
 }
 
@@ -523,14 +527,14 @@ body {
 .split-box:not(.horz) .right-sidebar {
   position: fixed;
   width: inherit;
-  height: calc(100vh - (var(--accessibility-toolbar-height)));
+  height: var(--accessibility-main-height)
 }
 
 .right-sidebar ._header {
   background-color: var(--theme-toolbar-background);
   border-bottom: 1px solid var(--theme-splitter-color);
-  height: var(--accessibility-toolbar-height);
-  line-height: var(--accessibility-toolbar-height);
+  height: var(--theme-toolbar-height);
+  line-height: var(--theme-toolbar-height);
   padding-inline-start: 14px;
   padding-inline-end: var(--accessibility-arrow-horizontal-padding);
   display: flex;
@@ -784,7 +788,7 @@ body {
   margin: 0;
   font-weight: bold;
   font-size: var(--accessibility-font-size);
-  line-height: var(--accessibility-toolbar-height);
+  line-height: var(--theme-toolbar-height);
 }
 
 .accessibility-check-annotation {

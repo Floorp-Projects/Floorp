@@ -362,6 +362,8 @@ class RefTest(object):
         prefs['reftest.logLevel'] = options.log_tbpl_level or 'info'
         prefs['reftest.suite'] = options.suite
         prefs['gfx.font_rendering.ahem_antialias_none'] = True
+        # Disable dark scrollbars because it's semi-transparent.
+        prefs['widget.disable-dark-scrollbar'] = True
 
         # Set tests to run or manifests to parse.
         if tests:
