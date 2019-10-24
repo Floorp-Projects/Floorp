@@ -76,7 +76,10 @@ class AbstractFirebasePushServiceTest {
     fun `malformed message exception handled with the processor`() {
         val remoteMessage: RemoteMessage = mock()
         val data = mapOf(
-            "body" to "contents"
+            "chid" to "1234",
+            "con" to "encoding",
+            "enc" to "salt",
+            "cryptokey" to "dh256"
         )
         val captor = argumentCaptor<PushError>()
         `when`(remoteMessage.data).thenReturn(data)
@@ -86,6 +89,21 @@ class AbstractFirebasePushServiceTest {
 
         assertTrue(captor.value is PushError.MalformedMessage)
         assertTrue(captor.value.desc.contains("NoSuchElementException"))
+    }
+
+    @Test
+    fun `do nothing if the message is not for us`() {
+        val remoteMessage: RemoteMessage = mock()
+        val data = mapOf(
+            "con" to "encoding",
+            "enc" to "salt",
+            "cryptokey" to "dh256"
+        )
+        `when`(remoteMessage.data).thenReturn(data)
+
+        service.onMessageReceived(remoteMessage)
+
+        verifyZeroInteractions(processor)
     }
 
     @Test

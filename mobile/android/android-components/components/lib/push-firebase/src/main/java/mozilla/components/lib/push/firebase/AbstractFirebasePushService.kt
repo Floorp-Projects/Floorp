@@ -46,13 +46,18 @@ abstract class AbstractFirebasePushService(
 
     override fun onMessageReceived(remoteMessage: RemoteMessage?) {
         remoteMessage?.let {
+            // This is not an AutoPush message we can handle.
+            if (it.data[MESSAGE_KEY_CHANNEL_ID] == null) {
+                return
+            }
+
             try {
                 val message = EncryptedPushMessage(
-                    channelId = it.data.getValue("chid"),
-                    body = it.data.getValue("body"),
-                    encoding = it.data.getValue("con"),
-                    salt = it.data["enc"],
-                    cryptoKey = it.data["cryptokey"]
+                    channelId = it.data.getValue(MESSAGE_KEY_CHANNEL_ID),
+                    body = it.data.getValue(MESSAGE_KEY_BODY),
+                    encoding = it.data.getValue(MESSAGE_KEY_ENCODING),
+                    salt = it.data[MESSAGE_KEY_SALT],
+                    cryptoKey = it.data[MESSAGE_KEY_CRYPTO_KEY]
                 )
                 PushProcessor.requireInstance.onMessageReceived(message)
             } catch (e: NoSuchElementException) {
@@ -87,5 +92,13 @@ abstract class AbstractFirebasePushService(
 
     override fun isServiceAvailable(context: Context): Boolean {
         return GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(context) == ConnectionResult.SUCCESS
+    }
+
+    companion object {
+        const val MESSAGE_KEY_CHANNEL_ID = "chid"
+        const val MESSAGE_KEY_BODY = "body"
+        const val MESSAGE_KEY_ENCODING = "con"
+        const val MESSAGE_KEY_SALT = "enc"
+        const val MESSAGE_KEY_CRYPTO_KEY = "cryptokey"
     }
 }
