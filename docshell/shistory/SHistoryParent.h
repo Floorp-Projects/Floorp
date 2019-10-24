@@ -24,14 +24,20 @@ class SHistoryParent;
  */
 class LegacySHistory final : public nsSHistory {
  private:
+  friend class SHistoryParent;
   virtual ~LegacySHistory() {}
 
   void EvictOutOfRangeWindowContentViewers(int32_t aIndex) override;
 
+  SHistoryParent* mSHistoryParent;
+
  public:
-  LegacySHistory(CanonicalBrowsingContext* aRootBC, const nsID& aDocShellID);
+  LegacySHistory(SHistoryParent* aSHistoryParent,
+                 CanonicalBrowsingContext* aRootBC, const nsID& aDocShellID);
 
   NS_IMETHOD CreateEntry(nsISHEntry** aEntry) override;
+
+  SHistoryParent* GetActor() { return mSHistoryParent; }
 };
 
 /**
@@ -39,6 +45,7 @@ class LegacySHistory final : public nsSHistory {
  * implementation that used to live in the child process (see LegacySHistory).
  */
 class SHistoryParent final : public PSHistoryParent {
+  friend class LegacySHistory;
   friend class PSHistoryParent;
   friend class SHEntryParent;
 

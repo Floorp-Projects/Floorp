@@ -11333,13 +11333,9 @@ nsresult nsDocShell::AddToSessionHistory(
     NS_ENSURE_TRUE(webnav, NS_ERROR_FAILURE);
 
     RefPtr<ChildSHistory> shistory = webnav->GetSessionHistory();
-    NS_ENSURE_TRUE(shistory, NS_ERROR_FAILURE);
-
-    shistory->LegacySHistory()->CreateEntry(getter_AddRefs(entry));
-
-    if (!entry) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
+    entry = CreateSHEntryForDocShell(shistory ? shistory->LegacySHistory()
+                                              : nullptr);
+    NS_ENSURE_TRUE(entry, NS_ERROR_FAILURE);
   }
 
   // Get the post data & referrer

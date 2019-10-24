@@ -79,7 +79,7 @@ class nsSHEntry : public nsISHEntry {
  */
 class nsLegacySHEntry final : public nsSHEntry {
  public:
-  explicit nsLegacySHEntry(nsSHistory* aHistory, uint64_t aID);
+  explicit nsLegacySHEntry(nsISHistory* aHistory, uint64_t aID);
   explicit nsLegacySHEntry(const nsLegacySHEntry& aOther) : nsSHEntry(aOther) {}
 
   NS_IMETHOD GetContentViewer(nsIContentViewer** aResult) override;

@@ -125,5 +125,17 @@ nsISupports* ChildSHistory::GetParentObject() const {
   return ToSupports(mm);
 }
 
+already_AddRefed<nsISHEntry> CreateSHEntryForDocShell(nsISHistory* aSHistory) {
+  uint64_t sharedID = SHEntryChildShared::CreateSharedID();
+  if (XRE_IsContentProcess() && StaticPrefs::fission_sessionHistoryInParent()) {
+    return do_AddRef(static_cast<SHEntryChild*>(
+        ContentChild::GetSingleton()->SendPSHEntryConstructor(
+            static_cast<SHistoryChild*>(aSHistory), sharedID)));
+  }
+
+  nsCOMPtr<nsISHEntry> entry = new nsLegacySHEntry(aSHistory, sharedID);
+  return entry.forget();
+}
+
 }  // namespace dom
 }  // namespace mozilla

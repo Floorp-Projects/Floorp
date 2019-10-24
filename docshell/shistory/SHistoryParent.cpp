@@ -16,9 +16,10 @@ extern mozilla::LazyLogModule gSHistoryLog;
 namespace mozilla {
 namespace dom {
 
-LegacySHistory::LegacySHistory(CanonicalBrowsingContext* aRootBC,
+LegacySHistory::LegacySHistory(SHistoryParent* aSHistoryParent,
+                               CanonicalBrowsingContext* aRootBC,
                                const nsID& aDocShellID)
-    : nsSHistory(aRootBC, aDocShellID) {
+    : nsSHistory(aRootBC, aDocShellID), mSHistoryParent(aSHistoryParent) {
   mIsRemote = true;
   aRootBC->SetSessionHistory(this);
 }
@@ -36,9 +37,9 @@ static void FillInLoadResult(PContentParent* aManager, nsresult aRv,
 }
 
 SHistoryParent::SHistoryParent(CanonicalBrowsingContext* aContext)
-    : mHistory(new LegacySHistory(aContext, nsID())) {}
+    : mHistory(new LegacySHistory(this, aContext, nsID())) {}
 
-SHistoryParent::~SHistoryParent() {}
+SHistoryParent::~SHistoryParent() { mHistory->mSHistoryParent = nullptr; }
 
 SHEntryParent* SHistoryParent::CreateEntry(
     PContentParent* aContentParent, PSHistoryParent* aSHistoryParent,

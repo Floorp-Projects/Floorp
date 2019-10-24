@@ -25,7 +25,7 @@ namespace dom = mozilla::dom;
 namespace mozilla {
 namespace dom {
 
-SHEntrySharedParentState::SHEntrySharedParentState(nsSHistory* aSHistory,
+SHEntrySharedParentState::SHEntrySharedParentState(nsISHistory* aSHistory,
                                                    uint64_t aID)
     : SHEntrySharedParentState(nsWeakPtr(do_GetWeakReference(aSHistory)).get(),
                                aID) {}

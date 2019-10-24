@@ -37,7 +37,8 @@ class SHEntryChildShared final : public nsIBFCacheEntry,
  public:
   static void Init();
 
-  static SHEntryChildShared* GetOrCreate(uint64_t aSharedID);
+  static SHEntryChildShared* GetOrCreate(SHistoryChild* aSHistory,
+                                         uint64_t aSharedID);
   static void Remove(uint64_t aSharedID);
 
   static uint64_t CreateSharedID() {
@@ -65,7 +66,7 @@ class SHEntryChildShared final : public nsIBFCacheEntry,
  private:
   static uint64_t sNextSharedID;
 
-  explicit SHEntryChildShared(uint64_t aID);
+  SHEntryChildShared(SHistoryChild* aSHistory, uint64_t aID);
   ~SHEntryChildShared();
 
   friend class SHEntryChild;
@@ -94,8 +95,8 @@ class SHEntryChild final : public PSHEntryChild,
  public:
   explicit SHEntryChild(const SHEntryChild* aClone)
       : mShared(aClone->mShared.get()), mIPCActorDeleted(false) {}
-  explicit SHEntryChild(uint64_t aSharedID)
-      : mShared(SHEntryChildShared::GetOrCreate(aSharedID)),
+  SHEntryChild(SHistoryChild* aSHistory, uint64_t aSharedID)
+      : mShared(SHEntryChildShared::GetOrCreate(aSHistory, aSharedID)),
         mIPCActorDeleted(false) {}
 
   NS_DECL_ISUPPORTS

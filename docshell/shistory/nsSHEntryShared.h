@@ -53,10 +53,10 @@ class SHEntrySharedParentState {
   void NotifyListenersContentViewerEvicted();
 
  protected:
-  SHEntrySharedParentState(nsSHistory* aSHistory, uint64_t aID);
+  SHEntrySharedParentState(nsISHistory* aSHistory, uint64_t aID);
   SHEntrySharedParentState(SHEntrySharedParentState* aDuplicate, uint64_t aID)
       : SHEntrySharedParentState(aDuplicate->mSHistory, aID) {}
-  SHEntrySharedParentState(nsIWeakReference* aDuplicate, uint64_t aID);
+  SHEntrySharedParentState(nsIWeakReference* aSHistory, uint64_t aID);
   virtual ~SHEntrySharedParentState();
   NS_INLINE_DECL_VIRTUAL_REFCOUNTING_WITH_DESTROY(SHEntrySharedParentState,
                                                   Destroy())
