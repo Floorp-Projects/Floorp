@@ -116,7 +116,7 @@ function startTest(test, token) {
     removeNodeAndSource(v);
     m.finished(v.token);
   }}(video, manager);
-  window['test_fragment_noplay'](video, test.start, test.end, localIs, localOk, localFinish);
+  window.test_fragment_noplay(video, test.start, test.end, localIs, localOk, localFinish);
 }
 
 manager.runTests(createTestArray(), startTest);

@@ -1918,9 +1918,8 @@ function getPlayableAudio(candidates) {
 function getMajorMimeType(mimetype) {
   if (/^video/.test(mimetype)) {
     return "video";
-  } else {
-    return "audio";
   }
+  return "audio";
 }
 
 // Force releasing decoder to avoid timeout in waiting for decoding resource.
@@ -1959,10 +1958,10 @@ function once(target, name, cb) {
 function nextEvent(video, eventName) {
   return new Promise(function(resolve, reject) {
     let f = function(event) {
-      video.removeEventListener(eventName, f, false);
+      video.removeEventListener(eventName, f);
       resolve(event);
     };
-    video.addEventListener(eventName, f, false);
+    video.addEventListener(eventName, f);
   });
 }
 
@@ -2186,7 +2185,6 @@ function MediaTestManager() {
         SimpleTest.finish();
       };
       mediaTestCleanup(onCleanup);
-      return;
     }
   };
 }
