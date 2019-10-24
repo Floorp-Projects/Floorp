@@ -1,103 +1,90 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+"use strict";
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var EXPORTED_SYMBOLS = ["PageStyleChild"];
 
-const { ActorChild } = ChromeUtils.import(
-  "resource://gre/modules/ActorChild.jsm"
-);
+class PageStyleChild extends JSWindowActorChild {
+  handleEvent(event) {
+    // On page show, tell the parent all of the stylesheets this document has.
+    if (event.type == "pageshow") {
+      // If we are in the topmost browsing context,
+      // delete the stylesheets from the previous page.
+      if (this.browsingContext.top === this.browsingContext) {
+        this.sendAsyncMessage("PageStyle:Clear");
+      }
 
-class PageStyleChild extends ActorChild {
-  getViewer(content) {
-    return content.docShell.contentViewer;
-  }
+      let window = event.target.ownerGlobal;
+      window.requestIdleCallback(() => {
+        if (!window || window.closed) {
+          return;
+        }
+        let styleSheets = Array.from(this.document.styleSheets);
+        let filteredStyleSheets = this._filterStyleSheets(styleSheets, window);
 
-  sendStyleSheetInfo(mm) {
-    let content = mm.content;
-    content.requestIdleCallback(() => {
-      let filteredStyleSheets = this._filterStyleSheets(
-        this.getAllStyleSheets(content),
-        content
-      );
-
-      mm.sendAsyncMessage("PageStyle:StyleSheets", {
-        filteredStyleSheets,
-        authorStyleDisabled: this.getViewer(content).authorStyleDisabled,
-        preferredStyleSheetSet: content.document.preferredStyleSheetSet,
+        this.sendAsyncMessage("PageStyle:Add", {
+          filteredStyleSheets,
+          authorStyleDisabled: this.docShell.contentViewer.authorStyleDisabled,
+          preferredStyleSheetSet: this.document.preferredStyleSheetSet,
+        });
       });
-    });
-  }
-
-  getAllStyleSheets(frameset) {
-    let selfSheets = Array.from(frameset.document.styleSheets);
-    let subSheets = Array.from(frameset.frames, frame =>
-      this.getAllStyleSheets(frame)
-    );
-    return selfSheets.concat(...subSheets);
+    }
   }
 
   receiveMessage(msg) {
-    let content = msg.target.content;
     switch (msg.name) {
+      // Sent when the page's enabled style sheet is changed.
       case "PageStyle:Switch":
-        this.getViewer(content).authorStyleDisabled = false;
-        this._stylesheetSwitchAll(content, msg.data.title);
+        this.docShell.contentViewer.authorStyleDisabled = false;
+        this._switchStylesheet(msg.data.title);
         break;
-
+      // Sent when "No Style" is chosen.
       case "PageStyle:Disable":
-        this.getViewer(content).authorStyleDisabled = true;
+        this.docShell.contentViewer.authorStyleDisabled = true;
         break;
     }
-
-    this.sendStyleSheetInfo(msg.target);
   }
 
-  handleEvent(event) {
-    let win = event.target.ownerGlobal;
-    if (win != win.top) {
-      return;
+  /**
+   * Switch the stylesheet so that only the sheet with the given title is enabled.
+   */
+  _switchStylesheet(title) {
+    let docStyleSheets = this.document.styleSheets;
+
+    // Does this doc contain a stylesheet with this title?
+    // If not, it's a subframe's stylesheet that's being changed,
+    // so no need to disable stylesheets here.
+    let docContainsStyleSheet = false;
+    for (let docStyleSheet of docStyleSheets) {
+      if (docStyleSheet.title === title) {
+        docContainsStyleSheet = true;
+        break;
+      }
     }
 
-    let mm = win.docShell.messageManager;
-    this.sendStyleSheetInfo(mm);
-  }
-
-  _stylesheetSwitchAll(frameset, title) {
-    if (!title || this._stylesheetInFrame(frameset, title)) {
-      this._stylesheetSwitchFrame(frameset, title);
-    }
-
-    for (let i = 0; i < frameset.frames.length; i++) {
-      // Recurse into sub-frames.
-      this._stylesheetSwitchAll(frameset.frames[i], title);
-    }
-  }
-
-  _stylesheetSwitchFrame(frame, title) {
-    var docStyleSheets = frame.document.styleSheets;
-
-    for (let i = 0; i < docStyleSheets.length; ++i) {
-      let docStyleSheet = docStyleSheets[i];
+    for (let docStyleSheet of docStyleSheets) {
       if (docStyleSheet.title) {
-        docStyleSheet.disabled = docStyleSheet.title != title;
+        if (docContainsStyleSheet) {
+          docStyleSheet.disabled = docStyleSheet.title !== title;
+        }
       } else if (docStyleSheet.disabled) {
         docStyleSheet.disabled = false;
       }
     }
   }
 
-  _stylesheetInFrame(frame, title) {
-    return Array.from(frame.document.styleSheets).some(
-      styleSheet => styleSheet.title == title
-    );
-  }
-
+  /**
+   * Filter the stylesheets that actually apply to this webpage.
+   * @param styleSheets The list of stylesheets from the document.
+   * @param content     The window object that the webpage lives in.
+   */
   _filterStyleSheets(styleSheets, content) {
     let result = [];
 
+    // Only stylesheets with a title can act as an alternative stylesheet.
     for (let currentStyleSheet of styleSheets) {
       if (!currentStyleSheet.title) {
         continue;
@@ -115,7 +102,7 @@ class PageStyleChild extends ActorChild {
       try {
         if (
           !currentStyleSheet.ownerNode ||
-          // special-case style nodes, which have no href
+          // Special-case style nodes, which have no href.
           currentStyleSheet.ownerNode.nodeName.toLowerCase() != "style"
         ) {
           URI = Services.io.newURI(currentStyleSheet.href);
