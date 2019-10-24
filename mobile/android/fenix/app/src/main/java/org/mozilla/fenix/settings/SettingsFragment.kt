@@ -25,6 +25,7 @@ import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.Config
+import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.FenixApplication
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
@@ -41,6 +42,7 @@ import org.mozilla.fenix.R.string.pref_key_help
 import org.mozilla.fenix.R.string.pref_key_language
 import org.mozilla.fenix.R.string.pref_key_leakcanary
 import org.mozilla.fenix.R.string.pref_key_make_default_browser
+import org.mozilla.fenix.R.string.pref_key_passwords
 import org.mozilla.fenix.R.string.pref_key_privacy_link
 import org.mozilla.fenix.R.string.pref_key_rate
 import org.mozilla.fenix.R.string.pref_key_remote_debugging
@@ -105,7 +107,7 @@ class SettingsFragment : PreferenceFragmentCompat(), AccountObserver {
         (activity as AppCompatActivity).supportActionBar?.show()
 
         val trackingProtectionPreference =
-            findPreference<Preference>(getPreferenceKey(R.string.pref_key_tracking_protection_settings))
+            findPreference<Preference>(getPreferenceKey(pref_key_tracking_protection_settings))
         trackingProtectionPreference?.summary = context?.let {
             if (it.settings().shouldUseTrackingProtection) {
                 getString(R.string.tracking_protection_on)
@@ -115,7 +117,7 @@ class SettingsFragment : PreferenceFragmentCompat(), AccountObserver {
         }
 
         val themesPreference =
-            findPreference<Preference>(getPreferenceKey(R.string.pref_key_theme))
+            findPreference<Preference>(getPreferenceKey(pref_key_theme))
         themesPreference?.summary = context?.settings()?.themeSettingString
 
         val aboutPreference = findPreference<Preference>(getPreferenceKey(R.string.pref_key_about))
@@ -123,7 +125,11 @@ class SettingsFragment : PreferenceFragmentCompat(), AccountObserver {
         aboutPreference?.title = getString(R.string.preferences_about, appName)
 
         val deleteBrowsingDataPreference =
-            findPreference<Preference>(getPreferenceKey(R.string.pref_key_delete_browsing_data_on_quit_preference))
+            findPreference<Preference>(
+                getPreferenceKey(
+                    pref_key_delete_browsing_data_on_quit_preference
+                )
+            )
         deleteBrowsingDataPreference?.summary = context?.let {
             if (it.settings().shouldDeleteBrowsingDataOnQuit) {
                 getString(R.string.delete_browsing_data_quit_on)
@@ -132,13 +138,21 @@ class SettingsFragment : PreferenceFragmentCompat(), AccountObserver {
             }
         }
 
-        findPreference<Preference>(getPreferenceKey(R.string.pref_key_add_private_browsing_shortcut))?.apply {
+        findPreference<Preference>(getPreferenceKey(pref_key_add_private_browsing_shortcut))?.apply {
             isVisible = !PrivateShortcutCreateManager.doesPrivateBrowsingPinnedShortcutExist(context)
         }
 
         setupPreferences()
 
         updateAccountUIState(context!!, requireComponents.backgroundServices.accountManager.accountProfile())
+
+        updatePreferenceVisibilityForFeatureFlags()
+    }
+
+    private fun updatePreferenceVisibilityForFeatureFlags() {
+        findPreference<Preference>(getPreferenceKey(pref_key_passwords))?.apply {
+            isVisible = FeatureFlags.logins
+        }
     }
 
     @Suppress("ComplexMethod", "LongMethod")
@@ -190,6 +204,9 @@ class SettingsFragment : PreferenceFragmentCompat(), AccountObserver {
                         from = BrowserDirection.FromSettings
                     )
                 }
+            }
+            resources.getString(pref_key_passwords) -> {
+                navigateToLoginsSettingsFragment()
             }
             resources.getString(pref_key_about) -> {
                 navigateToAbout()
@@ -255,11 +272,16 @@ class SettingsFragment : PreferenceFragmentCompat(), AccountObserver {
         }
 
         preferenceRemoteDebugging?.setOnPreferenceChangeListener { preference, newValue ->
-        preference.context.settings().preferences.edit()
+            preference.context.settings().preferences.edit()
                 .putBoolean(preference.key, newValue as Boolean).apply()
             requireComponents.core.engine.settings.remoteDebuggingEnabled = newValue
             true
         }
+    }
+
+    private fun navigateToLoginsSettingsFragment() {
+        val directions = SettingsFragmentDirections.actionSettingsFragmentToLoginsFragment()
+        Navigation.findNavController(view!!).navigate(directions)
     }
 
     private fun navigateToSearchEngineSettings() {

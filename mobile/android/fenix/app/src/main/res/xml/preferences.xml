@@ -60,6 +60,11 @@
             android:key="@string/pref_key_tracking_protection_settings"
             android:title="@string/preference_enhanced_tracking_protection" />
         <androidx.preference.Preference
+            app:isPreferenceVisible="false"
+            android:icon="@drawable/ic_login"
+            android:key="@string/pref_key_passwords"
+            android:title="@string/preferences_passwords" />
+        <androidx.preference.Preference
             android:icon="@drawable/ic_private_browsing"
             android:key="@string/pref_key_add_private_browsing_shortcut"
             android:title="@string/preferences_add_private_browsing_shortcut"/>

@@ -28,6 +28,7 @@ import mozilla.components.service.fxa.manager.SyncEnginesStorage
 import mozilla.components.service.fxa.sync.SyncReason
 import mozilla.components.service.fxa.sync.SyncStatusObserver
 import mozilla.components.service.fxa.sync.getLastSynced
+import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.StoreProvider
@@ -36,7 +37,7 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.requireComponents
 
-@SuppressWarnings("TooManyFunctions")
+@SuppressWarnings("TooManyFunctions", "LargeClass")
 class AccountSettingsFragment : PreferenceFragmentCompat() {
     private lateinit var accountManager: FxaAccountManager
     private lateinit var accountSettingsStore: AccountSettingsFragmentStore
@@ -96,7 +97,7 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
         )
     }
 
-    @Suppress("ComplexMethod")
+    @Suppress("ComplexMethod", "LongMethod")
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.account_settings_preferences, rootKey)
 
@@ -108,7 +109,9 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
                         LastSyncTime.Never
                     else
                         LastSyncTime.Success(getLastSynced(requireContext())),
-                    deviceName = requireComponents.backgroundServices.defaultDeviceName(requireContext())
+                    deviceName = requireComponents.backgroundServices.defaultDeviceName(
+                        requireContext()
+                    )
                 )
             )
         }
@@ -158,6 +161,7 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
         findPreference<CheckBoxPreference>(historyNameKey)?.apply {
             setOnPreferenceChangeListener { _, newValue ->
                 SyncEnginesStorage(context).setStatus(SyncEngine.History, newValue as Boolean)
+                @Suppress("DeferredResultUnused")
                 context.components.backgroundServices.accountManager.syncNowAsync(SyncReason.EngineChange)
                 true
             }
@@ -167,6 +171,17 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
         findPreference<CheckBoxPreference>(bookmarksNameKey)?.apply {
             setOnPreferenceChangeListener { _, newValue ->
                 SyncEnginesStorage(context).setStatus(SyncEngine.Bookmarks, newValue as Boolean)
+                @Suppress("DeferredResultUnused")
+                context.components.backgroundServices.accountManager.syncNowAsync(SyncReason.EngineChange)
+                true
+            }
+        }
+
+        val loginsNameKey = getPreferenceKey(R.string.pref_key_sync_logins)
+        findPreference<CheckBoxPreference>(loginsNameKey)?.apply {
+            setOnPreferenceChangeListener { _, newValue ->
+                SyncEnginesStorage(context).setStatus(SyncEngine.Passwords, newValue as Boolean)
+                @Suppress("DeferredResultUnused")
                 context.components.backgroundServices.accountManager.syncNowAsync(SyncReason.EngineChange)
                 true
             }
@@ -193,13 +208,20 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
             isEnabled = syncEnginesStatus.containsKey(SyncEngine.History)
             isChecked = syncEnginesStatus.getOrElse(SyncEngine.History) { true }
         }
+        val loginsNameKey = getPreferenceKey(R.string.pref_key_sync_logins)
+        findPreference<CheckBoxPreference>(loginsNameKey)?.apply {
+            isVisible = FeatureFlags.logins
+            isEnabled = syncEnginesStatus.containsKey(SyncEngine.Passwords)
+            isChecked = syncEnginesStatus.getOrElse(SyncEngine.Passwords) { false }
+        }
     }
 
     private fun syncNow() {
         lifecycleScope.launch {
             requireComponents.analytics.metrics.track(Event.SyncAccountSyncNow)
             // Trigger a sync.
-            requireComponents.backgroundServices.accountManager.syncNowAsync(SyncReason.User).await()
+            requireComponents.backgroundServices.accountManager.syncNowAsync(SyncReason.User)
+                .await()
             // Poll for device events & update devices.
             accountManager.authenticatedAccount()
                 ?.deviceConstellation()?.run {
@@ -243,8 +265,8 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
         return Preference.OnPreferenceChangeListener { _, newValue ->
             accountSettingsInteractor.onChangeDeviceName(newValue as String) {
                 FenixSnackbar.make(view!!, FenixSnackbar.LENGTH_LONG)
-                .setText(getString(R.string.empty_device_name_error))
-                .show()
+                    .setText(getString(R.string.empty_device_name_error))
+                    .show()
             }
         }
     }
@@ -284,7 +306,11 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
                     pref.isEnabled = true
 
                     val failedTime = getLastSynced(requireContext())
-                    accountSettingsStore.dispatch(AccountSettingsFragmentAction.SyncFailed(failedTime))
+                    accountSettingsStore.dispatch(
+                        AccountSettingsFragmentAction.SyncFailed(
+                            failedTime
+                        )
+                    )
                 }
             }
         }

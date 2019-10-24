@@ -85,6 +85,7 @@ class BackgroundServices(
     val syncConfig = if (context.isInExperiment(Experiments.asFeatureSyncDisabled)) {
         null
     } else {
+        // TODO Add Passwords Here Waiting On https://github.com/mozilla-mobile/android-components/issues/4741
         SyncConfig(setOf(SyncEngine.History, SyncEngine.Bookmarks), syncPeriodInMinutes = 240L) // four hours
     }
 
@@ -93,9 +94,11 @@ class BackgroundServices(
     val push by lazy { makePushConfig()?.let { makePush(it) } }
 
     init {
-        // Make the "history" and "bookmark" stores accessible to workers spawned by the sync manager.
+        // Make the "history", "bookmark", and "logins" stores accessible to workers spawned by the sync manager.
         GlobalSyncableStoreProvider.configureStore(SyncEngine.History to historyStorage)
         GlobalSyncableStoreProvider.configureStore(SyncEngine.Bookmarks to bookmarkStorage)
+        // TODO Add Passwords Here Waiting On https://github.com/mozilla-mobile/android-components/issues/4741
+        // GlobalSyncableStoreProvider.configureStore(SyncEngine.Passwords to loginsStorage)
     }
 
     private val deviceEventObserver = object : DeviceEventsObserver {

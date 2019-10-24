@@ -196,6 +196,8 @@
     <string name="preferences_sync_history">History</string>
     <!-- Preference for syncing bookmarks -->
     <string name="preferences_sync_bookmarks">Bookmarks</string>
+    <!-- Preference for syncing logins -->
+    <string name="preferences_sync_logins">Logins</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">Sign out</string>
     <!-- Preference displays and allows changing current FxA device name -->
@@ -920,7 +922,7 @@
     <string name="browser_toolbar_long_press_popup_paste_and_go">Paste &amp; Go</string>
     <!-- Paste the text in the clipboard -->
     <string name="browser_toolbar_long_press_popup_paste">Paste</string>
-  
+
     <!-- Title text for the Add To Homescreen dialog -->
     <string name="add_to_homescreen_title">Add to Home screen</string>
     <!-- Cancel button text for the Add to Homescreen dialog -->
@@ -984,5 +986,20 @@
     <string name="logins_doorhanger_save_confirmation">Save</string>
     <!-- Negative confirmation that Fenix should not save the new or updated login -->
     <string name="logins_doorhanger_save_dont_save">Don\'t save</string>
-
+    <!-- Shown in snackbar to tell user that the password has been copied -->
+    <string name="logins_password_copied">Password copied to clipboard</string>
+    <!-- Shown in snackbar to tell user that the username has been copied -->
+    <string name="logins_username_copied">Username copied to clipboard</string>
+    <!-- Shown in snackbar to tell user that the site has been copied -->
+    <string name="logins_site_copied">Site copied to clipboard</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
+    <string name="saved_logins_copy_password">Copy password</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
+    <string name="saved_login_copy_username">Copy username</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
+    <string name="saved_login_copy_site">Copy site</string>
+    <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
+    <string name="saved_login_reveal_password">Show password</string>
+    <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
+    <string name="saved_login_hide_password">Hide password</string>
 </resources>

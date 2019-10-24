@@ -2,33 +2,39 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
     <androidx.preference.Preference
-            android:key="@string/pref_key_sync_now"
-            android:title="@string/preferences_sync_now" />
+        android:key="@string/pref_key_sync_now"
+        android:title="@string/preferences_sync_now" />
+
+    <androidx.preference.Preference
+        android:key="@string/pref_key_sign_out"
+        android:title="@string/preferences_sign_out" />
 
     <androidx.preference.PreferenceCategory
-            android:key="@string/preferences_sync_category"
-            android:title="@string/preferences_sync_category">
+        android:key="@string/preferences_sync_category"
+        android:title="@string/preferences_sync_category">
 
         <androidx.preference.CheckBoxPreference
-                android:key="@string/pref_key_sync_bookmarks"
-                android:defaultValue="true"
-                android:title="@string/preferences_sync_bookmarks" />
+            android:defaultValue="true"
+            android:key="@string/pref_key_sync_bookmarks"
+            android:title="@string/preferences_sync_bookmarks" />
 
         <androidx.preference.CheckBoxPreference
-                android:key="@string/pref_key_sync_history"
-                android:defaultValue="true"
-                android:title="@string/preferences_sync_history" />
+            android:defaultValue="true"
+            android:key="@string/pref_key_sync_history"
+            android:title="@string/preferences_sync_history" />
+
+        <androidx.preference.CheckBoxPreference
+            android:defaultValue="false"
+            android:key="@string/pref_key_sync_logins"
+            android:title="@string/preferences_sync_logins"
+            app:isPreferenceVisible="false" />
 
         <androidx.preference.EditTextPreference
-                android:key="@string/pref_key_sync_device_name"
-                android:title="@string/preferences_sync_device_name" />
+            android:key="@string/pref_key_sync_device_name"
+            android:title="@string/preferences_sync_device_name" />
 
     </androidx.preference.PreferenceCategory>
-
-    <androidx.preference.Preference
-            android:key="@string/pref_key_sign_out"
-            android:title="@string/preferences_sign_out" />
 </PreferenceScreen>

@@ -7,6 +7,7 @@ package org.mozilla.fenix.components
 import GeckoProvider
 import android.content.Context
 import android.content.res.Configuration
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -31,11 +32,14 @@ import mozilla.components.feature.media.RecordingDevicesNotificationFeature
 import mozilla.components.feature.media.state.MediaStateMachine
 import mozilla.components.feature.session.HistoryDelegate
 import mozilla.components.feature.webcompat.WebCompatFeature
+import mozilla.components.service.sync.logins.AsyncLoginsStorageAdapter
+import mozilla.components.service.sync.logins.SyncableLoginsStore
 import org.mozilla.fenix.AppRequestInterceptor
 import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.test.Mockable
+import java.io.File
 import java.util.concurrent.TimeUnit
 
 /**
@@ -151,6 +155,19 @@ class Core(private val context: Context) {
     val tabCollectionStorage by lazy { TabCollectionStorage(context, sessionManager) }
 
     val permissionStorage by lazy { PermissionStorage(context) }
+
+    val loginsStorage by lazy {
+        SyncableLoginsStore(
+            AsyncLoginsStorageAdapter.forDatabase(
+                File(
+                    context.filesDir,
+                    "logins.sqlite"
+                ).canonicalPath
+            )
+        ) {
+            CompletableDeferred("very-insecure-key")
+        }
+    }
 
     /**
      * Constructs a [TrackingProtectionPolicy] based on current preferences.

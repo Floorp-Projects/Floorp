@@ -181,8 +181,8 @@
             android:id="@+id/action_browserFragment_to_createCollectionFragment"
             app:destination="@id/collectionCreationFragment" />
         <action
-                android:id="@+id/action_browserFragment_to_createShortcutFragment"
-                app:destination="@id/createShortcutFragment" />
+            android:id="@+id/action_browserFragment_to_createShortcutFragment"
+            app:destination="@id/createShortcutFragment" />
         <action
             android:id="@+id/action_browserFragment_to_shareFragment"
             app:destination="@id/shareFragment" />
@@ -198,8 +198,14 @@
         android:id="@+id/externalAppBrowserFragment"
         android:name="org.mozilla.fenix.customtabs.ExternalAppBrowserFragment"
         tools:layout="@layout/fragment_browser">
-        <argument android:name="activeSessionId" app:argType="string" app:nullable="true" />
-        <argument android:name="webAppManifest" app:argType="string" app:nullable="true"/>
+        <argument
+            android:name="activeSessionId"
+            app:argType="string"
+            app:nullable="true" />
+        <argument
+            android:name="webAppManifest"
+            app:argType="string"
+            app:nullable="true" />
         <action
             android:id="@+id/action_externalAppBrowserFragment_to_shareFragment"
             app:destination="@id/shareFragment" />
@@ -315,6 +321,24 @@
     </fragment>
 
     <fragment
+        android:id="@+id/loginsFragment"
+        android:name="org.mozilla.fenix.settings.LoginsFragment"
+        android:label="@string/preferences_passwords_logins_and_passwords">
+        <action
+            android:id="@+id/action_loginsFragment_to_savedLoginsFragment"
+            app:destination="@id/savedLoginsFragment" />
+        <action
+            android:id="@+id/action_loginsFragment_to_accountSettingsFragment"
+            app:destination="@id/accountSettingsFragment" />
+        <action
+            android:id="@+id/action_loginsFragment_to_accountProblemFragment"
+            app:destination="@id/accountProblemFragment" />
+        <action
+            android:id="@+id/action_loginsFragment_to_turnOnSyncFragment"
+            app:destination="@id/turnOnSyncFragment" />
+    </fragment>
+
+    <fragment
         android:id="@+id/settingsFragment"
         android:name="org.mozilla.fenix.settings.SettingsFragment"
         android:label="@string/settings_title">
@@ -329,6 +353,9 @@
         <action
             android:id="@+id/action_settingsFragment_to_sitePermissionsFragment"
             app:destination="@id/sitePermissionsFragment" />
+        <action
+            android:id="@+id/action_settingsFragment_to_loginsFragment"
+            app:destination="@id/loginsFragment" />
         <action
             android:id="@+id/action_settingsFragment_to_accessibilityFragment"
             app:destination="@id/accessibilityFragment" />
@@ -494,10 +521,10 @@
             app:nullable="false" />
     </dialog>
     <dialog
-            android:id="@+id/createShortcutFragment"
-            android:name="org.mozilla.fenix.shortcut.CreateShortcutFragment"
-            android:label="fragment_create_shortcut"
-            tools:layout="@layout/fragment_create_shortcut" />
+        android:id="@+id/createShortcutFragment"
+        android:name="org.mozilla.fenix.shortcut.CreateShortcutFragment"
+        android:label="fragment_create_shortcut"
+        tools:layout="@layout/fragment_create_shortcut" />
     <dialog
         android:id="@+id/shareFragment"
         android:name="org.mozilla.fenix.share.ShareFragment"
@@ -617,5 +644,23 @@
         <action
             android:id="@+id/action_defaultBrowserSettingsFragment_to_browserFragment"
             app:destination="@id/browserFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/savedLoginsFragment"
+        android:name="org.mozilla.fenix.logins.SavedLoginsFragment"
+        android:label="fragment_saved_logins"
+        tools:layout="@layout/fragment_saved_logins">
+        <action
+            android:id="@+id/action_savedLoginsFragment_to_savedLoginSiteInfoFragment"
+            app:destination="@id/savedLoginSiteInfoFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/savedLoginSiteInfoFragment"
+        android:name="org.mozilla.fenix.logins.SavedLoginSiteInfoFragment"
+        android:label="fragment_saved_login_site_info"
+        tools:layout="@layout/fragment_saved_login_site_info">
+        <argument
+            android:name="savedLoginItem"
+            app:argType="org.mozilla.fenix.logins.SavedLoginsItem" />
     </fragment>
 </navigation>
