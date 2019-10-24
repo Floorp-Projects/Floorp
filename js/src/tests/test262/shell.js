@@ -5,7 +5,9 @@
 /*---
 description: |
     Collection of assertion functions used throughout test262
+defines: [assert]
 ---*/
+
 
 function assert(mustBeTrue, message) {
   if (mustBeTrue === true) {
@@ -13,7 +15,7 @@ function assert(mustBeTrue, message) {
   }
 
   if (message === undefined) {
-    message = 'Expected true but got ' + String(mustBeTrue);
+    message = 'Expected true but got ' + assert._toString(mustBeTrue);
   }
   $ERROR(message);
 }
@@ -44,7 +46,7 @@ assert.sameValue = function (actual, expected, message) {
     message += ' ';
   }
 
-  message += 'Expected SameValue(«' + String(actual) + '», «' + String(expected) + '») to be true';
+  message += 'Expected SameValue(«' + assert._toString(actual) + '», «' + assert._toString(expected) + '») to be true';
 
   $ERROR(message);
 };
@@ -60,7 +62,7 @@ assert.notSameValue = function (actual, unexpected, message) {
     message += ' ';
   }
 
-  message += 'Expected SameValue(«' + String(actual) + '», «' + String(unexpected) + '») to be false';
+  message += 'Expected SameValue(«' + assert._toString(actual) + '», «' + assert._toString(unexpected) + '») to be false';
 
   $ERROR(message);
 };
@@ -94,12 +96,25 @@ assert.throws = function (expectedErrorConstructor, func, message) {
   $ERROR(message);
 };
 
+assert._toString = function (value) {
+  try {
+    return String(value);
+  } catch (err) {
+    if (err.name === 'TypeError') {
+      return Object.prototype.toString.call(value);
+    }
+
+    throw err;
+  }
+};
+
 // file: compareArray.js
 // Copyright (C) 2017 Ecma International.  All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
 description: |
     Compare the contents of two arrays
+defines: [compareArray]
 ---*/
 
 function compareArray(a, b) {
@@ -108,16 +123,30 @@ function compareArray(a, b) {
   }
 
   for (var i = 0; i < a.length; i++) {
-    if (b[i] !== a[i]) {
+    if (!compareArray.isSameValue(b[i], a[i])) {
       return false;
     }
   }
   return true;
 }
 
+compareArray.isSameValue = function(a, b) {
+  if (a === 0 && b === 0) return 1 / a === 1 / b;
+  if (a !== a && b !== b) return true;
+
+  return a === b;
+};
+
+compareArray.format = function(array) {
+  return `[${array.map(String).join(', ')}]`;
+};
+
 assert.compareArray = function(actual, expected, message) {
-  assert(compareArray(actual, expected),
-         'Expected [' + actual.join(', ') + '] and [' + expected.join(', ') + '] to have the same contents. ' + message);
+  var format = compareArray.format;
+  assert(
+    compareArray(actual, expected),
+    `Expected ${format(actual)} and ${format(expected)} to have the same contents. ${(message || '')}`
+  );
 };
 
 // file: propertyHelper.js
@@ -127,8 +156,26 @@ assert.compareArray = function(actual, expected, message) {
 description: |
     Collection of functions used to safely verify the correctness of
     property descriptors.
+defines:
+  - verifyProperty
+  - verifyEqualTo
+  - verifyWritable
+  - verifyNotWritable
+  - verifyEnumerable
+  - verifyNotEnumerable
+  - verifyConfigurable
+  - verifyNotConfigurable
 ---*/
 
+// @ts-check
+
+/**
+ * @param {object} obj
+ * @param {string|symbol} name
+ * @param {PropertyDescriptor|undefined} desc
+ * @param {object} [options]
+ * @param {boolean} [options.restore]
+ */
 function verifyProperty(obj, name, desc, options) {
   assert(
     arguments.length > 2,
@@ -206,6 +253,7 @@ function verifyProperty(obj, name, desc, options) {
 }
 
 function isConfigurable(obj, name) {
+  var hasOwnProperty = Object.prototype.hasOwnProperty;
   try {
     delete obj[name];
   } catch (e) {
@@ -213,7 +261,7 @@ function isConfigurable(obj, name) {
       $ERROR("Expected TypeError, got " + e);
     }
   }
-  return !Object.prototype.hasOwnProperty.call(obj, name);
+  return !hasOwnProperty.call(obj, name);
 }
 
 function isEnumerable(obj, name) {
@@ -341,6 +389,7 @@ description: |
 
     - An error class to avoid false positives when testing for thrown exceptions
     - A function to explicitly throw an exception using the Test262Error class
+defines: [Test262Error, $ERROR, $DONOTEVALUATE]
 ---*/
 
 

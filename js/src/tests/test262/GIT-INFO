@@ -1,7 +1,5 @@
-commit 59a1a016b7cf5cf43f66b274c7d1db4ec6066935
-Author: André Bargull <andre.bargull@gmail.com>
-Date:   Thu Aug 15 07:58:40 2019 -0700
+commit 21195de94cfc36eadbde00a825ca7efb3d9c3dde
+Author: Leo Balter <leonardo.balter@gmail.com>
+Date:   Thu Oct 17 10:32:00 2019 -0400
 
-    Assign "name" property to all anonymous functions (#2299)
-    
-    Implements the changes from <https://github.com/tc39/ecma262/pull/1490>.
+    Inital commit for Intl.DisplayNames tests (#2404)

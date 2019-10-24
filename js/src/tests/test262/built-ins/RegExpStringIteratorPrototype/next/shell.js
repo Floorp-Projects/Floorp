@@ -4,6 +4,7 @@
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
 description: Compare the values of an iterator with an array of expected values
+defines: [assert.compareIterator]
 ---*/
 
 // Example:
@@ -41,6 +42,7 @@ assert.compareIterator = function(iter, validators, message) {
 /*---
 description: |
     Collection of functions used to assert the correctness of RegExp objects.
+defines: [buildString, testPropertyEscapes, matchValidator]
 ---*/
 
 function buildString({ loneCodePoints, ranges }) {

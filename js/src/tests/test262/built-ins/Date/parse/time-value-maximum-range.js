@@ -18,7 +18,6 @@ info: |
   smaller: exactly -100,000,000 days to 100,000,000 days measured relative to
   midnight at the beginning of 01 January, 1970 UTC. This gives a range of
   8,640,000,000,000,000 milliseconds to either side of 01 January, 1970 UTC.
-includes: [propertyHelper.js]
 ---*/
 
 const minDateStr = "-271821-04-20T00:00:00.000Z";
