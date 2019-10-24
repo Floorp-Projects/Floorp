@@ -485,14 +485,16 @@ this.FxAccountsWebChannelHelpers.prototype = {
    * @param the uid of the account which have been logged out
    */
   logout(uid) {
-    return this._fxAccounts._internal.getUserAccountData(["uid"]).then(userData => {
-      if (userData && userData.uid === uid) {
-        // true argument is `localOnly`, because server-side stuff
-        // has already been taken care of by the content server
-        return fxAccounts.signOut(true);
-      }
-      return null;
-    });
+    return this._fxAccounts._internal
+      .getUserAccountData(["uid"])
+      .then(userData => {
+        if (userData && userData.uid === uid) {
+          // true argument is `localOnly`, because server-side stuff
+          // has already been taken care of by the content server
+          return fxAccounts.signOut(true);
+        }
+        return null;
+      });
   },
 
   /**
