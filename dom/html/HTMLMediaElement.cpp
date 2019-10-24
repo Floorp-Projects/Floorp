@@ -1165,6 +1165,9 @@ class HTMLMediaElement::AudioChannelAgentCallback final
     }
 
     NotifyMediaStarted(mAudioChannelAgent->WindowID());
+    NotifyMediaAudibleChanged(
+        mAudioChannelAgent->WindowID(),
+        mIsOwnerAudible == AudioChannelService::AudibleState::eAudible);
     mAudioChannelAgent->PullInitialUpdate();
   }
 
