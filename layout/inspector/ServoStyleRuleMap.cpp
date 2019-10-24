@@ -11,6 +11,7 @@
 #include "mozilla/dom/CSSRuleBinding.h"
 #include "mozilla/dom/CSSStyleRule.h"
 #include "mozilla/dom/Document.h"
+#include "mozilla/dom/Element.h"
 #include "mozilla/dom/ShadowRoot.h"
 #include "mozilla/IntegerRange.h"
 #include "mozilla/ServoStyleSet.h"
