@@ -677,7 +677,7 @@ add_task(async function test_helpers_getFxAStatus_extra_engines() {
             uid: "uid",
             verified: true,
           });
-        }
+        },
       },
     },
     privateBrowsingUtils: {
@@ -714,7 +714,7 @@ add_task(async function test_helpers_getFxaStatus_allowed_signedInUser() {
             uid: "uid",
             verified: true,
           });
-        }
+        },
       },
     },
   });
