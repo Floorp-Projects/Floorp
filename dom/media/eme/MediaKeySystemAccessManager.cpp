@@ -3,26 +3,27 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MediaKeySystemAccessManager.h"
+
 #include "DecoderDoctorDiagnostics.h"
+#include "mozilla/dom/BrowserChild.h"
+#include "mozilla/DetailedPromise.h"
 #include "mozilla/EMEUtils.h"
-#include "nsServiceManagerUtils.h"
-#include "nsComponentManagerUtils.h"
-#include "nsIObserverService.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPrefs_media.h"
-#include "mozilla/DetailedPromise.h"
+#include "mozilla/Unused.h"
 #ifdef XP_WIN
 #  include "mozilla/WindowsVersion.h"
 #endif
 #ifdef XP_MACOSX
 #  include "nsCocoaFeatures.h"
 #endif
-#include "nsPrintfCString.h"
+#include "nsComponentManagerUtils.h"
 #include "nsContentUtils.h"
-#include "nsIScriptError.h"
-#include "mozilla/Unused.h"
 #include "nsDataHashtable.h"
-#include "mozilla/dom/BrowserChild.h"
+#include "nsIObserverService.h"
+#include "nsIScriptError.h"
+#include "nsPrintfCString.h"
+#include "nsServiceManagerUtils.h"
 
 namespace mozilla {
 namespace dom {
