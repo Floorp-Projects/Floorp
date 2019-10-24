@@ -13,8 +13,11 @@ add_task(async function test_remote_window_open_js_uri() {
   Assert.ok(browser.isRemoteBrowser, "should be a remote browser");
 
   BrowserTestUtils.loadURI(browser, `javascript:1;`);
-  await ContentTask.spawn(browser, {}, async function() {
-    info("origin " + content.document.nodePrincipal.origin);
+
+  await BrowserTestUtils.browserLoaded(browser);
+
+  await SpecialPowers.spawn(browser, [], async function() {
+    Assert.ok(true, "origin " + content.document.nodePrincipal.origin);
 
     Assert.ok(
       content.document.nodePrincipal.isNullPrincipal,
@@ -47,7 +50,7 @@ add_task(async function test_remote_window_open_js_uri2() {
     iframe.src = "http://example.com";
     iframe.id = "iframe1";
     document.body.appendChild(iframe);
-    alert("connect to http://example.com");
+    void(0);
  `
   );
 
@@ -56,8 +59,8 @@ add_task(async function test_remote_window_open_js_uri2() {
     return url == "http://example.com/";
   });
 
-  await ContentTask.spawn(browser, {}, async function() {
-    info("origin " + content.document.nodePrincipal.origin);
+  await SpecialPowers.spawn(browser, [], async function() {
+    Assert.ok(true, "origin " + content.document.nodePrincipal.origin);
 
     Assert.ok(
       content.document.nodePrincipal.isNullPrincipal,
@@ -74,11 +77,13 @@ add_task(async function test_remote_window_open_js_uri2() {
     );
 
     let iframe = content.document.getElementById("iframe1");
-    Assert.equal(
-      iframe.contentDocument.nodePrincipal.originAttributes.firstPartyDomain,
-      expectDomain,
-      "iframe should have firstPartyDomain set to " + expectDomain
-    );
+    await SpecialPowers.spawn(iframe, [expectDomain], function(domain) {
+      Assert.equal(
+        content.document.nodePrincipal.originAttributes.firstPartyDomain,
+        domain,
+        "iframe should have firstPartyDomain set to " + domain
+      );
+    });
   });
 
   win.close();
