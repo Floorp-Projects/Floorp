@@ -10,7 +10,7 @@ from setuptools import setup
 PACKAGE_NAME = 'mozpower'
 PACKAGE_VERSION = '1.0.0'
 
-deps = ['mozlog >= 3.0', 'mozdevice >= 3.0.2']
+deps = ['mozlog >= 5.0', 'mozdevice >= 3.0.2']
 
 setup(name=PACKAGE_NAME,
       version=PACKAGE_VERSION,
