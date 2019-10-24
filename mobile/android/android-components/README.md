@@ -282,14 +282,39 @@ If the environment variable `JAVA_HOME` is not defined, you will need to set it.
 
 Once the environment variable is set, you can import the project into Android Studio with the default wizard options.
 
+# Coding Standards #
+
 ## Style ##
-We follow the style enforced by [ktlint](https://ktlint.github.io/). See [how to configure Android Studio appropriately](https://github.com/pinterest/ktlint#option-1-recommended).
+We follow the style enforced by [ktlint](https://ktlint.github.io/) and [detekt](https://arturbosch.github.io/detekt/). See [how to configure Android Studio appropriately](https://github.com/pinterest/ktlint#option-1-recommended).
 
 To check your style, run:
 
 ```
 ./gradlew ktlint
+./gradlew detekt
 ```
+
+## Documentation ##
+We use `README.md` files and [Dokka](https://github.com/Kotlin/dokka), which you can generate with:
+
+```
+./gradlew dokka                          # Generate dokka for the entire repo
+./gradlew :browser-icons:dokka           # Generate dokka for a specified module
+```
+
+If you fix a bug or change an API, you should update [docs/changelog.md](https://github.com/mozilla-mobile/android-components/blob/master/docs/changelog.md).
+
+## Testing ##
+You are expected to both add tests for code that you write and make sure that your changes do not
+cause existing tests to fail. You may find these command lines helpful:
+
+```
+./gradlew test                            # Run all tests
+./gradlew :support-ktx:testdebugunittest  # Run unit tests for a specified module
+```
+
+## Accessibility ##
+If your code has user-facing changes, follow [Android accessibility best practices](https://github.com/mozilla-mobile/shared-docs/blob/master/android/accessibility_guide.md).
 
 # License
 
