@@ -51,7 +51,7 @@ typedef decl_generate_grain_y_fn(*generate_grain_y_fn);
 #define decl_generate_grain_uv_fn(name) \
 void (name)(entry buf[][GRAIN_WIDTH], \
             const entry buf_y[][GRAIN_WIDTH], \
-            const Dav1dFilmGrainData *const data, const int uv HIGHBD_DECL_SUFFIX)
+            const Dav1dFilmGrainData *const data, const intptr_t uv HIGHBD_DECL_SUFFIX)
 typedef decl_generate_grain_uv_fn(*generate_grain_uv_fn);
 
 #define decl_fgy_32x32xn_fn(name) \

@@ -153,6 +153,7 @@ elif CONFIG['CPU_ARCH'] == 'arm' or CONFIG['CPU_ARCH'] == 'aarch64':
     relative_path = '../../../third_party/dav1d/src/arm/'
     bitdepth_basenames = [
         'cdef_init_tmpl.c',
+        'ipred_init_tmpl.c',
         'itx_init_tmpl.c',
         'loopfilter_init_tmpl.c',
         'looprestoration_init_tmpl.c',
@@ -191,6 +192,7 @@ elif CONFIG['CPU_ARCH'] == 'arm' or CONFIG['CPU_ARCH'] == 'aarch64':
     if CONFIG['CPU_ARCH'] == 'aarch64':
         SOURCES += [
             '../../../third_party/dav1d/src/arm/64/cdef.S',
+            '../../../third_party/dav1d/src/arm/64/ipred.S',
             '../../../third_party/dav1d/src/arm/64/itx.S',
             '../../../third_party/dav1d/src/arm/64/loopfilter.S',
             '../../../third_party/dav1d/src/arm/64/looprestoration.S',
@@ -199,6 +201,7 @@ elif CONFIG['CPU_ARCH'] == 'arm' or CONFIG['CPU_ARCH'] == 'aarch64':
         ]
     elif CONFIG['CPU_ARCH'] == 'arm':
         SOURCES += [
+            '../../../third_party/dav1d/src/arm/32/cdef.S',
             '../../../third_party/dav1d/src/arm/32/looprestoration.S',
             '../../../third_party/dav1d/src/arm/32/mc.S',
         ]
