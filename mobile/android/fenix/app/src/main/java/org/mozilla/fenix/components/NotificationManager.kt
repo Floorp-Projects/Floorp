@@ -19,7 +19,6 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.getSystemService
 import mozilla.components.concept.sync.DeviceEvent
 import mozilla.components.concept.sync.TabData
-import mozilla.components.support.base.ids.notify
 import mozilla.components.support.base.log.logger.Logger
 import org.mozilla.fenix.R
 
@@ -30,8 +29,6 @@ class NotificationManager(private val context: Context) {
     companion object {
         const val RECEIVE_TABS_TAG = "ReceivedTabs"
         const val RECEIVE_TABS_CHANNEL_ID = "ReceivedTabsChannel"
-        const val DEFAULT_CHANNEL_TAG = "Default"
-        const val DEFAULT_CHANEL_ID = "DefaultChannel"
     }
 
     init {
@@ -46,13 +43,6 @@ class NotificationManager(private val context: Context) {
                 // Name and description are shown in the 'app notifications' settings for the app.
                 context.getString(R.string.fxa_received_tab_channel_name),
                 context.getString(R.string.fxa_received_tab_channel_description)
-            )
-
-            createNotificationChannel(
-                DEFAULT_CHANEL_ID,
-                NotificationManager.IMPORTANCE_DEFAULT,
-                context.getString(R.string.app_name),
-                ""
             )
         }
     }
@@ -95,21 +85,6 @@ class NotificationManager(private val context: Context) {
             with(NotificationManagerCompat.from(context)) {
                 notify(RECEIVE_TABS_TAG, notificationId, notification)
             }
-        }
-    }
-
-    fun showMessage(message: String) {
-        val builder = NotificationCompat.Builder(context, DEFAULT_CHANEL_ID)
-            .setSmallIcon(R.drawable.ic_status_logo)
-            .setContentTitle(context.getString(R.string.app_name))
-            .setContentText(message)
-            .setWhen(System.currentTimeMillis())
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .setDefaults(Notification.DEFAULT_VIBRATE or Notification.DEFAULT_SOUND)
-
-        val notification = builder.build()
-        with(NotificationManagerCompat.from(context)) {
-            notify(context, DEFAULT_CHANNEL_TAG, notification)
         }
     }
 

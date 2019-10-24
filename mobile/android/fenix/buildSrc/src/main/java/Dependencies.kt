@@ -164,7 +164,6 @@ object Deps {
     const val leakcanary = "com.squareup.leakcanary:leakcanary-android:${Versions.leakcanary}"
 
     const val leanplum = "com.leanplum:leanplum-core:${Versions.leanplum}"
-    const val leanplumMessaging = "com.leanplum:leanplum-fcm:${Versions.leanplum}"
 
     const val androidx_annotation = "androidx.annotation:annotation:${Versions.androidx_annotation}"
     const val androidx_fragment = "androidx.fragment:fragment-ktx:${Versions.androidx_fragment}"
