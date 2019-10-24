@@ -397,5 +397,8 @@ interface nsIHttpChannelInternal : nsISupports
     nsILoadInfo_CrossOriginOpenerPolicy computeCrossOriginOpenerPolicy(
         in nsILoadInfo_CrossOriginOpenerPolicy aInitiatorPolicy);
 
+    [noscript]
+    nsILoadInfo_CrossOriginEmbedderPolicy getResponseEmbedderPolicy();
+
     [notxpcom, nostdcall] attribute boolean hasNonEmptySandboxingFlag;
 };
