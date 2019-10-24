@@ -55,6 +55,9 @@ extern bool WritableStreamCloseQueuedOrInFlight(
 extern void WritableStreamMarkCloseRequestInFlight(
     WritableStream* unwrappedStream);
 
+extern void WritableStreamMarkFirstWriteRequestInFlight(
+    WritableStream* unwrappedStream);
+
 extern MOZ_MUST_USE bool WritableStreamUpdateBackpressure(
     JSContext* cx, JS::Handle<WritableStream*> unwrappedStream,
     bool backpressure);

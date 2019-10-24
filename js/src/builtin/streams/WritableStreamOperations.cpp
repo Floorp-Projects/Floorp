@@ -460,6 +460,29 @@ void js::WritableStreamMarkCloseRequestInFlight(
 }
 
 /**
+ * Streams spec, 4.4.12.
+ *      WritableStreamMarkFirstWriteRequestInFlight ( stream )
+ */
+void js::WritableStreamMarkFirstWriteRequestInFlight(
+    WritableStream* unwrappedStream) {
+  // Step 1: Assert: stream.[[inFlightWriteRequest]] is undefined.
+  MOZ_ASSERT(!unwrappedStream->haveInFlightWriteRequest());
+
+  // Step 2: Assert: stream.[[writeRequests]] is not empty.
+  MOZ_ASSERT(unwrappedStream->writeRequests()->length() > 0);
+
+  // Step 3: Let writeRequest be the first element of stream.[[writeRequests]].
+  // Step 4: Remove writeRequest from stream.[[writeRequests]], shifting all
+  //         other elements downward (so that the second becomes the first, and
+  //         so on).
+  // Step 5: Set stream.[[inFlightWriteRequest]] to writeRequest.
+  // In our implementation, we model [[inFlightWriteRequest]] as merely the
+  // first element of [[writeRequests]], plus a flag indicating there's an
+  // in-flight request.  Set the flag and be done with it.
+  unwrappedStream->setHaveInFlightWriteRequest();
+}
+
+/**
  * Streams spec, 4.4.14.
  *      WritableStreamUpdateBackpressure ( stream, backpressure )
  */
