@@ -1,3 +1,7 @@
+// This file expects manifest.js to be included in the same scope.
+/* import-globals-from manifest.js */
+// This file expects SEEK_TEST_NUMBER to be defined by the test.
+/* global SEEK_TEST_NUMBER */
 var manager = new MediaTestManager();
 
 function createTestArray() {

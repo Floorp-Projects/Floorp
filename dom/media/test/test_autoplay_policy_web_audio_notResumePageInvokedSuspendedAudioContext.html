@@ -49,6 +49,7 @@ function setupTestPreferences() {
 }
 
 async function createAudioContext() {
+  /* global ac */
   window.ac = new AudioContext();
   await once(ac, "blocked");
   is(ac.state, "suspended", `AudioContext is blocked.`);

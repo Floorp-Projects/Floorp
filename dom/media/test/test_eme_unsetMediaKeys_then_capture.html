@@ -10,6 +10,7 @@
 <body>
 <pre id="test">
 <script class="testbody" type="text/javascript">
+/* import-globals-from eme.js */
 var manager = new MediaTestManager;
 
 // Test that if we can capture a video frame while playing clear content after
@@ -41,9 +42,9 @@ function startTest(test, token)
     function playClearVideo() {
       var p1 = once(v, 'loadeddata', (e) => {
         ok(true, TimeStamp(token) + " Receiving event 'loadeddata' for (CLEAR) content.");
-        canvasElem = document.createElement('canvas');
+        let canvasElem = document.createElement('canvas');
         document.body.appendChild(canvasElem);
-        ctx2d = canvasElem.getContext('2d');
+        let ctx2d = canvasElem.getContext('2d');
 
         var gotTypeError = false;
         try {

@@ -32,7 +32,6 @@ function testWebM3(e) {
   var v = e.target;
   v.removeEventListener('loadeddata', testWebM3);
 
-  var startPassed = false;
   var completed = false;
   var gotTimeupdate = false;
 
@@ -58,7 +57,6 @@ function testWebM3(e) {
       return;
 
     v.addEventListener("timeupdate", timeupdate);
-    startPassed = true;
   }
 
   function seekEnded() {
