@@ -14,7 +14,7 @@
 #include "js/TraceKind.h"
 #include "js/Utility.h"
 
-struct JSStringFinalizer;
+struct JSExternalStringCallbacks;
 
 /* These values are private to the JS engine. */
 namespace js {
@@ -249,7 +249,7 @@ struct String {
     JS::Latin1Char inlineStorageLatin1[1];
     char16_t inlineStorageTwoByte[1];
   };
-  const JSStringFinalizer* externalFinalizer;
+  const JSExternalStringCallbacks* externalCallbacks;
 
   inline uint32_t flags() const { return uint32_t(flags_); }
   inline uint32_t length() const {

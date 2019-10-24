@@ -247,9 +247,9 @@ class XPCStringConvert {
                                                     uint32_t length,
                                                     JS::MutableHandleValue rval,
                                                     bool* sharedBuffer) {
-    JSString* str =
-        JS_NewMaybeExternalString(cx, static_cast<char16_t*>(buf->Data()),
-                                  length, &sDOMStringFinalizer, sharedBuffer);
+    JSString* str = JS_NewMaybeExternalString(
+        cx, static_cast<char16_t*>(buf->Data()), length,
+        &sDOMStringExternalString, sharedBuffer);
     if (!str) {
       return false;
     }
@@ -262,8 +262,8 @@ class XPCStringConvert {
                                           uint32_t length,
                                           JS::MutableHandleValue rval) {
     bool ignored;
-    JSString* str = JS_NewMaybeExternalString(cx, literal, length,
-                                              &sLiteralFinalizer, &ignored);
+    JSString* str = JS_NewMaybeExternalString(
+        cx, literal, length, &sLiteralExternalString, &ignored);
     if (!str) {
       return false;
     }
@@ -276,7 +276,7 @@ class XPCStringConvert {
     bool sharedAtom;
     JSString* str =
         JS_NewMaybeExternalString(cx, atom->GetUTF16String(), atom->GetLength(),
-                                  &sDynamicAtomFinalizer, &sharedAtom);
+                                  &sDynamicAtomExternalString, &sharedAtom);
     if (!str) {
       return false;
     }
@@ -293,24 +293,33 @@ class XPCStringConvert {
 
   static MOZ_ALWAYS_INLINE bool IsLiteral(JSString* str) {
     return JS_IsExternalString(str) &&
-           JS_GetExternalStringFinalizer(str) == &sLiteralFinalizer;
+           JS_GetExternalStringCallbacks(str) == &sLiteralExternalString;
   }
 
   static MOZ_ALWAYS_INLINE bool IsDOMString(JSString* str) {
     return JS_IsExternalString(str) &&
-           JS_GetExternalStringFinalizer(str) == &sDOMStringFinalizer;
+           JS_GetExternalStringCallbacks(str) == &sDOMStringExternalString;
   }
 
  private:
-  static const JSStringFinalizer sLiteralFinalizer, sDOMStringFinalizer,
-      sDynamicAtomFinalizer;
-
-  static void FinalizeLiteral(const JSStringFinalizer* fin, char16_t* chars);
-
-  static void FinalizeDOMString(const JSStringFinalizer* fin, char16_t* chars);
-
-  static void FinalizeDynamicAtom(const JSStringFinalizer* fin,
-                                  char16_t* chars);
+  struct LiteralExternalString : public JSExternalStringCallbacks {
+    void finalize(char16_t* aChars) const override;
+    size_t sizeOfBuffer(const char16_t* aChars,
+                        mozilla::MallocSizeOf aMallocSizeOf) const override;
+  };
+  struct DOMStringExternalString : public JSExternalStringCallbacks {
+    void finalize(char16_t* aChars) const override;
+    size_t sizeOfBuffer(const char16_t* aChars,
+                        mozilla::MallocSizeOf aMallocSizeOf) const override;
+  };
+  struct DynamicAtomExternalString : public JSExternalStringCallbacks {
+    void finalize(char16_t* aChars) const override;
+    size_t sizeOfBuffer(const char16_t* aChars,
+                        mozilla::MallocSizeOf aMallocSizeOf) const override;
+  };
+  static const LiteralExternalString sLiteralExternalString;
+  static const DOMStringExternalString sDOMStringExternalString;
+  static const DynamicAtomExternalString sDynamicAtomExternalString;
 
   XPCStringConvert() = delete;
 };
