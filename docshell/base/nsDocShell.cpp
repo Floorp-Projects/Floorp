@@ -4904,7 +4904,7 @@ nsDocShell::Destroy() {
   CancelRefreshURITimers();
 
   if (UsePrivateBrowsing()) {
-    mPrivateBrowsingId = 0;
+    mPrivateBrowsingId = nsIScriptSecurityManager::DEFAULT_PRIVATE_BROWSING_ID;
     mOriginAttributes.SyncAttributesWithPrivateBrowsing(false);
     if (mAffectPrivateSessionLifetime) {
       DecreasePrivateDocShellCount();
@@ -13209,10 +13209,12 @@ nsresult nsDocShell::SetOriginAttributes(const OriginAttributes& aAttrs) {
   AssertOriginAttributesMatchPrivateBrowsing();
   mOriginAttributes = aAttrs;
 
-  bool isPrivate = mOriginAttributes.mPrivateBrowsingId > 0;
+  bool isPrivate = mOriginAttributes.mPrivateBrowsingId !=
+                   nsIScriptSecurityManager::DEFAULT_PRIVATE_BROWSING_ID;
   // Chrome docshell can not contain OriginAttributes.mPrivateBrowsingId
   if (mItemType == typeChrome && isPrivate) {
-    mOriginAttributes.mPrivateBrowsingId = 0;
+    mOriginAttributes.mPrivateBrowsingId =
+        nsIScriptSecurityManager::DEFAULT_PRIVATE_BROWSING_ID;
   }
 
   SetPrivateBrowsing(isPrivate);
