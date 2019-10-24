@@ -2,22 +2,27 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-add_task(async function() {
-  let newTab = BrowserTestUtils.addTab(gBrowser, "http://example.com");
-  await BrowserTestUtils.browserLoaded(newTab.linkedBrowser);
+function test() {
+  let newTab = BrowserTestUtils.addTab(gBrowser);
+  waitForExplicitFinish();
+  BrowserTestUtils.browserLoaded(newTab.linkedBrowser).then(mainPart);
 
-  gBrowser.pinTab(newTab);
-  gBrowser.selectedTab = newTab;
+  function mainPart() {
+    gBrowser.pinTab(newTab);
+    gBrowser.selectedTab = newTab;
 
-  openTrustedLinkIn("javascript:var x=0;", "current");
-  is(gBrowser.tabs.length, 2, "Should open in current tab");
+    openTrustedLinkIn("javascript:var x=0;", "current");
+    is(gBrowser.tabs.length, 2, "Should open in current tab");
 
-  openTrustedLinkIn("http://example.com/1", "current");
-  is(gBrowser.tabs.length, 2, "Should open in current tab");
+    openTrustedLinkIn("http://example.com/1", "current");
+    is(gBrowser.tabs.length, 2, "Should open in current tab");
 
-  openTrustedLinkIn("http://example.org/", "current");
-  is(gBrowser.tabs.length, 3, "Should open in new tab");
+    openTrustedLinkIn("http://example.org/", "current");
+    is(gBrowser.tabs.length, 3, "Should open in new tab");
 
-  await BrowserTestUtils.removeTab(newTab);
-  await BrowserTestUtils.removeTab(gBrowser.tabs[1]); // example.org tab
-});
+    gBrowser.removeTab(newTab);
+    gBrowser.removeTab(gBrowser.tabs[1]); // example.org tab
+    finish();
+  }
+  BrowserTestUtils.loadURI(newTab.linkedBrowser, "http://example.com");
+}
