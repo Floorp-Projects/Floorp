@@ -28,6 +28,9 @@ createEnum(
     // Updates whether or not the class list panel is expanded.
     "UPDATE_CLASS_PANEL_EXPANDED",
 
+    // Updates whether or not the color scheme simulation button is hidden.
+    "UPDATE_COLOR_SCHEME_SIMULATION_HIDDEN",
+
     // Updates the highlighted selector.
     "UPDATE_HIGHLIGHTED_SELECTOR",
 
