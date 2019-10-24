@@ -16,6 +16,7 @@
 #include "builtin/Promise.h"                 // js::PromiseObject
 #include "builtin/streams/WritableStream.h"  // js::WritableStream
 #include "builtin/streams/WritableStreamDefaultController.h"  // js::WritableStreamDefaultController, js::WritableStream::controller
+#include "builtin/streams/WritableStreamWriterOperations.h"  // js::WritableStreamDefaultWriterEnsureReadyPromiseRejected
 #include "js/Promise.h"      // JS::{Reject,Resolve}Promise
 #include "js/RootingAPI.h"   // JS::Handle, JS::Rooted
 #include "js/Value.h"        // JS::Value, JS::ObjecValue
@@ -158,6 +159,9 @@ MOZ_MUST_USE bool js::WritableStreamDealWithRejection(
   return WritableStreamFinishErroring(cx, unwrappedStream);
 }
 
+static bool WritableStreamHasOperationMarkedInFlight(
+    const WritableStream* unwrappedStream);
+
 /**
  * Streams spec, 4.4.3.
  *      WritableStreamStartErroring ( stream, reason )
@@ -196,18 +200,31 @@ MOZ_MUST_USE bool js::WritableStreamStartErroring(
   // Step 8: If writer is not undefined, perform
   //         ! WritableStreamDefaultWriterEnsureReadyPromiseRejected(
   //             writer, reason).
+  if (unwrappedStream->hasWriter()) {
+    Rooted<WritableStreamDefaultWriter*> unwrappedWriter(
+        cx, UnwrapWriterFromStream(cx, unwrappedStream));
+    if (!unwrappedWriter) {
+      return false;
+    }
+
+    if (!WritableStreamDefaultWriterEnsureReadyPromiseRejected(
+            cx, unwrappedWriter, reason)) {
+      return false;
+    }
+  }
+
   // Step 9: If ! WritableStreamHasOperationMarkedInFlight(stream) is false and
   //         controller.[[started]] is true, perform
   //         ! WritableStreamFinishErroring(stream).
-  // XXX jwalden flesh me out!
-  JS_ReportErrorASCII(cx, "epic fail");
-  return false;
-}
+  if (!WritableStreamHasOperationMarkedInFlight(unwrappedStream) &&
+      unwrappedController->started()) {
+    if (!WritableStreamFinishErroring(cx, unwrappedStream)) {
+      return false;
+    }
+  }
 
-#ifdef DEBUG
-static bool WritableStreamHasOperationMarkedInFlight(
-    const WritableStream* unwrappedStream);
-#endif
+  return true;
+}
 
 /**
  * Streams spec, 4.4.4.
@@ -427,7 +444,6 @@ bool js::WritableStreamCloseQueuedOrInFlight(
   return unwrappedStream->haveCloseRequestOrInFlightCloseRequest();
 }
 
-#ifdef DEBUG
 /**
  * Streams spec, 4.4.10.
  *      WritableStreamHasOperationMarkedInFlight ( stream )
@@ -440,7 +456,6 @@ bool WritableStreamHasOperationMarkedInFlight(
   return unwrappedStream->haveInFlightWriteRequest() ||
          unwrappedStream->haveInFlightCloseRequest();
 }
-#endif  // DEBUG
 
 /**
  * Streams spec, 4.4.11.
