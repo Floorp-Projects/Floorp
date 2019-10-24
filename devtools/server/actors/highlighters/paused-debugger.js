@@ -10,7 +10,7 @@ const {
 } = require("./utils/markup");
 
 const { LocalizationHelper } = require("devtools/shared/l10n");
-const STRINGS_URI = "devtools/client/shared/locales/debugger.properties";
+const STRINGS_URI = "devtools/client/locales/debugger.properties";
 const L10N = new LocalizationHelper(STRINGS_URI);
 
 /**
