@@ -1,3 +1,5 @@
+/* global video, result, resolve */
+
 video.mozRequestDebugInfo().then(debugInfo => {
   // The parsing won't be necessary once we have bug 1542674
   try {

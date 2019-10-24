@@ -1,3 +1,5 @@
+/* import-globals-from manifest.js */
+
 const CLEARKEY_KEYSYSTEM = "org.w3.clearkey";
 
 const gCencMediaKeySystemConfig = [
@@ -173,7 +175,6 @@ function AppendTrack(test, ms, track, token) {
   return new Promise(function(resolve, reject) {
     var sb;
     var curFragment = 0;
-    var resolved = false;
     var fragments = track.fragments;
     var fragmentFile;
 
@@ -181,7 +182,6 @@ function AppendTrack(test, ms, track, token) {
       if (curFragment >= fragments.length) {
         Log(token, track.name + ": end of track");
         resolve();
-        resolved = true;
         return;
       }
 

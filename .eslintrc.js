@@ -396,9 +396,7 @@ module.exports = {
       "no-nested-ternary": "off",
       "no-self-assign": "off",
       "no-new-object": "off",
-      "no-undef": "off",
       "no-unsanitized/property": "off",
-      "no-unused-vars": "off",
     }
   }]
 };

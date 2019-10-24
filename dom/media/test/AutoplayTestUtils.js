@@ -1,3 +1,5 @@
+/* import-globals-from manifest.js */
+
 function playAndPostResult(muted, parent_window) {
   let element = document.createElement("video");
   element.preload = "auto";

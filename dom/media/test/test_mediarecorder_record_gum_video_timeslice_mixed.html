@@ -32,7 +32,7 @@ function unexpected({type}) {
       {audio: true, video: true});
     const blobs = [];
 
-    mediaRecorder = new MediaRecorder(stream);
+    let mediaRecorder = new MediaRecorder(stream);
     is(mediaRecorder.stream, stream,
        "Media recorder stream = element stream at the start of recording");
     mediaRecorder.start();

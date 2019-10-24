@@ -15,7 +15,6 @@ var manager = new MediaTestManager;
 function startTest(test, token)
 {
   // Case 1. setting MediaKeys on an element captured by MediaElementSource should fail.
-  var p1 = new EMEPromise;
   var case1token = token + "_case1";
   let v1 = document.createElement("video");
 
@@ -35,7 +34,7 @@ function startTest(test, token)
   }
 
   var context = new AudioContext();
-  var node = context.createMediaElementSource(v1);
+  context.createMediaElementSource(v1);
   v1.addEventListener("loadeddata", function(ev) {
     ok(false, TimeStamp(case1token) + " should never reach loadeddata, as setMediaKeys should fail");
   });

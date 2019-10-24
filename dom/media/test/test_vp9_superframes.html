@@ -16,7 +16,7 @@ function test() {
   video.src = "vp9-superframes.webm";
   video.play();
   video.addEventListener("ended", function () {
-    vpq = video.getVideoPlaybackQuality();
+    let vpq = video.getVideoPlaybackQuality();
     is(vpq.totalVideoFrames, 120, "totalVideoFrames must contains 120 frames");
     SimpleTest.finish();
   });
