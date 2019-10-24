@@ -23,6 +23,7 @@
         android:paddingTop="16dp"
         android:paddingBottom="16dp"
         android:paddingStart="32dp"
+        android:paddingEnd="0dp"
         android:background="@drawable/dialog_background">
         <TextView
             android:id="@+id/dialog_title"
