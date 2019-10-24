@@ -177,7 +177,7 @@ LoadInfo::LoadInfo(
       nsGlobalWindowInner* innerWindow =
           nsGlobalWindowInner::Cast(contextOuter->GetCurrentInnerWindow());
       if (innerWindow) {
-        mTopLevelPrincipal = innerWindow->GetTopLevelPrincipal();
+        mTopLevelPrincipal = innerWindow->GetTopLevelAntiTrackingPrincipal();
 
         // The top-level-storage-area-principal is not null only for the first
         // level of iframes (null for top-level contexts, and null for
@@ -388,7 +388,7 @@ LoadInfo::LoadInfo(nsPIDOMWindowOuter* aOuterWindow,
   nsGlobalWindowInner* innerWindow =
       nsGlobalWindowInner::Cast(aOuterWindow->GetCurrentInnerWindow());
   if (innerWindow) {
-    mTopLevelPrincipal = innerWindow->GetTopLevelPrincipal();
+    mTopLevelPrincipal = innerWindow->GetTopLevelAntiTrackingPrincipal();
     // mTopLevelStorageAreaPrincipal is always null for top-level document
     // loading.
   }
