@@ -32,14 +32,15 @@ void SHEntryChildShared::Init() {
 }
 
 /* static */
-SHEntryChildShared* SHEntryChildShared::GetOrCreate(uint64_t aSharedID) {
+SHEntryChildShared* SHEntryChildShared::GetOrCreate(SHistoryChild* aSHistory,
+                                                    uint64_t aSharedID) {
   MOZ_DIAGNOSTIC_ASSERT(
       sSHEntryChildSharedTable,
       "SHEntryChildShared::Init should have created the table.");
   RefPtr<SHEntryChildShared>& shared =
       sSHEntryChildSharedTable->GetOrInsert(aSharedID);
   if (!shared) {
-    shared = new SHEntryChildShared(aSharedID);
+    shared = new SHEntryChildShared(aSHistory, aSharedID);
   }
   return shared;
 }
@@ -81,7 +82,8 @@ void SHEntryChildShared::EvictContentViewers(
   }
 }
 
-SHEntryChildShared::SHEntryChildShared(uint64_t aID) : mID(aID) {}
+SHEntryChildShared::SHEntryChildShared(SHistoryChild* aSHistory, uint64_t aID)
+    : mID(aID), mSHistory(aSHistory) {}
 
 SHEntryChildShared::~SHEntryChildShared() {
   // The destruction can be caused by either the entry is removed from session
@@ -105,7 +107,7 @@ NS_IMPL_ISUPPORTS(SHEntryChildShared, nsIBFCacheEntry, nsIMutationObserver)
 
 already_AddRefed<SHEntryChildShared> SHEntryChildShared::Duplicate() {
   RefPtr<SHEntryChildShared> newEntry = new SHEntryChildShared(
-      mozilla::dom::SHEntryChildShared::CreateSharedID());
+      mSHistory, mozilla::dom::SHEntryChildShared::CreateSharedID());
   newEntry->CopyFrom(this);
   return newEntry.forget();
 }
