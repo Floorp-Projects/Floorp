@@ -15,6 +15,7 @@ Starting Push in the Application's onCreate is recommended.
 | [onError](on-error.md) | `abstract fun onError(error: `[`PushError`](../-push-error/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>An error has occurred. |
 | [onMessageReceived](on-message-received.md) | `abstract fun onMessageReceived(message: `[`EncryptedPushMessage`](../-encrypted-push-message/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>A new push message has been received. |
 | [onNewToken](on-new-token.md) | `abstract fun onNewToken(newToken: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>A new registration token has been received. |
+| [renewRegistration](renew-registration.md) | `abstract fun renewRegistration(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Requests the [PushService](../-push-service/index.md) to renew it's registration with it's provider. |
 | [shutdown](shutdown.md) | `abstract fun shutdown(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Removes all push subscriptions from the device. |
 
 ### Companion Object Properties

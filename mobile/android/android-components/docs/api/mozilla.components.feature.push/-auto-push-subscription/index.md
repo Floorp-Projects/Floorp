@@ -2,7 +2,7 @@
 
 # AutoPushSubscription
 
-`data class AutoPushSubscription` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/push/src/main/java/mozilla/components/feature/push/AutoPushFeature.kt#L349)
+`data class AutoPushSubscription` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/push/src/main/java/mozilla/components/feature/push/AutoPushFeature.kt#L352)
 
 The subscription information from AutoPush that can be used to send push messages to other devices.
 

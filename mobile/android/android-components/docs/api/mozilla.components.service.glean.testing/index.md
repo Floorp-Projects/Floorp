@@ -2,9 +2,9 @@
 
 ## Package mozilla.components.service.glean.testing
 
-### Types
+### Type Aliases
 
 | Name | Summary |
 |---|---|
-| [GleanTestLocalServer](-glean-test-local-server/index.md) | `class GleanTestLocalServer : TestWatcher`<br>This implements a JUnit rule for writing tests for Glean SDK metrics. |
-| [GleanTestRule](-glean-test-rule/index.md) | `class GleanTestRule : TestWatcher`<br>This implements a JUnit rule for writing tests for Glean SDK metrics. |
+| [GleanTestLocalServer](-glean-test-local-server.md) | `typealias GleanTestLocalServer = GleanTestLocalServer`<br>This implements a JUnit rule for writing tests for Glean SDK metrics. |
+| [GleanTestRule](-glean-test-rule.md) | `typealias GleanTestRule = GleanTestRule` |

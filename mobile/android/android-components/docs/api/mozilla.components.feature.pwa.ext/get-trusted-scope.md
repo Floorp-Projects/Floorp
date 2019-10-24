@@ -2,7 +2,7 @@
 
 # getTrustedScope
 
-`fun `[`WebAppManifest`](../mozilla.components.concept.engine.manifest/-web-app-manifest/index.md)`.getTrustedScope(): <ERROR CLASS>?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/pwa/src/main/java/mozilla/components/feature/pwa/ext/WebAppManifest.kt#L56)
+`fun `[`WebAppManifest`](../mozilla.components.concept.engine.manifest/-web-app-manifest/index.md)`.getTrustedScope(): <ERROR CLASS>?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/pwa/src/main/java/mozilla/components/feature/pwa/ext/WebAppManifest.kt#L58)
 
 Returns the scope of the manifest as a [Uri](#) for use
 with [mozilla.components.feature.pwa.feature.WebAppHideToolbarFeature](../mozilla.components.feature.pwa.feature/-web-app-hide-toolbar-feature/index.md).

@@ -2,7 +2,7 @@
 
 # PushError
 
-`sealed class PushError` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/push/src/main/java/mozilla/components/concept/push/PushProcessor.kt#L93)
+`sealed class PushError` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/push/src/main/java/mozilla/components/concept/push/PushProcessor.kt#L98)
 
 Various error types.
 

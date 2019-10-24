@@ -2,7 +2,7 @@
 
 # isTrustedWebActivityIntent
 
-`fun isTrustedWebActivityIntent(intent: <ERROR CLASS>): <ERROR CLASS>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/customtabs/src/main/java/mozilla/components/feature/customtabs/CustomTabConfigHelper.kt#L65)
+`fun isTrustedWebActivityIntent(intent: <ERROR CLASS>): <ERROR CLASS>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/customtabs/src/main/java/mozilla/components/feature/customtabs/CustomTabConfigHelper.kt#L66)
 
 Checks if the provided intent is a trusted web activity intent.
 
@@ -13,7 +13,7 @@ Checks if the provided intent is a trusted web activity intent.
 **Return**
 true if the intent is a trusted web activity intent, otherwise false.
 
-`fun isTrustedWebActivityIntent(safeIntent: `[`SafeIntent`](../mozilla.components.support.utils/-safe-intent/index.md)`): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/customtabs/src/main/java/mozilla/components/feature/customtabs/CustomTabConfigHelper.kt#L73)
+`fun isTrustedWebActivityIntent(safeIntent: `[`SafeIntent`](../mozilla.components.support.utils/-safe-intent/index.md)`): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/customtabs/src/main/java/mozilla/components/feature/customtabs/CustomTabConfigHelper.kt#L74)
 
 Checks if the provided intent is a trusted web activity intent.
 

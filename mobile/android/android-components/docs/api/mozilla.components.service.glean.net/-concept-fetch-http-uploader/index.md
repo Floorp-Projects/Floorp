@@ -2,7 +2,7 @@
 
 # ConceptFetchHttpUploader
 
-`class ConceptFetchHttpUploader : `[`PingUploader`](../-ping-uploader/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/net/ConceptFetchHttpUploader.kt#L24)
+`class ConceptFetchHttpUploader : PingUploader` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/net/ConceptFetchHttpUploader.kt#L26)
 
 A simple ping Uploader, which implements a "send once" policy, never
 storing or attempting to send the ping again. This uses Android Component's
@@ -18,7 +18,7 @@ storing or attempting to send the ping again. This uses Android Component's
 
 | Name | Summary |
 |---|---|
-| [upload](upload.md) | `fun upload(url: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, data: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, headers: `[`HeadersList`](../-headers-list.md)`): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Synchronously upload a ping to a server. |
+| [upload](upload.md) | `fun upload(url: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, data: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, headers: HeadersList): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Synchronously upload a ping to a server. |
 
 ### Companion Object Properties
 

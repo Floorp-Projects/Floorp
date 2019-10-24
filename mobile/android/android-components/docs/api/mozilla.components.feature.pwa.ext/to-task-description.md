@@ -2,7 +2,7 @@
 
 # toTaskDescription
 
-`fun `[`WebAppManifest`](../mozilla.components.concept.engine.manifest/-web-app-manifest/index.md)`.toTaskDescription(icon: <ERROR CLASS>?): <ERROR CLASS>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/pwa/src/main/java/mozilla/components/feature/pwa/ext/WebAppManifest.kt#L25)
+`fun `[`WebAppManifest`](../mozilla.components.concept.engine.manifest/-web-app-manifest/index.md)`.toTaskDescription(icon: <ERROR CLASS>?): <ERROR CLASS>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/pwa/src/main/java/mozilla/components/feature/pwa/ext/WebAppManifest.kt#L26)
 
 Creates a [TaskDescription](#) for the activity manager based on the manifest.
 

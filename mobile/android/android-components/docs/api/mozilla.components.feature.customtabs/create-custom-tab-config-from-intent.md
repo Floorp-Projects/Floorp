@@ -2,7 +2,7 @@
 
 # createCustomTabConfigFromIntent
 
-`fun createCustomTabConfigFromIntent(intent: <ERROR CLASS>, resources: <ERROR CLASS>?): `[`CustomTabConfig`](../mozilla.components.browser.state.state/-custom-tab-config/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/customtabs/src/main/java/mozilla/components/feature/customtabs/CustomTabConfigHelper.kt#L83)
+`fun createCustomTabConfigFromIntent(intent: <ERROR CLASS>, resources: <ERROR CLASS>?): `[`CustomTabConfig`](../mozilla.components.browser.state.state/-custom-tab-config/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/customtabs/src/main/java/mozilla/components/feature/customtabs/CustomTabConfigHelper.kt#L84)
 
 Creates a [CustomTabConfig](../mozilla.components.browser.state.state/-custom-tab-config/index.md) instance based on the provided intent.
 
