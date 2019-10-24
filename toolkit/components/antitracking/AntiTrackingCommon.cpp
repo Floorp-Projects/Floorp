@@ -90,7 +90,7 @@ bool GetParentPrincipalAndTrackingOrigin(
       // mode only.
       (aBehavior == nsICookieService::BEHAVIOR_REJECT_TRACKER)
           ? a3rdPartyTrackingWindow->GetTopLevelStorageAreaPrincipal()
-          : a3rdPartyTrackingWindow->GetTopLevelPrincipal();
+          : a3rdPartyTrackingWindow->GetTopLevelAntiTrackingPrincipal();
   if (!topLevelStoragePrincipal) {
     LOG(("No top-level storage area principal at hand"));
     return false;
