@@ -50,6 +50,29 @@ urlbar-addons-notification-anchor =
 urlbar-tip-help-icon =
     .title = Get help
 
+urlbar-geolocation-blocked =
+    .tooltiptext = You have blocked location information for this website.
+urlbar-web-notifications-blocked =
+    .tooltiptext = You have blocked notifications for this website.
+urlbar-camera-blocked =
+    .tooltiptext = You have blocked your camera for this website.
+urlbar-microphone-blocked =
+    .tooltiptext = You have blocked your microphone for this website.
+urlbar-screen-blocked =
+    .tooltiptext = You have blocked this website from sharing your screen.
+urlbar-persistent-storage-blocked =
+    .tooltiptext = You have blocked persistent storage for this website.
+urlbar-popup-blocked =
+    .tooltiptext = You have blocked pop-ups for this website.
+urlbar-autoplay-media-blocked =
+    .tooltiptext = You have blocked autoplay media with sound for this website.
+urlbar-canvas-blocked =
+    .tooltiptext = You have blocked canvas data extraction for this website.
+urlbar-midi-blocked =
+    .tooltiptext = You have blocked MIDI access for this website.
+urlbar-install-blocked =
+    .tooltiptext = You have blocked add-on installation for this website.
+
 ## Page Action Context Menu
 
 page-action-add-to-urlbar =
