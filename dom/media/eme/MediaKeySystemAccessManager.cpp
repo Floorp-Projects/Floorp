@@ -97,6 +97,9 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(MediaKeySystemAccessManager)
   }
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
+#define MKSAM_LOG_DEBUG(msg, ...) \
+  EME_LOG("MediaKeySystemAccessManager::%s " msg, __func__, ##__VA_ARGS__)
+
 MediaKeySystemAccessManager::MediaKeySystemAccessManager(
     nsPIDOMWindowInner* aWindow)
     : mWindow(aWindow), mAddedObservers(false) {}
@@ -113,10 +116,8 @@ void MediaKeySystemAccessManager::Request(
 void MediaKeySystemAccessManager::CheckDoesWindowSupportProtectedMedia(
     UniquePtr<PendingRequest> aRequest) {
   MOZ_ASSERT(aRequest);
-  EME_LOG(
-      "MediaKeySystemAccessManager::CheckDoesWindowSupportProtectedMedia "
-      "aRequest->mKeySystem=%s",
-      NS_ConvertUTF16toUTF8(aRequest->mKeySystem).get());
+  MKSAM_LOG_DEBUG("aRequest->mKeySystem=%s",
+                  NS_ConvertUTF16toUTF8(aRequest->mKeySystem).get());
 
   // In Windows OS, some Firefox windows that host content cannot support
   // protected content, so check the status of support for this window.
@@ -126,7 +127,8 @@ void MediaKeySystemAccessManager::CheckDoesWindowSupportProtectedMedia(
 
   RefPtr<MediaKeySystemAccessManager> self(this);
 
-  EME_LOG("Checking with browser if this window supports protected media.");
+  MKSAM_LOG_DEBUG(
+      "Checking with browser if this window supports protected media.");
   browser->DoesWindowSupportProtectedMedia()->Then(
       GetCurrentThreadSerialEventTarget(), __func__,
       [self, request = std::move(aRequest)](
@@ -137,7 +139,9 @@ void MediaKeySystemAccessManager::CheckDoesWindowSupportProtectedMedia(
                                                   std::move(request));
         } else {
           EME_LOG(
-              "Failed to make IPC call to IsWindowSupportingProtectedMedia: "
+              "MediaKeySystemAccessManager::DoesWindowSupportProtectedMedia-"
+              "ResolveOrRejectLambda Failed to make IPC call to "
+              "IsWindowSupportingProtectedMedia: "
               "reason=%d",
               static_cast<int>(value.RejectValue()));
           // Treat as failure.
@@ -146,7 +150,7 @@ void MediaKeySystemAccessManager::CheckDoesWindowSupportProtectedMedia(
       });
 #else
   // Non-Windows OS windows always support protected media.
-  EME_LOG(
+  MKSAM_LOG_DEBUG(
       "Allowing protected media because all non-Windows OS windows support "
       "protected media.");
   OnDoesWindowSupportProtectedMedia(true, std::move(aRequest));
@@ -156,11 +160,9 @@ void MediaKeySystemAccessManager::CheckDoesWindowSupportProtectedMedia(
 void MediaKeySystemAccessManager::OnDoesWindowSupportProtectedMedia(
     bool aIsSupportedInWindow, UniquePtr<PendingRequest> aRequest) {
   MOZ_ASSERT(aRequest);
-  EME_LOG(
-      "MediaKeySystemAccessManager::OnDoesWindowSupportProtectedMedia "
-      "aIsSupportedInWindow=%s aRequest->mKeySystem=%s",
-      aIsSupportedInWindow ? "true" : "false",
-      NS_ConvertUTF16toUTF8(aRequest->mKeySystem).get());
+  MKSAM_LOG_DEBUG("aIsSupportedInWindow=%s aRequest->mKeySystem=%s",
+                  aIsSupportedInWindow ? "true" : "false",
+                  NS_ConvertUTF16toUTF8(aRequest->mKeySystem).get());
 
   if (!aIsSupportedInWindow) {
     aRequest->RejectPromiseWithNotSupportedError(
@@ -174,8 +176,8 @@ void MediaKeySystemAccessManager::OnDoesWindowSupportProtectedMedia(
 void MediaKeySystemAccessManager::RequestMediaKeySystemAccess(
     UniquePtr<PendingRequest> aRequest) {
   MOZ_ASSERT(aRequest);
-  EME_LOG("MediaKeySystemAccessManager::ProcessRequest aIsSupportedInWindow=%s",
-          NS_ConvertUTF16toUTF8(aRequest->mKeySystem).get());
+  MKSAM_LOG_DEBUG("aIsSupportedInWindow=%s",
+                  NS_ConvertUTF16toUTF8(aRequest->mKeySystem).get());
 
   // 1. If keySystem is the empty string, return a promise rejected with a newly
   // created TypeError.
@@ -293,7 +295,10 @@ void MediaKeySystemAccessManager::RequestMediaKeySystemAccess(
   nsDataHashtable<nsCharPtrHashKey, bool> warnings;
   std::function<void(const char*)> deprecationWarningLogFn =
       [&](const char* aMsgName) {
-        EME_LOG("Logging deprecation warning '%s' to WebConsole.", aMsgName);
+        EME_LOG(
+            "MediaKeySystemAccessManager::DeprecationWarningLambda Logging "
+            "deprecation warning '%s' to WebConsole.",
+            aMsgName);
         warnings.Put(aMsgName, true);
         AutoTArray<nsString, 1> params;
         nsString& uri = *params.AppendElement();
@@ -347,8 +352,8 @@ void MediaKeySystemAccessManager::RequestMediaKeySystemAccess(
 bool MediaKeySystemAccessManager::AwaitInstall(
     UniquePtr<PendingRequest> aRequest) {
   MOZ_ASSERT(aRequest);
-  EME_LOG("MediaKeySystemAccessManager::AwaitInstall aRequest->mKeySystem=%s",
-          NS_ConvertUTF16toUTF8(aRequest->mKeySystem).get());
+  MKSAM_LOG_DEBUG("aRequest->mKeySystem=%s",
+                  NS_ConvertUTF16toUTF8(aRequest->mKeySystem).get());
 
   if (!EnsureObserversAdded()) {
     NS_WARNING("Failed to add pref observer");
@@ -379,8 +384,8 @@ bool MediaKeySystemAccessManager::AwaitInstall(
 void MediaKeySystemAccessManager::RetryRequest(
     UniquePtr<PendingRequest> aRequest) {
   MOZ_ASSERT(aRequest);
-  EME_LOG("MediaKeySystemAccessManager::RetryRequest aRequest->mKeySystem=%s",
-          NS_ConvertUTF16toUTF8(aRequest->mKeySystem).get());
+  MKSAM_LOG_DEBUG("aRequest->mKeySystem=%s",
+                  NS_ConvertUTF16toUTF8(aRequest->mKeySystem).get());
   // Cancel and null timer if it exists.
   aRequest->CancelTimer();
   // Indicate that this is a request that's being retried.
@@ -391,7 +396,7 @@ void MediaKeySystemAccessManager::RetryRequest(
 nsresult MediaKeySystemAccessManager::Observe(nsISupports* aSubject,
                                               const char* aTopic,
                                               const char16_t* aData) {
-  EME_LOG("MediaKeySystemAccessManager::Observe %s", aTopic);
+  MKSAM_LOG_DEBUG("%s", aTopic);
 
   if (!strcmp(aTopic, "gmp-changed")) {
     // Filter out the requests where the CDM's install-status is no longer
@@ -450,7 +455,7 @@ bool MediaKeySystemAccessManager::EnsureObserversAdded() {
 }
 
 void MediaKeySystemAccessManager::Shutdown() {
-  EME_LOG("MediaKeySystemAccessManager::Shutdown");
+  MKSAM_LOG_DEBUG("");
   for (const UniquePtr<PendingRequest>& installRequest :
        mPendingInstallRequests) {
     // Cancel all requests; we're shutting down.
@@ -471,3 +476,5 @@ void MediaKeySystemAccessManager::Shutdown() {
 
 }  // namespace dom
 }  // namespace mozilla
+
+#undef MKSAM_LOG_DEBUG
