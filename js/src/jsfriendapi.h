@@ -822,9 +822,9 @@ MOZ_ALWAYS_INLINE const char16_t* GetTwoByteAtomChars(
   return GetTwoByteLinearStringChars(nogc, AtomToLinearString(atom));
 }
 
-MOZ_ALWAYS_INLINE bool IsExternalString(JSString* str,
-                                        const JSStringFinalizer** fin,
-                                        const char16_t** chars) {
+MOZ_ALWAYS_INLINE bool IsExternalString(
+    JSString* str, const JSExternalStringCallbacks** callbacks,
+    const char16_t** chars) {
   using JS::shadow::String;
   String* s = reinterpret_cast<String*>(str);
 
@@ -833,7 +833,7 @@ MOZ_ALWAYS_INLINE bool IsExternalString(JSString* str,
   }
 
   MOZ_ASSERT(JS_IsExternalString(str));
-  *fin = s->externalFinalizer;
+  *callbacks = s->externalCallbacks;
   *chars = s->nonInlineCharsTwoByte;
   return true;
 }

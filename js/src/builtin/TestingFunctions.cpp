@@ -1841,17 +1841,15 @@ static bool SetTestFilenameValidationCallback(JSContext* cx, unsigned argc,
   return true;
 }
 
-static void FinalizeExternalString(const JSStringFinalizer* fin,
-                                   char16_t* chars);
+struct TestExternalString : public JSExternalStringCallbacks {
+  void finalize(char16_t* chars) const override { js_free(chars); }
+  size_t sizeOfBuffer(const char16_t* chars,
+                      mozilla::MallocSizeOf mallocSizeOf) const override {
+    return mallocSizeOf(chars);
+  }
+};
 
-static const JSStringFinalizer ExternalStringFinalizer = {
-    FinalizeExternalString};
-
-static void FinalizeExternalString(const JSStringFinalizer* fin,
-                                   char16_t* chars) {
-  MOZ_ASSERT(fin == &ExternalStringFinalizer);
-  js_free(chars);
-}
+static constexpr TestExternalString TestExternalStringCallbacks;
 
 static bool NewExternalString(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
@@ -1875,7 +1873,7 @@ static bool NewExternalString(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   JSString* res =
-      JS_NewExternalString(cx, buf.get(), len, &ExternalStringFinalizer);
+      JS_NewExternalString(cx, buf.get(), len, &TestExternalStringCallbacks);
   if (!res) {
     return false;
   }
@@ -1908,7 +1906,7 @@ static bool NewMaybeExternalString(JSContext* cx, unsigned argc, Value* vp) {
 
   bool allocatedExternal;
   JSString* res = JS_NewMaybeExternalString(
-      cx, buf.get(), len, &ExternalStringFinalizer, &allocatedExternal);
+      cx, buf.get(), len, &TestExternalStringCallbacks, &allocatedExternal);
   if (!res) {
     return false;
   }

@@ -193,7 +193,8 @@ class JSString : public js::gc::CellWithLengthAndFlags<js::gc::Cell> {
           JSLinearString* base; /* JSDependentString */
           JSString* right;      /* JSRope */
           size_t capacity;      /* JSLinearString (extensible) */
-          const JSStringFinalizer* externalFinalizer; /* JSExternalString */
+          const JSExternalStringCallbacks*
+              externalCallbacks; /* JSExternalString */
         } u3;
       } s;
     };
@@ -331,9 +332,9 @@ class JSString : public js::gc::CellWithLengthAndFlags<js::gc::Cell> {
                       offsetof(String, nonInlineCharsTwoByte),
                   "shadow::String nonInlineChars offset must match JSString");
     static_assert(
-        offsetof(JSString, d.s.u3.externalFinalizer) ==
-            offsetof(String, externalFinalizer),
-        "shadow::String externalFinalizer offset must match JSString");
+        offsetof(JSString, d.s.u3.externalCallbacks) ==
+            offsetof(String, externalCallbacks),
+        "shadow::String externalCallbacks offset must match JSString");
     static_assert(offsetof(JSString, d.inlineStorageLatin1) ==
                       offsetof(String, inlineStorageLatin1),
                   "shadow::String inlineStorage offset must match JSString");
@@ -1078,20 +1079,21 @@ static_assert(sizeof(JSFatInlineString) % js::gc::CellAlignBytes == 0,
               "boundary");
 
 class JSExternalString : public JSLinearString {
-  void init(const char16_t* chars, size_t length, const JSStringFinalizer* fin);
+  void init(const char16_t* chars, size_t length,
+            const JSExternalStringCallbacks* callbacks);
 
   /* Vacuous and therefore unimplemented. */
   bool isExternal() const = delete;
   JSExternalString& asExternal() const = delete;
 
  public:
-  static inline JSExternalString* new_(JSContext* cx, const char16_t* chars,
-                                       size_t length,
-                                       const JSStringFinalizer* fin);
+  static inline JSExternalString* new_(
+      JSContext* cx, const char16_t* chars, size_t length,
+      const JSExternalStringCallbacks* callbacks);
 
-  const JSStringFinalizer* externalFinalizer() const {
+  const JSExternalStringCallbacks* callbacks() const {
     MOZ_ASSERT(JSString::isExternal());
-    return d.s.u3.externalFinalizer;
+    return d.s.u3.externalCallbacks;
   }
 
   // External chars are never allocated inline or in the nursery, so we can
@@ -1493,7 +1495,7 @@ inline JSLinearString* NewStringCopyUTF8Z(JSContext* cx,
 }
 
 JSString* NewMaybeExternalString(JSContext* cx, const char16_t* s, size_t n,
-                                 const JSStringFinalizer* fin,
+                                 const JSExternalStringCallbacks* callbacks,
                                  bool* allocatedExternal);
 
 /**

@@ -406,11 +406,26 @@ typedef void (*JSWeakPointerCompartmentCallback)(JSContext* cx,
                                                  void* data);
 
 /**
- * Finalizes external strings created by JS_NewExternalString. The finalizer
- * can be called off the main thread.
+ * Each external string has a pointer to JSExternalStringCallbacks. Embedders
+ * can use this to implement custom finalization or memory reporting behavior.
  */
-struct JSStringFinalizer {
-  void (*finalize)(const JSStringFinalizer* fin, char16_t* chars);
+struct JSExternalStringCallbacks {
+  /**
+   * Finalizes external strings created by JS_NewExternalString. The finalizer
+   * can be called off the main thread.
+   */
+  virtual void finalize(char16_t* chars) const = 0;
+
+  /**
+   * Callback used by memory reporting to ask the embedder how much memory an
+   * external string is keeping alive.  The embedder is expected to return a
+   * value that corresponds to the size of the allocation that will be released
+   * by the finalizer callback above.
+   *
+   * Implementations of this callback MUST NOT do anything that can cause GC.
+   */
+  virtual size_t sizeOfBuffer(const char16_t* chars,
+                              mozilla::MallocSizeOf mallocSizeOf) const = 0;
 };
 
 namespace JS {
@@ -1049,7 +1064,7 @@ extern JS_PUBLIC_API void JS_SetGCParametersBasedOnAvailableMemory(
  */
 extern JS_PUBLIC_API JSString* JS_NewExternalString(
     JSContext* cx, const char16_t* chars, size_t length,
-    const JSStringFinalizer* fin);
+    const JSExternalStringCallbacks* callbacks);
 
 /**
  * Create a new JSString whose chars member may refer to external memory.
@@ -1060,7 +1075,7 @@ extern JS_PUBLIC_API JSString* JS_NewExternalString(
  */
 extern JS_PUBLIC_API JSString* JS_NewMaybeExternalString(
     JSContext* cx, const char16_t* chars, size_t length,
-    const JSStringFinalizer* fin, bool* allocatedExternal);
+    const JSExternalStringCallbacks* callbacks, bool* allocatedExternal);
 
 /**
  * Return whether 'str' was created with JS_NewExternalString or
@@ -1069,10 +1084,11 @@ extern JS_PUBLIC_API JSString* JS_NewMaybeExternalString(
 extern JS_PUBLIC_API bool JS_IsExternalString(JSString* str);
 
 /**
- * Return the 'fin' arg passed to JS_NewExternalString.
+ * Return the 'callbacks' arg passed to JS_NewExternalString or
+ * JS_NewMaybeExternalString.
  */
-extern JS_PUBLIC_API const JSStringFinalizer* JS_GetExternalStringFinalizer(
-    JSString* str);
+extern JS_PUBLIC_API const JSExternalStringCallbacks*
+JS_GetExternalStringCallbacks(JSString* str);
 
 namespace JS {
 

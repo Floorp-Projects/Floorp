@@ -9,39 +9,39 @@
 using mozilla::ArrayEqual;
 using mozilla::ArrayLength;
 
-static const char16_t arr[] = {'h', 'i', ',', 'd', 'o', 'n', '\'',
-                               't', ' ', 'd', 'e', 'l', 'e', 't',
-                               'e', ' ', 'm', 'e', '\0'};
+static const char16_t arr[] = u"hi, don't delete me";
 static const size_t arrlen = ArrayLength(arr) - 1;
 
 static int finalized1 = 0;
 static int finalized2 = 0;
 
-static void finalize_str(const JSStringFinalizer* fin, char16_t* chars);
+struct ExternalStringCallbacks : public JSExternalStringCallbacks {
+  int* finalizedCount = nullptr;
 
-static const JSStringFinalizer finalizer1 = {finalize_str};
-static const JSStringFinalizer finalizer2 = {finalize_str};
+  explicit ExternalStringCallbacks(int* finalizedCount)
+      : finalizedCount(finalizedCount) {}
 
-static void finalize_str(const JSStringFinalizer* fin, char16_t* chars) {
-  if (chars && ArrayEqual(chars, arr, arrlen)) {
-    if (fin == &finalizer1) {
-      ++finalized1;
-    } else if (fin == &finalizer2) {
-      ++finalized2;
-    }
+  void finalize(char16_t* chars) const override {
+    MOZ_ASSERT(chars == arr);
+    (*finalizedCount)++;
   }
-}
+
+  size_t sizeOfBuffer(const char16_t* chars,
+                      mozilla::MallocSizeOf mallocSizeOf) const override {
+    MOZ_CRASH("Unexpected call");
+  }
+};
+
+static const ExternalStringCallbacks callbacks1(&finalized1);
+static const ExternalStringCallbacks callbacks2(&finalized2);
 
 BEGIN_TEST(testExternalStrings) {
   const unsigned N = 1000;
 
   for (unsigned i = 0; i < N; ++i) {
-    CHECK(JS_NewExternalString(cx, arr, arrlen, &finalizer1));
-    CHECK(JS_NewExternalString(cx, arr, arrlen, &finalizer2));
+    CHECK(JS_NewExternalString(cx, arr, arrlen, &callbacks1));
+    CHECK(JS_NewExternalString(cx, arr, arrlen, &callbacks2));
   }
-
-  // clear that newborn root
-  JS_NewUCStringCopyN(cx, arr, arrlen);
 
   JS_GC(cx);
 

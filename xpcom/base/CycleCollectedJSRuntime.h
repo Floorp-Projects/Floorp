@@ -155,11 +155,6 @@ class CycleCollectedJSRuntime {
                                           JS::GCNurseryProgress aProgress,
                                           JS::GCReason aReason);
   static void OutOfMemoryCallback(JSContext* aContext, void* aData);
-  /**
-   * Callback for reporting external string memory.
-   */
-  static size_t SizeofExternalStringCallback(
-      JSString* aStr, mozilla::MallocSizeOf aMallocSizeOf);
 
   static bool ContextCallback(JSContext* aCx, unsigned aOperation, void* aData);
 
