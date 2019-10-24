@@ -31,14 +31,6 @@ async function check_webm(v, enabled) {
   check("video/webm; codecs=xyz,vorbis", "");
   check("video/webm; codecs=vorbis,xyz", "");
 
-  function getPref(name) {
-    var pref = false;
-    try {
-      pref = SpecialPowers.getBoolPref(name);
-    } catch (ex) {}
-    return pref;
-  }
-
   await SpecialPowers.pushPrefEnv({ set: [["media.av1.enabled", true]] });
   check('video/webm; codecs="av1"', "probably");
 

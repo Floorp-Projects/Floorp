@@ -67,7 +67,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=778077
 
     function startTest(test, token) {
       manager.started(token);
-      v = document.createElement("video");
+      let v = document.createElement("video");
       v.src = test.name;
       v.name = test.name;
       v.preload = "metadata";

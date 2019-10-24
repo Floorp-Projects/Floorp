@@ -2194,12 +2194,12 @@ function MediaTestManager() {
 // stacks.
 function mediaTestCleanup(callback) {
   var V = document.getElementsByTagName("video");
-  for (i = 0; i < V.length; i++) {
+  for (let i = 0; i < V.length; i++) {
     removeNodeAndSource(V[i]);
     V[i] = null;
   }
   var A = document.getElementsByTagName("audio");
-  for (i = 0; i < A.length; i++) {
+  for (let i = 0; i < A.length; i++) {
     removeNodeAndSource(A[i]);
     A[i] = null;
   }

@@ -27,15 +27,13 @@ function startTest() {
   var onstopTriggered = false;
   dest.channelCount = 4;
   var expectedMimeType = 'audio/ogg; codecs=opus';
-  var totalBlobSize = 0;
   source.channelCountMode = 'explicit';
   source.connect(dest);
   var elem = document.createElement('audio');
   elem.srcObject = dest.stream;
-  mMediaStream = dest.stream;
   source.start(0);
   elem.play();
-  mMediaRecorder = new MediaRecorder(dest.stream);
+  let mMediaRecorder = new MediaRecorder(dest.stream);
   mMediaRecorder.onwarning = function() {
     ok(false, 'onwarning unexpectedly fired');
   };
@@ -52,7 +50,6 @@ function startTest() {
   };
   mMediaRecorder.ondataavailable = function (e) {
     ok(e.data.size > 0, 'check blob has data');
-    totalBlobSize += e.data.size;
     is(e.data.type, expectedMimeType, 'blob should have expected mimetype');
     if (!stopTriggered) {
       is(mMediaRecorder.mimeType, expectedMimeType, 'recorder should have expected mimetype');

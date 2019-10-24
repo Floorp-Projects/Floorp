@@ -85,7 +85,7 @@ async function pushGetUserMediaTestPrefs({
 // names already set in the prefs. If no loopback device name can be found then
 // prefs are setup such that a fake device is used.
 async function setupGetUserMediaTestPrefs() {
-  prefRequests = {};
+  let prefRequests = {};
   let audioLoopDev = SpecialPowers.getCharPref("media.audio_loopback_dev", "");
   if (audioLoopDev) {
     prefRequests.fakeAudio = false;
