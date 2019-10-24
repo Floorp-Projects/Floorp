@@ -2,7 +2,7 @@
 
 # sessionToken
 
-`val sessionToken: CustomTabsSessionToken?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/CustomTabConfig.kt#L43)
+`val sessionToken: CustomTabsSessionToken?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/CustomTabConfig.kt#L44)
 
 The token associated with the custom tab.
 

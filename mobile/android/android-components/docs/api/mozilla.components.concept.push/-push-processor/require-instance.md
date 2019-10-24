@@ -2,4 +2,4 @@
 
 # requireInstance
 
-`val requireInstance: `[`PushProcessor`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/push/src/main/java/mozilla/components/concept/push/PushProcessor.kt#L56)
+`val requireInstance: `[`PushProcessor`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/push/src/main/java/mozilla/components/concept/push/PushProcessor.kt#L61)

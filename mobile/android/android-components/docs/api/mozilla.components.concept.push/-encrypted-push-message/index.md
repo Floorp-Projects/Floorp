@@ -2,7 +2,7 @@
 
 # EncryptedPushMessage
 
-`data class EncryptedPushMessage` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/push/src/main/java/mozilla/components/concept/push/PushProcessor.kt#L66)
+`data class EncryptedPushMessage` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/push/src/main/java/mozilla/components/concept/push/PushProcessor.kt#L71)
 
 A push message holds the information needed to pass the message on to the appropriate receiver.
 

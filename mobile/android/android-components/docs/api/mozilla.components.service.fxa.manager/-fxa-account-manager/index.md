@@ -54,3 +54,9 @@ Class is 'open' to facilitate testing.
 | [supportedSyncEngines](supported-sync-engines.md) | `fun supportedSyncEngines(): `[`Set`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-set/index.html)`<`[`SyncEngine`](../../mozilla.components.service.fxa/-sync-engine/index.md)`>?` |
 | [syncNowAsync](sync-now-async.md) | `fun syncNowAsync(reason: `[`SyncReason`](../../mozilla.components.service.fxa.sync/-sync-reason/index.md)`, debounce: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = false): Deferred<`[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`>`<br>Request an immediate synchronization, as configured according to [syncConfig](#). |
 | [updateProfileAsync](update-profile-async.md) | `fun updateProfileAsync(): Deferred<`[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`>` |
+
+### Extension Functions
+
+| Name | Summary |
+|---|---|
+| [withConstellation](../../mozilla.components.service.fxa.manager.ext/with-constellation.md) | `fun `[`FxaAccountManager`](./index.md)`.withConstellation(block: (`[`DeviceConstellation`](../../mozilla.components.concept.sync/-device-constellation/index.md)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Executes [block](../../mozilla.components.service.fxa.manager.ext/with-constellation.md#mozilla.components.service.fxa.manager.ext$withConstellation(mozilla.components.service.fxa.manager.FxaAccountManager, kotlin.Function1((mozilla.components.concept.sync.DeviceConstellation, kotlin.Unit)))/block) and provides the [DeviceConstellation](../../mozilla.components.concept.sync/-device-constellation/index.md) of an [OAuthAccount](../../mozilla.components.concept.sync/-o-auth-account/index.md) if present. |

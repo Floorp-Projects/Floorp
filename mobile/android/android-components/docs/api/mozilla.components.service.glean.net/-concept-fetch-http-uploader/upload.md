@@ -2,9 +2,7 @@
 
 # upload
 
-`fun upload(url: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, data: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, headers: `[`HeadersList`](../-headers-list.md)`): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/net/ConceptFetchHttpUploader.kt#L48)
-
-Overrides [PingUploader.upload](../-ping-uploader/upload.md)
+`fun upload(url: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, data: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, headers: HeadersList): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/net/ConceptFetchHttpUploader.kt#L50)
 
 Synchronously upload a ping to a server.
 
@@ -14,7 +12,7 @@ Synchronously upload a ping to a server.
 
 `data` - the serialized text data to send
 
-`headers` - a [HeadersList](../-headers-list.md) containing String to String [Pair](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-pair/index.html) with
+`headers` - a [HeadersList](#) containing String to String [Pair](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-pair/index.html) with
     the first entry being the header name and the second its value.
 
 **Return**

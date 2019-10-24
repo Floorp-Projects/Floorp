@@ -2,7 +2,7 @@
 
 # ServiceUnavailable
 
-`data class ServiceUnavailable : `[`PushError`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/push/src/main/java/mozilla/components/concept/push/PushProcessor.kt#L98)
+`data class ServiceUnavailable : `[`PushError`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/push/src/main/java/mozilla/components/concept/push/PushProcessor.kt#L103)
 
 ### Constructors
 

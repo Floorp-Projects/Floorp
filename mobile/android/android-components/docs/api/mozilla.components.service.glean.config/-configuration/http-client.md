@@ -2,7 +2,7 @@
 
 # httpClient
 
-`val httpClient: `[`PingUploader`](../../mozilla.components.service.glean.net/-ping-uploader/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/config/Configuration.kt#L36)
+`val httpClient: PingUploader` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/config/Configuration.kt#L26)
 
 The HTTP client implementation to use for uploading pings.
 

@@ -2,4 +2,4 @@
 
 # EXTRA_ADDITIONAL_TRUSTED_ORIGINS
 
-`const val EXTRA_ADDITIONAL_TRUSTED_ORIGINS: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/CustomTabConfig.kt#L48)
+`const val EXTRA_ADDITIONAL_TRUSTED_ORIGINS: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/CustomTabConfig.kt#L50)
