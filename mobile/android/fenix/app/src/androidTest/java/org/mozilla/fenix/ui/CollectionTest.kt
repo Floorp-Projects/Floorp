@@ -42,25 +42,25 @@ class CollectionTest {
         mockWebServer.shutdown()
     }
 
-    @Ignore
+    @Ignore("not implemented")
     @Test
     fun AddTabToCollectionTest() {
         // open a webpage, and add currently opened tab to existing collection
     }
 
-    @Ignore
+    @Ignore("not implemented")
     @Test
     fun OpenTabFromCollectionTest() {
         // Open one tab from Collection in the Homescreen view
     }
 
-    @Ignore
+    @Ignore("not implemented")
     @Test
     fun RenameCollectionTest() {
         // Rename Collection from the Homescreen
     }
 
-    @Ignore
+    @Ignore("not implemented")
     @Test
     fun DeleteCollectionTest() {
         // Delete Collection from the Homescreen
