@@ -333,20 +333,25 @@ void Classifier::Reset() {
   LOG(("Reset() is called so we interrupt the update."));
   mUpdateInterrupted = true;
 
-  RefPtr<Classifier> self = this;
-  auto resetFunc = [self] {
-    if (self->mIsClosed) {
+  // We don't pass the ref counted object 'Classifier' to resetFunc because we
+  // don't want to release 'Classifier in the update thread, which triggers an
+  // assertion when LazyIdelUpdate thread is not created and removed by the same
+  // thread (worker thread). Since |resetFuc| is a synchronous call, we can just
+  // pass the reference of Classifier because Classifier's life cycle is
+  // guarantee longer than |resetFunc|.
+  auto resetFunc = [&] {
+    if (this->mIsClosed) {
       return;  // too late to reset, bail
     }
-    self->DropStores();
+    this->DropStores();
 
-    self->mRootStoreDirectory->Remove(true);
-    self->mBackupDirectory->Remove(true);
-    self->mUpdatingDirectory->Remove(true);
-    self->mToDeleteDirectory->Remove(true);
+    this->mRootStoreDirectory->Remove(true);
+    this->mBackupDirectory->Remove(true);
+    this->mUpdatingDirectory->Remove(true);
+    this->mToDeleteDirectory->Remove(true);
 
-    self->CreateStoreDirectory();
-    self->RegenActiveTables();
+    this->CreateStoreDirectory();
+    this->RegenActiveTables();
   };
 
   if (!mUpdateThread) {
