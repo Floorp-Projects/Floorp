@@ -12,8 +12,10 @@
 
 [package]
 name = "encoding_c"
-version = "0.9.5"
+version = "0.9.7"
 authors = ["Henri Sivonen <hsivonen@hsivonen.fi>"]
+build = "build.rs"
+links = "encoding_c"
 description = "C API for encoding_rs"
 homepage = "https://docs.rs/encoding_c/"
 documentation = "https://docs.rs/encoding_c/"

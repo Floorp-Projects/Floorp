@@ -20,6 +20,12 @@ compiled with unwinding enabled.
 
 ## Release Notes
 
+### 0.2.5
+
+* Specify a `links` value in the Cargo manifest.
+* Emit an `include_dir` variable from build script so that other build scripts
+  depending on this crate can rely on it.
+
 ### 0.2.4
 
 * Documentation-only fix.

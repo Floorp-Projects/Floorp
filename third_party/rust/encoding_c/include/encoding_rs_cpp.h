@@ -286,7 +286,7 @@ class Decoder final {
    * bytes taking into account the state of the decoder.
    *
    * Returns `std::nullopt` if the decoder is not in a neutral state, including
-   * waiting for the BOM or if the encoding is never Latin-byte-compatible.
+   * waiting for the BOM, or if the encoding is never Latin1-byte-compatible.
    *
    * Otherwise returns the index of the first byte whose unsigned value doesn't
    * directly correspond to the decoded Unicode scalar value, or the length
@@ -901,8 +901,8 @@ class Encoding final {
    * (https://encoding.spec.whatwg.org/#utf-8-decode-without-bom-or-fail)
    * spec concept.
    *
-   * Returns `None` if a malformed sequence was encountered and the result
-   * of the decode as `Some(String)` otherwise.
+   * Returns `std::nullopt` if a malformed sequence was encountered and the result
+   * of the decode as `std::optional<std::string>` otherwise.
    *
    * _Note:_ It is wrong to use this when the input buffer represents only
    * a segment of the input instead of the whole input. Use
@@ -931,6 +931,7 @@ class Encoding final {
       string.resize(written);
       return string;
     }
+    return std::nullopt;
   }
 
   /**
@@ -1047,8 +1048,8 @@ class Encoding final {
    * (https://encoding.spec.whatwg.org/#utf-8-decode-without-bom-or-fail)
    * spec concept.
    *
-   * Returns `None` if a malformed sequence was encountered and the result
-   * of the decode as `Some(String)` otherwise.
+   * Returns `std::nullopt` if a malformed sequence was encountered and the result
+   * of the decode as `std::optional<std::u16string>` otherwise.
    *
    * _Note:_ It is wrong to use this when the input buffer represents only
    * a segment of the input instead of the whole input. Use
@@ -1073,6 +1074,7 @@ class Encoding final {
       string.resize(written);
       return string;
     }
+    return std::nullopt;
   }
 
   /**

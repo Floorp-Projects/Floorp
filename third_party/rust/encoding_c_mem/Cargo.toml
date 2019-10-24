@@ -13,8 +13,9 @@
 [package]
 edition = "2018"
 name = "encoding_c_mem"
-version = "0.2.4"
+version = "0.2.5"
 authors = ["Henri Sivonen <hsivonen@hsivonen.fi>"]
+links = "encoding_c_mem"
 description = "C API for encoding_rs::mem"
 homepage = "https://docs.rs/encoding_c_mem/"
 documentation = "https://docs.rs/encoding_c_mem/"
