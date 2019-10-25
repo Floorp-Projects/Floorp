@@ -111,16 +111,18 @@ events:
       preference_key:
         description: "The preference key for the switch preference the user toggled. We currently track:
           show_search_suggestions, remote_debugging, telemetry, tracking_protection, search_bookmarks,
-          search_browsing_history, show_clipboard_suggestions, and show_search_shortcuts"
+          search_browsing_history, show_clipboard_suggestions, show_search_shortcuts, and open_links_in_a_private_tab"
       enabled:
         description: "Whether or not the preference is *now* enabled"
     bugs:
     - https://github.com/mozilla-mobile/fenix/issue/975
     - https://github.com/mozilla-mobile/fenix/issue/5094
+    - https://github.com/mozilla-mobile/fenix/issues/5737
     data_reviews:
     - https://github.com/mozilla-mobile/fenix/pull/1896
     - https://github.com/mozilla-mobile/fenix/pull/5704
     - https://github.com/mozilla-mobile/fenix/pull/5886
+    - https://github.com/mozilla-mobile/fenix/pull/5975
     notification_emails:
     - fenix-core@mozilla.com
     expires: "2020-03-01"
@@ -135,6 +137,20 @@ events:
       - https://github.com/mozilla-mobile/fenix/issue/5021
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/5090
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-03-01"
+  opened_link:
+    type: event
+    description: >
+        A user opened a link with Fenix
+    extra_keys:
+      mode:
+        description: "The mode the link was opened in. Either 'PRIVATE' or 'NORMAL'"
+    bugs:
+     - https://github.com/mozilla-mobile/fenix/issue/5737
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/5975
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-03-01"

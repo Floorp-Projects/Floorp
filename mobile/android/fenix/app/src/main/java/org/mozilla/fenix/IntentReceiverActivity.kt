@@ -13,6 +13,7 @@ import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import mozilla.components.feature.intent.processing.TabIntentProcessor
 import mozilla.components.support.utils.Browsers
+import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.customtabs.ExternalAppBrowserActivity
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
@@ -47,14 +48,26 @@ class IntentReceiverActivity : Activity() {
         Which only appears if the user doesn't have a default set. */
         if (didLaunchPrivateLink && Browsers.all(this).isDefaultBrowser) {
             this.settings().openLinksInAPrivateTab = true
+            components.analytics.metrics.track(Event.PreferenceToggled(
+                preferenceKey = getString(R.string.pref_key_open_links_in_a_private_tab),
+                enabled = true,
+                context = applicationContext
+            ))
         } else if (!Browsers.all(this).isDefaultBrowser) {
             /* If the user has unset us as the default browser, unset openLinksInAPrivateTab */
             this.settings().openLinksInAPrivateTab = false
+            components.analytics.metrics.track(Event.PreferenceToggled(
+                preferenceKey = getString(R.string.pref_key_open_links_in_a_private_tab),
+                enabled = false,
+                context = applicationContext
+            ))
         }
 
         val tabIntentProcessor = if (settings().openLinksInAPrivateTab || didLaunchPrivateLink) {
+            components.analytics.metrics.track(Event.OpenedLink(Event.OpenedLink.Mode.PRIVATE))
             components.intentProcessors.privateIntentProcessor
         } else {
+            components.analytics.metrics.track(Event.OpenedLink(Event.OpenedLink.Mode.NORMAL))
             components.intentProcessors.intentProcessor
         }
 

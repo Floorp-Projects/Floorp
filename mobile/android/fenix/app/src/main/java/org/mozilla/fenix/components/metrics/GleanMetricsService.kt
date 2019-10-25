@@ -416,6 +416,10 @@ private val Event.wrapper: EventWrapper<*>?
             { TrackingProtection.etpSettingChanged.record(it) },
             { TrackingProtection.etpSettingChangedKeys.valueOf(it) }
         )
+        is Event.OpenedLink -> EventWrapper(
+            { Events.openedLink.record(it) },
+            { Events.openedLinkKeys.valueOf(it) }
+        )
         // Don't record other events in Glean:
         is Event.AddBookmark -> null
         is Event.OpenedBookmark -> null
