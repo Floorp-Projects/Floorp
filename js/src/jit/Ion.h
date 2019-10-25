@@ -235,7 +235,7 @@ inline bool TooManyFormalArguments(unsigned nargs) {
 
 inline size_t NumLocalsAndArgs(JSScript* script) {
   size_t num = 1 /* this */ + script->nfixed();
-  if (JSFunction* fun = script->functionNonDelazifying()) {
+  if (JSFunction* fun = script->function()) {
     num += fun->nargs();
   }
   return num;

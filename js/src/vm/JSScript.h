@@ -2730,8 +2730,9 @@ class JSScript : public js::BaseScript {
   js::LazyScript* maybeLazyScript() { return lazyScript; }
 
   // Canonical function for the script, if it has a function. For global and
-  // eval scripts this is nullptr.
-  JSFunction* functionNonDelazifying() const {
+  // eval scripts this is nullptr. The canonical function is never lazy if the
+  // script exists.
+  JSFunction* function() const {
     if (bodyScope()->is<js::FunctionScope>()) {
       return bodyScope()->as<js::FunctionScope>().canonicalFunction();
     }
@@ -2801,7 +2802,7 @@ class JSScript : public js::BaseScript {
    * If this script has a function associated to it, then it is not the
    * top-level of a file.
    */
-  bool isTopLevel() { return code() && !functionNonDelazifying(); }
+  bool isTopLevel() { return code() && !function(); }
 
   /* Ensure the script has a JitScript. */
   inline bool ensureHasJitScript(JSContext* cx, js::jit::AutoKeepJitScripts&);
@@ -3053,13 +3054,6 @@ class JSScript : public js::BaseScript {
 
   inline JSFunction* getFunction(size_t index);
   inline JSFunction* getFunction(jsbytecode* pc);
-
-  JSFunction* function() const {
-    if (functionNonDelazifying()) {
-      return functionNonDelazifying();
-    }
-    return nullptr;
-  }
 
   inline js::RegExpObject* getRegExp(size_t index);
   inline js::RegExpObject* getRegExp(jsbytecode* pc);

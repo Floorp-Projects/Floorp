@@ -237,7 +237,7 @@ class CompilerFrameInfo : public FrameInfo {
   MOZ_MUST_USE bool init(TempAllocator& alloc);
 
   size_t nlocals() const { return script->nfixed(); }
-  size_t nargs() const { return script->functionNonDelazifying()->nargs(); }
+  size_t nargs() const { return script->function()->nargs(); }
 
  private:
   inline StackValue* rawPush() {

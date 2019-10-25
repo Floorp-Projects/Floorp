@@ -728,7 +728,7 @@ class JSFunction : public js::NativeObject {
   // builtins don't have a lazy script so in that case we also return nullptr.
   JSFunction* maybeCanonicalFunction() const {
     if (hasScript()) {
-      return nonLazyScript()->functionNonDelazifying();
+      return nonLazyScript()->function();
     }
     if (hasLazyScript()) {
       return lazyScript()->functionNonDelazifying();
