@@ -406,7 +406,8 @@ class TestResolver(MozbuildObject):
     def tests(self):
         if not self._tests_loaded:
             self._reset_state()
-            self._tests = list(self.load_tests())
+            for test in self.load_tests():
+                self._tests.append(test)
             self._tests_loaded = True
         return self._tests
 
@@ -464,6 +465,7 @@ class TestResolver(MozbuildObject):
 
         if flavor in (None, 'puppeteer') and any(self.is_puppeteer_path(p) for p in paths):
             self.add_puppeteer_manifest_data()
+
         if flavor in (None, 'web-platform-tests') and any(self.is_wpt_path(p) for p in paths):
             self.add_wpt_manifest_data()
 
@@ -570,7 +572,7 @@ class TestResolver(MozbuildObject):
                         "here": os.path.dirname(path),
                         "manifest": data["manifest_path"],
                         "name": test.id,
-                        "file_relpath": path,
+                        "file_relpath": src_path,
                         "head": "",
                         "support-files": "",
                         "subsuite": test_type,
