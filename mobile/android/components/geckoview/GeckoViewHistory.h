@@ -50,7 +50,6 @@ class GeckoViewHistory final : public mozilla::BaseHistory,
 
   void QueryVisitedStateInContentProcess();
   void QueryVisitedStateInParentProcess();
-  void DispatchNotifyVisited(nsIURI* aURI, mozilla::dom::Document* aDocument);
 
   static mozilla::StaticRefPtr<GeckoViewHistory> sHistory;
 

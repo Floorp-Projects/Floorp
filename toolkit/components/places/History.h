@@ -158,19 +158,6 @@ class History final : public BaseHistory,
   const mozIStorageConnection* GetConstDBConn();
 
   /**
-   * Mark all links for the given URI in the given document as visited. Used
-   * within NotifyVisited.
-   */
-  void NotifyVisitedForDocument(nsIURI* aURI,
-                                mozilla::dom::Document* aDocument);
-
-  /**
-   * Dispatch a runnable for the document passed in which will call
-   * NotifyVisitedForDocument with the correct URI and Document.
-   */
-  void DispatchNotifyVisited(nsIURI* aURI, mozilla::dom::Document* aDocument);
-
-  /**
    * The database handle.  This is initialized lazily by the first call to
    * GetDBConn(), so never use it directly, or, if you really need, always
    * invoke GetDBConn() before.
