@@ -22,6 +22,7 @@
 #include "mozilla/net/CookieSettings.h"
 #include "mozilla/net/HttpBaseChannel.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/StaticPrefs_network.h"
 #include "mozilla/StyleSheet.h"
 
 static mozilla::LazyLogModule gReferrerInfoLog("ReferrerInfo");
@@ -59,7 +60,6 @@ static uint32_t sDefaultTrackerRp = DEFAULT_TRACKER_RP;
 static uint32_t defaultPrivateRp = DEFAULT_PRIVATE_RP;
 static uint32_t defaultTrackerPrivateRp = DEFAULT_TRACKER_PRIVATE_RP;
 
-static bool sUserSpoofReferrerSource = false;
 static bool sUserHideOnionReferrerSource = false;
 static uint32_t sUserReferrerSendingPolicy = 0;
 static uint32_t sUserXOriginSendingPolicy = 0;
@@ -73,8 +73,6 @@ static void CachePreferrenceValue() {
     return;
   }
 
-  Preferences::AddBoolVarCache(&sUserSpoofReferrerSource,
-                               "network.http.referer.spoofSource");
   Preferences::AddBoolVarCache(&sUserHideOnionReferrerSource,
                                "network.http.referer.hideOnionSource");
   Preferences::AddUintVarCache(&sUserReferrerSendingPolicy,
@@ -1280,7 +1278,7 @@ nsresult ReferrerInfo::ComputeReferrer(nsIHttpChannel* aChannel) {
 
   // Handle user pref network.http.referer.spoofSource, send spoofed referrer if
   // desired
-  if (sUserSpoofReferrerSource) {
+  if (StaticPrefs::network_http_referer_spoofSource()) {
     nsCOMPtr<nsIURI> userSpoofReferrer;
     rv = NS_GetURIWithoutRef(uri, getter_AddRefs(userSpoofReferrer));
     if (NS_WARN_IF(NS_FAILED(rv))) {
