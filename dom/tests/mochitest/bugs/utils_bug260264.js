@@ -38,27 +38,23 @@ function send(element, event, handler) {
     while (n-- > 0) {
       var win = wins.pop();
       if (win) {
-        let openedWindowID = SpecialPowers.getDOMWindowUtils(win).outerWindowID;
+        let openedBrowsingContextID = SpecialPowers.getBrowsingContextID(win);
         promises.push(
           (function(openedWindow) {
             return new Promise(function(resolve) {
               let observer = {
                 observe(subject) {
-                  let wrapped = SpecialPowers.wrap(subject);
-                  let winID = wrapped.QueryInterface(
-                    SpecialPowers.Ci.nsISupportsPRUint64
-                  ).data;
-                  if (winID == openedWindowID) {
+                  if (subject.id == openedBrowsingContextID) {
                     SpecialPowers.removeObserver(
                       observer,
-                      "outer-window-destroyed"
+                      "browsing-context-discarded"
                     );
                     SimpleTest.executeSoon(resolve);
                   }
                 },
               };
 
-              SpecialPowers.addObserver(observer, "outer-window-destroyed");
+              SpecialPowers.addObserver(observer, "browsing-context-discarded");
             });
           })(win)
         );
