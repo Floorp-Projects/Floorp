@@ -29,7 +29,6 @@ DevToolsModules(
     'menu-item.js',
     'menu.js',
     'selection.js',
-    'sidebar.js',
     'source-map-url-service.js',
     'store-provider.js',
     'store.js',
