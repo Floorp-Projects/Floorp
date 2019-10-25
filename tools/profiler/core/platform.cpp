@@ -244,49 +244,68 @@ class PSMutex : private ::mozilla::detail::MutexImpl {
  public:
   PSMutex()
       : ::mozilla::detail::MutexImpl(
-            ::mozilla::recordreplay::Behavior::DontPreserve),
-        mIsLocked(false) {}
+            ::mozilla::recordreplay::Behavior::DontPreserve) {}
+
   void Lock() {
+    const int tid = profiler_current_thread_id();
+    MOZ_ASSERT(tid != 0);
+
+    // This is only designed to catch recursive locking:
+    // - If the current thread doesn't own the mutex, `mOwningThreadId` must be
+    //   zero or a different thread id written by another thread; it may change
+    //   again at any time, but never to the current thread's id.
+    // - If the current thread owns the mutex, `mOwningThreadId` must be its id.
+    MOZ_ASSERT(mOwningThreadId != tid);
+
     ::mozilla::detail::MutexImpl::lock();
-    // Set mIsLocked to true, don't trust this value too much!
-    mIsLocked = true;
+
+    // We now hold the mutex, it should have been in the unlocked state before.
+    MOZ_ASSERT(mOwningThreadId == 0);
+    // And we can write our own thread id.
+    mOwningThreadId = tid;
   }
 
   void Unlock() {
-    mIsLocked = false;
+    // This should never trigger! But check just in case something has gone
+    // very wrong (e.g., memory corruption).
+    AssertCurrentThreadOwns();
+
+    // We're still holding the mutex here, so it's safe to just reset
+    // `mOwningThreadId`.
+    mOwningThreadId = 0;
+
     ::mozilla::detail::MutexImpl::unlock();
   }
 
-  // Warning! Do not mis-use this method.
-  //
-  // When the native allocations feature is turned on, memory hooks run on
-  // every single allocation. For a subset of these allocations, the stack
-  // gets sampled by running profiler_get_backtrace(), which locks the PSMutex.
-  //
-  // An issue arises when allocating while the profiler is locked FOR THE
-  // CURRENT THREAD. In this situation, if profiler_get_backtrace() were to be
-  // run, it would try to re-acquire this lock and deadlock. In order to guard
-  // against this deadlock, this method provides a check to see if the mutex is
-  // already locked.
-  //
-  // This method is not perfect, and will return many false positives when the
-  // mutex is modified by ANOTHER THREAD. In this case we will fail to collect a
-  // stack when it is valid to do so. While not a perfect solution, it is an
-  // acceptable limitation in order to have full-featured stack information.
-  //
-  // However, despite these false positives from another thread, we will not get
-  // false positive or false negatives from THE CURRENT THREAD, which is the
-  // only situation where we will get a deadlock.
-  //
-  // This non-perfect, but functional solution could be worked around if the
-  // profile_get_backtrace() mechanism were to remove all allocations.
-  // See Bug 1578792 for tracking this work.
-  bool CouldBeLockedOnCurrentThread() const { return mIsLocked; }
+  // Does the current thread own this mutex?
+  // False positive or false negatives are not possible:
+  // - If `true`, the current thread owns the mutex, it has written its own
+  //   `mOwningThreadId` when taking the lock, and no-one else can modify it
+  //   until the current thread itself unlocks the mutex.
+  // - If `false`, the current thread does not own the mutex, therefore either
+  //   `mOwningThreadId` is zero (unlocked), or it is a different thread id
+  //   written by another thread, but it can never be the current thread's id
+  //   until the current thread itself locks the mutex.
+  bool IsLockedOnCurrentThread() const {
+    return mOwningThreadId == profiler_current_thread_id();
+  }
 
-  // This value protects against re-entering in the current thread from a
-  // a memory hook when the profiler state is locked BY THE CURRENT THREAD.
-  Atomic<bool, MemoryOrdering::Relaxed, recordreplay::Behavior::DontPreserve>
-      mIsLocked;
+  void AssertCurrentThreadOwns() const {
+    MOZ_ASSERT(IsLockedOnCurrentThread());
+  }
+
+  void AssertCurrentThreadDoesNotOwn() const {
+    MOZ_ASSERT(!IsLockedOnCurrentThread());
+  }
+
+ private:
+  // Zero when unlocked, or the thread id of the owning thread.
+  // This should only be used to compare with the current thread id; any other
+  // number (0 or other id) could change at any time because the current thread
+  // wouldn't own the lock.
+  Atomic<int, MemoryOrdering::SequentiallyConsistent,
+         recordreplay::Behavior::DontPreserve>
+      mOwningThreadId{0};
 };
 
 // RAII class to lock the profiler mutex.
@@ -4350,12 +4369,8 @@ void profiler_add_js_allocation_marker(JS::RecordAllocationInfo&& info) {
                                 profiler_get_backtrace()));
 }
 
-// Memory hooks can re-enter into the locked profiler state. This function
-// provides a check to avoid sampling memory allocations while the profiler
-// could potentially be locked on the current thread. There will be many false
-// positives with this check. See PSMutex::CouldBeLockedOnCurrentThread.
-bool profiler_could_be_locked_on_current_thread() {
-  return gPSMutex.CouldBeLockedOnCurrentThread();
+bool profiler_is_locked_on_current_thread() {
+  return gPSMutex.IsLockedOnCurrentThread();
 }
 
 void profiler_add_native_allocation_marker(const int64_t aSize) {
