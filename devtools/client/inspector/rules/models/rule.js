@@ -909,15 +909,10 @@ class Rule {
         url,
         line,
         column,
-        (enabled, sourceUrl, sourceLine, sourceColumn, sourceId) => {
+        (enabled, sourceUrl, sourceLine, sourceColumn) => {
           if (enabled) {
             // Only update the source location if source map is in use.
-            this.updateSourceLocation(
-              sourceUrl,
-              sourceLine,
-              sourceColumn,
-              sourceId
-            );
+            this.updateSourceLocation(sourceUrl, sourceLine, sourceColumn);
           }
         }
       );
@@ -936,15 +931,12 @@ class Rule {
    *         The original line number.
    * @param  {number} column
    *         The original column number.
-   * @param  {number} sourceId
-   *         The original sourceId.
    */
-  updateSourceLocation(url, line, column, sourceId) {
+  updateSourceLocation(url, line, column) {
     this._sourceLocation = {
       column,
       line,
       url,
-      sourceId,
     };
     this.store.dispatch(
       updateSourceLink(this.domRule.actorID, this.sourceLink)
