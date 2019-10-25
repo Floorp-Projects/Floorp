@@ -415,7 +415,45 @@ nsFind::SetEntireWord(bool aEntireWord) {
 // are intermixed in the dom. We don't have string classes which can deal with
 // intermixed strings, so all the handling is done explicitly here.
 
-char16_t nsFind::PeekNextChar(State& aState) const {
+char32_t nsFind::DecodeChar(const char16_t* t2b, int32_t* index) const {
+  char32_t c = t2b[*index];
+  if (mFindBackward) {
+    if (*index >= 1 && NS_IS_SURROGATE_PAIR(t2b[*index - 1], t2b[*index])) {
+      c = SURROGATE_TO_UCS4(t2b[*index - 1], t2b[*index]);
+      (*index)--;
+    }
+  } else {
+    if (NS_IS_SURROGATE_PAIR(t2b[*index], t2b[*index + 1])) {
+      c = SURROGATE_TO_UCS4(t2b[*index], t2b[*index + 1]);
+      (*index)++;
+    }
+  }
+  return c;
+}
+
+bool nsFind::BreakInBetween(char32_t x, char32_t y) const {
+  char16_t x16[2], y16[2];
+  int32_t x16len, y16len;
+  if (IS_IN_BMP(x)) {
+    x16[0] = (char16_t)x;
+    x16len = 1;
+  } else {
+    x16[0] = H_SURROGATE(x);
+    x16[1] = L_SURROGATE(x);
+    x16len = 2;
+  }
+  if (IS_IN_BMP(y)) {
+    y16[0] = (char16_t)y;
+    y16len = 1;
+  } else {
+    y16[0] = H_SURROGATE(y);
+    y16[1] = L_SURROGATE(y);
+    y16len = 2;
+  }
+  return mWordBreaker->BreakInBetween(x16, x16len, y16, y16len);
+}
+
+char32_t nsFind::PeekNextChar(State& aState) const {
   // We need to restore the necessary state before this function returns.
   StateRestorer restorer(aState);
 
@@ -437,7 +475,7 @@ char16_t nsFind::PeekNextChar(State& aState) const {
   MOZ_ASSERT(len);
 
   int32_t index = mFindBackward ? len - 1 : 0;
-  return t1b ? CHAR_TO_UNICHAR(t1b[index]) : t2b[index];
+  return t1b ? CHAR_TO_UNICHAR(t1b[index]) : DecodeChar(t2b, &index);
 }
 
 #define NBSP_CHARCODE (CHAR_TO_UNICHAR(160))
@@ -518,10 +556,10 @@ nsFind::Find(const nsAString& aPatText, nsRange* aSearchRange,
   nsINode* endNode = aEndPoint->GetEndContainer();
   uint32_t endOffset = aEndPoint->EndOffset();
 
-  char16_t c = 0;
-  char16_t patc = 0;
-  char16_t prevChar = 0;
-  char16_t prevCharInMatch = 0;
+  char32_t c = 0;
+  char32_t patc = 0;
+  char32_t prevChar = 0;
+  char32_t prevCharInMatch = 0;
 
   State state(mFindBackward, *root, *aStartPoint);
   Text* current = nullptr;
@@ -627,12 +665,13 @@ nsFind::Find(const nsAString& aPatText, nsRange* aSearchRange,
     // Save the previous character for word boundary detection
     prevChar = c;
     // The two characters we'll be comparing:
-    c = (t2b ? t2b[findex] : CHAR_TO_UNICHAR(t1b[findex]));
-    patc = patStr[pindex];
+    c = (t2b ? DecodeChar(t2b, &findex) : CHAR_TO_UNICHAR(t1b[findex]));
+    patc = DecodeChar(patStr, &pindex);
 
-    DEBUG_FIND_PRINTF("Comparing '%c'=%x to '%c' (%d of %d), findex=%d%s\n",
-                      (char)c, (int)c, patc, pindex, patLen, findex,
-                      inWhitespace ? " (inWhitespace)" : "");
+    DEBUG_FIND_PRINTF(
+        "Comparing '%c'=%#x to '%c'=%#x (%d of %d), findex=%d%s\n", (char)c,
+        (int)c, (char)patc, (int)patc, pindex, patLen, findex,
+        inWhitespace ? " (inWhitespace)" : "");
 
     // Do we need to go back to non-whitespace mode? If inWhitespace, then this
     // space in the pat str has already matched at least one space in the
@@ -648,7 +687,7 @@ nsFind::Find(const nsAString& aPatText, nsRange* aSearchRange,
         NS_ASSERTION(false, "Missed a whitespace match");
       }
 #endif
-      patc = patStr[pindex];
+      patc = DecodeChar(patStr, &pindex);
     }
     if (!inWhitespace && IsSpace(patc)) {
       inWhitespace = true;
@@ -702,7 +741,7 @@ nsFind::Find(const nsAString& aPatText, nsRange* aSearchRange,
     wordBreakPrev = false;
     if (mWordBreaker) {
       if (prevChar == NBSP_CHARCODE) prevChar = CHAR_TO_UNICHAR(' ');
-      wordBreakPrev = mWordBreaker->BreakInBetween(&prevChar, 1, &c, 1);
+      wordBreakPrev = BreakInBetween(prevChar, c);
     }
 
     // Compare. Match if we're in whitespace and c is whitespace, or if the
@@ -725,6 +764,7 @@ nsFind::Find(const nsAString& aPatText, nsRange* aSearchRange,
       if (!matchAnchorNode) {
         matchAnchorNode = state.GetCurrentNode();
         matchAnchorOffset = findex;
+        if (!IS_IN_BMP(c)) matchAnchorOffset -= incr;
       }
 
       // Are we done?
@@ -739,17 +779,20 @@ nsFind::Find(const nsAString& aPatText, nsRange* aSearchRange,
 
           char16_t nextChar;
           // If still in array boundaries, get nextChar.
-          if (mFindBackward ? (nextfindex >= 0) : (nextfindex < fragLen))
-            nextChar =
-                (t2b ? t2b[nextfindex] : CHAR_TO_UNICHAR(t1b[nextfindex]));
-          // Get next character from the next node.
-          else
+          if (mFindBackward ? (nextfindex >= 0) : (nextfindex < fragLen)) {
+            if (t2b)
+              nextChar = DecodeChar(t2b, &nextfindex);
+            else
+              nextChar = CHAR_TO_UNICHAR(t1b[nextfindex]);
+          } else {
+            // Get next character from the next node.
             nextChar = PeekNextChar(state);
+          }
 
           if (nextChar == NBSP_CHARCODE) nextChar = CHAR_TO_UNICHAR(' ');
 
           // If a word break isn't there when it needs to be, reset search.
-          if (!mWordBreaker->BreakInBetween(&c, 1, &nextChar, 1)) {
+          if (!BreakInBetween(c, nextChar)) {
             matchAnchorNode = nullptr;
             continue;
           }
