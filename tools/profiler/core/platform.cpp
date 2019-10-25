@@ -1015,40 +1015,6 @@ class ActivePS {
     sInstance->mDeadProfiledPages.clear();
   }
 
-#if !defined(RELEASE_OR_BETA)
-  static void UnregisterIOInterposer(PSLockRef) {
-    MOZ_ASSERT(sInstance);
-    if (!sInstance->mInterposeObserver) {
-      return;
-    }
-
-    IOInterposer::Unregister(IOInterposeObserver::OpAll,
-                             sInstance->mInterposeObserver);
-
-    sInstance->mInterposeObserver = nullptr;
-  }
-
-  static void PauseIOInterposer(PSLockRef) {
-    MOZ_ASSERT(sInstance);
-    if (!sInstance->mInterposeObserver) {
-      return;
-    }
-
-    IOInterposer::Unregister(IOInterposeObserver::OpAll,
-                             sInstance->mInterposeObserver);
-  }
-
-  static void ResumeIOInterposer(PSLockRef) {
-    MOZ_ASSERT(sInstance);
-    if (!sInstance->mInterposeObserver) {
-      return;
-    }
-
-    IOInterposer::Register(IOInterposeObserver::OpAll,
-                           sInstance->mInterposeObserver);
-  }
-#endif
-
   static void ClearExpiredExitProfiles(PSLockRef) {
     MOZ_ASSERT(sInstance);
     uint64_t bufferRangeStart = sInstance->mProfileBuffer.BufferRangeStart();
@@ -2443,16 +2409,8 @@ bool profiler_stream_json_for_this_process(
     return false;
   }
 
-#if !defined(RELEASE_OR_BETA)
-  ActivePS::PauseIOInterposer(lock);
-#endif
-
   locked_profiler_stream_json_for_this_process(lock, aWriter, aSinceTime,
                                                aIsShuttingDown, aService);
-#if !defined(RELEASE_OR_BETA)
-  ActivePS::ResumeIOInterposer(lock);
-#endif
-
   return true;
 }
 
@@ -3339,11 +3297,6 @@ void profiler_shutdown() {
     if (ActivePS::Exists(lock)) {
       const char* filename = getenv("MOZ_PROFILER_SHUTDOWN");
       if (filename) {
-#if !defined(RELEASE_OR_BETA)
-        // Attempting to record the I/O we are doing to the shutdown profile
-        // file while we are locked will deadlock.
-        ActivePS::UnregisterIOInterposer(lock);
-#endif
         locked_profiler_save_profile_to_file(lock, filename,
                                              /* aIsShuttingDown */ true);
       }
