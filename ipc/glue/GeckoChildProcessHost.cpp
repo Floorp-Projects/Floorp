@@ -360,7 +360,7 @@ GeckoChildProcessHost::~GeckoChildProcessHost()
 
   if (mChildProcessHandle != 0) {
 #if defined(MOZ_WIDGET_COCOA)
-    SharedMemoryBasic::CleanupForPid(mChildProcessHandle);
+    SharedMemoryBasic::CleanupForPidWithLock(mChildProcessHandle);
 #endif
     ProcessWatcher::EnsureProcessTerminated(
         mChildProcessHandle
