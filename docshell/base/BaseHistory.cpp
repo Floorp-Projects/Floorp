@@ -151,10 +151,6 @@ void BaseHistory::NotifyVisited(nsIURI* aURI) {
     return;
   }
 
-  // NOTE: This can be run within the SystemGroup, and thus cannot directly
-  // interact with webpages.
-  nsAutoScriptBlocker scriptBlocker;
-
   auto entry = mTrackedURIs.Lookup(aURI);
   if (!entry) {
     // If we have no observers for this URI, we have nothing to notify about.
