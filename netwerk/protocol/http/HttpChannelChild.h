@@ -112,8 +112,7 @@ class HttpChannelChild final : public PHttpChannelChild,
   // nsIResumableChannel
   NS_IMETHOD ResumeAt(uint64_t startPos, const nsACString& entityID) override;
 
-  nsresult SetReferrerHeader(const nsACString& aReferrer,
-                             bool aRespectBeforeConnect) override;
+  nsresult SetReferrerHeader(const nsACString& aReferrer) override;
 
   MOZ_MUST_USE bool IsSuspended();
 
@@ -178,9 +177,6 @@ class HttpChannelChild final : public PHttpChannelChild,
 
   mozilla::ipc::IPCResult RecvAltDataCacheInputStreamAvailable(
       const Maybe<IPCStream>& aStream) override;
-
-  mozilla::ipc::IPCResult RecvOverrideReferrerInfoDuringBeginConnect(
-      nsIReferrerInfo* aReferrerInfo) override;
 
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
