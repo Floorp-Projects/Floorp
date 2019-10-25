@@ -432,7 +432,14 @@ void SharedMemoryBasic::Shutdown() {
   gMemoryCommPorts.clear();
 }
 
+void SharedMemoryBasic::CleanupForPidWithLock(pid_t pid) {
+  StaticMutexAutoLock smal(gMutex);
+  CleanupForPid(pid);
+}
+
 void SharedMemoryBasic::CleanupForPid(pid_t pid) {
+  gMutex.AssertCurrentThreadOwns();
+
   if (gThreads.find(pid) == gThreads.end()) {
     return;
   }
