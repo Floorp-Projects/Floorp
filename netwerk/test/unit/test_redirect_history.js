@@ -65,7 +65,7 @@ function run_test() {
 
   var chan = make_channel(URL + redirects[0]);
   var uri = NetUtil.newURI("http://test.com");
-  httpChan = chan.QueryInterface(Ci.nsIHttpChannel);
+  var httpChan = chan.QueryInterface(Ci.nsIHttpChannel);
   httpChan.referrerInfo = new ReferrerInfo(Ci.nsIReferrerInfo.EMPTY, true, uri);
   chan.asyncOpen(new ChannelListener(finish_test, null));
   do_test_pending();
