@@ -58,7 +58,6 @@ static uint32_t sDefaultTrackerRp = DEFAULT_TRACKER_RP;
 static uint32_t defaultPrivateRp = DEFAULT_PRIVATE_RP;
 static uint32_t defaultTrackerPrivateRp = DEFAULT_TRACKER_PRIVATE_RP;
 
-static uint32_t sUserXOriginSendingPolicy = 0;
 static uint32_t sUserTrimmingPolicy = 0;
 static uint32_t sUserXOriginTrimmingPolicy = 0;
 
@@ -67,12 +66,6 @@ static void CachePreferrenceValue() {
   if (sPrefCached) {
     return;
   }
-
-  Preferences::AddUintVarCache(&sUserXOriginSendingPolicy,
-                               "network.http.referer.XOriginPolicy");
-  sUserXOriginSendingPolicy = clamped<uint32_t>(
-      sUserXOriginSendingPolicy, MIN_CROSS_ORIGIN_SENDING_POLICY,
-      MAX_CROSS_ORIGIN_SENDING_POLICY);
 
   Preferences::AddUintVarCache(&sUserTrimmingPolicy,
                                "network.http.referer.trimmingPolicy");
@@ -213,6 +206,13 @@ uint32_t ReferrerInfo::GetUserReferrerSendingPolicy() {
   return clamped<uint32_t>(
       StaticPrefs::network_http_sendRefererHeader_DoNotUseDirectly(),
       MIN_REFERRER_SENDING_POLICY, MAX_REFERRER_SENDING_POLICY);
+}
+
+/* static */
+uint32_t ReferrerInfo::GetUserXOriginSendingPolicy() {
+  return clamped<uint32_t>(
+      StaticPrefs::network_http_referer_XOriginPolicy_DoNotUseDirectly(),
+      MIN_CROSS_ORIGIN_SENDING_POLICY, MAX_CROSS_ORIGIN_SENDING_POLICY);
 }
 
 /* static */
@@ -360,7 +360,7 @@ nsresult ReferrerInfo::HandleUserXOriginSendingPolicy(nsIURI* aURI,
     return NS_OK;
   }
 
-  switch (sUserXOriginSendingPolicy) {
+  switch (GetUserXOriginSendingPolicy()) {
     // Check policy for sending referrer only when hosts match
     case XOriginSendingPolicy::ePolicySendWhenSameHost: {
       if (!uriHost.Equals(referrerHost)) {

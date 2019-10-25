@@ -6437,6 +6437,13 @@
   value: 4096
   mirror: always
 
+#  0=always send, 1=send iff base domains match, 2=send iff hosts match.
+- name: network.http.referer.XOriginPolicy
+  type: uint32_t
+  value: 0
+  mirror: always
+  do_not_use_directly: true
+
 # Enables the predictive service.
 - name: network.predictor.enabled
   type: bool
