@@ -8,7 +8,7 @@ const { Cc, Ci, Cu } = require("chrome");
 
 const Services = require("Services");
 const protocol = require("devtools/shared/protocol");
-const { walkerSpec } = require("devtools/shared/specs/inspector");
+const { walkerSpec } = require("devtools/shared/specs/walker");
 const { LongStringActor } = require("devtools/server/actors/string");
 const InspectorUtils = require("InspectorUtils");
 const ReplayInspector = require("devtools/server/actors/replay/inspector");
