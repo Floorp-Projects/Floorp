@@ -277,7 +277,9 @@ function initPage() {
     setupErrorUI();
 
     const errorCode = document.getNetErrorInfo().errorCodeString;
-    const isTlsVersionError = errorCode == "SSL_ERROR_UNSUPPORTED_VERSION";
+    const isTlsVersionError =
+      errorCode == "SSL_ERROR_UNSUPPORTED_VERSION" ||
+      errorCode == "SSL_ERROR_PROTOCOL_VERSION_ALERT";
     const tls10OverrideEnabled = RPMGetBoolPref(
       "security.tls.version.enable-deprecated"
     );
