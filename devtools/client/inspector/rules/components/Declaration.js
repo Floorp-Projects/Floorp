@@ -38,7 +38,7 @@ class Declaration extends PureComponent {
     this.valueSpanRef = createRef();
 
     this.onComputedExpanderClick = this.onComputedExpanderClick.bind(this);
-    this.onToggleDeclarationChange = this.onToggleDeclarationChange.bind(this);
+    this.onToggleDeclarationClick = this.onToggleDeclarationClick.bind(this);
   }
 
   componentDidMount() {
@@ -90,7 +90,7 @@ class Declaration extends PureComponent {
     });
   }
 
-  onToggleDeclarationChange(event) {
+  onToggleDeclarationClick(event) {
     event.stopPropagation();
     const { id, ruleId } = this.props.declaration;
     this.props.onToggleDeclaration(ruleId, id);
@@ -236,12 +236,12 @@ class Declaration extends PureComponent {
       { className: declarationClassName },
       dom.div(
         { className: "ruleview-propertycontainer" },
-        dom.input({
-          type: "checkbox",
-          className: "ruleview-enableproperty",
-          checked: isEnabled,
-          onChange: this.onToggleDeclarationChange,
-          "aria-labelledby": this.props.declaration.id,
+        dom.div({
+          className:
+            "ruleview-enableproperty theme-checkbox" +
+            (isEnabled ? " checked" : ""),
+          onClick: this.onToggleDeclarationClick,
+          tabIndex: -1,
         }),
         dom.span(
           { className: "ruleview-namecontainer" },
@@ -250,7 +250,6 @@ class Declaration extends PureComponent {
               className: "ruleview-propertyname theme-fg-color3",
               ref: this.nameSpanRef,
               tabIndex: 0,
-              id: this.props.declaration.id,
             },
             name
           ),

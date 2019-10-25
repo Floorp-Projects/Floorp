@@ -111,7 +111,7 @@ function TextPropertyEditor(ruleEditor, property) {
   this.getGridlineNames = this.getGridlineNames.bind(this);
   this.update = this.update.bind(this);
   this.updatePropertyState = this.updatePropertyState.bind(this);
-  this._onEnableChanged = this._onEnableChanged.bind(this);
+  this._onEnableClicked = this._onEnableClicked.bind(this);
   this._onExpandClicked = this._onExpandClicked.bind(this);
   this._onNameDone = this._onNameDone.bind(this);
   this._onStartEditing = this._onStartEditing.bind(this);
@@ -159,10 +159,9 @@ TextPropertyEditor.prototype = {
     });
 
     // The enable checkbox will disable or enable the rule.
-    this.enable = createChild(this.container, "input", {
-      type: "checkbox",
-      class: "ruleview-enableproperty",
-      "aria-labelledby": this.prop.id,
+    this.enable = createChild(this.container, "div", {
+      class: "ruleview-enableproperty theme-checkbox",
+      tabindex: "-1",
     });
 
     this.nameContainer = createChild(this.container, "span", {
@@ -174,7 +173,6 @@ TextPropertyEditor.prototype = {
     this.nameSpan = createChild(this.nameContainer, "span", {
       class: "ruleview-propertyname theme-fg-color3",
       tabindex: this.ruleEditor.isEditable ? "0" : "-1",
-      id: this.prop.id,
     });
 
     appendText(this.nameContainer, ": ");
@@ -245,7 +243,7 @@ TextPropertyEditor.prototype = {
 
     // Only bind event handlers if the rule is editable.
     if (this.ruleEditor.isEditable) {
-      this.enable.addEventListener("change", this._onEnableChanged, true);
+      this.enable.addEventListener("click", this._onEnableClicked, true);
 
       this.nameContainer.addEventListener("click", event => {
         // Clicks within the name shouldn't propagate any further.
@@ -915,7 +913,7 @@ TextPropertyEditor.prototype = {
   /**
    * Handles clicks on the disabled property.
    */
-  _onEnableChanged: function(event) {
+  _onEnableClicked: function(event) {
     const checked = this.enable.hasAttribute("checked");
     if (checked) {
       this.enable.removeAttribute("checked");
