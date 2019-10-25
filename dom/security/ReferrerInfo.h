@@ -185,6 +185,11 @@ class ReferrerInfo : public nsIReferrerInfo {
                                         nsIURI* aOriginURI);
 
   /**
+   * Getter for network.http.sendRefererHeader.
+   */
+  static uint32_t GetUserReferrerSendingPolicy();
+
+  /**
    * Return default referrer policy which is controlled by user
    * prefs:
    * network.http.referer.defaultPolicy for regular mode

@@ -60,7 +60,6 @@ static uint32_t sDefaultTrackerRp = DEFAULT_TRACKER_RP;
 static uint32_t defaultPrivateRp = DEFAULT_PRIVATE_RP;
 static uint32_t defaultTrackerPrivateRp = DEFAULT_TRACKER_PRIVATE_RP;
 
-static uint32_t sUserReferrerSendingPolicy = 0;
 static uint32_t sUserXOriginSendingPolicy = 0;
 static uint32_t sUserTrimmingPolicy = 0;
 static uint32_t sUserXOriginTrimmingPolicy = 0;
@@ -72,15 +71,9 @@ static void CachePreferrenceValue() {
     return;
   }
 
-  Preferences::AddUintVarCache(&sUserReferrerSendingPolicy,
-                               "network.http.sendRefererHeader");
   Preferences::AddUintVarCache(&sReferrerHeaderLimit,
                                "network.http.referer.referrerLengthLimit",
                                DEFAULT_REFERRER_HEADER_LENGTH_LIMIT);
-  sUserReferrerSendingPolicy =
-      clamped<uint32_t>(sUserReferrerSendingPolicy, MIN_REFERRER_SENDING_POLICY,
-                        MAX_REFERRER_SENDING_POLICY);
-
   Preferences::AddUintVarCache(&sUserXOriginSendingPolicy,
                                "network.http.referer.XOriginPolicy");
   sUserXOriginSendingPolicy = clamped<uint32_t>(
@@ -219,6 +212,13 @@ const char* ReferrerInfo::ReferrerPolicyToString(ReferrerPolicyEnum aPolicy) {
   }
 
   return ReferrerPolicyValues::strings[index].value;
+}
+
+/* static */
+uint32_t ReferrerInfo::GetUserReferrerSendingPolicy() {
+  return clamped<uint32_t>(
+      StaticPrefs::network_http_sendRefererHeader_DoNotUseDirectly(),
+      MIN_REFERRER_SENDING_POLICY, MAX_REFERRER_SENDING_POLICY);
 }
 
 /* static */
@@ -488,7 +488,7 @@ nsresult ReferrerInfo::HandleUserReferrerSendingPolicy(nsIHttpChannel* aChannel,
   } else {
     referrerSendingPolicy = ReferrerSendingPolicy::ePolicySendInlineContent;
   }
-  if (sUserReferrerSendingPolicy < referrerSendingPolicy) {
+  if (GetUserReferrerSendingPolicy() < referrerSendingPolicy) {
     return NS_OK;
   }
 
