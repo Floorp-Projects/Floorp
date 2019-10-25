@@ -208,6 +208,13 @@ class ResponsiveUI {
     await this.restoreState();
 
     if (!this.isBrowserUIEnabled) {
+      // Force the newly created Zoom actor to cache its 1.0 zoom level. This
+      // prevents it from sending out FullZoomChange events when the content
+      // full zoom level is changed the first time.
+      const bc = this.toolWindow.docShell.browsingContext;
+      const zoomActor = bc.currentWindowGlobal.getActor("Zoom");
+      zoomActor.sendAsyncMessage("FullZoom", { value: 1.0 });
+
       // Re-apply our cached zoom levels. Other Zoom UI update events have finished
       // by now.
       rdmContent.fullZoom = fullZoom;
