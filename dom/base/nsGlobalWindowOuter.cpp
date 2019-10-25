@@ -200,6 +200,8 @@
 #include "mozilla/dom/GamepadManager.h"
 
 #include "gfxVR.h"
+#include "VRShMem.h"
+#include "FxRWindowManager.h"
 #include "mozilla/dom/VRDisplay.h"
 #include "mozilla/dom/VRDisplayEvent.h"
 #include "mozilla/dom/VRDisplayEventBinding.h"
@@ -4437,6 +4439,12 @@ nsresult nsGlobalWindowOuter::SetFullscreenInternal(FullscreenReason aReason,
     }
   }
 
+#if defined(NIGHTLY_BUILD) && defined(XP_WIN)
+  if (FxRWindowManager::GetInstance()->IsFxRWindow(mWindowID)) {
+    mozilla::gfx::VRShMem shmem(nullptr, true /*aRequiresMutex*/);
+    shmem.SendFullscreenState(mWindowID, aFullscreen);
+  }
+#endif  // NIGHTLY_BUILD && XP_WIN
   FinishFullscreenChange(aFullscreen);
   return NS_OK;
 }
