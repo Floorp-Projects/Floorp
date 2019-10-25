@@ -112,10 +112,7 @@ void bytefn(dav1d_lr_copy_lpf)(Dav1dFrameContext *const f,
     const ptrdiff_t lr_stride = ((f->sr_cur.p.p.w + 31) & ~31) * sizeof(pixel);
 
     // TODO Also check block level restore type to reduce copying.
-    const int restore_planes =
-        ((f->frame_hdr->restoration.type[0] != DAV1D_RESTORATION_NONE) << 0) +
-        ((f->frame_hdr->restoration.type[1] != DAV1D_RESTORATION_NONE) << 1) +
-        ((f->frame_hdr->restoration.type[2] != DAV1D_RESTORATION_NONE) << 2);
+    const int restore_planes = f->lf.restore_planes;
 
     if (restore_planes & LR_RESTORE_Y) {
         const int h = f->cur.p.h;
@@ -180,12 +177,8 @@ static void lr_stripe(const Dav1dFrameContext *const f, pixel *p,
     }
 
     while (y + stripe_h <= row_h) {
-        // TODO Look into getting rid of the this if
-        if (y + stripe_h == row_h) {
-            edges &= ~LR_HAVE_BOTTOM;
-        } else {
-            edges |= LR_HAVE_BOTTOM;
-        }
+        // Change HAVE_BOTTOM bit in edges to (y + stripe_h != row_h)
+        edges ^= (-(y + stripe_h != row_h) ^ edges) & LR_HAVE_BOTTOM;
         if (lr->type == DAV1D_RESTORATION_WIENER) {
             dsp->lr.wiener(p, p_stride, left, lpf, lpf_stride, unit_w, stripe_h,
                            filterh, filterv, edges HIGHBD_CALL_SUFFIX);
@@ -239,8 +232,7 @@ static void lr_sbrow(const Dav1dFrameContext *const f, pixel *p, const int y,
     const int shift_hor = 7 - ss_hor;
 
     pixel pre_lr_border[2][128 + 8 /* maximum sbrow height is 128 + 8 rows offset */][4];
-
-    int unit_w = unit_size, bit = 0;
+    const Av1RestorationUnit *lr[2];
 
     enum LrEdgeFlags edges = (y > 0 ? LR_HAVE_TOP : 0) | LR_HAVE_RIGHT |
                              (row_h < h ? LR_HAVE_BOTTOM : 0);
@@ -251,26 +243,27 @@ static void lr_sbrow(const Dav1dFrameContext *const f, pixel *p, const int y,
     aligned_unit_pos <<= ss_ver;
     const int sb_idx = (aligned_unit_pos >> 7) * f->sr_sb128w;
     const int unit_idx = ((aligned_unit_pos >> 6) & 1) << 1;
-    for (int x = 0; x < w; x += unit_w, edges |= LR_HAVE_LEFT, bit ^= 1) {
-        if (x + max_unit_size > w) {
-            unit_w = w - x;
-            edges &= ~LR_HAVE_RIGHT;
-        }
-
-        // Based on the position of the restoration unit, find the corresponding
-        // AV1Filter unit.
-        const int u_idx = unit_idx + ((x >> (shift_hor - 1)) & 1);
-        const Av1RestorationUnit *const lr =
-            &f->lf.lr_mask[sb_idx + (x >> shift_hor)].lr[plane][u_idx];
-
-        // FIXME Don't backup if the next restoration unit is RESTORE_NONE
-        if (edges & LR_HAVE_RIGHT) {
-            backup4xU(pre_lr_border[bit], p + unit_w - 4, p_stride, row_h - y);
-        }
-        if (lr->type != DAV1D_RESTORATION_NONE) {
-            lr_stripe(f, p, pre_lr_border[!bit], x, y, plane, unit_w, row_h, lr, edges);
-        }
-        p += unit_w;
+    lr[0] = &f->lf.lr_mask[sb_idx].lr[plane][unit_idx];
+    int restore = lr[0]->type != DAV1D_RESTORATION_NONE;
+    int x = 0, bit = 0;
+    for (; x + max_unit_size <= w; p += unit_size, edges |= LR_HAVE_LEFT, bit ^= 1) {
+        const int next_x = x + unit_size;
+        const int next_u_idx = unit_idx + ((next_x >> (shift_hor - 1)) & 1);
+        lr[!bit] =
+            &f->lf.lr_mask[sb_idx + (next_x >> shift_hor)].lr[plane][next_u_idx];
+        const int restore_next = lr[!bit]->type != DAV1D_RESTORATION_NONE;
+        if (restore_next)
+            backup4xU(pre_lr_border[bit], p + unit_size - 4, p_stride, row_h - y);
+        if (restore)
+            lr_stripe(f, p, pre_lr_border[!bit], x, y, plane, unit_size, row_h,
+                      lr[bit], edges);
+        x = next_x;
+        restore = restore_next;
+    }
+    if (restore) {
+        edges &= ~LR_HAVE_RIGHT;
+        const int unit_w = w - x;
+        lr_stripe(f, p, pre_lr_border[!bit], x, y, plane, unit_w, row_h, lr[bit], edges);
     }
 }
 
@@ -279,11 +272,7 @@ void bytefn(dav1d_lr_sbrow)(Dav1dFrameContext *const f, pixel *const dst[3],
 {
     const int offset_y = 8 * !!sby;
     const ptrdiff_t *const dst_stride = f->sr_cur.p.stride;
-
-    const int restore_planes =
-        ((f->frame_hdr->restoration.type[0] != DAV1D_RESTORATION_NONE) << 0) +
-        ((f->frame_hdr->restoration.type[1] != DAV1D_RESTORATION_NONE) << 1) +
-        ((f->frame_hdr->restoration.type[2] != DAV1D_RESTORATION_NONE) << 2);
+    const int restore_planes = f->lf.restore_planes;
 
     if (restore_planes & LR_RESTORE_Y) {
         const int h = f->sr_cur.p.p.h;

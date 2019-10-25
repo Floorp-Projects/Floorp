@@ -43,6 +43,11 @@ XPCOMUtils.defineLazyServiceGetters(this, {
   ],
 });
 
+Services.mm.loadFrameScript(
+  "chrome://mochikit/content/tests/BrowserTestUtils/content-utils.js",
+  true
+);
+
 const PROCESSSELECTOR_CONTRACTID = "@mozilla.org/ipc/processselector;1";
 const OUR_PROCESSSELECTOR_CID = Components.ID(
   "{f9746211-3d53-4465-9aeb-ca0d96de0253}"
@@ -82,15 +87,8 @@ const kAboutPageRegistrationContentScript =
  */
 function registerActor() {
   let actorOptions = {
-    parent: {
-      moduleURI: "resource://testing-common/BrowserTestUtilsParent.jsm",
-    },
     child: {
       moduleURI: "resource://testing-common/BrowserTestUtilsChild.jsm",
-      events: {
-        DOMContentLoaded: { capture: true },
-        load: { capture: true },
-      },
     },
     allFrames: true,
     includeChrome: true,
@@ -417,40 +415,23 @@ var BrowserTestUtils = {
       return wantLoad == url;
     }
 
-    // Error pages are loaded slightly differently, so listen for the
-    // DOMContentLoaded event for those instead.
-    let loadEvent = maybeErrorPage ? "DOMContentLoaded" : "load";
-    let eventName = `BrowserTestUtils:ContentEvent:${loadEvent}`;
-
     return new Promise(resolve => {
-      browser.addEventListener(
-        eventName,
-        function listener(event) {
-          let { browsingContext, internalURL, visibleURL } = event.detail;
-
-          // Sometimes we arrive here without an internalURL. If that's the
-          // case, just keep waiting until we get one.
-          if (!internalURL) {
-            return;
-          }
-
-          // Ignore subframes if we only care about the top-level load.
-          let subframe = browsingContext !== browsingContext.top;
-          if (subframe && !includeSubFrames) {
-            return;
-          }
-
-          // See testing/mochitest/BrowserTestUtils/content/BrowserTestUtilsChild.jsm
-          // for the difference between visibleURL and internalURL.
-          if (!isWanted(maybeErrorPage ? visibleURL : internalURL)) {
-            return;
-          }
-
-          browser.removeEventListener(eventName, listener, true);
-          resolve(internalURL);
-        },
-        true
-      );
+      let mm = browser.ownerGlobal.messageManager;
+      let eventName = maybeErrorPage
+        ? "browser-test-utils:DOMContentLoadedEvent"
+        : "browser-test-utils:loadEvent";
+      mm.addMessageListener(eventName, function onLoad(msg) {
+        // See testing/mochitest/BrowserTestUtils/content/content-utils.js for
+        // the difference between visibleURL and internalURL.
+        if (
+          msg.target == browser &&
+          (!msg.data.subframe || includeSubFrames) &&
+          isWanted(maybeErrorPage ? msg.data.visibleURL : msg.data.internalURL)
+        ) {
+          mm.removeMessageListener(eventName, onLoad);
+          resolve(msg.data.internalURL);
+        }
+      });
     });
   },
 
@@ -474,20 +455,18 @@ var BrowserTestUtils = {
    * @resolves Once the selected browser fires its load event.
    */
   firstBrowserLoaded(win, aboutBlank = true, checkFn = null) {
-    return this.waitForEvent(
-      win,
-      "BrowserTestUtils:ContentEvent:load",
-      true,
-      event => {
-        if (checkFn) {
-          return checkFn(event.target);
-        }
-        return (
-          win.gBrowser.selectedBrowser.currentURI.spec !== "about:blank" ||
-          aboutBlank
-        );
+    let mm = win.messageManager;
+    return this.waitForMessage(mm, "browser-test-utils:loadEvent", msg => {
+      if (checkFn) {
+        return checkFn(msg.target);
       }
-    );
+
+      let selectedBrowser = win.gBrowser.selectedBrowser;
+      return (
+        msg.target == selectedBrowser &&
+        (aboutBlank || selectedBrowser.currentURI.spec != "about:blank")
+      );
+    });
   },
 
   _webProgressListeners: new Set(),

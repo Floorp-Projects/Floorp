@@ -51,6 +51,36 @@ add_task(async function testEnableAudioFocusManagement() {
   await clearTabsAndResetPref([tab1, tab2]);
 });
 
+add_task(async function testCheckAudioCompetingMultipleTimes() {
+  await switchAudioFocusManagerment(true);
+
+  info(`open audible autoplay media in tab1`);
+  const tab1 = await createTabAndLoad(PAGE_AUDIBLE);
+  await checkOrWaitUntilMediaStartedPlaying(tab1);
+
+  info(`open same page on another tab, which should cause audio competing`);
+  const tab2 = await createTabAndLoad(PAGE_AUDIBLE);
+  await checkOrWaitUntilMediaStartedPlaying(tab2);
+
+  info(`media in tab1 should be stopped`);
+  await checkOrWaitUntilMediaStoppedPlaying(tab1);
+
+  info(`play media in tab1 again`);
+  await playMedia(tab1);
+
+  info(`media in tab2 should be stopped`);
+  await checkOrWaitUntilMediaStoppedPlaying(tab2);
+
+  info(`play media in tab2 again`);
+  await playMedia(tab2);
+
+  info(`media in tab1 should be stopped`);
+  await checkOrWaitUntilMediaStoppedPlaying(tab1);
+
+  info(`remove tabs`);
+  await clearTabsAndResetPref([tab1, tab2]);
+});
+
 add_task(async function testMutedMediaWontInvolveAudioCompeting() {
   await switchAudioFocusManagerment(true);
 
@@ -121,6 +151,26 @@ async function switchAudioFocusManagerment(enable) {
 async function createTabAndLoad(url) {
   let tab = await BrowserTestUtils.openNewForegroundTab(window.gBrowser, url);
   return tab;
+}
+
+async function playMedia(tab) {
+  await ContentTask.spawn(tab.linkedBrowser, null, () => {
+    return new Promise(resolve => {
+      const video = content.document.getElementById("autoplay");
+      if (!video) {
+        ok(false, `can't get the media element!`);
+      }
+
+      ok(video.paused, `media has not started yet`);
+      info(`wait until media starts playing`);
+      video.play();
+      video.onplaying = () => {
+        video.onplaying = null;
+        ok(true, `media started playing`);
+        resolve();
+      };
+    });
+  });
 }
 
 async function checkOrWaitUntilMediaStartedPlaying(tab) {

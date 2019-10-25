@@ -1,3 +1,25 @@
+Changes for 0.5.0 'Asiatic Cheetah':
+----------------------------
+
+0.5.0 is a medium release fixing regressions and minor issues,
+and improving speed significantly:
+ - Export ITU T.35 metadata
+ - Speed improvements on blend_ on ARM
+ - Speed improvements on decode_coef and MSAC
+ - NEON optimizations for blend*, w_mask_, ipred functions for ARM64
+ - NEON optimizations for CDEF and warp on ARM32
+ - SSE2 optimizations for MSAC hi_tok decoding
+ - SSSE3 optimizations for deblocking loopfilters and warp_affine
+ - AVX-2 optimizations for film grain and ipred_z2
+ - SSE4 optimizations for warp_affine
+ - VSX optimizations for wiener
+ - Fix inverse transform overflows in x86 and NEON asm
+ - Fix integer overflows with large frames
+ - Improve film grain generation to match reference code
+ - Improve compatibility with older binutils for ARM
+ - More advanced Player example in tools
+
+
 Changes for 0.4.0 'Cheetah':
 ----------------------------
 
@@ -11,6 +33,7 @@ Changes for 0.4.0 'Cheetah':
  - NEON optimizations for blend functions on ARM
  - NEON optimizations for w_mask functions on ARM
  - NEON optimizations for inverse transforms on ARM64
+ - VSX optimizations for CDEF filter
  - Improve handling of malloc failures
  - Simple Player example in tools
 
@@ -38,7 +61,7 @@ Changes for 0.2.2 (0.3.0-rc) 'Antelope':
  - Large improvement on MSAC decoding with SSE, bringing 4-6% speed increase
    The impact is important on SSSE3, SSE4 and AVX-2 cpus
  - SSSE3 optimizations for all blocks size in itx
- - SSSE3 optimizations for ipred_paeth and ipref_cfl (420, 422 and 444)
+ - SSSE3 optimizations for ipred_paeth and ipred_cfl (420, 422 and 444)
  - Speed improvements on CDEF for SSE4 CPUs
  - NEON optimizations for SGR and loop filter
  - Minor crashes, improvements and build changes

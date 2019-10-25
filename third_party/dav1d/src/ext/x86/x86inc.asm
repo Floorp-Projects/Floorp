@@ -1126,6 +1126,7 @@ INIT_XMM
     %xdefine %%tmp %%f %+ 0
     %ifnum %%tmp
         RESET_MM_PERMUTATION
+        AVX512_MM_PERMUTATION
         %assign %%i 0
         %rep num_mmregs
             %xdefine %%tmp %%f %+ %%i

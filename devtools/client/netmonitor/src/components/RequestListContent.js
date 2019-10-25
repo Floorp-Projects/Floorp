@@ -252,11 +252,9 @@ class RequestListContent extends Component {
 
     switch (evt.key) {
       case "ArrowUp":
-      case "ArrowLeft":
         delta = -1;
         break;
       case "ArrowDown":
-      case "ArrowRight":
         delta = +1;
         break;
       case "PageUp":

@@ -1201,12 +1201,24 @@ Result AuthCertificate(CertVerifier& certVerifier,
   PinningTelemetryInfo pinningTelemetryInfo;
   CertificateTransparencyInfo certificateTransparencyInfo;
 
+  nsTArray<nsTArray<uint8_t>> peerCertsBytes;
+  for (CERTCertListNode* n = CERT_LIST_HEAD(peerCertChain);
+       !CERT_LIST_END(n, peerCertChain); n = CERT_LIST_NEXT(n)) {
+    // Don't include the end-entity certificate.
+    if (n == CERT_LIST_HEAD(peerCertChain)) {
+      continue;
+    }
+    nsTArray<uint8_t> certBytes;
+    certBytes.AppendElements(n->cert->derCert.data, n->cert->derCert.len);
+    peerCertsBytes.AppendElement(std::move(certBytes));
+  }
+
   Result rv = certVerifier.VerifySSLServerCert(
-      cert, stapledOCSPResponse, sctsFromTLSExtension, time, infoObject,
-      infoObject->GetHostName(), builtCertChain, saveIntermediates,
-      certVerifierFlags, infoObject->GetOriginAttributes(), &evOidPolicy,
-      &ocspStaplingStatus, &keySizeStatus, &sha1ModeResult,
-      &pinningTelemetryInfo, &certificateTransparencyInfo);
+      cert, time, infoObject, infoObject->GetHostName(), builtCertChain,
+      certVerifierFlags, Some(peerCertsBytes), stapledOCSPResponse,
+      sctsFromTLSExtension, infoObject->GetOriginAttributes(),
+      saveIntermediates, &evOidPolicy, &ocspStaplingStatus, &keySizeStatus,
+      &sha1ModeResult, &pinningTelemetryInfo, &certificateTransparencyInfo);
 
   CollectCertTelemetry(rv, evOidPolicy, ocspStaplingStatus, keySizeStatus,
                        sha1ModeResult, pinningTelemetryInfo, builtCertChain,
@@ -1558,7 +1570,6 @@ SECStatus AuthCertificateHook(void* arg, PRFileDesc* fd, PRBool checkSig,
     return SECFailure;
   }
 
-  // Get the peer certificate chain for error reporting
   UniqueCERTCertList peerCertChain(SSL_PeerCertificateChain(fd));
   if (!peerCertChain) {
     PR_SetError(PR_INVALID_STATE_ERROR, 0);

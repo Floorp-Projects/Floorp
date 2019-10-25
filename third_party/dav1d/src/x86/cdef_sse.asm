@@ -32,6 +32,7 @@ SECTION_RODATA 16
 pb_0: times 16 db 0
 pb_0xFF: times 16 db 0xFF
 %endif
+pw_8: times 8 dw 8
 pw_128: times 8 dw 128
 pw_256: times 8 dw 256
 pw_2048: times 8 dw 2048
@@ -118,6 +119,36 @@ SECTION .text
  %endif
 %endmacro
 
+%macro PMOVZXBW 2-3 0 ; %3 = half
+ %if %3 == 1
+    movd            %1, %2
+ %else
+    movq            %1, %2
+ %endif
+    punpcklbw       %1, m15
+%endmacro
+
+%macro PSHUFB_0 2
+ %if cpuflag(ssse3)
+    pshufb          %1, %2
+ %else
+    punpcklbw       %1, %1
+    pshuflw         %1, %1, q0000
+    punpcklqdq      %1, %1
+ %endif
+%endmacro
+
+%macro LOAD_SEC_TAP 0
+ %if ARCH_X86_64
+    movd            m3, [secq+kq]
+    PSHUFB_0        m3, m15
+ %else
+    movd            m2, [secq+kq]             ; sec_taps
+    pxor            m3, m3
+    PSHUFB_0        m2, m3
+ %endif
+%endmacro
+
 %macro ACCUMULATE_TAP 7 ; tap_offset, shift, shift_mask, strength, mul_tap, w, stride
     ; load p0/p1
     movsx         offq, byte [dirq+kq+%1]       ; off1
@@ -153,13 +184,13 @@ SECTION .text
     pmaxsw          m7, m10                     ; max after p1
     pminsw          m8, m6                      ; min after p1
   %else
-    pcmpeqw         m3, m5, OUT_OF_BOUNDS_MEM
-    pandn           m3, m5
-    pmaxsw          m7, m3                      ; max after p0
+    pcmpeqw         m9, m5, OUT_OF_BOUNDS_MEM
+    pandn           m9, m5
+    pmaxsw          m7, m9                      ; max after p0
     pminsw          m8, m5                      ; min after p0
-    pcmpeqw         m3, m6, OUT_OF_BOUNDS_MEM
-    pandn           m3, m6
-    pmaxsw          m7, m3                      ; max after p1
+    pcmpeqw         m9, m6, OUT_OF_BOUNDS_MEM
+    pandn           m9, m6
+    pmaxsw          m7, m9                      ; max after p1
     pminsw          m8, m6                      ; min after p1
   %endif
  %endif
@@ -168,13 +199,24 @@ SECTION .text
     psubw           m5, m4          ; diff_p0(p0 - px)
     psubw           m6, m4          ; diff_p1(p1 - px)
     packsswb        m5, m6          ; convert pixel diff to 8-bit
- %if ARCH_X86_64 && cpuflag(sse4)
+ %if cpuflag(ssse3)
+  %if ARCH_X86_64 && cpuflag(sse4)
     pshufb          m5, m14         ; group diffs p0 and p1 into pairs
- %else
+  %else
     pshufb          m5, [PIC_sym(shufb_lohi)]
- %endif
+  %endif
     pabsb           m6, m5
     psignb          m9, %5, m5
+ %else
+    movlhps         m6, m5
+    punpckhbw       m6, m5
+    pxor            m5, m5
+    pcmpgtb         m5, m6
+    paddb           m6, m5
+    pxor            m6, m5
+    paddb           m9, %5, m5
+    pxor            m9, m5
+ %endif
  %if ARCH_X86_64
     psrlw          m10, m6, %2      ; emulate 8-bit shift
     pand           m10, %3
@@ -186,17 +228,18 @@ SECTION .text
     pxor            m5, [PIC_sym(pb_0xFF)]
  %endif
     pminub          m5, m6          ; constrain(diff_p)
+ %if cpuflag(ssse3)
     pmaddubsw       m5, m9          ; constrain(diff_p) * taps
-    paddw          m13, m5
-%endmacro
-
-%macro PMOVZXBW 2-3 0 ; %3 = half
- %if %3 == 1
-    movd            %1, %2
  %else
-    movq            %1, %2
+    psrlw           m2, m5, 8
+    psraw           m6, m9, 8
+    psllw           m5, 8
+    psllw           m9, 8
+    pmullw          m2, m6
+    pmulhw          m5, m9
+    paddw           m5, m2
  %endif
-    punpcklbw       %1, m15
+    paddw          m13, m5
 %endmacro
 
 %macro LOAD_BODY 4  ; dst, src, block_width, tmp_stride
@@ -610,8 +653,8 @@ cglobal cdef_filter_%1x%2, 2, 7, 8, - 7 * 16 - (%2+4)*%3, \
  %endif
     movd            m2, [tableq+pridmpq]
     movd            m3, [tableq+secdmpq]
-    pshufb          m2, m15                     ; pri_shift_mask
-    pshufb          m3, m15                     ; sec_shift_mask
+    PSHUFB_0        m2, m15                     ; pri_shift_mask
+    PSHUFB_0        m3, m15                     ; sec_shift_mask
  %if ARCH_X86_64
     SWAP            m2, m11
     SWAP            m3, m12
@@ -630,13 +673,15 @@ cglobal cdef_filter_%1x%2, 2, 7, 8, - 7 * 16 - (%2+4)*%3, \
     movd            m0, prid
     movd            m1, secd
  %if ARCH_X86_64
-    pshufb          m0, m15
-    pshufb          m1, m15
+    PSHUFB_0        m0, m15
+    PSHUFB_0        m1, m15
  %else
-    mova            m2, m15
+  %if cpuflag(ssse3)
+    pxor            m2, m2
+  %endif
     mova            m3, [PIC_sym(pb_0xFF)]
-    pshufb          m0, m2
-    pshufb          m1, m2
+    PSHUFB_0        m0, m2
+    PSHUFB_0        m1, m2
     pxor            m0, m3
     pxor            m1, m3
     mova    [esp+0x20], m0
@@ -687,36 +732,44 @@ cglobal cdef_filter_%1x%2, 2, 7, 8, - 7 * 16 - (%2+4)*%3, \
     mova            m7, m4                      ; max
     mova            m8, m4                      ; min
 .k_loop:
- %if ARCH_X86_64
     movd            m2, [priq+kq]               ; pri_taps
-    movd            m3, [secq+kq]               ; sec_taps
-    pshufb          m2, m15
-    pshufb          m3, m15
+ %if ARCH_X86_64
+    PSHUFB_0        m2, m15
+  %if cpuflag(ssse3)
+    LOAD_SEC_TAP                                ; sec_taps
+  %endif
     ACCUMULATE_TAP 0*2, [rsp+ 0], m11, m0, m2, %1, %3
+  %if notcpuflag(ssse3)
+    LOAD_SEC_TAP                                ; sec_taps
+  %endif
     ACCUMULATE_TAP 2*2, [rsp+16], m12, m1, m3, %1, %3
     ACCUMULATE_TAP 6*2, [rsp+16], m12, m1, m3, %1, %3
  %else
-    movd            m2, [priq+kq]             ; pri_taps
-    pshufb          m2, m15
+  %if cpuflag(ssse3)
+    pxor            m3, m3
+  %endif
+    PSHUFB_0        m2, m3
     ACCUMULATE_TAP 0*2, [esp+0x00], [esp+0x10], [esp+0x20], m2, %1, %3
-
-    movd            m2, [secq+kq]             ; sec_taps
-    pshufb          m2, m15
+    LOAD_SEC_TAP                                ; sec_taps
     ACCUMULATE_TAP 2*2, [esp+0x30], [esp+0x40], [esp+0x50], m2, %1, %3
+  %if notcpuflag(ssse3)
+    LOAD_SEC_TAP                                ; sec_taps
+  %endif
     ACCUMULATE_TAP 6*2, [esp+0x30], [esp+0x40], [esp+0x50], m2, %1, %3
  %endif
 
     dec             kq
     jge .k_loop
 
- %if cpuflag(sse4)
-    pcmpgtw         m6, m15, m13
- %else
     pxor            m6, m6
     pcmpgtw         m6, m13
- %endif
     paddw          m13, m6
+ %if cpuflag(ssse3)
     pmulhrsw       m13, [PIC_sym(pw_2048)]
+ %else
+    paddw          m13, [PIC_sym(pw_8)]
+    psraw          m13, 4
+ %endif
     paddw           m4, m13
     pminsw          m4, m7
     pmaxsw          m4, m8
@@ -1352,3 +1405,8 @@ CDEF_FILTER 8, 8, 32
 CDEF_FILTER 4, 8, 32
 CDEF_FILTER 4, 4, 32
 CDEF_DIR
+
+INIT_XMM sse2
+CDEF_FILTER 8, 8, 32
+CDEF_FILTER 4, 8, 32
+CDEF_FILTER 4, 4, 32

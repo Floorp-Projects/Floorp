@@ -173,15 +173,10 @@ CommonSocketControl::IsAcceptableForHost(const nsACString& hostname,
   }
   psm::CertVerifier::Flags flags = psm::CertVerifier::FLAG_LOCAL_ONLY;
   UniqueCERTCertList unusedBuiltChain;
-  mozilla::pkix::Result result = certVerifier->VerifySSLServerCert(
-      nssCert,
-      Maybe<nsTArray<uint8_t>>(),  // stapledOCSPResponse
-      Maybe<nsTArray<uint8_t>>(),  // sctsFromTLSExtension
-      mozilla::pkix::Now(),
-      nullptr,  // pinarg
-      hostname, unusedBuiltChain,
-      false,  // save intermediates
-      flags);
+  mozilla::pkix::Result result =
+      certVerifier->VerifySSLServerCert(nssCert, mozilla::pkix::Now(),
+                                        nullptr,  // pinarg
+                                        hostname, unusedBuiltChain, flags);
   if (result != mozilla::pkix::Success) {
     return NS_OK;
   }

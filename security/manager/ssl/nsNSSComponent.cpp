@@ -1000,7 +1000,7 @@ static const bool REQUIRE_SAFE_NEGOTIATION_DEFAULT = false;
 static const bool FALSE_START_ENABLED_DEFAULT = true;
 static const bool ALPN_ENABLED_DEFAULT = false;
 static const bool ENABLED_0RTT_DATA_DEFAULT = false;
-static const bool HELLO_DOWNGRADE_CHECK_DEFAULT = false;
+static const bool HELLO_DOWNGRADE_CHECK_DEFAULT = true;
 static const bool ENABLED_POST_HANDSHAKE_AUTH_DEFAULT = false;
 static const bool DELEGATED_CREDENTIALS_ENABLED_DEFAULT = false;
 

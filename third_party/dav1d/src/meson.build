@@ -93,6 +93,7 @@ if is_asm_enabled
         )
         libdav1d_tmpl_sources += files(
             'arm/cdef_init_tmpl.c',
+            'arm/ipred_init_tmpl.c',
             'arm/itx_init_tmpl.c',
             'arm/loopfilter_init_tmpl.c',
             'arm/looprestoration_init_tmpl.c',
@@ -101,6 +102,7 @@ if is_asm_enabled
         if host_machine.cpu_family() == 'aarch64'
             libdav1d_sources += files(
                 'arm/64/cdef.S',
+                'arm/64/ipred.S',
                 'arm/64/itx.S',
                 'arm/64/loopfilter.S',
                 'arm/64/looprestoration.S',
@@ -109,6 +111,7 @@ if is_asm_enabled
             )
         elif host_machine.cpu_family().startswith('arm')
             libdav1d_sources += files(
+                'arm/32/cdef.S',
                 'arm/32/looprestoration.S',
                 'arm/32/mc.S',
             )
@@ -167,6 +170,7 @@ if is_asm_enabled
         )
         libdav1d_arch_tmpl_sources += files(
             'ppc/cdef_init_tmpl.c',
+            'ppc/looprestoration_init_tmpl.c',
         )
     endif
 endif

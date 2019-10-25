@@ -105,3 +105,5 @@ html_static_path = ['_static']
 htmlhelp_basename = 'MozillaTreeDocs'
 
 moz_project_name = 'main'
+
+html_show_copyright = False
