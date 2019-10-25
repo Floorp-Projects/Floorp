@@ -101,7 +101,7 @@ BaseHistory::RegisterVisitedCallback(nsIURI* aURI, Link* aLink) {
     return NS_OK;
   }
 
-  TrackedURI& trackedURI = entry.OrInsert([] { return TrackedURI {}; });
+  TrackedURI& trackedURI = entry.OrInsert([] { return TrackedURI{}; });
 
   // Sanity check that Links are not registered more than once for a given URI.
   // This will not catch a case where it is registered for two different URIs.
@@ -155,4 +155,44 @@ BaseHistory::UnregisterVisitedCallback(nsIURI* aURI, Link* aLink) {
   return NS_OK;
 }
 
-} // namespace mozilla
+NS_IMETHODIMP
+BaseHistory::NotifyVisited(nsIURI* aURI) {
+  MOZ_ASSERT(NS_IsMainThread());
+  NS_ENSURE_ARG(aURI);
+
+  // NOTE: This can be run within the SystemGroup, and thus cannot directly
+  // interact with webpages.
+  nsAutoScriptBlocker scriptBlocker;
+
+  auto entry = mTrackedURIs.Lookup(aURI);
+  if (!entry) {
+    // If we have no observers for this URI, we have nothing to notify about.
+    return NS_OK;
+  }
+
+  TrackedURI& trackedURI = entry.Data();
+  trackedURI.mVisited = true;
+
+  // If we have a key, it should have at least one observer.
+  MOZ_ASSERT(!trackedURI.mLinks.IsEmpty());
+
+  // Dispatch an event to each document which has a Link observing this URL.
+  // These will fire asynchronously in the correct DocGroup.
+
+  // FIXME(emilio): Maybe a hashtable for this? An array could be bad.
+  nsTArray<Document*> seen;  // Don't dispatch duplicate runnables.
+  ObserverArray::BackwardIterator iter(trackedURI.mLinks);
+  while (iter.HasMore()) {
+    Link* link = iter.GetNext();
+    Document* doc = GetLinkDocument(*link);
+    if (seen.Contains(doc)) {
+      continue;
+    }
+    seen.AppendElement(doc);
+    DispatchNotifyVisited(aURI, doc);
+  }
+
+  return NS_OK;
+}
+
+}  // namespace mozilla
