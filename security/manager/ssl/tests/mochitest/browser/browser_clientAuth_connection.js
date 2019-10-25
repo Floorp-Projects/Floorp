@@ -92,21 +92,17 @@ const gClientAuthDialogs = {
     // For mochitests, only the cert at build/pgo/certs/mochitest.client should
     // be selectable, so we do some brief checks to confirm this.
     Assert.notEqual(certList, null, "Cert list should not be null");
-    Assert.ok(certList.length > 0, "Should have at least one certificate");
-    let index = -1;
-    for (let i = 0; i < certList.length; i++) {
-      let cert = certList.queryElementAt(i, Ci.nsIX509Cert);
-      Assert.notEqual(cert, null, "Cert list should contain an nsIX509Cert");
-      if (cert.commonName === "Mochitest client") {
-        index = i;
-        break;
-      }
-    }
-
-    Assert.notEqual(index, -1, "Should have found 'Mochitest client'");
+    Assert.equal(certList.length, 1, "Only 1 certificate should be available");
+    let cert = certList.queryElementAt(0, Ci.nsIX509Cert);
+    Assert.notEqual(cert, null, "Cert list should contain an nsIX509Cert");
+    Assert.equal(
+      cert.commonName,
+      "Mochitest client",
+      "Cert CN should be 'Mochitest client'"
+    );
 
     if (this.state == DialogState.RETURN_CERT_SELECTED) {
-      selectedIndex.value = index;
+      selectedIndex.value = 0;
       return true;
     }
     return false;
