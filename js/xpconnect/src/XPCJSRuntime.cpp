@@ -3297,9 +3297,10 @@ JSObject* XPCJSRuntime::GetUAWidgetScope(JSContext* cx,
     NS_ENSURE_SUCCESS(rv, nullptr);
     scope = &v.toObject();
 
-    MOZ_ASSERT(xpc::IsInUAWidgetScope(js::UncheckedUnwrap(scope)));
+    JSObject* unwrapped = js::UncheckedUnwrap(scope);
+    MOZ_ASSERT(xpc::IsInUAWidgetScope(unwrapped));
 
-    MOZ_ALWAYS_TRUE(mUAWidgetScopeMap.putNew(key, scope));
+    MOZ_ALWAYS_TRUE(mUAWidgetScopeMap.putNew(key, unwrapped));
   } while (false);
 
   return scope;
