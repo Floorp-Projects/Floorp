@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.browser
 
+import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.graphics.Color
@@ -73,12 +74,12 @@ import org.mozilla.fenix.components.toolbar.ToolbarIntegration
 import org.mozilla.fenix.downloads.DownloadService
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.enterToImmersiveMode
+import org.mozilla.fenix.ext.getRootView
 import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.sessionsOfType
 import org.mozilla.fenix.ext.settings
-import org.mozilla.fenix.ext.getRootView
 import org.mozilla.fenix.isInExperiment
 import org.mozilla.fenix.quickactionsheet.QuickActionSheetBehavior
 import org.mozilla.fenix.settings.SupportUtils
@@ -235,16 +236,7 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler, SessionManager.Obs
                 feature = ContextMenuFeature(
                     fragmentManager = parentFragmentManager,
                     store = store,
-                    candidates = ContextMenuCandidate.defaultCandidates(
-                        context,
-                        context.components.useCases.tabsUseCases,
-                        context.components.useCases.contextMenuUseCases,
-                        view,
-                        FenixSnackbarDelegate(
-                            view,
-                            if (getSessionById()?.isCustomTabSession() == true) null else nestedScrollQuickAction
-                        )
-                    ),
+                    candidates = getContextMenuCandidates(context, view),
                     engineView = view.engineView,
                     useCases = context.components.useCases.contextMenuUseCases,
                     customTabId = customTabSessionId
@@ -404,6 +396,14 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler, SessionManager.Obs
         }
     }
 
+    /**
+     * Returns a list of context menu items [ContextMenuCandidate] for the context menu
+     */
+    protected abstract fun getContextMenuCandidates(
+        context: Context,
+        view: View
+    ): List<ContextMenuCandidate>
+
     private fun adjustBackgroundAndNavigate(directions: NavDirections) {
         context?.let {
             swipeRefresh?.background = ColorDrawable(Color.TRANSPARENT)
@@ -521,7 +521,8 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler, SessionManager.Obs
             if (session.source == Session.Source.ACTION_VIEW) {
                 sessionManager.remove(session)
             } else {
-                val isLastSession = sessionManager.sessionsOfType(private = session.private).count() == 1
+                val isLastSession =
+                    sessionManager.sessionsOfType(private = session.private).count() == 1
                 sessionManager.remove(session, true)
                 return !isLastSession // Jump to tab overview if last session was removed
             }

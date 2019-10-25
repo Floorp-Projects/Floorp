@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.customtabs
 
+import android.content.Context
 import android.view.Gravity
 import android.view.View
 import androidx.core.view.isGone
@@ -14,6 +15,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.browser.session.Session
 import mozilla.components.concept.engine.manifest.WebAppManifestParser
 import mozilla.components.concept.engine.manifest.getOrNull
+import mozilla.components.feature.contextmenu.ContextMenuCandidate
 import mozilla.components.feature.pwa.ext.getTrustedScope
 import mozilla.components.feature.pwa.ext.trustedOrigins
 import mozilla.components.feature.pwa.feature.WebAppActivityFeature
@@ -25,6 +27,8 @@ import mozilla.components.support.base.feature.BackHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BaseBrowserFragment
+import org.mozilla.fenix.browser.CustomTabContextMenuCandidate
+import org.mozilla.fenix.browser.FenixSnackbarDelegate
 import org.mozilla.fenix.components.toolbar.BrowserToolbarController
 import org.mozilla.fenix.components.toolbar.BrowserToolbarInteractor
 import org.mozilla.fenix.ext.components
@@ -76,7 +80,8 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), BackHandler {
                         updateLayoutMargins(inFullScreen = !toolbarVisible)
                     },
                     owner = this,
-                    view = toolbar)
+                    view = toolbar
+                )
 
                 if (manifest != null) {
                     activity.lifecycle.addObserver(
@@ -143,11 +148,11 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), BackHandler {
         val directions =
             ExternalAppBrowserFragmentDirections
                 .actionExternalAppBrowserFragmentToTrackingProtectionPanelDialogFragment(
-                sessionId = session.id,
-                url = session.url,
-                trackingProtectionEnabled = session.trackerBlockingEnabled,
-                gravity = getAppropriateLayoutGravity()
-            )
+                    sessionId = session.id,
+                    url = session.url,
+                    trackingProtectionEnabled = session.trackerBlockingEnabled,
+                    gravity = getAppropriateLayoutGravity()
+                )
         nav(R.id.externalAppBrowserFragment, directions)
     }
 
@@ -160,6 +165,19 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), BackHandler {
             toolbarSize to 0
         }
     }
+
+    override fun getContextMenuCandidates(
+        context: Context,
+        view: View
+    ): List<ContextMenuCandidate> = CustomTabContextMenuCandidate.defaultCandidates(
+        context,
+        context.components.useCases.contextMenuUseCases,
+        view,
+        FenixSnackbarDelegate(
+            view,
+            null
+        )
+    )
 
     override fun getAppropriateLayoutGravity() = Gravity.TOP
 }
