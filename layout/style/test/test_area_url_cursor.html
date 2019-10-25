@@ -15,20 +15,20 @@ area {
 <div></div>
 <script>
 SimpleTest.waitForExplicitFinish();
-
-let checked = false;
-document.querySelector("area").addEventListener("mouseover", function() {
-  setTimeout(() => {
-    if (checked) {
-      return;
-    }
-    checked = true;
-    ok("Didn't assert");
-    SimpleTest.finish()
-  }, 0);
-});
-
 SimpleTest.waitForFocus(() => {
+
+  let checked = false;
+  document.querySelector("area").addEventListener("mouseover", function() {
+    setTimeout(() => {
+      if (checked) {
+        return;
+      }
+      checked = true;
+      ok("Didn't assert");
+      SimpleTest.finish()
+    }, 0);
+  });
+
   synthesizeMouseAtCenter(document.querySelector("img"), { type: "mousemove" });
 });
 </script>
