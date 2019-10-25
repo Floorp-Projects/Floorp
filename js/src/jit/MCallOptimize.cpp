@@ -4128,7 +4128,7 @@ IonBuilder::InliningResult IonBuilder::inlineIsConstructing(
     CallInfo& callInfo) {
   MOZ_ASSERT(!callInfo.constructing());
   MOZ_ASSERT(callInfo.argc() == 0);
-  MOZ_ASSERT(script()->functionNonDelazifying(),
+  MOZ_ASSERT(script()->function(),
              "isConstructing() should only be called in function scripts");
 
   if (getInlineReturnType() != MIRType::Boolean) {

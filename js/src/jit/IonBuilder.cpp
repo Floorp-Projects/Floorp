@@ -96,7 +96,7 @@ BaselineFrameInspector* jit::NewBaselineFrameInspector(TempAllocator* temp,
 
   JSScript* script = frame->script();
 
-  if (script->functionNonDelazifying()) {
+  if (script->function()) {
     if (!inspector->argTypes.reserve(frame->numFormalArgs())) {
       return nullptr;
     }

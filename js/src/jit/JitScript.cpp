@@ -40,7 +40,7 @@ size_t JitScript::NumTypeSets(JSScript* script) {
                 "JSFunction nargs should have safe range to avoid overflow");
 
   size_t num = script->numBytecodeTypeSets() + 1 /* this */;
-  if (JSFunction* fun = script->functionNonDelazifying()) {
+  if (JSFunction* fun = script->function()) {
     num += fun->nargs();
   }
 
@@ -167,8 +167,7 @@ bool JSScript::createJitScript(JSContext* cx) {
   StackTypeSet* thisTypes = this->jitScript()->thisTypes(sweep, this);
   InferSpew(ISpewOps, "typeSet: %sT%p%s this %p", InferSpewColor(thisTypes),
             thisTypes, InferSpewColorReset(), this);
-  unsigned nargs =
-      functionNonDelazifying() ? functionNonDelazifying()->nargs() : 0;
+  unsigned nargs = function() ? function()->nargs() : 0;
   for (unsigned i = 0; i < nargs; i++) {
     StackTypeSet* types = this->jitScript()->argTypes(sweep, this, i);
     InferSpew(ISpewOps, "typeSet: %sT%p%s arg%u %p", InferSpewColor(types),
@@ -264,7 +263,7 @@ void JitScript::printTypes(JSContext* cx, HandleScript script) {
   AutoEnterAnalysis enter(nullptr, script->zone());
   Fprinter out(stderr);
 
-  if (script->functionNonDelazifying()) {
+  if (script->function()) {
     fprintf(stderr, "Function");
   } else if (script->isForEval()) {
     fprintf(stderr, "Eval");
@@ -274,8 +273,8 @@ void JitScript::printTypes(JSContext* cx, HandleScript script) {
   fprintf(stderr, " %#" PRIxPTR " %s:%u ", uintptr_t(script.get()),
           script->filename(), script->lineno());
 
-  if (script->functionNonDelazifying()) {
-    if (JSAtom* name = script->functionNonDelazifying()->explicitName()) {
+  if (script->function()) {
+    if (JSAtom* name = script->function()->explicitName()) {
       name->dumpCharsNoNewline(out);
     }
   }
@@ -283,8 +282,7 @@ void JitScript::printTypes(JSContext* cx, HandleScript script) {
   fprintf(stderr, "\n    this:");
   thisTypes(sweep, script)->print();
 
-  for (uint32_t i = 0; script->functionNonDelazifying() &&
-                       i < script->functionNonDelazifying()->nargs();
+  for (uint32_t i = 0; script->function() && i < script->function()->nargs();
        i++) {
     fprintf(stderr, "\n    arg%u:", i);
     argTypes(sweep, script, i)->print();
@@ -565,8 +563,8 @@ bool JitScript::ensureHasCachedIonData(JSContext* cx, HandleScript script) {
   }
 
   Rooted<EnvironmentObject*> templateEnv(cx);
-  if (script->functionNonDelazifying()) {
-    RootedFunction fun(cx, script->functionNonDelazifying());
+  if (script->function()) {
+    RootedFunction fun(cx, script->function());
 
     if (fun->needsNamedLambdaEnvironment()) {
       templateEnv =

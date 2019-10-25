@@ -139,7 +139,7 @@ class RematerializedFrame {
     return *argsObj_;
   }
 
-  bool isFunctionFrame() const { return !!script_->functionNonDelazifying(); }
+  bool isFunctionFrame() const { return !!script_->function(); }
   bool isGlobalFrame() const { return script_->isGlobalCode(); }
   bool isModuleFrame() const { return script_->module(); }
 

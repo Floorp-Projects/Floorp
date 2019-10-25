@@ -33,7 +33,7 @@ inline StackTypeSet* JitScript::thisTypes(const AutoSweepJitScript& sweep,
 
 inline StackTypeSet* JitScript::argTypes(const AutoSweepJitScript& sweep,
                                          JSScript* script, unsigned i) {
-  MOZ_ASSERT(i < script->functionNonDelazifying()->nargs());
+  MOZ_ASSERT(i < script->function()->nargs());
   return typeArray(sweep) + script->numBytecodeTypeSets() + 1 /* this */ + i;
 }
 
