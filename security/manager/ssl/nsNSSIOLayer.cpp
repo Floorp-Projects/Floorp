@@ -1656,13 +1656,15 @@ class ClientAuthDataRunnable : public SyncRunnableBase {
  public:
   ClientAuthDataRunnable(CERTCertificate** pRetCert, SECKEYPrivateKey** pRetKey,
                          nsNSSSocketInfo* info,
-                         const UniqueCERTCertificate& serverCert)
+                         const UniqueCERTCertificate& serverCert,
+                         nsTArray<nsCString>& caNamesStrings)
       : mRV(SECFailure),
         mErrorCodeToReport(SEC_ERROR_NO_MEMORY),
         mPRetCert(pRetCert),
         mPRetKey(pRetKey),
         mSocketInfo(info),
-        mServerCert(serverCert.get()) {}
+        mServerCert(serverCert.get()),
+        mCANamesStrings(std::move(caNamesStrings)) {}
 
   SECStatus mRV;                      // out
   PRErrorCode mErrorCodeToReport;     // out
@@ -1672,16 +1674,49 @@ class ClientAuthDataRunnable : public SyncRunnableBase {
   virtual void RunOnTargetThread() override;
 
  private:
-  nsNSSSocketInfo* const mSocketInfo;  // in
-  CERTCertificate* const mServerCert;  // in
+  nsNSSSocketInfo* const mSocketInfo;   // in
+  CERTCertificate* const mServerCert;   // in
+  nsTArray<nsCString> mCANamesStrings;  // in
 };
+
+nsTArray<nsCString> DecodeCANames(CERTDistNames* caNames) {
+  MOZ_ASSERT(caNames);
+
+  nsTArray<nsCString> caNamesStrings;
+  if (!caNames) {
+    return caNamesStrings;
+  }
+
+  for (int i = 0; i < caNames->nnames; i++) {
+    char* caName = CERT_DerNameToAscii(&caNames->names[i]);
+    // Ignore failures
+    if (caName) {
+      caNamesStrings.AppendElement(nsCString(caName));
+      PORT_Free(caName);  // CERT_DerNameToAscii uses PORT_Alloc
+    }
+  }
+  return caNamesStrings;
+}
+
+nsTArray<char*> GetDependentStringPointers(nsTArray<nsCString>& strings) {
+  nsTArray<char*> pointers;
+  for (auto& string : strings) {
+    // We're not actually writing to the string. The API we're going to use this
+    // data with takes an array of non-const char pointers. To avoid the
+    // undefined behavior of reinterpreting a const pointer as a non-const
+    // pointer, everything we do here has to be non-const.
+    pointers.AppendElement(string.BeginWriting());
+  }
+  return pointers;
+}
 
 // This callback function is used to pull client certificate
 // information upon server request
 //
 // - arg: SSL data connection
 // - socket: SSL socket we're dealing with
-// - caNames: list of CA names, we ignore this argument in this function
+// - caNames: list of CA names to use as a hint for selecting potential client
+//            certificates (may be empty)
 // - pRetCert: returns a pointer to a pointer to a valid certificate if
 //             successful; otherwise nullptr
 // - pRetKey: returns a pointer to a pointer to the corresponding key if
@@ -1690,7 +1725,7 @@ SECStatus nsNSS_SSLGetClientAuthData(void* arg, PRFileDesc* socket,
                                      CERTDistNames* caNames,
                                      CERTCertificate** pRetCert,
                                      SECKEYPrivateKey** pRetKey) {
-  if (!socket || !pRetCert || !pRetKey) {
+  if (!socket || !caNames || !pRetCert || !pRetKey) {
     PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
     return SECFailure;
   }
@@ -1731,9 +1766,10 @@ SECStatus nsNSS_SSLGetClientAuthData(void* arg, PRFileDesc* socket,
     return SECSuccess;
   }
 
+  nsTArray<nsCString> caNamesStrings(DecodeCANames(caNames));
   // XXX: This should be done asynchronously; see bug 696976
-  RefPtr<ClientAuthDataRunnable> runnable(
-      new ClientAuthDataRunnable(pRetCert, pRetKey, info, serverCert));
+  RefPtr<ClientAuthDataRunnable> runnable(new ClientAuthDataRunnable(
+      pRetCert, pRetKey, info, serverCert, caNamesStrings));
   nsresult rv = runnable->DispatchToMainThreadAndWait();
   if (NS_FAILED(rv)) {
     PR_SetError(SEC_ERROR_NO_MEMORY, 0);
@@ -1798,7 +1834,17 @@ void ClientAuthDataRunnable::RunOnTargetThread() {
     return;
   }
 
-  mRV = SECSuccess;
+  nsTArray<char*> caNamesStringPointers(
+      GetDependentStringPointers(mCANamesStrings));
+  mRV = CERT_FilterCertListByCANames(
+      certList.get(), caNamesStringPointers.Length(),
+      caNamesStringPointers.Elements(), certUsageSSLClient);
+  if (mRV != SECSuccess) {
+    return;
+  }
+  if (CERT_LIST_EMPTY(certList)) {
+    return;
+  }
 
   // find valid user cert and key pair
   if (nsGetUserCertChoice() == UserCertChoice::Auto) {
