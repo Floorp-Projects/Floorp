@@ -58,15 +58,6 @@ ScriptAndCounts::ScriptAndCounts(ScriptAndCounts&& sac)
 void SetFrameArgumentsObject(JSContext* cx, AbstractFramePtr frame,
                              HandleScript script, JSObject* argsobj);
 
-/* static */ inline JSFunction* LazyScript::functionDelazifying(
-    JSContext* cx, Handle<LazyScript*> script) {
-  RootedFunction fun(cx, script->functionNonDelazifying());
-  if (fun && !JSFunction::getOrCreateScript(cx, fun)) {
-    return nullptr;
-  }
-  return fun;
-}
-
 }  // namespace js
 
 inline JSFunction* JSScript::getFunction(size_t index) {

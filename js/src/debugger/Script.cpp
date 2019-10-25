@@ -153,13 +153,9 @@ static JSScript* DelazifyScript(JSContext* cx, Handle<LazyScript*> lazyScript) {
   }
   MOZ_ASSERT(lazyScript->enclosingScriptHasEverBeenCompiled());
 
-  RootedFunction fun0(cx, lazyScript->functionNonDelazifying());
-  AutoRealm ar(cx, fun0);
-  RootedFunction fun(cx, LazyScript::functionDelazifying(cx, lazyScript));
-  if (!fun) {
-    return nullptr;
-  }
-  return fun->getOrCreateScript(cx, fun);
+  RootedFunction fun(cx, lazyScript->functionNonDelazifying());
+  AutoRealm ar(cx, fun);
+  return JSFunction::getOrCreateScript(cx, fun);
 }
 
 /* static */

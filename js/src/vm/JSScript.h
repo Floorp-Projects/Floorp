@@ -3328,8 +3328,6 @@ class LazyScript : public BaseScript {
       uint32_t sourceStart, uint32_t sourceEnd, uint32_t toStringStart,
       uint32_t toStringEnd, uint32_t lineno, uint32_t column);
 
-  static inline JSFunction* functionDelazifying(JSContext* cx,
-                                                Handle<LazyScript*>);
   JSFunction* functionNonDelazifying() const {
     return &functionOrGlobal_->as<JSFunction>();
   }
