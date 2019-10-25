@@ -2729,15 +2729,8 @@ class JSScript : public js::BaseScript {
   void setLazyScript(js::LazyScript* lazy) { lazyScript = lazy; }
   js::LazyScript* maybeLazyScript() { return lazyScript; }
 
-  /*
-   * Original compiled function for the script, if it has a function.
-   * nullptr for global and eval scripts.
-   * The delazifying variant ensures that the function isn't lazy. The
-   * non-delazifying variant must only be used after earlier code has
-   * called ensureNonLazyCanonicalFunction and while the function can't
-   * have been relazified.
-   */
-  inline JSFunction* functionDelazifying() const;
+  // Canonical function for the script, if it has a function. For global and
+  // eval scripts this is nullptr.
   JSFunction* functionNonDelazifying() const {
     if (bodyScope()->is<js::FunctionScope>()) {
       return bodyScope()->as<js::FunctionScope>().canonicalFunction();

@@ -218,8 +218,8 @@ IonBytecodeInfo js::jit::AnalyzeBytecodeForIon(JSContext* cx,
   IonBytecodeInfo result;
 
   if (script->module() || script->initialEnvironmentShape() ||
-      (script->functionDelazifying() &&
-       script->functionDelazifying()->needsSomeEnvironmentObject())) {
+      (script->function() &&
+       script->function()->needsSomeEnvironmentObject())) {
     result.usesEnvironmentChain = true;
   }
 

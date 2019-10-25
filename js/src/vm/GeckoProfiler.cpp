@@ -279,7 +279,7 @@ UniqueChars GeckoProfilerRuntime::allocProfileString(JSContext* cx,
   bool hasName = false;
   size_t nameLength = 0;
   UniqueChars nameStr;
-  JSFunction* func = script->functionDelazifying();
+  JSFunction* func = script->function();
   if (func && func->displayAtom()) {
     nameStr = StringToNewUTF8CharsZ(cx, *func->displayAtom());
     if (!nameStr) {
