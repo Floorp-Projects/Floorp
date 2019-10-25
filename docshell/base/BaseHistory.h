@@ -18,6 +18,20 @@ class BaseHistory : public IHistory {
   BaseHistory()
     : mTrackedURIs(kTrackedUrisInitialSize) {}
 
+  /**
+   * Mark all links for the given URI in the given document as visited. Used
+   * within NotifyVisited.
+   */
+  void NotifyVisitedForDocument(nsIURI*,
+                                dom::Document*);
+
+  /**
+   * Dispatch a runnable for the document passed in which will call
+   * NotifyVisitedForDocument with the correct URI and Document.
+   */
+  void DispatchNotifyVisited(nsIURI*, dom::Document*);
+
+
   static dom::Document* GetLinkDocument(dom::Link&);
 
   using ObserverArray = nsTObserverArray<dom::Link*>;
