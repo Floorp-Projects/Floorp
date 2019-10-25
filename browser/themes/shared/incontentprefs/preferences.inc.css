@@ -692,7 +692,7 @@ button > hbox > label {
 .sync-engines-list + hbox {
   margin-top: 0px;
   padding-top: 16px;
-  max-width: 224px;
+  max-width: 300px;
   height: auto;
 }
 
@@ -705,15 +705,24 @@ dialog > .sync-engines-list + hbox {
 .sync-engine-image {
   margin-inline-start: 4px;
   margin-inline-end: 8px;
-  width: 16px;
-  height: 16px;
+  min-width: 16px;
+  min-height: 16px;
   -moz-context-properties: fill;
   fill: currentColor;
+}
+
+.sync-engines-list checkbox {
+  min-width: max-content;
+  max-width: calc(50vw - 10px);
 }
 
 .sync-engines-list {
   column-count: 2;
   column-fill: balance;
+}
+
+.sync-engines-list > div:not([hidden]) {
+  display: flex;
 }
 
 .sync-engine-bookmarks .checkbox-icon,
