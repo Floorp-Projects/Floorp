@@ -14,9 +14,9 @@ namespace mozilla {
 
 class BaseHistory : public IHistory {
  public:
-  NS_IMETHODIMP RegisterVisitedCallback(nsIURI*, dom::Link*) final;
-  NS_IMETHODIMP UnregisterVisitedCallback(nsIURI*, dom::Link*) final;
-  NS_IMETHODIMP NotifyVisited(nsIURI* aURI) final;
+  nsresult RegisterVisitedCallback(nsIURI*, dom::Link*) final;
+  void UnregisterVisitedCallback(nsIURI*, dom::Link*) final;
+  void NotifyVisited(nsIURI* aURI) final;
 
  protected:
   static constexpr const size_t kTrackedUrisInitialSize = 64;

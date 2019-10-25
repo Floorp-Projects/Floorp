@@ -566,7 +566,7 @@ void GeckoViewHistory::HandleVisitedState(
   if (!mTrackedURIs.IsEmpty()) {
     for (const VisitedURI& visitedURI : aVisitedURIs) {
       if (visitedURI.mVisited) {
-        Unused << NS_WARN_IF(NS_FAILED(NotifyVisited(visitedURI.mURI)));
+        NotifyVisited(visitedURI.mURI);
       }
     }
   }

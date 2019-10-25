@@ -168,8 +168,7 @@ void test_unvisited_does_not_notify_part2() {
   // We would have had a failure at this point had the content node been told it
   // was visited.  Therefore, it is safe to unregister our content node.
   nsCOMPtr<IHistory> history = do_get_IHistory();
-  nsresult rv = history->UnregisterVisitedCallback(testURI, testLink);
-  do_check_success(rv);
+  history->UnregisterVisitedCallback(testURI, testLink);
 
   // Clear the stored variables now.
   testURI = nullptr;
@@ -214,8 +213,7 @@ void test_unregistered_visited_does_not_notify() {
   do_check_success(rv);
 
   // Unregister the Link.
-  rv = history->UnregisterVisitedCallback(testURI, link);
-  do_check_success(rv);
+  history->UnregisterVisitedCallback(testURI, link);
 
   // And finally add a visit for the URI.
   addURI(testURI);
@@ -261,8 +259,7 @@ void test_RegisterVisitedCallback_returns_before_notifying() {
 
   // Remove ourselves as an observer.  We would have failed if we had been
   // notified.
-  rv = history->UnregisterVisitedCallback(testURI, link);
-  do_check_success(rv);
+  history->UnregisterVisitedCallback(testURI, link);
 
   run_next_test();
 }
@@ -363,8 +360,7 @@ void test_observer_topic_dispatched() {
   SpinEventLoopUntil([&]() { return visitedNotified && notVisitedNotified; });
 
   // Unregister our observer that would not have been released.
-  rv = history->UnregisterVisitedCallback(notVisitedURI, notVisitedLink);
-  do_check_success(rv);
+  history->UnregisterVisitedCallback(notVisitedURI, notVisitedLink);
 
   run_next_test();
 }
