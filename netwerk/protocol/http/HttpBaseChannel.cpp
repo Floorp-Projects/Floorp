@@ -1568,18 +1568,17 @@ HttpBaseChannel::GetReferrerInfo(nsIReferrerInfo** aReferrerInfo) {
   return NS_OK;
 }
 
-nsresult HttpBaseChannel::SetReferrerInfoInternal(
-    nsIReferrerInfo* aReferrerInfo, bool aClone, bool aCompute,
-    bool aRespectBeforeConnect) {
-  LOG(
-      ("HttpBaseChannel::SetReferrerInfoInternal [this=%p aClone(%d) "
-       "aCompute(%d)]\n",
+nsresult HttpBaseChannel::SetReferrerInfo(nsIReferrerInfo* aReferrerInfo,
+                                          bool aClone, bool aCompute,
+                                          bool aSetOriginal) {
+  LOG(("HttpBaseChannel::SetReferrerInfo [this=%p aClone(%d) aCompute(%d)]\n",
        this, aClone, aCompute));
-  if (aRespectBeforeConnect) {
-    ENSURE_CALLED_BEFORE_CONNECT();
-  }
+  ENSURE_CALLED_BEFORE_CONNECT();
 
   mReferrerInfo = aReferrerInfo;
+  if (aSetOriginal) {
+    mOriginalReferrerInfo = aReferrerInfo;
+  }
 
   // clear existing referrer, if any
   nsresult rv = ClearReferrerHeader();
@@ -1593,6 +1592,9 @@ nsresult HttpBaseChannel::SetReferrerInfoInternal(
 
   if (aClone) {
     mReferrerInfo = static_cast<dom::ReferrerInfo*>(aReferrerInfo)->Clone();
+    if (aSetOriginal) {
+      mOriginalReferrerInfo = mReferrerInfo;
+    }
   }
 
   dom::ReferrerInfo* referrerInfo =
@@ -1622,17 +1624,17 @@ nsresult HttpBaseChannel::SetReferrerInfoInternal(
     return rv;
   }
 
-  return SetReferrerHeader(spec, aRespectBeforeConnect);
+  return SetReferrerHeader(spec);
 }
 
 NS_IMETHODIMP
 HttpBaseChannel::SetReferrerInfo(nsIReferrerInfo* aReferrerInfo) {
-  return SetReferrerInfoInternal(aReferrerInfo, true, true, true);
+  return SetReferrerInfo(aReferrerInfo, true, true);
 }
 
 NS_IMETHODIMP
 HttpBaseChannel::SetReferrerInfoWithoutClone(nsIReferrerInfo* aReferrerInfo) {
-  return SetReferrerInfoInternal(aReferrerInfo, false, true, true);
+  return SetReferrerInfo(aReferrerInfo, false, true);
 }
 
 // Return the channel's proxy URI, or if it doesn't exist, the
@@ -3139,7 +3141,7 @@ HttpBaseChannel::CloneReplacementChannelConfig(bool aPreserveMethod,
     config.privateBrowsing = Some(mPrivateBrowsing);
   }
 
-  if (mReferrerInfo) {
+  if (mOriginalReferrerInfo) {
     dom::ReferrerPolicy referrerPolicy = dom::ReferrerPolicy::_empty;
     nsAutoCString tRPHeaderCValue;
     Unused << GetResponseHeader(NS_LITERAL_CSTRING("referrer-policy"),
@@ -3156,11 +3158,11 @@ HttpBaseChannel::CloneReplacementChannelConfig(bool aPreserveMethod,
       // changes, we must not use the old computed value, and have to compute
       // again.
       nsCOMPtr<nsIReferrerInfo> referrerInfo =
-          dom::ReferrerInfo::CreateFromOtherAndPolicyOverride(mReferrerInfo,
-                                                              referrerPolicy);
+          dom::ReferrerInfo::CreateFromOtherAndPolicyOverride(
+              mOriginalReferrerInfo, referrerPolicy);
       config.referrerInfo = referrerInfo;
     } else {
-      config.referrerInfo = mReferrerInfo;
+      config.referrerInfo = mOriginalReferrerInfo;
     }
   }
 
