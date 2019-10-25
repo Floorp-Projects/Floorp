@@ -14,7 +14,7 @@ namespace mozilla {
 using mozilla::dom::Document;
 using mozilla::dom::Link;
 
-Document* BaseHistory::GetLinkDocument(Link& aLink) {
+static Document* GetLinkDocument(const Link& aLink) {
   Element* element = aLink.GetElement();
   // Element can only be null for mock_Link.
   return element ? element->OwnerDoc() : nullptr;

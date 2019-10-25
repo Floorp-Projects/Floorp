@@ -31,8 +31,6 @@ class BaseHistory : public IHistory {
   // use the results anymore.
   virtual void CancelVisitedQueryIfPossible(nsIURI*) = 0;
 
-  static dom::Document* GetLinkDocument(dom::Link&);
-
   using ObserverArray = nsTObserverArray<dom::Link*>;
   struct TrackedURI {
     ObserverArray mLinks;
