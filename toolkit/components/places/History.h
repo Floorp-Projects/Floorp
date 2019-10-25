@@ -195,8 +195,6 @@ class History final : public IHistory,
   // starting in an unexpected moment.
   Mutex mShutdownMutex;
 
-  nsDataHashtable<nsURIHashKey, TrackedURI> mTrackedURIs;
-
   /**
    * mRecentlyVisitedURIs remembers URIs which have been recently added to
    * history, to avoid saving these locations repeatedly in a short period.

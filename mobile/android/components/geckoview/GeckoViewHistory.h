@@ -54,10 +54,6 @@ class GeckoViewHistory final : public mozilla::IHistory,
 
   static mozilla::StaticRefPtr<GeckoViewHistory> sHistory;
 
-  // A map of unvisited links for URIs. If the history delegate reports that
-  // the URI is visited, we'll asynchronously notify and remove the links.
-  nsDataHashtable<nsURIHashKey, TrackedURI> mTrackedURIs;
-
   // A set of URIs for which we don't know the visited status, and need to
   // query the history delegate.
   nsTHashtable<nsURIHashKey> mNewURIs;
