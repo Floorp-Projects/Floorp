@@ -6,23 +6,12 @@
 
 <body>
 
-<form id="subform2" onsubmit="return checkSubmit(100)">
+<form id="subform2" onsubmit="return false">
   <input id="subtest2" type="text" name="subtest2">
   <button type="submit">Submit</button>
 </form>
 
 <script>
-  /* exported checkSubmit clickButton */
-  function checkSubmit(num) {
-    return SpecialPowers.wrap(parent).wrappedJSObject.checkSubmit(num);
-  }
-
-  function clickButton(num) {
-    if (num == 100) {
-      document.querySelectorAll("button")[0].click();
-    }
-  }
-
   // set the input's value (can't use a default value, as satchel will ignore it)
   document.getElementById("subtest2").value = "subtestValue";
 </script>
