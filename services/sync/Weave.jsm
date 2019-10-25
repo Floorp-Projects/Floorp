@@ -120,8 +120,6 @@ WeaveService.prototype = {
             isConfigured =
               Weave.Status.checkSetup() != Weave.CLIENT_NOT_CONFIGURED;
           }
-          let getHistogramById = Services.telemetry.getHistogramById;
-          getHistogramById("WEAVE_CONFIGURED").add(isConfigured);
           if (isConfigured) {
             this.ensureLoaded();
           }
