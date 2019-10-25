@@ -92,50 +92,42 @@ void GeckoViewHistory::QueryVisitedStateInContentProcess() {
   // instead, but, since we don't expect to have many tab children, we can avoid
   // the cost of hashing.
   AutoTArray<NewURIEntry, 8> newEntries;
-  for (auto newURIsIter = mNewURIs.Iter(); !newURIsIter.Done();
+  for (auto newURIsIter = mNewURIs.ConstIter(); !newURIsIter.Done();
        newURIsIter.Next()) {
     nsIURI* uri = newURIsIter.Get()->GetKey();
-    if (auto entry = mTrackedURIs.Lookup(uri)) {
-      ObservingLinks& links = entry.Data();
-      nsTObserverArray<Link*>::BackwardIterator linksIter(links.mLinks);
-      while (linksIter.HasMore()) {
-        Link* link = linksIter.GetNext();
+    auto entry = mTrackedURIs.Lookup(uri);
+    if (!entry) {
+      continue;
+    }
+    ObservingLinks& links = entry.Data();
+    nsTObserverArray<Link*>::BackwardIterator linksIter(links.mLinks);
+    while (linksIter.HasMore()) {
+      Link* link = linksIter.GetNext();
 
-        BrowserChild* browserChild = nullptr;
-        nsIWidget* widget =
-            nsContentUtils::WidgetForContent(link->GetElement());
-        if (widget) {
-          browserChild = widget->GetOwningBrowserChild();
-        }
-        if (!browserChild) {
-          // We need the link's tab child to find the matching window in the
-          // parent process, so stop tracking it if it doesn't have one.
-          linksIter.Remove();
-          continue;
-        }
-
-        // Add to the list of new URIs for this document, or make a new entry.
-        bool hasEntry = false;
-        for (NewURIEntry& entry : newEntries) {
-          if (entry.mBrowserChild == browserChild) {
-            entry.AddURI(uri);
-            hasEntry = true;
-            break;
-          }
-        }
-        if (!hasEntry) {
-          newEntries.AppendElement(NewURIEntry(browserChild, uri));
+      nsIWidget* widget = nsContentUtils::WidgetForContent(link->GetElement());
+      if (!widget) {
+        continue;
+      }
+      BrowserChild* browserChild = widget->GetOwningBrowserChild();
+      if (!browserChild) {
+        continue;
+      }
+      // Add to the list of new URIs for this document, or make a new entry.
+      bool hasEntry = false;
+      for (NewURIEntry& entry : newEntries) {
+        if (entry.mBrowserChild == browserChild) {
+          entry.AddURI(uri);
+          hasEntry = true;
+          break;
         }
       }
-      if (links.mLinks.IsEmpty()) {
-        // If the list of tracked links is empty, remove the entry for the URI.
-        // We'll need to query the history delegate again the next time we look
-        // up the visited status for this URI.
-        entry.Remove();
+      if (!hasEntry) {
+        newEntries.AppendElement(NewURIEntry(browserChild, uri));
       }
     }
-    newURIsIter.Remove();
   }
+
+  mNewURIs.Clear();
 
   // Send the request to the parent process, one message per tab child.
   for (const NewURIEntry& entry : newEntries) {
@@ -164,41 +156,39 @@ void GeckoViewHistory::QueryVisitedStateInParentProcess() {
   MOZ_ASSERT(XRE_IsParentProcess());
 
   nsTArray<NewURIEntry> newEntries;
-  for (auto newURIsIter = mNewURIs.Iter(); !newURIsIter.Done();
+  for (auto newURIsIter = mNewURIs.ConstIter(); !newURIsIter.Done();
        newURIsIter.Next()) {
     nsIURI* uri = newURIsIter.Get()->GetKey();
-    if (auto entry = mTrackedURIs.Lookup(uri)) {
-      ObservingLinks& links = entry.Data();
-      nsTObserverArray<Link*>::BackwardIterator linksIter(links.mLinks);
-      while (linksIter.HasMore()) {
-        Link* link = linksIter.GetNext();
+    auto entry = mTrackedURIs.Lookup(uri);
+    if (!entry) {
+      continue;  // Nobody cares about this uri anymore.
+    }
 
-        nsIWidget* widget =
-            nsContentUtils::WidgetForContent(link->GetElement());
-        if (!widget) {
-          linksIter.Remove();
+    ObservingLinks& links = entry.Data();
+    nsTObserverArray<Link*>::BackwardIterator linksIter(links.mLinks);
+    while (linksIter.HasMore()) {
+      Link* link = linksIter.GetNext();
+
+      nsIWidget* widget = nsContentUtils::WidgetForContent(link->GetElement());
+      if (!widget) {
+        continue;
+      }
+
+      bool hasEntry = false;
+      for (NewURIEntry& entry : newEntries) {
+        if (entry.mWidget != widget) {
           continue;
         }
-
-        bool hasEntry = false;
-        for (NewURIEntry& entry : newEntries) {
-          if (entry.mWidget == widget) {
-            entry.AddURI(uri);
-            hasEntry = true;
-            break;
-          }
-        }
-        if (!hasEntry) {
-          newEntries.AppendElement(NewURIEntry(widget, uri));
-        }
+        entry.AddURI(uri);
+        hasEntry = true;
       }
-      if (links.mLinks.IsEmpty()) {
-        entry.Remove();
+      if (!hasEntry) {
+        newEntries.AppendElement(NewURIEntry(widget, uri));
       }
     }
   }
-  mNewURIs.Clear();
 
+  mNewURIs.Clear();
   for (const NewURIEntry& entry : newEntries) {
     QueryVisitedState(entry.mWidget, entry.mURIs);
   }
