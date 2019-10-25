@@ -16,6 +16,7 @@
 
 #include "mozilla/dom/Link.h"
 #include "mozilla/ipc/URIParams.h"
+#include "nsDataHashtable.h"
 #include "nsTHashtable.h"
 #include "nsString.h"
 #include "nsURIHashKey.h"
@@ -194,25 +195,7 @@ class History final : public IHistory,
   // starting in an unexpected moment.
   Mutex mShutdownMutex;
 
-  typedef nsTObserverArray<mozilla::dom::Link*> ObserverArray;
-
-  class KeyClass : public nsURIHashKey {
-   public:
-    explicit KeyClass(const nsIURI* aURI) : nsURIHashKey(aURI) {}
-    KeyClass(KeyClass&& aOther)
-        : nsURIHashKey(std::move(aOther)),
-          array(std::move(aOther.array)),
-          mVisited(std::move(aOther.mVisited)) {
-      MOZ_ASSERT_UNREACHABLE("Do not call me!");
-    }
-    size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
-      return array.ShallowSizeOfExcludingThis(aMallocSizeOf);
-    }
-    ObserverArray array;
-    bool mVisited = false;
-  };
-
-  nsTHashtable<KeyClass> mObservers;
+  nsDataHashtable<nsURIHashKey, TrackedURI> mTrackedURIs;
 
   /**
    * mRecentlyVisitedURIs remembers URIs which have been recently added to
