@@ -3719,7 +3719,6 @@ JS_PUBLIC_API JSString* JS_DecompileScript(JSContext* cx, HandleScript script) {
 
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
-  script->ensureNonLazyCanonicalFunction();
   RootedFunction fun(cx, script->functionNonDelazifying());
   if (fun) {
     return JS_DecompileFunction(cx, fun);
