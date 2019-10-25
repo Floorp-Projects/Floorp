@@ -148,8 +148,8 @@ class DeleteOrphanedBodyAction final : public Action {
     mDeletedBodyIdList.AppendElement(aBodyId);
   }
 
-  virtual void RunOnTarget(Resolver* aResolver, const QuotaInfo& aQuotaInfo,
-                           Data*) override {
+  void RunOnTarget(Resolver* aResolver, const QuotaInfo& aQuotaInfo,
+                   Data*) override {
     MOZ_DIAGNOSTIC_ASSERT(aResolver);
     MOZ_DIAGNOSTIC_ASSERT(aQuotaInfo.mDir);
 

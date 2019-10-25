@@ -115,6 +115,11 @@ static nsresult LockedGetPaddingSizeFromDB(nsIFile* aDir,
   QuotaInfo quotaInfo;
   quotaInfo.mGroup = aGroup;
   quotaInfo.mOrigin = aOrigin;
+  // This should only be called during the temporary storage is initializing.
+  // And at that moment, we haven't constructed in-memory objects
+  // (e.g. QuotaObject) yet. So, passing a specific id to not get a QuotaObject
+  // on the TelemetryVFS.
+  MOZ_DIAGNOSTIC_ASSERT(quotaInfo.mDirectoryLockId == -1);
   nsresult rv = mozilla::dom::cache::OpenDBConnection(quotaInfo, aDir,
                                                       getter_AddRefs(conn));
   if (rv == NS_ERROR_FILE_NOT_FOUND ||
@@ -432,11 +437,24 @@ class CacheQuotaClient final : public Client {
               dir, DirPaddingFile::TMP_FILE) ||
           NS_WARN_IF(NS_FAILED(mozilla::dom::cache::LockedDirectoryPaddingGet(
               dir, &paddingSize)))) {
-        rv = LockedGetPaddingSizeFromDB(dir, aGroup, aOrigin, &paddingSize);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
+        if (aInitializing) {
+          rv = LockedGetPaddingSizeFromDB(dir, aGroup, aOrigin, &paddingSize);
+          if (NS_WARN_IF(NS_FAILED(rv))) {
+            REPORT_TELEMETRY_ERR_IN_INIT(aInitializing, kQuotaInternalError,
+                                         Cache_GetPaddingSize);
+            return rv;
+          }
+        } else {
+          // XXXtt This should be handled in a better way.
+          // If there is no another action/operation for Cache on other threads,
+          // it means the previous action failed. And we should be safe to get
+          // the padding size from the database.
+          // However, if there is other actions access the files on Cache IO
+          // thread, then we shouldn't touch the file here.
           REPORT_TELEMETRY_ERR_IN_INIT(aInitializing, kQuotaInternalError,
                                        Cache_GetPaddingSize);
-          return rv;
+
+          return NS_ERROR_ABORT;
         }
       }
     }
