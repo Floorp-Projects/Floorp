@@ -73,19 +73,12 @@ class SmartTrace extends Component {
           new Promise(resolve => {
             const { lineNumber, columnNumber, filename } = frame;
             const source = filename.split(" -> ").pop();
-            const subscribeCallback = (
-              isSourceMapped,
-              url,
-              line,
-              column,
-              sourceId
-            ) => {
+            const subscribeCallback = (isSourceMapped, url, line, column) => {
               this.onSourceMapServiceChange(
                 isSourceMapped,
                 url,
                 line,
                 column,
-                sourceId,
                 index
               );
               resolve();
@@ -178,7 +171,6 @@ class SmartTrace extends Component {
     filename,
     lineNumber,
     columnNumber,
-    sourceId,
     index
   ) {
     if (isSourceMapped) {
@@ -188,7 +180,9 @@ class SmartTrace extends Component {
 
       this.setState(state => {
         const stacktrace = (state && state.stacktrace) || this.props.stacktrace;
-        const frame = stacktrace[index];
+        const frame = { ...stacktrace[index] };
+        // Remove any sourceId that might confuse the viewSource util.
+        delete frame.sourceId;
 
         const newStacktrace = stacktrace
           .slice(0, index)
@@ -197,7 +191,6 @@ class SmartTrace extends Component {
             filename,
             lineNumber,
             columnNumber,
-            sourceId,
           })
           .concat(stacktrace.slice(index + 1));
 
