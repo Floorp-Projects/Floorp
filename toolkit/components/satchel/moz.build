@@ -42,8 +42,7 @@ XPCOM_MANIFESTS += [
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_TARGET_FILES.actors += [
-    'FormHistoryChild.jsm',
-    'FormHistoryParent.jsm',
+    'FormSubmitChild.jsm',
 ]
 
 FINAL_LIBRARY = 'xul'
