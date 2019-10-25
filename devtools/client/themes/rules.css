@@ -692,6 +692,28 @@
   background-image: url("chrome://devtools/skin/images/rules-view-print-simulation.svg");
 }
 
+#color-scheme-simulation-toggle::before {
+  -moz-context-properties: fill, fill-opacity;
+  background-image: url("chrome://mozapps/skin/extensions/category-themes.svg");
+  background-size: 12px;
+}
+
+#color-scheme-simulation-toggle[state="dark"] {
+  background-color: #333;
+}
+
+#color-scheme-simulation-toggle[state="dark"]::before {
+  fill: white;
+}
+
+#color-scheme-simulation-toggle[state="light"]::before {
+  fill: #bbb;
+}
+
+#color-scheme-simulation-toggle[state="no-preference"]::before {
+  fill-opacity: 0.5;
+}
+
 .flash-out {
   transition: background 1s;
 }
