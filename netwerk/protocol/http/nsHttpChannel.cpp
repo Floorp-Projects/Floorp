@@ -9800,7 +9800,7 @@ void nsHttpChannel::SetOriginHeader() {
       // Origin header suppressed by user setting
       return;
     }
-  } else if (dom::ReferrerInfo::HideOnionReferrerSource()) {
+  } else if (StaticPrefs::network_http_referer_hideOnionSource()) {
     nsAutoCString host;
     if (referrer && NS_SUCCEEDED(referrer->GetAsciiHost(host)) &&
         StringEndsWith(host, NS_LITERAL_CSTRING(".onion"))) {
