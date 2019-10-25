@@ -2164,16 +2164,16 @@ History::RegisterVisitedCallback(nsIURI* aURI, Link* aLink) {
       // Remove our array from the hashtable so we don't keep it around.
       MOZ_DIAGNOSTIC_ASSERT(key == mObservers.GetEntry(aURI),
                             "The URIs hash mutated!");
-      // In some case calling RemoveEntry on the key obtained by PutEntry
-      // crashes for currently unknown reasons.  Our suspect is that something
-      // between PutEntry and this call causes a nested loop that either removes
-      // the entry or reallocs the hash.
-      // TODO (Bug 1412647): we must figure the root cause for these issues and
-      // remove this stop-gap crash fix.
-      key = mObservers.GetEntry(aURI);
-      if (key) {
-        mObservers.RemoveEntry(key);
-      }
+
+      // TODO (bug 1412647): This could be marginally more efficient if we
+      // called RemoveEntry(key), but it seems that in the past it crashed and
+      // issues couldn't be figured out.
+      // Our suspect is that something between PutEntry and this call causes a
+      // nested loop that either removes the entry or reallocs the hash.
+      //
+      // We must figure the root cause for these issues and just call the faster
+      // thing.
+      mObservers.RemoveEntry(aURI);
       return rv;
     }
   }
