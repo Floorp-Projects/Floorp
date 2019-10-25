@@ -46,11 +46,16 @@ function viewCertHelper(parent, cert, openingOption = "tab") {
   }
 }
 
-function getPKCS7String(certArray) {
+function getPKCS7Array(certArray) {
   let certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
     Ci.nsIX509CertDB
   );
-  return certdb.asPKCS7Blob(certArray);
+  let pkcs7String = certdb.asPKCS7Blob(certArray);
+  let pkcs7Array = new Uint8Array(pkcs7String.length);
+  for (let i = 0; i < pkcs7Array.length; i++) {
+    pkcs7Array[i] = pkcs7String.charCodeAt(i);
+  }
+  return pkcs7Array;
 }
 
 function getPEMString(cert) {
@@ -155,13 +160,18 @@ async function exportToFile(parent, cert) {
       }
       break;
     case 2:
-      content = cert.getRawDER();
+      // OS.File.writeAtomic requires a utf-8 string or a typed array.
+      // nsIX509Cert.getRawDER() returns an array (not a typed array), so we
+      // convert it here.
+      content = Uint8Array.from(cert.getRawDER());
       break;
     case 3:
-      content = getPKCS7String([cert]);
+      // getPKCS7Array returns a typed array already, so no conversion is
+      // necessary.
+      content = getPKCS7Array([cert]);
       break;
     case 4:
-      content = getPKCS7String(chain);
+      content = getPKCS7Array(chain);
       break;
     case 0:
     default:

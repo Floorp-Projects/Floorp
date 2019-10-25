@@ -16,7 +16,31 @@ function createTemporarySaveDirectory() {
   return saveDir;
 }
 
-add_task(async function checkCertExportWorks() {
+// Create the folder the certificates will be saved into.
+var destDir = createTemporarySaveDirectory();
+registerCleanupFunction(function() {
+  destDir.remove(true);
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
+});
+
+function stringOrArrayEquals(actual, expected, message) {
+  is(
+    typeof actual,
+    typeof expected,
+    "actual, expected should have the same type"
+  );
+  if (typeof expected == "string") {
+    is(actual, expected, message);
+  } else {
+    is(actual.toString(), expected.toString(), message);
+  }
+}
+
+var dialogWin;
+var exportButton;
+var expectedCert;
+
+async function setupTest() {
   await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
   let certButton = gBrowser.selectedBrowser.contentDocument.getElementById(
     "viewCertificatesButton"
@@ -26,12 +50,11 @@ add_task(async function checkCertExportWorks() {
     "chrome://pippki/content/certManager.xul"
   );
   certButton.click();
-  let dialogWin = await certDialogLoaded;
+  dialogWin = await certDialogLoaded;
   let doc = dialogWin.document;
   doc.getElementById("certmanagertabs").selectedTab = doc.getElementById(
     "ca_tab"
   );
-  let expectedCert;
   let treeView = doc.getElementById("ca-tree").view;
   // Select any which cert. Ignore parent rows (ie rows without certs):
   for (let i = 0; i < treeView.rowCount; i++) {
@@ -45,38 +68,89 @@ add_task(async function checkCertExportWorks() {
     }
   }
 
-  let exportButton = doc.getElementById("ca_exportButton");
+  exportButton = doc.getElementById("ca_exportButton");
   is(exportButton.disabled, false, "Should enable export button");
-  // Create the folder the link will be saved into.
-  var destDir = createTemporarySaveDirectory();
+}
+
+async function checkCertExportWorks(
+  exportType,
+  encoding,
+  expectedFileContents
+) {
+  MockFilePicker.displayDirectory = destDir;
   var destFile = destDir.clone();
   MockFilePicker.init(window);
-  registerCleanupFunction(function() {
-    MockFilePicker.cleanup();
-    destDir.remove(true);
-  });
-  MockFilePicker.displayDirectory = destDir;
+  MockFilePicker.filterIndex = exportType;
   MockFilePicker.showCallback = function(fp) {
     info("showCallback");
     let fileName = fp.defaultString;
     info("fileName: " + fileName);
     destFile.append(fileName);
     MockFilePicker.setFiles([destFile]);
-    MockFilePicker.filterIndex = 0; // Save an x509 PEM copy of the cert.
     info("done showCallback");
   };
   let finishedExporting = TestUtils.topicObserved("cert-export-finished");
   exportButton.click();
   await finishedExporting;
+  MockFilePicker.cleanup();
   if (destFile && destFile.exists()) {
-    let contents = await OS.File.read(destFile.path, { encoding: "utf-8" });
-    is(
+    let contents = await OS.File.read(destFile.path, { encoding });
+    stringOrArrayEquals(
       contents,
-      dialogWin.getPEMString(expectedCert),
+      expectedFileContents,
       "Should have written correct contents"
     );
+    destFile.remove(false);
   } else {
     ok(false, "No cert saved!");
   }
-  BrowserTestUtils.removeTab(gBrowser.selectedTab);
+}
+
+add_task(setupTest);
+
+add_task(async function checkCertPEMExportWorks() {
+  let expectedContents = dialogWin.getPEMString(expectedCert);
+  await checkCertExportWorks(0, /* 0 = PEM */ "utf-8", expectedContents);
+});
+
+add_task(async function checkCertPEMChainExportWorks() {
+  let expectedContents = dialogWin.getPEMString(expectedCert);
+  await checkCertExportWorks(
+    1, // 1 = PEM chain, but the chain is of length 1
+    "utf-8",
+    expectedContents
+  );
+});
+
+add_task(async function checkCertDERExportWorks() {
+  let expectedContents = Uint8Array.from(expectedCert.getRawDER());
+  await checkCertExportWorks(2, /* 2 = DER */ "", expectedContents);
+});
+
+function stringToTypedArray(str) {
+  let arr = new Uint8Array(str.length);
+  for (let i = 0; i < arr.length; i++) {
+    arr[i] = str.charCodeAt(i);
+  }
+  return arr;
+}
+
+add_task(async function checkCertPKCS7ExportWorks() {
+  let certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
+    Ci.nsIX509CertDB
+  );
+  let expectedContents = stringToTypedArray(certdb.asPKCS7Blob([expectedCert]));
+  await checkCertExportWorks(3, /* 3 = PKCS7 */ "", expectedContents);
+});
+
+add_task(async function checkCertPKCS7ChainExportWorks() {
+  let certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
+    Ci.nsIX509CertDB
+  );
+  let expectedContents = stringToTypedArray(certdb.asPKCS7Blob([expectedCert]));
+  await checkCertExportWorks(
+    4, // 4 = PKCS7 chain, but the chain is of length 1
+    "",
+    expectedContents
+  );
 });
