@@ -58,7 +58,6 @@ class History final : public BaseHistory,
   NS_IMETHOD VisitURI(nsIWidget*, nsIURI*, nsIURI* aLastVisitedURI,
                       uint32_t aFlags) final;
   NS_IMETHOD SetURITitle(nsIURI*, const nsAString&) final;
-  NS_IMETHOD NotifyVisited(nsIURI*) override;
 
   // BaseHistory
   Result<Ok, nsresult> StartVisitedQuery(nsIURI*) final;

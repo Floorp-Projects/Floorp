@@ -397,31 +397,6 @@ GeckoViewHistory::SetURITitle(nsIURI* aURI, const nsAString& aTitle) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP
-GeckoViewHistory::NotifyVisited(nsIURI* aURI) {
-  if (NS_WARN_IF(!aURI)) {
-    return NS_OK;
-  }
-
-  if (auto entry = mTrackedURIs.Lookup(aURI)) {
-    TrackedURI& trackedURI = entry.Data();
-    trackedURI.mVisited = true;
-    nsTArray<Document*> seen;
-    nsTObserverArray<Link*>::BackwardIterator iter(trackedURI.mLinks);
-    while (iter.HasMore()) {
-      Link* link = iter.GetNext();
-      Document* doc = GetLinkDocument(*link);
-      if (seen.Contains(doc)) {
-        continue;
-      }
-      seen.AppendElement(doc);
-      DispatchNotifyVisited(aURI, doc);
-    }
-  }
-
-  return NS_OK;
-}
-
 /**
  * Called from the session handler for the history delegate, with visited
  * statuses for all requested URIs.
@@ -592,7 +567,7 @@ void GeckoViewHistory::HandleVisitedState(
 
   // We might still have child processes even if e10s is disabled, so always
   // check if we're tracking any links in the parent, and notify them if so.
-  if (mTrackedURIs.Count() > 0) {
+  if (!mTrackedURIs.IsEmpty()) {
     for (const VisitedURI& visitedURI : aVisitedURIs) {
       if (visitedURI.mVisited) {
         Unused << NS_WARN_IF(NS_FAILED(NotifyVisited(visitedURI.mURI)));
