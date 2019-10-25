@@ -65,8 +65,8 @@ NS_IMPL_FRAMEARENA_HELPERS(SVGFEUnstyledLeafFrame)
 nsresult SVGFEUnstyledLeafFrame::AttributeChanged(int32_t aNameSpaceID,
                                                   nsAtom* aAttribute,
                                                   int32_t aModType) {
-  SVGFEUnstyledElement* element =
-      static_cast<SVGFEUnstyledElement*>(GetContent());
+  auto* element =
+      static_cast<mozilla::dom::SVGFEUnstyledElement*>(GetContent());
   if (element->AttributeAffectsRendering(aNameSpaceID, aAttribute)) {
     MOZ_ASSERT(
         GetParent()->GetParent()->IsSVGFilterFrame(),

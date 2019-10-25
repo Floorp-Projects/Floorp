@@ -58,5 +58,6 @@ add_task(async function test_mpAutocompleteTimeout() {
       content.document.getElementById("form-basic-password").focus();
     });
     await dialogShown;
+    closePopup(document.getElementById("PopupAutoComplete"));
   });
 });

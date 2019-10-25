@@ -144,7 +144,7 @@ static already_AddRefed<nsINodeList> GetChildren(nsINode* aParent,
 
   nsCOMPtr<nsINodeList> ret;
   if (aShowSubDocuments) {
-    Document* domdoc = inLayoutUtils::GetSubDocumentFor(aParent);
+    mozilla::dom::Document* domdoc = inLayoutUtils::GetSubDocumentFor(aParent);
     if (domdoc) {
       aParent = domdoc;
     }

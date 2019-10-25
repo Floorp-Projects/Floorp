@@ -12,6 +12,7 @@
 #include "nsTextControlFrame.h"
 #include "nsListControlFrame.h"
 #include "nsComboboxControlFrame.h"
+#include "mozilla/dom/Text.h"  // for inline nsINode::AsText() definition
 #include "mozilla/PresShell.h"
 #include "mozilla/ReflowInput.h"
 #include "nsTextFrameUtils.h"

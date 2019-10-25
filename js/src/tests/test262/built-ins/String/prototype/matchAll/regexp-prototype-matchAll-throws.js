@@ -18,7 +18,7 @@ RegExp.prototype[Symbol.matchAll] = function() {
 };
 
 assert.throws(Test262Error, function() {
-  ''.matchAll(/./);
+  ''.matchAll(/./g);
 });
 
 reportCompare(0, 0);

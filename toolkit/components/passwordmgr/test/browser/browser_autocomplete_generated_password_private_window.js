@@ -28,7 +28,7 @@ add_task(async function test_autocomplete_popup_item_hidden() {
       );
 
       await TestUtils.waitForTick();
-      popup.closePopup();
+      await closePopup(popup);
       await onPopupClosed;
     }
   );
@@ -54,7 +54,7 @@ add_task(async function test_autocomplete_menu_item_disabled() {
         "true",
         "Generate password context menu item should be disabled in PB mode"
       );
-      document.getElementById("contentAreaContextMenu").hidePopup();
+      await closePopup(document.getElementById("contentAreaContextMenu"));
     }
   );
   await BrowserTestUtils.closeWindow(win);

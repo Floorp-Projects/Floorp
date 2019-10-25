@@ -12,6 +12,7 @@
 #include "mozilla/dom/DocumentOrShadowRoot.h"
 #include "nsCCUncollectableMarker.h"
 #include "mozilla/dom/Document.h"
+#include "mozilla/HoldDropJSObjects.h"
 #include "nsWrapperCacheInlines.h"
 
 using namespace mozilla;

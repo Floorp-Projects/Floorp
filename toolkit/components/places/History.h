@@ -30,13 +30,6 @@ namespace places {
 struct VisitData;
 class ConcurrentStatementsHolder;
 
-#define NS_HISTORYSERVICE_CID                        \
-  {                                                  \
-    0x0937a705, 0x91a6, 0x417a, {                    \
-      0x82, 0x92, 0xb2, 0x2e, 0xb1, 0x0d, 0xa8, 0x6c \
-    }                                                \
-  }
-
 // Initial size of mRecentlyVisitedURIs.
 #define RECENTLY_VISITED_URIS_SIZE 64
 // Microseconds after which a visit can be expired from mRecentlyVisitedURIs.

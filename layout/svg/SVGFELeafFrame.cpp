@@ -80,7 +80,7 @@ void SVGFELeafFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
 nsresult SVGFELeafFrame::AttributeChanged(int32_t aNameSpaceID,
                                           nsAtom* aAttribute,
                                           int32_t aModType) {
-  SVGFE* element = static_cast<SVGFE*>(GetContent());
+  auto* element = static_cast<mozilla::dom::SVGFE*>(GetContent());
   if (element->AttributeAffectsRendering(aNameSpaceID, aAttribute)) {
     MOZ_ASSERT(
         GetParent()->IsSVGFilterFrame(),

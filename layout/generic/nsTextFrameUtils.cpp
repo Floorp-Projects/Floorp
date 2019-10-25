@@ -6,6 +6,7 @@
 
 #include "nsTextFrameUtils.h"
 
+#include "mozilla/dom/Text.h"
 #include "nsBidiUtils.h"
 #include "nsCharTraits.h"
 #include "nsIContent.h"
@@ -16,6 +17,7 @@
 #include <algorithm>
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 // static
 bool nsTextFrameUtils::IsSpaceCombiningSequenceTail(const char16_t* aChars,

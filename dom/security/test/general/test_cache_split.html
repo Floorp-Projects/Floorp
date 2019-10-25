@@ -25,25 +25,22 @@
         async function resetCount() {
             return fetch(`${PATH}?flush`).then(r => r.text());
         }
-        function ensureLoaded(win) {
-            return new Promise((res, err) => {
-                var superSadCheck = setInterval(() => {
-                    try {
-                        if (win.document.readyState === "complete") {
-                            clearInterval(superSadCheck);
-                            res(win);
-                        }
-                    } catch (error) { err(error) }
-                }, 200);
-            });
+        async function ensureLoaded() {
+            // This Fetch is geting the Response "1", once file_cache_splitting_isloaded 
+            // gets a request without a query String issued from the cache_splitting_window.html
+            info("Waiting for Pageload");
+            let result = await fetch("file_cache_splitting_isloaded.sjs?wait").then(r => r.text);
+            info("Page has been Loaded");
+            return result;
         }
 
 
         async function openAndLoadWindow(origin) {
+            let isLoaded =  ensureLoaded();
             let url = `${origin}tests/dom/security/test/general/file_cache_splitting_window.html`;
             let w = window.open(url);
             let ew = SpecialPowers.wrap(w);
-            await ensureLoaded(ew);
+            await isLoaded;
             return w;
         }
 

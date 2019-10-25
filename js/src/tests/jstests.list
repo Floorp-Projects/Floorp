@@ -304,9 +304,6 @@ ignore-flag(--more-compartments) script test262/built-ins/Array/length/define-ow
 skip script test262/built-ins/Function/internals/Construct/derived-return-val-realm.js
 skip script test262/built-ins/Function/internals/Construct/derived-this-uninitialized-realm.js
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1317416
-skip script test262/built-ins/GeneratorFunction/proto-from-ctor-realm.js
-
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1317395
 skip script test262/built-ins/ArrayBuffer/prototype/byteLength/detached-buffer.js
 
@@ -435,7 +432,10 @@ ignore-flag(--more-compartments) script test262/built-ins/Proxy/construct/return
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1560355
 skip script test262/intl402/DateTimeFormat/numbering-system-calendar-options.js
+skip script test262/intl402/DateTimeFormat/constructor-calendar-numberingSystem-order.js
 skip script test262/intl402/NumberFormat/numbering-system-options.js
+skip script test262/intl402/NumberFormat/constructor-numberingSystem-order.js
+skip script test262/intl402/NumberFormat/constructor-options-throwing-getters.js
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1277801
 skip script test262/built-ins/Object/prototype/toString/symbol-tag-non-str-builtin.js
@@ -462,6 +462,25 @@ skip script test262/intl402/ListFormat/constructor/constructor/options-style-val
 skip script test262/intl402/ListFormat/constructor/constructor/options-toobject-prototype.js
 skip script test262/intl402/ListFormat/constructor/constructor/options-order.js
 skip script test262/intl402/ListFormat/constructor/constructor/options-type-valid.js
+
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1590539
+skip script test262/built-ins/Atomics/add/validate-arraytype-before-index-coercion.js
+skip script test262/built-ins/Atomics/and/validate-arraytype-before-index-coercion.js
+skip script test262/built-ins/Atomics/compareExchange/validate-arraytype-before-index-coercion.js
+skip script test262/built-ins/Atomics/exchange/validate-arraytype-before-index-coercion.js
+skip script test262/built-ins/Atomics/load/validate-arraytype-before-index-coercion.js
+skip script test262/built-ins/Atomics/or/validate-arraytype-before-index-coercion.js
+skip script test262/built-ins/Atomics/store/validate-arraytype-before-index-coercion.js
+skip script test262/built-ins/Atomics/sub/validate-arraytype-before-index-coercion.js
+skip script test262/built-ins/Atomics/xor/validate-arraytype-before-index-coercion.js
+
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1590543
+skip script test262/built-ins/String/prototype/matchAll/flags-nonglobal-throws.js
+skip script test262/built-ins/String/prototype/matchAll/flags-undefined-throws.js
+
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1591099
+skip script test262/intl402/ListFormat/constructor/constructor/proto-from-ctor-realm.js
+skip script test262/intl402/Locale/proto-from-ctor-realm.js
 
 
 ###########################################################
