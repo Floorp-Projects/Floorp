@@ -348,13 +348,6 @@ add_task(async function test_getSlowSQL() {
   Assert.ok("mainThread" in slow && "otherThreads" in slow);
 });
 
-add_task(async function test_getWebrtc() {
-  var webrtc = Telemetry.webrtcStats;
-  Assert.ok("IceCandidatesStats" in webrtc);
-  var icestats = webrtc.IceCandidatesStats;
-  Assert.ok("webrtc" in icestats);
-});
-
 // Check that telemetry doesn't record in private mode
 add_task(async function test_privateMode() {
   var h = Telemetry.getHistogramById("TELEMETRY_TEST_BOOLEAN");

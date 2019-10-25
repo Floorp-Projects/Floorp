@@ -82,7 +82,6 @@ SOURCES += [
     'other/CombinedStacks.cpp',
     'other/ProcessedStack.cpp',
     'other/TelemetryIOInterposeObserver.cpp',
-    'other/WebrtcTelemetry.cpp',
 ]
 
 if CONFIG['OS_ARCH'] == 'WINNT':
