@@ -1,6 +1,5 @@
 load 40929-1.html
 load 369126-1.html
-skip-if(!xbl) load 403574-1.xhtml
 load 430124-1.html
 load 430628-1.html
 load 432114-1.html
