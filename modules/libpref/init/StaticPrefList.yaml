@@ -6415,6 +6415,13 @@
   value: false
   mirror: always
 
+# Check whether we need to hide referrer when leaving a .onion domain.
+# false=allow onion referer, true=hide onion referer (use empty referer).
+- name: network.http.referer.hideOnionSource
+  type: bool
+  value: false
+  mirror: always
+
 # Enables the predictive service.
 - name: network.predictor.enabled
   type: bool

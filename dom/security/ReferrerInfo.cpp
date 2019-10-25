@@ -60,7 +60,6 @@ static uint32_t sDefaultTrackerRp = DEFAULT_TRACKER_RP;
 static uint32_t defaultPrivateRp = DEFAULT_PRIVATE_RP;
 static uint32_t defaultTrackerPrivateRp = DEFAULT_TRACKER_PRIVATE_RP;
 
-static bool sUserHideOnionReferrerSource = false;
 static uint32_t sUserReferrerSendingPolicy = 0;
 static uint32_t sUserXOriginSendingPolicy = 0;
 static uint32_t sUserTrimmingPolicy = 0;
@@ -73,8 +72,6 @@ static void CachePreferrenceValue() {
     return;
   }
 
-  Preferences::AddBoolVarCache(&sUserHideOnionReferrerSource,
-                               "network.http.referer.hideOnionSource");
   Preferences::AddUintVarCache(&sUserReferrerSendingPolicy,
                                "network.http.sendRefererHeader");
   Preferences::AddUintVarCache(&sReferrerHeaderLimit,
@@ -114,12 +111,6 @@ static void CachePreferrenceValue() {
       DEFAULT_TRACKER_PRIVATE_RP);
 
   sPrefCached = true;
-}
-
-/* static */
-bool ReferrerInfo::HideOnionReferrerSource() {
-  CachePreferrenceValue();
-  return sUserHideOnionReferrerSource;
 }
 
 struct LegacyReferrerPolicyTokenMap {
@@ -369,7 +360,8 @@ nsresult ReferrerInfo::HandleUserXOriginSendingPolicy(nsIURI* aURI,
   }
 
   // Send an empty referrer if xorigin and leaving a .onion domain.
-  if (sUserHideOnionReferrerSource && !uriHost.Equals(referrerHost) &&
+  if (StaticPrefs::network_http_referer_hideOnionSource() &&
+      !uriHost.Equals(referrerHost) &&
       StringEndsWith(referrerHost, NS_LITERAL_CSTRING(".onion"))) {
     return NS_OK;
   }

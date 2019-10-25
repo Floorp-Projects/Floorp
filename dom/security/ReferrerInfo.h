@@ -162,12 +162,6 @@ class ReferrerInfo : public nsIReferrerInfo {
   static bool ShouldResponseInheritReferrerInfo(nsIChannel* aChannel);
 
   /*
-   * Check whether we need to hide referrer when leaving a .onion domain.
-   * Controlled by user pref: network.http.referer.hideOnionSource
-   */
-  static bool HideOnionReferrerSource();
-
-  /*
    * Check whether referrer is allowed to send in secure to insecure scenario.
    */
   static nsresult HandleSecureToInsecureReferral(nsIURI* aOriginalURI,
