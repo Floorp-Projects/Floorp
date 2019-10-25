@@ -39,7 +39,12 @@ open class ExternalAppBrowserActivity : HomeActivity() {
     override fun getNavDirections(
         from: BrowserDirection,
         customTabSessionId: String?
-    ): NavDirections {
+    ): NavDirections? {
+        if (customTabSessionId == null) {
+            finish()
+            return null
+        }
+
         val manifest = intent
             .getWebAppManifest()
             ?.let { WebAppManifestParser().serialize(it).toString() }

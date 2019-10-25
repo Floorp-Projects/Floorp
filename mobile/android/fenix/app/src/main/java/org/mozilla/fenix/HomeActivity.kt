@@ -17,6 +17,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavDestination
+import androidx.navigation.NavDirections
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.NavigationUI
@@ -247,14 +248,15 @@ open class HomeActivity : AppCompatActivity() {
         if (navHost.navController.alreadyOnDestination(R.id.browserFragment)) return
         @IdRes val fragmentId = if (from.fragmentId != 0) from.fragmentId else null
         val directions = getNavDirections(from, customTabSessionId)
-
-        navHost.navController.nav(fragmentId, directions)
+        if (directions != null) {
+            navHost.navController.nav(fragmentId, directions)
+        }
     }
 
     protected open fun getNavDirections(
         from: BrowserDirection,
         customTabSessionId: String?
-    ) = when (from) {
+    ): NavDirections? = when (from) {
         BrowserDirection.FromGlobal ->
             NavGraphDirections.actionGlobalBrowser(customTabSessionId)
         BrowserDirection.FromHome ->
