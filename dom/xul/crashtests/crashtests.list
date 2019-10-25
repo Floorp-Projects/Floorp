@@ -1,5 +1,4 @@
 load 107518-1.xml
-skip-if(!xbl) load chrome://reftest/content/crashtests/dom/xul/crashtests/252448-1.xul
 load chrome://reftest/content/crashtests/dom/xul/crashtests/253479-1.xul
 load chrome://reftest/content/crashtests/dom/xul/crashtests/253479-2.xul
 load chrome://reftest/content/crashtests/dom/xul/crashtests/326204-1.xul
@@ -9,16 +8,11 @@ load 329982-1.xhtml
 load 336096-1.xhtml
 load chrome://reftest/content/crashtests/dom/xul/crashtests/344215-1.xul
 load 354611-1.html
-skip-if(!xbl) load 360078-1.xhtml
 load chrome://reftest/content/crashtests/dom/xul/crashtests/363791-1.xul
 load chrome://reftest/content/crashtests/dom/xul/crashtests/384740-1.xul
 load 384877-1.html
 load 386914-1.html
-skip-if(!xbl) asserts(1) load chrome://reftest/content/crashtests/dom/xul/crashtests/386947-1.xul
 load chrome://reftest/content/crashtests/dom/xul/crashtests/425821-1.xul
 load chrome://reftest/content/crashtests/dom/xul/crashtests/428951-1.xul
 load 431906-1.html
 load 461917-1.xhtml
-skip-if(!xbl) load chrome://reftest/content/crashtests/dom/xul/crashtests/468211-1.xul
-skip-if(!xbl) load chrome://reftest/content/crashtests/dom/xul/crashtests/468211-2.xul
-skip-if(!xbl) load chrome://reftest/content/crashtests/dom/xul/crashtests/468211-3.xul
