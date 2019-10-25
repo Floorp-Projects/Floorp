@@ -69,19 +69,6 @@ void SetFrameArgumentsObject(JSContext* cx, AbstractFramePtr frame,
 
 }  // namespace js
 
-inline JSFunction* JSScript::functionDelazifying() const {
-  JSFunction* fun = function();
-  if (fun && fun->isInterpretedLazy()) {
-    fun->setUnlazifiedScript(const_cast<JSScript*>(this));
-    // If this script has a LazyScript, make sure the LazyScript has a
-    // reference to the script when delazifying its canonical function.
-    if (lazyScript && !lazyScript->maybeScript()) {
-      lazyScript->initScript(const_cast<JSScript*>(this));
-    }
-  }
-  return fun;
-}
-
 inline JSFunction* JSScript::getFunction(size_t index) {
   JSObject* obj = getObject(index);
   MOZ_RELEASE_ASSERT(obj->is<JSFunction>(), "Script object is not JSFunction");
