@@ -2148,8 +2148,8 @@ History::RegisterVisitedCallback(nsIURI* aURI, Link* aLink) {
   ObserverArray& observers = key->array;
 
   if (observers.IsEmpty()) {
-    NS_ASSERTION(!keyAlreadyExists,
-                 "An empty key was kept around in our hashtable!");
+    MOZ_ASSERT(!keyAlreadyExists,
+               "An empty key was kept around in our hashtable!");
 
     // We are the first Link node to ask about this URI, or there are no pending
     // Links wanting to know about this URI.  Therefore, we should query the
@@ -2162,7 +2162,8 @@ History::RegisterVisitedCallback(nsIURI* aURI, Link* aLink) {
     // assumes that aLink is non-nullptr, we will need to return now.
     if (NS_FAILED(rv) || !aLink) {
       // Remove our array from the hashtable so we don't keep it around.
-      MOZ_ASSERT(key == mObservers.GetEntry(aURI), "The URIs hash mutated!");
+      MOZ_DIAGNOSTIC_ASSERT(key == mObservers.GetEntry(aURI),
+                            "The URIs hash mutated!");
       // In some case calling RemoveEntry on the key obtained by PutEntry
       // crashes for currently unknown reasons.  Our suspect is that something
       // between PutEntry and this call causes a nested loop that either removes
@@ -2187,8 +2188,8 @@ History::RegisterVisitedCallback(nsIURI* aURI, Link* aLink) {
 
   // Sanity check that Links are not registered more than once for a given URI.
   // This will not catch a case where it is registered for two different URIs.
-  NS_ASSERTION(!observers.Contains(aLink),
-               "Already tracking this Link object!");
+  MOZ_DIAGNOSTIC_ASSERT(!observers.Contains(aLink),
+                        "Already tracking this Link object!");
 
   // Start tracking our Link.
   observers.AppendElement(aLink);
