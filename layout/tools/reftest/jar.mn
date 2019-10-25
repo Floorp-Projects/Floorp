@@ -27,7 +27,6 @@ reftest.jar:
   content/reftest.xul (reftest.xul)
 
 # Crash tests
-  content/crashtests/dom/xbl/crashtests (../../../dom/xbl/crashtests/*)
   content/crashtests/dom/svg/crashtests (../../../dom/svg/crashtests/*)
   content/crashtests/dom/html/crashtests (../../../dom/html/crashtests/*)
   content/crashtests/dom/base/crashtests (../../../dom/base/crashtests/*)
