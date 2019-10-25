@@ -40,11 +40,6 @@ NS_IMPL_CLASSINFO(ReferrerInfo, nullptr, nsIClassInfo::MAIN_THREAD_ONLY,
 
 NS_IMPL_ISUPPORTS_CI(ReferrerInfo, nsIReferrerInfo, nsISerializable)
 
-#define DEFAULT_RP 3
-#define DEFAULT_TRACKER_RP 3
-#define DEFAULT_PRIVATE_RP 2
-#define DEFAULT_TRACKER_PRIVATE_RP 2
-
 #define MAX_REFERRER_SENDING_POLICY 2
 #define MAX_CROSS_ORIGIN_SENDING_POLICY 2
 #define MAX_TRIMMING_POLICY 2
@@ -52,33 +47,6 @@ NS_IMPL_ISUPPORTS_CI(ReferrerInfo, nsIReferrerInfo, nsISerializable)
 #define MIN_REFERRER_SENDING_POLICY 0
 #define MIN_CROSS_ORIGIN_SENDING_POLICY 0
 #define MIN_TRIMMING_POLICY 0
-
-static uint32_t sDefaultRp = DEFAULT_RP;
-static uint32_t sDefaultTrackerRp = DEFAULT_TRACKER_RP;
-static uint32_t defaultPrivateRp = DEFAULT_PRIVATE_RP;
-static uint32_t defaultTrackerPrivateRp = DEFAULT_TRACKER_PRIVATE_RP;
-
-static void CachePreferrenceValue() {
-  static bool sPrefCached = false;
-  if (sPrefCached) {
-    return;
-  }
-
-  Preferences::AddUintVarCache(
-      &sDefaultRp, "network.http.referer.defaultPolicy", DEFAULT_RP);
-  Preferences::AddUintVarCache(&sDefaultTrackerRp,
-                               "network.http.referer.defaultPolicy.trackers",
-                               DEFAULT_TRACKER_RP);
-  Preferences::AddUintVarCache(&defaultPrivateRp,
-                               "network.http.referer.defaultPolicy.pbmode",
-                               DEFAULT_PRIVATE_RP);
-  Preferences::AddUintVarCache(
-      &defaultTrackerPrivateRp,
-      "network.http.referer.defaultPolicy.trackers.pbmode",
-      DEFAULT_TRACKER_PRIVATE_RP);
-
-  sPrefCached = true;
-}
 
 struct LegacyReferrerPolicyTokenMap {
   const char* mToken;
@@ -221,7 +189,6 @@ uint32_t ReferrerInfo::GetUserXOriginTrimmingPolicy() {
 ReferrerPolicy ReferrerInfo::GetDefaultReferrerPolicy(nsIHttpChannel* aChannel,
                                                       nsIURI* aURI,
                                                       bool privateBrowsing) {
-  CachePreferrenceValue();
   bool thirdPartyTrackerIsolated = false;
   nsCOMPtr<nsILoadInfo> loadInfo;
   if (aChannel) {
@@ -247,15 +214,16 @@ ReferrerPolicy ReferrerInfo::GetDefaultReferrerPolicy(nsIHttpChannel* aChannel,
   uint32_t defaultToUse;
   if (thirdPartyTrackerIsolated) {
     if (privateBrowsing) {
-      defaultToUse = defaultTrackerPrivateRp;
+      defaultToUse =
+          StaticPrefs::network_http_referer_defaultPolicy_trackers_pbmode();
     } else {
-      defaultToUse = sDefaultTrackerRp;
+      defaultToUse = StaticPrefs::network_http_referer_defaultPolicy_trackers();
     }
   } else {
     if (privateBrowsing) {
-      defaultToUse = defaultPrivateRp;
+      defaultToUse = StaticPrefs::network_http_referer_defaultPolicy_pbmode();
     } else {
-      defaultToUse = sDefaultRp;
+      defaultToUse = StaticPrefs::network_http_referer_defaultPolicy();
     }
   }
 
@@ -1158,7 +1126,6 @@ bool ReferrerInfo::HasRelNoReferrer(nsINode* aNode) const {
 }
 
 nsresult ReferrerInfo::ComputeReferrer(nsIHttpChannel* aChannel) {
-  CachePreferrenceValue();
   NS_ENSURE_ARG(aChannel);
   MOZ_ASSERT(NS_IsMainThread());
 
