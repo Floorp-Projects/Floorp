@@ -178,14 +178,6 @@ interface nsITelemetry : nsISupports
   [implicit_jscontext]
   readonly attribute jsval debugSlowSQL;
 
-  /*
-   * An object containing information about Webrtc related stats. For now it
-   * only contains local and remote ICE candidates avaiable when a Webrtc
-   * PeerConnection gets terminated.
-   */
-  [implicit_jscontext]
-  readonly attribute jsval webrtcStats;
-
   /**
    * A number representing the highest number of concurrent threads
    * reached during this session.

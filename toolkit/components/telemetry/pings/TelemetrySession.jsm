@@ -628,7 +628,6 @@ var Impl = {
     // Add extended set measurements common to chrome & content processes
     if (Telemetry.canRecordExtended) {
       payloadObj.log = [];
-      payloadObj.webrtc = protect(() => Telemetry.webrtcStats);
     }
 
     if (Utils.isContentProcess) {
