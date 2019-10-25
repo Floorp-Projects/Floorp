@@ -177,7 +177,7 @@
         <item name="android:textAllCaps">false</item>
         <item name="android:textSize">14sp</item>
         <item name="android:textColor">@color/toggle_text_color</item>
-        <item name="android:drawableTint" tools:targetApi="m">@color/toggle_text_color</item>
+        <item name="drawableTint">@color/toggle_text_color</item>
         <item name="android:layout_gravity">center_vertical</item>
         <item name="android:gravity">center_vertical</item>
         <item name="android:singleLine">true</item>
