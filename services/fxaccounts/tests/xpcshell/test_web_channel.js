@@ -279,6 +279,7 @@ add_test(function test_fxa_status_message() {
     messageId: 123,
     data: {
       service: "sync",
+      context: "fx_desktop_v3",
     },
   };
 
@@ -286,7 +287,11 @@ add_test(function test_fxa_status_message() {
     channel_id: WEBCHANNEL_ID,
     content_uri: URL_STRING,
     helpers: {
-      async getFxaStatus() {
+      async getFxaStatus(service, sendingContext, isPairing, context) {
+        Assert.equal(service, "sync");
+        Assert.equal(sendingContext, mockSendingContext);
+        Assert.ok(!isPairing);
+        Assert.equal(context, "fx_desktop_v3");
         return {
           signedInUser: {
             email: "testuser@testuser.com",
@@ -800,21 +805,30 @@ add_task(async function test_helpers_getFxaStatus_not_allowed() {
     },
   });
 
-  helpers.shouldAllowFxaStatus = (service, sendingContext) => {
+  helpers.shouldAllowFxaStatus = (
+    service,
+    sendingContext,
+    isPairing,
+    context
+  ) => {
     wasCalled.shouldAllowFxaStatus = true;
     Assert.equal(service, "sync");
     Assert.equal(sendingContext, mockSendingContext);
+    Assert.ok(!isPairing);
+    Assert.equal(context, "fx_desktop_v3");
 
     return false;
   };
 
-  return helpers.getFxaStatus("sync", mockSendingContext).then(fxaStatus => {
-    Assert.ok(!!fxaStatus);
-    Assert.ok(!wasCalled.getUserAccountData);
-    Assert.ok(wasCalled.shouldAllowFxaStatus);
+  return helpers
+    .getFxaStatus("sync", mockSendingContext, false, "fx_desktop_v3")
+    .then(fxaStatus => {
+      Assert.ok(!!fxaStatus);
+      Assert.ok(!wasCalled.getUserAccountData);
+      Assert.ok(wasCalled.shouldAllowFxaStatus);
 
-    Assert.equal(null, fxaStatus.signedInUser);
-  });
+      Assert.equal(null, fxaStatus.signedInUser);
+    });
 });
 
 add_task(
@@ -834,6 +848,30 @@ add_task(
       "sync",
       mockSendingContext,
       false
+    );
+    Assert.ok(shouldAllowFxaStatus);
+    Assert.ok(wasCalled.isPrivateBrowsingMode);
+  }
+);
+
+add_task(
+  async function test_helpers_shouldAllowFxaStatus_desktop_context_not_private_browsing() {
+    let wasCalled = {
+      isPrivateBrowsingMode: false,
+    };
+    let helpers = new FxAccountsWebChannelHelpers({});
+
+    helpers.isPrivateBrowsingMode = sendingContext => {
+      wasCalled.isPrivateBrowsingMode = true;
+      Assert.equal(sendingContext, mockSendingContext);
+      return false;
+    };
+
+    let shouldAllowFxaStatus = helpers.shouldAllowFxaStatus(
+      "",
+      mockSendingContext,
+      false,
+      "fx_desktop_v3"
     );
     Assert.ok(shouldAllowFxaStatus);
     Assert.ok(wasCalled.isPrivateBrowsingMode);
@@ -903,6 +941,30 @@ add_task(
       "sync",
       mockSendingContext,
       false
+    );
+    Assert.ok(shouldAllowFxaStatus);
+    Assert.ok(wasCalled.isPrivateBrowsingMode);
+  }
+);
+
+add_task(
+  async function test_helpers_shouldAllowFxaStatus_desktop_context_private_browsing() {
+    let wasCalled = {
+      isPrivateBrowsingMode: false,
+    };
+    let helpers = new FxAccountsWebChannelHelpers({});
+
+    helpers.isPrivateBrowsingMode = sendingContext => {
+      wasCalled.isPrivateBrowsingMode = true;
+      Assert.equal(sendingContext, mockSendingContext);
+      return true;
+    };
+
+    let shouldAllowFxaStatus = helpers.shouldAllowFxaStatus(
+      "",
+      mockSendingContext,
+      false,
+      "fx_desktop_v3"
     );
     Assert.ok(shouldAllowFxaStatus);
     Assert.ok(wasCalled.isPrivateBrowsingMode);
