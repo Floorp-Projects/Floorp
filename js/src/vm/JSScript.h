@@ -3328,9 +3328,7 @@ class LazyScript : public BaseScript {
       uint32_t sourceStart, uint32_t sourceEnd, uint32_t toStringStart,
       uint32_t toStringEnd, uint32_t lineno, uint32_t column);
 
-  JSFunction* functionNonDelazifying() const {
-    return &functionOrGlobal_->as<JSFunction>();
-  }
+  JSFunction* function() const { return &functionOrGlobal_->as<JSFunction>(); }
 
   bool canRelazify() const {
     // Only functions without inner functions or direct eval are re-lazified.

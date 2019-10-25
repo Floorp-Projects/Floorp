@@ -1250,7 +1250,7 @@ XDRResult js::XDRLazyScript(XDRState<mode>* xdr, HandleScope enclosingScope,
       // to a JSScript. We don't encode it: we can just delazify the
       // lazy script.
 
-      MOZ_ASSERT(fun == lazy->functionNonDelazifying());
+      MOZ_ASSERT(fun == lazy->function());
 
       sourceStart = lazy->sourceStart();
       sourceEnd = lazy->sourceEnd();
@@ -3905,7 +3905,7 @@ JSScript* JSScript::Create(JSContext* cx, HandleObject functionOrGlobal,
 /* static */ JSScript* JSScript::CreateFromLazy(JSContext* cx,
                                                 Handle<LazyScript*> lazy) {
   RootedScriptSourceObject sourceObject(cx, lazy->sourceObject());
-  RootedObject fun(cx, lazy->functionNonDelazifying());
+  RootedObject fun(cx, lazy->function());
   RootedScript script(cx,
                       JSScript::New(cx, fun, sourceObject, lazy->sourceStart(),
                                     lazy->sourceEnd(), lazy->toStringStart(),

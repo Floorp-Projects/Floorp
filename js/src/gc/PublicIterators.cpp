@@ -90,7 +90,7 @@ static void TraverseInnerLazyScriptsForLazyScript(
     // LazyScript::CreateForXDR temporarily initializes innerFunctions with
     // its own function, but it should be overwritten with correct
     // inner functions before getting inserted into parent's innerFunctions.
-    MOZ_ASSERT(fun != enclosingLazyScript->functionNonDelazifying());
+    MOZ_ASSERT(fun != enclosingLazyScript->function());
 
     if (!fun->isInterpretedLazy()) {
       return;

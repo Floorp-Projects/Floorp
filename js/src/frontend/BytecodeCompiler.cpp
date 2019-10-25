@@ -932,8 +932,7 @@ class MOZ_STACK_CLASS AutoAssertFunctionDelazificationCompletion {
 template <typename Unit>
 static bool CompileLazyFunctionImpl(JSContext* cx, Handle<LazyScript*> lazy,
                                     const Unit* units, size_t length) {
-  MOZ_ASSERT(cx->compartment() ==
-             lazy->functionNonDelazifying()->compartment());
+  MOZ_ASSERT(cx->compartment() == lazy->compartment());
 
   // We can only compile functions whose parents have previously been
   // compiled, because compilation requires full information about the
@@ -943,7 +942,7 @@ static bool CompileLazyFunctionImpl(JSContext* cx, Handle<LazyScript*> lazy,
   MOZ_ASSERT(!lazy->isBinAST());
 
   AutoAssertReportedException assertException(cx);
-  Rooted<JSFunction*> fun(cx, lazy->functionNonDelazifying());
+  Rooted<JSFunction*> fun(cx, lazy->function());
   AutoAssertFunctionDelazificationCompletion delazificationCompletion(cx, fun);
 
   JS::CompileOptions options(cx);
@@ -1045,8 +1044,7 @@ bool frontend::CompileLazyFunction(JSContext* cx, Handle<LazyScript*> lazy,
 bool frontend::CompileLazyBinASTFunction(JSContext* cx,
                                          Handle<LazyScript*> lazy,
                                          const uint8_t* buf, size_t length) {
-  MOZ_ASSERT(cx->compartment() ==
-             lazy->functionNonDelazifying()->compartment());
+  MOZ_ASSERT(cx->compartment() == lazy->compartment());
 
   // We can only compile functions whose parents have previously been
   // compiled, because compilation requires full information about the
@@ -1055,7 +1053,7 @@ bool frontend::CompileLazyBinASTFunction(JSContext* cx,
   MOZ_ASSERT(lazy->isBinAST());
 
   AutoAssertReportedException assertException(cx);
-  Rooted<JSFunction*> fun(cx, lazy->functionNonDelazifying());
+  Rooted<JSFunction*> fun(cx, lazy->function());
   AutoAssertFunctionDelazificationCompletion delazificationCompletion(cx, fun);
 
   CompileOptions options(cx);
