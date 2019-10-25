@@ -1538,7 +1538,7 @@ static bool DelazifyCanonicalScriptedFunction(JSContext* cx,
   Rooted<LazyScript*> lazy(cx, fun->lazyScript());
 
   MOZ_ASSERT(!lazy->maybeScript(), "Script is already compiled!");
-  MOZ_ASSERT(lazy->functionNonDelazifying() == fun);
+  MOZ_ASSERT(lazy->function() == fun);
 
   ScriptSource* ss = lazy->scriptSource();
   size_t sourceStart = lazy->sourceStart();
@@ -1646,7 +1646,7 @@ bool JSFunction::delazifyLazilyInterpretedFunction(JSContext* cx,
 
   if (fun->hasLazyScript()) {
     Rooted<LazyScript*> lazy(cx, fun->lazyScript());
-    RootedFunction canonicalFun(cx, lazy->functionNonDelazifying());
+    RootedFunction canonicalFun(cx, lazy->function());
 
     // If this function is non-canonical, then use the canonical function first
     // to get the delazified script. This may result in calling this method
