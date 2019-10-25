@@ -2360,8 +2360,6 @@ void nsHttpTransaction::Refused0RTT() {
 void nsHttpTransaction::SetHttpTrailers(nsCString& aTrailers) {
   LOG(("nsHttpTransaction::SetHttpTrailers %p", this));
   LOG(("[\n    %s\n]", aTrailers.BeginReading()));
-
-  MutexAutoLock lock(*nsHttp::GetLock());
   if (!mForTakeResponseTrailers) {
     mForTakeResponseTrailers = new nsHttpHeaderArray();
   }
