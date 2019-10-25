@@ -6,6 +6,7 @@
 #define mozilla_BaseHistory_h
 
 #include "IHistory.h"
+#include "mozilla/Result.h"
 
 /* A base class for history implementations that implement link coloring. */
 
@@ -22,8 +23,7 @@ class BaseHistory : public IHistory {
    * Mark all links for the given URI in the given document as visited. Used
    * within NotifyVisited.
    */
-  void NotifyVisitedForDocument(nsIURI*,
-                                dom::Document*);
+  void NotifyVisitedForDocument(nsIURI*, dom::Document*);
 
   /**
    * Dispatch a runnable for the document passed in which will call
@@ -31,6 +31,18 @@ class BaseHistory : public IHistory {
    */
   void DispatchNotifyVisited(nsIURI*, dom::Document*);
 
+  // We implement the link tracking ourselves, and delegate to our subclasses by
+  // using StartTrackingURI and StopTrackingURI
+  NS_IMETHODIMP RegisterVisitedCallback(nsIURI*, dom::Link*) final;
+  NS_IMETHODIMP UnregisterVisitedCallback(nsIURI*, dom::Link*) final;
+
+  // Starts a visited query, that eventually could call NotifyVisited if
+  // appropriate.
+  virtual Result<Ok, nsresult> StartVisitedQuery(nsIURI*) = 0;
+
+  // Cancels a visited query, if it is at all possible, because we know we won't
+  // use the results anymore.
+  virtual void CancelVisitedQueryIfPossible(nsIURI*) = 0;
 
   static dom::Document* GetLinkDocument(dom::Link&);
 

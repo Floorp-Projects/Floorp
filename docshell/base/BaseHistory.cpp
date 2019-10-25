@@ -65,5 +65,94 @@ void BaseHistory::NotifyVisitedForDocument(nsIURI* aURI, dom::Document* aDoc) {
   }
 }
 
+NS_IMETHODIMP
+BaseHistory::RegisterVisitedCallback(nsIURI* aURI, Link* aLink) {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aURI, "Must pass a non-null URI!");
+  if (XRE_IsContentProcess()) {
+    MOZ_ASSERT(aLink, "Must pass a non-null Link!");
+  }
+
+  // Obtain our array of observers for this URI.
+  auto entry = mTrackedURIs.LookupForAdd(aURI);
+  MOZ_DIAGNOSTIC_ASSERT(!entry || !entry.Data().mLinks.IsEmpty(),
+                        "An empty key was kept around in our hashtable!");
+  if (!entry) {
+    // This is the first request for this URI, thus we must query its visited
+    // state.
+    auto result = StartVisitedQuery(aURI);
+    if (result.isErr()) {
+      entry.OrRemove();
+      return result.unwrapErr();
+    }
+  }
+
+  if (!aLink) {
+    // In IPC builds, we are passed a nullptr Link from
+    // ContentParent::RecvStartVisitedQuery.  All of our code after this point
+    // assumes aLink is non-nullptr, so we have to return now.
+    MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess(),
+                          "We should only ever get a null Link "
+                          "in the parent process!");
+    // We don't want to remove if we're tracking other links.
+    if (!entry) {
+      entry.OrRemove();
+    }
+    return NS_OK;
+  }
+
+  TrackedURI& trackedURI = entry.OrInsert([] { return TrackedURI {}; });
+
+  // Sanity check that Links are not registered more than once for a given URI.
+  // This will not catch a case where it is registered for two different URIs.
+  MOZ_DIAGNOSTIC_ASSERT(!trackedURI.mLinks.Contains(aLink),
+                        "Already tracking this Link object!");
+
+  // Start tracking our Link.
+  trackedURI.mLinks.AppendElement(aLink);
+
+  // If this link has already been visited, we cannot synchronously mark
+  // ourselves as visited, so instead we fire a runnable into our docgroup,
+  // which will handle it for us.
+  if (trackedURI.mVisited) {
+    DispatchNotifyVisited(aURI, GetLinkDocument(*aLink));
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+BaseHistory::UnregisterVisitedCallback(nsIURI* aURI, Link* aLink) {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aURI, "Must pass a non-null URI!");
+  MOZ_ASSERT(aLink, "Must pass a non-null Link object!");
+
+  // Get the array, and remove the item from it.
+  auto entry = mTrackedURIs.Lookup(aURI);
+  if (!entry) {
+    // GeckoViewHistory sometimes, for somewhat dubious reasons, removes links
+    // from mTrackedURIs.
+#ifndef MOZ_WIDGET_ANDROID
+    MOZ_ASSERT_UNREACHABLE("Trying to unregister URI that wasn't registered!");
+#endif
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  ObserverArray& observers = entry.Data().mLinks;
+  if (!observers.RemoveElement(aLink)) {
+#ifndef MOZ_WIDGET_ANDROID
+    MOZ_ASSERT_UNREACHABLE("Trying to unregister node that wasn't registered!");
+#endif
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  // If the array is now empty, we should remove it from the hashtable.
+  if (observers.IsEmpty()) {
+    entry.Remove();
+    CancelVisitedQueryIfPossible(aURI);
+  }
+
+  return NS_OK;
+}
 
 } // namespace mozilla

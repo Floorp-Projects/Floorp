@@ -142,16 +142,6 @@ class IHistory : public nsISupports {
 
 NS_DEFINE_STATIC_IID_ACCESSOR(IHistory, IHISTORY_IID)
 
-#define NS_DECL_IHISTORY                                                       \
-  NS_IMETHOD RegisterVisitedCallback(nsIURI* aURI,                             \
-                                     mozilla::dom::Link* aContent) override;   \
-  NS_IMETHOD UnregisterVisitedCallback(nsIURI* aURI,                           \
-                                       mozilla::dom::Link* aContent) override; \
-  NS_IMETHOD VisitURI(nsIWidget* aWidget, nsIURI* aURI,                        \
-                      nsIURI* aLastVisitedURI, uint32_t aFlags) override;      \
-  NS_IMETHOD SetURITitle(nsIURI* aURI, const nsAString& aTitle) override;      \
-  NS_IMETHOD NotifyVisited(nsIURI* aURI) override;
-
 }  // namespace mozilla
 
 #endif  // mozilla_IHistory_h_
