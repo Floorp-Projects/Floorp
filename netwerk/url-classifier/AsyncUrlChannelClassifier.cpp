@@ -707,14 +707,20 @@ nsresult FeatureData::InitializeList(
   nsIUrlClassifierFeature::URIType URIType;
   nsresult rv = mFeature->GetURIByListType(aChannel, aListType, &URIType,
                                            getter_AddRefs(uri));
-  if (NS_WARN_IF(NS_FAILED(rv)) || !uri) {
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     if (UC_LOG_ENABLED()) {
       nsAutoCString errorName;
       GetErrorName(rv, errorName);
-      UC_LOG(("FeatureData::InitializeList got an unexpected error (rv=%s)",
-              errorName.get()));
+      UC_LOG(("FeatureData::InitializeList[%p] got an unexpected error (rv=%s)",
+              this, errorName.get()));
     }
     return rv;
+  }
+
+  if (!uri) {
+    // Return success when the URI is empty to conitnue to do the lookup.
+    UC_LOG(("FeatureData::InitializeList[%p] got an empty URL", this));
+    return NS_OK;
   }
 
   nsCOMPtr<nsIURI> innermostURI = NS_GetInnermostURI(uri);
