@@ -13,28 +13,15 @@
 namespace mozilla {
 
 class BaseHistory : public IHistory {
+ public:
+  NS_IMETHODIMP RegisterVisitedCallback(nsIURI*, dom::Link*) final;
+  NS_IMETHODIMP UnregisterVisitedCallback(nsIURI*, dom::Link*) final;
+  NS_IMETHODIMP NotifyVisited(nsIURI* aURI) final;
+
  protected:
   static constexpr const size_t kTrackedUrisInitialSize = 64;
 
-  BaseHistory()
-    : mTrackedURIs(kTrackedUrisInitialSize) {}
-
-  /**
-   * Mark all links for the given URI in the given document as visited. Used
-   * within NotifyVisited.
-   */
-  void NotifyVisitedForDocument(nsIURI*, dom::Document*);
-
-  /**
-   * Dispatch a runnable for the document passed in which will call
-   * NotifyVisitedForDocument with the correct URI and Document.
-   */
-  void DispatchNotifyVisited(nsIURI*, dom::Document*);
-
-  // We implement the link tracking ourselves, and delegate to our subclasses by
-  // using StartTrackingURI and StopTrackingURI
-  NS_IMETHODIMP RegisterVisitedCallback(nsIURI*, dom::Link*) final;
-  NS_IMETHODIMP UnregisterVisitedCallback(nsIURI*, dom::Link*) final;
+  BaseHistory() : mTrackedURIs(kTrackedUrisInitialSize) {}
 
   // Starts a visited query, that eventually could call NotifyVisited if
   // appropriate.
@@ -56,10 +43,23 @@ class BaseHistory : public IHistory {
     }
   };
 
-  nsDataHashtable<nsURIHashKey, TrackedURI> mTrackedURIs;
+ private:
+  /**
+   * Mark all links for the given URI in the given document as visited. Used
+   * within NotifyVisited.
+   */
+  void NotifyVisitedForDocument(nsIURI*, dom::Document*);
 
+  /**
+   * Dispatch a runnable for the document passed in which will call
+   * NotifyVisitedForDocument with the correct URI and Document.
+   */
+  void DispatchNotifyVisited(nsIURI*, dom::Document*);
+
+ protected:
+  nsDataHashtable<nsURIHashKey, TrackedURI> mTrackedURIs;
 };
 
-} // namespace mozilla
+}  // namespace mozilla
 
 #endif
