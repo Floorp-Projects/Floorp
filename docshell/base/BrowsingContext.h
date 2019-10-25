@@ -271,7 +271,8 @@ class BrowsingContext : public nsISupports,
   // BrowsingContext::FindWithName(const nsAString&) is equivalent to
   // calling nsIDocShellTreeItem::FindItemWithName(aName, nullptr,
   // nullptr, false, <return value>).
-  BrowsingContext* FindWithName(const nsAString& aName);
+  BrowsingContext* FindWithName(const nsAString& aName,
+                                bool aUseEntryGlobalForAccessCheck = true);
 
   // Find a browsing context in this context's list of
   // children. Doesn't consider the special names, '_self', '_parent',
