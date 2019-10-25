@@ -159,6 +159,10 @@
   display: block;
   position: absolute;
   inset: 0;
+}
+
+:root:not([chromehidden~="toolbar"]) #urlbar.megabar:not([breakout]) > #urlbar-background,
+:root:not([chromehidden~="toolbar"]) #urlbar.megabar:not([breakout-extend]) > #urlbar-background {
   inset-inline-start: @urlbarSearchIconWidth@;
 }
 
@@ -202,7 +206,6 @@
 
 #urlbar[breakout][breakout-extend] > #urlbar-background {
   box-shadow: 0 5px 18px rgba(0, 0, 0, .2);
-  inset-inline-start: 0;
 }
 
 #urlbar[breakout][breakout-extend] > #urlbar-input-container {
