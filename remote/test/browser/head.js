@@ -19,8 +19,10 @@ this.add_task = function(taskFn, opts = {}) {
   const { createTab = true } = opts;
 
   add_plain_task(async function() {
-    info("Start the CDP server");
+    let client;
+
     await RemoteAgent.listen(Services.io.newURI("http://localhost:9222"));
+    info("CDP server started");
 
     try {
       const CDP = await getCDP();
@@ -30,7 +32,7 @@ this.add_task = function(taskFn, opts = {}) {
         const tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
         const browsingContextId = tab.linkedBrowser.browsingContext.id;
 
-        const client = await CDP({
+        client = await CDP({
           target(list) {
             return list.find(target => target.id === browsingContextId);
           },
@@ -44,11 +46,10 @@ this.add_task = function(taskFn, opts = {}) {
         // Wait for the next tick here.
         await TestUtils.waitForTick();
         BrowserTestUtils.removeTab(tab);
-
-        await client.close();
-        info("CDP client closed");
       } else {
-        const client = await CDP({});
+        client = await CDP({});
+        info("CDP client instantiated");
+
         await taskFn(client, CDP);
       }
     } catch (e) {
@@ -60,8 +61,13 @@ this.add_task = function(taskFn, opts = {}) {
         throw e;
       }
     } finally {
-      info("Stop the CDP server");
+      if (client) {
+        await client.close();
+        info("CDP client closed");
+      }
+
       await RemoteAgent.close();
+      info("CDP server stopped");
 
       // Close any additional tabs, so that only a single tab remains open
       while (gBrowser.tabs.length > 1) {
