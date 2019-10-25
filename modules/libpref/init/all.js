@@ -32,11 +32,7 @@ pref("security.tls.insecure_fallback_hosts", "");
 // until the incompatibility with HTTP/2 is resolved:
 // https://tools.ietf.org/html/draft-davidben-http2-tls13-00
 pref("security.tls.enable_post_handshake_auth", false);
-#ifdef RELEASE_OR_BETA
-  pref("security.tls.hello_downgrade_check", false);
-#else
-  pref("security.tls.hello_downgrade_check", true);
-#endif
+pref("security.tls.hello_downgrade_check", true);
 pref("security.tls.enable_delegated_credentials", false);
 
 pref("security.ssl.treat_unsafe_negotiation_as_broken", false);

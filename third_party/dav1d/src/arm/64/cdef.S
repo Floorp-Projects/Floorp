@@ -129,6 +129,14 @@
 3:
 .endm
 
+.macro load_n_incr dst, src, incr, w
+.if \w == 4
+        ld1             {\dst\().s}[0], [\src], \incr
+.else
+        ld1             {\dst\().8b},   [\src], \incr
+.endif
+.endm
+
 // void dav1d_cdef_paddingX_neon(uint16_t *tmp, const pixel *src,
 //                               ptrdiff_t src_stride, const pixel (*left)[2],
 //                               /*const*/ pixel *const top[2], int h,
@@ -163,9 +171,8 @@ function cdef_padding\w\()_neon, export=1
         // CDEF_HAVE_LEFT+CDEF_HAVE_RIGHT
 0:
         ld1             {v0.h}[0], [x3], #2
-        ldr             \rn\()1, [x1]
         ldr             h2,      [x1, #\w]
-        add             x1,  x1,  x2
+        load_n_incr     v1,  x1,  x2,  \w
         subs            w5,  w5,  #1
         uxtl            v0.8h,  v0.8b
         uxtl            v1.8h,  v1.8b
@@ -179,11 +186,7 @@ function cdef_padding\w\()_neon, export=1
 1:
         // CDEF_HAVE_LEFT+!CDEF_HAVE_RIGHT
         ld1             {v0.h}[0], [x3], #2
-.if \w == 8
-        ld1             {v1.8b},   [x1], x2
-.else
-        ld1             {v1.s}[0], [x1], x2
-.endif
+        load_n_incr     v1,  x1,  x2,  \w
         subs            w5,  w5,  #1
         uxtl            v0.8h,  v0.8b
         uxtl            v1.8h,  v1.8b
@@ -198,9 +201,8 @@ function cdef_padding\w\()_neon, export=1
         b.eq            1f
         // !CDEF_HAVE_LEFT+CDEF_HAVE_RIGHT
 0:
-        ldr             \rn\()0, [x1]
         ldr             h1,      [x1, #\w]
-        add             x1,  x1,  x2
+        load_n_incr     v0,  x1,  x2,  \w
         subs            w5,  w5,  #1
         uxtl            v0.8h,  v0.8b
         uxtl            v1.8h,  v1.8b
@@ -212,11 +214,7 @@ function cdef_padding\w\()_neon, export=1
         b               3f
 1:
         // !CDEF_HAVE_LEFT+!CDEF_HAVE_RIGHT
-.if \w == 8
-        ld1             {v0.8b},   [x1], x2
-.else
-        ld1             {v0.s}[0], [x1], x2
-.endif
+        load_n_incr     v0,  x1,  x2,  \w
         subs            w5,  w5,  #1
         uxtl            v0.8h,  v0.8b
         str             s31,     [x0]
@@ -299,17 +297,17 @@ endconst
         uabd            v20.8h, v0.8h,  \s2\().8h   // abs(diff)
         ushl            v17.8h, v16.8h, \shift      // abs(diff) >> shift
         ushl            v21.8h, v20.8h, \shift      // abs(diff) >> shift
-        uqsub           v17.8h, \thresh_vec, v17.8h // imax(0, threshold - (abs(diff) >> shift))
-        uqsub           v21.8h, \thresh_vec, v21.8h // imax(0, threshold - (abs(diff) >> shift))
-        cmhi            v18.8h, v0.8h,  \s1\().8h   // px > p0
-        cmhi            v22.8h, v0.8h,  \s2\().8h   // px > p1
-        umin            v17.8h, v17.8h, v16.8h      // imin(abs(diff), imax())
-        umin            v21.8h, v21.8h, v20.8h      // imin(abs(diff), imax())
+        uqsub           v17.8h, \thresh_vec, v17.8h // clip = imax(0, threshold - (abs(diff) >> shift))
+        uqsub           v21.8h, \thresh_vec, v21.8h // clip = imax(0, threshold - (abs(diff) >> shift))
+        sub             v18.8h, \s1\().8h,  v0.8h   // diff = p0 - px
+        sub             v22.8h, \s2\().8h,  v0.8h   // diff = p1 - px
+        neg             v16.8h, v17.8h              // -clip
+        neg             v20.8h, v21.8h              // -clip
+        smin            v18.8h, v18.8h, v17.8h      // imin(diff, clip)
+        smin            v22.8h, v22.8h, v21.8h      // imin(diff, clip)
         dup             v19.8h, \tap                // taps[k]
-        neg             v16.8h, v17.8h              // -imin()
-        neg             v20.8h, v21.8h              // -imin()
-        bsl             v18.16b, v16.16b, v17.16b   // constrain() = apply_sign()
-        bsl             v22.16b, v20.16b, v21.16b   // constrain() = apply_sign()
+        smax            v18.8h, v18.8h, v16.8h      // constrain() = imax(imin(diff, clip), -clip)
+        smax            v22.8h, v22.8h, v20.8h      // constrain() = imax(imin(diff, clip), -clip)
         mla             v1.8h,  v18.8h, v19.8h      // sum += taps[k] * constrain()
         mla             v1.8h,  v22.8h, v19.8h      // sum += taps[k] * constrain()
 3:
@@ -325,19 +323,18 @@ function cdef_filter\w\()_neon, export=1
         add             x8,  x8,  w9, uxtw #1
         movrel          x9,  directions\w
         add             x5,  x9,  w5, uxtw #1
-        movi            v30.8h,   #15
-        dup             v28.8h,   w6                // damping
+        movi            v30.4h,   #15
+        dup             v28.4h,   w6                // damping
 
         dup             v25.8h, w3                  // threshold
         dup             v27.8h, w4                  // threshold
-        clz             v24.8h, v25.8h              // clz(threshold)
-        clz             v26.8h, v27.8h              // clz(threshold)
-        sub             v24.8h, v30.8h, v24.8h      // ulog2(threshold)
-        sub             v26.8h, v30.8h, v26.8h      // ulog2(threshold)
-        uqsub           v24.8h, v28.8h, v24.8h      // shift = imax(0, damping - ulog2(threshold))
-        uqsub           v26.8h, v28.8h, v26.8h      // shift = imax(0, damping - ulog2(threshold))
-        neg             v24.8h, v24.8h              // -shift
-        neg             v26.8h, v26.8h              // -shift
+        trn1            v24.4h, v25.4h, v27.4h
+        clz             v24.4h, v24.4h              // clz(threshold)
+        sub             v24.4h, v30.4h, v24.4h      // ulog2(threshold)
+        uqsub           v24.4h, v28.4h, v24.4h      // shift = imax(0, damping - ulog2(threshold))
+        neg             v24.4h, v24.4h              // -shift
+        dup             v26.8h, v24.h[1]
+        dup             v24.8h, v24.h[0]
 
 1:
 .if \w == 8
@@ -467,15 +464,15 @@ function cdef_find_dir_neon, export=1
         ext             v24.16b, v30.16b, v29.16b, #(16-2*\i)
         ext             v25.16b, v29.16b, v30.16b, #(16-2*\i)
         add             v6.8h,   v6.8h,   v22.8h      // sum_alt[0]
-        add             v7.8h,   v7.8h,   v23.8h      // sum_alt[0]
+        add             v7.4h,   v7.4h,   v23.4h      // sum_alt[0]
         add             v16.8h,  v16.8h,  v24.8h      // sum_alt[1]
-        add             v17.8h,  v17.8h,  v25.8h      // sum_alt[1]
+        add             v17.4h,  v17.4h,  v25.4h      // sum_alt[1]
 .endif
 .if \i < 6
         ext             v22.16b, v30.16b, v26.16b, #(16-2*(3-(\i/2)))
         ext             v23.16b, v26.16b, v30.16b, #(16-2*(3-(\i/2)))
         add             v18.8h,  v18.8h,  v22.8h      // sum_alt[2]
-        add             v19.8h,  v19.8h,  v23.8h      // sum_alt[2]
+        add             v19.4h,  v19.4h,  v23.4h      // sum_alt[2]
 .else
         add             v18.8h,  v18.8h,  v26.8h      // sum_alt[2]
 .endif
@@ -487,7 +484,7 @@ function cdef_find_dir_neon, export=1
         ext             v24.16b, v30.16b, v26.16b, #(16-2*(\i/2))
         ext             v25.16b, v26.16b, v30.16b, #(16-2*(\i/2))
         add             v20.8h,  v20.8h,  v24.8h      // sum_alt[3]
-        add             v21.8h,  v21.8h,  v25.8h      // sum_alt[3]
+        add             v21.4h,  v21.4h,  v25.4h      // sum_alt[3]
 .endif
 .endr
 
@@ -504,10 +501,8 @@ function cdef_find_dir_neon, export=1
 
         rev64           v1.8h,   v1.8h
         rev64           v3.8h,   v3.8h
-        ext             v1.16b,  v1.16b,  v1.16b, #8  // sum_diag[0][15-n]
-        ext             v3.16b,  v3.16b,  v3.16b, #8  // sum_diag[1][15-n]
-        ext             v1.16b,  v1.16b,  v1.16b, #2  // sum_diag[0][14-n]
-        ext             v3.16b,  v3.16b,  v3.16b, #2  // sum_diag[1][14-n]
+        ext             v1.16b,  v1.16b,  v1.16b, #10 // sum_diag[0][14-n]
+        ext             v3.16b,  v3.16b,  v3.16b, #10 // sum_diag[1][14-n]
 
         str             s4,  [sp, #2*4]               // cost[2]
         str             s5,  [sp, #6*4]               // cost[6]
@@ -559,15 +554,16 @@ function cdef_find_dir_neon, export=1
         addv            \d2, v25.4s                   // *cost_ptr
 .endm
         cost_alt        s6,  s16, v6,  v7,  v16, v17  // cost[1], cost[3]
+        cost_alt        s18, s20, v18, v19, v20, v21  // cost[5], cost[7]
         str             s6,  [sp, #1*4]               // cost[1]
         str             s16, [sp, #3*4]               // cost[3]
-        cost_alt        s18, s20, v18, v19, v20, v21  // cost[5], cost[7]
-        str             s18, [sp, #5*4]               // cost[5]
-        str             s20, [sp, #7*4]               // cost[7]
 
         mov             w0,  #0                       // best_dir
         mov             w1,  v0.s[0]                  // best_cost
         mov             w3,  #1                       // n
+
+        str             s18, [sp, #5*4]               // cost[5]
+        str             s20, [sp, #7*4]               // cost[7]
 
         mov             w4,  v6.s[0]
 

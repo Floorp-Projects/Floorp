@@ -48,7 +48,18 @@ class WritableStreamDefaultWriter : public NativeObject {
      */
     Slot_Stream,
 
+    /**
+     * The promise returned by the |writer.ready| getter property, a promise
+     * signaling that the related stream is accepting writes.
+     *
+     * This value repeatedly changes as the related stream changes back and
+     * forth between being writable and temporarily filled (or, ultimately,
+     * errored or aborted).  These changes are invoked by a number of user-
+     * visible functions, so this may be a wrapper around a promise in another
+     * realm.
+     */
     Slot_ReadyPromise,
+
     SlotCount,
   };
 

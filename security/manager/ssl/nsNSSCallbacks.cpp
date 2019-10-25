@@ -1043,6 +1043,27 @@ static void RebuildVerifiedCertificateInformation(PRFileDesc* fd,
     return;
   }
 
+  Maybe<nsTArray<nsTArray<uint8_t>>> maybePeerCertsBytes;
+  UniqueCERTCertList peerCertChain(SSL_PeerCertificateChain(fd));
+  if (!peerCertChain) {
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
+            ("RebuildVerifiedCertificateInformation: failed to get peer "
+             "certificate chain"));
+  } else {
+    nsTArray<nsTArray<uint8_t>> peerCertsBytes;
+    for (CERTCertListNode* n = CERT_LIST_HEAD(peerCertChain);
+         !CERT_LIST_END(n, peerCertChain); n = CERT_LIST_NEXT(n)) {
+      // Don't include the end-entity certificate.
+      if (n == CERT_LIST_HEAD(peerCertChain)) {
+        continue;
+      }
+      nsTArray<uint8_t> certBytes;
+      certBytes.AppendElements(n->cert->derCert.data, n->cert->derCert.len);
+      peerCertsBytes.AppendElement(std::move(certBytes));
+    }
+    maybePeerCertsBytes.emplace(std::move(peerCertsBytes));
+  }
+
   RefPtr<SharedCertVerifier> certVerifier(GetDefaultCertVerifier());
   MOZ_ASSERT(certVerifier,
              "Certificate verifier uninitialized in TLS handshake callback?");
@@ -1081,9 +1102,10 @@ static void RebuildVerifiedCertificateInformation(PRFileDesc* fd,
   UniqueCERTCertList builtChain;
   const bool saveIntermediates = false;
   mozilla::pkix::Result rv = certVerifier->VerifySSLServerCert(
-      cert, stapledOCSPResponse, sctsFromTLSExtension, mozilla::pkix::Now(),
-      infoObject, infoObject->GetHostName(), builtChain, saveIntermediates,
-      flags, infoObject->GetOriginAttributes(), &evOidPolicy,
+      cert, mozilla::pkix::Now(), infoObject, infoObject->GetHostName(),
+      builtChain, flags, maybePeerCertsBytes, stapledOCSPResponse,
+      sctsFromTLSExtension, infoObject->GetOriginAttributes(),
+      saveIntermediates, &evOidPolicy,
       nullptr,  // OCSP stapling telemetry
       nullptr,  // key size telemetry
       nullptr,  // SHA-1 telemetry

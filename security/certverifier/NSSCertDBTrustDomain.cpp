@@ -67,6 +67,7 @@ NSSCertDBTrustDomain::NSSCertDBTrustDomain(
     const OriginAttributes& originAttributes,
     const Vector<Input>& thirdPartyRootInputs,
     const Vector<Input>& thirdPartyIntermediateInputs,
+    const Maybe<nsTArray<nsTArray<uint8_t>>>& extraCertificates,
     /*out*/ UniqueCERTCertList& builtChain,
     /*optional*/ PinningTelemetryInfo* pinningTelemetryInfo,
     /*optional*/ const char* hostname)
@@ -87,6 +88,7 @@ NSSCertDBTrustDomain::NSSCertDBTrustDomain(
       mOriginAttributes(originAttributes),
       mThirdPartyRootInputs(thirdPartyRootInputs),
       mThirdPartyIntermediateInputs(thirdPartyIntermediateInputs),
+      mExtraCertificates(extraCertificates),
       mBuiltChain(builtChain),
       mPinningTelemetryInfo(pinningTelemetryInfo),
       mHostname(hostname),
@@ -306,6 +308,32 @@ Result NSSCertDBTrustDomain::FindIssuer(Input encodedIssuerName,
     }
   }
 
+  if (mExtraCertificates.isSome()) {
+    for (const auto& extraCert : *mExtraCertificates) {
+      Input certInput;
+      Result rv = certInput.Init(extraCert.Elements(), extraCert.Length());
+      if (rv != Success) {
+        continue;
+      }
+      BackCert cert(certInput, EndEntityOrCA::MustBeCA, nullptr);
+      rv = cert.Init();
+      if (rv != Success) {
+        continue;
+      }
+      // Filter out certificates that can't be issuers we're looking for because
+      // the subject distinguished name doesn't match. This prevents
+      // mozilla::pkix from accumulating spurious errors during path building.
+      if (!InputsAreEqual(encodedIssuerName, cert.GetSubject())) {
+        continue;
+      }
+      // We assume that extra certificates (presumably from the TLS handshake)
+      // are intermediates, since sending trust anchors would be superfluous.
+      if (!geckoIntermediateCandidates.append(certInput)) {
+        return Result::FATAL_ERROR_NO_MEMORY;
+      }
+    }
+  }
+
   // Try all root certs first and then all (presumably) intermediates.
   if (!geckoRootCandidates.appendAll(geckoIntermediateCandidates)) {
     return Result::FATAL_ERROR_NO_MEMORY;
@@ -324,10 +352,10 @@ Result NSSCertDBTrustDomain::FindIssuer(Input encodedIssuerName,
   // NSS seems not to differentiate between "no potential issuers found" and
   // "there was an error trying to retrieve the potential issuers." We assume
   // there was no error if CERT_CreateSubjectCertList returns nullptr.
-  Vector<Input> nssRootCandidates;
-  Vector<Input> nssIntermediateCandidates;
   UniqueCERTCertList candidates(CERT_CreateSubjectCertList(
       nullptr, CERT_GetDefaultCertDB(), &encodedIssuerNameItem, 0, false));
+  Vector<Input> nssRootCandidates;
+  Vector<Input> nssIntermediateCandidates;
   if (candidates) {
     for (CERTCertListNode* n = CERT_LIST_HEAD(candidates);
          !CERT_LIST_END(n, candidates); n = CERT_LIST_NEXT(n)) {

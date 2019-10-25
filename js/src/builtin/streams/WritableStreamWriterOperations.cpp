@@ -11,7 +11,7 @@
 #include "mozilla/Assertions.h"  // MOZ_ASSERT
 #include "mozilla/Attributes.h"  // MOZ_MUST_USE
 
-#include "jsapi.h"        // JS_ReportErrorNumberASCII
+#include "jsapi.h"        // JS_ReportErrorNumberASCII, JS_ReportErrorASCII
 #include "jsfriendapi.h"  // js::GetErrorMessage, JSMSG_*
 
 #include "builtin/Promise.h"                          // js::PromiseObject
@@ -111,6 +111,20 @@ JSObject* js::WritableStreamDefaultWriterClose(
 
   // Step 11: Return promise.
   return promise;
+}
+
+/**
+ * Streams spec, 4.6.6.
+ *  WritableStreamDefaultWriterEnsureReadyPromiseRejected( writer, error )
+ */
+MOZ_MUST_USE bool js::WritableStreamDefaultWriterEnsureReadyPromiseRejected(
+    JSContext* cx, Handle<WritableStreamDefaultWriter*> unwrappedWriter,
+    Handle<Value> error) {
+  cx->check(error);
+
+  // XXX jwalden flesh me out!
+  JS_ReportErrorASCII(cx, "epic fail");
+  return false;
 }
 
 /**

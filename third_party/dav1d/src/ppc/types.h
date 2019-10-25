@@ -47,6 +47,8 @@
 #define u8h_to_u16(v) ((u16x8) vec_mergeh((u8x16) v, vec_splat_u8(0)))
 #define u8l_to_u16(v) ((u16x8) vec_mergel((u8x16) v, vec_splat_u8(0)))
 #define u16h_to_i32(v) ((i32x4) vec_mergeh((u16x8) v, vec_splat_u16(0)))
+#define i16h_to_i32(v) ((i32x4) vec_unpackh((i16x8)v))
 #define u16l_to_i32(v) ((i32x4) vec_mergel((u16x8) v, vec_splat_u16(0)))
+#define i16l_to_i32(v) ((i32x4) vec_unpackl((i16x8)v))
 
 #endif /* DAV1D_SRC_PPC_TYPES_H */

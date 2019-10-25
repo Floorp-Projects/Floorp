@@ -32,6 +32,8 @@ pw_1024: times 16 dw 1024
 pb_mask: db 0, 0x80, 0x80, 0, 0x80, 0, 0, 0x80, 0x80, 0, 0, 0x80, 0, 0x80, 0x80, 0
 rnd_next_upperbit_mask: dw 0x100B, 0x2016, 0x402C, 0x8058
 byte_blend: db 0, 0, 0, 0xff, 0, 0, 0, 0
+pw_seed_xor: times 2 dw 0xb524
+             times 2 dw 0x49d8
 pd_m65536: dd ~0xffff
 pb_23_22: times 2 db 23, 22
 pb_1: times 4 db 1
@@ -55,6 +57,7 @@ pb_27_17_17_27: db 27, 17, 17, 27
 %endmacro
 
 JMP_TABLE generate_grain_y_avx2, 0, 1, 2, 3
+JMP_TABLE generate_grain_uv_420_avx2, 0, 1, 2, 3
 
 struc FGData
     .seed:                      resd 1
@@ -405,6 +408,443 @@ cglobal generate_grain_y, 2, 9, 16, buf, fg_data
 
 .x_loop_ar3_end:
     add            bufq, 82
+    dec              hd
+    jg .y_loop_ar3
+    RET
+
+INIT_XMM avx2
+cglobal generate_grain_uv_420, 4, 10, 16, buf, bufy, fg_data, uv
+    lea              r4, [pb_mask]
+%define base r4-pb_mask
+    movq            xm1, [base+rnd_next_upperbit_mask]
+    movq            xm4, [base+mul_bits]
+    movq            xm7, [base+hmul_bits]
+    mov             r5d, [fg_dataq+FGData.grain_scale_shift]
+    vpbroadcastw    xm8, [base+round+r5*2]
+    mova            xm5, [base+pb_mask]
+    vpbroadcastw    xm0, [fg_dataq+FGData.seed]
+    vpbroadcastw    xm9, [base+pw_seed_xor+uvq*4]
+    pxor            xm0, xm9
+    vpbroadcastd    xm9, [base+pd_m65536]
+    lea              r6, [gaussian_sequence]
+    mov             r7d, 38
+    add            bufq, 44
+.loop_y:
+    mov              r5, -44
+.loop_x:
+    pand            xm2, xm0, xm1
+    psrlw           xm3, xm2, 10
+    por             xm2, xm3            ; bits 0xf, 0x1e, 0x3c and 0x78 are set
+    pmullw          xm2, xm4            ; bits 0x0f00 are set
+    pshufb          xm2, xm5, xm2       ; set 15th bit for next 4 seeds
+    psllq           xm6, xm2, 30
+    por             xm2, xm6
+    psllq           xm6, xm2, 15
+    por             xm2, xm6            ; aggregate each bit into next seed's high bit
+    pmulhuw         xm3, xm0, xm7
+    por             xm2, xm3            ; 4 next output seeds
+    pshuflw         xm0, xm2, q3333
+    psrlw           xm2, 5
+    pmovzxwd        xm3, xm2
+    mova            xm6, xm9
+    vpgatherdd      xm2, [r6+xm3*2], xm6
+    pandn           xm2, xm9, xm2
+    packusdw        xm2, xm2
+    pmulhrsw        xm2, xm8
+    packsswb        xm2, xm2
+    movd      [bufq+r5], xm2
+    add              r5, 4
+    jl .loop_x
+    add            bufq, 82
+    dec             r7d
+    jg .loop_y
+
+    ; auto-regression code
+    movsxd           r5, [fg_dataq+FGData.ar_coeff_lag]
+    movsxd           r5, [base+generate_grain_uv_420_avx2_table+r5*4]
+    lea              r5, [r5+base+generate_grain_uv_420_avx2_table]
+    jmp              r5
+
+.ar0:
+    INIT_YMM avx2
+    DEFINE_ARGS buf, bufy, fg_data, uv, unused, shift
+    imul            uvd, 25
+    mov          shiftd, [fg_dataq+FGData.ar_coeff_shift]
+    movd            xm4, [fg_dataq+FGData.ar_coeffs_uv+uvq]
+    movd            xm3, [base+hmul_bits+shiftq*2]
+    DEFINE_ARGS buf, bufy, h
+    pmovsxbw        xm4, xm4
+    vpbroadcastd     m7, [pb_1]
+    vpbroadcastw     m6, [hmul_bits+4]
+    vpbroadcastw     m4, xm4
+    vpbroadcastw     m3, xm3
+    sub            bufq, 82*38+82-(82*3+41)
+    add           bufyq, 3+82*3
+    mov              hd, 35
+.y_loop_ar0:
+    ; first 32 pixels
+    movu            xm8, [bufyq]
+    movu            xm9, [bufyq+82]
+    movu           xm10, [bufyq+16]
+    movu           xm11, [bufyq+82+16]
+    vinserti128      m8, [bufyq+32], 1
+    vinserti128      m9, [bufyq+82+32], 1
+    vinserti128     m10, [bufyq+48], 1
+    vinserti128     m11, [bufyq+82+48], 1
+    pmaddubsw        m8, m7, m8
+    pmaddubsw        m9, m7, m9
+    pmaddubsw       m10, m7, m10
+    pmaddubsw       m11, m7, m11
+    paddw            m8, m9
+    paddw           m10, m11
+    pmulhrsw         m8, m6
+    pmulhrsw        m10, m6
+    pmullw           m8, m4
+    pmullw          m10, m4
+    pmulhrsw         m8, m3
+    pmulhrsw        m10, m3
+    packsswb         m8, m10
+    movu             m0, [bufq]
+    punpckhbw        m1, m0, m8
+    punpcklbw        m0, m8
+    pmaddubsw        m1, m7, m1
+    pmaddubsw        m0, m7, m0
+    packsswb         m0, m1
+    movu         [bufq], m0
+
+    ; last 6 pixels
+    movu            xm8, [bufyq+32*2]
+    movu            xm9, [bufyq+32*2+82]
+    pmaddubsw       xm8, xm7, xm8
+    pmaddubsw       xm9, xm7, xm9
+    paddw           xm8, xm9
+    pmulhrsw        xm8, xm6
+    pmullw          xm8, xm4
+    pmulhrsw        xm8, xm3
+    packsswb        xm8, xm8
+    movq            xm0, [bufq+32]
+    punpcklbw       xm8, xm0
+    pmaddubsw       xm8, xm7, xm8
+    packsswb        xm8, xm8
+    vpblendw        xm0, xm8, xm0, 1000b
+    movq      [bufq+32], xm0
+
+    add            bufq, 82
+    add           bufyq, 82*2
+    dec              hd
+    jg .y_loop_ar0
+    RET
+
+.ar1:
+    INIT_XMM avx2
+    DEFINE_ARGS buf, bufy, fg_data, uv, val3, cf3, min, max, x, shift
+    imul            uvd, 25
+    mov          shiftd, [fg_dataq+FGData.ar_coeff_shift]
+    movsx          cf3d, byte [fg_dataq+FGData.ar_coeffs_uv+uvq+3]
+    movd            xm4, [fg_dataq+FGData.ar_coeffs_uv+uvq]
+    pinsrb          xm4, [fg_dataq+FGData.ar_coeffs_uv+uvq+4], 3
+    DEFINE_ARGS buf, bufy, h, val0, val3, cf3, min, max, x, shift
+    pmovsxbw        xm4, xm4
+    pshufd          xm5, xm4, q1111
+    pshufd          xm4, xm4, q0000
+    pmovsxwd        xm3, [base+round_vals+shiftq*2-12]    ; rnd
+    vpbroadcastd    xm7, [pb_1]
+    vpbroadcastw    xm6, [hmul_bits+4]
+    vpbroadcastd    xm3, xm3
+    sub            bufq, 82*38+44-(82*3+41)
+    add           bufyq, 79+82*3
+    mov              hd, 35
+    mov            mind, -128
+    mov            maxd, 127
+.y_loop_ar1:
+    mov              xq, -38
+    movsx         val3d, byte [bufq+xq-1]
+.x_loop_ar1:
+    pmovsxbw        xm0, [bufq+xq-82-1]     ; top/left
+    movq            xm8, [bufyq+xq*2]
+    movq            xm9, [bufyq+xq*2+82]
+    psrldq          xm2, xm0, 2             ; top
+    psrldq          xm1, xm0, 4             ; top/right
+    pmaddubsw       xm8, xm7, xm8
+    pmaddubsw       xm9, xm7, xm9
+    paddw           xm8, xm9
+    pmulhrsw        xm8, xm6
+    punpcklwd       xm0, xm2
+    punpcklwd       xm1, xm8
+    pmaddwd         xm0, xm4
+    pmaddwd         xm1, xm5
+    paddd           xm0, xm1
+    paddd           xm0, xm3
+.x_loop_ar1_inner:
+    movd          val0d, xm0
+    psrldq          xm0, 4
+    imul          val3d, cf3d
+    add           val3d, val0d
+    sarx          val3d, val3d, shiftd
+    movsx         val0d, byte [bufq+xq]
+    add           val3d, val0d
+    cmp           val3d, maxd
+    cmovg         val3d, maxd
+    cmp           val3d, mind
+    cmovl         val3d, mind
+    mov  byte [bufq+xq], val3b
+    ; keep val3d in-place as left for next x iteration
+    inc              xq
+    jz .x_loop_ar1_end
+    test             xq, 3
+    jnz .x_loop_ar1_inner
+    jmp .x_loop_ar1
+
+.x_loop_ar1_end:
+    add            bufq, 82
+    add           bufyq, 82*2
+    dec              hd
+    jg .y_loop_ar1
+    RET
+
+.ar2:
+    DEFINE_ARGS buf, bufy, fg_data, uv, unused, shift
+    mov          shiftd, [fg_dataq+FGData.ar_coeff_shift]
+    imul            uvd, 25
+    movd           xm15, [base+hmul_bits-10+shiftq*2]
+    pmovsxbw        xm8, [fg_dataq+FGData.ar_coeffs_uv+uvq+0]   ; cf0-7
+    pmovsxbw        xm9, [fg_dataq+FGData.ar_coeffs_uv+uvq+8]   ; cf8-12
+    DEFINE_ARGS buf, bufy, h, x
+    pshufd         xm12, xm9, q0000
+    pshufd         xm13, xm9, q1111
+    pshufd         xm14, xm9, q2222
+    pxor           xm10, xm10
+    vpblendw       xm14, xm10, 10101010b
+    pshufd         xm11, xm8, q3333
+    pshufd         xm10, xm8, q2222
+    pshufd          xm9, xm8, q1111
+    pshufd          xm8, xm8, q0000
+    sub            bufq, 82*38+44-(82*3+41)
+    add           bufyq, 79+82*3
+    mov              hd, 35
+.y_loop_ar2:
+    mov              xq, -38
+
+.x_loop_ar2:
+    pmovsxbw        xm0, [bufq+xq-82*2-2]   ; y=-2,x=[-2,+5]
+    pmovsxbw        xm1, [bufq+xq-82*1-2]   ; y=-1,x=[-2,+5]
+    psrldq          xm2, xm0, 2             ; y=-2,x=[-1,+5]
+    psrldq          xm3, xm1, 2             ; y=-1,x=[-1,+5]
+    psrldq          xm4, xm1, 4             ; y=-1,x=[+0,+5]
+    punpcklwd       xm2, xm0, xm2
+    punpcklwd       xm3, xm4
+    pmaddwd         xm2, xm8
+    pmaddwd         xm3, xm11
+    paddd           xm2, xm3
+
+    psrldq          xm4, xm0, 4             ; y=-2,x=[+0,+5]
+    psrldq          xm5, xm0, 6             ; y=-2,x=[+1,+5]
+    psrldq          xm6, xm0, 8             ; y=-2,x=[+2,+5]
+    punpcklwd       xm4, xm5
+    punpcklwd       xm6, xm1
+    psrldq          xm7, xm1, 6             ; y=-1,x=[+1,+5]
+    psrldq          xm1, xm1, 8             ; y=-1,x=[+2,+5]
+    punpcklwd       xm7, xm1
+    pmaddwd         xm4, xm9
+    pmaddwd         xm6, xm10
+    pmaddwd         xm7, xm12
+    paddd           xm4, xm6
+    paddd           xm2, xm7
+    paddd           xm2, xm4
+
+    vpbroadcastd    xm4, [base+pb_1]
+    movq            xm6, [bufyq+xq*2]
+    movq            xm7, [bufyq+xq*2+82]
+    pmaddubsw       xm6, xm4, xm6
+    pmaddubsw       xm7, xm4, xm7
+    vpbroadcastw    xm4, [base+hmul_bits+4]
+    paddw           xm6, xm7
+    pmulhrsw        xm6, xm4
+    pxor            xm7, xm7
+    punpcklwd       xm6, xm7
+    pmaddwd         xm6, xm14
+    paddd           xm2, xm6
+
+    movq            xm0, [bufq+xq-2]        ; y=0,x=[-2,+5]
+.x_loop_ar2_inner:
+    pmovsxbw        xm0, xm0
+    pmaddwd         xm3, xm0, xm13
+    paddd           xm3, xm2
+    psrldq          xm2, 4                  ; shift top to next pixel
+    psrad           xm3, 5
+    packssdw        xm3, xm3
+    pmulhrsw        xm3, xm15
+    pslldq          xm3, 2
+    psrldq          xm0, 2
+    paddw           xm3, xm0
+    vpblendw        xm0, xm3, 00000010b
+    packsswb        xm0, xm0
+    pextrb    [bufq+xq], xm0, 1
+    inc              xq
+    jz .x_loop_ar2_end
+    test             xq, 3
+    jnz .x_loop_ar2_inner
+    jmp .x_loop_ar2
+
+.x_loop_ar2_end:
+    add            bufq, 82
+    add           bufyq, 82*2
+    dec              hd
+    jg .y_loop_ar2
+    RET
+
+.ar3:
+    DEFINE_ARGS buf, bufy, fg_data, uv, unused, shift
+    SUB             rsp, 16*12
+%assign stack_size_padded (stack_size_padded+16*12)
+%assign stack_size (stack_size+16*12)
+    mov          shiftd, [fg_dataq+FGData.ar_coeff_shift]
+    imul            uvd, 25
+    movd           xm14, [base+hmul_bits-10+shiftq*2]
+    pmovsxbw        xm0, [fg_dataq+FGData.ar_coeffs_uv+uvq+ 0]   ; cf0-7
+    pmovsxbw        xm1, [fg_dataq+FGData.ar_coeffs_uv+uvq+ 8]   ; cf8-15
+    pmovsxbw        xm2, [fg_dataq+FGData.ar_coeffs_uv+uvq+16]   ; cf16-23
+    pmovsxbw        xm5, [fg_dataq+FGData.ar_coeffs_uv+uvq+24]   ; cf24 [luma]
+    pshufd          xm9, xm0, q1111
+    pshufd         xm10, xm0, q2222
+    pshufd         xm11, xm0, q3333
+    pshufd          xm0, xm0, q0000
+    pshufd          xm6, xm1, q1111
+    pshufd          xm7, xm1, q2222
+    pshufd          xm8, xm1, q3333
+    pshufd          xm1, xm1, q0000
+    pshufd          xm3, xm2, q1111
+    pshufd          xm4, xm2, q2222
+    vpbroadcastw    xm5, xm5
+    vpblendw        xm4, xm5, 10101010b                     ; interleave luma cf
+    psrldq          xm5, xm2, 10
+    pshufd          xm2, xm2, q0000
+    pinsrw          xm5, [base+round_vals+shiftq*2-10], 3
+    mova    [rsp+ 0*16], xm0
+    mova    [rsp+ 1*16], xm9
+    mova    [rsp+ 2*16], xm10
+    mova    [rsp+ 3*16], xm11
+    mova    [rsp+ 4*16], xm1
+    mova    [rsp+ 5*16], xm6
+    mova    [rsp+ 6*16], xm7
+    mova    [rsp+ 7*16], xm8
+    mova    [rsp+ 8*16], xm2
+    mova    [rsp+ 9*16], xm3
+    mova    [rsp+10*16], xm4
+    mova    [rsp+11*16], xm5
+    vpbroadcastd   xm13, [base+pb_1]
+    vpbroadcastw   xm15, [base+hmul_bits+4]
+    DEFINE_ARGS buf, bufy, h, x
+    sub            bufq, 82*38+44-(82*3+41)
+    add           bufyq, 79+82*3
+    mov              hd, 35
+.y_loop_ar3:
+    mov              xq, -38
+
+.x_loop_ar3:
+    movu            xm0, [bufq+xq-82*3-3]   ; y=-3,x=[-3,+12]
+    movu            xm1, [bufq+xq-82*2-3]   ; y=-2,x=[-3,+12]
+    movu            xm2, [bufq+xq-82*1-3]   ; y=-1,x=[-3,+12]
+    pxor            xm3, xm3
+    pcmpgtb         xm6, xm3, xm2
+    pcmpgtb         xm5, xm3, xm1
+    pcmpgtb         xm4, xm3, xm0
+    punpckhbw       xm3, xm0, xm4
+    punpcklbw       xm0, xm4
+    punpckhbw       xm4, xm1, xm5
+    punpcklbw       xm1, xm5
+    punpckhbw       xm5, xm2, xm6
+    punpcklbw       xm2, xm6
+
+    psrldq          xm6, xm0, 2
+    psrldq          xm7, xm0, 4
+    psrldq          xm8, xm0, 6
+    psrldq          xm9, xm0, 8
+    palignr        xm10, xm3, xm0, 10
+    palignr        xm11, xm3, xm0, 12
+
+    punpcklwd       xm0, xm6
+    punpcklwd       xm7, xm8
+    punpcklwd       xm9, xm10
+    punpcklwd      xm11, xm1
+    pmaddwd         xm0, [rsp+ 0*16]
+    pmaddwd         xm7, [rsp+ 1*16]
+    pmaddwd         xm9, [rsp+ 2*16]
+    pmaddwd        xm11, [rsp+ 3*16]
+    paddd           xm0, xm7
+    paddd           xm9, xm11
+    paddd           xm0, xm9
+
+    psrldq          xm6, xm1, 2
+    psrldq          xm7, xm1, 4
+    psrldq          xm8, xm1, 6
+    psrldq          xm9, xm1, 8
+    palignr        xm10, xm4, xm1, 10
+    palignr        xm11, xm4, xm1, 12
+    psrldq         xm12, xm2, 2
+
+    punpcklwd       xm6, xm7
+    punpcklwd       xm8, xm9
+    punpcklwd      xm10, xm11
+    punpcklwd      xm12, xm2, xm12
+    pmaddwd         xm6, [rsp+ 4*16]
+    pmaddwd         xm8, [rsp+ 5*16]
+    pmaddwd        xm10, [rsp+ 6*16]
+    pmaddwd        xm12, [rsp+ 7*16]
+    paddd           xm6, xm8
+    paddd          xm10, xm12
+    paddd           xm6, xm10
+    paddd           xm0, xm6
+
+    psrldq          xm6, xm2, 4
+    psrldq          xm7, xm2, 6
+    psrldq          xm8, xm2, 8
+    palignr         xm9, xm5, xm2, 10
+    palignr         xm5, xm5, xm2, 12
+
+    movq            xm1, [bufyq+xq*2]
+    movq            xm2, [bufyq+xq*2+82]
+    pmaddubsw       xm1, xm13, xm1
+    pmaddubsw       xm2, xm13, xm2
+    paddw           xm1, xm2
+    vpbroadcastw    xm3, xm15
+    pmulhrsw        xm1, xm3
+
+    punpcklwd       xm6, xm7
+    punpcklwd       xm8, xm9
+    punpcklwd       xm5, xm1
+    pmaddwd         xm6, [rsp+ 8*16]
+    pmaddwd         xm8, [rsp+ 9*16]
+    pmaddwd         xm5, [rsp+10*16]
+    paddd           xm0, xm6
+    paddd           xm8, xm5
+    paddd           xm0, xm8
+
+    movq            xm1, [bufq+xq-3]        ; y=0,x=[-3,+4]
+.x_loop_ar3_inner:
+    pmovsxbw        xm1, xm1
+    pmaddwd         xm2, xm1, [rsp+16*11]
+    pshufd          xm3, xm2, q1111
+    paddd           xm2, xm3                ; left+cur
+    paddd           xm2, xm0                ; add top
+    psrldq          xm0, 4
+    psrad           xm2, 5
+    packssdw        xm2, xm2
+    pmulhrsw        xm2, xm14
+    pslldq          xm2, 6
+    vpblendw        xm1, xm2, 1000b
+    packsswb        xm1, xm1
+    pextrb    [bufq+xq], xm1, 3
+    psrldq          xm1, 1
+    inc              xq
+    jz .x_loop_ar3_end
+    test             xq, 3
+    jnz .x_loop_ar3_inner
+    jmp .x_loop_ar3
+
+.x_loop_ar3_end:
+    add            bufq, 82
+    add           bufyq, 82*2
     dec              hd
     jg .y_loop_ar3
     RET

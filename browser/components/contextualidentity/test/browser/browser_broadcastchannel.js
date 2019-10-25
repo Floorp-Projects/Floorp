@@ -50,8 +50,17 @@ async function addBrowserFrameInUserContext(uri, userContextId) {
 }
 
 function browserFrameLoaded(browser) {
-  let event = "BrowserTestUtils:ContentEvent:load";
-  return BrowserTestUtils.waitForEvent(browser, event);
+  const mm = browser.messageManager;
+  return new Promise(resolve => {
+    const eventName = "browser-test-utils:loadEvent";
+    mm.addMessageListener(eventName, function onLoad(msg) {
+      if (msg.target != browser) {
+        return;
+      }
+      mm.removeMessageListener(eventName, onLoad);
+      resolve(msg.data.internalURL);
+    });
+  });
 }
 
 function removeBrowserFrame({ browser }) {
