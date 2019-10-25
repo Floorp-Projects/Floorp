@@ -200,8 +200,6 @@ MethodStatus jit::BaselineCompile(JSContext* cx, JSScript* script,
       cx, "Baseline script compilation",
       JS::ProfilingCategoryPair::JS_BaselineCompilation);
 
-  script->ensureNonLazyCanonicalFunction();
-
   TempAllocator temp(&cx->tempLifoAlloc());
   JitContext jctx(cx, nullptr);
 

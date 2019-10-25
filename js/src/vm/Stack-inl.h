@@ -265,8 +265,6 @@ MOZ_ALWAYS_INLINE bool InterpreterStack::pushInlineFrame(
   MOZ_ASSERT(regs.sp == args.end());
   MOZ_ASSERT(callee->nonLazyScript() == script);
 
-  script->ensureNonLazyCanonicalFunction();
-
   InterpreterFrame* prev = regs.fp();
   jsbytecode* prevpc = regs.pc;
   Value* prevsp = regs.sp;
@@ -299,8 +297,6 @@ MOZ_ALWAYS_INLINE bool InterpreterStack::resumeGeneratorCallFrame(
   jsbytecode* prevpc = regs.pc;
   Value* prevsp = regs.sp;
   MOZ_ASSERT(prev);
-
-  script->ensureNonLazyCanonicalFunction();
 
   LifoAlloc::Mark mark = allocator_.mark();
 

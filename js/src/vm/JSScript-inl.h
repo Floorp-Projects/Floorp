@@ -82,14 +82,6 @@ inline JSFunction* JSScript::functionDelazifying() const {
   return fun;
 }
 
-inline void JSScript::ensureNonLazyCanonicalFunction() {
-  // Infallibly delazify the canonical script.
-  JSFunction* fun = function();
-  if (fun && fun->isInterpretedLazy()) {
-    functionDelazifying();
-  }
-}
-
 inline JSFunction* JSScript::getFunction(size_t index) {
   JSObject* obj = getObject(index);
   MOZ_RELEASE_ASSERT(obj->is<JSFunction>(), "Script object is not JSFunction");

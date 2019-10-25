@@ -1746,10 +1746,6 @@ static AbortReason IonCompile(JSContext* cx, JSScript* script,
 
   cx->check(script);
 
-  // Make sure the script's canonical function isn't lazy. We can't de-lazify
-  // it in a helper thread.
-  script->ensureNonLazyCanonicalFunction();
-
   auto alloc =
       cx->make_unique<LifoAlloc>(TempAllocator::PreferredLifoChunkSize);
   if (!alloc) {
