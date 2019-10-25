@@ -335,10 +335,8 @@ RuleEditor.prototype = {
    *        The original line number
    * @param {number} column
    *        The original column number
-   * @param {number} sourceId
-   *        The original sourceId
    */
-  _updateLocation: function(enabled, url, line, column, sourceId) {
+  _updateLocation: function(enabled, url, line, column) {
     let displayURL = url;
     if (!enabled) {
       url = null;
@@ -355,7 +353,6 @@ RuleEditor.prototype = {
       url,
       line,
       column,
-      sourceId,
     };
 
     let sourceTextContent = CssLogic.shortSource({ href: displayURL });
