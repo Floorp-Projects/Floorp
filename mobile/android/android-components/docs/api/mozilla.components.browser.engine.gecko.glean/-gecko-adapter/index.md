@@ -2,9 +2,9 @@
 
 # GeckoAdapter
 
-`class GeckoAdapter` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-beta/src/main/java/mozilla/components/browser/engine/gecko/glean/GeckoAdapter.kt#L21)
+`class GeckoAdapter : `[`Delegate`](https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/RuntimeTelemetry/Delegate.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-beta/src/main/java/mozilla/components/browser/engine/gecko/glean/GeckoAdapter.kt#L21)
 
-This implements a [RuntimeTelemetry.Delegate](#) that dispatches Gecko runtime
+This implements a [RuntimeTelemetry.Delegate](https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/RuntimeTelemetry/Delegate.html) that dispatches Gecko runtime
 telemetry to the Glean SDK.
 
 Metrics defined in the `metrics.yaml` file in Gecko's mozilla-central repository
@@ -18,7 +18,7 @@ providing an instance to `GeckoRuntimeSettings.Builder().telemetryDelegate`.
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `GeckoAdapter()`<br>This implements a [RuntimeTelemetry.Delegate](#) that dispatches Gecko runtime telemetry to the Glean SDK. |
+| [&lt;init&gt;](-init-.md) | `GeckoAdapter()`<br>This implements a [RuntimeTelemetry.Delegate](https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/RuntimeTelemetry/Delegate.html) that dispatches Gecko runtime telemetry to the Glean SDK. |
 
 ### Functions
 
@@ -28,4 +28,4 @@ providing an instance to `GeckoRuntimeSettings.Builder().telemetryDelegate`.
 | [onHistogram](on-histogram.md) | `fun onHistogram(metric: <ERROR CLASS>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [onLongScalar](on-long-scalar.md) | `fun onLongScalar(metric: <ERROR CLASS><`[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html)`>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [onStringScalar](on-string-scalar.md) | `fun onStringScalar(metric: <ERROR CLASS><`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
-| [onTelemetryReceived](on-telemetry-received.md) | `fun onTelemetryReceived(metric: <ERROR CLASS>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
+| [onTelemetryReceived](on-telemetry-received.md) | `fun onTelemetryReceived(metric: `[`Metric`](https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/RuntimeTelemetry/Metric.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |

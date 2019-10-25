@@ -2,4 +2,4 @@
 
 # GECKO_AUTH_LEVEL
 
-`typealias GECKO_AUTH_LEVEL = <ERROR CLASS>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-beta/src/main/java/mozilla/components/browser/engine/gecko/prompt/GeckoPromptDelegate.kt#L40)
+`typealias GECKO_AUTH_LEVEL = `[`Level`](https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoSession/PromptDelegate/AuthPrompt/AuthOptions/Level.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-beta/src/main/java/mozilla/components/browser/engine/gecko/prompt/GeckoPromptDelegate.kt#L40)

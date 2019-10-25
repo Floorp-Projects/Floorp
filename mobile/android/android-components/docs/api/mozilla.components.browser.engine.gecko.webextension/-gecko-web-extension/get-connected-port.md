@@ -2,7 +2,7 @@
 
 # getConnectedPort
 
-`fun getConnectedPort(name: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, session: `[`EngineSession`](../../mozilla.components.concept.engine/-engine-session/index.md)`?): `[`Port`](../../mozilla.components.concept.engine.webextension/-port/index.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-beta/src/main/java/mozilla/components/browser/engine/gecko/webextension/GeckoWebExtension.kt#L120)
+`fun getConnectedPort(name: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, session: `[`EngineSession`](../../mozilla.components.concept.engine/-engine-session/index.md)`?): `[`Port`](../../mozilla.components.concept.engine.webextension/-port/index.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-beta/src/main/java/mozilla/components/browser/engine/gecko/webextension/GeckoWebExtension.kt#L130)
 
 Overrides [WebExtension.getConnectedPort](../../mozilla.components.concept.engine.webextension/-web-extension/get-connected-port.md)
 

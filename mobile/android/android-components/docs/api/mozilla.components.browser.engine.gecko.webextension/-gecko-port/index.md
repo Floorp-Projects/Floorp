@@ -2,7 +2,7 @@
 
 # GeckoPort
 
-`class GeckoPort : `[`Port`](../../mozilla.components.concept.engine.webextension/-port/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-beta/src/main/java/mozilla/components/browser/engine/gecko/webextension/GeckoWebExtension.kt#L140)
+`class GeckoPort : `[`Port`](../../mozilla.components.concept.engine.webextension/-port/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-beta/src/main/java/mozilla/components/browser/engine/gecko/webextension/GeckoWebExtension.kt#L150)
 
 Gecko-based implementation of [Port](../../mozilla.components.concept.engine.webextension/-port/index.md), wrapping the native port provided by GeckoView.
 

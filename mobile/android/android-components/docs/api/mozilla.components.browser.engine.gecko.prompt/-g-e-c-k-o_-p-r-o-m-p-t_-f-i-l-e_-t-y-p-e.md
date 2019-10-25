@@ -2,4 +2,4 @@
 
 # GECKO_PROMPT_FILE_TYPE
 
-`typealias GECKO_PROMPT_FILE_TYPE = <ERROR CLASS>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-beta/src/main/java/mozilla/components/browser/engine/gecko/prompt/GeckoPromptDelegate.kt#L41)
+`typealias GECKO_PROMPT_FILE_TYPE = `[`Type`](https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoSession/PromptDelegate/FilePrompt/Type.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-beta/src/main/java/mozilla/components/browser/engine/gecko/prompt/GeckoPromptDelegate.kt#L41)

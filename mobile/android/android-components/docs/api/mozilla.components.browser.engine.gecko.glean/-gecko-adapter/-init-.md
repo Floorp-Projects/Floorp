@@ -4,7 +4,7 @@
 
 `GeckoAdapter()`
 
-This implements a [RuntimeTelemetry.Delegate](#) that dispatches Gecko runtime
+This implements a [RuntimeTelemetry.Delegate](https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/RuntimeTelemetry/Delegate.html) that dispatches Gecko runtime
 telemetry to the Glean SDK.
 
 Metrics defined in the `metrics.yaml` file in Gecko's mozilla-central repository
