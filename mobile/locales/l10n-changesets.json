@@ -75,7 +75,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "2496de6372ba"
+        "revision": "e080c0973ea9"
     },
     "da": {
         "platforms": [
@@ -87,7 +87,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "37461d78c9fe"
+        "revision": "3b9e84324659"
     },
     "dsb": {
         "platforms": [
@@ -153,7 +153,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "ba04e8b73ca4"
+        "revision": "5cd7f54b4218"
     },
     "fa": {
         "platforms": [
@@ -183,7 +183,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "77f560ce9105"
+        "revision": "2856e5f1b3a0"
     },
     "ga-IE": {
         "platforms": [
@@ -243,7 +243,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "07583ce9146a"
+        "revision": "f576e8f362ff"
     },
     "hy-AM": {
         "platforms": [
@@ -267,7 +267,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "1f6ab7f35599"
+        "revision": "629fef360c81"
     },
     "ja": {
         "platforms": [
@@ -285,7 +285,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "0e0e25c26247"
+        "revision": "49885793feae"
     },
     "kk": {
         "platforms": [
@@ -369,7 +369,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "b3430db2fd86"
+        "revision": "0c9b3b18b646"
     },
     "nn-NO": {
         "platforms": [
@@ -447,7 +447,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "2bb3808072da"
+        "revision": "f5899364e31b"
     },
     "sr": {
         "platforms": [
@@ -483,7 +483,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "1e0771d95708"
+        "revision": "63ff2e29169c"
     },
     "trs": {
         "platforms": [
