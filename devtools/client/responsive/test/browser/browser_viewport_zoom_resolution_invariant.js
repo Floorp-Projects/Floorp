@@ -1,0 +1,95 @@
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
+"use strict";
+
+// Test that resolution is as expected for different types of meta viewport
+// settings, as the RDM pane is zoomed to different values.
+
+add_task(async function() {
+  // Turn on the pref that allows meta viewport support.
+  await SpecialPowers.pushPrefEnv({
+    set: [["devtools.responsive.metaViewport.enabled", true]],
+  });
+
+  const RESOLUTION_FACTOR_MIN = 0.96;
+  const RESOLUTION_FACTOR_MAX = 1.04;
+  const ZOOM_LEVELS = [
+    0.3,
+    0.5,
+    0.67,
+    0.8,
+    0.9,
+    1.0,
+    1.1,
+    1.2,
+    1.33,
+    1.5,
+    1.7,
+    2.0,
+    2.4,
+    3.0,
+  ];
+
+  info("--- Starting viewport test output ---");
+
+  const WIDTH = 200;
+  const HEIGHT = 200;
+  const TESTS = [
+    { content: "width=600", res_target: 0.333 },
+    { content: "width=600, initial-scale=1.0", res_target: 1.0 },
+    { content: "width=device-width", res_target: 1.0 },
+    { content: "width=device-width, initial-scale=2.0", res_target: 2.0 },
+  ];
+
+  for (const { content, res_target } of TESTS) {
+    info(`Using meta viewport content "${content}".`);
+
+    const TEST_URL =
+      `data:text/html;charset=utf-8,` +
+      `<html><head><meta name="viewport" content="${content}"></head>` +
+      `<body><div style="width:100%;background-color:green">${content}</div>` +
+      `</body></html>`;
+
+    const tab = await addTab(TEST_URL);
+    const browser = tab.linkedBrowser;
+    const { ui, manager } = await openRDM(tab);
+
+    const store = ui.toolWindow.store;
+
+    // Wait until the viewport has been added.
+    await waitUntilState(store, state => state.viewports.length == 1);
+
+    await setViewportSize(ui, manager, WIDTH, HEIGHT);
+    await setTouchAndMetaViewportSupport(ui, true);
+
+    // Randomize the order that we'll check the zoom levels.
+    const random_zoom_levels = ZOOM_LEVELS.slice();
+    const l = random_zoom_levels.length;
+    for (let i = l - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * l);
+      const temp = random_zoom_levels[i];
+      random_zoom_levels[i] = random_zoom_levels[j];
+      random_zoom_levels[j] = temp;
+    }
+
+    for (const zoom of random_zoom_levels) {
+      info(`Set zoom to ${zoom}.`);
+      await promiseRDMZoom(ui, browser, zoom);
+
+      const resolution = await spawnViewportTask(ui, {}, () => {
+        return content.windowUtils.getResolution();
+      });
+
+      const res_min = res_target * RESOLUTION_FACTOR_MIN;
+      const res_max = res_target * RESOLUTION_FACTOR_MAX;
+      ok(
+        res_min <= resolution && res_max >= resolution,
+        `${content} zoom ${zoom} resolution should be near ${res_target}, and we got ${resolution}.`
+      );
+    }
+
+    await closeRDM(tab);
+    await removeTab(tab);
+  }
+});
