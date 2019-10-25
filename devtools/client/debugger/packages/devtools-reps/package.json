@@ -4,10 +4,7 @@
   "description": "Devtools Reps",
   "main": "src/index.js",
   "scripts": {
-    "start": "node bin/dev-server.js",
     "lint-js": "eslint src",
-    "firefox": "./node_modules/.bin/start-firefox --start --location https://firefox-devtools.github.io/debugger-examples/",
-    "chrome": "./node_modules/.bin/start-chrome",
     "license-check": "devtools-license-check",
     "test": "TZ=Africa/Nairobi jest --projects jest.config.js"
   },
@@ -37,9 +34,7 @@
     "babel-plugin-syntax-object-rest-spread": "^6.13.0",
     "babel-plugin-transform-es2015-modules-commonjs": "^6.26.0",
     "babel-preset-react": "^6.24.1",
-    "devtools-config": "^0.0.16",
     "devtools-license-check": "^0.7.0",
-    "devtools-modules": "~1.1.0",
     "devtools-services": "^0.0.1",
     "enzyme": "^3.10.0",
     "enzyme-adapter-react-16": "^1.14.0",
