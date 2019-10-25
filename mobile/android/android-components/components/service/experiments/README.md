@@ -63,20 +63,25 @@ Experiments.withExperiment("button-color-experiment") { branchName ->
 
 ## Testing experiments
 
-### Testing on the dev server
+### Accessing the Kinto staging server
 
-For any technical tests, we do have a Kinto dev server available, which can be freely configured & gets reset daily.
-The admin interface is [here](https://kinto.dev.mozaws.net/v1/admin/). For setting up a testing setup we can:
-- [Create a collection in the main bucket](https://kinto.dev.mozaws.net/v1/admin/#/buckets/main/collections/create).
-  - The *collection id* should be `mobile-experiments`.
-  - The *JSON schema* should have [this content](KintoSchema.md#JSON-Schema)
-  - The *UI schema* should have [this content](KintoSchema.md#UI-Schema)
-  - The *Records list columns* should contain `id` and `description`.
-  - Click *Create collection*
-- In the [`mobile-experiments` record list](https://kinto.dev.mozaws.net/v1/admin/#/buckets/main/collections/mobile-experiments/records), create new entries for experiments as needed.
-- In the mobile application, use the debug commands below to switch to the `dev` endpoint.
+To test experiments and branching, use the Kinto staging server available. **You** are responsible for cleaning up your experiments when you are finished testing.
 
-### ExperimentsDebugActivity usage
+There is no way to test branching locally only, unfortunately - you must have the experiment available on a testing server.
+
+The staging server is only for internal testing, and requires additional permissions. Allocate at least a few days to make sure you can get the correct permissions.
+
+You will need:
+- Set up the [VPN](https://mana.mozilla.org/wiki/pages/viewpage.action?spaceKey=SD&title=VPN)
+- Get the relevant experiment creation/approval permissions by reaching out to the Mobile Experiments team.
+
+The staging server interface is [here](https://settings-writer.stage.mozaws.net/v1/admin/#/). Once you have completed the above prerequisites, you'll be able to log in with LDAP.
+
+In the [`mobile-experiments` record list](https://settings-writer.stage.mozaws.net/v1/admin/#/buckets/main-workspace/collections/mobile-experiments/records), create new entries for experiments as needed.
+
+- Use the debug commands below to switch to the `staging` endpoint.
+
+### Using ExperimentsDebugActivity to access staged experiments
 
 Experiments exports the [`ExperimentsDebugActivity`](src/main/java/mozilla/components/service/experiments/debug/ExperimentsDebugActivity.kt)
 that can be used to trigger functionality or toggle debug features on or off. Users can invoke this special activity, at
@@ -100,12 +105,12 @@ In the above:
     |---|----|-----------|
     | updateExperiments | boolean (--ez) | Forces the experiments updater to run and fetch experiments immediately. You must pass `true` or `false` following this switch but either will update experiments if this is present |
     | setKintoInstance | string (--es) | Sets the Kinto instance to the specified instance ("dev", "staging", "prod" only) |
-    | overrideExperiment | string (--es) | Used to pass in the experiment to override and must be followed by the `branch` command below. |
+    | overrideExperiment | string (--es) | Used to pass in the experiment name to override. Must be followed by the `branch` command below. |
     | branch | string (--es) | Used to set the branch for overriding the experiment and is meant to be used with the `overrideExperiment` command above. |
     | clearAllOverrides | boolean (--ez) | Clears any overrides that have been set.  You must pass `true` or `false` following this switch but either will clear the overrides if this is present. Should **not** be used in combination with the `overrideExperiment` command |
 
 #### Examples
- 
+
 To direct a release build of the Glean sample application to (1) update experiments immediately and (2) change the Kinto instance to the staging instance, the following command can be used:
 
 ```
