@@ -472,6 +472,43 @@ class WalkerFront extends FrontClassWithSpec(walkerSpec) {
     const documentNode = await this.getRootNode();
     documentNode.reparent(parentNode);
   }
+
+  /**
+   * Evaluate the cross iframes query selectors for the current walker front.
+   *
+   * @param {Array} selectors
+   *        An array of CSS selectors to find the target accessible object.
+   *        Several selectors can be needed if the element is nested in frames
+   *        and not directly in the root document.
+   * @return {Promise} a promise that resolves when the node front is found for
+   *                   selection using inspector tools.
+   */
+  async findNodeFront(nodeSelectors) {
+    const querySelectors = async nodeFront => {
+      const selector = nodeSelectors.shift();
+      if (!selector) {
+        return nodeFront;
+      }
+      nodeFront = await this.querySelector(nodeFront, selector);
+      if (nodeSelectors.length > 0) {
+        const { nodes } = await this.children(nodeFront);
+        // If there are remaining selectors to process, they will target a document or a
+        // document-fragment under the current node. Whether the element is a frame or
+        // a web component, it can only contain one document/document-fragment, so just
+        // select the first one available.
+        nodeFront = nodes.find(node => {
+          const { nodeType } = node;
+          return (
+            nodeType === Node.DOCUMENT_FRAGMENT_NODE ||
+            nodeType === Node.DOCUMENT_NODE
+          );
+        });
+      }
+      return querySelectors(nodeFront);
+    };
+    const nodeFront = await this.getRootNode();
+    return querySelectors(nodeFront);
+  }
 }
 
 exports.WalkerFront = WalkerFront;
