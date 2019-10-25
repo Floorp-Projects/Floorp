@@ -62,8 +62,8 @@ class SessionUseCasesTest {
         useCases.loadData("Should load in WebView", "text/plain", session = selectedSession)
         verify(selectedEngineSession).loadData("Should load in WebView", "text/plain", "UTF-8")
 
-        useCases.loadData("ahr0cdovl21vemlsbgeub3jn==", "text/plain", "base64", selectedSession)
-        verify(selectedEngineSession).loadData("ahr0cdovl21vemlsbgeub3jn==", "text/plain", "base64")
+        useCases.loadData("Should also load in WebView", "text/plain", "base64", selectedSession)
+        verify(selectedEngineSession).loadData("Should also load in WebView", "text/plain", "base64")
     }
 
     @Test
