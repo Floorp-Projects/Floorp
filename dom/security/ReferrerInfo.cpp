@@ -58,18 +58,11 @@ static uint32_t sDefaultTrackerRp = DEFAULT_TRACKER_RP;
 static uint32_t defaultPrivateRp = DEFAULT_PRIVATE_RP;
 static uint32_t defaultTrackerPrivateRp = DEFAULT_TRACKER_PRIVATE_RP;
 
-static uint32_t sUserXOriginTrimmingPolicy = 0;
-
 static void CachePreferrenceValue() {
   static bool sPrefCached = false;
   if (sPrefCached) {
     return;
   }
-
-  Preferences::AddUintVarCache(&sUserXOriginTrimmingPolicy,
-                               "network.http.referer.XOriginTrimmingPolicy");
-  sUserXOriginTrimmingPolicy = clamped<uint32_t>(
-      sUserXOriginTrimmingPolicy, MIN_TRIMMING_POLICY, MAX_TRIMMING_POLICY);
 
   Preferences::AddUintVarCache(
       &sDefaultRp, "network.http.referer.defaultPolicy", DEFAULT_RP);
@@ -213,6 +206,14 @@ uint32_t ReferrerInfo::GetUserXOriginSendingPolicy() {
 uint32_t ReferrerInfo::GetUserTrimmingPolicy() {
   return clamped<uint32_t>(
       StaticPrefs::network_http_referer_trimmingPolicy_DoNotUseDirectly(),
+      MIN_TRIMMING_POLICY, MAX_TRIMMING_POLICY);
+}
+
+/* static */
+uint32_t ReferrerInfo::GetUserXOriginTrimmingPolicy() {
+  return clamped<uint32_t>(
+      StaticPrefs::
+          network_http_referer_XOriginTrimmingPolicy_DoNotUseDirectly(),
       MIN_TRIMMING_POLICY, MAX_TRIMMING_POLICY);
 }
 
@@ -553,9 +554,10 @@ ReferrerInfo::TrimmingPolicy ReferrerInfo::ComputeTrimmingPolicy(
         // Ignore set trimmingPolicy if it is already the strictest
         // policy. Apply the user cross-origin trimming policy if it's more
         // restrictive than the general one.
-        if (sUserXOriginTrimmingPolicy != TrimmingPolicy::ePolicyFullURI &&
+        if (GetUserXOriginTrimmingPolicy() != TrimmingPolicy::ePolicyFullURI &&
             IsCrossOriginRequest(aChannel)) {
-          trimmingPolicy = std::max(trimmingPolicy, sUserXOriginTrimmingPolicy);
+          trimmingPolicy =
+              std::max(trimmingPolicy, GetUserXOriginTrimmingPolicy());
         }
       }
       break;
