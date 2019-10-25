@@ -16,7 +16,6 @@ info: |
       Let primValue be ? ToPrimitive(argument, hint Number).
       Return ? ToNumber(primValue).
 
-includes: [atomicsHelper.js]
 features: [Atomics, SharedArrayBuffer, Symbol, Symbol.toPrimitive, TypedArray]
 flags: [CanBlockIsTrue]
 ---*/

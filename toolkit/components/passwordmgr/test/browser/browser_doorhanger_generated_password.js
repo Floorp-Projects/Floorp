@@ -201,13 +201,6 @@ async function openFormInNewTab(url, formValues, taskFn) {
   );
 }
 
-async function waitForDoorhanger(browser, type) {
-  await TestUtils.waitForCondition(() => {
-    let notif = PopupNotifications.getNotification("password", browser);
-    return notif && notif.options.passwordNotificationType == type;
-  }, `Waiting for a ${type} notification`);
-}
-
 async function openAndVerifyDoorhanger(browser, type, expected) {
   // check a dismissed prompt was shown with extraAttr attribute
   let notif = getCaptureDoorhanger(type);
@@ -249,18 +242,6 @@ async function openAndVerifyDoorhanger(browser, type, expected) {
     "Doorhanger username field was popuplated"
   );
   return notif;
-}
-
-async function hideDoorhangerPopup() {
-  info("hideDoorhangerPopup");
-  if (!PopupNotifications.isPanelOpen) {
-    return;
-  }
-  let { panel } = PopupNotifications;
-  let promiseHidden = BrowserTestUtils.waitForEvent(panel, "popuphidden");
-  panel.hidePopup();
-  await promiseHidden;
-  info("got popuphidden from notification panel");
 }
 
 async function submitForm(browser) {

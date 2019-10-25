@@ -18,7 +18,6 @@ info: |
   Date.parse(x.toString())
   Date.parse(x.toUTCString())
   Date.parse(x.toISOString())
-includes: [propertyHelper.js]
 ---*/
 
 const zero = new Date(0);

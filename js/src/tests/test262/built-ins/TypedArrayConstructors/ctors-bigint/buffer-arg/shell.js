@@ -7,7 +7,7 @@ description: |
     A function used in the process of asserting correctness of TypedArray objects.
 
     $262.detachArrayBuffer is defined by a host.
-
+defines: [$DETACHBUFFER]
 ---*/
 
 function $DETACHBUFFER(buffer) {
@@ -23,6 +23,7 @@ function $DETACHBUFFER(buffer) {
 /*---
 description: |
     Collection of functions used to assert the correctness of BigInt TypedArray objects.
+defines: [TypedArray, testWithBigIntTypedArrayConstructors]
 ---*/
 
 /**

@@ -1,4 +1,4 @@
-// |reftest| skip -- FinalizationGroup,WeakRef is not supported
+// |reftest| skip async -- FinalizationGroup,WeakRef is not supported
 // Copyright (C) 2019 Leo Balter. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 
@@ -30,6 +30,8 @@ info: |
   2. If Type(iterator) is not Object, throw a TypeError exception.
   3. If iterator does not have a [[FinalizationGroup]] internal slot, throw a TypeError exception.
 features: [FinalizationGroup, WeakRef, host-gc-required, Symbol]
+includes: [async-gc.js]
+flags: [async, non-deterministic]
 ---*/
 
 var iter;
@@ -43,23 +45,26 @@ function callback(iterator) {
   FinalizationGroupCleanupIteratorPrototype = Object.getPrototypeOf(iterator);
 }
 
-(function() {
-  var o = {};
-  fg.register(o);
-})();
+function emptyCells() {
+  var target = {};
+  fg.register(target, 'target');
 
-$262.gc();
+  var prom = asyncGC(target);
+  target = null;
 
-fg.cleanupSome(callback);
+  return prom;
+}
 
-// Make sure everything is set
-assert.sameValue(called, 1, 'cleanup successful');
-assert.sameValue(typeof iter, 'object');
-assert.sameValue(Object.getPrototypeOf(iter), FinalizationGroupCleanupIteratorPrototype);
+emptyCells().then(function() {
+  fg.cleanupSome(callback);
 
-// To the actual assertion
-assert.throws(TypeError, function() {
-  iter.next();
-}, 'Iter should fail if not called during the cleanupSome call');
+  // Make sure everything is set
+  assert.sameValue(called, 1, 'cleanup successful');
+  assert.sameValue(typeof iter, 'object');
+  assert.sameValue(Object.getPrototypeOf(iter), FinalizationGroupCleanupIteratorPrototype);
 
-reportCompare(0, 0);
+  // To the actual assertion
+  assert.throws(TypeError, function() {
+    iter.next();
+  }, 'Iter should fail if not called during the cleanupSome call');
+}).then($DONE, resolveAsyncGC);

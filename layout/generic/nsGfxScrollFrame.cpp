@@ -21,6 +21,7 @@
 #include "nsGkAtoms.h"
 #include "nsNameSpaceManager.h"
 #include "mozilla/dom/DocumentInlines.h"
+#include "mozilla/gfx/gfxVars.h"
 #include "nsFontMetrics.h"
 #include "nsBoxLayoutState.h"
 #include "mozilla/dom/NodeInfo.h"

@@ -42,10 +42,9 @@ flags: [module, async]
 features: [top-level-await]
 ---*/
 
-function fn() { return 1; }
-function fn() { return 2; }
-await function fn() { return 3; };
+function fn() { return 42; }
+await function fn() { return 111; };
 
-assert.sameValue(fn(), 2);
+assert.sameValue(fn(), 42);
 
 $DONE();

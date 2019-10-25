@@ -1,17 +1,4 @@
 // GENERATED, DO NOT EDIT
-// file: fnGlobalObject.js
-// Copyright (C) 2017 Ecma International.  All rights reserved.
-// This code is governed by the BSD license found in the LICENSE file.
-/*---
-description: |
-    Produce a reliable global object
----*/
-
-var __globalObject = Function("return this;")();
-function fnGlobalObject() {
-  return __globalObject;
-}
-
 // file: nativeFunctionMatcher.js
 // Copyright (C) 2016 Michael Ficarra.  All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
@@ -23,7 +10,10 @@ info: |
 
     NativeFunction :
       function _IdentifierName_ opt ( _FormalParameters_ ) { [ native code ] }
-
+defines:
+  - NATIVE_FUNCTION_RE
+  - assertToStringOrNativeFunction
+  - assertNativeFunction
 ---*/
 const NATIVE_FUNCTION_RE = /\bfunction\b[\s\S]*\([\s\S]*\)[\s\S]*\{[\s\S]*\[[\s\S]*\bnative\b[\s\S]+\bcode\b[\s\S]*\][\s\S]*\}/;
 
@@ -50,6 +40,7 @@ const assertNativeFunction = function(fn, special) {
 /*---
 description: |
     An Array of all representable Well-Known Intrinsic Objects
+defines: [WellKnownIntrinsicObjects]
 ---*/
 
 const WellKnownIntrinsicObjects = [

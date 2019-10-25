@@ -24,6 +24,7 @@
 #include "nsTHashtable.h"
 
 class nsIContent;
+class nsINode;
 class nsContentList;
 class nsBaseContentList;
 

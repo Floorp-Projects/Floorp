@@ -19,6 +19,7 @@
 #include "SVGTextFrame.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 using namespace mozilla::image;
 
 NS_QUERYFRAME_HEAD(nsSVGContainerFrame)

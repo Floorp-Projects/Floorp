@@ -25,6 +25,7 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsIContent.h"
+#include "nsIContentInlines.h"
 #include "mozilla/dom/Document.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"

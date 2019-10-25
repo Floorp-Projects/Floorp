@@ -5,6 +5,11 @@
 /*---
 description: >
     Collection of functions used to interact with Atomics.* operations across agent boundaries.
+defines:
+  - $262.agent.getReport
+  - $262.agent.safeBroadcast
+  - $262.agent.tryYield
+  - $262.trySleep
 ---*/
 
 /**
@@ -283,7 +288,7 @@ description: |
     A function used in the process of asserting correctness of TypedArray objects.
 
     $262.detachArrayBuffer is defined by a host.
-
+defines: [$DETACHBUFFER]
 ---*/
 
 function $DETACHBUFFER(buffer) {

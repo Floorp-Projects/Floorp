@@ -9,6 +9,7 @@ description: |
     This helper is mostly used on tests for TypedArray and DataView, and each
     array from the expected values must match the original values array on every
     index containing its original value.
+defines: [byteConversionValues]
 ---*/
 var byteConversionValues = {
   values: [
@@ -455,6 +456,7 @@ description: |
     to create distinct bit representations on various platforms. These provide a
     weak basis for assertions regarding the consistent canonicalization of NaN
     values in Array buffers.
+defines: [NaNs]
 ---*/
 
 var NaNs = [
@@ -475,6 +477,13 @@ var NaNs = [
 /*---
 description: |
     Collection of functions used to assert the correctness of TypedArray objects.
+defines:
+  - typedArrayConstructors
+  - floatArrayConstructors
+  - intArrayConstructors
+  - TypedArray
+  - testWithTypedArrayConstructors
+  - testTypedArrayConversions
 ---*/
 
 /**
