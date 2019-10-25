@@ -91,7 +91,7 @@ class Frame extends Component {
     }
   }
 
-  _locationChanged(isSourceMapped, url, line, column, sourceId) {
+  _locationChanged(isSourceMapped, url, line, column) {
     const newState = {
       isSourceMapped,
     };
@@ -101,7 +101,6 @@ class Frame extends Component {
         line,
         column,
         functionDisplayName: this.props.frame.functionDisplayName,
-        sourceId,
       };
     }
 
