@@ -58,6 +58,7 @@ class SharedMemoryBasic final : public SharedMemoryCommon<mach_port_t> {
                               ReceivePort* send_port_ack, bool pidIsParent);
 
   static void CleanupForPid(pid_t pid);
+  static void CleanupForPidWithLock(pid_t pid);
 
   static void Shutdown();
 
