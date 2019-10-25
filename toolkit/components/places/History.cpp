@@ -44,9 +44,6 @@
 #include "mozilla/dom/PlacesVisit.h"
 #include "mozilla/dom/ScriptSettings.h"
 
-// Initial size for the cache holding visited status observers.
-#define VISIT_OBSERVERS_INITIAL_CACHE_LENGTH 64
-
 using namespace mozilla::dom;
 using namespace mozilla::ipc;
 using mozilla::Unused;
@@ -1438,9 +1435,9 @@ void StoreAndNotifyEmbedVisit(VisitData& aPlace,
 History* History::gService = nullptr;
 
 History::History()
-    : mShuttingDown(false),
+    : IHistory(),
+      mShuttingDown(false),
       mShutdownMutex("History::mShutdownMutex"),
-      mObservers(VISIT_OBSERVERS_INITIAL_CACHE_LENGTH),
       mRecentlyVisitedURIs(RECENTLY_VISITED_URIS_SIZE) {
   NS_ASSERTION(!gService, "Ruh-roh!  This service has already been created!");
   if (XRE_IsParentProcess()) {
