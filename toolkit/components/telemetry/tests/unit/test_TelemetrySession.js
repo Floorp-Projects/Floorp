@@ -457,11 +457,6 @@ function checkPayload(payload, reason, successfulPings) {
     "mainThread" in payload.slowSQL && "otherThreads" in payload.slowSQL
   );
 
-  Assert.ok(
-    "IceCandidatesStats" in payload.webrtc &&
-      "webrtc" in payload.webrtc.IceCandidatesStats
-  );
-
   // Check keyed histogram payload.
 
   Assert.ok("keyedHistograms" in payload);
@@ -2012,7 +2007,6 @@ add_task(async function test_pingExtendedStats() {
     "fileIOReports",
     "lateWrites",
     "addonDetails",
-    "webrtc",
   ];
 
   if (AppConstants.platform == "android") {
