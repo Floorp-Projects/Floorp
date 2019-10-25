@@ -6430,6 +6430,13 @@
   mirror: always
   do_not_use_directly: true
 
+# The maximum allowed length for a referrer header - 4096 default.
+# 0 means no limit.
+- name: network.http.referer.referrerLengthLimit
+  type: uint32_t
+  value: 4096
+  mirror: always
+
 # Enables the predictive service.
 - name: network.predictor.enabled
   type: bool

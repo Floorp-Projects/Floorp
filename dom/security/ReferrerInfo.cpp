@@ -45,8 +45,6 @@ NS_IMPL_ISUPPORTS_CI(ReferrerInfo, nsIReferrerInfo, nsISerializable)
 #define DEFAULT_PRIVATE_RP 2
 #define DEFAULT_TRACKER_PRIVATE_RP 2
 
-#define DEFAULT_REFERRER_HEADER_LENGTH_LIMIT 4096
-
 #define MAX_REFERRER_SENDING_POLICY 2
 #define MAX_CROSS_ORIGIN_SENDING_POLICY 2
 #define MAX_TRIMMING_POLICY 2
@@ -63,7 +61,6 @@ static uint32_t defaultTrackerPrivateRp = DEFAULT_TRACKER_PRIVATE_RP;
 static uint32_t sUserXOriginSendingPolicy = 0;
 static uint32_t sUserTrimmingPolicy = 0;
 static uint32_t sUserXOriginTrimmingPolicy = 0;
-static uint32_t sReferrerHeaderLimit = DEFAULT_REFERRER_HEADER_LENGTH_LIMIT;
 
 static void CachePreferrenceValue() {
   static bool sPrefCached = false;
@@ -71,9 +68,6 @@ static void CachePreferrenceValue() {
     return;
   }
 
-  Preferences::AddUintVarCache(&sReferrerHeaderLimit,
-                               "network.http.referer.referrerLengthLimit",
-                               DEFAULT_REFERRER_HEADER_LENGTH_LIMIT);
   Preferences::AddUintVarCache(&sUserXOriginSendingPolicy,
                                "network.http.referer.XOriginPolicy");
   sUserXOriginSendingPolicy = clamped<uint32_t>(
@@ -578,16 +572,18 @@ ReferrerInfo::TrimmingPolicy ReferrerInfo::ComputeTrimmingPolicy(
 nsresult ReferrerInfo::LimitReferrerLength(
     nsIHttpChannel* aChannel, nsIURI* aReferrer, TrimmingPolicy aTrimmingPolicy,
     nsACString& aInAndOutTrimmedReferrer) const {
-  if (!sReferrerHeaderLimit) {
+  if (!StaticPrefs::network_http_referer_referrerLengthLimit()) {
     return NS_OK;
   }
 
-  if (aInAndOutTrimmedReferrer.Length() <= sReferrerHeaderLimit) {
+  if (aInAndOutTrimmedReferrer.Length() <=
+      StaticPrefs::network_http_referer_referrerLengthLimit()) {
     return NS_OK;
   }
 
   nsAutoString referrerLengthLimit;
-  referrerLengthLimit.AppendInt(sReferrerHeaderLimit);
+  referrerLengthLimit.AppendInt(
+      StaticPrefs::network_http_referer_referrerLengthLimit());
   if (aTrimmingPolicy == ePolicyFullURI ||
       aTrimmingPolicy == ePolicySchemeHostPortPath) {
     // If referrer header is over max Length, down to origin
@@ -601,7 +597,8 @@ nsresult ReferrerInfo::LimitReferrerLength(
     // GetOriginFromReferrerURI() also removes any trailing "/" hence we have to
     // add it back here.
     aInAndOutTrimmedReferrer.AppendLiteral("/");
-    if (aInAndOutTrimmedReferrer.Length() <= sReferrerHeaderLimit) {
+    if (aInAndOutTrimmedReferrer.Length() <=
+        StaticPrefs::network_http_referer_referrerLengthLimit()) {
       AutoTArray<nsString, 2> params = {
           referrerLengthLimit, NS_ConvertUTF8toUTF16(aInAndOutTrimmedReferrer)};
       LogMessageToConsole(aChannel, "ReferrerLengthOverLimitation", params);
