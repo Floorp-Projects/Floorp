@@ -6458,6 +6458,46 @@
   mirror: always
   do_not_use_directly: true
 
+# Set the default Referrer Policy; to be used unless overriden by the site.
+# 0=no-referrer, 1=same-origin, 2=strict-origin-when-cross-origin,
+# 3=no-referrer-when-downgrade.
+- name: network.http.referer.defaultPolicy
+  type: uint32_t
+  value: 3
+  mirror: always
+
+# Set the default Referrer Policy applied to third-party trackers when the
+# default cookie policy is set to reject third-party trackers, to be used
+# unless overriden by the site.
+# 0=no-referrer, 1=same-origin, 2=strict-origin-when-cross-origin,
+# 3=no-referrer-when-downgrade.
+# Trim referrers from trackers to origins by default.
+- name: network.http.referer.defaultPolicy.trackers
+  type: uint32_t
+  value: 2
+  mirror: always
+
+# Set the Private Browsing Default Referrer Policy, to be used
+# unless overriden by the site.
+# 0=no-referrer, 1=same-origin, 2=strict-origin-when-cross-origin,
+# 3=no-referrer-when-downgrade.
+- name: network.http.referer.defaultPolicy.pbmode
+  type: uint32_t
+  value: 2
+  mirror: always
+
+# Set the Private Browsing Default Referrer Policy applied to third-party
+# trackers when the default cookie policy is set to reject third-party
+# trackers, to be used unless overriden by the site.
+# 0=no-referrer, 1=same-origin, 2=strict-origin-when-cross-origin,
+# 3=no-referrer-when-downgrade.
+# No need to change this pref for trimming referrers from trackers since in
+# private windows we already trim all referrers to origin only.
+- name: network.http.referer.defaultPolicy.trackers.pbmode
+  type: uint32_t
+  value: 2
+  mirror: always
+
 # Enables the predictive service.
 - name: network.predictor.enabled
   type: bool
