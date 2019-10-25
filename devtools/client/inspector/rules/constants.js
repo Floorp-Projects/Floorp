@@ -8,3 +8,6 @@
 // Rules and their Styles into one actor. For elements (which have a style
 // but no associated rule) we fake a rule with the following style id.
 exports.ELEMENT_STYLE = 100;
+
+// An array of the possible color schemes that can be emulated.
+exports.COLOR_SCHEMES = [null, "dark", "light", "no-preference"];
