@@ -48,6 +48,9 @@
 #define NS_IS_HIGH_SURROGATE(u) ((uint32_t(u) & 0xFFFFFC00) == 0xD800)
 // Low surrogates are in the range 0xDC00 -- 0xDFFF
 #define NS_IS_LOW_SURROGATE(u) ((uint32_t(u) & 0xFFFFFC00) == 0xDC00)
+// Easier to type than NS_IS_HIGH_SURROGATE && NS_IS_LOW_SURROGATE
+#define NS_IS_SURROGATE_PAIR(h, l) \
+  (NS_IS_HIGH_SURROGATE(h) && NS_IS_LOW_SURROGATE(l))
 // Faster than testing NS_IS_HIGH_SURROGATE || NS_IS_LOW_SURROGATE
 #define IS_SURROGATE(u) ((uint32_t(u) & 0xFFFFF800) == 0xD800)
 
