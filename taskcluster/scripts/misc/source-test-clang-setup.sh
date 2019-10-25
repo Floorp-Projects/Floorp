@@ -9,10 +9,14 @@ export LD_LIBRARY_PATH=$MOZ_FETCHES_DIR/clang/lib
 
 # Write custom mozconfig
 export MOZCONFIG=$GECKO_PATH/mozconfig
+
+# Add to mozconfig all the appropriate options
+cat <<EOT >> $MOZCONFIG
 # Enable debug mode
-echo "ac_add_options --enable-debug"  > $MOZCONFIG
+ac_add_options --enable-debug
 # Enable GC zeal, a testing and debugging feature that helps find GC-related bugs in JSAPI applications.
-echo "ac_add_options --enable-gczeal" > $MOZCONFIG
+ac_add_options --enable-gczeal
+EOT
 
 # Mach lookup clang-tidy in clang-tools
 mkdir -p $MOZBUILD_STATE_PATH/clang-tools
