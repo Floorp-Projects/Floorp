@@ -282,6 +282,8 @@ If the environment variable `JAVA_HOME` is not defined, you will need to set it.
 
 Once the environment variable is set, you can import the project into Android Studio with the default wizard options.
 
+If your build fails, you may find you get more instructive error messages by attempting the build at the command line.
+
 # Coding Standards #
 
 ## Style ##
