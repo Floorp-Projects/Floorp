@@ -655,8 +655,8 @@ class JSFunction : public js::NativeObject {
   }
   static size_t offsetOfAtom() { return offsetof(JSFunction, atom_); }
 
-  static bool createScriptForLazilyInterpretedFunction(JSContext* cx,
-                                                       js::HandleFunction fun);
+  static bool delazifyLazilyInterpretedFunction(JSContext* cx,
+                                                js::HandleFunction fun);
   void maybeRelazify(JSRuntime* rt);
 
   // Function Scripts
@@ -685,7 +685,7 @@ class JSFunction : public js::NativeObject {
     MOZ_ASSERT(fun->isInterpreted());
     MOZ_ASSERT(cx);
     if (fun->isInterpretedLazy()) {
-      if (!createScriptForLazilyInterpretedFunction(cx, fun)) {
+      if (!delazifyLazilyInterpretedFunction(cx, fun)) {
         return nullptr;
       }
       return fun->nonLazyScript();
