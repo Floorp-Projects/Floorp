@@ -33,8 +33,10 @@ class WorkletNodeEngine final : public AudioNodeEngine {
   void ProcessBlock(AudioNodeTrack* aTrack, GraphTime aFrom,
                     const AudioBlock& aInput, AudioBlock* aOutput,
                     bool* aFinished) override {
-    ProcessBlocksOnPorts(aTrack, MakeSpan(&aInput, 1), MakeSpan(aOutput, 1),
-                         aFinished);
+    MOZ_ASSERT(InputCount() <= 1);
+    MOZ_ASSERT(OutputCount() <= 1);
+    ProcessBlocksOnPorts(aTrack, MakeSpan(&aInput, InputCount()),
+                         MakeSpan(aOutput, OutputCount()), aFinished);
   }
 
   void ProcessBlocksOnPorts(AudioNodeTrack* aTrack,
@@ -188,6 +190,7 @@ enum class ArrayElementInit { None, Zero };
 static bool PrepareBufferArrays(JSContext* aCx, Span<const AudioBlock> aBlocks,
                                 WorkletNodeEngine::Ports* aPorts,
                                 ArrayElementInit aInit) {
+  MOZ_ASSERT(aBlocks.Length() == aPorts->mPorts.length());
   for (size_t i = 0; i < aBlocks.Length(); ++i) {
     size_t channelCount = aBlocks[i].ChannelCount();
     WorkletNodeEngine::Channels& portRef = aPorts->mPorts[i];
@@ -267,6 +270,9 @@ void WorkletNodeEngine::ProcessBlocksOnPorts(AudioNodeTrack* aTrack,
                                              Span<const AudioBlock> aInput,
                                              Span<AudioBlock> aOutput,
                                              bool* aFinished) {
+  MOZ_ASSERT(aInput.Length() == InputCount());
+  MOZ_ASSERT(aOutput.Length() == OutputCount());
+
   if (!mProcessor) {
     ProduceSilence(aOutput);
     return;
