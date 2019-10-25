@@ -1786,18 +1786,21 @@ PopupNotifications.prototype = {
     let notificationEl = getNotificationFromElement(event.target);
 
     let notification = notificationEl.notification;
-    if (notification.options.checkbox) {
-      if (notificationEl.checkbox.checked) {
-        this._setNotificationUIState(
-          notificationEl,
-          notification.options.checkbox.checkedState
-        );
-      } else {
-        this._setNotificationUIState(
-          notificationEl,
-          notification.options.checkbox.uncheckedState
-        );
-      }
+    if (!notification.options.checkbox) {
+      this._setNotificationUIState(notificationEl);
+      return;
+    }
+
+    if (notificationEl.checkbox.checked) {
+      this._setNotificationUIState(
+        notificationEl,
+        notification.options.checkbox.checkedState
+      );
+    } else {
+      this._setNotificationUIState(
+        notificationEl,
+        notification.options.checkbox.uncheckedState
+      );
     }
   },
 
