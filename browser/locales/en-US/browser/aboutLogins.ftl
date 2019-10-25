@@ -106,11 +106,7 @@ master-password-reload-button =
   .label = Log in
   .accesskey = L
 
-## Dialogs
-
-confirmation-dialog-cancel-button = Cancel
-confirmation-dialog-dismiss-button =
-  .title = Cancel
+## Password Sync notification
 
 enable-password-sync-notification-message =
   { PLATFORM() ->
@@ -124,6 +120,15 @@ enable-password-sync-preferences-button =
        *[other] Visit { -sync-brand-short-name } Preferences
     }
   .accesskey = V
+about-logins-enable-password-sync-dont-ask-again-button =
+  .label = Don’t ask me again
+  .accesskey = D
+
+## Dialogs
+
+confirmation-dialog-cancel-button = Cancel
+confirmation-dialog-dismiss-button =
+  .title = Cancel
 
 confirm-delete-dialog-title = Delete this login?
 confirm-delete-dialog-message = This action cannot be undone.
