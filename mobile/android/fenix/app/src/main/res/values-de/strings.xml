@@ -2,8 +2,8 @@
 <resources>
 
 
-    <!-- App name for private browsing mode, only the "(Private)" portion should be localized. -->
-    <string name="app_name_private">Firefox Preview (privat)</string>
+    <!-- App name for private browsing mode, only the "Private" portion should be localized. -->
+    <string name="app_name_private_2">Private Firefox Preview</string>
 
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
@@ -144,8 +144,8 @@
     <string name="preferences_category_privacy">Datenschutz</string>
     <!-- Preference for advanced site permissions -->
     <string name="preferences_site_permissions">Website-Berechtigungen</string>
-    <!-- Preference for launching links in a private tab-->
-    <string name="preferences_launch_links_in_private_mode">Links in einem privaten Tab öffnen</string>
+    <!-- Preference for opening links in a private tab-->
+    <string name="preferences_open_links_in_a_private_tab">Links in privatem Tab öffnen</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Verknüpfung zum privaten Modus hinzufügen</string>
     <!-- Preference for accessibility -->
@@ -174,6 +174,8 @@
     <string name="developer_tools_category">Entwicklerwerkzeuge</string>
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">Externes Debugging über USB</string>
+    <!-- Preference title for switch preference to show search shortcuts -->
+    <string name="preferences_show_search_shortcuts">Kürzel für die Suche anzeigen</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Suchvorschläge anzeigen</string>
     <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
@@ -195,6 +197,8 @@
     <string name="preferences_sync_history">Chronik</string>
     <!-- Preference for syncing bookmarks -->
     <string name="preferences_sync_bookmarks">Lesezeichen</string>
+    <!-- Preference for syncing logins -->
+    <string name="preferences_sync_logins">Zugangsdaten</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">Abmelden</string>
     <!-- Preference displays and allows changing current FxA device name -->
@@ -363,6 +367,8 @@
     <string name="add_tab">Tab hinzufügen</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
     <string name="close_tab">Tab schließen</string>
+    <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
+    <string name="close_tab_title">Tab %s schließen</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the open tabs menu when pressed -->
     <string name="open_tabs_menu">Offene-Tabs-Menü</string>
     <!-- Open tabs menu item to close all tabs -->
@@ -554,6 +560,11 @@
     <!-- Label that indicates video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed">Video und Audio erlaubt</string>
 
+    <!-- Summary of delete browsing data on quit preference if it is set to on -->
+    <string name="delete_browsing_data_quit_on">Ein</string>
+    <!-- Summary of delete browsing data on quit preference if it is set to off -->
+    <string name="delete_browsing_data_quit_off">Aus</string>
+
     <!-- Collections -->
     <!-- Label to describe what collections are to a new user without any collections -->
     <string name="collections_description">Sammeln Sie die Inhalte, die Ihnen wichtig sind. Speichern Sie für den Anfang geöffnete Tabs in einer neuen Sammlung.</string>
@@ -666,6 +677,14 @@
 
     <!-- Text shown in snackbar when user deletes all tabs -->
     <string name="snackbar_tabs_deleted">Tabs gelöscht</string>
+    <!-- Text shown in snackbar when user closes a tab -->
+    <string name="snackbar_tab_closed">Tab geschlossen</string>
+    <!-- Text shown in snackbar when user closes all tabs -->
+    <string name="snackbar_tabs_closed">Tabs geschlossen</string>
+    <!-- Text shown in snackbar when user closes a private tab -->
+    <string name="snackbar_private_tab_closed">Privater Tab geschlossen</string>
+    <!-- Text shown in snackbar when user closes all private tabs -->
+    <string name="snackbar_private_tabs_closed">Private Tabs geschlossen</string>
     <!-- Text shown in snackbar when user deletes all private tabs -->
     <string name="snackbar_private_tabs_deleted">Private Tabs gelöscht</string>
     <!-- Text for action to undo deleting a tab or collection shown in snackbar -->
@@ -758,6 +777,9 @@
     <string name="delete_browsing_data_prompt_allow">Löschen</string>
     <!-- Text for the snackbar confirmation that the data was deleted -->
     <string name="preferences_delete_browsing_data_snackbar">Browser-Daten gelöscht</string>
+
+    <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
+    <string name="deleting_browsing_data_in_progress">Surf-Daten werden gelöscht…</string>
 
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message
@@ -907,7 +929,7 @@
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">Verhindert das Laden von Werbung, Videos und anderen Inhalten, die Skripte zur Aktivitätenverfolgung enthalten. Kann einige Funktionen der Website beeinträchtigen.</string>
     <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="etp_onboarding_message">Wenn der Schild die Farbe ändert, blockiert %s die Skripte zur Aktivitätenverfolgung auf einer Website. Tippen Sie darauf, um zu sehen, was blockiert wird.</string>
+    <string name="etp_onboarding_message_2">%s blockiert Tracker auf dieser Website, wenn der Schild violett ist. Tippen Sie darauf, um zu sehen, was blockiert wird.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">Der Schutz für diese Website ist aktiviert</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -1000,5 +1022,20 @@
     <string name="logins_doorhanger_save_confirmation">Speichern</string>
     <!-- Negative confirmation that Fenix should not save the new or updated login -->
     <string name="logins_doorhanger_save_dont_save">Nicht speichern</string>
-
+    <!-- Shown in snackbar to tell user that the password has been copied -->
+    <string name="logins_password_copied">Passwort in Zwischenablage kopiert</string>
+    <!-- Shown in snackbar to tell user that the username has been copied -->
+    <string name="logins_username_copied">Benutzername in Zwischenablage kopiert</string>
+    <!-- Shown in snackbar to tell user that the site has been copied -->
+    <string name="logins_site_copied">Website in Zwischenablage kopiert</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
+    <string name="saved_logins_copy_password">Passwort kopieren</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
+    <string name="saved_login_copy_username">Benutzernamen kopieren</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
+    <string name="saved_login_copy_site">Website kopieren</string>
+    <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
+    <string name="saved_login_reveal_password">Passwort anzeigen</string>
+    <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
+    <string name="saved_login_hide_password">Passwort verbergen</string>
 </resources>

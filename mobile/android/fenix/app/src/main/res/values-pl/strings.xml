@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- App name for private browsing mode, only the "(Private)" portion should be localized. -->
-    <string name="app_name_private">Firefox Preview (tryb prywatny)</string>
+
+    <!-- App name for private browsing mode, only the "Private" portion should be localized. -->
+    <string name="app_name_private_2">Firefox Preview (tryb prywatny)</string>
 
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
@@ -143,8 +144,8 @@
     <string name="preferences_category_privacy">Prywatność</string>
     <!-- Preference for advanced site permissions -->
     <string name="preferences_site_permissions">Uprawnienia witryn</string>
-    <!-- Preference for launching links in a private tab-->
-    <string name="preferences_launch_links_in_private_mode">Otwieranie odnośników w prywatnej karcie</string>
+    <!-- Preference for opening links in a private tab-->
+    <string name="preferences_open_links_in_a_private_tab">Otwieranie odnośników w prywatnej karcie</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Dodaj skrót do trybu prywatnego</string>
     <!-- Preference for accessibility -->
@@ -173,6 +174,8 @@
     <string name="developer_tools_category">Narzędzia dla programistów</string>
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">Zdalne debugowanie przez USB</string>
+    <!-- Preference title for switch preference to show search shortcuts -->
+    <string name="preferences_show_search_shortcuts">Skróty wyszukiwania</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Podpowiedzi wyszukiwania</string>
     <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
@@ -193,6 +196,8 @@
     <string name="preferences_sync_history">Historia</string>
     <!-- Preference for syncing bookmarks -->
     <string name="preferences_sync_bookmarks">Zakładki</string>
+    <!-- Preference for syncing logins -->
+    <string name="preferences_sync_logins">Dane logowania</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">Wyloguj się</string>
     <!-- Preference displays and allows changing current FxA device name -->
@@ -359,6 +364,8 @@
     <string name="add_tab">Otwórz nową kartę</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
     <string name="close_tab">Zamknij kartę</string>
+    <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
+    <string name="close_tab_title">Zamknij kartę „%s”</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the open tabs menu when pressed -->
     <string name="open_tabs_menu">Menu otwartych kart</string>
     <!-- Open tabs menu item to close all tabs -->
@@ -545,6 +552,11 @@
     <!-- Label that indicates video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed">Dozwolone dla wideo i dźwięku</string>
 
+    <!-- Summary of delete browsing data on quit preference if it is set to on -->
+    <string name="delete_browsing_data_quit_on">Włączone</string>
+    <!-- Summary of delete browsing data on quit preference if it is set to off -->
+    <string name="delete_browsing_data_quit_off">Wyłączone</string>
+
     <!-- Collections -->
     <!-- Label to describe what collections are to a new user without any collections -->
     <string name="collections_description">Zbieraj rzeczy, które są dla Ciebie ważne. Aby zacząć, zachowaj otwarte karty w nowej kolekcji.</string>
@@ -575,7 +587,7 @@
     <string name="create_collection_save_to_collection_tabs_selected">Wybrane karty: %d</string>
     <!-- Text to show users they have one tab selected in the "select tabs" step of the collection creator.
     %d is a placeholder for the number of tabs selected. -->
-    <string name="create_collection_save_to_collection_tab_selected">Wybrana karta: %d</string>
+    <string name="create_collection_save_to_collection_tab_selected">Wybrane karty: %d</string>
     <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
     <string name="create_collection_tabs_saved">Zachowano karty</string>
     <!-- Text shown in snackbar when one tab has been saved in a collection -->
@@ -644,6 +656,14 @@
     <string name="snackbar_tab_deleted">Usunięto kartę</string>
     <!-- Text shown in snackbar when user deletes all tabs -->
     <string name="snackbar_tabs_deleted">Usunięto karty</string>
+    <!-- Text shown in snackbar when user closes a tab -->
+    <string name="snackbar_tab_closed">Zamknięto kartę</string>
+    <!-- Text shown in snackbar when user closes all tabs -->
+    <string name="snackbar_tabs_closed">Zamknięto karty</string>
+    <!-- Text shown in snackbar when user closes a private tab -->
+    <string name="snackbar_private_tab_closed">Zamknięto prywatną kartę</string>
+    <!-- Text shown in snackbar when user closes all private tabs -->
+    <string name="snackbar_private_tabs_closed">Zamknięto prywatne karty</string>
     <!-- Text shown in snackbar when user deletes all private tabs -->
     <string name="snackbar_private_tabs_deleted">Usunięto prywatne karty</string>
     <!-- Text for action to undo deleting a tab or collection shown in snackbar -->
@@ -733,6 +753,9 @@
     <string name="delete_browsing_data_prompt_allow">Usuń</string>
     <!-- Text for the snackbar confirmation that the data was deleted -->
     <string name="preferences_delete_browsing_data_snackbar">Usunięto dane przeglądania</string>
+
+    <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
+    <string name="deleting_browsing_data_in_progress">Usuwanie danych przeglądania…</string>
 
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message
@@ -883,7 +906,7 @@
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">Zatrzymuje wczytywanie zewnętrznych reklam, filmów i innych treści zawierających elementy śledzące. Może powodować niepoprawne działanie niektórych stron.</string>
     <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="etp_onboarding_message">Kiedy tarcza zmienia kolory, %s blokuje elementy śledzące na stronie. Stuknij ją, aby wyświetlić, co jest blokowane.</string>
+    <string name="etp_onboarding_message_2">Kiedy tarcza zmienia kolory, %s blokuje elementy śledzące na stronie. Stuknij ją, aby wyświetlić, co jest blokowane.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">Ochrona jest włączona na tej witrynie</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -976,5 +999,20 @@
     <string name="logins_doorhanger_save_confirmation">Zachowaj</string>
     <!-- Negative confirmation that Fenix should not save the new or updated login -->
     <string name="logins_doorhanger_save_dont_save">Nie zachowuj</string>
-
+    <!-- Shown in snackbar to tell user that the password has been copied -->
+    <string name="logins_password_copied">Skopiowano hasło do schowka</string>
+    <!-- Shown in snackbar to tell user that the username has been copied -->
+    <string name="logins_username_copied">Skopiowano nazwę użytkownika do schowka</string>
+    <!-- Shown in snackbar to tell user that the site has been copied -->
+    <string name="logins_site_copied">Skopiowano witrynę do schowka</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
+    <string name="saved_logins_copy_password">Kopiuj hasło</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
+    <string name="saved_login_copy_username">Kopiuj nazwę użytkownika</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
+    <string name="saved_login_copy_site">Kopiuj witrynę</string>
+    <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
+    <string name="saved_login_reveal_password">Wyświetl hasło</string>
+    <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
+    <string name="saved_login_hide_password">Ukryj hasło</string>
 </resources>

@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <!-- App name for private browsing mode, only the "(Private)" portion should be localized. -->
-    <string name="app_name_private">Firefox Preview (anonymní)</string>
+    <!-- App name for private browsing mode, only the "Private" portion should be localized. -->
+    <string name="app_name_private_2">Firefox Preview (anonymní)</string>
 
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
@@ -144,8 +144,8 @@
     <string name="preferences_category_privacy">Soukromí</string>
     <!-- Preference for advanced site permissions -->
     <string name="preferences_site_permissions">Oprávnění webových stránek</string>
-    <!-- Preference for launching links in a private tab-->
-    <string name="preferences_launch_links_in_private_mode">Otevírat odkazy v anonymním režimu</string>
+    <!-- Preference for opening links in a private tab-->
+    <string name="preferences_open_links_in_a_private_tab">Otevírat odkazy v anonymních panelech</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Přidat anonymní prohlížení na plochu</string>
     <!-- Preference for accessibility -->
@@ -174,6 +174,8 @@
     <string name="developer_tools_category">Nástroje pro vývojáře</string>
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">Vzdálené ladění pomocí USB</string>
+    <!-- Preference title for switch preference to show search shortcuts -->
+    <string name="preferences_show_search_shortcuts">Zobrazit zkratky vyhledávání</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Našeptávat vyhledávání</string>
     <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
@@ -194,6 +196,8 @@
     <string name="preferences_sync_history">Historii</string>
     <!-- Preference for syncing bookmarks -->
     <string name="preferences_sync_bookmarks">Záložky</string>
+    <!-- Preference for syncing logins -->
+    <string name="preferences_sync_logins">Přihlašovací jména</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">Odhlásit</string>
     <!-- Preference displays and allows changing current FxA device name -->
@@ -363,6 +367,8 @@
     <string name="add_tab">Přidat panel</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
     <string name="close_tab">Zavřít panel</string>
+    <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
+    <string name="close_tab_title">Zavřít panel %s</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the open tabs menu when pressed -->
     <string name="open_tabs_menu">Otevřít nabídku panelů</string>
     <!-- Open tabs menu item to close all tabs -->
@@ -558,6 +564,11 @@
     <!-- Label that indicates video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed">Povoleno pro videa i zvuky</string>
 
+    <!-- Summary of delete browsing data on quit preference if it is set to on -->
+    <string name="delete_browsing_data_quit_on">Zapnuto</string>
+    <!-- Summary of delete browsing data on quit preference if it is set to off -->
+    <string name="delete_browsing_data_quit_off">Vypnuto</string>
+
     <!-- Collections -->
     <!-- Label to describe what collections are to a new user without any collections -->
     <string name="collections_description">Do sbírek si můžete ukládat důležité stránky.</string>
@@ -657,6 +668,14 @@
     <string name="snackbar_tab_deleted">Panel zavřen</string>
     <!-- Text shown in snackbar when user deletes all tabs -->
     <string name="snackbar_tabs_deleted">Panely zavřeny</string>
+    <!-- Text shown in snackbar when user closes a tab -->
+    <string name="snackbar_tab_closed">Panel zavřen</string>
+    <!-- Text shown in snackbar when user closes all tabs -->
+    <string name="snackbar_tabs_closed">Panely zavřen</string>
+    <!-- Text shown in snackbar when user closes a private tab -->
+    <string name="snackbar_private_tab_closed">Anonymní panel zavřen</string>
+    <!-- Text shown in snackbar when user closes all private tabs -->
+    <string name="snackbar_private_tabs_closed">Anonymní panely zavřeny</string>
     <!-- Text shown in snackbar when user deletes all private tabs -->
     <string name="snackbar_private_tabs_deleted">Soukromé panely smazány</string>
     <!-- Text for action to undo deleting a tab or collection shown in snackbar -->
@@ -747,6 +766,9 @@
     <string name="delete_browsing_data_prompt_allow">Smazat</string>
     <!-- Text for the snackbar confirmation that the data was deleted -->
     <string name="preferences_delete_browsing_data_snackbar">Soukromá data smazána</string>
+
+    <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
+    <string name="deleting_browsing_data_in_progress">Mazání soukromých dat…</string>
 
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message
@@ -895,7 +917,7 @@
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">Blokuje načítání reklam, videí a dalšího obsahu, který obsahuje sledující kód. To může ovlivnit fungování některých webových stránek.</string>
     <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="etp_onboarding_message">Změna barvy ikony štítu indikuje, že %s na stránce blokuje nějaké sledovací prvky. Pro zobrazení seznamu zablokovaných prvků na ikonu štítu klepněte.</string>
+    <string name="etp_onboarding_message_2">Pokud je ikona štítu fialová, znamená to, že %s na stránce blokuje nějaké sledovací prvky. Klepnutím na ikonu zobrazíte jejich seznam.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">Ochrana je na tomto serveru zapnuta</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -988,5 +1010,20 @@
     <string name="logins_doorhanger_save_confirmation">Uložit</string>
     <!-- Negative confirmation that Fenix should not save the new or updated login -->
     <string name="logins_doorhanger_save_dont_save">Neukládat</string>
-
+    <!-- Shown in snackbar to tell user that the password has been copied -->
+    <string name="logins_password_copied">Heslo zkopírováno do schránky</string>
+    <!-- Shown in snackbar to tell user that the username has been copied -->
+    <string name="logins_username_copied">Uživatelské jméno zkopírováno do schránky</string>
+    <!-- Shown in snackbar to tell user that the site has been copied -->
+    <string name="logins_site_copied">Server zkopírován do schránky</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
+    <string name="saved_logins_copy_password">Kopírovat heslo</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
+    <string name="saved_login_copy_username">Kopírovat uživatelské jméno</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
+    <string name="saved_login_copy_site">Kopírovat server</string>
+    <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
+    <string name="saved_login_reveal_password">Zobrazit heslo</string>
+    <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
+    <string name="saved_login_hide_password">Skrýt heslo</string>
 </resources>
