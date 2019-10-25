@@ -701,43 +701,6 @@ DevTools.prototype = {
   },
 
   /**
-   * Evaluate the cross iframes query selectors
-   * @oaram {Object} walker
-   * @param {Array} selectors
-   *        An array of CSS selectors to find the target accessible object.
-   *        Several selectors can be needed if the element is nested in frames
-   *        and not directly in the root document.
-   * @return {Promise} a promise that resolves when the node front is found for
-   *                   selection using inspector tools.
-   */
-  async findNodeFront(walker, nodeSelectors) {
-    async function querySelectors(nodeFront) {
-      const selector = nodeSelectors.shift();
-      if (!selector) {
-        return nodeFront;
-      }
-      nodeFront = await walker.querySelector(nodeFront, selector);
-      if (nodeSelectors.length > 0) {
-        const { nodes } = await walker.children(nodeFront);
-        // If there are remaining selectors to process, they will target a document or a
-        // document-fragment under the current node. Whether the element is a frame or
-        // a web component, it can only contain one document/document-fragment, so just
-        // select the first one available.
-        nodeFront = nodes.find(node => {
-          const { nodeType } = node;
-          return (
-            nodeType === Node.DOCUMENT_FRAGMENT_NODE ||
-            nodeType === Node.DOCUMENT_NODE
-          );
-        });
-      }
-      return querySelectors(nodeFront);
-    }
-    const nodeFront = await walker.getRootNode();
-    return querySelectors(nodeFront);
-  },
-
-  /**
    * Called from the DevToolsShim, used by nsContextMenu.js.
    *
    * @param {XULTab} tab
@@ -774,7 +737,7 @@ DevTools.prototype = {
     // browser is remote or not.
     const onNewNode = inspector.selection.once("new-node-front");
 
-    const nodeFront = await this.findNodeFront(inspector.walker, nodeSelectors);
+    const nodeFront = await inspector.walker.findNodeFront(nodeSelectors);
     // Select the final node
     inspector.selection.setNodeFront(nodeFront, {
       reason: "browser-context-menu",
@@ -812,10 +775,7 @@ DevTools.prototype = {
       startTime
     );
     const inspectorFront = await toolbox.target.getFront("inspector");
-    const nodeFront = await this.findNodeFront(
-      inspectorFront.walker,
-      nodeSelectors
-    );
+    const nodeFront = await inspectorFront.walker.findNodeFront(nodeSelectors);
     // Select the accessible object in the panel and wait for the event that
     // tells us it has been done.
     const a11yPanel = toolbox.getCurrentPanel();
