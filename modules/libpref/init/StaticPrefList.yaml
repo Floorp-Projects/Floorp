@@ -6444,6 +6444,13 @@
   mirror: always
   do_not_use_directly: true
 
+# 0=full URI, 1=scheme+host+port+path, 2=scheme+host+port.
+- name: network.http.referer.trimmingPolicy
+  type: uint32_t
+  value: 0
+  mirror: always
+  do_not_use_directly: true
+
 # Enables the predictive service.
 - name: network.predictor.enabled
   type: bool

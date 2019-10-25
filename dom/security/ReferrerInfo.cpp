@@ -58,7 +58,6 @@ static uint32_t sDefaultTrackerRp = DEFAULT_TRACKER_RP;
 static uint32_t defaultPrivateRp = DEFAULT_PRIVATE_RP;
 static uint32_t defaultTrackerPrivateRp = DEFAULT_TRACKER_PRIVATE_RP;
 
-static uint32_t sUserTrimmingPolicy = 0;
 static uint32_t sUserXOriginTrimmingPolicy = 0;
 
 static void CachePreferrenceValue() {
@@ -66,11 +65,6 @@ static void CachePreferrenceValue() {
   if (sPrefCached) {
     return;
   }
-
-  Preferences::AddUintVarCache(&sUserTrimmingPolicy,
-                               "network.http.referer.trimmingPolicy");
-  sUserTrimmingPolicy = clamped<uint32_t>(
-      sUserTrimmingPolicy, MIN_TRIMMING_POLICY, MAX_TRIMMING_POLICY);
 
   Preferences::AddUintVarCache(&sUserXOriginTrimmingPolicy,
                                "network.http.referer.XOriginTrimmingPolicy");
@@ -213,6 +207,13 @@ uint32_t ReferrerInfo::GetUserXOriginSendingPolicy() {
   return clamped<uint32_t>(
       StaticPrefs::network_http_referer_XOriginPolicy_DoNotUseDirectly(),
       MIN_CROSS_ORIGIN_SENDING_POLICY, MAX_CROSS_ORIGIN_SENDING_POLICY);
+}
+
+/* static */
+uint32_t ReferrerInfo::GetUserTrimmingPolicy() {
+  return clamped<uint32_t>(
+      StaticPrefs::network_http_referer_trimmingPolicy_DoNotUseDirectly(),
+      MIN_TRIMMING_POLICY, MAX_TRIMMING_POLICY);
 }
 
 /* static */
@@ -523,7 +524,7 @@ bool ReferrerInfo::IsCrossOriginRequest(nsIHttpChannel* aChannel) {
 
 ReferrerInfo::TrimmingPolicy ReferrerInfo::ComputeTrimmingPolicy(
     nsIHttpChannel* aChannel) const {
-  uint32_t trimmingPolicy = sUserTrimmingPolicy;
+  uint32_t trimmingPolicy = GetUserTrimmingPolicy();
 
   switch (mPolicy) {
     case ReferrerPolicy::Origin:

@@ -195,6 +195,11 @@ class ReferrerInfo : public nsIReferrerInfo {
   static uint32_t GetUserXOriginSendingPolicy();
 
   /**
+   * Getter for network.http.referer.trimmingPolicy.
+   */
+  static uint32_t GetUserTrimmingPolicy();
+
+  /**
    * Return default referrer policy which is controlled by user
    * prefs:
    * network.http.referer.defaultPolicy for regular mode
