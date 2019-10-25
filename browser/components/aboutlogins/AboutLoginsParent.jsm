@@ -42,6 +42,8 @@ const MASTER_PASSWORD_NOTIFICATION_ID = "master-password-login-required";
 const PASSWORD_SYNC_NOTIFICATION_ID = "enable-password-sync";
 
 const HIDE_MOBILE_FOOTER_PREF = "signon.management.page.hideMobileFooter";
+const SHOW_PASSWORD_SYNC_NOTIFICATION_PREF =
+  "signon.management.page.showPasswordSyncNotification";
 
 // about:logins will always use the privileged content process,
 // even if it is disabled for other consumers such as about:newtab.
@@ -598,24 +600,43 @@ var AboutLoginsParent = {
       priority: "PRIORITY_WARNING_MEDIUM",
       iconURL: "chrome://browser/skin/login.svg",
       messageId: "master-password-notification-message",
-      buttonId: "master-password-reload-button",
-      onClick(browser) {
-        browser.reload();
-      },
+      buttonIds: ["master-password-reload-button"],
+      onClicks: [
+        function onReloadClick(browser) {
+          browser.reload();
+        },
+      ],
     });
     this.messageSubscribers("AboutLogins:MasterPasswordAuthRequired");
   },
 
   showPasswordSyncNotifications() {
+    if (
+      !Services.prefs.getBoolPref(SHOW_PASSWORD_SYNC_NOTIFICATION_PREF, true)
+    ) {
+      return;
+    }
+
     this.showNotifications({
       id: PASSWORD_SYNC_NOTIFICATION_ID,
       priority: "PRIORITY_INFO_MEDIUM",
       iconURL: "chrome://browser/skin/login.svg",
       messageId: "enable-password-sync-notification-message",
-      buttonId: "enable-password-sync-preferences-button",
-      onClick(browser) {
-        browser.ownerGlobal.gSync.openPrefs("password-manager");
-      },
+      buttonIds: [
+        "enable-password-sync-preferences-button",
+        "about-logins-enable-password-sync-dont-ask-again-button",
+      ],
+      onClicks: [
+        function onSyncPreferencesClick(browser) {
+          browser.ownerGlobal.gSync.openPrefs("password-manager");
+        },
+        function onDontAskAgainClick(browser) {
+          Services.prefs.setBoolPref(
+            SHOW_PASSWORD_SYNC_NOTIFICATION_PREF,
+            false
+          );
+        },
+      ],
       extraFtl: ["branding/brand.ftl", "browser/branding/sync-brand.ftl"],
     });
   },
@@ -625,8 +646,8 @@ var AboutLoginsParent = {
     priority,
     iconURL,
     messageId,
-    buttonId,
-    onClick,
+    buttonIds,
+    onClicks,
     extraFtl = [],
   } = {}) {
     for (let subscriber of this._subscriberIterator()) {
@@ -652,15 +673,16 @@ var AboutLoginsParent = {
       doc.l10n.setAttributes(message, messageId);
       messageFragment.appendChild(message);
 
-      let buttons = [
-        {
-          "l10n-id": buttonId,
+      let buttons = [];
+      for (let i = 0; i < buttonIds.length; i++) {
+        buttons[i] = {
+          "l10n-id": buttonIds[i],
           popup: null,
           callback: () => {
-            onClick(browser);
+            onClicks[i](browser);
           },
-        },
-      ];
+        };
+      }
 
       notification = notificationBox.appendNotification(
         messageFragment,
@@ -793,6 +815,7 @@ var AboutLoginsParent = {
   },
 
   onPasswordSyncEnabledPreferenceChange(data, previous, latest) {
+    Services.prefs.clearUserPref(SHOW_PASSWORD_SYNC_NOTIFICATION_PREF);
     this.updatePasswordSyncNotificationState(this.getSyncState(), latest);
   },
 };
