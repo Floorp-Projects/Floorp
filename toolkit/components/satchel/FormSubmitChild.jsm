@@ -4,10 +4,10 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["FormHistoryChild"];
+var EXPORTED_SYMBOLS = ["FormSubmitChild"];
 
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
+const { ActorChild } = ChromeUtils.import(
+  "resource://gre/modules/ActorChild.jsm"
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
@@ -22,18 +22,46 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/PrivateBrowsingUtils.jsm"
 );
 
-XPCOMUtils.defineLazyPreferenceGetter(this, "gDebug", "browser.formfill.debug");
-XPCOMUtils.defineLazyPreferenceGetter(this, "gEnabled", "browser.formfill.enable");
+class FormSubmitChild extends ActorChild {
+  constructor(dispatcher) {
+    super(dispatcher);
 
-function log(message) {
-  if (!gDebug) {
-    return;
+    this.QueryInterface = ChromeUtils.generateQI([
+      Ci.nsIObserver,
+      Ci.nsISupportsWeakReference,
+    ]);
+
+    Services.prefs.addObserver("browser.formfill.", this);
+    this.updatePrefs();
   }
-  dump("satchelFormListener: " + message + "\n");
-  Services.console.logStringMessage("satchelFormListener: " + message);
-}
 
-class FormHistoryChild extends JSWindowActorChild {
+  cleanup() {
+    Services.prefs.removeObserver("browser.formfill.", this);
+  }
+
+  updatePrefs() {
+    this.debug = Services.prefs.getBoolPref("browser.formfill.debug");
+    this.enabled = Services.prefs.getBoolPref("browser.formfill.enable");
+  }
+
+  log(message) {
+    if (!this.debug) {
+      return;
+    }
+    dump("satchelFormListener: " + message + "\n");
+    Services.console.logStringMessage("satchelFormListener: " + message);
+  }
+
+  /* ---- nsIObserver interface ---- */
+
+  observe(subject, topic, data) {
+    if (topic == "nsPref:changed") {
+      this.updatePrefs();
+    } else {
+      this.log("Oops! Unexpected notification: " + topic);
+    }
+  }
+
   handleEvent(event) {
     switch (event.type) {
       case "DOMFormBeforeSubmit": {
@@ -49,13 +77,13 @@ class FormHistoryChild extends JSWindowActorChild {
   onDOMFormBeforeSubmit(event) {
     let form = event.target;
     if (
-      !gEnabled ||
+      !this.enabled ||
       PrivateBrowsingUtils.isContentWindowPrivate(form.ownerGlobal)
     ) {
       return;
     }
 
-    log("Form submit observer notified.");
+    this.log("Form submit observer notified.");
 
     if (
       form.hasAttribute("autocomplete") &&
@@ -99,7 +127,7 @@ class FormHistoryChild extends JSWindowActorChild {
 
       // Don't save credit card numbers.
       if (CreditCard.isValidNumber(value)) {
-        log("skipping saving a credit card number");
+        this.log("skipping saving a credit card number");
         continue;
       }
 
@@ -109,19 +137,19 @@ class FormHistoryChild extends JSWindowActorChild {
       }
 
       if (name == "searchbar-history") {
-        log('addEntry for input name "' + name + '" is denied');
+        this.log('addEntry for input name "' + name + '" is denied');
         continue;
       }
 
       // Limit stored data to 200 characters.
       if (name.length > 200 || value.length > 200) {
-        log("skipping input that has a name/value too large");
+        this.log("skipping input that has a name/value too large");
         continue;
       }
 
       // Limit number of fields stored per form.
       if (entries.length >= 100) {
-        log("not saving any more entries for this form.");
+        this.log("not saving any more entries for this form.");
         break;
       }
 
@@ -129,7 +157,7 @@ class FormHistoryChild extends JSWindowActorChild {
     }
 
     if (entries.length) {
-      log("sending entries to parent process for form " + form.id);
+      this.log("sending entries to parent process for form " + form.id);
       this.sendAsyncMessage("FormHistory:FormSubmitEntries", entries);
     }
   }
