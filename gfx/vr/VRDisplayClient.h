@@ -48,6 +48,8 @@ class VRDisplayClient {
   void StartVRNavigation();
   void StopVRNavigation(const TimeDuration& aTimeout);
 
+  bool IsPresenting();
+
  protected:
   virtual ~VRDisplayClient();
 

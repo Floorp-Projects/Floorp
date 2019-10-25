@@ -1098,6 +1098,8 @@ static int parse_frame_hdr(Dav1dContext *const c, GetBits *const gb) {
                     const int num_uv_pos = num_y_pos + !!fgd->num_y_points;
                     for (int i = 0; i < num_uv_pos; i++)
                         fgd->ar_coeffs_uv[pl][i] = dav1d_get_bits(gb, 8) - 128;
+                    if (!fgd->num_y_points)
+                        fgd->ar_coeffs_uv[pl][num_uv_pos] = 0;
                 }
             fgd->ar_coeff_shift = dav1d_get_bits(gb, 2) + 6;
             fgd->grain_scale_shift = dav1d_get_bits(gb, 2);

@@ -72,6 +72,22 @@ VRManagerChild* VRManagerChild::Get() {
 bool VRManagerChild::IsCreated() { return !!sVRManagerChildSingleton; }
 
 /* static */
+bool VRManagerChild::IsPresenting() {
+  if (!VRManagerChild::IsCreated()) {
+    return false;
+  }
+
+  nsTArray<RefPtr<VRDisplayClient>> displays;
+  sVRManagerChildSingleton->GetVRDisplays(displays);
+
+  bool result = false;
+  for (auto& display : displays) {
+    result |= display->IsPresenting();
+  }
+  return result;
+}
+
+/* static */
 bool VRManagerChild::InitForContent(Endpoint<PVRManagerChild>&& aEndpoint) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!sVRManagerChildSingleton);

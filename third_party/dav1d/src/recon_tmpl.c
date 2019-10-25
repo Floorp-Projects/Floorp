@@ -1971,7 +1971,7 @@ void bytefn(dav1d_filter_sbrow)(Dav1dFrameContext *const f, const int sby) {
                                        start_of_tile_row);
     }
 
-    if (f->seq_hdr->restoration) {
+    if (f->lf.restore_planes) {
         // Store loop filtered pixels required by loop restoration
         bytefn(dav1d_lr_copy_lpf)(f, f->lf.p, sby);
     }
@@ -2010,7 +2010,7 @@ void bytefn(dav1d_filter_sbrow)(Dav1dFrameContext *const f, const int sby) {
                               f->resize_start[!!pl] HIGHBD_CALL_SUFFIX);
         }
     }
-    if (f->seq_hdr->restoration) {
+    if (f->lf.restore_planes) {
         bytefn(dav1d_lr_sbrow)(f, f->lf.sr_p, sby);
     }
 

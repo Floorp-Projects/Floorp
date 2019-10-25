@@ -81,9 +81,17 @@ installer::
 	$(error ZIP_IN must be set when building installer)
 endif
 
+HELPER_DEPS = $(GLOBAL_DEPS) \
+              $(addprefix $(srcdir)/,$(INSTALLER_FILES)) \
+              $(addprefix $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/,$(BRANDING_FILES)) \
+              $(srcdir)/nsis/defines.nsi.in \
+              $(topsrcdir)/toolkit/mozapps/installer/windows/nsis/preprocess-locale.py \
+              $(addprefix $(MOZILLA_DIR)/toolkit/mozapps/installer/windows/nsis/,$(TOOLKIT_NSIS_FILES)) \
+              $(addprefix $(MOZILLA_DIR)/other-licenses/nsis/Plugins/,$(CUSTOM_NSIS_PLUGINS))
+
 # For building the uninstaller during the application build so it can be
 # included for mar file generation.
-$(CONFIG_DIR)/helper.exe:
+$(CONFIG_DIR)/helper.exe: $(HELPER_DEPS)
 	$(RM) -r $(CONFIG_DIR)
 	$(MKDIR) $(CONFIG_DIR)
 	$(INSTALL) $(addprefix $(srcdir)/,$(INSTALLER_FILES)) $(CONFIG_DIR)

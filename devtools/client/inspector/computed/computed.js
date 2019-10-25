@@ -1474,10 +1474,8 @@ SelectorView.prototype = {
    *        The original line number
    * @param {number} column
    *        The original column number
-   * @param {number} sourceId
-   *        The original sourceId
    */
-  _updateLocation: function(enabled, url, line, column, sourceId) {
+  _updateLocation: function(enabled, url, line, column) {
     if (!this.tree.element) {
       return;
     }
@@ -1485,7 +1483,7 @@ SelectorView.prototype = {
     // Update |currentLocation| to be whichever location is being
     // displayed at the moment.
     if (enabled) {
-      this.currentLocation = { href: url, line, column, sourceId };
+      this.currentLocation = { href: url, line, column };
     } else {
       this.currentLocation = this.generatedLocation;
     }
