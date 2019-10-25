@@ -229,10 +229,13 @@ void WaitForVREvent(uint32_t& nVRWindowID, uint32_t& eventType,
           mozilla::gfx::VRFxEventType(eventType);
 
       switch (fxEvent) {
-        case mozilla::gfx::VRFxEventType::FxEvent_IME:
-          eventData1 = (uint32_t)windowState.imeState;
+        case mozilla::gfx::VRFxEventType::IME:
+          eventData1 = (uint32_t)windowState.eventState;
           break;
-        case mozilla::gfx::VRFxEventType::FxEvent_SHUTDOWN:
+        case mozilla::gfx::VRFxEventType::FULLSCREEN:
+          eventData1 = (uint32_t)windowState.eventState;
+          break;
+        case mozilla::gfx::VRFxEventType::SHUTDOWN:
           VRShmemInstance::GetInstance().CloseShMem();
           break;
         default:

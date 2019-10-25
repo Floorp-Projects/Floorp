@@ -47,8 +47,8 @@ namespace gfx {
 // and mapped files if we have both release and nightlies
 // running at the same time? Or...what if we have multiple
 // release builds running on same machine? (Bug 1563232)
-#define SHMEM_VERSION "0.0.3"
-static const int32_t kVRExternalVersion = 10;
+#define SHMEM_VERSION "0.0.4"
+static const int32_t kVRExternalVersion = 11;
 
 // We assign VR presentations to groups with a bitmask.
 // Currently, we will only display either content or chrome.
@@ -439,13 +439,21 @@ struct VRSystemState {
 };
 
 enum class VRFxEventType : uint8_t {
-  FxEvent_NONE = 0,
-  FxEvent_IME,
-  FxEvent_SHUTDOWN,
-  FxEvent_TOTAL
+  NONE = 0,
+  IME,
+  SHUTDOWN,
+  FULLSCREEN,
+  TOTAL
 };
 
-enum class VRFxIMEState : uint8_t { Blur, Focus };
+enum class VRFxEventState : uint8_t {
+  NONE = 0,
+  BLUR,
+  FOCUS,
+  FULLSCREEN_ENTER,
+  FULLSCREEN_EXIT,
+  TOTAL
+};
 
 // Data shared via shmem for running Firefox in a VR windowed environment
 struct VRWindowState {
@@ -456,7 +464,7 @@ struct VRWindowState {
   VRLayerTextureHandle textureFx;
   uint32_t windowID;
   VRFxEventType eventType;
-  VRFxIMEState imeState;
+  VRFxEventState eventState;
 
   // State from VRHost
   uint32_t dxgiAdapterHost;
