@@ -103,8 +103,26 @@ add_task(async function setup() {
       // todo(Bug 1587237): Ignore error when loading the Migration Wizard in automation.
       return;
     }
+    if (
+      msg.errorMessage.includes("Error detecting Chrome profiles") ||
+      msg.errorMessage.includes(
+        "Library/Application Support/Chromium/Local State (No such file or directory)"
+      ) ||
+      msg.errorMessage.includes(
+        "Library/Application Support/Google/Chrome/Local State (No such file or directory)"
+      )
+    ) {
+      // Ignore errors that can occur when the migrator is looking for a
+      // Chrome/Chromium profile
+      return;
+    }
     if (msg.errorMessage.includes("Can't find profile directory.")) {
       // Ignore error messages for no profile found in old XULStore.jsm
+      return;
+    }
+    if (msg.errorMessage.includes("Error reading typed URL history")) {
+      // The Migrator when opened can log this exception if there is no Edge
+      // history on the machine.
       return;
     }
     if (msg.errorMessage.includes(EXPECTED_ERROR_MESSAGE)) {
