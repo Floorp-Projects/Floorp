@@ -128,22 +128,13 @@ void BaseHistory::UnregisterVisitedCallback(nsIURI* aURI, Link* aLink) {
   // Get the array, and remove the item from it.
   auto entry = mTrackedURIs.Lookup(aURI);
   if (!entry) {
-    // GeckoViewHistory sometimes, for somewhat dubious reasons, removes links
-    // from mTrackedURIs...
-    //
-    // We return NS_OK to please the assertions in Link.cpp so that the link is
-    // properly marked as unregistered, but this should probably be sorted out.
-#ifndef MOZ_WIDGET_ANDROID
     MOZ_ASSERT_UNREACHABLE("Trying to unregister URI that wasn't registered!");
-#endif
     return;
   }
 
   ObserverArray& observers = entry.Data().mLinks;
   if (!observers.RemoveElement(aLink)) {
-#ifndef MOZ_WIDGET_ANDROID
     MOZ_ASSERT_UNREACHABLE("Trying to unregister node that wasn't registered!");
-#endif
     return;
   }
 
