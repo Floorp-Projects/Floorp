@@ -75,7 +75,7 @@ You will need:
 - Set up the [VPN](https://mana.mozilla.org/wiki/pages/viewpage.action?spaceKey=SD&title=VPN)
 - Get the relevant experiment creation/approval permissions by reaching out to the Mobile Experiments team.
 
-The staging server interface is [here](https://settings-writer.stage.mozaws.net/v1/admin/#/), and you can log in with LDAP.
+The staging server interface is [here](https://settings-writer.stage.mozaws.net/v1/admin/#/). Once you have completed the above prerequisites, you'll be able to log in with LDAP.
 
 In the [`mobile-experiments` record list](https://settings-writer.stage.mozaws.net/v1/admin/#/buckets/main-workspace/collections/mobile-experiments/records), create new entries for experiments as needed.
 
