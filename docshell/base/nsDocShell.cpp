@@ -8518,8 +8518,8 @@ nsresult nsDocShell::PerformRetargeting(nsDocShellLoadState* aLoadState,
       aLoadState->Target().LowerCaseEqualsLiteral("_self") ||
       aLoadState->Target().LowerCaseEqualsLiteral("_parent") ||
       aLoadState->Target().LowerCaseEqualsLiteral("_top")) {
-    if (BrowsingContext* context =
-            mBrowsingContext->FindWithName(aLoadState->Target())) {
+    if (BrowsingContext* context = mBrowsingContext->FindWithName(
+            aLoadState->Target(), /* aUseEntryGlobalForAccessCheck */ false)) {
       targetDocShell = context->GetDocShell();
     }
   }
