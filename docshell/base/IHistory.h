@@ -18,6 +18,7 @@ class nsIWidget;
 namespace mozilla {
 
 namespace dom {
+class Document;
 class Link;
 }  // namespace dom
 
@@ -137,25 +138,6 @@ class IHistory : public nsISupports {
    *        The URI to notify about.
    */
   NS_IMETHOD NotifyVisited(nsIURI* aURI) = 0;
-
-
- protected:
-  static constexpr const size_t kTrackedUrisInitialSize = 64;
-
-  IHistory()
-    : mTrackedURIs(kTrackedUrisInitialSize) {}
-
-  using ObserverArray = nsTObserverArray<dom::Link*>;
-  struct TrackedURI {
-    ObserverArray mLinks;
-    bool mVisited = false;
-
-    size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const {
-      return mLinks.ShallowSizeOfExcludingThis(aMallocSizeOf);
-    }
-  };
-
-  nsDataHashtable<nsURIHashKey, TrackedURI> mTrackedURIs;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(IHistory, IHISTORY_IID)

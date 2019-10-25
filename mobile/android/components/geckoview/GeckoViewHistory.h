@@ -5,7 +5,7 @@
 #ifndef GECKOVIEWHISTORY_H
 #define GECKOVIEWHISTORY_H
 
-#include "mozilla/IHistory.h"
+#include "mozilla/BaseHistory.h"
 #include "nsDataHashtable.h"
 #include "nsTObserverArray.h"
 #include "nsURIHashKey.h"
@@ -28,7 +28,7 @@ struct VisitedURI {
   bool mVisited = false;
 };
 
-class GeckoViewHistory final : public mozilla::IHistory,
+class GeckoViewHistory final : public mozilla::BaseHistory,
                                public nsITimerCallback,
                                public nsINamed {
  public:
