@@ -297,7 +297,7 @@ static XDRResult XDRRelazificationInfo(XDRState<mode>* xdr, HandleFunction fun,
       MOZ_ASSERT(column == lazy->column());
       // We can assert we have no inner functions because we don't
       // relazify scripts with inner functions.  See
-      // JSFunction::createScriptForLazilyInterpretedFunction.
+      // JSFunction::delazifyLazilyInterpretedFunction.
       MOZ_ASSERT(!lazy->hasInnerFunctions());
       if (fun->kind() == FunctionFlags::FunctionKind::ClassConstructor) {
         numFieldInitializers =

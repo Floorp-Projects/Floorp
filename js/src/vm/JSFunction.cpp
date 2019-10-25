@@ -1635,8 +1635,8 @@ static bool DelazifyCanonicalScriptedFunction(JSContext* cx,
 }
 
 /* static */
-bool JSFunction::createScriptForLazilyInterpretedFunction(JSContext* cx,
-                                                          HandleFunction fun) {
+bool JSFunction::delazifyLazilyInterpretedFunction(JSContext* cx,
+                                                   HandleFunction fun) {
   MOZ_ASSERT(fun->isInterpretedLazy());
   MOZ_ASSERT(cx->compartment() == fun->compartment());
 
@@ -1646,29 +1646,14 @@ bool JSFunction::createScriptForLazilyInterpretedFunction(JSContext* cx,
 
   if (fun->hasLazyScript()) {
     Rooted<LazyScript*> lazy(cx, fun->lazyScript());
-    RootedScript script(cx, lazy->maybeScript());
+    RootedFunction canonicalFun(cx, lazy->functionNonDelazifying());
 
-    if (script) {
-      // This function is a non-canonical function, and the canonical function
-      // is already delazified.
-      fun->setUnlazifiedScript(script);
-      // Remember the lazy script on the compiled script, so it can be
-      // stored on the function again in case of re-lazification.
-      if (lazy->canRelazify()) {
-        MOZ_RELEASE_ASSERT(script->maybeLazyScript() == lazy);
-        script->setLazyScript(lazy);
-      }
-      return true;
-    }
-
-    if (fun != lazy->functionNonDelazifying()) {
-      // This function is a non-canonical function, and the canonical function
-      // is lazy. Delazify the canonical function, which will result in calling
-      // this function again with the canonical function.
-      if (!LazyScript::functionDelazifying(cx, lazy)) {
-        return false;
-      }
-      script = lazy->functionNonDelazifying()->nonLazyScript();
+    // If this function is non-canonical, then use the canonical function first
+    // to get the delazified script. This may result in calling this method
+    // again on the canonical function. This ensures the canonical function is
+    // always non-lazy if any of the clones are non-lazy.
+    if (fun != canonicalFun) {
+      JSScript* script = JSFunction::getOrCreateScript(cx, canonicalFun);
       if (!script) {
         return false;
       }
@@ -1677,6 +1662,14 @@ bool JSFunction::createScriptForLazilyInterpretedFunction(JSContext* cx,
       return true;
     }
 
+    // Even if we relazified the canonical function, the GC may not have swept
+    // the non-lazy script yet. In this case, we can reuse it.
+    if (lazy->hasScript()) {
+      fun->setUnlazifiedScript(lazy->maybeScript());
+      return true;
+    }
+
+    // Finally, compile the script if it really doesn't exist.
     return DelazifyCanonicalScriptedFunction(cx, fun);
   }
 
