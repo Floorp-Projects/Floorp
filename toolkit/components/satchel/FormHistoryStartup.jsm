@@ -50,32 +50,20 @@ FormHistoryStartup.prototype = {
     Services.obs.addObserver(this, "idle-daily", true);
     Services.obs.addObserver(this, "formhistory-expire-now", true);
 
-    Services.mm.addMessageListener("FormHistory:FormSubmitEntries", this);
-
-    // For each of these messages, we could receive them from content,
-    // or we might receive them from the ppmm if the searchbar is
-    // having its history queried.
-    for (let manager of [Services.mm, Services.ppmm]) {
-      manager.addMessageListener("FormHistory:AutoCompleteSearchAsync", this);
-      manager.addMessageListener("FormHistory:RemoveEntry", this);
-    }
+    Services.ppmm.addMessageListener(
+      "FormHistory:AutoCompleteSearchAsync",
+      this
+    );
+    Services.ppmm.addMessageListener("FormHistory:RemoveEntry", this);
   },
 
   receiveMessage(message) {
     switch (message.name) {
-      case "FormHistory:FormSubmitEntries": {
-        let entries = message.data;
-        let changes = entries.map(entry => ({
-          op: "bump",
-          fieldname: entry.name,
-          value: entry.value,
-        }));
-
-        FormHistory.update(changes);
-        break;
-      }
-
       case "FormHistory:AutoCompleteSearchAsync": {
+        // This case is only used for the search field. There is a
+        // similar algorithm in FormHistoryParent.jsm that uses
+        // sendQuery for other form fields.
+
         let { id, searchString, params } = message.data;
 
         if (this.pendingQuery) {
@@ -83,19 +71,7 @@ FormHistoryStartup.prototype = {
           this.pendingQuery = null;
         }
 
-        let mm;
         let query = null;
-        // MessageListenerManager is a Mozilla-only interface, so disable the eslint error
-        // for it.
-        // eslint-disable-next-line no-undef
-        if (message.target instanceof MessageListenerManager) {
-          // The target is the PPMM, meaning that the parent process
-          // is requesting FormHistory data on the searchbar.
-          mm = message.target;
-        } else {
-          // Otherwise, the target is a <xul:browser>.
-          mm = message.target.messageManager;
-        }
 
         let results = [];
         let processResults = {
@@ -109,10 +85,13 @@ FormHistoryStartup.prototype = {
             if (query === this.pendingQuery) {
               this.pendingQuery = null;
               if (!aReason) {
-                mm.sendAsyncMessage("FormHistory:AutoCompleteSearchResults", {
-                  id,
-                  results,
-                });
+                message.target.sendAsyncMessage(
+                  "FormHistory:AutoCompleteSearchResults",
+                  {
+                    id,
+                    results,
+                  }
+                );
               }
             }
           },

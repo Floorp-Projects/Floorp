@@ -4,10 +4,10 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["FormSubmitChild"];
+var EXPORTED_SYMBOLS = ["FormHistoryChild"];
 
-const { ActorChild } = ChromeUtils.import(
-  "resource://gre/modules/ActorChild.jsm"
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
@@ -22,46 +22,22 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/PrivateBrowsingUtils.jsm"
 );
 
-class FormSubmitChild extends ActorChild {
-  constructor(dispatcher) {
-    super(dispatcher);
+XPCOMUtils.defineLazyPreferenceGetter(this, "gDebug", "browser.formfill.debug");
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "gEnabled",
+  "browser.formfill.enable"
+);
 
-    this.QueryInterface = ChromeUtils.generateQI([
-      Ci.nsIObserver,
-      Ci.nsISupportsWeakReference,
-    ]);
-
-    Services.prefs.addObserver("browser.formfill.", this);
-    this.updatePrefs();
+function log(message) {
+  if (!gDebug) {
+    return;
   }
+  dump("satchelFormListener: " + message + "\n");
+  Services.console.logStringMessage("satchelFormListener: " + message);
+}
 
-  cleanup() {
-    Services.prefs.removeObserver("browser.formfill.", this);
-  }
-
-  updatePrefs() {
-    this.debug = Services.prefs.getBoolPref("browser.formfill.debug");
-    this.enabled = Services.prefs.getBoolPref("browser.formfill.enable");
-  }
-
-  log(message) {
-    if (!this.debug) {
-      return;
-    }
-    dump("satchelFormListener: " + message + "\n");
-    Services.console.logStringMessage("satchelFormListener: " + message);
-  }
-
-  /* ---- nsIObserver interface ---- */
-
-  observe(subject, topic, data) {
-    if (topic == "nsPref:changed") {
-      this.updatePrefs();
-    } else {
-      this.log("Oops! Unexpected notification: " + topic);
-    }
-  }
-
+class FormHistoryChild extends JSWindowActorChild {
   handleEvent(event) {
     switch (event.type) {
       case "DOMFormBeforeSubmit": {
@@ -77,13 +53,13 @@ class FormSubmitChild extends ActorChild {
   onDOMFormBeforeSubmit(event) {
     let form = event.target;
     if (
-      !this.enabled ||
+      !gEnabled ||
       PrivateBrowsingUtils.isContentWindowPrivate(form.ownerGlobal)
     ) {
       return;
     }
 
-    this.log("Form submit observer notified.");
+    log("Form submit observer notified.");
 
     if (
       form.hasAttribute("autocomplete") &&
@@ -127,7 +103,7 @@ class FormSubmitChild extends ActorChild {
 
       // Don't save credit card numbers.
       if (CreditCard.isValidNumber(value)) {
-        this.log("skipping saving a credit card number");
+        log("skipping saving a credit card number");
         continue;
       }
 
@@ -137,19 +113,19 @@ class FormSubmitChild extends ActorChild {
       }
 
       if (name == "searchbar-history") {
-        this.log('addEntry for input name "' + name + '" is denied');
+        log('addEntry for input name "' + name + '" is denied');
         continue;
       }
 
       // Limit stored data to 200 characters.
       if (name.length > 200 || value.length > 200) {
-        this.log("skipping input that has a name/value too large");
+        log("skipping input that has a name/value too large");
         continue;
       }
 
       // Limit number of fields stored per form.
       if (entries.length >= 100) {
-        this.log("not saving any more entries for this form.");
+        log("not saving any more entries for this form.");
         break;
       }
 
@@ -157,7 +133,7 @@ class FormSubmitChild extends ActorChild {
     }
 
     if (entries.length) {
-      this.log("sending entries to parent process for form " + form.id);
+      log("sending entries to parent process for form " + form.id);
       this.sendAsyncMessage("FormHistory:FormSubmitEntries", entries);
     }
   }
