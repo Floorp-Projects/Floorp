@@ -218,16 +218,12 @@ class History final : public IHistory,
    * mRecentlyVisitedURIs remembers URIs which have been recently added to
    * history, to avoid saving these locations repeatedly in a short period.
    */
-  class RecentURIKey : public nsURIHashKey {
-   public:
-    explicit RecentURIKey(const nsIURI* aURI) : nsURIHashKey(aURI) {}
-    RecentURIKey(RecentURIKey&& aOther) : nsURIHashKey(std::move(aOther)) {
-      MOZ_ASSERT_UNREACHABLE("Do not call me!");
-    }
-    MOZ_INIT_OUTSIDE_CTOR PRTime time;
-    MOZ_INIT_OUTSIDE_CTOR bool hidden;
+  struct RecentURIVisit {
+    PRTime mTime;
+    bool mHidden;
   };
-  nsTHashtable<RecentURIKey> mRecentlyVisitedURIs;
+
+  nsDataHashtable<nsURIHashKey, RecentURIVisit> mRecentlyVisitedURIs;
 };
 
 }  // namespace places
