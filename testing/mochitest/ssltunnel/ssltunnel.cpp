@@ -31,6 +31,7 @@
 #include "sslproto.h"
 #include "plhash.h"
 #include "mozilla/Sprintf.h"
+#include "mozilla/Unused.h"
 
 using namespace mozilla;
 using namespace mozilla::psm;
@@ -382,6 +383,32 @@ bool ConfigureSSLServerSocket(PRFileDesc* socket, server_info_t* si,
   SSL_OptionSet(ssl_socket, SSL_HANDSHAKE_AS_SERVER, true);
 
   if (clientAuth != caNone) {
+    // If we're requesting or requiring a client certificate, we should
+    // configure NSS to include the "certificate_authorities" field in the
+    // certificate request message. That way we can test that gecko properly
+    // takes note of it.
+    UniqueCERTCertificate issuer(
+        CERT_FindCertIssuer(cert.get(), PR_Now(), certUsageAnyCA));
+    if (!issuer) {
+      LOG_DEBUG(("Failed to find issuer for %s\n", certnick));
+      return false;
+    }
+    UniqueCERTCertList issuerList(CERT_NewCertList());
+    if (!issuerList) {
+      LOG_ERROR(("Failed to allocate new CERTCertList\n"));
+      return false;
+    }
+    if (CERT_AddCertToListTail(issuerList.get(), issuer.get()) != SECSuccess) {
+      LOG_ERROR(("Failed to add issuer to issuerList\n"));
+      return false;
+    }
+    Unused << issuer.release();  // Ownership transferred to issuerList.
+    if (SSL_SetTrustAnchors(ssl_socket, issuerList.get()) != SECSuccess) {
+      LOG_ERROR(
+          ("Failed to set certificate_authorities list for client "
+           "authentication\n"));
+      return false;
+    }
     SSL_OptionSet(ssl_socket, SSL_REQUEST_CERTIFICATE, true);
     SSL_OptionSet(ssl_socket, SSL_REQUIRE_CERTIFICATE, clientAuth == caRequire);
   }
