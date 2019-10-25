@@ -1108,6 +1108,17 @@ namespace gc {
  */
 extern JS_PUBLIC_API JSObject* NewMemoryInfoObject(JSContext* cx);
 
+/*
+ * Run the finalizer of a nursery-allocated JSObject that is known to be dead.
+ *
+ * This is a dangerous operation - only use this if you know what you're doing!
+ *
+ * This is used by the browser to implement nursery-allocated wrapper cached
+ * wrappers.
+ */
+extern JS_PUBLIC_API void FinalizeDeadNurseryObject(JSContext* cx,
+                                                    JSObject* obj);
+
 } /* namespace gc */
 } /* namespace js */
 
