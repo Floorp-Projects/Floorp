@@ -217,6 +217,11 @@ class ScalarType:
             if not utils.is_valid_product(product):
                 ParserError(self._name + ' - unknown value in products: ' + product +
                             '.\nSee: {}'.format(BASE_DOC_URL)).handle_later()
+            if utils.is_geckoview_streaming_product(product):
+                keyed = definition.get('keyed')
+                if keyed:
+                    ParserError('%s - keyed Scalars not supported for product %s' %
+                                (self._name, product)).handle_later()
 
         # Validate the expiration version.
         # Historical versions of Scalars.json may contain expiration versions
