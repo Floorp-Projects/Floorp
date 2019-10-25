@@ -8,6 +8,8 @@
 
 "use strict";
 
+requestLongerTimeout(4);
+
 const TEST_URI = `data:text/html,<meta charset=utf8>console API calls<script>
   console.log("Data Message");
 </script>`;
