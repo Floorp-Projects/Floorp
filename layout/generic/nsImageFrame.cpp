@@ -1398,8 +1398,7 @@ ImgDrawResult nsImageFrame::DisplayAltFeedback(gfxContext& aRenderingContext,
     }
 
     WritingMode wm = GetWritingMode();
-    bool flushRight =
-        (!wm.IsVertical() && !wm.IsBidiLTR()) || wm.IsVerticalRL();
+    bool flushRight = !wm.IsPhysicalLTR();
 
     // If the icon in question is loaded, draw it.
     uint32_t imageStatus = 0;
@@ -1581,8 +1580,7 @@ ImgDrawResult nsImageFrame::DisplayAltFeedbackWithoutLayer(
     }
 
     WritingMode wm = GetWritingMode();
-    bool flushRight =
-        (!wm.IsVertical() && !wm.IsBidiLTR()) || wm.IsVerticalRL();
+    const bool flushRight = !wm.IsPhysicalLTR();
 
     // If the icon in question is loaded, draw it.
     uint32_t imageStatus = 0;

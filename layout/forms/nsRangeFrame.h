@@ -111,8 +111,7 @@ class nsRangeFrame final : public nsContainerFrame,
    */
   bool IsRightToLeft() const {
     MOZ_ASSERT(IsHorizontal());
-    mozilla::WritingMode wm = GetWritingMode();
-    return wm.IsVertical() ? wm.IsVerticalRL() : !wm.IsBidiLTR();
+    return !GetWritingMode().IsPhysicalLTR();
   }
 
   double GetMin() const;

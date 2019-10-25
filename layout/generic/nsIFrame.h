@@ -1064,8 +1064,7 @@ class nsIFrame : public nsQueryFrame {
    */
   void SetSize(mozilla::WritingMode aWritingMode,
                const mozilla::LogicalSize& aSize) {
-    if ((!aWritingMode.IsVertical() && !aWritingMode.IsBidiLTR()) ||
-        aWritingMode.IsVerticalRL()) {
+    if (!aWritingMode.IsPhysicalLTR()) {
       nscoord oldWidth = mRect.Width();
       SetSize(aSize.GetPhysicalSize(aWritingMode));
       mRect.x -= mRect.Width() - oldWidth;
