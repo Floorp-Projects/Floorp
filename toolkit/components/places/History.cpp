@@ -1519,59 +1519,6 @@ History::NotifyVisited(nsIURI* aURI) {
   return NS_OK;
 }
 
-void History::NotifyVisitedForDocument(nsIURI* aURI, Document* aDocument) {
-  MOZ_ASSERT(NS_IsMainThread());
-  // Make sure that nothing invalidates our observer array while we're walking
-  // over it.
-  nsAutoScriptBlocker scriptBlocker;
-
-  // If we have no observers for this URI, we have nothing to notify about.
-  auto entry = mTrackedURIs.Lookup(aURI);
-  if (!entry) {
-    return;
-  }
-
-  TrackedURI& trackedURI = entry.Data();
-
-  {
-    // Update status of each Link node. We iterate over the array backwards so
-    // we can remove the items as we encounter them.
-    ObserverArray::BackwardIterator iter(trackedURI.mLinks);
-    while (iter.HasMore()) {
-      Link* link = iter.GetNext();
-      if (GetLinkDocument(*link) == aDocument) {
-        link->SetLinkState(eLinkState_Visited);
-        iter.Remove();
-      }
-    }
-  }
-
-  // If we don't have any links left, we can remove the array.
-  if (trackedURI.mLinks.IsEmpty()) {
-    entry.Remove();
-  }
-}
-
-void History::DispatchNotifyVisited(nsIURI* aURI, Document* aDocument) {
-  // Capture strong references to the arguments to capture in the closure.
-  RefPtr<Document> doc = aDocument;
-  nsCOMPtr<nsIURI> uri = aURI;
-
-  // Create and dispatch the runnable to call NotifyVisitedForDocument.
-  nsCOMPtr<nsIRunnable> runnable =
-      NS_NewRunnableFunction("History::DispatchNotifyVisited", [uri, doc] {
-        nsCOMPtr<IHistory> history = services::GetHistoryService();
-        static_cast<History*>(history.get())
-            ->NotifyVisitedForDocument(uri, doc);
-      });
-
-  if (doc) {
-    doc->Dispatch(TaskCategory::Other, runnable.forget());
-  } else {
-    NS_DispatchToMainThread(runnable.forget());
-  }
-}
-
 class ConcurrentStatementsHolder final : public mozIStorageCompletionCallback {
  public:
   NS_DECL_ISUPPORTS
