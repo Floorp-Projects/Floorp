@@ -56,11 +56,11 @@ class IHistory : public nsISupports {
    *        object should be destroyed, be sure to call
    *        UnregisterVistedCallback first.
    */
-  NS_IMETHOD RegisterVisitedCallback(nsIURI* aURI, dom::Link* aLink) = 0;
+  virtual nsresult RegisterVisitedCallback(nsIURI* aURI, dom::Link* aLink) = 0;
 
   /**
    * Unregisters a previously registered Link object.  This must be called
-   * before destroying the registered object.
+   * before destroying the registered object, and asserts when misused.
    *
    * @pre aURI must not be null.
    * @pre aLink must not be null.
@@ -70,7 +70,15 @@ class IHistory : public nsISupports {
    * @param aLink
    *        The link object to unregister for aURI.
    */
-  NS_IMETHOD UnregisterVisitedCallback(nsIURI* aURI, dom::Link* aLink) = 0;
+  virtual void UnregisterVisitedCallback(nsIURI* aURI, dom::Link* aLink) = 0;
+
+  /**
+   * Notifies about the visited status of a given URI.
+   *
+   * @param aURI
+   *        The URI to notify about.
+   */
+  virtual void NotifyVisited(nsIURI* aURI) = 0;
 
   enum VisitFlags {
     /**
@@ -130,14 +138,6 @@ class IHistory : public nsISupports {
    *        The title string.
    */
   NS_IMETHOD SetURITitle(nsIURI* aURI, const nsAString& aTitle) = 0;
-
-  /**
-   * Notifies about the visited status of a given URI.
-   *
-   * @param aURI
-   *        The URI to notify about.
-   */
-  NS_IMETHOD NotifyVisited(nsIURI* aURI) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(IHistory, IHISTORY_IID)

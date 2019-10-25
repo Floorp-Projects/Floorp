@@ -544,12 +544,8 @@ void Link::UnregisterFromHistory() {
   // And tell History to stop tracking us.
   if (mHistory && mCachedURI) {
     if (nsCOMPtr<IHistory> history = services::GetHistoryService()) {
-      nsresult rv = history->UnregisterVisitedCallback(mCachedURI, this);
-      NS_ASSERTION(NS_SUCCEEDED(rv),
-                   "This should only fail if we misuse the API!");
-      if (NS_SUCCEEDED(rv)) {
-        mRegistered = false;
-      }
+      history->UnregisterVisitedCallback(mCachedURI, this);
+      mRegistered = false;
     }
   }
 }

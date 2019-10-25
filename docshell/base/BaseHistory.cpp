@@ -65,8 +65,7 @@ void BaseHistory::NotifyVisitedForDocument(nsIURI* aURI, dom::Document* aDoc) {
   }
 }
 
-NS_IMETHODIMP
-BaseHistory::RegisterVisitedCallback(nsIURI* aURI, Link* aLink) {
+nsresult BaseHistory::RegisterVisitedCallback(nsIURI* aURI, Link* aLink) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aURI, "Must pass a non-null URI!");
   if (XRE_IsContentProcess()) {
@@ -121,8 +120,7 @@ BaseHistory::RegisterVisitedCallback(nsIURI* aURI, Link* aLink) {
   return NS_OK;
 }
 
-NS_IMETHODIMP
-BaseHistory::UnregisterVisitedCallback(nsIURI* aURI, Link* aLink) {
+void BaseHistory::UnregisterVisitedCallback(nsIURI* aURI, Link* aLink) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aURI, "Must pass a non-null URI!");
   MOZ_ASSERT(aLink, "Must pass a non-null Link object!");
@@ -131,11 +129,14 @@ BaseHistory::UnregisterVisitedCallback(nsIURI* aURI, Link* aLink) {
   auto entry = mTrackedURIs.Lookup(aURI);
   if (!entry) {
     // GeckoViewHistory sometimes, for somewhat dubious reasons, removes links
-    // from mTrackedURIs.
+    // from mTrackedURIs...
+    //
+    // We return NS_OK to please the assertions in Link.cpp so that the link is
+    // properly marked as unregistered, but this should probably be sorted out.
 #ifndef MOZ_WIDGET_ANDROID
     MOZ_ASSERT_UNREACHABLE("Trying to unregister URI that wasn't registered!");
 #endif
-    return NS_ERROR_UNEXPECTED;
+    return;
   }
 
   ObserverArray& observers = entry.Data().mLinks;
@@ -143,7 +144,7 @@ BaseHistory::UnregisterVisitedCallback(nsIURI* aURI, Link* aLink) {
 #ifndef MOZ_WIDGET_ANDROID
     MOZ_ASSERT_UNREACHABLE("Trying to unregister node that wasn't registered!");
 #endif
-    return NS_ERROR_UNEXPECTED;
+    return;
   }
 
   // If the array is now empty, we should remove it from the hashtable.
@@ -151,14 +152,13 @@ BaseHistory::UnregisterVisitedCallback(nsIURI* aURI, Link* aLink) {
     entry.Remove();
     CancelVisitedQueryIfPossible(aURI);
   }
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-BaseHistory::NotifyVisited(nsIURI* aURI) {
+void BaseHistory::NotifyVisited(nsIURI* aURI) {
   MOZ_ASSERT(NS_IsMainThread());
-  NS_ENSURE_ARG(aURI);
+  if (NS_WARN_IF(!aURI)) {
+    return;
+  }
 
   // NOTE: This can be run within the SystemGroup, and thus cannot directly
   // interact with webpages.
@@ -167,7 +167,7 @@ BaseHistory::NotifyVisited(nsIURI* aURI) {
   auto entry = mTrackedURIs.Lookup(aURI);
   if (!entry) {
     // If we have no observers for this URI, we have nothing to notify about.
-    return NS_OK;
+    return;
   }
 
   ObservingLinks& links = entry.Data();
@@ -191,8 +191,6 @@ BaseHistory::NotifyVisited(nsIURI* aURI) {
     seen.AppendElement(doc);
     DispatchNotifyVisited(aURI, doc);
   }
-
-  return NS_OK;
 }
 
 }  // namespace mozilla
