@@ -190,6 +190,11 @@ class ReferrerInfo : public nsIReferrerInfo {
   static uint32_t GetUserReferrerSendingPolicy();
 
   /**
+   * Getter for network.http.referer.XOriginPolicy.
+   */
+  static uint32_t GetUserXOriginSendingPolicy();
+
+  /**
    * Return default referrer policy which is controlled by user
    * prefs:
    * network.http.referer.defaultPolicy for regular mode
