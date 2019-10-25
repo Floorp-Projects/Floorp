@@ -46,7 +46,8 @@ class VRShMem final {
   void PushWindowState(VRWindowState& aState);
   void PullWindowState(VRWindowState& aState);
 
-  void SendIMEState(uint64_t aWindowID, mozilla::gfx::VRFxIMEState aImeState);
+  void SendIMEState(uint64_t aWindowID, mozilla::gfx::VRFxEventState aImeState);
+  void SendFullscreenState(uint64_t aWindowID, bool aFullscreen);
   void SendShutdowmState(uint64_t aWindowID);
 
   bool HasExternalShmem() const { return mExternalShmem != nullptr; }
@@ -56,6 +57,8 @@ class VRShMem final {
 
  private:
   bool IsCreatedOnSharedMemory() const;
+  void SendEvent(uint64_t aWindowID, mozilla::gfx::VRFxEventType aEventType,
+                 mozilla::gfx::VRFxEventState aEventState);
 
   // mExternalShmem can have one of three sources:
   // - Allocated outside of this class on the heap and passed in via

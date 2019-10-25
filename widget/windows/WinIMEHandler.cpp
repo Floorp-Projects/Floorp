@@ -745,7 +745,7 @@ void IMEHandler::MaybeShowOnScreenKeyboard() {
   if (FxRWindowManager::GetInstance()->IsFxRWindow(sFocusedWindow)) {
     mozilla::gfx::VRShMem shmem(nullptr, true /*aRequiresMutex*/);
     shmem.SendIMEState(FxRWindowManager::GetInstance()->GetWindowID(),
-                       mozilla::gfx::VRFxIMEState::Focus);
+                       mozilla::gfx::VRFxEventState::FOCUS);
     return;
   }
 #endif  // NIGHTLY_BUILD
@@ -775,7 +775,7 @@ void IMEHandler::MaybeDismissOnScreenKeyboard(nsWindow* aWindow) {
   if (FxRWindowManager::GetInstance()->IsFxRWindow(aWindow)) {
     mozilla::gfx::VRShMem shmem(nullptr, true /*aRequiresMutex*/);
     shmem.SendIMEState(FxRWindowManager::GetInstance()->GetWindowID(),
-                       mozilla::gfx::VRFxIMEState::Blur);
+                       mozilla::gfx::VRFxEventState::BLUR);
   }
 #endif  // NIGHTLY_BUILD
   if (sPluginHasFocus || !IsWin8OrLater()) {
