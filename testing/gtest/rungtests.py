@@ -68,6 +68,7 @@ class GTests(object):
         proc.run(timeout=GTests.TEST_PROC_TIMEOUT,
                  outputTimeout=GTests.TEST_PROC_NO_OUTPUT_TIMEOUT)
         proc.wait()
+        log.info("gtest | process wait complete, returncode=%s" % proc.proc.returncode)
         if proc.timedOut:
             if proc.outputTimedOut:
                 log.testFail("gtest | timed out after %d seconds without output",
@@ -225,7 +226,9 @@ def main():
     except Exception as e:
         log.error(str(e))
         result = False
-    sys.exit(0 if result else 1)
+    exit_code = 0 if result else 1
+    log.info("rungtests.py exits with code %s" % exit_code)
+    sys.exit(exit_code)
 
 
 if __name__ == '__main__':
