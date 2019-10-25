@@ -6744,8 +6744,7 @@ struct LambdaFunctionInfo {
       : fun_(fun),
         flags(fun->flags().toRaw()),
         nargs(fun->nargs()),
-        scriptOrLazyScript(fun->hasScript() ? (gc::Cell*)fun->nonLazyScript()
-                                            : (gc::Cell*)fun->lazyScript()),
+        scriptOrLazyScript(fun->baseScript()),
         singletonType(fun->isSingleton()),
         useSingletonForClone(ObjectGroup::useSingletonForClone(fun)) {
     // If this assert fails, make sure CodeGenerator::visitLambda does the
