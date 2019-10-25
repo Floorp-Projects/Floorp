@@ -1027,6 +1027,7 @@ class PictureInPictureChild extends ActorChild {
       "unload",
       () => {
         if (this.weakVideo) {
+          this.untrackOriginatingVideo(this.weakVideo);
           this.weakVideo.stopCloningElementVisually();
         }
         gWeakVideo = null;
