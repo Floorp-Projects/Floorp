@@ -30,7 +30,6 @@
         android:src="@drawable/ic_hollow_share"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/close_tabs_button"
-        app:layout_constraintStart_toEndOf="@+id/header_text"
         app:layout_constraintTop_toTopOf="parent" />
 
     <ImageButton
@@ -43,7 +42,6 @@
         android:tint="?primaryText"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/tabs_overflow_button"
-        app:layout_constraintStart_toEndOf="@+id/share_tabs_button"
         app:layout_constraintTop_toTopOf="parent" />
 
     <ImageButton
