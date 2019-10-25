@@ -14,8 +14,8 @@ import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import org.mozilla.fenix.R
-import org.mozilla.fenix.theme.ThemeManager
 import org.mozilla.fenix.components.toolbar.ToolbarMenu
+import org.mozilla.fenix.theme.ThemeManager
 
 class CustomTabToolbarMenu(
     private val context: Context,
@@ -148,7 +148,7 @@ class CustomTabToolbarMenu(
             SimpleBrowserMenuItem(
                 {
                     val appName = context.getString(R.string.app_name)
-                    context.getString(R.string.browser_menu_powered_by, appName).toUpperCase()
+                    context.getString(R.string.browser_menu_powered_by2, appName).toUpperCase()
                 }(),
                 ToolbarMenu.CAPTION_TEXT_SIZE,
                 ThemeManager.resolveAttribute(R.attr.primaryText, context)
