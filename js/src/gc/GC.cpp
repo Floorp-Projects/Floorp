@@ -8842,3 +8842,18 @@ bool js::gc::ClearEdgesTracer::onChild(const JS::GCCellPtr& thing) {
   MOZ_CRASH();
   return true;
 }
+
+JS_PUBLIC_API void js::gc::FinalizeDeadNurseryObject(JSContext* cx,
+                                                     JSObject* obj) {
+  CHECK_THREAD(cx);
+  MOZ_ASSERT(JS::RuntimeHeapIsMinorCollecting());
+
+  MOZ_ASSERT(obj);
+  MOZ_ASSERT(IsInsideNursery(obj));
+  mozilla::DebugOnly<JSObject*> prior(obj);
+  MOZ_ASSERT(IsAboutToBeFinalizedUnbarriered(&prior));
+  MOZ_ASSERT(obj == prior);
+
+  const JSClass* jsClass = js::GetObjectClass(obj);
+  jsClass->doFinalize(cx->defaultFreeOp(), obj);
+}
