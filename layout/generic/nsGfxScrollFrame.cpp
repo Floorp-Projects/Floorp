@@ -5447,35 +5447,6 @@ void ScrollFrameHelper::PostOverflowEvent() {
   rpc->AddWillPaintObserver(mAsyncScrollPortEvent.get());
 }
 
-nsIFrame* ScrollFrameHelper::GetFrameForDir() const {
-  nsIFrame* frame = mOuter;
-  // XXX This is a bit on the slow side.
-  if (mIsRoot) {
-    // https://drafts.csswg.org/css-writing-modes-4/#principal-flow
-    // If we're the root scrollframe, we need the root element's style data.
-    nsPresContext* presContext = mOuter->PresContext();
-    Document* document = presContext->Document();
-    Element* root = document->GetRootElement();
-
-    // But for HTML and XHTML we want the body element.
-    if (document->IsHTMLOrXHTML()) {
-      Element* bodyElement = document->GetBodyElement();
-      if (bodyElement) {
-        root = bodyElement;  // we can trust the document to hold on to it
-      }
-    }
-
-    if (root) {
-      nsIFrame* rootsFrame = root->GetPrimaryFrame();
-      if (rootsFrame) {
-        frame = rootsFrame;
-      }
-    }
-  }
-
-  return frame;
-}
-
 nsIFrame* ScrollFrameHelper::GetFrameForStyle() const {
   nsIFrame* styleFrame = nullptr;
   if (mIsRoot) {
@@ -6952,7 +6923,7 @@ layers::ScrollSnapInfo ScrollFrameHelper::ComputeScrollSnapInfo(
     return result;
   }
 
-  WritingMode writingMode = GetFrameForDir()->GetWritingMode();
+  WritingMode writingMode = mOuter->GetWritingMode();
   result.InitializeScrollSnapStrictness(writingMode, disp);
 
   nsRect snapport = GetScrollPortRect();

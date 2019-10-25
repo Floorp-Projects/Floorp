@@ -343,22 +343,13 @@ class ScrollFrameHelper : public nsIReflowCallback {
   nscoord GetNondisappearingScrollbarWidth(nsBoxLayoutState* aState,
                                            mozilla::WritingMode aVerticalWM);
   bool IsPhysicalLTR() const {
-    WritingMode wm = GetFrameForDir()->GetWritingMode();
+    WritingMode wm = mOuter->GetWritingMode();
     return wm.IsVertical() ? wm.IsVerticalLR() : wm.IsBidiLTR();
   }
-  bool IsBidiLTR() const {
-    nsIFrame* frame = GetFrameForDir();
-    return frame->StyleVisibility()->mDirection == NS_STYLE_DIRECTION_LTR;
-  }
+  bool IsBidiLTR() const { return mOuter->GetWritingMode().IsBidiLTR(); }
 
  private:
-  nsIFrame* GetFrameForDir() const;  // helper for Is{Physical,Bidi}LTR to find
-                                     // the frame whose directionality we use
-  // helper to find the frame that style data for this scrollable frame is
-  // stored.
-  //
-  // NOTE: Use GetFrameForDir() if you want to know `writing-mode` or `dir`
-  // properties. Use GetScrollStylesFromFrame() if you want to know `overflow`
+  // NOTE: Use GetScrollStylesFromFrame() if you want to know `overflow`
   // and `overflow-behavior` properties.
   nsIFrame* GetFrameForStyle() const;
 
