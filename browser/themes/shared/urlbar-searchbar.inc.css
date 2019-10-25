@@ -216,6 +216,7 @@
 
 #urlbar[breakout][breakout-extend] > #urlbar-input-container > #urlbar-search-icon {
   fill: currentColor;
+  fill-opacity: .6;
 }
 
 @keyframes urlbar-grow {
