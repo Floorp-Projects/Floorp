@@ -3079,7 +3079,7 @@
     "products": ["firefox", "fennec", "geckoview"],
     "alert_emails": ["necko@mozilla.com", "seceng-telemetry@mozilla.com", "jkt@mozilla.com"],
     "bug_numbers": [1440701],
-    "expires_in_version": "70",
+    "expires_in_version": "never",
     "kind": "categorical",
     "keyed": true,
     "releaseChannelCollection": "opt-out",
