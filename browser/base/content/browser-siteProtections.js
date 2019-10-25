@@ -1606,6 +1606,37 @@ var gProtectionsHandler = {
     this.shieldHistogramAdd(0);
   },
 
+  notifyContentBlockingEvent(event) {
+    // We don't notify observers until the document stops loading, therefore
+    // a merged event can be sent, which gives an opportunity to decide the
+    // priority by the handler.
+    // Content blocking events coming after stopping will not be merged, and are
+    // sent directly.
+    if (!this._isStoppedState) {
+      return;
+    }
+
+    let uri = gBrowser.currentURI;
+    let uriHost = uri.asciiHost ? uri.host : uri.spec;
+    Services.obs.notifyObservers(
+      {
+        wrappedJSObject: {
+          browser: gBrowser.selectedBrowser,
+          host: uriHost,
+          event,
+        },
+      },
+      "SiteProtection:ContentBlockingEvent"
+    );
+  },
+
+  onStateChange(stateFlags) {
+    this._isStoppedState = !!(
+      stateFlags & Ci.nsIWebProgressListener.STATE_STOP
+    );
+    this.notifyContentBlockingEvent(gBrowser.securityUI.contentBlockingEvent);
+  },
+
   onContentBlockingEvent(event, webProgress, isSimulated) {
     let previousState = gBrowser.securityUI.contentBlockingEvent;
 
@@ -1694,24 +1725,7 @@ var gProtectionsHandler = {
       this.showNoTrackerTooltipForTPIcon();
     }
 
-    if (
-      Cryptomining.isBlocking(event) ||
-      Fingerprinting.isBlocking(event) ||
-      SocialTracking.isBlocking(event)
-    ) {
-      let uri = gBrowser.currentURI;
-      let uriHost = uri.asciiHost ? uri.host : uri.spec;
-      Services.obs.notifyObservers(
-        {
-          wrappedJSObject: {
-            browser: gBrowser.selectedBrowser,
-            host: uriHost,
-            event,
-          },
-        },
-        "SiteProtection:ContentBlockingEvent"
-      );
-    }
+    this.notifyContentBlockingEvent(event);
 
     // We report up to one instance of fingerprinting and cryptomining
     // blocking and/or allowing per page load.
