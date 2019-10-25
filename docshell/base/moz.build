@@ -66,6 +66,7 @@ EXPORTS += [
 ]
 
 EXPORTS.mozilla += [
+    'BaseHistory.h',
     'IHistory.h',
     'LoadContext.h',
 ]
@@ -79,6 +80,7 @@ EXPORTS.mozilla.dom += [
 ]
 
 UNIFIED_SOURCES += [
+    'BaseHistory.cpp',
     'BrowsingContext.cpp',
     'BrowsingContextGroup.cpp',
     'CanonicalBrowsingContext.cpp',

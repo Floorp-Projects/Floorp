@@ -1435,8 +1435,7 @@ void StoreAndNotifyEmbedVisit(VisitData& aPlace,
 History* History::gService = nullptr;
 
 History::History()
-    : IHistory(),
-      mShuttingDown(false),
+    : mShuttingDown(false),
       mShutdownMutex("History::mShutdownMutex"),
       mRecentlyVisitedURIs(RECENTLY_VISITED_URIS_SIZE) {
   NS_ASSERTION(!gService, "Ruh-roh!  This service has already been created!");
@@ -1467,17 +1466,6 @@ History::~History() {
 }
 
 void History::InitMemoryReporter() { RegisterWeakMemoryReporter(this); }
-
-// Helper function which performs the checking required to fetch the document
-// object for the given link. May return null if the link does not have an owner
-// document.
-static Document* GetLinkDocument(Link* aLink) {
-  // NOTE: Theoretically GetElement should never return nullptr, but it does
-  // in GTests because they use a mock_Link which returns null from this
-  // method.
-  Element* element = aLink->GetElement();
-  return element ? element->OwnerDoc() : nullptr;
-}
 
 void History::NotifyVisitedParent(const nsTArray<URIParams>& aURIs) {
   MOZ_ASSERT(XRE_IsParentProcess());
@@ -1520,7 +1508,7 @@ History::NotifyVisited(nsIURI* aURI) {
   ObserverArray::BackwardIterator iter(trackedURI.mLinks);
   while (iter.HasMore()) {
     Link* link = iter.GetNext();
-    Document* doc = GetLinkDocument(link);
+    Document* doc = GetLinkDocument(*link);
     if (seen.Contains(doc)) {
       continue;
     }
@@ -1551,7 +1539,7 @@ void History::NotifyVisitedForDocument(nsIURI* aURI, Document* aDocument) {
     ObserverArray::BackwardIterator iter(trackedURI.mLinks);
     while (iter.HasMore()) {
       Link* link = iter.GetNext();
-      if (GetLinkDocument(link) == aDocument) {
+      if (GetLinkDocument(*link) == aDocument) {
         link->SetLinkState(eLinkState_Visited);
         iter.Remove();
       }
@@ -2184,7 +2172,7 @@ History::RegisterVisitedCallback(nsIURI* aURI, Link* aLink) {
   // ourselves as visited, so instead we fire a runnable into our docgroup,
   // which will handle it for us.
   if (trackedURI.mVisited) {
-    DispatchNotifyVisited(aURI, GetLinkDocument(aLink));
+    DispatchNotifyVisited(aURI, GetLinkDocument(*aLink));
   }
 
   return NS_OK;

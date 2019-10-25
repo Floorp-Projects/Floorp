@@ -7,7 +7,7 @@
 #ifndef mozilla_places_History_h_
 #define mozilla_places_History_h_
 
-#include "mozilla/IHistory.h"
+#include "mozilla/BaseHistory.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Move.h"
 #include "mozilla/Mutex.h"
@@ -44,7 +44,7 @@ class ConcurrentStatementsHolder;
 // without janking the main thread by expecting it to process hundreds at once.
 #define NOTIFY_VISITS_CHUNK_SIZE 100
 
-class History final : public IHistory,
+class History final : public BaseHistory,
                       public mozIAsyncHistory,
                       public nsIObserver,
                       public nsIMemoryReporter {
