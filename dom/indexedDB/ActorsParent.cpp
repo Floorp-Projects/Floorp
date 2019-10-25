@@ -3898,9 +3898,7 @@ nsresult UpgradeSchemaFrom25_0To26_0(mozIStorageConnection* aConnection) {
   return NS_OK;
 }
 
-nsresult GetDatabaseFileURL(nsIFile* aDatabaseFile,
-                            PersistenceType aPersistenceType,
-                            const nsACString& aGroup, const nsACString& aOrigin,
+nsresult GetDatabaseFileURL(nsIFile* aDatabaseFile, int64_t aDirectoryLockId,
                             uint32_t aTelemetryId, nsIFileURL** aResult) {
   MOZ_ASSERT(aDatabaseFile);
   MOZ_ASSERT(aResult);
@@ -3927,11 +3925,14 @@ nsresult GetDatabaseFileURL(nsIFile* aDatabaseFile,
 
   nsCOMPtr<nsIFileURL> fileUrl;
 
-  nsAutoCString type;
-  PersistenceTypeToText(aPersistenceType, type);
-
-  nsAutoCString clientType;
-  Client::TypeToText(Client::IDB, clientType);
+  // The aDirectoryLock should only be a nullptr when the temporary storage
+  // hasn't been initialized. At that time, we don't have in-memory objects
+  // (e.g. originInfo) so that it doesn't make sense to tunnel the
+  // directoryLockId to TelemetryVFS to get the quotaObject.
+  const nsCString directoryLockIdClause =
+      aDirectoryLockId >= 0 ? NS_LITERAL_CSTRING("&directoryLockId=") +
+                                  IntCString(aDirectoryLockId)
+                            : EmptyCString();
 
   nsAutoCString telemetryFilenameClause;
   if (aTelemetryId) {
@@ -3941,12 +3942,8 @@ nsresult GetDatabaseFileURL(nsIFile* aDatabaseFile,
   }
 
   rv = NS_MutateURI(mutator)
-           .SetQuery(NS_LITERAL_CSTRING("persistenceType=") + type +
-                     NS_LITERAL_CSTRING("&group=") + aGroup +
-                     NS_LITERAL_CSTRING("&origin=") + aOrigin +
-                     NS_LITERAL_CSTRING("&clientType=") + clientType +
-                     NS_LITERAL_CSTRING("&cache=private") +
-                     telemetryFilenameClause)
+           .SetQuery(NS_LITERAL_CSTRING("cache=private") +
+                     directoryLockIdClause + telemetryFilenameClause)
            .Finalize(fileUrl);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -4167,14 +4164,14 @@ nsresult OpenDatabaseAndHandleBusy(mozIStorageService* aStorageService,
 
 nsresult CreateStorageConnection(nsIFile* aDBFile, nsIFile* aFMDirectory,
                                  const nsAString& aName,
-                                 PersistenceType aPersistenceType,
-                                 const nsACString& aGroup,
                                  const nsACString& aOrigin,
+                                 int64_t aDirectoryLockId,
                                  uint32_t aTelemetryId,
                                  mozIStorageConnection** aConnection) {
   AssertIsOnIOThread();
   MOZ_ASSERT(aDBFile);
   MOZ_ASSERT(aFMDirectory);
+  MOZ_ASSERT(aDirectoryLockId >= -1);
   MOZ_ASSERT(aConnection);
 
   AUTO_PROFILER_LABEL("CreateStorageConnection", DOM);
@@ -4183,8 +4180,8 @@ nsresult CreateStorageConnection(nsIFile* aDBFile, nsIFile* aFMDirectory,
   bool exists;
 
   nsCOMPtr<nsIFileURL> dbFileUrl;
-  rv = GetDatabaseFileURL(aDBFile, aPersistenceType, aGroup, aOrigin,
-                          aTelemetryId, getter_AddRefs(dbFileUrl));
+  rv = GetDatabaseFileURL(aDBFile, aDirectoryLockId, aTelemetryId,
+                          getter_AddRefs(dbFileUrl));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -4629,14 +4626,13 @@ already_AddRefed<nsIFile> GetFileForPath(const nsAString& aPath) {
   return file.forget();
 }
 
-nsresult GetStorageConnection(nsIFile* aDatabaseFile,
-                              PersistenceType aPersistenceType,
-                              const nsACString& aGroup,
-                              const nsACString& aOrigin, uint32_t aTelemetryId,
+nsresult GetStorageConnection(nsIFile* aDatabaseFile, int64_t aDirectoryLockId,
+                              uint32_t aTelemetryId,
                               mozIStorageConnection** aConnection) {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(!IsOnBackgroundThread());
   MOZ_ASSERT(aDatabaseFile);
+  MOZ_ASSERT(aDirectoryLockId >= 0);
   MOZ_ASSERT(aConnection);
 
   AUTO_PROFILER_LABEL("GetStorageConnection", DOM);
@@ -4653,8 +4649,8 @@ nsresult GetStorageConnection(nsIFile* aDatabaseFile,
   }
 
   nsCOMPtr<nsIFileURL> dbFileUrl;
-  rv = GetDatabaseFileURL(aDatabaseFile, aPersistenceType, aGroup, aOrigin,
-                          aTelemetryId, getter_AddRefs(dbFileUrl));
+  rv = GetDatabaseFileURL(aDatabaseFile, aDirectoryLockId, aTelemetryId,
+                          getter_AddRefs(dbFileUrl));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -4686,14 +4682,13 @@ nsresult GetStorageConnection(nsIFile* aDatabaseFile,
 }
 
 nsresult GetStorageConnection(const nsAString& aDatabaseFilePath,
-                              PersistenceType aPersistenceType,
-                              const nsACString& aGroup,
-                              const nsACString& aOrigin, uint32_t aTelemetryId,
+                              int64_t aDirectoryLockId, uint32_t aTelemetryId,
                               mozIStorageConnection** aConnection) {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(!IsOnBackgroundThread());
   MOZ_ASSERT(!aDatabaseFilePath.IsEmpty());
   MOZ_ASSERT(StringEndsWith(aDatabaseFilePath, kSQLiteSuffix));
+  MOZ_ASSERT(aDirectoryLockId >= 0);
   MOZ_ASSERT(aConnection);
 
   nsCOMPtr<nsIFile> dbFile = GetFileForPath(aDatabaseFilePath);
@@ -4702,8 +4697,8 @@ nsresult GetStorageConnection(const nsAString& aDatabaseFilePath,
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
 
-  return GetStorageConnection(dbFile, aPersistenceType, aGroup, aOrigin,
-                              aTelemetryId, aConnection);
+  return GetStorageConnection(dbFile, aDirectoryLockId, aTelemetryId,
+                              aConnection);
 }
 
 /*******************************************************************************
@@ -5796,6 +5791,7 @@ class Database final
   const nsCString mId;
   const nsString mFilePath;
   uint32_t mActiveMutableFileCount;
+  int64_t mDirectoryLockId;
   const uint32_t mTelemetryId;
   const PersistenceType mPersistenceType;
   const bool mFileHandleDisabled;
@@ -5845,6 +5841,8 @@ class Database final
   const nsCString& Origin() const { return mOrigin; }
 
   const nsCString& Id() const { return mId; }
+
+  int64_t DirectoryLockId() const { return mDirectoryLockId; }
 
   uint32_t TelemetryId() const { return mTelemetryId; }
 
@@ -6672,6 +6670,7 @@ class FactoryOp
   nsCString mOrigin;
   nsCString mDatabaseId;
   nsString mDatabaseFilePath;
+  int64_t mDirectoryLockId;
   State mState;
   bool mWaitingForPermissionRetry;
   bool mEnforcingQuota;
@@ -8333,6 +8332,7 @@ class DatabaseMaintenance final : public Runnable {
   const nsCString mGroup;
   const nsCString mOrigin;
   const nsString mDatabasePath;
+  int64_t mDirectoryLockId;
   nsCOMPtr<nsIRunnable> mCompleteCallback;
   const PersistenceType mPersistenceType;
 
@@ -8346,7 +8346,12 @@ class DatabaseMaintenance final : public Runnable {
         mGroup(aGroup),
         mOrigin(aOrigin),
         mDatabasePath(aDatabasePath),
-        mPersistenceType(aPersistenceType) {}
+        mPersistenceType(aPersistenceType) {
+    MOZ_ASSERT(aDirectoryLock);
+
+    MOZ_ASSERT(mDirectoryLock->GetId() >= 0);
+    mDirectoryLockId = mDirectoryLock->GetId();
+  }
 
   const nsString& DatabasePath() const { return mDatabasePath; }
 
@@ -10910,10 +10915,9 @@ nsresult ConnectionPool::GetOrCreateConnection(
     MOZ_ASSERT(!dbInfo->mDEBUGConnectionThread);
 
     nsCOMPtr<mozIStorageConnection> storageConnection;
-    nsresult rv = GetStorageConnection(aDatabase->FilePath(), aDatabase->Type(),
-                                       aDatabase->Group(), aDatabase->Origin(),
-                                       aDatabase->TelemetryId(),
-                                       getter_AddRefs(storageConnection));
+    nsresult rv = GetStorageConnection(
+        aDatabase->FilePath(), aDatabase->DirectoryLockId(),
+        aDatabase->TelemetryId(), getter_AddRefs(storageConnection));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -12598,6 +12602,10 @@ Database::Database(Factory* aFactory, const PrincipalInfo& aPrincipalInfo,
   MOZ_ASSERT(aFileManager);
   MOZ_ASSERT_IF(aChromeWriteAccessAllowed,
                 aPrincipalInfo.type() == PrincipalInfo::TSystemPrincipalInfo);
+
+  MOZ_ASSERT(mDirectoryLock);
+  MOZ_ASSERT(mDirectoryLock->GetId() >= 0);
+  mDirectoryLockId = mDirectoryLock->GetId();
 }
 
 void Database::Invalidate() {
@@ -15614,8 +15622,6 @@ already_AddRefed<nsIFile> FileManager::GetCheckedFileForId(nsIFile* aDirectory,
 
 // static
 nsresult FileManager::InitDirectory(nsIFile* aDirectory, nsIFile* aDatabaseFile,
-                                    PersistenceType aPersistenceType,
-                                    const nsACString& aGroup,
                                     const nsACString& aOrigin,
                                     uint32_t aTelemetryId) {
   AssertIsOnIOThread();
@@ -15683,7 +15689,7 @@ nsresult FileManager::InitDirectory(nsIFile* aDirectory, nsIFile* aDatabaseFile,
     if (hasElements) {
       nsCOMPtr<mozIStorageConnection> connection;
       rv = CreateStorageConnection(aDatabaseFile, aDirectory, VoidString(),
-                                   aPersistenceType, aGroup, aOrigin,
+                                   aOrigin, /* aDirectoryLockId */ -1,
                                    aTelemetryId, getter_AddRefs(connection));
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
@@ -16224,8 +16230,7 @@ nsresult QuotaClient::InitOrigin(PersistenceType aPersistenceType,
       }
     }
 
-    rv = FileManager::InitDirectory(fmDirectory, databaseFile, aPersistenceType,
-                                    aGroup, aOrigin,
+    rv = FileManager::InitDirectory(fmDirectory, databaseFile, aOrigin,
                                     TelemetryIdForFile(databaseFile));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       REPORT_TELEMETRY_INIT_ERR(kQuotaInternalError, IDB_InitDirectory);
@@ -17612,8 +17617,8 @@ void DatabaseMaintenance::PerformMaintenanceOnDatabase() {
   MOZ_ASSERT(databaseFile);
 
   nsCOMPtr<mozIStorageConnection> connection;
-  nsresult rv = GetStorageConnection(databaseFile, mPersistenceType, mGroup,
-                                     mOrigin, TelemetryIdForFile(databaseFile),
+  nsresult rv = GetStorageConnection(databaseFile, mDirectoryLockId,
+                                     TelemetryIdForFile(databaseFile),
                                      getter_AddRefs(connection));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
@@ -19294,6 +19299,7 @@ FactoryOp::FactoryOp(Factory* aFactory,
       mFactory(aFactory),
       mContentParent(std::move(aContentParent)),
       mCommonParams(aCommonParams),
+      mDirectoryLockId(-1),
       mState(State::Initial),
       mWaitingForPermissionRetry(false),
       mEnforcingQuota(true),
@@ -20042,10 +20048,14 @@ FactoryOp::Run() {
 
 void FactoryOp::DirectoryLockAcquired(DirectoryLock* aLock) {
   AssertIsOnOwningThread();
+  MOZ_ASSERT(aLock);
   MOZ_ASSERT(mState == State::DirectoryOpenPending);
   MOZ_ASSERT(!mDirectoryLock);
 
   mDirectoryLock = aLock;
+
+  MOZ_ASSERT(mDirectoryLock->GetId() >= 0);
+  mDirectoryLockId = mDirectoryLock->GetId();
 
   nsresult rv = DirectoryOpen();
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -20267,8 +20277,8 @@ nsresult OpenDatabaseOp::DoDatabaseWork() {
   }
 
   nsCOMPtr<mozIStorageConnection> connection;
-  rv = CreateStorageConnection(dbFile, fmDirectory, databaseName,
-                               persistenceType, mGroup, mOrigin, mTelemetryId,
+  rv = CreateStorageConnection(dbFile, fmDirectory, databaseName, mOrigin,
+                               mDirectoryLockId, mTelemetryId,
                                getter_AddRefs(connection));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;

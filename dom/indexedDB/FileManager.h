@@ -52,8 +52,6 @@ class FileManager final {
                                                        int64_t aId);
 
   static nsresult InitDirectory(nsIFile* aDirectory, nsIFile* aDatabaseFile,
-                                PersistenceType aPersistenceType,
-                                const nsACString& aGroup,
                                 const nsACString& aOrigin,
                                 uint32_t aTelemetryId);
 

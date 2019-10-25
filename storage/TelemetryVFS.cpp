@@ -299,57 +299,22 @@ already_AddRefed<QuotaObject> GetQuotaObjectFromNameAndParameters(
   MOZ_ASSERT(zName);
   MOZ_ASSERT(zURIParameterKey);
 
-  const char* persistenceType =
-      sqlite3_uri_parameter(zURIParameterKey, "persistenceType");
-  if (!persistenceType) {
+  const char* directoryLockIdParam =
+      sqlite3_uri_parameter(zURIParameterKey, "directoryLockId");
+  if (!directoryLockIdParam) {
     return nullptr;
   }
 
-  const char* group = sqlite3_uri_parameter(zURIParameterKey, "group");
-  if (!group) {
-    NS_WARNING("SQLite URI had 'persistenceType' but not 'group'?!");
-    return nullptr;
-  }
-
-  const char* origin = sqlite3_uri_parameter(zURIParameterKey, "origin");
-  if (!origin) {
-    NS_WARNING(
-        "SQLite URI had 'persistenceType' and 'group' but not "
-        "'origin'?!");
-    return nullptr;
-  }
-
-  const char* clientType =
-      sqlite3_uri_parameter(zURIParameterKey, "clientType");
-  if (!clientType) {
-    NS_WARNING(
-        "SQLite URI had 'persistenceType', 'group' and 'origin' but not "
-        "'clientType'?!");
-    return nullptr;
-  }
-
-  // Re-escape group and origin to make sure we get the right quota group and
-  // origin.
-  nsAutoCString escGroup;
-  nsresult rv =
-      NS_EscapeURL(nsDependentCString(group), esc_Query, escGroup, fallible);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return nullptr;
-  }
-
-  nsAutoCString escOrigin;
-  rv = NS_EscapeURL(nsDependentCString(origin), esc_Query, escOrigin, fallible);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return nullptr;
-  }
+  nsresult rv;
+  const int64_t directoryLockId =
+      nsDependentCString(directoryLockIdParam).ToInteger64(&rv);
+  MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
 
   QuotaManager* quotaManager = QuotaManager::Get();
   MOZ_ASSERT(quotaManager);
 
-  return quotaManager->GetQuotaObject(
-      PersistenceTypeFromText(nsDependentCString(persistenceType)), escGroup,
-      escOrigin, Client::TypeFromText(nsDependentCString(clientType)),
-      NS_ConvertUTF8toUTF16(zName));
+  return quotaManager->GetQuotaObject(directoryLockId,
+                                      NS_ConvertUTF8toUTF16(zName));
 }
 
 void MaybeEstablishQuotaControl(const char* zName, telemetry_file* pFile,
