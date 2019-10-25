@@ -449,7 +449,8 @@ nsresult TransportSecurityInfo::ReadCertificatesFromStream(
     if (!cert) {
       return NS_ERROR_UNEXPECTED;
     }
-    aCertList.AppendElement(cert);
+    RefPtr<nsIX509Cert> castedCert(cert.get());
+    aCertList.AppendElement(castedCert);
   }
   return NS_OK;
 }
@@ -655,16 +656,6 @@ TransportSecurityInfo::Read(nsIObjectInputStream* aStream) {
     }
   }
   // END moved from nsISSLStatus
-  // mIsDelegatedCredential added in bug 1562773
-  if (serVersion.EqualsASCII("2")) {
-    rv = aStream->ReadBoolean(&mIsDelegatedCredential);
-    CHILD_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv),
-                            "Deserialization should not fail");
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-  }
-
   if (!serVersion.EqualsASCII("3")) {
     // The old data structure of certList(nsIX509CertList) presents
     rv = ReadCertList(aStream, mFailedCertChain);
@@ -680,6 +671,16 @@ TransportSecurityInfo::Read(nsIObjectInputStream* aStream) {
 
     rv = ReadCertificatesFromStream(aStream, certCount, mFailedCertChain);
     NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // mIsDelegatedCredential added in bug 1562773
+  if (serVersion.EqualsASCII("2") || serVersion.EqualsASCII("3")) {
+    rv = aStream->ReadBoolean(&mIsDelegatedCredential);
+    CHILD_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv),
+                            "Deserialization should not fail");
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
   }
 
   return NS_OK;
