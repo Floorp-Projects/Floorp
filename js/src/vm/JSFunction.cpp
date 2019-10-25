@@ -1216,22 +1216,19 @@ const JSClass* const js::FunctionClassPtr = &JSFunction::class_;
 
 bool JSFunction::isDerivedClassConstructor() {
   bool derived;
-  if (isInterpretedLazy()) {
+  if (hasSelfHostedLazyScript()) {
     // There is only one plausible lazy self-hosted derived
     // constructor.
-    if (isSelfHostedBuiltin()) {
-      JSAtom* name = GetClonedSelfHostedFunctionName(this);
+    JSAtom* name = GetClonedSelfHostedFunctionName(this);
 
-      // This function is called from places without access to a
-      // JSContext. Trace some plumbing to get what we want.
-      derived = name == compartment()
-                            ->runtimeFromAnyThread()
-                            ->commonNames->DefaultDerivedClassConstructor;
-    } else {
-      derived = lazyScript()->isDerivedClassConstructor();
-    }
-  } else {
-    derived = nonLazyScript()->isDerivedClassConstructor();
+    // This function is called from places without access to a
+    // JSContext. Trace some plumbing to get what we want.
+    derived = name == compartment()
+                          ->runtimeFromAnyThread()
+                          ->commonNames->DefaultDerivedClassConstructor;
+  }
+  if (hasBaseScript()) {
+    derived = baseScript()->isDerivedClassConstructor();
   }
   MOZ_ASSERT_IF(derived, isClassConstructor());
   return derived;
@@ -2164,8 +2161,7 @@ bool js::CanReuseScriptForClone(JS::Realm* realm, HandleFunction fun,
 
   // We need to clone the script if we're not already marked as having a
   // non-syntactic scope.
-  return fun->hasScript() ? fun->nonLazyScript()->hasNonSyntacticScope()
-                          : fun->lazyScript()->hasNonSyntacticScope();
+  return fun->baseScript()->hasNonSyntacticScope();
 }
 
 static inline JSFunction* NewFunctionClone(JSContext* cx, HandleFunction fun,
