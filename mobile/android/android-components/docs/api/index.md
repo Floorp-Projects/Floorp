@@ -101,6 +101,7 @@
 | [mozilla.components.feature.media.ext](mozilla.components.feature.media.ext/index.md) |  |
 | [mozilla.components.feature.media.facts](mozilla.components.feature.media.facts/index.md) |  |
 | [mozilla.components.feature.media.state](mozilla.components.feature.media.state/index.md) |  |
+| [mozilla.components.feature.privatemode.feature](mozilla.components.feature.privatemode.feature/index.md) |  |
 | [mozilla.components.feature.prompts](mozilla.components.feature.prompts/index.md) |  |
 | [mozilla.components.feature.push](mozilla.components.feature.push/index.md) |  |
 | [mozilla.components.feature.pwa](mozilla.components.feature.pwa/index.md) |  |

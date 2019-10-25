@@ -158,6 +158,7 @@ mozilla.components.feature.media
 mozilla.components.feature.media.ext
 mozilla.components.feature.media.facts
 mozilla.components.feature.media.state
+mozilla.components.feature.privatemode.feature
 mozilla.components.feature.prompts
 mozilla.components.feature.push
 mozilla.components.feature.pwa
