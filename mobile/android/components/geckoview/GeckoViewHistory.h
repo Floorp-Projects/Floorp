@@ -66,6 +66,12 @@ class GeckoViewHistory final : public mozilla::BaseHistory,
   nsTHashtable<nsURIHashKey> mNewURIs;
 
   nsCOMPtr<nsITimer> mQueryVisitedStateTimer;
+
+  // Whether mQueryVisitedStateTimer is armed.
+  //
+  // We could just null out the timer, but this way we don't have to re-allocate
+  // a timer over and over.
+  bool mQueryVisitedStateTimerPending = false;
 };
 
 #endif

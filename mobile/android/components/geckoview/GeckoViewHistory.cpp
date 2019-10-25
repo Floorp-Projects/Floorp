@@ -207,8 +207,10 @@ void GeckoViewHistory::QueryVisitedStateInParentProcess() {
 NS_IMETHODIMP
 GeckoViewHistory::Notify(nsITimer* aTimer) {
   MOZ_ASSERT(aTimer == mQueryVisitedStateTimer);
+  MOZ_ASSERT(mQueryVisitedStateTimerPending);
+  mQueryVisitedStateTimerPending = false;
 
-  if (mNewURIs.Count() > 0) {
+  if (!mNewURIs.IsEmpty()) {
     if (XRE_IsContentProcess()) {
       QueryVisitedStateInContentProcess();
     } else {
@@ -221,12 +223,17 @@ GeckoViewHistory::Notify(nsITimer* aTimer) {
 
 Result<Ok, nsresult> GeckoViewHistory::StartVisitedQuery(nsIURI* aURI) {
   mNewURIs.PutEntry(aURI);
+  if (mQueryVisitedStateTimerPending) {
+    MOZ_ASSERT(mQueryVisitedStateTimer);
+    return Ok();
+  }
   if (!mQueryVisitedStateTimer) {
     mQueryVisitedStateTimer = NS_NewTimer();
   }
-  // FIXME(emilio): Do we really want to initialize the timer all the time?
-  return ToResult(mQueryVisitedStateTimer->InitWithCallback(
-      this, GET_VISITS_WAIT_MS, nsITimer::TYPE_ONE_SHOT));
+  nsresult rv = mQueryVisitedStateTimer->InitWithCallback(
+      this, GET_VISITS_WAIT_MS, nsITimer::TYPE_ONE_SHOT);
+  mQueryVisitedStateTimerPending = NS_SUCCEEDED(rv);
+  return ToResult(rv);
 }
 
 void GeckoViewHistory::CancelVisitedQueryIfPossible(nsIURI* aURI) {
