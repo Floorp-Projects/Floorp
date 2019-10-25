@@ -339,7 +339,7 @@ class LoginManagerParent extends JSWindowActorParent {
           Services.obs.removeObserver(this, "passwordmgr-crypto-login");
           Services.obs.removeObserver(this, "passwordmgr-crypto-loginCanceled");
           if (topic == "passwordmgr-crypto-loginCanceled") {
-            uiBusyPromise.resolve({ logins: [], recipes });
+            uiBusyPromiseResolve({ logins: [], recipes });
             return;
           }
 

@@ -1,4 +1,4 @@
-// |reftest| skip -- FinalizationGroup is not supported
+// |reftest| skip async -- FinalizationGroup is not supported
 // Copyright (C) 2019 Leo Balter. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 
@@ -15,6 +15,8 @@ info: |
   5. Perform ? CleanupFinalizationGroup(finalizationGroup, callback).
   6. Return undefined.
 features: [FinalizationGroup, host-gc-required]
+includes: [async-gc.js]
+flags: [async, non-deterministic]
 ---*/
 
 var holdingsList;
@@ -23,29 +25,24 @@ function cb(iterator) {
 };
 var fg = new FinalizationGroup(function() {});
 
+var referenced = {};
+
 function emptyCells() {
-  var x;
-  (function() {
-    var a = {};
-    b = {};
-    x = {};
-    var y = {};
-    fg.register(x, 'x');
-    fg.register(a, 'a');
-    fg.register(y, y);
-    fg.register(b, 'b');
-    var b;
-  })();
-  $262.gc();
-  x; // This is an intentional reference to x, please leave it here, after the GC
+  var target = {};
+  fg.register(target, 'target!');
+  fg.register(referenced, 'referenced');
+
+  var prom = asyncGC(target);
+  target = null;
+
+  return prom;
 }
 
-emptyCells();
-fg.cleanupSome(cb);
+emptyCells().then(function() {
+  fg.cleanupSome(cb);
 
-// The order is per implementation so we can't use compareArray without sorting
-assert.sameValue(holdingsList.length, 2);
-assert(holdingsList.includes('a'));
-assert(holdingsList.includes('b'));
+  assert.sameValue(holdingsList.length, 1);
+  assert.sameValue(holdingsList[0], 'target!');
 
-reportCompare(0, 0);
+  assert.sameValue(typeof referenced, 'object', 'referenced preserved');
+}).then($DONE, resolveAsyncGC);

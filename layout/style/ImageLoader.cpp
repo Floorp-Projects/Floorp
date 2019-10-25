@@ -9,6 +9,9 @@
  */
 
 #include "mozilla/css/ImageLoader.h"
+
+#include "mozilla/dom/Document.h"
+#include "mozilla/dom/DocumentInlines.h"
 #include "nsAutoPtr.h"
 #include "nsContentUtils.h"
 #include "nsLayoutUtils.h"

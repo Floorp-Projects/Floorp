@@ -31,5 +31,5 @@ info: |
 $DONOTEVALUATE();
 
 async function fn() {
-  for await ([{ get x() {} }] of [[{}]])
+  for await ([{ get x() {} }] of [[{}]]) {}
 }

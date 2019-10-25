@@ -136,7 +136,7 @@ bool GeckoMVMContext::IsInReaderMode() const {
 
 bool GeckoMVMContext::IsDocumentLoading() const {
   MOZ_ASSERT(mDocument);
-  return mDocument->GetReadyStateEnum() == Document::READYSTATE_LOADING;
+  return mDocument->GetReadyStateEnum() == dom::Document::READYSTATE_LOADING;
 }
 
 void GeckoMVMContext::SetResolutionAndScaleTo(float aResolution,
