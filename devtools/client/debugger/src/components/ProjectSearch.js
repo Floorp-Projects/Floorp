@@ -295,7 +295,7 @@ export class ProjectSearch extends Component<Props, State> {
   }
 
   renderInput() {
-    const { status } = this.props;
+    const { cx, closeProjectSearch, status } = this.props;
     return (
       <SearchInput
         query={this.state.inputValue}
@@ -310,10 +310,7 @@ export class ProjectSearch extends Component<Props, State> {
         onBlur={() => this.setState({ inputFocused: false })}
         onKeyDown={this.onKeyDown}
         onHistoryScroll={this.onHistoryScroll}
-        handleClose={
-          // TODO - This function doesn't quite match the signature.
-          (this.props.closeProjectSearch: any)
-        }
+        handleClose={() => closeProjectSearch(cx)}
         ref="searchInput"
       />
     );
