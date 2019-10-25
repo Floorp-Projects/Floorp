@@ -8,6 +8,8 @@
 #define mozilla_IHistory_h_
 
 #include "nsISupports.h"
+#include "nsDataHashtable.h"
+#include "nsURIHashKey.h"
 #include "nsTObserverArray.h"
 
 class nsIURI;
@@ -138,6 +140,10 @@ class IHistory : public nsISupports {
 
 
  protected:
+  static constexpr const size_t kTrackedUrisInitialSize = 64;
+
+  IHistory()
+    : mTrackedURIs(kTrackedUrisInitialSize) {}
 
   using ObserverArray = nsTObserverArray<dom::Link*>;
   struct TrackedURI {
@@ -148,6 +154,8 @@ class IHistory : public nsISupports {
       return mLinks.ShallowSizeOfExcludingThis(aMallocSizeOf);
     }
   };
+
+  nsDataHashtable<nsURIHashKey, TrackedURI> mTrackedURIs;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(IHistory, IHISTORY_IID)
