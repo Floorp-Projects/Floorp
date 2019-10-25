@@ -213,6 +213,13 @@ class WritingMode {
   bool IsBidiLTR() const { return eBidiLTR == GetBidiDir(); }
 
   /**
+   * True if it is vertical and vertical-lr, or is horizontal and bidi LTR.
+   */
+  bool IsPhysicalLTR() const {
+    return IsVertical() ? IsVerticalLR() : IsBidiLTR();
+  }
+
+  /**
    * True if vertical-mode block direction is LR (convenience method).
    */
   bool IsVerticalLR() const { return eBlockLR == GetBlockDir(); }

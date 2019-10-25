@@ -516,7 +516,7 @@ nsResizerFrame::Direction nsResizerFrame::GetDirection() {
     // Directions 8 and higher are RTL-aware directions and should reverse the
     // horizontal component if RTL.
     WritingMode wm = GetWritingMode();
-    if (!(wm.IsVertical() ? wm.IsVerticalLR() : wm.IsBidiLTR())) {
+    if (!wm.IsPhysicalLTR()) {
       Direction direction = directions[index];
       direction.mHorizontal *= -1;
       return direction;
