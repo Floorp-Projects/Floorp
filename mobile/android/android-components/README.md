@@ -282,6 +282,8 @@ If the environment variable `JAVA_HOME` is not defined, you will need to set it.
 
 Once the environment variable is set, you can import the project into Android Studio with the default wizard options.
 
+If your build fails, you may find you get more instructive error messages by attempting the build at the command line.
+
 # Coding Standards #
 
 ## Style ##
@@ -312,6 +314,8 @@ cause existing tests to fail. You may find these command lines helpful:
 ./gradlew test                            # Run all tests
 ./gradlew :support-ktx:testdebugunittest  # Run unit tests for a specified module
 ```
+
+See also [how to measure code coverage](https://mozac.org/contributing/code-coverage).
 
 ## Accessibility ##
 If your code has user-facing changes, follow [Android accessibility best practices](https://github.com/mozilla-mobile/shared-docs/blob/master/android/accessibility_guide.md).
