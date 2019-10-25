@@ -1008,7 +1008,6 @@ FxAccountsInternal.prototype = {
     if (!this.isUserEmailVerified(credentials)) {
       this.startVerifiedCheck(credentials);
     }
-    Services.telemetry.getHistogramById("FXA_CONFIGURED").add(1);
     await this.notifyObservers(ONLOGIN_NOTIFICATION);
     await this.updateDeviceRegistration();
     return currentAccountState.resolve();
@@ -1386,7 +1385,6 @@ FxAccountsInternal.prototype = {
     let currentState = this.currentAccountState;
     return currentState.getUserAccountData().then(data => {
       if (data) {
-        Services.telemetry.getHistogramById("FXA_CONFIGURED").add(1);
         if (!this.isUserEmailVerified(data)) {
           this.startPollEmailStatus(
             currentState,

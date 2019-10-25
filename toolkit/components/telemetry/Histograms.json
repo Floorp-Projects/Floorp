@@ -11902,14 +11902,6 @@
     "n_values": 6,
     "description": "1 = No SHA1 signatures, 2 = SHA1 certificates issued by an imported root, 3 = SHA1 certificates issued before 2016, 4 = SHA1 certificates issued after 2015, 5 = another error prevented successful verification"
   },
-  "WEAVE_CONFIGURED": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "expires_in_version": "default",
-    "kind": "boolean",
-    "description": "If any version of Firefox Sync is configured for this device",
-    "releaseChannelCollection": "opt-out"
-  },
   "WEAVE_CONFIGURED_MASTER_PASSWORD": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "geckoview"],
@@ -13224,16 +13216,6 @@
     "n_buckets": 60,
     "releaseChannelCollection": "opt-out",
     "description": "Time spent waiting for a navigator.requestMediaKeySystemAccess call to fail."
-  },
-  "FXA_CONFIGURED": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["sync-dev@mozilla.org"],
-    "bug_numbers": [1236383],
-    "expires_in_version": "never",
-    "kind": "flag",
-    "releaseChannelCollection": "opt-out",
-    "description": "If the user is signed in to a Firefox Account on this device. Recorded once per session just after startup as Sync is initialized."
   },
   "WEAVE_DEVICE_COUNT_DESKTOP": {
     "record_in_processes": ["main", "content"],
