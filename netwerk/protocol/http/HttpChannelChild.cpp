@@ -3337,19 +3337,6 @@ mozilla::ipc::IPCResult HttpChannelChild::RecvAltDataCacheInputStreamAvailable(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-HttpChannelChild::RecvOverrideReferrerInfoDuringBeginConnect(
-    nsIReferrerInfo* aReferrerInfo) {
-  // The arguments passed to SetReferrerInfoInternal here should mirror the
-  // arguments passed in
-  // nsHttpChannel::ReEvaluateReferrerAfterTrackingStatusIsKnown(), except for
-  // aRespectBeforeConnect which we pass false here since we're intentionally
-  // overriding the referrer after BeginConnect().
-  Unused << SetReferrerInfoInternal(aReferrerInfo, false, true, false);
-
-  return IPC_OK();
-}
-
 //-----------------------------------------------------------------------------
 // HttpChannelChild::nsIResumableChannel
 //-----------------------------------------------------------------------------
@@ -3778,14 +3765,11 @@ nsresult HttpChannelChild::AsyncCallImpl(
   return rv;
 }
 
-nsresult HttpChannelChild::SetReferrerHeader(const nsACString& aReferrer,
-                                             bool aRespectBeforeConnect) {
+nsresult HttpChannelChild::SetReferrerHeader(const nsACString& aReferrer) {
   // Normally this would be ENSURE_CALLED_BEFORE_CONNECT, but since the
   // "connect" is done in the main process, and mRequestObserversCalled is never
   // set in the ChannelChild, before connect basically means before asyncOpen.
-  if (aRespectBeforeConnect) {
-    ENSURE_CALLED_BEFORE_ASYNC_OPEN();
-  }
+  ENSURE_CALLED_BEFORE_ASYNC_OPEN();
 
   // remove old referrer if any, loop backwards
   for (int i = mClientSetRequestHeaders.Length() - 1; i >= 0; --i) {
@@ -3795,7 +3779,7 @@ nsresult HttpChannelChild::SetReferrerHeader(const nsACString& aReferrer,
     }
   }
 
-  return HttpBaseChannel::SetReferrerHeader(aReferrer, aRespectBeforeConnect);
+  return HttpBaseChannel::SetReferrerHeader(aReferrer);
 }
 
 class CancelEvent final : public NeckoTargetChannelEvent<HttpChannelChild> {
