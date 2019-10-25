@@ -82,6 +82,8 @@ nsFtpState::nsFtpState()
       mRetryPass(false),
       mStorReplyReceived(false),
       mRlist1xxReceived(false),
+      mRretr1xxReceived(false),
+      mRstor1xxReceived(false),
       mInternalError(NS_OK),
       mReconnectAndLoginAgain(false),
       mCacheConnection(true),
@@ -1095,14 +1097,20 @@ nsresult nsFtpState::S_retr() {
 FTP_STATE
 nsFtpState::R_retr() {
   if (mResponseCode / 100 == 2) {
+    if (!mRretr1xxReceived)
+      return FTP_ERROR;
+
     //(DONE)
     mNextState = FTP_COMPLETE;
+    mRretr1xxReceived = false;
     return FTP_COMPLETE;
   }
 
   if (mResponseCode / 100 == 1) {
     Telemetry::ScalarAdd(
         Telemetry::ScalarID::NETWORKING_FTP_OPENED_CHANNELS_FILES, 1);
+
+    mRretr1xxReceived = true;
 
     if (mDataStream && HasPendingCallback())
       mDataStream->AsyncWait(this, 0, 0, CallbackTarget());
@@ -1172,10 +1180,11 @@ nsresult nsFtpState::S_stor() {
 
 FTP_STATE
 nsFtpState::R_stor() {
-  if (mResponseCode / 100 == 2) {
+  if (mResponseCode / 100 == 2 && mRstor1xxReceived) {
     //(DONE)
     mNextState = FTP_COMPLETE;
     mStorReplyReceived = true;
+    mRstor1xxReceived = false;
 
     // Call Close() if it was not called in nsFtpState::OnStoprequest()
     if (!mUploadRequest && !IsClosed()) Close();
@@ -1188,6 +1197,7 @@ nsFtpState::R_stor() {
         Telemetry::ScalarID::NETWORKING_FTP_OPENED_CHANNELS_FILES, 1);
 
     LOG(("FTP:(%p) writing on DT\n", this));
+    mRstor1xxReceived = true;
     return FTP_READ_BUF;
   }
 
