@@ -131,18 +131,6 @@ static const int32_t INPUT_RESULT_HANDLED =
 static const int32_t INPUT_RESULT_HANDLED_CONTENT =
     java::PanZoomController::INPUT_RESULT_HANDLED_CONTENT;
 
-/**
- * Width and height from the last nsWindow::Resize call, used for setting
- * dimensions of a new window under the heuristic that a new window is likely
- * to be the same size as a previous window.
- *
- * A default size of 1x1 confuses MobileViewportManager, so we use 0x0 instead.
- * This is also a little more fitting since we don't yet have a surface yet
- * (and therefore a valid size) and 0x0 is usually recognized as invalid.
- */
-static int32_t gLastWidth = 0;
-static int32_t gLastHeight = 0;
-
 template <typename Lambda, bool IsStatic, typename InstanceType, class Impl>
 class nsWindow::WindowEvent : public Runnable {
   bool IsStaleCall() {
@@ -1510,7 +1498,11 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
     mParent = parent;
   }
 
-  Resize(gLastWidth, gLastHeight, false);
+  // A default size of 1x1 confuses MobileViewportManager, so
+  // use 0x0 instead. This is also a little more fitting since
+  // we don't yet have a surface yet (and therefore a valid size)
+  // and 0x0 is usually recognized as invalid.
+  Resize(0, 0, false);
 
   CreateLayerManager();
 
@@ -1710,8 +1702,8 @@ void nsWindow::Resize(double aX, double aY, double aWidth, double aHeight,
 
   mBounds.x = NSToIntRound(aX);
   mBounds.y = NSToIntRound(aY);
-  mBounds.width = gLastWidth = NSToIntRound(aWidth);
-  mBounds.height = gLastHeight = NSToIntRound(aHeight);
+  mBounds.width = NSToIntRound(aWidth);
+  mBounds.height = NSToIntRound(aHeight);
 
   if (needSizeDispatch) {
     OnSizeChanged(gfx::IntSize::Truncate(aWidth, aHeight));
