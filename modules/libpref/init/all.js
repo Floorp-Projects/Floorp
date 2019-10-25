@@ -1347,8 +1347,6 @@ pref("network.http.referer.defaultPolicy.pbmode", 2);
 // No need to change this pref for trimming referrers from trackers since in
 // private windows we already trim all referrers to origin only.
 pref("network.http.referer.defaultPolicy.trackers.pbmode", 2);
-// false=real referer, true=spoof referer (use target URI as referer)
-pref("network.http.referer.spoofSource", false);
 // false=allow onion referer, true=hide onion referer (use empty referer)
 pref("network.http.referer.hideOnionSource", false);
 // 0=full URI, 1=scheme+host+port+path, 2=scheme+host+port

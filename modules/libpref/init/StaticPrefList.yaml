@@ -6409,6 +6409,12 @@
   value: false
   mirror: always
 
+# false=real referer, true=spoof referer (use target URI as referer).
+- name: network.http.referer.spoofSource
+  type: bool
+  value: false
+  mirror: always
+
 # Enables the predictive service.
 - name: network.predictor.enabled
   type: bool
