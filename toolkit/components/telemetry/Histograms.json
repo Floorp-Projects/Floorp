@@ -8626,7 +8626,9 @@
     "products": ["firefox", "fennec", "geckoview", "thunderbird", "geckoview_streaming"],
     "alert_emails": ["telemetry-client-dev@mozilla.com"],
     "expires_in_version": "4",
-    "kind": "flag",
+    "kind": "linear",
+    "high": 10,
+    "n_buckets": 3,
     "description": "a testing histogram; not meant to be touched"
   },
   "TELEMETRY_TEST_EXPIRED_KEYED": {

@@ -439,6 +439,48 @@ class TestParser(unittest.TestCase):
                                    strict_type_checks=True)
         self.assertRaises(SystemExit, ParserError.exit_func)
 
+    def test_gv_streaming_unsupported_kind(self):
+        SAMPLE_HISTOGRAM = {
+            "TEST_HISTOGRAM_GV_STREAMING": {
+                "record_in_processes": ["main", "content"],
+                "alert_emails": ["team@mozilla.xyz"],
+                "bug_numbers": [1383793],
+                "expires_in_version": "never",
+                "kind": "boolean",
+                "description": "Test histogram",
+                "products": ["geckoview_streaming"],
+            }
+        }
+        histograms = load_histogram(SAMPLE_HISTOGRAM)
+        parse_histograms.load_allowlist()
+        parse_histograms.Histogram('TEST_HISTOGRAM_GV_STREAMING',
+                                   histograms['TEST_HISTOGRAM_GV_STREAMING'],
+                                   strict_type_checks=True)
+        self.assertRaises(SystemExit, ParserError.exit_func)
+
+    def test_gv_streaming_keyed(self):
+        SAMPLE_HISTOGRAM = {
+            "TEST_HISTOGRAM_GV_STREAMING": {
+                "record_in_processes": ["main", "content"],
+                "alert_emails": ["team@mozilla.xyz"],
+                "bug_numbers": [1383793],
+                "expires_in_version": "never",
+                "kind": "exponential",
+                "low": 1024,
+                "high": 2 ** 64,
+                "n_buckets": 100,
+                "keyed": "true",
+                "description": "Test histogram",
+                "products": ["geckoview_streaming"],
+            }
+        }
+        histograms = load_histogram(SAMPLE_HISTOGRAM)
+        parse_histograms.load_allowlist()
+        parse_histograms.Histogram('TEST_HISTOGRAM_GV_STREAMING',
+                                   histograms['TEST_HISTOGRAM_GV_STREAMING'],
+                                   strict_type_checks=True)
+        self.assertRaises(SystemExit, ParserError.exit_func)
+
 
 if __name__ == '__main__':
     mozunit.main()
