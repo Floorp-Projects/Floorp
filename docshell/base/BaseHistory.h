@@ -32,9 +32,9 @@ class BaseHistory : public IHistory {
   virtual void CancelVisitedQueryIfPossible(nsIURI*) = 0;
 
   using ObserverArray = nsTObserverArray<dom::Link*>;
-  struct TrackedURI {
+  struct ObservingLinks {
     ObserverArray mLinks;
-    bool mVisited = false;
+    bool mKnownVisited = false;
 
     size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const {
       return mLinks.ShallowSizeOfExcludingThis(aMallocSizeOf);
@@ -55,7 +55,13 @@ class BaseHistory : public IHistory {
   void DispatchNotifyVisited(nsIURI*, dom::Document*);
 
  protected:
-  nsDataHashtable<nsURIHashKey, TrackedURI> mTrackedURIs;
+  // A map from URI to links that depend on that URI, and whether that URI is
+  // known-to-be-visited already.
+  //
+  // FIXME(emilio, bug 1506842): The known-to-be-visited stuff seems it could
+  // cause timeable differences, probably we should store whether it's
+  // known-to-be-unvisited too.
+  nsDataHashtable<nsURIHashKey, ObservingLinks> mTrackedURIs;
 };
 
 }  // namespace mozilla

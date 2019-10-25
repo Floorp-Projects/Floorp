@@ -44,12 +44,12 @@ void BaseHistory::NotifyVisitedForDocument(nsIURI* aURI, dom::Document* aDoc) {
     return;
   }
 
-  TrackedURI& trackedURI = entry.Data();
+  ObservingLinks& links = entry.Data();
 
   {
     // Update status of each Link node. We iterate over the array backwards so
     // we can remove the items as we encounter them.
-    ObserverArray::BackwardIterator iter(trackedURI.mLinks);
+    ObserverArray::BackwardIterator iter(links.mLinks);
     while (iter.HasMore()) {
       Link* link = iter.GetNext();
       if (GetLinkDocument(*link) == aDoc) {
@@ -60,7 +60,7 @@ void BaseHistory::NotifyVisitedForDocument(nsIURI* aURI, dom::Document* aDoc) {
   }
 
   // If we don't have any links left, we can remove the array.
-  if (trackedURI.mLinks.IsEmpty()) {
+  if (links.mLinks.IsEmpty()) {
     entry.Remove();
   }
 }
@@ -101,20 +101,20 @@ BaseHistory::RegisterVisitedCallback(nsIURI* aURI, Link* aLink) {
     return NS_OK;
   }
 
-  TrackedURI& trackedURI = entry.OrInsert([] { return TrackedURI{}; });
+  ObservingLinks& links = entry.OrInsert([] { return ObservingLinks{}; });
 
   // Sanity check that Links are not registered more than once for a given URI.
   // This will not catch a case where it is registered for two different URIs.
-  MOZ_DIAGNOSTIC_ASSERT(!trackedURI.mLinks.Contains(aLink),
+  MOZ_DIAGNOSTIC_ASSERT(!links.mLinks.Contains(aLink),
                         "Already tracking this Link object!");
 
   // Start tracking our Link.
-  trackedURI.mLinks.AppendElement(aLink);
+  links.mLinks.AppendElement(aLink);
 
   // If this link has already been visited, we cannot synchronously mark
   // ourselves as visited, so instead we fire a runnable into our docgroup,
   // which will handle it for us.
-  if (trackedURI.mVisited) {
+  if (links.mKnownVisited) {
     DispatchNotifyVisited(aURI, GetLinkDocument(*aLink));
   }
 
@@ -170,18 +170,18 @@ BaseHistory::NotifyVisited(nsIURI* aURI) {
     return NS_OK;
   }
 
-  TrackedURI& trackedURI = entry.Data();
-  trackedURI.mVisited = true;
+  ObservingLinks& links = entry.Data();
+  links.mKnownVisited = true;
 
   // If we have a key, it should have at least one observer.
-  MOZ_ASSERT(!trackedURI.mLinks.IsEmpty());
+  MOZ_ASSERT(!links.mLinks.IsEmpty());
 
   // Dispatch an event to each document which has a Link observing this URL.
   // These will fire asynchronously in the correct DocGroup.
 
-  // FIXME(emilio): Maybe a hashtable for this? An array could be bad.
+  // TODO(bug 1591090): Maybe a hashtable for this? An array could be bad.
   nsTArray<Document*> seen;  // Don't dispatch duplicate runnables.
-  ObserverArray::BackwardIterator iter(trackedURI.mLinks);
+  ObserverArray::BackwardIterator iter(links.mLinks);
   while (iter.HasMore()) {
     Link* link = iter.GetNext();
     Document* doc = GetLinkDocument(*link);
