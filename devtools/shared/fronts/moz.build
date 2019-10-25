@@ -45,6 +45,7 @@ DevToolsModules(
     'stylesheets.js',
     'symbol-iterator.js',
     'thread.js',
+    'walker.js',
     'webconsole.js',
     'websocket.js'
 )

@@ -51,6 +51,7 @@ DevToolsModules(
     'symbol.js',
     'thread.js',
     'timeline.js',
+    'walker.js',
     'webconsole.js',
     'websocket.js',
 )
