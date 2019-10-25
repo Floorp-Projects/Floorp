@@ -476,11 +476,14 @@ void BrowsingContext::GetChildren(Children& aChildren) {
 //
 // See
 // https://html.spec.whatwg.org/multipage/browsers.html#the-rules-for-choosing-a-browsing-context-given-a-browsing-context-name
-BrowsingContext* BrowsingContext::FindWithName(const nsAString& aName) {
+BrowsingContext* BrowsingContext::FindWithName(
+    const nsAString& aName, bool aUseEntryGlobalForAccessCheck) {
   RefPtr<BrowsingContext> requestingContext = this;
-  if (nsCOMPtr<nsIDocShell> caller = do_GetInterface(GetEntryGlobal())) {
-    if (caller->GetBrowsingContext()) {
-      requestingContext = caller->GetBrowsingContext();
+  if (aUseEntryGlobalForAccessCheck) {
+    if (nsCOMPtr<nsIDocShell> caller = do_GetInterface(GetEntryGlobal())) {
+      if (caller->GetBrowsingContext()) {
+        requestingContext = caller->GetBrowsingContext();
+      }
     }
   }
 
