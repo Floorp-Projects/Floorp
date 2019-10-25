@@ -8,6 +8,7 @@
 #define mozilla_IHistory_h_
 
 #include "nsISupports.h"
+#include "nsTObserverArray.h"
 
 class nsIURI;
 class nsIWidget;
@@ -134,6 +135,19 @@ class IHistory : public nsISupports {
    *        The URI to notify about.
    */
   NS_IMETHOD NotifyVisited(nsIURI* aURI) = 0;
+
+
+ protected:
+
+  using ObserverArray = nsTObserverArray<dom::Link*>;
+  struct TrackedURI {
+    ObserverArray mLinks;
+    bool mVisited = false;
+
+    size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const {
+      return mLinks.ShallowSizeOfExcludingThis(aMallocSizeOf);
+    }
+  };
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(IHistory, IHISTORY_IID)

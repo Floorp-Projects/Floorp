@@ -28,12 +28,6 @@ struct VisitedURI {
   bool mVisited = false;
 };
 
-struct TrackedURI {
-  // Per `IHistory`, these are not owning references.
-  nsTObserverArray<mozilla::dom::Link*> mLinks;
-  bool mVisited = false;
-};
-
 class GeckoViewHistory final : public mozilla::IHistory,
                                public nsITimerCallback,
                                public nsINamed {

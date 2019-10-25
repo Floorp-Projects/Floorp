@@ -1503,30 +1503,32 @@ History::NotifyVisited(nsIURI* aURI) {
 
   nsAutoScriptBlocker scriptBlocker;
 
-  // If we have no observers for this URI, we have nothing to notify about.
-  KeyClass* key = mObservers.GetEntry(aURI);
-  if (!key) {
+  auto entry = mTrackedURIs.Lookup(aURI);
+  if (!entry) {
+    // If we have no observers for this URI, we have nothing to notify about.
     return NS_OK;
   }
-  key->mVisited = true;
+
+  TrackedURI& trackedURI = entry.Data();
+  trackedURI.mVisited = true;
 
   // If we have a key, it should have at least one observer.
-  MOZ_ASSERT(!key->array.IsEmpty());
+  MOZ_ASSERT(!trackedURI.mLinks.IsEmpty());
 
   // Dispatch an event to each document which has a Link observing this URL.
   // These will fire asynchronously in the correct DocGroup.
-  {
-    nsTArray<Document*> seen;  // Don't dispatch duplicate runnables.
-    ObserverArray::BackwardIterator iter(key->array);
-    while (iter.HasMore()) {
-      Link* link = iter.GetNext();
-      Document* doc = GetLinkDocument(link);
-      if (seen.Contains(doc)) {
-        continue;
-      }
-      seen.AppendElement(doc);
-      DispatchNotifyVisited(aURI, doc);
+
+  // FIXME(emilio): Maybe a hashtable for this? An array could be bad.
+  nsTArray<Document*> seen;  // Don't dispatch duplicate runnables.
+  ObserverArray::BackwardIterator iter(trackedURI.mLinks);
+  while (iter.HasMore()) {
+    Link* link = iter.GetNext();
+    Document* doc = GetLinkDocument(link);
+    if (seen.Contains(doc)) {
+      continue;
     }
+    seen.AppendElement(doc);
+    DispatchNotifyVisited(aURI, doc);
   }
 
   return NS_OK;
@@ -1539,32 +1541,29 @@ void History::NotifyVisitedForDocument(nsIURI* aURI, Document* aDocument) {
   nsAutoScriptBlocker scriptBlocker;
 
   // If we have no observers for this URI, we have nothing to notify about.
-  KeyClass* key = mObservers.GetEntry(aURI);
-  if (!key) {
+  auto entry = mTrackedURIs.Lookup(aURI);
+  if (!entry) {
     return;
   }
+
+  TrackedURI& trackedURI = entry.Data();
 
   {
     // Update status of each Link node. We iterate over the array backwards so
     // we can remove the items as we encounter them.
-    ObserverArray::BackwardIterator iter(key->array);
+    ObserverArray::BackwardIterator iter(trackedURI.mLinks);
     while (iter.HasMore()) {
       Link* link = iter.GetNext();
-      Document* doc = GetLinkDocument(link);
-      if (doc == aDocument) {
+      if (GetLinkDocument(link) == aDocument) {
         link->SetLinkState(eLinkState_Visited);
         iter.Remove();
       }
-
-      // Verify that the observers hash doesn't mutate while looping through
-      // the links associated with this URI.
-      MOZ_ASSERT(key == mObservers.GetEntry(aURI), "The URIs hash mutated!");
     }
   }
 
   // If we don't have any links left, we can remove the array.
-  if (key->array.IsEmpty()) {
-    mObservers.RemoveEntry(key);
+  if (trackedURI.mLinks.IsEmpty()) {
+    entry.Remove();
   }
 }
 
@@ -1908,9 +1907,13 @@ History::CollectReports(nsIHandleReportCallback* aHandleReport,
   return NS_OK;
 }
 
-size_t History::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOfThis) {
-  return aMallocSizeOfThis(this) +
-         mObservers.SizeOfExcludingThis(aMallocSizeOfThis);
+size_t History::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) {
+  size_t size = aMallocSizeOf(this);
+  size += mTrackedURIs.ShallowSizeOfExcludingThis(aMallocSizeOf);
+  for (const auto& entry : mTrackedURIs) {
+    size += entry.GetData().SizeOfExcludingThis(aMallocSizeOf);
+  }
+  return size;
 }
 
 /* static */
@@ -2142,40 +2145,21 @@ History::RegisterVisitedCallback(nsIURI* aURI, Link* aLink) {
   }
 
   // Obtain our array of observers for this URI.
-#ifdef DEBUG
-  bool keyAlreadyExists = !!mObservers.GetEntry(aURI);
-#endif
-  KeyClass* key = mObservers.PutEntry(aURI);
-  NS_ENSURE_TRUE(key, NS_ERROR_OUT_OF_MEMORY);
-  ObserverArray& observers = key->array;
-
-  if (observers.IsEmpty()) {
-    MOZ_ASSERT(!keyAlreadyExists,
-               "An empty key was kept around in our hashtable!");
-
+  auto entry = mTrackedURIs.LookupForAdd(aURI);
+  MOZ_DIAGNOSTIC_ASSERT(!entry || !entry.Data().mLinks.IsEmpty(),
+                        "An empty key was kept around in our hashtable!");
+  if (!entry) {
     // We are the first Link node to ask about this URI, or there are no pending
     // Links wanting to know about this URI.  Therefore, we should query the
     // database now.
     nsresult rv = VisitedQuery::Start(aURI);
 
     // In IPC builds, we are passed a nullptr Link from
-    // ContentParent::RecvStartVisitedQuery.  Since we won't be adding a
-    // nullptr entry to our list of observers, and the code after this point
-    // assumes that aLink is non-nullptr, we will need to return now.
+    // ContentParent::RecvStartVisitedQuery.  Since we won't be adding a nullptr
+    // entry to our list of observers, and the code after this point assumes
+    // that aLink is non-nullptr, we will need to return now.
     if (NS_FAILED(rv) || !aLink) {
-      // Remove our array from the hashtable so we don't keep it around.
-      MOZ_DIAGNOSTIC_ASSERT(key == mObservers.GetEntry(aURI),
-                            "The URIs hash mutated!");
-
-      // TODO (bug 1412647): This could be marginally more efficient if we
-      // called RemoveEntry(key), but it seems that in the past it crashed and
-      // issues couldn't be figured out.
-      // Our suspect is that something between PutEntry and this call causes a
-      // nested loop that either removes the entry or reallocs the hash.
-      //
-      // We must figure the root cause for these issues and just call the faster
-      // thing.
-      mObservers.RemoveEntry(aURI);
+      entry.OrRemove();
       return rv;
     }
   }
@@ -2183,23 +2167,26 @@ History::RegisterVisitedCallback(nsIURI* aURI, Link* aLink) {
   // ContentParent::RecvStartVisitedQuery.  All of our code after this point
   // assumes aLink is non-nullptr, so we have to return now.
   else if (!aLink) {
-    NS_ASSERTION(XRE_IsParentProcess(),
-                 "We should only ever get a null Link in the default process!");
+    MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess(),
+                          "We should only ever get a null Link "
+                          "in the parent process!");
     return NS_OK;
   }
 
+  TrackedURI& trackedURI = entry.OrInsert([] { return TrackedURI {}; });
+
   // Sanity check that Links are not registered more than once for a given URI.
   // This will not catch a case where it is registered for two different URIs.
-  MOZ_DIAGNOSTIC_ASSERT(!observers.Contains(aLink),
+  MOZ_DIAGNOSTIC_ASSERT(!trackedURI.mLinks.Contains(aLink),
                         "Already tracking this Link object!");
 
   // Start tracking our Link.
-  observers.AppendElement(aLink);
+  trackedURI.mLinks.AppendElement(aLink);
 
   // If this link has already been visited, we cannot synchronously mark
   // ourselves as visited, so instead we fire a runnable into our docgroup,
   // which will handle it for us.
-  if (key->mVisited) {
+  if (trackedURI.mVisited) {
     DispatchNotifyVisited(aURI, GetLinkDocument(aLink));
   }
 
@@ -2214,21 +2201,20 @@ History::UnregisterVisitedCallback(nsIURI* aURI, Link* aLink) {
   NS_ASSERTION(aLink, "Must pass a non-null Link object!");
 
   // Get the array, and remove the item from it.
-  KeyClass* key = mObservers.GetEntry(aURI);
-  if (!key) {
-    NS_ERROR("Trying to unregister for a URI that wasn't registered!");
+  auto entry = mTrackedURIs.Lookup(aURI);
+  if (!entry) {
+    MOZ_ASSERT_UNREACHABLE("Trying to unregister URI that wasn't registered!");
     return NS_ERROR_UNEXPECTED;
   }
-  ObserverArray& observers = key->array;
+  ObserverArray& observers = entry.Data().mLinks;
   if (!observers.RemoveElement(aLink)) {
-    NS_ERROR("Trying to unregister a node that wasn't registered!");
+    MOZ_ASSERT_UNREACHABLE("Trying to unregister node that wasn't registered!");
     return NS_ERROR_UNEXPECTED;
   }
 
   // If the array is now empty, we should remove it from the hashtable.
   if (observers.IsEmpty()) {
-    MOZ_ASSERT(key == mObservers.GetEntry(aURI), "The URIs hash mutated!");
-    mObservers.RemoveEntry(key);
+    entry.Remove();
   }
 
   return NS_OK;
