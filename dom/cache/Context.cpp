@@ -233,10 +233,14 @@ void Context::QuotaInitRunnable::OpenDirectory() {
 
 void Context::QuotaInitRunnable::DirectoryLockAcquired(DirectoryLock* aLock) {
   NS_ASSERT_OWNINGTHREAD(QuotaInitRunnable);
+  MOZ_DIAGNOSTIC_ASSERT(aLock);
   MOZ_DIAGNOSTIC_ASSERT(mState == STATE_WAIT_FOR_DIRECTORY_LOCK);
   MOZ_DIAGNOSTIC_ASSERT(!mDirectoryLock);
 
   mDirectoryLock = aLock;
+
+  MOZ_DIAGNOSTIC_ASSERT(mDirectoryLock->GetId() >= 0);
+  mQuotaInfo.mDirectoryLockId = mDirectoryLock->GetId();
 
   if (mCanceled) {
     Complete(NS_ERROR_ABORT);
