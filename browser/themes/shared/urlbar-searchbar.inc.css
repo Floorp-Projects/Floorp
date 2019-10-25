@@ -7,6 +7,7 @@
 %define fieldBorderColor hsla(240,5%,5%,.25)
 %define fieldHoverBorderColor hsla(240,5%,5%,.35)
 %define urlbarMarginInline 5px
+%define urlbarSearchIconWidth calc(16px + 2 * @identityBoxPaddingInline@)
 
 :root {
   --toolbar-field-focus-border-color: Highlight;
@@ -129,14 +130,17 @@
 }
 
 #urlbar.megabar > #urlbar-input-container > #urlbar-search-icon {
-  width: calc(16px + 2 * @identityBoxPaddingInline@);
-  margin-inline-end: @identityBoxMarginInlineEnd@;
+  width: @urlbarSearchIconWidth@;
   background-image: url(chrome://browser/skin/search-glass.svg);
   background-repeat: no-repeat;
   background-position: center;
   -moz-context-properties: fill, fill-opacity;
   fill: var(--lwt-toolbarbutton-icon-fill, var(--toolbar-color));
   fill-opacity: var(--toolbarbutton-icon-fill-opacity);
+}
+
+#urlbar.megabar > #urlbar-input-container[pageproxystate="invalid"] > #urlbar-search-icon {
+  margin-inline-end: 6px;
 }
 
 /**
@@ -155,7 +159,7 @@
   display: block;
   position: absolute;
   inset: 0;
-  inset-inline-start: calc(16px + 2 * @identityBoxPaddingInline@);
+  inset-inline-start: @urlbarSearchIconWidth@;
 }
 
 #urlbar.megabar > #urlbar-input-container {
