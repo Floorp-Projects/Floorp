@@ -44,11 +44,6 @@ enum class GeckoViewVisitFlags : int32_t {
 // reduce the number of IPC and JNI calls.
 static const uint32_t GET_VISITS_WAIT_MS = 250;
 
-static inline Document* OwnerDocForLink(Link* aLink) {
-  Element* element = aLink->GetElement();
-  return element ? element->OwnerDoc() : nullptr;
-}
-
 GeckoViewHistory::GeckoViewHistory() {}
 
 NS_IMPL_ISUPPORTS(GeckoViewHistory, IHistory, nsITimerCallback, nsINamed)
@@ -241,7 +236,7 @@ GeckoViewHistory::RegisterVisitedCallback(nsIURI* aURI, Link* aLink) {
 
     if (trackedURI.mVisited) {
       // If we already know that the URI was visited, update the link state now.
-      DispatchNotifyVisited(aURI, OwnerDocForLink(aLink));
+      DispatchNotifyVisited(aURI, GetLinkDocument(*aLink));
     }
   } else {
     // Otherwise, track the link, and start the timer to request the visited
@@ -471,7 +466,7 @@ GeckoViewHistory::NotifyVisited(nsIURI* aURI) {
     nsTObserverArray<Link*>::BackwardIterator iter(trackedURI.mLinks);
     while (iter.HasMore()) {
       Link* link = iter.GetNext();
-      Document* doc = OwnerDocForLink(link);
+      Document* doc = GetLinkDocument(*link);
       if (seen.Contains(doc)) {
         continue;
       }
@@ -687,7 +682,7 @@ void GeckoViewHistory::DispatchNotifyVisited(nsIURI* aURI,
           nsTObserverArray<Link*>::BackwardIterator iter(trackedURI.mLinks);
           while (iter.HasMore()) {
             Link* link = iter.GetNext();
-            if (OwnerDocForLink(link) == doc) {
+            if (GetLinkDocument(*link) == doc) {
               link->SetLinkState(eLinkState_Visited);
               iter.Remove();
             }
