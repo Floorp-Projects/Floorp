@@ -106,6 +106,10 @@ AndroidAlerts::CloseAlert(const nsAString& aAlertName,
                           nsIPrincipal* aPrincipal) {
   java::WebNotification::LocalRef notification =
       mNotificationsMap.Get(aAlertName);
+  if (!notification) {
+    return NS_OK;
+  }
+
   java::GeckoRuntime::LocalRef runtime = java::GeckoRuntime::GetInstance();
   if (runtime != NULL) {
     runtime->NotifyOnClose(notification);
