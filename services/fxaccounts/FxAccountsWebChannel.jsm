@@ -547,10 +547,12 @@ this.FxAccountsWebChannelHelpers.prototype = {
    * If returning status information is not allowed or no user is signed into
    * Sync, `user_data` will be null.
    */
-  async getFxaStatus(service, sendingContext, isPairing) {
+  async getFxaStatus(service, sendingContext, isPairing, context) {
     let signedInUser = null;
 
-    if (this.shouldAllowFxaStatus(service, sendingContext, isPairing)) {
+    if (
+      this.shouldAllowFxaStatus(service, sendingContext, isPairing, context)
+    ) {
       const userData = await this._fxAccounts._internal.getUserAccountData([
         "email",
         "sessionToken",
