@@ -699,13 +699,20 @@ class TabTracker extends TabTrackerBase {
   }
 
   getBrowserData(browser) {
-    let { gBrowser } = browser.ownerGlobal;
+    let window = browser.ownerGlobal;
+    if (!window) {
+      return {
+        tabId: -1,
+        windowId: -1,
+      };
+    }
+    let { gBrowser } = window;
     // Some non-browser windows have gBrowser but not getTabForBrowser!
     if (!gBrowser || !gBrowser.getTabForBrowser) {
-      if (browser.ownerGlobal.top.document.documentURI === "about:addons") {
+      if (window.top.document.documentURI === "about:addons") {
         // When we're loaded into a <browser> inside about:addons, we need to go up
         // one more level.
-        browser = browser.ownerGlobal.docShell.chromeEventHandler;
+        browser = window.docShell.chromeEventHandler;
 
         ({ gBrowser } = browser.ownerGlobal);
       } else {
