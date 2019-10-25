@@ -621,6 +621,14 @@ function isJSON(payload) {
     }
   }
 
+  // Do not present JSON primitives (e.g. boolean, strings in quotes, numbers)
+  // as JSON expandable tree.
+  if (!error) {
+    if (typeof json !== "object") {
+      return {};
+    }
+  }
+
   return {
     json,
     error,
