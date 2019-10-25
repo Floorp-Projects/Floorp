@@ -1977,20 +1977,21 @@ void History::Shutdown() {
 }
 
 void History::AppendToRecentlyVisitedURIs(nsIURI* aURI, bool aHidden) {
-  // Add a new entry, if necessary.
-  RecentURIKey* entry = mRecentlyVisitedURIs.GetEntry(aURI);
-  if (!entry) {
-    entry = mRecentlyVisitedURIs.PutEntry(aURI);
-  }
-  if (entry) {
-    entry->time = PR_Now();
-    entry->hidden = aHidden;
+  PRTime now = PR_Now();
+
+  {
+    RecentURIVisit& visit =
+        mRecentlyVisitedURIs.LookupForAdd(aURI).OrInsert([] {
+          return RecentURIVisit{0, false};
+        });
+
+    visit.mTime = now;
+    visit.mHidden = aHidden;
   }
 
   // Remove entries older than RECENTLY_VISITED_URIS_MAX_AGE.
   for (auto iter = mRecentlyVisitedURIs.Iter(); !iter.Done(); iter.Next()) {
-    RecentURIKey* entry = iter.Get();
-    if ((PR_Now() - entry->time) > RECENTLY_VISITED_URIS_MAX_AGE) {
+    if ((now - iter.Data().mTime) > RECENTLY_VISITED_URIS_MAX_AGE) {
       iter.Remove();
     }
   }
@@ -2098,11 +2099,12 @@ History::VisitURI(nsIWidget* aWidget, nsIURI* aURI, nsIURI* aLastVisitedURI,
 
   // Do not save a reloaded uri if we have visited the same URI recently.
   if (reload) {
-    RecentURIKey* entry = mRecentlyVisitedURIs.GetEntry(aURI);
+    auto entry = mRecentlyVisitedURIs.Lookup(aURI);
     // Check if the entry exists and is younger than
     // RECENTLY_VISITED_URIS_MAX_AGE.
-    if (entry && (PR_Now() - entry->time) < RECENTLY_VISITED_URIS_MAX_AGE) {
-      bool wasHidden = entry->hidden;
+    if (entry &&
+        (PR_Now() - entry.Data().mTime) < RECENTLY_VISITED_URIS_MAX_AGE) {
+      bool wasHidden = entry.Data().mHidden;
       // Regardless of whether we store the visit or not, we must update the
       // stored visit time.
       AppendToRecentlyVisitedURIs(aURI, place.hidden);
