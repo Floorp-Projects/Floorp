@@ -125,7 +125,17 @@ class ThreadIntercept {
   // Only allow consumers to access this information if they run
   // ThreadIntercept::MaybeGet and ask through the non-static version.
   static bool IsBlocked_() {
-    return tlsIsBlocked.get() || profiler_could_be_locked_on_current_thread();
+    // When the native allocations feature is turned on, memory hooks run on
+    // every single allocation. For a subset of these allocations, the stack
+    // gets sampled by running profiler_get_backtrace(), which locks the
+    // profiler mutex.
+    //
+    // An issue arises when allocating while the profiler is locked FOR THE
+    // CURRENT THREAD. In this situation, if profiler_get_backtrace() were to be
+    // run, it would try to re-acquire this lock and deadlock. In order to guard
+    // against this deadlock, we check to see if the mutex is already locked by
+    // this thread.
+    return tlsIsBlocked.get() || profiler_is_locked_on_current_thread();
   }
 
  public:
