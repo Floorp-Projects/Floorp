@@ -166,7 +166,12 @@ class FramePayload extends Component {
       },
     ];
     if (!isTruncated && this.state.isFormattedData) {
-      items.push({
+      /**
+       * Push the JSON section (formatted data) at the begging of the array
+       * before the raw data section. Note that the JSON section will be
+       * auto-expanded while the raw data auto-collapsed.
+       */
+      items.unshift({
         className: "formattedData",
         component: JSONPreview({
           object: this.state.formattedData,
