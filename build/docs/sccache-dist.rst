@@ -14,18 +14,20 @@ in your office are detailed below.
 
 In addition to improved security properties, distributed sccache offers
 distribution and caching of rust compilation, so it should be an improvement
-above and beyond what we see with icecc. Build servers run on linux and
-distributing builds is currently supported from macOS and linux machines.
-Distribution from Windows is supported in principle but hasn't seen sufficient
-testing.
+above and beyond what we see with icecc. Build servers run on Linux and
+distributing builds is currently supported from Linux, macOS, and Windows.
+
 
 Steps for distributing a build as an sccache-dist client
 ========================================================
 
 Start by following the instructions at https://github.com/mozilla/sccache/blob/master/docs/DistributedQuickstart.md#configure-a-client
-to configure your sccache distributed client. Ignore the note about custom
-toolchains if you're distributing compilation from linux.
-sccache 0.2.11 or above is recommended, and the auth section of your config
+to configure your sccache distributed client.
+*NOTE* If you're distributing from Linux a toolchain will be packaged
+automatically and provided to the build server. If you're distributing from
+Windows or macOS, start by using the cross-toolchains provided by
+``./mach bootstrap`` rather than attempting to use ``icecc-create-env``.
+sccache 0.2.12 or above is recommended, and the auth section of your config
 must read::
 
     [dist.auth]
@@ -40,9 +42,9 @@ must read::
   if wired.
 
 * If you're compiling from a macOS client, there are a handful of additional
-  considerations detailed here:
+  considerations outlined here:
   https://github.com/mozilla/sccache/blob/master/docs/DistributedQuickstart.md#considerations-when-distributing-from-macos.
-  In particular, custom toolchains will need to be specified.
+
   Run ``./mach bootstrap`` to download prebuilt toolchains to
   ``~/.mozbuild/clang-dist-toolchain.tar.xz`` and
   ``~/.mozbuild/rustc-dist-toolchain.tar.xz``. This is an example of the paths
@@ -77,6 +79,39 @@ must read::
   ``rustup toolchain add 1.37.0`` and point to
   ``~/.rustup/toolchains/1.37.0-x86_64-apple-darwin/bin/rustc`` in your
   client config.
+
+  The build system currently requires an explicit target to be passed with
+  ``HOST_CFLAGS`` and ``HOST_CXXFLAGS`` e.g.::
+
+    export HOST_CFLAGS="--target=x86_64-apple-darwin16.0.0"
+    export HOST_CXXFLAGS="--target=x86_64-apple-darwin16.0.0"
+
+* Compiling from a Windows client is supported but hasn't seen as much testing
+  as other platforms. The following example mozconfig can be used as a guide::
+
+    ac_add_options CCACHE=~/.mozbuild/sccache/sccache.exe
+
+    export CC="~/.mozbuild/clang/bin/clang-cl.exe --driver-mode=cl"
+    export CXX="~/.mozbuild/clang/bin/clang-cl.exe --driver-mode=cl"
+    export HOST_CC="~/.mozbuild/clang/bin/clang-cl.exe --driver-mode=cl"
+    export HOST_CXX="~/.mozbuild/clang/bin/clang-cl.exe --driver-mode=cl"
+
+  The client config should be located at
+  ``~/AppData/Roaming/Mozilla/sccache/config/config``, and as on macOS custom
+  toolchains should be obtained with ``./mach bootstrap`` and specified in the
+  client config, for example::
+
+    [[dist.toolchains]]
+    type = "path_override"
+    compiler_executable = "C:/Users/<USER>/.mozbuild/clang/bin/clang-cl.exe"
+    archive = "C:/Users/<USER>/.mozbuild/clang-dist-toolchain.tar.xz"
+    archive_compiler_executable = "/builds/worker/toolchains/clang/bin/clang"
+
+    [[dist.toolchains]]
+    type = "path_override"
+    compiler_executable = "C:/Users/<USER>/.rustup/toolchains/stable-x86_64-pc-windows-msvc/bin/rustc.exe"
+    archive = "C:/Users/<USER>/.mozbuild/rustc-dist-toolchain.tar.xz"
+    archive_compiler_executable = "/builds/worker/toolchains/rustc/bin/rustc"
 
 * Add the following to your mozconfig::
 
