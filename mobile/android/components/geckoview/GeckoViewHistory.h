@@ -33,9 +33,18 @@ class GeckoViewHistory final : public mozilla::BaseHistory,
                                public nsINamed {
  public:
   NS_DECL_ISUPPORTS
-  NS_DECL_IHISTORY
   NS_DECL_NSITIMERCALLBACK
   NS_DECL_NSINAMED
+
+  // IHistory
+  NS_IMETHOD VisitURI(nsIWidget*, nsIURI*, nsIURI* aLastVisitedURI,
+                      uint32_t aFlags) final;
+  NS_IMETHOD SetURITitle(nsIURI*, const nsAString&) final;
+  NS_IMETHOD NotifyVisited(nsIURI*) override;
+
+  // BaseHistory
+  mozilla::Result<mozilla::Ok, nsresult> StartVisitedQuery(nsIURI*) final;
+  void CancelVisitedQueryIfPossible(nsIURI*) final;
 
   static already_AddRefed<GeckoViewHistory> GetSingleton();
 

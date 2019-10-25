@@ -50,10 +50,21 @@ class History final : public BaseHistory,
                       public nsIMemoryReporter {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
-  NS_DECL_IHISTORY
   NS_DECL_MOZIASYNCHISTORY
   NS_DECL_NSIOBSERVER
   NS_DECL_NSIMEMORYREPORTER
+
+  // IHistory
+  NS_IMETHOD VisitURI(nsIWidget*, nsIURI*, nsIURI* aLastVisitedURI,
+                      uint32_t aFlags) final;
+  NS_IMETHOD SetURITitle(nsIURI*, const nsAString&) final;
+  NS_IMETHOD NotifyVisited(nsIURI*) override;
+
+  // BaseHistory
+  Result<Ok, nsresult> StartVisitedQuery(nsIURI*) final;
+  void CancelVisitedQueryIfPossible(nsIURI*) final {
+    // TODO(bug 1591393): This could be worth it? Needs some measurement.
+  }
 
   History();
 

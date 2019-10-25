@@ -10,6 +10,7 @@
 #include "nsXULAppAPI.h"
 
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/ResultExtensions.h"
 
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/Element.h"
@@ -222,75 +223,18 @@ GeckoViewHistory::Notify(nsITimer* aTimer) {
   return NS_OK;
 }
 
-NS_IMETHODIMP
-GeckoViewHistory::RegisterVisitedCallback(nsIURI* aURI, Link* aLink) {
-  if (!aLink || !aURI) {
-    return NS_OK;
+Result<Ok, nsresult> GeckoViewHistory::StartVisitedQuery(nsIURI* aURI) {
+  mNewURIs.PutEntry(aURI);
+  if (!mQueryVisitedStateTimer) {
+    mQueryVisitedStateTimer = NS_NewTimer();
   }
-
-  auto entry = mTrackedURIs.LookupForAdd(aURI);
-  if (entry) {
-    // Start tracking the link for this URI.
-    TrackedURI& trackedURI = entry.Data();
-    trackedURI.mLinks.AppendElement(aLink);
-
-    if (trackedURI.mVisited) {
-      // If we already know that the URI was visited, update the link state now.
-      DispatchNotifyVisited(aURI, GetLinkDocument(*aLink));
-    }
-  } else {
-    // Otherwise, track the link, and start the timer to request the visited
-    // status from the history delegate for this and any other new URIs. If the
-    // delegate reports that the URI is unvisited, we'll keep tracking the link,
-    // and update its state from `VisitedCallback` once it's visited. If the URI
-    // is already visited, `GetVisitedCallback` will update this and all other
-    // visited links, and stop tracking them.
-    entry.OrInsert([aLink]() {
-      TrackedURI trackedURI;
-      trackedURI.mLinks.AppendElement(aLink);
-      return trackedURI;
-    });
-    mNewURIs.PutEntry(aURI);
-    if (!mQueryVisitedStateTimer) {
-      mQueryVisitedStateTimer = NS_NewTimer();
-    }
-    Unused << NS_WARN_IF(NS_FAILED(mQueryVisitedStateTimer->InitWithCallback(
-        this, GET_VISITS_WAIT_MS, nsITimer::TYPE_ONE_SHOT)));
-  }
-
-  return NS_OK;
+  // FIXME(emilio): Do we really want to initialize the timer all the time?
+  return ToResult(mQueryVisitedStateTimer->InitWithCallback(
+      this, GET_VISITS_WAIT_MS, nsITimer::TYPE_ONE_SHOT));
 }
 
-NS_IMETHODIMP
-GeckoViewHistory::UnregisterVisitedCallback(nsIURI* aURI, Link* aLink) {
-  if (!aLink || !aURI) {
-    return NS_OK;
-  }
-
-  if (auto entry = mTrackedURIs.Lookup(aURI)) {
-    TrackedURI& trackedURI = entry.Data();
-    if (!trackedURI.mLinks.IsEmpty()) {
-      nsTObserverArray<Link*>::BackwardIterator iter(trackedURI.mLinks);
-      while (iter.HasMore()) {
-        Link* link = iter.GetNext();
-        if (link == aLink) {
-          iter.Remove();
-          break;
-        }
-      }
-    }
-
-    if (trackedURI.mLinks.IsEmpty()) {
-      // If the list of tracked links is empty, remove the entry for the URI.
-      // We'll need to query the history delegate again the next time we look
-      // up the visited status for this URI.
-      entry.Remove();
-    }
-  }
-
+void GeckoViewHistory::CancelVisitedQueryIfPossible(nsIURI* aURI) {
   mNewURIs.RemoveEntry(aURI);
-
-  return NS_OK;
 }
 
 /**

@@ -1932,6 +1932,10 @@ void History::AppendToRecentlyVisitedURIs(nsIURI* aURI, bool aHidden) {
   }
 }
 
+Result<Ok, nsresult> History::StartVisitedQuery(nsIURI* aURI) {
+  return ToResult(VisitedQuery::Start(aURI));
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 //// IHistory
 
@@ -2063,90 +2067,6 @@ History::VisitURI(nsIWidget* aWidget, nsIURI* aURI, nsIURI* aLastVisitedURI,
 
     rv = InsertVisitedURIs::Start(dbConn, placeArray);
     NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-History::RegisterVisitedCallback(nsIURI* aURI, Link* aLink) {
-  MOZ_ASSERT(NS_IsMainThread());
-  NS_ASSERTION(aURI, "Must pass a non-null URI!");
-  if (XRE_IsContentProcess()) {
-    MOZ_ASSERT(aLink, "Must pass a non-null Link!");
-  }
-
-  // Obtain our array of observers for this URI.
-  auto entry = mTrackedURIs.LookupForAdd(aURI);
-  MOZ_DIAGNOSTIC_ASSERT(!entry || !entry.Data().mLinks.IsEmpty(),
-                        "An empty key was kept around in our hashtable!");
-  if (!entry) {
-    // We are the first Link node to ask about this URI, or there are no pending
-    // Links wanting to know about this URI.  Therefore, we should query the
-    // database now.
-    nsresult rv = VisitedQuery::Start(aURI);
-
-    // In IPC builds, we are passed a nullptr Link from
-    // ContentParent::RecvStartVisitedQuery.  Since we won't be adding a nullptr
-    // entry to our list of observers, and the code after this point assumes
-    // that aLink is non-nullptr, we will need to return now.
-    if (NS_FAILED(rv) || !aLink) {
-      entry.OrRemove();
-      return rv;
-    }
-  }
-  // In IPC builds, we are passed a nullptr Link from
-  // ContentParent::RecvStartVisitedQuery.  All of our code after this point
-  // assumes aLink is non-nullptr, so we have to return now.
-  else if (!aLink) {
-    MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess(),
-                          "We should only ever get a null Link "
-                          "in the parent process!");
-    return NS_OK;
-  }
-
-  TrackedURI& trackedURI = entry.OrInsert([] { return TrackedURI {}; });
-
-  // Sanity check that Links are not registered more than once for a given URI.
-  // This will not catch a case where it is registered for two different URIs.
-  MOZ_DIAGNOSTIC_ASSERT(!trackedURI.mLinks.Contains(aLink),
-                        "Already tracking this Link object!");
-
-  // Start tracking our Link.
-  trackedURI.mLinks.AppendElement(aLink);
-
-  // If this link has already been visited, we cannot synchronously mark
-  // ourselves as visited, so instead we fire a runnable into our docgroup,
-  // which will handle it for us.
-  if (trackedURI.mVisited) {
-    DispatchNotifyVisited(aURI, GetLinkDocument(*aLink));
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-History::UnregisterVisitedCallback(nsIURI* aURI, Link* aLink) {
-  MOZ_ASSERT(NS_IsMainThread());
-  // TODO: aURI is sometimes null - see bug 548685
-  NS_ASSERTION(aURI, "Must pass a non-null URI!");
-  NS_ASSERTION(aLink, "Must pass a non-null Link object!");
-
-  // Get the array, and remove the item from it.
-  auto entry = mTrackedURIs.Lookup(aURI);
-  if (!entry) {
-    MOZ_ASSERT_UNREACHABLE("Trying to unregister URI that wasn't registered!");
-    return NS_ERROR_UNEXPECTED;
-  }
-  ObserverArray& observers = entry.Data().mLinks;
-  if (!observers.RemoveElement(aLink)) {
-    MOZ_ASSERT_UNREACHABLE("Trying to unregister node that wasn't registered!");
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  // If the array is now empty, we should remove it from the hashtable.
-  if (observers.IsEmpty()) {
-    entry.Remove();
   }
 
   return NS_OK;
