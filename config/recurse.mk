@@ -199,15 +199,16 @@ endif
 # Those need to depend on config/export for system wrappers.
 $(addprefix build/unix/stdc++compat/,target host) build/clang-plugin/host: config/export
 
-# Rust targets need $topobjdir/.cargo/config to be preprocessed first. Ideally,
-# we'd only set it as a dependency of the rust targets, but unfortunately, that
-# pushes Make to execute them much later than we'd like them to be when the file
-# doesn't exist prior to Make running. So we also set it as a dependency of
-# export, which ensures it exists before recursing the rust targets, tricking
-# Make into keeping them early.
-$(rust_targets): $(DEPTH)/.cargo/config
+# Rust targets, and export targets that run cbindgen need
+# $topobjdir/.cargo/config to be preprocessed first. Ideally, we'd only set it
+# as a dependency of the rust targets, but unfortunately, that pushes Make to
+# execute them much later than we'd like them to be when the file doesn't exist
+# prior to Make running. So we also set it as a dependency of pre-export, which
+# ensures it exists before recursing the rust targets and the export targets
+# that run cbindgen, tricking Make into keeping them early.
+$(rust_targets) gfx/webrender_bindings/export layout/style/export xpcom/base/export: $(DEPTH)/.cargo/config
 ifndef TEST_MOZBUILD
-export:: $(DEPTH)/.cargo/config
+pre-export:: $(DEPTH)/.cargo/config
 endif
 
 # When building gtest as part of the build (LINK_GTEST_DURING_COMPILE),
