@@ -914,13 +914,18 @@ class SpecialPowersChild extends JSWindowActorChild {
         }
       }
       this._permissionsUndoStack.push(cleanupPermissions);
-      this._pendingPermissions.push([
-        pendingPermissions,
-        this._delayCallbackTwice(callback),
-      ]);
-      this._applyPermissions();
+      await new Promise(resolve => {
+        this._pendingPermissions.push([
+          pendingPermissions,
+          this._delayCallbackTwice(resolve),
+        ]);
+        this._applyPermissions();
+      });
     } else {
-      this._setTimeout(callback);
+      await this.promiseTimeout();
+    }
+    if (callback) {
+      callback();
     }
   }
 
