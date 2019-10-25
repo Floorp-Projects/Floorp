@@ -18,8 +18,12 @@
 namespace mozilla {
 namespace dom {
 
+static bool IsRootElement(Element* aElement) {
+  return aElement->OwnerDoc()->GetRootElement() == aElement;
+}
+
 static bool ShouldPersistAttribute(Element* aElement, nsAtom* aAttribute) {
-  if (aElement->IsXULElement(nsGkAtoms::window)) {
+  if (IsRootElement(aElement)) {
     // This is not an element of the top document, its owner is
     // not an nsXULWindow. Persist it.
     if (aElement->OwnerDoc()->GetInProcessParentDocument()) {
@@ -132,7 +136,7 @@ void XULPersist::Persist(Element* aElement, int32_t aNameSpaceID,
   }
 
   // Persisting attributes to top level windows is handled by nsXULWindow.
-  if (aElement->IsXULElement(nsGkAtoms::window)) {
+  if (IsRootElement(aElement)) {
     if (nsCOMPtr<nsIXULWindow> win =
             mDocument->GetXULWindowIfToplevelChrome()) {
       return;
@@ -297,7 +301,7 @@ nsresult XULPersist::ApplyPersistentAttributesToElements(
 
       // Applying persistent attributes to top level windows is handled
       // by nsXULWindow.
-      if (element->IsXULElement(nsGkAtoms::window)) {
+      if (IsRootElement(element)) {
         if (nsCOMPtr<nsIXULWindow> win =
                 mDocument->GetXULWindowIfToplevelChrome()) {
           continue;
