@@ -10,6 +10,16 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 
 object ExperimentsManager {
+    fun optOutEtpExperiment(context: Context) {
+        // If a user can see the ETP categories we don't want to change their settings
+        if (FeatureFlags.etpCategories) return
+        // Release user has opted out of ETP experiment, reset them to current default (strict)
+        context.settings().setUseStrictTrackingProtection()
+        context.components.useCases.settingsUseCases.updateTrackingProtection(
+            context.components.core.createTrackingProtectionPolicy()
+        )
+    }
+
     fun initEtpExperiment(context: Context) {
         // When the `fenix-etp-5651` experiment is active, set up ETP settings and GV policy.
         // Note that this will not take effect the first time the application has launched,
