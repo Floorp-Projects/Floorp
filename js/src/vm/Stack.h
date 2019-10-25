@@ -445,7 +445,7 @@ class InterpreterFrame {
 
   bool isEvalFrame() const { return script_->isForEval(); }
 
-  bool isFunctionFrame() const { return script_->functionNonDelazifying(); }
+  bool isFunctionFrame() const { return script_->function(); }
 
   inline bool isStrictEvalFrame() const {
     return isEvalFrame() && script()->strict();

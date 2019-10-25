@@ -70,7 +70,7 @@ static EnterJitStatus JS_HAZ_JSNATIVE_CALLER EnterJit(JSContext* cx,
     envChain = nullptr;
     calleeToken = CalleeToToken(&args.callee().as<JSFunction>(), constructing);
 
-    unsigned numFormals = script->functionNonDelazifying()->nargs();
+    unsigned numFormals = script->function()->nargs();
     if (numFormals > numActualArgs) {
       code = cx->runtime()->jitRuntime()->getArgumentsRectifier().value;
     }

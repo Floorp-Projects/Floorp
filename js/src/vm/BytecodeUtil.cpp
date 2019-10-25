@@ -2191,7 +2191,7 @@ JSAtom* ExpressionDecompiler::loadAtom(jsbytecode* pc) {
 }
 
 JSAtom* ExpressionDecompiler::getArg(unsigned slot) {
-  MOZ_ASSERT(script->functionNonDelazifying());
+  MOZ_ASSERT(script->function());
   MOZ_ASSERT(slot < script->numArgs());
 
   for (PositionalFormalParameterIter fi(script); fi; fi++) {
@@ -2651,7 +2651,7 @@ JS_FRIEND_API JSString* js::GetPCCountScriptSummary(JSContext* cx,
   }
   json.property("line", script->lineno());
 
-  if (JSFunction* fun = script->functionNonDelazifying()) {
+  if (JSFunction* fun = script->function()) {
     if (JSAtom* atom = fun->displayAtom()) {
       if (!JSONStringProperty(sp, json, "name", atom)) {
         return nullptr;

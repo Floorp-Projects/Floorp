@@ -580,11 +580,7 @@ class BaselineCompilerHandler {
   JSScript* script() const { return script_; }
   JSScript* maybeScript() const { return script_; }
 
-  JSFunction* function() const {
-    // Not delazifying here is ok as the function is guaranteed to have
-    // been delazified before compilation started.
-    return script_->functionNonDelazifying();
-  }
+  JSFunction* function() const { return script_->function(); }
   JSFunction* maybeFunction() const { return function(); }
 
   ModuleObject* module() const { return script_->module(); }

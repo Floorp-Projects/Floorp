@@ -230,14 +230,13 @@ bool InterpreterFrame::prologue(JSContext* cx) {
                 thisArgument().isObject() ||
                     thisArgument().isMagic(JS_UNINITIALIZED_LEXICAL));
 
-  return probes::EnterScript(cx, script, script->functionNonDelazifying(),
-                             this);
+  return probes::EnterScript(cx, script, script->function(), this);
 }
 
 void InterpreterFrame::epilogue(JSContext* cx, jsbytecode* pc) {
   RootedScript script(cx, this->script());
   MOZ_ASSERT(cx->realm() == script->realm());
-  probes::ExitScript(cx, script, script->functionNonDelazifying(),
+  probes::ExitScript(cx, script, script->function(),
                      hasPushedGeckoProfilerFrame());
 
   // Check that the scope matches the environment at the point of leaving
@@ -947,7 +946,7 @@ bool FrameIter::isFunctionFrame() const {
         if (jsJitFrame().isBaselineJS()) {
           return jsJitFrame().baselineFrame()->isFunctionFrame();
         }
-        return script()->functionNonDelazifying();
+        return script()->function();
       }
       MOZ_ASSERT(isWasm());
       return false;
@@ -1258,7 +1257,7 @@ unsigned FrameIter::numActualArgs() const {
 }
 
 unsigned FrameIter::numFormalArgs() const {
-  return script()->functionNonDelazifying()->nargs();
+  return script()->function()->nargs();
 }
 
 Value FrameIter::unaliasedActual(unsigned i,

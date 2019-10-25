@@ -4831,7 +4831,7 @@ bool jit::AnalyzeArgumentsUsage(JSContext* cx, JSScript* scriptArg) {
   }
 
   CompileInfo info(CompileRuntime::get(cx->runtime()), script,
-                   script->functionNonDelazifying(),
+                   script->function(),
                    /* osrPc = */ nullptr, Analysis_ArgumentsUsage,
                    /* needsArgsObj = */ true, inlineScriptTree);
 

@@ -122,7 +122,7 @@ void LCovSource::exportInto(GenericPrinter& out) {
 }
 
 bool LCovSource::writeScriptName(LSprinter& out, JSScript* script) {
-  JSFunction* fun = script->functionNonDelazifying();
+  JSFunction* fun = script->function();
   if (fun && fun->displayAtom()) {
     return EscapedStringPrinter(out, fun->displayAtom(), 0);
   }

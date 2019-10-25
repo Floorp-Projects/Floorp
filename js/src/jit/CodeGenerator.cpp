@@ -3723,7 +3723,7 @@ void CodeGenerator::visitIsConstructing(LIsConstructing* lir) {
   masm.loadPtr(calleeToken, output);
 
   // We must be inside a function.
-  MOZ_ASSERT(current->mir()->info().script()->functionNonDelazifying());
+  MOZ_ASSERT(current->mir()->info().script()->function());
 
   // The low bit indicates whether this call is constructing, just clear the
   // other bits.

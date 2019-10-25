@@ -321,7 +321,7 @@ bool DebuggerScript::CallData::getIsFunction() {
 
   // Note: LazyScripts always have functions.
   args.rval().setBoolean(!referent.is<JSScript*>() ||
-                         referent.as<JSScript*>()->functionNonDelazifying());
+                         referent.as<JSScript*>()->function());
   return true;
 }
 
@@ -338,7 +338,7 @@ bool DebuggerScript::CallData::getDisplayName() {
   if (!ensureScriptMaybeLazy()) {
     return false;
   }
-  JSFunction* func = CallScriptMethod(obj, &JSScript::functionNonDelazifying,
+  JSFunction* func = CallScriptMethod(obj, &JSScript::function,
                                       &LazyScript::functionNonDelazifying);
   Debugger* dbg = Debugger::fromChildJSObject(obj);
 

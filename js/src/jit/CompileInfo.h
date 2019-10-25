@@ -192,7 +192,7 @@ class CompileInfo {
     // jit-code. Precisely because it can flow in from anywhere, it's not
     // guaranteed to be non-lazy. Hence, don't access its script!
     if (fun_) {
-      fun_ = fun_->nonLazyScript()->functionNonDelazifying();
+      fun_ = fun_->nonLazyScript()->function();
       MOZ_ASSERT(fun_->isTenured());
     }
 
