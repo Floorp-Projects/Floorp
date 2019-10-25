@@ -1158,14 +1158,14 @@ void CycleCollectedJSRuntime::GarbageCollect(JS::GCReason aReason) const {
 }
 
 void CycleCollectedJSRuntime::JSObjectsTenured() {
+  JSContext* cx = CycleCollectedJSContext::Get()->Context();
   for (auto iter = mNurseryObjects.Iter(); !iter.Done(); iter.Next()) {
     nsWrapperCache* cache = iter.Get();
     JSObject* wrapper = cache->GetWrapperMaybeDead();
     MOZ_DIAGNOSTIC_ASSERT(wrapper || recordreplay::IsReplaying());
     if (!JS::ObjectIsTenured(wrapper)) {
       MOZ_ASSERT(!cache->PreservingWrapper());
-      const JSClass* jsClass = js::GetObjectClass(wrapper);
-      jsClass->doFinalize(nullptr, wrapper);
+      js::gc::FinalizeDeadNurseryObject(cx, wrapper);
     }
   }
 
