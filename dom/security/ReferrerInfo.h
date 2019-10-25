@@ -200,6 +200,11 @@ class ReferrerInfo : public nsIReferrerInfo {
   static uint32_t GetUserTrimmingPolicy();
 
   /**
+   * Getter for network.http.referer.XOriginTrimmingPolicy.
+   */
+  static uint32_t GetUserXOriginTrimmingPolicy();
+
+  /**
    * Return default referrer policy which is controlled by user
    * prefs:
    * network.http.referer.defaultPolicy for regular mode
@@ -348,8 +353,9 @@ class ReferrerInfo : public nsIReferrerInfo {
   /*
    * Compute referrer for a given channel. The computation result then will be
    * stored in this class and then used to set the actual referrer header of
-   * the channel. The computation could be controlled by sereral user prefs
-   * which is defined in all.js (see all.js for more details):
+   * the channel. The computation could be controlled by several user prefs
+   * which are defined in StaticPrefList.yaml (see StaticPrefList.yaml for more
+   * details):
    *  network.http.sendRefererHeader
    *  network.http.referer.spoofSource
    *  network.http.referer.hideOnionSource
