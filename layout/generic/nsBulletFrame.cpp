@@ -756,8 +756,7 @@ Maybe<BulletRenderer> nsBulletFrame::CreateBulletRenderer(
         builder->LineTo(NSPointToPoint(
             (rect.BottomLeft() + rect.BottomRight()) / 2, appUnitsPerDevPixel));
       } else {
-        bool isLR = isVertical ? wm.IsVerticalLR() : wm.IsBidiLTR();
-        if (isLR) {
+        if (wm.IsPhysicalLTR()) {
           // to right
           builder->MoveTo(NSPointToPoint(rect.TopLeft(), appUnitsPerDevPixel));
           builder->LineTo(NSPointToPoint(
