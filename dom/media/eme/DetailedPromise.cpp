@@ -62,7 +62,7 @@ void DetailedPromise::MaybeReject(ErrorResult& aArg,
 already_AddRefed<DetailedPromise> DetailedPromise::Create(
     nsIGlobalObject* aGlobal, ErrorResult& aRv, const nsACString& aName) {
   RefPtr<DetailedPromise> promise = new DetailedPromise(aGlobal, aName);
-  promise->CreateWrapper(nullptr, aRv);
+  promise->CreateWrapper(aRv);
   return aRv.Failed() ? nullptr : promise.forget();
 }
 
@@ -73,7 +73,7 @@ already_AddRefed<DetailedPromise> DetailedPromise::Create(
     Telemetry::HistogramID aFailureLatencyProbe) {
   RefPtr<DetailedPromise> promise = new DetailedPromise(
       aGlobal, aName, aSuccessLatencyProbe, aFailureLatencyProbe);
-  promise->CreateWrapper(nullptr, aRv);
+  promise->CreateWrapper(aRv);
   return aRv.Failed() ? nullptr : promise.forget();
 }
 
