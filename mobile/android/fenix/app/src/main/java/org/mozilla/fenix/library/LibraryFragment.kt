@@ -4,8 +4,6 @@
 
 package org.mozilla.fenix.library
 
-import android.graphics.PorterDuff.Mode.SRC_IN
-import android.graphics.PorterDuffColorFilter
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuInflater
@@ -22,6 +20,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
+import org.mozilla.fenix.ext.setToolbarColors
 
 /**
  * Displays buttons to navigate to library sections, such as bookmarks and history.
@@ -35,10 +34,7 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
 
     override fun onResume() {
         super.onResume()
-
-        setToolbarColor()
-        (activity as AppCompatActivity).title = getString(R.string.library_title)
-        (activity as AppCompatActivity).supportActionBar?.show()
+        initToolbar()
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -47,7 +43,10 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
         libraryHistory.setOnClickListener {
             requireComponents.analytics.metrics
                 .track(Event.LibrarySelectedItem(view.context.getString(R.string.library_history)))
-            nav(R.id.libraryFragment, LibraryFragmentDirections.actionLibraryFragmentToHistoryFragment())
+            nav(
+                R.id.libraryFragment,
+                LibraryFragmentDirections.actionLibraryFragmentToHistoryFragment()
+            )
         }
 
         libraryBookmarks.setOnClickListener {
@@ -81,15 +80,16 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
         requireComponents.analytics.metrics.track(Event.LibraryClosed)
     }
 
-    private fun setToolbarColor() {
-        val toolbar = (activity as AppCompatActivity).findViewById<Toolbar>(R.id.navigationToolbar)
-
-        val backgroundColor = context!!.getColorFromAttr(R.attr.foundation)
-        val foregroundColor = context!!.getColorFromAttr(R.attr.primaryText)
-
-        toolbar.setBackgroundColor(backgroundColor)
-        toolbar.setTitleTextColor(foregroundColor)
-        toolbar.navigationIcon?.colorFilter =
-            PorterDuffColorFilter(foregroundColor, SRC_IN)
+    private fun initToolbar() {
+        val activity = activity as? AppCompatActivity
+        val toolbar = activity?.findViewById<Toolbar>(R.id.navigationToolbar)
+        context?.let { context ->
+            toolbar?.setToolbarColors(
+                foreground = context.getColorFromAttr(R.attr.primaryText),
+                background = context.getColorFromAttr(R.attr.foundation)
+            )
+        }
+        activity?.title = getString(R.string.library_title)
+        activity?.supportActionBar?.show()
     }
 }

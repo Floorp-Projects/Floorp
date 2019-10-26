@@ -5,18 +5,10 @@
 package org.mozilla.fenix.library
 
 import android.content.Context
-import android.graphics.ColorFilter
-import android.graphics.PorterDuff
-import android.graphics.PorterDuffColorFilter
 import android.view.ViewGroup
-import android.widget.ActionMenuView
-import android.widget.ImageButton
-import androidx.annotation.ColorInt
-import androidx.appcompat.view.menu.ActionMenuItemView
 import androidx.appcompat.widget.Toolbar
 import androidx.core.content.ContextCompat
 import androidx.core.view.children
-import androidx.core.view.forEach
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.extensions.LayoutContainer
 import kotlinx.android.synthetic.main.library_site_item.view.*
@@ -24,6 +16,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.asActivity
 import org.mozilla.fenix.ext.getColorFromAttr
 import org.mozilla.fenix.ext.hideAndDisable
+import org.mozilla.fenix.ext.setToolbarColors
 import org.mozilla.fenix.ext.showAndEnable
 
 open class LibraryPageView(
@@ -36,14 +29,14 @@ open class LibraryPageView(
         title: String?,
         libraryItemsList: RecyclerView
     ) {
-        activity?.title = title
-        setToolbarColors(
-            context.getColorFromAttr(R.attr.primaryText),
-            context.getColorFromAttr(R.attr.foundation)
+        updateToolbar(
+            title = title,
+            foregroundColor = context.getColorFromAttr(R.attr.primaryText),
+            backgroundColor = context.getColorFromAttr(R.attr.foundation)
         )
         libraryItemsList.setItemViewCacheSize(0)
-        libraryItemsList.children.forEach {
-                item -> item.overflow_menu.showAndEnable()
+        libraryItemsList.children.forEach { item ->
+            item.overflow_menu.showAndEnable()
         }
     }
 
@@ -51,46 +44,20 @@ open class LibraryPageView(
         title: String?,
         libraryItemsList: RecyclerView
     ) {
-        activity?.title = title
-        setToolbarColors(
-            ContextCompat.getColor(context, R.color.white_color),
-            context.getColorFromAttr(R.attr.accentHighContrast)
+        updateToolbar(
+            title = title,
+            foregroundColor = ContextCompat.getColor(context, R.color.white_color),
+            backgroundColor = context.getColorFromAttr(R.attr.accentHighContrast)
         )
         libraryItemsList.setItemViewCacheSize(0)
-        libraryItemsList.children.forEach {
-            item -> item.overflow_menu.hideAndDisable()
+        libraryItemsList.children.forEach { item ->
+            item.overflow_menu.hideAndDisable()
         }
     }
 
-    /**
-     * Adjust the colors of the [Toolbar] on the top of the screen.
-     */
-    private fun setToolbarColors(@ColorInt foreground: Int, @ColorInt background: Int) {
+    private fun updateToolbar(title: String?, foregroundColor: Int, backgroundColor: Int) {
+        activity?.title = title
         val toolbar = activity?.findViewById<Toolbar>(R.id.navigationToolbar)
-
-        toolbar?.apply {
-            setBackgroundColor(background)
-            setTitleTextColor(foreground)
-
-            val colorFilter = PorterDuffColorFilter(foreground, PorterDuff.Mode.SRC_IN)
-
-            overflowIcon?.colorFilter = colorFilter
-            forEach { child ->
-                when (child) {
-                    is ImageButton -> child.drawable.colorFilter = colorFilter
-                    is ActionMenuView -> themeActionMenuView(child, colorFilter)
-                }
-            }
-        }
-    }
-
-    private fun themeActionMenuView(item: ActionMenuView, colorFilter: ColorFilter) {
-        item.forEach { innerChild ->
-            if (innerChild is ActionMenuItemView) {
-                innerChild.compoundDrawables.forEach { drawable ->
-                    item.post { drawable?.colorFilter = colorFilter }
-                }
-            }
-        }
+        toolbar?.setToolbarColors(foregroundColor, backgroundColor)
     }
 }
