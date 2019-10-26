@@ -72,12 +72,11 @@
     return e;
   } }
 
-  // A sample policy we use to test TrustedTypes.createPolicy behaviour.
+  // A sample policy we use to test trustedTypes.createPolicy behaviour.
   const id = x => x;
   const a_policy = {
     createHTML: id,
     createScriptURL: id,
-    createURL: id,
     createScript: id,
   };
 
@@ -101,14 +100,14 @@
         .then(expect_sample("three"))
         .then(expect_blocked_uri("trusted-types-policy"))
         .then(promise_flush());
-    expect_throws(_ => TrustedTypes.createPolicy("three", a_policy));
+    expect_throws(_ => trustedTypes.createPolicy("three", a_policy));
     flush();
     return p;
   }, "Trusted Type violation report: creating a forbidden policy.");
 
   promise_test(t => {
     let p = promise_flush()();
-    expect_throws(_ => TrustedTypes.createPolicy("two", a_policy));
+    expect_throws(_ => trustedTypes.createPolicy("two", a_policy));
     flush();
     return p;
   }, "Trusted Type violation report: creating a report-only-forbidden policy.");
@@ -120,16 +119,16 @@
     let p = Promise.resolve()
         .then(promise_violation("trusted-types two"))
         .then(promise_flush());
-    policy_one = TrustedTypes.createPolicy("one", a_policy);
+    policy_one = trustedTypes.createPolicy("one", a_policy);
     flush();
     return p;
   }, "Trusted Type violation report: creating a forbidden-but-not-reported policy.");
 
   promise_test(t => {
     let p = promise_violation("trusted-types two")();
-    expect_throws(_ => document.getElementById("anchor").href = url);
+    expect_throws(_ => document.getElementById("script").src = url);
     return p;
-  }, "Trusted Type violation report: assign string to url");
+  }, "Trusted Type violation report: assign string to script url");
 
   promise_test(t => {
     let p = promise_violation("trusted-types two")();
@@ -139,10 +138,10 @@
 
   promise_test(t => {
     let p = promise_flush()();
-    document.getElementById("anchor").href = policy_one.createURL("#");
+    document.getElementById("script").text = policy_one.createScript("2+2;");
     flush();
     return p;
-  }, "Trusted Type violation report: assign trusted URL to url; no report");
+  }, "Trusted Type violation report: assign trusted script to script; no report");
 
   promise_test(t => {
     let p = promise_flush()();
@@ -165,10 +164,10 @@
     let p = Promise.resolve()
         .then(promise_violation("trusted-types two"))
         .then(expect_blocked_uri("trusted-types-sink"))
-        .then(expect_sample("HTMLAnchorElement.href"));
-      expect_throws(_ => { document.getElementById("anchor").href = "" });
+        .then(expect_sample("HTMLScriptElement.src"));
+      expect_throws(_ => { document.getElementById("script").src = "" });
     return p;
-  }, "Trusted Type violation report: sample for .href assignment");
+  }, "Trusted Type violation report: sample for script.src assignment");
 
   promise_test(t => {
     let p = Promise.resolve()
@@ -210,24 +209,24 @@
   // refer to the DOM elements being modified, so that Custom Elements cannot
   // "mask" the underlying DOM mechanism (for reporting).
   if (customElements) {
-    class CustomLink extends HTMLAnchorElement {};
-    customElements.define("custom-link", CustomLink, { extends: "a" });
+    class CustomScript extends HTMLScriptElement {};
+    customElements.define("custom-script", CustomScript, { extends: "script" });
 
     promise_test(t => {
       let p = Promise.resolve()
           .then(promise_violation("trusted-types one"))
           .then(expect_blocked_uri("trusted-types-sink"))
-          .then(expect_sample("HTMLAnchorElement.href"))
+          .then(expect_sample("HTMLScriptElement.src"))
           .then(expect_sample("abc"));
-      expect_throws(_ => document.getElementById("customlink").href = "abc");
+      expect_throws(_ => document.getElementById("customscript").src = "abc");
       return p;
     }, "Trusted Type violation report: sample for custom element assignment");
   }
+
   </script>
 
   <!-- Some elements for the tests to act on. -->
-  <a id="anchor" href="">anchor</a>
   <div id="div"></div>
   <script id="script"></script>
-  <a id="customlink" is="custom-link" href="a"></a>
+  <script id="customscript" is="custom-script" src="a"></script>
 </body>

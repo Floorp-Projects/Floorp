@@ -124,7 +124,7 @@ var GenericSensorTest = (() => {
   class MockSensorProvider {
     constructor() {
       this.readingSizeInBytes_ =
-          device.mojom.SensorInitParams.kReadBufferSizeForTests;
+          device.mojom.SensorInitParams.READ_BUFFER_SIZE_FOR_TESTS;
       this.sharedBufferSizeInBytes_ = this.readingSizeInBytes_ *
               (device.mojom.SensorType.MAX_VALUE + 1);
       const rv = Mojo.createSharedBuffer(this.sharedBufferSizeInBytes_);
@@ -197,6 +197,19 @@ var GenericSensorTest = (() => {
       if (type == device.mojom.SensorType.AMBIENT_LIGHT ||
           type == device.mojom.SensorType.MAGNETOMETER) {
         this.maxFrequency_ = Math.min(10, this.maxFrequency_);
+      }
+
+      // Chromium applies some rounding and other privacy-related measures that
+      // can cause ALS not to report a reading when it has not changed beyond a
+      // certain threshold compared to the previous illuminance value. Make
+      // each reading return a different value that is significantly different
+      // from the previous one when setSensorReading() is not called by client
+      // code (e.g. run_generic_sensor_iframe_tests()).
+      if (type == device.mojom.SensorType.AMBIENT_LIGHT) {
+        this.activeSensors_.get(type).setSensorReading([
+          [window.performance.now() * 100],
+          [(window.performance.now() + 50) * 100]
+        ]);
       }
 
       const initParams = new device.mojom.SensorInitParams({
