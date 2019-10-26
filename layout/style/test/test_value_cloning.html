@@ -18,12 +18,6 @@ const { AppConstants } = SpecialPowers.Cu.import(
   {}
 );
 
-if (!AppConstants.MOZ_XBL) {
-  // This property still exists when XBL is disabled, but we don't want to
-  // test it, since it will crash. Will be removed in bug 1566221.
-  delete gCSSProperties["-moz-binding"]
-}
-
 /** Test for cloning of CSS property values (including 'inherit', 'initial' and 'unset') **/
 var test_queue = [];
 var iframe = document.getElementById("iframe");

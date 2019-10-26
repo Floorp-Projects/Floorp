@@ -182,7 +182,6 @@ exports.ANIMATION_TYPE_FOR_LONGHANDS = [
       "animation-name",
       "animation-play-state",
       "animation-timing-function",
-      "-moz-binding",
       "block-size",
       "border-block-end-color",
       "border-block-end-style",
