@@ -391,12 +391,19 @@ if (navigator.platform.includes("Linux")) {
 
 var testIndex = 0;
 
+// Change it to something like /bug1524266/ to skip all other tests and make
+// debugging easier...
+const DEBUG_TEST_FILTER = null;
+
 function nextTest() {
   if (testIndex < tests.length) {
-    if (typeof(tests[testIndex]) == 'function') {
-      tests[testIndex]();
+    let test = tests[testIndex];
+    if (typeof(test) == 'function') {
+      test();
+    } else if (!DEBUG_TEST_FILTER || DEBUG_TEST_FILTER.test(test[0])) {
+      refTest(test[0], test[1]);
     } else {
-      refTest(tests[testIndex][0],tests[testIndex][1]);
+      setTimeout(nextTest, 0);
     }
     ++testIndex;
   } else {
