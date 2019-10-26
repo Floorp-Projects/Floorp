@@ -150,3 +150,6 @@ fails == translate-rounding-3.html translate-rounding-viewport-ref.html # bug 13
 # Bug 1526847
 pref(layout.css.individual-transform.enabled,true) == animate-layer-scale-inherit-4.html animate-layer-scale-inherit-4-ref.html
 == 1569215-1.html 1569215-1-ref.html
+
+test-pref(layout.css.zoom-transform-hack.enabled,true) == zoom-hack-1.html zoom-hack-ref.html
+test-pref(layout.css.zoom-transform-hack.enabled,false) != zoom-hack-1.html zoom-hack-ref.html
