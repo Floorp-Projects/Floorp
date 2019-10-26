@@ -188,6 +188,8 @@ child:
 
   async AltDataCacheInputStreamAvailable(IPCStream? stream);
 
+  async OverrideReferrerInfoDuringBeginConnect(nsIReferrerInfo referrerInfo);
+
 both:
   // After receiving this message, the parent also calls
   // SendFinishInterceptedRedirect, and makes sure not to send any more messages

@@ -23,7 +23,7 @@ async function testOnWindowBody(win, expectedReferrer, rp) {
   await promiseTabLoadEvent(tab, TEST_TOP_PAGE);
 
   info("Loading tracking scripts and tracking images");
-  await ContentTask.spawn(b, { rp }, async function({ rp }) {
+  let referrer = await ContentTask.spawn(b, { rp }, async function({ rp }) {
     {
       let src = content.document.createElement("script");
       let p = new content.Promise(resolve => {
@@ -51,7 +51,31 @@ async function testOnWindowBody(win, expectedReferrer, rp) {
         "https://tracking.example.org/browser/toolkit/components/antitracking/test/browser/referrer.sjs?what=image";
       await p;
     }
+
+    {
+      let iframe = content.document.createElement("iframe");
+      let p = new content.Promise(resolve => {
+        iframe.onload = resolve;
+      });
+      content.document.body.appendChild(iframe);
+      if (rp) {
+        iframe.referrerPolicy = rp;
+      }
+      iframe.src =
+        "https://tracking.example.org/browser/toolkit/components/antitracking/test/browser/referrer.sjs?what=iframe";
+      await p;
+
+      p = new content.Promise(resolve => {
+        content.onmessage = event => {
+          resolve(event.data);
+        };
+      });
+      iframe.contentWindow.postMessage("ping", "*");
+      return p;
+    }
   });
+
+  is(referrer, expectedReferrer, "The correct referrer must be read from DOM");
 
   await fetch(
     "https://tracking.example.org/browser/toolkit/components/antitracking/test/browser/referrer.sjs?result&what=script"
@@ -63,6 +87,14 @@ async function testOnWindowBody(win, expectedReferrer, rp) {
 
   await fetch(
     "https://tracking.example.org/browser/toolkit/components/antitracking/test/browser/referrer.sjs?result&what=image"
+  )
+    .then(r => r.text())
+    .then(text => {
+      is(text, expectedReferrer, "We sent the correct Referer header");
+    });
+
+  await fetch(
+    "https://tracking.example.org/browser/toolkit/components/antitracking/test/browser/referrer.sjs?result&what=iframe"
   )
     .then(r => r.text())
     .then(text => {
