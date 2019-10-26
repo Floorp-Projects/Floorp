@@ -238,8 +238,15 @@ panelview[mainview] > .panel-header {
   pointer-events: auto;
 }
 
+/* The address bar needs to be able to render outside of the toolbar, but as
+ * long as it's within the toolbar's bounds we can clip the toolbar so that the
+ * rendering pipeline doesn't reserve an enormous texture for it. */
+#nav-bar:not([urlbar-exceeds-toolbar-bounds]),
+/* When customizing, overflowable toolbars move automatically moved items back
+ * from the overflow menu, but we still don't want to render them outside of
+ * the customization target. */
 toolbar[overflowable][customizing] > .customization-target {
-  overflow: hidden;
+  overflow: -moz-hidden-unscrollable;
 }
 
 toolbar:not([overflowing]) > .overflow-button,
