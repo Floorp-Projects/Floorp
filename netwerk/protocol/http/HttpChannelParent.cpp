@@ -485,7 +485,8 @@ bool HttpChannelParent::DoAsyncOpen(
   if (docUri) httpChannel->SetDocumentURI(docUri);
   if (aReferrerInfo) {
     // Referrer header is computed in child no need to recompute here
-    rv = httpChannel->SetReferrerInfo(aReferrerInfo, false, false);
+    rv =
+        httpChannel->SetReferrerInfoInternal(aReferrerInfo, false, false, true);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
   }
 
@@ -917,7 +918,8 @@ mozilla::ipc::IPCResult HttpChannelParent::RecvRedirect2Verify(
         MOZ_ASSERT(baseChannel);
         if (baseChannel) {
           // Referrer header is computed in child no need to recompute here
-          rv = baseChannel->SetReferrerInfo(aReferrerInfo, false, false);
+          rv = baseChannel->SetReferrerInfoInternal(aReferrerInfo, false, false,
+                                                    true);
           MOZ_ASSERT(NS_SUCCEEDED(rv));
         }
       }
@@ -2758,6 +2760,11 @@ nsresult HttpChannelParent::TriggerCrossProcessSwitch(nsIHttpChannel* aChannel,
       });
 
   return NS_OK;
+}
+
+void HttpChannelParent::OverrideReferrerInfoDuringBeginConnect(
+    nsIReferrerInfo* aReferrerInfo) {
+  Unused << SendOverrideReferrerInfoDuringBeginConnect(aReferrerInfo);
 }
 
 }  // namespace net
