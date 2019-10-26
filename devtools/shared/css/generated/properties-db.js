@@ -10813,6 +10813,49 @@ exports.CSS_PROPERTIES = {
       "revert",
       "unset"
     ]
+  },
+  "zoom": {
+    "isInherited": false,
+    "subproperties": [
+      "transform",
+      "transform-origin"
+    ],
+    "supports": [],
+    "values": [
+      "accumulatematrix",
+      "bottom",
+      "center",
+      "inherit",
+      "initial",
+      "interpolatematrix",
+      "left",
+      "matrix",
+      "matrix3d",
+      "none",
+      "perspective",
+      "revert",
+      "right",
+      "rotate",
+      "rotate3d",
+      "rotateX",
+      "rotateY",
+      "rotateZ",
+      "scale",
+      "scale3d",
+      "scaleX",
+      "scaleY",
+      "scaleZ",
+      "skew",
+      "skewX",
+      "skewY",
+      "top",
+      "translate",
+      "translate3d",
+      "translateX",
+      "translateY",
+      "translateZ",
+      "unset"
+    ]
   }
 };
 
@@ -10979,6 +11022,10 @@ exports.PREFERENCES = [
   [
     "offset",
     "layout.css.motion-path.enabled"
+  ],
+  [
+    "zoom",
+    "layout.css.zoom-transform-hack.enabled"
   ],
   [
     "-moz-transition-duration",

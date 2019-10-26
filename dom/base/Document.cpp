@@ -12755,9 +12755,8 @@ void Document::MaybeWarnAboutZoom() {
     return;
   }
   const bool usedZoom =
-      mStyleUseCounters &&
-      Servo_IsUnknownPropertyRecordedInUseCounter(mStyleUseCounters.get(),
-                                                  CountedUnknownProperty::Zoom);
+      mStyleUseCounters && Servo_IsPropertyIdRecordedInUseCounter(
+                               mStyleUseCounters.get(), eCSSProperty_zoom);
   if (!usedZoom) {
     return;
   }

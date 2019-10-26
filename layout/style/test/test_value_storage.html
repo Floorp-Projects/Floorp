@@ -205,6 +205,18 @@ function test_property(property)
         if (info.type == CSS_TYPE_LEGACY_SHORTHAND && value_has_variable_reference)
           newValue = "";
         expected_serialization = info.alias_for + colon + newValue + ";";
+      } else if (info.type == CSS_TYPE_LEGACY_SHORTHAND) {
+        is(property, "zoom", "Zoom is a bit special because it never " +
+                             "serializes as-is, we always serialize the longhands, " +
+                             "but it doesn't just map to a single property " +
+                             "(and thus we can't use the 'alias_for' mechanism)");
+        let transform = step1val == "1" ? "none" : "scale(" + step1val + ")";
+        let origin = step1val == "1" ? "50% 50% 0px" : "0px 0px 0px";
+        if (value_has_variable_reference) { // See above.
+          transform = "";
+          origin = "";
+        }
+        expected_serialization = "transform" + colon + transform + "; transform-origin" + colon + origin + ";";
       } else {
         expected_serialization = property + colon + step1val + ";";
       }

@@ -1207,6 +1207,7 @@ for (prop in gCSSProperties) {
   if (!(prop in supported_properties) &&
       !skipped_transitionable_properties.includes(prop) &&
       info.type != CSS_TYPE_TRUE_SHORTHAND &&
+      info.type != CSS_TYPE_LEGACY_SHORTHAND &&
       !("alias_for" in info) &&
       !prop.match(/^transition-/) &&
       // FIXME (Bug 119078): THIS SHOULD REALLY NOT BE NEEDED!

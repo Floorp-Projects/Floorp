@@ -83,6 +83,12 @@ function test_property(property)
     if ("alias_for" in info) {
       is(gDeclaration.cssText, info.alias_for + ": " + keyword + ";",
         "declaration should serialize to exactly what went in (for " + keyword + ")");
+    } else if (info.type == CSS_TYPE_LEGACY_SHORTHAND) {
+      // We can't assert anything more meaningful here, really.
+      is(property, "zoom", "Zoom is a bit special because it never " +
+                           "serializes as-is, we always serialize the longhands, " +
+                           "but it doesn't just map to a single property " +
+                           "(and thus we can't use the 'alias_for' mechanism)");
     } else {
       is(gDeclaration.cssText, property + ": " + keyword + ";",
         "declaration should serialize to exactly what went in (for " + keyword + ")");
