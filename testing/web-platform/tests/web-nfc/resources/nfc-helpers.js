@@ -152,6 +152,8 @@ function assertWebNDEFMessagesEqual(message, expectedMessage) {
     assert_equals(record.mediaType, expectedRecord.mediaType);
 
     // Compares record data
+    assert_array_equals(new Uint8Array(record.data),
+          new Uint8Array(expectedRecord.data));
     assert_equals(record.text(), expectedRecord.text());
     assert_array_equals(new Uint8Array(record.arrayBuffer()),
           new Uint8Array(expectedRecord.arrayBuffer()));
