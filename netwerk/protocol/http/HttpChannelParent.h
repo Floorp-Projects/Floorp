@@ -136,6 +136,10 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
   nsresult TriggerCrossProcessSwitch(nsIHttpChannel* aChannel,
                                      uint64_t aIdentifier);
 
+  // Inform the child actor that our referrer info was modified late during
+  // BeginConnect.
+  void OverrideReferrerInfoDuringBeginConnect(nsIReferrerInfo* aReferrerInfo);
+
  protected:
   // used to connect redirected-to channel in parent with just created
   // ChildChannel.  Used during redirects.
