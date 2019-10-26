@@ -87,7 +87,7 @@ addRDMTask(TEST_URL, async function({ ui, manager }) {
 
     // Get to the initial size and snapshot the window.
     await setViewportSize(ui, manager, 300, 600);
-    const initialSnapshot = snapshotWindow(browser.contentWindow);
+    const initialSnapshot = await snapshotWindow(browser.contentWindow);
 
     // Move to the rotated size.
     await setViewportSize(ui, manager, 600, 300);
@@ -99,7 +99,7 @@ addRDMTask(TEST_URL, async function({ ui, manager }) {
 
     // Go back to the initial size and take another snapshot.
     await setViewportSize(ui, manager, 300, 600);
-    const finalSnapshot = snapshotWindow(browser.contentWindow);
+    const finalSnapshot = await snapshotWindow(browser.contentWindow);
 
     const result = compareSnapshots(initialSnapshot, finalSnapshot, true);
     is(result[2], result[1], "Window snapshots should match.");
