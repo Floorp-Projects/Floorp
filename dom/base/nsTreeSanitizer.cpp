@@ -1062,10 +1062,6 @@ bool nsTreeSanitizer::MustPrune(int32_t aNamespace, nsAtom* aLocal,
   return false;
 }
 
-bool nsTreeSanitizer::SanitizeStyleDeclaration(DeclarationBlock* aDeclaration) {
-  return aDeclaration->RemovePropertyByID(eCSSProperty__moz_binding);
-}
-
 bool nsTreeSanitizer::SanitizeStyleSheet(const nsAString& aOriginal,
                                          nsAString& aSanitized,
                                          Document* aDocument,
@@ -1111,26 +1107,14 @@ bool nsTreeSanitizer::SanitizeStyleSheet(const nsAString& aOriginal,
         didSanitize = true;
         // Ignore these rule types.
         break;
+      case CSSRule_Binding::STYLE_RULE:
       case CSSRule_Binding::NAMESPACE_RULE:
       case CSSRule_Binding::FONT_FACE_RULE: {
-        // Append @namespace and @font-face rules verbatim.
+        // Append style, @namespace and @font-face rules verbatim.
         nsAutoString cssText;
         rule->GetCssText(cssText);
         aSanitized.Append(cssText);
         break;
-      }
-      case CSSRule_Binding::STYLE_RULE: {
-        // For style rules, we will just look for and remove the
-        // -moz-binding properties.
-        auto styleRule = static_cast<BindingStyleRule*>(rule);
-        DeclarationBlock* styleDecl = styleRule->GetDeclarationBlock();
-        MOZ_ASSERT(styleDecl);
-        if (SanitizeStyleDeclaration(styleDecl)) {
-          didSanitize = true;
-        }
-        nsAutoString decl;
-        styleRule->GetCssText(decl);
-        aSanitized.Append(decl);
       }
     }
   }
@@ -1169,26 +1153,6 @@ void nsTreeSanitizer::SanitizeAttributes(mozilla::dom::Element* aElement,
 
     if (kNameSpaceID_None == attrNs) {
       if (aAllowed.mStyle && nsGkAtoms::style == attrLocal) {
-        nsAutoString value;
-        aElement->GetAttr(attrNs, attrLocal, value);
-        Document* document = aElement->OwnerDoc();
-        RefPtr<URLExtraData> urlExtra(aElement->GetURLDataForStyleAttr());
-        RefPtr<DeclarationBlock> decl = DeclarationBlock::FromCssText(
-            value, urlExtra, document->GetCompatibilityMode(),
-            document->CSSLoader());
-        if (decl) {
-          if (SanitizeStyleDeclaration(decl)) {
-            nsAutoString cleanValue;
-            decl->ToString(cleanValue);
-            aElement->SetAttr(kNameSpaceID_None, nsGkAtoms::style, cleanValue,
-                              false);
-            if (mLogRemovals) {
-              LogMessage(
-                  "Removed -moz-binding styling from element style attribute.",
-                  aElement->OwnerDoc(), aElement);
-            }
-          }
-        }
         continue;
       }
       if (aAllowed.mDangerousSrc && nsGkAtoms::src == attrLocal) {

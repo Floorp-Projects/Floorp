@@ -2648,8 +2648,7 @@ bool StyleAnimation::operator==(const StyleAnimation& aOther) const {
 // nsStyleDisplay
 //
 nsStyleDisplay::nsStyleDisplay(const Document& aDocument)
-    : mBinding(StyleUrlOrNone::None()),
-      mTransitions(
+    : mTransitions(
           nsStyleAutoArray<StyleTransition>::WITH_SINGLE_INITIAL_ELEMENT),
       mTransitionTimingFunctionCount(1),
       mTransitionDurationCount(1),
@@ -2717,8 +2716,7 @@ nsStyleDisplay::nsStyleDisplay(const Document& aDocument)
 }
 
 nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
-    : mBinding(aSource.mBinding),
-      mTransitions(aSource.mTransitions),
+    : mTransitions(aSource.mTransitions),
       mTransitionTimingFunctionCount(aSource.mTransitionTimingFunctionCount),
       mTransitionDurationCount(aSource.mTransitionDurationCount),
       mTransitionDelayCount(aSource.mTransitionDelayCount),
@@ -2848,8 +2846,8 @@ nsChangeHint nsStyleDisplay::CalcDifference(
     const nsStyleDisplay& aNewData, const nsStylePosition& aOldPosition) const {
   nsChangeHint hint = nsChangeHint(0);
 
-  if (mBinding != aNewData.mBinding || mPosition != aNewData.mPosition ||
-      mDisplay != aNewData.mDisplay || mContain != aNewData.mContain ||
+  if (mPosition != aNewData.mPosition || mDisplay != aNewData.mDisplay ||
+      mContain != aNewData.mContain ||
       (mFloat == StyleFloat::None) != (aNewData.mFloat == StyleFloat::None) ||
       mScrollBehavior != aNewData.mScrollBehavior ||
       mScrollSnapType != aNewData.mScrollSnapType ||

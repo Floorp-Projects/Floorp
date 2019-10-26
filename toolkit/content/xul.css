@@ -457,10 +457,6 @@ search-textbox {
 /* SeaMonkey uses its own autocomplete and the toolkit's autocomplete widget */
 %ifndef MOZ_SUITE
 
-panel[type="autocomplete-richlistbox"] {
-  -moz-binding: none;
-}
-
 .autocomplete-richlistbox {
   -moz-user-focus: ignore;
   overflow-x: hidden !important;
@@ -625,7 +621,3 @@ tabmodalprompt {
   [ordinal="9"] { -moz-box-ordinal-group: 9; }
   [ordinal="1000"] { -moz-box-ordinal-group: 1000; }
 }
-
-%ifndef MOZ_XBL
-* { -moz-binding: none !important }
-%endif

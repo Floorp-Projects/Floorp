@@ -1470,7 +1470,6 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
   nsChangeHint CalcDifference(const nsStyleDisplay& aNewData,
                               const nsStylePosition& aOldPosition) const;
 
-  mozilla::StyleUrlOrNone mBinding;
   nsStyleAutoArray<mozilla::StyleTransition> mTransitions;
   // The number of elements in mTransitions that are not from repeating
   // a list due to another property being longer.

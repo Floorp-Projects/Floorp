@@ -3119,7 +3119,6 @@ exports.CSS_PROPERTIES = {
       "transform-origin",
       "contain",
       "-moz-appearance",
-      "-moz-binding",
       "-moz-orient",
       "will-change",
       "shape-image-threshold",
@@ -11002,10 +11001,6 @@ exports.PREFERENCES = [
   [
     "text-underline-offset",
     "layout.css.text-underline-offset.enabled"
-  ],
-  [
-    "-moz-binding",
-    "layout.css.moz-binding.content.enabled"
   ],
   [
     "offset-distance",

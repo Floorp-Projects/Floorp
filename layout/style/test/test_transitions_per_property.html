@@ -1210,8 +1210,6 @@ for (prop in gCSSProperties) {
       info.type != CSS_TYPE_LEGACY_SHORTHAND &&
       !("alias_for" in info) &&
       !prop.match(/^transition-/) &&
-      // FIXME (Bug 119078): THIS SHOULD REALLY NOT BE NEEDED!
-      prop != "-moz-binding" &&
       prop != "mask") {
 
     if ("prerequisites" in info) {

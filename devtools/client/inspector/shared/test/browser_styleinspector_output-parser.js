@@ -139,15 +139,6 @@ const TEST_DATA = [
     },
   },
   {
-    name: "-moz-binding",
-    value: "url(http://somesite.com/path/to/binding.xml#someid)",
-    test: fragment => {
-      is(countAll(fragment), 1);
-      is(countUrls(fragment), 1);
-      is(getUrl(fragment), "http://somesite.com/path/to/binding.xml#someid");
-    },
-  },
-  {
     name: "background",
     value:
       "linear-gradient(to right, rgba(183,222,237,1) 0%, " +
