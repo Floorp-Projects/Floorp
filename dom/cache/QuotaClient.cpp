@@ -31,6 +31,7 @@ using mozilla::dom::cache::Manager;
 using mozilla::dom::cache::QuotaInfo;
 using mozilla::dom::quota::AssertIsOnIOThread;
 using mozilla::dom::quota::Client;
+using mozilla::dom::quota::PERSISTENCE_TYPE_DEFAULT;
 using mozilla::dom::quota::PersistenceType;
 using mozilla::dom::quota::QuotaManager;
 using mozilla::dom::quota::UsageInfo;
@@ -111,15 +112,19 @@ static nsresult LockedGetPaddingSizeFromDB(nsIFile* aDir,
 
   *aPaddingSizeOut = 0;
 
-  nsCOMPtr<mozIStorageConnection> conn;
   QuotaInfo quotaInfo;
   quotaInfo.mGroup = aGroup;
   quotaInfo.mOrigin = aOrigin;
-  // This should only be called during the temporary storage is initializing.
-  // And at that moment, we haven't constructed in-memory objects
-  // (e.g. QuotaObject) yet. So, passing a specific id to not get a QuotaObject
-  // on the TelemetryVFS.
+  // quotaInfo.mDirectoryLockId must be -1 (which is default for new QuotaInfo)
+  // because this method should only be called from QuotaClient::InitOrigin
+  // (via QuotaClient::GetUsageForOriginInternal) when the temporary storage
+  // hasn't been initialized yet. At that time, the in-memory objects (e.g.
+  // OriginInfo) are only being created so it doesn't make sense to tunnel
+  // quota information to TelemetryVFS to get corresponding QuotaObject instance
+  // for the SQLite file).
   MOZ_DIAGNOSTIC_ASSERT(quotaInfo.mDirectoryLockId == -1);
+
+  nsCOMPtr<mozIStorageConnection> conn;
   nsresult rv = mozilla::dom::cache::OpenDBConnection(quotaInfo, aDir,
                                                       getter_AddRefs(conn));
   if (rv == NS_ERROR_FILE_NOT_FOUND ||
@@ -427,10 +432,12 @@ class CacheQuotaClient final : public Client {
       return rv;
     }
 
+    bool useCachedValue = false;
+
     int64_t paddingSize = 0;
     {
       // If the tempoary file still exists after locking, it means the previous
-      // action fails, so restore the padding file.
+      // action failed, so restore the padding file.
       MutexAutoLock lock(mDirPaddingFileMutex);
 
       if (mozilla::dom::cache::DirectoryPaddingFileExists(
@@ -445,18 +452,24 @@ class CacheQuotaClient final : public Client {
             return rv;
           }
         } else {
-          // XXXtt This should be handled in a better way.
-          // If there is no another action/operation for Cache on other threads,
-          // it means the previous action failed. And we should be safe to get
-          // the padding size from the database.
-          // However, if there is other actions access the files on Cache IO
-          // thread, then we shouldn't touch the file here.
-          REPORT_TELEMETRY_ERR_IN_INIT(aInitializing, kQuotaInternalError,
-                                       Cache_GetPaddingSize);
+          // We can't open the database at this point, since it can be already
+          // used by Cache IO thread. Use the cached value instead. (In theory,
+          // we could check if the database is actually used by Cache IO thread
+          // at this moment, but it's probably not worth additional complexity.)
 
-          return NS_ERROR_ABORT;
+          useCachedValue = true;
         }
       }
+    }
+
+    if (useCachedValue) {
+      uint64_t usage;
+      if (qm->GetUsageForClient(PERSISTENCE_TYPE_DEFAULT, aGroup, aOrigin,
+                                Client::DOMCACHE, usage)) {
+        aUsageInfo->AppendToDatabaseUsage(Some(usage));
+      }
+
+      return NS_OK;
     }
 
     aUsageInfo->AppendToFileUsage(Some(paddingSize));

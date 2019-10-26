@@ -63,9 +63,16 @@ class DirectoryLock : public RefCountedObject {
   friend class DirectoryLockImpl;
 
  public:
-  const nsACString& GetOrigin() const;
+  int64_t Id() const;
 
-  int64_t GetId() const;
+  // 'Get' prefix is to avoid name collisions with the enum
+  PersistenceType GetPersistenceType() const;
+
+  const nsACString& Group() const;
+
+  const nsACString& Origin() const;
+
+  Client::Type ClientType() const;
 
   already_AddRefed<DirectoryLock> Specialize(PersistenceType aPersistenceType,
                                              const nsACString& aGroup,
