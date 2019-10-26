@@ -8,9 +8,10 @@ import { clearDocuments } from "../utils/editor";
 import sourceQueue from "../utils/source-queue";
 
 import { updateThreads } from "./threads";
+import { evaluateExpressions } from "./expressions";
 
 import { clearWasmStates } from "../utils/wasm";
-import { getMainThread } from "../selectors";
+import { getMainThread, getThreadContext } from "../selectors";
 import type { Action, ThunkArgs } from "./types";
 
 /**
@@ -51,9 +52,9 @@ export function connect(
   traits: Object,
   isWebExtension: boolean
 ) {
-  return async function({ dispatch }: ThunkArgs) {
+  return async function({ dispatch, getState }: ThunkArgs) {
     await dispatch(updateThreads());
-    dispatch(
+    await dispatch(
       ({
         type: "CONNECT",
         mainThread: {
@@ -66,6 +67,9 @@ export function connect(
         isWebExtension,
       }: Action)
     );
+
+    const cx = getThreadContext(getState());
+    dispatch(evaluateExpressions(cx));
   };
 }
 

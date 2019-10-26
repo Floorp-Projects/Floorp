@@ -37,6 +37,7 @@ describe("navigation", () => {
     const { dispatch, getState } = createStore({
       fetchThreads: async () => [],
       getMainThread: () => "FakeThread",
+      evaluateExpressions: () => {},
     });
     await dispatch(
       actions.connect("http://test.com/foo", "actor", false, false)
