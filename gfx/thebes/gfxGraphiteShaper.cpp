@@ -75,6 +75,25 @@ static void AddFeature(const uint32_t& aTag, uint32_t& aValue, void* aUserArg) {
   }
 }
 
+// Count the number of Unicode characters in a UTF-16 string (i.e. surrogate
+// pairs are counted as 1, although they are 2 code units).
+// (Any isolated surrogates will count 1 each, because in decoding they would
+// be replaced by individual U+FFFD REPLACEMENT CHARACTERs.)
+static inline size_t CountUnicodes(const char16_t* aText, uint32_t aLength) {
+  size_t total = 0;
+  const char16_t* end = aText + aLength;
+  while (aText < end) {
+    if (NS_IS_HIGH_SURROGATE(*aText) && aText + 1 < end &&
+        NS_IS_LOW_SURROGATE(*(aText + 1))) {
+      aText += 2;
+    } else {
+      aText++;
+    }
+    total++;
+  }
+  return total;
+}
+
 bool gfxGraphiteShaper::ShapeText(DrawTarget* aDrawTarget,
                                   const char16_t* aText, uint32_t aOffset,
                                   uint32_t aLength, Script aScript,
@@ -152,8 +171,7 @@ bool gfxGraphiteShaper::ShapeText(DrawTarget* aDrawTarget,
     }
   }
 
-  size_t numChars =
-      gr_count_unicode_characters(gr_utf16, aText, aText + aLength, nullptr);
+  size_t numChars = CountUnicodes(aText, aLength);
   gr_bidirtl grBidi = gr_bidirtl(
       aShapedText->IsRightToLeft() ? (gr_rtl | gr_nobidi) : gr_nobidi);
   gr_segment* seg = gr_make_seg(mGrFont, mGrFace, 0, grFeatures, gr_utf16,
