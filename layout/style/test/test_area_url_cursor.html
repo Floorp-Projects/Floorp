@@ -18,13 +18,13 @@ SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(() => {
 
   let checked = false;
-  document.querySelector("area").addEventListener("mouseover", function() {
+  document.querySelector("area").addEventListener("mousemove", function() {
     setTimeout(() => {
       if (checked) {
         return;
       }
       checked = true;
-      ok("Didn't assert");
+      ok(true, "Didn't assert");
       SimpleTest.finish()
     }, 0);
   });
