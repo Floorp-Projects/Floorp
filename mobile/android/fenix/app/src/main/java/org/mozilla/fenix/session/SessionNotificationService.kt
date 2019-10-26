@@ -18,9 +18,8 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.getSystemService
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.support.utils.ThreadUtils
-
-import org.mozilla.fenix.R
 import org.mozilla.fenix.HomeActivity
+import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.metrics
@@ -104,6 +103,7 @@ class SessionNotificationService : Service() {
     private fun createOpenActionIntent(): PendingIntent {
         val intent = Intent(this, HomeActivity::class.java)
         intent.putExtra(HomeActivity.EXTRA_OPENED_FROM_NOTIFICATION, true)
+        intent.putExtra(HomeActivity.PRIVATE_BROWSING_MODE, true)
 
         return PendingIntent.getActivity(this, 1, intent, PendingIntent.FLAG_UPDATE_CURRENT)
     }
