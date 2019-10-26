@@ -239,8 +239,8 @@ void Context::QuotaInitRunnable::DirectoryLockAcquired(DirectoryLock* aLock) {
 
   mDirectoryLock = aLock;
 
-  MOZ_DIAGNOSTIC_ASSERT(mDirectoryLock->GetId() >= 0);
-  mQuotaInfo.mDirectoryLockId = mDirectoryLock->GetId();
+  MOZ_DIAGNOSTIC_ASSERT(mDirectoryLock->Id() >= 0);
+  mQuotaInfo.mDirectoryLockId = mDirectoryLock->Id();
 
   if (mCanceled) {
     Complete(NS_ERROR_ABORT);
