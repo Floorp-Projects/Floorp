@@ -28,7 +28,7 @@ PlayPromise::~PlayPromise() {
 already_AddRefed<PlayPromise> PlayPromise::Create(nsIGlobalObject* aGlobal,
                                                   ErrorResult& aRv) {
   RefPtr<PlayPromise> promise = new PlayPromise(aGlobal);
-  promise->CreateWrapper(nullptr, aRv);
+  promise->CreateWrapper(aRv);
   return aRv.Failed() ? nullptr : promise.forget();
 }
 

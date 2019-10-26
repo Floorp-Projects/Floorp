@@ -274,12 +274,11 @@ class Promise : public nsISupports, public SupportsWeakPtr<Promise> {
 
   virtual ~Promise();
 
-  // Do JS-wrapping after Promise creation.  Passing null for aDesiredProto will
-  // use the default prototype for the sort of Promise we have.
+  // Do JS-wrapping after Promise creation.
   // Pass ePropagateUserInteraction for aPropagateUserInteraction if you want
   // the promise resolve handler to be called as if we were handling user
   // input events in case we are currently handling user input events.
-  void CreateWrapper(JS::Handle<JSObject*> aDesiredProto, ErrorResult& aRv,
+  void CreateWrapper(ErrorResult& aRv,
                      PropagateUserInteraction aPropagateUserInteraction =
                          eDontPropagateUserInteraction);
 
