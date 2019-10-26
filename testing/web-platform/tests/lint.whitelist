@@ -7,13 +7,7 @@
 
 ## Whitespace rules that we can't enforce yet ##
 
-INDENT TABS: .gitmodules
 INDENT TABS: conformance-checkers/*
-INDENT TABS: content-security-policy/*
-INDENT TABS: pointerlock/*
-INDENT TABS: shadow-dom/*
-INDENT TABS: webaudio/*
-INDENT TABS: webvtt/*
 INDENT TABS: encoding/legacy*/*
 
 TRAILING WHITESPACE: 2dcontext/tools/current-work-canvas.xhtml
@@ -76,8 +70,8 @@ SET TIMEOUT: docs/*
 WEB-PLATFORM.TEST:README.md
 WEB-PLATFORM.TEST:*/README.md
 WEB-PLATFORM.TEST:docs/*
-INDENT TABS:docs/*
-CR AT EOL:docs/*
+CR AT EOL, INDENT TABS:docs/make.bat
+INDENT TABS:docs/Makefile
 
 ## Helper scripts ##
 
@@ -106,6 +100,8 @@ CR AT EOL: webvtt/parsing/file-parsing/tests/support/newlines.vtt
 
 # Intentional use of tabs
 INDENT TABS: html/semantics/embedded-content/the-canvas-element/size.attributes.parse.whitespace.html
+INDENT TABS: webvtt/parsing/file-parsing/tests/support/header-tab.vtt
+INDENT TABS: webvtt/parsing/file-parsing/tests/support/whitespace-chars.vtt
 
 # Intentional use of print statements
 PRINT STATEMENT: dom/nodes/Document-createElement-namespace-tests/generate.py
