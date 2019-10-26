@@ -37,6 +37,7 @@ import mozilla.components.concept.engine.prompt.PromptRequest.MenuChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.MultipleChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.SingleChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.TextPrompt
+import mozilla.components.feature.prompts.FilePicker.Companion.FILE_PICKER_ACTIVITY_REQUEST_CODE
 import mozilla.components.support.test.any
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
@@ -410,7 +411,7 @@ class PromptFeatureTest {
         intent.data = mock()
         store.dispatch(ContentAction.UpdatePromptRequestAction(tabId, filePickerRequest)).joinBlocking()
 
-        feature.onActivityResult(R.id.mozac_feature_prompts_file_picker_activity_request_code, RESULT_OK, intent)
+        feature.onActivityResult(FILE_PICKER_ACTIVITY_REQUEST_CODE, RESULT_OK, intent)
         processActions()
         assertTrue(onSingleFileSelectionWasCalled)
         assertNull(tab()?.content?.promptRequest)
@@ -442,7 +443,7 @@ class PromptFeatureTest {
 
         store.dispatch(ContentAction.UpdatePromptRequestAction(tabId, filePickerRequest)).joinBlocking()
 
-        feature.onActivityResult(R.id.mozac_feature_prompts_file_picker_activity_request_code, RESULT_OK, intent)
+        feature.onActivityResult(FILE_PICKER_ACTIVITY_REQUEST_CODE, RESULT_OK, intent)
         processActions()
         assertTrue(onMultipleFileSelectionWasCalled)
         assertNull(tab()?.content?.promptRequest)
@@ -462,7 +463,7 @@ class PromptFeatureTest {
 
         store.dispatch(ContentAction.UpdatePromptRequestAction(tabId, filePickerRequest)).joinBlocking()
 
-        feature.onActivityResult(R.id.mozac_feature_prompts_file_picker_activity_request_code, RESULT_CANCELED, intent)
+        feature.onActivityResult(FILE_PICKER_ACTIVITY_REQUEST_CODE, RESULT_CANCELED, intent)
         processActions()
         assertTrue(onDismissWasCalled)
         assertNull(tab()?.content?.promptRequest)
