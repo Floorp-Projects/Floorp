@@ -4832,12 +4832,6 @@
   value: @IS_NOT_RELEASE_OR_BETA@
   mirror: always
 
-# Is support for -moz-binding enabled?
-- name: layout.css.moz-binding.content.enabled
-  type: bool
-  value: false
-  mirror: always
-
 # Expose the media query -moz-touch-enabled to web content.
 - name: layout.css.moz-touch-enabled.enabled
   type: RelaxedAtomicBool

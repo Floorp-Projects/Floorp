@@ -1478,14 +1478,6 @@ var gCSSProperties = {
     other_values: ["radio", "menulist"],
     invalid_values: [],
   },
-  "-moz-binding": {
-    domProp: "MozBinding",
-    inherited: false,
-    type: CSS_TYPE_LONGHAND,
-    initial_values: ["none"],
-    other_values: ["url(foo.xml)"],
-    invalid_values: [],
-  },
   "border-inline": {
     domProp: "borderInline",
     inherited: false,
