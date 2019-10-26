@@ -222,51 +222,6 @@ class GeckoEngineTest {
     }
 
     @Test
-    fun `WHEN a strict tracking protection policy is set THEN the setEnhancedTrackingProtectionLevel must be STRICT`() {
-        val mockRuntime = mock<GeckoRuntime>()
-        whenever(mockRuntime.settings).thenReturn(mock())
-        whenever(mockRuntime.settings.contentBlocking).thenReturn(mock())
-
-        val engine = GeckoEngine(testContext, runtime = mockRuntime)
-
-        engine.settings.trackingProtectionPolicy = TrackingProtectionPolicy.strict()
-
-        verify(mockRuntime.settings.contentBlocking).setEnhancedTrackingProtectionLevel(
-            ContentBlocking.EtpLevel.STRICT
-        )
-    }
-
-    @Test
-    fun `WHEN a recommended tracking protection policy is set  THEN the setEnhancedTrackingProtectionLevel must be DEFAULT`() {
-        val mockRuntime = mock<GeckoRuntime>()
-        whenever(mockRuntime.settings).thenReturn(mock())
-        whenever(mockRuntime.settings.contentBlocking).thenReturn(mock())
-
-        val engine = GeckoEngine(testContext, runtime = mockRuntime)
-
-        engine.settings.trackingProtectionPolicy = TrackingProtectionPolicy.recommended()
-
-        verify(mockRuntime.settings.contentBlocking).setEnhancedTrackingProtectionLevel(
-            ContentBlocking.EtpLevel.DEFAULT
-        )
-    }
-
-    @Test
-    fun `WHEN a tracking protection policy other than recommended or strict is set THEN the setEnhancedTrackingProtectionLevel must be NONE`() {
-        val mockRuntime = mock<GeckoRuntime>()
-        whenever(mockRuntime.settings).thenReturn(mock())
-        whenever(mockRuntime.settings.contentBlocking).thenReturn(mock())
-
-        val engine = GeckoEngine(testContext, runtime = mockRuntime)
-
-        engine.settings.trackingProtectionPolicy = TrackingProtectionPolicy.select(trackingCategories = arrayOf(TrackingCategory.CRYPTOMINING))
-
-        verify(mockRuntime.settings.contentBlocking).setEnhancedTrackingProtectionLevel(
-            ContentBlocking.EtpLevel.NONE
-        )
-    }
-
-    @Test
     fun `WHEN a non strict tracking protection policy is set THEN the strict social list must be disabled`() {
         val mockRuntime = mock<GeckoRuntime>()
         whenever(mockRuntime.settings).thenReturn(mock())

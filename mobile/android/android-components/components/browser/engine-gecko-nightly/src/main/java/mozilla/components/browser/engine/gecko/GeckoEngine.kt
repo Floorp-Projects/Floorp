@@ -241,11 +241,9 @@ class GeckoEngine(
                         )
                     val etpLevel =
                         when {
-                            policy.trackingCategories.contains(TrackingCategory.STRICT) ->
-                                ContentBlocking.EtpLevel.STRICT
-                            policy.trackingCategories.contains(TrackingCategory.RECOMMENDED) ->
-                                ContentBlocking.EtpLevel.DEFAULT
-                            else -> ContentBlocking.EtpLevel.NONE
+                            policy.trackingCategories.contains(TrackingCategory.NONE) ->
+                                ContentBlocking.EtpLevel.NONE
+                            else -> ContentBlocking.EtpLevel.STRICT
                         }
                     runtime.settings.contentBlocking.setEnhancedTrackingProtectionLevel(etpLevel)
                     runtime.settings.contentBlocking.setStrictSocialTrackingProtection(
