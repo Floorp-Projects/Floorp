@@ -141,7 +141,6 @@ function test_restore_session_apis() {
   // Create fake session objects to restore.
   const sessionWithoutDevTools = {};
   const sessionWithDevTools = {
-    scratchpads: [{}],
     browserConsole: true,
   };
 

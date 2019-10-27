@@ -15,7 +15,6 @@ const {
 const {
   getSourceNames,
   parseURL,
-  isScratchpadScheme,
   getSourceMappedFile,
 } = require("devtools/client/shared/source-utils");
 const { LocalizationHelper } = require("devtools/shared/l10n");
@@ -156,15 +155,11 @@ class Frame extends Component {
 
     // Reparse the URL to determine if we should link this; `getSourceNames`
     // has already cached this indirectly. We don't want to attempt to
-    // link to "self-hosted" and "(unknown)". However, we do want to link
-    // to Scratchpad URIs.
+    // link to "self-hosted" and "(unknown)".
     // Source mapped sources might not necessary linkable, but they
     // are still valid in the debugger.
     // If we have a source ID then we can show the source in the debugger.
-    const isLinkable =
-      !!(isScratchpadScheme(source) || parseURL(source)) ||
-      isSourceMapped ||
-      sourceId;
+    const isLinkable = !!parseURL(source) || isSourceMapped || sourceId;
     const elements = [];
     const sourceElements = [];
     let sourceEl;

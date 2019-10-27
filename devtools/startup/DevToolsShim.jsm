@@ -180,9 +180,8 @@ this.DevToolsShim = {
       return;
     }
 
-    const { scratchpads, browserConsole, browserToolbox } = session;
-    const hasDevToolsData =
-      browserConsole || browserToolbox || (scratchpads && scratchpads.length);
+    const { browserConsole, browserToolbox } = session;
+    const hasDevToolsData = browserConsole || browserToolbox;
     if (!hasDevToolsData) {
       // Do not initialize DevTools unless there is DevTools specific data in the session.
       return;

@@ -14,8 +14,6 @@ const TAB_URL = EXAMPLE_URL + "doc_WorkerTargetActor.attachThread-tab.html";
 const WORKER_URL = "code_WorkerTargetActor.attachThread-worker.js";
 
 add_task(async function() {
-  await pushPrefs(["devtools.scratchpad.enabled", true]);
-
   const tab = await addTab(TAB_URL);
   const target = await TargetFactory.forTab(tab);
   await target.attach();
@@ -54,7 +52,7 @@ add_task(async function() {
 
   is(
     activeTools.join(","),
-    "webconsole,jsdebugger,scratchpad",
+    "webconsole,jsdebugger",
     "Correct set of tools supported by worker"
   );
 

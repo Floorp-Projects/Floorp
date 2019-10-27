@@ -133,22 +133,6 @@ add_task(async function() {
   );
 });
 
-// Test `sourceUtils.isScratchpadTheme`
-add_task(async function() {
-  ok(
-    sourceUtils.isScratchpadScheme("Scratchpad/1"),
-    "Scratchpad/1 identified as scratchpad"
-  );
-  ok(
-    sourceUtils.isScratchpadScheme("Scratchpad/20"),
-    "Scratchpad/20 identified as scratchpad"
-  );
-  ok(
-    !sourceUtils.isScratchpadScheme("http://www.mozilla.org"),
-    "http://www.mozilla.org not identified as scratchpad"
-  );
-});
-
 // Test `sourceUtils.getSourceNames`.
 add_task(async function() {
   // Check length

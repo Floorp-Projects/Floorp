@@ -63,7 +63,6 @@ function setupServiceContainer({
         toolbox.threadFront.timeWarp(executionPoint),
       onViewSourceInDebugger: frame => hud.onViewSourceInDebugger(frame),
       onViewSourceInStyleEditor: frame => hud.onViewSourceInStyleEditor(frame),
-      onViewSourceInScratchpad: frame => hud.onViewSourceInScratchpad(frame),
     });
   }
 

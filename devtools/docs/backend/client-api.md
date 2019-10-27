@@ -137,8 +137,6 @@ Here is the source code for a complete debugger application:
 ```javascript
 /*
  * Debugger API demo.
- * Try it in Scratchpad with Environment -> Browser, using
- * http://htmlpad.org/debugger/ as the current page.
  */
 const { DebuggerServer } = require("devtools/server/debugger-server");
 const { DebuggerClient } = require("devtools/shared/client/debugger-client");

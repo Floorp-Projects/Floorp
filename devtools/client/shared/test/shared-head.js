@@ -43,9 +43,6 @@ if (DEBUG_ALLOCATIONS) {
   });
 }
 
-const { ScratchpadManager } = ChromeUtils.import(
-  "resource://devtools/client/scratchpad/scratchpad-manager.jsm"
-);
 const { loader, require } = ChromeUtils.import(
   "resource://devtools/shared/Loader.jsm"
 );

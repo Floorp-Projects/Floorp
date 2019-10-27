@@ -13,7 +13,6 @@ module.exports = {
   },
   onViewSourceInDebugger: () => {},
   onViewSourceInStyleEditor: () => {},
-  onViewSourceInScratchpad: () => {},
   openNetworkPanel: () => {},
   resendNetworkRequest: () => {},
   sourceMapService: {

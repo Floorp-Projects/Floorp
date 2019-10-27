@@ -31,7 +31,6 @@ class SmartTrace extends Component {
       stacktrace: PropTypes.array.isRequired,
       onViewSource: PropTypes.func.isRequired,
       onViewSourceInDebugger: PropTypes.func.isRequired,
-      onViewSourceInScratchpad: PropTypes.func,
       // Service to enable the source map feature.
       sourceMapService: PropTypes.object,
       initialRenderDelay: PropTypes.number,
@@ -221,11 +220,7 @@ class SmartTrace extends Component {
       return null;
     }
 
-    const {
-      onViewSourceInDebugger,
-      onViewSource,
-      onViewSourceInScratchpad,
-    } = this.props;
+    const { onViewSourceInDebugger, onViewSource } = this.props;
 
     const stacktrace = this.state.isSourceMapped
       ? this.state.stacktrace
@@ -250,9 +245,7 @@ class SmartTrace extends Component {
     return Frames({
       frames,
       selectFrame: (cx, { location }) => {
-        const viewSource = /^Scratchpad\/\d+$/.test(location.filename)
-          ? onViewSourceInScratchpad
-          : onViewSourceInDebugger || onViewSource;
+        const viewSource = onViewSourceInDebugger || onViewSource;
 
         viewSource({
           sourceId: location.sourceId,

@@ -184,7 +184,6 @@
   "rotaryengine.js": ["RotaryEngine", "RotaryRecord", "RotaryStore", "RotaryTracker"],
   "RTCStatsReport.jsm": ["convertToRTCStatsReport"],
   "Schemas.jsm": ["SchemaRoot", "Schemas"],
-  "scratchpad-manager.jsm": ["ScratchpadManager"],
   "SearchShortcuts.jsm": ["checkHasSearchEngine", "getSearchProvider", "SEARCH_SHORTCUTS", "CUSTOM_SEARCH_SHORTCUTS", "SEARCH_SHORTCUTS_EXPERIMENT", "SEARCH_SHORTCUTS_SEARCH_ENGINES_PREF", "SEARCH_SHORTCUTS_HAVE_PINNED_PREF"],
   "SectionsManager.jsm": ["SectionsFeed", "SectionsManager"],
   "service.js": ["Service"],

@@ -4,9 +4,6 @@
 
 "use strict";
 
-var Services = require("Services");
-var { gDevTools } = require("devtools/client/framework/devtools");
-
 /**
  * Tries to open a Stylesheet file in the Style Editor. If the file is not
  * found, it is opened in source view instead.
@@ -92,40 +89,6 @@ exports.viewSourceInDebugger = async function(
 
   exports.viewSource(toolbox, sourceURL, sourceLine, sourceColumn);
   return false;
-};
-
-/**
- * Tries to open a JavaScript file in the corresponding Scratchpad.
- *
- * @param {string} sourceURL
- * @param {number} sourceLine
- *
- * @return {Promise}
- */
-exports.viewSourceInScratchpad = async function(sourceURL, sourceLine) {
-  // Check for matching top level scratchpad window.
-  for (const win of Services.wm.getEnumerator("devtools:scratchpad")) {
-    if (!win.closed && win.Scratchpad.uniqueName === sourceURL) {
-      win.focus();
-      win.Scratchpad.editor.setCursor({ line: sourceLine, ch: 0 });
-      return;
-    }
-  }
-
-  // For scratchpads within toolbox
-  for (const toolbox of gDevTools.getToolboxes()) {
-    const scratchpadPanel = toolbox.getPanel("scratchpad");
-    if (scratchpadPanel) {
-      const { scratchpad } = scratchpadPanel;
-      if (scratchpad.uniqueName === sourceURL) {
-        toolbox.selectTool("scratchpad");
-        toolbox.raise();
-        scratchpad.editor.focus();
-        scratchpad.editor.setCursor({ line: sourceLine, ch: 0 });
-        return;
-      }
-    }
-  }
 };
 
 /**

@@ -32,11 +32,6 @@ loader.lazyRequireGetter(
 loader.lazyRequireGetter(this, "Telemetry", "devtools/client/shared/telemetry");
 loader.lazyImporter(
   this,
-  "ScratchpadManager",
-  "resource://devtools/client/scratchpad/scratchpad-manager.jsm"
-);
-loader.lazyImporter(
-  this,
   "BrowserToolboxProcess",
   "resource://devtools/client/framework/ToolboxProcess.jsm"
 );
@@ -430,30 +425,12 @@ DevTools.prototype = {
   saveDevToolsSession: function(state) {
     state.browserConsole = BrowserConsoleManager.getBrowserConsoleSessionState();
     state.browserToolbox = BrowserToolboxProcess.getBrowserToolboxSessionState();
-
-    // Check if the module is loaded to avoid loading ScratchpadManager for no reason.
-    state.scratchpads = [];
-    if (
-      Cu.isModuleLoaded(
-        "resource://devtools/client/scratchpad/scratchpad-manager.jsm"
-      )
-    ) {
-      state.scratchpads = ScratchpadManager.getSessionState();
-    }
   },
 
   /**
    * Restore the devtools session state as provided by SessionStore.
    */
-  restoreDevToolsSession: function({
-    scratchpads,
-    browserConsole,
-    browserToolbox,
-  }) {
-    if (scratchpads) {
-      ScratchpadManager.restoreSession(scratchpads);
-    }
-
+  restoreDevToolsSession: function({ browserConsole, browserToolbox }) {
     if (browserToolbox) {
       BrowserToolboxProcess.init();
     }
@@ -871,8 +848,8 @@ DevTools.prototype = {
     removeThemeObserver(this._onThemeChanged);
 
     // Do not unregister devtools from the DevToolsShim if the destroy is caused by an
-    // application shutdown. For instance SessionStore needs to save the Scratchpad
-    // manager state on shutdown.
+    // application shutdown. For instance SessionStore needs to save the Browser Toolbox
+    // state on shutdown.
     if (!shuttingDown) {
       // Notify the DevToolsShim that DevTools are no longer available, particularly if
       // the destroy was caused by disabling/removing DevTools.

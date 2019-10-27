@@ -60,11 +60,6 @@ loader.lazyGetter(
 );
 loader.lazyGetter(
   this,
-  "ScratchpadPanel",
-  () => require("devtools/client/scratchpad/panel").ScratchpadPanel
-);
-loader.lazyGetter(
-  this,
   "DomPanel",
   () => require("devtools/client/dom/panel").DomPanel
 );
@@ -101,11 +96,6 @@ loader.lazyRequireGetter(
   "ResponsiveUIManager",
   "devtools/client/responsive/manager"
 );
-loader.lazyImporter(
-  this,
-  "ScratchpadManager",
-  "resource://devtools/client/scratchpad/scratchpad-manager.jsm"
-);
 
 loader.lazyRequireGetter(
   this,
@@ -124,10 +114,6 @@ const L10N = new MultiLocalizationHelper(
   "devtools/client/locales/startup.properties",
   "devtools/startup/locales/key-shortcuts.properties"
 );
-
-// URL to direct people to the deprecated tools panel
-const DEPRECATION_URL =
-  "https://developer.mozilla.org/docs/Tools/Deprecated_tools";
 
 var Tools = {};
 exports.Tools = Tools;
@@ -406,26 +392,6 @@ Tools.storage = {
   },
 };
 
-Tools.scratchpad = {
-  id: "scratchpad",
-  deprecated: true,
-  deprecationURL: `${DEPRECATION_URL}#Scratchpad`,
-  ordinal: 12,
-  visibilityswitch: "devtools.scratchpad.enabled",
-  icon: "chrome://devtools/skin/images/tool-scratchpad.svg",
-  url: "chrome://devtools/content/scratchpad/index.xul",
-  label: l10n("scratchpad.label"),
-  panelLabel: l10n("scratchpad.panelLabel"),
-  tooltip: l10n("scratchpad.tooltip"),
-  inMenu: false,
-  isTargetSupported: function(target) {
-    return target.hasActor("console");
-  },
-  build: function(iframeWindow, toolbox) {
-    return new ScratchpadPanel(iframeWindow, toolbox);
-  },
-};
-
 Tools.dom = {
   id: "dom",
   accesskey: l10n("dom.accesskey"),
@@ -515,7 +481,6 @@ var defaultTools = [
   Tools.performance,
   Tools.netMonitor,
   Tools.storage,
-  Tools.scratchpad,
   Tools.memory,
   Tools.dom,
   Tools.accessibility,
@@ -555,14 +520,6 @@ exports.ToolboxButtons = [
     },
     isChecked(toolbox) {
       return toolbox.isPaintFlashing;
-    },
-  },
-  {
-    id: "command-button-scratchpad",
-    description: l10n("toolbox.buttons.scratchpad"),
-    isTargetSupported: target => target.isLocalTab,
-    onClick(event, toolbox) {
-      ScratchpadManager.openScratchpad();
     },
   },
   {

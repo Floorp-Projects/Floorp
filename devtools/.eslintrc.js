@@ -22,8 +22,6 @@ module.exports = {
     }
   }, {
     "files": [
-      "client/scratchpad/scratchpad-manager.jsm",
-      "client/scratchpad/scratchpad.js",
       "client/shared/*.jsm",
     ],
     "rules": {
@@ -32,7 +30,6 @@ module.exports = {
   }, {
     "files": [
       "client/framework/**",
-      "client/scratchpad/**",
       "client/shared/*.jsm",
       "client/shared/widgets/*.jsm",
     ],
@@ -42,23 +39,13 @@ module.exports = {
   }, {
     "files": [
       "client/framework/**",
-      "client/scratchpad/**",
     ],
     "rules": {
       "max-nested-callbacks": "off",
     }
   }, {
     "files": [
-      "client/scratchpad/test/browser_scratchpad_inspect.js",
-      "client/scratchpad/test/browser_scratchpad_inspect_primitives.js",
-    ],
-    "rules": {
-      "no-labels": "off",
-    }
-  }, {
-    "files": [
       "client/framework/**",
-      "client/scratchpad/**",
       "client/shared/*.jsm",
       "client/shared/widgets/*.jsm",
     ],
@@ -68,7 +55,6 @@ module.exports = {
   }, {
     "files": [
       "client/framework/test/**",
-      "client/scratchpad/**",
     ],
     "rules": {
       "mozilla/var-only-at-top-level": "off",
@@ -76,7 +62,6 @@ module.exports = {
   }, {
     "files": [
       "client/framework/**",
-      "client/scratchpad/**",
       "client/shared/widgets/*.jsm",
     ],
     "rules": {
@@ -85,7 +70,6 @@ module.exports = {
   }, {
     "files": [
       "client/framework/**",
-      "client/scratchpad/**",
     ],
     "rules": {
       "strict": "off",

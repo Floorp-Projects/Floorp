@@ -17,7 +17,6 @@ Then to recreate codemirror.bundle.js:
 To confirm the functionality run mochitests for the following components:
 
  * sourceeditor
- * scratchpad
  * debugger
  * styleditor
  * netmonitor
