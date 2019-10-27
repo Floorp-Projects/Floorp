@@ -163,8 +163,7 @@ void nsHyphenator::HyphenateWord(const nsAString& aString, uint32_t aStart,
         aHyphens[cur - begin] = true;
       }
       cur++;
-      if (cur < end && NS_IS_LOW_SURROGATE(*cur) &&
-          NS_IS_HIGH_SURROGATE(*(cur - 1))) {
+      if (cur < end && NS_IS_SURROGATE_PAIR(*(cur - 1), *cur)) {
         cur++;
       }
       hyphPtr++;

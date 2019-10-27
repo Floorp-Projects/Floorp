@@ -46,8 +46,7 @@ DeleteTextTransaction::MaybeCreateForPreviousCharacter(EditorBase& aEditorBase,
 
   uint32_t length = 1;
   uint32_t offset = aOffset - 1;
-  if (offset && NS_IS_LOW_SURROGATE(data[offset]) &&
-      NS_IS_HIGH_SURROGATE(data[offset - 1])) {
+  if (offset && NS_IS_SURROGATE_PAIR(data[offset - 1], data[offset])) {
     ++length;
     --offset;
   }
@@ -67,8 +66,8 @@ DeleteTextTransaction::MaybeCreateForNextCharacter(EditorBase& aEditorBase,
   }
 
   uint32_t length = 1;
-  if (aOffset + 1 < data.Length() && NS_IS_HIGH_SURROGATE(data[aOffset]) &&
-      NS_IS_LOW_SURROGATE(data[aOffset + 1])) {
+  if (aOffset + 1 < data.Length() &&
+      NS_IS_SURROGATE_PAIR(data[aOffset], data[aOffset + 1])) {
     ++length;
   }
   return DeleteTextTransaction::MaybeCreate(aEditorBase, aTextNode, aOffset,

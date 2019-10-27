@@ -338,8 +338,7 @@ bool nsCaseTransformTextRunFactory::TransformString(
     const mozilla::unicode::MultiCharMapping* mcm;
     bool inhibitBreakBefore = false;  // have we just deleted preceding hyphen?
 
-    if (NS_IS_HIGH_SURROGATE(ch) && i < length - 1 &&
-        NS_IS_LOW_SURROGATE(str[i + 1])) {
+    if (i < length - 1 && NS_IS_SURROGATE_PAIR(ch, str[i + 1])) {
       ch = SURROGATE_TO_UCS4(ch, str[i + 1]);
     }
 

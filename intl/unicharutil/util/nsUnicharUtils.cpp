@@ -187,8 +187,7 @@ uint32_t ToLowerCase(uint32_t aChar) { return ToLowerCase_inline(aChar); }
 void ToLowerCase(const char16_t* aIn, char16_t* aOut, uint32_t aLen) {
   for (uint32_t i = 0; i < aLen; i++) {
     uint32_t ch = aIn[i];
-    if (NS_IS_HIGH_SURROGATE(ch) && i < aLen - 1 &&
-        NS_IS_LOW_SURROGATE(aIn[i + 1])) {
+    if (i < aLen - 1 && NS_IS_SURROGATE_PAIR(ch, aIn[i + 1])) {
       ch = mozilla::unicode::GetLowercase(SURROGATE_TO_UCS4(ch, aIn[i + 1]));
       NS_ASSERTION(!IS_IN_BMP(ch), "case mapping crossed BMP/SMP boundary!");
       aOut[i++] = H_SURROGATE(ch);
@@ -220,8 +219,7 @@ uint32_t ToUpperCase(uint32_t aChar) {
 void ToUpperCase(const char16_t* aIn, char16_t* aOut, uint32_t aLen) {
   for (uint32_t i = 0; i < aLen; i++) {
     uint32_t ch = aIn[i];
-    if (NS_IS_HIGH_SURROGATE(ch) && i < aLen - 1 &&
-        NS_IS_LOW_SURROGATE(aIn[i + 1])) {
+    if (i < aLen - 1 && NS_IS_SURROGATE_PAIR(ch, aIn[i + 1])) {
       ch = mozilla::unicode::GetUppercase(SURROGATE_TO_UCS4(ch, aIn[i + 1]));
       NS_ASSERTION(!IS_IN_BMP(ch), "case mapping crossed BMP/SMP boundary!");
       aOut[i++] = H_SURROGATE(ch);
@@ -257,9 +255,9 @@ int32_t CaseInsensitiveCompare(const char16_t* a, const char16_t* b,
       // in the case where it _is_ a surrogate, we're definitely going to get
       // a mismatch, and don't need to interpret and lowercase it
 
-      if (NS_IS_HIGH_SURROGATE(c1) && len > 1 && NS_IS_LOW_SURROGATE(*a)) {
+      if (len > 1 && NS_IS_SURROGATE_PAIR(c1, *a)) {
         c1 = SURROGATE_TO_UCS4(c1, *a++);
-        if (NS_IS_HIGH_SURROGATE(c2) && NS_IS_LOW_SURROGATE(*b)) {
+        if (NS_IS_SURROGATE_PAIR(c2, *b)) {
           c2 = SURROGATE_TO_UCS4(c2, *b++);
         }
         // If c2 wasn't a surrogate, decrementing len means we'd stop
