@@ -25,66 +25,58 @@
 namespace mozilla {
 namespace recordreplay {
 
+// clang-format off
 #define FOR_EACH_INTERFACE(Macro)                                              \
-  Macro(InternalAreThreadEventsPassedThrough, bool, (), ()) Macro(             \
-      InternalAreThreadEventsDisallowed, bool, (),                             \
-      ()) Macro(InternalRecordReplayValue, size_t, (size_t aValue), (aValue))  \
-      Macro(InternalHasDivergedFromRecording, bool, (), ()) Macro(             \
-          InternalGeneratePLDHashTableCallbacks, const PLDHashTableOps*,       \
-          (const PLDHashTableOps* aOps), (aOps))                               \
-          Macro(InternalUnwrapPLDHashTableCallbacks, const PLDHashTableOps*,   \
-                (const PLDHashTableOps* aOps), (aOps))                         \
-              Macro(InternalThingIndex, size_t, (void* aThing), (aThing))      \
-                  Macro(InternalVirtualThingName, const char*, (void* aThing), \
-                        (aThing)) Macro(ExecutionProgressCounter,              \
-                                        ProgressCounter*, (), ())              \
-                      Macro(NewTimeWarpTarget, ProgressCounter, (), ())        \
-                          Macro(ShouldUpdateProgressCounter, bool,             \
-                                (const char* aURL), (aURL))                    \
-                              Macro(DefineRecordReplayControlObject, bool,     \
-                                    (void* aCx, void* aObj), (aCx, aObj))
+  Macro(InternalAreThreadEventsPassedThrough, bool, (), ())                    \
+  Macro(InternalAreThreadEventsDisallowed, bool, (), ())                       \
+  Macro(InternalRecordReplayValue, size_t, (size_t aValue), (aValue))          \
+  Macro(InternalHasDivergedFromRecording, bool, (), ())                        \
+  Macro(InternalGeneratePLDHashTableCallbacks, const PLDHashTableOps*,         \
+        (const PLDHashTableOps* aOps), (aOps))                                 \
+  Macro(InternalUnwrapPLDHashTableCallbacks, const PLDHashTableOps*,           \
+        (const PLDHashTableOps* aOps), (aOps))                                 \
+  Macro(InternalThingIndex, size_t, (void* aThing), (aThing))                  \
+  Macro(InternalVirtualThingName, const char*, (void* aThing), (aThing))       \
+  Macro(ExecutionProgressCounter, ProgressCounter*, (), ())                    \
+  Macro(NewTimeWarpTarget, ProgressCounter, (), ())                            \
+  Macro(ShouldUpdateProgressCounter, bool, (const char* aURL), (aURL))         \
+  Macro(DefineRecordReplayControlObject, bool, (void* aCx, void* aObj),        \
+        (aCx, aObj))
 
 #define FOR_EACH_INTERFACE_VOID(Macro)                                         \
-  Macro(InternalBeginOrderedAtomicAccess, (const void* aValue),                \
-        (aValue)) Macro(InternalEndOrderedAtomicAccess, (), ())                \
-      Macro(InternalBeginPassThroughThreadEvents, (), ()) Macro(               \
-          InternalEndPassThroughThreadEvents, (),                              \
-          ()) Macro(InternalBeginDisallowThreadEvents, (), ())                 \
-          Macro(InternalEndDisallowThreadEvents, (), ()) Macro(                \
-              InternalRecordReplayBytes, (void* aData, size_t aSize),          \
-              (aData, aSize)) Macro(InternalInvalidateRecording,               \
-                                    (const char* aWhy), (aWhy))                \
-              Macro(InternalDestroyPLDHashTableCallbacks,                      \
-                    (const PLDHashTableOps* aOps),                             \
-                    (aOps)) Macro(InternalMovePLDHashTableContents,            \
-                                  (const PLDHashTableOps* aFirstOps,           \
-                                   const PLDHashTableOps* aSecondOps),         \
-                                  (aFirstOps, aSecondOps))                     \
-                  Macro(InternalHoldJSObject, (void* aJSObj), (aJSObj)) Macro( \
-                      InternalRecordReplayAssert,                              \
-                      (const char* aFormat, va_list aArgs), (aFormat, aArgs))  \
-                      Macro(InternalRecordReplayAssertBytes,                   \
-                            (const void* aData, size_t aSize), (aData, aSize)) \
-                          Macro(InternalRegisterThing, (void* aThing),         \
-                                (aThing)) Macro(InternalUnregisterThing,       \
-                                                (void* aThing), (aThing))      \
-                              Macro(BeginContentParse,                         \
-                                    (const void* aToken, const char* aURL,     \
-                                     const char* aContentType),                \
-                                    (aToken, aURL, aContentType))              \
-                                  Macro(AddContentParseData8,                  \
-                                        (const void* aToken,                   \
-                                         const mozilla::Utf8Unit* aUtf8Buffer, \
-                                         size_t aLength),                      \
-                                        (aToken, aUtf8Buffer, aLength))        \
-                                      Macro(AddContentParseData16,             \
-                                            (const void* aToken,               \
-                                             const char16_t* aBuffer,          \
-                                             size_t aLength),                  \
-                                            (aToken, aBuffer, aLength))        \
-                                          Macro(EndContentParse,               \
-                                                (const void* aToken),          \
-                                                (aToken))
+  Macro(InternalBeginOrderedAtomicAccess, (const void* aValue), (aValue))      \
+  Macro(InternalEndOrderedAtomicAccess, (), ())                                \
+  Macro(InternalBeginPassThroughThreadEvents, (), ())                          \
+  Macro(InternalEndPassThroughThreadEvents, (), ())                            \
+  Macro(InternalBeginDisallowThreadEvents, (), ())                             \
+  Macro(InternalEndDisallowThreadEvents, (), ())                               \
+  Macro(InternalRecordReplayBytes, (void* aData, size_t aSize),                \
+        (aData, aSize))                                                        \
+  Macro(InternalInvalidateRecording, (const char* aWhy), (aWhy))               \
+  Macro(InternalDestroyPLDHashTableCallbacks, (const PLDHashTableOps* aOps),   \
+        (aOps))                                                                \
+  Macro(InternalMovePLDHashTableContents,                                      \
+        (const PLDHashTableOps* aFirstOps, const PLDHashTableOps* aSecondOps), \
+        (aFirstOps, aSecondOps))                                               \
+  Macro(InternalHoldJSObject, (void* aJSObj), (aJSObj))                        \
+  Macro(InternalRecordReplayAssert, (const char* aFormat, va_list aArgs),      \
+        (aFormat, aArgs))                                                      \
+  Macro(InternalRecordReplayAssertBytes, (const void* aData, size_t aSize),    \
+        (aData, aSize))                                                        \
+  Macro(InternalRegisterThing, (void* aThing), (aThing))                       \
+  Macro(InternalUnregisterThing, (void* aThing), (aThing))                     \
+  Macro(BeginContentParse,                                                     \
+        (const void* aToken, const char* aURL, const char* aContentType),      \
+        (aToken, aURL, aContentType))                                          \
+  Macro(AddContentParseData8,                                                  \
+        (const void* aToken, const mozilla::Utf8Unit* aUtf8Buffer,             \
+         size_t aLength),                                                      \
+        (aToken, aUtf8Buffer, aLength))                                        \
+  Macro(AddContentParseData16,                                                 \
+        (const void* aToken, const char16_t* aBuffer, size_t aLength),         \
+        (aToken, aBuffer, aLength))                                            \
+  Macro(EndContentParse, (const void* aToken), (aToken))
+// clang-format on
 
 #define DECLARE_SYMBOL(aName, aReturnType, aFormals, _) \
   static aReturnType(*gPtr##aName) aFormals;
