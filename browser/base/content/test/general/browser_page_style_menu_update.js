@@ -14,9 +14,8 @@ add_task(async function() {
     false
   );
   let browser = tab.linkedBrowser;
-
   await BrowserTestUtils.loadURI(browser, PAGE);
-  await promiseStylesheetsUpdated(browser);
+  await promiseStylesheetsLoaded(tab, 17);
 
   let menupopup = document.getElementById("pageStyleMenu").menupopup;
   gPageStyleMenu.fillPopup(menupopup);
@@ -33,10 +32,6 @@ add_task(async function() {
   // Now select stylesheet "1"
   let target = menupopup.querySelector("menuitem[label='1']");
   target.click();
-
-  // Now we need to wait for the content process to send its stylesheet
-  // update for the selected tab to the parent.
-  await promiseStylesheetsUpdated(browser);
 
   gPageStyleMenu.fillPopup(menupopup);
   // gPageStyleMenu empties out the menu between opens, so we need
