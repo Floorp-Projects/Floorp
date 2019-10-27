@@ -58,11 +58,6 @@ loader.lazyImporter(
 );
 loader.lazyImporter(
   this,
-  "ScratchpadManager",
-  "resource://devtools/client/scratchpad/scratchpad-manager.jsm"
-);
-loader.lazyImporter(
-  this,
   "ProfilerMenuButton",
   "resource://devtools/client/performance-new/popup/menu-button.jsm.js"
 );
@@ -173,14 +168,6 @@ exports.menuitems = [
       inspectorFront.pickColorFromPage({ copyOnSelect: true, fromMenu: true });
     },
     checkbox: true,
-  },
-  {
-    id: "menu_scratchpad",
-    l10nKey: "scratchpad",
-    oncommand() {
-      ScratchpadManager.openScratchpad();
-    },
-    keyId: "scratchpad",
   },
   { separator: true, id: "devToolsEndSeparator" },
   {

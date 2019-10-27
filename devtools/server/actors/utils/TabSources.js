@@ -326,7 +326,6 @@ TabSources.prototype = {
       // There are a few special URLs that we know are JavaScript:
       // inline `javascript:` and code coming from the console
       if (
-        url.indexOf("Scratchpad/") === 0 ||
         url.indexOf("javascript:") === 0 ||
         url === "debugger eval code" ||
         url === "sandbox eval code"

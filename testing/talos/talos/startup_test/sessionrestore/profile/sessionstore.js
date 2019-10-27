@@ -6193,9 +6193,6 @@
     "startTime": 1393256133774,
     "recentCrashes": 0
   },
-  "scratchpads": [
-    
-  ],
   "global": {
     
   }

@@ -9,7 +9,7 @@ function testJumpToLine(ed, inputLine, expectCursor) {
   const lineInput = editorDoc.querySelector("input");
   lineInput.value = inputLine;
   EventUtils.synthesizeKey("VK_RETURN", {}, editorDoc.defaultView);
-  // CodeMirror lines and columns are 0-based, Scratchpad UI is 1-based.
+  // CodeMirror lines and columns are 0-based.
   ch(
     ed.getCursor(),
     expectCursor,

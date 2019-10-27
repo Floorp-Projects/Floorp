@@ -164,22 +164,6 @@ window.onload = async function () {
       tooltip: "View source in Debugger → http://myfile.com/mahscripts.js",
     });
 
-    // Check when source is via Scratchpad; we should render out the
-    // lines and columns as this is linkable.
-    await checkFrameComponent({
-      frame: {
-        source: "Scratchpad/1",
-        line: 10,
-        column: 50,
-      }
-    }, {
-      file: "Scratchpad/1",
-      line: 10,
-      column: 50,
-      shouldLink: true,
-      tooltip: "View source in Debugger → Scratchpad/1:10:50",
-    });
-
     // Check that line and column can be strings
     await checkFrameComponent({
       frame: {

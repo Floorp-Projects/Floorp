@@ -9527,7 +9527,7 @@
     "high": 60000,
     "n_buckets": 100,
     "keyed": true,
-    "description": "Time taken (in ms) to open the first DevTools toolbox. This is keyed by tool ID being opened [inspector, webconsole, jsdebugger, styleeditor, performance, memory, netmonitor, storage, scratchpad, dom]."
+    "description": "Time taken (in ms) to open the first DevTools toolbox. This is keyed by tool ID being opened [inspector, webconsole, jsdebugger, styleeditor, performance, memory, netmonitor, storage, dom]."
   },
   "DEVTOOLS_WARM_TOOLBOX_OPEN_DELAY_MS": {
     "record_in_processes": ["main"],
@@ -9539,7 +9539,7 @@
     "high": 60000,
     "n_buckets": 100,
     "keyed": true,
-    "description": "Time taken (in ms) to open all but first DevTools toolbox. This is keyed by tool ID being opened [inspector, webconsole, jsdebugger, styleeditor, performance, memory, netmonitor, storage, scratchpad, dom]."
+    "description": "Time taken (in ms) to open all but first DevTools toolbox. This is keyed by tool ID being opened [inspector, webconsole, jsdebugger, styleeditor, performance, memory, netmonitor, storage, dom]."
   },
   "DEVTOOLS_TOOLBOX_PAGE_RELOAD_DELAY_MS": {
     "record_in_processes": ["main"],
@@ -9551,7 +9551,7 @@
     "high": 120000,
     "n_buckets": 100,
     "keyed": true,
-    "description": "Time taken (in ms) to update DevTools panel when reloading a page. This is keyed by tool ID being currently opened [inspector, webconsole, jsdebugger, styleeditor, performance, memory, netmonitor, storage, scratchpad, dom]."
+    "description": "Time taken (in ms) to update DevTools panel when reloading a page. This is keyed by tool ID being currently opened [inspector, webconsole, jsdebugger, styleeditor, performance, memory, netmonitor, storage, dom]."
   },
   "DEVTOOLS_INSPECTOR_NEW_ROOT_TO_RELOAD_DELAY_MS": {
     "record_in_processes": ["main"],
@@ -10381,26 +10381,6 @@
     "description": "Number of times the DevTools Paint Flashing has been opened via the toolbox button.",
     "releaseChannelCollection": "opt-out"
   },
-  "DEVTOOLS_SCRATCHPAD_OPENED_COUNT": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["dev-developer-tools@lists.mozilla.org"],
-    "expires_in_version": "never",
-    "kind": "count",
-    "bug_numbers": [1247985],
-    "description": "Number of times the DevTools Scratchpad toolbox panel has been opened.",
-    "releaseChannelCollection": "opt-out"
-  },
-  "DEVTOOLS_SCRATCHPAD_WINDOW_OPENED_COUNT": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["dev-developer-tools@lists.mozilla.org"],
-    "expires_in_version": "never",
-    "kind": "count",
-    "bug_numbers": [1214352, 1247985],
-    "description": "Number of times the DevTools Scratchpad standalone window has been opened.",
-    "releaseChannelCollection": "opt-out"
-  },
   "DEVTOOLS_RESPONSIVE_OPENED_COUNT": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "geckoview"],
@@ -10772,18 +10752,6 @@
     "alert_emails": ["dev-developer-tools@lists.mozilla.org", "jryans@mozilla.com"],
     "releaseChannelCollection": "opt-out",
     "description": "How long has paint flashing been active (seconds)"
-  },
-  "DEVTOOLS_SCRATCHPAD_TIME_ACTIVE_SECONDS": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": 10000000,
-    "n_buckets": 100,
-    "bug_numbers": [1446496],
-    "alert_emails": ["dev-developer-tools@lists.mozilla.org", "jryans@mozilla.com"],
-    "releaseChannelCollection": "opt-out",
-    "description": "How long has Scratchpad been active (seconds)"
   },
   "DEVTOOLS_RESPONSIVE_TIME_ACTIVE_SECONDS": {
     "record_in_processes": ["main", "content"],

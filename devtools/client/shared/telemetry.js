@@ -748,7 +748,6 @@ function getChartsFromToolId(id) {
     case "OPTIONS":
     case "PAINTFLASHING":
     case "RESPONSIVE":
-    case "SCRATCHPAD":
     case "STORAGE":
     case "STYLEEDITOR":
     case "TOOLBOX":

@@ -46,7 +46,6 @@ browser/chrome/devtools/modules/devtools/client/themes/toolbars.css
 browser/chrome/devtools/modules/devtools/client/themes/variables.css
 browser/chrome/devtools/skin/common.css
 browser/chrome/devtools/skin/toolbars.css
-browser/chrome/devtools/skin/images/command-scratchpad.svg
 browser/chrome/devtools/skin/images/controls.png
 browser/chrome/devtools/skin/images/controls@2x.png
 browser/chrome/devtools/skin/images/debugger-blackbox.svg
@@ -57,7 +56,6 @@ browser/chrome/devtools/skin/images/security-state-broken.svg
 browser/chrome/devtools/skin/images/security-state-local.svg
 browser/chrome/devtools/skin/images/security-state-secure.svg
 browser/chrome/devtools/skin/images/tabs-icon.svg
-browser/chrome/devtools/skin/images/tool-scratchpad.svg
 browser/chrome/devtools/skin/images/tool-storage.svg
 browser/chrome/devtools/skin/images/tool-styleeditor.svg
 browser/chrome/devtools/skin/promisedebugger.css

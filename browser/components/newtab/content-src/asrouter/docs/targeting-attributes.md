@@ -176,7 +176,7 @@ type ECMA262DateString = string;
 ```
 
 ### `devToolsOpenedCount`
-Number of usages of the web console or scratchpad.
+Number of usages of the web console.
 
 #### Examples
 * Has the user opened the web console more than 10 times?

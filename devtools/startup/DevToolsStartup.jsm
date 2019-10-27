@@ -142,13 +142,6 @@ XPCOMUtils.defineLazyGetter(this, "KeyShortcuts", function() {
       ),
       modifiers,
     },
-    // Open ScratchPad window
-    {
-      id: "scratchpad",
-      shortcut: KeyShortcutsBundle.GetStringFromName("scratchpad.commandkey"),
-      modifiers: "shift",
-    },
-
     // The following keys are also registered in /client/definitions.js
     // and should be synced.
 

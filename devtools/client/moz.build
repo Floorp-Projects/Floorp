@@ -22,7 +22,6 @@ DIRS += [
     'performance-new',
     'preferences',
     'responsive',
-    'scratchpad',
     'shared',
     'storage',
     'styleeditor',
