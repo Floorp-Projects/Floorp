@@ -18,7 +18,7 @@ use crate::picture::{PictureUpdateState, SurfaceInfo, ROOT_SURFACE_INDEX, Surfac
 use crate::picture::{RetainedTiles, TileCacheInstance, DirtyRegion, SurfaceRenderTasks, SubpixelMode};
 use crate::prim_store::{SpaceMapper, PictureIndex, PrimitiveDebugId, PrimitiveScratchBuffer};
 use crate::prim_store::{DeferredResolve, PrimitiveVisibilityMask};
-use crate::profiler::{FrameProfileCounters, GpuCacheProfileCounters, TextureCacheProfileCounters};
+use crate::profiler::{FrameProfileCounters, TextureCacheProfileCounters, ResourceProfileCounters};
 use crate::render_backend::{DataStores, FrameStamp, FrameId};
 use crate::render_target::{RenderTarget, PictureCacheTarget, TextureCacheRenderTarget};
 use crate::render_target::{RenderTargetContext, RenderTargetKind};
@@ -443,8 +443,7 @@ impl FrameBuilder {
         layer: DocumentLayer,
         device_origin: DeviceIntPoint,
         pan: WorldPoint,
-        texture_cache_profile: &mut TextureCacheProfileCounters,
-        gpu_cache_profile: &mut GpuCacheProfileCounters,
+        resource_profile: &mut ResourceProfileCounters,
         scene_properties: &SceneProperties,
         data_stores: &mut DataStores,
         scratch: &mut PrimitiveScratchBuffer,
@@ -458,7 +457,7 @@ impl FrameBuilder {
         profile_counters
             .total_primitives
             .set(scene.prim_store.prim_count());
-
+        resource_profile.content_slices.set(scene.content_slice_count);
         resource_cache.begin_frame(stamp);
         gpu_cache.begin_frame(stamp);
 
@@ -496,7 +495,7 @@ impl FrameBuilder {
             &mut surfaces,
             scratch,
             debug_flags,
-            texture_cache_profile,
+            &mut resource_profile.texture_cache,
             &mut composite_state,
         );
 
@@ -563,11 +562,11 @@ impl FrameBuilder {
             }
         }
 
-        let gpu_cache_frame_id = gpu_cache.end_frame(gpu_cache_profile).frame_id();
+        let gpu_cache_frame_id = gpu_cache.end_frame(&mut resource_profile.gpu_cache).frame_id();
 
         render_tasks.write_task_data();
         *render_task_counters = render_tasks.counters();
-        resource_cache.end_frame(texture_cache_profile);
+        resource_cache.end_frame(&mut resource_profile.texture_cache);
 
         Frame {
             content_origin: scene.output_rect.origin,
