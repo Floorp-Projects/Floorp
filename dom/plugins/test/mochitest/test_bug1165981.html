@@ -43,9 +43,7 @@
       async function run() {
         ok(await SpecialPowers.setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED, "Shockwave Flash"), "Should find allowed test flash plugin");
         ok(!await SpecialPowers.setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED, "Third Test Plug-in"), "Should not find disallowed plugin");
-        await new Promise(resolve => {
-          SpecialPowers.pushPermissions([{type: "plugin:flash", allow: true, context: document}], resolve);
-        });
+        await SpecialPowers.pushPermissions([{type: "plugin:flash", allow: true, context: document}]);
 
         createNode("plugin-flash", "application/x-shockwave-flash-test");
         createNode("disallowedPlugin", "application/x-third-test");

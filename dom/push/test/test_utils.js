@@ -172,12 +172,9 @@ SimpleTest.registerCleanupFunction(async function() {
 });
 
 function setPushPermission(allow) {
-  return new Promise(resolve => {
-    SpecialPowers.pushPermissions(
-      [{ type: "desktop-notification", allow, context: document }],
-      resolve
-    );
-  });
+  return SpecialPowers.pushPermissions([
+    { type: "desktop-notification", allow, context: document },
+  ]);
 }
 
 function setupPrefs() {

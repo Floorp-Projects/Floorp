@@ -1,16 +1,11 @@
 async function addNotificationPermission(originString) {
-  return new Promise(resolve => {
-    SpecialPowers.pushPermissions(
-      [
-        {
-          type: "desktop-notification",
-          allow: true,
-          context: originString,
-        },
-      ],
-      resolve
-    );
-  });
+  return SpecialPowers.pushPermissions([
+    {
+      type: "desktop-notification",
+      allow: true,
+      context: originString,
+    },
+  ]);
 }
 
 /**
