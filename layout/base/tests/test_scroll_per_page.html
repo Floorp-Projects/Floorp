@@ -12,7 +12,7 @@
 <script class="testbody" type="text/javascript">
 SimpleTest.waitForExplicitFinish();
 addLoadEvent(() => {
-  open("window_empty_document.html", "_blank", "width=500,height=500");
+  open("window_empty_document.html", "_blank", "width=500,height=500,scrollbars=yes");
 });
 
 async function doTests(aWindow) {
@@ -57,8 +57,8 @@ async function doTests(aWindow) {
 
   function waitForScrollEvent() {
     return new Promise(resolve => {
-  	  aWindow.addEventListener("scroll", () => { resolve(); }, {once: true, capture: true});
-	  });
+      aWindow.addEventListener("scroll", () => { SimpleTest.executeSoon(resolve); }, {once: true, capture: true});
+    });
   }
 
   async function doPageDown() {
@@ -67,8 +67,8 @@ async function doTests(aWindow) {
       synthesizeKey("KEY_PageDown", {}, aWindow);
     } else {
       selectionController.pageMove(true, false);
-	  }
-	  await waitForScrolling;
+    }
+    await waitForScrolling;
   }
 
   async function doPageUp() {
@@ -77,8 +77,8 @@ async function doTests(aWindow) {
       synthesizeKey("KEY_PageUp", {}, aWindow);
     } else {
       selectionController.pageMove(false, false);
-	  }
-	  await waitForScrolling;
+    }
+    await waitForScrolling;
   }
 
   let doc = aWindow.document;
@@ -87,12 +87,12 @@ async function doTests(aWindow) {
   let container;
 
   body.innerHTML = '<div id="largeDiv" style="height: 1500px;">' +
-    	             "<p>previous line of the editor.</p>" +
-				           '<div id="editor" contenteditable style="mergin-top 500px; height: 5em; overflow: auto;">' +
-				           "Here is first line<br>" +
+                   "<p>previous line of the editor.</p>" +
+                   '<div id="editor" contenteditable style="margin-top 500px; height: 5em; overflow: auto;">' +
+                   "Here is first line<br>" +
                    "Here is second line" +
-				           "</div>" +
-				           "<p>next line of the editor.</p>" +
+                   "</div>" +
+                   "<p>next line of the editor.</p>" +
                    "</div>";
   container = doc.documentElement;
   let editor = doc.getElementById("editor");
@@ -123,14 +123,14 @@ async function doTests(aWindow) {
      description + "the editing host should keep having focus");
 
   body.innerHTML = '<div id="largeDiv" style="height: 1500px;">' +
-    	             "<p>previous line of the editor.</p>" +
-                   '<div id="editor" contenteditable style="mergin-top 500px; height: 5em; overflow: auto;">' +
+                   "<p>previous line of the editor.</p>" +
+                   '<div id="editor" contenteditable style="margin-top 500px; height: 5em; overflow: auto;">' +
                    '<div id="innerDiv" style="height: 10em;">' +
                    "Here is first line<br>" +
                    "Here is second line" +
                    "</div>" +
-				           "</div>" +
-				           "<p>next line of the editor.</p>" +
+                   "</div>" +
+                   "<p>next line of the editor.</p>" +
                    "</div>";
   editor = doc.getElementById("editor");
   container = editor;
@@ -159,6 +159,29 @@ async function doTests(aWindow) {
   ok(range.collapsed, description + "selection should be collapsed");
   is(doc.activeElement, editor,
      description + "the editing host should keep having focus");
+
+  // Should scroll one page of the scrollable element
+  body.innerHTML = `<div id="editor" contenteditable style="height: 1500px;">${"abc<br>".repeat(100)}</div>`;
+  editor = doc.getElementById("editor");
+  container = doc.documentElement;
+  editor.focus();
+
+  description = "PageDown in too large editing host: ";
+  previousScrollTop = container.scrollTop;
+  await doPageDown();
+  ok(container.scrollTop > previousScrollTop,
+     `${description} The document should be scrolled down (got: ${container.scrollTop}, previous position: ${previousScrollTop})`);
+  ok(container.scrollTop <= previousScrollTop + container.clientHeight,
+     `${description} The document should not be scrolled down too much (got: ${container.scrollTop}, previous position: ${previousScrollTop}, scroll height: ${container.clientHeight})`);
+
+  selection.selectAllChildren(editor);
+  selection.collapseToEnd();
+  description = "PageUp in too large editing host: ";
+  container.scrollTop = container.scrollHeight;
+  previousScrollTop = container.scrollTop;
+  await doPageUp();
+  ok(container.scrollTop >= previousScrollTop - container.clientHeight,
+     `${description} The document should not be scrolled up too much (got: ${container.scrollTop}, previous position: ${previousScrollTop}, scroll height: ${container.clientHeight})`);
 
   aWindow.close();
   SimpleTest.finish();
