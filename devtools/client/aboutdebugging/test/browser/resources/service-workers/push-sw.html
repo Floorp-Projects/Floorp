@@ -13,10 +13,8 @@ let registration;
 let subscription;
 
 const registerServiceWorker = async function() {
-  await new Promise(resolve => {
-    const perm = { type: "desktop-notification", allow: true, context: document };
-    SpecialPowers.pushPermissions([perm], resolve);
-  });
+  const perm = { type: "desktop-notification", allow: true, context: document };
+  await SpecialPowers.pushPermissions([perm]);
 
   try {
     registration = await navigator.serviceWorker.register("push-sw.js");
