@@ -62,10 +62,10 @@
 
 #include "js/RootingAPI.h"  // JS::PersistentRooted, JS::Rooted
 
-struct JSContext;
-class JSObject;
-class JSScript;
-class JSString;
+struct JS_PUBLIC_API JSContext;
+class JS_PUBLIC_API JSObject;
+class JS_PUBLIC_API JSScript;
+class JS_PUBLIC_API JSString;
 
 namespace JS {
 

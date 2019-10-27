@@ -9,11 +9,12 @@
 
 #include "mozilla/Atomics.h"
 
+#include "jstypes.h"
 #include "jit/BaselineIC.h"
 #include "js/UniquePtr.h"
 #include "vm/TypeInference.h"
 
-class JSScript;
+class JS_PUBLIC_API JSScript;
 
 namespace js {
 namespace jit {

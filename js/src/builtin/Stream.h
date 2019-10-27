@@ -9,9 +9,10 @@
 
 #include "mozilla/Attributes.h"  // MOZ_MUST_USE
 
+#include "jstypes.h"        // JS_PUBLIC_API
 #include "js/RootingAPI.h"  // JS::Handle
 
-struct JSContext;
+struct JS_PUBLIC_API JSContext;
 
 namespace js {
 

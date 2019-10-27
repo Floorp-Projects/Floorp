@@ -15,8 +15,8 @@
 
 #include "js/GCAPI.h"  // JS::AutoRequireNoGC
 
-struct JSContext;
-class JSObject;
+struct JS_PUBLIC_API JSContext;
+class JS_PUBLIC_API JSObject;
 
 namespace JS {
 

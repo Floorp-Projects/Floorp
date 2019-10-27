@@ -15,8 +15,9 @@
 
 #include "js/RootingAPI.h"  // JS::Handle, JS::MutableHandle
 
-struct JSContext;
-class JSObject;
+struct JS_PUBLIC_API JSContext;
+class JS_PUBLIC_API JSObject;
+
 struct JSPrincipals;
 
 namespace JS {

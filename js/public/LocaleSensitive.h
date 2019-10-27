@@ -17,9 +17,9 @@
 #include "js/Utility.h"     // JS::UniqueChars
 #include "js/Value.h"       // JS::Value
 
-struct JSContext;
-struct JSRuntime;
-class JSString;
+struct JS_PUBLIC_API JSContext;
+struct JS_PUBLIC_API JSRuntime;
+class JS_PUBLIC_API JSString;
 
 /**
  * Set the default locale for the ECMAScript Internationalization API

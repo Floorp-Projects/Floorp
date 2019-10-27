@@ -19,14 +19,14 @@
 
 #include "js/Class.h"  // JSTraceOp
 
-struct JSContext;
-class JSObject;
+struct JS_PUBLIC_API JSContext;
+class JS_PUBLIC_API JSObject;
 
 namespace JS {
 
-class Compartment;
-class Realm;
-class Zone;
+class JS_PUBLIC_API Compartment;
+class JS_PUBLIC_API Realm;
+class JS_PUBLIC_API Zone;
 
 }  // namespace JS
 
