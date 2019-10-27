@@ -1364,8 +1364,9 @@ static const JSFunctionSpec gRecordReplayMethods[] = {
 extern "C" {
 
 MOZ_EXPORT bool RecordReplayInterface_DefineRecordReplayControlObject(
-    JSContext* aCx, JSObject* aObjectArg) {
-  RootedObject object(aCx, aObjectArg);
+    void* aCxVoid, void* aObjectArg) {
+  JSContext* aCx = static_cast<JSContext*>(aCxVoid);
+  RootedObject object(aCx, static_cast<JSObject*>(aObjectArg));
 
   RootedObject staticObject(aCx, JS_NewObject(aCx, nullptr));
   if (!staticObject ||
