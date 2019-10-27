@@ -358,6 +358,9 @@ pub struct SceneBuilder<'a> {
     /// The current recursion depth of iframes encountered. Used to restrict picture
     /// caching slices to only the top-level content frame.
     iframe_depth: usize,
+
+    /// The number of picture cache slices that were created for content.
+    content_slice_count: usize,
 }
 
 impl<'a> SceneBuilder<'a> {
@@ -397,6 +400,7 @@ impl<'a> SceneBuilder<'a> {
             external_scroll_mapper: ScrollOffsetMapper::new(),
             found_explicit_tile_cache: false,
             iframe_depth: 0,
+            content_slice_count: 0,
         };
 
         let device_pixel_scale = view.accumulated_scale_factor_for_snapping();
@@ -452,6 +456,7 @@ impl<'a> SceneBuilder<'a> {
             clip_store: builder.clip_store,
             root_pic_index: builder.root_pic_index,
             config: builder.config,
+            content_slice_count: builder.content_slice_count,
         }
     }
 
@@ -578,12 +583,14 @@ impl<'a> SceneBuilder<'a> {
                             clip_instance.clip_chain_id,
                             &mut prim_clips,
                             &self.clip_store,
+                            &self.interners,
                         );
                     }
                     add_clips(
                         instance.clip_chain_id,
                         &mut prim_clips,
                         &self.clip_store,
+                        &self.interners,
                     );
                 }
 
@@ -1859,7 +1866,7 @@ impl<'a> SceneBuilder<'a> {
                         // are scrollbars. Once this lands, we can simplify this logic considerably
                         // (and add a separate picture cache slice / OS layer for scroll bars).
                         if parent_sc.pipeline_id != stacking_context.pipeline_id && self.iframe_depth == 1 {
-                            stacking_context.init_picture_caching(&self.clip_scroll_tree);
+                            self.content_slice_count = stacking_context.init_picture_caching(&self.clip_scroll_tree);
 
                             // Mark that a user supplied tile cache was specified.
                             self.found_explicit_tile_cache = true;
@@ -3521,12 +3528,13 @@ impl FlattenedStackingContext {
     fn init_picture_caching(
         &mut self,
         clip_scroll_tree: &ClipScrollTree,
-    ) {
+    ) -> usize {
         struct SliceInfo {
             cluster_index: usize,
-            scroll_roots: Vec<SpatialNodeIndex>,
+            scroll_root: SpatialNodeIndex,
         }
 
+        let mut content_slice_count = 0;
         let mut slices: Vec<SliceInfo> = Vec::new();
 
         // Step through each cluster, and work out where the slice boundaries should be.
@@ -3537,51 +3545,47 @@ impl FlattenedStackingContext {
 
             // We want to create a slice in the following conditions:
             // (1) This cluster is a scrollbar
-            // (2) This cluster begins a 'real' scroll root, where we don't currently have a real scroll root
+            // (2) This cluster begins a scroll root different from the current
             // (3) No slice exists yet
             let create_new_slice =
                 cluster.flags.contains(ClusterFlags::SCROLLBAR_CONTAINER) ||
                 slices.last().map(|slice| {
-                    scroll_root != ROOT_SPATIAL_NODE_INDEX &&
-                    slice.scroll_roots.is_empty()
+                    scroll_root != slice.scroll_root
                 }).unwrap_or(true);
 
             // Create a new slice if required
             if create_new_slice {
                 slices.push(SliceInfo {
                     cluster_index,
-                    scroll_roots: Vec::new(),
+                    scroll_root
                 });
-            }
-
-            // If this is a 'real' scroll root, include that in the list of scroll roots
-            // that have been found for this slice.
-            if scroll_root != ROOT_SPATIAL_NODE_INDEX {
-                let slice = slices.last_mut().unwrap();
-                if !slice.scroll_roots.contains(&scroll_root) {
-                    slice.scroll_roots.push(scroll_root);
-                }
             }
         }
 
-        // Walk the list of slices, setting appropriate flags on the clusters which are
-        // later used during setup_picture_caching.
-        for slice in slices.drain(..) {
-            let cluster = &mut self.prim_list.clusters[slice.cluster_index];
-            // Mark that this cluster creates a picture cache slice
-            cluster.flags.insert(ClusterFlags::CREATE_PICTURE_CACHE_PRE);
-            assert!(!slice.scroll_roots.contains(&ROOT_SPATIAL_NODE_INDEX));
-            // Only select a scroll root for this slice if there's a single 'real' scroll
-            // root. If there are no scroll roots (doesn't scroll) or there are multiple
-            // scroll roots, then cache as a fixed slice. In the case of multiple scroll
-            // roots, this means we'll do some extra rasterization work (but only in dirty
-            // regions) as parts of the slice scroll. However, it does mean that we
-            // reduce number of tiles / GPU memory, and keep subpixel AA. In future, we
-            // might decide to create extra slices in some cases where there are multiple
-            // scroll roots (specifically, non-overlapping sibling scroll roots might be
-            // useful to support).
-            if slice.scroll_roots.len() == 1 {
-                cluster.cache_scroll_root = Some(slice.scroll_roots.first().cloned().unwrap());
+        // If the page would create too many slices (an arbitrary definition where
+        // it's assumed the GPU memory + compositing overhead would be too high)
+        // then just create a single picture cache for the entire content. This at
+        // least means that we can cache small content changes efficiently when
+        // scrolling isn't occurring. Scrolling regions will be handled reasonably
+        // efficiently by the dirty rect tracking (since it's likely that if the
+        // page has so many slices there isn't a single major scroll region).
+        const MAX_CONTENT_SLICES: usize = 8;
+
+        if slices.len() > MAX_CONTENT_SLICES {
+            if let Some(cluster) = self.prim_list.clusters.first_mut() {
+                content_slice_count = 1;
+                cluster.flags.insert(ClusterFlags::CREATE_PICTURE_CACHE_PRE);
+                cluster.cache_scroll_root = None;
+            }
+        } else {
+            // Walk the list of slices, setting appropriate flags on the clusters which are
+            // later used during setup_picture_caching.
+            for slice in slices.drain(..) {
+                content_slice_count += 1;
+                let cluster = &mut self.prim_list.clusters[slice.cluster_index];
+                // Mark that this cluster creates a picture cache slice
+                cluster.flags.insert(ClusterFlags::CREATE_PICTURE_CACHE_PRE);
+                cluster.cache_scroll_root = Some(slice.scroll_root);
             }
         }
 
@@ -3590,6 +3594,8 @@ impl FlattenedStackingContext {
         if let Some(cluster) = self.prim_list.clusters.last_mut() {
             cluster.flags.insert(ClusterFlags::CREATE_PICTURE_CACHE_POST);
         }
+
+        content_slice_count
     }
 
     /// Return true if the stacking context isn't needed.
@@ -3933,6 +3939,7 @@ fn add_clips(
     clip_chain_id: ClipChainId,
     prim_clips: &mut Vec<ClipDataHandle>,
     clip_store: &ClipStore,
+    interners: &Interners,
 ) {
     let mut current_clip_chain_id = clip_chain_id;
 
@@ -3940,7 +3947,10 @@ fn add_clips(
         let clip_chain_node = &clip_store
             .clip_chain_nodes[current_clip_chain_id.0 as usize];
 
-        prim_clips.push(clip_chain_node.handle);
+        let clip_kind = interners.clip[clip_chain_node.handle];
+        if let ClipNodeKind::Rectangle = clip_kind {
+            prim_clips.push(clip_chain_node.handle);
+        }
 
         current_clip_chain_id = clip_chain_node.parent_clip_chain_id;
     }

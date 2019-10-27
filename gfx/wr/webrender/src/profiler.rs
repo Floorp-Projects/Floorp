@@ -199,6 +199,10 @@ impl IntProfileCounter {
     pub fn inc(&mut self) {
         self.value += 1;
     }
+
+    pub fn set(&mut self, value: usize) {
+        self.value = value;
+    }
 }
 
 impl ProfileCounter for IntProfileCounter {
@@ -679,6 +683,7 @@ pub struct ResourceProfileCounters {
     pub image_templates: ResourceProfileCounter,
     pub texture_cache: TextureCacheProfileCounters,
     pub gpu_cache: GpuCacheProfileCounters,
+    pub content_slices: IntProfileCounter,
 }
 
 #[derive(Clone)]
@@ -761,6 +766,10 @@ impl BackendProfileCounters {
                     "Image Templates",
                     Some(expected::NUM_IMAGE_TEMPLATES),
                     Some(expected::IMAGE_TEMPLATES_MB),
+                ),
+                content_slices: IntProfileCounter::new(
+                    "Content Slices",
+                    None,
                 ),
                 texture_cache: TextureCacheProfileCounters::new(),
                 gpu_cache: GpuCacheProfileCounters::new(),
@@ -1464,6 +1473,7 @@ impl Profiler {
 
     fn draw_compact_profile(
         &mut self,
+        backend_profile: &BackendProfileCounters,
         renderer_profile: &RendererProfileCounters,
         debug_renderer: &mut DebugRenderer,
     ) {
@@ -1476,6 +1486,7 @@ impl Profiler {
                 &renderer_profile.vertices,
                 &renderer_profile.rendered_picture_cache_tiles,
                 &renderer_profile.texture_data_uploaded,
+                &backend_profile.resources.content_slices,
                 &self.ipc_time,
                 &self.backend_time,
                 &self.renderer_time,
@@ -1507,6 +1518,7 @@ impl Profiler {
                 &renderer_profile.rendered_picture_cache_tiles,
                 &renderer_profile.total_picture_cache_tiles,
                 &renderer_profile.texture_data_uploaded,
+                &backend_profile.resources.content_slices,
             ],
             None,
             debug_renderer,
@@ -1760,6 +1772,7 @@ impl Profiler {
             }
             ProfileStyle::Compact => {
                 self.draw_compact_profile(
+                    backend_profile,
                     renderer_profile,
                     debug_renderer,
                 );
@@ -1769,7 +1782,7 @@ impl Profiler {
                     backend_profile,
                     renderer_profile,
                     debug_renderer,
-                );                
+                );
             }
         }
     }

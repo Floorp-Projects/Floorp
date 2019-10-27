@@ -227,6 +227,7 @@ pub struct BuiltScene {
     pub config: FrameBuilderConfig,
     pub clip_scroll_tree: ClipScrollTree,
     pub hit_testing_scene: Arc<HitTestingScene>,
+    pub content_slice_count: usize,
 }
 
 impl BuiltScene {
@@ -240,6 +241,7 @@ impl BuiltScene {
             clip_store: ClipStore::new(),
             clip_scroll_tree: ClipScrollTree::new(),
             hit_testing_scene: Arc::new(HitTestingScene::new(&HitTestingSceneStats::empty())),
+            content_slice_count: 0,
             config: FrameBuilderConfig {
                 default_font_render_mode: FontRenderMode::Mono,
                 dual_source_blending_is_enabled: true,
