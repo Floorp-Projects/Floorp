@@ -11,6 +11,7 @@
 
 #include "mozilla/Attributes.h"  // MOZ_MUST_USE
 
+#include "jstypes.h"          // JS_PUBLIC_API
 #include "js/Class.h"         // JSClass, js::ClassSpec
 #include "js/RootingAPI.h"    // JS::Handle
 #include "js/Value.h"         // JS::{,Boolean,Object,Undefined}Value
@@ -18,7 +19,7 @@
 #include "vm/List.h"          // js::ListObject
 #include "vm/NativeObject.h"  // js::NativeObject
 
-struct JSContext;
+struct JS_PUBLIC_API JSContext;
 
 namespace js {
 

@@ -15,10 +15,10 @@
 
 #include "jstypes.h"  // JS_PUBLIC_API
 
-struct JSContext;
-class JSFreeOp;
-class JSObject;
-struct JSRuntime;
+struct JS_PUBLIC_API JSContext;
+class JS_PUBLIC_API JSFreeOp;
+class JS_PUBLIC_API JSObject;
+struct JS_PUBLIC_API JSRuntime;
 
 extern JS_PUBLIC_API void* JS_malloc(JSContext* cx, size_t nbytes);
 

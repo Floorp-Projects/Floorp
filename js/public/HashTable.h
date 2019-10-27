@@ -9,12 +9,14 @@
 
 #include "mozilla/HashTable.h"
 
+#include "jstypes.h"
+
 namespace js {
 
 using HashNumber = mozilla::HashNumber;
 static const uint32_t kHashNumberBits = mozilla::kHashNumberBits;
 
-class TempAllocPolicy;
+class JS_PUBLIC_API TempAllocPolicy;
 
 template <class T>
 using DefaultHasher = mozilla::DefaultHasher<T>;

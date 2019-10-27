@@ -15,6 +15,7 @@
 #include <stddef.h>  // size_t
 #include <stdint.h>  // uint32_t
 
+#include "jstypes.h"                // JS_PUBLIC_API
 #include "frontend/ParseContext.h"  // js::frontend::UsedNameTracker
 #include "frontend/ParseInfo.h"
 #include "frontend/SharedContext.h"  // js::frontend::Directives, js::frontend::{,Eval,Global}SharedContext
@@ -25,8 +26,8 @@
 #include "vm/JSScript.h"  // js::{FunctionAsync,Generator}Kind, js::LazyScript, JSScript, js::ScriptSource, js::ScriptSourceObject
 #include "vm/Scope.h"     // js::ScopeKind
 
-class JSFunction;
-class JSObject;
+class JS_PUBLIC_API JSFunction;
+class JS_PUBLIC_API JSObject;
 
 namespace js {
 

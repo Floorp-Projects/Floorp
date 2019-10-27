@@ -14,6 +14,7 @@
 #include <stddef.h>  // ptrdiff_t, size_t
 #include <stdint.h>  // uint16_t, int32_t, uint32_t
 
+#include "jstypes.h"                   // JS_PUBLIC_API
 #include "NamespaceImports.h"          // ValueVector
 #include "frontend/BytecodeOffset.h"   // BytecodeOffset
 #include "frontend/JumpList.h"         // JumpTarget

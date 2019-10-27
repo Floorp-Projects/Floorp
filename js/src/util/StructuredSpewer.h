@@ -16,6 +16,7 @@
 #  include "mozilla/Maybe.h"
 #  include "mozilla/Sprintf.h"
 
+#  include "jstypes.h"
 #  include "vm/JSONPrinter.h"
 #  include "vm/Printer.h"
 
@@ -66,7 +67,7 @@
 // - Each file is prefixed with the PID to handle multiple processes.
 // - Files are opened lazily, just before the first write to them.
 
-class JSScript;
+class JS_PUBLIC_API JSScript;
 
 namespace js {
 

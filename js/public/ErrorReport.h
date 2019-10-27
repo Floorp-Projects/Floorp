@@ -31,8 +31,8 @@
 #include "js/UniquePtr.h"          // js::UniquePtr
 #include "js/Vector.h"             // js::Vector
 
-struct JSContext;
-class JSString;
+struct JS_PUBLIC_API JSContext;
+class JS_PUBLIC_API JSString;
 
 /**
  * Possible exception types. These types are part of a JSErrorFormatString

@@ -21,37 +21,38 @@
 #include <stdint.h>
 
 #include "js-config.h"
+#include "jstypes.h"
 
 typedef uint8_t jsbytecode;
 
-class JSAtom;
-struct JSContext;
-struct JSClass;
-class JSFunction;
-class JSFreeOp;
-class JSObject;
-struct JSRuntime;
-class JSScript;
-class JSString;
+class JS_PUBLIC_API JSAtom;
+struct JS_PUBLIC_API JSContext;
+struct JS_PUBLIC_API JSClass;
+class JS_PUBLIC_API JSFunction;
+class JS_PUBLIC_API JSFreeOp;
+class JS_PUBLIC_API JSObject;
+struct JS_PUBLIC_API JSRuntime;
+class JS_PUBLIC_API JSScript;
+class JS_PUBLIC_API JSString;
 
 namespace js {
-class TempAllocPolicy;
+class JS_PUBLIC_API TempAllocPolicy;
 };  // namespace js
 
 namespace JS {
 
-struct PropertyKey;
+struct JS_PUBLIC_API PropertyKey;
 
 typedef unsigned char Latin1Char;
 
-class Symbol;
-class BigInt;
-class Value;
+class JS_PUBLIC_API Symbol;
+class JS_PUBLIC_API BigInt;
+class JS_PUBLIC_API Value;
 
-class Compartment;
-class Realm;
-struct Runtime;
-class Zone;
+class JS_PUBLIC_API Compartment;
+class JS_PUBLIC_API Realm;
+struct JS_PUBLIC_API Runtime;
+class JS_PUBLIC_API Zone;
 
 template <typename T>
 class Handle;

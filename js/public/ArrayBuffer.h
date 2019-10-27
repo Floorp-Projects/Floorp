@@ -16,8 +16,8 @@
 #include "js/GCAPI.h"       // JS::AutoRequireNoGC
 #include "js/RootingAPI.h"  // JS::Handle
 
-struct JSContext;
-class JSObject;
+struct JS_PUBLIC_API JSContext;
+class JS_PUBLIC_API JSObject;
 
 namespace JS {
 

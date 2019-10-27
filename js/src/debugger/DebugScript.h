@@ -12,9 +12,10 @@
 #include <stdint.h>  // for uint32_t
 
 #include "jsapi.h"
+#include "jstypes.h"
 
 namespace JS {
-class Realm;
+class JS_PUBLIC_API Realm;
 }
 
 namespace js {

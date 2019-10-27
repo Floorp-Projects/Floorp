@@ -11,6 +11,7 @@
 #include "mozilla/Attributes.h"  // for MOZ_MUST_USE
 #include "mozilla/Maybe.h"       // for Maybe
 
+#include "jstypes.h"            // for JS_PUBLIC_API
 #include "NamespaceImports.h"   // for Value, HandleId, HandleObject
 #include "debugger/Debugger.h"  // for Env
 #include "gc/Rooting.h"         // for HandleDebuggerEnvironment
@@ -19,9 +20,9 @@
 #include "vm/NativeObject.h"    // for NativeObject
 #include "vm/Scope.h"           // for ScopeKind
 
-class JSObject;
+class JS_PUBLIC_API JSObject;
+struct JS_PUBLIC_API JSContext;
 class JSTracer;
-struct JSContext;
 
 namespace js {
 

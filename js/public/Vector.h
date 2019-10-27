@@ -12,7 +12,7 @@
 
 namespace js {
 
-class TempAllocPolicy;
+class JS_PUBLIC_API TempAllocPolicy;
 
 namespace detail {
 

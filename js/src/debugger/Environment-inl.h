@@ -9,12 +9,13 @@
 
 #include "debugger/Environment.h"  // for DebuggerEnvironment
 
+#include "jstypes.h"            // for JS_PUBLIC_API
 #include "NamespaceImports.h"   // for Value
 #include "debugger/Debugger.h"  // for Debugger
 
 #include "debugger/Debugger-inl.h"  // for Debugger::fromJSObject
 
-class JSObject;
+class JS_PUBLIC_API JSObject;
 
 inline js::Debugger* js::DebuggerEnvironment::owner() const {
   JSObject* dbgobj = &getReservedSlot(OWNER_SLOT).toObject();

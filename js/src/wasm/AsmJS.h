@@ -24,14 +24,15 @@
 
 #include <stdint.h>  // uint32_t
 
+#include "jstypes.h"      // JS_PUBLIC_API
 #include "js/CallArgs.h"  // JSNative
 
-struct JSContext;
-class JSFunction;
+struct JS_PUBLIC_API JSContext;
+class JS_PUBLIC_API JSFunction;
 
 namespace JS {
 
-class Value;
+class JS_PUBLIC_API Value;
 
 template <typename T>
 class Handle;

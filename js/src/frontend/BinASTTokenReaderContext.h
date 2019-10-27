@@ -17,6 +17,7 @@
 #include <stddef.h>  // size_t
 #include <stdint.h>  // uint8_t, uint32_t
 
+#include "jstypes.h"               // JS_PUBLIC_API
 #include "ds/FixedLengthVector.h"  // FixedLengthVector
 #include "frontend/BinASTRuntimeSupport.h"  // CharSlice, BinASTVariant, BinASTKind, BinASTField, BinASTSourceMetadata
 #include "frontend/BinASTToken.h"
@@ -26,9 +27,9 @@
 #include "js/Result.h"                       // JS::Result, Ok, Error
 #include "js/Vector.h"                       // js::Vector
 
-class JSAtom;
-class JSTracer;
-struct JSContext;
+class JS_PUBLIC_API JSAtom;
+class JS_PUBLIC_API JSTracer;
+struct JS_PUBLIC_API JSContext;
 
 namespace js {
 

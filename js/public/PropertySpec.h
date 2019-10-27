@@ -22,7 +22,7 @@
 #include "js/Symbol.h"              // JS::SymbolCode, PropertySpecNameIsSymbol
 #include "js/Value.h"               // JS::Value
 
-struct JSContext;
+struct JS_PUBLIC_API JSContext;
 struct JSJitInfo;
 
 /**

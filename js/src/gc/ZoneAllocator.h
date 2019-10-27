@@ -11,12 +11,13 @@
 #ifndef gc_ZoneAllocator_h
 #define gc_ZoneAllocator_h
 
+#include "jstypes.h"
 #include "gc/Cell.h"
 #include "gc/Scheduling.h"
 #include "vm/MallocProvider.h"
 
 namespace JS {
-class Zone;
+class JS_PUBLIC_API Zone;
 }  // namespace JS
 
 namespace js {
