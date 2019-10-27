@@ -25,11 +25,6 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
-  "viewSource",
-  "devtools/client/shared/view-source"
-);
-loader.lazyRequireGetter(
-  this,
   "openDocLink",
   "devtools/client/shared/link",
   true
@@ -259,17 +254,6 @@ class WebConsole {
   }
 
   /**
-   * Tries to open a JavaScript file related to the web page for the web console
-   * instance in the corresponding Scratchpad.
-   *
-   * @param string sourceURL
-   *        The URL of the file which corresponds to a Scratchpad id.
-   */
-  viewSourceInScratchpad(sourceURL, sourceLine) {
-    viewSource.viewSourceInScratchpad(sourceURL, sourceLine);
-  }
-
-  /**
    * Retrieve information about the JavaScript debugger's stackframes list. This
    * is used to allow the Web Console to evaluate code in the selected
    * stackframe.
@@ -389,13 +373,6 @@ class WebConsole {
 
       this.recordEvent("jump_to_source");
       this.emit("source-in-debugger-opened");
-    }
-  }
-
-  async onViewSourceInScratchpad(frame) {
-    if (this.toolbox) {
-      await this.toolbox.viewSourceInScratchpad(frame.url, frame.line);
-      this.recordEvent("jump_to_source");
     }
   }
 

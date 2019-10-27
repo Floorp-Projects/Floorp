@@ -34,7 +34,6 @@ const CHAR_CODE_COLON = ":".charCodeAt(0);
 const CHAR_CODE_DASH = "-".charCodeAt(0);
 const CHAR_CODE_L_SQUARE_BRACKET = "[".charCodeAt(0);
 const CHAR_CODE_SLASH = "/".charCodeAt(0);
-const CHAR_CODE_CAP_S = "S".charCodeAt(0);
 
 // The cache used in the `parseURL` function.
 const gURLStore = new Map();
@@ -139,14 +138,6 @@ function getSourceNames(source) {
     }
   }
 
-  // If Scratchpad URI, like "Scratchpad/1"; no modifications,
-  // and short/long are the same.
-  if (isScratchpadScheme(sourceStr)) {
-    const result = { short: sourceStr, long: sourceStr };
-    gSourceNamesStore.set(source, result);
-    return result;
-  }
-
   const parsedUrl = parseURL(sourceStr);
 
   if (!parsedUrl) {
@@ -195,25 +186,6 @@ function isColonSlashSlash(location, i = 0) {
   return (
     location.charCodeAt(++i) === CHAR_CODE_COLON &&
     location.charCodeAt(++i) === CHAR_CODE_SLASH &&
-    location.charCodeAt(++i) === CHAR_CODE_SLASH
-  );
-}
-
-/**
- * Checks for a Scratchpad URI, like "Scratchpad/1"
- */
-function isScratchpadScheme(location, i = 0) {
-  return (
-    location.charCodeAt(i) === CHAR_CODE_CAP_S &&
-    location.charCodeAt(++i) === CHAR_CODE_C &&
-    location.charCodeAt(++i) === CHAR_CODE_R &&
-    location.charCodeAt(++i) === CHAR_CODE_A &&
-    location.charCodeAt(++i) === CHAR_CODE_T &&
-    location.charCodeAt(++i) === CHAR_CODE_C &&
-    location.charCodeAt(++i) === CHAR_CODE_H &&
-    location.charCodeAt(++i) === CHAR_CODE_P &&
-    location.charCodeAt(++i) === CHAR_CODE_A &&
-    location.charCodeAt(++i) === CHAR_CODE_D &&
     location.charCodeAt(++i) === CHAR_CODE_SLASH
   );
 }
@@ -380,7 +352,6 @@ function getSourceMappedFile(source) {
 
 exports.parseURL = parseURL;
 exports.getSourceNames = getSourceNames;
-exports.isScratchpadScheme = isScratchpadScheme;
 exports.isChromeScheme = isChromeScheme;
 exports.isContentScheme = isContentScheme;
 exports.isWASM = isWASM;

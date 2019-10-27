@@ -338,10 +338,6 @@
   background: var(--toolbarbutton-background);
 }
 
-#command-button-scratchpad::before {
-  background-image: url("chrome://devtools/skin/images/tool-scratchpad.svg");
-}
-
 #command-button-rulers::before {
   background-image: url("chrome://devtools/skin/images/command-rulers.svg");
 }

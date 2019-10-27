@@ -78,10 +78,6 @@ function getObjectInspector(grip, serviceContainer, override = {}) {
           ? serviceContainer.onViewSourceInDebugger ||
             serviceContainer.onViewSource
           : null,
-        onViewSourceInScratchpad: serviceContainer
-          ? serviceContainer.onViewSourceInScratchpad ||
-            serviceContainer.onViewSource
-          : null,
         onViewSource: serviceContainer.onViewSource,
         onReady: override.maybeScrollToBottom,
         sourceMapService: serviceContainer
