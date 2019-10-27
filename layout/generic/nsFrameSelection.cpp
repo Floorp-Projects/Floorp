@@ -1636,8 +1636,9 @@ nsIFrame* nsFrameSelection::GetFrameToPageSelect() const {
   return rootFrameToSelect;
 }
 
-void nsFrameSelection::CommonPageMove(bool aForward, bool aExtend,
-                                      nsIFrame* aFrame) {
+nsresult nsFrameSelection::PageMove(bool aForward, bool aExtend,
+                                    nsIFrame* aFrame,
+                                    SelectionIntoView aSelectionIntoView) {
   MOZ_ASSERT(aFrame);
 
   // expected behavior for PageMove is to scroll AND move the caret
@@ -1650,21 +1651,21 @@ void nsFrameSelection::CommonPageMove(bool aForward, bool aExtend,
   nsIFrame* scrolledFrame =
       scrollableFrame ? scrollableFrame->GetScrolledFrame() : aFrame;
   if (!scrolledFrame) {
-    return;
+    return NS_OK;
   }
 
   // find out where the caret is.
   // we should know mDesiredPos value of nsFrameSelection, but I havent seen
   // that behavior in other windows applications yet.
-  Selection* domSel = GetSelection(SelectionType::eNormal);
-  if (!domSel) {
-    return;
+  RefPtr<Selection> selection = GetSelection(SelectionType::eNormal);
+  if (!selection) {
+    return NS_OK;
   }
 
   nsRect caretPos;
-  nsIFrame* caretFrame = nsCaret::GetGeometry(domSel, &caretPos);
+  nsIFrame* caretFrame = nsCaret::GetGeometry(selection, &caretPos);
   if (!caretFrame) {
-    return;
+    return NS_OK;
   }
 
   // If the scrolled frame is outside of current selection limiter,
@@ -1673,13 +1674,18 @@ void nsFrameSelection::CommonPageMove(bool aForward, bool aExtend,
   if (!IsValidSelectionPoint(this, scrolledFrame->GetContent())) {
     frameToClick = GetFrameToPageSelect();
     if (NS_WARN_IF(!frameToClick)) {
-      return;
+      return NS_OK;
     }
   }
 
   if (scrollableFrame) {
     // If there is a scrollable frame, adjust pseudo-click position with page
     // scroll amount.
+    // XXX This may scroll more than one page if ScrollSelectionIntoView is
+    //     called later because caret may not fully visible.  E.g., if
+    //     clicking line will be visible only half height with scrolling
+    //     the frame, ScrollSelectionIntoView additionally scrolls to show
+    //     the caret entirely.
     if (aForward) {
       caretPos.y += scrollableFrame->GetPageScrollAmount().height;
     } else {
@@ -1704,18 +1710,55 @@ void nsFrameSelection::CommonPageMove(bool aForward, bool aExtend,
       frameToClick->GetContentOffsetsFromPoint(desiredPoint);
 
   if (!offsets.content) {
-    return;
+    // XXX Do we need to handle ScrollSelectionIntoView in this case?
+    return NS_OK;
   }
 
-  // Scroll one page if necessary.
+  // First, place the caret.
+  bool selectionChanged;
+  {
+    // We don't want any script to run until we check whether selection is
+    // modified by HandleClick.
+    SelectionBatcher ensureNoSelectionChangeNotifications(selection);
+
+    RangeBoundary oldAnchor = selection->AnchorRef();
+    RangeBoundary oldFocus = selection->FocusRef();
+
+    HandleClick(offsets.content, offsets.offset, offsets.offset, aExtend, false,
+                CARET_ASSOCIATE_AFTER);
+
+    selectionChanged = selection->AnchorRef() != oldAnchor ||
+                       selection->FocusRef() != oldFocus;
+  }
+
+  bool doScrollSelectionIntoView = !(
+      aSelectionIntoView == SelectionIntoView::IfChanged && !selectionChanged);
+
+  // Then, scroll the given frame one page.
   if (scrollableFrame) {
+    // If we'll call ScrollSelectionIntoView later and selection wasn't
+    // changed and we scroll outside of selection limiter, we shouldn't use
+    // smooth scroll here because nsIScrollableFrame uses normal runnable,
+    // but ScrollSelectionIntoView uses early runner and it cancels the
+    // pending smooth scroll.  Therefore, if we used smooth scroll in such
+    // case, ScrollSelectionIntoView would scroll to show caret instead of
+    // page scroll of an element outside selection limiter.
+    ScrollMode scrollMode = doScrollSelectionIntoView && !selectionChanged &&
+                                    scrolledFrame != frameToClick
+                                ? ScrollMode::Instant
+                                : ScrollMode::Smooth;
     scrollableFrame->ScrollBy(nsIntPoint(0, aForward ? 1 : -1),
-                              nsIScrollableFrame::PAGES, ScrollMode::Smooth);
+                              nsIScrollableFrame::PAGES, scrollMode);
   }
 
-  // place the caret
-  HandleClick(offsets.content, offsets.offset, offsets.offset, aExtend, false,
-              CARET_ASSOCIATE_AFTER);
+  // Finally, scroll selection into view if requested.
+  if (!doScrollSelectionIntoView) {
+    return NS_OK;
+  }
+  return ScrollSelectionIntoView(
+      SelectionType::eNormal, nsISelectionController::SELECTION_FOCUS_REGION,
+      nsISelectionController::SCROLL_SYNCHRONOUS |
+          nsISelectionController::SCROLL_FOR_CARET_MOVE);
 }
 
 nsresult nsFrameSelection::PhysicalMove(int16_t aDirection, int16_t aAmount,
