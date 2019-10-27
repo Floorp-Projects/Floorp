@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- App name for private browsing mode, only the "(Private)" portion should be localized. -->
-    <string name="app_name_private">Firefox Preview (privát)</string>
+
+    <!-- App name for private browsing mode, only the "Private" portion should be localized. -->
+    <string name="app_name_private_2">Privát Firefox Preview</string>
 
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
@@ -142,8 +143,8 @@
     <string name="preferences_category_privacy">Adatvédelem</string>
     <!-- Preference for advanced site permissions -->
     <string name="preferences_site_permissions">Webhely engedélyek</string>
-    <!-- Preference for launching links in a private tab-->
-    <string name="preferences_launch_links_in_private_mode">Hivatkozások megnyitása privát lapon</string>
+    <!-- Preference for opening links in a private tab-->
+    <string name="preferences_open_links_in_a_private_tab">Hivatkozások megnyitása privát lapon</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Privát böngészési parancsikon hozzáadása</string>
     <!-- Preference for accessibility -->
@@ -172,6 +173,8 @@
     <string name="developer_tools_category">Fejlesztői eszközök</string>
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">Távoli hibakeresés USB-n</string>
+    <!-- Preference title for switch preference to show search shortcuts -->
+    <string name="preferences_show_search_shortcuts">Keresési gyorsparancsok megjelenítése</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Keresési javaslatok</string>
     <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
@@ -192,6 +195,8 @@
     <string name="preferences_sync_history">Előzmények</string>
     <!-- Preference for syncing bookmarks -->
     <string name="preferences_sync_bookmarks">Könyvjelzők</string>
+    <!-- Preference for syncing logins -->
+    <string name="preferences_sync_logins">Bejelentkezések</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">Kijelentkezés</string>
     <!-- Preference displays and allows changing current FxA device name -->
@@ -358,6 +363,8 @@
     <string name="add_tab">Lap hozzáadása</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
     <string name="close_tab">Lap bezárása</string>
+    <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
+    <string name="close_tab_title">%s lap bezárása</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the open tabs menu when pressed -->
     <string name="open_tabs_menu">Lapok menü megnyitása</string>
     <!-- Open tabs menu item to close all tabs -->
@@ -544,6 +551,11 @@
     <!-- Label that indicates video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed">Videó és hang engedélyezve</string>
 
+    <!-- Summary of delete browsing data on quit preference if it is set to on -->
+    <string name="delete_browsing_data_quit_on">Be</string>
+    <!-- Summary of delete browsing data on quit preference if it is set to off -->
+    <string name="delete_browsing_data_quit_off">Ki</string>
+
     <!-- Collections -->
     <!-- Label to describe what collections are to a new user without any collections -->
     <string name="collections_description">Gyűjtsd össze az Ön számára fontos dolgokat. A kezdéshez mentse a nyitott lapokat egy új gyűjteménybe.</string>
@@ -644,6 +656,14 @@
     <string name="snackbar_tab_deleted">Lap törölve</string>
     <!-- Text shown in snackbar when user deletes all tabs -->
     <string name="snackbar_tabs_deleted">Lapok törölve</string>
+    <!-- Text shown in snackbar when user closes a tab -->
+    <string name="snackbar_tab_closed">Lap bezárva</string>
+    <!-- Text shown in snackbar when user closes all tabs -->
+    <string name="snackbar_tabs_closed">Lapok bezárva</string>
+    <!-- Text shown in snackbar when user closes a private tab -->
+    <string name="snackbar_private_tab_closed">Privát lap bezárva</string>
+    <!-- Text shown in snackbar when user closes all private tabs -->
+    <string name="snackbar_private_tabs_closed">Privát lapok bezárva</string>
     <!-- Text shown in snackbar when user deletes all private tabs -->
     <string name="snackbar_private_tabs_deleted">Privát lapok törölve</string>
     <!-- Text for action to undo deleting a tab or collection shown in snackbar -->
@@ -733,6 +753,9 @@
     <string name="delete_browsing_data_prompt_allow">Törlés</string>
     <!-- Text for the snackbar confirmation that the data was deleted -->
     <string name="preferences_delete_browsing_data_snackbar">Böngészési adatok törölve</string>
+
+    <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
+    <string name="deleting_browsing_data_in_progress">Böngészési adatok törlése…</string>
 
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message
@@ -883,7 +906,7 @@
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">Megállítja a követési kódokat tartalmazó külső hirdetések, videók és egyéb tartalmak betöltését. Befolyásolhatja az egyes weboldalak funkcióit.</string>
     <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="etp_onboarding_message">Ha a pajzs színe megváltozik, akkor a %s követőket blokkol egy webhelyen. Koppintson rá, és nézze meg, hogy mi lett blokkolva.</string>
+    <string name="etp_onboarding_message_2">A %s követőket blokkol az oldalon, ha a pajzs lila. Koppintson rá, hogy megnézze, mit blokkolt.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">A védelem BE van kapcsolva ezen a webhelyen</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -977,5 +1000,20 @@
     <string name="logins_doorhanger_save_confirmation">Mentés</string>
     <!-- Negative confirmation that Fenix should not save the new or updated login -->
     <string name="logins_doorhanger_save_dont_save">Ne mentse</string>
-
+    <!-- Shown in snackbar to tell user that the password has been copied -->
+    <string name="logins_password_copied">A jelszó vágólapra másolva</string>
+    <!-- Shown in snackbar to tell user that the username has been copied -->
+    <string name="logins_username_copied">A felhasználónév vágólapra másolva</string>
+    <!-- Shown in snackbar to tell user that the site has been copied -->
+    <string name="logins_site_copied">Az oldal vágólapra másolva</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
+    <string name="saved_logins_copy_password">Jelszó másolása</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
+    <string name="saved_login_copy_username">Felhasználónév másolása</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
+    <string name="saved_login_copy_site">Oldal másolása</string>
+    <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
+    <string name="saved_login_reveal_password">Jelszó megjelenítése</string>
+    <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
+    <string name="saved_login_hide_password">Jelszó elrejtése</string>
 </resources>

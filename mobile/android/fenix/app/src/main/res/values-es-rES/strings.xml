@@ -2,8 +2,8 @@
 <resources>
 
 
-    <!-- App name for private browsing mode, only the "(Private)" portion should be localized. -->
-    <string name="app_name_private">Firefox Preview (Privado)</string>
+    <!-- App name for private browsing mode, only the "Private" portion should be localized. -->
+    <string name="app_name_private_2">Firefox Preview privado</string>
 
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
@@ -145,8 +145,8 @@
     <string name="preferences_category_privacy">Privacidad</string>
     <!-- Preference for advanced site permissions -->
     <string name="preferences_site_permissions">Permisos del sitio</string>
-    <!-- Preference for launching links in a private tab-->
-    <string name="preferences_launch_links_in_private_mode">Ejecutar enlaces en una pestaña privada</string>
+    <!-- Preference for opening links in a private tab-->
+    <string name="preferences_open_links_in_a_private_tab">Abrir enlaces en una pestaña privada</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Agregar acceso directo a navegación privada</string>
     <!-- Preference for accessibility -->
@@ -175,6 +175,8 @@
     <string name="developer_tools_category">Herramientas de desarrollador</string>
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">Depuración remota vía USB</string>
+    <!-- Preference title for switch preference to show search shortcuts -->
+    <string name="preferences_show_search_shortcuts">Mostrar atajos de búsqueda</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Mostrar sugerencias de búsqueda</string>
     <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
@@ -195,6 +197,8 @@
     <string name="preferences_sync_history">Historial</string>
     <!-- Preference for syncing bookmarks -->
     <string name="preferences_sync_bookmarks">Marcadores</string>
+    <!-- Preference for syncing logins -->
+    <string name="preferences_sync_logins">Inicios de sesión</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">Cerrar sesión</string>
     <!-- Preference displays and allows changing current FxA device name -->
@@ -365,6 +369,8 @@
     <string name="add_tab">Agregar pestaña</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
     <string name="close_tab">Cerrar pestaña</string>
+    <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
+    <string name="close_tab_title">Cerrar pestaña %s</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the open tabs menu when pressed -->
     <string name="open_tabs_menu">Abrir menú de pestañas</string>
     <!-- Open tabs menu item to close all tabs -->
@@ -554,6 +560,11 @@
     <!-- Label that indicates video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed">Video y audio permitidos</string>
 
+    <!-- Summary of delete browsing data on quit preference if it is set to on -->
+    <string name="delete_browsing_data_quit_on">Activado</string>
+    <!-- Summary of delete browsing data on quit preference if it is set to off -->
+    <string name="delete_browsing_data_quit_off">Desactivado</string>
+
     <!-- Collections -->
     <!-- Label to describe what collections are to a new user without any collections -->
     <string name="collections_description">Guarda las cosas que te importan. Para empezar, guarda las pestañas abiertas en una nueva colección.</string>
@@ -666,6 +677,14 @@
 
     <!-- Text shown in snackbar when user deletes all tabs -->
     <string name="snackbar_tabs_deleted">Pestañas eliminadas</string>
+    <!-- Text shown in snackbar when user closes a tab -->
+    <string name="snackbar_tab_closed">Pestaña cerrada</string>
+    <!-- Text shown in snackbar when user closes all tabs -->
+    <string name="snackbar_tabs_closed">Pestañas cerradas</string>
+    <!-- Text shown in snackbar when user closes a private tab -->
+    <string name="snackbar_private_tab_closed">Pestaña privada cerrada</string>
+    <!-- Text shown in snackbar when user closes all private tabs -->
+    <string name="snackbar_private_tabs_closed">Pestañas privada cerradas</string>
     <!-- Text shown in snackbar when user deletes all private tabs -->
     <string name="snackbar_private_tabs_deleted">Pestañas privadas eliminadas</string>
     <!-- Text for action to undo deleting a tab or collection shown in snackbar -->
@@ -759,6 +778,9 @@
     <string name="delete_browsing_data_prompt_allow">Eliminar</string>
     <!-- Text for the snackbar confirmation that the data was deleted -->
     <string name="preferences_delete_browsing_data_snackbar">Se han eliminado los datos del navegador</string>
+
+    <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
+    <string name="deleting_browsing_data_in_progress">Eliminando datos de navegación…</string>
 
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message
@@ -909,7 +931,7 @@
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">Bloquea la carga de anuncios externos, vídeos y contenido que contenga código de rastreo. Puede afectar a la funcionalidad del sitio web.</string>
     <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="etp_onboarding_message">Cuando el escudo cambia de color significa que %s está bloqueando rastreadores en ese sitio. Haz clic en él para ver qué ha bloqueado.</string>
+    <string name="etp_onboarding_message_2">Cuando el escudo es morado, %s está bloqueando rastreadores en ese sitio. Toca para ver qué ha sido bloqueado.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">Las protecciones están activadas para este sitio</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -1002,5 +1024,20 @@
     <string name="logins_doorhanger_save_confirmation">Guardar</string>
     <!-- Negative confirmation that Fenix should not save the new or updated login -->
     <string name="logins_doorhanger_save_dont_save">No guardar</string>
-
+    <!-- Shown in snackbar to tell user that the password has been copied -->
+    <string name="logins_password_copied">Contraseña copiada al portapapeles</string>
+    <!-- Shown in snackbar to tell user that the username has been copied -->
+    <string name="logins_username_copied">Nombre de usuario copiado al portapapeles</string>
+    <!-- Shown in snackbar to tell user that the site has been copied -->
+    <string name="logins_site_copied">Sitio copiado al portapapeles</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
+    <string name="saved_logins_copy_password">Copiar contraseña</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
+    <string name="saved_login_copy_username">Copiar nombre de usuario</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
+    <string name="saved_login_copy_site">Copiar sitio</string>
+    <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
+    <string name="saved_login_reveal_password">Mostrar contraseña</string>
+    <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
+    <string name="saved_login_hide_password">Ocultar contraseña</string>
 </resources>

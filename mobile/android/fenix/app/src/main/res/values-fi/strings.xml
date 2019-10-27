@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <!-- App name for private browsing mode, only the "(Private)" portion should be localized. -->
-    <string name="app_name_private">Firefox Preview (yksityinen)</string>
+    <!-- App name for private browsing mode, only the "Private" portion should be localized. -->
+    <string name="app_name_private_2">Yksityinen Firefox Preview</string>
 
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
@@ -138,8 +138,8 @@
     <string name="preferences_category_privacy">Yksityisyys</string>
     <!-- Preference for advanced site permissions -->
     <string name="preferences_site_permissions">Sivustojen käyttöoikeudet</string>
-    <!-- Preference for launching links in a private tab-->
-    <string name="preferences_launch_links_in_private_mode">Avaa linkit yksityisiin välilehtiin</string>
+    <!-- Preference for opening links in a private tab-->
+    <string name="preferences_open_links_in_a_private_tab">Avaa linkit yksityisessä välilehdessä</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Lisää yksityisen selauksen pikakuvake</string>
     <!-- Preference for accessibility -->
@@ -188,6 +188,8 @@
     <string name="preferences_sync_history">Historia</string>
     <!-- Preference for syncing bookmarks -->
     <string name="preferences_sync_bookmarks">Kirjanmerkit</string>
+    <!-- Preference for syncing logins -->
+    <string name="preferences_sync_logins">Kirjautumistiedot</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">Kirjaudu ulos</string>
     <!-- Preference displays and allows changing current FxA device name -->
@@ -355,6 +357,8 @@
     <string name="add_tab">Lisää välilehti</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
     <string name="close_tab">Sulje välilehti</string>
+    <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
+    <string name="close_tab_title">Sulje välilehti %s</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the open tabs menu when pressed -->
     <string name="open_tabs_menu">Avointen välilehtien valikko</string>
     <!-- Open tabs menu item to close all tabs -->
@@ -543,6 +547,11 @@
     <!-- Label that indicates video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed">Video ja ääni sallittu</string>
 
+    <!-- Summary of delete browsing data on quit preference if it is set to on -->
+    <string name="delete_browsing_data_quit_on">Päällä</string>
+    <!-- Summary of delete browsing data on quit preference if it is set to off -->
+    <string name="delete_browsing_data_quit_off">Pois</string>
+
     <!-- Collections -->
     <!-- Label to describe what collections are to a new user without any collections -->
     <string name="collections_description">Kerää merkitykselliset asiat yhteen. Aloita tallentamalla avoimet välilehdet uudeksi kokoelmaksi.</string>
@@ -641,6 +650,14 @@
     <string name="snackbar_tab_deleted">Välilehti poistettu</string>
     <!-- Text shown in snackbar when user deletes all tabs -->
     <string name="snackbar_tabs_deleted">Välilehdet poistettu</string>
+    <!-- Text shown in snackbar when user closes a tab -->
+    <string name="snackbar_tab_closed">Välilehti suljettu</string>
+    <!-- Text shown in snackbar when user closes all tabs -->
+    <string name="snackbar_tabs_closed">Välilehdet suljettu</string>
+    <!-- Text shown in snackbar when user closes a private tab -->
+    <string name="snackbar_private_tab_closed">Yksityinen välilehti suljettu</string>
+    <!-- Text shown in snackbar when user closes all private tabs -->
+    <string name="snackbar_private_tabs_closed">Yksityiset välilehdet suljettu</string>
     <!-- Text shown in snackbar when user deletes all private tabs -->
     <string name="snackbar_private_tabs_deleted">Yksityiset välilehdet poistettu</string>
     <!-- Text for action to undo deleting a tab or collection shown in snackbar -->
@@ -733,6 +750,9 @@
     <string name="delete_browsing_data_prompt_allow">Poista</string>
     <!-- Text for the snackbar confirmation that the data was deleted -->
     <string name="preferences_delete_browsing_data_snackbar">Selaustiedot poistettu</string>
+
+    <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
+    <string name="deleting_browsing_data_in_progress">Poistetaan selaustietoja…</string>
 
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message
@@ -873,8 +893,6 @@
     <string name="etp_tracking_content_title">Seurantaan tarkoitettu sisältö</string>
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">Estää lataamasta ulkopuolisia mainoksia, videoita ja muuta sisältöä, joka sisältää seurantakoodin. Voi vaikuttaa joidenkin verkkosivustojen toimimiseen.</string>
-    <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="etp_onboarding_message">Kun kilven väri vaihtuu, %s estää sivulla olevia seuraimia. Napauta kilpeä nähdäksesi mitä estetään.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">Suojaukset ovat PÄÄLLÄ tällä sivustolla</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -968,5 +986,20 @@
     <string name="logins_doorhanger_save_confirmation">Tallenna</string>
     <!-- Negative confirmation that Fenix should not save the new or updated login -->
     <string name="logins_doorhanger_save_dont_save">Älä tallenna</string>
-
+    <!-- Shown in snackbar to tell user that the password has been copied -->
+    <string name="logins_password_copied">Salasana kopioitu leikepöydälle</string>
+    <!-- Shown in snackbar to tell user that the username has been copied -->
+    <string name="logins_username_copied">Käyttäjätunnus kopioitu leikepöydälle</string>
+    <!-- Shown in snackbar to tell user that the site has been copied -->
+    <string name="logins_site_copied">Sivusto kopioitu leikepöydälle</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
+    <string name="saved_logins_copy_password">Kopioi salasana</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
+    <string name="saved_login_copy_username">Kopioi käyttäjätunnus</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
+    <string name="saved_login_copy_site">Kopioi sivusto</string>
+    <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
+    <string name="saved_login_reveal_password">Näytä salasana</string>
+    <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
+    <string name="saved_login_hide_password">Piilota salasana</string>
 </resources>

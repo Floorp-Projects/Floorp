@@ -2,9 +2,6 @@
 <resources>
 
 
-    <!-- App name for private browsing mode, only the "(Private)" portion should be localized. -->
-    <string name="app_name_private">Firefox Preview (Nav. privée)</string>
-
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">Plus d’options</string>
@@ -144,8 +141,8 @@
     <string name="preferences_category_privacy">Vie privée</string>
     <!-- Preference for advanced site permissions -->
     <string name="preferences_site_permissions">Autorisations de site</string>
-    <!-- Preference for launching links in a private tab-->
-    <string name="preferences_launch_links_in_private_mode">Ouvrir les liens dans un onglet privé</string>
+    <!-- Preference for opening links in a private tab-->
+    <string name="preferences_open_links_in_a_private_tab">Ouvrir les liens dans un onglet privé</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Ajouter un raccourci pour la navigation privée</string>
     <!-- Preference for accessibility -->
@@ -194,6 +191,8 @@
     <string name="preferences_sync_history">Historique</string>
     <!-- Preference for syncing bookmarks -->
     <string name="preferences_sync_bookmarks">Marque-pages</string>
+    <!-- Preference for syncing logins -->
+    <string name="preferences_sync_logins">Identifiants</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">Déconnexion</string>
     <!-- Preference displays and allows changing current FxA device name -->
@@ -553,6 +552,11 @@
     <!-- Label that indicates video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed">Vidéo et audio autorisés</string>
 
+    <!-- Summary of delete browsing data on quit preference if it is set to on -->
+    <string name="delete_browsing_data_quit_on">Activé</string>
+    <!-- Summary of delete browsing data on quit preference if it is set to off -->
+    <string name="delete_browsing_data_quit_off">Désactivé</string>
+
     <!-- Collections -->
     <!-- Label to describe what collections are to a new user without any collections -->
     <string name="collections_description">Recueillez les choses qui comptent pour vous. Pour commencer, enregistrez les onglets ouverts dans une nouvelle collection.</string>
@@ -667,6 +671,14 @@
 
     <!-- Text shown in snackbar when user deletes all tabs -->
     <string name="snackbar_tabs_deleted">Onglets supprimés</string>
+    <!-- Text shown in snackbar when user closes a tab -->
+    <string name="snackbar_tab_closed">Onglet fermé</string>
+    <!-- Text shown in snackbar when user closes all tabs -->
+    <string name="snackbar_tabs_closed">Onglets fermés</string>
+    <!-- Text shown in snackbar when user closes a private tab -->
+    <string name="snackbar_private_tab_closed">Onglet privé fermé</string>
+    <!-- Text shown in snackbar when user closes all private tabs -->
+    <string name="snackbar_private_tabs_closed">Onglets privés fermés</string>
     <!-- Text shown in snackbar when user deletes all private tabs -->
     <string name="snackbar_private_tabs_deleted">Onglets privés supprimés</string>
     <!-- Text for action to undo deleting a tab or collection shown in snackbar -->
@@ -760,6 +772,9 @@
     <string name="delete_browsing_data_prompt_allow">Supprimer</string>
     <!-- Text for the snackbar confirmation that the data was deleted -->
     <string name="preferences_delete_browsing_data_snackbar">Données de navigation supprimées</string>
+
+    <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
+    <string name="deleting_browsing_data_in_progress">Suppression des données de navigation…</string>
 
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message
@@ -910,8 +925,6 @@
     <string name="etp_tracking_content_title">Contenu utilisé pour le pistage</string>
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">Empêche le chargement des publicités, vidéos et autres contenus d’origine externe au site et contenant du code de pistage. Peut affecter certaines fonctionnalités du site.</string>
-    <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="etp_onboarding_message">Lorsque le bouclier change de couleur, %s bloque les traqueurs sur un site web. Appuyez dessus pour voir ce qui est bloqué.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">Les protections sont activées pour ce site</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -1004,5 +1017,20 @@
     <string name="logins_doorhanger_save_confirmation">Enregistrer</string>
     <!-- Negative confirmation that Fenix should not save the new or updated login -->
     <string name="logins_doorhanger_save_dont_save">Ne pas enregistrer</string>
-
+    <!-- Shown in snackbar to tell user that the password has been copied -->
+    <string name="logins_password_copied">Mot de passe copié dans le presse-papiers</string>
+    <!-- Shown in snackbar to tell user that the username has been copied -->
+    <string name="logins_username_copied">Nom d’utilisateur copié dans le presse-papiers</string>
+    <!-- Shown in snackbar to tell user that the site has been copied -->
+    <string name="logins_site_copied">Site copié dans le presse-papiers</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
+    <string name="saved_logins_copy_password">Copier le mot de passe</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
+    <string name="saved_login_copy_username">Copier le nom d’utilisateur</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
+    <string name="saved_login_copy_site">Copier le site</string>
+    <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
+    <string name="saved_login_reveal_password">Afficher le mot de passe</string>
+    <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
+    <string name="saved_login_hide_password">Masquer le mot de passe</string>
 </resources>
