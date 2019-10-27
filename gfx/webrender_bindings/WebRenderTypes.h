@@ -225,6 +225,10 @@ struct ImageDescriptor : public wr::WrImageDescriptor {
   }
 };
 
+inline uint64_t AsUint64(const NativeSurfaceId& aId) {
+  return static_cast<uint64_t>(aId._0);
+}
+
 // Whenever possible, use wr::WindowId instead of manipulating uint64_t.
 inline uint64_t AsUint64(const WindowId& aId) {
   return static_cast<uint64_t>(aId.mHandle);
