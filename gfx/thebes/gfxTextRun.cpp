@@ -2616,8 +2616,8 @@ void gfxFontGroup::InitScriptRun(DrawTarget* aDrawTarget, gfxTextRun* aTextRun,
         // for 16-bit textruns only, check for surrogate pairs and
         // special Unicode spaces; omit these checks in 8-bit runs
         if (sizeof(T) == sizeof(char16_t)) {
-          if (NS_IS_HIGH_SURROGATE(ch) && index + 1 < aLength &&
-              NS_IS_LOW_SURROGATE(aString[index + 1])) {
+          if (index + 1 < aLength &&
+              NS_IS_SURROGATE_PAIR(ch, aString[index + 1])) {
             uint32_t usv = SURROGATE_TO_UCS4(ch, aString[index + 1]);
             aTextRun->SetMissingGlyph(aOffset + index, usv, mainFont);
             index++;
@@ -3027,8 +3027,7 @@ void gfxFontGroup::ComputeRanges(nsTArray<TextRange>& aRanges, const T* aString,
   uint32_t prevCh = 0;
   uint32_t nextCh = aString[0];
   if (sizeof(T) == sizeof(char16_t)) {
-    if (aLength > 1 && NS_IS_HIGH_SURROGATE(nextCh) &&
-        NS_IS_LOW_SURROGATE(aString[1])) {
+    if (aLength > 1 && NS_IS_SURROGATE_PAIR(nextCh, aString[1])) {
       nextCh = SURROGATE_TO_UCS4(nextCh, aString[1]);
     }
   }
@@ -3060,8 +3059,7 @@ void gfxFontGroup::ComputeRanges(nsTArray<TextRange>& aRanges, const T* aString,
       }
       if (i < aLength - 1) {
         nextCh = aString[i + 1];
-        if ((i + 2 < aLength) && NS_IS_HIGH_SURROGATE(nextCh) &&
-            NS_IS_LOW_SURROGATE(aString[i + 2])) {
+        if (i + 2 < aLength && NS_IS_SURROGATE_PAIR(nextCh, aString[i + 2])) {
           nextCh = SURROGATE_TO_UCS4(nextCh, aString[i + 2]);
         }
       } else {

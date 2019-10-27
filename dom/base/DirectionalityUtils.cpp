@@ -330,8 +330,7 @@ Directionality GetDirectionFromText(const char16_t* aText,
     uint32_t current = start - aText;
     uint32_t ch = *start++;
 
-    if (NS_IS_HIGH_SURROGATE(ch) && start < end &&
-        NS_IS_LOW_SURROGATE(*start)) {
+    if (start < end && NS_IS_SURROGATE_PAIR(ch, *start)) {
       ch = SURROGATE_TO_UCS4(ch, *start++);
       current++;
     }

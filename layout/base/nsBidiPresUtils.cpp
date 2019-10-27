@@ -2117,8 +2117,8 @@ void nsBidiPresUtils::CalculateCharType(nsBidi* aBidiEngine,
     } else if (IS_ARABIC_ALPHABETIC(ch)) {
       charType = eCharType_RightToLeftArabic;
     } else {
-      if (NS_IS_HIGH_SURROGATE(ch) && offset + 1 < aCharTypeLimit &&
-          NS_IS_LOW_SURROGATE(aText[offset + 1])) {
+      if (offset + 1 < aCharTypeLimit &&
+          NS_IS_SURROGATE_PAIR(ch, aText[offset + 1])) {
         ch = SURROGATE_TO_UCS4(ch, aText[offset + 1]);
         charLen = 2;
       }

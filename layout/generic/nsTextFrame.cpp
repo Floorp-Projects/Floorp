@@ -2776,8 +2776,7 @@ void BuildTextRunsScanner::SetupTextEmphasisForTextRun(gfxTextRun* aTextRun,
     auto text = reinterpret_cast<const char16_t*>(aTextPtr);
     auto length = aTextRun->GetLength();
     for (size_t i = 0; i < length; ++i) {
-      if (NS_IS_HIGH_SURROGATE(text[i]) && i + 1 < length &&
-          NS_IS_LOW_SURROGATE(text[i + 1])) {
+      if (i + 1 < length && NS_IS_SURROGATE_PAIR(text[i], text[i + 1])) {
         uint32_t ch = SURROGATE_TO_UCS4(text[i], text[i + 1]);
         if (!MayCharacterHaveEmphasisMark(ch)) {
           aTextRun->SetNoEmphasisMark(i);

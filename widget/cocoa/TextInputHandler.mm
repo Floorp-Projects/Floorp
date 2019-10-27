@@ -3020,7 +3020,7 @@ void IMEInputHandler::OnCurrentTextInputSourceChange(CFNotificationCenterRef aCe
     }
     // 72 is kMaximumKeyStringLength in TelemetryScalar.cpp
     if (key.Length() > 72) {
-      if (NS_IS_LOW_SURROGATE(key[72 - 1]) && NS_IS_HIGH_SURROGATE(key[72 - 2])) {
+      if (NS_IS_SURROGATE_PAIR(key[72 - 2], key[72 - 1])) {
         key.Truncate(72 - 2);
       } else {
         key.Truncate(72 - 1);

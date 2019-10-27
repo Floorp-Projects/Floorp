@@ -227,8 +227,7 @@ class nsTextFragment final {
     if (!mState.mIs2b || aIndex + 1 >= mState.mLength) {
       return false;
     }
-    return NS_IS_HIGH_SURROGATE(Get2b()[aIndex]) &&
-           NS_IS_LOW_SURROGATE(Get2b()[aIndex + 1]);
+    return NS_IS_SURROGATE_PAIR(Get2b()[aIndex], Get2b()[aIndex + 1]);
   }
 
   /**
@@ -241,8 +240,7 @@ class nsTextFragment final {
     if (!mState.mIs2b || aIndex <= 0) {
       return false;
     }
-    return NS_IS_LOW_SURROGATE(Get2b()[aIndex]) &&
-           NS_IS_HIGH_SURROGATE(Get2b()[aIndex - 1]);
+    return NS_IS_SURROGATE_PAIR(Get2b()[aIndex - 1], Get2b()[aIndex]);
   }
 
   /**
