@@ -22,8 +22,8 @@ use gleam::gl;
 
 use webrender::{
     api::*, api::units::*, ApiRecordingReceiver, AsyncPropertySampler, AsyncScreenshotHandle,
-    BinaryRecorder, DebugFlags, Device, ExternalImage, ExternalImageHandler, ExternalImageSource,
-    PipelineInfo, ProfilerHooks, RecordedFrameHandle, Renderer, RendererOptions, RendererStats,
+    BinaryRecorder, Compositor, DebugFlags, Device, ExternalImage, ExternalImageHandler, ExternalImageSource,
+    NativeSurfaceId, PipelineInfo, ProfilerHooks, RecordedFrameHandle, Renderer, RendererOptions, RendererStats,
     SceneBuilderHooks, ShaderPrecacheFlags, Shaders, ThreadListener, UploadMethod, VertexUsageHint,
     WrShaders, set_profiler_hooks,
 };
@@ -1135,6 +1135,120 @@ fn wr_device_new(gl_context: *mut c_void, pc: Option<&mut WrProgramCache>)
     Device::new(gl, resource_override_path, upload_method, cached_programs, false, true, true, None)
 }
 
+extern "C" {
+    fn wr_compositor_create_surface(
+        compositor: *mut c_void,
+        id: NativeSurfaceId,
+        size: DeviceIntSize,
+    );
+    fn wr_compositor_destroy_surface(
+        compositor: *mut c_void,
+        id: NativeSurfaceId,
+    );
+    fn wr_compositor_bind(
+        compositor: *mut c_void,
+        id: NativeSurfaceId,
+        offset: &mut DeviceIntPoint,
+    );
+    fn wr_compositor_unbind(compositor: *mut c_void);
+    fn wr_compositor_begin_frame(compositor: *mut c_void);
+    fn wr_compositor_add_surface(
+        compositor: *mut c_void,
+        id: NativeSurfaceId,
+        position: DeviceIntPoint,
+        clip_rect: DeviceIntRect,
+    );
+    fn wr_compositor_end_frame(compositor: *mut c_void);
+}
+
+pub struct WrCompositor(*mut c_void);
+
+impl Compositor for WrCompositor {
+    fn create_surface(
+        &mut self,
+        id: NativeSurfaceId,
+        size: DeviceIntSize,
+    ) {
+        unsafe {
+            wr_compositor_create_surface(
+                self.0,
+                id,
+                size,
+            );
+        }
+    }
+
+    fn destroy_surface(
+        &mut self,
+        id: NativeSurfaceId,
+    ) {
+        unsafe {
+            wr_compositor_destroy_surface(
+                self.0,
+                id,
+            );
+        }
+    }
+
+    fn bind(
+        &mut self,
+        id: NativeSurfaceId,
+    ) -> DeviceIntPoint {
+        let mut offset = DeviceIntPoint::zero();
+        unsafe {
+            wr_compositor_bind(
+                self.0,
+                id,
+                &mut offset,
+            );
+        }
+        offset
+    }
+
+    fn unbind(
+        &mut self,
+    ) {
+        unsafe {
+            wr_compositor_unbind(
+                self.0,
+            );
+        }
+    }
+
+    fn begin_frame(&mut self) {
+        unsafe {
+            wr_compositor_begin_frame(
+                self.0,
+            );
+        }
+    }
+
+    fn add_surface(
+        &mut self,
+        id: NativeSurfaceId,
+        position: DeviceIntPoint,
+        clip_rect: DeviceIntRect,
+    ) {
+        unsafe {
+            wr_compositor_add_surface(
+                self.0,
+                id,
+                position,
+                clip_rect,
+            );
+        }
+    }
+
+    fn end_frame(&mut self) {
+        unsafe {
+            wr_compositor_end_frame(
+                self.0,
+            );
+        }
+    }
+}
+
+
 // Call MakeCurrent before this.
 #[no_mangle]
 pub extern "C" fn wr_window_new(window_id: WrWindowId,
@@ -1151,6 +1265,7 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
                                 size_of_op: VoidPtrToSizeFn,
                                 enclosing_size_of_op: VoidPtrToSizeFn,
                                 document_id: u32,
+                                compositor: *mut c_void,
                                 out_handle: &mut *mut DocumentHandle,
                                 out_renderer: &mut *mut Renderer,
                                 out_max_texture_size: *mut i32)
@@ -1203,6 +1318,12 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
         ColorF::new(0.0, 0.0, 0.0, 0.0)
     };
 
+    let native_compositor : Option<Box<dyn Compositor>> = if compositor != ptr::null_mut() {
+        Some(Box::new(WrCompositor(compositor)))
+    } else {
+        None
+    };
+
     let opts = RendererOptions {
         enable_aa: true,
         enable_subpixel_aa: cfg!(not(target_os = "android")),
@@ -1237,6 +1358,7 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
         enable_picture_caching,
         allow_pixel_local_storage_support: false,
         start_debug_server,
+        native_compositor,
         ..Default::default()
     };
 

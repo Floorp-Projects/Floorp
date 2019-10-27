@@ -9,6 +9,7 @@
 
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/webrender/WebRenderTypes.h"
 #include "Units.h"
 
 namespace mozilla {
@@ -61,6 +62,21 @@ class RenderCompositor {
   layers::SyncObjectHost* GetSyncObject() const { return mSyncObject.get(); }
 
   virtual bool IsContextLost();
+
+  virtual bool ShouldUseNativeCompositor() { return false; }
+
+  // Interface for wr::Compositor
+  virtual void CompositorBeginFrame() {}
+  virtual void CompositorEndFrame() {}
+  virtual void Bind(wr::NativeSurfaceId aId, wr::DeviceIntPoint* aOffset) {}
+  virtual void Unbind() {}
+  virtual void CreateSurface(wr::NativeSurfaceId aId, wr::DeviceIntSize aSize) {
+  }
+  virtual void DestroySurface(NativeSurfaceId aId) {}
+  virtual void AddSurface(wr::NativeSurfaceId aId, wr::DeviceIntPoint aPosition,
+                          wr::DeviceIntRect aClipRect) {}
+
+  void wr_compositor_unbind(void* aCompositor) {}
 
  protected:
   RefPtr<widget::CompositorWidget> mWidget;
