@@ -507,6 +507,15 @@ class WalkerFront extends FrontClassWithSpec(walkerSpec) {
       return querySelectors(nodeFront);
     };
     const nodeFront = await this.getRootNode();
+
+    // Check the "depth" of the walker.
+    // The `nodeSelectors` array starts from the topmost document, if the walker
+    // is targetting a nested iframe, the selectors needed to reach this iframe
+    // need to be excluded from the query.
+    const rootFrontSelectors = await nodeFront.getAllSelectors();
+    const walkerDepth = rootFrontSelectors.length - 1;
+    nodeSelectors.splice(0, walkerDepth);
+
     return querySelectors(nodeFront);
   }
 }
