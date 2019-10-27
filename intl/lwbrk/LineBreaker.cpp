@@ -667,8 +667,7 @@ class ContextState {
     MOZ_ASSERT(mUniText, "Only for 16-bit text!");
     MOZ_ASSERT(aIndex < mLength, "Out of range!");
     char32_t c = mUniText[aIndex];
-    if (NS_IS_HIGH_SURROGATE(c) && aIndex + 1 < mLength &&
-        NS_IS_LOW_SURROGATE(mUniText[aIndex + 1])) {
+    if (aIndex + 1 < mLength && NS_IS_SURROGATE_PAIR(c, mUniText[aIndex + 1])) {
       c = SURROGATE_TO_UCS4(c, mUniText[aIndex + 1]);
     }
     return c;
@@ -968,8 +967,7 @@ void LineBreaker::GetJISx4051Breaks(const char16_t* aChars, uint32_t aLength,
         // not using state.GetUnicodeCharAt() here because we're looking back
         // rather than forward for possible surrogates
         prev = aChars[cur - 1];
-        if (NS_IS_LOW_SURROGATE(prev) && cur > 1 &&
-            NS_IS_HIGH_SURROGATE(aChars[cur - 2])) {
+        if (cur > 1 && NS_IS_SURROGATE_PAIR(aChars[cur - 2], prev)) {
           prev = SURROGATE_TO_UCS4(aChars[cur - 2], prev);
         }
       } else {

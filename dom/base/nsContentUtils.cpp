@@ -2919,8 +2919,7 @@ bool nsContentUtils::IsNameWithDash(nsAtom* aName) {
 
   uint32_t i = 1;
   while (i < len) {
-    if (NS_IS_HIGH_SURROGATE(name[i]) && i + 1 < len &&
-        NS_IS_LOW_SURROGATE(name[i + 1])) {
+    if (i + 1 < len && NS_IS_SURROGATE_PAIR(name[i], name[i + 1])) {
       // Merged two 16-bit surrogate pairs into code point.
       char32_t code = SURROGATE_TO_UCS4(name[i], name[i + 1]);
 

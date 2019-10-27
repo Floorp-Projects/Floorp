@@ -539,8 +539,7 @@ bool mozTXTToHTMLConv::ItMatchesDelimited(const char16_t* aInString,
     return false;
 
   uint32_t text0 = aInString[0];
-  if (NS_IS_HIGH_SURROGATE(text0) && aInLength > 1 &&
-      NS_IS_LOW_SURROGATE(aInString[1])) {
+  if (aInLength > 1 && NS_IS_SURROGATE_PAIR(text0, aInString[1])) {
     text0 = SURROGATE_TO_UCS4(text0, aInString[1]);
   }
   // find length of the char/cluster to be ignored
@@ -553,8 +552,8 @@ bool mozTXTToHTMLConv::ItMatchesDelimited(const char16_t* aInString,
 
   int32_t afterIndex = aRepLen + ignoreLen;
   uint32_t textAfterPos = aInString[afterIndex];
-  if (NS_IS_HIGH_SURROGATE(textAfterPos) && aInLength > afterIndex + 1 &&
-      NS_IS_LOW_SURROGATE(aInString[afterIndex + 1])) {
+  if (aInLength > afterIndex + 1 &&
+      NS_IS_SURROGATE_PAIR(textAfterPos, aInString[afterIndex + 1])) {
     textAfterPos = SURROGATE_TO_UCS4(textAfterPos, aInString[afterIndex + 1]);
   }
 
