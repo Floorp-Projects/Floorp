@@ -389,11 +389,11 @@ MOZ_EXPORT const char* RecordReplayInterface_InternalVirtualThingName(
   return name ? name : "(unknown)";
 }
 
-MOZ_EXPORT void RecordReplayInterface_InternalHoldJSObject(JSObject* aJSObj) {
+MOZ_EXPORT void RecordReplayInterface_InternalHoldJSObject(void* aJSObj) {
   if (aJSObj) {
     JSContext* cx = dom::danger::GetJSContext();
     JS::PersistentRootedObject* root = new JS::PersistentRootedObject(cx);
-    *root = aJSObj;
+    *root = static_cast<JSObject*>(aJSObj);
   }
 }
 

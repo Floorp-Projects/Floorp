@@ -19,8 +19,6 @@
 #include <stdarg.h>
 
 struct PLDHashTableOps;
-struct JSContext;
-class JSObject;
 
 namespace mozilla {
 namespace recordreplay {
@@ -190,8 +188,11 @@ static inline void MovePLDHashTableContents(const PLDHashTableOps* aFirstOps,
 // Prevent a JS object from ever being collected while recording or replaying.
 // GC behavior is non-deterministic when recording/replaying, and preventing
 // an object from being collected ensures that finalizers which might interact
-// with the recording will not execute.
-static inline void HoldJSObject(JSObject* aJSObj);
+// with the recording will not execute. "aJSObj" must be a JSObject* pointer,
+// but we can't include JSObject's header here and we can't forward-declare it
+// due to some peculiarities with the compiler's visibility attributes.
+// See https://bugzilla.mozilla.org/show_bug.cgi?id=1426865
+static inline void HoldJSObject(void* aJSObj);
 
 // Some devtools operations which execute in a replaying process can cause code
 // to run which did not run while recording. For example, the JS debugger can
@@ -266,8 +267,9 @@ MFBT_API bool ShouldUpdateProgressCounter(const char* aURL);
 
 // Define a RecordReplayControl object on the specified global object, with
 // methods specialized to the current recording/replaying or middleman process
-// kind.
-MFBT_API bool DefineRecordReplayControlObject(JSContext* aCx, JSObject* aObj);
+// kind. "aCx" must be a JSContext* pointer, and "aObj" must be a JSObject*
+// pointer, as with HoldJSObject above.
+MFBT_API bool DefineRecordReplayControlObject(void* aCx, void* aObj);
 
 // Notify the infrastructure that some URL which contains JavaScript or CSS is
 // being parsed. This is used to provide the complete contents of the URL to
@@ -376,8 +378,7 @@ MOZ_MAKE_RECORD_REPLAY_WRAPPER_VOID(MovePLDHashTableContents,
                                     (aFirstOps, aSecondOps))
 MOZ_MAKE_RECORD_REPLAY_WRAPPER_VOID(InvalidateRecording, (const char* aWhy),
                                     (aWhy))
-MOZ_MAKE_RECORD_REPLAY_WRAPPER_VOID(HoldJSObject, (JSObject * aObject),
-                                    (aObject))
+MOZ_MAKE_RECORD_REPLAY_WRAPPER_VOID(HoldJSObject, (void* aJSObj), (aJSObj))
 MOZ_MAKE_RECORD_REPLAY_WRAPPER_VOID(RecordReplayAssertBytes,
                                     (const void* aData, size_t aSize),
                                     (aData, aSize))
