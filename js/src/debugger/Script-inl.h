@@ -14,13 +14,14 @@
 
 #include <utility>  // for move
 
+#include "jstypes.h"            // for JS_PUBLIC_API
 #include "debugger/Debugger.h"  // for DebuggerScriptReferent
 #include "gc/Cell.h"            // for Cell
 #include "vm/JSScript.h"        // for BaseScript, JSScript, LazyScript
 #include "vm/NativeObject.h"    // for NativeObject
 #include "wasm/WasmJS.h"        // for WasmInstanceObject
 
-class JSObject;
+class JS_PUBLIC_API JSObject;
 
 js::gc::Cell* js::DebuggerScript::getReferentCell() const {
   return static_cast<gc::Cell*>(getPrivate());

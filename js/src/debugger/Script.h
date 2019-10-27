@@ -9,12 +9,13 @@
 
 #include "jsapi.h"  // for Handle, JSFunctionSpec, JSPropertySpec
 
+#include "jstypes.h"            // for JS_PUBLIC_API
 #include "NamespaceImports.h"   // for Value, HandleObject, CallArgs
 #include "debugger/Debugger.h"  // for DebuggerScriptReferent
 #include "gc/Rooting.h"         // for HandleNativeObject
 #include "vm/NativeObject.h"    // for NativeObject
 
-class JSObject;
+class JS_PUBLIC_API JSObject;
 
 namespace js {
 

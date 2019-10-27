@@ -9,6 +9,7 @@
 
 #include "mozilla/Assertions.h"  // MOZ_ASSERT
 
+#include "jstypes.h"                  // JS_PUBLIC_API
 #include "gc/GCEnum.h"                // js::MemoryUse
 #include "jit/ExecutableAllocator.h"  // jit::JitPoisonRangeVector
 #include "js/AllocPolicy.h"           // SystemAllocPolicy
@@ -16,7 +17,7 @@
 #include "js/Utility.h"               // AutoEnterOOMUnsafeRegion, js_free
 #include "js/Vector.h"                // js::Vector
 
-struct JSRuntime;
+struct JS_PUBLIC_API JSRuntime;
 
 namespace js {
 namespace gc {

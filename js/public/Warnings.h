@@ -27,7 +27,7 @@
 
 #include "jstypes.h"  // JS_PUBLIC_API
 
-struct JSContext;
+struct JS_PUBLIC_API JSContext;
 class JSErrorReport;
 
 namespace JS {

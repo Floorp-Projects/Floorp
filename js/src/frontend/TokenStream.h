@@ -217,7 +217,7 @@
 #include "vm/JSAtom.h"
 #include "vm/StringType.h"
 
-struct JSContext;
+struct JS_PUBLIC_API JSContext;
 struct KeywordInfo;
 
 namespace js {
