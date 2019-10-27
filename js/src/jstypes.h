@@ -64,23 +64,6 @@
 #  define JS_NO_FASTCALL
 #endif
 
-// gcc is buggy and warns on our attempts to JS_PUBLIC_API our
-// forward-declarations or explicit template instantiations.  See
-// <https://gcc.gnu.org/bugzilla/show_bug.cgi?id=50044>.  Add a way to detect
-// that so we can locally disable that warning.
-//
-// This version-check is written such that the version-number mentioned below
-// must be bumped every time a new gcc that *doesn't* fix this bug is released.
-// (The gcc release that *fixes* this bug will trigger no warning, and we'll
-// naturally stop bumping this number.)  If you ever trigger this warning with
-// the latest stable gcc, you have rs=jwalden to bump it to the next gcc minor
-// or major version as needed, e.g. (8, 2, 0) to (8, 3, 0).
-#if MOZ_IS_GCC
-#  if !MOZ_GCC_VERSION_AT_LEAST(8, 2, 0)
-#    define JS_BROKEN_GCC_ATTRIBUTE_WARNING
-#  endif
-#endif
-
 /***********************************************************************
 ** MACROS:      JS_BEGIN_MACRO
 **              JS_END_MACRO
