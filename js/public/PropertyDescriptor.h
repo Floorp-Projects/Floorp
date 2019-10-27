@@ -12,7 +12,7 @@
 
 #include <stdint.h>  // uint8_t
 
-#include "jstypes.h"  // JS_BROKEN_GCC_ATTRIBUTE_WARNING, JS_PUBLIC_API
+#include "jstypes.h"  // JS_PUBLIC_API
 
 #include "js/Class.h"       // JS{Getter,Setter}Op
 #include "js/RootingAPI.h"  // JS::Handle, js::{,Mutable}WrappedPtrOperations
@@ -20,17 +20,7 @@
 
 struct JSContext;
 class JSObject;
-
-#ifdef JS_BROKEN_GCC_ATTRIBUTE_WARNING
-#  pragma GCC diagnostic push
-#  pragma GCC diagnostic ignored "-Wattributes"
-#endif  // JS_BROKEN_GCC_ATTRIBUTE_WARNING
-
 class JS_PUBLIC_API JSTracer;
-
-#ifdef JS_BROKEN_GCC_ATTRIBUTE_WARNING
-#  pragma GCC diagnostic pop
-#endif  // JS_BROKEN_GCC_ATTRIBUTE_WARNING
 
 /* Property attributes, set in JSPropertySpec and passed to API functions.
  *
