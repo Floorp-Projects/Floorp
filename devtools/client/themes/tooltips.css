@@ -73,6 +73,7 @@ strong {
 .devtools-tooltip-css-variable {
   color: var(--theme-body-color);
   padding: 2px;
+  direction: ltr;
 }
 
 /* Tooltip: Inactive CSS tooltip */
