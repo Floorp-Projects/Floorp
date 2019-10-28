@@ -5,15 +5,15 @@
  * found in the LICENSE file.
  */
 
-#include "GrShadowRRectOp.h"
+#include "src/gpu/ops/GrShadowRRectOp.h"
 
-#include "GrDrawOpTest.h"
-#include "GrMemoryPool.h"
-#include "GrOpFlushState.h"
-#include "GrRecordingContext.h"
-#include "GrRecordingContextPriv.h"
-#include "SkRRectPriv.h"
-#include "effects/GrShadowGeoProc.h"
+#include "include/private/GrRecordingContext.h"
+#include "src/core/SkRRectPriv.h"
+#include "src/gpu/GrDrawOpTest.h"
+#include "src/gpu/GrMemoryPool.h"
+#include "src/gpu/GrOpFlushState.h"
+#include "src/gpu/GrRecordingContextPriv.h"
+#include "src/gpu/effects/GrShadowGeoProc.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 // Circle Data
@@ -155,7 +155,6 @@ static int rrect_type_to_vert_count(RRectType type) {
             return kVertsPerOverstrokeRRect;
     }
     SK_ABORT("Invalid type");
-    return 0;
 }
 
 static int rrect_type_to_index_count(RRectType type) {
@@ -168,7 +167,6 @@ static int rrect_type_to_index_count(RRectType type) {
             return kIndicesPerOverstrokeRRect;
     }
     SK_ABORT("Invalid type");
-    return 0;
 }
 
 static const uint16_t* rrect_type_to_indices(RRectType type) {
@@ -180,7 +178,6 @@ static const uint16_t* rrect_type_to_indices(RRectType type) {
             return gRRectIndices;
     }
     SK_ABORT("Invalid type");
-    return nullptr;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -221,7 +218,7 @@ public:
             }
         }
 
-        this->setBounds(bounds, HasAABloat::kNo, IsZeroArea::kNo);
+        this->setBounds(bounds, HasAABloat::kNo, IsHairline::kNo);
 
         fGeoData.emplace_back(Geometry{color, outerRadius, umbraInset, innerRadius,
                                        blurRadius, bounds, type, isCircle});
@@ -255,7 +252,8 @@ public:
 
     FixedFunctionFlags fixedFunctionFlags() const override { return FixedFunctionFlags::kNone; }
 
-    GrProcessorSet::Analysis finalize(const GrCaps&, const GrAppliedClip*, GrFSAAType) override {
+    GrProcessorSet::Analysis finalize(const GrCaps&, const GrAppliedClip*,
+                                      bool hasMixedSampledCoverage, GrClampType) override {
         return GrProcessorSet::EmptySetAnalysis();
     }
 
@@ -640,6 +638,10 @@ std::unique_ptr<GrDrawOp> Make(GrRecordingContext* context,
     SkScalar matrixFactor = viewMatrix[SkMatrix::kMScaleX] + viewMatrix[SkMatrix::kMSkewX];
     SkScalar scaledRadius = SkScalarAbs(radius*matrixFactor);
     SkScalar scaledInsetWidth = SkScalarAbs(insetWidth*matrixFactor);
+
+    if (scaledInsetWidth <= 0) {
+        return nullptr;
+    }
 
     GrOpMemoryPool* pool = context->priv().opMemoryPool();
 

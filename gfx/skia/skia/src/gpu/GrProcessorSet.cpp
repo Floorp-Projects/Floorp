@@ -5,13 +5,13 @@
  * found in the LICENSE file.
  */
 
-#include "GrProcessorSet.h"
-#include "GrAppliedClip.h"
-#include "GrCaps.h"
-#include "GrUserStencilSettings.h"
-#include "GrXferProcessor.h"
-#include "SkBlendModePriv.h"
-#include "effects/GrPorterDuffXferProcessor.h"
+#include "src/core/SkBlendModePriv.h"
+#include "src/gpu/GrAppliedClip.h"
+#include "src/gpu/GrCaps.h"
+#include "src/gpu/GrProcessorSet.h"
+#include "src/gpu/GrUserStencilSettings.h"
+#include "src/gpu/GrXferProcessor.h"
+#include "src/gpu/effects/GrPorterDuffXferProcessor.h"
 
 const GrProcessorSet& GrProcessorSet::EmptySet() {
     static GrProcessorSet gEmpty(GrProcessorSet::Empty::kEmpty);
@@ -162,8 +162,9 @@ bool GrProcessorSet::operator==(const GrProcessorSet& that) const {
 
 GrProcessorSet::Analysis GrProcessorSet::finalize(
         const GrProcessorAnalysisColor& colorInput, const GrProcessorAnalysisCoverage coverageInput,
-        const GrAppliedClip* clip, const GrUserStencilSettings* userStencil, GrFSAAType fsaaType,
-        const GrCaps& caps, SkPMColor4f* overrideInputColor) {
+        const GrAppliedClip* clip, const GrUserStencilSettings* userStencil,
+        bool hasMixedSampledCoverage, const GrCaps& caps, GrClampType clampType,
+        SkPMColor4f* overrideInputColor) {
     SkASSERT(!this->isFinalized());
     SkASSERT(!fFragmentProcessorOffset);
 
@@ -174,8 +175,6 @@ GrProcessorSet::Analysis GrProcessorSet::finalize(
             fFragmentProcessors.get() + fFragmentProcessorOffset;
     GrColorFragmentProcessorAnalysis colorAnalysis(
             colorInput, unique_ptr_address_as_pointer_address(fps), fColorFragmentProcessorCnt);
-    analysis.fCompatibleWithCoverageAsAlpha &=
-            colorAnalysis.allProcessorsCompatibleWithCoverageAsAlpha();
     fps += fColorFragmentProcessorCnt;
     int n = this->numCoverageFragmentProcessors();
     bool hasCoverageFP = n > 0;
@@ -209,14 +208,14 @@ GrProcessorSet::Analysis GrProcessorSet::finalize(
     }
 
     GrXPFactory::AnalysisProperties props = GrXPFactory::GetAnalysisProperties(
-            this->xpFactory(), colorAnalysis.outputColor(), outputCoverage, caps);
+            this->xpFactory(), colorAnalysis.outputColor(), outputCoverage, caps, clampType);
     if (!this->numCoverageFragmentProcessors() &&
         GrProcessorAnalysisCoverage::kNone == coverageInput) {
     }
     analysis.fRequiresDstTexture =
             SkToBool(props & GrXPFactory::AnalysisProperties::kRequiresDstTexture);
     analysis.fCompatibleWithCoverageAsAlpha &=
-            SkToBool(props & GrXPFactory::AnalysisProperties::kCompatibleWithAlphaAsCoverage);
+            SkToBool(props & GrXPFactory::AnalysisProperties::kCompatibleWithCoverageAsAlpha);
     analysis.fRequiresNonOverlappingDraws = SkToBool(
             props & GrXPFactory::AnalysisProperties::kRequiresNonOverlappingDraws);
     if (props & GrXPFactory::AnalysisProperties::kIgnoresInputColor) {
@@ -225,21 +224,20 @@ GrProcessorSet::Analysis GrProcessorSet::finalize(
                 static_cast<Analysis::PackedInputColorType>(Analysis::kIgnored_InputColorType);
         analysis.fUsesLocalCoords = coverageUsesLocalCoords;
     } else {
+        analysis.fCompatibleWithCoverageAsAlpha &=
+            colorAnalysis.allProcessorsCompatibleWithCoverageAsAlpha();
         analysis.fUsesLocalCoords = coverageUsesLocalCoords | colorAnalysis.usesLocalCoords();
     }
     for (int i = 0; i < colorFPsToEliminate; ++i) {
         fFragmentProcessors[i].reset(nullptr);
     }
-    for (int i = colorFPsToEliminate; i < fFragmentProcessors.count(); ++i) {
-        fFragmentProcessors[i]->markPendingExecution();
-    }
     fFragmentProcessorOffset = colorFPsToEliminate;
     fColorFragmentProcessorCnt -= colorFPsToEliminate;
+    analysis.fHasColorFragmentProcessor = (fColorFragmentProcessorCnt != 0);
 
-    bool hasMixedSampledCoverage = (GrFSAAType::kMixedSamples == fsaaType)
-            && !userStencil->testAlwaysPasses((clip) ? clip->hasStencilClip() : false);
     auto xp = GrXPFactory::MakeXferProcessor(this->xpFactory(), colorAnalysis.outputColor(),
-                                             outputCoverage, hasMixedSampledCoverage, caps);
+                                             outputCoverage, hasMixedSampledCoverage, caps,
+                                             clampType);
     fXP.fProcessor = xp.release();
 
     fFlags |= kFinalized_Flag;

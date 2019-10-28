@@ -8,14 +8,15 @@
 #ifndef SkScopeExit_DEFINED
 #define SkScopeExit_DEFINED
 
-#include "SkTypes.h"
-#include "SkMacros.h"
+#include "include/core/SkTypes.h"
+#include "include/private/SkMacros.h"
 
 #include <functional>
 
 /** SkScopeExit calls a std:::function<void()> in its destructor. */
 class SkScopeExit {
 public:
+    SkScopeExit() = default;
     SkScopeExit(std::function<void()> f) : fFn(std::move(f)) {}
     SkScopeExit(SkScopeExit&& that) : fFn(std::move(that.fFn)) {}
 

@@ -8,9 +8,9 @@
 #ifndef GrGLInterface_DEFINED
 #define GrGLInterface_DEFINED
 
-#include "GrGLFunctions.h"
-#include "GrGLExtensions.h"
-#include "SkRefCnt.h"
+#include "include/core/SkRefCnt.h"
+#include "include/gpu/gl/GrGLExtensions.h"
+#include "include/gpu/gl/GrGLFunctions.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -33,13 +33,6 @@ struct GrGLInterface;
 SK_API sk_sp<const GrGLInterface> GrGLMakeNativeInterface();
 // Deprecated alternative to GrGLMakeNativeInterface().
 SK_API const GrGLInterface* GrGLCreateNativeInterface();
-
-/**
- * Creates a null GrGLInterface that doesn't draw anything. Used for measuring
- * CPU overhead. TODO: We would like to move this to tools/gpu/gl/null but currently
- * Chromium is using it in its unit tests.
- */
-const SK_API GrGLInterface* GrGLCreateNullInterface(bool enableNVPR = false);
 
 /**
  * GrContext uses the following interface to make all calls into OpenGL. When a
@@ -333,9 +326,9 @@ public:
         /* EXT_window_rectangles */
         GrGLFunction<GrGLWindowRectanglesFn> fWindowRectangles;
 
-        /* EGL functions */
-        GrGLFunction<GrEGLCreateImageFn> fEGLCreateImage;
-        GrGLFunction<GrEGLDestroyImageFn> fEGLDestroyImage;
+        /* GL_QCOM_tiled_rendering */
+        GrGLFunction<GrGLStartTilingFn> fStartTiling;
+        GrGLFunction<GrGLEndTilingFn> fEndTiling;
     } fFunctions;
 
 #if GR_TEST_UTILS

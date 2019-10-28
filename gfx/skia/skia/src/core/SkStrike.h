@@ -7,17 +7,17 @@
 #ifndef SkStrike_DEFINED
 #define SkStrike_DEFINED
 
-#include "SkArenaAlloc.h"
-#include "SkDescriptor.h"
-#include "SkFontMetrics.h"
-#include "SkFontTypes.h"
-#include "SkGlyph.h"
-#include "SkGlyphRunPainter.h"
-#include "SkPaint.h"
-#include "SkTHash.h"
-#include "SkScalerContext.h"
-#include "SkStrikeInterface.h"
-#include "SkTemplates.h"
+#include "include/core/SkFontMetrics.h"
+#include "include/core/SkFontTypes.h"
+#include "include/core/SkPaint.h"
+#include "include/private/SkTHash.h"
+#include "include/private/SkTemplates.h"
+#include "src/core/SkArenaAlloc.h"
+#include "src/core/SkDescriptor.h"
+#include "src/core/SkGlyph.h"
+#include "src/core/SkGlyphRunPainter.h"
+#include "src/core/SkScalerContext.h"
+#include "src/core/SkStrikeForGPU.h"
 #include <memory>
 
 /** \class SkGlyphCache
@@ -33,38 +33,37 @@
     The Find*Exclusive() method returns SkExclusiveStrikePtr, which releases exclusive ownership
     when they go out of scope.
 */
-class SkStrike : public SkStrikeInterface {
+class SkStrike final : public SkStrikeForGPU {
 public:
     SkStrike(const SkDescriptor& desc,
              std::unique_ptr<SkScalerContext> scaler,
              const SkFontMetrics&);
 
-    /** Return true if glyph is cached. */
-    bool isGlyphCached(SkGlyphID glyphID, SkFixed x, SkFixed y) const;
+    // Return a glyph. Create it if it doesn't exist, and initialize the glyph with metrics and
+    // advances using a scaler.
+    SkGlyph* glyph(SkPackedGlyphID packedID);
+    SkGlyph* glyph(SkGlyphID glyphID);
+    SkGlyph* glyph(SkGlyphID, SkPoint);
 
-    /**  Return a glyph that has no information if it is not already filled out. */
-    SkGlyph* getRawGlyphByID(SkPackedGlyphID);
+    // Return a glyph.  Create it if it doesn't exist, and initialize with the prototype.
+    SkGlyph* glyphFromPrototype(const SkGlyphPrototype& p, void* image = nullptr);
 
-    /** Returns a glyph with valid fAdvance and fDevKern fields. The remaining fields may be
-        valid, but that is not guaranteed. If you require those, call getGlyphIDMetrics instead.
-    */
-    const SkGlyph& getGlyphIDAdvance(SkGlyphID);
+    // Return a glyph or nullptr if it does not exits in the strike.
+    SkGlyph* glyphOrNull(SkPackedGlyphID id) const;
 
-    /** Returns a glyph with all fields valid except fImage and fPath, which may be null. If they
-        are null, call findImage or findPath for those. If they are not null, then they are valid.
+    const void* prepareImage(SkGlyph* glyph);
 
-        This call is potentially slower than the matching ...Advance call. If you only need the
-        fAdvance/fDevKern fields, call those instead.
-    */
-    const SkGlyph& getGlyphIDMetrics(SkGlyphID);
+    // Lookup (or create if needed) the toGlyph using toID. If that glyph is not initialized with
+    // an image, then use the information in from to initialize the width, height top, left,
+    // format and image of the toGlyph. This is mainly used preserving the glyph if it was
+    // created by a search of desperation.
+    SkGlyph* mergeGlyphAndImage(SkPackedGlyphID toID, const SkGlyph& from);
 
-    /** These are variants that take the device position of the glyph. Call these only if you are
-        drawing in subpixel mode. Passing 0, 0 is effectively the same as calling the variants
-        w/o the extra params, though a tiny bit slower.
-    */
-    const SkGlyph& getGlyphIDMetrics(uint16_t, SkFixed x, SkFixed y);
+    // If the path has never been set, then use the scaler context to add the glyph.
+    const SkPath* preparePath(SkGlyph*);
 
-    void getAdvances(SkSpan<const SkGlyphID>, SkPoint[]);
+    // If the path has never been set, then add a path to glyph.
+    const SkPath* preparePath(SkGlyph* glyph, const SkPath* path);
 
     /** Returns the number of glyphs for this strike.
     */
@@ -73,30 +72,11 @@ public:
     /** Return the number of glyphs currently cached. */
     int countCachedGlyphs() const;
 
-    /** Return the image associated with the glyph. If it has not been generated this will
-        trigger that.
-    */
-    const void* findImage(const SkGlyph&);
-
-    /** Initializes the image associated with the glyph with |data|.
-     */
-    void initializeImage(const volatile void* data, size_t size, SkGlyph*);
-
     /** If the advance axis intersects the glyph's path, append the positions scaled and offset
         to the array (if non-null), and set the count to the updated array length.
     */
     void findIntercepts(const SkScalar bounds[2], SkScalar scale, SkScalar xPos,
-                        bool yAxis, SkGlyph* , SkScalar* array, int* count);
-
-    /** Return the Path associated with the glyph. If it has not been generated this will trigger
-        that.
-    */
-    const SkPath* findPath(const SkGlyph&);
-
-    /** Initializes the path associated with the glyph with |data|. Returns false if
-     *  data is invalid.
-     */
-    bool initializePath(SkGlyph*, const volatile void* data, size_t size);
+                        SkGlyph* , SkScalar* array, int* count);
 
     /** Fallback glyphs used during font remoting if the original glyph can't be found.
      */
@@ -106,7 +86,6 @@ public:
      */
     const SkGlyph* getCachedGlyphAnySubPix(SkGlyphID,
                                            SkPackedGlyphID vetoID = SkPackedGlyphID()) const;
-    void initializeGlyphFromFallback(SkGlyph* glyph, const SkGlyph&);
 
     /** Return the vertical metrics for this strike.
     */
@@ -118,23 +97,29 @@ public:
         return fScalerContext->getMaskFormat();
     }
 
-    bool isSubpixel() const {
-        return fIsSubpixel;
+    const SkGlyphPositionRoundingSpec& roundingSpec() const override {
+        return fRoundingSpec;
     }
-
-    SkVector rounding() const override;
-
-    const SkGlyph& getGlyphMetrics(SkGlyphID glyphID, SkPoint position) override;
-
-    bool decideCouldDrawFromPath(const SkGlyph& glyph) override;
 
     const SkDescriptor& getDescriptor() const override;
 
-    SkStrikeSpec strikeSpec() const override {
-        return SkStrikeSpec{this->getDescriptor(),
-                            *this->getScalerContext()->getTypeface(),
-                            this->getScalerContext()->getEffects()};
-    }
+    SkSpan<const SkGlyph*> metrics(SkSpan<const SkGlyphID> glyphIDs,
+                                   const SkGlyph* results[]);
+
+    SkSpan<const SkGlyph*> preparePaths(SkSpan<const SkGlyphID> glyphIDs,
+                                        const SkGlyph* results[]);
+
+    SkSpan<const SkGlyph*> prepareImages(SkSpan<const SkPackedGlyphID> glyphIDs,
+                                         const SkGlyph* results[]);
+
+    void prepareForDrawingMasksCPU(SkDrawableGlyphBuffer* drawables);
+
+    void prepareForDrawingPathsCPU(SkDrawableGlyphBuffer* drawables);
+    SkSpan<const SkGlyphPos> prepareForDrawingRemoveEmpty(const SkPackedGlyphID packedGlyphIDs[],
+                                                          const SkPoint positions[],
+                                                          size_t n,
+                                                          int maxDimension,
+                                                          SkGlyphPos results[]) override;
 
     void onAboutToExitScope() override;
 
@@ -172,41 +157,6 @@ public:
     };
 
 private:
-    enum MetricsType {
-        kNothing_MetricsType,
-        kJustAdvance_MetricsType,
-        kFull_MetricsType
-    };
-
-    enum {
-        kHashBits  = 8,
-        kHashCount = 1 << kHashBits,
-        kHashMask  = kHashCount - 1
-    };
-
-    // Return the SkGlyph* associated with MakeID. The id parameter is the
-    // combined glyph/x/y id generated by MakeID. If it is just a glyph id
-    // then x and y are assumed to be zero. Limit the amount of work using type.
-    SkGlyph* lookupByPackedGlyphID(SkPackedGlyphID packedGlyphID, MetricsType type);
-
-    static void OffsetResults(const SkGlyph::Intercept* intercept, SkScalar scale,
-                              SkScalar xPos, SkScalar* array, int* count);
-    static void AddInterval(SkScalar val, SkGlyph::Intercept* intercept);
-    static void AddPoints(const SkPoint* pts, int ptCount, const SkScalar bounds[2],
-                          bool yAxis, SkGlyph::Intercept* intercept);
-    static void AddLine(const SkPoint pts[2], SkScalar axis, bool yAxis,
-                        SkGlyph::Intercept* intercept);
-    static void AddQuad(const SkPoint pts[2], SkScalar axis, bool yAxis,
-                        SkGlyph::Intercept* intercept);
-    static void AddCubic(const SkPoint pts[3], SkScalar axis, bool yAxis,
-                         SkGlyph::Intercept* intercept);
-    static const SkGlyph::Intercept* MatchBounds(const SkGlyph* glyph,
-                                                 const SkScalar bounds[2]);
-
-    const SkAutoDescriptor fDesc;
-    const std::unique_ptr<SkScalerContext> fScalerContext;
-    SkFontMetrics          fFontMetrics;
-
     class GlyphMapHashTraits {
     public:
         static SkPackedGlyphID GetKey(const SkGlyph* glyph) {
@@ -217,9 +167,26 @@ private:
         }
     };
 
+    SkGlyph* makeGlyph(SkPackedGlyphID);
+
+    enum PathDetail {
+        kMetricsOnly,
+        kMetricsAndPath
+    };
+
+    // internalPrepare will only be called with a mutex already held.
+    SkSpan<const SkGlyph*> internalPrepare(
+            SkSpan<const SkGlyphID> glyphIDs,
+            PathDetail pathDetail,
+            const SkGlyph** results);
+
+    const SkAutoDescriptor                 fDesc;
+    const std::unique_ptr<SkScalerContext> fScalerContext;
+    SkFontMetrics                          fFontMetrics;
+
     // Map from a combined GlyphID and sub-pixel position to a SkGlyph*.
     // The actual glyph is stored in the fAlloc. This structure provides an
-    // unchanging pointer as long as the cache is alive.
+    // unchanging pointer as long as the strike is alive.
     SkTHashTable<SkGlyph*, SkPackedGlyphID, GlyphMapHashTraits> fGlyphMap;
 
     // so we don't grow our arrays a lot
@@ -229,11 +196,10 @@ private:
 
     SkArenaAlloc            fAlloc {kMinAllocAmount};
 
-    // used to track (approx) how much ram is tied-up in this cache
+    // Tracks (approx) how much ram is tied-up in this strike.
     size_t                  fMemoryUsed;
 
-    const bool              fIsSubpixel;
-    const SkAxisAlignment   fAxisAlignment;
+    const SkGlyphPositionRoundingSpec fRoundingSpec;
 };
 
 #endif  // SkStrike_DEFINED

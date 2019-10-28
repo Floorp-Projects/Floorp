@@ -5,14 +5,14 @@
  * found in the LICENSE file.
  */
 
-#include "GrPathRenderer.h"
-#include "GrCaps.h"
-#include "GrPaint.h"
-#include "GrRecordingContextPriv.h"
-#include "GrRenderTargetContext.h"
-#include "GrShape.h"
-#include "GrUserStencilSettings.h"
-#include "SkDrawProcs.h"
+#include "src/core/SkDrawProcs.h"
+#include "src/gpu/GrCaps.h"
+#include "src/gpu/GrPaint.h"
+#include "src/gpu/GrPathRenderer.h"
+#include "src/gpu/GrRecordingContextPriv.h"
+#include "src/gpu/GrRenderTargetContext.h"
+#include "src/gpu/GrUserStencilSettings.h"
+#include "src/gpu/geometry/GrShape.h"
 
 #ifdef SK_DEBUG
 void GrPathRenderer::StencilPathArgs::validate() const {
@@ -22,7 +22,6 @@ void GrPathRenderer::StencilPathArgs::validate() const {
     SkASSERT(fViewMatrix);
     SkASSERT(fShape);
     SkASSERT(fShape->style().isSimpleFill());
-    SkASSERT(GrAAType::kCoverage != fAAType);
     SkPath path;
     fShape->asPath(&path);
     SkASSERT(!path.isInverseFillType());
@@ -46,6 +45,7 @@ bool GrPathRenderer::drawPath(const DrawPathArgs& args) {
     args.validate();
     CanDrawPathArgs canArgs;
     canArgs.fCaps = args.fContext->priv().caps();
+    canArgs.fProxy = args.fRenderTargetContext->proxy();
     canArgs.fClipConservativeBounds = args.fClipConservativeBounds;
     canArgs.fViewMatrix = args.fViewMatrix;
     canArgs.fShape = args.fShape;
@@ -54,10 +54,6 @@ bool GrPathRenderer::drawPath(const DrawPathArgs& args) {
     canArgs.validate();
 
     canArgs.fHasUserStencilSettings = !args.fUserStencilSettings->isUnused();
-    SkASSERT(!(canArgs.fAAType == GrAAType::kMSAA &&
-               GrFSAAType::kUnifiedMSAA != args.fRenderTargetContext->fsaaType()));
-    SkASSERT(!(canArgs.fAAType == GrAAType::kMixedSamples &&
-               GrFSAAType::kMixedSamples != args.fRenderTargetContext->fsaaType()));
     SkASSERT(CanDrawPath::kNo != this->canDrawPath(canArgs));
     if (!args.fUserStencilSettings->isUnused()) {
         SkPath path;
@@ -118,7 +114,7 @@ void GrPathRenderer::onStencilPath(const StencilPathArgs& args) {
                           args.fClipConservativeBounds,
                           args.fViewMatrix,
                           args.fShape,
-                          args.fAAType,
+                          (GrAA::kYes == args.fDoStencilMSAA) ? GrAAType::kMSAA : GrAAType::kNone,
                           false};
     this->drawPath(drawArgs);
 }

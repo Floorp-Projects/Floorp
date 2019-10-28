@@ -8,10 +8,10 @@
 #ifndef SkOpts_DEFINED
 #define SkOpts_DEFINED
 
-#include "SkConvolver.h"
-#include "SkRasterPipeline.h"
-#include "SkTypes.h"
-#include "SkXfermodePriv.h"
+#include "include/core/SkTypes.h"
+#include "src/core/SkConvolver.h"
+#include "src/core/SkRasterPipeline.h"
+#include "src/core/SkXfermodePriv.h"
 
 struct SkBitmapProcState;
 
@@ -48,6 +48,12 @@ namespace SkOpts {
     extern void (*memset16)(uint16_t[], uint16_t, int);
     extern void SK_API (*memset32)(uint32_t[], uint32_t, int);
     extern void (*memset64)(uint64_t[], uint64_t, int);
+
+    extern void (*rect_memset16)(uint16_t[], uint16_t, int, size_t, int);
+    extern void (*rect_memset32)(uint32_t[], uint32_t, int, size_t, int);
+    extern void (*rect_memset64)(uint64_t[], uint64_t, int, size_t, int);
+
+    extern float (*cubic_solver)(float, float, float, float);
 
     // The fastest high quality 32-bit hash we can provide on this platform.
     extern uint32_t (*hash_fn)(const void*, size_t, uint32_t seed);

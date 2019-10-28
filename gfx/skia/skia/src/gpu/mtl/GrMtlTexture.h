@@ -8,7 +8,7 @@
 #ifndef GrMtlTexture_DEFINED
 #define GrMtlTexture_DEFINED
 
-#include "GrTexture.h"
+#include "include/gpu/GrTexture.h"
 
 #import <Metal/Metal.h>
 
@@ -16,10 +16,10 @@ class GrMtlGpu;
 
 class GrMtlTexture : public GrTexture {
 public:
-    static sk_sp<GrMtlTexture> CreateNewTexture(GrMtlGpu*, SkBudgeted budgeted,
-                                                const GrSurfaceDesc&,
-                                                MTLTextureDescriptor*,
-                                                GrMipMapsStatus);
+    static sk_sp<GrMtlTexture> MakeNewTexture(GrMtlGpu*, SkBudgeted budgeted,
+                                              const GrSurfaceDesc&,
+                                              MTLTextureDescriptor*,
+                                              GrMipMapsStatus);
 
     static sk_sp<GrMtlTexture> MakeWrappedTexture(GrMtlGpu*, const GrSurfaceDesc&, id<MTLTexture>,
                                                   GrWrapCacheable, GrIOType);

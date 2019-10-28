@@ -8,9 +8,8 @@
 #ifndef GrMesh_DEFINED
 #define GrMesh_DEFINED
 
-#include "GrBuffer.h"
-#include "GrPendingIOResource.h"
-#include "GrGpuBuffer.h"
+#include "src/gpu/GrBuffer.h"
+#include "src/gpu/GrGpuBuffer.h"
 
 class GrPrimitiveProcessor;
 

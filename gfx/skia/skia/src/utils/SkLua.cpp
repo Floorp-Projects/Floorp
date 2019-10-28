@@ -5,34 +5,34 @@
  * found in the LICENSE file.
  */
 
-#include "SkLua.h"
+#include "include/utils/SkLua.h"
 
 #if SK_SUPPORT_GPU
-//#include "GrReducedClip.h"
+//#include "src/gpu/GrReducedClip.h"
 #endif
 
-#include "SkBlurImageFilter.h"
-#include "SkCanvas.h"
-#include "SkColorFilter.h"
-#include "SkData.h"
-#include "SkFont.h"
-#include "SkFontMetrics.h"
-#include "SkFontStyle.h"
-#include "SkGradientShader.h"
-#include "SkImage.h"
-#include "SkMakeUnique.h"
-#include "SkMatrix.h"
-#include "SkPDFDocument.h"
-#include "SkPaint.h"
-#include "SkPath.h"
-#include "SkPictureRecorder.h"
-#include "SkRRect.h"
-#include "SkShaper.h"
-#include "SkString.h"
-#include "SkSurface.h"
-#include "SkTextBlob.h"
-#include "SkTo.h"
-#include "SkTypeface.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColorFilter.h"
+#include "include/core/SkData.h"
+#include "include/core/SkFont.h"
+#include "include/core/SkFontMetrics.h"
+#include "include/core/SkFontStyle.h"
+#include "include/core/SkImage.h"
+#include "include/core/SkMatrix.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkPictureRecorder.h"
+#include "include/core/SkRRect.h"
+#include "include/core/SkString.h"
+#include "include/core/SkSurface.h"
+#include "include/core/SkTextBlob.h"
+#include "include/core/SkTypeface.h"
+#include "include/docs/SkPDFDocument.h"
+#include "include/effects/SkGradientShader.h"
+#include "include/effects/SkImageFilters.h"
+#include "include/private/SkTo.h"
+#include "modules/skshaper/include/SkShaper.h"
+#include "src/core/SkMakeUnique.h"
 #include <new>
 
 extern "C" {
@@ -412,10 +412,10 @@ static SkColor lua2color(lua_State* L, int index) {
 }
 
 static SkRect* lua2rect(lua_State* L, int index, SkRect* rect) {
-    rect->set(getfield_scalar_default(L, index, "left", 0),
-              getfield_scalar_default(L, index, "top", 0),
-              getfield_scalar(L, index, "right"),
-              getfield_scalar(L, index, "bottom"));
+    rect->setLTRB(getfield_scalar_default(L, index, "left", 0),
+                  getfield_scalar_default(L, index, "top", 0),
+                  getfield_scalar(L, index, "right"),
+                  getfield_scalar(L, index, "bottom"));
     return rect;
 }
 
@@ -563,7 +563,7 @@ static int lcanvas_drawText(lua_State* L) {
         size_t len;
         const char* text = lua_tolstring(L, 2, &len);
         get_ref<SkCanvas>(L, 1)->drawSimpleText(
-                text, len, kUTF8_SkTextEncoding,
+                text, len, SkTextEncoding::kUTF8,
                 lua2scalar(L, 3), lua2scalar(L, 4),
                 SkFont::LEGACY_ExtractFromPaint(*get_obj<SkPaint>(L, 5)),
                 *get_obj<SkPaint>(L, 5));
@@ -814,7 +814,6 @@ static int lpaint_getEffects(lua_State* L) {
     const SkPaint* paint = get_obj<SkPaint>(L, 1);
 
     lua_newtable(L);
-    setfield_bool_if(L, "looper",      !!paint->getLooper());
     setfield_bool_if(L, "pathEffect",  !!paint->getPathEffect());
     setfield_bool_if(L, "maskFilter",  !!paint->getMaskFilter());
     setfield_bool_if(L, "shader",      !!paint->getShader());
@@ -977,7 +976,7 @@ static int lfont_measureText(lua_State* L) {
     if (lua_isstring(L, 2)) {
         size_t len;
         const char* text = lua_tolstring(L, 2, &len);
-        SkLua(L).pushScalar(get_obj<SkFont>(L, 1)->measureText(text, len, kUTF8_SkTextEncoding));
+        SkLua(L).pushScalar(get_obj<SkFont>(L, 1)->measureText(text, len, SkTextEncoding::kUTF8));
         return 1;
     }
     return 0;
@@ -1019,10 +1018,10 @@ static const struct luaL_Reg gSkFont_Methods[] = {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-static const char* mode2string(SkShader::TileMode mode) {
-    static const char* gNames[] = { "clamp", "repeat", "mirror" };
+static const char* mode2string(SkTileMode mode) {
+    static const char* gNames[] = { "clamp", "repeat", "mirror", "decal" };
     SkASSERT((unsigned)mode < SK_ARRAY_COUNT(gNames));
-    return gNames[mode];
+    return gNames[static_cast<int>(mode)];
 }
 
 static const char* gradtype2string(SkShader::GradientType t) {
@@ -1042,7 +1041,7 @@ static int lshader_isAImage(lua_State* L) {
     SkShader* shader = get_ref<SkShader>(L, 1);
     if (shader) {
         SkMatrix matrix;
-        SkShader::TileMode modes[2];
+        SkTileMode modes[2];
         if (SkImage* image = shader->isAImage(&matrix, modes)) {
             lua_newtable(L);
             setfield_number(L, "id", image->uniqueID());
@@ -1071,7 +1070,7 @@ static int lshader_asAGradient(lua_State* L) {
 
             lua_newtable(L);
             setfield_string(L,  "type",           gradtype2string(t));
-            setfield_string(L,  "tile",           mode2string(info.fTileMode));
+            setfield_string(L,  "tile",           mode2string((SkTileMode)info.fTileMode));
             setfield_number(L,  "colorCount",     info.fColorCount);
 
             lua_newtable(L);
@@ -1333,31 +1332,6 @@ static int lpath_isRect(lua_State* L) {
     return ret_count;
 }
 
-static const char* dir2string(SkPath::Direction dir) {
-    static const char* gStr[] = {
-        "unknown", "cw", "ccw"
-    };
-    SkASSERT((unsigned)dir < SK_ARRAY_COUNT(gStr));
-    return gStr[dir];
-}
-
-static int lpath_isNestedFillRects(lua_State* L) {
-    SkRect rects[2];
-    SkPath::Direction dirs[2];
-    bool pred = get_obj<SkPath>(L, 1)->isNestedFillRects(rects, dirs);
-    int ret_count = 1;
-    lua_pushboolean(L, pred);
-    if (pred) {
-        SkLua lua(L);
-        lua.pushRect(rects[0]);
-        lua.pushRect(rects[1]);
-        lua_pushstring(L, dir2string(dirs[0]));
-        lua_pushstring(L, dir2string(dirs[0]));
-        ret_count += 4;
-    }
-    return ret_count;
-}
-
 static int lpath_countPoints(lua_State* L) {
     lua_pushinteger(L, get_obj<SkPath>(L, 1)->countPoints());
     return 1;
@@ -1373,7 +1347,7 @@ static int lpath_getVerbs(lua_State* L) {
     bool done = false;
     int i = 0;
     do {
-        switch (iter.next(pts, true)) {
+        switch (iter.next(pts)) {
             case SkPath::kMove_Verb:
                 setarray_string(L, ++i, "move");
                 break;
@@ -1448,7 +1422,6 @@ static const struct luaL_Reg gSkPath_Methods[] = {
     { "isConvex", lpath_isConvex },
     { "isEmpty", lpath_isEmpty },
     { "isRect", lpath_isRect },
-    { "isNestedFillRects", lpath_isNestedFillRects },
     { "countPoints", lpath_countPoints },
     { "reset", lpath_reset },
     { "moveTo", lpath_moveTo },
@@ -1525,7 +1498,7 @@ static int limage_height(lua_State* L) {
 }
 
 static int limage_newShader(lua_State* L) {
-    SkShader::TileMode tmode = SkShader::kClamp_TileMode;
+    SkTileMode tmode = SkTileMode::kClamp;
     const SkMatrix* localM = nullptr;
     push_ref(L, get_ref<SkImage>(L, 1)->makeShader(tmode, tmode, localM));
     return 1;
@@ -1813,7 +1786,7 @@ static int lsk_newDocumentPDF(lua_State* L) {
 static int lsk_newBlurImageFilter(lua_State* L) {
     SkScalar sigmaX = lua2scalar_def(L, 1, 0);
     SkScalar sigmaY = lua2scalar_def(L, 2, 0);
-    sk_sp<SkImageFilter> imf(SkBlurImageFilter::Make(sigmaX, sigmaY, nullptr));
+    sk_sp<SkImageFilter> imf(SkImageFilters::Blur(sigmaX, sigmaY, nullptr));
     if (!imf) {
         lua_pushnil(L);
     } else {
@@ -1832,8 +1805,7 @@ static int lsk_newLinearGradient(lua_State* L) {
 
     SkPoint pts[] = { { x0, y0 }, { x1, y1 } };
     SkColor colors[] = { c0, c1 };
-    sk_sp<SkShader> s(SkGradientShader::MakeLinear(pts, colors, nullptr, 2,
-                                                   SkShader::kClamp_TileMode));
+    sk_sp<SkShader> s(SkGradientShader::MakeLinear(pts, colors, nullptr, 2, SkTileMode::kClamp));
     if (!s) {
         lua_pushnil(L);
     } else {
@@ -1882,12 +1854,11 @@ static int lsk_newTextBlob(lua_State* L) {
 #else
     SkFont font;
 #endif
-    SkTextBlobBuilderRunHandler builder(text);
-    SkPoint end = shaper->shape(&builder, font, text, strlen(text), true,
-                                { bounds.left(), bounds.top() }, bounds.width());
+    SkTextBlobBuilderRunHandler builder(text, { bounds.left(), bounds.top() });
+    shaper->shape(text, strlen(text), font, true, bounds.width(), &builder);
 
     push_ref<SkTextBlob>(L, builder.makeBlob());
-    SkLua(L).pushScalar(end.fY);
+    SkLua(L).pushScalar(builder.endPoint().fY);
     return 2;
 }
 

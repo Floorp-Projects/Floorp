@@ -8,21 +8,21 @@
 #ifndef GrFPArgs_DEFINED
 #define GrFPArgs_DEFINED
 
-#include "SkFilterQuality.h"
-#include "SkMatrix.h"
+#include "include/core/SkFilterQuality.h"
+#include "include/core/SkMatrix.h"
 
-class GrColorSpaceInfo;
+class GrColorInfo;
 class GrRecordingContext;
 
 struct GrFPArgs {
     GrFPArgs(GrRecordingContext* context,
              const SkMatrix* viewMatrix,
              SkFilterQuality filterQuality,
-             const GrColorSpaceInfo* dstColorSpaceInfo)
-    : fContext(context)
-    , fViewMatrix(viewMatrix)
-    , fFilterQuality(filterQuality)
-    , fDstColorSpaceInfo(dstColorSpaceInfo) {
+             const GrColorInfo* dstColorInfo)
+            : fContext(context)
+            , fViewMatrix(viewMatrix)
+            , fFilterQuality(filterQuality)
+            , fDstColorInfo(dstColorInfo) {
         SkASSERT(fContext);
         SkASSERT(fViewMatrix);
     }
@@ -42,8 +42,11 @@ struct GrFPArgs {
     const SkMatrix* fPreLocalMatrix  = nullptr;
     const SkMatrix* fPostLocalMatrix = nullptr;
 
+    // Make this SkAlphaType?
+    bool fInputColorIsOpaque = false;
+
     SkFilterQuality fFilterQuality;
-    const GrColorSpaceInfo* fDstColorSpaceInfo;
+    const GrColorInfo* fDstColorInfo;
 };
 
 class GrFPArgs::WithPreLocalMatrix final : public GrFPArgs {

@@ -5,11 +5,11 @@
  * found in the LICENSE file.
  */
 
-#include "GrVkBuffer.h"
-#include "GrVkGpu.h"
-#include "GrVkMemory.h"
-#include "GrVkTransferBuffer.h"
-#include "GrVkUtil.h"
+#include "src/gpu/vk/GrVkBuffer.h"
+#include "src/gpu/vk/GrVkGpu.h"
+#include "src/gpu/vk/GrVkMemory.h"
+#include "src/gpu/vk/GrVkTransferBuffer.h"
+#include "src/gpu/vk/GrVkUtil.h"
 
 #define VK_CALL(GPU, X) GR_VK_CALL(GPU->vkInterface(), X)
 
@@ -20,6 +20,7 @@
 #endif
 
 const GrVkBuffer::Resource* GrVkBuffer::Create(const GrVkGpu* gpu, const Desc& desc) {
+    SkASSERT(!gpu->protectedContext() || (gpu->protectedContext() == desc.fDynamic));
     VkBuffer       buffer;
     GrVkAlloc      alloc;
 
@@ -184,6 +185,35 @@ void GrVkBuffer::internalMap(GrVkGpu* gpu, size_t size, bool* createdNewBuffer) 
     VALIDATE();
 }
 
+void GrVkBuffer::copyCpuDataToGpuBuffer(GrVkGpu* gpu, const void* src, size_t size) {
+    SkASSERT(src);
+    // We should never call this method in protected contexts.
+    SkASSERT(!gpu->protectedContext());
+    // The vulkan api restricts the use of vkCmdUpdateBuffer to updates that are less than or equal
+    // to 65536 bytes and a size the is 4 byte aligned.
+    if ((size <= 65536) && (0 == (size & 0x3)) && !gpu->vkCaps().avoidUpdateBuffers()) {
+        gpu->updateBuffer(this, src, this->offset(), size);
+    } else {
+        sk_sp<GrVkTransferBuffer> transferBuffer =
+                GrVkTransferBuffer::Make(gpu, size, GrVkBuffer::kCopyRead_Type);
+        if (!transferBuffer) {
+            return;
+        }
+
+        char* buffer = (char*) transferBuffer->map();
+        memcpy (buffer, src, size);
+        transferBuffer->unmap();
+
+        gpu->copyBuffer(transferBuffer.get(), this, 0, this->offset(), size);
+    }
+    this->addMemoryBarrier(gpu,
+                           VK_ACCESS_TRANSFER_WRITE_BIT,
+                           buffer_type_to_access_flags(fDesc.fType),
+                           VK_PIPELINE_STAGE_TRANSFER_BIT,
+                           VK_PIPELINE_STAGE_VERTEX_INPUT_BIT,
+                           false);
+}
+
 void GrVkBuffer::internalUnmap(GrVkGpu* gpu, size_t size) {
     VALIDATE();
     SkASSERT(this->vkIsMapped());
@@ -199,29 +229,8 @@ void GrVkBuffer::internalUnmap(GrVkGpu* gpu, size_t size) {
         GrVkMemory::UnmapAlloc(gpu, alloc);
         fMapPtr = nullptr;
     } else {
-        // vkCmdUpdateBuffer requires size < 64k and 4-byte alignment.
-        // https://bugs.chromium.org/p/skia/issues/detail?id=7488
-        if (size <= 65536 && 0 == (size & 0x3)) {
-            gpu->updateBuffer(this, fMapPtr, this->offset(), size);
-        } else {
-            sk_sp<GrVkTransferBuffer> transferBuffer =
-                    GrVkTransferBuffer::Make(gpu, size, GrVkBuffer::kCopyRead_Type);
-            if (!transferBuffer) {
-                return;
-            }
-
-            char* buffer = (char*) transferBuffer->map();
-            memcpy (buffer, fMapPtr, size);
-            transferBuffer->unmap();
-
-            gpu->copyBuffer(transferBuffer.get(), this, 0, this->offset(), size);
-        }
-        this->addMemoryBarrier(gpu,
-                               VK_ACCESS_TRANSFER_WRITE_BIT,
-                               buffer_type_to_access_flags(fDesc.fType),
-                               VK_PIPELINE_STAGE_TRANSFER_BIT,
-                               VK_PIPELINE_STAGE_VERTEX_INPUT_BIT,
-                               false);
+        SkASSERT(fMapPtr);
+        this->copyCpuDataToGpuBuffer(gpu, fMapPtr, size);
     }
 }
 
@@ -236,14 +245,18 @@ bool GrVkBuffer::vkUpdateData(GrVkGpu* gpu, const void* src, size_t srcSizeInByt
         return false;
     }
 
-    this->internalMap(gpu, srcSizeInBytes, createdNewBuffer);
-    if (!fMapPtr) {
-        return false;
+    if (fDesc.fDynamic) {
+        this->internalMap(gpu, srcSizeInBytes, createdNewBuffer);
+        if (!fMapPtr) {
+            return false;
+        }
+
+        memcpy(fMapPtr, src, srcSizeInBytes);
+        this->internalUnmap(gpu, srcSizeInBytes);
+    } else {
+        this->copyCpuDataToGpuBuffer(gpu, src, srcSizeInBytes);
     }
 
-    memcpy(fMapPtr, src, srcSizeInBytes);
-
-    this->internalUnmap(gpu, srcSizeInBytes);
 
     return true;
 }

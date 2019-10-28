@@ -5,11 +5,11 @@
  * found in the LICENSE file.
  */
 
-#include "SkLocalMatrixShader.h"
-#include "SkTLazy.h"
+#include "src/core/SkTLazy.h"
+#include "src/shaders/SkLocalMatrixShader.h"
 
 #if SK_SUPPORT_GPU
-#include "GrFragmentProcessor.h"
+#include "src/gpu/GrFragmentProcessor.h"
 #endif
 
 #if SK_SUPPORT_GPU
@@ -51,7 +51,7 @@ SkShaderBase::Context* SkLocalMatrixShader::onMakeContext(
 }
 #endif
 
-SkImage* SkLocalMatrixShader::onIsAImage(SkMatrix* outMatrix, enum TileMode* mode) const {
+SkImage* SkLocalMatrixShader::onIsAImage(SkMatrix* outMatrix, SkTileMode* mode) const {
     SkMatrix imageMatrix;
     SkImage* image = fProxyShader->isAImage(&imageMatrix, mode);
     if (image && outMatrix) {
@@ -62,13 +62,24 @@ SkImage* SkLocalMatrixShader::onIsAImage(SkMatrix* outMatrix, enum TileMode* mod
     return image;
 }
 
-bool SkLocalMatrixShader::onAppendStages(const StageRec& rec) const {
+SkPicture* SkLocalMatrixShader::isAPicture(SkMatrix* matrix,
+                                           SkTileMode tileModes[2],
+                                           SkRect* tile) const {
+    SkMatrix proxyMatrix;
+    SkPicture* picture = as_SB(fProxyShader)->isAPicture(&proxyMatrix, tileModes, tile);
+    if (picture && matrix) {
+        *matrix = SkMatrix::Concat(proxyMatrix, this->getLocalMatrix());
+    }
+    return picture;
+}
+
+bool SkLocalMatrixShader::onAppendStages(const SkStageRec& rec) const {
     SkTCopyOnFirstWrite<SkMatrix> lm(this->getLocalMatrix());
     if (rec.fLocalM) {
         lm.writable()->preConcat(*rec.fLocalM);
     }
 
-    StageRec newRec = rec;
+    SkStageRec newRec = rec;
     newRec.fLocalM = lm;
     return as_SB(fProxyShader)->appendStages(newRec);
 }

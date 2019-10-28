@@ -5,13 +5,13 @@
  * found in the LICENSE file.
  */
 
-#include "SkPDFMetadata.h"
+#include "src/pdf/SkPDFMetadata.h"
 
-#include "SkMD5.h"
-#include "SkMilestone.h"
-#include "SkPDFTypes.h"
-#include "SkTo.h"
-#include "SkUtils.h"
+#include "include/core/SkMilestone.h"
+#include "include/private/SkTo.h"
+#include "src/core/SkMD5.h"
+#include "src/core/SkUtils.h"
+#include "src/pdf/SkPDFTypes.h"
 
 #include <utility>
 
@@ -147,7 +147,7 @@ std::unique_ptr<SkPDFObject> SkPDFMetadata::MakeDocumentInformationDict(
     if (metadata.fModified != kZeroTime) {
         dict->insertString("ModDate", pdf_date(metadata.fModified));
     }
-    return std::move(dict);
+    return dict;
 }
 
 SkUUID SkPDFMetadata::CreateUUID(const SkPDF::Metadata& metadata) {
@@ -171,8 +171,7 @@ SkUUID SkPDFMetadata::CreateUUID(const SkPDF::Metadata& metadata) {
         md5.write(value.c_str(), value.size());
         md5.write("\036", 1);
     }
-    SkMD5::Digest digest;
-    md5.finish(digest);
+    SkMD5::Digest digest = md5.finish();
     // See RFC 4122, page 6-7.
     digest.data[6] = (digest.data[6] & 0x0F) | 0x30;
     digest.data[8] = (digest.data[6] & 0x3F) | 0x80;
@@ -192,7 +191,7 @@ std::unique_ptr<SkPDFObject> SkPDFMetadata::MakePdfId(const SkUUID& doc,
             SkString(reinterpret_cast<const char*>(&doc), sizeof(SkUUID)));
     array->appendString(
             SkString(reinterpret_cast<const char*>(&instance), sizeof(SkUUID)));
-    return std::move(array);
+    return array;
 }
 
 // Convert a block of memory to hexadecimal.  Input and output pointers will be

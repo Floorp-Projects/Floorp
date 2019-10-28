@@ -9,20 +9,19 @@
 #define GrOpFlushState_DEFINED
 
 #include <utility>
-#include "GrAppliedClip.h"
-#include "GrBufferAllocPool.h"
-#include "GrDeferredUpload.h"
-#include "GrRenderTargetProxy.h"
-#include "SkArenaAlloc.h"
-#include "SkArenaAllocList.h"
-#include "ops/GrMeshDrawOp.h"
+#include "src/core/SkArenaAlloc.h"
+#include "src/core/SkArenaAllocList.h"
+#include "src/gpu/GrAppliedClip.h"
+#include "src/gpu/GrBufferAllocPool.h"
+#include "src/gpu/GrDeferredUpload.h"
+#include "src/gpu/GrRenderTargetProxy.h"
+#include "src/gpu/ops/GrMeshDrawOp.h"
 
 class GrGpu;
-class GrGpuCommandBuffer;
-class GrGpuRTCommandBuffer;
+class GrOpsRenderPass;
 class GrResourceProvider;
 
-/** Tracks the state across all the GrOps (really just the GrDrawOps) in a GrOpList flush. */
+/** Tracks the state across all the GrOps (really just the GrDrawOps) in a GrOpsTask flush. */
 class GrOpFlushState final : public GrDeferredUploadTarget, public GrMeshDrawOp::Target {
 public:
     // vertexSpace and indexSpace may either be null or an alloation of size
@@ -37,17 +36,20 @@ public:
         executed. */
     void preExecuteDraws();
 
-    void doUpload(GrDeferredTextureUploadFn&);
+    /** Called to upload data to a texture using the GrDeferredTextureUploadFn. If the uploaded
+        surface needs to be prepared for being sampled in a draw after the upload, the caller
+        should pass in true for shouldPrepareSurfaceForSampling. This feature is needed for Vulkan
+        when doing inline uploads to reset the image layout back to sampled. */
+    void doUpload(GrDeferredTextureUploadFn&, bool shouldPrepareSurfaceForSampling = false);
 
     /** Called as ops are executed. Must be called in the same order as the ops were prepared. */
     void executeDrawsAndUploadsForMeshDrawOp(
-            const GrOp* op, const SkRect& chainBounds, GrProcessorSet&&, uint32_t pipelineFlags = 0,
+            const GrOp* op, const SkRect& chainBounds, GrProcessorSet&&,
+            GrPipeline::InputFlags = GrPipeline::InputFlags::kNone,
             const GrUserStencilSettings* = &GrUserStencilSettings::kUnused);
 
-    GrGpuCommandBuffer* commandBuffer() { return fCommandBuffer; }
-    // Helper function used by Ops that are only called via RenderTargetOpLists
-    GrGpuRTCommandBuffer* rtCommandBuffer();
-    void setCommandBuffer(GrGpuCommandBuffer* buffer) { fCommandBuffer = buffer; }
+    GrOpsRenderPass* opsRenderPass() { return fOpsRenderPass; }
+    void setOpsRenderPass(GrOpsRenderPass* renderPass) { fOpsRenderPass = renderPass; }
 
     GrGpu* gpu() { return fGpu; }
 
@@ -55,22 +57,53 @@ public:
 
     /** Additional data required on a per-op basis when executing GrOps. */
     struct OpArgs {
-        GrSurfaceOrigin origin() const { return fProxy->origin(); }
-        GrRenderTarget* renderTarget() const { return fProxy->peekRenderTarget(); }
+        explicit OpArgs(GrOp* op, GrRenderTargetProxy* proxy, GrAppliedClip* appliedClip,
+                        const GrXferProcessor::DstProxy& dstProxy)
+            : fOp(op)
+            , fProxy(proxy)
+            , fAppliedClip(appliedClip)
+            , fDstProxy(dstProxy) {
+        }
 
-        GrOp* fOp;
-        // TODO: do we still need the dst proxy here?
-        GrRenderTargetProxy* fProxy;
-        GrAppliedClip* fAppliedClip;
-        GrXferProcessor::DstProxy fDstProxy;
+        int numSamples() const { return fProxy->numSamples(); }
+        GrSurfaceOrigin origin() const { return fProxy->origin(); }
+        GrSwizzle outputSwizzle() const { return fProxy->outputSwizzle(); }
+
+        GrOp* op() { return fOp; }
+        GrRenderTargetProxy* proxy() const { return fProxy; }
+        GrRenderTarget* renderTarget() const { return fProxy->peekRenderTarget(); }
+        GrAppliedClip* appliedClip() { return fAppliedClip; }
+        const GrAppliedClip* appliedClip() const { return fAppliedClip; }
+        const GrXferProcessor::DstProxy& dstProxy() const { return fDstProxy; }
+
+#ifdef SK_DEBUG
+        void validate() const {
+            SkASSERT(fOp);
+            SkASSERT(fProxy);
+        }
+#endif
+
+    private:
+        GrOp*                     fOp;
+        GrRenderTargetProxy*      fProxy;
+        GrAppliedClip*            fAppliedClip;
+        GrXferProcessor::DstProxy fDstProxy;     // TODO: do we still need the dst proxy here?
     };
 
     void setOpArgs(OpArgs* opArgs) { fOpArgs = opArgs; }
 
     const OpArgs& drawOpArgs() const {
         SkASSERT(fOpArgs);
-        SkASSERT(fOpArgs->fOp);
+        SkDEBUGCODE(fOpArgs->validate());
         return *fOpArgs;
+    }
+
+    void setSampledProxyArray(SkTArray<GrTextureProxy*, true>* sampledProxies) {
+        fSampledProxies = sampledProxies;
+    }
+
+    SkTArray<GrTextureProxy*, true>* sampledProxyArray() override {
+        return fSampledProxies;
     }
 
     /** Overrides of GrDeferredUploadTarget. */
@@ -80,9 +113,9 @@ public:
     GrDeferredUploadToken addASAPUpload(GrDeferredTextureUploadFn&&) final;
 
     /** Overrides of GrMeshDrawOp::Target. */
-    void recordDraw(
-            sk_sp<const GrGeometryProcessor>, const GrMesh[], int meshCnt,
-            const GrPipeline::FixedDynamicState*, const GrPipeline::DynamicStateArrays*) final;
+    void recordDraw(sk_sp<const GrGeometryProcessor>, const GrMesh[], int meshCnt,
+                    const GrPipeline::FixedDynamicState*,
+                    const GrPipeline::DynamicStateArrays*) final;
     void* makeVertexSpace(size_t vertexSize, int vertexCount, sk_sp<const GrBuffer>*,
                           int* startVertex) final;
     uint16_t* makeIndexSpace(int indexCount, sk_sp<const GrBuffer>*, int* startIndex) final;
@@ -94,10 +127,10 @@ public:
                                     int* actualIndexCount) final;
     void putBackIndices(int indexCount) final;
     void putBackVertices(int vertices, size_t vertexStride) final;
-    GrRenderTargetProxy* proxy() const final { return fOpArgs->fProxy; }
-    const GrAppliedClip* appliedClip() final { return fOpArgs->fAppliedClip; }
+    GrRenderTargetProxy* proxy() const final { return fOpArgs->proxy(); }
+    const GrAppliedClip* appliedClip() final { return fOpArgs->appliedClip(); }
     GrAppliedClip detachAppliedClip() final;
-    const GrXferProcessor::DstProxy& dstProxy() const final { return fOpArgs->fDstProxy; }
+    const GrXferProcessor::DstProxy& dstProxy() const final { return fOpArgs->dstProxy(); }
     GrDeferredUploadTarget* deferredUploadTarget() final { return this; }
     const GrCaps& caps() const final;
     GrResourceProvider* resourceProvider() const final { return fResourceProvider; }
@@ -108,10 +141,10 @@ public:
     // permissible).
     GrAtlasManager* atlasManager() const final;
 
-private:
     /** GrMeshDrawOp::Target override. */
     SkArenaAlloc* allocator() override { return &fArena; }
 
+private:
     struct InlineUpload {
         InlineUpload(GrDeferredTextureUploadFn&& upload, GrDeferredUploadToken token)
                 : fUpload(std::move(upload)), fUploadBeforeToken(token) {}
@@ -153,10 +186,14 @@ private:
     // an op is not currently preparing of executing.
     OpArgs* fOpArgs = nullptr;
 
+    // This field is only transiently set during flush. Each GrOpsTask will set it to point to an
+    // array of proxies it uses before call onPrepare and onExecute.
+    SkTArray<GrTextureProxy*, true>* fSampledProxies;
+
     GrGpu* fGpu;
     GrResourceProvider* fResourceProvider;
     GrTokenTracker* fTokenTracker;
-    GrGpuCommandBuffer* fCommandBuffer = nullptr;
+    GrOpsRenderPass* fOpsRenderPass = nullptr;
 
     // Variables that are used to track where we are in lists as ops are executed
     SkArenaAllocList<Draw>::Iter fCurrDraw;

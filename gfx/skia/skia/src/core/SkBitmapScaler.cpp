@@ -5,13 +5,13 @@
  * found in the LICENSE file.
  */
 
-#include "SkBitmapScaler.h"
-#include "SkBitmapFilter.h"
-#include "SkConvolver.h"
-#include "SkImageInfo.h"
-#include "SkPixmap.h"
-#include "SkRect.h"
-#include "SkTArray.h"
+#include "src/core/SkBitmapScaler.h"
+#include "src/core/SkBitmapFilter.h"
+#include "src/core/SkConvolver.h"
+#include "include/core/SkImageInfo.h"
+#include "include/core/SkPixmap.h"
+#include "include/core/SkRect.h"
+#include "include/private/SkTArray.h"
 
 // SkResizeFilter ----------------------------------------------------------------
 

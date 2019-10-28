@@ -6,14 +6,14 @@
  * found in the LICENSE file.
  */
 
-#include "SkBitmap.h"
-#include "SkCanvas.h"
-#include "SkColor.h"
-#include "SkColorData.h"
-#include "SkFDot6.h"
-#include "SkFontHost_FreeType_common.h"
-#include "SkPath.h"
-#include "SkTo.h"
+#include "include/core/SkBitmap.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkPath.h"
+#include "include/private/SkColorData.h"
+#include "include/private/SkTo.h"
+#include "src/core/SkFDot6.h"
+#include "src/ports/SkFontHost_FreeType_common.h"
 
 #include <utility>
 
@@ -464,8 +464,7 @@ void SkScalerContext_FreeType_Base::generateGlyphImage(
                     return;
                 }
 
-                SkMask mask;
-                glyph.toMask(&mask);
+                SkMask mask = glyph.mask();
 #ifdef SK_SHOW_TEXT_BLIT_COVERAGE
                 memset(mask.fImage, 0x80, mask.fBounds.height() * mask.fRowBytes);
 #endif
@@ -579,8 +578,7 @@ void SkScalerContext_FreeType_Base::generateGlyphImage(
 
             // If no scaling needed, directly copy glyph bitmap.
             if (bitmapTransform.isIdentity()) {
-                SkMask dstMask;
-                glyph.toMask(&dstMask);
+                SkMask dstMask = glyph.mask();
                 copyFTBitmap(face->glyph->bitmap, dstMask);
                 break;
             }
@@ -597,7 +595,7 @@ void SkScalerContext_FreeType_Base::generateGlyphImage(
 
             SkMask unscaledBitmapAlias;
             unscaledBitmapAlias.fImage = reinterpret_cast<uint8_t*>(unscaledBitmap.getPixels());
-            unscaledBitmapAlias.fBounds.set(0, 0, unscaledBitmap.width(), unscaledBitmap.height());
+            unscaledBitmapAlias.fBounds.setWH(unscaledBitmap.width(), unscaledBitmap.height());
             unscaledBitmapAlias.fRowBytes = unscaledBitmap.rowBytes();
             unscaledBitmapAlias.fFormat = SkMaskFormat_for_SkColorType(unscaledBitmap.colorType());
             copyFTBitmap(face->glyph->bitmap, unscaledBitmapAlias);
@@ -648,8 +646,7 @@ void SkScalerContext_FreeType_Base::generateGlyphImage(
             // If the destination is BW or LCD, convert from A8.
             if (SkMask::kBW_Format == maskFormat) {
                 // Copy the A8 dstBitmap into the A1 glyph.fImage.
-                SkMask dstMask;
-                glyph.toMask(&dstMask);
+                SkMask dstMask = glyph.mask();
                 packA8ToA1(dstMask, dstBitmap.getAddr8(0, 0), dstBitmap.rowBytes());
             } else if (SkMask::kLCD16_Format == maskFormat) {
                 // Copy the A8 dstBitmap into the LCD16 glyph.fImage.

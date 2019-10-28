@@ -5,9 +5,13 @@
  * found in the LICENSE file.
  */
 
-#include "GrMtlSampler.h"
+#include "src/gpu/mtl/GrMtlSampler.h"
 
-#include "GrMtlGpu.h"
+#include "src/gpu/mtl/GrMtlGpu.h"
+
+#if !__has_feature(objc_arc)
+#error This file must be compiled with Arc. Use -fobjc-arc flag
+#endif
 
 static inline MTLSamplerAddressMode wrap_mode_to_mtl_sampler_address(
         GrSamplerState::WrapMode wrapMode, const GrCaps& caps) {
@@ -19,22 +23,24 @@ static inline MTLSamplerAddressMode wrap_mode_to_mtl_sampler_address(
         case GrSamplerState::WrapMode::kMirrorRepeat:
             return MTLSamplerAddressModeMirrorRepeat;
         case GrSamplerState::WrapMode::kClampToBorder:
-            // Must guard the reference to the clamp to border address mode by macro since iOS
-            // builds will fail if it's referenced, even if other code makes sure it's never used.
-#ifdef SK_BUILD_FOR_IOS
-            SkASSERT(false);
-            return MTLSamplerAddressModeClampToEdge;
-#else
-            SkASSERT(caps.clampToBorderSupport());
-            return MTLSamplerAddressModeClampToBorderColor;
+            // Must guard the reference to the clamp to border address mode by macro since iOS or
+            // older MacOS builds will fail if it's referenced, even if other code makes sure it's
+            // never used.
+#ifdef SK_BUILD_FOR_MAC
+            if (@available(macOS 10.12, *)) {
+                SkASSERT(caps.clampToBorderSupport());
+                return MTLSamplerAddressModeClampToBorderColor;
+            } else
 #endif
+            {
+                SkASSERT(false);
+                return MTLSamplerAddressModeClampToEdge;
+            }
     }
     SK_ABORT("Unknown wrap mode.");
-    return MTLSamplerAddressModeClampToEdge;
 }
 
-GrMtlSampler* GrMtlSampler::Create(const GrMtlGpu* gpu, const GrSamplerState& samplerState,
-                                   uint32_t maxMipLevel) {
+GrMtlSampler* GrMtlSampler::Create(const GrMtlGpu* gpu, const GrSamplerState& samplerState) {
     static MTLSamplerMinMagFilter mtlMinMagFilterModes[] = {
         MTLSamplerMinMagFilterNearest,
         MTLSamplerMinMagFilterLinear,
@@ -55,11 +61,18 @@ GrMtlSampler* GrMtlSampler::Create(const GrMtlGpu* gpu, const GrSamplerState& sa
     samplerDesc.minFilter = mtlMinMagFilterModes[static_cast<int>(samplerState.filter())];
     samplerDesc.mipFilter = MTLSamplerMipFilterLinear;
     samplerDesc.lodMinClamp = 0.0f;
-    bool useMipMaps = GrSamplerState::Filter::kMipMap == samplerState.filter() && maxMipLevel > 0;
-    samplerDesc.lodMaxClamp = !useMipMaps ? 0.0f : (float)(maxMipLevel);
+    bool useMipMaps = GrSamplerState::Filter::kMipMap == samplerState.filter();
+    samplerDesc.lodMaxClamp = !useMipMaps ? 0.0f : 10000.0f;
     samplerDesc.maxAnisotropy = 1.0f;
     samplerDesc.normalizedCoordinates = true;
-    samplerDesc.compareFunction = MTLCompareFunctionNever;
+    if (@available(macOS 10.11, iOS 9.0, *)) {
+        samplerDesc.compareFunction = MTLCompareFunctionNever;
+    }
 
-    return new GrMtlSampler([gpu->device() newSamplerStateWithDescriptor: samplerDesc]);
+    return new GrMtlSampler([gpu->device() newSamplerStateWithDescriptor: samplerDesc],
+                            GenerateKey(samplerState));
+}
+
+GrMtlSampler::Key GrMtlSampler::GenerateKey(const GrSamplerState& samplerState) {
+    return GrSamplerState::GenerateKey(samplerState);
 }

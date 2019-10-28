@@ -8,18 +8,18 @@
 #ifndef SkUniqueCFRef_DEFINED
 #define SkUniqueCFRef_DEFINED
 
-#include "SkTypes.h"  // Keep this before any #ifdef ...
+#include "include/core/SkTypes.h"
 #if defined(SK_BUILD_FOR_MAC) || defined(SK_BUILD_FOR_IOS)
 
-#include "SkTemplates.h"
-#include "SkTLogic.h"
+#include "include/private/SkTLogic.h"
+#include "include/private/SkTemplates.h"
 
 #include <CoreFoundation/CoreFoundation.h>
 #include <memory>
 
 template <typename CFRef> using SkUniqueCFRef =
     std::unique_ptr<skstd::remove_pointer_t<CFRef>,
-                    SkFunctionWrapper<void, skstd::remove_pointer_t<CFTypeRef>, CFRelease>>;
+                    SkFunctionWrapper<decltype(CFRelease), CFRelease>>;
 
 #endif
 #endif

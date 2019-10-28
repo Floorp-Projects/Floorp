@@ -9,7 +9,7 @@
 #define GrShadowRRectOp_DEFINED
 
 #include <memory>
-#include "GrColor.h"
+#include "src/gpu/GrColor.h"
 
 class GrDrawOp;
 class GrRecordingContext;

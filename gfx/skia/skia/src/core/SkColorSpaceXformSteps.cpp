@@ -5,12 +5,20 @@
  * found in the LICENSE file.
  */
 
-#include "SkColorSpaceXformSteps.h"
-#include "SkColorSpacePriv.h"
-#include "SkRasterPipeline.h"
-#include "../../third_party/skcms/skcms.h"
+#include "include/third_party/skcms/skcms.h"
+#include "src/core/SkColorSpacePriv.h"
+#include "src/core/SkColorSpaceXformSteps.h"
+#include "src/core/SkRasterPipeline.h"
 
-// TODO: explain
+// TODO(mtklein): explain the logic of this file
+
+bool SkColorSpaceXformSteps::Required(SkColorSpace* src, SkColorSpace* dst) {
+    // Any SkAlphaType will work fine here as long as we use the same one.
+    SkAlphaType at = kPremul_SkAlphaType;
+    return 0 != SkColorSpaceXformSteps(src, at,
+                                       dst, at).flags.mask();
+    // TODO(mtklein): quicker impl. that doesn't construct an SkColorSpaceXformSteps?
+}
 
 SkColorSpaceXformSteps::SkColorSpaceXformSteps(SkColorSpace* src, SkAlphaType srcAT,
                                                SkColorSpace* dst, SkAlphaType dstAT) {
@@ -106,12 +114,9 @@ void SkColorSpaceXformSteps::apply(float* rgba) const {
         rgba[2] *= invA;
     }
     if (flags.linearize) {
-        skcms_TransferFunction tf;
-        memcpy(&tf, &srcTF, 7*sizeof(float));
-
-        rgba[0] = skcms_TransferFunction_eval(&tf, rgba[0]);
-        rgba[1] = skcms_TransferFunction_eval(&tf, rgba[1]);
-        rgba[2] = skcms_TransferFunction_eval(&tf, rgba[2]);
+        rgba[0] = skcms_TransferFunction_eval(&srcTF, rgba[0]);
+        rgba[1] = skcms_TransferFunction_eval(&srcTF, rgba[1]);
+        rgba[2] = skcms_TransferFunction_eval(&srcTF, rgba[2]);
     }
     if (flags.gamut_transform) {
         float temp[3] = { rgba[0], rgba[1], rgba[2] };
@@ -122,12 +127,9 @@ void SkColorSpaceXformSteps::apply(float* rgba) const {
         }
     }
     if (flags.encode) {
-        skcms_TransferFunction tf;
-        memcpy(&tf, &dstTFInv, 7*sizeof(float));
-
-        rgba[0] = skcms_TransferFunction_eval(&tf, rgba[0]);
-        rgba[1] = skcms_TransferFunction_eval(&tf, rgba[1]);
-        rgba[2] = skcms_TransferFunction_eval(&tf, rgba[2]);
+        rgba[0] = skcms_TransferFunction_eval(&dstTFInv, rgba[0]);
+        rgba[1] = skcms_TransferFunction_eval(&dstTFInv, rgba[1]);
+        rgba[2] = skcms_TransferFunction_eval(&dstTFInv, rgba[2]);
     }
     if (flags.premul) {
         rgba[0] *= rgba[3];
@@ -144,15 +146,8 @@ void SkColorSpaceXformSteps::apply(SkRasterPipeline* p, bool src_is_normalized) 
     if (flags.linearize) {
         if (src_is_normalized && srcTF_is_sRGB) {
             p->append(SkRasterPipeline::from_srgb);
-        } else if (srcTF.a == 1 &&
-                   srcTF.b == 0 &&
-                   srcTF.c == 0 &&
-                   srcTF.d == 0 &&
-                   srcTF.e == 0 &&
-                   srcTF.f == 0) {
-            p->append(SkRasterPipeline::gamma, &srcTF.g);
         } else {
-            p->append(SkRasterPipeline::parametric, &srcTF);
+            p->append_transfer_function(srcTF);
         }
     }
     if (flags.gamut_transform) {
@@ -161,26 +156,10 @@ void SkColorSpaceXformSteps::apply(SkRasterPipeline* p, bool src_is_normalized) 
     if (flags.encode) {
         if (src_is_normalized && dstTF_is_sRGB) {
             p->append(SkRasterPipeline::to_srgb);
-        } else if (dstTFInv.a == 1 &&
-                   dstTFInv.b == 0 &&
-                   dstTFInv.c == 0 &&
-                   dstTFInv.d == 0 &&
-                   dstTFInv.e == 0 &&
-                   dstTFInv.f == 0) {
-            p->append(SkRasterPipeline::gamma, &dstTFInv.g);
         } else {
-            p->append(SkRasterPipeline::parametric, &dstTFInv);
+            p->append_transfer_function(dstTFInv);
         }
     }
     if (flags.premul) { p->append(SkRasterPipeline::premul); }
 }
 
-//////////////
-
-bool sk_can_use_legacy_blits(SkColorSpace* src, SkColorSpace* dst) {
-    // When considering legacy blits, we only supported premul, so set those here
-    SkAlphaType srcAT = kPremul_SkAlphaType;
-    SkAlphaType dstAT = kPremul_SkAlphaType;
-
-    return SkColorSpaceXformSteps(src, srcAT, dst, dstAT).flags.mask() == 0;
-}

@@ -5,14 +5,14 @@
  * found in the LICENSE file.
  */
 
-#include "GrConvexPolyEffect.h"
-#include "SkPathPriv.h"
-#include "effects/GrAARectEffect.h"
-#include "effects/GrConstColorProcessor.h"
-#include "glsl/GrGLSLFragmentProcessor.h"
-#include "glsl/GrGLSLFragmentShaderBuilder.h"
-#include "glsl/GrGLSLProgramDataManager.h"
-#include "glsl/GrGLSLUniformHandler.h"
+#include "src/core/SkPathPriv.h"
+#include "src/gpu/effects/GrConvexPolyEffect.h"
+#include "src/gpu/effects/generated/GrAARectEffect.h"
+#include "src/gpu/effects/generated/GrConstColorProcessor.h"
+#include "src/gpu/glsl/GrGLSLFragmentProcessor.h"
+#include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
+#include "src/gpu/glsl/GrGLSLProgramDataManager.h"
+#include "src/gpu/glsl/GrGLSLUniformHandler.h"
 
 //////////////////////////////////////////////////////////////////////////////
 
@@ -125,7 +125,7 @@ std::unique_ptr<GrFragmentProcessor> GrConvexPolyEffect::Make(GrClipEdgeType typ
     // Iterate here to consume any degenerate contours and only process the points
     // on the actual convex contour.
     int n = 0;
-    while ((verb = iter.next(pts, true, true)) != SkPath::kDone_Verb) {
+    while ((verb = iter.next(pts)) != SkPath::kDone_Verb) {
         switch (verb) {
             case SkPath::kMove_Verb:
                 SkASSERT(n == 0);
@@ -135,17 +135,19 @@ std::unique_ptr<GrFragmentProcessor> GrConvexPolyEffect::Make(GrClipEdgeType typ
                 if (n >= kMaxEdges) {
                     return nullptr;
                 }
-                SkVector v = pts[1] - pts[0];
-                v.normalize();
-                if (SkPathPriv::kCCW_FirstDirection == dir) {
-                    edges[3 * n] = v.fY;
-                    edges[3 * n + 1] = -v.fX;
-                } else {
-                    edges[3 * n] = -v.fY;
-                    edges[3 * n + 1] = v.fX;
+                if (pts[0] != pts[1]) {
+                    SkVector v = pts[1] - pts[0];
+                    v.normalize();
+                    if (SkPathPriv::kCCW_FirstDirection == dir) {
+                        edges[3 * n] = v.fY;
+                        edges[3 * n + 1] = -v.fX;
+                    } else {
+                        edges[3 * n] = -v.fY;
+                        edges[3 * n + 1] = v.fX;
+                    }
+                    edges[3 * n + 2] = -(edges[3 * n] * pts[1].fX + edges[3 * n + 1] * pts[1].fY);
+                    ++n;
                 }
-                edges[3 * n + 2] = -(edges[3 * n] * pts[1].fX + edges[3 * n + 1] * pts[1].fY);
-                ++n;
                 break;
             }
             default:

@@ -7,13 +7,13 @@
 #ifndef SkPDFDocumentPriv_DEFINED
 #define SkPDFDocumentPriv_DEFINED
 
-#include "SkCanvas.h"
-#include "SkMutex.h"
-#include "SkPDFDocument.h"
-#include "SkPDFMetadata.h"
-#include "SkPDFTag.h"
-#include "SkStream.h"
-#include "SkTHash.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkStream.h"
+#include "include/docs/SkPDFDocument.h"
+#include "include/private/SkMutex.h"
+#include "include/private/SkTHash.h"
+#include "src/pdf/SkPDFMetadata.h"
+#include "src/pdf/SkPDFTag.h"
 
 #include <atomic>
 #include <vector>
@@ -47,6 +47,13 @@ private:
     size_t fBaseOffset = SIZE_MAX;
 };
 
+
+struct SkPDFNamedDestination {
+    sk_sp<SkData> fName;
+    SkPoint fPoint;
+    SkPDFIndirectReference fPage;
+};
+
 /** Concrete implementation of SkDocument that creates PDF files. This
     class does not produced linearized or optimized PDFs; instead it
     it attempts to use a minimum amount of RAM. */
@@ -73,6 +80,7 @@ public:
 
     template <typename T>
     void emitStream(const SkPDFDict& dict, T writeStream, SkPDFIndirectReference ref) {
+        SkAutoMutexExclusive lock(fMutex);
         SkWStream* stream = this->beginObject(ref);
         dict.emitObject(stream);
         stream->writeText(" stream\n");
@@ -84,6 +92,9 @@ public:
     const SkPDF::Metadata& metadata() const { return fMetadata; }
 
     SkPDFIndirectReference getPage(size_t pageIndex) const;
+    SkPDFIndirectReference currentPage() const {
+        return SkASSERT(!fPageRefs.empty()), fPageRefs.back();
+    }
     // Returns -1 if no mark ID.
     int getMarkIdForNodeId(int nodeId);
 
@@ -94,6 +105,8 @@ public:
     void signalJobComplete();
     size_t currentPageIndex() { return fPages.size(); }
     size_t pageCount() { return fPageRefs.size(); }
+
+    const SkMatrix& currentPageTransform() const;
 
     // Canonicalized objects
     SkTHashMap<SkPDFImageShaderKey, SkPDFIndirectReference> fImageShaderMap;
@@ -111,12 +124,16 @@ public:
     SkPDFIndirectReference fInvertFunction;
     SkPDFIndirectReference fNoSmaskGraphicState;
 
+    std::vector<std::pair<sk_sp<SkData>, SkRect>> fCurrentPageLinkToURLs;
+    std::vector<std::pair<sk_sp<SkData>, SkRect>> fCurrentPageLinkToDestinations;
+    std::vector<SkPDFNamedDestination> fNamedDestinations;
+
 private:
     SkPDFOffsetMap fOffsetMap;
     SkCanvas fCanvas;
     std::vector<std::unique_ptr<SkPDFDict>> fPages;
     std::vector<SkPDFIndirectReference> fPageRefs;
-    SkPDFDict fDests;
+
     sk_sp<SkPDFDevice> fPageDevice;
     std::atomic<int> fNextObjectNumber = {1};
     std::atomic<int> fJobCount = {0};

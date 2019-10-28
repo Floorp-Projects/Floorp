@@ -5,14 +5,14 @@
  * found in the LICENSE file.
  */
 
-#include "GrGaussianConvolutionFragmentProcessor.h"
+#include "src/gpu/effects/GrGaussianConvolutionFragmentProcessor.h"
 
-#include "GrTexture.h"
-#include "GrTextureProxy.h"
-#include "glsl/GrGLSLFragmentProcessor.h"
-#include "glsl/GrGLSLFragmentShaderBuilder.h"
-#include "glsl/GrGLSLProgramDataManager.h"
-#include "glsl/GrGLSLUniformHandler.h"
+#include "include/gpu/GrTexture.h"
+#include "src/gpu/GrTextureProxy.h"
+#include "src/gpu/glsl/GrGLSLFragmentProcessor.h"
+#include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
+#include "src/gpu/glsl/GrGLSLProgramDataManager.h"
+#include "src/gpu/glsl/GrGLSLUniformHandler.h"
 
 // For brevity
 using UniformHandle = GrGLSLProgramDataManager::UniformHandle;
@@ -56,7 +56,7 @@ void GrGLConvolutionEffect::emitCode(EmitArgs& args) {
                                                  "Kernel", arrayCount);
 
     GrGLSLFPFragmentBuilder* fragBuilder = args.fFragBuilder;
-    SkString coords2D = fragBuilder->ensureCoords2D(args.fTransformedCoords[0]);
+    SkString coords2D = fragBuilder->ensureCoords2D(args.fTransformedCoords[0].fVaryingPoint);
 
     fragBuilder->codeAppendf("%s = half4(0, 0, 0, 0);", args.fOutputColor);
 
@@ -176,7 +176,9 @@ void GrGLConvolutionEffect::GenKey(const GrProcessor& processor, const GrShaderC
             processor.cast<GrGaussianConvolutionFragmentProcessor>();
     uint32_t key = conv.radius();
     key <<= 3;
-    key |= Direction::kY == conv.direction() ? 0x4 : 0x0;
+    if (conv.useBounds()) {
+        key |= Direction::kY == conv.direction() ? 0x4 : 0x0;
+    }
     key |= static_cast<uint32_t>(conv.mode());
     b->add32(key);
 }
@@ -210,13 +212,14 @@ static void fill_in_1D_gaussian_kernel(float* kernel, int width, float gaussianS
 
 GrGaussianConvolutionFragmentProcessor::GrGaussianConvolutionFragmentProcessor(
                                                             sk_sp<GrTextureProxy> proxy,
+                                                            GrColorType srcColorType,
                                                             Direction direction,
                                                             int radius,
                                                             float gaussianSigma,
                                                             GrTextureDomain::Mode mode,
                                                             int bounds[2])
         : INHERITED(kGrGaussianConvolutionFragmentProcessor_ClassID,
-                    ModulateForSamplerOptFlags(proxy->config(),
+                    ModulateForSamplerOptFlags(srcColorType,
                                                mode == GrTextureDomain::kDecal_Mode))
         , fCoordTransform(proxy.get())
         , fTextureSampler(std::move(proxy))
@@ -296,7 +299,7 @@ std::unique_ptr<GrFragmentProcessor> GrGaussianConvolutionFragmentProcessor::Tes
     float sigma = radius / 3.f;
 
     return GrGaussianConvolutionFragmentProcessor::Make(
-            d->textureProxy(texIdx),
+            std::move(proxy), d->textureProxyColorType(texIdx),
             dir, radius, sigma, static_cast<GrTextureDomain::Mode>(modeIdx), bounds);
 }
 #endif

@@ -8,7 +8,7 @@
 #ifndef SkNx_sse_DEFINED
 #define SkNx_sse_DEFINED
 
-#include "SkTypes.h"
+#include "include/core/SkTypes.h"
 
 #if SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_SSE41
     #include <smmintrin.h>
@@ -727,6 +727,10 @@ template<> AI /*static*/ Sk4f SkNx_cast<float, int32_t>(const Sk4i& src) {
 
 template<> AI /*static*/ Sk4f SkNx_cast<float, uint32_t>(const Sk4u& src) {
     return SkNx_cast<float>(Sk4i::Load(&src));
+}
+
+template<> AI /*static*/ Sk4f SkNx_cast<float, uint64_t>(const SkNx<4, uint64_t>& src) {
+    return Sk4f(float(int32_t(src[0])), float(int32_t(src[1])), float(int32_t(src[2])), float(int32_t(src[3])));
 }
 
 template <> AI /*static*/ Sk4i SkNx_cast<int32_t, float>(const Sk4f& src) {

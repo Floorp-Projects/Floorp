@@ -8,9 +8,9 @@
 #ifndef GrVkTransferBuffer_DEFINED
 #define GrVkTransferBuffer_DEFINED
 
-#include "GrGpuBuffer.h"
-#include "GrVkBuffer.h"
-#include "vk/GrVkTypes.h"
+#include "include/gpu/vk/GrVkTypes.h"
+#include "src/gpu/GrGpuBuffer.h"
+#include "src/gpu/vk/GrVkBuffer.h"
 
 class GrVkGpu;
 
@@ -28,21 +28,12 @@ private:
     void setMemoryBacking(SkTraceMemoryDump* traceMemoryDump,
                           const SkString& dumpName) const override;
 
-    void onMap() override {
-        if (!this->wasDestroyed()) {
-            this->GrGpuBuffer::fMapPtr = this->vkMap(this->getVkGpu());
-        }
-    }
+    void onMap() override { this->GrGpuBuffer::fMapPtr = this->vkMap(this->getVkGpu()); }
 
-    void onUnmap() override {
-        if (!this->wasDestroyed()) {
-            this->vkUnmap(this->getVkGpu());
-        }
-    }
+    void onUnmap() override { this->vkUnmap(this->getVkGpu()); }
 
     bool onUpdateData(const void* src, size_t srcSizeInBytes) override {
         SK_ABORT("Not implemented for transfer buffers.");
-        return false;
     }
 
     GrVkGpu* getVkGpu() const {

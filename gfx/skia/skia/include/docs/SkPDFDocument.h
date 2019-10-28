@@ -3,11 +3,11 @@
 #ifndef SkPDFDocument_DEFINED
 #define SkPDFDocument_DEFINED
 
-#include "SkDocument.h"
+#include "include/core/SkDocument.h"
 
-#include "SkScalar.h"
-#include "SkString.h"
-#include "SkTime.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkString.h"
+#include "include/core/SkTime.h"
 
 class SkExecutor;
 
@@ -159,6 +159,14 @@ struct Metadata {
         Experimental.
     */
     SkExecutor* fExecutor = nullptr;
+
+    /** Preferred Subsetter. Only respected if both are compiled in.
+        Experimental.
+    */
+    enum Subsetter {
+        kHarfbuzz_Subsetter,
+        kSfntly_Subsetter,
+    } fSubsetter = kHarfbuzz_Subsetter;
 };
 
 /** Associate a node ID with subsequent drawing commands in an

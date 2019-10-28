@@ -8,9 +8,9 @@
 #ifndef SkTHash_DEFINED
 #define SkTHash_DEFINED
 
-#include "SkChecksum.h"
-#include "SkTypes.h"
-#include "SkTemplates.h"
+#include "include/core/SkTypes.h"
+#include "include/private/SkChecksum.h"
+#include "include/private/SkTemplates.h"
 #include <new>
 
 // Before trying to use SkTHashTable, look below to see if SkTHashMap or SkTHashSet works for you.
@@ -211,12 +211,12 @@ private:
     }
 
     static uint32_t Hash(const K& key) {
-        uint32_t hash = Traits::Hash(key);
+        uint32_t hash = Traits::Hash(key) & 0xffffffff;
         return hash ? hash : 1;  // We reserve hash 0 to mark empty.
     }
 
     struct Slot {
-        Slot() : hash(0) {}
+        Slot() : val{}, hash(0) {}
         Slot(T&& v, uint32_t h) : val(std::move(v)), hash(h) {}
         Slot(Slot&& o) { *this = std::move(o); }
         Slot& operator=(Slot&& o) {
@@ -297,7 +297,7 @@ private:
         K key;
         V val;
         static const K& GetKey(const Pair& p) { return p.key; }
-        static uint32_t Hash(const K& key) { return HashK()(key); }
+        static auto Hash(const K& key) { return HashK()(key); }
     };
 
     SkTHashTable<Pair, K> fTable;
@@ -319,6 +319,9 @@ public:
 
     // How many items are in the set?
     int count() const { return fTable.count(); }
+
+    // Is empty?
+    bool empty() const { return fTable.count() == 0; }
 
     // Approximately how many bytes of memory do we use beyond sizeof(*this)?
     size_t approxBytesUsed() const { return fTable.approxBytesUsed(); }
@@ -348,7 +351,7 @@ public:
 private:
     struct Traits {
         static const T& GetKey(const T& item) { return item; }
-        static uint32_t Hash(const T& item) { return HashT()(item); }
+        static auto Hash(const T& item) { return HashT()(item); }
     };
     SkTHashTable<T, T, Traits> fTable;
 

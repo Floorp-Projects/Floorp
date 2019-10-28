@@ -5,29 +5,41 @@
  * found in the LICENSE file.
  */
 
-#include "SkPictureShader.h"
+#include "src/shaders/SkPictureShader.h"
 
-#include "SkArenaAlloc.h"
-#include "SkBitmap.h"
-#include "SkBitmapProcShader.h"
-#include "SkCanvas.h"
-#include "SkColorSpaceXformCanvas.h"
-#include "SkImage.h"
-#include "SkImageShader.h"
-#include "SkMatrixUtils.h"
-#include "SkPicturePriv.h"
-#include "SkReadBuffer.h"
-#include "SkResourceCache.h"
+#include "include/core/SkBitmap.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkImage.h"
+#include "src/core/SkArenaAlloc.h"
+#include "src/core/SkMatrixUtils.h"
+#include "src/core/SkPicturePriv.h"
+#include "src/core/SkReadBuffer.h"
+#include "src/core/SkResourceCache.h"
+#include "src/shaders/SkBitmapProcShader.h"
+#include "src/shaders/SkImageShader.h"
 #include <atomic>
 
 #if SK_SUPPORT_GPU
-#include "GrCaps.h"
-#include "GrColorSpaceInfo.h"
-#include "GrFragmentProcessor.h"
-#include "GrRecordingContext.h"
-#include "GrRecordingContextPriv.h"
-#include "SkGr.h"
+#include "include/private/GrRecordingContext.h"
+#include "src/gpu/GrCaps.h"
+#include "src/gpu/GrColorInfo.h"
+#include "src/gpu/GrFragmentProcessor.h"
+#include "src/gpu/GrRecordingContextPriv.h"
+#include "src/gpu/SkGr.h"
 #endif
+
+sk_sp<SkShader> SkPicture::makeShader(SkTileMode tmx, SkTileMode tmy, const SkMatrix* localMatrix,
+                                      const SkRect* tile) const {
+    if (localMatrix && !localMatrix->invert(nullptr)) {
+        return nullptr;
+    }
+    return SkPictureShader::Make(sk_ref_sp(this), tmx, tmy, localMatrix, tile);
+}
+
+sk_sp<SkShader> SkPicture::makeShader(SkTileMode tmx, SkTileMode tmy,
+                                      const SkMatrix* localMatrix) const {
+    return this->makeShader(tmx, tmy, localMatrix, nullptr);
+}
 
 namespace {
 static unsigned gBitmapShaderKeyNamespaceLabel;
@@ -106,15 +118,13 @@ uint32_t next_id() {
 
 } // namespace
 
-SkPictureShader::SkPictureShader(sk_sp<SkPicture> picture, TileMode tmx, TileMode tmy,
-                                 const SkMatrix* localMatrix, const SkRect* tile,
-                                 sk_sp<SkColorSpace> colorSpace)
+SkPictureShader::SkPictureShader(sk_sp<SkPicture> picture, SkTileMode tmx, SkTileMode tmy,
+                                 const SkMatrix* localMatrix, const SkRect* tile)
     : INHERITED(localMatrix)
     , fPicture(std::move(picture))
     , fTile(tile ? *tile : fPicture->cullRect())
     , fTmx(tmx)
     , fTmy(tmy)
-    , fColorSpace(std::move(colorSpace))
     , fUniqueID(next_id())
     , fAddedToCache(false) {}
 
@@ -124,20 +134,35 @@ SkPictureShader::~SkPictureShader() {
     }
 }
 
-sk_sp<SkShader> SkPictureShader::Make(sk_sp<SkPicture> picture, TileMode tmx, TileMode tmy,
+sk_sp<SkShader> SkPictureShader::Make(sk_sp<SkPicture> picture, SkTileMode tmx, SkTileMode tmy,
                                       const SkMatrix* localMatrix, const SkRect* tile) {
     if (!picture || picture->cullRect().isEmpty() || (tile && tile->isEmpty())) {
-        return SkShader::MakeEmptyShader();
+        return SkShaders::Empty();
     }
-    return sk_sp<SkShader>(new SkPictureShader(std::move(picture), tmx, tmy, localMatrix, tile,
-                                               nullptr));
+    return sk_sp<SkShader>(new SkPictureShader(std::move(picture), tmx, tmy, localMatrix, tile));
+}
+
+SkPicture* SkPictureShader::isAPicture(SkMatrix* matrix,
+                                       SkTileMode tileModes[2],
+                                       SkRect* tile) const {
+    if (matrix) {
+        *matrix = this->getLocalMatrix();
+    }
+    if (tileModes) {
+        tileModes[0] = fTmx;
+        tileModes[1] = fTmy;
+    }
+    if (tile) {
+        *tile = fTile;
+    }
+    return fPicture.get();
 }
 
 sk_sp<SkFlattenable> SkPictureShader::CreateProc(SkReadBuffer& buffer) {
     SkMatrix lm;
     buffer.readMatrix(&lm);
-    TileMode mx = (TileMode)buffer.read32();
-    TileMode my = (TileMode)buffer.read32();
+    auto tmx = buffer.read32LE(SkTileMode::kLastTileMode);
+    auto tmy = buffer.read32LE(SkTileMode::kLastTileMode);
     SkRect tile;
     buffer.readRect(&tile);
 
@@ -147,13 +172,13 @@ sk_sp<SkFlattenable> SkPictureShader::CreateProc(SkReadBuffer& buffer) {
     if (didSerialize) {
         picture = SkPicturePriv::MakeFromBuffer(buffer);
     }
-    return SkPictureShader::Make(picture, mx, my, &lm, &tile);
+    return SkPictureShader::Make(picture, tmx, tmy, &lm, &tile);
 }
 
 void SkPictureShader::flatten(SkWriteBuffer& buffer) const {
     buffer.writeMatrix(this->getLocalMatrix());
-    buffer.write32(fTmx);
-    buffer.write32(fTmy);
+    buffer.write32((unsigned)fTmx);
+    buffer.write32((unsigned)fTmy);
     buffer.writeRect(fTile);
 
     buffer.writeBool(true);
@@ -205,26 +230,17 @@ sk_sp<SkShader> SkPictureShader::refBitmapShader(const SkMatrix& viewMatrix,
 
     const SkISize tileSize = scaledSize.toCeil();
     if (tileSize.isEmpty()) {
-        return SkShader::MakeEmptyShader();
+        return SkShaders::Empty();
     }
 
     // The actual scale, compensating for rounding & clamping.
     const SkSize tileScale = SkSize::Make(SkIntToScalar(tileSize.width()) / fTile.width(),
                                           SkIntToScalar(tileSize.height()) / fTile.height());
 
-    // |fColorSpace| will only be set when using an SkColorSpaceXformCanvas to do pre-draw xforms.
-    // A non-null |dstColorSpace| indicates that the surface we're drawing to is tagged. In all
-    // cases, picture-backed images behave the same (using a tagged surface for rasterization),
-    // and (as sources) they require a valid color space, so default to sRGB.
 
-    // With SkColorSpaceXformCanvas, the surface should never have a color space attached.
-    SkASSERT(!fColorSpace || !dstColorSpace);
-
-    sk_sp<SkColorSpace> imgCS = dstColorSpace ? sk_ref_sp(dstColorSpace)
-                                              : fColorSpace ? fColorSpace
-                                                            : SkColorSpace::MakeSRGB();
+    sk_sp<SkColorSpace> imgCS = dstColorSpace ? sk_ref_sp(dstColorSpace): SkColorSpace::MakeSRGB();
     SkImage::BitDepth bitDepth =
-            kRGBA_F16_SkColorType == dstColorType || kRGBA_F32_SkColorType == dstColorType
+            dstColorType >= kRGBA_F16Norm_SkColorType
             ? SkImage::BitDepth::kF16 : SkImage::BitDepth::kU8;
 
     BitmapShaderKey key(imgCS.get(), bitDepth, fUniqueID, tileScale);
@@ -254,7 +270,7 @@ sk_sp<SkShader> SkPictureShader::refBitmapShader(const SkMatrix& viewMatrix,
     return tileShader;
 }
 
-bool SkPictureShader::onAppendStages(const StageRec& rec) const {
+bool SkPictureShader::onAppendStages(const SkStageRec& rec) const {
     auto lm = this->totalLocalMatrix(rec.fLocalM);
 
     // Keep bitmapShader alive by using alloc instead of stack memory
@@ -265,7 +281,7 @@ bool SkPictureShader::onAppendStages(const StageRec& rec) const {
         return false;
     }
 
-    StageRec localRec = rec;
+    SkStageRec localRec = rec;
     localRec.fLocalM = lm->isIdentity() ? nullptr : lm.get();
 
     return as_SB(bitmapShader)->appendStages(localRec);
@@ -295,16 +311,6 @@ const {
 }
 #endif
 
-sk_sp<SkShader> SkPictureShader::onMakeColorSpace(SkColorSpaceXformer* xformer) const {
-    sk_sp<SkColorSpace> dstCS = xformer->dst();
-    if (SkColorSpace::Equals(dstCS.get(), fColorSpace.get())) {
-        return sk_ref_sp(const_cast<SkPictureShader*>(this));
-    }
-
-    return sk_sp<SkPictureShader>(new SkPictureShader(fPicture, fTmx, fTmy, &this->getLocalMatrix(),
-                                                      &fTile, std::move(dstCS)));
-}
-
 /////////////////////////////////////////////////////////////////////////////////////////
 
 SkPictureShader::PictureShaderContext::PictureShaderContext(
@@ -328,8 +334,8 @@ void SkPictureShader::PictureShaderContext::shadeSpan(int x, int y, SkPMColor ds
 }
 
 #if SK_SUPPORT_GPU
-#include "GrContext.h"
-#include "GrContextPriv.h"
+#include "include/gpu/GrContext.h"
+#include "src/gpu/GrContextPriv.h"
 
 std::unique_ptr<GrFragmentProcessor> SkPictureShader::asFragmentProcessor(
         const GrFPArgs& args) const {
@@ -339,17 +345,19 @@ std::unique_ptr<GrFragmentProcessor> SkPictureShader::asFragmentProcessor(
     }
 
     auto lm = this->totalLocalMatrix(args.fPreLocalMatrix, args.fPostLocalMatrix);
-    SkColorType dstColorType = kN32_SkColorType;
-    GrPixelConfigToColorType(args.fDstColorSpaceInfo->config(), &dstColorType);
+    SkColorType dstColorType = GrColorTypeToSkColorType(args.fDstColorInfo->colorType());
+    if (dstColorType == kUnknown_SkColorType) {
+        dstColorType = kRGBA_8888_SkColorType;
+    }
     sk_sp<SkShader> bitmapShader(this->refBitmapShader(*args.fViewMatrix, &lm, dstColorType,
-                                                       args.fDstColorSpaceInfo->colorSpace(),
+                                                       args.fDstColorInfo->colorSpace(),
                                                        maxTextureSize));
     if (!bitmapShader) {
         return nullptr;
     }
 
     // We want to *reset* args.fPreLocalMatrix, not compose it.
-    GrFPArgs newArgs(args.fContext, args.fViewMatrix, args.fFilterQuality, args.fDstColorSpaceInfo);
+    GrFPArgs newArgs(args.fContext, args.fViewMatrix, args.fFilterQuality, args.fDstColorInfo);
     newArgs.fPreLocalMatrix = lm.get();
 
     return as_SB(bitmapShader)->asFragmentProcessor(newArgs);

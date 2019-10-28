@@ -8,11 +8,15 @@
 #ifndef GrMtlCppUtil_DEFINED
 #define GrMtlCppUtil_DEFINED
 
-#include "mtl/GrMtlTypes.h"
+#include "include/gpu/mtl/GrMtlTypes.h"
 
 // Utilities that can be used from cpp files (rather than .mm).
 
 GrMTLPixelFormat GrGetMTLPixelFormatFromMtlTextureInfo(const GrMtlTextureInfo&);
 
+#if GR_TEST_UTILS
+const char* GrMtlFormatToStr(GrMTLPixelFormat mtlFormat);
+bool GrMtlFormatIsBGRA(GrMTLPixelFormat mtlFormat);
+#endif
 
 #endif

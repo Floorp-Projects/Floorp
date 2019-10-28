@@ -5,10 +5,10 @@
  * found in the LICENSE file.
  */
 
-#include "GrGLVertexArray.h"
-#include "GrCpuBuffer.h"
-#include "GrGLBuffer.h"
-#include "GrGLGpu.h"
+#include "src/gpu/GrCpuBuffer.h"
+#include "src/gpu/gl/GrGLBuffer.h"
+#include "src/gpu/gl/GrGLGpu.h"
+#include "src/gpu/gl/GrGLVertexArray.h"
 
 struct AttribLayout {
     bool        fNormalized;  // Only used by floating point types.
@@ -74,9 +74,12 @@ static AttribLayout attrib_layout(GrVertexAttribType type) {
             return {false, 1, GR_GL_INT};
         case kUint_GrVertexAttribType:
             return {false, 1, GR_GL_UNSIGNED_INT};
+        case kUShort_norm_GrVertexAttribType:
+            return {true, 1, GR_GL_UNSIGNED_SHORT};
+        case kUShort4_norm_GrVertexAttribType:
+            return {true, 4, GR_GL_UNSIGNED_SHORT};
     }
     SK_ABORT("Unknown vertex attrib type");
-    return {false, 0, 0};
 };
 
 void GrGLAttribArrayState::set(GrGLGpu* gpu,

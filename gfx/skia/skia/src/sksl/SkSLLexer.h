@@ -65,12 +65,6 @@ struct Token {
         UNIFORM,
 #undef CONST
         CONST,
-#undef LOWP
-        LOWP,
-#undef MEDIUMP
-        MEDIUMP,
-#undef HIGHP
-        HIGHP,
 #undef FLAT
         FLAT,
 #undef NOPERSPECTIVE
@@ -247,5 +241,5 @@ private:
     int32_t fOffset;
 };
 
-}  // namespace SkSL
+}  // namespace
 #endif

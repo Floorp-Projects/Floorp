@@ -7,11 +7,11 @@
 #ifndef SkEdgeBuilder_DEFINED
 #define SkEdgeBuilder_DEFINED
 
-#include "SkAnalyticEdge.h"
-#include "SkArenaAlloc.h"
-#include "SkEdge.h"
-#include "SkRect.h"
-#include "SkTDArray.h"
+#include "include/core/SkRect.h"
+#include "include/private/SkTDArray.h"
+#include "src/core/SkAnalyticEdge.h"
+#include "src/core/SkArenaAlloc.h"
+#include "src/core/SkEdge.h"
 
 class SkPath;
 
@@ -42,12 +42,11 @@ private:
 
     virtual char* allocEdges(size_t n, size_t* sizeof_edge) = 0;
     virtual SkRect recoverClip(const SkIRect&) const = 0;
-    virtual bool chopCubics() const = 0;
 
     virtual void addLine (const SkPoint pts[]) = 0;
     virtual void addQuad (const SkPoint pts[]) = 0;
     virtual void addCubic(const SkPoint pts[]) = 0;
-    virtual Combine addPolyLine(SkPoint pts[], char* edge, char** edgePtr) = 0;
+    virtual Combine addPolyLine(const SkPoint pts[], char* edge, char** edgePtr) = 0;
 };
 
 class SkBasicEdgeBuilder final : public SkEdgeBuilder {
@@ -61,12 +60,11 @@ private:
 
     char* allocEdges(size_t, size_t*) override;
     SkRect recoverClip(const SkIRect&) const override;
-    bool chopCubics() const override { return true; }
 
     void addLine (const SkPoint pts[]) override;
     void addQuad (const SkPoint pts[]) override;
     void addCubic(const SkPoint pts[]) override;
-    Combine addPolyLine(SkPoint pts[], char* edge, char** edgePtr) override;
+    Combine addPolyLine(const SkPoint pts[], char* edge, char** edgePtr) override;
 
     const int fClipShift;
 };
@@ -82,29 +80,10 @@ private:
 
     char* allocEdges(size_t, size_t*) override;
     SkRect recoverClip(const SkIRect&) const override;
-    bool chopCubics() const override { return true; }
 
     void addLine (const SkPoint pts[]) override;
     void addQuad (const SkPoint pts[]) override;
     void addCubic(const SkPoint pts[]) override;
-    Combine addPolyLine(SkPoint pts[], char* edge, char** edgePtr) override;
+    Combine addPolyLine(const SkPoint pts[], char* edge, char** edgePtr) override;
 };
-
-class SkBezierEdgeBuilder final : public SkEdgeBuilder {
-public:
-    SkBezierEdgeBuilder() {}
-
-    SkBezier** bezierList() { return (SkBezier**)fEdgeList; }
-
-private:
-    char* allocEdges(size_t, size_t*) override;
-    SkRect recoverClip(const SkIRect&) const override;
-    bool chopCubics() const override { return false; }
-
-    void addLine (const SkPoint pts[]) override;
-    void addQuad (const SkPoint pts[]) override;
-    void addCubic(const SkPoint pts[]) override;
-    Combine addPolyLine(SkPoint pts[], char* edge, char** edgePtr) override;
-};
-
 #endif
