@@ -461,10 +461,10 @@ button.invoke-getter {
 
 button.remove-set-watchpoint {
   mask: url("resource://devtools/client/debugger/images/webconsole-logpoint.svg")
-  no-repeat;
+    no-repeat;
   display: inline-block;
   vertical-align: top;
-  height: 15px;
+  height: 13px;
   width: 15px;
   margin: 0 4px 0px 20px;
   padding: 0;
@@ -475,14 +475,22 @@ button.remove-set-watchpoint {
 
 button.remove-get-watchpoint {
   mask: url("resource://devtools/client/debugger/images/webconsole-logpoint.svg")
-  no-repeat;
+    no-repeat;
   display: inline-block;
   vertical-align: top;
-  height: 15px;
+  height: 13px;
   width: 15px;
   margin: 0 4px 0px 20px;
   padding: 0;
   border: none;
   background-color: var(--purple-60);
   cursor: pointer;
+}
+.theme-dark button.remove-set-watchpoint:hover,
+.theme-light button.remove-set-watchpoint:hover {
+  background-color: var(--breakpoint-fill);
+}
+.theme-dark button.remove-get-watchpoint:hover,
+.theme-light button.remove-get-watchpoint:hover {
+  background-color: var(--purple-60);
 }
