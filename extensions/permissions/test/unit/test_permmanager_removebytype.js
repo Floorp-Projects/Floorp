@@ -9,7 +9,7 @@ function run_test() {
     Ci.nsIPermissionManager
   );
 
-  Assert.equal(perm_count(), 0);
+  Assert.equal(pm.all.length, 0);
 
   // add some permissions
   let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
@@ -32,10 +32,10 @@ function run_test() {
   pm.addFromPrincipal(principal3, "cucumber", 3);
   pm.addFromPrincipal(principal3, "apple", 1);
 
-  Assert.equal(perm_count(), 7);
+  Assert.equal(pm.all.length, 7);
 
   pm.removeByType("apple");
-  Assert.equal(perm_count(), 4);
+  Assert.equal(pm.all.length, 4);
 
   Assert.equal(pm.testPermissionFromPrincipal(principal, "pear"), 1);
   Assert.equal(pm.testPermissionFromPrincipal(principal2, "pear"), 2);
@@ -48,7 +48,7 @@ function run_test() {
   Assert.equal(pm.testPermissionFromPrincipal(principal3, "cucumber"), 3);
 
   pm.removeByType("cucumber");
-  Assert.equal(perm_count(), 2);
+  Assert.equal(pm.all.length, 2);
 
   Assert.equal(pm.testPermissionFromPrincipal(principal, "pear"), 1);
   Assert.equal(pm.testPermissionFromPrincipal(principal2, "pear"), 2);
@@ -61,7 +61,7 @@ function run_test() {
   Assert.equal(pm.testPermissionFromPrincipal(principal3, "cucumber"), 0);
 
   pm.removeByType("pear");
-  Assert.equal(perm_count(), 0);
+  Assert.equal(pm.all.length, 0);
 
   Assert.equal(pm.testPermissionFromPrincipal(principal, "pear"), 0);
   Assert.equal(pm.testPermissionFromPrincipal(principal2, "pear"), 0);
@@ -72,15 +72,4 @@ function run_test() {
 
   Assert.equal(pm.testPermissionFromPrincipal(principal, "cucumber"), 0);
   Assert.equal(pm.testPermissionFromPrincipal(principal3, "cucumber"), 0);
-
-  function perm_count() {
-    let enumerator = pm.enumerator;
-    let count = 0;
-    while (enumerator.hasMoreElements()) {
-      count++;
-      enumerator.getNext();
-    }
-
-    return count;
-  }
 }

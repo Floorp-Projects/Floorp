@@ -136,7 +136,7 @@ permission_observer.prototype = {
     } else if (data == "cleared") {
       // only clear once: at the end
       Assert.ok(!this.cleared);
-      Assert.equal(do_count_enumerator(Services.perms.enumerator), 0);
+      Assert.equal(do_count_array(Services.perms.all), 0);
       this.cleared = true;
     } else {
       do_throw("unexpected data '" + data + "'!");
