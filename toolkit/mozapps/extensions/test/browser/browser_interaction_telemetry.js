@@ -612,7 +612,7 @@ add_task(async function testPreferencesLink() {
     ],
     {
       category: "addonsManager",
-      methods: /^(link|view)$/,
+      method: /^(link|view)$/,
     }
   );
 
