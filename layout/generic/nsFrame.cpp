@@ -59,6 +59,7 @@
 #include "nsGkAtoms.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsCSSClipPathInstance.h"
+#include "nsCanvasFrame.h"
 
 #include "nsFrameTraversal.h"
 #include "nsRange.h"
@@ -544,6 +545,13 @@ static bool IsFontSizeInflationContainer(nsIFrame* aFrame,
   }
 
   nsIContent* content = aFrame->GetContent();
+  if (content && content->IsInNativeAnonymousSubtree()) {
+    // Native anonymous content shouldn't be a font inflation root,
+    // except for the canvas custom content container.
+    nsCanvasFrame* canvas = aFrame->PresShell()->GetCanvasFrame();
+    return canvas && canvas->GetCustomContentContainer() == content;
+  }
+
   LayoutFrameType frameType = aFrame->Type();
   bool isInline =
       (nsStyleDisplay::IsInlineFlow(aFrame->GetDisplay()) ||
@@ -555,8 +563,7 @@ static bool IsFontSizeInflationContainer(nsIFrame* aFrame,
        (aFrame->GetParent()->GetContent() == content) ||
        (content &&
         (content->IsAnyOfHTMLElements(nsGkAtoms::option, nsGkAtoms::optgroup,
-                                      nsGkAtoms::select) ||
-         content->IsInNativeAnonymousSubtree()))) &&
+                                      nsGkAtoms::select)))) &&
       !(aFrame->IsXULBoxFrame() && aFrame->GetParent()->IsXULBoxFrame());
   NS_ASSERTION(!aFrame->IsFrameOfType(nsIFrame::eLineParticipant) || isInline ||
                    // br frames and mathml frames report being line
