@@ -137,7 +137,7 @@ void nsMeterFrame::ReflowBarFrame(nsIFrame* aBarFrame,
 
   size = NSToCoordRound(size * position);
 
-  if (!vertical && !wm.IsPhysicalLTR()) {
+  if (!vertical && wm.IsPhysicalRTL()) {
     xoffset += aReflowInput.ComputedWidth() - size;
   }
 

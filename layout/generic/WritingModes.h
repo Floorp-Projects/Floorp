@@ -225,6 +225,13 @@ class WritingMode {
   }
 
   /**
+   * True if it is vertical and vertical-rl, or is horizontal and bidi RTL.
+   */
+  bool IsPhysicalRTL() const {
+    return IsVertical() ? IsVerticalRL() : IsBidiRTL();
+  }
+
+  /**
    * True if vertical-mode block direction is LR (convenience method).
    */
   bool IsVerticalLR() const { return eBlockLR == GetBlockDir(); }
