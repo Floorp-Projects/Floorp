@@ -72,6 +72,7 @@ interface nsIWebBrowserPersistDocument : nsISupports
    * The cache key.  Unlike in nsISHEntry, where it's wrapped in an
    * nsISupportsPRUint32, this is just the integer.
    */
+  [infallible]
   readonly attribute unsigned long cacheKey;
 
   /**
