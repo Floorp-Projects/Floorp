@@ -484,6 +484,9 @@ function initPageCertError() {
   document
     .getElementById("copyToClipboardBottom")
     .addEventListener("click", copyPEMToClipboard);
+  document
+    .getElementById("exceptionDialogButton")
+    .addEventListener("click", addCertException);
 
   setCertErrorDetails();
   setTechnicalDetailsOnCertError();
@@ -491,6 +494,10 @@ function initPageCertError() {
   // Dispatch this event only for tests.
   let event = new CustomEvent("AboutNetErrorLoad", { bubbles: true });
   document.dispatchEvent(event);
+}
+
+function addCertException() {
+  RPMSendAsyncMessage("AddCertException", { location: document.location.href });
 }
 
 function onReturnButtonClick(e) {
