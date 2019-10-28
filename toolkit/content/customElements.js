@@ -498,7 +498,8 @@
        *         but excluding any text node.
        */
       static parseXULToFragment(str, entities = []) {
-        let fullSrc = `
+        let doc = gXULDOMParser.parseFromSafeString(
+          `
       ${
         entities.length
           ? `<!DOCTYPE bindings [
@@ -517,13 +518,9 @@
            xmlns:html="http://www.w3.org/1999/xhtml">
         ${str}
       </box>
-    `;
-        let doc = gXULDOMParser.parseFromString(fullSrc, "application/xml");
-
-        if (doc.documentElement.localName === "parsererror") {
-          throw new Error("not well-formed XML");
-        }
-
+    `,
+          "application/xml"
+        );
         // The XUL/XBL parser is set to ignore all-whitespace nodes, whereas (X)HTML
         // does not do this. Most XUL code assumes that the whitespace has been
         // stripped out, so we simply remove all text nodes after using the parser.
