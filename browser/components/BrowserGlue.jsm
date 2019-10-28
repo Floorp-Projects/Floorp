@@ -311,7 +311,6 @@ let LEGACY_ACTORS = {
     child: {
       module: "resource:///actors/NetErrorChild.jsm",
       events: {
-        AboutNetErrorSetAutomatic: { wantUntrusted: true },
         AboutNetErrorResetPreferences: { wantUntrusted: true },
         click: {},
       },

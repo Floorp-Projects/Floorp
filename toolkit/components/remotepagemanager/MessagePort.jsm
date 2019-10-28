@@ -46,12 +46,14 @@ let RPMAccessManager = {
         "security.ssl.errorReporting.automatic",
         "security.ssl.errorReporting.enabled",
       ],
+      setBoolPref: ["security.ssl.errorReporting.automatic"],
       getIntPref: [
         "services.settings.clock_skew_seconds",
         "services.settings.last_update_seconds",
       ],
       getAppBuildID: ["yes"],
       recordTelemetryEvent: ["yes"],
+      addToHistogram: ["yes"],
     },
     "about:neterror": {
       getFormatURLPref: ["app.support.baseURL"],
@@ -61,6 +63,8 @@ let RPMAccessManager = {
         "security.ssl.errorReporting.enabled",
         "security.tls.version.enable-deprecated",
       ],
+      setBoolPref: ["security.ssl.errorReporting.automatic"],
+      addToHistogram: ["yes"],
     },
     "about:privatebrowsing": {
       // "sendAsyncMessage": handled within AboutPrivateBrowsingHandler.jsm
@@ -388,8 +392,13 @@ class MessagePort {
       throw new Error("Message port has been destroyed");
     }
 
+    let id;
+    if (this.window) {
+      id = this.window.docShell.browsingContext.id;
+    }
     this.messageManager.sendAsyncMessage("RemotePage:Message", {
       portID: this.portID,
+      browsingContextID: id,
       name,
       data,
     });
@@ -532,5 +541,16 @@ class MessagePort {
       value,
       extra
     );
+  }
+
+  addToHistogram(histID, bin) {
+    let doc = this.window.document;
+    if (!RPMAccessManager.checkAllowAccess(doc, "addToHistogram", "yes")) {
+      throw new Error(
+        "RPMAccessManager does not allow access to addToHistogram"
+      );
+    }
+
+    Services.telemetry.getHistogramById(histID).add(bin);
   }
 }

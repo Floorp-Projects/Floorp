@@ -35,6 +35,7 @@ module.exports = {
     RPMSendAsyncMessage: false,
     RPMAddMessageListener: false,
     RPMRecordTelemetryEvent: false,
+    RPMAddToHistogram: false,
     RPMRemoveMessageListener: false,
   },
 };
