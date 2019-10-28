@@ -31,11 +31,6 @@ function waitForSymbols(dbg, url) {
   return waitForState(dbg, state => dbg.selectors.getSymbols(state, source.id));
 }
 
-async function waitToClose(dbg) {
-  pressKey(dbg, "Escape");
-  return new Promise(r => setTimeout(r, 200));
-}
-
 function resultCount(dbg) {
   return findAllElements(dbg, "resultItems").length;
 }
@@ -44,8 +39,16 @@ async function quickOpen(dbg, query, shortcut = "quickOpen") {
   pressKey(dbg, shortcut);
   assertEnabled(dbg);
   query !== "" && type(dbg, query);
+}
 
-  await waitForTime(150);
+async function waitForResults(dbg, results) {
+  await waitForAllElements(dbg, "resultItems", results.length, true);
+
+  for (let i = 0; i < results.length; ++i) {
+    if (results[i] !== undefined) {
+      await waitForElement(dbg, "resultItemName", results[i], i + 1);
+    }
+  }
 }
 
 function findResultEl(dbg, index = 1) {
@@ -71,18 +74,21 @@ add_task(async function() {
 
   info("Testing the number of results for source search");
   await quickOpen(dbg, "sw");
+  await waitForResults(dbg, [undefined, undefined]);
   is(resultCount(dbg), 2, "two file results");
   pressKey(dbg, "Escape");
 
   info("Testing source search and check to see if source is selected");
   await waitForSource(dbg, "switching-01");
   await quickOpen(dbg, "sw1");
+  await waitForResults(dbg, ["switching-01.js"]);
   is(resultCount(dbg), 1, "one file results");
   pressKey(dbg, "Enter");
   await waitForSelectedSource(dbg, "switching-01");
 
   info("Test that results show tab icons");
   await quickOpen(dbg, "sw1");
+  await waitForResults(dbg, ["switching-01.js"]);
   await assertResultIsTab(dbg, 1);
   pressKey(dbg, "Tab");
 
@@ -90,6 +96,7 @@ add_task(async function() {
     "Testing arrow keys in source search and check to see if source is selected"
   );
   await quickOpen(dbg, "sw2");
+  await waitForResults(dbg, ["switching-02.js"]);
   is(resultCount(dbg), 1, "one file results");
   pressKey(dbg, "Down");
   pressKey(dbg, "Enter");
@@ -97,15 +104,17 @@ add_task(async function() {
 
   info("Testing tab closes the search");
   await quickOpen(dbg, "sw");
+  await waitForResults(dbg, [undefined, undefined]);
   pressKey(dbg, "Tab");
   assertDisabled(dbg);
 
   info("Testing function search");
   await quickOpen(dbg, "", "quickOpenFunc");
+  await waitForResults(dbg, ["secondCall", "foo"]);
   is(resultCount(dbg), 2, "two function results");
 
   type(dbg, "@x");
-  await waitForTime(150);
+  await waitForResults(dbg, []);
   is(resultCount(dbg), 0, "no functions with 'x' in name");
 
   pressKey(dbg, "Escape");
@@ -115,12 +124,14 @@ add_task(async function() {
   assertLine(dbg, 0);
   assertColumn(dbg, null);
   await quickOpen(dbg, ":7:12");
+  await waitForResults(dbg, [undefined, undefined]);
   pressKey(dbg, "Enter");
   assertLine(dbg, 7);
   assertColumn(dbg, 12);
 
   info("Testing gotoSource");
   await quickOpen(dbg, "sw1:5");
+  await waitForResults(dbg, ["switching-01.js"]);
   pressKey(dbg, "Enter");
   await waitForSelectedSource(dbg, "switching-01");
   assertLine(dbg, 5);
