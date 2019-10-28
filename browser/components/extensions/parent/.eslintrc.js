@@ -9,6 +9,7 @@ module.exports = {
     "Window": true,
     "actionContextMenu": true,
     "browserActionFor": true,
+    "clickModifiersFromEvent": true,
     "getContainerForCookieStoreId": true,
     "getDevToolsTargetForContext": true,
     "getInspectedWindowFront": true,
