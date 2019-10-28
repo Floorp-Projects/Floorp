@@ -328,7 +328,8 @@ static void StatsCellCallback(JSRuntime* rt, void* data, JS::GCCellPtr cellptr,
   StatsClosure* closure = static_cast<StatsClosure*>(data);
   RuntimeStats* rtStats = closure->rtStats;
   ZoneStats* zStats = rtStats->currZoneStats;
-  switch (cellptr.kind()) {
+  JS::TraceKind kind = cellptr.kind();
+  switch (kind) {
     case JS::TraceKind::Object: {
       JSObject* obj = &cellptr.as<JSObject>();
       RealmStats& realmStats = obj->maybeCCWRealm()->realmStats();
@@ -505,7 +506,7 @@ static void StatsCellCallback(JSRuntime* rt, void* data, JS::GCCellPtr cellptr,
   }
 
   // Yes, this is a subtraction:  see StatsArenaCallback() for details.
-  zStats->unusedGCThings.addToKind(cellptr.kind(), -thingSize);
+  zStats->unusedGCThings.addToKind(kind, -thingSize);
 }
 
 void ZoneStats::initStrings() {
