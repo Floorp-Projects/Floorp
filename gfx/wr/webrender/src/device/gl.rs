@@ -1082,6 +1082,7 @@ pub enum DrawTarget {
     /// An OS compositor surface
     NativeSurface {
         offset: DeviceIntPoint,
+        external_fbo_id: u32,
         dimensions: DeviceIntSize,
     },
 }
@@ -1732,21 +1733,21 @@ impl Device {
     ) {
         let (fbo_id, rect, depth_available) = match target {
             DrawTarget::Default { rect, .. } => {
-                (Some(self.default_draw_fbo), rect, true)
+                (self.default_draw_fbo, rect, true)
             }
             DrawTarget::Texture { dimensions, fbo_id, with_depth, .. } => {
                 let rect = FramebufferIntRect::new(
                     FramebufferIntPoint::zero(),
                     FramebufferIntSize::from_untyped(dimensions.to_untyped()),
                 );
-                (Some(fbo_id), rect, with_depth)
+                (fbo_id, rect, with_depth)
             },
             DrawTarget::External { fbo, size } => {
-                (Some(fbo), size.into(), false)
+                (fbo, size.into(), false)
             }
-            DrawTarget::NativeSurface { offset, dimensions, .. } => {
+            DrawTarget::NativeSurface { external_fbo_id, offset, dimensions, .. } => {
                 (
-                    None,
+                    FBOId(external_fbo_id),
                     FramebufferIntRect::new(
                         FramebufferIntPoint::from_untyped(offset.to_untyped()),
                         FramebufferIntSize::from_untyped(dimensions.to_untyped()),
@@ -1757,9 +1758,7 @@ impl Device {
         };
 
         self.depth_available = depth_available;
-        if let Some(fbo_id) = fbo_id {
-            self.bind_draw_target_impl(fbo_id);
-        }
+        self.bind_draw_target_impl(fbo_id);
         self.gl.viewport(
             rect.origin.x,
             rect.origin.y,

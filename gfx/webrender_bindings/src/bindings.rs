@@ -25,7 +25,7 @@ use webrender::{
     BinaryRecorder, Compositor, DebugFlags, Device, ExternalImage, ExternalImageHandler, ExternalImageSource,
     NativeSurfaceId, PipelineInfo, ProfilerHooks, RecordedFrameHandle, Renderer, RendererOptions, RendererStats,
     SceneBuilderHooks, ShaderPrecacheFlags, Shaders, ThreadListener, UploadMethod, VertexUsageHint,
-    WrShaders, set_profiler_hooks, CompositorConfig
+    WrShaders, set_profiler_hooks, CompositorConfig, NativeSurfaceInfo
 };
 use thread_profiler::register_thread_with_profiler;
 use moz2d_renderer::Moz2dBlobImageHandler;
@@ -1149,6 +1149,7 @@ extern "C" {
         compositor: *mut c_void,
         id: NativeSurfaceId,
         offset: &mut DeviceIntPoint,
+        fbo_id: &mut u32,
     );
     fn wr_compositor_unbind(compositor: *mut c_void);
     fn wr_compositor_begin_frame(compositor: *mut c_void);
@@ -1193,16 +1194,22 @@ impl Compositor for WrCompositor {
     fn bind(
         &mut self,
         id: NativeSurfaceId,
-    ) -> DeviceIntPoint {
-        let mut offset = DeviceIntPoint::zero();
+    ) -> NativeSurfaceInfo {
+        let mut surface_info = NativeSurfaceInfo {
+            origin: DeviceIntPoint::zero(),
+            fbo_id: 0,
+        };
+
         unsafe {
             wr_compositor_bind(
                 self.0,
                 id,
-                &mut offset,
+                &mut surface_info.origin,
+                &mut surface_info.fbo_id,
             );
         }
-        offset
+
+        surface_info
     }
 
     fn unbind(

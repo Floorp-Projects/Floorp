@@ -200,6 +200,27 @@ impl CompositeState {
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct NativeSurfaceId(pub u64);
 
+/// Information about a bound surface that the native compositor
+/// returns to WR.
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct NativeSurfaceInfo {
+    /// An offset into the surface that WR should draw. Some compositing
+    /// implementations (notably, DirectComposition) use texture atlases
+    /// when the surface sizes are small. In this case, an offset can
+    /// be returned into the larger texture where WR should draw. This
+    /// can be (0, 0) if texture atlases are not used.
+    pub origin: DeviceIntPoint,
+    /// The ID of the FBO that WR should bind to, in order to draw to
+    /// the bound surface. On Windows (ANGLE) this will always be 0,
+    /// since creating a p-buffer sets the default framebuffer to
+    /// be the DirectComposition surface. On Mac, this will be non-zero,
+    /// since it identifies the IOSurface that has been bound to draw to.
+    // TODO(gw): This may need to be a larger / different type for WR
+    //           backends that are not GL.
+    pub fbo_id: u32,
+}
+
 /// Defines an interface to a native (OS level) compositor. If supplied
 /// by the client application, then picture cache slices will be
 /// composited by the OS compositor, rather than drawn via WR batches.
@@ -225,7 +246,7 @@ pub trait Compositor {
     fn bind(
         &mut self,
         id: NativeSurfaceId,
-    ) -> DeviceIntPoint;
+    ) -> NativeSurfaceInfo;
 
     /// Unbind the surface. This is called by WR when it has
     /// finished issuing OpenGL commands on the current surface.
