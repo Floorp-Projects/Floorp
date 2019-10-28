@@ -2754,7 +2754,7 @@ BrowserGlue.prototype = {
   _migrateUI: function BG__migrateUI() {
     // Use an increasing number to keep track of the current migration state.
     // Completely unrelated to the current Firefox release number.
-    const UI_VERSION = 88;
+    const UI_VERSION = 87;
     const BROWSER_DOCURL = AppConstants.BROWSER_CHROME_URL;
 
     let currentUIVersion;
@@ -3167,37 +3167,6 @@ BrowserGlue.prototype = {
       // in the about:preferences#privacy custom panel.
       if (Services.prefs.prefHasUserValue(TRACKING_TABLE_PREF)) {
         Services.prefs.setBoolPref(CUSTOM_BLOCKING_PREF, true);
-      }
-    }
-
-    if (currentUIVersion < 88) {
-      // If the user the has "browser.contentblocking.category = custom", but has
-      // the exact same settings as "standard", move them once to "standard". This is
-      // to reset users who we may have moved accidentally, or moved to get ETP early.
-      let category_prefs = [
-        "network.cookie.cookieBehavior",
-        "privacy.trackingprotection.pbmode.enabled",
-        "privacy.trackingprotection.enabled",
-        "privacy.trackingprotection.socialtracking.enabled",
-        "privacy.trackingprotection.fingerprinting.enabled",
-        "privacy.trackingprotection.cryptomining.enabled",
-      ];
-      if (
-        Services.prefs.getStringPref("browser.contentblocking.category") ==
-        "custom"
-      ) {
-        let shouldMigrate = true;
-        for (let pref of category_prefs) {
-          if (Services.prefs.prefHasUserValue(pref)) {
-            shouldMigrate = false;
-          }
-        }
-        if (shouldMigrate) {
-          Services.prefs.setStringPref(
-            "browser.contentblocking.category",
-            "standard"
-          );
-        }
       }
     }
 
