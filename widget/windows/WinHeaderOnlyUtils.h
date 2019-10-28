@@ -613,6 +613,18 @@ struct CoTaskMemFreeDeleter {
   void operator()(void* aPtr) { ::CoTaskMemFree(aPtr); }
 };
 
+inline LauncherResult<TOKEN_ELEVATION_TYPE> GetElevationType(
+    const nsAutoHandle& aToken) {
+  DWORD retLen;
+  TOKEN_ELEVATION_TYPE elevationType;
+  if (!::GetTokenInformation(aToken.get(), TokenElevationType, &elevationType,
+                             sizeof(elevationType), &retLen)) {
+    return LAUNCHER_ERROR_FROM_LAST();
+  }
+
+  return elevationType;
+}
+
 }  // namespace mozilla
 
 #endif  // mozilla_WinHeaderOnlyUtils_h

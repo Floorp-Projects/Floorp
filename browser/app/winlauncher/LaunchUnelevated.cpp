@@ -11,21 +11,10 @@
 #include "mozilla/mscom/ProcessRuntime.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/ShellHeaderOnlyUtils.h"
+#include "mozilla/WinHeaderOnlyUtils.h"
 #include "nsWindowsHelpers.h"
 
 #include <windows.h>
-
-static mozilla::LauncherResult<TOKEN_ELEVATION_TYPE> GetElevationType(
-    const nsAutoHandle& aToken) {
-  DWORD retLen;
-  TOKEN_ELEVATION_TYPE elevationType;
-  if (!::GetTokenInformation(aToken.get(), TokenElevationType, &elevationType,
-                             sizeof(elevationType), &retLen)) {
-    return LAUNCHER_ERROR_FROM_LAST();
-  }
-
-  return elevationType;
-}
 
 static mozilla::LauncherResult<bool> IsHighIntegrity(
     const nsAutoHandle& aToken) {
