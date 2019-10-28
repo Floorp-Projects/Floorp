@@ -25,7 +25,7 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == simple-dx-anchor-end-bid
 == simple-dx-rtl-2.svg simple-dx-rtl-2-ref.svg
 
 == simple-fill-color-dynamic.svg simple-fill-color-dynamic-ref.svg
-fuzzy-if(webrender&&winWidget,125-127,221-254) fuzzy-if(webrender&&OSX,46-46,195-196) == simple-fill-color.svg simple-fill-color-ref.html
+fuzzy-if(webrender&&winWidget,125-128,221-254) fuzzy-if(webrender&&OSX,32-65,195-196) == simple-fill-color.svg simple-fill-color-ref.html
 == simple-fill-gradient.svg simple-fill-gradient-ref.svg
 == simple-fill-none.svg simple.svg
 == simple-pointer-events.svg simple.svg
@@ -198,7 +198,7 @@ fuzzy-if(skiaContent,0-1,0-600) needs-focus == selectSubString-2.svg selectSubSt
 fuzzy-if(skiaContent,0-1,0-250) needs-focus == selectSubString-3.svg selectSubString-3-ref.svg
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy-if(webrender&&!geckoview,1-1,35-237) needs-focus fuzzy-if(webrender&&winWidget,125-148,221-254) == simple-selection.svg simple-selection-ref.html # Bug 1392106
 fuzzy-if(skiaContent,0-1,0-100) fuzzy-if(webrender&&!geckoview,1-1,65-575) needs-focus fuzzy-if(webrender&&winWidget,134-148,261-318) == simple-bidi-selection.svg simple-bidi-selection-ref.html
-fuzzy-if(skiaContent,0-1,0-50) fuzzy-if(webrender&&!geckoview,1-1,46-237) needs-focus fuzzy-if(webrender&&winWidget,127-148,221-254) fuzzy-if(webrender&&OSX,1-46,19-196) == simple-fill-color-selection.svg simple-fill-color-selection-ref.html
+fuzzy-if(skiaContent,0-1,0-50) fuzzy-if(webrender&&!geckoview,1-1,46-237) needs-focus fuzzy-if(webrender&&winWidget,127-148,221-254) fuzzy-if(webrender&&OSX,1-65,19-196) == simple-fill-color-selection.svg simple-fill-color-selection-ref.html
 fuzzy-if(skiaContent,0-1,0-150) fuzzy-if(webrender&&!geckoview,1-1,35-222) needs-focus fuzzy-if(webrender&&winWidget,125-148,221-254) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == simple-underline-selection.svg simple-underline-selection-ref.html # Bug 1392106
 fuzzy-if(skiaContent,0-1,0-300) fuzzy-if(webrender&&!geckoview,1-1,119-934) needs-focus fuzzy-if(webrender&&winWidget,134-152,432-501) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == multiple-text-selection.svg multiple-text-selection-ref.html # Bug 1392106
 needs-focus == multiple-chunks-selection.svg multiple-chunks-selection-ref.svg
