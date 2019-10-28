@@ -49,6 +49,18 @@ DEFAULT_CXX_14 = {
     '__cplusplus': '201402L',
 }
 
+DRAFT_CXX17_201500 = {
+    '__cplusplus': '201500L',
+}
+
+DRAFT_CXX17_201406 = {
+    '__cplusplus': '201406L',
+}
+
+DEFAULT_CXX_17 = {
+    '__cplusplus': '201703L',
+}
+
 SUPPORTS_GNU99 = {
     '-std=gnu99': DEFAULT_C99,
 }
@@ -63,6 +75,14 @@ SUPPORTS_GNUXX14 = {
 
 SUPPORTS_CXX14 = {
     '-std=c++14': DEFAULT_CXX_14,
+}
+
+SUPPORTS_GNUXX17 = {
+    '-std=gnu++17': DEFAULT_CXX_17,
+}
+
+SUPPORTS_CXX17 = {
+    '-std=c++17': DEFAULT_CXX_17,
 }
 
 
@@ -91,14 +111,22 @@ SUPPORTS_DRAFT_CXX14_VERSION = {
     '-std=gnu++14': DRAFT_CXX_14,
 }
 
+SUPPORTS_GNUXX1Z = {
+    '-std=gnu++1z': DRAFT_CXX17_201406,
+}
+
+SUPPORTS_DRAFT_CXX17_201500_VERSION = {
+    '-std=gnu++17': DRAFT_CXX17_201500,
+}
+
 GCC_4_9 = GCC('4.9.3')
 GXX_4_9 = GXX('4.9.3') + SUPPORTS_DRAFT_CXX14_VERSION
 GCC_5 = GCC('5.2.1') + DEFAULT_C11
 GXX_5 = GXX('5.2.1') + SUPPORTS_GNUXX14
 GCC_6 = GCC('6.4.0') + DEFAULT_C11
-GXX_6 = GXX('6.4.0') + DEFAULT_CXX_14
+GXX_6 = GXX('6.4.0') + DEFAULT_CXX_14 + SUPPORTS_GNUXX17 + SUPPORTS_DRAFT_CXX17_201500_VERSION
 GCC_7 = GCC('7.3.0') + DEFAULT_C11
-GXX_7 = GXX('7.3.0') + DEFAULT_CXX_14
+GXX_7 = GXX('7.3.0') + DEFAULT_CXX_14 + SUPPORTS_GNUXX17 + SUPPORTS_CXX17
 
 DEFAULT_GCC = GCC_6
 DEFAULT_GXX = GXX_6
@@ -194,14 +222,14 @@ CLANGXX_3_3 = CLANGXX('3.3.0')
 CLANG_4_0 = CLANG('4.0.2') + DEFAULT_C11 + {
     '__has_attribute(diagnose_if)': '1',
 }
-CLANGXX_4_0 = CLANGXX('4.0.2') + {
+CLANGXX_4_0 = CLANGXX('4.0.2') + SUPPORTS_GNUXX1Z + {
     '__has_attribute(diagnose_if)': '1',
 }
 CLANG_5_0 = CLANG('5.0.1') + DEFAULT_C11 + {
     '__has_attribute(diagnose_if)': '1',
     '__has_warning("-Wunguarded-availability")': '1',
 }
-CLANGXX_5_0 = CLANGXX('5.0.1') + {
+CLANGXX_5_0 = CLANGXX('5.0.1') + SUPPORTS_GNUXX17 + {
     '__has_attribute(diagnose_if)': '1',
     '__has_warning("-Wunguarded-availability")': '1',
 }
@@ -269,7 +297,8 @@ CLANG_CL_3_9 = (CLANG_BASE('3.9.0') + VS('18.00.00000') + DEFAULT_C11 +
     },
 }
 CLANG_CL_8_0 = (CLANG_BASE('8.0.0') + VS('18.00.00000') + DEFAULT_C11 +
-                SUPPORTS_GNU99 + SUPPORTS_GNUXX11 + SUPPORTS_CXX14) + {
+                SUPPORTS_GNU99 + SUPPORTS_GNUXX11 + SUPPORTS_CXX14 +
+                SUPPORTS_CXX17) + {
     '*.cpp': {
         '__STDC_VERSION__': False,
         '__cplusplus': '201103L',
