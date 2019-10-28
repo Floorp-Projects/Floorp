@@ -21,5 +21,10 @@
       inline_script = function () { var x = 5; };
       inline_script();
     </script>
+    <script>
+      // This is a second inline script element whose breakpoints won't be
+      // known until after the script element has been added.
+      var x = 3;
+    </script>
   </body>
 </html>
