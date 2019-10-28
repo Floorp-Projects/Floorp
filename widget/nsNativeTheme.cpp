@@ -336,7 +336,7 @@ bool nsNativeTheme::IsFrameRTL(nsIFrame* aFrame) {
   if (!aFrame) {
     return false;
   }
-  return !aFrame->GetWritingMode().IsPhysicalLTR();
+  return aFrame->GetWritingMode().IsPhysicalRTL();
 }
 
 bool nsNativeTheme::IsHTMLContent(nsIFrame* aFrame) {
