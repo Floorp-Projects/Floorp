@@ -6,6 +6,7 @@
  * Specification: http://w3c.github.io/webrtc-pc/#certificate-management
  */
 
+[GenerateInit]
 dictionary RTCCertificateExpiration {
   [EnforceRange]
   DOMTimeStamp expires;

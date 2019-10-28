@@ -1857,6 +1857,7 @@ class IDLDictionary(IDLObjectWithScope):
         self._partialDictionaries = []
         self._extendedAttrDict = {}
         self.needsConversionToJS = False
+        self.needsConversionFromJS = False
 
         IDLObjectWithScope.__init__(self, location, parentScope, name)
 
@@ -1997,10 +1998,12 @@ class IDLDictionary(IDLObjectWithScope):
         for attr in attrs:
             identifier = attr.identifier()
 
-            if identifier == "GenerateInitFromJSON":
+            if (identifier == "GenerateInitFromJSON" or
+                identifier == "GenerateInit"):
                 if not attr.noArguments():
                     raise WebIDLError("[%s] must not have arguments" % identifier,
                                       [attr.location])
+                self.needsConversionFromJS = True
             elif (identifier == "GenerateConversionToJS" or
                   identifier == "GenerateToJSON"):
                 if not attr.noArguments():

@@ -8,12 +8,14 @@ dictionary DisplayNameOptions {
   sequence<DOMString> keys;
 };
 
+[GenerateInit]
 dictionary DisplayNameResult {
   DOMString locale;
   DOMString style;
   record<DOMString, DOMString> values;
 };
 
+[GenerateInit]
 dictionary LocaleInfo {
   DOMString locale;
   DOMString direction;

@@ -5,6 +5,7 @@
 /**
  * Options for nsINativeOSFileInternals::Read
  */
+[GenerateInit]
 dictionary NativeOSFileReadOptions
 {
   /**
@@ -23,6 +24,7 @@ dictionary NativeOSFileReadOptions
 /**
  * Options for nsINativeOSFileInternals::WriteAtomic
  */
+[GenerateInit]
 dictionary NativeOSFileWriteAtomicOptions
 {
   /**
