@@ -22,6 +22,7 @@ import {
 } from "../../selectors";
 
 import { setBreakpointPositions } from "./breakpointPositions";
+import { setSkipPausing } from "../pause/skipPausing";
 
 import { PROMISE } from "../utils/middleware/promise";
 import { recordEvent } from "../../utils/telemetry";
@@ -79,12 +80,13 @@ function clientRemoveBreakpoint(
 }
 
 export function enableBreakpoint(cx: Context, initialBreakpoint: Breakpoint) {
-  return async ({ dispatch, getState, client, sourceMaps }: ThunkArgs) => {
+  return ({ dispatch, getState, client, sourceMaps }: ThunkArgs) => {
     const breakpoint = getBreakpoint(getState(), initialBreakpoint.location);
     if (!breakpoint || !breakpoint.disabled) {
       return;
     }
 
+    dispatch(setSkipPausing(false));
     return dispatch({
       type: "SET_BREAKPOINT",
       cx,
@@ -158,6 +160,7 @@ export function addBreakpoint(
       return;
     }
 
+    dispatch(setSkipPausing(false));
     return dispatch({
       type: "SET_BREAKPOINT",
       cx,
@@ -186,6 +189,7 @@ export function removeBreakpoint(cx: Context, initialBreakpoint: Breakpoint) {
       return;
     }
 
+    dispatch(setSkipPausing(false));
     return dispatch({
       type: "REMOVE_BREAKPOINT",
       cx,
@@ -267,6 +271,7 @@ export function disableBreakpoint(cx: Context, initialBreakpoint: Breakpoint) {
       return;
     }
 
+    dispatch(setSkipPausing(false));
     return dispatch({
       type: "SET_BREAKPOINT",
       cx,

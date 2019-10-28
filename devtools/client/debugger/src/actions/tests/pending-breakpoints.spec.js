@@ -50,7 +50,7 @@ import { makePendingLocationId } from "../../utils/breakpoint";
 function mockClient(bpPos = {}) {
   return {
     ...mockCommandClient,
-
+    setSkipPausing: jest.fn(),
     getSourceActorBreakpointPositions: async () => bpPos,
     getSourceActorBreakableLines: async () => [],
   };
