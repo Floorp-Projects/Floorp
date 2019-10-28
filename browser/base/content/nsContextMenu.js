@@ -58,7 +58,6 @@ function openContextMenu(aMessage, aBrowser, aActor) {
 
   nsContextMenu.contentData = {
     context: data.context,
-    popupNodeSelectors: data.popupNodeSelectors,
     browser,
     actor,
     editFlags: data.editFlags,
@@ -267,12 +266,6 @@ class nsContextMenu {
     }
 
     this.csp = E10SUtils.deserializeCSP(context.csp);
-
-    // Remember the CSS selectors corresponding to clicked node. this.contentData
-    // can be null if the menu was triggered by tests in which case use an empty array.
-    this.targetSelectors = this.contentData
-      ? this.contentData.popupNodeSelectors
-      : [];
 
     if (this.contentData) {
       this.browser = this.contentData.browser;
@@ -1031,14 +1024,14 @@ class nsContextMenu {
   inspectNode() {
     return nsContextMenu.DevToolsShim.inspectNode(
       gBrowser.selectedTab,
-      this.targetSelectors
+      this.targetIdentifier
     );
   }
 
   inspectA11Y() {
     return nsContextMenu.DevToolsShim.inspectA11Y(
       gBrowser.selectedTab,
-      this.targetSelectors
+      this.targetIdentifier
     );
   }
 
