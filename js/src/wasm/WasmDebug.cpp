@@ -139,7 +139,7 @@ bool DebugState::incrementStepperCount(JSContext* cx, uint32_t funcIndex) {
   return true;
 }
 
-bool DebugState::decrementStepperCount(JSFreeOp* fop, uint32_t funcIndex) {
+void DebugState::decrementStepperCount(JSFreeOp* fop, uint32_t funcIndex) {
   const CodeRange& codeRange =
       codeRanges(Tier::Debug)[funcToCodeRangeIndex(funcIndex)];
   MOZ_ASSERT(codeRange.isFunction());
@@ -148,7 +148,7 @@ bool DebugState::decrementStepperCount(JSFreeOp* fop, uint32_t funcIndex) {
   StepperCounters::Ptr p = stepperCounters_.lookup(funcIndex);
   MOZ_ASSERT(p);
   if (--p->value()) {
-    return true;
+    return;
   }
 
   stepperCounters_.remove(p);
@@ -167,7 +167,6 @@ bool DebugState::decrementStepperCount(JSFreeOp* fop, uint32_t funcIndex) {
       toggleDebugTrap(offset, enabled);
     }
   }
-  return true;
 }
 
 bool DebugState::hasBreakpointTrapAtOffset(uint32_t offset) {

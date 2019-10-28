@@ -74,9 +74,10 @@ class DebugState {
 
   const Bytes& bytecode() const { return module_->debugBytecode(); }
 
-  bool getLineOffsets(size_t lineno, Vector<uint32_t>* offsets);
-  bool getAllColumnOffsets(Vector<ExprLoc>* offsets);
-  bool getOffsetLocation(uint32_t offset, size_t* lineno, size_t* column);
+  MOZ_MUST_USE bool getLineOffsets(size_t lineno, Vector<uint32_t>* offsets);
+  MOZ_MUST_USE bool getAllColumnOffsets(Vector<ExprLoc>* offsets);
+  MOZ_MUST_USE bool getOffsetLocation(uint32_t offset, size_t* lineno,
+                                      size_t* column);
 
   // The Code can track enter/leave frame events. Any such event triggers
   // debug trap. The enter/leave frame events enabled or disabled across
@@ -106,20 +107,23 @@ class DebugState {
   // the granularity of individual functions.
 
   bool stepModeEnabled(uint32_t funcIndex) const;
-  bool incrementStepperCount(JSContext* cx, uint32_t funcIndex);
-  bool decrementStepperCount(JSFreeOp* fop, uint32_t funcIndex);
+  MOZ_MUST_USE bool incrementStepperCount(JSContext* cx, uint32_t funcIndex);
+  void decrementStepperCount(JSFreeOp* fop, uint32_t funcIndex);
 
   // Stack inspection helpers.
 
-  bool debugGetLocalTypes(uint32_t funcIndex, ValTypeVector* locals,
-                          size_t* argsLength);
-  bool debugGetResultTypes(uint32_t funcIndex, ValTypeVector* results);
-  bool getGlobal(Instance& instance, uint32_t globalIndex,
-                 MutableHandleValue vp);
+  MOZ_MUST_USE bool debugGetLocalTypes(uint32_t funcIndex,
+                                       ValTypeVector* locals,
+                                       size_t* argsLength);
+  MOZ_MUST_USE bool debugGetResultTypes(uint32_t funcIndex,
+                                        ValTypeVector* results);
+  MOZ_MUST_USE bool getGlobal(Instance& instance, uint32_t globalIndex,
+                              MutableHandleValue vp);
 
   // Debug URL helpers.
 
-  bool getSourceMappingURL(JSContext* cx, MutableHandleString result) const;
+  MOZ_MUST_USE bool getSourceMappingURL(JSContext* cx,
+                                        MutableHandleString result) const;
 
   // Accessors for commonly used elements of linked structures.
 
