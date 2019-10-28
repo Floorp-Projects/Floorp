@@ -183,6 +183,53 @@ async function doTests(aWindow) {
   ok(container.scrollTop >= previousScrollTop - container.clientHeight,
      `${description} The document should not be scrolled up too much (got: ${container.scrollTop}, previous position: ${previousScrollTop}, scroll height: ${container.clientHeight})`);
 
+  // Shouldn't scroll to caret position after pagedown scrolls editing host.
+  body.innerHTML = '<div id="editor" contenteditable style="height: 300px; overflow: auto;"><div style="height: 1500px;">abc<br>def<br></div></div>';
+  editor = doc.getElementById("editor");
+  container = editor;
+  editor.focus();
+
+  description = "PageDown in scrollable editing host";
+  previousScrollTop = container.scrollTop;
+  await doPageDown();
+  ok(container.scrollTop > previousScrollTop,
+     `${description} #1: Should be scrolled down (got: ${container.scrollTop}, previous position: ${previousScrollTop})`);
+  previousScrollTop = container.scrollTop;
+  await doPageDown();
+  ok(container.scrollTop > previousScrollTop,
+     `${description} #2: should be scrolled down (got:${container.scrollTop}, previous position: ${previousScrollTop})`);
+  previousScrollTop = container.scrollTop;
+  await doPageDown();
+  ok(container.scrollTop > previousScrollTop,
+     `${description} #3: should be scrolled down (got:${container.scrollTop}, previous position: ${previousScrollTop})`);
+  await doPageUp();
+  ok(container.scrollTop < 300,
+     `PageUp in scrollable editing host after scrolled down 3 pages: should be scrolled up to show caret (got:${container.scrollTop}`);
+
+  // Shouldn't scroll to caret position after pagedown scrolls outside of editing host.
+  body.innerHTML = '<div id="editor" contenteditable style="height: 1500px">abc<br>def<br></div>';
+  editor = doc.getElementById("editor");
+  container = doc.documentElement;
+  editor.focus();
+  selection.collapse(editor.firstChild);
+
+  description = "PageDown in too high non-scrollable editing host";
+  previousScrollTop = container.scrollTop;
+  await doPageDown();
+  ok(container.scrollTop > previousScrollTop,
+     `${description} #1: Should be scrolled down (got: ${container.scrollTop}, previous position: ${previousScrollTop})`);
+  previousScrollTop = container.scrollTop;
+  await doPageDown();
+  ok(container.scrollTop > previousScrollTop,
+     `${description} #2: should be scrolled down (got:${container.scrollTop}, previous position: ${previousScrollTop})`);
+  previousScrollTop = container.scrollTop;
+  await doPageDown();
+  ok(container.scrollTop > previousScrollTop,
+     `${description} #3: should be scrolled down (got:${container.scrollTop}, previous position: ${previousScrollTop})`);
+  await doPageUp();
+  ok(container.scrollTop < 300,
+     `PageUp in too high non-scrollable editing host after scrolled down 3 pages: should be scrolled up to show caret (got:${container.scrollTop}`);
+
   aWindow.close();
   SimpleTest.finish();
 }
