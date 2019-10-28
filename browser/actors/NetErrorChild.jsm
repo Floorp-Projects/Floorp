@@ -38,10 +38,7 @@ class NetErrorChild extends ActorChild {
     switch (aEvent.type) {
       case "click":
         let elem = aEvent.originalTarget;
-        if (
-          elem.id == "viewCertificate" ||
-          elem.id == "exceptionDialogButton"
-        ) {
+        if (elem.id == "viewCertificate") {
           this.mm.sendAsyncMessage("Browser:CertExceptionError", {
             location: doc.location.href,
             elementId: elem.id,
