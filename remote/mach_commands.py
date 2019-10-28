@@ -251,7 +251,7 @@ class PuppeteerTest(MachCommandBase):
                      help="Path to Firefox binary.  Defaults to local build.")
     @CommandArgument("-z", "--headless",
                      action="store_true",
-                     help="Run browser in headless mode (default).")
+                     help="Run browser in headless mode.")
     @CommandArgument("--setpref",
                      action="append",
                      dest="extra_prefs",
