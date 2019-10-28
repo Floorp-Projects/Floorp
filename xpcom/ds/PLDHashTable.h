@@ -122,57 +122,57 @@ class Checker {
 
   void StartReadOp() {
     uint32_t oldState = mState++;  // this is an atomic increment
-    MOZ_ASSERT(IsIdle(oldState) || IsRead(oldState));
-    MOZ_ASSERT(oldState < kReadMax);  // check for overflow
+    MOZ_RELEASE_ASSERT(IsIdle(oldState) || IsRead(oldState));
+    MOZ_RELEASE_ASSERT(oldState < kReadMax);  // check for overflow
   }
 
   void EndReadOp() {
     uint32_t oldState = mState--;  // this is an atomic decrement
-    MOZ_ASSERT(IsRead(oldState));
+    MOZ_RELEASE_ASSERT(IsRead(oldState));
   }
 
   void StartWriteOp() {
-    MOZ_ASSERT(IsWritable());
+    MOZ_RELEASE_ASSERT(IsWritable());
     uint32_t oldState = mState.exchange(kWrite);
-    MOZ_ASSERT(IsIdle(oldState));
+    MOZ_RELEASE_ASSERT(IsIdle(oldState));
   }
 
   void EndWriteOp() {
     // Check again that the table is writable, in case it was marked as
     // non-writable just after the IsWritable() assertion in StartWriteOp()
     // occurred.
-    MOZ_ASSERT(IsWritable());
+    MOZ_RELEASE_ASSERT(IsWritable());
     uint32_t oldState = mState.exchange(kIdle);
-    MOZ_ASSERT(IsWrite(oldState));
+    MOZ_RELEASE_ASSERT(IsWrite(oldState));
   }
 
   void StartIteratorRemovalOp() {
     // When doing removals at the end of iteration, we go from Read1 state to
     // Write and then back.
-    MOZ_ASSERT(IsWritable());
+    MOZ_RELEASE_ASSERT(IsWritable());
     uint32_t oldState = mState.exchange(kWrite);
-    MOZ_ASSERT(IsRead1(oldState));
+    MOZ_RELEASE_ASSERT(IsRead1(oldState));
   }
 
   void EndIteratorRemovalOp() {
     // Check again that the table is writable, in case it was marked as
     // non-writable just after the IsWritable() assertion in
     // StartIteratorRemovalOp() occurred.
-    MOZ_ASSERT(IsWritable());
+    MOZ_RELEASE_ASSERT(IsWritable());
     uint32_t oldState = mState.exchange(kRead1);
-    MOZ_ASSERT(IsWrite(oldState));
+    MOZ_RELEASE_ASSERT(IsWrite(oldState));
   }
 
   void StartDestructorOp() {
     // A destructor op is like a write, but the table doesn't need to be
     // writable.
     uint32_t oldState = mState.exchange(kWrite);
-    MOZ_ASSERT(IsIdle(oldState));
+    MOZ_RELEASE_ASSERT(IsIdle(oldState));
   }
 
   void EndDestructorOp() {
     uint32_t oldState = mState.exchange(kIdle);
-    MOZ_ASSERT(IsWrite(oldState));
+    MOZ_RELEASE_ASSERT(IsWrite(oldState));
   }
 
  private:
