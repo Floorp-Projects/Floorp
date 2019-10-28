@@ -38,7 +38,6 @@
 #include "nsICycleCollectorListener.h"
 #include "nsIException.h"
 #include "nsIScriptError.h"
-#include "nsISimpleEnumerator.h"
 #include "nsPIDOMWindow.h"
 #include "nsGlobalWindow.h"
 #include "nsScriptError.h"
@@ -341,38 +340,27 @@ nsXPCComponents_Classes::NewEnumerate(nsIXPConnectWrappedNative* wrapper,
     return NS_ERROR_UNEXPECTED;
   }
 
-  nsCOMPtr<nsISimpleEnumerator> e;
-  if (NS_FAILED(compMgr->EnumerateContractIDs(getter_AddRefs(e))) || !e) {
+  nsTArray<nsCString> contractIDs;
+  if (NS_FAILED(compMgr->GetContractIDs(contractIDs))) {
     return NS_ERROR_UNEXPECTED;
   }
 
-  bool hasMore;
-  nsCOMPtr<nsISupports> isup;
-  while (NS_SUCCEEDED(e->HasMoreElements(&hasMore)) && hasMore &&
-         NS_SUCCEEDED(e->GetNext(getter_AddRefs(isup))) && isup) {
-    nsCOMPtr<nsISupportsCString> holder(do_QueryInterface(isup));
-    if (!holder) {
-      continue;
+  for (const auto& name : contractIDs) {
+    RootedString idstr(cx, JS_NewStringCopyN(cx, name.get(), name.Length()));
+    if (!idstr) {
+      *_retval = false;
+      return NS_OK;
     }
 
-    nsAutoCString name;
-    if (NS_SUCCEEDED(holder->GetData(name))) {
-      RootedString idstr(cx, JS_NewStringCopyN(cx, name.get(), name.Length()));
-      if (!idstr) {
-        *_retval = false;
-        return NS_OK;
-      }
+    RootedId id(cx);
+    if (!JS_StringToId(cx, idstr, &id)) {
+      *_retval = false;
+      return NS_OK;
+    }
 
-      RootedId id(cx);
-      if (!JS_StringToId(cx, idstr, &id)) {
-        *_retval = false;
-        return NS_OK;
-      }
-
-      if (!properties.append(id)) {
-        *_retval = false;
-        return NS_OK;
-      }
+    if (!properties.append(id)) {
+      *_retval = false;
+      return NS_OK;
     }
   }
 
