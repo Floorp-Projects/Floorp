@@ -14,9 +14,7 @@ const { DebuggerServer } = require("devtools/server/debugger-server");
 const { ActorPool } = require("devtools/server/actors/common");
 const { ThreadActor } = require("devtools/server/actors/thread");
 const { ObjectActor } = require("devtools/server/actors/object");
-const {
-  LongStringActor,
-} = require("devtools/server/actors/object/long-string");
+const { LongStringActor } = require("devtools/server/actors/string");
 const {
   createValueGrip,
   stringIsLong,
@@ -579,9 +577,9 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
    *         A LongStringActor object that wraps the given string.
    */
   longStringGrip: function(string, pool) {
-    const actor = new LongStringActor(string);
+    const actor = new LongStringActor(this.conn, string);
     pool.addActor(actor);
-    return actor.grip();
+    return actor.form();
   },
 
   /**
