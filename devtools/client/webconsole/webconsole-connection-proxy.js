@@ -68,7 +68,7 @@ class WebConsoleConnectionProxy {
     const connection = (async () => {
       this.client = this.target.client;
       this.webConsoleFront = await this.target.getFront("console");
-      this._addWebConsoleFrontEventListeners();
+
       await this._attachConsole();
 
       // There is no way to view response bodies from the Browser Console, so do
@@ -85,6 +85,8 @@ class WebConsoleConnectionProxy {
       const messages = cachedMessages.concat(networkMessages);
       messages.sort((a, b) => a.timeStamp - b.timeStamp);
       this.dispatchMessagesAdd(messages);
+
+      this._addWebConsoleFrontEventListeners();
 
       if (!this.webConsoleFront.hasNativeConsoleAPI) {
         await this.webConsoleUI.logWarningAboutReplacedAPI();
