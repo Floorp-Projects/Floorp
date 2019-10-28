@@ -511,9 +511,7 @@ class nsBaseHashtable
     nsTHashtable<EntryType>::SwapElements(aOther);
   }
 
-#ifdef DEBUG
   using nsTHashtable<EntryType>::MarkImmutable;
-#endif
 };
 
 //

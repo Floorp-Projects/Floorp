@@ -14471,13 +14471,9 @@ void VersionChangeTransaction::UpdateMetadata(nsresult aResult) {
           indexIter.Remove();
         }
       }
-#ifdef DEBUG
       metadata->mIndexes.MarkImmutable();
-#endif
     }
-#ifdef DEBUG
     info->mMetadata->mObjectStores.MarkImmutable();
-#endif
   } else {
     // Replace metadata pointers for all live databases.
     info->mMetadata = oldMetadata.forget();
@@ -18611,10 +18607,7 @@ nsresult DatabaseOperationBase::GetUniqueIndexTableForObjectStore(
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-#ifdef DEBUG
   aMaybeUniqueIndexTable.ref().MarkImmutable();
-#endif
-
   return NS_OK;
 }
 
@@ -24190,11 +24183,9 @@ bool ObjectStoreAddOrPutRequestOp::Init(TransactionBase* aTransaction) {
     mUniqueIndexTable.emplace();
   }
 
-#ifdef DEBUG
   if (mUniqueIndexTable.isSome()) {
     mUniqueIndexTable.ref().MarkImmutable();
   }
-#endif
 
   const nsTArray<FileAddInfo>& fileAddInfos = mParams.fileAddInfos();
 

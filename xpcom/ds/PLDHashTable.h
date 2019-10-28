@@ -23,6 +23,10 @@
 using PLDHashNumber = mozilla::HashNumber;
 static const uint32_t kPLDHashNumberBits = mozilla::kHashNumberBits;
 
+#ifdef DEBUG
+#define MOZ_HASH_TABLE_CHECKS_ENABLED 1
+#endif
+
 class PLDHashTable;
 struct PLDHashTableOps;
 
@@ -52,7 +56,7 @@ struct PLDHashEntryHdr {
   friend class PLDHashTable;
 };
 
-#ifdef DEBUG
+#ifdef MOZ_HASH_TABLE_CHECKS_ENABLED
 
 // This class does three kinds of checking:
 //
@@ -378,7 +382,7 @@ class PLDHashTable {
   uint32_t mEntryCount;               // Number of entries in table.
   uint32_t mRemovedCount;             // Removed entry sentinels in table.
 
-#ifdef DEBUG
+#ifdef MOZ_HASH_TABLE_CHECKS_ENABLED
   mutable Checker mChecker;
 #endif
 
@@ -515,12 +519,14 @@ class PLDHashTable {
   // Like ShallowSizeOfExcludingThis(), but includes sizeof(*this).
   size_t ShallowSizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
-#ifdef DEBUG
   // Mark a table as immutable for the remainder of its lifetime. This
   // changes the implementation from asserting one set of invariants to
   // asserting a different set.
-  void MarkImmutable();
+  void MarkImmutable() {
+#ifdef MOZ_HASH_TABLE_CHECKS_ENABLED
+    mChecker.SetNonWritable();
 #endif
+  }
 
   // If you use PLDHashEntryStub or a subclass of it as your entry struct, and
   // if your entries move via memcpy and clear via memset(0), you can use these
