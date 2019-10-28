@@ -194,12 +194,7 @@
 .computed-link {
   padding: 0 3px;
   cursor: pointer;
-  float: right;
-}
-
-/* Workaround until float: inline-end; is enabled by default */
-.computed-link:dir(rtl) {
-  float: left;
+  float: inline-end;
 }
 
 /* Take away these two :visited rules to get a core dumper     */
