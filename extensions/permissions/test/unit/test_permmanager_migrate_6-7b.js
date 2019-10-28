@@ -111,7 +111,7 @@ add_task(function test() {
   Services.obs.notifyObservers(null, "testonly-reload-permissions-from-disk");
 
   // Force initialization of the nsPermissionManager
-  for (let permission of Services.perms.enumerator) {
+  for (let permission of Services.perms.all) {
     let isExpected = false;
 
     expected.forEach((it, i) => {

@@ -34,7 +34,6 @@ interface nsIObserver;
 interface nsIPrincipal;
 interface mozIDOMWindow;
 interface nsIPermission;
-interface nsISimpleEnumerator;
 interface nsIRunnable;
 
 %{ C++
@@ -205,11 +204,10 @@ interface nsIPermissionManager : nsISupports
                                     in boolean exactHost);
 
   /**
-   * Allows enumeration of all stored permissions
-   * @return an nsISimpleEnumerator interface that allows access to
-   *         nsIPermission objects
+   * Returns all stored permissions.
+   * @return an array of nsIPermission objects
    */
-  readonly attribute nsISimpleEnumerator enumerator;
+  readonly attribute Array<nsIPermission> all;
 
   /**
    * Remove all permissions that will match the origin pattern.

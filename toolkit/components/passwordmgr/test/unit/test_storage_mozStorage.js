@@ -74,7 +74,7 @@ function checkStorageData(storage, ref_disabledHosts, ref_logins) {
 
 function getAllDisabledHostsFromPermissionManager() {
   let disabledHosts = [];
-  for (let perm of Services.perms.enumerator) {
+  for (let perm of Services.perms.all) {
     if (
       perm.type == PERMISSION_SAVE_LOGINS &&
       perm.capability == Services.perms.DENY_ACTION
