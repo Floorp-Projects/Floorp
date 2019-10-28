@@ -1401,7 +1401,7 @@ void SendRunnable::RunOnMainThread(ErrorResult& aRv) {
   } else {
     DocumentOrBlobOrArrayBufferViewOrArrayBufferOrFormDataOrURLSearchParamsOrUSVString&
         ref = payload.SetValue();
-    ref.SetAsUSVString().Rebind(mStringBody.Data(), mStringBody.Length());
+    ref.SetAsUSVString().ShareOrDependUpon(mStringBody);
   }
 
   // Send() has been already called, reset the proxy.

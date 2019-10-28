@@ -363,9 +363,8 @@ already_AddRefed<Promise> Cache::AddAll(
         return nullptr;
       }
     } else {
-      requestOrString.SetAsUSVString().Rebind(
-          aRequestList[i].GetAsUSVString().Data(),
-          aRequestList[i].GetAsUSVString().Length());
+      requestOrString.SetAsUSVString().ShareOrDependUpon(
+          aRequestList[i].GetAsUSVString());
     }
 
     RefPtr<Request> request =
