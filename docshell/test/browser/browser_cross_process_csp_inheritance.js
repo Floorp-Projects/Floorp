@@ -11,6 +11,8 @@ const TEST_URI = TEST_PATH + "file_cross_process_csp_inheritance.html";
 const DATA_URI =
   "data:text/html,<html>test-same-diff-process-csp-inhertiance</html>";
 
+const FISSION_ENABLED = SpecialPowers.useRemoteSubframes;
+
 function getCurrentPID(aBrowser) {
   return ContentTask.spawn(aBrowser, null, () => {
     return Services.appinfo.processID;
@@ -24,11 +26,18 @@ function getCurrentURI(aBrowser) {
   });
 }
 
-function verifyResult(aTestName, aBrowser, aDataURI, aPID, aSamePID) {
+function verifyResult(
+  aTestName,
+  aBrowser,
+  aDataURI,
+  aPID,
+  aSamePID,
+  aFissionEnabled
+) {
   return ContentTask.spawn(
     aBrowser,
-    { aTestName, aDataURI, aPID, aSamePID },
-    async function({ aTestName, aDataURI, aPID, aSamePID }) {
+    { aTestName, aDataURI, aPID, aSamePID, aFissionEnabled },
+    async function({ aTestName, aDataURI, aPID, aSamePID, aFissionEnabled }) {
       // sanity, to make sure the correct URI was loaded
       let channel = content.docShell.currentDocumentChannel;
       is(
@@ -41,6 +50,15 @@ function verifyResult(aTestName, aBrowser, aDataURI, aPID, aSamePID) {
       let pid = Services.appinfo.processID;
       if (aSamePID) {
         is(pid, aPID, aTestName + ": process ID needs to be identical");
+      } else if (aFissionEnabled) {
+        // TODO: Fission discards dom.noopener.newprocess.enabled and puts
+        // data: URIs in the same process. Unfortunately todo_isnot is not
+        // defined in that scope, hence we have to use a workaround.
+        todo(
+          false,
+          pid == aPID,
+          ": process ID needs to be different in fission"
+        );
       } else {
         isnot(pid, aPID, aTestName + ": process ID needs to be different");
       }
@@ -80,7 +98,8 @@ async function simulateCspInheritanceForNewTab(aTestName, aSamePID) {
       gBrowser.selectedBrowser,
       DATA_URI,
       pid,
-      aSamePID
+      aSamePID,
+      FISSION_ENABLED
     );
     await BrowserTestUtils.removeTab(tab);
   });
