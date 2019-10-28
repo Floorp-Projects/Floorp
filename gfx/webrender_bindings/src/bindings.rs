@@ -1150,6 +1150,7 @@ extern "C" {
         id: NativeSurfaceId,
         offset: &mut DeviceIntPoint,
         fbo_id: &mut u32,
+        dirty_rect: DeviceIntRect,
     );
     fn wr_compositor_unbind(compositor: *mut c_void);
     fn wr_compositor_begin_frame(compositor: *mut c_void);
@@ -1194,6 +1195,7 @@ impl Compositor for WrCompositor {
     fn bind(
         &mut self,
         id: NativeSurfaceId,
+        dirty_rect: DeviceIntRect,
     ) -> NativeSurfaceInfo {
         let mut surface_info = NativeSurfaceInfo {
             origin: DeviceIntPoint::zero(),
@@ -1206,6 +1208,7 @@ impl Compositor for WrCompositor {
                 id,
                 &mut surface_info.origin,
                 &mut surface_info.fbo_id,
+                dirty_rect,
             );
         }
 

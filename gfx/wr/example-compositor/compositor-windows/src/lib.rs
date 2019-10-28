@@ -45,6 +45,10 @@ extern {
         id: u64,
         x_offset: &mut i32,
         y_offset: &mut i32,
+        dirty_x0: i32,
+        dirty_y0: i32,
+        dirty_width: i32,
+        dirty_height: i32,
     );
     fn com_dc_unbind_surface(window: *mut Window);
 
@@ -119,6 +123,10 @@ pub fn destroy_surface(
 pub fn bind_surface(
     window: *mut Window,
     id: u64,
+    dirty_x0: i32,
+    dirty_y0: i32,
+    dirty_width: i32,
+    dirty_height: i32,
 ) -> (i32, i32) {
     unsafe {
         let mut x_offset = 0;
@@ -129,6 +137,10 @@ pub fn bind_surface(
             id,
             &mut x_offset,
             &mut y_offset,
+            dirty_x0,
+            dirty_y0,
+            dirty_width,
+            dirty_height,
         );
 
         (x_offset, y_offset)
