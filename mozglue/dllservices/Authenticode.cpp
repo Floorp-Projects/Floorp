@@ -79,7 +79,7 @@ static const DWORD kEncodingTypes = X509_ASN_ENCODING | PKCS_7_ASN_ENCODING;
 
 class SignedBinary final {
  public:
-  explicit SignedBinary(const wchar_t* aFilePath);
+  SignedBinary(const wchar_t* aFilePath, mozilla::AuthenticodeFlags aFlags);
 
   explicit operator bool() const { return mCertStore && mCryptMsg && mCertCtx; }
 
@@ -99,14 +99,16 @@ class SignedBinary final {
   enum class TrustSource { eNone, eEmbedded, eCatalog };
 
  private:
+  const mozilla::AuthenticodeFlags mFlags;
   TrustSource mTrustSource;
   CertStoreUniquePtr mCertStore;
   CryptMsgUniquePtr mCryptMsg;
   CertContextUniquePtr mCertCtx;
 };
 
-SignedBinary::SignedBinary(const wchar_t* aFilePath)
-    : mTrustSource(TrustSource::eNone) {
+SignedBinary::SignedBinary(const wchar_t* aFilePath,
+                           mozilla::AuthenticodeFlags aFlags)
+    : mFlags(aFlags), mTrustSource(TrustSource::eNone) {
   if (!VerifySignature(aFilePath)) {
     return;
   }
@@ -182,16 +184,20 @@ bool SignedBinary::VerifySignatureInternal(WINTRUST_DATA& aTrustData) {
 
 bool SignedBinary::VerifySignature(const wchar_t* aFilePath) {
   // First, try the binary itself
-  WINTRUST_FILE_INFO fileInfo = {sizeof(fileInfo)};
-  fileInfo.pcwszFilePath = aFilePath;
-
-  WINTRUST_DATA trustData = {sizeof(trustData)};
-  trustData.dwUnionChoice = WTD_CHOICE_FILE;
-  trustData.pFile = &fileInfo;
-
-  if (VerifySignatureInternal(trustData)) {
+  if (QueryObject(aFilePath)) {
     mTrustSource = TrustSource::eEmbedded;
-    return QueryObject(aFilePath);
+    if (mFlags & mozilla::AuthenticodeFlags::SkipTrustVerification) {
+      return true;
+    }
+
+    WINTRUST_FILE_INFO fileInfo = {sizeof(fileInfo)};
+    fileInfo.pcwszFilePath = aFilePath;
+
+    WINTRUST_DATA trustData = {sizeof(trustData)};
+    trustData.dwUnionChoice = WTD_CHOICE_FILE;
+    trustData.pFile = &fileInfo;
+
+    return VerifySignatureInternal(trustData);
   }
 
   // We didn't find anything in the binary, so now try a catalog file.
@@ -334,6 +340,16 @@ bool SignedBinary::VerifySignature(const wchar_t* aFilePath) {
     return false;
   }
 
+  if (!QueryObject(catInfo.wszCatalogFile)) {
+    return false;
+  }
+
+  mTrustSource = TrustSource::eCatalog;
+
+  if (mFlags & mozilla::AuthenticodeFlags::SkipTrustVerification) {
+    return true;
+  }
+
   // WINTRUST_CATALOG_INFO::pcwszMemberTag is commonly set to the string
   // representation of the file hash, so we build that here.
 
@@ -366,15 +382,11 @@ bool SignedBinary::VerifySignature(const wchar_t* aFilePath) {
     wtCatInfo.hCatAdmin = rawCatAdmin;
   }
 
+  WINTRUST_DATA trustData = {sizeof(trustData)};
   trustData.dwUnionChoice = WTD_CHOICE_CATALOG;
   trustData.pCatalog = &wtCatInfo;
 
-  if (VerifySignatureInternal(trustData)) {
-    mTrustSource = TrustSource::eCatalog;
-    return QueryObject(catInfo.wszCatalogFile);
-  }
-
-  return false;
+  return VerifySignatureInternal(trustData);
 }
 
 mozilla::UniquePtr<wchar_t[]> SignedBinary::GetOrgName() {
@@ -400,12 +412,13 @@ namespace mozilla {
 class AuthenticodeImpl : public Authenticode {
  public:
   virtual UniquePtr<wchar_t[]> GetBinaryOrgName(
-      const wchar_t* aFilePath) override;
+      const wchar_t* aFilePath,
+      AuthenticodeFlags aFlags = AuthenticodeFlags::Default) override;
 };
 
 UniquePtr<wchar_t[]> AuthenticodeImpl::GetBinaryOrgName(
-    const wchar_t* aFilePath) {
-  SignedBinary bin(aFilePath);
+    const wchar_t* aFilePath, AuthenticodeFlags aFlags) {
+  SignedBinary bin(aFilePath, aFlags);
   if (!bin) {
     return nullptr;
   }
