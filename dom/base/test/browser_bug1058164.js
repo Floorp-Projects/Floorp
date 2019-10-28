@@ -55,26 +55,26 @@ function addContentEventListenerWithMessageManager(
   // |browser|.
 
   /* eslint-disable no-eval */
-  function frameScript(id, eventName, checkFnSource) {
-    let checkFn;
-    if (checkFnSource) {
-      checkFn = eval(`(() => (${unescape(checkFnSource)}))()`);
+  function frameScript(innerId, innerEventName, innerCheckFnSource) {
+    let innerCheckFn;
+    if (innerCheckFnSource) {
+      innerCheckFn = eval(`(() => (${unescape(innerCheckFnSource)}))()`);
     }
 
-    function listener(event) {
-      if (checkFn && !checkFn(event)) {
+    function innerListener(event) {
+      if (innerCheckFn && !innerCheckFn(event)) {
         return;
       }
-      sendAsyncMessage("ContentEventListener:Run", id);
+      sendAsyncMessage("ContentEventListener:Run", innerId);
     }
     function removeListener(msg) {
-      if (msg.data == id) {
+      if (msg.data == innerId) {
         removeMessageListener("ContentEventListener:Remove", removeListener);
-        removeEventListener(eventName, listener);
+        removeEventListener(innerEventName, innerListener);
       }
     }
     addMessageListener("ContentEventListener:Remove", removeListener);
-    addEventListener(eventName, listener);
+    addEventListener(innerEventName, innerListener);
   }
   /* eslint-enable no-eval */
 
