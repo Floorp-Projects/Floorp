@@ -11,9 +11,13 @@ function handleRequest(request, response) {
   }
   response.processAsync();
   timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-  timer.init(() => {
-    response.setHeader("Content-Type", "text/html", false);
-    response.write("<body>This was the slow load. You should never see this.</body>");
-    response.finish();
-  }, DELAY_MS, Ci.nsITimer.TYPE_ONE_SHOT);
+  timer.init(
+    () => {
+      response.setHeader("Content-Type", "text/html", false);
+      response.write("<body>This is a slow loading page.</body>");
+      response.finish();
+    },
+    DELAY_MS,
+    Ci.nsITimer.TYPE_ONE_SHOT
+  );
 }
