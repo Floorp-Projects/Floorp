@@ -108,17 +108,20 @@ bool AddonManagerWebAPI::IsAPIEnabled(JSContext* aCx, JSObject* aGlobal) {
     }
 
     // Checks whether there is a parent frame of the same type. This won't cross
-    // mozbrowser or chrome boundaries.
+    // mozbrowser or chrome or fission/process boundaries.
     nsCOMPtr<nsIDocShellTreeItem> parent;
     nsresult rv = docShell->GetInProcessSameTypeParent(getter_AddRefs(parent));
     if (NS_FAILED(rv)) {
       return false;
     }
 
+    // No parent means we've hit a mozbrowser or chrome or process boundary.
     if (!parent) {
-      // No parent means we've hit a mozbrowser or chrome boundary so allow
-      // access to the API.
-      return true;
+      // With Fission, a cross-origin iframe has an out-of-process parent, but
+      // DocShell knows nothing about it. We need to ask BrowsingContext here,
+      // and only allow API access if AMO is actually at the top, not framed
+      // by evilleagueofevil.com.
+      return docShell->GetBrowsingContext()->IsTopContent();
     }
 
     Document* doc = win->GetDoc();
