@@ -319,10 +319,8 @@ void TelemetryOrigin::InitializeGlobalState() {
 
   // This map shouldn't change at runtime, so make debug builds complain
   // if it tries.
-#ifdef DEBUG
   gOriginToIndexMap->MarkImmutable();
   gHashToIndexMap->MarkImmutable();
-#endif  // DEBUG
 
   gInitDone = true;
 }
