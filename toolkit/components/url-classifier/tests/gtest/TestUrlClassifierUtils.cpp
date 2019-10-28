@@ -5,12 +5,13 @@
 #include <ctype.h>
 #include <stdio.h>
 
-#include "gtest/gtest.h"
 #include <mozilla/RefPtr.h>
 #include "nsEscape.h"
 #include "nsString.h"
 #include "nsUrlClassifierUtils.h"
 #include "stdlib.h"
+
+#include "Common.h"
 
 static char int_to_hex_digit(int32_t i) {
   NS_ASSERTION((i >= 0) && (i <= 15), "int too big in int_to_hex_digit");
