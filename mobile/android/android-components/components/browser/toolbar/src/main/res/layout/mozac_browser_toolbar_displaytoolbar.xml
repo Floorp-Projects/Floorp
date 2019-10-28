@@ -81,6 +81,7 @@
             android:scaleType="center"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toEndOf="@+id/mozac_browser_toolbar_separator"
+            android:contentDescription="@string/mozac_browser_toolbar_content_description_site_info"
             android:src="@drawable/mozac_ic_site_security" />
 
         <!-- URL & Title -->

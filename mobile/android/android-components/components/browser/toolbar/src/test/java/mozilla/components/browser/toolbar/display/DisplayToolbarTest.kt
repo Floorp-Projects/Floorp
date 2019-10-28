@@ -618,6 +618,16 @@ class DisplayToolbarTest {
     }
 
     @Test
+    fun `Security icon has proper content description`() {
+        val (_, displayToolbar) = createDisplayToolbar()
+        val siteSecurityIconView = displayToolbar.views.securityIndicator
+
+        assertNotNull(siteSecurityIconView.contentDescription)
+        assertEquals(testContext.getString(R.string.mozac_browser_toolbar_content_description_site_info),
+            siteSecurityIconView.contentDescription)
+    }
+
+    @Test
     fun `Backgrounding the app dismisses menu if already open`() {
         val (_, displayToolbar) = createDisplayToolbar()
         val menuView = displayToolbar.views.menu
