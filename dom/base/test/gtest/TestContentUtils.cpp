@@ -11,6 +11,56 @@
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/dom/SimpleGlobalObject.h"
 
+struct IsURIInListMatch {
+  nsLiteralCString pattern;
+  bool firstMatch, secondMatch;
+};
+
+TEST(DOM_Base_ContentUtils, IsURIInList)
+{
+  nsCOMPtr<nsIURI> uri, subURI;
+  nsresult rv =
+      NS_NewURI(getter_AddRefs(uri),
+                NS_LITERAL_CSTRING("https://example.com/path/favicon.ico"));
+  ASSERT_TRUE(rv == NS_OK);
+
+  rv = NS_NewURI(getter_AddRefs(subURI),
+                 NS_LITERAL_CSTRING("http://sub.example.com/favicon.ico?"));
+  ASSERT_TRUE(rv == NS_OK);
+
+  static constexpr IsURIInListMatch patterns[] = {
+      {NS_LITERAL_CSTRING("bar.com,*.example.com,example.com,foo.com"), true,
+       true},
+      {NS_LITERAL_CSTRING("bar.com,example.com,*.example.com,foo.com"), true,
+       true},
+      {NS_LITERAL_CSTRING("*.example.com,example.com,foo.com"), true, true},
+      {NS_LITERAL_CSTRING("example.com,*.example.com,foo.com"), true, true},
+      {NS_LITERAL_CSTRING("*.example.com,example.com"), true, true},
+      {NS_LITERAL_CSTRING("example.com,*.example.com"), true, true},
+      {NS_LITERAL_CSTRING("*.example.com/,example.com/"), true, true},
+      {NS_LITERAL_CSTRING("example.com/,*.example.com/"), true, true},
+      {NS_LITERAL_CSTRING("*.example.com/pa,example.com/pa"), false, false},
+      {NS_LITERAL_CSTRING("example.com/pa,*.example.com/pa"), false, false},
+      {NS_LITERAL_CSTRING("*.example.com/pa/,example.com/pa/"), false, false},
+      {NS_LITERAL_CSTRING("example.com/pa/,*.example.com/pa/"), false, false},
+      {NS_LITERAL_CSTRING("*.example.com/path,example.com/path"), true, false},
+      {NS_LITERAL_CSTRING("example.com/path,*.example.com/path"), true, false},
+      {NS_LITERAL_CSTRING("*.example.com/favicon.ico"), false, true},
+      {NS_LITERAL_CSTRING("*.example.com"), false, true},
+      {NS_LITERAL_CSTRING("example.com"), true, false},
+      {NS_LITERAL_CSTRING("foo.com"), false, false},
+      {NS_LITERAL_CSTRING("*.foo.com"), false, false},
+  };
+
+  for (auto& entry : patterns) {
+    bool result = nsContentUtils::IsURIInList(uri, entry.pattern);
+    ASSERT_EQ(result, entry.firstMatch) << "Matching " << entry.pattern;
+
+    result = nsContentUtils::IsURIInList(subURI, entry.pattern);
+    ASSERT_EQ(result, entry.secondMatch) << "Matching " << entry.pattern;
+  }
+}
+
 TEST(DOM_Base_ContentUtils, StringifyJSON_EmptyValue)
 {
   JS::RootedObject globalObject(
