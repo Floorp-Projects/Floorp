@@ -1717,29 +1717,25 @@ already_AddRefed<nsIScriptGlobalObject>
 EventListenerManager::GetScriptGlobalAndDocument(Document** aDoc) {
   nsCOMPtr<nsINode> node(do_QueryInterface(mTarget));
   nsCOMPtr<Document> doc;
-  nsCOMPtr<nsIScriptGlobalObject> global;
+  nsCOMPtr<nsPIDOMWindowInner> win;
   if (node) {
     // Try to get context from doc
-    // XXX sXBL/XBL2 issue -- do we really want the owner here?  What
-    // if that's the XBL document?
     doc = node->OwnerDoc();
     if (doc->IsLoadedAsData()) {
       return nullptr;
     }
 
-    // We want to allow compiling an event handler even in an unloaded
-    // document, so use GetScopeObject here, not GetScriptHandlingObject.
-    global = do_QueryInterface(doc->GetScopeObject());
-  } else {
-    if (nsCOMPtr<nsPIDOMWindowInner> win = GetTargetAsInnerWindow()) {
-      doc = win->GetExtantDoc();
-      global = do_QueryInterface(win);
-    } else {
-      global = do_QueryInterface(mTarget);
-    }
+    win = do_QueryInterface(doc->GetScopeObject());
+  } else if ((win = GetTargetAsInnerWindow())) {
+    doc = win->GetExtantDoc();
+  }
+
+  if (!win || !win->IsCurrentInnerWindow()) {
+    return nullptr;
   }
 
   doc.forget(aDoc);
+  nsCOMPtr<nsIScriptGlobalObject> global = do_QueryInterface(win);
   return global.forget();
 }
 

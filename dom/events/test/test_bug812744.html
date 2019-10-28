@@ -26,8 +26,7 @@ addLoadEvent(function() {
   var el = f.contentDocument.documentElement;
   f.onload = function() {
     el.setAttribute("onmouseleave", "(void 0)");
-    is(el.onmouseleave.toString(), "function onmouseleave(event) {\n(void 0)\n}",
-       "Should have a function here");
+    is(el.onmouseleave, null, "Should not have a function here");
     SimpleTest.finish();
   };
   f.src = "http://www.example.com/"
