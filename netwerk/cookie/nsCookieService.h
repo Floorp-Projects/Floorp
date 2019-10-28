@@ -67,7 +67,7 @@ using mozilla::net::nsCookieKey;
 class nsCookieEntry : public nsCookieKey {
  public:
   // Hash methods
-  typedef nsTArray<RefPtr<nsCookie> > ArrayType;
+  typedef nsTArray<RefPtr<nsCookie>> ArrayType;
   typedef ArrayType::index_type IndexType;
 
   explicit nsCookieEntry(KeyTypePointer aKey) : nsCookieKey(aKey) {}
@@ -331,7 +331,7 @@ class nsCookieService final : public nsICookieService,
 
   nsresult GetCookiesWithOriginAttributes(
       const mozilla::OriginAttributesPattern& aPattern,
-      const nsCString& aBaseDomain, nsISimpleEnumerator** aEnumerator);
+      const nsCString& aBaseDomain, nsTArray<RefPtr<nsICookie>>& aResult);
   nsresult RemoveCookiesWithOriginAttributes(
       const mozilla::OriginAttributesPattern& aPattern,
       const nsCString& aBaseDomain);
