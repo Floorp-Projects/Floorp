@@ -679,25 +679,39 @@ DebuggerFrameImplementation DebuggerFrame::getImplementation(
 /* static */
 bool DebuggerFrame::setOnStepHandler(JSContext* cx, HandleDebuggerFrame frame,
                                      OnStepHandler* handler) {
-  MOZ_ASSERT(frame->isLive());
-
   OnStepHandler* prior = frame->onStepHandler();
   if (handler == prior) {
     return true;
   }
 
   JSFreeOp* fop = cx->defaultFreeOp();
-  AbstractFramePtr referent = DebuggerFrame::getReferent(frame);
+  if (frame->isLive()) {
+    AbstractFramePtr referent = DebuggerFrame::getReferent(frame);
 
-  // Adjust execution observability and step counts on whatever code (JS or
-  // Wasm) this frame is running.
-  if (handler) {
-    if (!frame->maybeIncrementStepperCounter(cx, referent)) {
-      return false;
+    // Adjust execution observability and step counts on whatever code (JS or
+    // Wasm) this frame is running.
+    if (handler) {
+      if (!frame->maybeIncrementStepperCounter(cx, referent)) {
+        return false;
+      }
+    } else {
+      frame->maybeDecrementStepperCounter(cx->runtime()->defaultFreeOp(),
+                                          referent);
+    }
+  } else if (frame->hasGenerator()) {
+    RootedScript script(cx, frame->generatorInfo()->generatorScript());
+
+    if (handler) {
+      if (!frame->maybeIncrementStepperCounter(cx, script)) {
+        return false;
+      }
+    } else {
+      frame->maybeDecrementStepperCounter(cx->runtime()->defaultFreeOp(),
+                                          script);
     }
   } else {
-    frame->maybeDecrementStepperCounter(cx->runtime()->defaultFreeOp(),
-                                        referent);
+    // If the frame is entirely dead, we still allow setting the onStep
+    // handler, but it has no effect.
   }
 
   // Now that the stepper counts and observability are set correctly, we can
@@ -1215,8 +1229,10 @@ bool DebuggerFrame::CallData::ToNative(JSContext* cx, unsigned argc,
                                        Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
-  // All accessors/methods require a live frame, except for the live getter.
-  bool checkLive = MyMethod != &CallData::liveGetter;
+  // These methods do not require liveness.
+  bool checkLive = MyMethod != &CallData::liveGetter &&
+                   MyMethod != &CallData::onStepGetter &&
+                   MyMethod != &CallData::onStepSetter;
 
   RootedDebuggerFrame frame(cx,
                             DebuggerFrame::check(cx, args.thisv(), checkLive));
