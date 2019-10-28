@@ -137,9 +137,8 @@ AST_MATCHER(BinaryOperator, isInWhitelistForNaNExpr) {
   const char *whitelist[] = {"SkScalar.h", "json_writer.cpp", "State.cpp"};
 
   SourceLocation Loc = Node.getOperatorLoc();
-  auto &SourceManager = Finder->getASTContext().getSourceManager();
-  SmallString<1024> FileName = SourceManager.getFilename(Loc);
-
+  StringRef FileName =
+      getFilename(Finder->getASTContext().getSourceManager(), Loc);
   for (auto itr = std::begin(whitelist); itr != std::end(whitelist); itr++) {
     if (llvm::sys::path::rbegin(FileName)->equals(*itr)) {
       return true;
