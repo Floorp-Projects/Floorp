@@ -25,7 +25,7 @@ use webrender::{
     BinaryRecorder, Compositor, DebugFlags, Device, ExternalImage, ExternalImageHandler, ExternalImageSource,
     NativeSurfaceId, PipelineInfo, ProfilerHooks, RecordedFrameHandle, Renderer, RendererOptions, RendererStats,
     SceneBuilderHooks, ShaderPrecacheFlags, Shaders, ThreadListener, UploadMethod, VertexUsageHint,
-    WrShaders, set_profiler_hooks,
+    WrShaders, set_profiler_hooks, CompositorConfig
 };
 use thread_profiler::register_thread_with_profiler;
 use moz2d_renderer::Moz2dBlobImageHandler;
@@ -1319,10 +1319,15 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
         ColorF::new(0.0, 0.0, 0.0, 0.0)
     };
 
-    let native_compositor : Option<Box<dyn Compositor>> = if compositor != ptr::null_mut() {
-        Some(Box::new(WrCompositor(compositor)))
+    let compositor_config = if compositor != ptr::null_mut() {
+        CompositorConfig::Native {
+            max_update_rects: 0,
+            compositor: Box::new(WrCompositor(compositor)),
+        }
     } else {
-        None
+        CompositorConfig::Draw {
+            max_partial_present_rects: 0,
+        }
     };
 
     let opts = RendererOptions {
@@ -1359,8 +1364,8 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
         enable_picture_caching,
         allow_pixel_local_storage_support: false,
         start_debug_server,
-        native_compositor,
         surface_is_y_flipped,
+        compositor_config,
         ..Default::default()
     };
 

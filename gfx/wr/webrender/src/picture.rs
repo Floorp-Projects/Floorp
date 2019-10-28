@@ -68,7 +68,7 @@ use crate::clip::{ClipStore, ClipChainInstance, ClipDataHandle, ClipChainId};
 use crate::clip_scroll_tree::{ROOT_SPATIAL_NODE_INDEX,
     ClipScrollTree, CoordinateSpaceMapping, SpatialNodeIndex, VisibleFace, CoordinateSystemId
 };
-use crate::composite::{CompositeMode, CompositeState, NativeSurfaceId};
+use crate::composite::{CompositorKind, CompositeState, NativeSurfaceId};
 use crate::debug_colors;
 use euclid::{vec3, Point2D, Scale, Size2D, Vector2D, Rect};
 use euclid::approxeq::ApproxEq;
@@ -740,14 +740,21 @@ impl Tile {
             return false;
         }
 
-        // If we are using native composite mode, we don't currently support
-        // dirty rects and must update the entire tile. A simple way to
-        // achieve this is to never consider splitting the dirty rect!
-        // TODO(gw): Support dirty rect updates for native compositor mode
-        //           on operating systems that support this.
+        // Check if the selected composite mode supports dirty rect updates. For Draw composite
+        // mode, we can always update the content with smaller dirty rects. For native composite
+        // mode, we can only use dirty rects if the compositor supports partial surface updates.
+        let (supports_dirty_rects, supports_simple_prims) = match state.composite_state.compositor_kind {
+            CompositorKind::Draw { .. } => {
+                (true, true)
+            }
+            CompositorKind::Native { max_update_rects, .. } => {
+                (max_update_rects > 0, false)
+            }
+        };
+
         // TODO(gw): Consider using smaller tiles and/or tile splits for
         //           native compositors that don't support dirty rects.
-        if state.composite_state.composite_mode == CompositeMode::Draw {
+        if supports_dirty_rects {
             // For small tiles, only allow splitting once, since otherwise we
             // end up splitting into tiny dirty rects that aren't saving much
             // in the way of pixel work.
@@ -773,7 +780,7 @@ impl Tile {
         let is_simple_prim =
             self.current_descriptor.prims.len() == 1 &&
             self.is_opaque &&
-            state.composite_state.composite_mode == CompositeMode::Draw;
+            supports_simple_prims;
 
         // Set up the backing surface for this tile.
         let surface = if is_simple_prim {
@@ -804,15 +811,15 @@ impl Tile {
                     // involves drawing to a texture. Create the correct surface
                     // descriptor depending on the compositing mode that will read
                     // the output.
-                    let descriptor = match state.composite_state.composite_mode {
-                        CompositeMode::Draw => {
+                    let descriptor = match state.composite_state.compositor_kind {
+                        CompositorKind::Draw { .. } => {
                             // For a texture cache entry, create an invalid handle that
                             // will be allocated when update_picture_cache is called.
                             SurfaceTextureDescriptor::TextureCache {
                                 handle: TextureCacheHandle::invalid(),
                             }
                         }
-                        CompositeMode::Native => {
+                        CompositorKind::Native { .. } => {
                             // For a new native OS surface, we need to queue up creation
                             // of a native surface to be passed to the compositor interface.
                             state.composite_state.create_surface(
@@ -4657,7 +4664,7 @@ impl CompositeState {
         // simple composite mode, the texture cache handle will expire and be collected
         // by the texture cache. For native compositor mode, we need to explicitly
         // invoke a callback to the client to destroy that surface.
-        if let CompositeMode::Native = self.composite_mode {
+        if let CompositorKind::Native { .. } = self.compositor_kind {
             for tile in tiles_iter {
                 // Only destroy native surfaces that have been allocated. It's
                 // possible for display port tiles to be created that never

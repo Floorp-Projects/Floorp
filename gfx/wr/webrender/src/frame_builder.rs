@@ -8,7 +8,7 @@ use api::units::*;
 use crate::batch::{BatchBuilder, AlphaBatchBuilder, AlphaBatchContainer};
 use crate::clip::{ClipStore, ClipChainStack};
 use crate::clip_scroll_tree::{ClipScrollTree, ROOT_SPATIAL_NODE_INDEX, SpatialNodeIndex};
-use crate::composite::{CompositeMode, CompositeState};
+use crate::composite::{CompositorKind, CompositeState};
 use crate::debug_render::DebugItem;
 use crate::gpu_cache::{GpuCache, GpuCacheHandle};
 use crate::gpu_types::{PrimitiveHeaders, TransformPalette, UvRectKind, ZBufferIdGenerator};
@@ -64,7 +64,7 @@ pub struct FrameBuilderConfig {
     pub advanced_blend_is_coherent: bool,
     pub batch_lookback_count: usize,
     pub background_color: Option<ColorF>,
-    pub composite_mode: CompositeMode,
+    pub compositor_kind: CompositorKind,
 }
 
 /// A set of common / global resources that are retained between
@@ -479,7 +479,7 @@ impl FrameBuilder {
 
         let output_size = scene.output_rect.size.to_i32();
         let screen_world_rect = (scene.output_rect.to_f32() / global_device_pixel_scale).round_out();
-        let mut composite_state = CompositeState::new(scene.config.composite_mode);
+        let mut composite_state = CompositeState::new(scene.config.compositor_kind);
 
         let main_render_task_id = self.build_layer_screen_rects_and_cull_layers(
             scene,

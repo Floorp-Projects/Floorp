@@ -143,16 +143,21 @@ fn main() {
         enable_compositor,
     );
     let debug_flags = DebugFlags::empty();
-    let native_compositor: Option<Box<dyn webrender::Compositor>> = if enable_compositor {
-        Some(Box::new(DirectCompositeInterface::new(window)))
+    let compositor_config = if enable_compositor {
+        webrender::CompositorConfig::Native {
+            max_update_rects: 0,
+            compositor: Box::new(DirectCompositeInterface::new(window)),
+        }
     } else {
-        None
+        webrender::CompositorConfig::Draw {
+            max_partial_present_rects: 0,
+        }
     };
     let opts = webrender::RendererOptions {
         clear_color: Some(ColorF::new(1.0, 1.0, 1.0, 1.0)),
         debug_flags,
         enable_picture_caching: true,
-        native_compositor,
+        compositor_config,
         ..webrender::RendererOptions::default()
     };
     let (tx, rx) = mpsc::channel();

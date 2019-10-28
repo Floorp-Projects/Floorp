@@ -58,17 +58,65 @@ pub struct CompositeTile {
     pub z_id: ZBufferId,
 }
 
-/// Defines what code path WR is using to composite picture cache tiles.
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
-#[derive(Debug, Copy, Clone, PartialEq)]
-pub enum CompositeMode {
+/// Public interface specified in `RendererOptions` that configures
+/// how WR compositing will operate.
+pub enum CompositorConfig {
     /// Let WR draw tiles via normal batching. This requires no special OS support.
-    Draw,
+    Draw {
+        /// If this is zero, a full screen present occurs at the end of the
+        /// frame. This is the simplest and default mode. If this is non-zero,
+        /// then the operating system supports a form of 'partial present' where
+        /// only dirty regions of the framebuffer need to be updated.
+        max_partial_present_rects: usize,
+    },
     /// Use a native OS compositor to draw tiles. This requires clients to implement
     /// the Compositor trait, but can be significantly more power efficient on operating
     /// systems that support it.
-    Native,
+    Native {
+        /// The maximum number of dirty rects that can be provided per compositor
+        /// surface update. If this is zero, the entire compositor surface for
+        /// a given tile will be drawn if it's dirty.
+        max_update_rects: usize,
+        /// A client provided interface to a native / OS compositor.
+        compositor: Box<dyn Compositor>,
+    }
+}
+
+impl Default for CompositorConfig {
+    /// Default compositor config is full present without partial present.
+    fn default() -> Self {
+        CompositorConfig::Draw {
+            max_partial_present_rects: 0,
+        }
+    }
+}
+
+/// This is a representation of `CompositorConfig` without the `Compositor` trait
+/// present. This allows it to be freely copied to other threads, such as the render
+/// backend where the frame builder can access it.
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub enum CompositorKind {
+    /// WR handles compositing via drawing.
+    Draw {
+        /// Partial present support.
+        max_partial_present_rects: usize,
+    },
+    /// Native OS compositor.
+    Native {
+        /// Maximum dirty rects per compositor surface.
+        max_update_rects: usize,
+    },
+}
+
+impl Default for CompositorKind {
+    /// Default compositor config is full present without partial present.
+    fn default() -> Self {
+        CompositorKind::Draw {
+            max_partial_present_rects: 0,
+        }
+    }
 }
 
 /// The list of tiles to be drawn this frame
@@ -89,14 +137,14 @@ pub struct CompositeState {
     /// List of OS native surface create / destroy operations to
     /// apply when render occurs.
     pub native_surface_updates: Vec<NativeSurfaceOperation>,
-    /// The current mode for compositing picture cache tiles (e.g. drawn by WR, or OS compositor)
-    pub composite_mode: CompositeMode,
+    /// The kind of compositor for picture cache tiles (e.g. drawn by WR, or OS compositor)
+    pub compositor_kind: CompositorKind,
 }
 
 impl CompositeState {
     /// Construct a new state for compositing picture tiles. This is created
     /// during each frame construction and passed to the renderer.
-    pub fn new(composite_mode: CompositeMode) -> Self {
+    pub fn new(compositor_kind: CompositorKind) -> Self {
         CompositeState {
             opaque_tiles: Vec::new(),
             alpha_tiles: Vec::new(),
@@ -104,7 +152,7 @@ impl CompositeState {
             z_generator: ZBufferIdGenerator::new(0),
             dirty_rects_are_valid: true,
             native_surface_updates: Vec::new(),
-            composite_mode,
+            compositor_kind,
         }
     }
 
@@ -115,8 +163,6 @@ impl CompositeState {
         id: NativeSurfaceId,
         size: DeviceIntSize,
     ) -> SurfaceTextureDescriptor {
-        debug_assert_eq!(self.composite_mode, CompositeMode::Native);
-
         self.native_surface_updates.push(
             NativeSurfaceOperation {
                 id,
@@ -138,8 +184,6 @@ impl CompositeState {
         &mut self,
         id: NativeSurfaceId,
     ) {
-        debug_assert_eq!(self.composite_mode, CompositeMode::Native);
-
         self.native_surface_updates.push(
             NativeSurfaceOperation {
                 id,
