@@ -1041,6 +1041,8 @@ pub struct Device {
 
     /// Dumps the source of the shader with the given name
     dump_shader_source: Option<String>,
+
+    surface_is_y_flipped: bool,
 }
 
 /// Contains the parameters necessary to bind a draw target.
@@ -1053,6 +1055,7 @@ pub enum DrawTarget {
         rect: FramebufferIntRect,
         /// Total size of the target.
         total_size: FramebufferIntSize,
+        surface_is_y_flipped: bool,
     },
     /// Use the provided texture.
     Texture {
@@ -1084,11 +1087,12 @@ pub enum DrawTarget {
 }
 
 impl DrawTarget {
-    pub fn new_default(size: DeviceIntSize) -> Self {
+    pub fn new_default(size: DeviceIntSize, surface_is_y_flipped: bool) -> Self {
         let total_size = FramebufferIntSize::from_untyped(size.to_untyped());
         DrawTarget::Default {
             rect: total_size.into(),
             total_size,
+            surface_is_y_flipped,
         }
     }
 
@@ -1135,10 +1139,12 @@ impl DrawTarget {
     pub fn to_framebuffer_rect(&self, device_rect: DeviceIntRect) -> FramebufferIntRect {
         let mut fb_rect = FramebufferIntRect::from_untyped(&device_rect.to_untyped());
         match *self {
-            DrawTarget::Default { ref rect, .. } => {
+            DrawTarget::Default { ref rect, surface_is_y_flipped, .. } => {
                 // perform a Y-flip here
-                fb_rect.origin.y = rect.origin.y + rect.size.height - fb_rect.origin.y - fb_rect.size.height;
-                fb_rect.origin.x += rect.origin.x;
+                if !surface_is_y_flipped {
+                    fb_rect.origin.y = rect.origin.y + rect.size.height - fb_rect.origin.y - fb_rect.size.height;
+                    fb_rect.origin.x += rect.origin.x;
+                }
             }
             DrawTarget::Texture { .. } | DrawTarget::External { .. } => (),
             DrawTarget::NativeSurface { .. } => {
@@ -1234,6 +1240,7 @@ impl Device {
         allow_texture_storage_support: bool,
         allow_texture_swizzling: bool,
         dump_shader_source: Option<String>,
+        surface_is_y_flipped: bool,
     ) -> Device {
         let mut max_texture_size = [0];
         let mut max_texture_layers = [0];
@@ -1459,6 +1466,7 @@ impl Device {
             texture_storage_usage,
             optimal_pbo_stride,
             dump_shader_source,
+            surface_is_y_flipped,
         }
     }
 
@@ -1484,6 +1492,10 @@ impl Device {
     /// Returns the limit on texture dimensions (width or height).
     pub fn max_texture_size(&self) -> i32 {
         self.max_texture_size
+    }
+
+    pub fn surface_is_y_flipped(&self) -> bool {
+        self.surface_is_y_flipped
     }
 
     /// Returns the limit on texture array layers.
