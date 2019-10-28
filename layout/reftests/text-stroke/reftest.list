@@ -1,7 +1,7 @@
 # basic tests for webkit-text-stroke
 # fuzzy is needed here for platform dependent backends
 # These fail on Linux without webrender due to lack of antialiasing of the HTML text stroke
-fuzzy(0-64,0-52) fails-if(gtkWidget&&!webrender) fuzzy-if(webrender,0-64,0-61) fuzzy-if(geckoview&&webrender,0-64,0-770) == webkit-text-stroke-property-001.html webkit-text-stroke-property-001-ref.html
+fuzzy(0-64,0-52) fails-if(gtkWidget&&!webrender) fuzzy-if(webrender,0-64,0-776) == webkit-text-stroke-property-001.html webkit-text-stroke-property-001-ref.html
 fuzzy(0-4,0-24) fails-if(gtkWidget&&!webrender) fuzzy-if(webrender,0-4,0-27) fuzzy-if(geckoview&&webrender,0-4,0-1476) == webkit-text-stroke-property-002.html webkit-text-stroke-property-002-ref.html
 fuzzy(0-48,0-28) fails-if(gtkWidget&&!webrender) fuzzy-if(webrender,0-64,0-346) == webkit-text-stroke-property-003.html webkit-text-stroke-property-003-ref.html
 fuzzy(0-64,0-33) fails-if(gtkWidget&&!webrender) fuzzy-if(webrender,0-64,0-575) fuzzy-if(geckoview&&webrender,0-64,0-599) == webkit-text-stroke-property-004.html webkit-text-stroke-property-004-ref.html
