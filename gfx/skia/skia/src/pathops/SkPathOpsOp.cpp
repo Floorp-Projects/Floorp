@@ -4,11 +4,11 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-#include "SkAddIntersections.h"
-#include "SkOpCoincidence.h"
-#include "SkOpEdgeBuilder.h"
-#include "SkPathOpsCommon.h"
-#include "SkPathWriter.h"
+#include "src/pathops/SkAddIntersections.h"
+#include "src/pathops/SkOpCoincidence.h"
+#include "src/pathops/SkOpEdgeBuilder.h"
+#include "src/pathops/SkPathOpsCommon.h"
+#include "src/pathops/SkPathWriter.h"
 
 #include <utility>
 
@@ -224,9 +224,7 @@ static const bool gOutInverse[kReverseDifference_SkPathOp + 1][2][2] = {
 
 #if DEBUG_T_SECT_LOOP_COUNT
 
-#include "SkMutex.h"
-
-SK_DECLARE_STATIC_MUTEX(debugWorstLoop);
+#include "include/private/SkMutex.h"
 
 SkOpGlobalState debugWorstState(nullptr, nullptr  SkDEBUGPARAMS(false) SkDEBUGPARAMS(nullptr));
 
@@ -357,8 +355,9 @@ bool OpDebug(const SkPath& one, const SkPath& two, SkPathOp op, SkPath* result
     }
     wrapper.assemble();  // if some edges could not be resolved, assemble remaining
 #if DEBUG_T_SECT_LOOP_COUNT
+    static SkMutex& debugWorstLoop = *(new SkMutex);
     {
-        SkAutoMutexAcquire autoM(debugWorstLoop);
+        SkAutoMutexExclusive autoM(debugWorstLoop);
         if (!gVerboseFinalize) {
             gVerboseFinalize = &ReportPathOpsDebugging;
         }

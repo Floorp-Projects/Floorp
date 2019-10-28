@@ -147,6 +147,7 @@
 /*      GL_ALWAYS */
 
 /* EnableCap */
+#define GR_GL_TEXTURE_NONE                   0x0000
 #define GR_GL_TEXTURE_2D                     0x0DE1
 #define GR_GL_CULL_FACE                      0x0B44
 #define GR_GL_BLEND                          0x0BE2
@@ -460,6 +461,7 @@
 
 /* Luminance sized formats */
 #define GR_GL_LUMINANCE8                     0x8040
+#define GR_GL_LUMINANCE16F                   0x881E
 
 /* Alpha sized formats */
 #define GR_GL_ALPHA8                         0x803C
@@ -480,6 +482,7 @@
 #define GR_GL_RG16                           0x822C
 #define GR_GL_R16F                           0x822D
 #define GR_GL_R32F                           0x822E
+#define GR_GL_RG16F                          0x822F
 
 /* RG sized integer formats */
 #define GR_GL_RG8I                           0x8237
@@ -512,6 +515,7 @@
 #define GR_GL_RGBA16F                        0x881A
 #define GR_GL_RGBA32F                        0x8814
 #define GR_GL_RG32F                          0x8230
+#define GR_GL_RGBA16                         0x805B
 
 /* RGBA integer sized formats */
 #define GR_GL_RGBA8I                         0x8D8E
@@ -1040,6 +1044,40 @@
 #define GR_GL_MAX_WINDOW_RECTANGLES                         0x8f14
 #define GR_GL_INCLUSIVE                                     0x8f10
 #define GR_GL_EXCLUSIVE                                     0x8f11
+
+/** GL_QCOM_tiled_rendering */
+#define GR_GL_COLOR_BUFFER_BIT0                             0x00000001
+#define GR_GL_COLOR_BUFFER_BIT1                             0x00000002
+#define GR_GL_COLOR_BUFFER_BIT2                             0x00000004
+#define GR_GL_COLOR_BUFFER_BIT3                             0x00000008
+#define GR_GL_COLOR_BUFFER_BIT4                             0x00000010
+#define GR_GL_COLOR_BUFFER_BIT5                             0x00000020
+#define GR_GL_COLOR_BUFFER_BIT6                             0x00000040
+#define GR_GL_COLOR_BUFFER_BIT7                             0x00000080
+#define GR_GL_DEPTH_BUFFER_BIT0                             0x00000100
+#define GR_GL_DEPTH_BUFFER_BIT1                             0x00000200
+#define GR_GL_DEPTH_BUFFER_BIT2                             0x00000400
+#define GR_GL_DEPTH_BUFFER_BIT3                             0x00000800
+#define GR_GL_DEPTH_BUFFER_BIT4                             0x00001000
+#define GR_GL_DEPTH_BUFFER_BIT5                             0x00002000
+#define GR_GL_DEPTH_BUFFER_BIT6                             0x00004000
+#define GR_GL_DEPTH_BUFFER_BIT7                             0x00008000
+#define GR_GL_STENCIL_BUFFER_BIT0                           0x00010000
+#define GR_GL_STENCIL_BUFFER_BIT1                           0x00020000
+#define GR_GL_STENCIL_BUFFER_BIT2                           0x00040000
+#define GR_GL_STENCIL_BUFFER_BIT3                           0x00080000
+#define GR_GL_STENCIL_BUFFER_BIT4                           0x00100000
+#define GR_GL_STENCIL_BUFFER_BIT5                           0x00200000
+#define GR_GL_STENCIL_BUFFER_BIT6                           0x00400000
+#define GR_GL_STENCIL_BUFFER_BIT7                           0x00800000
+#define GR_GL_MULTISAMPLE_BUFFER_BIT0                       0x01000000
+#define GR_GL_MULTISAMPLE_BUFFER_BIT1                       0x02000000
+#define GR_GL_MULTISAMPLE_BUFFER_BIT2                       0x04000000
+#define GR_GL_MULTISAMPLE_BUFFER_BIT3                       0x08000000
+#define GR_GL_MULTISAMPLE_BUFFER_BIT4                       0x10000000
+#define GR_GL_MULTISAMPLE_BUFFER_BIT5                       0x20000000
+#define GR_GL_MULTISAMPLE_BUFFER_BIT6                       0x40000000
+#define GR_GL_MULTISAMPLE_BUFFER_BIT7                       0x80000000
 
 /* GL_ARB_sync */
 #define GR_GL_SYNC_GPU_COMMANDS_COMPLETE                    0x9117

@@ -5,20 +5,20 @@
  * found in the LICENSE file.
  */
 
-#include "SkNormalMapSource.h"
+#include "src/core/SkNormalMapSource.h"
 
-#include "SkArenaAlloc.h"
-#include "SkLightingShader.h"
-#include "SkMatrix.h"
-#include "SkNormalSource.h"
-#include "SkReadBuffer.h"
-#include "SkWriteBuffer.h"
+#include "include/core/SkMatrix.h"
+#include "src/core/SkArenaAlloc.h"
+#include "src/core/SkNormalSource.h"
+#include "src/core/SkReadBuffer.h"
+#include "src/core/SkWriteBuffer.h"
+#include "src/shaders/SkLightingShader.h"
 
 #if SK_SUPPORT_GPU
-#include "GrCoordTransform.h"
-#include "glsl/GrGLSLFragmentProcessor.h"
-#include "glsl/GrGLSLFragmentShaderBuilder.h"
-#include "SkGr.h"
+#include "src/gpu/GrCoordTransform.h"
+#include "src/gpu/SkGr.h"
+#include "src/gpu/glsl/GrGLSLFragmentProcessor.h"
+#include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
 
 class NormalMapFP : public GrFragmentProcessor {
 public:
@@ -47,10 +47,10 @@ private:
             // add uniform
             const char* xformUniName = nullptr;
             fXformUni = uniformHandler->addUniform(kFragment_GrShaderFlag, kFloat2x2_GrSLType,
-                                                   kDefault_GrSLPrecision, "Xform", &xformUniName);
+                                                   "Xform", &xformUniName);
 
             SkString dstNormalColorName("dstNormalColor");
-            this->emitChild(0, &dstNormalColorName, args);
+            this->invokeChild(0, &dstNormalColorName, args);
             fragBuilder->codeAppendf("float3 normal = normalize(%s.rgb - float3(0.5));",
                                      dstNormalColorName.c_str());
 
@@ -167,7 +167,7 @@ SkNormalSource::Provider* SkNormalMapSourceImpl::asProvider(const SkShaderBase::
 
 bool SkNormalMapSourceImpl::computeNormTotalInverse(const SkShaderBase::ContextRec& rec,
                                                     SkMatrix* normTotalInverse) const {
-    SkMatrix total = SkMatrix::Concat(*rec.fMatrix, fMapShader->getLocalMatrix());
+    SkMatrix total = SkMatrix::Concat(*rec.fMatrix, as_SB(fMapShader)->getLocalMatrix());
     if (rec.fLocalMatrix) {
         total.preConcat(*rec.fLocalMatrix);
     }

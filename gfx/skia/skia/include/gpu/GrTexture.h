@@ -9,17 +9,16 @@
 #ifndef GrTexture_DEFINED
 #define GrTexture_DEFINED
 
-#include "GrBackendSurface.h"
-#include "GrSamplerState.h"
-#include "GrSurface.h"
-#include "SkImage.h"
-#include "SkPoint.h"
-#include "SkRefCnt.h"
-#include "../private/GrTypesPriv.h"
+#include "include/core/SkImage.h"
+#include "include/core/SkPoint.h"
+#include "include/core/SkRefCnt.h"
+#include "include/gpu/GrBackendSurface.h"
+#include "include/gpu/GrSurface.h"
+#include "include/private/GrTypesPriv.h"
 
 class GrTexturePriv;
 
-class SK_API GrTexture : virtual public GrSurface {
+class GrTexture : virtual public GrSurface {
 public:
     GrTexture* asTexture() override { return this; }
     const GrTexture* asTexture() const override { return this; }
@@ -30,7 +29,7 @@ public:
      * This function indicates that the texture parameters (wrap mode, filtering, ...) have been
      * changed externally to Skia.
      */
-    virtual void textureParamsModified() = 0;
+    SK_API virtual void textureParamsModified() = 0;
 
     /**
      * This function steals the backend texture from a uniquely owned GrTexture with no pending
@@ -42,12 +41,6 @@ public:
     static bool StealBackendTexture(sk_sp<GrTexture>,
                                     GrBackendTexture*,
                                     SkImage::BackendTextureReleaseProc*);
-
-#ifdef SK_DEBUG
-    void validate() const {
-        this->INHERITED::validate();
-    }
-#endif
 
     /** See addIdleProc. */
     enum class IdleState {
@@ -81,20 +74,19 @@ public:
     inline const GrTexturePriv texturePriv() const;
 
 protected:
-    GrTexture(GrGpu*, const GrSurfaceDesc&, GrTextureType, GrMipMapsStatus);
+    GrTexture(GrGpu*, const SkISize&, GrPixelConfig, GrProtected, GrTextureType, GrMipMapsStatus);
 
     virtual bool onStealBackendTexture(GrBackendTexture*, SkImage::BackendTextureReleaseProc*) = 0;
 
     SkTArray<sk_sp<GrRefCntedCallback>> fIdleProcs;
 
-    void willRemoveLastRefOrPendingIO() override {
+    void willRemoveLastRef() override {
         // We're about to be idle in the resource cache. Do our part to trigger the idle callbacks.
         fIdleProcs.reset();
     }
+    void computeScratchKey(GrScratchKey*) const override;
 
 private:
-
-    void computeScratchKey(GrScratchKey*) const override;
     size_t onGpuMemorySize() const override;
     void markMipMapsDirty();
     void markMipMapsClean();

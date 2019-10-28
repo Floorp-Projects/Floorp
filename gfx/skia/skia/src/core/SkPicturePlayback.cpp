@@ -5,21 +5,21 @@
  * found in the LICENSE file.
  */
 
-#include "SkCanvas.h"
-#include "SkCanvasPriv.h"
-#include "SkDrawShadowInfo.h"
-#include "SkFontPriv.h"
-#include "SkPaintPriv.h"
-#include "SkPatchUtils.h"
-#include "SkPictureData.h"
-#include "SkPicturePlayback.h"
-#include "SkPictureRecord.h"
-#include "SkReadBuffer.h"
-#include "SkRSXform.h"
-#include "SkSafeMath.h"
-#include "SkTextBlob.h"
-#include "SkTDArray.h"
-#include "SkTypes.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkRSXform.h"
+#include "include/core/SkTextBlob.h"
+#include "include/core/SkTypes.h"
+#include "include/private/SkTDArray.h"
+#include "src/core/SkCanvasPriv.h"
+#include "src/core/SkDrawShadowInfo.h"
+#include "src/core/SkFontPriv.h"
+#include "src/core/SkPaintPriv.h"
+#include "src/core/SkPictureData.h"
+#include "src/core/SkPicturePlayback.h"
+#include "src/core/SkPictureRecord.h"
+#include "src/core/SkReadBuffer.h"
+#include "src/core/SkSafeMath.h"
+#include "src/utils/SkPatchUtils.h"
 
 // matches old SkCanvas::SaveFlags
 enum LegacySaveFlags {
@@ -274,15 +274,91 @@ void SkPicturePlayback::handleOp(SkReadBuffer* reader,
                 canvas->drawDRRect(outer, inner, *paint);
             }
         } break;
-        case DRAW_EDGEAA_RECT: {
+        case DRAW_EDGEAA_QUAD: {
             SkRect rect;
             reader->readRect(&rect);
             SkCanvas::QuadAAFlags aaFlags = static_cast<SkCanvas::QuadAAFlags>(reader->read32());
-            SkColor color = reader->read32();
+            SkColor4f color;
+            if (reader->isVersionLT(SkPicturePriv::kEdgeAAQuadColor4f_Version)) {
+                // Old version stored color as 8888
+                color = SkColor4f::FromColor(reader->read32());
+            } else {
+                reader->readColor4f(&color);
+            }
             SkBlendMode blend = static_cast<SkBlendMode>(reader->read32());
+            bool hasClip = reader->readInt();
+            SkPoint* clip = nullptr;
+            if (hasClip) {
+                clip = (SkPoint*) reader->skip(4, sizeof(SkPoint));
+            }
+            BREAK_ON_READ_ERROR(reader);
+            canvas->experimental_DrawEdgeAAQuad(rect, clip, aaFlags, color, blend);
+        } break;
+        case DRAW_EDGEAA_IMAGE_SET: {
+            static const size_t kEntryReadSize =
+                    4 * sizeof(uint32_t) + 2 * sizeof(SkRect) + sizeof(SkScalar);
+            static const size_t kMatrixSize = 9 * sizeof(SkScalar); // != sizeof(SkMatrix)
+
+            int cnt = reader->readInt();
+            if (!reader->validate(cnt >= 0)) {
+                break;
+            }
+            const SkPaint* paint = fPictureData->getPaint(reader);
+            SkCanvas::SrcRectConstraint constraint =
+                    static_cast<SkCanvas::SrcRectConstraint>(reader->readInt());
+
+            if (!reader->validate(SkSafeMath::Mul(cnt, kEntryReadSize) <= reader->available())) {
+                break;
+            }
+
+            // Track minimum necessary clip points and matrices that must be provided to satisfy
+            // the entries.
+            int expectedClips = 0;
+            int maxMatrixIndex = -1;
+            SkAutoTArray<SkCanvas::ImageSetEntry> set(cnt);
+            for (int i = 0; i < cnt && reader->isValid(); ++i) {
+                set[i].fImage = sk_ref_sp(fPictureData->getImage(reader));
+                reader->readRect(&set[i].fSrcRect);
+                reader->readRect(&set[i].fDstRect);
+                set[i].fMatrixIndex = reader->readInt();
+                set[i].fAlpha = reader->readScalar();
+                set[i].fAAFlags = reader->readUInt();
+                set[i].fHasClip = reader->readInt();
+
+                expectedClips += set[i].fHasClip ? 1 : 0;
+                if (set[i].fMatrixIndex > maxMatrixIndex) {
+                    maxMatrixIndex = set[i].fMatrixIndex;
+                }
+            }
+
+            int dstClipCount = reader->readInt();
+            SkPoint* dstClips = nullptr;
+            if (!reader->validate(expectedClips <= dstClipCount)) {
+                // Entries request more dstClip points than are provided in the buffer
+                break;
+            } else if (dstClipCount > 0) {
+                dstClips = (SkPoint*) reader->skip(dstClipCount, sizeof(SkPoint));
+                if (dstClips == nullptr) {
+                    // Not enough bytes remaining so the reader has been invalidated
+                    break;
+                }
+            }
+            int matrixCount = reader->readInt();
+            if (!reader->validate((maxMatrixIndex + 1) <= matrixCount) ||
+                !reader->validate(
+                    SkSafeMath::Mul(matrixCount, kMatrixSize) <= reader->available())) {
+                // Entries access out-of-bound matrix indices, given provided matrices or
+                // there aren't enough bytes to provide that many matrices
+                break;
+            }
+            SkTArray<SkMatrix> matrices(matrixCount);
+            for (int i = 0; i < matrixCount && reader->isValid(); ++i) {
+                reader->readMatrix(&matrices.push_back());
+            }
             BREAK_ON_READ_ERROR(reader);
 
-            canvas->experimental_DrawEdgeAARectV1(rect, aaFlags, color, blend);
+            canvas->experimental_DrawEdgeAAImageSet(set.get(), cnt, dstClips, matrices.begin(),
+                                                    paint, constraint);
         } break;
         case DRAW_IMAGE: {
             const SkPaint* paint = fPictureData->getPaint(reader);
@@ -331,25 +407,6 @@ void SkPicturePlayback::handleOp(SkReadBuffer* reader,
 
             canvas->legacy_drawImageRect(image, src, dst, paint, constraint);
         } break;
-        case DRAW_IMAGE_SET: {
-            int cnt = reader->readInt();
-            if (!reader->validate(cnt >= 0)) {
-                break;
-            }
-            SkFilterQuality filterQuality = (SkFilterQuality)reader->readUInt();
-            SkBlendMode mode = (SkBlendMode)reader->readUInt();
-            SkAutoTArray<SkCanvas::ImageSetEntry> set(cnt);
-            for (int i = 0; i < cnt; ++i) {
-                set[i].fImage = sk_ref_sp(fPictureData->getImage(reader));
-                reader->readRect(&set[i].fSrcRect);
-                reader->readRect(&set[i].fDstRect);
-                set[i].fAlpha = reader->readScalar();
-                set[i].fAAFlags = reader->readUInt();
-            }
-            BREAK_ON_READ_ERROR(reader);
-
-            canvas->experimental_DrawImageSetV1(set.get(), cnt, filterQuality, mode);
-        } break;
         case DRAW_OVAL: {
             const SkPaint* paint = fPictureData->getPaint(reader);
             SkRect rect;
@@ -366,6 +423,14 @@ void SkPicturePlayback::handleOp(SkReadBuffer* reader,
 
             if (paint) {
                 canvas->drawPaint(*paint);
+            }
+        } break;
+        case DRAW_BEHIND_PAINT: {
+            const SkPaint* paint = fPictureData->getPaint(reader);
+            BREAK_ON_READ_ERROR(reader);
+
+            if (paint) {
+                SkCanvasPriv::DrawBehind(canvas, *paint);
             }
         } break;
         case DRAW_PATCH: {
@@ -467,7 +532,7 @@ void SkPicturePlayback::handleOp(SkReadBuffer* reader,
             reader->readPoint3(&rec.fZPlaneParams);
             reader->readPoint3(&rec.fLightPos);
             rec.fLightRadius = reader->readScalar();
-            if (reader->isVersionLT(SkReadBuffer::kTwoColorDrawShadow_Version)) {
+            if (reader->isVersionLT(SkPicturePriv::kTwoColorDrawShadow_Version)) {
                 SkScalar ambientAlpha = reader->readScalar();
                 SkScalar spotAlpha = reader->readScalar();
                 SkColor color = reader->read32();

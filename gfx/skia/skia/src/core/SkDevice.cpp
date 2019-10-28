@@ -5,32 +5,32 @@
  * found in the LICENSE file.
  */
 
-#include "SkDevice.h"
+#include "src/core/SkDevice.h"
 
-#include "SkColorFilter.h"
-#include "SkDraw.h"
-#include "SkDrawable.h"
-#include "SkGlyphRun.h"
-#include "SkImageFilter.h"
-#include "SkImageFilterCache.h"
-#include "SkImagePriv.h"
-#include "SkImage_Base.h"
-#include "SkLatticeIter.h"
-#include "SkLocalMatrixShader.h"
-#include "SkMakeUnique.h"
-#include "SkMatrixPriv.h"
-#include "SkPatchUtils.h"
-#include "SkPathMeasure.h"
-#include "SkPathPriv.h"
-#include "SkRSXform.h"
-#include "SkRasterClip.h"
-#include "SkShader.h"
-#include "SkSpecialImage.h"
-#include "SkTLazy.h"
-#include "SkTextBlobPriv.h"
-#include "SkTo.h"
-#include "SkUtils.h"
-#include "SkVertices.h"
+#include "include/core/SkColorFilter.h"
+#include "include/core/SkDrawable.h"
+#include "include/core/SkImageFilter.h"
+#include "include/core/SkPathMeasure.h"
+#include "include/core/SkRSXform.h"
+#include "include/core/SkShader.h"
+#include "include/core/SkVertices.h"
+#include "include/private/SkTo.h"
+#include "src/core/SkDraw.h"
+#include "src/core/SkGlyphRun.h"
+#include "src/core/SkImageFilterCache.h"
+#include "src/core/SkImagePriv.h"
+#include "src/core/SkLatticeIter.h"
+#include "src/core/SkMakeUnique.h"
+#include "src/core/SkMatrixPriv.h"
+#include "src/core/SkPathPriv.h"
+#include "src/core/SkRasterClip.h"
+#include "src/core/SkSpecialImage.h"
+#include "src/core/SkTLazy.h"
+#include "src/core/SkTextBlobPriv.h"
+#include "src/core/SkUtils.h"
+#include "src/image/SkImage_Base.h"
+#include "src/shaders/SkLocalMatrixShader.h"
+#include "src/utils/SkPatchUtils.h"
 
 SkBaseDevice::SkBaseDevice(const SkImageInfo& info, const SkSurfaceProps& surfaceProps)
     : fInfo(info)
@@ -54,7 +54,7 @@ void SkBaseDevice::setGlobalCTM(const SkMatrix& ctm) {
 }
 
 bool SkBaseDevice::clipIsWideOpen() const {
-    if (kRect_ClipType == this->onGetClipType()) {
+    if (ClipType::kRect == this->onGetClipType()) {
         SkRegion rgn;
         this->onAsRgnClip(&rgn);
         SkASSERT(rgn.isRect());
@@ -64,10 +64,7 @@ bool SkBaseDevice::clipIsWideOpen() const {
     }
 }
 
-SkPixelGeometry SkBaseDevice::CreateInfo::AdjustGeometry(const SkImageInfo& info,
-                                                         TileUsage tileUsage,
-                                                         SkPixelGeometry geo,
-                                                         bool preserveLCDText) {
+SkPixelGeometry SkBaseDevice::CreateInfo::AdjustGeometry(TileUsage tileUsage, SkPixelGeometry geo) {
     switch (tileUsage) {
         case kPossible_TileUsage:
             // (we think) for compatibility with old clients, we assume this layer can support LCD
@@ -75,9 +72,7 @@ SkPixelGeometry SkBaseDevice::CreateInfo::AdjustGeometry(const SkImageInfo& info
             // our callers (reed/robertphilips).
             break;
         case kNever_TileUsage:
-            if (!preserveLCDText) {
-                geo = kUnknown_SkPixelGeometry;
-            }
+            geo = kUnknown_SkPixelGeometry;
             break;
     }
     return geo;
@@ -126,16 +121,6 @@ void SkBaseDevice::drawDRRect(const SkRRect& outer,
     path.setIsVolatile(true);
 
     this->drawPath(path, paint, true);
-}
-
-void SkBaseDevice::drawEdgeAARect(const SkRect& r, SkCanvas::QuadAAFlags aa, SkColor color,
-                                  SkBlendMode mode) {
-    SkPaint paint;
-    paint.setColor(color);
-    paint.setBlendMode(mode);
-    paint.setAntiAlias(aa == SkCanvas::kAll_QuadAAFlags);
-
-    this->drawRect(r, paint);
 }
 
 void SkBaseDevice::drawPatch(const SkPoint cubics[12], const SkColor colors[4],
@@ -204,22 +189,6 @@ void SkBaseDevice::drawImageLattice(const SkImage* image,
     }
 }
 
-void SkBaseDevice::drawImageSet(const SkCanvas::ImageSetEntry images[], int count,
-                                SkFilterQuality filterQuality, SkBlendMode mode) {
-    SkPaint paint;
-    paint.setFilterQuality(SkTPin(filterQuality, kNone_SkFilterQuality, kLow_SkFilterQuality));
-    paint.setBlendMode(mode);
-    for (int i = 0; i < count; ++i) {
-        // TODO: Handle per-edge AA. Right now this mirrors the SkiaRenderer component of Chrome
-        // which turns off antialiasing unless all four edges should be antialiased. This avoids
-        // seaming in tiled composited layers.
-        paint.setAntiAlias(images[i].fAAFlags == SkCanvas::kAll_QuadAAFlags);
-        paint.setAlpha(SkToUInt(SkTClamp(SkScalarRoundToInt(images[i].fAlpha * 255), 0, 255)));
-        this->drawImageRect(images[i].fImage.get(), &images[i].fSrcRect, images[i].fDstRect, paint,
-                            SkCanvas::kFast_SrcRectConstraint);
-    }
-}
-
 void SkBaseDevice::drawBitmapLattice(const SkBitmap& bitmap,
                                      const SkCanvas::Lattice& lattice, const SkRect& dst,
                                      const SkPaint& paint) {
@@ -275,6 +244,70 @@ void SkBaseDevice::drawAtlas(const SkImage* atlas, const SkRSXform xform[],
     this->drawVertices(builder.detach().get(), nullptr, 0, mode, p);
 }
 
+
+void SkBaseDevice::drawEdgeAAQuad(const SkRect& r, const SkPoint clip[4], SkCanvas::QuadAAFlags aa,
+                                  const SkColor4f& color, SkBlendMode mode) {
+    SkPaint paint;
+    paint.setColor4f(color);
+    paint.setBlendMode(mode);
+    paint.setAntiAlias(aa == SkCanvas::kAll_QuadAAFlags);
+
+    if (clip) {
+        // Draw the clip directly as a quad since it's a filled color with no local coords
+        SkPath clipPath;
+        clipPath.addPoly(clip, 4, true);
+        this->drawPath(clipPath, paint);
+    } else {
+        this->drawRect(r, paint);
+    }
+}
+
+void SkBaseDevice::drawEdgeAAImageSet(const SkCanvas::ImageSetEntry images[], int count,
+                                      const SkPoint dstClips[], const SkMatrix preViewMatrices[],
+                                      const SkPaint& paint,
+                                      SkCanvas::SrcRectConstraint constraint) {
+    SkASSERT(paint.getStyle() == SkPaint::kFill_Style);
+    SkASSERT(!paint.getPathEffect());
+
+    SkPaint entryPaint = paint;
+    const SkMatrix baseCTM = this->ctm();
+    int clipIndex = 0;
+    for (int i = 0; i < count; ++i) {
+        // TODO: Handle per-edge AA. Right now this mirrors the SkiaRenderer component of Chrome
+        // which turns off antialiasing unless all four edges should be antialiased. This avoids
+        // seaming in tiled composited layers.
+        entryPaint.setAntiAlias(images[i].fAAFlags == SkCanvas::kAll_QuadAAFlags);
+        entryPaint.setAlphaf(paint.getAlphaf() * images[i].fAlpha);
+
+        bool needsRestore = false;
+        SkASSERT(images[i].fMatrixIndex < 0 || preViewMatrices);
+        if (images[i].fMatrixIndex >= 0) {
+            this->save();
+            this->setGlobalCTM(SkMatrix::Concat(
+                    baseCTM, preViewMatrices[images[i].fMatrixIndex]));
+            needsRestore = true;
+        }
+
+        SkASSERT(!images[i].fHasClip || dstClips);
+        if (images[i].fHasClip) {
+            // Since drawImageRect requires a srcRect, the dst clip is implemented as a true clip
+            if (!needsRestore) {
+                this->save();
+                needsRestore = true;
+            }
+            SkPath clipPath;
+            clipPath.addPoly(dstClips + clipIndex, 4, true);
+            this->clipPath(clipPath, SkClipOp::kIntersect, entryPaint.isAntiAlias());
+            clipIndex += 4;
+        }
+        this->drawImageRect(images[i].fImage.get(), &images[i].fSrcRect, images[i].fDstRect,
+                            entryPaint, constraint);
+        if (needsRestore) {
+            this->restore(baseCTM);
+        }
+    }
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 void SkBaseDevice::drawDrawable(SkDrawable* drawable, const SkMatrix* matrix, SkCanvas* canvas) {
@@ -287,7 +320,10 @@ void SkBaseDevice::drawSpecial(SkSpecialImage*, int x, int y, const SkPaint&,
                                SkImage*, const SkMatrix&) {}
 sk_sp<SkSpecialImage> SkBaseDevice::makeSpecial(const SkBitmap&) { return nullptr; }
 sk_sp<SkSpecialImage> SkBaseDevice::makeSpecial(const SkImage*) { return nullptr; }
-sk_sp<SkSpecialImage> SkBaseDevice::snapSpecial() { return nullptr; }
+sk_sp<SkSpecialImage> SkBaseDevice::snapSpecial(const SkIRect&, bool) { return nullptr; }
+sk_sp<SkSpecialImage> SkBaseDevice::snapSpecial() {
+    return this->snapSpecial(SkIRect::MakeWH(this->width(), this->height()));
+}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -325,7 +361,7 @@ bool SkBaseDevice::peekPixels(SkPixmap* pmap) {
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
-#include "SkUtils.h"
+#include "src/core/SkUtils.h"
 
 void SkBaseDevice::drawGlyphRunRSXform(const SkFont& font, const SkGlyphID glyphs[],
                                        const SkRSXform xform[], int count, SkPoint origin,
@@ -379,10 +415,6 @@ void SkBaseDevice::drawGlyphRunRSXform(const SkFont& font, const SkGlyphID glyph
 //////////////////////////////////////////////////////////////////////////////////////////
 
 sk_sp<SkSurface> SkBaseDevice::makeSurface(SkImageInfo const&, SkSurfaceProps const&) {
-    return nullptr;
-}
-
-sk_sp<SkSpecialImage> SkBaseDevice::snapBackImage(const SkIRect&) {
     return nullptr;
 }
 
@@ -441,4 +473,3 @@ void SkBaseDevice::LogDrawScaleFactor(const SkMatrix& view, const SkMatrix& srcT
     SK_HISTOGRAM_ENUMERATION("FilterQuality", filterQuality, kLast_SkFilterQuality + 1);
 #endif
 }
-

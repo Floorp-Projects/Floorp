@@ -8,20 +8,20 @@
 #ifndef SkImage_GpuBase_DEFINED
 #define SkImage_GpuBase_DEFINED
 
-#include "GrBackendSurface.h"
-#include "GrContext.h"
-#include "GrTypesPriv.h"
-#include "SkDeferredDisplayListRecorder.h"
-#include "SkImage_Base.h"
-#include "SkYUVAIndex.h"
+#include "include/core/SkDeferredDisplayListRecorder.h"
+#include "include/core/SkYUVAIndex.h"
+#include "include/gpu/GrBackendSurface.h"
+#include "include/gpu/GrContext.h"
+#include "include/private/GrTypesPriv.h"
+#include "src/image/SkImage_Base.h"
 
 class GrColorSpaceXform;
 class SkColorSpace;
 
 class SkImage_GpuBase : public SkImage_Base {
 public:
-    SkImage_GpuBase(sk_sp<GrContext>, int width, int height, uint32_t uniqueID, SkAlphaType,
-                    sk_sp<SkColorSpace>);
+    SkImage_GpuBase(sk_sp<GrContext>, int width, int height, uint32_t uniqueID, SkColorType,
+                    SkAlphaType, sk_sp<SkColorSpace>);
     ~SkImage_GpuBase() override;
 
     GrContext* context() const final { return fContext.get(); }
@@ -57,8 +57,8 @@ public:
     void resetContext(sk_sp<GrContext> newContext);
 #endif
 
-    static bool ValidateBackendTexture(GrContext* ctx, const GrBackendTexture& tex,
-                                       GrPixelConfig* config, SkColorType ct, SkAlphaType at,
+    static bool ValidateBackendTexture(const GrCaps*, const GrBackendTexture& tex,
+                                       GrColorType grCT, SkColorType ct, SkAlphaType at,
                                        sk_sp<SkColorSpace> cs);
     static bool MakeTempTextureProxies(GrContext* ctx, const GrBackendTexture yuvaTextures[],
                                        int numTextures, const SkYUVAIndex [4],
@@ -78,14 +78,15 @@ public:
     using PromiseImageTextureDoneProc = SkDeferredDisplayListRecorder::PromiseImageTextureDoneProc;
 
 protected:
+    using PromiseImageApiVersion = SkDeferredDisplayListRecorder::PromiseImageApiVersion;
     // Helper for making a lazy proxy for a promise image. The PromiseDoneProc we be called,
     // if not null, immediately if this function fails. Othwerwise, it is installed in the
     // proxy along with the TextureFulfillProc and TextureReleaseProc. PromiseDoneProc must not
     // be null.
     static sk_sp<GrTextureProxy> MakePromiseImageLazyProxy(
-            GrContext*, int width, int height, GrSurfaceOrigin, GrPixelConfig, GrBackendFormat,
+            GrContext*, int width, int height, GrSurfaceOrigin, GrColorType, GrBackendFormat,
             GrMipMapped, PromiseImageTextureFulfillProc, PromiseImageTextureReleaseProc,
-            PromiseImageTextureDoneProc, PromiseImageTextureContext);
+            PromiseImageTextureDoneProc, PromiseImageTextureContext, PromiseImageApiVersion);
 
     static bool RenderYUVAToRGBA(GrContext* ctx, GrRenderTargetContext* renderTargetContext,
                                  const SkRect& rect, SkYUVColorSpace yuvColorSpace,
@@ -93,9 +94,7 @@ protected:
                                  const sk_sp<GrTextureProxy> proxies[4],
                                  const SkYUVAIndex yuvaIndices[4]);
 
-    sk_sp<GrContext>      fContext;
-    const SkAlphaType     fAlphaType;  // alpha type for final image
-    sk_sp<SkColorSpace>   fColorSpace; // color space for final image
+    sk_sp<GrContext> fContext;
 
 private:
     typedef SkImage_Base INHERITED;

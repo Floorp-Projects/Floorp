@@ -8,9 +8,10 @@
 #ifndef GrMtlBuffer_DEFINED
 #define GrMtlBuffer_DEFINED
 
-#include "GrGpuBuffer.h"
+#include "src/gpu/GrGpuBuffer.h"
+#include "src/gpu/mtl/GrMtlUniformHandler.h"
 
-#import <metal/metal.h>
+#import <Metal/Metal.h>
 
 class GrMtlCaps;
 class GrMtlGpu;
@@ -23,6 +24,8 @@ public:
     ~GrMtlBuffer() override;
 
     id<MTLBuffer> mtlBuffer() const { return fMtlBuffer; }
+    size_t offset() const { return fOffset; }
+    void bind(); // for initial binding of XferGpuToCpu buffers
 
 protected:
     GrMtlBuffer(GrMtlGpu*, size_t size, GrGpuBufferType intendedType, GrAccessPattern);
@@ -46,7 +49,8 @@ private:
 
     bool fIsDynamic;
     id<MTLBuffer> fMtlBuffer;
-    id<MTLBuffer> fMappedBuffer;
+    size_t        fOffset;       // offset into shared buffer for dynamic buffers
+    id<MTLBuffer> fMappedBuffer; // buffer used by static buffers for uploads
 
     typedef GrGpuBuffer INHERITED;
 };

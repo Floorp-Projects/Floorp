@@ -8,23 +8,39 @@
 #ifndef GrMtlSampler_DEFINED
 #define GrMtlSampler_DEFINED
 
-#import <metal/metal.h>
+#import <Metal/Metal.h>
+
+#include "src/core/SkOpts.h"
+#include <atomic>
 
 class GrSamplerState;
 class GrMtlGpu;
 
-// This class only acts as a wrapper for a MTLSamplerState object for now, but will be more useful
-// once we start caching sampler states.
-class GrMtlSampler {
+// A wrapper for a MTLSamplerState object with caching support.
+class GrMtlSampler : public SkRefCnt {
 public:
-    static GrMtlSampler* Create(const GrMtlGpu* gpu, const GrSamplerState&, uint32_t maxMipLevel);
+    static GrMtlSampler* Create(const GrMtlGpu* gpu, const GrSamplerState&);
+    ~GrMtlSampler() { fMtlSamplerState = nil; }
 
-    id<MTLSamplerState> mtlSamplerState() const { return fMtlSamplerState; }
+    id<MTLSamplerState> mtlSampler() const { return fMtlSamplerState; }
+
+    typedef uint32_t Key;
+
+    // Helpers for hashing GrMtlSampler
+    static Key GenerateKey(const GrSamplerState&);
+
+    static const Key& GetKey(const GrMtlSampler& sampler) { return sampler.fKey; }
+    static uint32_t Hash(const Key& key) {
+        return SkOpts::hash(reinterpret_cast<const uint32_t*>(&key), sizeof(Key));
+    }
 
 private:
-    GrMtlSampler(id<MTLSamplerState> mtlSamplerState) : fMtlSamplerState(mtlSamplerState) {}
+    GrMtlSampler(id<MTLSamplerState> mtlSamplerState, Key key)
+        : fMtlSamplerState(mtlSamplerState)
+        , fKey(key) {}
 
     id<MTLSamplerState> fMtlSamplerState;
+    Key                 fKey;
 };
 
 #endif

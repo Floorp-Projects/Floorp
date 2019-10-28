@@ -8,7 +8,7 @@
 #ifndef SkBitSet_DEFINED
 #define SkBitSet_DEFINED
 
-#include "SkTemplates.h"
+#include "include/private/SkTemplates.h"
 
 class SkBitSet {
 public:
@@ -51,7 +51,7 @@ public:
     }
 
 private:
-    std::unique_ptr<uint32_t, SkFunctionWrapper<void, void, sk_free>> fBitData;
+    std::unique_ptr<uint32_t, SkFunctionWrapper<void(void*), sk_free>> fBitData;
     size_t fDwordCount;  // Dword (32-bit) count of the bitset.
 
     uint32_t* internalGet(int index) const {

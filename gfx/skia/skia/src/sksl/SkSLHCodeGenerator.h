@@ -8,10 +8,10 @@
 #ifndef SKSL_HCODEGENERATOR
 #define SKSL_HCODEGENERATOR
 
-#include "SkSLCodeGenerator.h"
-#include "SkSLSectionAndParameterHelper.h"
-#include "ir/SkSLType.h"
-#include "ir/SkSLVariable.h"
+#include "src/sksl/SkSLCodeGenerator.h"
+#include "src/sksl/SkSLSectionAndParameterHelper.h"
+#include "src/sksl/ir/SkSLType.h"
+#include "src/sksl/ir/SkSLVariable.h"
 
 #include <cctype>
 
@@ -42,7 +42,7 @@ public:
     static String AccessType(const Context& context, const Type& type, const Layout& layout);
 
     static String FieldName(const char* varName) {
-        return String::printf("f%c%s", toupper(varName[0]), varName + 1);
+        return String(varName);
     }
 
     static String CoordTransformName(const String& arg, int index) {

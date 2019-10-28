@@ -8,7 +8,7 @@
 #ifndef GrContextThreadSafeProxy_DEFINED
 #define GrContextThreadSafeProxy_DEFINED
 
-#include "../private/GrContext_Base.h"
+#include "include/private/GrContext_Base.h"
 
 class GrBackendFormat;
 class GrContextThreadSafeProxyPriv;
@@ -53,6 +53,7 @@ public:
      *  @param willUseGLFBO0         Will the surface the DDL will be replayed into be backed by GL
      *                               FBO 0. This flag is only valid if using an GL backend.
      *  @param isTextureable         Will the surface be able to act as a texture?
+     *  @param isProtected           Will the (Vulkan) surface be DRM protected?
      */
     SkSurfaceCharacterization createCharacterization(
                                   size_t cacheMaxResourceBytes,
@@ -61,7 +62,19 @@ public:
                                   const SkSurfaceProps& surfaceProps,
                                   bool isMipMapped,
                                   bool willUseGLFBO0 = false,
-                                  bool isTextureable = true);
+                                  bool isTextureable = true,
+                                  GrProtected isProtected = GrProtected::kNo);
+
+    /*
+     * Retrieve the default GrBackendFormat for a given SkColorType and renderability.
+     * It is guaranteed that this backend format will be the one used by the following
+     * SkColorType and SkSurfaceCharacterization-based createBackendTexture methods.
+     *
+     * The caller should check that the returned format is valid.
+     */
+    GrBackendFormat defaultBackendFormat(SkColorType ct, GrRenderable renderable) const {
+        return INHERITED::defaultBackendFormat(ct, renderable);
+    }
 
     bool operator==(const GrContextThreadSafeProxy& that) const {
         // Each GrContext should only ever have a single thread-safe proxy.

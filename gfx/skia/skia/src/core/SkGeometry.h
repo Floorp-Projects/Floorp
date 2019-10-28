@@ -8,8 +8,8 @@
 #ifndef SkGeometry_DEFINED
 #define SkGeometry_DEFINED
 
-#include "SkMatrix.h"
-#include "SkNx.h"
+#include "include/core/SkMatrix.h"
+#include "include/private/SkNx.h"
 
 static inline Sk2s from_point(const SkPoint& point) {
     return Sk2s::Load(&point);
@@ -182,7 +182,6 @@ static inline bool SkCubicIsDegenerate(SkCubicType type) {
             return true;
     }
     SK_ABORT("Invalid SkCubicType");
-    return true;
 }
 
 static inline const char* SkCubicTypeName(SkCubicType type) {
@@ -195,7 +194,6 @@ static inline const char* SkCubicTypeName(SkCubicType type) {
         case SkCubicType::kLineOrPoint: return "kLineOrPoint";
     }
     SK_ABORT("Invalid SkCubicType");
-    return "";
 }
 
 /** Returns the cubic classification.
@@ -405,7 +403,7 @@ struct SkCubicCoeff {
 
 }
 
-#include "SkTemplates.h"
+#include "include/private/SkTemplates.h"
 
 /**
  *  Help class to allocate storage for approximating a conic with N quads.

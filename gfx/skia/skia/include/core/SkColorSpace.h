@@ -8,11 +8,11 @@
 #ifndef SkColorSpace_DEFINED
 #define SkColorSpace_DEFINED
 
-#include "../private/SkFixed.h"
-#include "../private/SkOnce.h"
-#include "../../third_party/skcms/skcms.h"
-#include "SkMatrix44.h"
-#include "SkRefCnt.h"
+#include "include/core/SkMatrix44.h"
+#include "include/core/SkRefCnt.h"
+#include "include/private/SkFixed.h"
+#include "include/private/SkOnce.h"
+#include "include/third_party/skcms/skcms.h"
 #include <memory>
 
 class SkData;
@@ -48,6 +48,15 @@ static constexpr skcms_TransferFunction k2Dot2 =
 
 static constexpr skcms_TransferFunction kLinear =
     { 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f };
+
+static constexpr skcms_TransferFunction kRec2020 =
+    {2.22222f, 0.909672f, 0.0903276f, 0.222222f, 0.0812429f, 0, 0};
+
+static constexpr skcms_TransferFunction kPQ =
+    {-2.0f, -107/128.0f, 1.0f, 32/2523.0f, 2413/128.0f, -2392/128.0f, 8192/1305.0f };
+
+static constexpr skcms_TransferFunction kHLG =
+    {-3.0f, 2.0f, 2.0f, 1/0.17883277f, 0.28466892f, 0.55991073f, 0.0f };
 
 }
 

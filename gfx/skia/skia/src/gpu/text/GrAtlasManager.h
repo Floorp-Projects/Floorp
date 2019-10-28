@@ -8,10 +8,10 @@
 #ifndef GrAtlasManager_DEFINED
 #define GrAtlasManager_DEFINED
 
-#include "GrCaps.h"
-#include "GrDrawOpAtlas.h"
-#include "GrOnFlushResourceProvider.h"
-#include "GrProxyProvider.h"
+#include "src/gpu/GrCaps.h"
+#include "src/gpu/GrDrawOpAtlas.h"
+#include "src/gpu/GrOnFlushResourceProvider.h"
+#include "src/gpu/GrProxyProvider.h"
 
 struct GrGlyph;
 class GrTextStrike;
@@ -34,7 +34,8 @@ public:
     // GrStrikeCache.cpp
     GrMaskFormat resolveMaskFormat(GrMaskFormat format) const {
         if (kA565_GrMaskFormat == format &&
-            !fProxyProvider->caps()->isConfigTexturable(kRGB_565_GrPixelConfig)) {
+            !fProxyProvider->caps()->getDefaultBackendFormat(GrColorType::kBGR_565,
+                                                             GrRenderable::kNo).isValid()) {
             format = kARGB_GrMaskFormat;
         }
         return format;
@@ -87,17 +88,16 @@ public:
 
     // GrOnFlushCallbackObject overrides
 
-    void preFlush(GrOnFlushResourceProvider* onFlushResourceProvider, const uint32_t*, int,
-                  SkTArray<sk_sp<GrRenderTargetContext>>*) override {
+    void preFlush(GrOnFlushResourceProvider* onFlushRP, const uint32_t*, int) override {
         for (int i = 0; i < kMaskFormatCount; ++i) {
             if (fAtlases[i]) {
-                fAtlases[i]->instantiate(onFlushResourceProvider);
+                fAtlases[i]->instantiate(onFlushRP);
             }
         }
     }
 
     void postFlush(GrDeferredUploadToken startTokenForNextFlush,
-                   const uint32_t* opListIDs, int numOpListIDs) override {
+                   const uint32_t* opsTaskIDs, int numOpsTaskIDs) override {
         for (int i = 0; i < kMaskFormatCount; ++i) {
             if (fAtlases[i]) {
                 fAtlases[i]->compact(startTokenForNextFlush);
@@ -122,17 +122,8 @@ private:
     bool initAtlas(GrMaskFormat);
 
     // There is a 1:1 mapping between GrMaskFormats and atlas indices
-    static int MaskFormatToAtlasIndex(GrMaskFormat format) {
-        static const int sAtlasIndices[] = {
-            kA8_GrMaskFormat,
-            kA565_GrMaskFormat,
-            kARGB_GrMaskFormat,
-        };
-        static_assert(SK_ARRAY_COUNT(sAtlasIndices) == kMaskFormatCount, "array_size_mismatch");
-
-        SkASSERT(sAtlasIndices[format] < kMaskFormatCount);
-        return sAtlasIndices[format];
-    }
+    static int MaskFormatToAtlasIndex(GrMaskFormat format) { return static_cast<int>(format); }
+    static GrMaskFormat AtlasIndexToMaskFormat(int idx) { return static_cast<GrMaskFormat>(idx); }
 
     GrDrawOpAtlas* getAtlas(GrMaskFormat format) const {
         format = this->resolveMaskFormat(format);

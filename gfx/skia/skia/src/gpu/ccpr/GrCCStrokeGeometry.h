@@ -8,9 +8,9 @@
 #ifndef GrGrCCStrokeGeometry_DEFINED
 #define GrGrCCStrokeGeometry_DEFINED
 
-#include "SkPaint.h"
-#include "SkPoint.h"
-#include "SkTArray.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPoint.h"
+#include "include/private/SkTArray.h"
 
 class SkStrokeRec;
 
@@ -175,6 +175,5 @@ inline bool GrCCStrokeGeometry::IsInternalJoinVerb(Verb verb) {
             return false;
     }
     SK_ABORT("Invalid GrCCStrokeGeometry::Verb.");
-    return false;
 }
 #endif

@@ -8,11 +8,10 @@
 #ifndef GrPrimitiveProcessor_DEFINED
 #define GrPrimitiveProcessor_DEFINED
 
-#include "GrColor.h"
-#include "GrNonAtomicRef.h"
-#include "GrProcessor.h"
-#include "GrProxyRef.h"
-#include "GrShaderVar.h"
+#include "src/gpu/GrColor.h"
+#include "src/gpu/GrNonAtomicRef.h"
+#include "src/gpu/GrProcessor.h"
+#include "src/gpu/GrShaderVar.h"
 
 class GrCoordTransform;
 
@@ -175,7 +174,7 @@ public:
      *
      * TODO: A better name for this function  would be "compute" instead of "get".
      */
-    uint32_t getTransformKey(const SkTArray<const GrCoordTransform*, true>& coords,
+    uint32_t getTransformKey(const SkTArray<GrCoordTransform*, true>& coords,
                              int numCoords) const;
 
     /**
@@ -247,42 +246,39 @@ private:
 //////////////////////////////////////////////////////////////////////////////
 
 /**
- * Used to represent a texture that is required by a GrPrimitiveProcessor. It holds a GrTextureProxy
- * along with an associated GrSamplerState. TextureSamplers don't perform any coord manipulation to
- * account for texture origin.
+ * Used to capture the properties of the GrTextureProxies required/expected by a primitiveProcessor
+ * along with an associated GrSamplerState. The actual proxies used are stored in either the
+ * fixed or dynamic state arrays. TextureSamplers don't perform any coord manipulation to account
+ * for texture origin.
  */
 class GrPrimitiveProcessor::TextureSampler {
 public:
     TextureSampler() = default;
 
-    TextureSampler(GrTextureType, GrPixelConfig, const GrSamplerState&, uint32_t extraSamplerKey);
-
-    explicit TextureSampler(GrTextureType, GrPixelConfig,
-                            GrSamplerState::Filter = GrSamplerState::Filter::kNearest,
-                            GrSamplerState::WrapMode wrapXAndY = GrSamplerState::WrapMode::kClamp);
+    TextureSampler(GrTextureType, const GrSamplerState&, const GrSwizzle&,
+                   uint32_t extraSamplerKey = 0);
 
     TextureSampler(const TextureSampler&) = delete;
     TextureSampler& operator=(const TextureSampler&) = delete;
 
-    void reset(GrTextureType, GrPixelConfig, const GrSamplerState&, uint32_t extraSamplerKey = 0);
-    void reset(GrTextureType, GrPixelConfig,
-               GrSamplerState::Filter,
-               GrSamplerState::WrapMode wrapXAndY);
+    void reset(GrTextureType, const GrSamplerState&, const GrSwizzle&,
+               uint32_t extraSamplerKey = 0);
 
     GrTextureType textureType() const { return fTextureType; }
-    GrPixelConfig config() const { return fConfig; }
 
     const GrSamplerState& samplerState() const { return fSamplerState; }
+    const GrSwizzle& swizzle() const { return fSwizzle; }
 
     uint32_t extraSamplerKey() const { return fExtraSamplerKey; }
 
-    bool isInitialized() const { return fConfig != kUnknown_GrPixelConfig; }
+    bool isInitialized() const { return fIsInitialized; }
 
 private:
     GrSamplerState fSamplerState;
+    GrSwizzle fSwizzle;
     GrTextureType fTextureType = GrTextureType::k2D;
-    GrPixelConfig fConfig = kUnknown_GrPixelConfig;
     uint32_t fExtraSamplerKey = 0;
+    bool fIsInitialized = false;
 };
 
 const GrPrimitiveProcessor::TextureSampler& GrPrimitiveProcessor::IthTextureSampler(int i) {
@@ -353,6 +349,10 @@ static constexpr inline size_t GrVertexAttribTypeSize(GrVertexAttribType type) {
             return sizeof(int32_t);
         case kUint_GrVertexAttribType:
             return sizeof(uint32_t);
+        case kUShort_norm_GrVertexAttribType:
+            return sizeof(uint16_t);
+        case kUShort4_norm_GrVertexAttribType:
+            return 4 * sizeof(uint16_t);
     }
     // GCC fails because SK_ABORT evaluates to non constexpr. clang and cl.exe think this is
     // unreachable and don't complain.

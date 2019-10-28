@@ -8,8 +8,8 @@
 #ifndef SkBitmapScaler_DEFINED
 #define SkBitmapScaler_DEFINED
 
-#include "SkBitmap.h"
-#include "SkConvolver.h"
+#include "include/core/SkBitmap.h"
+#include "src/core/SkConvolver.h"
 
 /** \class SkBitmapScaler
 

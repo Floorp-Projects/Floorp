@@ -8,7 +8,7 @@
 #ifndef SkBitmapFilter_opts_DEFINED
 #define SkBitmapFilter_opts_DEFINED
 
-#include "SkConvolver.h"
+#include "src/core/SkConvolver.h"
 
 #if SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_SSE2
     #include <immintrin.h>

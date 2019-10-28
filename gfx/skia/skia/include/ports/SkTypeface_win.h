@@ -8,11 +8,18 @@
 #ifndef SkTypeface_win_DEFINED
 #define SkTypeface_win_DEFINED
 
-#include "../private/SkLeanWindows.h"
-#include "SkTypeface.h"
-#include <dwrite.h>
+#include "include/core/SkTypeface.h"
+#include "include/core/SkTypes.h"
 
 #ifdef SK_BUILD_FOR_WIN
+
+#ifdef UNICODE
+typedef struct tagLOGFONTW LOGFONTW;
+typedef LOGFONTW LOGFONT;
+#else
+typedef struct tagLOGFONTA LOGFONTA;
+typedef LOGFONTA LOGFONT;
+#endif  // UNICODE
 
 /**
  *  Like the other Typeface create methods, this returns a new reference to the
@@ -44,6 +51,7 @@ class SkRemotableFontMgr;
 struct IDWriteFactory;
 struct IDWriteFontCollection;
 struct IDWriteFontFallback;
+struct IDWriteFontFace;
 
 /**
  *  Like the other Typeface create methods, this returns a new reference to the
@@ -53,7 +61,7 @@ struct IDWriteFontFallback;
 SK_API SkTypeface* SkCreateTypefaceFromDWriteFont(IDWriteFactory* aFactory,
                                                   IDWriteFontFace* aFontFace,
                                                   SkFontStyle aStyle,
-                                                  DWRITE_RENDERING_MODE aRenderingMode,
+                                                  int aRenderingMode,
                                                   float aGamma,
                                                   float aContrast);
 

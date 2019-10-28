@@ -8,16 +8,18 @@
 #ifndef GrCCAtlas_DEFINED
 #define GrCCAtlas_DEFINED
 
-#include "GrAllocator.h"
-#include "GrNonAtomicRef.h"
-#include "GrResourceKey.h"
-#include "GrTexture.h"
-#include "SkRefCnt.h"
-#include "SkSize.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkSize.h"
+#include "include/gpu/GrTexture.h"
+#include "include/private/GrResourceKey.h"
+#include "src/gpu/GrAllocator.h"
+#include "src/gpu/GrNonAtomicRef.h"
+#include "src/gpu/GrSurfaceProxy.h"
 
 class GrCCCachedAtlas;
 class GrOnFlushResourceProvider;
 class GrRenderTargetContext;
+class GrResourceProvider;
 class GrTextureProxy;
 struct SkIPoint16;
 struct SkIRect;
@@ -46,10 +48,30 @@ public:
         void accountForSpace(int width, int height);
     };
 
-    enum class CoverageType : bool {
+    enum class CoverageType {
         kFP16_CoverageCount,
+        kA8_Multisample,
         kA8_LiteralCoverage
     };
+
+    static constexpr GrColorType CoverageTypeToColorType(CoverageType coverageType) {
+        switch (coverageType) {
+            case CoverageType::kFP16_CoverageCount:
+                return GrColorType::kAlpha_F16;
+            case CoverageType::kA8_Multisample:
+            case CoverageType::kA8_LiteralCoverage:
+                return GrColorType::kAlpha_8;
+        }
+        SkUNREACHABLE;
+    }
+
+    using LazyInstantiateAtlasCallback = std::function<sk_sp<GrTexture>(
+            GrResourceProvider*, GrPixelConfig, const GrBackendFormat&, int sampleCount)>;
+
+    static sk_sp<GrTextureProxy> MakeLazyAtlasProxy(const LazyInstantiateAtlasCallback&,
+                                                    CoverageType,
+                                                    const GrCaps&,
+                                                    GrSurfaceProxy::UseAllocator);
 
     GrCCAtlas(CoverageType, const Specs&, const GrCaps&);
     ~GrCCAtlas();
@@ -63,12 +85,14 @@ public:
     bool addRect(const SkIRect& devIBounds, SkIVector* atlasOffset);
     const SkISize& drawBounds() { return fDrawBounds; }
 
-    // This is an optional space for the caller to jot down which user-defined batches to use when
-    // they render the content of this atlas.
+    // This is an optional space for the caller to jot down user-defined instance data to use when
+    // rendering atlas content.
     void setFillBatchID(int id);
     int getFillBatchID() const { return fFillBatchID; }
     void setStrokeBatchID(int id);
     int getStrokeBatchID() const { return fStrokeBatchID; }
+    void setEndStencilResolveInstance(int idx);
+    int getEndStencilResolveInstance() const { return fEndStencilResolveInstance; }
 
     sk_sp<GrCCCachedAtlas> refOrMakeCachedAtlas(GrOnFlushResourceProvider*);
 
@@ -79,8 +103,8 @@ public:
     // 'backingTexture', if provided, is a renderable texture with which to instantiate our proxy.
     // If null then we will create a texture using the resource provider. The purpose of this param
     // is to provide a guaranteed way to recycle a stashed atlas texture from a previous flush.
-    sk_sp<GrRenderTargetContext> makeRenderTargetContext(GrOnFlushResourceProvider*,
-                                                         sk_sp<GrTexture> backingTexture = nullptr);
+    std::unique_ptr<GrRenderTargetContext> makeRenderTargetContext(
+            GrOnFlushResourceProvider*, sk_sp<GrTexture> backingTexture = nullptr);
 
 private:
     class Node;
@@ -95,6 +119,7 @@ private:
 
     int fFillBatchID;
     int fStrokeBatchID;
+    int fEndStencilResolveInstance;
 
     sk_sp<GrCCCachedAtlas> fCachedAtlas;
     sk_sp<GrTextureProxy> fTextureProxy;
@@ -112,6 +137,7 @@ public:
     GrCCAtlasStack(CoverageType coverageType, const GrCCAtlas::Specs& specs, const GrCaps* caps)
             : fCoverageType(coverageType), fSpecs(specs), fCaps(caps) {}
 
+    CoverageType coverageType() const { return fCoverageType; }
     bool empty() const { return fAtlases.empty(); }
     const GrCCAtlas& front() const { SkASSERT(!this->empty()); return fAtlases.front(); }
     GrCCAtlas& front() { SkASSERT(!this->empty()); return fAtlases.front(); }

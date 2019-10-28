@@ -8,14 +8,14 @@
 #ifndef GrCCPathParser_DEFINED
 #define GrCCPathParser_DEFINED
 
-#include "GrMesh.h"
-#include "SkPathPriv.h"
-#include "SkRect.h"
-#include "SkRefCnt.h"
-#include "GrTessellator.h"
-#include "ccpr/GrCCCoverageProcessor.h"
-#include "ccpr/GrCCFillGeometry.h"
-#include "ops/GrDrawOp.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkRefCnt.h"
+#include "src/core/SkPathPriv.h"
+#include "src/gpu/GrMesh.h"
+#include "src/gpu/GrTessellator.h"
+#include "src/gpu/ccpr/GrCCCoverageProcessor.h"
+#include "src/gpu/ccpr/GrCCFillGeometry.h"
+#include "src/gpu/ops/GrDrawOp.h"
 
 class GrOnFlushResourceProvider;
 class SkMatrix;
@@ -27,7 +27,12 @@ class SkPath;
  */
 class GrCCFiller {
 public:
-    GrCCFiller(int numPaths, int numSkPoints, int numSkVerbs, int numConicWeights);
+    enum class Algorithm : bool {
+        kCoverageCount,
+        kStencilWindingCount
+    };
+
+    GrCCFiller(Algorithm, int numPaths, int numSkPoints, int numSkVerbs, int numConicWeights);
 
     // Parses a device-space SkPath into the current batch, using the SkPath's original verbs and
     // 'deviceSpacePts'. Accepts an optional post-device-space translate for placement in an atlas.
@@ -45,7 +50,8 @@ public:
     bool prepareToDraw(GrOnFlushResourceProvider*);
 
     // Called after prepareToDraw(). Draws the given batch of path fills.
-    void drawFills(GrOpFlushState*, BatchID, const SkIRect& drawBounds) const;
+    void drawFills(GrOpFlushState*, GrCCCoverageProcessor*, const GrPipeline&, BatchID,
+                   const SkIRect& drawBounds) const;
 
 private:
     static constexpr int kNumScissorModes = 2;
@@ -70,8 +76,9 @@ private:
             SkASSERT(this->hasFanTessellation());
             return fFanTessellation.get();
         }
-        void tessellateFan(const GrCCFillGeometry&, int verbsIdx, int ptsIdx,
-                           const SkIRect& clippedDevIBounds, PrimitiveTallies* newTriangleCounts);
+        void tessellateFan(
+                Algorithm, const SkPath& originalPath, const GrCCFillGeometry&, int verbsIdx,
+                int ptsIdx, const SkIRect& clippedDevIBounds, PrimitiveTallies* newTriangleCounts);
 
     private:
         GrScissorTest fScissorTest;
@@ -95,10 +102,15 @@ private:
         SkIRect fScissor;
     };
 
-    void drawPrimitives(GrOpFlushState*, const GrPipeline&, BatchID,
-                        GrCCCoverageProcessor::PrimitiveType, int PrimitiveTallies::*instanceType,
-                        const SkIRect& drawBounds) const;
+    void emitTessellatedFan(
+            const GrTessellator::WindingVertex*, int numVertices, const Sk2f& devToAtlasOffset,
+            GrCCCoverageProcessor::TriPointInstance::Ordering,
+            GrCCCoverageProcessor::TriPointInstance*, GrCCCoverageProcessor::QuadPointInstance*,
+            GrCCFillGeometry::PrimitiveTallies*);
+    void drawPrimitives(GrOpFlushState*, const GrCCCoverageProcessor&, const GrPipeline&, BatchID,
+                        int PrimitiveTallies::*instanceType, const SkIRect& drawBounds) const;
 
+    const Algorithm fAlgorithm;
     GrCCFillGeometry fGeometry;
     SkSTArray<32, PathInfo, true> fPathInfos;
     SkSTArray<32, Batch, true> fBatches;

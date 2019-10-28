@@ -5,22 +5,22 @@
  * found in the LICENSE file.
  */
 
-#include "GrAtlasTextOp.h"
+#include "src/gpu/ops/GrAtlasTextOp.h"
 
-#include "GrCaps.h"
-#include "GrMemoryPool.h"
-#include "GrOpFlushState.h"
-#include "GrRecordingContext.h"
-#include "GrRecordingContextPriv.h"
-#include "GrResourceProvider.h"
-#include "SkMathPriv.h"
-#include "SkMatrixPriv.h"
-#include "SkPoint3.h"
-#include "SkStrikeCache.h"
-#include "effects/GrBitmapTextGeoProc.h"
-#include "effects/GrDistanceFieldGeoProc.h"
-#include "text/GrAtlasManager.h"
-#include "text/GrStrikeCache.h"
+#include "include/core/SkPoint3.h"
+#include "include/private/GrRecordingContext.h"
+#include "src/core/SkMathPriv.h"
+#include "src/core/SkMatrixPriv.h"
+#include "src/core/SkStrikeCache.h"
+#include "src/gpu/GrCaps.h"
+#include "src/gpu/GrMemoryPool.h"
+#include "src/gpu/GrOpFlushState.h"
+#include "src/gpu/GrRecordingContextPriv.h"
+#include "src/gpu/GrResourceProvider.h"
+#include "src/gpu/effects/GrBitmapTextGeoProc.h"
+#include "src/gpu/effects/GrDistanceFieldGeoProc.h"
+#include "src/gpu/text/GrAtlasManager.h"
+#include "src/gpu/text/GrStrikeCache.h"
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -110,10 +110,10 @@ void GrAtlasTextOp::init() {
                                    fNeedsGlyphTransform);
     // We don't have tight bounds on the glyph paths in device space. For the purposes of bounds
     // we treat this as a set of non-AA rects rendered with a texture.
-    this->setBounds(bounds, HasAABloat::kNo, IsZeroArea::kNo);
+    this->setBounds(bounds, HasAABloat::kNo, IsHairline::kNo);
 }
 
-void GrAtlasTextOp::visitProxies(const VisitProxyFunc& func, VisitorType) const {
+void GrAtlasTextOp::visitProxies(const VisitProxyFunc& func) const {
     fProcessors.visitProxies(func);
 }
 
@@ -141,7 +141,8 @@ GrDrawOp::FixedFunctionFlags GrAtlasTextOp::fixedFunctionFlags() const {
 }
 
 GrProcessorSet::Analysis GrAtlasTextOp::finalize(
-        const GrCaps& caps, const GrAppliedClip* clip, GrFSAAType fsaaType) {
+        const GrCaps& caps, const GrAppliedClip* clip, bool hasMixedSampledCoverage,
+        GrClampType clampType) {
     GrProcessorAnalysisCoverage coverage;
     GrProcessorAnalysisColor color;
     if (kColorBitmapMask_MaskType == fMaskType) {
@@ -165,8 +166,8 @@ GrProcessorSet::Analysis GrAtlasTextOp::finalize(
             break;
     }
     auto analysis = fProcessors.finalize(
-            color, coverage, clip, &GrUserStencilSettings::kUnused, fsaaType, caps,
-            &fGeoData[0].fColor);
+            color, coverage, clip, &GrUserStencilSettings::kUnused, hasMixedSampledCoverage, caps,
+            clampType, &fGeoData[0].fColor);
     fUsesLocalCoords = analysis.usesLocalCoords();
     return analysis;
 }
@@ -304,6 +305,9 @@ void GrAtlasTextOp::onPrepareDraws(Target* target) {
     auto fixedDynamicState = target->makeFixedDynamicState(kMaxTextures);
     for (unsigned i = 0; i < numActiveProxies; ++i) {
         fixedDynamicState->fPrimitiveProcessorTextures[i] = proxies[i].get();
+        // This op does not know its atlas proxies when it is added to a GrOpsTasks, so the proxies
+        // don't get added during the visitProxies call. Thus we add them here.
+        target->sampledProxyArray()->push_back(proxies[i].get());
     }
 
     FlushInfo flushInfo;
@@ -328,7 +332,7 @@ void GrAtlasTextOp::onPrepareDraws(Target* target) {
 
     void* vertices = target->makeVertexSpace(vertexStride, glyphCount * kVerticesPerGlyph,
                                              &flushInfo.fVertexBuffer, &flushInfo.fVertexOffset);
-    flushInfo.fIndexBuffer = target->resourceProvider()->refQuadIndexBuffer();
+    flushInfo.fIndexBuffer = resourceProvider->refQuadIndexBuffer();
     if (!vertices || !flushInfo.fVertexBuffer) {
         SkDebugf("Could not allocate vertices\n");
         return;
@@ -390,9 +394,8 @@ void GrAtlasTextOp::onPrepareDraws(Target* target) {
 }
 
 void GrAtlasTextOp::onExecute(GrOpFlushState* flushState, const SkRect& chainBounds) {
-    static const uint32_t kPipelineFlags = 0;
     flushState->executeDrawsAndUploadsForMeshDrawOp(
-            this, chainBounds, std::move(fProcessors), kPipelineFlags);
+            this, chainBounds, std::move(fProcessors), GrPipeline::InputFlags::kNone);
 }
 
 void GrAtlasTextOp::flush(GrMeshDrawOp::Target* target, FlushInfo* flushInfo) const {
@@ -413,6 +416,9 @@ void GrAtlasTextOp::flush(GrMeshDrawOp::Target* target, FlushInfo* flushInfo) co
         // Update the proxies used in the GP to match.
         for (unsigned i = gp->numTextureSamplers(); i < numActiveProxies; ++i) {
             flushInfo->fFixedDynamicState->fPrimitiveProcessorTextures[i] = proxies[i].get();
+            // This op does not know its atlas proxies when it is added to a GrOpsTasks, so the
+            // proxies don't get added during the visitProxies call. Thus we add them here.
+            target->sampledProxyArray()->push_back(proxies[i].get());
         }
         if (this->usesDistanceFields()) {
             if (this->isLCD()) {

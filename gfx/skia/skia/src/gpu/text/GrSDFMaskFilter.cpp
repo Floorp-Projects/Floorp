@@ -5,15 +5,15 @@
  * found in the LICENSE file.
  */
 
-#include "GrSDFMaskFilter.h"
-#include "SkDistanceFieldGen.h"
-#include "SkMaskFilterBase.h"
-#include "SkReadBuffer.h"
-#include "SkSafeMath.h"
-#include "SkWriteBuffer.h"
-#include "SkString.h"
+#include "include/core/SkString.h"
+#include "src/core/SkDistanceFieldGen.h"
+#include "src/core/SkMaskFilterBase.h"
+#include "src/core/SkReadBuffer.h"
+#include "src/core/SkSafeMath.h"
+#include "src/core/SkWriteBuffer.h"
+#include "src/gpu/text/GrSDFMaskFilter.h"
 
-class SK_API GrSDFMaskFilterImpl : public SkMaskFilterBase {
+class GrSDFMaskFilterImpl : public SkMaskFilterBase {
 public:
     GrSDFMaskFilterImpl();
 
@@ -83,8 +83,8 @@ bool GrSDFMaskFilterImpl::filterMask(SkMask* dst, const SkMask& src,
 
 void GrSDFMaskFilterImpl::computeFastBounds(const SkRect& src,
                                             SkRect* dst) const {
-    dst->set(src.fLeft  - SK_DistanceFieldPad, src.fTop    - SK_DistanceFieldPad,
-             src.fRight + SK_DistanceFieldPad, src.fBottom + SK_DistanceFieldPad);
+    dst->setLTRB(src.fLeft  - SK_DistanceFieldPad, src.fTop    - SK_DistanceFieldPad,
+                 src.fRight + SK_DistanceFieldPad, src.fBottom + SK_DistanceFieldPad);
 }
 
 sk_sp<SkFlattenable> GrSDFMaskFilterImpl::CreateProc(SkReadBuffer& buffer) {

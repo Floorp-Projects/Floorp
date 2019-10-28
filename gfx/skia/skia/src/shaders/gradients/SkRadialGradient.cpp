@@ -5,11 +5,10 @@
  * found in the LICENSE file.
  */
 
-#include "SkColorSpaceXformer.h"
-#include "SkRadialGradient.h"
-#include "SkRasterPipeline.h"
-#include "SkReadBuffer.h"
-#include "SkWriteBuffer.h"
+#include "src/core/SkRasterPipeline.h"
+#include "src/core/SkReadBuffer.h"
+#include "src/core/SkWriteBuffer.h"
+#include "src/shaders/gradients/SkRadialGradient.h"
 
 namespace {
 
@@ -59,13 +58,6 @@ void SkRadialGradient::flatten(SkWriteBuffer& buffer) const {
     buffer.writeScalar(fRadius);
 }
 
-sk_sp<SkShader> SkRadialGradient::onMakeColorSpace(SkColorSpaceXformer* xformer) const {
-    const AutoXformColors xformedColors(*this, xformer);
-    return SkGradientShader::MakeRadial(fCenter, fRadius, xformedColors.fColors.get(), fOrigPos,
-                                        fColorCount, fTileMode, fGradFlags,
-                                        &this->getLocalMatrix());
-}
-
 void SkRadialGradient::appendGradientStages(SkArenaAlloc*, SkRasterPipeline* p,
                                             SkRasterPipeline*) const {
     p->append(SkRasterPipeline::xy_to_radius);
@@ -75,7 +67,7 @@ void SkRadialGradient::appendGradientStages(SkArenaAlloc*, SkRasterPipeline* p,
 
 #if SK_SUPPORT_GPU
 
-#include "gradients/GrGradientShader.h"
+#include "src/gpu/gradients/GrGradientShader.h"
 
 std::unique_ptr<GrFragmentProcessor> SkRadialGradient::asFragmentProcessor(
         const GrFPArgs& args) const {

@@ -5,16 +5,16 @@
 * found in the LICENSE file.
 */
 
-#include "GrPathProcessor.h"
+#include "src/gpu/GrPathProcessor.h"
 
-#include "GrShaderCaps.h"
-#include "SkTo.h"
-#include "gl/GrGLGpu.h"
-#include "gl/GrGLVaryingHandler.h"
-#include "glsl/GrGLSLFragmentShaderBuilder.h"
-#include "glsl/GrGLSLPrimitiveProcessor.h"
-#include "glsl/GrGLSLUniformHandler.h"
-#include "glsl/GrGLSLVarying.h"
+#include "include/private/SkTo.h"
+#include "src/gpu/GrShaderCaps.h"
+#include "src/gpu/gl/GrGLGpu.h"
+#include "src/gpu/gl/GrGLVaryingHandler.h"
+#include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
+#include "src/gpu/glsl/GrGLSLPrimitiveProcessor.h"
+#include "src/gpu/glsl/GrGLSLUniformHandler.h"
+#include "src/gpu/glsl/GrGLSLVarying.h"
 
 class GrGLPathProcessor : public GrGLSLPrimitiveProcessor {
 public:
@@ -49,6 +49,11 @@ public:
         fragBuilder->codeAppendf("%s = half4(1);", args.fOutputCoverage);
     }
 
+    SkString matrix_to_sksl(const SkMatrix& m) {
+        return SkStringPrintf("float3x3(%f, %f, %f, %f, %f, %f, %f, %f, %f)", m[0], m[1], m[2],
+                              m[3], m[4], m[5], m[6], m[7], m[8]);
+    }
+
     void emitTransforms(GrGLSLVaryingHandler* varyingHandler,
                         FPCoordTransformHandler* transformHandler) {
         int i = 0;
@@ -66,7 +71,11 @@ public:
                                                                &v).toIndex();
             fInstalledTransforms.back().fType = varyingType;
 
-            transformHandler->specifyCoordsForCurrCoordTransform(SkString(v.fsIn()), varyingType);
+            transformHandler->specifyCoordsForCurrCoordTransform(
+                                                        matrix_to_sksl(coordTransform->getMatrix()),
+                                                        UniformHandle(),
+                                                        GrShaderVar(SkString(v.fsIn()),
+                                                                             varyingType));
             ++i;
         }
     }

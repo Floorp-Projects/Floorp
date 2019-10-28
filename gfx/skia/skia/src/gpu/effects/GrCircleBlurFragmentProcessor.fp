@@ -31,7 +31,7 @@ uniform half4 circleData;
 }
 
 @cpp {
-    #include "GrProxyProvider.h"
+    #include "src/gpu/GrProxyProvider.h"
 
     // Computes an unnormalized half kernel (right side). Returns the summation of all the half
     // kernel values.
@@ -226,8 +226,8 @@ uniform half4 circleData;
         builder[0] = sigmaToCircleRRatioFixed;
         builder.finish();
 
-        sk_sp<GrTextureProxy> blurProfile =
-                      proxyProvider->findOrCreateProxyByUniqueKey(key, kTopLeft_GrSurfaceOrigin);
+        sk_sp<GrTextureProxy> blurProfile = proxyProvider->findOrCreateProxyByUniqueKey(
+                key, GrColorType::kAlpha_8, kTopLeft_GrSurfaceOrigin);
         if (!blurProfile) {
             static constexpr int kProfileTextureWidth = 512;
 
@@ -248,7 +248,7 @@ uniform half4 circleData;
             bm.setImmutable();
             sk_sp<SkImage> image = SkImage::MakeFromBitmap(bm);
 
-            blurProfile = proxyProvider->createTextureProxy(std::move(image), kNone_GrSurfaceFlags, 1,
+            blurProfile = proxyProvider->createTextureProxy(std::move(image), 1,
                                                             SkBudgeted::kYes, SkBackingFit::kExact);
             if (!blurProfile) {
                 return nullptr;
@@ -281,7 +281,7 @@ void main() {
     half2 vec = half2(half((sk_FragCoord.x - circleData.x) * circleData.w),
                       half((sk_FragCoord.y - circleData.y) * circleData.w));
     half dist = length(vec) + (0.5 - circleData.z) * circleData.w;
-    sk_OutColor = sk_InColor * texture(blurProfileSampler, half2(dist, 0.5)).a;
+    sk_OutColor = sk_InColor * sample(blurProfileSampler, half2(dist, 0.5)).a;
 }
 
 @test(testData) {

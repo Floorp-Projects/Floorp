@@ -5,15 +5,16 @@
  * found in the LICENSE file.
  */
 
-#include "GrCCStroker.h"
+#include "src/gpu/ccpr/GrCCStroker.h"
 
-#include "GrGpuCommandBuffer.h"
-#include "GrOnFlushResourceProvider.h"
-#include "SkPathPriv.h"
-#include "SkStrokeRec.h"
-#include "ccpr/GrCCCoverageProcessor.h"
-#include "glsl/GrGLSLFragmentShaderBuilder.h"
-#include "glsl/GrGLSLVertexGeoBuilder.h"
+#include "include/core/SkStrokeRec.h"
+#include "src/core/SkPathPriv.h"
+#include "src/gpu/GrOnFlushResourceProvider.h"
+#include "src/gpu/GrOpsRenderPass.h"
+#include "src/gpu/GrProgramInfo.h"
+#include "src/gpu/ccpr/GrCCCoverageProcessor.h"
+#include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
+#include "src/gpu/glsl/GrGLSLVertexGeoBuilder.h"
 
 static constexpr int kMaxNumLinearSegmentsLog2 = GrCCStrokeGeometry::kMaxNumLinearSegmentsLog2;
 using TriangleInstance = GrCCCoverageProcessor::TriPointInstance;
@@ -296,9 +297,9 @@ void GrCCStroker::parseDeviceSpaceStroke(const SkPath& path, const SkPoint* devi
     InstanceTallies* currStrokeEndIndices;
     if (GrScissorTest::kEnabled == scissorTest) {
         SkASSERT(fBatches.back().fEndScissorSubBatch == fScissorSubBatches.count());
-        fScissorSubBatches.emplace_back(
-                &fTalliesAllocator, *fInstanceCounts[(int)GrScissorTest::kEnabled],
-                clippedDevIBounds.makeOffset(devToAtlasOffset.x(), devToAtlasOffset.y()));
+        fScissorSubBatches.emplace_back(&fTalliesAllocator,
+                                        *fInstanceCounts[(int)GrScissorTest::kEnabled],
+                                        clippedDevIBounds.makeOffset(devToAtlasOffset));
         fBatches.back().fEndScissorSubBatch = fScissorSubBatches.count();
         fInstanceCounts[(int)GrScissorTest::kEnabled] =
                 currStrokeEndIndices = fScissorSubBatches.back().fEndInstances;
@@ -440,8 +441,9 @@ public:
 
         if (!GrCCStrokeGeometry::IsInternalJoinVerb(joinVerb)) {
             // Normal joins are a triangle that connects the outer corners of two adjoining strokes.
-            this->appendTriangleInstance().set(n1 * fCurrStrokeRadius, Sk2f(0, 0),
-                                               n0 * fCurrStrokeRadius, offset);
+            this->appendTriangleInstance().set(
+                    n1 * fCurrStrokeRadius, Sk2f(0, 0), n0 * fCurrStrokeRadius, offset,
+                    TriangleInstance::Ordering::kXYTransposed);
             if (Verb::kBevelJoin == joinVerb) {
                 return;
             }
@@ -449,10 +451,18 @@ public:
             // Internal joins are coverage-counted, self-intersecting quadrilaterals that tie the
             // four corners of two adjoining strokes together a like a shoelace. Coverage is
             // negative on the inside half. We implement this geometry with a pair of triangles.
-            this->appendTriangleInstance().set(-n0 * fCurrStrokeRadius, n0 * fCurrStrokeRadius,
-                                               n1 * fCurrStrokeRadius, offset);
-            this->appendTriangleInstance().set(-n0 * fCurrStrokeRadius, n1 * fCurrStrokeRadius,
-                                               -n1 * fCurrStrokeRadius, offset);
+            this->appendTriangleInstance().set(
+                    -n0 * fCurrStrokeRadius, n0 * fCurrStrokeRadius, n1 * fCurrStrokeRadius,
+                    offset, TriangleInstance::Ordering::kXYTransposed);
+            if (Verb::kBevelJoin == joinVerb) {
+                return;
+            }
+            this->appendTriangleInstance().set(
+                    -n0 * fCurrStrokeRadius, n1 * fCurrStrokeRadius, -n1 * fCurrStrokeRadius,
+                    offset, TriangleInstance::Ordering::kXYTransposed);
+            if (Verb::kBevelJoin == joinVerb) {
+                return;
+            }
             if (Verb::kInternalBevelJoin == joinVerb) {
                 return;
             }
@@ -466,8 +476,9 @@ public:
         Sk2f c = (n0 + n1) * .5f + baseNorm * miterCapHeightOverWidth;
 
         if (Verb::kMiterJoin == joinVerb) {
-            this->appendTriangleInstance().set(n0 * fCurrStrokeRadius, c * fCurrStrokeRadius,
-                                               n1 * fCurrStrokeRadius, offset);
+            this->appendTriangleInstance().set(
+                    n0 * fCurrStrokeRadius, c * fCurrStrokeRadius, n1 * fCurrStrokeRadius, offset,
+                    TriangleInstance::Ordering::kXYTransposed);
         } else {
             SkASSERT(Verb::kRoundJoin == joinVerb || Verb::kInternalRoundJoin == joinVerb);
             this->appendConicInstance().setW(n0 * fCurrStrokeRadius, c * fCurrStrokeRadius,
@@ -491,7 +502,8 @@ public:
             this->appendLinearStrokeInstance().set(endPts, offset[0], offset[1], fCurrStrokeRadius);
         } else {
             SkASSERT(Verb::kRoundCap == capType);
-            this->appendTriangleInstance().set(n, v, -n, offset);
+            this->appendTriangleInstance().set(
+                    n, v, -n, offset, TriangleInstance::Ordering::kXYTransposed);
             this->appendConicInstance().setW(n, n + v, v, offset, SK_ScalarRoot2Over2);
             this->appendConicInstance().setW(v, v - n, -n, offset, SK_ScalarRoot2Over2);
         }
@@ -573,8 +585,8 @@ bool GrCCStroker::prepareToDraw(GrOnFlushResourceProvider* onFlushRP) {
     fBaseInstances[1].fStrokes[0] = fInstanceCounts[0]->fStrokes[0];
     int endLinearStrokesIdx = fBaseInstances[1].fStrokes[0] + fInstanceCounts[1]->fStrokes[0];
 
-    int cubicStrokesIdx = GR_CT_DIV_ROUND_UP(endLinearStrokesIdx * sizeof(LinearStrokeInstance),
-                                             sizeof(CubicStrokeInstance));
+    int cubicStrokesIdx = GrSizeDivRoundUp(endLinearStrokesIdx * sizeof(LinearStrokeInstance),
+                                           sizeof(CubicStrokeInstance));
     for (int i = 1; i <= kMaxNumLinearSegmentsLog2; ++i) {
         for (int j = 0; j < kNumScissorModes; ++j) {
             fBaseInstances[j].fStrokes[i] = cubicStrokesIdx;
@@ -582,16 +594,16 @@ bool GrCCStroker::prepareToDraw(GrOnFlushResourceProvider* onFlushRP) {
         }
     }
 
-    int trianglesIdx = GR_CT_DIV_ROUND_UP(cubicStrokesIdx * sizeof(CubicStrokeInstance),
-                                          sizeof(TriangleInstance));
+    int trianglesIdx = GrSizeDivRoundUp(cubicStrokesIdx * sizeof(CubicStrokeInstance),
+                                        sizeof(TriangleInstance));
     fBaseInstances[0].fTriangles = trianglesIdx;
     fBaseInstances[1].fTriangles =
             fBaseInstances[0].fTriangles + fInstanceCounts[0]->fTriangles;
     int endTrianglesIdx =
             fBaseInstances[1].fTriangles + fInstanceCounts[1]->fTriangles;
 
-    int conicsIdx = GR_CT_DIV_ROUND_UP(endTrianglesIdx * sizeof(TriangleInstance),
-                                       sizeof(ConicInstance));
+    int conicsIdx =
+            GrSizeDivRoundUp(endTrianglesIdx * sizeof(TriangleInstance), sizeof(ConicInstance));
     fBaseInstances[0].fConics = conicsIdx;
     fBaseInstances[1].fConics = fBaseInstances[0].fConics + fInstanceCounts[0]->fConics;
 
@@ -672,8 +684,8 @@ bool GrCCStroker::prepareToDraw(GrOnFlushResourceProvider* onFlushRP) {
     return true;
 }
 
-void GrCCStroker::drawStrokes(GrOpFlushState* flushState, BatchID batchID,
-                              const SkIRect& drawBounds) const {
+void GrCCStroker::drawStrokes(GrOpFlushState* flushState, GrCCCoverageProcessor* proc,
+                              BatchID batchID, const SkIRect& drawBounds) const {
     using PrimitiveType = GrCCCoverageProcessor::PrimitiveType;
     SkASSERT(fInstanceBuffer);
 
@@ -689,7 +701,8 @@ void GrCCStroker::drawStrokes(GrOpFlushState* flushState, BatchID batchID,
     startIndices[(int)GrScissorTest::kEnabled] = (!startScissorSubBatch)
             ? &fZeroTallies : fScissorSubBatches[startScissorSubBatch - 1].fEndInstances;
 
-    GrPipeline pipeline(GrScissorTest::kEnabled, SkBlendMode::kPlus);
+    GrPipeline pipeline(GrScissorTest::kEnabled, SkBlendMode::kPlus,
+                        flushState->drawOpArgs().outputSwizzle());
 
     // Draw linear strokes.
     this->appendStrokeMeshesToBuffers(0, batch, startIndices, startScissorSubBatch, drawBounds);
@@ -708,14 +721,14 @@ void GrCCStroker::drawStrokes(GrOpFlushState* flushState, BatchID batchID,
     }
 
     // Draw triangles.
-    GrCCCoverageProcessor triProc(flushState->resourceProvider(), PrimitiveType::kTriangles);
+    proc->reset(PrimitiveType::kTriangles, flushState->resourceProvider());
     this->drawConnectingGeometry<&InstanceTallies::fTriangles>(
-            flushState, pipeline, triProc, batch, startIndices, startScissorSubBatch, drawBounds);
+            flushState, pipeline, *proc, batch, startIndices, startScissorSubBatch, drawBounds);
 
     // Draw conics.
-    GrCCCoverageProcessor conicProc(flushState->resourceProvider(), PrimitiveType::kConics);
+    proc->reset(PrimitiveType::kConics, flushState->resourceProvider());
     this->drawConnectingGeometry<&InstanceTallies::fConics>(
-            flushState, pipeline, conicProc, batch, startIndices, startScissorSubBatch, drawBounds);
+            flushState, pipeline, *proc, batch, startIndices, startScissorSubBatch, drawBounds);
 }
 
 void GrCCStroker::appendStrokeMeshesToBuffers(int numSegmentsLog2, const Batch& batch,
@@ -763,9 +776,17 @@ void GrCCStroker::flushBufferedMeshesAsStrokes(const GrPrimitiveProcessor& proce
     SkASSERT(fMeshesBuffer.count() == fScissorsBuffer.count());
     GrPipeline::DynamicStateArrays dynamicStateArrays;
     dynamicStateArrays.fScissorRects = fScissorsBuffer.begin();
-    flushState->rtCommandBuffer()->draw(processor, pipeline, nullptr, &dynamicStateArrays,
-                                        fMeshesBuffer.begin(), fMeshesBuffer.count(),
-                                        SkRect::Make(drawBounds));
+
+    GrProgramInfo programInfo(flushState->drawOpArgs().numSamples(),
+                              flushState->drawOpArgs().origin(),
+                              pipeline,
+                              processor,
+                              nullptr,
+                              &dynamicStateArrays, 0);
+
+    flushState->opsRenderPass()->draw(programInfo,
+                                      fMeshesBuffer.begin(), fMeshesBuffer.count(),
+                                      SkRect::Make(drawBounds));
     // Don't call reset(), as that also resets the reserve count.
     fMeshesBuffer.pop_back_n(fMeshesBuffer.count());
     fScissorsBuffer.pop_back_n(fScissorsBuffer.count());

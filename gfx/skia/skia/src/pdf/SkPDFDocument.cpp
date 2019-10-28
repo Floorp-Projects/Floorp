@@ -5,20 +5,20 @@
  * found in the LICENSE file.
  */
 
-#include "SkPDFDocument.h"
-#include "SkPDFDocumentPriv.h"
+#include "include/docs/SkPDFDocument.h"
+#include "src/pdf/SkPDFDocumentPriv.h"
 
-#include "SkMakeUnique.h"
-#include "SkPDFDevice.h"
-#include "SkPDFDocument.h"
-#include "SkPDFFont.h"
-#include "SkPDFGradientShader.h"
-#include "SkPDFGraphicState.h"
-#include "SkPDFShader.h"
-#include "SkPDFTag.h"
-#include "SkPDFUtils.h"
-#include "SkStream.h"
-#include "SkTo.h"
+#include "include/core/SkStream.h"
+#include "include/docs/SkPDFDocument.h"
+#include "include/private/SkTo.h"
+#include "src/core/SkMakeUnique.h"
+#include "src/pdf/SkPDFDevice.h"
+#include "src/pdf/SkPDFFont.h"
+#include "src/pdf/SkPDFGradientShader.h"
+#include "src/pdf/SkPDFGraphicState.h"
+#include "src/pdf/SkPDFShader.h"
+#include "src/pdf/SkPDFTag.h"
+#include "src/pdf/SkPDFUtils.h"
 
 #include <utility>
 
@@ -206,20 +206,19 @@ SkPDFDocument::~SkPDFDocument() {
 }
 
 SkPDFIndirectReference SkPDFDocument::emit(const SkPDFObject& object, SkPDFIndirectReference ref){
+    SkAutoMutexExclusive lock(fMutex);
     object.emitObject(this->beginObject(ref));
     this->endObject();
     return ref;
 }
 
-SkWStream* SkPDFDocument::beginObject(SkPDFIndirectReference ref) {
-    fMutex.acquire();
+SkWStream* SkPDFDocument::beginObject(SkPDFIndirectReference ref) SK_REQUIRES(fMutex) {
     begin_indirect_object(&fOffsetMap, ref, this->getStream());
     return this->getStream();
 };
 
-void SkPDFDocument::endObject() {
+void SkPDFDocument::endObject() SK_REQUIRES(fMutex) {
     end_indirect_object(this->getStream());
-    fMutex.release();
 };
 
 static SkSize operator*(SkISize u, SkScalar s) { return SkSize{u.width() * s, u.height() * s}; }
@@ -230,7 +229,7 @@ SkCanvas* SkPDFDocument::onBeginPage(SkScalar width, SkScalar height) {
     if (fPages.empty()) {
         // if this is the first page if the document.
         {
-            SkAutoMutexAcquire autoMutexAcquire(fMutex);
+            SkAutoMutexExclusive autoMutexAcquire(fMutex);
             serializeHeader(&fOffsetMap, this->getStream());
 
         }
@@ -263,6 +262,68 @@ SkCanvas* SkPDFDocument::onBeginPage(SkScalar width, SkScalar height) {
     return &fCanvas;
 }
 
+static void populate_link_annotation(SkPDFDict* annotation, const SkRect& r) {
+    annotation->insertName("Subtype", "Link");
+    annotation->insertInt("F", 4);  // required by ISO 19005
+    // Border: 0 = Horizontal corner radius.
+    //         0 = Vertical corner radius.
+    //         0 = Width, 0 = no border.
+    annotation->insertObject("Border", SkPDFMakeArray(0, 0, 0));
+    annotation->insertObject("Rect", SkPDFMakeArray(r.fLeft, r.fTop, r.fRight, r.fBottom));
+}
+
+static SkString to_string(const SkData& d) {
+    return SkString(static_cast<const char*>(d.data()), d.size() - 1);
+}
+
+static std::unique_ptr<SkPDFArray> get_annotations(
+        SkPDFDocument* doc,
+        const std::vector<std::pair<sk_sp<SkData>, SkRect>>& linkToURLs,
+        const std::vector<std::pair<sk_sp<SkData>, SkRect>>& linkToDestinations)
+{
+    std::unique_ptr<SkPDFArray> array;
+    size_t count = linkToURLs.size() + linkToDestinations.size();
+    if (0 == count) {
+        return array;  // is nullptr
+    }
+    array = SkPDFMakeArray();
+    array->reserve(count);
+    for (const auto& rectWithURL : linkToURLs) {
+        SkPDFDict annotation("Annot");
+        populate_link_annotation(&annotation, rectWithURL.second);
+        std::unique_ptr<SkPDFDict> action = SkPDFMakeDict("Action");
+        action->insertName("S", "URI");
+        action->insertString("URI", to_string(*rectWithURL.first));
+        annotation.insertObject("A", std::move(action));
+        array->appendRef(doc->emit(annotation));
+    }
+    for (const auto& linkToDestination : linkToDestinations) {
+        SkPDFDict annotation("Annot");
+        populate_link_annotation(&annotation, linkToDestination.second);
+        annotation.insertName("Dest", to_string(*linkToDestination.first));
+        array->appendRef(doc->emit(annotation));
+    }
+    return array;
+}
+
+static SkPDFIndirectReference append_destinations(
+        SkPDFDocument* doc,
+        const std::vector<SkPDFNamedDestination>& namedDestinations)
+{
+    SkPDFDict destinations;
+    for (const SkPDFNamedDestination& dest : namedDestinations) {
+        auto pdfDest = SkPDFMakeArray();
+        pdfDest->reserve(5);
+        pdfDest->appendRef(dest.fPage);
+        pdfDest->appendName("XYZ");
+        pdfDest->appendScalar(dest.fPoint.x());
+        pdfDest->appendScalar(dest.fPoint.y());
+        pdfDest->appendInt(0);  // Leave zoom unchanged
+        destinations.insertObject(SkString((const char*)dest.fName->data()), std::move(pdfDest));
+    }
+    return doc->emit(destinations);
+}
+
 void SkPDFDocument::onEndPage() {
     SkASSERT(!fCanvas.imageInfo().dimensions().isZero());
     reset_object(&fCanvas);
@@ -273,17 +334,19 @@ void SkPDFDocument::onEndPage() {
     SkSize mediaSize = fPageDevice->imageInfo().dimensions() * fInverseRasterScale;
     std::unique_ptr<SkStreamAsset> pageContent = fPageDevice->content();
     auto resourceDict = fPageDevice->makeResourceDict();
-    auto annotations = fPageDevice->getAnnotations();
     SkASSERT(fPageRefs.size() > 0);
-    fPageDevice->appendDestinations(&fDests, fPageRefs.back());
     fPageDevice = nullptr;
 
     page->insertObject("Resources", std::move(resourceDict));
     page->insertObject("MediaBox", SkPDFUtils::RectToArray(SkRect::MakeSize(mediaSize)));
 
-    if (annotations) {
+    if (std::unique_ptr<SkPDFArray> annotations =
+            get_annotations(this, fCurrentPageLinkToURLs, fCurrentPageLinkToDestinations)) {
         page->insertObject("Annots", std::move(annotations));
+        fCurrentPageLinkToURLs.clear();
+        fCurrentPageLinkToDestinations.clear();
     }
+
     page->insertRef("Contents", SkPDFStreamOut(nullptr, std::move(pageContent), this));
     // The StructParents unique identifier for each page is just its
     // 0-based page index.
@@ -435,6 +498,10 @@ SkPDFIndirectReference SkPDFDocument::getPage(size_t pageIndex) const {
     return fPageRefs[pageIndex];
 }
 
+const SkMatrix& SkPDFDocument::currentPageTransform() const {
+    return fPageDevice->initialTransform();
+}
+
 int SkPDFDocument::getMarkIdForNodeId(int nodeId) {
     return fTagTree.getMarkIdForNodeId(nodeId, SkToUInt(this->currentPageIndex()));
 }
@@ -467,9 +534,9 @@ void SkPDFDocument::onClose(SkWStream* stream) {
 
     docCatalog->insertRef("Pages", generate_page_tree(this, std::move(fPages), fPageRefs));
 
-    if (fDests.size() > 0) {
-        docCatalog->insertRef("Dests", this->emit(fDests));
-        reset_object(&fDests);
+    if (!fNamedDestinations.empty()) {
+        docCatalog->insertRef("Dests", append_destinations(this, fNamedDestinations));
+        fNamedDestinations.clear();
     }
 
     // Handle tagged PDFs.
@@ -489,7 +556,7 @@ void SkPDFDocument::onClose(SkWStream* stream) {
 
     this->waitForJobs();
     {
-        SkAutoMutexAcquire autoMutexAcquire(fMutex);
+        SkAutoMutexExclusive autoMutexAcquire(fMutex);
         serialize_footer(fOffsetMap, this->getStream(), fInfoDict, docCatalogRef, fUUID);
     }
 }

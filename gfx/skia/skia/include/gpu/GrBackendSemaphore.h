@@ -8,10 +8,11 @@
 #ifndef GrBackendSemaphore_DEFINED
 #define GrBackendSemaphore_DEFINED
 
-#include "GrTypes.h"
+#include "include/gpu/GrTypes.h"
 
-#include "gl/GrGLTypes.h"
-#include "vk/GrVkTypes.h"
+#include "include/gpu/gl/GrGLTypes.h"
+#include "include/gpu/mtl/GrMtlTypes.h"
+#include "include/gpu/vk/GrVkTypes.h"
 
 /**
  * Wrapper class for passing into and receiving data from Ganesh about a backend semaphore object.
@@ -38,6 +39,19 @@ public:
 #endif
     }
 
+    // It is the creator's responsibility to ref the MTLEvent passed in here, via __bridge_retained.
+    // The other end will wrap this BackendSemaphore and take the ref, via __bridge_transfer.
+    void initMetal(GrMTLHandle event, uint64_t value) {
+        fBackend = GrBackendApi::kMetal;
+        fMtlEvent = event;
+        fMtlValue = value;
+#ifdef SK_METAL
+        fIsInitialized = true;
+#else
+        fIsInitialized = false;
+#endif
+    }
+
     bool isInitialized() const { return fIsInitialized; }
 
     GrGLsync glSync() const {
@@ -54,12 +68,28 @@ public:
         return fVkSemaphore;
     }
 
+    GrMTLHandle mtlSemaphore() const {
+        if (!fIsInitialized || GrBackendApi::kMetal != fBackend) {
+            return nullptr;
+        }
+        return fMtlEvent;
+    }
+
+    uint64_t mtlValue() const {
+        if (!fIsInitialized || GrBackendApi::kMetal != fBackend) {
+            return 0;
+        }
+        return fMtlValue;
+    }
+
 private:
     GrBackendApi fBackend;
     union {
         GrGLsync    fGLSync;
         VkSemaphore fVkSemaphore;
+        GrMTLHandle fMtlEvent;    // Expected to be an id<MTLEvent>
     };
+    uint64_t fMtlValue;
     bool fIsInitialized;
 };
 

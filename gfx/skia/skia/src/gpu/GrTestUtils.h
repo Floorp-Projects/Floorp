@@ -8,21 +8,21 @@
 #ifndef GrTestUtils_DEFINED
 #define GrTestUtils_DEFINED
 
-#include "SkTypes.h"
+#include "include/core/SkTypes.h"
 
 #if GR_TEST_UTILS
 
-#include "../private/SkTemplates.h"
-#include "GrColor.h"
-#include "GrFPArgs.h"
-#include "GrSamplerState.h"
-#include "SkMacros.h"
-#include "SkPathEffect.h"
-#include "SkRandom.h"
-#include "SkShaderBase.h"
-#include "SkStrokeRec.h"
+#include "include/core/SkPathEffect.h"
+#include "include/core/SkStrokeRec.h"
+#include "include/private/SkMacros.h"
+#include "include/private/SkTemplates.h"
+#include "include/utils/SkRandom.h"
+#include "src/gpu/GrColor.h"
+#include "src/gpu/GrFPArgs.h"
+#include "src/gpu/GrSamplerState.h"
+#include "src/shaders/SkShaderBase.h"
 
-class GrColorSpaceInfo;
+class GrColorInfo;
 class GrColorSpaceXform;
 struct GrProcessorTestData;
 class GrStyle;
@@ -60,7 +60,7 @@ public:
 
 private:
     SkMatrix fViewMatrixStorage;
-    std::unique_ptr<GrColorSpaceInfo> fColorSpaceInfoStorage;
+    std::unique_ptr<GrColorInfo> fColorInfoStorage;
     GrFPArgs fArgs;
 };
 

@@ -8,16 +8,16 @@
 #ifndef SkMatrixImageFilter_DEFINED
 #define SkMatrixImageFilter_DEFINED
 
-#include "SkFlattenable.h"
-#include "SkImageFilter.h"
-#include "SkMatrix.h"
+#include "include/core/SkFlattenable.h"
+#include "include/core/SkMatrix.h"
+#include "src/core/SkImageFilter_Base.h"
 
 /*! \class SkMatrixImageFilter
     Matrix transformation image filter.  This filter draws its source
     input transformed by the given matrix.
  */
 
-class SkMatrixImageFilter : public SkImageFilter {
+class SkMatrixImageFilter : public SkImageFilter_Base {
 public:
     /** Construct a 2D transformation image filter.
      *  @param transform     The matrix to apply when drawing the src bitmap
@@ -38,9 +38,7 @@ protected:
                         sk_sp<SkImageFilter> input);
     void flatten(SkWriteBuffer&) const override;
 
-    sk_sp<SkSpecialImage> onFilterImage(SkSpecialImage* source, const Context&,
-                                        SkIPoint* offset) const override;
-    sk_sp<SkImageFilter> onMakeColorSpace(SkColorSpaceXformer*) const override;
+    sk_sp<SkSpecialImage> onFilterImage(const Context&, SkIPoint* offset) const override;
     SkIRect onFilterNodeBounds(const SkIRect& src, const SkMatrix& ctm,
                                MapDirection, const SkIRect* inputRect) const override;
 
@@ -49,7 +47,7 @@ private:
 
     SkMatrix              fTransform;
     SkFilterQuality       fFilterQuality;
-    typedef SkImageFilter INHERITED;
+    typedef SkImageFilter_Base INHERITED;
 };
 
 #endif

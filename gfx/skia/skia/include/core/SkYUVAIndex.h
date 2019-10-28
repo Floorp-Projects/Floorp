@@ -8,19 +8,8 @@
 #ifndef SkYUVAIndex_DEFINED
 #define SkYUVAIndex_DEFINED
 
-#include "SkTypes.h"
-
-/** \enum SkColorChannel
-    Describes different color channels one can manipulate
-*/
-enum class SkColorChannel {
-    kR,  // the red channel
-    kG,  // the green channel
-    kB,  // the blue channel
-    kA,  // the alpha channel
-
-    kLastEnum = kA,
-};
+#include "include/core/SkColor.h"
+#include "include/core/SkTypes.h"
 
 /** \struct SkYUVAIndex
     Describes from which image source and which channel to read each individual YUVA plane.
@@ -49,7 +38,7 @@ struct SK_API SkYUVAIndex {
     };
     static constexpr int kIndexCount = kLast_Index + 1;
 
-    /** The index is a number between -1..3 which definies which image source to read from, where -1
+    /** The index is a number between -1..3 which defines which image source to read from, where -1
      * means the image source doesn't exist. The assumption is we will always have image sources for
      * each of YUV planes, but optionally have image source for A plane. */
     int            fIndex;

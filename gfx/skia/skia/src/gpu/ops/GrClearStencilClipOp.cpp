@@ -5,13 +5,13 @@
  * found in the LICENSE file.
  */
 
-#include "GrClearStencilClipOp.h"
+#include "src/gpu/ops/GrClearStencilClipOp.h"
 
-#include "GrGpuCommandBuffer.h"
-#include "GrMemoryPool.h"
-#include "GrOpFlushState.h"
-#include "GrRecordingContext.h"
-#include "GrRecordingContextPriv.h"
+#include "include/private/GrRecordingContext.h"
+#include "src/gpu/GrMemoryPool.h"
+#include "src/gpu/GrOpFlushState.h"
+#include "src/gpu/GrOpsRenderPass.h"
+#include "src/gpu/GrRecordingContextPriv.h"
 
 std::unique_ptr<GrOp> GrClearStencilClipOp::Make(GrRecordingContext* context,
                                                  const GrFixedClip& clip,
@@ -23,6 +23,6 @@ std::unique_ptr<GrOp> GrClearStencilClipOp::Make(GrRecordingContext* context,
 }
 
 void GrClearStencilClipOp::onExecute(GrOpFlushState* state, const SkRect& chainBounds) {
-    SkASSERT(state->rtCommandBuffer());
-    state->rtCommandBuffer()->clearStencilClip(fClip, fInsideStencilMask);
+    SkASSERT(state->opsRenderPass());
+    state->opsRenderPass()->clearStencilClip(fClip, fInsideStencilMask);
 }

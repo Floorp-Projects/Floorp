@@ -8,31 +8,27 @@
 #ifndef GrGLGpu_DEFINED
 #define GrGLGpu_DEFINED
 
-#include "GrGLContext.h"
-#include "GrGLIRect.h"
-#include "GrGLPathRendering.h"
-#include "GrGLProgram.h"
-#include "GrGLRenderTarget.h"
-#include "GrGLStencilAttachment.h"
-#include "GrGLTexture.h"
-#include "GrGLVertexArray.h"
-#include "GrGpu.h"
-#include "GrMesh.h"
-#include "GrWindowRectsState.h"
-#include "GrXferProcessor.h"
-#include "SkLRUCache.h"
-#include "SkTArray.h"
-#include "SkTypes.h"
+#include <list>
+#include "include/core/SkTypes.h"
+#include "include/private/SkTArray.h"
+#include "src/core/SkLRUCache.h"
+#include "src/gpu/GrGpu.h"
+#include "src/gpu/GrMesh.h"
+#include "src/gpu/GrNativeRect.h"
+#include "src/gpu/GrWindowRectsState.h"
+#include "src/gpu/GrXferProcessor.h"
+#include "src/gpu/gl/GrGLContext.h"
+#include "src/gpu/gl/GrGLPathRendering.h"
+#include "src/gpu/gl/GrGLProgram.h"
+#include "src/gpu/gl/GrGLRenderTarget.h"
+#include "src/gpu/gl/GrGLStencilAttachment.h"
+#include "src/gpu/gl/GrGLTexture.h"
+#include "src/gpu/gl/GrGLVertexArray.h"
 
 class GrGLBuffer;
-class GrGLGpuRTCommandBuffer;
-class GrGLGpuTextureCommandBuffer;
+class GrGLOpsRenderPass;
 class GrPipeline;
 class GrSwizzle;
-
-#ifdef SK_DEBUG
-#define PROGRAM_CACHE_STATS
-#endif
 
 class GrGLGpu final : public GrGpu, private GrMesh::SendToGpuImpl {
 public:
@@ -56,7 +52,7 @@ public:
     }
 
     // Used by GrGLProgram to configure OpenGL state.
-    void bindTexture(int unitIdx, GrSamplerState samplerState, GrGLTexture* texture);
+    void bindTexture(int unitIdx, GrSamplerState samplerState, const GrSwizzle&, GrGLTexture*);
 
     // These functions should be used to bind GL objects. They track the GL state and skip redundant
     // bindings. Making the equivalent glBind calls directly will confuse the state tracking.
@@ -76,16 +72,10 @@ public:
     // If the caller wishes to bind an index buffer to a specific VAO, it can call glBind directly.
     GrGLenum bindBuffer(GrGpuBufferType type, const GrBuffer*);
 
-    // The GrGLGpuRTCommandBuffer does not buffer up draws before submitting them to the gpu.
+    // The GrGLOpsRenderPass does not buffer up draws before submitting them to the gpu.
     // Thus this is the implementation of the draw call for the corresponding passthrough function
-    // on GrGLRTGpuCommandBuffer.
-    void draw(GrRenderTarget*, GrSurfaceOrigin,
-              const GrPrimitiveProcessor&,
-              const GrPipeline&,
-              const GrPipeline::FixedDynamicState*,
-              const GrPipeline::DynamicStateArrays*,
-              const GrMesh[],
-              int meshCount);
+    // on GrGLOpsRenderPass.
+    void draw(GrRenderTarget*, const GrProgramInfo&, const GrMesh[], int meshCount);
 
     // GrMesh::SendToGpuImpl methods. These issue the actual GL draw calls.
     // Marked final as a hint to the compiler to not use virtual dispatch.
@@ -106,14 +96,14 @@ public:
                                        const GrBuffer* instanceBuffer, int instanceCount,
                                        int baseInstance, GrPrimitiveRestart) final;
 
-    // The GrGLGpuRTCommandBuffer does not buffer up draws before submitting them to the gpu.
+    // The GrGLOpsRenderPass does not buffer up draws before submitting them to the gpu.
     // Thus this is the implementation of the clear call for the corresponding passthrough function
-    // on GrGLGpuRTCommandBuffer.
+    // on GrGLOpsRenderPass.
     void clear(const GrFixedClip&, const SkPMColor4f&, GrRenderTarget*, GrSurfaceOrigin);
 
-    // The GrGLGpuRTCommandBuffer does not buffer up draws before submitting them to the gpu.
+    // The GrGLOpsRenderPass does not buffer up draws before submitting them to the gpu.
     // Thus this is the implementation of the clearStencil call for the corresponding passthrough
-    // function on GrGLGpuRTCommandBuffer.
+    // function on GrGLOpsrenderPass.
     void clearStencilClip(const GrFixedClip&, bool insideStencilMask,
                           GrRenderTarget*, GrSurfaceOrigin);
 
@@ -121,40 +111,45 @@ public:
     // stencil buffer as not dirty?
     void clearStencil(GrRenderTarget*, int clearValue);
 
-    GrGpuRTCommandBuffer* getCommandBuffer(
-            GrRenderTarget*, GrSurfaceOrigin, const SkRect&,
-            const GrGpuRTCommandBuffer::LoadAndStoreInfo&,
-            const GrGpuRTCommandBuffer::StencilLoadAndStoreInfo&) override;
+    void beginCommandBuffer(GrRenderTarget*, const SkIRect& bounds, GrSurfaceOrigin,
+                            const GrOpsRenderPass::LoadAndStoreInfo& colorLoadStore,
+                            const GrOpsRenderPass::StencilLoadAndStoreInfo& stencilLoadStore);
 
-    GrGpuTextureCommandBuffer* getCommandBuffer(GrTexture*, GrSurfaceOrigin) override;
+    void endCommandBuffer(GrRenderTarget*, const GrOpsRenderPass::LoadAndStoreInfo& colorLoadStore,
+                          const GrOpsRenderPass::StencilLoadAndStoreInfo& stencilLoadStore);
+
+    GrOpsRenderPass* getOpsRenderPass(
+            GrRenderTarget*, GrSurfaceOrigin, const SkIRect&,
+            const GrOpsRenderPass::LoadAndStoreInfo&,
+            const GrOpsRenderPass::StencilLoadAndStoreInfo&,
+            const SkTArray<GrTextureProxy*, true>& sampledProxies) override;
 
     void invalidateBoundRenderTarget() {
         fHWBoundRenderTargetUniqueID.makeInvalid();
     }
 
-    GrStencilAttachment* createStencilAttachmentForRenderTarget(const GrRenderTarget* rt,
-                                                                int width,
-                                                                int height) override;
+    GrStencilAttachment* createStencilAttachmentForRenderTarget(
+            const GrRenderTarget* rt, int width, int height, int numStencilSamples) override;
+    void deleteBackendTexture(const GrBackendTexture&) override;
+
+    bool precompileShader(const SkData& key, const SkData& data) override {
+        return fProgramCache->precompileShader(key, data);
+    }
+
 #if GR_TEST_UTILS
-    GrBackendTexture createTestingOnlyBackendTexture(const void* pixels, int w, int h,
-                                                     GrColorType colorType, bool isRenderTarget,
-                                                     GrMipMapped mipMapped,
-                                                     size_t rowBytes = 0) override;
     bool isTestingOnlyBackendTexture(const GrBackendTexture&) const override;
-    void deleteTestingOnlyBackendTexture(const GrBackendTexture&) override;
 
     GrBackendRenderTarget createTestingOnlyBackendRenderTarget(int w, int h, GrColorType) override;
-
     void deleteTestingOnlyBackendRenderTarget(const GrBackendRenderTarget&) override;
 
     const GrGLContext* glContextForTesting() const override { return &this->glContext(); }
 
-    void resetShaderCacheForTesting() const override { fProgramCache->abandon(); }
+    void resetShaderCacheForTesting() const override { fProgramCache->reset(); }
 
     void testingOnly_flushGpuAndSync() override;
 #endif
 
-    void submit(GrGpuCommandBuffer* buffer) override;
+    void submit(GrOpsRenderPass* renderPass) override;
 
     GrFence SK_WARN_UNUSED_RESULT insertFence() override;
     bool waitFence(GrFence, uint64_t timeout) override;
@@ -166,6 +161,8 @@ public:
                                             GrWrapOwnership ownership) override;
     void insertSemaphore(sk_sp<GrSemaphore> semaphore) override;
     void waitSemaphore(sk_sp<GrSemaphore> semaphore) override;
+
+    void checkFinishProcs() override;
 
     sk_sp<GrSemaphore> prepareTextureForCrossContextUsage(GrTexture*) override;
 
@@ -180,96 +177,104 @@ private:
     GrGLGpu(std::unique_ptr<GrGLContext>, GrContext*);
 
     // GrGpu overrides
+    GrBackendTexture onCreateBackendTexture(int w, int h, const GrBackendFormat&,
+                                            GrMipMapped, GrRenderable,
+                                            const SkPixmap srcData[], int numMipLevels,
+                                            const SkColor4f* color, GrProtected) override;
+
     void onResetContext(uint32_t resetBits) override;
 
     void onResetTextureBindings() override;
 
+    void querySampleLocations(GrRenderTarget*, SkTArray<SkPoint>*) override;
+
     void xferBarrier(GrRenderTarget*, GrXferBarrierType) override;
 
-    sk_sp<GrTexture> onCreateTexture(const GrSurfaceDesc& desc, SkBudgeted budgeted,
-                                     const GrMipLevel texels[], int mipLevelCount) override;
+    sk_sp<GrTexture> onCreateTexture(const GrSurfaceDesc&,
+                                     const GrBackendFormat&,
+                                     GrRenderable,
+                                     int renderTargetSampleCnt,
+                                     SkBudgeted,
+                                     GrProtected,
+                                     int mipLevelCount,
+                                     uint32_t levelClearMask) override;
+    sk_sp<GrTexture> onCreateCompressedTexture(int width, int height, const GrBackendFormat&,
+                                               SkImage::CompressionType compression, SkBudgeted,
+                                               const void* data) override;
 
     sk_sp<GrGpuBuffer> onCreateBuffer(size_t size, GrGpuBufferType intendedType, GrAccessPattern,
                                       const void* data) override;
 
-    sk_sp<GrTexture> onWrapBackendTexture(const GrBackendTexture&, GrWrapOwnership, GrWrapCacheable,
-                                          GrIOType) override;
+    sk_sp<GrTexture> onWrapBackendTexture(const GrBackendTexture&, GrColorType, GrWrapOwnership,
+                                          GrWrapCacheable, GrIOType) override;
     sk_sp<GrTexture> onWrapRenderableBackendTexture(const GrBackendTexture&, int sampleCnt,
-                                                    GrWrapOwnership, GrWrapCacheable) override;
-    sk_sp<GrRenderTarget> onWrapBackendRenderTarget(const GrBackendRenderTarget&) override;
+                                                    GrColorType, GrWrapOwnership,
+                                                    GrWrapCacheable) override;
+    sk_sp<GrRenderTarget> onWrapBackendRenderTarget(const GrBackendRenderTarget&,
+                                                    GrColorType) override;
     sk_sp<GrRenderTarget> onWrapBackendTextureAsRenderTarget(const GrBackendTexture&,
-                                                             int sampleCnt) override;
+                                                             int sampleCnt, GrColorType) override;
 
-    // Given a GrPixelConfig return the index into the stencil format array on GrGLCaps to a
+    // Given a GL format return the index into the stencil format array on GrGLCaps to a
     // compatible stencil format, or negative if there is no compatible stencil format.
-    int getCompatibleStencilIndex(GrPixelConfig config);
+    int getCompatibleStencilIndex(GrGLFormat format);
 
     void onFBOChanged();
 
-    // Returns whether the texture is successfully created. On success, the
-    // result is stored in |info|.
-    // The texture is populated with |texels|, if it exists.
+    // Returns whether the texture is successfully created. On success, a non-zero texture ID is
+    // returned. On failure, zero is returned.
+    // The texture is populated with |texels|, if it is non-null.
     // The texture parameters are cached in |initialTexParams|.
-    bool createTextureImpl(const GrSurfaceDesc& desc, GrGLTextureInfo* info, bool renderTarget,
-                           GrGLTexture::SamplerParams* initialTexParams, const GrMipLevel texels[],
-                           int mipLevelCount, GrMipMapsStatus* mipMapsStatus);
+    GrGLuint createTexture2D(const SkISize& size,
+                             GrGLFormat format,
+                             GrRenderable,
+                             GrGLTextureParameters::SamplerOverriddenState* initialState,
+                             int mipLevelCount);
 
-    // Checks whether glReadPixels can be called to get pixel values in readConfig from the
-    // render target.
-    bool readPixelsSupported(GrRenderTarget* target, GrPixelConfig readConfig);
+    GrGLuint createCompressedTexture2D(const SkISize& size, GrGLFormat format,
+                                       SkImage::CompressionType compression,
+                                       GrGLTextureParameters::SamplerOverriddenState* initialState,
+                                       const void* data);
 
-    // Checks whether glReadPixels can be called to get pixel values in readConfig from a
-    // render target that has renderTargetConfig. This may have to create a temporary
-    // render target and thus is less preferable than the variant that takes a render target.
-    bool readPixelsSupported(GrPixelConfig renderTargetConfig, GrPixelConfig readConfig);
+    bool onReadPixels(GrSurface*, int left, int top, int width, int height,
+                      GrColorType surfaceColorType, GrColorType dstColorType, void* buffer,
+                      size_t rowBytes) override;
 
-    // Checks whether glReadPixels can be called to get pixel values in readConfig from a
-    // render target that has the same config as surfaceForConfig. Calls one of the the two
-    // variations above, depending on whether the surface is a render target or not.
-    bool readPixelsSupported(GrSurface* surfaceForConfig, GrPixelConfig readConfig);
+    bool onWritePixels(GrSurface*, int left, int top, int width, int height,
+                       GrColorType surfaceColorType, GrColorType srcColorType,
+                       const GrMipLevel texels[], int mipLevelCount,
+                       bool prepForTexSampling) override;
 
-    bool onReadPixels(GrSurface*, int left, int top, int width, int height, GrColorType,
-                      void* buffer, size_t rowBytes) override;
-
-    bool onWritePixels(GrSurface*, int left, int top, int width, int height, GrColorType,
-                       const GrMipLevel texels[], int mipLevelCount) override;
-
-    bool onTransferPixels(GrTexture*, int left, int top, int width, int height, GrColorType,
-                          GrGpuBuffer* transferBuffer, size_t offset, size_t rowBytes) override;
+    bool onTransferPixelsTo(GrTexture*, int left, int top, int width, int height,
+                            GrColorType textureColorType, GrColorType bufferColorType,
+                            GrGpuBuffer* transferBuffer, size_t offset, size_t rowBytes) override;
+    bool onTransferPixelsFrom(GrSurface*, int left, int top, int width, int height,
+                              GrColorType surfaceColorType, GrColorType bufferColorType,
+                              GrGpuBuffer* transferBuffer, size_t offset) override;
+    bool readOrTransferPixelsFrom(GrSurface*, int left, int top, int width, int height,
+                                  GrColorType surfaceColorType, GrColorType dstColorType,
+                                  void* offsetOrPtr, int rowWidthInPixels);
 
     // Before calling any variation of TexImage, TexSubImage, etc..., call this to ensure that the
     // PIXEL_UNPACK_BUFFER is unbound.
     void unbindCpuToGpuXferBuffer();
 
-    void onResolveRenderTarget(GrRenderTarget* target) override;
+    void onResolveRenderTarget(GrRenderTarget* target, const SkIRect& resolveRect,
+                               GrSurfaceOrigin resolveOrigin, ForExternalIO) override;
 
     bool onRegenerateMipMapLevels(GrTexture*) override;
 
-    bool onCopySurface(GrSurface* dst, GrSurfaceOrigin dstOrigin,
-                       GrSurface* src, GrSurfaceOrigin srcOrigin,
-                       const SkIRect& srcRect, const SkIPoint& dstPoint,
-                       bool canDiscardOutsideDstRect) override;
+    bool onCopySurface(GrSurface* dst, GrSurface* src, const SkIRect& srcRect,
+                       const SkIPoint& dstPoint) override;
 
     // binds texture unit in GL
     void setTextureUnit(int unitIdx);
-
-    /**
-     * primitiveProcessorTextures must contain GrPrimitiveProcessor::numTextureSamplers() *
-     * numPrimitiveProcessorTextureSets entries.
-     */
-    void resolveAndGenerateMipMapsForProcessorTextures(
-            const GrPrimitiveProcessor&, const GrPipeline&,
-            const GrTextureProxy* const primitiveProcessorTextures[],
-            int numPrimitiveProcessorTextureSets);
 
     // Flushes state from GrPipeline to GL. Returns false if the state couldn't be set.
     // willDrawPoints must be true if point primitives will be rendered after setting the GL state.
     // If DynamicStateArrays is not null then dynamicStateArraysLength is the number of dynamic
     // state entries in each array.
-    bool flushGLState(GrRenderTarget*, GrSurfaceOrigin, const GrPrimitiveProcessor&,
-                      const GrPipeline&, const GrPipeline::FixedDynamicState*,
-                      const GrPipeline::DynamicStateArrays*, int dynamicStateArraysLength,
-                      bool willDrawPoints);
+    bool flushGLState(GrRenderTarget*, const GrProgramInfo&, GrPrimitiveType);
 
     void flushProgram(sk_sp<GrGLProgram>);
 
@@ -284,20 +289,19 @@ private:
                        int baseInstance,
                        GrPrimitiveRestart);
 
-    void flushBlend(const GrXferProcessor::BlendInfo& blendInfo, const GrSwizzle&);
+    void flushBlendAndColorWrite(const GrXferProcessor::BlendInfo& blendInfo, const GrSwizzle&);
 
-    void onFinishFlush(GrSurfaceProxy*, SkSurface::BackendSurfaceAccess access,
-                       SkSurface::FlushFlags flags, bool insertedSemaphores) override;
+    void onFinishFlush(GrSurfaceProxy*[], int n, SkSurface::BackendSurfaceAccess access,
+                       const GrFlushInfo&, const GrPrepareForExternalIORequests&) override;
 
-    bool copySurfaceAsDraw(GrSurface* dst, GrSurfaceOrigin dstOrigin,
-                           GrSurface* src, GrSurfaceOrigin srcOrigin,
-                           const SkIRect& srcRect, const SkIPoint& dstPoint);
-    void copySurfaceAsCopyTexSubImage(GrSurface* dst, GrSurfaceOrigin dstOrigin,
-                                      GrSurface* src, GrSurfaceOrigin srcOrigin,
-                                      const SkIRect& srcRect, const SkIPoint& dstPoint);
-    bool copySurfaceAsBlitFramebuffer(GrSurface* dst, GrSurfaceOrigin dstOrigin,
-                                      GrSurface* src, GrSurfaceOrigin srcOrigin,
-                                      const SkIRect& srcRect, const SkIPoint& dstPoint);
+    bool waitSync(GrGLsync, uint64_t timeout, bool flush);
+
+    bool copySurfaceAsDraw(GrSurface* dst, GrSurface* src, const SkIRect& srcRect,
+                           const SkIPoint& dstPoint);
+    void copySurfaceAsCopyTexSubImage(GrSurface* dst, GrSurface* src, const SkIRect& srcRect,
+                                      const SkIPoint& dstPoint);
+    bool copySurfaceAsBlitFramebuffer(GrSurface* dst, GrSurface* src, const SkIRect& srcRect,
+                                      const SkIPoint& dstPoint);
 
     static bool BlendCoeffReferencesConstant(GrBlendCoeff coeff);
 
@@ -307,21 +311,12 @@ private:
         ~ProgramCache();
 
         void abandon();
-        GrGLProgram* refProgram(GrGLGpu*, GrRenderTarget*, GrSurfaceOrigin,
-                                const GrPrimitiveProcessor&,
-                                const GrTextureProxy* const primProcProxies[],
-                                const GrPipeline&, bool hasPointSize);
+        void reset();
+        GrGLProgram* refProgram(GrGLGpu*, GrRenderTarget*, const GrProgramInfo&, GrPrimitiveType);
+        bool precompileShader(const SkData& key, const SkData& data);
 
     private:
-        // We may actually have kMaxEntries+1 shaders in the GL context because we create a new
-        // shader before evicting from the cache.
-        static const int kMaxEntries = 128;
-
         struct Entry;
-
-        // binary search for entry matching desc. returns index into fEntries that matches desc or ~
-        // of the index of where it should be inserted.
-        int search(const GrProgramDesc& desc) const;
 
         struct DescHash {
             uint32_t operator()(const GrProgramDesc& desc) const {
@@ -331,22 +326,15 @@ private:
 
         SkLRUCache<GrProgramDesc, std::unique_ptr<Entry>, DescHash> fMap;
 
-        GrGLGpu*                    fGpu;
-#ifdef PROGRAM_CACHE_STATS
-        int                         fTotalRequests;
-        int                         fCacheMisses;
-        int                         fHashMisses; // cache hit but hash table missed
-#endif
+        GrGLGpu* fGpu;
     };
 
     void flushColorWrite(bool writeColor);
-    void flushClearColor(GrGLfloat r, GrGLfloat g, GrGLfloat b, GrGLfloat a);
+    void flushClearColor(const SkPMColor4f&);
 
     // flushes the scissor. see the note on flushBoundTextureAndParams about
     // flushing the scissor after that function is called.
-    void flushScissor(const GrScissorState&,
-                      const GrGLIRect& rtViewport,
-                      GrSurfaceOrigin rtOrigin);
+    void flushScissor(const GrScissorState&, int rtWidth, int rtHeight, GrSurfaceOrigin rtOrigin);
 
     // disables the scissor
     void disableScissor();
@@ -371,9 +359,9 @@ private:
     void flushRenderTargetNoColorWrites(GrGLRenderTarget*);
 
     // Need not be called if flushRenderTarget is used.
-    void flushViewport(const GrGLIRect&);
+    void flushViewport(int width, int height);
 
-    void flushStencil(const GrStencilSettings&);
+    void flushStencil(const GrStencilSettings&, GrSurfaceOrigin);
     void disableStencil();
 
     // rt is used only if useHWAA is true.
@@ -381,25 +369,22 @@ private:
 
     void flushFramebufferSRGB(bool enable);
 
-    // helper for onCreateTexture and writeTexturePixels
-    enum UploadType {
-        kNewTexture_UploadType,   // we are creating a new texture
-        kWrite_UploadType,        // we are using TexSubImage2D to copy data to an existing texture
-    };
-    bool uploadTexData(GrPixelConfig texConfig, int texWidth, int texHeight, GrGLenum target,
-                       UploadType uploadType, int left, int top, int width, int height,
-                       GrPixelConfig dataConfig, const GrMipLevel texels[], int mipLevelCount,
+    bool uploadTexData(GrGLFormat textureFormat, GrColorType textureColorType, int texWidth,
+                       int texHeight, GrGLenum target, int left, int top, int width, int height,
+                       GrColorType srcColorType, const GrMipLevel texels[], int mipLevelCount,
                        GrMipMapsStatus* mipMapsStatus = nullptr);
 
-    // helper for onCreateCompressedTexture. Compressed textures are read-only so we
-    // only use this to populate a new texture.
-    bool uploadCompressedTexData(GrPixelConfig texConfig, int texWidth, int texHeight,
-                                 GrGLenum target, GrPixelConfig dataConfig,
-                                 const GrMipLevel texels[], int mipLevelCount,
-                                 GrMipMapsStatus* mipMapsStatus = nullptr);
+    // Helper for onCreateCompressedTexture. Compressed textures are read-only so we only use this
+    // to populate a new texture. Returns false if we failed to create and upload the texture.
+    bool uploadCompressedTexData(GrGLFormat,
+                                 SkImage::CompressionType,
+                                 const SkISize& size,
+                                 GrGLenum target,
+                                 const void* data);
 
-    bool createRenderTargetObjects(const GrSurfaceDesc&, const GrGLTextureInfo& texInfo,
-                                   GrGLRenderTarget::IDDesc*);
+    bool createRenderTargetObjects(const GrGLTexture::Desc&,
+                                   int sampleCount,
+                                   GrGLRenderTarget::IDs*);
 
     enum TempFBOTarget {
         kSrc_TempFBOTarget,
@@ -409,11 +394,11 @@ private:
     // Binds a surface as a FBO for copying, reading, or clearing. If the surface already owns an
     // FBO ID then that ID is bound. If not the surface is temporarily bound to a FBO and that FBO
     // is bound. This must be paired with a call to unbindSurfaceFBOForPixelOps().
-    void bindSurfaceFBOForPixelOps(GrSurface* surface, GrGLenum fboTarget, GrGLIRect* viewport,
+    void bindSurfaceFBOForPixelOps(GrSurface* surface, int mipLevel, GrGLenum fboTarget,
                                    TempFBOTarget tempFBOTarget);
 
     // Must be called if bindSurfaceFBOForPixelOps was used to bind a surface for copying.
-    void unbindTextureFBOForPixelOps(GrGLenum fboTarget, GrSurface* surface);
+    void unbindSurfaceFBOForPixelOps(GrSurface* surface, int mipLevel, GrGLenum fboTarget);
 
 #ifdef SK_ENABLE_DUMP_GPU
     void onDumpJSON(SkJSONWriter*) const override;
@@ -448,8 +433,8 @@ private:
 
     // last scissor / viewport scissor state seen by the GL.
     struct {
-        TriState    fEnabled;
-        GrGLIRect   fRect;
+        TriState fEnabled;
+        GrNativeRect fRect;
         void invalidate() {
             fEnabled = kUnknown_TriState;
             fRect.invalidate();
@@ -466,19 +451,21 @@ private:
             fWindowState.setDisabled();
         }
 
-        void set(GrSurfaceOrigin rtOrigin, const GrGLIRect& viewport,
+        void set(GrSurfaceOrigin rtOrigin, int width, int height,
                  const GrWindowRectsState& windowState) {
             fRTOrigin = rtOrigin;
-            fViewport = viewport;
+            fWidth = width;
+            fHeight = height;
             fWindowState = windowState;
         }
 
-        bool knownEqualTo(GrSurfaceOrigin rtOrigin, const GrGLIRect& viewport,
+        bool knownEqualTo(GrSurfaceOrigin rtOrigin, int width, int height,
                           const GrWindowRectsState& windowState) const {
             if (!this->valid()) {
                 return false;
             }
-            if (fWindowState.numWindows() && (fRTOrigin != rtOrigin || fViewport != viewport)) {
+            if (fWindowState.numWindows() &&
+                (fRTOrigin != rtOrigin || fWidth != width || fHeight != height)) {
                 return false;
             }
             return fWindowState == windowState;
@@ -488,11 +475,12 @@ private:
         enum { kInvalidSurfaceOrigin = -1 };
 
         int                  fRTOrigin;
-        GrGLIRect            fViewport;
+        int                  fWidth;
+        int                  fHeight;
         GrWindowRectsState   fWindowState;
     } fHWWindowRectsState;
 
-    GrGLIRect                   fHWViewport;
+    GrNativeRect fHWViewport;
 
     /**
      * Tracks vertex attrib array state.
@@ -592,6 +580,7 @@ private:
     TriState                                fMSAAEnabled;
 
     GrStencilSettings                       fHWStencilSettings;
+    GrSurfaceOrigin                         fHWStencilOrigin;
     TriState                                fHWStencilTestEnabled;
 
 
@@ -651,11 +640,21 @@ private:
 
     GrPrimitiveType fLastPrimitiveType;
 
+    GrGLTextureParameters::ResetTimestamp fResetTimestampForTextureParameters = 0;
+
     class SamplerObjectCache;
     std::unique_ptr<SamplerObjectCache> fSamplerObjectCache;
 
-    std::unique_ptr<GrGLGpuRTCommandBuffer>      fCachedRTCommandBuffer;
-    std::unique_ptr<GrGLGpuTextureCommandBuffer> fCachedTexCommandBuffer;
+    std::unique_ptr<GrGLOpsRenderPass> fCachedOpsRenderPass;
+
+    struct FinishCallback {
+        GrGpuFinishedProc fCallback;
+        GrGpuFinishedContext fContext;
+        GrGLsync fSync;
+    };
+    std::list<FinishCallback> fFinishCallbacks;
+
+    SkDEBUGCODE(bool fIsExecutingCommandBuffer_DebugOnly = false);
 
     friend class GrGLPathRendering; // For accessing setTextureUnit.
 

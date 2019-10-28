@@ -5,13 +5,13 @@
  * found in the LICENSE file.
  */
 
-#include "GrGpuResource.h"
-#include "GrContext.h"
-#include "GrContextPriv.h"
-#include "GrResourceCache.h"
-#include "GrGpu.h"
-#include "GrGpuResourcePriv.h"
-#include "SkTraceMemoryDump.h"
+#include "include/core/SkTraceMemoryDump.h"
+#include "include/gpu/GrContext.h"
+#include "include/gpu/GrGpuResource.h"
+#include "src/gpu/GrContextPriv.h"
+#include "src/gpu/GrGpu.h"
+#include "src/gpu/GrGpuResourcePriv.h"
+#include "src/gpu/GrResourceCache.h"
 #include <atomic>
 
 static inline GrResourceCache* get_resource_cache(GrGpu* gpu) {
@@ -96,13 +96,11 @@ void GrGpuResource::dumpMemoryStatisticsPriv(SkTraceMemoryDump* traceMemoryDump,
 bool GrGpuResource::isPurgeable() const {
     // Resources in the kUnbudgetedCacheable state are never purgeable when they have a unique
     // key. The key must be removed/invalidated to make them purgeable.
-    return !this->hasRefOrPendingIO() &&
+    return !this->hasRef() &&
            !(fBudgetedType == GrBudgetedType::kUnbudgetedCacheable && fUniqueKey.isValid());
 }
 
-bool GrGpuResource::hasRefOrPendingIO() const {
-    return this->internalHasRef() || this->internalHasPendingIO();
-}
+bool GrGpuResource::hasRef() const { return this->internalHasRef(); }
 
 SkString GrGpuResource::getResourceName() const {
     // Dump resource as "skia/gpu_resources/resource_#".
@@ -155,43 +153,21 @@ void GrGpuResource::setUniqueKey(const GrUniqueKey& key) {
     get_resource_cache(fGpu)->resourceAccess().changeUniqueKey(this, key);
 }
 
-void GrGpuResource::notifyAllCntsWillBeZero() const {
+void GrGpuResource::notifyRefCntWillBeZero() const {
     GrGpuResource* mutableThis = const_cast<GrGpuResource*>(this);
-    mutableThis->willRemoveLastRefOrPendingIO();
+    mutableThis->willRemoveLastRef();
 }
 
-void GrGpuResource::notifyAllCntsAreZero(CntType lastCntTypeToReachZero) const {
+void GrGpuResource::notifyRefCntIsZero() const {
     if (this->wasDestroyed()) {
         // We've already been removed from the cache. Goodbye cruel world!
         delete this;
         return;
     }
 
-    // We should have already handled this fully in notifyRefCntIsZero().
-    SkASSERT(kRef_CntType != lastCntTypeToReachZero);
-
-    static const uint32_t kFlag =
-        GrResourceCache::ResourceAccess::kAllCntsReachedZero_RefNotificationFlag;
     GrGpuResource* mutableThis = const_cast<GrGpuResource*>(this);
-    get_resource_cache(fGpu)->resourceAccess().notifyCntReachedZero(mutableThis, kFlag);
-}
 
-bool GrGpuResource::notifyRefCountIsZero() const {
-    if (this->wasDestroyed()) {
-        // handle this in notifyAllCntsAreZero().
-        return true;
-    }
-
-    GrGpuResource* mutableThis = const_cast<GrGpuResource*>(this);
-    uint32_t flags = GrResourceCache::ResourceAccess::kRefCntReachedZero_RefNotificationFlag;
-    if (!this->internalHasPendingIO()) {
-        flags |= GrResourceCache::ResourceAccess::kAllCntsReachedZero_RefNotificationFlag;
-    }
-    get_resource_cache(fGpu)->resourceAccess().notifyCntReachedZero(mutableThis, flags);
-
-    // There is no need to call our notifyAllCntsAreZero function at this point since we already
-    // told the cache about the state of cnts.
-    return false;
+    get_resource_cache(fGpu)->resourceAccess().notifyRefCntReachedZero(mutableThis);
 }
 
 void GrGpuResource::removeScratchKey() {
@@ -228,4 +204,11 @@ uint32_t GrGpuResource::CreateUniqueID() {
         id = nextID++;
     } while (id == SK_InvalidUniqueID);
     return id;
+}
+
+//////////////////////////////////////////////////////////////////////////////
+
+void GrGpuResource::ProxyAccess::ref(GrResourceCache* cache) {
+    SkASSERT(cache == fResource->getContext()->priv().getResourceCache());
+    cache->resourceAccess().refResource(fResource);
 }

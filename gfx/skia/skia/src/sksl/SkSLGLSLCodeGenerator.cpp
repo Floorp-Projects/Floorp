@@ -5,18 +5,18 @@
  * found in the LICENSE file.
  */
 
-#include "SkSLGLSLCodeGenerator.h"
+#include "src/sksl/SkSLGLSLCodeGenerator.h"
 
-#include "SkSLCompiler.h"
-#include "ir/SkSLExpressionStatement.h"
-#include "ir/SkSLExtension.h"
-#include "ir/SkSLIndexExpression.h"
-#include "ir/SkSLModifiersDeclaration.h"
-#include "ir/SkSLNop.h"
-#include "ir/SkSLVariableReference.h"
+#include "src/sksl/SkSLCompiler.h"
+#include "src/sksl/ir/SkSLExpressionStatement.h"
+#include "src/sksl/ir/SkSLExtension.h"
+#include "src/sksl/ir/SkSLIndexExpression.h"
+#include "src/sksl/ir/SkSLModifiersDeclaration.h"
+#include "src/sksl/ir/SkSLNop.h"
+#include "src/sksl/ir/SkSLVariableReference.h"
 
 #ifndef SKSL_STANDALONE
-#include "SkOnce.h"
+#include "include/private/SkOnce.h"
 #endif
 
 namespace SkSL {
@@ -470,7 +470,7 @@ void GLSLCodeGenerator::writeFunctionCall(const FunctionCall& c) {
         (*fFunctionClasses)["min"]         = FunctionClass::kMin;
         (*fFunctionClasses)["pow"]         = FunctionClass::kPow;
         (*fFunctionClasses)["saturate"]    = FunctionClass::kSaturate;
-        (*fFunctionClasses)["texture"]     = FunctionClass::kTexture;
+        (*fFunctionClasses)["sample"]      = FunctionClass::kTexture;
         (*fFunctionClasses)["transpose"]   = FunctionClass::kTranspose;
     }
 #ifndef SKSL_STANDALONE
@@ -656,7 +656,7 @@ void GLSLCodeGenerator::writeFunctionCall(const FunctionCall& c) {
                         proj = false;
                         break;
                     case SpvDimRect:
-                        dim = "Rect";
+                        dim = "2DRect";
                         proj = false;
                         break;
                     case SpvDimBuffer:
@@ -670,12 +670,16 @@ void GLSLCodeGenerator::writeFunctionCall(const FunctionCall& c) {
                         proj = false;
                         break;
                 }
-                this->write("texture");
-                if (fProgram.fSettings.fCaps->generation() < k130_GrGLSLGeneration) {
-                    this->write(dim);
-                }
-                if (proj) {
-                    this->write("Proj");
+                if (fTextureFunctionOverride != "") {
+                    this->write(fTextureFunctionOverride.c_str());
+                } else {
+                    this->write("texture");
+                    if (fProgram.fSettings.fCaps->generation() < k130_GrGLSLGeneration) {
+                        this->write(dim);
+                    }
+                    if (proj) {
+                        this->write("Proj");
+                    }
                 }
                 nameWritten = true;
                 break;
@@ -847,24 +851,189 @@ void GLSLCodeGenerator::writeFieldAccess(const FieldAccess& f) {
     }
 }
 
-void GLSLCodeGenerator::writeSwizzle(const Swizzle& swizzle) {
-    int last = swizzle.fComponents.back();
-    if (last == SKSL_SWIZZLE_0 || last == SKSL_SWIZZLE_1) {
-        this->writeType(swizzle.fType);
-        this->write("(");
-    }
+void GLSLCodeGenerator::writeConstantSwizzle(const Swizzle& swizzle, const String& constants) {
+    this->writeType(swizzle.fType);
+    this->write("(");
+    this->write(constants);
+    this->write(")");
+}
+
+void GLSLCodeGenerator::writeSwizzleMask(const Swizzle& swizzle, const String& mask) {
     this->writeExpression(*swizzle.fBase, kPostfix_Precedence);
     this->write(".");
+    this->write(mask);
+}
+
+void GLSLCodeGenerator::writeSwizzleConstructor(const Swizzle& swizzle, const String& constants,
+                                                const String& mask,
+                                                GLSLCodeGenerator::SwizzleOrder order) {
+    this->writeType(swizzle.fType);
+    this->write("(");
+    if (order == SwizzleOrder::CONSTANTS_FIRST) {
+        this->write(constants);
+        this->write(", ");
+        this->writeSwizzleMask(swizzle, mask);
+    } else {
+        this->writeSwizzleMask(swizzle, mask);
+        this->write(", ");
+        this->write(constants);
+    }
+    this->write(")");
+}
+
+void GLSLCodeGenerator::writeSwizzleConstructor(const Swizzle& swizzle, const String& constants,
+                                                const String& mask, const String& reswizzle) {
+    this->writeSwizzleConstructor(swizzle, constants, mask, SwizzleOrder::MASK_FIRST);
+    this->write(".");
+    this->write(reswizzle);
+}
+
+// Writing a swizzle is complicated due to the handling of constant swizzle components. The most
+// problematic case is a mask like '.r00a'. A naive approach might turn that into
+// 'vec4(base.r, 0, 0, base.a)', but that would cause 'base' to be evaluated twice. We instead
+// group the swizzle mask ('ra') and constants ('0, 0') together and use a secondary swizzle to put
+// them back into the right order, so in this case we end up with something like
+// 'vec4(base4.ra, 0, 0).rbag'.
+void GLSLCodeGenerator::writeSwizzle(const Swizzle& swizzle) {
+    // has a 1 bit in every position for which the swizzle mask is a constant, so 'r0b1' would
+    // yield binary 0101.
+    int constantBits = 0;
+    String mask;
+    String constants;
+    // compute mask ("ra") and constant ("0, 0") strings, and fill in constantBits
     for (int c : swizzle.fComponents) {
-        if (c >= 0) {
-            this->write(&("x\0y\0z\0w\0"[c * 2]));
+        constantBits <<= 1;
+        switch (c) {
+            case SKSL_SWIZZLE_0:
+                constantBits |= 1;
+                if (constants.length() > 0) {
+                    constants += ", ";
+                }
+                constants += "0";
+                break;
+            case SKSL_SWIZZLE_1:
+                constantBits |= 1;
+                if (constants.length() > 0) {
+                    constants += ", ";
+                }
+                constants += "1";
+                break;
+            case 0:
+                mask += "x";
+                break;
+            case 1:
+                mask += "y";
+                break;
+            case 2:
+                mask += "z";
+                break;
+            case 3:
+                mask += "w";
+                break;
+            default:
+                SkASSERT(false);
         }
     }
-    if (last == SKSL_SWIZZLE_0) {
-        this->write(", 0)");
-    }
-    else if (last == SKSL_SWIZZLE_1) {
-        this->write(", 1)");
+    switch (swizzle.fComponents.size()) {
+        case 1:
+            if (constantBits == 1) {
+                this->write(constants);
+            }
+            else {
+                this->writeSwizzleMask(swizzle, mask);
+            }
+            break;
+        case 2:
+            switch (constantBits) {
+                case 0: // 00
+                    this->writeSwizzleMask(swizzle, mask);
+                    break;
+                case 1: // 01
+                    this->writeSwizzleConstructor(swizzle, constants, mask,
+                                                  SwizzleOrder::MASK_FIRST);
+                    break;
+                case 2: // 10
+                    this->writeSwizzleConstructor(swizzle, constants, mask,
+                                                  SwizzleOrder::CONSTANTS_FIRST);
+                    break;
+                case 3: // 11
+                    this->writeConstantSwizzle(swizzle, constants);
+                    break;
+                default:
+                    SkASSERT(false);
+            }
+            break;
+        case 3:
+            switch (constantBits) {
+                case 0: // 000
+                    this->writeSwizzleMask(swizzle, mask);
+                    break;
+                case 1: // 001
+                case 3: // 011
+                    this->writeSwizzleConstructor(swizzle, constants, mask,
+                                                  SwizzleOrder::MASK_FIRST);
+                    break;
+                case 4: // 100
+                case 6: // 110
+                    this->writeSwizzleConstructor(swizzle, constants, mask,
+                                                  SwizzleOrder::CONSTANTS_FIRST);
+                    break;
+                case 2: // 010
+                    this->writeSwizzleConstructor(swizzle, constants, mask, "xzy");
+                    break;
+                case 5: // 101
+                    this->writeSwizzleConstructor(swizzle, constants, mask, "yxz");
+                    break;
+                case 7: // 111
+                    this->writeConstantSwizzle(swizzle, constants);
+                    break;
+            }
+            break;
+        case 4:
+            switch (constantBits) {
+                case  0: // 0000
+                    this->writeSwizzleMask(swizzle, mask);
+                    break;
+                case  1: // 0001
+                case  3: // 0011
+                case  7: // 0111
+                    this->writeSwizzleConstructor(swizzle, constants, mask,
+                                                  SwizzleOrder::MASK_FIRST);
+                    break;
+                case  8: // 1000
+                case 12: // 1100
+                case 14: // 1110
+                    this->writeSwizzleConstructor(swizzle, constants, mask,
+                                                  SwizzleOrder::CONSTANTS_FIRST);
+                    break;
+                case  2: // 0010
+                    this->writeSwizzleConstructor(swizzle, constants, mask, "xywz");
+                    break;
+                case  4: // 0100
+                    this->writeSwizzleConstructor(swizzle, constants, mask, "xwyz");
+                    break;
+                case  5: // 0101
+                    this->writeSwizzleConstructor(swizzle, constants, mask, "xzyw");
+                    break;
+                case  6: // 0110
+                    this->writeSwizzleConstructor(swizzle, constants, mask, "xzwy");
+                    break;
+                case  9: // 1001
+                    this->writeSwizzleConstructor(swizzle, constants, mask, "zxyw");
+                    break;
+                case 10: // 1010
+                    this->writeSwizzleConstructor(swizzle, constants, mask, "zxwy");
+                    break;
+                case 11: // 1011
+                    this->writeSwizzleConstructor(swizzle, constants, mask, "yxzw");
+                    break;
+                case 13: // 1101
+                    this->writeSwizzleConstructor(swizzle, constants, mask, "yzxw");
+                    break;
+                case 15: // 1111
+                    this->writeConstantSwizzle(swizzle, constants);
+                    break;
+            }
     }
 }
 
@@ -1035,6 +1204,8 @@ void GLSLCodeGenerator::writeSetting(const Setting& s) {
 }
 
 void GLSLCodeGenerator::writeFunction(const FunctionDefinition& f) {
+    fSetupFragPositionLocal = false;
+    fSetupFragCoordWorkaround = false;
     if (fProgramKind != Program::kPipelineStage_Kind) {
         this->writeTypePrecision(f.fDeclaration.fReturnType);
         this->writeType(f.fDeclaration.fReturnType);
@@ -1140,16 +1311,25 @@ void GLSLCodeGenerator::writeModifiers(const Modifiers& modifiers,
     if (modifiers.fFlags & Modifiers::kPLSOut_Flag) {
         this->write("__pixel_local_outEXT ");
     }
-    if (usesPrecisionModifiers()) {
-        if (modifiers.fFlags & Modifiers::kLowp_Flag) {
-            this->write("lowp ");
-        }
-        if (modifiers.fFlags & Modifiers::kMediump_Flag) {
-            this->write("mediump ");
-        }
-        if (modifiers.fFlags & Modifiers::kHighp_Flag) {
+    switch (modifiers.fLayout.fFormat) {
+        case Layout::Format::kUnspecified:
+            break;
+        case Layout::Format::kRGBA32F:      // fall through
+        case Layout::Format::kR32F:
             this->write("highp ");
-        }
+            break;
+        case Layout::Format::kRGBA16F:      // fall through
+        case Layout::Format::kR16F:         // fall through
+        case Layout::Format::kLUMINANCE16F: // fall through
+        case Layout::Format::kRG16F:
+            this->write("mediump ");
+            break;
+        case Layout::Format::kRGBA8:        // fall through
+        case Layout::Format::kR8:           // fall through
+        case Layout::Format::kRGBA8I:       // fall through
+        case Layout::Format::kR8I:
+            this->write("lowp ");
+            break;
     }
 }
 
@@ -1252,12 +1432,6 @@ void GLSLCodeGenerator::writeVarDeclarations(const VarDeclarations& decl, bool g
             this->write(" = ");
             this->writeVarInitializer(*var.fVar, *var.fValue);
         }
-        if (!fFoundImageDecl && var.fVar->fType == *fContext.fImage2D_Type) {
-            if (fProgram.fSettings.fCaps->imageLoadStoreExtensionString()) {
-                this->writeExtension(fProgram.fSettings.fCaps->imageLoadStoreExtensionString());
-            }
-            fFoundImageDecl = true;
-        }
         if (!fFoundExternalSamplerDecl && var.fVar->fType == *fContext.fSamplerExternalOES_Type) {
             if (fProgram.fSettings.fCaps->externalTextureExtensionString()) {
                 this->writeExtension(fProgram.fSettings.fCaps->externalTextureExtensionString());
@@ -1267,6 +1441,9 @@ void GLSLCodeGenerator::writeVarDeclarations(const VarDeclarations& decl, bool g
                                   fProgram.fSettings.fCaps->secondExternalTextureExtensionString());
             }
             fFoundExternalSamplerDecl = true;
+        }
+        if (!fFoundRectSamplerDecl && var.fVar->fType == *fContext.fSampler2DRect_Type) {
+            fFoundRectSamplerDecl = true;
         }
     }
     if (wroteType) {
@@ -1568,14 +1745,20 @@ bool GLSLCodeGenerator::generateCode() {
         Layout layout;
         switch (fProgram.fKind) {
             case Program::kVertex_Kind: {
-                Modifiers modifiers(layout, Modifiers::kOut_Flag | Modifiers::kHighp_Flag);
+                Modifiers modifiers(layout, Modifiers::kOut_Flag);
                 this->writeModifiers(modifiers, true);
+                if (this->usesPrecisionModifiers()) {
+                    this->write("highp ");
+                }
                 this->write("vec4 sk_FragCoord_Workaround;\n");
                 break;
             }
             case Program::kFragment_Kind: {
-                Modifiers modifiers(layout, Modifiers::kIn_Flag | Modifiers::kHighp_Flag);
+                Modifiers modifiers(layout, Modifiers::kIn_Flag);
                 this->writeModifiers(modifiers, true);
+                if (this->usesPrecisionModifiers()) {
+                    this->write("highp ");
+                }
                 this->write("vec4 sk_FragCoord_Workaround;\n");
                 break;
             }
@@ -1586,6 +1769,14 @@ bool GLSLCodeGenerator::generateCode() {
 
     if (this->usesPrecisionModifiers()) {
         this->writeLine("precision mediump float;");
+        this->writeLine("precision mediump sampler2D;");
+        if (fFoundExternalSamplerDecl &&
+            !fProgram.fSettings.fCaps->noDefaultPrecisionForExternalSamplers()) {
+            this->writeLine("precision mediump samplerExternalOES;");
+        }
+        if (fFoundRectSamplerDecl) {
+            this->writeLine("precision mediump sampler2DRect;");
+        }
     }
     write_stringstream(fExtraFunctions, *rawOut);
     write_stringstream(body, *rawOut);

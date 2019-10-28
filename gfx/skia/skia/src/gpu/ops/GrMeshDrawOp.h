@@ -8,10 +8,10 @@
 #ifndef GrMeshDrawOp_DEFINED
 #define GrMeshDrawOp_DEFINED
 
-#include "GrAppliedClip.h"
-#include "GrDrawOp.h"
-#include "GrGeometryProcessor.h"
-#include "GrMesh.h"
+#include "src/gpu/GrAppliedClip.h"
+#include "src/gpu/GrGeometryProcessor.h"
+#include "src/gpu/GrMesh.h"
+#include "src/gpu/ops/GrDrawOp.h"
 #include <type_traits>
 
 class GrAtlasManager;
@@ -72,7 +72,12 @@ protected:
     };
 
 private:
+    void onPrePrepare(GrRecordingContext* context) final { this->onPrePrepareDraws(context); }
     void onPrepare(GrOpFlushState* state) final;
+
+    // Only the GrTextureOp currently overrides this virtual
+    virtual void onPrePrepareDraws(GrRecordingContext*) {}
+
     virtual void onPrepareDraws(Target*) = 0;
     typedef GrDrawOp INHERITED;
 };
@@ -159,6 +164,11 @@ public:
 
     virtual GrStrikeCache* glyphCache() const = 0;
     virtual GrAtlasManager* atlasManager() const = 0;
+
+    // This should be called during onPrepare of a GrOp. The caller should add any proxies to the
+    // array it will use that it did not access during a call to visitProxies. This is usually the
+    // case for atlases.
+    virtual SkTArray<GrTextureProxy*, true>* sampledProxyArray() = 0;
 
     virtual const GrCaps& caps() const = 0;
 

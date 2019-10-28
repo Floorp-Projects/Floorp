@@ -5,31 +5,31 @@
  * found in the LICENSE file.
  */
 
-#include "GrDashOp.h"
-#include "GrAppliedClip.h"
-#include "GrCaps.h"
-#include "GrCoordTransform.h"
-#include "GrDefaultGeoProcFactory.h"
-#include "GrDrawOpTest.h"
-#include "GrGeometryProcessor.h"
-#include "GrMemoryPool.h"
-#include "GrOpFlushState.h"
-#include "GrProcessor.h"
-#include "GrQuad.h"
-#include "GrRecordingContext.h"
-#include "GrRecordingContextPriv.h"
-#include "GrStyle.h"
-#include "GrVertexWriter.h"
-#include "SkGr.h"
-#include "SkMatrixPriv.h"
-#include "SkPointPriv.h"
-#include "glsl/GrGLSLFragmentShaderBuilder.h"
-#include "glsl/GrGLSLGeometryProcessor.h"
-#include "glsl/GrGLSLProgramDataManager.h"
-#include "glsl/GrGLSLUniformHandler.h"
-#include "glsl/GrGLSLVarying.h"
-#include "glsl/GrGLSLVertexGeoBuilder.h"
-#include "ops/GrMeshDrawOp.h"
+#include "include/private/GrRecordingContext.h"
+#include "src/core/SkMatrixPriv.h"
+#include "src/core/SkPointPriv.h"
+#include "src/gpu/GrAppliedClip.h"
+#include "src/gpu/GrCaps.h"
+#include "src/gpu/GrCoordTransform.h"
+#include "src/gpu/GrDefaultGeoProcFactory.h"
+#include "src/gpu/GrDrawOpTest.h"
+#include "src/gpu/GrGeometryProcessor.h"
+#include "src/gpu/GrMemoryPool.h"
+#include "src/gpu/GrOpFlushState.h"
+#include "src/gpu/GrProcessor.h"
+#include "src/gpu/GrRecordingContextPriv.h"
+#include "src/gpu/GrStyle.h"
+#include "src/gpu/GrVertexWriter.h"
+#include "src/gpu/SkGr.h"
+#include "src/gpu/geometry/GrQuad.h"
+#include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
+#include "src/gpu/glsl/GrGLSLGeometryProcessor.h"
+#include "src/gpu/glsl/GrGLSLProgramDataManager.h"
+#include "src/gpu/glsl/GrGLSLUniformHandler.h"
+#include "src/gpu/glsl/GrGLSLVarying.h"
+#include "src/gpu/glsl/GrGLSLVertexGeoBuilder.h"
+#include "src/gpu/ops/GrDashOp.h"
+#include "src/gpu/ops/GrMeshDrawOp.h"
 
 using AAMode = GrDashOp::AAMode;
 
@@ -172,8 +172,8 @@ static void setup_dashed_rect(const SkRect& rect, GrVertexWriter& vertices, cons
         SkScalar halfOffLen = SkScalarHalf(endInterval);
         SkScalar halfStroke = SkScalarHalf(strokeWidth);
         SkRect rectParam;
-        rectParam.set(halfOffLen                 + 0.5f, -halfStroke + 0.5f,
-                      halfOffLen + startInterval - 0.5f,  halfStroke - 0.5f);
+        rectParam.setLTRB(halfOffLen                 + 0.5f, -halfStroke + 0.5f,
+                          halfOffLen + startInterval - 0.5f,  halfStroke - 0.5f);
 
         vertices.writeQuad(GrQuad::MakeFromRect(rect, matrix),
                            GrVertexWriter::TriStripFromRect(dashRect),
@@ -223,7 +223,7 @@ public:
 
     const char* name() const override { return "DashOp"; }
 
-    void visitProxies(const VisitProxyFunc& func, VisitorType) const override {
+    void visitProxies(const VisitProxyFunc& func) const override {
         fProcessorSet.visitProxies(func);
     }
 
@@ -258,7 +258,8 @@ public:
     }
 
     GrProcessorSet::Analysis finalize(
-            const GrCaps& caps, const GrAppliedClip* clip, GrFSAAType fsaaType) override {
+            const GrCaps& caps, const GrAppliedClip* clip, bool hasMixedSampledCoverage,
+            GrClampType clampType) override {
         GrProcessorAnalysisCoverage coverage;
         if (AAMode::kNone == fAAMode && !clip->numClipCoverageFragmentProcessors()) {
             coverage = GrProcessorAnalysisCoverage::kNone;
@@ -266,7 +267,8 @@ public:
             coverage = GrProcessorAnalysisCoverage::kSingleChannel;
         }
         auto analysis = fProcessorSet.finalize(
-                fColor, coverage, clip, fStencilSettings, fsaaType, caps, &fColor);
+                fColor, coverage, clip, fStencilSettings, hasMixedSampledCoverage, caps, clampType,
+                &fColor);
         fUsesLocalCoords = analysis.usesLocalCoords();
         return analysis;
     }
@@ -296,7 +298,8 @@ private:
         SkMatrix& combinedMatrix = fLines[0].fSrcRotInv;
         combinedMatrix.postConcat(geometry.fViewMatrix);
 
-        IsZeroArea zeroArea = geometry.fSrcStrokeWidth ? IsZeroArea::kNo : IsZeroArea::kYes;
+        IsHairline zeroArea = geometry.fSrcStrokeWidth ? IsHairline::kNo
+                                                             : IsHairline::kYes;
         HasAABloat aaBloat = (aaMode == AAMode::kNone) ? HasAABloat ::kNo : HasAABloat::kYes;
         this->setTransformedBounds(bounds, combinedMatrix, aaBloat, zeroArea);
     }
@@ -402,7 +405,7 @@ private:
                     startPts[1].fY = startPts[0].fY;
                     startPts[1].fX = SkMinScalar(startPts[0].fX + draw.fIntervals[0] - draw.fPhase,
                                                  draw.fPtsRot[1].fX);
-                    startRect.set(startPts, 2);
+                    startRect.setBounds(startPts, 2);
                     startRect.outset(strokeAdj, halfSrcStroke);
 
                     hasStartRect = true;
@@ -438,7 +441,7 @@ private:
                     endPts[0].fY = endPts[1].fY;
                     endPts[0].fX = endPts[1].fX - endingInterval;
 
-                    endRect.set(endPts, 2);
+                    endRect.setBounds(endPts, 2);
                     endRect.outset(strokeAdj, halfSrcStroke);
 
                     hasEndRect = true;
@@ -508,7 +511,7 @@ private:
                 // one giant dash
                 draw.fPtsRot[0].fX -= hasStartRect ? startAdj : 0;
                 draw.fPtsRot[1].fX += hasEndRect ? endAdj : 0;
-                startRect.set(draw.fPtsRot, 2);
+                startRect.setBounds(draw.fPtsRot, 2);
                 startRect.outset(strokeAdj, halfSrcStroke);
                 hasStartRect = true;
                 hasEndRect = false;
@@ -541,8 +544,8 @@ private:
                     draw.fLineLength += 2.f * halfDevStroke;
                 }
 
-                bounds.set(draw.fPtsRot[0].fX, draw.fPtsRot[0].fY,
-                           draw.fPtsRot[1].fX, draw.fPtsRot[1].fY);
+                bounds.setLTRB(draw.fPtsRot[0].fX, draw.fPtsRot[0].fY,
+                               draw.fPtsRot[1].fX, draw.fPtsRot[1].fY);
                 bounds.outset(bloatX + strokeAdj, bloatY + halfSrcStroke);
             }
 
@@ -623,9 +626,9 @@ private:
     }
 
     void onExecute(GrOpFlushState* flushState, const SkRect& chainBounds) override {
-        uint32_t pipelineFlags = 0;
+        auto pipelineFlags = GrPipeline::InputFlags::kNone;
         if (AAMode::kCoverageWithMSAA == fAAMode) {
-            pipelineFlags |= GrPipeline::kHWAntialias_Flag;
+            pipelineFlags |= GrPipeline::InputFlags::kHWAntialias;
         }
         flushState->executeDrawsAndUploadsForMeshDrawOp(
                 this, chainBounds, std::move(fProcessorSet), pipelineFlags, fStencilSettings);
@@ -1204,7 +1207,7 @@ GR_DRAW_OP_TEST_DEFINE(DashOp) {
     AAMode aaMode;
     do {
         aaMode = static_cast<AAMode>(random->nextULessThan(GrDashOp::kAAModeCnt));
-    } while (AAMode::kCoverageWithMSAA == aaMode && GrFSAAType::kUnifiedMSAA != fsaaType);
+    } while (AAMode::kCoverageWithMSAA == aaMode && numSamples <= 1);
 
     // We can only dash either horizontal or vertical lines
     SkPoint pts[2];

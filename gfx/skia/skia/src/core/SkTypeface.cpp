@@ -5,19 +5,19 @@
  * found in the LICENSE file.
  */
 
-#include "SkAdvancedTypefaceMetrics.h"
-#include "SkEndian.h"
-#include "SkFontDescriptor.h"
-#include "SkFontMetrics.h"
-#include "SkFontMgr.h"
-#include "SkMakeUnique.h"
-#include "SkMutex.h"
-#include "SkOTTable_OS_2.h"
-#include "SkOnce.h"
-#include "SkStream.h"
-#include "SkSurfacePriv.h"
-#include "SkTypeface.h"
-#include "SkTypefaceCache.h"
+#include "include/core/SkFontMetrics.h"
+#include "include/core/SkFontMgr.h"
+#include "include/core/SkStream.h"
+#include "include/core/SkTypeface.h"
+#include "include/private/SkMutex.h"
+#include "include/private/SkOnce.h"
+#include "src/core/SkAdvancedTypefaceMetrics.h"
+#include "src/core/SkEndian.h"
+#include "src/core/SkFontDescriptor.h"
+#include "src/core/SkMakeUnique.h"
+#include "src/core/SkSurfacePriv.h"
+#include "src/core/SkTypefaceCache.h"
+#include "src/sfnt/SkOTTable_OS_2.h"
 
 SkTypeface::SkTypeface(const SkFontStyle& style, bool isFixedPitch)
     : fUniqueID(SkTypefaceCache::NewFontID()), fStyle(style), fIsFixedPitch(isFixedPitch) { }
@@ -57,14 +57,12 @@ protected:
         return nullptr;
     }
     void onGetFontDescriptor(SkFontDescriptor*, bool*) const override { }
-    virtual int onCharsToGlyphs(const void* chars, Encoding encoding,
-                                uint16_t glyphs[], int glyphCount) const override {
-        if (glyphs && glyphCount > 0) {
-            sk_bzero(glyphs, glyphCount * sizeof(glyphs[0]));
-        }
-        return 0;
+    void onCharsToGlyphs(const SkUnichar* chars, int count, SkGlyphID glyphs[]) const override {
+        sk_bzero(glyphs, count * sizeof(glyphs[0]));
     }
     int onCountGlyphs() const override { return 0; }
+    void getPostScriptGlyphNames(SkString*) const override {}
+    void getGlyphToUnicodeMap(SkUnichar*) const override {}
     int onGetUPEM() const override { return 0; }
     class EmptyLocalizedStrings : public SkTypeface::LocalizedStrings {
     public:
@@ -180,25 +178,22 @@ void SkTypeface::serialize(SkWStream* wstream, SerializeBehavior behavior) const
         (*gSerializeTypefaceDelegate)(this, wstream);
         return;
     }
+
     bool isLocalData = false;
     SkFontDescriptor desc;
     this->onGetFontDescriptor(&desc, &isLocalData);
 
+    bool shouldSerializeData = false;
     switch (behavior) {
-        case SerializeBehavior::kDoIncludeData:
-            isLocalData = true;
-            break;
-        case SerializeBehavior::kDontIncludeData:
-            isLocalData = false;
-            break;
-        case SerializeBehavior::kIncludeDataIfLocal:
-            break;
+        case SerializeBehavior::kDoIncludeData:      shouldSerializeData = true;        break;
+        case SerializeBehavior::kDontIncludeData:    shouldSerializeData = false;       break;
+        case SerializeBehavior::kIncludeDataIfLocal: shouldSerializeData = isLocalData; break;
     }
 
     // TODO: why do we check hasFontData() and allow the data to pass through even if the caller
     //       has said they don't want the fontdata? Does this actually happen (getDescriptor returns
     //       fontdata as well?)
-    if (isLocalData && !desc.hasFontData()) {
+    if (shouldSerializeData && !desc.hasFontData()) {
         desc.setFontData(this->onMakeFontData());
     }
     desc.serialize(wstream);
@@ -262,6 +257,20 @@ size_t SkTypeface::getTableData(SkFontTableTag tag, size_t offset, size_t length
     return this->onGetTableData(tag, offset, length, data);
 }
 
+sk_sp<SkData> SkTypeface::copyTableData(SkFontTableTag tag) const {
+    return this->onCopyTableData(tag);
+}
+
+sk_sp<SkData> SkTypeface::onCopyTableData(SkFontTableTag tag) const {
+    size_t size = this->getTableSize(tag);
+    if (size) {
+        sk_sp<SkData> data = SkData::MakeUninitialized(size);
+        (void)this->getTableData(tag, 0, size, data->writable_data());
+        return data;
+    }
+    return nullptr;
+}
+
 std::unique_ptr<SkStreamAsset> SkTypeface::openStream(int* ttcIndex) const {
     int ttcIndexStorage;
     if (nullptr == ttcIndex) {
@@ -285,23 +294,16 @@ std::unique_ptr<SkFontData> SkTypeface::onMakeFontData() const {
     return skstd::make_unique<SkFontData>(std::move(stream), index, nullptr, 0);
 };
 
-int SkTypeface::charsToGlyphs(const void* chars, Encoding encoding,
-                              uint16_t glyphs[], int glyphCount) const {
-    if (glyphCount <= 0) {
-        return 0;
+void SkTypeface::unicharsToGlyphs(const SkUnichar uni[], int count, SkGlyphID glyphs[]) const {
+    if (count > 0 && glyphs && uni) {
+        this->onCharsToGlyphs(uni, count, glyphs);
     }
-    if (nullptr == chars || (unsigned)encoding > kUTF32_Encoding) {
-        if (glyphs) {
-            sk_bzero(glyphs, glyphCount * sizeof(glyphs[0]));
-        }
-        return 0;
-    }
-    return this->onCharsToGlyphs(chars, encoding, glyphs, glyphCount);
 }
 
 SkGlyphID SkTypeface::unicharToGlyph(SkUnichar uni) const {
-    SkGlyphID glyphs[1];
-    return this->onCharsToGlyphs(&uni, kUTF32_Encoding, glyphs, 1) == 1 ? glyphs[0] : 0;
+    SkGlyphID glyphs[1] = { 0 };
+    this->onCharsToGlyphs(&uni, 1, glyphs);
+    return glyphs[0];
 }
 
 int SkTypeface::countGlyphs() const {
@@ -366,19 +368,10 @@ bool SkTypeface::onGetKerningPairAdjustments(const uint16_t glyphs[], int count,
     return false;
 }
 
-sk_sp<SkTypeface> SkTypeface::onMakeClone(const SkFontArguments& args) const {
-    return sk_ref_sp(this);
-}
-
-int SkTypeface::onGetVariationDesignParameters(
-        SkFontParameters::Variation::Axis parameters[], int parameterCount) const {
-    return -1;
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "SkDescriptor.h"
-#include "SkPaint.h"
+#include "include/core/SkPaint.h"
+#include "src/core/SkDescriptor.h"
 
 SkRect SkTypeface::getBounds() const {
     fBoundsOnce([this] {
@@ -416,8 +409,8 @@ bool SkTypeface::onComputeBounds(SkRect* bounds) const {
 
     SkFontMetrics fm;
     ctx->getFontMetrics(&fm);
-    bounds->set(fm.fXMin * invTextSize, fm.fTop * invTextSize,
-                fm.fXMax * invTextSize, fm.fBottom * invTextSize);
+    bounds->setLTRB(fm.fXMin * invTextSize, fm.fTop * invTextSize,
+                    fm.fXMax * invTextSize, fm.fBottom * invTextSize);
     return true;
 }
 

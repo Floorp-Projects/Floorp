@@ -8,8 +8,8 @@
 #ifndef GrGpuResourceCacheAccess_DEFINED
 #define GrGpuResourceCacheAccess_DEFINED
 
-#include "GrGpuResource.h"
-#include "GrGpuResourcePriv.h"
+#include "include/gpu/GrGpuResource.h"
+#include "src/gpu/GrGpuResourcePriv.h"
 
 namespace skiatest {
     class Reporter;
@@ -20,6 +20,9 @@ namespace skiatest {
  */
 class GrGpuResource::CacheAccess {
 private:
+    /** The cache is allowed to go from no refs to 1 ref. */
+    void ref() { fResource->addInitialRef(); }
+
     /**
      * Is the resource currently cached as scratch? This means it is cached, has a valid scratch
      * key, and does not have a unique key.
@@ -34,7 +37,7 @@ private:
      */
     void release() {
         fResource->release();
-        if (!fResource->hasRefOrPendingIO()) {
+        if (!fResource->hasRef()) {
             delete fResource;
         }
     }
@@ -44,13 +47,16 @@ private:
      */
     void abandon() {
         fResource->abandon();
-        if (!fResource->hasRefOrPendingIO()) {
+        if (!fResource->hasRef()) {
             delete fResource;
         }
     }
 
     /** Called by the cache to assign a new unique key. */
     void setUniqueKey(const GrUniqueKey& key) { fResource->fUniqueKey = key; }
+
+    /** Is the resource ref'ed */
+    bool hasRef() const { return fResource->hasRef(); }
 
     /** Called by the cache to make the unique key invalid. */
     void removeUniqueKey() { fResource->fUniqueKey.reset(); }
@@ -78,8 +84,8 @@ private:
     CacheAccess& operator=(const CacheAccess&); // unimpl
 
     // No taking addresses of this type.
-    const CacheAccess* operator&() const;
-    CacheAccess* operator&();
+    const CacheAccess* operator&() const = delete;
+    CacheAccess* operator&() = delete;
 
     GrGpuResource* fResource;
 

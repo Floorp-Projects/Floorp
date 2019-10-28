@@ -9,22 +9,19 @@
 #define SkTypes_DEFINED
 
 // IWYU pragma: begin_exports
-#include "SkPreConfig.h"
-#include "SkUserConfig.h"
-#include "SkPostConfig.h"
+#include "include/core/SkPreConfig.h"
+#if defined (SK_USER_CONFIG_HEADER)
+    #include SK_USER_CONFIG_HEADER
+#else
+    #include "include/config/SkUserConfig.h"
+#endif
+#include "include/core/SkPostConfig.h"
 #include <stddef.h>
 #include <stdint.h>
 // IWYU pragma: end_exports
 
 /** \file SkTypes.h
 */
-
-/** See SkGraphics::GetVersion() to retrieve these at runtime
-*/
-#define SKIA_VERSION_MAJOR  1
-#define SKIA_VERSION_MINOR  0
-#define SKIA_VERSION_PATCH  0
-
 
 /** Called internally if we hit an unrecoverable error.
     The platform implementation must not return, but should either throw

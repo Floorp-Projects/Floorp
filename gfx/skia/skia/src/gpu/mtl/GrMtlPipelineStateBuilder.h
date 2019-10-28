@@ -8,15 +8,16 @@
 #ifndef GrMtlPipelineStateBuilder_DEFINED
 #define GrMtlPipelineStateBuilder_DEFINED
 
-#include "GrPipeline.h"
-#include "GrProgramDesc.h"
-#include "GrMtlUniformHandler.h"
-#include "GrMtlVaryingHandler.h"
-#include "SkSLCompiler.h"
-#include "glsl/GrGLSLProgramBuilder.h"
+#include "src/gpu/GrPipeline.h"
+#include "src/gpu/GrProgramDesc.h"
+#include "src/gpu/glsl/GrGLSLProgramBuilder.h"
+#include "src/gpu/mtl/GrMtlUniformHandler.h"
+#include "src/gpu/mtl/GrMtlVaryingHandler.h"
+#include "src/sksl/SkSLCompiler.h"
 
-#import <metal/metal.h>
+#import <Metal/Metal.h>
 
+class GrProgramInfo;
 class GrMtlGpu;
 class GrMtlPipelineState;
 
@@ -35,12 +36,8 @@ public:
      */
     class Desc : public GrProgramDesc {
     public:
-        static bool Build(Desc*,
-                          GrRenderTarget*,
-                          const GrPrimitiveProcessor&,
-                          const GrPipeline&,
-                          GrPrimitiveType,
-                          GrMtlGpu* gpu);
+        static bool Build(Desc*, GrRenderTarget*,
+                          const GrProgramInfo&, GrPrimitiveType, GrMtlGpu* gpu);
 
         size_t shaderKeyLength() const { return fShaderKeyLength; }
 
@@ -59,23 +56,14 @@ public:
      * @return true if generation was successful.
      */
     static GrMtlPipelineState* CreatePipelineState(GrMtlGpu*,
-                                                   GrRenderTarget*, GrSurfaceOrigin,
-                                                   const GrPrimitiveProcessor&,
-                                                   const GrTextureProxy* const primProcProxies[],
-                                                   const GrPipeline&,
+                                                   GrRenderTarget*,
+                                                   const GrProgramInfo&,
                                                    Desc*);
 
 private:
-    GrMtlPipelineStateBuilder(GrMtlGpu*, GrRenderTarget*, GrSurfaceOrigin,
-                              const GrPipeline&,
-                              const GrPrimitiveProcessor&,
-                              const GrTextureProxy* const primProcProxies[],
-                              GrProgramDesc*);
+    GrMtlPipelineStateBuilder(GrMtlGpu*, GrRenderTarget*, const GrProgramInfo&, GrProgramDesc*);
 
-    GrMtlPipelineState* finalize(GrRenderTarget* renderTarget,
-                                 const GrPrimitiveProcessor& primProc,
-                                 const GrPipeline& pipeline,
-                                 Desc*);
+    GrMtlPipelineState* finalize(GrRenderTarget*, const GrProgramInfo&, Desc*);
 
     const GrCaps* caps() const override;
 

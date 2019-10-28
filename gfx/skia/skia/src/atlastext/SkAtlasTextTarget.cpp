@@ -5,20 +5,20 @@
  * found in the LICENSE file.
  */
 
-#include "SkAtlasTextTarget.h"
+#include "include/atlastext/SkAtlasTextTarget.h"
 
-#include "GrClip.h"
-#include "GrContextPriv.h"
-#include "GrDrawingManager.h"
-#include "GrMemoryPool.h"
-#include "SkAtlasTextContext.h"
-#include "SkAtlasTextFont.h"
-#include "SkAtlasTextRenderer.h"
-#include "SkGlyphRunPainter.h"
-#include "SkGr.h"
-#include "SkInternalAtlasTextContext.h"
-#include "ops/GrAtlasTextOp.h"
-#include "text/GrTextContext.h"
+#include "include/atlastext/SkAtlasTextContext.h"
+#include "include/atlastext/SkAtlasTextFont.h"
+#include "include/atlastext/SkAtlasTextRenderer.h"
+#include "src/atlastext/SkInternalAtlasTextContext.h"
+#include "src/core/SkGlyphRunPainter.h"
+#include "src/gpu/GrClip.h"
+#include "src/gpu/GrContextPriv.h"
+#include "src/gpu/GrDrawingManager.h"
+#include "src/gpu/GrMemoryPool.h"
+#include "src/gpu/SkGr.h"
+#include "src/gpu/ops/GrAtlasTextOp.h"
+#include "src/gpu/text/GrTextContext.h"
 
 static constexpr int kMaxBatchLookBack = 10;
 
@@ -73,7 +73,7 @@ void SkAtlasTextTarget::concat(const SkMatrix& matrix) { this->accessCTM()->preC
 
 //////////////////////////////////////////////////////////////////////////////
 
-static const GrColorSpaceInfo kColorSpaceInfo(nullptr, kRGBA_8888_GrPixelConfig);
+static const GrColorInfo kColorInfo(GrColorType::kRGBA_8888, kPremul_SkAlphaType, nullptr);
 static const SkSurfaceProps kProps(
         SkSurfaceProps::kUseDistanceFieldFonts_Flag, kUnknown_SkPixelGeometry);
 
@@ -81,12 +81,11 @@ static const SkSurfaceProps kProps(
 
 class SkInternalAtlasTextTarget : public GrTextTarget, public SkAtlasTextTarget {
 public:
-    SkInternalAtlasTextTarget(sk_sp<SkAtlasTextContext> context,
-                              int width, int height,
+    SkInternalAtlasTextTarget(sk_sp<SkAtlasTextContext> context, int width, int height,
                               void* handle)
-            : GrTextTarget(width, height, kColorSpaceInfo)
+            : GrTextTarget(width, height, kColorInfo)
             , SkAtlasTextTarget(std::move(context), width, height, handle)
-            , fGlyphPainter(kProps, kColorSpaceInfo) {
+            , fGlyphPainter(kProps, kColorInfo) {
         fOpMemoryPool = fContext->internal().grContext()->priv().refOpMemoryPool();
     }
 
@@ -212,8 +211,9 @@ void GrAtlasTextOp::finalizeForTextTarget(uint32_t color, const GrCaps& caps) {
     for (int i = 0; i < fGeoCount; ++i) {
         fGeoData[i].fColor = color4f;
     }
-    // Atlas text doesn't use MSAA, so no need to handle a GrFSAAType.
-    this->finalize(caps, nullptr /* applied clip */, GrFSAAType::kNone);
+    // Atlas text doesn't use MSAA, so no need to handle mixed samples.
+    // Also, no need to support normalized F16 with manual clamp?
+    this->finalize(caps, nullptr /* applied clip */, false /* mixed samples */, GrClampType::kAuto);
 }
 
 void GrAtlasTextOp::executeForTextTarget(SkAtlasTextTarget* target) {

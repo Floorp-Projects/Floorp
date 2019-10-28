@@ -8,12 +8,13 @@
 #ifndef SkPDFTag_DEFINED
 #define SkPDFTag_DEFINED
 
-#include "SkPDFDocument.h"
-#include "SkTArray.h"
-#include "SkArenaAlloc.h"
-#include "SkTHash.h"
+#include "include/docs/SkPDFDocument.h"
+#include "include/private/SkTArray.h"
+#include "include/private/SkTHash.h"
+#include "src/core/SkArenaAlloc.h"
 
 class SkPDFDocument;
+struct SkPDFIndirectReference;
 struct SkPDFTagNode;
 
 class SkPDFTagTree {

@@ -7,14 +7,14 @@
 #ifndef SkPictureFlat_DEFINED
 #define SkPictureFlat_DEFINED
 
-#include "SkCanvas.h"
-#include "SkChecksum.h"
-#include "SkReadBuffer.h"
-#include "SkWriteBuffer.h"
-#include "SkPaint.h"
-#include "SkPicture.h"
-#include "SkPtrRecorder.h"
-#include "SkTDynamicHash.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPicture.h"
+#include "include/private/SkChecksum.h"
+#include "src/core/SkPtrRecorder.h"
+#include "src/core/SkReadBuffer.h"
+#include "src/core/SkTDynamicHash.h"
+#include "src/core/SkWriteBuffer.h"
 
 /*
  * Note: While adding new DrawTypes, it is necessary to add to the end of this list
@@ -97,13 +97,15 @@ enum DrawType {
 
     FLUSH,
 
-    DRAW_IMAGE_SET,
+    DRAW_EDGEAA_IMAGE_SET,
 
     SAVE_BEHIND,
 
-    DRAW_EDGEAA_RECT,
+    DRAW_EDGEAA_QUAD,
 
-    LAST_DRAWTYPE_ENUM = DRAW_EDGEAA_RECT,
+    DRAW_BEHIND_PAINT,
+
+    LAST_DRAWTYPE_ENUM = DRAW_BEHIND_PAINT,
 };
 
 enum DrawVertexFlags {

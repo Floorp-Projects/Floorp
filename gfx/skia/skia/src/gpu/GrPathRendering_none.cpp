@@ -5,17 +5,17 @@
  * found in the LICENSE file.
  */
 
-#include "GrCaps.h"
-#include "GrGpu.h"
-#include "GrPath.h"
-#include "GrPathRenderer.h"
-#include "GrPathRendering.h"
-#include "GrResourceProvider.h"
-#include "SkTypes.h"
-#include "gl/GrGLGpu.h"
-#include "gl/GrGLPathRendering.h"
-#include "ops/GrStencilAndCoverPathRenderer.h"
-#include "ops/GrStencilPathOp.h"
+#include "include/core/SkTypes.h"
+#include "src/gpu/GrCaps.h"
+#include "src/gpu/GrGpu.h"
+#include "src/gpu/GrPath.h"
+#include "src/gpu/GrPathRenderer.h"
+#include "src/gpu/GrPathRendering.h"
+#include "src/gpu/GrResourceProvider.h"
+#include "src/gpu/gl/GrGLGpu.h"
+#include "src/gpu/gl/GrGLPathRendering.h"
+#include "src/gpu/ops/GrStencilAndCoverPathRenderer.h"
+#include "src/gpu/ops/GrStencilPathOp.h"
 
 class GrRecordingContext;
 
@@ -42,10 +42,8 @@ void GrGLPathRendering::setProjectionMatrix(const SkMatrix&, const SkISize&, GrS
 
 sk_sp<GrPath> GrGLPathRendering::createPath(const SkPath&, const GrStyle&) { return nullptr; }
 
-void GrGLPathRendering::onDrawPath(GrRenderTarget*, GrSurfaceOrigin,
-                                   const GrPrimitiveProcessor&,
-                                   const GrPipeline&,
-                                   const GrPipeline::FixedDynamicState&,
+void GrGLPathRendering::onDrawPath(GrRenderTarget*,
+                                   const GrProgramInfo&,
                                    const GrStencilSettings&,
                                    const GrPath*) {}
 
@@ -54,9 +52,8 @@ void GrGLPathRendering::onStencilPath(const StencilPathArgs&, const GrPath*) {}
 std::unique_ptr<GrOp> GrStencilPathOp::Make(GrRecordingContext*,
                                             const SkMatrix&,
                                             bool,
-                                            GrPathRendering::FillType,
                                             bool,
                                             const GrScissorState&,
-                                            const GrPath*) { return nullptr; }
+                                            sk_sp<const GrPath>) { return nullptr; }
 
 void GrPath::ComputeKey(const GrShape&, GrUniqueKey*, bool*) {}

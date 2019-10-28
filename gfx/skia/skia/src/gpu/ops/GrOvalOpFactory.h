@@ -8,8 +8,8 @@
 #ifndef GrOvalOpFactory_DEFINED
 #define GrOvalOpFactory_DEFINED
 
-#include "GrColor.h"
-#include "SkRefCnt.h"
+#include "include/core/SkRefCnt.h"
+#include "src/gpu/GrColor.h"
 
 class GrDrawOp;
 class GrPaint;
@@ -26,12 +26,26 @@ class SkStrokeRec;
  */
 class GrOvalOpFactory {
 public:
+    static std::unique_ptr<GrDrawOp> MakeCircleOp(GrRecordingContext*,
+                                                  GrPaint&&,
+                                                  const SkMatrix&,
+                                                  const SkRect& oval,
+                                                  const GrStyle& style,
+                                                  const GrShaderCaps*);
+
     static std::unique_ptr<GrDrawOp> MakeOvalOp(GrRecordingContext*,
                                                 GrPaint&&,
                                                 const SkMatrix&,
                                                 const SkRect& oval,
                                                 const GrStyle& style,
                                                 const GrShaderCaps*);
+
+    static std::unique_ptr<GrDrawOp> MakeCircularRRectOp(GrRecordingContext*,
+                                                         GrPaint&&,
+                                                         const SkMatrix&,
+                                                         const SkRRect&,
+                                                         const SkStrokeRec&,
+                                                         const GrShaderCaps*);
 
     static std::unique_ptr<GrDrawOp> MakeRRectOp(GrRecordingContext*,
                                                  GrPaint&&,

@@ -8,12 +8,12 @@
 #ifndef SKSL_FUNCTIONDECLARATION
 #define SKSL_FUNCTIONDECLARATION
 
-#include "SkSLExpression.h"
-#include "SkSLModifiers.h"
-#include "SkSLSymbol.h"
-#include "SkSLSymbolTable.h"
-#include "SkSLType.h"
-#include "SkSLVariable.h"
+#include "src/sksl/ir/SkSLExpression.h"
+#include "src/sksl/ir/SkSLModifiers.h"
+#include "src/sksl/ir/SkSLSymbol.h"
+#include "src/sksl/ir/SkSLSymbolTable.h"
+#include "src/sksl/ir/SkSLType.h"
+#include "src/sksl/ir/SkSLVariable.h"
 
 namespace SkSL {
 
@@ -93,7 +93,9 @@ struct FunctionDeclaration : public Symbol {
             }
         }
         if (fReturnType.kind() == Type::kGeneric_Kind) {
-            SkASSERT(genericIndex != -1);
+            if (genericIndex == -1) {
+                return false;
+            }
             *outReturnType = fReturnType.coercibleTypes()[genericIndex];
         } else {
             *outReturnType = &fReturnType;

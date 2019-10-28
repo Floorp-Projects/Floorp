@@ -8,16 +8,15 @@
 #ifndef SkGradientShaderPriv_DEFINED
 #define SkGradientShaderPriv_DEFINED
 
-#include "SkGradientShader.h"
+#include "include/effects/SkGradientShader.h"
 
-#include "SkArenaAlloc.h"
-#include "SkMatrix.h"
-#include "SkShaderBase.h"
-#include "SkTArray.h"
-#include "SkTemplates.h"
+#include "include/core/SkMatrix.h"
+#include "include/private/SkTArray.h"
+#include "include/private/SkTemplates.h"
+#include "src/core/SkArenaAlloc.h"
+#include "src/shaders/SkShaderBase.h"
 
 class SkColorSpace;
-class SkColorSpaceXformer;
 class SkRasterPipeline;
 class SkReadBuffer;
 class SkWriteBuffer;
@@ -27,7 +26,7 @@ public:
     struct Descriptor {
         Descriptor() {
             sk_bzero(this, sizeof(*this));
-            fTileMode = SkShader::kClamp_TileMode;
+            fTileMode = SkTileMode::kClamp;
         }
 
         const SkMatrix*     fLocalMatrix;
@@ -35,7 +34,7 @@ public:
         sk_sp<SkColorSpace> fColorSpace;
         const SkScalar*     fPos;
         int                 fCount;
-        SkShader::TileMode  fTileMode;
+        SkTileMode          fTileMode;
         uint32_t            fGradFlags;
 
         void flatten(SkWriteBuffer&) const;
@@ -77,7 +76,7 @@ protected:
 
     bool onAsLuminanceColor(SkColor*) const override;
 
-    bool onAppendStages(const StageRec&) const override;
+    bool onAppendStages(const SkStageRec&) const override;
 
     virtual void appendGradientStages(SkArenaAlloc* alloc, SkRasterPipeline* tPipeline,
                                       SkRasterPipeline* postPipeline) const = 0;
@@ -91,14 +90,8 @@ protected:
         return ctx;
     }
 
-    struct AutoXformColors {
-        AutoXformColors(const SkGradientShaderBase&, SkColorSpaceXformer*);
-
-        SkAutoSTMalloc<8, SkColor> fColors;
-    };
-
     const SkMatrix fPtsToUnit;
-    TileMode       fTileMode;
+    SkTileMode      fTileMode;
     uint8_t        fGradFlags;
 
 public:
@@ -127,7 +120,7 @@ public:
 
     bool colorsAreOpaque() const { return fColorsAreOpaque; }
 
-    TileMode getTileMode() const { return fTileMode; }
+    SkTileMode getTileMode() const { return fTileMode; }
 
 private:
     // Reserve inline space for up to 4 stops.

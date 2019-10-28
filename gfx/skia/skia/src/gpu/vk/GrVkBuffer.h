@@ -8,8 +8,8 @@
 #ifndef GrVkBuffer_DEFINED
 #define GrVkBuffer_DEFINED
 
-#include "GrVkResource.h"
-#include "vk/GrVkTypes.h"
+#include "include/gpu/vk/GrVkTypes.h"
+#include "src/gpu/vk/GrVkResource.h"
 
 class GrVkGpu;
 
@@ -106,6 +106,7 @@ private:
 
     void internalMap(GrVkGpu* gpu, size_t size, bool* createdNewBuffer = nullptr);
     void internalUnmap(GrVkGpu* gpu, size_t size);
+    void copyCpuDataToGpuBuffer(GrVkGpu* gpu, const void* srcData, size_t size);
 
     void validate() const;
     bool vkIsMapped() const;

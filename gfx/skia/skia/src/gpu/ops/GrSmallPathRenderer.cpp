@@ -6,27 +6,28 @@
  * found in the LICENSE file.
  */
 
-#include "GrSmallPathRenderer.h"
+#include "src/gpu/ops/GrSmallPathRenderer.h"
 
-#include "GrBuffer.h"
-#include "GrCaps.h"
-#include "GrDistanceFieldGenFromVector.h"
-#include "GrDrawOpTest.h"
-#include "GrQuad.h"
-#include "GrRenderTargetContext.h"
-#include "GrResourceProvider.h"
-#include "GrSimpleMeshDrawOpHelper.h"
-#include "GrVertexWriter.h"
-#include "SkAutoMalloc.h"
-#include "SkAutoPixmapStorage.h"
-#include "SkDistanceFieldGen.h"
-#include "SkDraw.h"
-#include "SkPaint.h"
-#include "SkPointPriv.h"
-#include "SkRasterClip.h"
-#include "effects/GrBitmapTextGeoProc.h"
-#include "effects/GrDistanceFieldGeoProc.h"
-#include "ops/GrMeshDrawOp.h"
+#include "include/core/SkPaint.h"
+#include "src/core/SkAutoMalloc.h"
+#include "src/core/SkAutoPixmapStorage.h"
+#include "src/core/SkDistanceFieldGen.h"
+#include "src/core/SkDraw.h"
+#include "src/core/SkPointPriv.h"
+#include "src/core/SkRasterClip.h"
+#include "src/gpu/GrAuditTrail.h"
+#include "src/gpu/GrBuffer.h"
+#include "src/gpu/GrCaps.h"
+#include "src/gpu/GrDistanceFieldGenFromVector.h"
+#include "src/gpu/GrDrawOpTest.h"
+#include "src/gpu/GrRenderTargetContext.h"
+#include "src/gpu/GrResourceProvider.h"
+#include "src/gpu/GrVertexWriter.h"
+#include "src/gpu/effects/GrBitmapTextGeoProc.h"
+#include "src/gpu/effects/GrDistanceFieldGeoProc.h"
+#include "src/gpu/geometry/GrQuad.h"
+#include "src/gpu/ops/GrMeshDrawOp.h"
+#include "src/gpu/ops/GrSimpleMeshDrawOpHelper.h"
 
 #define ATLAS_TEXTURE_WIDTH 2048
 #define ATLAS_TEXTURE_HEIGHT 2048
@@ -251,7 +252,7 @@ public:
             : INHERITED(ClassID()), fHelper(helperArgs, GrAAType::kCoverage, stencilSettings) {
         SkASSERT(shape.hasUnstyledKey());
         // Compute bounds
-        this->setTransformedBounds(shape.bounds(), viewMatrix, HasAABloat::kYes, IsZeroArea::kNo);
+        this->setTransformedBounds(shape.bounds(), viewMatrix, HasAABloat::kYes, IsHairline::kNo);
 
 #if defined(SK_BUILD_FOR_ANDROID) && !defined(SK_BUILD_FOR_ANDROID_FRAMEWORK)
         fUsesDistanceField = true;
@@ -268,19 +269,17 @@ public:
         fShapeCache = shapeCache;
         fShapeList = shapeList;
         fGammaCorrect = gammaCorrect;
-        fWideColor = !SkPMColor4fFitsInBytes(color);
-
     }
 
     const char* name() const override { return "SmallPathOp"; }
 
-    void visitProxies(const VisitProxyFunc& func, VisitorType) const override {
+    void visitProxies(const VisitProxyFunc& func) const override {
         fHelper.visitProxies(func);
 
         const sk_sp<GrTextureProxy>* proxies = fAtlas->getProxies();
         for (uint32_t i = 0; i < fAtlas->numActivePages(); ++i) {
             SkASSERT(proxies[i]);
-            func(proxies[i].get());
+            func(proxies[i].get(), GrMipMapped::kNo);
         }
     }
 
@@ -299,10 +298,11 @@ public:
     FixedFunctionFlags fixedFunctionFlags() const override { return fHelper.fixedFunctionFlags(); }
 
     GrProcessorSet::Analysis finalize(
-            const GrCaps& caps, const GrAppliedClip* clip, GrFSAAType fsaaType) override {
+            const GrCaps& caps, const GrAppliedClip* clip, bool hasMixedSampledCoverage,
+            GrClampType clampType) override {
         return fHelper.finalizeProcessors(
-                caps, clip, fsaaType, GrProcessorAnalysisCoverage::kSingleChannel,
-                &fShapes.front().fColor);
+                caps, clip, hasMixedSampledCoverage, clampType,
+                GrProcessorAnalysisCoverage::kSingleChannel, &fShapes.front().fColor, &fWideColor);
     }
 
 private:
@@ -326,7 +326,10 @@ private:
         int numActiveProxies = fAtlas->numActivePages();
         const auto proxies = fAtlas->getProxies();
         for (int i = 0; i < numActiveProxies; ++i) {
+            // This op does not know its atlas proxies when it is added to a GrOpsTasks, so the
+            // proxies don't get added during the visitProxies call. Thus we add them here.
             flushInfo.fFixedDynamicState->fPrimitiveProcessorTextures[i] = proxies[i].get();
+            target->sampledProxyArray()->push_back(proxies[i].get());
         }
 
         // Setup GrGeometryProcessor
@@ -777,6 +780,9 @@ private:
         if (gp->numTextureSamplers() != numAtlasTextures) {
             for (int i = gp->numTextureSamplers(); i < numAtlasTextures; ++i) {
                 flushInfo->fFixedDynamicState->fPrimitiveProcessorTextures[i] = proxies[i].get();
+                // This op does not know its atlas proxies when it is added to a GrOpsTasks, so the
+                // proxies don't get added during the visitProxies call. Thus we add them here.
+                target->sampledProxyArray()->push_back(proxies[i].get());
             }
             // During preparation the number of atlas pages has increased.
             // Update the proxies used in the GP to match.
@@ -874,12 +880,11 @@ bool GrSmallPathRenderer::onDrawPath(const DrawPathArgs& args) {
     SkASSERT(!args.fShape->isEmpty());
     SkASSERT(args.fShape->hasUnstyledKey());
     if (!fAtlas) {
-        const GrBackendFormat format =
-                args.fContext->priv().caps()->getBackendFormatFromColorType(
-                        kAlpha_8_SkColorType);
+        const GrBackendFormat format = args.fContext->priv().caps()->getDefaultBackendFormat(
+                GrColorType::kAlpha_8, GrRenderable::kNo);
         fAtlas = GrDrawOpAtlas::Make(args.fContext->priv().proxyProvider(),
                                      format,
-                                     kAlpha_8_GrPixelConfig,
+                                     GrColorType::kAlpha_8,
                                      ATLAS_TEXTURE_WIDTH, ATLAS_TEXTURE_HEIGHT,
                                      PLOT_WIDTH, PLOT_HEIGHT,
                                      GrDrawOpAtlas::AllowMultitexturing::kYes,
@@ -965,10 +970,10 @@ GR_DRAW_OP_TEST_DEFINE(SmallPathOp) {
     if (context->priv().contextID() != gTestStruct.fContextID) {
         gTestStruct.fContextID = context->priv().contextID();
         gTestStruct.reset();
-        const GrBackendFormat format =
-                context->priv().caps()->getBackendFormatFromColorType(kAlpha_8_SkColorType);
+        const GrBackendFormat format = context->priv().caps()->getDefaultBackendFormat(
+                GrColorType::kAlpha_8, GrRenderable::kNo);
         gTestStruct.fAtlas = GrDrawOpAtlas::Make(context->priv().proxyProvider(),
-                                                 format, kAlpha_8_GrPixelConfig,
+                                                 format, GrColorType::kAlpha_8,
                                                  ATLAS_TEXTURE_WIDTH, ATLAS_TEXTURE_HEIGHT,
                                                  PLOT_WIDTH, PLOT_HEIGHT,
                                                  GrDrawOpAtlas::AllowMultitexturing::kYes,

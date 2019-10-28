@@ -8,9 +8,9 @@
 #ifndef GrPathRenderer_DEFINED
 #define GrPathRenderer_DEFINED
 
-#include "GrTypesPriv.h"
-#include "SkTArray.h"
-#include "SkRefCnt.h"
+#include "include/core/SkRefCnt.h"
+#include "include/private/GrTypesPriv.h"
+#include "include/private/SkTArray.h"
 
 class GrCaps;
 class GrClip;
@@ -19,6 +19,7 @@ class GrHardClip;
 class GrPaint;
 class GrRecordingContext;
 class GrRenderTargetContext;
+class GrRenderTargetProxy;
 class GrShape;
 class GrStyle;
 struct GrUserStencilSettings;
@@ -27,9 +28,9 @@ class SkMatrix;
 class SkPath;
 
 /**
- *  Base class for drawing paths into a GrOpList.
+ *  Base class for drawing paths into a GrOpsTask.
  */
-class SK_API GrPathRenderer : public SkRefCnt {
+class GrPathRenderer : public SkRefCnt {
 public:
     GrPathRenderer();
 
@@ -76,6 +77,7 @@ public:
         SkDEBUGCODE(CanDrawPathArgs() { memset(this, 0, sizeof(*this)); }) // For validation.
 
         const GrCaps*               fCaps;
+        const GrRenderTargetProxy*  fProxy;
         const SkIRect*              fClipConservativeBounds;
         const SkMatrix*             fViewMatrix;
         const GrShape*              fShape;
@@ -88,6 +90,7 @@ public:
 #ifdef SK_DEBUG
         void validate() const {
             SkASSERT(fCaps);
+            SkASSERT(fProxy);
             SkASSERT(fClipConservativeBounds);
             SkASSERT(fViewMatrix);
             SkASSERT(fShape);
@@ -145,8 +148,8 @@ public:
         const GrHardClip*      fClip;
         const SkIRect*         fClipConservativeBounds;
         const SkMatrix*        fViewMatrix;
-        GrAAType               fAAType;
         const GrShape*         fShape;
+        GrAA                   fDoStencilMSAA;
 
         SkDEBUGCODE(void validate() const);
     };

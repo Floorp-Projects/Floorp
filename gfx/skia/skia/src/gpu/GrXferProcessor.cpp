@@ -5,10 +5,10 @@
  * found in the LICENSE file.
  */
 
-#include "GrXferProcessor.h"
+#include "src/gpu/GrXferProcessor.h"
 
-#include "GrCaps.h"
-#include "GrPipeline.h"
+#include "src/gpu/GrCaps.h"
+#include "src/gpu/GrPipeline.h"
 
 GrXferProcessor::GrXferProcessor(ClassID classID)
         : INHERITED(classID)
@@ -28,15 +28,6 @@ bool GrXferProcessor::hasSecondaryOutput() const {
         return this->onHasSecondaryOutput();
     }
     return this->dstReadUsesMixedSamples();
-}
-
-void GrXferProcessor::getBlendInfo(BlendInfo* blendInfo) const {
-    blendInfo->reset();
-    if (!this->willReadDstColor()) {
-        this->onGetBlendInfo(blendInfo);
-    } else if (this->dstReadUsesMixedSamples()) {
-        blendInfo->fDstBlend = kIS2A_GrBlendCoeff;
-    }
 }
 
 void GrXferProcessor::getGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b,
@@ -166,12 +157,14 @@ GrXPFactory::AnalysisProperties GrXPFactory::GetAnalysisProperties(
         const GrXPFactory* factory,
         const GrProcessorAnalysisColor& color,
         const GrProcessorAnalysisCoverage& coverage,
-        const GrCaps& caps) {
+        const GrCaps& caps,
+        GrClampType clampType) {
     AnalysisProperties result;
     if (factory) {
-        result = factory->analysisProperties(color, coverage, caps);
+        result = factory->analysisProperties(color, coverage, caps, clampType);
     } else {
-        result = GrPorterDuffXPFactory::SrcOverAnalysisProperties(color, coverage, caps);
+        result = GrPorterDuffXPFactory::SrcOverAnalysisProperties(color, coverage, caps,
+                                                                  clampType);
     }
     SkASSERT(!(result & AnalysisProperties::kRequiresDstTexture));
     if ((result & AnalysisProperties::kReadsDstInShader) &&
@@ -186,10 +179,11 @@ sk_sp<const GrXferProcessor> GrXPFactory::MakeXferProcessor(const GrXPFactory* f
                                                             const GrProcessorAnalysisColor& color,
                                                             GrProcessorAnalysisCoverage coverage,
                                                             bool hasMixedSamples,
-                                                            const GrCaps& caps) {
+                                                            const GrCaps& caps,
+                                                            GrClampType clampType) {
     SkASSERT(!hasMixedSamples || caps.shaderCaps()->dualSourceBlendingSupport());
     if (factory) {
-        return factory->makeXferProcessor(color, coverage, hasMixedSamples, caps);
+        return factory->makeXferProcessor(color, coverage, hasMixedSamples, caps, clampType);
     } else {
         return GrPorterDuffXPFactory::MakeSrcOverXferProcessor(color, coverage, hasMixedSamples,
                                                                caps);

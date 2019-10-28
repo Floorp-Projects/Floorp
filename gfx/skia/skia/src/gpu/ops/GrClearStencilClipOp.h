@@ -8,9 +8,9 @@
 #ifndef GrClearStencilClipOp_DEFINED
 #define GrClearStencilClipOp_DEFINED
 
-#include "GrFixedClip.h"
-#include "GrOp.h"
-#include "GrRenderTargetProxy.h"
+#include "src/gpu/GrFixedClip.h"
+#include "src/gpu/GrRenderTargetProxy.h"
+#include "src/gpu/ops/GrOp.h"
 
 class GrOpFlushState;
 class GrRecordingContext;
@@ -52,7 +52,7 @@ private:
         const SkRect& bounds = fClip.scissorEnabled()
                                             ? SkRect::Make(fClip.scissorRect())
                                             : SkRect::MakeIWH(proxy->width(), proxy->height());
-        this->setBounds(bounds, HasAABloat::kNo, IsZeroArea::kNo);
+        this->setBounds(bounds, HasAABloat::kNo, IsHairline::kNo);
     }
 
     void onPrepare(GrOpFlushState*) override {}

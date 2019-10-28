@@ -5,19 +5,18 @@
 * found in the LICENSE file.
 */
 
-#include "GrVkResourceProvider.h"
+#include "src/gpu/vk/GrVkResourceProvider.h"
 
-#include "GrContextPriv.h"
-#include "GrSamplerState.h"
-#include "GrVkCommandBuffer.h"
-#include "GrVkCommandPool.h"
-#include "GrVkCopyPipeline.h"
-#include "GrVkGpu.h"
-#include "GrVkPipeline.h"
-#include "GrVkRenderTarget.h"
-#include "GrVkUniformBuffer.h"
-#include "GrVkUtil.h"
-#include "SkTaskGroup.h"
+#include "src/core/SkTaskGroup.h"
+#include "src/gpu/GrContextPriv.h"
+#include "src/gpu/GrSamplerState.h"
+#include "src/gpu/vk/GrVkCommandBuffer.h"
+#include "src/gpu/vk/GrVkCommandPool.h"
+#include "src/gpu/vk/GrVkGpu.h"
+#include "src/gpu/vk/GrVkPipeline.h"
+#include "src/gpu/vk/GrVkRenderTarget.h"
+#include "src/gpu/vk/GrVkUniformBuffer.h"
+#include "src/gpu/vk/GrVkUtil.h"
 
 #ifdef SK_TRACE_VK_RESOURCES
 std::atomic<uint32_t> GrVkResource::fKeyCounter{0};
@@ -92,45 +91,16 @@ void GrVkResourceProvider::init() {
     fUniformDSHandle = GrVkDescriptorSetManager::Handle(0);
 }
 
-GrVkPipeline* GrVkResourceProvider::createPipeline(int numColorSamples,
-                                                   const GrPrimitiveProcessor& primProc,
-                                                   const GrPipeline& pipeline,
+GrVkPipeline* GrVkResourceProvider::createPipeline(const GrProgramInfo& programInfo,
                                                    const GrStencilSettings& stencil,
                                                    VkPipelineShaderStageCreateInfo* shaderStageInfo,
                                                    int shaderStageCount,
                                                    GrPrimitiveType primitiveType,
                                                    VkRenderPass compatibleRenderPass,
                                                    VkPipelineLayout layout) {
-    return GrVkPipeline::Create(fGpu, numColorSamples, primProc, pipeline, stencil, shaderStageInfo,
-                                shaderStageCount, primitiveType, compatibleRenderPass, layout,
-                                this->pipelineCache());
-}
-
-GrVkCopyPipeline* GrVkResourceProvider::findOrCreateCopyPipeline(
-        const GrVkRenderTarget* dst,
-        VkPipelineShaderStageCreateInfo* shaderStageInfo,
-        VkPipelineLayout pipelineLayout) {
-    // Find or Create a compatible pipeline
-    GrVkCopyPipeline* pipeline = nullptr;
-    for (int i = 0; i < fCopyPipelines.count() && !pipeline; ++i) {
-        if (fCopyPipelines[i]->isCompatible(*dst->simpleRenderPass())) {
-            pipeline = fCopyPipelines[i];
-        }
-    }
-    if (!pipeline) {
-        pipeline = GrVkCopyPipeline::Create(fGpu, shaderStageInfo,
-                                            pipelineLayout,
-                                            dst->numColorSamples(),
-                                            *dst->simpleRenderPass(),
-                                            this->pipelineCache());
-        if (!pipeline) {
-            return nullptr;
-        }
-        fCopyPipelines.push_back(pipeline);
-    }
-    SkASSERT(pipeline);
-    pipeline->ref();
-    return pipeline;
+    return GrVkPipeline::Create(fGpu, programInfo, stencil, shaderStageInfo,
+                                shaderStageCount, primitiveType, compatibleRenderPass,
+                                layout, this->pipelineCache());
 }
 
 // To create framebuffers, we first need to create a simple RenderPass that is
@@ -255,12 +225,12 @@ GrVkSamplerYcbcrConversion* GrVkResourceProvider::findOrCreateCompatibleSamplerY
 }
 
 GrVkPipelineState* GrVkResourceProvider::findOrCreateCompatiblePipelineState(
-        GrRenderTarget* renderTarget, GrSurfaceOrigin origin,
-        const GrPipeline& pipeline, const GrPrimitiveProcessor& proc,
-        const GrTextureProxy* const primProcProxies[], GrPrimitiveType primitiveType,
+        GrRenderTarget* renderTarget,
+        const GrProgramInfo& programInfo,
+        GrPrimitiveType primitiveType,
         VkRenderPass compatibleRenderPass) {
-    return fPipelineStateCache->refPipelineState(renderTarget, origin, proc, primProcProxies,
-                                                 pipeline, primitiveType, compatibleRenderPass);
+    return fPipelineStateCache->refPipelineState(renderTarget, programInfo,
+                                                 primitiveType, compatibleRenderPass);
 }
 
 void GrVkResourceProvider::getSamplerDescriptorSetHandle(VkDescriptorType type,
@@ -369,6 +339,18 @@ void GrVkResourceProvider::checkCommandBuffers() {
     }
 }
 
+void GrVkResourceProvider::addFinishedProcToActiveCommandBuffers(
+        GrGpuFinishedProc finishedProc, GrGpuFinishedContext finishedContext) {
+    sk_sp<GrRefCntedCallback> procRef(new GrRefCntedCallback(finishedProc, finishedContext));
+    for (int i = 0; i < fActiveCommandPools.count(); ++i) {
+        GrVkCommandPool* pool = fActiveCommandPools[i];
+        if (!pool->isOpen()) {
+            GrVkPrimaryCommandBuffer* buffer = pool->getPrimaryCommandBuffer();
+            buffer->addFinishedProc(procRef);
+        }
+    }
+}
+
 const GrVkResource* GrVkResourceProvider::findOrCreateStandardUniformBufferResource() {
     const GrVkResource* resource = nullptr;
     int count = fAvailableUniformBufferResources.count();
@@ -391,11 +373,6 @@ void GrVkResourceProvider::destroyResources(bool deviceLost) {
         taskGroup->wait();
     }
 
-    // Release all copy pipelines
-    for (int i = 0; i < fCopyPipelines.count(); ++i) {
-        fCopyPipelines[i]->unref(fGpu);
-    }
-
     // loop over all render pass sets to make sure we destroy all the internal VkRenderPasses
     for (int i = 0; i < fRenderPassArray.count(); ++i) {
         fRenderPassArray[i].releaseResources(fGpu);
@@ -408,11 +385,15 @@ void GrVkResourceProvider::destroyResources(bool deviceLost) {
     fExternalRenderPasses.reset();
 
     // Iterate through all store GrVkSamplers and unref them before resetting the hash.
-    SkTDynamicHash<GrVkSampler, GrVkSampler::Key>::Iter iter(&fSamplers);
-    for (; !iter.done(); ++iter) {
+    for (decltype(fSamplers)::Iter iter(&fSamplers); !iter.done(); ++iter) {
         (*iter).unref(fGpu);
     }
     fSamplers.reset();
+
+    for (decltype(fYcbcrConversions)::Iter iter(&fYcbcrConversions); !iter.done(); ++iter) {
+        (*iter).unref(fGpu);
+    }
+    fYcbcrConversions.reset();
 
     fPipelineStateCache->release();
 
@@ -464,11 +445,6 @@ void GrVkResourceProvider::abandonResources() {
     }
     fAvailableCommandPools.reset();
 
-    // Abandon all copy pipelines
-    for (int i = 0; i < fCopyPipelines.count(); ++i) {
-        fCopyPipelines[i]->unrefAndAbandon();
-    }
-
     // loop over all render pass sets to make sure we destroy all the internal VkRenderPasses
     for (int i = 0; i < fRenderPassArray.count(); ++i) {
         fRenderPassArray[i].abandonResources();
@@ -486,6 +462,11 @@ void GrVkResourceProvider::abandonResources() {
         (*iter).unrefAndAbandon();
     }
     fSamplers.reset();
+
+    for (decltype(fYcbcrConversions)::Iter iter(&fYcbcrConversions); !iter.done(); ++iter) {
+        (*iter).unrefAndAbandon();
+    }
+    fYcbcrConversions.reset();
 
     fPipelineStateCache->abandon();
 
@@ -507,6 +488,7 @@ void GrVkResourceProvider::abandonResources() {
 }
 
 void GrVkResourceProvider::backgroundReset(GrVkCommandPool* pool) {
+    TRACE_EVENT0("skia.gpu", TRACE_FUNC);
     SkASSERT(pool->unique());
     pool->releaseResources(fGpu);
     SkTaskGroup* taskGroup = fGpu->getContext()->priv().getTaskGroup();
@@ -520,6 +502,7 @@ void GrVkResourceProvider::backgroundReset(GrVkCommandPool* pool) {
 }
 
 void GrVkResourceProvider::reset(GrVkCommandPool* pool) {
+    TRACE_EVENT0("skia.gpu", TRACE_FUNC);
     SkASSERT(pool->unique());
     pool->reset(fGpu);
     std::unique_lock<std::recursive_mutex> providerLock(fBackgroundMutex);

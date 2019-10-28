@@ -8,9 +8,9 @@
 #ifndef GrAtlasTextOp_DEFINED
 #define GrAtlasTextOp_DEFINED
 
-#include "ops/GrMeshDrawOp.h"
-#include "text/GrTextBlob.h"
-#include "text/GrDistanceFieldAdjustTable.h"
+#include "src/gpu/ops/GrMeshDrawOp.h"
+#include "src/gpu/text/GrDistanceFieldAdjustTable.h"
+#include "src/gpu/text/GrTextBlob.h"
 
 class GrRecordingContext;
 class SkAtlasTextTarget;
@@ -67,7 +67,7 @@ public:
 
     const char* name() const override { return "AtlasTextOp"; }
 
-    void visitProxies(const VisitProxyFunc& func, VisitorType) const override;
+    void visitProxies(const VisitProxyFunc& func) const override;
 
 #ifdef SK_DEBUG
     SkString dumpInfo() const override;
@@ -75,7 +75,8 @@ public:
 
     FixedFunctionFlags fixedFunctionFlags() const override;
 
-    GrProcessorSet::Analysis finalize(const GrCaps&, const GrAppliedClip*, GrFSAAType) override;
+    GrProcessorSet::Analysis finalize(const GrCaps&, const GrAppliedClip*,
+                                      bool hasMixedSampledCoverage, GrClampType) override;
 
     enum MaskType {
         kGrayscaleCoverageMask_MaskType,

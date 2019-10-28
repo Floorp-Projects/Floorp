@@ -5,11 +5,11 @@
  * found in the LICENSE file.
  */
 
-#include "SkColorSpace.h"
-#include "SkColorSpacePriv.h"
-#include "SkData.h"
-#include "SkOpts.h"
-#include "../../third_party/skcms/skcms.h"
+#include "include/core/SkColorSpace.h"
+#include "include/core/SkData.h"
+#include "include/third_party/skcms/skcms.h"
+#include "src/core/SkColorSpacePriv.h"
+#include "src/core/SkOpts.h"
 
 bool SkColorSpacePrimaries::toXYZD50(skcms_Matrix3x3* toXYZ_D50) const {
     return skcms_PrimariesToXYZD50(fRX, fRY, fGX, fGY, fBX, fBY, fWX, fWY, toXYZ_D50);
@@ -38,7 +38,7 @@ static bool xyz_almost_equal(const skcms_Matrix3x3& mA, const skcms_Matrix3x3& m
 
 sk_sp<SkColorSpace> SkColorSpace::MakeRGB(const skcms_TransferFunction& transferFn,
                                           const skcms_Matrix3x3& toXYZ) {
-    if (!is_valid_transfer_fn(transferFn)) {
+    if (classify_transfer_fn(transferFn) == Bad_TF) {
         return nullptr;
     }
 
@@ -116,8 +116,11 @@ void SkColorSpace::computeLazyDstFields() const {
 }
 
 bool SkColorSpace::isNumericalTransferFn(skcms_TransferFunction* coeffs) const {
+    // TODO: Change transferFn/invTransferFn to just operate on skcms_TransferFunction (all callers
+    // already pass pointers to an skcms struct). Then remove this function, and update the two
+    // remaining callers to do the right thing with transferFn and classify.
     this->transferFn(&coeffs->g);
-    return true;
+    return classify_transfer_fn(*coeffs) == sRGBish_TF;
 }
 
 void SkColorSpace::transferFn(float gabcdef[7]) const {

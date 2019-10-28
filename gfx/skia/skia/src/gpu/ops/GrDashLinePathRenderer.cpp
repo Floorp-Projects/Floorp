@@ -5,22 +5,19 @@
  * found in the LICENSE file.
  */
 
-#include "GrDashLinePathRenderer.h"
-#include "GrAuditTrail.h"
-#include "GrGpu.h"
-#include "GrRenderTargetContext.h"
-#include "GrShape.h"
-#include "ops/GrDashOp.h"
-#include "ops/GrMeshDrawOp.h"
+#include "src/gpu/GrAuditTrail.h"
+#include "src/gpu/GrGpu.h"
+#include "src/gpu/GrRenderTargetContext.h"
+#include "src/gpu/geometry/GrShape.h"
+#include "src/gpu/ops/GrDashLinePathRenderer.h"
+#include "src/gpu/ops/GrDashOp.h"
+#include "src/gpu/ops/GrMeshDrawOp.h"
 
 GrPathRenderer::CanDrawPath
 GrDashLinePathRenderer::onCanDrawPath(const CanDrawPathArgs& args) const {
     SkPoint pts[2];
     bool inverted;
     if (args.fShape->style().isDashed() && args.fShape->asLine(pts, &inverted)) {
-        if (args.fAAType == GrAAType::kMixedSamples) {
-            return CanDrawPath::kNo;
-        }
         // We should never have an inverse dashed case.
         SkASSERT(!inverted);
         if (!GrDashOp::CanDrawDashLine(pts, args.fShape->style(), *args.fViewMatrix)) {
@@ -34,18 +31,18 @@ GrDashLinePathRenderer::onCanDrawPath(const CanDrawPathArgs& args) const {
 bool GrDashLinePathRenderer::onDrawPath(const DrawPathArgs& args) {
     GR_AUDIT_TRAIL_AUTO_FRAME(args.fRenderTargetContext->auditTrail(),
                               "GrDashLinePathRenderer::onDrawPath");
-    GrDashOp::AAMode aaMode = GrDashOp::AAMode::kNone;
+    GrDashOp::AAMode aaMode;
     switch (args.fAAType) {
         case GrAAType::kNone:
-            break;
-        case GrAAType::kCoverage:
-        case GrAAType::kMixedSamples:
-            aaMode = GrDashOp::AAMode::kCoverage;
+            aaMode = GrDashOp::AAMode::kNone;
             break;
         case GrAAType::kMSAA:
             // In this mode we will use aa between dashes but the outer border uses MSAA. Otherwise,
             // we can wind up with external edges antialiased and internal edges unantialiased.
             aaMode = GrDashOp::AAMode::kCoverageWithMSAA;
+            break;
+        case GrAAType::kCoverage:
+            aaMode = GrDashOp::AAMode::kCoverage;
             break;
     }
     SkPoint pts[2];

@@ -6,11 +6,11 @@
  */
 
 
-#include "Sk1DPathEffect.h"
-#include "SkReadBuffer.h"
-#include "SkWriteBuffer.h"
-#include "SkPathMeasure.h"
-#include "SkStrokeRec.h"
+#include "include/core/SkPathMeasure.h"
+#include "include/core/SkStrokeRec.h"
+#include "include/effects/Sk1DPathEffect.h"
+#include "src/core/SkReadBuffer.h"
+#include "src/core/SkWriteBuffer.h"
 
 // Since we are stepping by a float, the do/while loop might go on forever (or nearly so).
 // Put in a governor to limit crash values from looping too long (and allocating too much ram).
@@ -40,6 +40,10 @@ SkPath1DPathEffect::SkPath1DPathEffect(const SkPath& path, SkScalar advance, SkS
                                        Style style) : fPath(path) {
     SkASSERT(advance > 0 && !path.isEmpty());
     SkASSERT((unsigned)style <= kMorph_Style);
+
+    // Make the path thread-safe.
+    fPath.updateBoundsCache();
+    (void)fPath.getGenerationID();
 
     // cleanup their phase parameter, inverting it so that it becomes an
     // offset along the path (to match the interpretation in PostScript)

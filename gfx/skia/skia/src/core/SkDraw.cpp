@@ -5,44 +5,44 @@
  * found in the LICENSE file.
  */
 
-#include "SkDraw.h"
+#include "src/core/SkDraw.h"
 
-#include "SkArenaAlloc.h"
-#include "SkAutoBlitterChoose.h"
-#include "SkBlendModePriv.h"
-#include "SkBlitter.h"
-#include "SkCanvas.h"
-#include "SkColorData.h"
-#include "SkDevice.h"
-#include "SkDrawProcs.h"
-#include "SkMaskFilterBase.h"
-#include "SkMacros.h"
-#include "SkMatrix.h"
-#include "SkMatrixUtils.h"
-#include "SkPaint.h"
-#include "SkPathEffect.h"
-#include "SkPathPriv.h"
-#include "SkRRect.h"
-#include "SkRasterClip.h"
-#include "SkRectPriv.h"
-#include "SkScan.h"
-#include "SkShader.h"
-#include "SkString.h"
-#include "SkStroke.h"
-#include "SkStrokeRec.h"
-#include "SkTLazy.h"
-#include "SkTemplates.h"
-#include "SkTo.h"
-#include "SkUtils.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkMatrix.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPathEffect.h"
+#include "include/core/SkRRect.h"
+#include "include/core/SkShader.h"
+#include "include/core/SkString.h"
+#include "include/core/SkStrokeRec.h"
+#include "include/private/SkColorData.h"
+#include "include/private/SkMacros.h"
+#include "include/private/SkTemplates.h"
+#include "include/private/SkTo.h"
+#include "src/core/SkArenaAlloc.h"
+#include "src/core/SkAutoBlitterChoose.h"
+#include "src/core/SkBlendModePriv.h"
+#include "src/core/SkBlitter.h"
+#include "src/core/SkDevice.h"
+#include "src/core/SkDrawProcs.h"
+#include "src/core/SkMaskFilterBase.h"
+#include "src/core/SkMatrixUtils.h"
+#include "src/core/SkPathPriv.h"
+#include "src/core/SkRasterClip.h"
+#include "src/core/SkRectPriv.h"
+#include "src/core/SkScan.h"
+#include "src/core/SkStroke.h"
+#include "src/core/SkTLazy.h"
+#include "src/core/SkUtils.h"
 
 #include <utility>
 
 static SkPaint make_paint_with_image(
     const SkPaint& origPaint, const SkBitmap& bitmap, SkMatrix* matrix = nullptr) {
     SkPaint paint(origPaint);
-    paint.setShader(SkMakeBitmapShader(bitmap, SkShader::kClamp_TileMode,
-                                       SkShader::kClamp_TileMode, matrix,
-                                       kNever_SkCopyPixelsMode));
+    paint.setShader(SkMakeBitmapShaderForPaint(origPaint, bitmap, SkTileMode::kClamp,
+                                               SkTileMode::kClamp, matrix,
+                                               kNever_SkCopyPixelsMode));
     return paint;
 }
 
@@ -77,7 +77,7 @@ void SkDraw::drawPaint(const SkPaint& paint) const {
     }
 
     SkIRect    devRect;
-    devRect.set(0, 0, fDst.width(), fDst.height());
+    devRect.setWH(fDst.width(), fDst.height());
 
     SkAutoBlitterChoose blitter(*this, nullptr, paint);
     SkScan::FillIRect(devRect, *fRC, blitter.get());
@@ -497,10 +497,10 @@ void SkDraw::drawPoints(SkCanvas::PointMode mode, size_t count,
                             SkRect r;
 
                             for (int i = 0; i < pointData.fNumPoints; ++i) {
-                                r.set(pointData.fPoints[i].fX - pointData.fSize.fX,
-                                      pointData.fPoints[i].fY - pointData.fSize.fY,
-                                      pointData.fPoints[i].fX + pointData.fSize.fX,
-                                      pointData.fPoints[i].fY + pointData.fSize.fY);
+                                r.setLTRB(pointData.fPoints[i].fX - pointData.fSize.fX,
+                                          pointData.fPoints[i].fY - pointData.fSize.fY,
+                                          pointData.fPoints[i].fX + pointData.fSize.fX,
+                                          pointData.fPoints[i].fY + pointData.fSize.fY);
                                 if (device) {
                                     device->drawRect(r, newP);
                                 } else {
@@ -902,7 +902,6 @@ void SkDraw::drawPath(const SkPath& origSrcPath, const SkPaint& origPaint,
     SkMatrix        tmpMatrix;
     const SkMatrix* matrix = fMatrix;
     tmpPath->setIsVolatile(true);
-    SkPathPriv::SetIsBadForDAA(*tmpPath, SkPathPriv::IsBadForDAA(origSrcPath));
 
     if (prePathMatrix) {
         if (origPaint.getPathEffect() || origPaint.getStyle() != SkPaint::kFill_Style) {
@@ -993,7 +992,7 @@ void SkDraw::drawBitmapAsMask(const SkBitmap& bitmap, const SkPaint& paint) cons
             return;
         }
         SkMask  mask;
-        mask.fBounds.set(ix, iy, ix + pmap.width(), iy + pmap.height());
+        mask.fBounds.setXYWH(ix, iy, pmap.width(), pmap.height());
         mask.fFormat = SkMask::kA8_Format;
         mask.fRowBytes = SkToU32(pmap.rowBytes());
         // fImage is typed as writable, but in this case it is used read-only
@@ -1004,19 +1003,18 @@ void SkDraw::drawBitmapAsMask(const SkBitmap& bitmap, const SkPaint& paint) cons
         SkRect  r;
         SkMask  mask;
 
-        r.set(0, 0,
-              SkIntToScalar(bitmap.width()), SkIntToScalar(bitmap.height()));
+        r.setIWH(bitmap.width(), bitmap.height());
         fMatrix->mapRect(&r);
         r.round(&mask.fBounds);
 
         // set the mask's bounds to the transformed bitmap-bounds,
-        // clipped to the actual device
+        // clipped to the actual device and further limited by the clip bounds
         {
-            SkIRect    devBounds;
-            devBounds.set(0, 0, fDst.width(), fDst.height());
+            SkASSERT(fDst.bounds().contains(fRC->getBounds()));
+            SkIRect devBounds = fDst.bounds();
+            devBounds.intersect(fRC->getBounds().makeOutset(1, 1));
             // need intersect(l, t, r, b) on irect
-            if (!devBounds.intersect(fRC->getBounds()) ||
-                !mask.fBounds.intersect(devBounds)) {
+            if (!mask.fBounds.intersect(devBounds)) {
                 return;
             }
         }
@@ -1054,8 +1052,7 @@ void SkDraw::drawBitmapAsMask(const SkBitmap& bitmap, const SkPaint& paint) cons
             tmpPaint.setFilterQuality(paint.getFilterQuality());
             SkPaint paintWithShader = make_paint_with_image(tmpPaint, bitmap);
             SkRect rr;
-            rr.set(0, 0, SkIntToScalar(bitmap.width()),
-                   SkIntToScalar(bitmap.height()));
+            rr.setIWH(bitmap.width(), bitmap.height());
             c.drawRect(rr, paintWithShader);
         }
         this->drawDevMask(mask, paint);
@@ -1072,7 +1069,7 @@ static bool clipped_out(const SkMatrix& m, const SkRasterClip& c,
 static bool clipped_out(const SkMatrix& matrix, const SkRasterClip& clip,
                         int width, int height) {
     SkRect  r;
-    r.set(0, 0, SkIntToScalar(width), SkIntToScalar(height));
+    r.setIWH(width, height);
     return clipped_out(matrix, clip, r);
 }
 
@@ -1207,7 +1204,7 @@ void SkDraw::validate() const {
     const SkIRect&  cr = fRC->getBounds();
     SkIRect         br;
 
-    br.set(0, 0, fDst.width(), fDst.height());
+    br.setWH(fDst.width(), fDst.height());
     SkASSERT(cr.isEmpty() || br.contains(cr));
 }
 
@@ -1215,10 +1212,10 @@ void SkDraw::validate() const {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-#include "SkPath.h"
-#include "SkDraw.h"
-#include "SkRegion.h"
-#include "SkBlitter.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkRegion.h"
+#include "src/core/SkBlitter.h"
+#include "src/core/SkDraw.h"
 
 bool SkDraw::ComputeMaskBounds(const SkRect& devPathBounds, const SkIRect* clipBounds,
                                const SkMaskFilter* filter, const SkMatrix* filterMatrix,

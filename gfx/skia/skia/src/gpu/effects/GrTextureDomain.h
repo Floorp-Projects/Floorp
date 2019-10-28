@@ -8,10 +8,10 @@
 #ifndef GrTextureDomainEffect_DEFINED
 #define GrTextureDomainEffect_DEFINED
 
-#include "GrCoordTransform.h"
-#include "GrFragmentProcessor.h"
-#include "glsl/GrGLSLFragmentProcessor.h"
-#include "glsl/GrGLSLProgramDataManager.h"
+#include "src/gpu/GrCoordTransform.h"
+#include "src/gpu/GrFragmentProcessor.h"
+#include "src/gpu/glsl/GrGLSLFragmentProcessor.h"
+#include "src/gpu/glsl/GrGLSLProgramDataManager.h"
 
 class GrGLProgramBuilder;
 class GrGLSLShaderBuilder;
@@ -188,12 +188,14 @@ protected:
 class GrTextureDomainEffect : public GrFragmentProcessor {
 public:
     static std::unique_ptr<GrFragmentProcessor> Make(sk_sp<GrTextureProxy>,
+                                                     GrColorType srcColorType,
                                                      const SkMatrix&,
                                                      const SkRect& domain,
                                                      GrTextureDomain::Mode mode,
                                                      GrSamplerState::Filter filterMode);
 
     static std::unique_ptr<GrFragmentProcessor> Make(sk_sp<GrTextureProxy>,
+                                                     GrColorType srcColorType,
                                                      const SkMatrix&,
                                                      const SkRect& domain,
                                                      GrTextureDomain::Mode modeX,
@@ -223,6 +225,7 @@ private:
     TextureSampler fTextureSampler;
 
     GrTextureDomainEffect(sk_sp<GrTextureProxy>,
+                          GrColorType srcColorType,
                           const SkMatrix&,
                           const SkRect& domain,
                           GrTextureDomain::Mode modeX,

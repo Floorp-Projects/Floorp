@@ -5,29 +5,29 @@
  * found in the LICENSE file.
  */
 
-#include "SkBmpCodec.h"
-#include "SkCodec.h"
-#include "SkCodecPriv.h"
-#include "SkColorSpace.h"
-#include "SkData.h"
-#include "SkFrameHolder.h"
-#include "SkHalf.h"
+#include "include/codec/SkCodec.h"
+#include "include/core/SkColorSpace.h"
+#include "include/core/SkData.h"
+#include "include/private/SkHalf.h"
+#include "src/codec/SkBmpCodec.h"
+#include "src/codec/SkCodecPriv.h"
+#include "src/codec/SkFrameHolder.h"
 #ifdef SK_HAS_HEIF_LIBRARY
-#include "SkHeifCodec.h"
+#include "src/codec/SkHeifCodec.h"
 #endif
-#include "SkIcoCodec.h"
-#include "SkJpegCodec.h"
+#include "src/codec/SkIcoCodec.h"
+#include "src/codec/SkJpegCodec.h"
 #ifdef SK_HAS_PNG_LIBRARY
-#include "SkPngCodec.h"
+#include "src/codec/SkPngCodec.h"
 #endif
-#include "SkRawCodec.h"
-#include "SkStream.h"
-#include "SkWbmpCodec.h"
-#include "SkWebpCodec.h"
+#include "include/core/SkStream.h"
+#include "src/codec/SkRawCodec.h"
+#include "src/codec/SkWbmpCodec.h"
+#include "src/codec/SkWebpCodec.h"
 #ifdef SK_HAS_WUFFS_LIBRARY
-#include "SkWuffsCodec.h"
+#include "src/codec/SkWuffsCodec.h"
 #else
-#include "SkGifCodec.h"
+#include "src/codec/SkGifCodec.h"
 #endif
 
 struct DecoderProc {
@@ -35,30 +35,37 @@ struct DecoderProc {
     std::unique_ptr<SkCodec> (*MakeFromStream)(std::unique_ptr<SkStream>, SkCodec::Result*);
 };
 
-static constexpr DecoderProc gDecoderProcs[] = {
-#ifdef SK_HAS_JPEG_LIBRARY
-    { SkJpegCodec::IsJpeg, SkJpegCodec::MakeFromStream },
-#endif
-#ifdef SK_HAS_WEBP_LIBRARY
-    { SkWebpCodec::IsWebp, SkWebpCodec::MakeFromStream },
-#endif
-#ifdef SK_HAS_WUFFS_LIBRARY
-    { SkWuffsCodec_IsFormat, SkWuffsCodec_MakeFromStream },
-#else
-    { SkGifCodec::IsGif, SkGifCodec::MakeFromStream },
-#endif
-#ifdef SK_HAS_PNG_LIBRARY
-    { SkIcoCodec::IsIco, SkIcoCodec::MakeFromStream },
-#endif
-    { SkBmpCodec::IsBmp, SkBmpCodec::MakeFromStream },
-    { SkWbmpCodec::IsWbmp, SkWbmpCodec::MakeFromStream },
-#ifdef SK_HAS_HEIF_LIBRARY
-    { SkHeifCodec::IsHeif, SkHeifCodec::MakeFromStream },
-#endif
-};
+static std::vector<DecoderProc>* decoders() {
+    static auto* decoders = new std::vector<DecoderProc> {
+    #ifdef SK_HAS_JPEG_LIBRARY
+        { SkJpegCodec::IsJpeg, SkJpegCodec::MakeFromStream },
+    #endif
+    #ifdef SK_HAS_WEBP_LIBRARY
+        { SkWebpCodec::IsWebp, SkWebpCodec::MakeFromStream },
+    #endif
+    #ifdef SK_HAS_WUFFS_LIBRARY
+        { SkWuffsCodec_IsFormat, SkWuffsCodec_MakeFromStream },
+    #else
+        { SkGifCodec::IsGif, SkGifCodec::MakeFromStream },
+    #endif
+    #ifdef SK_HAS_PNG_LIBRARY
+        { SkIcoCodec::IsIco, SkIcoCodec::MakeFromStream },
+    #endif
+        { SkBmpCodec::IsBmp, SkBmpCodec::MakeFromStream },
+        { SkWbmpCodec::IsWbmp, SkWbmpCodec::MakeFromStream },
+    };
+    return decoders;
+}
 
-std::unique_ptr<SkCodec> SkCodec::MakeFromStream(std::unique_ptr<SkStream> stream,
-                                                 Result* outResult, SkPngChunkReader* chunkReader) {
+void SkCodec::Register(
+            bool                     (*peek)(const void*, size_t),
+            std::unique_ptr<SkCodec> (*make)(std::unique_ptr<SkStream>, SkCodec::Result*)) {
+    decoders()->push_back(DecoderProc{peek, make});
+}
+
+std::unique_ptr<SkCodec> SkCodec::MakeFromStream(
+        std::unique_ptr<SkStream> stream, Result* outResult,
+        SkPngChunkReader* chunkReader, SelectionPolicy selectionPolicy) {
     Result resultStorage;
     if (!outResult) {
         outResult = &resultStorage;
@@ -66,6 +73,12 @@ std::unique_ptr<SkCodec> SkCodec::MakeFromStream(std::unique_ptr<SkStream> strea
 
     if (!stream) {
         *outResult = kInvalidInput;
+        return nullptr;
+    }
+
+    if (selectionPolicy != SelectionPolicy::kPreferStillImage
+            && selectionPolicy != SelectionPolicy::kPreferAnimation) {
+        *outResult = kInvalidParameters;
         return nullptr;
     }
 
@@ -105,11 +118,17 @@ std::unique_ptr<SkCodec> SkCodec::MakeFromStream(std::unique_ptr<SkStream> strea
     } else
 #endif
     {
-        for (DecoderProc proc : gDecoderProcs) {
+        for (DecoderProc proc : *decoders()) {
             if (proc.IsFormat(buffer, bytesRead)) {
                 return proc.MakeFromStream(std::move(stream), outResult);
             }
         }
+
+#ifdef SK_HAS_HEIF_LIBRARY
+        if (SkHeifCodec::IsHeif(buffer, bytesRead)) {
+            return SkHeifCodec::MakeFromStream(std::move(stream), selectionPolicy, outResult);
+        }
+#endif
 
 #ifdef SK_CODEC_DECODES_RAW
         // Try to treat the input as RAW if all the other checks failed.
@@ -195,8 +214,21 @@ bool SkCodec::rewindIfNeeded() {
     return this->onRewind();
 }
 
+static SkIRect frame_rect_on_screen(SkIRect frameRect,
+                                    const SkIRect& screenRect) {
+    if (!frameRect.intersect(screenRect)) {
+        return SkIRect::MakeEmpty();
+    }
+
+    return frameRect;
+}
+
 bool zero_rect(const SkImageInfo& dstInfo, void* pixels, size_t rowBytes,
                SkISize srcDimensions, SkIRect prevRect) {
+    prevRect = frame_rect_on_screen(prevRect, SkIRect::MakeSize(srcDimensions));
+    if (prevRect.isEmpty()) {
+        return true;
+    }
     const auto dimensions = dstInfo.dimensions();
     if (dimensions != srcDimensions) {
         SkRect src = SkRect::Make(srcDimensions);
@@ -214,13 +246,7 @@ bool zero_rect(const SkImageInfo& dstInfo, void* pixels, size_t rowBytes,
         }
     }
 
-    if (!prevRect.intersect(dstInfo.bounds())) {
-        SkCodecPrintf("rectangles do not intersect!");
-        SkASSERT(false);
-        return true;
-    }
-
-    const SkImageInfo info = dstInfo.makeWH(prevRect.width(), prevRect.height());
+    const SkImageInfo info = dstInfo.makeDimensions(prevRect.size());
     const size_t bpp = dstInfo.bytesPerPixel();
     const size_t offset = prevRect.x() * bpp + prevRect.y() * rowBytes;
     void* eraseDst = SkTAddOffset<void>(pixels, offset);
@@ -715,15 +741,6 @@ const char* SkCodec::ResultToString(Result result) {
     }
 }
 
-static SkIRect frame_rect_on_screen(SkIRect frameRect,
-                                    const SkIRect& screenRect) {
-    if (!frameRect.intersect(screenRect)) {
-        return SkIRect::MakeEmpty();
-    }
-
-    return frameRect;
-}
-
 static bool independent(const SkFrame& frame) {
     return frame.getRequiredFrame() == SkCodec::kNoFrame;
 }
@@ -732,6 +749,48 @@ static bool restore_bg(const SkFrame& frame) {
     return frame.getDisposalMethod() == SkCodecAnimation::DisposalMethod::kRestoreBGColor;
 }
 
+// As its name suggests, this method computes a frame's alpha (e.g. completely
+// opaque, unpremul, binary) and its required frame (a preceding frame that
+// this frame depends on, to draw the complete image at this frame's point in
+// the animation stream), and calls this frame's setter methods with that
+// computed information.
+//
+// A required frame of kNoFrame means that this frame is independent: drawing
+// the complete image at this frame's point in the animation stream does not
+// require first preparing the pixel buffer based on another frame. Instead,
+// drawing can start from an uninitialized pixel buffer.
+//
+// "Uninitialized" is from the SkCodec's caller's point of view. In the SkCodec
+// implementation, for independent frames, first party Skia code (in src/codec)
+// will typically fill the buffer with a uniform background color (e.g.
+// transparent black) before calling into third party codec-specific code (e.g.
+// libjpeg or libpng). Pixels outside of the frame's rect will remain this
+// background color after drawing this frame. For incomplete decodes, pixels
+// inside that rect may be (at least temporarily) set to that background color.
+// In an incremental decode, later passes may then overwrite that background
+// color.
+//
+// Determining kNoFrame or otherwise involves testing a number of conditions
+// sequentially. The first satisfied condition results in setting the required
+// frame to kNoFrame (an "INDx" condition) or to a non-negative frame number (a
+// "DEPx" condition), and the function returning early. Those "INDx" and "DEPx"
+// labels also map to comments in the function body.
+//
+//  - IND1: this frame is the first frame.
+//  - IND2: this frame fills out the whole image, and it is completely opaque
+//          or it overwrites (not blends with) the previous frame.
+//  - IND3: all preceding frames' disposals are kRestorePrevious.
+//  - IND4: the prevFrame's disposal is kRestoreBGColor, and it fills out the
+//          whole image or it is itself otherwise independent.
+//  - DEP5: this frame reports alpha (it is not completely opaque) and it
+//          blends with (not overwrites) the previous frame.
+//  - IND6: this frame's rect covers the rects of all preceding frames back to
+//          and including the most recent independent frame before this frame.
+//  - DEP7: unconditional.
+//
+// The "prevFrame" variable initially points to the previous frame (also known
+// as the prior frame), but that variable may iterate further backwards over
+// the course of this computation.
 void SkFrameHolder::setAlphaAndRequiredFrame(SkFrame* frame) {
     const bool reportsAlpha = frame->reportedAlpha() != SkEncodedInfo::kOpaque_Alpha;
     const auto screenRect = SkIRect::MakeWH(fScreenWidth, fScreenHeight);
@@ -740,7 +799,7 @@ void SkFrameHolder::setAlphaAndRequiredFrame(SkFrame* frame) {
     const int i = frame->frameId();
     if (0 == i) {
         frame->setHasAlpha(reportsAlpha || frameRect != screenRect);
-        frame->setRequiredFrame(SkCodec::kNoFrame);
+        frame->setRequiredFrame(SkCodec::kNoFrame);  // IND1
         return;
     }
 
@@ -748,7 +807,7 @@ void SkFrameHolder::setAlphaAndRequiredFrame(SkFrame* frame) {
     const bool blendWithPrevFrame = frame->getBlend() == SkCodecAnimation::Blend::kPriorFrame;
     if ((!reportsAlpha || !blendWithPrevFrame) && frameRect == screenRect) {
         frame->setHasAlpha(reportsAlpha);
-        frame->setRequiredFrame(SkCodec::kNoFrame);
+        frame->setRequiredFrame(SkCodec::kNoFrame);  // IND2
         return;
     }
 
@@ -757,7 +816,7 @@ void SkFrameHolder::setAlphaAndRequiredFrame(SkFrame* frame) {
         const int prevId = prevFrame->frameId();
         if (0 == prevId) {
             frame->setHasAlpha(true);
-            frame->setRequiredFrame(SkCodec::kNoFrame);
+            frame->setRequiredFrame(SkCodec::kNoFrame);  // IND3
             return;
         }
 
@@ -770,7 +829,7 @@ void SkFrameHolder::setAlphaAndRequiredFrame(SkFrame* frame) {
     if (clearPrevFrame) {
         if (prevFrameRect == screenRect || independent(*prevFrame)) {
             frame->setHasAlpha(true);
-            frame->setRequiredFrame(SkCodec::kNoFrame);
+            frame->setRequiredFrame(SkCodec::kNoFrame);  // IND4
             return;
         }
     }
@@ -780,7 +839,7 @@ void SkFrameHolder::setAlphaAndRequiredFrame(SkFrame* frame) {
         // to background color and covers its required frame (and that
         // frame is independent), prevFrame could be marked independent.
         // Would this extra complexity be worth it?
-        frame->setRequiredFrame(prevFrame->frameId());
+        frame->setRequiredFrame(prevFrame->frameId());  // DEP5
         frame->setHasAlpha(prevFrame->hasAlpha() || clearPrevFrame);
         return;
     }
@@ -788,7 +847,7 @@ void SkFrameHolder::setAlphaAndRequiredFrame(SkFrame* frame) {
     while (frameRect.contains(prevFrameRect)) {
         const int prevRequiredFrame = prevFrame->getRequiredFrame();
         if (prevRequiredFrame == SkCodec::kNoFrame) {
-            frame->setRequiredFrame(SkCodec::kNoFrame);
+            frame->setRequiredFrame(SkCodec::kNoFrame);  // IND6
             frame->setHasAlpha(true);
             return;
         }
@@ -797,21 +856,12 @@ void SkFrameHolder::setAlphaAndRequiredFrame(SkFrame* frame) {
         prevFrameRect = frame_rect_on_screen(prevFrame->frameRect(), screenRect);
     }
 
+    frame->setRequiredFrame(prevFrame->frameId());  // DEP7
     if (restore_bg(*prevFrame)) {
         frame->setHasAlpha(true);
-        if (prevFrameRect == screenRect || independent(*prevFrame)) {
-            frame->setRequiredFrame(SkCodec::kNoFrame);
-        } else {
-            // Note: As above, frame could still be independent, e.g. if
-            // prevFrame covers its required frame and that frame is
-            // independent.
-            frame->setRequiredFrame(prevFrame->frameId());
-        }
         return;
     }
-
     SkASSERT(prevFrame->getDisposalMethod() == SkCodecAnimation::DisposalMethod::kKeep);
-    frame->setRequiredFrame(prevFrame->frameId());
     frame->setHasAlpha(prevFrame->hasAlpha() || (reportsAlpha && !blendWithPrevFrame));
 }
 

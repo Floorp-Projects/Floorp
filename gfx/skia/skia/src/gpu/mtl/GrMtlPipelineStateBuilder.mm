@@ -5,43 +5,40 @@
  * found in the LICENSE file.
  */
 
-#include "GrMtlPipelineStateBuilder.h"
+#include "src/gpu/mtl/GrMtlPipelineStateBuilder.h"
 
-#include "GrContext.h"
-#include "GrContextPriv.h"
+#include "include/gpu/GrContext.h"
+#include "src/gpu/GrContextPriv.h"
 
-#include "GrMtlGpu.h"
-#include "GrMtlPipelineState.h"
-#include "GrMtlUtil.h"
+#include "src/gpu/mtl/GrMtlGpu.h"
+#include "src/gpu/mtl/GrMtlPipelineState.h"
+#include "src/gpu/mtl/GrMtlUtil.h"
 
-#include "GrRenderTargetPriv.h"
+#include "src/gpu/GrRenderTargetPriv.h"
 
 #import <simd/simd.h>
 
-GrMtlPipelineState* GrMtlPipelineStateBuilder::CreatePipelineState(
-        GrMtlGpu* gpu,
-        GrRenderTarget* renderTarget, GrSurfaceOrigin origin,
-        const GrPrimitiveProcessor& primProc,
-        const GrTextureProxy* const primProcProxies[],
-        const GrPipeline& pipeline,
-        Desc* desc) {
-    GrMtlPipelineStateBuilder builder(gpu, renderTarget, origin, pipeline, primProc,
-                                      primProcProxies, desc);
+#if !__has_feature(objc_arc)
+#error This file must be compiled with Arc. Use -fobjc-arc flag
+#endif
+
+GrMtlPipelineState* GrMtlPipelineStateBuilder::CreatePipelineState(GrMtlGpu* gpu,
+                                                                   GrRenderTarget* renderTarget,
+                                                                   const GrProgramInfo& programInfo,
+                                                                   Desc* desc) {
+    GrMtlPipelineStateBuilder builder(gpu, renderTarget, programInfo, desc);
 
     if (!builder.emitAndInstallProcs()) {
         return nullptr;
     }
-    return builder.finalize(renderTarget, primProc, pipeline, desc);
+    return builder.finalize(renderTarget, programInfo, desc);
 }
 
 GrMtlPipelineStateBuilder::GrMtlPipelineStateBuilder(GrMtlGpu* gpu,
                                                      GrRenderTarget* renderTarget,
-                                                     GrSurfaceOrigin origin,
-                                                     const GrPipeline& pipeline,
-                                                     const GrPrimitiveProcessor& primProc,
-                                                     const GrTextureProxy* const primProcProxies[],
+                                                     const GrProgramInfo& programInfo,
                                                      GrProgramDesc* desc)
-        : INHERITED(renderTarget, origin, primProc, primProcProxies, pipeline, desc)
+        : INHERITED(renderTarget, programInfo, desc)
         , fGpu(gpu)
         , fUniformHandler(this)
         , fVaryingHandler(this) {
@@ -64,16 +61,8 @@ id<MTLLibrary> GrMtlPipelineStateBuilder::createMtlShaderLibrary(
         SkSL::Program::Kind kind,
         const SkSL::Program::Settings& settings,
         GrProgramDesc* desc) {
-    SkString shaderString;
-    for (int i = 0; i < builder.fCompilerStrings.count(); ++i) {
-        if (builder.fCompilerStrings[i]) {
-            shaderString.append(builder.fCompilerStrings[i]);
-            shaderString.append("\n");
-        }
-    }
-
     SkSL::Program::Inputs inputs;
-    id<MTLLibrary> shaderLibrary = GrCompileMtlShaderLibrary(fGpu, shaderString.c_str(),
+    id<MTLLibrary> shaderLibrary = GrCompileMtlShaderLibrary(fGpu, builder.fCompilerString.c_str(),
                                                              kind, settings, &inputs);
     if (shaderLibrary == nil) {
         return nil;
@@ -81,15 +70,10 @@ id<MTLLibrary> GrMtlPipelineStateBuilder::createMtlShaderLibrary(
     if (inputs.fRTHeight) {
         this->addRTHeightUniform(SKSL_RTHEIGHT_NAME);
     }
-    if (inputs.fFlipY) {
-        desc->setSurfaceOriginKey(GrGLSLFragmentShaderBuilder::KeyForSurfaceOrigin(this->origin()));
-    }
     return shaderLibrary;
 }
 
 static inline MTLVertexFormat attribute_type_to_mtlformat(GrVertexAttribType type) {
-    // All half types will actually be float types. We are currently not using half types with
-    // metal to avoid an issue with narrow type coercions (float->half) http://skbug.com/8221
     switch (type) {
         case kFloat_GrVertexAttribType:
             return MTLVertexFormatFloat;
@@ -100,7 +84,11 @@ static inline MTLVertexFormat attribute_type_to_mtlformat(GrVertexAttribType typ
         case kFloat4_GrVertexAttribType:
             return MTLVertexFormatFloat4;
         case kHalf_GrVertexAttribType:
-            return MTLVertexFormatHalf;
+            if (@available(macOS 10.13, iOS 11.0, *)) {
+                return MTLVertexFormatHalf;
+            } else {
+                return MTLVertexFormatInvalid;
+            }
         case kHalf2_GrVertexAttribType:
             return MTLVertexFormatHalf2;
         case kHalf3_GrVertexAttribType:
@@ -114,7 +102,11 @@ static inline MTLVertexFormat attribute_type_to_mtlformat(GrVertexAttribType typ
         case kInt4_GrVertexAttribType:
             return MTLVertexFormatInt4;
         case kByte_GrVertexAttribType:
-            return MTLVertexFormatChar;
+            if (@available(macOS 10.13, iOS 11.0, *)) {
+                return MTLVertexFormatChar;
+            } else {
+                return MTLVertexFormatInvalid;
+            }
         case kByte2_GrVertexAttribType:
             return MTLVertexFormatChar2;
         case kByte3_GrVertexAttribType:
@@ -122,7 +114,11 @@ static inline MTLVertexFormat attribute_type_to_mtlformat(GrVertexAttribType typ
         case kByte4_GrVertexAttribType:
             return MTLVertexFormatChar4;
         case kUByte_GrVertexAttribType:
-            return MTLVertexFormatUChar;
+            if (@available(macOS 10.13, iOS 11.0, *)) {
+                return MTLVertexFormatUChar;
+            } else {
+                return MTLVertexFormatInvalid;
+            }
         case kUByte2_GrVertexAttribType:
             return MTLVertexFormatUChar2;
         case kUByte3_GrVertexAttribType:
@@ -130,7 +126,11 @@ static inline MTLVertexFormat attribute_type_to_mtlformat(GrVertexAttribType typ
         case kUByte4_GrVertexAttribType:
             return MTLVertexFormatUChar4;
         case kUByte_norm_GrVertexAttribType:
-            return MTLVertexFormatUCharNormalized;
+            if (@available(macOS 10.13, iOS 11.0, *)) {
+                return MTLVertexFormatUCharNormalized;
+            } else {
+                return MTLVertexFormatInvalid;
+            }
         case kUByte4_norm_GrVertexAttribType:
             return MTLVertexFormatUChar4Normalized;
         case kShort2_GrVertexAttribType:
@@ -145,9 +145,16 @@ static inline MTLVertexFormat attribute_type_to_mtlformat(GrVertexAttribType typ
             return MTLVertexFormatInt;
         case kUint_GrVertexAttribType:
             return MTLVertexFormatUInt;
+        case kUShort_norm_GrVertexAttribType:
+            if (@available(macOS 10.13, iOS 11.0, *)) {
+                return MTLVertexFormatUShortNormalized;
+            } else {
+                return MTLVertexFormatInvalid;
+            }
+        case kUShort4_norm_GrVertexAttribType:
+            return MTLVertexFormatUShort4Normalized;
     }
     SK_ABORT("Unknown vertex attribute type");
-    return MTLVertexFormatInvalid;
 }
 
 static MTLVertexDescriptor* create_vertex_descriptor(const GrPrimitiveProcessor& primProc) {
@@ -170,6 +177,7 @@ static MTLVertexDescriptor* create_vertex_descriptor(const GrPrimitiveProcessor&
     for (const auto& attribute : primProc.vertexAttributes()) {
         MTLVertexAttributeDescriptor* mtlAttribute = vertexDescriptor.attributes[attributeIndex];
         mtlAttribute.format = attribute_type_to_mtlformat(attribute.cpuType());
+        SkASSERT(MTLVertexFormatInvalid != mtlAttribute.format);
         mtlAttribute.offset = vertexAttributeOffset;
         mtlAttribute.bufferIndex = vertexBinding;
 
@@ -210,49 +218,64 @@ static MTLVertexDescriptor* create_vertex_descriptor(const GrPrimitiveProcessor&
 }
 
 static MTLBlendFactor blend_coeff_to_mtl_blend(GrBlendCoeff coeff) {
-    static const MTLBlendFactor gTable[] = {
-        MTLBlendFactorZero,                      // kZero_GrBlendCoeff
-        MTLBlendFactorOne,                       // kOne_GrBlendCoeff
-        MTLBlendFactorSourceColor,               // kSC_GrBlendCoeff
-        MTLBlendFactorOneMinusSourceColor,       // kISC_GrBlendCoeff
-        MTLBlendFactorDestinationColor,          // kDC_GrBlendCoeff
-        MTLBlendFactorOneMinusDestinationColor,  // kIDC_GrBlendCoeff
-        MTLBlendFactorSourceAlpha,               // kSA_GrBlendCoeff
-        MTLBlendFactorOneMinusSourceAlpha,       // kISA_GrBlendCoeff
-        MTLBlendFactorDestinationAlpha,          // kDA_GrBlendCoeff
-        MTLBlendFactorOneMinusDestinationAlpha,  // kIDA_GrBlendCoeff
-        MTLBlendFactorBlendColor,                // kConstC_GrBlendCoeff
-        MTLBlendFactorOneMinusBlendColor,        // kIConstC_GrBlendCoeff
-        MTLBlendFactorBlendAlpha,                // kConstA_GrBlendCoeff
-        MTLBlendFactorOneMinusBlendAlpha,        // kIConstA_GrBlendCoeff
-        MTLBlendFactorSource1Color,              // kS2C_GrBlendCoeff
-        MTLBlendFactorOneMinusSource1Color,      // kIS2C_GrBlendCoeff
-        MTLBlendFactorSource1Alpha,              // kS2A_GrBlendCoeff
-        MTLBlendFactorOneMinusSource1Alpha,      // kIS2A_GrBlendCoeff
-        MTLBlendFactorZero,                      // kIllegal_GrBlendCoeff
-    };
-    GR_STATIC_ASSERT(SK_ARRAY_COUNT(gTable) == kGrBlendCoeffCnt);
-    GR_STATIC_ASSERT(0 == kZero_GrBlendCoeff);
-    GR_STATIC_ASSERT(1 == kOne_GrBlendCoeff);
-    GR_STATIC_ASSERT(2 == kSC_GrBlendCoeff);
-    GR_STATIC_ASSERT(3 == kISC_GrBlendCoeff);
-    GR_STATIC_ASSERT(4 == kDC_GrBlendCoeff);
-    GR_STATIC_ASSERT(5 == kIDC_GrBlendCoeff);
-    GR_STATIC_ASSERT(6 == kSA_GrBlendCoeff);
-    GR_STATIC_ASSERT(7 == kISA_GrBlendCoeff);
-    GR_STATIC_ASSERT(8 == kDA_GrBlendCoeff);
-    GR_STATIC_ASSERT(9 == kIDA_GrBlendCoeff);
-    GR_STATIC_ASSERT(10 == kConstC_GrBlendCoeff);
-    GR_STATIC_ASSERT(11 == kIConstC_GrBlendCoeff);
-    GR_STATIC_ASSERT(12 == kConstA_GrBlendCoeff);
-    GR_STATIC_ASSERT(13 == kIConstA_GrBlendCoeff);
-    GR_STATIC_ASSERT(14 == kS2C_GrBlendCoeff);
-    GR_STATIC_ASSERT(15 == kIS2C_GrBlendCoeff);
-    GR_STATIC_ASSERT(16 == kS2A_GrBlendCoeff);
-    GR_STATIC_ASSERT(17 == kIS2A_GrBlendCoeff);
+    switch (coeff) {
+        case kZero_GrBlendCoeff:
+            return MTLBlendFactorZero;
+        case kOne_GrBlendCoeff:
+            return MTLBlendFactorOne;
+        case kSC_GrBlendCoeff:
+            return MTLBlendFactorSourceColor;
+        case kISC_GrBlendCoeff:
+            return MTLBlendFactorOneMinusSourceColor;
+        case kDC_GrBlendCoeff:
+            return MTLBlendFactorDestinationColor;
+        case kIDC_GrBlendCoeff:
+            return MTLBlendFactorOneMinusDestinationColor;
+        case kSA_GrBlendCoeff:
+            return MTLBlendFactorSourceAlpha;
+        case kISA_GrBlendCoeff:
+            return MTLBlendFactorOneMinusSourceAlpha;
+        case kDA_GrBlendCoeff:
+            return MTLBlendFactorDestinationAlpha;
+        case kIDA_GrBlendCoeff:
+            return MTLBlendFactorOneMinusDestinationAlpha;
+        case kConstC_GrBlendCoeff:
+            return MTLBlendFactorBlendColor;
+        case kIConstC_GrBlendCoeff:
+            return MTLBlendFactorOneMinusBlendColor;
+        case kConstA_GrBlendCoeff:
+            return MTLBlendFactorBlendAlpha;
+        case kIConstA_GrBlendCoeff:
+            return MTLBlendFactorOneMinusBlendAlpha;
+        case kS2C_GrBlendCoeff:
+            if (@available(macOS 10.12, iOS 11.0, *)) {
+                return MTLBlendFactorSource1Color;
+            } else {
+                return MTLBlendFactorZero;
+            }
+        case kIS2C_GrBlendCoeff:
+            if (@available(macOS 10.12, iOS 11.0, *)) {
+                return MTLBlendFactorOneMinusSource1Color;
+            } else {
+                return MTLBlendFactorZero;
+            }
+        case kS2A_GrBlendCoeff:
+            if (@available(macOS 10.12, iOS 11.0, *)) {
+                return MTLBlendFactorSource1Alpha;
+            } else {
+                return MTLBlendFactorZero;
+            }
+        case kIS2A_GrBlendCoeff:
+            if (@available(macOS 10.12, iOS 11.0, *)) {
+                return MTLBlendFactorOneMinusSource1Alpha;
+            } else {
+                return MTLBlendFactorZero;
+            }
+        case kIllegal_GrBlendCoeff:
+            return MTLBlendFactorZero;
+    }
 
-    SkASSERT((unsigned)coeff < kGrBlendCoeffCnt);
-    return gTable[coeff];
+    SK_ABORT("Unknown blend coefficient");
 }
 
 static MTLBlendOperation blend_equation_to_mtl_blend_op(GrBlendEquation equation) {
@@ -280,8 +303,7 @@ static MTLRenderPipelineColorAttachmentDescriptor* create_color_attachment(
     mtlColorAttachment.pixelFormat = format;
 
     // blending
-    GrXferProcessor::BlendInfo blendInfo;
-    pipeline.getXferProcessor().getBlendInfo(&blendInfo);
+    const GrXferProcessor::BlendInfo& blendInfo = pipeline.getXferProcessor().getBlendInfo();
 
     GrBlendEquation equation = blendInfo.fEquation;
     GrBlendCoeff srcCoeff = blendInfo.fSrcBlend;
@@ -318,10 +340,9 @@ uint32_t buffer_size(uint32_t offset, uint32_t maxAlignment) {
 }
 
 GrMtlPipelineState* GrMtlPipelineStateBuilder::finalize(GrRenderTarget* renderTarget,
-                                                        const GrPrimitiveProcessor& primProc,
-                                                        const GrPipeline& pipeline,
+                                                        const GrProgramInfo& programInfo,
                                                         Desc* desc) {
-    auto pipelineDescriptor = [[MTLRenderPipelineDescriptor alloc] init];
+    auto pipelineDescriptor = [MTLRenderPipelineDescriptor new];
 
     fVS.extensions().appendf("#extension GL_ARB_separate_shader_objects : enable\n");
     fFS.extensions().appendf("#extension GL_ARB_separate_shader_objects : enable\n");
@@ -349,16 +370,28 @@ GrMtlPipelineState* GrMtlPipelineStateBuilder::finalize(GrRenderTarget* renderTa
                                                    desc);
     SkASSERT(!this->primitiveProcessor().willUseGeoShader());
 
-    SkASSERT(vertexLibrary);
-    SkASSERT(fragmentLibrary);
+    if (!vertexLibrary || !fragmentLibrary) {
+        return nullptr;
+    }
 
     id<MTLFunction> vertexFunction = [vertexLibrary newFunctionWithName: @"vertexMain"];
     id<MTLFunction> fragmentFunction = [fragmentLibrary newFunctionWithName: @"fragmentMain"];
 
+    if (vertexFunction == nil) {
+        SkDebugf("Couldn't find vertexMain() in library\n");
+        return nullptr;
+    }
+    if (fragmentFunction == nil) {
+        SkDebugf("Couldn't find fragmentMain() in library\n");
+        return nullptr;
+    }
+
     pipelineDescriptor.vertexFunction = vertexFunction;
     pipelineDescriptor.fragmentFunction = fragmentFunction;
-    pipelineDescriptor.vertexDescriptor = create_vertex_descriptor(primProc);
-    pipelineDescriptor.colorAttachments[0] = create_color_attachment(this->config(), pipeline);
+    pipelineDescriptor.vertexDescriptor = create_vertex_descriptor(programInfo.primProc());
+    pipelineDescriptor.colorAttachments[0] = create_color_attachment(renderTarget->config(),
+                                                                     programInfo.pipeline());
+    pipelineDescriptor.sampleCount = renderTarget->numSamples();
     bool hasStencilAttachment = SkToBool(renderTarget->renderTargetPriv().getStencilAttachment());
     GrMtlCaps* mtlCaps = (GrMtlCaps*)this->caps();
     pipelineDescriptor.stencilAttachmentPixelFormat =
@@ -370,6 +403,19 @@ GrMtlPipelineState* GrMtlPipelineStateBuilder::finalize(GrRenderTarget* renderTa
     SkASSERT(pipelineDescriptor.vertexDescriptor);
     SkASSERT(pipelineDescriptor.colorAttachments[0]);
 
+#if defined(SK_BUILD_FOR_MAC) && defined(GR_USE_COMPLETION_HANDLER)
+    bool timedout;
+    id<MTLRenderPipelineState> pipelineState = GrMtlNewRenderPipelineStateWithDescriptor(
+                                                     fGpu->device(), pipelineDescriptor, &timedout);
+    if (timedout) {
+        // try a second time
+        pipelineState = GrMtlNewRenderPipelineStateWithDescriptor(
+                                fGpu->device(), pipelineDescriptor, &timedout);
+    }
+    if (!pipelineState) {
+        return nullptr;
+    }
+#else
     NSError* error = nil;
     id<MTLRenderPipelineState> pipelineState =
             [fGpu->device() newRenderPipelineStateWithDescriptor: pipelineDescriptor
@@ -379,23 +425,16 @@ GrMtlPipelineState* GrMtlPipelineStateBuilder::finalize(GrRenderTarget* renderTa
                  [[error localizedDescription] cStringUsingEncoding: NSASCIIStringEncoding]);
         return nullptr;
     }
-    uint32_t geomBufferSize = buffer_size(fUniformHandler.fCurrentGeometryUBOOffset,
-                                          fUniformHandler.fCurrentGeometryUBOMaxAlignment);
-    uint32_t fragBufferSize = buffer_size(fUniformHandler.fCurrentFragmentUBOOffset,
-                                          fUniformHandler.fCurrentFragmentUBOMaxAlignment);
+#endif
+
+    uint32_t bufferSize = buffer_size(fUniformHandler.fCurrentUBOOffset,
+                                      fUniformHandler.fCurrentUBOMaxAlignment);
     return new GrMtlPipelineState(fGpu,
                                   pipelineState,
                                   pipelineDescriptor.colorAttachments[0].pixelFormat,
                                   fUniformHandles,
                                   fUniformHandler.fUniforms,
-                                  GrMtlBuffer::Make(fGpu,
-                                                    geomBufferSize,
-                                                    GrGpuBufferType::kVertex,
-                                                    kStatic_GrAccessPattern),
-                                  GrMtlBuffer::Make(fGpu,
-                                                    fragBufferSize,
-                                                    GrGpuBufferType::kVertex,
-                                                    kStatic_GrAccessPattern),
+                                  bufferSize,
                                   (uint32_t)fUniformHandler.numSamplers(),
                                   std::move(fGeometryProcessor),
                                   std::move(fXferProcessor),
@@ -407,12 +446,10 @@ GrMtlPipelineState* GrMtlPipelineStateBuilder::finalize(GrRenderTarget* renderTa
 
 bool GrMtlPipelineStateBuilder::Desc::Build(Desc* desc,
                                             GrRenderTarget* renderTarget,
-                                            const GrPrimitiveProcessor& primProc,
-                                            const GrPipeline& pipeline,
+                                            const GrProgramInfo& programInfo,
                                             GrPrimitiveType primitiveType,
                                             GrMtlGpu* gpu) {
-    if (!INHERITED::Build(desc, renderTarget->config(), primProc,
-                          GrPrimitiveType::kLines == primitiveType, pipeline, gpu)) {
+    if (!GrProgramDesc::Build(desc, renderTarget, programInfo, primitiveType, gpu)) {
         return false;
     }
 
@@ -423,14 +460,14 @@ bool GrMtlPipelineStateBuilder::Desc::Build(Desc* desc,
     desc->fShaderKeyLength = SkToU32(keyLength);
 
     b.add32(renderTarget->config());
-    b.add32(renderTarget->numColorSamples());
+    b.add32(renderTarget->numSamples());
     bool hasStencilAttachment = SkToBool(renderTarget->renderTargetPriv().getStencilAttachment());
     b.add32(hasStencilAttachment ? gpu->mtlCaps().preferredStencilFormat().fInternalFormat
                                  : MTLPixelFormatInvalid);
-    b.add32((uint32_t)pipeline.isStencilEnabled());
+    b.add32((uint32_t)programInfo.pipeline().isStencilEnabled());
     // Stencil samples don't seem to be tracked in the MTLRenderPipeline
 
-    b.add32(pipeline.getBlendInfoKey());
+    b.add32(programInfo.pipeline().getBlendInfoKey());
 
     b.add32((uint32_t)primitiveType);
 

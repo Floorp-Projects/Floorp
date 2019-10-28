@@ -5,13 +5,13 @@
  * found in the LICENSE file.
  */
 
-#include "GrTextureMaker.h"
+#include "src/gpu/GrTextureMaker.h"
 
-#include "GrColorSpaceXform.h"
-#include "GrGpu.h"
-#include "GrProxyProvider.h"
-#include "GrRecordingContext.h"
-#include "GrRecordingContextPriv.h"
+#include "include/private/GrRecordingContext.h"
+#include "src/gpu/GrColorSpaceXform.h"
+#include "src/gpu/GrGpu.h"
+#include "src/gpu/GrProxyProvider.h"
+#include "src/gpu/GrRecordingContextPriv.h"
 
 sk_sp<GrTextureProxy> GrTextureMaker::onRefTextureProxyForParams(const GrSamplerState& params,
                                                                  bool willBeMipped,
@@ -54,7 +54,8 @@ sk_sp<GrTextureProxy> GrTextureMaker::onRefTextureProxyForParams(const GrSampler
     this->makeCopyKey(copyParams, &copyKey);
     sk_sp<GrTextureProxy> cachedProxy;
     if (copyKey.isValid()) {
-        cachedProxy = proxyProvider->findOrCreateProxyByUniqueKey(copyKey, origOrigin);
+        cachedProxy =
+                proxyProvider->findOrCreateProxyByUniqueKey(copyKey, this->colorType(), origOrigin);
         if (cachedProxy && (!willBeMipped || GrMipMapped::kYes == cachedProxy->mipMapped())) {
             return cachedProxy;
         }
@@ -74,7 +75,8 @@ sk_sp<GrTextureProxy> GrTextureMaker::onRefTextureProxyForParams(const GrSampler
         return nullptr;
     }
 
-    sk_sp<GrTextureProxy> result = CopyOnGpu(this->context(), source, copyParams, willBeMipped);
+    sk_sp<GrTextureProxy> result =
+            CopyOnGpu(this->context(), source, this->colorType(), copyParams, willBeMipped);
 
     if (!result) {
         // If we were unable to make a copy and we only needed a copy for mips, then we will return

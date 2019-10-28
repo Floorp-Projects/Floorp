@@ -9,12 +9,12 @@
 #ifndef GrVkRenderTarget_DEFINED
 #define GrVkRenderTarget_DEFINED
 
-#include "GrVkImage.h"
-#include "GrRenderTarget.h"
+#include "src/gpu/GrRenderTarget.h"
+#include "src/gpu/vk/GrVkImage.h"
 
-#include "GrVkRenderPass.h"
-#include "GrVkResourceProvider.h"
-#include "vk/GrVkTypes.h"
+#include "include/gpu/vk/GrVkTypes.h"
+#include "src/gpu/vk/GrVkRenderPass.h"
+#include "src/gpu/vk/GrVkResourceProvider.h"
 
 class GrVkCommandBuffer;
 class GrVkFramebuffer;
@@ -34,7 +34,7 @@ struct GrVkImageInfo;
 class GrVkRenderTarget: public GrRenderTarget, public virtual GrVkImage {
 public:
     static sk_sp<GrVkRenderTarget> MakeWrappedRenderTarget(GrVkGpu*, const GrSurfaceDesc&,
-                                                           const GrVkImageInfo&,
+                                                           int sampleCnt, const GrVkImageInfo&,
                                                            sk_sp<GrVkImageLayout>);
 
     static sk_sp<GrVkRenderTarget> MakeSecondaryCBRenderTarget(GrVkGpu*, const GrSurfaceDesc&,
@@ -68,17 +68,9 @@ public:
         return fCachedSimpleRenderPass;
     }
 
-    bool wrapsSecondaryCommandBuffer() const { return fSecondaryCommandBuffer != nullptr; }
-    GrVkSecondaryCommandBuffer* getExternalSecondaryCommandBuffer() const {
+    bool wrapsSecondaryCommandBuffer() const { return fSecondaryCommandBuffer != VK_NULL_HANDLE; }
+    VkCommandBuffer getExternalSecondaryCommandBuffer() const {
         return fSecondaryCommandBuffer;
-    }
-
-    // override of GrRenderTarget
-    ResolveType getResolveType() const override {
-        if (this->numColorSamples() > 1) {
-            return kCanResolve_ResolveType;
-        }
-        return kAutoResolves_ResolveType;
     }
 
     bool canAttemptStencilAttachment() const override {
@@ -97,6 +89,7 @@ public:
 protected:
     GrVkRenderTarget(GrVkGpu* gpu,
                      const GrSurfaceDesc& desc,
+                     int sampleCnt,
                      const GrVkImageInfo& info,
                      sk_sp<GrVkImageLayout> layout,
                      const GrVkImageInfo& msaaInfo,
@@ -119,12 +112,13 @@ protected:
 
     // This accounts for the texture's memory and any MSAA renderbuffer's memory.
     size_t onGpuMemorySize() const override {
-        int numColorSamples = this->numColorSamples();
+        int numColorSamples = this->numSamples();
         if (numColorSamples > 1) {
             // Add one to account for the resolved VkImage.
             numColorSamples += 1;
         }
-        return GrSurface::ComputeSize(this->config(), this->width(), this->height(),
+        const GrCaps& caps = *this->getGpu()->caps();
+        return GrSurface::ComputeSize(caps, this->backendFormat(), this->width(), this->height(),
                                       numColorSamples, GrMipMapped::kNo);
     }
 
@@ -137,6 +131,7 @@ protected:
 private:
     GrVkRenderTarget(GrVkGpu* gpu,
                      const GrSurfaceDesc& desc,
+                     int sampleCnt,
                      const GrVkImageInfo& info,
                      sk_sp<GrVkImageLayout> layout,
                      const GrVkImageInfo& msaaInfo,
@@ -156,7 +151,7 @@ private:
                      const GrVkImageInfo& info,
                      sk_sp<GrVkImageLayout> layout,
                      const GrVkRenderPass* renderPass,
-                     GrVkSecondaryCommandBuffer* secondaryCommandBuffer);
+                     VkCommandBuffer secondaryCommandBuffer);
 
     bool completeStencilAttachment() override;
 
@@ -178,11 +173,10 @@ private:
     // This is a handle to be used to quickly get compatible GrVkRenderPasses for this render target
     GrVkResourceProvider::CompatibleRPHandle fCompatibleRPHandle;
 
-    // If this render target wraps an external VkCommandBuffer, then this pointer will be non-null
-    // and will point to the GrVk object that, in turn, wraps the external VkCommandBuffer. In this
-    // case the render target will not be backed by an actual VkImage and will thus be limited in
-    // terms of what it can be used for.
-    GrVkSecondaryCommandBuffer* fSecondaryCommandBuffer = nullptr;
+    // If this render target wraps an external VkCommandBuffer, then this handle will be that
+    // VkCommandBuffer and not VK_NULL_HANDLE. In this case the render target will not be backed by
+    // an actual VkImage and will thus be limited in terms of what it can be used for.
+    VkCommandBuffer fSecondaryCommandBuffer = VK_NULL_HANDLE;
 };
 
 #endif

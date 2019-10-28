@@ -8,10 +8,12 @@
 #ifndef SKSL_SWITCHSTATEMENT
 #define SKSL_SWITCHSTATEMENT
 
-#include "SkSLStatement.h"
-#include "SkSLSwitchCase.h"
+#include "src/sksl/ir/SkSLStatement.h"
+#include "src/sksl/ir/SkSLSwitchCase.h"
 
 namespace SkSL {
+
+class SymbolTable;
 
 /**
  * A 'switch' statement.

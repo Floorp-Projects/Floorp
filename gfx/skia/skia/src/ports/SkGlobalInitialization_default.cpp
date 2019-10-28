@@ -5,7 +5,7 @@
  * found in the LICENSE file.
  */
 
-#include "SkFlattenable.h"
+#include "include/core/SkFlattenable.h"
 
 #if defined(SK_DISABLE_EFFECT_DESERIALIZATION)
 
@@ -14,10 +14,13 @@
 
 #else
 
-    #include "../../src/effects/SkDashImpl.h"
-    #include "SkGradientShader.h"
-    #include "SkMaskFilter.h"
-    #include "SkImageFilter.h"
+    #include "include/core/SkColorFilter.h"
+    #include "src/effects/SkDashImpl.h"
+    #include "include/effects/SkGradientShader.h"
+    #include "include/core/SkMaskFilter.h"
+
+    #include "include/effects/SkBlurImageFilter.h"
+    #include "include/effects/SkComposeImageFilter.h"
 
     /*
      *  Register most effects for deserialization.
@@ -29,6 +32,9 @@
     void SkFlattenable::PrivateInitializer::InitEffects() {
         // Shaders.
         SkGradientShader::RegisterFlattenables();
+
+        // Color filters.
+        SkColorFilter::RegisterFlattenables();
 
         // Mask filters.
         SkMaskFilter::RegisterFlattenables();
@@ -45,7 +51,8 @@
      *  SK_DISABLE_EFFECT_SERIALIZATION, or modify/replace this file as needed.
      */
     void SkFlattenable::PrivateInitializer::InitImageFilters() {
-        SkImageFilter::RegisterFlattenables();
+        SkBlurImageFilter::RegisterFlattenables();
+        SkComposeImageFilter::RegisterFlattenables();
     }
 
 #endif

@@ -6,9 +6,10 @@
  */
 
 
-#include "GrGLUtil.h"
-#include "GrTypesPriv.h"
-#include "SkMatrix.h"
+#include "include/core/SkMatrix.h"
+#include "include/private/GrTypesPriv.h"
+#include "src/gpu/GrDataUtils.h"
+#include "src/gpu/gl/GrGLUtil.h"
 #include <stdio.h>
 
 void GrGLClearErr(const GrGLInterface* gl) {
@@ -77,6 +78,13 @@ GrGLStandard GrGLGetStandardInUseFromString(const char* versionString) {
         return kGL_GrGLStandard;
     }
 
+    // WebGL might look like "OpenGL ES 2.0 (WebGL 1.0 (OpenGL ES 2.0 Chromium))"
+    int esMajor, esMinor;
+    n = sscanf(versionString, "OpenGL ES %d.%d (WebGL %d.%d", &esMajor, &esMinor, &major, &minor);
+    if (4 == n) {
+        return kWebGL_GrGLStandard;
+    }
+
     // check for ES 1
     char profile[2];
     n = sscanf(versionString, "OpenGL ES-%c%c %d.%d", profile, profile+1, &major, &minor);
@@ -121,7 +129,7 @@ void GrGLGetDriverInfo(GrGLStandard standard,
         return;
     }
 
-    if (standard == kGL_GrGLStandard) {
+    if (GR_IS_GR_GL(standard)) {
         if (kNVIDIA_GrGLVendor == vendor) {
             *outDriver = kNVIDIA_GrGLDriver;
             int n = sscanf(versionString, "%d.%d.%d NVIDIA %d.%d",
@@ -143,8 +151,7 @@ void GrGLGetDriverInfo(GrGLStandard standard,
             *outVersion = GR_GL_DRIVER_VER(driverMajor, driverMinor, 0);
             return;
         }
-    }
-    else {
+    } else if (GR_IS_GR_GL_ES(standard)) {
         if (kNVIDIA_GrGLVendor == vendor) {
             *outDriver = kNVIDIA_GrGLDriver;
             int n = sscanf(versionString, "OpenGL ES %d.%d NVIDIA %d.%d",
@@ -211,6 +218,10 @@ void GrGLGetDriverInfo(GrGLStandard standard,
         }
         return;
     }
+    static constexpr char kEmulatorPrefix[] = "Android Emulator OpenGL ES Translator";
+    if (0 == strncmp(kEmulatorPrefix, rendererString, strlen(kEmulatorPrefix))) {
+        *outDriver = kAndroidEmulator_GrGLDriver;
+    }
 }
 
 GrGLVersion GrGLGetVersionFromString(const char* versionString) {
@@ -230,6 +241,13 @@ GrGLVersion GrGLGetVersionFromString(const char* versionString) {
 
     n = sscanf(versionString, "%d.%d", &major, &minor);
     if (2 == n) {
+        return GR_GL_VER(major, minor);
+    }
+
+    // WebGL might look like "OpenGL ES 2.0 (WebGL 1.0 (OpenGL ES 2.0 Chromium))"
+    int esMajor, esMinor;
+    n = sscanf(versionString, "OpenGL ES %d.%d (WebGL %d.%d", &esMajor, &esMinor, &major, &minor);
+    if (4 == n) {
         return GR_GL_VER(major, minor);
     }
 
@@ -369,36 +387,69 @@ GrGLRenderer GrGLGetRendererFromStrings(const char* rendererString,
         }
 
         if (const char* intelString = strstr(rendererString, "Intel")) {
-            if (0 == strcmp("Intel Iris Pro OpenGL Engine", intelString)) {
-                return kIntelIrisPro_GrGLRenderer;
+            // These generic strings seem to always come from Haswell: Iris 5100 or Iris Pro 5200
+            if (0 == strcmp("Intel Iris OpenGL Engine", intelString) ||
+                0 == strcmp("Intel Iris Pro OpenGL Engine", intelString)) {
+                return kIntelHaswell_GrGLRenderer;
             }
             if (strstr(intelString, "Sandybridge")) {
                 return kIntelSandyBridge_GrGLRenderer;
             }
             if (strstr(intelString, "Bay Trail")) {
-                return kIntelBayTrail_GrGLRenderer;
+                return kIntelValleyView_GrGLRenderer;
             }
-            int intelNumber;
-            if (sscanf(intelString, "Intel(R) Iris(TM) Graphics %d", &intelNumber) ||
-                sscanf(intelString, "Intel(R) Iris(TM) Pro Graphics %d", &intelNumber) ||
-                sscanf(intelString, "Intel(R) Iris(TM) Pro Graphics P%d", &intelNumber) ||
-                sscanf(intelString, "Intel(R) Iris(R) Graphics %d", &intelNumber) ||
-                sscanf(intelString, "Intel(R) Iris(R) Pro Graphics %d", &intelNumber) ||
-                sscanf(intelString, "Intel(R) Iris(R) Pro Graphics P%d", &intelNumber) ||
-                sscanf(intelString, "Intel(R) HD Graphics %d", &intelNumber) ||
-                sscanf(intelString, "Intel(R) HD Graphics P%d", &intelNumber)) {
+            // There are many possible intervening strings here:
+            // 'Intel(R)' is a common prefix
+            // 'Iris' may appear, followed by '(R)' or '(TM)'
+            // 'Iris' can then be followed by 'Graphics', 'Pro Graphics', or 'Plus Graphics'
+            // If 'Iris' isn't there, we might have 'HD Graphics' or 'UHD Graphics'
+            //
+            // In all cases, though, we end with 'Graphics ', an optional 'P', and a number,
+            // so just skip to that and handle two cases:
+            if (const char* intelGfxString = strstr(intelString, "Graphics")) {
+                int intelNumber;
+                if (sscanf(intelGfxString, "Graphics %d", &intelNumber) ||
+                    sscanf(intelGfxString, "Graphics P%d", &intelNumber)) {
 
-                if (intelNumber >= 4000 && intelNumber < 5000) {
-                    return kIntel4xxx_GrGLRenderer;
-                }
-                if (intelNumber >= 6000 && intelNumber < 7000) {
-                    return kIntel6xxx_GrGLRenderer;
-                }
-                if (intelNumber >= 2000 && intelNumber < 4000) {
-                    return kIntelSandyBridge_GrGLRenderer;
-                }
-                if (intelNumber >= 500 && intelNumber < 600) {
-                    return kIntelSkylake_GrGLRenderer;
+                    if (intelNumber == 2000 || intelNumber == 3000) {
+                        return kIntelSandyBridge_GrGLRenderer;
+                    }
+                    if (intelNumber == 2500 || intelNumber == 4000) {
+                        return kIntelIvyBridge_GrGLRenderer;
+                    }
+                    if (intelNumber >= 4200 && intelNumber <= 5200) {
+                        return kIntelHaswell_GrGLRenderer;
+                    }
+                    if (intelNumber >= 400 && intelNumber <= 405) {
+                        return kIntelCherryView_GrGLRenderer;
+                    }
+                    if (intelNumber >= 5300 && intelNumber <= 6300) {
+                        return kIntelBroadwell_GrGLRenderer;
+                    }
+                    if (intelNumber >= 500 && intelNumber <= 505) {
+                        return kIntelApolloLake_GrGLRenderer;
+                    }
+                    if (intelNumber >= 510 && intelNumber <= 580) {
+                        return kIntelSkyLake_GrGLRenderer;
+                    }
+                    if (intelNumber >= 600 && intelNumber <= 605) {
+                        return kIntelGeminiLake_GrGLRenderer;
+                    }
+                    // 610 and 630 are reused from KabyLake to CoffeeLake. The CoffeeLake variants
+                    // are "UHD Graphics", while the KabyLake ones are "HD Graphics"
+                    if (intelNumber == 610 || intelNumber == 630) {
+                        return strstr(intelString, "UHD") ? kIntelCoffeeLake_GrGLRenderer
+                                                          : kIntelKabyLake_GrGLRenderer;
+                    }
+                    if (intelNumber >= 610 && intelNumber <= 650) {
+                        return kIntelKabyLake_GrGLRenderer;
+                    }
+                    if (intelNumber == 655) {
+                        return kIntelCoffeeLake_GrGLRenderer;
+                    }
+                    if (intelNumber >= 910 && intelNumber <= 950) {
+                        return kIntelIceLake_GrGLRenderer;
+                    }
                 }
             }
         }
@@ -421,9 +472,6 @@ GrGLRenderer GrGLGetRendererFromStrings(const char* rendererString,
             }
         }
 
-        if (0 == strcmp("Mesa Offscreen", rendererString)) {
-            return kOSMesa_GrGLRenderer;
-        }
         if (strstr(rendererString, "llvmpipe")) {
             return kGalliumLLVM_GrGLRenderer;
         }
@@ -545,5 +593,66 @@ GrGLenum GrToGLStencilFunc(GrStencilTest test) {
     SkASSERT(test < (GrStencilTest)kGrStencilTestCount);
 
     return gTable[(int)test];
+}
+
+bool GrGLFormatIsCompressed(GrGLFormat format) {
+    switch (format) {
+        case GrGLFormat::kCOMPRESSED_RGB8_ETC2:
+        case GrGLFormat::kCOMPRESSED_ETC1_RGB8:
+            return true;
+
+        case GrGLFormat::kRGBA8:
+        case GrGLFormat::kR8:
+        case GrGLFormat::kALPHA8:
+        case GrGLFormat::kLUMINANCE8:
+        case GrGLFormat::kBGRA8:
+        case GrGLFormat::kRGB565:
+        case GrGLFormat::kRGBA16F:
+        case GrGLFormat::kR16F:
+        case GrGLFormat::kLUMINANCE16F:
+        case GrGLFormat::kRGB8:
+        case GrGLFormat::kRG8:
+        case GrGLFormat::kRGB10_A2:
+        case GrGLFormat::kRGBA4:
+        case GrGLFormat::kSRGB8_ALPHA8:
+        case GrGLFormat::kR16:
+        case GrGLFormat::kRG16:
+        case GrGLFormat::kRGBA16:
+        case GrGLFormat::kRG16F:
+        case GrGLFormat::kUnknown:
+            return false;
+    }
+    SkUNREACHABLE;
+}
+
+bool GrGLFormatToCompressionType(GrGLFormat format, SkImage::CompressionType* compressionType) {
+    switch (format) {
+        case GrGLFormat::kCOMPRESSED_RGB8_ETC2:
+        case GrGLFormat::kCOMPRESSED_ETC1_RGB8:
+            *compressionType = SkImage::kETC1_CompressionType;
+            return true;
+
+        case GrGLFormat::kRGBA8:
+        case GrGLFormat::kR8:
+        case GrGLFormat::kALPHA8:
+        case GrGLFormat::kLUMINANCE8:
+        case GrGLFormat::kBGRA8:
+        case GrGLFormat::kRGB565:
+        case GrGLFormat::kRGBA16F:
+        case GrGLFormat::kR16F:
+        case GrGLFormat::kLUMINANCE16F:
+        case GrGLFormat::kRGB8:
+        case GrGLFormat::kRG8:
+        case GrGLFormat::kRGB10_A2:
+        case GrGLFormat::kRGBA4:
+        case GrGLFormat::kSRGB8_ALPHA8:
+        case GrGLFormat::kR16:
+        case GrGLFormat::kRG16:
+        case GrGLFormat::kRGBA16:
+        case GrGLFormat::kRG16F:
+        case GrGLFormat::kUnknown:
+            return false;
+    }
+    SkUNREACHABLE;
 }
 

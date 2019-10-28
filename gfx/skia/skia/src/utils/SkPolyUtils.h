@@ -10,8 +10,8 @@
 
 #include <functional>
 
-#include "SkTDArray.h"
-#include "SkPoint.h"
+#include "include/core/SkPoint.h"
+#include "include/private/SkTDArray.h"
 
 struct SkRect;
 

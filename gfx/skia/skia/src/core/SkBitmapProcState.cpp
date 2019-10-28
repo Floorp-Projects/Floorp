@@ -5,18 +5,18 @@
  * found in the LICENSE file.
  */
 
-#include "SkBitmapCache.h"
-#include "SkBitmapController.h"
-#include "SkBitmapProcState.h"
-#include "SkColorData.h"
-#include "SkImageEncoder.h"
-#include "SkMacros.h"
-#include "SkMipMap.h"
-#include "SkOpts.h"
-#include "SkPaint.h"
-#include "SkResourceCache.h"
-#include "SkShader.h"   // for tilemodes
-#include "SkUtils.h"
+#include "include/core/SkImageEncoder.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkShader.h"
+#include "include/private/SkColorData.h"
+#include "include/private/SkMacros.h"
+#include "src/core/SkBitmapCache.h"
+#include "src/core/SkBitmapController.h"
+#include "src/core/SkBitmapProcState.h"
+#include "src/core/SkMipMap.h"
+#include "src/core/SkOpts.h"
+#include "src/core/SkResourceCache.h"
+#include "src/core/SkUtils.h"
 
 // One-stop-shop shader for,
 //   - nearest-neighbor sampling (_nofilter_),
@@ -119,9 +119,8 @@ static void S32_alpha_D32_nofilter_DX(const SkBitmapProcState& s,
     }
 }
 
-SkBitmapProcInfo::SkBitmapProcInfo(const SkBitmapProvider& provider,
-                                   SkShader::TileMode tmx, SkShader::TileMode tmy)
-    : fProvider(provider)
+SkBitmapProcInfo::SkBitmapProcInfo(const SkImage_Base* image, SkTileMode tmx, SkTileMode tmy)
+    : fImage(image)
     , fTileModeX(tmx)
     , fTileModeY(tmy)
     , fBMState(nullptr)
@@ -173,7 +172,7 @@ bool SkBitmapProcInfo::init(const SkMatrix& inv, const SkPaint& paint) {
     fInvMatrix = inv;
     fFilterQuality = paint.getFilterQuality();
 
-    fBMState = SkBitmapController::RequestBitmap(fProvider, inv, paint.getFilterQuality(), &fAlloc);
+    fBMState = SkBitmapController::RequestBitmap(fImage, inv, paint.getFilterQuality(), &fAlloc);
 
     // Note : we allow the controller to return an empty (zero-dimension) result. Should we?
     if (nullptr == fBMState || fBMState->pixmap().info().isEmpty()) {
@@ -196,8 +195,7 @@ bool SkBitmapProcInfo::init(const SkMatrix& inv, const SkPaint& paint) {
         // We don't do this if we're either trivial (can ignore the matrix) or clamping
         // in both X and Y since clamping to width,height is just as easy as to 0xFFFF.
 
-        if (fTileModeX != SkShader::kClamp_TileMode ||
-            fTileModeY != SkShader::kClamp_TileMode) {
+        if (fTileModeX != SkTileMode::kClamp || fTileModeY != SkTileMode::kClamp) {
             fInvMatrix.postIDiv(fPixmap.width(), fPixmap.height());
         }
 
@@ -247,7 +245,7 @@ bool SkBitmapProcState::chooseProcs() {
     SkASSERT(fPixmap.alphaType() == kPremul_SkAlphaType ||
              fPixmap.alphaType() == kOpaque_SkAlphaType);
     SkASSERT(fTileModeX == fTileModeY);
-    SkASSERT(fTileModeX != SkShader::kDecal_TileMode);
+    SkASSERT(fTileModeX != SkTileMode::kDecal);
     SkASSERT(fFilterQuality < kHigh_SkFilterQuality);
 
     fInvProc            = SkMatrixPriv::GetMapXYProc(fInvMatrix);
@@ -275,7 +273,7 @@ bool SkBitmapProcState::chooseProcs() {
     if (nullptr == fShaderProc32
             && fAlphaScale == 256
             && fFilterQuality == kNone_SkFilterQuality
-            && SkShader::kClamp_TileMode == fTileModeX) {
+            && SkTileMode::kClamp == fTileModeX) {
         fShaderProc32 = Clamp_S32_opaque_D32_nofilter_DX_shaderproc;
     }
 
@@ -432,8 +430,7 @@ static void S32_D32_constX_shaderproc(const void* sIn,
             // chooseProcs multiples the inverse matrix by the inverse of the
             // bitmap's width and height. Since this method is going to do
             // its own tiling and sampling we need to undo that here.
-            if (SkShader::kClamp_TileMode != s.fTileModeX ||
-                SkShader::kClamp_TileMode != s.fTileModeY) {
+            if (SkTileMode::kClamp != s.fTileModeX || SkTileMode::kClamp != s.fTileModeY) {
                 yTemp = SkFractionalIntToInt(mapper.fractionalIntY() * s.fPixmap.height());
             } else {
                 yTemp = mapper.intY();
@@ -444,13 +441,13 @@ static void S32_D32_constX_shaderproc(const void* sIn,
 
         const int stopY = s.fPixmap.height();
         switch (s.fTileModeY) {
-            case SkShader::kClamp_TileMode:
+            case SkTileMode::kClamp:
                 iY0 = SkClampMax(yTemp, stopY-1);
                 break;
-            case SkShader::kRepeat_TileMode:
+            case SkTileMode::kRepeat:
                 iY0 = sk_int_mod(yTemp, stopY);
                 break;
-            case SkShader::kMirror_TileMode:
+            case SkTileMode::kMirror:
             default:
                 iY0 = sk_int_mirror(yTemp, stopY);
                 break;
@@ -462,21 +459,20 @@ static void S32_D32_constX_shaderproc(const void* sIn,
             int iY2;
 
             if (s.fInvType > SkMatrix::kTranslate_Mask &&
-                (SkShader::kClamp_TileMode != s.fTileModeX ||
-                 SkShader::kClamp_TileMode != s.fTileModeY)) {
+                (SkTileMode::kClamp != s.fTileModeX || SkTileMode::kClamp != s.fTileModeY)) {
                 iY2 = SkFractionalIntToInt(mapper.fractionalIntY() * s.fPixmap.height());
             } else {
                 iY2 = mapper.intY();
             }
 
             switch (s.fTileModeY) {
-            case SkShader::kClamp_TileMode:
+            case SkTileMode::kClamp:
                 iY2 = SkClampMax(iY2, stopY-1);
                 break;
-            case SkShader::kRepeat_TileMode:
+            case SkTileMode::kRepeat:
                 iY2 = sk_int_mod(iY2, stopY);
                 break;
-            case SkShader::kMirror_TileMode:
+            case SkTileMode::kMirror:
             default:
                 iY2 = sk_int_mirror(iY2, stopY);
                 break;
@@ -560,16 +556,16 @@ SkBitmapProcState::ShaderProc32 SkBitmapProcState::chooseShaderProc32() {
         return nullptr;
     }
 
-    SkShader::TileMode tx = (SkShader::TileMode)fTileModeX;
-    SkShader::TileMode ty = (SkShader::TileMode)fTileModeY;
+    SkTileMode tx = fTileModeX;
+    SkTileMode ty = fTileModeY;
 
-    if (SkShader::kClamp_TileMode == tx && SkShader::kClamp_TileMode == ty) {
+    if (SkTileMode::kClamp == tx && SkTileMode::kClamp == ty) {
         if (this->setupForTranslate()) {
             return Clamp_S32_D32_nofilter_trans_shaderproc;
         }
         return DoNothing_shaderproc;
     }
-    if (SkShader::kRepeat_TileMode == tx && SkShader::kRepeat_TileMode == ty) {
+    if (SkTileMode::kRepeat == tx && SkTileMode::kRepeat == ty) {
         if (this->setupForTranslate()) {
             return Repeat_S32_D32_nofilter_trans_shaderproc;
         }

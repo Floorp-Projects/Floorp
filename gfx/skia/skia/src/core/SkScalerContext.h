@@ -10,19 +10,19 @@
 
 #include <memory>
 
-#include "SkFont.h"
-#include "SkFontTypes.h"
-#include "SkGlyph.h"
-#include "SkMacros.h"
-#include "SkMask.h"
-#include "SkMaskFilter.h"
-#include "SkMaskGamma.h"
-#include "SkMatrix.h"
-#include "SkPaint.h"
-#include "SkStrikeInterface.h"
-#include "SkSurfacePriv.h"
-#include "SkTypeface.h"
-#include "SkWriteBuffer.h"
+#include "include/core/SkFont.h"
+#include "include/core/SkFontTypes.h"
+#include "include/core/SkMaskFilter.h"
+#include "include/core/SkMatrix.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkTypeface.h"
+#include "include/private/SkMacros.h"
+#include "src/core/SkGlyph.h"
+#include "src/core/SkMask.h"
+#include "src/core/SkMaskGamma.h"
+#include "src/core/SkStrikeForGPU.h"
+#include "src/core/SkSurfacePriv.h"
+#include "src/core/SkWriteBuffer.h"
 
 class SkAutoDescriptor;
 class SkDescriptor;
@@ -202,15 +202,26 @@ public:
 
     // setLuminanceColor forces the alpha to be 0xFF because the blitter that draws the glyph
     // will apply the alpha from the paint. Don't apply the alpha twice.
-    void setLuminanceColor(SkColor c) {
-        fLumBits = SkColorSetRGB(SkColorGetR(c), SkColorGetG(c), SkColorGetB(c));
-    }
+    void setLuminanceColor(SkColor c);
 
 private:
     // TODO: remove
     friend class SkScalerContext;
 };
 SK_END_REQUIRE_DENSE
+
+// TODO: rename SkScalerContextEffects -> SkStrikeEffects
+struct SkScalerContextEffects {
+    SkScalerContextEffects() : fPathEffect(nullptr), fMaskFilter(nullptr) {}
+    SkScalerContextEffects(SkPathEffect* pe, SkMaskFilter* mf)
+            : fPathEffect(pe), fMaskFilter(mf) {}
+    explicit SkScalerContextEffects(const SkPaint& paint)
+            : fPathEffect(paint.getPathEffect())
+            , fMaskFilter(paint.getMaskFilter()) {}
+
+    SkPathEffect*   fPathEffect;
+    SkMaskFilter*   fMaskFilter;
+};
 
 //The following typedef hides from the rest of the implementation the number of
 //most significant bits to consider when creating mask gamma tables. Two bits
@@ -243,6 +254,8 @@ public:
         // Generate A8 from LCD source (for GDI and CoreGraphics).
         // only meaningful if fMaskFormat is kA8
         kGenA8FromLCD_Flag        = 0x0800, // could be 0x200 (bit meaning dependent on fMaskFormat)
+        kLinearMetrics_Flag       = 0x1000,
+        kBaselineSnap_Flag        = 0x2000,
 
         kLightOnDark_Flag         = 0x8000, // Moz + Mac only, used to distinguish different mask dilations
     };
@@ -265,17 +278,12 @@ public:
         return SkToBool(fRec.fFlags & kSubpixelPositioning_Flag);
     }
 
+    bool isLinearMetrics() const {
+        return SkToBool(fRec.fFlags & kLinearMetrics_Flag);
+    }
+
     // DEPRECATED
     bool isVertical() const { return false; }
-
-    /** Return the corresponding glyph for the specified unichar. Since contexts
-        may be chained (under the hood), the glyphID that is returned may in
-        fact correspond to a different font/context. In that case, we use the
-        base-glyph-count to know how to translate back into local glyph space.
-     */
-    uint16_t charToGlyphID(SkUnichar uni) {
-        return generateCharToGlyph(uni);
-    }
 
     unsigned    getGlyphCount() { return this->generateGlyphCount(); }
     void        getAdvance(SkGlyph*);
@@ -368,11 +376,11 @@ protected:
 
     /** Generates the contents of glyph.fImage.
      *  When called, glyph.fImage will be pointing to a pre-allocated,
-     *  uninitialized region of memory of size glyph.computeImageSize().
+     *  uninitialized region of memory of size glyph.imageSize().
      *  This method may change glyph.fMaskFormat if the new image size is
      *  less than or equal to the old image size.
      *
-     *  Because glyph.computeImageSize() will determine the size of fImage,
+     *  Because glyph.imageSize() will determine the size of fImage,
      *  generateMetrics will be called before generateImage.
      */
     virtual void generateImage(const SkGlyph& glyph) = 0;
@@ -389,16 +397,11 @@ protected:
     /** Returns the number of glyphs in the font. */
     virtual unsigned generateGlyphCount() = 0;
 
-    /** Returns the glyph id for the given unichar.
-     *  If there is no 1:1 mapping from the unichar to a glyph id, returns 0.
-     */
-    virtual uint16_t generateCharToGlyph(SkUnichar unichar) = 0;
-
     void forceGenerateImageFromPath() { fGenerateImageFromPath = true; }
     void forceOffGenerateImageFromPath() { fGenerateImageFromPath = false; }
 
 private:
-    friend class SkRandomScalerContext; // For debug purposes
+    friend class RandomScalerContext;  // For debug purposes
 
     static SkScalerContextRec PreprocessRec(const SkTypeface& typeface,
                                             const SkScalerContextEffects& effects,

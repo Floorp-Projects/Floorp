@@ -5,19 +5,23 @@
  * found in the LICENSE file.
  */
 
-#include "SkContourMeasure.h"
-#include "SkPathMeasurePriv.h"
-#include "SkGeometry.h"
-#include "SkPath.h"
-#include "SkTSearch.h"
+#include "include/core/SkContourMeasure.h"
+#include "include/core/SkPath.h"
+#include "src/core/SkGeometry.h"
+#include "src/core/SkPathMeasurePriv.h"
+#include "src/core/SkTSearch.h"
 
 #define kMaxTValue  0x3FFFFFFF
 
-static inline SkScalar tValue2Scalar(int t) {
+constexpr static inline SkScalar tValue2Scalar(int t) {
     SkASSERT((unsigned)t <= kMaxTValue);
-    const SkScalar kMaxTReciprocal = 1.0f / kMaxTValue;
+    // 1/kMaxTValue can't be represented as a float, but it's close and the limits work fine.
+    const SkScalar kMaxTReciprocal = 1.0f / (SkScalar)kMaxTValue;
     return t * kMaxTReciprocal;
 }
+
+static_assert(0.0f == tValue2Scalar(         0), "Lower limit should be exact.");
+static_assert(1.0f == tValue2Scalar(kMaxTValue), "Upper limit should be exact.");
 
 SkScalar SkContourMeasure::Segment::getScalarT() const {
     return tValue2Scalar(fTValue);

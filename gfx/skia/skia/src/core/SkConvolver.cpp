@@ -2,9 +2,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "SkConvolver.h"
-#include "SkOpts.h"
-#include "SkTArray.h"
+#include "src/core/SkConvolver.h"
+#include "src/core/SkOpts.h"
+#include "include/private/SkTArray.h"
 
 namespace {
     // Stores a list of rows in a circular buffer. The usage is you write into it

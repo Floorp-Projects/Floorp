@@ -5,8 +5,8 @@
  * found in the LICENSE file.
  */
 
-#include "SkPDFDocumentPriv.h"
-#include "SkPDFTag.h"
+#include "src/pdf/SkPDFDocumentPriv.h"
+#include "src/pdf/SkPDFTag.h"
 
 // Table 333 in PDF 32000-1:2008
 static const char* tag_name_from_type(SkPDF::DocumentStructureType type) {
@@ -64,7 +64,6 @@ static const char* tag_name_from_type(SkPDF::DocumentStructureType type) {
         #undef M
     }
     SK_ABORT("bad tag");
-    return "";
 }
 
 struct SkPDFTagNode {

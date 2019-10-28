@@ -635,8 +635,13 @@ template<> AI /*static*/ Sk4i SkNx_cast<int32_t, float>(const Sk4f& src) {
 template<> AI /*static*/ Sk4f SkNx_cast<float, int32_t>(const Sk4i& src) {
     return vcvtq_f32_s32(src.fVec);
 }
+
 template<> AI /*static*/ Sk4f SkNx_cast<float, uint32_t>(const Sk4u& src) {
     return SkNx_cast<float>(Sk4i::Load(&src));
+}
+
+template<> AI /*static*/ Sk4f SkNx_cast<float, uint64_t>(const SkNx<4, uint64_t>& src) {
+    return Sk4f(float(int32_t(src[0])), float(int32_t(src[1])), float(int32_t(src[2])), float(int32_t(src[3])));
 }
 
 template<> AI /*static*/ Sk4h SkNx_cast<uint16_t, float>(const Sk4f& src) {

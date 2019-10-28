@@ -6,8 +6,8 @@
  */
 
 
-#include "GrShaderVar.h"
-#include "GrShaderCaps.h"
+#include "src/gpu/GrShaderCaps.h"
+#include "src/gpu/GrShaderVar.h"
 
 static const char* type_modifier_string(GrShaderVar::TypeModifier t) {
     switch (t) {
@@ -18,7 +18,6 @@ static const char* type_modifier_string(GrShaderVar::TypeModifier t) {
         case GrShaderVar::kUniform_TypeModifier: return "uniform";
     }
     SK_ABORT("Unknown shader variable type modifier.");
-    return "";
 }
 
 void GrShaderVar::setIOType(GrIOType ioType) {
@@ -35,25 +34,7 @@ void GrShaderVar::setIOType(GrIOType ioType) {
     SK_ABORT("Unknown io type.");
 }
 
-// Converts a GrSLPrecision to its corresponding GLSL precision qualifier. TODO: Remove this as we
-// shouldn't need it with SkSL.
-static inline const char* glsl_precision_string(GrSLPrecision p) {
-    switch (p) {
-        case kLow_GrSLPrecision:
-            return "lowp";
-        case kMedium_GrSLPrecision:
-            return "mediump";
-        case kHigh_GrSLPrecision:
-            return "highp";
-        case kDefault_GrSLPrecision:
-            return "";
-    }
-    SK_ABORT("Unexpected precision type.");
-    return "";
-}
-
 void GrShaderVar::appendDecl(const GrShaderCaps* shaderCaps, SkString* out) const {
-    SkASSERT(kDefault_GrSLPrecision == fPrecision || GrSLTypeTemporarilyAcceptsPrecision(fType));
     SkString layout = fLayoutQualifier;
     if (!fLayoutQualifier.isEmpty()) {
         out->appendf("layout(%s) ", fLayoutQualifier.c_str());
@@ -64,10 +45,6 @@ void GrShaderVar::appendDecl(const GrShaderCaps* shaderCaps, SkString* out) cons
         out->append(" ");
     }
     GrSLType effectiveType = this->getType();
-    if (shaderCaps->usesPrecisionModifiers() && GrSLTypeAcceptsPrecision(effectiveType)) {
-        // Desktop GLSL has added precision qualifiers but they don't do anything.
-        out->appendf("%s ", glsl_precision_string(fPrecision));
-    }
     if (this->isArray()) {
         if (this->isUnsizedArray()) {
             out->appendf("%s %s[]", GrGLSLTypeString(effectiveType), this->getName().c_str());

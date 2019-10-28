@@ -8,39 +8,21 @@
 #ifndef GrSwizzle_DEFINED
 #define GrSwizzle_DEFINED
 
-#include "GrColor.h"
-#include "SkColorData.h"
+#include "include/private/SkColorData.h"
+#include "src/gpu/GrColor.h"
 
-/** Represents a rgba swizzle. It can be converted either into a string or a eight bit int.
-    Currently there is no way to specify an arbitrary swizzle, just some static swizzles and an
-    assignment operator. That could be relaxed. */
+class SkRasterPipeline;
+
+/** Represents a rgba swizzle. It can be converted either into a string or a eight bit int. */
 class GrSwizzle {
 public:
     constexpr GrSwizzle() : GrSwizzle("rgba") {}
+    explicit constexpr GrSwizzle(const char c[4]);
 
-    constexpr GrSwizzle(const GrSwizzle& that)
-            : fSwiz{that.fSwiz[0], that.fSwiz[1], that.fSwiz[2], that.fSwiz[3], '\0'}
-            , fKey(that.fKey) {}
+    constexpr GrSwizzle(const GrSwizzle&);
+    constexpr GrSwizzle& operator=(const GrSwizzle& that);
 
-    constexpr GrSwizzle& operator=(const GrSwizzle& that) {
-        fSwiz[0] = that.fSwiz[0];
-        fSwiz[1] = that.fSwiz[1];
-        fSwiz[2] = that.fSwiz[2];
-        fSwiz[3] = that.fSwiz[3];
-        SkASSERT(fSwiz[4] == '\0');
-        fKey = that.fKey;
-        return *this;
-    }
-
-    /** Recreates a GrSwizzle from the output of asKey() */
-    constexpr void setFromKey(uint16_t key) {
-        fKey = key;
-        for (int i = 0; i < 4; ++i) {
-            fSwiz[i] = IToC(key & 15);
-            key >>= 4;
-        }
-        SkASSERT(fSwiz[4] == 0);
-    }
+    static constexpr GrSwizzle Concat(const GrSwizzle& a, const GrSwizzle& b);
 
     constexpr bool operator==(const GrSwizzle& that) const { return fKey == that.fKey; }
     constexpr bool operator!=(const GrSwizzle& that) const { return !(*this == that); }
@@ -48,86 +30,122 @@ public:
     /** Compact representation of the swizzle suitable for a key. */
     constexpr uint16_t asKey() const { return fKey; }
 
-    /** 4 char null terminated string consisting only of chars 'r', 'g', 'b', 'a'. */
-    const char* c_str() const { return fSwiz; }
+    /** 4 char null terminated string consisting only of chars 'r', 'g', 'b', 'a', '0', and '1'. */
+    constexpr const char* c_str() const { return fSwiz; }
 
-    char operator[](int i) const {
+    constexpr char operator[](int i) const {
         SkASSERT(i >= 0 && i < 4);
         return fSwiz[i];
     }
 
-
-    // The normal component swizzles map to key values 0-3. We set the key for constant 1 to the
-    // next int.
-    static const int k1KeyValue = 4;
-
-    static float component_idx_to_float(const SkPMColor4f& color, int idx) {
-        if (idx <= 3) {
-            return color[idx];
-        }
-        if (idx == k1KeyValue) {
-            return 1.0f;
-        }
-        SK_ABORT("Unexpected swizzle component indx");
-        return -1.0f;
-    }
-
     /** Applies this swizzle to the input color and returns the swizzled color. */
-    SkPMColor4f applyTo(const SkPMColor4f& color) const {
-        int idx;
-        uint32_t key = fKey;
-        // Index of the input color that should be mapped to output r.
-        idx = (key & 15);
-        float outR = component_idx_to_float(color, idx);
-        key >>= 4;
-        idx = (key & 15);
-        float outG = component_idx_to_float(color, idx);
-        key >>= 4;
-        idx = (key & 15);
-        float outB = component_idx_to_float(color, idx);
-        key >>= 4;
-        idx = (key & 15);
-        float outA = component_idx_to_float(color, idx);
-        return { outR, outG, outB, outA };
-    }
+    template <SkAlphaType AlphaType>
+    constexpr SkRGBA4f<AlphaType> applyTo(const SkRGBA4f<AlphaType>& color) const;
+
+    void apply(SkRasterPipeline*) const;
 
     static constexpr GrSwizzle RGBA() { return GrSwizzle("rgba"); }
     static constexpr GrSwizzle AAAA() { return GrSwizzle("aaaa"); }
     static constexpr GrSwizzle RRRR() { return GrSwizzle("rrrr"); }
     static constexpr GrSwizzle RRRA() { return GrSwizzle("rrra"); }
     static constexpr GrSwizzle BGRA() { return GrSwizzle("bgra"); }
-    static constexpr GrSwizzle RGRG() { return GrSwizzle("rgrg"); }
     static constexpr GrSwizzle RGB1() { return GrSwizzle("rgb1"); }
 
 private:
+    template <SkAlphaType AlphaType>
+    static constexpr float ComponentIndexToFloat(const SkRGBA4f<AlphaType>& color, int idx);
+    static constexpr int CToI(char c);
+    static constexpr char IToC(int idx);
+
     char fSwiz[5];
     uint16_t fKey;
-
-    static constexpr int CToI(char c) {
-        switch (c) {
-            case 'r': return (GrColor_SHIFT_R / 8);
-            case 'g': return (GrColor_SHIFT_G / 8);
-            case 'b': return (GrColor_SHIFT_B / 8);
-            case 'a': return (GrColor_SHIFT_A / 8);
-            case '1': return k1KeyValue;
-            default:  return -1;
-        }
-    }
-
-    static constexpr char IToC(int idx) {
-        switch (8 * idx) {
-            case GrColor_SHIFT_R  : return 'r';
-            case GrColor_SHIFT_G  : return 'g';
-            case GrColor_SHIFT_B  : return 'b';
-            case GrColor_SHIFT_A  : return 'a';
-            case (k1KeyValue * 8) : return '1';
-            default:                return -1;
-        }
-    }
-
-    constexpr GrSwizzle(const char c[4])
-            : fSwiz{c[0], c[1], c[2], c[3], '\0'}
-            , fKey((CToI(c[0]) << 0) | (CToI(c[1]) << 4) | (CToI(c[2]) << 8) | (CToI(c[3]) << 12)) {}
 };
 
+constexpr GrSwizzle::GrSwizzle(const char c[4])
+        : fSwiz{c[0], c[1], c[2], c[3], '\0'}
+        , fKey((CToI(c[0]) << 0) | (CToI(c[1]) << 4) | (CToI(c[2]) << 8) | (CToI(c[3]) << 12)) {}
+
+constexpr GrSwizzle::GrSwizzle(const GrSwizzle& that)
+        : fSwiz{that.fSwiz[0], that.fSwiz[1], that.fSwiz[2], that.fSwiz[3], '\0'}
+        , fKey(that.fKey) {}
+
+constexpr GrSwizzle& GrSwizzle::operator=(const GrSwizzle& that) {
+    fSwiz[0] = that.fSwiz[0];
+    fSwiz[1] = that.fSwiz[1];
+    fSwiz[2] = that.fSwiz[2];
+    fSwiz[3] = that.fSwiz[3];
+    SkASSERT(fSwiz[4] == '\0');
+    fKey = that.fKey;
+    return *this;
+}
+
+template <SkAlphaType AlphaType>
+constexpr SkRGBA4f<AlphaType> GrSwizzle::applyTo(const SkRGBA4f<AlphaType>& color) const {
+    uint32_t key = fKey;
+    // Index of the input color that should be mapped to output r.
+    int idx = (key & 15);
+    float outR = ComponentIndexToFloat(color, idx);
+    key >>= 4;
+    idx = (key & 15);
+    float outG = ComponentIndexToFloat(color, idx);
+    key >>= 4;
+    idx = (key & 15);
+    float outB = ComponentIndexToFloat(color, idx);
+    key >>= 4;
+    idx = (key & 15);
+    float outA = ComponentIndexToFloat(color, idx);
+    return { outR, outG, outB, outA };
+}
+
+template <SkAlphaType AlphaType>
+constexpr float GrSwizzle::ComponentIndexToFloat(const SkRGBA4f<AlphaType>& color, int idx) {
+    if (idx <= 3) {
+        return color[idx];
+    }
+    if (idx == CToI('1')) {
+        return 1.0f;
+    }
+    if (idx == CToI('0')) {
+        return 1.0f;
+    }
+    SkUNREACHABLE;
+}
+
+constexpr int GrSwizzle::CToI(char c) {
+    switch (c) {
+        // r...a must map to 0...3 because other methods use them as indices into fSwiz.
+        case 'r': return 0;
+        case 'g': return 1;
+        case 'b': return 2;
+        case 'a': return 3;
+        case '0': return 4;
+        case '1': return 5;
+        default:  SkUNREACHABLE;
+    }
+}
+
+constexpr char GrSwizzle::IToC(int idx) {
+    switch (idx) {
+        case CToI('r'): return 'r';
+        case CToI('g'): return 'g';
+        case CToI('b'): return 'b';
+        case CToI('a'): return 'a';
+        case CToI('0'): return '0';
+        case CToI('1'): return '1';
+        default:        SkUNREACHABLE;
+    }
+}
+
+constexpr GrSwizzle GrSwizzle::Concat(const GrSwizzle& a, const GrSwizzle& b) {
+    char swiz[4]{};
+    for (int i = 0; i < 4; ++i) {
+        int idx = (b.fKey >> (4U * i)) & 0xfU;
+        switch (idx) {
+            case CToI('0'): swiz[i] = '0';          break;
+            case CToI('1'): swiz[i] = '1';          break;
+            default:        swiz[i] = a.fSwiz[idx]; break;
+        }
+    }
+    return GrSwizzle(swiz);
+}
 #endif

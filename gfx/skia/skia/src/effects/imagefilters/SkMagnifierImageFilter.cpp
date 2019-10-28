@@ -5,33 +5,61 @@
  * found in the LICENSE file.
  */
 
-#include "SkMagnifierImageFilter.h"
+#include "include/effects/SkMagnifierImageFilter.h"
 
-#include "SkBitmap.h"
-#include "SkColorData.h"
-#include "SkColorSpaceXformer.h"
-#include "SkImageFilterPriv.h"
-#include "SkReadBuffer.h"
-#include "SkSpecialImage.h"
-#include "SkWriteBuffer.h"
-#include "SkValidationUtils.h"
+#include "include/core/SkBitmap.h"
+#include "include/private/SkColorData.h"
+#include "src/core/SkImageFilter_Base.h"
+#include "src/core/SkReadBuffer.h"
+#include "src/core/SkSpecialImage.h"
+#include "src/core/SkValidationUtils.h"
+#include "src/core/SkWriteBuffer.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 #if SK_SUPPORT_GPU
-#include "GrColorSpaceXform.h"
-#include "GrContext.h"
-#include "GrCoordTransform.h"
-#include "GrTexture.h"
-#include "effects/GrMagnifierEffect.h"
-#include "glsl/GrGLSLFragmentProcessor.h"
-#include "glsl/GrGLSLFragmentShaderBuilder.h"
-#include "glsl/GrGLSLProgramDataManager.h"
-#include "glsl/GrGLSLUniformHandler.h"
+#include "include/gpu/GrContext.h"
+#include "include/gpu/GrTexture.h"
+#include "src/gpu/GrColorSpaceXform.h"
+#include "src/gpu/GrCoordTransform.h"
+#include "src/gpu/effects/generated/GrMagnifierEffect.h"
+#include "src/gpu/glsl/GrGLSLFragmentProcessor.h"
+#include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
+#include "src/gpu/glsl/GrGLSLProgramDataManager.h"
+#include "src/gpu/glsl/GrGLSLUniformHandler.h"
 #endif
+
+namespace {
+
+class SkMagnifierImageFilterImpl final : public SkImageFilter_Base {
+public:
+    SkMagnifierImageFilterImpl(const SkRect& srcRect, SkScalar inset, sk_sp<SkImageFilter> input,
+                               const CropRect* cropRect)
+            : INHERITED(&input, 1, cropRect)
+            , fSrcRect(srcRect)
+            , fInset(inset) {
+        SkASSERT(srcRect.left() >= 0 && srcRect.top() >= 0 && inset >= 0);
+    }
+
+protected:
+    void flatten(SkWriteBuffer&) const override;
+
+    sk_sp<SkSpecialImage> onFilterImage(const Context&, SkIPoint* offset) const override;
+
+private:
+    friend void SkMagnifierImageFilter::RegisterFlattenables();
+    SK_FLATTENABLE_HOOKS(SkMagnifierImageFilterImpl)
+
+    SkRect   fSrcRect;
+    SkScalar fInset;
+
+    typedef SkImageFilter_Base INHERITED;
+};
+
+} // end namespace
 
 sk_sp<SkImageFilter> SkMagnifierImageFilter::Make(const SkRect& srcRect, SkScalar inset,
                                                   sk_sp<SkImageFilter> input,
-                                                  const CropRect* cropRect) {
+                                                  const SkImageFilter::CropRect* cropRect) {
     if (!SkScalarIsFinite(inset) || !SkIsValidRect(srcRect)) {
         return nullptr;
     }
@@ -42,41 +70,36 @@ sk_sp<SkImageFilter> SkMagnifierImageFilter::Make(const SkRect& srcRect, SkScala
     if (srcRect.fLeft < 0 || srcRect.fTop < 0) {
         return nullptr;
     }
-    return sk_sp<SkImageFilter>(new SkMagnifierImageFilter(srcRect, inset,
-                                                           std::move(input),
-                                                           cropRect));
+    return sk_sp<SkImageFilter>(new SkMagnifierImageFilterImpl(srcRect, inset, std::move(input),
+                                                               cropRect));
+}
+
+void SkMagnifierImageFilter::RegisterFlattenables() {
+    SK_REGISTER_FLATTENABLE(SkMagnifierImageFilterImpl);
+    // TODO (michaelludwig) - Remove after grace period for SKPs to stop using old name
+    SkFlattenable::Register("SkMagnifierImageFilter", SkMagnifierImageFilterImpl::CreateProc);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-SkMagnifierImageFilter::SkMagnifierImageFilter(const SkRect& srcRect,
-                                               SkScalar inset,
-                                               sk_sp<SkImageFilter> input,
-                                               const CropRect* cropRect)
-    : INHERITED(&input, 1, cropRect)
-    , fSrcRect(srcRect)
-    , fInset(inset) {
-    SkASSERT(srcRect.left() >= 0 && srcRect.top() >= 0 && inset >= 0);
-}
-
-sk_sp<SkFlattenable> SkMagnifierImageFilter::CreateProc(SkReadBuffer& buffer) {
+sk_sp<SkFlattenable> SkMagnifierImageFilterImpl::CreateProc(SkReadBuffer& buffer) {
     SK_IMAGEFILTER_UNFLATTEN_COMMON(common, 1);
     SkRect src;
     buffer.readRect(&src);
-    return Make(src, buffer.readScalar(), common.getInput(0), &common.cropRect());
+    return SkMagnifierImageFilter::Make(src, buffer.readScalar(), common.getInput(0),
+                                        &common.cropRect());
 }
 
-void SkMagnifierImageFilter::flatten(SkWriteBuffer& buffer) const {
+void SkMagnifierImageFilterImpl::flatten(SkWriteBuffer& buffer) const {
     this->INHERITED::flatten(buffer);
     buffer.writeRect(fSrcRect);
     buffer.writeScalar(fInset);
 }
 
-sk_sp<SkSpecialImage> SkMagnifierImageFilter::onFilterImage(SkSpecialImage* source,
-                                                            const Context& ctx,
-                                                            SkIPoint* offset) const {
+sk_sp<SkSpecialImage> SkMagnifierImageFilterImpl::onFilterImage(const Context& ctx,
+                                                                SkIPoint* offset) const {
     SkIPoint inputOffset = SkIPoint::Make(0, 0);
-    sk_sp<SkSpecialImage> input(this->filterInput(0, source, ctx, &inputOffset));
+    sk_sp<SkSpecialImage> input(this->filterInput(0, ctx, &inputOffset));
     if (!input) {
         return nullptr;
     }
@@ -96,30 +119,39 @@ sk_sp<SkSpecialImage> SkMagnifierImageFilter::onFilterImage(SkSpecialImage* sour
 
 
 #if SK_SUPPORT_GPU
-    if (source->isTextureBacked()) {
-        auto context = source->getContext();
+    if (ctx.gpuBacked()) {
+        auto context = ctx.getContext();
 
         sk_sp<GrTextureProxy> inputProxy(input->asTextureProxyRef(context));
         SkASSERT(inputProxy);
+
+        const auto isProtected = inputProxy->isProtected();
 
         offset->fX = bounds.left();
         offset->fY = bounds.top();
         bounds.offset(-inputOffset);
 
+        // Map bounds and srcRect into the proxy space. Due to the zoom effect,
+        // it's not just an offset for fSrcRect.
+        bounds.offset(input->subset().x(), input->subset().y());
+        SkRect srcRect = fSrcRect.makeOffset((1.f - invXZoom) * input->subset().x(),
+                                             (1.f - invYZoom) * input->subset().y());
+
         auto fp = GrMagnifierEffect::Make(std::move(inputProxy),
                                           bounds,
-                                          fSrcRect,
+                                          srcRect,
                                           invXZoom,
                                           invYZoom,
                                           bounds.width() * invInset,
                                           bounds.height() * invInset);
         fp = GrColorSpaceXformEffect::Make(std::move(fp), input->getColorSpace(),
-                                           input->alphaType(), ctx.outputProperties().colorSpace());
+                                           input->alphaType(), ctx.colorSpace());
         if (!fp) {
             return nullptr;
         }
 
-        return DrawWithFP(context, std::move(fp), bounds, ctx.outputProperties());
+        return DrawWithFP(context, std::move(fp), bounds, ctx.colorType(), ctx.colorSpace(),
+                          isProtected ? GrProtected::kYes : GrProtected::kNo);
     }
 #endif
 
@@ -187,14 +219,4 @@ sk_sp<SkSpecialImage> SkMagnifierImageFilter::onFilterImage(SkSpecialImage* sour
     offset->fY = bounds.top();
     return SkSpecialImage::MakeFromRaster(SkIRect::MakeWH(bounds.width(), bounds.height()),
                                           dst);
-}
-
-sk_sp<SkImageFilter> SkMagnifierImageFilter::onMakeColorSpace(SkColorSpaceXformer* xformer) const {
-    SkASSERT(1 == this->countInputs());
-    auto input = xformer->apply(this->getInput(0));
-    if (input.get() != this->getInput(0)) {
-        return SkMagnifierImageFilter::Make(fSrcRect, fInset, std::move(input),
-                                            this->getCropRectIfSet());
-    }
-    return this->refMe();
 }

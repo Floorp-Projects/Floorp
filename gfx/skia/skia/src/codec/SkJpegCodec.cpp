@@ -5,21 +5,22 @@
  * found in the LICENSE file.
  */
 
-#include "SkJpegCodec.h"
+#include "src/codec/SkJpegCodec.h"
 
-#include "SkCodec.h"
-#include "SkCodecPriv.h"
-#include "SkColorData.h"
-#include "SkJpegDecoderMgr.h"
-#include "SkJpegInfo.h"
-#include "SkStream.h"
-#include "SkTemplates.h"
-#include "SkTo.h"
-#include "SkTypes.h"
+#include "include/codec/SkCodec.h"
+#include "include/core/SkStream.h"
+#include "include/core/SkTypes.h"
+#include "include/private/SkColorData.h"
+#include "include/private/SkTemplates.h"
+#include "include/private/SkTo.h"
+#include "src/codec/SkCodecPriv.h"
+#include "src/codec/SkJpegDecoderMgr.h"
+#include "src/codec/SkParseEncodedOrigin.h"
+#include "src/pdf/SkJpegInfo.h"
 
 // stdio is needed for libjpeg-turbo
 #include <stdio.h>
-#include "SkJpegUtility.h"
+#include "src/codec/SkJpegUtility.h"
 
 // This warning triggers false postives way too often in here.
 #if defined(__GNUC__) && !defined(__clang__)
@@ -34,14 +35,6 @@ extern "C" {
 bool SkJpegCodec::IsJpeg(const void* buffer, size_t bytesRead) {
     constexpr uint8_t jpegSig[] = { 0xFF, 0xD8, 0xFF };
     return bytesRead >= 3 && !memcmp(buffer, jpegSig, sizeof(jpegSig));
-}
-
-static uint32_t get_endian_int(const uint8_t* data, bool littleEndian) {
-    if (littleEndian) {
-        return (data[3] << 24) | (data[2] << 16) | (data[1] << 8) | (data[0]);
-    }
-
-    return (data[0] << 24) | (data[1] << 16) | (data[2] << 8) | (data[3]);
 }
 
 const uint32_t kExifHeaderSize = 14;
@@ -59,51 +52,8 @@ static bool is_orientation_marker(jpeg_marker_struct* marker, SkEncodedOrigin* o
 
     // Account for 'E', 'x', 'i', 'f', '\0', '<fill byte>'.
     constexpr size_t kOffset = 6;
-    return is_orientation_marker(marker->data + kOffset, marker->data_length - kOffset,
+    return SkParseEncodedOrigin(marker->data + kOffset, marker->data_length - kOffset,
             orientation);
-}
-
-bool is_orientation_marker(const uint8_t* data, size_t data_length, SkEncodedOrigin* orientation) {
-    bool littleEndian;
-    // We need eight bytes to read the endian marker and the offset, below.
-    if (data_length < 8 || !is_valid_endian_marker(data, &littleEndian)) {
-        return false;
-    }
-
-    // Get the offset from the start of the marker.
-    // Though this only reads four bytes, use a larger int in case it overflows.
-    uint64_t offset = get_endian_int(data + 4, littleEndian);
-
-    // Require that the marker is at least large enough to contain the number of entries.
-    if (data_length < offset + 2) {
-        return false;
-    }
-    uint32_t numEntries = get_endian_short(data + offset, littleEndian);
-
-    // Tag (2 bytes), Datatype (2 bytes), Number of elements (4 bytes), Data (4 bytes)
-    const uint32_t kEntrySize = 12;
-    const auto max = SkTo<uint32_t>((data_length - offset - 2) / kEntrySize);
-    numEntries = SkTMin(numEntries, max);
-
-    // Advance the data to the start of the entries.
-    data += offset + 2;
-
-    const uint16_t kOriginTag = 0x112;
-    const uint16_t kOriginType = 3;
-    for (uint32_t i = 0; i < numEntries; i++, data += kEntrySize) {
-        uint16_t tag = get_endian_short(data, littleEndian);
-        uint16_t type = get_endian_short(data + 2, littleEndian);
-        uint32_t count = get_endian_int(data + 4, littleEndian);
-        if (kOriginTag == tag && kOriginType == type && 1 == count) {
-            uint16_t val = get_endian_short(data + 8, littleEndian);
-            if (0 < val && val <= kLast_SkEncodedOrigin) {
-                *orientation = (SkEncodedOrigin) val;
-                return true;
-            }
-        }
-    }
-
-    return false;
 }
 
 static SkEncodedOrigin get_exif_orientation(jpeg_decompress_struct* dinfo) {
