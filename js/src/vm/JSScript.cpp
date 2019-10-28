@@ -4092,7 +4092,8 @@ bool JSScript::fullyInitFromEmitter(JSContext* cx, HandleScript script,
     if (fun->isInterpretedLazy()) {
       fun->setUnlazifiedScript(script);
     } else {
-      fun->setScript(script);
+      MOZ_ASSERT(fun->hasUncompletedScript());
+      fun->initScript(script);
     }
   }
 
