@@ -101,24 +101,38 @@ function dismissNotification(popup, win) {
 }
 
 function waitForMessage(aMessage, browser) {
-  function checkFn(event) {
-    dump("whatever: checkFn run\n");
-    is(event.data.message, arguments.Message, "received " + arguments.aMessage);
-    if (event.data.message == arguments.aMessage) {
-      return true;
+  return new Promise((resolve, reject) => {
+    // When contentScript runs, "this" is a ContentFrameMessageManager (so that's where
+    // addEventListener will add the listener), but the non-bubbling "message" event is
+    // sent to the Window involved, so we need a capturing listener.
+    function contentScript() {
+      addEventListener(
+        "message",
+        function(event) {
+          sendAsyncMessage("testLocal:persisted", { persisted: event.data });
+        },
+        { once: true, capture: true },
+        true
+      );
     }
-    throw new Error(
-      `Unexpected result: ${event.data.message}, expected ${arguments.aMessage}`
-    );
-  }
-  checkFn.aMessage = aMessage;
-  return BrowserTestUtils.waitForContentEvent(
-    browser.selectedBrowser,
-    "message",
-    /* capture */ true,
-    checkFn,
-    /* wantsUntrusted */ true
-  );
+
+    let script = "data:,(" + contentScript.toString() + ")();";
+
+    let mm = browser.selectedBrowser.messageManager;
+
+    mm.addMessageListener("testLocal:persisted", function listener(msg) {
+      mm.removeMessageListener("testLocal:persisted", listener);
+      mm.removeDelayedFrameScript(script);
+      is(msg.data.persisted, aMessage, "received " + aMessage);
+      if (msg.data.persisted == aMessage) {
+        resolve();
+      } else {
+        reject();
+      }
+    });
+
+    mm.loadFrameScript(script, true);
+  });
 }
 
 function removePermission(url, permission) {
