@@ -498,7 +498,7 @@ async function waitForPaused(dbg, url) {
 }
 
 function waitForInlinePreviews(dbg) {
-  return waitForState(dbg, () => dbg.selectors.getSelectedInlinePreviews())
+  return waitForState(dbg, () => dbg.selectors.getSelectedInlinePreviews());
 }
 
 function waitForCondition(dbg, condition) {
@@ -1327,6 +1327,8 @@ const selectors = {
     `${selectors.threadSourceTree(i)} .tree-node:nth-child(${j}) .node`,
   sourceDirectoryLabel: i => `.sources-list .tree-node:nth-child(${i}) .label`,
   resultItems: ".result-list .result-item",
+  resultItemName: (name, i) =>
+    `${selectors.resultItems}:nth-child(${i})[title$="${name}"]`,
   fileMatch: ".project-text-search .line-value",
   popup: ".popover",
   tooltip: ".tooltip",
