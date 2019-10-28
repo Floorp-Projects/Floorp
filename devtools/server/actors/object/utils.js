@@ -10,10 +10,11 @@ const { assert } = DevToolsUtils;
 
 loader.lazyRequireGetter(
   this,
-  "longStringGrip",
-  "devtools/server/actors/object/long-string",
+  "LongStringActor",
+  "devtools/server/actors/string",
   true
 );
+
 loader.lazyRequireGetter(
   this,
   "symbolGrip",
@@ -88,7 +89,15 @@ function createValueGrip(value, pool, makeObjectGrip) {
 
     case "string":
       if (stringIsLong(value)) {
-        return longStringGrip(value, pool);
+        for (const child of pool.poolChildren()) {
+          if (child instanceof LongStringActor && child.str == value) {
+            return child.form();
+          }
+        }
+
+        const actor = new LongStringActor(pool.conn, value);
+        pool.addActor(actor);
+        return actor.form();
       }
       return value;
 

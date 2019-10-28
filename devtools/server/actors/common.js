@@ -100,6 +100,20 @@ ActorPool.prototype = {
       callback(this._actors[name]);
     }
   },
+
+  // Generator that yields each non-self child of the pool.
+  *poolChildren() {
+    if (!this._actors) {
+      return;
+    }
+    for (const actor of Object.values(this._actors)) {
+      // Self-owned actors are ok, but don't need visiting twice.
+      if (actor === this) {
+        continue;
+      }
+      yield actor;
+    }
+  },
 };
 
 exports.ActorPool = ActorPool;
