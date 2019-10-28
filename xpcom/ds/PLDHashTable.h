@@ -86,14 +86,15 @@ struct PLDHashEntryHdr {
 //
 class Checker {
  public:
-  constexpr Checker() : mState(kIdle), mIsWritable(1) {}
+  constexpr Checker() : mState(kIdle), mIsWritable(true) {}
 
   Checker& operator=(Checker&& aOther) {
     // Atomic<> doesn't have an |operator=(Atomic<>&&)|.
     mState = uint32_t(aOther.mState);
-    mIsWritable = uint32_t(aOther.mIsWritable);
+    mIsWritable = bool(aOther.mIsWritable);
 
     aOther.mState = kIdle;
+    // XXX Shouldn't we set mIsWritable to true here for consistency?
 
     return *this;
   }
@@ -107,9 +108,9 @@ class Checker {
 
   bool IsIdle() const { return mState == kIdle; }
 
-  bool IsWritable() const { return !!mIsWritable; }
+  bool IsWritable() const { return mIsWritable; }
 
-  void SetNonWritable() { mIsWritable = 0; }
+  void SetNonWritable() { mIsWritable = false; }
 
   // NOTE: the obvious way to implement these functions is to (a) check
   // |mState| is reasonable, and then (b) update |mState|. But the lack of
@@ -190,11 +191,11 @@ class Checker {
   static const uint32_t kReadMax = 9999;
   static const uint32_t kWrite = 10000;
 
-  mutable mozilla::Atomic<uint32_t, mozilla::SequentiallyConsistent,
-                          mozilla::recordreplay::Behavior::DontPreserve>
+  mozilla::Atomic<uint32_t, mozilla::SequentiallyConsistent,
+                  mozilla::recordreplay::Behavior::DontPreserve>
       mState;
-  mutable mozilla::Atomic<uint32_t, mozilla::SequentiallyConsistent,
-                          mozilla::recordreplay::Behavior::DontPreserve>
+  mozilla::Atomic<bool, mozilla::SequentiallyConsistent,
+                  mozilla::recordreplay::Behavior::DontPreserve>
       mIsWritable;
 };
 #endif
