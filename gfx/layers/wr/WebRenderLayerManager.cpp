@@ -542,9 +542,17 @@ void WebRenderLayerManager::MakeSnapshotIfRequired(LayoutDeviceIntSize aSize) {
 
   // The data we get from webrender is upside down. So flip and translate up so
   // the image is rightside up. Webrender always does a full screen readback.
-  SurfacePattern pattern(
-      snapshot, ExtendMode::CLAMP,
-      Matrix::Scaling(1.0, -1.0).PostTranslate(0.0, aSize.height));
+#ifdef XP_WIN
+  // ANGLE with WR does not need y flip
+  const bool needsYFlip = !WrBridge()->GetCompositorUseANGLE();
+#else
+  const bool needsYFlip = true;
+#endif
+  Matrix m;
+  if (needsYFlip) {
+    m = Matrix::Scaling(1.0, -1.0).PostTranslate(0.0, aSize.height);
+  }
+  SurfacePattern pattern(snapshot, ExtendMode::CLAMP, m);
   DrawTarget* dt = mTarget->GetDrawTarget();
   MOZ_RELEASE_ASSERT(dt);
   dt->FillRect(dst, pattern);

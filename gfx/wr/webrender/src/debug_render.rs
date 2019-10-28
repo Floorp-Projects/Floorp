@@ -321,11 +321,18 @@ impl DebugRenderer {
             device.set_blend(true);
             device.set_blend_mode_premultiplied_alpha();
 
+            let surface_is_y_flipped = device.surface_is_y_flipped();
+            let (bottom, top) = if surface_is_y_flipped {
+                (0.0, viewport_size.height as f32 * scale)
+            } else {
+                (viewport_size.height as f32 * scale, 0.0)
+            };
+
             let projection = Transform3D::ortho(
                 0.0,
                 viewport_size.width as f32 * scale,
-                viewport_size.height as f32 * scale,
-                0.0,
+                bottom,
+                top,
                 ORTHO_NEAR_PLANE,
                 ORTHO_FAR_PLANE,
             );

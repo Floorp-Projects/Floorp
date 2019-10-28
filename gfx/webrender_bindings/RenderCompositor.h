@@ -78,6 +78,9 @@ class RenderCompositor {
 
   void wr_compositor_unbind(void* aCompositor) {}
 
+  // Whether the surface contents are flipped vertically
+  virtual bool SurfaceIsYFlipped() { return false; }
+
  protected:
   RefPtr<widget::CompositorWidget> mWidget;
   RefPtr<layers::SyncObjectHost> mSyncObject;

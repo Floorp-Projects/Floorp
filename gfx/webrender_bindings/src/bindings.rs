@@ -1132,7 +1132,7 @@ fn wr_device_new(gl_context: *mut c_void, pc: Option<&mut WrProgramCache>)
       None => None,
     };
 
-    Device::new(gl, resource_override_path, upload_method, cached_programs, false, true, true, None)
+    Device::new(gl, resource_override_path, upload_method, cached_programs, false, true, true, None, false)
 }
 
 extern "C" {
@@ -1259,6 +1259,7 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
                                 enable_picture_caching: bool,
                                 start_debug_server: bool,
                                 gl_context: *mut c_void,
+                                surface_is_y_flipped: bool,
                                 program_cache: Option<&mut WrProgramCache>,
                                 shaders: Option<&mut WrShaders>,
                                 thread_pool: *mut WrThreadPool,
@@ -1359,6 +1360,7 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
         allow_pixel_local_storage_support: false,
         start_debug_server,
         native_compositor,
+        surface_is_y_flipped,
         ..Default::default()
     };
 
