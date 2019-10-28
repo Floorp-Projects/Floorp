@@ -380,8 +380,8 @@ export function newGeneratedSources(sourceInfo: Array<GeneratedSourceData>) {
       // We would like to sync breakpoints after we are done
       // loading source maps as sometimes generated and original
       // files share the same paths.
-      for (const source of newSources) {
-        dispatch(checkPendingBreakpoints(cx, source.id));
+      for (const { source } of newSourceActors) {
+        dispatch(checkPendingBreakpoints(cx, source));
       }
     })();
 

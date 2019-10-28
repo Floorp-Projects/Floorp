@@ -15,15 +15,17 @@ function getLineEl(dbg, line) {
   return lines[line - 1];
 }
 
-function addBreakpoint(dbg, line) {
+function addBreakpointViaGutter(dbg, line) {
   clickGutter(dbg, line);
   return waitForDispatch(dbg, "SET_BREAKPOINT");
 }
 
-function assertEditorBreakpoint(dbg, line) {
-  const lineEl = getLineEl(dbg, line);
-  const exists = lineEl.classList.contains("new-breakpoint");
-  ok(exists, `Breakpoint exists on line ${line}`);
+async function assertEditorBreakpoint(dbg, line) {
+  await waitUntil(() => {
+    const lineEl = getLineEl(dbg, line);
+    return lineEl.classList.contains("new-breakpoint");
+  });
+  ok(true, `Breakpoint exists on line ${line}`);
 }
 
 add_task(async function() {
@@ -31,14 +33,40 @@ add_task(async function() {
   const source = findSource(dbg, "simple1.js");
 
   await selectSource(dbg, source.url);
-  await addBreakpoint(dbg, 5);
-  await addBreakpoint(dbg, 4);
+  await addBreakpointViaGutter(dbg, 5);
+  await addBreakpointViaGutter(dbg, 4);
 
   const syncedBps = waitForDispatch(dbg, "SET_BREAKPOINT", 2);
   await reload(dbg, "simple1");
   await waitForSelectedSource(dbg, "simple1");
   await syncedBps;
 
-  assertEditorBreakpoint(dbg, 4);
-  assertEditorBreakpoint(dbg, 5);
+  await assertEditorBreakpoint(dbg, 4);
+  await assertEditorBreakpoint(dbg, 5);
+});
+
+// Test that pending breakpoints are installed in inline scripts as they are
+// sent to the client.
+add_task(async function() {
+  const dbg = await initDebugger("doc-scripts.html", "doc-scripts.html");
+  let source = findSource(dbg, "doc-scripts.html");
+
+  await selectSource(dbg, source.url);
+  await addBreakpoint(dbg, "doc-scripts.html", 22);
+  await addBreakpoint(dbg, "doc-scripts.html", 27);
+
+  await reload(dbg, "doc-scripts.html");
+  source = findSource(dbg, "doc-scripts.html");
+
+  await waitForPaused(dbg);
+  assertPausedAtSourceAndLine(dbg, source.id, 22);
+  await assertEditorBreakpoint(dbg, 22);
+
+  // The second breakpoint we added is in a later inline script, and won't
+  // appear until after we have resumed from the first breakpoint and the
+  // second inline script has been created.
+  await resume(dbg);
+  await waitForPaused(dbg);
+  assertPausedAtSourceAndLine(dbg, source.id, 27);
+  await assertEditorBreakpoint(dbg, 27);
 });
