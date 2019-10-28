@@ -42,19 +42,10 @@ class ExecutionContext {
   /**
    * @param {Function|string} pageFunction
    * @param {...*} args
-   * @return {!Promise<(!Object|undefined)>}
+   * @return {!Promise<*>}
    */
   async evaluate(pageFunction, ...args) {
-    const handle = await this.evaluateHandle(pageFunction, ...args);
-    const result = await handle.jsonValue().catch(error => {
-      if (error.message.includes('Object reference chain is too long'))
-        return;
-      if (error.message.includes('Object couldn\'t be returned by value'))
-        return;
-      throw error;
-    });
-    await handle.dispose();
-    return result;
+    return await this._evaluateInternal(true /* returnByValue */, pageFunction, ...args);
   }
 
   /**
@@ -63,6 +54,16 @@ class ExecutionContext {
    * @return {!Promise<!JSHandle>}
    */
   async evaluateHandle(pageFunction, ...args) {
+    return this._evaluateInternal(false /* returnByValue */, pageFunction, ...args);
+  }
+
+  /**
+   * @param {boolean} returnByValue
+   * @param {Function|string} pageFunction
+   * @param {...*} args
+   * @return {!Promise<*>}
+   */
+  async _evaluateInternal(returnByValue, pageFunction, ...args) {
     const suffix = `//# sourceURL=${EVALUATION_SCRIPT_URL}`;
 
     if (helper.isString(pageFunction)) {
@@ -72,13 +73,13 @@ class ExecutionContext {
       const {exceptionDetails, result: remoteObject} = await this._client.send('Runtime.evaluate', {
         expression: expressionWithSourceUrl,
         contextId,
-        returnByValue: false,
+        returnByValue,
         awaitPromise: true,
         userGesture: true
       }).catch(rewriteError);
       if (exceptionDetails)
         throw new Error('Evaluation failed: ' + helper.getExceptionMessage(exceptionDetails));
-      return createJSHandle(this, remoteObject);
+      return returnByValue ? helper.valueFromRemoteObject(remoteObject) : createJSHandle(this, remoteObject);
     }
 
     if (typeof pageFunction !== 'function')
@@ -107,19 +108,19 @@ class ExecutionContext {
         functionDeclaration: functionText + '\n' + suffix + '\n',
         executionContextId: this._contextId,
         arguments: args.map(convertArgument.bind(this)),
-        returnByValue: false,
+        returnByValue,
         awaitPromise: true,
         userGesture: true
       });
     } catch (err) {
-      if (err instanceof TypeError && err.message === 'Converting circular structure to JSON')
+      if (err instanceof TypeError && err.message.startsWith('Converting circular structure to JSON'))
         err.message += ' Are you passing a nested JSHandle?';
       throw err;
     }
     const { exceptionDetails, result: remoteObject } = await callFunctionOnPromise.catch(rewriteError);
     if (exceptionDetails)
       throw new Error('Evaluation failed: ' + helper.getExceptionMessage(exceptionDetails));
-    return createJSHandle(this, remoteObject);
+    return returnByValue ? helper.valueFromRemoteObject(remoteObject) : createJSHandle(this, remoteObject);
 
     /**
      * @param {*} arg
@@ -157,7 +158,12 @@ class ExecutionContext {
      * @return {!Protocol.Runtime.evaluateReturnValue}
      */
     function rewriteError(error) {
-      if (error.message.endsWith('Cannot find context with specified id'))
+      if (error.message.includes('Object reference chain is too long'))
+        return {result: {type: 'undefined'}};
+      if (error.message.includes('Object couldn\'t be returned by value'))
+        return {result: {type: 'undefined'}};
+
+      if (error.message.endsWith('Cannot find context with specified id') || error.message.endsWith('Inspected target navigated or closed'))
         throw new Error('Execution context was destroyed, most likely because of a navigation.');
       throw error;
     }

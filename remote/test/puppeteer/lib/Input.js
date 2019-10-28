@@ -156,16 +156,15 @@ class Keyboard {
    * @param {{delay: (number|undefined)}=} options
    */
   async type(text, options) {
-    let delay = 0;
-    if (options && options.delay)
-      delay = options.delay;
+    const delay = (options && options.delay) || null;
     for (const char of text) {
-      if (keyDefinitions[char])
+      if (keyDefinitions[char]) {
         await this.press(char, {delay});
-      else
+      } else {
+        if (delay)
+          await new Promise(f => setTimeout(f, delay));
         await this.sendCharacter(char);
-      if (delay)
-        await new Promise(f => setTimeout(f, delay));
+      }
     }
   }
 
@@ -176,7 +175,7 @@ class Keyboard {
   async press(key, options = {}) {
     const {delay = null} = options;
     await this.down(key, options);
-    if (delay !== null)
+    if (delay)
       await new Promise(f => setTimeout(f, options.delay));
     await this.up(key);
   }
@@ -224,11 +223,20 @@ class Mouse {
    */
   async click(x, y, options = {}) {
     const {delay = null} = options;
-    this.move(x, y);
-    this.down(options);
-    if (delay !== null)
+    if (delay !== null) {
+      await Promise.all([
+        this.move(x, y),
+        this.down(options),
+      ]);
       await new Promise(f => setTimeout(f, delay));
-    await this.up(options);
+      await this.up(options);
+    } else {
+      await Promise.all([
+        this.move(x, y),
+        this.down(options),
+        this.up(options),
+      ]);
+    }
   }
 
   /**

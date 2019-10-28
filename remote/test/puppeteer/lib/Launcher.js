@@ -42,12 +42,12 @@ const DEFAULT_ARGS = [
   '--disable-backgrounding-occluded-windows',
   '--disable-breakpad',
   '--disable-client-side-phishing-detection',
+  '--disable-component-extensions-with-background-pages',
   '--disable-default-apps',
   '--disable-dev-shm-usage',
   '--disable-extensions',
-  // TODO: Support OOOPIF. @see https://github.com/GoogleChrome/puppeteer/issues/2548
   // BlinkGenPropertyTrees disabled due to crbug.com/937609
-  '--disable-features=site-per-process,TranslateUI,BlinkGenPropertyTrees',
+  '--disable-features=TranslateUI,BlinkGenPropertyTrees',
   '--disable-hang-monitor',
   '--disable-ipc-flooding-protection',
   '--disable-popup-blocking',
@@ -127,12 +127,18 @@ class Launcher {
 
     const usePipe = chromeArguments.includes('--remote-debugging-pipe');
     /** @type {!Array<"ignore"|"pipe">} */
-    const stdio = usePipe ? ['ignore', 'ignore', 'ignore', 'pipe', 'pipe'] : ['pipe', 'pipe', 'pipe'];
+    let stdio = ['pipe', 'pipe', 'pipe'];
+    if (usePipe) {
+      if (dumpio)
+        stdio = ['ignore', 'pipe', 'pipe', 'pipe', 'pipe'];
+      else
+        stdio = ['ignore', 'ignore', 'ignore', 'pipe', 'pipe'];
+    }
     const chromeProcess = childProcess.spawn(
         chromeExecutable,
         chromeArguments,
         {
-          // On non-windows platforms, `detached: false` makes child process a leader of a new
+          // On non-windows platforms, `detached: true` makes child process a leader of a new
           // process group, making it possible to kill child process tree with `.kill(-pid)` command.
           // @see https://nodejs.org/api/child_process.html#child_process_options_detached
           detached: process.platform !== 'win32',
@@ -247,8 +253,6 @@ class Launcher {
           '--hide-scrollbars',
           '--mute-audio'
       );
-      if (os.platform() === 'win32')
-        chromeArguments.push('--disable-gpu');
     }
     if (args.every(arg => arg.startsWith('-')))
       chromeArguments.push('about:blank');
@@ -299,7 +303,6 @@ class Launcher {
    * @return {{executablePath: string, missingText: ?string}}
    */
   _resolveExecutablePath() {
-    const browserFetcher = new BrowserFetcher(this._projectRoot);
     // puppeteer-core doesn't take into account PUPPETEER_* env variables.
     if (!this._isPuppeteerCore) {
       const executablePath = process.env.PUPPETEER_EXECUTABLE_PATH || process.env.npm_config_puppeteer_executable_path || process.env.npm_package_config_puppeteer_executable_path;
@@ -307,6 +310,9 @@ class Launcher {
         const missingText = !fs.existsSync(executablePath) ? 'Tried to use PUPPETEER_EXECUTABLE_PATH env variable to launch browser but did not find any executable at: ' + executablePath : null;
         return { executablePath, missingText };
       }
+    }
+    const browserFetcher = new BrowserFetcher(this._projectRoot);
+    if (!this._isPuppeteerCore) {
       const revision = process.env['PUPPETEER_CHROMIUM_REVISION'];
       if (revision) {
         const revisionInfo = browserFetcher.revisionInfo(revision);
