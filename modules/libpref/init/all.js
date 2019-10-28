@@ -4278,9 +4278,9 @@ pref("urlclassifier.features.cryptomining.blacklistTables", "base-cryptomining-t
 pref("urlclassifier.features.cryptomining.whitelistTables", "mozstd-trackwhite-digest256");
 pref("urlclassifier.features.cryptomining.annotate.blacklistTables", "base-cryptomining-track-digest256");
 pref("urlclassifier.features.cryptomining.annotate.whitelistTables", "mozstd-trackwhite-digest256");
-pref("urlclassifier.features.socialtracking.blacklistTables", "social-tracking-protection-digest256,social-tracking-protection-facebook-digest256,social-tracking-protection-linkedin-digest256,social-tracking-protection-twitter-digest256");
+pref("urlclassifier.features.socialtracking.blacklistTables", "social-tracking-protection-facebook-digest256,social-tracking-protection-linkedin-digest256,social-tracking-protection-twitter-digest256");
 pref("urlclassifier.features.socialtracking.whitelistTables", "mozstd-trackwhite-digest256");
-pref("urlclassifier.features.socialtracking.annotate.blacklistTables", "social-tracking-protection-digest256,social-tracking-protection-facebook-digest256,social-tracking-protection-linkedin-digest256,social-tracking-protection-twitter-digest256");
+pref("urlclassifier.features.socialtracking.annotate.blacklistTables", "social-tracking-protection-facebook-digest256,social-tracking-protection-linkedin-digest256,social-tracking-protection-twitter-digest256");
 pref("urlclassifier.features.socialtracking.annotate.whitelistTables", "mozstd-trackwhite-digest256");
 
 // These tables will never trigger a gethash call.
