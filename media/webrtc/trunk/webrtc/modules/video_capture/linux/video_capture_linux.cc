@@ -12,6 +12,7 @@
 
 #include <errno.h>
 #include <fcntl.h>
+#include <poll.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/ioctl.h>
@@ -370,25 +371,23 @@ bool VideoCaptureModuleV4L2::CaptureThread(void* obj) {
 }
 bool VideoCaptureModuleV4L2::CaptureProcess() {
   int retVal = 0;
-  fd_set rSet;
-  struct timeval timeout;
+  struct pollfd rSet;
 
   rtc::CritScope cs(&_captureCritSect);
 
-  FD_ZERO(&rSet);
-  FD_SET(_deviceFd, &rSet);
-  timeout.tv_sec = 1;
-  timeout.tv_usec = 0;
+  rSet.fd = _deviceFd;
+  rSet.events = POLLIN;
+  rSet.revents = 0;
 
-  retVal = select(_deviceFd + 1, &rSet, NULL, NULL, &timeout);
+  retVal = poll(&rSet, 1, 1000);
   if (retVal < 0 && errno != EINTR)  // continue if interrupted
   {
-    // select failed
+    // poll failed
     return false;
   } else if (retVal == 0) {
-    // select timed out
+    // poll timed out
     return true;
-  } else if (!FD_ISSET(_deviceFd, &rSet)) {
+  } else if (!(rSet.revents & POLLIN)) {
     // not event on camera handle
     return true;
   }

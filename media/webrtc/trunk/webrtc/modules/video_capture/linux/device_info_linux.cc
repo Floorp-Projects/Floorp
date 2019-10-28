@@ -12,6 +12,7 @@
 
 #include <errno.h>
 #include <fcntl.h>
+#include <poll.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/ioctl.h>
@@ -72,16 +73,13 @@ void DeviceInfoLinux::HandleEvent(inotify_event* event, int fd)
 
 int DeviceInfoLinux::EventCheck(int fd)
 {
-    struct timeval timeout;
-    fd_set rfds;
+    struct pollfd fds = {
+      .fd = fd,
+      .events = POLLIN,
+      .revents = 0
+    };
 
-    timeout.tv_sec = 0;
-    timeout.tv_usec = 100000;
-
-    FD_ZERO(&rfds);
-    FD_SET(fd, &rfds);
-
-    return select(fd+1, &rfds, NULL, NULL, &timeout);
+    return poll(&fds, 1, 100);
 }
 
 int DeviceInfoLinux::HandleEvents(int fd)
