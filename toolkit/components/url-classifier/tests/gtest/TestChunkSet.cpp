@@ -5,11 +5,13 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+
 #include <set>
 
 #include "ChunkSet.h"
-#include "gtest/gtest.h"
 #include "mozilla/ArrayUtils.h"
+
+#include "Common.h"
 
 TEST(UrlClassifierChunkSet, Empty)
 {

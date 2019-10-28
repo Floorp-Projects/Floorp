@@ -177,12 +177,12 @@ _Prefix CreatePrefixFromURL(const nsCString& aURL, uint8_t aPrefixSize) {
   return prefix;
 }
 
-void CheckContent(LookupCacheV4* cache, const _PrefixArray& array) {
+void CheckContent(LookupCacheV4* aCache, const _PrefixArray& aPrefixArray) {
   PrefixStringMap vlPSetMap;
-  cache->GetPrefixes(vlPSetMap);
+  aCache->GetPrefixes(vlPSetMap);
 
   PrefixStringMap expected;
-  PrefixArrayToPrefixStringMap(array, expected);
+  PrefixArrayToPrefixStringMap(aPrefixArray, expected);
 
   for (auto iter = vlPSetMap.Iter(); !iter.Done(); iter.Next()) {
     nsCString* expectedPrefix = expected.Get(iter.Key());

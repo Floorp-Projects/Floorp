@@ -3,9 +3,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#ifndef nsUrlClassifierGTestCommon_h__
+#define nsUrlClassifierGTestCommon_h__
+
 #include "Entries.h"
 #include "nsIFile.h"
 #include "nsTArray.h"
+
 #include "gtest/gtest.h"
 
 using namespace mozilla::safebrowsing;
@@ -59,7 +63,7 @@ _Prefix CreatePrefixFromURL(const char* aURL, uint8_t aPrefixSize);
 _Prefix CreatePrefixFromURL(const nsCString& aURL, uint8_t aPrefixSize);
 
 // To test if the content is equal
-void CheckContent(LookupCacheV4* aCache, PrefixStringMap& aExpected);
+void CheckContent(LookupCacheV4* cache, const _PrefixArray& aPrefixArray);
 
 /**
  * Utility function to generate safebrowsing internal structure
@@ -80,3 +84,5 @@ RefPtr<Classifier> GetClassifier();
 
 nsresult BuildLookupCache(const RefPtr<Classifier>& aClassifier,
                           const nsACString& aTable, _PrefixArray& aPrefixArray);
+
+#endif  // nsUrlClassifierGTestCommon_h__
