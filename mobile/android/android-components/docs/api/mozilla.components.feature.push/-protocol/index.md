@@ -2,7 +2,7 @@
 
 # Protocol
 
-`enum class Protocol` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/push/src/main/java/mozilla/components/feature/push/AutoPushFeature.kt#L344)
+`enum class Protocol` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/push/src/main/java/mozilla/components/feature/push/AutoPushFeature.kt#L394)
 
 Supported network protocols.
 
