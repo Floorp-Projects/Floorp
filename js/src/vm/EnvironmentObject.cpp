@@ -1497,7 +1497,6 @@ class DebugEnvironmentProxyHandler : public BaseProxyHandler {
       } else {
         script = env->as<ModuleEnvironmentObject>().module().maybeScript();
         if (!script) {
-          *accessResult = ACCESS_LOST;
           return true;
         }
       }
