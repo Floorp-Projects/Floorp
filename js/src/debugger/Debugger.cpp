@@ -3736,7 +3736,7 @@ bool DebugAPI::markIteratively(GCMarker* marker) {
         if (!dbgMarked && dbg->hasAnyLiveHooks(rt)) {
           // obj could be reachable only via its live, enabled
           // debugger hooks, which may yet be called.
-          TraceEdge(marker, &dbgobj, "enabled Debugger");
+          TraceEdge(marker, &dbgobj, "Debugger with live hooks");
           markedAny = true;
           dbgMarked = true;
         }
