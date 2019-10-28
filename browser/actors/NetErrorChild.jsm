@@ -36,9 +36,6 @@ class NetErrorChild extends ActorChild {
     let doc = aEvent.originalTarget.ownerDocument || aEvent.originalTarget;
 
     switch (aEvent.type) {
-      case "AboutNetErrorResetPreferences":
-        this.onResetPreferences(aEvent);
-        break;
       case "click":
         let elem = aEvent.originalTarget;
         if (
@@ -55,9 +52,5 @@ class NetErrorChild extends ActorChild {
         }
         break;
     }
-  }
-
-  onResetPreferences(evt) {
-    this.mm.sendAsyncMessage("Browser:ResetSSLPreferences");
   }
 }
