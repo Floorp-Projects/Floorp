@@ -8,7 +8,7 @@ import type {
   ObjectFront,
   PropertiesIterator,
   Node,
-  LongStringClient,
+  LongStringFront,
 } from "../types";
 
 const { getValue, nodeHasFullText } = require("../utils/node");
@@ -88,33 +88,25 @@ async function getPrototype(
 }
 
 async function getFullText(
-  longStringClient: LongStringClient,
+  longStringFront: LongStringFront,
   item: Node
 ): Promise<{ fullText?: string }> {
   const { initial, fullText, length } = getValue(item);
-
   // Return fullText property if it exists so that it can be added to the
   // loadedProperties map.
   if (nodeHasFullText(item)) {
-    return Promise.resolve({ fullText });
+    return { fullText };
   }
 
-  return new Promise((resolve, reject) => {
-    longStringClient.substring(initial.length, length, response => {
-      if (response.error) {
-        console.error(
-          "LongStringClient.substring",
-          `${response.error}: ${response.message}`
-        );
-        reject({});
-        return;
-      }
-
-      resolve({
-        fullText: initial + response.substring,
-      });
-    });
-  });
+  try {
+    const substring = await longStringFront.substring(initial.length, length);
+    return {
+      fullText: initial + substring,
+    };
+  } catch (e) {
+    console.error("LongStringFront.substring", e);
+    throw e;
+  }
 }
 
 async function getProxySlots(

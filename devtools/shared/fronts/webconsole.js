@@ -5,7 +5,7 @@
 "use strict";
 
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
-const LongStringClient = require("devtools/shared/client/long-string-client");
+const { LongStringFront } = require("devtools/shared/fronts/string");
 const {
   FrontClassWithSpec,
   registerFront,
@@ -446,21 +446,64 @@ class WebConsoleFront extends FrontClassWithSpec(webconsoleSpec) {
   }
 
   /**
-   * Return an instance of LongStringClient for the given long string grip.
+   * Return an instance of LongStringFront for the given long string grip.
    *
    * @param object grip
    *        The long string grip returned by the protocol.
-   * @return object
-   *         The LongStringClient for the given long string grip.
+   * @return {LongStringFront} the front for the given long string grip.
    */
   longString(grip) {
     if (grip.actor in this._longStrings) {
       return this._longStrings[grip.actor];
     }
 
-    const client = new LongStringClient(this._client, grip);
-    this._longStrings[grip.actor] = client;
-    return client;
+    const front = new LongStringFront(this._client, this.targetFront, this);
+    front.form(grip);
+    this.manage(front);
+    this._longStrings[grip.actor] = front;
+    return front;
+  }
+
+  /**
+   * Fetches the full text of a LongString.
+   *
+   * @param object | string stringGrip
+   *        The long string grip containing the corresponding actor.
+   *        If you pass in a plain string (by accident or because you're lazy),
+   *        then a promise of the same string is simply returned.
+   * @return object Promise
+   *         A promise that is resolved when the full string contents
+   *         are available, or rejected if something goes wrong.
+   */
+  async getString(stringGrip) {
+    // Make sure this is a long string.
+    if (typeof stringGrip !== "object" || stringGrip.type !== "longString") {
+      // Go home string, you're drunk.
+      return stringGrip;
+    }
+
+    // Fetch the long string only once.
+    if (stringGrip._fullText) {
+      return stringGrip._fullText;
+    }
+
+    const { initial, length } = stringGrip;
+    const longStringFront = this.longString(stringGrip);
+
+    try {
+      const response = await longStringFront.substring(initial.length, length);
+      return initial + response;
+    } catch (e) {
+      DevToolsUtils.reportException("getString", e.message);
+      throw e;
+    }
+  }
+
+  clearNetworkRequests() {
+    // Prevent exception if the front has already been destroyed.
+    if (this._networkRequests) {
+      this._networkRequests.clear();
+    }
   }
 
   /**
@@ -481,53 +524,6 @@ class WebConsoleFront extends FrontClassWithSpec(webconsoleSpec) {
     this.clearNetworkRequests();
     this._networkRequests = null;
     return super.destroy();
-  }
-
-  clearNetworkRequests() {
-    // Prevent exception if the front has already been destroyed.
-    if (this._networkRequests) {
-      this._networkRequests.clear();
-    }
-  }
-
-  /**
-   * Fetches the full text of a LongString.
-   *
-   * @param object | string stringGrip
-   *        The long string grip containing the corresponding actor.
-   *        If you pass in a plain string (by accident or because you're lazy),
-   *        then a promise of the same string is simply returned.
-   * @return object Promise
-   *         A promise that is resolved when the full string contents
-   *         are available, or rejected if something goes wrong.
-   */
-  getString(stringGrip) {
-    // Make sure this is a long string.
-    if (typeof stringGrip !== "object" || stringGrip.type !== "longString") {
-      // Go home string, you're drunk.
-      return Promise.resolve(stringGrip);
-    }
-
-    // Fetch the long string only once.
-    if (stringGrip._fullText) {
-      return stringGrip._fullText;
-    }
-
-    return new Promise((resolve, reject) => {
-      const { initial, length } = stringGrip;
-      const longStringClient = this.longString(stringGrip);
-
-      longStringClient.substring(initial.length, length, response => {
-        if (response.error) {
-          DevToolsUtils.reportException(
-            "getString",
-            response.error + ": " + response.message
-          );
-          reject(response);
-        }
-        resolve(initial + response.substring);
-      });
-    });
   }
 }
 

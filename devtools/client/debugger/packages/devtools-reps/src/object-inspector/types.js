@@ -77,7 +77,7 @@ export type ObjectFront = {
   getProxySlots: () => Promise<{ proxyTarget: Object, proxyHandler: Object }>,
 };
 
-export type LongStringClient = {
+export type LongStringFront = {
   substring: (
     start: number,
     end: number,
@@ -91,7 +91,7 @@ export type LongStringClient = {
 
 export type CreateObjectFront = RdpGrip => ObjectFront;
 
-export type CreateLongStringClient = RdpGrip => LongStringClient;
+export type CreateLongStringFront = RdpGrip => LongStringFront;
 
 export type CachedNodes = Map<Path, Array<Node>>;
 
@@ -118,7 +118,7 @@ export type Props = {
   dimTopLevelWindow: boolean,
   releaseActor: string => void,
   createObjectFront: CreateObjectFront,
-  createLongStringClient: CreateLongStringClient,
+  createLongStringFront: CreateLongStringFront,
   onFocus: ?(Node) => any,
   onActivate: ?(Node) => any,
   onDoubleClick: ?(

@@ -6,7 +6,7 @@
 
 const { mountObjectInspector } = require("../test-utils");
 const ObjectFront = require("../__mocks__/object-front");
-const LongStringClient = require("../__mocks__/long-string-client");
+const { LongStringFront } = require("../__mocks__/string-front");
 
 const repsPath = "../../../reps";
 const longStringStubs = require(`${repsPath}/stubs/long-string`);
@@ -23,7 +23,7 @@ function mount(stub) {
   const { wrapper } = mountObjectInspector({
     client: {
       createObjectFront: grip => ObjectFront(grip),
-      createLongStringClient: grip => LongStringClient(grip),
+      createLongStringFront: grip => LongStringFront(grip),
     },
     props: {
       roots: [root],

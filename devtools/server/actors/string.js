@@ -34,7 +34,7 @@ exports.LongStringActor = protocol.ActorClassWithSpec(longStringSpec, {
   },
 
   substring: function(start, end) {
-    return Promise.resolve(this.str.substring(start, end));
+    return this.str.substring(start, end);
   },
 
   release: function() {},
