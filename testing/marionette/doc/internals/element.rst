@@ -26,10 +26,6 @@ element.findByPartialLinkText
 -----------------------------
 .. js:autofunction:: element.findByPartialLinkText
 
-element.findAnonymousNodes
-----------------------------
-.. js:autofunction:: element.findAnonymousNodes
-
 element.findClosest
 -------------------
 .. js:autofunction:: element.findClosest
