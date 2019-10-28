@@ -354,12 +354,21 @@ AutoXDRTree::Key XDRIncrementalEncoder::getTopLevelTreeKey() const {
 }
 
 AutoXDRTree::Key XDRIncrementalEncoder::getTreeKey(JSFunction* fun) const {
-  if (fun->hasBaseScript()) {
-    static_assert(sizeof(fun->baseScript()->sourceStart()) == 4 &&
-                      sizeof(fun->baseScript()->sourceEnd()) == 4,
-                  "AutoXDRTree key requires BaseScript positions to be uint32");
-    return uint64_t(fun->baseScript()->sourceStart()) << 32 |
-           fun->baseScript()->sourceEnd();
+  if (fun->isInterpretedLazy()) {
+    static_assert(
+        sizeof(fun->lazyScript()->sourceStart()) == 4 ||
+            sizeof(fun->lazyScript()->sourceEnd()) == 4,
+        "AutoXDRTree key requires LazyScripts positions to be uint32");
+    return uint64_t(fun->lazyScript()->sourceStart()) << 32 |
+           fun->lazyScript()->sourceEnd();
+  }
+
+  if (fun->isInterpreted()) {
+    static_assert(sizeof(fun->nonLazyScript()->sourceStart()) == 4 ||
+                      sizeof(fun->nonLazyScript()->sourceEnd()) == 4,
+                  "AutoXDRTree key requires JSScripts positions to be uint32");
+    return uint64_t(fun->nonLazyScript()->sourceStart()) << 32 |
+           fun->nonLazyScript()->sourceEnd();
   }
 
   return AutoXDRTree::noKey;
