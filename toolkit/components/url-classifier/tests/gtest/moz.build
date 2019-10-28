@@ -27,6 +27,7 @@ UNIFIED_SOURCES += [
     'TestTable.cpp',
     'TestUrlClassifierTableUpdateV4.cpp',
     'TestUrlClassifierUtils.cpp',
+    'TestURLsAndHashing.cpp',
     'TestVariableLengthPrefixSet.cpp',
 ]
 
