@@ -203,135 +203,138 @@ class CustomRequestPanel extends Component {
     return div(
       { className: "custom-request-panel" },
       div(
-        { className: "tabpanel-summary-container custom-request" },
-        div(
-          { className: "custom-request-label custom-header" },
-          CUSTOM_NEW_REQUEST
-        ),
-        div(
-          { className: "custom-request-button-container" },
-          button(
-            {
-              className: "devtools-button",
-              id: "custom-request-close-button",
-              onClick: removeSelectedCustomRequest,
-            },
-            CUSTOM_CANCEL
-          ),
-          button(
-            {
-              className: "devtools-button",
-              id: "custom-request-send-button",
-              onClick: sendCustomRequest,
-            },
-            CUSTOM_SEND
-          )
-        )
+        { className: "custom-request-label custom-header" },
+        CUSTOM_NEW_REQUEST
       ),
       div(
-        {
-          className: "tabpanel-summary-container custom-method-and-url",
-          id: "custom-method-and-url",
-        },
-        label(
-          {
-            className: "custom-method-value-label custom-request-label",
-            htmlFor: "custom-method-value",
-          },
-          CUSTOM_NEW_REQUEST_METHOD_LABEL
-        ),
-        input({
-          className: "custom-method-value",
-          id: "custom-method-value",
-          onChange: evt =>
-            this.updateCustomRequestFields(evt, request, updateRequest),
-          onBlur: evt =>
-            this.updateCustomRequestFields(evt, request, updateRequest),
-          value: method,
-        }),
-        label(
-          {
-            className: "custom-url-value-label custom-request-label",
-            htmlFor: "custom-url-value",
-          },
-          CUSTOM_NEW_REQUEST_URL_LABEL
-        ),
-        input({
-          className: "custom-url-value",
-          id: "custom-url-value",
-          onChange: evt =>
-            this.updateCustomRequestFields(evt, request, updateRequest),
-          value: url || "http://",
-        })
-      ),
-      // Hide query field when there is no params
-      params
-        ? div(
-            {
-              className: "tabpanel-summary-container custom-section",
-              id: "custom-query",
-            },
-            label(
+        { className: "custom-request-panel-content" },
+        div(
+          { className: "tabpanel-summary-container custom-request" },
+          div(
+            { className: "custom-request-button-container" },
+            button(
               {
-                className: "custom-request-label",
-                htmlFor: "custom-query-value",
+                className: "devtools-button",
+                id: "custom-request-close-button",
+                onClick: removeSelectedCustomRequest,
               },
-              CUSTOM_QUERY
+              CUSTOM_CANCEL
             ),
-            textarea({
-              className: "tabpanel-summary-input",
-              id: "custom-query-value",
-              onChange: evt =>
-                this.updateCustomRequestFields(evt, request, updateRequest),
-              rows: 4,
-              value: params,
-              wrap: "off",
-            })
+            button(
+              {
+                className: "devtools-button",
+                id: "custom-request-send-button",
+                onClick: sendCustomRequest,
+              },
+              CUSTOM_SEND
+            )
           )
-        : null,
-      div(
-        {
-          id: "custom-headers",
-          className: "tabpanel-summary-container custom-section",
-        },
-        label(
-          {
-            className: "custom-request-label",
-            htmlFor: "custom-headers-value",
-          },
-          CUSTOM_HEADERS
         ),
-        textarea({
-          className: "tabpanel-summary-input",
-          id: "custom-headers-value",
-          onChange: evt =>
-            this.updateCustomRequestFields(evt, request, updateRequest),
-          rows: 8,
-          value: headers,
-          wrap: "off",
-        })
-      ),
-      div(
-        {
-          id: "custom-postdata",
-          className: "tabpanel-summary-container custom-section",
-        },
-        label(
+        div(
           {
-            className: "custom-request-label",
-            htmlFor: "custom-postdata-value",
+            className: "tabpanel-summary-container custom-method-and-url",
+            id: "custom-method-and-url",
           },
-          CUSTOM_POSTDATA
+          label(
+            {
+              className: "custom-method-value-label custom-request-label",
+              htmlFor: "custom-method-value",
+            },
+            CUSTOM_NEW_REQUEST_METHOD_LABEL
+          ),
+          input({
+            className: "custom-method-value",
+            id: "custom-method-value",
+            onChange: evt =>
+              this.updateCustomRequestFields(evt, request, updateRequest),
+            onBlur: evt =>
+              this.updateCustomRequestFields(evt, request, updateRequest),
+            value: method,
+          }),
+          label(
+            {
+              className: "custom-url-value-label custom-request-label",
+              htmlFor: "custom-url-value",
+            },
+            CUSTOM_NEW_REQUEST_URL_LABEL
+          ),
+          input({
+            className: "custom-url-value",
+            id: "custom-url-value",
+            onChange: evt =>
+              this.updateCustomRequestFields(evt, request, updateRequest),
+            value: url || "http://",
+          })
         ),
-        textarea({
-          className: "tabpanel-summary-input",
-          id: "custom-postdata-value",
-          onChange: evt =>
-            this.updateCustomRequestFields(evt, request, updateRequest),
-          rows: 6,
-          value: postData,
-          wrap: "off",
-        })
+        // Hide query field when there is no params
+        params
+          ? div(
+              {
+                className: "tabpanel-summary-container custom-section",
+                id: "custom-query",
+              },
+              label(
+                {
+                  className: "custom-request-label",
+                  htmlFor: "custom-query-value",
+                },
+                CUSTOM_QUERY
+              ),
+              textarea({
+                className: "tabpanel-summary-input",
+                id: "custom-query-value",
+                onChange: evt =>
+                  this.updateCustomRequestFields(evt, request, updateRequest),
+                rows: 4,
+                value: params,
+                wrap: "off",
+              })
+            )
+          : null,
+        div(
+          {
+            id: "custom-headers",
+            className: "tabpanel-summary-container custom-section",
+          },
+          label(
+            {
+              className: "custom-request-label",
+              htmlFor: "custom-headers-value",
+            },
+            CUSTOM_HEADERS
+          ),
+          textarea({
+            className: "tabpanel-summary-input",
+            id: "custom-headers-value",
+            onChange: evt =>
+              this.updateCustomRequestFields(evt, request, updateRequest),
+            rows: 8,
+            value: headers,
+            wrap: "off",
+          })
+        ),
+        div(
+          {
+            id: "custom-postdata",
+            className: "tabpanel-summary-container custom-section",
+          },
+          label(
+            {
+              className: "custom-request-label",
+              htmlFor: "custom-postdata-value",
+            },
+            CUSTOM_POSTDATA
+          ),
+          textarea({
+            className: "tabpanel-summary-input",
+            id: "custom-postdata-value",
+            onChange: evt =>
+              this.updateCustomRequestFields(evt, request, updateRequest),
+            rows: 6,
+            value: postData,
+            wrap: "off",
+          })
+        )
       )
     );
   }
