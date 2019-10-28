@@ -198,12 +198,6 @@ class HTMLObjectElement final : public nsGenericHTMLFormElement,
                                           bool aNotify) override;
 
  private:
-  /**
-   * Returns if the element is currently focusable regardless of it's tabindex
-   * value. This is used to know the default tabindex value.
-   */
-  bool IsFocusableForTabIndex();
-
   nsContentPolicyType GetContentPolicyType() const override {
     return nsIContentPolicy::TYPE_INTERNAL_OBJECT;
   }
