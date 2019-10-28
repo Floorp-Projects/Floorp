@@ -4207,16 +4207,36 @@ class MTruncateToInt32 : public MUnaryInstruction, public ToInt32Policy::Data {
 
 // Converts any type to a string
 class MToString : public MUnaryInstruction, public ToStringPolicy::Data {
-  explicit MToString(MDefinition* def) : MUnaryInstruction(classOpcode, def) {
-    setResultType(MIRType::String);
-    setMovable();
+ public:
+  // MToString has two modes for handling of object/symbol arguments: if the
+  // to-string conversion happens as part of another opcode, we have to bail out
+  // to Baseline. If the conversion is for a stand-alone JSOp we can support
+  // side-effects.
+  enum class SideEffectHandling { Bailout, Supported };
 
-    // Objects might override toString; Symbol throws. We bailout in those cases
-    // and run side-effects in baseline instead.
-    if (def->mightBeType(MIRType::Object) ||
-        def->mightBeType(MIRType::Symbol)) {
-      setGuard();
+ private:
+  SideEffectHandling sideEffects_;
+
+  MToString(MDefinition* def, SideEffectHandling sideEffects)
+      : MUnaryInstruction(classOpcode, def), sideEffects_(sideEffects) {
+    setResultType(MIRType::String);
+
+    // If this instruction is not effectful, mark it as movable and set the
+    // Guard flag if needed. If the operation is effectful it won't be optimized
+    // anyway so there's no need to set any flags.
+    if (!isEffectful()) {
+      setMovable();
+      // Objects might override toString; Symbol throws. We bailout in those
+      // cases and run side-effects in baseline instead.
+      if (conversionMightHaveSideEffects()) {
+        setGuard();
+      }
     }
+  }
+
+  bool conversionMightHaveSideEffects() const {
+    return input()->mightBeType(MIRType::Object) ||
+           input()->mightBeType(MIRType::Symbol);
   }
 
  public:
@@ -4226,14 +4246,29 @@ class MToString : public MUnaryInstruction, public ToStringPolicy::Data {
   MDefinition* foldsTo(TempAllocator& alloc) override;
 
   bool congruentTo(const MDefinition* ins) const override {
+    if (!ins->isToString()) {
+      return false;
+    }
+    if (sideEffects_ != ins->toToString()->sideEffects_) {
+      return false;
+    }
     return congruentIfOperandsEqual(ins);
   }
 
-  AliasSet getAliasSet() const override { return AliasSet::None(); }
+  AliasSet getAliasSet() const override {
+    if (supportSideEffects() && conversionMightHaveSideEffects()) {
+      return AliasSet::Store(AliasSet::Any);
+    }
+    return AliasSet::None();
+  }
 
-  bool fallible() const {
-    return input()->mightBeType(MIRType::Object) ||
-           input()->mightBeType(MIRType::Symbol);
+  bool supportSideEffects() const {
+    return sideEffects_ == SideEffectHandling::Supported;
+  }
+
+  bool needsSnapshot() const {
+    return sideEffects_ == SideEffectHandling::Bailout &&
+           conversionMightHaveSideEffects();
   }
 
   ALLOW_CLONE(MToString)

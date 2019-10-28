@@ -4011,10 +4011,13 @@ AbortReasonOr<Ok> IonBuilder::jsop_tostring() {
   }
 
   MDefinition* value = current->pop();
-  MToString* ins = MToString::New(alloc(), value);
+  MToString* ins =
+      MToString::New(alloc(), value, MToString::SideEffectHandling::Supported);
   current->add(ins);
   current->push(ins);
-  MOZ_ASSERT(!ins->isEffectful());
+  if (ins->isEffectful()) {
+    MOZ_TRY(resumeAfter(ins));
+  }
   return Ok();
 }
 

@@ -3720,9 +3720,13 @@ IonBuilder::InliningResult IonBuilder::inlineToString(CallInfo& callInfo) {
   }
 
   callInfo.setImplicitlyUsedUnchecked();
-  MToString* toString = MToString::New(alloc(), callInfo.getArg(0));
+  MToString* toString = MToString::New(
+      alloc(), callInfo.getArg(0), MToString::SideEffectHandling::Supported);
   current->add(toString);
   current->push(toString);
+  if (toString->isEffectful()) {
+    MOZ_TRY(resumeAfter(toString));
+  }
   return InliningStatus_Inlined;
 }
 
