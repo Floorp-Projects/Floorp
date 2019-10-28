@@ -1042,8 +1042,6 @@ OnPopHandler* DebuggerFrame::onPopHandler() const {
 }
 
 void DebuggerFrame::setOnPopHandler(JSContext* cx, OnPopHandler* handler) {
-  MOZ_ASSERT(isLive());
-
   OnPopHandler* prior = onPopHandler();
   if (handler == prior) {
     return;
@@ -1232,7 +1230,9 @@ bool DebuggerFrame::CallData::ToNative(JSContext* cx, unsigned argc,
   // These methods do not require liveness.
   bool checkLive = MyMethod != &CallData::liveGetter &&
                    MyMethod != &CallData::onStepGetter &&
-                   MyMethod != &CallData::onStepSetter;
+                   MyMethod != &CallData::onStepSetter &&
+                   MyMethod != &CallData::onPopGetter &&
+                   MyMethod != &CallData::onPopSetter;
 
   RootedDebuggerFrame frame(cx,
                             DebuggerFrame::check(cx, args.thisv(), checkLive));
