@@ -623,6 +623,9 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64 {
   void load64(const Address& address, Register64 dest) {
     loadPtr(address, dest.reg);
   }
+  void load64(const BaseIndex& address, Register64 dest) {
+    loadPtr(address, dest.reg);
+  }
 
   void loadPtr(const Address& address, Register dest);
   void loadPtr(const BaseIndex& src, Register dest);
@@ -663,8 +666,12 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64 {
   void store64(Imm64 imm, Address address) {
     storePtr(ImmWord(imm.value), address);
   }
+  void store64(Imm64 imm, const BaseIndex& address) {
+    storePtr(ImmWord(imm.value), address);
+  }
 
   void store64(Register64 src, Address address) { storePtr(src.reg, address); }
+  void store64(Register64 src, const BaseIndex& address) { storePtr(src.reg, address); }
 
   template <typename T>
   void storePtr(ImmWord imm, T address);
