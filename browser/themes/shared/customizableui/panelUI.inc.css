@@ -1130,7 +1130,7 @@ panelview .toolbarbutton-1,
 
 .subviewbutton[shortcut]::after {
   content: attr(shortcut);
-  float: right;
+  float: inline-end;
 }
 
 .PanelUI-subView .subviewbutton-nav::after,
@@ -1175,7 +1175,7 @@ panelview .toolbarbutton-1,
   -moz-context-properties: fill, fill-opacity;
   fill: currentColor;
   fill-opacity: 0.4;
-  float: right;
+  float: inline-end;
   /* Centers the icon and resizes it to 12px square. */
   transform: translateY(2px) scaleX(.75);
 }
@@ -1192,7 +1192,7 @@ panelview .toolbarbutton-1,
   -moz-context-properties: fill, fill-opacity;
   fill: currentColor;
   fill-opacity: 0.6;
-  float: right;
+  float: inline-end;
   height: 12px;
   width: 12px;
 }
@@ -1513,7 +1513,7 @@ toolbaritem[overflowedItem=true],
   content: url(chrome://browser/skin/back-12.svg);
   fill: currentColor;
   fill-opacity: 0.6;
-  float: right;
+  float: inline-end;
 }
 
 toolbarpaletteitem[place="menu-panel"] > .subviewbutton-nav::after {

@@ -12,7 +12,7 @@
   }
 
   .float-right {
-    float: right;
+    float: inline-end;
   }
 
   .hidden {

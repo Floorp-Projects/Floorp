@@ -90,7 +90,7 @@ xul|richlistitem[originaltype="autofill-insecureWarning"] {
 
 .autofill-item-box:not([ac-image=""]) > .profile-label-col::before {
   margin-right: 5px;
-  float: left;
+  float: inline-start;
   content: "";
   width: 16px;
   height: 16px;

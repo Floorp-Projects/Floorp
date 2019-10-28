@@ -73,7 +73,7 @@ option:nth-child(even) {
   content: "";
   background: url("icon-credit-card-generic.svg") no-repeat;
   background-size: contain;
-  float: left;
+  float: inline-start;
   width: 16px;
   height: 16px;
   padding-inline-end: 10px;
