@@ -8,44 +8,12 @@ const ReferrerInfo = Components.Constructor(
   "init"
 );
 
-const referrerInfo = new ReferrerInfo(
+let referrerInfo = new ReferrerInfo(
   Ci.nsIReferrerInfo.ORIGIN,
   true,
   Services.io.newURI(TEST_REFERRER)
 );
-
-function queryEntry(browser) {
-  function queryEntryScript() {
-    let webNav = docShell.QueryInterface(Ci.nsIWebNavigation);
-    let sessionHistory = webNav.sessionHistory;
-    let entry = sessionHistory.legacySHistory.getEntryAtIndex(
-      sessionHistory.count - 1
-    );
-    let result = {
-      uri: entry.URI.spec,
-      referrerInfo: E10SUtils.serializeReferrerInfo(entry.referrerInfo),
-    };
-    sendAsyncMessage("Test:queryEntry", result);
-  }
-
-  return new Promise(resolve => {
-    browser.messageManager.addMessageListener(
-      "Test:queryEntry",
-      function listener({ data }) {
-        browser.messageManager.removeMessageListener(
-          "Test:queryEntry",
-          listener
-        );
-        resolve(data);
-      }
-    );
-
-    browser.messageManager.loadFrameScript(
-      "data:,(" + queryEntryScript.toString() + ")();",
-      true
-    );
-  });
-}
+let deReferrerInfo = E10SUtils.serializeReferrerInfo(referrerInfo);
 
 var checkResult = async function(isRemote, browserKey, uri) {
   is(
@@ -60,38 +28,57 @@ var checkResult = async function(isRemote, browserKey, uri) {
     "browser.permanentKey should be correct"
   );
 
-  let entry = await queryEntry(gBrowser.selectedBrowser);
+  await SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [{ uri, referrerInfo: deReferrerInfo, isRemote }],
+    async function(args) {
+      let webNav = content.docShell.QueryInterface(Ci.nsIWebNavigation);
+      let sessionHistory = webNav.sessionHistory;
+      let entry = sessionHistory.legacySHistory.getEntryAtIndex(
+        sessionHistory.count - 1
+      );
 
-  is(entry.uri, uri, "Uri should be correct");
+      var { E10SUtils } = SpecialPowers.Cu.import(
+        "resource://gre/modules/E10SUtils.jsm"
+      );
 
-  // Main process like about:mozilla does not trigger the real network request.
-  // So we don't store referrerInfo in sessionHistory in that case.
-  // Besides, the referrerInfo stored in sessionHistory was computed, we only
-  // check pre-computed things.
-  if (isRemote) {
-    let resultReferrerInfo = E10SUtils.deserializeReferrerInfo(
-      entry.referrerInfo
-    );
-    is(
-      resultReferrerInfo.originalReferrer.spec,
-      referrerInfo.originalReferrer.spec,
-      "originalReferrer should be correct"
-    );
-    is(
-      resultReferrerInfo.sendReferrer,
-      referrerInfo.sendReferrer,
-      "sendReferrer should be correct"
-    );
-    is(
-      resultReferrerInfo.referrerPolicy,
-      referrerInfo.referrerPolicy,
-      "referrerPolicy should be correct"
-    );
-  } else {
-    is(entry.referrerInfo, null, "ReferrerInfo should be correct");
-  }
+      Assert.equal(entry.URI.spec, args.uri, "Uri should be correct");
+
+      // Main process like about:mozilla does not trigger the real network request.
+      // So we don't store referrerInfo in sessionHistory in that case.
+      // Besides, the referrerInfo stored in sessionHistory was computed, we only
+      // check pre-computed things.
+      if (args.isRemote) {
+        let resultReferrerInfo = entry.referrerInfo;
+        let expectedReferrerInfo = E10SUtils.deserializeReferrerInfo(
+          args.referrerInfo
+        );
+
+        Assert.equal(
+          resultReferrerInfo.originalReferrer.spec,
+          expectedReferrerInfo.originalReferrer.spec,
+          "originalReferrer should be correct"
+        );
+        Assert.equal(
+          resultReferrerInfo.sendReferrer,
+          expectedReferrerInfo.sendReferrer,
+          "sendReferrer should be correct"
+        );
+        Assert.equal(
+          resultReferrerInfo.referrerPolicy,
+          expectedReferrerInfo.referrerPolicy,
+          "referrerPolicy should be correct"
+        );
+      } else {
+        Assert.equal(
+          entry.referrerInfo,
+          null,
+          "ReferrerInfo should be correct"
+        );
+      }
+    }
+  );
 };
-
 var waitForLoad = async function(uri) {
   info("waitForLoad " + uri);
   let loadURIOptions = {
@@ -111,22 +98,20 @@ var waitForLoad = async function(uri) {
 // Finally, docshell will do the load in correct process with the input
 // referrerInfo and store an entry to SessionHistory
 add_task(async function test_navigation() {
+  // Navigate from non remote to remote
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:blank");
   let testURI = TEST_PAGE;
   let { permanentKey } = gBrowser.selectedBrowser;
-  // Load a remote page
   await waitForLoad(testURI);
   await checkResult(true, permanentKey, testURI);
+  gBrowser.removeCurrentTab();
 
-  // Load a non-remote page
+  // Navigate from remote to non-remote
+  gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, TEST_PAGE);
   testURI = "about:mozilla";
+  permanentKey = gBrowser.selectedBrowser.permanentKey;
   await waitForLoad(testURI);
   await checkResult(false, permanentKey, testURI);
-
-  // Load a remote page
-  testURI = TEST_PAGE;
-  await waitForLoad(testURI);
-  await checkResult(true, permanentKey, testURI);
 
   gBrowser.removeCurrentTab();
 });
