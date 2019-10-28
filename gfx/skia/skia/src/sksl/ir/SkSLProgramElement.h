@@ -8,7 +8,9 @@
 #ifndef SKSL_PROGRAMELEMENT
 #define SKSL_PROGRAMELEMENT
 
-#include "SkSLIRNode.h"
+#include "src/sksl/ir/SkSLIRNode.h"
+
+#include <memory>
 
 namespace SkSL {
 

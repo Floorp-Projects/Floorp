@@ -6,11 +6,11 @@
  */
 
 
-#include "SkCornerPathEffect.h"
-#include "SkPath.h"
-#include "SkPoint.h"
-#include "SkReadBuffer.h"
-#include "SkWriteBuffer.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkPoint.h"
+#include "include/effects/SkCornerPathEffect.h"
+#include "src/core/SkReadBuffer.h"
+#include "src/core/SkWriteBuffer.h"
 
 SkCornerPathEffect::SkCornerPathEffect(SkScalar radius) {
     // check with ! to catch NaNs
@@ -57,7 +57,7 @@ bool SkCornerPathEffect::onFilterPath(SkPath* dst, const SkPath& src,
     lastCorner.set(0, 0);
 
     for (;;) {
-        switch (verb = iter.next(pts, false)) {
+        switch (verb = iter.next(pts)) {
             case SkPath::kMove_Verb:
                 // close out the previous (open) contour
                 if (SkPath::kLine_Verb == prevVerb) {

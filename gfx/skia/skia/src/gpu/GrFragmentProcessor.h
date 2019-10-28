@@ -8,10 +8,10 @@
 #ifndef GrFragmentProcessor_DEFINED
 #define GrFragmentProcessor_DEFINED
 
-#include "GrProcessor.h"
-#include "GrProxyRef.h"
+#include "src/gpu/GrCoordTransform.h"
+#include "src/gpu/GrProcessor.h"
+#include "src/gpu/ops/GrOp.h"
 
-class GrCoordTransform;
 class GrGLSLFragmentProcessor;
 class GrPaint;
 class GrPipeline;
@@ -63,7 +63,8 @@ public:
      *  child.
      */
     static std::unique_ptr<GrFragmentProcessor> OverrideInput(std::unique_ptr<GrFragmentProcessor>,
-                                                              const SkPMColor4f&);
+                                                              const SkPMColor4f&,
+                                                              bool useUniform = true);
 
     /**
      *  Returns a fragment processor that premuls the input before calling the passed in fragment
@@ -113,7 +114,7 @@ public:
         numTransforms(). */
     const GrCoordTransform& coordTransform(int index) const { return *fCoordTransforms[index]; }
 
-    const SkTArray<const GrCoordTransform*, true>& coordTransforms() const {
+    const SkTArray<GrCoordTransform*, true>& coordTransforms() const {
         return fCoordTransforms;
     }
 
@@ -121,12 +122,28 @@ public:
 
     const GrFragmentProcessor& childProcessor(int index) const { return *fChildProcessors[index]; }
 
-    bool instantiate(GrResourceProvider*) const;
-
-    void markPendingExecution() const;
+    SkDEBUGCODE(bool isInstantiated() const;)
 
     /** Do any of the coordtransforms for this processor require local coords? */
     bool usesLocalCoords() const { return SkToBool(fFlags & kUsesLocalCoords_Flag); }
+
+    bool computeLocalCoordsInVertexShader() const {
+        return SkToBool(fFlags & kComputeLocalCoordsInVertexShader_Flag);
+    }
+
+    void setComputeLocalCoordsInVertexShader(bool value) const {
+        if (value) {
+            fFlags |= kComputeLocalCoordsInVertexShader_Flag;
+        } else {
+            fFlags &= ~kComputeLocalCoordsInVertexShader_Flag;
+        }
+        for (GrCoordTransform* transform : fCoordTransforms) {
+            transform->setComputeInVertexShader(value);
+        }
+        for (const auto& child : fChildProcessors) {
+            child->setComputeLocalCoordsInVertexShader(value);
+        }
+    }
 
     /**
      * A GrDrawOp may premultiply its antialiasing coverage into its GrGeometryProcessor's color
@@ -241,7 +258,7 @@ public:
                                          &GrFragmentProcessor::numTextureSamplers,
                                          &GrFragmentProcessor::textureSampler>;
 
-    void visitProxies(const std::function<void(GrSurfaceProxy*)>& func);
+    void visitProxies(const GrOp::VisitProxyFunc& func);
 
 protected:
     enum OptimizationFlags : uint32_t {
@@ -258,24 +275,24 @@ protected:
     /**
      * Can be used as a helper to decide which fragment processor OptimizationFlags should be set.
      * This assumes that the subclass output color will be a modulation of the input color with a
-     * value read from a texture of the passed config and that the texture contains premultiplied
-     * color or alpha values that are in range.
+     * value read from a texture of the passed color type and that the texture contains
+     * premultiplied color or alpha values that are in range.
      *
      * Since there are multiple ways in which a sampler may have its coordinates clamped or wrapped,
      * callers must determine on their own if the sampling uses a decal strategy in any way, in
-     * which case the texture may become transparent regardless of the pixel config.
+     * which case the texture may become transparent regardless of the color type.
      */
-    static OptimizationFlags ModulateForSamplerOptFlags(GrPixelConfig config, bool samplingDecal) {
+    static OptimizationFlags ModulateForSamplerOptFlags(GrColorType colorType, bool samplingDecal) {
         if (samplingDecal) {
             return kCompatibleWithCoverageAsAlpha_OptimizationFlag;
         } else {
-            return ModulateForClampedSamplerOptFlags(config);
+            return ModulateForClampedSamplerOptFlags(colorType);
         }
     }
 
     // As above, but callers should somehow ensure or assert their sampler still uses clamping
-    static OptimizationFlags ModulateForClampedSamplerOptFlags(GrPixelConfig config) {
-        if (GrPixelConfigIsOpaque(config)) {
+    static OptimizationFlags ModulateForClampedSamplerOptFlags(GrColorType colorType) {
+        if (!GrColorTypeHasAlpha(colorType)) {
             return kCompatibleWithCoverageAsAlpha_OptimizationFlag |
                    kPreservesOpaqueInput_OptimizationFlag;
         } else {
@@ -284,13 +301,18 @@ protected:
     }
 
     GrFragmentProcessor(ClassID classID, OptimizationFlags optimizationFlags)
-    : INHERITED(classID)
-    , fFlags(optimizationFlags) {
-        SkASSERT((fFlags & ~kAll_OptimizationFlags) == 0);
+            : INHERITED(classID)
+            , fFlags(optimizationFlags | kComputeLocalCoordsInVertexShader_Flag) {
+        SkASSERT((optimizationFlags & ~kAll_OptimizationFlags) == 0);
     }
 
     OptimizationFlags optimizationFlags() const {
         return static_cast<OptimizationFlags>(kAll_OptimizationFlags & fFlags);
+    }
+
+    /** Useful when you can't call fp->optimizationFlags() on a base class object from a subclass.*/
+    static OptimizationFlags ProcessorOptimizationFlags(const GrFragmentProcessor* fp) {
+        return fp->optimizationFlags();
     }
 
     /**
@@ -321,7 +343,7 @@ protected:
      * transforms in a consistent order. The non-virtual implementation of isEqual() automatically
      * compares transforms and will assume they line up across the two processor instances.
      */
-    void addCoordTransform(const GrCoordTransform*);
+    void addCoordTransform(GrCoordTransform*);
 
     /**
      * FragmentProcessor subclasses call this from their constructor to register any child
@@ -353,7 +375,6 @@ protected:
 private:
     virtual SkPMColor4f constantOutputForConstantInput(const SkPMColor4f& /* inputColor */) const {
         SK_ABORT("Subclass must override this if advertising this optimization.");
-        return SK_PMColor4fTRANSPARENT;
     }
 
     /** Returns a new instance of the appropriate *GL* implementation class
@@ -379,13 +400,14 @@ private:
     enum PrivateFlags {
         kFirstPrivateFlag = kAll_OptimizationFlags + 1,
         kUsesLocalCoords_Flag = kFirstPrivateFlag,
+        kComputeLocalCoordsInVertexShader_Flag = kFirstPrivateFlag << 1,
     };
 
-    mutable uint32_t fFlags = 0;
+    mutable uint32_t fFlags = kComputeLocalCoordsInVertexShader_Flag;
 
     int fTextureSamplerCnt = 0;
 
-    SkSTArray<4, const GrCoordTransform*, true> fCoordTransforms;
+    SkSTArray<4, GrCoordTransform*, true> fCoordTransforms;
 
     SkSTArray<1, std::unique_ptr<GrFragmentProcessor>, true> fChildProcessors;
 
@@ -402,26 +424,17 @@ public:
     TextureSampler() = default;
 
     /**
-     * This copy constructor is used by GrFragmentProcessor::clone() implementations. The copy
-     * always takes a new ref on the texture proxy as the new fragment processor will not yet be
-     * in pending execution state.
+     * This copy constructor is used by GrFragmentProcessor::clone() implementations.
      */
     explicit TextureSampler(const TextureSampler& that)
-            : fProxyRef(sk_ref_sp(that.fProxyRef.get()), that.fProxyRef.ioType())
+            : fProxy(that.fProxy)
             , fSamplerState(that.fSamplerState) {}
 
-    TextureSampler(sk_sp<GrTextureProxy>, const GrSamplerState&);
-
-    explicit TextureSampler(sk_sp<GrTextureProxy>,
-                            GrSamplerState::Filter = GrSamplerState::Filter::kNearest,
-                            GrSamplerState::WrapMode wrapXAndY = GrSamplerState::WrapMode::kClamp);
+    TextureSampler(sk_sp<GrTextureProxy>, const GrSamplerState& = GrSamplerState::ClampNearest());
 
     TextureSampler& operator=(const TextureSampler&) = delete;
 
     void reset(sk_sp<GrTextureProxy>, const GrSamplerState&);
-    void reset(sk_sp<GrTextureProxy>,
-               GrSamplerState::Filter = GrSamplerState::Filter::kNearest,
-               GrSamplerState::WrapMode wrapXAndY = GrSamplerState::WrapMode::kClamp);
 
     bool operator==(const TextureSampler& that) const {
         return this->proxy()->underlyingUniqueID() == that.proxy()->underlyingUniqueID() &&
@@ -430,29 +443,23 @@ public:
 
     bool operator!=(const TextureSampler& other) const { return !(*this == other); }
 
-    // 'instantiate' should only ever be called at flush time.
-    bool instantiate(GrResourceProvider* resourceProvider) const {
-        return SkToBool(fProxyRef.get()->instantiate(resourceProvider));
-    }
+    SkDEBUGCODE(bool isInstantiated() const { return fProxy->isInstantiated(); })
 
     // 'peekTexture' should only ever be called after a successful 'instantiate' call
     GrTexture* peekTexture() const {
-        SkASSERT(fProxyRef.get()->peekTexture());
-        return fProxyRef.get()->peekTexture();
+        SkASSERT(fProxy->isInstantiated());
+        return fProxy->peekTexture();
     }
 
-    GrTextureProxy* proxy() const { return fProxyRef.get(); }
+    GrTextureProxy* proxy() const { return fProxy.get(); }
     const GrSamplerState& samplerState() const { return fSamplerState; }
+    const GrSwizzle& swizzle() const { return this->proxy()->textureSwizzle(); }
 
-    bool isInitialized() const { return SkToBool(fProxyRef.get()); }
-    /**
-     * For internal use by GrFragmentProcessor.
-     */
-    const GrTextureProxyRef* proxyRef() const { return &fProxyRef; }
+    bool isInitialized() const { return SkToBool(fProxy.get()); }
 
 private:
-    GrTextureProxyRef fProxyRef;
-    GrSamplerState fSamplerState;
+    sk_sp<GrTextureProxy> fProxy;
+    GrSamplerState        fSamplerState;
 };
 
 //////////////////////////////////////////////////////////////////////////////

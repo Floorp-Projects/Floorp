@@ -5,15 +5,15 @@
  * found in the LICENSE file.
  */
 
-#include "SkBlurMask.h"
+#include "src/core/SkBlurMask.h"
 
-#include "SkColorPriv.h"
-#include "SkEndian.h"
-#include "SkMaskBlurFilter.h"
-#include "SkMath.h"
-#include "SkMathPriv.h"
-#include "SkTemplates.h"
-#include "SkTo.h"
+#include "include/core/SkColorPriv.h"
+#include "include/core/SkMath.h"
+#include "include/private/SkTemplates.h"
+#include "include/private/SkTo.h"
+#include "src/core/SkEndian.h"
+#include "src/core/SkMaskBlurFilter.h"
+#include "src/core/SkMathPriv.h"
 
 // This constant approximates the scaling done in the software path's
 // "high quality" mode, in SkBlurMask::Blur() (1 / sqrt(3)).
@@ -404,10 +404,10 @@ bool SkBlurMask::BlurRect(SkScalar sigma, SkMask *dst,
         margin->set( pad, pad );
     }
 
-    dst->fBounds.set(SkScalarRoundToInt(src.fLeft - pad),
-                     SkScalarRoundToInt(src.fTop - pad),
-                     SkScalarRoundToInt(src.fRight + pad),
-                     SkScalarRoundToInt(src.fBottom + pad));
+    dst->fBounds.setLTRB(SkScalarRoundToInt(src.fLeft - pad),
+                         SkScalarRoundToInt(src.fTop - pad),
+                         SkScalarRoundToInt(src.fRight + pad),
+                         SkScalarRoundToInt(src.fBottom + pad));
 
     dst->fRowBytes = dst->fBounds.width();
     dst->fFormat = SkMask::kA8_Format;
@@ -418,10 +418,7 @@ bool SkBlurMask::BlurRect(SkScalar sigma, SkMask *dst,
 
     if (createMode == SkMask::kJustComputeBounds_CreateMode) {
         if (style == kInner_SkBlurStyle) {
-            dst->fBounds.set(SkScalarRoundToInt(src.fLeft),
-                             SkScalarRoundToInt(src.fTop),
-                             SkScalarRoundToInt(src.fRight),
-                             SkScalarRoundToInt(src.fBottom)); // restore trimmed bounds
+            dst->fBounds = src.round(); // restore trimmed bounds
             dst->fRowBytes = sw;
         }
         return true;
@@ -472,10 +469,7 @@ bool SkBlurMask::BlurRect(SkScalar sigma, SkMask *dst,
         }
         SkMask::FreeImage(dp);
 
-        dst->fBounds.set(SkScalarRoundToInt(src.fLeft),
-                         SkScalarRoundToInt(src.fTop),
-                         SkScalarRoundToInt(src.fRight),
-                         SkScalarRoundToInt(src.fBottom)); // restore trimmed bounds
+        dst->fBounds = src.round(); // restore trimmed bounds
         dst->fRowBytes = sw;
 
     } else if (style == kOuter_SkBlurStyle) {

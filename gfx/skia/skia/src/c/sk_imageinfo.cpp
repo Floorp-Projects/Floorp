@@ -5,11 +5,11 @@
  * found in the LICENSE file.
  */
 
-#include "SkImageInfo.h"
-#include "SkColorSpace.h"
+#include "include/core/SkColorSpace.h"
+#include "include/core/SkImageInfo.h"
 
-#include "sk_imageinfo.h"
-#include "sk_colorspace.h"
+#include "include/c/sk_colorspace.h"
+#include "include/c/sk_imageinfo.h"
 
 const struct {
     sk_colortype_t  fC;
@@ -104,11 +104,11 @@ void sk_imageinfo_delete(sk_imageinfo_t* cinfo) {
     delete ToImageInfo(cinfo);
 }
 
-int sk_imageinfo_get_width(const sk_imageinfo_t* cinfo) {
+int32_t sk_imageinfo_get_width(const sk_imageinfo_t* cinfo) {
     return ToImageInfo(cinfo)->width();
 }
 
-int sk_imageinfo_get_height(const sk_imageinfo_t* cinfo) {
+int32_t sk_imageinfo_get_height(const sk_imageinfo_t* cinfo) {
     return ToImageInfo(cinfo)->height();
 }
 

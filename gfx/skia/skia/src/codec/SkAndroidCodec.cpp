@@ -5,14 +5,14 @@
  * found in the LICENSE file.
  */
 
-#include "SkAndroidCodec.h"
-#include "SkAndroidCodecAdapter.h"
-#include "SkCodec.h"
-#include "SkCodecPriv.h"
-#include "SkMakeUnique.h"
-#include "SkPixmap.h"
-#include "SkPixmapPriv.h"
-#include "SkSampledCodec.h"
+#include "include/codec/SkAndroidCodec.h"
+#include "include/codec/SkCodec.h"
+#include "include/core/SkPixmap.h"
+#include "src/codec/SkAndroidCodecAdapter.h"
+#include "src/codec/SkCodecPriv.h"
+#include "src/codec/SkSampledCodec.h"
+#include "src/core/SkMakeUnique.h"
+#include "src/core/SkPixmapPriv.h"
 
 static bool is_valid_sample_size(int sampleSize) {
     // FIXME: As Leon has mentioned elsewhere, surely there is also a maximum sampleSize?
@@ -91,19 +91,23 @@ std::unique_ptr<SkAndroidCodec> SkAndroidCodec::MakeFromCodec(std::unique_ptr<Sk
         case SkEncodedImageFormat::kPNG:
         case SkEncodedImageFormat::kICO:
         case SkEncodedImageFormat::kJPEG:
+#ifndef SK_HAS_WUFFS_LIBRARY
         case SkEncodedImageFormat::kGIF:
+#endif
         case SkEncodedImageFormat::kBMP:
         case SkEncodedImageFormat::kWBMP:
         case SkEncodedImageFormat::kHEIF:
             return skstd::make_unique<SkSampledCodec>(codec.release(), orientationBehavior);
-
+#ifdef SK_HAS_WUFFS_LIBRARY
+        case SkEncodedImageFormat::kGIF:
+#endif
 #ifdef SK_HAS_WEBP_LIBRARY
         case SkEncodedImageFormat::kWEBP:
 #endif
 #ifdef SK_CODEC_DECODES_RAW
         case SkEncodedImageFormat::kDNG:
 #endif
-#if defined(SK_HAS_WEBP_LIBRARY) || defined(SK_CODEC_DECODES_RAW)
+#if defined(SK_HAS_WEBP_LIBRARY) || defined(SK_CODEC_DECODES_RAW) || defined(SK_HAS_WUFFS_LIBRARY)
             return skstd::make_unique<SkAndroidCodecAdapter>(codec.release(), orientationBehavior);
 #endif
 

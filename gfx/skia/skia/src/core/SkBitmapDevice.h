@@ -8,18 +8,18 @@
 #ifndef SkBitmapDevice_DEFINED
 #define SkBitmapDevice_DEFINED
 
-#include "SkBitmap.h"
-#include "SkCanvas.h"
-#include "SkColor.h"
-#include "SkDevice.h"
-#include "SkGlyphRunPainter.h"
-#include "SkImageInfo.h"
-#include "SkRasterClip.h"
-#include "SkRasterClipStack.h"
-#include "SkRect.h"
-#include "SkScalar.h"
-#include "SkSize.h"
-#include "SkSurfaceProps.h"
+#include "include/core/SkBitmap.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkImageInfo.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkSize.h"
+#include "include/core/SkSurfaceProps.h"
+#include "src/core/SkDevice.h"
+#include "src/core/SkGlyphRunPainter.h"
+#include "src/core/SkRasterClip.h"
+#include "src/core/SkRasterClipStack.h"
 
 class SkImageFilterCache;
 class SkMatrix;
@@ -101,6 +101,8 @@ protected:
     void drawGlyphRunList(const SkGlyphRunList& glyphRunList) override;
     void drawVertices(const SkVertices*, const SkVertices::Bone bones[], int boneCount, SkBlendMode,
                       const SkPaint& paint) override;
+    void drawAtlas(const SkImage*, const SkRSXform[], const SkRect[], const SkColor[], int count,
+                   SkBlendMode, const SkPaint&) override;
     void drawDevice(SkBaseDevice*, int x, int y, const SkPaint&) override;
 
     ///////////////////////////////////////////////////////////////////////////
@@ -109,10 +111,8 @@ protected:
                      SkImage*, const SkMatrix&) override;
     sk_sp<SkSpecialImage> makeSpecial(const SkBitmap&) override;
     sk_sp<SkSpecialImage> makeSpecial(const SkImage*) override;
-    sk_sp<SkSpecialImage> snapSpecial() override;
+    sk_sp<SkSpecialImage> snapSpecial(const SkIRect&, bool = false) override;
     void setImmutable() override { fBitmap.setImmutable(); }
-
-    sk_sp<SkSpecialImage> snapBackImage(const SkIRect&) override;
 
     ///////////////////////////////////////////////////////////////////////////
 

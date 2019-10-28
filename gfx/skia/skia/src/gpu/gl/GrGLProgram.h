@@ -9,15 +9,16 @@
 #ifndef GrGLProgram_DEFINED
 #define GrGLProgram_DEFINED
 
-#include "GrGLProgramDataManager.h"
-#include "glsl/GrGLSLProgramDataManager.h"
-#include "glsl/GrGLSLUniformHandler.h"
+#include "src/gpu/gl/GrGLProgramDataManager.h"
+#include "src/gpu/glsl/GrGLSLProgramDataManager.h"
+#include "src/gpu/glsl/GrGLSLUniformHandler.h"
 
 class GrGLSLFragmentProcessor;
 class GrGLSLPrimitiveProcessor;
 class GrGLSLXferProcessor;
 class GrPipeline;
 class GrPrimitiveProcessor;
+class GrProgramInfo;
 class GrRenderTarget;
 class GrTextureProxy;
 
@@ -118,9 +119,7 @@ public:
      *
      * It is the caller's responsibility to ensure the program is bound before calling.
      */
-    void updateUniformsAndTextureBindings(const GrRenderTarget*, GrSurfaceOrigin,
-                                          const GrPrimitiveProcessor&, const GrPipeline&,
-                                          const GrTextureProxy* const primitiveProcessorTextures[]);
+    void updateUniformsAndTextureBindings(const GrRenderTarget*, const GrProgramInfo&);
 
     void updatePrimitiveProcessorTextureBindings(const GrPrimitiveProcessor&,
                                                  const GrTextureProxy* const[]);

@@ -5,14 +5,14 @@
  * found in the LICENSE file.
  */
 
-#include "SkAutoMalloc.h"
-#include "SkColorSpacePriv.h"
-#include "SkEndian.h"
-#include "SkFixed.h"
-#include "SkICC.h"
-#include "SkICCPriv.h"
-#include "SkMD5.h"
-#include "SkUtils.h"
+#include "include/core/SkICC.h"
+#include "include/private/SkFixed.h"
+#include "src/core/SkAutoMalloc.h"
+#include "src/core/SkColorSpacePriv.h"
+#include "src/core/SkEndian.h"
+#include "src/core/SkICCPriv.h"
+#include "src/core/SkMD5.h"
+#include "src/core/SkUtils.h"
 
 static constexpr char kDescriptionTagBodyPrefix[12] =
         { 'G', 'o', 'o', 'g', 'l', 'e', '/', 'S', 'k', 'i', 'a' , '/'};
@@ -280,8 +280,7 @@ static void get_color_profile_tag(char dst[kICCDescriptionTagSize],
         md5.write(&toXYZD50, sizeof(toXYZD50));
         static_assert(sizeof(fn) == sizeof(float) * 7, "packed");
         md5.write(&fn, sizeof(fn));
-        SkMD5::Digest digest;
-        md5.finish(digest);
+        SkMD5::Digest digest = md5.finish();
         char* ptr = dst + sizeof(kDescriptionTagBodyPrefix);
         for (unsigned i = 0; i < sizeof(SkMD5::Digest); ++i) {
             uint8_t byte = digest.data[i];
@@ -294,7 +293,8 @@ static void get_color_profile_tag(char dst[kICCDescriptionTagSize],
 
 sk_sp<SkData> SkWriteICCProfile(const skcms_TransferFunction& fn,
                                 const skcms_Matrix3x3& toXYZD50) {
-    if (!is_valid_transfer_fn(fn)) {
+    // We can't encode HDR transfer functions in ICC
+    if (classify_transfer_fn(fn) != sRGBish_TF) {
         return nullptr;
     }
 

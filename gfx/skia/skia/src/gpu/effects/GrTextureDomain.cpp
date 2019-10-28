@@ -5,19 +5,19 @@
  * found in the LICENSE file.
  */
 
-#include "GrTextureDomain.h"
+#include "src/gpu/effects/GrTextureDomain.h"
 
-#include "GrProxyProvider.h"
-#include "GrShaderCaps.h"
-#include "GrSimpleTextureEffect.h"
-#include "GrSurfaceProxyPriv.h"
-#include "GrTexture.h"
-#include "SkFloatingPoint.h"
-#include "glsl/GrGLSLFragmentProcessor.h"
-#include "glsl/GrGLSLFragmentShaderBuilder.h"
-#include "glsl/GrGLSLProgramDataManager.h"
-#include "glsl/GrGLSLShaderBuilder.h"
-#include "glsl/GrGLSLUniformHandler.h"
+#include "include/gpu/GrTexture.h"
+#include "include/private/SkFloatingPoint.h"
+#include "src/gpu/GrProxyProvider.h"
+#include "src/gpu/GrShaderCaps.h"
+#include "src/gpu/GrSurfaceProxyPriv.h"
+#include "src/gpu/effects/generated/GrSimpleTextureEffect.h"
+#include "src/gpu/glsl/GrGLSLFragmentProcessor.h"
+#include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
+#include "src/gpu/glsl/GrGLSLProgramDataManager.h"
+#include "src/gpu/glsl/GrGLSLShaderBuilder.h"
+#include "src/gpu/glsl/GrGLSLUniformHandler.h"
 
 #include <utility>
 
@@ -220,9 +220,9 @@ void GrTextureDomain::GLDomain::setData(const GrGLSLProgramDataManager& pdman,
         };
 
         if (proxy->textureType() == GrTextureType::kRectangle) {
-            SkASSERT(values[0] >= 0.0f && values[0] <= proxy->height());
+            SkASSERT(values[0] >= 0.0f && values[0] <= proxy->width());
             SkASSERT(values[1] >= 0.0f && values[1] <= proxy->height());
-            SkASSERT(values[2] >= 0.0f && values[2] <= proxy->height());
+            SkASSERT(values[2] >= 0.0f && values[2] <= proxy->width());
             SkASSERT(values[3] >= 0.0f && values[3] <= proxy->height());
         } else {
             SkASSERT(values[0] >= 0.0f && values[0] <= 1.0f);
@@ -252,16 +252,18 @@ void GrTextureDomain::GLDomain::setData(const GrGLSLProgramDataManager& pdman,
 
 std::unique_ptr<GrFragmentProcessor> GrTextureDomainEffect::Make(
         sk_sp<GrTextureProxy> proxy,
+        GrColorType srcColorType,
         const SkMatrix& matrix,
         const SkRect& domain,
         GrTextureDomain::Mode mode,
         GrSamplerState::Filter filterMode) {
-    return Make(std::move(proxy), matrix, domain, mode, mode,
+    return Make(std::move(proxy), srcColorType, matrix, domain, mode, mode,
                 GrSamplerState(GrSamplerState::WrapMode::kClamp, filterMode));
 }
 
 std::unique_ptr<GrFragmentProcessor> GrTextureDomainEffect::Make(
         sk_sp<GrTextureProxy> proxy,
+        GrColorType srcColorType,
         const SkMatrix& matrix,
         const SkRect& domain,
         GrTextureDomain::Mode modeX,
@@ -272,17 +274,18 @@ std::unique_ptr<GrFragmentProcessor> GrTextureDomainEffect::Make(
     // with the sampler modes and the proxy is the same size as the domain. It's a lot easier for
     // calling code to detect these cases and handle it themselves.
     return std::unique_ptr<GrFragmentProcessor>(new GrTextureDomainEffect(
-            std::move(proxy), matrix, domain, modeX, modeY, sampler));
+            std::move(proxy), srcColorType, matrix, domain, modeX, modeY, sampler));
 }
 
 GrTextureDomainEffect::GrTextureDomainEffect(sk_sp<GrTextureProxy> proxy,
+                                             GrColorType srcColorType,
                                              const SkMatrix& matrix,
                                              const SkRect& domain,
                                              GrTextureDomain::Mode modeX,
                                              GrTextureDomain::Mode modeY,
                                              const GrSamplerState& sampler)
         : INHERITED(kGrTextureDomainEffect_ClassID,
-                    ModulateForSamplerOptFlags(proxy->config(),
+                    ModulateForSamplerOptFlags(srcColorType,
                             GrTextureDomain::IsDecalSampled(sampler, modeX, modeY)))
         , fCoordTransform(matrix, proxy.get())
         , fTextureDomain(proxy.get(), domain, modeX, modeY)
@@ -315,7 +318,8 @@ GrGLSLFragmentProcessor* GrTextureDomainEffect::onCreateGLSLInstance() const  {
             const GrTextureDomain& domain = tde.fTextureDomain;
 
             GrGLSLFPFragmentBuilder* fragBuilder = args.fFragBuilder;
-            SkString coords2D = fragBuilder->ensureCoords2D(args.fTransformedCoords[0]);
+            SkString coords2D =
+                              fragBuilder->ensureCoords2D(args.fTransformedCoords[0].fVaryingPoint);
 
             fGLDomain.sampleTexture(fragBuilder,
                                     args.fUniformHandler,
@@ -372,6 +376,7 @@ std::unique_ptr<GrFragmentProcessor> GrTextureDomainEffect::TestCreate(GrProcess
             d->fRandom->nextBool() : false;
     return GrTextureDomainEffect::Make(
             std::move(proxy),
+            d->textureProxyColorType(texIdx),
             matrix,
             domain,
             modeX,

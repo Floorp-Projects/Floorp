@@ -5,9 +5,9 @@
  * found in the LICENSE file.
  */
 
-#include "SkSLString.h"
+#include "src/sksl/SkSLString.h"
 
-#include "SkSLUtil.h"
+#include "src/sksl/SkSLUtil.h"
 #include <algorithm>
 #include <errno.h>
 #include <limits.h>
@@ -26,7 +26,6 @@ String String::printf(const char* fmt, ...) {
     return result;
 }
 
-#ifdef SKSL_USE_STD_STRING
 void String::appendf(const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
@@ -43,7 +42,6 @@ int String::findLastOf(const char c) const {
     size_t index = this->find_last_of(c);
     return (index == std::string::npos ? -1 : index);
 }
-#endif
 
 void String::vappendf(const char* fmt, va_list args) {
 #ifdef SKSL_BUILD_FOR_WIN
@@ -85,26 +83,8 @@ int String::find(const String& substring, int fromPos) const {
 
 int String::find(const char* substring, int fromPos) const {
     SkASSERT(fromPos >= 0);
-#ifdef SKSL_USE_STD_STRING
-    // use std::string find() and check it against npos for not found, and find() natively supports
-    // searching from a position
     size_t found = INHERITED::find(substring, (size_t) fromPos);
     return found == std::string::npos ? -1 : found;
-#else
-    // use SkStrFind on the underlying c string, and pointer arithmetic to support the searching
-    // position
-    if (substring == nullptr) {
-        // Treat null as empty, and an empty string shows up immediately
-        return 0;
-    }
-
-    size_t sublen = strlen(substring);
-    if (fromPos >= size() - sublen) {
-        // Can't find it if there aren't enough characters left
-        return -1;
-    }
-    return SkStrFind(c_str() + fromPos, substring);
-#endif
 }
 
 String String::operator+(const char* s) const {
@@ -263,16 +243,16 @@ String to_string(double value) {
     return String(buffer.str().c_str());
 }
 
-int stoi(const String& s) {
+SKSL_INT stoi(const String& s) {
     char* p;
     SkDEBUGCODE(errno = 0;)
     long result = strtoul(s.c_str(), &p, 0);
     SkASSERT(*p == 0);
     SkASSERT(!errno);
-    return (int) result;
+    return result;
 }
 
-double stod(const String& s) {
+SKSL_FLOAT stod(const String& s) {
     double result;
     std::string str(s.c_str(), s.size());
     std::stringstream buffer(str);

@@ -5,15 +5,15 @@
  * found in the LICENSE file.
  */
 
-#include "GrVkTexture.h"
+#include "src/gpu/vk/GrVkTexture.h"
 
-#include "GrTexturePriv.h"
-#include "GrVkGpu.h"
-#include "GrVkImageView.h"
-#include "GrVkTextureRenderTarget.h"
-#include "GrVkUtil.h"
+#include "src/gpu/GrTexturePriv.h"
+#include "src/gpu/vk/GrVkGpu.h"
+#include "src/gpu/vk/GrVkImageView.h"
+#include "src/gpu/vk/GrVkTextureRenderTarget.h"
+#include "src/gpu/vk/GrVkUtil.h"
 
-#include "vk/GrVkTypes.h"
+#include "include/gpu/vk/GrVkTypes.h"
 
 #define VK_CALL(GPU, X) GR_VK_CALL(GPU->vkInterface(), X)
 
@@ -25,13 +25,16 @@ GrVkTexture::GrVkTexture(GrVkGpu* gpu,
                          sk_sp<GrVkImageLayout> layout,
                          const GrVkImageView* view,
                          GrMipMapsStatus mipMapsStatus)
-        : GrSurface(gpu, desc)
+        : GrSurface(gpu, {desc.fWidth, desc.fHeight}, desc.fConfig, info.fProtected)
         , GrVkImage(info, std::move(layout), GrBackendObjectOwnership::kOwned)
-        , INHERITED(gpu, desc, GrTextureType::k2D, mipMapsStatus)
+        , INHERITED(gpu, {desc.fWidth, desc.fHeight}, desc.fConfig, info.fProtected,
+                    GrTextureType::k2D, mipMapsStatus)
         , fTextureView(view) {
     SkASSERT((GrMipMapsStatus::kNotAllocated == mipMapsStatus) == (1 == info.fLevelCount));
+    // We don't support creating external GrVkTextures
+    SkASSERT(!info.fYcbcrConversionInfo.isValid() || !info.fYcbcrConversionInfo.fExternalFormat);
     this->registerWithCache(budgeted);
-    if (GrPixelConfigIsCompressed(desc.fConfig)) {
+    if (GrVkFormatIsCompressed(info.fFormat)) {
         this->setReadOnly();
     }
 }
@@ -39,10 +42,11 @@ GrVkTexture::GrVkTexture(GrVkGpu* gpu,
 GrVkTexture::GrVkTexture(GrVkGpu* gpu, const GrSurfaceDesc& desc, const GrVkImageInfo& info,
                          sk_sp<GrVkImageLayout> layout, const GrVkImageView* view,
                          GrMipMapsStatus mipMapsStatus, GrBackendObjectOwnership ownership,
-                         GrWrapCacheable cacheable, GrIOType ioType)
-        : GrSurface(gpu, desc)
+                         GrWrapCacheable cacheable, GrIOType ioType, bool isExternal)
+        : GrSurface(gpu, {desc.fWidth, desc.fHeight}, desc.fConfig, info.fProtected)
         , GrVkImage(info, std::move(layout), ownership)
-        , INHERITED(gpu, desc, GrTextureType::k2D, mipMapsStatus)
+        , INHERITED(gpu, {desc.fWidth, desc.fHeight}, desc.fConfig, info.fProtected,
+                    isExternal ? GrTextureType::kExternal : GrTextureType::k2D, mipMapsStatus)
         , fTextureView(view) {
     SkASSERT((GrMipMapsStatus::kNotAllocated == mipMapsStatus) == (1 == info.fLevelCount));
     if (ioType == kRead_GrIOType) {
@@ -59,11 +63,15 @@ GrVkTexture::GrVkTexture(GrVkGpu* gpu,
                          const GrVkImageView* view,
                          GrMipMapsStatus mipMapsStatus,
                          GrBackendObjectOwnership ownership)
-        : GrSurface(gpu, desc)
+        : GrSurface(gpu, {desc.fWidth, desc.fHeight}, desc.fConfig, info.fProtected)
         , GrVkImage(info, layout, ownership)
-        , INHERITED(gpu, desc, GrTextureType::k2D, mipMapsStatus)
+        , INHERITED(gpu, {desc.fWidth, desc.fHeight}, desc.fConfig, info.fProtected,
+                    GrTextureType::k2D, mipMapsStatus)
         , fTextureView(view) {
     SkASSERT((GrMipMapsStatus::kNotAllocated == mipMapsStatus) == (1 == info.fLevelCount));
+    // Since this ctor is only called from GrVkTextureRenderTarget, we can't have a ycbcr conversion
+    // since we don't support that on render targets.
+    SkASSERT(!info.fYcbcrConversionInfo.isValid());
 }
 
 sk_sp<GrVkTexture> GrVkTexture::MakeNewTexture(GrVkGpu* gpu, SkBudgeted budgeted,
@@ -90,13 +98,16 @@ sk_sp<GrVkTexture> GrVkTexture::MakeNewTexture(GrVkGpu* gpu, SkBudgeted budgeted
                                               imageView, mipMapsStatus));
 }
 
-sk_sp<GrVkTexture> GrVkTexture::MakeWrappedTexture(GrVkGpu* gpu, const GrSurfaceDesc& desc,
+sk_sp<GrVkTexture> GrVkTexture::MakeWrappedTexture(GrVkGpu* gpu,
+                                                   const GrSurfaceDesc& desc,
                                                    GrWrapOwnership wrapOwnership,
-                                                   GrWrapCacheable cacheable, GrIOType ioType,
+                                                   GrWrapCacheable cacheable,
+                                                   GrIOType ioType,
                                                    const GrVkImageInfo& info,
                                                    sk_sp<GrVkImageLayout> layout) {
-    // Wrapped textures require both image and allocation (because they can be mapped)
-    SkASSERT(VK_NULL_HANDLE != info.fImage && VK_NULL_HANDLE != info.fAlloc.fMemory);
+    // Adopted textures require both image and allocation because we're responsible for freeing
+    SkASSERT(VK_NULL_HANDLE != info.fImage &&
+             (kBorrow_GrWrapOwnership == wrapOwnership || VK_NULL_HANDLE != info.fAlloc.fMemory));
 
     const GrVkImageView* imageView = GrVkImageView::Create(
             gpu, info.fImage, info.fFormat, GrVkImageView::kColor_Type, info.fLevelCount,
@@ -110,8 +121,11 @@ sk_sp<GrVkTexture> GrVkTexture::MakeWrappedTexture(GrVkGpu* gpu, const GrSurface
 
     GrBackendObjectOwnership ownership = kBorrow_GrWrapOwnership == wrapOwnership
             ? GrBackendObjectOwnership::kBorrowed : GrBackendObjectOwnership::kOwned;
+    bool isExternal = info.fYcbcrConversionInfo.isValid() &&
+                      (info.fYcbcrConversionInfo.fExternalFormat != 0);
     return sk_sp<GrVkTexture>(new GrVkTexture(gpu, desc, info, std::move(layout), imageView,
-                                              mipMapsStatus, ownership, cacheable, ioType));
+                                              mipMapsStatus, ownership, cacheable, ioType,
+                                              isExternal));
 }
 
 GrVkTexture::~GrVkTexture() {
@@ -193,7 +207,7 @@ void GrVkTexture::callIdleProcsOnBehalfOfResource() {
     this->resource()->resetIdleProcs();
 }
 
-void GrVkTexture::willRemoveLastRefOrPendingIO() {
+void GrVkTexture::willRemoveLastRef() {
     if (!fIdleProcs.count()) {
         return;
     }

@@ -5,9 +5,9 @@
  * found in the LICENSE file.
  */
 
-#include "GrPrimitiveProcessor.h"
+#include "src/gpu/GrPrimitiveProcessor.h"
 
-#include "GrCoordTransform.h"
+#include "src/gpu/GrCoordTransform.h"
 
 /**
  * We specialize the vertex code for each of these matrix types.
@@ -25,7 +25,7 @@ const GrPrimitiveProcessor::TextureSampler& GrPrimitiveProcessor::textureSampler
 }
 
 uint32_t
-GrPrimitiveProcessor::getTransformKey(const SkTArray<const GrCoordTransform*, true>& coords,
+GrPrimitiveProcessor::getTransformKey(const SkTArray<GrCoordTransform*, true>& coords,
                                       int numCoords) const {
     uint32_t totalKey = 0;
     for (int t = 0; t < numCoords; ++t) {
@@ -54,39 +54,21 @@ static inline GrSamplerState::Filter clamp_filter(GrTextureType type,
 }
 
 GrPrimitiveProcessor::TextureSampler::TextureSampler(GrTextureType textureType,
-                                                     GrPixelConfig config,
                                                      const GrSamplerState& samplerState,
+                                                     const GrSwizzle& swizzle,
                                                      uint32_t extraSamplerKey) {
-    this->reset(textureType, config, samplerState, extraSamplerKey);
-}
-
-GrPrimitiveProcessor::TextureSampler::TextureSampler(GrTextureType textureType,
-                                                     GrPixelConfig config,
-                                                     GrSamplerState::Filter filterMode,
-                                                     GrSamplerState::WrapMode wrapXAndY) {
-    this->reset(textureType, config, filterMode, wrapXAndY);
+    this->reset(textureType, samplerState, swizzle, extraSamplerKey);
 }
 
 void GrPrimitiveProcessor::TextureSampler::reset(GrTextureType textureType,
-                                                 GrPixelConfig config,
                                                  const GrSamplerState& samplerState,
+                                                 const GrSwizzle& swizzle,
                                                  uint32_t extraSamplerKey) {
-    SkASSERT(kUnknown_GrPixelConfig != config);
     fSamplerState = samplerState;
     fSamplerState.setFilterMode(clamp_filter(textureType, samplerState.filter()));
+    fSwizzle = swizzle;
     fTextureType = textureType;
-    fConfig = config;
     fExtraSamplerKey = extraSamplerKey;
-    SkASSERT(!fExtraSamplerKey || textureType == GrTextureType::kExternal);
+    fIsInitialized = true;
 }
 
-void GrPrimitiveProcessor::TextureSampler::reset(GrTextureType textureType,
-                                                 GrPixelConfig config,
-                                                 GrSamplerState::Filter filterMode,
-                                                 GrSamplerState::WrapMode wrapXAndY) {
-    SkASSERT(kUnknown_GrPixelConfig != config);
-    filterMode = clamp_filter(textureType, filterMode);
-    fSamplerState = GrSamplerState(wrapXAndY, filterMode);
-    fTextureType = textureType;
-    fConfig = config;
-}

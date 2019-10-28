@@ -8,7 +8,7 @@
 #ifndef SkEncodedOrigin_DEFINED
 #define SkEncodedOrigin_DEFINED
 
-#include "SkMatrix.h"
+#include "include/core/SkMatrix.h"
 
 // These values match the orientation www.exif.org/Exif2-2.PDF.
 enum SkEncodedOrigin {
@@ -41,7 +41,6 @@ static inline SkMatrix SkEncodedOriginToMatrix(SkEncodedOrigin origin, int w, in
         case  kLeftBottom_SkEncodedOrigin: return SkMatrix::MakeAll( 0,  1, 0, -1,  0, w, 0, 0, 1);
     }
     SK_ABORT("Unexpected origin");
-    return SkMatrix::I();
 }
 
 

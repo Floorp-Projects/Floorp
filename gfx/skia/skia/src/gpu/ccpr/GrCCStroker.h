@@ -8,10 +8,10 @@
 #ifndef GrCCStroker_DEFINED
 #define GrCCStroker_DEFINED
 
-#include "GrAllocator.h"
-#include "GrMesh.h"
-#include "SkNx.h"
-#include "ccpr/GrCCStrokeGeometry.h"
+#include "include/private/SkNx.h"
+#include "src/gpu/GrAllocator.h"
+#include "src/gpu/GrMesh.h"
+#include "src/gpu/ccpr/GrCCStrokeGeometry.h"
 
 class GrGpuBuffer;
 class GrCCCoverageProcessor;
@@ -55,7 +55,8 @@ public:
     bool prepareToDraw(GrOnFlushResourceProvider*);
 
     // Called after prepareToDraw(). Draws the given batch of path strokes.
-    void drawStrokes(GrOpFlushState*, BatchID, const SkIRect& drawBounds) const;
+    void drawStrokes(
+            GrOpFlushState*, GrCCCoverageProcessor*, BatchID, const SkIRect& drawBounds) const;
 
 private:
     static constexpr int kNumScissorModes = 2;

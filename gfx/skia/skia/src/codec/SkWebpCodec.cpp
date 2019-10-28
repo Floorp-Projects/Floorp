@@ -5,19 +5,20 @@
  * found in the LICENSE file.
  */
 
-#include "SkWebpCodec.h"
+#include "src/codec/SkWebpCodec.h"
 
-#include "SkBitmap.h"
-#include "SkCanvas.h"
-#include "SkCodecAnimation.h"
-#include "SkCodecAnimationPriv.h"
-#include "SkCodecPriv.h"
-#include "SkMakeUnique.h"
-#include "SkRasterPipeline.h"
-#include "SkSampler.h"
-#include "SkStreamPriv.h"
-#include "SkTemplates.h"
-#include "SkTo.h"
+#include "include/codec/SkCodecAnimation.h"
+#include "include/core/SkBitmap.h"
+#include "include/core/SkCanvas.h"
+#include "include/private/SkTemplates.h"
+#include "include/private/SkTo.h"
+#include "src/codec/SkCodecAnimationPriv.h"
+#include "src/codec/SkCodecPriv.h"
+#include "src/codec/SkParseEncodedOrigin.h"
+#include "src/codec/SkSampler.h"
+#include "src/core/SkMakeUnique.h"
+#include "src/core/SkRasterPipeline.h"
+#include "src/core/SkStreamPriv.h"
 
 // A WebP decoder on top of (subset of) libwebp
 // For more information on WebP image format, and libwebp library, see:
@@ -106,7 +107,7 @@ std::unique_ptr<SkCodec> SkWebpCodec::MakeFromStream(std::unique_ptr<SkStream> s
         WebPChunkIterator chunkIterator;
         SkAutoTCallVProc<WebPChunkIterator, WebPDemuxReleaseChunkIterator> autoCI(&chunkIterator);
         if (WebPDemuxGetChunk(demux, "EXIF", 1, &chunkIterator)) {
-            is_orientation_marker(chunkIterator.chunk.bytes, chunkIterator.chunk.size, &origin);
+            SkParseEncodedOrigin(chunkIterator.chunk.bytes, chunkIterator.chunk.size, &origin);
         }
     }
 
@@ -174,21 +175,6 @@ std::unique_ptr<SkCodec> SkWebpCodec::MakeFromStream(std::unique_ptr<SkStream> s
     SkEncodedInfo info = SkEncodedInfo::Make(width, height, color, alpha, 8, std::move(profile));
     return std::unique_ptr<SkCodec>(new SkWebpCodec(std::move(info), std::move(stream),
                                                     demux.release(), std::move(data), origin));
-}
-
-SkISize SkWebpCodec::onGetScaledDimensions(float desiredScale) const {
-    SkISize dim = this->dimensions();
-    // SkCodec treats zero dimensional images as errors, so the minimum size
-    // that we will recommend is 1x1.
-    dim.fWidth = SkTMax(1, SkScalarRoundToInt(desiredScale * dim.fWidth));
-    dim.fHeight = SkTMax(1, SkScalarRoundToInt(desiredScale * dim.fHeight));
-    return dim;
-}
-
-bool SkWebpCodec::onDimensionsSupported(const SkISize& dim) {
-    const SkEncodedInfo& info = this->getEncodedInfo();
-    return dim.width() >= 1 && dim.width() <= info.width()
-            && dim.height() >= 1 && dim.height() <= info.height();
 }
 
 static WEBP_CSP_MODE webp_decode_mode(SkColorType dstCT, bool premultiply) {
@@ -405,7 +391,7 @@ SkCodec::Result SkWebpCodec::onGetPixels(const SkImageInfo& dstInfo, void* dst, 
         SkASSERT(SkIsAlign2(subset.fLeft) && SkIsAlign2(subset.fTop));
         SkASSERT(this->getValidSubset(&subset) && subset == *options.fSubset);
 
-        if (!SkIRect::IntersectsNoEmptyCheck(subset, frameRect)) {
+        if (!SkIRect::Intersects(subset, frameRect)) {
             return kSuccess;
         }
 

@@ -8,7 +8,8 @@
 #ifndef SkPictureShader_DEFINED
 #define SkPictureShader_DEFINED
 
-#include "SkShaderBase.h"
+#include "include/core/SkTileMode.h"
+#include "src/shaders/SkShaderBase.h"
 #include <atomic>
 
 class SkArenaAlloc;
@@ -25,27 +26,27 @@ class SkPictureShader : public SkShaderBase {
 public:
     ~SkPictureShader() override;
 
-    static sk_sp<SkShader> Make(sk_sp<SkPicture>, TileMode, TileMode, const SkMatrix*,
+    static sk_sp<SkShader> Make(sk_sp<SkPicture>, SkTileMode, SkTileMode, const SkMatrix*,
                                 const SkRect*);
 
 #if SK_SUPPORT_GPU
     std::unique_ptr<GrFragmentProcessor> asFragmentProcessor(const GrFPArgs&) const override;
 #endif
 
+    SkPicture* isAPicture(SkMatrix*, SkTileMode[2], SkRect* tile) const override;
+
 protected:
     SkPictureShader(SkReadBuffer&);
     void flatten(SkWriteBuffer&) const override;
-    bool onAppendStages(const StageRec&) const override;
+    bool onAppendStages(const SkStageRec&) const override;
 #ifdef SK_ENABLE_LEGACY_SHADERCONTEXT
     Context* onMakeContext(const ContextRec&, SkArenaAlloc*) const override;
 #endif
-    sk_sp<SkShader> onMakeColorSpace(SkColorSpaceXformer* xformer) const override;
 
 private:
     SK_FLATTENABLE_HOOKS(SkPictureShader)
 
-    SkPictureShader(sk_sp<SkPicture>, TileMode, TileMode, const SkMatrix*, const SkRect*,
-                    sk_sp<SkColorSpace>);
+    SkPictureShader(sk_sp<SkPicture>, SkTileMode, SkTileMode, const SkMatrix*, const SkRect*);
 
     sk_sp<SkShader> refBitmapShader(const SkMatrix&, SkTCopyOnFirstWrite<SkMatrix>* localMatrix,
                                     SkColorType dstColorType, SkColorSpace* dstColorSpace,
@@ -69,11 +70,7 @@ private:
 
     sk_sp<SkPicture>    fPicture;
     SkRect              fTile;
-    TileMode            fTmx, fTmy;
-
-    // Should never be set by a public constructor.  This is only used when onMakeColorSpace()
-    // forces a deferred color space xform.
-    sk_sp<SkColorSpace>    fColorSpace;
+    SkTileMode          fTmx, fTmy;
 
     const uint32_t            fUniqueID;
     mutable std::atomic<bool> fAddedToCache;

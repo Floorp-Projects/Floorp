@@ -5,14 +5,14 @@
  * found in the LICENSE file.
  */
 
-#include "GrClearOp.h"
+#include "src/gpu/ops/GrClearOp.h"
 
-#include "GrGpuCommandBuffer.h"
-#include "GrMemoryPool.h"
-#include "GrOpFlushState.h"
-#include "GrProxyProvider.h"
-#include "GrRecordingContext.h"
-#include "GrRecordingContextPriv.h"
+#include "include/private/GrRecordingContext.h"
+#include "src/gpu/GrMemoryPool.h"
+#include "src/gpu/GrOpFlushState.h"
+#include "src/gpu/GrOpsRenderPass.h"
+#include "src/gpu/GrProxyProvider.h"
+#include "src/gpu/GrRecordingContextPriv.h"
 
 std::unique_ptr<GrClearOp> GrClearOp::Make(GrRecordingContext* context,
                                            const GrFixedClip& clip,
@@ -56,10 +56,10 @@ GrClearOp::GrClearOp(const GrFixedClip& clip, const SkPMColor4f& color, GrSurfac
         }
     }
     this->setBounds(SkRect::Make(fClip.scissorEnabled() ? fClip.scissorRect() : rtRect),
-                    HasAABloat::kNo, IsZeroArea::kNo);
+                    HasAABloat::kNo, IsHairline::kNo);
 }
 
 void GrClearOp::onExecute(GrOpFlushState* state, const SkRect& chainBounds) {
-    SkASSERT(state->rtCommandBuffer());
-    state->rtCommandBuffer()->clear(fClip, fColor);
+    SkASSERT(state->opsRenderPass());
+    state->opsRenderPass()->clear(fClip, fColor);
 }

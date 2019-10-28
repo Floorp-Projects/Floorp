@@ -8,9 +8,9 @@
 #ifndef GrCoverageSetOpXP_DEFINED
 #define GrCoverageSetOpXP_DEFINED
 
-#include "GrTypes.h"
-#include "GrXferProcessor.h"
-#include "SkRegion.h"
+#include "include/core/SkRegion.h"
+#include "include/gpu/GrTypes.h"
+#include "src/gpu/GrXferProcessor.h"
 
 // See the comment above GrXPFactory's definition about this warning suppression.
 #if defined(__GNUC__)
@@ -37,11 +37,13 @@ private:
     sk_sp<const GrXferProcessor> makeXferProcessor(const GrProcessorAnalysisColor&,
                                                    GrProcessorAnalysisCoverage,
                                                    bool hasMixedSamples,
-                                                   const GrCaps&) const override;
+                                                   const GrCaps&,
+                                                   GrClampType) const override;
 
     AnalysisProperties analysisProperties(const GrProcessorAnalysisColor&,
                                           const GrProcessorAnalysisCoverage&,
-                                          const GrCaps&) const override {
+                                          const GrCaps&,
+                                          GrClampType) const override {
         return AnalysisProperties::kIgnoresInputColor;
     }
 

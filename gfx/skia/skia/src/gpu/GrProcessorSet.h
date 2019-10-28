@@ -8,11 +8,11 @@
 #ifndef GrProcessorSet_DEFINED
 #define GrProcessorSet_DEFINED
 
-#include "GrFragmentProcessor.h"
-#include "GrPaint.h"
-#include "GrProcessorAnalysis.h"
-#include "SkTemplates.h"
-#include "GrXferProcessor.h"
+#include "include/private/SkTemplates.h"
+#include "src/gpu/GrFragmentProcessor.h"
+#include "src/gpu/GrPaint.h"
+#include "src/gpu/GrProcessorAnalysis.h"
+#include "src/gpu/GrXferProcessor.h"
 
 struct GrUserStencilSettings;
 class GrAppliedClip;
@@ -84,6 +84,8 @@ public:
         bool requiresDstTexture() const { return fRequiresDstTexture; }
         bool requiresNonOverlappingDraws() const { return fRequiresNonOverlappingDraws; }
         bool isCompatibleWithCoverageAsAlpha() const { return fCompatibleWithCoverageAsAlpha; }
+        // Indicates whether all color fragment processors were eliminated in the analysis.
+        bool hasColorFragmentProcessor() const { return fHasColorFragmentProcessor; }
 
         bool inputColorIsIgnored() const { return fInputColorType == kIgnored_InputColorType; }
         bool inputColorIsOverridden() const {
@@ -96,6 +98,7 @@ public:
                 , fCompatibleWithCoverageAsAlpha(true)
                 , fRequiresDstTexture(false)
                 , fRequiresNonOverlappingDraws(false)
+                , fHasColorFragmentProcessor(false)
                 , fIsInitialized(true)
                 , fInputColorType(kOriginal_InputColorType) {}
         enum InputColorType : uint32_t {
@@ -112,6 +115,7 @@ public:
         PackedBool fCompatibleWithCoverageAsAlpha : 1;
         PackedBool fRequiresDstTexture : 1;
         PackedBool fRequiresNonOverlappingDraws : 1;
+        PackedBool fHasColorFragmentProcessor : 1;
         PackedBool fIsInitialized : 1;
         PackedInputColorType fInputColorType : 2;
 
@@ -133,9 +137,10 @@ public:
      * that owns a processor set is recorded to ensure pending and writes are propagated to
      * resources referred to by the processors. Otherwise, data hazards may occur.
      */
-    Analysis finalize(const GrProcessorAnalysisColor&, const GrProcessorAnalysisCoverage,
-                      const GrAppliedClip*, const GrUserStencilSettings*, GrFSAAType, const GrCaps&,
-                      SkPMColor4f* inputColorOverride);
+    Analysis finalize(
+            const GrProcessorAnalysisColor&, const GrProcessorAnalysisCoverage,
+            const GrAppliedClip*, const GrUserStencilSettings*, bool hasMixedSampledCoverage,
+            const GrCaps&, GrClampType, SkPMColor4f* inputColorOverride);
 
     bool isFinalized() const { return SkToBool(kFinalized_Flag & fFlags); }
 
@@ -148,11 +153,12 @@ public:
     SkString dumpProcessors() const;
 #endif
 
-    void visitProxies(const std::function<void(GrSurfaceProxy*)>& func) const {
+    void visitProxies(const GrOp::VisitProxyFunc& func) const {
         for (int i = 0; i < this->numFragmentProcessors(); ++i) {
             GrFragmentProcessor::TextureAccessIter iter(this->fragmentProcessor(i));
             while (const GrFragmentProcessor::TextureSampler* sampler = iter.next()) {
-                func(sampler->proxy());
+                bool mipped = (GrSamplerState::Filter::kMipMap == sampler->samplerState().filter());
+                func(sampler->proxy(), GrMipMapped(mipped));
             }
         }
     }

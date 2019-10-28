@@ -8,13 +8,12 @@
 #ifndef SkLocalMatrixShader_DEFINED
 #define SkLocalMatrixShader_DEFINED
 
-#include "SkShaderBase.h"
-#include "SkReadBuffer.h"
-#include "SkWriteBuffer.h"
+#include "src/core/SkReadBuffer.h"
+#include "src/core/SkWriteBuffer.h"
+#include "src/shaders/SkShaderBase.h"
 
 class GrFragmentProcessor;
 class SkArenaAlloc;
-class SkColorSpaceXformer;
 
 class SkLocalMatrixShader final : public SkShaderBase {
 public:
@@ -38,6 +37,8 @@ public:
         return fProxyShader;
     }
 
+    SkPicture* isAPicture(SkMatrix*, SkTileMode[2], SkRect* tile) const override;
+
 protected:
     void flatten(SkWriteBuffer&) const override;
 
@@ -45,14 +46,9 @@ protected:
     Context* onMakeContext(const ContextRec&, SkArenaAlloc*) const override;
 #endif
 
-    SkImage* onIsAImage(SkMatrix* matrix, TileMode* mode) const override;
+    SkImage* onIsAImage(SkMatrix* matrix, SkTileMode* mode) const override;
 
-    bool onAppendStages(const StageRec&) const override;
-
-    sk_sp<SkShader> onMakeColorSpace(SkColorSpaceXformer* xformer) const override {
-        return as_SB(fProxyShader)->makeColorSpace(xformer)->makeWithLocalMatrix(
-            this->getLocalMatrix());
-    }
+    bool onAppendStages(const SkStageRec&) const override;
 
 private:
     SK_FLATTENABLE_HOOKS(SkLocalMatrixShader)

@@ -5,16 +5,17 @@
  * found in the LICENSE file.
  */
 
-#include "SkAndroidCodec.h"
-#include "SkAnimatedImage.h"
-#include "SkCanvas.h"
-#include "SkCodec.h"
-#include "SkCodecPriv.h"
-#include "SkImagePriv.h"
-#include "SkPicture.h"
-#include "SkPictureRecorder.h"
-#include "SkPixelRef.h"
+#include "include/android/SkAnimatedImage.h"
+#include "include/codec/SkAndroidCodec.h"
+#include "include/codec/SkCodec.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkPicture.h"
+#include "include/core/SkPictureRecorder.h"
+#include "include/core/SkPixelRef.h"
+#include "src/codec/SkCodecPriv.h"
+#include "src/core/SkImagePriv.h"
 
+#include <limits.h>
 #include <utility>
 
 sk_sp<SkAnimatedImage> SkAnimatedImage::Make(std::unique_ptr<SkAndroidCodec> codec,
@@ -22,7 +23,7 @@ sk_sp<SkAnimatedImage> SkAnimatedImage::Make(std::unique_ptr<SkAndroidCodec> cod
     if (!codec) {
         return nullptr;
     }
-    auto info = codec->getInfo().makeWH(scaledSize.width(), scaledSize.height());
+    auto info = codec->getInfo().makeDimensions(scaledSize);
     return Make(std::move(codec), info, cropRect, std::move(postProcess));
 }
 
@@ -39,7 +40,7 @@ sk_sp<SkAnimatedImage> SkAnimatedImage::Make(std::unique_ptr<SkAndroidCodec> cod
             || scaledSize.height() >= decodeInfo.height()) {
         // Only libwebp can decode to arbitrary smaller sizes.
         auto dims = codec->getInfo().dimensions();
-        decodeInfo = decodeInfo.makeWH(dims.width(), dims.height());
+        decodeInfo = decodeInfo.makeDimensions(dims);
     }
 
     auto image = sk_sp<SkAnimatedImage>(new SkAnimatedImage(std::move(codec), scaledSize,
@@ -189,7 +190,7 @@ int SkAnimatedImage::decodeNextFrame() {
     }
 
     bool animationEnded = false;
-    int frameToDecode = this->computeNextFrame(fDisplayFrame.fIndex, &animationEnded);
+    const int frameToDecode = this->computeNextFrame(fDisplayFrame.fIndex, &animationEnded);
 
     SkCodec::FrameInfo frameInfo;
     if (fCodec->codec()->getFrameInfo(frameToDecode, &frameInfo)) {
@@ -312,6 +313,17 @@ int SkAnimatedImage::decodeNextFrame() {
 
     if (animationEnded) {
         return this->finish();
+    } else if (fCodec->getEncodedFormat() == SkEncodedImageFormat::kHEIF) {
+        // HEIF doesn't know the frame duration until after decoding. Update to
+        // the correct value. Note that earlier returns in this method either
+        // return kFinished, or fCurrentFrameDuration. If they return the
+        // latter, it is a frame that was previously decoded, so it has the
+        // updated value.
+        if (fCodec->codec()->getFrameInfo(frameToDecode, &frameInfo)) {
+            fCurrentFrameDuration = frameInfo.fDuration;
+        } else {
+            SkCodecPrintf("Failed to getFrameInfo on second attempt (HEIF)");
+        }
     }
     return fCurrentFrameDuration;
 }

@@ -5,21 +5,21 @@
  * found in the LICENSE file.
  */
 
-#include "GrStrokeRectOp.h"
+#include "src/gpu/ops/GrStrokeRectOp.h"
 
-#include "GrCaps.h"
-#include "GrColor.h"
-#include "GrDefaultGeoProcFactory.h"
-#include "GrDrawOpTest.h"
-#include "GrMeshDrawOp.h"
-#include "GrOpFlushState.h"
-#include "GrResourceKey.h"
-#include "GrResourceProvider.h"
-#include "GrSimpleMeshDrawOpHelper.h"
-#include "GrVertexWriter.h"
-#include "ops/GrFillRectOp.h"
-#include "SkRandom.h"
-#include "SkStrokeRec.h"
+#include "include/core/SkStrokeRec.h"
+#include "include/private/GrResourceKey.h"
+#include "include/utils/SkRandom.h"
+#include "src/gpu/GrCaps.h"
+#include "src/gpu/GrColor.h"
+#include "src/gpu/GrDefaultGeoProcFactory.h"
+#include "src/gpu/GrDrawOpTest.h"
+#include "src/gpu/GrOpFlushState.h"
+#include "src/gpu/GrResourceProvider.h"
+#include "src/gpu/GrVertexWriter.h"
+#include "src/gpu/ops/GrFillRectOp.h"
+#include "src/gpu/ops/GrMeshDrawOp.h"
+#include "src/gpu/ops/GrSimpleMeshDrawOpHelper.h"
 
 namespace {
 
@@ -89,7 +89,7 @@ public:
 
     const char* name() const override { return "NonAAStrokeRectOp"; }
 
-    void visitProxies(const VisitProxyFunc& func, VisitorType) const override {
+    void visitProxies(const VisitProxyFunc& func) const override {
         fHelper.visitProxies(func);
     }
 
@@ -117,22 +117,22 @@ public:
         if (!allowed_stroke(stroke, GrAA::kNo, &isMiter)) {
             return nullptr;
         }
-        Helper::Flags flags = Helper::Flags::kNone;
+        Helper::InputFlags inputFlags = Helper::InputFlags::kNone;
         // Depending on sub-pixel coordinates and the particular GPU, we may lose a corner of
         // hairline rects. We jam all the vertices to pixel centers to avoid this, but not
         // when MSAA is enabled because it can cause ugly artifacts.
         if (stroke.getStyle() == SkStrokeRec::kHairline_Style && aaType != GrAAType::kMSAA) {
-            flags |= Helper::Flags::kSnapVerticesToPixelCenters;
+            inputFlags |= Helper::InputFlags::kSnapVerticesToPixelCenters;
         }
-        return Helper::FactoryHelper<NonAAStrokeRectOp>(context, std::move(paint), flags,
+        return Helper::FactoryHelper<NonAAStrokeRectOp>(context, std::move(paint), inputFlags,
                                                         viewMatrix, rect,
                                                         stroke, aaType);
     }
 
     NonAAStrokeRectOp(const Helper::MakeArgs& helperArgs, const SkPMColor4f& color,
-                      Helper::Flags flags, const SkMatrix& viewMatrix, const SkRect& rect,
+                      Helper::InputFlags inputFlags, const SkMatrix& viewMatrix, const SkRect& rect,
                       const SkStrokeRec& stroke, GrAAType aaType)
-            : INHERITED(ClassID()), fHelper(helperArgs, aaType, flags) {
+            : INHERITED(ClassID()), fHelper(helperArgs, aaType, inputFlags) {
         fColor = color;
         fViewMatrix = viewMatrix;
         fRect = rect;
@@ -145,28 +145,33 @@ public:
         bounds.outset(rad, rad);
 
         // If our caller snaps to pixel centers then we have to round out the bounds
-        if (flags & Helper::Flags::kSnapVerticesToPixelCenters) {
+        if (inputFlags & Helper::InputFlags::kSnapVerticesToPixelCenters) {
+            SkASSERT(!fStrokeWidth || aaType == GrAAType::kNone);
             viewMatrix.mapRect(&bounds);
             // We want to be consistent with how we snap non-aa lines. To match what we do in
             // GrGLSLVertexShaderBuilder, we first floor all the vertex values and then add half a
             // pixel to force us to pixel centers.
-            bounds.set(SkScalarFloorToScalar(bounds.fLeft),
-                       SkScalarFloorToScalar(bounds.fTop),
-                       SkScalarFloorToScalar(bounds.fRight),
-                       SkScalarFloorToScalar(bounds.fBottom));
+            bounds.setLTRB(SkScalarFloorToScalar(bounds.fLeft),
+                           SkScalarFloorToScalar(bounds.fTop),
+                           SkScalarFloorToScalar(bounds.fRight),
+                           SkScalarFloorToScalar(bounds.fBottom));
             bounds.offset(0.5f, 0.5f);
-            this->setBounds(bounds, HasAABloat::kNo, IsZeroArea::kNo);
+            this->setBounds(bounds, HasAABloat::kNo, IsHairline::kNo);
         } else {
-            this->setTransformedBounds(bounds, fViewMatrix, HasAABloat::kNo, IsZeroArea::kNo);
+            HasAABloat aaBloat = (aaType == GrAAType::kNone) ? HasAABloat ::kNo : HasAABloat::kYes;
+            this->setTransformedBounds(bounds, fViewMatrix, aaBloat,
+                                       fStrokeWidth ? IsHairline::kNo : IsHairline::kYes);
         }
     }
 
     FixedFunctionFlags fixedFunctionFlags() const override { return fHelper.fixedFunctionFlags(); }
 
     GrProcessorSet::Analysis finalize(
-            const GrCaps& caps, const GrAppliedClip* clip, GrFSAAType fsaaType) override {
-        return fHelper.finalizeProcessors(
-                caps, clip, fsaaType, GrProcessorAnalysisCoverage::kNone, &fColor);
+            const GrCaps& caps, const GrAppliedClip* clip, bool hasMixedSampledCoverage,
+            GrClampType clampType) override {
+        // This Op uses uniform (not vertex) color, so doesn't need to track wide color.
+        return fHelper.finalizeProcessors(caps, clip, hasMixedSampledCoverage, clampType,
+                                          GrProcessorAnalysisCoverage::kNone, &fColor, nullptr);
     }
 
 private:
@@ -341,9 +346,8 @@ public:
         SkASSERT(!devInside.isEmpty());
 
         fRects.emplace_back(RectInfo{color, devOutside, devOutside, devInside, false});
-        this->setBounds(devOutside, HasAABloat::kYes, IsZeroArea::kNo);
+        this->setBounds(devOutside, HasAABloat::kYes, IsHairline::kNo);
         fMiterStroke = true;
-        fWideColor = !SkPMColor4fFitsInBytes(color);
     }
 
     static std::unique_ptr<GrDrawOp> Make(GrRecordingContext* context,
@@ -366,25 +370,24 @@ public:
             , fHelper(helperArgs, GrAAType::kCoverage)
             , fViewMatrix(viewMatrix) {
         fMiterStroke = isMiter;
-        fWideColor = !SkPMColor4fFitsInBytes(color);
         RectInfo& info = fRects.push_back();
         compute_aa_rects(&info.fDevOutside, &info.fDevOutsideAssist, &info.fDevInside,
                          &info.fDegenerate, viewMatrix, rect, stroke.getWidth(), isMiter);
         info.fColor = color;
         if (isMiter) {
-            this->setBounds(info.fDevOutside, HasAABloat::kYes, IsZeroArea::kNo);
+            this->setBounds(info.fDevOutside, HasAABloat::kYes, IsHairline::kNo);
         } else {
             // The outer polygon of the bevel stroke is an octagon specified by the points of a
             // pair of overlapping rectangles where one is wide and the other is narrow.
             SkRect bounds = info.fDevOutside;
             bounds.joinPossiblyEmptyRect(info.fDevOutsideAssist);
-            this->setBounds(bounds, HasAABloat::kYes, IsZeroArea::kNo);
+            this->setBounds(bounds, HasAABloat::kYes, IsHairline::kNo);
         }
     }
 
     const char* name() const override { return "AAStrokeRect"; }
 
-    void visitProxies(const VisitProxyFunc& func, VisitorType) const override {
+    void visitProxies(const VisitProxyFunc& func) const override {
         fHelper.visitProxies(func);
     }
 
@@ -411,10 +414,11 @@ public:
     FixedFunctionFlags fixedFunctionFlags() const override { return fHelper.fixedFunctionFlags(); }
 
     GrProcessorSet::Analysis finalize(
-            const GrCaps& caps, const GrAppliedClip* clip, GrFSAAType fsaaType) override {
+            const GrCaps& caps, const GrAppliedClip* clip, bool hasMixedSampledCoverage,
+            GrClampType clampType) override {
         return fHelper.finalizeProcessors(
-                caps, clip, fsaaType, GrProcessorAnalysisCoverage::kSingleChannel,
-                &fRects.back().fColor);
+                caps, clip, hasMixedSampledCoverage, clampType,
+                GrProcessorAnalysisCoverage::kSingleChannel, &fRects.back().fColor, &fWideColor);
     }
 
 private:
@@ -466,7 +470,7 @@ private:
 
 void AAStrokeRectOp::onPrepareDraws(Target* target) {
     sk_sp<GrGeometryProcessor> gp(create_aa_stroke_rect_gp(target->caps().shaderCaps(),
-                                                           fHelper.compatibleWithAlphaAsCoverage(),
+                                                           fHelper.compatibleWithCoverageAsAlpha(),
                                                            this->viewMatrix(),
                                                            fHelper.usesLocalCoords(),
                                                            fWideColor));
@@ -506,7 +510,7 @@ void AAStrokeRectOp::onPrepareDraws(Target* target) {
                                            info.fDevInside,
                                            fMiterStroke,
                                            info.fDegenerate,
-                                           fHelper.compatibleWithAlphaAsCoverage());
+                                           fHelper.compatibleWithCoverageAsAlpha());
     }
     helper.recordDraw(target, std::move(gp));
 }
@@ -723,7 +727,7 @@ void AAStrokeRectOp::generateAAStrokeRectGeometry(GrVertexWriter& vertices,
 
         // The innermost rect has 0 coverage...
         vertices.writeQuad(inset_fan(devInside, SK_ScalarHalf, SK_ScalarHalf),
-                           GrVertexColor(SK_PMColor4fTRANSPARENT, wideColor),
+                           outerColor,
                            maybe_coverage(0.0f));
     } else {
         // When the interior rect has become degenerate we smoosh to a single point
@@ -775,8 +779,10 @@ std::unique_ptr<GrDrawOp> MakeNested(GrRecordingContext* context,
         if (devOutside.isEmpty()) {
             return nullptr;
         }
-        return GrFillRectOp::Make(context, std::move(paint), GrAAType::kCoverage, viewMatrix,
-                                  rects[0]);
+        return GrFillRectOp::Make(context, std::move(paint), GrAAType::kCoverage,
+                                  GrQuadAAFlags::kAll,
+                                  GrQuad::MakeFromRect(rects[0], viewMatrix),
+                                  GrQuad(rects[0]));
     }
 
     return AAStrokeRectOp::Make(context, std::move(paint), viewMatrix, devOutside, devInside);
@@ -786,7 +792,7 @@ std::unique_ptr<GrDrawOp> MakeNested(GrRecordingContext* context,
 
 #if GR_TEST_UTILS
 
-#include "GrDrawOpTest.h"
+#include "src/gpu/GrDrawOpTest.h"
 
 GR_DRAW_OP_TEST_DEFINE(NonAAStrokeRectOp) {
     SkMatrix viewMatrix = GrTest::TestMatrix(random);
@@ -798,7 +804,7 @@ GR_DRAW_OP_TEST_DEFINE(NonAAStrokeRectOp) {
     strokePaint.setStrokeJoin(SkPaint::kMiter_Join);
     SkStrokeRec strokeRec(strokePaint);
     GrAAType aaType = GrAAType::kNone;
-    if (fsaaType == GrFSAAType::kUnifiedMSAA) {
+    if (numSamples > 1) {
         aaType = random->nextBool() ? GrAAType::kMSAA : GrAAType::kNone;
     }
     return NonAAStrokeRectOp::Make(context, std::move(paint), viewMatrix, rect, strokeRec, aaType);

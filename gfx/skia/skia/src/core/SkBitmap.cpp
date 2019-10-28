@@ -5,28 +5,29 @@
  * found in the LICENSE file.
  */
 
-#include "SkBitmap.h"
+#include "include/core/SkBitmap.h"
 
-#include "SkColorData.h"
-#include "SkConvertPixels.h"
-#include "SkData.h"
-#include "SkFilterQuality.h"
-#include "SkHalf.h"
-#include "SkImageInfoPriv.h"
-#include "SkMallocPixelRef.h"
-#include "SkMask.h"
-#include "SkMaskFilterBase.h"
-#include "SkMath.h"
-#include "SkPixelRef.h"
-#include "SkPixmapPriv.h"
-#include "SkReadBuffer.h"
-#include "SkRect.h"
-#include "SkScalar.h"
-#include "SkTemplates.h"
-#include "SkTo.h"
-#include "SkUnPreMultiply.h"
-#include "SkWriteBuffer.h"
-#include "SkWritePixelsRec.h"
+#include "include/core/SkData.h"
+#include "include/core/SkFilterQuality.h"
+#include "include/core/SkMallocPixelRef.h"
+#include "include/core/SkMath.h"
+#include "include/core/SkPixelRef.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkUnPreMultiply.h"
+#include "include/private/SkColorData.h"
+#include "include/private/SkHalf.h"
+#include "include/private/SkImageInfoPriv.h"
+#include "include/private/SkTemplates.h"
+#include "include/private/SkTo.h"
+#include "src/core/SkConvertPixels.h"
+#include "src/core/SkMask.h"
+#include "src/core/SkMaskFilterBase.h"
+#include "src/core/SkPixelRefPriv.h"
+#include "src/core/SkPixmapPriv.h"
+#include "src/core/SkReadBuffer.h"
+#include "src/core/SkWriteBuffer.h"
+#include "src/core/SkWritePixelsRec.h"
 
 #include <cstring>
 #include <utility>
@@ -193,20 +194,12 @@ void SkBitmap::setPixelRef(sk_sp<SkPixelRef> pr, int dx, int dy) {
 }
 
 void SkBitmap::setPixels(void* p) {
-    if (nullptr == p) {
-        this->setPixelRef(nullptr, 0, 0);
-        return;
-    }
-
     if (kUnknown_SkColorType == this->colorType()) {
-        this->setPixelRef(nullptr, 0, 0);
-        return;
+        p = nullptr;
     }
-
-    this->setPixelRef(SkMallocPixelRef::MakeDirect(this->info(), p, this->rowBytes()), 0, 0);
-    if (!fPixelRef) {
-        return;
-    }
+    size_t rb = this->rowBytes();
+    SkPixmapPriv::ResetPixmapKeepInfo(&fPixmap, p, rb);
+    fPixelRef = p ? sk_make_sp<SkPixelRef>(this->width(), this->height(), p, rb) : nullptr;
     SkDEBUGCODE(this->validate();)
 }
 
@@ -286,9 +279,8 @@ bool SkBitmap::tryAllocPixelsFlags(const SkImageInfo& requestedInfo, uint32_t al
     // setInfo may have corrected info (e.g. 565 is always opaque).
     const SkImageInfo& correctedInfo = this->info();
 
-    sk_sp<SkPixelRef> pr = (allocFlags & kZeroPixels_AllocFlag) ?
-        SkMallocPixelRef::MakeZeroed(correctedInfo, correctedInfo.minRowBytes()) :
-        SkMallocPixelRef::MakeAllocate(correctedInfo, correctedInfo.minRowBytes());
+    sk_sp<SkPixelRef> pr = SkMallocPixelRef::MakeAllocate(correctedInfo,
+                                                          correctedInfo.minRowBytes());
     if (!pr) {
         return reset_return_false(this);
     }
@@ -320,15 +312,9 @@ bool SkBitmap::installPixels(const SkImageInfo& requestedInfo, void* pixels, siz
 
     // setInfo may have corrected info (e.g. 565 is always opaque).
     const SkImageInfo& correctedInfo = this->info();
-
-    sk_sp<SkPixelRef> pr = SkMallocPixelRef::MakeWithProc(correctedInfo, rb, pixels,
-                                                          releaseProc, context);
-    if (!pr) {
-        this->reset();
-        return false;
-    }
-
-    this->setPixelRef(std::move(pr), 0, 0);
+    this->setPixelRef(
+            SkMakePixelRefWithProc(correctedInfo.width(), correctedInfo.height(),
+                                   rb, pixels, releaseProc, context), 0, 0);
     SkDEBUGCODE(this->validate();)
     return true;
 }
@@ -454,7 +440,7 @@ bool SkBitmap::extractSubset(SkBitmap* result, const SkIRect& subset) const {
     }
 
     SkIRect srcRect, r;
-    srcRect.set(0, 0, this->width(), this->height());
+    srcRect.setWH(this->width(), this->height());
     if (!r.intersect(srcRect, subset)) {
         return false;   // r is empty (i.e. no intersection)
     }
@@ -465,7 +451,7 @@ bool SkBitmap::extractSubset(SkBitmap* result, const SkIRect& subset) const {
     SkASSERT(static_cast<unsigned>(r.fTop) < static_cast<unsigned>(this->height()));
 
     SkBitmap dst;
-    dst.setInfo(this->info().makeWH(r.width(), r.height()), this->rowBytes());
+    dst.setInfo(this->info().makeDimensions(r.size()), this->rowBytes());
     dst.setIsVolatile(this->isVolatile());
 
     if (fPixelRef) {
@@ -506,7 +492,7 @@ bool SkBitmap::writePixels(const SkPixmap& src, int dstX, int dstY) {
     }
 
     void* dstPixels = this->getAddr(rec.fX, rec.fY);
-    const SkImageInfo dstInfo = this->info().makeWH(rec.fInfo.width(), rec.fInfo.height());
+    const SkImageInfo dstInfo = this->info().makeDimensions(rec.fInfo.dimensions());
     SkConvertPixels(dstInfo, dstPixels, this->rowBytes(), rec.fInfo, rec.fPixels, rec.fRowBytes);
     this->notifyPixelsChanged();
     return true;
@@ -531,9 +517,9 @@ static bool GetBitmapAlpha(const SkBitmap& src, uint8_t* SK_RESTRICT alpha, int 
     return true;
 }
 
-#include "SkPaint.h"
-#include "SkMaskFilter.h"
-#include "SkMatrix.h"
+#include "include/core/SkMaskFilter.h"
+#include "include/core/SkMatrix.h"
+#include "include/core/SkPaint.h"
 
 bool SkBitmap::extractAlpha(SkBitmap* dst, const SkPaint* paint,
                             Allocator *allocator, SkIPoint* offset) const {
@@ -546,7 +532,7 @@ bool SkBitmap::extractAlpha(SkBitmap* dst, const SkPaint* paint,
     if (this->width() == 0 || this->height() == 0) {
         return false;
     }
-    srcM.fBounds.set(0, 0, this->width(), this->height());
+    srcM.fBounds.setWH(this->width(), this->height());
     srcM.fRowBytes = SkAlign4(this->width());
     srcM.fFormat = SkMask::kA8_Format;
 
@@ -642,14 +628,3 @@ bool SkBitmap::peekPixels(SkPixmap* pmap) const {
     }
     return false;
 }
-
-///////////////////////////////////////////////////////////////////////////////
-
-#ifdef SK_DEBUG
-void SkImageInfo::validate() const {
-    SkASSERT(fDimensions.width() >= 0);
-    SkASSERT(fDimensions.height() >= 0);
-    SkASSERT(SkColorTypeIsValid(fColorType));
-    SkASSERT(SkAlphaTypeIsValid(fAlphaType));
-}
-#endif

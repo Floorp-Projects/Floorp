@@ -5,24 +5,24 @@
  * found in the LICENSE file.
  */
 
-#include "GrTessellatingPathRenderer.h"
+#include "src/gpu/ops/GrTessellatingPathRenderer.h"
 #include <stdio.h>
-#include "GrAuditTrail.h"
-#include "GrCaps.h"
-#include "GrClip.h"
-#include "GrDefaultGeoProcFactory.h"
-#include "GrDrawOpTest.h"
-#include "GrMesh.h"
-#include "GrOpFlushState.h"
-#include "GrPathUtils.h"
-#include "GrResourceCache.h"
-#include "GrResourceProvider.h"
-#include "GrShape.h"
-#include "GrSimpleMeshDrawOpHelper.h"
-#include "GrStyle.h"
-#include "GrTessellator.h"
-#include "SkGeometry.h"
-#include "ops/GrMeshDrawOp.h"
+#include "src/core/SkGeometry.h"
+#include "src/gpu/GrAuditTrail.h"
+#include "src/gpu/GrCaps.h"
+#include "src/gpu/GrClip.h"
+#include "src/gpu/GrDefaultGeoProcFactory.h"
+#include "src/gpu/GrDrawOpTest.h"
+#include "src/gpu/GrMesh.h"
+#include "src/gpu/GrOpFlushState.h"
+#include "src/gpu/GrResourceCache.h"
+#include "src/gpu/GrResourceProvider.h"
+#include "src/gpu/GrStyle.h"
+#include "src/gpu/GrTessellator.h"
+#include "src/gpu/geometry/GrPathUtils.h"
+#include "src/gpu/geometry/GrShape.h"
+#include "src/gpu/ops/GrMeshDrawOp.h"
+#include "src/gpu/ops/GrSimpleMeshDrawOpHelper.h"
 
 #ifndef GR_AA_TESSELLATOR_MAX_VERB_COUNT
 #define GR_AA_TESSELLATOR_MAX_VERB_COUNT 10
@@ -137,7 +137,8 @@ private:
 
 }  // namespace
 
-GrTessellatingPathRenderer::GrTessellatingPathRenderer() {
+GrTessellatingPathRenderer::GrTessellatingPathRenderer()
+  : fMaxVerbCount(GR_AA_TESSELLATOR_MAX_VERB_COUNT) {
 }
 
 GrPathRenderer::CanDrawPath
@@ -145,21 +146,29 @@ GrTessellatingPathRenderer::onCanDrawPath(const CanDrawPathArgs& args) const {
     // This path renderer can draw fill styles, and can do screenspace antialiasing via a
     // one-pixel coverage ramp. It can do convex and concave paths, but we'll leave the convex
     // ones to simpler algorithms. We pass on paths that have styles, though they may come back
-    // around after applying the styling information to the geometry to create a filled path. In
-    // the non-AA case, We skip paths that don't have a key since the real advantage of this path
-    // renderer comes from caching the tessellated geometry. In the AA case, we do not cache, so we
-    // accept paths without keys.
+    // around after applying the styling information to the geometry to create a filled path.
     if (!args.fShape->style().isSimpleFill() || args.fShape->knownToBeConvex()) {
         return CanDrawPath::kNo;
     }
-    if (GrAAType::kCoverage == args.fAAType) {
-        SkPath path;
-        args.fShape->asPath(&path);
-        if (path.countVerbs() > GR_AA_TESSELLATOR_MAX_VERB_COUNT) {
-            return CanDrawPath::kNo;
-        }
-    } else if (!args.fShape->hasUnstyledKey()) {
-        return CanDrawPath::kNo;
+    switch (args.fAAType) {
+        case GrAAType::kNone:
+        case GrAAType::kMSAA:
+            // Prefer MSAA, if any antialiasing. In the non-analytic-AA case, We skip paths that
+            // don't have a key since the real advantage of this path renderer comes from caching
+            // the tessellated geometry.
+            if (!args.fShape->hasUnstyledKey()) {
+                return CanDrawPath::kNo;
+            }
+            break;
+        case GrAAType::kCoverage:
+            // Use analytic AA if we don't have MSAA. In this case, we do not cache, so we accept
+            // paths without keys.
+            SkPath path;
+            args.fShape->asPath(&path);
+            if (path.countVerbs() > fMaxVerbCount) {
+                return CanDrawPath::kNo;
+            }
+            break;
     }
     return CanDrawPath::kYes;
 }
@@ -187,7 +196,7 @@ public:
 
     const char* name() const override { return "TessellatingPathOp"; }
 
-    void visitProxies(const VisitProxyFunc& func, VisitorType) const override {
+    void visitProxies(const VisitProxyFunc& func) const override {
         fHelper.visitProxies(func);
     }
 
@@ -222,17 +231,20 @@ public:
             // include the path bounds.
             devBounds.join(SkRect::Make(fDevClipBounds));
         }
-        this->setBounds(devBounds, HasAABloat::kNo, IsZeroArea::kNo);
+        this->setBounds(devBounds, HasAABloat::kNo, IsHairline::kNo);
     }
 
     FixedFunctionFlags fixedFunctionFlags() const override { return fHelper.fixedFunctionFlags(); }
 
     GrProcessorSet::Analysis finalize(
-            const GrCaps& caps, const GrAppliedClip* clip, GrFSAAType fsaaType) override {
+            const GrCaps& caps, const GrAppliedClip* clip, bool hasMixedSampledCoverage,
+            GrClampType clampType) override {
         GrProcessorAnalysisCoverage coverage = fAntiAlias
                                                        ? GrProcessorAnalysisCoverage::kSingleChannel
                                                        : GrProcessorAnalysisCoverage::kNone;
-        return fHelper.finalizeProcessors(caps, clip, fsaaType, coverage, &fColor);
+        // This Op uses uniform (not vertex) color, so doesn't need to track wide color.
+        return fHelper.finalizeProcessors(
+                caps, clip, hasMixedSampledCoverage, clampType, coverage, &fColor, nullptr);
     }
 
 private:
@@ -329,7 +341,7 @@ private:
                                                         : LocalCoords::kUnused_Type;
             Coverage::Type coverageType;
             if (fAntiAlias) {
-                if (fHelper.compatibleWithAlphaAsCoverage()) {
+                if (fHelper.compatibleWithCoverageAsAlpha()) {
                     coverageType = Coverage::kAttributeTweakAlpha_Type;
                 } else {
                     coverageType = Coverage::kAttribute_Type;
@@ -390,13 +402,9 @@ bool GrTessellatingPathRenderer::onDrawPath(const DrawPathArgs& args) {
     args.fClip->getConservativeBounds(args.fRenderTargetContext->width(),
                                       args.fRenderTargetContext->height(),
                                       &clipBoundsI);
-    std::unique_ptr<GrDrawOp> op = TessellatingPathOp::Make(args.fContext,
-                                                            std::move(args.fPaint),
-                                                            *args.fShape,
-                                                            *args.fViewMatrix,
-                                                            clipBoundsI,
-                                                            args.fAAType,
-                                                            args.fUserStencilSettings);
+    std::unique_ptr<GrDrawOp> op = TessellatingPathOp::Make(
+            args.fContext, std::move(args.fPaint), *args.fShape, *args.fViewMatrix, clipBoundsI,
+            args.fAAType, args.fUserStencilSettings);
     args.fRenderTargetContext->addDrawOp(*args.fClip, std::move(op));
     return true;
 }
@@ -415,7 +423,7 @@ GR_DRAW_OP_TEST_DEFINE(TesselatingPathOp) {
     GrAAType aaType;
     do {
         aaType = kAATypes[random->nextULessThan(SK_ARRAY_COUNT(kAATypes))];
-    } while(GrAAType::kMSAA == aaType && GrFSAAType::kUnifiedMSAA != fsaaType);
+    } while(GrAAType::kMSAA == aaType && numSamples <= 1);
     GrStyle style;
     do {
         GrTest::TestStyle(random, &style);

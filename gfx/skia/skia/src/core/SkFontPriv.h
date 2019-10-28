@@ -8,9 +8,9 @@
 #ifndef SkFontPriv_DEFINED
 #define SkFontPriv_DEFINED
 
-#include "SkFont.h"
-#include "SkMatrix.h"
-#include "SkTypeface.h"
+#include "include/core/SkFont.h"
+#include "include/core/SkMatrix.h"
+#include "include/core/SkTypeface.h"
 
 class SkReadBuffer;
 class SkWriteBuffer;
@@ -32,10 +32,6 @@ public:
      *  need not match per-se.
      */
     static constexpr int kCanonicalTextSizeForPaths  = 64;
-
-    static bool TooBigToUseCache(const SkMatrix& ctm, const SkMatrix& textM, SkScalar maxLimit);
-
-    static SkScalar MaxCacheSize2(SkScalar maxLimit);
 
     /**
      *  Return a matrix that applies the paint's text values: size, scale, skew
@@ -85,7 +81,7 @@ public:
 class SkAutoToGlyphs {
 public:
     SkAutoToGlyphs(const SkFont& font, const void* text, size_t length, SkTextEncoding encoding) {
-        if (encoding == kGlyphID_SkTextEncoding || length == 0) {
+        if (encoding == SkTextEncoding::kGlyphID || length == 0) {
             fGlyphs = reinterpret_cast<const uint16_t*>(text);
             fCount = length >> 1;
         } else {

@@ -8,11 +8,11 @@
 #ifndef SkBitmapFilter_DEFINED
 #define SkBitmapFilter_DEFINED
 
-#include "SkFixed.h"
-#include "SkMath.h"
-#include "SkScalar.h"
+#include "include/private/SkFixed.h"
+#include "include/core/SkMath.h"
+#include "include/core/SkScalar.h"
 
-#include "SkNx.h"
+#include "include/private/SkNx.h"
 
 // size of the precomputed bitmap filter tables for high quality filtering.
 // Used to precompute the shape of the filter kernel.

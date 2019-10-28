@@ -5,17 +5,17 @@
  * found in the LICENSE file.
  */
 
-#include "GrContext.h"
-#include "GrCaps.h"
-#include "GrContextPriv.h"
-#include "GrContextThreadSafeProxyPriv.h"
-#include "GrSkSLFPFactoryCache.h"
+#include "include/gpu/GrContext.h"
+#include "src/gpu/GrCaps.h"
+#include "src/gpu/GrContextPriv.h"
+#include "src/gpu/GrContextThreadSafeProxyPriv.h"
+#include "src/gpu/GrSkSLFPFactoryCache.h"
 
 /**
  * The DDL Context is the one in effect during DDL Recording. It isn't backed by a GrGPU and
  * cannot allocate any GPU resources.
  */
-class SK_API GrDDLContext : public GrContext {
+class GrDDLContext : public GrContext {
 public:
     GrDDLContext(sk_sp<GrContextThreadSafeProxy> proxy)
             : INHERITED(proxy->backend(), proxy->priv().options(), proxy->priv().contextID()) {
@@ -51,6 +51,10 @@ protected:
         if (!INHERITED::init(std::move(caps), std::move(FPFactoryCache))) {
             return false;
         }
+
+        // DDL contexts/drawing managers always sort the oplists and attempt to reduce opsTask
+        // splitting.
+        this->setupDrawingManager(true, true);
 
         SkASSERT(this->caps());
 

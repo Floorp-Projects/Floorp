@@ -5,13 +5,13 @@
  * found in the LICENSE file.
  */
 
-#include "GrDrawVerticesOp.h"
-#include "GrCaps.h"
-#include "GrDefaultGeoProcFactory.h"
-#include "GrOpFlushState.h"
-#include "GrSimpleMeshDrawOpHelper.h"
-#include "SkGr.h"
-#include "SkRectPriv.h"
+#include "src/core/SkRectPriv.h"
+#include "src/gpu/GrCaps.h"
+#include "src/gpu/GrDefaultGeoProcFactory.h"
+#include "src/gpu/GrOpFlushState.h"
+#include "src/gpu/SkGr.h"
+#include "src/gpu/ops/GrDrawVerticesOp.h"
+#include "src/gpu/ops/GrSimpleMeshDrawOpHelper.h"
 
 namespace {
 
@@ -28,7 +28,7 @@ public:
 
     const char* name() const override { return "DrawVerticesOp"; }
 
-    void visitProxies(const VisitProxyFunc& func, VisitorType) const override {
+    void visitProxies(const VisitProxyFunc& func) const override {
         fHelper.visitProxies(func);
     }
 
@@ -38,7 +38,8 @@ public:
 
     FixedFunctionFlags fixedFunctionFlags() const override;
 
-    GrProcessorSet::Analysis finalize(const GrCaps&, const GrAppliedClip*, GrFSAAType) override;
+    GrProcessorSet::Analysis finalize(const GrCaps&, const GrAppliedClip*,
+                                      bool hasMixedSampledCoverage, GrClampType) override;
 
 private:
     enum class ColorArrayType {
@@ -177,11 +178,11 @@ DrawVerticesOp::DrawVerticesOp(const Helper::MakeArgs& helperArgs, const SkPMCol
         mesh.fViewMatrix.preConcat(worldTransform);
     }
 
-    IsZeroArea zeroArea;
+    IsHairline zeroArea;
     if (GrIsPrimTypeLines(primitiveType) || GrPrimitiveType::kPoints == primitiveType) {
-        zeroArea = IsZeroArea::kYes;
+        zeroArea = IsHairline::kYes;
     } else {
-        zeroArea = IsZeroArea::kNo;
+        zeroArea = IsHairline::kNo;
     }
 
     this->setTransformedBounds(mesh.fVertices->bounds(),
@@ -206,15 +207,16 @@ GrDrawOp::FixedFunctionFlags DrawVerticesOp::fixedFunctionFlags() const {
 }
 
 GrProcessorSet::Analysis DrawVerticesOp::finalize(
-        const GrCaps& caps, const GrAppliedClip* clip, GrFSAAType fsaaType) {
+        const GrCaps& caps, const GrAppliedClip* clip, bool hasMixedSampledCoverage,
+        GrClampType clampType) {
     GrProcessorAnalysisColor gpColor;
     if (this->requiresPerVertexColors()) {
         gpColor.setToUnknown();
     } else {
         gpColor.setToConstant(fMeshes.front().fColor);
     }
-    auto result = fHelper.finalizeProcessors(
-            caps, clip, fsaaType, GrProcessorAnalysisCoverage::kNone, &gpColor);
+    auto result = fHelper.finalizeProcessors(caps, clip, hasMixedSampledCoverage, clampType,
+                                             GrProcessorAnalysisCoverage::kNone, &gpColor);
     if (gpColor.isConstant(&fMeshes.front().fColor)) {
         fMeshes.front().fIgnoreColors = true;
         fFlags &= ~kRequiresPerVertexColors_Flag;
@@ -591,7 +593,7 @@ std::unique_ptr<GrDrawOp> GrDrawVerticesOp::Make(GrRecordingContext* context,
 
 #if GR_TEST_UTILS
 
-#include "GrDrawOpTest.h"
+#include "src/gpu/GrDrawOpTest.h"
 
 static uint32_t seed_vertices(GrPrimitiveType type) {
     switch (type) {
@@ -603,11 +605,11 @@ static uint32_t seed_vertices(GrPrimitiveType type) {
         case GrPrimitiveType::kLines:
         case GrPrimitiveType::kLineStrip:
             return 2;
-        case GrPrimitiveType::kLinesAdjacency:
-            return 4;
+        case GrPrimitiveType::kPath:
+            SkASSERT(0);
+            return 0;
     }
     SK_ABORT("Incomplete switch\n");
-    return 0;
 }
 
 static uint32_t primitive_vertices(GrPrimitiveType type) {
@@ -620,11 +622,11 @@ static uint32_t primitive_vertices(GrPrimitiveType type) {
         case GrPrimitiveType::kPoints:
         case GrPrimitiveType::kLineStrip:
             return 1;
-        case GrPrimitiveType::kLinesAdjacency:
-            return 4;
+        case GrPrimitiveType::kPath:
+            SkASSERT(0);
+            return 0;
     }
     SK_ABORT("Incomplete switch\n");
-    return 0;
 }
 
 static SkPoint random_point(SkRandom* random, SkScalar min, SkScalar max) {
@@ -658,8 +660,7 @@ GR_DRAW_OP_TEST_DEFINE(DrawVerticesOp) {
     GrPrimitiveType type;
     do {
        type = GrPrimitiveType(random->nextULessThan(kNumGrPrimitiveTypes));
-    } while (GrPrimTypeRequiresGeometryShaderSupport(type) &&
-             !context->priv().caps()->shaderCaps()->geometryShaderSupport());
+    } while (type == GrPrimitiveType::kPath);
 
     uint32_t primitiveCount = random->nextRangeU(1, 100);
 
@@ -697,7 +698,7 @@ GR_DRAW_OP_TEST_DEFINE(DrawVerticesOp) {
                                                       hasIndices ? indices.count() : 0,
                                                       indices.begin());
     GrAAType aaType = GrAAType::kNone;
-    if (GrFSAAType::kUnifiedMSAA == fsaaType && random->nextBool()) {
+    if (numSamples > 1 && random->nextBool()) {
         aaType = GrAAType::kMSAA;
     }
     return GrDrawVerticesOp::Make(context, std::move(paint), std::move(vertices), nullptr, 0,

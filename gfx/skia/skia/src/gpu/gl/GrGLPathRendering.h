@@ -8,12 +8,12 @@
 #ifndef GrGLPathRendering_DEFINED
 #define GrGLPathRendering_DEFINED
 
-#include "SkRefCnt.h"
-#include "GrGpu.h"
-#include "GrPathRendering.h"
-#include "GrStencilSettings.h"
-#include "gl/GrGLTypes.h"
-#include "glsl/GrGLSLUtil.h"
+#include "include/core/SkRefCnt.h"
+#include "include/gpu/gl/GrGLTypes.h"
+#include "src/gpu/GrGpu.h"
+#include "src/gpu/GrPathRendering.h"
+#include "src/gpu/GrStencilSettings.h"
+#include "src/gpu/glsl/GrGLSLUtil.h"
 
 class GrGLNameAllocator;
 class GrGLGpu;
@@ -65,11 +65,7 @@ public:
 
 protected:
     void onStencilPath(const StencilPathArgs&, const GrPath*) override;
-    void onDrawPath(GrRenderTarget*, GrSurfaceOrigin,
-                    const GrPrimitiveProcessor&,
-                    const GrPipeline&,
-                    const GrPipeline::FixedDynamicState&,
-                    const GrStencilSettings&,
+    void onDrawPath(GrRenderTarget*, const GrProgramInfo&, const GrStencilSettings&,
                     const GrPath*) override;
 
 private:

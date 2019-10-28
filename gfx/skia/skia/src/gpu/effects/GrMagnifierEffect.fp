@@ -38,7 +38,7 @@ void main() {
         weight = min(min(delta_squared.x, delta_squared.y), 1.0);
     }
 
-    sk_OutColor = texture(src, mix(coord, zoom_coord, weight));
+    sk_OutColor = sample(src, mix(coord, zoom_coord, weight));
 }
 
 @setData(pdman) {
@@ -56,15 +56,17 @@ void main() {
 
     {
         SkScalar y = bounds.y() * invH;
+        SkScalar hSign = 1.f;
         if (srcProxy.origin() != kTopLeft_GrSurfaceOrigin) {
-            y = 1.0f - bounds.height() * invH;
+            y = 1.0f - bounds.y() * invH;
+            hSign = -1.f;
         }
 
         pdman.set4f(boundsUniform,
                     bounds.x() * invW,
                     y,
                     SkIntToScalar(src.width()) / bounds.width(),
-                    SkIntToScalar(src.height()) / bounds.height());
+                    hSign * SkIntToScalar(src.height()) / bounds.height());
     }
 }
 

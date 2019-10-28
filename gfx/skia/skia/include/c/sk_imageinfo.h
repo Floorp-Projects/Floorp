@@ -11,7 +11,7 @@
 #ifndef sk_imageinfo_DEFINED
 #define sk_imageinfo_DEFINED
 
-#include "sk_types.h"
+#include "include/c/sk_types.h"
 
 SK_C_PLUS_PLUS_BEGIN_GUARD
 
@@ -35,19 +35,19 @@ typedef enum {
  *  Allocate a new imageinfo object. If colorspace is not null, it's owner-count will be
  *  incremented automatically.
  */
-sk_imageinfo_t* sk_imageinfo_new(int width, int height, sk_colortype_t ct, sk_alphatype_t at,
+SK_API sk_imageinfo_t* sk_imageinfo_new(int width, int height, sk_colortype_t ct, sk_alphatype_t at,
                                  sk_colorspace_t* cs);
 
 /**
  *  Free the imageinfo object. If it contains a reference to a colorspace, its owner-count will
  *  be decremented automatically.
  */
-void sk_imageinfo_delete(sk_imageinfo_t*);
+SK_API void sk_imageinfo_delete(sk_imageinfo_t*);
 
-int32_t          sk_imageinfo_get_width(sk_imageinfo_t*);
-int32_t          sk_imageinfo_get_height(sk_imageinfo_t*);
-sk_colortype_t   sk_imageinfo_get_colortype(sk_imageinfo_t*);
-sk_alphatype_t   sk_imageinfo_get_alphatype(sk_imageinfo_t*);
+SK_API int32_t          sk_imageinfo_get_width(const sk_imageinfo_t*);
+SK_API int32_t          sk_imageinfo_get_height(const sk_imageinfo_t*);
+SK_API sk_colortype_t   sk_imageinfo_get_colortype(const sk_imageinfo_t*);
+SK_API sk_alphatype_t   sk_imageinfo_get_alphatype(const sk_imageinfo_t*);
 
 /**
  *  Return the colorspace object reference contained in the imageinfo, or null if there is none.
@@ -55,7 +55,7 @@ sk_alphatype_t   sk_imageinfo_get_alphatype(sk_imageinfo_t*);
  *  use the colorspace beyond the lifetime of the imageinfo, it should manually call
  *  sk_colorspace_ref() (and then call unref() when it is done).
  */
-sk_colorspace_t* sk_imageinfo_get_colorspace(sk_imageinfo_t*);
+SK_API sk_colorspace_t* sk_imageinfo_get_colorspace(const sk_imageinfo_t*);
 
 SK_C_PLUS_PLUS_END_GUARD
 

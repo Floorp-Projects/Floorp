@@ -5,17 +5,18 @@
  * found in the LICENSE file.
  */
 
-#include "SkImageEncoderPriv.h"
+#include "src/images/SkImageEncoderPriv.h"
 
 #ifdef SK_HAS_JPEG_LIBRARY
 
-#include "SkColorData.h"
-#include "SkImageEncoderFns.h"
-#include "SkImageInfoPriv.h"
-#include "SkJpegEncoder.h"
-#include "SkJPEGWriteUtility.h"
-#include "SkStream.h"
-#include "SkTemplates.h"
+#include "include/core/SkStream.h"
+#include "include/encode/SkJpegEncoder.h"
+#include "include/private/SkColorData.h"
+#include "include/private/SkImageInfoPriv.h"
+#include "include/private/SkTemplates.h"
+#include "src/core/SkMSAN.h"
+#include "src/images/SkImageEncoderFns.h"
+#include "src/images/SkJPEGWriteUtility.h"
 
 #include <stdio.h>
 
@@ -214,15 +215,26 @@ bool SkJpegEncoder::onEncodeRows(int numRows) {
         return false;
     }
 
+    const size_t srcBytes = SkColorTypeBytesPerPixel(fSrc.colorType()) * fSrc.width();
+    const size_t jpegSrcBytes = fEncoderMgr->cinfo()->input_components * fSrc.width();
+
     const void* srcRow = fSrc.addr(0, fCurrRow);
     for (int i = 0; i < numRows; i++) {
         JSAMPLE* jpegSrcRow = (JSAMPLE*) srcRow;
         if (fEncoderMgr->proc()) {
+            sk_msan_assert_initialized(srcRow, SkTAddOffset<const void>(srcRow, srcBytes));
             fEncoderMgr->proc()((char*)fStorage.get(),
                                 (const char*)srcRow,
                                 fSrc.width(),
                                 fEncoderMgr->cinfo()->input_components);
             jpegSrcRow = fStorage.get();
+            sk_msan_assert_initialized(jpegSrcRow,
+                                       SkTAddOffset<const void>(jpegSrcRow, jpegSrcBytes));
+        } else {
+            // Same as above, but this repetition allows determining whether a
+            // proc was used when msan asserts.
+            sk_msan_assert_initialized(jpegSrcRow,
+                                       SkTAddOffset<const void>(jpegSrcRow, jpegSrcBytes));
         }
 
         jpeg_write_scanlines(fEncoderMgr->cinfo(), &jpegSrcRow, 1);

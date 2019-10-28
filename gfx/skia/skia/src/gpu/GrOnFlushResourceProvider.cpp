@@ -5,31 +5,28 @@
  * found in the LICENSE file.
  */
 
-#include "GrOnFlushResourceProvider.h"
+#include "src/gpu/GrOnFlushResourceProvider.h"
 
-#include "GrContextPriv.h"
-#include "GrDrawingManager.h"
-#include "GrProxyProvider.h"
-#include "GrRecordingContext.h"
-#include "GrRecordingContextPriv.h"
-#include "GrRenderTargetContext.h"
-#include "GrSurfaceProxy.h"
+#include "include/private/GrRecordingContext.h"
+#include "src/gpu/GrContextPriv.h"
+#include "src/gpu/GrDrawingManager.h"
+#include "src/gpu/GrProxyProvider.h"
+#include "src/gpu/GrRecordingContextPriv.h"
+#include "src/gpu/GrRenderTargetContext.h"
+#include "src/gpu/GrSurfaceProxy.h"
+#include "src/gpu/GrTextureResolveRenderTask.h"
 
-sk_sp<GrRenderTargetContext> GrOnFlushResourceProvider::makeRenderTargetContext(
-                                                        sk_sp<GrSurfaceProxy> proxy,
-                                                        sk_sp<SkColorSpace> colorSpace,
-                                                        const SkSurfaceProps* props) {
+std::unique_ptr<GrRenderTargetContext> GrOnFlushResourceProvider::makeRenderTargetContext(
+        sk_sp<GrSurfaceProxy> proxy, GrColorType colorType, sk_sp<SkColorSpace> colorSpace,
+        const SkSurfaceProps* props) {
     // Since this is at flush time and these won't be allocated for us by the GrResourceAllocator
-    // we have to manually ensure it is allocated here. The proxy had best have been created
-    // with the kNoPendingIO flag!
+    // we have to manually ensure it is allocated here.
     if (!this->instatiateProxy(proxy.get())) {
         return nullptr;
     }
 
-    sk_sp<GrRenderTargetContext> renderTargetContext(
-        fDrawingMgr->makeRenderTargetContext(std::move(proxy),
-                                             std::move(colorSpace),
-                                             props, false));
+    auto renderTargetContext = fDrawingMgr->makeRenderTargetContext(
+            std::move(proxy), colorType, std::move(colorSpace), props, false);
 
     if (!renderTargetContext) {
         return nullptr;
@@ -37,7 +34,24 @@ sk_sp<GrRenderTargetContext> GrOnFlushResourceProvider::makeRenderTargetContext(
 
     renderTargetContext->discard();
 
+    // FIXME: http://skbug.com/9357: This breaks if the renderTargetContext splits its opsTask.
+    fDrawingMgr->fOnFlushRenderTasks.push_back(sk_ref_sp(renderTargetContext->getOpsTask()));
+
     return renderTargetContext;
+}
+
+void GrOnFlushResourceProvider::addTextureResolveTask(sk_sp<GrTextureProxy> textureProxy,
+                                                      GrSurfaceProxy::ResolveFlags resolveFlags) {
+    // Since we are bypassing normal DAG operation, we need to ensure the textureProxy's last render
+    // task gets closed before making a texture resolve task. makeClosed is what will mark msaa and
+    // mipmaps dirty.
+    if (GrRenderTask* renderTask = textureProxy->getLastRenderTask()) {
+        renderTask->makeClosed(*this->caps());
+    }
+    auto task = static_cast<GrTextureResolveRenderTask*>(fDrawingMgr->fOnFlushRenderTasks.push_back(
+            sk_make_sp<GrTextureResolveRenderTask>()).get());
+    task->addProxy(textureProxy, resolveFlags, *this->caps());
+    task->makeClosed(*this->caps());
 }
 
 bool GrOnFlushResourceProvider::assignUniqueKeyToProxy(const GrUniqueKey& key,
@@ -58,12 +72,17 @@ void GrOnFlushResourceProvider::processInvalidUniqueKey(const GrUniqueKey& key) 
 }
 
 sk_sp<GrTextureProxy> GrOnFlushResourceProvider::findOrCreateProxyByUniqueKey(
-        const GrUniqueKey& key, GrSurfaceOrigin origin) {
+        const GrUniqueKey& key,
+        GrColorType colorType,
+        GrSurfaceOrigin origin,
+        UseAllocator useAllocator) {
     auto proxyProvider = fDrawingMgr->getContext()->priv().proxyProvider();
-    return proxyProvider->findOrCreateProxyByUniqueKey(key, origin);
+    return proxyProvider->findOrCreateProxyByUniqueKey(key, colorType, origin, useAllocator);
 }
 
 bool GrOnFlushResourceProvider::instatiateProxy(GrSurfaceProxy* proxy) {
+    SkASSERT(proxy->canSkipResourceAllocator());
+
     // TODO: this class should probably just get a GrDirectContext
     auto direct = fDrawingMgr->getContext()->priv().asDirectContext();
     if (!direct) {
@@ -72,9 +91,7 @@ bool GrOnFlushResourceProvider::instatiateProxy(GrSurfaceProxy* proxy) {
 
     auto resourceProvider = direct->priv().resourceProvider();
 
-    if (GrSurfaceProxy::LazyState::kNot != proxy->lazyInstantiationState()) {
-        // DDL TODO: Decide if we ever plan to have these proxies use the GrDeinstantiateTracker
-        // to support unistantiating them at the end of a flush.
+    if (proxy->isLazy()) {
         return proxy->priv().doLazyInstantiation(resourceProvider);
     }
 
@@ -105,11 +122,7 @@ sk_sp<const GrGpuBuffer> GrOnFlushResourceProvider::findOrMakeStaticBuffer(
 
     auto resourceProvider = direct->priv().resourceProvider();
 
-    sk_sp<const GrGpuBuffer> buffer =
-            resourceProvider->findOrMakeStaticBuffer(intendedType, size, data, key);
-    // Static buffers should never have pending IO.
-    SkASSERT(!buffer || !buffer->resourcePriv().hasPendingIO_debugOnly());
-    return buffer;
+    return resourceProvider->findOrMakeStaticBuffer(intendedType, size, data, key);
 }
 
 uint32_t GrOnFlushResourceProvider::contextID() const {

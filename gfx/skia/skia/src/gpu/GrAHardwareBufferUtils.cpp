@@ -5,30 +5,30 @@
  * found in the LICENSE file.
  */
 
-#include "SkTypes.h"
+#include "include/core/SkTypes.h"
 
 #if defined(SK_BUILD_FOR_ANDROID) && __ANDROID_API__ >= 26
 #define GL_GLEXT_PROTOTYPES
 #define EGL_EGLEXT_PROTOTYPES
 
-#include "GrAHardwareBufferUtils.h"
+#include "src/gpu/GrAHardwareBufferUtils.h"
 
 #include <android/hardware_buffer.h>
-
-#include "GrContext.h"
-#include "GrContextPriv.h"
-#include "gl/GrGLDefines.h"
-#include "gl/GrGLTypes.h"
-
-#ifdef SK_VULKAN
-#include "vk/GrVkCaps.h"
-#include "vk/GrVkGpu.h"
-#endif
-
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
 #include <GLES/gl.h>
 #include <GLES/glext.h>
+
+#include "include/gpu/GrContext.h"
+#include "include/gpu/gl/GrGLTypes.h"
+#include "src/gpu/GrContextPriv.h"
+#include "src/gpu/gl/GrGLDefines.h"
+#include "src/gpu/gl/GrGLUtil.h"
+
+#ifdef SK_VULKAN
+#include "src/gpu/vk/GrVkCaps.h"
+#include "src/gpu/vk/GrVkGpu.h"
+#endif
 
 #define PROT_CONTENT_EXT_STR "EGL_EXT_protected_content"
 #define EGL_PROTECTED_CONTENT_EXT 0x32C0
@@ -138,7 +138,7 @@ GrBackendFormat GetBackendFormat(GrContext* context, AHardwareBuffer* hardwareBu
                     ycbcrConversion.fYChromaOffset = hwbFormatProps.suggestedYChromaOffset;
                     ycbcrConversion.fForceExplicitReconstruction = VK_FALSE;
                     ycbcrConversion.fExternalFormat = hwbFormatProps.externalFormat;
-                    ycbcrConversion.fExternalFormatFeatures = hwbFormatProps.formatFeatures;
+                    ycbcrConversion.fFormatFeatures = hwbFormatProps.formatFeatures;
                     if (VK_FORMAT_FEATURE_SAMPLED_IMAGE_YCBCR_CONVERSION_LINEAR_FILTER_BIT &
                         hwbFormatProps.formatFeatures) {
                         ycbcrConversion.fChromaFilter = VK_FILTER_LINEAR;
@@ -157,33 +157,59 @@ GrBackendFormat GetBackendFormat(GrContext* context, AHardwareBuffer* hardwareBu
     return GrBackendFormat();
 }
 
-class GLCleanupHelper {
+class GLTextureHelper {
 public:
-    GLCleanupHelper(GrGLuint texID, EGLImageKHR image, EGLDisplay display)
+    GLTextureHelper(GrGLuint texID, EGLImageKHR image, EGLDisplay display, GrGLuint texTarget)
         : fTexID(texID)
         , fImage(image)
-        , fDisplay(display) { }
-    ~GLCleanupHelper() {
+        , fDisplay(display)
+        , fTexTarget(texTarget) { }
+    ~GLTextureHelper() {
         glDeleteTextures(1, &fTexID);
         // eglDestroyImageKHR will remove a ref from the AHardwareBuffer
         eglDestroyImageKHR(fDisplay, fImage);
     }
+    void rebind(GrContext* grContext);
+
 private:
     GrGLuint    fTexID;
     EGLImageKHR fImage;
     EGLDisplay  fDisplay;
+    GrGLuint    fTexTarget;
 };
 
+void GLTextureHelper::rebind(GrContext* grContext) {
+    glBindTexture(fTexTarget, fTexID);
+    GLenum status = GL_NO_ERROR;
+    if ((status = glGetError()) != GL_NO_ERROR) {
+        SkDebugf("glBindTexture(%#x, %d) failed (%#x)", (int) fTexTarget,
+            (int) fTexID, (int) status);
+        return;
+    }
+    glEGLImageTargetTexture2DOES(fTexTarget, fImage);
+    if ((status = glGetError()) != GL_NO_ERROR) {
+        SkDebugf("glEGLImageTargetTexture2DOES failed (%#x)", (int) status);
+        return;
+    }
+    grContext->resetContext(kTextureBinding_GrGLBackendState);
+}
+
 void delete_gl_texture(void* context) {
-    GLCleanupHelper* cleanupHelper = static_cast<GLCleanupHelper*>(context);
+    GLTextureHelper* cleanupHelper = static_cast<GLTextureHelper*>(context);
     delete cleanupHelper;
+}
+
+void update_gl_texture(void* context, GrContext* grContext) {
+    GLTextureHelper* cleanupHelper = static_cast<GLTextureHelper*>(context);
+    cleanupHelper->rebind(grContext);
 }
 
 static GrBackendTexture make_gl_backend_texture(
         GrContext* context, AHardwareBuffer* hardwareBuffer,
         int width, int height,
         DeleteImageProc* deleteProc,
-        DeleteImageCtx* deleteCtx,
+        UpdateImageProc* updateProc,
+        TexImageCtx* imageCtx,
         bool isProtectedContent,
         const GrBackendFormat& backendFormat,
         bool isRenderable) {
@@ -233,10 +259,11 @@ static GrBackendTexture make_gl_backend_texture(
     textureInfo.fID = texID;
     SkASSERT(backendFormat.isValid());
     textureInfo.fTarget = target;
-    textureInfo.fFormat = *backendFormat.getGLFormat();
+    textureInfo.fFormat = GrGLFormatToEnum(backendFormat.asGLFormat());
 
     *deleteProc = delete_gl_texture;
-    *deleteCtx = new GLCleanupHelper(texID, image, display);
+    *updateProc = update_gl_texture;
+    *imageCtx = new GLTextureHelper(texID, image, display, target);
 
     return GrBackendTexture(width, height, GrMipMapped::kNo, textureInfo);
 }
@@ -267,11 +294,16 @@ void delete_vk_image(void* context) {
     delete cleanupHelper;
 }
 
+void update_vk_image(void* context, GrContext* grContext) {
+    // no op
+}
+
 static GrBackendTexture make_vk_backend_texture(
         GrContext* context, AHardwareBuffer* hardwareBuffer,
         int width, int height,
         DeleteImageProc* deleteProc,
-        DeleteImageCtx* deleteCtx,
+        UpdateImageProc* updateProc,
+        TexImageCtx* imageCtx,
         bool isProtectedContent,
         const GrBackendFormat& backendFormat,
         bool isRenderable) {
@@ -287,8 +319,8 @@ static GrBackendTexture make_vk_backend_texture(
         return GrBackendTexture();
     }
 
-    SkASSERT(backendFormat.getVkFormat());
-    VkFormat format = *backendFormat.getVkFormat();
+    VkFormat format;
+    SkAssertResult(backendFormat.asVkFormat(&format));
 
     VkResult err;
 
@@ -456,7 +488,8 @@ static GrBackendTexture make_vk_backend_texture(
     imageInfo.fYcbcrConversionInfo = *ycbcrConversion;
 
     *deleteProc = delete_vk_image;
-    *deleteCtx = new VulkanCleanupHelper(gpu, image, memory);
+    *updateProc = update_vk_image;
+    *imageCtx = new VulkanCleanupHelper(gpu, image, memory);
 
     return GrBackendTexture(width, height, imageInfo);
 }
@@ -489,7 +522,8 @@ static bool can_import_protected_content(GrContext* context) {
 GrBackendTexture MakeBackendTexture(GrContext* context, AHardwareBuffer* hardwareBuffer,
                                     int width, int height,
                                     DeleteImageProc* deleteProc,
-                                    DeleteImageCtx* deleteCtx,
+                                    UpdateImageProc* updateProc,
+                                    TexImageCtx* imageCtx,
                                     bool isProtectedContent,
                                     const GrBackendFormat& backendFormat,
                                     bool isRenderable) {
@@ -500,7 +534,7 @@ GrBackendTexture MakeBackendTexture(GrContext* context, AHardwareBuffer* hardwar
 
     if (GrBackendApi::kOpenGL == context->backend()) {
         return make_gl_backend_texture(context, hardwareBuffer, width, height, deleteProc,
-                                       deleteCtx, createProtectedImage, backendFormat,
+                                       updateProc, imageCtx, createProtectedImage, backendFormat,
                                        isRenderable);
     } else {
         SkASSERT(GrBackendApi::kVulkan == context->backend());
@@ -508,7 +542,7 @@ GrBackendTexture MakeBackendTexture(GrContext* context, AHardwareBuffer* hardwar
         // Currently we don't support protected images on vulkan
         SkASSERT(!createProtectedImage);
         return make_vk_backend_texture(context, hardwareBuffer, width, height, deleteProc,
-                                       deleteCtx, createProtectedImage, backendFormat,
+                                       updateProc, imageCtx, createProtectedImage, backendFormat,
                                        isRenderable);
 #else
         return GrBackendTexture();

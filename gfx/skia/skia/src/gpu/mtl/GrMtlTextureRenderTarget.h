@@ -8,19 +8,21 @@
 #ifndef GrMtlTextureRenderTarget_DEFINED
 #define GrMtlTextureRenderTarget_DEFINED
 
-#include "GrMtlRenderTarget.h"
-#include "GrMtlTexture.h"
+#include "src/gpu/mtl/GrMtlRenderTarget.h"
+#include "src/gpu/mtl/GrMtlTexture.h"
 
 class GrMtlTextureRenderTarget: public GrMtlTexture, public GrMtlRenderTarget {
 public:
-    static sk_sp<GrMtlTextureRenderTarget> CreateNewTextureRenderTarget(GrMtlGpu*,
-                                                                        SkBudgeted,
-                                                                        const GrSurfaceDesc&,
-                                                                        MTLTextureDescriptor*,
-                                                                        GrMipMapsStatus);
+    static sk_sp<GrMtlTextureRenderTarget> MakeNewTextureRenderTarget(GrMtlGpu*,
+                                                                      SkBudgeted,
+                                                                      const GrSurfaceDesc&,
+                                                                      int sampleCnt,
+                                                                      MTLTextureDescriptor*,
+                                                                      GrMipMapsStatus);
 
     static sk_sp<GrMtlTextureRenderTarget> MakeWrappedTextureRenderTarget(GrMtlGpu*,
                                                                           const GrSurfaceDesc&,
+                                                                          int sampleCnt,
                                                                           id<MTLTexture>,
                                                                           GrWrapCacheable);
     GrBackendFormat backendFormat() const override {
@@ -42,25 +44,28 @@ private:
     GrMtlTextureRenderTarget(GrMtlGpu* gpu,
                              SkBudgeted budgeted,
                              const GrSurfaceDesc& desc,
-                             id<MTLTexture> renderTexture,
+                             int sampleCnt,
+                             id<MTLTexture> colorTexture,
                              id<MTLTexture> resolveTexture,
                              GrMipMapsStatus);
 
     GrMtlTextureRenderTarget(GrMtlGpu* gpu,
                              SkBudgeted budgeted,
                              const GrSurfaceDesc& desc,
-                             id<MTLTexture> renderTexture,
+                             id<MTLTexture> colorTexture,
                              GrMipMapsStatus);
 
     GrMtlTextureRenderTarget(GrMtlGpu* gpu,
                              const GrSurfaceDesc& desc,
-                             id<MTLTexture> renderTexture,
+                             int sampleCnt,
+                             id<MTLTexture> colorTexture,
                              id<MTLTexture> resolveTexture,
-                             GrMipMapsStatus);
+                             GrMipMapsStatus,
+                             GrWrapCacheable cacheable);
 
     GrMtlTextureRenderTarget(GrMtlGpu* gpu,
                              const GrSurfaceDesc& desc,
-                             id<MTLTexture> renderTexture,
+                             id<MTLTexture> colorTexture,
                              GrMipMapsStatus,
                              GrWrapCacheable cacheable);
 
@@ -68,12 +73,13 @@ private:
         // TODO: When used as render targets certain formats may actually have a larger size than
         // the base format size. Check to make sure we are reporting the correct value here.
         // The plus 1 is to account for the resolve texture or if not using msaa the RT itself
-        int numColorSamples = this->numColorSamples();
+        int numColorSamples = this->numSamples();
         if (numColorSamples > 1) {
             ++numColorSamples;
         }
-        return GrSurface::ComputeSize(this->config(), this->width(), this->height(),
-                                      numColorSamples, GrMipMapped::kNo, false);
+        const GrCaps& caps = *this->getGpu()->caps();
+        return GrSurface::ComputeSize(caps, this->backendFormat(), this->width(), this->height(),
+                                      numColorSamples, GrMipMapped::kNo);
     }
 };
 

@@ -5,12 +5,12 @@
  * found in the LICENSE file.
  */
 
-#include "SkTime.h"
+#include "include/core/SkTime.h"
 
-#include "SkLeanWindows.h"
-#include "SkString.h"
-#include "SkTo.h"
-#include "SkTypes.h"
+#include "include/core/SkString.h"
+#include "include/core/SkTypes.h"
+#include "include/private/SkTo.h"
+#include "src/core/SkLeanWindows.h"
 
 void SkTime::DateTime::toISO8601(SkString* dst) const {
     if (dst) {
@@ -80,7 +80,7 @@ double SkTime::GetNSecs() {
 #else
 #include <chrono>
 double SkTime::GetNSecs() {
-    auto now = std::chrono::high_resolution_clock::now();
+    auto now = std::chrono::steady_clock::now();
     std::chrono::duration<double, std::nano> ns = now.time_since_epoch();
     return ns.count();
 }

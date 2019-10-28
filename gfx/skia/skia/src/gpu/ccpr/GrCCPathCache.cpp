@@ -5,11 +5,11 @@
  * found in the LICENSE file.
  */
 
-#include "GrCCPathCache.h"
+#include "src/gpu/ccpr/GrCCPathCache.h"
 
-#include "GrOnFlushResourceProvider.h"
-#include "GrProxyProvider.h"
-#include "SkNx.h"
+#include "include/private/SkNx.h"
+#include "src/gpu/GrOnFlushResourceProvider.h"
+#include "src/gpu/GrProxyProvider.h"
 
 static constexpr int kMaxKeyDataCountU32 = 256;  // 1kB of uint32_t's.
 
@@ -74,6 +74,8 @@ sk_sp<GrCCPathCache::Key> GrCCPathCache::Key::Make(uint32_t pathCacheUniqueID,
     }
     return key;
 }
+
+void GrCCPathCache::Key::operator delete(void* p) { ::operator delete(p); }
 
 const uint32_t* GrCCPathCache::Key::data() const {
     // The shape key is a variable-length footer to the entry allocation.
@@ -226,12 +228,15 @@ GrCCPathCache::OnFlushEntryRef GrCCPathCache::find(
         ++entry->fHitCount;
 
         if (entry->fCachedAtlas) {
-            SkASSERT(SkToBool(entry->fCachedAtlas->peekOnFlushRefCnt())
-                             == SkToBool(entry->fCachedAtlas->getOnFlushProxy()));
+            SkASSERT(SkToBool(entry->fCachedAtlas->peekOnFlushRefCnt()) ==
+                     SkToBool(entry->fCachedAtlas->getOnFlushProxy()));
             if (!entry->fCachedAtlas->getOnFlushProxy()) {
-                entry->fCachedAtlas->setOnFlushProxy(
-                    onFlushRP->findOrCreateProxyByUniqueKey(entry->fCachedAtlas->textureKey(),
-                                                            GrCCAtlas::kTextureOrigin));
+                auto ct = GrCCAtlas::CoverageTypeToColorType(entry->fCachedAtlas->coverageType());
+                if (sk_sp<GrTextureProxy> onFlushProxy = onFlushRP->findOrCreateProxyByUniqueKey(
+                            entry->fCachedAtlas->textureKey(), ct, GrCCAtlas::kTextureOrigin,
+                            GrSurfaceProxy::UseAllocator::kNo)) {
+                    entry->fCachedAtlas->setOnFlushProxy(std::move(onFlushProxy));
+                }
             }
             if (!entry->fCachedAtlas->getOnFlushProxy()) {
                 // Our atlas's backing texture got purged from the GrResourceCache. Release the
@@ -240,7 +245,7 @@ GrCCPathCache::OnFlushEntryRef GrCCPathCache::find(
             }
         }
     }
-    entry->fHitRect.join(clippedDrawBounds.makeOffset(-maskShift->x(), -maskShift->y()));
+    entry->fHitRect.join(clippedDrawBounds.makeOffset(-*maskShift));
     SkASSERT(!entry->fCachedAtlas || entry->fCachedAtlas->getOnFlushProxy());
     return OnFlushEntryRef::OnFlushRef(entry);
 }
@@ -352,8 +357,7 @@ GrCCPathCache::OnFlushEntryRef::~OnFlushEntryRef() {
 
 void GrCCPathCacheEntry::setCoverageCountAtlas(
         GrOnFlushResourceProvider* onFlushRP, GrCCAtlas* atlas, const SkIVector& atlasOffset,
-        const SkRect& devBounds, const SkRect& devBounds45, const SkIRect& devIBounds,
-        const SkIVector& maskShift) {
+        const GrOctoBounds& octoBounds, const SkIRect& devIBounds, const SkIVector& maskShift) {
     SkASSERT(fOnFlushRefCnt > 0);
     SkASSERT(!fCachedAtlas);  // Otherwise we would need to call releaseCachedAtlas().
 
@@ -369,10 +373,8 @@ void GrCCPathCacheEntry::setCoverageCountAtlas(
 
     fAtlasOffset = atlasOffset + maskShift;
 
-    float dx = (float)maskShift.fX, dy = (float)maskShift.fY;
-    fDevBounds = devBounds.makeOffset(-dx, -dy);
-    fDevBounds45 = GrCCPathProcessor::MakeOffset45(devBounds45, -dx, -dy);
-    fDevIBounds = devIBounds.makeOffset(-maskShift.fX, -maskShift.fY);
+    fOctoBounds.setOffset(octoBounds, -maskShift.fX, -maskShift.fY);
+    fDevIBounds = devIBounds.makeOffset(-maskShift);
 }
 
 GrCCPathCacheEntry::ReleaseAtlasResult GrCCPathCacheEntry::upgradeToLiteralCoverageAtlas(
@@ -381,7 +383,7 @@ GrCCPathCacheEntry::ReleaseAtlasResult GrCCPathCacheEntry::upgradeToLiteralCover
     SkASSERT(!this->hasBeenEvicted());
     SkASSERT(fOnFlushRefCnt > 0);
     SkASSERT(fCachedAtlas);
-    SkASSERT(GrCCAtlas::CoverageType::kFP16_CoverageCount == fCachedAtlas->coverageType());
+    SkASSERT(GrCCAtlas::CoverageType::kA8_LiteralCoverage != fCachedAtlas->coverageType());
 
     ReleaseAtlasResult releaseAtlasResult = this->releaseCachedAtlas(pathCache);
 

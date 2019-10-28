@@ -5,18 +5,18 @@
  * found in the LICENSE file.
  */
 
-#include "GrRRectEffect.h"
+#include "src/gpu/effects/GrRRectEffect.h"
 
-#include "GrConvexPolyEffect.h"
-#include "GrFragmentProcessor.h"
-#include "GrOvalEffect.h"
-#include "GrShaderCaps.h"
-#include "SkRRectPriv.h"
-#include "SkTLazy.h"
-#include "glsl/GrGLSLFragmentProcessor.h"
-#include "glsl/GrGLSLFragmentShaderBuilder.h"
-#include "glsl/GrGLSLProgramDataManager.h"
-#include "glsl/GrGLSLUniformHandler.h"
+#include "src/core/SkRRectPriv.h"
+#include "src/core/SkTLazy.h"
+#include "src/gpu/GrFragmentProcessor.h"
+#include "src/gpu/GrShaderCaps.h"
+#include "src/gpu/effects/GrConvexPolyEffect.h"
+#include "src/gpu/effects/GrOvalEffect.h"
+#include "src/gpu/glsl/GrGLSLFragmentProcessor.h"
+#include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
+#include "src/gpu/glsl/GrGLSLProgramDataManager.h"
+#include "src/gpu/glsl/GrGLSLUniformHandler.h"
 
 // The effects defined here only handle rrect radii >= kRadiusMin.
 static const SkScalar kRadiusMin = SK_ScalarHalf;
@@ -536,7 +536,7 @@ void GLEllipticalRRectEffect::emitCode(EmitArgs& args) {
         case SkRRect::kSimple_Type: {
             const char *invRadiiXYSqdName;
             fInvRadiiSqdUniform = uniformHandler->addUniform(kFragment_GrShaderFlag,
-                                                             kHalf2_GrSLType,
+                                                             kFloat2_GrSLType,
                                                              "invRadiiXY",
                                                              &invRadiiXYSqdName);
             fragBuilder->codeAppend("float2 dxy = max(max(dxy0, dxy1), 0.0);");
@@ -550,7 +550,7 @@ void GLEllipticalRRectEffect::emitCode(EmitArgs& args) {
         case SkRRect::kNinePatch_Type: {
             const char *invRadiiLTRBSqdName;
             fInvRadiiSqdUniform = uniformHandler->addUniform(kFragment_GrShaderFlag,
-                                                             kHalf4_GrSLType,
+                                                             kFloat4_GrSLType,
                                                              "invRadiiLTRB",
                                                              &invRadiiLTRBSqdName);
             if (scaleName) {

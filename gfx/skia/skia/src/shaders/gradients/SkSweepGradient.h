@@ -8,7 +8,7 @@
 #ifndef SkSweepGradient_DEFINED
 #define SkSweepGradient_DEFINED
 
-#include "SkGradientShaderPriv.h"
+#include "src/shaders/gradients/SkGradientShaderPriv.h"
 
 class SkSweepGradient final : public SkGradientShaderBase {
 public:
@@ -26,7 +26,6 @@ public:
 
 protected:
     void flatten(SkWriteBuffer& buffer) const override;
-    sk_sp<SkShader> onMakeColorSpace(SkColorSpaceXformer* xformer) const override;
 
     void appendGradientStages(SkArenaAlloc* alloc, SkRasterPipeline* tPipeline,
                               SkRasterPipeline* postPipeline) const override;

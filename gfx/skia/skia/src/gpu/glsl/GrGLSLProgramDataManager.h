@@ -8,9 +8,9 @@
 #ifndef GrGLSLProgramDataManager_DEFINED
 #define GrGLSLProgramDataManager_DEFINED
 
-#include "GrResourceHandle.h"
-#include "SkNoncopyable.h"
-#include "SkTypes.h"
+#include "include/core/SkTypes.h"
+#include "include/private/SkNoncopyable.h"
+#include "src/gpu/GrResourceHandle.h"
 
 class SkMatrix;
 class SkMatrix44;
@@ -55,8 +55,7 @@ public:
 
     // convenience method for uploading a SkMatrix to a 3x3 matrix uniform
     void setSkMatrix(UniformHandle, const SkMatrix&) const;
-
-    // convenience method for uploading a SkMatrix44 to a 4x4 matrix uniform
+    // convenience method for uploading a SkMatrix to a 4x4 matrix uniform
     void setSkMatrix44(UniformHandle, const SkMatrix44&) const;
 
     // for nvpr only

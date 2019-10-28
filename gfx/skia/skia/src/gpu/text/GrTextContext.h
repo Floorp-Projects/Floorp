@@ -8,13 +8,13 @@
 #ifndef GrTextContext_DEFINED
 #define GrTextContext_DEFINED
 
-#include "GrDistanceFieldAdjustTable.h"
-#include "GrGeometryProcessor.h"
-#include "GrTextTarget.h"
-#include "SkGlyphRun.h"
+#include "src/core/SkGlyphRun.h"
+#include "src/gpu/GrGeometryProcessor.h"
+#include "src/gpu/text/GrDistanceFieldAdjustTable.h"
+#include "src/gpu/text/GrTextTarget.h"
 
 #if GR_TEST_UTILS
-#include "GrDrawOpTest.h"
+#include "src/gpu/GrDrawOpTest.h"
 #endif
 
 class GrDrawOp;
@@ -80,7 +80,7 @@ private:
     // sets up the descriptor on the blob and returns a detached cache.  Client must attach
     static SkColor ComputeCanonicalColor(const SkPaint&, bool lcd);
     // Determines if we need to use fake gamma (and contrast boost):
-    static SkScalerContextFlags ComputeScalerContextFlags(const GrColorSpaceInfo&);
+    static SkScalerContextFlags ComputeScalerContextFlags(const GrColorInfo&);
 
     const GrDistanceFieldAdjustTable* dfAdjustTable() const { return fDistanceAdjustTable.get(); }
 

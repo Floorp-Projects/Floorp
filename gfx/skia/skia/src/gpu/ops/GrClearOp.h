@@ -8,8 +8,8 @@
 #ifndef GrClearOp_DEFINED
 #define GrClearOp_DEFINED
 
-#include "GrFixedClip.h"
-#include "GrOp.h"
+#include "src/gpu/GrFixedClip.h"
+#include "src/gpu/ops/GrOp.h"
 
 class GrOpFlushState;
 class GrRecordingContext;
@@ -62,7 +62,7 @@ private:
         if (fullScreen) {
             fClip.disableScissor();
         }
-        this->setBounds(SkRect::Make(rect), HasAABloat::kNo, IsZeroArea::kNo);
+        this->setBounds(SkRect::Make(rect), HasAABloat::kNo, IsHairline::kNo);
     }
 
     CombineResult onCombineIfPossible(GrOp* t, const GrCaps& caps) override {

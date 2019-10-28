@@ -8,14 +8,14 @@
 #ifndef SkRemoteTypeface_DEFINED
 #define SkRemoteTypeface_DEFINED
 
-#include "SkAdvancedTypefaceMetrics.h"
-#include "SkDescriptor.h"
-#include "SkFontDescriptor.h"
-#include "SkFontStyle.h"
-#include "SkPaint.h"
-#include "SkRemoteGlyphCache.h"
-#include "SkScalerContext.h"
-#include "SkTypeface.h"
+#include "include/core/SkFontStyle.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkTypeface.h"
+#include "src/core/SkAdvancedTypefaceMetrics.h"
+#include "src/core/SkDescriptor.h"
+#include "src/core/SkFontDescriptor.h"
+#include "src/core/SkRemoteGlyphCache.h"
+#include "src/core/SkScalerContext.h"
 
 class SkTypefaceProxy;
 class SkStrikeCache;
@@ -31,7 +31,6 @@ public:
 
 protected:
     unsigned generateGlyphCount() override;
-    uint16_t generateCharToGlyph(SkUnichar) override;
     bool generateAdvance(SkGlyph* glyph) override;
     void generateMetrics(SkGlyph* glyph) override;
     void generateImage(const SkGlyph& glyph) override;
@@ -64,28 +63,23 @@ public:
     bool isLogging() const {return fIsLogging;}
 
 protected:
-    int onGetUPEM() const override { SK_ABORT("Should never be called."); return 0; }
+    int onGetUPEM() const override { SK_ABORT("Should never be called."); }
     std::unique_ptr<SkStreamAsset> onOpenStream(int* ttcIndex) const override {
         SK_ABORT("Should never be called.");
-        return nullptr;
     }
     std::unique_ptr<SkFontData> onMakeFontData() const override {
         SK_ABORT("Should never be called.");
-        return nullptr;
     }
     sk_sp<SkTypeface> onMakeClone(const SkFontArguments& args) const override {
         SK_ABORT("Should never be called.");
-        return nullptr;
     }
     int onGetVariationDesignPosition(SkFontArguments::VariationPosition::Coordinate coordinates[],
                                      int coordinateCount) const override {
         SK_ABORT("Should never be called.");
-        return 0;
     }
     int onGetVariationDesignParameters(SkFontParameters::Variation::Axis parameters[],
                                        int parameterCount) const override {
         SK_ABORT("Should never be called.");
-        return 0;
     }
     void onGetFamilyName(SkString* familyName) const override {
         // Used by SkStrikeCache::DumpMemoryStatistics.
@@ -93,15 +87,12 @@ protected:
     }
     SkTypeface::LocalizedStrings* onCreateFamilyNameIterator() const override {
         SK_ABORT("Should never be called.");
-        return nullptr;
     }
     int onGetTableTags(SkFontTableTag tags[]) const override {
         SK_ABORT("Should never be called.");
-        return 0;
     }
     size_t onGetTableData(SkFontTableTag, size_t offset, size_t length, void* data) const override {
         SK_ABORT("Should never be called.");
-        return 0;
     }
     SkScalerContext* onCreateScalerContext(const SkScalerContextEffects& effects,
                                            const SkDescriptor* desc) const override {
@@ -119,14 +110,15 @@ protected:
         SK_ABORT("Should never be called.");
     }
 
+    void getPostScriptGlyphNames(SkString*) const override {
+        SK_ABORT("Should never be called.");
+    }
+
     std::unique_ptr<SkAdvancedTypefaceMetrics> onGetAdvancedMetrics() const override {
         SK_ABORT("Should never be called.");
-        return nullptr;
     }
-    int onCharsToGlyphs(const void* chars, Encoding,
-                        uint16_t glyphs[], int glyphCount) const override {
+    void onCharsToGlyphs(const SkUnichar* chars, int count, SkGlyphID glyphs[]) const override {
         SK_ABORT("Should never be called.");
-        return 0;
     }
     int onCountGlyphs() const override {
         return this->glyphCount();
@@ -134,7 +126,6 @@ protected:
 
     void* onGetCTFontRef() const override {
         SK_ABORT("Should never be called.");
-        return nullptr;
     }
 
 private:

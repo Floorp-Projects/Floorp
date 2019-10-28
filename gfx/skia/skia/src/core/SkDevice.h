@@ -8,11 +8,12 @@
 #ifndef SkDevice_DEFINED
 #define SkDevice_DEFINED
 
-#include "SkRefCnt.h"
-#include "SkCanvas.h"
-#include "SkColor.h"
-#include "SkRegion.h"
-#include "SkSurfaceProps.h"
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColor.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkRegion.h"
+#include "include/core/SkSurfaceProps.h"
+#include "include/private/SkNoncopyable.h"
 
 class SkBitmap;
 struct SkDrawShadowRec;
@@ -145,10 +146,10 @@ protected:
     virtual void onSetDeviceClipRestriction(SkIRect* mutableClipRestriction) {}
     virtual bool onClipIsAA() const = 0;
     virtual void onAsRgnClip(SkRegion*) const = 0;
-    enum ClipType {
-        kEmpty_ClipType,
-        kRect_ClipType,
-        kComplex_ClipType
+    enum class ClipType {
+        kEmpty,
+        kRect,
+        kComplex
     };
     virtual ClipType onGetClipType() const = 0;
 
@@ -174,11 +175,6 @@ protected:
     // Default impl calls drawPath()
     virtual void drawDRRect(const SkRRect& outer,
                             const SkRRect& inner, const SkPaint&);
-
-    // Default impl always calls drawRect() with a solid-color paint, setting it to anti-aliased
-    // only when all edge flags are set.
-    virtual void drawEdgeAARect(const SkRect& r, SkCanvas::QuadAAFlags aa, SkColor color,
-                                SkBlendMode mode);
 
     /**
      *  If pathIsMutable, then the implementation is allowed to cast path to a
@@ -212,9 +208,6 @@ protected:
     virtual void drawImageLattice(const SkImage*, const SkCanvas::Lattice&,
                                   const SkRect& dst, const SkPaint&);
 
-    virtual void drawImageSet(const SkCanvas::ImageSetEntry[], int count, SkFilterQuality,
-                              SkBlendMode);
-
     virtual void drawVertices(const SkVertices*, const SkVertices::Bone bones[], int boneCount,
                               SkBlendMode, const SkPaint&) = 0;
     virtual void drawShadow(const SkPath&, const SkDrawShadowRec&);
@@ -230,6 +223,18 @@ protected:
 
     virtual void drawAnnotation(const SkRect&, const char[], SkData*) {}
 
+    // Default impl always calls drawRect() with a solid-color paint, setting it to anti-aliased
+    // only when all edge flags are set. If there's a clip region, it draws that using drawPath,
+    // or uses clipPath().
+    virtual void drawEdgeAAQuad(const SkRect& rect, const SkPoint clip[4],
+                                SkCanvas::QuadAAFlags aaFlags, const SkColor4f& color,
+                                SkBlendMode mode);
+    // Default impl uses drawImageRect per entry, being anti-aliased only when an entry's edge flags
+    // are all set. If there's a clip region, it will be applied using clipPath().
+    virtual void drawEdgeAAImageSet(const SkCanvas::ImageSetEntry[], int count,
+                                    const SkPoint dstClips[], const SkMatrix preViewMatrices[],
+                                    const SkPaint& paint, SkCanvas::SrcRectConstraint);
+
     /** The SkDevice passed will be an SkDevice which was returned by a call to
         onCreateDevice on this device with kNeverTile_TileExpectation.
      */
@@ -244,12 +249,17 @@ protected:
                              SkImage* clipImage, const SkMatrix& clipMatrix);
     virtual sk_sp<SkSpecialImage> makeSpecial(const SkBitmap&);
     virtual sk_sp<SkSpecialImage> makeSpecial(const SkImage*);
-    virtual sk_sp<SkSpecialImage> snapSpecial();
+    // Get a view of the entire device's current contents as an image.
+    sk_sp<SkSpecialImage> snapSpecial();
+    // Snap the 'subset' contents from this device, possibly as a read-only view. If 'forceCopy'
+    // is true then the returned image's pixels must not be affected by subsequent draws into the
+    // device. When 'forceCopy' is false, the image can be a view into the device's pixels
+    // (avoiding a copy for performance, at the expense of safety). Default returns null.
+    virtual sk_sp<SkSpecialImage> snapSpecial(const SkIRect& subset, bool forceCopy = false);
+
     virtual void setImmutable() {}
 
     bool readPixels(const SkPixmap&, int x, int y);
-
-    virtual sk_sp<SkSpecialImage> snapBackImage(const SkIRect&);    // default returns null
 
     ///////////////////////////////////////////////////////////////////////////
 
@@ -277,27 +287,17 @@ protected:
     virtual bool onAccessPixels(SkPixmap*) { return false; }
 
     struct CreateInfo {
-        static SkPixelGeometry AdjustGeometry(const SkImageInfo&, TileUsage, SkPixelGeometry,
-                                              bool preserveLCDText);
+        static SkPixelGeometry AdjustGeometry(TileUsage, SkPixelGeometry);
 
         // The constructor may change the pixel geometry based on other parameters.
         CreateInfo(const SkImageInfo& info,
                    TileUsage tileUsage,
-                   SkPixelGeometry geo)
-            : fInfo(info)
-            , fTileUsage(tileUsage)
-            , fPixelGeometry(AdjustGeometry(info, tileUsage, geo, false))
-        {}
-
-        CreateInfo(const SkImageInfo& info,
-                   TileUsage tileUsage,
                    SkPixelGeometry geo,
-                   bool preserveLCDText,
                    bool trackCoverage,
                    SkRasterHandleAllocator* allocator)
             : fInfo(info)
             , fTileUsage(tileUsage)
-            , fPixelGeometry(AdjustGeometry(info, tileUsage, geo, preserveLCDText))
+            , fPixelGeometry(AdjustGeometry(tileUsage, geo))
             , fTrackCoverage(trackCoverage)
             , fAllocator(allocator)
         {}
@@ -341,8 +341,6 @@ private:
     friend class SkGlyphRunList;
     friend class SkGlyphRunBuilder;
 
-    friend class ClipTileRenderer;  // GM needs context() until API is in SkCanvas
-
     // used to change the backend's pixels (and possibly config/rowbytes)
     // but cannot change the width/height, so there should be no change to
     // any clip information.
@@ -383,16 +381,19 @@ class SkNoPixelsDevice : public SkBaseDevice {
 public:
     SkNoPixelsDevice(const SkIRect& bounds, const SkSurfaceProps& props,
                      sk_sp<SkColorSpace> colorSpace = nullptr)
-    : SkBaseDevice(SkImageInfo::Make(bounds.width(), bounds.height(), kUnknown_SkColorType,
-                                     kUnknown_SkAlphaType, std::move(colorSpace)), props)
-    {
+            : SkBaseDevice(SkImageInfo::Make(bounds.size(), kUnknown_SkColorType,
+                                             kUnknown_SkAlphaType, std::move(colorSpace)),
+                           props) {
         // this fails if we enable this assert: DiscardableImageMapTest.GetDiscardableImagesInRectMaxImage
         //SkASSERT(bounds.width() >= 0 && bounds.height() >= 0);
+
+        this->setOrigin(SkMatrix::I(), bounds.left(), bounds.top());
     }
 
     void resetForNextPicture(const SkIRect& bounds) {
         //SkASSERT(bounds.width() >= 0 && bounds.height() >= 0);
         this->privateResize(bounds.width(), bounds.height());
+        this->setOrigin(SkMatrix::I(), bounds.left(), bounds.top());
     }
 
 protected:
@@ -410,7 +411,7 @@ protected:
         rgn->setRect(SkIRect::MakeWH(this->width(), this->height()));
     }
     ClipType onGetClipType() const override {
-        return kRect_ClipType;
+        return ClipType::kRect;
     }
 
     void drawPaint(const SkPaint& paint) override {}

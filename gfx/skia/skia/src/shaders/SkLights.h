@@ -9,11 +9,10 @@
 #ifndef SkLights_DEFINED
 #define SkLights_DEFINED
 
-#include "SkPoint3.h"
-#include "SkRefCnt.h"
-#include "../private/SkTArray.h"
+#include "include/core/SkPoint3.h"
+#include "include/core/SkRefCnt.h"
+#include "include/private/SkTArray.h"
 
-class SkColorSpaceXformer;
 class SkReadBuffer;
 class SkWriteBuffer;
 
@@ -183,8 +182,6 @@ private:
     friend class SkLightingShaderImpl;
 
     SkLights() : fAmbientLightColor(SkColor3f::Make(0.0f, 0.0f, 0.0f)) {}
-
-    sk_sp<SkLights> makeColorSpace(SkColorSpaceXformer* xformer) const;
 
     SkTArray<Light> fLights;
     SkColor3f       fAmbientLightColor;

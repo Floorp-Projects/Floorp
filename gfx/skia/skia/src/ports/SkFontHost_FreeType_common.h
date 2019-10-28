@@ -9,13 +9,14 @@
 #ifndef SKFONTHOST_FREETYPE_COMMON_H_
 #define SKFONTHOST_FREETYPE_COMMON_H_
 
-#include "SkGlyph.h"
-#include "SkMutex.h"
-#include "SkScalerContext.h"
-#include "SkTypeface.h"
-#include "SkTypes.h"
+#include "include/core/SkTypeface.h"
+#include "include/core/SkTypes.h"
+#include "include/private/SkMutex.h"
+#include "src/core/SkGlyph.h"
+#include "src/core/SkScalerContext.h"
+#include "src/utils/SkCharToGlyphCache.h"
 
-#include "SkFontMgr.h"
+#include "include/core/SkFontMgr.h"
 
 // These are forward declared to avoid pimpl but also hide the FreeType implementation.
 typedef struct FT_LibraryRec_* FT_Library;
@@ -102,8 +103,7 @@ protected:
     int onGetUPEM() const override;
     bool onGetKerningPairAdjustments(const uint16_t glyphs[], int count,
                                      int32_t adjustments[]) const override;
-    int onCharsToGlyphs(const void* chars, Encoding, uint16_t glyphs[],
-                        int glyphCount) const override;
+    void onCharsToGlyphs(const SkUnichar uni[], int count, SkGlyphID glyphs[]) const override;
     int onCountGlyphs() const override;
 
     LocalizedStrings* onCreateFamilyNameIterator() const override;
@@ -115,8 +115,12 @@ protected:
     int onGetTableTags(SkFontTableTag tags[]) const override;
     size_t onGetTableData(SkFontTableTag, size_t offset,
                           size_t length, void* data) const override;
+    sk_sp<SkData> onCopyTableData(SkFontTableTag) const override;
 
 private:
+    mutable SkMutex fC2GCacheMutex;
+    mutable SkCharToGlyphCache fC2GCache;
+
     typedef SkTypeface INHERITED;
 };
 

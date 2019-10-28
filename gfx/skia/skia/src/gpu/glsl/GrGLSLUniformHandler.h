@@ -8,16 +8,16 @@
 #ifndef GrGLSLUniformHandler_DEFINED
 #define GrGLSLUniformHandler_DEFINED
 
-#include "GrGLSLProgramDataManager.h"
-#include "GrShaderVar.h"
-#include "GrSwizzle.h"
+#include "src/gpu/GrShaderVar.h"
+#include "src/gpu/GrSwizzle.h"
+#include "src/gpu/glsl/GrGLSLProgramDataManager.h"
 
 // variable names beginning with this prefix will not be mangled
 #define GR_NO_MANGLE_PREFIX "sk_"
 
 class GrGLSLProgramBuilder;
 class GrSamplerState;
-class GrTexture;
+class GrTextureProxy;
 
 // Handles for program uniforms (other than per-effect uniforms)
 struct GrGLSLBuiltinUniformHandles {
@@ -45,30 +45,10 @@ public:
         to add an array of uniforms. */
     UniformHandle addUniform(uint32_t visibility,
                              GrSLType type,
-                             GrSLPrecision precision,
                              const char* name,
                              const char** outName = nullptr) {
         SkASSERT(!GrSLTypeIsCombinedSamplerType(type));
-        return this->addUniformArray(visibility, type, precision, name, 0, outName);
-    }
-
-    UniformHandle addUniform(uint32_t visibility,
-                             GrSLType type,
-                             const char* name,
-                             const char** outName = nullptr) {
-        return this->addUniform(visibility, type, kDefault_GrSLPrecision, name, outName);
-    }
-
-    UniformHandle addUniformArray(uint32_t visibility,
-                                  GrSLType type,
-                                  GrSLPrecision precision,
-                                  const char* name,
-                                  int arrayCount,
-                                  const char** outName = nullptr) {
-        SkASSERT(!GrSLTypeIsCombinedSamplerType(type));
-        bool mangle = strncmp(name, GR_NO_MANGLE_PREFIX, strlen(GR_NO_MANGLE_PREFIX));
-        return this->internalAddUniformArray(visibility, type, precision, name, mangle, arrayCount,
-                                             outName);
+        return this->addUniformArray(visibility, type, name, 0, outName);
     }
 
     UniformHandle addUniformArray(uint32_t visibility,
@@ -78,11 +58,15 @@ public:
                                   const char** outName = nullptr) {
         SkASSERT(!GrSLTypeIsCombinedSamplerType(type));
         bool mangle = strncmp(name, GR_NO_MANGLE_PREFIX, strlen(GR_NO_MANGLE_PREFIX));
-        return this->internalAddUniformArray(visibility, type, kDefault_GrSLPrecision, name, mangle,
-                                             arrayCount, outName);
+        return this->internalAddUniformArray(visibility, type, name, mangle, arrayCount, outName);
     }
 
     virtual const GrShaderVar& getUniformVariable(UniformHandle u) const = 0;
+
+    /**
+     * 'Or's the visibility parameter with the current uniform visibililty.
+     */
+    virtual void updateUniformVisibility(UniformHandle u, uint32_t visibility) = 0;
 
     /**
      * Shortcut for getUniformVariable(u).c_str()
@@ -96,15 +80,15 @@ protected:
     GrGLSLProgramBuilder* fProgramBuilder;
 
 private:
-    virtual const GrShaderVar& samplerVariable(SamplerHandle) const = 0;
+    virtual const char * samplerVariable(SamplerHandle) const = 0;
+    // Only called if GrShaderCaps(:textureSwizzleAppliedInShader() == true.
     virtual GrSwizzle samplerSwizzle(SamplerHandle) const = 0;
 
-    virtual SamplerHandle addSampler(const GrTexture*, const GrSamplerState&, const char* name,
-                                     const GrShaderCaps*) = 0;
+    virtual SamplerHandle addSampler(const GrTextureProxy*, const GrSamplerState&, const GrSwizzle&,
+                                     const char* name, const GrShaderCaps*) = 0;
 
     virtual UniformHandle internalAddUniformArray(uint32_t visibility,
                                                   GrSLType type,
-                                                  GrSLPrecision precision,
                                                   const char* name,
                                                   bool mangleName,
                                                   int arrayCount,

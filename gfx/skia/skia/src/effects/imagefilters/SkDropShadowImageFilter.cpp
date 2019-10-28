@@ -5,42 +5,71 @@
  * found in the LICENSE file.
  */
 
-#include "SkDropShadowImageFilter.h"
+#include "include/effects/SkDropShadowImageFilter.h"
 
-#include "SkBlurImageFilter.h"
-#include "SkCanvas.h"
-#include "SkColorSpaceXformer.h"
-#include "SkImageFilterPriv.h"
-#include "SkReadBuffer.h"
-#include "SkSpecialImage.h"
-#include "SkSpecialSurface.h"
-#include "SkWriteBuffer.h"
+#include "include/core/SkCanvas.h"
+#include "include/effects/SkBlurImageFilter.h"
+#include "src/core/SkImageFilter_Base.h"
+#include "src/core/SkReadBuffer.h"
+#include "src/core/SkSpecialImage.h"
+#include "src/core/SkSpecialSurface.h"
+#include "src/core/SkWriteBuffer.h"
+
+namespace {
+
+class SkDropShadowImageFilterImpl final : public SkImageFilter_Base {
+public:
+    SkDropShadowImageFilterImpl(SkScalar dx, SkScalar dy, SkScalar sigmaX, SkScalar sigmaY,
+                                SkColor color, bool shadowOnly, sk_sp<SkImageFilter> input,
+                                const CropRect* cropRect)
+            : INHERITED(&input, 1, cropRect)
+            , fDx(dx)
+            , fDy(dy)
+            , fSigmaX(sigmaX)
+            , fSigmaY(sigmaY)
+            , fColor(color)
+            , fShadowOnly(shadowOnly) {}
+
+    SkRect computeFastBounds(const SkRect&) const override;
+
+protected:
+    void flatten(SkWriteBuffer&) const override;
+    sk_sp<SkSpecialImage> onFilterImage(const Context&, SkIPoint* offset) const override;
+    SkIRect onFilterNodeBounds(const SkIRect& src, const SkMatrix& ctm,
+                               MapDirection, const SkIRect* inputRect) const override;
+
+private:
+    friend void SkDropShadowImageFilter::RegisterFlattenables();
+    SK_FLATTENABLE_HOOKS(SkDropShadowImageFilterImpl)
+
+    SkScalar fDx, fDy, fSigmaX, fSigmaY;
+    SkColor  fColor;
+    bool     fShadowOnly;
+
+    typedef SkImageFilter_Base INHERITED;
+};
+
+} // end namespace
 
 sk_sp<SkImageFilter> SkDropShadowImageFilter::Make(SkScalar dx, SkScalar dy,
                                                    SkScalar sigmaX, SkScalar sigmaY,
                                                    SkColor color, ShadowMode shadowMode,
                                                    sk_sp<SkImageFilter> input,
-                                                   const CropRect* cropRect) {
-    return sk_sp<SkImageFilter>(new SkDropShadowImageFilter(dx, dy, sigmaX, sigmaY,
-                                                            color, shadowMode,
-                                                            std::move(input),
-                                                            cropRect));
+                                                   const SkImageFilter::CropRect* cropRect) {
+    bool shadowOnly = shadowMode == SkDropShadowImageFilter::kDrawShadowOnly_ShadowMode;
+    return sk_sp<SkImageFilter>(new SkDropShadowImageFilterImpl(
+            dx, dy, sigmaX, sigmaY, color, shadowOnly, std::move(input), cropRect));
 }
 
-SkDropShadowImageFilter::SkDropShadowImageFilter(SkScalar dx, SkScalar dy,
-                                                 SkScalar sigmaX, SkScalar sigmaY, SkColor color,
-                                                 ShadowMode shadowMode, sk_sp<SkImageFilter> input,
-                                                 const CropRect* cropRect)
-    : INHERITED(&input, 1, cropRect)
-    , fDx(dx)
-    , fDy(dy)
-    , fSigmaX(sigmaX)
-    , fSigmaY(sigmaY)
-    , fColor(color)
-    , fShadowMode(shadowMode) {
+void SkDropShadowImageFilter::RegisterFlattenables() {
+    SK_REGISTER_FLATTENABLE(SkDropShadowImageFilterImpl);
+    // TODO (michaelludwig) - Remove after grace period for SKPs to stop using old name
+    SkFlattenable::Register("SkDropShadowImageFilter", SkDropShadowImageFilterImpl::CreateProc);
 }
 
-sk_sp<SkFlattenable> SkDropShadowImageFilter::CreateProc(SkReadBuffer& buffer) {
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+sk_sp<SkFlattenable> SkDropShadowImageFilterImpl::CreateProc(SkReadBuffer& buffer) {
     SK_IMAGEFILTER_UNFLATTEN_COMMON(common, 1);
     SkScalar dx = buffer.readScalar();
     SkScalar dy = buffer.readScalar();
@@ -48,26 +77,31 @@ sk_sp<SkFlattenable> SkDropShadowImageFilter::CreateProc(SkReadBuffer& buffer) {
     SkScalar sigmaY = buffer.readScalar();
     SkColor color = buffer.readColor();
 
-    ShadowMode shadowMode = buffer.read32LE(kLast_ShadowMode);
-
-    return Make(dx, dy, sigmaX, sigmaY, color, shadowMode, common.getInput(0), &common.cropRect());
+    // For backwards compatibility, the shadow mode had been saved as an enum cast to a 32LE int,
+    // where shadow-and-foreground was 0 and shadow-only was 1. Other than the number of bits, this
+    // is equivalent to the bool that SkDropShadowImageFilterImpl now uses.
+    bool shadowOnly = SkToBool(buffer.read32LE(1));
+    // TODO (michaelludwig) - TODO: Call factory function once SkDropShadowImageFilter::Make no
+    // longer takes the old enum as its argument
+    return sk_sp<SkImageFilter>(new SkDropShadowImageFilterImpl(
+            dx, dy, sigmaX, sigmaY, color, shadowOnly, common.getInput(0), &common.cropRect()));
 }
 
-void SkDropShadowImageFilter::flatten(SkWriteBuffer& buffer) const {
+void SkDropShadowImageFilterImpl::flatten(SkWriteBuffer& buffer) const {
     this->INHERITED::flatten(buffer);
     buffer.writeScalar(fDx);
     buffer.writeScalar(fDy);
     buffer.writeScalar(fSigmaX);
     buffer.writeScalar(fSigmaY);
     buffer.writeColor(fColor);
-    buffer.writeInt(static_cast<int>(fShadowMode));
+    // See CreateProc, but we save the bool as an int to match previous enum serialization.
+    buffer.writeInt(fShadowOnly);
 }
 
-sk_sp<SkSpecialImage> SkDropShadowImageFilter::onFilterImage(SkSpecialImage* source,
-                                                             const Context& ctx,
-                                                             SkIPoint* offset) const {
+sk_sp<SkSpecialImage> SkDropShadowImageFilterImpl::onFilterImage(const Context& ctx,
+                                                                 SkIPoint* offset) const {
     SkIPoint inputOffset = SkIPoint::Make(0, 0);
-    sk_sp<SkSpecialImage> input(this->filterInput(0, source, ctx, &inputOffset));
+    sk_sp<SkSpecialImage> input(this->filterInput(0, ctx, &inputOffset));
     if (!input) {
         return nullptr;
     }
@@ -79,7 +113,7 @@ sk_sp<SkSpecialImage> SkDropShadowImageFilter::onFilterImage(SkSpecialImage* sou
         return nullptr;
     }
 
-    sk_sp<SkSpecialSurface> surf(source->makeSurface(ctx.outputProperties(), bounds.size()));
+    sk_sp<SkSpecialSurface> surf(ctx.makeSurface(bounds.size()));
     if (!surf) {
         return nullptr;
     }
@@ -97,7 +131,7 @@ sk_sp<SkSpecialImage> SkDropShadowImageFilter::onFilterImage(SkSpecialImage* sou
     SkPaint paint;
     paint.setAntiAlias(true);
     paint.setImageFilter(SkBlurImageFilter::Make(sigma.fX, sigma.fY, nullptr));
-    paint.setColorFilter(SkColorFilter::MakeModeFilter(fColor, SkBlendMode::kSrcIn));
+    paint.setColorFilter(SkColorFilters::Blend(fColor, SkBlendMode::kSrcIn));
 
     SkVector offsetVec = SkVector::Make(fDx, fDy);
     ctx.ctm().mapVectors(&offsetVec, 1);
@@ -106,7 +140,7 @@ sk_sp<SkSpecialImage> SkDropShadowImageFilter::onFilterImage(SkSpecialImage* sou
                       SkIntToScalar(inputOffset.fY - bounds.fTop));
     input->draw(canvas, offsetVec.fX, offsetVec.fY, &paint);
 
-    if (fShadowMode == kDrawShadowAndForeground_ShadowMode) {
+    if (!fShadowOnly) {
         input->draw(canvas, 0, 0, nullptr);
     }
     offset->fX = bounds.fLeft;
@@ -114,24 +148,12 @@ sk_sp<SkSpecialImage> SkDropShadowImageFilter::onFilterImage(SkSpecialImage* sou
     return surf->makeImageSnapshot();
 }
 
-sk_sp<SkImageFilter> SkDropShadowImageFilter::onMakeColorSpace(SkColorSpaceXformer* xformer) const {
-    SkASSERT(1 == this->countInputs());
-
-    sk_sp<SkImageFilter> input = xformer->apply(this->getInput(0));
-    SkColor color = xformer->apply(fColor);
-    if (input.get() != this->getInput(0) || color != fColor) {
-        return SkDropShadowImageFilter::Make(fDx, fDy, fSigmaX, fSigmaY, color,
-                                             fShadowMode, input, this->getCropRectIfSet());
-    }
-    return this->refMe();
-}
-
-SkRect SkDropShadowImageFilter::computeFastBounds(const SkRect& src) const {
+SkRect SkDropShadowImageFilterImpl::computeFastBounds(const SkRect& src) const {
     SkRect bounds = this->getInput(0) ? this->getInput(0)->computeFastBounds(src) : src;
     SkRect shadowBounds = bounds;
     shadowBounds.offset(fDx, fDy);
     shadowBounds.outset(fSigmaX * 3, fSigmaY * 3);
-    if (fShadowMode == kDrawShadowAndForeground_ShadowMode) {
+    if (!fShadowOnly) {
         bounds.join(shadowBounds);
     } else {
         bounds = shadowBounds;
@@ -139,8 +161,8 @@ SkRect SkDropShadowImageFilter::computeFastBounds(const SkRect& src) const {
     return bounds;
 }
 
-SkIRect SkDropShadowImageFilter::onFilterNodeBounds(const SkIRect& src, const SkMatrix& ctm,
-                                                    MapDirection dir, const SkIRect* inputRect) const {
+SkIRect SkDropShadowImageFilterImpl::onFilterNodeBounds(
+        const SkIRect& src, const SkMatrix& ctm, MapDirection dir, const SkIRect* inputRect) const {
     SkVector offsetVec = SkVector::Make(fDx, fDy);
     if (kReverse_MapDirection == dir) {
         offsetVec.negate();
@@ -153,7 +175,7 @@ SkIRect SkDropShadowImageFilter::onFilterNodeBounds(const SkIRect& src, const Sk
     dst.outset(
         SkScalarCeilToInt(SkScalarAbs(sigma.x() * 3)),
         SkScalarCeilToInt(SkScalarAbs(sigma.y() * 3)));
-    if (fShadowMode == kDrawShadowAndForeground_ShadowMode) {
+    if (!fShadowOnly) {
         dst.join(src);
     }
     return dst;

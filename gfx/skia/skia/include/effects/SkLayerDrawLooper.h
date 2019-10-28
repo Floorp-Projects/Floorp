@@ -8,10 +8,10 @@
 #ifndef SkLayerDrawLooper_DEFINED
 #define SkLayerDrawLooper_DEFINED
 
-#include "SkDrawLooper.h"
-#include "SkPaint.h"
-#include "SkPoint.h"
-#include "SkBlendMode.h"
+#include "include/core/SkBlendMode.h"
+#include "include/core/SkDrawLooper.h"
+#include "include/core/SkPaint.h"
+#include "include/core/SkPoint.h"
 
 class SK_API SkLayerDrawLooper : public SkDrawLooper {
 public:
@@ -72,13 +72,11 @@ public:
         LayerInfo();
     };
 
-    SkDrawLooper::Context* makeContext(SkCanvas*, SkArenaAlloc*) const override;
+    SkDrawLooper::Context* makeContext(SkArenaAlloc*) const override;
 
     bool asABlurShadow(BlurShadowRec* rec) const override;
 
 protected:
-    sk_sp<SkDrawLooper> onMakeColorSpace(SkColorSpaceXformer*) const override;
-
     SkLayerDrawLooper();
 
     void flatten(SkWriteBuffer&) const override;
@@ -100,7 +98,7 @@ private:
         explicit LayerDrawLooperContext(const SkLayerDrawLooper* looper);
 
     protected:
-        bool next(SkCanvas*, SkPaint* paint) override;
+        bool next(Info*, SkPaint* paint) override;
 
     private:
         Rec* fCurrRec;

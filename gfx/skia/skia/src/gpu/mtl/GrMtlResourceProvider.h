@@ -8,30 +8,38 @@
 #ifndef GrMtlResourceProvider_DEFINED
 #define GrMtlResourceProvider_DEFINED
 
-#include "GrMtlCopyPipelineState.h"
-#include "GrMtlPipelineStateBuilder.h"
-#include "SkLRUCache.h"
-#include "SkTArray.h"
+#include "include/private/SkSpinlock.h"
+#include "include/private/SkTArray.h"
+#include "src/core/SkLRUCache.h"
+#include "src/gpu/mtl/GrMtlDepthStencil.h"
+#include "src/gpu/mtl/GrMtlPipelineStateBuilder.h"
+#include "src/gpu/mtl/GrMtlSampler.h"
 
-#import <metal/metal.h>
+#import <Metal/Metal.h>
 
 class GrMtlGpu;
+class GrMtlCommandBuffer;
 
 class GrMtlResourceProvider {
 public:
     GrMtlResourceProvider(GrMtlGpu* gpu);
 
-    GrMtlCopyPipelineState* findOrCreateCopyPipelineState(MTLPixelFormat dstPixelFormat,
-                                                          id<MTLFunction> vertexFunction,
-                                                          id<MTLFunction> fragmentFunction,
-                                                          MTLVertexDescriptor* vertexDescriptor);
+    GrMtlPipelineState* findOrCreateCompatiblePipelineState(GrRenderTarget*,
+                                                            const GrProgramInfo&,
+                                                            GrPrimitiveType);
 
-    GrMtlPipelineState* findOrCreateCompatiblePipelineState(
-        GrRenderTarget*, GrSurfaceOrigin,
-        const GrPipeline&,
-        const GrPrimitiveProcessor&,
-        const GrTextureProxy* const primProcProxies[],
-        GrPrimitiveType);
+    // Finds or creates a compatible MTLDepthStencilState based on the GrStencilSettings.
+    GrMtlDepthStencil* findOrCreateCompatibleDepthStencilState(const GrStencilSettings&,
+                                                               GrSurfaceOrigin);
+
+    // Finds or creates a compatible MTLSamplerState based on the GrSamplerState.
+    GrMtlSampler* findOrCreateCompatibleSampler(const GrSamplerState&);
+
+    id<MTLBuffer> getDynamicBuffer(size_t size, size_t* offset);
+    void addBufferCompletionHandler(GrMtlCommandBuffer* cmdBuffer);
+
+    // Destroy any cached resources. To be called before releasing the MtlDevice.
+    void destroyResources();
 
 private:
 #ifdef SK_DEBUG
@@ -43,19 +51,11 @@ private:
         PipelineStateCache(GrMtlGpu* gpu);
         ~PipelineStateCache();
 
-        GrMtlPipelineState* refPipelineState(GrRenderTarget*, GrSurfaceOrigin,
-                                             const GrPrimitiveProcessor&,
-                                             const GrTextureProxy* const primProcProxies[],
-                                             const GrPipeline&,
+        void release();
+        GrMtlPipelineState* refPipelineState(GrRenderTarget*, const GrProgramInfo&,
                                              GrPrimitiveType);
 
     private:
-        enum {
-            // We may actually have kMaxEntries+1 PipelineStates in context because we create a new
-            // PipelineState before evicting from the cache.
-            kMaxEntries = 128,
-        };
-
         struct Entry;
 
         struct DescHash {
@@ -74,12 +74,41 @@ private:
 #endif
     };
 
-    SkTArray<std::unique_ptr<GrMtlCopyPipelineState>> fCopyPipelineStateCache;
+    // Buffer allocator
+    class BufferSuballocator : public SkRefCnt {
+    public:
+        BufferSuballocator(id<MTLDevice> device, size_t size);
+        ~BufferSuballocator() {
+            fBuffer = nil;
+            fTotalSize = 0;
+        }
+
+        id<MTLBuffer> getAllocation(size_t size, size_t* offset);
+        void addCompletionHandler(GrMtlCommandBuffer* cmdBuffer);
+        size_t size() { return fTotalSize; }
+
+    private:
+        id<MTLBuffer> fBuffer;
+        size_t        fTotalSize;
+        size_t        fHead SK_GUARDED_BY(fMutex);     // where we start allocating
+        size_t        fTail SK_GUARDED_BY(fMutex);     // where we start deallocating
+        SkSpinlock    fMutex;
+    };
+    static constexpr size_t kBufferSuballocatorStartSize = 1024*1024;
 
     GrMtlGpu* fGpu;
 
     // Cache of GrMtlPipelineStates
     std::unique_ptr<PipelineStateCache> fPipelineStateCache;
+
+    SkTDynamicHash<GrMtlSampler, GrMtlSampler::Key> fSamplers;
+    SkTDynamicHash<GrMtlDepthStencil, GrMtlDepthStencil::Key> fDepthStencilStates;
+
+    // This is ref-counted because we might delete the GrContext before the command buffer
+    // finishes. The completion handler will retain a reference to this so it won't get
+    // deleted along with the GrContext.
+    sk_sp<BufferSuballocator> fBufferSuballocator;
+    size_t fBufferSuballocatorMaxSize;
 };
 
 #endif

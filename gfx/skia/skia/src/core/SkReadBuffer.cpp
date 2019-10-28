@@ -5,18 +5,18 @@
  * found in the LICENSE file.
  */
 
-#include "SkAutoMalloc.h"
-#include "SkBitmap.h"
-#include "SkData.h"
-#include "SkImage.h"
-#include "SkImageGenerator.h"
-#include "SkMakeUnique.h"
-#include "SkMathPriv.h"
-#include "SkMatrixPriv.h"
-#include "SkReadBuffer.h"
-#include "SkSafeMath.h"
-#include "SkStream.h"
-#include "SkTypeface.h"
+#include "include/core/SkBitmap.h"
+#include "include/core/SkData.h"
+#include "include/core/SkImage.h"
+#include "include/core/SkImageGenerator.h"
+#include "include/core/SkStream.h"
+#include "include/core/SkTypeface.h"
+#include "src/core/SkAutoMalloc.h"
+#include "src/core/SkMakeUnique.h"
+#include "src/core/SkMathPriv.h"
+#include "src/core/SkMatrixPriv.h"
+#include "src/core/SkReadBuffer.h"
+#include "src/core/SkSafeMath.h"
 
 #ifndef SK_DISABLE_READBUFFER
 
@@ -142,14 +142,23 @@ bool SkReadBuffer::readPad32(void* buffer, size_t bytes) {
     return false;
 }
 
+const char* SkReadBuffer::readString(size_t* len) {
+    *len = this->readUInt();
+
+    // The string is len characters and a terminating \0.
+    const char* c_str = this->skipT<char>(*len+1);
+
+    if (this->validate(c_str && c_str[*len] == '\0')) {
+        return c_str;
+    }
+    return nullptr;
+}
+
 void SkReadBuffer::readString(SkString* string) {
-    const size_t len = this->readUInt();
-    // skip over the string + '\0'
-    if (const char* src = this->skipT<char>(len + 1)) {
-        if (this->validate(src[len] == 0)) {
-            string->set(src, len);
-            return;
-        }
+    size_t len;
+    if (const char* c_str = this->readString(&len)) {
+        string->set(c_str, len);
+        return;
     }
     string->reset();
 }
@@ -279,7 +288,7 @@ uint32_t SkReadBuffer::getArrayCount() {
  */
 sk_sp<SkImage> SkReadBuffer::readImage() {
     SkIRect bounds;
-    if (this->isVersionLT(kStoreImageBounds_Version)) {
+    if (this->isVersionLT(SkPicturePriv::kStoreImageBounds_Version)) {
         bounds.fLeft = bounds.fTop = 0;
         bounds.fRight = this->read32();
         bounds.fBottom = this->read32();
@@ -324,7 +333,7 @@ sk_sp<SkImage> SkReadBuffer::readImage() {
         this->validate(false);
         return nullptr;
     }
-    if (this->isVersionLT(kDontNegateImageSize_Version)) {
+    if (this->isVersionLT(SkPicturePriv::kDontNegateImageSize_Version)) {
         (void)this->read32();   // originX
         (void)this->read32();   // originY
     }
@@ -385,13 +394,13 @@ SkFlattenable* SkReadBuffer::readFlattenable(SkFlattenable::Type ft) {
         }
         factory = fFactoryArray[index];
     } else {
-        if (this->peekByte()) {
+        if (this->peekByte() != 0) {
             // If the first byte is non-zero, the flattenable is specified by a string.
-            SkString name;
-            this->readString(&name);
-
-            factory = SkFlattenable::NameToFactory(name.c_str());
-            fFlattenableDict.set(fFlattenableDict.count() + 1, factory);
+            size_t ignored_length;
+            if (const char* name = this->readString(&ignored_length)) {
+                factory = SkFlattenable::NameToFactory(name);
+                fFlattenableDict.set(fFlattenableDict.count() + 1, factory);
+            }
         } else {
             // Read the index.  We are guaranteed that the first byte
             // is zeroed, so we must shift down a byte.

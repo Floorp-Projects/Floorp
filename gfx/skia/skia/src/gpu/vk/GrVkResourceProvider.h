@@ -8,26 +8,25 @@
 #ifndef GrVkResourceProvider_DEFINED
 #define GrVkResourceProvider_DEFINED
 
-#include "GrResourceHandle.h"
-#include "GrVkDescriptorPool.h"
-#include "GrVkDescriptorSetManager.h"
-#include "GrVkPipelineStateBuilder.h"
-#include "GrVkRenderPass.h"
-#include "GrVkResource.h"
-#include "GrVkSampler.h"
-#include "GrVkSamplerYcbcrConversion.h"
-#include "GrVkUtil.h"
-#include "SkLRUCache.h"
-#include "SkTArray.h"
-#include "SkTDynamicHash.h"
-#include "SkTInternalLList.h"
-#include "vk/GrVkTypes.h"
+#include "include/gpu/vk/GrVkTypes.h"
+#include "include/private/SkTArray.h"
+#include "src/core/SkLRUCache.h"
+#include "src/core/SkTDynamicHash.h"
+#include "src/core/SkTInternalLList.h"
+#include "src/gpu/GrResourceHandle.h"
+#include "src/gpu/vk/GrVkDescriptorPool.h"
+#include "src/gpu/vk/GrVkDescriptorSetManager.h"
+#include "src/gpu/vk/GrVkPipelineStateBuilder.h"
+#include "src/gpu/vk/GrVkRenderPass.h"
+#include "src/gpu/vk/GrVkResource.h"
+#include "src/gpu/vk/GrVkSampler.h"
+#include "src/gpu/vk/GrVkSamplerYcbcrConversion.h"
+#include "src/gpu/vk/GrVkUtil.h"
 
 #include <mutex>
 #include <thread>
 
 class GrVkCommandPool;
-class GrVkCopyPipeline;
 class GrVkGpu;
 class GrVkPipeline;
 class GrVkPipelineState;
@@ -44,19 +43,13 @@ public:
     // Set up any initial vk objects
     void init();
 
-    GrVkPipeline* createPipeline(int numColorSamples,
-                                 const GrPrimitiveProcessor& primProc,
-                                 const GrPipeline& pipeline,
+    GrVkPipeline* createPipeline(const GrProgramInfo&,
                                  const GrStencilSettings& stencil,
                                  VkPipelineShaderStageCreateInfo* shaderStageInfo,
                                  int shaderStageCount,
                                  GrPrimitiveType primitiveType,
                                  VkRenderPass compatibleRenderPass,
                                  VkPipelineLayout layout);
-
-    GrVkCopyPipeline* findOrCreateCopyPipeline(const GrVkRenderTarget* dst,
-                                               VkPipelineShaderStageCreateInfo*,
-                                               VkPipelineLayout);
 
     GR_DEFINE_RESOURCE_HANDLE_CLASS(CompatibleRPHandle);
 
@@ -92,6 +85,13 @@ public:
 
     void checkCommandBuffers();
 
+    // We must add the finishedProc to all active command buffers since we may have flushed work
+    // that the client cares about before they explicitly called flush and the GPU may reorder
+    // command execution. So we make sure all previously submitted work finishes before we call the
+    // finishedProc.
+    void addFinishedProcToActiveCommandBuffers(GrGpuFinishedProc finishedProc,
+                                               GrGpuFinishedContext finishedContext);
+
     // Finds or creates a compatible GrVkDescriptorPool for the requested type and count.
     // The refcount is incremented and a pointer returned.
     // TODO: Currently this will just create a descriptor pool without holding onto a ref itself
@@ -111,10 +111,8 @@ public:
             const GrVkYcbcrConversionInfo& ycbcrInfo);
 
     GrVkPipelineState* findOrCreateCompatiblePipelineState(
-            GrRenderTarget*, GrSurfaceOrigin,
-            const GrPipeline&,
-            const GrPrimitiveProcessor&,
-            const GrTextureProxy* const primProcProxies[],
+            GrRenderTarget*,
+            const GrProgramInfo&,
             GrPrimitiveType,
             VkRenderPass compatibleRenderPass);
 
@@ -177,6 +175,10 @@ public:
 
     void reset(GrVkCommandPool* pool);
 
+#if GR_TEST_UTILS
+    void resetShaderCacheForTesting() const { fPipelineStateCache->release(); }
+#endif
+
 private:
 
 #ifdef SK_DEBUG
@@ -190,20 +192,12 @@ private:
 
         void abandon();
         void release();
-        GrVkPipelineState* refPipelineState(GrRenderTarget*, GrSurfaceOrigin,
-                                            const GrPrimitiveProcessor&,
-                                            const GrTextureProxy* const primProcProxies[],
-                                            const GrPipeline&,
+        GrVkPipelineState* refPipelineState(GrRenderTarget*,
+                                            const GrProgramInfo&,
                                             GrPrimitiveType,
                                             VkRenderPass compatibleRenderPass);
 
     private:
-        enum {
-            // We may actually have kMaxEntries+1 PipelineStates in context because we create a new
-            // PipelineState before evicting from the cache.
-            kMaxEntries = 128,
-        };
-
         struct Entry;
 
         struct DescHash {
@@ -256,9 +250,6 @@ private:
 
     // Central cache for creating pipelines
     VkPipelineCache fPipelineCache;
-
-    // Cache of previously created copy pipelines
-    SkTArray<GrVkCopyPipeline*> fCopyPipelines;
 
     SkSTArray<4, CompatibleRenderPassSet> fRenderPassArray;
 

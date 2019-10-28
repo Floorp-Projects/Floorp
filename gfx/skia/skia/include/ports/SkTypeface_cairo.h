@@ -1,8 +1,8 @@
 #ifndef SkTypeface_cairo_DEFINED
 #define SkTypeface_cairo_DEFINED
 
-#include "SkTypeface.h"
-#include "SkSurfaceProps.h"
+#include "include/core/SkTypeface.h"
+#include "include/core/SkSurfaceProps.h"
 
 struct FT_FaceRec_;
 typedef FT_FaceRec_* FT_Face;

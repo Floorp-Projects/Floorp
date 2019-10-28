@@ -12,15 +12,14 @@
 #include <memory>
 #include "stdlib.h"
 #include "string.h"
-#include "SkSLDefines.h"
-#include "SkSLString.h"
-#include "SkSLStringStream.h"
+#include "src/sksl/SkSLDefines.h"
+#include "src/sksl/SkSLLexer.h"
 
 #ifndef SKSL_STANDALONE
-#include "SkTypes.h"
+#include "include/core/SkTypes.h"
 #if SK_SUPPORT_GPU
-#include "GrContextOptions.h"
-#include "GrShaderCaps.h"
+#include "include/gpu/GrContextOptions.h"
+#include "src/gpu/GrShaderCaps.h"
 #endif // SK_SUPPORT_GPU
 #endif // SKSL_STANDALONE
 
@@ -85,10 +84,6 @@ public:
         return false;
     }
 
-    bool dropsTileOnZeroDivide() const {
-        return false;
-    }
-
     bool flatInterpolationSupport() const {
         return true;
     }
@@ -109,10 +104,6 @@ public:
         return true;
     }
 
-    bool imageLoadStoreSupport() const {
-        return true;
-    }
-
     bool mustDoOpBetweenFloorAndAbs() const {
         return false;
     }
@@ -126,6 +117,10 @@ public:
     }
 
     bool canUseAnyFunctionInShader() const {
+        return false;
+    }
+
+    bool noDefaultPrecisionForExternalSamplers() const {
         return false;
     }
 
@@ -146,10 +141,6 @@ public:
     }
 
     const char* fragCoordConventionsExtensionString() const {
-        return nullptr;
-    }
-
-    const char* imageLoadStoreExtensionString() const {
         return nullptr;
     }
 
@@ -333,7 +324,6 @@ public:
         result->fVersionDeclString = "#version 400";
         result->fExternalTextureSupport = true;
         result->fFBFetchSupport = false;
-        result->fDropsTileOnZeroDivide = true;
         result->fCanUseAnyFunctionInShader = false;
         return result;
     }
@@ -391,6 +381,13 @@ public:
 #endif
 
 void write_stringstream(const StringStream& d, OutputStream& out);
+
+// Returns true if op is '=' or any compound assignment operator ('+=', '-=', etc.)
+bool is_assignment(Token::Kind op);
+
+// Given a compound assignment operator, returns the non-assignment version of the operator (e.g.
+// '+=' becomes '+')
+Token::Kind remove_assignment(Token::Kind op);
 
 NORETURN void sksl_abort();
 
