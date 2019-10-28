@@ -50,7 +50,6 @@ class TestBrowserWindowShortcuts(PuppeteerMixin, MarionetteTestCase):
 
         # TODO: Check that the right input box is focused
         # Located below searchbar as class="textbox-input"
-        # Anon locator has not been released yet (bug 1080764)
         def has_input_selected(mn):
             selection_name = mn.execute_script("""
                 return window.document.activeElement.localName;

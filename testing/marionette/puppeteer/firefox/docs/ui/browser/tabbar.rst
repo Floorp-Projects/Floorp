@@ -14,9 +14,3 @@ Tab
 
 .. autoclass:: Tab
    :members:
-
-MenuPanel
-----------
-
-.. autoclass:: MenuPanel
-   :members:

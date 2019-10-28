@@ -65,8 +65,7 @@ class AddOnInstallBlockedNotification(BaseNotification):
         :returns: The allow button.
         """
         return self.element.find_element(
-            By.ANON_ATTRIBUTE, {'anonid': 'button'}).find_element(
-            By.ANON_ATTRIBUTE, {'anonid': 'button'})
+            By.CLASS, "popup-notification-primary-button")
 
 
 class AddOnInstallConfirmationNotification(BaseNotification):
