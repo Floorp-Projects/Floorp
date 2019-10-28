@@ -99,36 +99,6 @@ if test -n "$ENABLE_CLANG_PLUGIN"; then
         CLANG_LDFLAGS="$CLANG_REPLACE_LDFLAGS"
     fi
 
-    dnl Check for the new ASTMatcher API names.  Since this happened in the
-    dnl middle of the 3.8 cycle, our CLANG_VERSION_FULL is impossible to use
-    dnl correctly, so we have to detect this at configure time.
-    AC_CACHE_CHECK(for new ASTMatcher API,
-                   ac_cv_have_new_ASTMatcher_names,
-        [
-            AC_LANG_SAVE
-            AC_LANG_CPLUSPLUS
-            _SAVE_CXXFLAGS="$CXXFLAGS"
-            _SAVE_CPPFLAGS="$CPPFLAGS"
-            _SAVE_CXX="$CXX"
-            _SAVE_MACOSX_DEPLOYMENT_TARGET="$MACOSX_DEPLOYMENT_TARGET"
-            unset MACOSX_DEPLOYMENT_TARGET
-            CXXFLAGS="${LLVM_CXXFLAGS}"
-            CPPFLAGS=""
-            CXX="${HOST_CXX}"
-            AC_TRY_COMPILE([#include "clang/ASTMatchers/ASTMatchers.h"],
-                           [clang::ast_matchers::cxxConstructExpr();],
-                           ac_cv_have_new_ASTMatcher_names="yes",
-                           ac_cv_have_new_ASTMatcher_names="no")
-            CXX="$_SAVE_CXX"
-            CPPFLAGS="$_SAVE_CPPFLAGS"
-            CXXFLAGS="$_SAVE_CXXFLAGS"
-            export MACOSX_DEPLOYMENT_TARGET="$_SAVE_MACOSX_DEPLOYMENT_TARGET"
-            AC_LANG_RESTORE
-        ])
-    if test "$ac_cv_have_new_ASTMatcher_names" = "yes"; then
-      LLVM_CXXFLAGS="$LLVM_CXXFLAGS -DHAVE_NEW_ASTMATCHER_NAMES"
-    fi
-
     dnl Check if we can compile has(ignoringParenImpCasts()) because
     dnl before 3.9 that ignoringParenImpCasts was done internally by "has".
     dnl See https://www.mail-archive.com/cfe-commits@lists.llvm.org/msg25234.html

@@ -39,7 +39,6 @@ def write_cmake(module_path):
         f.write("""set(LLVM_LINK_COMPONENTS support)
 
 add_definitions( -DCLANG_TIDY )
-add_definitions( -DHAVE_NEW_ASTMATCHER_NAMES )
 
 add_clang_library(clangTidyMozillaModule
   ThirdPartyPaths.cpp
