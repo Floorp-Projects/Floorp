@@ -966,7 +966,7 @@ nsresult nsWindowWatcher::OpenWindowInternal(
   if (activeDocsSandboxFlags &
       SANDBOX_PROPAGATES_TO_AUXILIARY_BROWSING_CONTEXTS) {
     MOZ_ASSERT(windowIsNew, "Should only get here for new windows");
-    newDocShell->SetSandboxFlags(activeDocsSandboxFlags);
+    newBC->SetSandboxFlags(activeDocsSandboxFlags);
   }
 
   RefPtr<nsGlobalWindowOuter> win(
