@@ -55,13 +55,16 @@ impl webrender::Compositor for DirectCompositeInterface {
     fn bind(
         &mut self,
         id: webrender::NativeSurfaceId,
-    ) -> DeviceIntPoint {
+    ) -> webrender::NativeSurfaceInfo {
         let (x, y) = compositor::bind_surface(
             self.window,
             id.0,
         );
 
-        DeviceIntPoint::new(x, y)
+        webrender::NativeSurfaceInfo {
+            origin: DeviceIntPoint::new(x, y),
+            fbo_id: 0,
+        }
     }
 
     fn unbind(&mut self) {

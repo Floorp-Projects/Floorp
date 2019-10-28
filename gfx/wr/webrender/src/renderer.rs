@@ -5055,7 +5055,7 @@ impl Renderer {
                                     )
                                 }
                                 ResolvedSurfaceTexture::NativeSurface { id, size, .. } => {
-                                    let offset = match self.compositor_config {
+                                    let surface_info = match self.compositor_config {
                                         CompositorConfig::Native { ref mut compositor, .. } => {
                                             compositor.bind(id)
                                         }
@@ -5065,7 +5065,8 @@ impl Renderer {
                                     };
 
                                     DrawTarget::NativeSurface {
-                                        offset,
+                                        offset: surface_info.origin,
+                                        external_fbo_id: surface_info.fbo_id,
                                         dimensions: size,
                                     }
                                 }
