@@ -39,17 +39,6 @@ typedef ASTConsumer *ASTConsumerPtr;
 #define getEndLoc getLocEnd
 #endif
 
-#ifndef HAVE_NEW_ASTMATCHER_NAMES
-// In clang 3.8, a number of AST matchers were renamed to better match the
-// respective AST node.  We use the new names, and #define them to the old
-// ones for compatibility with older versions.
-#define cxxConstructExpr constructExpr
-#define cxxConstructorDecl constructorDecl
-#define cxxMethodDecl methodDecl
-#define cxxNewExpr newExpr
-#define cxxRecordDecl recordDecl
-#endif
-
 #ifndef HAS_ACCEPTS_IGNORINGPARENIMPCASTS
 #define hasIgnoringParenImpCasts(x) has(x)
 #else
