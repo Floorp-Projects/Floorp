@@ -1,6 +1,9 @@
 #!/bin/bash
 set -x +e -v
 
+# Set Iris code root, required by moziris
+export IRIS_CODE_ROOT=$MOZ_FETCHES_DIR/iris_firefox
+
 # Store our starting dir so we can get back to it later
 dir=$(pwd)
 
