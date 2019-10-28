@@ -82,7 +82,7 @@ The response is parsed using DOM parser and displayed as an XML markup.
 [2] List of Image mime-types: `devtools/client/webconsole/old/net/utils/json`
 [3] List of XML/HTML mime-types: `devtools/client/webconsole/old/net/utils/net`
 
-Response data are fetched using `LongStringClient`, so if data are bigger
+Response data are fetched using `LongStringFront`, so if data are bigger
 than defined limit (see `devtools/server/main.js - LONG_STRING_LENGTH)
 the user needs to manually require the rest (there is a link at the end
 of incomplete response body that allows this).

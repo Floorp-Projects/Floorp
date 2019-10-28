@@ -30,7 +30,7 @@ const {
 } = require("./node");
 
 import type {
-  CreateLongStringClient,
+  CreateLongStringFront,
   CreateObjectFront,
   GripProperties,
   LoadedProperties,
@@ -39,7 +39,7 @@ import type {
 
 type Client = {
   createObjectFront: CreateObjectFront,
-  createLongStringClient: CreateLongStringClient,
+  createLongStringFront: CreateLongStringFront,
 };
 
 function loadItemProperties(
@@ -90,7 +90,7 @@ function loadItemProperties(
   }
 
   if (shouldLoadItemFullText(item, loadedProperties)) {
-    promises.push(getFullText(client.createLongStringClient(value), item));
+    promises.push(getFullText(client.createLongStringFront(value), item));
   }
 
   if (shouldLoadItemProxySlots(item, loadedProperties)) {

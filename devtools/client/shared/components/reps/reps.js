@@ -3994,7 +3994,7 @@ function loadItemProperties(item, client, loadedProperties) {
   }
 
   if (shouldLoadItemFullText(item, loadedProperties)) {
-    promises.push(getFullText(client.createLongStringClient(value), item));
+    promises.push(getFullText(client.createLongStringFront(value), item));
   }
 
   if (shouldLoadItemProxySlots(item, loadedProperties)) {
@@ -4155,7 +4155,7 @@ async function getPrototype(objectFront) {
   return objectFront.getPrototype();
 }
 
-async function getFullText(longStringClient, item) {
+async function getFullText(longStringFront, item) {
   const {
     initial,
     fullText,
@@ -4164,24 +4164,20 @@ async function getFullText(longStringClient, item) {
   // loadedProperties map.
 
   if (nodeHasFullText(item)) {
-    return Promise.resolve({
+    return {
       fullText
-    });
+    };
   }
 
-  return new Promise((resolve, reject) => {
-    longStringClient.substring(initial.length, length, response => {
-      if (response.error) {
-        console.error("LongStringClient.substring", `${response.error}: ${response.message}`);
-        reject({});
-        return;
-      }
-
-      resolve({
-        fullText: initial + response.substring
-      });
-    });
-  });
+  try {
+    const substring = await longStringFront.substring(initial.length, length);
+    return {
+      fullText: initial + substring
+    };
+  } catch (e) {
+    console.error("LongStringFront.substring", e);
+    throw e;
+  }
 }
 
 async function getProxySlots(objectFront) {

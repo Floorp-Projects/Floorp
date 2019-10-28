@@ -38,7 +38,7 @@ var L10N = new LocalizationHelper(DBG_STRINGS_URI);
  * @param object aOptions [optional]
  *        Options for configuring the controller. Supported options:
  *        - getObjectFront: @see this._setClientGetters
- *        - getLongStringClient: @see this._setClientGetters
+ *        - getLongStringFront: @see this._setClientGetters
  *        - getEnvironmentFront: @see this._setClientGetters
  *        - releaseActor: @see this._setClientGetters
  *        - overrideValueEvalMacro: @see _setEvaluationMacros
@@ -79,7 +79,7 @@ VariablesViewController.prototype = {
    * @param object aOptions
    *        Options for getting the client grips. Supported options:
    *        - getObjectFront: callback for creating an object grip front
-   *        - getLongStringClient: callback for creating a long string grip client
+   *        - getLongStringFront: callback for creating a long string front
    *        - getEnvironmentFront: callback for creating an environment front
    *        - releaseActor: callback for releasing an actor when it's no longer needed
    */
@@ -87,8 +87,8 @@ VariablesViewController.prototype = {
     if (aOptions.getObjectFront) {
       this._getObjectFront = aOptions.getObjectFront;
     }
-    if (aOptions.getLongStringClient) {
-      this._getLongStringClient = aOptions.getLongStringClient;
+    if (aOptions.getLongStringFront) {
+      this._getLongStringFront = aOptions.getLongStringFront;
     }
     if (aOptions.getEnvironmentFront) {
       this._getEnvironmentFront = aOptions.getEnvironmentFront;
@@ -129,25 +129,18 @@ VariablesViewController.prototype = {
    * @return Promise
    *         The promise that will be resolved when the string is retrieved.
    */
-  _populateFromLongString: function(aTarget, aGrip) {
-    const deferred = defer();
-
+  _populateFromLongString: async function(aTarget, aGrip) {
     const from = aGrip.initial.length;
     const to = Math.min(aGrip.length, MAX_LONG_STRING_LENGTH);
 
-    this._getLongStringClient(aGrip).substring(from, to, aResponse => {
-      // Stop tracking the actor because it's no longer needed.
-      this.releaseActor(aGrip);
+    const response = await this._getLongStringFront(aGrip).substring(from, to);
+    // Stop tracking the actor because it's no longer needed.
+    this.releaseActor(aGrip);
 
-      // Replace the preview with the full string and make it non-expandable.
-      aTarget.onexpand = null;
-      aTarget.setGrip(aGrip.initial + aResponse.substring);
-      aTarget.hideArrow();
-
-      deferred.resolve();
-    });
-
-    return deferred.promise;
+    // Replace the preview with the full string and make it non-expandable.
+    aTarget.onexpand = null;
+    aTarget.setGrip(aGrip.initial + response);
+    aTarget.hideArrow();
   },
 
   /**

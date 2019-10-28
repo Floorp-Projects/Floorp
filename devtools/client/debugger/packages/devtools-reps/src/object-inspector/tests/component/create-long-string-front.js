@@ -6,18 +6,18 @@
 
 const { mountObjectInspector } = require("../test-utils");
 const ObjectFront = require("../__mocks__/object-front");
-const LongStringClient = require("../__mocks__/long-string-client");
+const { LongStringFront } = require("../__mocks__/string-front");
 
 const repsPath = "../../../reps";
 const longStringStubs = require(`${repsPath}/stubs/long-string`);
 
 function mount(props) {
-  const substring = jest.fn(() => Promise.resolve({ fullText: "" }));
+  const substring = jest.fn(() => Promise.resolve(""));
 
   const client = {
     createObjectFront: grip => ObjectFront(grip),
-    createLongStringClient: jest.fn(grip =>
-      LongStringClient(grip, { substring })
+    createLongStringFront: jest.fn(grip =>
+      LongStringFront(grip, { substring })
     ),
   };
 
@@ -29,9 +29,9 @@ function mount(props) {
   return { ...obj, substring };
 }
 
-describe("createLongStringClient", () => {
+describe("createLongStringFront", () => {
   it("is called with the expected object for longString node", () => {
-    const stub = longStringStubs.get("testUnloadedFullText");
+    const stub = longStringStubs.get("testMultiline");
 
     const { client } = mount({
       autoExpandDepth: 1,
@@ -45,7 +45,7 @@ describe("createLongStringClient", () => {
       ],
     });
 
-    expect(client.createLongStringClient.mock.calls[0][0]).toBe(stub);
+    expect(client.createLongStringFront.mock.calls[0][0]).toBe(stub);
   });
 
   describe("substring", () => {
@@ -64,8 +64,7 @@ describe("createLongStringClient", () => {
         ],
       });
 
-      // Third argument is the callback which holds the string response.
-      expect(substring.mock.calls[0]).toHaveLength(3);
+      expect(substring.mock.calls[0]).toHaveLength(2);
       const [start, length] = substring.mock.calls[0];
       expect(start).toBe(stub.initial.length);
       expect(length).toBe(stub.length);

@@ -4,7 +4,6 @@
 "use strict";
 
 const { DebuggerServer } = require("devtools/server/debugger-server");
-const promise = require("promise");
 const {
   longStringSpec,
   SimpleStringFront,
@@ -32,7 +31,7 @@ class LongStringFront extends FrontClassWithSpec(longStringSpec) {
     if (!this.strPromise) {
       const promiseRest = thusFar => {
         if (thusFar.length === this.length) {
-          return promise.resolve(thusFar);
+          return Promise.resolve(thusFar);
         }
         return this.substring(
           thusFar.length,

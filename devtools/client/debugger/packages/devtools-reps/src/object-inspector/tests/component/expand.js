@@ -48,7 +48,7 @@ function generateDefaults(overrides) {
     ...overrides,
   };
 }
-const LongStringClientMock = require("../__mocks__/long-string-client");
+const { LongStringFront } = require("../__mocks__/string-front");
 
 function mount(props, { initialState } = {}) {
   const client = {
@@ -59,12 +59,10 @@ function mount(props, { initialState } = {}) {
           Promise.resolve(gripRepStubs.get("testProxySlots")),
       }),
 
-    createLongStringClient: grip =>
-      LongStringClientMock(grip, {
-        substring: function(initiaLength, length, cb) {
-          cb({
-            substring: "<<<<",
-          });
+    createLongStringFront: grip =>
+      LongStringFront(grip, {
+        substring: async function(initiaLength, length) {
+          return "<<<<";
         },
       }),
   };
