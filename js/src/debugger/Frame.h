@@ -250,7 +250,7 @@ class DebuggerFrame : public NativeObject {
    */
   bool resume(const FrameIter& iter);
 
-  bool hasAnyLiveHooks() const;
+  bool hasAnyHooks() const;
 
  private:
   static const JSClassOps classOps_;
