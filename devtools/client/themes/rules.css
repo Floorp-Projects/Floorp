@@ -345,11 +345,58 @@
 
 .ruleview-enableproperty {
   position: relative;
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+:root[platform="mac"] .ruleview-enableproperty {
+  left: -29px;
+  box-sizing: border-box;
+  margin-inline-start: 3px;
+  margin-inline-end: 9px;
+  width: 12px;
+  height: 12px;
+}
+
+/* The SVG checkbox on Windows and Linux */
+:root[platform="win"] .ruleview-enableproperty,
+:root[platform="linux"] .ruleview-enableproperty {
+  -moz-appearance: none;
   float: left;
-  left: -38px;
+  left: -27px;
   box-sizing: content-box;
-  border-left: 10px solid transparent;
-  background-clip: content-box;
+  margin-inline-start: 0;
+  margin-inline-end: 10px;
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 0;
+  padding: 0;
+  outline: none;
+  background: url("chrome://devtools/skin/images/checkbox.svg") center no-repeat content-box;
+  /* Using fill to paint the border, and stroke for the tick */
+  -moz-context-properties: fill, stroke;
+  fill: rgba(0,0,0,.3);
+  stroke: transparent;
+}
+
+:root[platform="win"].theme-dark .ruleview-enableproperty,
+:root[platform="linux"].theme-dark .ruleview-enableproperty {
+  fill: rgba(255,255,255,.4);
+}
+
+:root[platform="win"] .ruleview-enableproperty:checked,
+:root[platform="linux"] .ruleview-enableproperty:checked {
+  stroke: rgba(0,0,0,.6);
+}
+
+:root[platform="win"].theme-dark .ruleview-enableproperty:checked,
+:root[platform="linux"].theme-dark .ruleview-enableproperty:checked {
+  stroke: rgba(255,255,255,.8);
+}
+
+:root[platform="mac"] .ruleview-enableproperty {
+  -moz-appearance: checkbox;
 }
 
 .ruleview-warning,
@@ -378,8 +425,10 @@
   stroke: var(--theme-icon-color);
 }
 
-.ruleview-rule:not(:hover) .ruleview-enableproperty {
-  visibility: hidden;
+.ruleview-rule:not(:hover) .ruleview-enableproperty:not(:focus) {
+  /* Use opacity to hide the checkbox instead of visibility:hidden,
+     so that it's possible to focus it with the keyboard. */
+  opacity: 0;
 }
 
 .ruleview-expander {

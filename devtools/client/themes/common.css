@@ -659,37 +659,6 @@ checkbox:-moz-focusring {
   visibility: hidden;
 }
 
-.theme-checkbox {
-  display: inline-block;
-  width: 14px;
-  height: 14px;
-  border: 0;
-  padding: 0;
-  outline: none;
-  background-image: url("chrome://devtools/skin/images/checkbox.svg");
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: 14px 14px;
-  /* Using fill to paint the border, and stroke for the tick */
-  -moz-context-properties: fill, stroke;
-  fill: rgba(0,0,0,.3);
-  stroke: transparent;
-}
-
-.theme-dark .theme-checkbox {
-  fill: rgba(255,255,255,.4);
-}
-
-.theme-checkbox.checked,
-.theme-checkbox[checked] {
-  stroke: rgba(0,0,0,.6);
-}
-
-.theme-dark .theme-checkbox.checked,
-.theme-dark .theme-checkbox[checked] {
-  stroke: rgba(255,255,255,.8);
-}
-
 /* Throbbers */
 .devtools-throbber::before {
   content: "";
