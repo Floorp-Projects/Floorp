@@ -698,7 +698,7 @@ bool Debugger::hasAnyLiveHooks(JSRuntime* rt) const {
        r.popFront()) {
     JSObject* key = r.front().key();
     DebuggerFrame& frameObj = r.front().value()->as<DebuggerFrame>();
-    if (IsMarkedUnbarriered(rt, &key) && frameObj.hasAnyLiveHooks()) {
+    if (IsMarkedUnbarriered(rt, &key) && frameObj.hasAnyHooks()) {
       return true;
     }
   }
@@ -3686,7 +3686,7 @@ void DebugAPI::traceFramesWithLiveHooks(JSTracer* tracer) {
          r.popFront()) {
       HeapPtr<DebuggerFrame*>& frameobj = r.front().value();
       MOZ_ASSERT(frameobj->isLiveMaybeForwarded());
-      if (frameobj->hasAnyLiveHooks()) {
+      if (frameobj->hasAnyHooks()) {
         TraceEdge(tracer, &frameobj, "Debugger.Frame with live hooks");
       }
     }

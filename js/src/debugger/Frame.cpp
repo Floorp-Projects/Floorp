@@ -215,7 +215,7 @@ bool DebuggerFrame::resume(const FrameIter& iter) {
   return true;
 }
 
-bool DebuggerFrame::hasAnyLiveHooks() const {
+bool DebuggerFrame::hasAnyHooks() const {
   return !getReservedSlot(ONSTEP_HANDLER_SLOT).isUndefined() ||
          !getReservedSlot(ONPOP_HANDLER_SLOT).isUndefined();
 }
