@@ -2264,15 +2264,12 @@ PresShell::PageMove(bool aForward, bool aExtend) {
       return NS_OK;
     }
   }
+  // We may scroll parent scrollable element of current selection limiter.
+  // In such case, we don't want to scroll selection into view unless
+  // selection is changed.
   RefPtr<nsFrameSelection> frameSelection = mSelection;
-  frameSelection->CommonPageMove(aForward, aExtend, frame);
-  // After ScrollSelectionIntoView(), the pending notifications might be
-  // flushed and PresShell/PresContext/Frames may be dead. See bug 418470.
-  return ScrollSelectionIntoView(
-      nsISelectionController::SELECTION_NORMAL,
-      nsISelectionController::SELECTION_FOCUS_REGION,
-      nsISelectionController::SCROLL_SYNCHRONOUS |
-          nsISelectionController::SCROLL_FOR_CARET_MOVE);
+  return frameSelection->PageMove(
+      aForward, aExtend, frame, nsFrameSelection::SelectionIntoView::IfChanged);
 }
 
 NS_IMETHODIMP

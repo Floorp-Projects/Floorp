@@ -472,21 +472,25 @@ class nsFrameSelection final {
   nsIFrame* GetFrameToPageSelect() const;
 
   /**
-   * Scrolling then moving caret placement code in common to text areas and
-   * content areas should be located in the implementer
-   * This method will accept the following parameters and perform the scroll
-   * and caret movement.  It remains for the caller to call the final
-   * ScrollCaretIntoView if that called wants to be sure the caret is always
-   * visible.
+   * This method moves caret (if aExtend is false) or expands selection (if
+   * aExtend is true).  Then, scrolls aFrame one page.  Finally, this may
+   * call ScrollSelectionIntoView() for making focus of selection visible
+   * but depending on aSelectionIntoView value.
    *
    * @param aForward if true, scroll forward if not scroll backward
    * @param aExtend  if true, extend selection to the new point
    * @param aFrame   the frame to scroll or container of per-page selection.
    *                 if aExtend is true and selection may have ancestor limit,
    *                 should set result of GetFrameToPageSelect().
+   * @param aSelectionIntoView
+   *                 If IfChanged, this makes selection into view only when
+   *                 selection is modified by the call.
+   *                 If Yes, this makes selection into view always.
    */
-  MOZ_CAN_RUN_SCRIPT
-  void CommonPageMove(bool aForward, bool aExtend, nsIFrame* aFrame);
+  enum class SelectionIntoView { IfChanged, Yes };
+  MOZ_CAN_RUN_SCRIPT nsresult PageMove(bool aForward, bool aExtend,
+                                       nsIFrame* aFrame,
+                                       SelectionIntoView aSelectionIntoView);
 
   void SetHint(CaretAssociateHint aHintRight) { mHint = aHintRight; }
   CaretAssociateHint GetHint() const { return mHint; }
