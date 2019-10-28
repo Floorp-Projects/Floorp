@@ -700,16 +700,6 @@ inline bool IsInAutomation() {
   return sAutomationPrefIsSet && AreNonLocalConnectionsDisabled();
 }
 
-void CreateCooperativeContext();
-
-void DestroyCooperativeContext();
-
-// Please see JS_YieldCooperativeContext in jsapi.h.
-void YieldCooperativeContext();
-
-// Please see JS_ResumeCooperativeContext in jsapi.h.
-void ResumeCooperativeContext();
-
 /**
  * Extract the native nsID object from a JS ID, IfaceID, ClassID, or ContractID
  * value.

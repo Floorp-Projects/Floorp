@@ -1097,14 +1097,9 @@ CycleCollectedJSRuntime* XPCJSContext::CreateRuntime(JSContext* aCx) {
   return new XPCJSRuntime(aCx);
 }
 
-nsresult XPCJSContext::Initialize(XPCJSContext* aPrimaryContext) {
-  nsresult rv;
-  if (aPrimaryContext) {
-    rv = CycleCollectedJSContext::InitializeNonPrimary(aPrimaryContext);
-  } else {
-    rv = CycleCollectedJSContext::Initialize(nullptr, JS::DefaultHeapMaxBytes,
-                                             JS::DefaultNurseryMaxBytes);
-  }
+nsresult XPCJSContext::Initialize() {
+  nsresult rv = CycleCollectedJSContext::Initialize(
+      nullptr, JS::DefaultHeapMaxBytes, JS::DefaultNurseryMaxBytes);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1251,9 +1246,7 @@ nsresult XPCJSContext::Initialize(XPCJSContext* aPrimaryContext) {
 
   JS_AddInterruptCallback(cx, InterruptCallback);
 
-  if (!aPrimaryContext) {
-    Runtime()->Initialize(cx);
-  }
+  Runtime()->Initialize(cx);
 
   LoadStartupJSPrefs(this);
 
@@ -1290,9 +1283,9 @@ WatchdogManager* XPCJSContext::GetWatchdogManager() {
 void XPCJSContext::InitTLS() { MOZ_RELEASE_ASSERT(gTlsContext.init()); }
 
 // static
-XPCJSContext* XPCJSContext::NewXPCJSContext(XPCJSContext* aPrimaryContext) {
+XPCJSContext* XPCJSContext::NewXPCJSContext() {
   XPCJSContext* self = new XPCJSContext();
-  nsresult rv = self->Initialize(aPrimaryContext);
+  nsresult rv = self->Initialize();
   if (NS_FAILED(rv)) {
     MOZ_CRASH("new XPCJSContext failed to initialize.");
   }

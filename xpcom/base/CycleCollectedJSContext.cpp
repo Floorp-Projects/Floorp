@@ -53,8 +53,7 @@ using namespace mozilla::dom;
 namespace mozilla {
 
 CycleCollectedJSContext::CycleCollectedJSContext()
-    : mIsPrimaryContext(true),
-      mRuntime(nullptr),
+    : mRuntime(nullptr),
       mJSContext(nullptr),
       mDoingStableStates(false),
       mTargetedMicroTaskRecursionDepth(0),
@@ -82,10 +81,7 @@ CycleCollectedJSContext::~CycleCollectedJSContext() {
   JS_SetContextPrivate(mJSContext, nullptr);
 
   mRuntime->RemoveContext(this);
-
-  if (mIsPrimaryContext) {
-    mRuntime->Shutdown(mJSContext);
-  }
+  mRuntime->Shutdown(mJSContext);
 
   // Last chance to process any events.
   CleanupIDBTransactions(mBaseRecursionDepth);
@@ -109,24 +105,31 @@ CycleCollectedJSContext::~CycleCollectedJSContext() {
   JS_DestroyContext(mJSContext);
   mJSContext = nullptr;
 
-  if (mIsPrimaryContext) {
-    nsCycleCollector_forgetJSContext();
-  } else {
-    nsCycleCollector_forgetNonPrimaryContext();
-  }
+  nsCycleCollector_forgetJSContext();
 
   mozilla::dom::DestroyScriptSettings();
 
   mOwningThread->SetScriptObserver(nullptr);
   NS_RELEASE(mOwningThread);
 
-  if (mIsPrimaryContext) {
-    delete mRuntime;
-  }
+  delete mRuntime;
   mRuntime = nullptr;
 }
 
-void CycleCollectedJSContext::InitializeCommon() {
+nsresult CycleCollectedJSContext::Initialize(JSRuntime* aParentRuntime,
+                                             uint32_t aMaxBytes,
+                                             uint32_t aMaxNurseryBytes) {
+  MOZ_ASSERT(!mJSContext);
+
+  mozilla::dom::InitScriptSettings();
+  mJSContext = JS_NewContext(aMaxBytes, aParentRuntime);
+  if (!mJSContext) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  JS_SetGCParameter(mJSContext, JSGC_MAX_NURSERY_BYTES, aMaxNurseryBytes);
+
+  mRuntime = CreateRuntime(mJSContext);
   mRuntime->AddContext(this);
 
   mOwningThread->SetScriptObserver(this);
@@ -147,47 +150,8 @@ void CycleCollectedJSContext::InitializeCommon() {
 
   // Cast to PerThreadAtomCache for dom::GetAtomCache(JSContext*).
   JS_SetContextPrivate(mJSContext, static_cast<PerThreadAtomCache*>(this));
-}
-
-nsresult CycleCollectedJSContext::Initialize(JSRuntime* aParentRuntime,
-                                             uint32_t aMaxBytes,
-                                             uint32_t aMaxNurseryBytes) {
-  MOZ_ASSERT(!mJSContext);
-
-  mozilla::dom::InitScriptSettings();
-  mJSContext = JS_NewContext(aMaxBytes, aParentRuntime);
-  if (!mJSContext) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  JS_SetGCParameter(mJSContext, JSGC_MAX_NURSERY_BYTES, aMaxNurseryBytes);
-
-  mRuntime = CreateRuntime(mJSContext);
-
-  InitializeCommon();
 
   nsCycleCollector_registerJSContext(this);
-
-  return NS_OK;
-}
-
-nsresult CycleCollectedJSContext::InitializeNonPrimary(
-    CycleCollectedJSContext* aPrimaryContext) {
-  MOZ_ASSERT(!mJSContext);
-
-  mIsPrimaryContext = false;
-
-  mozilla::dom::InitScriptSettings();
-  mJSContext = JS_NewCooperativeContext(aPrimaryContext->mJSContext);
-  if (!mJSContext) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  mRuntime = aPrimaryContext->mRuntime;
-
-  InitializeCommon();
-
-  nsCycleCollector_registerNonPrimaryContext(this);
 
   return NS_OK;
 }

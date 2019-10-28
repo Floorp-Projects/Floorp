@@ -61,8 +61,8 @@ const char XPC_SCRIPT_ERROR_CONTRACTID[] = "@mozilla.org/scripterror;1";
 /***************************************************************************/
 
 // This global should be used very sparingly: only to create and destroy
-// nsXPConnect and when creating a new cooperative (non-primary) XPCJSContext.
-static XPCJSContext* gPrimaryContext;
+// nsXPConnect.
+static XPCJSContext* gContext;
 
 nsXPConnect::nsXPConnect() : mShuttingDown(false) {
   XPCJSContext::InitTLS();
@@ -72,16 +72,16 @@ nsXPConnect::nsXPConnect() : mShuttingDown(false) {
                                   profiler_unregister_thread);
 #endif
 
-  XPCJSContext* xpccx = XPCJSContext::NewXPCJSContext(nullptr);
+  XPCJSContext* xpccx = XPCJSContext::NewXPCJSContext();
   if (!xpccx) {
     MOZ_CRASH("Couldn't create XPCJSContext.");
   }
-  gPrimaryContext = xpccx;
+  gContext = xpccx;
   mRuntime = xpccx->Runtime();
 }
 
 nsXPConnect::~nsXPConnect() {
-  MOZ_ASSERT(XPCJSContext::Get() == gPrimaryContext);
+  MOZ_ASSERT(XPCJSContext::Get() == gContext);
 
   mRuntime->DeleteSingletonScopes();
 
@@ -109,7 +109,7 @@ nsXPConnect::~nsXPConnect() {
   // shutdown the logging system
   XPC_LOG_FINISH();
 
-  delete gPrimaryContext;
+  delete gContext;
 
   MOZ_ASSERT(gSelf == this);
   gSelf = nullptr;
@@ -1195,24 +1195,6 @@ bool ThreadSafeIsChromeOrXBLOrUAWidget(JSContext* cx, JSObject* obj) {
 
 }  // namespace dom
 }  // namespace mozilla
-
-void xpc::CreateCooperativeContext() {
-  MOZ_ASSERT(gPrimaryContext);
-  XPCJSContext::NewXPCJSContext(gPrimaryContext);
-}
-
-void xpc::DestroyCooperativeContext() {
-  MOZ_ASSERT(XPCJSContext::Get() != gPrimaryContext);
-  delete XPCJSContext::Get();
-}
-
-void xpc::YieldCooperativeContext() {
-  JS_YieldCooperativeContext(XPCJSContext::Get()->Context());
-}
-
-void xpc::ResumeCooperativeContext() {
-  JS_ResumeCooperativeContext(XPCJSContext::Get()->Context());
-}
 
 void xpc::CacheAutomationPref(bool* aMirror) {
   // The obvious thing is to make this pref a static pref. But then it would
