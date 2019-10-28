@@ -550,27 +550,6 @@
     }
 
     // nsIDOMXULMultiSelectControlElement
-    invertSelection() {
-      this._selectionStart = null;
-
-      var suppress = this._suppressOnSelect;
-      this._suppressOnSelect = true;
-
-      var item = this.getItemAtIndex(0);
-      while (item) {
-        if (item.selected) {
-          this.removeItemFromSelection(item);
-        } else {
-          this.addItemToSelection(item);
-        }
-        item = this.getNextItem(item, 1);
-      }
-
-      this._suppressOnSelect = suppress;
-      this._fireOnSelect();
-    }
-
-    // nsIDOMXULMultiSelectControlElement
     clearSelection() {
       if (this.selectedItems) {
         while (this.selectedItems.length) {

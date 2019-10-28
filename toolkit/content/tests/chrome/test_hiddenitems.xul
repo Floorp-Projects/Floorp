@@ -51,8 +51,6 @@ function testListbox(id)
   is(listbox.selectedItem.id, id + "_item2", id + ": Up didn't skip hidden item");
   listbox.selectAll();
   is(listbox.selectedItems.length, 7, id + ": Should have still selected all items");
-  listbox.invertSelection();
-  is(listbox.selectedItems.length, 0, id + ": Should have unselected all items");
   listbox.selectedIndex = 2;
   ok(listbox.selectedItem == listbox.getItemAtIndex(2), id + ": Should have selected the hidden item");
   listbox.selectedIndex = 0;
