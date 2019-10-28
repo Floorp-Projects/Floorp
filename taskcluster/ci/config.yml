@@ -305,20 +305,20 @@ task-priority:
 workers:
     aliases:
         b-linux.*:
-            provisioner: aws-provisioner-v1
+            provisioner: 'gecko-{level}'
             implementation: docker-worker
             os: linux
-            worker-type: 'gecko-{level}-{alias}'
+            worker-type: '{alias}'
         b-win2012:
             provisioner: aws-provisioner-v1
             implementation: generic-worker
             os: windows
             worker-type: 'gecko-{level}-{alias}'
         images:
-            provisioner: aws-provisioner-v1
+            provisioner: 'gecko-{level}'
             implementation: docker-worker
             os: linux
-            worker-type: 'gecko-{level}-{alias}'
+            worker-type: '{alias}'
         linux-depsigning:
             provisioner: scriptworker-k8s
             implementation: scriptworker-signing
@@ -370,18 +370,13 @@ workers:
             os: macosx
             worker-type: 'gecko-{alias}'
         t-linux-xlarge-pgo:
-            # As of 2019-10-21 we don't have CoT enabled workers for
-            # AWS Provider, so the level-3 jobs are still on aws provisioner.
             provisioner:
                 by-level:
-                    '3': aws-provisioner-v1
+                    '3': 'gecko-{level}'
                     default: 'gecko-t'
             implementation: docker-worker
             os: linux
-            worker-type:
-                by-level:
-                    '3': 'gecko-{level}-t-linux-xlarge'
-                    default: 't-linux-xlarge'
+            worker-type: 't-linux-xlarge'
         t-osx-1010-pgo:
             provisioner: releng-hardware
             implementation: generic-worker
