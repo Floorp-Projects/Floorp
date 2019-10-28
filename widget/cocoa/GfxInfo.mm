@@ -283,7 +283,7 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
     IMPLEMENT_MAC_DRIVER_BLOCKLIST(
         OperatingSystem::OSX, (nsAString&)GfxDriverInfo::GetDeviceVendor(VendorIntel),
         (nsAString&)GfxDriverInfo::GetDriverVendor(DriverVendorAll),
-        (GfxDeviceFamily*)GfxDriverInfo::GetDeviceFamily(IntelHDGraphicsIvyBridge),
+        (GfxDeviceFamily*)GfxDriverInfo::GetDeviceFamily(IntelHDGraphicsToIvyBridge),
         nsIGfxInfo::FEATURE_GL_SWIZZLE, nsIGfxInfo::FEATURE_BLOCKED_DEVICE,
         "FEATURE_FAILURE_MAC_INTELHD4000_NO_SWIZZLE");
   }
