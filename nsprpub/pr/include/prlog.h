@@ -207,12 +207,16 @@ PR_PRETEND_NORETURN;
 #define PR_ASSERT(_expr) \
     ((_expr)?((void)0):PR_Assert(# _expr,__FILE__,__LINE__))
 
+#define PR_ASSERT_ARG(_expr) PR_ASSERT(_expr)
+
 #define PR_NOT_REACHED(_reasonStr) \
     PR_Assert(_reasonStr,__FILE__,__LINE__)
 
 #else
 
 #define PR_ASSERT(expr) ((void) 0)
+/* PR_ASSERT_ARG avoids compiler warning: unused variable */
+#define PR_ASSERT_ARG(expr) ((void)(0 && (expr)))
 #define PR_NOT_REACHED(reasonStr)
 
 #endif /* defined(DEBUG) || defined(FORCE_PR_ASSERT) */

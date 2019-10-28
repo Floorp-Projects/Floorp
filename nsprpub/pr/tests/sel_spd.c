@@ -86,7 +86,6 @@ void
 _server_thread(void *arg_id)
 {
     void _client_thread(void *);
-    PRThread *thread;
     int *id =  (int *)arg_id;
     PRFileDesc *sock;
     PRSocketOptionData sockopt;
@@ -142,13 +141,13 @@ _server_thread(void *arg_id)
     }
 
     /* Tell the client to start */
-    if ( (thread = PR_CreateThread(PR_USER_THREAD,
-                                   _client_thread,
-                                   id,
-                                   PR_PRIORITY_NORMAL,
-                                   scope2,
-                                   PR_UNJOINABLE_THREAD,
-                                   0)) == NULL) {
+    if ( PR_CreateThread(PR_USER_THREAD,
+                         _client_thread,
+                         id,
+                         PR_PRIORITY_NORMAL,
+                         scope2,
+                         PR_UNJOINABLE_THREAD,
+                         0) == NULL) {
         fprintf(stderr, "Error creating client thread %d\n", *id);
     }
 
@@ -334,18 +333,17 @@ void do_work(void)
 
     _thread_exit_count = _threads * 2;
     for (index=0; index<_threads; index++) {
-        PRThread *thread;
         int *id = (int *)PR_Malloc(sizeof(int));
 
         *id = index;
 
-        if ( (thread = PR_CreateThread(PR_USER_THREAD,
-                                       _server_thread,
-                                       id,
-                                       PR_PRIORITY_NORMAL,
-                                       scope1,
-                                       PR_UNJOINABLE_THREAD,
-                                       0)) == NULL) {
+        if ( PR_CreateThread(PR_USER_THREAD,
+                             _server_thread,
+                             id,
+                             PR_PRIORITY_NORMAL,
+                             scope1,
+                             PR_UNJOINABLE_THREAD,
+                             0) == NULL) {
             fprintf(stderr, "Error creating server thread %d\n", index);
         }
     }

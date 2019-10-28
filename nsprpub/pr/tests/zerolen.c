@@ -72,7 +72,7 @@ static void ClientThread(void *arg)
     /*
      * Then start reading.
      */
-    while ((nbytes = PR_Read(sock, buf, sizeof(buf))) > 0) {
+    while (nbytes = PR_Read(sock, buf, sizeof(buf)) > 0) {
         /* empty loop body */
     }
     if (-1 == nbytes) {
@@ -136,7 +136,7 @@ int main()
         exit(1);
     }
     osfd = PR_FileDesc2NativeHandle(acceptSock);
-    while ((nbytes = write(osfd, buf, sizeof(buf))) != -1) {
+    while (write(osfd, buf, sizeof(buf)) != -1) {
         /* empty loop body */
     }
     if ((errno != EAGAIN) && (errno != EWOULDBLOCK)) {
@@ -177,7 +177,7 @@ int main()
         exit(1);
     }
     osfd = PR_FileDesc2NativeHandle(acceptSock);
-    while ((nbytes = write(osfd, buf, sizeof(buf))) != -1) {
+    while (write(osfd, buf, sizeof(buf)) != -1) {
         /* empty loop body */
     }
     if ((errno != EAGAIN) && (errno != EWOULDBLOCK)) {
@@ -216,7 +216,7 @@ int main()
         exit(1);
     }
     osfd = PR_FileDesc2NativeHandle(acceptSock);
-    while ((nbytes = write(osfd, buf, sizeof(buf))) != -1) {
+    while (write(osfd, buf, sizeof(buf)) != -1) {
         /* empty loop body */
     }
     if ((errno != EAGAIN) && (errno != EWOULDBLOCK)) {

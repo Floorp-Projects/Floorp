@@ -199,7 +199,6 @@ finish:
 int main(int argc, char **argv)
 {
     pid_t pid;
-    int rv;
 
     /* main test program */
 
@@ -216,7 +215,7 @@ int main(int argc, char **argv)
 
         printf("Fork succeeded.  Parent process continues.\n");
         DoIO();
-        if ((rv = waitpid(pid, &childStatus, 0)) != pid) {
+        if (waitpid(pid, &childStatus, 0) != pid) {
             {
                 fprintf(stderr, "waitpid failed: %d\n", errno);
                 failed_already = 1;
