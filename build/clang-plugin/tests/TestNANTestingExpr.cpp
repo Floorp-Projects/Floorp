@@ -1,3 +1,11 @@
+#line 1 "tests/SkScalar.h"
+// This checks that the whitelist accounts for #line directives and such. If you
+// remove SkScalar from the whitelist, please change the filename here instead
+// of adding expected diagnostics.
+inline int headerSays(double x) {
+  return x != x;
+}
+#line 9 "TestNANTestingExpr.cpp"
 void test(bool x);
 void foo() {
   float f, f2;

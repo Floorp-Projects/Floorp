@@ -24,4 +24,4 @@ public:
 static FrontendPluginRegistry::Add<MozCheckAction> X("moz-check",
                                                      "check moz action");
 
-DenseMap<unsigned, bool> InThirdPartyPathCache;
+DenseMap<StringRef, bool> InThirdPartyPathCache;
