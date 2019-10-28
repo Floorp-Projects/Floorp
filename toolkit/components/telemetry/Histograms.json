@@ -13349,6 +13349,15 @@
     "kind": "boolean",
     "description": "XUL-only: whether the user has toggled do not disturb."
   },
+  "ALERTS_SERVICE_DND_SUPPORTED_FLAG": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec", "geckoview"],
+    "alert_emails": ["firefox-dev@mozilla.org"],
+    "bug_numbers": [1219030],
+    "expires_in_version": "50",
+    "kind": "flag",
+    "description": "Whether the do not disturb option is supported. True if the browser uses XUL alerts."
+  },
   "PLUGIN_DRAWING_MODEL": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "geckoview"],
