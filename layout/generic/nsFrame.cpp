@@ -7808,7 +7808,7 @@ void nsIFrame::ListGeneric(nsACString& aTo, const char* aPrefix,
                          mRect.height);
 
   mozilla::WritingMode wm = GetWritingMode();
-  if (wm.IsVertical() || !wm.IsBidiLTR()) {
+  if (wm.IsVertical() || wm.IsBidiRTL()) {
     aTo += nsPrintfCString(" wm=%s logical-size={%d,%d}", wm.DebugString(),
                            ISize(), BSize());
   }
@@ -7816,7 +7816,7 @@ void nsIFrame::ListGeneric(nsACString& aTo, const char* aPrefix,
   nsIFrame* parent = GetParent();
   if (parent) {
     WritingMode pWM = parent->GetWritingMode();
-    if (pWM.IsVertical() || !pWM.IsBidiLTR()) {
+    if (pWM.IsVertical() || pWM.IsBidiRTL()) {
       nsSize containerSize = parent->mRect.Size();
       LogicalRect lr(pWM, mRect, containerSize);
       aTo += nsPrintfCString(

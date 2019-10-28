@@ -308,7 +308,7 @@ TextOverflow::TextOverflow(nsDisplayListBuilder* aBuilder,
       // for RTL blocks (also for overflow:hidden), so we need to move
       // the edges 1px outward in ExamineLineFrames to avoid triggering
       // a text-overflow marker in this case.
-      mAdjustForPixelSnapping = !mBlockWM.IsBidiLTR();
+      mAdjustForPixelSnapping = mBlockWM.IsBidiRTL();
     }
   }
 #endif

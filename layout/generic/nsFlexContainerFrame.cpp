@@ -3715,7 +3715,7 @@ void FlexboxAxisTracker::InitAxesFromLegacyProps(
   // So, we need to reverse the corresponding flex axis to match.
   // (Note this we don't toggle "mIsMainAxisReversed" for this condition,
   // because the main axis will still match mWM's inline direction.)
-  if (!mWM.IsBidiLTR()) {
+  if (mWM.IsBidiRTL()) {
     AxisOrientationType& axisToFlip = mIsRowOriented ? mMainAxis : mCrossAxis;
     axisToFlip = GetReverseAxis(axisToFlip);
   }

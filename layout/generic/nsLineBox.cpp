@@ -243,7 +243,7 @@ void nsLineBox::List(FILE* out, const char* aPrefix, uint32_t aFlags) const {
   nsRect bounds = GetPhysicalBounds();
   str += nsPrintfCString("{%d,%d,%d,%d} ", bounds.x, bounds.y, bounds.width,
                          bounds.height);
-  if (mWritingMode.IsVertical() || !mWritingMode.IsBidiLTR()) {
+  if (mWritingMode.IsVertical() || mWritingMode.IsBidiRTL()) {
     str +=
         nsPrintfCString("{%s: %d,%d,%d,%d; cs=%d,%d} ",
                         mWritingMode.DebugString(), IStart(), BStart(), ISize(),
