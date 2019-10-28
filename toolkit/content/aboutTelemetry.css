@@ -241,7 +241,7 @@ section:not(.active) {
 }
 
 .histogram {
-  float: left;
+  float: inline-start;
   white-space: nowrap;
   padding: 10px;
   position: relative; /* required for position:absolute of the contained .copy-node */
@@ -251,11 +251,6 @@ section:not(.active) {
   margin-bottom: 24px;
   margin-right: 24px;
   min-height: 17.5em;
-}
-
-
-body:dir(rtl) .histogram {
-  float: right;
 }
 
 .histogram-title {
@@ -294,12 +289,8 @@ body:dir(rtl) .histogram {
   width: 2em;
   margin: 2px;
   text-align: center;
-  float: left;
+  float: inline-start;
   font-family: monospace;
-}
-
-body:dir(rtl) .bar {
-  float: right;
 }
 
 .bar-inner {
