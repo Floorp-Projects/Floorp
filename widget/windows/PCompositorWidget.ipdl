@@ -27,7 +27,8 @@ parent:
 child:
   async ObserveVsync();
   async UnobserveVsync();
-  async UpdateCompositorWnd(WindowsHandle aCompositorWnd, WindowsHandle aParentWnd);
+  async UpdateCompositorWnd(WindowsHandle aCompositorWnd, WindowsHandle aParentWnd)
+    returns (bool success);
 };
 
 } // namespace widget

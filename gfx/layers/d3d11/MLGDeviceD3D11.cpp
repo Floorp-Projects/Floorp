@@ -380,8 +380,6 @@ void MLGSwapChainD3D11::UpdateBackBufferContents(ID3D11Texture2D* aBack) {
 }
 
 bool MLGSwapChainD3D11::ResizeBuffers(const IntSize& aSize) {
-  mWidget->AsWindows()->UpdateCompositorWndSizeIfNecessary();
-
   // We have to clear all references to the old backbuffer before resizing.
   mRT = nullptr;
 
