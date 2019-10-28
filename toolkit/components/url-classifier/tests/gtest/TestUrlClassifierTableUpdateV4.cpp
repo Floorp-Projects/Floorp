@@ -3,9 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "Common.h"
 #include "Classifier.h"
-#include "gtest/gtest.h"
 #include "HashStore.h"
 #include "mozilla/Components.h"
 #include "mozilla/Unused.h"
@@ -14,6 +12,8 @@
 #include "nsIThread.h"
 #include "nsThreadUtils.h"
 #include "string.h"
+
+#include "Common.h"
 
 #define GTEST_SAFEBROWSING_DIR NS_LITERAL_CSTRING("safebrowsing")
 #define GTEST_TABLE NS_LITERAL_CSTRING("gtest-malware-proto")

@@ -3,12 +3,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "string.h"
-
-#include "gtest/gtest.h"
 #include "HashStore.h"
 #include "mozilla/Unused.h"
 #include "nsPrintfCString.h"
+#include "string.h"
+
+#include "Common.h"
 
 static const char* kFilesInV2[] = {".vlpset", ".sbstore"};
 static const char* kFilesInV4[] = {".vlpset", ".metadata"};

@@ -3,11 +3,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "gtest/gtest.h"
 #include "HashStore.h"
 #include "LookupCache.h"
 #include "LookupCacheV4.h"
 #include "nsAppDirectoryServiceDefs.h"
+
+#include "Common.h"
 
 namespace mozilla {
 namespace safebrowsing {
