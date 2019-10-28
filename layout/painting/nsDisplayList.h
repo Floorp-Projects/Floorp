@@ -1673,9 +1673,21 @@ class nsDisplayListBuilder {
    */
   bool IsInWillChangeBudget(nsIFrame* aFrame, const nsSize& aSize);
 
-  void RemoveFromWillChangeBudget(nsIFrame* aFrame);
+  /**
+   * Clears the will-change budget status for the given |aFrame|.
+   * This will also remove the frame from will-change budgets.
+   */
+  void ClearWillChangeBudgetStatus(nsIFrame* aFrame);
 
-  void ClearWillChangeBudget();
+  /**
+   * Removes the given |aFrame| from will-change budgets.
+   */
+  void RemoveFromWillChangeBudgets(const nsIFrame* aFrame);
+
+  /**
+   * Clears the will-change budgets.
+   */
+  void ClearWillChangeBudgets();
 
   void EnterSVGEffectsContents(nsIFrame* aEffectsFrame,
                                nsDisplayList* aHoistedItemsStorage);
@@ -1868,19 +1880,13 @@ class nsDisplayListBuilder {
 
   void AddSizeOfExcludingThis(nsWindowSizes&) const;
 
-  struct DocumentWillChangeBudget {
-    DocumentWillChangeBudget() : mBudget(0) {}
-
-    uint32_t mBudget;
-  };
-
   struct FrameWillChangeBudget {
     FrameWillChangeBudget() : mPresContext(nullptr), mUsage(0) {}
 
-    FrameWillChangeBudget(nsPresContext* aPresContext, uint32_t aUsage)
+    FrameWillChangeBudget(const nsPresContext* aPresContext, uint32_t aUsage)
         : mPresContext(aPresContext), mUsage(aUsage) {}
 
-    nsPresContext* mPresContext;
+    const nsPresContext* mPresContext;
     uint32_t mUsage;
   };
 
@@ -1915,13 +1921,14 @@ class nsDisplayListBuilder {
   RefPtr<AnimatedGeometryRoot> mCurrentAGR;
 
   // will-change budget tracker
-  nsDataHashtable<nsPtrHashKey<nsPresContext>, DocumentWillChangeBudget>
-      mWillChangeBudget;
+  typedef uint32_t DocumentWillChangeBudget;
+  nsDataHashtable<nsPtrHashKey<const nsPresContext>, DocumentWillChangeBudget>
+      mDocumentWillChangeBudgets;
 
   // Any frame listed in this set is already counted in the budget
   // and thus is in-budget.
-  nsDataHashtable<nsPtrHashKey<nsIFrame>, FrameWillChangeBudget>
-      mWillChangeBudgetSet;
+  nsDataHashtable<nsPtrHashKey<const nsIFrame>, FrameWillChangeBudget>
+      mFrameWillChangeBudgets;
 
   uint8_t mBuildingExtraPagesForPageNum;
 

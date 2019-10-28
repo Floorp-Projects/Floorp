@@ -3027,7 +3027,7 @@ void nsIFrame::BuildDisplayListForStackingContext(
     }
   }
 
-  if (disp->mWillChange.bits) {
+  if (aBuilder->IsForPainting() && disp->mWillChange.bits) {
     aBuilder->AddToWillChangeBudget(this, GetSize());
   }
 
@@ -3903,7 +3903,9 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
       // Animations may change the stacking context state.
       !(child->MayHaveTransformAnimation() || child->MayHaveOpacityAnimation());
 
-  aBuilder->RemoveFromWillChangeBudget(child);
+  if (aBuilder->IsForPainting()) {
+    aBuilder->ClearWillChangeBudgetStatus(child);
+  }
 
   if (StaticPrefs::layout_css_scroll_anchoring_highlight()) {
     if (child->FirstContinuation()->IsScrollAnchor()) {
@@ -3945,8 +3947,8 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
     child = placeholder->GetOutOfFlowFrame();
     NS_ASSERTION(child, "No out of flow frame?");
 
-    if (child) {
-      aBuilder->RemoveFromWillChangeBudget(child);
+    if (child && aBuilder->IsForPainting()) {
+      aBuilder->ClearWillChangeBudgetStatus(child);
     }
 
     // If 'child' is a pushed float then it's owned by a block that's not an

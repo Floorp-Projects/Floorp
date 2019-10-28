@@ -868,7 +868,7 @@ static void TakeAndAddModifiedAndFramesWithPropsFromRootFrame(
     }
 
     if (flags & RetainedDisplayListData::FrameFlags::HadWillChange) {
-      aBuilder->RemoveFromWillChangeBudget(frame);
+      aBuilder->RemoveFromWillChangeBudgets(frame);
     }
   }
 
