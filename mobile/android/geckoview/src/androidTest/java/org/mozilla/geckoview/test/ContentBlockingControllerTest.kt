@@ -153,6 +153,9 @@ class ContentBlockingControllerTest : BaseSessionTest() {
         sessionRule.session.settings.useTrackingProtection = true
         sessionRule.session.loadTestPath(TRACKERS_PATH)
 
+        assumeThat(sessionRule.env.isDebugBuild,
+                   equalTo(false))
+
         sessionRule.waitForPageStop()
 
         sessionRule.waitForResult(sessionRule.runtime.contentBlockingController.getLog(sessionRule.session).accept {
