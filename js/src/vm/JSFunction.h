@@ -470,7 +470,6 @@ class JSFunction : public js::NativeObject {
   bool hasSelfHostedLazyScript() const {
     return flags_.hasSelfHostedLazyScript();
   }
-  bool hasBaseScript() const { return hasScript() || hasLazyScript(); }
 
   // Arrow functions store their lexical new.target in the first extended slot.
   bool isArrow() const { return flags_.isArrow(); }
@@ -515,7 +514,11 @@ class JSFunction : public js::NativeObject {
   bool needsPrototypeProperty();
 
   /* Returns the strictness of this function, which must be interpreted. */
-  bool strict() const { return baseScript()->strict(); }
+  bool strict() const {
+    MOZ_ASSERT(isInterpreted());
+    return isInterpretedLazy() ? lazyScript()->strict()
+                               : nonLazyScript()->strict();
+  }
 
   void setFlags(uint16_t flags) { flags_ = FunctionFlags(flags); }
   void setFlags(FunctionFlags flags) { flags_ = flags; }
@@ -764,20 +767,17 @@ class JSFunction : public js::NativeObject {
     return u.scripted.s.selfHostedLazy_;
   }
 
-  // Access fields defined on both lazy and non-lazy scripts. This should
-  // optimize away the branch since the union arms are compatible.
-  js::BaseScript* baseScript() const {
-    if (hasScript()) {
-      return nonLazyScript();
-    }
-    MOZ_ASSERT(hasLazyScript());
-    return lazyScript();
-  }
-
   js::GeneratorKind generatorKind() const {
-    if (hasBaseScript()) {
-      return baseScript()->generatorKind();
+    if (!isInterpreted()) {
+      return js::GeneratorKind::NotGenerator;
     }
+    if (hasScript()) {
+      return nonLazyScript()->generatorKind();
+    }
+    if (hasLazyScript()) {
+      return lazyScript()->generatorKind();
+    }
+    MOZ_ASSERT(isSelfHostedBuiltin());
     return js::GeneratorKind::NotGenerator;
   }
 
@@ -786,9 +786,16 @@ class JSFunction : public js::NativeObject {
   }
 
   js::FunctionAsyncKind asyncKind() const {
-    if (hasBaseScript()) {
-      return baseScript()->asyncKind();
+    if (!isInterpreted()) {
+      return js::FunctionAsyncKind::SyncFunction;
     }
+    if (hasScript()) {
+      return nonLazyScript()->asyncKind();
+    }
+    if (hasLazyScript()) {
+      return lazyScript()->asyncKind();
+    }
+    MOZ_ASSERT(isSelfHostedBuiltin());
     return js::FunctionAsyncKind::SyncFunction;
   }
 

@@ -36,7 +36,9 @@ FunctionEmitter::FunctionEmitter(BytecodeEmitter* bce, FunctionBox* funbox,
       fun_(bce_->cx, funbox_->function()),
       name_(bce_->cx, fun_->explicitName()),
       syntaxKind_(syntaxKind),
-      isHoisted_(isHoisted) {}
+      isHoisted_(isHoisted) {
+  MOZ_ASSERT_IF(fun_->isInterpretedLazy(), fun_->lazyScript());
+}
 
 bool FunctionEmitter::interpretedCommon() {
   // Mark as singletons any function which will only be executed once, or
@@ -114,7 +116,7 @@ bool FunctionEmitter::emitLazy() {
   if (bce_->emittingRunOnceLambda) {
     // NOTE: The 'funbox' is only partially initialized so we defer checking
     // the shouldSuppressRunOnce condition until delazification.
-    fun_->baseScript()->setTreatAsRunOnce();
+    fun_->lazyScript()->setTreatAsRunOnce();
   }
 
   if (!emitFunction()) {

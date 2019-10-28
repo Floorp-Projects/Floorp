@@ -793,9 +793,12 @@ static JSFunction* MaybeConstructorFromType(TypeSet::Type ty) {
 static void InterpretedFunctionFilenameAndLineNumber(JSFunction* fun,
                                                      const char** filename,
                                                      Maybe<unsigned>* lineno) {
-  if (fun->hasBaseScript()) {
-    *filename = fun->baseScript()->maybeForwardedScriptSource()->filename();
-    *lineno = Some((unsigned)fun->baseScript()->lineno());
+  if (fun->hasScript()) {
+    *filename = fun->nonLazyScript()->maybeForwardedScriptSource()->filename();
+    *lineno = Some((unsigned)fun->nonLazyScript()->lineno());
+  } else if (fun->hasLazyScript()) {
+    *filename = fun->lazyScript()->maybeForwardedScriptSource()->filename();
+    *lineno = Some((unsigned)fun->lazyScript()->lineno());
   } else {
     *filename = "(self-hosted builtin)";
     *lineno = Nothing();
