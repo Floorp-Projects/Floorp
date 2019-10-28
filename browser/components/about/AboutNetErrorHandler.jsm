@@ -31,6 +31,7 @@ var AboutNetErrorHandler = {
     "Browser:OpenCaptivePortalPage",
     "Browser:PrimeMitm",
     "Browser:ResetEnterpriseRootsPref",
+    "Browser:ResetSSLPreferences",
     "Browser:SSLErrorGoBack",
     "GetChangedCertPrefs",
     "ReportTLSError",
@@ -89,6 +90,15 @@ var AboutNetErrorHandler = {
       case "Browser:ResetEnterpriseRootsPref":
         Services.prefs.clearUserPref("security.enterprise_roots.enabled");
         Services.prefs.clearUserPref("security.enterprise_roots.auto-enabled");
+        break;
+      case "Browser:ResetSSLPreferences":
+        let prefSSLImpact = PREF_SSL_IMPACT_ROOTS.reduce((prefs, root) => {
+          return prefs.concat(Services.prefs.getChildList(root));
+        }, []);
+        for (let prefName of prefSSLImpact) {
+          Services.prefs.clearUserPref(prefName);
+        }
+        msg.target.browser.reload();
         break;
       case "Browser:SSLErrorGoBack":
         this.goBackFromErrorPage(msg.target.browser.ownerGlobal);
