@@ -31,6 +31,13 @@ loader.lazyRequireGetter(
   true
 );
 
+loader.lazyRequireGetter(
+  this,
+  "LongStringActor",
+  "devtools/server/actors/string",
+  true
+);
+
 function isObject(value) {
   return Object(value) === value;
 }
@@ -313,14 +320,13 @@ function getDbgWindow(options, dbg, webConsole) {
     return { bindSelf: null, dbgWindow };
   }
 
-  const objActor = webConsole.getActorByID(options.selectedObjectActor);
+  const actor = webConsole.getActorByID(options.selectedObjectActor);
 
-  if (!objActor) {
+  if (!actor) {
     return { bindSelf: null, dbgWindow };
   }
 
-  const jsVal = objActor.rawValue();
-
+  const jsVal = actor instanceof LongStringActor ? actor.str : actor.rawValue();
   if (!isObject(jsVal)) {
     return { bindSelf: jsVal, dbgWindow };
   }
