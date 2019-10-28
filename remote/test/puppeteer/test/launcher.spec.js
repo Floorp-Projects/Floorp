@@ -84,6 +84,23 @@ module.exports.addTests = function({testRunner, expect, defaultBrowserOptions, p
         await browser.close();
       });
     });
+    describe('Browser.close', function() {
+      it('should terminate network waiters', async({context, server}) => {
+        const browser = await puppeteer.launch(defaultBrowserOptions);
+        const remote = await puppeteer.connect({browserWSEndpoint: browser.wsEndpoint()});
+        const newPage = await remote.newPage();
+        const results = await Promise.all([
+          newPage.waitForRequest(server.EMPTY_PAGE).catch(e => e),
+          newPage.waitForResponse(server.EMPTY_PAGE).catch(e => e),
+          browser.close()
+        ]);
+        for (let i = 0; i < 2; i++) {
+          const message = results[i].message;
+          expect(message).toContain('Target closed');
+          expect(message).not.toContain('Timeout');
+        }
+      });
+    });
     describe('Puppeteer.launch', function() {
       it('should reject all promises when browser is closed', async() => {
         const browser = await puppeteer.launch(defaultBrowserOptions);
@@ -204,21 +221,22 @@ module.exports.addTests = function({testRunner, expect, defaultBrowserOptions, p
         expect(spawnargs.indexOf(defaultArgs[2])).toBe(-1);
         await browser.close();
       });
-      it_fails_ffox('should have default url when launching browser', async function() {
+      it_fails_ffox('should have default URL when launching browser', async function() {
         const browser = await puppeteer.launch(defaultBrowserOptions);
         const pages = (await browser.pages()).map(page => page.url());
         expect(pages).toEqual(['about:blank']);
         await browser.close();
       });
-      it_fails_ffox('should have custom url when launching browser', async function({server}) {
+      it_fails_ffox('should have custom URL when launching browser', async function({server}) {
         const options = Object.assign({}, defaultBrowserOptions);
         options.args = [server.EMPTY_PAGE].concat(options.args || []);
         const browser = await puppeteer.launch(options);
         const pages = await browser.pages();
         expect(pages.length).toBe(1);
-        if (pages[0].url() !== server.EMPTY_PAGE)
-          await pages[0].waitForNavigation();
-        expect(pages[0].url()).toBe(server.EMPTY_PAGE);
+        const page = pages[0];
+        if (page.url() !== server.EMPTY_PAGE)
+          await page.waitForNavigation();
+        expect(page.url()).toBe(server.EMPTY_PAGE);
         await browser.close();
       });
       it('should set the default viewport', async() => {
@@ -288,11 +306,15 @@ module.exports.addTests = function({testRunner, expect, defaultBrowserOptions, p
         const browser = await puppeteer.connect({browserWSEndpoint, ignoreHTTPSErrors: true});
         const page = await browser.newPage();
         let error = null;
-        const response = await page.goto(httpsServer.EMPTY_PAGE).catch(e => error = e);
+        const [serverRequest, response] = await Promise.all([
+          httpsServer.waitForRequest('/empty.html'),
+          page.goto(httpsServer.EMPTY_PAGE).catch(e => error = e)
+        ]);
         expect(error).toBe(null);
         expect(response.ok()).toBe(true);
         expect(response.securityDetails()).toBeTruthy();
-        expect(response.securityDetails().protocol()).toBe('TLS 1.2');
+        const protocol = serverRequest.socket.getProtocol().replace('v', ' ');
+        expect(response.securityDetails().protocol()).toBe(protocol);
         await page.close();
         await browser.close();
       });

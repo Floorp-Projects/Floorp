@@ -17,8 +17,8 @@
 const os = require('os');
 const fs = require('fs');
 const path = require('path');
-const extract = require('extract-zip');
 const util = require('util');
+const extract = require('extract-zip');
 const URL = require('url');
 const {helper, assert} = require('./helper');
 const removeRecursive = require('rimraf');
@@ -268,17 +268,26 @@ function extractZip(zipPath, folderPath) {
 
 function httpRequest(url, method, response) {
   /** @type {Object} */
-  const options = URL.parse(url);
+  let options = URL.parse(url);
   options.method = method;
 
   const proxyURL = getProxyForUrl(url);
   if (proxyURL) {
-    /** @type {Object} */
-    const parsedProxyURL = URL.parse(proxyURL);
-    parsedProxyURL.secureProxy = parsedProxyURL.protocol === 'https:';
+    if (url.startsWith('http:')) {
+      const proxy = URL.parse(proxyURL);
+      options = {
+        path: options.href,
+        host: proxy.hostname,
+        port: proxy.port,
+      };
+    } else {
+      /** @type {Object} */
+      const parsedProxyURL = URL.parse(proxyURL);
+      parsedProxyURL.secureProxy = parsedProxyURL.protocol === 'https:';
 
-    options.agent = new ProxyAgent(parsedProxyURL);
-    options.rejectUnauthorized = false;
+      options.agent = new ProxyAgent(parsedProxyURL);
+      options.rejectUnauthorized = false;
+    }
   }
 
   const requestCallback = res => {

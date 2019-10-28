@@ -15,6 +15,7 @@
  */
 
 const fs = require('fs');
+const path = require('path');
 const EventEmitter = require('events');
 const mime = require('mime');
 const {Events} = require('./Events');
@@ -30,6 +31,7 @@ const {Worker} = require('./Worker');
 const {createJSHandle} = require('./JSHandle');
 const {Accessibility} = require('./Accessibility');
 const {TimeoutSettings} = require('./TimeoutSettings');
+
 const writeFileAsync = helper.promisify(fs.writeFile);
 
 class Page extends EventEmitter {
@@ -43,12 +45,7 @@ class Page extends EventEmitter {
    */
   static async create(client, target, ignoreHTTPSErrors, defaultViewport, screenshotTaskQueue) {
     const page = new Page(client, target, ignoreHTTPSErrors, screenshotTaskQueue);
-    await Promise.all([
-      page._frameManager.initialize(),
-      client.send('Target.setAutoAttach', {autoAttach: true, waitForDebuggerOnStart: false, flatten: true}),
-      client.send('Performance.enable', {}),
-      client.send('Log.enable', {}),
-    ]);
+    await page._initialize();
     if (defaultViewport)
       await page.setViewport(defaultViewport);
     return page;
@@ -115,6 +112,8 @@ class Page extends EventEmitter {
     networkManager.on(Events.NetworkManager.Response, event => this.emit(Events.Page.Response, event));
     networkManager.on(Events.NetworkManager.RequestFailed, event => this.emit(Events.Page.RequestFailed, event));
     networkManager.on(Events.NetworkManager.RequestFinished, event => this.emit(Events.Page.RequestFinished, event));
+    this._fileChooserInterceptionIsDisabled = false;
+    this._fileChooserInterceptors = new Set();
 
     client.on('Page.domContentEventFired', event => this.emit(Events.Page.DOMContentLoaded));
     client.on('Page.loadEventFired', event => this.emit(Events.Page.Load));
@@ -125,9 +124,56 @@ class Page extends EventEmitter {
     client.on('Inspector.targetCrashed', event => this._onTargetCrashed());
     client.on('Performance.metrics', event => this._emitMetrics(event));
     client.on('Log.entryAdded', event => this._onLogEntryAdded(event));
+    client.on('Page.fileChooserOpened', event => this._onFileChooser(event));
     this._target._isClosedPromise.then(() => {
       this.emit(Events.Page.Close);
       this._closed = true;
+    });
+  }
+
+  async _initialize() {
+    await Promise.all([
+      this._frameManager.initialize(),
+      this._client.send('Target.setAutoAttach', {autoAttach: true, waitForDebuggerOnStart: false, flatten: true}),
+      this._client.send('Performance.enable', {}),
+      this._client.send('Log.enable', {}),
+      this._client.send('Page.setInterceptFileChooserDialog', {enabled: true}).catch(e => {
+        this._fileChooserInterceptionIsDisabled = true;
+      }),
+    ]);
+  }
+
+  /**
+   * @param {!Protocol.Page.fileChooserOpenedPayload} event
+   */
+  _onFileChooser(event) {
+    if (!this._fileChooserInterceptors.size) {
+      this._client.send('Page.handleFileChooser', { action: 'fallback' }).catch(debugError);
+      return;
+    }
+    const interceptors = Array.from(this._fileChooserInterceptors);
+    this._fileChooserInterceptors.clear();
+    const fileChooser = new FileChooser(this._client, event);
+    for (const interceptor of interceptors)
+      interceptor.call(null, fileChooser);
+  }
+
+  /**
+   * @param {!{timeout?: number}=} options
+   * @return !Promise<!FileChooser>}
+   */
+  async waitForFileChooser(options = {}) {
+    if (this._fileChooserInterceptionIsDisabled)
+      throw new Error('File chooser handling does not work with multiple connections to the same page');
+    const {
+      timeout = this._timeoutSettings.timeout(),
+    } = options;
+    let callback;
+    const promise = new Promise(x => callback = x);
+    this._fileChooserInterceptors.add(callback);
+    return helper.waitWithTimeout(promise, 'waiting for file chooser', timeout).catch(e => {
+      this._fileChooserInterceptors.delete(callback);
+      throw e;
     });
   }
 
@@ -649,6 +695,12 @@ class Page extends EventEmitter {
     return await this._frameManager.mainFrame().waitForNavigation(options);
   }
 
+  _sessionClosePromise() {
+    if (!this._disconnectPromise)
+      this._disconnectPromise = new Promise(fulfill => this._client.once(Events.CDPSession.Disconnected, () => fulfill(new Error('Target closed'))));
+    return this._disconnectPromise;
+  }
+
   /**
    * @param {(string|Function)} urlOrPredicate
    * @param {!{timeout?: number}=} options
@@ -664,7 +716,7 @@ class Page extends EventEmitter {
       if (typeof urlOrPredicate === 'function')
         return !!(urlOrPredicate(request));
       return false;
-    }, timeout);
+    }, timeout, this._sessionClosePromise());
   }
 
   /**
@@ -682,7 +734,7 @@ class Page extends EventEmitter {
       if (typeof urlOrPredicate === 'function')
         return !!(urlOrPredicate(response));
       return false;
-    }, timeout);
+    }, timeout, this._sessionClosePromise());
   }
 
   /**
@@ -749,11 +801,40 @@ class Page extends EventEmitter {
   }
 
   /**
-   * @param {?string} mediaType
+   * @param {?string} type
    */
-  async emulateMedia(mediaType) {
-    assert(mediaType === 'screen' || mediaType === 'print' || mediaType === null, 'Unsupported media type: ' + mediaType);
-    await this._client.send('Emulation.setEmulatedMedia', {media: mediaType || ''});
+  async emulateMediaType(type) {
+    assert(type === 'screen' || type === 'print' || type === null, 'Unsupported media type: ' + type);
+    await this._client.send('Emulation.setEmulatedMedia', {media: type || ''});
+  }
+
+  /**
+   * @param {?Array<MediaFeature>} features
+   */
+  async emulateMediaFeatures(features) {
+    if (features === null)
+      await this._client.send('Emulation.setEmulatedMedia', {features: null});
+    if (Array.isArray(features)) {
+      features.every(mediaFeature => {
+        const name = mediaFeature.name;
+        assert(/^prefers-(?:color-scheme|reduced-motion)$/.test(name), 'Unsupported media feature: ' + name);
+        return true;
+      });
+      await this._client.send('Emulation.setEmulatedMedia', {features: features});
+    }
+  }
+
+  /**
+   * @param {?string} timezoneId
+   */
+  async emulateTimezone(timezoneId) {
+    try {
+      await this._client.send('Emulation.setTimezoneOverride', {timezoneId: timezoneId || ''});
+    } catch (exception) {
+      if (exception.message.includes('Invalid timezone'))
+        throw new Error(`Invalid timezone ID: ${timezoneId}`);
+      throw exception;
+    }
   }
 
   /**
@@ -834,7 +915,7 @@ class Page extends EventEmitter {
       assert(typeof options.clip.width === 'number', 'Expected options.clip.width to be a number but found ' + (typeof options.clip.width));
       assert(typeof options.clip.height === 'number', 'Expected options.clip.height to be a number but found ' + (typeof options.clip.height));
       assert(options.clip.width !== 0, 'Expected options.clip.width not to be 0.');
-      assert(options.clip.height !== 0, 'Expected options.clip.width not to be 0.');
+      assert(options.clip.height !== 0, 'Expected options.clip.height not to be 0.');
     }
     return this._screenshotTaskQueue.postTask(this._screenshotTask.bind(this, screenshotType, options));
   }
@@ -924,6 +1005,7 @@ class Page extends EventEmitter {
     const marginRight = convertPrintParameterToInches(margin.right) || 0;
 
     const result = await this._client.send('Page.printToPDF', {
+      transferMode: 'ReturnAsStream',
       landscape,
       displayHeaderFooter,
       headerTemplate,
@@ -939,10 +1021,7 @@ class Page extends EventEmitter {
       pageRanges,
       preferCSSPageSize
     });
-    const buffer = Buffer.from(result.data, 'base64');
-    if (path !== null)
-      await writeFileAsync(path, buffer);
-    return buffer;
+    return await helper.readProtocolStream(this._client, result.stream, path);
   }
 
   /**
@@ -1029,7 +1108,7 @@ class Page extends EventEmitter {
 
   /**
    * @param {(string|number|Function)} selectorOrFunctionOrTimeout
-   * @param {!Object=} options
+   * @param {!{visible?: boolean, hidden?: boolean, timeout?: number, polling?: string|number}=} options
    * @param {!Array<*>} args
    * @return {!Promise<!Puppeteer.JSHandle>}
    */
@@ -1065,6 +1144,9 @@ class Page extends EventEmitter {
     return this.mainFrame().waitForFunction(pageFunction, options, ...args);
   }
 }
+
+// Expose alias for deprecated method.
+Page.prototype.emulateMedia = Page.prototype.emulateMediaType;
 
 /**
  * @typedef {Object} PDFOptions
@@ -1111,6 +1193,12 @@ class Page extends EventEmitter {
  * @property {string=} encoding
  */
 
+/**
+ * @typedef {Object} MediaFeature
+ * @property {string} name
+ * @property {string} value
+ */
+
 /** @type {!Set<string>} */
 const supportedMetrics = new Set([
   'Timestamp',
@@ -1136,8 +1224,8 @@ Page.PaperFormats = {
   ledger: {width: 17, height: 11},
   a0: {width: 33.1, height: 46.8 },
   a1: {width: 23.4, height: 33.1 },
-  a2: {width: 16.5, height: 23.4 },
-  a3: {width: 11.7, height: 16.5 },
+  a2: {width: 16.54, height: 23.4 },
+  a3: {width: 11.7, height: 16.54 },
   a4: {width: 8.27, height: 11.7 },
   a5: {width: 5.83, height: 8.27 },
   a6: {width: 4.13, height: 5.83 },
@@ -1260,5 +1348,48 @@ class ConsoleMessage {
   }
 }
 
+class FileChooser {
+  /**
+   * @param {Puppeteer.CDPSession} client
+   * @param {!Protocol.Page.fileChooserOpenedPayload} event
+   */
+  constructor(client, event) {
+    this._client = client;
+    this._multiple = event.mode !== 'selectSingle';
+    this._handled = false;
+  }
 
-module.exports = {Page, ConsoleMessage};
+  /**
+   * @return {boolean}
+   */
+  isMultiple() {
+    return this._multiple;
+  }
+
+  /**
+   * @param {!Array<string>} filePaths
+   * @return {!Promise}
+   */
+  async accept(filePaths) {
+    assert(!this._handled, 'Cannot accept FileChooser which is already handled!');
+    this._handled = true;
+    const files = filePaths.map(filePath => path.resolve(filePath));
+    await this._client.send('Page.handleFileChooser', {
+      action: 'accept',
+      files,
+    });
+  }
+
+  /**
+   * @return {!Promise}
+   */
+  async cancel() {
+    assert(!this._handled, 'Cannot cancel FileChooser which is already handled!');
+    this._handled = true;
+    await this._client.send('Page.handleFileChooser', {
+      action: 'cancel',
+    });
+  }
+}
+
+module.exports = {Page, ConsoleMessage, FileChooser};
