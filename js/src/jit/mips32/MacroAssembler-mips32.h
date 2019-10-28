@@ -604,6 +604,10 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS {
     load32(LowWord(address), dest.low);
     load32(HighWord(address), dest.high);
   }
+  void load64(const BaseIndex& address, Register64 dest) {
+    load32(LowWord(address), dest.low);
+    load32(HighWord(address), dest.high);
+  }
 
   void loadPtr(const Address& address, Register dest);
   void loadPtr(const BaseIndex& src, Register dest);
@@ -646,8 +650,16 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS {
     store32(src.low, Address(address.base, address.offset + LOW_32_OFFSET));
     store32(src.high, Address(address.base, address.offset + HIGH_32_OFFSET));
   }
+  void store64(Register64 src, const BaseIndex& address) {
+    store32(src.low, Address(address.base, address.offset + LOW_32_OFFSET));
+    store32(src.high, Address(address.base, address.offset + HIGH_32_OFFSET));
+  }
 
   void store64(Imm64 imm, Address address) {
+    store32(imm.low(), Address(address.base, address.offset + LOW_32_OFFSET));
+    store32(imm.hi(), Address(address.base, address.offset + HIGH_32_OFFSET));
+  }
+  void store64(Imm64 imm, const BaseIndex& address) {
     store32(imm.low(), Address(address.base, address.offset + LOW_32_OFFSET));
     store32(imm.hi(), Address(address.base, address.offset + HIGH_32_OFFSET));
   }
