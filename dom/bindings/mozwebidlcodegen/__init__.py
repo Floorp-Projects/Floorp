@@ -82,9 +82,12 @@ class WebIDLCodegenManagerState(dict):
 
     dictionaries_convertible_to_js
        A set of names of dictionaries that are convertible to JS.
+
+    dictionaries_convertible_from_js
+       A set of names of dictionaries that are convertible from JS.
     """
 
-    VERSION = 2
+    VERSION = 3
 
     def __init__(self, fh=None):
         self['version'] = self.VERSION
@@ -112,6 +115,9 @@ class WebIDLCodegenManagerState(dict):
         self['dictionaries_convertible_to_js'] = set(
             state['dictionaries_convertible_to_js'])
 
+        self['dictionaries_convertible_from_js'] = set(
+            state['dictionaries_convertible_from_js'])
+
     def dump(self, fh):
         """Dump serialized state to a file handle."""
         normalized = deepcopy(self)
@@ -123,6 +129,9 @@ class WebIDLCodegenManagerState(dict):
 
         normalized['dictionaries_convertible_to_js'] = sorted(
             self['dictionaries_convertible_to_js'])
+
+        normalized['dictionaries_convertible_from_js'] = sorted(
+            self['dictionaries_convertible_from_js'])
 
         json.dump(normalized, fh, sort_keys=True)
 
@@ -279,6 +288,8 @@ class WebIDLCodegenManager(LoggingMixin):
         self._state['global_depends'] = global_hashes
         self._state['dictionaries_convertible_to_js'] = set(
             d.identifier.name for d in self._config.getDictionariesConvertibleToJS())
+        self._state['dictionaries_convertible_from_js'] = set(
+            d.identifier.name for d in self._config.getDictionariesConvertibleFromJS())
 
         # Generate bindings from .webidl files.
         for filename in sorted(changed_inputs):
@@ -441,6 +452,13 @@ class WebIDLCodegenManager(LoggingMixin):
         newDictionariesConvertibleToJS = self._config.getDictionariesConvertibleToJS()
         newNames = set(d.identifier.name for d in newDictionariesConvertibleToJS)
         changedDictionaryNames = oldDictionariesConvertibleToJS ^ newNames
+
+        # Now check for changes to the set of dictionaries that are convertible from JS
+        oldDictionariesConvertibleFromJS = self._state['dictionaries_convertible_from_js']
+        newDictionariesConvertibleFromJS = self._config.getDictionariesConvertibleFromJS()
+        newNames = set(d.identifier.name for d in newDictionariesConvertibleFromJS)
+        changedDictionaryNames |= oldDictionariesConvertibleFromJS ^ newNames
+
         for name in changedDictionaryNames:
             d = self._config.getDictionaryIfExists(name)
             if d:

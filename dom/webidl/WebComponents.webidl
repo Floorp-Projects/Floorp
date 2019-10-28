@@ -25,6 +25,7 @@ callback LifecycleAttributeChangedCallback = void(DOMString attrName,
 [MOZ_CAN_RUN_SCRIPT_BOUNDARY]
 callback LifecycleGetCustomInterfaceCallback = object?(any iid);
 
+[GenerateInit]
 dictionary LifecycleCallbacks {
   LifecycleConnectedCallback connectedCallback;
   LifecycleDisconnectedCallback disconnectedCallback;

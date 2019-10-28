@@ -36,6 +36,7 @@ typedef unsigned long long GLuint64EXT;
 // section of the specification.
 enum WebGLPowerPreference { "default", "low-power", "high-performance" };
 
+[GenerateInit]
 dictionary WebGLContextAttributes {
     // We deviate from the spec for alpha and antialias:
     // * alpha: Historically, we might use rgb565 instead of rgb(x)8, for

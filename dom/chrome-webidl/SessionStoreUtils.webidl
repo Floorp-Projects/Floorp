@@ -124,14 +124,14 @@ namespace SessionStoreUtils {
    void restoreSessionStorage(nsIDocShell docShell, record<DOMString, record<DOMString, DOMString>> data);
 };
 
-[GenerateConversionToJS]
+[GenerateConversionToJS, GenerateInit]
 dictionary CollectedFileListValue
 {
   required DOMString type;
   required sequence<DOMString> fileList;
 };
 
-[GenerateConversionToJS]
+[GenerateConversionToJS, GenerateInit]
 dictionary CollectedNonMultipleSelectValue
 {
   required long selectedIndex;
