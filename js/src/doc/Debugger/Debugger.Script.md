@@ -305,8 +305,7 @@ methods of other kinds of objects.
     debugger's compartment).
 
     The new breakpoint belongs to the [`Debugger`][debugger-object] instance to
-    which this script belongs. Disabling the [`Debugger`][debugger-object]
-    instance disables this breakpoint; and removing a global from the
+    which this script belongs. Removing a global from the
     [`Debugger`][debugger-object] instance's set of debuggees clears all the
     breakpoints belonging to that [`Debugger`][debugger-object] instance in that
     global's scripts.
