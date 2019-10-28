@@ -33,6 +33,7 @@ var AboutNetErrorHandler = {
     "Browser:ResetEnterpriseRootsPref",
     "Browser:SSLErrorGoBack",
     "GetChangedCertPrefs",
+    "ReportTLSError",
   ],
 
   init() {
@@ -104,7 +105,26 @@ var AboutNetErrorHandler = {
           hasChangedCertPrefs,
         });
         break;
+      case "ReportTLSError":
+        this.reportTLSError(
+          msg.browsingContextID,
+          msg.data.host,
+          msg.data.port
+        );
+        break;
     }
+  },
+
+  async reportTLSError(bcID, host, port) {
+    let securityInfo = await BrowsingContext.get(
+      bcID
+    ).currentWindowGlobal.getSecurityInfo();
+    securityInfo.QueryInterface(Ci.nsITransportSecurityInfo);
+
+    let errorReporter = Cc["@mozilla.org/securityreporter;1"].getService(
+      Ci.nsISecurityReporter
+    );
+    errorReporter.reportTLSError(securityInfo, host, port);
   },
 
   hasChangedCertPrefs() {

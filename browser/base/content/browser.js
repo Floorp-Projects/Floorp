@@ -3496,10 +3496,6 @@ function PageProxyClickHandler(aEvent) {
   }
 }
 
-// Values for telemtery bins: see TLS_ERROR_REPORT_UI in Histograms.json
-const TLS_ERROR_REPORT_TELEMETRY_AUTO_CHECKED = 2;
-const TLS_ERROR_REPORT_TELEMETRY_AUTO_UNCHECKED = 3;
-
 const SEC_ERROR_BASE = Ci.nsINSSErrorsService.NSS_SEC_ERROR_BASE;
 const SEC_ERROR_UNKNOWN_ISSUER = SEC_ERROR_BASE + 13;
 
@@ -3515,7 +3511,6 @@ var BrowserOnClick = {
     let mm = window.messageManager;
     mm.addMessageListener("Browser:CertExceptionError", this);
     mm.addMessageListener("Browser:SiteBlockedError", this);
-    mm.addMessageListener("Browser:SetSSLErrorReportAuto", this);
     mm.addMessageListener("Browser:ResetSSLPreferences", this);
   },
 
@@ -3523,7 +3518,6 @@ var BrowserOnClick = {
     let mm = window.messageManager;
     mm.removeMessageListener("Browser:CertExceptionError", this);
     mm.removeMessageListener("Browser:SiteBlockedError", this);
-    mm.removeMessageListener("Browser:SetSSLErrorReportAuto", this);
     mm.removeMessageListener("Browser:ResetSSLPreferences", this);
   },
 
@@ -3554,17 +3548,6 @@ var BrowserOnClick = {
           Services.prefs.clearUserPref(prefName);
         }
         msg.target.reload();
-        break;
-      case "Browser:SetSSLErrorReportAuto":
-        Services.prefs.setBoolPref(
-          "security.ssl.errorReporting.automatic",
-          msg.json.automatic
-        );
-        let bin = TLS_ERROR_REPORT_TELEMETRY_AUTO_UNCHECKED;
-        if (msg.json.automatic) {
-          bin = TLS_ERROR_REPORT_TELEMETRY_AUTO_CHECKED;
-        }
-        Services.telemetry.getHistogramById("TLS_ERROR_REPORT_UI").add(bin);
         break;
     }
   },

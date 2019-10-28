@@ -262,6 +262,7 @@ class ChromeMessagePort extends MessagePort {
       target: this.publicPort,
       name: messagedata.name,
       data: messagedata.data,
+      browsingContextID: messagedata.browsingContextID,
     };
     this.listener.callListeners(message);
 

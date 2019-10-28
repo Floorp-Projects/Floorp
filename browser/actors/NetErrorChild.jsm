@@ -36,9 +36,6 @@ class NetErrorChild extends ActorChild {
     let doc = aEvent.originalTarget.ownerDocument || aEvent.originalTarget;
 
     switch (aEvent.type) {
-      case "AboutNetErrorSetAutomatic":
-        this.onSetAutomatic(aEvent);
-        break;
       case "AboutNetErrorResetPreferences":
         this.onResetPreferences(aEvent);
         break;
@@ -62,26 +59,5 @@ class NetErrorChild extends ActorChild {
 
   onResetPreferences(evt) {
     this.mm.sendAsyncMessage("Browser:ResetSSLPreferences");
-  }
-
-  onSetAutomatic(evt) {
-    this.mm.sendAsyncMessage("Browser:SetSSLErrorReportAuto", {
-      automatic: evt.detail,
-    });
-
-    // If we're enabling reports, send a report for this failure.
-    if (evt.detail) {
-      let win = evt.originalTarget.ownerGlobal;
-      let docShell = win.docShell;
-
-      let { securityInfo } = docShell.failedChannel;
-      securityInfo.QueryInterface(Ci.nsITransportSecurityInfo);
-      let { host, port } = win.document.mozDocumentURIIfNotForErrorPages;
-
-      let errorReporter = Cc["@mozilla.org/securityreporter;1"].getService(
-        Ci.nsISecurityReporter
-      );
-      errorReporter.reportTLSError(securityInfo, host, port);
-    }
   }
 }

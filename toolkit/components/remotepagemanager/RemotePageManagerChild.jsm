@@ -62,6 +62,9 @@ class ChildMessagePort extends MessagePort {
     Cu.exportFunction(this.recordTelemetryEvent.bind(this), window, {
       defineAs: "RPMRecordTelemetryEvent",
     });
+    Cu.exportFunction(this.addToHistogram.bind(this), window, {
+      defineAs: "RPMAddToHistogram",
+    });
 
     // Send a message for load events
     let loadListener = () => {
