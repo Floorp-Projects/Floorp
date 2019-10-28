@@ -22,13 +22,20 @@ const actions = require("devtools/client/webconsole/actions/index");
 const {
   FILTERBAR_DISPLAY_MODES,
 } = require("devtools/client/webconsole/constants");
-
-// We directly require Components that we know are going to be used right away
 const ConsoleOutput = createFactory(
   require("devtools/client/webconsole/components/Output/ConsoleOutput")
 );
 const FilterBar = createFactory(
   require("devtools/client/webconsole/components/FilterBar/FilterBar")
+);
+const SideBar = createFactory(
+  require("devtools/client/webconsole/components/SideBar")
+);
+const ReverseSearchInput = createFactory(
+  require("devtools/client/webconsole/components/Input/ReverseSearchInput")
+);
+const EditorToolbar = createFactory(
+  require("devtools/client/webconsole/components/Input/EditorToolbar")
 );
 const JSTerm = createFactory(
   require("devtools/client/webconsole/components/Input/JSTerm")
@@ -36,34 +43,11 @@ const JSTerm = createFactory(
 const ConfirmDialog = createFactory(
   require("devtools/client/webconsole/components/Input/ConfirmDialog")
 );
-
-// And lazy load the ones that may not be used.
-loader.lazyGetter(this, "SideBar", () =>
-  createFactory(require("devtools/client/webconsole/components/SideBar"))
+const NotificationBox = createFactory(
+  require("devtools/client/shared/components/NotificationBox").NotificationBox
 );
-
-loader.lazyGetter(this, "ReverseSearchInput", () =>
-  createFactory(
-    require("devtools/client/webconsole/components/Input/ReverseSearchInput")
-  )
-);
-
-loader.lazyGetter(this, "EditorToolbar", () =>
-  createFactory(
-    require("devtools/client/webconsole/components/Input/EditorToolbar")
-  )
-);
-
-loader.lazyGetter(this, "NotificationBox", () =>
-  createFactory(
-    require("devtools/client/shared/components/NotificationBox").NotificationBox
-  )
-);
-
-loader.lazyGetter(this, "GridElementWidthResizer", () =>
-  createFactory(
-    require("devtools/client/shared/components/splitter/GridElementWidthResizer")
-  )
+const GridElementWidthResizer = createFactory(
+  require("devtools/client/shared/components/splitter/GridElementWidthResizer")
 );
 
 const l10n = require("devtools/client/webconsole/utils/l10n");
@@ -329,46 +313,36 @@ class App extends Component {
   }
 
   renderReverseSearch() {
-    const {
-      serviceContainer,
-      reverseSearchInitialValue,
-      reverseSearchInputVisible,
-    } = this.props;
+    const { serviceContainer, reverseSearchInitialValue } = this.props;
 
-    return reverseSearchInputVisible
-      ? ReverseSearchInput({
-          key: "reverse-search-input",
-          setInputValue: serviceContainer.setInputValue,
-          focusInput: serviceContainer.focusInput,
-          initialValue: reverseSearchInitialValue,
-        })
-      : null;
+    return ReverseSearchInput({
+      key: "reverse-search-input",
+      setInputValue: serviceContainer.setInputValue,
+      focusInput: serviceContainer.focusInput,
+      initialValue: reverseSearchInitialValue,
+    });
   }
 
   renderSideBar() {
     const { serviceContainer, sidebarVisible } = this.props;
-    return sidebarVisible
-      ? SideBar({
-          key: "sidebar",
-          serviceContainer,
-          visible: sidebarVisible,
-        })
-      : null;
+    return SideBar({
+      key: "sidebar",
+      serviceContainer,
+      visible: sidebarVisible,
+    });
   }
 
   renderNotificationBox() {
     const { notifications, editorMode } = this.props;
 
-    return notifications && notifications.length > 0
-      ? NotificationBox({
-          id: "webconsole-notificationbox",
-          key: "notification-box",
-          displayBorderTop: !editorMode,
-          displayBorderBottom: editorMode,
-          wrapping: true,
-          notifications,
-        })
-      : null;
+    return NotificationBox({
+      id: "webconsole-notificationbox",
+      key: "notification-box",
+      displayBorderTop: !editorMode,
+      displayBorderBottom: editorMode,
+      wrapping: true,
+      notifications,
+    });
   }
 
   renderConfirmDialog() {
@@ -426,16 +400,14 @@ class App extends Component {
         notificationBox,
         jsterm
       ),
-      editorMode
-        ? GridElementWidthResizer({
-            key: "editor-resizer",
-            enabled: editorMode,
-            position: "end",
-            className: "editor-resizer",
-            getControlledElementNode: () => webConsoleUI.jsterm.node,
-            onResizeEnd: width => dispatch(actions.setEditorWidth(width)),
-          })
-        : null,
+      GridElementWidthResizer({
+        key: "editor-resizer",
+        enabled: editorMode,
+        position: "end",
+        className: "editor-resizer",
+        getControlledElementNode: () => webConsoleUI.jsterm.node,
+        onResizeEnd: width => dispatch(actions.setEditorWidth(width)),
+      }),
       reverseSearch,
       sidebar,
       confirmDialog,
