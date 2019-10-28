@@ -3005,8 +3005,7 @@ nsresult Document::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
   // If this is an error page, don't inherit sandbox flags from docshell
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
   if (docShell && !loadInfo->GetLoadErrorPage()) {
-    nsresult rv = docShell->GetSandboxFlags(&mSandboxFlags);
-    NS_ENSURE_SUCCESS(rv, rv);
+    mSandboxFlags = docShell->GetBrowsingContext()->GetSandboxFlags();
     WarnIfSandboxIneffective(docShell, mSandboxFlags, GetChannel());
   }
 

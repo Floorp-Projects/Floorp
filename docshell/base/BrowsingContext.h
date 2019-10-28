@@ -261,6 +261,8 @@ class BrowsingContext : public nsISupports,
 
   BrowsingContextGroup* Group() { return mGroup; }
 
+  uint32_t SandboxFlags() { return mSandboxFlags; }
+
   // Using the rules for choosing a browsing context we try to find
   // the browsing context with the given name in the set of
   // transitively reachable browsing contexts. Performs access control

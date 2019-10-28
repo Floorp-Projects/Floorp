@@ -49,7 +49,9 @@ const backgroundPageThumbsContent = {
       Ci.nsIRequest.INHIBIT_CACHING |
       Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_HISTORY;
     docShell.defaultLoadFlags = defaultFlags;
-    docShell.sandboxFlags |= SANDBOXED_AUXILIARY_NAVIGATION;
+    BrowsingContext.getFromWindow(
+      content
+    ).sandboxFlags |= SANDBOXED_AUXILIARY_NAVIGATION;
     docShell.useTrackingProtection = true;
 
     addMessageListener(

@@ -3041,12 +3041,13 @@ nsIFrame* nsFrameLoader::GetDetachedSubdocFrame(
 }
 
 void nsFrameLoader::ApplySandboxFlags(uint32_t sandboxFlags) {
+  uint32_t parentSandboxFlags = mOwnerContent->OwnerDoc()->GetSandboxFlags();
+
+  // The child can only add restrictions, never remove them.
+  sandboxFlags |= parentSandboxFlags;
+
+  // XXX this probably isn't fission compatible.
   if (GetDocShell()) {
-    uint32_t parentSandboxFlags = mOwnerContent->OwnerDoc()->GetSandboxFlags();
-
-    // The child can only add restrictions, never remove them.
-    sandboxFlags |= parentSandboxFlags;
-
     // If this frame is a receiving browsing context, we should add
     // sandboxed auxiliary navigation flag to sandboxFlags. See
     // https://w3c.github.io/presentation-api/#creating-a-receiving-browsing-context
@@ -3055,8 +3056,8 @@ void nsFrameLoader::ApplySandboxFlags(uint32_t sandboxFlags) {
     if (!presentationURL.IsEmpty()) {
       sandboxFlags |= SANDBOXED_AUXILIARY_NAVIGATION;
     }
-    GetDocShell()->SetSandboxFlags(sandboxFlags);
   }
+  mBrowsingContext->SetSandboxFlags(sandboxFlags);
 }
 
 /* virtual */

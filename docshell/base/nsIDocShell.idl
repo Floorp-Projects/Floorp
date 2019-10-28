@@ -773,20 +773,6 @@ interface nsIDocShell : nsIDocShellTreeItem
   readonly attribute bool asyncPanZoomEnabled;
 
   /**
-   * The sandbox flags on the docshell. These reflect the value of the sandbox
-   * attribute of the associated IFRAME or CSP-protectable content, if
-   * existent. See the HTML5 spec for more details.
-   * These flags on the docshell reflect the current state of the sandbox
-   * attribute, which is modifiable. They are only used when loading new
-   * content, sandbox flags are also immutably set on the document when it is
-   * loaded.
-   * The sandbox flags of a document depend on the sandbox flags on its
-   * docshell and of its parent document, if any.
-   * See nsSandboxFlags.h for the possible flags.
-   */
-  attribute unsigned long sandboxFlags;
-
-  /**
    * Returns true if we are sandboxed from aTargetDocShell.
    * aTargetDocShell - the browsing context we are attempting to navigate.
    */

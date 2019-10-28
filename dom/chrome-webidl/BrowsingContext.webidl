@@ -35,6 +35,20 @@ interface BrowsingContext {
   readonly attribute WindowProxy? window;
 
   /**
+   * The sandbox flags on the browsing context. These reflect the value of the
+   * sandbox attribute of the associated IFRAME or CSP-protectable content, if
+   * existent. See the HTML5 spec for more details.
+   * These flags on the browsing context reflect the current state of the
+   * sandbox attribute, which is modifiable. They are only used when loading new
+   * content, sandbox flags are also immutably set on the document when it is
+   * loaded.
+   * The sandbox flags of a document depend on the sandbox flags on its
+   * browsing context and of its parent document, if any.
+   * See nsSandboxFlags.h for the possible flags.
+   */
+  attribute unsigned long sandboxFlags;
+
+  /**
    * Loads a given URI.  This will give priority to loading the requested URI
    * in the object implementing this interface.  If it can't be loaded here
    * however, the URI dispatcher will go through its normal process of content
