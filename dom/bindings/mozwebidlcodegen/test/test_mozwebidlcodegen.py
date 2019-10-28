@@ -132,7 +132,7 @@ class TestWebIDLCodegenManager(unittest.TestCase):
 
         with open(manager._state_path, 'rb') as fh:
             state = json.load(fh)
-            self.assertEqual(state['version'], 1)
+            self.assertEqual(state['version'], 2)
             self.assertIn('webidls', state)
 
             child = state['webidls']['Child.webidl']

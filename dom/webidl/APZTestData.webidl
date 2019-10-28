@@ -63,6 +63,7 @@ dictionary AdditionalDataEntry {
 };
 
 // All the paints and repaint requests. This is the top-level data structure.
+[GenerateConversionToJS]
 dictionary APZTestData {
   sequence<APZBucket> paints;
   sequence<APZBucket> repaintRequests;
@@ -76,6 +77,7 @@ dictionary FrameUniformity {
   float frameUniformity;
 };
 
+[GenerateConversionToJS]
 dictionary FrameUniformityResults {
   sequence<FrameUniformity> layerUniformities;
 };

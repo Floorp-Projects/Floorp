@@ -80,6 +80,7 @@ namespace console {
 };
 
 // This is used to propagate console events to the observers.
+[GenerateConversionToJS]
 dictionary ConsoleEvent {
   (unsigned long long or DOMString) ID;
   (unsigned long long or DOMString) innerID;
@@ -111,6 +112,7 @@ dictionary ConsoleEvent {
 };
 
 // Event for profile operations
+[GenerateConversionToJS]
 dictionary ConsoleProfileEvent {
   DOMString action = "";
   sequence<any> arguments;
@@ -118,6 +120,7 @@ dictionary ConsoleProfileEvent {
 };
 
 // This dictionary is used to manage stack trace data.
+[GenerateConversionToJS]
 dictionary ConsoleStackEntry {
   DOMString filename = "";
   // Unique identifier within the process for the script source this entry is
@@ -129,25 +132,30 @@ dictionary ConsoleStackEntry {
   DOMString? asyncCause;
 };
 
+[GenerateConversionToJS]
 dictionary ConsoleTimerStart {
   DOMString name = "";
 };
 
+[GenerateConversionToJS]
 dictionary ConsoleTimerLogOrEnd {
   DOMString name = "";
   double duration = 0;
 };
 
+[GenerateConversionToJS]
 dictionary ConsoleTimerError {
   DOMString error = "";
   DOMString name = "";
 };
 
+[GenerateConversionToJS]
 dictionary ConsoleCounter {
   DOMString label = "";
   unsigned long count = 0;
 };
 
+[GenerateConversionToJS]
 dictionary ConsoleCounterError {
   DOMString label = "";
   DOMString error = "";

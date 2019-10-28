@@ -1856,6 +1856,7 @@ class IDLDictionary(IDLObjectWithScope):
         self.members = list(members)
         self._partialDictionaries = []
         self._extendedAttrDict = {}
+        self.needsConversionToJS = False
 
         IDLObjectWithScope.__init__(self, location, parentScope, name)
 
@@ -1996,11 +1997,19 @@ class IDLDictionary(IDLObjectWithScope):
         for attr in attrs:
             identifier = attr.identifier()
 
-            if (identifier == "GenerateInitFromJSON" or
-                identifier == "GenerateToJSON"):
+            if identifier == "GenerateInitFromJSON":
                 if not attr.noArguments():
                     raise WebIDLError("[%s] must not have arguments" % identifier,
                                       [attr.location])
+            elif (identifier == "GenerateConversionToJS" or
+                  identifier == "GenerateToJSON"):
+                if not attr.noArguments():
+                    raise WebIDLError("[%s] must not have arguments" % identifier,
+                                      [attr.location])
+                # ToJSON methods require to-JS conversion, because we
+                # implement ToJSON by converting to a JS object and
+                # then using JSON.stringify.
+                self.needsConversionToJS = True
             else:
                 raise WebIDLError("[%s] extended attribute not allowed on "
                                   "dictionaries" % identifier,

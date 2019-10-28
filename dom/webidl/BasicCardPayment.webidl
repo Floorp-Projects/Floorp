@@ -12,6 +12,7 @@ dictionary BasicCardRequest {
   boolean requestSecurityCode = true;
 };
 
+[GenerateConversionToJS]
 dictionary BasicCardResponse {
            DOMString cardholderName = "";
   required DOMString cardNumber;
@@ -21,6 +22,7 @@ dictionary BasicCardResponse {
            PaymentAddress? billingAddress = null;
 };
 
+[GenerateConversionToJS]
 dictionary BasicCardChangeDetails {
   PaymentAddress? billingAddress = null;
 };

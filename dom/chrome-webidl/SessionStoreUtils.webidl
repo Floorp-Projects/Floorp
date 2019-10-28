@@ -124,12 +124,14 @@ namespace SessionStoreUtils {
    void restoreSessionStorage(nsIDocShell docShell, record<DOMString, record<DOMString, DOMString>> data);
 };
 
+[GenerateConversionToJS]
 dictionary CollectedFileListValue
 {
   required DOMString type;
   required sequence<DOMString> fileList;
 };
 
+[GenerateConversionToJS]
 dictionary CollectedNonMultipleSelectValue
 {
   required long selectedIndex;
@@ -160,6 +162,7 @@ dictionary InputElementData {
   sequence<boolean> boolVal;
 };
 
+[GenerateConversionToJS]
 dictionary UpdateSessionStoreData {
   ByteString docShellCaps;
   boolean isPrivate;

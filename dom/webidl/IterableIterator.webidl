@@ -4,11 +4,13 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+[GenerateConversionToJS]
 dictionary IterableKeyOrValueResult {
   any value;
   boolean done = false;
 };
 
+[GenerateConversionToJS]
 dictionary IterableKeyAndValueResult {
   sequence<any> value = [];
   boolean done = false;

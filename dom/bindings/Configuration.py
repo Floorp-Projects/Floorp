@@ -49,6 +49,7 @@ class Configuration(DescriptorProvider):
         self.descriptors = []
         self.interfaces = {}
         self.descriptorsByName = {}
+        self.dictionariesByName = {}
         self.generatedEvents = generatedEvents
         self.maxProtoChainLength = 0
         for thing in parseData:
@@ -136,6 +137,8 @@ class Configuration(DescriptorProvider):
         self.enums = [e for e in parseData if e.isEnum()]
 
         self.dictionaries = [d for d in parseData if d.isDictionary()]
+        self.dictionariesByName = { d.identifier.name: d for d in self.dictionaries }
+
         self.callbacks = [c for c in parseData if
                           c.isCallback() and not c.isInterface()]
 
@@ -152,15 +155,7 @@ class Configuration(DescriptorProvider):
         self.unionsPerFilename = defaultdict(list)
 
         for (t, _) in getAllTypes(self.descriptors, self.dictionaries, self.callbacks):
-            while True:
-                if t.isRecord():
-                    t = t.inner
-                elif t.unroll() != t:
-                    t = t.unroll()
-                elif t.isPromise():
-                    t = t.promiseInnerType()
-                else:
-                    break
+            t = findInnermostType(t)
             if t.isUnion():
                 filenamesForUnion = self.filenamesPerUnion[t.name]
                 if t.filename() not in filenamesForUnion:
@@ -198,6 +193,10 @@ class Configuration(DescriptorProvider):
                         uniqueFilenameForUnion = None
                     self.unionsPerFilename[uniqueFilenameForUnion].append(t)
                     filenamesForUnion.add(t.filename())
+
+        for d in getDictionariesConvertedToJS(self.descriptors, self.dictionaries,
+                                              self.callbacks):
+            d.needsConversionToJS = True
 
     def getInterface(self, ifname):
         return self.interfaces[ifname]
@@ -270,6 +269,12 @@ class Configuration(DescriptorProvider):
 
     def getConfig(self):
         return self
+
+    def getDictionariesConvertibleToJS(self):
+        return filter(lambda d: d.needsConversionToJS, self.dictionaries)
+
+    def getDictionaryIfExists(self, dictionaryName):
+        return self.dictionariesByName.get(dictionaryName, None)
 
 
 class NoSuchDescriptorError(TypeError):
@@ -805,10 +810,13 @@ class Descriptor(DescriptorProvider):
 
 
 # Some utility methods
-def getTypesFromDescriptor(descriptor):
+def getTypesFromDescriptor(descriptor, includeArgs=True, includeReturns=True):
     """
-    Get all argument and return types for all members of the descriptor
+    Get argument and/or return types for all members of the descriptor.  By
+    default returns all argument types (which includes types of writable
+    attributes) and all return types (which includes types of all attributes).
     """
+    assert(includeArgs or includeReturns) # Must want _something_.
     members = [m for m in descriptor.interface.members]
     if descriptor.interface.ctor():
         members.append(descriptor.interface.ctor())
@@ -818,17 +826,52 @@ def getTypesFromDescriptor(descriptor):
     for s in signatures:
         assert len(s) == 2
         (returnType, arguments) = s
-        types.append(returnType)
-        types.extend(a.type for a in arguments)
+        if includeReturns:
+            types.append(returnType)
+        if includeArgs:
+            types.extend(a.type for a in arguments)
 
-    types.extend(a.type for a in members if a.isAttr())
+    types.extend(a.type for a in members if
+                 (a.isAttr() and (includeReturns or
+                                  (includeArgs and not a.readonly))))
 
     if descriptor.interface.maplikeOrSetlikeOrIterable:
         maplikeOrSetlikeOrIterable = descriptor.interface.maplikeOrSetlikeOrIterable
-        if maplikeOrSetlikeOrIterable.hasKeyType():
-            types.append(maplikeOrSetlikeOrIterable.keyType)
-        if maplikeOrSetlikeOrIterable.hasValueType():
-            types.append(maplikeOrSetlikeOrIterable.valueType)
+        if maplikeOrSetlikeOrIterable.isMaplike():
+            # The things we expand into may or may not correctly indicate in
+            # their formal IDL types what things we have as return values.  For
+            # example, "keys" returns the moral equivalent of sequence<keyType>
+            # but just claims to return "object".  Similarly, "values" returns
+            # the moral equivalent of sequence<valueType> but claims to return
+            # "object".  And due to bug 1155340, "get" claims to return "any"
+            # instead of the right type.  So let's just manually work around
+            # that lack of specificity.  For our arguments, we already enforce
+            # the right types at the IDL level, so those will get picked up
+            # correctly.
+            assert maplikeOrSetlikeOrIterable.hasKeyType()
+            assert maplikeOrSetlikeOrIterable.hasValueType()
+            if includeReturns:
+                types.append(maplikeOrSetlikeOrIterable.keyType)
+                types.append(maplikeOrSetlikeOrIterable.valueType)
+        elif maplikeOrSetlikeOrIterable.isSetlike():
+            assert maplikeOrSetlikeOrIterable.hasKeyType()
+            assert maplikeOrSetlikeOrIterable.hasValueType()
+            assert maplikeOrSetlikeOrIterable.keyType == maplikeOrSetlikeOrIterable.valueType
+            # As in the maplike case, we don't always declare our return values
+            # quite correctly.
+            if includeReturns:
+                types.append(maplikeOrSetlikeOrIterable.keyType)
+        else:
+            assert maplikeOrSetlikeOrIterable.isIterable()
+            # As in the maplike/setlike cases we don't do a good job of
+            # declaring our actual return types, while our argument types, if
+            # any, are declared fine.
+            if includeReturns:
+                if maplikeOrSetlikeOrIterable.hasKeyType():
+                    types.append(maplikeOrSetlikeOrIterable.keyType)
+                if maplikeOrSetlikeOrIterable.hasValueType():
+                    types.append(maplikeOrSetlikeOrIterable.valueType)
+
     return types
 
 
@@ -878,3 +921,93 @@ def iteratorNativeType(descriptor):
     iterableDecl = descriptor.interface.maplikeOrSetlikeOrIterable
     assert iterableDecl.isPairIterator()
     return "mozilla::dom::IterableIterator<%s>" % descriptor.nativeType
+
+
+def findInnermostType(t):
+    """
+    Find the innermost type of the given type, unwrapping Promise and Record
+    types, as well as everything that unroll() unwraps.
+    """
+    while True:
+        if t.isRecord():
+            t = t.inner
+        elif t.unroll() != t:
+            t = t.unroll()
+        elif t.isPromise():
+            t = t.promiseInnerType()
+        else:
+            return t
+
+
+def getDependentDictionariesFromDictionary(d):
+    """
+    Find all the dictionaries contained in the given dictionary, as ancestors or
+    members.  This returns a generator.
+    """
+    while d:
+        yield d
+        for member in d.members:
+            for next in getDictionariesFromType(member.type):
+                yield next
+        d = d.parent
+
+
+def getDictionariesFromType(type):
+    """
+    Find all the dictionaries contained in type.  This can be used to find
+    dictionaries that need conversion to JS (by looking at types that get
+    converted to JS) or dictionaries that need conversion from JS (by looking at
+    types that get converted from JS).
+
+    This returns a generator.
+    """
+    type = findInnermostType(type)
+    if type.isUnion():
+        # Look for dictionaries in all the member types
+        for t in type.flatMemberTypes:
+            for next in getDictionariesFromType(t):
+                yield next
+    elif type.isDictionary():
+        # Find the dictionaries that are itself, any of its ancestors, or
+        # contained in any of its member types.
+        for d in getDependentDictionariesFromDictionary(type.inner):
+            yield d
+
+
+def getDictionariesConvertedToJS(descriptors, dictionaries, callbacks):
+    for desc in descriptors:
+        if desc.interface.isExternal():
+            continue
+
+        if desc.interface.isJSImplemented():
+            # For a JS-implemented interface, we need to-JS
+            # conversions for all the types involved.
+            for t in getTypesFromDescriptor(desc):
+                for d in getDictionariesFromType(t):
+                    yield d
+        elif desc.interface.isCallback():
+            # For callbacks we only want to include the arguments, since that's
+            # where the to-JS conversion happens.
+            for t in getTypesFromDescriptor(desc, includeReturns=False):
+                for d in getDictionariesFromType(t):
+                    yield d
+        else:
+            # For normal interfaces, we only want to include return values,
+            # since that's where to-JS conversion happens.
+            for t in getTypesFromDescriptor(desc, includeArgs=False):
+                for d in getDictionariesFromType(t):
+                    yield d
+
+    for callback in callbacks:
+        # We only want to look at the arguments
+        sig = callback.signatures()[0]
+        for arg in sig[1]:
+            for d in getDictionariesFromType(arg.type):
+                yield d
+
+    for dictionary in dictionaries:
+        if dictionary.needsConversionToJS:
+            # It's explicitly flagged as needing to-JS conversion, and all its
+            # dependent dictionaries will need to-JS conversion too.
+            for d in getDependentDictionariesFromDictionary(dictionary):
+                yield d
