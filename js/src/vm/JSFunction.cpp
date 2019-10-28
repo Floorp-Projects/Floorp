@@ -764,9 +764,13 @@ inline void JSFunction::trace(JSTracer* trc) {
     // yet at some points when parsing, and can be lazy with no lazy script
     // for self-hosted code.
     if (hasScript() && !hasUncompletedScript()) {
-      TraceManuallyBarrieredEdge(trc, &u.scripted.s.script_, "script");
+      JSScript* script = static_cast<JSScript*>(u.scripted.s.script_);
+      TraceManuallyBarrieredEdge(trc, &script, "script");
+      u.scripted.s.script_ = script;
     } else if (hasLazyScript()) {
-      TraceManuallyBarrieredEdge(trc, &u.scripted.s.lazy_, "lazyScript");
+      LazyScript* lazy = static_cast<LazyScript*>(u.scripted.s.script_);
+      TraceManuallyBarrieredEdge(trc, &lazy, "lazy");
+      u.scripted.s.script_ = lazy;
     }
     // NOTE: The u.scripted.s.selfHostedLazy_ does not point to GC things.
 
@@ -1678,7 +1682,7 @@ void JSFunction::maybeRelazify(JSRuntime* rt) {
   // Try to relazify functions with a non-lazy script. Note: functions can be
   // marked as interpreted despite having no script yet at some points when
   // parsing.
-  if (!hasScript() || !u.scripted.s.script_) {
+  if (!hasScript() || hasUncompletedScript()) {
     return;
   }
 
@@ -1708,7 +1712,8 @@ void JSFunction::maybeRelazify(JSRuntime* rt) {
   }
 
   // Don't relazify functions with JIT code.
-  if (!u.scripted.s.script_->isRelazifiable()) {
+  JSScript* script = nonLazyScript();
+  if (!script->isRelazifiable()) {
     return;
   }
 
@@ -1719,8 +1724,6 @@ void JSFunction::maybeRelazify(JSRuntime* rt) {
     return;
   }
 
-  JSScript* script = nonLazyScript();
-
   flags_.clearInterpreted();
   flags_.setInterpretedLazy();
 
@@ -1729,8 +1732,8 @@ void JSFunction::maybeRelazify(JSRuntime* rt) {
 
   LazyScript* lazy = script->maybeLazyScript();
   if (lazy) {
-    u.scripted.s.lazy_ = lazy;
-    MOZ_ASSERT(!isSelfHostedBuiltin());
+    u.scripted.s.script_ = lazy;
+    MOZ_ASSERT(hasLazyScript());
   } else {
     // Lazy self-hosted builtins point to a SelfHostedLazyScript that may be
     // called from JIT scripted calls.
