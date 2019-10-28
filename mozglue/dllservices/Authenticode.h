@@ -8,13 +8,23 @@
 #define mozilla_Authenticode_h
 
 #include "mozilla/Maybe.h"
+#include "mozilla/TypedEnumBits.h"
 #include "mozilla/UniquePtr.h"
 
 namespace mozilla {
 
+enum class AuthenticodeFlags : uint32_t {
+  Default = 0,
+  SkipTrustVerification = 1,
+};
+
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(AuthenticodeFlags)
+
 class Authenticode {
  public:
-  virtual UniquePtr<wchar_t[]> GetBinaryOrgName(const wchar_t* aFilePath) = 0;
+  virtual UniquePtr<wchar_t[]> GetBinaryOrgName(
+      const wchar_t* aFilePath,
+      AuthenticodeFlags aFlags = AuthenticodeFlags::Default) = 0;
 };
 
 }  // namespace mozilla
