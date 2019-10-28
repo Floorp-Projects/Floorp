@@ -135,8 +135,7 @@ function autocompleteDataFetch({
   authorizedEvaluations,
 }) {
   return ({ dispatch, webConsoleUI }) => {
-    const selectedNodeFront = webConsoleUI.getSelectedNodeFront();
-    const selectedNodeActor = selectedNodeFront && selectedNodeFront.actorID;
+    const selectedNodeActor = webConsoleUI.getSelectedNodeActor();
     const id = generateRequestId();
     dispatch({ type: AUTOCOMPLETE_PENDING_REQUEST, id });
     webConsoleFront

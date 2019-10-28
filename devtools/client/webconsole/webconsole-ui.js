@@ -593,10 +593,10 @@ class WebConsoleUI {
     };
   }
 
-  getSelectedNodeFront() {
+  getSelectedNodeActor() {
     const inspectorSelection = this.hud.getInspectorSelection();
-    if (inspectorSelection) {
-      return inspectorSelection.nodeFront;
+    if (inspectorSelection && inspectorSelection.nodeFront) {
+      return inspectorSelection.nodeFront.actorID;
     }
     return null;
   }
