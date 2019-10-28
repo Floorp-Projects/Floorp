@@ -537,8 +537,6 @@
 
 .network-monitor .custom-request-panel {
   height: 100%;
-  overflow: auto;
-  padding: 0 4px;
   background-color: var(--theme-sidebar-background);
 }
 
