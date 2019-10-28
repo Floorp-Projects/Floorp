@@ -32,18 +32,22 @@ inline bool CanReuseFunctionForClone(JSContext* cx, HandleFunction fun) {
   if (!fun->isSingleton()) {
     return false;
   }
-
-  if (fun->baseScript()->hasBeenCloned()) {
-    return false;
-  }
-  fun->baseScript()->setHasBeenCloned();
-
-  if (fun->hasScript()) {
-    if (LazyScript* lazy = fun->nonLazyScript()->maybeLazyScript()) {
+  if (fun->isInterpretedLazy()) {
+    LazyScript* lazy = fun->lazyScript();
+    if (lazy->hasBeenCloned()) {
+      return false;
+    }
+    lazy->setHasBeenCloned();
+  } else {
+    JSScript* script = fun->nonLazyScript();
+    if (script->hasBeenCloned()) {
+      return false;
+    }
+    script->setHasBeenCloned();
+    if (LazyScript* lazy = script->maybeLazyScript()) {
       lazy->setHasBeenCloned();
     }
   }
-
   return true;
 }
 

@@ -516,7 +516,7 @@ bool ParseContext::declareFunctionThis(const UsedNameTracker& usedNames,
 
   bool declareThis;
   if (canSkipLazyClosedOverBindings) {
-    declareThis = funbox->function()->baseScript()->hasThisBinding();
+    declareThis = funbox->function()->lazyScript()->hasThisBinding();
   } else {
     declareThis =
         hasUsedFunctionSpecialName(usedNames, dotThis) ||
@@ -551,7 +551,7 @@ bool ParseContext::declareFunctionArgumentsObject(
   bool tryDeclareArguments;
   if (canSkipLazyClosedOverBindings) {
     tryDeclareArguments =
-        funbox->function()->baseScript()->shouldDeclareArguments();
+        funbox->function()->lazyScript()->shouldDeclareArguments();
   } else {
     tryDeclareArguments = hasUsedFunctionSpecialName(usedNames, argumentsName);
   }
