@@ -187,10 +187,6 @@ PLDHashTable::PLDHashTable(const PLDHashTableOps* aOps, uint32_t aEntrySize,
       mEntrySize(aEntrySize),
       mEntryCount(0),
       mRemovedCount(0)
-#ifdef DEBUG
-      ,
-      mChecker()
-#endif
 {
   // An entry size greater than 0xff is unlikely, but let's check anyway. If
   // you hit this, your hashtable would waste lots of space for unused entries
