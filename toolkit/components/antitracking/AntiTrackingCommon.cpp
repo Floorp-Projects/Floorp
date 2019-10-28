@@ -793,6 +793,12 @@ bool CheckAntiTrackingPermission(nsIPrincipal* aPrincipal,
               "permission of type %s for %s",
               aType.get(), _spec),
              aPrincipalURI);
+    if (!permManager->PermissionAvailable(aPrincipal, aType)) {
+      LOG(
+          ("Permission isn't available for this principal in the current "
+           "process"));
+      return false;
+    }
     nsCOMPtr<nsISimpleEnumerator> se;
     nsresult rv =
         permManager->GetAllForPrincipal(aPrincipal, getter_AddRefs(se));
