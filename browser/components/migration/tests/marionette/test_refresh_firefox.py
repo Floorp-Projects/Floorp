@@ -334,11 +334,9 @@ class TestFirefoxRefresh(MarionetteTestCase):
     def checkCookie(self):
         cookieInfo = self.runCode("""
           try {
-            let cookieEnum = Services.cookies.getCookiesFromHost(arguments[0], {});
+            let cookies = Services.cookies.getCookiesFromHost(arguments[0], {});
             let cookie = null;
-            while (cookieEnum.hasMoreElements()) {
-              let hostCookie = cookieEnum.getNext();
-              hostCookie.QueryInterface(Ci.nsICookie);
+            for (let hostCookie of cookies) {
               // getCookiesFromHost returns any cookie from the BASE host.
               if (hostCookie.rawHost != arguments[0])
                 continue;

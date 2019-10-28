@@ -54,9 +54,9 @@ add_task(async function() {
   );
 
   // Now check the cookie details.
-  let enumerator = Services.cookies.getCookiesFromHost(COOKIE.host, {});
-  Assert.ok(enumerator.hasMoreElements(), "Cookies available");
-  let foundCookie = enumerator.getNext().QueryInterface(Ci.nsICookie);
+  let cookies = Services.cookies.getCookiesFromHost(COOKIE.host, {});
+  Assert.ok(cookies.length, "Cookies available");
+  let foundCookie = cookies[0];
 
   for (let prop of Object.keys(COOKIE)) {
     Assert.equal(foundCookie[prop], COOKIE[prop], "Check cookie " + prop);

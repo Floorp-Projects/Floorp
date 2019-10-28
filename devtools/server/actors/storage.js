@@ -872,9 +872,7 @@ var cookieHelpers = {
 
     host = trimHttpHttpsPort(host);
 
-    return Array.from(
-      Services.cookies.getCookiesFromHost(host, originAttributes)
-    );
+    return Services.cookies.getCookiesFromHost(host, originAttributes);
   },
 
   /**

@@ -143,10 +143,10 @@ async function test_cookie_cleared() {
   }
   // Check that cookies have been set properly.
   for (let userContextId of Object.keys(USER_CONTEXTS)) {
-    let enumerator = getCookiesForOA(TEST_HOST, userContextId);
-    ok(enumerator.hasMoreElements(), "Cookies available");
+    let cookies = getCookiesForOA(TEST_HOST, userContextId);
+    ok(cookies.length, "Cookies available");
 
-    let foundCookie = enumerator.getNext().QueryInterface(Ci.nsICookie);
+    let foundCookie = cookies[0];
     Assert.equal(foundCookie.name, COOKIE_NAME, "Check cookie name");
     Assert.equal(
       foundCookie.value,
@@ -160,8 +160,8 @@ async function test_cookie_cleared() {
 
   // Check that whether cookies has been cleared or not.
   for (let userContextId of Object.keys(USER_CONTEXTS)) {
-    let enumerator = getCookiesForOA(TEST_HOST, userContextId);
-    ok(!enumerator.hasMoreElements(), "No Cookie should be here");
+    let cookies = getCookiesForOA(TEST_HOST, userContextId);
+    ok(!cookies.length, "No Cookie should be here");
   }
 }
 

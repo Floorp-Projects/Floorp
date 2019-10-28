@@ -4610,7 +4610,9 @@ NS_IMETHODIMP
 nsCookieService::GetCookiesFromHost(const nsACString& aHost,
                                     JS::HandleValue aOriginAttributes,
                                     JSContext* aCx,
-                                    nsISimpleEnumerator** aEnumerator) {
+                                    nsTArray<RefPtr<nsICookie>>& aResult) {
+  aResult.Clear();
+
   if (!mDBState) {
     NS_WARNING("No DBState! Profile already closed?");
     return NS_ERROR_NOT_AVAILABLE;
@@ -4638,15 +4640,15 @@ nsCookieService::GetCookiesFromHost(const nsACString& aHost,
   nsCookieKey key = nsCookieKey(baseDomain, attrs);
 
   nsCookieEntry* entry = mDBState->hostTable.GetEntry(key);
-  if (!entry) return NS_NewEmptyEnumerator(aEnumerator);
+  if (!entry) return NS_OK;
 
-  nsCOMArray<nsICookie> cookieList(mMaxCookiesPerHost);
+  aResult.SetCapacity(mMaxCookiesPerHost);
   const nsCookieEntry::ArrayType& cookies = entry->GetCookies();
   for (nsCookieEntry::IndexType i = 0; i < cookies.Length(); ++i) {
-    cookieList.AppendObject(cookies[i]);
+    aResult.AppendElement(cookies[i]);
   }
 
-  return NS_NewArrayEnumerator(aEnumerator, cookieList, NS_GET_IID(nsICookie));
+  return NS_OK;
 }
 
 NS_IMETHODIMP

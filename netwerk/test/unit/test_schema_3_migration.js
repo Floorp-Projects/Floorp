@@ -161,8 +161,8 @@ function* do_run_test() {
   // 3) Only one cookie remains, and it's the one with the highest expiration
   // time.
   Assert.equal(Services.cookiemgr.countCookiesFromHost("baz.com"), 1);
-  let enumerator = Services.cookiemgr.getCookiesFromHost("baz.com", {});
-  let cookie = enumerator.getNext().QueryInterface(Ci.nsICookie);
+  let cookies = Services.cookiemgr.getCookiesFromHost("baz.com", {});
+  let cookie = cookies[0];
   Assert.equal(cookie.expiry, futureExpiry + 44);
 
   do_close_profile(test_generator);
@@ -199,8 +199,8 @@ function* do_run_test() {
 
   // Test the expected set of cookies.
   Assert.equal(Services.cookiemgr.countCookiesFromHost("cat.com"), 20);
-  enumerator = Services.cookiemgr.getCookiesFromHost("cat.com", {});
-  cookie = enumerator.getNext().QueryInterface(Ci.nsICookie);
+  cookies = Services.cookiemgr.getCookiesFromHost("cat.com", {});
+  cookie = cookies[0];
   Assert.equal(cookie.creationTime, 0);
 
   finish_test();

@@ -65,10 +65,10 @@ add_task(async function test_cookie_getCookiesWithOriginAttributes() {
 
   // Check that cookies have been set properly.
   for (let userContextId of Object.keys(USER_CONTEXTS)) {
-    let enumerator = getCookiesForOA(TEST_HOST, userContextId);
-    ok(enumerator.hasMoreElements(), "Cookies available");
+    let cookies = getCookiesForOA(TEST_HOST, userContextId);
+    ok(cookies.length, "Cookies available");
 
-    let foundCookie = enumerator.getNext().QueryInterface(Ci.nsICookie);
+    let foundCookie = cookies[0];
     is(foundCookie.name, cookieName, "Check cookie name");
     is(foundCookie.value, USER_CONTEXTS[userContextId], "Check cookie value");
   }
@@ -89,7 +89,7 @@ add_task(async function test_cookie_getCookiesWithOriginAttributes() {
 
   // Check that whether cookies has been cleared.
   for (let userContextId of Object.keys(USER_CONTEXTS)) {
-    let e = getCookiesForOA(TEST_HOST, userContextId);
-    ok(!e.hasMoreElements(), "No Cookie should be here");
+    let cookies = getCookiesForOA(TEST_HOST, userContextId);
+    ok(!cookies.length, "No Cookie should be here");
   }
 });

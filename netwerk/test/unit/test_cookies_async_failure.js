@@ -229,11 +229,10 @@ function* run_test_1(generator) {
   do_load_profile();
 
   Assert.equal(Services.cookiemgr.countCookiesFromHost("foo.com"), 1);
-  let enumerator = Services.cookiemgr.getCookiesFromHost(cookie.host, {});
-  Assert.ok(enumerator.hasMoreElements());
-  let dbcookie = enumerator.getNext().QueryInterface(Ci.nsICookie);
+  let cookies = Services.cookiemgr.getCookiesFromHost(cookie.host, {});
+  Assert.equal(cookies.length, 1);
+  let dbcookie = cookies[0];
   Assert.equal(dbcookie.value, "hallo");
-  Assert.ok(!enumerator.hasMoreElements());
 
   // Close the profile.
   do_close_profile(sub_generator);

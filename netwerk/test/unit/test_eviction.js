@@ -222,9 +222,9 @@ function set_cookies(begin, end, expiry) {
 
 function get_creationTime(i) {
   let host = "eviction." + i + ".tests";
-  let enumerator = Services.cookiemgr.getCookiesFromHost(host, {});
-  Assert.ok(enumerator.hasMoreElements());
-  let cookie = enumerator.getNext().QueryInterface(Ci.nsICookie);
+  let cookies = Services.cookiemgr.getCookiesFromHost(host, {});
+  Assert.ok(cookies.length);
+  let cookie = cookies[0];
   return cookie.creationTime;
 }
 
