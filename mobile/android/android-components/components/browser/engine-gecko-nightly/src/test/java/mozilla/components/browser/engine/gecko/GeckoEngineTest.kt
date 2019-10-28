@@ -38,6 +38,7 @@ import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyBoolean
 import org.mockito.ArgumentMatchers.anyFloat
 import org.mockito.Mockito.never
+import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mozilla.geckoview.ContentBlocking
 import org.mozilla.geckoview.ContentBlockingController
@@ -237,7 +238,7 @@ class GeckoEngineTest {
     }
 
     @Test
-    fun `WHEN a recommended tracking protection policy is set  THEN the setEnhancedTrackingProtectionLevel must be DEFAULT`() {
+    fun `setEnhancedTrackingProtectionLevel MUST always be set to STRICT unless the tracking protection policy is none`() {
         val mockRuntime = mock<GeckoRuntime>()
         whenever(mockRuntime.settings).thenReturn(mock())
         whenever(mockRuntime.settings.contentBlocking).thenReturn(mock())
@@ -247,19 +248,16 @@ class GeckoEngineTest {
         engine.settings.trackingProtectionPolicy = TrackingProtectionPolicy.recommended()
 
         verify(mockRuntime.settings.contentBlocking).setEnhancedTrackingProtectionLevel(
-            ContentBlocking.EtpLevel.DEFAULT
+            ContentBlocking.EtpLevel.STRICT
         )
-    }
 
-    @Test
-    fun `WHEN a tracking protection policy other than recommended or strict is set THEN the setEnhancedTrackingProtectionLevel must be NONE`() {
-        val mockRuntime = mock<GeckoRuntime>()
-        whenever(mockRuntime.settings).thenReturn(mock())
-        whenever(mockRuntime.settings.contentBlocking).thenReturn(mock())
+        engine.settings.trackingProtectionPolicy = TrackingProtectionPolicy.strict()
 
-        val engine = GeckoEngine(testContext, runtime = mockRuntime)
+        verify(mockRuntime.settings.contentBlocking, times(2)).setEnhancedTrackingProtectionLevel(
+            ContentBlocking.EtpLevel.STRICT
+        )
 
-        engine.settings.trackingProtectionPolicy = TrackingProtectionPolicy.select(trackingCategories = arrayOf(TrackingCategory.CRYPTOMINING))
+        engine.settings.trackingProtectionPolicy = TrackingProtectionPolicy.none()
 
         verify(mockRuntime.settings.contentBlocking).setEnhancedTrackingProtectionLevel(
             ContentBlocking.EtpLevel.NONE
