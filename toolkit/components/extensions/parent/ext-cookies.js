@@ -249,6 +249,8 @@ const query = function*(detailsIn, props, context) {
   if (host && "firstPartyDomain" in originAttributes) {
     // getCookiesFromHost is more efficient than getCookiesWithOriginAttributes
     // if the host and all origin attributes are known.
+    // TODO: Rename enumerator when getCookiesFromHost is changed to return an
+    // array.
     enumerator = Services.cookies.getCookiesFromHost(host, originAttributes);
   } else {
     enumerator = Services.cookies.getCookiesWithOriginAttributes(

@@ -91,10 +91,10 @@ async function checkCookies(expectedValues, time) {
 
 function getCookiesFromManager(userContextId) {
   let cookies = {};
-  let enumerator = cm.getCookiesWithOriginAttributes(
+  let allCookies = cm.getCookiesWithOriginAttributes(
     JSON.stringify({ userContextId })
   );
-  for (let cookie of enumerator) {
+  for (let cookie of allCookies) {
     cookies[cookie.name] = cookie.value;
   }
   return cookies;
