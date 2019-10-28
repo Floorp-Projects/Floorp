@@ -13,6 +13,7 @@
 
 enum CanvasWindingRule { "nonzero", "evenodd" };
 
+[GenerateInit]
 dictionary ContextAttributes2D {
   // whether or not we're planning to do a lot of readback operations
   boolean willReadFrequently = false;

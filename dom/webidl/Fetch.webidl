@@ -29,10 +29,12 @@ interface mixin Body {
 // getReader().read().then(data) parsing.
 // See more about how these 2 helpers are used in
 // dom/fetch/FetchStreamReader.cpp
+[GenerateInit]
 dictionary FetchReadableStreamReadDataDone {
   boolean done = false;
 };
 
+[GenerateInit]
 dictionary FetchReadableStreamReadDataArray {
   Uint8Array value;
 };

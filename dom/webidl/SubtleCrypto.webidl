@@ -18,15 +18,18 @@ dictionary Algorithm {
   required DOMString name;
 };
 
+[GenerateInit]
 dictionary AesCbcParams : Algorithm {
   required BufferSource iv;
 };
 
+[GenerateInit]
 dictionary AesCtrParams : Algorithm {
   required BufferSource counter;
   required [EnforceRange] octet length;
 };
 
+[GenerateInit]
 dictionary AesGcmParams : Algorithm {
   required BufferSource iv;
   BufferSource additionalData;
@@ -37,12 +40,14 @@ dictionary HmacImportParams : Algorithm {
   required AlgorithmIdentifier hash;
 };
 
+[GenerateInit]
 dictionary Pbkdf2Params : Algorithm {
   required BufferSource salt;
   required [EnforceRange] unsigned long iterations;
   required AlgorithmIdentifier hash;
 };
 
+[GenerateInit]
 dictionary RsaHashedImportParams {
   required AlgorithmIdentifier hash;
 };
@@ -51,63 +56,77 @@ dictionary AesKeyGenParams : Algorithm {
   required [EnforceRange] unsigned short length;
 };
 
+[GenerateInit]
 dictionary HmacKeyGenParams : Algorithm {
   required AlgorithmIdentifier hash;
   [EnforceRange] unsigned long length;
 };
 
+[GenerateInit]
 dictionary RsaHashedKeyGenParams : Algorithm {
   required [EnforceRange] unsigned long modulusLength;
   required BigInteger publicExponent;
   required AlgorithmIdentifier hash;
 };
 
+[GenerateInit]
 dictionary RsaOaepParams : Algorithm {
   BufferSource label;
 };
 
+[GenerateInit]
 dictionary RsaPssParams : Algorithm {
   required [EnforceRange] unsigned long saltLength;
 };
 
+[GenerateInit]
 dictionary DhKeyGenParams : Algorithm {
   required BigInteger prime;
   required BigInteger generator;
 };
 
+[GenerateInit]
 dictionary EcKeyGenParams : Algorithm {
   required NamedCurve namedCurve;
 };
 
+[GenerateInit]
 dictionary AesDerivedKeyParams : Algorithm {
   required [EnforceRange] unsigned long length;
 };
 
+[GenerateInit]
 dictionary HmacDerivedKeyParams : HmacImportParams {
   [EnforceRange] unsigned long length;
 };
 
+[GenerateInit]
 dictionary EcdhKeyDeriveParams : Algorithm {
   required CryptoKey public;
 };
 
+[GenerateInit]
 dictionary DhKeyDeriveParams : Algorithm {
   required CryptoKey public;
 };
 
+[GenerateInit]
 dictionary DhImportKeyParams : Algorithm {
   required BigInteger prime;
   required BigInteger generator;
 };
 
+[GenerateInit]
 dictionary EcdsaParams : Algorithm {
   required AlgorithmIdentifier hash;
 };
 
+[GenerateInit]
 dictionary EcKeyImportParams : Algorithm {
   NamedCurve namedCurve;
 };
 
+[GenerateInit]
 dictionary HkdfParams : Algorithm {
   required AlgorithmIdentifier hash;
   required BufferSource salt;

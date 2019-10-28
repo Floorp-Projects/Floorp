@@ -10,6 +10,7 @@
  * liability, trademark and document use rules apply.
  */
 
+[GenerateInit]
 dictionary AudioParamDescriptor {
     required DOMString name;
     float defaultValue = 0;

@@ -11,7 +11,7 @@ interface ReferrerInfo;
 /**
  * This dictionary holds load arguments for docshell loads.
  */
-
+[GenerateInit]
 dictionary LoadURIOptions {
   /**
    * The principal that initiated the load.

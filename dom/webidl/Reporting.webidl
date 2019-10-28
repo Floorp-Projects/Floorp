@@ -66,6 +66,7 @@ interface TestingDeprecatedInterface {
 };
 
 // Used internally to process the JSON
+[GenerateInit]
 dictionary ReportingHeaderValue {
   sequence<ReportingItem> items;
 };
@@ -82,6 +83,7 @@ dictionary ReportingItem {
 };
 
 // Used internally to process the JSON
+[GenerateInit]
 dictionary ReportingEndpoint {
   // This is a string.
   any url;

@@ -15,6 +15,7 @@ enum PermissionName {
   // Unsupported: "midi"
 };
 
+[GenerateInit]
 dictionary PermissionDescriptor {
   required PermissionName name;
 };

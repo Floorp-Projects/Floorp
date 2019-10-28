@@ -95,6 +95,7 @@ callback MozJSWindowActorCallback = void();
  * NOTE: Messages may be received between willDestroy and didDestroy, but they
  * may not be sent.
  */
+[GenerateInit]
 dictionary MozJSWindowActorCallbacks {
   [ChromeOnly] MozJSWindowActorCallback willDestroy;
   [ChromeOnly] MozJSWindowActorCallback didDestroy;

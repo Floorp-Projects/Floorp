@@ -198,6 +198,10 @@ class Configuration(DescriptorProvider):
                                               self.callbacks):
             d.needsConversionToJS = True
 
+        for d in getDictionariesConvertedFromJS(self.descriptors, self.dictionaries,
+                                                self.callbacks):
+            d.needsConversionFromJS = True
+
     def getInterface(self, ifname):
         return self.interfaces[ifname]
 
@@ -272,6 +276,9 @@ class Configuration(DescriptorProvider):
 
     def getDictionariesConvertibleToJS(self):
         return filter(lambda d: d.needsConversionToJS, self.dictionaries)
+
+    def getDictionariesConvertibleFromJS(self):
+        return filter(lambda d: d.needsConversionFromJS, self.dictionaries)
 
     def getDictionaryIfExists(self, dictionaryName):
         return self.dictionariesByName.get(dictionaryName, None)
@@ -1009,5 +1016,43 @@ def getDictionariesConvertedToJS(descriptors, dictionaries, callbacks):
         if dictionary.needsConversionToJS:
             # It's explicitly flagged as needing to-JS conversion, and all its
             # dependent dictionaries will need to-JS conversion too.
+            for d in getDependentDictionariesFromDictionary(dictionary):
+                yield d
+
+
+def getDictionariesConvertedFromJS(descriptors, dictionaries, callbacks):
+    for desc in descriptors:
+        if desc.interface.isExternal():
+            continue
+
+        if desc.interface.isJSImplemented():
+            # For a JS-implemented interface, we need from-JS conversions for
+            # all the types involved.
+            for t in getTypesFromDescriptor(desc):
+                for d in getDictionariesFromType(t):
+                    yield d
+        elif desc.interface.isCallback():
+            # For callbacks we only want to include the return value, since
+            # that's where teh from-JS conversion happens.
+            for t in getTypesFromDescriptor(desc, includeArgs=False):
+                for d in getDictionariesFromType(t):
+                    yield d
+        else:
+            # For normal interfaces, we only want to include arguments values,
+            # since that's where from-JS conversion happens.
+            for t in getTypesFromDescriptor(desc, includeReturns=False):
+                for d in getDictionariesFromType(t):
+                    yield d
+
+    for callback in callbacks:
+        # We only want to look at the return value
+        sig = callback.signatures()[0]
+        for d in getDictionariesFromType(sig[0]):
+            yield d
+
+    for dictionary in dictionaries:
+        if dictionary.needsConversionFromJS:
+            # It's explicitly flagged as needing from-JS conversion, and all its
+            # dependent dictionaries will need from-JS conversion too.
             for d in getDependentDictionariesFromDictionary(dictionary):
                 yield d
