@@ -850,9 +850,9 @@ pub fn build_render_pass(
                             let scissor_rect  = match render_tasks[task_id].kind {
                                 RenderTaskKind::Picture(ref info) => info.scissor_rect,
                                 _ => unreachable!(),
-                            };
+                            }.expect("bug: dirty rect must be set for picture cache tasks");
                             let mut batch_containers = Vec::new();
-                            let mut alpha_batch_container = AlphaBatchContainer::new(scissor_rect);
+                            let mut alpha_batch_container = AlphaBatchContainer::new(Some(scissor_rect));
                             batcher.build(
                                 &mut batch_containers,
                                 &mut alpha_batch_container,
@@ -865,6 +865,7 @@ pub fn build_render_pass(
                                 surface: surface.clone(),
                                 clear_color,
                                 alpha_batch_container,
+                                dirty_rect: scissor_rect,
                             };
 
                             picture_cache.push(target);

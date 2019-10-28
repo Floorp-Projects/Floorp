@@ -722,6 +722,7 @@ pub struct PictureCacheTarget {
     pub surface: ResolvedSurfaceTexture,
     pub alpha_batch_container: AlphaBatchContainer,
     pub clear_color: Option<ColorF>,
+    pub dirty_rect: DeviceIntRect,
 }
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
