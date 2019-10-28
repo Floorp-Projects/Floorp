@@ -3157,7 +3157,7 @@ void nsLineLayout::TextAlignLine(nsLineBox* aLine, bool aIsLastLine) {
 
       case NS_STYLE_TEXT_ALIGN_LEFT:
       case NS_STYLE_TEXT_ALIGN_MOZ_LEFT:
-        if (!lineWM.IsBidiLTR()) {
+        if (lineWM.IsBidiRTL()) {
           dx = remainingISize;
         }
         break;
@@ -3185,7 +3185,7 @@ void nsLineLayout::TextAlignLine(nsLineBox* aLine, bool aIsLastLine) {
   }
 
   if (mPresContext->BidiEnabled() &&
-      (!mPresContext->IsVisualMode() || !lineWM.IsBidiLTR())) {
+      (!mPresContext->IsVisualMode() || lineWM.IsBidiRTL())) {
     PerFrameData* startFrame = psd->mFirstFrame;
     MOZ_ASSERT(startFrame, "empty line?");
     if (startFrame->mIsMarker) {

@@ -842,7 +842,7 @@ void nsBulletFrame::GetListItemText(CounterStyle* aStyle,
 
   aResult.Truncate();
   aResult.Append(prefix);
-  if (aWritingMode.IsBidiLTR() != isRTL) {
+  if (aWritingMode.IsBidiRTL() == isRTL) {
     aResult.Append(counter);
   } else {
     // RLM = 0x200f, LRM = 0x200e
