@@ -69,6 +69,7 @@ const threadSpec = generateActorSpec({
     replayFramePositions: {
       positions: Option(0, "array:json"),
       frame: Option(0, "string"),
+      thread: Option(0, "string"),
     },
   },
 
@@ -117,6 +118,11 @@ const threadSpec = generateActorSpec({
       },
       response: {
         skip: Arg(0, "json"),
+      },
+    },
+    fetchAncestorFramePositions: {
+      request: {
+        index: Arg(0, "number"),
       },
     },
     dumpThread: {

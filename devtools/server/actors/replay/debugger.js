@@ -249,6 +249,14 @@ ReplayDebugger.prototype = {
     return this._control.findFrameSteps(point);
   },
 
+  async replayAncestorFramePositions(point, index) {
+    const ancestor = await this._control.findAncestorFrameEntryPoint(
+      point,
+      index
+    );
+    return this._control.findFrameSteps(ancestor);
+  },
+
   replayRecordingEndpoint() {
     return this._control.recordingEndpoint();
   },

@@ -1,0 +1,48 @@
+.theme-light {
+  --progress-playing-background: hsl(207, 100%, 97%);
+  --progressbar-background: #ffffff;
+  --replay-head-background: var(--purple-50);
+}
+
+.theme-dark {
+  --progress-playing-background: #071a2b;
+  --progressbar-background: #0c0c0d;
+  --replay-head-background: var(--theme-highlight-purple);
+}
+
+.frame-timeline-container {
+  border-bottom: 1px solid var(--theme-splitter-color);
+  background-color: var(--accordion-header-background);
+  padding: 8px;
+}
+
+.frame-timeline-bar {
+  background-color: var(--progressbar-background);
+  border: 1px solid var(--theme-splitter-color);
+  width: 100%;
+  height: 20px;
+  position: relative;
+}
+
+.frame-timeline-marker {
+  background-color: var(--replay-head-background);
+  display: inline-block;
+  opacity: 0.4;
+  width: 2px;
+  height: 100%;
+}
+
+.scrubbing .frame-timeline-marker,
+.scrubbing .frame-timeline-bar,
+.scrubbing .frame-timeline-container,
+.frame-timeline-marker:hover {
+  cursor: ew-resize;
+}
+
+.frame-timeline-progress {
+  background-color: var(--progress-playing-background);
+  width: 50%;
+  height: 100%;
+  position: relative;
+  display: inline-block;
+}

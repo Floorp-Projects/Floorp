@@ -22,7 +22,11 @@ export function previewPausedLocation(location: Location) {
       return;
     }
 
-    const sourceLocation = { ...location, sourceId: source.id };
+    const sourceLocation = {
+      line: location.line,
+      column: location.column,
+      sourceId: source.id,
+    };
     dispatch(selectLocation(cx, sourceLocation));
 
     dispatch({

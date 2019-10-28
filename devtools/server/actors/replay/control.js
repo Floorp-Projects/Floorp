@@ -1960,6 +1960,15 @@ const gControl = {
     return findFrameSteps(point);
   },
 
+  async findAncestorFrameEntryPoint(point, index) {
+    const steps = await findFrameSteps(point);
+    point = steps[0];
+    while (index--) {
+      point = await findParentFrameEntryPoint(point);
+    }
+    return point;
+  },
+
   // Return whether the active child is currently recording.
   childIsRecording() {
     return gActiveChild && gActiveChild.recording;

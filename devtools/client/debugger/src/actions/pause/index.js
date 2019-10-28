@@ -17,6 +17,7 @@ export {
   resume,
   rewind,
   reverseStepOver,
+  seekToPosition,
 } from "./commands";
 export { fetchScopes } from "./fetchScopes";
 export { paused } from "./paused";
@@ -34,3 +35,4 @@ export {
   previewPausedLocation,
   clearPreviewPausedLocation,
 } from "./previewPausedLocation";
+export { setFramePositions } from "./setFramePositions";

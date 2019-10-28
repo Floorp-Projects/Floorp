@@ -165,7 +165,8 @@ function makeMockFrame(
   source: Source = makeMockSource("url"),
   scope: Scope = makeMockScope(),
   line: number = 4,
-  displayName: string = `display-${id}`
+  displayName: string = `display-${id}`,
+  index: number = 0
 ): Frame {
   const location = { sourceId: source.id, line };
   return {
@@ -177,6 +178,7 @@ function makeMockFrame(
     source,
     scope,
     this: {},
+    index,
   };
 }
 

@@ -26,6 +26,7 @@ import type {
   ThreadId,
   Context,
   ThreadContext,
+  ExecutionPoint,
 } from "../../types";
 import type { ThunkArgs } from "../types";
 import type { Command } from "../../reducers/types";
@@ -68,6 +69,19 @@ export function command(cx: ThreadContext, type: Command) {
         [PROMISE]: client[type](cx.thread),
       });
     }
+  };
+}
+
+export function seekToPosition(position: ExecutionPoint) {
+  return ({ dispatch, getState, client }: ThunkArgs) => {
+    const cx = getThreadContext(getState());
+    client.timeWarp(position);
+    dispatch({
+      type: "COMMAND",
+      command: "timeWarp",
+      status: "start",
+      thread: cx.thread,
+    });
   };
 }
 

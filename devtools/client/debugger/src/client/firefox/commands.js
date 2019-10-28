@@ -25,6 +25,7 @@ import type {
   Range,
   Thread,
   ThreadType,
+  ExecutionPoint,
 } from "../../types";
 
 import type {
@@ -545,6 +546,14 @@ function getFrontByID(actorID: String) {
   return debuggerClient.getFrontByID(actorID);
 }
 
+function timeWarp(position: ExecutionPoint) {
+  currentThreadFront.timeWarp(position);
+}
+
+function fetchAncestorFramePositions(index: number) {
+  currentThreadFront.fetchAncestorFramePositions(index);
+}
+
 const clientCommands = {
   autocomplete,
   blackBox,
@@ -592,6 +601,8 @@ const clientCommands = {
   detachWorkers,
   lookupTarget,
   getFrontByID,
+  timeWarp,
+  fetchAncestorFramePositions,
 };
 
 export { setupCommands, clientCommands };

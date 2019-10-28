@@ -115,6 +115,20 @@ export type PendingLocation = {
   +sourceUrl?: string,
 };
 
+export type ExecutionPoint = {
+  +checkpoint: number,
+  +location: PendingLocation,
+  +position: ExecutionPointPosition,
+  +progress: number,
+};
+
+export type ExecutionPointPosition = {
+  +frameIndex: number,
+  +kind: string,
+  +offset: number,
+  +script: number,
+};
+
 // Type of location used when setting breakpoints in the server. Exactly one of
 // { sourceUrl, sourceId } must be specified. Soon this will replace
 // SourceLocation and PendingLocation, and SourceActorLocation will be removed
@@ -243,6 +257,7 @@ export type Frame = {
   originalDisplayName?: string,
   originalVariables?: XScopeVariables,
   library?: string,
+  index: number,
 };
 
 export type ChromeFrame = {

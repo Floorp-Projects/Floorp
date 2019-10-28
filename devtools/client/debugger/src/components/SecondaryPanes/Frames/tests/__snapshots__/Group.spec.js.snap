@@ -24,6 +24,7 @@ exports[`Group displays a group 1`] = `
             "sourceId": "source",
           },
           "id": "frame",
+          "index": 0,
           "library": "Back",
           "location": Object {
             "line": 4,
@@ -97,6 +98,7 @@ exports[`Group passes the getFrameTitle prop to the Frame components 1`] = `
             "sourceId": "source",
           },
           "id": "1",
+          "index": 0,
           "library": "Back",
           "location": Object {
             "line": 55,
@@ -169,6 +171,7 @@ exports[`Group passes the getFrameTitle prop to the Frame components 1`] = `
             "sourceId": "source",
           },
           "id": "1",
+          "index": 0,
           "library": "Back",
           "location": Object {
             "line": 55,
@@ -216,6 +219,7 @@ exports[`Group passes the getFrameTitle prop to the Frame components 1`] = `
             "sourceId": "source",
           },
           "id": "frame",
+          "index": 0,
           "library": "Back",
           "location": Object {
             "line": 4,
@@ -276,6 +280,7 @@ exports[`Group passes the getFrameTitle prop to the Frame components 1`] = `
             "sourceId": "source",
           },
           "id": "2",
+          "index": 0,
           "library": "Back",
           "location": Object {
             "line": 55,
@@ -323,6 +328,7 @@ exports[`Group passes the getFrameTitle prop to the Frame components 1`] = `
             "sourceId": "source",
           },
           "id": "frame",
+          "index": 0,
           "library": "Back",
           "location": Object {
             "line": 4,
@@ -383,6 +389,7 @@ exports[`Group passes the getFrameTitle prop to the Frame components 1`] = `
             "sourceId": "source",
           },
           "id": "3",
+          "index": 0,
           "library": "Back",
           "location": Object {
             "line": 55,
@@ -430,6 +437,7 @@ exports[`Group passes the getFrameTitle prop to the Frame components 1`] = `
             "sourceId": "source",
           },
           "id": "frame",
+          "index": 0,
           "library": "Back",
           "location": Object {
             "line": 4,
@@ -495,6 +503,7 @@ exports[`Group renders group with anonymous functions 1`] = `
             "sourceId": "source",
           },
           "id": "1",
+          "index": 0,
           "library": "Back",
           "location": Object {
             "line": 55,
@@ -568,6 +577,7 @@ exports[`Group renders group with anonymous functions 2`] = `
             "sourceId": "source",
           },
           "id": "1",
+          "index": 0,
           "library": "Back",
           "location": Object {
             "line": 55,
@@ -640,6 +650,7 @@ exports[`Group renders group with anonymous functions 2`] = `
             "sourceId": "source",
           },
           "id": "1",
+          "index": 0,
           "library": "Back",
           "location": Object {
             "line": 55,
@@ -686,6 +697,7 @@ exports[`Group renders group with anonymous functions 2`] = `
             "sourceId": "source",
           },
           "id": "frame",
+          "index": 0,
           "library": "Back",
           "location": Object {
             "line": 4,
@@ -746,6 +758,7 @@ exports[`Group renders group with anonymous functions 2`] = `
             "sourceId": "source",
           },
           "id": "2",
+          "index": 0,
           "library": "Back",
           "location": Object {
             "line": 55,
@@ -792,6 +805,7 @@ exports[`Group renders group with anonymous functions 2`] = `
             "sourceId": "source",
           },
           "id": "frame",
+          "index": 0,
           "library": "Back",
           "location": Object {
             "line": 4,
@@ -852,6 +866,7 @@ exports[`Group renders group with anonymous functions 2`] = `
             "sourceId": "source",
           },
           "id": "3",
+          "index": 0,
           "library": "Back",
           "location": Object {
             "line": 55,
@@ -898,6 +913,7 @@ exports[`Group renders group with anonymous functions 2`] = `
             "sourceId": "source",
           },
           "id": "frame",
+          "index": 0,
           "library": "Back",
           "location": Object {
             "line": 4,

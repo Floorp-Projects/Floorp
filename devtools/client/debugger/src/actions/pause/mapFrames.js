@@ -147,6 +147,7 @@ async function expandFrames(
         id,
         displayName: originalFrame.displayName,
         location: originalFrame.location,
+        index: frame.index,
         source: null,
         thread: frame.thread,
         scope: frame.scope,

@@ -30,7 +30,11 @@ export function prepareSourcePayload(
   return { thread: client.actor, source };
 }
 
-export function createFrame(thread: ThreadId, frame: FramePacket): ?Frame {
+export function createFrame(
+  thread: ThreadId,
+  frame: FramePacket,
+  index: number = 0
+): ?Frame {
   if (!frame) {
     return null;
   }
@@ -50,6 +54,7 @@ export function createFrame(thread: ThreadId, frame: FramePacket): ?Frame {
     this: frame.this,
     source: null,
     scope: frame.environment,
+    index,
   };
 }
 
@@ -69,7 +74,9 @@ export function createPause(
     ...packet,
     thread,
     frame: createFrame(thread, frame),
-    frames: response.frames.map(createFrame.bind(null, thread)),
+    frames: response.frames.map((currentFrame, i) =>
+      createFrame(thread, currentFrame, i)
+    ),
   };
 }
 

@@ -30,6 +30,7 @@ import type {
   ThreadContext,
   Previews,
   SourceLocation,
+  ExecutionPoint,
 } from "../types";
 
 export type Command =
@@ -46,6 +47,9 @@ type ThreadPauseState = {
   why: ?Why,
   isWaitingOnBreak: boolean,
   frames: ?(any[]),
+  replayFramePositions: {
+    [FrameId]: Array<ExecutionPoint>,
+  },
   frameScopes: {
     generated: {
       [FrameId]: {
@@ -266,6 +270,14 @@ function update(
         },
       });
     }
+
+    case "SET_FRAME_POSITIONS":
+      return updateThreadState({
+        replayFramePositions: {
+          ...threadState().replayFramePositions,
+          [action.frame]: action.positions,
+        },
+      });
 
     case "BREAK_ON_NEXT":
       return updateThreadState({ isWaitingOnBreak: true });
