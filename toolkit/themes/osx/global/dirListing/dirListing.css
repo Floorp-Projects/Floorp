@@ -42,20 +42,12 @@ p {
 
 #UI_goUp {
   margin-top: 0;
-  float: left;
-}
-
-#UI_goUp:dir(rtl) {
-  float: right;
+  float: inline-start;
 }
 
 #UI_showHidden {
   margin-top: 0;
-  float: right;
-}
-
-#UI_showHidden:dir(rtl) {
-  float: left;
+  float: inline-end;
 }
 
 table {

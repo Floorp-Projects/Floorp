@@ -19,14 +19,10 @@ button {
 }
 
 #action-box {
-  float: right;
+  float: inline-end;
   margin-top: 2em;
   margin-bottom: 20px;
   margin-inline-start: 20px;
   margin-inline-end: 0;
   width: 30%;
-}
-
-#action-box:dir(rtl) {
-  float: left;
 }
