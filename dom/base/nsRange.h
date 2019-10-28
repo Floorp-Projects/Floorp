@@ -440,7 +440,7 @@ class nsRange final : public mozilla::dom::AbstractRange,
 
   nsCOMPtr<nsINode> mRoot;
   // mRegisteredCommonAncestor is only non-null when the range
-  // IsInSelection().  It's kept alive via mStartContainer/mEndContainer,
+  // IsInSelection().  It's kept alive via mStart/mEnd,
   // because we update it any time those could become disconnected from it.
   nsINode* MOZ_NON_OWNING_REF mRegisteredCommonAncestor;
   mozilla::WeakPtr<mozilla::dom::Selection> mSelection;
