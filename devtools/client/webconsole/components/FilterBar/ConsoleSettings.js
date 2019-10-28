@@ -16,18 +16,12 @@ const { l10n } = require("devtools/client/webconsole/utils/messages");
 const MenuButton = createFactory(
   require("devtools/client/shared/components/menu/MenuButton")
 );
-
-loader.lazyGetter(this, "MenuItem", function() {
-  return createFactory(
-    require("devtools/client/shared/components/menu/MenuItem")
-  );
-});
-
-loader.lazyGetter(this, "MenuList", function() {
-  return createFactory(
-    require("devtools/client/shared/components/menu/MenuList")
-  );
-});
+const MenuItem = createFactory(
+  require("devtools/client/shared/components/menu/MenuItem")
+);
+const MenuList = createFactory(
+  require("devtools/client/shared/components/menu/MenuList")
+);
 
 class ConsoleSettings extends Component {
   static get propTypes() {
@@ -140,9 +134,7 @@ class ConsoleSettings extends Component {
         className: "devtools-button webconsole-console-settings-menu-button",
         title: l10n.getStr("webconsole.console.settings.menu.button.tooltip"),
       },
-      // We pass the children in a function so we don't require the MenuItem and MenuList
-      // components until we need to display them (i.e. when the button is clicked).
-      () => this.renderMenuItems()
+      this.renderMenuItems()
     );
   }
 }
