@@ -15,13 +15,8 @@ body {
 }
 
 #sectionTitle {
-  float: left;
+  float: inline-start;
   padding-inline-start: 1rem;
-}
-
-#sectionTitle:dir(rtl) {
-  float: right;
-  padding-inline-end: 1rem;
 }
 
 /** Categories **/

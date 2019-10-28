@@ -507,7 +507,7 @@ description#identity-popup-content-verifier,
   -moz-context-properties: fill, fill-opacity;
   fill-opacity: .6;
   transform: scaleX(-1) translateY(1px);
-  float: right;
+  float: inline-end;
 }
 
 .protections-popup-category:-moz-locale-dir(rtl)::after {
