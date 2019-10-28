@@ -3511,14 +3511,12 @@ var BrowserOnClick = {
     let mm = window.messageManager;
     mm.addMessageListener("Browser:CertExceptionError", this);
     mm.addMessageListener("Browser:SiteBlockedError", this);
-    mm.addMessageListener("Browser:ResetSSLPreferences", this);
   },
 
   uninit() {
     let mm = window.messageManager;
     mm.removeMessageListener("Browser:CertExceptionError", this);
     mm.removeMessageListener("Browser:SiteBlockedError", this);
-    mm.removeMessageListener("Browser:ResetSSLPreferences", this);
   },
 
   receiveMessage(msg) {
@@ -3539,15 +3537,6 @@ var BrowserOnClick = {
           msg.data.location,
           msg.data.blockedInfo
         );
-        break;
-      case "Browser:ResetSSLPreferences":
-        let prefSSLImpact = PREF_SSL_IMPACT_ROOTS.reduce((prefs, root) => {
-          return prefs.concat(Services.prefs.getChildList(root));
-        }, []);
-        for (let prefName of prefSSLImpact) {
-          Services.prefs.clearUserPref(prefName);
-        }
-        msg.target.reload();
         break;
     }
   },

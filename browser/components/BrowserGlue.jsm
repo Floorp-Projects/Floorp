@@ -311,7 +311,6 @@ let LEGACY_ACTORS = {
     child: {
       module: "resource:///actors/NetErrorChild.jsm",
       events: {
-        AboutNetErrorResetPreferences: { wantUntrusted: true },
         click: {},
       },
       matches: ["about:certerror?*", "about:neterror?*"],
