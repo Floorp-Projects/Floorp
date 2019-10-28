@@ -21,50 +21,6 @@ static char* DataToString(const char* aFormat, T aData) {
   return moz_xstrdup(buf);
 }
 
-/***************************************************************************/
-
-NS_IMPL_ISUPPORTS(nsSupportsID, nsISupportsID, nsISupportsPrimitive)
-
-nsSupportsID::nsSupportsID() : mData(nullptr) {}
-
-NS_IMETHODIMP
-nsSupportsID::GetType(uint16_t* aType) {
-  NS_ASSERTION(aType, "Bad pointer");
-  *aType = TYPE_ID;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSupportsID::GetData(nsID** aData) {
-  NS_ASSERTION(aData, "Bad pointer");
-
-  *aData = mData ? mData->Clone() : nullptr;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSupportsID::SetData(const nsID* aData) {
-  if (mData) {
-    free(mData);
-  }
-
-  mData = aData ? aData->Clone() : nullptr;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSupportsID::ToString(char** aResult) {
-  NS_ASSERTION(aResult, "Bad pointer");
-
-  if (mData) {
-    *aResult = mData->ToString();
-  } else {
-    *aResult = moz_xstrdup("null");
-  }
-
-  return NS_OK;
-}
-
 /*****************************************************************************
  * nsSupportsCString
  *****************************************************************************/
