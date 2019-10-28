@@ -243,6 +243,11 @@ inline size_t TypedArrayObject::bytesPerElement() const {
 template <typename CharT>
 bool StringIsTypedArrayIndex(mozilla::Range<const CharT> s, uint64_t* indexp);
 
+template <typename CharT>
+inline bool CanStartTypedArrayIndex(CharT ch) {
+  return mozilla::IsAsciiDigit(ch) || ch == '-';
+}
+
 inline bool IsTypedArrayIndex(jsid id, uint64_t* indexp) {
   if (JSID_IS_INT(id)) {
     int32_t i = JSID_TO_INT(id);
@@ -263,14 +268,14 @@ inline bool IsTypedArrayIndex(jsid id, uint64_t* indexp) {
 
   if (atom->hasLatin1Chars()) {
     mozilla::Range<const Latin1Char> chars = atom->latin1Range(nogc);
-    if (!mozilla::IsAsciiDigit(chars[0]) && chars[0] != '-') {
+    if (!CanStartTypedArrayIndex(chars[0])) {
       return false;
     }
     return StringIsTypedArrayIndex(chars, indexp);
   }
 
   mozilla::Range<const char16_t> chars = atom->twoByteRange(nogc);
-  if (!mozilla::IsAsciiDigit(chars[0]) && chars[0] != '-') {
+  if (!CanStartTypedArrayIndex(chars[0])) {
     return false;
   }
   return StringIsTypedArrayIndex(chars, indexp);
