@@ -2754,8 +2754,8 @@ void nsCSSFrameConstructor::SetUpDocElementContainingBlock(
 }
 
 void nsCSSFrameConstructor::ConstructAnonymousContentForCanvas(
-    nsFrameConstructorState& aState, nsIFrame* aFrame, nsIContent* aDocElement,
-    nsFrameList& aFrameList) {
+    nsFrameConstructorState& aState, nsContainerFrame* aFrame,
+    nsIContent* aDocElement, nsFrameList& aFrameList) {
   NS_ASSERTION(aFrame->IsCanvasFrame(), "aFrame should be canvas frame!");
   MOZ_ASSERT(mRootElementFrame->GetContent() == aDocElement);
 
@@ -2766,11 +2766,10 @@ void nsCSSFrameConstructor::ConstructAnonymousContentForCanvas(
   }
 
   AutoFrameConstructionItemList itemsToConstruct(this);
-  nsContainerFrame* frameAsContainer = do_QueryFrame(aFrame);
-  AddFCItemsForAnonymousContent(aState, frameAsContainer, anonymousItems,
+  AddFCItemsForAnonymousContent(aState, aFrame, anonymousItems,
                                 itemsToConstruct);
 
-  ConstructFramesFromItemList(aState, itemsToConstruct, frameAsContainer,
+  ConstructFramesFromItemList(aState, itemsToConstruct, aFrame,
                               /* aParentIsWrapperAnonBox = */ false,
                               aFrameList);
 }
