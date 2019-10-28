@@ -904,44 +904,31 @@ nsXULAppInfo::GetLauncherProcessState(uint32_t* aResult) {
 }
 
 #ifdef XP_WIN
-// Matches the enum in WinNT.h for the Vista SDK but renamed so that we can
-// safely build with the Vista SDK and without it.
-typedef enum {
-  VistaTokenElevationTypeDefault = 1,
-  VistaTokenElevationTypeFull,
-  VistaTokenElevationTypeLimited
-} VISTA_TOKEN_ELEVATION_TYPE;
-
-// avoid collision with TokeElevationType enum in WinNT.h
-// of the Vista SDK
-#  define VistaTokenElevationType static_cast<TOKEN_INFORMATION_CLASS>(18)
-
 NS_IMETHODIMP
 nsXULAppInfo::GetUserCanElevate(bool* aUserCanElevate) {
-  HANDLE hToken;
-
-  VISTA_TOKEN_ELEVATION_TYPE elevationType;
-  DWORD dwSize;
-
-  if (!OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hToken) ||
-      !GetTokenInformation(hToken, VistaTokenElevationType, &elevationType,
-                           sizeof(elevationType), &dwSize)) {
+  HANDLE rawToken;
+  if (!::OpenProcessToken(::GetCurrentProcess(), TOKEN_QUERY, &rawToken)) {
     *aUserCanElevate = false;
-  } else {
-    // The possible values returned for elevationType and their meanings are:
-    //   TokenElevationTypeDefault: The token does not have a linked token
-    //     (e.g. UAC disabled or a standard user, so they can't be elevated)
-    //   TokenElevationTypeFull: The token is linked to an elevated token
-    //     (e.g. UAC is enabled and the user is already elevated so they can't
-    //      be elevated again)
-    //   TokenElevationTypeLimited: The token is linked to a limited token
-    //     (e.g. UAC is enabled and the user is not elevated, so they can be
-    //      elevated)
-    *aUserCanElevate = (elevationType == VistaTokenElevationTypeLimited);
+    return NS_OK;
   }
 
-  if (hToken) CloseHandle(hToken);
+  nsAutoHandle token(rawToken);
+  LauncherResult<TOKEN_ELEVATION_TYPE> elevationType = GetElevationType(token);
+  if (elevationType.isErr()) {
+    *aUserCanElevate = false;
+    return NS_OK;
+  }
 
+  // The possible values returned for elevationType and their meanings are:
+  //   TokenElevationTypeDefault: The token does not have a linked token
+  //     (e.g. UAC disabled or a standard user, so they can't be elevated)
+  //   TokenElevationTypeFull: The token is linked to an elevated token
+  //     (e.g. UAC is enabled and the user is already elevated so they can't
+  //      be elevated again)
+  //   TokenElevationTypeLimited: The token is linked to a limited token
+  //     (e.g. UAC is enabled and the user is not elevated, so they can be
+  //      elevated)
+  *aUserCanElevate = (elevationType.inspect() == TokenElevationTypeLimited);
   return NS_OK;
 }
 #endif
