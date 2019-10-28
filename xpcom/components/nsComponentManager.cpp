@@ -1702,27 +1702,6 @@ nsComponentManagerImpl::IsContractIDRegistered(const char* aClass,
 }
 
 NS_IMETHODIMP
-nsComponentManagerImpl::EnumerateCIDs(nsISimpleEnumerator** aEnumerator) {
-  nsCOMArray<nsISupports> array;
-  auto appendEntry = [&](const nsID& aCID) {
-    nsCOMPtr<nsISupportsID> wrapper = new nsSupportsID();
-    wrapper->SetData(&aCID);
-    array.AppendObject(wrapper);
-  };
-
-  for (auto iter = mFactories.Iter(); !iter.Done(); iter.Next()) {
-    appendEntry(*iter.Key());
-  }
-  for (const auto& module : gStaticModules) {
-    if (module.Active()) {
-      appendEntry(module.CID());
-    }
-  }
-
-  return NS_NewArrayEnumerator(aEnumerator, array);
-}
-
-NS_IMETHODIMP
 nsComponentManagerImpl::EnumerateContractIDs(
     nsISimpleEnumerator** aEnumerator) {
   auto* array = new nsTArray<nsCString>;

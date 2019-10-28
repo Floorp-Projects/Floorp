@@ -13,20 +13,6 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 
-class nsSupportsID final : public nsISupportsID {
- public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSISUPPORTSPRIMITIVE
-  NS_DECL_NSISUPPORTSID
-
-  nsSupportsID();
-
- private:
-  ~nsSupportsID() {}
-
-  nsID* mData;
-};
-
 /***************************************************************************/
 
 class nsSupportsCString final : public nsISupportsCString {

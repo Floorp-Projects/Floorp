@@ -112,17 +112,6 @@ interface nsIComponentRegistrar : nsISupports
     boolean isContractIDRegistered(in string aContractID);
 
     /**
-     * enumerateCIDs
-     *
-     * Enumerate the list of all registered CIDs.
-     *
-     * @return : enumerator for CIDs.  Elements of the enumeration can be QI'ed
-     *           for the nsISupportsID interface.  From the nsISupportsID, you
-     *           can obtain the actual CID.
-     */
-    nsISimpleEnumerator enumerateCIDs();
-
-    /**
      * enumerateContractIDs
      *
      * Enumerate the list of all registered ContractIDs.
