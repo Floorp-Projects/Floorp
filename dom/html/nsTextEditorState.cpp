@@ -634,10 +634,18 @@ nsTextInputSelectionImpl::PageMove(bool aForward, bool aExtend) {
   if (mScrollFrame) {
     RefPtr<nsFrameSelection> frameSelection = mFrameSelection;
     nsIFrame* scrollFrame = do_QueryFrame(mScrollFrame);
-    frameSelection->CommonPageMove(aForward, aExtend, scrollFrame);
+    // We won't scroll parent scrollable element of mScrollFrame.  Therefore,
+    // this may be handled when mScrollFrame is completely outside of the view.
+    // In such case, user may be confused since they might have wanted to
+    // scroll a parent scrollable element.  For making clearer which element
+    // handles PageDown/PageUp, we should move selection into view even if
+    // selection is not changed.
+    return frameSelection->PageMove(aForward, aExtend, scrollFrame,
+                                    nsFrameSelection::SelectionIntoView::Yes);
   }
-  // After ScrollSelectionIntoView(), the pending notifications might be
-  // flushed and PresShell/PresContext/Frames may be dead. See bug 418470.
+  // Similarly, if there is no scrollable frame, we should move the editor
+  // frame into the view for making it clearer which element handles
+  // PageDown/PageUp.
   return ScrollSelectionIntoView(
       nsISelectionController::SELECTION_NORMAL,
       nsISelectionController::SELECTION_FOCUS_REGION,
