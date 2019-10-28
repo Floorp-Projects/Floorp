@@ -8,27 +8,16 @@ from marionette_driver import (
     By, Wait
 )
 
-from marionette_driver.errors import NoSuchElementException
-
 import firefox_puppeteer.errors as errors
 
 from firefox_puppeteer.api.security import Security
-from firefox_puppeteer.ui.base import UIBaseLib, DOMElement
+from firefox_puppeteer.ui.base import UIBaseLib
 
 
 class TabBar(UIBaseLib):
     """Wraps the tabs toolbar DOM element inside a browser window."""
 
     # Properties for visual elements of the tabs toolbar #
-
-    @property
-    def menupanel(self):
-        """A :class:`MenuPanel` instance which represents the menu panel
-        at the far right side of the tabs toolbar.
-
-        :returns: :class:`MenuPanel` instance.
-        """
-        return MenuPanel(self.marionette, self.window)
 
     @property
     def newtab_button(self):
@@ -362,47 +351,3 @@ class Tab(UIBaseLib):
         Use the :func:`~Tab.select` method instead.
         """
         self.marionette.switch_to_window(self.handle)
-
-
-class MenuPanel(UIBaseLib):
-
-    @property
-    def popup(self):
-        """
-        :returns: The :class:`MenuPanelElement`.
-        """
-        popup = self.marionette.find_element(By.ID, 'PanelUI-popup')
-        return self.MenuPanelElement(popup)
-
-    class MenuPanelElement(DOMElement):
-        """Wraps the menu panel."""
-        _buttons = None
-
-        @property
-        def buttons(self):
-            """
-            :returns: A list of all the clickable buttons in the menu panel.
-            """
-            if not self._buttons:
-                self._buttons = (self.find_element(By.ID, 'PanelUI-multiView')
-                                     .find_element(By.ANON_ATTRIBUTE,
-                                                   {'anonid': 'viewContainer'})
-                                     .find_elements(By.TAG_NAME,
-                                                    'toolbarbutton'))
-            return self._buttons
-
-        def click(self, target=None):
-            """
-            Overrides HTMLElement.click to provide a target to click.
-
-            :param target: The label associated with the button to click on,
-             e.g., `New Private Window`.
-            """
-            if not target:
-                return DOMElement.click(self)
-
-            for button in self.buttons:
-                if button.get_attribute('label') == target:
-                    return button.click()
-            raise NoSuchElementException('Could not find "{}"" in the '
-                                         'menu panel UI'.format(target))
