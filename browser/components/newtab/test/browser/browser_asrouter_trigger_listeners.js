@@ -327,10 +327,10 @@ add_task(async function check_trackingProtectionMilestone_listener() {
   const triggerHandler = (target, trigger) => {
     const {
       id,
-      param: { type },
+      param: { host },
     } = trigger;
     is(id, "trackingProtection", "should match event name");
-    is(type, "ContentBlockingMilestone", "Should be the correct event type");
+    is(host, "ContentBlockingMilestone", "Should be the correct event type");
     observerEvent += 1;
   };
   const trackingProtectionListener = ASRouterTriggerListeners.get(
