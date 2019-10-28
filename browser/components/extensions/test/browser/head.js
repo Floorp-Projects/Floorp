@@ -4,7 +4,9 @@
 
 /* exported CustomizableUI makeWidgetId focusWindow forceGC
  *          getBrowserActionWidget
- *          clickBrowserAction clickPageAction
+ *          clickBrowserAction clickPageAction clickPageActionInPanel
+ *          triggerPageActionWithKeyboard triggerPageActionWithKeyboardInPanel
+ *          triggerBrowserActionWithKeyboard
  *          getBrowserActionPopup getPageActionPopup getPageActionButton
  *          openBrowserActionPanel
  *          closeBrowserAction closePageAction
@@ -285,10 +287,19 @@ function alterContent(browser, task, arg = null) {
 }
 
 function getPanelForNode(node) {
-  while (node.localName != "panel") {
-    node = node.parentNode;
-  }
-  return node;
+  return node.closest("panel");
+}
+
+async function focusButtonAndPressKey(key, elem, modifiers) {
+  let focused = BrowserTestUtils.waitForEvent(elem, "focus", true);
+
+  elem.setAttribute("tabindex", "-1");
+  elem.focus();
+  elem.removeAttribute("tabindex");
+  await focused;
+
+  EventUtils.synthesizeKey(key, modifiers);
+  elem.blur();
 }
 
 var awaitBrowserLoaded = browser =>
@@ -357,13 +368,46 @@ var showBrowserAction = async function(extension, win = window) {
   }
 };
 
-var clickBrowserAction = async function(extension, win = window) {
+async function clickBrowserAction(extension, win = window, modifiers) {
   await promiseAnimationFrame(win);
   await showBrowserAction(extension, win);
 
   let widget = getBrowserActionWidget(extension).forWindow(win);
-  widget.node.click();
-};
+
+  if (modifiers) {
+    EventUtils.synthesizeMouseAtCenter(widget.node, modifiers, win);
+  } else {
+    widget.node.click();
+  }
+}
+
+async function triggerBrowserActionWithKeyboard(
+  extension,
+  key = "KEY_Enter",
+  modifiers = {},
+  win = window
+) {
+  await promiseAnimationFrame(win);
+  await showBrowserAction(extension, win);
+
+  let group = getBrowserActionWidget(extension);
+  let node = group.forWindow(win).node;
+
+  if (group.areaType == CustomizableUI.TYPE_TOOLBAR) {
+    await focusButtonAndPressKey(key, node, modifiers);
+  } else if (group.areaType == CustomizableUI.TYPE_MENU_PANEL) {
+    // Use key navigation so that the PanelMultiView doesn't ignore key events
+    let panel = win.document.getElementById("widget-overflow");
+    while (win.document.activeElement != node) {
+      EventUtils.synthesizeKey("KEY_ArrowDown");
+      ok(
+        panel.contains(win.document.activeElement),
+        "Focus is inside the panel"
+      );
+    }
+    EventUtils.synthesizeKey(key, modifiers);
+  }
+}
 
 function closeBrowserAction(extension, win = window) {
   let group = getBrowserActionWidget(extension);
@@ -660,9 +704,89 @@ async function getPageActionButton(extension, win = window) {
   return win.document.getElementById(pageActionId);
 }
 
-async function clickPageAction(extension, win = window) {
+async function clickPageAction(extension, win = window, modifiers = {}) {
   let elem = await getPageActionButton(extension, win);
-  EventUtils.synthesizeMouseAtCenter(elem, {}, win);
+  EventUtils.synthesizeMouseAtCenter(elem, modifiers, win);
+  return new Promise(SimpleTest.executeSoon);
+}
+
+// Shows the popup for the page action which for lists
+// all available page actions
+async function showPageActionsPanel(win = window) {
+  // See the comment at getPageActionButton
+  SetPageProxyState("valid");
+  await promiseAnimationFrame(win);
+
+  let pageActionsPopup = win.document.getElementById("pageActionPanel");
+
+  let popupShownPromise = promisePopupShown(pageActionsPopup);
+  EventUtils.synthesizeMouseAtCenter(
+    win.document.getElementById("pageActionButton"),
+    {},
+    win
+  );
+  await popupShownPromise;
+
+  return pageActionsPopup;
+}
+
+async function clickPageActionInPanel(extension, win = window, modifiers = {}) {
+  let pageActionsPopup = await showPageActionsPanel(win);
+
+  let pageActionId = BrowserPageActions.panelButtonNodeIDForActionID(
+    makeWidgetId(extension.id)
+  );
+
+  let popupHiddenPromise = promisePopupHidden(pageActionsPopup);
+  let widgetButton = win.document.getElementById(pageActionId);
+  EventUtils.synthesizeMouseAtCenter(widgetButton, modifiers, win);
+  if (widgetButton.disabled) {
+    pageActionsPopup.hidePopup();
+  }
+  await popupHiddenPromise;
+
+  return new Promise(SimpleTest.executeSoon);
+}
+
+async function triggerPageActionWithKeyboard(
+  extension,
+  modifiers = {},
+  win = window
+) {
+  let elem = await getPageActionButton(extension, win);
+  await focusButtonAndPressKey("KEY_Enter", elem, modifiers);
+  return new Promise(SimpleTest.executeSoon);
+}
+
+async function triggerPageActionWithKeyboardInPanel(
+  extension,
+  modifiers = {},
+  win = window
+) {
+  let pageActionsPopup = await showPageActionsPanel(win);
+
+  let pageActionId = BrowserPageActions.panelButtonNodeIDForActionID(
+    makeWidgetId(extension.id)
+  );
+
+  let popupHiddenPromise = promisePopupHidden(pageActionsPopup);
+  let widgetButton = win.document.getElementById(pageActionId);
+  if (widgetButton.disabled) {
+    pageActionsPopup.hidePopup();
+    return new Promise(SimpleTest.executeSoon);
+  }
+
+  // Use key navigation so that the PanelMultiView doesn't ignore key events
+  while (win.document.activeElement != widgetButton) {
+    EventUtils.synthesizeKey("KEY_ArrowDown");
+    ok(
+      pageActionsPopup.contains(win.document.activeElement),
+      "Focus is inside of the panel"
+    );
+  }
+  EventUtils.synthesizeKey("KEY_Enter", modifiers);
+  await popupHiddenPromise;
+
   return new Promise(SimpleTest.executeSoon);
 }
 

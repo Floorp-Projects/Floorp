@@ -1829,7 +1829,24 @@ var PanelView = class extends AssociatedToNode {
         // closes the menu. However, in some cases (e.g. the Library button),
         // there is no command event handler and the mousedown event executes the
         // action instead.
-        button.doCommand();
+        let commandEvent = event.target.ownerDocument.createEvent(
+          "xulcommandevent"
+        );
+        commandEvent.initCommandEvent(
+          "command",
+          true,
+          true,
+          event.target.ownerGlobal,
+          0,
+          event.ctrlKey,
+          event.altKey,
+          event.shiftKey,
+          event.metaKey,
+          null,
+          0
+        );
+        button.dispatchEvent(commandEvent);
+
         let dispEvent = new event.target.ownerGlobal.MouseEvent("mousedown", {
           bubbles: true,
         });
