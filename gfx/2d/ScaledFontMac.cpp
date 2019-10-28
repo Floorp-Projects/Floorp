@@ -194,7 +194,7 @@ void ScaledFontMac::SetupSkFontDrawOptions(SkFont& aFont) {
   // To accomplish this we have to explicitly disable hinting,
   // and disable LCDRenderText.
   if (aFont.getEdging() == SkFont::Edging::kAntiAlias && !mUseFontSmoothing) {
-    aFont.setHinting(kNo_SkFontHinting);
+    aFont.setHinting(SkFontHinting::kNone);
   }
 }
 #endif

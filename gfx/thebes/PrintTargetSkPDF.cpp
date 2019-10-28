@@ -7,7 +7,6 @@
 
 #include "mozilla/gfx/2D.h"
 #include "nsString.h"
-#include "SkPDFDocument.h"
 #include <vector>
 
 namespace mozilla {
