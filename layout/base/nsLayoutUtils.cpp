@@ -3922,7 +3922,7 @@ nsresult nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext,
         list->DeleteAll(builder);
 
         builder->ClearRetainedWindowRegions();
-        builder->ClearWillChangeBudget();
+        builder->ClearWillChangeBudgets();
 
         builder->EnterPresShell(aFrame);
         builder->SetDirtyRect(visibleRect);

@@ -3494,7 +3494,8 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   AppendScrollPartsTo(aBuilder, aLists, createLayersForScrollbars, false);
 
   const nsStyleDisplay* disp = mOuter->StyleDisplay();
-  if (disp->mWillChange.bits & StyleWillChangeBits_SCROLL) {
+  if (aBuilder->IsForPainting() &&
+      disp->mWillChange.bits & StyleWillChangeBits_SCROLL) {
     aBuilder->AddToWillChangeBudget(mOuter, GetVisualViewportSize());
   }
 

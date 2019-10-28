@@ -2394,8 +2394,8 @@ void nsDisplayListBuilder::AddSizeOfExcludingThis(nsWindowSizes& aSizes) const {
 
   size_t n = 0;
   MallocSizeOf mallocSizeOf = aSizes.mState.mMallocSizeOf;
-  n += mWillChangeBudget.ShallowSizeOfExcludingThis(mallocSizeOf);
-  n += mWillChangeBudgetSet.ShallowSizeOfExcludingThis(mallocSizeOf);
+  n += mDocumentWillChangeBudgets.ShallowSizeOfExcludingThis(mallocSizeOf);
+  n += mFrameWillChangeBudgets.ShallowSizeOfExcludingThis(mallocSizeOf);
   n += mAGRBudgetSet.ShallowSizeOfExcludingThis(mallocSizeOf);
   n += mEffectsUpdates.ShallowSizeOfExcludingThis(mallocSizeOf);
   n += mWindowExcludeGlassRegion.SizeOfExcludingThis(mallocSizeOf);
@@ -2489,9 +2489,9 @@ static uint32_t GetLayerizationCost(const nsSize& aSize) {
   // There's significant overhead for each layer created from Gecko
   // (IPC+Shared Objects) and from the backend (like an OpenGL texture).
   // Therefore we set a minimum cost threshold of a 64x64 area.
-  int minBudgetCost = 64 * 64;
+  const int minBudgetCost = 64 * 64;
 
-  uint32_t budgetCost = std::max(
+  const uint32_t budgetCost = std::max(
       minBudgetCost, nsPresContext::AppUnitsToIntCSSPixels(aSize.width) *
                          nsPresContext::AppUnitsToIntCSSPixels(aSize.height));
 
@@ -2500,24 +2500,31 @@ static uint32_t GetLayerizationCost(const nsSize& aSize) {
 
 bool nsDisplayListBuilder::AddToWillChangeBudget(nsIFrame* aFrame,
                                                  const nsSize& aSize) {
-  if (mWillChangeBudgetSet.Get(aFrame, nullptr)) {
-    return true;  // Already accounted
+  MOZ_ASSERT(IsForPainting());
+
+  if (aFrame->MayHaveWillChangeBudget()) {
+    // The frame is already in the will-change budget.
+    MOZ_ASSERT(mFrameWillChangeBudgets.Contains(aFrame));
+    return true;
   }
 
-  nsPresContext* presContext = aFrame->PresContext();
-  nsRect area = presContext->GetVisibleArea();
-  uint32_t budgetLimit = nsPresContext::AppUnitsToIntCSSPixels(area.width) *
-                         nsPresContext::AppUnitsToIntCSSPixels(area.height);
-  uint32_t cost = GetLayerizationCost(aSize);
+  const nsPresContext* presContext = aFrame->PresContext();
+  const nsRect area = presContext->GetVisibleArea();
+  const uint32_t budgetLimit =
+      nsPresContext::AppUnitsToIntCSSPixels(area.width) *
+      nsPresContext::AppUnitsToIntCSSPixels(area.height);
+  const uint32_t cost = GetLayerizationCost(aSize);
 
-  DocumentWillChangeBudget& budget = mWillChangeBudget.GetOrInsert(presContext);
+  DocumentWillChangeBudget& documentBudget =
+      mDocumentWillChangeBudgets.GetOrInsert(presContext);
 
-  bool onBudget =
-      (budget.mBudget + cost) / gWillChangeAreaMultiplier < budgetLimit;
+  const bool onBudget =
+      (documentBudget + cost) / gWillChangeAreaMultiplier < budgetLimit;
 
   if (onBudget) {
-    budget.mBudget += cost;
-    mWillChangeBudgetSet.Put(aFrame, FrameWillChangeBudget(presContext, cost));
+    documentBudget += cost;
+    mFrameWillChangeBudgets.Put(aFrame,
+                                FrameWillChangeBudget(presContext, cost));
     aFrame->SetMayHaveWillChangeBudget(true);
   }
 
@@ -2526,7 +2533,13 @@ bool nsDisplayListBuilder::AddToWillChangeBudget(nsIFrame* aFrame,
 
 bool nsDisplayListBuilder::IsInWillChangeBudget(nsIFrame* aFrame,
                                                 const nsSize& aSize) {
-  bool onBudget = AddToWillChangeBudget(aFrame, aSize);
+  if (!IsForPainting()) {
+    // If this nsDisplayListBuilder is not for painting, the layerization should
+    // not matter. Do the simple thing and return false.
+    return false;
+  }
+
+  const bool onBudget = AddToWillChangeBudget(aFrame, aSize);
   if (onBudget) {
     return true;
   }
@@ -2548,31 +2561,36 @@ bool nsDisplayListBuilder::IsInWillChangeBudget(nsIFrame* aFrame,
   return false;
 }
 
-void nsDisplayListBuilder::RemoveFromWillChangeBudget(nsIFrame* aFrame) {
+void nsDisplayListBuilder::ClearWillChangeBudgetStatus(nsIFrame* aFrame) {
+  MOZ_ASSERT(IsForPainting());
+
   if (!aFrame->MayHaveWillChangeBudget()) {
-    MOZ_ASSERT(!mWillChangeBudgetSet.Contains(aFrame));
+    MOZ_ASSERT(!mFrameWillChangeBudgets.Contains(aFrame));
     return;
   }
 
-  FrameWillChangeBudget* frameBudget = mWillChangeBudgetSet.GetValue(aFrame);
-
-  if (!frameBudget) {
-    return;
-  }
-
-  DocumentWillChangeBudget* budget =
-      mWillChangeBudget.GetValue(frameBudget->mPresContext);
-
-  if (budget) {
-    budget->mBudget -= frameBudget->mUsage;
-  }
-
-  mWillChangeBudgetSet.Remove(aFrame);
+  aFrame->SetMayHaveWillChangeBudget(false);
+  RemoveFromWillChangeBudgets(aFrame);
 }
 
-void nsDisplayListBuilder::ClearWillChangeBudget() {
-  mWillChangeBudgetSet.Clear();
-  mWillChangeBudget.Clear();
+void nsDisplayListBuilder::RemoveFromWillChangeBudgets(const nsIFrame* aFrame) {
+  if (auto entry = mFrameWillChangeBudgets.Lookup(aFrame)) {
+    const FrameWillChangeBudget& frameBudget = entry.Data();
+
+    DocumentWillChangeBudget* documentBudget =
+        mDocumentWillChangeBudgets.GetValue(frameBudget.mPresContext);
+
+    if (documentBudget) {
+      *documentBudget -= frameBudget.mUsage;
+    }
+
+    entry.Remove();
+  }
+}
+
+void nsDisplayListBuilder::ClearWillChangeBudgets() {
+  mFrameWillChangeBudgets.Clear();
+  mDocumentWillChangeBudgets.Clear();
 }
 
 #ifdef MOZ_GFX_OPTIMIZE_MOBILE
