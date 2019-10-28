@@ -499,7 +499,8 @@ bool ConvertToStringPolicy<Op>::staticAdjustInputs(TempAllocator& alloc,
     return true;
   }
 
-  MToString* replace = MToString::New(alloc, in);
+  MToString* replace =
+      MToString::New(alloc, in, MToString::SideEffectHandling::Bailout);
   ins->block()->insertBefore(ins, replace);
   ins->replaceOperand(Op, replace);
 
