@@ -15,16 +15,7 @@ class ConsoleCommands {
   }
 
   evaluateJSAsync(expression, options) {
-    const { selectedNodeFront } = options;
-    let front = this.proxy.webConsoleFront;
-
-    // Defer to the selected node's thread console front
-    if (selectedNodeFront) {
-      front = selectedNodeFront.targetFront.activeConsole;
-      options.selectedNodeActor = selectedNodeFront.actorID;
-    }
-
-    return front.evaluateJSAsync(expression, options);
+    return this.proxy.webConsoleFront.evaluateJSAsync(expression, options);
   }
 
   createObjectFront(object) {
