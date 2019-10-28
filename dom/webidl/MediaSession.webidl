@@ -56,6 +56,7 @@ dictionary MediaMetadataInit {
   sequence<MediaImage> artwork = [];
 };
 
+[GenerateConversionToJS]
 dictionary MediaImage {
   required USVString src;
   DOMString sizes = "";

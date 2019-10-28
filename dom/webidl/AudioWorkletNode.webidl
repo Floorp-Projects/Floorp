@@ -10,6 +10,7 @@
  * liability, trademark and document use rules apply.
  */
 
+[GenerateConversionToJS]
 dictionary AudioWorkletNodeOptions : AudioNodeOptions {
              unsigned long             numberOfInputs = 1;
              unsigned long             numberOfOutputs = 1;

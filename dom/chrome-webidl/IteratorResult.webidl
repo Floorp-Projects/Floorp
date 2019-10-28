@@ -8,6 +8,7 @@
  * A dictionary which represents the result of a call to a next() method on a
  * JS iterator object.
  */
+[GenerateConversionToJS]
 dictionary IteratorResult {
   required boolean done;
   any value;

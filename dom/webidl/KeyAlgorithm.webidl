@@ -11,25 +11,30 @@ dictionary KeyAlgorithm {
   required DOMString name;
 };
 
+[GenerateConversionToJS]
 dictionary AesKeyAlgorithm : KeyAlgorithm {
   required unsigned short length;
 };
 
+[GenerateConversionToJS]
 dictionary EcKeyAlgorithm : KeyAlgorithm {
   required DOMString namedCurve;
 };
 
+[GenerateConversionToJS]
 dictionary HmacKeyAlgorithm : KeyAlgorithm {
   required KeyAlgorithm hash;
   required unsigned long length;
 };
 
+[GenerateConversionToJS]
 dictionary RsaHashedKeyAlgorithm : KeyAlgorithm {
   required unsigned short modulusLength;
   required Uint8Array publicExponent;
   required KeyAlgorithm hash;
 };
 
+[GenerateConversionToJS]
 dictionary DhKeyAlgorithm : KeyAlgorithm {
   required Uint8Array prime;
   required Uint8Array generator;
