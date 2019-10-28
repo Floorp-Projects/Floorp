@@ -2124,7 +2124,7 @@ class nsCSSFrameConstructor final : public nsFrameManager {
   void CountersDirty();
 
   void ConstructAnonymousContentForCanvas(nsFrameConstructorState& aState,
-                                          nsIFrame* aFrame,
+                                          nsContainerFrame* aFrame,
                                           nsIContent* aDocElement,
                                           nsFrameList&);
 
