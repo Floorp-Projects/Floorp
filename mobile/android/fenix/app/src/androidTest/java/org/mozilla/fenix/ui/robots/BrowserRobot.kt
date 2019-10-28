@@ -51,6 +51,11 @@ class BrowserRobot {
             .check((matches(withText(containsString(expectedText)))))
     }
 
+    fun waitForCollectionSavedPopup() {
+        mDevice.wait(Until.findObject(By.text("Tab saved!")),
+            TestAssetHelper.waitingTime)
+    }
+
     class Transition {
         private val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
 
@@ -94,6 +99,10 @@ fun browserScreen(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
 }
 
 private fun dismissOnboardingButton() = onView(withId(R.id.close_onboarding))
+fun dismissTrackingOnboarding() {
+    mDevice.wait(Until.findObject(By.res("close_onboarding")), TestAssetHelper.waitingTime)
+    dismissOnboardingButton().click()
+}
 
 fun navURLBar() = onView(withId(R.id.mozac_browser_toolbar_url_view))
 
