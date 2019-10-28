@@ -111,7 +111,7 @@ class nsRangeFrame final : public nsContainerFrame,
    */
   bool IsRightToLeft() const {
     MOZ_ASSERT(IsHorizontal());
-    return !GetWritingMode().IsPhysicalLTR();
+    return GetWritingMode().IsPhysicalRTL();
   }
 
   double GetMin() const;

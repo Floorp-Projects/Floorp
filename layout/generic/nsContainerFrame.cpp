@@ -887,7 +887,7 @@ void nsContainerFrame::ReflowChild(
     const nsSize& aContainerSize, ReflowChildFlags aFlags,
     nsReflowStatus& aStatus, nsOverflowContinuationTracker* aTracker) {
   MOZ_ASSERT(aReflowInput.mFrame == aKidFrame, "bad reflow input");
-  if (!aWM.IsPhysicalLTR()) {
+  if (aWM.IsPhysicalRTL()) {
     NS_ASSERTION(aContainerSize.width != NS_UNCONSTRAINEDSIZE,
                  "ReflowChild with unconstrained container width!");
   }
@@ -1032,7 +1032,7 @@ void nsContainerFrame::FinishReflowChild(
                  aKidFrame->IsTableCellFrame(),
              "aReflowInput should be passed in almost all cases");
 
-  if (!aWM.IsPhysicalLTR()) {
+  if (aWM.IsPhysicalRTL()) {
     NS_ASSERTION(aContainerSize.width != NS_UNCONSTRAINEDSIZE,
                  "FinishReflowChild with unconstrained container width!");
   }
