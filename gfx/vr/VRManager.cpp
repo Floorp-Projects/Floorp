@@ -570,6 +570,9 @@ void VRManager::EnumerateVRDisplays() {
       // In Android, we need to make sure calling
       // GeckoVRManager::SetExternalContext() from an external VR service
       // before doing enumeration.
+      if (!mShmem->GetExternalShmem()) {
+        mShmem->CreateShMemForAndroid();
+      }
       if (mShmem->GetExternalShmem()) {
         mState = VRManagerState::Enumeration;
       }
