@@ -151,13 +151,13 @@ button::selection {
 .devtools-autocomplete-listbox .autocomplete-item > .autocomplete-value {
   margin: 0;
   padding: 0;
-  float: left;
+  float: inline-start;
 }
 
 .devtools-autocomplete-listbox .autocomplete-item > .autocomplete-postlabel {
   font-style: italic;
-  float: right;
-  padding-right: 3px;
+  float: inline-end;
+  padding-inline-end: 3px;
 }
 
 .devtools-autocomplete-listbox .autocomplete-item > .autocomplete-count {
