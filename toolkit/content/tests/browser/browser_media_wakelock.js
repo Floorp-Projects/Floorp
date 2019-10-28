@@ -35,10 +35,9 @@ function wakeLockObserved(observeTopic, checkFn) {
 
 function getWakeLockState(topic, needLock, isTabInForeground) {
   const tabState = isTabInForeground ? "foreground" : "background";
-  const promise = wakeLockObserved(
-    topic,
-    state => state == `locked-${tabState}`
-  );
+  const promise = needLock
+    ? wakeLockObserved(topic, state => state == `locked-${tabState}`)
+    : null;
   return {
     check: async () => {
       if (needLock) {
