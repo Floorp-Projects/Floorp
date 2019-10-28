@@ -244,12 +244,11 @@ add_task(async function() {
 
   // Get the exact creation date from the cookies (to avoid intermittents
   // from minimal time differences, since we round up to minutes).
-  let cookiesEnum1 = Services.cookies.getCookiesFromHost(uri.host, {});
+  let cookies1 = Services.cookies.getCookiesFromHost(uri.host, {});
+  let cookies2 = Services.cookies.getCookiesFromHost(uri2.host, {});
   // We made two valid cookies for example.com.
-  cookiesEnum1.getNext();
-  let cookiesEnum2 = Services.cookies.getCookiesFromHost(uri2.host, {});
-  let cookie1 = cookiesEnum1.getNext().QueryInterface(Ci.nsICookie);
-  let cookie2 = cookiesEnum2.getNext().QueryInterface(Ci.nsICookie);
+  let cookie1 = cookies1[1];
+  let cookie2 = cookies2[0];
 
   let fullFormatter = new Services.intl.DateTimeFormat(undefined, {
     dateStyle: "short",
