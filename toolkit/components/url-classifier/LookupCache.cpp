@@ -590,7 +590,9 @@ nsresult LookupCache::GetLookupFragments(const nsACString& aSpec,
     paths.AppendElement(path);
   }
   // Check an empty path (for whole-domain blacklist entries)
-  paths.AppendElement(EmptyCString());
+  if (!paths.Contains(EmptyCString())) {
+    paths.AppendElement(EmptyCString());
+  }
 
   for (uint32_t hostIndex = 0; hostIndex < hosts.Length(); hostIndex++) {
     for (uint32_t pathIndex = 0; pathIndex < paths.Length(); pathIndex++) {
