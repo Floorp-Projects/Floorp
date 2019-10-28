@@ -47,8 +47,8 @@ struct CharacterDataChangeInfo {
 
   /**
    * The offset such that mChangeEnd - mChangeStart is equal to the length of
-   * the text we removed. If this was a pure insert or append, this is equal to
-   * mChangeStart.
+   * the text we removed. If this was a pure insert, append or a result of
+   * `splitText()` this is equal to mChangeStart.
    */
   uint32_t mChangeEnd;
 
