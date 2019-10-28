@@ -8,9 +8,7 @@ const baseURL = getRootDirectory(gTestPath).replace(
 );
 
 function clearAllPermissionsByPrefix(aPrefix) {
-  let perms = Services.perms.enumerator;
-  while (perms.hasMoreElements()) {
-    let perm = perms.getNext();
+  for (let perm of Services.perms.all) {
     if (perm.type.startsWith(aPrefix)) {
       Services.perms.removePermission(perm);
     }

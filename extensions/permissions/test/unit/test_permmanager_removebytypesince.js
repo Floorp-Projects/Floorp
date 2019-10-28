@@ -9,7 +9,7 @@ add_task(async function test() {
     Ci.nsIPermissionManager
   );
 
-  Assert.equal(perm_count(), 0);
+  Assert.equal(pm.all.length, 0);
 
   // add some permissions
   let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
@@ -44,11 +44,11 @@ add_task(async function test() {
   pm.addFromPrincipal(principal3, "cucumber", 3);
   pm.addFromPrincipal(principal3, "apple", 1);
 
-  Assert.equal(perm_count(), 7);
+  Assert.equal(pm.all.length, 7);
 
   pm.removeByTypeSince("apple", since);
 
-  Assert.equal(perm_count(), 5);
+  Assert.equal(pm.all.length, 5);
 
   Assert.equal(pm.testPermissionFromPrincipal(principal, "pear"), 1);
   Assert.equal(pm.testPermissionFromPrincipal(principal2, "pear"), 2);
@@ -61,7 +61,7 @@ add_task(async function test() {
   Assert.equal(pm.testPermissionFromPrincipal(principal3, "cucumber"), 3);
 
   pm.removeByTypeSince("cucumber", since);
-  Assert.equal(perm_count(), 4);
+  Assert.equal(pm.all.length, 4);
 
   Assert.equal(pm.testPermissionFromPrincipal(principal, "pear"), 1);
   Assert.equal(pm.testPermissionFromPrincipal(principal2, "pear"), 2);
@@ -74,7 +74,7 @@ add_task(async function test() {
   Assert.equal(pm.testPermissionFromPrincipal(principal3, "cucumber"), 0);
 
   pm.removeByTypeSince("pear", since);
-  Assert.equal(perm_count(), 3);
+  Assert.equal(pm.all.length, 3);
 
   Assert.equal(pm.testPermissionFromPrincipal(principal, "pear"), 1);
   Assert.equal(pm.testPermissionFromPrincipal(principal2, "pear"), 0);
@@ -85,15 +85,4 @@ add_task(async function test() {
 
   Assert.equal(pm.testPermissionFromPrincipal(principal, "cucumber"), 1);
   Assert.equal(pm.testPermissionFromPrincipal(principal3, "cucumber"), 0);
-
-  function perm_count() {
-    let enumerator = pm.enumerator;
-    let count = 0;
-    while (enumerator.hasMoreElements()) {
-      count++;
-      enumerator.getNext();
-    }
-
-    return count;
-  }
 });

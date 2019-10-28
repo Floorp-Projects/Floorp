@@ -907,7 +907,7 @@ async function sanitizeOnShutdown(progress) {
   progress.advancement = "session-permission";
 
   // Let's see if we have to forget some particular site.
-  for (let permission of Services.perms.enumerator) {
+  for (let permission of Services.perms.all) {
     if (
       permission.type != "cookie" ||
       permission.capability != Ci.nsICookiePermission.ACCESS_SESSION
@@ -991,7 +991,7 @@ function cookiesAllowedForDomainOrSubDomain(principal) {
     return false;
   }
 
-  for (let perm of Services.perms.enumerator) {
+  for (let perm of Services.perms.all) {
     if (perm.type != "cookie") {
       continue;
     }
