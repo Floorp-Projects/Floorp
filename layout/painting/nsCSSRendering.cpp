@@ -22,11 +22,7 @@
 #include "mozilla/PresShell.h"
 #include "gfxFont.h"
 #include "ScaledFontBase.h"
-#include "SkTextBlob.h"
-#include "SkTypeface.h"
-#include "SkFont.h"
-#include "SkPoint.h"
-#include "SkScalar.h"
+#include "skia/include/core/SkTextBlob.h"
 
 #include "BorderConsts.h"
 #include "nsStyleConsts.h"

@@ -259,39 +259,36 @@ static inline Rect SkRectToRect(const SkRect& aRect) {
               SkScalarToFloat(aRect.width()), SkScalarToFloat(aRect.height()));
 }
 
-static inline SkShader::TileMode ExtendModeToTileMode(ExtendMode aMode,
-                                                      Axis aAxis) {
+static inline SkTileMode ExtendModeToTileMode(ExtendMode aMode, Axis aAxis) {
   switch (aMode) {
     case ExtendMode::CLAMP:
-      return SkShader::kClamp_TileMode;
+      return SkTileMode::kClamp;
     case ExtendMode::REPEAT:
-      return SkShader::kRepeat_TileMode;
+      return SkTileMode::kRepeat;
     case ExtendMode::REFLECT:
-      return SkShader::kMirror_TileMode;
+      return SkTileMode::kMirror;
     case ExtendMode::REPEAT_X: {
-      return aAxis == Axis::X_AXIS ? SkShader::kRepeat_TileMode
-                                   : SkShader::kClamp_TileMode;
+      return aAxis == Axis::X_AXIS ? SkTileMode::kRepeat : SkTileMode::kClamp;
     }
     case ExtendMode::REPEAT_Y: {
-      return aAxis == Axis::Y_AXIS ? SkShader::kRepeat_TileMode
-                                   : SkShader::kClamp_TileMode;
+      return aAxis == Axis::Y_AXIS ? SkTileMode::kRepeat : SkTileMode::kClamp;
     }
   }
-  return SkShader::kClamp_TileMode;
+  return SkTileMode::kClamp;
 }
 
 static inline SkFontHinting GfxHintingToSkiaHinting(FontHinting aHinting) {
   switch (aHinting) {
     case FontHinting::NONE:
-      return kNo_SkFontHinting;
+      return SkFontHinting::kNone;
     case FontHinting::LIGHT:
-      return kSlight_SkFontHinting;
+      return SkFontHinting::kSlight;
     case FontHinting::NORMAL:
-      return kNormal_SkFontHinting;
+      return SkFontHinting::kNormal;
     case FontHinting::FULL:
-      return kFull_SkFontHinting;
+      return SkFontHinting::kFull;
   }
-  return kNormal_SkFontHinting;
+  return SkFontHinting::kNormal;
 }
 
 static inline FillRule GetFillRule(SkPath::FillType aFillType) {

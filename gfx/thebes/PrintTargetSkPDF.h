@@ -9,9 +9,9 @@
 #include "mozilla/UniquePtr.h"
 #include "nsCOMPtr.h"
 #include "PrintTarget.h"
-#include "SkCanvas.h"
-#include "SkPDFDocument.h"
-#include "SkStream.h"
+#include "skia/include/core/SkCanvas.h"
+#include "skia/include/docs/SkPDFDocument.h"
+#include "skia/include/core/SkStream.h"
 
 namespace mozilla {
 namespace gfx {

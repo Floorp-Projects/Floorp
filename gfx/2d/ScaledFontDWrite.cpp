@@ -183,7 +183,7 @@ SkTypeface* ScaledFontDWrite::CreateSkTypeface() {
   }
 
   return SkCreateTypefaceFromDWriteFont(factory, mFontFace, mStyle,
-                                        mRenderingMode, gamma, contrast);
+                                        (int)mRenderingMode, gamma, contrast);
 }
 
 void ScaledFontDWrite::SetupSkFontDrawOptions(SkFont& aFont) {

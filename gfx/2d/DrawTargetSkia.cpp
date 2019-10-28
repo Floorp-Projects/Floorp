@@ -436,8 +436,7 @@ static void SetPaintPattern(SkPaint& aPaint, const Pattern& aPattern,
           !pat.mEnd.IsFinite() || pat.mBegin == pat.mEnd) {
         aPaint.setColor(SK_ColorTRANSPARENT);
       } else {
-        SkShader::TileMode mode =
-            ExtendModeToTileMode(stops->mExtendMode, Axis::BOTH);
+        SkTileMode mode = ExtendModeToTileMode(stops->mExtendMode, Axis::BOTH);
         SkPoint points[2];
         points[0] = SkPoint::Make(SkFloatToScalar(pat.mBegin.x),
                                   SkFloatToScalar(pat.mBegin.y));
@@ -471,8 +470,7 @@ static void SetPaintPattern(SkPaint& aPaint, const Pattern& aPattern,
           (pat.mCenter1 == pat.mCenter2 && pat.mRadius1 == pat.mRadius2)) {
         aPaint.setColor(SK_ColorTRANSPARENT);
       } else {
-        SkShader::TileMode mode =
-            ExtendModeToTileMode(stops->mExtendMode, Axis::BOTH);
+        SkTileMode mode = ExtendModeToTileMode(stops->mExtendMode, Axis::BOTH);
         SkPoint points[2];
         points[0] = SkPoint::Make(SkFloatToScalar(pat.mCenter1.x),
                                   SkFloatToScalar(pat.mCenter1.y));
@@ -516,12 +514,10 @@ static void SetPaintPattern(SkPaint& aPaint, const Pattern& aPattern,
         mat.preTranslate(pat.mSamplingRect.X(), pat.mSamplingRect.Y());
       }
 
-      SkShader::TileMode xTileMode =
-          ExtendModeToTileMode(pat.mExtendMode, Axis::X_AXIS);
-      SkShader::TileMode yTileMode =
-          ExtendModeToTileMode(pat.mExtendMode, Axis::Y_AXIS);
+      SkTileMode xTile = ExtendModeToTileMode(pat.mExtendMode, Axis::X_AXIS);
+      SkTileMode yTile = ExtendModeToTileMode(pat.mExtendMode, Axis::Y_AXIS);
 
-      aPaint.setShader(image->makeShader(xTileMode, yTileMode, &mat));
+      aPaint.setShader(image->makeShader(xTile, yTile, &mat));
 
       if (pat.mSamplingFilter == SamplingFilter::POINT) {
         aPaint.setFilterQuality(kNone_SkFilterQuality);
@@ -705,7 +701,7 @@ void DrawTargetSkia::DrawSurfaceWithShadow(SourceSurface* aSurface,
   } else {
     sk_sp<SkImageFilter> blurFilter(
         SkBlurImageFilter::Make(aSigma, aSigma, nullptr));
-    sk_sp<SkColorFilter> colorFilter(SkColorFilter::MakeModeFilter(
+    sk_sp<SkColorFilter> colorFilter(SkColorFilters::Blend(
         ColorToSkColor(aColor, 1.0f), SkBlendMode::kSrcIn));
 
     shadowPaint.setImageFilter(blurFilter);
