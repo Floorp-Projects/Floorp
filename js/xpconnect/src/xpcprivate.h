@@ -313,7 +313,7 @@ class XPCJSContext final : public mozilla::CycleCollectedJSContext,
                            public mozilla::LinkedListElement<XPCJSContext> {
  public:
   static void InitTLS();
-  static XPCJSContext* NewXPCJSContext(XPCJSContext* aPrimaryContext);
+  static XPCJSContext* NewXPCJSContext();
   static XPCJSContext* Get();
 
   XPCJSRuntime* Runtime() const;
@@ -425,7 +425,7 @@ class XPCJSContext final : public mozilla::CycleCollectedJSContext,
   XPCJSContext();
 
   MOZ_IS_CLASS_INIT
-  nsresult Initialize(XPCJSContext* aPrimaryContext);
+  nsresult Initialize();
 
   XPCCallContext* mCallContext;
   AutoMarkingPtr* mAutoRoots;
