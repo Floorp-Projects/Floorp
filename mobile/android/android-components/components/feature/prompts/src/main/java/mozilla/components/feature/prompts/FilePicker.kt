@@ -58,7 +58,7 @@ internal class FilePicker(
             if (hasPermission && type.shouldCapture(promptRequest.mimeTypes, promptRequest.captureMode)) {
                 type.buildIntent(container.context, promptRequest)?.also {
                     saveCaptureUriIfPresent(it)
-                    container.startActivityForResult(it, R.id.mozac_feature_prompts_file_picker_activity_request_code)
+                    container.startActivityForResult(it, FILE_PICKER_ACTIVITY_REQUEST_CODE)
                     return
                 }
             }
@@ -84,7 +84,7 @@ internal class FilePicker(
                 putExtra(EXTRA_INITIAL_INTENTS, intents.toTypedArray())
             }
 
-            container.startActivityForResult(chooser, R.id.mozac_feature_prompts_file_picker_activity_request_code)
+            container.startActivityForResult(chooser, FILE_PICKER_ACTIVITY_REQUEST_CODE)
         } else {
             onNeedToRequestPermissions(neededPermissions.toTypedArray())
         }
@@ -98,7 +98,7 @@ internal class FilePicker(
      * @param intent The result of the request.
      */
     fun onActivityResult(requestCode: Int, resultCode: Int, intent: Intent?) {
-        if (requestCode == R.id.mozac_feature_prompts_file_picker_activity_request_code) {
+        if (requestCode == FILE_PICKER_ACTIVITY_REQUEST_CODE) {
             store.consumePromptFrom(sessionId) {
                 val request = it as File
 
@@ -170,4 +170,8 @@ internal class FilePicker(
 
     private fun saveCaptureUriIfPresent(intent: Intent) =
         intent.getParcelableExtra<Uri>(EXTRA_OUTPUT)?.let { captureUri = it }
+
+    companion object {
+        const val FILE_PICKER_ACTIVITY_REQUEST_CODE = 7113
+    }
 }

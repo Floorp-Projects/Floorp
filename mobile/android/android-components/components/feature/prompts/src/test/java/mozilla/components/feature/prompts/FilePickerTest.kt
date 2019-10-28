@@ -22,6 +22,7 @@ import mozilla.components.browser.state.state.CustomTabSessionState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.prompt.PromptRequest
+import mozilla.components.feature.prompts.FilePicker.Companion.FILE_PICKER_ACTIVITY_REQUEST_CODE
 import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
@@ -72,12 +73,12 @@ class FilePickerTest {
 
         whenever(state.customTabs).thenReturn(listOf(customTab))
         filePicker = FilePicker(fragment, store, customTab.id) { }
-        filePicker.onActivityResult(R.id.mozac_feature_prompts_file_picker_activity_request_code, 0, null)
+        filePicker.onActivityResult(FILE_PICKER_ACTIVITY_REQUEST_CODE, 0, null)
         verify(store).dispatch(ContentAction.ConsumePromptRequestAction(customTab.id))
 
         val selected = prepareSelectedSession(request)
         filePicker = FilePicker(fragment, store) { }
-        filePicker.onActivityResult(R.id.mozac_feature_prompts_file_picker_activity_request_code, 0, null)
+        filePicker.onActivityResult(FILE_PICKER_ACTIVITY_REQUEST_CODE, 0, null)
         verify(store).dispatch(ContentAction.ConsumePromptRequestAction(selected.id))
     }
 
@@ -163,7 +164,7 @@ class FilePickerTest {
 
         stubContext()
 
-        filePicker.onActivityResult(R.id.mozac_feature_prompts_file_picker_activity_request_code, RESULT_OK, intent)
+        filePicker.onActivityResult(FILE_PICKER_ACTIVITY_REQUEST_CODE, RESULT_OK, intent)
 
         assertTrue(onSingleFileSelectionWasCalled)
         verify(store).dispatch(ContentAction.ConsumePromptRequestAction(selected.id))
@@ -197,7 +198,7 @@ class FilePickerTest {
 
         stubContext()
 
-        filePicker.onActivityResult(R.id.mozac_feature_prompts_file_picker_activity_request_code, RESULT_OK, intent)
+        filePicker.onActivityResult(FILE_PICKER_ACTIVITY_REQUEST_CODE, RESULT_OK, intent)
 
         assertTrue(onMultipleFileSelectionWasCalled)
         verify(store).dispatch(ContentAction.ConsumePromptRequestAction(selected.id))
@@ -214,7 +215,7 @@ class FilePickerTest {
         val selected = prepareSelectedSession(filePickerRequest)
         val intent = Intent()
 
-        filePicker.onActivityResult(R.id.mozac_feature_prompts_file_picker_activity_request_code, RESULT_CANCELED, intent)
+        filePicker.onActivityResult(FILE_PICKER_ACTIVITY_REQUEST_CODE, RESULT_CANCELED, intent)
 
         assertTrue(onDismissWasCalled)
         verify(store).dispatch(ContentAction.ConsumePromptRequestAction(selected.id))
