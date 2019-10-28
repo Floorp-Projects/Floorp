@@ -17,27 +17,14 @@
 const path = require('path');
 const os = require('os');
 const fs = require('fs');
-const {helper} = require('../lib/helper');
-const rmAsync = helper.promisify(require('rimraf'));
+const util = require('util');
 const utils = require('./utils');
 const {waitEvent} = utils;
-const mkdtempAsync = helper.promisify(fs.mkdtemp);
+
+const rmAsync = util.promisify(require('rimraf'));
+const mkdtempAsync = util.promisify(fs.mkdtemp);
 
 const TMP_FOLDER = path.join(os.tmpdir(), 'pptr_tmp_folder-');
-
-function waitForBackgroundPageTarget(browser) {
-  const target = browser.targets().find(target => target.type() === 'background_page');
-  if (target)
-    return Promise.resolve(target);
-  return new Promise(resolve => {
-    browser.on('targetcreated', function listener(target) {
-      if (target.type() !== 'background_page')
-        return;
-      browser.removeListener(listener);
-      resolve(target);
-    });
-  });
-}
 
 module.exports.addTests = function({testRunner, expect, puppeteer, defaultBrowserOptions}) {
   const {describe, xdescribe, fdescribe} = testRunner;
@@ -63,16 +50,17 @@ module.exports.addTests = function({testRunner, expect, puppeteer, defaultBrowse
     it('background_page target type should be available', async() => {
       const browserWithExtension = await puppeteer.launch(extensionOptions);
       const page = await browserWithExtension.newPage();
-      const backgroundPageTarget = await waitForBackgroundPageTarget(browserWithExtension);
+      const backgroundPageTarget = await browserWithExtension.waitForTarget(target => target.type() === 'background_page');
       await page.close();
       await browserWithExtension.close();
       expect(backgroundPageTarget).toBeTruthy();
     });
     it('target.page() should return a background_page', async({}) => {
       const browserWithExtension = await puppeteer.launch(extensionOptions);
-      const backgroundPageTarget = await waitForBackgroundPageTarget(browserWithExtension);
+      const backgroundPageTarget = await browserWithExtension.waitForTarget(target => target.type() === 'background_page');
       const page = await backgroundPageTarget.page();
       expect(await page.evaluate(() => 2 * 3)).toBe(6);
+      expect(await page.evaluate(() => window.MAGIC)).toBe(42);
       await browserWithExtension.close();
     });
     it('should have default url when launching browser', async function() {
@@ -99,7 +87,8 @@ module.exports.addTests = function({testRunner, expect, puppeteer, defaultBrowse
       await rmAsync(userDataDir).catch(e => {});
       expect(cookie).toBe('foo=true');
     });
-    it('OOPIF: should report google.com frame', async({server}) => {
+    // TODO: Support OOOPIF. @see https://github.com/GoogleChrome/puppeteer/issues/2548
+    xit('OOPIF: should report google.com frame', async({server}) => {
       // https://google.com is isolated by default in Chromium embedder.
       const browser = await puppeteer.launch(headfulOptions);
       const page = await browser.newPage();
@@ -127,6 +116,35 @@ module.exports.addTests = function({testRunner, expect, puppeteer, defaultBrowse
       // We have to interact with a page so that 'beforeunload' handlers
       // fire.
       await page.click('body');
+      await browser.close();
+    });
+    it('should open devtools when "devtools: true" option is given', async({server}) => {
+      const browser = await puppeteer.launch(Object.assign({devtools: true}, headfulOptions));
+      const context = await browser.createIncognitoBrowserContext();
+      await Promise.all([
+        context.newPage(),
+        context.waitForTarget(target => target.url().includes('devtools://')),
+      ]);
+      await browser.close();
+    });
+  });
+
+  describe('Page.bringToFront', function() {
+    it('should work', async() => {
+      const browser = await puppeteer.launch(headfulOptions);
+      const page1 = await browser.newPage();
+      const page2 = await browser.newPage();
+
+      await page1.bringToFront();
+      expect(await page1.evaluate(() => document.visibilityState)).toBe('visible');
+      expect(await page2.evaluate(() => document.visibilityState)).toBe('hidden');
+
+      await page2.bringToFront();
+      expect(await page1.evaluate(() => document.visibilityState)).toBe('hidden');
+      expect(await page2.evaluate(() => document.visibilityState)).toBe('visible');
+
+      await page1.close();
+      await page2.close();
       await browser.close();
     });
   });

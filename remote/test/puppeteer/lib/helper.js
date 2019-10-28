@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 const {TimeoutError} = require('./Errors');
-
 const debugError = require('debug')(`puppeteer:error`);
+const fs = require('fs');
 
 class Helper {
   /**
@@ -107,7 +107,8 @@ class Helper {
       if (methodName === 'constructor' || typeof methodName !== 'string' || methodName.startsWith('_') || typeof method !== 'function' || method.constructor.name !== 'AsyncFunction')
         continue;
       Reflect.set(classType.prototype, methodName, function(...args) {
-        const syncStack = new Error();
+        const syncStack = {};
+        Error.captureStackTrace(syncStack);
         return method.call(this, ...args).catch(e => {
           const stack = syncStack.stack.substring(syncStack.stack.indexOf('\n') + 1);
           const clientStack = stack.substring(stack.indexOf('\n'));
@@ -155,6 +156,10 @@ class Helper {
     return typeof obj === 'number' || obj instanceof Number;
   }
 
+  /**
+   * @param {function} nodeFunction
+   * @return {function}
+   */
   static promisify(nodeFunction) {
     function promisified(...args) {
       return new Promise((resolve, reject) => {
@@ -175,9 +180,11 @@ class Helper {
    * @param {!NodeJS.EventEmitter} emitter
    * @param {(string|symbol)} eventName
    * @param {function} predicate
+   * @param {number} timeout
+   * @param {!Promise<!Error>} abortPromise
    * @return {!Promise}
    */
-  static waitForEvent(emitter, eventName, predicate, timeout) {
+  static async waitForEvent(emitter, eventName, predicate, timeout, abortPromise) {
     let eventTimeout, resolveCallback, rejectCallback;
     const promise = new Promise((resolve, reject) => {
       resolveCallback = resolve;
@@ -186,12 +193,10 @@ class Helper {
     const listener = Helper.addEventListener(emitter, eventName, event => {
       if (!predicate(event))
         return;
-      cleanup();
       resolveCallback(event);
     });
     if (timeout) {
       eventTimeout = setTimeout(() => {
-        cleanup();
         rejectCallback(new TimeoutError('Timeout exceeded while waiting for event'));
       }, timeout);
     }
@@ -199,7 +204,16 @@ class Helper {
       Helper.removeEventListeners([listener]);
       clearTimeout(eventTimeout);
     }
-    return promise;
+    const result = await Promise.race([promise, abortPromise]).then(r => {
+      cleanup();
+      return r;
+    }, e => {
+      cleanup();
+      throw e;
+    });
+    if (result instanceof Error)
+      throw result;
+    return result;
   }
 
   /**
@@ -213,14 +227,52 @@ class Helper {
     let reject;
     const timeoutError = new TimeoutError(`waiting for ${taskName} failed: timeout ${timeout}ms exceeded`);
     const timeoutPromise = new Promise((resolve, x) => reject = x);
-    const timeoutTimer = setTimeout(() => reject(timeoutError), timeout);
+    let timeoutTimer = null;
+    if (timeout)
+      timeoutTimer = setTimeout(() => reject(timeoutError), timeout);
     try {
       return await Promise.race([promise, timeoutPromise]);
     } finally {
-      clearTimeout(timeoutTimer);
+      if (timeoutTimer)
+        clearTimeout(timeoutTimer);
+    }
+  }
+
+  /**
+   * @param {!Puppeteer.CDPSession} client
+   * @param {string} handle
+   * @param {?string} path
+   * @return {!Promise<!Buffer>}
+   */
+  static async readProtocolStream(client, handle, path) {
+    let eof = false;
+    let file;
+    if (path)
+      file = await openAsync(path, 'w');
+    const bufs = [];
+    while (!eof) {
+      const response = await client.send('IO.read', {handle});
+      eof = response.eof;
+      const buf = Buffer.from(response.data, response.base64Encoded ? 'base64' : undefined);
+      bufs.push(buf);
+      if (path)
+        await writeAsync(file, buf);
+    }
+    if (path)
+      await closeAsync(file);
+    await client.send('IO.close', {handle});
+    let resultBuffer = null;
+    try {
+      resultBuffer = Buffer.concat(bufs);
+    } finally {
+      return resultBuffer;
     }
   }
 }
+
+const openAsync = Helper.promisify(fs.open);
+const writeAsync = Helper.promisify(fs.write);
+const closeAsync = Helper.promisify(fs.close);
 
 /**
  * @param {*} value

@@ -15,7 +15,7 @@
  */
 
 const EventEmitter = require('events');
-const {helper, assert} = require('./helper');
+const {helper, assert, debugError} = require('./helper');
 const {Events} = require('./Events');
 const {ExecutionContext, EVALUATION_SCRIPT_URL} = require('./ExecutionContext');
 const {LifecycleWatcher} = require('./LifecycleWatcher');
@@ -35,8 +35,7 @@ class FrameManager extends EventEmitter {
     super();
     this._client = client;
     this._page = page;
-    this._networkManager = new NetworkManager(client, ignoreHTTPSErrors);
-    this._networkManager.setFrameManager(this);
+    this._networkManager = new NetworkManager(client, ignoreHTTPSErrors, this);
     this._timeoutSettings = timeoutSettings;
     /** @type {!Map<string, !Frame>} */
     this._frames = new Map();
@@ -276,7 +275,7 @@ class FrameManager extends EventEmitter {
       frameId: frame._id,
       grantUniveralAccess: true,
       worldName: name,
-    })));
+    }).catch(debugError))); // frames might be removed before we send this
   }
 
   /**

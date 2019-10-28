@@ -4,7 +4,6 @@ const {Dialog} = require('./Dialog');
 const {TimeoutError} = require('./Errors');
 const fs = require('fs');
 const mime = require('mime');
-const util = require('util');
 const EventEmitter = require('events');
 const {createHandle} = require('./JSHandle');
 const {Events} = require('./Events');
@@ -15,7 +14,7 @@ const {TimeoutSettings} = require('./TimeoutSettings');
 const {NavigationWatchdog} = require('./NavigationWatchdog');
 const {Accessibility} = require('./Accessibility');
 
-const writeFileAsync = util.promisify(fs.writeFile);
+const writeFileAsync = helper.promisify(fs.writeFile);
 
 class Page extends EventEmitter {
   /**
@@ -88,7 +87,7 @@ class Page extends EventEmitter {
   async cookies(...urls) {
     const connection = Connection.fromSession(this._session);
     return (await connection.send('Browser.getCookies', {
-      browserContextId: this._target._context._browserContextId,
+      browserContextId: this._target._context._browserContextId || undefined,
       urls: urls.length ? urls : [this.url()]
     })).cookies;
   }
@@ -113,7 +112,7 @@ class Page extends EventEmitter {
 
     const connection = Connection.fromSession(this._session);
     await connection.send('Browser.deleteCookies', {
-      browserContextId: this._target._context._browserContextId,
+      browserContextId: this._target._context._browserContextId || undefined,
       cookies: items,
     });
   }
@@ -136,7 +135,7 @@ class Page extends EventEmitter {
     if (items.length) {
       const connection = Connection.fromSession(this._session);
       await connection.send('Browser.setCookies', {
-        browserContextId: this._target._context._browserContextId,
+        browserContextId: this._target._context._browserContextId || undefined,
         cookies: items
       });
     }
@@ -151,11 +150,11 @@ class Page extends EventEmitter {
   }
 
   /**
-   * @param {?string} mediaType
+   * @param {?string} type
    */
-  async emulateMedia(mediaType) {
-    assert(mediaType === 'screen' || mediaType === 'print' || mediaType === null, 'Unsupported media type: ' + mediaType);
-    await this._session.send('Page.setEmulatedMedia', {media: mediaType || ''});
+  async emulateMediaType(type) {
+    assert(type === 'screen' || type === 'print' || type === null, 'Unsupported media type: ' + type);
+    await this._session.send('Page.setEmulatedMedia', {media: type || ''});
   }
 
   /**
@@ -241,6 +240,12 @@ class Page extends EventEmitter {
     }
   }
 
+  _sessionClosePromise() {
+    if (!this._disconnectPromise)
+      this._disconnectPromise = new Promise(fulfill => this._session.once(Events.JugglerSession.Disconnected, () => fulfill(new Error('Target closed'))));
+    return this._disconnectPromise;
+  }
+
   /**
    * @param {(string|Function)} urlOrPredicate
    * @param {!{timeout?: number}=} options
@@ -256,7 +261,7 @@ class Page extends EventEmitter {
       if (typeof urlOrPredicate === 'function')
         return !!(urlOrPredicate(request));
       return false;
-    }, timeout);
+    }, timeout, this._sessionClosePromise());
   }
 
   /**
@@ -274,7 +279,7 @@ class Page extends EventEmitter {
       if (typeof urlOrPredicate === 'function')
         return !!(urlOrPredicate(response));
       return false;
-    }, timeout);
+    }, timeout, this._sessionClosePromise());
   }
 
   /**
@@ -441,7 +446,7 @@ class Page extends EventEmitter {
     if (!navigationId)
       return null;
 
-    const timeoutError = new TimeoutError('Navigation Timeout Exceeded: ' + timeout + 'ms');
+    const timeoutError = new TimeoutError('Navigation timeout of ' + timeout + ' ms exceeded');
     let timeoutCallback;
     const timeoutPromise = new Promise(resolve => timeoutCallback = resolve.bind(null, timeoutError));
     const timeoutId = timeout ? setTimeout(timeoutCallback, timeout) : null;
@@ -474,7 +479,7 @@ class Page extends EventEmitter {
     if (!navigationId)
       return null;
 
-    const timeoutError = new TimeoutError('Navigation Timeout Exceeded: ' + timeout + 'ms');
+    const timeoutError = new TimeoutError('Navigation timeout of ' + timeout + ' ms exceeded');
     let timeoutCallback;
     const timeoutPromise = new Promise(resolve => timeoutCallback = resolve.bind(null, timeoutError));
     const timeoutId = timeout ? setTimeout(timeoutCallback, timeout) : null;
@@ -507,7 +512,7 @@ class Page extends EventEmitter {
     if (!navigationId)
       return null;
 
-    const timeoutError = new TimeoutError('Navigation Timeout Exceeded: ' + timeout + 'ms');
+    const timeoutError = new TimeoutError('Navigation timeout of ' + timeout + ' ms exceeded');
     let timeoutCallback;
     const timeoutPromise = new Promise(resolve => timeoutCallback = resolve.bind(null, timeoutError));
     const timeoutId = timeout ? setTimeout(timeoutCallback, timeout) : null;
@@ -742,6 +747,9 @@ class Page extends EventEmitter {
   }
 }
 
+// Expose alias for deprecated method.
+Page.prototype.emulateMedia = Page.prototype.emulateMediaType;
+
 class ConsoleMessage {
   /**
    * @param {string} type
@@ -797,7 +805,7 @@ function getScreenshotMimeType(options) {
     const fileType = mime.getType(options.path);
     if (fileType === 'image/png' || fileType === 'image/jpeg')
       return fileType;
-    throw new Error('Unsupported screnshot mime type: ' + fileType);
+    throw new Error('Unsupported screenshot mime type: ' + fileType);
   }
   return 'image/png';
 }

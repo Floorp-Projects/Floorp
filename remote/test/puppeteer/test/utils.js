@@ -16,14 +16,18 @@
 
 const fs = require('fs');
 const path = require('path');
+const {FlakinessDashboard} = require('../utils/flakiness-dashboard');
 const PROJECT_ROOT = fs.existsSync(path.join(__dirname, '..', 'package.json')) ? path.join(__dirname, '..') : path.join(__dirname, '..', '..');
+
+const COVERAGE_TESTSUITE_NAME = '**API COVERAGE**';
 
 /**
  * @param {Map<string, boolean>} apiCoverage
+ * @param {Object} events
  * @param {string} className
  * @param {!Object} classType
  */
-function traceAPICoverage(apiCoverage, className, classType) {
+function traceAPICoverage(apiCoverage, events, className, classType) {
   className = className.substring(0, 1).toLowerCase() + className.substring(1);
   for (const methodName of Reflect.ownKeys(classType.prototype)) {
     const method = Reflect.get(classType.prototype, methodName);
@@ -36,12 +40,14 @@ function traceAPICoverage(apiCoverage, className, classType) {
     });
   }
 
-  if (classType.Events) {
-    for (const event of Object.values(classType.Events))
-      apiCoverage.set(`${className}.emit(${JSON.stringify(event)})`, false);
+  if (events[classType.name]) {
+    for (const event of Object.values(events[classType.name])) {
+      if (typeof event !== 'symbol')
+        apiCoverage.set(`${className}.emit(${JSON.stringify(event)})`, false);
+    }
     const method = Reflect.get(classType.prototype, 'emit');
     Reflect.set(classType.prototype, 'emit', function(event, ...args) {
-      if (this.listenerCount(event))
+      if (typeof event !== 'symbol' && this.listenerCount(event))
         apiCoverage.set(`${className}.emit(${JSON.stringify(event)})`, true);
       return method.call(this, event, ...args);
     });
@@ -49,17 +55,20 @@ function traceAPICoverage(apiCoverage, className, classType) {
 }
 
 const utils = module.exports = {
-  recordAPICoverage: function(testRunner, api, disabled) {
+  recordAPICoverage: function(testRunner, api, events, disabled) {
     const coverage = new Map();
     for (const [className, classType] of Object.entries(api))
-      traceAPICoverage(coverage, className, classType);
-    testRunner.describe('COVERAGE', () => {
-      for (const method of coverage.keys()) {
-        (disabled.has(method) ? testRunner.xit : testRunner.it)(`public api '${method}' should be called`, async({page, server}) => {
-          if (!coverage.get(method))
-            throw new Error('NOT CALLED!');
-        });
-      }
+      traceAPICoverage(coverage, events, className, classType);
+    testRunner.describe(COVERAGE_TESTSUITE_NAME, () => {
+      testRunner.it('should call all API methods', () => {
+        const missingMethods = [];
+        for (const method of coverage.keys()) {
+          if (!coverage.get(method) && !disabled.has(method))
+            missingMethods.push(method);
+        }
+        if (missingMethods.length)
+          throw new Error('Certain API Methods are not called: ' + missingMethods.join(', '));
+      });
     });
   },
 
@@ -152,5 +161,81 @@ const utils = module.exports = {
         fulfill(event);
       });
     });
+  },
+
+  initializeFlakinessDashboardIfNeeded: async function(testRunner) {
+    // Generate testIDs for all tests and verify they don't clash.
+    // This will add |test.testId| for every test.
+    //
+    // NOTE: we do this on CI's so that problems arise on PR trybots.
+    if (process.env.CI)
+      generateTestIDs(testRunner);
+    // FLAKINESS_DASHBOARD_PASSWORD is an encrypted/secured variable.
+    // Encrypted variables get a special treatment in CI's when handling PRs so that
+    // secrets are not leaked to untrusted code.
+    // - AppVeyor DOES NOT decrypt secured variables for PRs
+    // - Travis DOES NOT decrypt encrypted variables for PRs
+    // - Cirrus CI DOES NOT decrypt encrypted variables for PRs *unless* PR is sent
+    //   from someone who has WRITE ACCESS to the repo.
+    //
+    // Since we don't want to run flakiness dashboard for PRs on all CIs, we
+    // check existance of FLAKINESS_DASHBOARD_PASSWORD and absense of
+    // CIRRUS_BASE_SHA env variables.
+    if (!process.env.FLAKINESS_DASHBOARD_PASSWORD || process.env.CIRRUS_BASE_SHA)
+      return;
+    const {sha, timestamp} = await FlakinessDashboard.getCommitDetails(__dirname, 'HEAD');
+    const dashboard = new FlakinessDashboard({
+      commit: {
+        sha,
+        timestamp,
+        url: `https://github.com/GoogleChrome/puppeteer/commit/${sha}`,
+      },
+      build: {
+        url: process.env.FLAKINESS_DASHBOARD_BUILD_URL,
+      },
+      dashboardRepo: {
+        url: 'https://github.com/aslushnikov/puppeteer-flakiness-dashboard.git',
+        username: 'puppeteer-flakiness',
+        email: 'aslushnikov+puppeteerflakiness@gmail.com',
+        password: process.env.FLAKINESS_DASHBOARD_PASSWORD,
+        branch: process.env.FLAKINESS_DASHBOARD_NAME,
+      },
+    });
+
+    testRunner.on('testfinished', test => {
+      // Do not report tests from COVERAGE testsuite.
+      // They don't bring much value to us.
+      if (test.fullName.includes(COVERAGE_TESTSUITE_NAME))
+        return;
+      const testpath = test.location.filePath.substring(utils.projectRoot().length);
+      const url = `https://github.com/GoogleChrome/puppeteer/blob/${sha}/${testpath}#L${test.location.lineNumber}`;
+      dashboard.reportTestResult({
+        testId: test.testId,
+        name: test.location.fileName + ':' + test.location.lineNumber,
+        description: test.fullName,
+        url,
+        result: test.result,
+      });
+    });
+    testRunner.on('finished', async({result}) => {
+      dashboard.setBuildResult(result);
+      await dashboard.uploadAndCleanup();
+    });
+
+    function generateTestIDs(testRunner) {
+      const testIds = new Map();
+      for (const test of testRunner.tests()) {
+        const testIdComponents = [test.name];
+        for (let suite = test.suite; !!suite.parentSuite; suite = suite.parentSuite)
+          testIdComponents.push(suite.name);
+        testIdComponents.reverse();
+        const testId = testIdComponents.join('>');
+        const clashingTest = testIds.get(testId);
+        if (clashingTest)
+          throw new Error(`Two tests with clashing IDs: ${test.location.fileName}:${test.location.lineNumber} and ${clashingTest.location.fileName}:${clashingTest.location.lineNumber}`);
+        testIds.set(testId, test);
+        test.testId = testId;
+      }
+    }
   },
 };
