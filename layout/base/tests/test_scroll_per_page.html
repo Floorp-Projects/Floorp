@@ -207,7 +207,9 @@ async function doTests(aWindow) {
      `PageUp in scrollable editing host after scrolled down 3 pages: should be scrolled up to show caret (got:${container.scrollTop}`);
 
   // Shouldn't scroll to caret position after pagedown scrolls outside of editing host.
-  body.innerHTML = '<div id="editor" contenteditable style="height: 1500px">abc<br>def<br></div>';
+  // NOTE: We've set the window height is 500px above, but on Android, the viewport size depends on the screen size.
+  //       Therefore, we need to compute enough height to test below with actual height of the window.
+  body.innerHTML = `<div id="editor" contenteditable style="height: ${aWindow.innerHeight * 3}px">abc<br>def<br></div>`;
   editor = doc.getElementById("editor");
   container = doc.documentElement;
   editor.focus();
