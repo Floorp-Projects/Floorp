@@ -47,8 +47,7 @@ class CollectionCreationFragment : DialogFragment() {
         val sessionManager = requireComponents.core.sessionManager
         val publicSuffixList = requireComponents.publicSuffixList
         val tabs = sessionManager.getTabs(args.tabIds, publicSuffixList)
-        val selectedTabs = sessionManager.getTabs(args.selectedTabIds, publicSuffixList)
-            .toSet()
+        val selectedTabs = if (tabs.size == 1) setOf(tabs.first()) else emptySet()
         val tabCollections = requireComponents.core.tabCollectionStorage.cachedTabCollections
         val selectedTabCollection = args.selectedTabCollectionId
             .let { id -> tabCollections.firstOrNull { it.id == id } }
