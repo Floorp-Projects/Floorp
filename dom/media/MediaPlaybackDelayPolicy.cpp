@@ -68,7 +68,6 @@ ResumeDelayedPlaybackAgent::ResumePlayDelegate::~ResumePlayDelegate() {
 bool ResumeDelayedPlaybackAgent::ResumePlayDelegate::Init(
     const HTMLMediaElement* aElement, bool aIsAudible) {
   MOZ_ASSERT(aElement);
-  MOZ_ASSERT(aElement->OwnerDoc());
   if (!aElement->OwnerDoc()->GetInnerWindow()) {
     return false;
   }
@@ -151,10 +150,6 @@ bool MediaPlaybackDelayPolicy::ShouldDelayPlayback(
   }
 
   const Document* doc = aElement->OwnerDoc();
-  if (!doc) {
-    return false;
-  }
-
   nsPIDOMWindowInner* inner = nsPIDOMWindowInner::From(doc->GetInnerWindow());
   nsPIDOMWindowOuter* outer = nsPIDOMWindowOuter::GetFromCurrentInner(inner);
   if (!outer) {
