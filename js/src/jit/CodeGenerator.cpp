@@ -1718,20 +1718,28 @@ void CodeGenerator::visitValueToString(LValueToString* lir) {
 
   // Object
   if (lir->mir()->input()->mightBeType(MIRType::Object)) {
-    // Bail.
-    MOZ_ASSERT(lir->mir()->fallible());
-    Label bail;
-    masm.branchTestObject(Assembler::Equal, tag, &bail);
-    bailoutFrom(&bail, lir->snapshot());
+    if (lir->mir()->supportSideEffects()) {
+      masm.branchTestObject(Assembler::Equal, tag, ool->entry());
+    } else {
+      // Bail.
+      MOZ_ASSERT(lir->mir()->needsSnapshot());
+      Label bail;
+      masm.branchTestObject(Assembler::Equal, tag, &bail);
+      bailoutFrom(&bail, lir->snapshot());
+    }
   }
 
   // Symbol
   if (lir->mir()->input()->mightBeType(MIRType::Symbol)) {
-    // Bail.
-    MOZ_ASSERT(lir->mir()->fallible());
-    Label bail;
-    masm.branchTestSymbol(Assembler::Equal, tag, &bail);
-    bailoutFrom(&bail, lir->snapshot());
+    if (lir->mir()->supportSideEffects()) {
+      masm.branchTestSymbol(Assembler::Equal, tag, ool->entry());
+    } else {
+      // Bail.
+      MOZ_ASSERT(lir->mir()->needsSnapshot());
+      Label bail;
+      masm.branchTestSymbol(Assembler::Equal, tag, &bail);
+      bailoutFrom(&bail, lir->snapshot());
+    }
   }
 
   // BigInt
@@ -1741,7 +1749,7 @@ void CodeGenerator::visitValueToString(LValueToString* lir) {
   }
 
 #ifdef DEBUG
-  masm.assumeUnreachable("Unexpected type for MValueToString.");
+  masm.assumeUnreachable("Unexpected type for LValueToString.");
 #endif
 
   masm.bind(&done);

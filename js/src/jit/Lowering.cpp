@@ -2275,7 +2275,7 @@ void LIRGenerator::visitToString(MToString* ins) {
     case MIRType::Value: {
       LValueToString* lir =
           new (alloc()) LValueToString(useBox(opd), tempToUnbox());
-      if (ins->fallible()) {
+      if (ins->needsSnapshot()) {
         assignSnapshot(lir, Bailout_NonPrimitiveInput);
       }
       define(lir, ins);
