@@ -40,7 +40,7 @@ body {
  * This allows long overflows of text or input fields to still be styled with
  * the container, rather than the background disappearing when scrolling */
 #root {
-  float: left;
+  float: left; /* The markup view should always be LTR */
   min-width: 100%;
   /* Reserve extra space (in addition to the indent size) for DOM mutation
    * breakpoint and pseudo icons. */

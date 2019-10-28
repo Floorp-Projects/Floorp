@@ -25,11 +25,7 @@
 
 .options-vertical-pane {
   display: inline;
-  float: left;
-}
-
-.options-vertical-pane:dir(rtl) {
-  float: right;
+  float: inline-start;
 }
 
 .options-vertical-pane {
