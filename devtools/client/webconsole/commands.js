@@ -5,7 +5,6 @@
 "use strict";
 
 const ObjectFront = require("devtools/shared/fronts/object");
-const LongStringClient = require("devtools/shared/client/long-string-client");
 
 class ConsoleCommands {
   constructor({ debuggerClient, proxy, threadFront, currentTarget }) {
@@ -23,8 +22,8 @@ class ConsoleCommands {
     return new ObjectFront(this.debuggerClient, object);
   }
 
-  createLongStringClient(object) {
-    return new LongStringClient(this.debuggerClient, object);
+  createLongStringFront(object) {
+    return this.proxy.webConsoleFront.longString(object);
   }
 
   releaseActor(actor) {

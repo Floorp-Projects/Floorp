@@ -9,5 +9,4 @@ DevToolsModules(
     'constants.js',
     'debugger-client.js',
     'deprecated-thread-client.js',
-    'long-string-client.js',
 )
