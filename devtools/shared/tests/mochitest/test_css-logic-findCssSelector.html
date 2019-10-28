@@ -1,18 +1,15 @@
 <!DOCTYPE HTML>
 <html>
-<!--
-https://bugzilla.mozilla.org/show_bug.cgi?id=
--->
 <head>
   <meta charset="utf-8">
-  <title>Test for Bug </title>
+  <title>Test for CSS logic helper </title>
 
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
   <script type="application/javascript">
 
-/* globals findCssSelector */
-ChromeUtils.import("resource://gre/modules/css-selector.js", this);
+const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+const { findCssSelector } = require("devtools/shared/inspector/css-logic");
 
 var _tests = [];
 function addTest(test) {
