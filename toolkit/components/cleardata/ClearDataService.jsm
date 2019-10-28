@@ -712,7 +712,7 @@ const PushNotificationsCleaner = {
 const StorageAccessCleaner = {
   deleteByHost(aHost, aOriginAttributes) {
     return new Promise(aResolve => {
-      for (let perm of Services.perms.enumerator) {
+      for (let perm of Services.perms.all) {
         if (perm.type == "storageAccessAPI") {
           let toBeRemoved = false;
           try {
@@ -832,7 +832,7 @@ const AuthCacheCleaner = {
 const PermissionsCleaner = {
   deleteByHost(aHost, aOriginAttributes) {
     return new Promise(aResolve => {
-      for (let perm of Services.perms.enumerator) {
+      for (let perm of Services.perms.all) {
         let toBeRemoved;
         try {
           toBeRemoved = Services.eTLD.hasRootDomain(

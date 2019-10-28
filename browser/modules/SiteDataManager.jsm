@@ -437,10 +437,8 @@ var SiteDataManager = {
   // we consider part of "site data and cookies".
   _getDeletablePermissions() {
     let perms = [];
-    let enumerator = Services.perms.enumerator;
 
-    while (enumerator.hasMoreElements()) {
-      let permission = enumerator.getNext().QueryInterface(Ci.nsIPermission);
+    for (let permission of Services.perms.all) {
       if (
         permission.type == "persistent-storage" ||
         permission.type == "storage-access"
