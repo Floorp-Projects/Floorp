@@ -3895,7 +3895,6 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
   }
 
   nsIFrame* child = aChild;
-  aBuilder->RemoveFromWillChangeBudget(child);
 
   const bool isPaintingToWindow = aBuilder->IsPaintingToWindow();
   const bool doingShortcut =
@@ -3903,6 +3902,8 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
       (child->GetStateBits() & NS_FRAME_SIMPLE_DISPLAYLIST) &&
       // Animations may change the stacking context state.
       !(child->MayHaveTransformAnimation() || child->MayHaveOpacityAnimation());
+
+  aBuilder->RemoveFromWillChangeBudget(child);
 
   if (StaticPrefs::layout_css_scroll_anchoring_highlight()) {
     if (child->FirstContinuation()->IsScrollAnchor()) {

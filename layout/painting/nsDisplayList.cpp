@@ -2549,6 +2549,11 @@ bool nsDisplayListBuilder::IsInWillChangeBudget(nsIFrame* aFrame,
 }
 
 void nsDisplayListBuilder::RemoveFromWillChangeBudget(nsIFrame* aFrame) {
+  if (!aFrame->MayHaveWillChangeBudget()) {
+    MOZ_ASSERT(!mWillChangeBudgetSet.Contains(aFrame));
+    return;
+  }
+
   FrameWillChangeBudget* frameBudget = mWillChangeBudgetSet.GetValue(aFrame);
 
   if (!frameBudget) {
