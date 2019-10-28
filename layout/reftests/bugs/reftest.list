@@ -407,7 +407,7 @@ fuzzy-if(Android,0-2,0-18) == 315920-17.html 315920-17-ref.html
 == 315920-18h.html 315920-18-ref.html
 == 315920-18i.html 315920-18-ref.html
 == 315920-19.html 315920-19-ref.html
-== 315920-20.svg 315920-20-ref.svg
+fuzzy-if(skiaContent,0-1,0-1) == 315920-20.svg 315920-20-ref.svg
 == 315920-21.svg 315920-21-ref.svg
 == 315920-22.html 315920-22-ref.html
 == 315920-23.html 315920-23-ref.html
