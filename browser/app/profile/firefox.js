@@ -1953,11 +1953,16 @@ pref("devtools.toolbox.splitconsoleEnabled", false);
 pref("devtools.toolbox.splitconsoleHeight", 100);
 pref("devtools.toolbox.tabsOrder", "");
 
-// The fission pref is enabling the "Omniscient Browser Toolbox", which will
+// The fission pref for enabling the "Omniscient Browser Toolbox", which will
 // make it possible to debug anything in Firefox (See Bug 1570639 for more
 // information).
 // ⚠ This is a work in progress. Expect weirdness when the pref is enabled. ⚠
 pref("devtools.browsertoolbox.fission", false);
+
+// The fission pref for enabling Fission frame debugging directly from the
+// regular web/content toolbox.
+// ⚠ This is a work in progress. Expect weirdness when the pref is enabled. ⚠
+pref("devtools.contenttoolbox.fission", false);
 
 // This pref is also related to fission, but not only. It allows the toolbox
 // to stay open even if the debugged tab switches to another process.
