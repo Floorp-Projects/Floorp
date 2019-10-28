@@ -131,10 +131,6 @@ FINAL_LIBRARY = 'xul'
 
 if CONFIG['MOZ_ENABLE_SKIA_PDF']:
   LOCAL_INCLUDES += CONFIG['SKIA_INCLUDES']
-  LOCAL_INCLUDES += [
-    '/gfx/skia/skia/include/config',
-    '/gfx/skia/skia/include/core',
-  ]
 
 LOCAL_INCLUDES += [
     '/layout/forms',
