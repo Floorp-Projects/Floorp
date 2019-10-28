@@ -1596,12 +1596,7 @@ static bool DelazifyCanonicalScriptedFunction(JSContext* cx,
   }
 
   RootedScript script(cx, fun->nonLazyScript());
-
-  // Remember the compiled script on the lazy script itself, in case
-  // there are clones of the function still pointing to the lazy script.
-  if (!lazy->maybeScript()) {
-    lazy->initScript(script);
-  }
+  MOZ_ASSERT(lazy->maybeScript() == script);
 
   if (lazy->canRelazify()) {
     // Remember the lazy script on the compiled script, so it can be
