@@ -514,15 +514,12 @@ this.ASRouterTriggerListeners = new Map([
         switch (aTopic) {
           case "SiteProtection:ContentBlockingEvent":
             const { browser, host, event } = aSubject.wrappedJSObject;
-            for (let ev of this._events) {
-              if ((ev & event) !== ev) {
-                continue;
-              }
+            if (this._events.filter(e => (e & event) === e).length) {
               this._triggerHandler(browser, {
                 id: "trackingProtection",
                 param: {
                   host,
-                  type: ev,
+                  type: event,
                 },
                 context: {
                   pageLoad: this._sessionPageLoad,
@@ -541,7 +538,7 @@ this.ASRouterTriggerListeners = new Map([
                     pageLoad: this._sessionPageLoad,
                   },
                   param: {
-                    type: aSubject.wrappedJSObject.event,
+                    host: aSubject.wrappedJSObject.event,
                   },
                 }
               );
