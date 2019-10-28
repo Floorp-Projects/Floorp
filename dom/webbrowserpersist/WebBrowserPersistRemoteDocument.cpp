@@ -24,9 +24,12 @@ WebBrowserPersistRemoteDocument ::WebBrowserPersistRemoteDocument(
     : mActor(aActor), mAttrs(aAttrs), mPostData(aPostData) {
   nsresult rv;
   mPrincipal = ipc::PrincipalInfoToPrincipal(mAttrs.principal(), &rv);
-  mSHEntry =
-      static_cast<dom::SHEntryParent*>(mAttrs.sessionHistoryEntryParent())
-          ->GetSHEntry();
+  if (mAttrs.sessionHistoryEntryOrCacheKey().type() ==
+      SessionHistoryEntryOrCacheKey::TPSHEntryParent) {
+    mSHEntry = static_cast<dom::SHEntryParent*>(
+                   mAttrs.sessionHistoryEntryOrCacheKey().get_PSHEntryParent())
+                   ->GetSHEntry();
+  }
 }
 
 WebBrowserPersistRemoteDocument::~WebBrowserPersistRemoteDocument() {
@@ -93,8 +96,13 @@ WebBrowserPersistRemoteDocument::GetContentDisposition(nsAString& aDisp) {
 NS_IMETHODIMP
 WebBrowserPersistRemoteDocument::GetCacheKey(uint32_t* aCacheKey) {
   *aCacheKey = 0;
-  if (mSHEntry) {
-    *aCacheKey = mSHEntry->GetCacheKey();
+  if (mAttrs.sessionHistoryEntryOrCacheKey().type() ==
+      SessionHistoryEntryOrCacheKey::TPSHEntryParent) {
+    if (mSHEntry) {
+      *aCacheKey = mSHEntry->GetCacheKey();
+    }
+  } else {
+    *aCacheKey = mAttrs.sessionHistoryEntryOrCacheKey();
   }
   return NS_OK;
 }
