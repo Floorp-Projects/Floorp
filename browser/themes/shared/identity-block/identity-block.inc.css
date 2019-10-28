@@ -259,6 +259,9 @@
 }
 
 #tracking-protection-icon-box:not([hasException])[active] #tracking-protection-icon-animatable-image {
+  /* Overrides the default 'display: -moz-box' to prevent icon shifting issue
+     with scaled text, see Bug 1591049 */
+  display: block;
   background-image: url(chrome://browser/skin/tracking-protection-animation.svg);
   transform: translateX(-256px);
   width: 272px;
