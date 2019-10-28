@@ -1677,9 +1677,9 @@ void nsFrameSelection::CommonPageMove(bool aForward, bool aExtend,
     }
   }
 
-  if (scrollableFrame && scrolledFrame == frameToClick) {
-    // If aFrame is scrollable, adjust pseudo-click position with page scroll
-    // amount.
+  if (scrollableFrame) {
+    // If there is a scrollable frame, adjust pseudo-click position with page
+    // scroll amount.
     if (aForward) {
       caretPos.y += scrollableFrame->GetPageScrollAmount().height;
     } else {
