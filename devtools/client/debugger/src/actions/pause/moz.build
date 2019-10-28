@@ -22,5 +22,6 @@ CompiledModules(
     'previewPausedLocation.js',
     'resumed.js',
     'selectFrame.js',
+    'setFramePositions.js',
     'skipPausing.js',
 )

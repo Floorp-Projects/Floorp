@@ -57,3 +57,19 @@ export const getVisibleSelectedFrame: Selector<?{
     };
   }
 );
+
+export function getFramePositions(state: State) {
+  const threadId = getCurrentThread(state);
+  const currentThread = state.pause.threads[threadId];
+
+  if (
+    !currentThread ||
+    !currentThread.selectedFrameId ||
+    !currentThread.replayFramePositions
+  ) {
+    return null;
+  }
+
+  const currentFrameId = currentThread.selectedFrameId;
+  return currentThread.replayFramePositions[currentFrameId];
+}

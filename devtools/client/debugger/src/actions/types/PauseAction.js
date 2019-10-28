@@ -13,6 +13,7 @@ import type {
   Why,
   ThreadContext,
   Previews,
+  ExecutionPoint,
 } from "../../types";
 
 import type { PromiseAction } from "../utils/middleware/promise";
@@ -161,4 +162,9 @@ export type PauseAction =
       +thread: string,
       +frame: Frame,
       +previews: Previews,
+    |}
+  | {|
+      +type: "SET_FRAME_POSITIONS",
+      +frame: Frame,
+      +positions: Array<ExecutionPoint>,
     |};

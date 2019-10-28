@@ -1533,7 +1533,11 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       const point = this.dbg.replayCurrentExecutionPoint();
       packet.executionPoint = point;
       packet.recordingEndpoint = this.dbg.replayRecordingEndpoint();
-      this.onFramePositions(point, frame);
+      if (point) {
+        this.dbg
+          .replayFramePositions(point)
+          .then(positions => this.onFramePositions(positions, frame));
+      }
     }
 
     if (poppedFrames) {
@@ -1543,35 +1547,44 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     return packet;
   },
 
-  onFramePositions: function(point, frame) {
-    if (!point) {
+  fetchAncestorFramePositions: function(index) {
+    const point = this.dbg.replayCurrentExecutionPoint();
+
+    let frame = this.youngestFrame;
+    for (let i = 0; frame && i < index; i++) {
+      frame = frame.older;
+    }
+
+    this.dbg.replayAncestorFramePositions(point, index).then(points => {
+      this.onFramePositions(points, frame);
+    });
+  },
+
+  onFramePositions: function(positions, frame) {
+    if (!positions) {
       return;
     }
 
-    this.dbg.replayFramePositions(point).then(positions => {
-      if (!positions) {
-        return;
+    const mappedPositions = positions.map(mappedPoint => {
+      let location = {};
+      if (mappedPoint.position.kind === "OnStep") {
+        const offsetLocation = this.sources.getScriptOffsetLocation(
+          frame.script,
+          mappedPoint.position.offset
+        );
+        location = {
+          line: offsetLocation.line,
+          column: offsetLocation.column,
+          sourceUrl: offsetLocation.url,
+        };
       }
+      return { ...mappedPoint, location };
+    });
 
-      const mappedPositions = positions.map(mappedPoint => {
-        let location = {};
-        if (mappedPoint.position.kind === "OnStep") {
-          const offsetLocation = this.sources.getScriptOffsetLocation(
-            frame.script,
-            mappedPoint.position.offset
-          );
-          location = {
-            line: offsetLocation.line,
-            column: offsetLocation.column,
-          };
-        }
-        return { ...mappedPoint, location };
-      });
-
-      this.emit("replayFramePositions", {
-        positions: mappedPositions,
-        frame: frame.actor.actorID,
-      });
+    this.emit("replayFramePositions", {
+      positions: mappedPositions,
+      frame: frame.actor.actorID,
+      thread: this.actorID,
     });
   },
 

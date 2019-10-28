@@ -186,6 +186,7 @@ export type Actions = {
   newQueuedSources: (QueuedSourceData[]) => void,
   fetchEventListeners: () => void,
   updateThreads: typeof actions.updateThreads,
+  setFramePositions: typeof actions.setFramePositions,
 };
 
 type ConsoleClient = {
@@ -385,6 +386,8 @@ export type ThreadFront = {
   getAvailableEventBreakpoints: () => Promise<EventListenerCategoryList>,
   skipBreakpoints: boolean => Promise<{| skip: boolean |}>,
   detach: () => Promise<void>,
+  timeWarp: Function => Promise<*>,
+  fetchAncestorFramePositions: Function => Promise<*>,
 };
 
 export type Panel = {|
