@@ -59,6 +59,8 @@ class RenderCompositorANGLE : public RenderCompositor {
 
   bool IsContextLost() override;
 
+  bool SurfaceIsYFlipped() override { return true; }
+
  protected:
   void InsertPresentWaitQuery();
   bool WaitForPreviousPresentQuery();

@@ -1950,6 +1950,7 @@ impl Renderer {
             options.allow_texture_storage_support,
             options.allow_texture_swizzling,
             options.dump_shader_source.take(),
+            options.surface_is_y_flipped,
         );
 
         let color_cache_formats = device.preferred_color_formats();
@@ -4168,7 +4169,7 @@ impl Renderer {
                 DrawTarget::NativeSurface { .. } => {
                     unreachable!("bug: native compositor surface in child target");
                 }
-                DrawTarget::Default { rect, total_size } if rect.origin == FramebufferIntPoint::zero() && rect.size == total_size => {
+                DrawTarget::Default { rect, total_size, .. } if rect.origin == FramebufferIntPoint::zero() && rect.size == total_size => {
                     // whole screen is covered, no need for scissor
                     None
                 }
@@ -4291,12 +4292,22 @@ impl Renderer {
                     }
                 };
                 let (src_rect, _) = render_tasks[output.task_id].get_target_rect();
-                self.device.blit_render_target_invert_y(
-                    draw_target.into(),
-                    draw_target.to_framebuffer_rect(src_rect.translate(-content_origin.to_vector())),
-                    DrawTarget::External { fbo: fbo_id, size: output_size },
-                    output_size.into(),
-                );
+                if !self.device.surface_is_y_flipped() {
+                    self.device.blit_render_target_invert_y(
+                        draw_target.into(),
+                        draw_target.to_framebuffer_rect(src_rect.translate(-content_origin.to_vector())),
+                        DrawTarget::External { fbo: fbo_id, size: output_size },
+                        output_size.into(),
+                    );
+                } else {
+                    self.device.blit_render_target(
+                        draw_target.into(),
+                        draw_target.to_framebuffer_rect(src_rect.translate(-content_origin.to_vector())),
+                        DrawTarget::External { fbo: fbo_id, size: output_size },
+                        output_size.into(),
+                        TextureFilter::Linear,
+                    );
+                }
                 handler.unlock(output.pipeline_id);
             }
         }
@@ -4951,22 +4962,33 @@ impl Renderer {
 
                         let offset = frame.content_origin.to_f32();
                         let size = frame.device_rect.size.to_f32();
+                        let surface_is_y_flipped = self.device.surface_is_y_flipped();
+                        let (bottom, top) = if surface_is_y_flipped {
+                          (offset.y, offset.y + size.height)
+                        } else {
+                          (offset.y + size.height, offset.y)
+                        };
+
                         let projection = Transform3D::ortho(
                             offset.x,
                             offset.x + size.width,
-                            offset.y + size.height,
-                            offset.y,
+                            bottom,
+                            top,
                             ORTHO_NEAR_PLANE,
                             ORTHO_FAR_PLANE,
                         );
 
                         let fb_scale = Scale::<_, _, FramebufferPixel>::new(1i32);
                         let mut fb_rect = frame.device_rect * fb_scale;
-                        fb_rect.origin.y = device_size.height - fb_rect.origin.y - fb_rect.size.height;
+
+                        if !surface_is_y_flipped {
+                            fb_rect.origin.y = device_size.height - fb_rect.origin.y - fb_rect.size.height;
+                        }
 
                         let draw_target = DrawTarget::Default {
                             rect: fb_rect,
                             total_size: device_size * fb_scale,
+                            surface_is_y_flipped,
                         };
 
                         if self.enable_picture_caching {
@@ -5405,7 +5427,7 @@ impl Renderer {
         }
 
         // Copy frame buffer into the zoom texture
-        let read_target = DrawTarget::new_default(device_size);
+        let read_target = DrawTarget::new_default(device_size, self.device.surface_is_y_flipped());
         self.device.blit_render_target(
             read_target.into(),
             read_target.to_framebuffer_rect(source_rect),
@@ -5541,12 +5563,22 @@ impl Renderer {
                 // we're blitting from a texture to the main framebuffer, which
                 // use different conventions.
                 let dest_rect = rect(x, y + tag_height, size, size);
-                device.blit_render_target_invert_y(
-                    ReadTarget::from_texture(texture, layer),
-                    src_rect,
-                    DrawTarget::new_default(device_size),
-                    FramebufferIntRect::from_untyped(&dest_rect),
-                );
+                if !device.surface_is_y_flipped() {
+                    device.blit_render_target_invert_y(
+                        ReadTarget::from_texture(texture, layer),
+                        src_rect,
+                        DrawTarget::new_default(device_size, device.surface_is_y_flipped()),
+                        FramebufferIntRect::from_untyped(&dest_rect),
+                    );
+                } else {
+                    device.blit_render_target(
+                        ReadTarget::from_texture(texture, layer),
+                        src_rect,
+                        DrawTarget::new_default(device_size, device.surface_is_y_flipped()),
+                        FramebufferIntRect::from_untyped(&dest_rect),
+                        TextureFilter::Linear,
+                    );
+                }
                 i += 1;
             }
         }
@@ -5983,6 +6015,7 @@ pub struct RendererOptions {
     pub present_config: Option<PresentConfig>,
     /// An optional client provided interface to a native / OS compositor.
     pub native_compositor: Option<Box<dyn Compositor>>,
+    pub surface_is_y_flipped: bool,
 }
 
 impl Default for RendererOptions {
@@ -6036,6 +6069,7 @@ impl Default for RendererOptions {
             dump_shader_source: None,
             present_config: None,
             native_compositor: None,
+            surface_is_y_flipped: false,
         }
     }
 }

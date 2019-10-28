@@ -160,9 +160,7 @@ static EGLDisplay GetAndInitWARPDisplay(GLLibraryEGL& egl, void* displayType) {
 static EGLDisplay GetAndInitDisplayForWebRender(GLLibraryEGL& egl,
                                                 void* displayType) {
 #ifdef XP_WIN
-  const EGLint attrib_list[] = {LOCAL_EGL_EXPERIMENTAL_PRESENT_PATH_ANGLE,
-                                LOCAL_EGL_EXPERIMENTAL_PRESENT_PATH_FAST_ANGLE,
-                                LOCAL_EGL_NONE};
+  const EGLint attrib_list[] = {LOCAL_EGL_NONE};
   RefPtr<ID3D11Device> d3d11Device =
       gfx::DeviceManagerDx::Get()->GetCompositorDevice();
   if (!d3d11Device) {
