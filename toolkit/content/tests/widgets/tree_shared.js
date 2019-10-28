@@ -451,9 +451,6 @@ function testtag_tree_TreeSelection(tree, testid, multiple) {
     []
   );
 
-  // XXXndeakin invertSelection isn't implemented
-  //  selection.invertSelection();
-
   is(selection.shiftSelectPivot, -1, testid + "shiftSelectPivot set to -1");
 
   // rangedSelect and clearRange set the currentIndex to the endIndex. The

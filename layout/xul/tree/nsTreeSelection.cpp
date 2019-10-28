@@ -458,10 +458,6 @@ NS_IMETHODIMP nsTreeSelection::ClearSelection() {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsTreeSelection::InvertSelection() {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 NS_IMETHODIMP nsTreeSelection::SelectAll() {
   if (!mTree) return NS_OK;
 

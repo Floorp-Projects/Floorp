@@ -26,7 +26,6 @@ interface nsIDOMXULMultiSelectControlElement : nsIDOMXULSelectControlElement
   void selectItemRange(in nsIDOMXULSelectControlItemElement startItem, in nsIDOMXULSelectControlItemElement item);
 
   void selectAll();
-  void invertSelection();
   void clearSelection();
 
   // XXX - temporary, pending implementation of scriptable,

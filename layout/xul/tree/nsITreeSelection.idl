@@ -64,11 +64,6 @@ interface nsITreeSelection : nsISupports
   void clearSelection();
 
   /**
-   * Inverts the selection.
-   */
-  void invertSelection();
-
-  /**
    * Selects all rows.
    */
   void selectAll();
