@@ -459,8 +459,8 @@ Inspector.prototype = {
         }
 
         rootNode = node;
-        if (this.selectionCssSelector) {
-          return walker.querySelector(rootNode, this.selectionCssSelector);
+        if (this.selectionCssSelectors.length) {
+          return walker.findNodeFront(this.selectionCssSelectors);
         }
         return null;
       })
@@ -1400,46 +1400,63 @@ Inspector.prototype = {
     }
   },
 
-  _selectionCssSelector: null,
+  _selectionCssSelectors: null,
 
   /**
-   * Set the currently selected node unique css selector.
+   * Set the array of CSS selectors for the currently selected node.
+   * We use an array of selectors in case the element is in iframes.
    * Will store the current target url along with it to allow pre-selection at
    * reload
    */
-  set selectionCssSelector(cssSelector = null) {
+  set selectionCssSelectors(cssSelectors = []) {
     if (this._destroyed) {
       return;
     }
 
-    this._selectionCssSelector = {
-      selector: cssSelector,
+    this._selectionCssSelectors = {
+      selectors: cssSelectors,
       url: this._target.url,
     };
   },
 
   /**
-   * Get the current selection unique css selector if any, that is, if a node
+   * Get the CSS selectors for the current selection if any, that is, if a node
    * is actually selected and that node has been selected while on the same url
    */
-  get selectionCssSelector() {
+  get selectionCssSelectors() {
     if (
-      this._selectionCssSelector &&
-      this._selectionCssSelector.url === this._target.url
+      this._selectionCssSelectors &&
+      this._selectionCssSelectors.url === this._target.url
     ) {
-      return this._selectionCssSelector.selector;
+      return this._selectionCssSelectors.selectors;
     }
+    return [];
+  },
+
+  /**
+   * Some inspector ruleview helpers rely on the selectionCssSelector to get the
+   * unique CSS selector of the selected element only within its host document,
+   * disregarding ancestor iframes.
+   * They should not care about the complete array of CSS selectors, only
+   * relevant in order to reselect the proper node when reloading pages with
+   * frames.
+   */
+  get selectionCssSelector() {
+    if (this.selectionCssSelectors.length) {
+      return this.selectionCssSelectors[this.selectionCssSelectors.length - 1];
+    }
+
     return null;
   },
 
   /**
-   * On any new selection made by the user, store the unique css selector
+   * On any new selection made by the user, store the array of css selectors
    * of the selected node so it can be restored after reload of the same page
    */
-  updateSelectionCssSelector() {
+  updateSelectionCssSelectors() {
     if (this.selection.isElementNode()) {
-      this.selection.nodeFront.getUniqueSelector().then(selector => {
-        this.selectionCssSelector = selector;
+      this.selection.nodeFront.getAllSelectors().then(selectors => {
+        this.selectionCssSelectors = selectors;
       }, this._handleRejectionIfNotDestroyed);
     }
   },
@@ -1509,7 +1526,7 @@ Inspector.prototype = {
     }
 
     this.updateAddElementButton();
-    this.updateSelectionCssSelector();
+    this.updateSelectionCssSelectors();
 
     const selfUpdate = this.updating("inspector-panel");
     executeSoon(() => {

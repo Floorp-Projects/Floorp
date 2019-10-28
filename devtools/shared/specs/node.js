@@ -88,6 +88,12 @@ const nodeSpec = generateActorSpec({
         value: RetVal("string"),
       },
     },
+    getAllSelectors: {
+      request: {},
+      response: {
+        value: RetVal("array:string"),
+      },
+    },
     getCssPath: {
       request: {},
       response: {
@@ -147,6 +153,10 @@ const nodeSpec = generateActorSpec({
       //
       // Alex: Can we do something to address that??
       response: RetVal("json"),
+    },
+    waitForFrameLoad: {
+      request: {},
+      response: {},
     },
   },
 });

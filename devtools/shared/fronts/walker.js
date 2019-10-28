@@ -491,7 +491,15 @@ class WalkerFront extends FrontClassWithSpec(walkerSpec) {
       }
       nodeFront = await this.querySelector(nodeFront, selector);
       if (nodeSelectors.length > 0) {
+        if (nodeFront.traits.supportsWaitForFrameLoad) {
+          // Backward compatibility: only FF72 or newer are able to wait for
+          // iframes to load. After FF72 reaches release we can unconditionally
+          // call waitForFrameLoad.
+          await nodeFront.waitForFrameLoad();
+        }
+
         const { nodes } = await this.children(nodeFront);
+
         // If there are remaining selectors to process, they will target a document or a
         // document-fragment under the current node. Whether the element is a frame or
         // a web component, it can only contain one document/document-fragment, so just
