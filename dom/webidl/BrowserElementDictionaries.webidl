@@ -7,6 +7,7 @@
  * liability, trademark and document use rules apply.
  */
 
+[GenerateConversionToJS]
 dictionary OpenWindowEventDetail {
   DOMString url = "";
   DOMString name = "";
@@ -15,6 +16,7 @@ dictionary OpenWindowEventDetail {
   boolean forceNoReferrer = false;
 };
 
+[GenerateConversionToJS]
 dictionary DOMWindowResizeEventDetail {
   long width = 0;
   long height = 0;

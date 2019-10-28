@@ -162,6 +162,7 @@ interface CryptoKey {
   [Cached, Constant, Frozen] readonly attribute sequence<KeyUsage> usages;
 };
 
+[GenerateConversionToJS]
 dictionary CryptoKeyPair {
   required CryptoKey publicKey;
   required CryptoKey privateKey;

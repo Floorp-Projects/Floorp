@@ -10646,6 +10646,11 @@ class CGUnionStruct(CGThing):
                        unions=[ClassUnion("Value", unionValues, visibility="private")])
 
     def getConversionToJS(self, templateVars, type):
+        if type.isDictionary() and not type.inner.needsConversionToJS:
+            # We won't be able to convert this dictionary to a JS value, nor
+            # will we need to, since we don't need a ToJSVal method at all.
+            return None
+
         assert not type.nullable()  # flatMemberTypes never has nullable types
         val = "mValue.m%(name)s.Value()" % templateVars
         wrapCode = wrapForType(
@@ -13977,7 +13982,8 @@ class CGDictionary(CGThing):
             d.getExtendedAttribute("GenerateInitFromJSON")):
             methods.append(self.initFromJSONMethod())
 
-        methods.append(self.toObjectInternalMethod())
+        if d.needsConversionToJS:
+            methods.append(self.toObjectInternalMethod())
 
         if (canBeRepresentedAsJSON and
             d.getExtendedAttribute("GenerateToJSON")):

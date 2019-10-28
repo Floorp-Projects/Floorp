@@ -8,6 +8,7 @@
 // holds an object of this type.  It intentionally looks like a
 // SavedStack object and is a representation of the frame that is
 // about to be constructed at the entry point.
+[GenerateConversionToJS]
 dictionary ProfileTimelineStackFrame {
   long line;
   long column = 0;
@@ -37,6 +38,7 @@ enum ProfileTimelineWorkerOperationType {
   "deserializeDataOnMainThread",
 };
 
+[GenerateConversionToJS]
 dictionary ProfileTimelineMarker {
   DOMString name = "";
   DOMHighResTimeStamp start = 0;

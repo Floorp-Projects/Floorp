@@ -144,7 +144,7 @@ interface Localization {
 /**
  * A helper dict for converting between JS Value and L10nArgs.
  */
-[GenerateInitFromJSON]
+[GenerateInitFromJSON, GenerateConversionToJS]
 dictionary L10nArgsHelperDict {
   required L10nArgs args;
 };

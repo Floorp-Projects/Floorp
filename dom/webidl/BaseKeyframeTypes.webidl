@@ -53,6 +53,7 @@ dictionary BaseKeyframe {
   [ChromeOnly] boolean simulateComputeValuesFailure = false;
 };
 
+[GenerateConversionToJS]
 dictionary BaseComputedKeyframe : BaseKeyframe {
   double computedOffset;
 };
