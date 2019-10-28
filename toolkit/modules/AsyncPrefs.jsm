@@ -27,6 +27,7 @@ const kAllowedPrefs = new Set([
   "reader.content_width",
   "reader.line_height",
 
+  "security.ssl.errorReporting.automatic",
   "security.tls.version.enable-deprecated",
 ]);
 
