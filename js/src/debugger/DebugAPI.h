@@ -98,8 +98,8 @@ class DebugAPI {
    *   * the Debugger JSObject is live (Debugger::trace handles this case); OR
    *   * it is in the middle of dispatching an event (the event dispatching
    *     code roots it in this case); OR
-   *   * it is enabled, and it is debugging at least one live compartment,
-   *     and at least one of the following is true:
+   *   * it is debugging at least one live compartment, and at least one of the
+   *     following is true:
    *       - it has a debugger hook installed
    *       - it has a breakpoint set on a live script
    *       - it has a watchpoint set on a live object.
