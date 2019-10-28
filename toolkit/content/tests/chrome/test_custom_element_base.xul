@@ -121,6 +121,15 @@
     is(boxWithWhitespaceText.textContent, "", "Whitespace removed");
     let boxWithNonWhitespaceText = MozXULElement.parseXULToFragment(`<box>foo</box>`).querySelector("box");
     is(boxWithNonWhitespaceText.textContent, "foo", "Non-whitespace not removed");
+
+    try {
+      // we didn't encode the & as &amp;
+      MozXULElement.parseXULToFragment(`<box id="foo=1&bar=2"/>`);
+      ok(false, "parseXULToFragment should've thrown an exception for not-well-formed XML");
+    }
+    catch (ex) {
+      is(ex.message, "not well-formed XML", "parseXULToFragment threw the wrong message");
+    }
   }
 
   function testInheritAttributes() {
