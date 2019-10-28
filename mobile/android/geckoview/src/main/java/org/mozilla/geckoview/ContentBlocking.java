@@ -660,7 +660,7 @@ public class ContentBlocking {
     private static final String CONTENT = "content-track-digest256";
     private static final String CRYPTOMINING = "base-cryptomining-track-digest256";
     private static final String FINGERPRINTING = "base-fingerprinting-track-digest256";
-    private static final String STP = "social-tracking-protection-digest256";
+    private static final String STP = "social-tracking-protection-facebook-digest256,social-tracking-protection-linkedin-digest256,social-tracking-protection-twitter-digest256";
 
     /* package */ static @CBSafeBrowsing int sbMalwareToSbCat(final boolean enabled) {
         return enabled ? (SafeBrowsing.MALWARE | SafeBrowsing.UNWANTED | SafeBrowsing.HARMFUL)
