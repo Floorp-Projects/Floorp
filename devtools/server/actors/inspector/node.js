@@ -28,6 +28,12 @@ loader.lazyRequireGetter(
   "devtools/shared/inspector/css-logic",
   true
 );
+loader.lazyRequireGetter(
+  this,
+  "findAllCssSelectors",
+  "devtools/shared/inspector/css-logic",
+  true
+);
 
 loader.lazyRequireGetter(
   this,
@@ -135,6 +141,12 @@ loader.lazyRequireGetter(
   this,
   "scrollbarTreeWalkerFilter",
   "devtools/server/actors/inspector/utils",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "DOMHelpers",
+  "resource://devtools/client/shared/DOMHelpers.jsm",
   true
 );
 
@@ -255,6 +267,12 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
         this.rawNode.ownerDocument &&
         this.rawNode.ownerDocument.contentType === "text/html",
       hasEventListeners: this._hasEventListeners,
+      traits: {
+        // Added in FF72
+        supportsGetAllSelectors: true,
+        // Added in FF72
+        supportsWaitForFrameLoad: true,
+      },
     };
 
     if (this.isDocumentElement()) {
@@ -543,9 +561,20 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
    */
   getUniqueSelector: function() {
     if (Cu.isDeadWrapper(this.rawNode)) {
-      return "";
+      return [];
     }
     return findCssSelector(this.rawNode);
+  },
+
+  /**
+   * Get the full array of selectors from the topmost document, going through
+   * iframes.
+   */
+  getAllSelectors: function() {
+    if (Cu.isDeadWrapper(this.rawNode)) {
+      return "";
+    }
+    return findAllCssSelectors(this.rawNode);
   },
 
   /**
@@ -700,6 +729,23 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
       innerWidth: win.innerWidth,
       innerHeight: win.innerHeight,
     };
+  },
+
+  /**
+   * If the current node is an iframe, wait for the content window to be loaded.
+   */
+  async waitForFrameLoad() {
+    if (Cu.isDeadWrapper(this.rawNode)) {
+      return;
+    }
+
+    const { contentDocument, contentWindow } = this.rawNode;
+    if (contentDocument && contentDocument.readyState !== "complete") {
+      await new Promise(resolve => {
+        const domHelper = new DOMHelpers(contentWindow);
+        domHelper.onceDOMReady(resolve);
+      });
+    }
   },
 });
 

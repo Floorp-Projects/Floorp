@@ -26,6 +26,11 @@ loader.lazyImporter(
 );
 loader.lazyImporter(
   this,
+  "findAllCssSelectors",
+  "resource://gre/modules/css-selector.js"
+);
+loader.lazyImporter(
+  this,
   "getCssPath",
   "resource://gre/modules/css-selector.js"
 );
@@ -496,6 +501,16 @@ exports.prettifyCSS = prettifyCSS;
  * and ele.ownerDocument.querySelectorAll(reply).length === 1
  */
 exports.findCssSelector = findCssSelector;
+
+/**
+ * Retrieve the array of CSS selectors corresponding to the provided node.
+ *
+ * The selectors are ordered starting with the root document and ending with the deepest
+ * nested frame. Additional items are used if the node is inside a frame or a shadow root,
+ * each representing the CSS selector for finding the frame or root element in its parent
+ * document.
+ */
+exports.findAllCssSelectors = findAllCssSelectors;
 
 /**
  * Get the full CSS path for a given element.
