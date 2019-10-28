@@ -3568,35 +3568,6 @@ var BrowserOnClick = {
           );
         }
         break;
-      case "exceptionDialogButton":
-        securityInfo = getSecurityInfo(securityInfoAsString);
-        let overrideService = Cc[
-          "@mozilla.org/security/certoverride;1"
-        ].getService(Ci.nsICertOverrideService);
-        let flags = 0;
-        if (securityInfo.isUntrusted) {
-          flags |= overrideService.ERROR_UNTRUSTED;
-        }
-        if (securityInfo.isDomainMismatch) {
-          flags |= overrideService.ERROR_MISMATCH;
-        }
-        if (securityInfo.isNotValidAtThisTime) {
-          flags |= overrideService.ERROR_TIME;
-        }
-        let uri = Services.uriFixup.createFixupURI(location, 0);
-        let permanentOverride =
-          !PrivateBrowsingUtils.isBrowserPrivate(browser) &&
-          Services.prefs.getBoolPref("security.certerrors.permanentOverride");
-        cert = securityInfo.serverCert;
-        overrideService.rememberValidityOverride(
-          uri.asciiHost,
-          uri.port,
-          cert,
-          flags,
-          !permanentOverride
-        );
-        browser.reload();
-        break;
     }
   },
 
