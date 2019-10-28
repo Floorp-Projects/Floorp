@@ -335,49 +335,6 @@ AST_MATCHER(CXXDefaultArgExpr, isNullDefaultArg) {
                                              Expr::NPC_NeverValueDependent);
 }
 
-#if CLANG_VERSION_FULL < 309
-/// DISCLAIMER: This is a copy/paste from the Clang source code starting from
-/// Clang 3.9, so that this matcher is supported in lower versions.
-///
-/// \brief Matches declaration of the function the statement belongs to
-///
-/// Given:
-/// \code
-/// F& operator=(const F& o) {
-///   std::copy_if(o.begin(), o.end(), begin(), [](V v) { return v > 0; });
-///   return *this;
-/// }
-/// \endcode
-/// returnStmt(forFunction(hasName("operator=")))
-///   matches 'return *this'
-///   but does match 'return > 0'
-AST_MATCHER_P(Stmt, forFunction, internal::Matcher<FunctionDecl>,
-              InnerMatcher) {
-  const auto &Parents = Finder->getASTContext().getParents(Node);
-
-  llvm::SmallVector<ast_type_traits::DynTypedNode, 8> Stack(Parents.begin(),
-                                                            Parents.end());
-  while (!Stack.empty()) {
-    const auto &CurNode = Stack.back();
-    Stack.pop_back();
-    if (const auto *FuncDeclNode = CurNode.get<FunctionDecl>()) {
-      if (InnerMatcher.matches(*FuncDeclNode, Finder, Builder)) {
-        return true;
-      }
-    } else if (const auto *LambdaExprNode = CurNode.get<LambdaExpr>()) {
-      if (InnerMatcher.matches(*LambdaExprNode->getCallOperator(), Finder,
-                               Builder)) {
-        return true;
-      }
-    } else {
-      for (const auto &Parent : Finder->getASTContext().getParents(CurNode))
-        Stack.push_back(Parent);
-    }
-  }
-  return false;
-}
-#endif
-
 } // namespace ast_matchers
 } // namespace clang
 

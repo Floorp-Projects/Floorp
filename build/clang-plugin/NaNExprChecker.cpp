@@ -9,10 +9,10 @@ void NaNExprChecker::registerMatchers(MatchFinder *AstMatcher) {
   AstMatcher->addMatcher(
       binaryOperator(
           allOf(binaryEqualityOperator(),
-                hasLHS(hasIgnoringParenImpCasts(
-                    declRefExpr(hasType(qualType((isFloat())))).bind("lhs"))),
-                hasRHS(hasIgnoringParenImpCasts(
-                    declRefExpr(hasType(qualType((isFloat())))).bind("rhs"))),
+                hasLHS(has(ignoringParenImpCasts(
+                    declRefExpr(hasType(qualType((isFloat())))).bind("lhs")))),
+                hasRHS(has(ignoringParenImpCasts(
+                    declRefExpr(hasType(qualType((isFloat())))).bind("rhs")))),
                 unless(anyOf(isInSystemHeader(), isInWhitelistForNaNExpr()))))
           .bind("node"),
       this);
