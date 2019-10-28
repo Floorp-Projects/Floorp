@@ -11,8 +11,8 @@ void SprintfLiteralChecker::registerMatchers(MatchFinder *AstMatcher) {
           isSnprintfLikeFunc(),
           allOf(hasArgument(
                     0, ignoringParenImpCasts(declRefExpr().bind("buffer"))),
-                anyOf(hasArgument(1, sizeOfExpr(hasIgnoringParenImpCasts(
-                                         declRefExpr().bind("size")))),
+                anyOf(hasArgument(1, sizeOfExpr(has(ignoringParenImpCasts(
+                                         declRefExpr().bind("size"))))),
                       hasArgument(1, integerLiteral().bind("immediate")),
                       hasArgument(1, declRefExpr(to(varDecl(
                                          hasType(isConstQualified()),

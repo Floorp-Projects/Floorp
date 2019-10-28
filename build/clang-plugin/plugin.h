@@ -39,14 +39,6 @@ typedef ASTConsumer *ASTConsumerPtr;
 #define getEndLoc getLocEnd
 #endif
 
-#ifndef HAS_ACCEPTS_IGNORINGPARENIMPCASTS
-#define hasIgnoringParenImpCasts(x) has(x)
-#else
-// Before clang 3.9 "has" would behave like has(ignoringParenImpCasts(x)),
-// however doing that explicitly would not compile.
-#define hasIgnoringParenImpCasts(x) has(ignoringParenImpCasts(x))
-#endif
-
 // In order to support running our checks using clang-tidy, we implement a
 // source compatible base check class called BaseCheck, and we use the
 // preprocessor to decide which base class to pick.
