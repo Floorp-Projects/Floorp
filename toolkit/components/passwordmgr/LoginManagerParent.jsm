@@ -394,8 +394,17 @@ class LoginManagerParent extends JSWindowActorParent {
     // Note: previousResult is a regular object, not an
     // nsIAutoCompleteResult.
 
-    // Cancel if we unsuccessfully prompted for the master password too recently.
+    // Cancel if the master password prompt is already showing or we unsuccessfully prompted for it too recently.
     if (!Services.logins.isLoggedIn) {
+      if (Services.logins.uiBusy) {
+        log(
+          "Not searching logins for autocomplete since the master password prompt is already showing"
+        );
+        // Return an empty array to make LoginManagerChild clear the
+        // outstanding request it has temporarily saved.
+        return { logins: [] };
+      }
+
       let timeDiff = Date.now() - gLastMPLoginCancelled;
       if (timeDiff < LoginManagerParent._repromptTimeout) {
         log(
