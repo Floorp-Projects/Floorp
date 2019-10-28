@@ -29,18 +29,12 @@ let gListenerId = 0;
  * @param {function} listener
  *        Function to call in parent process when event fires.
  *        Not passed any arguments.
- * @param {object} listenerOptions [optional]
- *        Options to pass to the event listener.
  * @param {function} checkFn [optional]
  *        Called with the Event object as argument, should return true if the
  *        event is the expected one, or false if it should be ignored and
  *        listening should continue. If not specified, the first event with
  *        the specified name resolves the returned promise. This is called
  *        within the content process and can have no closure environment.
- * @param {bool} autoremove [optional]
- *        Whether the listener should be removed when |browser| is removed
- *        from the DOM. Note that, if this flag is true, it won't be possible
- *        to listen for events after a frameloader swap.
  *
  * @returns function
  *        If called, the return value will remove the event listener.
@@ -49,9 +43,7 @@ function addContentEventListenerWithMessageManager(
   browser,
   eventName,
   listener,
-  listenerOptions = {},
-  checkFn,
-  autoremove = true
+  checkFn
 ) {
   let id = gListenerId++;
   let checkFnSource = checkFn
@@ -63,7 +55,7 @@ function addContentEventListenerWithMessageManager(
   // |browser|.
 
   /* eslint-disable no-eval */
-  function frameScript(id, eventName, listenerOptions, checkFnSource) {
+  function frameScript(id, eventName, checkFnSource) {
     let checkFn;
     if (checkFnSource) {
       checkFn = eval(`(() => (${unescape(checkFnSource)}))()`);
@@ -78,17 +70,16 @@ function addContentEventListenerWithMessageManager(
     function removeListener(msg) {
       if (msg.data == id) {
         removeMessageListener("ContentEventListener:Remove", removeListener);
-        removeEventListener(eventName, listener, listenerOptions);
+        removeEventListener(eventName, listener);
       }
     }
     addMessageListener("ContentEventListener:Remove", removeListener);
-    addEventListener(eventName, listener, listenerOptions);
+    addEventListener(eventName, listener);
   }
   /* eslint-enable no-eval */
 
-  let frameScriptSource = `data:,(${frameScript.toString()})(${id}, "${eventName}", ${uneval(
-    listenerOptions
-  )}, "${checkFnSource}")`;
+  let frameScriptSource = `data:,(${frameScript.toString()})(${id}, "${eventName}",
+     "${checkFnSource}")`;
 
   let mm = Services.mm;
 
@@ -109,18 +100,12 @@ function addContentEventListenerWithMessageManager(
     mm.removeMessageListener("ContentEventListener:Run", runListener);
     mm.broadcastAsyncMessage("ContentEventListener:Remove", id);
     mm.removeDelayedFrameScript(frameScriptSource);
-    if (autoremove) {
-      Services.obs.removeObserver(cleanupObserver, "message-manager-close");
-    }
   };
 
   function cleanupObserver(subject, topic, data) {
     if (subject == browser.messageManager) {
       unregisterFunction();
     }
-  }
-  if (autoremove) {
-    Services.obs.addObserver(cleanupObserver, "message-manager-close");
   }
 
   mm.loadFrameScript(frameScriptSource, true);
@@ -175,17 +160,13 @@ function prepareForVisibilityEvents(browser, expectedOrder) {
       browser,
       "pagehide",
       () => eventListener("pagehide"),
-      {},
-      checkFn,
-      /* autoremove = */ false
+      checkFn
     );
     rmvShow = addContentEventListenerWithMessageManager(
       browser,
       "pageshow",
       () => eventListener("pageshow"),
-      {},
-      checkFn,
-      /* autoremove = */ false
+      checkFn
     );
   });
 }
