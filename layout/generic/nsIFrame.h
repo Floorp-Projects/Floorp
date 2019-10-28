@@ -4208,26 +4208,26 @@ class nsIFrame : public nsQueryFrame {
     mForceDescendIntoIfVisible = aForce;
   }
 
-  bool BuiltDisplayList() { return mBuiltDisplayList; }
-  void SetBuiltDisplayList(bool aBuilt) { mBuiltDisplayList = aBuilt; }
+  bool BuiltDisplayList() const { return mBuiltDisplayList; }
+  void SetBuiltDisplayList(const bool aBuilt) { mBuiltDisplayList = aBuilt; }
 
-  bool IsFrameModified() { return mFrameIsModified; }
-  void SetFrameIsModified(bool aFrameIsModified) {
+  bool IsFrameModified() const { return mFrameIsModified; }
+  void SetFrameIsModified(const bool aFrameIsModified) {
     mFrameIsModified = aFrameIsModified;
   }
 
-  bool HasOverrideDirtyRegion() { return mHasOverrideDirtyRegion; }
-  void SetHasOverrideDirtyRegion(bool aHasDirtyRegion) {
+  bool HasOverrideDirtyRegion() const { return mHasOverrideDirtyRegion; }
+  void SetHasOverrideDirtyRegion(const bool aHasDirtyRegion) {
     mHasOverrideDirtyRegion = aHasDirtyRegion;
   }
 
-  bool MayHaveWillChangeBudget() { return mMayHaveWillChangeBudget; }
-  void SetMayHaveWillChangeBudget(bool aHasBudget) {
+  bool MayHaveWillChangeBudget() const { return mMayHaveWillChangeBudget; }
+  void SetMayHaveWillChangeBudget(const bool aHasBudget) {
     mMayHaveWillChangeBudget = aHasBudget;
   }
 
   bool HasBSizeChange() const { return mHasBSizeChange; }
-  void SetHasBSizeChange(bool aHasBSizeChange) {
+  void SetHasBSizeChange(const bool aHasBSizeChange) {
     mHasBSizeChange = aHasBSizeChange;
   }
 
