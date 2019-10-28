@@ -4626,7 +4626,7 @@ class IDLAttribute(IDLInterfaceMember):
                            identifier,
                            returnType=self.type, arguments=[],
                            stringifier=True, underlyingAttr=self)
-        allowedExtAttrs = ["Throws", "NeedsSubjectPrincipal"]
+        allowedExtAttrs = ["Throws", "NeedsSubjectPrincipal", "Pure"]
         # Safe to ignore these as they are only meaningful for attributes
         attributeOnlyExtAttrs = [
             "CEReactions",
