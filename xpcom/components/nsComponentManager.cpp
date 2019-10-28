@@ -23,7 +23,6 @@
 #include "mozilla/MemoryReporting.h"
 #include "nsIConsoleService.h"
 #include "nsIObserverService.h"
-#include "nsISimpleEnumerator.h"
 #include "nsIStringEnumerator.h"
 #include "nsXPCOM.h"
 #include "nsXPCOMPrivate.h"
@@ -48,8 +47,6 @@
 #include "nsSupportsPrimitives.h"
 #include "nsArray.h"
 #include "nsIMutableArray.h"
-#include "nsArrayEnumerator.h"
-#include "nsStringEnumerator.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/FileUtils.h"
 #include "mozilla/ScopeExit.h"
@@ -1702,27 +1699,20 @@ nsComponentManagerImpl::IsContractIDRegistered(const char* aClass,
 }
 
 NS_IMETHODIMP
-nsComponentManagerImpl::EnumerateContractIDs(
-    nsISimpleEnumerator** aEnumerator) {
-  auto* array = new nsTArray<nsCString>;
+nsComponentManagerImpl::GetContractIDs(nsTArray<nsCString>& aResult) {
+  aResult.Clear();
+
   for (auto iter = mContractIDs.Iter(); !iter.Done(); iter.Next()) {
-    const nsACString& contract = iter.Key();
-    array->AppendElement(contract);
+    aResult.AppendElement(iter.Key());
   }
 
   for (const auto& entry : gContractEntries) {
     if (!entry.Invalid()) {
-      array->AppendElement(entry.ContractID());
+      aResult.AppendElement(entry.ContractID());
     }
   }
 
-  nsCOMPtr<nsIUTF8StringEnumerator> e;
-  nsresult rv = NS_NewAdoptingUTF8StringEnumerator(getter_AddRefs(e), array);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  return CallQueryInterface(e, aEnumerator);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
