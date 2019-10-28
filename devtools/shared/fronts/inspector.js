@@ -30,7 +30,8 @@ const TELEMETRY_EYEDROPPER_OPENED_MENU =
 const SHOW_ALL_ANONYMOUS_CONTENT_PREF =
   "devtools.inspector.showAllAnonymousContent";
 const SHOW_UA_SHADOW_ROOTS_PREF = "devtools.inspector.showUserAgentShadowRoots";
-const FISSION_ENABLED_PREF = "devtools.browsertoolbox.fission";
+const BROWSER_FISSION_ENABLED_PREF = "devtools.browsertoolbox.fission";
+const CONTENT_FISSION_ENABLED_PREF = "devtools.contenttoolbox.fission";
 const USE_NEW_BOX_MODEL_HIGHLIGHTER_PREF =
   "devtools.inspector.use-new-box-model-highlighter";
 
@@ -533,6 +534,26 @@ class InspectorFront extends FrontClassWithSpec(inspectorSpec) {
     ]);
   }
 
+  get isBrowserFissionEnabled() {
+    if (this._isBrowserFissionEnabled === undefined) {
+      this._isBrowserFissionEnabled = Services.prefs.getBoolPref(
+        BROWSER_FISSION_ENABLED_PREF
+      );
+    }
+
+    return this._isBrowserFissionEnabled;
+  }
+
+  get isContentFissionEnabled() {
+    if (this._isContentFissionEnabled === undefined) {
+      this._isContentFissionEnabled = Services.prefs.getBoolPref(
+        CONTENT_FISSION_ENABLED_PREF
+      );
+    }
+
+    return this._isContentFissionEnabled;
+  }
+
   async _getWalker() {
     const showAllAnonymousContent = Services.prefs.getBoolPref(
       SHOW_ALL_ANONYMOUS_CONTENT_PREF
@@ -624,11 +645,11 @@ class InspectorFront extends FrontClassWithSpec(inspectorSpec) {
    * @return {Array} The list of InspectorFront instances.
    */
   async getChildInspectors() {
-    const fissionEnabled = Services.prefs.getBoolPref(FISSION_ENABLED_PREF);
     const childInspectors = [];
     const target = this.targetFront;
+
     // this line can be removed when we are ready for fission frames
-    if (fissionEnabled && target.chrome && !target.isAddon) {
+    if (this.isBrowserFissionEnabled && target.chrome && !target.isAddon) {
       const { frames } = await target.listRemoteFrames();
       // attempt to get targets and filter by targets that could connect
       for (const descriptor of frames) {
@@ -666,7 +687,7 @@ class InspectorFront extends FrontClassWithSpec(inspectorSpec) {
   async getNodeFrontFromNodeGrip(grip) {
     const gripHasContentDomReference = "contentDomReference" in grip;
 
-    if (!gripHasContentDomReference) {
+    if (!this.isContentFissionEnabled || !gripHasContentDomReference) {
       // Backward compatibility ( < Firefox 71):
       // If the grip does not have a contentDomReference, we can't know in which browsing
       // context id the node lives. We fall back on gripToNodeFront that might retrieve
