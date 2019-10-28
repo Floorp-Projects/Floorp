@@ -418,10 +418,6 @@ class PLDHashTable {
         mEntryStore(),
         mGeneration(0),
         mEntrySize(0)
-#ifdef DEBUG
-        ,
-        mChecker()
-#endif
   {
     *this = std::move(aOther);
   }
