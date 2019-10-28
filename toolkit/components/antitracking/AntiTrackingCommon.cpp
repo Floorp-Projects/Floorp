@@ -400,12 +400,7 @@ void ReportBlockingToConsole(nsPIDOMWindowOuter* aWindow, nsIURI* aURI,
       aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_ALL ||
       aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN);
 
-  nsCOMPtr<nsIDocShell> docShell = aWindow->GetDocShell();
-  if (NS_WARN_IF(!docShell)) {
-    return;
-  }
-
-  RefPtr<Document> doc = docShell->GetDocument();
+  RefPtr<Document> doc = aWindow->GetExtantDoc();
   if (NS_WARN_IF(!doc)) {
     return;
   }
@@ -485,12 +480,7 @@ void ReportUnblockingToConsole(
     return;
   }
 
-  nsCOMPtr<nsIDocShell> docShell = aWindow->GetDocShell();
-  if (NS_WARN_IF(!docShell)) {
-    return;
-  }
-
-  RefPtr<Document> doc = docShell->GetDocument();
+  RefPtr<Document> doc = aWindow->GetExtantDoc();
   if (NS_WARN_IF(!doc)) {
     return;
   }
