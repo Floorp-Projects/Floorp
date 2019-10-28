@@ -7,7 +7,7 @@ function run_test() {
     Ci.nsIPermissionManager
   );
 
-  Assert.equal(pm.all.length, 0);
+  Assert.equal(perm_count(), 0);
 
   // add some permissions
   let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
@@ -30,27 +30,40 @@ function run_test() {
   pm.addFromPrincipal(principal2, "pear", 2);
 
   // Make sure that removePermission doesn't remove more than one permission each time
-  Assert.equal(pm.all.length, 5);
+  Assert.equal(perm_count(), 5);
 
   remove_one_by_type("apple");
-  Assert.equal(pm.all.length, 4);
+  Assert.equal(perm_count(), 4);
 
   remove_one_by_type("apple");
-  Assert.equal(pm.all.length, 3);
+  Assert.equal(perm_count(), 3);
 
   remove_one_by_type("pear");
-  Assert.equal(pm.all.length, 2);
+  Assert.equal(perm_count(), 2);
 
   remove_one_by_type("cucumber");
-  Assert.equal(pm.all.length, 1);
+  Assert.equal(perm_count(), 1);
 
   remove_one_by_type("pear");
-  Assert.equal(pm.all.length, 0);
+  Assert.equal(perm_count(), 0);
+
+  function perm_count() {
+    let enumerator = pm.enumerator;
+    let count = 0;
+    while (enumerator.hasMoreElements()) {
+      count++;
+      enumerator.getNext();
+    }
+
+    return count;
+  }
 
   function remove_one_by_type(type) {
-    for (let perm of pm.all) {
-      if (perm.type == type) {
-        pm.removePermission(perm);
+    let enumerator = pm.enumerator;
+    while (enumerator.hasMoreElements()) {
+      let it = enumerator.getNext().QueryInterface(Ci.nsIPermission);
+      if (it.type == type) {
+        pm.removePermission(it);
         break;
       }
     }
