@@ -21,6 +21,7 @@ exports[`Frame getFrameTitle 1`] = `
           "sourceId": "source",
         },
         "id": "1",
+        "index": 0,
         "location": Object {
           "line": 10,
           "sourceId": "source",
@@ -74,6 +75,7 @@ exports[`Frame getFrameTitle 1`] = `
           "sourceId": "source",
         },
         "id": "1",
+        "index": 0,
         "location": Object {
           "line": 10,
           "sourceId": "source",
@@ -133,6 +135,7 @@ exports[`Frame library frame 1`] = `
           "sourceId": "source",
         },
         "id": "3",
+        "index": 0,
         "library": "backbone",
         "location": Object {
           "line": 12,
@@ -187,6 +190,7 @@ exports[`Frame library frame 1`] = `
           "sourceId": "source",
         },
         "id": "3",
+        "index": 0,
         "library": "backbone",
         "location": Object {
           "line": 12,
@@ -247,6 +251,7 @@ exports[`Frame user frame (not selected) 1`] = `
           "sourceId": "source",
         },
         "id": "1",
+        "index": 0,
         "location": Object {
           "line": 10,
           "sourceId": "source",
@@ -300,6 +305,7 @@ exports[`Frame user frame (not selected) 1`] = `
           "sourceId": "source",
         },
         "id": "1",
+        "index": 0,
         "location": Object {
           "line": 10,
           "sourceId": "source",
@@ -359,6 +365,7 @@ exports[`Frame user frame 1`] = `
           "sourceId": "source",
         },
         "id": "1",
+        "index": 0,
         "location": Object {
           "line": 10,
           "sourceId": "source",
@@ -412,6 +419,7 @@ exports[`Frame user frame 1`] = `
           "sourceId": "source",
         },
         "id": "1",
+        "index": 0,
         "location": Object {
           "line": 10,
           "sourceId": "source",
