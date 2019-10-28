@@ -111,6 +111,7 @@ class DownloadsFeature(
                 showDialog(tab, download)
                 false
             } else {
+                useCases.consumeDownload(tab.id, download.id)
                 startDownload(download)
             }
         } else {
