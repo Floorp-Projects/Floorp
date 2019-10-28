@@ -5400,7 +5400,7 @@ void nsGlobalWindowOuter::NotifyContentBlockingEvent(
   if (!docShell) {
     return;
   }
-  nsCOMPtr<Document> doc = docShell->GetDocument();
+  nsCOMPtr<Document> doc = GetExtantDoc();
   NS_ENSURE_TRUE_VOID(doc);
 
   nsCOMPtr<nsIURI> uri(aURIHint);
