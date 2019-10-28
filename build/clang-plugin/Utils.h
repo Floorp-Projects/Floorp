@@ -9,6 +9,16 @@
 #include "ThirdPartyPaths.h"
 #include "plugin.h"
 
+inline StringRef getFilename(const SourceManager &SM, SourceLocation Loc) {
+  // We use the presumed location to handle #line directives and such, so the
+  // plugin is friendly to icecc / sccache users.
+  auto PL = SM.getPresumedLoc(Loc);
+  if (PL.isValid()) {
+    return StringRef(PL.getFilename());
+  }
+  return SM.getFilename(Loc);
+}
+
 // Check if the given expression contains an assignment expression.
 // This can either take the form of a Binary Operator or a
 // Overloaded Operator Call.
@@ -181,7 +191,7 @@ inline bool isIgnoredPathForImplicitConversion(const Decl *Declaration) {
   Declaration = Declaration->getCanonicalDecl();
   SourceLocation Loc = Declaration->getLocation();
   const SourceManager &SM = Declaration->getASTContext().getSourceManager();
-  SmallString<1024> FileName = SM.getFilename(Loc);
+  SmallString<1024> FileName = getFilename(SM, Loc);
   llvm::sys::fs::make_absolute(FileName);
   llvm::sys::path::reverse_iterator Begin = llvm::sys::path::rbegin(FileName),
                                     End = llvm::sys::path::rend(FileName);
@@ -201,7 +211,7 @@ inline bool isIgnoredPathForImplicitConversion(const Decl *Declaration) {
 inline bool isIgnoredPathForSprintfLiteral(const CallExpr *Call,
                                            const SourceManager &SM) {
   SourceLocation Loc = Call->getBeginLoc();
-  SmallString<1024> FileName = SM.getFilename(Loc);
+  SmallString<1024> FileName = getFilename(SM, Loc);
   llvm::sys::fs::make_absolute(FileName);
   llvm::sys::path::reverse_iterator Begin = llvm::sys::path::rbegin(FileName),
                                     End = llvm::sys::path::rend(FileName);
@@ -362,18 +372,16 @@ inline bool isPlacementNew(const CXXNewExpr *Expression) {
   return true;
 }
 
-extern DenseMap<unsigned, bool> InThirdPartyPathCache;
+extern DenseMap<StringRef, bool> InThirdPartyPathCache;
 
 inline bool inThirdPartyPath(SourceLocation Loc, const SourceManager &SM) {
-  Loc = SM.getFileLoc(Loc);
-
-  unsigned id = SM.getFileID(Loc).getHashValue();
-  auto pair = InThirdPartyPathCache.find(id);
+  StringRef OriginalFileName = getFilename(SM, Loc);
+  auto pair = InThirdPartyPathCache.find(OriginalFileName);
   if (pair != InThirdPartyPathCache.end()) {
     return pair->second;
   }
 
-  SmallString<1024> FileName = SM.getFilename(Loc);
+  SmallString<1024> FileName = OriginalFileName;
   llvm::sys::fs::make_absolute(FileName);
 
   for (uint32_t i = 0; i < MOZ_THIRD_PARTY_PATHS_COUNT; ++i) {
@@ -397,13 +405,13 @@ inline bool inThirdPartyPath(SourceLocation Loc, const SourceManager &SM) {
 
       // We found a match!
       if (IThirdPartyB == ThirdPartyE) {
-        InThirdPartyPathCache.insert(std::make_pair(id, true));
+        InThirdPartyPathCache.insert(std::make_pair(OriginalFileName, true));
         return true;
       }
     }
   }
 
-  InThirdPartyPathCache.insert(std::make_pair(id, false));
+  InThirdPartyPathCache.insert(std::make_pair(OriginalFileName, false));
   return false;
 }
 
