@@ -309,7 +309,6 @@ class MOZ_NEEDS_NO_VTABLE_TYPE nsTHashtable {
     mozilla::Swap(this->mTable, aOther.mTable);
   }
 
-#ifdef DEBUG
   /**
    * Mark the table as constant after initialization.
    *
@@ -317,7 +316,6 @@ class MOZ_NEEDS_NO_VTABLE_TYPE nsTHashtable {
    * threads without synchronization.
    */
   void MarkImmutable() { mTable.MarkImmutable(); }
-#endif
 
  protected:
   PLDHashTable mTable;
@@ -515,10 +513,7 @@ class nsTHashtable<nsPtrHashKey<T>>
 
   using Base::ShallowSizeOfExcludingThis;
   using Base::ShallowSizeOfIncludingThis;
-
-#ifdef DEBUG
   using Base::MarkImmutable;
-#endif
 
   /* Wrapper functions */
   EntryType* GetEntry(T* aKey) const {
