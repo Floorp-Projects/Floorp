@@ -11,6 +11,7 @@
 #include "mozilla/ScopeExit.h"
 #include "mozilla/EndianUtils.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
 #include <algorithm>
 
@@ -119,13 +120,13 @@ nsresult VariableLengthPrefixSet::SetPrefixes(AddPrefixArray& aAddPrefixes,
   }
   completions.Sort();
 
-  nsCString* completionStr = new nsCString;
+  UniquePtr<nsCString> completionStr(new nsCString);
   completionStr->SetCapacity(completions.Length() * COMPLETE_SIZE);
   for (size_t i = 0; i < completions.Length(); i++) {
     const char* buf = reinterpret_cast<const char*>(completions[i].buf);
     completionStr->Append(buf, COMPLETE_SIZE);
   }
-  mVLPrefixSet.Put(COMPLETE_SIZE, completionStr);
+  mVLPrefixSet.Put(COMPLETE_SIZE, completionStr.release());
 
   return NS_OK;
 }
@@ -201,7 +202,7 @@ nsresult VariableLengthPrefixSet::GetPrefixes(PrefixStringMap& aPrefixMap) {
 
   size_t count = array.Length();
   if (count) {
-    nsCString* prefixes = new nsCString();
+    UniquePtr<nsCString> prefixes(new nsCString());
     if (!prefixes->SetLength(PREFIX_SIZE_FIXED * count, fallible)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -212,7 +213,7 @@ nsresult VariableLengthPrefixSet::GetPrefixes(PrefixStringMap& aPrefixMap) {
       begin[i] = NativeEndian::swapToBigEndian(array[i]);
     }
 
-    aPrefixMap.Put(PREFIX_SIZE_FIXED, prefixes);
+    aPrefixMap.Put(PREFIX_SIZE_FIXED, prefixes.release());
   }
 
   // Copy variable-length prefix set
@@ -349,7 +350,7 @@ nsresult VariableLengthPrefixSet::LoadPrefixes(nsCOMPtr<nsIInputStream>& in) {
     NS_ENSURE_TRUE(stringLength % prefixSize == 0, NS_ERROR_FILE_CORRUPTED);
     uint32_t prefixCount = stringLength / prefixSize;
 
-    nsCString* vlPrefixes = new nsCString();
+    UniquePtr<nsCString> vlPrefixes(new nsCString());
     if (!vlPrefixes->SetLength(stringLength, fallible)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -359,7 +360,7 @@ nsresult VariableLengthPrefixSet::LoadPrefixes(nsCOMPtr<nsIInputStream>& in) {
     NS_ENSURE_SUCCESS(rv, rv);
     NS_ENSURE_TRUE(read == stringLength, NS_ERROR_FAILURE);
 
-    mVLPrefixSet.Put(prefixSize, vlPrefixes);
+    mVLPrefixSet.Put(prefixSize, vlPrefixes.release());
     totalPrefixes += prefixCount;
     LOG(("[%s] Loaded %u %u-byte prefixes", mName.get(), prefixCount,
          prefixSize));
