@@ -2478,7 +2478,7 @@ void nsBlockFrame::ReflowDirtyLines(BlockReflowInput& aState) {
       uint8_t align =
           isLastLine ? StyleText()->mTextAlign : StyleText()->mTextAlignLast;
 
-      if (line->mWritingMode.IsVertical() || !line->mWritingMode.IsBidiLTR() ||
+      if (line->mWritingMode.IsVertical() || line->mWritingMode.IsBidiRTL() ||
           !IsAlignedLeft(align,
                          aState.mReflowInput.mStyleVisibility->mDirection,
                          StyleTextReset()->mUnicodeBidi, this)) {

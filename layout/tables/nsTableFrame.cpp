@@ -7181,7 +7181,7 @@ Maybe<BCBorderParameters> BCInlineDirSeg::BuildBorderParameters(
   // right or bottom end. If the writing mode is inline-RTL, our "start" and
   // "end" will be reversed from this physical-coord view, so we have to swap
   // them here.
-  if (!aIter.mTableWM.IsBidiLTR()) {
+  if (aIter.mTableWM.IsBidiRTL()) {
     Swap(result.mStartBevelSide, result.mEndBevelSide);
     Swap(result.mStartBevelOffset, result.mEndBevelOffset);
   }

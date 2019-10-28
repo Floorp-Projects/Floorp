@@ -132,7 +132,7 @@ void nsColumnSetFrame::ForEachColumnRule(
 
   WritingMode wm = GetWritingMode();
   bool isVertical = wm.IsVertical();
-  bool isRTL = !wm.IsBidiLTR();
+  bool isRTL = wm.IsBidiRTL();
 
   nsRect contentRect = GetContentRectRelativeToSelf() + aPt;
   nsSize ruleSize = isVertical ? nsSize(contentRect.width, ruleWidth)
@@ -560,7 +560,7 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowChildren(
   ColumnBalanceData colData;
   bool allFit = true;
   WritingMode wm = GetWritingMode();
-  const bool isRTL = !wm.IsBidiLTR();
+  const bool isRTL = wm.IsBidiRTL();
   const bool shrinkingBSize = mLastBalanceBSize > aConfig.mColMaxBSize;
   const bool changingBSize = mLastBalanceBSize != aConfig.mColMaxBSize;
 

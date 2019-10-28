@@ -121,7 +121,7 @@ bool nsInlineFrame::IsSelfEmpty() {
         StyleBorder()->mBoxDecorationBreak == StyleBoxDecorationBreak::Slice) {
       // When direction=rtl, we need to consider logical rather than visual
       // start and end, so swap the flags.
-      if (!wm.IsBidiLTR()) {
+      if (wm.IsBidiRTL()) {
         Swap(haveStart, haveEnd);
       }
       // For ib-split frames, ignore things we know we'll skip in GetSkipSides.

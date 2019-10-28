@@ -1037,7 +1037,7 @@ void nsTextBoxFrame::CalcDrawRect(gfxContext& aRenderingContext) {
     textRect.IStart(wm) += (outerISize - textRect.ISize(wm)) / 2;
   } else if (textStyle->mTextAlign == NS_STYLE_TEXT_ALIGN_END ||
              (textStyle->mTextAlign == NS_STYLE_TEXT_ALIGN_LEFT &&
-              !wm.IsBidiLTR()) ||
+              wm.IsBidiRTL()) ||
              (textStyle->mTextAlign == NS_STYLE_TEXT_ALIGN_RIGHT &&
               wm.IsBidiLTR())) {
     textRect.IStart(wm) += (outerISize - textRect.ISize(wm));
