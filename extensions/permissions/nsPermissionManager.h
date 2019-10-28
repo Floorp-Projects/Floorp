@@ -284,6 +284,15 @@ class nsPermissionManager final : public nsIPermissionManager,
   // From ContentChild.
   nsresult RemoveAllFromIPC();
 
+  /**
+   * Returns false if this permission manager wouldn't have the permission
+   * requested available.
+   *
+   * If aType is empty, checks that the permission manager would have all
+   * permissions available for the given principal.
+   */
+  bool PermissionAvailable(nsIPrincipal* aPrincipal, const nsACString& aType);
+
  private:
   virtual ~nsPermissionManager();
 
@@ -517,15 +526,6 @@ class nsPermissionManager final : public nsIPermissionManager,
 
   template <class T>
   nsresult RemovePermissionEntries(T aCondition);
-
-  /**
-   * Returns false if this permission manager wouldn't have the permission
-   * requested available.
-   *
-   * If aType is nullptr, checks that the permission manager would have all
-   * permissions available for the given principal.
-   */
-  bool PermissionAvailable(nsIPrincipal* aPrincipal, const nsACString& aType);
 
   nsRefPtrHashtable<nsCStringHashKey,
                     mozilla::GenericNonExclusivePromise::Private>
