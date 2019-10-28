@@ -242,10 +242,18 @@ pub trait Compositor {
     /// Bind this surface such that WR can issue OpenGL commands
     /// that will target the surface. Returns an (x, y) offset
     /// where WR should draw into the surface. This can be set
-    /// to (0, 0) if the OS doesn't use texture atlases.
+    /// to (0, 0) if the OS doesn't use texture atlases. The dirty
+    /// rect is a local surface rect that specifies which part
+    /// of the surface needs to be updated. If max_update_rects
+    /// in CompositeConfig is 0, this will always be the size
+    /// of the entire surface. The returned offset is only
+    /// relevant to compositors that store surfaces in a texture
+    /// atlas (that is, WR expects that the dirty rect doesn't
+    /// affect the coordinates of the returned origin).
     fn bind(
         &mut self,
         id: NativeSurfaceId,
+        dirty_rect: DeviceIntRect,
     ) -> NativeSurfaceInfo;
 
     /// Unbind the surface. This is called by WR when it has

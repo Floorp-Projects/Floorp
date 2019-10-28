@@ -5057,7 +5057,7 @@ impl Renderer {
                                 ResolvedSurfaceTexture::NativeSurface { id, size, .. } => {
                                     let surface_info = match self.compositor_config {
                                         CompositorConfig::Native { ref mut compositor, .. } => {
-                                            compositor.bind(id)
+                                            compositor.bind(id, picture_target.dirty_rect)
                                         }
                                         CompositorConfig::Draw { .. } => {
                                             unreachable!();
