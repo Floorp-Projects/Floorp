@@ -543,6 +543,13 @@ void RenderCompositorANGLE::Pause() {}
 
 bool RenderCompositorANGLE::Resume() { return true; }
 
+void RenderCompositorANGLE::Update() {
+  // Update compositor window's size if it exists.
+  // It needs to be called here, since OS might update compositor
+  // window's size at unexpected timing.
+  mWidget->AsWindows()->UpdateCompositorWndSizeIfNecessary();
+}
+
 bool RenderCompositorANGLE::MakeCurrent() {
   gl::GLContextEGL::Cast(gl())->SetEGLSurfaceOverride(mEGLSurface);
   return gl()->MakeCurrent();
