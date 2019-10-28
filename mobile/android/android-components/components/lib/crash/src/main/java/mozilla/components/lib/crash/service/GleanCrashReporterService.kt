@@ -125,9 +125,15 @@ class GleanCrashReporterService(
         }
 
         // Now, record the crash counts into Glean
-        CrashMetrics.crashCount[UNCAUGHT_EXCEPTION_KEY].add(uncaughtExceptionCount)
-        CrashMetrics.crashCount[CAUGHT_EXCEPTION_KEY].add(caughtExceptionCount)
-        CrashMetrics.crashCount[NATIVE_CODE_CRASH_KEY].add(nativeCodeCrashCount)
+        if (uncaughtExceptionCount > 0) {
+            CrashMetrics.crashCount[UNCAUGHT_EXCEPTION_KEY].add(uncaughtExceptionCount)
+        }
+        if (caughtExceptionCount > 0) {
+            CrashMetrics.crashCount[CAUGHT_EXCEPTION_KEY].add(caughtExceptionCount)
+        }
+        if (nativeCodeCrashCount > 0) {
+            CrashMetrics.crashCount[NATIVE_CODE_CRASH_KEY].add(nativeCodeCrashCount)
+        }
     }
 
     /**
