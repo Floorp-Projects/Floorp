@@ -2993,6 +2993,30 @@ AttachDecision HasPropIRGenerator::tryAttachTypedArray(HandleObject obj,
   return AttachDecision::Attach;
 }
 
+AttachDecision HasPropIRGenerator::tryAttachTypedArrayNonInt32Index(
+    HandleObject obj, ObjOperandId objId, ValOperandId keyId) {
+  if (!obj->is<TypedArrayObject>()) {
+    return AttachDecision::NoAction;
+  }
+
+  if (!idVal_.isNumber()) {
+    return AttachDecision::NoAction;
+  }
+
+  Int32OperandId indexId = writer.guardToTypedArrayIndex(keyId);
+
+  TypedThingLayout layout = GetTypedThingLayout(obj->getClass());
+
+  writer.guardShapeForClass(objId, obj->as<TypedArrayObject>().shape());
+
+  writer.loadTypedElementExistsResult(objId, indexId, layout);
+
+  writer.returnFromIC();
+
+  trackAttached("TypedArrayObjectNonInt32Index");
+  return AttachDecision::Attach;
+}
+
 AttachDecision HasPropIRGenerator::tryAttachTypedObject(JSObject* obj,
                                                         ObjOperandId objId,
                                                         jsid key,
@@ -3119,6 +3143,8 @@ AttachDecision HasPropIRGenerator::tryAttachStub() {
     trackAttached(IRGenerator::NotAttached);
     return AttachDecision::NoAction;
   }
+
+  TRY_ATTACH(tryAttachTypedArrayNonInt32Index(obj, objId, keyId));
 
   trackAttached(IRGenerator::NotAttached);
   return AttachDecision::NoAction;
