@@ -450,8 +450,14 @@ class StaticAnalysis(MachCommandBase):
 
         # For each element in commands_list run `cov-translate`
         for element in commands_list:
+
+            def transform_cmd(cmd):
+                # Coverity Analysis has a problem translating definitions passed as:
+                # '-DSOME_DEF="ValueOfAString"', please see Bug 1588283.
+                return [re.sub(r'\'-D(.*)="(.*)"\'', r'-D\1="\2"', arg) for arg in cmd]
+
             cmd = [self.cov_translate, '--dir', self.cov_idir_path] + \
-                element['command'].split(' ')
+                transform_cmd(element['command'].split(' '))
 
             if self.run_cov_command(cmd, element['directory']):
                 return 1
