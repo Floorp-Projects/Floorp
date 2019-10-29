@@ -1612,6 +1612,8 @@ nsresult nsIOService::OnNetworkLinkEvent(const char* data) {
   } else if (!strcmp(data, NS_NETWORK_LINK_DATA_UNKNOWN)) {
     nsresult rv = mNetworkLinkService->GetIsLinkUp(&isUp);
     NS_ENSURE_SUCCESS(rv, rv);
+  } else if (!strcmp(data, NS_NETWORK_LINK_DATA_NETWORKID_CHANGED)) {
+    LOG(("nsIOService::OnNetworkLinkEvent Network id changed"));
   } else {
     NS_WARNING("Unhandled network event!");
     return NS_OK;

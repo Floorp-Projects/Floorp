@@ -630,8 +630,9 @@ void nsNetworkLinkService::calculateNetworkIdInternal(void) {
   static bool initialIDCalculation = true;
   if (idChanged && !initialIDCalculation) {
     RefPtr<nsNetworkLinkService> self = this;
-    NS_DispatchToMainThread(NS_NewRunnableFunction(
-        "nsNetworkLinkService::calculateNetworkIdInternal", [self]() { self->SendEvent(true); }));
+    NS_DispatchToMainThread(
+        NS_NewRunnableFunction("nsNetworkLinkService::calculateNetworkIdInternal",
+                               [self]() { self->OnNetworkIdChanged(); }));
   }
 
   initialIDCalculation = false;
@@ -665,7 +666,7 @@ void nsNetworkLinkService::NetworkConfigChanged(SCDynamicStoreRef aStoreREf,
 
   nsNetworkLinkService* service = static_cast<nsNetworkLinkService*>(aInfo);
   if (ipConfigChanged) {
-    service->calculateNetworkIdWithDelay(kNetworkIdDelayAfterChange);
+    service->OnIPConfigChanged();
   }
 
   if (dnsConfigChanged) {
@@ -846,35 +847,50 @@ void nsNetworkLinkService::UpdateReachability() {
   mStatusKnown = true;
 }
 
-void nsNetworkLinkService::SendEvent(bool aNetworkChanged) {
+void nsNetworkLinkService::OnIPConfigChanged() {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsCOMPtr<nsIObserverService> observerService = do_GetService("@mozilla.org/observer-service;1");
-  if (!observerService) {
+  calculateNetworkIdWithDelay(kNetworkIdDelayAfterChange);
+  if (!StaticPrefs::network_notify_changed()) {
     return;
   }
 
-  const char* event;
-  if (aNetworkChanged) {
-    if (!StaticPrefs::network_notify_changed()) {
-      return;
-    }
-    event = NS_NETWORK_LINK_DATA_CHANGED;
-
-    if (!mNetworkChangeTime.IsNull()) {
-      Telemetry::AccumulateTimeDelta(Telemetry::NETWORK_TIME_BETWEEN_NETWORK_CHANGE_EVENTS,
-                                     mNetworkChangeTime);
-    }
-    mNetworkChangeTime = TimeStamp::Now();
-  } else if (!mStatusKnown) {
-    event = NS_NETWORK_LINK_DATA_UNKNOWN;
-  } else {
-    event = mLinkUp ? NS_NETWORK_LINK_DATA_UP : NS_NETWORK_LINK_DATA_DOWN;
+  if (!mNetworkChangeTime.IsNull()) {
+    Telemetry::AccumulateTimeDelta(Telemetry::NETWORK_TIME_BETWEEN_NETWORK_CHANGE_EVENTS,
+                                   mNetworkChangeTime);
   }
-  LOG(("SendEvent: network is '%s'\n", event));
+  mNetworkChangeTime = TimeStamp::Now();
 
-  observerService->NotifyObservers(static_cast<nsINetworkLinkService*>(this), NS_NETWORK_LINK_TOPIC,
-                                   NS_ConvertASCIItoUTF16(event).get());
+  SendEvent(NS_NETWORK_LINK_DATA_CHANGED);
+}
+
+void nsNetworkLinkService::OnNetworkIdChanged() {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  SendEvent(NS_NETWORK_LINK_DATA_NETWORKID_CHANGED);
+}
+
+void nsNetworkLinkService::OnReachabilityChanged() {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (!mStatusKnown) {
+    SendEvent(NS_NETWORK_LINK_DATA_UNKNOWN);
+    return;
+  }
+
+  SendEvent(mLinkUp ? NS_NETWORK_LINK_DATA_UP : NS_NETWORK_LINK_DATA_DOWN);
+}
+
+void nsNetworkLinkService::SendEvent(const char* aEventID) {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  LOG(("SendEvent: network is '%s'\n", aEventID));
+
+  nsCOMPtr<nsIObserverService> observerService = do_GetService("@mozilla.org/observer-service;1");
+  if (observerService) {
+    observerService->NotifyObservers(static_cast<nsINetworkLinkService*>(this),
+                                     NS_NETWORK_LINK_TOPIC, NS_ConvertASCIItoUTF16(aEventID).get());
+  }
 }
 
 /* static */
@@ -884,7 +900,7 @@ void nsNetworkLinkService::ReachabilityChanged(SCNetworkReachabilityRef target,
   nsNetworkLinkService* service = static_cast<nsNetworkLinkService*>(info);
 
   service->UpdateReachability();
-  service->SendEvent(false);
+  service->OnReachabilityChanged();
   service->calculateNetworkIdWithDelay(kNetworkIdDelayAfterChange);
   // If a new interface is up or the order of interfaces is changed, we should
   // update the DNS suffix list.

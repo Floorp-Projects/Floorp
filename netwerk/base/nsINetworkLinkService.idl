@@ -81,6 +81,10 @@ interface nsINetworkLinkService : nsISupports
  */
 #define NS_NETWORK_LINK_DATA_CHANGED "changed"
 /**
+ * network ID has changed.
+ */
+#define NS_NETWORK_LINK_DATA_NETWORKID_CHANGED "networkid-changed"
+/**
  * linkStatusKnown is now false.
  */
 #define NS_NETWORK_LINK_DATA_UNKNOWN "unknown"
