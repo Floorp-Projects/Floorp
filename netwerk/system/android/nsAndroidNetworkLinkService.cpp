@@ -153,6 +153,8 @@ void nsAndroidNetworkLinkService::OnNetworkChanged() {
   }
 }
 
+void nsAndroidNetworkLinkService::OnNetworkIDChanged() {}
+
 void nsAndroidNetworkLinkService::OnLinkUp() {
   RefPtr<nsAndroidNetworkLinkService> self = this;
   NS_DispatchToMainThread(NS_NewRunnableFunction(
