@@ -35,7 +35,6 @@ class NetlinkMsg;
 class NetlinkServiceListener : public nsISupports {
  public:
   virtual void OnNetworkChanged() = 0;
-  virtual void OnNetworkIDChanged() = 0;
   virtual void OnLinkUp() = 0;
   virtual void OnLinkDown() = 0;
   virtual void OnLinkStatusKnown() = 0;
@@ -106,10 +105,6 @@ class NetlinkService : public nsIRunnable {
   // Calculation is postponed until we receive responses to all enqueued
   // messages.
   bool mRecalculateNetworkId;
-
-  // Flag indicating that network change event needs to be sent even if
-  // network ID hasn't changed.
-  bool mSendNetworkChangeEvent;
 
   // Time stamp of setting mRecalculateNetworkId to true
   mozilla::TimeStamp mTriggerTime;
