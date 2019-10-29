@@ -82,6 +82,8 @@ element.Strategy = {
   PartialLinkText: "partial link text",
   TagName: "tag name",
   XPath: "xpath",
+  Anon: "anon",
+  AnonAttribute: "anon attribute",
 };
 
 /**
@@ -327,7 +329,17 @@ element.find = function(container, strategy, selector, opts = {}) {
       // the following code ought to be moved into findElement
       // and findElements when bug 1254486 is addressed
       if (!opts.all && (!foundEls || foundEls.length == 0)) {
-        let msg = `Unable to locate element: ${selector}`;
+        let msg;
+        switch (strategy) {
+          case element.Strategy.AnonAttribute:
+            msg =
+              "Unable to locate anonymous element: " + JSON.stringify(selector);
+            break;
+
+          default:
+            msg = "Unable to locate element: " + selector;
+        }
+
         reject(new NoSuchElementError(msg));
       }
 
@@ -349,7 +361,19 @@ function find_(
   let rootNode = container.shadowRoot || container.frame.document;
 
   if (!startNode) {
-    startNode = rootNode;
+    switch (strategy) {
+      // For anonymous nodes the start node needs to be of type
+      // DOMElement, which will refer to :root in case of a DOMDocument.
+      case element.Strategy.Anon:
+      case element.Strategy.AnonAttribute:
+        if (rootNode.nodeType == rootNode.DOCUMENT_NODE) {
+          startNode = rootNode.documentElement;
+        }
+        break;
+
+      default:
+        startNode = rootNode;
+    }
   }
 
   let res;
@@ -461,6 +485,24 @@ element.findByPartialLinkText = function(startNode, linkText) {
 };
 
 /**
+ * Find anonymous nodes of <var>node</var>.
+ *
+ * @param {HTMLDocument} document
+ *     Root node of the document.
+ * @param {XULElement} node
+ *     Where in the DOM hierarchy to begin searching.
+ *
+ * @return {Iterable.<XULElement>}
+ *     Iterator over anonymous elements.
+ */
+element.findAnonymousNodes = function*(document, node) {
+  let anons = document.getAnonymousNodes(node) || [];
+  for (let node of anons) {
+    yield node;
+  }
+};
+
+/**
  * Filters all hyperlinks that are descendant of <var>startNode</var>
  * by <var>predicate</var>.
  *
@@ -550,6 +592,17 @@ function findElement(strategy, selector, document, startNode = undefined) {
       } catch (e) {
         throw new InvalidSelectorError(`${e.message}: "${selector}"`);
       }
+
+    case element.Strategy.Anon:
+      return element.findAnonymousNodes(document, startNode).next().value;
+
+    case element.Strategy.AnonAttribute:
+      let attr = Object.keys(selector)[0];
+      return document.getAnonymousElementByAttribute(
+        startNode,
+        attr,
+        selector[attr]
+      );
   }
 
   throw new InvalidSelectorError(`No such strategy: ${strategy}`);
@@ -610,6 +663,21 @@ function findElements(strategy, selector, document, startNode = undefined) {
 
     case element.Strategy.Selector:
       return startNode.querySelectorAll(selector);
+
+    case element.Strategy.Anon:
+      return [...element.findAnonymousNodes(document, startNode)];
+
+    case element.Strategy.AnonAttribute:
+      let attr = Object.keys(selector)[0];
+      let el = document.getAnonymousElementByAttribute(
+        startNode,
+        attr,
+        selector[attr]
+      );
+      if (el) {
+        return [el];
+      }
+      return [];
 
     default:
       throw new InvalidSelectorError(`No such strategy: ${strategy}`);

@@ -1,0 +1,49 @@
+<?xml version="1.0"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!DOCTYPE dialog [
+]>
+
+<dialog id="testDialogAnonymousNode"
+          buttons="accept, cancel"
+          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <bindings id="testBindings" xmlns="http://www.mozilla.org/xbl"
+            xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+    <binding id="framebox">
+      <content orient="vertical" mousethrough="never">
+        <xul:browser anonid="content" id="browser" flex="1"
+                     context="contentAreaContextMenu"
+                     src="test.xul"
+                     type="content"/>
+      </content>
+    </binding>
+
+    <binding id="iframebox">
+      <content>
+        <xul:box>
+          <xul:iframe anonid="iframe" src="chrome://marionette/content/test.xul"></xul:iframe>
+        </xul:box>
+      </content>
+    </binding>
+
+    <binding id="buttonbox">
+      <content>
+        <xul:box anonid="buttons">
+          <xul:button dlgtype="cancel" class="dialog-button"/>
+          <xul:button dlgtype="accept" class="dialog-button"/>
+        </xul:box>
+        <xul:vbox></xul:vbox>
+        <xul:vbox></xul:vbox>
+      </content>
+    </binding>
+  </bindings>
+
+  <hbox id="testAnonymousContentBox"/>
+  <hbox id="container" style="-moz-binding: url('#testBindings');"/>
+  <hbox id="container2" style="-moz-binding: url('#iframebox');"/>
+  <hbox id="container3" style="-moz-binding: url('#buttonbox');"/>
+
+</dialog>

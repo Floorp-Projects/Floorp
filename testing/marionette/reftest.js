@@ -157,6 +157,7 @@ reftest.Runner = class {
       browser = reftestWin.document.createElementNS(XUL_NS, "xul:browser");
       browser.permanentKey = {};
       browser.setAttribute("id", "browser");
+      browser.setAttribute("anonid", "initialBrowser");
       browser.setAttribute("type", "content");
       browser.setAttribute("primary", "true");
       if (this.remote) {
