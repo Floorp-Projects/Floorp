@@ -75,7 +75,7 @@ nsFxrCommandLineHandler::Handle(nsICommandLine* aCmdLine) {
     result = wwatch->OpenWindow(nullptr,                            // aParent
                                 "chrome://fxr/content/fxrui.html",  // aUrl
                                 "_blank",                           // aName
-                                "chrome,dialog=no,all",             // aFeatures
+                                "chrome,dialog=no,all,private",     // aFeatures
                                 nullptr,  // aArguments
                                 getter_AddRefs(newWindow));
 
