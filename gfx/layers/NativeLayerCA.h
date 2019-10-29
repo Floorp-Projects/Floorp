@@ -114,6 +114,8 @@ class NativeLayerCA : public NativeLayer {
   void NotifySurfaceReady() override;
   void SetIsOpaque(bool aIsOpaque) override;
   bool IsOpaque() override;
+  void SetClipRect(const Maybe<gfx::IntRect>& aClipRect) override;
+  Maybe<gfx::IntRect> ClipRect() override;
   void SetSurfaceIsFlipped(bool aIsFlipped) override;
   bool SurfaceIsFlipped() override;
 
@@ -250,17 +252,22 @@ class NativeLayerCA : public NativeLayer {
 
   gfx::IntPoint mPosition;
   gfx::IntSize mSize;
+  Maybe<gfx::IntRect> mClipRect;
 
-  // Lazily initialized by first call to ApplyChanges.
+  // Lazily initialized by first call to ApplyChanges. mWrappingLayer is the
+  // layer that applies mClipRect (if set), and mContentCALayer is the layer
+  // that hosts the IOSurface. We do not share clip layers between consecutive
+  // NativeLayerCA objects with the same clip rect.
   CALayer* mWrappingCALayer = nullptr;  // strong
-  CALayer* mContentCALayer;             // strong
+  CALayer* mContentCALayer = nullptr;   // strong
 
   float mBackingScale = 1.0f;
   bool mSurfaceIsFlipped = false;
   bool mIsOpaque = false;
   bool mMutatedPosition = false;
-  bool mMutatedGeometry = false;
+  bool mMutatedSize = false;
   bool mMutatedIsOpaque = false;
+  bool mMutatedClipRect = false;
 };
 
 }  // namespace layers

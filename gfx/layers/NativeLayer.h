@@ -75,6 +75,11 @@ class NativeLayer {
   virtual void SetIsOpaque(bool aIsOpaque) = 0;
   virtual bool IsOpaque() = 0;
 
+  // Set an optional clip rect on the layer. The clip rect is in the same
+  // coordinate space as the layer rect.
+  virtual void SetClipRect(const Maybe<gfx::IntRect>& aClipRect) = 0;
+  virtual Maybe<gfx::IntRect> ClipRect() = 0;
+
   // Whether the surface contents are flipped vertically compared to this
   // layer's coordinate system. Can be set on any thread at any time.
   virtual void SetSurfaceIsFlipped(bool aIsFlipped) = 0;
