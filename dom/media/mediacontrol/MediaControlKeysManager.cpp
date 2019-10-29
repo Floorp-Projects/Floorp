@@ -36,7 +36,7 @@ void MediaControlKeysManager::StartMonitoringControlKeys() {
   }
   CreateEventSource();
   if (mEventSource) {
-    mEventSource->AddListener(new MediaControlKeysEventListener());
+    mEventSource->AddListener(new MediaControlKeysHandler());
   }
 }
 

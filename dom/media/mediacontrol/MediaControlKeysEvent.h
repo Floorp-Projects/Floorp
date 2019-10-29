@@ -14,20 +14,29 @@ namespace dom {
 enum class MediaControlKeysEvent { ePlayPause, ePrev, eNext, eNone };
 
 /**
- * MediaControlKeysEventListener is used to monitor MediaControlKeysEvent, we
- * can add it onto the MediaControlKeysEventSource, and then everytime when
- * the media key events occur, `OnKeyPressed` will be called so that we can do
- * related handling.
+ * MediaControlKeysEventListener is a pure interface, which is used to monitor
+ * MediaControlKeysEvent, we can add it onto the MediaControlKeysEventSource,
+ * and then everytime when the media key events occur, `OnKeyPressed` will be
+ * called so that we can do related handling.
  */
 class MediaControlKeysEventListener {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaControlKeysEventListener);
   MediaControlKeysEventListener() = default;
 
-  virtual void OnKeyPressed(MediaControlKeysEvent aKeyEvent);
+  virtual void OnKeyPressed(MediaControlKeysEvent aKeyEvent) = 0;
 
  protected:
   virtual ~MediaControlKeysEventListener() = default;
+};
+
+/**
+ * MediaControlKeysHandler is used to operate media controller by corresponding
+ * received media control key events.
+ */
+class MediaControlKeysHandler final : public MediaControlKeysEventListener {
+ public:
+  void OnKeyPressed(MediaControlKeysEvent aKeyEvent) override;
 };
 
 /**
