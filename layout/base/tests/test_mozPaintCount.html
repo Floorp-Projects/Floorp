@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-  <title>Tests for mozPaintCount</title>
+  <title>Tests for DOMWindowUtils.paintCount</title>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript" src="plugin-utils.js"></script>
   <script type="application/javascript">
@@ -22,13 +22,13 @@
 
 SimpleTest.waitForExplicitFinish();
 
-var startPaintCount = window.mozPaintCount;
+var startPaintCount = SpecialPowers.DOMWindowUtils.paintCount;
 ok(true, "Got to initial paint count: " + startPaintCount);
 var color = 0;
 
 function doPluginFlicker() {
-  ok(true, "Plugin color iteration " + color + ", paint count: " + window.mozPaintCount);
-  if (window.mozPaintCount - startPaintCount > 20) {
+  ok(true, "Plugin color iteration " + color + ", paint count: " + SpecialPowers.DOMWindowUtils.paintCount);
+  if (SpecialPowers.DOMWindowUtils.paintCount - startPaintCount > 20) {
     ok(true, "Got enough paints from plugin color changes");
     SimpleTest.finish();
     return;
@@ -45,10 +45,10 @@ function doPluginFlicker() {
 }
 
 function doBackgroundFlicker() {
-  ok(true, "Background color iteration " + color + ", paint count: " + window.mozPaintCount);
-  if (window.mozPaintCount - startPaintCount > 20) {
+  ok(true, "Background color iteration " + color + ", paint count: " + SpecialPowers.DOMWindowUtils.paintCount);
+  if (SpecialPowers.DOMWindowUtils.paintCount - startPaintCount > 20) {
     ok(true, "Got enough paints from background color changes");
-    startPaintCount = window.mozPaintCount;
+    startPaintCount = SpecialPowers.DOMWindowUtils.paintCount;
     doPluginFlicker();
     return;
   }
