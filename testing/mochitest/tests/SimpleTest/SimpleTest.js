@@ -1249,6 +1249,8 @@ SimpleTest.finish = function() {
     };
 
     executeCleanupFunction();
+
+    SpecialPowers.notifyObservers(null, "test-complete");
 };
 
 /**
