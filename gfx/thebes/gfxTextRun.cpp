@@ -2887,54 +2887,55 @@ gfxFont* gfxFontGroup::FindFontForChar(uint32_t aCh, uint32_t aPrevCh,
       continue;
     }
 
-    // if available, use already made gfxFont and check for character
     gfxFont* font = ff.Font();
     if (font) {
+      // if available, use already-made gfxFont and check for character
       if (font->HasCharacter(aCh)) {
         *aMatchType = {FontMatchType::Kind::kFontGroup, ff.Generic()};
         return font;
       }
-      continue;
-    }
+    } else {
+      // don't have a gfxFont yet, test charmap before instantiating
+      gfxFontEntry* fe = ff.FontEntry();
+      if (fe->mIsUserFontContainer) {
+        // for userfonts, need to test both the unicode range map and
+        // the cmap of the platform font entry
+        gfxUserFontEntry* ufe = static_cast<gfxUserFontEntry*>(fe);
 
-    // don't have a gfxFont yet, test before building
-    gfxFontEntry* fe = ff.FontEntry();
-    if (fe->mIsUserFontContainer) {
-      // for userfonts, need to test both the unicode range map and
-      // the cmap of the platform font entry
-      gfxUserFontEntry* ufe = static_cast<gfxUserFontEntry*>(fe);
+        // never match a character outside the defined unicode range
+        if (!ufe->CharacterInUnicodeRange(aCh)) {
+          continue;
+        }
 
-      // never match a character outside the defined unicode range
-      if (!ufe->CharacterInUnicodeRange(aCh)) {
-        continue;
-      }
+        // Load if not already loaded, unless we've already seen an in-
+        // progress load that is expected to satisfy this request.
+        if (!loading &&
+            ufe->LoadState() == gfxUserFontEntry::STATUS_NOT_LOADED) {
+          ufe->Load();
+          ff.CheckState(mSkipDrawing);
+        }
 
-      // Load if not already loaded, unless we've already seen an in-
-      // progress load that is expected to satisfy this request.
-      if (!loading && ufe->LoadState() == gfxUserFontEntry::STATUS_NOT_LOADED) {
-        ufe->Load();
-        ff.CheckState(mSkipDrawing);
-      }
+        if (ff.IsLoading()) {
+          loading = true;
+        }
 
-      if (ff.IsLoading()) {
-        loading = true;
-      }
-
-      gfxFontEntry* pfe = ufe->GetPlatformFontEntry();
-      if (pfe && pfe->HasCharacter(aCh)) {
+        gfxFontEntry* pfe = ufe->GetPlatformFontEntry();
+        if (pfe && pfe->HasCharacter(aCh)) {
+          font = GetFontAt(i, aCh, &loading);
+          if (font) {
+            *aMatchType = {FontMatchType::Kind::kFontGroup,
+                           mFonts[i].Generic()};
+            return font;
+          }
+        }
+      } else if (fe->HasCharacter(aCh)) {
+        // for normal platform fonts, after checking the cmap
+        // build the font via GetFontAt
         font = GetFontAt(i, aCh, &loading);
         if (font) {
           *aMatchType = {FontMatchType::Kind::kFontGroup, mFonts[i].Generic()};
           return font;
         }
-      }
-    } else if (fe->HasCharacter(aCh)) {
-      // for normal platform fonts, after checking the cmap
-      // build the font via GetFontAt
-      font = GetFontAt(i, aCh, &loading);
-      if (font) {
-        *aMatchType = {FontMatchType::Kind::kFontGroup, mFonts[i].Generic()};
-        return font;
       }
     }
 
@@ -2963,7 +2964,7 @@ gfxFont* gfxFontGroup::FindFontForChar(uint32_t aCh, uint32_t aPrevCh,
       // For platform fonts, but not user fonts, consider intra-family
       // fallback to handle styles with reduced character sets (see
       // also above).
-      fe = ff.FontEntry();
+      gfxFontEntry* fe = ff.FontEntry();
       if (!fe->mIsUserFontContainer && !fe->IsUserFont()) {
         font = FindFallbackFaceForChar(ff, aCh);
         if (font) {
