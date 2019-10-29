@@ -248,6 +248,7 @@ already_AddRefed<Promise> ScreenOrientation::Lock(
   return LockInternal(orientation, aRv);
 }
 
+#if defined(MOZ_WIDGET_ANDROID)
 static inline void AbortOrientationPromises(nsIDocShell* aDocShell) {
   MOZ_ASSERT(aDocShell);
 
@@ -273,6 +274,7 @@ static inline void AbortOrientationPromises(nsIDocShell* aDocShell) {
     }
   }
 }
+#endif
 
 already_AddRefed<Promise> ScreenOrientation::LockInternal(
     hal::ScreenOrientation aOrientation, ErrorResult& aRv) {
