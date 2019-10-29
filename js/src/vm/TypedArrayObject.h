@@ -8,10 +8,12 @@
 #define vm_TypedArrayObject_h
 
 #include "mozilla/Attributes.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/TextUtils.h"
 
 #include "gc/Barrier.h"
 #include "js/Class.h"
+#include "js/Result.h"
 #include "vm/ArrayBufferObject.h"
 #include "vm/ArrayBufferViewObject.h"
 #include "vm/JSObject.h"
@@ -237,11 +239,15 @@ inline size_t TypedArrayObject::bytesPerElement() const {
   return Scalar::byteSize(type());
 }
 
-// Return value is whether the string is some integer. If the string is an
-// integer which is not representable as a uint64_t, the return value is true
-// and the resulting index is UINT64_MAX.
+// ES2020 draft rev a5375bdad264c8aa264d9c44f57408087761069e
+// 7.1.16 CanonicalNumericIndexString
+//
+// Checks whether or not the string is a canonical numeric index string. If the
+// string is a canonical numeric index which is not representable as a uint64_t,
+// the returned index is UINT64_MAX.
 template <typename CharT>
-bool StringIsTypedArrayIndex(mozilla::Range<const CharT> s, uint64_t* indexp);
+JS::Result<mozilla::Maybe<uint64_t>> StringIsTypedArrayIndex(
+    JSContext* cx, mozilla::Range<const CharT> s);
 
 // A string |s| is a TypedArray index (or: canonical numeric index string) iff
 // |s| is "-0" or |SameValue(ToString(ToNumber(s)), s)| is true. So check for
@@ -252,37 +258,39 @@ inline bool CanStartTypedArrayIndex(CharT ch) {
   return mozilla::IsAsciiDigit(ch) || ch == '-' || ch == 'N' || ch == 'I';
 }
 
-inline bool IsTypedArrayIndex(jsid id, uint64_t* indexp) {
+inline JS::Result<mozilla::Maybe<uint64_t>> IsTypedArrayIndex(JSContext* cx,
+                                                              jsid id) {
+  using ResultType = decltype(IsTypedArrayIndex(cx, id));
+
   if (JSID_IS_INT(id)) {
     int32_t i = JSID_TO_INT(id);
     MOZ_ASSERT(i >= 0);
-    *indexp = static_cast<uint64_t>(i);
-    return true;
+    return mozilla::Some(static_cast<uint64_t>(i));
   }
 
   if (MOZ_UNLIKELY(!JSID_IS_STRING(id))) {
-    return false;
+    return ResultType(mozilla::Nothing());
   }
 
   JS::AutoCheckCannotGC nogc;
   JSAtom* atom = JSID_TO_ATOM(id);
   if (atom->length() == 0) {
-    return false;
+    return ResultType(mozilla::Nothing());
   }
 
   if (atom->hasLatin1Chars()) {
     mozilla::Range<const Latin1Char> chars = atom->latin1Range(nogc);
     if (!CanStartTypedArrayIndex(chars[0])) {
-      return false;
+      return ResultType(mozilla::Nothing());
     }
-    return StringIsTypedArrayIndex(chars, indexp);
+    return StringIsTypedArrayIndex(cx, chars);
   }
 
   mozilla::Range<const char16_t> chars = atom->twoByteRange(nogc);
   if (!CanStartTypedArrayIndex(chars[0])) {
-    return false;
+    return ResultType(mozilla::Nothing());
   }
-  return StringIsTypedArrayIndex(chars, indexp);
+  return StringIsTypedArrayIndex(cx, chars);
 }
 
 bool SetTypedArrayElement(JSContext* cx, Handle<TypedArrayObject*> obj,
