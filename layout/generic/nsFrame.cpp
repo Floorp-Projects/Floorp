@@ -3352,7 +3352,7 @@ void nsIFrame::BuildDisplayListForStackingContext(
     aBuilder->Check();
     BuildDisplayList(aBuilder, set);
     aBuilder->Check();
-    aBuilder->DisplayCaret(this, set.Content());
+    aBuilder->DisplayCaret(this, set.Outlines());
 
     insertBackdropRoot = backdropFilterEnabled &&
                          aBuilder->ContainsBackdropFilter() &&
@@ -3860,7 +3860,7 @@ void nsIFrame::BuildDisplayListForSimpleChild(nsDisplayListBuilder* aBuilder,
   aBuilder->Check();
   aChild->BuildDisplayList(aBuilder, aLists);
   aBuilder->Check();
-  aBuilder->DisplayCaret(aChild, aLists.Content());
+  aBuilder->DisplayCaret(aChild, aLists.Outlines());
 #ifdef DEBUG
   DisplayDebugBorders(aBuilder, aChild, aLists);
 #endif
@@ -4147,7 +4147,7 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
       aBuilder->Check();
       child->BuildDisplayList(aBuilder, aLists);
       aBuilder->Check();
-      aBuilder->DisplayCaret(child, aLists.Content());
+      aBuilder->DisplayCaret(child, aLists.Outlines());
 #ifdef DEBUG
       DisplayDebugBorders(aBuilder, child, aLists);
 #endif
@@ -4175,7 +4175,7 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
     aBuilder->Check();
     child->BuildDisplayList(aBuilder, pseudoStack);
     aBuilder->Check();
-    if (aBuilder->DisplayCaret(child, pseudoStack.Content())) {
+    if (aBuilder->DisplayCaret(child, pseudoStack.Outlines())) {
       builtContainerItem = false;
     }
 
