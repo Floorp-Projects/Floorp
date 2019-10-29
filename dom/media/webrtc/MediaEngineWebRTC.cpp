@@ -27,6 +27,9 @@ static mozilla::LazyLogModule sGetUserMediaLog("GetUserMedia");
 
 namespace mozilla {
 
+using camera::CamerasChild;
+using camera::GetChildAndCall;
+
 CubebDeviceEnumerator* GetEnumerator() {
   return CubebDeviceEnumerator::GetInstance();
 }
@@ -43,12 +46,12 @@ MediaEngineWebRTC::MediaEngineWebRTC(MediaEnginePrefs& aPrefs)
                                     &mHasTabVideoSource);
   }
 
-  camera::GetChildAndCall(&camera::CamerasChild::AddDeviceChangeCallback, this);
+  GetChildAndCall(&CamerasChild::AddDeviceChangeCallback, this);
   GetEnumerator()->AddDeviceChangeCallback(this);
 }
 
 void MediaEngineWebRTC::SetFakeDeviceChangeEvents() {
-  camera::GetChildAndCall(&camera::CamerasChild::SetFakeDeviceChangeEvents);
+  GetChildAndCall(&CamerasChild::SetFakeDeviceChangeEvents);
 }
 
 void MediaEngineWebRTC::EnumerateVideoDevices(
@@ -85,8 +88,7 @@ void MediaEngineWebRTC::EnumerateVideoDevices(
     }
   }
 #endif
-  num = mozilla::camera::GetChildAndCall(
-      &mozilla::camera::CamerasChild::NumberOfCaptureDevices, aCapEngine);
+  num = GetChildAndCall(&CamerasChild::NumberOfCaptureDevices, aCapEngine);
 
   for (int i = 0; i < num; i++) {
     char deviceName[MediaEngineSource::kMaxDeviceNameLength];
@@ -98,10 +100,9 @@ void MediaEngineWebRTC::EnumerateVideoDevices(
     uniqueId[0] = '\0';
     int error;
 
-    error = mozilla::camera::GetChildAndCall(
-        &mozilla::camera::CamerasChild::GetCaptureDevice, aCapEngine, i,
-        deviceName, sizeof(deviceName), uniqueId, sizeof(uniqueId),
-        &scarySource);
+    error = GetChildAndCall(&CamerasChild::GetCaptureDevice, aCapEngine, i,
+                            deviceName, sizeof(deviceName), uniqueId,
+                            sizeof(uniqueId), &scarySource);
     if (error) {
       LOG(("camera:GetCaptureDevice: Failed %d", error));
       continue;
@@ -110,14 +111,12 @@ void MediaEngineWebRTC::EnumerateVideoDevices(
     LOG(("  Capture Device Index %d, Name %s", i, deviceName));
 
     webrtc::CaptureCapability cap;
-    int numCaps = mozilla::camera::GetChildAndCall(
-        &mozilla::camera::CamerasChild::NumberOfCapabilities, aCapEngine,
-        uniqueId);
+    int numCaps = GetChildAndCall(&CamerasChild::NumberOfCapabilities,
+                                  aCapEngine, uniqueId);
     LOG(("Number of Capabilities %d", numCaps));
     for (int j = 0; j < numCaps; j++) {
-      if (mozilla::camera::GetChildAndCall(
-              &mozilla::camera::CamerasChild::GetCaptureCapability, aCapEngine,
-              uniqueId, j, cap) != 0) {
+      if (GetChildAndCall(&CamerasChild::GetCaptureCapability, aCapEngine,
+                          uniqueId, j, cap) != 0) {
         break;
       }
       LOG(("type=%d width=%d height=%d maxFPS=%d",
@@ -283,8 +282,7 @@ void MediaEngineWebRTC::Shutdown() {
   MutexAutoLock lock(mMutex);
 
   if (camera::GetCamerasChildIfExists()) {
-    camera::GetChildAndCall(&camera::CamerasChild::RemoveDeviceChangeCallback,
-                            this);
+    GetChildAndCall(&CamerasChild::RemoveDeviceChangeCallback, this);
   }
   GetEnumerator()->RemoveDeviceChangeCallback(this);
 
