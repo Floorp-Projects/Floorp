@@ -25,3 +25,5 @@ class By(object):
     TAG_NAME = "tag name"
     CLASS_NAME = "class name"
     CSS_SELECTOR = "css selector"
+    ANON_ATTRIBUTE = "anon attribute"
+    ANON = "anon"
