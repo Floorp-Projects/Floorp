@@ -7,14 +7,14 @@
 
 using namespace mozilla::dom;
 
-TEST(MediaHardwareKeysEvent, TestAddOrRemoveListener)
+TEST(MediaControlKeysEvent, TestAddOrRemoveListener)
 {
-  RefPtr<MediaHardwareKeysEventSource> source =
-      new MediaHardwareKeysEventSource();
+  RefPtr<MediaControlKeysEventSource> source =
+      new MediaControlKeysEventSource();
   ASSERT_TRUE(source->GetListenersNum() == 0);
 
-  RefPtr<MediaHardwareKeysEventListener> listener =
-      new MediaHardwareKeysEventListener();
+  RefPtr<MediaControlKeysEventListener> listener =
+      new MediaControlKeysEventListener();
 
   source->AddListener(listener);
   ASSERT_TRUE(source->GetListenersNum() == 1);

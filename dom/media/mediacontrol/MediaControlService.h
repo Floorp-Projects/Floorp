@@ -59,7 +59,7 @@ class MediaControlService final : public nsIObserver {
   nsDataHashtable<nsUint64HashKey, RefPtr<MediaController>> mControllers;
   nsTArray<uint64_t> mControllerHistory;
   AudioFocusManager mAudioFocusManager;
-  MediaHardwareKeysManager mHardwareKeysManager;
+  MediaControlKeysManager mMediaControlKeysManager;
 };
 
 }  // namespace dom

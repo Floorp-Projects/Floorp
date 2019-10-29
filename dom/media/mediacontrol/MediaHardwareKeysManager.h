@@ -11,21 +11,21 @@ namespace mozilla {
 namespace dom {
 
 /**
- * MediaHardwareKeysManager is used to create a source to intercept platform
+ * MediaControlKeysManager is used to create a source to intercept platform
  * level media keys event and assign a proper event listener to handle those
  * events.
  */
-class MediaHardwareKeysManager final {
+class MediaControlKeysManager final {
  public:
-  MediaHardwareKeysManager();
-  ~MediaHardwareKeysManager();
+  MediaControlKeysManager();
+  ~MediaControlKeysManager();
 
-  void StartMonitoringHardwareKeys();
-  void StopMonitoringHardwareKeys();
+  void StartMonitoringControlKeys();
+  void StopMonitoringControlKeys();
 
  private:
   void CreateEventSource();
-  RefPtr<MediaHardwareKeysEventSource> mEventSource;
+  RefPtr<MediaControlKeysEventSource> mEventSource;
 };
 
 }  // namespace dom
