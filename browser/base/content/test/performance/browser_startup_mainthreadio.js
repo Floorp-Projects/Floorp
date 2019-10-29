@@ -333,12 +333,6 @@ const startupPhases = {
   // This means that any I/O at this point delayed first paint.
   "before first paint": [
     {
-      // bug 1541226
-      path: "ProfD:",
-      condition: WIN,
-      stat: 1,
-    },
-    {
       // bug 1545119
       path: "OldUpdRootD:",
       condition: WIN,
@@ -366,12 +360,6 @@ const startupPhases = {
     {
       // bug 1545123
       path: "UserPlugins.parent:",
-      condition: WIN,
-      stat: 1,
-    },
-    {
-      // bug 1545123
-      path: "UserPlugins:",
       condition: WIN,
       stat: 1,
     },
