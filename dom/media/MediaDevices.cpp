@@ -48,12 +48,7 @@ class FuzzTimerCallBack final : public nsITimerCallback, public nsINamed {
 
 NS_IMPL_ISUPPORTS(FuzzTimerCallBack, nsITimerCallback, nsINamed)
 
-MediaDevices::~MediaDevices() {
-  MediaManager* mediamanager = MediaManager::GetIfExists();
-  if (mediamanager) {
-    mediamanager->RemoveDeviceChangeCallback(this);
-  }
-}
+MediaDevices::~MediaDevices() { mDeviceChangeListener.DisconnectIfExists(); }
 
 static bool IsSameOriginWithAllParentDocs(nsINode* aDoc) {
   MOZ_ASSERT(aDoc);
@@ -253,16 +248,36 @@ mozilla::dom::EventHandlerNonNull* MediaDevices::GetOndevicechange() {
   return GetEventHandler(nsGkAtoms::ondevicechange);
 }
 
+void MediaDevices::SetupDeviceChangeListener() {
+  if (mIsDeviceChangeListenerSetUp) {
+    return;
+  }
+
+  nsPIDOMWindowInner* window = GetOwner();
+  if (!window) {
+    return;
+  }
+
+  nsISerialEventTarget* mainThread =
+      window->EventTargetFor(TaskCategory::Other);
+  if (!mainThread) {
+    return;
+  }
+
+  mDeviceChangeListener = MediaManager::Get()->DeviceListChangeEvent().Connect(
+      mainThread, this, &MediaDevices::OnDeviceChange);
+  mIsDeviceChangeListenerSetUp = true;
+}
+
 void MediaDevices::SetOndevicechange(
     mozilla::dom::EventHandlerNonNull* aCallback) {
   SetEventHandler(nsGkAtoms::ondevicechange, aCallback);
-
-  MediaManager::Get()->AddDeviceChangeCallback(this);
+  SetupDeviceChangeListener();
 }
 
 void MediaDevices::EventListenerAdded(nsAtom* aType) {
-  MediaManager::Get()->AddDeviceChangeCallback(this);
   DOMEventTargetHelper::EventListenerAdded(aType);
+  SetupDeviceChangeListener();
 }
 
 JSObject* MediaDevices::WrapObject(JSContext* aCx,

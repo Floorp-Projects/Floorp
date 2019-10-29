@@ -8,14 +8,14 @@
 #include "AudioDeviceInfo.h"
 #include "CubebUtils.h"
 #include "cubeb/cubeb.h"
-#include "mozilla/media/DeviceChangeCallback.h"
+#include "MediaEventSource.h"
 #include "mozilla/Mutex.h"
 #include "nsTArray.h"
 
 namespace mozilla {
 // This class implements a cache for accessing the audio device list.
 // It can be accessed on any thread.
-class CubebDeviceEnumerator final : public DeviceChangeNotifier {
+class CubebDeviceEnumerator final {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CubebDeviceEnumerator)
 
@@ -44,6 +44,15 @@ class CubebDeviceEnumerator final : public DeviceChangeNotifier {
   };
   already_AddRefed<AudioDeviceInfo> DeviceInfoFromName(const nsString& aName,
                                                        Side aSide);
+  // Event source to listen for changes to the audio input device list on.
+  MediaEventSource<void>& OnAudioInputDeviceListChange() {
+    return mOnInputDeviceListChange;
+  }
+
+  // Event source to listen for changes to the audio output device list on.
+  MediaEventSource<void>& OnAudioOutputDeviceListChange() {
+    return mOnOutputDeviceListChange;
+  }
 
  private:
   CubebDeviceEnumerator();
@@ -66,6 +75,8 @@ class CubebDeviceEnumerator final : public DeviceChangeNotifier {
   // cubeb itself. Set in the constructor and then can be access on any thread.
   bool mManualInputInvalidation;
   bool mManualOutputInvalidation;
+  MediaEventProducer<void> mOnInputDeviceListChange;
+  MediaEventProducer<void> mOnOutputDeviceListChange;
   // The singleton instance.
   static StaticRefPtr<CubebDeviceEnumerator> sInstance;
 };
