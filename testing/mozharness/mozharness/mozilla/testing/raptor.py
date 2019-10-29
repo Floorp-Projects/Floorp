@@ -78,6 +78,12 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
             "default": None,
             "help": argparse.SUPPRESS
         }],
+        [["--browsertime-video"], {
+            "dest": "browsertime_video",
+            "action": "store_true",
+            "default": False,
+            "help": argparse.SUPPRESS
+        }],
         [["--browsertime"], {
             "dest": "browsertime",
             "action": "store_true",

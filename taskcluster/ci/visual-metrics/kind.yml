@@ -31,7 +31,7 @@ jobs:
             artifacts:
                 - type: file
                   name: public/visual-metrics.tar.xz
-                  path: /builds/worker/visual-metrics.tar.xz
+                  path: /builds/worker/artifacts/visual-metrics.tar.xz
 
         fetches:
             fetch:

@@ -157,6 +157,8 @@ def create_parser(mach_interface=False):
             help="path to browsertime.js script")
     add_arg('--browsertime-chromedriver', dest='browsertime_chromedriver',
             help="path to chromedriver executable")
+    add_arg('--browsertime-video', dest='browsertime_video',
+            help="records the viewport", default=False, action="store_true")
     add_arg('--browsertime-ffmpeg', dest='browsertime_ffmpeg',
             help="path to ffmpeg executable (for `--video=true`)")
     add_arg('--browsertime-geckodriver', dest='browsertime_geckodriver',

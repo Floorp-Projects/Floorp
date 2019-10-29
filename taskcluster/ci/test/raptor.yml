@@ -1024,8 +1024,11 @@ browsertime-tp6-1:
             firefox: true
             default: false
     treeherder-symbol: Btime(tp6-1)
-    max-run-time: 3000
+    max-run-time: 4000
     tier: 3
+    attributes:
+        run-visual-metrics: true
     mozharness:
         extra-options:
             - --browsertime
+            - --browsertime-video
