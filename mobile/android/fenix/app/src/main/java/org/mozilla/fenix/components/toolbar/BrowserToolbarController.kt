@@ -33,6 +33,7 @@ import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.collections.SaveCollectionStep
+import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
@@ -66,7 +67,8 @@ class DefaultBrowserToolbarController(
     private val getSupportUrl: () -> String,
     private val openInFenixIntent: Intent,
     private val bottomSheetBehavior: QuickActionSheetBehavior<NestedScrollView>,
-    private val scope: LifecycleCoroutineScope
+    private val scope: LifecycleCoroutineScope,
+    private val tabCollectionStorage: TabCollectionStorage
 ) : BrowserToolbarController {
 
     private val currentSession
@@ -184,7 +186,11 @@ class DefaultBrowserToolbarController(
                         previousFragmentId = R.id.browserFragment,
                         tabIds = arrayOf(currentSession.id),
                         selectedTabIds = arrayOf(currentSession.id),
-                        saveCollectionStep = SaveCollectionStep.SelectCollection
+                        saveCollectionStep = if (tabCollectionStorage.cachedTabCollections.isEmpty()) {
+                            SaveCollectionStep.NameCollection
+                        } else {
+                            SaveCollectionStep.SelectCollection
+                        }
                     )
                     navController.nav(R.id.browserFragment, directions)
                 }

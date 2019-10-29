@@ -44,6 +44,7 @@ import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 import org.mozilla.fenix.collections.SaveCollectionStep
 import org.mozilla.fenix.components.Analytics
 import org.mozilla.fenix.components.FenixSnackbar
+import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.components
@@ -79,6 +80,7 @@ class DefaultBrowserToolbarControllerTest {
     private val scope: LifecycleCoroutineScope = mockk(relaxed = true)
     private val adjustBackgroundAndNavigate: (NavDirections) -> Unit = mockk(relaxed = true)
     private val snackbar = mockk<FenixSnackbar>(relaxed = true)
+    private val tabCollectionStorage = mockk<TabCollectionStorage>(relaxed = true)
 
     private lateinit var controller: DefaultBrowserToolbarController
 
@@ -100,7 +102,8 @@ class DefaultBrowserToolbarControllerTest {
             bottomSheetBehavior = bottomSheetBehavior,
             scope = scope,
             browserLayout = browserLayout,
-            swipeRefresh = swipeRefreshLayout
+            swipeRefresh = swipeRefreshLayout,
+            tabCollectionStorage = tabCollectionStorage
         )
 
         mockkStatic(
@@ -402,7 +405,7 @@ class DefaultBrowserToolbarControllerTest {
     }
 
     @Test
-    fun handleToolbarSaveToCollectionPress() {
+    fun handleToolbarSaveToCollectionPressWhenAtLeastOneCollectionExists() {
         val item = ToolbarMenu.Item.SaveToCollection
         val cachedTabCollections: List<TabCollection> = mockk(relaxed = true)
         every { activity.components.useCases.sessionUseCases } returns sessionUseCases
@@ -410,13 +413,39 @@ class DefaultBrowserToolbarControllerTest {
 
         controller.handleToolbarItemInteraction(item)
 
-        verify { metrics.track(Event.BrowserMenuItemTapped(Event.BrowserMenuItemTapped.Item.SAVE_TO_COLLECTION)) }
-        verify { metrics.track(Event.CollectionSaveButtonPressed(DefaultBrowserToolbarController.TELEMETRY_BROWSER_IDENTIFIER)) }
+        verify { metrics.track(
+            Event.BrowserMenuItemTapped(Event.BrowserMenuItemTapped.Item.SAVE_TO_COLLECTION)) }
+        verify { metrics.track(
+            Event.CollectionSaveButtonPressed(DefaultBrowserToolbarController.TELEMETRY_BROWSER_IDENTIFIER)) }
         verify {
             val directions =
                 BrowserFragmentDirections.actionBrowserFragmentToCreateCollectionFragment(
                     previousFragmentId = R.id.browserFragment,
                     saveCollectionStep = SaveCollectionStep.SelectCollection,
+                    tabIds = arrayOf(currentSession.id),
+                    selectedTabIds = arrayOf(currentSession.id)
+                )
+            navController.nav(R.id.browserFragment, directions)
+        }
+    }
+
+    @Test
+    fun handleToolbarSaveToCollectionPressWhenNoCollectionsExists() {
+        val item = ToolbarMenu.Item.SaveToCollection
+        val cachedTabCollectionsEmpty: List<TabCollection> = emptyList()
+        every { activity.components.useCases.sessionUseCases } returns sessionUseCases
+        every { activity.components.core.tabCollectionStorage.cachedTabCollections } returns cachedTabCollectionsEmpty
+
+        controller.handleToolbarItemInteraction(item)
+
+        verify { metrics.track(Event.BrowserMenuItemTapped(Event.BrowserMenuItemTapped.Item.SAVE_TO_COLLECTION)) }
+        verify { metrics.track(Event.CollectionSaveButtonPressed(
+            DefaultBrowserToolbarController.TELEMETRY_BROWSER_IDENTIFIER)) }
+        verify {
+            val directions =
+                BrowserFragmentDirections.actionBrowserFragmentToCreateCollectionFragment(
+                    previousFragmentId = R.id.browserFragment,
+                    saveCollectionStep = SaveCollectionStep.NameCollection,
                     tabIds = arrayOf(currentSession.id),
                     selectedTabIds = arrayOf(currentSession.id)
                 )
@@ -440,7 +469,8 @@ class DefaultBrowserToolbarControllerTest {
             bottomSheetBehavior = bottomSheetBehavior,
             scope = scope,
             browserLayout = browserLayout,
-            swipeRefresh = swipeRefreshLayout
+            swipeRefresh = swipeRefreshLayout,
+            tabCollectionStorage = tabCollectionStorage
         )
 
         val sessionManager: SessionManager = mockk(relaxed = true)
