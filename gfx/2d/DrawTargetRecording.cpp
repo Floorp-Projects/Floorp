@@ -297,7 +297,7 @@ void DrawTargetRecording::FillGlyphs(ScaledFont* aFont,
     mRecorder->AddScaledFont(aFont);
   } else if (!aFont->GetUserData(userDataKey)) {
     UnscaledFont* unscaledFont = aFont->GetUnscaledFont();
-    if (!mRecorder->HasStoredObject(unscaledFont)) {
+    if (!mRecorder->HasStoredUnscaledFont(unscaledFont)) {
       RecordedFontData fontData(unscaledFont);
       RecordedFontDetails fontDetails;
       if (fontData.GetFontDetails(fontDetails)) {
@@ -320,7 +320,7 @@ void DrawTargetRecording::FillGlyphs(ScaledFont* aFont,
                           "UnscaledFont";
         }
       }
-      mRecorder->AddStoredObject(unscaledFont);
+      mRecorder->AddStoredUnscaledFont(unscaledFont);
     }
     mRecorder->RecordEvent(RecordedScaledFontCreation(aFont, unscaledFont));
     RecordingFontUserData* userData = new RecordingFontUserData;
