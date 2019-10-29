@@ -8,8 +8,6 @@ const { Ci, Cu } = require("chrome");
 
 // Note that this is only used in WebConsoleCommands, see $0, screenshot and pprint().
 if (!isWorker) {
-  // TODO: Fix this server -> client import in Bug 1591055
-  // eslint-disable-next-line mozilla/reject-some-requires
   loader.lazyImporter(
     this,
     "VariablesView",
@@ -630,6 +628,7 @@ WebConsoleCommands._registerOriginal("pprint", function(owner, object) {
   for (const name in obj) {
     const desc = WebConsoleUtils.getPropertyDescriptor(obj, name) || {};
     if (desc.get || desc.set) {
+      // TODO: Bug 842672 - toolkit/ imports modules from browser/.
       const getGrip = VariablesView.getGrip(desc.get);
       const setGrip = VariablesView.getGrip(desc.set);
       const getString = VariablesView.getString(getGrip);
