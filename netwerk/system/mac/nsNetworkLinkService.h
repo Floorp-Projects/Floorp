@@ -48,7 +48,10 @@ class nsNetworkLinkService : public nsINetworkLinkService,
   SCDynamicStoreRef mStoreRef;
 
   void UpdateReachability();
-  void SendEvent(bool aNetworkChanged);
+  void OnIPConfigChanged();
+  void OnNetworkIdChanged();
+  void OnReachabilityChanged();
+  void SendEvent(const char* aEventID);
   static void ReachabilityChanged(SCNetworkReachabilityRef target,
                                   SCNetworkConnectionFlags flags, void* info);
   static void NetworkConfigChanged(SCDynamicStoreRef store,
