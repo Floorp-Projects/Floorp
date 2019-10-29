@@ -1931,6 +1931,21 @@ impl PrimitiveStore {
         for cluster in &mut prim_list.clusters {
             // Get the cluster and see if is visible
             if !cluster.flags.contains(ClusterFlags::IS_VISIBLE) {
+                // Each prim instance must have reset called each frame, to clear
+                // indices into various scratch buffers. If this doesn't occur,
+                // the primitive may incorrectly be considered visible, which can
+                // cause unexpected conditions to occur later during the frame.
+                // Primitive instances are normally reset in the main loop below,
+                // but we must also reset them in the rare case that the cluster
+                // visibility has changed (due to an invalid transform and/or
+                // backface visibility changing for this cluster).
+                // TODO(gw): This is difficult to test for in CI - as a follow up,
+                //           we should add a debug flag that validates the prim
+                //           instance is always reset every frame to catch similar
+                //           issues in future.
+                for prim_instance in &mut cluster.prim_instances {
+                    prim_instance.reset();
+                }
                 continue;
             }
 
