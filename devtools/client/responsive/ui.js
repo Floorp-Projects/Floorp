@@ -238,8 +238,7 @@ class ResponsiveUI {
     const { document: doc, gBrowser } = this.browserWindow;
     const rdmFrame = doc.createElement("iframe");
     rdmFrame.src = "chrome://devtools/content/responsive/toolbar.xhtml";
-    rdmFrame.style.height = rdmFrame.style.minHeight = "30px";
-    rdmFrame.style.borderStyle = "none";
+    rdmFrame.classList.add("rdm-toolbar");
 
     this.browserContainerEl = gBrowser.getBrowserContainer(
       gBrowser.getBrowserForTab(this.tab)
@@ -315,8 +314,8 @@ class ResponsiveUI {
       this.rdmFrame.remove();
 
       this.browserContainerEl.classList.remove("responsive-mode");
-      this.browserStackEl.style.maxWidth = this.browserStackEl.style.minWidth = null;
-      this.browserStackEl.style.maxHeight = this.browserStackEl.style.minHeight = null;
+      this.browserStackEl.style.removeProperty("--rdm-width");
+      this.browserStackEl.style.removeProperty("--rdm-height");
     }
 
     if (!this.isBrowserUIEnabled && !isTabContentDestroying) {
@@ -769,8 +768,10 @@ class ResponsiveUI {
       return;
     }
 
-    this.browserStackEl.style.maxWidth = this.browserStackEl.style.minWidth = `${width}px`;
-    this.browserStackEl.style.maxHeight = this.browserStackEl.style.minHeight = `${height}px`;
+    // Setting this with a variable on the stack instead of directly as width/height
+    // on the <browser> because we'll need to use this for the alert dialog as well.
+    this.browserStackEl.style.setProperty("--rdm-width", `${width}px`);
+    this.browserStackEl.style.setProperty("--rdm-height", `${height}px`);
   }
 
   /**

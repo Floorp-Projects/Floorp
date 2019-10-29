@@ -14,14 +14,33 @@
 
 .browserContainer.responsive-mode {
   background-color: var(--rdm-browser-container-background);
-  overflow: auto;
 }
 
-.browserContainer.responsive-mode browser {
-  border: 1px solid var(--devtools-splitter-color);
-  box-shadow: var(--rdm-browser-box-shadow);
+.browserContainer.responsive-mode > .rdm-toolbar {
+  border: none;
+  height: 30px;
 }
 
 .browserContainer.responsive-mode > .browserStack {
   margin-top: 15px;
+  min-height: 0;
+  min-width: 0;
+  overflow: auto;
+
+  /* This could go post https://bugzilla.mozilla.org/show_bug.cgi?id=1576946 */
+  display: grid;
+}
+
+.browserContainer.responsive-mode > .browserStack > * {
+  align-self: center;
+  justify-self: center;
+  /* This could go post https://bugzilla.mozilla.org/show_bug.cgi?id=1576946 */
+  grid-area: 1 / 1;
+  height: var(--rdm-height);
+  width: var(--rdm-width);
+}
+
+.browserContainer.responsive-mode > .browserStack > browser {
+  border: 1px solid var(--devtools-splitter-color);
+  box-shadow: var(--rdm-browser-box-shadow);
 }
