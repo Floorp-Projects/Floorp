@@ -7720,6 +7720,41 @@ void CodeGenerator::visitTypedArrayElementShift(LTypedArrayElementShift* lir) {
   masm.bind(&done);
 }
 
+class OutOfLineTypedArrayIndexToInt32
+    : public OutOfLineCodeBase<CodeGenerator> {
+  LTypedArrayIndexToInt32* lir_;
+
+ public:
+  explicit OutOfLineTypedArrayIndexToInt32(LTypedArrayIndexToInt32* lir)
+      : lir_(lir) {}
+
+  void accept(CodeGenerator* codegen) override {
+    codegen->visitOutOfLineTypedArrayIndexToInt32(this);
+  }
+  LTypedArrayIndexToInt32* lir() const { return lir_; }
+};
+
+void CodeGenerator::visitTypedArrayIndexToInt32(LTypedArrayIndexToInt32* lir) {
+  FloatRegister index = ToFloatRegister(lir->index());
+  Register output = ToRegister(lir->output());
+
+  auto* ool = new (alloc()) OutOfLineTypedArrayIndexToInt32(lir);
+  addOutOfLineCode(ool, lir->mir());
+
+  static_assert(TypedArrayObject::MAX_BYTE_LENGTH <= INT32_MAX,
+                "Double exceeding Int32 range can't be in-bounds array access");
+
+  masm.convertDoubleToInt32(index, output, ool->entry(), false);
+  masm.bind(ool->rejoin());
+}
+
+void CodeGenerator::visitOutOfLineTypedArrayIndexToInt32(
+    OutOfLineTypedArrayIndexToInt32* ool) {
+  // Substitute the invalid index with an arbitrary out-of-bounds index.
+  masm.move32(Imm32(-1), ToRegister(ool->lir()->output()));
+  masm.jump(ool->rejoin());
+}
+
 void CodeGenerator::visitTypedObjectDescr(LTypedObjectDescr* lir) {
   Register obj = ToRegister(lir->object());
   Register out = ToRegister(lir->output());
