@@ -2031,6 +2031,7 @@ static SystemRedirection gSystemRedirections[] = {
     {"setlocale", RR_CStringRval},
     {"strftime", RR_Compose<RR_ScalarRval, RR_WriteBufferViaRval<0, 1, 1>>},
     {"arc4random", RR_ScalarRval, nullptr, nullptr, Preamble_PassThrough},
+    {"arc4random_buf", RR_WriteBuffer<0, 1>},
     {"mach_absolute_time", RR_ScalarRval, Preamble_mach_absolute_time, nullptr,
      Preamble_PassThrough},
     {"mach_msg", RR_Compose<RR_ScalarRval, RR_WriteBuffer<0, 3>>, nullptr,
