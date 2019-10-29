@@ -1,3 +1,7 @@
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
+
 var { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
@@ -13,54 +17,40 @@ const PREF_AUDIO_LOOPBACK = "media.audio_loopback_dev";
 const PREF_VIDEO_LOOPBACK = "media.video_loopback_dev";
 const PREF_FAKE_STREAMS = "media.navigator.streams.fake";
 const PREF_FOCUS_SOURCE = "media.getusermedia.window.focus_source.enabled";
-const CONTENT_SCRIPT_HELPER =
-  getRootDirectory(gTestPath) + "get_user_media_content_script.js";
 
 const STATE_CAPTURE_ENABLED = Ci.nsIMediaManagerService.STATE_CAPTURE_ENABLED;
 const STATE_CAPTURE_DISABLED = Ci.nsIMediaManagerService.STATE_CAPTURE_DISABLED;
 
-function waitForCondition(condition, nextTest, errorMsg, retryTimes) {
-  retryTimes = typeof retryTimes !== "undefined" ? retryTimes : 30;
-  var tries = 0;
-  var interval = setInterval(function() {
-    if (tries >= retryTimes) {
-      ok(false, errorMsg);
-      moveOn();
-    }
-    var conditionPassed;
-    try {
-      conditionPassed = condition();
-    } catch (e) {
-      ok(false, e + "\n" + e.stack);
-      conditionPassed = false;
-    }
-    if (conditionPassed) {
-      moveOn();
-    }
-    tries++;
-  }, 100);
-  var moveOn = function() {
-    clearInterval(interval);
-    nextTest();
-  };
+let observerTopics = [
+  "getUserMedia:response:allow",
+  "getUserMedia:revoke",
+  "getUserMedia:response:deny",
+  "getUserMedia:request",
+  "recording-device-events",
+  "recording-window-ended",
+];
+
+function whenDelayedStartupFinished(aWindow) {
+  return TestUtils.topicObserved(
+    "browser-delayed-startup-finished",
+    subject => subject == aWindow
+  );
 }
 
-/**
- * Waits for a window with the given URL to exist.
- *
- * @param url
- *        The url of the window.
- * @return {Promise} resolved when the window exists.
- * @resolves to the window
- */
-function promiseWindow(url) {
-  info("expecting a " + url + " window");
+function promiseIndicatorWindow() {
+  // We don't show the indicator window on Mac.
+  if ("nsISystemStatusBar" in Ci) {
+    return Promise.resolve();
+  }
+
   return new Promise(resolve => {
     Services.obs.addObserver(function obs(win) {
       win.addEventListener(
         "load",
         function() {
-          if (win.location.href !== url) {
+          if (
+            win.location.href !== "chrome://browser/content/webrtcIndicator.xul"
+          ) {
             info("ignoring a window with this url: " + win.location.href);
             return;
           }
@@ -72,27 +62,6 @@ function promiseWindow(url) {
       );
     }, "domwindowopened");
   });
-}
-
-function whenDelayedStartupFinished(aWindow) {
-  return new Promise(resolve => {
-    info("Waiting for delayed startup to finish");
-    Services.obs.addObserver(function observer(aSubject, aTopic) {
-      if (aWindow == aSubject) {
-        Services.obs.removeObserver(observer, aTopic);
-        resolve();
-      }
-    }, "browser-delayed-startup-finished");
-  });
-}
-
-function promiseIndicatorWindow() {
-  // We don't show the indicator window on Mac.
-  if ("nsISystemStatusBar" in Ci) {
-    return Promise.resolve();
-  }
-
-  return promiseWindow("chrome://browser/content/webrtcIndicator.xul");
 }
 
 async function assertWebRTCIndicatorStatus(expected) {
@@ -215,121 +184,118 @@ function promiseNotificationShown(notification) {
   return panelPromise;
 }
 
-function _mm() {
-  return gBrowser.selectedBrowser.messageManager;
+function ignoreEvent(aSubject, aTopic, aData) {
+  // With e10s disabled, our content script receives notifications for the
+  // preview displayed in our screen sharing permission prompt; ignore them.
+  const kBrowserURL = AppConstants.BROWSER_CHROME_URL;
+  const nsIPropertyBag = Ci.nsIPropertyBag;
+  if (
+    aTopic == "recording-device-events" &&
+    aSubject.QueryInterface(nsIPropertyBag).getProperty("requestURL") ==
+      kBrowserURL
+  ) {
+    return true;
+  }
+  if (aTopic == "recording-window-ended") {
+    let win = Services.wm.getOuterWindowWithId(aData).top;
+    if (win.document.documentURI == kBrowserURL) {
+      return true;
+    }
+  }
+  return false;
 }
 
-function promiseObserverCalled(aTopic) {
+function expectObserverCalledInProcess(aTopic, aCount = 1) {
+  let promises = [];
+  for (let count = aCount; count > 0; count--) {
+    promises.push(TestUtils.topicObserved(aTopic, ignoreEvent));
+  }
+  return promises;
+}
+
+function expectObserverCalled(
+  aTopic,
+  aCount = 1,
+  browser = gBrowser.selectedBrowser
+) {
+  if (!gMultiProcessBrowser) {
+    return expectObserverCalledInProcess(aTopic, aCount);
+  }
+
+  return BrowserTestUtils.contentTopicObserved(
+    browser.browsingContext,
+    aTopic,
+    aCount
+  );
+}
+
+// This is a special version of expectObserverCalled that should only
+// be used when expecting a notification upon closing a window. It uses
+// the per-process message manager instead of actors to send the
+// notifications.
+function expectObserverCalledOnClose(
+  aTopic,
+  aCount = 1,
+  browser = gBrowser.selectedBrowser
+) {
+  if (!gMultiProcessBrowser) {
+    return expectObserverCalledInProcess(aTopic, aCount);
+  }
+
   return new Promise(resolve => {
-    let mm = _mm();
-    mm.addMessageListener("Test:ObserverCalled", function listener({ data }) {
-      if (data == aTopic) {
-        ok(true, "got " + aTopic + " notification");
-        mm.removeMessageListener("Test:ObserverCalled", listener);
+    BrowserTestUtils.sendAsyncMessage(
+      browser.browsingContext,
+      "BrowserTestUtils:ObserveTopic",
+      {
+        topic: aTopic,
+        count: 1,
+        filterFunctionSource: ((subject, topic, data) => {
+          Services.cpmm.sendAsyncMessage("WebRTCTest:ObserverCalled", {
+            topic,
+          });
+          return true;
+        }).toSource(),
+      }
+    );
+
+    function observerCalled(message) {
+      if (message.data.topic == aTopic) {
+        Services.ppmm.removeMessageListener(
+          "WebRTCTest:ObserverCalled",
+          observerCalled
+        );
         resolve();
       }
-    });
-    mm.sendAsyncMessage("Test:WaitForObserverCall", aTopic);
+    }
+    Services.ppmm.addMessageListener(
+      "WebRTCTest:ObserverCalled",
+      observerCalled
+    );
   });
 }
 
-function expectObserverCalled(aTopic, aCount = 1) {
-  return new Promise(resolve => {
-    let mm = _mm();
-    mm.addMessageListener("Test:ExpectObserverCalled:Reply", function listener({
-      data,
-    }) {
-      is(data.count, aCount, "expected notification " + aTopic);
-      mm.removeMessageListener("Test:ExpectObserverCalled:Reply", listener);
-      resolve();
-    });
-    mm.sendAsyncMessage("Test:ExpectObserverCalled", {
-      topic: aTopic,
-      count: aCount,
-    });
-  });
-}
-
-function expectNoObserverCalled() {
-  return new Promise(resolve => {
-    let mm = _mm();
-    mm.addMessageListener(
-      "Test:ExpectNoObserverCalled:Reply",
-      function listener({ data }) {
-        mm.removeMessageListener("Test:ExpectNoObserverCalled:Reply", listener);
-        for (let topic in data) {
-          if (!data[topic]) {
-            continue;
+function promiseMessage(aMessage, aAction, aCount = 1) {
+  let promise = ContentTask.spawn(
+    gBrowser.selectedBrowser,
+    [aMessage, aCount],
+    async function([expectedMessage, expectedCount]) {
+      return new Promise(resolve => {
+        function listenForMessage({ data }) {
+          if (
+            (!expectedMessage || data == expectedMessage) &&
+            --expectedCount == 0
+          ) {
+            content.removeEventListener("message", listenForMessage);
+            resolve(data);
           }
-
-          is(data[topic], 0, topic + " notification unexpected");
         }
-        resolve();
-      }
-    );
-    mm.sendAsyncMessage("Test:ExpectNoObserverCalled");
-  });
-}
-
-function ignoreObserversCalled() {
-  return new Promise(resolve => {
-    let mm = _mm();
-    mm.addMessageListener(
-      "Test:ExpectNoObserverCalled:Reply",
-      function listener() {
-        mm.removeMessageListener("Test:ExpectNoObserverCalled:Reply", listener);
-        resolve();
-      }
-    );
-    mm.sendAsyncMessage("Test:ExpectNoObserverCalled");
-  });
-}
-
-function promiseMessageReceived() {
-  return new Promise((resolve, reject) => {
-    let mm = _mm();
-    mm.addMessageListener("Test:MessageReceived", function listener({ data }) {
-      mm.removeMessageListener("Test:MessageReceived", listener);
-      resolve(data);
-    });
-    mm.sendAsyncMessage("Test:WaitForMessage");
-  });
-}
-
-function promiseSpecificMessageReceived(aMessage, aCount = 1) {
-  return new Promise(resolve => {
-    let mm = _mm();
-    let counter = 0;
-    mm.addMessageListener("Test:MessageReceived", function listener({ data }) {
-      if (data == aMessage) {
-        counter++;
-        if (counter == aCount) {
-          mm.sendAsyncMessage("Test:StopWaitForMultipleMessages");
-          mm.removeMessageListener("Test:MessageReceived", listener);
-          resolve(data);
-        }
-      }
-    });
-    mm.sendAsyncMessage("Test:WaitForMultipleMessages");
-  });
-}
-
-function promiseMessage(aMessage, aAction) {
-  let promise = new Promise((resolve, reject) => {
-    promiseMessageReceived(aAction).then(data => {
-      is(data, aMessage, "received " + aMessage);
-      if (data == aMessage) {
-        resolve();
-      } else {
-        reject();
-      }
-    });
-  });
-
+        content.addEventListener("message", listenForMessage);
+      });
+    }
+  );
   if (aAction) {
     aAction();
   }
-
   return promise;
 }
 
@@ -362,37 +328,18 @@ function promisePopupNotificationShown(aName, aAction) {
   });
 }
 
-function promisePopupNotification(aName) {
-  return new Promise(resolve => {
-    waitForCondition(
-      () => PopupNotifications.getNotification(aName),
-      () => {
-        ok(
-          !!PopupNotifications.getNotification(aName),
-          aName + " notification appeared"
-        );
-
-        resolve();
-      },
-      "timeout waiting for popup notification " + aName
-    );
-  });
+async function promisePopupNotification(aName) {
+  return TestUtils.waitForCondition(
+    () => PopupNotifications.getNotification(aName),
+    aName + " notification appeared"
+  );
 }
 
-function promiseNoPopupNotification(aName) {
-  return new Promise(resolve => {
-    waitForCondition(
-      () => !PopupNotifications.getNotification(aName),
-      () => {
-        ok(
-          !PopupNotifications.getNotification(aName),
-          aName + " notification removed"
-        );
-        resolve();
-      },
-      "timeout waiting for popup notification " + aName + " to disappear"
-    );
-  });
+async function promiseNoPopupNotification(aName) {
+  return TestUtils.waitForCondition(
+    () => !PopupNotifications.getNotification(aName),
+    aName + " notification removed"
+  );
 }
 
 const kActionAlways = 1;
@@ -420,17 +367,47 @@ function activateSecondaryAction(aAction) {
 }
 
 function getMediaCaptureState() {
-  return new Promise(resolve => {
-    let mm = _mm();
-    mm.addMessageListener("Test:MediaCaptureState", ({ data }) => {
-      resolve(data);
-    });
-    mm.sendAsyncMessage("Test:GetMediaCaptureState");
+  return SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
+    let mediaManagerService = Cc[
+      "@mozilla.org/mediaManagerService;1"
+    ].getService(Ci.nsIMediaManagerService);
+
+    let hasCamera = {};
+    let hasMicrophone = {};
+    let hasScreenShare = {};
+    let hasWindowShare = {};
+    let hasBrowserShare = {};
+    mediaManagerService.mediaCaptureWindowState(
+      content,
+      hasCamera,
+      hasMicrophone,
+      hasScreenShare,
+      hasWindowShare,
+      hasBrowserShare
+    );
+    let result = {};
+
+    if (hasCamera.value != mediaManagerService.STATE_NOCAPTURE) {
+      result.video = true;
+    }
+    if (hasMicrophone.value != mediaManagerService.STATE_NOCAPTURE) {
+      result.audio = true;
+    }
+
+    if (hasScreenShare.value != mediaManagerService.STATE_NOCAPTURE) {
+      result.screen = "Screen";
+    } else if (hasWindowShare.value != mediaManagerService.STATE_NOCAPTURE) {
+      result.screen = "Window";
+    } else if (hasBrowserShare.value != mediaManagerService.STATE_NOCAPTURE) {
+      result.screen = "Browser";
+    }
+
+    return result;
   });
 }
 
 async function stopSharing(aType = "camera", aShouldKeepSharing = false) {
-  let promiseRecordingEvent = promiseObserverCalled("recording-device-events");
+  let promiseRecordingEvent = expectObserverCalled("recording-device-events");
   gIdentityHandler._identityBox.click();
   let permissions = document.getElementById("identity-popup-permission-list");
   let cancelButton = permissions.querySelector(
@@ -439,18 +416,20 @@ async function stopSharing(aType = "camera", aShouldKeepSharing = false) {
       "-icon ~ " +
       ".identity-popup-permission-remove-button"
   );
-  cancelButton.click();
-  gIdentityHandler._identityPopup.hidden = true;
-  await promiseRecordingEvent;
-  await expectObserverCalled("getUserMedia:revoke");
+  let observerPromise1 = expectObserverCalled("getUserMedia:revoke");
 
   // If we are stopping screen sharing and expect to still have another stream,
   // "recording-window-ended" won't be fired.
+  let observerPromise2 = null;
   if (!aShouldKeepSharing) {
-    await expectObserverCalled("recording-window-ended");
+    observerPromise2 = expectObserverCalled("recording-window-ended");
   }
 
-  await expectNoObserverCalled();
+  cancelButton.click();
+  gIdentityHandler._identityPopup.hidden = true;
+  await promiseRecordingEvent;
+  await observerPromise1;
+  await observerPromise2;
 
   if (!aShouldKeepSharing) {
     await checkNotSharing();
@@ -484,15 +463,23 @@ function promiseRequestDevice(
   );
 }
 
-async function closeStream(aAlreadyClosed, aFrameId) {
-  await expectNoObserverCalled();
+async function closeStream(
+  aAlreadyClosed,
+  aFrameId,
+  aDontFlushObserverVerification
+) {
+  // Check that spurious notifications that occur while closing the
+  // stream are handled separately. Tests that use skipObserverVerification
+  // should pass true for aDontFlushObserverVerification.
+  if (!aDontFlushObserverVerification) {
+    await disableObserverVerification();
+    await enableObserverVerification();
+  }
 
-  let promises;
+  let observerPromises = [];
   if (!aAlreadyClosed) {
-    promises = [
-      promiseObserverCalled("recording-device-events"),
-      promiseObserverCalled("recording-window-ended"),
-    ];
+    observerPromises.push(expectObserverCalled("recording-device-events"));
+    observerPromises.push(expectObserverCalled("recording-window-ended"));
   }
 
   info("closing the stream");
@@ -506,27 +493,29 @@ async function closeStream(aAlreadyClosed, aFrameId) {
     global.closeStream();
   });
 
-  if (promises) {
-    await Promise.all(promises);
-  }
+  await Promise.all(observerPromises);
 
   await assertWebRTCIndicatorStatus(null);
 }
 
 async function reloadAndAssertClosedStreams() {
   info("reloading the web page");
-  let promises = [
-    promiseObserverCalled("recording-device-events"),
-    promiseObserverCalled("recording-window-ended"),
-  ];
+
+  // Disable observers as the page is being reloaded which can destroy
+  // the actors listening to the notifications.
+  await disableObserverVerification();
+
+  let loadedPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
   await ContentTask.spawn(
     gBrowser.selectedBrowser,
     null,
     "() => content.location.reload()"
   );
-  await Promise.all(promises);
 
-  await expectNoObserverCalled();
+  await loadedPromise;
+
+  await enableObserverVerification();
+
   await checkNotSharing();
 }
 
@@ -654,13 +643,26 @@ async function checkNotSharing() {
 }
 
 function promiseReloadFrame(aFrameId) {
-  return ContentTask.spawn(gBrowser.selectedBrowser, aFrameId, async function(
-    contentFrameId
-  ) {
-    content.wrappedJSObject.document
-      .getElementById(contentFrameId)
-      .contentWindow.location.reload();
-  });
+  return SpecialPowers.spawn(
+    gBrowser.selectedBrowser.browsingContext,
+    [aFrameId],
+    async function(contentFrameId) {
+      let frame = content.wrappedJSObject.document.getElementById(
+        contentFrameId
+      );
+      return new Promise(resolve => {
+        function listener() {
+          frame.removeEventListener("load", listener, true);
+          resolve();
+        }
+        frame.addEventListener("load", listener, true);
+
+        content.wrappedJSObject.document
+          .getElementById(contentFrameId)
+          .contentWindow.location.reload();
+      });
+    }
+  );
 }
 
 async function openNewTestTab(leaf = "get_user_media.html") {
@@ -672,14 +674,38 @@ async function openNewTestTab(leaf = "get_user_media.html") {
   let absoluteURI = rootDir + leaf;
 
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, absoluteURI);
-  let browser = tab.linkedBrowser;
+  return tab.linkedBrowser;
+}
 
-  browser.messageManager.loadFrameScript(CONTENT_SCRIPT_HELPER, true);
-  return browser;
+// Enabling observer verification adds listeners for all of the webrtc
+// observer topics. If any notifications occur for those topics that
+// were not explicitly requested, a failure will occur.
+function enableObserverVerification(browser = gBrowser.selectedBrowser) {
+  // Skip these checks in single process mode as it isn't worth implementing it.
+  if (!gMultiProcessBrowser) {
+    return Promise.resolve();
+  }
+
+  return BrowserTestUtils.startObservingTopics(
+    browser.browsingContext,
+    observerTopics
+  );
+}
+
+function disableObserverVerification(browser = gBrowser.selectedBrowser) {
+  if (!gMultiProcessBrowser) {
+    return Promise.resolve();
+  }
+
+  return BrowserTestUtils.stopObservingTopics(
+    browser.browsingContext,
+    observerTopics
+  ).catch(reason => {
+    ok(false, "Failed " + reason);
+  });
 }
 
 async function runTests(tests, options = {}) {
-  let cleanup = options.cleanup || (() => expectNoObserverCalled());
   let browser = await openNewTestTab(options.relativeURI);
 
   is(
@@ -707,8 +733,22 @@ async function runTests(tests, options = {}) {
 
   for (let testCase of tests) {
     info(testCase.desc);
+    if (
+      !testCase.skipObserverVerification &&
+      !options.skipObserverVerification
+    ) {
+      await enableObserverVerification();
+    }
     await testCase.run(browser);
-    await cleanup();
+    if (
+      !testCase.skipObserverVerification &&
+      !options.skipObserverVerification
+    ) {
+      await disableObserverVerification();
+    }
+    if (options.cleanup) {
+      await options.cleanup();
+    }
   }
 
   // Some tests destroy the original tab and leave a new one in its place.
