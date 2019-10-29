@@ -9,25 +9,14 @@ add_task(async function init() {
   // Run this in a new tab, to ensure all the locationchange notifications have
   // fired.
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
-  let which = gURLBar._whichSearchSuggestionsNotification || undefined;
   registerCleanupFunction(async function() {
     BrowserTestUtils.removeTab(tab);
-    // Reset the search suggestions notification.
-    if (which === undefined) {
-      delete gURLBar._whichSearchSuggestionsNotification;
-    } else {
-      gURLBar._whichSearchSuggestionsNotification = which;
-    }
-    Services.prefs.clearUserPref("timesBeforeHidingSuggestionsHint");
-
     gURLBar.handleRevert();
   });
 });
 
 // Calls search() with a normal, non-"@engine" search-string argument.
 add_task(async function basic() {
-  let resetNotification = enableSearchSuggestionsNotification();
-
   gURLBar.blur();
   gURLBar.search("basic");
   ok(gURLBar.hasAttribute("focused"), "url bar is focused");
@@ -38,15 +27,11 @@ add_task(async function basic() {
   await UrlbarTestUtils.promisePopupClose(window, () =>
     EventUtils.synthesizeKey("KEY_Escape")
   );
-
-  resetNotification();
 });
 
 // Calls search() with an "@engine" search engine alias so that the one-off
-// search buttons and search-suggestions notification are disabled.
+// search buttons are disabled.
 add_task(async function searchEngineAlias() {
-  let resetNotification = enableSearchSuggestionsNotification();
-
   gURLBar.blur();
   await UrlbarTestUtils.promisePopupOpen(window, () =>
     gURLBar.search("@example")
@@ -60,9 +45,8 @@ add_task(async function searchEngineAlias() {
     EventUtils.synthesizeKey("KEY_Escape")
   );
 
-  // Open the popup again (by doing another search) to make sure the
-  // notification and one-off buttons are shown -- i.e., that we didn't
-  // accidentally break them.
+  // Open the popup again (by doing another search) to make sure the one-off
+  // buttons are shown -- i.e., that we didn't accidentally break them.
   await UrlbarTestUtils.promisePopupOpen(window, () =>
     gURLBar.search("not an engine alias")
   );
@@ -72,14 +56,10 @@ add_task(async function searchEngineAlias() {
   await UrlbarTestUtils.promisePopupClose(window, () =>
     EventUtils.synthesizeKey("KEY_Escape")
   );
-
-  resetNotification();
 });
 
 // Calls search() with a restriction character.
 add_task(async function searchRestriction() {
-  let resetNotification = enableSearchSuggestionsNotification();
-
   gURLBar.blur();
   await UrlbarTestUtils.promisePopupOpen(window, () =>
     gURLBar.search(UrlbarTokenizer.RESTRICT.SEARCH)
@@ -91,14 +71,10 @@ add_task(async function searchRestriction() {
   assertOneOffButtonsVisible(false);
 
   await UrlbarTestUtils.promisePopupClose(window);
-
-  resetNotification();
 });
 
 // Calls search() twice with the same value. The popup should reopen.
 add_task(async function searchTwice() {
-  let resetNotification = enableSearchSuggestionsNotification();
-
   gURLBar.blur();
   await UrlbarTestUtils.promisePopupOpen(window, () => gURLBar.search("test"));
   ok(gURLBar.hasAttribute("focused"), "url bar is focused");
@@ -111,14 +87,10 @@ add_task(async function searchTwice() {
   await assertUrlbarValue("test");
   assertOneOffButtonsVisible(true);
   await UrlbarTestUtils.promisePopupClose(window);
-
-  resetNotification();
 });
 
 // Calls search() during an IME composition.
 add_task(async function searchIME() {
-  let resetNotification = enableSearchSuggestionsNotification();
-
   // First run a search.
   gURLBar.blur();
   await UrlbarTestUtils.promisePopupOpen(window, () => gURLBar.search("test"));
@@ -143,30 +115,7 @@ add_task(async function searchIME() {
   assertOneOffButtonsVisible(true);
 
   await UrlbarTestUtils.promisePopupClose(window);
-
-  resetNotification();
 });
-
-/**
- * Makes sure the search-suggestions notification will be shown the next several
- * times the popup opens.
- *
- * @returns {function} A function that you should call when you're done that
- *   resets the state state of the notification.
- */
-function enableSearchSuggestionsNotification() {
-  let which = gURLBar._whichSearchSuggestionsNotification || undefined;
-  gURLBar._whichSearchSuggestionsNotification = "opt-out";
-  Services.prefs.setIntPref("timesBeforeHidingSuggestionsHint", 10);
-  return function reset() {
-    if (which === undefined) {
-      delete gURLBar._whichSearchSuggestionsNotification;
-    } else {
-      gURLBar._whichSearchSuggestionsNotification = which;
-    }
-    Services.prefs.clearUserPref("timesBeforeHidingSuggestionsHint");
-  };
-}
 
 /**
  * Asserts that the one-off search buttons are or aren't visible.

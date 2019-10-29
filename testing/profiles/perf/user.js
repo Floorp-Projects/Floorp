@@ -34,9 +34,6 @@ user_pref("browser.safebrowsing.provider.mozilla.updateURL", "http://127.0.0.1/s
 user_pref("browser.search.geoip.url", "");
 user_pref("browser.shell.checkDefaultBrowser", false);
 user_pref("browser.tabs.remote.autostart", true);
-// Turn off the location bar search suggestions opt-in.  It interferes with
-// tests that don't expect it to be there.
-user_pref("browser.urlbar.userMadeSearchSuggestionsChoice", true);
 user_pref("browser.warnOnQuit", false);
 user_pref("datareporting.healthreport.documentServerURI", "http://127.0.0.1/healthreport/");
 user_pref("devtools.chrome.enabled", false);
