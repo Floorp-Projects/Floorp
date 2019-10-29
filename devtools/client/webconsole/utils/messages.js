@@ -241,11 +241,12 @@ function transformConsoleAPICallPacket(packet) {
         sourceId: message.sourceId,
         line: message.lineNumber,
         column: message.columnNumber,
-        options: {
-          logPoint: type === "logPointError" || type === "logPoint",
-        },
       }
     : null;
+
+  if (type === "logPointError" || type === "logPoint") {
+    frame.options = { logPoint: true };
+  }
 
   return new ConsoleMessage({
     source: MESSAGE_SOURCE.CONSOLE_API,
