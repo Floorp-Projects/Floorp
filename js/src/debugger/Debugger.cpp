@@ -4688,7 +4688,7 @@ void Debugger::removeDebuggeeGlobal(JSFreeOp* fop, GlobalObject* global,
     DebuggerFrame* frameobj = e.front().value();
     if (frame.hasGlobal(global)) {
       frameobj->freeFrameIterData(fop);
-      frameobj->maybeDecrementFrameScriptStepperCount(fop, frame);
+      frameobj->maybeDecrementStepperCounter(fop, frame);
       e.removeFront();
     }
   }
@@ -6352,7 +6352,7 @@ bool Debugger::replaceFrameGuts(JSContext* cx, AbstractFramePtr from,
       // lambda. Manually clean it up here.
       JSFreeOp* fop = cx->runtime()->defaultFreeOp();
       frameobj->freeFrameIterData(fop);
-      frameobj->maybeDecrementFrameScriptStepperCount(fop, to);
+      frameobj->maybeDecrementStepperCounter(fop, to);
 
       ReportOutOfMemory(cx);
       return false;
@@ -6399,7 +6399,7 @@ void Debugger::removeFromFrameMapsAndClearBreakpointsIn(JSContext* cx,
         frameobj->clearGenerator(fop, dbg);
       }
     } else {
-      frameobj->maybeDecrementFrameScriptStepperCount(fop, frame);
+      frameobj->maybeDecrementStepperCounter(fop, frame);
     }
   });
 
