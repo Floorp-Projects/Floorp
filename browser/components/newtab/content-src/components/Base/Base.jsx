@@ -172,6 +172,7 @@ export class BaseContent extends React.PureComponent {
               </div>
             )}
             <ASRouterUISurface
+              appUpdateChannel={this.props.Prefs.values.appUpdateChannel}
               fxaEndpoint={this.props.Prefs.values.fxa_endpoint}
               dispatch={this.props.dispatch}
             />

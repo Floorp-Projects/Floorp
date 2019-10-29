@@ -3,7 +3,10 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { actionCreators as ac } from "common/Actions.jsm";
-import { addUtmParams } from "../../templates/FirstRun/addUtmParams";
+import {
+  addUtmParams,
+  BASE_PARAMS,
+} from "../../templates/FirstRun/addUtmParams";
 import React from "react";
 
 export class FxASignupForm extends React.PureComponent {
@@ -98,7 +101,11 @@ export class FxASignupForm extends React.PureComponent {
             value="activity-stream-firstrun"
           />
           <input name="utm_source" type="hidden" value="activity-stream" />
-          <input name="utm_campaign" type="hidden" value="firstrun" />
+          <input
+            name="utm_campaign"
+            type="hidden"
+            value={BASE_PARAMS.utm_campaign}
+          />
           <input name="utm_term" type="hidden" value={UTMTerm} />
           <input
             name="device_id"
