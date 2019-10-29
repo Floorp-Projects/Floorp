@@ -892,10 +892,14 @@ void TransportSecurityInfo::SetStatusErrorBits(nsNSSCertificate* cert,
 }
 
 NS_IMETHODIMP
-TransportSecurityInfo::GetFailedCertChain(nsIX509CertList** _result) {
-  MOZ_ASSERT(_result);
-  return TransportSecurityInfo::ConvertCertArrayToCertList(mFailedCertChain,
-                                                           _result);
+TransportSecurityInfo::GetFailedCertChain(
+    nsTArray<RefPtr<nsIX509Cert>>& aFailedCertChain) {
+  MOZ_ASSERT(aFailedCertChain.IsEmpty());
+  if (!aFailedCertChain.IsEmpty()) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  aFailedCertChain.AppendElements(mFailedCertChain);
+  return NS_OK;
 }
 
 nsresult TransportSecurityInfo::SetFailedCertChain(
@@ -928,11 +932,14 @@ void TransportSecurityInfo::SetServerCert(nsNSSCertificate* aServerCert,
 }
 
 NS_IMETHODIMP
-TransportSecurityInfo::GetSucceededCertChain(nsIX509CertList** _result) {
-  NS_ENSURE_ARG_POINTER(_result);
-
-  return TransportSecurityInfo::ConvertCertArrayToCertList(mSucceededCertChain,
-                                                           _result);
+TransportSecurityInfo::GetSucceededCertChain(
+    nsTArray<RefPtr<nsIX509Cert>>& aSucceededCertChain) {
+  MOZ_ASSERT(aSucceededCertChain.IsEmpty());
+  if (!aSucceededCertChain.IsEmpty()) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  aSucceededCertChain.AppendElements(mSucceededCertChain);
+  return NS_OK;
 }
 
 nsresult TransportSecurityInfo::SetSucceededCertChain(

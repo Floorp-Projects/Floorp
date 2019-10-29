@@ -32,7 +32,7 @@ var security = {
 
   viewCert() {
     if (Services.prefs.getBoolPref("security.aboutcertificate.enabled")) {
-      let certChain = getCertificateChain(this.securityInfo.certChain);
+      let certChain = this.securityInfo.certChain;
       let certs = certChain.map(elem =>
         encodeURIComponent(elem.getBase64DERString())
       );
@@ -79,6 +79,13 @@ var security = {
         issuerName = cert.issuerOrganization || cert.issuerName;
       }
 
+      let certChainArray = [];
+      if (secInfo.succeededCertChain.length) {
+        certChainArray = secInfo.succeededCertChain;
+      } else {
+        certChainArray = secInfo.failedCertChain;
+      }
+
       var retval = {
         cAName: issuerName,
         encryptionAlgorithm: undefined,
@@ -88,7 +95,7 @@ var security = {
         isMixed,
         isEV,
         cert,
-        certChain: secInfo.succeededCertChain || secInfo.failedCertChain,
+        certChain: certChainArray,
         certificateTransparency: undefined,
       };
 
@@ -386,14 +393,6 @@ function setText(id, value) {
   } else {
     element.textContent = value;
   }
-}
-
-function getCertificateChain(certChain, options = {}) {
-  let certificates = [];
-  for (let cert of certChain.getEnumerator()) {
-    certificates.push(cert);
-  }
-  return certificates;
 }
 
 /**
