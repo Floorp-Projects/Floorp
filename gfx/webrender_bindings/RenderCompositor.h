@@ -19,6 +19,7 @@ class GLContext;
 }
 
 namespace layers {
+class NativeLayer;
 class SyncObjectHost;
 }  // namespace layers
 
@@ -36,7 +37,7 @@ class RenderCompositor {
   RenderCompositor(RefPtr<widget::CompositorWidget>&& aWidget);
   virtual ~RenderCompositor();
 
-  virtual bool BeginFrame() = 0;
+  virtual bool BeginFrame(layers::NativeLayer* aNativeLayer) = 0;
   virtual void EndFrame() = 0;
   // Returns false when waiting gpu tasks is failed.
   // It might happen when rendering context is lost.
