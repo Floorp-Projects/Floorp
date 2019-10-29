@@ -29,6 +29,7 @@ document.addEventListener("DOMContentLoaded", e => {
   ];
 
   let protectionDetails = document.getElementById("protection-details");
+  let manageProtections = document.getElementById("manage-protections");
   let protectionDetailsEvtHandler = evt => {
     if (evt.keyCode == evt.DOM_VK_RETURN || evt.type == "click") {
       RPMSendAsyncMessage("OpenContentBlockingPreferences");
@@ -36,6 +37,8 @@ document.addEventListener("DOMContentLoaded", e => {
   };
   protectionDetails.addEventListener("click", protectionDetailsEvtHandler);
   protectionDetails.addEventListener("keypress", protectionDetailsEvtHandler);
+  manageProtections.addEventListener("click", protectionDetailsEvtHandler);
+  manageProtections.addEventListener("keypress", protectionDetailsEvtHandler);
 
   let cbCategory = RPMGetStringPref("browser.contentblocking.category");
   if (cbCategory == "custom") {
@@ -205,9 +208,48 @@ document.addEventListener("DOMContentLoaded", e => {
       });
     }
 
-    // Hide the trackers tab if the user is in standard and
-    // has no recorded trackers blocked.
-    if (weekTypeCounts.tracker == 0 && cbCategory == "standard") {
+    let blockingCookies =
+      RPMGetIntPref("network.cookie.cookieBehavior", 0) != 0;
+    let cryptominingEnabled = RPMGetBoolPref(
+      "privacy.trackingprotection.cryptomining.enabled",
+      false
+    );
+    let fingerprintingEnabled = RPMGetBoolPref(
+      "privacy.trackingprotection.fingerprinting.enabled",
+      false
+    );
+    let tpEnabled = RPMGetBoolPref("privacy.trackingprotection.enabled", false);
+    let socialTracking = RPMGetBoolPref(
+      "privacy.trackingprotection.socialtracking.enabled",
+      false
+    );
+    let socialCookies = RPMGetBoolPref(
+      "privacy.socialtracking.block_cookies.enabled",
+      false
+    );
+    let socialEnabled =
+      socialCookies && (blockingCookies || (tpEnabled && socialTracking));
+    let notBlocking =
+      !blockingCookies &&
+      !cryptominingEnabled &&
+      !fingerprintingEnabled &&
+      !tpEnabled &&
+      !socialEnabled;
+
+    // User has turned off all blocking, show a different card.
+    if (notBlocking) {
+      document
+        .getElementById("etp-card-content")
+        .setAttribute(
+          "data-l10n-id",
+          "protection-report-etp-card-content-custom-not-blocking"
+        );
+      document.querySelector(".etp-card").classList.add("custom-not-blocking");
+    }
+
+    // Hide each type of tab if the user has no recorded
+    // trackers of that type blocked and blocking of that type is off.
+    if (weekTypeCounts.tracker == 0 && !tpEnabled) {
       legend.style.gridTemplateAreas = legend.style.gridTemplateAreas.replace(
         "tracker",
         ""
@@ -216,11 +258,6 @@ document.addEventListener("DOMContentLoaded", e => {
       radio.setAttribute("disabled", true);
       document.querySelector("#tab-tracker ~ label").style.display = "none";
     }
-    let socialEnabled = RPMGetBoolPref(
-      "privacy.socialtracking.block_cookies.enabled",
-      false
-    );
-
     if (weekTypeCounts.social == 0 && !socialEnabled) {
       legend.style.gridTemplateAreas = legend.style.gridTemplateAreas.replace(
         "social",
@@ -229,6 +266,34 @@ document.addEventListener("DOMContentLoaded", e => {
       let radio = document.getElementById("tab-social");
       radio.setAttribute("disabled", true);
       document.querySelector("#tab-social ~ label").style.display = "none";
+    }
+    if (weekTypeCounts.cookie == 0 && !blockingCookies) {
+      legend.style.gridTemplateAreas = legend.style.gridTemplateAreas.replace(
+        "cookie",
+        ""
+      );
+      let radio = document.getElementById("tab-cookie");
+      radio.setAttribute("disabled", true);
+      document.querySelector("#tab-cookie ~ label").style.display = "none";
+    }
+    if (weekTypeCounts.cryptominer == 0 && !cryptominingEnabled) {
+      legend.style.gridTemplateAreas = legend.style.gridTemplateAreas.replace(
+        "cryptominer",
+        ""
+      );
+      let radio = document.getElementById("tab-cryptominer");
+      radio.setAttribute("disabled", true);
+      document.querySelector("#tab-cryptominer ~ label").style.display = "none";
+    }
+    if (weekTypeCounts.fingerprinter == 0 && !fingerprintingEnabled) {
+      legend.style.gridTemplateAreas = legend.style.gridTemplateAreas.replace(
+        "fingerprinter",
+        ""
+      );
+      let radio = document.getElementById("tab-fingerprinter");
+      radio.setAttribute("disabled", true);
+      document.querySelector("#tab-fingerprinter ~ label").style.display =
+        "none";
     }
 
     let firstRadio = document.querySelector("input:not(:disabled)");
