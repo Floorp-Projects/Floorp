@@ -22,14 +22,16 @@ function OnDeviceChangeEvent() {
 function OnDeviceChangeEventReceived() {
   return Promise.race([
     OnDeviceChangeEvent(),
-    wait(RESPONSE_WAIT_TIME_MS).then(() => Promise.reject("Timed out while waiting for devicechange event"))
+    wait(RESPONSE_WAIT_TIME_MS).then(() =>
+      Promise.reject(new Error("Timed out waiting for devicechange"))),
   ]);
 }
 
 function OnDeviceChangeEventNotReceived() {
   return Promise.race([
-    OnDeviceChangeEvent().then(() => Promise.reject("ondevicechange event is fired unexpectedly.")),
-    wait(RESPONSE_WAIT_TIME_MS)
+    OnDeviceChangeEvent().then(() =>
+      Promise.reject(new Error("devicechange fired unexpectedly"))),
+    wait(RESPONSE_WAIT_TIME_MS),
   ]);
 }
 
@@ -49,10 +51,11 @@ runTest(async () => {
   info("assure devicechange event is fired when gUM is NOT in use and permanent permission is granted");
   await OnDeviceChangeEventReceived();
   ok(true, "devicechange event is fired when gUM is NOT in use and permanent permission is granted");
-  let st = await getUserMedia({video: true, fake: true});
-  let videoTracks = st.getVideoTracks();
 
   info("assure devicechange event is fired when gUM is in use");
+  const st = await getUserMedia({video: true, fake: true});
+  const videoTracks = st.getVideoTracks();
+  await pushPrefs(['media.navigator.permission.disabled', false]);
   await OnDeviceChangeEventReceived();
   ok(true, "devicechange event is fired when gUM is in use");
   videoTracks.forEach(track => track.stop());
