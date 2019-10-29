@@ -165,7 +165,6 @@ class Rule;
 }  // namespace css
 
 namespace dom {
-class Animation;
 class AnonymousContent;
 class Attr;
 class XULBroadcastManager;
@@ -3290,8 +3289,6 @@ class Document : public nsINode,
 
   DocumentTimeline* Timeline();
   LinkedList<DocumentTimeline>& Timelines() { return mTimelines; }
-
-  void GetAnimations(nsTArray<RefPtr<Animation>>& aAnimations);
 
   SVGSVGElement* GetSVGRootElement() const;
 
