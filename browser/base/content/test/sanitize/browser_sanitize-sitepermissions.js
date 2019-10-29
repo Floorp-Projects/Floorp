@@ -1,7 +1,13 @@
 // Bug 380852 - Delete permission manager entries in Clear Recent History
 
 function countPermissions() {
-  return Services.perms.all.length;
+  let result = 0;
+  let enumerator = Services.perms.enumerator;
+  while (enumerator.hasMoreElements()) {
+    result++;
+    enumerator.getNext();
+  }
+  return result;
 }
 
 add_task(async function test() {
@@ -21,7 +27,7 @@ add_task(async function test() {
 
   // Sanity check
   ok(
-    !!Services.perms.all.length,
+    Services.perms.enumerator.hasMoreElements(),
     "Permission manager should have elements, since we just added one"
   );
 

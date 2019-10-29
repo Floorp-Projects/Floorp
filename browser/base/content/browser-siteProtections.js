@@ -793,7 +793,7 @@ var ThirdPartyCookies = {
 
     // Cookie exceptions get "inherited" from parent- to sub-domain, so we need to
     // clear any cookie permissions from parent domains as well.
-    for (let perm of Services.perms.all) {
+    for (let perm of Services.perms.enumerator) {
       if (
         perm.type == "cookie" &&
         Services.eTLD.hasRootDomain(host, perm.principal.URI.host)

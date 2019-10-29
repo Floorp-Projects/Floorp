@@ -201,7 +201,9 @@ function promiseReloadPlugin(aId, aBrowser) {
 // after a test is done using the plugin doorhanger, we should just clear
 // any permissions that may have crept in
 function clearAllPluginPermissions() {
-  for (let perm of Services.perms.all) {
+  let perms = Services.perms.enumerator;
+  while (perms.hasMoreElements()) {
+    let perm = perms.getNext();
     if (perm.type.startsWith("plugin")) {
       info(
         "removing permission:" + perm.principal.origin + " " + perm.type + "\n"
