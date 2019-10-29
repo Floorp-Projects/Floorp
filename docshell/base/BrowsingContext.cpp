@@ -29,11 +29,13 @@
 #include "mozilla/Components.h"
 #include "mozilla/HashTable.h"
 #include "mozilla/Logging.h"
+#include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
 #include "nsIURIFixup.h"
 
 #include "nsDocShell.h"
 #include "nsGlobalWindowOuter.h"
+#include "nsIObserverService.h"
 #include "nsContentUtils.h"
 #include "nsScriptError.h"
 #include "nsThreadUtils.h"
@@ -361,6 +363,12 @@ void BrowsingContext::Detach(bool aFromIPC) {
 
   mGroup->Unregister(this);
   mIsDiscarded = true;
+
+  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+  if (obs) {
+    obs->NotifyObservers(ToSupports(this), "browsing-context-discarded",
+                         nullptr);
+  }
 
   // NOTE: Doesn't use SetClosed, as it will be set in all processes
   // automatically by calls to Detach()
