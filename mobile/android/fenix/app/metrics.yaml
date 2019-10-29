@@ -415,7 +415,8 @@ metrics:
     type: string
     lifetime: application
     description: >
-      A string containing the Adjust campaign ID from which the user installed Fenix
+      A string containing the Adjust campaign ID from which the user installed Fenix. This will not
+      send on the first session the user runs. If the install is organic, this will be empty.
     send_in_pings:
       - metrics
     bugs:

@@ -35,13 +35,10 @@ class AdjustMetricsService(private val application: Application) : MetricsServic
         )
 
         config.setOnAttributionChangedListener {
-            it.campaign?.let { campaign ->
-                application.settings().adjustCampaignId = campaign
-            }
+            application.applicationContext.settings().adjustCampaignId = it.campaign
         }
 
         config.setLogLevel(LogLevel.SUPRESS)
-
         Adjust.onCreate(config)
         Adjust.setEnabled(true)
         application.registerActivityLifecycleCallbacks(AdjustLifecycleCallbacks())
