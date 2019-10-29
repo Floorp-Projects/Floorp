@@ -200,6 +200,11 @@ void CanvasChild::EndTransaction() {
 }
 
 bool CanvasChild::ShouldBeCleanedUp() const {
+  // We can't be cleaned up if we have stored objects still alive.
+  if (!mRecorder->IsEmpty()) {
+    return false;
+  }
+
   static const TimeDuration kCleanUpCanvasThreshold =
       TimeDuration::FromSeconds(10);
   return TimeStamp::NowLoRes() - mLastNonEmptyTransaction >
