@@ -67,6 +67,7 @@ endif
 
 rustflags_sancov =
 ifdef FUZZING_INTERFACES
+ifndef MOZ_TSAN
 # These options should match what is implicitly enabled for `clang -fsanitize=fuzzer`
 #   here: https://github.com/llvm/llvm-project/blob/release/8.x/clang/lib/Driver/SanitizerArgs.cpp#L354
 #
@@ -74,7 +75,10 @@ ifdef FUZZING_INTERFACES
 #  -sanitizer-coverage-level=4                   Enable coverage for all blocks, critical edges, and indirect calls.
 #  -sanitizer-coverage-trace-compares            Tracing of CMP and similar instructions.
 #  -sanitizer-coverage-pc-table                  Create a static PC table.
+#
+# In TSan builds, we must not pass any of these, because sanitizer coverage is incompatible with TSan.
 rustflags_sancov += -Cpasses=sancov -Cllvm-args=-sanitizer-coverage-inline-8bit-counters -Cllvm-args=-sanitizer-coverage-level=4 -Cllvm-args=-sanitizer-coverage-trace-compares -Cllvm-args=-sanitizer-coverage-pc-table
+endif
 endif
 
 rustflags_override = $(MOZ_RUST_DEFAULT_FLAGS) $(rustflags_neon)

@@ -2340,8 +2340,17 @@ add_old_configure_assignment('FUZZING_INTERFACES', enable_fuzzing_interfaces)
 
 @depends(c_compiler.try_compile(flags=['-fsanitize=fuzzer-no-link'],
          when=enable_fuzzing,
-         check_msg='whether the C compiler supports -fsanitize=fuzzer-no-link'))
-def libfuzzer_flags(value):
+         check_msg='whether the C compiler supports -fsanitize=fuzzer-no-link'), tsan)
+def libfuzzer_flags(value, tsan):
+    if tsan:
+        # With ThreadSanitizer, we should not use any libFuzzer instrumentation because
+        # it is incompatible (e.g. there are races on global sanitizer coverage counters).
+        # Instead we use an empty set of flags here but still build the fuzzing targets.
+        # With this setup, we can still run files through these targets in TSan builds,
+        # e.g. those obtained from regular fuzzing.
+        # This code can be removed once libFuzzer has been made compatible with TSan.
+        return namespace(no_link_flag_supported=False, use_flags=[])
+
     if value:
         no_link_flag_supported = True
         # recommended for (and only supported by) clang >= 6
