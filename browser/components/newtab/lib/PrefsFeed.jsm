@@ -62,6 +62,12 @@ this.PrefsFeed = class PrefsFeed {
       "https://accounts.firefox.com"
     );
 
+    // Get the firefox update channel with values as default, nightly, beta or release
+    values.appUpdateChannel = Services.prefs.getStringPref(
+      "app.update.channel",
+      ""
+    );
+
     // Read the pref for search shortcuts top sites experiment from firefox.js and store it
     // in our interal list of prefs to watch
     let searchTopSiteExperimentPrefValue = Services.prefs.getBoolPref(
