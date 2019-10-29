@@ -360,11 +360,6 @@ mozilla::ipc::IPCResult CompositorBridgeParent::RecvInitialize(
   MOZ_ASSERT(XRE_IsGPUProcess());
 
   mRootLayerTreeID = aRootLayerTreeId;
-#ifdef XP_WIN
-  if (XRE_IsGPUProcess()) {
-    mWidget->AsWindows()->SetRootLayerTreeID(mRootLayerTreeID);
-  }
-#endif
 
   Initialize();
   return IPC_OK();
@@ -952,13 +947,6 @@ void CompositorBridgeParent::CompositeToTarget(VsyncId aId, DrawTarget* aTarget,
     ScheduleComposition();
     return;
   }
-#endif
-
-#ifdef XP_WIN
-  // Update compositor window's size if it exists.
-  // It needs to be called here, since OS might update compositor
-  // window's size at unexpected timing.
-  mWidget->AsWindows()->UpdateCompositorWndSizeIfNecessary();
 #endif
 
   /*
@@ -1671,30 +1659,6 @@ void CompositorBridgeParent::NotifyVsync(const VsyncEvent& aVsync,
   if (!obs) return;
 
   obs->NotifyVsync(aVsync);
-}
-
-/* static */
-void CompositorBridgeParent::ScheduleForcedComposition(
-    const LayersId& aLayersId) {
-  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_GPU);
-  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
-
-  MonitorAutoLock lock(*sIndirectLayerTreesLock);
-  auto it = sIndirectLayerTrees.find(aLayersId);
-  if (it == sIndirectLayerTrees.end()) {
-    return;
-  }
-
-  CompositorBridgeParent* cbp = it->second.mParent;
-  if (!cbp || !cbp->mWidget) {
-    return;
-  }
-
-  if (cbp->mWrBridge) {
-    cbp->mWrBridge->ScheduleForcedGenerateFrame();
-  } else if (cbp->CanComposite()) {
-    cbp->mCompositorScheduler->ScheduleComposition();
-  }
 }
 
 mozilla::ipc::IPCResult CompositorBridgeParent::RecvNotifyChildCreated(

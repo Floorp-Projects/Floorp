@@ -1451,6 +1451,8 @@ void CompositorD3D11::PrepareViewport(const gfx::IntSize& aSize,
 void CompositorD3D11::EnsureSize() { mSize = mWidget->GetClientSize(); }
 
 bool CompositorD3D11::VerifyBufferSize() {
+  mWidget->AsWindows()->UpdateCompositorWndSizeIfNecessary();
+
   DXGI_SWAP_CHAIN_DESC swapDesc;
   HRESULT hr;
 

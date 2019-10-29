@@ -89,7 +89,6 @@ wr::WrExternalImageHandler RendererOGL::GetExternalImageHandler() {
 }
 
 void RendererOGL::Update() {
-  mCompositor->Update();
   if (mCompositor->MakeCurrent()) {
     wr_renderer_update(mRenderer);
   }
