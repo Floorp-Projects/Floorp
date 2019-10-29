@@ -385,16 +385,20 @@ char16_t* CopyUnicodeTo(const nsAString& aSource, uint32_t aSrcOffset,
  * Copies a shared string buffer or an otherwise read-only
  * buffer only if there are unpaired surrogates.
  */
-inline void EnsureUTF16Validity(nsAString& aString) {
+inline MOZ_MUST_USE bool EnsureUTF16Validity(nsAString& aString) {
   uint32_t upTo = mozilla::Utf16ValidUpTo(aString);
   uint32_t len = aString.Length();
   if (upTo == len) {
-    return;
+    return true;
   }
-  char16_t* ptr = aString.BeginWriting();
+  char16_t* ptr = aString.BeginWriting(mozilla::fallible);
+  if (!ptr) {
+    return false;
+  }
   auto span = mozilla::MakeSpan(ptr, len);
   span[upTo] = 0xFFFD;
   mozilla::EnsureUtf16ValiditySpan(span.From(upTo + 1));
+  return true;
 }
 
 bool ParseString(const nsACString& aAstring, char aDelimiter,

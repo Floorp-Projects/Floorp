@@ -63,8 +63,7 @@ struct FakeString {
   const nsString::char_type* Data() const { return mData; }
 
   nsString::char_type* BeginWriting() {
-    MOZ_ASSERT(!(mDataFlags & nsString::DataFlags::REFCOUNTED) ||
-               !nsStringBuffer::FromData(mData)->IsReadonly());
+    MOZ_ASSERT(IsMutable());
     return mData;
   }
 
@@ -83,6 +82,8 @@ struct FakeString {
     // Use mInlineStorage for small strings.
     if (aLength < sInlineCapacity) {
       SetData(mInlineStorage);
+      mDataFlags =
+          nsString::DataFlags::TERMINATED | nsString::DataFlags::INLINE;
     } else {
       RefPtr<nsStringBuffer> buf =
           nsStringBuffer::Alloc((aLength + 1) * sizeof(nsString::char_type));
@@ -94,6 +95,34 @@ struct FakeString {
     }
     mLength = aLength;
     mData[mLength] = char16_t(0);
+    return true;
+  }
+
+  // Returns false on allocation failure.
+  bool EnsureMutable() {
+    if (IsMutable()) {
+      return true;
+    }
+
+    RefPtr<nsStringBuffer> buffer;
+    if (mDataFlags & nsString::DataFlags::REFCOUNTED) {
+      // Make sure we'll drop it when we're done.
+      buffer = dont_AddRef(nsStringBuffer::FromData(mData));
+      // And make sure we don't release it twice by accident.
+    }
+    const nsString::char_type* oldChars = mData;
+
+    mDataFlags = nsString::DataFlags::TERMINATED;
+    // SetLength will make sure we have our own buffer to work with.  Note that
+    // we may be transitioning from having a (short) readonly stringbuffer to
+    // our inline storage or whatnot.  That's all fine; SetLength is responsible
+    // for setting up our flags correctly.
+    if (!SetLength(Length(), fallible)) {
+      return false;
+    }
+    MOZ_ASSERT(oldChars != mData, "Should have new chars now!");
+    MOZ_ASSERT(IsMutable(), "Why are we still not mutable?");
+    memcpy(mData, oldChars, Length() * sizeof(nsString::char_type));
     return true;
   }
 
@@ -131,6 +160,12 @@ struct FakeString {
     SetData(static_cast<nsString::char_type*>(aBuffer.take()->Data()));
     mDataFlags =
         nsString::DataFlags::REFCOUNTED | nsString::DataFlags::TERMINATED;
+  }
+
+  bool IsMutable() {
+    return (mDataFlags & nsString::DataFlags::INLINE) ||
+           ((mDataFlags & nsString::DataFlags::REFCOUNTED) &&
+            !nsStringBuffer::FromData(mData)->IsReadonly());
   }
 
   friend class NonNull<nsAString>;

@@ -5937,7 +5937,15 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
         def getConversionCode(varName):
             normalizeCode = ""
             if type.isUSVString():
-                normalizeCode = "NormalizeUSVString(%s);\n" % varName
+                normalizeCode = fill(
+                    """
+                    if (!NormalizeUSVString(${var})) {
+                      JS_ReportOutOfMemory(cx);
+                      $*{exceptionCode}
+                    }
+                    """,
+                    var=varName,
+                    exceptionCode=exceptionCode)
 
             conversionCode = fill("""
                 if (!ConvertJSValueToString(cx, $${val}, ${nullBehavior}, ${undefinedBehavior}, ${varName})) {

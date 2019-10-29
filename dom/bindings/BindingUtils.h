@@ -1849,9 +1849,9 @@ static inline bool ConvertJSValueToString(JSContext* cx,
   return ConvertJSValueToString(cx, v, eStringify, eStringify, result);
 }
 
-void NormalizeUSVString(nsAString& aString);
+MOZ_MUST_USE bool NormalizeUSVString(nsAString& aString);
 
-void NormalizeUSVString(binding_detail::FakeString& aString);
+MOZ_MUST_USE bool NormalizeUSVString(binding_detail::FakeString& aString);
 
 template <typename T>
 static inline bool ConvertJSValueToUSVString(JSContext* cx,
@@ -1861,7 +1861,11 @@ static inline bool ConvertJSValueToUSVString(JSContext* cx,
     return false;
   }
 
-  NormalizeUSVString(result);
+  if (!NormalizeUSVString(result)) {
+    JS_ReportOutOfMemory(cx);
+    return false;
+  }
+
   return true;
 }
 

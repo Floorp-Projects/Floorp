@@ -2604,10 +2604,30 @@ bool NonVoidByteStringToJsval(JSContext* cx, const nsACString& str,
   return true;
 }
 
-void NormalizeUSVString(nsAString& aString) { EnsureUTF16Validity(aString); }
+bool NormalizeUSVString(nsAString& aString) {
+  return EnsureUTF16Validity(aString);
+}
 
-void NormalizeUSVString(binding_detail::FakeString& aString) {
-  EnsureUtf16ValiditySpan(aString);
+bool NormalizeUSVString(binding_detail::FakeString& aString) {
+  uint32_t upTo = Utf16ValidUpTo(aString);
+  uint32_t len = aString.Length();
+  if (upTo == len) {
+    return true;
+  }
+  // This is the part that's different from EnsureUTF16Validity with an
+  // nsAString& argument, because we don't want to ensure mutability in our
+  // BeginWriting() in the common case and nsAString's EnsureMutable is not
+  // public.  This is a little annoying; I wish we could just share the more or
+  // less identical code!
+  if (!aString.EnsureMutable()) {
+    return false;
+  }
+
+  char16_t* ptr = aString.BeginWriting();
+  auto span = MakeSpan(ptr, len);
+  span[upTo] = 0xFFFD;
+  EnsureUtf16ValiditySpan(span.From(upTo + 1));
+  return true;
 }
 
 bool ConvertJSValueToByteString(JSContext* cx, JS::Handle<JS::Value> v,
