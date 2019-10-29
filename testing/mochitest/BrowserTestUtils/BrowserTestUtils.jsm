@@ -43,11 +43,6 @@ XPCOMUtils.defineLazyServiceGetters(this, {
   ],
 });
 
-Services.mm.loadFrameScript(
-  "chrome://mochikit/content/tests/BrowserTestUtils/content-utils.js",
-  true
-);
-
 const PROCESSSELECTOR_CONTRACTID = "@mozilla.org/ipc/processselector;1";
 const OUR_PROCESSSELECTOR_CID = Components.ID(
   "{f9746211-3d53-4465-9aeb-ca0d96de0253}"
@@ -479,18 +474,20 @@ var BrowserTestUtils = {
    * @resolves Once the selected browser fires its load event.
    */
   firstBrowserLoaded(win, aboutBlank = true, checkFn = null) {
-    let mm = win.messageManager;
-    return this.waitForMessage(mm, "browser-test-utils:loadEvent", msg => {
-      if (checkFn) {
-        return checkFn(msg.target);
+    return this.waitForEvent(
+      win,
+      "BrowserTestUtils:ContentEvent:load",
+      true,
+      event => {
+        if (checkFn) {
+          return checkFn(event.target);
+        }
+        return (
+          win.gBrowser.selectedBrowser.currentURI.spec !== "about:blank" ||
+          aboutBlank
+        );
       }
-
-      let selectedBrowser = win.gBrowser.selectedBrowser;
-      return (
-        msg.target == selectedBrowser &&
-        (aboutBlank || selectedBrowser.currentURI.spec != "about:blank")
-      );
-    });
+    );
   },
 
   _webProgressListeners: new Set(),
