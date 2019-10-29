@@ -384,6 +384,7 @@ interface nsISearchService : nsISupports
 
   /**
    * Returns an array of all installed search engines.
+   * The array is sorted either to the user requirements or the default order.
    *
    * @returns an array of nsISearchEngine objects.
    */
@@ -392,6 +393,7 @@ interface nsISearchService : nsISupports
   /**
    * Returns an array of all installed search engines whose hidden attribute is
    * false.
+   * The array is sorted either to the user requirements or the default order.
    *
    * @returns an array of nsISearchEngine objects.
    */
@@ -400,6 +402,7 @@ interface nsISearchService : nsISupports
   /**
    * Returns an array of all default search engines. This includes all loaded
    * engines that aren't in the user's profile directory.
+   * The array is sorted to the default order.
    *
    * @returns an array of nsISearchEngine objects.
    */
