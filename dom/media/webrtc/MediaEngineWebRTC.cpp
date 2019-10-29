@@ -35,10 +35,11 @@ CubebDeviceEnumerator* GetEnumerator() {
 }
 
 MediaEngineWebRTC::MediaEngineWebRTC(MediaEnginePrefs& aPrefs)
-    : mMutex("mozilla::MediaEngineWebRTC"),
-      mDelayAgnostic(aPrefs.mDelayAgnostic),
+    : mDelayAgnostic(aPrefs.mDelayAgnostic),
       mExtendedFilter(aPrefs.mExtendedFilter),
       mHasTabVideoSource(false) {
+  AssertIsOnOwningThread();
+
   nsCOMPtr<nsIComponentRegistrar> compMgr;
   NS_GetComponentRegistrar(getter_AddRefs(compMgr));
   if (compMgr) {
@@ -51,13 +52,15 @@ MediaEngineWebRTC::MediaEngineWebRTC(MediaEnginePrefs& aPrefs)
 }
 
 void MediaEngineWebRTC::SetFakeDeviceChangeEvents() {
+  AssertIsOnOwningThread();
   GetChildAndCall(&CamerasChild::SetFakeDeviceChangeEvents);
 }
 
 void MediaEngineWebRTC::EnumerateVideoDevices(
     uint64_t aWindowId, camera::CaptureEngine aCapEngine,
     nsTArray<RefPtr<MediaDevice>>* aDevices) {
-  mMutex.AssertCurrentThreadOwns();
+  AssertIsOnOwningThread();
+
   // flag sources with cross-origin exploit potential
   bool scaryKind = (aCapEngine == camera::ScreenEngine ||
                     aCapEngine == camera::BrowserEngine);
@@ -151,7 +154,7 @@ void MediaEngineWebRTC::EnumerateVideoDevices(
 
 void MediaEngineWebRTC::EnumerateMicrophoneDevices(
     uint64_t aWindowId, nsTArray<RefPtr<MediaDevice>>* aDevices) {
-  mMutex.AssertCurrentThreadOwns();
+  AssertIsOnOwningThread();
 
   nsTArray<RefPtr<AudioDeviceInfo>> devices;
   GetEnumerator()->EnumerateAudioInputDevices(devices);
@@ -202,6 +205,8 @@ void MediaEngineWebRTC::EnumerateMicrophoneDevices(
 
 void MediaEngineWebRTC::EnumerateSpeakerDevices(
     uint64_t aWindowId, nsTArray<RefPtr<MediaDevice>>* aDevices) {
+  AssertIsOnOwningThread();
+
   nsTArray<RefPtr<AudioDeviceInfo>> devices;
   GetEnumerator()->EnumerateAudioOutputDevices(devices);
 
@@ -235,9 +240,9 @@ void MediaEngineWebRTC::EnumerateSpeakerDevices(
 void MediaEngineWebRTC::EnumerateDevices(
     uint64_t aWindowId, dom::MediaSourceEnum aMediaSource,
     MediaSinkEnum aMediaSink, nsTArray<RefPtr<MediaDevice>>* aDevices) {
+  AssertIsOnOwningThread();
   MOZ_ASSERT(aMediaSource != dom::MediaSourceEnum::Other ||
              aMediaSink != MediaSinkEnum::Other);
-  MutexAutoLock lock(mMutex);
   if (MediaEngineSource::IsVideo(aMediaSource)) {
     switch (aMediaSource) {
       case dom::MediaSourceEnum::Window:
@@ -278,9 +283,7 @@ void MediaEngineWebRTC::EnumerateDevices(
 }
 
 void MediaEngineWebRTC::Shutdown() {
-  // This is likely paranoia
-  MutexAutoLock lock(mMutex);
-
+  AssertIsOnOwningThread();
   if (camera::GetCamerasChildIfExists()) {
     GetChildAndCall(&CamerasChild::RemoveDeviceChangeCallback, this);
   }
