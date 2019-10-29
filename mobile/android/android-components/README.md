@@ -162,6 +162,8 @@ _Combined components to implement feature-specific use cases._
 
 * 🔵 [**WebCompat**](components/feature/webcompat/README.md) - A feature to enable website-hotfixing via the Web Compatibility System-Addon.
 
+* 🔴 [**Web Add-ons**](components/feature/addons/README.md) - A feature that provides functionality for managing add-ons.
+
 ## UI
 
 _Generic low-level UI components for building apps._
