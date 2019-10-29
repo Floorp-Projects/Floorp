@@ -33,7 +33,7 @@ function onAfterPaint () {
 function startTest() {
   setTimeout(function () {
     afterPaintCount = 0;
-    initialPaintCount = window.mozPaintCount;
+    initialPaintCount = SpecialPowers.DOMWindowUtils.paintCount;
     window.addEventListener("MozAfterPaint", onAfterPaint, true);
     doBackgroundFlicker();
   }, 500);
@@ -49,7 +49,7 @@ const minimumAfterPaintsToPass = 10;
 function doPluginFlicker() {
   ok(true, "Plugin color iteration " + color + 
      ", afterpaint count: " + afterPaintCount +
-     ", mozpaint count: " + window.mozPaintCount);
+     ", mozpaint count: " + SpecialPowers.DOMWindowUtils.paintCount);
   if (afterPaintCount >= minimumAfterPaintsToPass) { 
     ok(true, "afterPaintCount incremented enough from plugin color changes.");
     SimpleTest.finish();
@@ -69,11 +69,11 @@ function doPluginFlicker() {
 function doBackgroundFlicker() {
   ok(true, "Background color iteration " + color + 
      ", afterpaint count: " + afterPaintCount +
-     ", mozpaint count: " + window.mozPaintCount);
+     ", mozpaint count: " + SpecialPowers.DOMWindowUtils.paintCount);
   if (afterPaintCount >= minimumAfterPaintsToPass) {
     ok(true, "afterPaintCount incremented enough from background color changes.");
     afterPaintCount = 0;
-    initialPaintCount = window.mozPaintCount;
+    initialPaintCount = SpecialPowers.DOMWindowUtils.paintCount;
     doPluginFlicker();
     return;
   }

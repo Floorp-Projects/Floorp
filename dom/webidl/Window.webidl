@@ -303,8 +303,10 @@ partial interface Window {
   /**
    * Returns the number of times this document for this window has
    * been painted to the screen.
+   *
+   * If you need this for tests use nsIDOMWindowUtils.paintCount instead.
    */
-  [Throws] readonly attribute unsigned long long mozPaintCount;
+  [Throws, Pref="dom.mozPaintCount.enabled"] readonly attribute unsigned long long mozPaintCount;
 
            attribute EventHandler ondevicemotion;
            attribute EventHandler ondeviceorientation;

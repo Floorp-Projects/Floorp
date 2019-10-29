@@ -31,17 +31,17 @@
     }
 
     function doTest(evt) {
-      var initialCount = win.mozPaintCount;
+      var initialCount = win.windowUtils.paintCount;
 
       function nextStep() {
-        if (win.mozPaintCount == initialCount || win.isMozAfterPaintPending) {
+        if (win.windowUtils.paintCount == initialCount || win.isMozAfterPaintPending) {
           SimpleTest.info("Waiting for mozPaintCount (= " + initialCount + ") to increase" + testInfo());
           // Do not use SimpleTest.executeSoon() here: give a little more time.
           setTimeout(nextStep, 100);
           return;
         }
 
-        isnot(win.mozPaintCount, initialCount, "mozPaintCount has increased" + testInfo());
+        isnot(win.windowUtils.paintCount, initialCount, "mozPaintCount has increased" + testInfo());
 
         function testLeafLayersPartitionWindow() {
           var success = win.windowUtils
@@ -67,7 +67,7 @@
         function resizeListener() {
           win.removeEventListener("resize", resizeListener, true);
           // We want a paint after resize.
-          initialCount = win.mozPaintCount;
+          initialCount = win.windowUtils.paintCount;
           SimpleTest.executeSoon(nextStep);
         }
         win.addEventListener("resize", resizeListener, true);

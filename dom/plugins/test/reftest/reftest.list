@@ -22,5 +22,5 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fails-if(!haveTestPlugin) f
 random-if(!haveTestPlugin) HTTP == plugin-transform-1.html plugin-transform-1-ref.html
 fails-if(!haveTestPlugin) HTTP == plugin-transform-2.html plugin-transform-2-ref.html
 skip-if(!haveTestPlugin) HTTP == shrink-1.html shrink-1-ref.html
-skip-if(!haveTestPlugin) HTTP == update-1.html update-1-ref.html
+pref(dom.mozPaintCount.enabled,true) skip-if(!haveTestPlugin) HTTP == update-1.html update-1-ref.html
 skip-if(!haveTestPlugin) HTTP == windowless-layers.html windowless-layers-ref.html
