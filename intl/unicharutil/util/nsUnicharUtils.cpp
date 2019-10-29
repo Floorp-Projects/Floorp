@@ -138,6 +138,30 @@ void ToUpperCase(const nsAString& aSource, nsAString& aDest) {
 
 #ifdef MOZILLA_INTERNAL_API
 
+uint32_t ToFoldedCase(uint32_t aChar) {
+  if (IS_ASCII(aChar)) return gASCIIToLower[aChar];
+  return mozilla::unicode::GetFoldedcase(aChar);
+}
+
+void ToFoldedCase(nsAString& aString) {
+  char16_t* buf = aString.BeginWriting();
+  ToFoldedCase(buf, buf, aString.Length());
+}
+
+void ToFoldedCase(const char16_t* aIn, char16_t* aOut, uint32_t aLen) {
+  for (uint32_t i = 0; i < aLen; i++) {
+    uint32_t ch = aIn[i];
+    if (i < aLen - 1 && NS_IS_SURROGATE_PAIR(ch, aIn[i + 1])) {
+      ch = mozilla::unicode::GetFoldedcase(SURROGATE_TO_UCS4(ch, aIn[i + 1]));
+      NS_ASSERTION(!IS_IN_BMP(ch), "case mapping crossed BMP/SMP boundary!");
+      aOut[i++] = H_SURROGATE(ch);
+      aOut[i] = L_SURROGATE(ch);
+      continue;
+    }
+    aOut[i] = ToFoldedCase(ch);
+  }
+}
+
 int32_t nsCaseInsensitiveStringComparator::operator()(const char16_t* lhs,
                                                       const char16_t* rhs,
                                                       uint32_t lLength,

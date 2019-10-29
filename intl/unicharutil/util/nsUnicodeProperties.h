@@ -124,6 +124,10 @@ inline uint32_t GetTitlecaseForAll(
   return u_totitle(aCh);
 }
 
+inline uint32_t GetFoldedcase(uint32_t aCh) {
+  return u_foldCase(aCh, U_FOLD_CASE_DEFAULT);
+}
+
 inline bool IsEastAsianWidthFHWexcludingEmoji(uint32_t aCh) {
   switch (u_getIntPropertyValue(aCh, UCHAR_EAST_ASIAN_WIDTH)) {
     case U_EA_FULLWIDTH:
