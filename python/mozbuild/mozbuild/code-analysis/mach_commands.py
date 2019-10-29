@@ -588,7 +588,9 @@ class StaticAnalysis(MachCommandBase):
                  'Using symbol upload token from the secrets service: "{}"'.format(secrets_url))
 
         import requests
+        self.log_manager.enable_unstructured()
         res = requests.get(secrets_url)
+        self.log_manager.disable_unstructured()
         res.raise_for_status()
         secret = res.json()
         cov_config = secret['secret'] if 'secret' in secret else None
@@ -648,7 +650,9 @@ class StaticAnalysis(MachCommandBase):
 
         def download(artifact_url, target):
             import requests
+            self.log_manager.enable_unstructured()
             resp = requests.get(artifact_url, verify=False, stream=True)
+            self.log_manager.disable_unstructured()
             resp.raise_for_status()
 
             # Extract archive into destination
