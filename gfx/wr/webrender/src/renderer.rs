@@ -48,7 +48,7 @@ use crate::batch::{AlphaBatchContainer, BatchKind, BatchFeatures, BatchTextures,
 #[cfg(any(feature = "capture", feature = "replay"))]
 use crate::capture::{CaptureConfig, ExternalCaptureImage, PlainExternalImage};
 use crate::composite::{CompositeState, CompositeTileSurface, CompositeTile, CompositorKind, Compositor};
-use crate::composite::{CompositorConfig, NativeSurfaceOperationDetails};
+use crate::composite::{CompositorConfig, NativeSurfaceOperationDetails, NativeSurfaceId};
 use crate::debug_colors;
 use crate::debug_render::{DebugItem, DebugRenderer};
 use crate::device::{DepthFunction, Device, GpuFrameId, Program, UploadMethod, Texture, PBO};
@@ -1859,6 +1859,12 @@ pub struct Renderer {
     /// The compositing config, affecting how WR composites into the final scene.
     compositor_config: CompositorConfig,
 
+    /// Maintains a set of allocated native composite surfaces. This allows any
+    /// currently allocated surfaces to be cleaned up as soon as deinit() is
+    /// called (the normal bookkeeping for native surfaces exists in the
+    /// render backend thread).
+    allocated_native_surfaces: FastHashSet<NativeSurfaceId>,
+
     /// If true, partial present state has been reset and everything needs to
     /// be drawn on the next render.
     force_redraw: bool,
@@ -2374,6 +2380,7 @@ impl Renderer {
             documents_seen: FastHashSet::default(),
             force_redraw: true,
             compositor_config: options.compositor_config,
+            allocated_native_surfaces: FastHashSet::default(),
         };
 
         // We initially set the flags to default and then now call set_debug_flags
@@ -4877,12 +4884,18 @@ impl Renderer {
                 for op in &composite_state.native_surface_updates {
                     match op.details {
                         NativeSurfaceOperationDetails::CreateSurface { size } => {
+                            let _inserted = self.allocated_native_surfaces.insert(op.id);
+                            debug_assert!(_inserted, "bug: creating existing surface");
+
                             compositor.create_surface(
                                 op.id,
                                 size,
                             );
                         }
                         NativeSurfaceOperationDetails::DestroySurface => {
+                            let _existed = self.allocated_native_surfaces.remove(&op.id);
+                            debug_assert!(_existed, "bug: removing unknown surface");
+
                             compositor.destroy_surface(
                                 op.id,
                             );
@@ -5681,6 +5694,13 @@ impl Renderer {
     pub fn deinit(mut self) {
         //Note: this is a fake frame, only needed because texture deletion is require to happen inside a frame
         self.device.begin_frame();
+        // If we are using a native compositor, ensure that any remaining native
+        // surfaces are freed.
+        if let CompositorConfig::Native { mut compositor, .. } = self.compositor_config {
+            for id in self.allocated_native_surfaces.drain() {
+                compositor.destroy_surface(id);
+            }
+        }
         self.gpu_cache_texture.deinit(&mut self.device);
         if let Some(dither_matrix_texture) = self.dither_matrix_texture {
             self.device.delete_texture(dither_matrix_texture);
