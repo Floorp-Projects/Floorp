@@ -208,32 +208,6 @@ var tests = [
     checkResult(html) { isnot(html.indexOf("style"), -1, "Should have retained style"); },
   },
   {
-    id: "o",
-    isIFrame: true,
-    payload: invalidStyle1Payload,
-    rootElement() { return document.getElementById("o").contentDocument.documentElement; },
-    checkResult(html) { is(html.indexOf("binding"), -1, "Should not have retained the binding style"); },
-  },
-  {
-    id: "p",
-    payload: invalidStyle1Payload,
-    rootElement() { return document.getElementById("p"); },
-    checkResult(html) { is(html.indexOf("binding"), -1, "Should not have retained the binding style"); },
-  },
-  {
-    id: "q",
-    isIFrame: true,
-    payload: invalidStyle2Payload,
-    rootElement() { return document.getElementById("q").contentDocument.documentElement; },
-    checkResult(html) { is(html.indexOf("binding"), -1, "Should not have retained the binding style"); },
-  },
-  {
-    id: "r",
-    payload: invalidStyle2Payload,
-    rootElement() { return document.getElementById("r"); },
-    checkResult(html) { is(html.indexOf("binding"), -1, "Should not have retained the binding style"); },
-  },
-  {
     id: "s",
     isIFrame: true,
     payload: invalidStyle1Payload,
@@ -284,27 +258,6 @@ var tests = [
     payload: invalidStyle5Payload,
     rootElement() { return document.getElementById("z"); },
     checkResult(html) { isnot(html.indexOf("xxx"), -1, "Should not have retained the font-face style"); },
-  },
-  {
-    id: "aa",
-    isIFrame: true,
-    payload: nestedStylePayload,
-    rootElement() { return document.getElementById("aa").contentDocument.documentElement; },
-    checkResult(html, text) {
-      is(html.indexOf("binding-1"), -1, "Should not have retained the binding-1 style");
-      isnot(text.indexOf("#bar2"), -1, "Should have retained binding-2 as text content");
-      is(text.indexOf("binding-2"), -1, "Should not have retained binding-2 as a tag");
-    },
-  },
-  {
-    id: "bb",
-    payload: nestedStylePayload,
-    rootElement() { return document.getElementById("bb"); },
-    checkResult(html, text) {
-      is(html.indexOf("binding-1"), -1, "Should not have retained the binding-1 style");
-      isnot(text.indexOf("#bar2"), -1, "Should have retained binding-2 as text content");
-      is(text.indexOf("binding-2"), -1, "Should not have retained binding-2 as a tag");
-    },
   },
   {
     id: "cc",
