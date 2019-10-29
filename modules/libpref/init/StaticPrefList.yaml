@@ -7099,6 +7099,16 @@
   value: true
   mirror: always
 
+
+# The level to which we sandbox the content process. firefox.js sets the
+# default to different values on a per-OS basis, and has documentation
+# on what the defaults are and what the numbers mean.
+- name: security.sandbox.content.level
+  type: int32_t
+  value: 0
+  mirror: always
+  do_not_use_directly: true # Consumers should use SandboxSettings to ask.
+
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
   # Whether win32k is disabled for content processes.
   # true means win32k system calls are not permitted.
