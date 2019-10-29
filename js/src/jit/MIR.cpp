@@ -5672,6 +5672,23 @@ MDefinition* MGetFirstDollarIndex::foldsTo(TempAllocator& alloc) {
   return MConstant::New(alloc, Int32Value(index));
 }
 
+MDefinition* MTypedArrayIndexToInt32::foldsTo(TempAllocator& alloc) {
+  MDefinition* input = getOperand(0);
+  if (!input->isConstant() || input->type() != MIRType::Double) {
+    return this;
+  }
+
+  // Fold constant double representable as int32 to int32.
+  int32_t ival;
+  if (!mozilla::NumberEqualsInt32(input->toConstant()->numberToDouble(),
+                                  &ival)) {
+    // If not representable as an int32, this access is equal to an OOB access.
+    // So replace it with a known int32 value which also produces an OOB access.
+    ival = -1;
+  }
+  return MConstant::New(alloc, Int32Value(ival));
+}
+
 bool jit::ElementAccessIsDenseNative(CompilerConstraintList* constraints,
                                      MDefinition* obj, MDefinition* id) {
   if (obj->mightBeType(MIRType::String)) {

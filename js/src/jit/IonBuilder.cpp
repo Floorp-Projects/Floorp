@@ -9027,18 +9027,6 @@ AbortReasonOr<Ok> IonBuilder::getElemTryTypedArray(bool* emitted,
     return Ok();
   }
 
-  // Don't generate a fast path if this pc has seen floating-point
-  // indexes accessed to avoid repeated bailouts. Unlike
-  // getElemTryDense, we still generate a fast path if we have seen
-  // negative indices. We expect code to occasionally generate
-  // negative indices by accident, but not to use negative indices
-  // intentionally, because typed arrays always return undefined for
-  // negative indices. See Bug 1535031.
-  if (inspector->hasSeenNonIntegerIndex(pc)) {
-    trackOptimizationOutcome(TrackedOutcome::ArraySeenNonIntegerIndex);
-    return Ok();
-  }
-
   // Emit typed getelem variant.
   MOZ_TRY(jsop_getelem_typed(obj, index, arrayType));
 
@@ -9569,14 +9557,19 @@ AbortReasonOr<Ok> IonBuilder::jsop_getelem_typed(MDefinition* obj,
   // and the instruction is not known to return a double.
   bool allowDouble = types->hasType(TypeSet::DoubleType());
 
-  // Ensure id is an integer.
-  MInstruction* idInt32 = MToNumberInt32::New(alloc(), index);
-  current->add(idInt32);
-  index = idInt32;
-
   if (!maybeUndefined) {
     // Assume the index is in range, so that we can hoist the length,
     // elements vector and bounds check.
+
+    // Ensure the index is an integer. This is a stricter requirement than
+    // enforcing that it is a TypedArray index via MTypedArrayIndexToInt32,
+    // because any double which isn't exactly representable as an int32 will
+    // lead to a bailout. But it's okay to have this stricter requirement here,
+    // since any non-int32 index is equivalent to an out-of-bounds access, which
+    // will lead to a bailout anyway.
+    MInstruction* indexInt32 = MToNumberInt32::New(alloc(), index);
+    current->add(indexInt32);
+    index = indexInt32;
 
     // If we are reading in-bounds elements, we can use knowledge about
     // the array type to determine the result type, even if the opcode has
@@ -9600,6 +9593,11 @@ AbortReasonOr<Ok> IonBuilder::jsop_getelem_typed(MDefinition* obj,
     load->setResultType(knownType);
     return Ok();
   } else {
+    // Ensure the index is a TypedArray index.
+    auto* indexInt32 = MTypedArrayIndexToInt32::New(alloc(), index);
+    current->add(indexInt32);
+    index = indexInt32;
+
     // We need a type barrier if the array's element type has never been
     // observed (we've only read out-of-bounds values). Note that for
     // Uint32Array, we only check for int32: if allowDouble is false we
