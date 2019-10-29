@@ -71,8 +71,8 @@ function run_test() {
     );
   }
 
-  // test the enumerator ...
-  var perms = Array.from(pm.enumerator);
+  // test the all property ...
+  var perms = pm.all;
   Assert.equal(perms.length, hosts.length);
 
   // ... remove all the hosts ...
@@ -96,7 +96,7 @@ function run_test() {
   Assert.equal(perms.length, 0);
 
   // ... and check the permmgr's empty
-  Assert.equal(pm.enumerator.hasMoreElements(), false);
+  Assert.equal(pm.all.length, 0);
 
   // test UTF8 normalization behavior: expect ASCII/ACE host encodings
   var utf8 = "b\u00FCcher.dolske.org"; // "bücher.dolske.org"
@@ -106,15 +106,14 @@ function run_test() {
     {}
   );
   pm.addFromPrincipal(principal, "utf8", 1);
-  var enumerator = pm.enumerator;
-  Assert.equal(enumerator.hasMoreElements(), true);
-  var ace = enumerator.getNext().QueryInterface(Ci.nsIPermission);
+  Assert.notEqual(Services.perms.all.length, 0);
+  var ace = Services.perms.all[0];
   Assert.equal(ace.principal.URI.asciiHost, aceref);
-  Assert.equal(enumerator.hasMoreElements(), false);
+  Assert.equal(Services.perms.all.length > 1, false);
 
   // test removeAll()
   pm.removeAll();
-  Assert.equal(pm.enumerator.hasMoreElements(), false);
+  Assert.equal(Services.perms.all.length, 0);
 
   principal = secMan.createContentPrincipalFromOrigin(
     "https://www.example.com"
@@ -126,5 +125,5 @@ function run_test() {
   // Try to remove already deleted entry.
   perm = pm.getPermissionObject(principal, "offline-app", true);
   pm.removePermission(perm);
-  Assert.equal(pm.enumerator.hasMoreElements(), false);
+  Assert.equal(Services.perms.all.length, 0);
 }

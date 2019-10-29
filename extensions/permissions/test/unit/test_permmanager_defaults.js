@@ -352,7 +352,7 @@ add_task(async function do_test() {
 // be found.
 function findCapabilityViaEnum(origin = TEST_ORIGIN, type = TEST_PERMISSION) {
   let result = undefined;
-  for (let perm of Services.perms.enumerator) {
+  for (let perm of Services.perms.all) {
     if (perm.matchesURI(origin, true) && perm.type == type) {
       if (result !== undefined) {
         // we've already found one previously - that's bad!
