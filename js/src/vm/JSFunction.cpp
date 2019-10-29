@@ -1215,23 +1215,19 @@ const JSClass JSFunction::class_ = {js_Function_str,
 const JSClass* const js::FunctionClassPtr = &JSFunction::class_;
 
 bool JSFunction::isDerivedClassConstructor() {
-  bool derived;
-  if (isInterpretedLazy()) {
+  bool derived = false;
+  if (hasSelfHostedLazyScript()) {
     // There is only one plausible lazy self-hosted derived
     // constructor.
-    if (isSelfHostedBuiltin()) {
-      JSAtom* name = GetClonedSelfHostedFunctionName(this);
+    JSAtom* name = GetClonedSelfHostedFunctionName(this);
 
-      // This function is called from places without access to a
-      // JSContext. Trace some plumbing to get what we want.
-      derived = name == compartment()
-                            ->runtimeFromAnyThread()
-                            ->commonNames->DefaultDerivedClassConstructor;
-    } else {
-      derived = lazyScript()->isDerivedClassConstructor();
-    }
-  } else {
-    derived = nonLazyScript()->isDerivedClassConstructor();
+    // This function is called from places without access to a
+    // JSContext. Trace some plumbing to get what we want.
+    derived = name == compartment()
+                          ->runtimeFromAnyThread()
+                          ->commonNames->DefaultDerivedClassConstructor;
+  } else if (hasBaseScript()) {
+    derived = baseScript()->isDerivedClassConstructor();
   }
   MOZ_ASSERT_IF(derived, isClassConstructor());
   return derived;

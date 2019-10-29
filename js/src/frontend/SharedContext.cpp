@@ -203,14 +203,15 @@ FunctionBox::FunctionBox(JSContext* cx, TraceListNode* traceListHead,
 }
 
 void FunctionBox::initFromLazyFunction(JSFunction* fun) {
-  if (fun->lazyScript()->isDerivedClassConstructor()) {
+  LazyScript* lazy = fun->lazyScript();
+  if (lazy->isDerivedClassConstructor()) {
     setDerivedClassConstructor();
   }
-  if (fun->lazyScript()->needsHomeObject()) {
+  if (lazy->needsHomeObject()) {
     setNeedsHomeObject();
   }
-  if (fun->lazyScript()->hasEnclosingScope()) {
-    enclosingScope_ = fun->lazyScript()->enclosingScope();
+  if (lazy->hasEnclosingScope()) {
+    enclosingScope_ = lazy->enclosingScope();
   } else {
     enclosingScope_ = nullptr;
   }

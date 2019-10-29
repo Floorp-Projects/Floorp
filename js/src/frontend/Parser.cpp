@@ -2623,14 +2623,14 @@ bool Parser<FullParseHandler, Unit>::skipLazyInnerFunction(
     return false;
   }
 
-  LazyScript* lazy = fun->lazyScript();
-  if (lazy->needsHomeObject()) {
+  BaseScript* base = fun->baseScript();
+  if (base->needsHomeObject()) {
     funbox->setNeedsHomeObject();
   }
 
-  PropagateTransitiveParseFlags(lazy, pc_->sc());
+  PropagateTransitiveParseFlags(base, pc_->sc());
 
-  if (!tokenStream.advance(fun->lazyScript()->sourceEnd())) {
+  if (!tokenStream.advance(base->sourceEnd())) {
     return false;
   }
 
@@ -7212,11 +7212,15 @@ bool GeneralParser<ParseHandler, Unit>::finishClassConstructor(
 
     // Set the same information, but on the lazyScript.
     if (ctorbox->isInterpretedLazy()) {
-      ctorbox->function()->lazyScript()->setToStringEnd(classEndOffset);
+      ctorbox->function()->baseScript()->setToStringEnd(classEndOffset);
 
       if (numFields > 0) {
-        ctorbox->function()->lazyScript()->setHasThisBinding();
+        ctorbox->function()->baseScript()->setHasThisBinding();
       }
+    } else {
+      // There should not be any non-lazy script yet.
+      MOZ_ASSERT_IF(ctorbox->hasObject(),
+                    ctorbox->function()->hasUncompletedScript());
     }
 
     if (numFields == 0) {
