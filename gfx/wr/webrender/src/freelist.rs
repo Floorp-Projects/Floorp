@@ -170,8 +170,13 @@ impl<T, M> FreeList<T, M> {
     }
 
     pub fn clear(&mut self) {
-        self.slots.clear();
-        self.free_list_head = None;
+        self.slots.truncate(1);
+        self.slots[0] = Slot {
+            next: None,
+            epoch: Epoch::new(),
+            value: None,
+        };
+        self.free_list_head = Some(0);
         self.active_count = 0;
     }
 
