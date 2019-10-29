@@ -16,12 +16,22 @@ const {
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const { button } = dom;
-const {
-  HTMLTooltip,
-} = require("devtools/client/shared/widgets/tooltip/HTMLTooltip");
-const { focusableSelector } = require("devtools/client/shared/focus");
 
 const isMacOS = Services.appinfo.OS === "Darwin";
+
+loader.lazyRequireGetter(
+  this,
+  "HTMLTooltip",
+  "devtools/client/shared/widgets/tooltip/HTMLTooltip",
+  true
+);
+
+loader.lazyRequireGetter(
+  this,
+  "focusableSelector",
+  "devtools/client/shared/focus",
+  true
+);
 
 loader.lazyRequireGetter(
   this,
