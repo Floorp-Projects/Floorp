@@ -1646,6 +1646,49 @@ bool CacheIRCompiler::emitGuardToInt32Index() {
   return true;
 }
 
+bool CacheIRCompiler::emitGuardToTypedArrayIndex() {
+  JitSpew(JitSpew_Codegen, __FUNCTION__);
+  ValOperandId inputId = reader.valOperandId();
+  Register output = allocator.defineRegister(masm, reader.int32OperandId());
+
+  if (allocator.knownType(inputId) == JSVAL_TYPE_INT32) {
+    Register input = allocator.useRegister(masm, Int32OperandId(inputId.id()));
+    masm.move32(input, output);
+    return true;
+  }
+
+  ValueOperand input = allocator.useValueRegister(masm, inputId);
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  EmitGuardInt32OrDouble(
+      this, masm, input, output, failure,
+      []() {
+        // No-op if the value is already an int32.
+      },
+      [&](FloatRegister floatReg) {
+        static_assert(
+            TypedArrayObject::MAX_BYTE_LENGTH <= INT32_MAX,
+            "Double exceeding Int32 range can't be in-bounds array access");
+
+        // ToPropertyKey(-0.0) is "0", so we can truncate -0.0 to 0 here.
+        Label done, fail;
+        masm.convertDoubleToInt32(floatReg, output, &fail, false);
+        masm.jump(&done);
+
+        // Substitute the invalid index with an arbitrary out-of-bounds index.
+        masm.bind(&fail);
+        masm.move32(Imm32(-1), output);
+
+        masm.bind(&done);
+      });
+
+  return true;
+}
+
 bool CacheIRCompiler::emitGuardToInt32ModUint32() {
   JitSpew(JitSpew_Codegen, __FUNCTION__);
   ValOperandId inputId = reader.valOperandId();
