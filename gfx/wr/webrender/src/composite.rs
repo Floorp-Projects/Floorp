@@ -195,7 +195,7 @@ impl CompositeState {
 
 /// An arbitrary identifier for a native (OS compositor) surface
 #[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct NativeSurfaceId(pub u64);
