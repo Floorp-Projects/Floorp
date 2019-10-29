@@ -80,29 +80,6 @@ void NativeLayerRootCA::RemoveLayer(NativeLayer* aLayer) {
   mMutated = true;
 }
 
-void NativeLayerRootCA::SetLayers(const nsTArray<RefPtr<NativeLayer>>& aLayers) {
-  MutexAutoLock lock(mMutex);
-
-  // Ideally, we'd just be able to do mSublayers = std::move(aLayers).
-  // However, aLayers has a different type: it carries NativeLayer objects, whereas mSublayers
-  // carries NativeLayerCA objects, so we have to downcast all the elements first. There's one other
-  // reason to look at all the elements in aLayers first: We need to make sure any new layers know
-  // about our current backing scale.
-
-  nsTArray<RefPtr<NativeLayerCA>> layersCA(aLayers.Length());
-  for (auto& layer : aLayers) {
-    RefPtr<NativeLayerCA> layerCA = layer->AsNativeLayerCA();
-    MOZ_RELEASE_ASSERT(layerCA);
-    layerCA->SetBackingScale(mBackingScale);
-    layersCA.AppendElement(std::move(layerCA));
-  }
-
-  if (layersCA != mSublayers) {
-    mSublayers = std::move(layersCA);
-    mMutated = true;
-  }
-}
-
 // Must be called within a current CATransaction on the transaction's thread.
 void NativeLayerRootCA::ApplyChanges() {
   MutexAutoLock lock(mMutex);
