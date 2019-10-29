@@ -11,10 +11,6 @@
     padding-bottom: 2em;
   }
 
-  .float-right {
-    float: inline-end;
-  }
-
   .hidden {
     display: none;
   }
