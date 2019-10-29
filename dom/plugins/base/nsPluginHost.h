@@ -15,7 +15,6 @@
 #include "prlink.h"
 #include "nsIPluginTag.h"
 #include "nsPluginsDir.h"
-#include "nsPluginDirServiceProvider.h"
 #include "nsWeakReference.h"
 #include "nsIPrompt.h"
 #include "MainThreadUtils.h"
@@ -58,23 +57,6 @@ class nsIStreamListener;
 struct _NPP;
 typedef _NPP* NPP;
 #endif
-
-class nsInvalidPluginTag : public nsISupports {
-  virtual ~nsInvalidPluginTag();
-
- public:
-  explicit nsInvalidPluginTag(const char* aFullPath,
-                              int64_t aLastModifiedTime = 0);
-
-  NS_DECL_ISUPPORTS
-
-  nsCString mFullPath;
-  int64_t mLastModifiedTime;
-  bool mSeen;
-
-  RefPtr<nsInvalidPluginTag> mPrev;
-  RefPtr<nsInvalidPluginTag> mNext;
-};
 
 class nsPluginHost final : public nsIPluginHost,
                            public nsIObserver,
@@ -226,6 +208,9 @@ class nsPluginHost final : public nsIPluginHost,
       uint32_t aPluginEpoch, nsTArray<mozilla::plugins::PluginTag>& aPlugins,
       nsTArray<mozilla::plugins::FakePluginTag>& aFakePlugins);
 
+  void UpdatePluginBlocklistState(nsPluginTag* aPluginTag,
+                                  bool aShouldSoftblock = false);
+
  private:
   nsresult LoadPlugins();
   nsresult UnloadPlugins();
@@ -282,8 +267,6 @@ class nsPluginHost final : public nsIPluginHost,
   nsresult FindStoppedPluginForURL(nsIURI* aURL,
                                    nsIPluginInstanceOwner* aOwner);
 
-  nsresult FindPlugins(bool aCreatePluginList, bool* aPluginsChanged);
-
   // FIXME revisit, no ns prefix
   // Registers or unregisters the given mime type with the category manager
   enum nsRegisterType {
@@ -295,49 +278,17 @@ class nsPluginHost final : public nsIPluginHost,
   void RegisterWithCategoryManager(const nsCString& aMimeType,
                                    nsRegisterType aType);
 
-  bool ShouldAddPlugin(const nsPluginInfo& aInfo);
-
   void AddPluginTag(nsPluginTag* aPluginTag);
-
-  void UpdatePluginBlocklistState(nsPluginTag* aPluginTag,
-                                  bool aShouldSoftblock = false);
-
-  nsresult ScanPluginsDirectory(nsIFile* pluginsDir, bool aCreatePluginList,
-                                bool* aPluginsChanged);
 
   nsresult EnsurePluginLoaded(nsPluginTag* aPluginTag);
 
   bool IsRunningPlugin(nsPluginTag* aPluginTag);
-
-  nsresult EnsurePluginReg();
-
-  nsresult DeterminePluginDirs(nsTArray<nsCOMPtr<nsIFile>>& pluginDirs);
-
-  // Read plugin info (either from prefs or disk)
-  nsresult ReadPluginInfo();
-
-  // Stores all plugins info into the plugin registry
-  nsresult WritePluginInfo();
-
-  // Loads all plugins info from the plugin registry
-  nsresult ReadPluginInfoFromDisk();
-
-  // The same, but only read/write flash info from/to prefs.
-  nsresult ReadFlashInfo();
-  nsresult WriteFlashInfo();
-
-  // Given a file path, returns the plugins info from our cache
-  // and removes it from the cache.
-  void RemoveCachedPluginsInfo(const char* filePath, nsPluginTag** result);
 
   // Checks to see if a tag object is in our list of live tags.
   bool IsLiveTag(nsIPluginTag* tag);
 
   // Checks our list of live tags for an equivalent tag.
   nsPluginTag* HaveSamePlugin(const nsPluginTag* aPluginTag);
-
-  // Returns the first plugin at |path|
-  nsPluginTag* FirstPluginWithPath(const nsCString& path);
 
   void OnPluginInstanceDestroyed(nsPluginTag* aPluginTag);
 
@@ -354,11 +305,10 @@ class nsPluginHost final : public nsIPluginHost,
 
   void UpdateInMemoryPluginInfo(nsPluginTag* aPluginTag);
 
+  void ClearNonRunningPlugins();
   nsresult ActuallyReloadPlugins();
 
   RefPtr<nsPluginTag> mPlugins;
-  RefPtr<nsPluginTag> mCachedPlugins;
-  RefPtr<nsInvalidPluginTag> mInvalidPlugins;
 
   nsTArray<RefPtr<nsFakePluginTag>> mFakePlugins;
 
@@ -379,7 +329,6 @@ class nsPluginHost final : public nsIPluginHost,
   nsTArray<RefPtr<nsNPAPIPluginInstance>> mInstances;
 
   // An nsIFile for the pluginreg.dat file in the profile.
-  nsCOMPtr<nsIFile> mPluginRegFile;
 #ifdef XP_WIN
   // In order to reload plugins when they change, we watch the registry via
   // this object.
