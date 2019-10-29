@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_mediacontrolservice_h__
-#define mozilla_dom_mediacontrolservice_h__
+#ifndef DOM_MEDIA_MEDIACONTROL_MEDIACONTROLSERVICE_H_
+#define DOM_MEDIA_MEDIACONTROL_MEDIACONTROLSERVICE_H_
 
 #include "mozilla/AlreadyAddRefed.h"
 

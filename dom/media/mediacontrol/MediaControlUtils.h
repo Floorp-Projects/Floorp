@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_MediaControlUtils_h
-#define mozilla_dom_MediaControlUtils_h
+#ifndef DOM_MEDIA_MEDIACONTROL_MEDIACONTROLUTILS_H_
+#define DOM_MEDIA_MEDIACONTROL_MEDIACONTROLUTILS_H_
 
 #include "MediaController.h"
 #include "MediaControlService.h"
@@ -104,4 +104,4 @@ void NotifyMediaAudibleChanged(uint64_t aWindowID, bool aAudible) {
 }  // namespace dom
 }  // namespace mozilla
 
-#endif  // mozilla_dom_MediaControlUtils_h
+#endif  // DOM_MEDIA_MEDIACONTROL_MEDIACONTROLUTILS_H_
