@@ -4,6 +4,10 @@
 
 package org.mozilla.fenix.helpers
 
+import android.net.Uri
+import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.action.ViewActions.longClick
+import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.uiautomator.UiScrollable
 import androidx.test.uiautomator.UiSelector
 
@@ -12,5 +16,9 @@ object TestHelper {
         val appView = UiScrollable(UiSelector().scrollable(true))
         appView.scrollTextIntoView(text)
         return appView
+    }
+
+    fun longTapSelectItem(url: Uri) {
+        onView(withText(url.toString())).perform(longClick())
     }
 }

@@ -16,6 +16,8 @@ import androidx.test.espresso.matcher.ViewMatchers.Visibility
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.espresso.matcher.ViewMatchers.hasFocus
+import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.Until
 import androidx.test.uiautomator.By
@@ -26,6 +28,7 @@ import org.hamcrest.CoreMatchers
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.containsString
 import org.mozilla.fenix.R
+import org.mozilla.fenix.helpers.click
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.click
 
@@ -113,6 +116,10 @@ class HomeScreenRobot {
         scrollToElementByText("Start browsing")
     }
 
+    fun closeTab() {
+        closeTabButton().click()
+    }
+
     class Transition {
         val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
 
@@ -164,6 +171,8 @@ val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
 
 private fun navigationToolbar() =
     onView(CoreMatchers.allOf(ViewMatchers.withText("Search or enter address")))
+
+private fun closeTabButton() = onView(withId(R.id.close_tab_button))
 
 private fun assertNavigationToolbar() =
     onView(CoreMatchers.allOf(ViewMatchers.withText("Search or enter address")))
