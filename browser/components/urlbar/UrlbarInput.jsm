@@ -1229,29 +1229,18 @@ class UrlbarInput {
     if (this.getAttribute("pageproxystate") == "valid") {
       uri = this.window.gBrowser.currentURI;
     } else {
-      // We're dealing with an autocompleted value.
-      if (!this._resultForCurrentValue) {
-        throw new Error(
-          "UrlbarInput: Should have a UrlbarResult since " +
-            "pageproxystate != 'valid' and valueIsTyped == false"
-        );
-      }
-      let resultURL = this._resultForCurrentValue.payload.url;
-      if (!resultURL) {
-        return selectedVal;
-      }
-
+      // The value could be:
+      // 1. a trimmed url, set by selecting a result
+      // 2. a search string set by selecting a result
+      // 3. a url that was confirmed but didn't finish loading yet
+      // If it's an url the untrimmedValue should resolve to a valid URI,
+      // otherwise it's a search string that should be copied as-is.
       try {
-        uri = Services.uriFixup.createFixupURI(
-          resultURL,
-          Services.uriFixup.FIXUP_FLAG_NONE
-        );
-      } catch (e) {}
-      if (!uri) {
+        uri = Services.io.newURI(this._untrimmedValue);
+      } catch (ex) {
         return selectedVal;
       }
     }
-
     uri = this.makeURIReadable(uri);
 
     // If the entire URL is selected, just use the actual loaded URI,
