@@ -65,6 +65,11 @@ class nsNetworkLinkService : public nsINetworkLinkService,
   // The timer used to delay the calculation of network id since it takes some
   // time to discover the gateway's MAC address.
   nsCOMPtr<nsITimer> mNetworkIdTimer;
+
+  // Time stamp of last NS_NETWORK_LINK_DATA_CHANGED_1MIN event
+  mozilla::TimeStamp mChangeTime_1min;
+  // Time stamp of last NS_NETWORK_LINK_DATA_CHANGED_5MIN event
+  mozilla::TimeStamp mChangeTime_5min;
 };
 
 #endif /* NSNETWORKLINKSERVICEMAC_H_ */
