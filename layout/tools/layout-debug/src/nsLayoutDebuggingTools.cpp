@@ -60,16 +60,7 @@ static already_AddRefed<Document> document(nsIDocShell* aDocShell) {
 }
 #endif
 
-nsLayoutDebuggingTools::nsLayoutDebuggingTools()
-    : mPaintFlashing(false),
-      mPaintDumping(false),
-      mInvalidateDumping(false),
-      mEventDumping(false),
-      mMotionEventDumping(false),
-      mCrossingEventDumping(false),
-      mReflowCounts(false) {
-  ForceRefresh();
-}
+nsLayoutDebuggingTools::nsLayoutDebuggingTools() { ForceRefresh(); }
 
 nsLayoutDebuggingTools::~nsLayoutDebuggingTools() {}
 
