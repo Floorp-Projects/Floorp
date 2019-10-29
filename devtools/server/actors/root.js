@@ -130,24 +130,9 @@ RootActor.prototype = {
     networkMonitor: true,
     // Whether the storage inspector actor to inspect cookies, etc.
     storageInspector: true,
-    // Whether storage inspector is read only
-    storageInspectorReadOnly: true,
     // Whether the server can return wasm binary source
     wasmBinarySource: true,
     bulk: true,
-    // Whether the director scripts are supported
-    directorScripts: true,
-    // Whether the debugger server supports
-    // blackboxing (not supported in Fever Dream yet)
-    noBlackBoxing: false,
-    // Support for server pretty-printing has been removed.
-    noPrettyPrinting: true,
-    // Added in Firefox 66. Indicates that clients do not need to pause the
-    // debuggee before adding breakpoints.
-    breakpointWhileRunning: true,
-    // Trait added in Gecko 38, indicating that all features necessary for
-    // grabbing allocations from the MemoryActor are available for the performance tool
-    memoryActorAllocations: true,
     // Added in Firefox 40. Indicates that the backend supports registering custom
     // commands through the WebConsoleCommands API.
     webConsoleCommands: true,
@@ -163,24 +148,15 @@ RootActor.prototype = {
     get allowChromeProcess() {
       return DebuggerServer.allowChromeProcess;
     },
-    // Whether or not `getProfile()` supports specifying a `startTime`
-    // and `endTime` to filter out samples. Fx40+
-    profilerDataFilterable: true,
     // Whether or not the MemoryActor's heap snapshot abilities are
     // fully equipped to handle heap snapshots for the memory tool. Fx44+
     heapSnapshots: true,
-    // Whether or not the timeline actor can emit DOMContentLoaded and Load
-    // markers, currently in use by the network monitor. Fx45+
-    documentLoadingMarkers: true,
     // Version of perf actor. Fx65+
     // Version 1 - Firefox 65: Introduces a duration-based buffer. It can be controlled
     // by adding a `duration` property (in seconds) to the options passed to
     // `front.startProfiler`. This is an optional parameter but it will throw an error if
     // the profiled Firefox doesn't accept it.
     perfActorVersion: 1,
-    // Supports native log points and modifying the condition/log of an existing
-    // breakpoints. Fx66+
-    nativeLogpoints: true,
     // Supports watchpoints in the server for Fx71+
     watchpoints: true,
   },
