@@ -165,8 +165,7 @@ function wait_for_page_show(browser) {
       "pageshow",
       listener,
       {},
-      event => event.target.location == "http://example.com/",
-      /* autoremove = */ false
+      event => event.target.location == "http://example.com/"
     );
   });
   return promise;

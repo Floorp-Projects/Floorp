@@ -10,8 +10,7 @@
  */
 
 // This file uses ContentTask & frame scripts, where these are available.
-/* global addEventListener, removeEventListener, sendAsyncMessage,
-          addMessageListener, removeMessageListener, ContentTaskUtils */
+/* global addEventListener, removeEventListener, ContentTaskUtils */
 
 "use strict";
 
@@ -96,6 +95,25 @@ function registerActor() {
     includeChrome: true,
   };
   ChromeUtils.registerWindowActor("BrowserTestUtils", actorOptions);
+}
+
+function registerContentEventListenerActor() {
+  let actorOptions = {
+    parent: {
+      moduleURI: "resource://testing-common/ContentEventListenerParent.jsm",
+    },
+
+    child: {
+      moduleURI: "resource://testing-common/ContentEventListenerChild.jsm",
+      events: {
+        // We need to see the creation of all new windows, in case they have
+        // a browsing context we are interesting in.
+        DOMWindowCreated: { capture: true },
+      },
+    },
+    allFrames: true,
+  };
+  ChromeUtils.registerWindowActor("ContentEventListener", actorOptions);
 }
 
 registerActor();
@@ -504,6 +522,12 @@ var BrowserTestUtils = {
   },
 
   _webProgressListeners: new Set(),
+
+  _contentEventListenerSharedState: new Map(),
+
+  _contentEventListeners: new Map(),
+
+  _contentEventListenerActorRegistered: false,
 
   /**
    * Waits for the web progress listener associated with this tab to fire a
@@ -1215,6 +1239,10 @@ var BrowserTestUtils = {
    * fire until it is removed. A callable object is returned that,
    * when called, removes the event listener. Note that this function
    * works even if the browser's frameloader is swapped.
+   * Note: This will only listen for events that either have the browsing
+   * context of the browser element at the time of the call, or that are fired
+   * on windows that were created after any call to the function since the start
+   * of the test. This could be improved if needed.
    *
    * @param {xul:browser} browser
    *        The browser element to listen for events in.
@@ -1231,10 +1259,6 @@ var BrowserTestUtils = {
    *        listening should continue. If not specified, the first event with
    *        the specified name resolves the returned promise. This is called
    *        within the content process and can have no closure environment.
-   * @param {bool} autoremove [optional]
-   *        Whether the listener should be removed when |browser| is removed
-   *        from the DOM. Note that, if this flag is true, it won't be possible
-   *        to listen for events after a frameloader swap.
    *
    * @returns function
    *        If called, the return value will remove the event listener.
@@ -1244,82 +1268,113 @@ var BrowserTestUtils = {
     eventName,
     listener,
     listenerOptions = {},
-    checkFn,
-    autoremove = true
+    checkFn
   ) {
     let id = gListenerId++;
-    let checkFnSource = checkFn
-      ? encodeURIComponent(escape(checkFn.toSource()))
-      : "";
+    let contentEventListeners = this._contentEventListeners;
+    contentEventListeners.set(id, { listener, browser });
 
-    // To correctly handle frameloader swaps, we load a frame script
-    // into all tabs but ignore messages from the ones not related to
-    // |browser|.
+    let eventListenerState = this._contentEventListenerSharedState;
+    eventListenerState.set(id, {
+      eventName,
+      listenerOptions,
+      checkFnSource: checkFn ? checkFn.toSource() : "",
+    });
 
-    /* eslint-disable no-eval */
-    function frameScript(id, eventName, listenerOptions, checkFnSource) {
-      let checkFn;
-      if (checkFnSource) {
-        checkFn = eval(`(() => (${unescape(checkFnSource)}))()`);
-      }
+    Services.ppmm.sharedData.set(
+      "BrowserTestUtils:ContentEventListener",
+      eventListenerState
+    );
+    Services.ppmm.sharedData.flush();
 
-      function listener(event) {
-        if (checkFn && !checkFn(event)) {
-          return;
+    if (!this._contentEventListenerActorRegistered) {
+      this._contentEventListenerActorRegistered = true;
+      registerContentEventListenerActor();
+
+      // We hadn't registered the actor yet, so any existing window
+      // for browser's BC will not have been created yet. Explicitly
+      // make sure the actors are created and ready to go now. This
+      // happens after the updating of sharedData so that the actors
+      // don't have to get created and do nothing, and then later have
+      // to be updated.
+      // Note: As mentioned in the comment at the start of this function,
+      // this will miss any windows that existed at the time that the function
+      // was initially called during this test, but that did not have the
+      // browser's browsing context.
+      let contextsToVisit = [browser.browsingContext];
+      while (contextsToVisit.length) {
+        let currentContext = contextsToVisit.pop();
+        let global = currentContext.currentWindowGlobal;
+        if (!global) {
+          continue;
         }
-        sendAsyncMessage("ContentEventListener:Run", id);
-      }
-      function removeListener(msg) {
-        if (msg.data == id) {
-          removeMessageListener("ContentEventListener:Remove", removeListener);
-          removeEventListener(eventName, listener, listenerOptions);
-        }
-      }
-      addMessageListener("ContentEventListener:Remove", removeListener);
-      addEventListener(eventName, listener, listenerOptions);
-    }
-    /* eslint-enable no-eval */
-
-    let frameScriptSource = `data:,(${frameScript.toString()})(${id}, "${eventName}", ${uneval(
-      listenerOptions
-    )}, "${checkFnSource}")`;
-
-    let mm = Services.mm;
-
-    function runListener(msg) {
-      if (msg.data == id && msg.target == browser) {
-        listener();
+        let actor = browser.browsingContext.currentWindowGlobal.getActor(
+          "ContentEventListener"
+        );
+        actor.sendAsyncMessage("ContentEventListener:LateCreate");
+        contextsToVisit.push(...currentContext.getChildren());
       }
     }
-    mm.addMessageListener("ContentEventListener:Run", runListener);
-
-    let needCleanup = true;
 
     let unregisterFunction = function() {
-      if (!needCleanup) {
+      if (!eventListenerState.has(id)) {
         return;
       }
-      needCleanup = false;
-      mm.removeMessageListener("ContentEventListener:Run", runListener);
-      mm.broadcastAsyncMessage("ContentEventListener:Remove", id);
-      mm.removeDelayedFrameScript(frameScriptSource);
-      if (autoremove) {
-        Services.obs.removeObserver(cleanupObserver, "message-manager-close");
-      }
+      eventListenerState.delete(id);
+      contentEventListeners.delete(id);
+      Services.ppmm.sharedData.set(
+        "BrowserTestUtils:ContentEventListener",
+        eventListenerState
+      );
+      Services.ppmm.sharedData.flush();
     };
-
-    function cleanupObserver(subject, topic, data) {
-      if (subject == browser.messageManager) {
-        unregisterFunction();
-      }
-    }
-    if (autoremove) {
-      Services.obs.addObserver(cleanupObserver, "message-manager-close");
-    }
-
-    mm.loadFrameScript(frameScriptSource, true);
-
     return unregisterFunction;
+  },
+
+  /**
+   * This is an internal method to be invoked by
+   * BrowserTestUtilsParent.jsm when a content event we were listening for
+   * happens.
+   */
+  _receivedContentEventListener(listenerId, browser) {
+    let listenerData = this._contentEventListeners.get(listenerId);
+    if (!listenerData) {
+      return;
+    }
+    if (listenerData.browser != browser) {
+      return;
+    }
+    listenerData.listener();
+  },
+
+  /**
+   * This is an internal method that cleans up any state from content event
+   * listeners.
+   */
+  _cleanupContentEventListeners() {
+    this._contentEventListeners.clear();
+
+    if (this._contentEventListenerSharedState.size != 0) {
+      this._contentEventListenerSharedState.clear();
+      Services.ppmm.sharedData.set(
+        "BrowserTestUtils:ContentEventListener",
+        this._contentEventListenerSharedState
+      );
+      Services.ppmm.sharedData.flush();
+    }
+
+    if (this._contentEventListenerActorRegistered) {
+      this._contentEventListenerActorRegistered = false;
+      ChromeUtils.unregisterWindowActor("ContentEventListener");
+    }
+  },
+
+  observe(subject, topic, data) {
+    switch (topic) {
+      case "test-complete":
+        this._cleanupContentEventListeners();
+        break;
+    }
   },
 
   /**
@@ -2279,3 +2334,5 @@ var BrowserTestUtils = {
     return actor.sendQuery(aMessageName, aMessageData);
   },
 };
+
+Services.obs.addObserver(BrowserTestUtils, "test-complete");

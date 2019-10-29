@@ -9,6 +9,8 @@ TESTING_JS_MODULES += [
     'BrowserTestUtilsChild.jsm',
     'BrowserTestUtilsParent.jsm',
     'content/content-task.js',
+    'ContentEventListenerChild.jsm',
+    'ContentEventListenerParent.jsm',
     'ContentTask.jsm',
     'ContentTaskUtils.jsm',
 ]
