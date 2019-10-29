@@ -50,7 +50,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
 EXPORTS.mozilla += ['ShmemPool.h',]
 
 EXPORTS.mozilla.media += ['CamerasTypes.h',
-                          'DeviceChangeCallback.h',
                           'MediaChild.h',
                           'MediaParent.h',
                           'MediaSystemResourceClient.h',
