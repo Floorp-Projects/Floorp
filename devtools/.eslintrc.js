@@ -88,7 +88,7 @@ module.exports = {
       "server/**",
     ],
     "rules": {
-      "mozilla/reject-some-requires": ["error", "^devtools/client"],
+      "mozilla/reject-some-requires": ["error", "^(resource\://)?devtools/client"],
     }
   }, {
     // Cu, Cc etc... are not available in most devtools modules loaded by require.
