@@ -1022,7 +1022,10 @@ Accessible* nsAccessibilityService::CreateAccessible(nsINode* aNode,
 
     if (!isARIATablePart || frame->AccessibleType() == eHTMLTableCellType ||
         frame->AccessibleType() == eHTMLTableRowType ||
-        frame->AccessibleType() == eHTMLTableType) {
+        frame->AccessibleType() == eHTMLTableType ||
+        // We should always use OuterDocAccessible for OuterDocs, even for
+        // ARIA table roles.
+        frame->AccessibleType() == eOuterDocType) {
       // Prefer to use markup to decide if and what kind of accessible to
       // create,
       const HTMLMarkupMapInfo* markupMap =
