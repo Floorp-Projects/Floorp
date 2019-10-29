@@ -2132,6 +2132,12 @@ CheckedUint32 WebGLContext::GetUnpackSize(bool isFunc3D, uint32_t width,
   return totalBytes;
 }
 
+void WebGLContext::ClearVRFrame() {
+#if defined(MOZ_WIDGET_ANDROID)
+  mVRScreen = nullptr;
+#endif
+}
+
 #if defined(MOZ_WIDGET_ANDROID)
 already_AddRefed<layers::SharedSurfaceTextureClient>
 WebGLContext::GetVRFrame() {

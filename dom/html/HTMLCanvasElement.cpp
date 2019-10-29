@@ -1439,5 +1439,19 @@ HTMLCanvasElement::GetVRFrame() {
   return webgl->GetVRFrame();
 }
 
+void HTMLCanvasElement::ClearVRFrame() {
+  if (GetCurrentContextType() != CanvasContextType::WebGL1 &&
+      GetCurrentContextType() != CanvasContextType::WebGL2) {
+    return;
+  }
+
+  WebGLContext* webgl = static_cast<WebGLContext*>(GetContextAtIndex(0));
+  if (!webgl) {
+    return;
+  }
+
+  webgl->ClearVRFrame();
+}
+
 }  // namespace dom
 }  // namespace mozilla

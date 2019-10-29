@@ -279,6 +279,10 @@ class VRDisplay final : public DOMEventTargetHelper, public nsIObserver {
   void GetDisplayName(nsAString& aDisplayName) const {
     aDisplayName = mDisplayName;
   }
+  // Replacing the old VRDisplayClient with the newest one to avoid
+  // JS needs to reload to recover VRDisplay when VRService is shutdown at the
+  // backend.
+  void UpdateDisplayClient(already_AddRefed<gfx::VRDisplayClient> aClient);
 
   static bool RefreshVRDisplays(uint64_t aWindowId);
   static void UpdateVRDisplays(nsTArray<RefPtr<VRDisplay> >& aDisplays,
