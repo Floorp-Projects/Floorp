@@ -82,6 +82,9 @@ bool RenderCompositorEGL::BeginFrame(layers::NativeLayer* aNativeLayer) {
         << "We don't have EGLSurface to draw into. Called too early?";
     return false;
   }
+  if (mWidget->AsX11()) {
+    mWidget->AsX11()->SetEGLNativeWindowSize(GetBufferSize());
+  }
 #endif
   if (!MakeCurrent()) {
     gfxCriticalNote << "Failed to make render context current, can't draw.";
