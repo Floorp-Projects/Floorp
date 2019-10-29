@@ -10098,8 +10098,15 @@ AbortReasonOr<Ok> IonBuilder::jsop_setelem_typed(Scalar::Type arrayType,
     spew("Emitting OOB TypedArray SetElem");
   }
 
-  // Ensure id is an integer.
-  MInstruction* idInt32 = MToNumberInt32::New(alloc(), id);
+  // Ensure id is an integer. Just as in |jsop_getelem_typed|, use either
+  // MTypedArrayIndexToInt32 or MToNumberInt32 depending on whether or not
+  // out-of-bounds accesses are to be expected.
+  MInstruction* idInt32;
+  if (expectOOB) {
+    idInt32 = MTypedArrayIndexToInt32::New(alloc(), id);
+  } else {
+    idInt32 = MToNumberInt32::New(alloc(), id);
+  }
   current->add(idInt32);
   id = idInt32;
 
