@@ -25,7 +25,6 @@
         align="stretch"
         title="&ldb.MainWindow.title;"
         titlemodifier="&ldb.MainWindow.title;"
-        contenttitlesetting="true"
         titlemenuseparator=" - "
         windowtype="mozapp:layoutdebug"
         onload="OnLDBLoad();"

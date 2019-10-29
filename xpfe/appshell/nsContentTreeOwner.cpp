@@ -78,7 +78,7 @@ class nsSiteWindow : public nsIEmbeddingSiteWindow {
 //*****************************************************************************
 
 nsContentTreeOwner::nsContentTreeOwner(bool fPrimary)
-    : mXULWindow(nullptr), mPrimary(fPrimary), mContentTitleSetting(false) {
+    : mXULWindow(nullptr), mPrimary(fPrimary) {
   // note if this fails, QI on nsIEmbeddingSiteWindow(2) will simply fail
   mSiteWindow = new nsSiteWindow(this);
 }
@@ -608,91 +608,7 @@ NS_IMETHODIMP nsContentTreeOwner::GetTitle(nsAString& aTitle) {
 }
 
 NS_IMETHODIMP nsContentTreeOwner::SetTitle(const nsAString& aTitle) {
-  // We only allow the title to be set from the primary content shell
-  if (!mPrimary || !mContentTitleSetting) return NS_OK;
-
-  NS_ENSURE_STATE(mXULWindow);
-
-  nsAutoString title;
-  nsAutoString docTitle(aTitle);
-
-  if (docTitle.IsEmpty()) docTitle.Assign(mTitleDefault);
-
-  if (!docTitle.IsEmpty()) {
-    if (!mTitlePreface.IsEmpty()) {
-      // Title will be: "Preface: Doc Title - Mozilla"
-      title.Assign(mTitlePreface);
-      title.Append(docTitle);
-    } else {
-      // Title will be: "Doc Title - Mozilla"
-      title = docTitle;
-    }
-
-    if (!mWindowTitleModifier.IsEmpty())
-      title += mTitleSeparator + mWindowTitleModifier;
-  } else
-    title.Assign(mWindowTitleModifier);  // Title will just be plain "Mozilla"
-
-  //
-  // if there is no location bar we modify the title to display at least
-  // the scheme and host (if any) as an anti-spoofing measure.
-  //
-  nsCOMPtr<dom::Element> docShellElement = mXULWindow->GetWindowDOMElement();
-
-  if (docShellElement) {
-    nsAutoString chromeString;
-    docShellElement->GetAttribute(NS_LITERAL_STRING("chromehidden"),
-                                  chromeString);
-    if (chromeString.Find(NS_LITERAL_STRING("location")) != kNotFound) {
-      //
-      // location bar is turned off, find the browser location
-      //
-      // use the document's ContentPrincipal to find the true owner
-      // in case of javascript: or data: documents
-      //
-      nsCOMPtr<nsIDocShellTreeItem> dsitem;
-      GetPrimaryContentShell(getter_AddRefs(dsitem));
-      RefPtr<dom::Document> doc = dsitem ? dsitem->GetDocument() : nullptr;
-      if (doc) {
-        nsCOMPtr<nsIURI> uri;
-        nsIPrincipal* principal = doc->GetPrincipal();
-        if (principal) {
-          principal->GetURI(getter_AddRefs(uri));
-          if (uri) {
-            //
-            // remove any user:pass information
-            //
-            nsCOMPtr<nsIURIFixup> fixup(components::URIFixup::Service());
-            if (fixup) {
-              nsCOMPtr<nsIURI> tmpuri;
-              nsresult rv =
-                  fixup->CreateExposableURI(uri, getter_AddRefs(tmpuri));
-              if (NS_SUCCEEDED(rv) && tmpuri) {
-                // (don't bother if there's no host)
-                nsAutoCString host;
-                nsAutoCString prepath;
-                tmpuri->GetHost(host);
-                tmpuri->GetPrePath(prepath);
-                if (!host.IsEmpty()) {
-                  //
-                  // We have a scheme/host, update the title
-                  //
-                  title.Insert(NS_ConvertUTF8toUTF16(prepath) + mTitleSeparator,
-                               0);
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-    dom::Document* document = docShellElement->OwnerDoc();
-    ErrorResult rv;
-    document->SetTitle(title, rv);
-    return rv.StealNSResult();
-  }
-
-  return mXULWindow->SetTitle(title);
+  return NS_OK;
 }
 
 //*****************************************************************************
@@ -842,43 +758,6 @@ class nsContentTitleSettingEvent : public Runnable {
 
 void nsContentTreeOwner::XULWindow(nsXULWindow* aXULWindow) {
   mXULWindow = aXULWindow;
-  if (mXULWindow && mPrimary) {
-    // Get the window title modifiers
-    nsCOMPtr<dom::Element> docShellElement = mXULWindow->GetWindowDOMElement();
-
-    nsAutoString contentTitleSetting;
-
-    if (docShellElement) {
-      docShellElement->GetAttribute(NS_LITERAL_STRING("contenttitlesetting"),
-                                    contentTitleSetting);
-      if (contentTitleSetting.EqualsLiteral("true")) {
-        mContentTitleSetting = true;
-        docShellElement->GetAttribute(NS_LITERAL_STRING("titledefault"),
-                                      mTitleDefault);
-        docShellElement->GetAttribute(NS_LITERAL_STRING("titlemodifier"),
-                                      mWindowTitleModifier);
-        docShellElement->GetAttribute(NS_LITERAL_STRING("titlepreface"),
-                                      mTitlePreface);
-
-#if defined(XP_MACOSX)
-        // On OS X, treat the titlemodifier like it's the titledefault, and
-        // don't ever append the separator + appname.
-        if (mTitleDefault.IsEmpty()) {
-          NS_DispatchToCurrentThread(new nsContentTitleSettingEvent(
-              docShellElement, mWindowTitleModifier));
-          mTitleDefault = mWindowTitleModifier;
-          mWindowTitleModifier.Truncate();
-        }
-#endif
-        docShellElement->GetAttribute(NS_LITERAL_STRING("titlemenuseparator"),
-                                      mTitleSeparator);
-      }
-    } else {
-      NS_ERROR(
-          "This condition should never happen.  If it does, "
-          "we just won't get a modifier, but it still shouldn't happen.");
-    }
-  }
 }
 
 nsXULWindow* nsContentTreeOwner::XULWindow() { return mXULWindow; }
