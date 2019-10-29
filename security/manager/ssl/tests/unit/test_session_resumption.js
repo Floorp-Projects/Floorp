@@ -50,8 +50,9 @@ function add_resume_non_ev_with_override_test() {
           Ci.nsIWebProgressListener.STATE_CERT_USER_OVERRIDDEN,
         "expired.example.com should have STATE_CERT_USER_OVERRIDDEN flag"
       );
-      ok(
-        !transportSecurityInfo.succeededCertChain,
+      equal(
+        transportSecurityInfo.succeededCertChain.length,
+        0,
         "ev-test.example.com should not have succeededCertChain set"
       );
       ok(
