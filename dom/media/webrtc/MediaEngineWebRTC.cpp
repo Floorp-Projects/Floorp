@@ -21,7 +21,7 @@
 #include "nsITabSource.h"
 #include "prenv.h"
 
-#define FAKE_ONDEVICECHANGE_EVENT_PERIOD_IN_MS 5000
+#define FAKE_ONDEVICECHANGE_EVENT_PERIOD_IN_MS 500
 
 static mozilla::LazyLogModule sGetUserMediaLog("GetUserMedia");
 #undef LOG
