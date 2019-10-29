@@ -391,7 +391,7 @@ pref("browser.search.widget.inNavBar", false);
 
 // Enables display of the options for the user using a separate default search
 // engine in private browsing mode.
-#ifdef EARLY_BETA_OR_EARLIER
+#ifdef NIGHTLY_BUILD
   pref("browser.search.separatePrivateDefault.ui.enabled", true);
 #endif
 // The maximum amount of times the private default banner is shown.
@@ -410,7 +410,7 @@ pref("permissions.default.geo", 0);
 pref("permissions.default.desktop-notification", 0);
 pref("permissions.default.shortcuts", 0);
 
-#ifdef NIGHTLY_BUILD
+#ifdef EARLY_BETA_OR_EARLIER
   pref("permissions.desktop-notification.postPrompt.enabled", true);
 #else
   pref("permissions.desktop-notification.postPrompt.enabled", false);
