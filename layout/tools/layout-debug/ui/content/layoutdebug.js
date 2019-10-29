@@ -277,6 +277,7 @@ function parseArguments() {
     url: null,
     autoclose: false,
     delay: 0,
+    paged: false,
   };
   if (window.arguments) {
     args.url = window.arguments[0];
@@ -288,6 +289,8 @@ function parseArguments() {
       } else if (/^profile=(.*)$/.test(arg)) {
         args.profile = true;
         args.profileFilename = RegExp.$1;
+      } else if (/^paged$/.test(arg)) {
+        args.paged = true;
       } else {
         throw `Unknown option ${arg}`;
       }
@@ -317,8 +320,6 @@ function OnLDBLoad() {
   gURLBar = document.getElementById("urlbar");
 
   gDebugger = new Debugger();
-
-  checkPersistentMenus();
 
   Services.obs.addObserver(TabCrashedObserver, "ipc:content-shutdown");
   Services.obs.addObserver(TabCrashedObserver, "oop-frameloader-crashed");
@@ -362,9 +363,16 @@ function OnLDBLoad() {
     }
   }
 
+  // The URI is not loaded yet. Just set the internal variable.
+  gDebugger._pagedMode = gArgs.paged;
+
   if (gArgs.url) {
     loadURI(gArgs.url);
   }
+
+  // Some command line arguments may toggle menu items. Call this after
+  // processing all the arguments.
+  checkPersistentMenus();
 }
 
 function checkPersistentMenu(item) {
@@ -381,6 +389,7 @@ function checkPersistentMenus() {
   checkPersistentMenu("motionEventDumping");
   checkPersistentMenu("crossingEventDumping");
   checkPersistentMenu("reflowCounts");
+  checkPersistentMenu("pagedMode");
 }
 
 function dumpProfile() {
