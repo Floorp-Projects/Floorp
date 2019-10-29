@@ -82,7 +82,7 @@ interface nsIPermissionManager : nsISupports
    *
    * @param principal  the URI to get all permissions for
    */
-  nsISimpleEnumerator getAllForPrincipal(in nsIPrincipal principal);
+  Array<nsIPermission> getAllForPrincipal(in nsIPrincipal principal);
 
   /**
    * Get all custom permissions of a specific type, specified with a prefix
