@@ -477,8 +477,6 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
   void ScheduleRotationOnCompositorThread(const TargetConfig& aTargetConfig,
                                           bool aIsFirstPaint);
 
-  static void ScheduleForcedComposition(const LayersId& aLayersId);
-
   /**
    * Returns the unique layer tree identifier that corresponds to the root
    * tree of this compositor.

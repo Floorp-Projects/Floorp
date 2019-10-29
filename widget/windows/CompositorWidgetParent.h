@@ -7,7 +7,6 @@
 #define widget_windows_CompositorWidgetParent_h
 
 #include "WinCompositorWidget.h"
-#include "mozilla/Maybe.h"
 #include "mozilla/widget/PCompositorWidgetParent.h"
 
 namespace mozilla {
@@ -34,11 +33,9 @@ class CompositorWidgetParent final : public PCompositorWidgetParent,
   // PlatformCompositorWidgetDelegate Overrides
   void UpdateCompositorWnd(const HWND aCompositorWnd,
                            const HWND aParentWnd) override;
-  void SetRootLayerTreeID(const layers::LayersId& aRootLayerTreeId) override;
 
  private:
   RefPtr<VsyncObserver> mVsyncObserver;
-  Maybe<layers::LayersId> mRootLayerTreeID;
 };
 
 }  // namespace widget
