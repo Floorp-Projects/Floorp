@@ -123,10 +123,6 @@ bool RendererOGL::UpdateAndRender(const Maybe<gfx::IntSize>& aReadbackSize,
   if (mNativeLayerForEntireWindow) {
     gfx::IntRect bounds({}, mCompositor->GetBufferSize().ToUnknownSize());
     mNativeLayerForEntireWindow->SetRect(bounds);
-#ifdef XP_MACOSX
-    mNativeLayerForEntireWindow->SetOpaqueRegion(
-        mCompositor->GetWidget()->GetOpaqueWidgetRegion().ToUnknownRegion());
-#endif
   }
 
   if (!mCompositor->BeginFrame(mNativeLayerForEntireWindow)) {
