@@ -384,6 +384,7 @@ export class ASRouterUISurface extends React.PureComponent {
             onBlockById={ASRouterUtils.blockById}
             onDismiss={this.onDismissById(this.state.message.id)}
             fxaEndpoint={this.props.fxaEndpoint}
+            appUpdateChannel={this.props.appUpdateChannel}
             fetchFlowParams={this.fetchFlowParams}
           />
         </ImpressionsWrapper>

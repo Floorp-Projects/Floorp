@@ -69,6 +69,11 @@ export class FirstRun extends React.PureComponent {
     this.closeTriplets = this.closeTriplets.bind(this);
 
     helpers.addFluent(this.props.document);
+    // Update utm campaign parameters by appending channel for
+    // differentiating campaign in amplitude
+    if (this.props.appUpdateChannel) {
+      BASE_PARAMS.utm_campaign += `-${this.props.appUpdateChannel}`;
+    }
   }
 
   static getDerivedStateFromProps(props, state) {

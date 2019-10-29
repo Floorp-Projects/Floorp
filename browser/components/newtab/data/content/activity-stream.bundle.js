@@ -724,6 +724,7 @@ class BaseContent extends react__WEBPACK_IMPORTED_MODULE_7___default.a.PureCompo
       showLogo: noSectionsEnabled,
       handoffEnabled: searchHandoffEnabled
     }, props.Search)))), react__WEBPACK_IMPORTED_MODULE_7___default.a.createElement(_asrouter_asrouter_content__WEBPACK_IMPORTED_MODULE_2__["ASRouterUISurface"], {
+      appUpdateChannel: this.props.Prefs.values.appUpdateChannel,
       fxaEndpoint: this.props.Prefs.values.fxa_endpoint,
       dispatch: this.props.dispatch
     }), react__WEBPACK_IMPORTED_MODULE_7___default.a.createElement("div", {
@@ -2231,6 +2232,7 @@ class ASRouterUISurface extends react__WEBPACK_IMPORTED_MODULE_6___default.a.Pur
         onBlockById: ASRouterUtils.blockById,
         onDismiss: this.onDismissById(this.state.message.id),
         fxaEndpoint: this.props.fxaEndpoint,
+        appUpdateChannel: this.props.appUpdateChannel,
         fetchFlowParams: this.fetchFlowParams
       }));
     }
@@ -3085,7 +3087,7 @@ class FxASignupForm extends react__WEBPACK_IMPORTED_MODULE_2___default.a.PureCom
     }), react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("input", {
       name: "utm_campaign",
       type: "hidden",
-      value: "firstrun"
+      value: _templates_FirstRun_addUtmParams__WEBPACK_IMPORTED_MODULE_1__["BASE_PARAMS"].utm_campaign
     }), react__WEBPACK_IMPORTED_MODULE_2___default.a.createElement("input", {
       name: "utm_term",
       type: "hidden",
@@ -3158,6 +3160,10 @@ __webpack_require__.r(__webpack_exports__);
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/**
+ * BASE_PARAMS keys/values can be modified from outside this file
+ */
 const BASE_PARAMS = {
   utm_source: "activity-stream",
   utm_campaign: "firstrun",
@@ -14728,7 +14734,12 @@ class FirstRun_FirstRun extends external_React_default.a.PureComponent {
     };
     this.closeInterrupt = this.closeInterrupt.bind(this);
     this.closeTriplets = this.closeTriplets.bind(this);
-    helpers.addFluent(this.props.document);
+    helpers.addFluent(this.props.document); // Update utm campaign parameters by appending channel for
+    // differentiating campaign in amplitude
+
+    if (this.props.appUpdateChannel) {
+      addUtmParams["BASE_PARAMS"].utm_campaign += `-${this.props.appUpdateChannel}`;
+    }
   }
 
   static getDerivedStateFromProps(props, state) {
