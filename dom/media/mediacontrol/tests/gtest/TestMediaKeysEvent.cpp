@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "gtest/gtest.h"
-#include "MediaHardwareKeysEvent.h"
+#include "MediaControlKeysEvent.h"
 
 using namespace mozilla::dom;
 

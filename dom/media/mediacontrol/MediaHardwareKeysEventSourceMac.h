@@ -8,7 +8,7 @@
 #import <ApplicationServices/ApplicationServices.h>
 #import <CoreFoundation/CoreFoundation.h>
 
-#include "MediaHardwareKeysEvent.h"
+#include "MediaControlKeysEvent.h"
 #include "nsISupportsImpl.h"
 
 namespace mozilla {

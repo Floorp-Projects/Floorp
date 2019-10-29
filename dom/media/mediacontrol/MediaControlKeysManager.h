@@ -5,7 +5,7 @@
 #ifndef mozilla_dom_mediahardwarekeysobservice_h__
 #define mozilla_dom_mediahardwarekeysobservice_h__
 
-#include "MediaHardwareKeysEvent.h"
+#include "MediaControlKeysEvent.h"
 
 namespace mozilla {
 namespace dom {
