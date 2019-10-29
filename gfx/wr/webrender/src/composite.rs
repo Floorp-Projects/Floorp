@@ -233,7 +233,12 @@ pub trait Compositor {
         size: DeviceIntSize,
     );
 
-    /// Destroy the surface with the specified id.
+    /// Destroy the surface with the specified id. WR may call this
+    /// at any time the surface is no longer required (including during
+    /// renderer deinit). It's the responsibility of the embedder
+    /// to ensure that the surface is only freed once the GPU is
+    /// no longer using the surface (if this isn't already handled
+    /// by the operating system).
     fn destroy_surface(
         &mut self,
         id: NativeSurfaceId,

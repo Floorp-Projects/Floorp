@@ -349,6 +349,22 @@ impl FrameBuilder {
                 &visibility_context,
                 &mut visibility_state,
             );
+
+            // When a new display list is processed by WR, the existing tiles from
+            // any picture cache are stored in the `retained_tiles` field above. This
+            // allows the first frame of a new display list to reuse any existing tiles
+            // and surfaces that match. Once the `update_visibility` call above is
+            // complete, any tiles that are left remaining in the `retained_tiles`
+            // map are not needed and will be dropped. For simple compositing mode,
+            // this is fine, since texture cache handles are garbage collected at
+            // the end of each frame. However, if we're in native compositor mode,
+            // we need to manually clean up any native compositor surfaces that were
+            // allocated by these tiles.
+            for (_, cache_state) in visibility_state.retained_tiles.caches.drain() {
+                visibility_state.composite_state.destroy_native_surfaces(
+                    cache_state.tiles.values(),
+                );
+            }
         }
 
         let mut frame_state = FrameBuildingState {
