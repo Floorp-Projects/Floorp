@@ -41,10 +41,10 @@ from dlmanager import (
 
 # Minimum number of downloaded artifacts to keep. Each artifact can be very large,
 # so don't make this to large!
-MIN_CACHED_ARTIFACTS = 6
+MIN_CACHED_ARTIFACTS = 12
 
-# Maximum size of the downloaded artifacts to keep in cache, in bytes (1GiB).
-MAX_CACHED_ARTIFACTS_SIZE = 1024 * 1024 * 1024
+# Maximum size of the downloaded artifacts to keep in cache, in bytes (2GiB).
+MAX_CACHED_ARTIFACTS_SIZE = 2 * 1024 * 1024 * 1024
 
 
 class ArtifactPersistLimit(PersistLimit):
