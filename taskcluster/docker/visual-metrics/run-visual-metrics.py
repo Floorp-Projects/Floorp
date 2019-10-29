@@ -64,13 +64,31 @@ class Job:
 JOB_SCHEMA = Schema(
     {
         Required("jobs"): [
-            {
-                Required("browsertime_json_url"): Url(),
-                Required("video_url"): Url(),
-            }
+            {Required("browsertime_json_url"): Url(), Required("video_url"): Url()}
         ]
     }
 )
+
+
+def run_command(log, cmd):
+    """Run a command using subprocess.check_output
+
+    Args:
+        log: The structlog logger instance.
+        cmd: the command to run as a list of strings.
+
+    Returns:
+        A tuple of the process' exit status and standard output.
+    """
+    log.info("Running command", cmd=cmd)
+    try:
+        res = subprocess.check_output(cmd)
+        log.info("Command succeeded", result=res)
+        return 0, res
+    except subprocess.CalledProcessError as e:
+        log.info("Command failed", cmd=cmd, status=e.returncode,
+                 output=e.output)
+        return e.returncode, e.output
 
 
 def main(log, args):
@@ -91,14 +109,14 @@ def main(log, args):
     visualmetrics_path = Path(fetch_dir) / "visualmetrics.py"
     if not visualmetrics_path.exists():
         log.error(
-            "Could not locate visualmetrics.py: expected it at %s"
-            % visualmetrics_path
+            "Could not locate visualmetrics.py",
+            expected_path=str(visualmetrics_path)
         )
         return 1
 
     if args.jobs_json_path:
         try:
-            with open(args.jobs_json_path, "r") as f:
+            with open(str(args.jobs_json_path), "r") as f:
                 jobs_json = json.load(f)
         except Exception as e:
             log.error(
@@ -109,9 +127,7 @@ def main(log, args):
             return 1
 
         log.info(
-            "Loaded jobs.json from file",
-            path=args.jobs_json_path,
-            jobs_json=jobs_json,
+            "Loaded jobs.json from file", path=args.jobs_json_path, jobs_json=jobs_json
         )
 
     else:
@@ -161,15 +177,16 @@ def main(log, args):
                 downloaded_jobs,
             ),
         ):
-            if isinstance(result, Exception):
+            returncode, res = result
+            if returncode != 0:
                 log.error(
-                    "Failed to run visualmetrics.py",
-                    video_url=job.video_url,
-                    error=result,
+                    "Failed to run visualmetrics.py", video_url=job.video_url, error=res
                 )
             else:
-                with (job.job_dir / "visual-metrics.json").open("wb") as f:
-                    f.write(result)
+                path = job.job_dir / "visual-metrics.json"
+                with path.open("wb") as f:
+                    log.info("Writing job result", path=path)
+                    f.write(res)
 
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -180,33 +197,25 @@ def main(log, args):
                     {
                         "video_url": job.video_url,
                         "browsertime_json_url": job.json_url,
-                        "path": (
-                            str(job.job_dir.relative_to(WORKSPACE_DIR)) + "/"
-                        ),
+                        "path": (str(job.job_dir.relative_to(WORKSPACE_DIR)) + "/"),
                     }
                     for job in downloaded_jobs
                 ],
                 "failed_jobs": [
-                    {
-                        "video_url": job.video_url,
-                        "browsertime_json_url": job.json_url,
-                    }
+                    {"video_url": job.video_url, "browsertime_json_url": job.json_url}
                     for job in failed_jobs
                 ],
             },
             f,
         )
 
-    subprocess.check_output(
-        [
-            "tar",
-            "cJf",
-            str(OUTPUT_DIR / "visual-metrics.tar.xz"),
-            "-C",
-            str(WORKSPACE_DIR),
-            ".",
-        ]
+    tarfile = OUTPUT_DIR / "visual-metrics.tar.xz"
+    log.info("Creating the tarfile", tarfile=tarfile)
+    returncode, res = run_command(
+        log, ["tar", "cJf", str(tarfile), "-C", str(WORKSPACE_DIR), "."]
     )
+    if returncode != 0:
+        raise Exception("Could not tar the results")
 
 
 def download_inputs(log, raw_jobs):
@@ -240,9 +249,7 @@ def download_inputs(log, raw_jobs):
     failed_jobs = []
 
     with ThreadPoolExecutor(max_workers=8) as executor:
-        for job, success in executor.map(
-            partial(download_job, log), pending_jobs
-        ):
+        for job, success in executor.map(partial(download_job, log), pending_jobs):
             if success:
                 downloaded_jobs.append(job)
             else:
@@ -330,22 +337,11 @@ def run_visual_metrics(job, visualmetrics_path, options):
     """Run visualmetrics.py on the input job.
 
     Returns:
-       Either a string containing the JSON output of visualmetrics.py or an
-       exception raised by :func:`subprocess.check_output`.
+       A returncode and a string containing the output of visualmetrics.py
     """
-    cmd = [
-        "/usr/bin/python",
-        str(visualmetrics_path),
-        "--video",
-        str(job.video_path),
-    ]
-
+    cmd = ["/usr/bin/python", str(visualmetrics_path), "--video", str(job.video_path)]
     cmd.extend(options)
-
-    try:
-        return subprocess.check_output(cmd)
-    except subprocess.CalledProcessError as e:
-        return e
+    return run_command(log, cmd)
 
 
 if __name__ == "__main__":
@@ -359,18 +355,17 @@ if __name__ == "__main__":
     )
 
     parser = argparse.ArgumentParser(
-        description=__doc__,
-        formatter_class=argparse.RawDescriptionHelpFormatter,
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
     parser.add_argument(
         "--jobs-json-path",
         type=Path,
         metavar="PATH",
         help=(
-            "The path to the jobs.josn file. If not present, the "
+            "The path to the jobs.json file. If not present, the "
             "VISUAL_METRICS_JOBS_JSON environment variable will be used "
             "instead."
-        ),
+        )
     )
     parser.add_argument(
         "visual_metrics_options",
