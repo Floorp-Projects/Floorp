@@ -2898,6 +2898,16 @@ void LIRGenerator::visitTypedArrayElementShift(MTypedArrayElementShift* ins) {
          ins);
 }
 
+void LIRGenerator::visitTypedArrayIndexToInt32(MTypedArrayIndexToInt32* ins) {
+  MDefinition* input = ins->input();
+  if (input->type() == MIRType::Int32) {
+    redefine(ins, input);
+  } else {
+    MOZ_ASSERT(input->type() == MIRType::Double);
+    define(new (alloc()) LTypedArrayIndexToInt32(useRegister(input)), ins);
+  }
+}
+
 void LIRGenerator::visitTypedObjectDescr(MTypedObjectDescr* ins) {
   MOZ_ASSERT(ins->type() == MIRType::Object);
   define(new (alloc()) LTypedObjectDescr(useRegisterAtStart(ins->object())),
