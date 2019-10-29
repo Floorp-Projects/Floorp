@@ -65,7 +65,6 @@ FINAL_TARGET_FILES.content.tests.SimpleTest += [
 FINAL_TARGET_FILES.content.tests.BrowserTestUtils += [
     'BrowserTestUtils/content/content-about-page-utils.js',
     'BrowserTestUtils/content/content-task.js',
-    'BrowserTestUtils/content/content-utils.js',
 ]
 
 MOCHITEST_MANIFESTS += [
