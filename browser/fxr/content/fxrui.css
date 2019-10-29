@@ -63,6 +63,8 @@ body {
 }
 .icon_prefs {
   background-image: url("assets/icon-settings.svg");
+  margin-inline-end: 0px;
+  margin-inline-start: 10px;
 }
 
 .urlbar_container {

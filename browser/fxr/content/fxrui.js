@@ -10,7 +10,8 @@ let homeURL = "https://www.mozilla.org/en-US/";
 // Bug 1586294 - Localize the privacy policy URL (Services.urlFormatter?)
 let privacyPolicyURL = "https://www.mozilla.org/en-US/privacy/firefox/";
 let reportIssueURL = "https://mzl.la/fxr";
-let licenseURL = "https://wiki.mozilla.org/Main_Page";
+let licenseURL =
+  "https://mixedreality.mozilla.org/FirefoxRealityPC/license.html";
 
 // https://developer.mozilla.org/en-US/docs/Mozilla/Tech/XUL/browser
 let browser = null;
