@@ -13,8 +13,11 @@ import org.junit.runner.RunWith
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDisplay
 import android.graphics.Bitmap
+import org.hamcrest.Matchers
 import org.hamcrest.Matchers.equalTo
 import java.nio.ByteBuffer
+import kotlin.math.absoluteValue
+import kotlin.math.max
 
 
 private const val SCREEN_HEIGHT = 100
@@ -49,11 +52,10 @@ class VerticalClippingTest : BaseSessionTest() {
             assertThat("Heights are the same", comparisonImage.height, equalTo(it.height))
             assertThat("Byte counts are the same", comparisonImage.byteCount, equalTo(it.byteCount))
             assertThat("Configs are the same", comparisonImage.config, equalTo(it.config))
-            val comparisonPixels: ByteBuffer = ByteBuffer.allocate(comparisonImage.byteCount)
-            comparisonImage.copyPixelsToBuffer(comparisonPixels)
-            val itPixels: ByteBuffer = ByteBuffer.allocate(it.byteCount)
-            it.copyPixelsToBuffer(itPixels)
-            assertThat("Bytes are the same", comparisonPixels, equalTo(itPixels))        }
+            assertThat("Images are almost identical",
+                    ScreenshotTest.Companion.imageElementDifference(comparisonImage, it),
+                    Matchers.lessThanOrEqualTo(1))
+        }
     }
 
 
