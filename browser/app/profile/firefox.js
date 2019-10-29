@@ -1518,13 +1518,10 @@ pref("media.autoplay.default", 1); // 0=Allowed, 1=Blocked, 5=All Blocked
   pref("media.autoplay.block-webaudio", false);
 #endif
 
-// Picture-in-Picture is currently enabled on Windows for EARLY_BETA_OR_EARLIER
-// and DevEdition
+// Picture-in-Picture is currently enabled by default on Windows.
 #if defined(XP_WIN)
-  #if defined(EARLY_BETA_OR_EARLIER) || defined(MOZ_DEV_EDITION)
-    pref("media.videocontrols.picture-in-picture.enabled", true);
-    pref("media.videocontrols.picture-in-picture.video-toggle.enabled", true);
-  #endif
+  pref("media.videocontrols.picture-in-picture.enabled", true);
+  pref("media.videocontrols.picture-in-picture.video-toggle.enabled", true);
 #endif
 
 // Picture-in-Picture is currently enabled on Nightly for macOS and Linux GTK.
