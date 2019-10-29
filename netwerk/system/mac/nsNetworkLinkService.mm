@@ -116,9 +116,203 @@ nsNetworkLinkService::GetNetworkID(nsACString& aNetworkID) {
   return NS_OK;
 }
 
+// Note that this function is copied from xpcom/io/nsLocalFileUnix.cpp.
+static nsresult CFStringReftoUTF8(CFStringRef aInStrRef, nsACString& aOutStr) {
+  // first see if the conversion would succeed and find the length of the result
+  CFIndex usedBufLen, inStrLen = ::CFStringGetLength(aInStrRef);
+  CFIndex charsConverted =
+      ::CFStringGetBytes(aInStrRef, CFRangeMake(0, inStrLen), kCFStringEncodingUTF8, 0, false,
+                         nullptr, 0, &usedBufLen);
+  if (charsConverted == inStrLen) {
+    // all characters converted, do the actual conversion
+    aOutStr.SetLength(usedBufLen);
+    if (aOutStr.Length() != (unsigned int)usedBufLen) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    UInt8* buffer = (UInt8*)aOutStr.BeginWriting();
+    ::CFStringGetBytes(aInStrRef, CFRangeMake(0, inStrLen), kCFStringEncodingUTF8, 0, false, buffer,
+                       usedBufLen, &usedBufLen);
+    return NS_OK;
+  }
+
+  return NS_ERROR_FAILURE;
+}
+
+static void GetDNSSearchDomains(const SCDynamicStoreRef aStoreRef, const CFStringRef aPattern,
+                                nsTArray<nsCString>& aResult) {
+  CFDictionaryRef dnsDict = (CFDictionaryRef)SCDynamicStoreCopyValue(aStoreRef, aPattern);
+  if (dnsDict) {
+    CFTypeRef domains;
+    if (::CFDictionaryGetValueIfPresent(dnsDict, kSCPropNetDNSSearchDomains, &domains)) {
+      if (domains && ::CFGetTypeID(domains) == ::CFArrayGetTypeID()) {
+        int count = ::CFArrayGetCount(static_cast<CFArrayRef>(domains));
+        for (int i = 0; i < count; i++) {
+          CFTypeRef domain = ::CFArrayGetValueAtIndex(static_cast<CFArrayRef>(domains), i);
+          if (domain && ::CFGetTypeID(domain) == ::CFStringGetTypeID()) {
+            nsAutoCString domainStr;
+            if (NS_SUCCEEDED(CFStringReftoUTF8(static_cast<CFStringRef>(domain), domainStr))) {
+              LOG(("DNS search domain [%s]\n", domainStr.get()));
+              aResult.AppendElement(domainStr);
+            }
+          }
+        }
+      }
+    }
+  }
+  CFReleaseSafe(dnsDict);
+}
+
+static OSStatus GetPrimaryServiceInfo(const SCDynamicStoreRef aStoreRef, nsACString& aServiceName,
+                                      nsACString& aServiceId) {
+  OSStatus err = getErrorCodePtr(aStoreRef);
+  if (err != noErr) {
+    return err;
+  }
+
+  CFStringRef globalIPv4StateKey = ::SCDynamicStoreKeyCreateNetworkGlobalEntity(
+      nullptr, kSCDynamicStoreDomainState, kSCEntNetIPv4);
+  err = getErrorCodePtr(globalIPv4StateKey);
+
+  // Get the primary interface.
+  CFDictionaryRef primaryInterface = nullptr;
+  if (err == noErr) {
+    primaryInterface = (CFDictionaryRef)::SCDynamicStoreCopyValue(aStoreRef, globalIPv4StateKey);
+    err = getErrorCodePtr(primaryInterface);
+  }
+
+  CFTypeRef serviceId;
+  if (err == noErr && ::CFDictionaryGetValueIfPresent(
+                          primaryInterface, kSCDynamicStorePropNetPrimaryService, &serviceId)) {
+    err = -1;
+    if (serviceId && ::CFGetTypeID(serviceId) == ::CFStringGetTypeID()) {
+      if (NS_SUCCEEDED(CFStringReftoUTF8(static_cast<CFStringRef>(serviceId), aServiceId))) {
+        err = noErr;
+      }
+    }
+  }
+
+  CFTypeRef serviceName;
+  if (err == noErr && ::CFDictionaryGetValueIfPresent(
+                          primaryInterface, kSCDynamicStorePropNetPrimaryInterface, &serviceName)) {
+    err = -1;
+    if (serviceName && ::CFGetTypeID(serviceName) == ::CFStringGetTypeID()) {
+      if (NS_SUCCEEDED(CFStringReftoUTF8(static_cast<CFStringRef>(serviceName), aServiceName))) {
+        err = noErr;
+      }
+    }
+  }
+
+  CFReleaseSafe(globalIPv4StateKey);
+  CFReleaseSafe(primaryInterface);
+
+  if (err == noErr) {
+    return noErr;
+  }
+
+  return err;
+}
+
+static OSStatus IsInterfaceActive(const SCDynamicStoreRef aStoreRef, const char* aInterfaceName,
+                                  bool& aResult) {
+  aResult = false;
+
+  OSStatus err = getErrorCodePtr(aStoreRef);
+  if (err != noErr) {
+    return err;
+  }
+
+  CFStringRef serviceNameRef = nullptr;
+  if (err == noErr) {
+    serviceNameRef = CFStringCreateWithCString(nullptr, aInterfaceName, kCFStringEncodingUTF8);
+    err = getErrorCodePtr(serviceNameRef);
+  }
+
+  CFStringRef linkPattern = nullptr;
+  if (err == noErr) {
+    linkPattern = ::SCDynamicStoreKeyCreateNetworkInterfaceEntity(
+        nullptr, kSCDynamicStoreDomainState, serviceNameRef, kSCEntNetLink);
+    err = getErrorCodePtr(linkPattern);
+  }
+
+  CFDictionaryRef dict = nullptr;
+  if (err == noErr) {
+    dict = (CFDictionaryRef)SCDynamicStoreCopyValue(aStoreRef, linkPattern);
+    err = getErrorCodePtr(dict);
+  }
+
+  if (err == noErr) {
+    CFTypeRef activeRef;
+    err = -1;
+    if (::CFDictionaryGetValueIfPresent(dict, kSCPropNetLinkActive, &activeRef)) {
+      if (activeRef && ::CFGetTypeID(activeRef) == ::CFBooleanGetTypeID()) {
+        aResult = ::CFBooleanGetValue(static_cast<CFBooleanRef>(activeRef));
+        err = noErr;
+      }
+    }
+  }
+
+  CFReleaseSafe(dict);
+  CFReleaseSafe(linkPattern);
+  CFReleaseSafe(serviceNameRef);
+  return err;
+}
+
+void nsNetworkLinkService::GetDnsSuffixListInternal() {
+  MOZ_ASSERT(!NS_IsMainThread());
+
+  nsAutoCString primaryServiceName;
+  nsAutoCString primaryServiceId;
+  OSStatus err = GetPrimaryServiceInfo(mStoreRef, primaryServiceName, primaryServiceId);
+
+  bool active = false;
+  if (err == noErr) {
+    err = IsInterfaceActive(mStoreRef, primaryServiceName.get(), active);
+    LOG(("primaryServiceName:[%s] active=%d", primaryServiceName.get(), active));
+  }
+
+  if (err != noErr || !active) {
+    // Primary interface is not active. Clear the DNS suffix list.
+    MutexAutoLock lock(mMutex);
+    mDNSSuffixList.Clear();
+    return;
+  }
+
+  nsTArray<nsCString> result;
+
+  CFStringRef serviceIdRef =
+      CFStringCreateWithCString(nullptr, primaryServiceId.get(), kCFStringEncodingUTF8);
+  err = getErrorCodePtr(serviceIdRef);
+  if (err == noErr) {
+    CFStringRef dnsSetupPattern = ::SCDynamicStoreKeyCreateNetworkServiceEntity(
+        nullptr, kSCDynamicStoreDomainSetup, serviceIdRef, kSCEntNetDNS);
+    CFStringRef dnsStatePattern = ::SCDynamicStoreKeyCreateNetworkServiceEntity(
+        nullptr, kSCDynamicStoreDomainState, serviceIdRef, kSCEntNetDNS);
+    err = getErrorCodePtr(dnsSetupPattern);
+    if (err == noErr) {
+      err = getErrorCodePtr(dnsStatePattern);
+      if (err == noErr) {
+        GetDNSSearchDomains(mStoreRef, dnsSetupPattern, result);
+        GetDNSSearchDomains(mStoreRef, dnsStatePattern, result);
+      }
+    }
+    CFReleaseSafe(dnsStatePattern);
+    CFReleaseSafe(dnsSetupPattern);
+  }
+  CFReleaseSafe(serviceIdRef);
+
+  if (err == noErr) {
+    MutexAutoLock lock(mMutex);
+    mDNSSuffixList = std::move(result);
+  }
+}
+
 NS_IMETHODIMP
 nsNetworkLinkService::GetDnsSuffixList(nsTArray<nsCString>& aDnsSuffixList) {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  aDnsSuffixList.Clear();
+
+  MutexAutoLock lock(mMutex);
+  aDnsSuffixList.AppendElements(mDNSSuffixList);
+  return NS_OK;
 }
 
 #ifndef SA_SIZE
@@ -437,8 +631,7 @@ void nsNetworkLinkService::calculateNetworkIdInternal(void) {
   if (idChanged && !initialIDCalculation) {
     RefPtr<nsNetworkLinkService> self = this;
     NS_DispatchToMainThread(NS_NewRunnableFunction(
-        "nsNetworkLinkService::calculateNetworkIdInternal",
-        [self]() { self->SendEvent(true); }));
+        "nsNetworkLinkService::calculateNetworkIdInternal", [self]() { self->SendEvent(true); }));
   }
 
   initialIDCalculation = false;
@@ -454,11 +647,41 @@ nsNetworkLinkService::Observe(nsISupports* subject, const char* topic, const cha
 }
 
 /* static */
-void nsNetworkLinkService::IPConfigChanged(SCDynamicStoreRef aStoreREf, CFArrayRef aChangedKeys,
-                                           void* aInfo) {
-  LOG(("nsNetworkLinkService::IPConfigChanged"));
+void nsNetworkLinkService::NetworkConfigChanged(SCDynamicStoreRef aStoreREf,
+                                                CFArrayRef aChangedKeys, void* aInfo) {
+  LOG(("nsNetworkLinkService::NetworkConfigChanged"));
+
+  bool ipConfigChanged = false;
+  bool dnsConfigChanged = false;
+  for (CFIndex i = 0; i < CFArrayGetCount(aChangedKeys); ++i) {
+    CFStringRef key = static_cast<CFStringRef>(CFArrayGetValueAtIndex(aChangedKeys, i));
+    if (CFStringHasSuffix(key, kSCEntNetIPv4) || CFStringHasSuffix(key, kSCEntNetIPv6)) {
+      ipConfigChanged = true;
+    }
+    if (CFStringHasSuffix(key, kSCEntNetDNS)) {
+      dnsConfigChanged = true;
+    }
+  }
+
   nsNetworkLinkService* service = static_cast<nsNetworkLinkService*>(aInfo);
-  service->calculateNetworkIdWithDelay(kNetworkIdDelayAfterChange);
+  if (ipConfigChanged) {
+    service->calculateNetworkIdWithDelay(kNetworkIdDelayAfterChange);
+  }
+
+  if (dnsConfigChanged) {
+    service->DNSConfigChanged();
+  }
+}
+
+void nsNetworkLinkService::DNSConfigChanged() {
+  LOG(("nsNetworkLinkService::DNSConfigChanged"));
+  nsCOMPtr<nsIEventTarget> target = do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
+  if (target) {
+    RefPtr<nsNetworkLinkService> self = this;
+    MOZ_ALWAYS_SUCCEEDS(
+        target->Dispatch(NS_NewRunnableFunction("nsNetworkLinkService::GetDnsSuffixListInternal",
+                                                [self]() { self->GetDnsSuffixListInternal(); })));
+  }
 }
 
 nsresult nsNetworkLinkService::Init(void) {
@@ -491,21 +714,26 @@ nsresult nsNetworkLinkService::Init(void) {
   }
 
   SCDynamicStoreContext storeContext = {0, this, nullptr, nullptr, nullptr};
-  mStoreRef = ::SCDynamicStoreCreate(nullptr, CFSTR("AddIPAddressListChangeCallbackSCF"),
-                                     IPConfigChanged, &storeContext);
+  mStoreRef = ::SCDynamicStoreCreate(nullptr, CFSTR("IPAndDNSChangeCallbackSCF"),
+                                     NetworkConfigChanged, &storeContext);
 
-  CFStringRef patterns[2] = {nullptr, nullptr};
+  CFStringRef patterns[4] = {nullptr, nullptr, nullptr, nullptr};
   OSStatus err = getErrorCodePtr(mStoreRef);
   if (err == noErr) {
     // This pattern is "State:/Network/Service/[^/]+/IPv4".
     patterns[0] = ::SCDynamicStoreKeyCreateNetworkServiceEntity(nullptr, kSCDynamicStoreDomainState,
                                                                 kSCCompAnyRegex, kSCEntNetIPv4);
-    err = getErrorCodePtr(patterns[0]);
-    if (err == noErr) {
-      // This pattern is "State:/Network/Service/[^/]+/IPv6".
-      patterns[1] = ::SCDynamicStoreKeyCreateNetworkServiceEntity(
-          nullptr, kSCDynamicStoreDomainState, kSCCompAnyRegex, kSCEntNetIPv6);
-      err = getErrorCodePtr(patterns[1]);
+    // This pattern is "State:/Network/Service/[^/]+/IPv6".
+    patterns[1] = ::SCDynamicStoreKeyCreateNetworkServiceEntity(nullptr, kSCDynamicStoreDomainState,
+                                                                kSCCompAnyRegex, kSCEntNetIPv6);
+    // This pattern is "State:/Network/Service/[^/]+/DNS".
+    patterns[2] = ::SCDynamicStoreKeyCreateNetworkServiceEntity(nullptr, kSCDynamicStoreDomainState,
+                                                                kSCCompAnyRegex, kSCEntNetDNS);
+    // This pattern is "Setup:/Network/Service/[^/]+/DNS".
+    patterns[3] = ::SCDynamicStoreKeyCreateNetworkServiceEntity(nullptr, kSCDynamicStoreDomainSetup,
+                                                                kSCCompAnyRegex, kSCEntNetDNS);
+    if (!patterns[0] || !patterns[1] || !patterns[2] || !patterns[3]) {
+      err = -1;
     }
   }
 
@@ -515,7 +743,7 @@ nsresult nsNetworkLinkService::Init(void) {
   // that match that pattern list, then create our run loop
   // source.
   if (err == noErr) {
-    patternList = ::CFArrayCreate(nullptr, (const void**)patterns, 2, &kCFTypeArrayCallBacks);
+    patternList = ::CFArrayCreate(nullptr, (const void**)patterns, 4, &kCFTypeArrayCallBacks);
     if (!patternList) {
       err = -1;
     }
@@ -531,6 +759,8 @@ nsresult nsNetworkLinkService::Init(void) {
 
   CFReleaseSafe(patterns[0]);
   CFReleaseSafe(patterns[1]);
+  CFReleaseSafe(patterns[2]);
+  CFReleaseSafe(patterns[3]);
   CFReleaseSafe(patternList);
 
   if (err != noErr) {
@@ -564,6 +794,8 @@ nsresult nsNetworkLinkService::Init(void) {
   UpdateReachability();
 
   calculateNetworkIdWithDelay(0);
+
+  DNSConfigChanged();
 
   return NS_OK;
 }
@@ -654,4 +886,7 @@ void nsNetworkLinkService::ReachabilityChanged(SCNetworkReachabilityRef target,
   service->UpdateReachability();
   service->SendEvent(false);
   service->calculateNetworkIdWithDelay(kNetworkIdDelayAfterChange);
+  // If a new interface is up or the order of interfaces is changed, we should
+  // update the DNS suffix list.
+  service->DNSConfigChanged();
 }
