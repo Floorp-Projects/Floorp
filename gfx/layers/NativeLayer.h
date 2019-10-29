@@ -36,6 +36,7 @@ class NativeLayerRoot {
   virtual already_AddRefed<NativeLayer> CreateLayer() = 0;
   virtual void AppendLayer(NativeLayer* aLayer) = 0;
   virtual void RemoveLayer(NativeLayer* aLayer) = 0;
+  virtual void SetLayers(const nsTArray<RefPtr<NativeLayer>>& aLayers) = 0;
 
  protected:
   virtual ~NativeLayerRoot() {}
