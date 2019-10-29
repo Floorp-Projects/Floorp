@@ -594,10 +594,6 @@ class DesktopInstance(GeckoInstance):
         # connections.
         "browser.urlbar.suggest.searches": False,
 
-        # Turn off the location bar search suggestions opt-in.  It interferes with
-        # tests that don't expect it to be there.
-        "browser.urlbar.userMadeSearchSuggestionsChoice": True,
-
         # Don't warn when exiting the browser
         "browser.warnOnQuit": False,
 
