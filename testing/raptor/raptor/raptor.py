@@ -238,6 +238,7 @@ either Raptor or browsertime."""
             raptor_json_path = os.path.join(os.getcwd(), 'local.json')
 
         self.config['raptor_json_path'] = raptor_json_path
+        self.config['artifact_dir'] = self.artifact_dir
         return self.results_handler.summarize_and_output(self.config, tests, test_names)
 
     @abstractmethod
@@ -356,6 +357,8 @@ class Browsertime(Perftest):
                   "browsertime_ffmpeg",
                   "browsertime_geckodriver",
                   "browsertime_chromedriver"):
+            if not self.browsertime_video and k == "browsertime_ffmpeg":
+                continue
             LOG.info("{}: {}".format(k, getattr(self, k)))
             try:
                 LOG.info("{}: {}".format(k, os.stat(getattr(self, k))))
@@ -477,7 +480,7 @@ class Browsertime(Perftest):
                browsertime_script +
                ['--firefox.profileTemplate', str(self.profile.profile),
                 '--skipHar',
-                '--video', 'false',
+                '--video', self.browsertime_video and 'true' or 'false',
                 '--visualMetrics', 'false',
                 '--timeouts.pageLoad', str(timeout),
                 '-vv',
@@ -487,12 +490,13 @@ class Browsertime(Perftest):
         LOG.info('timeout (s): {}'.format(timeout))
         LOG.info('browsertime cwd: {}'.format(os.getcwd()))
         LOG.info('browsertime cmd: {}'.format(cmd))
-        LOG.info('browsertime_ffmpeg: {}'.format(self.browsertime_ffmpeg))
+        if self.browsertime_video:
+            LOG.info('browsertime_ffmpeg: {}'.format(self.browsertime_ffmpeg))
 
         # browsertime requires ffmpeg on the PATH for `--video=true`.
         # It's easier to configure the PATH here than at the TC level.
         env = dict(os.environ)
-        if self.browsertime_ffmpeg:
+        if self.browsertime_video and self.browsertime_ffmpeg:
             ffmpeg_dir = os.path.dirname(os.path.abspath(self.browsertime_ffmpeg))
             old_path = env.setdefault('PATH', '')
             new_path = os.pathsep.join([ffmpeg_dir, old_path])

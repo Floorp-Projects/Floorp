@@ -340,6 +340,26 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
 
         return results
 
+    def _extract_vmetrics_jobs(self, test, browsertime_json, browsertime_results):
+        # XXX will do better later
+        url = ("https://queue.taskcluster.net/v1/task/%s/runs/0/artifacts/public/"
+               "test_info/" % os.environ.get("TASK_ID", "??"))
+
+        json_url = url + "/".join(browsertime_json.split(os.path.sep)[-3:])
+        files = []
+        for res in browsertime_results:
+            files.extend(res.get("files", {}).get("video", []))
+        if len(files) == 0:
+            # no video files.
+            return None
+        name = browsertime_json.split(os.path.sep)[-2]
+        result = []
+        for file in files:
+            video_url = url + "browsertime-results/" + name + "/" + file
+            result.append({"browsertime_json_url": json_url,
+                           "video_url": video_url})
+        return result
+
     def summarize_and_output(self, test_config, tests, test_names):
         """
         Retrieve, process, and output the browsertime test results. Currently supports page-load
@@ -366,6 +386,11 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
         # summarize the browsertime result data, write to file and output PERFHERDER_DATA
         LOG.info("retrieving browsertime test results")
 
+        # video_jobs is populated with video files produced by browsertime, we
+        # will send to the visual metrics task
+        video_jobs = []
+        run_local = test_config.get('run_local', False)
+
         for test in tests:
             bt_res_json = os.path.join(self.result_dir_for_test(test), 'browsertime.json')
             if os.path.exists(bt_res_json):
@@ -382,6 +407,11 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
                 # XXX this should be replaced by a traceback call
                 LOG.error("Exception: %s %s" % (type(e).__name__, str(e)))
                 raise
+
+            if not run_local:
+                video_files = self._extract_vmetrics_jobs(test, bt_res_json, raw_btresults)
+                if video_files:
+                    video_jobs.extend(video_files)
 
             for new_result in self.parse_browsertime_json(raw_btresults):
                 # add additional info not from the browsertime json
@@ -415,5 +445,12 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
         validate_success = True
         if not self.gecko_profile:
             validate_success = self._validate_treeherder_data(output, out_perfdata)
+
+        # Dumping the video list for the visual metrics task.
+        if len(video_jobs) > 0:
+            jobs_file = os.path.join(test_config["artifact_dir"], "jobs.json")
+            LOG.info("Writing %d video jobs into %s" % (len(video_jobs), jobs_file))
+            with open(jobs_file, "w") as f:
+                f.write(json.dumps({"jobs": video_jobs}))
 
         return success and validate_success
