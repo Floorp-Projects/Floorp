@@ -128,6 +128,10 @@ body {
   grid-auto-flow: column;
 }
 
+.webconsole-app:not(.jsterm-editor) .jsterm-input-container {
+  direction: ltr;
+}
+
 .webconsole-app .webconsole-output:empty ~ .jsterm-input-container {
   border-top: none;
 }
@@ -136,6 +140,10 @@ body {
   grid-column: -1 / -2;
   height: 24px;
   margin: 0;
+}
+
+:root:dir(rtl) .webconsole-input-openEditorButton {
+  transform: scaleX(-1);
 }
 
 .webconsole-input-openEditorButton::before {
@@ -279,10 +287,6 @@ body {
   -moz-context-properties: fill;
   fill: currentColor;
   margin-inline-end: 2px;
-}
-
-[dir="rtl"] .jsterm-editor .webconsole-editor-toolbar .webconsole-editor-toolbar-executeButton::before {
-  transform: rotate(180deg);
 }
 
 .jsterm-editor .webconsole-editor-toolbar .webconsole-editor-toolbar-history-prevExpressionButton {
