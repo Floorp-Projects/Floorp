@@ -536,6 +536,8 @@ class AudioSessionConduit : public MediaSessionConduit {
    *                             Hertz (16000, 32000,..)
    * @param capture_delay [in]: Estimated Time between reading of the samples
    *                            to rendering/playback
+   * @param numChannels [out]: Number of channels in the audio frame,
+   *                           guaranteed to be non-zero.
    * @param lengthSamples [out]: Will contain length of the audio frame in
    *                             samples at return.
    *                             Ex: A value of 160 implies 160 samples each of
@@ -549,7 +551,8 @@ class AudioSessionConduit : public MediaSessionConduit {
   virtual MediaConduitErrorCode GetAudioFrame(int16_t speechData[],
                                               int32_t samplingFreqHz,
                                               int32_t capture_delay,
-                                              int& lengthSamples) = 0;
+                                              size_t& numChannels,
+                                              size_t& lengthSamples) = 0;
 
   /**
    * Checks if given sampling frequency is supported

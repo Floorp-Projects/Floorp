@@ -197,7 +197,8 @@ void AudioSendAndReceive::GenerateAndReadSamples() {
   auto audioInput = mozilla::MakeUnique<int16_t[]>(PLAYOUT_SAMPLE_LENGTH);
   auto audioOutput = mozilla::MakeUnique<int16_t[]>(PLAYOUT_SAMPLE_LENGTH);
   short* inbuf;
-  int sampleLengthDecoded = 0;
+  size_t numChannels = 0;
+  size_t sampleLengthDecoded = 0;
   unsigned int SAMPLES = (PLAYOUT_SAMPLE_FREQUENCY / 100);  // 10 milliseconds
   int CHANNELS = 1;                                         // mono audio
   int sampleLengthInBytes = sizeof(int16_t) * PLAYOUT_SAMPLE_LENGTH;
@@ -246,7 +247,7 @@ void AudioSendAndReceive::GenerateAndReadSamples() {
 
     PR_Sleep(PR_MillisecondsToInterval(10));
     mOtherSession->GetAudioFrame(audioOutput.get(), PLAYOUT_SAMPLE_FREQUENCY,
-                                 10, sampleLengthDecoded);
+                                 10, numChannels, sampleLengthDecoded);
     if (sampleLengthDecoded == 0) {
       cerr << " Zero length Sample " << endl;
     }
