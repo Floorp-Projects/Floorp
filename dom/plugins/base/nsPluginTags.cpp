@@ -278,10 +278,6 @@ void nsPluginTag::InitMime(const char* const* aMimeTypes,
     // to properly handle a mixed-case type.
     ToLowerCase(mimeType);
 
-    if (!nsPluginHost::IsTypeWhitelisted(mimeType.get())) {
-      continue;
-    }
-
     // Look for certain special plugins.
     switch (nsPluginHost::GetSpecialType(mimeType)) {
       case nsPluginHost::eSpecialType_Flash:
