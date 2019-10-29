@@ -51,13 +51,16 @@ class nsNetworkLinkService : public nsINetworkLinkService,
   void SendEvent(bool aNetworkChanged);
   static void ReachabilityChanged(SCNetworkReachabilityRef target,
                                   SCNetworkConnectionFlags flags, void* info);
-  static void IPConfigChanged(SCDynamicStoreRef store, CFArrayRef changedKeys,
-                              void* info);
+  static void NetworkConfigChanged(SCDynamicStoreRef store,
+                                   CFArrayRef changedKeys, void* info);
   void calculateNetworkIdWithDelay(uint32_t aDelay);
   void calculateNetworkIdInternal(void);
+  void DNSConfigChanged();
+  void GetDnsSuffixListInternal();
 
   mozilla::Mutex mMutex;
   nsCString mNetworkId;
+  nsTArray<nsCString> mDNSSuffixList;
 
   // Time stamp of last NS_NETWORK_LINK_DATA_CHANGED event
   mozilla::TimeStamp mNetworkChangeTime;
