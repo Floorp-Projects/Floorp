@@ -15,7 +15,7 @@ namespace mozilla {
 namespace dom {
 
 class MediaHardwareKeysEventSourceMac final
-    : public MediaHardwareKeysEventSource {
+    : public MediaControlKeysEventSource {
  public:
   MediaHardwareKeysEventSourceMac();
   ~MediaHardwareKeysEventSourceMac();
