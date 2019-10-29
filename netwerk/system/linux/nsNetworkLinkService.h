@@ -25,7 +25,6 @@ class nsNetworkLinkService : public nsINetworkLinkService,
   nsresult Init();
 
   void OnNetworkChanged() override;
-  void OnNetworkIDChanged() override;
   void OnLinkUp() override;
   void OnLinkDown() override;
   void OnLinkStatusKnown() override;

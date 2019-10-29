@@ -133,13 +133,6 @@ void nsNetworkLinkService::OnNetworkChanged() {
   }
 }
 
-void nsNetworkLinkService::OnNetworkIDChanged() {
-  RefPtr<nsNetworkLinkService> self = this;
-  NS_DispatchToMainThread(NS_NewRunnableFunction(
-      "nsNetworkLinkService::OnNetworkIDChanged",
-      [self]() { self->SendEvent(NS_NETWORK_LINK_DATA_NETWORKID_CHANGED); }));
-}
-
 void nsNetworkLinkService::OnLinkUp() {
   RefPtr<nsNetworkLinkService> self = this;
   NS_DispatchToMainThread(NS_NewRunnableFunction(
