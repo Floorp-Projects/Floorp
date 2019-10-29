@@ -49,7 +49,7 @@ form :-moz-any(label, div) .label-text {
   position: absolute;
   opacity: .5;
   pointer-events: none;
-  left: 10px;
+  inset-inline-start: 10px;
   top: .2em;
   transition: top .2s var(--animation-easing-function),
               font-size .2s var(--animation-easing-function);
