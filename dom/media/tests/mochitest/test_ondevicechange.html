@@ -43,6 +43,9 @@ runTest(async () => {
     ["media.ondevicechange.fakeDeviceChangeEvent.enabled", true],
     // Enforce gUM permission prompts initially
     ["media.navigator.permission.disabled", false],
+    // Make fake devices count as real, permission-wise, or devicechange events
+    // won't be exposed
+    ["media.navigator.permission.fake", true],
   );
 
   info("assure devicechange event is NOT fired when gUM is NOT in use and permanent permission is NOT granted");
@@ -56,7 +59,7 @@ runTest(async () => {
   ok(true, "devicechange event is fired when gUM is NOT in use and permanent permission is granted");
 
   info("assure devicechange event is fired when gUM is in use");
-  const st = await getUserMedia({video: true, fake: true});
+  const st = await getUserMedia({video: true});
   const videoTracks = st.getVideoTracks();
   await pushPrefs(['media.navigator.permission.disabled', false]);
   await OnDeviceChangeEventReceived();
