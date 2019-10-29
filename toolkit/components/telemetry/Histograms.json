@@ -5344,6 +5344,34 @@
     "n_buckets": 50,
     "description": "Time in ms between two NS_NETWORK_LINK_DATA_CHANGED events sent"
   },
+  "NETWORK_TIME_BETWEEN_NETWORK_CHANGE_EVENTS_1MIN": {
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
+    "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
+    "bug_numbers": [1588056],
+    "expires_in_version": "72",
+    "kind": "exponential",
+    "low": 60000,
+    "high": 7200000,
+    "n_buckets": 50,
+    "releaseChannelCollection": "opt-out",
+    "operating_systems": ["mac"],
+    "description": "Time in ms between two NS_NETWORK_LINK_DATA_CHANGED events sent if a 1 minute coelescing is in place."
+  },
+  "NETWORK_TIME_BETWEEN_NETWORK_CHANGE_EVENTS_5MIN": {
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
+    "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
+    "bug_numbers": [1588056],
+    "expires_in_version": "72",
+    "kind": "exponential",
+    "low": 300000,
+    "high": 7200000,
+    "n_buckets": 50,
+    "releaseChannelCollection": "opt-out",
+    "operating_systems": ["mac"],
+    "description": "Time in ms between two NS_NETWORK_LINK_DATA_CHANGED events sent if a 5 minute coelescing is in place."
+  },
   "IDLE_NOTIFY_IDLE_MS": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "geckoview"],
