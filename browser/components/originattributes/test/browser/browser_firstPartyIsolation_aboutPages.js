@@ -132,12 +132,14 @@ add_task(async function test_remote_window_open_data_uri() {
 add_task(async function test_remote_window_open_data_uri2() {
   let win = await BrowserTestUtils.openNewBrowserWindow({ remote: true });
   let browser = win.gBrowser.selectedBrowser;
+  const TEST_PAGE =
+    "http://mochi.test:8888/browser/browser/components/originattributes/test/browser/test2.html";
 
   // The iframe test2.html will fetch test2.js, which will have cookies.
   const DATA_URI = `data:text/html,
-                    <iframe id="iframe1" src="http://mochi.test:8888/browser/browser/components/originattributes/test/browser/test2.html"></iframe>`;
+                    <iframe id="iframe1" src="${TEST_PAGE}"></iframe>`;
   BrowserTestUtils.loadURI(browser, DATA_URI);
-  await BrowserTestUtils.browserLoaded(browser, true);
+  await BrowserTestUtils.browserLoaded(browser, true, TEST_PAGE);
 
   await SpecialPowers.spawn(browser, [], async function() {
     Assert.ok(true, "origin " + content.document.nodePrincipal.origin);
