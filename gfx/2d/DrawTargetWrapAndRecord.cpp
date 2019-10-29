@@ -368,7 +368,7 @@ void DrawTargetWrapAndRecord::FillGlyphs(ScaledFont* aFont,
   UserDataKey* userDataKey = reinterpret_cast<UserDataKey*>(mRecorder.get());
   if (!aFont->GetUserData(userDataKey)) {
     UnscaledFont* unscaledFont = aFont->GetUnscaledFont();
-    if (!mRecorder->HasStoredObject(unscaledFont)) {
+    if (!mRecorder->HasStoredUnscaledFont(unscaledFont)) {
       RecordedFontData fontData(unscaledFont);
       RecordedFontDetails fontDetails;
       if (fontData.GetFontDetails(fontDetails)) {
@@ -391,7 +391,7 @@ void DrawTargetWrapAndRecord::FillGlyphs(ScaledFont* aFont,
                           "serialise UnscaledFont";
         }
       }
-      mRecorder->AddStoredObject(unscaledFont);
+      mRecorder->AddStoredUnscaledFont(unscaledFont);
     }
 
     mRecorder->RecordEvent(RecordedScaledFontCreation(aFont, unscaledFont));
