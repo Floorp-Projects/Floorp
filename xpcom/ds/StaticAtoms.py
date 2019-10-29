@@ -658,7 +658,6 @@ STATIC_ATOMS = [
     Atom("mousethrough", "mousethrough"),
     Atom("mozAccessiblecaret", "moz-accessiblecaret"),
     Atom("mozCustomContentContainer", "moz-custom-content-container"),
-    Atom("mozCollapsed", "moz-collapsed"),
     Atom("mozGrabber", "mozGrabber"),
     Atom("mozNativeAnonymous", "-moz-native-anonymous"),
     Atom("mozprivatebrowsing", "mozprivatebrowsing"),
