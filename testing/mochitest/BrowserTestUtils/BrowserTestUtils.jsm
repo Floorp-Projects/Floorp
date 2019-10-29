@@ -87,8 +87,15 @@ const kAboutPageRegistrationContentScript =
  */
 function registerActor() {
   let actorOptions = {
+    parent: {
+      moduleURI: "resource://testing-common/BrowserTestUtilsParent.jsm",
+    },
     child: {
       moduleURI: "resource://testing-common/BrowserTestUtilsChild.jsm",
+      events: {
+        DOMContentLoaded: { capture: true },
+        load: { capture: true },
+      },
     },
     allFrames: true,
     includeChrome: true,
@@ -415,23 +422,40 @@ var BrowserTestUtils = {
       return wantLoad == url;
     }
 
+    // Error pages are loaded slightly differently, so listen for the
+    // DOMContentLoaded event for those instead.
+    let loadEvent = maybeErrorPage ? "DOMContentLoaded" : "load";
+    let eventName = `BrowserTestUtils:ContentEvent:${loadEvent}`;
+
     return new Promise(resolve => {
-      let mm = browser.ownerGlobal.messageManager;
-      let eventName = maybeErrorPage
-        ? "browser-test-utils:DOMContentLoadedEvent"
-        : "browser-test-utils:loadEvent";
-      mm.addMessageListener(eventName, function onLoad(msg) {
-        // See testing/mochitest/BrowserTestUtils/content/content-utils.js for
-        // the difference between visibleURL and internalURL.
-        if (
-          msg.target == browser &&
-          (!msg.data.subframe || includeSubFrames) &&
-          isWanted(maybeErrorPage ? msg.data.visibleURL : msg.data.internalURL)
-        ) {
-          mm.removeMessageListener(eventName, onLoad);
-          resolve(msg.data.internalURL);
-        }
-      });
+      browser.addEventListener(
+        eventName,
+        function listener(event) {
+          let { browsingContext, internalURL, visibleURL } = event.detail;
+
+          // Sometimes we arrive here without an internalURL. If that's the
+          // case, just keep waiting until we get one.
+          if (!internalURL) {
+            return;
+          }
+
+          // Ignore subframes if we only care about the top-level load.
+          let subframe = browsingContext !== browsingContext.top;
+          if (subframe && !includeSubFrames) {
+            return;
+          }
+
+          // See testing/mochitest/BrowserTestUtils/content/BrowserTestUtilsChild.jsm
+          // for the difference between visibleURL and internalURL.
+          if (!isWanted(maybeErrorPage ? visibleURL : internalURL)) {
+            return;
+          }
+
+          browser.removeEventListener(eventName, listener, true);
+          resolve(internalURL);
+        },
+        true
+      );
     });
   },
 
