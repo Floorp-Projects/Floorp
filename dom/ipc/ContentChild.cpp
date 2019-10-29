@@ -27,6 +27,7 @@
 #include "mozilla/RemoteDecoderManagerChild.h"
 #include "mozilla/Unused.h"
 #include "mozilla/StaticPrefs_dom.h"
+#include "mozilla/StaticPrefs_media.h"
 #include "mozilla/TelemetryIPC.h"
 #include "mozilla/RemoteDecoderManagerChild.h"
 #include "mozilla/devtools/HeapSnapshotTempFileHelperChild.h"
@@ -1701,7 +1702,7 @@ static bool StartMacOSContentSandbox() {
   info.shouldLog = Preferences::GetBool("security.sandbox.logging.enabled") ||
                    PR_GetEnv("MOZ_SANDBOX_LOGGING");
   info.appPath.assign(appPath.get());
-  info.hasAudio = !Preferences::GetBool("media.cubeb.sandbox");
+  info.hasAudio = !StaticPrefs::media_cubeb_sandbox();
   info.hasWindowServer = !Preferences::GetBool(
       "security.sandbox.content.mac.disconnect-windowserver");
 
@@ -1781,7 +1782,7 @@ mozilla::ipc::IPCResult ContentChild::RecvSetProcessSandbox(
     sandboxEnabled = false;
   } else {
     // Pre-start audio before sandboxing; see bug 1443612.
-    if (Preferences::GetBool("media.cubeb.sandbox")) {
+    if (StaticPrefs::media_cubeb_sandbox()) {
       if (atp_set_real_time_limit(0, 48000)) {
         NS_WARNING("could not set real-time limit at process startup");
       }
