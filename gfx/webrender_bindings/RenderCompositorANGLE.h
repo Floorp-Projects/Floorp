@@ -39,7 +39,7 @@ class RenderCompositorANGLE : public RenderCompositor {
   virtual ~RenderCompositorANGLE();
   bool Initialize();
 
-  bool BeginFrame(layers::NativeLayer* aNativeLayer) override;
+  bool BeginFrame() override;
   void EndFrame() override;
   bool WaitForGPU() override;
   void Pause() override;
