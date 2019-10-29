@@ -77,7 +77,6 @@ linux64-clang-9-cross:
             - 'build/build-clang/clang-linux64-cross.json'
         resources:
             - 'build/build-clang/clang-linux64-cross.json'
-        toolchain-alias: linux64-clang
         toolchain-artifact: public/build/clang.tar.xz
     fetches:
         fetch:
