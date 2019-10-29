@@ -16,38 +16,38 @@ extern mozilla::LazyLogModule gMediaControlLog;
 #undef LOG
 #define LOG(msg, ...)                        \
   MOZ_LOG(gMediaControlLog, LogLevel::Debug, \
-          ("MediaHardwareKeysManager=%p, " msg, this, ##__VA_ARGS__))
+          ("MediaControlKeysManager=%p, " msg, this, ##__VA_ARGS__))
 
 namespace mozilla {
 namespace dom {
 
-MediaHardwareKeysManager::MediaHardwareKeysManager() {
-  StartMonitoringHardwareKeys();
+MediaControlKeysManager::MediaControlKeysManager() {
+  StartMonitoringControlKeys();
 }
 
-MediaHardwareKeysManager::~MediaHardwareKeysManager() {
-  StopMonitoringHardwareKeys();
+MediaControlKeysManager::~MediaControlKeysManager() {
+  StopMonitoringControlKeys();
 }
 
-void MediaHardwareKeysManager::StartMonitoringHardwareKeys() {
-  LOG("StartMonitoringHardwareKeys");
+void MediaControlKeysManager::StartMonitoringControlKeys() {
+  LOG("StartMonitoringControlKeys");
   if (!StaticPrefs::media_hardwaremediakeys_enabled()) {
     return;
   }
   CreateEventSource();
   if (mEventSource) {
-    mEventSource->AddListener(new MediaHardwareKeysEventListener());
+    mEventSource->AddListener(new MediaControlKeysEventListener());
   }
 }
 
-void MediaHardwareKeysManager::CreateEventSource() {
+void MediaControlKeysManager::CreateEventSource() {
 #ifdef MOZ_APPLEMEDIA
   mEventSource = new MediaHardwareKeysEventSourceMac();
 #endif
 }
 
-void MediaHardwareKeysManager::StopMonitoringHardwareKeys() {
-  LOG("StopMonitoringHardwareKeys");
+void MediaControlKeysManager::StopMonitoringControlKeys() {
+  LOG("StopMonitoringControlKeys");
   if (mEventSource) {
     mEventSource->Close();
     mEventSource = nullptr;

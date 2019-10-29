@@ -14,41 +14,40 @@ namespace dom {
 enum class MediaControlKeysEvent { ePlayPause, ePrev, eNext, eNone };
 
 /**
- * MediaHardwareKeysEventListener is used to monitor MediaControlKeysEvent, we
- * can add it onto the MediaHardwareKeysEventSource, and then everytime when
+ * MediaControlKeysEventListener is used to monitor MediaControlKeysEvent, we
+ * can add it onto the MediaControlKeysEventSource, and then everytime when
  * the media key events occur, `OnKeyPressed` will be called so that we can do
  * related handling.
  */
-class MediaHardwareKeysEventListener {
+class MediaControlKeysEventListener {
  public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaHardwareKeysEventListener);
-  MediaHardwareKeysEventListener() = default;
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaControlKeysEventListener);
+  MediaControlKeysEventListener() = default;
 
   virtual void OnKeyPressed(MediaControlKeysEvent aKeyEvent);
 
  protected:
-  virtual ~MediaHardwareKeysEventListener() = default;
+  virtual ~MediaControlKeysEventListener() = default;
 };
 
 /**
- * MediaHardwareKeysEventSource is a base class which is used to implement
- * intercepting media hardware keys event per plaftform. When receiving media
- * key events, it would notify all listeners which have been added onto the
- * source.
+ * MediaControlKeysEventSource is a base class which is used to implement
+ * transporting media control keys event to all its listeners when media keys
+ * event happens.
  */
-class MediaHardwareKeysEventSource {
+class MediaControlKeysEventSource {
  public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaHardwareKeysEventSource);
-  MediaHardwareKeysEventSource() = default;
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaControlKeysEventSource);
+  MediaControlKeysEventSource() = default;
 
-  virtual void AddListener(MediaHardwareKeysEventListener* aListener);
-  virtual void RemoveListener(MediaHardwareKeysEventListener* aListener);
+  virtual void AddListener(MediaControlKeysEventListener* aListener);
+  virtual void RemoveListener(MediaControlKeysEventListener* aListener);
   size_t GetListenersNum() const;
   void Close();
 
  protected:
-  virtual ~MediaHardwareKeysEventSource() = default;
-  nsTArray<RefPtr<MediaHardwareKeysEventListener>> mListeners;
+  virtual ~MediaControlKeysEventSource() = default;
+  nsTArray<RefPtr<MediaControlKeysEventListener>> mListeners;
 };
 
 }  // namespace dom

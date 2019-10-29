@@ -15,7 +15,7 @@ extern mozilla::LazyLogModule gMediaControlLog;
 #undef LOG
 #define LOG(msg, ...)                        \
   MOZ_LOG(gMediaControlLog, LogLevel::Debug, \
-          ("MediaHardwareKeysEventListener=%p, " msg, this, ##__VA_ARGS__))
+          ("MediaControlKeysEventListener=%p, " msg, this, ##__VA_ARGS__))
 
 namespace mozilla {
 namespace dom {
@@ -38,11 +38,11 @@ static const char* ToMediaControlKeysEventStr(MediaControlKeysEvent aKeyEvent) {
 #define LOG_KEY(msg, key, ...)                                    \
   if (MOZ_LOG_TEST(gMediaControlLog, mozilla::LogLevel::Debug)) { \
     MOZ_LOG(gMediaControlLog, LogLevel::Debug,                    \
-            ("MediaHardwareKeysEventListener=%p, " msg, this,     \
+            ("MediaControlKeysEventListener=%p, " msg, this,      \
              ToMediaControlKeysEventStr(key), ##__VA_ARGS__));    \
   }
 
-void MediaHardwareKeysEventListener::OnKeyPressed(
+void MediaControlKeysEventListener::OnKeyPressed(
     MediaControlKeysEvent aKeyEvent) {
   LOG_KEY("OnKeyPressed '%s'", aKeyEvent);
   switch (aKeyEvent) {
@@ -71,25 +71,25 @@ void MediaHardwareKeysEventListener::OnKeyPressed(
   }
 }
 
-void MediaHardwareKeysEventSource::AddListener(
-    MediaHardwareKeysEventListener* aListener) {
+void MediaControlKeysEventSource::AddListener(
+    MediaControlKeysEventListener* aListener) {
   MOZ_ASSERT(aListener);
   LOG("Add listener %p", aListener);
   mListeners.AppendElement(aListener);
 }
 
-void MediaHardwareKeysEventSource::RemoveListener(
-    MediaHardwareKeysEventListener* aListener) {
+void MediaControlKeysEventSource::RemoveListener(
+    MediaControlKeysEventListener* aListener) {
   MOZ_ASSERT(aListener);
   LOG("Remove listener %p", aListener);
   mListeners.RemoveElement(aListener);
 }
 
-size_t MediaHardwareKeysEventSource::GetListenersNum() const {
+size_t MediaControlKeysEventSource::GetListenersNum() const {
   return mListeners.Length();
 }
 
-void MediaHardwareKeysEventSource::Close() { mListeners.Clear(); }
+void MediaControlKeysEventSource::Close() { mListeners.Clear(); }
 
 }  // namespace dom
 }  // namespace mozilla

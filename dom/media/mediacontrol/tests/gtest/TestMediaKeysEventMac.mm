@@ -15,7 +15,7 @@ using namespace mozilla::dom;
 
 static const int kSystemDefinedEventMediaKeysSubtype = 8;
 
-class MediaHardwareKeysEventListenerTest : public MediaHardwareKeysEventListener {
+class MediaHardwareKeysEventListenerTest : public MediaControlKeysEventListener {
  public:
   void OnKeyPressed(MediaControlKeysEvent aKeyEvent) override { mReceivedEvent = aKeyEvent; }
   MediaControlKeysEvent GetResult() const { return mReceivedEvent; }
