@@ -39,6 +39,8 @@
 #include "prenv.h"
 #include "sandbox/linux/system_headers/linux_syscalls.h"
 
+#include "mozilla/StaticPrefs_media.h"
+
 #ifdef MOZ_X11
 #  ifndef MOZ_WIDGET_GTK
 #    error "Unknown toolkit"
@@ -162,7 +164,7 @@ static bool ContentNeedsSysVIPC() {
   // The ALSA dmix plugin uses SysV semaphores and shared memory to
   // coordinate software mixing.
 #ifdef MOZ_ALSA
-  if (!Preferences::GetBool("media.cubeb.sandbox")) {
+  if (!StaticPrefs::media_cubeb_sandbox()) {
     return true;
   }
 #endif

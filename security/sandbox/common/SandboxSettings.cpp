@@ -8,6 +8,7 @@
 
 #include "mozilla/Components.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs_media.h"
 #include "mozilla/StaticPrefs_security.h"
 
 #include "prenv.h"
@@ -30,7 +31,7 @@ int GetEffectiveContentSandboxLevel() {
 #endif
 #ifdef XP_LINUX
   // Level 4 and up will break direct access to audio.
-  if (level > 3 && !Preferences::GetBool("media.cubeb.sandbox")) {
+  if (level > 3 && !StaticPrefs::media_cubeb_sandbox()) {
     level = 3;
   }
 #endif

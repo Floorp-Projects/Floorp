@@ -5452,6 +5452,16 @@
   value: 32768   # Measured in KiB
   mirror: always
 
+# Whether cubeb is sandboxed
+- name: media.cubeb.sandbox
+  type: bool
+  mirror: always
+#if defined(XP_LINUX) && !defined(MOZ_WIDGET_ANDROID)
+  value: true
+#else
+  value: false
+#endif
+
 # If a resource is known to be smaller than this size (in kilobytes), a
 # memory-backed MediaCache may be used; otherwise the (single shared global)
 # file-backed MediaCache is used.
