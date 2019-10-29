@@ -90,6 +90,7 @@
 #include "mozilla/ReentrancyGuard.h"
 #include "mozilla/TypeTraits.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/WrappingOperations.h"
 
 namespace mozilla {
 
@@ -1700,7 +1701,7 @@ class HashTable : private AllocPolicy {
 
   static HashNumber applyDoubleHash(HashNumber aHash1,
                                     const DoubleHash& aDoubleHash) {
-    return (aHash1 - aDoubleHash.mHash2) & aDoubleHash.mSizeMask;
+    return WrappingSubtract(aHash1, aDoubleHash.mHash2) & aDoubleHash.mSizeMask;
   }
 
   static MOZ_ALWAYS_INLINE bool match(T& aEntry, const Lookup& aLookup) {
