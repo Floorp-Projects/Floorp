@@ -511,7 +511,7 @@ nsFind::Find(const nsAString& aPatText, nsRange* aSearchRange,
 
   nsAutoString patAutoStr(aPatText);
   if (!mCaseSensitive) {
-    ToLowerCase(patAutoStr);
+    ToFoldedCase(patAutoStr);
   }
 
   // Ignore soft hyphens in the pattern
@@ -691,8 +691,8 @@ nsFind::Find(const nsAString& aPatText, nsRange* aSearchRange,
     }
     if (!inWhitespace && IsSpace(patc)) {
       inWhitespace = true;
-    } else if (!inWhitespace && !mCaseSensitive && IsUpperCase(c)) {
-      c = ToLowerCase(c);
+    } else if (!inWhitespace && !mCaseSensitive) {
+      c = ToFoldedCase(c);
     }
 
     if (c == CH_SHY) {

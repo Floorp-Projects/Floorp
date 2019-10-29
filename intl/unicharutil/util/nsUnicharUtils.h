@@ -52,6 +52,10 @@ inline bool IsLowerCase(uint32_t c) { return ToUpperCase(c) != c; }
 
 #ifdef MOZILLA_INTERNAL_API
 
+uint32_t ToFoldedCase(uint32_t aChar);
+void ToFoldedCase(nsAString& aString);
+void ToFoldedCase(const char16_t* aIn, char16_t* aOut, uint32_t aLen);
+
 class nsCaseInsensitiveStringComparator : public nsStringComparator {
  public:
   nsCaseInsensitiveStringComparator() = default;

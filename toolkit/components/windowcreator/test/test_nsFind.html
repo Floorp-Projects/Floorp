@@ -2,6 +2,7 @@
 <html>
 <!--
 https://bugzilla.mozilla.org/show_bug.cgi?id=450048
+https://bugzilla.mozilla.org/show_bug.cgi?id=969980
 https://bugzilla.mozilla.org/show_bug.cgi?id=1589786
 -->
 <head>
@@ -48,6 +49,14 @@ async function runTests() {
   rf.caseSensitive = false;
 
   searchValue = "TexT";
+  retRange = rf.Find(searchValue, searchRange, startPt, endPt);
+  ok(retRange, "\"" + searchValue + "\" not found (not caseSensitive)");
+
+  searchValue = "λόγος";
+  retRange = rf.Find(searchValue, searchRange, startPt, endPt);
+  ok(retRange, "\"" + searchValue + "\" not found (not caseSensitive)");
+
+  searchValue = "degrees k";
   retRange = rf.Find(searchValue, searchRange, startPt, endPt);
   ok(retRange, "\"" + searchValue + "\" not found (not caseSensitive)");
 
@@ -257,6 +266,8 @@ async function runTests() {
 <p id="quotes">"straight" and &ldquo;curly&rdquo; and &lsquo;didn't&rsquo; and 'doesn&rsquo;t'</p>
 <p id="nullcharsnative">native null&#0;</p>
 <p id="nullcharsinjected"></p>
+<p id="greek">ΛΌΓΟΣ</p>
+<p id="kelvin">degrees &#x212A;</p>
 <p id="deseret">𐐐𐐯𐑊𐐬 𐐶𐐯𐑉𐑊𐐼!</p>
 <div id="content" style="display: none">
 
