@@ -21,7 +21,7 @@ TEST(DOM_Base_ContentUtils, IsURIInList)
   nsCOMPtr<nsIURI> uri, subURI;
   nsresult rv =
       NS_NewURI(getter_AddRefs(uri),
-                NS_LITERAL_CSTRING("https://example.com/path/favicon.ico"));
+                NS_LITERAL_CSTRING("https://example.com/path/favicon.ico#"));
   ASSERT_TRUE(rv == NS_OK);
 
   rv = NS_NewURI(getter_AddRefs(subURI),
@@ -46,6 +46,7 @@ TEST(DOM_Base_ContentUtils, IsURIInList)
       {NS_LITERAL_CSTRING("*.example.com/path,example.com/path"), true, false},
       {NS_LITERAL_CSTRING("example.com/path,*.example.com/path"), true, false},
       {NS_LITERAL_CSTRING("*.example.com/favicon.ico"), false, true},
+      {NS_LITERAL_CSTRING("example.com/path/favicon.ico"), true, false},
       {NS_LITERAL_CSTRING("*.example.com"), false, true},
       {NS_LITERAL_CSTRING("example.com"), true, false},
       {NS_LITERAL_CSTRING("foo.com"), false, false},

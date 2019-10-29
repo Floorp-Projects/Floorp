@@ -10214,7 +10214,8 @@ bool nsContentUtils::IsURIInList(nsIURI* aURI, const nsCString& aBlackList) {
               (filePath.Length() == pathInBlackList.Length() ||
                pathInBlackList.EqualsLiteral("/") ||
                filePath[pathInBlackList.Length()] == '/' ||
-               filePath[pathInBlackList.Length()] == '?')) {
+               filePath[pathInBlackList.Length()] == '?' ||
+               filePath[pathInBlackList.Length()] == '#')) {
             return true;
           }
         }
