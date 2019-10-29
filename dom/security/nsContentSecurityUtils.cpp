@@ -411,10 +411,18 @@ bool nsContentSecurityUtils::IsEvalAllowed(JSContext* cx,
       fileName.get(), NS_ConvertUTF16toUTF8(aScript).get());
 #endif
 
+
+#if defined(RELEASE_OR_BETA) && !defined(EARLY_BETA_OR_EARLIER)
+  // Until we understand the events coming from release, we don't want to enforce
+  // eval restrictions on release. However there's no RELEASE define, only RELEASE_OR_BETA
+  // so we enforce eval restrictions on Nightly and Early Beta; but not Release or Late Beta.
+  return false;
+#else
   // Do not enforce eval usage blocking on Worker threads; because this is
-  // new behavior and we want to be conservative so we don't accidently break
-  // Nightly. Bug 1584602 will enforce things.
+  // new behavior and we want to be conservative. Bug 1584602 will enforce
+  // things.
   return !NS_IsMainThread();
+#endif
 }
 
 /* static */
