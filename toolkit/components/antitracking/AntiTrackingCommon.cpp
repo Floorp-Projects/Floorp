@@ -799,20 +799,15 @@ bool CheckAntiTrackingPermission(nsIPrincipal* aPrincipal,
            "process"));
       return false;
     }
-    nsCOMPtr<nsISimpleEnumerator> se;
-    nsresult rv =
-        permManager->GetAllForPrincipal(aPrincipal, getter_AddRefs(se));
+    nsTArray<RefPtr<nsIPermission>> permissions;
+    nsresult rv = permManager->GetAllForPrincipal(aPrincipal, permissions);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       LOG(("Failed to get the list of permissions"));
       return false;
     }
 
-    bool more = false;
     bool found = false;
-    while (NS_SUCCEEDED(se->HasMoreElements(&more)) && more) {
-      nsCOMPtr<nsISupports> supports;
-      Unused << se->GetNext(getter_AddRefs(supports));
-      nsCOMPtr<nsIPermission> permission = do_QueryInterface(supports);
+    for (const auto& permission : permissions) {
       if (!permission) {
         LOG(("Couldn't get the permission for unknown reasons"));
         continue;

@@ -6,15 +6,15 @@ function check_enumerator(principal, permissions) {
     Ci.nsIPermissionManager
   );
 
-  let enumerator = pm.getAllForPrincipal(principal);
+  let perms = pm.getAllForPrincipal(principal);
   for ([type, capability] of permissions) {
-    let perm = enumerator.getNext();
+    let perm = perms.shift();
     Assert.ok(perm != null);
     Assert.equal(perm.type, type);
     Assert.equal(perm.capability, capability);
     Assert.equal(perm.expireType, pm.EXPIRE_NEVER);
   }
-  Assert.ok(!enumerator.hasMoreElements());
+  Assert.ok(!perms.length);
 }
 
 function run_test() {
