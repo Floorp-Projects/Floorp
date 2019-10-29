@@ -64,17 +64,14 @@ mozilla::ipc::IPCResult CompositorWidgetChild::RecvUnobserveVsync() {
 }
 
 mozilla::ipc::IPCResult CompositorWidgetChild::RecvUpdateCompositorWnd(
-    const WindowsHandle& aCompositorWnd, const WindowsHandle& aParentWnd,
-    UpdateCompositorWndResolver&& aResolve) {
+    const WindowsHandle& aCompositorWnd, const WindowsHandle& aParentWnd) {
   MOZ_ASSERT(mParentWnd);
 
   HWND parentWnd = reinterpret_cast<HWND>(aParentWnd);
   if (mParentWnd == parentWnd) {
     mCompositorWnd = reinterpret_cast<HWND>(aCompositorWnd);
     ::SetParent(mCompositorWnd, mParentWnd);
-    aResolve(true);
   } else {
-    aResolve(false);
     gfxCriticalNote << "Parent winow does not match";
     MOZ_ASSERT_UNREACHABLE("unexpected to happen");
   }
