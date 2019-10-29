@@ -76,6 +76,7 @@
             <menuitem type="checkbox" id="menu_crossingEventDumping" label="&ldb.crossingEventDumping.label;" accesskey="&ldb.crossingEventDumping.accesskey;" oncommand="toggle(this);" />
             <menuseparator />
             <menuitem type="checkbox" id="menu_reflowCounts" label="&ldb.reflowCounts.label;" accesskey="&ldb.reflowCounts.accesskey;" oncommand="toggle(this);" />
+            <menuitem type="checkbox" id="menu_pagedMode" label="&ldb.pagedMode.label;" accesskey="&ldb.pagedMode.accesskey;" oncommand="toggle(this);" />
           </menupopup>
         </menu>
         <menu label="&ldb.DumpMenu.label;"

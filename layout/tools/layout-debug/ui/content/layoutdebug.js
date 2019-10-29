@@ -50,6 +50,7 @@ class Debugger {
     this._flags = new Map();
     this._visualDebugging = false;
     this._visualEventDebugging = false;
+    this._pagedMode = false;
     this._attached = false;
 
     for (let [name, pref] of Object.entries(FEATURES)) {
@@ -110,6 +111,20 @@ class Debugger {
     v = !!v;
     this._visualEventDebugging = v;
     this._sendMessage("setVisualEventDebugging", v);
+  }
+
+  get pagedMode() {
+    return this._pagedMode;
+  }
+
+  set pagedMode(v) {
+    v = !!v;
+    this._pagedMode = v;
+    this.setPagedMode(this._pagedMode);
+  }
+
+  setPagedMode(v) {
+    this._sendMessage("setPagedMode", v);
   }
 
   _sendMessage(name, arg) {
@@ -200,6 +215,11 @@ nsLDBBrowserContentListener.prototype = {
       this.setButtonEnabled(this.mStopButton, false);
       this.mStatusText.value = gURLBar.value + " loaded";
       this.mLoading = false;
+
+      if (gDebugger.pagedMode) {
+        // Change to paged mode after the page is loaded.
+        gDebugger.setPagedMode(true);
+      }
 
       if (gBrowser.currentURI.spec != "about:blank") {
         // We check for about:blank just to avoid one or two STATE_STOP
