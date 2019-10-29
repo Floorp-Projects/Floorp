@@ -40,8 +40,7 @@ module.exports = function(context) {
       } else if (
         node.callee.type == "MemberExpression" &&
         node.callee.property.type == "Identifier" &&
-        (node.callee.property.name == "lazyRequireGetter" ||
-          node.callee.property.name == "lazyImporter") &&
+        node.callee.property.name == "lazyRequireGetter" &&
         node.arguments.length >= 3 &&
         node.arguments[2].type == "Literal"
       ) {
