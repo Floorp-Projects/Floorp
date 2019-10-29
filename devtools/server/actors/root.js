@@ -183,8 +183,6 @@ RootActor.prototype = {
     nativeLogpoints: true,
     // Supports watchpoints in the server for Fx71+
     watchpoints: true,
-    // support older browsers for Fx69+
-    hasThreadFront: true,
   },
 
   /**
