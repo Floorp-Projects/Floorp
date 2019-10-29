@@ -39,6 +39,19 @@ class RenderCompositorOGL : public RenderCompositor {
 
   LayoutDeviceIntSize GetBufferSize() override;
 
+  bool ShouldUseNativeCompositor() override;
+
+  // Interface for wr::Compositor
+  void CompositorBeginFrame() override;
+  void CompositorEndFrame() override;
+  void Bind(wr::NativeSurfaceId aId, wr::DeviceIntPoint* aOffset,
+            uint32_t* aFboId, wr::DeviceIntRect aDirtyRect) override;
+  void Unbind() override;
+  void CreateSurface(wr::NativeSurfaceId aId, wr::DeviceIntSize aSize) override;
+  void DestroySurface(NativeSurfaceId aId) override;
+  void AddSurface(wr::NativeSurfaceId aId, wr::DeviceIntPoint aPosition,
+                  wr::DeviceIntRect aClipRect) override;
+
  protected:
   void InsertFrameDoneSync();
 
@@ -47,6 +60,15 @@ class RenderCompositorOGL : public RenderCompositor {
   // Can be null.
   RefPtr<layers::NativeLayerRoot> mNativeLayerRoot;
   RefPtr<layers::NativeLayer> mNativeLayerForEntireWindow;
+
+  // Used in native compositor mode:
+  RefPtr<layers::NativeLayer> mCurrentlyBoundNativeLayer;
+  nsTArray<RefPtr<layers::NativeLayer>> mAddedLayers;
+  uint64_t mAddedPixelCount = 0;
+  uint64_t mAddedClippedPixelCount = 0;
+  uint64_t mDrawnPixelCount = 0;
+  gfx::IntRect mVisibleBounds;
+  std::unordered_map<uint64_t, RefPtr<layers::NativeLayer>> mNativeLayers;
 
   // Used to apply back-pressure in WaitForGPU().
   GLsync mPreviousFrameDoneSync;
