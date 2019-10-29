@@ -463,10 +463,9 @@ class GetUserMediaWindowListener {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GetUserMediaWindowListener)
 
   // Create in an inactive state
-  GetUserMediaWindowListener(base::Thread* aThread, uint64_t aWindowID,
+  GetUserMediaWindowListener(uint64_t aWindowID,
                              const PrincipalHandle& aPrincipalHandle)
-      : mMediaThread(aThread),
-        mWindowID(aWindowID),
+      : mWindowID(aWindowID),
         mPrincipalHandle(aPrincipalHandle),
         mChromeNotificationTaskPosted(false) {}
 
@@ -698,11 +697,7 @@ class GetUserMediaWindowListener {
                "Inactive listeners should already be removed");
     MOZ_ASSERT(mActiveListeners.Length() == 0,
                "Active listeners should already be removed");
-    Unused << mMediaThread;
   }
-
-  // Set at construction
-  base::Thread* mMediaThread;
 
   uint64_t mWindowID;
   const PrincipalHandle mPrincipalHandle;
@@ -1638,25 +1633,6 @@ class GetUserMediaTask : public Runnable {
   RefPtr<MediaManager> mManager;  // get ref to this when creating the runnable
 };
 
-#if defined(ANDROID)
-class GetUserMediaRunnableWrapper : public Runnable {
- public:
-  // This object must take ownership of task
-  explicit GetUserMediaRunnableWrapper(GetUserMediaTask* task)
-      : Runnable("GetUserMediaRunnableWrapper"), mTask(task) {}
-
-  ~GetUserMediaRunnableWrapper() {}
-
-  NS_IMETHOD Run() override {
-    mTask->Run();
-    return NS_OK;
-  }
-
- private:
-  nsAutoPtr<GetUserMediaTask> mTask;
-};
-#endif
-
 /* static */
 void MediaManager::GuessVideoDeviceGroupIDs(MediaDeviceSet& aDevices,
                                             const MediaDeviceSet& aAudios) {
@@ -1898,7 +1874,8 @@ RefPtr<MediaManager::MgrPromise> MediaManager::EnumerateRawDevices(
   return promise;
 }
 
-MediaManager::MediaManager() : mMediaThread(nullptr), mBackend(nullptr) {
+MediaManager::MediaManager(UniquePtr<base::Thread> aMediaThread)
+    : mMediaThread(std::move(aMediaThread)), mBackend(nullptr) {
   mPrefs.mFreq = 1000;  // 1KHz test tone
   mPrefs.mWidth = 0;    // adaptive default
   mPrefs.mHeight = 0;   // adaptive default
@@ -1996,20 +1973,24 @@ MediaManager* MediaManager::Get() {
     timesCreated++;
     MOZ_RELEASE_ASSERT(timesCreated == 1);
 
-    sSingleton = new MediaManager();
-
+    {
+      UniquePtr<base::Thread> mediaThread =
 #ifdef XP_WIN
-    sSingleton->mMediaThread = new MTAThread("MediaManager");
+          MakeUnique<MTAThread>("MediaManager");
 #else
-    sSingleton->mMediaThread = new base::Thread("MediaManager");
+          MakeUnique<base::Thread>("MediaManager");
 #endif
-    base::Thread::Options options;
-    options.message_loop_type = MessageLoop::TYPE_MOZILLA_NONMAINTHREAD;
-    if (!sSingleton->mMediaThread->StartWithOptions(options)) {
-      MOZ_CRASH();
-    }
 
-    LOG("New Media thread for gum");
+      base::Thread::Options options;
+      options.message_loop_type = MessageLoop::TYPE_MOZILLA_NONMAINTHREAD;
+      if (!mediaThread->StartWithOptions(options)) {
+        MOZ_CRASH();
+      }
+
+      LOG("New Media thread for gum");
+
+      sSingleton = new MediaManager(std::move(mediaThread));
+    }
 
     nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
     if (obs) {
@@ -2585,7 +2566,7 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetUserMedia(
     MOZ_ASSERT(PrincipalHandleMatches(existingPrincipalHandle, principal));
   } else {
     windowListener = new GetUserMediaWindowListener(
-        mMediaThread, windowID, MakePrincipalHandle(principal));
+        windowID, MakePrincipalHandle(principal));
     AddWindowID(windowID, windowListener);
   }
 
@@ -3184,7 +3165,7 @@ RefPtr<MediaManager::DevicesPromise> MediaManager::EnumerateDevices(
     MOZ_ASSERT(PrincipalHandleMatches(existingPrincipalHandle, principal));
   } else {
     windowListener = new GetUserMediaWindowListener(
-        mMediaThread, windowId, MakePrincipalHandle(principal));
+        windowId, MakePrincipalHandle(principal));
     AddWindowID(windowId, windowListener);
   }
 
@@ -3292,7 +3273,7 @@ RefPtr<SinkInfoPromise> MediaManager::GetSinkDevice(nsPIDOMWindowInner* aWindow,
     MOZ_ASSERT(PrincipalHandleMatches(existingPrincipalHandle, principal));
   } else {
     windowListener = new GetUserMediaWindowListener(
-        mMediaThread, windowId, MakePrincipalHandle(principal));
+        windowId, MakePrincipalHandle(principal));
     AddWindowID(windowId, windowListener);
   }
   // Create an inactive SourceListener to act as a placeholder, so the
