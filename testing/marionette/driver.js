@@ -97,8 +97,6 @@ const SUPPORTED_STRATEGIES = new Set([
   element.Strategy.ID,
   element.Strategy.TagName,
   element.Strategy.XPath,
-  element.Strategy.Anon,
-  element.Strategy.AnonAttribute,
 ]);
 
 // Timeout used to abort fullscreen, maximize, and minimize
@@ -1802,37 +1800,6 @@ GeckoDriver.prototype.switchToFrame = async function(cmd) {
           Ci.nsITimer.TYPE_ONE_SHOT
         );
         return;
-      }
-
-      // Check if the frame is XBL anonymous
-      let parent = curWindow.document.getBindingParent(wantedFrame);
-      // Shadow nodes also show up in getAnonymousNodes, we should
-      // ignore them.
-      if (
-        parent &&
-        !(parent.shadowRoot && parent.shadowRoot.contains(wantedFrame))
-      ) {
-        const doc = curWindow.document;
-        let anonNodes = [...(doc.getAnonymousNodes(parent) || [])];
-        if (anonNodes.length > 0) {
-          let el = wantedFrame;
-          while (el) {
-            if (anonNodes.indexOf(el) > -1) {
-              curWindow = wantedFrame.contentWindow;
-              this.curFrame = curWindow;
-              if (focus) {
-                this.curFrame.focus();
-              }
-              checkTimer.initWithCallback(
-                checkLoad.bind(this),
-                100,
-                Ci.nsITimer.TYPE_ONE_SHOT
-              );
-              return;
-            }
-            el = el.parentNode;
-          }
-        }
       }
 
       // else, assume iframe
