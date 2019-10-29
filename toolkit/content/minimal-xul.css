@@ -33,8 +33,7 @@
 }
 
 /* hide the content, but don't destroy the frames */
-[collapsed="true"],
-[moz-collapsed="true"] {
+[collapsed="true"] {
   visibility: collapse;
 }
 
