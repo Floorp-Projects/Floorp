@@ -635,6 +635,10 @@ SearchService.prototype = {
 
   /**
    * The suggested order of engines from the configuration.
+   * For modern configuration:
+   *   This is an array of objects containing the WebExtension ID and Locale.
+   * For legacy configuration:
+   *   This is an array of strings which are the display name of the engines.
    */
   _searchOrder: [],
 
@@ -1777,7 +1781,13 @@ SearchService.prototype = {
           ? defaultEngine.webExtensionLocales[0]
           : DEFAULT_TAG,
     };
-    this._searchOrder = engines.map(e => e.engineName);
+    this._searchOrder = engines.map(e => {
+      return {
+        id: e.webExtensionId,
+        locale:
+          "webExtensionLocales" in e ? e.webExtensionLocales[0] : DEFAULT_TAG,
+      };
+    });
     if (privateDefault) {
       this._searchPrivateDefault = {
         id: privateDefault.webExtensionId,
@@ -2145,14 +2155,26 @@ SearchService.prototype = {
         }
       }
 
-      for (let engineName of this._searchOrder) {
-        let engine = this._engines.get(engineName);
-        if (!engine || engine.name in addedEngines) {
-          continue;
-        }
+      if (gModernConfig) {
+        for (const details of this._searchOrder) {
+          let engine = this._getEngineByWebExtensionDetails(details);
+          if (!engine || engine.name in addedEngines) {
+            continue;
+          }
 
-        this.__sortedEngines.push(engine);
-        addedEngines[engine.name] = engine;
+          this.__sortedEngines.push(engine);
+          addedEngines[engine.name] = engine;
+        }
+      } else {
+        for (let engineName of this._searchOrder) {
+          let engine = this._engines.get(engineName);
+          if (!engine || engine.name in addedEngines) {
+            continue;
+          }
+
+          this.__sortedEngines.push(engine);
+          addedEngines[engine.name] = engine;
+        }
       }
     }
 
@@ -2296,8 +2318,17 @@ SearchService.prototype = {
     }
 
     // Now look at list.json
-    for (let engineName of this._searchOrder) {
-      engineOrder[engineName] = i++;
+    if (gModernConfig) {
+      for (const details of this._searchOrder) {
+        const engine = this._getEngineByWebExtensionDetails(details);
+        if (engine) {
+          engineOrder[engine.name] = i++;
+        }
+      }
+    } else {
+      for (let engineName of this._searchOrder) {
+        engineOrder[engineName] = i++;
+      }
     }
 
     SearchUtils.log(
