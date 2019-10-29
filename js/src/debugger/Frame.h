@@ -125,6 +125,8 @@ class DebuggerFrame : public NativeObject {
     ONSTEP_HANDLER_SLOT,
     ONPOP_HANDLER_SLOT,
 
+    HAS_INCREMENTED_STEPPER_SLOT,
+
     // If this is a frame for a generator call, and the generator object has
     // been created (which doesn't happen until after default argument
     // evaluation and destructuring), then this is a PrivateValue pointing to a
@@ -271,12 +273,20 @@ class DebuggerFrame : public NativeObject {
 
   Debugger* owner() const;
 
+  bool hasIncrementedStepper() const;
+  void setHasIncrementedStepper(bool incremented);
+
+  MOZ_MUST_USE bool maybeIncrementStepperCounter(JSContext* cx,
+                                                 AbstractFramePtr referent);
+  MOZ_MUST_USE bool maybeIncrementStepperCounter(JSContext* cx,
+                                                 JSScript* script);
+  void maybeDecrementStepperCounter(JSFreeOp* fop, JSScript* script);
+
  public:
   FrameIter::Data* frameIterData() const;
   void setFrameIterData(FrameIter::Data*);
   void freeFrameIterData(JSFreeOp* fop);
-  void maybeDecrementFrameScriptStepperCount(JSFreeOp* fop,
-                                             AbstractFramePtr frame);
+  void maybeDecrementStepperCounter(JSFreeOp* fop, AbstractFramePtr referent);
 
   class GeneratorInfo;
   inline GeneratorInfo* generatorInfo() const;
