@@ -1908,9 +1908,8 @@
       aBrowser.destroy();
       // Only remove the node if we're not rebuilding the frameloader via nsFrameLoaderOwner.
       let rebuildFrameLoaders =
-        Services.prefs.getBoolPref(
-          "fission.rebuild_frameloaders_on_remoteness_change"
-        ) || window.docShell.nsILoadContext.useRemoteSubframes;
+        E10SUtils.rebuildFrameloadersOnRemotenessChange ||
+        window.docShell.nsILoadContext.useRemoteSubframes;
       if (!rebuildFrameLoaders) {
         aBrowser.remove();
       }

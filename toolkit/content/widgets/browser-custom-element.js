@@ -22,6 +22,12 @@
     "resource://gre/actors/BrowserElementParent.jsm"
   );
 
+  ChromeUtils.defineModuleGetter(
+    LazyModules,
+    "E10SUtils",
+    "resource://gre/modules/E10SUtils.jsm"
+  );
+
   const elementsToDestroyOnUnload = new Set();
 
   window.addEventListener(
@@ -48,9 +54,8 @@
       // Only do this when the rebuild frameloaders pref is off. This update isn't
       // required when we rebuild the frameloaders in the backend.
       let rebuildFrameLoaders =
-        Services.prefs.getBoolPref(
-          "fission.rebuild_frameloaders_on_remoteness_change"
-        ) || this.ownerGlobal.docShell.nsILoadContext.useRemoteSubframes;
+        LazyModules.E10SUtils.rebuildFrameloadersOnRemotenessChange ||
+        this.ownerGlobal.docShell.nsILoadContext.useRemoteSubframes;
       if (
         !rebuildFrameLoaders &&
         name === "remote" &&
