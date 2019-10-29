@@ -171,7 +171,7 @@ void NativeLayerCA::SetSurfaceIsFlipped(bool aIsFlipped) {
 
   if (aIsFlipped != mSurfaceIsFlipped) {
     mSurfaceIsFlipped = aIsFlipped;
-    mMutatedGeometry = true;
+    mMutatedSize = true;
   }
 }
 
@@ -190,7 +190,7 @@ void NativeLayerCA::SetRect(const IntRect& aRect) {
   }
   if (aRect.Size() != mSize) {
     mSize = aRect.Size();
-    mMutatedGeometry = true;
+    mMutatedSize = true;
   }
 }
 
@@ -204,7 +204,9 @@ void NativeLayerCA::SetBackingScale(float aBackingScale) {
 
   if (aBackingScale != mBackingScale) {
     mBackingScale = aBackingScale;
-    mMutatedGeometry = true;
+    mMutatedClipRect = true;
+    mMutatedPosition = true;
+    mMutatedSize = true;
   }
 }
 
@@ -220,6 +222,20 @@ void NativeLayerCA::SetIsOpaque(bool aIsOpaque) {
 bool NativeLayerCA::IsOpaque() {
   MutexAutoLock lock(mMutex);
   return mIsOpaque;
+}
+
+void NativeLayerCA::SetClipRect(const Maybe<gfx::IntRect>& aClipRect) {
+  MutexAutoLock lock(mMutex);
+
+  if (aClipRect != mClipRect) {
+    mClipRect = aClipRect;
+    mMutatedClipRect = true;
+  }
+}
+
+Maybe<gfx::IntRect> NativeLayerCA::ClipRect() {
+  MutexAutoLock lock(mMutex);
+  return mClipRect;
 }
 
 IntRegion NativeLayerCA::CurrentSurfaceInvalidRegion() {
@@ -416,16 +432,38 @@ void NativeLayerCA::ApplyChanges() {
     [mWrappingCALayer addSublayer:mContentCALayer];
   }
 
-  if (mMutatedPosition || mMutatedGeometry) {
+  // CALayers have a position and a size, specified through the position and the bounds properties.
+  // layer.bounds.origin must always be (0, 0).
+  // A layer's position affects the layer's entire layer subtree. In other words, each layer's
+  // position is relative to its superlayer's position. We implement the clip rect using
+  // masksToBounds on mWrappingCALayer. So mContentCALayer's position is relative to the clip rect
+  // position.
+  // Note: The Core Animation docs on "Positioning and Sizing Sublayers" say:
+  //  Important: Always use integral numbers for the width and height of your layer.
+  // We hope that this refers to integral physical pixels, and not to integral logical coordinates.
+
+  auto globalClipOrigin = mClipRect ? mClipRect->TopLeft() : gfx::IntPoint{};
+  auto globalLayerOrigin = mPosition;
+  auto clipToLayerOffset = globalLayerOrigin - globalClipOrigin;
+
+  if (mMutatedClipRect) {
     mWrappingCALayer.position =
-        CGPointMake(mPosition.x / mBackingScale, mPosition.y / mBackingScale);
-    mMutatedPosition = false;
+        CGPointMake(globalClipOrigin.x / mBackingScale, globalClipOrigin.y / mBackingScale);
+    if (mClipRect) {
+      mWrappingCALayer.masksToBounds = YES;
+      mWrappingCALayer.bounds =
+          CGRectMake(0, 0, mClipRect->Width() / mBackingScale, mClipRect->Height() / mBackingScale);
+    } else {
+      mWrappingCALayer.masksToBounds = NO;
+    }
   }
 
-  if (mMutatedGeometry) {
-    mWrappingCALayer.bounds =
-        CGRectMake(0, 0, mSize.width / mBackingScale, mSize.height / mBackingScale);
+  if (mMutatedPosition || mMutatedClipRect) {
+    mContentCALayer.position =
+        CGPointMake(clipToLayerOffset.x / mBackingScale, clipToLayerOffset.y / mBackingScale);
+  }
 
+  if (mMutatedSize) {
     mContentCALayer.bounds =
         CGRectMake(0, 0, mSize.width / mBackingScale, mSize.height / mBackingScale);
     mContentCALayer.contentsScale = mBackingScale;
@@ -435,7 +473,6 @@ void NativeLayerCA::ApplyChanges() {
     } else {
       mContentCALayer.affineTransform = CGAffineTransformIdentity;
     }
-    mMutatedGeometry = false;
   }
 
   if (mMutatedIsOpaque) {
@@ -445,8 +482,12 @@ void NativeLayerCA::ApplyChanges() {
       // Additionally, call the private method setContentsOpaque.
       [mContentCALayer setContentsOpaque:mIsOpaque];
     }
-    mMutatedIsOpaque = false;
   }
+
+  mMutatedPosition = false;
+  mMutatedSize = false;
+  mMutatedIsOpaque = false;
+  mMutatedClipRect = false;
 
   if (mReadySurface) {
     mContentCALayer.contents = (id)mReadySurface->mSurface.get();
