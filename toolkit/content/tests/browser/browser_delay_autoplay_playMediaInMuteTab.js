@@ -53,8 +53,7 @@ add_task(async function setup_test_preference() {
 
 add_task(async function unblock_icon_should_disapear_after_resume_tab() {
   info("- open new background tab -");
-  let tab = BrowserTestUtils.addTab(window.gBrowser, "about:blank");
-  BrowserTestUtils.loadURI(tab.linkedBrowser, PAGE);
+  let tab = BrowserTestUtils.addTab(window.gBrowser, PAGE);
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   info("- audio doesn't be started in beginning -");
