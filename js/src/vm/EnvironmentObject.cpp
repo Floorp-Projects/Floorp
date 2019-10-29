@@ -1336,9 +1336,11 @@ void EnvironmentIter::settle() {
       if (scope->is<LexicalScope>()) {
         MOZ_ASSERT(scope == &env_->as<LexicalEnvironmentObject>().scope());
       } else if (scope->is<FunctionScope>()) {
-        MOZ_ASSERT(
-            scope->as<FunctionScope>().script() ==
-            env_->as<CallObject>().callee().existingScriptNonDelazifying());
+        MOZ_ASSERT(scope->as<FunctionScope>().script() ==
+                   env_->as<CallObject>()
+                       .callee()
+                       .maybeCanonicalFunction()
+                       ->nonLazyScript());
       } else if (scope->is<VarScope>()) {
         MOZ_ASSERT(scope == &env_->as<VarEnvironmentObject>().scope());
       } else if (scope->is<WithScope>()) {
