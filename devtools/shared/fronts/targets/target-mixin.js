@@ -4,11 +4,6 @@
 
 "use strict";
 
-loader.lazyRequireGetter(
-  this,
-  "ThreadClient",
-  "devtools/shared/client/deprecated-thread-client"
-);
 loader.lazyRequireGetter(this, "getFront", "devtools/shared/protocol", true);
 
 /**
@@ -383,17 +378,7 @@ function TargetMixin(parentClass) {
             "attachThread"
         );
       }
-      if (this.getTrait("hasThreadFront")) {
-        this.threadFront = await this.getFront("thread");
-      } else {
-        // Backwards compat for Firefox 68
-        // mimics behavior of a front
-        this.threadFront = new ThreadClient(this._client, this._threadActor);
-        this.fronts.set("thread", this.threadFront);
-        this.threadFront.actorID = this._threadActor;
-        this.threadFront.targetFront = this;
-        this.manage(this.threadFront);
-      }
+      this.threadFront = await this.getFront("thread");
       const result = await this.threadFront.attach(options);
 
       this.threadFront.on("newSource", this._onNewSource);
