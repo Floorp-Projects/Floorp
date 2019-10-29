@@ -73,6 +73,10 @@ class NetlinkAddress {
   bool ScopeIsUniverse() const { return mIfam.ifa_scope == RT_SCOPE_UNIVERSE; }
   const in_common_addr* GetAddrPtr() const { return &mAddr; }
 
+  bool MsgEquals(const NetlinkAddress* aOther) const {
+    return !memcmp(&mIfam, &(aOther->mIfam), sizeof(mIfam));
+  }
+
   bool Equals(const NetlinkAddress* aOther) const {
     if (mIfam.ifa_family != aOther->mIfam.ifa_family) {
       return false;
@@ -623,7 +627,8 @@ NetlinkService::NetlinkService()
       mDoRouteCheckIPv6(false),
       mMsgId(0),
       mLinkUp(true),
-      mRecalculateNetworkId(false) {
+      mRecalculateNetworkId(false),
+      mSendNetworkChangeEvent(false) {
   mPid = getpid();
   mShutdownPipe[0] = -1;
   mShutdownPipe[1] = -1;
@@ -875,10 +880,19 @@ void NetlinkService::OnAddrMessage(struct nlmsghdr* aNlh) {
   }
 
   // There might be already an equal address in the array even in case of
-  // RTM_NEWADDR message, e.g. when lifetime of IPv6 address is renewed. Remove
-  // existing equal address in case of RTM_DELADDR as well as RTM_NEWADDR
-  // message and add a new one in the latter case.
+  // RTM_NEWADDR message, e.g. when lifetime of IPv6 address is renewed. Equal
+  // in this case means that IP and prefix is the same but some attributes might
+  // be different. Remove existing equal address in case of RTM_DELADDR as well
+  // as RTM_NEWADDR message and add a new one in the latter case.
   for (uint32_t i = 0; i < linkInfo->mAddresses.Length(); ++i) {
+    if (aNlh->nlmsg_type == RTM_NEWADDR &&
+        linkInfo->mAddresses[i]->MsgEquals(address)) {
+      // If the new address is exactly the same, there is nothing to do.
+      LOG(("Exactly the same address already exists [ifIdx=%u, addr=%s/%u",
+           ifIdx, addrStr.get(), address->GetPrefixLen()));
+      return;
+    }
+
     if (linkInfo->mAddresses[i]->Equals(address)) {
       LOG(("Removing address [ifIdx=%u, addr=%s/%u]", ifIdx, addrStr.get(),
            address->GetPrefixLen()));
@@ -926,15 +940,14 @@ void NetlinkService::OnAddrMessage(struct nlmsghdr* aNlh) {
     }
   }
 
+  // Send network event change regardless of whether the ID has changed or not
+  mSendNetworkChangeEvent = true;
+  TriggerNetworkIDCalculation();
+
+  // If the status of this particular link device has changed, the global link
+  // status might have changed too.
   if (linkInfo->UpdateLinkStatus()) {
     UpdateLinkStatus();
-    TriggerNetworkIDCalculation();
-  } else {
-    // Even if the link status hasn't changed, network ID might have changed
-    // if it's an address change on a link that's up.
-    if (linkInfo->mLink->IsUp()) {
-      TriggerNetworkIDCalculation();
-    }
   }
 }
 
@@ -1822,14 +1835,20 @@ void NetlinkService::CalculateNetworkID() {
   // correct ID. The network hasn't really changed.
   static bool initialIDCalculation = true;
 
-  if (idChanged && !initialIDCalculation) {
-    RefPtr<NetlinkServiceListener> listener;
-    {
-      MutexAutoLock lock(mMutex);
-      listener = mListener;
-    }
-    if (listener) {
-      listener->OnNetworkChanged();
+  if (!initialIDCalculation) {
+    if (idChanged || mSendNetworkChangeEvent) {
+      mSendNetworkChangeEvent = false;
+      RefPtr<NetlinkServiceListener> listener;
+      {
+        MutexAutoLock lock(mMutex);
+        listener = mListener;
+      }
+      if (listener) {
+        if (idChanged) {
+          listener->OnNetworkIDChanged();
+        }
+        listener->OnNetworkChanged();
+      }
     }
   }
 
