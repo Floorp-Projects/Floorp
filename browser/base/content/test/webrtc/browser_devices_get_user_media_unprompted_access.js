@@ -11,17 +11,23 @@ var gTests = [
     desc: "getUserMedia audio+camera",
     run: async function checkAudioVideoWhileLiveTracksExist_audio_camera() {
       let promise = promisePopupNotificationShown("webRTC-shareDevices");
+      let observerPromise = expectObserverCalled("getUserMedia:request");
       await promiseRequestDevice(true, true);
       await promise;
-      await expectObserverCalled("getUserMedia:request");
+      await observerPromise;
       let indicator = promiseIndicatorWindow();
+
+      let observerPromise1 = expectObserverCalled(
+        "getUserMedia:response:allow"
+      );
+      let observerPromise2 = expectObserverCalled("recording-device-events");
 
       await promiseMessage("ok", () => {
         PopupNotifications.panel.firstElementChild.button.click();
       });
 
-      await expectObserverCalled("getUserMedia:response:allow");
-      await expectObserverCalled("recording-device-events");
+      await observerPromise1;
+      await observerPromise2;
       Assert.deepEqual(
         await getMediaCaptureState(),
         { audio: true, video: true },
@@ -32,13 +38,19 @@ var gTests = [
 
       // If there's an active audio+camera stream,
       // gUM(audio+camera) returns a stream without prompting;
+      let observerPromises = [
+        expectObserverCalled("getUserMedia:request"),
+        expectObserverCalled("getUserMedia:response:allow"),
+        expectObserverCalled("recording-device-events"),
+      ];
+
       promise = promiseMessage("ok");
+
       await promiseRequestDevice(true, true);
       await promise;
-      await expectObserverCalled("getUserMedia:request");
+      await Promise.all(observerPromises);
+
       await promiseNoPopupNotification("webRTC-shareDevices");
-      await expectObserverCalled("getUserMedia:response:allow");
-      await expectObserverCalled("recording-device-events");
 
       Assert.deepEqual(
         await getMediaCaptureState(),
@@ -49,10 +61,11 @@ var gTests = [
       await checkSharingUI({ audio: true, video: true });
 
       // gUM(screen) causes a prompt.
+      observerPromise = expectObserverCalled("getUserMedia:request");
       promise = promisePopupNotificationShown("webRTC-shareDevices");
       await promiseRequestDevice(false, true, null, "screen");
       await promise;
-      await expectObserverCalled("getUserMedia:request");
+      await observerPromise;
 
       is(
         PopupNotifications.getNotification("webRTC-shareDevices").anchorID,
@@ -61,11 +74,12 @@ var gTests = [
       );
       checkDeviceSelectors(false, false, true);
 
+      observerPromise = expectObserverCalled("getUserMedia:response:deny");
       await promiseMessage(permissionError, () => {
         activateSecondaryAction(kActionDeny);
       });
+      await observerPromise;
 
-      await expectObserverCalled("getUserMedia:response:deny");
       SitePermissions.removeFromPrincipal(
         null,
         "screen",
@@ -84,18 +98,23 @@ var gTests = [
 
       // After closing all streams, gUM(audio+camera) causes a prompt.
       await closeStream();
+      observerPromise = expectObserverCalled("getUserMedia:request");
       promise = promisePopupNotificationShown("webRTC-shareDevices");
       await promiseRequestDevice(true, true);
       await promise;
-      await expectObserverCalled("getUserMedia:request");
+      await observerPromise;
       checkDeviceSelectors(true, true);
+
+      observerPromise1 = expectObserverCalled("getUserMedia:response:deny");
+      observerPromise2 = expectObserverCalled("recording-window-ended");
 
       await promiseMessage(permissionError, () => {
         activateSecondaryAction(kActionDeny);
       });
 
-      await expectObserverCalled("getUserMedia:response:deny");
-      await expectObserverCalled("recording-window-ended");
+      await observerPromise1;
+      await observerPromise2;
+
       await checkNotSharing();
       SitePermissions.removeFromPrincipal(
         null,
@@ -118,18 +137,24 @@ var gTests = [
   {
     desc: "getUserMedia camera",
     run: async function checkAudioVideoWhileLiveTracksExist_camera() {
+      let observerPromise = expectObserverCalled("getUserMedia:request");
       let promise = promisePopupNotificationShown("webRTC-shareDevices");
       await promiseRequestDevice(false, true);
       await promise;
-      await expectObserverCalled("getUserMedia:request");
+      await observerPromise;
       let indicator = promiseIndicatorWindow();
+
+      let observerPromise1 = expectObserverCalled(
+        "getUserMedia:response:allow"
+      );
+      let observerPromise2 = expectObserverCalled("recording-device-events");
 
       await promiseMessage("ok", () => {
         PopupNotifications.panel.firstElementChild.button.click();
       });
 
-      await expectObserverCalled("getUserMedia:response:allow");
-      await expectObserverCalled("recording-device-events");
+      await observerPromise1;
+      await observerPromise2;
       Assert.deepEqual(
         await getMediaCaptureState(),
         { video: true },
@@ -140,17 +165,20 @@ var gTests = [
 
       // If there's an active camera stream,
       // gUM(audio) causes a prompt;
+      observerPromise = expectObserverCalled("getUserMedia:request");
       promise = promisePopupNotificationShown("webRTC-shareDevices");
       await promiseRequestDevice(true, false);
       await promise;
-      await expectObserverCalled("getUserMedia:request");
+      await observerPromise;
       checkDeviceSelectors(true, false);
+
+      observerPromise = expectObserverCalled("getUserMedia:response:deny");
 
       await promiseMessage(permissionError, () => {
         activateSecondaryAction(kActionDeny);
       });
 
-      await expectObserverCalled("getUserMedia:response:deny");
+      await observerPromise;
       SitePermissions.removeFromPrincipal(
         null,
         "screen",
@@ -168,17 +196,20 @@ var gTests = [
       );
 
       // gUM(audio+camera) causes a prompt;
+      observerPromise = expectObserverCalled("getUserMedia:request");
       promise = promisePopupNotificationShown("webRTC-shareDevices");
       await promiseRequestDevice(true, true);
       await promise;
-      await expectObserverCalled("getUserMedia:request");
+      await observerPromise;
       checkDeviceSelectors(true, true);
+
+      observerPromise = expectObserverCalled("getUserMedia:response:deny");
 
       await promiseMessage(permissionError, () => {
         activateSecondaryAction(kActionDeny);
       });
 
-      await expectObserverCalled("getUserMedia:response:deny");
+      await observerPromise;
       SitePermissions.removeFromPrincipal(
         null,
         "screen",
@@ -196,10 +227,11 @@ var gTests = [
       );
 
       // gUM(screen) causes a prompt;
+      observerPromise = expectObserverCalled("getUserMedia:request");
       promise = promisePopupNotificationShown("webRTC-shareDevices");
       await promiseRequestDevice(false, true, null, "screen");
       await promise;
-      await expectObserverCalled("getUserMedia:request");
+      await observerPromise;
 
       is(
         PopupNotifications.getNotification("webRTC-shareDevices").anchorID,
@@ -208,11 +240,13 @@ var gTests = [
       );
       checkDeviceSelectors(false, false, true);
 
+      observerPromise = expectObserverCalled("getUserMedia:response:deny");
+
       await promiseMessage(permissionError, () => {
         activateSecondaryAction(kActionDeny);
       });
 
-      await expectObserverCalled("getUserMedia:response:deny");
+      await observerPromise;
       SitePermissions.removeFromPrincipal(
         null,
         "screen",
@@ -230,13 +264,18 @@ var gTests = [
       );
 
       // gUM(camera) returns a stream without prompting.
+      let observerPromises = [
+        expectObserverCalled("getUserMedia:request"),
+        expectObserverCalled("getUserMedia:response:allow"),
+        expectObserverCalled("recording-device-events"),
+      ];
+
       promise = promiseMessage("ok");
       await promiseRequestDevice(false, true);
       await promise;
-      await expectObserverCalled("getUserMedia:request");
+      await Promise.all(observerPromises);
+
       await promiseNoPopupNotification("webRTC-shareDevices");
-      await expectObserverCalled("getUserMedia:response:allow");
-      await expectObserverCalled("recording-device-events");
 
       Assert.deepEqual(
         await getMediaCaptureState(),
@@ -254,18 +293,24 @@ var gTests = [
   {
     desc: "getUserMedia audio",
     run: async function checkAudioVideoWhileLiveTracksExist_audio() {
+      let observerPromise = expectObserverCalled("getUserMedia:request");
       let promise = promisePopupNotificationShown("webRTC-shareDevices");
       await promiseRequestDevice(true, false);
       await promise;
-      await expectObserverCalled("getUserMedia:request");
+      await observerPromise;
       let indicator = promiseIndicatorWindow();
+
+      let observerPromise1 = expectObserverCalled(
+        "getUserMedia:response:allow"
+      );
+      let observerPromise2 = expectObserverCalled("recording-device-events");
 
       await promiseMessage("ok", () => {
         PopupNotifications.panel.firstElementChild.button.click();
       });
 
-      await expectObserverCalled("getUserMedia:response:allow");
-      await expectObserverCalled("recording-device-events");
+      await observerPromise1;
+      await observerPromise2;
       Assert.deepEqual(
         await getMediaCaptureState(),
         { audio: true },
@@ -276,17 +321,20 @@ var gTests = [
 
       // If there's an active audio stream,
       // gUM(camera) causes a prompt;
+      observerPromise = expectObserverCalled("getUserMedia:request");
       promise = promisePopupNotificationShown("webRTC-shareDevices");
       await promiseRequestDevice(false, true);
       await promise;
-      await expectObserverCalled("getUserMedia:request");
+      await observerPromise;
       checkDeviceSelectors(false, true);
+
+      observerPromise = expectObserverCalled("getUserMedia:response:deny");
 
       await promiseMessage(permissionError, () => {
         activateSecondaryAction(kActionDeny);
       });
 
-      await expectObserverCalled("getUserMedia:response:deny");
+      await observerPromise;
       SitePermissions.removeFromPrincipal(
         null,
         "screen",
@@ -304,17 +352,20 @@ var gTests = [
       );
 
       // gUM(audio+camera) causes a prompt;
+      observerPromise = expectObserverCalled("getUserMedia:request");
       promise = promisePopupNotificationShown("webRTC-shareDevices");
       await promiseRequestDevice(true, true);
       await promise;
-      await expectObserverCalled("getUserMedia:request");
+      await observerPromise;
       checkDeviceSelectors(true, true);
+
+      observerPromise = expectObserverCalled("getUserMedia:response:deny");
 
       await promiseMessage(permissionError, () => {
         activateSecondaryAction(kActionDeny);
       });
 
-      await expectObserverCalled("getUserMedia:response:deny");
+      await observerPromise;
       SitePermissions.removeFromPrincipal(
         null,
         "screen",
@@ -332,13 +383,16 @@ var gTests = [
       );
 
       // gUM(audio) returns a stream without prompting.
+      let observerPromises = [
+        expectObserverCalled("getUserMedia:request"),
+        expectObserverCalled("getUserMedia:response:allow"),
+        expectObserverCalled("recording-device-events"),
+      ];
       promise = promiseMessage("ok");
       await promiseRequestDevice(true, false);
       await promise;
-      await expectObserverCalled("getUserMedia:request");
+      await observerPromises;
       await promiseNoPopupNotification("webRTC-shareDevices");
-      await expectObserverCalled("getUserMedia:response:allow");
-      await expectObserverCalled("recording-device-events");
 
       Assert.deepEqual(
         await getMediaCaptureState(),

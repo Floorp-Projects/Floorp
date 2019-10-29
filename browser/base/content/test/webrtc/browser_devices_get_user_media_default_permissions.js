@@ -16,24 +16,27 @@ var gTests = [
       Services.prefs.setIntPref(CAMERA_PREF, SitePermissions.BLOCK);
 
       // Requesting audio+video shouldn't work.
+      let observerPromise = expectObserverCalled("recording-window-ended");
       let promise = promiseMessage(permissionError);
       await promiseRequestDevice(true, true);
       await promise;
-      await expectObserverCalled("recording-window-ended");
+      await observerPromise;
       await checkNotSharing();
 
       // Requesting only video shouldn't work.
+      observerPromise = expectObserverCalled("recording-window-ended");
       promise = promiseMessage(permissionError);
       await promiseRequestDevice(false, true);
       await promise;
-      await expectObserverCalled("recording-window-ended");
+      await observerPromise;
       await checkNotSharing();
 
       // Requesting audio should work.
+      observerPromise = expectObserverCalled("getUserMedia:request");
       promise = promisePopupNotificationShown("webRTC-shareDevices");
       await promiseRequestDevice(true);
       await promise;
-      await expectObserverCalled("getUserMedia:request");
+      await observerPromise;
 
       is(
         PopupNotifications.getNotification("webRTC-shareDevices").anchorID,
@@ -47,11 +50,15 @@ var gTests = [
       ok(iconclass.includes("microphone-icon"), "panel using microphone icon");
 
       let indicator = promiseIndicatorWindow();
+      let observerPromise1 = expectObserverCalled(
+        "getUserMedia:response:allow"
+      );
+      let observerPromise2 = expectObserverCalled("recording-device-events");
       await promiseMessage("ok", () => {
         PopupNotifications.panel.firstElementChild.button.click();
       });
-      await expectObserverCalled("getUserMedia:response:allow");
-      await expectObserverCalled("recording-device-events");
+      await observerPromise1;
+      await observerPromise2;
       Assert.deepEqual(
         await getMediaCaptureState(),
         { audio: true },
@@ -79,13 +86,17 @@ var gTests = [
 
       // Requesting video should work.
       let indicator = promiseIndicatorWindow();
+      let promises = [
+        expectObserverCalled("getUserMedia:request"),
+        expectObserverCalled("getUserMedia:response:allow"),
+        expectObserverCalled("recording-device-events"),
+      ];
+
       let promise = promiseMessage("ok");
       await promiseRequestDevice(false, true);
       await promise;
 
-      await expectObserverCalled("getUserMedia:request");
-      await expectObserverCalled("getUserMedia:response:allow");
-      await expectObserverCalled("recording-device-events");
+      await Promise.all(promises);
       await indicator;
       await checkSharingUI({ video: true });
       await closeStream();
@@ -101,24 +112,27 @@ var gTests = [
       Services.prefs.setIntPref(MICROPHONE_PREF, SitePermissions.BLOCK);
 
       // Requesting audio+video shouldn't work.
+      let observerPromise = expectObserverCalled("recording-window-ended");
       let promise = promiseMessage(permissionError);
       await promiseRequestDevice(true, true);
       await promise;
-      await expectObserverCalled("recording-window-ended");
+      await observerPromise;
       await checkNotSharing();
 
       // Requesting only audio shouldn't work.
+      observerPromise = expectObserverCalled("recording-window-ended");
       promise = promiseMessage(permissionError);
       await promiseRequestDevice(true);
       await promise;
-      await expectObserverCalled("recording-window-ended");
+      await observerPromise;
       await checkNotSharing();
 
       // Requesting video should work.
+      observerPromise = expectObserverCalled("getUserMedia:request");
       promise = promisePopupNotificationShown("webRTC-shareDevices");
       await promiseRequestDevice(false, true);
       await promise;
-      await expectObserverCalled("getUserMedia:request");
+      await observerPromise;
 
       is(
         PopupNotifications.getNotification("webRTC-shareDevices").anchorID,
@@ -132,11 +146,15 @@ var gTests = [
       ok(iconclass.includes("camera-icon"), "panel using devices icon");
 
       let indicator = promiseIndicatorWindow();
+      let observerPromise1 = expectObserverCalled(
+        "getUserMedia:response:allow"
+      );
+      let observerPromise2 = expectObserverCalled("recording-device-events");
       await promiseMessage("ok", () => {
         PopupNotifications.panel.firstElementChild.button.click();
       });
-      await expectObserverCalled("getUserMedia:response:allow");
-      await expectObserverCalled("recording-device-events");
+      await observerPromise1;
+      await observerPromise2;
       Assert.deepEqual(
         await getMediaCaptureState(),
         { video: true },
@@ -164,13 +182,16 @@ var gTests = [
 
       // Requesting audio should work.
       let indicator = promiseIndicatorWindow();
+      let promises = [
+        expectObserverCalled("getUserMedia:request"),
+        expectObserverCalled("getUserMedia:response:allow"),
+        expectObserverCalled("recording-device-events"),
+      ];
       let promise = promiseMessage("ok");
       await promiseRequestDevice(true);
       await promise;
 
-      await expectObserverCalled("getUserMedia:request");
-      await expectObserverCalled("getUserMedia:response:allow");
-      await expectObserverCalled("recording-device-events");
+      await Promise.all(promises);
       await indicator;
       await checkSharingUI({ audio: true });
       await closeStream();

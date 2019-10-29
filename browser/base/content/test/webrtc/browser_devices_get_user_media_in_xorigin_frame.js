@@ -17,10 +17,11 @@ var gTests = [
 
       // Request devices and expect a prompt despite the saved 'Allow' permission,
       // because we're a third party.
+      let observerPromise = expectObserverCalled("getUserMedia:request");
       let promise = promisePopupNotificationShown("webRTC-shareDevices");
       await promiseRequestDevice(true, true, "frame1");
       await promise;
-      await expectObserverCalled("getUserMedia:request");
+      await observerPromise;
       checkDeviceSelectors(true, true);
 
       // Ensure that the 'Remember this decision' checkbox is absent.
@@ -31,11 +32,15 @@ var gTests = [
       ok(!checkbox.checked, "checkbox not checked");
 
       let indicator = promiseIndicatorWindow();
+      let observerPromise1 = expectObserverCalled(
+        "getUserMedia:response:allow"
+      );
+      let observerPromise2 = expectObserverCalled("recording-device-events");
       await promiseMessage("ok", () =>
         EventUtils.synthesizeMouseAtCenter(notification.button, {})
       );
-      await expectObserverCalled("getUserMedia:response:allow");
-      await expectObserverCalled("recording-device-events");
+      await observerPromise1;
+      await observerPromise2;
       Assert.deepEqual(
         await getMediaCaptureState(),
         { audio: true, video: true },
@@ -53,10 +58,11 @@ var gTests = [
   {
     desc: "'Always Allow' disabled when sharing screen in third party iframes",
     run: async function checkScreenSharing() {
+      let observerPromise = expectObserverCalled("getUserMedia:request");
       let promise = promisePopupNotificationShown("webRTC-shareDevices");
       await promiseRequestDevice(false, true, "frame1", "screen");
       await promise;
-      await expectObserverCalled("getUserMedia:request");
+      await observerPromise;
 
       checkDeviceSelectors(false, false, true);
       let notification = PopupNotifications.panel.firstElementChild;
@@ -101,11 +107,15 @@ var gTests = [
       ok(!notification.button.disabled, "Allow button is enabled");
 
       let indicator = promiseIndicatorWindow();
+      let observerPromise1 = expectObserverCalled(
+        "getUserMedia:response:allow"
+      );
+      let observerPromise2 = expectObserverCalled("recording-device-events");
       await promiseMessage("ok", () =>
         EventUtils.synthesizeMouseAtCenter(notification.button, {})
       );
-      await expectObserverCalled("getUserMedia:response:allow");
-      await expectObserverCalled("recording-device-events");
+      await observerPromise1;
+      await observerPromise2;
       Assert.deepEqual(
         await getMediaCaptureState(),
         { screen: "Screen" },

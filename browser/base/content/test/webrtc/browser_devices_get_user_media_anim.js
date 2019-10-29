@@ -7,16 +7,21 @@ var gTests = [
     run: async function checkAudioVideo() {
       async function getStreamAndCheckBackgroundAnim(aAudio, aVideo, aSharing) {
         // Get a stream
+        let observerPromise = expectObserverCalled("getUserMedia:request");
         let popupPromise = promisePopupNotificationShown("webRTC-shareDevices");
         await promiseRequestDevice(aAudio, aVideo);
         await popupPromise;
-        await expectObserverCalled("getUserMedia:request");
+        await observerPromise;
 
+        let observerPromise1 = expectObserverCalled(
+          "getUserMedia:response:allow"
+        );
+        let observerPromise2 = expectObserverCalled("recording-device-events");
         await promiseMessage("ok", () => {
           PopupNotifications.panel.firstElementChild.button.click();
         });
-        await expectObserverCalled("getUserMedia:response:allow");
-        await expectObserverCalled("recording-device-events");
+        await observerPromise1;
+        await observerPromise2;
         let expected = {};
         if (aVideo) {
           expected.video = true;

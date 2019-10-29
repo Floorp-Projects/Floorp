@@ -361,6 +361,7 @@ var gTests = [
 
 add_task(async function test() {
   await runTests(gTests, {
+    skipObserverVerification: true,
     cleanup() {
       is(
         webrtcUI.peerConnectionBlockers.size,
