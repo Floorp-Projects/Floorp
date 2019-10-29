@@ -58,12 +58,6 @@ RendererOGL::RendererOGL(RefPtr<RenderThread>&& aThread,
   MOZ_ASSERT(mRenderer);
   MOZ_ASSERT(mBridge);
   MOZ_COUNT_CTOR(RendererOGL);
-
-  mNativeLayerRoot = mCompositor->GetWidget()->GetNativeLayerRoot();
-  if (mNativeLayerRoot) {
-    mNativeLayerForEntireWindow = mNativeLayerRoot->CreateLayer();
-    mNativeLayerRoot->AppendLayer(mNativeLayerForEntireWindow);
-  }
 }
 
 RendererOGL::~RendererOGL() {
@@ -73,11 +67,6 @@ RendererOGL::~RendererOGL() {
         << "Failed to make render context current during destroying.";
     // Leak resources!
     return;
-  }
-  if (mNativeLayerRoot) {
-    mNativeLayerRoot->RemoveLayer(mNativeLayerForEntireWindow);
-    mNativeLayerForEntireWindow = nullptr;
-    mNativeLayerRoot = nullptr;
   }
   wr_renderer_delete(mRenderer);
 }
@@ -120,12 +109,7 @@ bool RendererOGL::UpdateAndRender(const Maybe<gfx::IntSize>& aReadbackSize,
   }
   // XXX set clear color if MOZ_WIDGET_ANDROID is defined.
 
-  if (mNativeLayerForEntireWindow) {
-    gfx::IntRect bounds({}, mCompositor->GetBufferSize().ToUnknownSize());
-    mNativeLayerForEntireWindow->SetRect(bounds);
-  }
-
-  if (!mCompositor->BeginFrame(mNativeLayerForEntireWindow)) {
+  if (!mCompositor->BeginFrame()) {
     if (mCompositor->IsContextLost()) {
       RenderThread::Get()->HandleDeviceReset("BeginFrame", /* aNotify */ true);
     }
