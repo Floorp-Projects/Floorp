@@ -649,6 +649,13 @@ const CFR_MESSAGES = [
             label: { string_id: "cfr-doorhanger-socialtracking-close-button" },
             event: "BLOCK",
           },
+          {
+            label: {
+              string_id: "cfr-doorhanger-socialtracking-dont-show-again",
+            },
+            action: { type: "DISABLE_STP_DOORHANGERS" },
+            event: "BLOCK",
+          },
         ],
       },
     },
@@ -700,6 +707,13 @@ const CFR_MESSAGES = [
             label: { string_id: "cfr-doorhanger-socialtracking-close-button" },
             event: "BLOCK",
           },
+          {
+            label: {
+              string_id: "cfr-doorhanger-socialtracking-dont-show-again",
+            },
+            action: { type: "DISABLE_STP_DOORHANGERS" },
+            event: "BLOCK",
+          },
         ],
       },
     },
@@ -745,6 +759,13 @@ const CFR_MESSAGES = [
         secondary: [
           {
             label: { string_id: "cfr-doorhanger-socialtracking-close-button" },
+            event: "BLOCK",
+          },
+          {
+            label: {
+              string_id: "cfr-doorhanger-socialtracking-dont-show-again",
+            },
+            action: { type: "DISABLE_STP_DOORHANGERS" },
             event: "BLOCK",
           },
         ],
