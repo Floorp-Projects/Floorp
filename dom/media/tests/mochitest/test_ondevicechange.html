@@ -38,9 +38,12 @@ function OnDeviceChangeEventNotReceived() {
 runTest(async () => {
   SimpleTest.requestCompleteLog();
 
-  await pushPrefs(["media.ondevicechange.fakeDeviceChangeEvent.enabled", true]);
-  await pushPrefs(["media.navigator.permission.disabled", false]);
-  await pushPrefs(["media.ondevicechange.enabled", true]);
+  await pushPrefs(
+    // Ensure there are continuous fake devicechange events throughout this test
+    ["media.ondevicechange.fakeDeviceChangeEvent.enabled", true],
+    // Enforce gUM permission prompts initially
+    ["media.navigator.permission.disabled", false],
+  );
 
   info("assure devicechange event is NOT fired when gUM is NOT in use and permanent permission is NOT granted");
   await OnDeviceChangeEventNotReceived();
