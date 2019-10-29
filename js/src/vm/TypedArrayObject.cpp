@@ -13,6 +13,7 @@
 #include "mozilla/PodOperations.h"
 #include "mozilla/TextUtils.h"
 
+#include <string>
 #include <string.h>
 #ifndef XP_WIN
 #  include <sys/mman.h>
@@ -2295,6 +2296,60 @@ bool js::IsBufferSource(JSObject* object, SharedMem<uint8_t*>* dataPointer,
 }
 
 template <typename CharT>
+struct CompareStringInfinityOrNaN;
+
+template <>
+struct CompareStringInfinityOrNaN<Latin1Char> {
+  using CharTraitT = char;
+  static constexpr char Infinity[] = "Infinity";
+  static constexpr char NaN[] = "NaN";
+};
+
+template <>
+struct CompareStringInfinityOrNaN<char16_t> {
+  using CharTraitT = char16_t;
+  static constexpr char16_t Infinity[] = u"Infinity";
+  static constexpr char16_t NaN[] = u"NaN";
+};
+
+// These definitions can be removed when we compile with C++17.
+constexpr char CompareStringInfinityOrNaN<Latin1Char>::Infinity[];
+constexpr char CompareStringInfinityOrNaN<Latin1Char>::NaN[];
+constexpr char16_t CompareStringInfinityOrNaN<char16_t>::Infinity[];
+constexpr char16_t CompareStringInfinityOrNaN<char16_t>::NaN[];
+
+template <typename CharT>
+static inline bool StringIsInfinity(mozilla::Range<const CharT> s) {
+  using CharTraitT = typename CompareStringInfinityOrNaN<CharT>::CharTraitT;
+  constexpr auto Infinity = CompareStringInfinityOrNaN<CharT>::Infinity;
+  // Can be changed to constexpr when compiled with C++17.
+  size_t length = std::char_traits<CharTraitT>::length(Infinity);
+
+  // While all this looks a bit convoluted to compare a string to "Infinity",
+  // compilers optimize this to one |cmp| instruction on x64 resp. two for x86,
+  // when the input is a Latin-1 string, because the string "Infinity" is
+  // exactly eight characters long, so it can be represented as a single uint64
+  // value.
+  return s.length() == length &&
+         !std::char_traits<CharTraitT>::compare(
+             reinterpret_cast<const CharTraitT*>(s.begin().get()), Infinity,
+             length);
+}
+
+template <typename CharT>
+static inline bool StringIsNaN(mozilla::Range<const CharT> s) {
+  using CharTraitT = typename CompareStringInfinityOrNaN<CharT>::CharTraitT;
+  constexpr auto NaN = CompareStringInfinityOrNaN<CharT>::NaN;
+  // Can be changed to constexpr when compiled with C++17.
+  size_t length = std::char_traits<CharTraitT>::length(NaN);
+
+  // "NaN" is not as nicely optimizable as "Infinity", but oh well.
+  return s.length() == length &&
+         !std::char_traits<CharTraitT>::compare(
+             reinterpret_cast<const CharTraitT*>(s.begin().get()), NaN, length);
+}
+
+template <typename CharT>
 bool js::StringIsTypedArrayIndex(mozilla::Range<const CharT> s,
                                  uint64_t* indexp) {
   mozilla::RangedPtr<const CharT> cp = s.begin();
@@ -2311,6 +2366,12 @@ bool js::StringIsTypedArrayIndex(mozilla::Range<const CharT> s,
   }
 
   if (!IsAsciiDigit(*cp)) {
+    // Check for "NaN", "Infinity", or "-Infinity".
+    if ((!negative && StringIsNaN<CharT>({cp, end})) ||
+        StringIsInfinity<CharT>({cp, end})) {
+      *indexp = UINT64_MAX;
+      return true;
+    }
     return false;
   }
 

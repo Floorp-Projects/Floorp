@@ -243,9 +243,13 @@ inline size_t TypedArrayObject::bytesPerElement() const {
 template <typename CharT>
 bool StringIsTypedArrayIndex(mozilla::Range<const CharT> s, uint64_t* indexp);
 
+// A string |s| is a TypedArray index (or: canonical numeric index string) iff
+// |s| is "-0" or |SameValue(ToString(ToNumber(s)), s)| is true. So check for
+// any characters which can start the string representation of a number,
+// including "NaN" and "Infinity".
 template <typename CharT>
 inline bool CanStartTypedArrayIndex(CharT ch) {
-  return mozilla::IsAsciiDigit(ch) || ch == '-';
+  return mozilla::IsAsciiDigit(ch) || ch == '-' || ch == 'N' || ch == 'I';
 }
 
 inline bool IsTypedArrayIndex(jsid id, uint64_t* indexp) {

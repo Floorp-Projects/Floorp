@@ -27,10 +27,25 @@ assertEq(x["9999999999999999999999"], undefined);
 x[9999999999999999999999] = "twelve";
 assertEq(x[9999999999999999999999], "twelve");
 
-// Infinity and -Infinity maybe are supposed to be integers, but they aren't currently.
+// Infinity, -Infinity, and NaN are canonical numeric indices and are handled
+// the same way as other out-of-bounds accesses.
 
 x["Infinity"] = "twelve";
-assertEq(x["Infinity"], "twelve");
+assertEq(x["Infinity"], undefined);
 
 x["-Infinity"] = "twelve";
-assertEq(x["-Infinity"], "twelve");
+assertEq(x["-Infinity"], undefined);
+
+x["NaN"] = "twelve";
+assertEq(x["NaN"], undefined);
+
+// +Infinity, +NaN, or -NaN are not integers.
+
+x["+Infinity"] = "twelve";
+assertEq(x["+Infinity"], "twelve");
+
+x["+NaN"] = "twelve";
+assertEq(x["+NaN"], "twelve");
+
+x["-NaN"] = "twelve";
+assertEq(x["-NaN"], "twelve");
