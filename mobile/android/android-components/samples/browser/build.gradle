@@ -96,6 +96,7 @@ dependencies {
     implementation project(':feature-findinpage')
     implementation project(':feature-sitepermissions')
     implementation project(':feature-webcompat')
+    implementation project(':feature-webnotifications')
 
     implementation project(':ui-autocomplete')
 

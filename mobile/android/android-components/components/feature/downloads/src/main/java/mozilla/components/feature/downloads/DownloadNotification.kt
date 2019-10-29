@@ -87,12 +87,7 @@ internal object DownloadNotification {
             val channel = notificationManager.getNotificationChannel(channelId)
             if (channel.importance == IMPORTANCE_NONE) return false
 
-            if (SDK_INT >= Build.VERSION_CODES.P) {
-                val group = notificationManager.getNotificationChannelGroup(channel.group)
-                group?.isBlocked != true
-            } else {
-                true
-            }
+            true
         } else {
             NotificationManagerCompat.from(context).areNotificationsEnabled()
         }

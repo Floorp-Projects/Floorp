@@ -44,6 +44,7 @@ import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.feature.session.HistoryDelegate
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.tabs.TabsUseCases
+import mozilla.components.feature.webnotifications.WebNotificationFeature
 import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
 import org.mozilla.samples.browser.integration.FindInPageIntegration
 import org.mozilla.samples.browser.request.SampleRequestInterceptor
@@ -101,6 +102,9 @@ open class DefaultComponents(private val applicationContext: Context) {
                 .enable()
 
             MediaStateMachine.start(this)
+
+            WebNotificationFeature(applicationContext, engine, icons, R.drawable.ic_notification,
+                BrowserActivity::class.java)
         }
     }
 

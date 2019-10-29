@@ -15,8 +15,8 @@ import mozilla.components.concept.engine.webnotifications.WebNotification
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
-import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
@@ -24,15 +24,16 @@ import org.junit.runner.RunWith
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.verify
 
+private const val TEST_TITLE = "test title"
+private const val TEST_TAG = "test tag"
+private const val TEST_TEXT = "test text"
+private const val TEST_CHANNEL = "testChannel"
+
 @RunWith(AndroidJUnit4::class)
 @ExperimentalCoroutinesApi
 class NativeNotificationBridgeTest {
-
-    private val blankNotificaiton = WebNotification(
-        origin = "https://example.com",
-        onClick = {},
-        onClose = {}
-    )
+    private val blankNotification = WebNotification(TEST_TITLE, TEST_TAG, TEST_TEXT, null, null,
+            null, true, 0)
 
     private lateinit var icons: BrowserIcons
     private lateinit var bridge: NativeNotificationBridge
@@ -40,7 +41,7 @@ class NativeNotificationBridgeTest {
     @Before
     fun setup() {
         icons = mock()
-        bridge = NativeNotificationBridge(icons)
+        bridge = NativeNotificationBridge(icons, android.R.drawable.ic_dialog_alert)
 
         val mockIcon = Icon(mock(), source = Icon.Source.GENERATOR)
         doReturn(CompletableDeferred(mockIcon)).`when`(icons).loadIcon(any())
@@ -49,38 +50,28 @@ class NativeNotificationBridgeTest {
     @Test
     fun `create blank notification`() = runBlockingTest {
         val notification = bridge.convertToAndroidNotification(
-            blankNotificaiton,
+            blankNotification,
             testContext,
-            "channel"
+            TEST_CHANNEL,
+            null,
+            0
         )
 
         assertNull(notification.actions)
-        @Suppress("Deprecation")
-        assertArrayEquals(longArrayOf(), notification.vibrate)
+        assertEquals(TEST_CHANNEL, notification.channelId)
         assertEquals(0, notification.`when`)
-        assertEquals("channel", notification.channelId)
+        assertNotNull(notification.smallIcon)
         assertNull(notification.getLargeIcon())
-        assertNull(notification.smallIcon)
-    }
-
-    @Test
-    fun `set vibration pattern`() = runBlockingTest {
-        val notification = bridge.convertToAndroidNotification(
-            blankNotificaiton.copy(vibrate = longArrayOf(1, 2, 3)),
-            testContext,
-            "channel"
-        )
-
-        @Suppress("Deprecation")
-        assertArrayEquals(longArrayOf(1, 2, 3), notification.vibrate)
     }
 
     @Test
     fun `set when`() = runBlockingTest {
         val notification = bridge.convertToAndroidNotification(
-            blankNotificaiton.copy(timestamp = 1234567890),
+            blankNotification.copy(timestamp = 1234567890),
             testContext,
-            "channel"
+            TEST_CHANNEL,
+            null,
+            0
         )
 
         assertEquals(1234567890, notification.`when`)
@@ -89,14 +80,16 @@ class NativeNotificationBridgeTest {
     @Test
     fun `icon is loaded from BrowserIcons`() = runBlockingTest {
         bridge.convertToAndroidNotification(
-            blankNotificaiton.copy(iconUrl = "https://example.com/large.png"),
+            blankNotification.copy(iconUrl = "https://example.com/large.png"),
             testContext,
-            "channel"
+            TEST_CHANNEL,
+            null,
+            0
         )
 
         verify(icons).loadIcon(
             IconRequest(
-                url = "https://example.com",
+                url = "https://example.com/large.png",
                 size = IconRequest.Size.DEFAULT,
                 resources = listOf(IconRequest.Resource(
                     url = "https://example.com/large.png",

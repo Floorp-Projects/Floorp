@@ -10,6 +10,7 @@ import mozilla.components.browser.engine.gecko.integration.LocaleSettingUpdater
 import mozilla.components.browser.engine.gecko.mediaquery.from
 import mozilla.components.browser.engine.gecko.mediaquery.toGeckoValue
 import mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension
+import mozilla.components.browser.engine.gecko.webnotifications.GeckoWebNotificationDelegate
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
@@ -25,6 +26,7 @@ import mozilla.components.concept.engine.mediaquery.PreferredColorScheme
 import mozilla.components.concept.engine.utils.EngineVersion
 import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.concept.engine.webextension.WebExtensionDelegate
+import mozilla.components.concept.engine.webnotifications.WebNotificationDelegate
 import org.json.JSONObject
 import org.mozilla.geckoview.ContentBlocking
 import org.mozilla.geckoview.ContentBlockingController
@@ -171,6 +173,15 @@ class GeckoEngine(
         }
 
         runtime.webExtensionController.tabDelegate = tabsDelegate
+    }
+
+    /**
+     * See [Engine.registerWebNotificationDelegate].
+     */
+    override fun registerWebNotificationDelegate(
+        webNotificationDelegate: WebNotificationDelegate
+    ) {
+        runtime.webNotificationDelegate = GeckoWebNotificationDelegate(webNotificationDelegate)
     }
 
     /**

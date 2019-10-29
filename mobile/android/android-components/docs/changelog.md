@@ -48,7 +48,16 @@ permalink: /changelog/
 
 * **feature-push**
   * The `AutoPushFeature` now checks (once every 24 hours) to verify and renew push subscriptions if expired after a cold boot.
-  
+
+* **feature-webnotifications**
+  * Adds feature implementation for configuring and displaying web notifications to the user
+  *
+  * ```Kotlin
+  * WebNotificationFeature(
+  *     applicationContext, engine, icons, R.mipmap.ic_launcher, BrowserActivity::class.java
+  * )
+  * ```
+
 # 18.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v17.0.0...v18.0.0)
