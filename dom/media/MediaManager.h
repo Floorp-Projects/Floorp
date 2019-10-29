@@ -10,7 +10,6 @@
 #include "mozilla/media/DeviceChangeCallback.h"
 #include "mozilla/dom/GetUserMediaRequest.h"
 #include "mozilla/Unused.h"
-#include "nsAutoPtr.h"
 #include "nsIMediaManager.h"
 
 #include "nsHashKeys.h"
@@ -318,7 +317,7 @@ class MediaManager final : public nsIMediaManagerService,
   void GetPrefs(nsIPrefBranch* aBranch, const char* aData);
 
   // Make private because we want only one instance of this class
-  MediaManager();
+  explicit MediaManager(UniquePtr<base::Thread> aMediaThread);
 
   ~MediaManager() {}
   void Shutdown();
@@ -343,7 +342,7 @@ class MediaManager final : public nsIMediaManagerService,
   nsTArray<RefPtr<dom::GetUserMediaRequest>> mPendingGUMRequest;
 
   // Always exists
-  nsAutoPtr<base::Thread> mMediaThread;
+  const UniquePtr<base::Thread> mMediaThread;
   nsCOMPtr<nsIAsyncShutdownBlocker> mShutdownBlocker;
 
   // ONLY accessed from MediaManagerThread
