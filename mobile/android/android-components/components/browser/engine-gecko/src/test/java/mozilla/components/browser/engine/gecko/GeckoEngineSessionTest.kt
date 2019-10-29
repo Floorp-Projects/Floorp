@@ -40,6 +40,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -2021,8 +2022,9 @@ class GeckoEngineSessionTest {
         var receivedWindowRequest: WindowRequest? = null
 
         engineSession.register(object : EngineSession.Observer {
-            override fun onOpenWindowRequest(windowRequest: WindowRequest) {
+            override fun onWindowRequest(windowRequest: WindowRequest) {
                 receivedWindowRequest = windowRequest
+                assertEquals(WindowRequest.Type.OPEN, windowRequest.type)
             }
         })
 
@@ -2030,6 +2032,27 @@ class GeckoEngineSessionTest {
 
         assertNotNull(receivedWindowRequest)
         assertEquals("mozilla.org", receivedWindowRequest!!.url)
+    }
+
+    @Test
+    fun `onCloseRequest creates window request`() {
+        val engineSession = GeckoEngineSession(mock(), geckoSessionProvider = geckoSessionProvider)
+
+        captureDelegates()
+
+        var receivedWindowRequest: WindowRequest? = null
+
+        engineSession.register(object : EngineSession.Observer {
+            override fun onWindowRequest(windowRequest: WindowRequest) {
+                receivedWindowRequest = windowRequest
+            }
+        })
+
+        contentDelegate.value.onCloseRequest(geckoSession)
+
+        assertNotNull(receivedWindowRequest)
+        assertSame(engineSession, receivedWindowRequest!!.prepare())
+        assertEquals(WindowRequest.Type.CLOSE, receivedWindowRequest!!.type)
     }
 
     private fun mockGeckoSession(): GeckoSession {

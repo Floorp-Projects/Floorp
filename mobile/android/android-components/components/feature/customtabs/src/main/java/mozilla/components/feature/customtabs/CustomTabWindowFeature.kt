@@ -8,29 +8,29 @@ import android.content.Context
 import androidx.annotation.VisibleForTesting
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.core.net.toUri
-import mozilla.components.browser.session.Session
-import mozilla.components.browser.session.SessionManager
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.mapNotNull
+import mozilla.components.browser.state.action.ContentAction
+import mozilla.components.browser.state.selector.findCustomTab
 import mozilla.components.browser.state.state.CustomTabConfig
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.window.WindowRequest
+import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.base.feature.LifecycleAwareFeature
+import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 
 /**
  * Feature implementation for handling window requests by opening custom tabs.
  */
 class CustomTabWindowFeature(
     private val context: Context,
-    private val sessionManager: SessionManager,
+    private val store: BrowserStore,
     private val sessionId: String
 ) : LifecycleAwareFeature {
 
-    @VisibleForTesting
-    internal val windowObserver = object : Session.Observer {
-        override fun onOpenWindowRequested(session: Session, windowRequest: WindowRequest): Boolean {
-            val intent = configToIntent(session.customTabConfig)
-            intent.launchUrl(context, windowRequest.url.toUri())
-            return true
-        }
-    }
+    private var scope: CoroutineScope? = null
 
     /**
      * Transform a [CustomTabConfig] into a [CustomTabsIntent] that creates a
@@ -57,16 +57,29 @@ class CustomTabWindowFeature(
     }
 
     /**
-     * Starts the feature and a observer to listen for window requests.
+     * Starts observing the configured session to listen for window requests.
      */
     override fun start() {
-        sessionManager.findSessionById(sessionId)?.register(windowObserver)
+        scope = store.flowScoped { flow ->
+            flow.mapNotNull { state -> state.findCustomTab(sessionId) }
+                .ifChanged {
+                    it.content.windowRequest
+                }
+                .collect { state ->
+                    val windowRequest = state.content.windowRequest
+                    if (windowRequest?.type == WindowRequest.Type.OPEN) {
+                        val intent = configToIntent(state.config)
+                        intent.launchUrl(context, windowRequest.url.toUri())
+                        store.dispatch(ContentAction.ConsumeWindowRequestAction(sessionId))
+                    }
+                }
+        }
     }
 
     /**
-     * Stops the feature and the window request observer.
+     * Stops observing the configured session for incoming window requests.
      */
     override fun stop() {
-        sessionManager.findSessionById(sessionId)?.unregister(windowObserver)
+        scope?.cancel()
     }
 }

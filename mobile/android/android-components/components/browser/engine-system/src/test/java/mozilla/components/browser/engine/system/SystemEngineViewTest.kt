@@ -1092,19 +1092,20 @@ class SystemEngineViewTest {
         var createWindowRequest: WindowRequest? = null
         var closeWindowRequest: WindowRequest? = null
         engineSession.register(object : EngineSession.Observer {
-            override fun onOpenWindowRequest(windowRequest: WindowRequest) {
-                createWindowRequest = windowRequest
-            }
-
-            override fun onCloseWindowRequest(windowRequest: WindowRequest) {
-                closeWindowRequest = windowRequest
+            override fun onWindowRequest(windowRequest: WindowRequest) {
+                if (windowRequest.type == WindowRequest.Type.OPEN) {
+                    createWindowRequest = windowRequest
+                } else {
+                    closeWindowRequest = windowRequest
+                }
             }
         })
 
-        engineSession.webView.webChromeClient!!.onCreateWindow(mock<WebView>(), false, false, null)
+        engineSession.webView.webChromeClient!!.onCreateWindow(mock(), false, false, null)
         assertNotNull(createWindowRequest)
+        assertNull(closeWindowRequest)
 
-        engineSession.webView.webChromeClient!!.onCloseWindow(mock<WebView>())
+        engineSession.webView.webChromeClient!!.onCloseWindow(mock())
         assertNotNull(closeWindowRequest)
     }
 

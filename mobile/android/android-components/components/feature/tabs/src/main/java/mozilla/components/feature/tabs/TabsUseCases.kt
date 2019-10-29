@@ -7,6 +7,7 @@ package mozilla.components.feature.tabs
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.Session.Source
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSession.LoadUrlFlags
 import mozilla.components.feature.session.SessionUseCases.LoadUrlUseCase
 
@@ -26,6 +27,7 @@ class TabsUseCases(
     class DefaultSelectTabUseCase internal constructor(
         private val sessionManager: SessionManager
     ) : SelectTabUseCase {
+
         /**
          * Marks the provided session as selected.
          *
@@ -39,6 +41,20 @@ class TabsUseCases(
     class RemoveTabUseCase internal constructor(
         private val sessionManager: SessionManager
     ) {
+
+        /**
+         * Removes the session with the provided ID. This method
+         * has no effect if the session doesn't exist.
+         *
+         * @param sessionId The ID of the session to remove.
+         */
+        operator fun invoke(sessionId: String) {
+            val session = sessionManager.findSessionById(sessionId)
+            if (session != null) {
+                invoke(session)
+            }
+        }
+
         /**
          * Removes the provided session.
          *
@@ -71,19 +87,24 @@ class TabsUseCases(
          * @param startLoading True (default) if the new tab should start loading immediately.
          * @param parentId the id of the parent tab to use for the newly created tab.
          * @param flags the [LoadUrlFlags] to use when loading the provided URL.
+         * @param engineSession (optional) engine session to use for this tab.
          */
+        @Suppress("LongParameterList")
         operator fun invoke(
             url: String,
             selectTab: Boolean = true,
             startLoading: Boolean = true,
             parentId: String? = null,
-            flags: LoadUrlFlags = LoadUrlFlags.none()
+            flags: LoadUrlFlags = LoadUrlFlags.none(),
+            engineSession: EngineSession? = null
         ): Session {
             val session = Session(url, false, Source.NEW_TAB)
             val parent = parentId?.let { sessionManager.findSessionById(parentId) }
-            sessionManager.add(session, selected = selectTab, parent = parent)
+            sessionManager.add(session, selected = selectTab, engineSession = engineSession, parent = parent)
 
-            if (startLoading) {
+            // If an engine session is specified then loading will have already started
+            // during sessionManager.add when linking the session to its engine session.
+            if (startLoading && engineSession == null) {
                 val parentEngineSession = parent?.let { sessionManager.getEngineSession(it) }
                 sessionManager.getOrCreateEngineSession(session).loadUrl(url, parentEngineSession, flags)
             }
@@ -114,19 +135,24 @@ class TabsUseCases(
          * @param startLoading True (default) if the new tab should start loading immediately.
          * @param parentId the id of the parent tab to use for the newly created tab.
          * @param flags the [LoadUrlFlags] to use when loading the provided URL.
+         * @param engineSession (optional) engine session to use for this tab.
          */
+        @Suppress("LongParameterList")
         operator fun invoke(
             url: String,
             selectTab: Boolean = true,
             startLoading: Boolean = true,
             parentId: String? = null,
-            flags: LoadUrlFlags = LoadUrlFlags.none()
+            flags: LoadUrlFlags = LoadUrlFlags.none(),
+            engineSession: EngineSession? = null
         ): Session {
             val session = Session(url, true, Source.NEW_TAB)
             val parent = parentId?.let { sessionManager.findSessionById(parentId) }
-            sessionManager.add(session, selected = selectTab, parent = parent)
+            sessionManager.add(session, selected = selectTab, engineSession = engineSession, parent = parent)
 
-            if (startLoading) {
+            // If an engine session is specified then loading will have already started
+            // during sessionManager.add when linking the session to its engine session.
+            if (startLoading && engineSession == null) {
                 val parentEngineSession = parent?.let { sessionManager.getEngineSession(it) }
                 sessionManager.getOrCreateEngineSession(session).loadUrl(url, parentEngineSession, flags)
             }
@@ -146,10 +172,10 @@ class TabsUseCases(
     class RemoveAllTabsOfTypeUseCase internal constructor(
         private val sessionManager: SessionManager
     ) {
+
         /**
          * @param private pass true if only private tabs should be removed otherwise normal tabs will be removed
          */
-
         operator fun invoke(private: Boolean) {
             sessionManager.sessions.filter { it.private == private }.forEach {
                 sessionManager.remove(it)

@@ -12,6 +12,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
+* **browser-session**, **feature-customtabs**, **feature-session**, **feature-tabs**
+  *  ⚠️ **This is a breaking change**: The `WindowFeature` and `CustomTabWindowFeature` components have been migrated to `browser-state` from `browser-session`. Therefore creating these features now requires a `BrowserStore` instance (instead of a `SessionManager` instance). The `windowRequest` properties have been removed `Session` so window requests can now only be observed on a `BrowserStore` from the `browser-state` component. In addition, `WindowFeature` was moved from `feature-session` to `feature-tabs` because it now makes use of our `TabsUseCases` and this would otherwise cause a dependency cycle.
+
 * **feature-downloads**
   * Added ability to pause, resume, cancel, and try again on a download through the `DownloadNotification`.
   * Added support for multiple, continuous downloads.

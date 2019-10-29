@@ -42,10 +42,12 @@ abstract class EngineSession(
         fun onTrackerBlockingEnabledChange(enabled: Boolean) = Unit
         fun onTrackerBlocked(tracker: Tracker) = Unit
         fun onTrackerLoaded(tracker: Tracker) = Unit
+
         /**
-         * Event to notifies when this [EngineSession] should be [excluded] on tracking protection .
+         * Event to indicate whether or not this [EngineSession] should be [excluded] from tracking protection.
          */
         fun onExcludedOnTrackingProtectionChange(excluded: Boolean) = Unit
+
         fun onLongPress(hitResult: HitResult) = Unit
         fun onDesktopModeChange(enabled: Boolean) = Unit
         fun onFind(text: String) = Unit
@@ -56,14 +58,22 @@ abstract class EngineSession(
         fun onContentPermissionRequest(permissionRequest: PermissionRequest) = permissionRequest.reject()
         fun onCancelContentPermissionRequest(permissionRequest: PermissionRequest) = Unit
         fun onPromptRequest(promptRequest: PromptRequest) = Unit
-        fun onOpenWindowRequest(windowRequest: WindowRequest) = Unit
-        fun onCloseWindowRequest(windowRequest: WindowRequest) = Unit
+
+        /**
+         * The engine received a request to open or close a window.
+         *
+         * @param windowRequest the request to describing the required window action.
+         */
+        fun onWindowRequest(windowRequest: WindowRequest) = Unit
+
         fun onMediaAdded(media: Media) = Unit
         fun onMediaRemoved(media: Media) = Unit
+
         /**
          * Event to notify that a web extension browser action has changed.
          */
         fun onBrowserActionChange(webExtensionId: String, action: BrowserAction) = Unit
+
         fun onWebAppManifestLoaded(manifest: WebAppManifest) = Unit
         fun onCrash() = Unit
         fun onProcessKilled() = Unit

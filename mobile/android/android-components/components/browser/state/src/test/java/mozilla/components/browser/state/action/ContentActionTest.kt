@@ -16,6 +16,7 @@ import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.prompt.PromptRequest
+import mozilla.components.concept.engine.window.WindowRequest
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
@@ -376,7 +377,7 @@ class ContentActionTest {
     }
 
     @Test
-    fun `ConsumePromptRequestAction removes result`() {
+    fun `ConsumePromptRequestAction removes request`() {
         val promptRequest: PromptRequest = mock()
 
         store.dispatch(
@@ -430,5 +431,43 @@ class ContentActionTest {
         ).joinBlocking()
 
         assertTrue(tab.content.findResults.isEmpty())
+    }
+
+    @Test
+    fun `UpdateWindowRequestAction updates request`() {
+        assertNull(tab.content.windowRequest)
+
+        val windowRequest1: WindowRequest = mock()
+
+        store.dispatch(
+            ContentAction.UpdateWindowRequestAction(tab.id, windowRequest1)
+        ).joinBlocking()
+
+        assertEquals(windowRequest1, tab.content.windowRequest)
+
+        val windowRequest2: WindowRequest = mock()
+
+        store.dispatch(
+            ContentAction.UpdateWindowRequestAction(tab.id, windowRequest2)
+        ).joinBlocking()
+
+        assertEquals(windowRequest2, tab.content.windowRequest)
+    }
+
+    @Test
+    fun `ConsumeWindowRequestAction removes request`() {
+        val windowRequest: WindowRequest = mock()
+
+        store.dispatch(
+            ContentAction.UpdateWindowRequestAction(tab.id, windowRequest)
+        ).joinBlocking()
+
+        assertEquals(windowRequest, tab.content.windowRequest)
+
+        store.dispatch(
+            ContentAction.ConsumeWindowRequestAction(tab.id)
+        ).joinBlocking()
+
+        assertNull(tab.content.windowRequest)
     }
 }

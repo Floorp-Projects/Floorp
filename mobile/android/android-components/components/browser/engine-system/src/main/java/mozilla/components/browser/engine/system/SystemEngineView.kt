@@ -55,6 +55,7 @@ import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.content.blocking.Tracker
 import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.request.RequestInterceptor.InterceptionResponse
+import mozilla.components.concept.engine.window.WindowRequest
 import mozilla.components.concept.storage.PageVisit
 import mozilla.components.concept.storage.RedirectSource
 import mozilla.components.concept.storage.VisitType
@@ -548,7 +549,7 @@ class SystemEngineView @JvmOverloads constructor(
         ): Boolean {
             session?.internalNotifyObservers {
                 val newEngineSession = SystemEngineSession(context, session?.settings)
-                onOpenWindowRequest(SystemWindowRequest(
+                onWindowRequest(SystemWindowRequest(
                     view, newEngineSession, NestedWebView(context), isDialog, isUserGesture, resultMsg
                 ))
             }
@@ -556,7 +557,9 @@ class SystemEngineView @JvmOverloads constructor(
         }
 
         override fun onCloseWindow(window: WebView) {
-            session?.internalNotifyObservers { onCloseWindowRequest(SystemWindowRequest(window)) }
+            session?.internalNotifyObservers {
+                onWindowRequest(SystemWindowRequest(window, type = WindowRequest.Type.CLOSE))
+            }
         }
     }
 

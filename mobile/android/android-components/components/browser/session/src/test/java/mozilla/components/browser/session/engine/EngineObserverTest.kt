@@ -420,18 +420,18 @@ class EngineObserverTest {
     }
 
     @Test
-    fun engineSessionObserverWithWindowRequests() {
+    fun engineObserverHandlesWindowRequest() {
         val windowRequest = mock(WindowRequest::class.java)
         val session = Session("")
-        val observer = EngineObserver(session)
+        val store = mock(BrowserStore::class.java)
+        whenever(store.state).thenReturn(mock())
+        val observer = EngineObserver(session, store)
 
-        assertTrue(session.openWindowRequest.isConsumed())
-        observer.onOpenWindowRequest(windowRequest)
-        assertFalse(session.openWindowRequest.isConsumed())
-
-        assertTrue(session.closeWindowRequest.isConsumed())
-        observer.onCloseWindowRequest(windowRequest)
-        assertFalse(session.closeWindowRequest.isConsumed())
+        observer.onWindowRequest(windowRequest)
+        verify(store).dispatch(ContentAction.UpdateWindowRequestAction(
+            session.id,
+            windowRequest
+        ))
     }
 
     @Test
