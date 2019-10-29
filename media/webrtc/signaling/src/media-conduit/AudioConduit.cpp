@@ -579,7 +579,8 @@ MediaConduitErrorCode WebrtcAudioConduit::SendAudioFrame(
 MediaConduitErrorCode WebrtcAudioConduit::GetAudioFrame(int16_t speechData[],
                                                         int32_t samplingFreqHz,
                                                         int32_t capture_delay,
-                                                        int& lengthSamples) {
+                                                        size_t& numChannels,
+                                                        size_t& lengthSamples) {
   CSFLogDebug(LOGTAG, "%s ", __FUNCTION__);
 
   // validate params
@@ -610,16 +611,23 @@ MediaConduitErrorCode WebrtcAudioConduit::GetAudioFrame(int16_t speechData[],
     return kMediaConduitSessionNotInited;
   }
 
-  int lengthSamplesAllowed = lengthSamples;
+  size_t lengthSamplesAllowed = lengthSamples;
   lengthSamples = 0;  // output paramter
 
   mRecvChannelProxy->GetAudioFrameWithInfo(samplingFreqHz, &mAudioFrame);
+  numChannels = mAudioFrame.num_channels_;
+
+  if (numChannels == 0) {
+    CSFLogError(LOGTAG, "%s Audio frame has zero channels", __FUNCTION__);
+    return kMediaConduitPlayoutError;
+  }
+
   // XXX Annoying, have to copy to our buffers -- refactor?
   lengthSamples = mAudioFrame.samples_per_channel_ * mAudioFrame.num_channels_;
   MOZ_RELEASE_ASSERT(lengthSamples <= lengthSamplesAllowed);
   PodCopy(speechData, mAudioFrame.data(), lengthSamples);
 
-  CSFLogDebug(LOGTAG, "%s GetAudioFrame:Got samples: length %d ", __FUNCTION__,
+  CSFLogDebug(LOGTAG, "%s GetAudioFrame:Got samples: length %zu ", __FUNCTION__,
               lengthSamples);
   return kMediaConduitNoError;
 }
