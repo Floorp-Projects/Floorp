@@ -1746,7 +1746,7 @@ BrowserGlue.prototype = {
     Services.telemetry.getHistogramById("COOKIE_BEHAVIOR").add(cookieBehavior);
 
     let exceptions = 0;
-    for (let permission of Services.perms.all) {
+    for (let permission of Services.perms.enumerator) {
       if (permission.type == "trackingprotection") {
         exceptions++;
       }

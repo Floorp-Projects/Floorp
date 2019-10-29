@@ -46,7 +46,7 @@ function getLanguageExceptions() {
 
 function getDomainExceptions() {
   let results = [];
-  for (let perm of Services.perms.all) {
+  for (let perm of Services.perms.enumerator) {
     if (
       perm.type == "translate" &&
       perm.capability == Services.perms.DENY_ACTION

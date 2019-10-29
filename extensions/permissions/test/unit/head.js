@@ -22,6 +22,11 @@ function do_finish_generator_test(generator) {
   });
 }
 
-function do_count_array(all) {
-  return all.length;
+function do_count_enumerator(enumerator) {
+  let i = 0;
+  for (let item of enumerator) {
+    void item;
+    ++i;
+  }
+  return i;
 }
