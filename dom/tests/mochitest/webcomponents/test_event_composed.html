@@ -1,0 +1,72 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for composed event in web components</title>
+  <script type="text/javascript" src="head.js"></script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<div id="host">
+<script>
+
+let host = document.getElementById("host");
+let root = host.attachShadow({ mode: "open" });
+
+function waitForEvent(element, eventName) {
+  let promises = [];
+  promises.push(new Promise((resolve) => {
+    element.addEventListener(eventName, (event) => {
+      is(event.composed, true, "check composed");
+      resolve();
+    }, { once:  true });
+  }));
+  promises.push(new Promise((resolve) => {
+    root.addEventListener(eventName, (event) => {
+      is(event.composed, true, "check composed");
+      resolve();
+    }, { once:  true });
+  }));
+  promises.push(new Promise((resolve) => {
+    host.addEventListener(eventName, (event) => {
+      is(event.composed, true, "check composed");
+      resolve();
+    }, { once:  true });
+  }));
+  return Promise.all(promises);
+}
+
+// https://bugzilla.mozilla.org/show_bug.cgi?id=1554965
+add_task(async function input_type_date() {
+  let date = document.createElement("input");
+  date.type = "date";
+  date.value = "2020-01-01";
+  root.appendChild(date);
+
+  let promise = waitForEvent(date, "input");
+  date.focus();
+  synthesizeKey("KEY_ArrowDown");
+
+  await promise;
+
+  date.remove();
+});
+
+// https://bugzilla.mozilla.org/show_bug.cgi?id=1554965
+add_task(function input_type_time() {
+  let time = document.createElement("input");
+  time.type = "time";
+  time.value = "10:30";
+  root.appendChild(time);
+
+  let promise = waitForEvent(time, "input");
+  time.focus();
+  synthesizeKey("KEY_ArrowDown");
+
+  time.remove();
+});
+
+</script>
+</body>
+</html>
