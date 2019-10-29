@@ -22,6 +22,8 @@ add_task(async function test_notifications_permission() {
     set: [
       // Set pref to exercise relevant code path for regression test.
       ["permissions.delegation.enable", true],
+      // Automatically dismiss the permission request when it appears.
+      ["dom.webnotifications.requireuserinteraction", true],
     ],
   });
 
