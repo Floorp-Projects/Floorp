@@ -521,6 +521,11 @@
     `,
           "application/xml"
         );
+
+        if (doc.documentElement.localName === "parsererror") {
+          throw new Error("not well-formed XML");
+        }
+
         // The XUL/XBL parser is set to ignore all-whitespace nodes, whereas (X)HTML
         // does not do this. Most XUL code assumes that the whitespace has been
         // stripped out, so we simply remove all text nodes after using the parser.
