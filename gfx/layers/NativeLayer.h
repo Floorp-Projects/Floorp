@@ -71,9 +71,9 @@ class NativeLayer {
   virtual void SetRect(const gfx::IntRect& aRect) = 0;
   virtual gfx::IntRect GetRect() = 0;
 
-  // Define which parts of the layer are opaque..
-  virtual void SetOpaqueRegion(const gfx::IntRegion& aRegion) = 0;
-  virtual gfx::IntRegion OpaqueRegion() = 0;
+  // Set whether the layer is fully opaque.
+  virtual void SetIsOpaque(bool aIsOpaque) = 0;
+  virtual bool IsOpaque() = 0;
 
   // Whether the surface contents are flipped vertically compared to this
   // layer's coordinate system. Can be set on any thread at any time.

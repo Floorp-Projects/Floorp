@@ -1515,7 +1515,8 @@ void nsChildView::PaintWindowInContentLayer() {
   mContentLayer->SetRect(GetBounds().ToUnknownRect());
   {
     auto opaqueRegion = mOpaqueRegion.Lock();
-    mContentLayer->SetOpaqueRegion(opaqueRegion->ToUnknownRegion());
+    bool isOpaque = *opaqueRegion == GetBounds();
+    mContentLayer->SetIsOpaque(isOpaque);
   }
   mContentLayer->SetSurfaceIsFlipped(false);
   CFTypeRefPtr<IOSurfaceRef> surf = mContentLayer->NextSurface();
