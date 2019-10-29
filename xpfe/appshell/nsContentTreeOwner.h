@@ -52,11 +52,6 @@ class nsContentTreeOwner final : public nsIDocShellTreeOwner,
   nsXULWindow* mXULWindow;
   nsSiteWindow* mSiteWindow;
   bool mPrimary;
-  bool mContentTitleSetting;
-  nsString mWindowTitleModifier;
-  nsString mTitleSeparator;
-  nsString mTitlePreface;
-  nsString mTitleDefault;
 };
 
 #endif /* nsContentTreeOwner_h__ */
