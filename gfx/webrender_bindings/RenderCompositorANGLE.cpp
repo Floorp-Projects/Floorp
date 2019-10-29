@@ -349,7 +349,8 @@ RefPtr<IDXGISwapChain1> RenderCompositorANGLE::CreateSwapChainForDComp(
   return nullptr;
 }
 
-bool RenderCompositorANGLE::BeginFrame() {
+bool RenderCompositorANGLE::BeginFrame(layers::NativeLayer* aNativeLayer) {
+  MOZ_RELEASE_ASSERT(!aNativeLayer, "Unexpected native layer on this platform");
   mWidget->AsWindows()->UpdateCompositorWndSizeIfNecessary();
 
   if (mDCLayerTree) {
