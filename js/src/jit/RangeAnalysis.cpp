@@ -1207,18 +1207,7 @@ Range* Range::NaNToZero(TempAllocator& alloc, const Range* op) {
 }
 
 Range* Range::toIntegerInt32(TempAllocator& alloc, const Range* op) {
-  Range* copy = new (alloc) Range(*op);
-  copy->canHaveFractionalPart_ = ExcludesFractionalParts;
-  if (copy->canBeNaN()) {
-    copy->max_exponent_ = Range::IncludesInfinity;
-    if (!copy->canBeZero()) {
-      Range zero;
-      zero.setDoubleSingleton(0);
-      copy->unionWith(&zero);
-    }
-  }
-  copy->refineToExcludeNegativeZero();
-  return copy;
+  return Range::NaNToZero(alloc, Range::ceil(alloc, op));
 }
 
 bool Range::negativeZeroMul(const Range* lhs, const Range* rhs) {
