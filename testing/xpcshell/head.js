@@ -647,6 +647,8 @@ function _execute_test() {
     .then(() => (complete = true));
   _Services.tm.spinEventLoopUntil(() => complete);
 
+  _Services.obs.notifyObservers(null, "test-complete");
+
   // Restore idle service to avoid leaks.
   _fakeIdleService.deactivate();
 
