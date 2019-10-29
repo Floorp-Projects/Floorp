@@ -6,6 +6,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/Logging.h"
 #include "nsNSSIOLayer.h"
+#include "TransportSecurityInfo.h"
 #include "ssl.h"
 #include "sslexp.h"
 
@@ -142,24 +143,21 @@ nsresult SSLTokensCache::Put(const nsACString& aKey, const uint8_t* aToken,
   }
 
   Maybe<nsTArray<nsTArray<uint8_t>>> succeededCertChainBytes;
-  nsCOMPtr<nsIX509CertList> succeededCertChain;
-  Unused << aSecInfo->GetSucceededCertChain(getter_AddRefs(succeededCertChain));
-  if (succeededCertChain) {
-    succeededCertChainBytes.emplace();
-    rv = succeededCertChain->GetCertList()->ForEachCertificateInChain(
-        [&succeededCertChainBytes](nsCOMPtr<nsIX509Cert> aCert, bool /*unused*/,
-                                   /*out*/ bool& /*unused*/) {
-          nsTArray<uint8_t> cert;
-          nsresult rv = aCert->GetRawDER(cert);
-          if (NS_FAILED(rv)) {
-            return rv;
-          }
+  nsTArray<RefPtr<nsIX509Cert>> succeededCertArray;
+  rv = aSecInfo->GetSucceededCertChain(succeededCertArray);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
-          succeededCertChainBytes->AppendElement(std::move(cert));
-          return NS_OK;
-        });
-    if (NS_FAILED(rv)) {
-      return rv;
+  if (!succeededCertArray.IsEmpty()) {
+    succeededCertChainBytes.emplace();
+    for (const auto& cert : succeededCertArray) {
+      nsTArray<uint8_t> rawCert;
+      nsresult rv = cert->GetRawDER(rawCert);
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+      succeededCertChainBytes->AppendElement(std::move(rawCert));
     }
   }
 

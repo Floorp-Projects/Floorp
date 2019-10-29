@@ -38,7 +38,8 @@ FuzzySecurityInfo::GetErrorCodeString(nsAString& aErrorString) {
 }
 
 NS_IMETHODIMP
-FuzzySecurityInfo::GetFailedCertChain(nsIX509CertList** _result) {
+FuzzySecurityInfo::GetFailedCertChain(
+    nsTArray<RefPtr<nsIX509Cert>>& aFailedCertChain) {
   MOZ_CRASH("Unused");
   return NS_OK;
 }
@@ -54,8 +55,8 @@ FuzzySecurityInfo::GetServerCert(nsIX509Cert** aServerCert) {
 }
 
 NS_IMETHODIMP
-FuzzySecurityInfo::GetSucceededCertChain(nsIX509CertList** _result) {
-  NS_ENSURE_ARG_POINTER(_result);
+FuzzySecurityInfo::GetSucceededCertChain(
+    nsTArray<RefPtr<nsIX509Cert>>& aSucceededCertChain) {
   MOZ_CRASH("Unused");
   return NS_OK;
 }

@@ -24,13 +24,6 @@ struct ParamTraits<nsIX509Cert*> {
                    RefPtr<nsIX509Cert>* aResult);
 };
 
-template <>
-struct ParamTraits<nsIX509CertList*> {
-  static void Write(Message* aMsg, nsIX509CertList* aCertList);
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   RefPtr<nsIX509CertList>* aResult);
-};
-
 }  // namespace IPC
 
 #endif  // mozilla_ipc_TransportSecurityInfoUtils_h

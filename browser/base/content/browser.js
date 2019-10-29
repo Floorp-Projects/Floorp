@@ -3550,7 +3550,7 @@ var BrowserOnClick = {
         securityInfo = getSecurityInfo(securityInfoAsString);
         cert = securityInfo.serverCert;
         if (Services.prefs.getBoolPref("security.aboutcertificate.enabled")) {
-          let certChain = getCertificateChain(securityInfo.failedCertChain);
+          let certChain = securityInfo.failedCertChain;
           let certs = certChain.map(elem =>
             encodeURIComponent(elem.getBase64DERString())
           );
@@ -3848,14 +3848,6 @@ function getPEMString(cert) {
     wrapped +
     "\r\n-----END CERTIFICATE-----\r\n"
   );
-}
-
-function getCertificateChain(certChain) {
-  let certificates = [];
-  for (let cert of certChain.getEnumerator()) {
-    certificates.push(cert);
-  }
-  return certificates;
 }
 
 var PrintPreviewListener = {

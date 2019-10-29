@@ -16,7 +16,7 @@ function getSecurityInfo(securityInfoAsString) {
 function getCertChain(securityInfoAsString) {
   let certChain = "";
   let securityInfo = getSecurityInfo(securityInfoAsString);
-  for (let cert of securityInfo.failedCertChain.getEnumerator()) {
+  for (let cert of securityInfo.failedCertChain) {
     certChain += getPEMString(cert);
   }
   return certChain;

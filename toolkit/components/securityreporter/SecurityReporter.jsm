@@ -55,7 +55,7 @@ SecurityReporter.prototype = {
     let asciiCertChain = [];
 
     if (transportSecurityInfo.failedCertChain) {
-      for (let cert of transportSecurityInfo.failedCertChain.getEnumerator()) {
+      for (let cert of transportSecurityInfo.failedCertChain) {
         asciiCertChain.push(cert.getBase64DERString());
       }
     }
