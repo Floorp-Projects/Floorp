@@ -5,12 +5,12 @@
 #ifndef mozilla_dom_MediaDevices_h
 #define mozilla_dom_MediaDevices_h
 
+#include "MediaEventSource.h"
 #include "mozilla/ErrorResult.h"
 #include "nsISupportsImpl.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "nsPIDOMWindow.h"
-#include "mozilla/media/DeviceChangeCallback.h"
 
 namespace mozilla {
 namespace dom {
@@ -27,8 +27,7 @@ struct MediaTrackSupportedConstraints;
     }                                                \
   }
 
-class MediaDevices final : public DOMEventTargetHelper,
-                           public DeviceChangeCallback {
+class MediaDevices final : public DOMEventTargetHelper {
  public:
   explicit MediaDevices(nsPIDOMWindowInner* aWindow)
       : DOMEventTargetHelper(aWindow) {}
@@ -53,10 +52,12 @@ class MediaDevices final : public DOMEventTargetHelper,
       const DisplayMediaStreamConstraints& aConstraints, CallerType aCallerType,
       ErrorResult& aRv);
 
-  virtual void OnDeviceChange() override;
+  // Called when MediaManager encountered a change in its device lists.
+  void OnDeviceChange();
+
+  void SetupDeviceChangeListener();
 
   mozilla::dom::EventHandlerNonNull* GetOndevicechange();
-
   void SetOndevicechange(mozilla::dom::EventHandlerNonNull* aCallback);
 
   void EventListenerAdded(nsAtom* aType) override;
@@ -69,6 +70,10 @@ class MediaDevices final : public DOMEventTargetHelper,
 
   virtual ~MediaDevices();
   nsCOMPtr<nsITimer> mFuzzTimer;
+
+  // Connect/Disconnect on main thread only
+  MediaEventListener mDeviceChangeListener;
+  bool mIsDeviceChangeListenerSetUp = false;
 
   void RecordAccessTelemetry(const UseCounter counter) const;
 };

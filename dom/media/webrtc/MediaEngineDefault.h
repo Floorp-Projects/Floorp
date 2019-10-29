@@ -144,8 +144,13 @@ class MediaEngineDefault : public MediaEngine {
                         nsTArray<RefPtr<MediaDevice>>*) override;
   void Shutdown() override {}
 
+  MediaEventSource<void>& DeviceListChangeEvent() override {
+    return mDeviceListChangeEvent;
+  }
+
  private:
   ~MediaEngineDefault() = default;
+  MediaEventProducer<void> mDeviceListChangeEvent;
 };
 
 }  // namespace mozilla

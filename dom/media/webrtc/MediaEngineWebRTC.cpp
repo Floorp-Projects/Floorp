@@ -21,6 +21,8 @@
 #include "nsITabSource.h"
 #include "prenv.h"
 
+#define FAKE_ONDEVICECHANGE_EVENT_PERIOD_IN_MS 5000
+
 static mozilla::LazyLogModule sGetUserMediaLog("GetUserMedia");
 #undef LOG
 #define LOG(args) MOZ_LOG(sGetUserMediaLog, mozilla::LogLevel::Debug, args)
@@ -47,13 +49,40 @@ MediaEngineWebRTC::MediaEngineWebRTC(MediaEnginePrefs& aPrefs)
                                     &mHasTabVideoSource);
   }
 
-  GetChildAndCall(&CamerasChild::AddDeviceChangeCallback, this);
-  GetEnumerator()->AddDeviceChangeCallback(this);
+  GetChildAndCall(
+      &CamerasChild::ConnectDeviceListChangeListener<MediaEngineWebRTC>,
+      &mCameraListChangeListener, AbstractThread::MainThread(), this,
+      &MediaEngineWebRTC::DeviceListChanged);
+  mMicrophoneListChangeListener =
+      GetEnumerator()->OnAudioInputDeviceListChange().Connect(
+          AbstractThread::MainThread(), this,
+          &MediaEngineWebRTC::DeviceListChanged);
+  mSpeakerListChangeListener =
+      GetEnumerator()->OnAudioOutputDeviceListChange().Connect(
+          AbstractThread::MainThread(), this,
+          &MediaEngineWebRTC::DeviceListChanged);
 }
 
-void MediaEngineWebRTC::SetFakeDeviceChangeEvents() {
+void MediaEngineWebRTC::SetFakeDeviceChangeEventsEnabled(bool aEnable) {
   AssertIsOnOwningThread();
-  GetChildAndCall(&CamerasChild::SetFakeDeviceChangeEvents);
+
+  // To simulate the devicechange event in mochitest, we schedule a timer to
+  // issue "devicechange" repeatedly until disabled.
+
+  if (aEnable && !mFakeDeviceChangeEventTimer) {
+    NS_NewTimerWithFuncCallback(
+        getter_AddRefs(mFakeDeviceChangeEventTimer),
+        &FakeDeviceChangeEventTimerTick, this,
+        FAKE_ONDEVICECHANGE_EVENT_PERIOD_IN_MS, nsITimer::TYPE_REPEATING_SLACK,
+        "MediaEngineWebRTC::mFakeDeviceChangeEventTimer");
+    return;
+  }
+
+  if (!aEnable && mFakeDeviceChangeEventTimer) {
+    mFakeDeviceChangeEventTimer->Cancel();
+    mFakeDeviceChangeEventTimer = nullptr;
+    return;
+  }
 }
 
 void MediaEngineWebRTC::EnumerateVideoDevices(
@@ -284,13 +313,19 @@ void MediaEngineWebRTC::EnumerateDevices(
 
 void MediaEngineWebRTC::Shutdown() {
   AssertIsOnOwningThread();
-  if (camera::GetCamerasChildIfExists()) {
-    GetChildAndCall(&CamerasChild::RemoveDeviceChangeCallback, this);
-  }
-  GetEnumerator()->RemoveDeviceChangeCallback(this);
+  MOZ_DIAGNOSTIC_ASSERT(!mFakeDeviceChangeEventTimer);
+  mCameraListChangeListener.DisconnectIfExists();
+  mMicrophoneListChangeListener.DisconnectIfExists();
+  mSpeakerListChangeListener.DisconnectIfExists();
 
   LOG(("%s", __FUNCTION__));
   mozilla::camera::Shutdown();
+}
+
+/* static */ void MediaEngineWebRTC::FakeDeviceChangeEventTimerTick(
+    nsITimer* aTimer, void* aClosure) {
+  MediaEngineWebRTC* self = static_cast<MediaEngineWebRTC*>(aClosure);
+  self->DeviceListChanged();
 }
 
 }  // namespace mozilla
