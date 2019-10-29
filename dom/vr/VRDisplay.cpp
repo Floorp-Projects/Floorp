@@ -68,6 +68,15 @@ uint32_t VRDisplayCapabilities::MaxLayers() const {
   return CanPresent() ? 1 : 0;
 }
 
+void VRDisplay::UpdateDisplayClient(
+    already_AddRefed<gfx::VRDisplayClient> aClient) {
+  mClient = std::move(aClient);
+
+  const gfx::VRDisplayInfo& info = mClient->GetDisplayInfo();
+  mDisplayId = info.GetDisplayID();
+  mDisplayName = NS_ConvertUTF8toUTF16(info.GetDisplayName());
+}
+
 /*static*/
 bool VRDisplay::RefreshVRDisplays(uint64_t aWindowId) {
   gfx::VRManagerChild* vm = gfx::VRManagerChild::Get();
@@ -89,6 +98,11 @@ void VRDisplay::UpdateVRDisplays(nsTArray<RefPtr<VRDisplay>>& aDisplays,
       for (size_t j = 0; j < aDisplays.Length(); j++) {
         if (aDisplays[j]->GetClient()->GetDisplayInfo().GetDisplayID() ==
             display->GetDisplayInfo().GetDisplayID()) {
+          displays.AppendElement(aDisplays[j]);
+          isNewDisplay = false;
+        } else {
+          RefPtr<gfx::VRDisplayClient> ref = display;
+          aDisplays[j]->UpdateDisplayClient(do_AddRef(display));
           displays.AppendElement(aDisplays[j]);
           isNewDisplay = false;
         }

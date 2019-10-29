@@ -329,6 +329,7 @@ class HTMLCanvasElement final : public nsGenericHTMLElement,
   static void InvalidateFromAsyncCanvasRenderer(AsyncCanvasRenderer* aRenderer);
 
   already_AddRefed<layers::SharedSurfaceTextureClient> GetVRFrame();
+  void ClearVRFrame();
 
   bool MaybeModified() const { return mMaybeModified; };
 
