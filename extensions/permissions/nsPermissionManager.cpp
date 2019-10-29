@@ -2598,9 +2598,9 @@ NS_IMETHODIMP nsPermissionManager::GetAllWithTypePrefix(
 }
 
 NS_IMETHODIMP
-nsPermissionManager::GetAllForPrincipal(nsIPrincipal* aPrincipal,
-                                        nsISimpleEnumerator** aEnum) {
-  nsCOMArray<nsIPermission> array;
+nsPermissionManager::GetAllForPrincipal(
+    nsIPrincipal* aPrincipal, nsTArray<RefPtr<nsIPermission>>& aResult) {
+  aResult.Clear();
 
   MOZ_ASSERT(PermissionAvailable(aPrincipal, EmptyCString()));
 
@@ -2621,18 +2621,18 @@ nsPermissionManager::GetAllForPrincipal(nsIPrincipal* aPrincipal,
         continue;
       }
 
-      nsCOMPtr<nsIPermission> permission = nsPermission::Create(
+      RefPtr<nsIPermission> permission = nsPermission::Create(
           aPrincipal, mTypeArray[permEntry.mType], permEntry.mPermission,
           permEntry.mExpireType, permEntry.mExpireTime,
           permEntry.mModificationTime);
       if (NS_WARN_IF(!permission)) {
         continue;
       }
-      array.AppendObject(permission);
+      aResult.AppendElement(permission);
     }
   }
 
-  return NS_NewArrayEnumerator(aEnum, array, NS_GET_IID(nsIPermission));
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsPermissionManager::Observe(nsISupports* aSubject,
