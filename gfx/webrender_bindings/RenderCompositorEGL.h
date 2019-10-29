@@ -22,7 +22,7 @@ class RenderCompositorEGL : public RenderCompositor {
   explicit RenderCompositorEGL(RefPtr<widget::CompositorWidget> aWidget);
   virtual ~RenderCompositorEGL();
 
-  bool BeginFrame(layers::NativeLayer* aNativeLayer) override;
+  bool BeginFrame() override;
   void EndFrame() override;
   void Pause() override;
   bool Resume() override;

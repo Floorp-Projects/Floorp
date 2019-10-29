@@ -26,8 +26,6 @@ class GLContext;
 
 namespace layers {
 class CompositorBridgeParent;
-class NativeLayerRoot;
-class NativeLayer;
 class SyncObjectHost;
 }  // namespace layers
 
@@ -108,8 +106,6 @@ class RendererOGL {
  protected:
   RefPtr<RenderThread> mThread;
   UniquePtr<RenderCompositor> mCompositor;
-  RefPtr<layers::NativeLayerRoot> mNativeLayerRoot;
-  RefPtr<layers::NativeLayer> mNativeLayerForEntireWindow;
   wr::Renderer* mRenderer;
   layers::CompositorBridgeParent* mBridge;
   wr::WindowId mWindowId;

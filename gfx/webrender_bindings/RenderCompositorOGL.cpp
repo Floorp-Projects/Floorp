@@ -32,12 +32,28 @@ RenderCompositorOGL::RenderCompositorOGL(
     RefPtr<gl::GLContext>&& aGL, RefPtr<widget::CompositorWidget>&& aWidget)
     : RenderCompositor(std::move(aWidget)),
       mGL(aGL),
+      mNativeLayerRoot(GetWidget()->GetNativeLayerRoot()),
       mPreviousFrameDoneSync(nullptr),
       mThisFrameDoneSync(nullptr) {
   MOZ_ASSERT(mGL);
+
+  if (mNativeLayerRoot) {
+    mNativeLayerForEntireWindow = mNativeLayerRoot->CreateLayer();
+    mNativeLayerForEntireWindow->SetSurfaceIsFlipped(true);
+    mNativeLayerForEntireWindow->SetGLContext(mGL);
+    mNativeLayerRoot->AppendLayer(mNativeLayerForEntireWindow);
+  }
 }
 
 RenderCompositorOGL::~RenderCompositorOGL() {
+  if (mNativeLayerRoot) {
+    if (mNativeLayerForEntireWindow) {
+      mNativeLayerRoot->RemoveLayer(mNativeLayerForEntireWindow);
+      mNativeLayerForEntireWindow = nullptr;
+    }
+    mNativeLayerRoot = nullptr;
+  }
+
   if (!mGL->MakeCurrent()) {
     gfxCriticalNote
         << "Failed to make render context current during destroying.";
@@ -55,21 +71,21 @@ RenderCompositorOGL::~RenderCompositorOGL() {
   }
 }
 
-bool RenderCompositorOGL::BeginFrame(layers::NativeLayer* aNativeLayer) {
+bool RenderCompositorOGL::BeginFrame() {
   if (!mGL->MakeCurrent()) {
     gfxCriticalNote << "Failed to make render context current, can't draw.";
     return false;
   }
 
-  if (aNativeLayer) {
-    aNativeLayer->SetSurfaceIsFlipped(true);
-    aNativeLayer->SetGLContext(mGL);
-    Maybe<GLuint> fbo = aNativeLayer->NextSurfaceAsFramebuffer(true);
+  if (mNativeLayerForEntireWindow) {
+    gfx::IntRect bounds({}, GetBufferSize().ToUnknownSize());
+    mNativeLayerForEntireWindow->SetRect(bounds);
+    Maybe<GLuint> fbo =
+        mNativeLayerForEntireWindow->NextSurfaceAsFramebuffer(true);
     if (!fbo) {
       return false;
     }
     mGL->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, *fbo);
-    mCurrentNativeLayer = aNativeLayer;
   } else {
     mGL->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, mGL->GetDefaultFramebuffer());
   }
@@ -81,9 +97,8 @@ void RenderCompositorOGL::EndFrame() {
   InsertFrameDoneSync();
   mGL->SwapBuffers();
 
-  if (mCurrentNativeLayer) {
-    mCurrentNativeLayer->NotifySurfaceReady();
-    mCurrentNativeLayer = nullptr;
+  if (mNativeLayerForEntireWindow) {
+    mNativeLayerForEntireWindow->NotifySurfaceReady();
   }
 }
 
