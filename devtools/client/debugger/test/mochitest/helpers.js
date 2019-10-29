@@ -243,10 +243,14 @@ function assertClass(el, className, exists = true) {
   }
 }
 
-function waitForSelectedLocation(dbg, line) {
+function waitForSelectedLocation(dbg, line, column) {
   return waitForState(dbg, state => {
     const location = dbg.selectors.getSelectedLocation();
-    return location && location.line == line;
+    return (
+      location &&
+      (line ? location.line == line : true) &&
+      (column ? location.column == column : true)
+    );
   });
 }
 
@@ -715,11 +719,11 @@ function getThreadContext(dbg) {
  * @return {Promise}
  * @static
  */
-async function selectSource(dbg, url, line) {
+async function selectSource(dbg, url, line, column) {
   const source = findSource(dbg, url);
   await dbg.actions.selectLocation(
     getContext(dbg),
-    { sourceId: source.id, line },
+    { sourceId: source.id, line, column },
     { keepContext: false }
   );
   return waitForSelectedSource(dbg, url);
@@ -1315,6 +1319,7 @@ const selectors = {
   replayNext: ".replay-next.active",
   toggleBreakpoints: ".breakpoints-toggle",
   prettyPrintButton: ".source-footer .prettyPrint",
+  prettyPrintLoader: ".source-footer .spin",
   sourceMapLink: ".source-footer .mapped-source",
   sourcesFooter: ".sources-panel .source-footer",
   editorFooter: ".editor-pane .source-footer",
