@@ -89,15 +89,6 @@ void Text::GetWholeText(nsAString& aWholeText, ErrorResult& aRv) {
     return;
   }
 
-  int32_t index = parent->ComputeIndexOf(this);
-  NS_WARNING_ASSERTION(index >= 0,
-                       "Trying to use .wholeText with an anonymous"
-                       "text node child of a binding parent?");
-  if (NS_WARN_IF(index < 0)) {
-    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-    return;
-  }
-
   Text* first = FirstLogicallyAdjacentTextNode(this);
   Text* last = LastLogicallyAdjacentTextNode(this);
 
