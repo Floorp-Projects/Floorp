@@ -34,24 +34,7 @@ const UnsolicitedNotifications = {
   newSource: "newSource",
 };
 
-/**
- * Set of pause types that are sent by the server and not as an immediate
- * response to a client request.
- */
-const UnsolicitedPauses = {
-  resumeLimit: "resumeLimit",
-  debuggerStatement: "debuggerStatement",
-  breakpoint: "breakpoint",
-  DOMEvent: "DOMEvent",
-  watchpoint: "watchpoint",
-  eventBreakpoint: "eventBreakpoint",
-  exception: "exception",
-  replayForcedPause: "replayForcedPause",
-  mutationBreakpoint: "mutationBreakpoint",
-};
-
 module.exports = {
   ThreadStateTypes,
   UnsolicitedNotifications,
-  UnsolicitedPauses,
 };
