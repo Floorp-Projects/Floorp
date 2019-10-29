@@ -34,6 +34,7 @@
 #include "js/PropertySpec.h"
 #include "js/UniquePtr.h"
 #include "js/Wrapper.h"
+#include "util/Text.h"
 #include "util/Windows.h"
 #include "vm/ArrayBufferObject.h"
 #include "vm/GlobalObject.h"
@@ -2350,6 +2351,58 @@ static inline bool StringIsNaN(mozilla::Range<const CharT> s) {
 }
 
 template <typename CharT>
+static JS::Result<mozilla::Maybe<uint64_t>> StringIsTypedArrayIndexSlow(
+    JSContext* cx, mozilla::Range<const CharT> s) {
+  using ResultType = decltype(StringIsTypedArrayIndexSlow(cx, s));
+
+  const mozilla::RangedPtr<const CharT> start = s.begin();
+  const mozilla::RangedPtr<const CharT> end = s.end();
+
+  const CharT* actualEnd;
+  double result;
+  if (!js_strtod(cx, start.get(), end.get(), &actualEnd, &result)) {
+    return cx->alreadyReportedOOM();
+  }
+
+  // The complete string must have been parsed.
+  if (actualEnd != end.get()) {
+    return ResultType(mozilla::Nothing());
+  }
+
+  // Now convert it back to a string.
+  ToCStringBuf cbuf;
+  const char* cstr = js::NumberToCString(cx, &cbuf, result);
+  if (!cstr) {
+    return ReportOutOfMemoryResult(cx);
+  }
+
+  // Both strings must be equal for a canonical numeric index string.
+  if (s.length() != strlen(cstr) ||
+      !EqualChars(start.get(), cstr, s.length())) {
+    return ResultType(mozilla::Nothing());
+  }
+
+  // Directly perform IsInteger() check and encode negative and non-integer
+  // indices as OOB.
+  // See 9.4.5.2 [[HasProperty]], steps 3.b.iii and 3.b.v.
+  // See 9.4.5.3 [[DefineOwnProperty]], steps 3.b.i and 3.b.iii.
+  // See 9.4.5.8 IntegerIndexedElementGet, steps 5 and 8.
+  // See 9.4.5.9 IntegerIndexedElementSet, steps 6 and 9.
+  if (result < 0 || !IsInteger(result)) {
+    return mozilla::Some(UINT64_MAX);
+  }
+
+  // Anything equals-or-larger than 2^53 is definitely OOB, encode it
+  // accordingly so that the cast to uint64_t is well defined.
+  if (result >= DOUBLE_INTEGRAL_PRECISION_LIMIT) {
+    return mozilla::Some(UINT64_MAX);
+  }
+
+  // The string is an actual canonical numeric index.
+  return mozilla::Some(uint64_t(result));
+}
+
+template <typename CharT>
 JS::Result<mozilla::Maybe<uint64_t>> js::StringIsTypedArrayIndex(
     JSContext* cx, mozilla::Range<const CharT> s) {
   using ResultType = decltype(StringIsTypedArrayIndex(cx, s));
@@ -2380,6 +2433,11 @@ JS::Result<mozilla::Maybe<uint64_t>> js::StringIsTypedArrayIndex(
 
   // Don't allow leading zeros.
   if (digit == 0 && cp != end) {
+    // The string may be of the form "0.xyz". The exponent form isn't possible
+    // when the string starts with "0".
+    if (*cp == '.') {
+      return StringIsTypedArrayIndexSlow(cx, s);
+    }
     return ResultType(mozilla::Nothing());
   }
 
@@ -2387,16 +2445,24 @@ JS::Result<mozilla::Maybe<uint64_t>> js::StringIsTypedArrayIndex(
 
   for (; cp < end; cp++) {
     if (!IsAsciiDigit(*cp)) {
+      // Take the slow path when the string has fractional parts or an exponent.
+      if (*cp == '.' || *cp == 'e') {
+        return StringIsTypedArrayIndexSlow(cx, s);
+      }
       return ResultType(mozilla::Nothing());
     }
 
     digit = AsciiDigitToNumber(*cp);
 
-    // Watch for overflows.
-    if ((UINT64_MAX - digit) / 10 < index) {
-      index = UINT64_MAX;
-    } else {
-      index = 10 * index + digit;
+    static_assert(
+        uint64_t(DOUBLE_INTEGRAL_PRECISION_LIMIT) < (UINT64_MAX - 10) / 10,
+        "2^53 is way below UINT64_MAX, so |10 * index + digit| can't overflow");
+
+    index = 10 * index + digit;
+
+    // Also take the slow path when the string is larger-or-equals 2^53.
+    if (index >= uint64_t(DOUBLE_INTEGRAL_PRECISION_LIMIT)) {
+      return StringIsTypedArrayIndexSlow(cx, s);
     }
   }
 

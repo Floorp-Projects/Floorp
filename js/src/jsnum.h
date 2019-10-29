@@ -112,7 +112,7 @@ extern char* NumberToCString(JSContext* cx, ToCStringBuf* cbuf, double d,
  * The largest positive integer such that all positive integers less than it
  * may be precisely represented using the IEEE-754 double-precision format.
  */
-const double DOUBLE_INTEGRAL_PRECISION_LIMIT = uint64_t(1) << 53;
+constexpr double DOUBLE_INTEGRAL_PRECISION_LIMIT = uint64_t(1) << 53;
 
 /*
  * Parse a decimal number encoded in |chars|.  The decimal number must be
