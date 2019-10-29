@@ -114,7 +114,6 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
           // Handle the heuristic result.
           sortedResults.unshift(result);
           handled.add(result);
-          context.maxResults -= UrlbarUtils.getSpanForResult(result) - 1;
           slots--;
         } else if (group == RESULT_TYPE_TO_GROUP.get(result.type)) {
           // If there's no suggestedIndex, insert the result now, otherwise
@@ -123,7 +122,6 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
             sortedResults.push(result);
           }
           handled.add(result);
-          context.maxResults -= UrlbarUtils.getSpanForResult(result) - 1;
           slots--;
         } else if (!RESULT_TYPE_TO_GROUP.has(result.type)) {
           let errorMsg = `Result type ${
