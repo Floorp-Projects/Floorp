@@ -63,8 +63,7 @@ RenderCompositorEGL::~RenderCompositorEGL() {
   DestroyEGLSurface();
 }
 
-bool RenderCompositorEGL::BeginFrame(layers::NativeLayer* aNativeLayer) {
-  MOZ_RELEASE_ASSERT(!aNativeLayer, "Unexpected native layer on this platform");
+bool RenderCompositorEGL::BeginFrame() {
 #ifdef MOZ_WAYLAND
   bool newSurface =
       mWidget->AsX11() && mWidget->AsX11()->WaylandRequestsUpdatingEGLSurface();
