@@ -94,7 +94,7 @@ var PermissionUITelemetry = {
       "microphone",
       "screen",
     ];
-    for (let perm of Services.perms.all) {
+    for (let perm of Services.perms.enumerator) {
       if (!commonPermissions.includes(perm.type)) {
         continue;
       }
