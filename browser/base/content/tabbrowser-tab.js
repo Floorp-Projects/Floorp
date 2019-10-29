@@ -101,6 +101,10 @@
     }
 
     connectedCallback() {
+      this.initialize();
+    }
+
+    initialize() {
       if (this._initialized) {
         return;
       }

@@ -2741,6 +2741,9 @@
 
         let tabAfter = this.tabs[index] || null;
         this._invalidateCachedTabs();
+        // Prevent a flash of unstyled content by setting up the tab content
+        // and inherited attributes before appending it (see Bug 1592054):
+        t.initialize();
         this.tabContainer.insertBefore(t, tabAfter);
         if (tabAfter) {
           this._updateTabsAfterInsert();
