@@ -26,6 +26,7 @@ import mozilla.components.concept.engine.utils.EngineVersion
 import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.concept.engine.webextension.WebExtensionDelegate
 import org.json.JSONObject
+import org.mozilla.geckoview.ContentBlocking
 import org.mozilla.geckoview.ContentBlockingController
 import org.mozilla.geckoview.ContentBlockingController.Event
 import org.mozilla.geckoview.GeckoResult
@@ -238,6 +239,13 @@ class GeckoEngine(
                         policy.strictSocialTrackingProtection ?: policy.trackingCategories.contains(
                             TrackingCategory.STRICT
                         )
+                    val etpLevel =
+                        when {
+                            policy.trackingCategories.contains(TrackingCategory.NONE) ->
+                                ContentBlocking.EtpLevel.NONE
+                            else -> ContentBlocking.EtpLevel.DEFAULT
+                        }
+                    runtime.settings.contentBlocking.setEnhancedTrackingProtectionLevel(etpLevel)
                     runtime.settings.contentBlocking.setStrictSocialTrackingProtection(
                         activateStrictSocialTracking
                     )
