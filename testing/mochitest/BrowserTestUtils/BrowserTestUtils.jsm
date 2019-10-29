@@ -2113,6 +2113,90 @@ var BrowserTestUtils = {
   },
 
   /**
+   * There are two ways to listen for observers in a content process:
+   *   1. Call contentTopicObserved which will watch for an observer notification
+   *      in a content process to occur, and will return a promise which resolves
+   *      when that notification occurs.
+   *   2. Enclose calls to contentTopicObserved inside a pair of calls to
+   *      startObservingTopics and stopObservingTopics. Usually this pair will be
+   *      placed at the start and end of a test or set of tests. Any observer
+   *      notification that happens between the start and stop that doesn't match
+   *      any explicitly expected by using contentTopicObserved will cause
+   *      stopObservingTopics to reject with an error.
+   *      For example:
+   *        await BrowserTestUtils.startObservingTopics(bc, ["a", "b", "c"]);
+   *        await BrowserTestUtils contentTopicObserved(bc, "a", 2);
+   *        await BrowserTestUtils.stopObservingTopics(bc, ["a", "b", "c"]);
+   *      This will expect two "a" notifications to occur, but will fail if more
+   *      than two occur, or if any "b" or "c" notifications occur.
+   * Note that this function doesn't handle adding a listener for the same topic
+   * more than once. To do that, use the aCount argument.
+   *
+   * @param aBrowsingContext
+   *        The browsing context associated with the content process to listen to.
+   * @param {string} aTopic
+   *        Observer topic to listen to. May be null to listen to any topic.
+   * @param {number} aCount
+   *        Number of such matching topics to listen to, defaults to 1. A match
+   *        occurs when the topic and filter function match.
+   * @param {function} aFilterFn
+   *        Function to be evaluated in the content process which should
+   *        return true if the notification matches. This function is passed
+   *        the same arguments as nsIObserver.observe(). May be null to
+   *        always match.
+   * @returns {Promise} resolves when the notification occurs.
+   */
+  contentTopicObserved(aBrowsingContext, aTopic, aCount = 1, aFilterFn = null) {
+    return this.sendQuery(aBrowsingContext, "BrowserTestUtils:ObserveTopic", {
+      topic: aTopic,
+      count: aCount,
+      filterFunctionSource: aFilterFn ? aFilterFn.toSource() : null,
+    });
+  },
+
+  /**
+   * Starts observing a list of topics in a content process. Use contentTopicObserved
+   * to allow an observer notification. Any other observer notification that occurs that
+   * matches one of the specified topics will cause the promise to reject.
+   *
+   * Calling this function more than once adds additional topics to be observed without
+   * replacing the existing ones.
+   *
+   * @param aBrowsingContext
+   *        The browsing context associated with the content process to listen to.
+   * @param {array of strings} aTopics array of observer topics
+   * @returns {Promise} resolves when the listeners have been added.
+   */
+  startObservingTopics(aBrowsingContext, aTopics) {
+    return this.sendQuery(
+      aBrowsingContext,
+      "BrowserTestUtils:StartObservingTopics",
+      {
+        topics: aTopics,
+      }
+    );
+  },
+
+  /**
+   * Stop listening to a set of observer topics.
+   *
+   * @param aBrowsingContext
+   *        The browsing context associated with the content process to listen to.
+   * @param {array of strings} aTopics array of observer topics. If empty, then all
+   *                           current topics being listened to are removed.
+   * @returns {Promise} promise that fails if an unexpected observer occurs.
+   */
+  stopObservingTopics(aBrowsingContext, aTopics) {
+    return this.sendQuery(
+      aBrowsingContext,
+      "BrowserTestUtils:StopObservingTopics",
+      {
+        topics: aTopics,
+      }
+    );
+  },
+
+  /**
    * Sends a message to a specific BrowserTestUtils window actor.
    * @param aBrowsingContext
    *        The browsing context where the actor lives.
