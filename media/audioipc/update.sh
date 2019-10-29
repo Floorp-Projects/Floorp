@@ -5,13 +5,13 @@ cp -p $1/README.md .
 cp -p $1/Cargo.toml .
 
 for crate in audioipc client server; do
+    test -d $crate/src || mkdir -p $crate/src
     rm -fr $crate/*
-    mkdir -p $crate/src
-    cp -pr $1/$crate/Cargo.toml $crate
-    cp -pr $1/$crate/src/ $crate/
+    cp -pr $1/$crate/Cargo.toml $crate/
+    cp -pr $1/$crate/src/ $crate/src/
 done
 
-rm -f audioipc/src/cmsghdr.c
+rm audioipc/src/cmsghdr.c
 
 if [ -d $1/.git ]; then
   rev=$(cd $1 && git rev-parse --verify HEAD)
