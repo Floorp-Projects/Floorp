@@ -6,35 +6,14 @@
 #ifndef nsPluginDirServiceProvider_h_
 #define nsPluginDirServiceProvider_h_
 
-#include "nsIDirectoryService.h"
-
-#if defined(XP_WIN)
-#  include "nsCOMArray.h"
-#endif
-
-class nsISimpleEnumerator;
-
-//*****************************************************************************
-// class nsPluginDirServiceProvider
-//*****************************************************************************
-
-class nsPluginDirServiceProvider : public nsIDirectoryServiceProvider {
- public:
-  nsPluginDirServiceProvider();
-
-  NS_DECL_THREADSAFE_ISUPPORTS
-  NS_DECL_NSIDIRECTORYSERVICEPROVIDER
-
 #ifdef XP_WIN
-  static nsresult GetPLIDDirectories(nsISimpleEnumerator** aEnumerator);
+#  include "nsCOMPtr.h"
+#  include "nsTArray.h"
 
- private:
-  static nsresult GetPLIDDirectoriesWithRootKey(uint32_t aKey,
-                                                nsCOMArray<nsIFile>& aDirs);
-#endif
+static nsresult GetPLIDDirectories(nsTArray<nsCOMPtr<nsIFile>>& aDirs);
 
- protected:
-  virtual ~nsPluginDirServiceProvider();
-};
+static nsresult GetPLIDDirectoriesWithRootKey(
+    uint32_t aKey, nsTArray<nsCOMPtr<nsIFile>>& aDirs);
 
+#endif  // XP_WIN
 #endif  // nsPluginDirServiceProvider_h_
