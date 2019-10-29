@@ -33,6 +33,8 @@
 <!ENTITY ldb.crossingEventDumping.accesskey "C">
 <!ENTITY ldb.reflowCounts.label "Reflow Counts">
 <!ENTITY ldb.reflowCounts.accesskey "R">
+<!ENTITY ldb.pagedMode.label "Paged Mode">
+<!ENTITY ldb.pagedMode.accesskey "G">
 
 <!ENTITY ldb.DumpMenu.label "Dump">
 <!ENTITY ldb.DumpMenu.accesskey "D">

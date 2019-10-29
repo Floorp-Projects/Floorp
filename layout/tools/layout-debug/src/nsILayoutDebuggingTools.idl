@@ -29,6 +29,7 @@ interface nsILayoutDebuggingTools : nsISupports
     void setVisualDebugging(in boolean enabled);
     void setVisualEventDebugging(in boolean enabled);
     void setReflowCounts(in boolean enabled);
+    void setPagedMode(in boolean enabled);
 
     /* Run various tests. */
     void dumpWebShells();

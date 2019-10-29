@@ -9,6 +9,8 @@
 #include "nsIDocShell.h"
 #include "nsPIDOMWindow.h"
 #include "nsIContentViewer.h"
+#include "nsIPrintSettings.h"
+#include "nsIPrintSettingsService.h"
 
 #include "nsIServiceManager.h"
 #include "nsAtom.h"
@@ -112,6 +114,38 @@ nsLayoutDebuggingTools::SetReflowCounts(bool aShow) {
     printf("************************************************\n");
 #endif
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLayoutDebuggingTools::SetPagedMode(bool aPagedMode) {
+  nsCOMPtr<nsIPrintSettingsService> printSettingsService =
+      do_GetService("@mozilla.org/gfx/printsettings-service;1");
+  nsCOMPtr<nsIPrintSettings> printSettings;
+
+  printSettingsService->GetNewPrintSettings(getter_AddRefs(printSettings));
+
+  // The setup is the similar as setupPrintMode() in reftest-content.js except
+  // we set the paper size by using US letter size 8.5 x 11 inches, so the page
+  // area is larger and easier read when debugging real web pages.
+  printSettings->SetPaperWidth(8.5);
+  printSettings->SetPaperHeight(11);
+
+  nsIntMargin unwriteableMargin(0, 0, 0, 0);
+  printSettings->SetUnwriteableMarginInTwips(unwriteableMargin);
+
+  printSettings->SetHeaderStrLeft(NS_LITERAL_STRING(""));
+  printSettings->SetHeaderStrCenter(NS_LITERAL_STRING(""));
+  printSettings->SetHeaderStrRight(NS_LITERAL_STRING(""));
+
+  printSettings->SetFooterStrLeft(NS_LITERAL_STRING(""));
+  printSettings->SetFooterStrCenter(NS_LITERAL_STRING(""));
+  printSettings->SetFooterStrRight(NS_LITERAL_STRING(""));
+
+  nsCOMPtr<nsIContentViewer> contentViewer(doc_viewer(mDocShell));
+  contentViewer->SetPageModeForTesting(aPagedMode, printSettings);
+
+  ForceRefresh();
   return NS_OK;
 }
 
