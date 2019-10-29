@@ -4586,19 +4586,26 @@ def handleDefaultStringValue(defaultValue, method):
     """
     Returns a string which ends up calling 'method' with a (char_t*, length)
     pair that sets this string default value.  This string is suitable for
-    passing as the second argument of handleDefault; in particular it does not
-    end with a ';'
+    passing as the second argument of handleDefault.
     """
     assert (defaultValue.type.isDOMString() or
             defaultValue.type.isUSVString() or
             defaultValue.type.isByteString())
-    return ("static const %(char_t)s data[] = { %(data)s };\n"
-            "%(method)s(data, ArrayLength(data) - 1)") % {
-                'char_t': "char" if defaultValue.type.isByteString() else "char16_t",
-                'method': method,
-                'data': ", ".join(["'" + char + "'" for char in
-                                   defaultValue.value] + ["0"])
-            }
+    # There shouldn't be any non-ASCII or embedded nulls in here; if
+    # it ever sneaks in we will need to think about how to properly
+    # represent that in the C++.
+    assert(all(ord(c) < 128 and ord(c) > 0 for c in defaultValue.value))
+    if defaultValue.type.isByteString():
+        prefix = ""
+    else:
+        prefix = "u"
+    return fill(
+        """
+        ${method}(${prefix}"${value}");
+        """,
+        method=method,
+        prefix=prefix,
+        value=defaultValue.value)
 
 
 def recordKeyType(recordType):
@@ -5491,8 +5498,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
             else:
                 default = CGGeneric(
                     handleDefaultStringValue(
-                        defaultValue, "%s.SetStringData" % unionArgumentObj) +
-                    ";\n")
+                        defaultValue, "%s.SetStringLiteral" % unionArgumentObj))
 
             templateBody = CGIfElseWrapper("!(${haveValue})", default, templateBody)
 
@@ -5965,11 +5971,11 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
 
             if isinstance(defaultValue, IDLNullValue):
                 assert(type.nullable())
-                defaultCode = "%s.SetIsVoid(true)" % varName
+                defaultCode = "%s.SetIsVoid(true);\n" % varName
             else:
-                defaultCode = handleDefaultStringValue(defaultValue,
-                                                       "%s.Rebind" % varName)
-            return handleDefault(conversionCode, defaultCode + ";\n")
+                defaultCode = handleDefaultStringValue(
+                    defaultValue, "%s.AssignLiteral" % varName)
+            return handleDefault(conversionCode, defaultCode)
 
         if isMember:
             # Convert directly into the nsString member we have.
@@ -6012,11 +6018,11 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
         if defaultValue is not None:
             if isinstance(defaultValue, IDLNullValue):
                 assert(type.nullable())
-                defaultCode = "${declName}.SetIsVoid(true)"
+                defaultCode = "${declName}.SetIsVoid(true);\n"
             else:
-                defaultCode = handleDefaultStringValue(defaultValue,
-                                                       "${declName}.Rebind")
-            conversionCode = handleDefault(conversionCode, defaultCode + ";\n")
+                defaultCode = handleDefaultStringValue(
+                    defaultValue, "${declName}.AssignLiteral")
+            conversionCode = handleDefault(conversionCode, defaultCode)
 
         return JSToNativeConversionInfo(
             conversionCode,
@@ -10506,21 +10512,22 @@ class CGUnionStruct(CGThing):
                 if self.ownsMembers:
                     if vars["setter"]:
                         methods.append(vars["setter"])
-                    # Provide a SetStringData() method to support string defaults.
+                    # Provide a SetStringLiteral() method to support string defaults.
                     if t.isByteString():
-                        methods.append(
-                            ClassMethod("SetStringData", "void",
-                                        [Argument("const nsCString::char_type*", "aData"),
-                                         Argument("nsCString::size_type", "aLength")],
-                                        inline=True, bodyInHeader=True,
-                                        body="RawSetAs%s().Assign(aData, aLength);\n" % t.name))
+                        charType = "const nsCString::char_type"
                     elif t.isString():
+                        charType = "const nsString::char_type"
+                    else:
+                        charType = None
+
+                    if charType:
                         methods.append(
-                            ClassMethod("SetStringData", "void",
-                                        [Argument("const nsString::char_type*", "aData"),
-                                         Argument("nsString::size_type", "aLength")],
+                            ClassMethod("SetStringLiteral", "void",
+                                        # Hack, but it works...
+                                        [Argument(charType, "(&aData)[N]")],
                                         inline=True, bodyInHeader=True,
-                                        body="RawSetAs%s().Assign(aData, aLength);\n" % t.name))
+                                        templateArgs=["int N"],
+                                        body="RawSetAs%s().AssignLiteral(aData);\n" % t.name))
 
             body = fill(
                 """
@@ -10781,21 +10788,22 @@ class CGUnionConversionStruct(CGThing):
                                            bodyInHeader=True,
                                            body=body,
                                            visibility="private"))
-                # Provide a SetStringData() method to support string defaults.
+                # Provide a SetStringLiteral() method to support string defaults.
                 if t.isByteString():
-                    methods.append(
-                        ClassMethod("SetStringData", "void",
-                                    [Argument("const nsDependentCString::char_type*", "aData"),
-                                     Argument("nsDependentCString::size_type", "aLength")],
-                                    inline=True, bodyInHeader=True,
-                                    body="RawSetAs%s().Rebind(aData, aLength);\n" % t.name))
+                    charType = "const nsCString::char_type"
                 elif t.isString():
+                    charType = "const nsString::char_type"
+                else:
+                    charType = None
+
+                if charType:
                     methods.append(
-                        ClassMethod("SetStringData", "void",
-                                    [Argument("const nsDependentString::char_type*", "aData"),
-                                     Argument("nsDependentString::size_type", "aLength")],
+                        ClassMethod("SetStringLiteral", "void",
+                                    # Hack, but it works...
+                                    [Argument(charType, "(&aData)[N]")],
                                     inline=True, bodyInHeader=True,
-                                    body="RawSetAs%s().Rebind(aData, aLength);\n" % t.name))
+                                    templateArgs=["int N"],
+                                    body="RawSetAs%s().AssignLiteral(aData);\n" % t.name))
 
             if vars["holderType"] is not None:
                 holderType = CGTemplatedType("Maybe",

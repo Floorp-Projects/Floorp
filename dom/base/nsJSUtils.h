@@ -264,11 +264,6 @@ inline void AssignFromStringBuffer(nsStringBuffer* buffer, size_t len,
   buffer->ToString(len, dest);
 }
 
-inline void AssignFromLiteralChars(const char16_t* chars, size_t len,
-                                   nsAString& dest) {
-  dest.AssignLiteral(chars, len);
-}
-
 template <typename T>
 inline bool AssignJSString(JSContext* cx, T& dest, JSString* s) {
   size_t len = JS::GetStringLength(s);
@@ -288,7 +283,7 @@ inline bool AssignJSString(JSContext* cx, T& dest, JSString* s) {
   } else if (XPCStringConvert::MaybeGetLiteralStringChars(s, &chars)) {
     // The characters represent a literal char16_t string constant
     // compiled into libxul; we can just use it as-is.
-    AssignFromLiteralChars(chars, len, dest);
+    dest.AssignLiteral(chars, len);
     return true;
   }
 
