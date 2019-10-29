@@ -62,6 +62,7 @@ class UrlbarInput {
         <vbox class="urlbarView"
               role="group"
               tooltip="aHTMLTooltip"
+              context=""
               hidden="true">
           <html:div class="urlbarView-body-outer">
             <html:div class="urlbarView-body-inner">
