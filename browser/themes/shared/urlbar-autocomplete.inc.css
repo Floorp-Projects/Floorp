@@ -244,10 +244,13 @@
 }
 
 .urlbarView-row[type=tip] {
-  border-bottom: 1px solid var(--panel-separator-color);
-  margin-bottom: 4px;
   padding-block: 24px;
   padding-inline-end: @urlbarViewPaddingInline@;
+}
+
+.urlbarView-row[type=tip]:not(:last-child) {
+  border-bottom: 1px solid var(--panel-separator-color);
+  margin-bottom: 4px;
 }
 
 .urlbarView-row[type=tip]:not(:first-child) {
