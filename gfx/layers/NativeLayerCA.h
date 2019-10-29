@@ -66,6 +66,7 @@ class NativeLayerRootCA : public NativeLayerRoot {
   already_AddRefed<NativeLayer> CreateLayer() override;
   void AppendLayer(NativeLayer* aLayer) override;
   void RemoveLayer(NativeLayer* aLayer) override;
+  void SetLayers(const nsTArray<RefPtr<NativeLayer>>& aLayers) override;
 
  protected:
   explicit NativeLayerRootCA(CALayer* aLayer);
