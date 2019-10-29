@@ -181,11 +181,6 @@ class ArtifactCache(object):
                 'Skipping cache: removing cached downloaded artifact {path}')
             os.remove(path)
 
-        self.log(
-            logging.INFO,
-            'artifact',
-            {'path': path},
-            'Downloading to temporary location {path}')
         try:
             dl = self._download_manager.download(url, fname)
 
@@ -204,18 +199,23 @@ class ArtifactCache(object):
                          'Downloading... {percent:02.1f} %')
 
             if dl:
+                self.log(
+                    logging.INFO,
+                    'artifact',
+                    {'path': path},
+                    'Downloading artifact to local cache: {path}')
                 dl.set_progress(download_progress)
                 dl.wait()
             else:
+                self.log(
+                    logging.INFO,
+                    'artifact',
+                    {'path': path},
+                    'Using artifact from local cache: {path}')
                 # Avoid the file being removed if it was in the cache already.
                 path = os.path.join(self._cache_dir, fname)
                 self._persist_limit.register_file(path)
 
-            self.log(
-                logging.INFO,
-                'artifact',
-                {'path': os.path.abspath(mozpath.join(self._cache_dir, fname))},
-                'Downloaded artifact to {path}')
             return os.path.abspath(mozpath.join(self._cache_dir, fname))
         finally:
             # Cancel any background downloads in progress.

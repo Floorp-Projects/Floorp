@@ -350,7 +350,7 @@ class PackageFrontend(MachCommandBase):
 
         for record in records.itervalues():
             self.log(logging.INFO, 'artifact', {'name': record.basename},
-                     'Downloading {name}')
+                     'Setting up artifact {name}')
             valid = False
             # sleeptime is 60 per retry.py, used by tooltool_wrapper.sh
             for attempt, _ in enumerate(redo.retrier(attempts=retry+1,
