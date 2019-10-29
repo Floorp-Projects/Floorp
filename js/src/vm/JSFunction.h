@@ -671,11 +671,6 @@ class JSFunction : public js::NativeObject {
   //   JSScript, delazifying the function if necessary. This is the safest to
   //   use, but has extra checks, requires a cx and may trigger a GC.
   //
-  // - For inlined functions which may have a LazyScript but whose JSScript
-  //   is known to exist, existingScript() will get the script and delazify
-  //   the function if necessary. If the function should not be delazified,
-  //   use existingScriptNonDelazifying().
-  //
   // - For functions known to have a JSScript, nonLazyScript() will get it.
 
   static JSScript* getOrCreateScript(JSContext* cx, js::HandleFunction fun) {
@@ -690,29 +685,14 @@ class JSFunction : public js::NativeObject {
     return fun->nonLazyScript();
   }
 
-  JSScript* existingScriptNonDelazifying() const {
-    MOZ_ASSERT(isInterpreted());
-    if (isInterpretedLazy()) {
-      // Get the script from the canonical function. Ion used the
-      // canonical function to inline the script and because it has
-      // Baseline code it has not been relazified. Note that we can't
-      // use lazyScript->script_ here as it may be null in some cases,
-      // see bug 976536.
-      js::LazyScript* lazy = lazyScript();
-      JSFunction* fun = lazy->function();
-      MOZ_ASSERT(fun);
-      return fun->nonLazyScript();
-    }
-    return nonLazyScript();
-  }
-
   JSScript* existingScript() {
     MOZ_ASSERT(isInterpreted());
     if (isInterpretedLazy()) {
       if (shadowZone()->needsIncrementalBarrier()) {
         js::LazyScript::writeBarrierPre(lazyScript());
       }
-      JSScript* script = existingScriptNonDelazifying();
+      JSFunction* canonicalFunction = lazyScript()->function();
+      JSScript* script = canonicalFunction->nonLazyScript();
       flags_.clearInterpretedLazy();
       flags_.setInterpreted();
       initScript(script);
