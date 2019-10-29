@@ -79,7 +79,7 @@ add_task(async function() {
     "us"
   );
   Assert.equal(
-    privateDefault,
+    privateDefault.engineName,
     "altavista",
     "Should set altavista as privateDefault"
   );
@@ -124,7 +124,7 @@ add_task(async function() {
     "The engines should be in the correct order"
   );
   Assert.equal(
-    privateDefault,
+    privateDefault.engineName,
     "altavista",
     "Should set altavista as privateDefault"
   );

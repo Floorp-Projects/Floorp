@@ -49,9 +49,10 @@ class SearchEngineSelector {
   /**
    * @param {string} locale - Users locale.
    * @param {string} region - Users region.
-   * @returns {object} result - An object with "engines" field, a sorted
-   *   list of engines and optionally "privateDefault" indicating the
-   *   name of the engine which should be the default in private.
+   * @returns {object}
+   *   An object with "engines" field, a sorted list of engines and
+   *   optionally "privateDefault" which is an object continaing the engine
+   *   details for the engine which should be the default in private mode.
    */
   fetchEngineConfiguration(locale, region = "default") {
     log(`fetchEngineConfiguration ${region}:${locale}`);
@@ -84,12 +85,16 @@ class SearchEngineSelector {
         }
 
         if ("webExtensionLocales" in baseConfig) {
-          baseConfig.webExtensionLocales = baseConfig.webExtensionLocales.map(
-            val => (val == USER_LOCALE ? locale : val)
-          );
+          for (const webExtensionLocale of baseConfig.webExtensionLocales) {
+            const engine = { ...baseConfig };
+            engine.webExtensionLocales = [
+              webExtensionLocale == USER_LOCALE ? locale : webExtensionLocale,
+            ];
+            engines.push(engine);
+          }
+        } else {
+          engines.push(baseConfig);
         }
-
-        engines.push(baseConfig);
       }
     }
 
@@ -136,7 +141,7 @@ class SearchEngineSelector {
     let result = { engines };
 
     if (privateEngine) {
-      result.privateDefault = privateEngine.engineName;
+      result.privateDefault = privateEngine;
     }
 
     if (SearchUtils.loggingEnabled) {

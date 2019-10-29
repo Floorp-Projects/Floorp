@@ -812,8 +812,10 @@ SearchEngine.prototype = {
   _updateURL: null,
   // The url to check for a new icon
   _iconUpdateURL: null,
-  /* The extension ID if added by an extension. */
+  // The extension ID if added by an extension.
   _extensionID: null,
+  // The locale, or "DEFAULT", if required.
+  _locale: null,
   // Built in search engine extensions.
   _isBuiltin: false,
 
@@ -1397,6 +1399,7 @@ SearchEngine.prototype = {
    */
   _initFromMetadata(engineName, params) {
     this._extensionID = params.extensionID;
+    this._locale = params.locale;
     this._isBuiltin = !!params.isBuiltin;
 
     this._initEngineURLFromMetaData(SearchUtils.URL_TYPE.SEARCH, {

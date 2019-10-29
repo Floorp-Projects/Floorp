@@ -1,7 +1,7 @@
 {
   "data": [
     {
-      "engineName": "Test search engine",
+      "engineName": "engine",
       "webExtensionId": "engine@search.mozilla.org",
       "webExtensionVersion": "1.0",
       "orderHint": 10000,
