@@ -4083,6 +4083,7 @@ nsresult nsContentUtils::DispatchInputEvent(Element* aEventTargetElement,
     WidgetEvent widgetEvent(true, eUnidentifiedEvent);
     widgetEvent.mSpecifiedEventType = nsGkAtoms::oninput;
     widgetEvent.mFlags.mCancelable = false;
+    widgetEvent.mFlags.mComposed = true;
     // Using same time as nsContentUtils::DispatchEvent() for backward
     // compatibility.
     widgetEvent.mTime = PR_Now();
