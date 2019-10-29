@@ -4642,7 +4642,8 @@ void nsWindow::UpdateOpaqueRegion(const LayoutDeviceIntRegion& aOpaqueRegion) {
     cairo_region_t* region = cairo_region_create();
 
     GtkBorder decorationSize = {0, 0, 0, 0};
-    if (mCSDSupportLevel == CSD_SUPPORT_CLIENT) {
+    if (mCSDSupportLevel == CSD_SUPPORT_CLIENT &&
+        mSizeState == nsSizeMode_Normal) {
       GetCSDDecorationSize(GTK_WINDOW(mShell), &decorationSize);
     }
 
@@ -4660,7 +4661,7 @@ void nsWindow::UpdateOpaqueRegion(const LayoutDeviceIntRegion& aOpaqueRegion) {
     // Subtract transparent corners which are used by
     // various Gtk themes for toplevel windows when titlebar
     // is rendered by gecko.
-    if (mDrawInTitlebar && !mIsPIPWindow && mSizeMode == nsSizeMode_Normal &&
+    if (mDrawInTitlebar && !mIsPIPWindow && mSizeState == nsSizeMode_Normal &&
         !mIsTiled) {
       LOG(("    substracted corners for titlebar decoration\n"));
       cairo_rectangle_int_t rect = {decorationSize.left, decorationSize.top,
