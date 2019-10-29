@@ -761,6 +761,7 @@ class WebGLContext : public nsICanvasRenderingContextInternal,
   void PolygonOffset(GLfloat factor, GLfloat units);
 
   already_AddRefed<layers::SharedSurfaceTextureClient> GetVRFrame();
+  void ClearVRFrame();
   void EnsureVRReady();
 
   ////

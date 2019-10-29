@@ -104,6 +104,7 @@ bool VRLayerChild::IsIPCOpen() { return mIPCOpen; }
 void VRLayerChild::ClearSurfaces() {
   mThisFrameTexture = nullptr;
   mLastFrameTexture = nullptr;
+  mCanvasElement->ClearVRFrame();
 }
 
 void VRLayerChild::ActorDestroy(ActorDestroyReason aWhy) { mIPCOpen = false; }
