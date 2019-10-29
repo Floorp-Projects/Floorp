@@ -13,7 +13,7 @@ createHTML({
   bug: "1152383"
 });
 
-const RESPONSE_WAIT_TIME_MS = 10000;
+const RESPONSE_WAIT_TIME_MS = 3000;
 
 function OnDeviceChangeEvent() {
   return new Promise(resolve => navigator.mediaDevices.ondevicechange = resolve);
