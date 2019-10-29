@@ -1256,8 +1256,11 @@ static const JSFunctionSpec number_methods[] = {
     JS_FS_END};
 
 bool js::IsInteger(const Value& val) {
-  return val.isInt32() || (mozilla::IsFinite(val.toDouble()) &&
-                           JS::ToInteger(val.toDouble()) == val.toDouble());
+  return val.isInt32() || IsInteger(val.toDouble());
+}
+
+bool js::IsInteger(double d) {
+  return mozilla::IsFinite(d) && JS::ToInteger(d) == d;
 }
 
 static const JSFunctionSpec number_static_methods[] = {
