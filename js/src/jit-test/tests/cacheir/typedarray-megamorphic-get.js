@@ -43,3 +43,11 @@ test(get)("-Infinity");
 
 test(get)(NaN);
 test(get)("NaN");
+
+// TypedArray index with fractional parts.
+test(get)(1.1);
+test(get)("1.1");
+
+// TypedArray index with exponent parts.
+test(get)(1e+25);
+test(get)("1e+25");
