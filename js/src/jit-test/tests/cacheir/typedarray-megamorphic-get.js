@@ -33,3 +33,13 @@ test(get)("100");
 // TypedArray index not representable as an Int32.
 test(get)(4294967296);
 test(get)("4294967296");
+
+// Non-finite TypedArray indices.
+test(get)(Infinity);
+test(get)("Infinity");
+
+test(get)(-Infinity);
+test(get)("-Infinity");
+
+test(get)(NaN);
+test(get)("NaN");
