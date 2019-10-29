@@ -8,5 +8,4 @@ DevToolsModules(
     'connection-manager.js',
     'constants.js',
     'debugger-client.js',
-    'deprecated-thread-client.js',
 )
