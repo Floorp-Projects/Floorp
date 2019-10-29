@@ -438,9 +438,24 @@ class Descriptor(DescriptorProvider):
                 if m.isMethod() and m.isDefaultToJSON():
                     self.hasDefaultToJSON = True
 
+            # We keep track of instrumente props for all non-external interfaces.
+            self.instrumentedProps = []
+            instrumentedProps = self.interface.getExtendedAttribute("InstrumentedProps")
+            if instrumentedProps:
+                # It's actually a one-element list, with the list
+                # we want as the only element.
+                self.instrumentedProps = instrumentedProps[0]
+
+                # Check that we don't have duplicated instrumented props.
+                uniqueInstrumentedProps = set(self.instrumentedProps)
+                if len(uniqueInstrumentedProps) != len(self.instrumentedProps):
+                    duplicates = [p for p in uniqueInstrumentedProps if
+                                  self.instrumentedProps.count(p) > 1]
+                    raise TypeError("Duplicated instrumented properties: %s.\n%s" %
+                                    (duplicates, self.interface.location))
+
         if self.concrete:
             self.proxy = False
-            self.instrumentedProps = []
             iface = self.interface
             for m in iface.members:
                 # Don't worry about inheriting legacycallers either: in
@@ -453,14 +468,8 @@ class Descriptor(DescriptorProvider):
                         raise TypeError("We don't support overloaded "
                                         "legacycaller.\n%s" % m.location)
                     addOperation('LegacyCaller', m)
+
             while iface:
-                instrumentedProps = iface.getExtendedAttribute("InstrumentedProps")
-                if instrumentedProps:
-                    # It's actually a one-element list, with the list
-                    # we want as the only element.
-                    for prop in instrumentedProps[0]:
-                        self.instrumentedProps.append((iface.identifier.name,
-                                                       prop))
                 for m in iface.members:
                     if not m.isMethod():
                         continue
@@ -486,21 +495,6 @@ class Descriptor(DescriptorProvider):
 
                 iface.setUserData('hasConcreteDescendant', True)
                 iface = iface.parent
-
-            # Check that we don't have duplicated instrumented props.
-            uniqueInstrumentedProps = set(prop[1] for prop in self.instrumentedProps)
-            if len(uniqueInstrumentedProps) != len(self.instrumentedProps):
-                for prop in self.instrumentedProps:
-                    name = prop[1]
-                    if name in uniqueInstrumentedProps:
-                        uniqueInstrumentedProps.remove(name)
-                    else:
-                        ifaces = list(
-                            entry[0] for entry in self.instrumentedProps if
-                            entry[1] == name)
-                        raise TypeError(
-                            "Duplicated instrumented property '%s' defined on "
-                            "these interfaces: %s." % (name, str(ifaces)))
 
             self.proxy = (self.supportsIndexedProperties() or
                           (self.supportsNamedProperties() and
@@ -593,18 +587,22 @@ class Descriptor(DescriptorProvider):
             if ctor:
                 maybeAddBinaryName(ctor)
 
-        # Some default binary names for cases when nothing else got set.
-        self._binaryNames.setdefault('__legacycaller', 'LegacyCall')
-        self._binaryNames.setdefault('__stringifier', 'Stringify')
+            # Some default binary names for cases when nothing else got set.
+            self._binaryNames.setdefault('__legacycaller', 'LegacyCall')
+            self._binaryNames.setdefault('__stringifier', 'Stringify')
 
-        # Build the prototype chain.
-        self.prototypeChain = []
-        parent = interface
-        while parent:
-            self.prototypeChain.insert(0, parent.identifier.name)
-            parent = parent.parent
-        config.maxProtoChainLength = max(config.maxProtoChainLength,
-                                         len(self.prototypeChain))
+            # Build the prototype chain.
+            self.prototypeChain = []
+            self.needsMissingPropUseCounters = False
+            parent = interface
+            while parent:
+                self.needsMissingPropUseCounters = (
+                    self.needsMissingPropUseCounters or
+                    parent.getExtendedAttribute("InstrumentedProps"))
+                self.prototypeChain.insert(0, parent.identifier.name)
+                parent = parent.parent
+            config.maxProtoChainLength = max(config.maxProtoChainLength,
+                                             len(self.prototypeChain))
 
     def binaryNameFor(self, name):
         return self._binaryNames.get(name, name)

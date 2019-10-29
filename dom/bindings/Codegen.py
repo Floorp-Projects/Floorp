@@ -11811,11 +11811,43 @@ class CGProxyUnwrap(CGAbstractMethod):
 MISSING_PROP_PREF = "dom.missing_prop_counters.enabled"
 
 def missingPropUseCountersForDescriptor(desc):
-    instrumentedProps = desc.instrumentedProps
-    if not instrumentedProps:
+    if not desc.needsMissingPropUseCounters:
         return ""
 
-    def gen_switch(switchDecriptor):
+    return fill(
+        """
+        if (StaticPrefs::${pref}() && JSID_IS_ATOM(id)) {
+          CountMaybeMissingProperty(proxy, id);
+        }
+
+        """,
+        pref=prefIdentifier(MISSING_PROP_PREF))
+
+
+def findAncestorWithInstrumentedProps(desc):
+    """
+    Find an ancestor of desc.interface (not including desc.interface
+    itself) that has instrumented properties on it.  May return None
+    if there is no such ancestor.
+    """
+    ancestor = desc.interface.parent
+    while ancestor:
+        if ancestor.getExtendedAttribute("InstrumentedProps"):
+            return ancestor
+        ancestor = ancestor.parent
+    return None
+
+class CGCountMaybeMissingProperty(CGAbstractMethod):
+    def __init__(self, descriptor):
+        """
+        Returns whether we counted the property involved.
+        """
+        CGAbstractMethod.__init__(self, descriptor, "CountMaybeMissingProperty",
+                                  "bool",
+                                  [Argument("JS::Handle<JSObject*>", "proxy"),
+                                   Argument("JS::Handle<jsid>", "id")])
+
+    def gen_switch(self, switchDecriptor):
         """
         Generate a switch from the switch descriptor.  The descriptor
         dictionary must have the following properties:
@@ -11831,7 +11863,7 @@ def missingPropUseCountersForDescriptor(desc):
         cases = []
         for label, body in sorted(switchDecriptor['cases'].iteritems()):
             if isinstance(body, dict):
-                body = gen_switch(body)
+                body = self.gen_switch(body)
             cases.append(fill(
                 """
                 case ${label}: {
@@ -11852,7 +11884,7 @@ def missingPropUseCountersForDescriptor(desc):
             condition=switchDecriptor['condition'],
             cases="".join(cases))
 
-    def charSwitch(props, charIndex):
+    def charSwitch(self, props, charIndex):
         """
         Create a switch for the given props, based on the first char where
         they start to differ at index charIndex or more.  Each prop is a tuple
@@ -11868,8 +11900,8 @@ def missingPropUseCountersForDescriptor(desc):
                   counter.emplace(eUseCounter_${iface}_${name});
                 }
                 """,
-                iface=props[0][0],
-                name=props[0][1])
+                iface=self.descriptor.name,
+                name=props[0])
 
         switch = dict()
         if charIndex == 0:
@@ -11879,7 +11911,7 @@ def missingPropUseCountersForDescriptor(desc):
             switch['precondition'] = ""
 
         # Find the first place where we might actually have a difference.
-        while all(prop[1][charIndex] == props[0][1][charIndex]
+        while all(prop[charIndex] == props[0][charIndex]
                   for prop in props):
             charIndex += 1
 
@@ -11889,47 +11921,70 @@ def missingPropUseCountersForDescriptor(desc):
         curChar = None
         idx = 0
         while idx < len(props):
-            nextChar = "'%s'" % props[idx][1][charIndex]
+            nextChar = "'%s'" % props[idx][charIndex]
             if nextChar != curChar:
                 if curChar:
-                    switch['cases'][curChar] = charSwitch(current_props,
-                                                          charIndex + 1)
+                    switch['cases'][curChar] = self.charSwitch(current_props,
+                                                               charIndex + 1)
                 current_props = []
                 curChar = nextChar
             current_props.append(props[idx])
             idx += 1
-        switch['cases'][curChar] = charSwitch(current_props, charIndex + 1)
+        switch['cases'][curChar] = self.charSwitch(current_props, charIndex + 1)
         return switch
 
-    lengths = set(len(prop[1]) for prop in instrumentedProps)
-    switchDesc = { 'condition': 'js::GetLinearStringLength(str)',
-                   'precondition': '' }
-    switchDesc['cases'] = dict()
-    for length in sorted(lengths):
-        switchDesc['cases'][str(length)] = charSwitch(
-            list(sorted(prop for prop in instrumentedProps
-                        if len(prop[1]) == length)),
-            0)
+    def definition_body(self):
+        ancestor = findAncestorWithInstrumentedProps(self.descriptor)
 
-    return fill(
-        """
-        if (StaticPrefs::${pref}() && JSID_IS_ATOM(id)) {
-          Maybe<UseCounter> counter;
-          {
-            // Scope for our no-GC section, so we don't need to rely on SetUseCounter not GCing.
-            JS::AutoCheckCannotGC nogc;
-            JSLinearString* str = js::AtomToLinearString(JSID_TO_ATOM(id));
-            // Don't waste time fetching the chars until we've done the length switch.
-            $*{switch}
-          }
-          if (counter) {
-            SetUseCounter(proxy, *counter);
-          }
-        }
+        if ancestor:
+            body = fill(
+                """
+                if (${ancestor}_Binding::CountMaybeMissingProperty(proxy, id)) {
+                  return true;
+                }
 
-        """,
-        pref=prefIdentifier(MISSING_PROP_PREF),
-        switch=gen_switch(switchDesc))
+                """,
+                ancestor=ancestor.identifier.name)
+        else:
+            body = ""
+
+        instrumentedProps = self.descriptor.instrumentedProps
+        if not instrumentedProps:
+            return body + dedent(
+                """
+                return false;
+                """)
+
+        lengths = set(len(prop) for prop in instrumentedProps)
+        switchDesc = { 'condition': 'js::GetLinearStringLength(str)',
+                       'precondition': '' }
+        switchDesc['cases'] = dict()
+        for length in sorted(lengths):
+            switchDesc['cases'][str(length)] = self.charSwitch(
+                list(sorted(prop for prop in instrumentedProps
+                            if len(prop) == length)),
+                0)
+
+        return body + fill(
+            """
+            MOZ_ASSERT(StaticPrefs::${pref}() && JSID_IS_ATOM(id));
+            Maybe<UseCounter> counter;
+            {
+              // Scope for our no-GC section, so we don't need to rely on SetUseCounter not GCing.
+              JS::AutoCheckCannotGC nogc;
+              JSLinearString* str = js::AtomToLinearString(JSID_TO_ATOM(id));
+              // Don't waste time fetching the chars until we've done the length switch.
+              $*{switch}
+            }
+            if (counter) {
+              SetUseCounter(proxy, *counter);
+              return true;
+            }
+
+            return false;
+            """,
+            pref=prefIdentifier(MISSING_PROP_PREF),
+            switch=self.gen_switch(switchDesc))
 
 
 class CGDOMJSProxyHandler_getOwnPropDescriptor(ClassMethod):
@@ -12559,8 +12614,8 @@ class CGDOMJSProxyHandler_hasOwn(ClassMethod):
                       "Should not have a XrayWrapper here");
             $*{maybeCrossOrigin}
             $*{indexed}
-            $*{missingPropUseCounters}
 
+            $*{missingPropUseCounters}
             JS::Rooted<JSObject*> expando(cx, GetExpandoObject(proxy));
             if (expando) {
               bool b = true;
@@ -13449,6 +13504,9 @@ class CGDescriptor(CGThing):
             raise TypeError("We don't support members in slots on "
                             "non-leaf interfaces like %s" %
                             descriptor.interface.identifier.name)
+
+        if descriptor.needsMissingPropUseCounters:
+            cgThings.append(CGCountMaybeMissingProperty(descriptor))
 
         if descriptor.concrete:
             if descriptor.interface.isSerializable():
@@ -15100,6 +15158,11 @@ class CGBindingRoot(CGThing):
             d.wantsXrays for d in descriptors)
         bindingHeaders["mozilla/dom/StructuredCloneTags.h"] = any(
             d.interface.isSerializable() for d in descriptors)
+
+        for ancestor in (findAncestorWithInstrumentedProps(d) for d in descriptors):
+            if not ancestor:
+                continue
+            bindingHeaders[CGHeaders.getDeclarationFilename(ancestor)] = True
 
         cgthings.extend(traverseMethods)
         cgthings.extend(unlinkMethods)
