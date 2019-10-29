@@ -1336,11 +1336,13 @@ class Element : public FragmentOrElement {
       const UnrestrictedDoubleOrKeyframeAnimationOptions& aOptions,
       ErrorResult& aError);
 
-  // Note: GetAnimations will flush style while GetAnimationsUnsorted won't.
-  // Callers must keep this element alive because flushing style may destroy
-  // this element.
+  enum class Flush { Yes, No };
+
+  MOZ_CAN_RUN_SCRIPT
   void GetAnimations(const GetAnimationsOptions& aOptions,
-                     nsTArray<RefPtr<Animation>>& aAnimations);
+                     nsTArray<RefPtr<Animation>>& aAnimations,
+                     Flush aFlush = Flush::Yes);
+
   static void GetAnimationsUnsorted(Element* aElement,
                                     PseudoStyleType aPseudoType,
                                     nsTArray<RefPtr<Animation>>& aAnimations);

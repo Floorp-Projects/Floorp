@@ -367,8 +367,6 @@ partial interface Document {
 partial interface Document {
   [Func="Document::AreWebAnimationsTimelinesEnabled"]
   readonly attribute DocumentTimeline timeline;
-  [Func="Document::IsWebAnimationsGetAnimationsEnabled"]
-  sequence<Animation> getAnimations();
 };
 
 // https://svgwg.org/svg2-draft/struct.html#InterfaceDocumentExtensions
