@@ -589,6 +589,8 @@ Tester.prototype = {
         }
       }
 
+      Services.obs.notifyObservers(null, "test-complete");
+
       if (
         this.currentTest.passCount === 0 &&
         this.currentTest.failCount === 0 &&
