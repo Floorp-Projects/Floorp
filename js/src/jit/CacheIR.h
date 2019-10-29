@@ -2505,6 +2505,9 @@ class MOZ_RAII HasPropIRGenerator : public IRGenerator {
                                     uint32_t index, Int32OperandId indexId);
   AttachDecision tryAttachTypedArray(HandleObject obj, ObjOperandId objId,
                                      Int32OperandId indexId);
+  AttachDecision tryAttachTypedArrayNonInt32Index(HandleObject obj,
+                                                  ObjOperandId objId,
+                                                  ValOperandId keyId);
   AttachDecision tryAttachSparse(HandleObject obj, ObjOperandId objId,
                                  Int32OperandId indexId);
   AttachDecision tryAttachNamedProp(HandleObject obj, ObjOperandId objId,
