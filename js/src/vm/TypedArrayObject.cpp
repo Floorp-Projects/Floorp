@@ -2350,8 +2350,10 @@ static inline bool StringIsNaN(mozilla::Range<const CharT> s) {
 }
 
 template <typename CharT>
-bool js::StringIsTypedArrayIndex(mozilla::Range<const CharT> s,
-                                 uint64_t* indexp) {
+JS::Result<mozilla::Maybe<uint64_t>> js::StringIsTypedArrayIndex(
+    JSContext* cx, mozilla::Range<const CharT> s) {
+  using ResultType = decltype(StringIsTypedArrayIndex(cx, s));
+
   mozilla::RangedPtr<const CharT> cp = s.begin();
   const mozilla::RangedPtr<const CharT> end = s.end();
 
@@ -2361,7 +2363,7 @@ bool js::StringIsTypedArrayIndex(mozilla::Range<const CharT> s,
   if (*cp == '-') {
     negative = true;
     if (++cp == end) {
-      return false;
+      return ResultType(mozilla::Nothing());
     }
   }
 
@@ -2369,24 +2371,23 @@ bool js::StringIsTypedArrayIndex(mozilla::Range<const CharT> s,
     // Check for "NaN", "Infinity", or "-Infinity".
     if ((!negative && StringIsNaN<CharT>({cp, end})) ||
         StringIsInfinity<CharT>({cp, end})) {
-      *indexp = UINT64_MAX;
-      return true;
+      return mozilla::Some(UINT64_MAX);
     }
-    return false;
+    return ResultType(mozilla::Nothing());
   }
 
   uint32_t digit = AsciiDigitToNumber(*cp++);
 
   // Don't allow leading zeros.
   if (digit == 0 && cp != end) {
-    return false;
+    return ResultType(mozilla::Nothing());
   }
 
   uint64_t index = digit;
 
   for (; cp < end; cp++) {
     if (!IsAsciiDigit(*cp)) {
-      return false;
+      return ResultType(mozilla::Nothing());
     }
 
     digit = AsciiDigitToNumber(*cp);
@@ -2400,18 +2401,16 @@ bool js::StringIsTypedArrayIndex(mozilla::Range<const CharT> s,
   }
 
   if (negative) {
-    *indexp = UINT64_MAX;
-  } else {
-    *indexp = index;
+    return mozilla::Some(UINT64_MAX);
   }
-  return true;
+  return mozilla::Some(index);
 }
 
-template bool js::StringIsTypedArrayIndex(mozilla::Range<const char16_t> s,
-                                          uint64_t* indexp);
+template JS::Result<mozilla::Maybe<uint64_t>> js::StringIsTypedArrayIndex(
+    JSContext* cx, mozilla::Range<const char16_t> s);
 
-template bool js::StringIsTypedArrayIndex(mozilla::Range<const Latin1Char> s,
-                                          uint64_t* indexp);
+template JS::Result<mozilla::Maybe<uint64_t>> js::StringIsTypedArrayIndex(
+    JSContext* cx, mozilla::Range<const Latin1Char> s);
 
 bool js::SetTypedArrayElement(JSContext* cx, Handle<TypedArrayObject*> obj,
                               uint64_t index, HandleValue v,

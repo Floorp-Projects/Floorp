@@ -2766,7 +2766,9 @@ JS_PUBLIC_API bool JS_AlreadyHasOwnPropertyById(JSContext* cx, HandleObject obj,
 
   RootedNativeObject nativeObj(cx, &obj->as<NativeObject>());
   Rooted<PropertyResult> prop(cx);
-  NativeLookupOwnPropertyNoResolve(cx, nativeObj, id, &prop);
+  if (!NativeLookupOwnPropertyNoResolve(cx, nativeObj, id, &prop)) {
+    return false;
+  }
   *foundp = prop.isFound();
   return true;
 }
