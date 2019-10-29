@@ -1,0 +1,93 @@
+<!DOCTYPE>
+<html>
+<head>
+<title>selection preventDefault test</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+
+<body>
+  <div id="wbrs" class="testingDiv">
+      abc<wbr>def<br>
+      ghi<wbr>jkl<br>
+      mno<wbr>pqr<br>
+  </div>
+
+  <p id="paragraphWbr">
+    abc<wbr>def<wbr>ghi<wbr>jkl<wbr>mno<wbr>pqr
+  </p>
+
+  <pre id="test">
+  <script class="testbody" type="text/javascript">
+
+  function test()
+  {
+    const kLF = !navigator.platform.indexOf("Win") ? "\r\n" : "\n";
+    const isMac = navigator.platform.indexOf("Mac") >= 0;
+    const combinators = isMac ? {shiftKey: true, altKey: true}
+                              : {shiftKey: true, accelKey: true};
+
+    var wbrElement = document.getElementById("wbrs");
+
+    //double clicking selects across wbr elements.
+    synthesizeMouse(wbrElement, 5, 5, { clickCount: 2 });
+    var selectedText = window.getSelection().toString();
+    console.log(selectedText);
+    is(selectedText,"abcdef", "Select across WBR elements with double click: OK");
+
+    //selecting first letter of wbr element and using shift + arrowRight selects across wbr elements.
+    synthesizeMouse(wbrElement, 1, 5, { type: "mousedown" });
+    synthesizeMouse(wbrElement, 2, 5, { type: "mousemove" });
+    synthesizeMouse(wbrElement, 2, 5, { type: "mouseup" });
+    synthesizeKey("KEY_ArrowRight", {shiftKey:true});
+    synthesizeKey("KEY_ArrowRight", {shiftKey:true});
+    synthesizeKey("KEY_ArrowRight", {shiftKey:true});
+    synthesizeKey("KEY_ArrowRight", {shiftKey:true});
+    var selectedText = window.getSelection().toString();
+    console.log(selectedText);
+    is(selectedText, "abcd", "Select across WBR elements using shift and right arrow: OK");
+
+    //selection using ctrl + shift + rightArrow selects across wbr elements
+    synthesizeMouse(wbrElement, 1, 5, { type: "mousedown" });
+    synthesizeMouse(wbrElement, 2, 5, { type: "mousemove" });
+    synthesizeMouse(wbrElement, 2, 5, { type: "mouseup" });
+    synthesizeKey("KEY_ArrowRight", combinators);
+    var selectedText = window.getSelection().toString();
+    console.log(selectedText);
+    is(selectedText, "abcdef", "Select across WBR elements using shift + ctrl + right arrow: OK");
+
+    //selection using ctrl + shift + rightArrow selects across wbr and br elements
+    synthesizeMouse(wbrElement, 1, 5, { type: "mousedown" });
+    synthesizeMouse(wbrElement, 2, 5, { type: "mousemove" });
+    synthesizeMouse(wbrElement, 2, 5, { type: "mouseup" });
+    synthesizeKey("KEY_ArrowRight", combinators);
+    synthesizeKey("KEY_ArrowRight", combinators);
+    var selectedText = window.getSelection().toString();
+    console.log(selectedText);
+    is(selectedText, "abcdef" + kLF + "ghijkl", "Select across WBR elements using shift + ctrl + right arrow: OK");
+
+    //double clicking on a paragraph selects across wbr elements
+    var paragraphWbr = document.getElementById("paragraphWbr");
+    synthesizeMouse(paragraphWbr, 5, 5, { clickCount: 2 });
+    var selectedText = window.getSelection().toString();
+    console.log(selectedText);
+    is(selectedText,"abcdefghijklmnopqr", "Select across WBR elements in paragraph with double click: OK");
+
+    SimpleTest.finish();
+  }
+  window.onload = function() {
+    SpecialPowers.pushPrefEnv({
+      set: [
+        // Prevent whitespace between lines from being selected.
+        ["layout.word_select.eat_space_to_next_word", false],
+      ],
+    }).then(() => {
+      setTimeout(test, 0);
+    });
+  };
+  SimpleTest.waitForExplicitFinish();
+  </script>
+  </pre>
+</body>
+</html>
