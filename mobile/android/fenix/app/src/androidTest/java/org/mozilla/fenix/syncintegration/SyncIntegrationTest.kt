@@ -43,7 +43,6 @@ class SyncIntegrationTest {
         tapReturnToPreviousApp()
         homeScreen {
         }.openThreeDotMenu {
-        }.openLibrary {
         }.openHistory { }
         historyAfterSyncIsShown()
     }
@@ -55,7 +54,6 @@ class SyncIntegrationTest {
         tapReturnToPreviousApp()
         homeScreen {
         }.openThreeDotMenu {
-        }.openLibrary {
         }.openBookmarks { }
         bookmarkAfterSyncIsShown()
     }

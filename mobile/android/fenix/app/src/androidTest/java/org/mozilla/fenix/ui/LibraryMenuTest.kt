@@ -1,18 +1,44 @@
 package org.mozilla.fenix.ui
 
+import okhttp3.mockwebserver.MockWebServer
+import org.junit.After
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityTestRule
-import org.mozilla.fenix.ui.robots.homeScreen
+import org.mozilla.fenix.helpers.TestAssetHelper
+import org.mozilla.fenix.ui.robots.navigationToolbar
 
+/**
+ *  Tests for verifying basic functionality of Library accessed from browser screen
+ */
 class LibraryMenuTest {
+
+    private lateinit var mockWebServer: MockWebServer
+    private lateinit var defaultWebPage: TestAssetHelper.TestAsset
 
     @get:Rule
     val activityTestRule = HomeActivityTestRule()
 
+    @Before
+    fun setUp() {
+        mockWebServer = MockWebServer().apply {
+            setDispatcher(AndroidAssetDispatcher())
+            start()
+        }
+        defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+    }
+
+    @After
+    fun tearDown() {
+        mockWebServer.shutdown()
+    }
+
     @Test
     fun libraryMenuItemsTest() {
-        homeScreen {
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
         }.openThreeDotMenu {
         }.openLibrary {
             verifyLibraryView()
@@ -23,27 +49,30 @@ class LibraryMenuTest {
 
     @Test
     fun closeMenuButtonTest() {
-        homeScreen {
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
         }.openThreeDotMenu {
         }.openLibrary {
         }.closeMenu {
-            verifyHomeScreen()
+            verifyBrowserScreen()
         }
     }
 
     @Test
     fun backButtonTest() {
-        homeScreen {
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
         }.openThreeDotMenu {
         }.openLibrary {
         }.goBack {
-            verifyHomeScreen()
+            verifyBrowserScreen()
         }
     }
 
     @Test
     fun bookmarksButtonTest() {
-        homeScreen {
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
         }.openThreeDotMenu {
         }.openLibrary {
         }.openBookmarks {
@@ -53,7 +82,8 @@ class LibraryMenuTest {
 
     @Test
     fun historyButtonTest() {
-        homeScreen {
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
         }.openThreeDotMenu {
         }.openLibrary {
         }.openHistory {

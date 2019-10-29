@@ -55,7 +55,6 @@ class BookmarksTest {
     fun noBookmarkItemsTest() {
         homeScreen {
         }.openThreeDotMenu {
-        }.openLibrary {
         }.openBookmarks {
             verifyEmptyBookmarksList()
         }
@@ -98,7 +97,6 @@ class BookmarksTest {
     fun createBookmarkFolderTest() {
         homeScreen {
         }.openThreeDotMenu {
-        }.openLibrary {
         }.openBookmarks {
             clickAddFolderButton()
             addNewFolderName(bookmarksFolderName)

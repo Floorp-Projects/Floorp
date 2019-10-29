@@ -35,20 +35,20 @@ class LibraryRobot {
 
         val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
 
-        fun goBack(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition {
+        fun goBack(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
 
             mDevice.waitForIdle()
             goBackButton().perform(click())
 
-            HomeScreenRobot().interact()
-            return HomeScreenRobot.Transition()
+            BrowserRobot().interact()
+            return BrowserRobot.Transition()
         }
 
-        fun closeMenu(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition {
+        fun closeMenu(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
             closeButton().click()
 
-            HomeScreenRobot().interact()
-            return HomeScreenRobot.Transition()
+            BrowserRobot().interact()
+            return BrowserRobot.Transition()
         }
 
         fun openBookmarks(interact: BookmarksRobot.() -> Unit): BookmarksRobot.Transition {

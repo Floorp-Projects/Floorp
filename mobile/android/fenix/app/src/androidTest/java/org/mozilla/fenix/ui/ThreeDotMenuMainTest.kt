@@ -47,15 +47,12 @@ class ThreeDotMenuMainTest {
         homeScreen {
         }.openThreeDotMenu {
             verifySettingsButton()
-            verifyLibraryButton()
+            verifyBookmarksButton()
+            verifyHistoryButton()
             verifyHelpButton()
             verifyWhatsNewButton()
         }.openSettings {
             verifySettingsView()
-        }.goBack {
-        }.openThreeDotMenu {
-        }.openLibrary {
-            verifyLibraryView()
         }.goBack {
         }.openThreeDotMenu {
         }.openHelp {
@@ -64,6 +61,20 @@ class ThreeDotMenuMainTest {
         }.openThreeDotMenu {
         }.openWhatsNew {
             verifyWhatsNewURL()
+        }.openHomeScreen {
+        }
+
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openBookmarks {
+            verifyBookmarksMenuView()
+        }.goBack {
+        }
+
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openHistory {
+            verifyHistoryMenuView()
         }
     }
 }

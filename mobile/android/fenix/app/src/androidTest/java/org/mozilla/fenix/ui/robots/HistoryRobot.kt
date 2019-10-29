@@ -37,6 +37,8 @@ class HistoryRobot {
 
     fun verifyDeleteConfirmationMessage() = assertDeleteConfirmationMessage()
 
+    fun verifyHomeScreen() = HomeScreenRobot().verifyHomeScreen()
+
     fun openOverflowMenu() {
         overflowMenu().click()
     }
@@ -57,18 +59,18 @@ class HistoryRobot {
     }
 
     class Transition {
-        fun goBack(interact: LibraryRobot.() -> Unit): LibraryRobot.Transition {
+        fun goBack(interact: HistoryRobot.() -> Unit): HistoryRobot.Transition {
             goBackButton().click()
 
-            LibraryRobot().interact()
-            return LibraryRobot.Transition()
+            HistoryRobot().interact()
+            return HistoryRobot.Transition()
         }
 
-        fun closeMenu(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition {
+        fun closeMenu(interact: HistoryRobot.() -> Unit): HistoryRobot.Transition {
             closeButton().click()
 
-            HomeScreenRobot().interact()
-            return HomeScreenRobot.Transition()
+            HistoryRobot().interact()
+            return HistoryRobot.Transition()
         }
     }
 }

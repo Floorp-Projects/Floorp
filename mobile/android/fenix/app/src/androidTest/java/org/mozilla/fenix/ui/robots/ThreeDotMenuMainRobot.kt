@@ -33,6 +33,8 @@ import org.mozilla.fenix.share.ShareFragment
 class ThreeDotMenuMainRobot {
     fun verifySettingsButton() = assertSettingsButton()
     fun verifyLibraryButton() = assertLibraryButton()
+    fun verifyHistoryButton() = assertHistoryButton()
+    fun verifyBookmarksButton() = assertBookmarksButton()
     fun verifyHelpButton() = assertHelpButton()
     fun verifyThreeDotMenuExists() = threeDotMenuRecyclerViewExists()
     fun verifyForwardButton() = assertForwardButton()
@@ -78,6 +80,22 @@ class ThreeDotMenuMainRobot {
 
             LibraryRobot().interact()
             return LibraryRobot.Transition()
+        }
+
+        fun openBookmarks(interact: BookmarksRobot.() -> Unit): BookmarksRobot.Transition {
+            mDevice.waitNotNull(Until.findObject(By.text("Bookmarks")), waitingTime)
+            bookmarksButton().click()
+
+            BookmarksRobot().interact()
+            return BookmarksRobot.Transition()
+        }
+
+        fun openHistory(interact: HistoryRobot.() -> Unit): HistoryRobot.Transition {
+            mDevice.waitNotNull(Until.findObject(By.text("History")), waitingTime)
+            historyButton().click()
+
+            HistoryRobot().interact()
+            return HistoryRobot.Transition()
         }
 
         fun openHelp(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
@@ -158,6 +176,14 @@ private fun assertSettingsButton() = settingsButton()
 
 private fun libraryButton() = onView(allOf(withText(R.string.browser_menu_your_library)))
 private fun assertLibraryButton() = libraryButton()
+    .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+
+private fun historyButton() = onView(allOf(withText(R.string.library_history)))
+private fun assertHistoryButton() = historyButton()
+    .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+
+private fun bookmarksButton() = onView(allOf(withText(R.string.library_bookmarks)))
+private fun assertBookmarksButton() = bookmarksButton()
     .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 
 private fun helpButton() = onView(allOf(withText(R.string.browser_menu_help)))

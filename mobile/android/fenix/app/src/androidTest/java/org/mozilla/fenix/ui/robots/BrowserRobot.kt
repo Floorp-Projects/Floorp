@@ -7,13 +7,17 @@
 package org.mozilla.fenix.ui.robots
 
 import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.action.ViewActions
 import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.matcher.ViewMatchers
+import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.Until
+import org.hamcrest.CoreMatchers
 import org.hamcrest.CoreMatchers.containsString
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.TestAssetHelper
@@ -22,10 +26,16 @@ import org.mozilla.fenix.helpers.ext.waitNotNull
 
 class BrowserRobot {
 
+    fun verifyBrowserScreen() {
+        onView(ViewMatchers.withResourceName("browserLayout"))
+            .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+    }
+
     fun verifyHelpUrl() {
         val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         val redirectUrl = "https://support.mozilla.org/"
-        mDevice.waitNotNull(Until.findObject(By.res("org.mozilla.fenix.debug:id/mozac_browser_toolbar_url_view")), TestAssetHelper.waitingTime)
+        mDevice.waitNotNull(Until.findObject(By.res("org.mozilla.fenix.debug:id/mozac_browser_toolbar_url_view")),
+            TestAssetHelper.waitingTime)
         onView(withId(R.id.mozac_browser_toolbar_url_view))
             .check(matches(withText(containsString(redirectUrl))))
     }
@@ -33,7 +43,8 @@ class BrowserRobot {
     fun verifyWhatsNewURL() {
         val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         val redirectUrl = "https://support.mozilla.org/"
-        mDevice.waitNotNull(Until.findObject(By.res("org.mozilla.fenix.debug:id/mozac_browser_toolbar_url_view")), TestAssetHelper.waitingTime)
+        mDevice.waitNotNull(Until.findObject(By.res("org.mozilla.fenix.debug:id/mozac_browser_toolbar_url_view")),
+            TestAssetHelper.waitingTime)
         onView(withId(R.id.mozac_browser_toolbar_url_view))
             .check(matches(withText(containsString(redirectUrl))))
     }
@@ -58,6 +69,21 @@ class BrowserRobot {
 
     class Transition {
         private val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+        private fun threeDotButton() = onView(
+            CoreMatchers.allOf(
+                ViewMatchers.withContentDescription(
+                    "Menu"
+                )
+            )
+        )
+
+        fun openThreeDotMenu(interact: ThreeDotMenuMainRobot.() -> Unit): ThreeDotMenuMainRobot.Transition {
+            mDevice.waitForIdle()
+            threeDotButton().perform(ViewActions.click())
+
+            ThreeDotMenuMainRobot().interact()
+            return ThreeDotMenuMainRobot.Transition()
+        }
 
         fun openNavigationToolbar(interact: NavigationToolbarRobot.() -> Unit): NavigationToolbarRobot.Transition {
 

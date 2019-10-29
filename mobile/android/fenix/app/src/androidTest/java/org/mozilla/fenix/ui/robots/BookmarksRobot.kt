@@ -16,8 +16,6 @@ import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withParent
 import androidx.test.espresso.matcher.ViewMatchers.withText
-import androidx.test.platform.app.InstrumentationRegistry
-import androidx.test.uiautomator.UiDevice
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.containsString
 import org.mozilla.fenix.R
@@ -50,6 +48,8 @@ class BookmarksRobot {
 
     fun verifyParentFolderSelector() = assertBookmarkFolderSelector()
 
+    fun verifyHomeScreen() = HomeScreenRobot().verifyHomeScreen()
+
     fun clickAddFolderButton() {
         addFolderButton().click()
     }
@@ -68,13 +68,11 @@ class BookmarksRobot {
     }
 
     class Transition {
-        val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
-
-        fun goBack(interact: LibraryRobot.() -> Unit): LibraryRobot.Transition {
+        fun goBack(interact: BookmarksRobot.() -> Unit): BookmarksRobot.Transition {
             goBackButton().click()
 
-            LibraryRobot().interact()
-            return LibraryRobot.Transition()
+            BookmarksRobot().interact()
+            return BookmarksRobot.Transition()
         }
 
         fun openThreeDotMenu(interact: ThreeDotMenuBookmarksRobot.() -> Unit): ThreeDotMenuBookmarksRobot.Transition {

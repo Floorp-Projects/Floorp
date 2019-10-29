@@ -13,6 +13,7 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.junit.Ignore
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
@@ -55,8 +56,6 @@ class HistoryTest {
     fun noHistoryItemsInCacheTest() {
         homeScreen {
         }.openThreeDotMenu {
-            verifyLibraryButton()
-        }.openLibrary {
             verifyHistoryButton()
         }.openHistory {
             verifyHistoryMenuView()
@@ -72,7 +71,6 @@ class HistoryTest {
         }.enterURLAndEnterToBrowser(firstWebPage.url) {
         }.openHomeScreen {
         }.openThreeDotMenu {
-        }.openLibrary {
         }.openHistory {
             verifyHistoryMenuView()
             verifyVisitedTimeTitle()
@@ -89,7 +87,6 @@ class HistoryTest {
         }.enterURLAndEnterToBrowser(firstWebPage.url) {
         }.openHomeScreen {
         }.openThreeDotMenu {
-        }.openLibrary {
         }.openHistory {
             openOverflowMenu()
             clickThreeDotMenuDelete()
@@ -105,7 +102,6 @@ class HistoryTest {
         }.enterURLAndEnterToBrowser(firstWebPage.url) {
         }.openHomeScreen {
         }.openThreeDotMenu {
-        }.openLibrary {
         }.openHistory {
             clickDeleteHistoryButton()
             verifyDeleteConfirmationMessage()
@@ -122,7 +118,6 @@ class HistoryTest {
         }.enterURLAndEnterToBrowser(firstWebPage.url) {
         }.openHomeScreen {
         }.openThreeDotMenu {
-        }.openLibrary {
         }.openHistory {
             longTapSelectItem(firstWebPage.url)
         }
@@ -146,7 +141,6 @@ class HistoryTest {
         }.openHomeScreen {
             closeTab()
         }.openThreeDotMenu {
-        }.openLibrary {
         }.openHistory {
             longTapSelectItem(firstWebPage.url)
             openActionBarOverflowOrOptionsMenu(activityTestRule.getActivity())
@@ -167,7 +161,6 @@ class HistoryTest {
         }.enterURLAndEnterToBrowser(firstWebPage.url) {
         }.openHomeScreen {
         }.openThreeDotMenu {
-        }.openLibrary {
         }.openHistory {
             longTapSelectItem(firstWebPage.url)
             openActionBarOverflowOrOptionsMenu(activityTestRule.getActivity())
@@ -191,7 +184,6 @@ class HistoryTest {
         }.enterURLAndEnterToBrowser(secondWebPage.url) {
         }.openHomeScreen {
         }.openThreeDotMenu {
-        }.openLibrary {
         }.openHistory {
             longTapSelectItem(firstWebPage.url)
             longTapSelectItem(secondWebPage.url)
@@ -212,7 +204,6 @@ class HistoryTest {
         }.enterURLAndEnterToBrowser(firstWebPage.url) {
         }.openHomeScreen {
         }.openThreeDotMenu {
-        }.openLibrary {
         }.openHistory {
             longTapSelectItem(firstWebPage.url)
         }
@@ -230,18 +221,16 @@ class HistoryTest {
     fun verifyBackNavigation() {
         homeScreen {
         }.openThreeDotMenu {
-        }.openLibrary {
         }.openHistory {
         }.goBack {
-            verifyLibraryView()
+            verifyHomeScreen()
         }
     }
-
+    @Ignore("Test will be included after back navigation from History Fragment is sorted")
     @Test
     fun verifyCloseMenu() {
         homeScreen {
         }.openThreeDotMenu {
-        }.openLibrary {
         }.openHistory {
         }.closeMenu {
             verifyHomeScreen()
