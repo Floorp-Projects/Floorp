@@ -9,7 +9,7 @@
 
 #include "AudioFocusManager.h"
 #include "MediaController.h"
-#include "MediaHardwareKeysManager.h"
+#include "MediaControlKeysManager.h"
 #include "nsDataHashtable.h"
 #include "nsIObserver.h"
 #include "nsTArray.h"
