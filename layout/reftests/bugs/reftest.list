@@ -1872,7 +1872,7 @@ fuzzy-if(webrender,63-64,407-845) == 1081185-1.html 1081185-1-ref.html
 == 1105137-1.html 1105137-1-ref.html
 fuzzy-if(d2d,0-36,0-304) fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)&&d2d,0-139,0-701) == 1116480-1-fakeitalic-overflow.html 1116480-1-fakeitalic-overflow-ref.html
 == 1111753-1.html about:blank
-== 1114526-1.html 1114526-1-ref.html
+== chrome://reftest/content/bugs/1114526-1.html 1114526-1-ref.html
 fuzzy-if(skiaContent,0-1,0-800000) == 1119117-1a.html 1119117-1-ref.html
 fuzzy-if(skiaContent,0-1,0-800000) == 1119117-1b.html 1119117-1-ref.html
 == 1120431-1.html 1120431-1-ref.html

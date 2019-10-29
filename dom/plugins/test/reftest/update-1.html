@@ -15,6 +15,9 @@ function start()
     var last_paint_count = 0;
     // Enough paints to test reusing a surface after it has been
     // moved from front to back buffer.
+    // FIXME: Stop using mozPaintCount for this test.
+    //        Can't make it a chrome:// url because it needs http, thus no
+    //        SpecialPowers :/
     var final_paint_count = window.mozPaintCount + 10;
     var final_color = "FFFF0000";
 

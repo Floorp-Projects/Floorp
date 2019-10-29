@@ -19,7 +19,7 @@
         "about:blank",
         null,
         "chrome,dialog=no,outerHeight=170,outerWidth=200");
-    waitForSuccess(function() { return win.mozPaintCount },
+    waitForSuccess(function() { return SpecialPowers.DOMWindowUtils.paintCount },
                    "No paint received", checkInitialSize);
   }
 

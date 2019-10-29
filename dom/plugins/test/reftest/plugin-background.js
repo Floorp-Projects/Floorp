@@ -21,14 +21,12 @@ function deltaInBounds(dx,dy, dw,dh) {
             200 <= b && b <= 220);
 }
 
-var initialFrame;
 function start() {
     window.removeEventListener("MozReftestInvalidate", start);
 
     window.addEventListener("MozAfterPaint", step);
     window.addEventListener("MozPaintWaitFinished", step);
 
-    initialFrame = window.mozPaintCount;
     plugin = document.getElementById("plugin");
 
     movePluginTo(0,0, 200,200);

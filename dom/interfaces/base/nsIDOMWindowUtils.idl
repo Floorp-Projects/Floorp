@@ -1935,6 +1935,13 @@ interface nsIDOMWindowUtils : nsISupports {
    */
   attribute ACString systemFont;
 
+  /**
+   * Returns the number of times this document for this window has
+   * been painted to the screen.
+   *
+   * Use this instead of window.mozPaintCount
+   */
+  readonly attribute unsigned long long paintCount;
 
   /**
    * Simulate the system setting corresponding to 'prefers-reduced-motion'

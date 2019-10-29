@@ -21,6 +21,7 @@ var iterations = 0;
 var plugin = document.getElementById("plugin");
 var lastPaintCount;
 var expectedWidth;
+var utils = SpecialPowers.DOMWindowUtils;
 
 var toggle = true;
 function invalidationLoop() {
@@ -32,7 +33,7 @@ function invalidationLoop() {
 invalidationLoop();
 
 function doIteration() {
-  lastPaintCount = window.mozPaintCount;
+  lastPaintCount = utils.paintCount;
   ok(true, "Beginning iteration " + iterations + ", last paint count: " + lastPaintCount);
 
   expectedWidth = 201 + iterations;
@@ -41,13 +42,12 @@ function doIteration() {
 }
 
 function checkDone() {
-  ok(true, "Check to see if we're done: " + window.mozPaintCount);
-  if (window.mozPaintCount == lastPaintCount) {
+  ok(true, "Check to see if we're done: " + utils.paintCount);
+  if (utils.paintCount == lastPaintCount) {
     setTimeout(checkDone, 30);
     return;
   }
 
-  var utils = SpecialPowers.getDOMWindowUtils(window);
   is(plugin.getWidthAtLastPaint(), utils.screenPixelsPerCSSPixel*expectedWidth,
      "Check that we set width before painting");
 
