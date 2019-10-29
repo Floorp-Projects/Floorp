@@ -187,28 +187,6 @@ skip script test262/built-ins/TypedArrayConstructors/internals/Set/detached-buff
 skip script test262/built-ins/TypedArrayConstructors/internals/Set/detached-buffer.js
 skip script test262/built-ins/TypedArrayConstructors/internals/Set/tonumber-value-detached-buffer.js
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1129202
-skip script test262/built-ins/TypedArrayConstructors/internals/DefineOwnProperty/BigInt/key-is-not-canonical-index.js
-skip script test262/built-ins/TypedArrayConstructors/internals/DefineOwnProperty/BigInt/key-is-not-integer.js
-skip script test262/built-ins/TypedArrayConstructors/internals/DefineOwnProperty/key-is-not-canonical-index.js
-skip script test262/built-ins/TypedArrayConstructors/internals/DefineOwnProperty/key-is-not-integer.js
-skip script test262/built-ins/TypedArrayConstructors/internals/Get/BigInt/key-is-not-canonical-index.js
-skip script test262/built-ins/TypedArrayConstructors/internals/Get/BigInt/key-is-not-integer.js
-skip script test262/built-ins/TypedArrayConstructors/internals/Get/key-is-not-canonical-index.js
-skip script test262/built-ins/TypedArrayConstructors/internals/Get/key-is-not-integer.js
-skip script test262/built-ins/TypedArrayConstructors/internals/GetOwnProperty/BigInt/key-is-not-canonical-index.js
-skip script test262/built-ins/TypedArrayConstructors/internals/GetOwnProperty/key-is-not-canonical-index.js
-skip script test262/built-ins/TypedArrayConstructors/internals/HasProperty/BigInt/key-is-not-canonical-index.js
-skip script test262/built-ins/TypedArrayConstructors/internals/HasProperty/BigInt/key-is-not-integer.js
-skip script test262/built-ins/TypedArrayConstructors/internals/HasProperty/key-is-not-canonical-index.js
-skip script test262/built-ins/TypedArrayConstructors/internals/HasProperty/key-is-not-integer.js
-skip script test262/built-ins/TypedArrayConstructors/internals/Set/BigInt/key-is-not-canonical-index.js
-skip script test262/built-ins/TypedArrayConstructors/internals/Set/BigInt/key-is-not-integer.js
-skip script test262/built-ins/TypedArrayConstructors/internals/Set/BigInt/tonumber-value-throws.js
-skip script test262/built-ins/TypedArrayConstructors/internals/Set/key-is-not-canonical-index.js
-skip script test262/built-ins/TypedArrayConstructors/internals/Set/key-is-not-integer.js
-skip script test262/built-ins/TypedArrayConstructors/internals/Set/tonumber-value-throws.js
-
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1317405
 skip script test262/language/computed-property-names/class/static/method-number.js
 skip script test262/language/computed-property-names/class/static/method-string.js
