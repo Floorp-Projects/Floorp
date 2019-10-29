@@ -1943,6 +1943,13 @@ class _ASRouter {
       case ra.OPEN_PROTECTION_REPORT:
         target.browser.ownerGlobal.gProtectionsHandler.openProtections();
         break;
+      case ra.DISABLE_STP_DOORHANGERS:
+        await this.blockMessageById([
+          "SOCIAL_TRACKING_PROTECTION",
+          "FINGERPRINTERS_PROTECTION",
+          "CRYPTOMINERS_PROTECTION",
+        ]);
+        break;
     }
   }
 
