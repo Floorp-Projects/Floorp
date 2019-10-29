@@ -593,125 +593,6 @@ nsresult NotificationPermissionRequest::ResolvePromise() {
   return rv;
 }
 
-NS_IMPL_ISUPPORTS(NotificationTelemetryService, nsIObserver)
-
-NotificationTelemetryService::NotificationTelemetryService()
-    : mDNDRecorded(false) {}
-
-NotificationTelemetryService::~NotificationTelemetryService() {}
-
-/* static */
-already_AddRefed<NotificationTelemetryService>
-NotificationTelemetryService::GetInstance() {
-  nsCOMPtr<nsISupports> telemetrySupports =
-      do_GetService(NOTIFICATIONTELEMETRYSERVICE_CONTRACTID);
-  if (!telemetrySupports) {
-    return nullptr;
-  }
-  RefPtr<NotificationTelemetryService> telemetry =
-      static_cast<NotificationTelemetryService*>(telemetrySupports.get());
-  return telemetry.forget();
-}
-
-nsresult NotificationTelemetryService::Init() {
-  // Only perform permissions telemetry collection in the parent process.
-  if (!XRE_IsParentProcess()) {
-    return NS_OK;
-  }
-
-  RecordPermissions();
-
-  return NS_OK;
-}
-
-void NotificationTelemetryService::RecordPermissions() {
-  MOZ_ASSERT(XRE_IsParentProcess(),
-             "RecordPermissions may only be called in the parent process");
-
-  if (!Telemetry::CanRecordBase() || !Telemetry::CanRecordExtended()) {
-    return;
-  }
-
-  nsCOMPtr<nsIPermissionManager> permissionManager =
-      services::GetPermissionManager();
-  if (!permissionManager) {
-    return;
-  }
-
-  nsCOMPtr<nsISimpleEnumerator> enumerator;
-  nsresult rv = permissionManager->GetEnumerator(getter_AddRefs(enumerator));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
-  }
-
-  for (;;) {
-    bool hasMoreElements;
-    nsresult rv = enumerator->HasMoreElements(&hasMoreElements);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return;
-    }
-    if (!hasMoreElements) {
-      break;
-    }
-    nsCOMPtr<nsISupports> supportsPermission;
-    rv = enumerator->GetNext(getter_AddRefs(supportsPermission));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return;
-    }
-    uint32_t capability;
-    if (!GetNotificationPermission(supportsPermission, &capability)) {
-      continue;
-    }
-  }
-}
-
-bool NotificationTelemetryService::GetNotificationPermission(
-    nsISupports* aSupports, uint32_t* aCapability) {
-  nsCOMPtr<nsIPermission> permission = do_QueryInterface(aSupports);
-  if (!permission) {
-    return false;
-  }
-  nsAutoCString type;
-  permission->GetType(type);
-  if (!type.EqualsLiteral("desktop-notification")) {
-    return false;
-  }
-  permission->GetCapability(aCapability);
-  return true;
-}
-
-void NotificationTelemetryService::RecordDNDSupported() {
-  if (mDNDRecorded) {
-    return;
-  }
-
-  nsCOMPtr<nsIAlertsService> alertService = components::Alerts::Service();
-  if (!alertService) {
-    return;
-  }
-
-  nsCOMPtr<nsIAlertsDoNotDisturb> alertServiceDND =
-      do_QueryInterface(alertService);
-  if (!alertServiceDND) {
-    return;
-  }
-
-  mDNDRecorded = true;
-  bool isEnabled;
-  nsresult rv = alertServiceDND->GetManualDoNotDisturb(&isEnabled);
-  if (NS_FAILED(rv)) {
-    return;
-  }
-
-  Telemetry::Accumulate(Telemetry::ALERTS_SERVICE_DND_SUPPORTED_FLAG, true);
-}
-
-NS_IMETHODIMP
-NotificationTelemetryService::Observe(nsISupports* aSubject, const char* aTopic,
-                                      const char16_t* aData) {
-  return NS_OK;
-}
-
 // Observer that the alert service calls to do common tasks and/or dispatch to
 // the specific observer for the context e.g. main thread, worker, or service
 // worker.
@@ -1184,13 +1065,6 @@ NotificationObserver::Observe(nsISupports* aSubject, const char* aTopic,
         IPC::Principal(mPrincipal));
     return NS_OK;
   } else if (!strcmp("alertshow", aTopic) || !strcmp("alertfinished", aTopic)) {
-    RefPtr<NotificationTelemetryService> telemetry =
-        NotificationTelemetryService::GetInstance();
-    if (telemetry) {
-      // Record whether "do not disturb" is supported after the first
-      // notification, to account for falling back to XUL alerts.
-      telemetry->RecordDNDSupported();
-    }
     Unused << NS_WARN_IF(NS_FAILED(AdjustPushQuota(aTopic)));
   }
 
