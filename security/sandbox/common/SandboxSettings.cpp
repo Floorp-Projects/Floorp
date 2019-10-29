@@ -8,6 +8,7 @@
 
 #include "mozilla/Components.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs_security.h"
 
 #include "prenv.h"
 
@@ -19,7 +20,7 @@ int GetEffectiveContentSandboxLevel() {
   if (PR_GetEnv("MOZ_DISABLE_CONTENT_SANDBOX")) {
     return 0;
   }
-  int level = Preferences::GetInt("security.sandbox.content.level");
+  int level = StaticPrefs::security_sandbox_content_level_DoNotUseDirectly();
 // On Windows and macOS, enforce a minimum content sandbox level of 1 (except on
 // Nightly, where it can be set to 0).
 #if !defined(NIGHTLY_BUILD) && (defined(XP_WIN) || defined(XP_MACOSX))
