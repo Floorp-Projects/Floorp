@@ -125,7 +125,7 @@ add_task(async function() {
       `Should have the correct order for the engines: test ${i}`
     );
     Assert.equal(
-      privateDefault,
+      privateDefault && privateDefault.engineName,
       test.expectedPrivate,
       `Should have the correct selection for the private engine: test ${i++}`
     );
