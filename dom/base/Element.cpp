@@ -3425,15 +3425,21 @@ already_AddRefed<Animation> Element::Animate(
 }
 
 void Element::GetAnimations(const GetAnimationsOptions& aOptions,
-                            nsTArray<RefPtr<Animation>>& aAnimations) {
-  Document* doc = GetComposedDoc();
-  if (doc) {
-    // We don't need to explicitly flush throttled animations here, since
-    // updating the animation style of elements will never affect the set of
-    // running animations and it's only the set of running animations that is
-    // important here.
-    doc->FlushPendingNotifications(
-        ChangesToFlush(FlushType::Style, false /* flush animations */));
+                            nsTArray<RefPtr<Animation>>& aAnimations,
+                            Flush aFlush) {
+  if (aFlush == Flush::Yes) {
+    if (Document* doc = GetComposedDoc()) {
+      // We don't need to explicitly flush throttled animations here, since
+      // updating the animation style of elements will never affect the set of
+      // running animations and it's only the set of running animations that is
+      // important here.
+      //
+      // NOTE: Any changes to the flags passed to the following call should
+      // be reflected in the flags passed in DocumentOrShadowRoot::GetAnimations
+      // too.
+      doc->FlushPendingNotifications(
+          ChangesToFlush(FlushType::Style, false /* flush animations */));
+    }
   }
 
   Element* elem = this;

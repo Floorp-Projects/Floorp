@@ -25,6 +25,7 @@ class StyleSheet;
 
 namespace dom {
 
+class Animation;
 class Element;
 class DocumentOrShadowRoot;
 class HTMLInputElement;
@@ -177,6 +178,10 @@ class DocumentOrShadowRoot {
   }
 
   void ReportEmptyGetElementByIdArg();
+
+  // Web Animations
+  MOZ_CAN_RUN_SCRIPT
+  void GetAnimations(nsTArray<RefPtr<Animation>>& aAnimations);
 
   // nsIRadioGroupContainer
   NS_IMETHOD WalkRadioGroup(const nsAString& aName, nsIRadioVisitor* aVisitor,
