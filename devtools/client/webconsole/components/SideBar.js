@@ -50,7 +50,6 @@ class SideBar extends Component {
     return {
       serviceContainer: PropTypes.object,
       dispatch: PropTypes.func.isRequired,
-      visible: PropTypes.bool,
       grip: PropTypes.object,
       onResized: PropTypes.func,
     };
@@ -62,9 +61,8 @@ class SideBar extends Component {
   }
 
   shouldComponentUpdate(nextProps) {
-    const { grip, visible } = nextProps;
-
-    return visible !== this.props.visible || grip !== this.props.grip;
+    const { grip } = nextProps;
+    return grip !== this.props.grip;
   }
 
   onClickSidebarClose() {
@@ -72,10 +70,6 @@ class SideBar extends Component {
   }
 
   render() {
-    if (!this.props.visible) {
-      return null;
-    }
-
     const { grip, serviceContainer } = this.props;
 
     const objectInspector = getObjectInspector(grip, serviceContainer, {
