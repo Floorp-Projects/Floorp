@@ -2147,6 +2147,22 @@ describe("ASRouter", () => {
       });
     });
 
+    describe("#onMessage: DISABLE_STP_DOORHANGERS", () => {
+      it("should block STP related messages", async () => {
+        const msg = fakeExecuteUserAction({ type: "DISABLE_STP_DOORHANGERS" });
+
+        assert.deepEqual(Router.state.messageBlockList, []);
+
+        await Router.onMessage(msg);
+
+        assert.deepEqual(Router.state.messageBlockList, [
+          "SOCIAL_TRACKING_PROTECTION",
+          "FINGERPRINTERS_PROTECTION",
+          "CRYPTOMINERS_PROTECTION",
+        ]);
+      });
+    });
+
     describe("#dispatch(action, target)", () => {
       it("should an action and target to onMessage", async () => {
         // use the IMPRESSION action to make sure actions are actually getting processed
