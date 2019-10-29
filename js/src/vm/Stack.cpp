@@ -105,9 +105,11 @@ static inline void AssertScopeMatchesEnvironment(Scope* scope,
     } else if (si.hasSyntacticEnvironment()) {
       switch (si.kind()) {
         case ScopeKind::Function:
-          MOZ_ASSERT(
-              env->as<CallObject>().callee().existingScriptNonDelazifying() ==
-              si.scope()->as<FunctionScope>().script());
+          MOZ_ASSERT(env->as<CallObject>()
+                         .callee()
+                         .maybeCanonicalFunction()
+                         ->nonLazyScript() ==
+                     si.scope()->as<FunctionScope>().script());
           env = &env->as<CallObject>().enclosingEnvironment();
           break;
 
