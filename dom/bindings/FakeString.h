@@ -131,6 +131,22 @@ struct FakeString {
     mLength = aLength;
   }
 
+  // The preferred way to assign literals to a FakeString.  This should only be
+  // called with actual C++ literal strings (i.e. u"stuff") or character arrays
+  // that originally come from passing such literal strings.
+  template <int N>
+  void AssignLiteral(const nsString::char_type (&aData)[N]) {
+    AssignLiteral(aData, N - 1);
+  }
+
+  // Assign a literal to a FakeString when it's not an actual literal
+  // in the code, but is known to be a literal somehow (e.g. it came
+  // from an nsAString that tested true for IsLiteral()).
+  void AssignLiteral(const nsString::char_type* aData, size_t aLength) {
+    Rebind(aData, aLength);
+    mDataFlags |= nsString::DataFlags::LITERAL;
+  }
+
   // If this ever changes, change the corresponding code in the
   // Optional<nsAString> specialization as well.
   const nsAString* ToAStringPtr() const {
@@ -208,12 +224,6 @@ inline void AssignFromStringBuffer(
     nsStringBuffer* aBuffer, size_t aLength,
     mozilla::dom::binding_detail::FakeString& aDest) {
   aDest.AssignFromStringBuffer(do_AddRef(aBuffer), aLength);
-}
-
-inline void AssignFromLiteralChars(
-    const char16_t* aChars, size_t aLength,
-    mozilla::dom::binding_detail::FakeString& aDest) {
-  aDest.Rebind(aChars, aLength);
 }
 
 #endif /* mozilla_dom_FakeString_h__ */
