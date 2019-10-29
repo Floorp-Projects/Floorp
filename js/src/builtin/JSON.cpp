@@ -481,7 +481,9 @@ static bool JO(JSContext* cx, HandleObject obj, StringifyContext* scx) {
     if (scx->maybeSafely) {
       RootedNativeObject nativeObj(cx, &obj->as<NativeObject>());
       Rooted<PropertyResult> prop(cx);
-      NativeLookupOwnPropertyNoResolve(cx, nativeObj, id, &prop);
+      if (!NativeLookupOwnPropertyNoResolve(cx, nativeObj, id, &prop)) {
+        return false;
+      }
       MOZ_ASSERT(prop && prop.isNativeProperty() &&
                  prop.shape()->isDataDescriptor());
     }
