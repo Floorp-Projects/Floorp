@@ -176,12 +176,7 @@ CommonDialog.prototype = {
     }
 
     if (!this.ui.promptContainer || !this.ui.promptContainer.hidden) {
-      // For tab prompts, we will need to ensure its content bindings are attached.
-      if (!xulDialog) {
-        this.ui.prompt.ensureXBLBindingAttached();
-      }
-
-      // Set default focus / selection.
+      // Set default focus and select textbox contents if applicable.
       this.setDefaultFocus(true);
     }
 

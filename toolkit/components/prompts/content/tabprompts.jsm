@@ -247,20 +247,6 @@ var TabModalPrompt = class {
     this.onResize();
   }
 
-  // Sadly this is needed to ensure all the bindings inside the <tabmodalprompt>
-  // are attached. This method had to be called by CommonDialog.jsm after
-  // it had set the visibility of each of the elements.
-  ensureXBLBindingAttached() {
-    for (let key in this.ui) {
-      if (this.ui[key] instanceof this.win.XULElement) {
-        if (this.ui[key].hidden) {
-          continue;
-        }
-        this.ui[key].clientTop;
-      }
-    }
-  }
-
   shutdownPrompt() {
     // remove our event listeners
     try {
