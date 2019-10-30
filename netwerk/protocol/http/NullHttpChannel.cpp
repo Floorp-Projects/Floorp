@@ -95,6 +95,11 @@ NullHttpChannel::GetTransferSize(uint64_t* aTransferSize) {
 }
 
 NS_IMETHODIMP
+NullHttpChannel::GetRequestSize(uint64_t* aRequestSize) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 NullHttpChannel::GetDecodedBodySize(uint64_t* aDecodedBodySize) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
