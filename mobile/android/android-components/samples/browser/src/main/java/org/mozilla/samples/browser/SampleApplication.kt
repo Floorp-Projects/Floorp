@@ -9,6 +9,7 @@ import mozilla.components.browser.session.Session
 import mozilla.components.support.base.facts.Facts
 import mozilla.components.support.base.facts.processor.LogFactProcessor
 import mozilla.components.support.base.log.Log
+import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.base.log.sink.AndroidLogSink
 import mozilla.components.support.ktx.android.content.isMainProcess
 import mozilla.components.support.webextensions.WebExtensionSupport
@@ -29,8 +30,17 @@ class SampleApplication : Application() {
 
         components.engine.warmUp()
 
-        WebExtensionSupport.initialize(components.engine, components.store, onNewTabOverride = {
-            _, engineSession, url -> components.sessionManager.add(Session(url), true, engineSession)
-        })
+        try {
+            WebExtensionSupport.initialize(
+                components.engine,
+                components.store,
+                onNewTabOverride = {
+                    _, engineSession, url -> components.sessionManager.add(Session(url), true, engineSession)
+                }
+            )
+        } catch (e: UnsupportedOperationException) {
+            // Web extension support is only available for engine gecko
+            Logger.error("Failed to initialize web extension support", e)
+        }
     }
 }
