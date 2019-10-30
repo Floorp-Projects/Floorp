@@ -43,6 +43,7 @@ loader.lazyRequireGetter(
   "devtools/client/webconsole/utils/messages",
   true
 );
+loader.lazyRequireGetter(this, "saveAs", "devtools/shared/DevToolsUtils", true);
 
 // React & Redux
 const { Component } = require("devtools/client/shared/vendor/react");
@@ -253,6 +254,23 @@ class JSTerm extends Component {
 
           "Cmd-Enter": onCtrlCmdEnter,
           "Ctrl-Enter": onCtrlCmdEnter,
+
+          [Editor.accel("S")]: () => {
+            const value = this._getValue();
+            if (!value) {
+              return null;
+            }
+
+            const date = new Date();
+            const suggestedName =
+              `console-input-${date.getFullYear()}-` +
+              `${date.getMonth() + 1}-${date.getDate()}_${date.getHours()}-` +
+              `${date.getMinutes()}-${date.getSeconds()}.js`;
+            const data = new TextEncoder().encode(value);
+            return saveAs(window, data, suggestedName);
+          },
+
+          [Editor.accel("O")]: async () => this._openFile(),
 
           Tab: () => {
             if (this.hasEmptyInput()) {
@@ -615,6 +633,49 @@ class JSTerm extends Component {
    */
   _getValue() {
     return this.editor ? this.editor.getText() || "" : "";
+  }
+
+  /**
+   * Open the file picker for the user to select a javascript file and open it.
+   *
+   */
+  async _openFile() {
+    const fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
+    fp.init(
+      this.webConsoleUI.document.defaultView,
+      l10n.getStr("webconsole.input.openJavaScriptFile"),
+      Ci.nsIFilePicker.modeOpen
+    );
+
+    // Append file filters
+    fp.appendFilter(
+      l10n.getStr("webconsole.input.openJavaScriptFileFilter"),
+      "*.js"
+    );
+
+    function readFile(file) {
+      return new Promise(resolve => {
+        const { OS } = Cu.import("resource://gre/modules/osfile.jsm");
+        OS.File.read(file.path).then(data => {
+          const decoder = new TextDecoder();
+          resolve(decoder.decode(data));
+        });
+      });
+    }
+
+    const content = await new Promise(resolve => {
+      fp.open(rv => {
+        if (rv == Ci.nsIFilePicker.returnOK) {
+          const file = Cc["@mozilla.org/file/local;1"].createInstance(
+            Ci.nsIFile
+          );
+          file.initWithPath(fp.file.path);
+          readFile(file).then(resolve);
+        }
+      });
+    });
+
+    this._setValue(content);
   }
 
   getSelectionStart() {
