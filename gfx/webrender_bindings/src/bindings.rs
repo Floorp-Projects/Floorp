@@ -1140,6 +1140,7 @@ extern "C" {
         compositor: *mut c_void,
         id: NativeSurfaceId,
         size: DeviceIntSize,
+        is_opaque: bool,
     );
     fn wr_compositor_destroy_surface(
         compositor: *mut c_void,
@@ -1170,12 +1171,14 @@ impl Compositor for WrCompositor {
         &mut self,
         id: NativeSurfaceId,
         size: DeviceIntSize,
+        is_opaque: bool,
     ) {
         unsafe {
             wr_compositor_create_surface(
                 self.0,
                 id,
                 size,
+                is_opaque,
             );
         }
     }
