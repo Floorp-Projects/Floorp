@@ -4883,14 +4883,13 @@ impl Renderer {
             CompositorConfig::Native { ref mut compositor, .. } => {
                 for op in &composite_state.native_surface_updates {
                     match op.details {
-                        NativeSurfaceOperationDetails::CreateSurface { size, is_opaque } => {
+                        NativeSurfaceOperationDetails::CreateSurface { size } => {
                             let _inserted = self.allocated_native_surfaces.insert(op.id);
                             debug_assert!(_inserted, "bug: creating existing surface");
 
                             compositor.create_surface(
                                 op.id,
                                 size,
-                                is_opaque,
                             );
                         }
                         NativeSurfaceOperationDetails::DestroySurface => {
