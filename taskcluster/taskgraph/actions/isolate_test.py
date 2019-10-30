@@ -128,8 +128,6 @@ def create_isolate_failure_tasks(task_definition, failures, level, times):
     is_windows = 'windows' in th_dict['machine']['platform']
 
     suite = task_definition['extra']['suite']
-    if '-chunked' in suite:
-        suite = suite[:suite.index('-chunked')]
     if '-coverage' in suite:
         suite = suite[:suite.index('-coverage')]
     is_wpt = 'web-platform-tests' in suite
