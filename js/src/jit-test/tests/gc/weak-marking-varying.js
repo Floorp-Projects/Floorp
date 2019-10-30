@@ -1,3 +1,5 @@
+// |jit-test| allow-unhandlable-oom
+
 // Crash test. Try lots of different combinations of mark colors and
 // sequencing, and rely on the in-code asserts to detect problems.
 

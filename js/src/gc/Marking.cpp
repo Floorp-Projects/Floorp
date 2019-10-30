@@ -1564,6 +1564,13 @@ GCMarker::MarkQueueProgress GCMarker::processMarkQueue() {
       // Mark the object and push it onto the stack.
       traverse(obj);
 
+      if (isMarkStackEmpty()) {
+        if (obj->asTenured().arena()->onDelayedMarkingList()) {
+          AutoEnterOOMUnsafeRegion oomUnsafe;
+          oomUnsafe.crash("mark queue OOM");
+        }
+      }
+
       // Process just the one object that is now on top of the mark stack,
       // possibly pushing more stuff onto the stack.
       if (isMarkStackEmpty()) {
@@ -2440,7 +2447,6 @@ void GCMarker::stop() {
   MOZ_ASSERT(markLaterArenas == 0);
 #endif
 
-  /* Free non-ballast stack memory. */
   stack.clear();
   AutoEnterOOMUnsafeRegion oomUnsafe;
   for (GCZonesIter zone(runtime()); !zone.done(); zone.next()) {
