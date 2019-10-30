@@ -255,6 +255,10 @@ const proto = {
       g.promiseState = this._createPromiseState();
     }
 
+    if (g.class == "Function") {
+      g.isClassConstructor = this.obj.isClassConstructor;
+    }
+
     const raw = this.getRawObject();
     this._populateGripPreview(g, raw);
     this.hooks.decrementGripDepth();
