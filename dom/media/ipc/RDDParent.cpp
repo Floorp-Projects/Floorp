@@ -172,9 +172,9 @@ mozilla::ipc::IPCResult RDDParent::RecvNewContentRemoteDecoderManager(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult RDDParent::RecvCreateVideoBridgeToParentProcess(
+mozilla::ipc::IPCResult RDDParent::RecvInitVideoBridge(
     Endpoint<PVideoBridgeChild>&& aEndpoint) {
-  if (!RemoteDecoderManagerParent::CreateVideoBridgeToParentProcess(
+  if (!RemoteDecoderManagerParent::CreateVideoBridgeToOtherProcess(
           std::move(aEndpoint))) {
     return IPC_FAIL_NO_REASON(this);
   }

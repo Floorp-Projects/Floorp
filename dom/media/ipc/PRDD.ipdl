@@ -41,7 +41,7 @@ parent:
 
   async UpdateVar(GfxVarUpdate var);
 
-  async CreateVideoBridgeToParentProcess(Endpoint<PVideoBridgeChild> endpoint);
+  async InitVideoBridge(Endpoint<PVideoBridgeChild> endpoint);
 
 child:
 

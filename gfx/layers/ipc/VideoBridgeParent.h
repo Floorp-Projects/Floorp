@@ -24,9 +24,8 @@ class VideoBridgeParent final : public PVideoBridgeParent,
 
   static VideoBridgeParent* GetSingleton(Maybe<VideoBridgeSource>& aSource);
 
-  static void CreateForGPUProcess(Endpoint<PVideoBridgeParent>&& aEndpoint,
-                                  VideoBridgeSource aSource);
-  static void CreateForContent(Endpoint<PVideoBridgeParent>&& aEndpoint);
+  static void Open(Endpoint<PVideoBridgeParent>&& aEndpoint,
+                   VideoBridgeSource aSource);
 
   TextureHost* LookupTexture(uint64_t aSerial);
 

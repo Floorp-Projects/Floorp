@@ -174,7 +174,8 @@ void RemoteDecoderManagerChild::OpenForRDDProcess(
   }
   sRemoteDecoderManagerChildForRDDProcess = nullptr;
   if (aEndpoint.IsValid()) {
-    RefPtr<RemoteDecoderManagerChild> manager = new RemoteDecoderManagerChild(VideoBridgeSource::RddProcess);
+    RefPtr<RemoteDecoderManagerChild> manager =
+        new RemoteDecoderManagerChild(VideoBridgeSource::RddProcess);
     if (aEndpoint.Bind(manager)) {
       sRemoteDecoderManagerChildForRDDProcess = manager;
       manager->InitIPDL();
@@ -188,7 +189,8 @@ void RemoteDecoderManagerChild::OpenForGPUProcess(
   // fail since this is as close to being recreated as we will ever be.
   sRemoteDecoderManagerChildForGPUProcess = nullptr;
   if (aEndpoint.IsValid()) {
-    RefPtr<RemoteDecoderManagerChild> manager = new RemoteDecoderManagerChild(VideoBridgeSource::GpuProcess);
+    RefPtr<RemoteDecoderManagerChild> manager =
+        new RemoteDecoderManagerChild(VideoBridgeSource::GpuProcess);
     if (aEndpoint.Bind(manager)) {
       sRemoteDecoderManagerChildForGPUProcess = manager;
       manager->InitIPDL();
