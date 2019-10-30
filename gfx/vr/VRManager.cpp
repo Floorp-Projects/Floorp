@@ -308,6 +308,7 @@ void VRManager::TaskTimerCallback(nsITimer* aTimer, void* aClosure) {
     // When the apps goes the background (e.g. Android) we should stop the
     // tasks.
     self->StopTasks();
+    self->mState = VRManagerState::Idle;
   }
 }
 
