@@ -14,7 +14,7 @@ body {
 }
 
 #categories {
-  padding-top: 0;
+  padding-top: 0px;
   overflow-y: auto;
   margin-bottom: 42px;
   -moz-user-select: none;
@@ -37,7 +37,11 @@ body {
   background-color: var(--in-content-page-background);
   position: absolute;
   bottom: 0;
-  inset-inline-start: 0;
+  left: 0;
+}
+
+body:dir(rtl) #category-raw{
+  right: 0;
 }
 
 .heading {
@@ -54,7 +58,7 @@ body {
 }
 
 .header select {
-  margin-inline-start: 4px;
+  margin-left: 4px;
 }
 
 #sectionTitle {
@@ -67,8 +71,14 @@ body {
 }
 
 #stores {
-  padding-block: 5px;
-  padding-inline-start: 5px;
+  padding-top: 5px;
+  padding-left: 5px;
+  padding-bottom: 5px;
+}
+
+.heading > h3 {
+  margin: 0;
+  padding-bottom: 12px;
 }
 
 #ping-type {
@@ -78,9 +88,7 @@ body {
   cursor: pointer;
 }
 
-#older-ping,
-#newer-ping,
-#ping-date {
+#older-ping, #newer-ping, #ping-date {
   pointer-events: all;
   -moz-user-select: none;
   cursor: pointer;
@@ -95,7 +103,7 @@ body {
   fill: currentColor;
 }
 
-.dropdown:dir(rtl) {
+body:dir(rtl) .dropdown {
   background-position-x: left 8px;
 }
 
@@ -117,13 +125,13 @@ body {
 }
 
 .category-name {
-  padding: 9px 0;
+  padding: 9px 0px;
   vertical-align: middle;
 }
 
 .category-subsection {
   color: var(--in-content-text-color);
-  padding: 8px 0;
+  padding: 8px 0px;
   padding-inline-start: 16px;
   display: none;
 }
@@ -148,6 +156,13 @@ section:not(.active) {
   display: none;
 }
 
+#page-description {
+  border: 1px solid threedshadow;
+  margin: 0px;
+  padding: 10px;
+  line-height: 1.2;
+}
+
 #ping-explanation > span {
   cursor: pointer;
   border-bottom-width: 2px;
@@ -158,7 +173,7 @@ section:not(.active) {
   position: fixed;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%);
+  transform: translate(-50%,-50%);
   display: flex;
   align-items: center;
   flex-direction: column;
@@ -191,16 +206,23 @@ section:not(.active) {
   flex-direction: column;
   background-color: var(--in-content-box-background);
   border: 1px solid var(--in-content-box-border-color);
-  margin: 12px 0;
-  inset-inline-start: 12px;
+  margin: 12px 0px;
+}
+
+#ping-picker:dir(ltr) {
+  left: 12px;
+}
+
+#ping-picker:dir(rtl) {
+  right: 12px;
 }
 
 #ping-picker .title {
-  margin: 4px 0;
+  margin: 4px 0px;
 }
 
 #ping-source-picker {
-  margin-inline-start: 5px;
+  margin-left: 5px;
   margin-bottom: 10px;
 }
 
@@ -214,7 +236,7 @@ section:not(.active) {
   text-decoration: underline;
 }
 
-#histograms {
+#histograms, #thread-hang-stats>div {
   overflow: hidden;
 }
 
@@ -223,12 +245,11 @@ section:not(.active) {
   white-space: nowrap;
   padding: 10px;
   position: relative; /* required for position:absolute of the contained .copy-node */
-  padding-block: 12px;
-  padding-inline: 20px;
+  padding: 12px 20px 12px 20px;
   border: 1px solid var(--in-content-box-border-color);
   border-radius: 2px;
   margin-bottom: 24px;
-  margin-inline-end: 24px;
+  margin-right: 24px;
   min-height: 17.5em;
 }
 
@@ -251,10 +272,10 @@ section:not(.active) {
   margin-bottom: 1em;
 }
 
-.keyed-scalar,
-.sub-section {
+.keyed-scalar, .sub-section {
   margin-bottom: 1em;
 }
+
 
 .keyed-title {
   text-overflow: ellipsis;
@@ -278,7 +299,7 @@ section:not(.active) {
   border-radius: 2px;
 }
 
-.bar:nth-child(even) .long-label {
+.bar:nth-child(even) .long-label  {
   margin-bottom: 1em;
 }
 
@@ -309,18 +330,29 @@ th {
   padding: 0.5em 0;
 }
 
+body:dir(rtl) th {
+  text-align: right;
+}
+
 caption {
-  text-align: start;
+  text-align: left;
   font-size: 22px;
-  margin-block: 0.5em
-  margin-inline: 0;
+  margin: 0.5em 0 0.5em 0;
+}
+
+body:dir(rtl) caption {
+  text-align: right;
 }
 
 .copy-node {
   visibility: hidden;
   position: absolute;
   bottom: 1px;
-  inset-inline-end: 1px;
+  right: 1px;
+}
+
+body:dir(rtl) .copy-node {
+  left: 1px;
 }
 
 .histogram:hover .copy-node {
