@@ -27,8 +27,8 @@ nsresult HeadlessLookAndFeel::NativeGetColor(ColorID aID, nscolor& aColor) {
 
   switch (aID) {
     // Override the solid black that GetStandinForNativeColor provides for
-    // -moz-FieldText, to match our behavior under the real GTK.
-    case ColorID::MozFieldtext:
+    // FieldText, to match our behavior under the real GTK.
+    case ColorID::Fieldtext:
       aColor = NS_RGB(0x21, 0x21, 0x21);
       break;
 
