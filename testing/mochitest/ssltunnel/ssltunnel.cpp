@@ -381,6 +381,7 @@ bool ConfigureSSLServerSocket(PRFileDesc* socket, server_info_t* si,
   SSL_OptionSet(ssl_socket, SSL_SECURITY, true);
   SSL_OptionSet(ssl_socket, SSL_HANDSHAKE_AS_CLIENT, false);
   SSL_OptionSet(ssl_socket, SSL_HANDSHAKE_AS_SERVER, true);
+  SSL_OptionSet(ssl_socket, SSL_ENABLE_SESSION_TICKETS, true);
 
   if (clientAuth != caNone) {
     // If we're requesting or requiring a client certificate, we should
