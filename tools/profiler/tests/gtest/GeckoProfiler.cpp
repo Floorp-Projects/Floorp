@@ -19,6 +19,7 @@
 #include "js/Printf.h"
 #include "jsapi.h"
 #include "json/json.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/BlocksRingBufferGeckoExtensions.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "nsIThread.h"
@@ -1612,4 +1613,87 @@ TEST(GeckoProfiler, SuspendAndSample)
   profiler_stop();
 
   ASSERT_TRUE(!profiler_is_active());
+}
+
+// Returns `static_cast<SamplingState>(-1)` if callback could not be installed.
+static SamplingState WaitForSamplingState() {
+  Atomic<int> samplingState{-1};
+
+  if (!profiler_callback_after_sampling([&](SamplingState aSamplingState) {
+        samplingState = static_cast<int>(aSamplingState);
+      })) {
+    return static_cast<SamplingState>(-1);
+  }
+
+  while (samplingState == -1) {
+  }
+
+  return static_cast<SamplingState>(static_cast<int>(samplingState));
+}
+
+TEST(GeckoProfiler, PostSamplingCallback)
+{
+  const char* filters[] = {"GeckoMain"};
+
+  ASSERT_TRUE(!profiler_is_active());
+  ASSERT_TRUE(!profiler_callback_after_sampling(
+      [&](SamplingState) { ASSERT_TRUE(false); }));
+
+  profiler_start(PROFILER_DEFAULT_ENTRIES, PROFILER_DEFAULT_INTERVAL,
+                 ProfilerFeature::StackWalk, filters,
+                 MOZ_ARRAY_LENGTH(filters));
+  {
+    // Stack sampling -> This label should appear at least once.
+    AUTO_PROFILER_LABEL("PostSamplingCallback completed", OTHER);
+    ASSERT_EQ(WaitForSamplingState(), SamplingState::SamplingCompleted);
+  }
+  UniquePtr<char[]> profileCompleted = profiler_get_profile();
+  ASSERT_TRUE(profileCompleted);
+  ASSERT_TRUE(profileCompleted[0] == '{');
+  ASSERT_TRUE(strstr(profileCompleted.get(), "PostSamplingCallback completed"));
+
+  profiler_pause();
+  {
+    // Paused -> This label should not appear.
+    AUTO_PROFILER_LABEL("PostSamplingCallback paused", OTHER);
+    ASSERT_EQ(WaitForSamplingState(), SamplingState::SamplingPaused);
+  }
+  UniquePtr<char[]> profilePaused = profiler_get_profile();
+  ASSERT_TRUE(profilePaused);
+  ASSERT_TRUE(profilePaused[0] == '{');
+  ASSERT_FALSE(strstr(profilePaused.get(), "PostSamplingCallback paused"));
+
+  profiler_resume();
+  {
+    // Stack sampling -> This label should appear at least once.
+    AUTO_PROFILER_LABEL("PostSamplingCallback resumed", OTHER);
+    ASSERT_EQ(WaitForSamplingState(), SamplingState::SamplingCompleted);
+  }
+  UniquePtr<char[]> profileResumed = profiler_get_profile();
+  ASSERT_TRUE(profileResumed);
+  ASSERT_TRUE(profileResumed[0] == '{');
+  ASSERT_TRUE(strstr(profileResumed.get(), "PostSamplingCallback resumed"));
+
+  profiler_start(PROFILER_DEFAULT_ENTRIES, PROFILER_DEFAULT_INTERVAL,
+                 ProfilerFeature::StackWalk | ProfilerFeature::NoStackSampling,
+                 filters, MOZ_ARRAY_LENGTH(filters));
+  {
+    // No stack sampling -> This label should not appear.
+    AUTO_PROFILER_LABEL("PostSamplingCallback completed (no stacks)", OTHER);
+    ASSERT_EQ(WaitForSamplingState(), SamplingState::NoStackSamplingCompleted);
+  }
+  UniquePtr<char[]> profileNoStacks = profiler_get_profile();
+  ASSERT_TRUE(profileNoStacks);
+  ASSERT_TRUE(profileNoStacks[0] == '{');
+  ASSERT_FALSE(strstr(profileNoStacks.get(),
+                      "PostSamplingCallback completed (no stacks)"));
+
+  // Note: There is no non-racy way to test for SamplingState::JustStopped, as
+  // it would require coordination between `profiler_stop()` and another thread
+  // doing `profiler_callback_after_sampling()` at just the right moment.
+
+  profiler_stop();
+  ASSERT_TRUE(!profiler_is_active());
+  ASSERT_TRUE(!profiler_callback_after_sampling(
+      [&](SamplingState) { ASSERT_TRUE(false); }));
 }

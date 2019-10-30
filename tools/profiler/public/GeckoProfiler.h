@@ -397,6 +397,29 @@ void profiler_remove_sampled_counter(BaseProfilerCount* aCounter);
 #  define AUTO_PROFILER_REGISTER_THREAD(name) \
     mozilla::AutoProfilerRegisterThread PROFILER_RAII(name)
 
+enum class SamplingState {
+  JustStopped,  // Sampling loop has just stopped without sampling, between the
+                // callback registration and now.
+  SamplingPaused,  // Profiler is active but sampling loop has gone through a
+                   // pause.
+  NoStackSamplingCompleted,  // A full sampling loop has completed in
+                             // no-stack-sampling mode.
+  SamplingCompleted          // A full sampling loop has completed.
+};
+
+using PostSamplingCallback = std::function<void(SamplingState)>;
+
+// Install a callback to be invoked at the end of the next sampling loop.
+// - `false` if profiler is not active, `aCallback` will stay untouched.
+// - `true` if `aCallback` was successfully moved-from into internal storage,
+//   and *will* be invoked at the end of the next sampling cycle. Note that this
+//   will happen on the Sampler thread, and will block further sampling, so
+//   please be mindful not to block for a long time (e.g., just dispatch a
+//   runnable to another thread.) Calling profiler functions from the callback
+//   is allowed.
+MOZ_MUST_USE bool profiler_callback_after_sampling(
+    PostSamplingCallback&& aCallback);
+
 // Pause and resume the profiler. No-ops if the profiler is inactive. While
 // paused the profile will not take any samples and will not record any data
 // into its buffers. The profiler remains fully initialized in this state.

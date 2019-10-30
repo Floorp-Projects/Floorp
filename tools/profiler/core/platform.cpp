@@ -57,6 +57,7 @@
 #include "mozilla/SystemGroup.h"
 #include "mozilla/ThreadLocal.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/TypeTraits.h"
 #include "mozilla/Tuple.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Vector.h"
@@ -763,6 +764,9 @@ class ActivePS {
     return ((aInfo->IsMainThread() || FeatureThreads(aLock)) &&
             sInstance->ThreadSelected(aInfo->Name()));
   }
+
+  static MOZ_MUST_USE bool AppendPostSamplingCallback(
+      PSLockRef, PostSamplingCallback&& aCallback);
 
   // Writes out the current active configuration of the profile.
   static void WriteActiveConfiguration(PSLockRef aLock, JSONWriter& aWriter,
@@ -2623,7 +2627,56 @@ class SamplerThread {
   // This runs on the main thread.
   void Stop(PSLockRef aLock);
 
+  void AppendPostSamplingCallback(PSLockRef, PostSamplingCallback&& aCallback) {
+    // We are under lock, so it's safe to just modify the list pointer.
+    // Also this means the sampler has not started its run yet, so any callback
+    // added now will be invoked at the end of the next loop; this guarantees
+    // that the callback will be invoked after at least one full sampling loop.
+    mPostSamplingCallbackList = MakeUnique<PostSamplingCallbackListItem>(
+        std::move(mPostSamplingCallbackList), std::move(aCallback));
+  }
+
  private:
+  // Item containing a post-sampling callback, and a tail-list of more items.
+  // Using a linked list means no need to move items when adding more, and
+  // "stealing" the whole list is one pointer move.
+  struct PostSamplingCallbackListItem {
+    UniquePtr<PostSamplingCallbackListItem> mPrev;
+    PostSamplingCallback mCallback;
+
+    PostSamplingCallbackListItem(UniquePtr<PostSamplingCallbackListItem> aPrev,
+                                 PostSamplingCallback&& aCallback)
+        : mPrev(std::move(aPrev)), mCallback(std::move(aCallback)) {}
+  };
+
+  MOZ_MUST_USE UniquePtr<PostSamplingCallbackListItem>
+  TakePostSamplingCallbacks(PSLockRef) {
+    return std::move(mPostSamplingCallbackList);
+  }
+
+  static void InvokePostSamplingCallbacks(
+      UniquePtr<PostSamplingCallbackListItem> aCallbacks,
+      SamplingState aSamplingState) {
+    if (!aCallbacks) {
+      return;
+    }
+    // We want to drill down to the last element in this list, which is the
+    // oldest one, so that we invoke them in FIFO order.
+    // We don't expect many callbacks, so it's safe to recurse. Note that we're
+    // moving-from the UniquePtr, so the tail will implicitly get destroyed.
+    InvokePostSamplingCallbacks(std::move(aCallbacks->mPrev), aSamplingState);
+    // We are going to destroy this item, so we can safely move-from the
+    // callback before calling it (in case it has an rvalue-ref-qualified call
+    // operator).
+    std::move(aCallbacks->mCallback)(aSamplingState);
+    // It may be tempting for a future maintainer to change aCallbacks into an
+    // rvalue reference; this will remind them not to do that!
+    static_assert(
+        IsSame<decltype(aCallbacks),
+               UniquePtr<PostSamplingCallbackListItem>>::value,
+        "We need to capture the list by-value, to implicitly destroy it");
+  }
+
   // This suspends the calling thread for the given number of microseconds.
   // Best effort timing.
   void SleepMicro(uint32_t aMicroseconds);
@@ -2644,9 +2697,24 @@ class SamplerThread {
   pthread_t mThread;
 #endif
 
+  // Post-sampling callbacks are kept in a simple linked list, which will be
+  // stolen by the sampler thread at the end of its next run.
+  UniquePtr<PostSamplingCallbackListItem> mPostSamplingCallbackList;
+
   SamplerThread(const SamplerThread&) = delete;
   void operator=(const SamplerThread&) = delete;
 };
+
+// static MOZ_MUST_USE
+bool ActivePS::AppendPostSamplingCallback(PSLockRef aLock,
+                                          PostSamplingCallback&& aCallback) {
+  if (!sInstance || !sInstance->mSamplerThread) {
+    return false;
+  }
+  sInstance->mSamplerThread->AppendPostSamplingCallback(aLock,
+                                                        std::move(aCallback));
+  return true;
+}
 
 // This function is required because we need to create a SamplerThread within
 // ActivePS's constructor, but SamplerThread is defined after ActivePS. It
@@ -2690,21 +2758,40 @@ void SamplerThread::Run() {
   TimeDuration lastSleepOvershoot = 0;
   TimeStamp sampleStart = TimeStamp::NowUnfuzzed();
 
+  // This will be set inside the loop, from inside the lock scope, to capture
+  // all callbacks added before that, but none after the lock is released.
+  UniquePtr<PostSamplingCallbackListItem> postSamplingCallbacks;
+  // This will be set inside the loop, before invoking callbacks outside.
+  SamplingState samplingState{};
+
   while (true) {
     // This scope is for |lock|. It ends before we sleep below.
     {
+      // There should be no local callbacks left from a previous loop.
+      MOZ_ASSERT(!postSamplingCallbacks);
+
       PSAutoLock lock(gPSMutex);
       TimeStamp lockAcquired = TimeStamp::NowUnfuzzed();
 
+      // Move all the post-sampling callbacks locally, so that new ones cannot
+      // sneak in between the end of the lock scope and the invocation after it.
+      postSamplingCallbacks = TakePostSamplingCallbacks(lock);
+
       if (!ActivePS::Exists(lock)) {
-        return;
+        // Exit the `while` loop, including the lock scope, before invoking
+        // callbacks and returning.
+        samplingState = SamplingState::JustStopped;
+        break;
       }
 
       // At this point profiler_stop() might have been called, and
       // profiler_start() might have been called on another thread. If this
       // happens the generation won't match.
       if (ActivePS::Generation(lock) != mActivityGeneration) {
-        return;
+        samplingState = SamplingState::JustStopped;
+        // Exit the `while` loop, including the lock scope, before invoking
+        // callbacks and returning.
+        break;
       }
 
       ActivePS::ClearExpiredExitProfiles(lock);
@@ -2737,6 +2824,8 @@ void SamplerThread::Run() {
         TimeStamp countersSampled = TimeStamp::NowUnfuzzed();
 
         if (!noStackSampling) {
+          samplingState = SamplingState::SamplingCompleted;
+
           const Vector<LiveProfiledThreadData>& liveThreads =
               ActivePS::LiveProfiledThreads(lock);
 
@@ -2828,6 +2917,8 @@ void SamplerThread::Run() {
             localBlocksRingBuffer.Clear();
             previousState = localBlocksRingBuffer.GetState();
           }
+        } else {
+          samplingState = SamplingState::NoStackSamplingCompleted;
         }
 
 #if defined(USE_LUL_STACKWALK)
@@ -2844,9 +2935,15 @@ void SamplerThread::Run() {
                                     expiredMarkersCleaned - lockAcquired,
                                     countersSampled - expiredMarkersCleaned,
                                     threadsSampled - countersSampled);
+      } else {
+        samplingState = SamplingState::SamplingPaused;
       }
     }
     // gPSMutex is not held after this point.
+
+    // Invoke end-of-sampling callbacks outside of the locked scope.
+    InvokePostSamplingCallbacks(std::move(postSamplingCallbacks),
+                                samplingState);
 
     // Calculate how long a sleep to request.  After the sleep, measure how
     // long we actually slept and take the difference into account when
@@ -2864,6 +2961,9 @@ void SamplerThread::Run() {
     lastSleepOvershoot =
         sampleStart - (beforeSleep + TimeDuration::FromMicroseconds(sleepTime));
   }
+
+  // End of `while` loop. We can only be here from a `break` inside the loop.
+  InvokePostSamplingCallbacks(std::move(postSamplingCallbacks), samplingState);
 }
 
 // We #include these files directly because it means those files can use
@@ -3937,6 +4037,17 @@ bool profiler_is_paused() {
   }
 
   return ActivePS::IsPaused(lock);
+}
+
+/* MOZ_MUST_USE */ bool profiler_callback_after_sampling(
+    PostSamplingCallback&& aCallback) {
+  LOG("profiler_callback_after_sampling");
+
+  MOZ_RELEASE_ASSERT(CorePS::Exists());
+
+  PSAutoLock lock(gPSMutex);
+
+  return ActivePS::AppendPostSamplingCallback(lock, std::move(aCallback));
 }
 
 void profiler_pause() {
