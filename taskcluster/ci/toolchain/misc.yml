@@ -153,7 +153,7 @@ browsertime:
         resources:
             - 'tools/browsertime/package.json'
             - 'tools/browsertime/mach_commands.py'
-        toolchain-artifact: public/build/browsertime.zip
+        toolchain-artifact: public/build/browsertime.tar.bz2
     fetches:
         toolchain:
             - linux64-node
