@@ -6022,6 +6022,7 @@ AttachDecision ToBoolIRGenerator::tryAttachStub() {
   TRY_ATTACH(tryAttachNullOrUndefined());
   TRY_ATTACH(tryAttachObject());
   TRY_ATTACH(tryAttachSymbol());
+  TRY_ATTACH(tryAttachBigInt());
 
   trackAttached(IRGenerator::NotAttached);
   return AttachDecision::NoAction;
@@ -6102,6 +6103,19 @@ AttachDecision ToBoolIRGenerator::tryAttachObject() {
   writer.loadObjectTruthyResult(objId);
   writer.returnFromIC();
   trackAttached("ToBoolObject");
+  return AttachDecision::Attach;
+}
+
+AttachDecision ToBoolIRGenerator::tryAttachBigInt() {
+  if (!val_.isBigInt()) {
+    return AttachDecision::NoAction;
+  }
+
+  ValOperandId valId(writer.setInputOperandId(0));
+  BigIntOperandId bigIntId = writer.guardToBigInt(valId);
+  writer.loadBigIntTruthyResult(bigIntId);
+  writer.returnFromIC();
+  trackAttached("ToBoolBigInt");
   return AttachDecision::Attach;
 }
 
