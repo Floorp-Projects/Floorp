@@ -24,7 +24,7 @@ void VideoBridgeChild::StartupForGPUProcess() {
                                 &childPipe);
 
   VideoBridgeChild::OpenToGPUProcess(std::move(childPipe));
-  VideoBridgeParent::CreateForGPUProcess(std::move(parentPipe), VideoBridgeSource::GpuProcess);
+  VideoBridgeParent::Open(std::move(parentPipe), VideoBridgeSource::GpuProcess);
 }
 
 void VideoBridgeChild::OpenToParentProcess(
