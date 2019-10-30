@@ -149,6 +149,24 @@ bool WritableStream::constructor(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 /**
+ * Streams spec, 4.2.5.1. get locked
+ */
+static bool WritableStream_locked(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  // Step 1: If ! WritableStream(this) is false, throw a TypeError exception.
+  Rooted<WritableStream*> unwrappedStream(
+      cx, UnwrapAndTypeCheckThis<WritableStream>(cx, args, "get locked"));
+  if (!unwrappedStream) {
+    return false;
+  }
+
+  // Step 2: Return ! IsWritableStreamLocked(this).
+  args.rval().setBoolean(unwrappedStream->isLocked());
+  return true;
+}
+
+/**
  * Streams spec, 4.2.5.3. getWriter()
  */
 static bool WritableStream_getWriter(JSContext* cx, unsigned argc, Value* vp) {
@@ -173,7 +191,8 @@ static bool WritableStream_getWriter(JSContext* cx, unsigned argc, Value* vp) {
 static const JSFunctionSpec WritableStream_methods[] = {
     JS_FN("getWriter", WritableStream_getWriter, 0, 0), JS_FS_END};
 
-static const JSPropertySpec WritableStream_properties[] = {JS_PS_END};
+static const JSPropertySpec WritableStream_properties[] = {
+    JS_PSG("locked", WritableStream_locked, 0), JS_PS_END};
 
 JS_STREAMS_CLASS_SPEC(WritableStream, 0, SlotCount, 0,
                       JSCLASS_PRIVATE_IS_NSISUPPORTS | JSCLASS_HAS_PRIVATE,
