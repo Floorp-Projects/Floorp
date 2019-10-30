@@ -1199,6 +1199,9 @@ BrowserElementChild.prototype = {
           case Cr.NS_ERROR_CSP_FRAME_ANCESTOR_VIOLATION:
             sendAsyncMsg("error", { type: "cspBlocked" });
             return;
+          case Cr.NS_ERROR_XFO_VIOLATION:
+            sendAsyncMsg("error", { type: "xfoBlocked" });
+            return;
           case Cr.NS_ERROR_PHISHING_URI:
             sendAsyncMsg("error", { type: "deceptiveBlocked" });
             return;
