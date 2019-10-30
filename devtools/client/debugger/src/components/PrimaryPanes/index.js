@@ -10,13 +10,14 @@ import { Tab, Tabs, TabList, TabPanels } from "react-aria-components/src/tabs";
 
 import actions from "../../actions";
 import {
-  getDisplayedSources,
   getActiveSearch,
   getProjectDirectoryRoot,
   getSelectedPrimaryPaneTab,
   getAllThreads,
   getContext,
+  getExtensionNameBySourceUrl,
 } from "../../selectors";
+import { isExtensionDirectoryPath } from "../../utils/source";
 import { features, prefs } from "../../utils/prefs";
 import { connect } from "../../utils/connect";
 import { formatKeyShortcut } from "../../utils/text";
@@ -25,7 +26,6 @@ import Outline from "./Outline";
 import SourcesTree from "./SourcesTree";
 import AccessibleImage from "../shared/AccessibleImage";
 
-import type { SourcesMapByThread } from "../../reducers/types";
 import type { SelectedPrimaryPaneTabType } from "../../selectors";
 import type { Thread, Context } from "../../types";
 
@@ -41,9 +41,9 @@ type OwnProps = {|
 type Props = {
   cx: Context,
   selectedTab: SelectedPrimaryPaneTabType,
-  sources: SourcesMapByThread,
   horizontal: boolean,
   projectRoot: string,
+  rootExtensionName: ?string,
   sourceSearchOn: boolean,
   setPrimaryPaneTab: typeof actions.setPrimaryPaneTab,
   setActiveSearch: typeof actions.setActiveSearch,
@@ -79,6 +79,26 @@ class PrimaryPanes extends Component<Props, State> {
     }
   };
 
+  getRootLabel = (projectRoot: string) => {
+    const { threads, rootExtensionName } = this.props;
+    const targetThread = threads.find(thread => thread.actor === projectRoot);
+
+    if (targetThread) {
+      return targetThread.name;
+    } else if (rootExtensionName) {
+      return rootExtensionName;
+    } else if (projectRoot.endsWith("://")) {
+      if (projectRoot === "ng://") {
+        return "Angular";
+      } else if (projectRoot === "webpack://") {
+        return "Webpack";
+      }
+      return `${unescape(projectRoot)}`;
+    }
+
+    return projectRoot.split("/").pop();
+  };
+
   renderOutlineTabs() {
     if (!features.outline) {
       return;
@@ -112,7 +132,7 @@ class PrimaryPanes extends Component<Props, State> {
       return null;
     }
 
-    const rootLabel = projectRoot.split("/").pop();
+    const rootLabel = this.getRootLabel(projectRoot);
 
     return (
       <div key="root" className="sources-clear-root-container">
@@ -166,14 +186,21 @@ class PrimaryPanes extends Component<Props, State> {
   }
 }
 
-const mapStateToProps = state => ({
-  cx: getContext(state),
-  selectedTab: getSelectedPrimaryPaneTab(state),
-  sources: getDisplayedSources(state),
-  sourceSearchOn: getActiveSearch(state) === "source",
-  threads: getAllThreads(state),
-  projectRoot: getProjectDirectoryRoot(state),
-});
+const mapStateToProps = state => {
+  const newProjectRoot = getProjectDirectoryRoot(state);
+  const extensionAsRoot = isExtensionDirectoryPath(newProjectRoot);
+
+  return {
+    cx: getContext(state),
+    selectedTab: getSelectedPrimaryPaneTab(state),
+    sourceSearchOn: getActiveSearch(state) === "source",
+    threads: getAllThreads(state),
+    projectRoot: newProjectRoot,
+    rootExtensionName: extensionAsRoot
+      ? getExtensionNameBySourceUrl(state, newProjectRoot)
+      : null,
+  };
+};
 
 const connector = connect<Props, OwnProps, _, _, _, _>(
   mapStateToProps,

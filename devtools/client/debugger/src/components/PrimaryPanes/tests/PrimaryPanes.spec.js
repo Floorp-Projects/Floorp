@@ -46,6 +46,23 @@ describe("PrimaryPanes", () => {
       expect(component).toMatchSnapshot();
     });
   });
+
+  describe("with a thread set to root", () => {
+    it("uses the thread name as root label", () => {
+      const { component } = render({
+        projectRoot: "FakeThread",
+        threads: [
+          {
+            actor: "FakeThread",
+            name: "Main Thread",
+            type: "mainThread",
+            url: "http://a",
+          },
+        ],
+      });
+      expect(component).toMatchSnapshot();
+    });
+  });
 });
 
 function generateDefaults(overrides) {

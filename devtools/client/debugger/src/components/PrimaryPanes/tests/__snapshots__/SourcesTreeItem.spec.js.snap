@@ -1700,7 +1700,7 @@ Object {
       className="arrow"
     />
     <AccessibleImage
-      className="folder"
+      className="extension"
     />
     <span
       className="label"
@@ -1719,7 +1719,7 @@ Object {
     "props": Object {
       "clearProjectDirectoryRoot": [MockFunction],
       "debuggeeUrl": "http://mdn.com",
-      "depth": 0,
+      "depth": 1,
       "expanded": false,
       "focusItem": [MockFunction],
       "item": Object {
@@ -1761,7 +1761,7 @@ Object {
         "_element": <SourceTreeItem
           clearProjectDirectoryRoot={[MockFunction]}
           debuggeeUrl="http://mdn.com"
-          depth={0}
+          depth={1}
           expanded={false}
           focusItem={[MockFunction]}
           item={
@@ -1812,7 +1812,7 @@ Object {
             className="arrow"
           />
           <AccessibleImage
-            className="folder"
+            className="extension"
           />
           <span
             className="label"
@@ -1830,7 +1830,7 @@ Object {
   "props": Object {
     "clearProjectDirectoryRoot": [MockFunction],
     "debuggeeUrl": "http://mdn.com",
-    "depth": 0,
+    "depth": 1,
     "expanded": false,
     "focusItem": [MockFunction],
     "item": Object {
@@ -1857,6 +1857,368 @@ Object {
     },
     "threads": Array [
       Object {
+        "name": "Main Thread",
+      },
+    ],
+    "toggleBlackBox": [MockFunction],
+  },
+}
+`;
+
+exports[`SourceTreeItem renderItem should show icon for moz-extension item when a thread is set to root 1`] = `
+Object {
+  "component": <div
+    className="node"
+    key="moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856"
+    onClick={[Function]}
+    onContextMenu={[Function]}
+    title=""
+  >
+    <AccessibleImage
+      className="arrow"
+    />
+    <AccessibleImage
+      className="extension"
+    />
+    <span
+      className="label"
+    >
+      moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856
+       
+    </span>
+  </div>,
+  "defaultState": null,
+  "instance": SourceTreeItem {
+    "addCollapseExpandAllOptions": [Function],
+    "context": Object {},
+    "handleDownloadFile": [Function],
+    "onClick": [Function],
+    "onContextMenu": [Function],
+    "props": Object {
+      "clearProjectDirectoryRoot": [MockFunction],
+      "debuggeeUrl": "http://mdn.com",
+      "depth": 0,
+      "expanded": false,
+      "focusItem": [MockFunction],
+      "item": Object {
+        "contents": Array [],
+        "name": "moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856",
+        "path": "moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856",
+        "type": "directory",
+      },
+      "projectRoot": "server1.conn13.child1/thread19",
+      "selectItem": [MockFunction],
+      "setExpanded": [MockFunction],
+      "setProjectDirectoryRoot": [MockFunction],
+      "source": Object {
+        "extensionName": null,
+        "id": "server1.conn13.child1/39",
+        "introductionType": undefined,
+        "introductionUrl": null,
+        "isBlackBoxed": false,
+        "isExtension": false,
+        "isPrettyPrinted": false,
+        "isWasm": false,
+        "relativeUrl": "http://mdn.com/one.js",
+        "url": "http://mdn.com/one.js",
+      },
+      "threads": Array [
+        Object {
+          "actor": "server1.conn13.child1/thread19",
+          "name": "Main Thread",
+        },
+      ],
+      "toggleBlackBox": [MockFunction],
+    },
+    "refs": Object {},
+    "setState": [Function],
+    "state": null,
+    "updater": Updater {
+      "_callbacks": Array [],
+      "_renderer": ReactShallowRenderer {
+        "_context": Object {},
+        "_element": <SourceTreeItem
+          clearProjectDirectoryRoot={[MockFunction]}
+          debuggeeUrl="http://mdn.com"
+          depth={0}
+          expanded={false}
+          focusItem={[MockFunction]}
+          item={
+            Object {
+              "contents": Array [],
+              "name": "moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856",
+              "path": "moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856",
+              "type": "directory",
+            }
+          }
+          projectRoot="server1.conn13.child1/thread19"
+          selectItem={[MockFunction]}
+          setExpanded={[MockFunction]}
+          setProjectDirectoryRoot={[MockFunction]}
+          source={
+            Object {
+              "extensionName": null,
+              "id": "server1.conn13.child1/39",
+              "introductionType": undefined,
+              "introductionUrl": null,
+              "isBlackBoxed": false,
+              "isExtension": false,
+              "isPrettyPrinted": false,
+              "isWasm": false,
+              "relativeUrl": "http://mdn.com/one.js",
+              "url": "http://mdn.com/one.js",
+            }
+          }
+          threads={
+            Array [
+              Object {
+                "actor": "server1.conn13.child1/thread19",
+                "name": "Main Thread",
+              },
+            ]
+          }
+          toggleBlackBox={[MockFunction]}
+        />,
+        "_forcedUpdate": false,
+        "_instance": [Circular],
+        "_newState": null,
+        "_rendered": <div
+          className="node"
+          onClick={[Function]}
+          onContextMenu={[Function]}
+          title=""
+        >
+          <AccessibleImage
+            className="arrow"
+          />
+          <AccessibleImage
+            className="extension"
+          />
+          <span
+            className="label"
+          >
+            moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856
+             
+          </span>
+        </div>,
+        "_rendering": false,
+        "_updater": [Circular],
+      },
+    },
+    Symbol(enzyme.__setState__): [Function],
+  },
+  "props": Object {
+    "clearProjectDirectoryRoot": [MockFunction],
+    "debuggeeUrl": "http://mdn.com",
+    "depth": 0,
+    "expanded": false,
+    "focusItem": [MockFunction],
+    "item": Object {
+      "contents": Array [],
+      "name": "moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856",
+      "path": "moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856",
+      "type": "directory",
+    },
+    "projectRoot": "server1.conn13.child1/thread19",
+    "selectItem": [MockFunction],
+    "setExpanded": [MockFunction],
+    "setProjectDirectoryRoot": [MockFunction],
+    "source": Object {
+      "extensionName": null,
+      "id": "server1.conn13.child1/39",
+      "introductionType": undefined,
+      "introductionUrl": null,
+      "isBlackBoxed": false,
+      "isExtension": false,
+      "isPrettyPrinted": false,
+      "isWasm": false,
+      "relativeUrl": "http://mdn.com/one.js",
+      "url": "http://mdn.com/one.js",
+    },
+    "threads": Array [
+      Object {
+        "actor": "server1.conn13.child1/thread19",
+        "name": "Main Thread",
+      },
+    ],
+    "toggleBlackBox": [MockFunction],
+  },
+}
+`;
+
+exports[`SourceTreeItem renderItem should show icon for domain item when a thread is set to root 1`] = `
+Object {
+  "component": <div
+    className="node"
+    key="domain/subfolder"
+    onClick={[Function]}
+    onContextMenu={[Function]}
+    title=""
+  >
+    <AccessibleImage
+      className="arrow"
+    />
+    <AccessibleImage
+      className="globe-small"
+    />
+    <span
+      className="label"
+    >
+      folder
+       
+    </span>
+  </div>,
+  "defaultState": null,
+  "instance": SourceTreeItem {
+    "addCollapseExpandAllOptions": [Function],
+    "context": Object {},
+    "handleDownloadFile": [Function],
+    "onClick": [Function],
+    "onContextMenu": [Function],
+    "props": Object {
+      "clearProjectDirectoryRoot": [MockFunction],
+      "debuggeeUrl": "http://mdn.com",
+      "depth": 0,
+      "expanded": false,
+      "focusItem": [MockFunction],
+      "item": Object {
+        "contents": Array [],
+        "name": "folder",
+        "path": "domain/subfolder",
+        "type": "directory",
+      },
+      "projectRoot": "server1.conn13.child1/thread19",
+      "selectItem": [MockFunction],
+      "setExpanded": [MockFunction],
+      "setProjectDirectoryRoot": [MockFunction],
+      "source": Object {
+        "extensionName": null,
+        "id": "server1.conn13.child1/39",
+        "introductionType": undefined,
+        "introductionUrl": null,
+        "isBlackBoxed": false,
+        "isExtension": false,
+        "isPrettyPrinted": false,
+        "isWasm": false,
+        "relativeUrl": "http://mdn.com/one.js",
+        "url": "http://mdn.com/one.js",
+      },
+      "threads": Array [
+        Object {
+          "actor": "server1.conn13.child1/thread19",
+          "name": "Main Thread",
+        },
+      ],
+      "toggleBlackBox": [MockFunction],
+    },
+    "refs": Object {},
+    "setState": [Function],
+    "state": null,
+    "updater": Updater {
+      "_callbacks": Array [],
+      "_renderer": ReactShallowRenderer {
+        "_context": Object {},
+        "_element": <SourceTreeItem
+          clearProjectDirectoryRoot={[MockFunction]}
+          debuggeeUrl="http://mdn.com"
+          depth={0}
+          expanded={false}
+          focusItem={[MockFunction]}
+          item={
+            Object {
+              "contents": Array [],
+              "name": "folder",
+              "path": "domain/subfolder",
+              "type": "directory",
+            }
+          }
+          projectRoot="server1.conn13.child1/thread19"
+          selectItem={[MockFunction]}
+          setExpanded={[MockFunction]}
+          setProjectDirectoryRoot={[MockFunction]}
+          source={
+            Object {
+              "extensionName": null,
+              "id": "server1.conn13.child1/39",
+              "introductionType": undefined,
+              "introductionUrl": null,
+              "isBlackBoxed": false,
+              "isExtension": false,
+              "isPrettyPrinted": false,
+              "isWasm": false,
+              "relativeUrl": "http://mdn.com/one.js",
+              "url": "http://mdn.com/one.js",
+            }
+          }
+          threads={
+            Array [
+              Object {
+                "actor": "server1.conn13.child1/thread19",
+                "name": "Main Thread",
+              },
+            ]
+          }
+          toggleBlackBox={[MockFunction]}
+        />,
+        "_forcedUpdate": false,
+        "_instance": [Circular],
+        "_newState": null,
+        "_rendered": <div
+          className="node"
+          onClick={[Function]}
+          onContextMenu={[Function]}
+          title=""
+        >
+          <AccessibleImage
+            className="arrow"
+          />
+          <AccessibleImage
+            className="globe-small"
+          />
+          <span
+            className="label"
+          >
+            folder
+             
+          </span>
+        </div>,
+        "_rendering": false,
+        "_updater": [Circular],
+      },
+    },
+    Symbol(enzyme.__setState__): [Function],
+  },
+  "props": Object {
+    "clearProjectDirectoryRoot": [MockFunction],
+    "debuggeeUrl": "http://mdn.com",
+    "depth": 0,
+    "expanded": false,
+    "focusItem": [MockFunction],
+    "item": Object {
+      "contents": Array [],
+      "name": "folder",
+      "path": "domain/subfolder",
+      "type": "directory",
+    },
+    "projectRoot": "server1.conn13.child1/thread19",
+    "selectItem": [MockFunction],
+    "setExpanded": [MockFunction],
+    "setProjectDirectoryRoot": [MockFunction],
+    "source": Object {
+      "extensionName": null,
+      "id": "server1.conn13.child1/39",
+      "introductionType": undefined,
+      "introductionUrl": null,
+      "isBlackBoxed": false,
+      "isExtension": false,
+      "isPrettyPrinted": false,
+      "isWasm": false,
+      "relativeUrl": "http://mdn.com/one.js",
+      "url": "http://mdn.com/one.js",
+    },
+    "threads": Array [
+      Object {
+        "actor": "server1.conn13.child1/thread19",
         "name": "Main Thread",
       },
     ],
