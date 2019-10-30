@@ -358,7 +358,22 @@ NS_IMETHODIMP
 nsClipboard::EmptyClipboard(int32_t aWhichClipboard) {
   LOGCLIP(("nsClipboard::EmptyClipboard (%s)\n",
            aWhichClipboard == kSelectionClipboard ? "primary" : "clipboard"));
+  if (aWhichClipboard == kSelectionClipboard) {
+    if (mSelectionTransferable) {
+      gtk_clipboard_clear(gtk_clipboard_get(GDK_SELECTION_PRIMARY));
+      MOZ_ASSERT(!mSelectionTransferable);
+    }
+  } else {
+    if (mGlobalTransferable) {
+      gtk_clipboard_clear(gtk_clipboard_get(GDK_SELECTION_CLIPBOARD));
+      MOZ_ASSERT(!mGlobalTransferable);
+    }
+  }
 
+  return NS_OK;
+}
+
+void nsClipboard::ClearTransferable(int32_t aWhichClipboard) {
   if (aWhichClipboard == kSelectionClipboard) {
     if (mSelectionOwner) {
       mSelectionOwner->LosingOwnership(mSelectionTransferable);
@@ -372,8 +387,6 @@ nsClipboard::EmptyClipboard(int32_t aWhichClipboard) {
     }
     mGlobalTransferable = nullptr;
   }
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -611,7 +624,7 @@ void nsClipboard::SelectionClearEvent(GtkClipboard* aGtkClipboard) {
   LOGCLIP(("nsClipboard::SelectionClearEvent (%s)\n",
            whichClipboard == kSelectionClipboard ? "primary" : "clipboard"));
 
-  EmptyClipboard(whichClipboard);
+  ClearTransferable(whichClipboard);
 }
 
 void clipboard_get_cb(GtkClipboard* aGtkClipboard,
