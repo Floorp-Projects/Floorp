@@ -150,6 +150,11 @@ class TypedArrayObject : public ArrayBufferViewObject {
                                          MutableHandleObject res);
 
   /*
+   * Maximum allowed byte length for any typed array.
+   */
+  static constexpr size_t MAX_BYTE_LENGTH = INT32_MAX;
+
+  /*
    * Byte length above which created typed arrays will have singleton types.
    * This only applies to typed arrays created with an existing ArrayBuffer and
    * when not inlined from Ion.
