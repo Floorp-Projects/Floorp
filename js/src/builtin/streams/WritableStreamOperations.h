@@ -22,6 +22,10 @@ namespace js {
 class PromiseObject;
 class WritableStream;
 
+extern JSObject* WritableStreamAbort(
+    JSContext* cx, JS::Handle<WritableStream*> unwrappedStream,
+    JS::Handle<JS::Value> reason);
+
 extern MOZ_MUST_USE PromiseObject* WritableStreamAddWriteRequest(
     JSContext* cx, JS::Handle<WritableStream*> unwrappedStream);
 
