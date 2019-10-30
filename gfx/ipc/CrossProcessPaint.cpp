@@ -15,7 +15,6 @@
 #include "mozilla/dom/WindowGlobalActorsBinding.h"
 #include "mozilla/gfx/DrawEventRecorder.h"
 #include "mozilla/gfx/InlineTranslator.h"
-#include "mozilla/Logging.h"
 #include "mozilla/PresShell.h"
 
 #include "gfxPlatform.h"
@@ -25,13 +24,16 @@
 #include "nsIDocShell.h"
 #include "nsPresContext.h"
 
-static mozilla::LazyLogModule gCrossProcessPaintLog("CrossProcessPaint");
-static mozilla::LazyLogModule gPaintFragmentLog("PaintFragment");
+#define ENABLE_PAINT_LOG 0
+// #define ENABLE_PAINT_LOG 1
 
-#define CPP_LOG(msg, ...) \
-  MOZ_LOG(gCrossProcessPaintLog, LogLevel::Debug, (msg, ##__VA_ARGS__))
-#define PF_LOG(msg, ...) \
-  MOZ_LOG(gPaintFragmentLog, LogLevel::Debug, (msg, ##__VA_ARGS__))
+#if ENABLE_PAINT_LOG
+#  define PF_LOG(...) printf_stderr("PaintFragment: " __VA_ARGS__)
+#  define CPP_LOG(...) printf_stderr("CrossProcessPaint: " __VA_ARGS__)
+#else
+#  define PF_LOG(...)
+#  define CPP_LOG(...)
+#endif
 
 namespace mozilla {
 namespace gfx {
