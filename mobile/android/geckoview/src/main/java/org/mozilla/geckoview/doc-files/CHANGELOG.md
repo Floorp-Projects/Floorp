@@ -56,6 +56,8 @@ exclude: true
   to the session it holds.
 - Changed [`AutofillElement.children`][71.20] interface to `Collection` to provide
   an efficient way to pre-allocate memory when filling `ViewStructure`.
+- Added [`GeckoSession.PromptDelegate.onSharePrompt`][71.22] to support the WebShare API.
+  ([bug 1402369]({{bugzilla}}1402369))
 
 [71.1]: {{javadoc_uri}}/RuntimeTelemetry.Delegate.html#onBooleanScalar-org.mozilla.geckoview.RuntimeTelemetry.Metric-
 [71.2]: {{javadoc_uri}}/RuntimeTelemetry.Delegate.html#onLongScalar-org.mozilla.geckoview.RuntimeTelemetry.Metric-
@@ -77,6 +79,7 @@ exclude: true
 [71.19]: {{javadoc_uri}}/GeckoSession.html#getAutofillElements--
 [71.20]: {{javadoc_uri}}/AutofillElement.html
 [71.21]: {{javadoc_uri}}/GeckoView.html#setAutofillEnabled-boolean-
+[71.22]: {{javadoc_uri}}/GeckoSession.PromptDelegate.html#onSharePrompt-org.mozilla.geckoview.GeckoSession-org.mozilla.geckoview.GeckoSession.PromptDelegate.SharePrompt-
 
 ## v70
 - Added API for session context assignment
@@ -399,4 +402,4 @@ exclude: true
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: ee3ceb65db78c3a801f525465ff3c6e9eca22ae9
+[api-version]: 6a71a9226b15eb40fb47f5da7400915f29fb4986

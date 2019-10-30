@@ -2738,6 +2738,14 @@ public class GeckoSession implements Parcelable {
                 res = delegate.onPopupPrompt(session, prompt);
                 break;
             }
+            case "share": {
+                final String text = message.getString("text");
+                final String uri = message.getString("uri");
+                final PromptDelegate.SharePrompt prompt =
+                    new PromptDelegate.SharePrompt(title, text, uri);
+                res = delegate.onSharePrompt(session, prompt);
+                break;
+            }
             default: {
                 callback.sendError("Invalid type");
                 return;
@@ -4413,6 +4421,82 @@ public class GeckoSession implements Parcelable {
             }
         }
 
+        /**
+         * SharePrompt contains the information necessary to represent a (v1) WebShare request.
+         */
+        public class SharePrompt extends BasePrompt {
+            @Retention(RetentionPolicy.SOURCE)
+            @IntDef({Result.SUCCESS, Result.FAILURE, Result.ABORT})
+            /* package */ @interface ShareResult {}
+
+            /**
+             * Possible results to a {@link SharePrompt}.
+             */
+            public static class Result {
+                /**
+                 * The user shared with another app successfully.
+                 */
+                public static final int SUCCESS = 0;
+
+                /**
+                 * The user attempted to share with another app, but it failed.
+                 */
+                public static final int FAILURE = 1;
+
+                /**
+                 * The user aborted the share.
+                 */
+                public static final int ABORT = 2;
+
+                protected Result() {}
+            }
+
+            /**
+             * The text for the share request.
+             */
+            public final @Nullable String text;
+
+            /**
+             * The uri for the share request.
+             */
+            public final @Nullable String uri;
+
+            protected SharePrompt(@Nullable final String title,
+                                  @Nullable final String text,
+                                  @Nullable final String uri) {
+                super(title);
+                this.text = text;
+                this.uri = uri;
+            }
+
+            /**
+             * Confirms the prompt and either blocks or allows the share request.
+             *
+             * @param response One of {@link Result} specifying the outcome of the
+             *                 share attempt.
+             *
+             * @return A {@link PromptResponse} which can be used to complete the
+             *         {@link GeckoResult} associated with this prompt.
+             */
+            @UiThread
+            public @NonNull PromptResponse confirm(@ShareResult final int response) {
+                ensureResult().putInt("response", response);
+                return super.confirm();
+            }
+
+            /**
+             * Dismisses the prompt and returns {@link Result#ABORT} to web content.
+             *
+             * @return A {@link PromptResponse} which can be used to complete the
+             *         {@link GeckoResult} associated with this prompt.
+             */
+            @UiThread
+            public @NonNull PromptResponse dismiss() {
+                ensureResult().putInt("response", Result.ABORT);
+                return super.dismiss();
+            }
+        }
+
         // Delegate functions.
         /**
          * Display an alert prompt.
@@ -4547,6 +4631,23 @@ public class GeckoSession implements Parcelable {
         @UiThread
         default @Nullable GeckoResult<PromptResponse> onPopupPrompt(@NonNull final GeckoSession session,
                                                                     @NonNull final PopupPrompt prompt) {
+            return null;
+        }
+
+        /**
+         * Display a share request prompt; this occurs when content attempts to use the
+         * WebShare API.
+         * See: https://developer.mozilla.org/en-US/docs/Web/API/Navigator/share
+         *
+         * @param session GeckoSession that triggered the prompt.
+         * @param prompt The {@link SharePrompt} that describes the prompt.
+         *
+         * @return A {@link GeckoResult} resolving to a {@link PromptResponse} which
+         *         includes all necessary information to resolve the prompt.
+         */
+        @UiThread
+        default @Nullable GeckoResult<PromptResponse> onSharePrompt(@NonNull final GeckoSession session,
+                                                                    @NonNull final SharePrompt prompt) {
             return null;
         }
     }
