@@ -15,6 +15,7 @@ mozilla.pth:third_party/python/Click
 mozilla.pth:third_party/python/compare-locales
 mozilla.pth:third_party/python/configobj
 mozilla.pth:third_party/python/cram
+mozilla.pth:third_party/python/distro
 mozilla.pth:third_party/python/dlmanager
 mozilla.pth:third_party/python/enum34
 mozilla.pth:third_party/python/fluent

@@ -1,0 +1,2 @@
+#!/bin/sh
+echo "I'm a bad uname file!"

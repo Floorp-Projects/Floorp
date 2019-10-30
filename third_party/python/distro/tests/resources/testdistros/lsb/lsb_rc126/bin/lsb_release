@@ -1,0 +1,5 @@
+#!/bin/bash
+rc=126
+msg="Cannot execute command"
+echo "Test failure - exiting with $rc ($msg)"
+exit $rc

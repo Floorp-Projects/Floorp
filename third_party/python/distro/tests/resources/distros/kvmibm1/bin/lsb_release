@@ -1,0 +1,21 @@
+#!/bin/bash
+#
+# lsb_release command for testing the ld module.
+# Only the -a option is supported.
+#
+# This version of the lsb_release command works without a corresponding
+# etc/lsb-release file.
+#
+
+if [[ "$@" != "-a" ]]; then
+  echo "Usage: lsb_release -a"
+  exit 2
+fi
+
+echo "LSB Version:	:core-4.1-noarch:core-4.1-s390x"
+echo "Distributor ID:	kvmibm"
+echo "Description:	KVM for IBM z Systems release 1.1.1 (Z) "
+echo "Release:	1.1.1"
+echo "Codename:	Z"
+
+exit 0
