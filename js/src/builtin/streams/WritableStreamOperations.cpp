@@ -11,49 +11,35 @@
 #include "mozilla/Assertions.h"  // MOZ_ASSERT
 #include "mozilla/Attributes.h"  // MOZ_MUST_USE
 
-#include <stdint.h>  // uint32_t
-
 #include "jsapi.h"  // JS_ReportErrorASCII, JS_SetPrivate
 
 #include "builtin/Promise.h"                 // js::PromiseObject
 #include "builtin/streams/WritableStream.h"  // js::WritableStream
 #include "builtin/streams/WritableStreamDefaultController.h"  // js::WritableStreamDefaultController, js::WritableStream::controller
-#include "builtin/streams/WritableStreamDefaultControllerOperations.h"  // js::WritableStreamControllerErrorSteps
 #include "builtin/streams/WritableStreamWriterOperations.h"  // js::WritableStreamDefaultWriterEnsureReadyPromiseRejected
-#include "js/CallArgs.h"     // JS::CallArgs{,FromVp}
 #include "js/Promise.h"      // JS::{Reject,Resolve}Promise
 #include "js/RootingAPI.h"   // JS::Handle, JS::Rooted
-#include "js/Value.h"  // JS::Value, JS::ObjecValue, JS::UndefinedHandleValue
+#include "js/Value.h"        // JS::Value, JS::ObjecValue
 #include "vm/Compartment.h"  // JS::Compartment
 #include "vm/JSContext.h"    // JSContext
-#include "vm/List.h"         // js::ListObject
 
-#include "builtin/streams/HandlerFunction-inl.h"  // js::NewHandler, js::TargetFromHandler
 #include "builtin/streams/MiscellaneousOperations-inl.h"  // js::ResolveUnwrappedPromiseWithUndefined, js::RejectUnwrappedPromiseWithError
 #include "builtin/streams/WritableStream-inl.h"  // js::UnwrapWriterFromStream
 #include "builtin/streams/WritableStreamDefaultWriter-inl.h"  // js::WritableStreamDefaultWriter::closedPromise
-#include "vm/Compartment-inl.h"  // JS::Compartment::wrap, js::UnwrapAndDowncastObject
+#include "vm/Compartment-inl.h"  // JS::Compartment::wrap
 #include "vm/JSContext-inl.h"    // JSContext::check
 #include "vm/JSObject-inl.h"     // js::NewObjectWithClassProto
 #include "vm/List-inl.h"         // js::{AppendTo,StoreNew}ListInFixedSlot
 #include "vm/Realm-inl.h"        // js::AutoRealm
 
-using js::ExtraFromHandler;
 using js::PromiseObject;
-using js::TargetFromHandler;
-using js::UnwrapAndDowncastObject;
 using js::WritableStream;
-using js::WritableStreamDefaultController;
-using js::WritableStreamRejectCloseAndClosedPromiseIfNeeded;
 
-using JS::CallArgs;
-using JS::CallArgsFromVp;
 using JS::Handle;
 using JS::ObjectValue;
 using JS::RejectPromise;
 using JS::ResolvePromise;
 using JS::Rooted;
-using JS::UndefinedHandleValue;
 using JS::Value;
 
 /*** 4.3. General writable stream abstract operations. **********************/
@@ -117,84 +103,6 @@ void WritableStream::clearInFlightWriteRequest(JSContext* cx) {
 
   MOZ_ASSERT(!haveInFlightWriteRequest());
   MOZ_ASSERT(inFlightWriteRequest().isUndefined());
-}
-
-/**
- * Streams spec, 4.3.6.
- *      WritableStreamAbort ( stream, reason )
- *
- * Note: The object (a promise) returned by this function is in the current
- *       compartment and does not require special wrapping to be put to use.
- */
-JSObject* js::WritableStreamAbort(JSContext* cx,
-                                  Handle<WritableStream*> unwrappedStream,
-                                  Handle<Value> reason) {
-  cx->check(reason);
-
-  // Step 1: Let state be stream.[[state]].
-  // Step 2: If state is "closed" or "errored", return a promise resolved with
-  //         undefined.
-  if (unwrappedStream->closed() || unwrappedStream->errored()) {
-    return PromiseObject::unforgeableResolve(cx, UndefinedHandleValue);
-  }
-
-  // Step 3: If stream.[[pendingAbortRequest]] is not undefined, return
-  //         stream.[[pendingAbortRequest]].[[promise]].
-  if (unwrappedStream->hasPendingAbortRequest()) {
-    Rooted<JSObject*> pendingPromise(
-        cx, unwrappedStream->pendingAbortRequestPromise());
-    if (!cx->compartment()->wrap(cx, &pendingPromise)) {
-      return nullptr;
-    }
-    return pendingPromise;
-  }
-
-  // Step 4: Assert: state is "writable" or "erroring".
-  MOZ_ASSERT(unwrappedStream->writable() ^ unwrappedStream->erroring());
-
-  // Step 7: Let promise be a new promise (reordered).
-  Rooted<PromiseObject*> promise(cx, PromiseObject::createSkippingExecutor(cx));
-  if (!promise) {
-    return nullptr;
-  }
-
-  // Step 5: Let wasAlreadyErroring be false.
-  // Step 6: If state is "erroring",
-  // Step 6.a: Set wasAlreadyErroring to true.
-  // Step 6.b: Set reason to undefined.
-  bool wasAlreadyErroring = unwrappedStream->erroring();
-  Handle<Value> pendingReason =
-      wasAlreadyErroring ? UndefinedHandleValue : reason;
-
-  // Step 8: Set stream.[[pendingAbortRequest]] to
-  //         Record {[[promise]]: promise, [[reason]]: reason,
-  //                 [[wasAlreadyErroring]]: wasAlreadyErroring}.
-  {
-    AutoRealm ar(cx, unwrappedStream);
-
-    Rooted<JSObject*> wrappedPromise(cx, promise);
-    Rooted<Value> wrappedPendingReason(cx, pendingReason);
-
-    JS::Compartment* comp = cx->compartment();
-    if (!comp->wrap(cx, &wrappedPromise) ||
-        !comp->wrap(cx, &wrappedPendingReason)) {
-      return nullptr;
-    }
-
-    unwrappedStream->setPendingAbortRequest(
-        wrappedPromise, wrappedPendingReason, wasAlreadyErroring);
-  }
-
-  // Step 9: If wasAlreadyErroring is false, perform
-  //         ! WritableStreamStartErroring(stream, reason).
-  if (!wasAlreadyErroring) {
-    if (!WritableStreamStartErroring(cx, unwrappedStream, pendingReason)) {
-      return nullptr;
-    }
-  }
-
-  // Step 10: Return promise.
-  return promise;
 }
 
 /*** 4.4. Writable stream abstract operations used by controllers ***********/
@@ -319,68 +227,6 @@ MOZ_MUST_USE bool js::WritableStreamStartErroring(
 }
 
 /**
- * Streams spec, 4.4.4 WritableStreamFinishErroring ( stream )
- *     Step 13: Upon fulfillment of promise, [...]
- */
-static bool AbortRequestPromiseFulfilledHandler(JSContext* cx, unsigned argc,
-                                                Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-
-  // Step 13.a: Resolve abortRequest.[[promise]] with undefined.
-  Rooted<JSObject*> abortRequestPromise(cx, TargetFromHandler<JSObject>(args));
-  if (!ResolvePromise(cx, abortRequestPromise, UndefinedHandleValue)) {
-    return false;
-  }
-
-  // Step 13.b: Perform
-  //            ! WritableStreamRejectCloseAndClosedPromiseIfNeeded(stream).
-  Rooted<WritableStream*> unwrappedStream(
-      cx, UnwrapAndDowncastObject<WritableStream>(
-              cx, ExtraFromHandler<JSObject>(args)));
-  if (!unwrappedStream) {
-    return false;
-  }
-
-  if (!WritableStreamRejectCloseAndClosedPromiseIfNeeded(cx, unwrappedStream)) {
-    return false;
-  }
-
-  args.rval().setUndefined();
-  return false;
-}
-
-/**
- * Streams spec, 4.4.4 WritableStreamFinishErroring ( stream )
- *     Step 14: Upon rejection of promise with reason reason, [...]
- */
-static bool AbortRequestPromiseRejectedHandler(JSContext* cx, unsigned argc,
-                                               Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-
-  // Step 14.a: Reject abortRequest.[[promise]] with reason.
-  Rooted<JSObject*> abortRequestPromise(cx, TargetFromHandler<JSObject>(args));
-  if (!RejectPromise(cx, abortRequestPromise, args.get(0))) {
-    return false;
-  }
-
-  // Step 14.b: Perform
-  //            ! WritableStreamRejectCloseAndClosedPromiseIfNeeded(stream).
-  Rooted<WritableStream*> unwrappedStream(
-      cx, UnwrapAndDowncastObject<WritableStream>(
-              cx, ExtraFromHandler<JSObject>(args)));
-  if (!unwrappedStream) {
-    return false;
-  }
-
-  if (!WritableStreamRejectCloseAndClosedPromiseIfNeeded(cx, unwrappedStream)) {
-    return false;
-  }
-
-  args.rval().setUndefined();
-  return false;
-}
-
-/**
  * Streams spec, 4.4.4.
  *      WritableStreamFinishErroring ( stream )
  */
@@ -397,117 +243,32 @@ MOZ_MUST_USE bool js::WritableStreamFinishErroring(
   unwrappedStream->setErrored();
 
   // Step 4: Perform ! stream.[[writableStreamController]].[[ErrorSteps]]().
-  {
-    Rooted<WritableStreamDefaultController*> unwrappedController(
-        cx, unwrappedStream->controller());
-    if (!WritableStreamControllerErrorSteps(cx, unwrappedController)) {
-      return false;
-    }
-  }
-
   // Step 5: Let storedError be stream.[[storedError]].
-  Rooted<Value> storedError(cx, unwrappedStream->storedError());
-  if (!cx->compartment()->wrap(cx, &storedError)) {
-    return false;
-  }
-
   // Step 6: Repeat for each writeRequest that is an element of
   //         stream.[[writeRequests]],
-  {
-    Rooted<ListObject*> unwrappedWriteRequests(
-        cx, unwrappedStream->writeRequests());
-    Rooted<JSObject*> writeRequest(cx);
-    uint32_t len = unwrappedWriteRequests->length();
-    for (uint32_t i = 0; i < len; i++) {
-      // Step 6.a: Reject writeRequest with storedError.
-      writeRequest = &unwrappedWriteRequests->get(i).toObject();
-      if (!RejectUnwrappedPromiseWithError(cx, &writeRequest, storedError)) {
-        return false;
-      }
-    }
-  }
-
+  //   a: Reject writeRequest with storedError.
   // Step 7: Set stream.[[writeRequests]] to an empty List.
-  // We optimize this to discard the list entirely.  (A brief scan of the
-  // streams spec should verify that [[writeRequests]] is never accessed on a
-  // stream when |stream.[[state]] === "errored"|, set in step 3 above.)
-  unwrappedStream->clearWriteRequests();
-
   // Step 8: If stream.[[pendingAbortRequest]] is undefined,
-  if (!unwrappedStream->hasPendingAbortRequest()) {
-    // Step 8.a: Perform
-    //           ! WritableStreamRejectCloseAndClosedPromiseIfNeeded(stream).
-    // Step 8.b: Return.
-    return WritableStreamRejectCloseAndClosedPromiseIfNeeded(cx,
-                                                             unwrappedStream);
-  }
-
+  //   a: Perform ! WritableStreamRejectCloseAndClosedPromiseIfNeeded(stream).
+  //   b: Return.
   // Step 9: Let abortRequest be stream.[[pendingAbortRequest]].
   // Step 10: Set stream.[[pendingAbortRequest]] to undefined.
-  Rooted<Value> abortRequestReason(
-      cx, unwrappedStream->pendingAbortRequestReason());
-  if (!cx->compartment()->wrap(cx, &abortRequestReason)) {
-    return false;
-  }
-  Rooted<JSObject*> abortRequestPromise(
-      cx, unwrappedStream->pendingAbortRequestPromise());
-  bool wasAlreadyErroring =
-      unwrappedStream->pendingAbortRequestWasAlreadyErroring();
-  unwrappedStream->clearPendingAbortRequest();
-
   // Step 11: If abortRequest.[[wasAlreadyErroring]] is true,
-  if (wasAlreadyErroring) {
-    // Step 11.a: Reject abortRequest.[[promise]] with storedError.
-    if (!RejectUnwrappedPromiseWithError(cx, &abortRequestPromise,
-                                         storedError)) {
-      return false;
-    }
-
-    // Step 11.b: Perform
-    //            ! WritableStreamRejectCloseAndClosedPromiseIfNeeded(stream).
-    // Step 11.c: Return.
-    return WritableStreamRejectCloseAndClosedPromiseIfNeeded(cx,
-                                                             unwrappedStream);
-  }
-
+  //   a: Reject abortRequest.[[promise]] with storedError.
+  //   b: Perform ! WritableStreamRejectCloseAndClosedPromiseIfNeeded(stream).
+  //   c: Return.
   // Step 12: Let promise be
   //          ! stream.[[writableStreamController]].[[AbortSteps]](
   //                abortRequest.[[reason]]).
-  Rooted<WritableStreamDefaultController*> unwrappedController(
-      cx, unwrappedStream->controller());
-  Rooted<JSObject*> promise(
-      cx, WritableStreamControllerAbortSteps(cx, unwrappedController,
-                                             abortRequestReason));
-  if (!promise) {
-    return false;
-  }
-  cx->check(promise);
-
-  if (!cx->compartment()->wrap(cx, &abortRequestPromise)) {
-    return false;
-  }
-
-  Rooted<JSObject*> stream(cx, unwrappedStream);
-  if (!cx->compartment()->wrap(cx, &stream)) {
-    return false;
-  }
-
-  // Step 13: Upon fulfillment of promise, [...]
-  // Step 14: Upon rejection of promise with reason reason, [...]
-  Rooted<JSObject*> onFulfilled(
-      cx, NewHandlerWithExtra(cx, AbortRequestPromiseFulfilledHandler,
-                              abortRequestPromise, stream));
-  if (!onFulfilled) {
-    return false;
-  }
-  Rooted<JSObject*> onRejected(
-      cx, NewHandlerWithExtra(cx, AbortRequestPromiseRejectedHandler,
-                              abortRequestPromise, stream));
-  if (!onRejected) {
-    return false;
-  }
-
-  return JS::AddPromiseReactions(cx, promise, onFulfilled, onRejected);
+  // Step 13: Upon fulfillment of promise,
+  //   a: Resolve abortRequest.[[promise]] with undefined.
+  //   b: Perform ! WritableStreamRejectCloseAndClosedPromiseIfNeeded(stream).
+  // Step 14: Upon rejection of promise with reason reason,
+  //   c: Reject abortRequest.[[promise]] with reason.
+  //   d: Perform ! WritableStreamRejectCloseAndClosedPromiseIfNeeded(stream).
+  // XXX jwalden flesh me out!
+  JS_ReportErrorASCII(cx, "epic fail");
+  return false;
 }
 
 /**
