@@ -4076,9 +4076,9 @@ void nsTextPaintStyle::InitCommonColors() {
   mFrameBackgroundColor = NS_ComposeColors(defaultBgColor, bgColor);
 
   mSystemFieldForegroundColor =
-      LookAndFeel::GetColor(LookAndFeel::ColorID::Fieldtext);
+      LookAndFeel::GetColor(LookAndFeel::ColorID::MozFieldtext);
   mSystemFieldBackgroundColor =
-      LookAndFeel::GetColor(LookAndFeel::ColorID::Field);
+      LookAndFeel::GetColor(LookAndFeel::ColorID::MozField);
 
   if (bgFrame->IsThemed()) {
     // Assume a native widget has sufficient contrast always

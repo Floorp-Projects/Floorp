@@ -248,10 +248,10 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, nscolor& aColor) {
       break;
 
     case ColorID::MozEventreerow:
-    case ColorID::Field:
+    case ColorID::MozField:
       aColor = mSystemColors.colorBackground;
       break;
-    case ColorID::Fieldtext:
+    case ColorID::MozFieldtext:
       aColor = mSystemColors.textColorPrimary;
       break;
     case ColorID::MozDialog:
