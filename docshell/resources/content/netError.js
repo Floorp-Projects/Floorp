@@ -125,8 +125,8 @@ function initPage() {
     document.getElementById("errorTryAgain").style.display = "none";
   }
 
-  if (err == "cspBlocked") {
-    // Remove the "Try again" button for CSP violations, since it's
+  if (err == "cspBlocked" || err == "xfoBlocked") {
+    // Remove the "Try again" button for XFO and CSP violations, since it's
     // almost certainly useless. (Bug 553180)
     document.getElementById("errorTryAgain").style.display = "none";
   }

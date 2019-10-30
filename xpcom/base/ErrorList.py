@@ -788,6 +788,9 @@ with modules["PROFILE"]:
 # 21: NS_ERROR_MODULE_SECURITY
 # =======================================================================
 with modules["SECURITY"]:
+    # Error code for XFO
+    errors["NS_ERROR_XFO_VIOLATION"] = FAILURE(96)
+
     # Error code for CSP
     errors["NS_ERROR_CSP_NAVIGATE_TO_VIOLATION"] = FAILURE(97)
     errors["NS_ERROR_CSP_FORM_ACTION_VIOLATION"] = FAILURE(98)

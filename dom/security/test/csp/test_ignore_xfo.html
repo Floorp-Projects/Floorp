@@ -27,8 +27,32 @@ function checkFinished() {
   if (testcounter < 2) {
   	return;
   }
+  // remove the listener and we are done.
+  window.examiner.remove();
   SimpleTest.finish();
 }
+
+// X-Frame-Options checks happen in the parent, hence we have to
+// proxy the csp violation notifications.
+SpecialPowers.registerObservers("xfo-on-violate-policy");
+
+function examiner() {
+  SpecialPowers.addObserver(this, "specialpowers-xfo-on-violate-policy");
+}
+examiner.prototype  = {
+  observe(subject, topic, data) {
+    var asciiSpec = SpecialPowers.getPrivilegedProps(SpecialPowers.do_QueryInterface(subject, "nsIURI"), "asciiSpec");
+
+    is(asciiSpec, "http://mochi.test:8888/tests/dom/security/test/csp/file_ro_ignore_xfo.html", "correct subject");  
+    is(topic, "specialpowers-xfo-on-violate-policy", "correct topic");
+    is(data, "deny", "correct data");
+    checkFinished();
+  },
+  remove() {
+    SpecialPowers.removeObserver(this, "specialpowers-xfo-on-violate-policy");
+  }
+}
+window.examiner = new examiner();
 
 // 1) test XFO with CSP
 var csp_testframe = document.getElementById("csp_testframe");
@@ -39,17 +63,23 @@ csp_testframe.onload = function() {
 }
 csp_testframe.onerror = function() {
   ok(false, "sanity: should not fire onerror for csp_testframe");
+  checkFinished();
 }
 csp_testframe.src = "file_ignore_xfo.html";
 
 // 2) test XFO with CSP_RO
 var csp_ro_testframe = document.getElementById("csp_ro_testframe");
+// If XFO denies framing the neither the onload, nor the onerror
+// event should fire, because we are displaying a about:neterror.
+// The actual error we are detecting within this test comes from
+// the xfo-on-violation-polcy observer.
 csp_ro_testframe.onload = function() {
-  is(csp_ro_testframe.contentDocument, null, "Blocking frame with with XFO and CSP_RO");
+  ok(false, "sanity: should not fire onload for csp_ro_testframe");
   checkFinished();
 }
 csp_ro_testframe.onerror = function() {
   ok(false, "sanity: should not fire onerror for csp_ro_testframe");
+  checkFinished();
 }
 csp_ro_testframe.src = "file_ro_ignore_xfo.html";
 
