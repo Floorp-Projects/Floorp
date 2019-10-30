@@ -3,7 +3,7 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g. crates.io) dependencies
+# to registry (e.g., crates.io) dependencies
 #
 # If you believe there's an error in this file please file an
 # issue against the rust-lang/cargo repository. If you're
@@ -12,7 +12,7 @@
 
 [package]
 name = "lazy_static"
-version = "1.2.0"
+version = "1.4.0"
 authors = ["Marvin Löbel <loebel.marvin@gmail.com>"]
 exclude = ["/.travis.yml", "/appveyor.yml"]
 description = "A macro for declaring lazily evaluated statics in Rust."
@@ -23,13 +23,12 @@ categories = ["no-std", "rust-patterns", "memory-management"]
 license = "MIT/Apache-2.0"
 repository = "https://github.com/rust-lang-nursery/lazy-static.rs"
 [dependencies.spin]
-version = "0.4.10"
-features = ["once"]
+version = "0.5.0"
 optional = true
-default-features = false
+[dev-dependencies.doc-comment]
+version = "0.3.1"
 
 [features]
-nightly = []
 spin_no_std = ["spin"]
 [badges.appveyor]
 repository = "rust-lang-nursery/lazy-static.rs"

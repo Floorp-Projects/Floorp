@@ -1,0 +1,17 @@
+[package]
+name = "neqo-http3"
+version = "0.1.4"
+authors = ["draganadamjanovic"]
+edition = "2018"
+
+[dependencies]
+neqo-common = { path = "./../neqo-common" }
+neqo-crypto = { path = "./../neqo-crypto" }
+neqo-transport = { path = "./../neqo-transport" }
+neqo-qpack = { path = "./../neqo-qpack" }
+num-traits = "0.2"
+log = "0.4.0"
+smallvec = "0.6.6"
+
+[dev-dependencies]
+test-fixture = { path = "../test-fixture" }
