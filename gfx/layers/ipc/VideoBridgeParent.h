@@ -13,6 +13,7 @@
 namespace mozilla {
 namespace layers {
 
+enum class VideoBridgeSource : uint8_t;
 class CompositorThreadHolder;
 
 class VideoBridgeParent final : public PVideoBridgeParent,
@@ -21,7 +22,8 @@ class VideoBridgeParent final : public PVideoBridgeParent,
  public:
   ~VideoBridgeParent();
 
-  static VideoBridgeParent* GetSingleton();
+  static VideoBridgeParent* GetSingleton(Maybe<VideoBridgeSource>& aSource);
+
   TextureHost* LookupTexture(uint64_t aSerial);
 
   // PVideoBridgeParent
@@ -54,10 +56,11 @@ class VideoBridgeParent final : public PVideoBridgeParent,
 
   void DeallocShmem(ipc::Shmem& aShmem) override;
 
-  static void Open(Endpoint<PVideoBridgeParent>&& aEndpoint);
+  static void Open(Endpoint<PVideoBridgeParent>&& aEndpoint,
+                   VideoBridgeSource aSource);
 
  private:
-  VideoBridgeParent();
+  explicit VideoBridgeParent(VideoBridgeSource aSource);
 
   void ActorDealloc() override;
 
