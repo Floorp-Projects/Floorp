@@ -896,11 +896,8 @@ class WorkerPrivate : public RelativeTimeline {
 
   const nsID& AgentClusterId() const { return mAgentClusterId; }
 
-  bool CanShareMemory(const nsID& aAgentClusterId);
-
-  nsILoadInfo::CrossOriginOpenerPolicy AgentClusterOpenerPolicy() {
-    return mAgentClusterOpenerPolicy;
-  }
+  // https://whatpr.org/html/4734/structured-data.html#cross-origin-isolated
+  bool IsCrossOriginIsolated() const;
 
  private:
   WorkerPrivate(
