@@ -37,13 +37,6 @@ size_t LZ4::compressLimitedOutput(const char* aSource, size_t aInputSize,
                               maxOutputSizeChecked.value());
 }
 
-bool LZ4::decompress(const char* aSource, char* aDest, size_t aOutputSize) {
-  CheckedInt<int> outputSizeChecked = aOutputSize;
-  MOZ_ASSERT(outputSizeChecked.isValid());
-  int ret = LZ4_decompress_fast(aSource, aDest, outputSizeChecked.value());
-  return ret >= 0;
-}
-
 bool LZ4::decompress(const char* aSource, size_t aInputSize, char* aDest,
                      size_t aMaxOutputSize, size_t* aOutputSize) {
   CheckedInt<int> maxOutputSizeChecked = aMaxOutputSize;
