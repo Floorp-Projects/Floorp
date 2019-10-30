@@ -118,7 +118,6 @@ devtools/client/shared/source-map/
 devtools/client/shared/vendor/
 devtools/client/shared/sourceeditor/codemirror/*.js
 devtools/client/shared/sourceeditor/codemirror/**/*.js
-devtools/client/shared/sourceeditor/tern/
 devtools/client/shared/sourceeditor/test/cm_mode_ruby.js
 devtools/client/shared/sourceeditor/test/codemirror/
 devtools/server/actors/utils/automation-timeline.js
