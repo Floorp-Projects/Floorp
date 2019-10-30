@@ -215,6 +215,7 @@ EXPORTS.mozilla.layers += [
     'ipc/UiCompositorControllerParent.h',
     'ipc/VideoBridgeChild.h',
     'ipc/VideoBridgeParent.h',
+    'ipc/VideoBridgeUtils.h',
     'LayerAttributes.h',
     'LayerMetricsWrapper.h',
     'LayersHelpers.h',

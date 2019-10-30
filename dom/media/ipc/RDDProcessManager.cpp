@@ -180,7 +180,7 @@ void RDDProcessManager::OnProcessLaunchComplete(RDDProcessHost* aHost) {
 
   CompositorThreadHolder::Loop()->PostTask(
       NewRunnableFunction("gfx::VideoBridgeParent::Open",
-                          &VideoBridgeParent::Open, std::move(parentPipe)));
+                          &VideoBridgeParent::Open, std::move(parentPipe), VideoBridgeSource::RddProcess));
 
   CrashReporter::AnnotateCrashReport(
       CrashReporter::Annotation::RDDProcessStatus,

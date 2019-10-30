@@ -25,9 +25,9 @@ void VideoBridgeChild::StartupForGPUProcess() {
 
   VideoBridgeChild::OpenToGPUProcess(std::move(childPipe));
 
-  CompositorThreadHolder::Loop()->PostTask(
-      NewRunnableFunction("gfx::VideoBridgeParent::Open",
-                          &VideoBridgeParent::Open, std::move(parentPipe)));
+  CompositorThreadHolder::Loop()->PostTask(NewRunnableFunction(
+      "gfx::VideoBridgeParent::Open", &VideoBridgeParent::Open,
+      std::move(parentPipe), VideoBridgeSource::GpuProcess));
 }
 
 void VideoBridgeChild::OpenToParentProcess(

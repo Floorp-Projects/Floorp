@@ -8,6 +8,7 @@
 #define MOZILLA_GFX_VIDEOBRIDGECHILD_H
 
 #include "mozilla/layers/PVideoBridgeChild.h"
+#include "mozilla/layers/VideoBridgeUtils.h"
 #include "ISurfaceAllocator.h"
 #include "TextureForwarder.h"
 
