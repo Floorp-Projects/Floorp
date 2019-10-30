@@ -18,9 +18,7 @@
 }
 
 .ac-title-text,
-.ac-tags-text,
-.ac-url-text,
-.ac-action-text {
+.ac-url-text {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
