@@ -98,7 +98,8 @@ var frameBlocked = function(uri, policy) {
   // Bug 1557712: Intermittent failure -> not sure why the 'uri' might ever
   // be non existing at this point, however if there is no uri, there can
   // also be no userpass!
-  if (policy.includes('@') || (uri && uri.includes('@'))) {
+  if (policy.includes('@') ||
+      (typeof uri === 'string' && uri.includes('@'))) {
     ok(false, ' a CSP policy blocked frame from being loaded. But contains' +
       ' userpass. Policy is: ' + policy + ';URI is: ' + uri );
   } else {
