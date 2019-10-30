@@ -36,6 +36,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyBoolean
 import org.mockito.ArgumentMatchers.anyFloat
+import org.mockito.Mockito
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 import org.mozilla.geckoview.ContentBlocking
@@ -199,6 +200,35 @@ class GeckoEngineTest {
         )
 
         assertEquals(0, geckoRunTime.settings.contentBlocking.antiTrackingCategories)
+    }
+
+    @Test
+    fun `setEnhancedTrackingProtectionLevel MUST always be set to DEFAULT unless the tracking protection policy is none`() {
+        val mockRuntime = mock<GeckoRuntime>()
+        whenever(mockRuntime.settings).thenReturn(mock())
+        whenever(mockRuntime.settings.contentBlocking).thenReturn(mock())
+
+        val engine = GeckoEngine(testContext, runtime = mockRuntime)
+
+        engine.settings.trackingProtectionPolicy = TrackingProtectionPolicy.strict()
+
+        verify(mockRuntime.settings.contentBlocking).setEnhancedTrackingProtectionLevel(
+            ContentBlocking.EtpLevel.DEFAULT
+        )
+
+        engine.settings.trackingProtectionPolicy = TrackingProtectionPolicy.none()
+
+        verify(mockRuntime.settings.contentBlocking).setEnhancedTrackingProtectionLevel(
+            ContentBlocking.EtpLevel.NONE
+        )
+
+        engine.settings.trackingProtectionPolicy = TrackingProtectionPolicy.select(
+            arrayOf(TrackingProtectionPolicy.TrackingCategory.SCRIPTS_AND_SUB_RESOURCES)
+        )
+
+        verify(mockRuntime.settings.contentBlocking, Mockito.times(2)).setEnhancedTrackingProtectionLevel(
+            ContentBlocking.EtpLevel.DEFAULT
+        )
     }
 
     @Test
