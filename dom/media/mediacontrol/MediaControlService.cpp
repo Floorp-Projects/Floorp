@@ -54,6 +54,7 @@ MediaControlService::MediaControlService() : mAudioFocusManager(this) {
   if (obs) {
     obs->AddObserver(this, "xpcom-shutdown", false);
   }
+  GetMediaControlKeysManager().AddListener(new MediaControlKeysHandler);
 }
 
 MediaControlService::~MediaControlService() {
