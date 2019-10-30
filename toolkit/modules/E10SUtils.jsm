@@ -320,25 +320,15 @@ var E10SUtils = {
   canLoadURIInRemoteType(
     aURL,
     aRemoteSubframes,
-    aRemoteType = DEFAULT_REMOTE_TYPE,
-    aPreferredRemoteType = undefined
+    aRemoteType = DEFAULT_REMOTE_TYPE
   ) {
-    // We need a strict equality here because the value of `NOT_REMOTE` is
-    // `null`, and there is a possibility that `undefined` is passed as an
-    // argument, which might result a load in the parent process.
-    if (aPreferredRemoteType === undefined) {
-      aPreferredRemoteType =
-        aRemoteType === NOT_REMOTE ? NOT_REMOTE : DEFAULT_REMOTE_TYPE;
-    }
+    // aRemoteType cannot be undefined, as that would cause it to default to
+    // `DEFAULT_REMOTE_TYPE`. This means any falsy remote types are
+    // intentionally `NOT_REMOTE`.
 
     return (
       aRemoteType ==
-      this.getRemoteTypeForURI(
-        aURL,
-        true,
-        aRemoteSubframes,
-        aPreferredRemoteType
-      )
+      this.getRemoteTypeForURI(aURL, true, aRemoteSubframes, aRemoteType)
     );
   },
 
