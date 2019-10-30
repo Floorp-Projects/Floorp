@@ -21,27 +21,97 @@
 #include "builtin/streams/WritableStreamOperations.h"  // js::WritableStream{DealWithRejection,{Start,Finish}Erroring,UpdateBackpressure}
 #include "js/CallArgs.h"    // JS::CallArgs{,FromVp}
 #include "js/RootingAPI.h"  // JS::Handle, JS::Rooted
-#include "js/Value.h"       // JS::{,Object}Value
+#include "js/Value.h"       // JS::{,Object}Value, JS::UndefinedHandleValue
+#include "vm/Compartment.h"  // JS::Compartment
 #include "vm/JSContext.h"   // JSContext
 #include "vm/JSObject.h"    // JSObject
 #include "vm/List.h"        // js::ListObject
 #include "vm/Runtime.h"     // JSAtomState
 
 #include "builtin/streams/HandlerFunction-inl.h"  // js::TargetFromHandler
+#include "builtin/streams/MiscellaneousOperations-inl.h"  // js::PromiseCall
+#include "vm/Compartment-inl.h"                   // JS::Compartment::wrap
 #include "vm/JSContext-inl.h"                     // JSContext::check
 #include "vm/JSObject-inl.h"  // js::NewBuiltinClassInstance, js::NewObjectWithClassProto
+#include "vm/Realm-inl.h"     // js::AutoRealm
 
 using JS::CallArgs;
 using JS::CallArgsFromVp;
 using JS::Handle;
 using JS::ObjectValue;
 using JS::Rooted;
+using JS::UndefinedHandleValue;
 using JS::Value;
 
 using js::ListObject;
 using js::WritableStream;
 using js::WritableStreamDefaultController;
 using js::WritableStreamFinishErroring;
+
+/*** 4.7. Writable stream default controller internal methods ***************/
+
+/**
+ * Streams spec, 4.7.5.1.
+ *      [[AbortSteps]]( reason )
+ */
+JSObject* js::WritableStreamControllerAbortSteps(
+    JSContext* cx, Handle<WritableStreamDefaultController*> unwrappedController,
+    Handle<Value> reason) {
+  cx->check(reason);
+
+  // Step 1: Let result be the result of performing this.[[abortAlgorithm]],
+  //         passing reason.
+  // CreateAlgorithmFromUnderlyingMethod(underlyingSink, "abort", 1, « »)
+  Rooted<Value> unwrappedAbortMethod(cx, unwrappedController->abortMethod());
+  Rooted<JSObject*> result(cx);
+  if (unwrappedAbortMethod.isUndefined()) {
+    // CreateAlgorithmFromUnderlyingMethod step 7.
+    result = PromiseObject::unforgeableResolve(cx, UndefinedHandleValue);
+    if (!result) {
+      return nullptr;
+    }
+  } else {
+    // CreateAlgorithmFromUnderlyingMethod step 6.c.i-ii.
+    {
+      AutoRealm ar(cx, unwrappedController);
+      cx->check(unwrappedAbortMethod);
+
+      Rooted<Value> underlyingSink(cx, unwrappedController->underlyingSink());
+      cx->check(underlyingSink);
+
+      Rooted<Value> wrappedReason(cx, reason);
+      if (!cx->compartment()->wrap(cx, &wrappedReason)) {
+        return nullptr;
+      }
+
+      result =
+          PromiseCall(cx, unwrappedAbortMethod, underlyingSink, wrappedReason);
+      if (!result) {
+        return nullptr;
+      }
+    }
+    if (!cx->compartment()->wrap(cx, &result)) {
+      return nullptr;
+    }
+  }
+
+  // Step 2: Perform ! WritableStreamDefaultControllerClearAlgorithms(this).
+  WritableStreamDefaultControllerClearAlgorithms(unwrappedController);
+
+  // Step 3: Return result.
+  return result;
+}
+
+/**
+ * Streams spec, 4.7.5.2.
+ *      [[ErrorSteps]]()
+ */
+bool js::WritableStreamControllerErrorSteps(
+    JSContext* cx,
+    Handle<WritableStreamDefaultController*> unwrappedController) {
+  // Step 1: Perform ! ResetQueue(this).
+  return ResetQueue(cx, unwrappedController);
+}
 
 /*** 4.8. Writable stream default controller abstract operations ************/
 
@@ -152,11 +222,16 @@ MOZ_MUST_USE bool js::SetUpWritableStreamDefaultController(
     SinkAlgorithms sinkAlgorithms, Handle<Value> underlyingSink,
     Handle<Value> writeMethod, Handle<Value> closeMethod,
     Handle<Value> abortMethod, double highWaterMark, Handle<Value> size) {
-  cx->check(stream, underlyingSink, size);
+  cx->check(stream);
+  cx->check(underlyingSink);
+  cx->check(writeMethod);
   MOZ_ASSERT(writeMethod.isUndefined() || IsCallable(writeMethod));
+  cx->check(closeMethod);
   MOZ_ASSERT(closeMethod.isUndefined() || IsCallable(closeMethod));
+  cx->check(abortMethod);
   MOZ_ASSERT(abortMethod.isUndefined() || IsCallable(abortMethod));
   MOZ_ASSERT(highWaterMark >= 0);
+  cx->check(size);
   MOZ_ASSERT(size.isUndefined() || IsCallable(size));
 
   // Done elsewhere in the standard: Create the new controller.
