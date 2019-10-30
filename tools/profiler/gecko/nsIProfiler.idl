@@ -43,6 +43,16 @@ interface nsIProfiler : nsISupports
   void PauseSampling();
   void ResumeSampling();
   void AddMarker(in string aMarker);
+
+  /*
+   * Resolves the returned promise after at least one full periodic sampling.
+   * Rejects the promise if sampler is not running (yet, or anymore, or paused).
+   * This is mainly useful in tests, to wait just long enough to guarantee that
+   * one sample was taken in the main process.
+   */
+  [implicit_jscontext]
+  Promise waitOnePeriodicSampling();
+
   /*
    * Returns the JSON string of the profile. If aSinceTime is passed, only
    * report samples taken at >= aSinceTime.
