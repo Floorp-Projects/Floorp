@@ -142,6 +142,8 @@ class nsHttpTransaction final : public nsAHttpTransaction,
 
   void DisableSpdy() override;
 
+  void DoNotRemoveAltSvc() override { mDoNotRemoveAltSvc = true; }
+
   nsHttpTransaction* QueryHttpTransaction() override { return this; }
 
   already_AddRefed<Http2PushedStreamWrapper> GetPushedStream() {
@@ -378,6 +380,8 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   bool mContentDecodingCheck;
   bool mDeferredSendProgress;
   bool mWaitingOnPipeOut;
+
+  bool mDoNotRemoveAltSvc;
 
   // mClosed           := transaction has been explicitly closed
   // mTransactionDone  := transaction ran to completion or was interrupted
