@@ -5767,6 +5767,22 @@ AttachDecision CompareIRGenerator::tryAttachNumber(ValOperandId lhsId,
   return AttachDecision::Attach;
 }
 
+AttachDecision CompareIRGenerator::tryAttachBigInt(ValOperandId lhsId,
+                                                   ValOperandId rhsId) {
+  if (!lhsVal_.isBigInt() || !rhsVal_.isBigInt()) {
+    return AttachDecision::NoAction;
+  }
+
+  BigIntOperandId lhs = writer.guardToBigInt(lhsId);
+  BigIntOperandId rhs = writer.guardToBigInt(rhsId);
+
+  writer.compareBigIntResult(op_, lhs, rhs);
+  writer.returnFromIC();
+
+  trackAttached("BigInt");
+  return AttachDecision::Attach;
+}
+
 AttachDecision CompareIRGenerator::tryAttachObjectUndefined(
     ValOperandId lhsId, ValOperandId rhsId) {
   if (!(lhsVal_.isNullOrUndefined() && rhsVal_.isObject()) &&
@@ -5982,6 +5998,7 @@ AttachDecision CompareIRGenerator::tryAttachStub() {
   // strictly-different-types cases in the below attachment code
   TRY_ATTACH(tryAttachInt32(lhsId, rhsId));
   TRY_ATTACH(tryAttachNumber(lhsId, rhsId));
+  TRY_ATTACH(tryAttachBigInt(lhsId, rhsId));
   TRY_ATTACH(tryAttachString(lhsId, rhsId));
 
   TRY_ATTACH(tryAttachStringNumber(lhsId, rhsId));
