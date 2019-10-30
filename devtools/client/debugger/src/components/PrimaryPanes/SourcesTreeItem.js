@@ -28,6 +28,7 @@ import {
   isOriginal as isOriginalSource,
   getSourceQueryString,
   isUrlExtension,
+  isExtensionDirectoryPath,
   shouldBlackbox,
 } from "../../utils/source";
 import { isDirectory, getPathWithoutThread } from "../../utils/sources-tree";
@@ -241,7 +242,7 @@ class SourceTreeItem extends Component<Props, State> {
       return <AccessibleImage className="webpack" />;
     } else if (item.name === "ng://") {
       return <AccessibleImage className="angular" />;
-    } else if (isUrlExtension(item.path) && depth === 1) {
+    } else if (isExtensionDirectoryPath(item.path)) {
       return <AccessibleImage className="extension" />;
     }
 
@@ -263,7 +264,10 @@ class SourceTreeItem extends Component<Props, State> {
 
     if (isDirectory(item)) {
       // Domain level
-      if (depth === 1 && projectRoot === "") {
+      if (
+        (depth === 1 && projectRoot === "") ||
+        (depth === 0 && threads.find(thrd => thrd.actor === projectRoot))
+      ) {
         return <AccessibleImage className="globe-small" />;
       }
       return <AccessibleImage className="folder" />;
@@ -379,7 +383,7 @@ function getSourceContentValue(state, source: Source) {
 }
 
 function isExtensionDirectory(depth, extensionName) {
-  return extensionName && depth === 1;
+  return extensionName && (depth === 1 || depth === 0);
 }
 
 const mapStateToProps = (state, props: OwnProps) => {

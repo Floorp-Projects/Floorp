@@ -282,7 +282,36 @@ describe("SourceTreeItem", () => {
         "moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856",
         "moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856"
       );
-      const node = render({ item, depth: 0 });
+      const node = render({ item, depth: 1 });
+      expect(node).toMatchSnapshot();
+    });
+
+    it("should show icon for moz-extension item when a thread is set to root", async () => {
+      const item = createMockDirectory(
+        "moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856",
+        "moz-extension://e37c3c08-beac-a04b-8032-c4f699a1a856"
+      );
+      const node = render({
+        item,
+        depth: 0,
+        projectRoot: "server1.conn13.child1/thread19",
+        threads: [
+          { name: "Main Thread", actor: "server1.conn13.child1/thread19" },
+        ],
+      });
+      expect(node).toMatchSnapshot();
+    });
+
+    it("should show icon for domain item when a thread is set to root", async () => {
+      const item = createMockDirectory();
+      const node = render({
+        item,
+        depth: 0,
+        projectRoot: "server1.conn13.child1/thread19",
+        threads: [
+          { name: "Main Thread", actor: "server1.conn13.child1/thread19" },
+        ],
+      });
       expect(node).toMatchSnapshot();
     });
 

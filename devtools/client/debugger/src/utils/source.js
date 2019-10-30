@@ -28,6 +28,7 @@ import type {
   SourceActor,
   SourceContent,
   SourceLocation,
+  ThreadId,
 } from "../types";
 import { isFulfilled, type AsyncValue } from "./async-value";
 import type { Symbols } from "../reducers/types";
@@ -483,7 +484,23 @@ export function getRelativeUrl(source: Source, root: string) {
   return url.slice(url.indexOf(root) + root.length + 1);
 }
 
-export function underRoot(source: Source, root: string) {
+export function underRoot(
+  source: Source,
+  root: string,
+  threadActors: Array<ThreadId>
+) {
+  // source.url doesn't include thread actor ID, so remove the thread actor ID from the root
+  threadActors.forEach(threadActor => {
+    if (root.includes(threadActor)) {
+      root = root.slice(threadActor.length + 1);
+    }
+  });
+
+  if (source.url && source.url.includes("chrome://")) {
+    const { group, path } = getURL(source);
+    return (group + path).includes(root);
+  }
+
   return source.url && source.url.includes(root);
 }
 
@@ -507,6 +524,17 @@ export function getSourceQueryString(source: ?Source) {
 
 export function isUrlExtension(url: string) {
   return url.includes("moz-extension:") || url.includes("chrome-extension");
+}
+
+export function isExtensionDirectoryPath(url: string) {
+  if (isUrlExtension(url)) {
+    const urlArr = url.replace(/\/+/g, "/").split("/");
+    let extensionIndex = urlArr.indexOf("moz-extension:");
+    if (extensionIndex === -1) {
+      extensionIndex = urlArr.indexOf("chrome-extension:");
+    }
+    return !urlArr[extensionIndex + 2];
+  }
 }
 
 export function getPlainUrl(url: string): string {

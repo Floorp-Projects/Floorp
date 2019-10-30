@@ -194,13 +194,16 @@ export function clearProjectDirectoryRoot(cx: Context) {
 
 export function setProjectDirectoryRoot(cx: Context, newRoot: string) {
   return ({ dispatch, getState }: ThunkArgs) => {
-    // Remove the thread actor ID from the root path
     const threadActor = startsWithThreadActor(getState(), newRoot);
+
+    let curRoot = getProjectDirectoryRoot(getState());
+
+    // Remove the thread actor ID from the root path
     if (threadActor) {
       newRoot = newRoot.slice(threadActor.length + 1);
+      curRoot = curRoot.slice(threadActor.length + 1);
     }
 
-    const curRoot = getProjectDirectoryRoot(getState());
     if (newRoot && curRoot) {
       const newRootArr = newRoot.replace(/\/+/g, "/").split("/");
       const curRootArr = curRoot
