@@ -190,6 +190,11 @@
   height: 100%;
 }
 
+#urlbar:not([open]) > .urlbarView,
+#urlbar.megabar:not([breakout]) > .urlbarView {
+  display: none;
+}
+
 #urlbar[breakout][breakout-extend],
 #urlbar[breakout][breakout-extend-disabled][open] {
   /* The z-index needs to be big enough to trump other positioned UI pieces
