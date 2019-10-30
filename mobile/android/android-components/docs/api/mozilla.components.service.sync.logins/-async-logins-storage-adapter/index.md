@@ -39,3 +39,9 @@ A helper class to wrap a synchronous [LoginsStorage](#) implementation and make 
 |---|---|
 | [forDatabase](for-database.md) | `fun forDatabase(dbPath: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`AsyncLoginsStorageAdapter`](./index.md)`<DatabaseLoginsStorage>`<br>Creates an [AsyncLoginsStorage](../-async-logins-storage/index.md) that is backed by a [DatabaseLoginsStorage](#). |
 | [inMemory](in-memory.md) | `fun inMemory(items: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`ServerPassword`](../-server-password.md)`>): `[`AsyncLoginsStorageAdapter`](./index.md)`<MemoryLoginsStorage>`<br>Creates an [AsyncLoginsStorage](../-async-logins-storage/index.md) that is backed by a [MemoryLoginsStorage](#). |
+
+### Extension Functions
+
+| Name | Summary |
+|---|---|
+| [loadResourceAsString](../../mozilla.components.support.test.file/kotlin.-any/load-resource-as-string.md) | `fun `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`.loadResourceAsString(path: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Loads a file from the resources folder and returns its content as a string object. |

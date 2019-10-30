@@ -36,3 +36,9 @@ Holds configuration data for a Custom Tab.
 |---|---|
 | [EXTRA_ADDITIONAL_TRUSTED_ORIGINS](-e-x-t-r-a_-a-d-d-i-t-i-o-n-a-l_-t-r-u-s-t-e-d_-o-r-i-g-i-n-s.md) | `const val EXTRA_ADDITIONAL_TRUSTED_ORIGINS: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
 | [EXTRA_NAVIGATION_BAR_COLOR](-e-x-t-r-a_-n-a-v-i-g-a-t-i-o-n_-b-a-r_-c-o-l-o-r.md) | `const val EXTRA_NAVIGATION_BAR_COLOR: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
+
+### Extension Functions
+
+| Name | Summary |
+|---|---|
+| [loadResourceAsString](../../mozilla.components.support.test.file/kotlin.-any/load-resource-as-string.md) | `fun `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`.loadResourceAsString(path: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Loads a file from the resources folder and returns its content as a string object. |

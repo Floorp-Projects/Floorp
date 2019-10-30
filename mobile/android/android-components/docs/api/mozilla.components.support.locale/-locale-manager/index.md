@@ -12,3 +12,9 @@ Helper for apps that want to change locale defined by the system.
 |---|---|
 | [getCurrentLocale](get-current-locale.md) | `fun getCurrentLocale(context: <ERROR CLASS>): `[`Locale`](https://developer.android.com/reference/java/util/Locale.html)`?`<br>The latest stored locale saved by [setNewLocale](set-new-locale.md). |
 | [setNewLocale](set-new-locale.md) | `fun setNewLocale(context: <ERROR CLASS>, language: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): <ERROR CLASS>`<br>Change the system defined locale to the indicated in the [language](set-new-locale.md#mozilla.components.support.locale.LocaleManager$setNewLocale(, kotlin.String)/language) parameter. This new [language](set-new-locale.md#mozilla.components.support.locale.LocaleManager$setNewLocale(, kotlin.String)/language) will be stored and will be the new current locale returned by [getCurrentLocale](get-current-locale.md). |
+
+### Extension Functions
+
+| Name | Summary |
+|---|---|
+| [loadResourceAsString](../../mozilla.components.support.test.file/kotlin.-any/load-resource-as-string.md) | `fun `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`.loadResourceAsString(path: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Loads a file from the resources folder and returns its content as a string object. |

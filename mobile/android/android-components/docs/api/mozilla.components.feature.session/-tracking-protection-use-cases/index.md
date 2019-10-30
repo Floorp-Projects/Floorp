@@ -41,3 +41,9 @@ Contains use cases related to the tracking protection.
 | [removeAllExceptions](remove-all-exceptions.md) | `val removeAllExceptions: `[`RemoveAllExceptionsUseCase`](-remove-all-exceptions-use-case/index.md) |
 | [removeException](remove-exception.md) | `val removeException: `[`RemoveExceptionUseCase`](-remove-exception-use-case/index.md) |
 | [sessionManager](session-manager.md) | `val sessionManager: `[`SessionManager`](../../mozilla.components.browser.session/-session-manager/index.md)<br>the application's [SessionManager](../../mozilla.components.browser.session/-session-manager/index.md). |
+
+### Extension Functions
+
+| Name | Summary |
+|---|---|
+| [loadResourceAsString](../../mozilla.components.support.test.file/kotlin.-any/load-resource-as-string.md) | `fun `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`.loadResourceAsString(path: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Loads a file from the resources folder and returns its content as a string object. |

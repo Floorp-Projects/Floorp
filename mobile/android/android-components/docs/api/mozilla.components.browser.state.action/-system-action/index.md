@@ -12,6 +12,12 @@
 |---|---|
 | [LowMemoryAction](-low-memory-action.md) | `object LowMemoryAction : `[`SystemAction`](./index.md)<br>Optimizes the [BrowserState](../../mozilla.components.browser.state.state/-browser-state/index.md) by removing unneeded and optional resources if the system is in a low memory condition. |
 
+### Extension Functions
+
+| Name | Summary |
+|---|---|
+| [loadResourceAsString](../../mozilla.components.support.test.file/kotlin.-any/load-resource-as-string.md) | `fun `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`.loadResourceAsString(path: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Loads a file from the resources folder and returns its content as a string object. |
+
 ### Inheritors
 
 | Name | Summary |

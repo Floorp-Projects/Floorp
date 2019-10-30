@@ -33,3 +33,9 @@ in which case can just transpose positions as needed.
 | Name | Summary |
 |---|---|
 | [create](create.md) | `fun create(string: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`ReversibleString`](./index.md)<br>Create a [ReversibleString](./index.md) for the provided [String](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html). |
+
+### Extension Functions
+
+| Name | Summary |
+|---|---|
+| [loadResourceAsString](../../mozilla.components.support.test.file/kotlin.-any/load-resource-as-string.md) | `fun `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`.loadResourceAsString(path: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Loads a file from the resources folder and returns its content as a string object. |

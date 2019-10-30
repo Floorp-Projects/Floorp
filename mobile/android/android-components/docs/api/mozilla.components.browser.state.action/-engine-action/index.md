@@ -15,6 +15,12 @@
 | [UnlinkEngineSessionAction](-unlink-engine-session-action/index.md) | `data class UnlinkEngineSessionAction : `[`EngineAction`](./index.md)<br>Detaches the current [EngineSession](../../mozilla.components.concept.engine/-engine-session/index.md) from the session with the provided [sessionId](-unlink-engine-session-action/session-id.md). |
 | [UpdateEngineSessionStateAction](-update-engine-session-state-action/index.md) | `data class UpdateEngineSessionStateAction : `[`EngineAction`](./index.md)<br>Updates the [EngineSessionState](../../mozilla.components.concept.engine/-engine-session-state/index.md) of the session with the provided [sessionId](-update-engine-session-state-action/session-id.md). |
 
+### Extension Functions
+
+| Name | Summary |
+|---|---|
+| [loadResourceAsString](../../mozilla.components.support.test.file/kotlin.-any/load-resource-as-string.md) | `fun `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`.loadResourceAsString(path: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Loads a file from the resources folder and returns its content as a string object. |
+
 ### Inheritors
 
 | Name | Summary |

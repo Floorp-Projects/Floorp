@@ -74,3 +74,9 @@ implemented by the DisplayToolbar and EditToolbar classes.
 | Name | Summary |
 |---|---|
 | [asView](../../mozilla.components.concept.toolbar/-toolbar/as-view.md) | `open fun asView(): <ERROR CLASS>`<br>Casts this toolbar to an Android View object. |
+
+### Extension Functions
+
+| Name | Summary |
+|---|---|
+| [loadResourceAsString](../../mozilla.components.support.test.file/kotlin.-any/load-resource-as-string.md) | `fun `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`.loadResourceAsString(path: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Loads a file from the resources folder and returns its content as a string object. |

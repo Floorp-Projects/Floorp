@@ -29,3 +29,9 @@ providing an instance to `GeckoRuntimeSettings.Builder().telemetryDelegate`.
 | [onLongScalar](on-long-scalar.md) | `fun onLongScalar(metric: <ERROR CLASS><`[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html)`>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [onStringScalar](on-string-scalar.md) | `fun onStringScalar(metric: <ERROR CLASS><`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [onTelemetryReceived](on-telemetry-received.md) | `fun onTelemetryReceived(metric: `[`Metric`](https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/RuntimeTelemetry/Metric.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
+
+### Extension Functions
+
+| Name | Summary |
+|---|---|
+| [loadResourceAsString](../../mozilla.components.support.test.file/kotlin.-any/load-resource-as-string.md) | `fun `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`.loadResourceAsString(path: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Loads a file from the resources folder and returns its content as a string object. |

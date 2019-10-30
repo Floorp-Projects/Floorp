@@ -23,3 +23,9 @@ Holds functions that parse the JSON returned by the Pocket API and converts them
 | Name | Summary |
 |---|---|
 | [newInstance](new-instance.md) | `fun newInstance(): `[`PocketJSONParser`](./index.md)<br>Returns a new instance of [PocketJSONParser](./index.md). |
+
+### Extension Functions
+
+| Name | Summary |
+|---|---|
+| [loadResourceAsString](../../mozilla.components.support.test.file/kotlin.-any/load-resource-as-string.md) | `fun `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`.loadResourceAsString(path: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Loads a file from the resources folder and returns its content as a string object. |

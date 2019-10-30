@@ -39,3 +39,9 @@ https://developer.android.com/studio/command-line/adb#am
 | [OVERRIDE_EXPERIMENT_EXTRA_KEY](-o-v-e-r-r-i-d-e_-e-x-p-e-r-i-m-e-n-t_-e-x-t-r-a_-k-e-y.md) | `const val OVERRIDE_EXPERIMENT_EXTRA_KEY: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Overrides the current experiment and set the active experiment to the given `branch`. This command requires two parameters to be passed, `overrideExperiment` and `branch` in order for it to work. |
 | [SET_KINTO_INSTANCE_EXTRA_KEY](-s-e-t_-k-i-n-t-o_-i-n-s-t-a-n-c-e_-e-x-t-r-a_-k-e-y.md) | `const val SET_KINTO_INSTANCE_EXTRA_KEY: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Sets the Kinto endpoint to the supplied endpoint. Must be one of: `dev`, `staging`, or `prod`. |
 | [UPDATE_EXPERIMENTS_EXTRA_KEY](-u-p-d-a-t-e_-e-x-p-e-r-i-m-e-n-t-s_-e-x-t-r-a_-k-e-y.md) | `const val UPDATE_EXPERIMENTS_EXTRA_KEY: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Fetch experiments from the server and update the active experiment if necessary. |
+
+### Extension Functions
+
+| Name | Summary |
+|---|---|
+| [loadResourceAsString](../../mozilla.components.support.test.file/kotlin.-any/load-resource-as-string.md) | `fun `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`.loadResourceAsString(path: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Loads a file from the resources folder and returns its content as a string object. |

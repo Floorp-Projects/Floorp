@@ -30,3 +30,9 @@ https://github.com/publicsuffix/list
 | [isPublicSuffix](is-public-suffix.md) | `fun isPublicSuffix(domain: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): Deferred<`[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`>`<br>Returns true if the given [domain](is-public-suffix.md#mozilla.components.lib.publicsuffixlist.PublicSuffixList$isPublicSuffix(kotlin.String)/domain) is a public suffix; false otherwise. |
 | [prefetch](prefetch.md) | `fun prefetch(): Deferred<`[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`>`<br>Prefetch the public suffix list from disk so that it is available in memory. |
 | [stripPublicSuffix](strip-public-suffix.md) | `fun stripPublicSuffix(domain: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): <ERROR CLASS>`<br>Strips the public suffix from the given [domain](strip-public-suffix.md#mozilla.components.lib.publicsuffixlist.PublicSuffixList$stripPublicSuffix(kotlin.String)/domain). Returns the original domain if no public suffix could be stripped. |
+
+### Extension Functions
+
+| Name | Summary |
+|---|---|
+| [loadResourceAsString](../../mozilla.components.support.test.file/kotlin.-any/load-resource-as-string.md) | `fun `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`.loadResourceAsString(path: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Loads a file from the resources folder and returns its content as a string object. |

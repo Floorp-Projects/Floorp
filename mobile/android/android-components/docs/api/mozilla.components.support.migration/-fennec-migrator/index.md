@@ -29,3 +29,9 @@ Entrypoint for Fennec data migration. See [Builder](-builder/index.md) for publi
 | Name | Summary |
 |---|---|
 | [migrateAsync](migrate-async.md) | `fun migrateAsync(): Deferred<`[`MigrationResults`](../-migration-results.md)`>`<br>Performs configured data migration. See [Builder](-builder/index.md) for how to configure a data migration. |
+
+### Extension Functions
+
+| Name | Summary |
+|---|---|
+| [loadResourceAsString](../../mozilla.components.support.test.file/kotlin.-any/load-resource-as-string.md) | `fun `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`.loadResourceAsString(path: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Loads a file from the resources folder and returns its content as a string object. |

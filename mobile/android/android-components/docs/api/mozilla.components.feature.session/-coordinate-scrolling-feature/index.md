@@ -43,3 +43,9 @@ A use case could be collapsing a toolbar every time that the user scrolls.
 | Name | Summary |
 |---|---|
 | [DEFAULT_SCROLL_FLAGS](-d-e-f-a-u-l-t_-s-c-r-o-l-l_-f-l-a-g-s.md) | `const val DEFAULT_SCROLL_FLAGS: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) |
+
+### Extension Functions
+
+| Name | Summary |
+|---|---|
+| [loadResourceAsString](../../mozilla.components.support.test.file/kotlin.-any/load-resource-as-string.md) | `fun `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`.loadResourceAsString(path: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Loads a file from the resources folder and returns its content as a string object. |

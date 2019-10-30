@@ -39,3 +39,9 @@ A candidate for an item to be displayed in the context menu.
 | [createSaveImageCandidate](create-save-image-candidate.md) | `fun createSaveImageCandidate(context: <ERROR CLASS>, contextMenuUseCases: `[`ContextMenuUseCases`](../-context-menu-use-cases/index.md)`): `[`ContextMenuCandidate`](./index.md)<br>Context Menu item: "Save image". |
 | [createShareLinkCandidate](create-share-link-candidate.md) | `fun createShareLinkCandidate(context: <ERROR CLASS>): `[`ContextMenuCandidate`](./index.md)<br>Context Menu item: "Share Link". |
 | [defaultCandidates](default-candidates.md) | `fun defaultCandidates(context: <ERROR CLASS>, tabsUseCases: `[`TabsUseCases`](../../mozilla.components.feature.tabs/-tabs-use-cases/index.md)`, contextMenuUseCases: `[`ContextMenuUseCases`](../-context-menu-use-cases/index.md)`, snackBarParentView: <ERROR CLASS>, snackbarDelegate: `[`SnackbarDelegate`](-snackbar-delegate/index.md)` = DefaultSnackbarDelegate()): `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`ContextMenuCandidate`](./index.md)`>`<br>Returns the default list of context menu candidates. |
+
+### Extension Functions
+
+| Name | Summary |
+|---|---|
+| [loadResourceAsString](../../mozilla.components.support.test.file/kotlin.-any/load-resource-as-string.md) | `fun `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`.loadResourceAsString(path: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Loads a file from the resources folder and returns its content as a string object. |

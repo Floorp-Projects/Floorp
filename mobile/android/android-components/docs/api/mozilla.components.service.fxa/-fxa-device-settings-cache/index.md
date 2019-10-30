@@ -43,3 +43,9 @@ This class exists to provide background sync workers with access to [DeviceSetti
 | [clear](../../mozilla.components.support.base.utils/-shared-preferences-cache/clear.md) | `fun clear(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Clear cached values. |
 | [getCached](../../mozilla.components.support.base.utils/-shared-preferences-cache/get-cached.md) | `fun getCached(): `[`T`](../../mozilla.components.support.base.utils/-shared-preferences-cache/index.md#T)`?` |
 | [setToCache](../../mozilla.components.support.base.utils/-shared-preferences-cache/set-to-cache.md) | `fun setToCache(obj: `[`T`](../../mozilla.components.support.base.utils/-shared-preferences-cache/index.md#T)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
+
+### Extension Functions
+
+| Name | Summary |
+|---|---|
+| [loadResourceAsString](../../mozilla.components.support.test.file/kotlin.-any/load-resource-as-string.md) | `fun `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`.loadResourceAsString(path: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Loads a file from the resources folder and returns its content as a string object. |

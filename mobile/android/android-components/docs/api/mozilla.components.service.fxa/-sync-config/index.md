@@ -18,3 +18,9 @@ Configuration for sync.
 |---|---|
 | [supportedEngines](supported-engines.md) | `val supportedEngines: `[`Set`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-set/index.html)`<`[`SyncEngine`](../-sync-engine/index.md)`>`<br>A set of supported sync engines, exposed via [GlobalSyncableStoreProvider](../../mozilla.components.service.fxa.sync/-global-syncable-store-provider/index.md). |
 | [syncPeriodInMinutes](sync-period-in-minutes.md) | `val syncPeriodInMinutes: `[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html)`?`<br>Optional, how frequently periodic sync should happen. If this is `null`, periodic syncing will be disabled. |
+
+### Extension Functions
+
+| Name | Summary |
+|---|---|
+| [loadResourceAsString](../../mozilla.components.support.test.file/kotlin.-any/load-resource-as-string.md) | `fun `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`.loadResourceAsString(path: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Loads a file from the resources folder and returns its content as a string object. |

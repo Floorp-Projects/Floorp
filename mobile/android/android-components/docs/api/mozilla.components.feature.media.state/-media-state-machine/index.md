@@ -28,3 +28,9 @@ Other components can subscribe to the state machine to get notified about [Media
 | [reset](reset.md) | `fun reset(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Resets the [MediaState](../-media-state/index.md) to [MediaState.None](../-media-state/-none/index.md). |
 | [start](start.md) | `fun start(sessionManager: `[`SessionManager`](../../mozilla.components.browser.session/-session-manager/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Start observing [Session](../../mozilla.components.browser.session/-session/index.md) and their [Media](../../mozilla.components.concept.engine.media/-media/index.md) and create an aggregated [MediaState](../-media-state/index.md) that can be observed. |
 | [stop](stop.md) | `fun stop(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Stop observing [Session](../../mozilla.components.browser.session/-session/index.md) and their [Media](../../mozilla.components.concept.engine.media/-media/index.md). |
+
+### Extension Functions
+
+| Name | Summary |
+|---|---|
+| [loadResourceAsString](../../mozilla.components.support.test.file/kotlin.-any/load-resource-as-string.md) | `fun `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`.loadResourceAsString(path: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Loads a file from the resources folder and returns its content as a string object. |

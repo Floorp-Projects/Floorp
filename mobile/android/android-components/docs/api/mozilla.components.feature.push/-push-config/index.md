@@ -30,3 +30,9 @@ Configuration object for initializing the Push Manager with an AutoPush server.
 | [senderId](sender-id.md) | `val senderId: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>The project identifier set by the server. Contact your server ops team to know what value to set. |
 | [serverHost](server-host.md) | `val serverHost: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>The sync server address. |
 | [serviceType](service-type.md) | `val serviceType: `[`ServiceType`](../-service-type/index.md)<br>The push services that the AutoPush server supports. |
+
+### Extension Functions
+
+| Name | Summary |
+|---|---|
+| [loadResourceAsString](../../mozilla.components.support.test.file/kotlin.-any/load-resource-as-string.md) | `fun `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`.loadResourceAsString(path: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Loads a file from the resources folder and returns its content as a string object. |

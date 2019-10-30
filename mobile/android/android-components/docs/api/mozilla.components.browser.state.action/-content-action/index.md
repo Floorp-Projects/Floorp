@@ -30,6 +30,12 @@
 | [UpdateTitleAction](-update-title-action/index.md) | `data class UpdateTitleAction : `[`ContentAction`](./index.md)<br>Updates the title of the [ContentState](../../mozilla.components.browser.state.state/-content-state/index.md) with the given [sessionId](-update-title-action/session-id.md). |
 | [UpdateUrlAction](-update-url-action/index.md) | `data class UpdateUrlAction : `[`ContentAction`](./index.md)<br>Updates the URL of the [ContentState](../../mozilla.components.browser.state.state/-content-state/index.md) with the given [sessionId](-update-url-action/session-id.md). |
 
+### Extension Functions
+
+| Name | Summary |
+|---|---|
+| [loadResourceAsString](../../mozilla.components.support.test.file/kotlin.-any/load-resource-as-string.md) | `fun `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`.loadResourceAsString(path: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Loads a file from the resources folder and returns its content as a string object. |
+
 ### Inheritors
 
 | Name | Summary |

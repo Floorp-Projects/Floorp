@@ -22,3 +22,9 @@ and instrumenting.
 | [loadKeyStore](load-key-store.md) | `open fun loadKeyStore(): `[`KeyStore`](https://developer.android.com/reference/java/security/KeyStore.html)<br>Creates and initializes the KeyStore in use. |
 | [makeKeyFor](make-key-for.md) | `open fun makeKeyFor(label: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`SecretKey`](https://developer.android.com/reference/javax/crypto/SecretKey.html)<br>Creates a SecretKey for the given label. |
 | [removeKeyFor](remove-key-for.md) | `fun removeKeyFor(label: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Deletes a key with the given label. |
+
+### Extension Functions
+
+| Name | Summary |
+|---|---|
+| [loadResourceAsString](../../mozilla.components.support.test.file/kotlin.-any/load-resource-as-string.md) | `fun `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`.loadResourceAsString(path: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Loads a file from the resources folder and returns its content as a string object. |

@@ -19,3 +19,9 @@ Configuration for the current device.
 | [capabilities](capabilities.md) | `val capabilities: `[`Set`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-set/index.html)`<`[`DeviceCapability`](../../mozilla.components.concept.sync/-device-capability/index.md)`>`<br>A set of device capabilities, such as SEND_TAB. This set can be expanded by re-initializing [FxaAccountManager](../../mozilla.components.service.fxa.manager/-fxa-account-manager/index.md) with a new set (e.g. on app restart). Shrinking a set of capabilities is currently not supported. |
 | [name](name.md) | `val name: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>An initial name to use for the device record which will be created during authentication. This can be changed later via [FxaDeviceConstellation](../-fxa-device-constellation/index.md). |
 | [type](type.md) | `val type: `[`DeviceType`](../../mozilla.components.concept.sync/-device-type/index.md)<br>Type of a device - mobile, desktop - used for displaying identifying icons on other devices. This cannot be changed once device record is created. |
+
+### Extension Functions
+
+| Name | Summary |
+|---|---|
+| [loadResourceAsString](../../mozilla.components.support.test.file/kotlin.-any/load-resource-as-string.md) | `fun `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`.loadResourceAsString(path: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Loads a file from the resources folder and returns its content as a string object. |

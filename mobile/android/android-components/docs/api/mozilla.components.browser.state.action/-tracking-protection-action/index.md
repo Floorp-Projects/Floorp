@@ -17,6 +17,12 @@
 | [TrackerBlockedAction](-tracker-blocked-action/index.md) | `data class TrackerBlockedAction : `[`TrackingProtectionAction`](./index.md)<br>Adds a [Tracker](../../mozilla.components.concept.engine.content.blocking/-tracker/index.md) to the [TrackingProtectionState.blockedTrackers](../../mozilla.components.browser.state.state/-tracking-protection-state/blocked-trackers.md) list. |
 | [TrackerLoadedAction](-tracker-loaded-action/index.md) | `data class TrackerLoadedAction : `[`TrackingProtectionAction`](./index.md)<br>Adds a [Tracker](../../mozilla.components.concept.engine.content.blocking/-tracker/index.md) to the [TrackingProtectionState.loadedTrackers](../../mozilla.components.browser.state.state/-tracking-protection-state/loaded-trackers.md) list. |
 
+### Extension Functions
+
+| Name | Summary |
+|---|---|
+| [loadResourceAsString](../../mozilla.components.support.test.file/kotlin.-any/load-resource-as-string.md) | `fun `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`.loadResourceAsString(path: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Loads a file from the resources folder and returns its content as a string object. |
+
 ### Inheritors
 
 | Name | Summary |

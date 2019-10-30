@@ -39,3 +39,4 @@ We could also consider a heavier use of generics, as well.
 | Name | Summary |
 |---|---|
 | [into](../../mozilla.components.service.sync.logins/into.md) | `fun `[`SyncAuthInfo`](./index.md)`.into(): `[`SyncUnlockInfo`](../../mozilla.components.service.sync.logins/-sync-unlock-info.md)<br>Conversion from a generic AuthInfo type into a type 'logins' lib uses at the interface boundary. |
+| [loadResourceAsString](../../mozilla.components.support.test.file/kotlin.-any/load-resource-as-string.md) | `fun `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`.loadResourceAsString(path: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Loads a file from the resources folder and returns its content as a string object. |

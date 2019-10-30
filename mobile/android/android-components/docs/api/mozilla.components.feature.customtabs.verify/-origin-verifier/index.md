@@ -21,3 +21,9 @@ lifecycle and reuses that without making any new network requests.
 | Name | Summary |
 |---|---|
 | [verifyOrigin](verify-origin.md) | `suspend fun verifyOrigin(origin: <ERROR CLASS>): <ERROR CLASS>`<br>Verify the claimed origin for the cached package name asynchronously. This will end up making a network request for non-cached origins with a HTTP [Client](../../mozilla.components.concept.fetch/-client/index.md). |
+
+### Extension Functions
+
+| Name | Summary |
+|---|---|
+| [loadResourceAsString](../../mozilla.components.support.test.file/kotlin.-any/load-resource-as-string.md) | `fun `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`.loadResourceAsString(path: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Loads a file from the resources folder and returns its content as a string object. |

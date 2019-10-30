@@ -2,12 +2,10 @@
 
 # requireInteraction
 
-`val requireInteraction: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/webnotifications/WebNotification.kt#L33)
+`val requireInteraction: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/webnotifications/WebNotification.kt#L27)
 
-Preference flag that indicates the notification should remain
-active until the user clicks or dismisses it.
+Preference flag that indicates the notification should remain.
 
 ### Property
 
-`requireInteraction` - Preference flag that indicates the notification should remain
-active until the user clicks or dismisses it.
+`requireInteraction` - Preference flag that indicates the notification should remain.

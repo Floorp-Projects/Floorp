@@ -24,3 +24,9 @@ Storage layer for the enabled/disabled state of [SyncEngine](../../mozilla.compo
 | Name | Summary |
 |---|---|
 | [SYNC_ENGINES_KEY](-s-y-n-c_-e-n-g-i-n-e-s_-k-e-y.md) | `const val SYNC_ENGINES_KEY: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
+
+### Extension Functions
+
+| Name | Summary |
+|---|---|
+| [loadResourceAsString](../../mozilla.components.support.test.file/kotlin.-any/load-resource-as-string.md) | `fun `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`.loadResourceAsString(path: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Loads a file from the resources folder and returns its content as a string object. |

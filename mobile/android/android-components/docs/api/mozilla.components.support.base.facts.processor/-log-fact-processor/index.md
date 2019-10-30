@@ -22,4 +22,5 @@ A [FactProcessor](../../mozilla.components.support.base.facts/-fact-processor/in
 
 | Name | Summary |
 |---|---|
+| [loadResourceAsString](../../mozilla.components.support.test.file/kotlin.-any/load-resource-as-string.md) | `fun `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`.loadResourceAsString(path: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Loads a file from the resources folder and returns its content as a string object. |
 | [register](../../mozilla.components.support.base.facts/register.md) | `fun `[`FactProcessor`](../../mozilla.components.support.base.facts/-fact-processor/index.md)`.register(): `[`Facts`](../../mozilla.components.support.base.facts/-facts/index.md)<br>Registers this [FactProcessor](../../mozilla.components.support.base.facts/-fact-processor/index.md) to collect [Fact](../../mozilla.components.support.base.facts/-fact/index.md) instances from the [Facts](../../mozilla.components.support.base.facts/-facts/index.md) singleton. |

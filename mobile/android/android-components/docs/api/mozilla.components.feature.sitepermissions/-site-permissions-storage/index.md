@@ -29,3 +29,9 @@ A storage implementation to save [SitePermissions](../-site-permissions/index.md
 | [removeAll](remove-all.md) | `fun removeAll(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Deletes all sitePermissions sitePermissions. |
 | [save](save.md) | `fun save(sitePermissions: `[`SitePermissions`](../-site-permissions/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Persists the [sitePermissions](save.md#mozilla.components.feature.sitepermissions.SitePermissionsStorage$save(mozilla.components.feature.sitepermissions.SitePermissions)/sitePermissions) provided as a parameter. |
 | [update](update.md) | `fun update(sitePermissions: `[`SitePermissions`](../-site-permissions/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Replaces an existing SitePermissions with the values of [sitePermissions](update.md#mozilla.components.feature.sitepermissions.SitePermissionsStorage$update(mozilla.components.feature.sitepermissions.SitePermissions)/sitePermissions) provided as a parameter. |
+
+### Extension Functions
+
+| Name | Summary |
+|---|---|
+| [loadResourceAsString](../../mozilla.components.support.test.file/kotlin.-any/load-resource-as-string.md) | `fun `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`.loadResourceAsString(path: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Loads a file from the resources folder and returns its content as a string object. |

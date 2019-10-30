@@ -20,3 +20,9 @@ Marks the state of a custom tabs [Relation](#) verification.
 | [relation](relation.md) | `val relation: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)<br>Relationship type to verify. |
 | [status](status.md) | `val status: `[`VerificationStatus`](../-verification-status/index.md)<br>State of the verification process. |
 | [token](token.md) | `val token: CustomTabsSessionToken`<br>Token of the custom tab to verify. |
+
+### Extension Functions
+
+| Name | Summary |
+|---|---|
+| [loadResourceAsString](../../mozilla.components.support.test.file/kotlin.-any/load-resource-as-string.md) | `fun `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`.loadResourceAsString(path: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Loads a file from the resources folder and returns its content as a string object. |

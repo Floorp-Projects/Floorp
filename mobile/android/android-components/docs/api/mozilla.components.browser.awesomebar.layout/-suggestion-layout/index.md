@@ -15,6 +15,12 @@ in order to create a customized look &amp; feel.
 | [createViewHolder](create-view-holder.md) | `abstract fun createViewHolder(awesomeBar: `[`BrowserAwesomeBar`](../../mozilla.components.browser.awesomebar/-browser-awesome-bar/index.md)`, view: <ERROR CLASS>, layoutId: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`): `[`SuggestionViewHolder`](../-suggestion-view-holder/index.md)<br>Creates and returns a [SuggestionViewHolder](../-suggestion-view-holder/index.md) instance for the provided [View](#). The [BrowserAwesomeBar](../../mozilla.components.browser.awesomebar/-browser-awesome-bar/index.md) will call [SuggestionViewHolder.bind](../-suggestion-view-holder/bind.md) once this view holder should display the data of a specific [AwesomeBar.Suggestion](../../mozilla.components.concept.awesomebar/-awesome-bar/-suggestion/index.md). |
 | [getLayoutResource](get-layout-resource.md) | `abstract fun getLayoutResource(suggestion: `[`Suggestion`](../../mozilla.components.concept.awesomebar/-awesome-bar/-suggestion/index.md)`): `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)<br>Returns a layout resource ID to be used for this suggestion. The [BrowserAwesomeBar](../../mozilla.components.browser.awesomebar/-browser-awesome-bar/index.md) implementation will take care of inflating the layout or re-using instances as needed. |
 
+### Extension Functions
+
+| Name | Summary |
+|---|---|
+| [loadResourceAsString](../../mozilla.components.support.test.file/kotlin.-any/load-resource-as-string.md) | `fun `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`.loadResourceAsString(path: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Loads a file from the resources folder and returns its content as a string object. |
+
 ### Inheritors
 
 | Name | Summary |

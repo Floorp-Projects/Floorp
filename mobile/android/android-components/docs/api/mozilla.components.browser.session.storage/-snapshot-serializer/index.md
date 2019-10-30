@@ -30,3 +30,9 @@ if it can't be guaranteed that the parent tab is still available when the child 
 | [itemFromJSON](item-from-j-s-o-n.md) | `fun itemFromJSON(engine: `[`Engine`](../../mozilla.components.concept.engine/-engine/index.md)`, json: <ERROR CLASS>): `[`Item`](../../mozilla.components.browser.session/-session-manager/-snapshot/-item/index.md) |
 | [itemToJSON](item-to-j-s-o-n.md) | `fun itemToJSON(item: `[`Item`](../../mozilla.components.browser.session/-session-manager/-snapshot/-item/index.md)`): <ERROR CLASS>` |
 | [toJSON](to-j-s-o-n.md) | `fun toJSON(snapshot: `[`Snapshot`](../../mozilla.components.browser.session/-session-manager/-snapshot/index.md)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
+
+### Extension Functions
+
+| Name | Summary |
+|---|---|
+| [loadResourceAsString](../../mozilla.components.support.test.file/kotlin.-any/load-resource-as-string.md) | `fun `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`.loadResourceAsString(path: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Loads a file from the resources folder and returns its content as a string object. |

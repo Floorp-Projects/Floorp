@@ -33,3 +33,9 @@ the Sync servers.
 |---|---|
 | [sendToAllAsync](send-to-all-async.md) | `val sendToAllAsync: `[`SendToAllUseCase`](-send-to-all-use-case/index.md) |
 | [sendToDeviceAsync](send-to-device-async.md) | `val sendToDeviceAsync: `[`SendToDeviceUseCase`](-send-to-device-use-case/index.md) |
+
+### Extension Functions
+
+| Name | Summary |
+|---|---|
+| [loadResourceAsString](../../mozilla.components.support.test.file/kotlin.-any/load-resource-as-string.md) | `fun `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`.loadResourceAsString(path: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Loads a file from the resources folder and returns its content as a string object. |

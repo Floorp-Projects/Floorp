@@ -36,3 +36,9 @@ Entry point of the library
 | [setOverrideNow](set-override-now.md) | `fun setOverrideNow(context: <ERROR CLASS>, descriptor: `[`ExperimentDescriptor`](../-experiment-descriptor/index.md)`, active: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Overrides a specified experiment as a blocking operation |
 | [updateExperiments](update-experiments.md) | `fun updateExperiments(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Requests new experiments from the server and saves them to local storage |
 | [withExperiment](with-experiment.md) | `fun withExperiment(context: <ERROR CLASS>, descriptor: `[`ExperimentDescriptor`](../-experiment-descriptor/index.md)`, block: (`[`Experiment`](../-experiment/index.md)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Performs an action if the user is part of the specified experiment |
+
+### Extension Functions
+
+| Name | Summary |
+|---|---|
+| [loadResourceAsString](../../mozilla.components.support.test.file/kotlin.-any/load-resource-as-string.md) | `fun `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`.loadResourceAsString(path: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Loads a file from the resources folder and returns its content as a string object. |

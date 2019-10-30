@@ -16,6 +16,7 @@ A [FactProcessor](./index.md) receives [Fact](../-fact/index.md) instances to pr
 
 | Name | Summary |
 |---|---|
+| [loadResourceAsString](../../mozilla.components.support.test.file/kotlin.-any/load-resource-as-string.md) | `fun `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`.loadResourceAsString(path: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Loads a file from the resources folder and returns its content as a string object. |
 | [register](../register.md) | `fun `[`FactProcessor`](./index.md)`.register(): `[`Facts`](../-facts/index.md)<br>Registers this [FactProcessor](./index.md) to collect [Fact](../-fact/index.md) instances from the [Facts](../-facts/index.md) singleton. |
 
 ### Inheritors
