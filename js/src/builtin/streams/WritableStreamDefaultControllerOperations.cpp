@@ -15,105 +15,33 @@
 
 #include "builtin/Promise.h"  // js::PromiseObject
 #include "builtin/streams/MiscellaneousOperations.h"  // js::CreateAlgorithmFromUnderlyingMethod, js::InvokeOrNoop
-#include "builtin/streams/QueueWithSizes.h"  // js::{EnqueueValueWithSize,ResetQueue}
+#include "builtin/streams/QueueWithSizes.h"  // js::ResetQueue
 #include "builtin/streams/WritableStream.h"  // js::WritableStream
 #include "builtin/streams/WritableStreamDefaultController.h"  // js::WritableStreamDefaultController
 #include "builtin/streams/WritableStreamOperations.h"  // js::WritableStream{DealWithRejection,{Start,Finish}Erroring,UpdateBackpressure}
 #include "js/CallArgs.h"    // JS::CallArgs{,FromVp}
 #include "js/RootingAPI.h"  // JS::Handle, JS::Rooted
-#include "js/Value.h"  // JS::{,Int32,Magic,Object}Value, JS::UndefinedHandleValue, JS_WRITABLESTREAM_CLOSE_RECORD
-#include "vm/Compartment.h"  // JS::Compartment
+#include "js/Value.h"       // JS::{,Object}Value
 #include "vm/JSContext.h"   // JSContext
 #include "vm/JSObject.h"    // JSObject
 #include "vm/List.h"        // js::ListObject
 #include "vm/Runtime.h"     // JSAtomState
 
 #include "builtin/streams/HandlerFunction-inl.h"  // js::TargetFromHandler
-#include "builtin/streams/MiscellaneousOperations-inl.h"  // js::PromiseCall
-#include "vm/Compartment-inl.h"                   // JS::Compartment::wrap
 #include "vm/JSContext-inl.h"                     // JSContext::check
 #include "vm/JSObject-inl.h"  // js::NewBuiltinClassInstance, js::NewObjectWithClassProto
-#include "vm/Realm-inl.h"     // js::AutoRealm
 
 using JS::CallArgs;
 using JS::CallArgsFromVp;
 using JS::Handle;
-using JS::Int32Value;
-using JS::MagicValue;
 using JS::ObjectValue;
 using JS::Rooted;
-using JS::UndefinedHandleValue;
 using JS::Value;
 
 using js::ListObject;
 using js::WritableStream;
 using js::WritableStreamDefaultController;
 using js::WritableStreamFinishErroring;
-
-/*** 4.7. Writable stream default controller internal methods ***************/
-
-/**
- * Streams spec, 4.7.5.1.
- *      [[AbortSteps]]( reason )
- */
-JSObject* js::WritableStreamControllerAbortSteps(
-    JSContext* cx, Handle<WritableStreamDefaultController*> unwrappedController,
-    Handle<Value> reason) {
-  cx->check(reason);
-
-  // Step 1: Let result be the result of performing this.[[abortAlgorithm]],
-  //         passing reason.
-  // CreateAlgorithmFromUnderlyingMethod(underlyingSink, "abort", 1, « »)
-  Rooted<Value> unwrappedAbortMethod(cx, unwrappedController->abortMethod());
-  Rooted<JSObject*> result(cx);
-  if (unwrappedAbortMethod.isUndefined()) {
-    // CreateAlgorithmFromUnderlyingMethod step 7.
-    result = PromiseObject::unforgeableResolve(cx, UndefinedHandleValue);
-    if (!result) {
-      return nullptr;
-    }
-  } else {
-    // CreateAlgorithmFromUnderlyingMethod step 6.c.i-ii.
-    {
-      AutoRealm ar(cx, unwrappedController);
-      cx->check(unwrappedAbortMethod);
-
-      Rooted<Value> underlyingSink(cx, unwrappedController->underlyingSink());
-      cx->check(underlyingSink);
-
-      Rooted<Value> wrappedReason(cx, reason);
-      if (!cx->compartment()->wrap(cx, &wrappedReason)) {
-        return nullptr;
-      }
-
-      result =
-          PromiseCall(cx, unwrappedAbortMethod, underlyingSink, wrappedReason);
-      if (!result) {
-        return nullptr;
-      }
-    }
-    if (!cx->compartment()->wrap(cx, &result)) {
-      return nullptr;
-    }
-  }
-
-  // Step 2: Perform ! WritableStreamDefaultControllerClearAlgorithms(this).
-  WritableStreamDefaultControllerClearAlgorithms(unwrappedController);
-
-  // Step 3: Return result.
-  return result;
-}
-
-/**
- * Streams spec, 4.7.5.2.
- *      [[ErrorSteps]]()
- */
-bool js::WritableStreamControllerErrorSteps(
-    JSContext* cx,
-    Handle<WritableStreamDefaultController*> unwrappedController) {
-  // Step 1: Perform ! ResetQueue(this).
-  return ResetQueue(cx, unwrappedController);
-}
 
 /*** 4.8. Writable stream default controller abstract operations ************/
 
@@ -224,16 +152,11 @@ MOZ_MUST_USE bool js::SetUpWritableStreamDefaultController(
     SinkAlgorithms sinkAlgorithms, Handle<Value> underlyingSink,
     Handle<Value> writeMethod, Handle<Value> closeMethod,
     Handle<Value> abortMethod, double highWaterMark, Handle<Value> size) {
-  cx->check(stream);
-  cx->check(underlyingSink);
-  cx->check(writeMethod);
+  cx->check(stream, underlyingSink, size);
   MOZ_ASSERT(writeMethod.isUndefined() || IsCallable(writeMethod));
-  cx->check(closeMethod);
   MOZ_ASSERT(closeMethod.isUndefined() || IsCallable(closeMethod));
-  cx->check(abortMethod);
   MOZ_ASSERT(abortMethod.isUndefined() || IsCallable(abortMethod));
   MOZ_ASSERT(highWaterMark >= 0);
-  cx->check(size);
   MOZ_ASSERT(size.isUndefined() || IsCallable(size));
 
   // Done elsewhere in the standard: Create the new controller.
@@ -418,97 +341,15 @@ void js::WritableStreamDefaultControllerClearAlgorithms(
  * Streams spec, 4.8.5.
  *      WritableStreamDefaultControllerClose ( controller )
  */
-bool js::WritableStreamDefaultControllerClose(
+MOZ_MUST_USE bool js::WritableStreamDefaultControllerClose(
     JSContext* cx,
     Handle<WritableStreamDefaultController*> unwrappedController) {
   // Step 1: Perform ! EnqueueValueWithSize(controller, "close", 0).
-  {
-    Rooted<Value> v(cx, MagicValue(JS_WRITABLESTREAM_CLOSE_RECORD));
-    Rooted<Value> size(cx, Int32Value(0));
-    if (!EnqueueValueWithSize(cx, unwrappedController, v, size)) {
-      return false;
-    }
-  }
-
   // Step 2: Perform
   //         ! WritableStreamDefaultControllerAdvanceQueueIfNeeded(controller).
-  return WritableStreamDefaultControllerAdvanceQueueIfNeeded(
-      cx, unwrappedController);
-}
-
-/**
- * Streams spec, 4.8.6.
- *      WritableStreamDefaultControllerGetChunkSize ( controller, chunk )
- */
-bool js::WritableStreamDefaultControllerGetChunkSize(
-    JSContext* cx, Handle<WritableStreamDefaultController*> unwrappedController,
-    Handle<Value> chunk, MutableHandle<Value> returnValue) {
-  cx->check(chunk);
-
-  // Step 1: Let returnValue be the result of performing
-  //         controller.[[strategySizeAlgorithm]], passing in chunk, and
-  //         interpreting the result as an ECMAScript completion value.
-
-  // We don't store a literal [[strategySizeAlgorithm]], only the value that if
-  // passed through |MakeSizeAlgorithmFromSizeFunction| wouldn't have triggered
-  // an error.  Perform the algorithm that function would return.
-  Rooted<Value> unwrappedStrategySize(cx, unwrappedController->strategySize());
-  if (unwrappedStrategySize.isUndefined()) {
-    // 6.3.8 step 1: If size is undefined, return an algorithm that returns 1.
-    // ...and then from this function...
-    // Step 3: Return returnValue.[[Value]].
-    returnValue.setInt32(1);
-    return true;
-  }
-
-  MOZ_ASSERT(IsCallable(unwrappedStrategySize));
-
-  {
-    bool success;
-    {
-      AutoRealm ar(cx, unwrappedController);
-      cx->check(unwrappedStrategySize);
-
-      Rooted<Value> wrappedChunk(cx, chunk);
-      if (!cx->compartment()->wrap(cx, &wrappedChunk)) {
-        return false;
-      }
-
-      // 6.3.8 step 3 (of |MakeSizeAlgorithmFromSizeFunction|):
-      //         Return an algorithm that performs the following steps, taking a
-      //         chunk argument:
-      //     a. Return ? Call(size, undefined, « chunk »).
-      success = Call(cx, unwrappedStrategySize, UndefinedHandleValue,
-                     wrappedChunk, returnValue);
-    }
-
-    // Step 3: (If returnValue is [not] an abrupt completion, )
-    //         Return returnValue.[[Value]].  (reordered for readability)
-    if (success) {
-      return cx->compartment()->wrap(cx, returnValue);
-    }
-  }
-
-  // Step 2: If returnValue is an abrupt completion,
-  if (!cx->isExceptionPending() || !cx->getPendingException(returnValue)) {
-    // Uncatchable error.  Die immediately without erroring the stream.
-    return false;
-  }
-  cx->check(returnValue);
-
-  cx->clearPendingException();
-
-  // Step 2.a: Perform
-  //           ! WritableStreamDefaultControllerErrorIfNeeded(
-  //                 controller, returnValue.[[Value]]).
-  if (!WritableStreamDefaultControllerErrorIfNeeded(cx, unwrappedController,
-                                                    returnValue)) {
-    return false;
-  }
-
-  // Step 2.b: Return 1.
-  returnValue.setInt32(1);
-  return true;
+  // XXX jwalden fill me in!
+  JS_ReportErrorASCII(cx, "nope");
+  return false;
 }
 
 /**
@@ -566,26 +407,6 @@ MOZ_MUST_USE bool WritableStreamDefaultControllerAdvanceQueueIfNeeded(
   // XXX jwalden fill me in!
   JS_ReportErrorASCII(cx, "nope");
   return false;
-}
-
-/**
- * Streams spec, 4.8.10.
- *      WritableStreamDefaultControllerErrorIfNeeded ( controller, error )
- */
-bool js::WritableStreamDefaultControllerErrorIfNeeded(
-    JSContext* cx, Handle<WritableStreamDefaultController*> unwrappedController,
-    Handle<Value> error) {
-  cx->check(error);
-
-  // Step 1: If controller.[[controlledWritableStream]].[[state]] is "writable",
-  //         perform ! WritableStreamDefaultControllerError(controller, error).
-  if (unwrappedController->stream()->writable()) {
-    if (!WritableStreamDefaultControllerError(cx, unwrappedController, error)) {
-      return false;
-    }
-  }
-
-  return true;
 }
 
 /**
