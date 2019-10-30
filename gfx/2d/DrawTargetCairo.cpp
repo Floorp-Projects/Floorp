@@ -1871,6 +1871,7 @@ already_AddRefed<DrawTarget> DrawTargetCairo::CreateShadowDrawTarget(
   return nullptr;
 }
 
+#ifndef USE_SKIA
 static inline pixman_format_code_t GfxFormatToPixmanFormat(
     SurfaceFormat aFormat) {
   switch (aFormat) {
@@ -1892,6 +1893,7 @@ static inline pixman_format_code_t GfxFormatToPixmanFormat(
       return (pixman_format_code_t)0;
   }
 }
+#endif
 
 static inline bool GfxMatrixToPixmanTransform(const Matrix4x4& aMatrix,
                                               pixman_transform* aResult) {
