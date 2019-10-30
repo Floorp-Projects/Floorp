@@ -144,7 +144,8 @@ struct VMFunctionData {
     RootId,
     RootFunction,
     RootValue,
-    RootCell
+    RootCell,
+    RootBigInt
   };
 
   // Contains an combination of enumerated types used by the gc for marking
@@ -395,6 +396,10 @@ struct TypeToDataType<JSLinearString*> {
 };
 
 template <>
+struct TypeToDataType<BigInt*> {
+  static const DataType result = Type_Object;
+};
+template <>
 struct TypeToDataType<HandleObject> {
   static const DataType result = Type_Handle;
 };
@@ -460,6 +465,10 @@ struct TypeToDataType<MutableHandleValue> {
 };
 template <>
 struct TypeToDataType<HandleId> {
+  static const DataType result = Type_Handle;
+};
+template <>
+struct TypeToDataType<HandleBigInt> {
   static const DataType result = Type_Handle;
 };
 
@@ -577,6 +586,11 @@ struct TypeToArgProperties<HandleObjectGroup> {
   static const uint32_t result =
       TypeToArgProperties<ObjectGroup*>::result | VMFunctionData::ByRef;
 };
+template <>
+struct TypeToArgProperties<HandleBigInt> {
+  static const uint32_t result =
+      TypeToArgProperties<BigInt*>::result | VMFunctionData::ByRef;
+};
 
 // Convert argument type to whether or not it should be passed in a float
 // register on platforms that have them, like x64.
@@ -674,6 +688,10 @@ template <>
 struct TypeToRootType<Handle<Scope*> > {
   static const uint32_t result = VMFunctionData::RootCell;
 };
+template <>
+struct TypeToRootType<HandleBigInt> {
+  static const uint32_t result = VMFunctionData::RootBigInt;
+};
 template <class T>
 struct TypeToRootType<Handle<T> > {
   // Fail for Handle types that aren't specialized above.
@@ -723,6 +741,10 @@ template <>
 struct OutParamToDataType<MutableHandleString> {
   static const DataType result = Type_Handle;
 };
+template <>
+struct OutParamToDataType<MutableHandleBigInt> {
+  static const DataType result = Type_Handle;
+};
 
 template <class>
 struct OutParamToRootType {
@@ -739,6 +761,10 @@ struct OutParamToRootType<MutableHandleObject> {
 template <>
 struct OutParamToRootType<MutableHandleString> {
   static const VMFunctionData::RootType result = VMFunctionData::RootString;
+};
+template <>
+struct OutParamToRootType<MutableHandleBigInt> {
+  static const VMFunctionData::RootType result = VMFunctionData::RootBigInt;
 };
 
 // Extract the last element of a list of types.

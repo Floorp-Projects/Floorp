@@ -2564,6 +2564,7 @@ void MacroAssembler::PushEmptyRooted(VMFunctionData::RootType rootType) {
     case VMFunctionData::RootString:
     case VMFunctionData::RootFunction:
     case VMFunctionData::RootCell:
+    case VMFunctionData::RootBigInt:
       Push(ImmPtr(nullptr));
       break;
     case VMFunctionData::RootValue:
@@ -2585,6 +2586,7 @@ void MacroAssembler::popRooted(VMFunctionData::RootType rootType,
     case VMFunctionData::RootFunction:
     case VMFunctionData::RootCell:
     case VMFunctionData::RootId:
+    case VMFunctionData::RootBigInt:
       Pop(cellReg);
       break;
     case VMFunctionData::RootValue:
