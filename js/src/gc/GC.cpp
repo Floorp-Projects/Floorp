@@ -5192,6 +5192,10 @@ void GCRuntime::startTask(GCParallelTask& task, gcstats::PhaseKind phase,
 
 void GCRuntime::joinTask(GCParallelTask& task, gcstats::PhaseKind phase,
                          AutoLockHelperThreadState& locked) {
+  if (task.isNotStarted(locked)) {
+    return;
+  }
+
   {
     gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::JOIN_PARALLEL_TASKS);
     task.joinWithLockHeld(locked);
