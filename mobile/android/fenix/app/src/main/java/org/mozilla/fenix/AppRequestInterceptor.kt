@@ -5,6 +5,7 @@
 package org.mozilla.fenix
 
 import android.content.Context
+import androidx.annotation.RawRes
 import mozilla.components.browser.errorpages.ErrorPages
 import mozilla.components.browser.errorpages.ErrorType
 import mozilla.components.concept.engine.EngineSession
@@ -48,71 +49,54 @@ class AppRequestInterceptor(private val context: Context) : RequestInterceptor {
         uri: String?
     ): RequestInterceptor.ErrorResponse? {
         val riskLevel = getRiskLevel(errorType)
-        val htmlResource = getPageForRiskLevel(riskLevel)
-        val cssResource = getStyleForRiskLevel(riskLevel)
 
         context.components.analytics.metrics.track(Event.ErrorPageVisited(errorType))
+
         return RequestInterceptor.ErrorResponse(
-            ErrorPages
-                .createErrorPage(context, errorType, uri = uri, htmlResource = htmlResource, cssResource = cssResource)
+            ErrorPages.createErrorPage(
+                context,
+                errorType,
+                uri = uri,
+                htmlResource = riskLevel.htmlRes,
+                cssResource = riskLevel.cssRes
+            )
         )
     }
 
-    private fun getPageForRiskLevel(riskLevel: RiskLevel): Int {
-        return when (riskLevel) {
-            RiskLevel.Low -> R.raw.low_risk_error_pages
-            RiskLevel.Medium -> R.raw.medium_and_high_risk_error_pages
-            RiskLevel.High -> R.raw.medium_and_high_risk_error_pages
-        }
+    private fun getRiskLevel(errorType: ErrorType): RiskLevel = when (errorType) {
+        ErrorType.UNKNOWN,
+        ErrorType.ERROR_NET_INTERRUPT,
+        ErrorType.ERROR_NET_TIMEOUT,
+        ErrorType.ERROR_CONNECTION_REFUSED,
+        ErrorType.ERROR_UNKNOWN_SOCKET_TYPE,
+        ErrorType.ERROR_REDIRECT_LOOP,
+        ErrorType.ERROR_OFFLINE,
+        ErrorType.ERROR_NET_RESET,
+        ErrorType.ERROR_UNSAFE_CONTENT_TYPE,
+        ErrorType.ERROR_CORRUPTED_CONTENT,
+        ErrorType.ERROR_CONTENT_CRASHED,
+        ErrorType.ERROR_INVALID_CONTENT_ENCODING,
+        ErrorType.ERROR_UNKNOWN_HOST,
+        ErrorType.ERROR_MALFORMED_URI,
+        ErrorType.ERROR_FILE_NOT_FOUND,
+        ErrorType.ERROR_FILE_ACCESS_DENIED,
+        ErrorType.ERROR_PROXY_CONNECTION_REFUSED,
+        ErrorType.ERROR_UNKNOWN_PROXY_HOST,
+        ErrorType.ERROR_UNKNOWN_PROTOCOL -> RiskLevel.Low
+
+        ErrorType.ERROR_SECURITY_BAD_CERT,
+        ErrorType.ERROR_SECURITY_SSL,
+        ErrorType.ERROR_PORT_BLOCKED -> RiskLevel.Medium
+
+        ErrorType.ERROR_SAFEBROWSING_HARMFUL_URI,
+        ErrorType.ERROR_SAFEBROWSING_MALWARE_URI,
+        ErrorType.ERROR_SAFEBROWSING_PHISHING_URI,
+        ErrorType.ERROR_SAFEBROWSING_UNWANTED_URI -> RiskLevel.High
     }
 
-    private fun getStyleForRiskLevel(riskLevel: RiskLevel): Int {
-        return when (riskLevel) {
-            RiskLevel.Low -> R.raw.low_and_medium_risk_error_style
-            RiskLevel.Medium -> R.raw.low_and_medium_risk_error_style
-            RiskLevel.High -> R.raw.high_risk_error_style
-        }
-    }
-
-    private fun getRiskLevel(errorType: ErrorType): RiskLevel {
-        return when (errorType) {
-            // Low risk errors
-            ErrorType.UNKNOWN -> RiskLevel.Low
-            ErrorType.ERROR_NET_INTERRUPT -> RiskLevel.Low
-            ErrorType.ERROR_NET_TIMEOUT -> RiskLevel.Low
-            ErrorType.ERROR_CONNECTION_REFUSED -> RiskLevel.Low
-            ErrorType.ERROR_UNKNOWN_SOCKET_TYPE -> RiskLevel.Low
-            ErrorType.ERROR_REDIRECT_LOOP -> RiskLevel.Low
-            ErrorType.ERROR_OFFLINE -> RiskLevel.Low
-            ErrorType.ERROR_NET_RESET -> RiskLevel.Low
-            ErrorType.ERROR_UNSAFE_CONTENT_TYPE -> RiskLevel.Low
-            ErrorType.ERROR_CORRUPTED_CONTENT -> RiskLevel.Low
-            ErrorType.ERROR_CONTENT_CRASHED -> RiskLevel.Low
-            ErrorType.ERROR_INVALID_CONTENT_ENCODING -> RiskLevel.Low
-            ErrorType.ERROR_UNKNOWN_HOST -> RiskLevel.Low
-            ErrorType.ERROR_MALFORMED_URI -> RiskLevel.Low
-            ErrorType.ERROR_FILE_NOT_FOUND -> RiskLevel.Low
-            ErrorType.ERROR_FILE_ACCESS_DENIED -> RiskLevel.Low
-            ErrorType.ERROR_PROXY_CONNECTION_REFUSED -> RiskLevel.Low
-            ErrorType.ERROR_UNKNOWN_PROXY_HOST -> RiskLevel.Low
-            ErrorType.ERROR_UNKNOWN_PROTOCOL -> RiskLevel.Low
-
-            // Medium risk errors
-            ErrorType.ERROR_SECURITY_BAD_CERT -> RiskLevel.Medium
-            ErrorType.ERROR_SECURITY_SSL -> RiskLevel.Medium
-            ErrorType.ERROR_PORT_BLOCKED -> RiskLevel.Medium
-
-            // High risk errors
-            ErrorType.ERROR_SAFEBROWSING_HARMFUL_URI -> RiskLevel.High
-            ErrorType.ERROR_SAFEBROWSING_MALWARE_URI -> RiskLevel.High
-            ErrorType.ERROR_SAFEBROWSING_PHISHING_URI -> RiskLevel.High
-            ErrorType.ERROR_SAFEBROWSING_UNWANTED_URI -> RiskLevel.High
-        }
-    }
-
-    sealed class RiskLevel {
-        object Low : RiskLevel()
-        object Medium : RiskLevel()
-        object High : RiskLevel()
+    private enum class RiskLevel(@RawRes val htmlRes: Int, @RawRes val cssRes: Int) {
+        Low(R.raw.low_risk_error_pages, R.raw.low_and_medium_risk_error_style),
+        Medium(R.raw.medium_and_high_risk_error_pages, R.raw.low_and_medium_risk_error_style),
+        High(R.raw.medium_and_high_risk_error_pages, R.raw.high_risk_error_style),
     }
 }
