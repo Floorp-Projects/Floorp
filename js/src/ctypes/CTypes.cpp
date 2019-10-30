@@ -47,6 +47,7 @@
 #include "js/UniquePtr.h"
 #include "js/Utility.h"
 #include "js/Vector.h"
+#include "util/Text.h"
 #include "util/Unicode.h"
 #include "util/Windows.h"
 #include "vm/JSContext.h"
@@ -2997,17 +2998,6 @@ void IntegerToString(IntegerType i, int radix,
   if (!result.append(cp, end)) {
     return;
   }
-}
-
-template <class CharType>
-static size_t strnlen(const CharType* begin, size_t max) {
-  for (size_t i = 0; i < max; i++) {
-    if (begin[i] == '\0') {
-      return i;
-    }
-  }
-
-  return max;
 }
 
 // Convert C binary value 'data' of CType 'typeObj' to a JS primitive, where
@@ -7761,7 +7751,7 @@ static bool ReadStringCommon(JSContext* cx, InflateUTF8Method inflateUTF8,
     case TYPE_signed_char:
     case TYPE_unsigned_char: {
       char* bytes = static_cast<char*>(data);
-      size_t length = strnlen(bytes, maxLength);
+      size_t length = js_strnlen(bytes, maxLength);
 
       // Determine the length.
       UniqueTwoByteChars dst(
@@ -7784,7 +7774,7 @@ static bool ReadStringCommon(JSContext* cx, InflateUTF8Method inflateUTF8,
     case TYPE_unsigned_short:
     case TYPE_char16_t: {
       char16_t* chars = static_cast<char16_t*>(data);
-      size_t length = strnlen(chars, maxLength);
+      size_t length = js_strnlen(chars, maxLength);
       result = JS_NewUCStringCopyN(cx, chars, length);
       break;
     }

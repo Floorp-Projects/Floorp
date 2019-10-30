@@ -290,9 +290,11 @@ UniqueChars GeckoProfilerRuntime::allocProfileString(JSContext* cx,
     hasName = true;
   }
 
-  // Calculate filename length.
+  // Calculate filename length. We cap this to a reasonable limit to avoid
+  // performance impact of strlen/alloc/memcpy.
+  constexpr size_t MaxFilenameLength = 200;
   const char* filenameStr = script->filename() ? script->filename() : "(null)";
-  size_t filenameLength = strlen(filenameStr);
+  size_t filenameLength = js_strnlen(filenameStr, MaxFilenameLength);
 
   // Calculate line + column length.
   bool hasLineAndColumn = false;
