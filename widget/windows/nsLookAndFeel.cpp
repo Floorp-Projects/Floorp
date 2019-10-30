@@ -292,11 +292,11 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, nscolor& aColor) {
       break;
     case ColorID::MozEventreerow:
     case ColorID::MozOddtreerow:
-    case ColorID::Field:
+    case ColorID::MozField:
     case ColorID::MozCombobox:
       idx = COLOR_WINDOW;
       break;
-    case ColorID::Fieldtext:
+    case ColorID::MozFieldtext:
     case ColorID::MozComboboxtext:
       idx = COLOR_WINDOWTEXT;
       break;

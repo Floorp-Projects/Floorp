@@ -5196,8 +5196,6 @@ var gCSSProperties = {
       "hsl(1turn, 0%, 0%)",
     ],
     other_values: [
-      "field",
-      "fieldtext",
       "green",
       "#f3c",
       "#fed292",
