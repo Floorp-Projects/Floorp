@@ -92,13 +92,9 @@ static void CertIsTrustAnchorForTLSServerAuth(PCCERT_CONTEXT certificate,
   memset(&chainPara, 0, sizeof(CERT_CHAIN_PARA));
   chainPara.cbSize = sizeof(CERT_CHAIN_PARA);
   chainPara.RequestedUsage = certUsage;
-  // Disable anything that could result in network I/O.
-  DWORD flags = CERT_CHAIN_REVOCATION_CHECK_CACHE_ONLY |
-                CERT_CHAIN_CACHE_ONLY_URL_RETRIEVAL |
-                CERT_CHAIN_DISABLE_AUTH_ROOT_AUTO_UPDATE |
-                CERT_CHAIN_DISABLE_AIA;
+
   if (!CertGetCertificateChain(nullptr, certificate, nullptr, nullptr,
-                               &chainPara, flags, nullptr, &pChainContext)) {
+                               &chainPara, 0, nullptr, &pChainContext)) {
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("CertGetCertificateChain failed"));
     return;
   }
