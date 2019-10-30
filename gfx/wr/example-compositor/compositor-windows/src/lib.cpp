@@ -311,20 +311,21 @@ extern "C" {
         Window *window,
         uint64_t id,
         int width,
-        int height
+        int height,
+        bool is_opaque
     ) {
         assert(window->tiles.count(id) == 0);
 
         Tile tile;
 
+        DXGI_ALPHA_MODE alpha_mode = is_opaque ? DXGI_ALPHA_MODE_IGNORE : DXGI_ALPHA_MODE_PREMULTIPLIED;
+
         // Create the video memory surface.
-        // TODO(gw): We should set alpha mode appropriately so that DC
-        //           can do opaque composites when possible!
         HRESULT hr = window->pDCompDevice->CreateSurface(
             width,
             height,
             DXGI_FORMAT_B8G8R8A8_UNORM,
-            DXGI_ALPHA_MODE_PREMULTIPLIED,
+            alpha_mode,
             &tile.pSurface
         );
         assert(SUCCEEDED(hr));

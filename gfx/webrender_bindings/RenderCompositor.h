@@ -70,8 +70,8 @@ class RenderCompositor {
   virtual void Bind(wr::NativeSurfaceId aId, wr::DeviceIntPoint* aOffset,
                     uint32_t* aFboId, wr::DeviceIntRect aDirtyRect) {}
   virtual void Unbind() {}
-  virtual void CreateSurface(wr::NativeSurfaceId aId, wr::DeviceIntSize aSize) {
-  }
+  virtual void CreateSurface(wr::NativeSurfaceId aId, wr::DeviceIntSize aSize,
+                             bool aIsOpaque) {}
   virtual void DestroySurface(NativeSurfaceId aId) {}
   virtual void AddSurface(wr::NativeSurfaceId aId, wr::DeviceIntPoint aPosition,
                           wr::DeviceIntRect aClipRect) {}
