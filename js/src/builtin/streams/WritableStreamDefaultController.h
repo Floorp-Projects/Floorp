@@ -139,7 +139,10 @@ class WritableStreamDefaultController : public StreamController {
     setFixedSlot(Slot_StrategyHWM, DoubleValue(highWaterMark));
   }
 
-  void setStrategySize(const JS::Value& size) {}
+  JS::Value strategySize() const { return getFixedSlot(Slot_StrategySize); }
+  void setStrategySize(const JS::Value& size) {
+    setFixedSlot(Slot_StrategySize, size);
+  }
   void clearStrategySize() { setStrategySize(JS::UndefinedValue()); }
 
   uint32_t flags() const { return getFixedSlot(Slot_Flags).toInt32(); }
