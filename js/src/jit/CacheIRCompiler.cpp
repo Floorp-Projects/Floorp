@@ -3999,6 +3999,25 @@ bool CacheIRCompiler::emitLoadObjectTruthyResult() {
   return true;
 }
 
+bool CacheIRCompiler::emitLoadBigIntTruthyResult() {
+  JitSpew(JitSpew_Codegen, __FUNCTION__);
+  AutoOutputRegister output(*this);
+  Register bigInt = allocator.useRegister(masm, reader.bigIntOperandId());
+
+  Label ifFalse, done;
+  masm.branch32(Assembler::Equal,
+                Address(bigInt, BigInt::offsetOfDigitLength()), Imm32(0),
+                &ifFalse);
+  masm.moveValue(BooleanValue(true), output.valueReg());
+  masm.jump(&done);
+
+  masm.bind(&ifFalse);
+  masm.moveValue(BooleanValue(false), output.valueReg());
+
+  masm.bind(&done);
+  return true;
+}
+
 bool CacheIRCompiler::emitLoadNewObjectFromTemplateResult() {
   JitSpew(JitSpew_Codegen, __FUNCTION__);
   AutoOutputRegister output(*this);
