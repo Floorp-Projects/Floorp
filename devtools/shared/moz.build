@@ -55,6 +55,7 @@ DevToolsModules(
     'DevToolsUtils.js',
     'dom-node-constants.js',
     'dom-node-filter-constants.js',
+    'DOMHelpers.jsm',
     'event-emitter.js',
     'execution-point-utils.js',
     'extend.js',

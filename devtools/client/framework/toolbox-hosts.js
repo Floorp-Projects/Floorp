@@ -7,9 +7,7 @@
 const EventEmitter = require("devtools/shared/event-emitter");
 const promise = require("promise");
 const Services = require("Services");
-const {
-  DOMHelpers,
-} = require("resource://devtools/client/shared/DOMHelpers.jsm");
+const { DOMHelpers } = require("resource://devtools/shared/DOMHelpers.jsm");
 
 loader.lazyRequireGetter(
   this,
