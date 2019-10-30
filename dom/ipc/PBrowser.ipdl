@@ -1035,6 +1035,11 @@ parent:
      */
     async IsWindowSupportingProtectedMedia(uint64_t aOuterWindowID) returns(bool isSupported);
 
+    /**
+     * Fetches whether this window supports WebVR, which is sent back in response.
+     */
+    async IsWindowSupportingWebVR(uint64_t aOuterWindowID) returns(bool isSupported);
+
     /** Records a history visit. */
     async VisitURI(URIParams aURI, URIParams? aLastVisitedURI,
                    uint32_t aFlags);
