@@ -4362,12 +4362,10 @@ void js::gc::MarkingValidator::nonIncrementalMark(AutoGCSession& session) {
       zone->changeGCState(Zone::MarkBlackOnly, Zone::MarkBlackAndGray);
     }
 
-    AutoSetMarkColor setColorGray(*gcmarker, MarkColor::Gray);
-    gcmarker->setMainStackColor(MarkColor::Gray);
+    AutoSetMarkColor setColorGray(gc->marker, MarkColor::Gray);
 
     gc->markAllGrayReferences(gcstats::PhaseKind::SWEEP_MARK_GRAY);
     gc->markAllWeakReferences(gcstats::PhaseKind::SWEEP_MARK_GRAY_WEAK);
-    gc->marker.setMainStackColor(MarkColor::Black);
 
     /* Restore zone state. */
     for (GCZonesIter zone(gc); !zone.done(); zone.next()) {
@@ -5013,7 +5011,6 @@ IncrementalProgress GCRuntime::markGrayReferencesInCurrentGroup(
   }
 
   AutoSetMarkColor setColorGray(marker, MarkColor::Gray);
-  marker.setMainStackColor(MarkColor::Gray);
 
   // Mark incoming gray pointers from previously swept compartments.
   markIncomingCrossCompartmentPointers(MarkColor::Gray);
@@ -5028,12 +5025,7 @@ IncrementalProgress GCRuntime::markGrayReferencesInCurrentGroup(
   }
 #endif
 
-  if (markUntilBudgetExhausted(budget, gcstats::PhaseKind::SWEEP_MARK_GRAY) ==
-      NotFinished) {
-    return NotFinished;
-  }
-  marker.setMainStackColor(MarkColor::Black);
-  return Finished;
+  return markUntilBudgetExhausted(budget, gcstats::PhaseKind::SWEEP_MARK_GRAY);
 }
 
 IncrementalProgress GCRuntime::endMarkingSweepGroup(JSFreeOp* fop,
@@ -5052,7 +5044,6 @@ IncrementalProgress GCRuntime::endMarkingSweepGroup(JSFreeOp* fop,
   markWeakReferencesInCurrentGroup(gcstats::PhaseKind::SWEEP_MARK_WEAK);
 
   AutoSetMarkColor setColorGray(marker, MarkColor::Gray);
-  marker.setMainStackColor(MarkColor::Gray);
 
   // Mark transitively inside the current compartment group.
   markWeakReferencesInCurrentGroup(gcstats::PhaseKind::SWEEP_MARK_GRAY_WEAK);
