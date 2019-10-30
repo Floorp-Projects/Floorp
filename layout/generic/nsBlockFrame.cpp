@@ -122,6 +122,50 @@ static bool BlockHasAnyFloats(nsIFrame* aFrame) {
   return false;
 }
 
+/**
+ * Determines whether the given frame is visible or has
+ * visible children that participate in the same line. Frames
+ * that are not line participants do not have their
+ * children checked.
+ */
+static bool FrameHasVisibleInlineContent(nsIFrame* aFrame) {
+  MOZ_ASSERT(aFrame, "Frame argument cannot be null");
+
+  if (aFrame->StyleVisibility()->IsVisible()) {
+    return true;
+  }
+
+  if (aFrame->IsFrameOfType(nsIFrame::eLineParticipant)) {
+    for (nsIFrame* kid : aFrame->PrincipalChildList()) {
+      if (kid->StyleVisibility()->IsVisible() ||
+          FrameHasVisibleInlineContent(kid)) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+/**
+ * Determines whether any of the frames descended from the
+ * given line have inline content with 'visibility: visible'.
+ * This function calls FrameHasVisibleInlineContent to process
+ * each frame in the line's child list.
+ */
+static bool LineHasVisibleInlineContent(nsLineBox* aLine) {
+  nsIFrame* kid = aLine->mFirstChild;
+  int32_t n = aLine->GetChildCount();
+  while (n-- > 0) {
+    if (FrameHasVisibleInlineContent(kid)) {
+      return true;
+    }
+
+    kid = kid->GetNextSibling();
+  }
+
+  return false;
+}
+
 #ifdef DEBUG
 #  include "nsBlockDebugFlags.h"
 
@@ -6872,9 +6916,9 @@ void nsBlockFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
       }
 
       if (!lineInLine && !curBackplateArea.IsEmpty()) {
-        // If we have encountered a non-inline line, but were previously forming
-        // a backplate, we should add the backplate to the display list as-is
-        // and render future backplates disjointly.
+        // If we have encountered a non-inline line but were previously
+        // forming a backplate, we should add the backplate to the display
+        // list as-is and render future backplates disjointly.
         MOZ_ASSERT(shouldDrawBackplate,
                    "if this master switch is off, curBackplateArea "
                    "must be empty and we shouldn't get here");
@@ -6892,7 +6936,8 @@ void nsBlockFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
         }
         lastY = lineArea.y;
         lastYMost = lineArea.YMost();
-        if (lineInLine && shouldDrawBackplate) {
+        if (lineInLine && shouldDrawBackplate &&
+            LineHasVisibleInlineContent(line)) {
           nsRect lineBackplate = lineArea + aBuilder->ToReferenceFrame(this);
           if (curBackplateArea.IsEmpty()) {
             curBackplateArea = lineBackplate;
