@@ -18,6 +18,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.ui.robots.homeScreen
+import org.mozilla.fenix.ui.robots.accountSettings
 
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
@@ -27,6 +28,7 @@ import androidx.test.uiautomator.Until
 import org.hamcrest.Matchers.allOf
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.TestAssetHelper
+
 import org.mozilla.fenix.helpers.ext.waitNotNull
 
 @Suppress("RECEIVER_NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
@@ -56,6 +58,27 @@ class SyncIntegrationTest {
         }.openThreeDotMenu {
         }.openBookmarks { }
         bookmarkAfterSyncIsShown()
+    }
+
+    @Test
+    fun checkAccountSettings() {
+        signInFxSync()
+        mDevice.waitNotNull(Until.findObjects(By.text("Settings")), TestAssetHelper.waitingTime)
+
+        goToAccountSettings()
+        // This function to be added to the robot once the status of checkboxes can be checked
+        // currently is not possible to select each one (History/Bookmark) and verify its status
+        // verifyCheckBoxesSelected()
+        // Then select/unselect each one and verify again that its status is correct
+        accountSettings {
+            verifyBookmarksCheckbox()
+            verifyHistoryCheckbox()
+            verifySignOutButton()
+            verifyDeviceName()
+        }.disconnectAccount {
+            sleep(TestAssetHelper.waitingTime)
+            verifySettingsView()
+        }
     }
 
     /* These tests will be running in the future
@@ -155,9 +178,15 @@ class SyncIntegrationTest {
         sleep(TestAssetHelper.waitingTimeShort)
         tapOnSignIn()
     }
+
+    fun goToAccountSettings() {
+        enterAccountSettings()
+        mDevice.waitNotNull(Until.findObjects(By.text("Device name")), TestAssetHelper.waitingTime)
+    }
 }
 
 fun settingsAccount() = onView(allOf(withText("Turn on Sync"))).perform(click())
 fun tapInToolBar() = onView(withId(org.mozilla.fenix.R.id.toolbar_wrapper))
 fun awesomeBar() = onView(withId(org.mozilla.fenix.R.id.mozac_browser_toolbar_edit_url_view))
 fun useEmailInsteadButton() = onView(withId(R.id.signInEmailButton)).perform(click())
+fun enterAccountSettings() = onView(withId(R.id.email)).perform(click())

@@ -2,7 +2,11 @@ import os
 import sys
 
 
+def test_sync_account_settings(tps, gradlewbuild):
+    gradlewbuild.test('checkAccountSettings')
+
 def test_sync_history_from_desktop(tps, gradlewbuild):
+    os.chdir('app/src/androidTest/java/org/mozilla/fenix/syncintegration/')
     tps.run('test_history.js')
     gradlewbuild.test('checkHistoryFromDesktopTest')
 
