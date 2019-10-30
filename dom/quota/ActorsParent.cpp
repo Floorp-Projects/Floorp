@@ -1852,6 +1852,9 @@ StaticRefPtr<QuotaManager> gInstance;
 bool gCreateFailed = false;
 mozilla::Atomic<bool> gShutdown(false);
 
+// Constants for temporary storage limit computing.
+static const uint32_t kDefaultChunkSizeKB = 10 * 1024;
+
 class StorageOperationBase {
  protected:
   struct OriginProps;
@@ -2579,32 +2582,33 @@ nsresult GetBinaryInputStream(nsIFile* aDirectory, const nsAString& aFilename,
 }
 
 // This method computes and returns our best guess for the temporary storage
-// limit (in bytes), based on the amount of space users have free on their hard
-// drive and on given temporary storage usage (also in bytes).
-nsresult GetTemporaryStorageLimit(nsIFile* aDirectory, uint64_t aCurrentUsage,
-                                  uint64_t* aLimit) {
-  // Check for free space on device where temporary storage directory lives.
-  int64_t bytesAvailable;
-  nsresult rv = aDirectory->GetDiskSpaceAvailable(&bytesAvailable);
-  NS_ENSURE_SUCCESS(rv, rv);
+// limit (in bytes), based on available space.
+uint64_t GetTemporaryStorageLimit(uint64_t aAvailableSpaceBytes) {
+  // The fixed limit pref can be used to override temporary storage limit
+  // calculation.
+  if (StaticPrefs::dom_quotaManager_temporaryStorage_fixedLimit() >= 0) {
+    return static_cast<uint64_t>(
+               StaticPrefs::dom_quotaManager_temporaryStorage_fixedLimit()) *
+           1024;
+  }
 
-  NS_ASSERTION(bytesAvailable >= 0, "Negative bytes available?!");
+  uint64_t availableSpaceKB = aAvailableSpaceBytes / 1024;
 
-  uint64_t availableKB =
-      static_cast<uint64_t>((bytesAvailable + aCurrentUsage) / 1024);
-  uint32_t chunkSizeKB =
-      StaticPrefs::dom_quotaManager_temporaryStorage_chunkSize();
+  // Prevent division by zero below.
+  uint32_t chunkSizeKB;
+  if (StaticPrefs::dom_quotaManager_temporaryStorage_chunkSize()) {
+    chunkSizeKB = StaticPrefs::dom_quotaManager_temporaryStorage_chunkSize();
+  } else {
+    chunkSizeKB = kDefaultChunkSizeKB;
+  }
 
   // Grow/shrink in chunkSizeKB units, deliberately, so that in the common case
   // we don't shrink temporary storage and evict origin data every time we
   // initialize.
-  availableKB = (availableKB / chunkSizeKB) * chunkSizeKB;
+  availableSpaceKB = (availableSpaceKB / chunkSizeKB) * chunkSizeKB;
 
   // Allow temporary storage to consume up to half the available space.
-  uint64_t resultKB = availableKB * .50;
-
-  *aLimit = resultKB * 1024;
-  return NS_OK;
+  return availableSpaceKB * .50 * 1024;
 }
 
 }  // namespace
@@ -6694,29 +6698,33 @@ nsresult QuotaManager::EnsureTemporaryStorageIsInitialized() {
 
   nsresult rv;
 
-  if (StaticPrefs::dom_quotaManager_temporaryStorage_fixedLimit() >= 0) {
-    mTemporaryStorageLimit =
-        static_cast<uint64_t>(
-            StaticPrefs::dom_quotaManager_temporaryStorage_fixedLimit()) *
-        1024;
-  } else {
-    nsCOMPtr<nsIFile> storageDir =
-        do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    rv = storageDir->InitWithPath(GetStoragePath());
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    rv = GetTemporaryStorageLimit(storageDir, mTemporaryStorageUsage,
-                                  &mTemporaryStorageLimit);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+  nsCOMPtr<nsIFile> storageDir =
+      do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
   }
+
+  rv = storageDir->InitWithPath(GetStoragePath());
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  // The storage directory must exist before calling GetDiskSpaceAvailable.
+  bool dummy;
+  rv = EnsureDirectory(storageDir, &dummy);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  // Check for available disk space users have on their device where storage
+  // directory lives.
+  int64_t diskSpaceAvailable;
+  rv = storageDir->GetDiskSpaceAvailable(&diskSpaceAvailable);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  MOZ_ASSERT(diskSpaceAvailable >= 0);
 
   rv = LoadQuota();
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -6724,6 +6732,14 @@ nsresult QuotaManager::EnsureTemporaryStorageIsInitialized() {
   }
 
   mTemporaryStorageInitialized = true;
+
+  // Available disk space shouldn't be used directly for temporary storage
+  // limit calculation since available disk space is affected by existing data
+  // stored in temporary storage. So we need to increase it by the temporary
+  // storage size (that has been calculated in LoadQuota) before passing to
+  // GetTemporaryStorageLimit..
+  mTemporaryStorageLimit = GetTemporaryStorageLimit(
+      /* aAvailableSpaceBytes */ diskSpaceAvailable + mTemporaryStorageUsage);
 
   CheckTemporaryStorageLimits();
 
