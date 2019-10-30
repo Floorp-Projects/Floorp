@@ -12,6 +12,16 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
+* **feature-downloads**
+  * Added ability to pause, resume, cancel, and try again on a download through the `DownloadNotification`.
+  * Added support for multiple, continuous downloads.
+  * Added size of the file to the `DownloadNotification`.
+  * Added open file funcitonality to the `DownloadNotification`.
+      * Note: you must add a `FileProvider` to your manifest as well as `file_paths.xml`. See SampleBrowser for an example.
+      * To open .apk files, you must still add the permisison `android.permission.INSTALL_PACKAGES` to your manifest.
+  * Improved visuals of `SimpleDownloadDialogFragment` to better match `SitePermissionsDialogFragment`.
+      * `SimpleDownloadDialogFragment` can similarly be themed by using `PromptsStyling` properties.
+
 * **feature-webnotifications**
   * Adds feature implementation for configuring and displaying web notifications to the user
   *

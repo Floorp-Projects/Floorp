@@ -1,0 +1,84 @@
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    tools:ignore="Overdraw"
+    android:background="?android:windowBackground"
+    android:orientation="vertical">
+
+    <ImageView
+        android:id="@+id/icon"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_marginStart="16dp"
+        android:scaleType="center"
+        android:src="@drawable/mozac_feature_download_ic_download"
+        android:importantForAccessibility="no"
+        android:layout_alignParentTop="true"
+        android:layout_marginTop="16dp"
+        android:tint="?android:attr/textColorPrimary"/>
+
+    <TextView
+        android:id="@+id/title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="11dp"
+        android:layout_marginStart="3dp"
+        tools:textColor="#000000"
+        android:textColor="?android:attr/textColorPrimary"
+        android:paddingTop="4dp"
+        android:paddingStart="5dp"
+        android:paddingEnd="5dp"
+        android:layout_alignParentTop="true"
+        android:layout_marginTop="16dp"
+        android:layout_toEndOf="@id/icon"
+        android:layout_toStartOf="@id/close_button"
+        android:layout_alignBaseline="@id/icon"
+        tools:text="Download (85.7 MB)"/>
+
+    <ImageButton
+        android:id="@+id/close_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="12dp"
+        android:layout_marginStart="3dp"
+        tools:textColor="#000000"
+        android:contentDescription="@string/mozac_feature_downloads_button_close"
+        android:background="@null"
+        android:tint="?android:attr/textColorPrimary"
+        android:src="@drawable/mozac_ic_close"
+        android:layout_alignParentTop="true"
+        android:layout_marginTop="16dp"
+        android:layout_alignParentEnd="true"
+        android:layout_alignBaseline="@id/icon"/>
+
+    <TextView
+        android:id="@+id/filename"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="3dp"
+        tools:textColor="#000000"
+        android:textColor="?android:attr/textColorPrimary"
+        android:paddingTop="4dp"
+        android:paddingStart="5dp"
+        android:paddingEnd="5dp"
+        android:layout_below="@id/title"
+        android:layout_marginTop="16dp"
+        android:layout_toEndOf="@id/icon"
+        android:layout_alignBaseline="@id/icon"
+        tools:text="Firefox_Preview_v2.1.apk"/>
+
+    <Button
+        android:id="@+id/download_button"
+        android:layout_alignParentEnd="true"
+        android:layout_below="@id/filename"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="16dp"
+        android:layout_marginStart="8dp"
+        android:textAllCaps="false"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/mozac_feature_downloads_dialog_download"/>
+</RelativeLayout>

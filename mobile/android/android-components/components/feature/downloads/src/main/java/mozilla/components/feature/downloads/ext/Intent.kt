@@ -4,6 +4,7 @@
 
 package mozilla.components.feature.downloads.ext
 
+import android.app.DownloadManager.EXTRA_DOWNLOAD_ID
 import android.content.Intent
 import androidx.core.os.bundleOf
 import mozilla.components.browser.state.state.content.DownloadState
@@ -26,7 +27,8 @@ fun Intent.putDownloadExtra(download: DownloadState) {
             CONTENT_LENGTH to contentLength,
             USER_AGENT to userAgent,
             INTENT_DESTINATION to destinationDirectory,
-            REFERRER to referrerUrl
+            REFERRER to referrerUrl,
+            EXTRA_DOWNLOAD_ID to id
         ))
     }
 }
@@ -36,6 +38,7 @@ fun Intent.getDownloadExtra(): DownloadState? =
         val url = getString(INTENT_URL)
         val fileName = getString(INTENT_FILE_NAME)
         val destination = getString(INTENT_DESTINATION)
+        val id = getLong(EXTRA_DOWNLOAD_ID)
         if (url == null || destination == null) return null
 
         DownloadState(
@@ -45,6 +48,7 @@ fun Intent.getDownloadExtra(): DownloadState? =
             contentLength = get(CONTENT_TYPE) as? Long?,
             userAgent = getString(USER_AGENT),
             destinationDirectory = destination,
-            referrerUrl = getString(REFERRER)
+            referrerUrl = getString(REFERRER),
+            id = id
         )
     }

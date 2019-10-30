@@ -22,7 +22,7 @@ class DownloadsUseCases(
          * Consumes the download with the given [downloadId] from the session with the given
          * [tabId].
          */
-        operator fun invoke(tabId: String, downloadId: String) {
+        operator fun invoke(tabId: String, downloadId: Long) {
             store.dispatch(ContentAction.ConsumeDownloadAction(
                 tabId, downloadId
             ))
