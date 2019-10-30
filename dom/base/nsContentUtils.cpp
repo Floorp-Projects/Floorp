@@ -3401,7 +3401,14 @@ already_AddRefed<imgIContainer> nsContentUtils::GetImageFromContent(
   }
 
   if (aRequest) {
-    imgRequest.swap(*aRequest);
+    // If the consumer wants the request, verify it has actually loaded
+    // successfully.
+    uint32_t imgStatus;
+    imgRequest->GetImageStatus(&imgStatus);
+    if (imgStatus & imgIRequest::STATUS_FRAME_COMPLETE &&
+        !(imgStatus & imgIRequest::STATUS_ERROR)) {
+      imgRequest.swap(*aRequest);
+    }
   }
 
   return imgContainer.forget();
