@@ -24,7 +24,7 @@ namespace mozilla {
 using namespace layers;
 using namespace gfx;
 
-RDDChild::RDDChild(RDDProcessHost* aHost) : mHost(aHost), mRDDReady(false) {
+RDDChild::RDDChild(RDDProcessHost* aHost) : mHost(aHost) {
   MOZ_COUNT_CTOR(RDDChild);
 }
 
@@ -59,25 +59,6 @@ bool RDDChild::Init(bool aStartMacSandbox) {
   gfxVars::AddReceiver(this);
 
   return true;
-}
-
-bool RDDChild::EnsureRDDReady() {
-  if (mRDDReady) {
-    return true;
-  }
-
-  mRDDReady = true;
-  return true;
-}
-
-mozilla::ipc::IPCResult RDDChild::RecvInitComplete() {
-  // We synchronously requested RDD parameters before this arrived.
-  if (mRDDReady) {
-    return IPC_OK();
-  }
-
-  mRDDReady = true;
-  return IPC_OK();
 }
 
 bool RDDChild::SendRequestMemoryReport(const uint32_t& aGeneration,
