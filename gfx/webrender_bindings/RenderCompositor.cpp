@@ -43,9 +43,9 @@ void wr_compositor_bind(void* aCompositor, wr::NativeSurfaceId aId,
 }
 
 void wr_compositor_create_surface(void* aCompositor, wr::NativeSurfaceId aId,
-                                  wr::DeviceIntSize aSize) {
+                                  wr::DeviceIntSize aSize, bool aIsOpaque) {
   RenderCompositor* compositor = static_cast<RenderCompositor*>(aCompositor);
-  compositor->CreateSurface(aId, aSize);
+  compositor->CreateSurface(aId, aSize, aIsOpaque);
 }
 
 void wr_compositor_destroy_surface(void* aCompositor, NativeSurfaceId aId) {
