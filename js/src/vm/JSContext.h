@@ -251,8 +251,8 @@ struct JSContext : public JS::RootingContext,
    * on OOM and retry the allocation.
    */
   template <typename T>
-  T* pod_callocCanGC(size_t numElems, arena_id_t arena = js::MallocArena) {
-    T* p = maybe_pod_calloc<T>(numElems, arena);
+  T* pod_arena_callocCanGC(arena_id_t arena, size_t numElems) {
+    T* p = maybe_pod_arena_calloc<T>(arena, numElems);
     if (MOZ_LIKELY(!!p)) {
       return p;
     }

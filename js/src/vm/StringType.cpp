@@ -406,7 +406,8 @@ static MOZ_ALWAYS_INLINE bool AllocChars(JSString* str, size_t length,
       length > DOUBLING_MAX ? length + (length / 8) : RoundUpPow2(length);
 
   JS_STATIC_ASSERT(JSString::MAX_LENGTH * sizeof(CharT) <= UINT32_MAX);
-  *chars = str->zone()->pod_malloc<CharT>(*capacity, js::StringBufferArena);
+  *chars =
+      str->zone()->pod_arena_malloc<CharT>(js::StringBufferArena, *capacity);
   return *chars != nullptr;
 }
 
@@ -431,7 +432,7 @@ UniquePtr<CharT[], JS::FreePolicy> JSRope::copyCharsInternal(
 
   UniquePtr<CharT[], JS::FreePolicy> out;
   if (maybecx) {
-    out.reset(maybecx->pod_malloc<CharT>(n, destArenaId));
+    out.reset(maybecx->pod_arena_malloc<CharT>(destArenaId, n));
   } else {
     out.reset(js_pod_arena_malloc<CharT>(destArenaId, n));
   }
@@ -1575,7 +1576,7 @@ static JSLinearString* NewStringDeflated(JSContext* cx, const char16_t* s,
         cx, mozilla::Range<const char16_t>(s, n));
   }
 
-  auto news = cx->make_pod_array<Latin1Char>(n, js::StringBufferArena);
+  auto news = cx->make_pod_arena_array<Latin1Char>(js::StringBufferArena, n);
   if (!news) {
     if (!allowGC) {
       cx->recoverFromOutOfMemory();
@@ -1610,7 +1611,8 @@ static JSLinearString* NewStringDeflatedFromLittleEndianNoGC(
     return str;
   }
 
-  auto news = cx->make_pod_array<Latin1Char>(length, js::StringBufferArena);
+  auto news =
+      cx->make_pod_arena_array<Latin1Char>(js::StringBufferArena, length);
   if (!news) {
     cx->recoverFromOutOfMemory();
     return nullptr;
@@ -1734,7 +1736,7 @@ JSLinearString* NewStringCopyNDontDeflate(JSContext* cx, const CharT* s,
     return NewInlineString<allowGC>(cx, mozilla::Range<const CharT>(s, n));
   }
 
-  auto news = cx->make_pod_array<CharT>(n, js::StringBufferArena);
+  auto news = cx->make_pod_arena_array<CharT>(js::StringBufferArena, n);
   if (!news) {
     if (!allowGC) {
       cx->recoverFromOutOfMemory();
@@ -1776,7 +1778,7 @@ static JSLinearString* NewUndeflatedStringFromLittleEndianNoGC(
     return str;
   }
 
-  auto news = cx->make_pod_array<char16_t>(length, js::StringBufferArena);
+  auto news = cx->make_pod_arena_array<char16_t>(js::StringBufferArena, length);
   if (!news) {
     cx->recoverFromOutOfMemory();
     return nullptr;
