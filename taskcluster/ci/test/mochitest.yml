@@ -43,7 +43,7 @@ job-defaults:
 mochitest:
     description: "Mochitest plain run"
     suite:
-        name: mochitest-plain-chunked
+        name: mochitest-plain
     treeherder-symbol: M()
     loopback-video: true
     tier:
@@ -90,7 +90,7 @@ mochitest-a11y:
 mochitest-browser-chrome:
     description: "Mochitest browser-chrome run"
     suite:
-        name: mochitest-browser-chrome-chunked
+        name: mochitest-browser-chrome
     treeherder-symbol: M(bc)
     loopback-video: true
     tier:
@@ -167,7 +167,7 @@ mochitest-chrome:
 mochitest-devtools-chrome:
     description: "Mochitest devtools-chrome run"
     suite:
-        name: mochitest-devtools-chrome-chunked
+        name: mochitest-devtools-chrome
     treeherder-symbol: M(dt)
     loopback-video: true
     tier:
@@ -284,7 +284,7 @@ mochitest-media:
 mochitest-plain-headless:
     description: "Mochitest plain headless run"
     suite:
-        name: mochitest-plain-chunked
+        name: mochitest-plain
     treeherder-symbol: M(h)
     loopback-video: true
     chunks:

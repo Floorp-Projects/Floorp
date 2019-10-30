@@ -142,8 +142,6 @@ class AndroidEmulatorTest(TestingMixin, BaseScript, MozbaseMixin, CodeCoverageMi
         self.test_packages_url = c.get('test_packages_url')
         self.test_manifest = c.get('test_manifest')
         suite = c.get('test_suite')
-        if suite and '-chunked' in suite:
-            suite = suite[:suite.index('-chunked')]
         self.test_suite = suite
         self.this_chunk = c.get('this_chunk')
         self.total_chunks = c.get('total_chunks')

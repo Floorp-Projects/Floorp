@@ -69,9 +69,7 @@ gtest:
 
 jittest:
     description: "JIT Test run"
-    suite:
-        category: jittest
-        name: jittest-chunked
+    suite: jittest
     treeherder-symbol: Jit
     run-on-projects:
         by-test-platform:

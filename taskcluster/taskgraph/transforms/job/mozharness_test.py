@@ -133,7 +133,7 @@ def mozharness_test_on_docker(config, job, taskdesc):
         'xpcshell'
     ]
     if job['run']['test']['suite'] in suites_not_need_compiz or (
-            job['run']['test']['suite'] == 'mochitest-plain-chunked' and
+            job['run']['test']['suite'] == 'mochitest-plain' and
             job['run']['test']['try-name'] == 'mochitest-plain-headless'):
         env['NEED_COMPIZ'] = 'false'
 
