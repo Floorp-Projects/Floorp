@@ -13,7 +13,9 @@ import {
   getSourceLineCount,
   isThirdParty,
   isJavaScript,
+  underRoot,
   isUrlExtension,
+  isExtensionDirectoryPath,
 } from "../source.js";
 
 import {
@@ -504,6 +506,35 @@ describe("sources", () => {
     });
   });
 
+  describe("underRoot", () => {
+    const threadActors = ["server0.conn1.child1/thread19"];
+
+    it("should detect normal source urls", () => {
+      const source = makeMockSource(
+        "resource://activity-stream/vendor/react.js"
+      );
+      expect(
+        underRoot(source, "resource://activity-stream", threadActors)
+      ).toBe(true);
+    });
+
+    it("should detect source urls under chrome:// as root", () => {
+      const source = makeMockSource(
+        "chrome://browser/content/contentSearchUI.js"
+      );
+      expect(underRoot(source, "chrome://", threadActors)).toBe(true);
+    });
+
+    it("should detect source urls if root is a thread actor Id", () => {
+      const source = makeMockSource(
+        "resource://activity-stream/vendor/react-dom.js"
+      );
+      expect(
+        underRoot(source, "server0.conn1.child1/thread19", threadActors)
+      ).toBe(true);
+    });
+  });
+
   describe("isUrlExtension", () => {
     it("should detect mozilla extenstion", () => {
       expect(isUrlExtension("moz-extension://id/js/content.js")).toBe(true);
@@ -513,6 +544,20 @@ describe("sources", () => {
     });
     it("should return false for non-extension assets", () => {
       expect(isUrlExtension("https://example.org/init.js")).toBe(false);
+    });
+  });
+
+  describe("isExtensionDirectoryPath", () => {
+    it("should detect mozilla extenstion directory", () => {
+      expect(isExtensionDirectoryPath("moz-extension://id")).toBe(true);
+    });
+    it("should detect chrome extenstion directory", () => {
+      expect(isExtensionDirectoryPath("chrome-extension://id")).toBe(true);
+    });
+    it("should return false for child file within the extenstion directory", () => {
+      expect(isExtensionDirectoryPath("moz-extension://id/js/content.js")).toBe(
+        false
+      );
     });
   });
 });
