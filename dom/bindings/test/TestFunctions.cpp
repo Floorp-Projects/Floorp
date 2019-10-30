@@ -76,6 +76,79 @@ void TestFunctions::GetStringDataAsDOMString(const Optional<uint32_t>& aLength,
   // No need to do anything here; aString is already empty.
 }
 
+void TestFunctions::GetShortLiteralString(nsAString& aString) {
+  // JS inline strings can hold 2 * sizeof(void*) chars, which on 32-bit means 8
+  // chars.  Return fewer than that.
+  aString.AssignLiteral(u"012345");
+}
+
+void TestFunctions::GetMediumLiteralString(nsAString& aString) {
+  // JS inline strings are at most 2 * sizeof(void*) chars, so at most 16 on
+  // 64-bit.  FakeString can hold 63 chars in its inline buffer (plus the null
+  // terminator).  Let's return 40 chars; that way if we ever move to 128-bit
+  // void* or something this test will still be valid.
+  aString.AssignLiteral(u"0123456789012345678901234567890123456789");
+}
+
+void TestFunctions::GetLongLiteralString(nsAString& aString) {
+  // Need more than 64 chars.
+  aString.AssignLiteral(
+      u"0123456789012345678901234567890123456789"  // 40
+      "0123456789012345678901234567890123456789"   // 80
+  );
+}
+
+void TestFunctions::GetStringbufferString(const nsAString& aInput,
+                                          nsAString& aRetval) {
+  // We have to be a bit careful: if aRetval is an autostring, if we just assign
+  // it won't cause stringbuffer allocation.  So we have to round-trip through
+  // something that definitely causes a stringbuffer allocation.
+  nsString str;
+  // Can't use operator= here, because if aInput is a literal string then str
+  // would end up the same way.
+  str.Assign(aInput.BeginReading(), aInput.Length());
+
+  // Now we might end up hitting our external string cache and getting the wrong
+  // sort of external string, so replace the last char by a different value
+  // (replacing, not just appending, to preserve the length).  If we have an
+  // empty string, our caller screwed up and there's not much we can do for
+  // them.
+  if (str.Length() > 1) {
+    char16_t last = str[str.Length() - 1];
+    str.Truncate(str.Length() - 1);
+    if (last == 'x') {
+      str.Append('y');
+    } else {
+      str.Append('x');
+    }
+  }
+
+  // Here we use operator= to preserve stringbufferness.
+  aRetval = str;
+}
+
+StringType TestFunctions::GetStringType(const nsAString& aString) {
+  if (aString.IsLiteral()) {
+    return StringType::Literal;
+  }
+
+  if (nsStringBuffer::FromString(aString)) {
+    return StringType::Stringbuffer;
+  }
+
+  if (aString.GetDataFlags() & nsAString::DataFlags::INLINE) {
+    return StringType::Inline;
+  }
+
+  return StringType::Other;
+}
+
+bool TestFunctions::StringbufferMatchesStored(const nsAString& aString) {
+  return nsStringBuffer::FromString(aString) &&
+         nsStringBuffer::FromString(aString) ==
+             nsStringBuffer::FromString(mStringData);
+}
+
 void TestFunctions::TestThrowNsresult(ErrorResult& aError) {
   nsCOMPtr<mozITestInterfaceJS> impl =
       do_CreateInstance("@mozilla.org/dom/test-interface-js;1");
