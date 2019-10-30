@@ -311,7 +311,7 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
   // Outer windows only.
   bool WouldReuseInnerWindow(Document* aNewDocument);
 
-  void DetachFromDocShell();
+  void DetachFromDocShell(bool aIsBeingDiscarded);
 
   virtual nsresult SetNewDocument(
       Document* aDocument, nsISupports* aState, bool aForceReuseInnerWindow,

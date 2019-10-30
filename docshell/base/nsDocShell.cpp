@@ -4756,7 +4756,7 @@ nsDocShell::Destroy() {
   mCurrentURI = nullptr;
 
   if (mScriptGlobal) {
-    mScriptGlobal->DetachFromDocShell();
+    mScriptGlobal->DetachFromDocShell(!mSkipBrowsingContextDetachOnDestroy);
     mScriptGlobal = nullptr;
   }
 
