@@ -42,7 +42,8 @@ static const char* ToMediaControlKeysEventStr(MediaControlKeysEvent aKeyEvent) {
              ToMediaControlKeysEventStr(key), ##__VA_ARGS__));    \
   }
 
-void MediaControlKeysHandler::OnKeyPressed(MediaControlKeysEvent aKeyEvent) {
+void MediaControlKeysEventListener::OnKeyPressed(
+    MediaControlKeysEvent aKeyEvent) {
   LOG_KEY("OnKeyPressed '%s'", aKeyEvent);
   switch (aKeyEvent) {
     case MediaControlKeysEvent::ePlayPause: {
