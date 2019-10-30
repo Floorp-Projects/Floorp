@@ -286,7 +286,6 @@ class ProxyChannelFilter {
       type: channel.type,
       fromCache: !!channel.fromCache,
       incognito: originAttributes && originAttributes.privateBrowsingId > 0,
-      thirdParty: channel.thirdParty,
 
       originUrl: channel.originURL || undefined,
       documentUrl: channel.documentURL || undefined,

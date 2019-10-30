@@ -231,7 +231,6 @@ function serializeRequestData(eventName) {
     timeStamp: Date.now(),
     frameId: this.windowId,
     parentFrameId: this.parentWindowId,
-    thirdParty: this.thirdParty,
   };
 
   if (MAYBE_CACHED_EVENTS.has(eventName)) {
@@ -769,7 +768,6 @@ HttpObserverManager = {
       type: channel.type,
       fromCache: channel.fromCache,
       originAttributes,
-      thirdParty: channel.thirdParty,
 
       originUrl: channel.originURL || undefined,
       documentUrl: channel.documentURL || undefined,
