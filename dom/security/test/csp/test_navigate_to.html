@@ -112,13 +112,9 @@ function checkResult(aResult) {
 // document (parent).
 function examiner() {
   SpecialPowers.addObserver(this, "csp-on-violate-policy");
-  SpecialPowers.addObserver(this, "specialpowers-http-notify-request");
 }
 examiner.prototype  = {
   observe(subject, topic, data) {
-    if (topic === "specialpowers-http-notify-request" && data === "http://www.example.com/" ) {
-      checkResult("allowed");
-    }
     if (topic === "csp-on-violate-policy" && data === "navigate-to") {
       checkResult("blocked");
     }
@@ -126,10 +122,14 @@ examiner.prototype  = {
   },
   remove() {
     SpecialPowers.removeObserver(this, "csp-on-violate-policy");
-    SpecialPowers.removeObserver(this, "specialpowers-http-notify-request");
   }
 }
 window.NavigationActionExaminer = new examiner();
+// We use iframe onload to check if requests are not blocked by CSP
+var iframe = document.getElementById("testframe");
+iframe.onload = function() {
+  checkResult("allowed");
+}
 
 function loadNextTest() {
   counter++;
@@ -147,7 +147,7 @@ function loadNextTest() {
   }
   src += "&target=" + escape(tests[counter].target);
 
-  document.getElementById("testframe").src = src;
+  iframe.src = src;
 }
 
 // start running the tests
