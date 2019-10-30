@@ -4216,10 +4216,16 @@ class MToString : public MUnaryInstruction, public ToStringPolicy::Data {
 
  private:
   SideEffectHandling sideEffects_;
+  bool mightHaveSideEffects_ = false;
 
   MToString(MDefinition* def, SideEffectHandling sideEffects)
       : MUnaryInstruction(classOpcode, def), sideEffects_(sideEffects) {
     setResultType(MIRType::String);
+
+    if (input()->mightBeType(MIRType::Object) ||
+        input()->mightBeType(MIRType::Symbol)) {
+      mightHaveSideEffects_ = true;
+    }
 
     // If this instruction is not effectful, mark it as movable and set the
     // Guard flag if needed. If the operation is effectful it won't be optimized
@@ -4228,15 +4234,10 @@ class MToString : public MUnaryInstruction, public ToStringPolicy::Data {
       setMovable();
       // Objects might override toString; Symbol throws. We bailout in those
       // cases and run side-effects in baseline instead.
-      if (conversionMightHaveSideEffects()) {
+      if (mightHaveSideEffects_) {
         setGuard();
       }
     }
-  }
-
-  bool conversionMightHaveSideEffects() const {
-    return input()->mightBeType(MIRType::Object) ||
-           input()->mightBeType(MIRType::Symbol);
   }
 
  public:
@@ -4256,7 +4257,7 @@ class MToString : public MUnaryInstruction, public ToStringPolicy::Data {
   }
 
   AliasSet getAliasSet() const override {
-    if (supportSideEffects() && conversionMightHaveSideEffects()) {
+    if (supportSideEffects() && mightHaveSideEffects_) {
       return AliasSet::Store(AliasSet::Any);
     }
     return AliasSet::None();
@@ -4267,8 +4268,7 @@ class MToString : public MUnaryInstruction, public ToStringPolicy::Data {
   }
 
   bool needsSnapshot() const {
-    return sideEffects_ == SideEffectHandling::Bailout &&
-           conversionMightHaveSideEffects();
+    return sideEffects_ == SideEffectHandling::Bailout && mightHaveSideEffects_;
   }
 
   ALLOW_CLONE(MToString)
