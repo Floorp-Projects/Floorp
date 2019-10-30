@@ -594,14 +594,6 @@ static nsresult AppendImagePromise(nsITransferable* aTransferable,
 
   NS_ENSURE_TRUE(aImgRequest, NS_OK);
 
-  uint32_t imageStatus;
-  rv = aImgRequest->GetImageStatus(&imageStatus);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (!(imageStatus & imgIRequest::STATUS_FRAME_COMPLETE) ||
-      (imageStatus & imgIRequest::STATUS_ERROR)) {
-    return NS_OK;
-  }
-
   bool isMultipart;
   rv = aImgRequest->GetMultipart(&isMultipart);
   NS_ENSURE_SUCCESS(rv, rv);
