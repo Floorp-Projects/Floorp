@@ -25,6 +25,7 @@
 #include "nsRect.h"
 #include "nsRegion.h"
 #include "mozilla/Array.h"
+#include "mozilla/layers/VideoBridgeUtils.h"
 
 #include <stdint.h>
 
