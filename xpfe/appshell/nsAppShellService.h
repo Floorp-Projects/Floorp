@@ -35,9 +35,7 @@ class nsAppShellService final : public nsIAppShellService, public nsIObserver {
  protected:
   ~nsAppShellService();
 
-  nsresult CreateHiddenWindowHelper(bool aIsPrivate);
   void EnsureHiddenWindow();
-  void EnsurePrivateHiddenWindow();
 
   nsresult JustCreateTopWindow(nsIXULWindow* aParent, nsIURI* aUrl,
                                uint32_t aChromeMask, int32_t aInitialWidth,
@@ -48,7 +46,6 @@ class nsAppShellService final : public nsIAppShellService, public nsIObserver {
   uint32_t CalculateWindowZLevel(nsIXULWindow* aParent, uint32_t aChromeMask);
 
   RefPtr<nsWebShellWindow> mHiddenWindow;
-  RefPtr<nsWebShellWindow> mHiddenPrivateWindow;
   bool mXPCOMWillShutDown;
   bool mXPCOMShuttingDown;
   uint16_t mModalWindowCount;

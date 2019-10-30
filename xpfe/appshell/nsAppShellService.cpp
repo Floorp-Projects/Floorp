@@ -85,11 +85,6 @@ nsAppShellService::~nsAppShellService() {}
 NS_IMPL_ISUPPORTS(nsAppShellService, nsIAppShellService, nsIObserver)
 
 NS_IMETHODIMP
-nsAppShellService::CreateHiddenWindow() {
-  return CreateHiddenWindowHelper(false);
-}
-
-NS_IMETHODIMP
 nsAppShellService::SetScreenId(uint32_t aScreenId) {
   mScreenId = aScreenId;
   return NS_OK;
@@ -97,17 +92,12 @@ nsAppShellService::SetScreenId(uint32_t aScreenId) {
 
 void nsAppShellService::EnsureHiddenWindow() {
   if (!mHiddenWindow) {
-    (void)CreateHiddenWindowHelper(/* aIsPrivate = */ false);
+    (void)CreateHiddenWindow();
   }
 }
 
-void nsAppShellService::EnsurePrivateHiddenWindow() {
-  if (!mHiddenPrivateWindow) {
-    (void)CreateHiddenWindowHelper(/* aIsPrivate = */ true);
-  }
-}
-
-nsresult nsAppShellService::CreateHiddenWindowHelper(bool aIsPrivate) {
+NS_IMETHODIMP
+nsAppShellService::CreateHiddenWindow() {
   if (!XRE_IsParentProcess()) {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
@@ -133,11 +123,7 @@ nsresult nsAppShellService::CreateHiddenWindowHelper(bool aIsPrivate) {
   rv = Preferences::GetCString("browser.hiddenWindowChromeURL", prefVal);
   const char* hiddenWindowURL =
       NS_SUCCEEDED(rv) ? prefVal.get() : DEFAULT_HIDDENWINDOW_URL;
-  if (aIsPrivate) {
-    hiddenWindowURL = DEFAULT_HIDDENWINDOW_URL;
-  } else {
-    mApplicationProvidedHiddenWindow = prefVal.get() ? true : false;
-  }
+  mApplicationProvidedHiddenWindow = prefVal.get() ? true : false;
 #else
   static const char hiddenWindowURL[] = DEFAULT_HIDDENWINDOW_URL;
   uint32_t chromeMask = nsIWebBrowserChrome::CHROME_ALL;
@@ -146,10 +132,6 @@ nsresult nsAppShellService::CreateHiddenWindowHelper(bool aIsPrivate) {
   nsCOMPtr<nsIURI> url;
   rv = NS_NewURI(getter_AddRefs(url), hiddenWindowURL);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  if (aIsPrivate) {
-    chromeMask |= nsIWebBrowserChrome::CHROME_PRIVATE_WINDOW;
-  }
 
   RefPtr<nsWebShellWindow> newWindow;
   rv =
@@ -161,16 +143,9 @@ nsresult nsAppShellService::CreateHiddenWindowHelper(bool aIsPrivate) {
   newWindow->GetDocShell(getter_AddRefs(docShell));
   if (docShell) {
     docShell->SetIsActive(false);
-    if (aIsPrivate) {
-      docShell->SetAffectPrivateSessionLifetime(false);
-    }
   }
 
-  if (aIsPrivate) {
-    mHiddenPrivateWindow.swap(newWindow);
-  } else {
-    mHiddenWindow.swap(newWindow);
-  }
+  mHiddenWindow.swap(newWindow);
 
   return NS_OK;
 }
@@ -181,12 +156,6 @@ nsAppShellService::DestroyHiddenWindow() {
     mHiddenWindow->Destroy();
 
     mHiddenWindow = nullptr;
-  }
-
-  if (mHiddenPrivateWindow) {
-    mHiddenPrivateWindow->Destroy();
-
-    mHiddenPrivateWindow = nullptr;
   }
 
   return NS_OK;
@@ -649,7 +618,7 @@ nsresult nsAppShellService::JustCreateTopWindow(
   uint32_t sheetMask = nsIWebBrowserChrome::CHROME_OPENAS_DIALOG |
                        nsIWebBrowserChrome::CHROME_MODAL |
                        nsIWebBrowserChrome::CHROME_OPENAS_CHROME;
-  if (parent && (parent != mHiddenWindow && parent != mHiddenPrivateWindow) &&
+  if (parent && (parent != mHiddenWindow) &&
       ((aChromeMask & sheetMask) == sheetMask)) {
     widgetInitData.mWindowType = eWindowType_sheet;
   }
@@ -798,48 +767,10 @@ nsAppShellService::GetHiddenDOMWindow(mozIDOMWindowProxy** aWindow) {
 }
 
 NS_IMETHODIMP
-nsAppShellService::GetHiddenPrivateWindow(nsIXULWindow** aWindow) {
-  NS_ENSURE_ARG_POINTER(aWindow);
-
-  EnsurePrivateHiddenWindow();
-
-  *aWindow = mHiddenPrivateWindow;
-  NS_IF_ADDREF(*aWindow);
-  return *aWindow ? NS_OK : NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsAppShellService::GetHiddenPrivateDOMWindow(mozIDOMWindowProxy** aWindow) {
-  NS_ENSURE_ARG_POINTER(aWindow);
-
-  EnsurePrivateHiddenWindow();
-
-  nsresult rv;
-  nsCOMPtr<nsIDocShell> docShell;
-  NS_ENSURE_TRUE(mHiddenPrivateWindow, NS_ERROR_FAILURE);
-
-  rv = mHiddenPrivateWindow->GetDocShell(getter_AddRefs(docShell));
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsPIDOMWindowOuter> hiddenPrivateDOMWindow(docShell->GetWindow());
-  hiddenPrivateDOMWindow.forget(aWindow);
-  return *aWindow ? NS_OK : NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
 nsAppShellService::GetHasHiddenWindow(bool* aHasHiddenWindow) {
   NS_ENSURE_ARG_POINTER(aHasHiddenWindow);
 
   *aHasHiddenWindow = !!mHiddenWindow;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsAppShellService::GetHasHiddenPrivateWindow(bool* aHasPrivateWindow) {
-  NS_ENSURE_ARG_POINTER(aHasPrivateWindow);
-
-  *aHasPrivateWindow = !!mHiddenPrivateWindow;
   return NS_OK;
 }
 
@@ -912,10 +843,6 @@ nsAppShellService::UnregisterTopLevelWindow(nsIXULWindow* aWindow) {
     // CreateHiddenWindow() does not register the window, so we're done.
     return NS_OK;
   }
-  if (aWindow == mHiddenPrivateWindow) {
-    // CreateHiddenWindow() does not register the window, so we're done.
-    return NS_OK;
-  }
 
   // tell the window mediator
   nsCOMPtr<nsIWindowMediator> mediator(
@@ -949,9 +876,6 @@ nsAppShellService::Observe(nsISupports* aSubject, const char* aTopic,
     mXPCOMShuttingDown = true;
     if (mHiddenWindow) {
       mHiddenWindow->Destroy();
-    }
-    if (mHiddenPrivateWindow) {
-      mHiddenPrivateWindow->Destroy();
     }
   } else {
     NS_ERROR("Unexpected observer topic!");

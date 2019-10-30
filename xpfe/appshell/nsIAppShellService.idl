@@ -90,24 +90,6 @@ interface nsIAppShellService : nsISupports
   readonly attribute mozIDOMWindowProxy hiddenDOMWindow;
 
   /**
-   * Return the (singleton) application hidden private window, automatically
-   * created and maintained by this AppShellService.  This window is created
-   * in private browsing mode.
-   * @param aResult the hidden private window.  Do not unhide hidden window.
-   *                Do not taunt hidden window.
-   */
-  readonly attribute nsIXULWindow hiddenPrivateWindow;
-
-  /**
-   * Return the (singleton) application hidden private window, automatically
-   * created and maintained by this AppShellService.  This window is created
-   * in private browsing mode.
-   * @param aResult the hidden private window.  Do not unhide hidden window.
-   *                Do not taunt hidden window.
-   */
-  readonly attribute mozIDOMWindowProxy hiddenPrivateDOMWindow;
-
-  /**
    * Return true if the application hidden window was provided by the
    * application. If it wasn't, the default hidden window was used. This will
    * usually be false on all non-mac platforms.
@@ -136,12 +118,6 @@ interface nsIAppShellService : nsISupports
    * Whether the hidden window has been lazily created.
    */
   readonly attribute boolean hasHiddenWindow;
-
-  /**
-   * Whether the hidden private window has been lazily created.
-   */
-  [noscript]
-  readonly attribute boolean hasHiddenPrivateWindow;
 
   /**
    * Start/stop tracking lags in the event loop.
