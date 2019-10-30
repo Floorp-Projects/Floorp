@@ -1566,7 +1566,7 @@ void ProfileBuffer::StreamCountersToJSON(SpliceableJSONWriter& aWriter,
       aWriter.StringProperty("category", base_counter->mCategory);
       aWriter.StringProperty("description", base_counter->mDescription);
 
-      aWriter.StartObjectProperty("sample_groups");
+      aWriter.StartArrayProperty("sample_groups");
       for (auto counter_iter = counter.iter(); !counter_iter.done();
            counter_iter.next()) {
         CounterKeyedSamples& samples = counter_iter.get().value();
@@ -1576,47 +1576,54 @@ void ProfileBuffer::StreamCountersToJSON(SpliceableJSONWriter& aWriter,
         if (size == 0) {
           continue;
         }
-        aWriter.IntProperty("id", static_cast<int64_t>(key));
-        aWriter.StartObjectProperty("samples");
+
+        aWriter.StartObjectElement();
         {
-          // XXX Can we assume a missing count means 0?
-          JSONSchemaWriter schema(aWriter);
-          schema.WriteField("time");
-          schema.WriteField("number");
-          schema.WriteField("count");
-        }
-
-        aWriter.StartArrayProperty("data");
-        uint64_t previousNumber = 0;
-        int64_t previousCount = 0;
-        for (size_t i = 0; i < size; i++) {
-          // Encode as deltas, and only encode if different than the last sample
-          if (i == 0 || samples[i].mNumber != previousNumber ||
-              samples[i].mCount != previousCount) {
-            if (i != 0 && samples[i].mTime >= samples[i - 1].mTime) {
-              MOZ_LOG(sFuzzyfoxLog, mozilla::LogLevel::Error,
-                      ("Fuzzyfox Profiler Assertion: %f >= %f",
-                       samples[i].mTime, samples[i - 1].mTime));
-            }
-            MOZ_ASSERT(i == 0 || samples[i].mTime >= samples[i - 1].mTime);
-            MOZ_ASSERT(samples[i].mNumber >= previousNumber);
-            MOZ_ASSERT(samples[i].mNumber - previousNumber <=
-                       uint64_t(std::numeric_limits<int64_t>::max()));
-
-            AutoArraySchemaWriter writer(aWriter);
-            writer.DoubleElement(TIME, samples[i].mTime);
-            writer.IntElement(NUMBER, static_cast<int64_t>(samples[i].mNumber -
-                                                           previousNumber));
-            writer.IntElement(COUNT, samples[i].mCount - previousCount);
-            previousNumber = samples[i].mNumber;
-            previousCount = samples[i].mCount;
+          aWriter.IntProperty("id", static_cast<int64_t>(key));
+          aWriter.StartObjectProperty("samples");
+          {
+            // XXX Can we assume a missing count means 0?
+            JSONSchemaWriter schema(aWriter);
+            schema.WriteField("time");
+            schema.WriteField("number");
+            schema.WriteField("count");
           }
+
+          aWriter.StartArrayProperty("data");
+          uint64_t previousNumber = 0;
+          int64_t previousCount = 0;
+          for (size_t i = 0; i < size; i++) {
+            // Encode as deltas, and only encode if different than the last
+            // sample
+            if (i == 0 || samples[i].mNumber != previousNumber ||
+                samples[i].mCount != previousCount) {
+              if (i != 0 && samples[i].mTime >= samples[i - 1].mTime) {
+                MOZ_LOG(sFuzzyfoxLog, mozilla::LogLevel::Error,
+                        ("Fuzzyfox Profiler Assertion: %f >= %f",
+                         samples[i].mTime, samples[i - 1].mTime));
+              }
+              MOZ_ASSERT(i == 0 || samples[i].mTime >= samples[i - 1].mTime);
+              MOZ_ASSERT(samples[i].mNumber >= previousNumber);
+              MOZ_ASSERT(samples[i].mNumber - previousNumber <=
+                         uint64_t(std::numeric_limits<int64_t>::max()));
+
+              AutoArraySchemaWriter writer(aWriter);
+              writer.DoubleElement(TIME, samples[i].mTime);
+              writer.IntElement(
+                  NUMBER,
+                  static_cast<int64_t>(samples[i].mNumber - previousNumber));
+              writer.IntElement(COUNT, samples[i].mCount - previousCount);
+              previousNumber = samples[i].mNumber;
+              previousCount = samples[i].mCount;
+            }
+          }
+          aWriter.EndArray();   // data
+          aWriter.EndObject();  // samples
         }
-        aWriter.EndArray();   // data
-        aWriter.EndObject();  // samples
+        aWriter.EndObject();  // sample_groups item
       }
-      aWriter.EndObject();  // sample groups
-      aWriter.End();        // for each counter
+      aWriter.EndArray();  // sample groups
+      aWriter.End();       // for each counter
     }
     aWriter.EndArray();  // counters
   });
