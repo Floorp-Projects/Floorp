@@ -302,11 +302,7 @@ nsAppStartup::Quit(uint32_t aMode) {
 #ifdef XP_MACOSX
     nsCOMPtr<nsIAppShellService> appShell(
         do_GetService(NS_APPSHELLSERVICE_CONTRACTID));
-    bool hasHiddenPrivateWindow = false;
-    if (appShell) {
-      appShell->GetHasHiddenPrivateWindow(&hasHiddenPrivateWindow);
-    }
-    int32_t suspiciousCount = hasHiddenPrivateWindow ? 2 : 1;
+    int32_t suspiciousCount = 1;
 #endif
 
     if (mConsiderQuitStopper == 0) {
@@ -325,12 +321,7 @@ nsAppStartup::Quit(uint32_t aMode) {
       nsCOMPtr<nsIXULWindow> hiddenWindow;
       appShell->GetHiddenWindow(getter_AddRefs(hiddenWindow));
       // If the remaining windows are useful, we won't quit:
-      nsCOMPtr<nsIXULWindow> hiddenPrivateWindow;
-      if (hasHiddenPrivateWindow) {
-        appShell->GetHiddenPrivateWindow(getter_AddRefs(hiddenPrivateWindow));
-        if ((!hiddenWindow && !hiddenPrivateWindow) || usefulHiddenWindow)
-          return NS_OK;
-      } else if (!hiddenWindow || usefulHiddenWindow) {
+      if (!hiddenWindow || usefulHiddenWindow) {
         return NS_OK;
       }
 

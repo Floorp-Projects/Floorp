@@ -357,17 +357,6 @@ nsresult nsCCUncollectableMarker::Observe(nsISupports* aSubject,
       hw->GetDocShell(getter_AddRefs(shell));
       MarkDocShell(shell, cleanupJS);
     }
-    bool hasHiddenPrivateWindow = false;
-    appShell->GetHasHiddenPrivateWindow(&hasHiddenPrivateWindow);
-    if (hasHiddenPrivateWindow) {
-      nsCOMPtr<nsIXULWindow> hw;
-      appShell->GetHiddenPrivateWindow(getter_AddRefs(hw));
-      if (hw) {
-        nsCOMPtr<nsIDocShell> shell;
-        hw->GetDocShell(getter_AddRefs(shell));
-        MarkDocShell(shell, cleanupJS);
-      }
-    }
   }
 
 #ifdef MOZ_XUL
