@@ -1,3 +1,5 @@
+// |jit-test| allow-unhandlable-oom
+
 // These tests will be using object literals as keys, and we want some of them
 // to be dead after being inserted into a WeakMap. That means we must wrap
 // everything in functions because it seems like the toplevel script hangs onto

@@ -8,6 +8,7 @@
 #define gc_GCMarker_h
 
 #include "mozilla/Maybe.h"
+#include "mozilla/Unused.h"
 
 #include "ds/OrderedHashTable.h"
 #include "js/SliceBudget.h"
@@ -160,7 +161,13 @@ class MarkStack {
   ValueArray popValueArray();
   SavedValueArray popSavedValueArray();
 
-  void clear() { topIndex_ = 0; }
+  void clear() {
+    // Fall back to the smaller initial capacity so we don't hold on to excess
+    // memory between GCs.
+    stack().clearAndFree();
+    mozilla::Unused << stack().resize(NON_INCREMENTAL_MARK_STACK_BASE_CAPACITY);
+    topIndex_ = 0;
+  }
 
   void setGCMode(JSGCMode gcMode);
 
