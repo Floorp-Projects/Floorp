@@ -83,6 +83,14 @@ module.exports = {
       "no-unused-vars": ["error", {"args": "none", "vars": "local"}],
     }
   }, {
+    // For all server files, prevent requiring devtools/client modules.
+    "files": [
+      "server/**",
+    ],
+    "rules": {
+      "mozilla/reject-some-requires": ["error", "^devtools/client"],
+    }
+  }, {
     // Cu, Cc etc... are not available in most devtools modules loaded by require.
     "files": [
       "**"
