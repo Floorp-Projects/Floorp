@@ -2323,6 +2323,114 @@ bool IonCacheIRCompiler::emitCallStringObjectConcatResult() {
 }
 
 template <typename CallVM>
+bool IonCacheIRCompiler::emitBigIntBinaryOperationShared(
+    const CallVM& emitCallVM) {
+  AutoSaveLiveRegisters save(*this);
+  AutoOutputRegister output(*this);
+  Register lhs = allocator.useRegister(masm, reader.bigIntOperandId());
+  Register rhs = allocator.useRegister(masm, reader.bigIntOperandId());
+
+  allocator.discardStack(masm);
+
+  prepareVMCall(masm, save);
+  masm.Push(rhs);
+  masm.Push(lhs);
+
+  emitCallVM();
+
+  masm.tagValue(JSVAL_TYPE_BIGINT, ReturnReg, output.valueReg());
+  return true;
+}
+
+bool IonCacheIRCompiler::emitBigIntAddResult() {
+  JitSpew(JitSpew_Codegen, __FUNCTION__);
+  return emitBigIntBinaryOperationShared([&]() {
+    using Fn = BigInt* (*)(JSContext*, HandleBigInt, HandleBigInt);
+    callVM<Fn, jit::BigIntAdd>(masm);
+  });
+}
+
+bool IonCacheIRCompiler::emitBigIntSubResult() {
+  JitSpew(JitSpew_Codegen, __FUNCTION__);
+  return emitBigIntBinaryOperationShared([&]() {
+    using Fn = BigInt* (*)(JSContext*, HandleBigInt, HandleBigInt);
+    callVM<Fn, jit::BigIntSub>(masm);
+  });
+}
+
+bool IonCacheIRCompiler::emitBigIntMulResult() {
+  JitSpew(JitSpew_Codegen, __FUNCTION__);
+  return emitBigIntBinaryOperationShared([&]() {
+    using Fn = BigInt* (*)(JSContext*, HandleBigInt, HandleBigInt);
+    callVM<Fn, jit::BigIntMul>(masm);
+  });
+}
+
+bool IonCacheIRCompiler::emitBigIntDivResult() {
+  JitSpew(JitSpew_Codegen, __FUNCTION__);
+  return emitBigIntBinaryOperationShared([&]() {
+    using Fn = BigInt* (*)(JSContext*, HandleBigInt, HandleBigInt);
+    callVM<Fn, jit::BigIntDiv>(masm);
+  });
+}
+
+bool IonCacheIRCompiler::emitBigIntModResult() {
+  JitSpew(JitSpew_Codegen, __FUNCTION__);
+  return emitBigIntBinaryOperationShared([&]() {
+    using Fn = BigInt* (*)(JSContext*, HandleBigInt, HandleBigInt);
+    callVM<Fn, jit::BigIntMod>(masm);
+  });
+}
+
+bool IonCacheIRCompiler::emitBigIntPowResult() {
+  JitSpew(JitSpew_Codegen, __FUNCTION__);
+  return emitBigIntBinaryOperationShared([&]() {
+    using Fn = BigInt* (*)(JSContext*, HandleBigInt, HandleBigInt);
+    callVM<Fn, jit::BigIntPow>(masm);
+  });
+}
+
+bool IonCacheIRCompiler::emitBigIntBitAndResult() {
+  JitSpew(JitSpew_Codegen, __FUNCTION__);
+  return emitBigIntBinaryOperationShared([&]() {
+    using Fn = BigInt* (*)(JSContext*, HandleBigInt, HandleBigInt);
+    callVM<Fn, jit::BigIntBitAnd>(masm);
+  });
+}
+
+bool IonCacheIRCompiler::emitBigIntBitOrResult() {
+  JitSpew(JitSpew_Codegen, __FUNCTION__);
+  return emitBigIntBinaryOperationShared([&]() {
+    using Fn = BigInt* (*)(JSContext*, HandleBigInt, HandleBigInt);
+    callVM<Fn, jit::BigIntBitOr>(masm);
+  });
+}
+
+bool IonCacheIRCompiler::emitBigIntBitXorResult() {
+  JitSpew(JitSpew_Codegen, __FUNCTION__);
+  return emitBigIntBinaryOperationShared([&]() {
+    using Fn = BigInt* (*)(JSContext*, HandleBigInt, HandleBigInt);
+    callVM<Fn, jit::BigIntBitXor>(masm);
+  });
+}
+
+bool IonCacheIRCompiler::emitBigIntLeftShiftResult() {
+  JitSpew(JitSpew_Codegen, __FUNCTION__);
+  return emitBigIntBinaryOperationShared([&]() {
+    using Fn = BigInt* (*)(JSContext*, HandleBigInt, HandleBigInt);
+    callVM<Fn, jit::BigIntLeftShift>(masm);
+  });
+}
+
+bool IonCacheIRCompiler::emitBigIntRightShiftResult() {
+  JitSpew(JitSpew_Codegen, __FUNCTION__);
+  return emitBigIntBinaryOperationShared([&]() {
+    using Fn = BigInt* (*)(JSContext*, HandleBigInt, HandleBigInt);
+    callVM<Fn, jit::BigIntRightShift>(masm);
+  });
+}
+
+template <typename CallVM>
 bool IonCacheIRCompiler::emitBigIntUnaryOperationShared(
     const CallVM& emitCallVM) {
   AutoSaveLiveRegisters save(*this);

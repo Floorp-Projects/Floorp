@@ -72,6 +72,9 @@ class MOZ_RAII BaselineCacheIRCompiler : public CacheIRCompiler {
                                                      const CallVM& emitCallVM);
 
   template <typename CallVM>
+  MOZ_MUST_USE bool emitBigIntBinaryOperationShared(const CallVM& emitCallVM);
+
+  template <typename CallVM>
   MOZ_MUST_USE bool emitBigIntUnaryOperationShared(const CallVM& emitCallVM);
 
  public:

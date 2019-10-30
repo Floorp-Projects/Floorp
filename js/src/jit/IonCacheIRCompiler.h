@@ -68,6 +68,9 @@ class MOZ_RAII IonCacheIRCompiler : public CacheIRCompiler {
       AutoSaveLiveRegisters& save);
 
   template <typename CallVM>
+  MOZ_MUST_USE bool emitBigIntBinaryOperationShared(const CallVM& emitCallVM);
+
+  template <typename CallVM>
   MOZ_MUST_USE bool emitBigIntUnaryOperationShared(const CallVM& emitCallVM);
 
   bool needsPostBarrier() const;
