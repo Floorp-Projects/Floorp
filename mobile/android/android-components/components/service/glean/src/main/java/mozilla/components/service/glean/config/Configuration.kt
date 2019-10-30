@@ -19,12 +19,17 @@ import mozilla.telemetry.glean.config.Configuration as GleanCoreConfiguration
  * @property maxEvents the number of events to store before the events ping is sent
  * @property httpClient The HTTP client implementation to use for uploading pings.
  */
-data class Configuration(
-    val serverEndpoint: String = GleanCoreConfiguration.DEFAULT_TELEMETRY_ENDPOINT,
+data class Configuration @JvmOverloads constructor (
+    val serverEndpoint: String = DEFAULT_TELEMETRY_ENDPOINT,
     val channel: String? = null,
     val maxEvents: Int? = null,
     val httpClient: PingUploader = ConceptFetchHttpUploader(lazy { HttpURLConnectionClient() })
 ) {
+    // The following is required to support calling our API from Java.
+    companion object {
+        const val DEFAULT_TELEMETRY_ENDPOINT = GleanCoreConfiguration.DEFAULT_TELEMETRY_ENDPOINT
+    }
+
     /**
      * Convert the Android Components configuration object to the Glean SDK
      * configuration object.
