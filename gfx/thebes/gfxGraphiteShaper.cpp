@@ -10,6 +10,7 @@
 #include "gfxTextRun.h"
 
 #include "graphite2/Font.h"
+#include "graphite2/GraphiteExtra.h"
 #include "graphite2/Segment.h"
 
 #include "harfbuzz/hb.h"
@@ -191,18 +192,6 @@ bool gfxGraphiteShaper::ShapeText(DrawTarget* aDrawTarget,
   return NS_SUCCEEDED(rv);
 }
 
-#define SMALL_GLYPH_RUN \
-  256  // avoid heap allocation of per-glyph data arrays
-       // for short (typical) runs up to this length
-
-struct Cluster {
-  uint32_t baseChar;  // in UTF16 code units, not Unicode character indices
-  uint32_t baseGlyph;
-  uint32_t nChars;  // UTF16 code units
-  uint32_t nGlyphs;
-  Cluster() : baseChar(0), baseGlyph(0), nChars(0), nGlyphs(0) {}
-};
-
 nsresult gfxGraphiteShaper::SetGlyphsFromSegment(
     gfxShapedText* aShapedText, uint32_t aOffset, uint32_t aLength,
     const char16_t* aText, gr_segment* aSegment, RoundingFlags aRounding) {
@@ -211,70 +200,19 @@ nsresult gfxGraphiteShaper::SetGlyphsFromSegment(
   int32_t dev2appUnits = aShapedText->GetAppUnitsPerDevUnit();
   bool rtl = aShapedText->IsRightToLeft();
 
-  uint32_t glyphCount = gr_seg_n_slots(aSegment);
-
   // identify clusters; graphite may have reordered/expanded/ligated glyphs.
-  AutoTArray<Cluster, SMALL_GLYPH_RUN> clusters;
-  AutoTArray<uint16_t, SMALL_GLYPH_RUN> gids;
-  AutoTArray<float, SMALL_GLYPH_RUN> xLocs;
-  AutoTArray<float, SMALL_GLYPH_RUN> yLocs;
+  gr_glyph_to_char_association* data =
+      gr_get_glyph_to_char_association(aSegment, aLength, aText);
 
-  if (!clusters.SetLength(aLength, fallible) ||
-      !gids.SetLength(glyphCount, fallible) ||
-      !xLocs.SetLength(glyphCount, fallible) ||
-      !yLocs.SetLength(glyphCount, fallible)) {
-    return NS_ERROR_OUT_OF_MEMORY;
+  if (!data) {
+    return NS_ERROR_FAILURE;
   }
 
-  // walk through the glyph slots and check which original character
-  // each is associated with
-  uint32_t gIndex = 0;  // glyph slot index
-  uint32_t cIndex = 0;  // current cluster index
-  for (const gr_slot* slot = gr_seg_first_slot(aSegment); slot != nullptr;
-       slot = gr_slot_next_in_segment(slot), gIndex++) {
-    uint32_t before =
-        gr_cinfo_base(gr_seg_cinfo(aSegment, gr_slot_before(slot)));
-    uint32_t after = gr_cinfo_base(gr_seg_cinfo(aSegment, gr_slot_after(slot)));
-    gids[gIndex] = gr_slot_gid(slot);
-    xLocs[gIndex] = gr_slot_origin_X(slot);
-    yLocs[gIndex] = gr_slot_origin_Y(slot);
-
-    // if this glyph has a "before" character index that precedes the
-    // current cluster's char index, we need to merge preceding
-    // clusters until it gets included
-    while (before < clusters[cIndex].baseChar && cIndex > 0) {
-      clusters[cIndex - 1].nChars += clusters[cIndex].nChars;
-      clusters[cIndex - 1].nGlyphs += clusters[cIndex].nGlyphs;
-      --cIndex;
-    }
-
-    // if there's a gap between the current cluster's base character and
-    // this glyph's, extend the cluster to include the intervening chars
-    if (gr_slot_can_insert_before(slot) && clusters[cIndex].nChars &&
-        before >= clusters[cIndex].baseChar + clusters[cIndex].nChars) {
-      NS_ASSERTION(cIndex < aLength - 1, "cIndex at end of word");
-      Cluster& c = clusters[cIndex + 1];
-      c.baseChar = clusters[cIndex].baseChar + clusters[cIndex].nChars;
-      c.nChars = before - c.baseChar;
-      c.baseGlyph = gIndex;
-      c.nGlyphs = 0;
-      ++cIndex;
-    }
-
-    // increment cluster's glyph count to include current slot
-    NS_ASSERTION(cIndex < aLength, "cIndex beyond word length");
-    ++clusters[cIndex].nGlyphs;
-
-    // bump |after| index if it falls in the middle of a surrogate pair
-    if (NS_IS_HIGH_SURROGATE(aText[after]) && after < aLength - 1 &&
-        NS_IS_LOW_SURROGATE(aText[after + 1])) {
-      after++;
-    }
-    // extend cluster if necessary to reach the glyph's "after" index
-    if (clusters[cIndex].baseChar + clusters[cIndex].nChars < after + 1) {
-      clusters[cIndex].nChars = after + 1 - clusters[cIndex].baseChar;
-    }
-  }
+  uint32_t cIndex = data->cIndex;
+  gr_glyph_to_char_cluster* clusters = data->clusters;
+  uint16_t* gids = data->gids;
+  float* xLocs = data->xLocs;
+  float* yLocs = data->yLocs;
 
   CompressedGlyph* charGlyphs = aShapedText->GetCharacterGlyphs() + aOffset;
 
@@ -283,7 +221,7 @@ nsresult gfxGraphiteShaper::SetGlyphsFromSegment(
 
   // now put glyphs into the textrun, one cluster at a time
   for (uint32_t i = 0; i <= cIndex; ++i) {
-    const Cluster& c = clusters[i];
+    const gr_glyph_to_char_cluster& c = clusters[i];
 
     float adv;  // total advance of the cluster
     if (rtl) {
@@ -350,10 +288,9 @@ nsresult gfxGraphiteShaper::SetGlyphsFromSegment(
     }
   }
 
+  gr_free_char_association(data);
   return NS_OK;
 }
-
-#undef SMALL_GLYPH_RUN
 
 // for language tag validation - include list of tags from the IANA registry
 #include "gfxLanguageTagList.cpp"
