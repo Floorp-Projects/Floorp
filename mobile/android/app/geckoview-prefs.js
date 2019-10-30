@@ -38,6 +38,9 @@ pref("geckoview.console.enabled", false);
   pref("geckoview.logging", "Debug");
 #endif
 
+// Enable WebShare support.
+pref("dom.webshare.enabled", true);
+
 // Enable capture attribute for file input.
 pref("dom.capture.enabled", true);
 

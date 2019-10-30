@@ -809,6 +809,7 @@ package org.mozilla.geckoview {
     method @UiThread @Nullable default public GeckoResult<GeckoSession.PromptDelegate.PromptResponse> onDateTimePrompt(@NonNull GeckoSession, @NonNull GeckoSession.PromptDelegate.DateTimePrompt);
     method @UiThread @Nullable default public GeckoResult<GeckoSession.PromptDelegate.PromptResponse> onFilePrompt(@NonNull GeckoSession, @NonNull GeckoSession.PromptDelegate.FilePrompt);
     method @UiThread @Nullable default public GeckoResult<GeckoSession.PromptDelegate.PromptResponse> onPopupPrompt(@NonNull GeckoSession, @NonNull GeckoSession.PromptDelegate.PopupPrompt);
+    method @UiThread @Nullable default public GeckoResult<GeckoSession.PromptDelegate.PromptResponse> onSharePrompt(@NonNull GeckoSession, @NonNull GeckoSession.PromptDelegate.SharePrompt);
     method @UiThread @Nullable default public GeckoResult<GeckoSession.PromptDelegate.PromptResponse> onTextPrompt(@NonNull GeckoSession, @NonNull GeckoSession.PromptDelegate.TextPrompt);
   }
 
@@ -952,6 +953,20 @@ package org.mozilla.geckoview {
   }
 
   public static class GeckoSession.PromptDelegate.PromptResponse {
+  }
+
+  public static class GeckoSession.PromptDelegate.SharePrompt extends GeckoSession.PromptDelegate.BasePrompt {
+    ctor protected SharePrompt(@Nullable String, @Nullable String, @Nullable String);
+    method @UiThread @NonNull public GeckoSession.PromptDelegate.PromptResponse confirm(int);
+    field @Nullable public final String text;
+    field @Nullable public final String uri;
+  }
+
+  public static class GeckoSession.PromptDelegate.SharePrompt.Result {
+    ctor protected Result();
+    field public static final int ABORT = 2;
+    field public static final int FAILURE = 1;
+    field public static final int SUCCESS = 0;
   }
 
   public static class GeckoSession.PromptDelegate.TextPrompt extends GeckoSession.PromptDelegate.BasePrompt {

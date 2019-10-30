@@ -20,6 +20,10 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIUUIDGenerator"
 );
 
+const domBundle = Services.strings.createBundle(
+  "chrome://global/locale/dom/dom.properties"
+);
+
 function PromptFactory() {
   this.wrappedJSObject = this;
 }
@@ -1127,8 +1131,68 @@ ColorPickerDelegate.prototype = {
   },
 };
 
+function ShareDelegate() {}
+
+ShareDelegate.prototype = {
+  classID: Components.ID("{1201d357-8417-4926-a694-e6408fbedcf8}"),
+
+  QueryInterface: ChromeUtils.generateQI([Ci.nsISharePicker]),
+
+  init: function(aParent) {
+    this._openerWindow = aParent;
+  },
+
+  get openerWindow() {
+    return this._openerWindow;
+  },
+
+  async share(aTitle, aText, aUri) {
+    const ABORT = 2;
+    const FAILURE = 1;
+    const SUCCESS = 0;
+
+    const msg = {
+      type: "share",
+      title: aTitle,
+      text: aText,
+      uri: aUri ? aUri.displaySpec : null,
+    };
+    const prompt = new PromptDelegate(this._openerWindow);
+    const result = await new Promise(resolve => {
+      prompt.asyncShowPrompt(msg, resolve);
+    });
+
+    if (!result) {
+      // A null result is treated as a dismissal in PromptDelegate.
+      throw new DOMException(
+        domBundle.GetStringFromName("WebShareAPI_Aborted"),
+        "AbortError"
+      );
+    }
+
+    const res = result && result.response;
+    switch (res) {
+      case FAILURE:
+        throw new DOMException(
+          domBundle.GetStringFromName("WebShareAPI_Failed"),
+          "DataError"
+        );
+      case ABORT: // Handle aborted attempt and invalid responses the same.
+        throw new DOMException(
+          domBundle.GetStringFromName("WebShareAPI_Aborted"),
+          "AbortError"
+        );
+      case SUCCESS:
+        return;
+      default:
+        throw new DOMException("Unknown error.", "UnknownError");
+    }
+  },
+};
+
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([
   ColorPickerDelegate,
   FilePickerDelegate,
   PromptFactory,
+  ShareDelegate,
 ]);
