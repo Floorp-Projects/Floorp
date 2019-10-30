@@ -3806,6 +3806,8 @@ JSObject* ArrayBufferBuilder::GetArrayBuffer(JSContext* aCx) {
   MutexAutoLock lock(mMutex);
 
   if (mMapPtr) {
+    MOZ_ASSERT(NS_IsMainThread());
+
     JSObject* obj = JS::NewMappedArrayBufferWithContents(aCx, mLength, mMapPtr);
     if (!obj) {
       JS::ReleaseMappedArrayBufferContents(mMapPtr, mLength);
@@ -3825,18 +3827,20 @@ JSObject* ArrayBufferBuilder::GetArrayBuffer(JSContext* aCx) {
     }
   }
 
-  JSObject* obj = JS::NewArrayBufferWithContents(aCx, mLength, mDataPtr);
-  mLength = mCapacity = 0;
+  JSObject* obj = JS::NewExternalArrayBuffer(
+      aCx, mLength, mDataPtr, ArrayBufferBuilder::FreeBuffer, this);
   if (!obj) {
-    js_free(mDataPtr);
+    return nullptr;
   }
-  mDataPtr = nullptr;
+
+  NS_ADDREF(this);
   return obj;
 }
 
 nsresult ArrayBufferBuilder::MapToFileInPackage(const nsCString& aFile,
                                                 nsIFile* aJarFile) {
   MutexAutoLock lock(mMutex);
+  MOZ_ASSERT(NS_IsMainThread());
 
   nsresult rv;
 
@@ -3883,6 +3887,14 @@ bool ArrayBufferBuilder::AreOverlappingRegions(const uint8_t* aStart1,
   const uint8_t* min_end = end1 < end2 ? end1 : end2;
 
   return max_start < min_end;
+}
+
+/* static */
+void ArrayBufferBuilder::FreeBuffer(void* aContents, void* aSelf) {
+  RefPtr<ArrayBufferBuilder> builder =
+      dont_AddRef(static_cast<ArrayBufferBuilder*>(aSelf));
+  // Nothing to do here. If this was the last reference, the builder will free
+  // the buffer.
 }
 
 RequestHeaders::RequestHeader* RequestHeaders::Find(const nsACString& aName) {
