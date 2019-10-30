@@ -6164,6 +6164,7 @@ AttachDecision UnaryArithIRGenerator::tryAttachStub() {
   AutoAssertNoPendingException aanpe(cx_);
   TRY_ATTACH(tryAttachInt32());
   TRY_ATTACH(tryAttachNumber());
+  TRY_ATTACH(tryAttachBigInt());
 
   trackAttached(IRGenerator::NotAttached);
   return AttachDecision::NoAction;
@@ -6227,6 +6228,38 @@ AttachDecision UnaryArithIRGenerator::tryAttachNumber() {
     case JSOP_DEC:
       writer.doubleDecResult(numId);
       trackAttached("UnaryArith.DoubleDec");
+      break;
+    default:
+      MOZ_CRASH("Unexpected OP");
+  }
+
+  writer.returnFromIC();
+  return AttachDecision::Attach;
+}
+
+AttachDecision UnaryArithIRGenerator::tryAttachBigInt() {
+  if (!val_.isBigInt()) {
+    return AttachDecision::NoAction;
+  }
+
+  ValOperandId valId(writer.setInputOperandId(0));
+  BigIntOperandId bigIntId = writer.guardToBigInt(valId);
+  switch (op_) {
+    case JSOP_BITNOT:
+      writer.bigIntNotResult(bigIntId);
+      trackAttached("UnaryArith.BigIntNot");
+      break;
+    case JSOP_NEG:
+      writer.bigIntNegationResult(bigIntId);
+      trackAttached("UnaryArith.BigIntNeg");
+      break;
+    case JSOP_INC:
+      writer.bigIntIncResult(bigIntId);
+      trackAttached("UnaryArith.BigIntInc");
+      break;
+    case JSOP_DEC:
+      writer.bigIntDecResult(bigIntId);
+      trackAttached("UnaryArith.BigIntDec");
       break;
     default:
       MOZ_CRASH("Unexpected OP");

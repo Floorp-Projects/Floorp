@@ -71,6 +71,9 @@ class MOZ_RAII BaselineCacheIRCompiler : public CacheIRCompiler {
   MOZ_MUST_USE bool emitCallNativeGetterResultShared(T receiver,
                                                      const CallVM& emitCallVM);
 
+  template <typename CallVM>
+  MOZ_MUST_USE bool emitBigIntUnaryOperationShared(const CallVM& emitCallVM);
+
  public:
   friend class AutoStubFrame;
 

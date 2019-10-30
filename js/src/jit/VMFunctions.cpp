@@ -2085,5 +2085,15 @@ void* AllocateBigIntNoGC(JSContext* cx) {
   return js::Allocate<BigInt, NoGC>(cx);
 }
 
+BigInt* BigIntBitNot(JSContext* cx, HandleBigInt x) {
+  return BigInt::bitNot(cx, x);
+}
+
+BigInt* BigIntNeg(JSContext* cx, HandleBigInt x) { return BigInt::neg(cx, x); }
+
+BigInt* BigIntInc(JSContext* cx, HandleBigInt x) { return BigInt::inc(cx, x); }
+
+BigInt* BigIntDec(JSContext* cx, HandleBigInt x) { return BigInt::dec(cx, x); }
+
 }  // namespace jit
 }  // namespace js

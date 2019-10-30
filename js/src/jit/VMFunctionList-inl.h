@@ -48,6 +48,10 @@ namespace jit {
   _(BaselineGetFunctionThis, js::jit::BaselineGetFunctionThis)                 \
   _(BaselineThrowInitializedThis, js::jit::BaselineThrowInitializedThis)       \
   _(BaselineThrowUninitializedThis, js::jit::BaselineThrowUninitializedThis)   \
+  _(BigIntBitNot, js::jit::BigIntBitNot)                                       \
+  _(BigIntDec, js::jit::BigIntDec)                                             \
+  _(BigIntInc, js::jit::BigIntInc)                                             \
+  _(BigIntNeg, js::jit::BigIntNeg)                                             \
   _(BindVarOperation, js::BindVarOperation)                                    \
   _(BitAnd, js::BitAnd)                                                        \
   _(BitLsh, js::BitLsh)                                                        \

@@ -67,6 +67,9 @@ class MOZ_RAII IonCacheIRCompiler : public CacheIRCompiler {
       TypedOrValueRegister receiver, const AutoOutputRegister& output,
       AutoSaveLiveRegisters& save);
 
+  template <typename CallVM>
+  MOZ_MUST_USE bool emitBigIntUnaryOperationShared(const CallVM& emitCallVM);
+
   bool needsPostBarrier() const;
 
   void pushStubCodePointer();

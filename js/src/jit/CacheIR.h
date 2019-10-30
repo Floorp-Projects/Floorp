@@ -366,12 +366,16 @@ extern const uint32_t ArgLengths[];
   _(Int32RightShiftResult, Id, Id)                                             \
   _(Int32URightShiftResult, Id, Id, Byte)                                      \
   _(Int32NotResult, Id)                                                        \
+  _(BigIntNotResult, Id)                                                       \
   _(Int32NegationResult, Id)                                                   \
   _(DoubleNegationResult, Id)                                                  \
+  _(BigIntNegationResult, Id)                                                  \
   _(Int32IncResult, Id)                                                        \
   _(Int32DecResult, Id)                                                        \
   _(DoubleIncResult, Id)                                                       \
   _(DoubleDecResult, Id)                                                       \
+  _(BigIntIncResult, Id)                                                       \
+  _(BigIntDecResult, Id)                                                       \
   _(LoadInt32TruthyResult, Id)                                                 \
   _(LoadDoubleTruthyResult, Id)                                                \
   _(LoadStringTruthyResult, Id)                                                \
@@ -1703,6 +1707,22 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     writeOpWithOperandId(CacheOp::DoubleDecResult, val);
   }
 
+  void bigIntNotResult(BigIntOperandId id) {
+    writeOpWithOperandId(CacheOp::BigIntNotResult, id);
+  }
+
+  void bigIntNegationResult(BigIntOperandId id) {
+    writeOpWithOperandId(CacheOp::BigIntNegationResult, id);
+  }
+
+  void bigIntIncResult(BigIntOperandId id) {
+    writeOpWithOperandId(CacheOp::BigIntIncResult, id);
+  }
+
+  void bigIntDecResult(BigIntOperandId id) {
+    writeOpWithOperandId(CacheOp::BigIntDecResult, id);
+  }
+
   void loadBooleanResult(bool val) {
     writeOp(CacheOp::LoadBooleanResult);
     buffer_.writeByte(uint32_t(val));
@@ -2705,6 +2725,7 @@ class MOZ_RAII UnaryArithIRGenerator : public IRGenerator {
 
   AttachDecision tryAttachInt32();
   AttachDecision tryAttachNumber();
+  AttachDecision tryAttachBigInt();
 
   void trackAttached(const char* name);
 
