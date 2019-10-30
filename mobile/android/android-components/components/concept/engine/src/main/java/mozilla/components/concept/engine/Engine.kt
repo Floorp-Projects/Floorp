@@ -13,6 +13,8 @@ import mozilla.components.concept.engine.utils.EngineVersion
 import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.concept.engine.webextension.WebExtensionDelegate
 import mozilla.components.concept.engine.webnotifications.WebNotificationDelegate
+import mozilla.components.concept.engine.webpush.WebPushDelegate
+import mozilla.components.concept.engine.webpush.WebPushHandler
 import org.json.JSONObject
 import java.lang.UnsupportedOperationException
 
@@ -151,6 +153,15 @@ interface Engine {
     fun registerWebNotificationDelegate(
         webNotificationDelegate: WebNotificationDelegate
     ): Unit = throw UnsupportedOperationException("Web notification support is not available in this engine")
+
+    /**
+     * Registers a [WebPushDelegate] to be notified of engine events related to web extensions.
+     *
+     * @return A [WebPushHandler] to notify the engine with messages and subscriptions when are delivered.
+     */
+    fun registerWebPushDelegate(
+        webPushDelegate: WebPushDelegate
+    ): WebPushHandler = throw UnsupportedOperationException("Web Push support is not available in this engine")
 
     /**
      * Clears browsing data stored by the engine.

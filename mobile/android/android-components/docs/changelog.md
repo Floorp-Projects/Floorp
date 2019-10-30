@@ -34,6 +34,9 @@ permalink: /changelog/
 * **service-glean**
    * Bumped the Glean SDK version to 19.1.0. This fixes a startup crash on Android SDK 22 devices due to missing `stderr`.
 
+* **concept-engine**
+  * Adds support for WebPush abstraction to the Engine.
+
 # 19.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v18.0.0...v19.0.0)
