@@ -13,9 +13,7 @@ Services.scriptloader.loadSubScript(
   this
 );
 
-const { DOMHelpers } = ChromeUtils.import(
-  "resource://devtools/shared/DOMHelpers.jsm"
-);
+const { DOMHelpers } = require("devtools/shared/dom-helpers");
 const { Hosts } = require("devtools/client/framework/toolbox-hosts");
 
 const TEST_URI_ROOT = "http://example.com/browser/devtools/client/shared/test/";
@@ -119,9 +117,8 @@ const createHost = async function(
   const iframe = await host.create();
 
   await new Promise(resolve => {
-    const domHelper = new DOMHelpers(iframe.contentWindow);
     iframe.setAttribute("src", src);
-    domHelper.onceDOMReady(resolve);
+    DOMHelpers.onceDOMReady(iframe.contentWindow, resolve);
   });
 
   return [host, iframe.contentWindow, iframe.contentDocument];
