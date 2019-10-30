@@ -379,6 +379,15 @@ class WritableStream : public NativeObject {
     return flags() & PendingAbortRequestWasAlreadyErroring;
   }
 
+  void setPendingAbortRequest(JSObject* promise, const JS::Value& reason,
+                              bool wasAlreadyErroring) {
+    MOZ_ASSERT(!hasPendingAbortRequest());
+    MOZ_ASSERT(!(flags() & PendingAbortRequestWasAlreadyErroring));
+    setFixedSlot(Slot_PendingAbortRequestPromise, JS::ObjectValue(*promise));
+    setFixedSlot(Slot_PendingAbortRequestReason, reason);
+    setFlag(PendingAbortRequestWasAlreadyErroring, wasAlreadyErroring);
+  }
+
   void clearPendingAbortRequest() {
     MOZ_ASSERT(stateIsInitialized());
     MOZ_ASSERT(hasPendingAbortRequest());
