@@ -38,6 +38,11 @@ static void InitMutex(pthread_mutex_t* mMutex) {
 
 CrossProcessMutex::CrossProcessMutex(const char*)
     : mMutex(nullptr), mCount(nullptr) {
+#if defined(MOZ_SANDBOX)
+  // POSIX mutexes in shared memory aren't guaranteed to be safe - and
+  // they specifically are not on Linux.
+  MOZ_RELEASE_ASSERT(false);
+#endif
   mSharedBuffer = new ipc::SharedMemoryBasic;
   if (!mSharedBuffer->Create(sizeof(MutexData))) {
     MOZ_CRASH();
