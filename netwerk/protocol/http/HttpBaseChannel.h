@@ -222,6 +222,7 @@ class HttpBaseChannel : public nsHashPropertyBag,
   NS_IMETHOD UpgradeToSecure() override;
   NS_IMETHOD GetRequestContextID(uint64_t* aRCID) override;
   NS_IMETHOD GetTransferSize(uint64_t* aTransferSize) override;
+  NS_IMETHOD GetRequestSize(uint64_t* aRequestSize) override;
   NS_IMETHOD GetDecodedBodySize(uint64_t* aDecodedBodySize) override;
   NS_IMETHOD GetEncodedBodySize(uint64_t* aEncodedBodySize) override;
   NS_IMETHOD SetRequestContextID(uint64_t aRCID) override;
@@ -702,6 +703,7 @@ class HttpBaseChannel : public nsHashPropertyBag,
 
   uint64_t mStartPos;
   uint64_t mTransferSize;
+  uint64_t mRequestSize;
   uint64_t mDecodedBodySize;
   uint64_t mEncodedBodySize;
   uint64_t mRequestContextID;
