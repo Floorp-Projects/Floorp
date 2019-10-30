@@ -1295,9 +1295,17 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
 
   // Indicates whether this window wants VRDisplayActivate events
   bool mHasVRDisplayActivateEvents : 1;
+
+  // True if this was the currently-active inner window for a BrowsingContext at
+  // the time it was discarded.
+  bool mWasCurrentInnerWindow : 1;
+  void SetWasCurrentInnerWindow() { mWasCurrentInnerWindow = true; }
+  bool WasCurrentInnerWindow() const override { return mWasCurrentInnerWindow; }
+
+  bool mHasSeenGamepadInput : 1;
+
   nsCheapSet<nsUint32HashKey> mGamepadIndexSet;
   nsRefPtrHashtable<nsUint32HashKey, mozilla::dom::Gamepad> mGamepads;
-  bool mHasSeenGamepadInput;
 
   RefPtr<nsScreen> mScreen;
 
