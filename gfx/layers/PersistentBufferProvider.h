@@ -172,7 +172,9 @@ class PersistentBufferProviderShared : public PersistentBufferProvider,
   gfx::IntSize mSize;
   gfx::SurfaceFormat mFormat;
   RefPtr<KnowsCompositor> mKnowsCompositor;
-  Vector<RefPtr<TextureClient>, 4> mTextures;
+  // We may need two extra textures if webrender is enabled.
+  static const size_t kMaxTexturesAllowed = 4;
+  Vector<RefPtr<TextureClient>, kMaxTexturesAllowed + 2> mTextures;
   // Offset of the texture in mTextures that the canvas uses.
   Maybe<uint32_t> mBack;
   // Offset of the texture in mTextures that is presented to the compositor.
@@ -184,6 +186,7 @@ class PersistentBufferProviderShared : public PersistentBufferProvider,
   RefPtr<gfx::DrawTarget> mDrawTarget;
   RefPtr<gfx::SourceSurface> mSnapshot;
   RefPtr<gfx::SourceSurface> mPreviousSnapshot;
+  size_t mMaxAllowedTextures = kMaxTexturesAllowed;
 };
 
 struct AutoReturnSnapshot final {

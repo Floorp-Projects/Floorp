@@ -9,6 +9,7 @@
 #include "Layers.h"
 #include "mozilla/layers/ShadowLayers.h"
 #include "mozilla/layers/TextureClient.h"
+#include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/StaticPrefs_layers.h"
 #include "pratom.h"
@@ -149,6 +150,18 @@ PersistentBufferProviderShared::PersistentBufferProviderShared(
   if (mTextures.append(aTexture)) {
     mBack = Some<uint32_t>(0);
   }
+
+  // If we are using webrender and our textures don't have an intermediate
+  // buffer, then we have to hold onto the textures for longer to make sure that
+  // the GPU has finished using them. So, we need to allow more TextureClients
+  // to be created.
+  if (!aTexture->HasIntermediateBuffer() && gfxVars::UseWebRender()) {
+    ++mMaxAllowedTextures;
+    if (gfxVars::UseWebRenderTripleBufferingWin()) {
+      ++mMaxAllowedTextures;
+    }
+  }
+
   MOZ_COUNT_CTOR(PersistentBufferProviderShared);
 }
 
@@ -306,7 +319,7 @@ PersistentBufferProviderShared::BorrowDrawTarget(
 
   if (!tex) {
     // We have to allocate a new texture.
-    if (mTextures.length() >= 4) {
+    if (mTextures.length() >= mMaxAllowedTextures) {
       // We should never need to buffer that many textures, something's wrong.
       // In theory we throttle the main thread when the compositor can't keep
       // up, so we shoud never get in a situation where we sent 4 textures to
