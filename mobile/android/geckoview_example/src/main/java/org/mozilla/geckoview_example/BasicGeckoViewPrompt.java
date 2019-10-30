@@ -114,6 +114,12 @@ final class BasicGeckoViewPrompt implements GeckoSession.PromptDelegate {
         return res;
     }
 
+    @Override
+    public GeckoResult<PromptResponse> onSharePrompt(final GeckoSession session,
+                                                     final SharePrompt prompt) {
+        return GeckoResult.fromValue(prompt.dismiss());
+    }
+
     private int getViewPadding(final AlertDialog.Builder builder) {
         final TypedArray attr = builder.getContext().obtainStyledAttributes(
                 new int[] { android.R.attr.listPreferredItemPaddingLeft });

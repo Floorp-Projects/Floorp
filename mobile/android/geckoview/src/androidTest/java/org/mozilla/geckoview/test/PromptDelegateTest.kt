@@ -5,12 +5,14 @@ import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoSession.NavigationDelegate.LoadRequest
 import org.mozilla.geckoview.GeckoSession.PromptDelegate
+import org.mozilla.geckoview.test.rule.GeckoSessionTestRule
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
 import org.mozilla.geckoview.test.util.Callbacks
 
 import android.support.test.filters.MediumTest
 import android.support.test.runner.AndroidJUnit4
 import org.hamcrest.Matchers.*
+import org.junit.Assert
 import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -254,5 +256,216 @@ class PromptDelegateTest : BaseSessionTest() {
             }
         })
     }
-}
 
+    @Test fun shareTextSucceeds() {
+        sessionRule.setPrefsUntilTestEnd(mapOf("dom.webshare.requireinteraction" to false))
+        mainSession.loadTestPath(HELLO_HTML_PATH)
+        mainSession.waitForPageStop()
+
+        val shareText = "Example share text"
+
+        sessionRule.delegateDuringNextWait(object : Callbacks.PromptDelegate {
+            @AssertCalled(count = 1)
+            override fun onSharePrompt(session: GeckoSession, prompt: PromptDelegate.SharePrompt): GeckoResult<PromptDelegate.PromptResponse>? {
+                assertThat("Text field is not null", prompt.text, notNullValue())
+                assertThat("Title field is null", prompt.title, nullValue())
+                assertThat("Url field is null", prompt.uri, nullValue())
+                assertThat("Text field contains correct value", prompt.text, equalTo(shareText))
+                return GeckoResult.fromValue(prompt.confirm(PromptDelegate.SharePrompt.Result.SUCCESS))
+            }
+        })
+
+        try {
+            mainSession.waitForJS("""window.navigator.share({text: "${shareText}"})""")
+        } catch (e: GeckoSessionTestRule.RejectedPromiseException) {
+            Assert.fail("Share must succeed." + e.reason as String)
+        }
+    }
+
+    @Test fun shareUrlSucceeds() {
+        sessionRule.setPrefsUntilTestEnd(mapOf("dom.webshare.requireinteraction" to false))
+        mainSession.loadTestPath(HELLO_HTML_PATH)
+        mainSession.waitForPageStop()
+
+        val shareUrl = "https://example.com/"
+
+        sessionRule.delegateDuringNextWait(object : Callbacks.PromptDelegate {
+            @AssertCalled(count = 1)
+            override fun onSharePrompt(session: GeckoSession, prompt: PromptDelegate.SharePrompt): GeckoResult<PromptDelegate.PromptResponse>? {
+                assertThat("Text field is null", prompt.text, nullValue())
+                assertThat("Title field is null", prompt.title, nullValue())
+                assertThat("Url field is not null", prompt.uri, notNullValue())
+                assertThat("Text field contains correct value", prompt.uri, equalTo(shareUrl))
+                return GeckoResult.fromValue(prompt.confirm(PromptDelegate.SharePrompt.Result.SUCCESS))
+            }
+        })
+
+        try {
+            mainSession.waitForJS("""window.navigator.share({url: "${shareUrl}"})""")
+        } catch (e: GeckoSessionTestRule.RejectedPromiseException) {
+            Assert.fail("Share must succeed." + e.reason as String)
+        }
+    }
+
+    @Test fun shareTitleSucceeds() {
+        sessionRule.setPrefsUntilTestEnd(mapOf("dom.webshare.requireinteraction" to false))
+        mainSession.loadTestPath(HELLO_HTML_PATH)
+        mainSession.waitForPageStop()
+
+        val shareTitle = "Title!"
+
+        sessionRule.delegateDuringNextWait(object : Callbacks.PromptDelegate {
+            @AssertCalled(count = 1)
+            override fun onSharePrompt(session: GeckoSession, prompt: PromptDelegate.SharePrompt): GeckoResult<PromptDelegate.PromptResponse>? {
+                assertThat("Text field is null", prompt.text, nullValue())
+                assertThat("Title field is not null", prompt.title, notNullValue())
+                assertThat("Url field is null", prompt.uri, nullValue())
+                assertThat("Text field contains correct value", prompt.title, equalTo(shareTitle))
+                return GeckoResult.fromValue(prompt.confirm(PromptDelegate.SharePrompt.Result.SUCCESS))
+            }
+        })
+
+        try {
+            mainSession.waitForJS("""window.navigator.share({title: "${shareTitle}"})""")
+        } catch (e: GeckoSessionTestRule.RejectedPromiseException) {
+            Assert.fail("Share must succeed." + e.reason as String)
+        }
+    }
+
+    @Test fun failedShareReturnsDataError() {
+        sessionRule.setPrefsUntilTestEnd(mapOf("dom.webshare.requireinteraction" to false))
+        mainSession.loadTestPath(HELLO_HTML_PATH)
+        mainSession.waitForPageStop()
+
+        val shareUrl = "https://www.example.com"
+
+        sessionRule.delegateDuringNextWait(object : Callbacks.PromptDelegate {
+            @AssertCalled(count = 1)
+            override fun onSharePrompt(session: GeckoSession, prompt: PromptDelegate.SharePrompt): GeckoResult<PromptDelegate.PromptResponse>? {
+                return GeckoResult.fromValue(prompt.confirm(PromptDelegate.SharePrompt.Result.FAILURE))
+            }
+        })
+
+        try {
+            mainSession.waitForJS("""window.navigator.share({url: "${shareUrl}"})""")
+            Assert.fail("Request should have failed")
+        } catch (e: GeckoSessionTestRule.RejectedPromiseException) {
+            assertThat("Error should be correct",
+                    e.reason as String, containsString("DataError"))
+        }
+    }
+
+    @Test fun abortedShareReturnsAbortError() {
+        sessionRule.setPrefsUntilTestEnd(mapOf("dom.webshare.requireinteraction" to false))
+        mainSession.loadTestPath(HELLO_HTML_PATH)
+        mainSession.waitForPageStop()
+
+        val shareUrl = "https://www.example.com"
+
+        sessionRule.delegateDuringNextWait(object : Callbacks.PromptDelegate {
+            @AssertCalled(count = 1)
+            override fun onSharePrompt(session: GeckoSession, prompt: PromptDelegate.SharePrompt): GeckoResult<PromptDelegate.PromptResponse>? {
+                return GeckoResult.fromValue(prompt.confirm(PromptDelegate.SharePrompt.Result.ABORT))
+            }
+        })
+
+        try {
+            mainSession.waitForJS("""window.navigator.share({url: "${shareUrl}"})""")
+            Assert.fail("Request should have failed")
+        } catch (e: GeckoSessionTestRule.RejectedPromiseException) {
+            assertThat("Error should be correct",
+                    e.reason as String, containsString("AbortError"))
+        }
+    }
+
+    @Test fun dismissedShareReturnsAbortError() {
+        sessionRule.setPrefsUntilTestEnd(mapOf("dom.webshare.requireinteraction" to false))
+        mainSession.loadTestPath(HELLO_HTML_PATH)
+        mainSession.waitForPageStop()
+
+        val shareUrl = "https://www.example.com"
+
+        sessionRule.delegateDuringNextWait(object : Callbacks.PromptDelegate {
+            @AssertCalled(count = 1)
+            override fun onSharePrompt(session: GeckoSession, prompt: PromptDelegate.SharePrompt): GeckoResult<PromptDelegate.PromptResponse>? {
+                return GeckoResult.fromValue(prompt.dismiss())
+            }
+        })
+
+        try {
+            mainSession.waitForJS("""window.navigator.share({url: "${shareUrl}"})""")
+            Assert.fail("Request should have failed")
+        } catch (e: GeckoSessionTestRule.RejectedPromiseException) {
+            assertThat("Error should be correct",
+                    e.reason as String, containsString("AbortError"))
+        }
+    }
+
+    @Test fun emptyShareReturnsTypeError() {
+        sessionRule.setPrefsUntilTestEnd(mapOf("dom.webshare.requireinteraction" to false))
+        mainSession.loadTestPath(HELLO_HTML_PATH)
+        mainSession.waitForPageStop()
+
+        sessionRule.delegateDuringNextWait(object : Callbacks.PromptDelegate {
+            @AssertCalled(count = 0)
+            override fun onSharePrompt(session: GeckoSession, prompt: PromptDelegate.SharePrompt): GeckoResult<PromptDelegate.PromptResponse>? {
+                return GeckoResult.fromValue(prompt.dismiss())
+            }
+        })
+
+        try {
+            mainSession.waitForJS("""window.navigator.share({})""")
+            Assert.fail("Request should have failed")
+        } catch (e: GeckoSessionTestRule.RejectedPromiseException) {
+            assertThat("Error should be correct",
+                    e.reason as String, containsString("TypeError"))
+        }
+    }
+
+    @Test fun invalidShareUrlReturnsTypeError() {
+        sessionRule.setPrefsUntilTestEnd(mapOf("dom.webshare.requireinteraction" to false))
+        mainSession.loadTestPath(HELLO_HTML_PATH)
+        mainSession.waitForPageStop()
+
+        // Invalid port should cause URL parser to fail.
+        val shareUrl = "http://www.example.com:123456"
+
+        sessionRule.delegateDuringNextWait(object : Callbacks.PromptDelegate {
+            @AssertCalled(count = 0)
+            override fun onSharePrompt(session: GeckoSession, prompt: PromptDelegate.SharePrompt): GeckoResult<PromptDelegate.PromptResponse>? {
+                return GeckoResult.fromValue(prompt.dismiss())
+            }
+        })
+
+        try {
+            mainSession.waitForJS("""window.navigator.share({url: "${shareUrl}"})""")
+            Assert.fail("Request should have failed")
+        } catch (e: GeckoSessionTestRule.RejectedPromiseException) {
+            assertThat("Error should be correct",
+                    e.reason as String, containsString("TypeError"))
+        }
+    }
+
+    @Test fun shareRequiresUserInteraction() {
+        sessionRule.setPrefsUntilTestEnd(mapOf("dom.webshare.requireinteraction" to true))
+        mainSession.loadTestPath(HELLO_HTML_PATH)
+        mainSession.waitForPageStop()
+
+        val shareUrl = "https://www.example.com"
+
+        sessionRule.delegateDuringNextWait(object : Callbacks.PromptDelegate {
+            @AssertCalled(count = 0)
+            override fun onSharePrompt(session: GeckoSession, prompt: PromptDelegate.SharePrompt): GeckoResult<PromptDelegate.PromptResponse>? {
+                return GeckoResult.fromValue(prompt.dismiss())
+            }
+        })
+
+        try {
+            mainSession.waitForJS("""window.navigator.share({url: "${shareUrl}"})""")
+            Assert.fail("Request should have failed")
+        } catch (e: GeckoSessionTestRule.RejectedPromiseException) {
+            assertThat("Error should be correct",
+                    e.reason as String, containsString("NotAllowedError"))
+        }
+    }
+}
