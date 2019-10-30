@@ -258,49 +258,16 @@ var Manager = {
         // Recognize when no valid autocomplete results has been selected.
         tabTransitionData.typed = true;
       } else {
-        let value = controller.getValueAt(idx);
-        let action = input._parseActionUrl(value);
+        // Special handling for bookmark urlbar autocompletion
+        // (which happens when we got a null action and a valid selectedIndex)
+        let styles = new Set(controller.getStyleAt(idx).split(/\s+/));
 
-        if (action) {
-          // Detect keyword and generated and more typed scenarios.
-          switch (action.type) {
-            case "keyword":
-              tabTransitionData.keyword = true;
-              break;
-            case "searchengine":
-            case "searchsuggestion":
-              tabTransitionData.generated = true;
-              break;
-            case "visiturl":
-              // Visiturl are autocompletion results related to
-              // history suggestions.
-              tabTransitionData.typed = true;
-              break;
-            case "remotetab":
-              // Remote tab are autocomplete results related to
-              // tab urls from a remote synchronized Firefox.
-              tabTransitionData.typed = true;
-              break;
-            case "switchtab":
-              // This "switchtab" autocompletion should be ignored, because
-              // it is not related to a navigation.
-              return;
-            default:
-              // Fallback on "typed" if unable to detect a known moz-action type.
-              tabTransitionData.typed = true;
-          }
+        if (styles.has("bookmark")) {
+          tabTransitionData.auto_bookmark = true;
         } else {
-          // Special handling for bookmark urlbar autocompletion
-          // (which happens when we got a null action and a valid selectedIndex)
-          let styles = new Set(controller.getStyleAt(idx).split(/\s+/));
-
-          if (styles.has("bookmark")) {
-            tabTransitionData.auto_bookmark = true;
-          } else {
-            // Fallback on "typed" if unable to detect a specific actionType
-            // (and when in the styles there are "autofill" or "history").
-            tabTransitionData.typed = true;
-          }
+          // Fallback on "typed" if unable to detect a specific actionType
+          // (and when in the styles there are "autofill" or "history").
+          tabTransitionData.typed = true;
         }
       }
 
