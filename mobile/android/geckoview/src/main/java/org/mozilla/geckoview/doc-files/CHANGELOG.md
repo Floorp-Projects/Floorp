@@ -56,8 +56,6 @@ exclude: true
   to the session it holds.
 - Changed [`AutofillElement.children`][71.20] interface to `Collection` to provide
   an efficient way to pre-allocate memory when filling `ViewStructure`.
-- Added [`GeckoDisplay.screenshot`][71.22] allowing apps finer grain control over screenshots.
-  ([bug 1577192]({{bugzilla}}1577192))
 
 [71.1]: {{javadoc_uri}}/RuntimeTelemetry.Delegate.html#onBooleanScalar-org.mozilla.geckoview.RuntimeTelemetry.Metric-
 [71.2]: {{javadoc_uri}}/RuntimeTelemetry.Delegate.html#onLongScalar-org.mozilla.geckoview.RuntimeTelemetry.Metric-
@@ -79,7 +77,6 @@ exclude: true
 [71.19]: {{javadoc_uri}}/GeckoSession.html#getAutofillElements--
 [71.20]: {{javadoc_uri}}/AutofillElement.html
 [71.21]: {{javadoc_uri}}/GeckoView.html#setAutofillEnabled-boolean-
-[71.22]: {{javadoc_uri}}/GeckoDisplay.html#screenshot--
 
 ## v70
 - Added API for session context assignment
@@ -402,4 +399,4 @@ exclude: true
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: ccbb8bca379f33fa67a332dcf8dea131249ce2ca
+[api-version]: ee3ceb65db78c3a801f525465ff3c6e9eca22ae9
