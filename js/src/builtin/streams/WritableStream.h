@@ -70,17 +70,9 @@ class WritableStream : public NativeObject {
     Slot_StoredError,
 
     /**
-     * Very briefly for newborn writable streams before they are initialized,
-     * |undefined|.
-     *
-     * After initialization, a |ListObject| consisting of the value of the
-     * [[inFlightWriteRequest]] spec field (if it is not |undefined|) followed
-     * by the elements of the [[queue]] List.  |this| and the |ListObject| are
-     * same-compartment.
-     *
-     * After a stream has gone irrevocably into an error state (specifically,
-     * |stream.[[state]]| is "errored") and requests can no longer be enqueued,
-     * |undefined| yet again.
+     * A |ListObject| consisting of the value of the [[inFlightWriteRequest]]
+     * spec field (if it is not |undefined|) followed by the elements of the
+     * [[queue]] List.  |this| and the |ListObject| are same-compartment.
      *
      * If the |HaveInFlightWriteRequest| flag is set, the first element of this
      * List is the non-|undefined| value of [[inFlightWriteRequest]].  If it is
@@ -360,16 +352,9 @@ class WritableStream : public NativeObject {
   }
 
   ListObject* writeRequests() const {
-    MOZ_ASSERT(!getFixedSlot(Slot_WriteRequests).isUndefined(),
-               "shouldn't be accessing [[writeRequests]] on a newborn and "
-               "uninitialized stream, or on a stream that's errored and no "
-               "longer has any write requests");
     return &getFixedSlot(Slot_WriteRequests).toObject().as<ListObject>();
   }
   void clearWriteRequests() {
-    // Setting [[writeRequests]] to an empty List in the irrevocably-in-error
-    // case (in which [[writeRequests]] is never again accessed) is optimized to
-    // just clearing the field.  See the comment on the slot constant above.
     MOZ_ASSERT(stateIsInitialized());
     MOZ_ASSERT(!haveInFlightWriteRequest(),
                "must clear the in-flight request flag before clearing "
@@ -392,15 +377,6 @@ class WritableStream : public NativeObject {
   bool pendingAbortRequestWasAlreadyErroring() const {
     MOZ_ASSERT(hasPendingAbortRequest());
     return flags() & PendingAbortRequestWasAlreadyErroring;
-  }
-
-  void setPendingAbortRequest(JSObject* promise, const JS::Value& reason,
-                              bool wasAlreadyErroring) {
-    MOZ_ASSERT(!hasPendingAbortRequest());
-    MOZ_ASSERT(!(flags() & PendingAbortRequestWasAlreadyErroring));
-    setFixedSlot(Slot_PendingAbortRequestPromise, JS::ObjectValue(*promise));
-    setFixedSlot(Slot_PendingAbortRequestReason, reason);
-    setFlag(PendingAbortRequestWasAlreadyErroring, wasAlreadyErroring);
   }
 
   void clearPendingAbortRequest() {

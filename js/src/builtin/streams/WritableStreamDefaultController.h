@@ -51,22 +51,6 @@ class WritableStreamDefaultController : public StreamController {
      */
     Slot_StrategySize,
 
-    /**
-     * Slots containing the core of each of the write/close/abort algorithms the
-     * spec creates from the underlying sink passed in when creating a
-     * |WritableStream|.  ("core", as in the value produced by
-     * |CreateAlgorithmFromUnderlyingMethod| after validating the user-provided
-     * input.)
-     *
-     * These slots are initialized underneath the |WritableStream| constructor,
-     * so they are same-compartment with both stream and controller.  (They
-     * could be wrappers around arbitrary callable objects from other
-     * compartments, tho.)
-     */
-    Slot_WriteMethod,
-    Slot_CloseMethod,
-    Slot_AbortMethod,
-
     /** Bit field stored as Int32Value. */
     Slot_Flags,
 
@@ -114,22 +98,13 @@ class WritableStreamDefaultController : public StreamController {
     controller->setUnderlyingSink(JS::UndefinedHandleValue);
   }
 
-  JS::Value writeMethod() const { return getFixedSlot(Slot_WriteMethod); }
-  void setWriteMethod(const JS::Value& writeMethod) {
-    setFixedSlot(Slot_WriteMethod, writeMethod);
-  }
+  void setWriteMethod(const JS::Value& writeMethod) {}
   void clearWriteMethod() { setWriteMethod(JS::UndefinedValue()); }
 
-  JS::Value closeMethod() const { return getFixedSlot(Slot_CloseMethod); }
-  void setCloseMethod(const JS::Value& closeMethod) {
-    setFixedSlot(Slot_CloseMethod, closeMethod);
-  }
+  void setCloseMethod(const JS::Value& closeMethod) {}
   void clearCloseMethod() { setCloseMethod(JS::UndefinedValue()); }
 
-  JS::Value abortMethod() const { return getFixedSlot(Slot_AbortMethod); }
-  void setAbortMethod(const JS::Value& abortMethod) {
-    setFixedSlot(Slot_AbortMethod, abortMethod);
-  }
+  void setAbortMethod(const JS::Value& abortMethod) {}
   void clearAbortMethod() { setAbortMethod(JS::UndefinedValue()); }
 
   double strategyHWM() const {
@@ -139,10 +114,7 @@ class WritableStreamDefaultController : public StreamController {
     setFixedSlot(Slot_StrategyHWM, DoubleValue(highWaterMark));
   }
 
-  JS::Value strategySize() const { return getFixedSlot(Slot_StrategySize); }
-  void setStrategySize(const JS::Value& size) {
-    setFixedSlot(Slot_StrategySize, size);
-  }
+  void setStrategySize(const JS::Value& size) {}
   void clearStrategySize() { setStrategySize(JS::UndefinedValue()); }
 
   uint32_t flags() const { return getFixedSlot(Slot_Flags).toInt32(); }
