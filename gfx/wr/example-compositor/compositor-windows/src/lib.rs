@@ -33,7 +33,6 @@ extern {
         id: u64,
         width: i32,
         height: i32,
-        is_opaque: bool,
     );
 
     fn com_dc_destroy_surface(
@@ -98,15 +97,13 @@ pub fn create_surface(
     id: u64,
     width: i32,
     height: i32,
-    is_opaque: bool,
 ) {
     unsafe {
         com_dc_create_surface(
             window,
             id,
             width,
-            height,
-            is_opaque
+            height
         )
     }
 }
