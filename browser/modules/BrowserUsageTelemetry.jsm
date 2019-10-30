@@ -41,7 +41,6 @@ const TAB_RESTORING_TOPIC = "SSTabRestoring";
 const TELEMETRY_SUBSESSIONSPLIT_TOPIC =
   "internal-telemetry-after-subsession-split";
 const DOMWINDOW_OPENED_TOPIC = "domwindowopened";
-const AUTOCOMPLETE_ENTER_TEXT_TOPIC = "autocomplete-did-enter-text";
 
 // Probe names.
 const MAX_TAB_COUNT_SCALAR_NAME = "browser.engagement.max_concurrent_tab_count";
@@ -337,104 +336,11 @@ let URICountListener = {
   ]),
 };
 
-let urlbarListener = {
-  // This is needed for recordUrlbarSelectedResultMethod().
-  selectedIndex: -1,
-
-  init() {
-    Services.obs.addObserver(this, AUTOCOMPLETE_ENTER_TEXT_TOPIC, true);
-  },
-
-  uninit() {
-    Services.obs.removeObserver(this, AUTOCOMPLETE_ENTER_TEXT_TOPIC);
-  },
-
-  observe(subject, topic, data) {
-    switch (topic) {
-      case AUTOCOMPLETE_ENTER_TEXT_TOPIC:
-        this._handleURLBarTelemetry(
-          subject.QueryInterface(Ci.nsIAutoCompleteInput)
-        );
-        break;
-    }
-  },
-
-  /**
-   * Used to log telemetry when the user enters text in the urlbar.
-   *
-   * @param {nsIAutoCompleteInput} input  The autocomplete element where the
-   *                                      text was entered.
-   */
-  _handleURLBarTelemetry(input) {
-    if (!input || input.id != "urlbar") {
-      return;
-    }
-    if (input.inPrivateContext || input.popup.selectedIndex < 0) {
-      this.selectedIndex = -1;
-      return;
-    }
-
-    // Except for the history popup, the urlbar always has a selection.  The
-    // first result at index 0 is the "heuristic" result that indicates what
-    // will happen when you press the Enter key.  Treat it as no selection.
-    this.selectedIndex =
-      input.popup.selectedIndex > 0 || !input.popup._isFirstResultHeuristic
-        ? input.popup.selectedIndex
-        : -1;
-
-    let controller = input.popup.view.QueryInterface(
-      Ci.nsIAutoCompleteController
-    );
-    let idx = input.popup.selectedIndex;
-    let value = controller.getValueAt(idx);
-    let action = input._parseActionUrl(value);
-    let actionType;
-    if (action) {
-      actionType =
-        action.type == "searchengine" && action.params.searchSuggestion
-          ? "searchsuggestion"
-          : action.type;
-    }
-    if (!actionType) {
-      let styles = new Set(controller.getStyleAt(idx).split(/\s+/));
-      let style = ["preloaded-top-site", "autofill", "tag", "bookmark"].find(
-        s => styles.has(s)
-      );
-      actionType = style || "history";
-    }
-
-    Services.telemetry
-      .getHistogramById("FX_URLBAR_SELECTED_RESULT_INDEX")
-      .add(idx);
-
-    // You can add values but don't change any of the existing values.
-    // Otherwise you'll break our data.
-    if (actionType in URLBAR_SELECTED_RESULT_TYPES) {
-      Services.telemetry
-        .getHistogramById("FX_URLBAR_SELECTED_RESULT_TYPE")
-        .add(URLBAR_SELECTED_RESULT_TYPES[actionType]);
-      Services.telemetry
-        .getKeyedHistogramById("FX_URLBAR_SELECTED_RESULT_INDEX_BY_TYPE")
-        .add(actionType, idx);
-    } else {
-      Cu.reportError(
-        "Unknown FX_URLBAR_SELECTED_RESULT_TYPE type: " + actionType
-      );
-    }
-  },
-
-  QueryInterface: ChromeUtils.generateQI([
-    Ci.nsIObserver,
-    Ci.nsISupportsWeakReference,
-  ]),
-};
-
 let BrowserUsageTelemetry = {
   _inited: false,
 
   init() {
     this._lastRecordTabCount = 0;
-    urlbarListener.init();
     this._setupAfterRestore();
     this._inited = true;
   },
@@ -471,7 +377,6 @@ let BrowserUsageTelemetry = {
     }
     Services.obs.removeObserver(this, DOMWINDOW_OPENED_TOPIC);
     Services.obs.removeObserver(this, TELEMETRY_SUBSESSIONSPLIT_TOPIC);
-    urlbarListener.uninit();
   },
 
   observe(subject, topic, data) {
@@ -654,37 +559,7 @@ let BrowserUsageTelemetry = {
   },
 
   /**
-   * Records the method by which the user selected a urlbar result for the
-   * legacy urlbar.
-   *
-   * @param {Event} event
-   *        The event that triggered the selection.
-   * @param {string} userSelectionBehavior
-   *        How the user cycled through results before picking the current match.
-   *        Could be one of "tab", "arrow" or "none".
-   */
-  recordLegacyUrlbarSelectedResultMethod(
-    event,
-    userSelectionBehavior = "none"
-  ) {
-    // The reason this method relies on urlbarListener instead of having the
-    // caller pass in an index is that by the time the urlbar handles a
-    // selection, the selection in its popup has been cleared, so it's not easy
-    // to tell which popup index was selected.  Fortunately this file already
-    // has urlbarListener, which gets notified of selections in the urlbar
-    // before the popup selection is cleared, so just use that.
-
-    this._recordUrlOrSearchbarSelectedResultMethod(
-      event,
-      urlbarListener.selectedIndex,
-      "FX_URLBAR_SELECTED_RESULT_METHOD",
-      userSelectionBehavior
-    );
-  },
-
-  /**
-   * Records the method by which the user selected a urlbar result for the
-   * legacy urlbar.
+   * Records the method by which the user selected a result from the urlbar.
    *
    * @param {Event} event
    *        The event that triggered the selection.
@@ -700,13 +575,6 @@ let BrowserUsageTelemetry = {
     index,
     userSelectionBehavior = "none"
   ) {
-    // The reason this method relies on urlbarListener instead of having the
-    // caller pass in an index is that by the time the urlbar handles a
-    // selection, the selection in its popup has been cleared, so it's not easy
-    // to tell which popup index was selected.  Fortunately this file already
-    // has urlbarListener, which gets notified of selections in the urlbar
-    // before the popup selection is cleared, so just use that.
-
     this._recordUrlOrSearchbarSelectedResultMethod(
       event,
       index,
