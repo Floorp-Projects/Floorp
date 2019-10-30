@@ -147,7 +147,7 @@ class UrlbarView {
    *   Whether the panel is open.
    */
   get isOpen() {
-    return !this.panel.hasAttribute("hidden");
+    return this.input.hasAttribute("open");
   }
 
   get allowEmptySelection() {
@@ -390,7 +390,6 @@ class UrlbarView {
       return;
     }
 
-    this.panel.setAttribute("hidden", "true");
     this.removeAccessibleFocus();
     this.input.inputField.setAttribute("aria-expanded", "false");
     this.input.dropmarker.removeAttribute("open");
@@ -611,7 +610,6 @@ class UrlbarView {
 
       this._mainContainer.style.maxWidth = px(width);
     }
-    this.panel.removeAttribute("hidden");
     this.input.inputField.setAttribute("aria-expanded", "true");
     this.input.dropmarker.setAttribute("open", "true");
 
