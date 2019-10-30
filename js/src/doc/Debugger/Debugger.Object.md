@@ -192,6 +192,12 @@ from its prototype:
     always equal to `obj.script.isAsyncFunction`, assuming `obj.script` is a
     `Debugger.Script`.)
 
+`isClassConstructor`
+:   If the referent is a debuggee function, returns `true` if the referent is a class, 
+    or false if it is some other sort of function. If the referent is not a debuggee 
+    function, or not a function at all, this is `undefined`. (This is always equal to
+    `obj.script.isClassConstructor`, assuming `obj.script` is a `Debugger.Script`.)
+
 `isPromise`
 :   `true` if the referent is a Promise; `false` otherwise.
 

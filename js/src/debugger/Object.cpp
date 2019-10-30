@@ -151,6 +151,7 @@ struct MOZ_STACK_CLASS DebuggerObject::CallData {
   bool isBoundFunctionGetter();
   bool isArrowFunctionGetter();
   bool isAsyncFunctionGetter();
+  bool isClassConstructorGetter();
   bool isGeneratorFunctionGetter();
   bool protoGetter();
   bool classGetter();
@@ -274,6 +275,16 @@ bool DebuggerObject::CallData::isGeneratorFunctionGetter() {
   }
 
   args.rval().setBoolean(object->isGeneratorFunction());
+  return true;
+}
+
+bool DebuggerObject::CallData::isClassConstructorGetter() {
+  if (!object->isDebuggeeFunction()) {
+    args.rval().setUndefined();
+    return true;
+  }
+
+  args.rval().setBoolean(object->isClassConstructor());
   return true;
 }
 
@@ -1412,6 +1423,7 @@ const JSPropertySpec DebuggerObject::properties_[] = {
     JS_DEBUG_PSG("isArrowFunction", isArrowFunctionGetter),
     JS_DEBUG_PSG("isGeneratorFunction", isGeneratorFunctionGetter),
     JS_DEBUG_PSG("isAsyncFunction", isAsyncFunctionGetter),
+    JS_DEBUG_PSG("isClassConstructor", isClassConstructorGetter),
     JS_DEBUG_PSG("proto", protoGetter),
     JS_DEBUG_PSG("class", classGetter),
     JS_DEBUG_PSG("name", nameGetter),
@@ -1548,6 +1560,12 @@ bool DebuggerObject::isGeneratorFunction() const {
   MOZ_ASSERT(isDebuggeeFunction());
 
   return referent()->as<JSFunction>().isGenerator();
+}
+
+bool DebuggerObject::isClassConstructor() const {
+  MOZ_ASSERT(isDebuggeeFunction());
+
+  return referent()->as<JSFunction>().isClassConstructor();
 }
 
 bool DebuggerObject::isGlobal() const { return referent()->is<GlobalObject>(); }
