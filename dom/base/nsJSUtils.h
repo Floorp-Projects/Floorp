@@ -25,6 +25,7 @@
 #include "js/SourceText.h"
 #include "js/StableStringChars.h"
 #include "nsString.h"
+#include "xpcpublic.h"
 
 class nsIScriptContext;
 class nsIScriptElement;
@@ -258,11 +259,42 @@ class nsJSUtils {
   static bool DumpEnabled();
 };
 
+inline void AssignFromStringBuffer(nsStringBuffer* buffer, size_t len,
+                                   nsAString& dest) {
+  buffer->ToString(len, dest);
+}
+
+inline void AssignFromLiteralChars(const char16_t* chars, size_t len,
+                                   nsAString& dest) {
+  dest.AssignLiteral(chars, len);
+}
+
 template <typename T>
 inline bool AssignJSString(JSContext* cx, T& dest, JSString* s) {
   size_t len = JS::GetStringLength(s);
   static_assert(js::MaxStringLength < (1 << 30),
                 "Shouldn't overflow here or in SetCapacity");
+
+  const char16_t* chars;
+  if (XPCStringConvert::MaybeGetDOMStringChars(s, &chars)) {
+    // The characters represent an existing string buffer that we shared with
+    // JS.  We can share that buffer ourselves if the string corresponds to the
+    // whole buffer; otherwise we have to copy.
+    if (chars[len] == '\0') {
+      AssignFromStringBuffer(
+          nsStringBuffer::FromData(const_cast<char16_t*>(chars)), len, dest);
+      return true;
+    }
+  } else if (XPCStringConvert::MaybeGetLiteralStringChars(s, &chars)) {
+    // The characters represent a literal char16_t string constant
+    // compiled into libxul; we can just use it as-is.
+    AssignFromLiteralChars(chars, len, dest);
+    return true;
+  }
+
+  // We don't bother checking for a dynamic-atom external string, because we'd
+  // just need to copy out of it anyway.
+
   if (MOZ_UNLIKELY(!dest.SetLength(len, mozilla::fallible))) {
     JS_ReportOutOfMemory(cx);
     return false;

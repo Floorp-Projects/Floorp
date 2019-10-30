@@ -27,3 +27,4 @@
 % http://localhost/tests/perf-reftest-singletons/link-style-cache-1.html
 % http://localhost/tests/perf-reftest-singletons/window-named-property-get.html
 % http://localhost/tests/perf-reftest-singletons/getElementById-1.html
+% http://localhost/tests/perf-reftest-singletons/external-string-pass.html

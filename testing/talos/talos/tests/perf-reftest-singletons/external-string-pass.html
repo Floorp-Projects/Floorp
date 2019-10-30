@@ -1,0 +1,18 @@
+<!doctype html>
+<script src="util.js"></script>
+<script>
+  onload = function() {
+      var str = new Array(1e6).join("a");
+      var div = document.createElement("div");
+      // Round-trip through the DOM to make sure we have an external string.
+      div.setAttribute("x", str);
+      str = div.getAttribute("x");
+      var count = 3e7;  // About 1s
+      var t = new DataTransfer();
+      perf_start();
+      for (let i = count; i > 0; --i) {
+          t.dropEffect = str;
+      }
+      perf_finish();
+  };
+</script>

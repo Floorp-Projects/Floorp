@@ -291,14 +291,24 @@ class XPCStringConvert {
     return true;
   }
 
-  static MOZ_ALWAYS_INLINE bool IsLiteral(JSString* str) {
-    return JS_IsExternalString(str) &&
-           JS_GetExternalStringCallbacks(str) == &sLiteralExternalString;
+  static MOZ_ALWAYS_INLINE bool MaybeGetExternalStringChars(
+      JSString* str, const JSExternalStringCallbacks* desiredCallbacks,
+      const char16_t** chars) {
+    const JSExternalStringCallbacks* callbacks;
+    return js::IsExternalString(str, &callbacks, chars) &&
+           callbacks == desiredCallbacks;
   }
 
-  static MOZ_ALWAYS_INLINE bool IsDOMString(JSString* str) {
-    return JS_IsExternalString(str) &&
-           JS_GetExternalStringCallbacks(str) == &sDOMStringExternalString;
+  // Returns non-null chars if the given string is a literal external string.
+  static MOZ_ALWAYS_INLINE bool MaybeGetLiteralStringChars(
+      JSString* str, const char16_t** chars) {
+    return MaybeGetExternalStringChars(str, &sLiteralExternalString, chars);
+  }
+
+  // Returns non-null chars if the given string is a DOM external string.
+  static MOZ_ALWAYS_INLINE bool MaybeGetDOMStringChars(JSString* str,
+                                                       const char16_t** chars) {
+    return MaybeGetExternalStringChars(str, &sDOMStringExternalString, chars);
   }
 
  private:
