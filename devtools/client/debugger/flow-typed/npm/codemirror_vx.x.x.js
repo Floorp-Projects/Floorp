@@ -122,10 +122,6 @@ declare module 'codemirror/addon/hint/javascript-hint' {
   declare module.exports: any;
 }
 
-declare module 'codemirror/addon/hint/show-hint' {
-  declare module.exports: any;
-}
-
 declare module 'codemirror/addon/hint/sql-hint' {
   declare module.exports: any;
 }
@@ -243,14 +239,6 @@ declare module 'codemirror/addon/selection/mark-selection' {
 }
 
 declare module 'codemirror/addon/selection/selection-pointer' {
-  declare module.exports: any;
-}
-
-declare module 'codemirror/addon/tern/tern' {
-  declare module.exports: any;
-}
-
-declare module 'codemirror/addon/tern/worker' {
   declare module.exports: any;
 }
 
@@ -1090,9 +1078,6 @@ declare module 'codemirror/addon/hint/html-hint.js' {
 declare module 'codemirror/addon/hint/javascript-hint.js' {
   declare module.exports: $Exports<'codemirror/addon/hint/javascript-hint'>;
 }
-declare module 'codemirror/addon/hint/show-hint.js' {
-  declare module.exports: $Exports<'codemirror/addon/hint/show-hint'>;
-}
 declare module 'codemirror/addon/hint/sql-hint.js' {
   declare module.exports: $Exports<'codemirror/addon/hint/sql-hint'>;
 }
@@ -1182,12 +1167,6 @@ declare module 'codemirror/addon/selection/mark-selection.js' {
 }
 declare module 'codemirror/addon/selection/selection-pointer.js' {
   declare module.exports: $Exports<'codemirror/addon/selection/selection-pointer'>;
-}
-declare module 'codemirror/addon/tern/tern.js' {
-  declare module.exports: $Exports<'codemirror/addon/tern/tern'>;
-}
-declare module 'codemirror/addon/tern/worker.js' {
-  declare module.exports: $Exports<'codemirror/addon/tern/worker'>;
 }
 declare module 'codemirror/addon/wrap/hardwrap.js' {
   declare module.exports: $Exports<'codemirror/addon/wrap/hardwrap'>;

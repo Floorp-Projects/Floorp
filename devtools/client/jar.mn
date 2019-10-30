@@ -14,8 +14,6 @@ devtools.jar:
     content/storage/index.xul (storage/index.xul)
     content/inspector/markup/markup.xhtml (inspector/markup/markup.xhtml)
     content/shared/sourceeditor/codemirror/addon/dialog/dialog.css (shared/sourceeditor/codemirror/addon/dialog/dialog.css)
-    content/shared/sourceeditor/codemirror/addon/hint/show-hint.js (shared/sourceeditor/codemirror/addon/hint/show-hint.js)
-    content/shared/sourceeditor/codemirror/addon/tern/tern.js (shared/sourceeditor/codemirror/addon/tern/tern.js)
     content/shared/sourceeditor/codemirror/keymap/emacs.js (shared/sourceeditor/codemirror/keymap/emacs.js)
     content/shared/sourceeditor/codemirror/keymap/vim.js (shared/sourceeditor/codemirror/keymap/vim.js)
     content/shared/sourceeditor/codemirror/keymap/sublime.js (shared/sourceeditor/codemirror/keymap/sublime.js)
