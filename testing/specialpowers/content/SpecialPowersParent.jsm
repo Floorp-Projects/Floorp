@@ -178,6 +178,19 @@ class SpecialPowersParent extends JSWindowActorParent {
             };
             this._self.sendAsyncMessage("specialpowers-" + aTopic, msg);
             return;
+          case "xfo-on-violate-policy":
+            let uriSpec = null;
+            if (aSubject instanceof Ci.nsIURI) {
+              uriSpec = aSubject.asciiSpec;
+            } else {
+              throw new Error("Subject must be nsIURI");
+            }
+            msg = {
+              subject: uriSpec,
+              data: aData,
+            };
+            this._self.sendAsyncMessage("specialpowers-" + aTopic, msg);
+            return;
           default:
             this._self.sendAsyncMessage("specialpowers-" + aTopic, msg);
         }

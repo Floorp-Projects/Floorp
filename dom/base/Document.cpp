@@ -99,7 +99,6 @@
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/FeaturePolicy.h"
 #include "mozilla/dom/FeaturePolicyUtils.h"
-#include "mozilla/dom/FramingChecker.h"
 #include "mozilla/dom/HTMLAllCollection.h"
 #include "mozilla/dom/HTMLMetaElement.h"
 #include "mozilla/dom/HTMLSharedElement.h"
@@ -1556,7 +1555,7 @@ void Document::GetFailedCertSecurityInfo(
     return;
   }
 
-  for (const auto& certificate: failedCertArray) {
+  for (const auto& certificate : failedCertArray) {
     rv = certificate->GetIssuerCommonName(issuerCommonName);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       aRv.Throw(rv);
@@ -3008,16 +3007,6 @@ nsresult Document::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
   // Initialize FeaturePolicy
   rv = InitFeaturePolicy(aChannel);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  // XFO needs to be checked after CSP because it is ignored if
-  // the CSP defines frame-ancestors.
-  nsCOMPtr<nsIContentSecurityPolicy> cspForFA = mCSP;
-  if (!FramingChecker::CheckFrameOptions(aChannel, docShell, cspForFA)) {
-    MOZ_LOG(gCspPRLog, LogLevel::Debug,
-            ("XFO doesn't like frame's ancestry, not loading."));
-    // stop!  ERROR page!
-    aChannel->Cancel(NS_ERROR_CSP_FRAME_ANCESTOR_VIOLATION);
-  }
 
   rv = loadInfo->GetCookieSettings(getter_AddRefs(mCookieSettings));
   NS_ENSURE_SUCCESS(rv, rv);
