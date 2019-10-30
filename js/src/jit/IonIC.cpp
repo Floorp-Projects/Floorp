@@ -613,6 +613,24 @@ bool IonBinaryArithIC::update(JSContext* cx, HandleScript outerScript,
       }
       break;
     }
+    case JSOP_LSH: {
+      if (!BitLsh(cx, &lhsCopy, &rhsCopy, ret)) {
+        return false;
+      }
+      break;
+    }
+    case JSOP_RSH: {
+      if (!BitRsh(cx, &lhsCopy, &rhsCopy, ret)) {
+        return false;
+      }
+      break;
+    }
+    case JSOP_URSH: {
+      if (!UrshOperation(cx, &lhsCopy, &rhsCopy, ret)) {
+        return false;
+      }
+      break;
+    }
     default:
       MOZ_CRASH("Unhandled binary arith op");
   }

@@ -709,13 +709,19 @@ AbortReasonOr<Ok> IonBuilder::analyzeNewLoopTypes(
         case JSOP_UINT16:
         case JSOP_UINT24:
         case JSOP_RESUMEINDEX:
+          type = MIRType::Int32;
+          break;
         case JSOP_BITAND:
         case JSOP_BITOR:
         case JSOP_BITXOR:
         case JSOP_BITNOT:
         case JSOP_RSH:
         case JSOP_LSH:
+          type = inspector->expectedResultType(last.toRawBytecode());
+          break;
         case JSOP_URSH:
+          // Unsigned right shift is not applicable to BigInts, so we don't need
+          // to query the baseline inspector for the possible result types.
           type = MIRType::Int32;
           break;
         case JSOP_FALSE:
@@ -3461,10 +3467,10 @@ AbortReasonOr<Ok> IonBuilder::jsop_bitnot() {
   return resumeAfter(ins);
 }
 
-AbortReasonOr<Ok> IonBuilder::jsop_bitop(JSOp op) {
-  // Pop inputs.
-  MDefinition* right = current->pop();
-  MDefinition* left = current->pop();
+AbortReasonOr<MBinaryBitwiseInstruction*> IonBuilder::binaryBitOpEmit(
+    JSOp op, MIRType specialization, MDefinition* left, MDefinition* right) {
+  MOZ_ASSERT(specialization == MIRType::Int32 ||
+             specialization == MIRType::None);
 
   MBinaryBitwiseInstruction* ins;
   switch (op) {
@@ -3499,11 +3505,68 @@ AbortReasonOr<Ok> IonBuilder::jsop_bitop(JSOp op) {
   current->add(ins);
   ins->infer(inspector, pc);
 
+  // The expected specialization should match the inferred specialization.
+  MOZ_ASSERT_IF(specialization == MIRType::None,
+                ins->specialization() == MIRType::None);
+  MOZ_ASSERT_IF(
+      specialization == MIRType::Int32,
+      ins->specialization() == MIRType::Int32 ||
+          (op == JSOP_URSH && ins->specialization() == MIRType::Double));
+
   current->push(ins);
   if (ins->isEffectful()) {
     MOZ_TRY(resumeAfter(ins));
   }
 
+  return ins;
+}
+
+static inline bool SimpleBitOpOperand(MDefinition* op) {
+  return !op->mightBeType(MIRType::Object) &&
+         !op->mightBeType(MIRType::Symbol) && !op->mightBeType(MIRType::BigInt);
+}
+
+AbortReasonOr<Ok> IonBuilder::binaryBitOpTrySpecialized(bool* emitted, JSOp op,
+                                                        MDefinition* left,
+                                                        MDefinition* right) {
+  MOZ_ASSERT(*emitted == false);
+
+  // Try to emit a specialized binary instruction based on the input types
+  // of the operands.
+
+  // Anything complex - objects, symbols, and bigints - are not specialized
+  if (!SimpleBitOpOperand(left) || !SimpleBitOpOperand(right)) {
+    return Ok();
+  }
+
+  MIRType specialization = MIRType::Int32;
+  MOZ_TRY(binaryBitOpEmit(op, specialization, left, right));
+
+  *emitted = true;
+  return Ok();
+}
+
+AbortReasonOr<Ok> IonBuilder::jsop_bitop(JSOp op) {
+  // Pop inputs.
+  MDefinition* right = current->pop();
+  MDefinition* left = current->pop();
+
+  bool emitted = false;
+
+  if (!forceInlineCaches()) {
+    MOZ_TRY(binaryBitOpTrySpecialized(&emitted, op, left, right));
+    if (emitted) {
+      return Ok();
+    }
+  }
+
+  MOZ_TRY(arithTryBinaryStub(&emitted, op, left, right));
+  if (emitted) {
+    return Ok();
+  }
+
+  // Not possible to optimize. Do a slow vm call.
+  MOZ_TRY(binaryBitOpEmit(op, MIRType::None, left, right));
   return Ok();
 }
 
@@ -3736,6 +3799,12 @@ AbortReasonOr<Ok> IonBuilder::arithTryBinaryStub(bool* emitted, JSOp op,
     case JSOP_MUL:
     case JSOP_DIV:
     case JSOP_MOD:
+    case JSOP_BITAND:
+    case JSOP_BITOR:
+    case JSOP_BITXOR:
+    case JSOP_LSH:
+    case JSOP_RSH:
+    case JSOP_URSH:
       stub = MBinaryCache::New(alloc(), left, right, MIRType::Value);
       break;
     default:

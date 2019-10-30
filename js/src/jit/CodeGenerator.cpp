@@ -3383,7 +3383,13 @@ void CodeGenerator::visitBinaryValueCache(LBinaryValueCache* lir) {
     case JSOP_MUL:
     case JSOP_DIV:
     case JSOP_MOD:
-    case JSOP_POW: {
+    case JSOP_POW:
+    case JSOP_BITAND:
+    case JSOP_BITOR:
+    case JSOP_BITXOR:
+    case JSOP_LSH:
+    case JSOP_RSH:
+    case JSOP_URSH: {
       IonBinaryArithIC ic(liveRegs, lhs, rhs, output);
       addIC(lir, allocateIC(ic));
       return;
