@@ -26,7 +26,7 @@ linux64-clang-4.0:
         fetch:
             - clang-4.0
         toolchain:
-            - linux64-gcc-6
+            - linux64-gcc-7
 
 linux64-clang-7:
     description: "Clang 7 toolchain build"
@@ -44,7 +44,7 @@ linux64-clang-7:
         fetch:
             - clang-7
         toolchain:
-            - linux64-gcc-6
+            - linux64-gcc-7
 
 linux64-clang-9:
     description: "Clang 9 toolchain build"
@@ -64,7 +64,7 @@ linux64-clang-9:
             - clang-9
         toolchain:
             - linux64-binutils
-            - linux64-gcc-6
+            - linux64-gcc-7
 
 linux64-clang-9-cross:
     description: "Clang 9 toolchain with patches to cross-compile to windows"
@@ -83,7 +83,7 @@ linux64-clang-9-cross:
             - clang-9
         toolchain:
             - linux64-binutils
-            - linux64-gcc-6
+            - linux64-gcc-7
 
 linux64-clang-8-mingw-x86:
     description: "MinGW-Clang Trunk x86 toolchain build"
@@ -105,7 +105,7 @@ linux64-clang-8-mingw-x86:
             - libunwind
             - llvm-mingw
         toolchain:
-            - linux64-gcc-6
+            - linux64-gcc-7
 
 linux64-clang-8-mingw-x64:
     description: "MinGW-Clang Trunk x64 toolchain build"
@@ -128,7 +128,7 @@ linux64-clang-8-mingw-x64:
             - libunwind
             - llvm-mingw
         toolchain:
-            - linux64-gcc-6
+            - linux64-gcc-7
 
 linux64-clang-9-android-cross:
     description: "Clang 9 toolchain build"
@@ -148,7 +148,7 @@ linux64-clang-9-android-cross:
             - clang-9
         toolchain:
             - linux64-binutils
-            - linux64-gcc-6
+            - linux64-gcc-7
             - linux64-android-ndk-linux-repack
 
 linux64-clang-9-aarch64-cross:
@@ -173,7 +173,7 @@ linux64-clang-9-aarch64-cross:
             - clang-9
         toolchain:
             - linux64-binutils
-            - linux64-gcc-6
+            - linux64-gcc-7
 
 linux64-clang-9-macosx-cross:
     description: "Clang 9 toolchain build with MacOS Compiler RT libs"
@@ -201,7 +201,7 @@ linux64-clang-9-macosx-cross:
             - linux64-binutils
             - linux64-cctools-port
             - linux64-clang-9
-            - linux64-gcc-6
+            - linux64-gcc-7
 
 macosx64-clang:
     description: "Clang toolchain build"
@@ -231,7 +231,7 @@ macosx64-clang:
             - linux64-binutils
             - linux64-cctools-port
             - linux64-clang-9
-            - linux64-gcc-6
+            - linux64-gcc-7
             - linux64-node
 
 win64-clang-cl:
