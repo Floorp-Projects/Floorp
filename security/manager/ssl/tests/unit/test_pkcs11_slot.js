@@ -27,7 +27,10 @@ function find_module_by_name(moduleDB, name) {
 }
 
 function run_test() {
-  loadPKCS11TestModule(false);
+  let libraryFile = Services.dirsvc.get("CurWorkD", Ci.nsIFile);
+  libraryFile.append("pkcs11testmodule");
+  libraryFile.append(ctypes.libraryName("pkcs11testmodule"));
+  loadPKCS11Module(libraryFile, "PKCS11 Test Module", false);
 
   let moduleDB = Cc["@mozilla.org/security/pkcs11moduledb;1"].getService(
     Ci.nsIPKCS11ModuleDB
