@@ -23,6 +23,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/BrowserHost.h"
+#include "mozIThirdPartyUtil.h"
 #include "nsIContentPolicy.h"
 #include "nsIClassifiedChannel.h"
 #include "nsIHttpChannelInternal.h"
@@ -923,6 +924,26 @@ void ChannelWrapper::GetUrlClassification(
     FillClassification(classification.mThirdParty, classificationFlags, aRv);
   }
   aRetVal.SetValue(std::move(classification));
+}
+
+bool ChannelWrapper::ThirdParty() const {
+  nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil = services::GetThirdPartyUtil();
+  if (NS_WARN_IF(!thirdPartyUtil)) {
+    return true;
+  }
+
+  nsCOMPtr<nsIHttpChannel> chan = MaybeHttpChannel();
+  if (!chan) {
+    return false;
+  }
+
+  bool thirdParty = false;
+  nsresult rv = thirdPartyUtil->IsThirdPartyChannel(chan, nullptr, &thirdParty);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return true;
+  }
+
+  return thirdParty;
 }
 
 /*****************************************************************************
