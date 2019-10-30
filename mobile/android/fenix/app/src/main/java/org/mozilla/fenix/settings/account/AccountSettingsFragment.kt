@@ -4,10 +4,16 @@
 
 package org.mozilla.fenix.settings.account
 
+import android.app.KeyguardManager
+import android.content.Context
+import android.content.DialogInterface
+import android.content.Intent
 import android.os.Bundle
+import android.provider.Settings
 import android.text.InputFilter
 import android.text.format.DateUtils
 import android.view.View
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -36,6 +42,7 @@ import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.requireComponents
+import org.mozilla.fenix.ext.settings
 
 @SuppressWarnings("TooManyFunctions", "LargeClass")
 class AccountSettingsFragment : PreferenceFragmentCompat() {
@@ -180,20 +187,60 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
         val loginsNameKey = getPreferenceKey(R.string.pref_key_sync_logins)
         findPreference<CheckBoxPreference>(loginsNameKey)?.apply {
             setOnPreferenceChangeListener { _, newValue ->
-                SyncEnginesStorage(context).setStatus(SyncEngine.Passwords, newValue as Boolean)
-                @Suppress("DeferredResultUnused")
-                context.components.backgroundServices.accountManager.syncNowAsync(SyncReason.EngineChange)
+                val manager =
+                    activity?.getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
+                if (manager.isKeyguardSecure ||
+                    newValue == false ||
+                    !context.settings().shouldShowSecurityPinWarningSync
+                ) {
+                    SyncEnginesStorage(context).setStatus(SyncEngine.Passwords, newValue as Boolean)
+                    @Suppress("DeferredResultUnused")
+                    context.components.backgroundServices.accountManager.syncNowAsync(SyncReason.EngineChange)
+                } else {
+                    showPinDialogWarning(newValue as Boolean)
+                }
                 true
             }
         }
 
-        deviceConstellation?.registerDeviceObserver(deviceConstellationObserver, owner = this, autoPause = true)
+        deviceConstellation?.registerDeviceObserver(
+            deviceConstellationObserver,
+            owner = this,
+            autoPause = true
+        )
 
         // NB: ObserverRegistry will take care of cleaning up internal references to 'observer' and
         // 'owner' when appropriate.
         requireComponents.backgroundServices.accountManager.registerForSyncEvents(
             syncStatusObserver, owner = this, autoPause = true
         )
+    }
+
+    private fun showPinDialogWarning(newValue: Boolean) {
+        context?.let {
+            AlertDialog.Builder(it).apply {
+                setTitle(getString(R.string.logins_warning_dialog_title))
+                setMessage(
+                    getString(R.string.logins_warning_dialog_message)
+                )
+
+                setNegativeButton(getString(R.string.logins_warning_dialog_later)) { _: DialogInterface, _ ->
+                    SyncEnginesStorage(context).setStatus(SyncEngine.Passwords, newValue)
+                    @Suppress("DeferredResultUnused")
+                    context.components.backgroundServices.accountManager.syncNowAsync(SyncReason.EngineChange)
+                }
+
+                setPositiveButton(getString(R.string.logins_warning_dialog_set_up_now)) { it: DialogInterface, _ ->
+                    it.dismiss()
+                    val intent = Intent(
+                        Settings.ACTION_SECURITY_SETTINGS
+                    )
+                    startActivity(intent)
+                }
+                create()
+            }.show()
+            it.settings().incrementShowLoginsSecureWarningSyncCount()
+        }
     }
 
     private fun updateSyncEngineStates() {

@@ -405,6 +405,7 @@ dependencies {
     debugImplementation Deps.leakcanary
 
     implementation Deps.androidx_legacy
+    implementation Deps.androidx_biometric
     implementation Deps.androidx_paging
     implementation Deps.androidx_preference
     implementation Deps.androidx_fragment

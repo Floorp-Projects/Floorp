@@ -174,6 +174,58 @@ class SettingsTest {
     }
 
     @Test
+    fun showLoginsDialogWarningSync() {
+        // When just created
+        // Then
+        assertEquals(0, settings.loginsSecureWarningSyncCount)
+
+        // When
+        settings.incrementShowLoginsSecureWarningSyncCount()
+
+        // Then
+        assertEquals(1, settings.loginsSecureWarningSyncCount)
+    }
+
+    @Test
+    fun shouldShowLoginsDialogWarningSync() {
+        // When just created
+        // Then
+        assertTrue(settings.shouldShowSecurityPinWarningSync)
+
+        // When
+        settings.incrementShowLoginsSecureWarningSyncCount()
+
+        // Then
+        assertFalse(settings.shouldShowSecurityPinWarningSync)
+    }
+
+    @Test
+    fun showLoginsDialogWarning() {
+        // When just created
+        // Then
+        assertEquals(0, settings.loginsSecureWarningCount)
+
+        // When
+        settings.incrementShowLoginsSecureWarningCount()
+
+        // Then
+        assertEquals(1, settings.loginsSecureWarningCount)
+    }
+
+    @Test
+    fun shouldShowLoginsDialogWarning() {
+        // When just created
+        // Then
+        assertTrue(settings.shouldShowSecurityPinWarning)
+
+        // When
+        settings.incrementShowLoginsSecureWarningCount()
+
+        // Then
+        assertFalse(settings.shouldShowSecurityPinWarning)
+    }
+
+    @Test
     fun shouldUseLightTheme() {
         // When just created
         // Then
@@ -298,7 +350,10 @@ class SettingsTest {
     fun sitePermissionsPhoneFeatureCameraAction() {
         // When just created
         // Then
-        assertEquals(ASK_TO_ALLOW, settings.getSitePermissionsPhoneFeatureAction(PhoneFeature.CAMERA))
+        assertEquals(
+            ASK_TO_ALLOW,
+            settings.getSitePermissionsPhoneFeatureAction(PhoneFeature.CAMERA)
+        )
 
         // When
         settings.setSitePermissionsPhoneFeatureAction(PhoneFeature.CAMERA, BLOCKED)
@@ -311,33 +366,48 @@ class SettingsTest {
     fun sitePermissionsPhoneFeatureMicrophoneAction() {
         // When just created
         // Then
-        assertEquals(ASK_TO_ALLOW, settings.getSitePermissionsPhoneFeatureAction(PhoneFeature.MICROPHONE))
+        assertEquals(
+            ASK_TO_ALLOW,
+            settings.getSitePermissionsPhoneFeatureAction(PhoneFeature.MICROPHONE)
+        )
 
         // When
         settings.setSitePermissionsPhoneFeatureAction(PhoneFeature.MICROPHONE, BLOCKED)
 
         // Then
-        assertEquals(BLOCKED, settings.getSitePermissionsPhoneFeatureAction(PhoneFeature.MICROPHONE))
+        assertEquals(
+            BLOCKED,
+            settings.getSitePermissionsPhoneFeatureAction(PhoneFeature.MICROPHONE)
+        )
     }
 
     @Test
     fun sitePermissionsPhoneFeatureNotificationAction() {
         // When just created
         // Then
-        assertEquals(ASK_TO_ALLOW, settings.getSitePermissionsPhoneFeatureAction(PhoneFeature.NOTIFICATION))
+        assertEquals(
+            ASK_TO_ALLOW,
+            settings.getSitePermissionsPhoneFeatureAction(PhoneFeature.NOTIFICATION)
+        )
 
         // When
         settings.setSitePermissionsPhoneFeatureAction(PhoneFeature.NOTIFICATION, BLOCKED)
 
         // Then
-        assertEquals(BLOCKED, settings.getSitePermissionsPhoneFeatureAction(PhoneFeature.NOTIFICATION))
+        assertEquals(
+            BLOCKED,
+            settings.getSitePermissionsPhoneFeatureAction(PhoneFeature.NOTIFICATION)
+        )
     }
 
     @Test
     fun sitePermissionsPhoneFeatureLocation() {
         // When just created
         // Then
-        assertEquals(ASK_TO_ALLOW, settings.getSitePermissionsPhoneFeatureAction(PhoneFeature.LOCATION))
+        assertEquals(
+            ASK_TO_ALLOW,
+            settings.getSitePermissionsPhoneFeatureAction(PhoneFeature.LOCATION)
+        )
 
         // When
         settings.setSitePermissionsPhoneFeatureAction(PhoneFeature.LOCATION, BLOCKED)

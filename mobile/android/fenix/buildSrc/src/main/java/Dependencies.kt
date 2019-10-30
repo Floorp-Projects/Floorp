@@ -18,6 +18,7 @@ object Versions {
     const val osslicenses_library = "17.0.0"
 
     const val androidx_appcompat = "1.1.0"
+    const val androidx_biometric = "1.0.0-rc02"
     const val androidx_coordinator_layout = "1.1.0-beta01"
     const val androidx_constraint_layout = "2.0.0-beta2"
     const val androidx_preference = "1.1.0"
@@ -166,6 +167,7 @@ object Deps {
     const val leanplum = "com.leanplum:leanplum-core:${Versions.leanplum}"
 
     const val androidx_annotation = "androidx.annotation:annotation:${Versions.androidx_annotation}"
+    const val androidx_biometric = "androidx.biometric:biometric:${Versions.androidx_biometric}"
     const val androidx_fragment = "androidx.fragment:fragment-ktx:${Versions.androidx_fragment}"
     const val androidx_appcompat = "androidx.appcompat:appcompat:${Versions.androidx_appcompat}"
     const val androidx_coordinatorlayout = "androidx.coordinatorlayout:coordinatorlayout:${Versions.androidx_coordinator_layout}"

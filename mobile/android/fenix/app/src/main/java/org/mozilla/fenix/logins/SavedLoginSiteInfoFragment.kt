@@ -9,6 +9,7 @@ import android.text.InputType
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.fragment_saved_login_site_info.*
 import org.mozilla.fenix.R
@@ -22,6 +23,12 @@ class SavedLoginSiteInfoFragment : Fragment(R.layout.fragment_saved_login_site_i
         SavedLoginSiteInfoFragmentArgs.fromBundle(
             safeArguments
         ).savedLoginItem
+    }
+
+    override fun onPause() {
+        // If we pause this fragment, we want to pop users back to reauth
+        findNavController().popBackStack(R.id.loginsFragment, false)
+        super.onPause()
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

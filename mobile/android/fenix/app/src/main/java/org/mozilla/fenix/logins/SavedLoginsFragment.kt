@@ -63,6 +63,12 @@ class SavedLoginsFragment : Fragment() {
         }
     }
 
+    override fun onPause() {
+        // If we pause this fragment, we want to pop users back to reauth
+        findNavController().popBackStack(R.id.loginsFragment, false)
+        super.onPause()
+    }
+
     private fun itemClicked(item: SavedLoginsItem) {
         val directions =
             SavedLoginsFragmentDirections.actionSavedLoginsFragmentToSavedLoginSiteInfoFragment(item)
