@@ -68,6 +68,9 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(this, "ObjectFront", "devtools/shared/fronts/object");
 
+// This import to chrome code is forbidden according to the inspector specific
+// eslintrc. TODO: Fix in Bug 1591091.
+// eslint-disable-next-line mozilla/reject-some-requires
 loader.lazyImporter(
   this,
   "DeferredTask",
