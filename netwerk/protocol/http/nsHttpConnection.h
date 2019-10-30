@@ -23,6 +23,7 @@
 #include "nsIAsyncOutputStream.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsITimer.h"
+#include "Http3Session.h"
 
 class nsISocketTransport;
 class nsISSLSocketControl;
@@ -183,6 +184,7 @@ class nsHttpConnection final : public nsAHttpSegmentReader,
   bool UsingSpdy() { return (mUsingSpdyVersion != SpdyVersion::NONE); }
   SpdyVersion GetSpdyVersion() { return mUsingSpdyVersion; }
   bool EverUsedSpdy() { return mEverUsedSpdy; }
+  bool UsingHttp3() { return mHttp3Session; }
   PRIntervalTime Rtt() { return mRtt; }
 
   // true when connection SSL NPN phase is complete and we know
@@ -224,6 +226,8 @@ class nsHttpConnection final : public nsAHttpSegmentReader,
   // Check active connections for traffic (or not). SPDY connections send a
   // ping, ordinary HTTP connections get some time to get traffic to be
   // considered alive.
+  // Http3 has its own ping triggered by a separate timer, therefore it does not
+  // use this one.
   void CheckForTraffic(bool check);
 
   // NoTraffic() returns true if there's been no traffic on the (non-spdy)
@@ -280,6 +284,9 @@ class nsHttpConnection final : public nsAHttpSegmentReader,
   // has had a chance to happen
   MOZ_MUST_USE bool EnsureNPNComplete(nsresult& aOut0RTTWriteHandshakeValue,
                                       uint32_t& aOut0RTTBytesWritten);
+  // This performs the quic transport handshake. The handshake also performs TLS
+  // handshake at the same time.
+  MOZ_MUST_USE bool EnsureNPNCompleteHttp3();
   void SetupSSL();
 
   // Start the Spdy transaction handler when NPN indicates spdy/*
@@ -442,6 +449,9 @@ class nsHttpConnection final : public nsAHttpSegmentReader,
 
   nsTArray<HttpTrafficCategory> mTrafficCategory;
   bool mThroughCaptivePortal;
+
+  // Http3
+  RefPtr<Http3Session> mHttp3Session;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsHttpConnection, NS_HTTPCONNECTION_IID)
