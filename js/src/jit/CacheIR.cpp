@@ -5965,10 +5965,15 @@ AttachDecision CompareIRGenerator::tryAttachStub() {
   ValOperandId rhsId(writer.setInputOperandId(rhsIndex));
 
   // For sloppy equality ops, there are cases this IC does not handle:
-  // - {Symbol} x {Null, Undefined, String, Bool, Number}.
-  // - {String} x {Null, Undefined, Symbol, Bool, Number}.
-  // - {Bool} x {Double}.
-  // - {Object} x {String, Symbol, Bool, Number}.
+  // - {Object} x {String, Symbol, Bool, Number, BigInt}.
+  // - {String} x {Symbol, Bool, BigInt}.
+  // - {Symbol} x {Bool, Number, BigInt}.
+  // - {Bool}   x {Double, BigInt}.
+  // - {Number} x {BigInt}
+  //
+  // (The above lists omits the equivalent case {B} x {A} when {A} x {B} is
+  // already present.)
+
   if (IsEqualityOp(op_)) {
     TRY_ATTACH(tryAttachObject(lhsId, rhsId));
     TRY_ATTACH(tryAttachSymbol(lhsId, rhsId));
