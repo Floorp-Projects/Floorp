@@ -230,6 +230,7 @@ nsresult ServiceWorkerPrivateImpl::SpawnWorkerIfNeeded() {
   MOZ_ASSERT(mOuter->mInfo);
 
   if (mControllerChild) {
+    mOuter->RenewKeepAliveToken(ServiceWorkerPrivate::WakeUpReason::Unknown);
     return NS_OK;
   }
 

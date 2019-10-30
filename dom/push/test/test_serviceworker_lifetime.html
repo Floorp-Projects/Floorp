@@ -327,11 +327,11 @@
           ["dom.serviceWorkers.idle_extended_timeout", 0],
         ],
         steps(context) {
-        return new Promise(function(res, rej) {
-          context.iframe.contentWindow.fetch("update");
-          res(context);
-        });
-      },
+          return new Promise(function(res, rej) {
+            context.iframe.contentWindow.navigator.serviceWorker.controller.postMessage("ping");
+            res(context);
+          });
+        },
       };
 
       // Test that service worker is closed when the extended timeout expired
