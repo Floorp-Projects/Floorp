@@ -7,18 +7,18 @@
 #ifndef nsProxyRelease_h__
 #define nsProxyRelease_h__
 
-#include "nsIEventTarget.h"
-#include "nsIThread.h"
-#include "nsCOMPtr.h"
-#include "nsAutoPtr.h"
 #include "MainThreadUtils.h"
-#include "nsPrintfCString.h"
-#include "nsThreadUtils.h"
 #include "mozilla/Likely.h"
 #include "mozilla/Move.h"
 #include "mozilla/SystemGroup.h"
 #include "mozilla/TypeTraits.h"
 #include "mozilla/Unused.h"
+#include "nsAutoPtr.h"
+#include "nsCOMPtr.h"
+#include "nsIEventTarget.h"
+#include "nsIThread.h"
+#include "nsPrintfCString.h"
+#include "nsThreadUtils.h"
 
 #ifdef XPCOM_GLUE_AVOID_NSPR
 #  error NS_ProxyRelease implementation depends on NSPR.
@@ -113,7 +113,7 @@ struct ProxyReleaseChooser<true> {
  * Ensures that the delete of a smart pointer occurs on the target thread.
  *
  * @param aName
- *        the labelling name of the runnable involved in the releasing
+ *        the labelling name of the runnable involved in the releasing.
  * @param aTarget
  *        the target thread where the doomed object should be released.
  * @param aDoomed
@@ -182,15 +182,15 @@ inline NS_HIDDEN_(void)
  *
  * Classes like XPCWrappedJS are main-thread-only, which means that it is
  * forbidden to call methods on instances of these classes off the main thread.
- * For various reasons (see bug 771074), this restriction recently began to
- * apply to AddRef/Release as well.
+ * For various reasons (see bug 771074), this restriction applies to
+ * AddRef/Release as well.
  *
  * This presents a problem for consumers that wish to hold a callback alive
  * on non-main-thread code. A common example of this is the proxy callback
  * pattern, where non-main-thread code holds a strong-reference to the callback
  * object, and dispatches new Runnables (also with a strong reference) to the
  * main thread in order to execute the callback. This involves several AddRef
- * and Release calls on the other thread, which is (now) verboten.
+ * and Release calls on the other thread, which is verboten.
  *
  * The basic idea of this class is to introduce a layer of indirection.
  * nsMainThreadPtrHolder is a threadsafe reference-counted class that internally
@@ -200,10 +200,10 @@ inline NS_HIDDEN_(void)
  * to the holder anywhere they please. These references are meant to be opaque
  * when accessed off-main-thread (assertions enforce this).
  *
- * The semantics of RefPtr<nsMainThreadPtrHolder<T> > would be cumbersome, so
- * we also introduce nsMainThreadPtrHandle<T>, which is conceptually identical
- * to the above (though it includes various convenience methods). The basic
- * pattern is as follows.
+ * The semantics of RefPtr<nsMainThreadPtrHolder<T>> would be cumbersome, so we
+ * also introduce nsMainThreadPtrHandle<T>, which is conceptually identical to
+ * the above (though it includes various convenience methods). The basic pattern
+ * is as follows.
  *
  * // On the main thread:
  * nsCOMPtr<nsIFooCallback> callback = ...;
@@ -218,14 +218,14 @@ inline NS_HIDDEN_(void)
 template <class T>
 class MOZ_IS_SMARTPTR_TO_REFCOUNTED nsMainThreadPtrHolder final {
  public:
-  // We can only acquire a pointer on the main thread. We to fail fast for
+  // We can only acquire a pointer on the main thread. We want to fail fast for
   // threading bugs, so by default we assert if our pointer is used or acquired
   // off-main-thread. But some consumers need to use the same pointer for
   // multiple classes, some of which are main-thread-only and some of which
   // aren't. So we allow them to explicitly disable this strict checking.
   nsMainThreadPtrHolder(const char* aName, T* aPtr, bool aStrict = true,
                         nsIEventTarget* aMainThreadEventTarget = nullptr)
-      : mRawPtr(nullptr),
+      : mRawPtr(aPtr),
         mStrict(aStrict),
         mMainThreadEventTarget(aMainThreadEventTarget)
 #ifndef RELEASE_OR_BETA
@@ -236,7 +236,7 @@ class MOZ_IS_SMARTPTR_TO_REFCOUNTED nsMainThreadPtrHolder final {
     // We can only AddRef our pointer on the main thread, which means that the
     // holder must be constructed on the main thread.
     MOZ_ASSERT(!mStrict || NS_IsMainThread());
-    NS_IF_ADDREF(mRawPtr = aPtr);
+    NS_IF_ADDREF(mRawPtr);
   }
   nsMainThreadPtrHolder(const char* aName, already_AddRefed<T> aPtr,
                         bool aStrict = true,
@@ -252,6 +252,11 @@ class MOZ_IS_SMARTPTR_TO_REFCOUNTED nsMainThreadPtrHolder final {
     // Since we don't need to AddRef the pointer, this constructor is safe to
     // call on any thread.
   }
+
+  // Copy constructor and operator= deleted. Once constructed, the holder is
+  // immutable.
+  T& operator=(nsMainThreadPtrHolder& aOther) = delete;
+  nsMainThreadPtrHolder(const nsMainThreadPtrHolder& aOther) = delete;
 
  private:
   // We can be released on any thread.
@@ -274,7 +279,7 @@ class MOZ_IS_SMARTPTR_TO_REFCOUNTED nsMainThreadPtrHolder final {
   }
 
  public:
-  T* get() {
+  T* get() const {
     // Nobody should be touching the raw pointer off-main-thread.
     if (mStrict && MOZ_UNLIKELY(!NS_IsMainThread())) {
       NS_ERROR("Can't dereference nsMainThreadPtrHolder off main thread");
@@ -292,27 +297,20 @@ class MOZ_IS_SMARTPTR_TO_REFCOUNTED nsMainThreadPtrHolder final {
 
  private:
   // Our wrapped pointer.
-  T* mRawPtr;
+  T* mRawPtr = nullptr;
 
   // Whether to strictly enforce thread invariants in this class.
-  bool mStrict;
+  bool mStrict = true;
 
   nsCOMPtr<nsIEventTarget> mMainThreadEventTarget;
 
 #ifndef RELEASE_OR_BETA
   const char* mName = nullptr;
 #endif
-
-  // Copy constructor and operator= not implemented. Once constructed, the
-  // holder is immutable.
-  T& operator=(nsMainThreadPtrHolder& aOther);
-  nsMainThreadPtrHolder(const nsMainThreadPtrHolder& aOther);
 };
 
 template <class T>
 class MOZ_IS_SMARTPTR_TO_REFCOUNTED nsMainThreadPtrHandle {
-  RefPtr<nsMainThreadPtrHolder<T>> mPtr;
-
  public:
   nsMainThreadPtrHandle() : mPtr(nullptr) {}
   MOZ_IMPLICIT nsMainThreadPtrHandle(decltype(nullptr)) : mPtr(nullptr) {}
@@ -339,8 +337,8 @@ class MOZ_IS_SMARTPTR_TO_REFCOUNTED nsMainThreadPtrHandle {
   }
 
   // These all call through to nsMainThreadPtrHolder, and thus implicitly
-  // assert that we're on the main thread. Off-main-thread consumers must treat
-  // these handles as opaque.
+  // assert that we're on the main thread (if strict). Off-main-thread consumers
+  // must treat these handles as opaque.
   T* get() const {
     if (mPtr) {
       return mPtr.get()->get();
@@ -364,17 +362,10 @@ class MOZ_IS_SMARTPTR_TO_REFCOUNTED nsMainThreadPtrHandle {
   bool operator==(decltype(nullptr)) const { return mPtr == nullptr; }
   bool operator!=(decltype(nullptr)) const { return mPtr != nullptr; }
   bool operator!() const { return !mPtr || !*mPtr; }
+
+ private:
+  RefPtr<nsMainThreadPtrHolder<T>> mPtr;
 };
-
-namespace mozilla {
-
-template <typename T>
-using PtrHolder = nsMainThreadPtrHolder<T>;
-
-template <typename T>
-using PtrHandle = nsMainThreadPtrHandle<T>;
-
-}  // namespace mozilla
 
 class nsCycleCollectionTraversalCallback;
 template <typename T>
