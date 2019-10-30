@@ -1391,7 +1391,7 @@ void CycleCollectedJSRuntime::OnGC(JSContext* aContext, JSGCStatus aStatus) {
   switch (aStatus) {
     case JSGC_BEGIN:
       nsCycleCollector_prepareForGarbageCollection();
-      mZonesWaitingForGC.Clear();
+      PrepareWaitingZonesForGC();
       break;
     case JSGC_END: {
       if (mOutOfMemoryState == OOMState::Reported) {

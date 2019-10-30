@@ -1182,8 +1182,6 @@ void nsJSContext::GarbageCollectNow(JS::GCReason aReason,
 
   if (sNeedsFullGC) {
     JS::PrepareForFullGC(cx);
-  } else {
-    CycleCollectedJSRuntime::Get()->PrepareWaitingZonesForGC();
   }
 
   if (aIncremental == IncrementalGC) {

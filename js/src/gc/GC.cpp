@@ -7094,7 +7094,7 @@ void GCRuntime::maybeCallGCCallback(JSGCStatus status) {
   }
 
   if (gcCallbackDepth == 0) {
-    // Save scheduled zone information in case the callback changes it.
+    // Save scheduled zone information in case the callback clears it.
     for (ZonesIter zone(this, WithAtoms); !zone.done(); zone.next()) {
       zone->gcScheduledSaved_ = zone->gcScheduled_;
     }
@@ -7108,9 +7108,9 @@ void GCRuntime::maybeCallGCCallback(JSGCStatus status) {
   gcCallbackDepth--;
 
   if (gcCallbackDepth == 0) {
-    // Restore scheduled zone information again.
+    // Ensure any zone that was originally scheduled stays scheduled.
     for (ZonesIter zone(this, WithAtoms); !zone.done(); zone.next()) {
-      zone->gcScheduled_ = zone->gcScheduledSaved_;
+      zone->gcScheduled_ = zone->gcScheduled_ || zone->gcScheduledSaved_;
     }
   }
 }
