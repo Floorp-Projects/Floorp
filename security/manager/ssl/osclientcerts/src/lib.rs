@@ -19,10 +19,11 @@ extern crate winapi;
 use pkcs11::types::*;
 use std::sync::Mutex;
 
+mod manager;
+#[macro_use]
+mod util;
 #[cfg(target_os = "windows")]
 mod backend_windows;
-mod manager;
-mod util;
 
 use manager::Manager;
 
@@ -167,8 +168,8 @@ extern "C" fn C_GetTokenInfo(slotID: CK_SLOT_ID, pInfo: CK_TOKEN_INFO_PTR) -> CK
     CKR_OK
 }
 
-/// This gets called to determine what mechanisms a slot supports. This implementation does not
-/// support any mechanisms.
+/// This gets called to determine what mechanisms a slot supports. This implementation supports
+/// ECDSA, RSA PKCS, and RSA PSS.
 extern "C" fn C_GetMechanismList(
     slotID: CK_SLOT_ID,
     pMechanismList: CK_MECHANISM_TYPE_PTR,
@@ -178,10 +179,20 @@ extern "C" fn C_GetMechanismList(
         error!("C_GetMechanismList: CKR_ARGUMENTS_BAD");
         return CKR_ARGUMENTS_BAD;
     }
-    if pMechanismList.is_null() {
-        unsafe {
-            *pulCount = 0;
+    let mechanisms = [CKM_ECDSA, CKM_RSA_PKCS, CKM_RSA_PKCS_PSS];
+    if !pMechanismList.is_null() {
+        if unsafe { *pulCount as usize } < mechanisms.len() {
+            error!("C_GetMechanismList: CKR_ARGUMENTS_BAD");
+            return CKR_ARGUMENTS_BAD;
         }
+        for i in 0..mechanisms.len() {
+            unsafe {
+                *pMechanismList.offset(i as isize) = mechanisms[i];
+            }
+        }
+    }
+    unsafe {
+        *pulCount = mechanisms.len() as CK_ULONG;
     }
     debug!("C_GetMechanismList: CKR_OK");
     CKR_OK
@@ -618,12 +629,24 @@ extern "C" fn C_SignInit(
         error!("C_SignInit: CKR_ARGUMENTS_BAD");
         return CKR_ARGUMENTS_BAD;
     }
-    // pMechanism generally appears to be empty (just mechanism is set).
     // Presumably we should validate the mechanism against hKey, but the specification doesn't
     // actually seem to require this.
-    debug!("C_SignInit: mechanism is {:?}", unsafe { *pMechanism });
+    let mechanism = unsafe { *pMechanism };
+    debug!("C_SignInit: mechanism is {:?}", mechanism);
+    let mechanism_params = if mechanism.mechanism == CKM_RSA_PKCS_PSS {
+        if mechanism.ulParameterLen as usize != std::mem::size_of::<CK_RSA_PKCS_PSS_PARAMS>() {
+            error!(
+                "C_SignInit: bad ulParameterLen for CKM_RSA_PKCS_PSS: {}",
+                unsafe_packed_field_access!(mechanism.ulParameterLen)
+            );
+            return CKR_ARGUMENTS_BAD;
+        }
+        Some(unsafe { *(mechanism.pParameter as *const CK_RSA_PKCS_PSS_PARAMS) })
+    } else {
+        None
+    };
     let mut manager = try_to_get_manager!();
-    match manager.start_sign(hSession, hKey) {
+    match manager.start_sign(hSession, hKey, mechanism_params) {
         Ok(()) => {}
         Err(()) => {
             error!("C_SignInit: CKR_GENERAL_ERROR");
