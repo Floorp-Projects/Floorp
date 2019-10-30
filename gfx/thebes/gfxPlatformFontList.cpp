@@ -1698,14 +1698,12 @@ void gfxPlatformFontList::AppendCJKPrefLangs(eFontPrefLang aPrefLangs[],
       }
     }
 
-    // Last resort... try Chinese font prefs before Japanese because they
-    // tend to have more complete character coverage, and therefore less
-    // risk of "ransom-note" effects
+    // last resort... (the order is same as old gfx.)
+    AppendPrefLang(tempPrefLangs, tempLen, eFontPrefLang_Japanese);
+    AppendPrefLang(tempPrefLangs, tempLen, eFontPrefLang_Korean);
     AppendPrefLang(tempPrefLangs, tempLen, eFontPrefLang_ChineseCN);
     AppendPrefLang(tempPrefLangs, tempLen, eFontPrefLang_ChineseHK);
     AppendPrefLang(tempPrefLangs, tempLen, eFontPrefLang_ChineseTW);
-    AppendPrefLang(tempPrefLangs, tempLen, eFontPrefLang_Japanese);
-    AppendPrefLang(tempPrefLangs, tempLen, eFontPrefLang_Korean);
 
     // copy into the cached array
     uint32_t j;
