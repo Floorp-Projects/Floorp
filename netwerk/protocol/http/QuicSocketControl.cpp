@@ -43,20 +43,17 @@ QuicSocketControl::GetSSLVersionOffered(int16_t* aSSLVersionOffered) {
 }
 
 void QuicSocketControl::CallAuthenticated() {
-  //  // Will be added when Http3 lands
-  /*  if (mHttp3Session) {
+  if (mHttp3Session) {
     RefPtr<Http3Session> http3Session = do_QueryReferent(mHttp3Session);
     http3Session->Authenticated(GetErrorCode());
   }
-  mHttp3Session = nullptr;*/
+  mHttp3Session = nullptr;
 }
 
-// Will be added when Http3 lands
-// void QuicSocketControl::SetAuthenticationCallback(Http3Session
-// *aHttp3Session) {
-//  mHttp3Session = do_GetWeakReference(
-//      static_cast<nsISupportsWeakReference*>(aHttp3Session));
-//}
+void QuicSocketControl::SetAuthenticationCallback(Http3Session* aHttp3Session) {
+  mHttp3Session = do_GetWeakReference(
+      static_cast<nsISupportsWeakReference*>(aHttp3Session));
+}
 
 void QuicSocketControl::HandshakeCompleted() {
   psm::RememberCertErrorsTable::GetInstance().LookupCertErrorBits(this);

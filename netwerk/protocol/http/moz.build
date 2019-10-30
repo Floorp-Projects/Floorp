@@ -77,6 +77,8 @@ UNIFIED_SOURCES += [
     'Http2Push.cpp',
     'Http2Session.cpp',
     'Http2Stream.cpp',
+    'Http3Session.cpp',
+    'Http3Stream.cpp',
     'HttpAuthUtils.cpp',
     'HttpBackgroundChannelChild.cpp',
     'HttpBackgroundChannelParent.cpp',
@@ -134,6 +136,7 @@ LOCAL_INCLUDES += [
     '/netwerk/base',
     '/netwerk/cookie',
     '/netwerk/ipc',
+    '/netwerk/socket/neqo_glue',
     '/netwerk/url-classifier',
 ]
 
