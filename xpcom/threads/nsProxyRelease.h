@@ -323,8 +323,14 @@ class MOZ_IS_SMARTPTR_TO_REFCOUNTED nsMainThreadPtrHandle {
       : mPtr(aHolder) {}
   nsMainThreadPtrHandle(const nsMainThreadPtrHandle& aOther)
       : mPtr(aOther.mPtr) {}
+  nsMainThreadPtrHandle(nsMainThreadPtrHandle&& aOther)
+      : mPtr(std::move(aOther.mPtr)) {}
   nsMainThreadPtrHandle& operator=(const nsMainThreadPtrHandle& aOther) {
     mPtr = aOther.mPtr;
+    return *this;
+  }
+  nsMainThreadPtrHandle& operator=(nsMainThreadPtrHandle&& aOther) {
+    mPtr = std::move(aOther.mPtr);
     return *this;
   }
   nsMainThreadPtrHandle& operator=(nsMainThreadPtrHolder<T>* aHolder) {
