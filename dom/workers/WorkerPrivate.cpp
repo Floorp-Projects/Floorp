@@ -2317,7 +2317,7 @@ already_AddRefed<WorkerPrivate> WorkerPrivate::Constructor(
     MOZ_ASSERT(aWorkerType == WorkerType::WorkerTypeDedicated);
 
     agentClusterId = parent->AgentClusterId();
-    agentClusterCoop = parent->AgentClusterOpenerPolicy();
+    agentClusterCoop = parent->mAgentClusterOpenerPolicy;
   } else {
     AssertIsOnMainThread();
 
@@ -3917,6 +3917,7 @@ void WorkerPrivate::PostMessageToParent(
     JSContext* aCx, JS::Handle<JS::Value> aMessage,
     const Sequence<JSObject*>& aTransferable, ErrorResult& aRv) {
   AssertIsOnWorkerThread();
+  MOZ_DIAGNOSTIC_ASSERT(IsDedicatedWorker());
 
   JS::Rooted<JS::Value> transferable(aCx, JS::UndefinedValue());
 
@@ -3943,7 +3944,7 @@ void WorkerPrivate::PostMessageToParent(
   }
 
   JS::CloneDataPolicy clonePolicy;
-  if (CanShareMemory(AgentClusterId())) {
+  if (IsCrossOriginIsolated()) {
     clonePolicy.allowSharedMemory();
   }
   runnable->Write(aCx, aMessage, transferable, clonePolicy, aRv);
@@ -4967,7 +4968,7 @@ const nsAString& WorkerPrivate::Id() {
   return mId;
 }
 
-bool WorkerPrivate::CanShareMemory(const nsID& aAgentClusterId) {
+bool WorkerPrivate::IsCrossOriginIsolated() const {
   AssertIsOnWorkerThread();
 
   if (StaticPrefs::
@@ -4979,16 +4980,7 @@ bool WorkerPrivate::CanShareMemory(const nsID& aAgentClusterId) {
     return false;
   }
 
-  Maybe<ClientInfo> clientInfo = GetClientInfo();
-  MOZ_DIAGNOSTIC_ASSERT(clientInfo.isSome());
-
-  // Ensure they are on the same agent cluster
-  if (clientInfo->AgentClusterId().isNothing() ||
-      !clientInfo->AgentClusterId()->Equals(aAgentClusterId)) {
-    return false;
-  }
-
-  return AgentClusterOpenerPolicy() ==
+  return mAgentClusterOpenerPolicy ==
          nsILoadInfo::OPENER_POLICY_SAME_ORIGIN_EMBEDDER_POLICY_REQUIRE_CORP;
 }
 

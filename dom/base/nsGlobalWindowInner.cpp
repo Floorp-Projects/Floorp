@@ -2397,7 +2397,7 @@ void nsGlobalWindowInner::UpdateTopInnerWindow() {
   mTopInnerWindow->UpdateWebSocketCount(-(int32_t)mNumOfOpenWebSockets);
 }
 
-bool nsGlobalWindowInner::CanShareMemory(const nsID& aAgentClusterId) {
+bool nsGlobalWindowInner::IsCrossOriginIsolated() const {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (StaticPrefs::
@@ -2409,13 +2409,6 @@ bool nsGlobalWindowInner::CanShareMemory(const nsID& aAgentClusterId) {
     return false;
   }
 
-  MOZ_DIAGNOSTIC_ASSERT(GetDocGroup());
-  // Ensure they are on the same agent cluster
-  if (!GetDocGroup()->AgentClusterId().Equals(aAgentClusterId)) {
-    return false;
-  }
-
-  // Ensure the both the coop and coep are set
   RefPtr<BrowsingContext> bc = GetBrowsingContext();
   MOZ_DIAGNOSTIC_ASSERT(bc);
   // XXX Also check remoteType once Bug 1579992 is implemented.

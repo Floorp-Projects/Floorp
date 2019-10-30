@@ -62,10 +62,13 @@ bool MessageEventRunnable::DispatchDOMEvent(JSContext* aCx,
   }
 
   JS::CloneDataPolicy cloneDataPolicy;
-  // The target of a worker postMessage cannot change while the message is
-  // in-flight, so SAB status was checked at sending-time, and does not need to
-  // be checked when deserializing.
-  cloneDataPolicy.allowSharedMemory();
+  if (parent->GetClientInfo().isSome() &&
+      parent->GetClientInfo()->AgentClusterId().isSome() &&
+      parent->GetClientInfo()->AgentClusterId()->Equals(
+          aWorkerPrivate->AgentClusterId())) {
+    cloneDataPolicy.allowSharedMemory();
+  }
+
   Read(parent, aCx, &messageData, cloneDataPolicy, rv);
 
   if (isTimelineRecording) {

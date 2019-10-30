@@ -164,15 +164,16 @@ PostMessageEvent::Run() {
 
   JS::CloneDataPolicy cloneDataPolicy;
   MOZ_DIAGNOSTIC_ASSERT(targetWindow);
-  if (mCallerAgentClusterId.isSome() &&
-      targetWindow->CanShareMemory(mCallerAgentClusterId.ref())) {
+  if (mCallerAgentClusterId.isSome() && targetWindow->GetDocGroup() &&
+      targetWindow->GetDocGroup()->AgentClusterId().Equals(
+          mCallerAgentClusterId.ref())) {
     cloneDataPolicy.allowSharedMemory();
   }
 
   StructuredCloneHolder* holder;
   if (mHolder.constructed<StructuredCloneHolder>()) {
-    mHolder.ref<StructuredCloneHolder>().Read(targetWindow->AsGlobal(), cx,
-                                              &messageData, cloneDataPolicy, rv);
+    mHolder.ref<StructuredCloneHolder>().Read(
+        targetWindow->AsGlobal(), cx, &messageData, cloneDataPolicy, rv);
     holder = &mHolder.ref<StructuredCloneHolder>();
   } else {
     MOZ_ASSERT(mHolder.constructed<ipc::StructuredCloneData>());
