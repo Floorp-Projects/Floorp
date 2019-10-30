@@ -35,9 +35,11 @@ add_task(async function test_urlClassification() {
     isPrivileged: true,
     background() {
       let expected = {
-        "http://tracking.example.org/": {first: "tracking"},
-        "http://mochi.test:8888/tests/toolkit/components/extensions/test/mochitest/file_third_party.html": {},
-        "http://tracking.example.org/tests/toolkit/components/extensions/test/mochitest/file_image_bad.png": {third: "tracking"},
+        "http://tracking.example.org/": {first: "tracking", thirdParty: false, },
+        "http://mochi.test:8888/tests/toolkit/components/extensions/test/mochitest/file_third_party.html?domain=tracking.example.org": { thirdParty: false, },
+        "http://tracking.example.org/tests/toolkit/components/extensions/test/mochitest/file_image_bad.png": {third: "tracking", thirdParty: true, },
+        "http://mochi.test:8888/tests/toolkit/components/extensions/test/mochitest/file_third_party.html?domain=example.net": { thirdParty: false, },
+        "http://example.net/tests/toolkit/components/extensions/test/mochitest/file_image_bad.png": { thirdParty: true, },
       };
       function testRequest(details) {
         let expect = expected[details.url];
@@ -52,6 +54,8 @@ add_task(async function test_urlClassification() {
           } else {
             browser.test.assertEq(details.urlClassification.thirdParty.length, 0, "not tracking thirdParty");
           }
+
+          browser.test.assertEq(details.thirdParty, expect.thirdParty, "3rd party flag matches");
           return true;
         }
         return false;
@@ -60,17 +64,17 @@ add_task(async function test_urlClassification() {
       browser.proxy.onRequest.addListener(details => {
         browser.test.log(`proxy.onRequest ${JSON.stringify(details)}`);
         testRequest(details);
-      }, {urls: ["http://mochi.test/tests/*", "http://tracking.example.org/*"]});
+      }, {urls: ["http://mochi.test/tests/*", "http://tracking.example.org/*", "http://example.net/*"]});
       browser.webRequest.onBeforeRequest.addListener(async (details) => {
         browser.test.log(`webRequest.onBeforeRequest ${JSON.stringify(details)}`);
         testRequest(details);
-      }, {urls: ["http://mochi.test/tests/*", "http://tracking.example.org/*"]}, ["blocking"]);
+      }, {urls: ["http://mochi.test/tests/*", "http://tracking.example.org/*", "http://example.net/*"]}, ["blocking"]);
       browser.webRequest.onCompleted.addListener(async (details) => {
         browser.test.log(`webRequest.onCompleted ${JSON.stringify(details)}`);
         if (testRequest(details)) {
           browser.test.sendMessage("classification", details.url);
         }
-      }, {urls: ["http://mochi.test/tests/*", "http://tracking.example.org/*"]});
+      }, {urls: ["http://mochi.test/tests/*", "http://tracking.example.org/*", "http://example.net/*"]});
     },
   });
   await extension.startup();
@@ -80,12 +84,22 @@ add_task(async function test_urlClassification() {
   let win = window.open(url);
   is(await extension.awaitMessage("classification"), url, "request completed");
   win.close();
+
   // Test third party tracking classification, expecting two results.
-  url = "http://mochi.test:8888/tests/toolkit/components/extensions/test/mochitest/file_third_party.html";
+  url = "http://mochi.test:8888/tests/toolkit/components/extensions/test/mochitest/file_third_party.html?domain=tracking.example.org";
   win = window.open(url);
   is(await extension.awaitMessage("classification"), url);
   is(await extension.awaitMessage("classification"),
      "http://tracking.example.org/tests/toolkit/components/extensions/test/mochitest/file_image_bad.png",
+     "request completed");
+  win.close();
+
+  // Test third party tracking classification, expecting two results.
+  url = "http://mochi.test:8888/tests/toolkit/components/extensions/test/mochitest/file_third_party.html?domain=example.net";
+  win = window.open(url);
+  is(await extension.awaitMessage("classification"), url);
+  is(await extension.awaitMessage("classification"),
+     "http://example.net/tests/toolkit/components/extensions/test/mochitest/file_image_bad.png",
      "request completed");
   win.close();
 
