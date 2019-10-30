@@ -1,0 +1,5 @@
+#!/bin/bash
+rc=2
+msg="Misuse of shell builtins, or missing keyword or command"
+echo "Test failure - exiting with $rc ($msg)"
+exit $rc

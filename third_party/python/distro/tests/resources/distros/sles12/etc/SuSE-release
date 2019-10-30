@@ -1,0 +1,5 @@
+SUSE Linux Enterprise Server 12 (s390x)
+VERSION = 12
+PATCHLEVEL = 1
+# This file is deprecated and will be removed in a future service pack or release.
+# Please check /etc/os-release for details about this release.

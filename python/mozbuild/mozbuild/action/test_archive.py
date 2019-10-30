@@ -250,6 +250,12 @@ ARCHIVE_FILES = {
             'dest': 'tools/six',
         },
         {
+            'source': buildconfig.topsrcdir,
+            'base': 'third_party/python/distro',
+            'pattern': '**',
+            'dest': 'tools/distro',
+        },
+        {
             'source': buildconfig.topobjdir,
             'base': '',
             'pattern': 'mozinfo.json',
@@ -434,6 +440,12 @@ ARCHIVE_FILES = {
             'source': buildconfig.topsrcdir,
             'base': 'third_party/python/six',
             'pattern': 'six.py',
+            'dest': 'mozharness',
+        },
+        {
+            'source': buildconfig.topsrcdir,
+            'base': 'third_party/python/distro',
+            'pattern': 'distro.py',
             'dest': 'mozharness',
         },
     ],

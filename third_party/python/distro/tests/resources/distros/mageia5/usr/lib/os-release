@@ -1,0 +1,10 @@
+NAME="Mageia"
+VERSION="5"
+ID=mageia
+VERSION_ID=5
+ID_LIKE="mandriva fedora"
+PRETTY_NAME="Mageia 5"
+ANSI_COLOR="1;36"
+HOME_URL="http://www.mageia.org/"
+SUPPORT_URL="http://www.mageia.org/support/"
+BUG_REPORT_URL="https://bugs.mageia.org/"

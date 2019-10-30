@@ -1,0 +1,10 @@
+PRETTY_NAME="Kali GNU/Linux Rolling"
+NAME="Kali GNU/Linux"
+ID=kali
+VERSION="2017.1"
+VERSION_ID="2017.1"
+ID_LIKE=debian
+ANSI_COLOR="1;31"
+HOME_URL="http://www.kali.org/"
+SUPPORT_URL="http://forums.kali.org/"
+BUG_REPORT_URL="http://bugs.kali.org/"
