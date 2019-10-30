@@ -428,6 +428,81 @@ MOZ_MUST_USE bool js::WritableStreamDefaultControllerClose(
 }
 
 /**
+ * Streams spec, 4.8.6.
+ *      WritableStreamDefaultControllerGetChunkSize ( controller, chunk )
+ */
+bool js::WritableStreamDefaultControllerGetChunkSize(
+    JSContext* cx, Handle<WritableStreamDefaultController*> unwrappedController,
+    Handle<Value> chunk, MutableHandle<Value> returnValue) {
+  cx->check(chunk);
+
+  // Step 1: Let returnValue be the result of performing
+  //         controller.[[strategySizeAlgorithm]], passing in chunk, and
+  //         interpreting the result as an ECMAScript completion value.
+
+  // We don't store a literal [[strategySizeAlgorithm]], only the value that if
+  // passed through |MakeSizeAlgorithmFromSizeFunction| wouldn't have triggered
+  // an error.  Perform the algorithm that function would return.
+  Rooted<Value> unwrappedStrategySize(cx, unwrappedController->strategySize());
+  if (unwrappedStrategySize.isUndefined()) {
+    // 6.3.8 step 1: If size is undefined, return an algorithm that returns 1.
+    // ...and then from this function...
+    // Step 3: Return returnValue.[[Value]].
+    returnValue.setInt32(1);
+    return true;
+  }
+
+  MOZ_ASSERT(IsCallable(unwrappedStrategySize));
+
+  {
+    bool success;
+    {
+      AutoRealm ar(cx, unwrappedController);
+      cx->check(unwrappedStrategySize);
+
+      Rooted<Value> wrappedChunk(cx, chunk);
+      if (!cx->compartment()->wrap(cx, &wrappedChunk)) {
+        return false;
+      }
+
+      // 6.3.8 step 3 (of |MakeSizeAlgorithmFromSizeFunction|):
+      //         Return an algorithm that performs the following steps, taking a
+      //         chunk argument:
+      //     a. Return ? Call(size, undefined, « chunk »).
+      success = Call(cx, unwrappedStrategySize, UndefinedHandleValue,
+                     wrappedChunk, returnValue);
+    }
+
+    // Step 3: (If returnValue is [not] an abrupt completion, )
+    //         Return returnValue.[[Value]].  (reordered for readability)
+    if (success) {
+      return cx->compartment()->wrap(cx, returnValue);
+    }
+  }
+
+  // Step 2: If returnValue is an abrupt completion,
+  if (!cx->isExceptionPending() || !cx->getPendingException(returnValue)) {
+    // Uncatchable error.  Die immediately without erroring the stream.
+    return false;
+  }
+  cx->check(returnValue);
+
+  cx->clearPendingException();
+
+  // Step 2.a: Perform
+  //           ! WritableStreamDefaultControllerErrorIfNeeded(
+  //                 controller, returnValue.[[Value]]).
+  if (!WritableStreamDefaultControllerErrorIfNeeded(cx, unwrappedController,
+                                                    returnValue)) {
+    return false;
+  }
+
+  // Step 2.b: Return 1.
+  returnValue.setInt32(1);
+  return true;
+}
+
+/**
  * Streams spec, 4.8.7.
  *      WritableStreamDefaultControllerGetDesiredSize ( controller )
  */
@@ -482,6 +557,26 @@ MOZ_MUST_USE bool WritableStreamDefaultControllerAdvanceQueueIfNeeded(
   // XXX jwalden fill me in!
   JS_ReportErrorASCII(cx, "nope");
   return false;
+}
+
+/**
+ * Streams spec, 4.8.10.
+ *      WritableStreamDefaultControllerErrorIfNeeded ( controller, error )
+ */
+bool js::WritableStreamDefaultControllerErrorIfNeeded(
+    JSContext* cx, Handle<WritableStreamDefaultController*> unwrappedController,
+    Handle<Value> error) {
+  cx->check(error);
+
+  // Step 1: If controller.[[controlledWritableStream]].[[state]] is "writable",
+  //         perform ! WritableStreamDefaultControllerError(controller, error).
+  if (unwrappedController->stream()->writable()) {
+    if (!WritableStreamDefaultControllerError(cx, unwrappedController, error)) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 /**

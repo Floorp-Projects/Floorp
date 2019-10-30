@@ -68,8 +68,18 @@ extern MOZ_MUST_USE bool WritableStreamDefaultControllerClose(
     JSContext* cx,
     JS::Handle<WritableStreamDefaultController*> unwrappedController);
 
+extern MOZ_MUST_USE bool WritableStreamDefaultControllerGetChunkSize(
+    JSContext* cx,
+    JS::Handle<WritableStreamDefaultController*> unwrappedController,
+    JS::Handle<JS::Value> chunk, JS::MutableHandle<JS::Value> returnValue);
+
 extern double WritableStreamDefaultControllerGetDesiredSize(
     const WritableStreamDefaultController* controller);
+
+extern MOZ_MUST_USE bool WritableStreamDefaultControllerErrorIfNeeded(
+    JSContext* cx,
+    JS::Handle<WritableStreamDefaultController*> unwrappedController,
+    JS::Handle<JS::Value> error);
 
 extern bool WritableStreamDefaultControllerGetBackpressure(
     const WritableStreamDefaultController* unwrappedController);
