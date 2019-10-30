@@ -2279,6 +2279,15 @@ SpecialPowersChild.prototype._proxiedObservers = {
       aMessage.data.data
     );
   },
+
+  "specialpowers-xfo-on-violate-policy": function(aMessage) {
+    let subject = Services.io.newURI(aMessage.data.subject);
+    Services.obs.notifyObservers(
+      subject,
+      "specialpowers-xfo-on-violate-policy",
+      aMessage.data.data
+    );
+  },
 };
 
 SpecialPowersChild.prototype.permissionObserverProxy = {
