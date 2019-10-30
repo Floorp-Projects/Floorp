@@ -2674,5 +2674,9 @@ HttpTrafficAnalyzer* nsHttpHandler::GetHttpTrafficAnalyzer() {
   return &mHttpTrafficAnalyzer;
 }
 
+bool nsHttpHandler::IsHttp3VersionSupportedHex(const nsACString& version) {
+  return version.LowerCaseEqualsLiteral(kHttp3VersionHEX);
+}
+
 }  // namespace net
 }  // namespace mozilla
