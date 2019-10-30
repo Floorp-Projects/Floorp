@@ -14,17 +14,11 @@ class nsIDocShellTreeItem;
 class nsIURI;
 class nsIContentSecurityPolicy;
 
-namespace mozilla {
-namespace dom {
-class BrowsingContext;
-}
-}  // namespace mozilla
-
 class FramingChecker {
  public:
   // Determine if X-Frame-Options allows content to be framed
   // as a subdocument
-  static bool CheckFrameOptions(nsIChannel* aChannel,
+  static bool CheckFrameOptions(nsIChannel* aChannel, nsIDocShell* aDocShell,
                                 nsIContentSecurityPolicy* aCSP);
 
  protected:
@@ -34,24 +28,18 @@ class FramingChecker {
    * Logs to the window about a X-Frame-Options error.
    *
    * @param aMessageTag the error message identifier to log
-   * @param aParentURI || aParentBrowsingContext
-   *   * @parentURI: the URI
-   *   * @aParentBrowsingContext: the BrowsingContext
-   *   of the document that the frame is loading into
+   * @param aParentDocShellItem the containing docshell that the frame is
+   * loading into
    * @param aChildURI the URI of the frame attempting to load
    * @param aPolicy the header value string from the frame
-   * @param aInnerWindowID the inner window id for logging
-   * to the console.
    */
-  static void ReportError(const char* aMessageTag, nsIURI* aParentURI,
-                          nsIURI* aChildURI, const nsAString& aPolicy,
-                          uint64_t aInnerWindowID);
   static void ReportError(const char* aMessageTag,
-                          BrowsingContext* aParentContext, nsIURI* aChildURI,
-                          const nsAString& aPolicy, uint64_t aInnerWindowID);
+                          nsIDocShellTreeItem* aParentDocShellItem,
+                          nsIURI* aChildURI, const nsAString& aPolicy);
 
   static bool CheckOneFrameOptionsPolicy(nsIHttpChannel* aHttpChannel,
-                                         const nsAString& aPolicy);
+                                         const nsAString& aPolicy,
+                                         nsIDocShell* aDocShell);
 };
 
 #endif /* mozilla_dom_FramingChecker_h */
