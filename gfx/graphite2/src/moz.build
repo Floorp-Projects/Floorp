@@ -6,6 +6,7 @@
 
 # This should contain all of the _PUBLIC_HEADERS from files.mk
 EXPORTS.graphite2 += [
+    '../geckoextra/include/GraphiteExtra.h',
     '../include/graphite2/Font.h',
     '../include/graphite2/Log.h',
     '../include/graphite2/Segment.h',
@@ -23,6 +24,7 @@ else:
 
 # This should contain all of the _SOURCES from files.mk, except *_machine.cpp
 UNIFIED_SOURCES += [
+    '../geckoextra/src/GraphiteExtra.cpp',
     'CmapCache.cpp',
     'Code.cpp',
     'Collider.cpp',
