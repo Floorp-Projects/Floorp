@@ -42,15 +42,8 @@ impl webrender::Compositor for DirectCompositeInterface {
         &mut self,
         id: webrender::NativeSurfaceId,
         size: DeviceIntSize,
-        is_opaque: bool,
     ) {
-        compositor::create_surface(
-            self.window,
-            id.0,
-            size.width,
-            size.height,
-            is_opaque,
-        );
+        compositor::create_surface(self.window, id.0, size.width, size.height);
     }
 
     fn destroy_surface(

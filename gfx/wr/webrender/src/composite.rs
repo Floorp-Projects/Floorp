@@ -19,7 +19,6 @@ use crate::picture::{ResolvedSurfaceTexture, SurfaceTextureDescriptor};
 pub enum NativeSurfaceOperationDetails {
     CreateSurface {
         size: DeviceIntSize,
-        is_opaque: bool,
     },
     DestroySurface,
 }
@@ -163,14 +162,12 @@ impl CompositeState {
         &mut self,
         id: NativeSurfaceId,
         size: DeviceIntSize,
-        is_opaque: bool,
     ) -> SurfaceTextureDescriptor {
         self.native_surface_updates.push(
             NativeSurfaceOperation {
                 id,
                 details: NativeSurfaceOperationDetails::CreateSurface {
                     size,
-                    is_opaque,
                 }
             }
         );
@@ -234,7 +231,6 @@ pub trait Compositor {
         &mut self,
         id: NativeSurfaceId,
         size: DeviceIntSize,
-        is_opaque: bool,
     );
 
     /// Destroy the surface with the specified id. WR may call this
