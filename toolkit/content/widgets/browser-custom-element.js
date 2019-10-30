@@ -794,18 +794,6 @@
       }
     }
 
-    set showWindowResizer(val) {
-      if (val) {
-        this.setAttribute("showresizer", "true");
-      } else {
-        this.removeAttribute("showresizer");
-      }
-    }
-
-    get showWindowResizer() {
-      return this.getAttribute("showresizer") == "true";
-    }
-
     set fullZoom(val) {
       if (this.isRemoteBrowser) {
         let changed = val.toFixed(2) != this._fullZoom.toFixed(2);
