@@ -1155,6 +1155,9 @@ static void TraceJitExitFrame(JSTracer* trc, const JSJitFrameIter& frame) {
         TraceGenericPointerRoot(trc, reinterpret_cast<gc::Cell**>(argBase),
                                 "ion-vm-args");
         break;
+      case VMFunctionData::RootBigInt:
+        TraceRoot(trc, reinterpret_cast<JS::BigInt**>(argBase), "ion-vm-args");
+        break;
     }
 
     switch (f->argProperties(explicitArg)) {
@@ -1191,6 +1194,9 @@ static void TraceJitExitFrame(JSTracer* trc, const JSJitFrameIter& frame) {
       case VMFunctionData::RootCell:
         TraceGenericPointerRoot(trc, footer->outParam<gc::Cell*>(),
                                 "ion-vm-out");
+        break;
+      case VMFunctionData::RootBigInt:
+        TraceRoot(trc, footer->outParam<JS::BigInt*>(), "ion-vm-out");
         break;
     }
   }
