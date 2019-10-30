@@ -359,6 +359,12 @@ extern const uint32_t ArgLengths[];
   _(Int32MulResult, Id, Id)                                                    \
   _(Int32DivResult, Id, Id)                                                    \
   _(Int32ModResult, Id, Id)                                                    \
+  _(BigIntAddResult, Id, Id)                                                   \
+  _(BigIntSubResult, Id, Id)                                                   \
+  _(BigIntMulResult, Id, Id)                                                   \
+  _(BigIntDivResult, Id, Id)                                                   \
+  _(BigIntModResult, Id, Id)                                                   \
+  _(BigIntPowResult, Id, Id)                                                   \
   _(Int32BitOrResult, Id, Id)                                                  \
   _(Int32BitXorResult, Id, Id)                                                 \
   _(Int32BitAndResult, Id, Id)                                                 \
@@ -366,6 +372,11 @@ extern const uint32_t ArgLengths[];
   _(Int32RightShiftResult, Id, Id)                                             \
   _(Int32URightShiftResult, Id, Id, Byte)                                      \
   _(Int32NotResult, Id)                                                        \
+  _(BigIntBitOrResult, Id, Id)                                                 \
+  _(BigIntBitXorResult, Id, Id)                                                \
+  _(BigIntBitAndResult, Id, Id)                                                \
+  _(BigIntLeftShiftResult, Id, Id)                                             \
+  _(BigIntRightShiftResult, Id, Id)                                            \
   _(BigIntNotResult, Id)                                                       \
   _(Int32NegationResult, Id)                                                   \
   _(DoubleNegationResult, Id)                                                  \
@@ -1647,6 +1658,36 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     writeOperandId(rhs);
   }
 
+  void bigIntAddResult(BigIntOperandId lhsId, BigIntOperandId rhsId) {
+    writeOpWithOperandId(CacheOp::BigIntAddResult, lhsId);
+    writeOperandId(rhsId);
+  }
+
+  void bigIntSubResult(BigIntOperandId lhsId, BigIntOperandId rhsId) {
+    writeOpWithOperandId(CacheOp::BigIntSubResult, lhsId);
+    writeOperandId(rhsId);
+  }
+
+  void bigIntMulResult(BigIntOperandId lhsId, BigIntOperandId rhsId) {
+    writeOpWithOperandId(CacheOp::BigIntMulResult, lhsId);
+    writeOperandId(rhsId);
+  }
+
+  void bigIntDivResult(BigIntOperandId lhsId, BigIntOperandId rhsId) {
+    writeOpWithOperandId(CacheOp::BigIntDivResult, lhsId);
+    writeOperandId(rhsId);
+  }
+
+  void bigIntModResult(BigIntOperandId lhsId, BigIntOperandId rhsId) {
+    writeOpWithOperandId(CacheOp::BigIntModResult, lhsId);
+    writeOperandId(rhsId);
+  }
+
+  void bigIntPowResult(BigIntOperandId lhsId, BigIntOperandId rhsId) {
+    writeOpWithOperandId(CacheOp::BigIntPowResult, lhsId);
+    writeOperandId(rhsId);
+  }
+
   void int32BitOrResult(Int32OperandId lhs, Int32OperandId rhs) {
     writeOpWithOperandId(CacheOp::Int32BitOrResult, lhs);
     writeOperandId(rhs);
@@ -1705,6 +1746,31 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
 
   void doubleDecResult(NumberOperandId val) {
     writeOpWithOperandId(CacheOp::DoubleDecResult, val);
+  }
+
+  void bigIntBitOrResult(BigIntOperandId lhs, BigIntOperandId rhs) {
+    writeOpWithOperandId(CacheOp::BigIntBitOrResult, lhs);
+    writeOperandId(rhs);
+  }
+
+  void bigIntBitXorResult(BigIntOperandId lhs, BigIntOperandId rhs) {
+    writeOpWithOperandId(CacheOp::BigIntBitXorResult, lhs);
+    writeOperandId(rhs);
+  }
+
+  void bigIntBitAndResult(BigIntOperandId lhs, BigIntOperandId rhs) {
+    writeOpWithOperandId(CacheOp::BigIntBitAndResult, lhs);
+    writeOperandId(rhs);
+  }
+
+  void bigIntLeftShiftResult(BigIntOperandId lhs, BigIntOperandId rhs) {
+    writeOpWithOperandId(CacheOp::BigIntLeftShiftResult, lhs);
+    writeOperandId(rhs);
+  }
+
+  void bigIntRightShiftResult(BigIntOperandId lhs, BigIntOperandId rhs) {
+    writeOpWithOperandId(CacheOp::BigIntRightShiftResult, lhs);
+    writeOperandId(rhs);
   }
 
   void bigIntNotResult(BigIntOperandId id) {
@@ -2752,6 +2818,7 @@ class MOZ_RAII BinaryArithIRGenerator : public IRGenerator {
   AttachDecision tryAttachStringObjectConcat();
   AttachDecision tryAttachStringNumberConcat();
   AttachDecision tryAttachStringBooleanConcat();
+  AttachDecision tryAttachBigInt();
 
  public:
   BinaryArithIRGenerator(JSContext* cx, HandleScript, jsbytecode* pc,
