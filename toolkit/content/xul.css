@@ -23,7 +23,6 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"); /* set default namespace to XUL */
 @namespace html url("http://www.w3.org/1999/xhtml"); /* namespace for HTML elements */
-@namespace xbl url("http://www.mozilla.org/xbl"); /* namespace for XBL elements */
 
 :root {
   text-rendering: optimizeLegibility;
@@ -61,18 +60,11 @@ window[chromehidden~="toolbar"] .chromeclass-toolbar-additional {
 
 /****** elements that have no visual representation ******/
 
-script, data,
-commands, commandset, command,
+script, commandset, command,
 broadcasterset, broadcaster, observes,
-keyset, key, toolbarpalette, toolbarset,
-template, rule, conditions, action,
-bindings, binding, content, member, triple,
+keyset, key, toolbarpalette, template,
 treeitem, treeseparator, treerow, treecell {
   display: none;
-}
-
-xbl|children {
-  display: none !important;
 }
 
 /********** focus rules **********/
@@ -191,18 +183,6 @@ toolbox {
   -moz-box-orient: vertical;
 }
 
-toolbar[customizing="true"][collapsed="true"] {
-  /* Some apps, e.g. Firefox, use 'collapsed' to hide toolbars.
-     Override it while customizing. */
-  visibility: visible;
-}
-
-toolbar[customizing="true"][hidden="true"] {
-  /* Some apps, e.g. SeaMonkey, use 'hidden' to hide toolbars.
-     Override it while customizing. */
-  display: -moz-box;
-}
-
 %ifdef XP_MACOSX
 toolbar[type="menubar"] {
   min-height: 0 !important;
@@ -226,10 +206,7 @@ menubar > menu:empty {
 
 /********* menupopup, panel, & tooltip ***********/
 
-menupopup {
-  -moz-box-orient: vertical;
-}
-
+menupopup,
 panel {
   -moz-box-orient: vertical;
 }
@@ -334,10 +311,7 @@ column {
   display: -moz-grid-line;
 }
 
-rows {
-  -moz-box-orient: vertical;
-}
-
+rows,
 column {
   -moz-box-orient: vertical;
 }
@@ -530,8 +504,7 @@ stringbundleset {
 
 /********** dialog **********/
 
-dialog,
-dialog:root /* override :root from above */ {
+dialog {
   -moz-box-orient: vertical;
 }
 
