@@ -64,41 +64,25 @@ panel[type="autocomplete-richlistbox"] {
   margin-inline-end: 6px;
 }
 
-html|span.ac-tag {
-  margin-inline-start: 0;
-  margin-inline-end: 2px;
-}
-
-.ac-tags {
-  display: none;
-  margin-inline-start: 0;
-  margin-inline-end: 4px;
-}
-
 .ac-separator {
   display: none;
   margin-inline-start: 0;
   margin-inline-end: 6px;
 }
 
-.ac-url,
-.ac-action {
+.ac-url {
   display: none;
 }
 
-/* Better align the URL/action with the title. */
-.ac-tags,
+/* Better align the URL with the title. */
 .ac-separator,
-.ac-url,
-.ac-action {
+.ac-url {
   margin-bottom: -2px;
 }
 
 .ac-title-text,
-.ac-tags-text,
 .ac-separator-text,
 .ac-url-text,
-.ac-action-text,
 .ac-text-overflow-container {
   padding: 0 !important;
   margin: 0 !important;
