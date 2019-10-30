@@ -22,6 +22,15 @@ namespace js {
 class WritableStream;
 class WritableStreamDefaultController;
 
+extern JSObject* WritableStreamControllerAbortSteps(
+    JSContext* cx,
+    JS::Handle<WritableStreamDefaultController*> unwrappedController,
+    JS::Handle<JS::Value> reason);
+
+extern MOZ_MUST_USE bool WritableStreamControllerErrorSteps(
+    JSContext* cx,
+    JS::Handle<WritableStreamDefaultController*> unwrappedController);
+
 extern MOZ_MUST_USE bool WritableStreamControllerStartHandler(JSContext* cx,
                                                               unsigned argc,
                                                               JS::Value* vp);
