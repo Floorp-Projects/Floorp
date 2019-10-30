@@ -277,6 +277,7 @@ class HomeFragment : Fragment() {
 
         view.add_tab_button.setOnClickListener {
             invokePendingDeleteJobs()
+            onboarding.finish()
             val directions = HomeFragmentDirections.actionHomeFragmentToSearchFragment(
                 sessionId = null
             )
