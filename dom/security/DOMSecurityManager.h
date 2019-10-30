@@ -8,7 +8,6 @@
 #define mozilla_dom_DOMSecurityManager_h
 
 #include "nsIObserver.h"
-#include "nsIContentSecurityPolicy.h"
 
 class DOMSecurityManager final : public nsIObserver {
  public:
@@ -24,12 +23,7 @@ class DOMSecurityManager final : public nsIObserver {
   // Only enforces the frame-anecstor check which needs to happen in
   // the parent because we can only access the window global in the
   // parent. The actual CSP gets parsed and applied in content.
-  nsresult ParseCSPAndEnforceFrameAncestorCheck(
-      nsIChannel* aChannel, nsIContentSecurityPolicy** aOutCSP);
-
-  // XFO checks are ignored in case CSP frame-ancestors is present,
-  nsresult EnforeXFrameOptionsCheck(nsIChannel* aChannel,
-                                    nsIContentSecurityPolicy* aCsp);
+  nsresult ParseCSPAndEnforceFrameAncestorCheck(nsIChannel* aChannel);
 
   static void Shutdown();
 };

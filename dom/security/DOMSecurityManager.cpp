@@ -7,7 +7,6 @@
 #include "DOMSecurityManager.h"
 #include "nsCSPContext.h"
 #include "nsContentSecurityUtils.h"
-#include "mozilla/dom/FramingChecker.h"
 #include "mozilla/dom/WindowGlobalParent.h"
 
 #include "nsIMultiPartChannel.h"
@@ -84,17 +83,7 @@ DOMSecurityManager::Observe(nsISupports* aSubject, const char* aTopic,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIContentSecurityPolicy> csp;
-  nsresult rv =
-      ParseCSPAndEnforceFrameAncestorCheck(channel, getter_AddRefs(csp));
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  // X-Frame-Options needs to be enforced after CSP frame-ancestors
-  // checks because if frame-ancestors is present, then x-frame-options
-  // will be discarded
-  rv = EnforeXFrameOptionsCheck(channel, csp);
+  nsresult rv = ParseCSPAndEnforceFrameAncestorCheck(channel);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -103,7 +92,7 @@ DOMSecurityManager::Observe(nsISupports* aSubject, const char* aTopic,
 }
 
 nsresult DOMSecurityManager::ParseCSPAndEnforceFrameAncestorCheck(
-    nsIChannel* aChannel, nsIContentSecurityPolicy** aOutCSP) {
+    nsIChannel* aChannel) {
   MOZ_ASSERT(aChannel);
 
   // CSP can only hang off an http channel, if this channel is not
@@ -187,19 +176,5 @@ nsresult DOMSecurityManager::ParseCSPAndEnforceFrameAncestorCheck(
     aChannel->Cancel(NS_ERROR_CSP_FRAME_ANCESTOR_VIOLATION);
   }
 
-  // return the CSP for x-frame-options check
-  csp.forget(aOutCSP);
-
-  return NS_OK;
-}
-
-nsresult DOMSecurityManager::EnforeXFrameOptionsCheck(
-    nsIChannel* aChannel, nsIContentSecurityPolicy* aCsp) {
-  MOZ_ASSERT(aChannel);
-
-  if (!FramingChecker::CheckFrameOptions(aChannel, aCsp)) {
-    // stop!  ERROR page!
-    aChannel->Cancel(NS_ERROR_XFO_VIOLATION);
-  }
   return NS_OK;
 }
