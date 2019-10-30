@@ -146,7 +146,7 @@ loader.lazyRequireGetter(
 loader.lazyRequireGetter(
   this,
   "DOMHelpers",
-  "resource://devtools/shared/DOMHelpers.jsm",
+  "devtools/shared/dom-helpers",
   true
 );
 
@@ -742,8 +742,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
     const { contentDocument, contentWindow } = this.rawNode;
     if (contentDocument && contentDocument.readyState !== "complete") {
       await new Promise(resolve => {
-        const domHelper = new DOMHelpers(contentWindow);
-        domHelper.onceDOMReady(resolve);
+        DOMHelpers.onceDOMReady(contentWindow, resolve);
       });
     }
   },

@@ -200,11 +200,10 @@ async function testClickInInnerIframe(doc) {
 
   iframe.srcdoc = "<div id=test style='height:50px'></div>";
   await new Promise(r => {
-    const domHelper = new DOMHelpers(iframe.contentWindow);
     const frameLoad = () => {
       r();
     };
-    domHelper.onceDOMReady(frameLoad);
+    DOMHelpers.onceDOMReady(iframe.contentWindow, frameLoad);
   });
 
   await waitUntil(() => iframe.contentWindow.document.getElementById("test"));

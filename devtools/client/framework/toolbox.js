@@ -27,7 +27,7 @@ var EventEmitter = require("devtools/shared/event-emitter");
 const Selection = require("devtools/client/framework/selection");
 var Telemetry = require("devtools/client/shared/telemetry");
 const { getUnicodeUrl } = require("devtools/client/shared/unicode-url");
-var { DOMHelpers } = require("resource://devtools/shared/DOMHelpers.jsm");
+var { DOMHelpers } = require("devtools/shared/dom-helpers");
 const { KeyCodes } = require("devtools/client/shared/keycodes");
 var Startup = Cc["@mozilla.org/devtools/startup-clh;1"].getService(
   Ci.nsISupports
@@ -727,11 +727,14 @@ Toolbox.prototype = {
         this._debugTargetData = this._getDebugTargetData();
       }
 
-      const domHelper = new DOMHelpers(this.win);
       const domReady = new Promise(resolve => {
-        domHelper.onceDOMReady(() => {
-          resolve();
-        }, this._URL);
+        DOMHelpers.onceDOMReady(
+          this.win,
+          () => {
+            resolve();
+          },
+          this._URL
+        );
       });
 
       // Optimization: fire up a few other things before waiting on
@@ -2479,8 +2482,7 @@ Toolbox.prototype = {
       // on the DOM node every time because this won't work
       // if the (xul chrome) iframe is loaded in a content docshell.
       if (iframe.contentWindow) {
-        const domHelper = new DOMHelpers(iframe.contentWindow);
-        domHelper.onceDOMReady(onLoad);
+        DOMHelpers.onceDOMReady(iframe.contentWindow, onLoad);
       } else {
         const callback = () => {
           iframe.removeEventListener("DOMContentLoaded", callback);

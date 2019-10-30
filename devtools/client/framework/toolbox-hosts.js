@@ -7,7 +7,7 @@
 const EventEmitter = require("devtools/shared/event-emitter");
 const promise = require("promise");
 const Services = require("Services");
-const { DOMHelpers } = require("resource://devtools/shared/DOMHelpers.jsm");
+const { DOMHelpers } = require("devtools/shared/dom-helpers");
 
 loader.lazyRequireGetter(
   this,
@@ -78,12 +78,11 @@ BottomHost.prototype = {
     this.frame.setAttribute("src", "about:blank");
 
     const frame = await new Promise(resolve => {
-      const domHelper = new DOMHelpers(this.frame.contentWindow);
       const frameLoad = () => {
         this.emit("ready", this.frame);
         resolve(this.frame);
       };
-      domHelper.onceDOMReady(frameLoad);
+      DOMHelpers.onceDOMReady(this.frame.contentWindow, frameLoad);
       focusTab(this.hostTab);
     });
 
@@ -174,12 +173,11 @@ class SidebarHost {
     this.frame.setAttribute("src", "about:blank");
 
     const frame = await new Promise(resolve => {
-      const domHelper = new DOMHelpers(this.frame.contentWindow);
       const frameLoad = () => {
         this.emit("ready", this.frame);
         resolve(this.frame);
       };
-      domHelper.onceDOMReady(frameLoad);
+      DOMHelpers.onceDOMReady(this.frame.contentWindow, frameLoad);
       focusTab(this.hostTab);
     });
 
