@@ -3639,8 +3639,8 @@ bool js::str_fromCodePoint(JSContext* cx, unsigned argc, Value* vp) {
   static_assert(
       ARGS_LENGTH_MAX < std::numeric_limits<decltype(args.length())>::max() / 2,
       "|args.length() * 2| does not overflow");
-  auto elements =
-      cx->make_pod_array<char16_t>(args.length() * 2, js::StringBufferArena);
+  auto elements = cx->make_pod_arena_array<char16_t>(js::StringBufferArena,
+                                                     args.length() * 2);
   if (!elements) {
     return false;
   }
