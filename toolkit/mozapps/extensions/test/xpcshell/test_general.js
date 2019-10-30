@@ -12,6 +12,9 @@ var gCount;
 async function run_test() {
   do_test_pending();
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
+  // Otherwise the plugins get initialized async and throw off our
+  // counting.
+  Services.prefs.setBoolPref("plugin.load_flash_only", false);
 
   await promiseStartupManager();
   let list = await AddonManager.getAddonsByTypes(null);
