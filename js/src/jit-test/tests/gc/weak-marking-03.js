@@ -1,3 +1,5 @@
+// |jit-test| allow-unhandlable-oom
+
 // weakmap marking tests that use the testing mark queue to force an ordering
 // of marking.
 
