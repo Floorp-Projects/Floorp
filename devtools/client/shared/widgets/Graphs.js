@@ -8,9 +8,7 @@ const {
 } = require("devtools/client/shared/widgets/view-helpers");
 const { getCurrentZoom } = require("devtools/shared/layout/utils");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
-const {
-  DOMHelpers,
-} = require("resource://devtools/client/shared/DOMHelpers.jsm");
+const { DOMHelpers } = require("resource://devtools/shared/DOMHelpers.jsm");
 
 loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
 

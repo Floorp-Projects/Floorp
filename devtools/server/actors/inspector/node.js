@@ -146,7 +146,7 @@ loader.lazyRequireGetter(
 loader.lazyRequireGetter(
   this,
   "DOMHelpers",
-  "resource://devtools/client/shared/DOMHelpers.jsm",
+  "resource://devtools/shared/DOMHelpers.jsm",
   true
 );
 

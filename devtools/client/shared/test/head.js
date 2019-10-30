@@ -14,7 +14,7 @@ Services.scriptloader.loadSubScript(
 );
 
 const { DOMHelpers } = ChromeUtils.import(
-  "resource://devtools/client/shared/DOMHelpers.jsm"
+  "resource://devtools/shared/DOMHelpers.jsm"
 );
 const { Hosts } = require("devtools/client/framework/toolbox-hosts");
 
