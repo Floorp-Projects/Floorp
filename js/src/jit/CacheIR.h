@@ -2750,6 +2750,8 @@ class MOZ_RAII CompareIRGenerator : public IRGenerator {
                                           ValOperandId rhsId);
   AttachDecision tryAttachNullUndefined(ValOperandId lhsId, ValOperandId rhsId);
   AttachDecision tryAttachStringNumber(ValOperandId lhsId, ValOperandId rhsId);
+  AttachDecision tryAttachPrimitiveSymbol(ValOperandId lhsId,
+                                          ValOperandId rhsId);
 
   void trackAttached(const char* name);
 
