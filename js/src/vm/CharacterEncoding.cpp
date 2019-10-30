@@ -408,8 +408,8 @@ static CharsT InflateUTF8StringHelper(JSContext* cx, const InputCharsT src,
   }
   *outlen = len;
 
-  CharT* dst =
-      cx->template pod_malloc<CharT>(*outlen + 1, destArenaId);  // +1 for NUL
+  CharT* dst = cx->pod_arena_malloc<CharT>(destArenaId,
+                                           *outlen + 1);  // +1 for NUL
 
   if (!dst) {
     ReportOutOfMemory(cx);

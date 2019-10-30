@@ -240,8 +240,8 @@ size_t TypedArrayObject::objectMoved(JSObject* obj, JSObject* old) {
 
     AutoEnterOOMUnsafeRegion oomUnsafe;
     nbytes = JS_ROUNDUP(nbytes, sizeof(Value));
-    void* data = newObj->zone()->pod_malloc<uint8_t>(
-        nbytes, js::ArrayBufferContentsArena);
+    void* data = newObj->zone()->pod_arena_malloc<uint8_t>(
+        js::ArrayBufferContentsArena, nbytes);
     if (!data) {
       oomUnsafe.crash(
           "Failed to allocate typed array elements while tenuring.");

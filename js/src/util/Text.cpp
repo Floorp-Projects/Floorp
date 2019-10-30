@@ -64,7 +64,7 @@ UniqueChars js::DuplicateStringToArena(arena_id_t destArenaId, JSContext* cx,
 
 UniqueChars js::DuplicateStringToArena(arena_id_t destArenaId, JSContext* cx,
                                        const char* s, size_t n) {
-  auto ret = cx->make_pod_array<char>(n + 1, destArenaId);
+  auto ret = cx->make_pod_arena_array<char>(destArenaId, n + 1);
   if (!ret) {
     return nullptr;
   }
@@ -82,7 +82,7 @@ UniqueTwoByteChars js::DuplicateStringToArena(arena_id_t destArenaId,
 UniqueTwoByteChars js::DuplicateStringToArena(arena_id_t destArenaId,
                                               JSContext* cx, const char16_t* s,
                                               size_t n) {
-  auto ret = cx->make_pod_array<char16_t>(n + 1, destArenaId);
+  auto ret = cx->make_pod_arena_array<char16_t>(destArenaId, n + 1);
   if (!ret) {
     return nullptr;
   }
