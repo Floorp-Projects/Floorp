@@ -1162,6 +1162,12 @@ BigInt* BigIntNeg(JSContext* cx, HandleBigInt x);
 BigInt* BigIntInc(JSContext* cx, HandleBigInt x);
 BigInt* BigIntDec(JSContext* cx, HandleBigInt x);
 
+template <EqualityKind Kind>
+bool BigIntEqual(BigInt* x, BigInt* y);
+
+template <ComparisonKind Kind>
+bool BigIntCompare(BigInt* x, BigInt* y);
+
 enum class TailCallVMFunctionId;
 enum class VMFunctionId;
 

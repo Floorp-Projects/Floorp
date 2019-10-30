@@ -2139,5 +2139,32 @@ BigInt* BigIntInc(JSContext* cx, HandleBigInt x) { return BigInt::inc(cx, x); }
 
 BigInt* BigIntDec(JSContext* cx, HandleBigInt x) { return BigInt::dec(cx, x); }
 
+template <EqualityKind Kind>
+bool BigIntEqual(BigInt* x, BigInt* y) {
+  AutoUnsafeCallWithABI unsafe;
+  bool res = BigInt::equal(x, y);
+  if (Kind != EqualityKind::Equal) {
+    res = !res;
+  }
+  return res;
+}
+
+template bool BigIntEqual<EqualityKind::Equal>(BigInt* x, BigInt* y);
+template bool BigIntEqual<EqualityKind::NotEqual>(BigInt* x, BigInt* y);
+
+template <ComparisonKind Kind>
+bool BigIntCompare(BigInt* x, BigInt* y) {
+  AutoUnsafeCallWithABI unsafe;
+  bool res = BigInt::lessThan(x, y);
+  if (Kind != ComparisonKind::LessThan) {
+    res = !res;
+  }
+  return res;
+}
+
+template bool BigIntCompare<ComparisonKind::LessThan>(BigInt* x, BigInt* y);
+template bool BigIntCompare<ComparisonKind::GreaterThanOrEqual>(BigInt* x,
+                                                                BigInt* y);
+
 }  // namespace jit
 }  // namespace js

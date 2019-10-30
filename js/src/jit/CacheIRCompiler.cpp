@@ -4120,6 +4120,56 @@ bool CacheIRCompiler::emitCompareDoubleResult() {
   return true;
 }
 
+bool CacheIRCompiler::emitCompareBigIntResult() {
+  JitSpew(JitSpew_Codegen, __FUNCTION__);
+  AutoOutputRegister output(*this);
+
+  Register lhs = allocator.useRegister(masm, reader.bigIntOperandId());
+  Register rhs = allocator.useRegister(masm, reader.bigIntOperandId());
+  JSOp op = reader.jsop();
+
+  AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+
+  LiveRegisterSet save(GeneralRegisterSet::Volatile(), liveVolatileFloatRegs());
+  masm.PushRegsInMask(save);
+
+  masm.setupUnalignedABICall(scratch);
+
+  // Push the operands in reverse order for JSOP_LE and JSOP_GT:
+  // - |left <= right| is implemented as |right >= left|.
+  // - |left > right| is implemented as |right < left|.
+  if (op == JSOP_LE || op == JSOP_GT) {
+    masm.passABIArg(rhs);
+    masm.passABIArg(lhs);
+  } else {
+    masm.passABIArg(lhs);
+    masm.passABIArg(rhs);
+  }
+
+  using Fn = bool (*)(BigInt*, BigInt*);
+  Fn fn;
+  if (op == JSOP_EQ || op == JSOP_STRICTEQ) {
+    fn = jit::BigIntEqual<EqualityKind::Equal>;
+  } else if (op == JSOP_NE || op == JSOP_STRICTNE) {
+    fn = jit::BigIntEqual<EqualityKind::NotEqual>;
+  } else if (op == JSOP_LT || op == JSOP_GT) {
+    fn = jit::BigIntCompare<ComparisonKind::LessThan>;
+  } else {
+    MOZ_ASSERT(op == JSOP_LE || op == JSOP_GE);
+    fn = jit::BigIntCompare<ComparisonKind::GreaterThanOrEqual>;
+  }
+
+  masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, fn));
+  masm.storeCallBoolResult(scratch);
+
+  LiveRegisterSet ignore;
+  ignore.add(scratch);
+  masm.PopRegsInMaskIgnore(save, ignore);
+
+  EmitStoreResult(masm, scratch, JSVAL_TYPE_BOOLEAN, output);
+  return true;
+}
+
 bool CacheIRCompiler::emitCompareObjectUndefinedNullResult() {
   JitSpew(JitSpew_Codegen, __FUNCTION__);
   AutoOutputRegister output(*this);
