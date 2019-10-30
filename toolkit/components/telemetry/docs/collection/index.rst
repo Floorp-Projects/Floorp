@@ -22,7 +22,6 @@ The current data collection possibilities include:
 * :doc:`Use counters <use-counters>` measure the usage of web platform features
 * :doc:`Experiment annotations <experiments>`
 * :doc:`Remote content uptake <uptake>`
-* :doc:`Hybrid Content Telemetry <hybrid-content>` allows recording telemetry from semi-privileged hosted content
 * :doc:`WebExtension API <webextension-api>` can be used in privileged webextensions
 * :doc:`Origin Telemetry <origin>` Experimental prototype. For use by Content Blocking only for now.
 
@@ -40,7 +39,6 @@ The current data collection possibilities include:
    stack-capture
    experiments
    uptake
-   hybrid-content
    *
 
 Browser Usage Telemetry

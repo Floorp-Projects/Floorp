@@ -1,6 +1,6 @@
-========================
-Hybrid Content Telemetry
-========================
+===================================
+Hybrid Content Telemetry (obsolete)
+===================================
 
 Hybrid content is web content that is loaded as part of Firefox, appears as part of
 Firefox to the user and is primarily intended to be used in Firefox. This can be
@@ -371,3 +371,4 @@ Version History
 ===============
 
 - Firefox 59: Initial hybrid content telemetry support (`bug 1417473 <https://bugzilla.mozilla.org/show_bug.cgi?id=1417473>`_).
+- Firefox 71: Hybrid Content Telemetry removed (`bug 1520491 <https://bugzilla.mozilla.org/show_bug.cgi?id=1520491>`_).
