@@ -54,6 +54,10 @@
         "$ref": "types.Setting",
         "description": "Controls after which mouse event context menus popup. This setting's value is of type ContextMenuMouseEvent, which has possible values of <code>mouseup</code> and <code>mousedown</code>."
       },
+      "ftpProtocolEnabled": {
+        "$ref": "types.Setting",
+        "description": "This boolean setting controls whether the FTP protocol is enabled."
+      },
       "homepageOverride": {
         "$ref": "types.Setting",
         "description": "Returns the value of the overridden home page. Read-only."
