@@ -187,9 +187,17 @@ class ChangesView {
    *        (Default) False if invoked from the button.
    */
   async copyRule(ruleId, usingContextMenu = false) {
-    const rule = await this.inspector.pageStyle.getRule(ruleId);
-    const text = await rule.getRuleText();
-    clipboardHelper.copyString(text);
+    const inspectorFronts = await this.inspector.inspectorFront.getAllInspectorFronts();
+
+    for (const inspectorFront of inspectorFronts) {
+      const rule = await inspectorFront.pageStyle.getRule(ruleId);
+
+      if (rule) {
+        const text = await rule.getRuleText();
+        clipboardHelper.copyString(text);
+        break;
+      }
+    }
 
     if (usingContextMenu) {
       this.telemetry.scalarAdd(TELEMETRY_SCALAR_CONTEXTMENU_COPY_RULE, 1);
