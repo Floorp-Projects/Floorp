@@ -18,8 +18,9 @@ pub struct Manager {
     sessions: BTreeSet<CK_SESSION_HANDLE>,
     /// A map of searches to PKCS #11 object handles that match those searches.
     searches: BTreeMap<CK_SESSION_HANDLE, Vec<CK_OBJECT_HANDLE>>,
-    /// A map of sign operations to the object handle being used by each one.
-    signs: BTreeMap<CK_SESSION_HANDLE, CK_OBJECT_HANDLE>,
+    /// A map of sign operations to a pair of the object handle and optionally some params being
+    /// used by each one.
+    signs: BTreeMap<CK_SESSION_HANDLE, (CK_OBJECT_HANDLE, Option<CK_RSA_PKCS_PSS_PARAMS>)>,
     /// A map of object handles to the underlying objects.
     objects: BTreeMap<CK_OBJECT_HANDLE, Object>,
     /// A set of certificate identifiers (not the same as handles).
@@ -177,6 +178,7 @@ impl Manager {
         &mut self,
         session: CK_SESSION_HANDLE,
         key_handle: CK_OBJECT_HANDLE,
+        params: Option<CK_RSA_PKCS_PSS_PARAMS>,
     ) -> Result<(), ()> {
         if self.signs.contains_key(&session) {
             return Err(());
@@ -185,7 +187,7 @@ impl Manager {
             Some(Object::Key(_)) => {}
             _ => return Err(()),
         };
-        self.signs.insert(session, key_handle);
+        self.signs.insert(session, (key_handle, params));
         Ok(())
     }
 
@@ -194,28 +196,28 @@ impl Manager {
         session: CK_SESSION_HANDLE,
         data: &[u8],
     ) -> Result<usize, ()> {
-        let key_handle = match self.signs.get(&session) {
-            Some(key_handle) => key_handle,
+        let (key_handle, params) = match self.signs.get(&session) {
+            Some((key_handle, params)) => (key_handle, params),
             None => return Err(()),
         };
         let key = match self.objects.get(&key_handle) {
             Some(Object::Key(key)) => key,
             _ => return Err(()),
         };
-        key.get_signature_length(data)
+        key.get_signature_length(data, params)
     }
 
     pub fn sign(&mut self, session: CK_SESSION_HANDLE, data: &[u8]) -> Result<Vec<u8>, ()> {
         // Performing the signature (via C_Sign, which is the only way we support) finishes the sign
         // operation, so it needs to be removed here.
-        let key_handle = match self.signs.remove(&session) {
-            Some(key_handle) => key_handle,
+        let (key_handle, params) = match self.signs.remove(&session) {
+            Some((key_handle, params)) => (key_handle, params),
             None => return Err(()),
         };
         let key = match self.objects.get(&key_handle) {
             Some(Object::Key(key)) => key,
             _ => return Err(()),
         };
-        key.sign(data)
+        key.sign(data, &params)
     }
 }
