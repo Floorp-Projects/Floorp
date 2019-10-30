@@ -10,6 +10,7 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/NonRefcountedDOMObject.h"
+#include "mozilla/dom/TestFunctionsBinding.h"
 #include "nsString.h"
 
 namespace mozilla {
@@ -38,6 +39,16 @@ class TestFunctions : public NonRefcountedDOMObject {
   void GetStringDataAsAString(uint32_t aLength, nsAString& aString);
   void GetStringDataAsDOMString(const Optional<uint32_t>& aLength,
                                 DOMString& aString);
+
+  void GetShortLiteralString(nsAString& aString);
+  void GetMediumLiteralString(nsAString& aString);
+  void GetLongLiteralString(nsAString& aString);
+
+  void GetStringbufferString(const nsAString& aInput, nsAString& aRetval);
+
+  StringType GetStringType(const nsAString& aString);
+
+  bool StringbufferMatchesStored(const nsAString& aString);
 
   void TestThrowNsresult(ErrorResult& aError);
   void TestThrowNsresultFromNative(ErrorResult& aError);

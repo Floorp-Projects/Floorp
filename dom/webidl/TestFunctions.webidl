@@ -13,6 +13,14 @@ callback PromiseReturner = Promise<any>();
 interface WrapperCachedNonISupportsTestInterface {
 };
 
+// The type of string C++ sees.
+enum StringType {
+  "literal",      // A string with the LITERAL flag.
+  "stringbuffer", // A string with the REFCOUNTED flag.
+  "inline",       // A string with the INLINE flag.
+  "other",        // Anything else.
+};
+
 [Pref="dom.expose_test_interfaces",
  Exposed=Window]
 interface TestFunctions {
@@ -45,6 +53,26 @@ interface TestFunctions {
   // DOMString argument on the C++ side and trying to hand it
   // stringbuffers.  If length not passed, use our full length.
   DOMString getStringDataAsDOMString(optional unsigned long length);
+
+  // Get a short (short enough to fit in a JS inline string) literal string.
+  DOMString getShortLiteralString();
+
+  // Get a medium (long enough to not be a JS inline, but short enough
+  // to fit in a FakeString inline buffer) literal string.
+  DOMString getMediumLiteralString();
+
+  // Get a long (long enough to not fit in any inline buffers) literal string.
+  DOMString getLongLiteralString();
+
+  // Get a stringbuffer string for whatever string is passed in.
+  DOMString getStringbufferString(DOMString input);
+
+  // Get the type of string that the C++ sees after going through bindings.
+  StringType getStringType(DOMString str);
+
+  // Returns true if both the incoming string and the stored (via setStringData())
+  // string have stringbuffers and they're the same stringbuffer.
+  boolean stringbufferMatchesStored(DOMString str);
 
   // Functions that just punch through to mozITestInterfaceJS.idl
   [Throws]
