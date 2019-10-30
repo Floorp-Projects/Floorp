@@ -225,6 +225,11 @@ void CanonicalBrowsingContext::PendingRemotenessChange::Complete(
   }
 
   RefPtr<CanonicalBrowsingContext> target(mTarget);
+  if (target->IsDiscarded()) {
+    Cancel(NS_ERROR_FAILURE);
+    return;
+  }
+
   RefPtr<WindowGlobalParent> embedderWindow = target->GetEmbedderWindowGlobal();
   if (NS_WARN_IF(!embedderWindow) || NS_WARN_IF(!embedderWindow->CanSend())) {
     Cancel(NS_ERROR_FAILURE);
