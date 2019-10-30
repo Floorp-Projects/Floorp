@@ -312,6 +312,11 @@ class Settings private constructor(
         default = 0
     )
 
+    var totalUriCount by longPreference(
+        appContext.getPreferenceKey(R.string.pref_key_total_uri),
+        default = 0
+    )
+
     fun addSearchWidgetInstalled(count: Int) {
         val key = appContext.getPreferenceKey(R.string.pref_key_search_widget_installed)
         val newValue = preferences.getInt(key, 0) + count

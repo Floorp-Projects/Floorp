@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.browser
 
+import android.content.Context
 import androidx.annotation.VisibleForTesting
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.LifecycleOwner
@@ -13,14 +14,17 @@ import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.metrics
+import org.mozilla.fenix.ext.settings
 
 class UriOpenedObserver(
+    private val context: Context,
     private val owner: LifecycleOwner,
     private val sessionManager: SessionManager,
     private val metrics: MetricController
 ) : SessionManager.Observer {
 
     constructor(activity: FragmentActivity) : this(
+        activity,
         activity,
         activity.components.core.sessionManager,
         activity.metrics
@@ -58,6 +62,7 @@ class UriOpenedObserver(
             } else if (urlLoading != null && !session.private && temporaryFix.shouldSendEvent(session.url)) {
                 temporaryFix.eventSentFor = session.url
                 metrics.track(Event.UriOpened)
+                context.settings().totalUriCount += 1
             }
         }
     }

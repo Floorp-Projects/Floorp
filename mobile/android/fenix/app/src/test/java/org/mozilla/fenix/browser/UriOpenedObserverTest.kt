@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.browser
 
+import android.content.Context
 import androidx.lifecycle.LifecycleOwner
 import io.mockk.every
 import io.mockk.mockk
@@ -17,12 +18,14 @@ import org.mozilla.fenix.components.metrics.MetricController
 
 class UriOpenedObserverTest {
 
+    private lateinit var context: Context
     private lateinit var owner: LifecycleOwner
     private lateinit var sessionManager: SessionManager
     private lateinit var metrics: MetricController
 
     @Before
     fun setup() {
+        context = mockk(relaxed = true)
         owner = mockk(relaxed = true)
         sessionManager = mockk(relaxed = true)
         metrics = mockk(relaxed = true)
@@ -30,13 +33,13 @@ class UriOpenedObserverTest {
 
     @Test
     fun `registers self as observer`() {
-        val observer = UriOpenedObserver(owner, sessionManager, metrics)
+        val observer = UriOpenedObserver(context, owner, sessionManager, metrics)
         verify { sessionManager.register(observer, owner) }
     }
 
     @Test
     fun `registers single session observer`() {
-        val observer = UriOpenedObserver(owner, sessionManager, metrics)
+        val observer = UriOpenedObserver(context, owner, sessionManager, metrics)
         val session: Session = mockk(relaxed = true)
 
         observer.onSessionAdded(session)
@@ -48,7 +51,7 @@ class UriOpenedObserverTest {
 
     @Test
     fun `tracks that a url was loaded`() {
-        val observer = UriOpenedObserver(owner, sessionManager, metrics).singleSessionObserver
+        val observer = UriOpenedObserver(context, owner, sessionManager, metrics).singleSessionObserver
         val session: Session = mockk(relaxed = true)
         every { session.url } returns "https://mozilla.com"
 

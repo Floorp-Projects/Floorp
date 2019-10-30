@@ -470,6 +470,7 @@ class GleanMetricsService(private val context: Context) : MetricsService {
             }
             mozillaProducts.set(MozillaProductDetector.getInstalledMozillaProducts(context))
             adjustCampaign.set(context.settings().adjustCampaignId)
+            totalUriCount.set(context.settings().totalUriCount.toString())
         }
 
         SearchDefaultEngine.apply {

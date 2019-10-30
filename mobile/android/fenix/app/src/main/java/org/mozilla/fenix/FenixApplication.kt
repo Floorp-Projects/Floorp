@@ -64,6 +64,8 @@ open class FenixApplication : Application() {
         registerRxExceptionHandling()
         enableStrictMode()
 
+        applicationContext.settings().totalUriCount = 0
+
         if (!isMainProcess()) {
             // If this is not the main process then do not continue with the initialization here. Everything that
             // follows only needs to be done in our app's main process and should not be done in other processes like
