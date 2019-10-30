@@ -781,6 +781,9 @@ void HttpConnInfo::SetHTTP1ProtocolVersion(HttpVersion pv) {
     case HttpVersion::v2_0:
       protocolVersion.AssignLiteral(u"http/2.0");
       break;
+    case HttpVersion::v3_0:
+      protocolVersion.AssignLiteral(u"http/3.0");
+      break;
     default:
       protocolVersion.AssignLiteral(u"unknown protocol version");
   }
@@ -789,6 +792,10 @@ void HttpConnInfo::SetHTTP1ProtocolVersion(HttpVersion pv) {
 void HttpConnInfo::SetHTTP2ProtocolVersion(SpdyVersion pv) {
   MOZ_ASSERT(pv == SpdyVersion::HTTP_2);
   protocolVersion.AssignLiteral(u"h2");
+}
+
+void HttpConnInfo::SetHTTP3ProtocolVersion() {
+  protocolVersion.AssignLiteral(u"h3");
 }
 
 NS_IMETHODIMP
