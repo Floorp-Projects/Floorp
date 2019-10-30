@@ -449,7 +449,7 @@ class GCMarker : public JSTracer {
   MainThreadOrGCTaskData<js::gc::Arena*> delayedMarkingList;
 
   /* Whether more work has been added to the delayed marking list. */
-  MainThreadData<bool> delayedMarkingWorkAdded;
+  MainThreadOrGCTaskData<bool> delayedMarkingWorkAdded;
 
   /*
    * If the weakKeys table OOMs, disable the linear algorithm and fall back
@@ -462,7 +462,7 @@ class GCMarker : public JSTracer {
 
 #ifdef DEBUG
   /* Count of arenas that are currently in the stack. */
-  MainThreadData<size_t> markLaterArenas;
+  MainThreadOrGCTaskData<size_t> markLaterArenas;
 
   /* Assert that start and stop are called with correct ordering. */
   MainThreadOrGCTaskData<bool> started;
