@@ -77,6 +77,10 @@ let RPMAccessManager = {
         "browser.contentblocking.report.monitor.enabled",
         "privacy.socialtracking.block_cookies.enabled",
         "browser.contentblocking.report.proxy.enabled",
+        "privacy.trackingprotection.cryptomining.enabled",
+        "privacy.trackingprotection.fingerprinting.enabled",
+        "privacy.trackingprotection.enabled",
+        "privacy.trackingprotection.socialtracking.enabled",
       ],
       getStringPref: [
         "browser.contentblocking.category",
@@ -86,6 +90,7 @@ let RPMAccessManager = {
         "browser.contentblocking.report.manage_devices.url",
         "browser.contentblocking.report.proxy_extension.url",
       ],
+      getIntPref: ["network.cookie.cookieBehavior"],
       getFormatURLPref: [
         "browser.contentblocking.report.monitor.how_it_works.url",
         "browser.contentblocking.report.lockwise.how_it_works.url",
