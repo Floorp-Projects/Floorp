@@ -119,6 +119,7 @@ class IonCacheIRCompiler;
   _(LoadDoubleTruthyResult)               \
   _(LoadStringTruthyResult)               \
   _(LoadObjectTruthyResult)               \
+  _(LoadBigIntTruthyResult)               \
   _(LoadNewObjectFromTemplateResult)      \
   _(CompareObjectResult)                  \
   _(CompareSymbolResult)                  \

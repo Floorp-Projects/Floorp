@@ -376,6 +376,7 @@ extern const uint32_t ArgLengths[];
   _(LoadDoubleTruthyResult, Id)                                                \
   _(LoadStringTruthyResult, Id)                                                \
   _(LoadObjectTruthyResult, Id)                                                \
+  _(LoadBigIntTruthyResult, Id)                                                \
   _(LoadValueResult, Field)                                                    \
   _(LoadNewObjectFromTemplateResult, Field, UInt32, UInt32)                    \
                                                                                \
@@ -1896,6 +1897,10 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     writeOpWithOperandId(CacheOp::LoadObjectTruthyResult, obj);
   }
 
+  void loadBigIntTruthyResult(BigIntOperandId obj) {
+    writeOpWithOperandId(CacheOp::LoadBigIntTruthyResult, obj);
+  }
+
   void loadValueResult(const Value& val) {
     writeOp(CacheOp::LoadValueResult);
     addStubField(val.asRawBits(), StubField::Type::Value);
@@ -2670,6 +2675,7 @@ class MOZ_RAII ToBoolIRGenerator : public IRGenerator {
   AttachDecision tryAttachSymbol();
   AttachDecision tryAttachNullOrUndefined();
   AttachDecision tryAttachObject();
+  AttachDecision tryAttachBigInt();
 
   void trackAttached(const char* name);
 
