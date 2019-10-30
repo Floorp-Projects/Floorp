@@ -950,7 +950,8 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
     return GetExtantDoc() && GetExtantDoc()->IsInSyncOperation();
   }
 
-  bool CanShareMemory(const nsID& aAgentClusterId);
+  // https://whatpr.org/html/4734/structured-data.html#cross-origin-isolated
+  bool IsCrossOriginIsolated() const;
 
  protected:
   // Web IDL helpers

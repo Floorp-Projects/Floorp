@@ -6075,7 +6075,7 @@ void nsGlobalWindowOuter::PostMessageMozOuter(JSContext* aCx,
 
   JS::CloneDataPolicy clonePolicy;
   if (GetDocGroup() && callerInnerWindow &&
-      callerInnerWindow->CanShareMemory(GetDocGroup()->AgentClusterId())) {
+      callerInnerWindow->IsCrossOriginIsolated()) {
     clonePolicy.allowSharedMemory();
   }
   event->Write(aCx, aMessage, aTransfer, clonePolicy, aError);
