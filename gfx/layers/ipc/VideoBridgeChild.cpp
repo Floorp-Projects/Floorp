@@ -24,10 +24,7 @@ void VideoBridgeChild::StartupForGPUProcess() {
                                 &childPipe);
 
   VideoBridgeChild::OpenToGPUProcess(std::move(childPipe));
-
-  CompositorThreadHolder::Loop()->PostTask(NewRunnableFunction(
-      "gfx::VideoBridgeParent::Open", &VideoBridgeParent::Open,
-      std::move(parentPipe), VideoBridgeSource::GpuProcess));
+  VideoBridgeParent::CreateForGPUProcess(std::move(parentPipe), VideoBridgeSource::GpuProcess);
 }
 
 void VideoBridgeChild::OpenToParentProcess(
@@ -36,7 +33,7 @@ void VideoBridgeChild::OpenToParentProcess(
 
   if (!aEndpoint.Bind(sVideoBridgeToParentProcess)) {
     // We can't recover from this.
-    MOZ_CRASH("Failed to bind RemoteDecoderManagerParent to endpoint");
+    MOZ_CRASH("Failed to bind VideoBridgeChild to endpoint");
   }
 }
 
@@ -46,7 +43,7 @@ void VideoBridgeChild::OpenToGPUProcess(
 
   if (!aEndpoint.Bind(sVideoBridgeToGPUProcess)) {
     // We can't recover from this.
-    MOZ_CRASH("Failed to bind RemoteDecoderManagerParent to endpoint");
+    MOZ_CRASH("Failed to bind VideoBridgeChild to endpoint");
   }
 }
 

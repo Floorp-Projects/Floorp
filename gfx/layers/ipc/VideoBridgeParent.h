@@ -24,6 +24,10 @@ class VideoBridgeParent final : public PVideoBridgeParent,
 
   static VideoBridgeParent* GetSingleton(Maybe<VideoBridgeSource>& aSource);
 
+  static void CreateForGPUProcess(Endpoint<PVideoBridgeParent>&& aEndpoint,
+                                  VideoBridgeSource aSource);
+  static void CreateForContent(Endpoint<PVideoBridgeParent>&& aEndpoint);
+
   TextureHost* LookupTexture(uint64_t aSerial);
 
   // PVideoBridgeParent
@@ -56,18 +60,16 @@ class VideoBridgeParent final : public PVideoBridgeParent,
 
   void DeallocShmem(ipc::Shmem& aShmem) override;
 
-  static void Open(Endpoint<PVideoBridgeParent>&& aEndpoint,
-                   VideoBridgeSource aSource);
-
  private:
   explicit VideoBridgeParent(VideoBridgeSource aSource);
+  void Bind(Endpoint<PVideoBridgeParent>&& aEndpoint);
 
   void ActorDealloc() override;
 
   // This keeps us alive until ActorDestroy(), at which point we do a
   // deferred destruction of ourselves.
   RefPtr<VideoBridgeParent> mSelfRef;
-  RefPtr<CompositorThreadHolder> mCompositorThreadRef;
+  RefPtr<CompositorThreadHolder> mCompositorThreadHolder;
 
   std::map<uint64_t, PTextureParent*> mTextureMap;
 
