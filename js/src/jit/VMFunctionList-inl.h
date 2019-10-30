@@ -48,10 +48,21 @@ namespace jit {
   _(BaselineGetFunctionThis, js::jit::BaselineGetFunctionThis)                 \
   _(BaselineThrowInitializedThis, js::jit::BaselineThrowInitializedThis)       \
   _(BaselineThrowUninitializedThis, js::jit::BaselineThrowUninitializedThis)   \
+  _(BigIntAdd, js::jit::BigIntAdd)                                             \
+  _(BigIntBitAnd, js::jit::BigIntBitAnd)                                       \
   _(BigIntBitNot, js::jit::BigIntBitNot)                                       \
+  _(BigIntBitOr, js::jit::BigIntBitOr)                                         \
+  _(BigIntBitXor, js::jit::BigIntBitXor)                                       \
   _(BigIntDec, js::jit::BigIntDec)                                             \
+  _(BigIntDiv, js::jit::BigIntDiv)                                             \
   _(BigIntInc, js::jit::BigIntInc)                                             \
+  _(BigIntLeftShift, js::jit::BigIntLeftShift)                                 \
+  _(BigIntMod, js::jit::BigIntMod)                                             \
+  _(BigIntMul, js::jit::BigIntMul)                                             \
   _(BigIntNeg, js::jit::BigIntNeg)                                             \
+  _(BigIntPow, js::jit::BigIntPow)                                             \
+  _(BigIntRightShift, js::jit::BigIntRightShift)                               \
+  _(BigIntSub, js::jit::BigIntSub)                                             \
   _(BindVarOperation, js::BindVarOperation)                                    \
   _(BitAnd, js::BitAnd)                                                        \
   _(BitLsh, js::BitLsh)                                                        \

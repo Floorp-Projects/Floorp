@@ -6312,6 +6312,9 @@ AttachDecision BinaryArithIRGenerator::tryAttachStub() {
   // String + Boolean
   TRY_ATTACH(tryAttachStringBooleanConcat());
 
+  // Arithmetic operations or bitwise operations with BigInt operands
+  TRY_ATTACH(tryAttachBigInt());
+
   trackAttached(IRGenerator::NotAttached);
   return AttachDecision::NoAction;
 }
@@ -6616,6 +6619,93 @@ AttachDecision BinaryArithIRGenerator::tryAttachStringObjectConcat() {
 
   writer.returnFromIC();
   trackAttached("BinaryArith.StringObjectConcat");
+  return AttachDecision::Attach;
+}
+
+AttachDecision BinaryArithIRGenerator::tryAttachBigInt() {
+  // Check Guards
+  if (!lhs_.isBigInt() || !rhs_.isBigInt()) {
+    return AttachDecision::NoAction;
+  }
+
+  switch (op_) {
+    case JSOP_ADD:
+    case JSOP_SUB:
+    case JSOP_MUL:
+    case JSOP_DIV:
+    case JSOP_MOD:
+    case JSOP_POW:
+      // Arithmetic operations.
+      break;
+
+    case JSOP_BITOR:
+    case JSOP_BITXOR:
+    case JSOP_BITAND:
+    case JSOP_LSH:
+    case JSOP_RSH:
+      // Bitwise operations.
+      break;
+
+    default:
+      return AttachDecision::NoAction;
+  }
+
+  ValOperandId lhsId(writer.setInputOperandId(0));
+  ValOperandId rhsId(writer.setInputOperandId(1));
+
+  BigIntOperandId lhsBigIntId = writer.guardToBigInt(lhsId);
+  BigIntOperandId rhsBigIntId = writer.guardToBigInt(rhsId);
+
+  switch (op_) {
+    case JSOP_ADD:
+      writer.bigIntAddResult(lhsBigIntId, rhsBigIntId);
+      trackAttached("BinaryArith.BigInt.Add");
+      break;
+    case JSOP_SUB:
+      writer.bigIntSubResult(lhsBigIntId, rhsBigIntId);
+      trackAttached("BinaryArith.BigInt.Sub");
+      break;
+    case JSOP_MUL:
+      writer.bigIntMulResult(lhsBigIntId, rhsBigIntId);
+      trackAttached("BinaryArith.BigInt.Mul");
+      break;
+    case JSOP_DIV:
+      writer.bigIntDivResult(lhsBigIntId, rhsBigIntId);
+      trackAttached("BinaryArith.BigInt.Div");
+      break;
+    case JSOP_MOD:
+      writer.bigIntModResult(lhsBigIntId, rhsBigIntId);
+      trackAttached("BinaryArith.BigInt.Mod");
+      break;
+    case JSOP_POW:
+      writer.bigIntPowResult(lhsBigIntId, rhsBigIntId);
+      trackAttached("BinaryArith.BigInt.Pow");
+      break;
+    case JSOP_BITOR:
+      writer.bigIntBitOrResult(lhsBigIntId, rhsBigIntId);
+      trackAttached("BinaryArith.BigInt.BitOr");
+      break;
+    case JSOP_BITXOR:
+      writer.bigIntBitXorResult(lhsBigIntId, rhsBigIntId);
+      trackAttached("BinaryArith.BigInt.BitXor");
+      break;
+    case JSOP_BITAND:
+      writer.bigIntBitAndResult(lhsBigIntId, rhsBigIntId);
+      trackAttached("BinaryArith.BigInt.BitAnd");
+      break;
+    case JSOP_LSH:
+      writer.bigIntLeftShiftResult(lhsBigIntId, rhsBigIntId);
+      trackAttached("BinaryArith.BigInt.LeftShift");
+      break;
+    case JSOP_RSH:
+      writer.bigIntRightShiftResult(lhsBigIntId, rhsBigIntId);
+      trackAttached("BinaryArith.BigInt.RightShift");
+      break;
+    default:
+      MOZ_CRASH("Unhandled op in tryAttachBigInt");
+  }
+
+  writer.returnFromIC();
   return AttachDecision::Attach;
 }
 
