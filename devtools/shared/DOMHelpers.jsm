@@ -15,18 +15,18 @@ this.EXPORTED_SYMBOLS = ["DOMHelpers"];
  * Makes DOM traversal easier. Goes through iframes.
  *
  * @constructor
- * @param nsIDOMWindow aWindow
+ * @param nsIDOMWindow win
  *        The content window, owning the document to traverse.
  */
-this.DOMHelpers = function DOMHelpers(aWindow) {
-  if (!aWindow) {
+this.DOMHelpers = function DOMHelpers(win) {
+  if (!win) {
     throw new Error("window can't be null or undefined");
   }
-  this.window = aWindow;
+  this.window = win;
 };
 
 DOMHelpers.prototype = {
-  getParentObject: function Helpers_getParentObject(node) {
+  getParentObject: function(node) {
     const parentNode = node ? node.parentNode : null;
 
     if (!parentNode) {
@@ -60,7 +60,7 @@ DOMHelpers.prototype = {
     return parentNode;
   },
 
-  getChildObject: function Helpers_getChildObject(
+  getChildObject: function(
     node,
     index,
     previousSibling,
@@ -110,13 +110,13 @@ DOMHelpers.prototype = {
     return null; // we have no children worth showing.
   },
 
-  getFirstChild: function Helpers_getFirstChild(node) {
+  getFirstChild: function(node) {
     const SHOW_ALL = nodeFilterConstants.SHOW_ALL;
     this.treeWalker = node.ownerDocument.createTreeWalker(node, SHOW_ALL, null);
     return this.treeWalker.firstChild();
   },
 
-  getNextSibling: function Helpers_getNextSibling(node) {
+  getNextSibling: function(node) {
     const next = this.treeWalker.nextSibling();
 
     if (!next) {
@@ -126,14 +126,14 @@ DOMHelpers.prototype = {
     return next;
   },
 
-  isWhitespaceText: function Helpers_isWhitespaceText(node) {
+  isWhitespaceText: function(node) {
     return (
       node.nodeType == this.window.Node.TEXT_NODE &&
       !/[^\s]/.exec(node.nodeValue)
     );
   },
 
-  destroy: function Helpers_destroy() {
+  destroy: function() {
     delete this.window;
     delete this.treeWalker;
   },
@@ -146,7 +146,7 @@ DOMHelpers.prototype = {
    * chrome iframes are loaded in content docshells (in Firefox
    * tabs for example).
    */
-  onceDOMReady: function Helpers_onLocationChange(callback, targetURL) {
+  onceDOMReady: function(callback, targetURL) {
     const window = this.window;
     const docShell = window.docShell;
     const onReady = function(event) {
