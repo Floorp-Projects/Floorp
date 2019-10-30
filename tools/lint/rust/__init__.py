@@ -125,7 +125,10 @@ def is_old_rustfmt(binary):
     return False
 
 
-def run_rustfmt(config, paths, log, fix=None):
+def lint(paths, config, fix=None, **lintargs):
+    log = lintargs['log']
+    paths = list(expand_exclusions(paths, config, lintargs['root']))
+
     binary = get_rustfmt_binary()
 
     if is_old_rustfmt(binary):
@@ -143,17 +146,9 @@ def run_rustfmt(config, paths, log, fix=None):
         cmd_args.append("--check")
     base_command = cmd_args + paths
     log.debug("Command: {}".format(' '.join(cmd_args)))
-    return parse_issues(config, run_process(config, base_command), paths)
+    output = run_process(config, base_command)
 
-
-def lint(paths, config, fix=None, **lintargs):
-    log = lintargs['log']
-    files = list(expand_exclusions(paths, config, lintargs['root']))
-
-    # to retrieve the future changes
-    results = run_rustfmt(config, files, log, fix=False)
-
-    if fix and results:
-        # To do the actual change
-        run_rustfmt(config, files, log, fix=True)
-    return results
+    if fix:
+        # Rustfmt is able to fix all issues so don't bother parsing the output.
+        return []
+    return parse_issues(config, output, paths)
