@@ -411,7 +411,13 @@ SamplerThread::SamplerThread(PSLockRef aLock, uint32_t aActivityGeneration,
   }
 }
 
-SamplerThread::~SamplerThread() { pthread_join(mThread, nullptr); }
+SamplerThread::~SamplerThread() {
+  pthread_join(mThread, nullptr);
+  // Just in the unlikely case some callbacks were added between the end of the
+  // thread and now.
+  InvokePostSamplingCallbacks(std::move(mPostSamplingCallbackList),
+                              SamplingState::JustStopped);
+}
 
 void SamplerThread::SleepMicro(uint32_t aMicroseconds) {
   if (aMicroseconds >= 1000000) {
