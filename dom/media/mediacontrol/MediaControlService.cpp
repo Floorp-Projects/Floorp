@@ -54,6 +54,8 @@ MediaControlService::MediaControlService() : mAudioFocusManager(this) {
   if (obs) {
     obs->AddObserver(this, "xpcom-shutdown", false);
   }
+  mMediaKeysHandlder = new MediaControlKeysHandler();
+  GetMediaControlKeysManager().AddListener(mMediaKeysHandlder.get());
 }
 
 MediaControlService::~MediaControlService() {
@@ -82,6 +84,7 @@ void MediaControlService::Shutdown() {
   ShutdownAllControllers();
   mControllers.Clear();
   mAudioFocusManager.Shutdown();
+  GetMediaControlKeysManager().RemoveListener(mMediaKeysHandlder.get());
 }
 
 RefPtr<MediaController> MediaControlService::GetOrCreateControllerById(
