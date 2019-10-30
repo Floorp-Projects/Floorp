@@ -35,9 +35,6 @@ void MediaControlKeysManager::StartMonitoringControlKeys() {
     return;
   }
   CreateEventSource();
-  if (mEventSource) {
-    mEventSource->AddListener(new MediaControlKeysHandler());
-  }
 }
 
 void MediaControlKeysManager::CreateEventSource() {
@@ -52,6 +49,26 @@ void MediaControlKeysManager::StopMonitoringControlKeys() {
     mEventSource->Close();
     mEventSource = nullptr;
   }
+}
+
+bool MediaControlKeysManager::AddListener(
+    MediaControlKeysEventListener* aListener) {
+  if (!mEventSource) {
+    LOG("No event source for adding a listener");
+    return false;
+  }
+  mEventSource->AddListener(aListener);
+  return true;
+}
+
+bool MediaControlKeysManager::RemoveListener(
+    MediaControlKeysEventListener* aListener) {
+  if (!mEventSource) {
+    LOG("No event source for removing a listener");
+    return false;
+  }
+  mEventSource->RemoveListener(aListener);
+  return true;
 }
 
 }  // namespace dom
