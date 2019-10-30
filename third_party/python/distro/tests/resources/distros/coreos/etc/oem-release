@@ -1,0 +1,5 @@
+ID=digitalocean
+VERSION_ID=0.0.4
+NAME="DigitalOcean"
+HOME_URL="https://www.digitalocean.com/"
+BUG_REPORT_URL="https://github.com/coreos/bugs/issues"

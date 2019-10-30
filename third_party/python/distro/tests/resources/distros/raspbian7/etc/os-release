@@ -1,0 +1,10 @@
+PRETTY_NAME="Raspbian GNU/Linux 7 (wheezy)"
+NAME="Raspbian GNU/Linux"
+VERSION_ID="7"
+VERSION="7 (wheezy)"
+ID=raspbian
+ID_LIKE=debian
+ANSI_COLOR="1;31"
+HOME_URL="http://www.raspbian.org/"
+SUPPORT_URL="http://www.raspbian.org/RaspbianForums"
+BUG_REPORT_URL="http://www.raspbian.org/RaspbianBugs"

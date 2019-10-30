@@ -14,6 +14,7 @@ import os
 import platform
 import re
 import sys
+
 from .string_version import StringVersion
 from ctypes.util import find_library
 
@@ -98,25 +99,35 @@ elif system.startswith(('MINGW', 'MSYS_NT')):
     info['os'] = 'win'
     os_version = version = unknown
 elif system == "Linux":
-    if hasattr(platform, "linux_distribution"):
-        (distro, os_version, codename) = platform.linux_distribution()
+    # Only attempt to import distro for Linux.
+    # https://github.com/nir0s/distro/issues/177
+    try:
+        import distro
+    except ImportError:
+        pass
+    # First use distro package, then fall back to platform.
+    # This will only until Mozilla upgrades python to 3.8.
+    if hasattr(distro, "linux_distribution"):
+        (distribution, os_version, codename) = distro.linux_distribution()
+    elif hasattr(platform, "linux_distribution"):
+        (distribution, os_version, codename) = platform.linux_distribution()
     else:
-        (distro, os_version, codename) = platform.dist()
+        (distribution, os_version, codename) = platform.dist()
     if not processor:
         processor = machine
-    version = "%s %s" % (distro, os_version)
+    version = "%s %s" % (distribution, os_version)
 
     # Bug in Python 2's `platform` library:
     # It will return a triple of empty strings if the distribution is not supported.
     # It works on Python 3. If we don't have an OS version,
     # the unit tests fail to run.
-    if not distro and not os_version and not codename:
-        distro = 'lfs'
+    if not distribution and not os_version and not codename:
+        distribution = 'lfs'
         version = release
         os_version = release
 
     info['os'] = 'linux'
-    info['linux_distro'] = distro
+    info['linux_distro'] = distribution
 elif system in ['DragonFly', 'FreeBSD', 'NetBSD', 'OpenBSD']:
     info['os'] = 'bsd'
     version = os_version = sys.platform
