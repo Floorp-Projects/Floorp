@@ -15,13 +15,13 @@
 
 #include "builtin/Promise.h"  // js::PromiseObject
 #include "builtin/streams/MiscellaneousOperations.h"  // js::CreateAlgorithmFromUnderlyingMethod, js::InvokeOrNoop
-#include "builtin/streams/QueueWithSizes.h"  // js::ResetQueue
+#include "builtin/streams/QueueWithSizes.h"  // js::{EnqueueValueWithSize,ResetQueue}
 #include "builtin/streams/WritableStream.h"  // js::WritableStream
 #include "builtin/streams/WritableStreamDefaultController.h"  // js::WritableStreamDefaultController
 #include "builtin/streams/WritableStreamOperations.h"  // js::WritableStream{DealWithRejection,{Start,Finish}Erroring,UpdateBackpressure}
 #include "js/CallArgs.h"    // JS::CallArgs{,FromVp}
 #include "js/RootingAPI.h"  // JS::Handle, JS::Rooted
-#include "js/Value.h"       // JS::{,Object}Value, JS::UndefinedHandleValue
+#include "js/Value.h"  // JS::{,Int32,Magic,Object}Value, JS::UndefinedHandleValue, JS_WRITABLESTREAM_CLOSE_RECORD
 #include "vm/Compartment.h"  // JS::Compartment
 #include "vm/JSContext.h"   // JSContext
 #include "vm/JSObject.h"    // JSObject
@@ -38,6 +38,8 @@
 using JS::CallArgs;
 using JS::CallArgsFromVp;
 using JS::Handle;
+using JS::Int32Value;
+using JS::MagicValue;
 using JS::ObjectValue;
 using JS::Rooted;
 using JS::UndefinedHandleValue;
@@ -416,15 +418,22 @@ void js::WritableStreamDefaultControllerClearAlgorithms(
  * Streams spec, 4.8.5.
  *      WritableStreamDefaultControllerClose ( controller )
  */
-MOZ_MUST_USE bool js::WritableStreamDefaultControllerClose(
+bool js::WritableStreamDefaultControllerClose(
     JSContext* cx,
     Handle<WritableStreamDefaultController*> unwrappedController) {
   // Step 1: Perform ! EnqueueValueWithSize(controller, "close", 0).
+  {
+    Rooted<Value> v(cx, MagicValue(JS_WRITABLESTREAM_CLOSE_RECORD));
+    Rooted<Value> size(cx, Int32Value(0));
+    if (!EnqueueValueWithSize(cx, unwrappedController, v, size)) {
+      return false;
+    }
+  }
+
   // Step 2: Perform
   //         ! WritableStreamDefaultControllerAdvanceQueueIfNeeded(controller).
-  // XXX jwalden fill me in!
-  JS_ReportErrorASCII(cx, "nope");
-  return false;
+  return WritableStreamDefaultControllerAdvanceQueueIfNeeded(
+      cx, unwrappedController);
 }
 
 /**
