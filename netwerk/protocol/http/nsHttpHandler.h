@@ -436,6 +436,8 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
   bool Bug1563695() const { return mBug1563695; }
   bool Bug1556491() const { return mBug1556491; }
 
+  nsCString Http3Version() { return kHttp3Version; }
+
   uint32_t MaxHttpResponseHeaderSize() const {
     return mMaxHttpResponseHeaderSize;
   }

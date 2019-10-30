@@ -210,6 +210,8 @@ bool IsValidToken(const char* start, const char* end) {
 
 const char* GetProtocolVersion(HttpVersion pv) {
   switch (pv) {
+    case HttpVersion::v3_0:
+      return "h3";
     case HttpVersion::v2_0:
       return "h2";
     case HttpVersion::v1_0:

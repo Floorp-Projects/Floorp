@@ -223,12 +223,15 @@ void nsHttpResponseHead::Flatten(nsACString& buf, bool pruneTransients) {
   if (mVersion == HttpVersion::v0_9) return;
 
   buf.AppendLiteral("HTTP/");
-  if (mVersion == HttpVersion::v2_0)
+  if (mVersion == HttpVersion::v3_0) {
+    buf.AppendLiteral("3.0 ");
+  } else if (mVersion == HttpVersion::v2_0) {
     buf.AppendLiteral("2.0 ");
-  else if (mVersion == HttpVersion::v1_1)
+  } else if (mVersion == HttpVersion::v1_1) {
     buf.AppendLiteral("1.1 ");
-  else
+  } else {
     buf.AppendLiteral("1.0 ");
+  }
 
   buf.Append(nsPrintfCString("%u", unsigned(mStatus)) +
              NS_LITERAL_CSTRING(" ") + mStatusText +
@@ -1111,14 +1114,17 @@ void nsHttpResponseHead::ParseVersion(const char* str) {
   int major = atoi(str + 1);
   int minor = atoi(p);
 
-  if ((major > 2) || ((major == 2) && (minor >= 0)))
+  if ((major > 3) || ((major == 3) && (minor >= 0))) {
+    mVersion = HttpVersion::v3_0;
+  } else if ((major > 2) || ((major == 2) && (minor >= 0))) {
     mVersion = HttpVersion::v2_0;
-  else if ((major == 1) && (minor >= 1))
+  } else if ((major == 1) && (minor >= 1)) {
     // at least HTTP/1.1
     mVersion = HttpVersion::v1_1;
-  else
+  } else {
     // treat anything else as version 1.0
     mVersion = HttpVersion::v1_0;
+  }
 }
 
 void nsHttpResponseHead::ParseCacheControl(const char* val) {
