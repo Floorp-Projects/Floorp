@@ -14,6 +14,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/ConsoleReportCollector.h"
+#include "mozilla/HashTable.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/Preferences.h"
@@ -76,6 +77,28 @@ class ServiceWorkerUpdateFinishCallback {
  * The ServiceWorkerManager is a per-process global that deals with the
  * installation, querying and event dispatch of ServiceWorkers for all the
  * origins in the process.
+ *
+ * NOTE: the following documentation is a WIP and only applies with
+ * dom.serviceWorkers.parent_intercept=true:
+ *
+ * The ServiceWorkerManager (SWM) is a main-thread, parent-process singleton
+ * that encapsulates the browser-global state of service workers. This state
+ * includes, but is not limited to, all service worker registrations and all
+ * controlled service worker clients. The SWM also provides methods to read and
+ * mutate this state and to dispatch operations (e.g. DOM events such as a
+ * FetchEvent) to service workers.
+ *
+ * Example usage:
+ *
+ * MOZ_ASSERT(NS_IsMainThread(), "SWM is main-thread only");
+ *
+ * RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+ *
+ * // Nullness must be checked by code that possibly executes during browser
+ * // shutdown, which is when the SWM is destroyed.
+ * if (swm) {
+ *   // Do something with the SWM.
+ * }
  */
 class ServiceWorkerManager final : public nsIServiceWorkerManager,
                                    public nsIObserver {
@@ -368,6 +391,18 @@ class ServiceWorkerManager final : public nsIServiceWorkerManager,
   // MUST ONLY BE CALLED FROM UnregisterIfMatchesHost!
   void ForceUnregister(RegistrationDataPerPrincipal* aRegistrationData,
                        ServiceWorkerRegistrationInfo* aRegistration);
+
+  // An "orphaned" registration is one that is unregistered and not controlling
+  // clients. The ServiceWorkerManager must know about all orphaned
+  // registrations to forcefully shutdown all Service Workers during browser
+  // shutdown.
+  void AddOrphanedRegistration(ServiceWorkerRegistrationInfo* aRegistration);
+
+  void RemoveOrphanedRegistration(ServiceWorkerRegistrationInfo* aRegistration);
+
+  HashSet<RefPtr<ServiceWorkerRegistrationInfo>,
+          PointerHasher<ServiceWorkerRegistrationInfo*>>
+      mOrphanedRegistrations;
 
   RefPtr<ServiceWorkerShutdownBlocker> mShutdownBlocker;
 

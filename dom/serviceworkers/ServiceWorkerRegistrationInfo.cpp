@@ -41,19 +41,15 @@ class ContinueActivateRunnable final : public LifeCycleEventCallback {
 
 void ServiceWorkerRegistrationInfo::ShutdownWorkers() {
   ForEachWorker([](RefPtr<ServiceWorkerInfo>& aWorker) {
-    if (aWorker) {
-      aWorker->WorkerPrivate()->NoteDeadServiceWorkerInfo();
-      aWorker = nullptr;
-    }
+    aWorker->WorkerPrivate()->NoteDeadServiceWorkerInfo();
+    aWorker = nullptr;
   });
 }
 
 void ServiceWorkerRegistrationInfo::Clear() {
   ForEachWorker([](RefPtr<ServiceWorkerInfo>& aWorker) {
-    if (aWorker) {
-      aWorker->UpdateState(ServiceWorkerState::Redundant);
-      aWorker->UpdateRedundantTime();
-    }
+    aWorker->UpdateState(ServiceWorkerState::Redundant);
+    aWorker->UpdateRedundantTime();
   });
 
   // FIXME: Abort any inflight requests from installing worker.
@@ -741,6 +737,11 @@ void ServiceWorkerRegistrationInfo::ClearWhenIdle() {
   MOZ_ASSERT(!IsControllingClients());
   MOZ_ASSERT(!IsIdle(), "Already idle!");
 
+  RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+  MOZ_ASSERT(swm);
+
+  swm->AddOrphanedRegistration(this);
+
   /**
    * Although a Service Worker will transition to idle many times during its
    * lifetime, the promise is only resolved once `GetIdlePromise` has been
@@ -768,6 +769,11 @@ void ServiceWorkerRegistrationInfo::ClearWhenIdle() {
         MOZ_ASSERT(!self->IsControllingClients());
         MOZ_ASSERT(self->IsIdle());
         self->Clear();
+
+        RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+        if (swm) {
+          swm->RemoveOrphanedRegistration(self);
+        }
       });
 }
 
