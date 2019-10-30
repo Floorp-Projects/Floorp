@@ -68,22 +68,6 @@ class LZ4 {
    * If the source stream is malformed, the function will stop decoding
    * and return false.
    *
-   * This function never writes outside of provided buffers, and never
-   * modifies input buffer.
-   *
-   * Note: destination buffer must be already allocated, and its size must be a
-   *       minimum of |aOutputSize| bytes.
-   *
-   * @param aOutputSize is the output size, therefore the original size
-   * @return true on success, false on failure
-   */
-  static MFBT_API MOZ_MUST_USE bool decompress(const char* aSource, char* aDest,
-                                               size_t aOutputSize);
-
-  /**
-   * If the source stream is malformed, the function will stop decoding
-   * and return false.
-   *
    * This function never writes beyond aDest + aMaxOutputSize, and is
    * therefore protected against malicious data packets.
    *
