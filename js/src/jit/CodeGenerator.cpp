@@ -8136,6 +8136,26 @@ void CodeGenerator::visitBinaryV(LBinaryV* lir) {
       callVM<Fn, js::ModValues>(lir);
       break;
 
+    case JSOP_BITAND:
+      callVM<Fn, js::BitAnd>(lir);
+      break;
+
+    case JSOP_BITOR:
+      callVM<Fn, js::BitOr>(lir);
+      break;
+
+    case JSOP_BITXOR:
+      callVM<Fn, js::BitXor>(lir);
+      break;
+
+    case JSOP_LSH:
+      callVM<Fn, js::BitLsh>(lir);
+      break;
+
+    case JSOP_RSH:
+      callVM<Fn, js::BitRsh>(lir);
+      break;
+
     case JSOP_URSH:
       callVM<Fn, js::UrshValues>(lir);
       break;
@@ -11526,33 +11546,6 @@ void CodeGenerator::visitBitNotV(LBitNotV* lir) {
 
   using Fn = bool (*)(JSContext*, MutableHandleValue, MutableHandleValue);
   callVM<Fn, BitNot>(lir);
-}
-
-void CodeGenerator::visitBitOpV(LBitOpV* lir) {
-  pushArg(ToValue(lir, LBitOpV::RhsInput));
-  pushArg(ToValue(lir, LBitOpV::LhsInput));
-
-  using Fn = bool (*)(JSContext*, MutableHandleValue, MutableHandleValue,
-                      MutableHandleValue);
-  switch (lir->jsop()) {
-    case JSOP_BITAND:
-      callVM<Fn, BitAnd>(lir);
-      break;
-    case JSOP_BITOR:
-      callVM<Fn, BitOr>(lir);
-      break;
-    case JSOP_BITXOR:
-      callVM<Fn, BitXor>(lir);
-      break;
-    case JSOP_LSH:
-      callVM<Fn, BitLsh>(lir);
-      break;
-    case JSOP_RSH:
-      callVM<Fn, BitRsh>(lir);
-      break;
-    default:
-      MOZ_CRASH("unexpected bitop");
-  }
 }
 
 class OutOfLineTypeOfV : public OutOfLineCodeBase<CodeGenerator> {

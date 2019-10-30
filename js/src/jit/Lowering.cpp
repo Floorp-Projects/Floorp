@@ -1100,7 +1100,7 @@ void LIRGenerator::visitSameValue(MSameValue* ins) {
   assignSafepoint(lir, ins);
 }
 
-void LIRGenerator::lowerBitOp(JSOp op, MInstruction* ins) {
+void LIRGenerator::lowerBitOp(JSOp op, MBinaryBitwiseInstruction* ins) {
   MDefinition* lhs = ins->getOperand(0);
   MDefinition* rhs = ins->getOperand(1);
 
@@ -1118,10 +1118,7 @@ void LIRGenerator::lowerBitOp(JSOp op, MInstruction* ins) {
     return;
   }
 
-  LBitOpV* lir =
-      new (alloc()) LBitOpV(op, useBoxAtStart(lhs), useBoxAtStart(rhs));
-  defineReturn(lir, ins);
-  assignSafepoint(lir, ins);
+  lowerBinaryV(op, ins);
 }
 
 void LIRGenerator::visitTypeOf(MTypeOf* ins) {
@@ -1234,17 +1231,7 @@ void LIRGenerator::lowerShiftOp(JSOp op, MShiftInstruction* ins) {
   }
 
   MOZ_ASSERT(ins->specialization() == MIRType::None);
-
-  if (op == JSOP_URSH) {
-    // Result is either int32 or double so we have to use BinaryV.
-    lowerBinaryV(JSOP_URSH, ins);
-    return;
-  }
-
-  LBitOpV* lir =
-      new (alloc()) LBitOpV(op, useBoxAtStart(lhs), useBoxAtStart(rhs));
-  defineReturn(lir, ins);
-  assignSafepoint(lir, ins);
+  lowerBinaryV(op, ins);
 }
 
 void LIRGenerator::visitLsh(MLsh* ins) { lowerShiftOp(JSOP_LSH, ins); }

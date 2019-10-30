@@ -55,7 +55,7 @@ class LIRGenerator final : public LIRGeneratorSpecific {
   LBoxAllocation useBoxAtStart(MDefinition* mir,
                                LUse::Policy policy = LUse::REGISTER);
 
-  void lowerBitOp(JSOp op, MInstruction* ins);
+  void lowerBitOp(JSOp op, MBinaryBitwiseInstruction* ins);
   void lowerShiftOp(JSOp op, MShiftInstruction* ins);
   void lowerBinaryV(JSOp op, MBinaryInstruction* ins);
   void definePhis();
