@@ -293,14 +293,14 @@ function checkBrowserRemoteType(
   }
 }
 
-function test_url_for_process_types(
+function test_url_for_process_types({
   url,
   chromeResult,
   webContentResult,
   privilegedAboutContentResult,
   privilegedMozillaContentResult,
-  extensionProcessResult
-) {
+  extensionProcessResult,
+}) {
   const CHROME_PROCESS = E10SUtils.NOT_REMOTE;
   const WEB_CONTENT_PROCESS = E10SUtils.WEB_REMOTE_TYPE;
   const PRIVILEGEDABOUT_CONTENT_PROCESS = E10SUtils.PRIVILEGEDABOUT_REMOTE_TYPE;
