@@ -30,7 +30,6 @@ DevToolsModules(
     'curl.js',
     'demangle.js',
     'devices.js',
-    'DOMHelpers.jsm',
     'enum.js',
     'events.js',
     'focus.js',
