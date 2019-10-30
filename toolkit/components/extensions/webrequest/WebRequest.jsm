@@ -218,6 +218,8 @@ const OPTIONAL_PROPERTIES = [
   "ip",
   "frameAncestors",
   "urlClassification",
+  "requestSize",
+  "responseSize",
 ];
 
 function serializeRequestData(eventName) {
@@ -854,6 +856,8 @@ HttpObserverManager = {
         let { policy } = opts;
         if (policy && policy.extension.isPrivileged) {
           data.urlClassification = channel.urlClassification;
+          data.requestSize = channel.requestSize;
+          data.responseSize = channel.responseSize;
         }
 
         if (registerFilter && opts.blocking && opts.policy) {
