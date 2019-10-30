@@ -1425,9 +1425,9 @@ class UrlbarInput {
    * @param {nsIInputStream} [params.postData]
    *   The POST data associated with a search submission.
    * @param {boolean} [params.allowInheritPrincipal]
-   *   If the principal may be inherited
-   * @param {object} [result]
-   *   Details of the selected result, if any
+   *   Whether the principal can be inherited.
+   * @param {object} [resultDetails]
+   *   Details of the selected result, if any.
    * @param {UrlbarUtils.RESULT_TYPE} [result.type]
    *   Details of the result type, if any.
    * @param {UrlbarUtils.RESULT_SOURCE} [result.source]
@@ -1438,7 +1438,7 @@ class UrlbarInput {
     url,
     openUILinkWhere,
     params,
-    result = {},
+    resultDetails = null,
     browser = this.window.gBrowser.selectedBrowser
   ) {
     // No point in setting these because we'll handleRevert() a few rows below.
@@ -1494,7 +1494,7 @@ class UrlbarInput {
     }
 
     // Notify about the start of navigation.
-    this._notifyStartNavigation(result);
+    this._notifyStartNavigation(resultDetails);
 
     try {
       this.window.openTrustedLinkIn(url, openUILinkWhere, params);
@@ -1622,7 +1622,7 @@ class UrlbarInput {
    * if they aren't being used, e.g. WebNavigation.
    *
    * @param {UrlbarResult} result
-   *   The result that was selected, if any.
+   *   Details of the result that was selected, if any.
    */
   _notifyStartNavigation(result) {
     Services.obs.notifyObservers({ result }, "urlbar-user-start-navigation");
