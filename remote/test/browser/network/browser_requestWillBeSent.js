@@ -6,9 +6,9 @@
 // Test the Network.requestWillBeSent event
 
 const PAGE_URL =
-  "http://example.com/browser/remote/test/browser/doc_network_requestWillBeSent.html";
+  "http://example.com/browser/remote/test/browser/network/doc_requestWillBeSent.html";
 const JS_URL =
-  "http://example.com/browser/remote/test/browser/file_network_requestWillBeSent.js";
+  "http://example.com/browser/remote/test/browser/network/file_requestWillBeSent.js";
 
 add_task(async function(client) {
   const { Page, Network } = client;
