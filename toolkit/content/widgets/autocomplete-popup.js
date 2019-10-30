@@ -463,11 +463,9 @@
             this.mousedOverIndex === this._currentIndex)
         ) {
           // try to re-use the existing item
-          let reused = item._reuseAcItem();
-          if (reused) {
-            this._currentIndex++;
-            continue;
-          }
+          item._reuseAcItem();
+          this._currentIndex++;
+          continue;
         } else {
           if (typeof item._cleanup == "function") {
             item._cleanup();

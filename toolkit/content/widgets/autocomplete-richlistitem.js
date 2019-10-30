@@ -459,36 +459,16 @@
     }
 
     _reuseAcItem() {
-      let action = this._parseActionUrl(this.getAttribute("url"));
-      let popup = this.parentNode.parentNode;
+      this.collapsed = false;
 
-      // If the item is a searchengine action, then it should
-      // only be reused if the engine name is the same as the
-      // popup's override engine name, if any.
-      if (
-        !action ||
-        action.type != "searchengine" ||
-        !popup.overrideSearchEngineName ||
-        action.params.engineName == popup.overrideSearchEngineName
-      ) {
-        this.collapsed = false;
-
-        // The popup may have changed size between now and the last
-        // time the item was shown, so always handle over/underflow.
-        let dwu = window.windowUtils;
-        let popupWidth = dwu.getBoundsWithoutFlushing(this.parentNode).width;
-        if (
-          !this._previousPopupWidth ||
-          this._previousPopupWidth != popupWidth
-        ) {
-          this._previousPopupWidth = popupWidth;
-          this.handleOverUnderflow();
-        }
-
-        return true;
+      // The popup may have changed size between now and the last
+      // time the item was shown, so always handle over/underflow.
+      let dwu = window.windowUtils;
+      let popupWidth = dwu.getBoundsWithoutFlushing(this.parentNode).width;
+      if (!this._previousPopupWidth || this._previousPopupWidth != popupWidth) {
+        this._previousPopupWidth = popupWidth;
+        this.handleOverUnderflow();
       }
-
-      return false;
     }
 
     _adjustAcItem() {
@@ -533,8 +513,7 @@
       );
 
       // If the type includes an action, set up the item appropriately.
-      if (initialTypes.has("action") || action) {
-        action = action || this._parseActionUrl(originalUrl);
+      if (action) {
         this.setAttribute("actiontype", action.type);
 
         switch (action.type) {
@@ -854,36 +833,6 @@
     handleOverUnderflow() {
       this._removeMaxWidths();
       this._handleOverflow();
-    }
-
-    _parseActionUrl(aUrl) {
-      if (!aUrl.startsWith("moz-action:")) {
-        return null;
-      }
-
-      // URL is in the format moz-action:ACTION,PARAMS
-      // Where PARAMS is a JSON encoded object.
-      let [, type, params] = aUrl.match(/^moz-action:([^,]+),(.*)$/);
-
-      let action = {
-        type,
-      };
-
-      try {
-        action.params = JSON.parse(params);
-        for (let key in action.params) {
-          action.params[key] = decodeURIComponent(action.params[key]);
-        }
-      } catch (e) {
-        // If this failed, we assume that params is not a JSON object, and
-        // is instead just a flat string. This may happen for legacy
-        // search components.
-        action.params = {
-          url: params,
-        };
-      }
-
-      return action;
     }
   };
 
