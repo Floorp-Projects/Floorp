@@ -1139,7 +1139,6 @@ inline void js::GCMarker::eagerlyMarkChildren(JSRope* rope) {
   // users of the stack. This also assumes that a rope can only point to
   // other ropes or linear strings, it cannot refer to GC things of other
   // types.
-  gc::MarkStack& stack = currentStack();
   size_t savedPos = stack.position();
   JS_DIAGNOSTICS_ASSERT(rope->getTraceKind() == JS::TraceKind::String);
 #ifdef JS_DEBUG
@@ -1565,13 +1564,6 @@ GCMarker::MarkQueueProgress GCMarker::processMarkQueue() {
       // Mark the object and push it onto the stack.
       traverse(obj);
 
-      if (isMarkStackEmpty()) {
-        if (obj->asTenured().arena()->onDelayedMarkingList()) {
-          AutoEnterOOMUnsafeRegion oomUnsafe;
-          oomUnsafe.crash("mark queue OOM");
-        }
-      }
-
       // Process just the one object that is now on top of the mark stack,
       // possibly pushing more stuff onto the stack.
       if (isMarkStackEmpty()) {
@@ -1656,23 +1648,12 @@ bool GCMarker::markUntilBudgetExhausted(SliceBudget& budget) {
     if (hasGrayEntries()) {
       AutoSetMarkColor autoSetGray(*this, MarkColor::Gray);
       do {
+        MOZ_ASSERT(!hasBlackEntries());
         processMarkStackTop(budget);
         if (budget.isOverBudget()) {
           return false;
         }
       } while (hasGrayEntries());
-    }
-
-    if (hasBlackEntries()) {
-      // We can end up marking black during gray marking in the following case:
-      // a WeakMap has a CCW key whose delegate (target) is black, and during
-      // gray marking we mark the map (gray). The delegate's color will be
-      // propagated to the key. (And we can't avoid this by marking the key
-      // gray, because even though the value will end up gray in either case,
-      // the WeakMap entry must be preserved because the CCW could get
-      // collected and then we could re-wrap the delegate and look it up in the
-      // map again, and need to get back the original value.)
-      continue;
     }
 
     if (!hasDelayedChildren()) {
@@ -1754,10 +1735,6 @@ inline void GCMarker::processMarkStackTop(SliceBudget& budget) {
   HeapSlot* vp;
   HeapSlot* end;
   JSObject* obj;
-
-  gTotalMarked++;
-
-  gc::MarkStack& stack = currentStack();
 
   switch (stack.peekTag()) {
     case MarkStack::ValueArrayTag: {
@@ -1925,26 +1902,23 @@ scan_obj : {
  */
 
 void GCMarker::saveValueRanges() {
-  gc::MarkStack* stacks[2] = {&stack, &auxStack};
-  for (auto& stack : stacks) {
-    MarkStackIter iter(*stack);
-    while (!iter.done()) {
-      auto tag = iter.peekTag();
-      if (tag == MarkStack::ValueArrayTag) {
-        const auto& array = iter.peekValueArray();
-        auto savedArray = saveValueRange(array);
-        iter.saveValueArray(savedArray);
-        iter.nextArray();
-      } else if (tag == MarkStack::SavedValueArrayTag) {
-        iter.nextArray();
-      } else {
-        iter.nextPtr();
-      }
+  MarkStackIter iter(stack);
+  while (!iter.done()) {
+    auto tag = iter.peekTag();
+    if (tag == MarkStack::ValueArrayTag) {
+      const auto& array = iter.peekValueArray();
+      auto savedArray = saveValueRange(array);
+      iter.saveValueArray(savedArray);
+      iter.nextArray();
+    } else if (tag == MarkStack::SavedValueArrayTag) {
+      iter.nextArray();
+    } else {
+      iter.nextPtr();
     }
-
-    // This is also a convenient point to poison unused stack memory.
-    stack->poisonUnused();
   }
+
+  // This is also a convenient point to poison unused stack memory.
+  stack.poisonUnused();
 }
 
 bool GCMarker::restoreValueArray(const MarkStack::SavedValueArray& savedArray,
@@ -2168,35 +2142,31 @@ MarkStack::~MarkStack() {
   MOZ_ASSERT(iteratorCount_ == 0);
 }
 
-bool MarkStack::init(JSGCMode gcMode, StackType which) {
+bool MarkStack::init(JSGCMode gcMode) {
   MOZ_ASSERT(isEmpty());
 
-  return setCapacityForMode(gcMode, which);
+  return setCapacityForMode(gcMode);
 }
 
 void MarkStack::setGCMode(JSGCMode gcMode) {
   // Ignore failure to resize the stack and keep using the existing stack.
-  mozilla::Unused << setCapacityForMode(gcMode, MainStack);
+  mozilla::Unused << setCapacityForMode(gcMode);
 }
 
-bool MarkStack::setCapacityForMode(JSGCMode mode, StackType which) {
+bool MarkStack::setCapacityForMode(JSGCMode mode) {
   size_t capacity;
 
-  if (which == AuxiliaryStack) {
-    capacity = SMALL_MARK_STACK_BASE_CAPACITY;
-  } else {
-    switch (mode) {
-      case JSGC_MODE_GLOBAL:
-      case JSGC_MODE_ZONE:
-        capacity = NON_INCREMENTAL_MARK_STACK_BASE_CAPACITY;
-        break;
-      case JSGC_MODE_INCREMENTAL:
-      case JSGC_MODE_ZONE_INCREMENTAL:
-        capacity = INCREMENTAL_MARK_STACK_BASE_CAPACITY;
-        break;
-      default:
-        MOZ_CRASH("bad gc mode");
-    }
+  switch (mode) {
+    case JSGC_MODE_GLOBAL:
+    case JSGC_MODE_ZONE:
+      capacity = NON_INCREMENTAL_MARK_STACK_BASE_CAPACITY;
+      break;
+    case JSGC_MODE_INCREMENTAL:
+    case JSGC_MODE_ZONE_INCREMENTAL:
+      capacity = INCREMENTAL_MARK_STACK_BASE_CAPACITY;
+      break;
+    default:
+      MOZ_CRASH("bad gc mode");
   }
 
   if (capacity > maxCapacity_) {
@@ -2425,9 +2395,8 @@ void MarkStackIter::saveValueArray(
 GCMarker::GCMarker(JSRuntime* rt)
     : JSTracer(rt, JSTracer::TracerKindTag::Marking, ExpandWeakMaps),
       stack(),
-      auxStack(),
+      grayPosition(0),
       color(MarkColor::Black),
-      mainStackColor(MarkColor::Black),
       delayedMarkingList(nullptr),
       delayedMarkingWorkAdded(false)
 #ifdef DEBUG
@@ -2441,10 +2410,7 @@ GCMarker::GCMarker(JSRuntime* rt)
 {
 }
 
-bool GCMarker::init(JSGCMode gcMode) {
-  return stack.init(gcMode, gc::MarkStack::MainStack) &&
-         auxStack.init(gcMode, gc::MarkStack::AuxiliaryStack);
-}
+bool GCMarker::init(JSGCMode gcMode) { return stack.init(gcMode); }
 
 void GCMarker::start() {
 #ifdef DEBUG
@@ -2474,9 +2440,8 @@ void GCMarker::stop() {
   MOZ_ASSERT(markLaterArenas == 0);
 #endif
 
+  /* Free non-ballast stack memory. */
   stack.clear();
-  auxStack.clear();
-  setMainStackColor(MarkColor::Black);
   AutoEnterOOMUnsafeRegion oomUnsafe;
   for (GCZonesIter zone(runtime()); !zone.done(); zone.next()) {
     if (!zone->gcWeakKeys().clear()) {
@@ -2503,8 +2468,6 @@ void GCMarker::reset() {
   color = MarkColor::Black;
 
   stack.clear();
-  auxStack.clear();
-  setMainStackColor(MarkColor::Black);
   MOZ_ASSERT(isMarkStackEmpty());
 
   forEachDelayedMarkingArena([&](Arena* arena) {
@@ -2533,30 +2496,27 @@ void GCMarker::setMarkColor(gc::MarkColor newColor) {
 }
 
 void GCMarker::setMarkColorGray() {
+  MOZ_ASSERT(!hasBlackEntries());
   MOZ_ASSERT(color == gc::MarkColor::Black);
   MOZ_ASSERT(runtime()->gc.state() == State::Sweep);
 
   color = gc::MarkColor::Gray;
+  grayPosition = SIZE_MAX;
 }
 
 void GCMarker::setMarkColorBlack() {
+  MOZ_ASSERT(!hasBlackEntries());
   MOZ_ASSERT(color == gc::MarkColor::Gray);
   MOZ_ASSERT(runtime()->gc.state() == State::Sweep);
 
   color = gc::MarkColor::Black;
-}
-
-void GCMarker::setMainStackColor(gc::MarkColor newColor) {
-  if (newColor != mainStackColor) {
-    MOZ_ASSERT(isMarkStackEmpty());
-    mainStackColor = newColor;
-  }
+  grayPosition = stack.position();
 }
 
 template <typename T>
 void GCMarker::pushTaggedPtr(T* ptr) {
   checkZone(ptr);
-  if (!currentStack().push(ptr)) {
+  if (!stack.push(ptr)) {
     delayMarkingChildren(ptr);
   }
 }
@@ -2568,7 +2528,7 @@ void GCMarker::pushValueArray(JSObject* obj, HeapSlot* start, HeapSlot* end) {
     return;
   }
 
-  if (!currentStack().push(obj, start, end)) {
+  if (!stack.push(obj, start, end)) {
     delayMarkingChildren(obj);
   }
 }
@@ -2785,7 +2745,6 @@ void GCMarker::checkZone(void* p) {
 
 size_t GCMarker::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
   size_t size = stack.sizeOfExcludingThis(mallocSizeOf);
-  size += auxStack.sizeOfExcludingThis(mallocSizeOf);
   for (ZonesIter zone(runtime(), WithAtoms); !zone.done(); zone.next()) {
     size += zone->gcGrayRoots().SizeOfExcludingThis(mallocSizeOf);
   }
