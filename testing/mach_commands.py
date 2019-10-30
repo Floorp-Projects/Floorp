@@ -1263,6 +1263,8 @@ class TestInfoCommand(MachCommandBase):
             filter_values = filter_values.split(',')
         else:
             filter_values = []
+        display_keys = (filter_keys or []) + ['skip-if', 'fail-if', 'fails-if']
+        display_keys = set(display_keys)
 
         try:
             self.config_environment
@@ -1348,11 +1350,13 @@ class TestInfoCommand(MachCommandBase):
                     if (not components) or (key in components):
                         component_set.add(key)
                         test_info = {'test': relpath}
-                        for test_key in ['skip-if', 'fail-if']:
+                        for test_key in display_keys:
                             value = t.get(test_key)
                             if value:
                                 test_info[test_key] = value
                         if t.get('fail-if'):
+                            failed_count += 1
+                        if t.get('fails-if'):
                             failed_count += 1
                         if t.get('skip-if'):
                             skipped_count += 1
