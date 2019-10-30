@@ -280,6 +280,9 @@ nsHttpHandler::nsHttpHandler()
       mBug1563538(true),
       mBug1563695(true),
       mBug1556491(true),
+      mHttp3Enabled(true),
+      mQpackTableSize(4096),
+      mHttp3MaxBlockedStreams(10),
       mMaxHttpResponseHeaderSize(393216),
       mFocusedWindowTransactionRatio(0.9f),
       mSpeculativeConnectEnabled(false),
@@ -1909,6 +1912,28 @@ void nsHttpHandler::PrefsChanged(const char* pref) {
     rv = Preferences::GetBool(HTTP_PREF("spdy.bug1556491"), &cVar);
     if (NS_SUCCEEDED(rv)) {
       mBug1556491 = cVar;
+    }
+  }
+
+  if (PREF_CHANGED(HTTP_PREF("http3.enabled"))) {
+    rv = Preferences::GetBool(HTTP_PREF("http3.enabled"), &cVar);
+    if (NS_SUCCEEDED(rv)) {
+      mHttp3Enabled = cVar;
+    }
+  }
+
+  if (PREF_CHANGED(HTTP_PREF("http3.default-qpack-table-size"))) {
+    rv = Preferences::GetInt(HTTP_PREF("http3.default-qpack-table-size"), &val);
+    if (NS_SUCCEEDED(rv)) {
+      mQpackTableSize = val;
+    }
+  }
+
+  if (PREF_CHANGED(HTTP_PREF("http3.default-max-stream-blocked"))) {
+    rv = Preferences::GetInt(HTTP_PREF("http3.default-max-stream-blocked"),
+                             &val);
+    if (NS_SUCCEEDED(rv)) {
+      mHttp3MaxBlockedStreams = clamped(val, 0, 0xffff);
     }
   }
 
