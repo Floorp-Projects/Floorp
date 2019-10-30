@@ -345,45 +345,8 @@ const startupPhases = {
       stat: 1,
     },
     {
-      // bug 1545123
-      path: "ProfD:pluginreg.dat",
-      condition: WIN,
-      stat: 1,
-    },
-    {
-      // bug 1545123
-      path: "ProfD:pluginreg.dat.tmp",
-      stat: 1,
-      write: 64,
-      close: 1,
-    },
-    {
-      // bug 1545123
+      // bug 1586808
       path: "UserPlugins.parent:",
-      condition: WIN,
-      stat: 1,
-    },
-    {
-      // bug 1545123
-      path: "ProfD:plugins/nptest.dll",
-      condition: WIN,
-      stat: 1,
-    },
-    {
-      // bug 1545123
-      path: "ProfD:plugins/npsecondtest.dll",
-      condition: WIN,
-      stat: 1,
-    },
-    {
-      // bug 1545123
-      path: "ProfD:plugins/npthirdtest.dll",
-      condition: WIN,
-      stat: 1,
-    },
-    {
-      // bug 1545123
-      path: "ProfD:plugins/npswftest.dll",
       condition: WIN,
       stat: 1,
     },

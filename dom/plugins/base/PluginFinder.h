@@ -13,7 +13,7 @@
 #include "nsTArray.h"
 #include "nsPluginTags.h"
 #include "mozilla/StaticPrefs_dom.h"
-#include "nsIRunnable.h"
+#include "nsIAsyncShutdown.h"
 
 class nsIFile;
 class nsPluginHost;
@@ -25,7 +25,7 @@ class nsInvalidPluginTag : public nsISupports {
   explicit nsInvalidPluginTag(const char* aFullPath,
                               int64_t aLastModifiedTime = 0);
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
 
   nsCString mFullPath;
   int64_t mLastModifiedTime;
@@ -47,14 +47,15 @@ static inline bool UnloadPluginsASAP() {
  * when the pluginhost wants to find plugins, and the next time it
  * wants to do so, it should create a new one.
  */
-class PluginFinder final : public nsIRunnable {
+class PluginFinder final : public nsIRunnable, public nsIAsyncShutdownBlocker {
   ~PluginFinder() = default;
 
  public:
   explicit PluginFinder(bool aFlashOnly);
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIRUNNABLE
+  NS_DECL_NSIASYNCSHUTDOWNBLOCKER
 
   typedef std::function<void(
       bool /* aPluginsChanged */, RefPtr<nsPluginTag> /* aNewPlugins */,
@@ -118,6 +119,8 @@ class PluginFinder final : public nsIRunnable {
   bool mCreateList;
   bool mPluginsChanged;
   bool mFinishedFinding;
+  bool mCalledOnMainthread;
+  bool mShutdown;
 };
 
 #endif
