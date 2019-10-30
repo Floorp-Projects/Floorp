@@ -84,7 +84,7 @@ class AddOnsCollectionsProviderTest {
             )
 
             // Ratings
-            assertEquals(4.7003, addOn.rating!!.average, 0.7003)
+            assertEquals(4.7003F, addOn.rating!!.average, 0.7003F)
             assertEquals(9930, addOn.rating!!.reviews)
         }
     }

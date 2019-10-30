@@ -63,7 +63,7 @@ data class AddOn(
      * @property reviews The number of users that has scored this add-on.
      */
     data class Rating(
-        val average: Double,
+        val average: Float,
         val reviews: Int
     )
 }

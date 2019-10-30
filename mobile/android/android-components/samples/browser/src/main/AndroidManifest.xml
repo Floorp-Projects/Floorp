@@ -42,6 +42,12 @@
             android:autoRemoveFromRecents="false"
             android:label="@string/app_name" />
 
+        <activity
+                android:theme="@style/Theme.AppCompat.Light"
+                android:name=".addons.AddOnsActivity"
+                android:label="@string/add_ons"
+                android:parentActivityName=".BrowserActivity" />
+
         <activity android:name=".IntentReceiverActivity">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
