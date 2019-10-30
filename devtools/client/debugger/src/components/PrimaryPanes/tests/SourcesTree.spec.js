@@ -373,7 +373,7 @@ function generateDefaults(overrides: Object) {
       ),
       "server1.conn13.child1/42/originalSource-sha": createMockSource(
         "server1.conn13.child1/42/originalSource-sha",
-        "http://mdn.com/four.js",
+        "http://mdn.com/four.js [original]",
         false
       ),
       "server1.conn13.child1/42": createMockSource(
