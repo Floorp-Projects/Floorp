@@ -101,36 +101,36 @@ registerCleanupFunction(() => {
 });
 
 add_task(async function test_chrome() {
-  test_url_for_process_types(
-    "about:" + CHROME.path,
-    true,
-    false,
-    false,
-    false,
-    false
-  );
+  test_url_for_process_types({
+    url: "about:" + CHROME.path,
+    chromeResult: true,
+    webContentResult: false,
+    privilegedAboutContentResult: false,
+    privilegedMozillaContentResult: false,
+    extensionProcessResult: false,
+  });
 });
 
 add_task(async function test_any() {
-  test_url_for_process_types(
-    "about:" + CANREMOTE.path,
-    true,
-    true,
-    true,
-    true,
-    true
-  );
+  test_url_for_process_types({
+    url: "about:" + CANREMOTE.path,
+    chromeResult: true,
+    webContentResult: true,
+    privilegedAboutContentResult: true,
+    privilegedMozillaContentResult: true,
+    extensionProcessResult: true,
+  });
 });
 
 add_task(async function test_remote() {
-  test_url_for_process_types(
-    "about:" + MUSTREMOTE.path,
-    false,
-    true,
-    false,
-    false,
-    false
-  );
+  test_url_for_process_types({
+    url: "about:" + MUSTREMOTE.path,
+    chromeResult: false,
+    webContentResult: true,
+    privilegedAboutContentResult: false,
+    privilegedMozillaContentResult: false,
+    extensionProcessResult: false,
+  });
 });
 
 add_task(async function test_privileged_remote_true() {
@@ -141,14 +141,14 @@ add_task(async function test_privileged_remote_true() {
   // This shouldn't be taken literally. We will always use the privleged about
   // content type if the URI_CAN_LOAD_IN_PRIVILEGEDABOUT_PROCESS flag is enabled and
   // the pref is turned on.
-  test_url_for_process_types(
-    "about:" + CANPRIVILEGEDREMOTE.path,
-    false,
-    false,
-    true,
-    false,
-    false
-  );
+  test_url_for_process_types({
+    url: "about:" + CANPRIVILEGEDREMOTE.path,
+    chromeResult: false,
+    webContentResult: false,
+    privilegedAboutContentResult: true,
+    privilegedMozillaContentResult: false,
+    extensionProcessResult: false,
+  });
 });
 
 add_task(async function test_privileged_remote_false() {
@@ -159,23 +159,23 @@ add_task(async function test_privileged_remote_false() {
   // This shouldn't be taken literally. We will always use the privleged about
   // content type if the URI_CAN_LOAD_IN_PRIVILEGEDABOUT_PROCESS flag is enabled and
   // the pref is turned on.
-  test_url_for_process_types(
-    "about:" + CANPRIVILEGEDREMOTE.path,
-    false,
-    true,
-    false,
-    false,
-    false
-  );
+  test_url_for_process_types({
+    url: "about:" + CANPRIVILEGEDREMOTE.path,
+    chromeResult: false,
+    webContentResult: true,
+    privilegedAboutContentResult: false,
+    privilegedMozillaContentResult: false,
+    extensionProcessResult: false,
+  });
 });
 
 add_task(async function test_extension() {
-  test_url_for_process_types(
-    "about:" + MUSTEXTENSION.path,
-    false,
-    false,
-    false,
-    false,
-    true
-  );
+  test_url_for_process_types({
+    url: "about:" + MUSTEXTENSION.path,
+    chromeResult: false,
+    webContentResult: false,
+    privilegedAboutContentResult: false,
+    privilegedMozillaContentResult: false,
+    extensionProcessResult: true,
+  });
 });
