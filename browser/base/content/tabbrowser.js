@@ -5625,37 +5625,28 @@
         location
       );
 
+      const {
+        STATE_START,
+        STATE_STOP,
+        STATE_IS_NETWORK,
+      } = Ci.nsIWebProgressListener;
+
       // If we were ignoring some messages about the initial about:blank, and we
       // got the STATE_STOP for it, we'll want to pay attention to those messages
       // from here forward. Similarly, if we conclude that this state change
       // is one that we shouldn't be ignoring, then stop ignoring.
       if (
         (ignoreBlank &&
-          aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
-          aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK) ||
+          aStateFlags & STATE_STOP &&
+          aStateFlags & STATE_IS_NETWORK) ||
         (!ignoreBlank && this.mBlank)
       ) {
         this.mBlank = false;
       }
 
-      if (aStateFlags & Ci.nsIWebProgressListener.STATE_START) {
+      if (aStateFlags & STATE_START && aStateFlags & STATE_IS_NETWORK) {
         this.mRequestCount++;
-      } else if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
-        const NS_ERROR_UNKNOWN_HOST = 2152398878;
-        if (--this.mRequestCount > 0 && aStatus == NS_ERROR_UNKNOWN_HOST) {
-          // to prevent bug 235825: wait for the request handled
-          // by the automatic keyword resolver
-          return;
-        }
-        // since we (try to) only handle STATE_STOP of the last request,
-        // the count of open requests should now be 0
-        this.mRequestCount = 0;
-      }
 
-      if (
-        aStateFlags & Ci.nsIWebProgressListener.STATE_START &&
-        aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK
-      ) {
         if (aWebProgress.isTopLevel) {
           // Need to use originalLocation rather than location because things
           // like about:home and about:privatebrowsing arrive with nsIRequest
@@ -5705,10 +5696,16 @@
             gBrowser._isBusy = true;
           }
         }
-      } else if (
-        aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
-        aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK
-      ) {
+      } else if (aStateFlags & STATE_STOP && aStateFlags & STATE_IS_NETWORK) {
+        if (--this.mRequestCount > 0 && aStatus == Cr.NS_ERROR_UNKNOWN_HOST) {
+          // to prevent bug 235825: wait for the request handled
+          // by the automatic keyword resolver
+          return;
+        }
+        // since we (try to) only handle STATE_STOP of the last request,
+        // the count of open requests should now be 0
+        this.mRequestCount = 0;
+
         let modifiedAttrs = [];
         if (this.mTab.hasAttribute("busy")) {
           this.mTab.removeAttribute("busy");
@@ -5805,11 +5802,7 @@
         false
       );
 
-      if (
-        aStateFlags &
-        (Ci.nsIWebProgressListener.STATE_START |
-          Ci.nsIWebProgressListener.STATE_STOP)
-      ) {
+      if (aStateFlags & (STATE_START | STATE_STOP)) {
         // reset cached temporary values at beginning and end
         this.mMessage = "";
         this.mTotalProgress = 0;
