@@ -32,7 +32,8 @@ enum class HttpVersion {
   v0_9 = 9,
   v1_0 = 10,
   v1_1 = 11,
-  v2_0 = 20
+  v2_0 = 20,
+  v3_0 = 30
 };
 
 enum class SpdyVersion {
@@ -52,6 +53,9 @@ enum class SpdyVersion {
   // 30 was h2-14 and h2-15
   // 31 was h2-16
 };
+
+const nsCString kHttp3Version = NS_LITERAL_CSTRING("h3-23");
+const char kHttp3VersionHEX[] = "ff00000017";  // this is draft 23.
 
 //-----------------------------------------------------------------------------
 // http connection capabilities
