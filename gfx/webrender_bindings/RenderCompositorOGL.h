@@ -47,7 +47,8 @@ class RenderCompositorOGL : public RenderCompositor {
   void Bind(wr::NativeSurfaceId aId, wr::DeviceIntPoint* aOffset,
             uint32_t* aFboId, wr::DeviceIntRect aDirtyRect) override;
   void Unbind() override;
-  void CreateSurface(wr::NativeSurfaceId aId, wr::DeviceIntSize aSize) override;
+  void CreateSurface(wr::NativeSurfaceId aId, wr::DeviceIntSize aSize,
+                     bool aIsOpaque) override;
   void DestroySurface(NativeSurfaceId aId) override;
   void AddSurface(wr::NativeSurfaceId aId, wr::DeviceIntPoint aPosition,
                   wr::DeviceIntRect aClipRect) override;

@@ -197,10 +197,12 @@ void RenderCompositorOGL::Unbind() {
 }
 
 void RenderCompositorOGL::CreateSurface(wr::NativeSurfaceId aId,
-                                        wr::DeviceIntSize aSize) {
+                                        wr::DeviceIntSize aSize,
+                                        bool aIsOpaque) {
   RefPtr<layers::NativeLayer> layer = mNativeLayerRoot->CreateLayer();
   layer->SetRect(gfx::IntRect(0, 0, aSize.width, aSize.height));
   layer->SetGLContext(mGL);
+  layer->SetIsOpaque(aIsOpaque);
   mNativeLayers.insert({wr::AsUint64(aId), layer});
 }
 
