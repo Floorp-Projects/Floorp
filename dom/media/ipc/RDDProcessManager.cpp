@@ -101,9 +101,10 @@ void RDDProcessManager::OnPreferenceChange(const char16_t* aData) {
   }
 }
 
-void RDDProcessManager::LaunchRDDProcess() {
+bool RDDProcessManager::LaunchRDDProcess(base::ProcessId aOtherProcess,
+    ipc::Endpoint<PRemoteDecoderManagerChild>* aOutRemoteDecoderManager) {
   if (mProcess) {
-    return;
+    return true;
   }
 
   mNumProcessAttempts++;
@@ -119,29 +120,22 @@ void RDDProcessManager::LaunchRDDProcess() {
   if (!mProcess->Launch(extraArgs)) {
     DestroyProcess();
   }
+  if (!EnsureRDDReady()) {
+    return false;
+  }
+
+  return CreateContentBridge(aOtherProcess, aOutRemoteDecoderManager);
 }
 
 bool RDDProcessManager::EnsureRDDReady() {
-  if (mProcess && !mProcess->IsConnected()) {
-    if (!mProcess->WaitForLaunch()) {
-      // If this fails, we should have fired OnProcessLaunchComplete and
-      // removed the process.
-      MOZ_ASSERT(!mProcess && !mRDDChild);
-      return false;
-    }
+  if (mProcess && !mProcess->IsConnected() && !mProcess->WaitForLaunch()) {
+    // If this fails, we should have fired OnProcessLaunchComplete and
+    // removed the process.
+    MOZ_ASSERT(!mProcess && !mRDDChild);
+    return false;
   }
 
-  if (mRDDChild) {
-    if (mRDDChild->EnsureRDDReady()) {
-      return true;
-    }
-
-    // If the initialization above fails, we likely have a RDD process teardown
-    // waiting in our message queue (or will soon).
-    DestroyProcess();
-  }
-
-  return false;
+  return true;
 }
 
 void RDDProcessManager::OnProcessLaunchComplete(RDDProcessHost* aHost) {
@@ -240,10 +234,6 @@ void RDDProcessManager::DestroyProcess() {
 bool RDDProcessManager::CreateContentBridge(
     base::ProcessId aOtherProcess,
     ipc::Endpoint<PRemoteDecoderManagerChild>* aOutRemoteDecoderManager) {
-  if (!EnsureRDDReady() || !StaticPrefs::media_rdd_process_enabled()) {
-    return false;
-  }
-
   ipc::Endpoint<PRemoteDecoderManagerParent> parentPipe;
   ipc::Endpoint<PRemoteDecoderManagerChild> childPipe;
 

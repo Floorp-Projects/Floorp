@@ -27,16 +27,14 @@ class RDDProcessManager final : public RDDProcessHost::Listener {
   ~RDDProcessManager();
 
   // If not using a RDD process, launch a new RDD process asynchronously.
-  void LaunchRDDProcess();
+  bool LaunchRDDProcess(base::ProcessId aOtherProcess,
+                           mozilla::ipc::Endpoint<PRemoteDecoderManagerChild>*
+                               aOutRemoteDecoderManager);
 
   // Ensure that RDD-bound methods can be used. If no RDD process is being
   // used, or one is launched and ready, this function returns immediately.
   // Otherwise it blocks until the RDD process has finished launching.
   bool EnsureRDDReady();
-
-  bool CreateContentBridge(base::ProcessId aOtherProcess,
-                           mozilla::ipc::Endpoint<PRemoteDecoderManagerChild>*
-                               aOutRemoteDecoderManager);
 
   void OnProcessLaunchComplete(RDDProcessHost* aHost) override;
   void OnProcessUnexpectedShutdown(RDDProcessHost* aHost) override;
@@ -65,6 +63,10 @@ class RDDProcessManager final : public RDDProcessHost::Listener {
   RDDProcessHost* Process() { return mProcess; }
 
  private:
+  bool CreateContentBridge(base::ProcessId aOtherProcess,
+                           mozilla::ipc::Endpoint<PRemoteDecoderManagerChild>*
+                               aOutRemoteDecoderManager);
+
   // Called from our xpcom-shutdown observer.
   void OnXPCOMShutdown();
   void OnPreferenceChange(const char16_t* aData);
