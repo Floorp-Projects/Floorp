@@ -1145,6 +1145,11 @@ bool DoToNumeric(JSContext* cx, HandleValue arg, MutableHandleValue ret);
 
 void* AllocateBigIntNoGC(JSContext* cx);
 
+BigInt* BigIntBitNot(JSContext* cx, HandleBigInt x);
+BigInt* BigIntNeg(JSContext* cx, HandleBigInt x);
+BigInt* BigIntInc(JSContext* cx, HandleBigInt x);
+BigInt* BigIntDec(JSContext* cx, HandleBigInt x);
+
 enum class TailCallVMFunctionId;
 enum class VMFunctionId;
 
