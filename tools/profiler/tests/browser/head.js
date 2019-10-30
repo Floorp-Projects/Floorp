@@ -21,26 +21,6 @@ function startProfiler(callersSettings) {
     settings.duration
   );
 }
-/**
- * This function spins on a while loop until at least one
- * periodic sample is taken. Use this function to ensure
- * that markers are properly collected for a test or that
- * at least one sample in which we are interested is collected.
- */
-async function doAtLeastOnePeriodicSample() {
-  async function getProfileSampleCount() {
-    const profile = await Services.profiler.getProfileDataAsync();
-    return profile.threads[0].samples.data.length;
-  }
-
-  const sampleCount = await getProfileSampleCount();
-  // Create an infinite loop until a sample has been collected.
-  while (true) {
-    if (sampleCount < (await getProfileSampleCount())) {
-      return;
-    }
-  }
-}
 
 /**
  * This is a helper function that will stop the profiler of the browser running
@@ -86,7 +66,7 @@ async function stopProfilerNowAndGetThreads(contentPid) {
  * @returns {Promise}
  */
 async function stopProfilerAndGetThreads(contentPid) {
-  await doAtLeastOnePeriodicSample();
+  await Services.profiler.waitOnePeriodicSampling();
 
   return stopProfilerNowAndGetThreads(contentPid);
 }
