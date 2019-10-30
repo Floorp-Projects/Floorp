@@ -6,7 +6,7 @@ job-defaults:
     max-run-time:
         by-test-platform:
             .*-qr/.*: 2400
-            .*-ref-hw-2017/.*: 2400
+            .*-ref-hw-2017/.*: 3600
             default: 1800
     suite: raptor
     workdir: /home/cltbld
