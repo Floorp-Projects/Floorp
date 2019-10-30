@@ -5,6 +5,7 @@
 package mozilla.components.service.glean
 
 import android.content.Context
+import androidx.annotation.MainThread
 import androidx.annotation.VisibleForTesting
 import mozilla.components.service.glean.config.Configuration
 import mozilla.components.service.glean.private.RecordedExperimentData
@@ -31,6 +32,8 @@ object Glean {
      * as shared preferences
      * @param configuration A Glean [Configuration] object with global settings.
      */
+    @JvmOverloads
+    @MainThread
     fun initialize(
         applicationContext: Context,
         configuration: Configuration = Configuration()
@@ -82,6 +85,7 @@ object Glean {
      * @param branch The experiment branch (maximum 30 bytes)
      * @param extra Optional metadata to output with the ping
      */
+    @JvmOverloads
     fun setExperimentActive(
         experimentId: String,
         branch: String,
