@@ -776,8 +776,7 @@ var BrowserTestUtils = {
               !E10SUtils.canLoadURIInRemoteType(
                 url,
                 win.gFissionBrowser,
-                browser.remoteType,
-                browser.remoteType /* aPreferredRemoteType */
+                browser.remoteType
               )
             ) {
               await this.waitForEvent(browser, "XULFrameLoaderCreated");

@@ -116,9 +116,9 @@ add_task(async function test_any() {
     "about:" + CANREMOTE.path,
     true,
     true,
-    false,
-    false,
-    false
+    true,
+    true,
+    true
   );
 });
 
