@@ -14,7 +14,7 @@ TEST(MediaControlKeysEvent, TestAddOrRemoveListener)
   ASSERT_TRUE(source->GetListenersNum() == 0);
 
   RefPtr<MediaControlKeysEventListener> listener =
-      new MediaControlKeysHandler();
+      new MediaControlKeysEventListener();
 
   source->AddListener(listener);
   ASSERT_TRUE(source->GetListenersNum() == 1);

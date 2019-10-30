@@ -38,9 +38,6 @@ class MediaControlService final : public nsIObserver {
   RefPtr<MediaController> GetOrCreateControllerById(const uint64_t aId) const;
   RefPtr<MediaController> GetControllerById(const uint64_t aId) const;
   AudioFocusManager& GetAudioFocusManager() { return mAudioFocusManager; }
-  MediaControlKeysManager& GetMediaControlKeysManager() {
-    return mMediaControlKeysManager;
-  }
 
   void AddMediaController(const RefPtr<MediaController>& aController);
   void RemoveMediaController(const RefPtr<MediaController>& aController);
