@@ -230,6 +230,8 @@ class ChannelWrapper final : public DOMEventTargetHelper,
   void GetUrlClassification(dom::Nullable<dom::MozUrlClassification>& aRetVal,
                             ErrorResult& aRv) const;
 
+  bool ThirdParty() const;
+
   using EventTarget::EventListenerAdded;
   using EventTarget::EventListenerRemoved;
   virtual void EventListenerAdded(nsAtom* aType) override;

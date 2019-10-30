@@ -410,6 +410,13 @@ interface ChannelWrapper : EventTarget {
    */
   [Cached, Frozen, GetterThrows, Pure]
   readonly attribute MozUrlClassification? urlClassification;
+
+  /**
+   * Indicates if this response and its content window hierarchy is third
+   * party.
+   */
+  [Cached, Constant]
+  readonly attribute boolean thirdParty;
 };
 
 /**

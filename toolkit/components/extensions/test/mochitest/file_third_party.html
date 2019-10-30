@@ -6,7 +6,14 @@
 </head>
 <body>
 
-<img id="tracking-image" src="http://tracking.example.org/tests/toolkit/components/extensions/test/mochitest/file_image_bad.png" />
+<script>
+
+let url = new URL(location);
+let img = new Image();
+img.src = `http://${url.searchParams.get("domain")}/tests/toolkit/components/extensions/test/mochitest/file_image_bad.png`;
+document.body.appendChild(img);
+
+</script>
 
 </body>
 </html>
