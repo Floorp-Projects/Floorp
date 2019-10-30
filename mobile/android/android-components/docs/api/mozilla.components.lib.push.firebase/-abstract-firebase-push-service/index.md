@@ -32,3 +32,9 @@ A Firebase Cloud Messaging implementation of the [PushService](../../mozilla.com
 | [MESSAGE_KEY_CRYPTO_KEY](-m-e-s-s-a-g-e_-k-e-y_-c-r-y-p-t-o_-k-e-y.md) | `const val MESSAGE_KEY_CRYPTO_KEY: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
 | [MESSAGE_KEY_ENCODING](-m-e-s-s-a-g-e_-k-e-y_-e-n-c-o-d-i-n-g.md) | `const val MESSAGE_KEY_ENCODING: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
 | [MESSAGE_KEY_SALT](-m-e-s-s-a-g-e_-k-e-y_-s-a-l-t.md) | `const val MESSAGE_KEY_SALT: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
+
+### Extension Functions
+
+| Name | Summary |
+|---|---|
+| [loadResourceAsString](../../mozilla.components.support.test.file/kotlin.-any/load-resource-as-string.md) | `fun `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`.loadResourceAsString(path: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Loads a file from the resources folder and returns its content as a string object. |

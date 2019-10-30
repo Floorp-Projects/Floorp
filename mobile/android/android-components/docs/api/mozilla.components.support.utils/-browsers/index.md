@@ -45,3 +45,9 @@ val browsers = Browsers.forUrl(context, url)`
 |---|---|
 | [all](all.md) | `fun all(context: <ERROR CLASS>): `[`Browsers`](./index.md)<br>Collect information about all installed browsers and return a [Browsers](./index.md) object containing that data. |
 | [forUrl](for-url.md) | `fun forUrl(context: <ERROR CLASS>, url: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`Browsers`](./index.md)<br>Collect information about all installed browsers that can handle the specified URL and return a [Browsers](./index.md) object containing that data. |
+
+### Extension Functions
+
+| Name | Summary |
+|---|---|
+| [loadResourceAsString](../../mozilla.components.support.test.file/kotlin.-any/load-resource-as-string.md) | `fun `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`.loadResourceAsString(path: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Loads a file from the resources folder and returns its content as a string object. |

@@ -32,3 +32,9 @@ This class provides access to a centralized registry of search engines.
 | [load](load.md) | `suspend fun ~~load~~(context: <ERROR CLASS>): Deferred<`[`SearchEngineList`](../../mozilla.components.browser.search.provider/-search-engine-list/index.md)`>`<br>Asynchronously load search engines from providers. Inherits caller's [CoroutineContext](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.coroutines/-coroutine-context/index.html). |
 | [loadAsync](load-async.md) | `suspend fun loadAsync(context: <ERROR CLASS>): Deferred<`[`SearchEngineList`](../../mozilla.components.browser.search.provider/-search-engine-list/index.md)`>`<br>Asynchronously load search engines from providers. Inherits caller's [CoroutineContext](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.coroutines/-coroutine-context/index.html). |
 | [registerForLocaleUpdates](register-for-locale-updates.md) | `fun registerForLocaleUpdates(context: <ERROR CLASS>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Registers for ACTION_LOCALE_CHANGED broadcasts and automatically reloads the search engines whenever the locale changes. |
+
+### Extension Functions
+
+| Name | Summary |
+|---|---|
+| [loadResourceAsString](../../mozilla.components.support.test.file/kotlin.-any/load-resource-as-string.md) | `fun `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`.loadResourceAsString(path: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Loads a file from the resources folder and returns its content as a string object. |

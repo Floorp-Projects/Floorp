@@ -61,6 +61,7 @@ $dokka.location:mozilla.components.support.ktx.kotlinx.coroutines.flow$ifChanged
 $dokka.location:mozilla.components.support.ktx.kotlinx.coroutines.flow$ifChanged(kotlinx.coroutines.flow.Flow((mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged.T)), kotlin.Function1((mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged.T, mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged.R)))mozilla.components.support.ktx.kotlinx.coroutines.flow/kotlinx.coroutines.flow.-flow/if-changed.md
 $dokka.location:mozilla.components.support.locale$toLocale(kotlin.String)mozilla.components.support.locale/kotlin.-string/to-locale.md
 $dokka.location:mozilla.components.support.test.ext$joinBlocking(kotlinx.coroutines.Job)mozilla.components.support.test.ext/kotlinx.coroutines.-job/join-blocking.md
+$dokka.location:mozilla.components.support.test.file$loadResourceAsString(kotlin.Any, kotlin.String)mozilla.components.support.test.file/kotlin.-any/load-resource-as-string.md
 mozilla.components
 mozilla.components.browser.awesomebar
 mozilla.components.browser.awesomebar.layout
@@ -137,6 +138,8 @@ mozilla.components.concept.sync
 mozilla.components.concept.tabstray
 mozilla.components.concept.toolbar
 mozilla.components.feature.accounts
+mozilla.components.feature.addons
+mozilla.components.feature.addons.amo
 mozilla.components.feature.app.links
 mozilla.components.feature.awesomebar
 mozilla.components.feature.awesomebar.provider
@@ -179,6 +182,7 @@ mozilla.components.feature.tabs.tabstray
 mozilla.components.feature.tabs.toolbar
 mozilla.components.feature.toolbar
 mozilla.components.feature.webcompat
+mozilla.components.feature.webnotifications
 mozilla.components.lib.crash
 mozilla.components.lib.crash.handler
 mozilla.components.lib.crash.prompt
@@ -261,6 +265,7 @@ mozilla.components.support.rustlog
 mozilla.components.support.sync.telemetry
 mozilla.components.support.test
 mozilla.components.support.test.ext
+mozilla.components.support.test.file
 mozilla.components.support.test.robolectric
 mozilla.components.support.test.robolectric.shadow
 mozilla.components.support.utils

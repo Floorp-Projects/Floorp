@@ -25,3 +25,9 @@ A profile of "Fennec" (Firefox for Android).
 | Name | Summary |
 |---|---|
 | [findDefault](find-default.md) | `fun findDefault(context: <ERROR CLASS>, mozillaDirectory: `[`File`](https://developer.android.com/reference/java/io/File.html)` = getMozillaDirectory(context), fileName: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)` = "profiles.ini"): `[`FennecProfile`](./index.md)`?`<br>Returns the default [FennecProfile](./index.md) - the default profile used by Fennec or `null` if no profile could be found. |
+
+### Extension Functions
+
+| Name | Summary |
+|---|---|
+| [loadResourceAsString](../../mozilla.components.support.test.file/kotlin.-any/load-resource-as-string.md) | `fun `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`.loadResourceAsString(path: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Loads a file from the resources folder and returns its content as a string object. |

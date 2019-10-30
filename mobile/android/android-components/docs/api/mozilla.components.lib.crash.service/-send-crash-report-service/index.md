@@ -22,3 +22,9 @@
 | Name | Summary |
 |---|---|
 | [createReportIntent](create-report-intent.md) | `fun createReportIntent(context: <ERROR CLASS>, crash: `[`Crash`](../../mozilla.components.lib.crash/-crash/index.md)`): <ERROR CLASS>` |
+
+### Extension Functions
+
+| Name | Summary |
+|---|---|
+| [loadResourceAsString](../../mozilla.components.support.test.file/kotlin.-any/load-resource-as-string.md) | `fun `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`.loadResourceAsString(path: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Loads a file from the resources folder and returns its content as a string object. |

@@ -29,3 +29,9 @@ A generic wrapper for values that can get consumed.
 | [empty](empty.md) | `fun <T> empty(): `[`Consumable`](./index.md)`<`[`T`](empty.md#T)`>`<br>Returns an empty Consumable with not value as if it was consumed already. |
 | [from](from.md) | `fun <T> from(value: `[`T`](from.md#T)`, onConsume: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)` = null): `[`Consumable`](./index.md)`<`[`T`](from.md#T)`>`<br>Creates a new Consumable wrapping the given value. |
 | [stream](stream.md) | `fun <T> stream(vararg values: `[`T`](stream.md#T)`): `[`ConsumableStream`](../-consumable-stream/index.md)`<`[`T`](stream.md#T)`>`<br>Creates a new Consumable stream for the provided values. |
+
+### Extension Functions
+
+| Name | Summary |
+|---|---|
+| [loadResourceAsString](../../mozilla.components.support.test.file/kotlin.-any/load-resource-as-string.md) | `fun `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`.loadResourceAsString(path: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Loads a file from the resources folder and returns its content as a string object. |

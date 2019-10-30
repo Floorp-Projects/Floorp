@@ -35,3 +35,9 @@ crash reporter is to collect crash count metrics by capturing [Crash.UncaughtExc
 | [CRASH_FILE_NAME](-c-r-a-s-h_-f-i-l-e_-n-a-m-e.md) | `const val CRASH_FILE_NAME: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
 | [NATIVE_CODE_CRASH_KEY](-n-a-t-i-v-e_-c-o-d-e_-c-r-a-s-h_-k-e-y.md) | `const val NATIVE_CODE_CRASH_KEY: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
 | [UNCAUGHT_EXCEPTION_KEY](-u-n-c-a-u-g-h-t_-e-x-c-e-p-t-i-o-n_-k-e-y.md) | `const val UNCAUGHT_EXCEPTION_KEY: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
+
+### Extension Functions
+
+| Name | Summary |
+|---|---|
+| [loadResourceAsString](../../mozilla.components.support.test.file/kotlin.-any/load-resource-as-string.md) | `fun `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`.loadResourceAsString(path: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Loads a file from the resources folder and returns its content as a string object. |

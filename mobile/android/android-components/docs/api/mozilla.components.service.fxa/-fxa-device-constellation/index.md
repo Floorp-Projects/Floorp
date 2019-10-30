@@ -26,3 +26,9 @@ Provides an implementation of [DeviceConstellation](../../mozilla.components.con
 | [setDeviceNameAsync](set-device-name-async.md) | `fun setDeviceNameAsync(name: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, context: <ERROR CLASS>): Deferred<`[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`>`<br>Set name of the current device. |
 | [setDevicePushSubscriptionAsync](set-device-push-subscription-async.md) | `fun setDevicePushSubscriptionAsync(subscription: `[`DevicePushSubscription`](../../mozilla.components.concept.sync/-device-push-subscription/index.md)`): Deferred<`[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`>`<br>Set a [DevicePushSubscription](../../mozilla.components.concept.sync/-device-push-subscription/index.md) for the current device. |
 | [state](state.md) | `fun state(): `[`ConstellationState`](../../mozilla.components.concept.sync/-constellation-state/index.md)`?`<br>Current state of the constellation. May be missing if state was never queried. |
+
+### Extension Functions
+
+| Name | Summary |
+|---|---|
+| [loadResourceAsString](../../mozilla.components.support.test.file/kotlin.-any/load-resource-as-string.md) | `fun `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`.loadResourceAsString(path: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Loads a file from the resources folder and returns its content as a string object. |

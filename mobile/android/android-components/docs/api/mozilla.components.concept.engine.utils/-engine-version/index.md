@@ -45,3 +45,9 @@ Data class for engine versions using semantic versioning (major.minor.patch).
 | Name | Summary |
 |---|---|
 | [parse](parse.md) | `fun parse(version: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`EngineVersion`](./index.md)`?`<br>Parses the given [version](parse.md#mozilla.components.concept.engine.utils.EngineVersion.Companion$parse(kotlin.String)/version) string and returns an [EngineVersion](./index.md). Returns null if the [version](parse.md#mozilla.components.concept.engine.utils.EngineVersion.Companion$parse(kotlin.String)/version) string could not be parsed successfully. |
+
+### Extension Functions
+
+| Name | Summary |
+|---|---|
+| [loadResourceAsString](../../mozilla.components.support.test.file/kotlin.-any/load-resource-as-string.md) | `fun `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`.loadResourceAsString(path: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Loads a file from the resources folder and returns its content as a string object. |

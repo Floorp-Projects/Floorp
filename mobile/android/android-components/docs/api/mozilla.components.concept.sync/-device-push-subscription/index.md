@@ -25,3 +25,4 @@ Describes an Autopush-compatible push channel subscription.
 | Name | Summary |
 |---|---|
 | [into](../../mozilla.components.service.fxa/into.md) | `fun `[`DevicePushSubscription`](./index.md)`.into(): PushSubscription` |
+| [loadResourceAsString](../../mozilla.components.support.test.file/kotlin.-any/load-resource-as-string.md) | `fun `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`.loadResourceAsString(path: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Loads a file from the resources folder and returns its content as a string object. |

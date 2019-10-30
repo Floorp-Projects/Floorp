@@ -20,3 +20,9 @@ be consumed first in, first out.
 | [isEmpty](is-empty.md) | `fun isEmpty(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Returns true if the stream is empty, otherwise false. |
 | [remove](remove.md) | `fun remove(value: `[`T`](index.md#T)`): `[`ConsumableStream`](./index.md)`<`[`T`](index.md#T)`>`<br>Copies the stream but removes all consumables equal to the provided value. |
 | [removeConsumed](remove-consumed.md) | `fun removeConsumed(): `[`ConsumableStream`](./index.md)`<`[`T`](index.md#T)`>`<br>Copies the stream but removes all consumed values. |
+
+### Extension Functions
+
+| Name | Summary |
+|---|---|
+| [loadResourceAsString](../../mozilla.components.support.test.file/kotlin.-any/load-resource-as-string.md) | `fun `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`.loadResourceAsString(path: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Loads a file from the resources folder and returns its content as a string object. |

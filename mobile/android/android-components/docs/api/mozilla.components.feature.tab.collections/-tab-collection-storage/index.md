@@ -25,3 +25,9 @@ A storage implementation that saves snapshots of tabs / sessions in named collec
 | [removeCollection](remove-collection.md) | `fun removeCollection(collection: `[`TabCollection`](../-tab-collection/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Removes a collection and all its tabs. |
 | [removeTabFromCollection](remove-tab-from-collection.md) | `fun removeTabFromCollection(collection: `[`TabCollection`](../-tab-collection/index.md)`, tab: `[`Tab`](../-tab/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Removes the given [Tab](../-tab/index.md) from the [TabCollection](../-tab-collection/index.md). |
 | [renameCollection](rename-collection.md) | `fun renameCollection(collection: `[`TabCollection`](../-tab-collection/index.md)`, title: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Renames a collection. |
+
+### Extension Functions
+
+| Name | Summary |
+|---|---|
+| [loadResourceAsString](../../mozilla.components.support.test.file/kotlin.-any/load-resource-as-string.md) | `fun `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`.loadResourceAsString(path: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Loads a file from the resources folder and returns its content as a string object. |

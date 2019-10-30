@@ -18,3 +18,9 @@ Default JSON parsing implementation
 |---|---|
 | [fromJson](from-json.md) | `fun fromJson(jsonObject: <ERROR CLASS>): `[`Experiment`](../-experiment/index.md)<br>Creates an experiment from its json representation |
 | [toJson](to-json.md) | `fun toJson(experiment: `[`Experiment`](../-experiment/index.md)`): <ERROR CLASS>`<br>Converts the specified experiment to json |
+
+### Extension Functions
+
+| Name | Summary |
+|---|---|
+| [loadResourceAsString](../../mozilla.components.support.test.file/kotlin.-any/load-resource-as-string.md) | `fun `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`.loadResourceAsString(path: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Loads a file from the resources folder and returns its content as a string object. |

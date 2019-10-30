@@ -11,3 +11,9 @@ An exception which may happen while obtaining auth information using [OAuthAccou
 | Name | Summary |
 |---|---|
 | [&lt;init&gt;](-init-.md) | `AuthException(type: `[`AuthExceptionType`](../-auth-exception-type/index.md)`, cause: `[`Exception`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-exception/index.html)`? = null)`<br>An exception which may happen while obtaining auth information using [OAuthAccount](../-o-auth-account/index.md). |
+
+### Extension Functions
+
+| Name | Summary |
+|---|---|
+| [loadResourceAsString](../../mozilla.components.support.test.file/kotlin.-any/load-resource-as-string.md) | `fun `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`.loadResourceAsString(path: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Loads a file from the resources folder and returns its content as a string object. |

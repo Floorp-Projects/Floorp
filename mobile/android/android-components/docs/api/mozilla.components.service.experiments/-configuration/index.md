@@ -18,3 +18,9 @@ The Configuration class describes how to configure Experiments.
 |---|---|
 | [httpClient](http-client.md) | `val httpClient: `[`Lazy`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-lazy/index.html)`<`[`Client`](../../mozilla.components.concept.fetch/-client/index.md)`>`<br>The HTTP client implementation to use for uploading pings. |
 | [kintoEndpoint](kinto-endpoint.md) | `val kintoEndpoint: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>the endpoint to fetch experiments from, must be one of: [ExperimentsUpdater.KINTO_ENDPOINT_DEV](#), [ExperimentsUpdater.KINTO_ENDPOINT_STAGING](#), or [ExperimentsUpdater.KINTO_ENDPOINT_PROD](#) |
+
+### Extension Functions
+
+| Name | Summary |
+|---|---|
+| [loadResourceAsString](../../mozilla.components.support.test.file/kotlin.-any/load-resource-as-string.md) | `fun `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`.loadResourceAsString(path: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Loads a file from the resources folder and returns its content as a string object. |

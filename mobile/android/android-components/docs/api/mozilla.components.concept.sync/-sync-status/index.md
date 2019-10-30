@@ -13,6 +13,12 @@ Results of running a sync via [SyncableStore.sync](../-syncable-store/sync.md).
 | [Error](-error/index.md) | `data class Error : `[`SyncStatus`](./index.md)<br>Sync completed with an error. |
 | [Ok](-ok.md) | `object Ok : `[`SyncStatus`](./index.md)<br>Sync succeeded successfully. |
 
+### Extension Functions
+
+| Name | Summary |
+|---|---|
+| [loadResourceAsString](../../mozilla.components.support.test.file/kotlin.-any/load-resource-as-string.md) | `fun `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`.loadResourceAsString(path: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Loads a file from the resources folder and returns its content as a string object. |
+
 ### Inheritors
 
 | Name | Summary |

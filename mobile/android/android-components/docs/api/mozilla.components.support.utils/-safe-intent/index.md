@@ -46,3 +46,4 @@ for more.
 | Name | Summary |
 |---|---|
 | [getSessionId](../../mozilla.components.feature.intent.ext/get-session-id.md) | `fun `[`SafeIntent`](./index.md)`.getSessionId(): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?`<br>Retrieves [mozilla.components.browser.session.Session](../../mozilla.components.browser.session/-session/index.md) ID from the intent. |
+| [loadResourceAsString](../../mozilla.components.support.test.file/kotlin.-any/load-resource-as-string.md) | `fun `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`.loadResourceAsString(path: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Loads a file from the resources folder and returns its content as a string object. |

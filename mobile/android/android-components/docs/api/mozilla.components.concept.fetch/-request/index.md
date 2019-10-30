@@ -37,3 +37,9 @@ https://developer.mozilla.org/en-US/docs/Web/API/Request
 | [redirect](redirect.md) | `val redirect: `[`Redirect`](-redirect/index.md)<br>Whether the [Client](../-client/index.md) should follow redirects (HTTP 3xx) for this request or not. |
 | [url](url.md) | `val url: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>The URL of the request. |
 | [useCaches](use-caches.md) | `val useCaches: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Whether caches should be used or a network request should be forced, defaults to true (use caches). |
+
+### Extension Functions
+
+| Name | Summary |
+|---|---|
+| [loadResourceAsString](../../mozilla.components.support.test.file/kotlin.-any/load-resource-as-string.md) | `fun `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`.loadResourceAsString(path: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Loads a file from the resources folder and returns its content as a string object. |

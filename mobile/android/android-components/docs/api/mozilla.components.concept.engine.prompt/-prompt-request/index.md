@@ -23,6 +23,12 @@ Value type that represents a request for showing a native dialog for prompt web 
 | [TextPrompt](-text-prompt/index.md) | `data class TextPrompt : `[`PromptRequest`](./index.md)`, `[`Dismissible`](-dismissible/index.md)<br>Value type that represents a request for an alert prompt to enter a message. |
 | [TimeSelection](-time-selection/index.md) | `class TimeSelection : `[`PromptRequest`](./index.md)<br>Value type that represents a request for a date prompt for picking a year, month, and day. |
 
+### Extension Functions
+
+| Name | Summary |
+|---|---|
+| [loadResourceAsString](../../mozilla.components.support.test.file/kotlin.-any/load-resource-as-string.md) | `fun `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`.loadResourceAsString(path: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Loads a file from the resources folder and returns its content as a string object. |
+
 ### Inheritors
 
 | Name | Summary |

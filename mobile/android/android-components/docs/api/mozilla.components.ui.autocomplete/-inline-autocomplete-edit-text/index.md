@@ -78,3 +78,9 @@ respectively (see also [setOnTextChangeListener](set-on-text-change-listener.md)
 |---|---|
 | [INPUT_METHOD_AMAZON_ECHO_SHOW](-i-n-p-u-t_-m-e-t-h-o-d_-a-m-a-z-o-n_-e-c-h-o_-s-h-o-w.md) | `const val INPUT_METHOD_AMAZON_ECHO_SHOW: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
 | [INPUT_METHOD_SONY](-i-n-p-u-t_-m-e-t-h-o-d_-s-o-n-y.md) | `const val INPUT_METHOD_SONY: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
+
+### Extension Functions
+
+| Name | Summary |
+|---|---|
+| [loadResourceAsString](../../mozilla.components.support.test.file/kotlin.-any/load-resource-as-string.md) | `fun `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`.loadResourceAsString(path: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Loads a file from the resources folder and returns its content as a string object. |

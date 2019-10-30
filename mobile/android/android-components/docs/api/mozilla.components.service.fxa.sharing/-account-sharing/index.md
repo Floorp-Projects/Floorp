@@ -17,3 +17,9 @@ or with [FirefoxAccount.migrateFromSessionTokenAsync](#) via [ShareableAccount.a
 | [getSignaturePreAPI28](get-signature-pre-a-p-i28.md) | `fun getSignaturePreAPI28(packageManager: <ERROR CLASS>, packageName: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?`<br>Obtains package signature on devices running API&lt;28. Takes into consideration multiple signers, but not signature rotation. |
 | [packageExistsWithSignature](package-exists-with-signature.md) | `fun packageExistsWithSignature(packageManager: <ERROR CLASS>, suspectPackage: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, expectedSignature: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Checks if package exists, and that its signature matches provided value. |
 | [queryShareableAccounts](query-shareable-accounts.md) | `fun queryShareableAccounts(context: <ERROR CLASS>): `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`ShareableAccount`](../-shareable-account/index.md)`>`<br>Queries trusted FxA Auth providers present on the device, returning a list of accounts that can be used for signing in automatically. |
+
+### Extension Functions
+
+| Name | Summary |
+|---|---|
+| [loadResourceAsString](../../mozilla.components.support.test.file/kotlin.-any/load-resource-as-string.md) | `fun `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`.loadResourceAsString(path: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Loads a file from the resources folder and returns its content as a string object. |

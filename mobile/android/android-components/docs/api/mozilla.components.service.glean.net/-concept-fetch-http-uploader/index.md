@@ -26,3 +26,9 @@ storing or attempting to send the ping again. This uses Android Component's
 |---|---|
 | [DEFAULT_CONNECTION_TIMEOUT](-d-e-f-a-u-l-t_-c-o-n-n-e-c-t-i-o-n_-t-i-m-e-o-u-t.md) | `const val DEFAULT_CONNECTION_TIMEOUT: `[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html) |
 | [DEFAULT_READ_TIMEOUT](-d-e-f-a-u-l-t_-r-e-a-d_-t-i-m-e-o-u-t.md) | `const val DEFAULT_READ_TIMEOUT: `[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html) |
+
+### Extension Functions
+
+| Name | Summary |
+|---|---|
+| [loadResourceAsString](../../mozilla.components.support.test.file/kotlin.-any/load-resource-as-string.md) | `fun `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`.loadResourceAsString(path: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Loads a file from the resources folder and returns its content as a string object. |

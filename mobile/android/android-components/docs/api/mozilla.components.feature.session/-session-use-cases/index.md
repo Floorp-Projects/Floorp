@@ -52,3 +52,9 @@ it to the [SessionManager](../../mozilla.components.browser.session/-session-man
 | [reload](reload.md) | `val reload: `[`ReloadUrlUseCase`](-reload-url-use-case/index.md) |
 | [requestDesktopSite](request-desktop-site.md) | `val requestDesktopSite: `[`RequestDesktopSiteUseCase`](-request-desktop-site-use-case/index.md) |
 | [stopLoading](stop-loading.md) | `val stopLoading: `[`StopLoadingUseCase`](-stop-loading-use-case/index.md) |
+
+### Extension Functions
+
+| Name | Summary |
+|---|---|
+| [loadResourceAsString](../../mozilla.components.support.test.file/kotlin.-any/load-resource-as-string.md) | `fun `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`.loadResourceAsString(path: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Loads a file from the resources folder and returns its content as a string object. |

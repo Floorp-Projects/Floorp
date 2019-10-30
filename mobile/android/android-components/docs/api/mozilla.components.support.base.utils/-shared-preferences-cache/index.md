@@ -31,6 +31,12 @@ An abstract wrapper around [SharedPreferences](#) which facilitates caching of [
 | [setToCache](set-to-cache.md) | `fun setToCache(obj: `[`T`](index.md#T)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [toJSON](to-j-s-o-n.md) | `abstract fun `[`T`](index.md#T)`.toJSON(): <ERROR CLASS>`<br>A conversion method from [T](index.md#T) into a [JSONObject](#). |
 
+### Extension Functions
+
+| Name | Summary |
+|---|---|
+| [loadResourceAsString](../../mozilla.components.support.test.file/kotlin.-any/load-resource-as-string.md) | `fun `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`.loadResourceAsString(path: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Loads a file from the resources folder and returns its content as a string object. |
+
 ### Inheritors
 
 | Name | Summary |

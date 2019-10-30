@@ -19,6 +19,12 @@ Aids in testing functionality which relies on some aspects of InlineAutocomplete
 | [applyAutocompleteResult](apply-autocomplete-result.md) | `abstract fun applyAutocompleteResult(result: `[`AutocompleteResult`](../-inline-autocomplete-edit-text/-autocomplete-result/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Apply provided [result](apply-autocomplete-result.md#mozilla.components.ui.autocomplete.AutocompleteView$applyAutocompleteResult(mozilla.components.ui.autocomplete.InlineAutocompleteEditText.AutocompleteResult)/result) autocomplete result. |
 | [noAutocompleteResult](no-autocomplete-result.md) | `abstract fun noAutocompleteResult(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Notify that there is no autocomplete result available. |
 
+### Extension Functions
+
+| Name | Summary |
+|---|---|
+| [loadResourceAsString](../../mozilla.components.support.test.file/kotlin.-any/load-resource-as-string.md) | `fun `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`.loadResourceAsString(path: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Loads a file from the resources folder and returns its content as a string object. |
+
 ### Inheritors
 
 | Name | Summary |

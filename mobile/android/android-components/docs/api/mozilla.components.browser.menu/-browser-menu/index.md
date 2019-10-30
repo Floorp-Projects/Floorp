@@ -25,3 +25,9 @@ A popup menu composed of BrowserMenuItem objects.
 | Name | Summary |
 |---|---|
 | [determineMenuOrientation](determine-menu-orientation.md) | `fun determineMenuOrientation(parent: <ERROR CLASS>?): `[`Orientation`](-orientation/index.md)<br>Determines the orientation to be used for a menu based on the positioning of the [parent](determine-menu-orientation.md#mozilla.components.browser.menu.BrowserMenu.Companion$determineMenuOrientation()/parent) in the layout. |
+
+### Extension Functions
+
+| Name | Summary |
+|---|---|
+| [loadResourceAsString](../../mozilla.components.support.test.file/kotlin.-any/load-resource-as-string.md) | `fun `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`.loadResourceAsString(path: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Loads a file from the resources folder and returns its content as a string object. |

@@ -13,3 +13,9 @@ Information about the current Android Components build.
 | [applicationServicesVersion](application-services-version.md) | `const val applicationServicesVersion: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>The version of "Application Services" libraries this version was *build* against. |
 | [gitHash](git-hash.md) | `const val gitHash: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Git hash of the latest commit in the Android Components repository checkout this version was built from. |
 | [version](version.md) | `const val version: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>The version name of this Android Components release (e.g. 0.54.0 or 0.55.0-SNAPSHOT). |
+
+### Extension Functions
+
+| Name | Summary |
+|---|---|
+| [loadResourceAsString](../../mozilla.components.support.test.file/kotlin.-any/load-resource-as-string.md) | `fun `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`.loadResourceAsString(path: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Loads a file from the resources folder and returns its content as a string object. |

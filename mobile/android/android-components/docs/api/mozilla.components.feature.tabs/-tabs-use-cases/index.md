@@ -34,3 +34,9 @@ Contains use cases related to the tabs feature.
 | [removeAllTabsOfType](remove-all-tabs-of-type.md) | `val removeAllTabsOfType: `[`RemoveAllTabsOfTypeUseCase`](-remove-all-tabs-of-type-use-case/index.md) |
 | [removeTab](remove-tab.md) | `val removeTab: `[`RemoveTabUseCase`](-remove-tab-use-case/index.md) |
 | [selectTab](select-tab.md) | `val selectTab: `[`SelectTabUseCase`](-select-tab-use-case/index.md) |
+
+### Extension Functions
+
+| Name | Summary |
+|---|---|
+| [loadResourceAsString](../../mozilla.components.support.test.file/kotlin.-any/load-resource-as-string.md) | `fun `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`.loadResourceAsString(path: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Loads a file from the resources folder and returns its content as a string object. |

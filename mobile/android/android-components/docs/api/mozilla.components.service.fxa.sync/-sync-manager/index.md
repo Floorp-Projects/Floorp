@@ -27,3 +27,9 @@ A base sync manager implementation.
 | Name | Summary |
 |---|---|
 | [SYNC_PERIOD_UNIT](-s-y-n-c_-p-e-r-i-o-d_-u-n-i-t.md) | `val SYNC_PERIOD_UNIT: `[`TimeUnit`](https://developer.android.com/reference/java/util/concurrent/TimeUnit.html) |
+
+### Extension Functions
+
+| Name | Summary |
+|---|---|
+| [loadResourceAsString](../../mozilla.components.support.test.file/kotlin.-any/load-resource-as-string.md) | `fun `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`.loadResourceAsString(path: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Loads a file from the resources folder and returns its content as a string object. |

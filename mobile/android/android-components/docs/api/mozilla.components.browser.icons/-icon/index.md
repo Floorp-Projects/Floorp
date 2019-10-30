@@ -26,3 +26,9 @@ An [Icon](./index.md) returned by [BrowserIcons](../-browser-icons/index.md) aft
 | [color](color.md) | `val color: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`?`<br>The dominant color of the icon. Will be null if no color could be extracted. |
 | [maskable](maskable.md) | `val maskable: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>True if the icon represents as full-bleed icon that can be cropped to other shapes. |
 | [source](source.md) | `val source: `[`Source`](-source/index.md)<br>The source of the icon. |
+
+### Extension Functions
+
+| Name | Summary |
+|---|---|
+| [loadResourceAsString](../../mozilla.components.support.test.file/kotlin.-any/load-resource-as-string.md) | `fun `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`.loadResourceAsString(path: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Loads a file from the resources folder and returns its content as a string object. |

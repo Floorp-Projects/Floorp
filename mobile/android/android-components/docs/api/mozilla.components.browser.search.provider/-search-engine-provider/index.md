@@ -12,6 +12,12 @@ Interface for classes that load search engines from a specific source.
 |---|---|
 | [loadSearchEngines](load-search-engines.md) | `abstract suspend fun loadSearchEngines(context: <ERROR CLASS>): `[`SearchEngineList`](../-search-engine-list/index.md)<br>Load search engines from this provider. |
 
+### Extension Functions
+
+| Name | Summary |
+|---|---|
+| [loadResourceAsString](../../mozilla.components.support.test.file/kotlin.-any/load-resource-as-string.md) | `fun `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`.loadResourceAsString(path: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Loads a file from the resources folder and returns its content as a string object. |
+
 ### Inheritors
 
 | Name | Summary |

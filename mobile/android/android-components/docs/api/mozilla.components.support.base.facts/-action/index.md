@@ -17,3 +17,9 @@ A user or system action that causes [Fact](../-fact/index.md) instances to be em
 | [PAUSE](-p-a-u-s-e.md) | The user has paused something. |
 | [STOP](-s-t-o-p.md) | The user has stopped something. |
 | [INTERACTION](-i-n-t-e-r-a-c-t-i-o-n.md) | A generic interaction that can be caused by a previous action (e.g. the user clicks on a button which causes a [Fact](../-fact/index.md) with [CLICK](-c-l-i-c-k.md) action to be emitted. This click may causes something to load which emits a follow-up a [Fact](../-fact/index.md) with [INTERACTION](-i-n-t-e-r-a-c-t-i-o-n.md) action. |
+
+### Extension Functions
+
+| Name | Summary |
+|---|---|
+| [loadResourceAsString](../../mozilla.components.support.test.file/kotlin.-any/load-resource-as-string.md) | `fun `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`.loadResourceAsString(path: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Loads a file from the resources folder and returns its content as a string object. |

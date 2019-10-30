@@ -17,3 +17,9 @@ A very simple parser for search plugins.
 | Name | Summary |
 |---|---|
 | [load](load.md) | `fun load(assetManager: <ERROR CLASS>, identifier: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, path: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`SearchEngine`](../-search-engine/index.md)<br>Loads a SearchEngine from the given path in assets and assigns it the given identifier.`fun load(identifier: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, stream: `[`InputStream`](https://developer.android.com/reference/java/io/InputStream.html)`): `[`SearchEngine`](../-search-engine/index.md)<br>Loads a SearchEngine from the given stream and assigns it the given identifier. |
+
+### Extension Functions
+
+| Name | Summary |
+|---|---|
+| [loadResourceAsString](../../mozilla.components.support.test.file/kotlin.-any/load-resource-as-string.md) | `fun `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`.loadResourceAsString(path: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Loads a file from the resources folder and returns its content as a string object. |
