@@ -7,6 +7,7 @@
 #include "VideoBridgeChild.h"
 #include "VideoBridgeParent.h"
 #include "CompositorThread.h"
+#include "mozilla/dom/ContentChild.h"
 
 namespace mozilla {
 namespace layers {
@@ -27,9 +28,7 @@ void VideoBridgeChild::StartupForGPUProcess() {
 }
 
 void VideoBridgeChild::Open(Endpoint<PVideoBridgeChild>&& aEndpoint) {
-  // TODO(djg): This is for testing and probably incorrect. What happens when
-  // the IPC fails and is rebound?
-  MOZ_ASSERT(!sVideoBridge);
+  MOZ_ASSERT(!sVideoBridge || !sVideoBridge->CanSend());
   sVideoBridge = new VideoBridgeChild();
 
   if (!aEndpoint.Bind(sVideoBridge)) {
@@ -102,6 +101,10 @@ PTextureChild* VideoBridgeChild::CreateTexture(
 
 bool VideoBridgeChild::IsSameProcess() const {
   return OtherPid() == base::GetCurrentProcId();
+}
+
+void VideoBridgeChild::HandleFatalError(const char* aMsg) const {
+  dom::ContentChild::FatalErrorIfNotUsingGPUProcess(aMsg, OtherPid());
 }
 
 }  // namespace layers
