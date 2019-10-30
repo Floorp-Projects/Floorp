@@ -2147,6 +2147,60 @@ bool BaselineCacheIRCompiler::emitCallStringObjectConcatResult() {
   return true;
 }
 
+template <typename CallVM>
+bool BaselineCacheIRCompiler::emitBigIntUnaryOperationShared(
+    const CallVM& emitCallVM) {
+  AutoOutputRegister output(*this);
+  Register val = allocator.useRegister(masm, reader.bigIntOperandId());
+  AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+
+  allocator.discardStack(masm);
+
+  AutoStubFrame stubFrame(*this);
+  stubFrame.enter(masm, scratch);
+
+  masm.push(val);
+
+  emitCallVM();
+
+  masm.tagValue(JSVAL_TYPE_BIGINT, ReturnReg, output.valueReg());
+
+  stubFrame.leave(masm);
+  return true;
+}
+
+bool BaselineCacheIRCompiler::emitBigIntNotResult() {
+  JitSpew(JitSpew_Codegen, __FUNCTION__);
+  return emitBigIntUnaryOperationShared([&]() {
+    using Fn = BigInt* (*)(JSContext*, HandleBigInt);
+    callVM<Fn, jit::BigIntBitNot>(masm);
+  });
+}
+
+bool BaselineCacheIRCompiler::emitBigIntNegationResult() {
+  JitSpew(JitSpew_Codegen, __FUNCTION__);
+  return emitBigIntUnaryOperationShared([&]() {
+    using Fn = BigInt* (*)(JSContext*, HandleBigInt);
+    callVM<Fn, jit::BigIntNeg>(masm);
+  });
+}
+
+bool BaselineCacheIRCompiler::emitBigIntIncResult() {
+  JitSpew(JitSpew_Codegen, __FUNCTION__);
+  return emitBigIntUnaryOperationShared([&]() {
+    using Fn = BigInt* (*)(JSContext*, HandleBigInt);
+    callVM<Fn, jit::BigIntInc>(masm);
+  });
+}
+
+bool BaselineCacheIRCompiler::emitBigIntDecResult() {
+  JitSpew(JitSpew_Codegen, __FUNCTION__);
+  return emitBigIntUnaryOperationShared([&]() {
+    using Fn = BigInt* (*)(JSContext*, HandleBigInt);
+    callVM<Fn, jit::BigIntDec>(masm);
+  });
+}
+
 // The value of argc entering the call IC is not always the value of
 // argc entering the callee. (For example, argc for a spread call IC
 // is always 1, but argc for the callee is the length of the array.)
