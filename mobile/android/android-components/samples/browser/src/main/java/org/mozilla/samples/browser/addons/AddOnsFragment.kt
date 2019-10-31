@@ -4,6 +4,7 @@
 
 package org.mozilla.samples.browser.addons
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -21,8 +22,6 @@ import kotlinx.coroutines.launch
 import mozilla.components.feature.addons.AddOn
 import org.mozilla.samples.browser.R
 import org.mozilla.samples.browser.ext.components
-import java.text.NumberFormat
-import java.util.Locale
 
 /**
  * Fragment use for managing add-ons.
@@ -111,10 +110,6 @@ class AddOnsFragment : Fragment(), View.OnClickListener {
             holder.view.setOnClickListener(clickListener)
             holder.addButton.setOnClickListener(clickListener)
         }
-
-        private fun getFormattedAmount(amount: Int): String {
-            return NumberFormat.getNumberInstance(Locale.getDefault()).format(amount)
-        }
     }
 
     /**
@@ -131,20 +126,19 @@ class AddOnsFragment : Fragment(), View.OnClickListener {
     ) : RecyclerView.ViewHolder(view)
 
     override fun onClick(view: View) {
-        val text = when (view.id) {
-            R.id.add_button -> "Installing add-on"
-            R.id.add_on_item -> "Add-on clicked"
-            else -> ""
+        val context = view.context
+        when (view.id) {
+            R.id.add_button -> {
+                Toast.makeText(this.requireContext(), "Installing add-on", Toast.LENGTH_SHORT)
+                    .show()
+            }
+            R.id.add_on_item -> {
+                val intent = Intent(context, AddOnDetailsActivity::class.java)
+                intent.putExtra("add_on", view.tag as AddOn)
+                context.startActivity(intent)
+            }
+            else -> {
+            }
         }
-
-        Toast.makeText(this.requireContext(), text, Toast.LENGTH_SHORT).show()
     }
-}
-
-/**
- * Try to find the default language on the map otherwise defaults to "en-US".
- */
-private fun Map<String, String>.translate(): String {
-    val lang = Locale.getDefault().isO3Language
-    return get(lang) ?: getValue("en-US")
 }

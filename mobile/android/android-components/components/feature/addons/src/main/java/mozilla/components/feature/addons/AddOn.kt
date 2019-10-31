@@ -4,6 +4,9 @@
 
 package mozilla.components.feature.addons
 
+import android.os.Parcelable
+import kotlinx.android.parcel.Parcelize
+
 /**
  * Represents an add-on based on the AMO store:
  * https://addons.mozilla.org/en-US/firefox/
@@ -26,6 +29,7 @@ package mozilla.components.feature.addons
  * @property createdAt The date the add-on was created.
  * @property updatedAt The date of the last time the add-on was updated by its developer(s).
  */
+@Parcelize
 data class AddOn(
     val id: String,
     val authors: List<Author>,
@@ -41,7 +45,7 @@ data class AddOn(
     val rating: Rating? = null,
     val createdAt: String,
     val updatedAt: String
-) {
+) : Parcelable {
     /**
      * Represents an add-on author.
      *
@@ -50,20 +54,22 @@ data class AddOn(
      * @property url The link to the profile page for of the author.
      * @property username The username of the author.
      */
+    @Parcelize
     data class Author(
         val id: String,
         val name: String,
         val url: String,
         val username: String
-    )
+    ) : Parcelable
 
     /**
      * Holds all the rating information of this add-on.
      * @property average An average score from 1 to 5 of how users scored this add-on.
      * @property reviews The number of users that has scored this add-on.
      */
+    @Parcelize
     data class Rating(
         val average: Float,
         val reviews: Int
-    )
+    ) : Parcelable
 }

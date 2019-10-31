@@ -48,6 +48,12 @@
                 android:label="@string/add_ons"
                 android:parentActivityName=".BrowserActivity" />
 
+        <activity
+                android:theme="@style/Theme.AppCompat.Light"
+                android:name=".addons.AddOnDetailsActivity"
+                android:label="@string/add_ons"
+                android:parentActivityName=".addons.AddOnsActivity" />
+
         <activity android:name=".IntentReceiverActivity">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
