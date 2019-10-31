@@ -76,7 +76,7 @@ describe("sources reducer", () => {
 
 describe("sources selectors", () => {
   it("should return all extensions when chrome preference enabled", () => {
-    prefs.chromeAndExtenstionsEnabled = true;
+    prefs.chromeAndExtensionsEnabled = true;
     let state = initialSourcesState();
     state = {
       sources: update(state, {
@@ -100,7 +100,7 @@ describe("sources selectors", () => {
   });
 
   it("should omit all extensions when chrome preference enabled", () => {
-    prefs.chromeAndExtenstionsEnabled = false;
+    prefs.chromeAndExtensionsEnabled = false;
     let state = initialSourcesState();
     state = {
       sources: update(state, {

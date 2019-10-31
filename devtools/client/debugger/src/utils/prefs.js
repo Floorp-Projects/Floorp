@@ -83,7 +83,7 @@ export const prefs = new PrefsHelper("devtools", {
   alphabetizeOutline: ["Bool", "debugger.alphabetize-outline"],
   autoPrettyPrint: ["Bool", "debugger.auto-pretty-print"],
   clientSourceMapsEnabled: ["Bool", "source-map.client-service.enabled"],
-  chromeAndExtenstionsEnabled: ["Bool", "chrome.enabled"],
+  chromeAndExtensionsEnabled: ["Bool", "chrome.enabled"],
   pauseOnExceptions: ["Bool", "debugger.pause-on-exceptions"],
   pauseOnCaughtExceptions: ["Bool", "debugger.pause-on-caught-exceptions"],
   ignoreCaughtExceptions: ["Bool", "debugger.ignore-caught-exceptions"],
