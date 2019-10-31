@@ -50,7 +50,7 @@ class Instance {
   void* preBarrierCode_;
   const SharedCode code_;
   const UniqueTlsData tlsData_;
-  const GCPtrWasmMemoryObject memory_;
+  GCPtrWasmMemoryObject memory_;
   const SharedTableVector tables_;
   DataSegmentVector passiveDataSegments_;
   ElemSegmentVector passiveElemSegments_;
