@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1571605630002">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1572443230107">
   <emItems>
     <emItem blockID="i334" id="{0F827075-B026-42F3-885D-98981EE7B1AE}">
       <prefs/>
@@ -3518,6 +3518,10 @@
       <versionRange minVersion="0" maxVersion="2.0.9" severity="3"/>
     </emItem>
     <emItem blockID="9e8f80d6-a818-4004-9a20-deec55f3fb96" id="/^((\{a059a924-e43a-495d-9620-ad8c111d62d9\})|(\{79f4bfc6-b1da-4dc4-85cc-ecbcc5dd152e\}))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="3bdd5b53-ddb1-4fb0-b250-d75a604a5546" id="/^((web@3753c687-a0c6-4cd1-b8ff-bab3c76b1236)|(ext@286f29a6-184e-4195-b1e5-1212ebf372a0)|(web@fd9b3d8a-1178-45ab-92a8-a172d0b70000)|(web@e7a72615-19b1-42a5-8e34-ddfa89ce0000)|(web@af1e58bc-4ead-11e8-81fc-065ad97f0000)|(web@7398cc9a-684e-40a4-afe1-b620e1a80000)|(web@2DC2452E-6999-11E8-A1CA-6C6318C60000)|(web@B7CCDA78-8455-11E8-91A4-ED179E46D000)|(web@8842eb7c-5f5c-4d33-aabe-81c27ae87000)|(web@ca5a2803-6421-4582-97e1-9e30fe440000)|(web@00022358-d56d-4f5e-a89c-d4534d7c5565)|(\{ff26fde6-4d73-49a3-bd6c-1ca7876484fc\})|(290e9605-6fb1-4c8b-a3d4-0084bfad201e@UniversalConverter)|(web@EmailNewTab)|(web@WhatsMySpeed)|(test@FormsHub)|(web@Forms2)|(newweb@MapsNewTab)|(\{4b1d718d-58ae-404b-a5d2-b7b977cfcb56\}))$/">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
