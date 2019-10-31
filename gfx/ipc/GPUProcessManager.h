@@ -33,7 +33,6 @@ class CompositorUpdateObserver;
 class PCompositorBridgeChild;
 class PCompositorManagerChild;
 class PImageBridgeChild;
-class PVideoBridgeParent;
 class RemoteCompositorSession;
 class InProcessCompositorSession;
 class UiCompositorControllerChild;
@@ -72,7 +71,6 @@ class GPUProcessManager final : public GPUProcessHost::Listener {
   typedef layers::PCompositorBridgeChild PCompositorBridgeChild;
   typedef layers::PCompositorManagerChild PCompositorManagerChild;
   typedef layers::PImageBridgeChild PImageBridgeChild;
-  typedef layers::PVideoBridgeParent PVideoBridgeParent;
   typedef layers::RemoteCompositorSession RemoteCompositorSession;
   typedef layers::InProcessCompositorSession InProcessCompositorSession;
   typedef layers::UiCompositorControllerChild UiCompositorControllerChild;
@@ -105,9 +103,6 @@ class GPUProcessManager final : public GPUProcessHost::Listener {
       mozilla::ipc::Endpoint<PVRManagerChild>* aOutVRBridge,
       mozilla::ipc::Endpoint<PRemoteDecoderManagerChild>* aOutVideoManager,
       nsTArray<uint32_t>* aNamespaces);
-
-  // Initialize GPU process with consuming end of PVideoBridge.
-  void InitVideoBridge(mozilla::ipc::Endpoint<PVideoBridgeParent>&& aVideoBridge);
 
   // Maps the layer tree and process together so that aOwningPID is allowed
   // to access aLayersId across process.

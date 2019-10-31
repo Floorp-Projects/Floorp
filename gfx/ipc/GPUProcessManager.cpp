@@ -968,12 +968,6 @@ void GPUProcessManager::CreateContentRemoteDecoderManager(
   *aOutEndpoint = std::move(childPipe);
 }
 
-void GPUProcessManager::InitVideoBridge(ipc::Endpoint<PVideoBridgeParent>&& aVideoBridge) {
-  if (EnsureGPUReady()) {
-    mGPUChild->SendInitVideoBridge(std::move(aVideoBridge));
-  }
-}
-
 void GPUProcessManager::MapLayerTreeId(LayersId aLayersId,
                                        base::ProcessId aOwningId) {
   LayerTreeOwnerTracker::Get()->Map(aLayersId, aOwningId);

@@ -174,7 +174,7 @@ bool RemoteDecoderManagerParent::CreateForContent(
   return true;
 }
 
-bool RemoteDecoderManagerParent::CreateVideoBridgeToOtherProcess(
+bool RemoteDecoderManagerParent::CreateVideoBridgeToParentProcess(
     Endpoint<PVideoBridgeChild>&& aEndpoint) {
   // We never want to decode in the GPU process, but output
   // frames to the parent process.
@@ -185,9 +185,9 @@ bool RemoteDecoderManagerParent::CreateVideoBridgeToOtherProcess(
     return false;
   }
 
-  RefPtr<Runnable> task =
-      NewRunnableFunction("gfx::VideoBridgeChild::Open",
-                          &VideoBridgeChild::Open, std::move(aEndpoint));
+  RefPtr<Runnable> task = NewRunnableFunction(
+      "gfx::VideoBridgeChild::Open", &VideoBridgeChild::OpenToParentProcess,
+      std::move(aEndpoint));
   sRemoteDecoderManagerParentThread->Dispatch(task.forget(),
                                               NS_DISPATCH_NORMAL);
   return true;

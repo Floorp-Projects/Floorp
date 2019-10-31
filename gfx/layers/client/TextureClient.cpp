@@ -1491,7 +1491,7 @@ void TextureClient::GPUVideoDesc(SurfaceDescriptorGPUVideo* const aOutDesc) {
   MOZ_RELEASE_ASSERT(mData);
   mData->GetSubDescriptor(&subDesc);
 
-  *aOutDesc = SurfaceDescriptorGPUVideo(handle, std::move(subDesc), Nothing());
+  *aOutDesc = SurfaceDescriptorGPUVideo(handle, std::move(subDesc));
 }
 
 class MemoryTextureReadLock : public NonBlockingTextureReadLock {
