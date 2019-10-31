@@ -177,25 +177,25 @@
       "type": "object",
       "title": "WebExtension",
       "dependencies": {
-        "webExtensionId": [
+        "id": [
           "webExtensionVersion"
         ],
-        "webExtensionVersion": [
+        "version": [
           "webExtensionId"
         ]
       },
       "properties": {
-        "webExtensionId": {
+        "id": {
           "type": "string",
           "title": "WebExtension Id",
           "description": "The identifier (local part) of the associated WebExtension"
         },
-        "webExtensionVersion": {
+        "version": {
           "type": "string",
           "title": "WebExtension Version",
           "description": "The version of the WebExtension to use"
         },
-        "webExtensionLocale": {
+        "locale": {
           "type": "string",
           "title": "WebExtension Locale",
           "description": "Overrides the WebExtension locales and specifies to use a particular one. Ideally this should only be used when really necessary, otherwise considered deprecated."

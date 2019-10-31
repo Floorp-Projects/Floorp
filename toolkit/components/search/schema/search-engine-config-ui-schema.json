@@ -3,13 +3,13 @@
     "ui:autofocus": true
   },
   "ui:order": [
+    "webExtension",
     "engineName",
     "default",
     "defaultPrivate",
     "application",
     "orderHint",
     "telemetryId",
-    "webExtension",
     "codes",
     "appliesTo"
   ]

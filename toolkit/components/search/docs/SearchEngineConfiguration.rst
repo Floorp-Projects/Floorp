@@ -41,17 +41,20 @@ Configuration Structure
 Overview
 --------
 
-The configuration is a JSON blob which has a list of keys which are the engine name:
+The configuration is a JSON blob which is object with a `data` property which
+is an array of engines:
 
 .. code-block:: js
 
     {
-      "engine1": {
-        ...
-      },
-      "engine2": {
-        ...
-      }
+      data: [
+        {
+          // engine 1 details
+        },
+        {
+          // engine 2 details
+        }
+      ]
     }
 
 .. note::
@@ -65,11 +68,14 @@ An engine that is deployed globally could be listed simply as:
 
 .. code-block:: js
 
-    "engine1": {
+    {
+      "engineName": "engine1",
       "default": "no",
-      "telemetryId": "engine1",
-      "webExtensionId": "webext",
-      "webExtensionVersion": "1.0",
+      "telemetryId": "engine1-telem",
+      "webExtension": {
+        "id": "webext",
+        "version": "1.0"
+      },
       "appliesTo": [{
         "included": {
           "everywhere": true
@@ -87,21 +93,28 @@ located specific regions or with certain locales. For example:
 
 .. code-block:: js
 
-    "engine1": {
-      "webExtensionId": "webext",
-      "webExtensionVersion": "1.0",
+    {
+      "engineName": "engine1",
+      "webExtension": {
+        "id": "webext",
+        "version": "1.0"
+      },
       "appliesTo": [{
         "included": {
           "region": "us"
         },
-        "webExtensionId": "webext-us",
-        "webExtensionVersion": "1.1"
+        "webExtension": {
+          "id": "webext-us",
+          "version": "1.1"
+        }
       }, {
         "included": {
           "region": "gb"
         },
-        "webExtensionId": "webext-gb",
-        "webExtensionVersion": "1.2"
+        "webExtension": {
+          "id": "webext-gb",
+          "version": "1.2"
+        }
       }]
     }
 
@@ -115,25 +128,32 @@ Special Attributes
 $USER_LOCALE
 ------------
 
-If a ``webExtensionLocales`` attribute contains an element with the value
+If a ``webExtension.locales`` property contains an element with the value
 ``"$USER_LOCALE"`` then the special value will be replaced in the
 configuration object with the users locale. For example:
 
 .. code-block:: js
 
-    "engine1": {
-      "webExtensionId": "webext",
-      "webExtensionVersion": "1.0",
+    {
+      "engineName": "engine1",
+      "webExtension": {
+        "id": "webext",
+        "version": "1.0"
+      },
       "appliesTo": [{
         "included": {
           "locales": {
             "matches": ["us", "gb"]
           },
-          "webExtensionLocales": ["$USER_LOCALE"],
-        },
+          "webExtension": {
+            "locales": ["$USER_LOCALE"],
+          }
+        }
+      }]
+    }
 
-Will report either ``[us]`` or ``[gb]`` as the ``webExtensionLocales``
-depending on the user.
+Will report either ``[us]`` or ``[gb]`` as the ``webExtension.locales``
+depending on the user's locale.
 
 "default"
 ---------
@@ -153,21 +173,28 @@ Sections which have a ``cohort`` will not be used unless a matching
 
 .. code-block:: js
 
-    "engine1": {
-      "webExtensionId": "webext",
-      "webExtensionVersion": "1.0",
+    {
+      "engineName": "engine1",
+      "webExtension": {
+        "id": "webext",
+        "version": "1.0"
+      },
       "appliesTo": [{
         "included": {
           "everywhere": true
         },
         "cohort": "nov-16",
-        "webExtensionId": "webext-experimental",
+        "webExtension": {
+          "id": "webext-experimental"
+        }
       }, {
         "included": {
           "everywhere": true
         },
-        "webExtensionId": "webext-gb",
-        "webExtensionVersion": "1.2"
+        "webExtension": {
+          "id": "webext-gb",
+          "version": "1.2"
+        }
       }]
     }
 
@@ -191,7 +218,8 @@ property is a tri-state value with states of ``yes``, ``yes-if-no-other`` and
 
 .. code-block:: js
 
-    "engine1": {
+    {
+      "engineName": "engine1",
       "appliesTo": [{
         "included": {
           "region": "us"
@@ -204,7 +232,8 @@ property is a tri-state value with states of ``yes``, ``yes-if-no-other`` and
         "default": "yes-if-no-other"
       }]
     },
-    "engine2": {
+    {
+      "engineName": "engine2",
       "appliesTo": [{
         "included": {
           "region": "gb"
@@ -212,7 +241,8 @@ property is a tri-state value with states of ``yes``, ``yes-if-no-other`` and
         "default": "yes"
       }]
     },
-    "engine3": {
+    {
+      "engineName": "engine3",
       "default": "no"
       "appliesTo": [{
         "included": {
@@ -220,13 +250,15 @@ property is a tri-state value with states of ``yes``, ``yes-if-no-other`` and
         },
       }]
     },
-    "engine4": {
+    {
+      "engineName": "engine4",
       "defaultPrivate": "yes",
       "appliesTo": [{
         "included": {
           "region": "fr"
         }
       }]
+    }
 
 In this example, for normal mode:
 
@@ -259,15 +291,18 @@ Example:
 
 .. code-block:: js
 
-    "engine1": {
+    {
+      "engineName": "engine1",
       "orderHint": 2000,
       "default": "no",
     },
-    "engine2": {
+    {
+      "engineName": "engine2",
       "orderHint": 1000,
       "default": "yes"
     },
-    "engine3": {
+    {
+      "engineName": "engine3",
       "orderHint": 500,
       "default": "no"
     }
@@ -281,9 +316,11 @@ Within each engine definition is the extension id and version, for example:
 
 .. code-block:: js
 
-    "engine": {
-      "webExtensionId": "webext",
-      "webExtensionVersion": "1.0",
+  {
+      "webExtension": {
+        "id": "webext",
+        "version": "1.0"
+      },
     }
 
 To locate an engine to use, the Search Service will look in the following locations (in order):
