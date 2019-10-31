@@ -86,6 +86,11 @@ interface nsIHttpChannel : nsIIdentChannel
     [must_use] readonly attribute uint64_t transferSize;
 
     /**
+     * size consumed by the request header fields and the request payload body
+     */
+    [must_use] readonly attribute uint64_t requestSize;
+
+    /**
      * The size of the message body received by the client,
      * after removing any applied content-codings
      */
