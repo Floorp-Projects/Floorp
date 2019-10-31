@@ -1,72 +1,30 @@
 extern crate bindgen;
 
-fn osx_version() -> Result<String, std::io::Error> {
+fn sdk_path(target: &str) -> Result<String, std::io::Error> {
+    // Use environment variable if set
+    println!("cargo:rerun-if-env-changed=COREAUDIO_SDK_PATH");
+    if let Ok(path) = std::env::var("COREAUDIO_SDK_PATH") {
+        return Ok(path);
+    }
+
     use std::process::Command;
 
-    let output = Command::new("defaults")
-        .arg("read")
-        .arg("loginwindow")
-        .arg("SystemVersionStampAsString")
+    let sdk = if target.contains("apple-darwin") {
+        "macosx"
+    } else if target.contains("apple-ios") {
+        "iphoneos"
+    } else {
+        unreachable!();
+    };
+    let output = Command::new("xcrun")
+        .args(&["--sdk", sdk, "--show-sdk-path"])
         .output()?
         .stdout;
-    let version_str = std::str::from_utf8(&output).expect("invalid output from `defaults`");
-    let version = version_str.trim_right();
-
-    Ok(version.to_owned())
+    let prefix_str = std::str::from_utf8(&output).expect("invalid output from `xcrun`");
+    Ok(prefix_str.trim_end().to_string())
 }
 
-fn parse_version(version: &str) -> Option<i32> {
-    version
-        .split(".")
-        .skip(1)
-        .next()
-        .and_then(|m| m.parse::<i32>().ok())
-}
-
-fn frameworks_path() -> Result<String, std::io::Error> {
-    // For 10.13 and higher:
-    //
-    // While macOS has its system frameworks located at "/System/Library/Frameworks"
-    // for actually linking against them (especially for cross-compilation) once
-    // has to refer to the frameworks as found within "Xcode.app/Contents/Developer/…".
-
-    if osx_version()
-        .and_then(|version| Ok(parse_version(&version).map(|v| v >= 13).unwrap_or(false)))
-        .unwrap_or(false)
-    {
-        use std::process::Command;
-
-        let output = Command::new("xcode-select").arg("-p").output()?.stdout;
-        let prefix_str = std::str::from_utf8(&output).expect("invalid output from `xcode-select`");
-        let prefix = prefix_str.trim_right();
-
-        let platform = if cfg!(target_os = "macos") {
-            "MacOSX"
-        } else if cfg!(target_os = "ios") {
-            "iPhoneOS"
-        } else {
-            unreachable!();
-        };
-
-        let infix = if prefix == "/Library/Developer/CommandLineTools" {
-            format!("SDKs/{}.sdk", platform)
-        } else {
-            format!(
-                "Platforms/{}.platform/Developer/SDKs/{}.sdk",
-                platform, platform
-            )
-        };
-
-        let suffix = "System/Library/Frameworks";
-        let directory = format!("{}/{}/{}", prefix, infix, suffix);
-
-        Ok(directory)
-    } else {
-        Ok("/System/Library/Frameworks".to_string())
-    }
-}
-
-fn build(frameworks_path: &str) {
+fn build(sdk_path: Option<&str>, target: &str) {
     // Generate one large set of bindings for all frameworks.
     //
     // We do this rather than generating a module per framework as some frameworks depend on other
@@ -79,72 +37,67 @@ fn build(frameworks_path: &str) {
     use std::env;
     use std::path::PathBuf;
 
-    let mut frameworks = Vec::<&str>::new();
-    let mut headers = Vec::<&str>::new();
+    let mut headers = vec![];
 
     #[cfg(feature = "audio_toolbox")]
     {
         println!("cargo:rustc-link-lib=framework=AudioToolbox");
-        frameworks.push("AudioToolbox");
-        headers.push("AudioToolbox.framework/Headers/AudioToolbox.h");
+        headers.push("AudioToolbox/AudioToolbox.h");
     }
 
     #[cfg(feature = "audio_unit")]
     {
         println!("cargo:rustc-link-lib=framework=AudioUnit");
-        frameworks.push("AudioUnit");
-        headers.push("AudioUnit.framework/Headers/AudioUnit.h");
+        headers.push("AudioUnit/AudioUnit.h");
     }
 
     #[cfg(feature = "core_audio")]
     {
         println!("cargo:rustc-link-lib=framework=CoreAudio");
-        frameworks.push("CoreAudio");
-        headers.push("CoreAudio.framework/Headers/CoreAudio.h");
+        headers.push("CoreAudio/CoreAudio.h");
     }
 
     #[cfg(feature = "open_al")]
     {
         println!("cargo:rustc-link-lib=framework=OpenAL");
-        frameworks.push("OpenAL");
-        headers.push("OpenAL.framework/Headers/al.h");
-        headers.push("OpenAL.framework/Headers/alc.h");
+        headers.push("OpenAL/al.h");
+        headers.push("OpenAL/alc.h");
     }
 
-    #[cfg(all(feature = "core_midi", target_os = "macos"))]
+    #[cfg(all(feature = "core_midi"))]
     {
-        println!("cargo:rustc-link-lib=framework=CoreMIDI");
-        frameworks.push("CoreMIDI");
-        headers.push("CoreMIDI.framework/Headers/CoreMIDI.h");
+        if target.contains("apple-darwin") {
+            println!("cargo:rustc-link-lib=framework=CoreMIDI");
+            headers.push("CoreMIDI/CoreMIDI.h");
+        }
     }
 
+    println!("cargo:rerun-if-env-changed=BINDGEN_EXTRA_CLANG_ARGS");
     // Get the cargo out directory.
     let out_dir = PathBuf::from(env::var("OUT_DIR").expect("env variable OUT_DIR not found"));
 
     // Begin building the bindgen params.
     let mut builder = bindgen::Builder::default();
 
-    builder = builder.clang_arg(format!("-F/{}", frameworks_path));
+    builder = builder.clang_args(&[&format!("--target={}", target)]);
 
-    // Add all headers.
-    for relative_path in headers {
-        let absolute_path = format!("{}/{}", frameworks_path, relative_path);
-        builder = builder.header(absolute_path);
+    if let Some(sdk_path) = sdk_path {
+        builder = builder.clang_args(&["-isysroot", sdk_path]);
     }
 
-    // Link to all frameworks.
-    for relative_path in frameworks {
-        let link_instruction = format!("#[link = \"{}/{}\"]", frameworks_path, relative_path);
-        builder = builder.raw_line(link_instruction);
-    }
+    let meta_header: Vec<_> = headers
+        .iter()
+        .map(|h| format!("#include <{}>\n", h))
+        .collect();
+
+    builder = builder.header_contents("coreaudio.h", &meta_header.concat());
 
     // Generate the bindings.
-    let bindings = builder
+    builder = builder
         .trust_clang_mangling(false)
-        .derive_default(true)
-        .rustfmt_bindings(false)
-        .generate()
-        .expect("unable to generate bindings");
+        .derive_default(true);
+
+    let bindings = builder.generate().expect("unable to generate bindings");
 
     // Write them to the crate root.
     bindings
@@ -152,32 +105,12 @@ fn build(frameworks_path: &str) {
         .expect("could not write bindings");
 }
 
-#[cfg(all(
-    not(feature = "nobindgen"),
-    any(target_os = "macos", target_os = "ios")
-))]
-fn main() {
-    if let Ok(directory) = frameworks_path() {
-        build(&directory);
-    } else {
-        eprintln!("coreaudio-sys could not find frameworks path");
-    }
-}
-
-#[cfg(any(
-    feature = "nobindgen",
-    not(any(target_os = "macos", target_os = "ios"))
-))]
 fn main() {
     let target = std::env::var("TARGET").unwrap();
-    // If target's operating system is not macos or ios but the build target
-    // is apple's platform (e.g., mac os virtual machine on Linux), use
-    // the fullback raw bindings instead.
-    if target.contains("-apple") {
-        println!("cargo:rustc-link-lib=framework=AudioUnit");
-        println!("cargo:rustc-link-lib=framework=CoreAudio");
-        println!("cargo:rustc-cfg=fullback_bindings");
-    } else {
-        eprintln!("{} is not a valid target for coreaudio-sys.", target);
+    if !(target.contains("apple-darwin") || target.contains("apple-ios")) {
+        panic!("coreaudio-sys requires macos or ios target");
     }
+
+    let directory = sdk_path(&target).ok();
+    build(directory.as_ref().map(String::as_ref), &target);
 }
