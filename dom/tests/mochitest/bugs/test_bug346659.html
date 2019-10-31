@@ -28,53 +28,94 @@ function r(base, tail) {
   return base.replace(/\/[^\/]*$/, "/" + tail);
 }
 
-function handleCmd(evt) {
+/**
+ * This function sets up the test according to the data it receives. If the data
+ * is a JSON string, it will use the object parsed from that to determine how to
+ * set up the test.
+ */
+async function handleCmd(evt) {
   var cmd;
   try {
     cmd = JSON.parse(evt.data);
   } catch (e) {
-    // Not json
+    // Not json, so it should be a test result. We don't need to set up test.
     return false;
   }  
 
   if ("load" in cmd) {
     var testNum = cmd.load;
-    var win = SpecialPowers.wrap(wins[testNum]).wrappedJSObject;
-    win.childWin.x = testNum;
-    if (SpecialPowers.unwrap(win.childWin.opener) == SpecialPowers.unwrap(win)) {
+
+    // Set up the testing window property and get necessary information from it.
+    // We use SpecialPowers.spawn() here since the testing window could be cross
+    // origin.
+    var { isOpenerTest, location } =
+      await SpecialPowers.spawn(wins[testNum], [testNum], testNum => {
+        var win = content.wrappedJSObject;
+        win.childWin.x = testNum;
+
+        return {
+          isOpenerTest: win.childWin.opener == win,
+          location: content.location.href,
+        };
+      });
+
+    // Get the test location according to the test.
+    if (isOpenerTest) {
       if ("xsite" in cmd) {
-        var loc = r(window.location.href, "bug346659-opener-echoer.html");
+        var loc = r(window.location.href, "bug346659-opener-echoer.html?" + testNum);
       } else {
-        var loc = r(win.location.href, "bug346659-opener-echoer.html");
+        var loc = r(location, "bug346659-opener-echoer.html?" + testNum);
       }
     } else {
       if ("xsite" in cmd) {
-        var loc = r(window.location.href, "bug346659-parent-echoer.html");
+        var loc = r(window.location.href, "bug346659-parent-echoer.html?" + testNum);
       } else {
-        var loc = r(win.location.href, "bug346659-parent-echoer.html");
+        var loc = r(location, "bug346659-parent-echoer.html?" + testNum);
       }
     }
-    win.childWin.location.href = loc;
+
+    // Trigger the loading on the child window of the testing window.
+    await SpecialPowers.spawn(wins[testNum], [loc], loc => {
+      content.wrappedJSObject.childWin.location.href = loc;
+    });
     wins[testNum] = null;
   } else if ("write" in cmd) {
     var testNum = cmd.write;
-    var win = wins[testNum];
-    win.childWin.x = testNum;
+
     try {
-      if (win.childWin.opener == win) {
-        win.childWin.document.write('<script>window.opener.opener.postMessage(window.opener.testNum + " - " + window.x, "http://mochi.test:8888/"); window.opener.close(); window.close();<' + '/script>');
-      } else {
-        win.childWin.document.write('<script>window.parent.opener.postMessage(window.parent.testNum + " - " + window.x, "http://mochi.test:8888/"); window.parent.close();<' + '/script>');
-      }
+      // Set up the test on the testing window.
+      await SpecialPowers.spawn(wins[testNum], [testNum], testNum => {
+        var win = content.wrappedJSObject;
+        win.childWin.x = testNum;
+
+        // Test document.write().
+        if (win.childWin.opener == win) {
+          win.childWin.document.write(`
+            <script>
+              window.opener.opener.postMessage("${testNum} - " + window.x, "http://mochi.test:8888/");
+              window.opener.close();
+              window.close();
+            <` + '/script>');
+        } else {
+          win.childWin.document.write(`
+            <script>
+              window.parent.opener.postMessage("${testNum} - " + window.x, "http://mochi.test:8888/");
+              window.parent.close();
+            <` + '/script>');
+        }
+      });
     } catch (e) {
       if (e.name != "SecurityError" || e.code != 18) {
         throw e;
       }
       // Security error on cross-site write() is fine
-      if (win.childWin.opener == win) {
-        win.childWin.close();
-      }
-      win.close()
+      await SpecialPowers.spawn(wins[testNum], [], () => {
+        var win = content.wrappedJSObject;
+        if (win.childWin.opener == win) {
+          win.childWin.close();
+        }
+      });
+
       handleTestEnd();
     }
     wins[testNum] = null;
@@ -82,9 +123,9 @@ function handleCmd(evt) {
   return true;
 }
 
-function messageReceiver(evt) {
+async function messageReceiver(evt) {
   // First try to detect a load/write command
-  if (handleCmd(evt)) {
+  if (await handleCmd(evt)) {
     return;
   }
 
