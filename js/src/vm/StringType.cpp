@@ -960,16 +960,6 @@ static inline void FillFromCompatible(unsigned char* dest, const char16_t* src,
                             AsWritableChars(MakeSpan(dest, length)));
 }
 
-static inline void FillFromCompatible(char16_t* dest, const char16_t* src,
-                                      size_t length) {
-  FillChars(dest, src, length);
-}
-
-static inline void FillFromCompatible(char16_t* dest, LittleEndianChars src,
-                                      size_t length) {
-  FillChars(dest, src, length);
-}
-
 static inline void FillFromCompatible(unsigned char* dest,
                                       LittleEndianChars src, size_t length) {
   for (size_t i = 0; i < length; ++i) {
