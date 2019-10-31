@@ -6104,6 +6104,34 @@ AttachDecision CompareIRGenerator::tryAttachBigIntNumber(ValOperandId lhsId,
   return AttachDecision::Attach;
 }
 
+AttachDecision CompareIRGenerator::tryAttachBigIntString(ValOperandId lhsId,
+                                                         ValOperandId rhsId) {
+  // Ensure BigInt x String.
+  if (!(lhsVal_.isBigInt() && rhsVal_.isString()) &&
+      !(rhsVal_.isBigInt() && lhsVal_.isString())) {
+    return AttachDecision::NoAction;
+  }
+
+  // Case should have been handled by tryAttachStrictlDifferentTypes
+  MOZ_ASSERT(op_ != JSOP_STRICTEQ && op_ != JSOP_STRICTNE);
+
+  if (lhsVal_.isBigInt()) {
+    BigIntOperandId bigIntId = writer.guardToBigInt(lhsId);
+    StringOperandId strId = writer.guardToString(rhsId);
+
+    writer.compareBigIntStringResult(op_, bigIntId, strId);
+  } else {
+    StringOperandId strId = writer.guardToString(lhsId);
+    BigIntOperandId bigIntId = writer.guardToBigInt(rhsId);
+
+    writer.compareStringBigIntResult(op_, strId, bigIntId);
+  }
+  writer.returnFromIC();
+
+  trackAttached("BigIntString");
+  return AttachDecision::Attach;
+}
+
 AttachDecision CompareIRGenerator::tryAttachStub() {
   MOZ_ASSERT(cacheKind_ == CacheKind::Compare);
   MOZ_ASSERT(IsEqualityOp(op_) || IsRelationalOp(op_));
@@ -6121,7 +6149,6 @@ AttachDecision CompareIRGenerator::tryAttachStub() {
 
   // For sloppy equality ops, there are cases this IC does not handle:
   // - {Object} x {String, Symbol, Bool, Number, BigInt}.
-  // - {String} x {BigInt}.
   //
   // (The above lists omits the equivalent case {B} x {A} when {A} x {B} is
   // already present.)
@@ -6165,6 +6192,7 @@ AttachDecision CompareIRGenerator::tryAttachStub() {
 
   TRY_ATTACH(tryAttachBigIntInt32(lhsId, rhsId));
   TRY_ATTACH(tryAttachBigIntNumber(lhsId, rhsId));
+  TRY_ATTACH(tryAttachBigIntString(lhsId, rhsId));
 
   trackAttached(IRGenerator::NotAttached);
   return AttachDecision::NoAction;

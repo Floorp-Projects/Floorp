@@ -2480,6 +2480,109 @@ bool IonCacheIRCompiler::emitBigIntDecResult() {
   });
 }
 
+bool IonCacheIRCompiler::emitCompareBigIntStringResult() {
+  JitSpew(JitSpew_Codegen, __FUNCTION__);
+  AutoSaveLiveRegisters save(*this);
+  AutoOutputRegister output(*this);
+  Register lhs = allocator.useRegister(masm, reader.bigIntOperandId());
+  Register rhs = allocator.useRegister(masm, reader.stringOperandId());
+  JSOp op = reader.jsop();
+
+  allocator.discardStack(masm);
+
+  prepareVMCall(masm, save);
+
+  // Push the operands in reverse order for JSOP_LE and JSOP_GT:
+  // - |left <= right| is implemented as |right >= left|.
+  // - |left > right| is implemented as |right < left|.
+  if (op == JSOP_LE || op == JSOP_GT) {
+    masm.Push(lhs);
+    masm.Push(rhs);
+  } else {
+    masm.Push(rhs);
+    masm.Push(lhs);
+  }
+
+  using FnBigIntString =
+      bool (*)(JSContext*, HandleBigInt, HandleString, bool*);
+  using FnStringBigInt =
+      bool (*)(JSContext*, HandleString, HandleBigInt, bool*);
+  if (op == JSOP_EQ) {
+    callVM<FnBigIntString, jit::BigIntStringEqual<EqualityKind::Equal>>(masm);
+  } else if (op == JSOP_NE) {
+    callVM<FnBigIntString, jit::BigIntStringEqual<EqualityKind::NotEqual>>(
+        masm);
+  } else if (op == JSOP_LT) {
+    callVM<FnBigIntString, jit::BigIntStringCompare<ComparisonKind::LessThan>>(
+        masm);
+  } else if (op == JSOP_GT) {
+    callVM<FnStringBigInt, jit::StringBigIntCompare<ComparisonKind::LessThan>>(
+        masm);
+  } else if (op == JSOP_LE) {
+    callVM<FnStringBigInt,
+           jit::StringBigIntCompare<ComparisonKind::GreaterThanOrEqual>>(masm);
+  } else {
+    MOZ_ASSERT(op == JSOP_GE);
+    callVM<FnBigIntString,
+           jit::BigIntStringCompare<ComparisonKind::GreaterThanOrEqual>>(masm);
+  }
+
+  masm.storeCallBoolResult(output.typedReg().gpr());
+  return true;
+}
+
+bool IonCacheIRCompiler::emitCompareStringBigIntResult() {
+  JitSpew(JitSpew_Codegen, __FUNCTION__);
+  AutoSaveLiveRegisters save(*this);
+  AutoOutputRegister output(*this);
+  Register lhs = allocator.useRegister(masm, reader.stringOperandId());
+  Register rhs = allocator.useRegister(masm, reader.bigIntOperandId());
+  JSOp op = reader.jsop();
+
+  allocator.discardStack(masm);
+
+  prepareVMCall(masm, save);
+
+  // Push the operands in reverse order for JSOP_LE and JSOP_GT:
+  // - |left <= right| is implemented as |right >= left|.
+  // - |left > right| is implemented as |right < left|.
+  // Also push the operands in reverse order for JSOP_EQ and JSOP_NE.
+  if (op == JSOP_LT || op == JSOP_GE) {
+    masm.Push(rhs);
+    masm.Push(lhs);
+  } else {
+    masm.Push(lhs);
+    masm.Push(rhs);
+  }
+
+  using FnBigIntString =
+      bool (*)(JSContext*, HandleBigInt, HandleString, bool*);
+  using FnStringBigInt =
+      bool (*)(JSContext*, HandleString, HandleBigInt, bool*);
+  if (op == JSOP_EQ) {
+    callVM<FnBigIntString, jit::BigIntStringEqual<EqualityKind::Equal>>(masm);
+  } else if (op == JSOP_NE) {
+    callVM<FnBigIntString, jit::BigIntStringEqual<EqualityKind::NotEqual>>(
+        masm);
+  } else if (op == JSOP_LT) {
+    callVM<FnStringBigInt, jit::StringBigIntCompare<ComparisonKind::LessThan>>(
+        masm);
+  } else if (op == JSOP_GT) {
+    callVM<FnBigIntString, jit::BigIntStringCompare<ComparisonKind::LessThan>>(
+        masm);
+  } else if (op == JSOP_LE) {
+    callVM<FnBigIntString,
+           jit::BigIntStringCompare<ComparisonKind::GreaterThanOrEqual>>(masm);
+  } else {
+    MOZ_ASSERT(op == JSOP_GE);
+    callVM<FnStringBigInt,
+           jit::StringBigIntCompare<ComparisonKind::GreaterThanOrEqual>>(masm);
+  }
+
+  masm.storeCallBoolResult(output.typedReg().gpr());
+  return true;
+}
+
 bool IonCacheIRCompiler::emitCallScriptedFunction() {
   MOZ_CRASH("Call ICs not used in ion");
 }
