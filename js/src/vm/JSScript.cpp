@@ -2536,6 +2536,9 @@ void ScriptSource::trace(JSTracer* trc) {
 #else
   MOZ_ASSERT(!data.is<BinAST>());
 #endif  // JS_BUILD_BINAST
+  if (xdrEncoder_) {
+    xdrEncoder_->trace(trc);
+  }
 }
 
 void ScriptSource::finalizeGCData() {
@@ -2556,6 +2559,9 @@ void ScriptSource::finalizeGCData() {
     }
   }
 #endif  // JS_BUILD_BINAST
+  if (xdrEncoder_) {
+    xdrEncoder_.reset();
+  }
 }
 
 ScriptSource::~ScriptSource() {
@@ -2563,6 +2569,7 @@ ScriptSource::~ScriptSource() {
 
   // GC pointers must have been cleared earlier, because this destructor could
   // be called off-thread by SweepCompressionTasks. See above.
+  MOZ_ASSERT(!xdrEncoder_);
   MOZ_ASSERT_IF(hasBinASTSource(), !data.as<BinAST>().metadata);
 }
 

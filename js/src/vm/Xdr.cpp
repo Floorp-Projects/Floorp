@@ -489,3 +489,7 @@ XDRResult XDRIncrementalEncoder::linearize(JS::TranscodeBuffer& buffer) {
   slices_.clearAndFree();
   return Ok();
 }
+
+void XDRDecoder::trace(JSTracer* trc) { atomTable_.trace(trc); }
+
+void XDRIncrementalEncoder::trace(JSTracer* trc) { atomMap_.trace(trc); }
