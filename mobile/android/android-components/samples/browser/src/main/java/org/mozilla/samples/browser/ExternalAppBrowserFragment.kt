@@ -64,7 +64,7 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), BackHandler {
 
         val windowFeature = CustomTabWindowFeature(
             requireContext(),
-            components.sessionManager,
+            components.store,
             sessionId!!
         )
         lifecycle.addObserver(windowFeature)

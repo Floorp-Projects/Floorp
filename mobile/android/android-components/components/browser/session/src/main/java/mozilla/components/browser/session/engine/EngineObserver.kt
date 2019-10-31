@@ -192,12 +192,13 @@ internal class EngineObserver(
         ))
     }
 
-    override fun onOpenWindowRequest(windowRequest: WindowRequest) {
-        session.openWindowRequest = Consumable.from(windowRequest)
-    }
-
-    override fun onCloseWindowRequest(windowRequest: WindowRequest) {
-        session.closeWindowRequest = Consumable.from(windowRequest)
+    override fun onWindowRequest(windowRequest: WindowRequest) {
+        store?.dispatch(
+            ContentAction.UpdateWindowRequestAction(
+                store.state.selectedTabId ?: session.id,
+                windowRequest
+            )
+        )
     }
 
     override fun onMediaAdded(media: Media) {

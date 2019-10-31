@@ -74,6 +74,12 @@ internal object ContentStateReducer {
             is ContentAction.ClearFindResultsAction -> updateContentState(state, action.sessionId) {
                 it.copy(findResults = emptyList())
             }
+            is ContentAction.UpdateWindowRequestAction -> updateContentState(state, action.sessionId) {
+                it.copy(windowRequest = action.windowRequest)
+            }
+            is ContentAction.ConsumeWindowRequestAction -> updateContentState(state, action.sessionId) {
+                it.copy(windowRequest = null)
+            }
         }
     }
 }

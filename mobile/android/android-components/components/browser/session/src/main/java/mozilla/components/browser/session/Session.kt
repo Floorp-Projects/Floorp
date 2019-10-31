@@ -37,7 +37,6 @@ import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.concept.engine.media.Media
 import mozilla.components.concept.engine.media.RecordingDevice
 import mozilla.components.concept.engine.permission.PermissionRequest
-import mozilla.components.concept.engine.window.WindowRequest
 import mozilla.components.support.base.observer.Consumable
 import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.base.observer.ObserverRegistry
@@ -100,8 +99,6 @@ class Session(
         fun onThumbnailChanged(session: Session, bitmap: Bitmap?) = Unit
         fun onContentPermissionRequested(session: Session, permissionRequest: PermissionRequest): Boolean = false
         fun onAppPermissionRequested(session: Session, permissionRequest: PermissionRequest): Boolean = false
-        fun onOpenWindowRequested(session: Session, windowRequest: WindowRequest): Boolean = false
-        fun onCloseWindowRequested(session: Session, windowRequest: WindowRequest): Boolean = false
         fun onMediaRemoved(session: Session, media: List<Media>, removed: Media) = Unit
         fun onMediaAdded(session: Session, media: List<Media>, added: Media) = Unit
         fun onCrashStateChanged(session: Session, crashed: Boolean) = Unit
@@ -443,22 +440,6 @@ class Session(
         _, _, request ->
             val consumers = wrapConsumers<PermissionRequest> { onAppPermissionRequested(this@Session, it) }
             !request.consumeBy(consumers)
-    }
-
-    /**
-     * [Consumable] request to open/create a window.
-     */
-    var openWindowRequest: Consumable<WindowRequest> by Delegates.vetoable(Consumable.empty()) { _, _, request ->
-        val consumers = wrapConsumers<WindowRequest> { onOpenWindowRequested(this@Session, it) }
-        !request.consumeBy(consumers)
-    }
-
-    /**
-     * [Consumable] request to close a window.
-     */
-    var closeWindowRequest: Consumable<WindowRequest> by Delegates.vetoable(Consumable.empty()) { _, _, request ->
-        val consumers = wrapConsumers<WindowRequest> { onCloseWindowRequested(this@Session, it) }
-        !request.consumeBy(consumers)
     }
 
     /**

@@ -9,6 +9,7 @@ import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.browser.state.state.content.FindResultState
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.prompt.PromptRequest
+import mozilla.components.concept.engine.window.WindowRequest
 
 /**
  * Value type that represents the state of the content within a [SessionState].
@@ -29,6 +30,7 @@ import mozilla.components.concept.engine.prompt.PromptRequest
  * @property hitResult the target of the latest long click operation.
  * @property promptRequest the last received [PromptRequest].
  * @property findResults the list of results of the latest "find in page" operation.
+ * @property windowRequest the last received [WindowRequest].
  */
 data class ContentState(
     val url: String,
@@ -43,5 +45,6 @@ data class ContentState(
     val download: DownloadState? = null,
     val hitResult: HitResult? = null,
     val promptRequest: PromptRequest? = null,
-    val findResults: List<FindResultState> = emptyList()
+    val findResults: List<FindResultState> = emptyList(),
+    val windowRequest: WindowRequest? = null
 )

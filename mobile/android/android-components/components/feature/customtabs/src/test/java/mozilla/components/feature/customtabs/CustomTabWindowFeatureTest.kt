@@ -7,14 +7,19 @@ package mozilla.components.feature.customtabs
 import android.content.Context
 import android.graphics.Color
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import mozilla.components.browser.session.Session
-import mozilla.components.browser.session.SessionManager
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.test.TestCoroutineDispatcher
+import kotlinx.coroutines.test.setMain
+import mozilla.components.browser.state.action.ContentAction
+import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.CustomTabActionButtonConfig
 import mozilla.components.browser.state.state.CustomTabConfig
 import mozilla.components.browser.state.state.CustomTabMenuItem
-import mozilla.components.concept.engine.Engine
+import mozilla.components.browser.state.state.createCustomTab
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.window.WindowRequest
 import mozilla.components.support.test.any
+import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
@@ -22,53 +27,48 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.never
+import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 
 @RunWith(AndroidJUnit4::class)
 class CustomTabWindowFeatureTest {
 
+    private val testDispatcher = TestCoroutineDispatcher()
+
+    private lateinit var store: BrowserStore
     private val sessionId = "session-uuid"
     private lateinit var context: Context
-    private lateinit var engine: Engine
-    private lateinit var sessionManager: SessionManager
-    private lateinit var session: Session
 
     @Before
     fun setup() {
         context = mock()
-        engine = mock()
-        sessionManager = mock()
-        session = mock()
+
+        Dispatchers.setMain(testDispatcher)
+        store = spy(BrowserStore(BrowserState(
+            customTabs = listOf(
+                createCustomTab(id = sessionId, url = "https://www.mozilla.org")
+            )
+        )))
 
         whenever(context.packageName).thenReturn("org.mozilla.firefox")
     }
 
     @Test
-    fun `start registers window observer`() {
-        whenever(sessionManager.findSessionById(sessionId)).thenReturn(session)
-
-        val feature = CustomTabWindowFeature(context, sessionManager, sessionId)
+    fun `handles request to open window`() {
+        val feature = CustomTabWindowFeature(context, store, sessionId)
         feature.start()
-        verify(session).register(feature.windowObserver)
-    }
 
-    @Test
-    fun `observer handles open window request`() {
-        whenever(sessionManager.findSessionById(sessionId)).thenReturn(session)
-
-        val session = Session("https://www.mozilla.org")
-        val request = mock<WindowRequest>()
-        whenever(request.url).thenReturn("about:blank")
-
-        val feature = CustomTabWindowFeature(context, sessionManager, sessionId)
-        feature.windowObserver.onOpenWindowRequested(session, request)
-
+        val windowRequest: WindowRequest = mock()
+        whenever(windowRequest.type).thenReturn(WindowRequest.Type.OPEN)
+        whenever(windowRequest.url).thenReturn("https://www.firefox.com")
+        store.dispatch(ContentAction.UpdateWindowRequestAction(sessionId, windowRequest)).joinBlocking()
         verify(context).startActivity(any(), any())
+        verify(store).dispatch(ContentAction.ConsumeWindowRequestAction(sessionId))
     }
 
     @Test
     fun `creates intent based on default custom tab config`() {
-        val feature = CustomTabWindowFeature(context, sessionManager, sessionId)
+        val feature = CustomTabWindowFeature(context, store, sessionId)
         val config = CustomTabConfig()
         val intent = feature.configToIntent(config)
 
@@ -79,7 +79,7 @@ class CustomTabWindowFeatureTest {
 
     @Test
     fun `creates intent based on custom tab config`() {
-        val feature = CustomTabWindowFeature(context, sessionManager, sessionId)
+        val feature = CustomTabWindowFeature(context, store, sessionId)
         val config = CustomTabConfig(
             toolbarColor = Color.RED,
             navigationBarColor = Color.BLUE,
@@ -96,7 +96,7 @@ class CustomTabWindowFeatureTest {
 
     @Test
     fun `creates intent with same menu items`() {
-        val feature = CustomTabWindowFeature(context, sessionManager, sessionId)
+        val feature = CustomTabWindowFeature(context, store, sessionId)
         val config = CustomTabConfig(
             actionButtonConfig = CustomTabActionButtonConfig(
                 description = "button",
@@ -117,23 +117,17 @@ class CustomTabWindowFeatureTest {
     }
 
     @Test
-    fun `stop unregisters window observer`() {
-        whenever(sessionManager.findSessionById(sessionId)).thenReturn(session)
-
-        val feature = CustomTabWindowFeature(context, sessionManager, sessionId)
-        feature.stop()
-        verify(session).unregister(feature.windowObserver)
-    }
-
-    @Test
-    fun `start and stop are no-op when session is null`() {
-        whenever(sessionManager.findSessionById(sessionId)).thenReturn(null)
-
-        val feature = CustomTabWindowFeature(context, sessionManager, sessionId)
+    fun `handles no requests when stopped`() {
+        val feature = CustomTabWindowFeature(context, store, sessionId)
         feature.start()
         feature.stop()
-        verify(session, never()).register(feature.windowObserver)
-        verify(session, never()).unregister(feature.windowObserver)
+
+        val windowRequest: WindowRequest = mock()
+        whenever(windowRequest.type).thenReturn(WindowRequest.Type.OPEN)
+        whenever(windowRequest.url).thenReturn("https://www.firefox.com")
+        store.dispatch(ContentAction.UpdateWindowRequestAction(sessionId, windowRequest)).joinBlocking()
+        verify(context, never()).startActivity(any(), any())
+        verify(store, never()).dispatch(ContentAction.ConsumeWindowRequestAction(sessionId))
     }
 
     private fun assertEqualConfigs(expected: CustomTabConfig, actual: CustomTabConfig) {

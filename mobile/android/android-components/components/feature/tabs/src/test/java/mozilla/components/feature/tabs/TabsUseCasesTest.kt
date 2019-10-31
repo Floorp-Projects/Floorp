@@ -48,6 +48,18 @@ class TabsUseCasesTest {
     }
 
     @Test
+    fun `RemoveTabUseCase - session can be removed by ID`() {
+        val sessionManager = spy(SessionManager(mock()))
+        val useCases = TabsUseCases(sessionManager)
+
+        val session = Session(id = "test", initialUrl = "http://mozilla.org")
+        sessionManager.remove(session)
+        useCases.removeTab(session.id)
+
+        verify(sessionManager).remove(session)
+    }
+
+    @Test
     fun `AddNewTabUseCase - session will be added to session manager`() {
         val sessionManager = spy(SessionManager(mock()))
         val engineSession: EngineSession = mock()
@@ -129,6 +141,16 @@ class TabsUseCasesTest {
     }
 
     @Test
+    fun `AddNewTabUseCase uses provided engine session`() {
+        val sessionManager = spy(SessionManager(mock()))
+        val engineSession: EngineSession = mock()
+
+        val useCases = TabsUseCases(sessionManager)
+        useCases.addTab.invoke("https://www.mozilla.org", engineSession = engineSession, startLoading = true)
+        verify(engineSession).loadUrl("https://www.mozilla.org", null, LoadUrlFlags.none())
+    }
+
+    @Test
     fun `AddNewPrivateTabUseCase will not load URL if flag is set to false`() {
         val sessionManager = spy(SessionManager(mock()))
         val engineSession: EngineSession = mock()
@@ -167,6 +189,16 @@ class TabsUseCasesTest {
         val useCases = TabsUseCases(sessionManager)
         useCases.addPrivateTab.invoke("https://www.mozilla.org", parentId = "parent", startLoading = true)
         verify(engineSession).loadUrl("https://www.mozilla.org", parentEngineSession, LoadUrlFlags.none())
+    }
+
+    @Test
+    fun `AddNewPrivateTabUseCase uses provided engine session`() {
+        val sessionManager = spy(SessionManager(mock()))
+        val engineSession: EngineSession = mock()
+
+        val useCases = TabsUseCases(sessionManager)
+        useCases.addPrivateTab.invoke("https://www.mozilla.org", engineSession = engineSession, startLoading = true)
+        verify(engineSession).loadUrl("https://www.mozilla.org", null, LoadUrlFlags.none())
     }
 
     @Test

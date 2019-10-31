@@ -12,6 +12,17 @@ import mozilla.components.concept.engine.EngineSession
 interface WindowRequest {
 
     /**
+     * Describes the different types of window requests.
+     */
+    enum class Type { OPEN, CLOSE }
+
+    /**
+     * The [Type] of this window request, indicating whether to open or
+     * close a window.
+     */
+    val type: Type
+
+    /**
      * The URL which should be opened in a new window. May be
      * empty if the request was created from JavaScript (using
      * window.open()).

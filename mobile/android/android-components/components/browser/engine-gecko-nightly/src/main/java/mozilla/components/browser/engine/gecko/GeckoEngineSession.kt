@@ -25,6 +25,7 @@ import mozilla.components.concept.engine.history.HistoryTrackingDelegate
 import mozilla.components.concept.engine.manifest.WebAppManifestParser
 import mozilla.components.concept.engine.request.RequestInterceptor
 import mozilla.components.concept.engine.request.RequestInterceptor.InterceptionResponse
+import mozilla.components.concept.engine.window.WindowRequest
 import mozilla.components.concept.storage.PageVisit
 import mozilla.components.concept.storage.RedirectSource
 import mozilla.components.concept.storage.VisitType
@@ -396,7 +397,7 @@ class GeckoEngineSession(
             val newEngineSession = GeckoEngineSession(runtime, privateMode, defaultSettings, openGeckoSession = false)
             notifyObservers {
                 MainScope().launch {
-                    onOpenWindowRequest(GeckoWindowRequest(uri, newEngineSession))
+                    onWindowRequest(GeckoWindowRequest(uri, newEngineSession))
                 }
             }
             return GeckoResult.fromValue(newEngineSession.geckoSession)
@@ -607,7 +608,15 @@ class GeckoEngineSession(
             }
         }
 
-        override fun onCloseRequest(session: GeckoSession) = Unit
+        override fun onCloseRequest(session: GeckoSession) {
+            notifyObservers {
+                onWindowRequest(GeckoWindowRequest(
+                        engineSession = this@GeckoEngineSession,
+                        type = WindowRequest.Type.CLOSE
+                    )
+                )
+            }
+        }
 
         override fun onTitleChange(session: GeckoSession, title: String?) {
             if (!privateMode) {

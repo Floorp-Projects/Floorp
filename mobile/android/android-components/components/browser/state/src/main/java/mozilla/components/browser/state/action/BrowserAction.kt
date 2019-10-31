@@ -21,6 +21,7 @@ import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.content.blocking.Tracker
 import mozilla.components.concept.engine.prompt.PromptRequest
+import mozilla.components.concept.engine.window.WindowRequest
 import mozilla.components.lib.state.Action
 
 typealias WebExtensionBrowserAction = mozilla.components.concept.engine.webextension.BrowserAction
@@ -215,6 +216,16 @@ sealed class ContentAction : BrowserAction() {
      * Removes all [FindResultState]s of the [ContentState] with the given [sessionId].
      */
     data class ClearFindResultsAction(val sessionId: String) : ContentAction()
+
+    /**
+     * Updates the [WindowRequest] of the [ContentState] with the given [sessionId].
+     */
+    data class UpdateWindowRequestAction(val sessionId: String, val windowRequest: WindowRequest) : ContentAction()
+
+    /**
+     * Removes the [WindowRequest] of the [ContentState] with the given [sessionId].
+     */
+    data class ConsumeWindowRequestAction(val sessionId: String) : ContentAction()
 }
 
 /**
