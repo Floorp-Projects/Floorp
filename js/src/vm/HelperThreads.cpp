@@ -594,7 +594,9 @@ void ScriptParseTask<Unit>::parse(JSContext* cx) {
   {
     ScopeKind scopeKind =
         options.nonSyntacticScope ? ScopeKind::NonSyntactic : ScopeKind::Global;
-    frontend::GlobalScriptInfo info(cx, options, scopeKind);
+    LifoAllocScope allocScope(&cx->tempLifoAlloc());
+    frontend::ParseInfo parseInfo(cx, allocScope);
+    frontend::GlobalScriptInfo info(cx, parseInfo, options, scopeKind);
     script = frontend::CompileGlobalScript(
         info, data,
         /* sourceObjectOut = */ &sourceObject.get());

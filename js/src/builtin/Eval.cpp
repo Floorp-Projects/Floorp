@@ -9,7 +9,9 @@
 #include "mozilla/HashFunctions.h"
 #include "mozilla/Range.h"
 
+#include "ds/LifoAlloc.h"
 #include "frontend/BytecodeCompilation.h"
+#include "frontend/ParseInfo.h"
 #include "gc/HashUtil.h"
 #include "js/SourceText.h"
 #include "js/StableStringChars.h"
@@ -322,7 +324,10 @@ static bool EvalKernel(JSContext* cx, HandleValue v, EvalType evalType,
       return false;
     }
 
-    frontend::EvalScriptInfo info(cx, options, env, enclosing);
+    LifoAllocScope allocScope(&cx->tempLifoAlloc());
+    frontend::ParseInfo parseInfo(cx, allocScope);
+
+    frontend::EvalScriptInfo info(cx, parseInfo, options, env, enclosing);
     RootedScript compiled(cx, frontend::CompileEvalScript(info, srcBuf));
     if (!compiled) {
       return false;
@@ -414,7 +419,10 @@ bool js::DirectEvalStringFromIon(JSContext* cx, HandleObject env,
       return false;
     }
 
-    frontend::EvalScriptInfo info(cx, options, env, enclosing);
+    LifoAllocScope allocScope(&cx->tempLifoAlloc());
+    frontend::ParseInfo parseInfo(cx, allocScope);
+
+    frontend::EvalScriptInfo info(cx, parseInfo, options, env, enclosing);
     JSScript* compiled = frontend::CompileEvalScript(info, srcBuf);
     if (!compiled) {
       return false;
