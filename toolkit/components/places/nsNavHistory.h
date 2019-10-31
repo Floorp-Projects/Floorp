@@ -49,12 +49,6 @@
 // If you typed it more than this time ago, it's not recent.
 #define RECENT_EVENT_THRESHOLD PRTime((int64_t)15 * 60 * PR_USEC_PER_SEC)
 
-#ifdef MOZ_XUL
-// Fired after autocomplete feedback has been updated.
-#  define TOPIC_AUTOCOMPLETE_FEEDBACK_UPDATED \
-    "places-autocomplete-feedback-updated"
-#endif
-
 // The preference we watch to know when the mobile bookmarks folder is filled by
 // sync.
 #define MOBILE_BOOKMARKS_PREF "browser.bookmarks.showMobileBookmarks"
@@ -507,11 +501,6 @@ class nsNavHistory final : public nsSupportsWeakReference,
 
   bool CheckIsRecentEvent(RecentEventHash* hashTable, const nsACString& url);
   void ExpireNonrecentEvents(RecentEventHash* hashTable);
-
-#ifdef MOZ_XUL
-  nsresult AutoCompleteFeedback(int32_t aIndex,
-                                nsIAutoCompleteController* aController);
-#endif
 
   // Whether history is enabled or not.
   // Will mimic value of the places.history.enabled preference.
