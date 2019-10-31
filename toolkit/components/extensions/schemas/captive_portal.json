@@ -17,6 +17,12 @@
     "namespace": "captivePortal",
     "description": "This API provides the ability detect the captive portal state of the users connection.",
     "permissions": ["captivePortal"],
+    "properties": {
+      "canonicalURL": {
+        "$ref": "types.Setting",
+        "description": "Return the canonical captive-portal detection URL. Read-only."
+      }
+    },
     "functions": [
       {
         "name": "getState",
