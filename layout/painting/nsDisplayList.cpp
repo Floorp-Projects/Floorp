@@ -8196,7 +8196,7 @@ nsDisplayTransform::FrameTransformProperties::FrameTransformProperties(
       mRotate(aFrame->StyleDisplay()->mRotate),
       mScale(aFrame->StyleDisplay()->mScale),
       mTransform(aFrame->StyleDisplay()->mTransform),
-      mMotion(nsLayoutUtils::ResolveMotionPath(aFrame)),
+      mMotion(MotionPathUtils::ResolveMotionPath(aFrame)),
       mToTransformOrigin(GetDeltaToTransformOrigin(aFrame, aAppUnitsPerPixel,
                                                    aBoundsOverride)) {}
 
