@@ -893,7 +893,7 @@ class Shape : public gc::TenuredCell {
 
  protected:
   GCPtrBaseShape base_;
-  GCPtrId propid_;
+  const GCPtrId propid_;
 
   // Flags that are not modified after the Shape is created. Off-thread Ion
   // compilation can access the immutableFlags word, so we don't want any
@@ -1273,7 +1273,7 @@ class Shape : public gc::TenuredCell {
     MOZ_ASSERT(!JSID_IS_VOID(propid_));
     return propid_;
   }
-  GCPtrId& propidRef() {
+  const GCPtrId& propidRef() {
     MOZ_ASSERT(!JSID_IS_VOID(propid_));
     return propid_;
   }
