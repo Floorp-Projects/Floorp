@@ -765,6 +765,20 @@ class Element : public FragmentOrElement {
   }
 
   /**
+   * Determine if an attribute has been set to a non-empty string value. If the
+   * attribute is not set at all, this will return false.
+   *
+   * @param aNameSpaceId the namespace id of the attribute (defaults to
+   *                     kNameSpaceID_None in the overload that omits this arg)
+   * @param aAttr the attribute name
+   */
+  inline bool HasNonEmptyAttr(int32_t aNameSpaceID, const nsAtom* aName) const;
+
+  bool HasNonEmptyAttr(const nsAtom* aAttr) const {
+    return HasNonEmptyAttr(kNameSpaceID_None, aAttr);
+  }
+
+  /**
    * Test whether this Element's given attribute has the given value.  If the
    * attribute is not set at all, this will return false.
    *
@@ -1986,6 +2000,15 @@ inline bool Element::HasAttr(int32_t aNameSpaceID, const nsAtom* aName) const {
                "must have a real namespace ID!");
 
   return mAttrs.IndexOfAttr(aName, aNameSpaceID) >= 0;
+}
+
+inline bool Element::HasNonEmptyAttr(int32_t aNameSpaceID,
+                                     const nsAtom* aName) const {
+  MOZ_ASSERT(aNameSpaceID > kNameSpaceID_Unknown, "Must have namespace");
+  MOZ_ASSERT(aName, "Must have attribute name");
+
+  const nsAttrValue* val = mAttrs.GetAttr(aName, aNameSpaceID);
+  return val && !val->IsEmptyString();
 }
 
 inline bool Element::AttrValueIs(int32_t aNameSpaceID, const nsAtom* aName,
