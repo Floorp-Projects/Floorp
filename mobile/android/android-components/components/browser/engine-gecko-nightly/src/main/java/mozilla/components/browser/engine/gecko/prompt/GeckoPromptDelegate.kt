@@ -15,6 +15,7 @@ import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.prompt.PromptRequest.MenuChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.MultipleChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.SingleChoice
+import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.kotlin.toDate
 import org.mozilla.geckoview.AllowOrDeny
@@ -41,6 +42,7 @@ typealias GECKO_AUTH_LEVEL = PromptDelegate.AuthPrompt.AuthOptions.Level
 typealias GECKO_PROMPT_FILE_TYPE = PromptDelegate.FilePrompt.Type
 typealias GECKO_PROMPT_CHOICE_TYPE = PromptDelegate.ChoicePrompt.Type
 typealias GECKO_PROMPT_FILE_CAPTURE = PromptDelegate.FilePrompt.Capture
+typealias GECKO_PROMPT_SHARE_RESULT = PromptDelegate.SharePrompt.Result
 typealias AC_AUTH_LEVEL = PromptRequest.Authentication.Level
 typealias AC_AUTH_METHOD = PromptRequest.Authentication.Method
 typealias AC_FILE_FACING_MODE = PromptRequest.File.FacingMode
@@ -295,6 +297,32 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
         geckoEngineSession.notifyObservers {
             onPromptRequest(
                 PromptRequest.Popup(prompt.targetUri ?: "", onAllow, onDeny)
+            )
+        }
+        return geckoResult
+    }
+
+    override fun onSharePrompt(
+        session: GeckoSession,
+        prompt: PromptDelegate.SharePrompt
+    ): GeckoResult<PromptResponse> {
+        val geckoResult = GeckoResult<PromptResponse>()
+        val onSuccess = { geckoResult.complete(prompt.confirm(GECKO_PROMPT_SHARE_RESULT.SUCCESS)) }
+        val onFailure = { geckoResult.complete(prompt.confirm(GECKO_PROMPT_SHARE_RESULT.FAILURE)) }
+        val onDismiss = { geckoResult.complete(prompt.dismiss()) }
+
+        geckoEngineSession.notifyObservers {
+            onPromptRequest(
+                PromptRequest.Share(
+                    ShareData(
+                        title = prompt.title,
+                        text = prompt.text,
+                        url = prompt.uri
+                    ),
+                    onSuccess,
+                    onFailure,
+                    onDismiss
+                )
             )
         }
         return geckoResult

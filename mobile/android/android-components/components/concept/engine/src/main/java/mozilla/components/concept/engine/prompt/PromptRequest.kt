@@ -233,6 +233,21 @@ sealed class PromptRequest {
         override val onDismiss: () -> Unit
     ) : PromptRequest(), Dismissible
 
+    /**
+     * Value type that represents a request to share data.
+     * https://w3c.github.io/web-share/
+     * @property data Share data containing title, text, and url of the request.
+     * @property onSuccess Callback to notify that the user hared with another app successfully.
+     * @property onFailure Callback to notify that the user attempted to share with another app, but it failed.
+     * @property onDismiss Callback to notify that the user aborted the share.
+     */
+    data class Share(
+        val data: ShareData,
+        val onSuccess: () -> Unit,
+        val onFailure: () -> Unit,
+        override val onDismiss: () -> Unit
+    ) : PromptRequest(), Dismissible
+
     interface Dismissible {
         val onDismiss: () -> Unit
     }
