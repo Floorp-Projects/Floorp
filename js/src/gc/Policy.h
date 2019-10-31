@@ -76,6 +76,17 @@ struct GCPolicy<js::HeapPtr<T>> {
 };
 
 template <typename T>
+struct GCPolicy<js::PreBarriered<T>> {
+  static void trace(JSTracer* trc, js::PreBarriered<T>* thingp,
+                    const char* name) {
+    js::TraceNullableEdge(trc, thingp, name);
+  }
+  static bool needsSweep(js::PreBarriered<T>* thingp) {
+    return js::gc::IsAboutToBeFinalized(thingp);
+  }
+};
+
+template <typename T>
 struct GCPolicy<js::WeakHeapPtr<T>> {
   static void trace(JSTracer* trc, js::WeakHeapPtr<T>* thingp,
                     const char* name) {
