@@ -109,7 +109,7 @@ inline bool IsAboutToBeFinalizedUnbarriered(T* thingp) {
 }
 
 template <typename T>
-inline bool IsAboutToBeFinalized(WriteBarriered<T>* thingp) {
+inline bool IsAboutToBeFinalized(const WriteBarriered<T>* thingp) {
   return IsAboutToBeFinalizedInternal(
       ConvertToBase(thingp->unsafeUnbarrieredForTracing()));
 }
