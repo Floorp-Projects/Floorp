@@ -582,7 +582,7 @@ tls13_ClientSetupESNI(sslSocket *ss)
     SECStatus rv;
     TLS13KeyShareEntry *share = NULL;
     const sslNamedGroupDef *group = NULL;
-    PRTime now = PR_Now() / PR_USEC_PER_SEC;
+    PRTime now = ssl_Time(ss) / PR_USEC_PER_SEC;
 
     PORT_Assert(!ss->xtnData.esniPrivateKey);
 

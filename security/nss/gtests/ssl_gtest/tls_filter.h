@@ -441,6 +441,19 @@ class TlsExtensionDropper : public TlsExtensionFilter {
   uint16_t extension_;
 };
 
+class TlsHandshakeDropper : public TlsHandshakeFilter {
+ public:
+  TlsHandshakeDropper(const std::shared_ptr<TlsAgent>& a)
+      : TlsHandshakeFilter(a) {}
+
+ protected:
+  PacketFilter::Action FilterHandshake(const HandshakeHeader& header,
+                                       const DataBuffer& input,
+                                       DataBuffer* output) override {
+    return DROP;
+  }
+};
+
 class TlsExtensionInjector : public TlsHandshakeFilter {
  public:
   TlsExtensionInjector(const std::shared_ptr<TlsAgent>& a, uint16_t ext,

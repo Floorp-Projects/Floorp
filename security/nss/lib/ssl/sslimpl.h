@@ -1678,6 +1678,7 @@ SECStatus ssl3_SendEmptyCertificate(sslSocket *ss);
 void ssl3_CleanupPeerCerts(sslSocket *ss);
 SECStatus ssl3_SendCertificateStatus(sslSocket *ss);
 SECStatus ssl_SetAuthKeyBits(sslSocket *ss, const SECKEYPublicKey *pubKey);
+SECStatus ssl3_HandleServerSpki(sslSocket *ss);
 SECStatus ssl3_AuthCertificate(sslSocket *ss);
 SECStatus ssl_ReadCertificateStatus(sslSocket *ss, PRUint8 *b,
                                     PRUint32 length);
