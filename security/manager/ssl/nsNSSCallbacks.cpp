@@ -1138,23 +1138,16 @@ static void RebuildVerifiedCertificateInformation(PRFileDesc* fd,
 nsresult IsCertificateDistrustImminent(
     const nsTArray<RefPtr<nsIX509Cert>>& aCertArray,
     /* out */ bool& isDistrusted) {
-  nsCOMPtr<nsIX509CertList> tmpCertList;
-  nsresult rv = TransportSecurityInfo::ConvertCertArrayToCertList(
-      aCertArray, getter_AddRefs(tmpCertList));
-
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  if (!tmpCertList) {
-    return NS_ERROR_INVALID_POINTER;
+  if (aCertArray.IsEmpty()) {
+    return NS_ERROR_INVALID_ARG;
   }
 
   nsCOMPtr<nsIX509Cert> rootCert;
-  nsCOMPtr<nsIX509CertList> intCerts;
+  nsTArray<RefPtr<nsIX509Cert>> intCerts;
   nsCOMPtr<nsIX509Cert> eeCert;
 
-  RefPtr<nsNSSCertList> certList = tmpCertList->GetCertList();
-  rv = certList->SegmentCertificateChain(rootCert, intCerts, eeCert);
+  nsresult rv = nsNSSCertificate::SegmentCertificateChain(aCertArray, rootCert,
+                                                          intCerts, eeCert);
   if (NS_FAILED(rv)) {
     return rv;
   }

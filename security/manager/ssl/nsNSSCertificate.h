@@ -49,6 +49,28 @@ class nsNSSCertificate final : public nsIX509Cert,
   static nsresult GetDbKey(const mozilla::UniqueCERTCertificate& cert,
                            nsACString& aDbKey);
 
+  // Split a certificate chain into the root, intermediates (if any), and end
+  // entity. This method does so blindly, assuming that the current list object
+  // is ordered [end entity, intermediates..., root]. If that isn't true, this
+  // method will return the certificates at the two ends without regard to the
+  // actual chain of trust. Callers are encouraged to check, if there's any
+  // doubt.
+  // Will return error if used on self-signed or empty chains.
+  // This method requires that all arguments be empty, notably the list
+  // `aIntermediates` must be empty.
+  static nsresult SegmentCertificateChain(
+      /* int */ const nsTArray<RefPtr<nsIX509Cert>>& aCertList,
+      /* out */ nsCOMPtr<nsIX509Cert>& aRoot,
+      /* out */ nsTArray<RefPtr<nsIX509Cert>>& aIntermediates,
+      /* out */ nsCOMPtr<nsIX509Cert>& aEndEntity);
+
+  // Obtain the root certificate of a certificate chain. This method does so
+  // blindly, as SegmentCertificateChain; the same restrictions apply. On an
+  // empty list, leaves aRoot empty and returns a failure.
+  static nsresult GetRootCertificate(
+      const nsTArray<RefPtr<nsIX509Cert>>& aCertList,
+      /* out */ nsCOMPtr<nsIX509Cert>& aRoot);
+
  private:
   virtual ~nsNSSCertificate();
 
