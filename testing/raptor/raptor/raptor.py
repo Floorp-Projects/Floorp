@@ -834,8 +834,10 @@ class RaptorDesktop(Raptor):
                 shutil.make_archive(power_data_path, 'zip', power_data_path)
                 shutil.rmtree(power_data_path)
 
-            self.control_server.submit_supporting_data(perfherder_data['utilization'])
-            self.control_server.submit_supporting_data(perfherder_data['power-usage'])
+            for data_type in perfherder_data:
+                self.control_server.submit_supporting_data(
+                    perfherder_data[data_type]
+                )
 
     def __run_test_cold(self, test, timeout):
         '''
