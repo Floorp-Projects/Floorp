@@ -406,6 +406,7 @@ cbindgen-types = [
     { gecko = "StyleGenericOffsetPath", servo = "values::generics::motion::OffsetPath" },
     { gecko = "StyleOffsetRotate", servo = "values::computed::motion::OffsetRotate" },
     { gecko = "StylePathCommand", servo = "values::specified::svg_path::PathCommand" },
+    { gecko = "StyleRayFunction", servo = "values::generics::motion::RayFunction" },
     { gecko = "StyleUnicodeRange", servo = "cssparser::UnicodeRange" },
     { gecko = "StyleOverflowWrap", servo = "values::computed::OverflowWrap" },
     { gecko = "StyleWordBreak", servo = "values::computed::WordBreak" },
