@@ -12,7 +12,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Casting.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/Range.h"
+#include "mozilla/Span.h"
 #include "mozilla/TextUtils.h"
 
 #include <algorithm>
@@ -79,7 +79,7 @@ struct IndexAndLength {
   IndexAndLength(size_t index, size_t length) : index(index), length(length){};
 
   template <typename T>
-  mozilla::Range<const T> rangeOf(const T* ptr) const {
+  mozilla::Span<const T> spanOf(const T* ptr) const {
     return {ptr + index, length};
   }
 };
@@ -835,18 +835,18 @@ static BaseNamePartsResult BaseNameParts(const CharT* baseName, size_t length) {
   }
 
   IndexAndLength language{0, languageLength};
-  MOZ_ASSERT(intl::IsStructurallyValidLanguageTag(language.rangeOf(baseName)));
+  MOZ_ASSERT(intl::IsStructurallyValidLanguageTag(language.spanOf(baseName)));
 
   mozilla::Maybe<IndexAndLength> script{};
   if (scriptIndex) {
     script.emplace(scriptIndex, ScriptLength);
-    MOZ_ASSERT(intl::IsStructurallyValidScriptTag(script->rangeOf(baseName)));
+    MOZ_ASSERT(intl::IsStructurallyValidScriptTag(script->spanOf(baseName)));
   }
 
   mozilla::Maybe<IndexAndLength> region{};
   if (regionIndex) {
     region.emplace(regionIndex, regionLength);
-    MOZ_ASSERT(intl::IsStructurallyValidRegionTag(region->rangeOf(baseName)));
+    MOZ_ASSERT(intl::IsStructurallyValidRegionTag(region->spanOf(baseName)));
   }
 
   return {language, script, region};
