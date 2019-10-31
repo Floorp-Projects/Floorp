@@ -7,10 +7,11 @@
 #define MOZILLA_AUDIOMIXER_H_
 
 #include "AudioSampleFormat.h"
-#include "nsTArray.h"
-#include "mozilla/PodOperations.h"
-#include "mozilla/LinkedList.h"
 #include "AudioStream.h"
+#include "nsTArray.h"
+#include "mozilla/LinkedList.h"
+#include "mozilla/NotNull.h"
+#include "mozilla/PodOperations.h"
 
 namespace mozilla {
 
@@ -54,6 +55,7 @@ class AudioMixer {
     for (MixerCallback* cb = mCallbacks.getFirst(); cb != nullptr;
          cb = cb->getNext()) {
       MixerCallbackReceiver* receiver = cb->mReceiver;
+      MOZ_ASSERT(receiver);
       receiver->MixerCallback(mMixedAudio.Elements(),
                               AudioSampleTypeToFormat<AudioDataValue>::Format,
                               mChannels, mFrames, mSampleRate);
@@ -86,7 +88,7 @@ class AudioMixer {
     }
   }
 
-  void AddCallback(MixerCallbackReceiver* aReceiver) {
+  void AddCallback(NotNull<MixerCallbackReceiver*> aReceiver) {
     mCallbacks.insertBack(new MixerCallback(aReceiver));
   }
 
@@ -122,9 +124,9 @@ class AudioMixer {
 
   class MixerCallback : public LinkedListElement<MixerCallback> {
    public:
-    explicit MixerCallback(MixerCallbackReceiver* aReceiver)
+    explicit MixerCallback(NotNull<MixerCallbackReceiver*> aReceiver)
         : mReceiver(aReceiver) {}
-    MixerCallbackReceiver* mReceiver;
+    NotNull<MixerCallbackReceiver*> mReceiver;
   };
 
   /* Function that is called when the mixing is done. */

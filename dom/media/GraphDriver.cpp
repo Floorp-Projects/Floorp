@@ -727,7 +727,7 @@ void AudioCallbackDriver::AddMixerCallback() {
   MOZ_ASSERT(OnGraphThread());
 
   if (!mAddedMixer) {
-    mGraphImpl->mMixer.AddCallback(this);
+    mGraphImpl->mMixer.AddCallback(WrapNotNull(this));
     mAddedMixer = true;
   }
 }
@@ -801,7 +801,7 @@ long AudioCallbackDriver::DataCallback(const AudioDataValue* aInputBuffer,
 
   // Don't add the callback until we're inited and ready
   if (!mAddedMixer) {
-    GraphImpl()->mMixer.AddCallback(this);
+    GraphImpl()->mMixer.AddCallback(WrapNotNull(this));
     mAddedMixer = true;
   }
 
