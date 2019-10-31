@@ -688,7 +688,7 @@
 
 .tabbrowser-arrowscrollbox::part(scrollbutton-up),
 .tabbrowser-arrowscrollbox::part(scrollbutton-down) {
-  list-style-image: url(chrome://browser/skin/arrow-left.svg) !important;
+  list-style-image: url(chrome://global/skin/icons/arrow-left.svg) !important;
   -moz-context-properties: fill, fill-opacity;
   fill: var(--lwt-toolbarbutton-icon-fill, currentColor);
   fill-opacity: var(--toolbarbutton-icon-fill-opacity);

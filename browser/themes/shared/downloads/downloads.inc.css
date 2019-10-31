@@ -218,11 +218,11 @@
 }
 
 .downloadIconSubviewArrow > .button-box > .button-icon {
-  list-style-image: url("chrome://browser/skin/panel-icon-arrow-right.svg");
+  list-style-image: url("chrome://global/skin/icons/arrow-left.svg");
 }
 
-.downloadIconSubviewArrow > .button-box > .button-icon:-moz-locale-dir(rtl) {
-  list-style-image: url("chrome://browser/skin/panel-icon-arrow-left.svg");
+.downloadIconSubviewArrow > .button-box > .button-icon:-moz-locale-dir(ltr) {
+  transform: scaleX(-1);
 }
 
 /*** Blocked subview ***/

@@ -1745,7 +1745,7 @@ toolbarpaletteitem[place="menu-panel"] > .subviewbutton-nav::after {
 .panel-header > .subviewbutton-back {
   -moz-context-properties: fill;
   fill: var(--arrowpanel-color);
-  list-style-image: url(chrome://browser/skin/arrow-left.svg);
+  list-style-image: url(chrome://global/skin/icons/arrow-left.svg);
   padding: 8px;
 }
 

@@ -190,7 +190,7 @@
   width: 38px;
   border-style: none;
   -moz-appearance: none;
-  background: url("chrome://browser/skin/arrow-left.svg") center no-repeat;
+  background: url("chrome://global/skin/icons/arrow-left.svg") center no-repeat;
   background-size: 16px, auto;
   -moz-context-properties: fill, fill-opacity;
   fill: currentColor;

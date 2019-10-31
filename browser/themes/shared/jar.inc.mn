@@ -105,8 +105,6 @@
   skin/classic/browser/tracking-protection-disabled.svg        (../shared/identity-block/tracking-protection-disabled.svg)
   skin/classic/browser/tracking-protection-animation.svg        (../shared/identity-block/tracking-protection-animation.svg)
   skin/classic/browser/tracking-protection-animation-brighttext.svg (../shared/identity-block/tracking-protection-animation-brighttext.svg)
-  skin/classic/browser/panel-icon-arrow-left.svg               (../shared/panel-icon-arrow-left.svg)
-  skin/classic/browser/panel-icon-arrow-right.svg              (../shared/panel-icon-arrow-right.svg)
   skin/classic/browser/panel-icon-cancel.svg                   (../shared/panel-icon-cancel.svg)
 #ifndef XP_MACOSX
   skin/classic/browser/panel-icon-folder.svg                   (../shared/panel-icon-folder.svg)
@@ -158,7 +156,6 @@
   skin/classic/browser/accessibility.svg              (../shared/icons/accessibility.svg)
   skin/classic/browser/accessibility-active.svg       (../shared/icons/accessibility-active.svg)
   skin/classic/browser/add.svg                        (../shared/icons/add.svg)
-  skin/classic/browser/arrow-left.svg                 (../shared/icons/arrow-left.svg)
   skin/classic/browser/back.svg                       (../shared/icons/back.svg)
   skin/classic/browser/back-12.svg                    (../shared/icons/back-12.svg)
   skin/classic/browser/bookmark.svg                   (../shared/icons/bookmark.svg)
