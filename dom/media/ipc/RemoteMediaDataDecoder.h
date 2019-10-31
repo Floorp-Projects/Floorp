@@ -42,16 +42,13 @@ class RemoteMediaDataDecoder
   ConversionRequired NeedsConversion() const override;
 
  private:
-  RemoteMediaDataDecoder(IRemoteDecoderChild* aChild, nsIThread* aManagerThread,
-                         AbstractThread* aAbstractManagerThread);
+  explicit RemoteMediaDataDecoder(IRemoteDecoderChild* aChild);
   ~RemoteMediaDataDecoder();
 
   // Only ever written to from the reader task queue (during the constructor and
   // destructor when we can guarantee no other threads are accessing it). Only
   // read from the manager thread.
   RefPtr<IRemoteDecoderChild> mChild;
-  nsIThread* mManagerThread;
-  AbstractThread* mAbstractManagerThread;
   // Only ever written/modified during decoder initialisation.
   // As such can be accessed from any threads after that.
   nsCString mDescription = NS_LITERAL_CSTRING("RemoteMediaDataDecoder");
