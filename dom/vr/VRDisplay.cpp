@@ -393,7 +393,10 @@ void VRDisplay::UpdateFrameInfo() {
    * If we are not presenting WebVR content, the frame will never end and we
    * should return the latest frame data always.
    */
-  if (mFrameInfo.IsDirty() || !mPresentation) {
+  mFrameInfo.Clear();
+
+  if ( (mFrameInfo.IsDirty() && IsPresenting()) ||
+      mClient->GetDisplayInfo().GetPresentingGroups() == 0) {
     const gfx::VRHMDSensorState& state = mClient->GetSensorState();
     const gfx::VRDisplayInfo& info = mClient->GetDisplayInfo();
     mFrameInfo.Update(info, state, mDepthNear, mDepthFar);
