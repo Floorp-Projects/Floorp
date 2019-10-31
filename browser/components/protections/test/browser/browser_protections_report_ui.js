@@ -177,7 +177,7 @@ add_task(async function test_graph_display() {
     url: "about:protections",
     gBrowser,
   });
-  await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
     const DATA_TYPES = [
       "cryptominer",
       "fingerprinter",
@@ -191,21 +191,21 @@ add_task(async function test_graph_display() {
       return allBars.length;
     }, "The graph has been built");
 
-    is(allBars.length, 7, "7 bars have been found on the graph");
+    Assert.equal(allBars.length, 7, "7 bars have been found on the graph");
 
     // For accessibility, test if the graph is a table
     // and has a correct column count (number of data types + total + day)
-    is(
+    Assert.equal(
       content.document.getElementById("graph").getAttribute("role"),
       "table",
       "Graph is an accessible table"
     );
-    is(
+    Assert.equal(
       content.document.getElementById("graph").getAttribute("aria-colcount"),
       DATA_TYPES.length + 2,
       "Table has the right number of columns"
     );
-    is(
+    Assert.equal(
       content.document.getElementById("graph").getAttribute("aria-labelledby"),
       "graphLegendDescription",
       "Table has an accessible label"
@@ -218,204 +218,211 @@ add_task(async function test_graph_display() {
     // 4 days ago will have no trackers
     // 5 days ago will have no social (when we add social)
     // 6 days ago will be empty
-    is(
+    Assert.equal(
       allBars[6].querySelectorAll(".inner-bar").length,
       DATA_TYPES.length,
       "today has all of the data types shown"
     );
-    is(allBars[6].getAttribute("role"), "row", "Today has the correct role");
-    is(
+    Assert.equal(
+      allBars[6].getAttribute("role"),
+      "row",
+      "Today has the correct role"
+    );
+    Assert.equal(
       allBars[6].getAttribute("aria-owns"),
       "day0 count0 cryptominer0 fingerprinter0 tracker0 cookie0 social0",
       "Row has the columns in the right order"
     );
-    is(
+    Assert.equal(
       allBars[6].querySelector(".tracker-bar").style.height,
       "10%",
       "trackers take 10%"
     );
-    is(
+    Assert.equal(
       allBars[6].querySelector(".tracker-bar").parentNode.getAttribute("role"),
       "cell",
       "Trackers have the correct role"
     );
-    is(
+    Assert.equal(
       allBars[6].querySelector(".tracker-bar").getAttribute("role"),
       "img",
       "Tracker bar has the correct image role"
     );
-    is(
+    Assert.equal(
       allBars[6].querySelector(".tracker-bar").getAttribute("aria-label"),
       "1 tracking content (10%)",
       "Trackers have the correct accessible text"
     );
-    is(
+    Assert.equal(
       allBars[6].querySelector(".cryptominer-bar").style.height,
       "20%",
       "cryptominers take 20%"
     );
-    is(
+    Assert.equal(
       allBars[6]
         .querySelector(".cryptominer-bar")
         .parentNode.getAttribute("role"),
       "cell",
       "Cryptominers have the correct role"
     );
-    is(
+    Assert.equal(
       allBars[6].querySelector(".cryptominer-bar").getAttribute("role"),
       "img",
       "Cryptominer bar has the correct image role"
     );
-    is(
+    Assert.equal(
       allBars[6].querySelector(".cryptominer-bar").getAttribute("aria-label"),
       "2 cryptominers (20%)",
       "Cryptominers have the correct accessible label"
     );
-    is(
+    Assert.equal(
       allBars[6].querySelector(".fingerprinter-bar").style.height,
       "20%",
       "fingerprinters take 20%"
     );
-    is(
+    Assert.equal(
       allBars[6]
         .querySelector(".fingerprinter-bar")
         .parentNode.getAttribute("role"),
       "cell",
       "Fingerprinters have the correct role"
     );
-    is(
+    Assert.equal(
       allBars[6].querySelector(".fingerprinter-bar").getAttribute("role"),
       "img",
       "Fingerprinter bar has the correct image role"
     );
-    is(
+    Assert.equal(
       allBars[6].querySelector(".fingerprinter-bar").getAttribute("aria-label"),
       "2 fingerprinters (20%)",
       "Fingerprinters have the correct accessible label"
     );
-    is(
+    Assert.equal(
       allBars[6].querySelector(".cookie-bar").style.height,
       "40%",
       "cross site tracking cookies take 40%"
     );
-    is(
+    Assert.equal(
       allBars[6].querySelector(".cookie-bar").parentNode.getAttribute("role"),
       "cell",
       "cross site tracking cookies have the correct role"
     );
-    is(
+    Assert.equal(
       allBars[6].querySelector(".cookie-bar").getAttribute("role"),
       "img",
       "Cross site tracking cookies bar has the correct image role"
     );
-    is(
+    Assert.equal(
       allBars[6].querySelector(".cookie-bar").getAttribute("aria-label"),
       "4 cross-site tracking cookies (40%)",
       "cross site tracking cookies have the correct accessible label"
     );
-    is(
+    Assert.equal(
       allBars[6].querySelector(".social-bar").style.height,
       "10%",
       "social trackers take 10%"
     );
-    is(
+    Assert.equal(
       allBars[6].querySelector(".social-bar").parentNode.getAttribute("role"),
       "cell",
       "social trackers have the correct role"
     );
-    is(
+    Assert.equal(
       allBars[6].querySelector(".social-bar").getAttribute("role"),
       "img",
       "social tracker bar has the correct image role"
     );
-    is(
+    Assert.equal(
       allBars[6].querySelector(".social-bar").getAttribute("aria-label"),
       "1 social media tracker (10%)",
       "social trackers have the correct accessible text"
     );
 
-    is(
+    Assert.equal(
       allBars[5].querySelectorAll(".inner-bar").length,
       DATA_TYPES.length - 1,
       "1 day ago is missing one type"
     );
-    ok(
+    Assert.ok(
       !allBars[5].querySelector(".cookie-bar"),
       "there is no cross site tracking cookie section 1 day ago."
     );
-    is(
+    Assert.equal(
       allBars[5].getAttribute("aria-owns"),
       "day1 count1 cryptominer1 fingerprinter1 tracker1 social1",
       "Row has the columns in the right order"
     );
 
-    is(
+    Assert.equal(
       allBars[4].querySelectorAll(".inner-bar").length,
       DATA_TYPES.length - 1,
       "2 days ago is missing one type"
     );
-    ok(
+    Assert.ok(
       !allBars[4].querySelector(".fingerprinter-bar"),
       "there is no fingerprinter section 1 day ago."
     );
-    is(
+    Assert.equal(
       allBars[4].getAttribute("aria-owns"),
       "day2 count2 cryptominer2 tracker2 cookie2 social2",
       "Row has the columns in the right order"
     );
 
-    is(
+    Assert.equal(
       allBars[3].querySelectorAll(".inner-bar").length,
       DATA_TYPES.length - 1,
       "3 days ago is missing one type"
     );
-    ok(
+    Assert.ok(
       !allBars[3].querySelector(".cryptominer-bar"),
       "there is no cryptominer section 1 day ago."
     );
-    is(
+    Assert.equal(
       allBars[3].getAttribute("aria-owns"),
       "day3 count3 fingerprinter3 tracker3 cookie3 social3",
       "Row has the columns in the right order"
     );
 
-    is(
+    Assert.equal(
       allBars[2].querySelectorAll(".inner-bar").length,
       DATA_TYPES.length - 1,
       "4 days ago is missing one type"
     );
-    ok(
+    Assert.ok(
       !allBars[2].querySelector(".tracker-bar"),
       "there is no tracker section 1 day ago."
     );
-    is(
+    Assert.equal(
       allBars[2].getAttribute("aria-owns"),
       "day4 count4 cryptominer4 fingerprinter4 cookie4 social4",
       "Row has the columns in the right order"
     );
 
-    is(
+    Assert.equal(
       allBars[1].querySelectorAll(".inner-bar").length,
       DATA_TYPES.length - 1,
       "5 days ago is missing one type"
     );
-    ok(
+    Assert.ok(
       !allBars[1].querySelector(".social-bar"),
       "there is no social section 1 day ago."
     );
-    is(
+    Assert.equal(
       allBars[1].getAttribute("aria-owns"),
       "day5 count5 cryptominer5 fingerprinter5 tracker5 cookie5",
       "Row has the columns in the right order"
     );
 
-    is(
+    Assert.equal(
       allBars[0].querySelectorAll(".inner-bar").length,
       0,
       "6 days ago has no content"
     );
-    ok(allBars[0].classList.contains("empty"), "6 days ago is an empty bar");
-    is(
+    Assert.ok(
+      allBars[0].classList.contains("empty"),
+      "6 days ago is an empty bar"
+    );
+    Assert.equal(
       allBars[0].getAttribute("aria-owns"),
       "day6 ",
       "Row has the columns in the right order"
@@ -425,36 +432,36 @@ add_task(async function test_graph_display() {
     // values. This helps screen readers know what type of tracker the reported
     // tab number is referencing.
     const socialTab = content.document.getElementById("tab-social");
-    is(
+    Assert.equal(
       socialTab.getAttribute("aria-labelledby"),
       "socialLabel socialTitle",
       "aria-labelledby attribute is socialLabel socialTitle"
     );
-    is(
+    Assert.equal(
       socialTab.getAttribute("aria-describedby"),
       "socialContent",
       "aria-describedby attribute is socialContent"
     );
 
     const cookieTab = content.document.getElementById("tab-cookie");
-    is(
+    Assert.equal(
       cookieTab.getAttribute("aria-labelledby"),
       "cookieLabel cookieTitle",
       "aria-labelledby attribute is cookieLabel cookieTitle"
     );
-    is(
+    Assert.equal(
       cookieTab.getAttribute("aria-describedby"),
       "cookieContent",
       "aria-describedby attribute is cookieContent"
     );
 
     const trackerTab = content.document.getElementById("tab-tracker");
-    is(
+    Assert.equal(
       trackerTab.getAttribute("aria-labelledby"),
       "trackerLabel trackerTitle",
       "aria-labelledby attribute is trackerLabel trackerTitle"
     );
-    is(
+    Assert.equal(
       trackerTab.getAttribute("aria-describedby"),
       "trackerContent",
       "aria-describedby attribute is trackerContent"
@@ -463,24 +470,24 @@ add_task(async function test_graph_display() {
     const fingerprinterTab = content.document.getElementById(
       "tab-fingerprinter"
     );
-    is(
+    Assert.equal(
       fingerprinterTab.getAttribute("aria-labelledby"),
       "fingerprinterLabel fingerprinterTitle",
       "aria-labelledby attribute is fingerprinterLabel fingerprinterTitle"
     );
-    is(
+    Assert.equal(
       fingerprinterTab.getAttribute("aria-describedby"),
       "fingerprinterContent",
       "aria-describedby attribute is fingerprinterContent"
     );
 
     const cryptominerTab = content.document.getElementById("tab-cryptominer");
-    is(
+    Assert.equal(
       cryptominerTab.getAttribute("aria-labelledby"),
       "cryptominerLabel cryptominerTitle",
       "aria-labelledby attribute is cryptominerLabel cryptominerTitle"
     );
-    is(
+    Assert.equal(
       cryptominerTab.getAttribute("aria-describedby"),
       "cryptominerContent",
       "aria-describedby attribute is cryptominerContent"
@@ -504,7 +511,7 @@ add_task(async function test_etp_header_string() {
     url: "about:protections",
     gBrowser,
   });
-  await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
     await ContentTaskUtils.waitForCondition(() => {
       let l10nID = content.document
         .querySelector("#protection-details")
@@ -515,7 +522,7 @@ add_task(async function test_etp_header_string() {
 
   Services.prefs.setStringPref("browser.contentblocking.category", "strict");
   await reloadTab(tab);
-  await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
     await ContentTaskUtils.waitForCondition(() => {
       let l10nID = content.document
         .querySelector("#protection-details")
@@ -526,7 +533,7 @@ add_task(async function test_etp_header_string() {
 
   Services.prefs.setStringPref("browser.contentblocking.category", "custom");
   await reloadTab(tab);
-  await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
     await ContentTaskUtils.waitForCondition(() => {
       let l10nID = content.document
         .querySelector("#protection-details")
@@ -535,6 +542,188 @@ add_task(async function test_etp_header_string() {
     }, "The custom string is showing");
   });
 
+  Services.prefs.setStringPref("browser.contentblocking.category", "standard");
+  BrowserTestUtils.removeTab(tab);
+});
+
+// Ensure that each type of tracker is hidden from the graph if there are no recorded
+// trackers of that type and the user has chosen to not block that type.
+add_task(async function test_etp_custom_settings() {
+  Services.prefs.setStringPref("browser.contentblocking.category", "strict");
+  Services.prefs.setBoolPref(
+    "privacy.socialtracking.block_cookies.enabled",
+    true
+  );
+  // hide cookies from the graph
+  Services.prefs.setIntPref("network.cookie.cookieBehavior", 0);
+  let tab = await BrowserTestUtils.openNewForegroundTab({
+    url: "about:protections",
+    gBrowser,
+  });
+
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+    await ContentTaskUtils.waitForCondition(() => {
+      let legend = content.document.getElementById("legend");
+      return ContentTaskUtils.is_visible(legend);
+    }, "The legend is visible");
+
+    let label = content.document.getElementById("cookieLabel");
+    Assert.ok(ContentTaskUtils.is_hidden(label), "Cookie Label is hidden");
+
+    label = content.document.getElementById("trackerLabel");
+    Assert.ok(ContentTaskUtils.is_visible(label), "Tracker Label is visible");
+    label = content.document.getElementById("socialLabel");
+    Assert.ok(ContentTaskUtils.is_visible(label), "Social Label is visible");
+    label = content.document.getElementById("cryptominerLabel");
+    Assert.ok(
+      ContentTaskUtils.is_visible(label),
+      "Cryptominer Label is visible"
+    );
+    label = content.document.getElementById("fingerprinterLabel");
+    Assert.ok(
+      ContentTaskUtils.is_visible(label),
+      "Fingerprinter Label is visible"
+    );
+  });
+  BrowserTestUtils.removeTab(tab);
+
+  // hide ad trackers from the graph
+  Services.prefs.setBoolPref("privacy.trackingprotection.enabled", false);
+  tab = await BrowserTestUtils.openNewForegroundTab({
+    url: "about:protections",
+    gBrowser,
+  });
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+    await ContentTaskUtils.waitForCondition(() => {
+      let legend = content.document.getElementById("legend");
+      return ContentTaskUtils.is_visible(legend);
+    }, "The legend is visible");
+
+    let label = content.document.querySelector("#trackerLabel");
+    Assert.ok(ContentTaskUtils.is_hidden(label), "Tracker Label is hidden");
+
+    label = content.document.querySelector("#socialLabel");
+    Assert.ok(ContentTaskUtils.is_hidden(label), "Social Label is hidden");
+  });
+  BrowserTestUtils.removeTab(tab);
+
+  // hide social from the graph
+  Services.prefs.setBoolPref(
+    "privacy.trackingprotection.socialtracking.enabled",
+    false
+  );
+  Services.prefs.setBoolPref(
+    "privacy.socialtracking.block_cookies.enabled",
+    false
+  );
+  tab = await BrowserTestUtils.openNewForegroundTab({
+    url: "about:protections",
+    gBrowser,
+  });
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+    await ContentTaskUtils.waitForCondition(() => {
+      let legend = content.document.getElementById("legend");
+      return ContentTaskUtils.is_visible(legend);
+    }, "The legend is visible");
+
+    let label = content.document.querySelector("#socialLabel");
+    Assert.ok(ContentTaskUtils.is_hidden(label), "Social Label is hidden");
+  });
+  BrowserTestUtils.removeTab(tab);
+
+  // hide fingerprinting from the graph
+  Services.prefs.setBoolPref(
+    "privacy.trackingprotection.fingerprinting.enabled",
+    false
+  );
+  tab = await BrowserTestUtils.openNewForegroundTab({
+    url: "about:protections",
+    gBrowser,
+  });
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+    await ContentTaskUtils.waitForCondition(() => {
+      let legend = content.document.getElementById("legend");
+      return ContentTaskUtils.is_visible(legend);
+    }, "The legend is visible");
+
+    let label = content.document.querySelector("#fingerprinterLabel");
+    Assert.ok(
+      ContentTaskUtils.is_hidden(label),
+      "Fingerprinter Label is hidden"
+    );
+  });
+  BrowserTestUtils.removeTab(tab);
+
+  // hide cryptomining from the graph
+  Services.prefs.setBoolPref(
+    "privacy.trackingprotection.cryptomining.enabled",
+    false
+  );
+  // Turn fingerprinting on so that all protectionsare not turned off, otherwise we will get a special card.
+  Services.prefs.setBoolPref(
+    "privacy.trackingprotection.fingerprinting.enabled",
+    true
+  );
+  tab = await BrowserTestUtils.openNewForegroundTab({
+    url: "about:protections",
+    gBrowser,
+  });
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+    await ContentTaskUtils.waitForCondition(() => {
+      let legend = content.document.getElementById("legend");
+      return ContentTaskUtils.is_visible(legend);
+    }, "The legend is visible");
+
+    let label = content.document.querySelector("#cryptominerLabel");
+    Assert.ok(ContentTaskUtils.is_hidden(label), "Cryptominer Label is hidden");
+  });
+  Services.prefs.clearUserPref("browser.contentblocking.category");
+  Services.prefs.clearUserPref(
+    "privacy.trackingprotection.fingerprinting.enabled"
+  );
+  Services.prefs.clearUserPref(
+    "privacy.trackingprotection.cryptomining.enabled"
+  );
+  Services.prefs.clearUserPref("privacy.trackingprotection.enabled");
+  Services.prefs.clearUserPref("network.cookie.cookieBehavior");
+  Services.prefs.clearUserPref("privacy.socialtracking.block_cookies.enabled");
+
+  BrowserTestUtils.removeTab(tab);
+});
+
+// Ensure that the Custom manage Protections card is shown if the user has all protections turned off.
+add_task(async function test_etp_custom_protections_off() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.contentblocking.category", "custom"],
+      ["network.cookie.cookieBehavior", 0], // not blocking
+      ["privacy.trackingprotection.cryptomining.enabled", false], // not blocking
+      ["privacy.trackingprotection.fingerprinting.enabled", false],
+      ["privacy.trackingprotection.enabled", false],
+      ["privacy.trackingprotection.socialtracking.enabled", false],
+      ["privacy.socialtracking.block_cookies.enabled", false],
+    ],
+  });
+
+  let tab = await BrowserTestUtils.openNewForegroundTab({
+    url: "about:protections",
+    gBrowser,
+  });
+
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+    await ContentTaskUtils.waitForCondition(() => {
+      let etpCard = content.document.querySelector(".etp-card");
+      return etpCard.classList.contains("custom-not-blocking");
+    }, "The custom protections warning card is showing");
+
+    let manageProtectionsCard = content.document.querySelector(
+      "#manage-protections"
+    );
+    Assert.ok(
+      ContentTaskUtils.is_visible(manageProtectionsCard),
+      "Button to manage protections is displayed"
+    );
+  });
   Services.prefs.setStringPref("browser.contentblocking.category", "standard");
   BrowserTestUtils.removeTab(tab);
 });
