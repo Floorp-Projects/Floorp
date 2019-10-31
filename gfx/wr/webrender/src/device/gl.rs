@@ -1036,6 +1036,10 @@ pub struct Device {
 
     optimal_pbo_stride: NonZeroUsize,
 
+    /// Whether we must ensure the source strings passed to glShaderSource()
+    /// are null-terminated, to work around driver bugs.
+    requires_null_terminated_shader_source: bool,
+
     // GL extensions
     extensions: Vec<String>,
 
@@ -1415,6 +1419,11 @@ impl Device {
         let supports_texture_swizzle = allow_texture_swizzling &&
             (gl.get_type() == gl::GlType::Gles || supports_extension(&extensions, "GL_ARB_texture_storage"));
 
+
+        // On the android emulator, glShaderSource can crash if the source
+        // strings are not null-terminated. See bug 1591945.
+        let requires_null_terminated_shader_source = is_emulator;
+
         // On Adreno GPUs PBO texture upload is only performed asynchronously
         // if the stride of the data in the PBO is a multiple of 256 bytes.
         // Other platforms may have similar requirements and should be added
@@ -1470,6 +1479,7 @@ impl Device {
             frame_id: GpuFrameId(0),
             extensions,
             texture_storage_usage,
+            requires_null_terminated_shader_source,
             optimal_pbo_stride,
             dump_shader_source,
             surface_is_y_flipped,
@@ -1560,10 +1570,19 @@ impl Device {
         name: &str,
         shader_type: gl::GLenum,
         source: &String,
+        requires_null_terminated_shader_source: bool,
     ) -> Result<gl::GLuint, ShaderError> {
         debug!("compile {}", name);
         let id = gl.create_shader(shader_type);
-        gl.shader_source(id, &[source.as_bytes()]);
+        if requires_null_terminated_shader_source {
+            // Ensure the source strings we pass to glShaderSource are
+            // null-terminated on buggy platforms.
+            use std::ffi::CString;
+            let terminated_source = CString::new(source.as_bytes()).unwrap();
+            gl.shader_source(id, &[terminated_source.as_bytes_with_nul()]);
+        } else {
+            gl.shader_source(id, &[source.as_bytes()]);
+        }
         gl.compile_shader(id);
         let log = gl.get_shader_info_log(id);
         let mut status = [0];
@@ -1870,7 +1889,7 @@ impl Device {
         if build_program {
             // Compile the vertex shader
             let vs_source = info.compute_source(self, SHADER_KIND_VERTEX);
-            let vs_id = match Device::compile_shader(&*self.gl, &info.base_filename, gl::VERTEX_SHADER, &vs_source) {
+            let vs_id = match Device::compile_shader(&*self.gl, &info.base_filename, gl::VERTEX_SHADER, &vs_source, self.requires_null_terminated_shader_source) {
                     Ok(vs_id) => vs_id,
                     Err(err) => return Err(err),
                 };
@@ -1878,7 +1897,7 @@ impl Device {
             // Compile the fragment shader
             let fs_source = info.compute_source(self, SHADER_KIND_FRAGMENT);
             let fs_id =
-                match Device::compile_shader(&*self.gl, &info.base_filename, gl::FRAGMENT_SHADER, &fs_source) {
+                match Device::compile_shader(&*self.gl, &info.base_filename, gl::FRAGMENT_SHADER, &fs_source, self.requires_null_terminated_shader_source) {
                     Ok(fs_id) => fs_id,
                     Err(err) => {
                         self.gl.delete_shader(vs_id);
