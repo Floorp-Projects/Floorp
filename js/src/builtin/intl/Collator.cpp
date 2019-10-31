@@ -139,6 +139,8 @@ void js::CollatorObject::finalize(JSFreeOp* fop, JSObject* obj) {
   MOZ_ASSERT(fop->onMainThread());
 
   if (UCollator* coll = obj->as<CollatorObject>().getCollator()) {
+    intl::RemoveICUCellMemory(fop, obj, CollatorObject::EstimatedMemoryUse);
+
     ucol_close(coll);
   }
 }
@@ -438,6 +440,8 @@ bool js::intl_CompareStrings(JSContext* cx, unsigned argc, Value* vp) {
       return false;
     }
     collator->setCollator(coll);
+
+    intl::AddICUCellMemory(collator, CollatorObject::EstimatedMemoryUse);
   }
 
   // Use the UCollator to actually compare the strings.

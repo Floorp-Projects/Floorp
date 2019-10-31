@@ -132,6 +132,8 @@ void js::ListFormatObject::finalize(JSFreeOp* fop, JSObject* obj) {
   MOZ_ASSERT(fop->onMainThread());
 
   if (UListFormatter* lf = obj->as<ListFormatObject>().getListFormatter()) {
+    intl::RemoveICUCellMemory(fop, obj, ListFormatObject::EstimatedMemoryUse);
+
     ulistfmt_close(lf);
   }
 }
@@ -441,6 +443,8 @@ bool js::intl_FormatList(JSContext* cx, unsigned argc, Value* vp) {
       return false;
     }
     listFormat->setListFormatter(lf);
+
+    intl::AddICUCellMemory(listFormat, ListFormatObject::EstimatedMemoryUse);
   }
 
   // Collect all strings and their lengths.
