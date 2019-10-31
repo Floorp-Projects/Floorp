@@ -2,10 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// This error shows up sometimes when running the test, and while this is a
-// strange problem that shouldn't be happening it doesn't prevent the test from
-// completing successfully.
 PromiseTestUtils.whitelistRejectionsGlobally(/Current state is running/);
+PromiseTestUtils.whitelistRejectionsGlobally(/Connection closed/);
 
 function findNode(dbg, text) {
   for (let index = 0; ; index++) {

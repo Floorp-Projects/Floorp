@@ -268,7 +268,7 @@ describe("loadSourceText", () => {
       : null;
     expect(
       content && isRejected(content) && typeof content.value === "string"
-        ? content.value.indexOf("unknown source")
+        ? content.value.indexOf("Unknown source")
         : -1
     ).not.toBe(-1);
   });

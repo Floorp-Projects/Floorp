@@ -122,7 +122,7 @@ function lookupThreadFront(thread: string) {
 
 function listThreadFronts() {
   const targetList = (Object.values(getTargetsMap()): any);
-  return targetList.map(target => target.threadFront);
+  return targetList.map(target => target.threadFront).filter(t => !!t);
 }
 
 function forEachThread(iteratee) {
@@ -521,10 +521,11 @@ async function getSourceActorBreakableLines({
   thread,
   actor,
 }: SourceActor): Promise<Array<number>> {
-  const sourceThreadFront = lookupThreadFront(thread);
-  const sourceFront = sourceThreadFront.source({ actor });
+  let sourceFront;
   let actorLines = [];
   try {
+    const sourceThreadFront = lookupThreadFront(thread);
+    sourceFront = sourceThreadFront.source({ actor });
     actorLines = await sourceFront.getBreakableLines();
   } catch (e) {
     // Handle backward compatibility
@@ -532,10 +533,11 @@ async function getSourceActorBreakableLines({
       e.message &&
       e.message.match(/does not recognize the packet type getBreakableLines/)
     ) {
-      const pos = await sourceFront.getBreakpointPositionsCompressed();
+      const pos = await (sourceFront: any).getBreakpointPositionsCompressed();
       actorLines = Object.keys(pos).map(line => Number(line));
-    } else if (!e.message || !e.message.match(/Connection closed/)) {
-      throw e;
+    } else {
+      // Other exceptions could be due to the target thread being shut down.
+      console.warn(`getSourceActorBreakableLines failed: ${e}`);
     }
   }
 
