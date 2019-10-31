@@ -84,8 +84,8 @@ def writeMappingsVar(println, mapping, name, description, source, url):
     println(u"};")
 
 
-def writeMappingsBinarySearch(println, fn_name, type_name, name, validate_fn, mappings,
-                              tag_maxlength, description, source, url):
+def writeMappingsBinarySearch(println, fn_name, type_name, name, validate_fn, validate_case_fn,
+                              mappings, tag_maxlength, description, source, url):
     """ Emit code to perform a binary search on language tag subtags.
 
         Uses the contents of |mapping|, which can either be a dictionary or set,
@@ -96,7 +96,8 @@ def writeMappingsBinarySearch(println, fn_name, type_name, name, validate_fn, ma
     println(u"""
 bool js::intl::LanguageTag::{0}({1} {2}) {{
   MOZ_ASSERT({3}({2}.range()));
-""".format(fn_name, type_name, name, validate_fn).strip())
+  MOZ_ASSERT({4}({2}.range()));
+""".format(fn_name, type_name, name, validate_fn, validate_case_fn).strip())
 
     def write_array(subtags, name, length, fixed):
         if fixed:
@@ -207,6 +208,7 @@ def writeComplexLanguageTagMappings(println, complex_language_mappings,
     println(u"""
 void js::intl::LanguageTag::performComplexLanguageMappings() {
   MOZ_ASSERT(IsStructurallyValidLanguageTag(language().range()));
+  MOZ_ASSERT(IsCanonicallyCasedLanguageTag(language().range()));
 """.lstrip())
 
     # Merge duplicate language entries.
@@ -266,7 +268,9 @@ def writeComplexRegionTagMappings(println, complex_region_mappings,
     println(u"""
 void js::intl::LanguageTag::performComplexRegionMappings() {
   MOZ_ASSERT(IsStructurallyValidLanguageTag(language().range()));
+  MOZ_ASSERT(IsCanonicallyCasedLanguageTag(language().range()));
   MOZ_ASSERT(IsStructurallyValidRegionTag(region().range()));
+  MOZ_ASSERT(IsCanonicallyCasedRegionTag(region().range()));
 """.lstrip())
 
     # |non_default_replacements| is a list and hence not hashable. Convert it
@@ -383,6 +387,10 @@ bool js::intl::LanguageTag::updateGrandfatheredMappings(JSContext* cx) {
       privateuse()) {
     return true;
   }
+
+  MOZ_ASSERT(IsCanonicallyCasedLanguageTag(language().range()));
+  MOZ_ASSERT(IsCanonicallyCasedVariantTag({variants()[0].get(),
+                                           strlen(variants()[0].get())}));
 
   auto variantEqualTo = [this](const char* variant) {
     return strcmp(variants()[0].get(), variant) == 0;
@@ -937,6 +945,40 @@ static inline const char* SearchReplacement(
   }
   return nullptr;
 }
+
+#ifdef DEBUG
+static bool IsCanonicallyCasedLanguageTag(const mozilla::Range<const char>& range) {
+  // Tell the analysis the |std::all_of| function can't GC.
+  JS::AutoSuppressGCAnalysis nogc;
+
+  size_t length = range.length();
+  const char* str = range.begin().get();
+  return std::all_of(str, str + length, mozilla::IsAsciiLowercaseAlpha<char>);
+}
+
+static bool IsCanonicallyCasedRegionTag(const mozilla::Range<const char>& range) {
+  // Tell the analysis the |std::all_of| function can't GC.
+  JS::AutoSuppressGCAnalysis nogc;
+
+  size_t length = range.length();
+  const char* str = range.begin().get();
+  return std::all_of(str, str + length, mozilla::IsAsciiUppercaseAlpha<char>) ||
+         std::all_of(str, str + length, mozilla::IsAsciiDigit<char>);
+}
+
+static bool IsCanonicallyCasedVariantTag(const mozilla::Range<const char>& range) {
+  auto isAsciiLowercaseAlphaOrDigit = [](char c) {
+    return mozilla::IsAsciiLowercaseAlpha(c) || mozilla::IsAsciiDigit(c);
+  };
+
+  // Tell the analysis the |std::all_of| function can't GC.
+  JS::AutoSuppressGCAnalysis nogc;
+
+  size_t length = range.length();
+  const char* str = range.begin().get();
+  return std::all_of(str, str + length, isAsciiLowercaseAlphaOrDigit);
+}
+#endif
 """.rstrip())
 
     source = u"CLDR Supplemental Data, version {}".format(data["version"])
@@ -956,21 +998,25 @@ static inline const char* SearchReplacement(
     writeMappingsBinarySearch(println, "languageMapping",
                               "LanguageSubtag&", "language",
                               "IsStructurallyValidLanguageTag",
+                              "IsCanonicallyCasedLanguageTag",
                               language_mappings, language_maxlength,
                               "Mappings from language subtags to preferred values.", source, url)
     writeMappingsBinarySearch(println, "complexLanguageMapping",
                               "const LanguageSubtag&", "language",
                               "IsStructurallyValidLanguageTag",
+                              "IsCanonicallyCasedLanguageTag",
                               complex_language_mappings.keys(), language_maxlength,
                               "Language subtags with complex mappings.", source, url)
     writeMappingsBinarySearch(println, "regionMapping",
                               "RegionSubtag&", "region",
                               "IsStructurallyValidRegionTag",
+                              "IsCanonicallyCasedRegionTag",
                               region_mappings, region_maxlength,
                               "Mappings from region subtags to preferred values.", source, url)
     writeMappingsBinarySearch(println, "complexRegionMapping",
                               "const RegionSubtag&", "region",
                               "IsStructurallyValidRegionTag",
+                              "IsCanonicallyCasedRegionTag",
                               complex_region_mappings.keys(), region_maxlength,
                               "Region subtags with complex mappings.", source, url)
 

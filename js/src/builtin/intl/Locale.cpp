@@ -286,7 +286,7 @@ static bool ApplyOptionsToTag(JSContext* cx, LanguageTag& tag,
 
   // Step 4.
   intl::LanguageSubtag language;
-  if (option && !intl::ParseStandaloneLanguagTag(option, language)) {
+  if (option && !intl::ParseStandaloneLanguageTag(option, language)) {
     if (UniqueChars str = QuoteString(cx, option, '"')) {
       JS_ReportErrorNumberASCII(cx, js::GetErrorMessage, nullptr,
                                 JSMSG_INVALID_OPTION_VALUE, "language",
