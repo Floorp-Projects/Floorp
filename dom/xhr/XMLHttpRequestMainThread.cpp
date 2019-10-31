@@ -546,6 +546,8 @@ nsresult XMLHttpRequestMainThread::AppendToResponseText(
 
 void XMLHttpRequestMainThread::GetResponseText(DOMString& aResponseText,
                                                ErrorResult& aRv) {
+  MOZ_DIAGNOSTIC_ASSERT(!mForWorker);
+
   XMLHttpRequestStringSnapshot snapshot;
   GetResponseText(snapshot, aRv);
   if (aRv.Failed()) {
@@ -660,6 +662,8 @@ void XMLHttpRequestMainThread::SetResponseType(
 
 void XMLHttpRequestMainThread::GetResponse(
     JSContext* aCx, JS::MutableHandle<JS::Value> aResponse, ErrorResult& aRv) {
+  MOZ_DIAGNOSTIC_ASSERT(!mForWorker);
+
   switch (mResponseType) {
     case XMLHttpRequestResponseType::_empty:
     case XMLHttpRequestResponseType::Text: {
@@ -705,7 +709,10 @@ void XMLHttpRequestMainThread::GetResponse(
         mResponseBlob = Blob::Create(GetOwnerGlobal(), mResponseBlobImpl);
       }
 
-      GetOrCreateDOMReflector(aCx, mResponseBlob, aResponse);
+      if (!GetOrCreateDOMReflector(aCx, mResponseBlob, aResponse)) {
+        aResponse.setNull();
+      }
+
       return;
     }
     case XMLHttpRequestResponseType::Document: {
