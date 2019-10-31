@@ -148,6 +148,13 @@ export PKG_CONFIG_ALLOW_CROSS=1
 export RUST_BACKTRACE=full
 export MOZ_TOPOBJDIR=$(topobjdir)
 
+# Set COREAUDIO_SDK_PATH for third_party/rust/coreaudio-sys/build.rs
+ifeq ($(OS_ARCH), Darwin)
+ifdef MACOS_SDK_DIR
+export COREAUDIO_SDK_PATH=$(MACOS_SDK_DIR)
+endif
+endif
+
 target_rust_ltoable := force-cargo-library-build
 target_rust_nonltoable := force-cargo-test-run force-cargo-library-check $(foreach b,build check,force-cargo-program-$(b))
 
