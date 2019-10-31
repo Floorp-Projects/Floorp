@@ -9599,8 +9599,9 @@ static bool IsConsideredSameOriginForUIR(nsIPrincipal* aTriggeringPrincipal,
   return aTriggeringPrincipal->Equals(tmpResultPrincipal);
 }
 
-static bool HasHttpScheme(nsIURI* aURI) {
-  return aURI && (aURI->SchemeIs("http") || aURI->SchemeIs("https"));
+static bool SchemeUsesDocChannel(nsIURI* aURI) {
+  return aURI && (aURI->SchemeIs("http") || aURI->SchemeIs("https") ||
+                  aURI->SchemeIs("moz"));
 }
 
 /* static */ bool nsDocShell::CreateChannelForLoadState(
@@ -9610,7 +9611,7 @@ static bool HasHttpScheme(nsIURI* aURI) {
     uint32_t aCacheKey, bool aIsActive, bool aIsTopLevelDoc,
     bool aHasNonEmptySandboxingFlags, nsresult& aRv, nsIChannel** aChannel) {
   if (StaticPrefs::browser_tabs_documentchannel() && XRE_IsContentProcess() &&
-      HasHttpScheme(aLoadState->URI())) {
+      SchemeUsesDocChannel(aLoadState->URI())) {
     RefPtr<DocumentChannelChild> child = new DocumentChannelChild(
         aLoadState, aLoadInfo, aInitiatorType, aLoadFlags, aLoadType, aCacheKey,
         aIsActive, aIsTopLevelDoc, aHasNonEmptySandboxingFlags);
