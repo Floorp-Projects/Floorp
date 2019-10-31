@@ -8,7 +8,7 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/MathAlgorithms.h"
-#include "mozilla/Range.h"
+#include "mozilla/Span.h"
 #include "mozilla/TextUtils.h"
 #include "mozilla/Variant.h"
 
@@ -41,51 +41,52 @@ namespace intl {
 
 using namespace js::intl::LanguageTagLimits;
 
-using ConstCharRange = mozilla::Range<const char>;
-
 template <typename CharT>
-bool IsStructurallyValidLanguageTag(
-    const mozilla::Range<const CharT>& language) {
+bool IsStructurallyValidLanguageTag(mozilla::Span<const CharT> language) {
   // Tell the analysis the |std::all_of| function can't GC.
   JS::AutoSuppressGCAnalysis nogc;
 
   // unicode_language_subtag = alpha{2,3} | alpha{5,8};
-  size_t length = language.length();
-  const CharT* str = language.begin().get();
+  size_t length = language.size();
+  const CharT* str = language.data();
   return ((2 <= length && length <= 3) || (5 <= length && length <= 8)) &&
          std::all_of(str, str + length, mozilla::IsAsciiAlpha<CharT>);
 }
 
 template bool IsStructurallyValidLanguageTag(
-    const mozilla::Range<const Latin1Char>& language);
+    mozilla::Span<const char> language);
 template bool IsStructurallyValidLanguageTag(
-    const mozilla::Range<const char16_t>& language);
+    mozilla::Span<const Latin1Char> language);
+template bool IsStructurallyValidLanguageTag(
+    mozilla::Span<const char16_t> language);
 
 template <typename CharT>
-bool IsStructurallyValidScriptTag(const mozilla::Range<const CharT>& script) {
+bool IsStructurallyValidScriptTag(mozilla::Span<const CharT> script) {
   // Tell the analysis the |std::all_of| function can't GC.
   JS::AutoSuppressGCAnalysis nogc;
 
   // unicode_script_subtag = alpha{4} ;
-  size_t length = script.length();
-  const CharT* str = script.begin().get();
+  size_t length = script.size();
+  const CharT* str = script.data();
   return length == 4 &&
          std::all_of(str, str + length, mozilla::IsAsciiAlpha<CharT>);
 }
 
 template bool IsStructurallyValidScriptTag(
-    const mozilla::Range<const Latin1Char>& script);
+    mozilla::Span<const char> script);
 template bool IsStructurallyValidScriptTag(
-    const mozilla::Range<const char16_t>& script);
+    mozilla::Span<const Latin1Char> script);
+template bool IsStructurallyValidScriptTag(
+    mozilla::Span<const char16_t> script);
 
 template <typename CharT>
-bool IsStructurallyValidRegionTag(const mozilla::Range<const CharT>& region) {
+bool IsStructurallyValidRegionTag(mozilla::Span<const CharT> region) {
   // Tell the analysis the |std::all_of| function can't GC.
   JS::AutoSuppressGCAnalysis nogc;
 
   // unicode_region_subtag = (alpha{2} | digit{3}) ;
-  size_t length = region.length();
-  const CharT* str = region.begin().get();
+  size_t length = region.size();
+  const CharT* str = region.data();
   return (length == 2 &&
           std::all_of(str, str + length, mozilla::IsAsciiAlpha<CharT>)) ||
          (length == 3 &&
@@ -93,31 +94,36 @@ bool IsStructurallyValidRegionTag(const mozilla::Range<const CharT>& region) {
 }
 
 template bool IsStructurallyValidRegionTag(
-    const mozilla::Range<const Latin1Char>& region);
+    mozilla::Span<const char> region);
 template bool IsStructurallyValidRegionTag(
-    const mozilla::Range<const char16_t>& region);
+    mozilla::Span<const Latin1Char> region);
+template bool IsStructurallyValidRegionTag(
+    mozilla::Span<const char16_t> region);
 
 #ifdef DEBUG
-bool IsStructurallyValidVariantTag(const ConstCharRange& variant) {
+bool IsStructurallyValidVariantTag(mozilla::Span<const char> variant) {
   // unicode_variant_subtag = (alphanum{5,8} | digit alphanum{3}) ;
-  size_t length = variant.length();
-  const char* str = variant.begin().get();
+  size_t length = variant.size();
+  const char* str = variant.data();
   return ((5 <= length && length <= 8) ||
           (length == 4 && mozilla::IsAsciiDigit(str[0]))) &&
          std::all_of(str, str + length, mozilla::IsAsciiAlphanumeric<char>);
 }
 
-bool IsStructurallyValidUnicodeExtensionTag(const ConstCharRange& extension) {
+bool IsStructurallyValidUnicodeExtensionTag(
+    mozilla::Span<const char> extension) {
   return LanguageTagParser::canParseUnicodeExtension(extension);
 }
 
-static bool IsStructurallyValidExtensionTag(const ConstCharRange& extension) {
+static bool IsStructurallyValidExtensionTag(
+    mozilla::Span<const char> extension) {
   // other_extensions = sep [alphanum-[tTuUxX]] (sep alphanum{2,8})+ ;
   // NB: Allow any extension, including Unicode and Transform here, because
   // this function is only used for an assertion.
 
-  size_t length = extension.length();
-  const char* str = extension.begin().get();
+  size_t length = extension.size();
+  const char* str = extension.data();
+  const char* const end = extension.data() + length;
   if (length <= 2) {
     return false;
   }
@@ -129,9 +135,9 @@ static bool IsStructurallyValidExtensionTag(const ConstCharRange& extension) {
     return false;
   }
   while (true) {
-    const char* sep = reinterpret_cast<const char*>(
-        memchr(str, '-', extension.end().get() - str));
-    size_t len = (sep ? sep : extension.end().get()) - str;
+    const char* sep =
+        reinterpret_cast<const char*>(memchr(str, '-', end - str));
+    size_t len = (sep ? sep : end) - str;
     if (len < 2 || len > 8 ||
         !std::all_of(str, str + len, mozilla::IsAsciiAlphanumeric<char>)) {
       return false;
@@ -143,11 +149,12 @@ static bool IsStructurallyValidExtensionTag(const ConstCharRange& extension) {
   }
 }
 
-bool IsStructurallyValidPrivateUseTag(const ConstCharRange& privateUse) {
+bool IsStructurallyValidPrivateUseTag(mozilla::Span<const char> privateUse) {
   // pu_extensions = sep [xX] (sep alphanum{1,8})+ ;
 
-  size_t length = privateUse.length();
-  const char* str = privateUse.begin().get();
+  size_t length = privateUse.size();
+  const char* str = privateUse.data();
+  const char* const end = privateUse.data() + length;
   if (length <= 2) {
     return false;
   }
@@ -159,9 +166,9 @@ bool IsStructurallyValidPrivateUseTag(const ConstCharRange& privateUse) {
     return false;
   }
   while (true) {
-    const char* sep = reinterpret_cast<const char*>(
-        memchr(str, '-', privateUse.end().get() - str));
-    size_t len = (sep ? sep : privateUse.end().get()) - str;
+    const char* sep =
+        reinterpret_cast<const char*>(memchr(str, '-', end - str));
+    size_t len = (sep ? sep : end) - str;
     if (len == 0 || len > 8 ||
         !std::all_of(str, str + len, mozilla::IsAsciiAlphanumeric<char>)) {
       return false;
@@ -196,7 +203,7 @@ const char* LanguageTag::unicodeExtension() const {
 
 bool LanguageTag::setUnicodeExtension(UniqueChars extension) {
   MOZ_ASSERT(IsStructurallyValidUnicodeExtensionTag(
-      {extension.get(), strlen(extension.get())}));
+      mozilla::MakeStringSpan(extension.get())));
 
   // Replace the existing Unicode extension subtag or append a new one.
   ptrdiff_t index = unicodeExtensionIndex();
@@ -260,18 +267,18 @@ bool LanguageTag::canonicalizeBaseName(JSContext* cx) {
 
   // Language codes need to be in lower case. "JA" -> "ja"
   language_.toLowerCase();
-  MOZ_ASSERT(IsStructurallyValidLanguageTag(language().range()));
+  MOZ_ASSERT(IsStructurallyValidLanguageTag(language().span()));
 
   // The first character of a script code needs to be capitalized.
   // "hans" -> "Hans"
   script_.toTitleCase();
   MOZ_ASSERT(script().missing() ||
-             IsStructurallyValidScriptTag(script().range()));
+             IsStructurallyValidScriptTag(script().span()));
 
   // Region codes need to be in upper case. "bu" -> "BU"
   region_.toUpperCase();
   MOZ_ASSERT(region().missing() ||
-             IsStructurallyValidRegionTag(region().range()));
+             IsStructurallyValidRegionTag(region().span()));
 
   // The canonical case for variant subtags is lowercase.
   for (UniqueChars& variant : variants_) {
@@ -405,7 +412,8 @@ bool LanguageTag::canonicalizeUnicodeExtension(
   const char* const extension = unicodeExtension.get();
   MOZ_ASSERT(extension[0] == 'u');
   MOZ_ASSERT(extension[1] == '-');
-  MOZ_ASSERT(IsStructurallyValidExtensionTag({extension, strlen(extension)}));
+  MOZ_ASSERT(
+      IsStructurallyValidExtensionTag(mozilla::MakeStringSpan(extension)));
 
   size_t length = strlen(extension);
 
@@ -419,7 +427,7 @@ bool LanguageTag::canonicalizeUnicodeExtension(
   JS_TRY_VAR_OR_RETURN_FALSE(
       cx, ok,
       LanguageTagParser::parseUnicodeExtension(
-          cx, ConstCharRange(extension, length), attributes, keywords));
+          cx, mozilla::MakeSpan(extension, length), attributes, keywords));
   MOZ_ASSERT(ok, "unexpected invalid Unicode extension subtag");
 
   auto attributesLessOrEqual = [extension](const Attribute& a,
@@ -518,12 +526,13 @@ bool LanguageTag::canonicalizeUnicodeExtension(
 
   static constexpr size_t UnicodeKeyWithSepLength = UnicodeKeyLength + 1;
 
-  static auto isTrue = [](const ConstCharRange& type) {
+  using StringSpan = mozilla::Span<const char>;
+
+  static auto isTrue = [](StringSpan type) {
     constexpr char True[] = "true";
     const size_t TrueLength = strlen(True);
-    return type.length() == TrueLength &&
-           std::char_traits<char>::compare(type.begin().get(), True,
-                                           TrueLength) == 0;
+    return type.size() == TrueLength &&
+           std::char_traits<char>::compare(type.data(), True, TrueLength) == 0;
   };
 
   auto appendKey = [&sb, extension](const Keyword& keyword) {
@@ -532,7 +541,7 @@ bool LanguageTag::canonicalizeUnicodeExtension(
   };
 
   auto appendKeyword = [&sb, extension](const Keyword& keyword,
-                                        const ConstCharRange& type) {
+                                        StringSpan type) {
     MOZ_ASSERT(keyword.length() > UnicodeKeyLength);
 
     // Elide the Unicode extension type "true".
@@ -544,7 +553,7 @@ bool LanguageTag::canonicalizeUnicodeExtension(
   };
 
   auto appendReplacement = [&sb, extension](const Keyword& keyword,
-                                            const ConstCharRange& replacement) {
+                                            StringSpan replacement) {
     MOZ_ASSERT(keyword.length() > UnicodeKeyLength);
 
     // Elide the type "true" if present in the replacement.
@@ -554,7 +563,7 @@ bool LanguageTag::canonicalizeUnicodeExtension(
     // Otherwise append the Unicode key (including the separator) and the
     // replaced type.
     return sb.append(keyword.begin(extension), UnicodeKeyWithSepLength) &&
-           sb.append(replacement.begin().get(), replacement.length());
+           sb.append(replacement.data(), replacement.size());
   };
 
   // Append all Unicode extension keywords.
@@ -582,15 +591,15 @@ bool LanguageTag::canonicalizeUnicodeExtension(
         return false;
       }
     } else {
-      ConstCharRange key(keyword.begin(extension), UnicodeKeyLength);
-      ConstCharRange type(keyword.begin(extension) + UnicodeKeyWithSepLength,
-                          keyword.length() - UnicodeKeyWithSepLength);
+      StringSpan key(keyword.begin(extension), UnicodeKeyLength);
+      StringSpan type(keyword.begin(extension) + UnicodeKeyWithSepLength,
+                      keyword.length() - UnicodeKeyWithSepLength);
 
       if (canonicalForm == UnicodeExtensionCanonicalForm::Yes) {
         // Search if there's a replacement for the current Unicode keyword.
         if (const char* replacement = replaceUnicodeExtensionType(key, type)) {
-          if (!appendReplacement(
-                  keyword, ConstCharRange(replacement, strlen(replacement)))) {
+          if (!appendReplacement(keyword,
+                                 mozilla::MakeStringSpan(replacement))) {
             return false;
           }
         } else {
@@ -627,9 +636,9 @@ template <class Buffer>
 static bool LanguageTagToString(JSContext* cx, const LanguageTag& tag,
                                 Buffer& sb) {
   auto appendSubtag = [&sb](const auto& subtag) {
-    auto range = subtag.range();
-    MOZ_ASSERT(range.length() > 0);
-    return sb.append(range.begin().get(), range.length());
+    auto span = subtag.span();
+    MOZ_ASSERT(span.size() > 0);
+    return sb.append(span.data(), span.size());
   };
 
   auto appendSubtagZ = [&sb](const char* subtag) {
@@ -704,7 +713,8 @@ bool LanguageTag::canonicalizeTransformExtension(
   const char* const extension = transformExtension.get();
   MOZ_ASSERT(extension[0] == 't');
   MOZ_ASSERT(extension[1] == '-');
-  MOZ_ASSERT(IsStructurallyValidExtensionTag({extension, strlen(extension)}));
+  MOZ_ASSERT(
+      IsStructurallyValidExtensionTag(mozilla::MakeStringSpan(extension)));
 
   size_t length = strlen(extension);
 
@@ -717,7 +727,7 @@ bool LanguageTag::canonicalizeTransformExtension(
   JS_TRY_VAR_OR_RETURN_FALSE(
       cx, ok,
       LanguageTagParser::parseTransformExtension(
-          cx, ConstCharRange(extension, length), tag, fields));
+          cx, mozilla::MakeSpan(extension, length), tag, fields));
   MOZ_ASSERT(ok, "unexpected invalid transform extension subtag");
 
   auto tfieldLessOrEqual = [extension](const TField& a, const TField& b) {
@@ -845,9 +855,9 @@ static bool CreateLocaleForLikelySubtags(const LanguageTag& tag,
   MOZ_ASSERT(locale.length() == 0);
 
   auto appendSubtag = [&locale](const auto& subtag) {
-    auto range = subtag.range();
-    MOZ_ASSERT(range.length() > 0);
-    return locale.append(range.begin().get(), range.length());
+    auto span = subtag.span();
+    MOZ_ASSERT(span.size() > 0);
+    return locale.append(span.data(), span.size());
   };
 
   // Append the language subtag.
@@ -900,12 +910,12 @@ static bool AssignFromLocaleId(JSContext* cx, LocaleId& localeId,
     memmove(localeId.begin(), und, length);
   }
 
-  ConstCharRange localeRange(localeId.begin(), localeId.length() - 1);
+  mozilla::Span<const char> localeSpan(localeId.begin(), localeId.length() - 1);
 
   // Retrieve the language, script, and region subtags from the locale ID, but
   // ignore any other subtags.
   LanguageTag localeTag(cx);
-  if (!LanguageTagParser::parseBaseName(cx, localeRange, localeTag)) {
+  if (!LanguageTagParser::parseBaseName(cx, localeSpan, localeTag)) {
     return false;
   }
 
@@ -1295,10 +1305,11 @@ bool LanguageTagParser::parse(JSContext* cx, JSLinearString* locale,
   return false;
 }
 
-bool LanguageTagParser::parseBaseName(JSContext* cx, ConstCharRange locale,
+bool LanguageTagParser::parseBaseName(JSContext* cx,
+                                      mozilla::Span<const char> locale,
                                       LanguageTag& tag) {
-  LocaleChars localeChars = StringChars(locale.begin().get());
-  LanguageTagParser ts(localeChars, locale.length());
+  LocaleChars localeChars = StringChars(locale.data());
+  LanguageTagParser ts(localeChars, locale.size());
   Token tok = ts.nextToken();
 
   // Parse only the base-name part and ignore any trailing characters.
@@ -1307,12 +1318,10 @@ bool LanguageTagParser::parseBaseName(JSContext* cx, ConstCharRange locale,
   if (ok) {
     return true;
   }
-  if (UniqueChars localeChars =
-          DuplicateString(locale.begin().get(), locale.length())) {
+  if (UniqueChars localeChars = DuplicateString(cx, locale.data(),
+                                                locale.size())) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_INVALID_LANGUAGE_TAG, localeChars.get());
-  } else {
-    JS_ReportOutOfMemory(cx);
   }
   return false;
 }
@@ -1320,10 +1329,10 @@ bool LanguageTagParser::parseBaseName(JSContext* cx, ConstCharRange locale,
 // Parse |extension|, which must be a valid `transformed_extensions` subtag, and
 // fill |tag| and |fields| from the `tlang` and `tfield` components.
 JS::Result<bool> LanguageTagParser::parseTransformExtension(
-    JSContext* cx, ConstCharRange extension, LanguageTag& tag,
+    JSContext* cx, mozilla::Span<const char> extension, LanguageTag& tag,
     TFieldVector& fields) {
-  LocaleChars extensionChars = StringChars(extension.begin().get());
-  LanguageTagParser ts(extensionChars, extension.length());
+  LocaleChars extensionChars = StringChars(extension.data());
+  LanguageTagParser ts(extensionChars, extension.size());
   Token tok = ts.nextToken();
 
   if (!ts.isExtensionStart(tok) || ts.singletonKey(tok) != 't') {
@@ -1380,10 +1389,10 @@ JS::Result<bool> LanguageTagParser::parseTransformExtension(
 // and fill |attributes| and |keywords| from the `attribute` and `keyword`
 // components.
 JS::Result<bool> LanguageTagParser::parseUnicodeExtension(
-    JSContext* cx, ConstCharRange extension, AttributesVector& attributes,
-    KeywordsVector& keywords) {
-  LocaleChars extensionChars = StringChars(extension.begin().get());
-  LanguageTagParser ts(extensionChars, extension.length());
+    JSContext* cx, mozilla::Span<const char> extension,
+    AttributesVector& attributes, KeywordsVector& keywords) {
+  LocaleChars extensionChars = StringChars(extension.data());
+  LanguageTagParser ts(extensionChars, extension.size());
   Token tok = ts.nextToken();
 
   // unicode_locale_extensions = sep [uU] ((sep keyword)+ |
@@ -1430,9 +1439,10 @@ JS::Result<bool> LanguageTagParser::parseUnicodeExtension(
   return tok.isNone();
 }
 
-bool LanguageTagParser::canParseUnicodeExtension(ConstCharRange extension) {
-  LocaleChars extensionChars = StringChars(extension.begin().get());
-  LanguageTagParser ts(extensionChars, extension.length());
+bool LanguageTagParser::canParseUnicodeExtension(
+    mozilla::Span<const char> extension) {
+  LocaleChars extensionChars = StringChars(extension.data());
+  LanguageTagParser ts(extensionChars, extension.size());
   Token tok = ts.nextToken();
 
   // unicode_locale_extensions = sep [uU] ((sep keyword)+ |
@@ -1489,15 +1499,15 @@ bool ParseStandaloneLanguageTag(HandleLinearString str,
                                 LanguageSubtag& result) {
   JS::AutoCheckCannotGC nogc;
   if (str->hasLatin1Chars()) {
-    if (!IsStructurallyValidLanguageTag(str->latin1Range(nogc))) {
+    if (!IsStructurallyValidLanguageTag<Latin1Char>(str->latin1Range(nogc))) {
       return false;
     }
-    result.set(str->latin1Range(nogc));
+    result.set<Latin1Char>(str->latin1Range(nogc));
   } else {
-    if (!IsStructurallyValidLanguageTag(str->twoByteRange(nogc))) {
+    if (!IsStructurallyValidLanguageTag<char16_t>(str->twoByteRange(nogc))) {
       return false;
     }
-    result.set(str->twoByteRange(nogc));
+    result.set<char16_t>(str->twoByteRange(nogc));
   }
   return true;
 }
@@ -1505,15 +1515,15 @@ bool ParseStandaloneLanguageTag(HandleLinearString str,
 bool ParseStandaloneScriptTag(HandleLinearString str, ScriptSubtag& result) {
   JS::AutoCheckCannotGC nogc;
   if (str->hasLatin1Chars()) {
-    if (!IsStructurallyValidScriptTag(str->latin1Range(nogc))) {
+    if (!IsStructurallyValidScriptTag<Latin1Char>(str->latin1Range(nogc))) {
       return false;
     }
-    result.set(str->latin1Range(nogc));
+    result.set<Latin1Char>(str->latin1Range(nogc));
   } else {
-    if (!IsStructurallyValidScriptTag(str->twoByteRange(nogc))) {
+    if (!IsStructurallyValidScriptTag<char16_t>(str->twoByteRange(nogc))) {
       return false;
     }
-    result.set(str->twoByteRange(nogc));
+    result.set<char16_t>(str->twoByteRange(nogc));
   }
   return true;
 }
@@ -1521,49 +1531,53 @@ bool ParseStandaloneScriptTag(HandleLinearString str, ScriptSubtag& result) {
 bool ParseStandaloneRegionTag(HandleLinearString str, RegionSubtag& result) {
   JS::AutoCheckCannotGC nogc;
   if (str->hasLatin1Chars()) {
-    if (!IsStructurallyValidRegionTag(str->latin1Range(nogc))) {
+    if (!IsStructurallyValidRegionTag<Latin1Char>(str->latin1Range(nogc))) {
       return false;
     }
-    result.set(str->latin1Range(nogc));
+    result.set<Latin1Char>(str->latin1Range(nogc));
   } else {
-    if (!IsStructurallyValidRegionTag(str->twoByteRange(nogc))) {
+    if (!IsStructurallyValidRegionTag<char16_t>(str->twoByteRange(nogc))) {
       return false;
     }
-    result.set(str->twoByteRange(nogc));
+    result.set<char16_t>(str->twoByteRange(nogc));
   }
   return true;
 }
 
 template <typename CharT>
-static bool IsAsciiLowercaseAlpha(const mozilla::Range<const CharT>& range) {
+static bool IsAsciiLowercaseAlpha(mozilla::Span<const CharT> span) {
   // Tell the analysis the |std::all_of| function can't GC.
   JS::AutoSuppressGCAnalysis nogc;
 
-  const CharT* ptr = range.begin().get();
-  size_t length = range.length();
+  const CharT* ptr = span.data();
+  size_t length = span.size();
   return std::all_of(ptr, ptr + length, mozilla::IsAsciiLowercaseAlpha<CharT>);
 }
 
 static bool IsAsciiLowercaseAlpha(JSLinearString* str) {
   JS::AutoCheckCannotGC nogc;
-  return str->hasLatin1Chars() ? IsAsciiLowercaseAlpha(str->latin1Range(nogc))
-                               : IsAsciiLowercaseAlpha(str->twoByteRange(nogc));
+  if (str->hasLatin1Chars()) {
+    return IsAsciiLowercaseAlpha<Latin1Char>(str->latin1Range(nogc));
+  }
+  return IsAsciiLowercaseAlpha<char16_t>(str->twoByteRange(nogc));
 }
 
 template <typename CharT>
-static bool IsAsciiAlpha(const mozilla::Range<const CharT>& range) {
+static bool IsAsciiAlpha(mozilla::Span<const CharT> span) {
   // Tell the analysis the |std::all_of| function can't GC.
   JS::AutoSuppressGCAnalysis nogc;
 
-  const CharT* ptr = range.begin().get();
-  size_t length = range.length();
+  const CharT* ptr = span.data();
+  size_t length = span.size();
   return std::all_of(ptr, ptr + length, mozilla::IsAsciiAlpha<CharT>);
 }
 
 static bool IsAsciiAlpha(JSLinearString* str) {
   JS::AutoCheckCannotGC nogc;
-  return str->hasLatin1Chars() ? IsAsciiAlpha(str->latin1Range(nogc))
-                               : IsAsciiAlpha(str->twoByteRange(nogc));
+  if (str->hasLatin1Chars()) {
+    return IsAsciiAlpha<Latin1Char>(str->latin1Range(nogc));
+  }
+  return IsAsciiAlpha<char16_t>(str->twoByteRange(nogc));
 }
 
 JS::Result<JSString*> ParseStandaloneISO639LanguageTag(JSContext* cx,
@@ -1586,10 +1600,10 @@ JS::Result<JSString*> ParseStandaloneISO639LanguageTag(JSContext* cx,
   LanguageSubtag languageTag;
   if (str->hasLatin1Chars()) {
     JS::AutoCheckCannotGC nogc;
-    languageTag.set(str->latin1Range(nogc));
+    languageTag.set<Latin1Char>(str->latin1Range(nogc));
   } else {
     JS::AutoCheckCannotGC nogc;
-    languageTag.set(str->twoByteRange(nogc));
+    languageTag.set<char16_t>(str->twoByteRange(nogc));
   }
 
   if (!isLowerCase) {
@@ -1606,8 +1620,8 @@ JS::Result<JSString*> ParseStandaloneISO639LanguageTag(JSContext* cx,
   // Take care to replace deprecated subtags with their preferred values.
   JSString* result;
   if (LanguageTag::languageMapping(languageTag) || !isLowerCase) {
-    auto range = languageTag.range();
-    result = NewStringCopyN<CanGC>(cx, range.begin().get(), range.length());
+    auto span = languageTag.span();
+    result = NewStringCopyN<CanGC>(cx, span.data(), span.size());
   } else {
     result = str;
   }

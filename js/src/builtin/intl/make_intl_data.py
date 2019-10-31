@@ -95,8 +95,8 @@ def writeMappingsBinarySearch(println, fn_name, type_name, name, validate_fn, va
     writeMappingHeader(println, description, source, url)
     println(u"""
 bool js::intl::LanguageTag::{0}({1} {2}) {{
-  MOZ_ASSERT({3}({2}.range()));
-  MOZ_ASSERT({4}({2}.range()));
+  MOZ_ASSERT({3}({2}.span()));
+  MOZ_ASSERT({4}({2}.span()));
 """.format(fn_name, type_name, name, validate_fn, validate_case_fn).strip())
 
     def write_array(subtags, name, length, fixed):
@@ -179,7 +179,7 @@ bool js::intl::LanguageTag::{0}({1} {2}) {{
 
                 println(u"""
     if (const char* replacement = SearchReplacement({0}s, aliases, {0})) {{
-      {0}.set(ConstCharRange(replacement, strlen(replacement)));
+      {0}.set(mozilla::MakeStringSpan(replacement));
       return true;
     }}
     return false;
@@ -207,8 +207,8 @@ def writeComplexLanguageTagMappings(println, complex_language_mappings,
     writeMappingHeader(println, description, source, url)
     println(u"""
 void js::intl::LanguageTag::performComplexLanguageMappings() {
-  MOZ_ASSERT(IsStructurallyValidLanguageTag(language().range()));
-  MOZ_ASSERT(IsCanonicallyCasedLanguageTag(language().range()));
+  MOZ_ASSERT(IsStructurallyValidLanguageTag(language().span()));
+  MOZ_ASSERT(IsCanonicallyCasedLanguageTag(language().span()));
 """.lstrip())
 
     # Merge duplicate language entries.
@@ -267,10 +267,10 @@ def writeComplexRegionTagMappings(println, complex_region_mappings,
     writeMappingHeader(println, description, source, url)
     println(u"""
 void js::intl::LanguageTag::performComplexRegionMappings() {
-  MOZ_ASSERT(IsStructurallyValidLanguageTag(language().range()));
-  MOZ_ASSERT(IsCanonicallyCasedLanguageTag(language().range()));
-  MOZ_ASSERT(IsStructurallyValidRegionTag(region().range()));
-  MOZ_ASSERT(IsCanonicallyCasedRegionTag(region().range()));
+  MOZ_ASSERT(IsStructurallyValidLanguageTag(language().span()));
+  MOZ_ASSERT(IsCanonicallyCasedLanguageTag(language().span()));
+  MOZ_ASSERT(IsStructurallyValidRegionTag(region().span()));
+  MOZ_ASSERT(IsCanonicallyCasedRegionTag(region().span()));
 """.lstrip())
 
     # |non_default_replacements| is a list and hence not hashable. Convert it
@@ -388,9 +388,8 @@ bool js::intl::LanguageTag::updateGrandfatheredMappings(JSContext* cx) {
     return true;
   }
 
-  MOZ_ASSERT(IsCanonicallyCasedLanguageTag(language().range()));
-  MOZ_ASSERT(IsCanonicallyCasedVariantTag({variants()[0].get(),
-                                           strlen(variants()[0].get())}));
+  MOZ_ASSERT(IsCanonicallyCasedLanguageTag(language().span()));
+  MOZ_ASSERT(IsCanonicallyCasedVariantTag(mozilla::MakeStringSpan(variants()[0].get())));
 
   auto variantEqualTo = [this](const char* variant) {
     return strcmp(variants()[0].get(), variant) == 0;
@@ -896,7 +895,7 @@ def writeCLDRLanguageTagData(println, data, url):
 
     println(u"""
 #include "mozilla/Assertions.h"
-#include "mozilla/Range.h"
+#include "mozilla/Span.h"
 #include "mozilla/TextUtils.h"
 
 #include <algorithm>
@@ -911,8 +910,6 @@ def writeCLDRLanguageTagData(println, data, url):
 
 using namespace js::intl::LanguageTagLimits;
 
-using ConstCharRange = mozilla::Range<const char>;
-
 template <size_t Length, size_t TagLength, size_t SubtagLength>
 static inline bool HasReplacement(
     const char (&subtags)[Length][TagLength],
@@ -920,7 +917,7 @@ static inline bool HasReplacement(
   MOZ_ASSERT(subtag.length() == TagLength - 1,
              "subtag must have the same length as the list of subtags");
 
-  const char* ptr = subtag.range().begin().get();
+  const char* ptr = subtag.span().data();
   return std::binary_search(std::begin(subtags), std::end(subtags), ptr,
                             [](const char* a, const char* b) {
     return memcmp(a, b, TagLength - 1) < 0;
@@ -935,7 +932,7 @@ static inline const char* SearchReplacement(
   MOZ_ASSERT(subtag.length() == TagLength - 1,
              "subtag must have the same length as the list of subtags");
 
-  const char* ptr = subtag.range().begin().get();
+  const char* ptr = subtag.span().data();
   auto p = std::lower_bound(std::begin(subtags), std::end(subtags), ptr,
                             [](const char* a, const char* b) {
     return memcmp(a, b, TagLength - 1) < 0;
@@ -947,26 +944,22 @@ static inline const char* SearchReplacement(
 }
 
 #ifdef DEBUG
-static bool IsCanonicallyCasedLanguageTag(const mozilla::Range<const char>& range) {
+static bool IsCanonicallyCasedLanguageTag(mozilla::Span<const char> span) {
   // Tell the analysis the |std::all_of| function can't GC.
   JS::AutoSuppressGCAnalysis nogc;
 
-  size_t length = range.length();
-  const char* str = range.begin().get();
-  return std::all_of(str, str + length, mozilla::IsAsciiLowercaseAlpha<char>);
+  return std::all_of(span.begin(), span.end(), mozilla::IsAsciiLowercaseAlpha<char>);
 }
 
-static bool IsCanonicallyCasedRegionTag(const mozilla::Range<const char>& range) {
+static bool IsCanonicallyCasedRegionTag(mozilla::Span<const char> span) {
   // Tell the analysis the |std::all_of| function can't GC.
   JS::AutoSuppressGCAnalysis nogc;
 
-  size_t length = range.length();
-  const char* str = range.begin().get();
-  return std::all_of(str, str + length, mozilla::IsAsciiUppercaseAlpha<char>) ||
-         std::all_of(str, str + length, mozilla::IsAsciiDigit<char>);
+  return std::all_of(span.begin(), span.end(), mozilla::IsAsciiUppercaseAlpha<char>) ||
+         std::all_of(span.begin(), span.end(), mozilla::IsAsciiDigit<char>);
 }
 
-static bool IsCanonicallyCasedVariantTag(const mozilla::Range<const char>& range) {
+static bool IsCanonicallyCasedVariantTag(mozilla::Span<const char> span) {
   auto isAsciiLowercaseAlphaOrDigit = [](char c) {
     return mozilla::IsAsciiLowercaseAlpha(c) || mozilla::IsAsciiDigit(c);
   };
@@ -974,9 +967,7 @@ static bool IsCanonicallyCasedVariantTag(const mozilla::Range<const char>& range
   // Tell the analysis the |std::all_of| function can't GC.
   JS::AutoSuppressGCAnalysis nogc;
 
-  size_t length = range.length();
-  const char* str = range.begin().get();
-  return std::all_of(str, str + length, isAsciiLowercaseAlphaOrDigit);
+  return std::all_of(span.begin(), span.end(), isAsciiLowercaseAlphaOrDigit);
 }
 #endif
 """.rstrip())
@@ -2065,34 +2056,34 @@ def updateCurrency(topsrcdir, args):
 def writeUnicodeExtensionsMappings(println, mapping):
     println(u"""
 template <size_t Length>
-static inline bool IsUnicodeKey(const ConstCharRange& key,
+static inline bool IsUnicodeKey(mozilla::Span<const char> key,
                                 const char (&str)[Length]) {
   static_assert(Length == UnicodeKeyLength + 1,
                 "Unicode extension key is two characters long");
-  return memcmp(key.begin().get(), str, Length - 1) == 0;
+  return memcmp(key.data(), str, Length - 1) == 0;
 }
 
 template <size_t Length>
-static inline bool IsUnicodeType(const ConstCharRange& type,
+static inline bool IsUnicodeType(mozilla::Span<const char> type,
                                  const char (&str)[Length]) {
   static_assert(Length > UnicodeKeyLength + 1,
                 "Unicode extension type contains more than two characters");
-  return type.length() == (Length - 1) &&
-         memcmp(type.begin().get(), str, Length - 1) == 0;
+  return type.size() == (Length - 1) &&
+         memcmp(type.data(), str, Length - 1) == 0;
 }
 
-static int32_t CompareUnicodeType(const char* a, const ConstCharRange& b) {
+static int32_t CompareUnicodeType(const char* a, mozilla::Span<const char> b) {
 #ifdef DEBUG
   auto isNull = [](char c) {
     return c == '\\0';
   };
 #endif
 
-  MOZ_ASSERT(std::none_of(b.begin().get(), b.end().get(), isNull),
+  MOZ_ASSERT(std::none_of(b.begin(), b.end(), isNull),
              "unexpected null-character in string");
 
   using UnsignedChar = unsigned char;
-  for (size_t i = 0; i < b.length(); i++) {
+  for (size_t i = 0; i < b.size(); i++) {
     // |a| is zero-terminated and |b| doesn't contain a null-terminator. So if
     // we've reached the end of |a|, the below if-statement will always be true.
     // That ensures we don't read past the end of |a|.
@@ -2103,13 +2094,13 @@ static int32_t CompareUnicodeType(const char* a, const ConstCharRange& b) {
 
   // Return zero if both strings are equal or a negative number if |b| is a
   // prefix of |a|.
-  return -int32_t(UnsignedChar(a[b.length()]));
+  return -int32_t(UnsignedChar(a[b.size()]));
 };
 
 template <size_t Length>
 static inline const char* SearchReplacement(const char* (&types)[Length],
                                             const char* (&aliases)[Length],
-                                            const ConstCharRange& type) {
+                                            mozilla::Span<const char> type) {
 
   auto p = std::lower_bound(std::begin(types), std::end(types), type,
                             [](const auto& a, const auto& b) {
@@ -2128,7 +2119,7 @@ static inline const char* SearchReplacement(const char* (&types)[Length],
  * Spec: https://www.unicode.org/reports/tr35/#Unicode_Locale_Extension_Data_Files
  */
 const char* js::intl::LanguageTag::replaceUnicodeExtensionType(
-    const ConstCharRange& key, const ConstCharRange& type) {
+    mozilla::Span<const char> key, mozilla::Span<const char> type) {
 #ifdef DEBUG
   static auto isAsciiLowercaseAlphanumeric = [](char c) {
     return mozilla::IsAsciiLowercaseAlpha(c) || mozilla::IsAsciiDigit(c);
@@ -2139,12 +2130,12 @@ const char* js::intl::LanguageTag::replaceUnicodeExtensionType(
   };
 #endif
 
-  MOZ_ASSERT(key.length() == UnicodeKeyLength);
-  MOZ_ASSERT(std::all_of(key.begin().get(), key.end().get(),
+  MOZ_ASSERT(key.size() == UnicodeKeyLength);
+  MOZ_ASSERT(std::all_of(key.begin(), key.end(),
                          isAsciiLowercaseAlphanumeric));
 
-  MOZ_ASSERT(type.length() > UnicodeKeyLength);
-  MOZ_ASSERT(std::all_of(type.begin().get(), type.end().get(),
+  MOZ_ASSERT(type.size() > UnicodeKeyLength);
+  MOZ_ASSERT(std::all_of(type.begin(), type.end(),
                          isAsciiLowercaseAlphanumericOrDash));
 """)
 
