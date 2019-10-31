@@ -78,13 +78,13 @@ bool IsStructurallyValidPrivateUseTag(
 template <typename CharT>
 char AsciiToLowerCase(CharT c) {
   MOZ_ASSERT(mozilla::IsAscii(c));
-  return mozilla::IsAsciiUppercaseAlpha(c) ? (c | 0x20) : c;
+  return mozilla::IsAsciiUppercaseAlpha(c) ? (c + 0x20) : c;
 }
 
 template <typename CharT>
 char AsciiToUpperCase(CharT c) {
   MOZ_ASSERT(mozilla::IsAscii(c));
-  return mozilla::IsAsciiLowercaseAlpha(c) ? (c & ~0x20) : c;
+  return mozilla::IsAsciiLowercaseAlpha(c) ? (c - 0x20) : c;
 }
 
 template <typename CharT>
@@ -139,7 +139,7 @@ static constexpr size_t TransformKeyLength = 2;
 template <size_t Length>
 class LanguageTagSubtag final {
   uint8_t length_ = 0;
-  char chars_[Length];
+  char chars_[Length] = {};  // zero initialize
 
  public:
   LanguageTagSubtag() = default;
@@ -158,11 +158,19 @@ class LanguageTagSubtag final {
     length_ = str.length();
   }
 
-  void toLowerCase() { AsciiToLowerCase(chars_, length(), chars_); }
+  // The toXYZCase() methods are using |Length| instead of |length()|, because
+  // current compilers (tested GCC and Clang) can't infer the maximum string
+  // length - even when using hints like |std::min| - and instead are emitting
+  // SIMD optimized code. Using a fixed sized length avoids emitting the SIMD
+  // code. (Emitting SIMD code doesn't make sense here, because the SIMD code
+  // only kicks in for long strings.) A fixed length will additionally ensure
+  // the compiler unrolls the loop in the case conversion code.
 
-  void toUpperCase() { AsciiToUpperCase(chars_, length(), chars_); }
+  void toLowerCase() { AsciiToLowerCase(chars_, Length, chars_); }
 
-  void toTitleCase() { AsciiToTitleCase(chars_, length(), chars_); }
+  void toUpperCase() { AsciiToUpperCase(chars_, Length, chars_); }
+
+  void toTitleCase() { AsciiToTitleCase(chars_, Length, chars_); }
 
   template <size_t N>
   bool equalTo(const char (&str)[N]) const {
@@ -521,8 +529,7 @@ class MOZ_STACK_CLASS LanguageTagParser final {
   // Always returns the lower case form of an alphabetical character.
   char singletonKey(const Token& tok) const {
     MOZ_ASSERT(tok.length() == 1);
-    char c = charAt(tok.index());
-    return mozilla::IsAsciiUppercaseAlpha(c) ? (c | 0x20) : c;
+    return AsciiToLowerCase(charAt(tok.index()));
   }
 
   // extensions = unicode_locale_extensions |
