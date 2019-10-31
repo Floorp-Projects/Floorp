@@ -1314,7 +1314,7 @@ class Breakpoint {
    * of debugger and debuggee, regardless of whether we're in the midst of a GC,
    * and so on - unwrapping is just too entangled.
    */
-  HeapPtr<JSObject*> wrappedDebugger;
+  const HeapPtr<JSObject*> wrappedDebugger;
 
   /* The site at which we're inserted. */
   BreakpointSite* const site;
@@ -1328,7 +1328,7 @@ class Breakpoint {
    * now it is just cross-compartment wrapper for the JS object supplied to
    * `setBreakpoint`, hopefully with a callable `hit` property.
    */
-  HeapPtr<JSObject*> handler;
+  const HeapPtr<JSObject*> handler;
 
   /**
    * Link elements for each list this breakpoint can be in.
@@ -1369,7 +1369,7 @@ class Breakpoint {
 
 class JSBreakpointSite : public BreakpointSite {
  public:
-  HeapPtr<JSScript*> script;
+  const HeapPtr<JSScript*> script;
   jsbytecode* const pc;
 
  public:
@@ -1387,7 +1387,7 @@ inline JSBreakpointSite* BreakpointSite::asJS() {
 
 class WasmBreakpointSite : public BreakpointSite {
  public:
-  HeapPtr<WasmInstanceObject*> instanceObject;
+  const HeapPtr<WasmInstanceObject*> instanceObject;
   uint32_t offset;
 
  public:
