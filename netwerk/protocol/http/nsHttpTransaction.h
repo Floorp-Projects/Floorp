@@ -180,6 +180,7 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   mozilla::TimeStamp GetResponseEnd();
 
   int64_t GetTransferSize() { return mTransferSize; }
+  int64_t GetRequestSize() { return mRequestSize; }
 
   MOZ_MUST_USE bool Do0RTT() override;
   MOZ_MUST_USE nsresult Finish0RTT(bool aRestart,
