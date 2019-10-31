@@ -436,15 +436,6 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
   bool Bug1563695() const { return mBug1563695; }
   bool Bug1556491() const { return mBug1556491; }
 
-  bool IsHttp3VersionSupportedHex(const nsACString& version);
-  nsCString Http3Version() { return kHttp3Version; }
-
-  bool IsHttp3Enabled() const { return mHttp3Enabled; }
-  uint32_t DefaultQpackTableSize() const { return mQpackTableSize; }
-  uint16_t DefaultHttp3MaxBlockedStreams() const {
-    return (uint16_t)mHttp3MaxBlockedStreams;
-  }
-
   uint32_t MaxHttpResponseHeaderSize() const {
     return mMaxHttpResponseHeaderSize;
   }
@@ -693,13 +684,6 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
   Atomic<bool, Relaxed> mBug1563538;
   Atomic<bool, Relaxed> mBug1563695;
   Atomic<bool, Relaxed> mBug1556491;
-
-  Atomic<bool, Relaxed> mHttp3Enabled;
-  // Http3 parameters
-  Atomic<uint32_t, Relaxed> mQpackTableSize;
-  Atomic<uint32_t, Relaxed>
-      mHttp3MaxBlockedStreams;  // uint16_t is enough here, but Atomic only
-                                // supports uint32_t or uint64_t.
 
   // The max size (in bytes) for received Http response header.
   uint32_t mMaxHttpResponseHeaderSize;

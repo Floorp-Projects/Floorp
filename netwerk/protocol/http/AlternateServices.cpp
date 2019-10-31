@@ -89,7 +89,6 @@ void AltSvcMapping::ProcessHeader(
     nsAutoCString npnToken;
     int32_t portno = originPort;
     bool clearEntry = false;
-    bool isHttp3 = false;
 
     for (uint32_t pairIndex = 0;
          pairIndex < parsedAltSvc.mValues[index].mValues.Length();
@@ -107,17 +106,8 @@ void AltSvcMapping::ProcessHeader(
           break;
         }
 
-        // h2=[hostname]:443 or h3=[hostname]:port;quic="ff0000XX"
-        // or h3-xx=[hostname]:port
-        // XX is current version we support and it is define in nsHttp.h.
-        if (currentName.EqualsLiteral("h3")) {
-          isHttp3 = true;
-        } else if (currentName.Equals(kHttp3Version)) {
-          isHttp3 = true;
-          npnToken = kHttp3Version;
-        } else {
-          npnToken = currentName;
-        }
+        // h2=[hostname]:443
+        npnToken = currentName;
         int32_t colonIndex = currentValue.FindChar(':');
         if (colonIndex >= 0) {
           portno =
@@ -128,20 +118,7 @@ void AltSvcMapping::ProcessHeader(
         hostname.Assign(currentValue.BeginReading(), colonIndex);
       } else if (currentName.EqualsLiteral("ma")) {
         maxage = atoi(PromiseFlatCString(currentValue).get());
-      } else if ((currentName.EqualsLiteral("quic")) && isHttp3) {
-        LOG(("Alt Svc versions string: %s", currentValue.BeginReading()));
-        for (const nsACString& ver : currentValue.Split(',')) {
-          LOG(("Alt Svc versions %s", PromiseFlatCString(ver).get()));
-          if (npnToken.IsEmpty()) {
-            nsAutoCString version(ver);
-            version.Trim(" \t");
-            if (gHttpHandler->IsHttp3VersionSupportedHex(version)) {
-              LOG(("Alt Svc found supported version: %s", version.get()));
-              npnToken.Assign(gHttpHandler->Http3Version());
-              break;
-            }
-          }
-        }
+        break;
       } else {
         LOG(("Alt Svc ignoring parameter %s", currentName.BeginReading()));
       }
@@ -170,8 +147,7 @@ void AltSvcMapping::ProcessHeader(
     uint32_t spdyIndex;
     SpdyInformation* spdyInfo = gHttpHandler->SpdyInfo();
     if (!(NS_SUCCEEDED(spdyInfo->GetNPNIndex(npnToken, &spdyIndex)) &&
-          spdyInfo->ProtocolEnabled(spdyIndex)) &&
-        !(isHttp3 && gHttpHandler->IsHttp3Enabled() && !npnToken.IsEmpty())) {
+          spdyInfo->ProtocolEnabled(spdyIndex))) {
       LOG(("Alt Svc unknown protocol %s, ignoring", npnToken.get()));
       continue;
     }
@@ -180,8 +156,7 @@ void AltSvcMapping::ProcessHeader(
         gHttpHandler->ConnMgr()->GetStoragePtr(),
         gHttpHandler->ConnMgr()->StorageEpoch(), originScheme, originHost,
         originPort, username, topWindowOrigin, privateBrowsing, isolated,
-        NowInSeconds() + maxage, hostname, portno, npnToken, originAttributes,
-        isHttp3);
+        NowInSeconds() + maxage, hostname, portno, npnToken, originAttributes);
     if (mapping->TTL() <= 0) {
       LOG(("Alt Svc invalid map"));
       mapping = nullptr;
@@ -207,8 +182,7 @@ AltSvcMapping::AltSvcMapping(
     const nsACString& username, const nsACString& topWindowOrigin,
     bool privateBrowsing, bool isolated, uint32_t expiresAt,
     const nsACString& alternateHost, int32_t alternatePort,
-    const nsACString& npnToken, const OriginAttributes& originAttributes,
-    bool aIsHttp3)
+    const nsACString& npnToken, const OriginAttributes& originAttributes)
     : mStorage(storage),
       mStorageEpoch(epoch),
       mAlternateHost(alternateHost),
@@ -224,8 +198,7 @@ AltSvcMapping::AltSvcMapping(
       mMixedScheme(false),
       mNPNToken(npnToken),
       mOriginAttributes(originAttributes),
-      mSyncOnlyOnSuccess(false),
-      mIsHttp3(aIsHttp3) {
+      mSyncOnlyOnSuccess(false) {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (NS_FAILED(SchemeIsHTTPS(originScheme, mHttps))) {
@@ -249,12 +222,7 @@ AltSvcMapping::AltSvcMapping(
   }
 
   if ((mAlternatePort == mOriginPort) &&
-      mAlternateHost.EqualsIgnoreCase(mOriginHost.get()) && !mIsHttp3) {
-    // Http2 on the same host:port does not make sense because we are
-    // connecting to the same end point over the same protocol (TCP) as with
-    // original host. On the other hand, for Http3 alt-svc can be hosted on
-    // the same host:port because protocol(UDP vs. TCP) is always different and
-    // we are not connecting to the same end point.
+      mAlternateHost.EqualsIgnoreCase(mOriginHost.get())) {
     LOG(("Alt Svc is also origin Svc - ignoring\n"));
     mExpiresAt = 0;  // invalid
   }
@@ -365,7 +333,7 @@ void AltSvcMapping::GetConnectionInfo(
     const OriginAttributes& originAttributes) {
   RefPtr<nsHttpConnectionInfo> ci = new nsHttpConnectionInfo(
       mOriginHost, mOriginPort, mNPNToken, mUsername, mTopWindowOrigin, pi,
-      originAttributes, mAlternateHost, mAlternatePort, mIsHttp3);
+      originAttributes, mAlternateHost, mAlternatePort);
 
   // http:// without the mixed-scheme attribute needs to be segmented in the
   // connection manager connection information hash with this attribute
@@ -410,17 +378,12 @@ void AltSvcMapping::Serialize(nsCString& out) {
   out.Append('|');  // Be careful, the top window origin may contain colons!
   out.Append(mIsolated ? 'y' : 'n');
   out.Append(':');
-  out.Append(mIsHttp3 ? 'y' : 'n');
-  out.Append(':');
   // Add code to serialize new members here!
 }
 
 AltSvcMapping::AltSvcMapping(DataStorage* storage, int32_t epoch,
                              const nsCString& str)
-    : mStorage(storage),
-      mStorageEpoch(epoch),
-      mSyncOnlyOnSuccess(false),
-      mIsHttp3(false) {
+    : mStorage(storage), mStorageEpoch(epoch), mSyncOnlyOnSuccess(false) {
   mValidated = false;
   nsresult code;
   char separator = ':';
@@ -478,8 +441,6 @@ AltSvcMapping::AltSvcMapping(DataStorage* storage, int32_t epoch,
     separator = ':';
     _NS_NEXT_TOKEN;
     mIsolated = Substring(str, start, idx - start).EqualsLiteral("y");
-    _NS_NEXT_TOKEN;
-    mIsHttp3 = Substring(str, start, idx - start).EqualsLiteral("y");
     // Add code to deserialize new members here!
 #undef _NS_NEXT_TOKEN
 
@@ -556,12 +517,9 @@ class AltSvcTransaction final : public NullHttpTransaction {
     HttpVersion version = mConnection->Version();
     LOG(("AltSvcTransaction::MaybeValidate() %p version %d\n", this,
          static_cast<int32_t>(version)));
-    if ((!mMapping->IsHttp3() && (version != HttpVersion::v2_0)) ||
-        (mMapping->IsHttp3() && (version != HttpVersion::v3_0))) {
-      LOG(
-          ("AltSvcTransaction::MaybeValidate %p Failed due to protocol version"
-           " expacted %s.",
-           this, mMapping->IsHttp3() ? "Http3" : "Http2"));
+    if (version != HttpVersion::v2_0) {
+      LOG(("AltSvcTransaction::MaybeValidate %p Failed due to protocol version",
+           this));
       return;
     }
 
@@ -676,7 +634,7 @@ class WellKnownChecker {
         LOG(("WellKnownChecker::Done %p alternate was not 200 response code\n",
              this));
       } else if (!mTransactionAlternate->mVersionOK) {
-        LOG(("WellKnownChecker::Done %p alternate was not at least h2 or h3\n",
+        LOG(("WellKnownChecker::Done %p alternate was not at least h2\n",
              this));
       } else if (!mTransactionAlternate->mWKResponse.Equals(
                      mTransactionOrigin->mWKResponse)) {
@@ -810,8 +768,7 @@ void TransactionObserver::Complete(nsHttpTransaction* aTrans, nsresult reason) {
   }
   HttpVersion version = conn->Version();
   mVersionOK = (((reason == NS_BASE_STREAM_CLOSED) || (reason == NS_OK)) &&
-                ((conn->Version() == HttpVersion::v2_0) ||
-                 (conn->Version() == HttpVersion::v3_0)));
+                conn->Version() == HttpVersion::v2_0);
 
   nsCOMPtr<nsISupports> secInfo;
   conn->GetSecurityInfo(getter_AddRefs(secInfo));
