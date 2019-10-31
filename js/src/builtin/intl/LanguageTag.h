@@ -63,14 +63,13 @@ bool IsStructurallyValidRegionTag(const mozilla::Range<const CharT>& region);
 bool IsStructurallyValidVariantTag(const mozilla::Range<const char>& variant);
 
 /**
- * Return true if |extension| is a valid, case-normalized Unicode extension
- * subtag.
+ * Return true if |extension| is a valid Unicode extension subtag.
  */
 bool IsStructurallyValidUnicodeExtensionTag(
     const mozilla::Range<const char>& extension);
 
 /**
- * Return true if |privateUse| is a valid, case-normalized private-use subtag.
+ * Return true if |privateUse| is a valid private-use subtag.
  */
 bool IsStructurallyValidPrivateUseTag(
     const mozilla::Range<const char>& privateUse);
@@ -317,8 +316,8 @@ class MOZ_STACK_CLASS LanguageTag final {
   void clearVariants() { variants_.clearAndFree(); }
 
   /**
-   * Set the Unicode extension subtag. The input must be a valid,
-   * case-normalized Unicode extension subtag.
+   * Set the Unicode extension subtag. The input must be a valid Unicode
+   * extension subtag.
    */
   bool setUnicodeExtension(JS::UniqueChars extension);
 
@@ -328,8 +327,8 @@ class MOZ_STACK_CLASS LanguageTag final {
   void clearUnicodeExtension();
 
   /**
-   * Set the private-use subtag. The input must be a valid, case-normalized
-   * private-use subtag or the empty string.
+   * Set the private-use subtag. The input must be a valid private-use subtag
+   * or nullptr.
    */
   void setPrivateuse(JS::UniqueChars privateuse) {
     MOZ_ASSERT(!privateuse ||
@@ -486,10 +485,15 @@ class MOZ_STACK_CLASS LanguageTagParser final {
     return chars(cx, tok.index(), tok.length());
   }
 
-  Token nextToken();
-
   JS::UniqueChars extension(JSContext* cx, const Token& start,
-                            const Token& end) const;
+                            const Token& end) const {
+    MOZ_ASSERT(start.index() < end.index());
+
+    size_t length = end.index() - 1 - start.index();
+    return chars(cx, start.index(), length);
+  }
+
+  Token nextToken();
 
   // unicode_language_subtag = alpha{2,3} | alpha{5,8} ;
   //

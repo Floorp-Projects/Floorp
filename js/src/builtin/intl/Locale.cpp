@@ -89,6 +89,9 @@ static mozilla::Maybe<IndexAndLength> UnicodeExtensionPosition(
     const LanguageTag& tag) {
   size_t index = 0;
   for (const auto& extension : tag.extensions()) {
+    MOZ_ASSERT(!mozilla::IsAsciiUppercaseAlpha(extension[0]),
+               "extensions are case normalized to lowercase");
+
     size_t extensionLength = strlen(extension.get());
     if (extension[0] == 'u') {
       return mozilla::Some(IndexAndLength{index, extensionLength});
@@ -416,8 +419,6 @@ static bool ApplyUnicodeExtensionToTag(JSContext* cx, LanguageTag& tag,
   // keyword with the same key is detected as a duplicate when canonicalizing
   // the Unicode extension subtag and gets discarded.
 
-  size_t startNewKeywords = newExtension.length();
-
   if (calendar) {
     if (!appendKeyword("-ca-", calendar)) {
       return false;
@@ -448,12 +449,6 @@ static bool ApplyUnicodeExtensionToTag(JSContext* cx, LanguageTag& tag,
       return false;
     }
   }
-
-  // Normalize the case of the new keywords.
-  std::transform(newExtension.begin() + startNewKeywords, newExtension.end(),
-                 newExtension.begin() + startNewKeywords, [](char c) {
-                   return mozilla::IsAsciiUppercaseAlpha(c) ? (c | 0x20) : c;
-                 });
 
   // Append the remaining keywords from the previous Unicode extension subtag.
   if (unicodeExtensionKeywords) {

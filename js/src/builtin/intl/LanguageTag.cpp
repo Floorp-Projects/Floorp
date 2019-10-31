@@ -112,31 +112,20 @@ bool IsStructurallyValidVariantTag(const ConstCharRange& variant) {
 }
 
 bool IsStructurallyValidUnicodeExtensionTag(const ConstCharRange& extension) {
-  auto isAsciiLowercaseAlphanumericOrDash = [](char c) {
-    return mozilla::IsAsciiLowercaseAlpha(c) || mozilla::IsAsciiDigit(c) ||
-           c == '-';
-  };
-
-  size_t length = extension.length();
-  const char* str = extension.begin().get();
-  return LanguageTagParser::canParseUnicodeExtension(extension) &&
-         std::all_of(str, str + length, isAsciiLowercaseAlphanumericOrDash);
+  return LanguageTagParser::canParseUnicodeExtension(extension);
 }
 
 static bool IsStructurallyValidExtensionTag(const ConstCharRange& extension) {
   // other_extensions = sep [alphanum-[tTuUxX]] (sep alphanum{2,8})+ ;
   // NB: Allow any extension, including Unicode and Transform here, because
   // this function is only used for an assertion.
-  auto isAsciiDigitOrLowercaseAlpha = [](char c) {
-    return mozilla::IsAsciiDigit(c) || mozilla::IsAsciiLowercaseAlpha(c);
-  };
 
   size_t length = extension.length();
   const char* str = extension.begin().get();
   if (length <= 2) {
     return false;
   }
-  if (!isAsciiDigitOrLowercaseAlpha(str[0]) || str[0] == 'x') {
+  if (!mozilla::IsAsciiAlphanumeric(str[0]) || str[0] == 'x' || str[0] == 'X') {
     return false;
   }
   str++;
@@ -148,7 +137,7 @@ static bool IsStructurallyValidExtensionTag(const ConstCharRange& extension) {
         memchr(str, '-', extension.end().get() - str));
     size_t len = (sep ? sep : extension.end().get()) - str;
     if (len < 2 || len > 8 ||
-        !std::all_of(str, str + len, isAsciiDigitOrLowercaseAlpha)) {
+        !std::all_of(str, str + len, mozilla::IsAsciiAlphanumeric<char>)) {
       return false;
     }
     if (!sep) {
@@ -160,13 +149,17 @@ static bool IsStructurallyValidExtensionTag(const ConstCharRange& extension) {
 
 bool IsStructurallyValidPrivateUseTag(const ConstCharRange& privateUse) {
   // pu_extensions = sep [xX] (sep alphanum{1,8})+ ;
-  auto isAsciiDigitOrLowercaseAlpha = [](char c) {
-    return mozilla::IsAsciiDigit(c) || mozilla::IsAsciiLowercaseAlpha(c);
-  };
 
   size_t length = privateUse.length();
   const char* str = privateUse.begin().get();
-  if (length <= 2 || *str++ != 'x' || *str++ != '-') {
+  if (length <= 2) {
+    return false;
+  }
+  if (str[0] != 'x' && str[0] != 'X') {
+    return false;
+  }
+  str++;
+  if (*str++ != '-') {
     return false;
   }
   while (true) {
@@ -174,7 +167,7 @@ bool IsStructurallyValidPrivateUseTag(const ConstCharRange& privateUse) {
         memchr(str, '-', privateUse.end().get() - str));
     size_t len = (sep ? sep : privateUse.end().get()) - str;
     if (len == 0 || len > 8 ||
-        !std::all_of(str, str + len, isAsciiDigitOrLowercaseAlpha)) {
+        !std::all_of(str, str + len, mozilla::IsAsciiAlphanumeric<char>)) {
       return false;
     }
     if (!sep) {
@@ -271,6 +264,8 @@ bool LanguageTag::canonicalizeBaseName(JSContext* cx) {
 
   // The |LanguageTag| fields are already in normalized case, so we can skip
   // this step.
+  // The following subtags are not in normalized case:
+  // - extensions and privateuse
   MOZ_ASSERT(IsStructurallyValidLanguageTag(language().range()));
   MOZ_ASSERT(script().length() == 0 ||
              IsStructurallyValidScriptTag(script().range()));
@@ -282,16 +277,10 @@ bool LanguageTag::canonicalizeBaseName(JSContext* cx) {
     return IsStructurallyValidVariantTag({str, strlen(str)});
   };
   MOZ_ASSERT(std::all_of(variants().begin(), variants().end(), validVariant));
-
-  auto validExtension = [](const auto& extension) {
-    const char* str = extension.get();
-    return IsStructurallyValidExtensionTag({str, strlen(str)});
-  };
-  MOZ_ASSERT(
-      std::all_of(extensions().begin(), extensions().end(), validExtension));
 #endif
-  MOZ_ASSERT(!privateuse() || IsStructurallyValidPrivateUseTag(
-                                  {privateuse(), strlen(privateuse())}));
+
+  // Extensions and privateuse subtags are case normalized in the
+  // |canonicalizeExtensions| method.
 
   // The second step in UTS 35, 3.2.1, is to order all subtags.
 
@@ -337,6 +326,16 @@ bool LanguageTag::canonicalizeBaseName(JSContext* cx) {
 
 bool LanguageTag::canonicalizeExtensions(
     JSContext* cx, UnicodeExtensionCanonicalForm canonicalForm) {
+  // The canonical case for all extension subtags is lowercase.
+  for (UniqueChars& extension : extensions_) {
+    char* extensionChars = extension.get();
+    size_t extensionLength = strlen(extensionChars);
+    AsciiToLowerCase(extensionChars, extensionLength, extensionChars);
+
+    MOZ_ASSERT(
+        IsStructurallyValidExtensionTag({extensionChars, extensionLength}));
+  }
+
   // Any extensions are in alphabetical order by their singleton.
   // "u-ca-chinese-t-zh-latn" -> "t-zh-latn-u-ca-chinese"
   if (!SortAlphabetically(cx, extensions_)) {
@@ -353,6 +352,15 @@ bool LanguageTag::canonicalizeExtensions(
         return false;
       }
     }
+  }
+
+  // The canonical case for privateuse subtags is lowercase.
+  if (char* privateuse = privateuse_.get()) {
+    size_t privateuseLength = strlen(privateuse);
+    AsciiToLowerCase(privateuse, privateuseLength, privateuse);
+
+    MOZ_ASSERT(
+        IsStructurallyValidPrivateUseTag({privateuse, privateuseLength}));
   }
   return true;
 }
@@ -1043,18 +1051,6 @@ UniqueChars LanguageTagParser::chars(JSContext* cx, size_t index,
     dest[length] = '\0';
   }
   return chars;
-}
-
-UniqueChars LanguageTagParser::extension(JSContext* cx, const Token& start,
-                                         const Token& end) const {
-  MOZ_ASSERT(start.index() < end.index());
-
-  size_t length = end.index() - 1 - start.index();
-  UniqueChars extension = chars(cx, start.index(), length);
-  if (extension) {
-    AsciiToLowerCase(extension.get(), length, extension.get());
-  }
-  return extension;
 }
 
 // Parse the `unicode_language_id` production.
