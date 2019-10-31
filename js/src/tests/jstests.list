@@ -441,17 +441,6 @@ skip script test262/intl402/ListFormat/constructor/constructor/options-toobject-
 skip script test262/intl402/ListFormat/constructor/constructor/options-order.js
 skip script test262/intl402/ListFormat/constructor/constructor/options-type-valid.js
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1590539
-skip script test262/built-ins/Atomics/add/validate-arraytype-before-index-coercion.js
-skip script test262/built-ins/Atomics/and/validate-arraytype-before-index-coercion.js
-skip script test262/built-ins/Atomics/compareExchange/validate-arraytype-before-index-coercion.js
-skip script test262/built-ins/Atomics/exchange/validate-arraytype-before-index-coercion.js
-skip script test262/built-ins/Atomics/load/validate-arraytype-before-index-coercion.js
-skip script test262/built-ins/Atomics/or/validate-arraytype-before-index-coercion.js
-skip script test262/built-ins/Atomics/store/validate-arraytype-before-index-coercion.js
-skip script test262/built-ins/Atomics/sub/validate-arraytype-before-index-coercion.js
-skip script test262/built-ins/Atomics/xor/validate-arraytype-before-index-coercion.js
-
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1590543
 skip script test262/built-ins/String/prototype/matchAll/flags-nonglobal-throws.js
 skip script test262/built-ins/String/prototype/matchAll/flags-undefined-throws.js
