@@ -47,7 +47,7 @@ import mozilla.components.feature.session.FullScreenFeature
 import mozilla.components.feature.session.SessionFeature
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.session.SwipeRefreshFeature
-import mozilla.components.feature.session.WindowFeature
+import mozilla.components.feature.tabs.WindowFeature
 import mozilla.components.feature.sitepermissions.SitePermissions
 import mozilla.components.feature.sitepermissions.SitePermissionsFeature
 import mozilla.components.feature.sitepermissions.SitePermissionsRules
@@ -248,7 +248,10 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler, SessionManager.Obs
             )
 
             windowFeature.set(
-                feature = WindowFeature(sessionManager),
+                feature = WindowFeature(
+                    store = store,
+                    tabsUseCases = context.components.useCases.tabsUseCases
+                ),
                 owner = this,
                 view = view
             )
