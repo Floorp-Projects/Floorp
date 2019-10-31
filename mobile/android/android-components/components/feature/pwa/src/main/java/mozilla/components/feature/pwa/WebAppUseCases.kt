@@ -16,17 +16,24 @@ import mozilla.components.feature.pwa.ext.installableManifest
 class WebAppUseCases(
     private val applicationContext: Context,
     private val sessionManager: SessionManager,
-    httpClient: Client,
-    private val supportWebApps: Boolean = true
+    private val shortcutManager: WebAppShortcutManager
 ) {
 
-    private val shortcutManager by lazy {
+    @Deprecated("Pass in WebAppShortcutManager directly instead")
+    constructor(
+        applicationContext: Context,
+        sessionManager: SessionManager,
+        httpClient: Client,
+        supportWebApps: Boolean = true
+    ) : this(
+        applicationContext,
+        sessionManager,
         WebAppShortcutManager(
             applicationContext,
             httpClient,
             supportWebApps = supportWebApps
         )
-    }
+    )
 
     /**
      * Checks if the launcher supports adding shortcuts.
@@ -38,7 +45,7 @@ class WebAppUseCases(
      * Checks to see if the current session can be installed as a Progressive Web App.
      */
     fun isInstallable() =
-        sessionManager.selectedSession?.installableManifest() != null && supportWebApps
+        sessionManager.selectedSession?.installableManifest() != null && shortcutManager.supportWebApps
 
     /**
      * Let the user add the selected session to the homescreen.

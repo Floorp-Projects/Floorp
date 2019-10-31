@@ -61,6 +61,7 @@ class WebAppShortcutManagerTest {
 
         `when`(context.packageManager).thenReturn(packageManager)
         `when`(context.getSystemService(ShortcutManager::class.java)).thenReturn(shortcutManager)
+        `when`(context.getString(R.string.mozac_feature_pwa_default_shortcut_label)).thenReturn("")
 
         manager = spy(WebAppShortcutManager(context, httpClient, storage))
         `when`(manager.icons).thenReturn(icons)

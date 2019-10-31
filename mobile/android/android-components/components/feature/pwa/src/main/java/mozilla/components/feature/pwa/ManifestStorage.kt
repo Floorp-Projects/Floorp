@@ -12,6 +12,9 @@ import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.feature.pwa.db.ManifestDatabase
 import mozilla.components.feature.pwa.db.ManifestEntity
 
+/**
+ * Disk storage for [WebAppManifest]. Other components use this class to reload a saved manifest.
+ */
 class ManifestStorage(context: Context) {
 
     @VisibleForTesting

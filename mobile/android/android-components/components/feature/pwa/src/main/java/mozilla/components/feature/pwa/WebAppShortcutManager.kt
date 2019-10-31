@@ -38,21 +38,28 @@ import mozilla.components.feature.pwa.WebAppLauncherActivity.Companion.ACTION_PW
 import mozilla.components.feature.pwa.ext.installableManifest
 
 private val pwaIconMemoryCache = IconMemoryCache()
+
 const val SHORTCUT_CATEGORY = "mozilla.components.pwa.category.SHORTCUT"
 
+/**
+ * Helper to manage pinned shortcuts for websites.
+ *
+ * @param httpClient Fetch client used to load website icons.
+ * @param storage Storage used to save web app manifests to disk.
+ * @param supportWebApps If true, Progressive Web Apps will be pinnable.
+ * If false, all web sites will be bookmark shortcuts even if they have a manifest.
+ */
 class WebAppShortcutManager(
     context: Context,
     httpClient: Client,
     private val storage: ManifestStorage = ManifestStorage(context),
-    private val supportWebApps: Boolean = true
+    internal val supportWebApps: Boolean = true
 ) {
 
     @VisibleForTesting
     internal val icons = webAppIcons(context, httpClient)
 
-    private val fallbackLabel = {
-        context.getString(R.string.mozac_feature_pwa_default_shortcut_label)
-    }
+    private val fallbackLabel = context.getString(R.string.mozac_feature_pwa_default_shortcut_label)
 
     /**
      * Request to create a new shortcut on the home screen.
@@ -109,7 +116,7 @@ class WebAppShortcutManager(
         }
 
         val builder = ShortcutInfoCompat.Builder(context, session.url)
-            .setShortLabel((overrideShortcutName ?: session.title).ifBlank(fallbackLabel))
+            .setShortLabel((overrideShortcutName ?: session.title).ifBlank { fallbackLabel })
             .setIntent(shortcutIntent)
 
         session.icon?.let {
@@ -138,7 +145,7 @@ class WebAppShortcutManager(
 
         return ShortcutInfoCompat.Builder(context, manifest.startUrl)
             .setLongLabel(manifest.name)
-            .setShortLabel(shortLabel.ifBlank(fallbackLabel))
+            .setShortLabel(shortLabel.ifBlank { fallbackLabel })
             .setIcon(buildIconFromManifest(manifest))
             .setIntent(shortcutIntent)
             .build()

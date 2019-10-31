@@ -39,6 +39,7 @@ import mozilla.components.feature.media.MediaFeature
 import mozilla.components.feature.media.RecordingDevicesNotificationFeature
 import mozilla.components.feature.media.state.MediaStateMachine
 import mozilla.components.feature.pwa.ManifestStorage
+import mozilla.components.feature.pwa.WebAppShortcutManager
 import mozilla.components.feature.pwa.WebAppUseCases
 import mozilla.components.feature.pwa.intent.TrustedWebActivityIntentProcessor
 import mozilla.components.feature.pwa.intent.WebAppIntentProcessor
@@ -128,7 +129,9 @@ open class DefaultComponents(private val applicationContext: Context) {
     val searchUseCases by lazy { SearchUseCases(applicationContext, searchEngineManager, sessionManager) }
     val defaultSearchUseCase by lazy { { searchTerms: String -> searchUseCases.defaultSearch.invoke(searchTerms) } }
 
-    val webAppUseCases by lazy { WebAppUseCases(applicationContext, sessionManager, client) }
+    private val webAppManifestStorage by lazy { ManifestStorage(applicationContext) }
+    private val webAppShortcutManager by lazy { WebAppShortcutManager(applicationContext, client, webAppManifestStorage) }
+    val webAppUseCases by lazy { WebAppUseCases(applicationContext, sessionManager, webAppShortcutManager) }
 
     // Intent
     val tabIntentProcessor by lazy {
@@ -136,7 +139,7 @@ open class DefaultComponents(private val applicationContext: Context) {
     }
     val externalAppIntentProcessors by lazy {
         listOf(
-            WebAppIntentProcessor(sessionManager, sessionUseCases.loadUrl, ManifestStorage(applicationContext)),
+            WebAppIntentProcessor(sessionManager, sessionUseCases.loadUrl, webAppManifestStorage),
             TrustedWebActivityIntentProcessor(
                 sessionManager,
                 sessionUseCases.loadUrl,
