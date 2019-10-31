@@ -849,6 +849,12 @@ class PictureInPictureChild extends ActorChild {
    * has been requested.
    */
   async togglePictureInPicture(video) {
+    // We don't allow viewing <video> elements with MediaStreams
+    // in Picture-in-Picture for now due to bug 1592539.
+    if (video.srcObject) {
+      return;
+    }
+
     if (this.inPictureInPicture(video)) {
       // The only way we could have entered here for the same video is if
       // we are toggling via the context menu, since we hide the inline
