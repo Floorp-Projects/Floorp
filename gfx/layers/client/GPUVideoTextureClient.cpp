@@ -16,12 +16,9 @@ using namespace gfx;
 GPUVideoTextureData::GPUVideoTextureData(RemoteDecoderManagerChild* aManager,
                                          const SurfaceDescriptorGPUVideo& aSD,
                                          const gfx::IntSize& aSize)
-    : mManager(aManager),
-      mSD(aSD), mSize(aSize) {
-  mSD.source() = Some(mManager->GetSource());
-}
+    : mManager(aManager), mSD(aSD), mSize(aSize) {}
 
-      GPUVideoTextureData::~GPUVideoTextureData() {}
+GPUVideoTextureData::~GPUVideoTextureData() {}
 
 bool GPUVideoTextureData::Serialize(SurfaceDescriptor& aOutDescriptor) {
   aOutDescriptor = mSD;

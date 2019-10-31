@@ -6,7 +6,6 @@
 #ifndef include_dom_media_ipc_RemoteDecoderManagerChild_h
 #define include_dom_media_ipc_RemoteDecoderManagerChild_h
 #include "mozilla/PRemoteDecoderManagerChild.h"
-#include "mozilla/layers/VideoBridgeUtils.h"
 
 namespace mozilla {
 
@@ -62,7 +61,6 @@ class RemoteDecoderManagerChild final : public PRemoteDecoderManagerChild,
   void RunWhenGPUProcessRecreated(already_AddRefed<Runnable> aTask);
 
   bool CanSend();
-  layers::VideoBridgeSource GetSource() const { return mSource; }
 
  protected:
   void InitIPDL();
@@ -83,7 +81,7 @@ class RemoteDecoderManagerChild final : public PRemoteDecoderManagerChild,
   // Main thread only
   static void InitializeThread();
 
-  explicit RemoteDecoderManagerChild(layers::VideoBridgeSource aSource);
+  RemoteDecoderManagerChild() = default;
   ~RemoteDecoderManagerChild() = default;
 
   static void OpenForRDDProcess(
@@ -92,9 +90,6 @@ class RemoteDecoderManagerChild final : public PRemoteDecoderManagerChild,
       Endpoint<PRemoteDecoderManagerChild>&& aEndpoint);
 
   RefPtr<RemoteDecoderManagerChild> mIPDLSelfRef;
-
-  // The associated source of this decoder manager
-  layers::VideoBridgeSource mSource;
 
   // Should only ever be accessed on the manager thread.
   bool mCanSend = false;

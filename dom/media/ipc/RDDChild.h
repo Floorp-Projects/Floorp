@@ -10,7 +10,6 @@
 #include "mozilla/ipc/CrashReporterHelper.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/gfx/gfxVarReceiver.h"
-#include "mozilla/gfx/GPUProcessListener.h"
 
 namespace mozilla {
 
@@ -26,8 +25,7 @@ class RDDProcessHost;
 
 class RDDChild final : public PRDDChild,
                        public ipc::CrashReporterHelper<GeckoProcessType_RDD>,
-                       public gfx::gfxVarReceiver,
-                       public gfx::GPUProcessListener {
+                       public gfx::gfxVarReceiver {
   typedef mozilla::dom::MemoryReportRequestHost MemoryReportRequestHost;
 
  public:
@@ -36,8 +34,12 @@ class RDDChild final : public PRDDChild,
 
   bool Init(bool aStartMacSandbox);
 
-  void OnCompositorUnexpectedShutdown() override;
+  bool EnsureRDDReady();
+
   void OnVarChanged(const GfxVarUpdate& aVar) override;
+
+  // PRDDChild overrides.
+  mozilla::ipc::IPCResult RecvInitComplete();
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
@@ -57,6 +59,7 @@ class RDDChild final : public PRDDChild,
 #if defined(XP_LINUX) && defined(MOZ_SANDBOX)
   UniquePtr<SandboxBroker> mSandboxBroker;
 #endif
+  bool mRDDReady;
 };
 
 }  // namespace mozilla

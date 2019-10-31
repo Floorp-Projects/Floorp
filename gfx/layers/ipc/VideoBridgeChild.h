@@ -8,7 +8,6 @@
 #define MOZILLA_GFX_VIDEOBRIDGECHILD_H
 
 #include "mozilla/layers/PVideoBridgeChild.h"
-#include "mozilla/layers/VideoBridgeUtils.h"
 #include "ISurfaceAllocator.h"
 #include "TextureForwarder.h"
 
@@ -23,7 +22,8 @@ class VideoBridgeChild final : public PVideoBridgeChild,
   static void StartupForGPUProcess();
   static void Shutdown();
 
-  static VideoBridgeChild* GetSingleton();
+  static VideoBridgeChild* GetSingletonToParentProcess();
+  static VideoBridgeChild* GetSingletonToGPUProcess();
 
   // PVideoBridgeChild
   PTextureChild* AllocPTextureChild(const SurfaceDescriptor& aSharedData,
@@ -65,10 +65,8 @@ class VideoBridgeChild final : public PVideoBridgeChild,
 
   bool CanSend() { return mCanSend; }
 
-  static void Open(Endpoint<PVideoBridgeChild>&& aEndpoint);
-
- protected:
-  void HandleFatalError(const char* aMsg) const override;
+  static void OpenToParentProcess(Endpoint<PVideoBridgeChild>&& aEndpoint);
+  static void OpenToGPUProcess(Endpoint<PVideoBridgeChild>&& aEndpoint);
 
  private:
   VideoBridgeChild();
