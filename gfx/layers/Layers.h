@@ -1466,6 +1466,8 @@ class Layer {
     return mAnimationInfo.GetAnimationGeneration();
   }
 
+  gfx::Path* CachedMotionPath() { return mAnimationInfo.CachedMotionPath(); }
+
   bool HasTransformAnimation() const;
 
   /**

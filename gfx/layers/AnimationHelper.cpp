@@ -120,18 +120,11 @@ void CompositorAnimationStorage::SetAnimatedValue(uint64_t aId,
   }
 }
 
-nsTArray<PropertyAnimationGroup>* CompositorAnimationStorage::GetAnimations(
-    const uint64_t& aId) const {
-  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
-  return mAnimations.Get(aId);
-}
-
 void CompositorAnimationStorage::SetAnimations(uint64_t aId,
                                                const AnimationArray& aValue,
                                                wr::RenderRoot aRenderRoot) {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
-  mAnimations.Put(aId, new nsTArray<PropertyAnimationGroup>(
-                           AnimationHelper::ExtractAnimations(aValue)));
+  mAnimations.Put(aId, AnimationHelper::ExtractAnimations(aValue));
   mAnimationRenderRoots.Put(aId, aRenderRoot);
 }
 
@@ -431,9 +424,31 @@ static dom::FillMode GetAdjustedFillMode(const Animation& aAnimation) {
   return fillMode;
 }
 
-nsTArray<PropertyAnimationGroup> AnimationHelper::ExtractAnimations(
+#ifdef DEBUG
+static bool HasMotionPathAnimations(const AnimationArray& aAnimations) {
+  // Actually, we don't need eCSSProperty_offset_path because the caller assumes
+  // offset-path is fixed. However, checking them together is fine.
+  nsCSSPropertyIDSet motionSet{
+      eCSSProperty_offset_path, eCSSProperty_offset_distance,
+      eCSSProperty_offset_rotate, eCSSProperty_offset_anchor};
+
+  for (const Animation& animation : aAnimations) {
+    if (animation.isNotAnimating()) {
+      continue;
+    }
+
+    if (motionSet.HasProperty(animation.property())) {
+      return true;
+    }
+  }
+
+  return false;
+}
+#endif
+
+AnimationStorageData AnimationHelper::ExtractAnimations(
     const AnimationArray& aAnimations) {
-  nsTArray<PropertyAnimationGroup> propertyAnimationGroupArray;
+  AnimationStorageData storageData;
 
   nsCSSPropertyID prevID = eCSSProperty_UNKNOWN;
   PropertyAnimationGroup* currData = nullptr;
@@ -445,7 +460,7 @@ nsTArray<PropertyAnimationGroup> AnimationHelper::ExtractAnimations(
     // knowing this is a new group.
     if (prevID != animation.property()) {
       // Got a different group, we should create a different array.
-      currData = propertyAnimationGroupArray.AppendElement();
+      currData = storageData.mAnimation.AppendElement();
       currData->mProperty = animation.property();
       currData->mAnimationData = animation.data();
       prevID = animation.property();
@@ -472,6 +487,25 @@ nsTArray<PropertyAnimationGroup> AnimationHelper::ExtractAnimations(
       MOZ_ASSERT(nsCSSPropertyIDSet::TransformLikeProperties().HasProperty(
                      animation.property()),
                  "Only transform-like properties could set this true");
+
+      if (animation.property() == eCSSProperty_offset_path) {
+        MOZ_ASSERT(currData->mBaseStyle,
+                   "Fixed offset-path should have base style");
+        MOZ_ASSERT(HasMotionPathAnimations(aAnimations));
+
+        AnimationValue value{currData->mBaseStyle};
+        const StyleOffsetPath& offsetPath = value.GetOffsetPathProperty();
+        if (offsetPath.IsPath()) {
+          MOZ_ASSERT(!storageData.mCachedMotionPath,
+                     "Only one offset-path: path() is set");
+
+          RefPtr<gfx::PathBuilder> builder =
+              MotionPathUtils::GetCompositorPathBuilder();
+          storageData.mCachedMotionPath =
+              MotionPathUtils::BuildPath(offsetPath.AsPath(), builder);
+        }
+      }
+
       continue;
     }
 
@@ -516,9 +550,9 @@ nsTArray<PropertyAnimationGroup> AnimationHelper::ExtractAnimations(
 #ifdef DEBUG
   // Sanity check that the grouped animation data is correct by looking at the
   // property set.
-  if (!propertyAnimationGroupArray.IsEmpty()) {
+  if (!storageData.mAnimation.IsEmpty()) {
     nsCSSPropertyIDSet seenProperties;
-    for (const auto& group : propertyAnimationGroupArray) {
+    for (const auto& group : storageData.mAnimation) {
       nsCSSPropertyID id = group.mProperty;
 
       MOZ_ASSERT(!seenProperties.HasProperty(id), "Should be a new property");
@@ -537,7 +571,7 @@ nsTArray<PropertyAnimationGroup> AnimationHelper::ExtractAnimations(
   }
 #endif
 
-  return propertyAnimationGroupArray;
+  return storageData;
 }
 
 uint64_t AnimationHelper::GetNextCompositorAnimationsId() {
@@ -564,8 +598,8 @@ bool AnimationHelper::SampleAnimations(CompositorAnimationStorage* aStorage,
   // Sample the animations in CompositorAnimationStorage
   for (auto iter = aStorage->ConstAnimationsTableIter(); !iter.Done();
        iter.Next()) {
-    auto& propertyAnimationGroups = *iter.UserData();
-    if (propertyAnimationGroups.IsEmpty()) {
+    auto& animationStorageData = iter.Data();
+    if (animationStorageData.mAnimation.IsEmpty()) {
       continue;
     }
 
@@ -575,14 +609,14 @@ bool AnimationHelper::SampleAnimations(CompositorAnimationStorage* aStorage,
     AnimationHelper::SampleResult sampleResult =
         AnimationHelper::SampleAnimationForEachNode(
             aPreviousFrameTime, aCurrentFrameTime, previousValue,
-            propertyAnimationGroups, animationValues);
+            animationStorageData.mAnimation, animationValues);
 
     if (sampleResult != AnimationHelper::SampleResult::Sampled) {
       continue;
     }
 
     const PropertyAnimationGroup& lastPropertyAnimationGroup =
-        propertyAnimationGroups.LastElement();
+        animationStorageData.mAnimation.LastElement();
 
     // Store the AnimatedValue
     switch (lastPropertyAnimationGroup.mProperty) {
@@ -603,8 +637,9 @@ bool AnimationHelper::SampleAnimations(CompositorAnimationStorage* aStorage,
         const TransformData& transformData =
             lastPropertyAnimationGroup.mAnimationData.ref();
 
-        gfx::Matrix4x4 transform =
-            ServoAnimationValueToMatrix4x4(animationValues, transformData);
+        gfx::Matrix4x4 transform = ServoAnimationValueToMatrix4x4(
+            animationValues, transformData,
+            animationStorageData.mCachedMotionPath);
         gfx::Matrix4x4 frameTransform = transform;
         // If the parent has perspective transform, then the offset into
         // reference frame coordinates is already on this transform. If not,
@@ -632,7 +667,7 @@ bool AnimationHelper::SampleAnimations(CompositorAnimationStorage* aStorage,
 
 gfx::Matrix4x4 AnimationHelper::ServoAnimationValueToMatrix4x4(
     const nsTArray<RefPtr<RawServoAnimationValue>>& aValues,
-    const TransformData& aTransformData) {
+    const TransformData& aTransformData, gfx::Path* aCachedMotionPath) {
   // This is a bit silly just to avoid the transform list copy from the
   // animation transform list.
   auto noneTranslate = StyleTranslate::None();
@@ -691,7 +726,7 @@ gfx::Matrix4x4 AnimationHelper::ServoAnimationValueToMatrix4x4(
   }
 
   Maybe<MotionPathData> motion = MotionPathUtils::ResolveMotionPath(
-      path, distance, offsetRotate, anchor, aTransformData);
+      path, distance, offsetRotate, anchor, aTransformData, aCachedMotionPath);
 
   // We expect all our transform data to arrive in device pixels
   gfx::Point3D transformOrigin = aTransformData.transformOrigin();
