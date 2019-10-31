@@ -292,7 +292,7 @@ void ScrollAnchorContainer::SuppressAdjustments() {
   mSuppressAnchorAdjustment = true;
 }
 
-void ScrollAnchorContainer::InvalidateAnchor() {
+void ScrollAnchorContainer::InvalidateAnchor(ScheduleSelection aSchedule) {
   ANCHOR_LOG("Invalidating scroll anchor %p for %p.\n", mAnchorNode, this);
 
   if (mAnchorNode) {
@@ -302,19 +302,16 @@ void ScrollAnchorContainer::InvalidateAnchor() {
   mAnchorNodeIsDirty = true;
   mLastAnchorOffset = 0;
 
-  if (!StaticPrefs::layout_css_scroll_anchoring_enabled()) {
+  if (aSchedule == ScheduleSelection::No ||
+      !StaticPrefs::layout_css_scroll_anchoring_enabled()) {
     return;
   }
+
   Frame()->PresShell()->PostPendingScrollAnchorSelection(this);
 }
 
 void ScrollAnchorContainer::Destroy() {
-  if (mAnchorNode) {
-    SetAnchorFlags(mScrollFrame->mScrolledFrame, mAnchorNode, false);
-  }
-  mAnchorNode = nullptr;
-  mAnchorNodeIsDirty = false;
-  mLastAnchorOffset = 0;
+  InvalidateAnchor(ScheduleSelection::No);
 }
 
 void ScrollAnchorContainer::ApplyAdjustments() {
