@@ -19,6 +19,12 @@ XPCOMUtils.defineLazyPreferenceGetter(
   false
 );
 
+var { ExtensionPreferencesManager } = ChromeUtils.import(
+  "resource://gre/modules/ExtensionPreferencesManager.jsm"
+);
+
+var { getSettingsAPI } = ExtensionPreferencesManager;
+
 function nameForCPSState(state) {
   switch (state) {
     case gCPS.UNKNOWN:
@@ -98,6 +104,15 @@ this.captivePortal = class extends ExtensionAPI {
             };
           },
         }).api(),
+        canonicalURL: getSettingsAPI(
+          context.extension.id,
+          "captiveURL",
+          () => {
+            return Services.prefs.getStringPref("captivedetect.canonicalURL");
+          },
+          undefined,
+          true
+        ),
       },
     };
   }
