@@ -38,6 +38,8 @@ class PreallocatedProcessManagerImpl final : public nsIObserver {
   bool Provide(ContentParent* aParent);
 
  private:
+  static const char* const kObserverTopics[];
+
   static mozilla::StaticRefPtr<PreallocatedProcessManagerImpl> sSingleton;
 
   PreallocatedProcessManagerImpl();
@@ -65,6 +67,13 @@ class PreallocatedProcessManagerImpl final : public nsIObserver {
   nsTHashtable<nsUint64HashKey> mBlockers;
 
   bool IsEmpty() const { return !mPreallocatedProcess && !mLaunchInProgress; }
+};
+
+const char* const PreallocatedProcessManagerImpl::kObserverTopics[] = {
+    "ipc:content-shutdown",
+    "memory-pressure",
+    "profile-change-teardown",
+    NS_XPCOM_SHUTDOWN_OBSERVER_ID,
 };
 
 /* static */
@@ -100,13 +109,9 @@ void PreallocatedProcessManagerImpl::Init() {
   // for testing.
   Preferences::AddStrongObserver(this, "dom.ipc.processCount");
   nsCOMPtr<nsIObserverService> os = services::GetObserverService();
-  if (os) {
-    os->AddObserver(this, "ipc:content-shutdown",
-                    /* weakRef = */ false);
-    os->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID,
-                    /* weakRef = */ false);
-    os->AddObserver(this, "profile-change-teardown",
-                    /* weakRef = */ false);
+  MOZ_ASSERT(os);
+  for (auto topic : kObserverTopics) {
+    os->AddObserver(this, topic, /* ownsWeak */ false);
   }
   RereadPrefs();
 }
@@ -125,18 +130,19 @@ PreallocatedProcessManagerImpl::Observe(nsISupports* aSubject,
     Preferences::RemoveObserver(this, "dom.ipc.processPrelaunch.enabled");
     Preferences::RemoveObserver(this, "dom.ipc.processCount");
     nsCOMPtr<nsIObserverService> os = services::GetObserverService();
-    if (os) {
-      os->RemoveObserver(this, "ipc:content-shutdown");
-      os->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
-      os->RemoveObserver(this, "profile-change-teardown");
+    MOZ_ASSERT(os);
+    for (auto topic : kObserverTopics) {
+      os->RemoveObserver(this, topic);
     }
     // Let's prevent any new preallocated processes from starting. ContentParent
     // will handle the shutdown of the existing process and the
     // mPreallocatedProcess reference will be cleared by the ClearOnShutdown of
     // the manager singleton.
     mShutdown = true;
+  } else if (!strcmp("memory-pressure", aTopic)) {
+    CloseProcess();
   } else {
-    MOZ_ASSERT(false);
+    MOZ_ASSERT_UNREACHABLE("Unknown topic");
   }
 
   return NS_OK;
