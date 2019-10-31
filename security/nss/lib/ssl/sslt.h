@@ -366,6 +366,9 @@ typedef struct SSLChannelInfoStr {
 #define ssl_preinfo_version (1U << 0)
 #define ssl_preinfo_cipher_suite (1U << 1)
 #define ssl_preinfo_0rtt_cipher_suite (1U << 2)
+/* ssl_preinfo_peer_auth covers peerDelegCred, authKeyBits, and scheme. Not
+ * included in ssl_preinfo_all as it is client-only. */
+#define ssl_preinfo_peer_auth (1U << 3)
 /* ssl_preinfo_all doesn't contain ssl_preinfo_0rtt_cipher_suite because that
  * field is only set if 0-RTT is sent (client) or accepted (server). */
 #define ssl_preinfo_all (ssl_preinfo_version | ssl_preinfo_cipher_suite)
@@ -405,6 +408,16 @@ typedef struct SSLPreliminaryChannelInfoStr {
      * value if 0-RTT is accepted by the server.  The server only sets this
      * after accepting 0-RTT, so this will contain the same value. */
     PRUint16 zeroRttCipherSuite;
+
+    /* The following fields were added in NSS 3.48. */
+    /* These fields contain information about the key that will be used in
+     * the CertificateVerify message. If Delegated Credentials are being used,
+     * this is the DC-contained SPKI, else the EE-cert SPKI. These fields are
+     * valid only after the Certificate message is handled. This can be determined
+     * by checking the valuesSet field against |ssl_preinfo_peer_auth|. */
+    PRBool peerDelegCred;
+    PRUint32 authKeyBits;
+    SSLSignatureScheme signatureScheme;
 
     /* When adding new fields to this structure, please document the
      * NSS version in which they were added. */

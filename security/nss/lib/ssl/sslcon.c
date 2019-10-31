@@ -18,7 +18,6 @@
 #include "sslerr.h"
 #include "pk11func.h"
 #include "prinit.h"
-#include "prtime.h" /* for PR_Now() */
 
 /*
 ** Put a string tag in the library so that we can examine an executable

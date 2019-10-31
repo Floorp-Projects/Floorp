@@ -55,6 +55,10 @@ TEST_P(TlsConnectGeneric, ServerNegotiateTls12) {
 // two validate that we can also detect fallback using the
 // SSL_SetDowngradeCheckVersion() API.
 TEST_F(TlsConnectTest, TestDowngradeDetectionToTls11) {
+  client_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_0,
+                           SSL_LIBRARY_VERSION_TLS_1_2);
+  server_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_0,
+                           SSL_LIBRARY_VERSION_TLS_1_2);
   client_->SetOption(SSL_ENABLE_HELLO_DOWNGRADE_CHECK, PR_TRUE);
   MakeTlsFilter<TlsClientHelloVersionSetter>(client_,
                                              SSL_LIBRARY_VERSION_TLS_1_1);
@@ -116,11 +120,11 @@ TEST_F(TlsConnectTest, TestDowngradeDetectionToTls10) {
 
 TEST_F(TlsConnectTest, TestFallbackFromTls12) {
   client_->SetOption(SSL_ENABLE_HELLO_DOWNGRADE_CHECK, PR_TRUE);
-  client_->SetDowngradeCheckVersion(SSL_LIBRARY_VERSION_TLS_1_2);
   client_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_1,
                            SSL_LIBRARY_VERSION_TLS_1_1);
   server_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_1,
                            SSL_LIBRARY_VERSION_TLS_1_2);
+  client_->SetDowngradeCheckVersion(SSL_LIBRARY_VERSION_TLS_1_2);
   ConnectExpectAlert(client_, kTlsAlertIllegalParameter);
   client_->CheckErrorCode(SSL_ERROR_RX_MALFORMED_SERVER_HELLO);
   server_->CheckErrorCode(SSL_ERROR_ILLEGAL_PARAMETER_ALERT);

@@ -22,12 +22,61 @@ const std::string kDCId = TlsAgent::kServerEcdsa256;
 const SSLSignatureScheme kDCScheme = ssl_sig_ecdsa_secp256r1_sha256;
 const PRUint32 kDCValidFor = 60 * 60 * 24 * 7 /* 1 week (seconds */;
 
+static void CheckPreliminaryPeerDelegCred(
+    const std::shared_ptr<TlsAgent>& client, bool expected,
+    PRUint32 key_bits = 0, SSLSignatureScheme sig_scheme = ssl_sig_none) {
+  EXPECT_NE(0U, (client->pre_info().valuesSet & ssl_preinfo_peer_auth));
+  EXPECT_EQ(expected, client->pre_info().peerDelegCred);
+  if (expected) {
+    EXPECT_EQ(key_bits, client->pre_info().authKeyBits);
+    EXPECT_EQ(sig_scheme, client->pre_info().signatureScheme);
+  }
+}
+
 static void CheckPeerDelegCred(const std::shared_ptr<TlsAgent>& client,
                                bool expected, PRUint32 key_bits = 0) {
   EXPECT_EQ(expected, client->info().peerDelegCred);
+  EXPECT_EQ(expected, client->pre_info().peerDelegCred);
   if (expected) {
     EXPECT_EQ(key_bits, client->info().authKeyBits);
+    EXPECT_EQ(key_bits, client->pre_info().authKeyBits);
+    EXPECT_EQ(client->info().signatureScheme,
+              client->pre_info().signatureScheme);
   }
+}
+
+// AuthCertificate callbacks to simulate DC validation
+static SECStatus CheckPreliminaryDC(TlsAgent* agent, bool checksig,
+                                    bool isServer) {
+  agent->UpdatePreliminaryChannelInfo();
+  EXPECT_EQ(PR_TRUE, agent->pre_info().peerDelegCred);
+  EXPECT_EQ(256U, agent->pre_info().authKeyBits);
+  EXPECT_EQ(ssl_sig_ecdsa_secp256r1_sha256, agent->pre_info().signatureScheme);
+  return SECSuccess;
+}
+
+static SECStatus CheckPreliminaryNoDC(TlsAgent* agent, bool checksig,
+                                      bool isServer) {
+  agent->UpdatePreliminaryChannelInfo();
+  EXPECT_EQ(PR_FALSE, agent->pre_info().peerDelegCred);
+  return SECSuccess;
+}
+
+// AuthCertificate callbacks for modifying DC attributes.
+// This allows testing tls13_CertificateVerify for rejection
+// of DC attributes that have changed since AuthCertificateHook
+// may have handled them.
+static SECStatus ModifyDCAuthKeyBits(TlsAgent* agent, bool checksig,
+                                     bool isServer) {
+  return SSLInt_TweakChannelInfoForDC(agent->ssl_fd(),
+                                      PR_TRUE,    // Change authKeyBits
+                                      PR_FALSE);  // Change scheme
+}
+
+static SECStatus ModifyDCScheme(TlsAgent* agent, bool checksig, bool isServer) {
+  return SSLInt_TweakChannelInfoForDC(agent->ssl_fd(),
+                                      PR_FALSE,  // Change authKeyBits
+                                      PR_TRUE);  // Change scheme
 }
 
 // Attempt to configure a DC when either the DC or DC private key is missing.
@@ -386,6 +435,77 @@ TEST_P(TlsConnectTls13, DCConnectExpectedCertVerifyAlgNotSupported) {
   // Client sends indication, but the server doesn't send a DC.
   EXPECT_TRUE(cfilter->captured());
   CheckPeerDelegCred(client_, false);
+}
+
+// Check that preliminary channel info properly reflects the DC.
+TEST_P(TlsConnectTls13, DCCheckPreliminaryInfo) {
+  Reset(kEcdsaDelegatorId);
+  EnsureTlsSetup();
+  client_->EnableDelegatedCredentials();
+  server_->AddDelegatedCredential(TlsAgent::kServerEcdsa256,
+                                  ssl_sig_ecdsa_secp256r1_sha256, kDCValidFor,
+                                  now());
+
+  auto filter = MakeTlsFilter<TlsHandshakeDropper>(server_);
+  filter->SetHandshakeTypes(
+      {kTlsHandshakeCertificateVerify, kTlsHandshakeFinished});
+  filter->EnableDecryption();
+  StartConnect();
+  client_->Handshake();  // Send ClientHello
+  server_->Handshake();  // Send ServerHello
+
+  client_->SetAuthCertificateCallback(CheckPreliminaryDC);
+  client_->Handshake();  // Process response
+
+  client_->UpdatePreliminaryChannelInfo();
+  CheckPreliminaryPeerDelegCred(client_, true, 256,
+                                ssl_sig_ecdsa_secp256r1_sha256);
+}
+
+// Check that preliminary channel info properly reflects a lack of DC.
+TEST_P(TlsConnectTls13, DCCheckPreliminaryInfoNoDC) {
+  Reset(kEcdsaDelegatorId);
+  EnsureTlsSetup();
+  client_->EnableDelegatedCredentials();
+  auto filter = MakeTlsFilter<TlsHandshakeDropper>(server_);
+  filter->SetHandshakeTypes(
+      {kTlsHandshakeCertificateVerify, kTlsHandshakeFinished});
+  filter->EnableDecryption();
+  StartConnect();
+  client_->Handshake();  // Send ClientHello
+  server_->Handshake();  // Send ServerHello
+
+  client_->SetAuthCertificateCallback(CheckPreliminaryNoDC);
+  client_->Handshake();  // Process response
+
+  client_->UpdatePreliminaryChannelInfo();
+  CheckPreliminaryPeerDelegCred(client_, false);
+}
+
+// Tweak the scheme in between |Cert| and |CertVerify|.
+TEST_P(TlsConnectTls13, DCRejectModifiedDCScheme) {
+  Reset(kEcdsaDelegatorId);
+  client_->EnableDelegatedCredentials();
+  client_->SetAuthCertificateCallback(ModifyDCScheme);
+  server_->AddDelegatedCredential(TlsAgent::kServerEcdsa521,
+                                  ssl_sig_ecdsa_secp521r1_sha512, kDCValidFor,
+                                  now());
+  ConnectExpectAlert(client_, kTlsAlertIllegalParameter);
+  server_->CheckErrorCode(SSL_ERROR_ILLEGAL_PARAMETER_ALERT);
+  client_->CheckErrorCode(SSL_ERROR_DC_CERT_VERIFY_ALG_MISMATCH);
+}
+
+// Tweak the authKeyBits in between |Cert| and |CertVerify|.
+TEST_P(TlsConnectTls13, DCRejectModifiedDCAuthKeyBits) {
+  Reset(kEcdsaDelegatorId);
+  client_->EnableDelegatedCredentials();
+  client_->SetAuthCertificateCallback(ModifyDCAuthKeyBits);
+  server_->AddDelegatedCredential(TlsAgent::kServerEcdsa521,
+                                  ssl_sig_ecdsa_secp521r1_sha512, kDCValidFor,
+                                  now());
+  ConnectExpectAlert(client_, kTlsAlertIllegalParameter);
+  server_->CheckErrorCode(SSL_ERROR_ILLEGAL_PARAMETER_ALERT);
+  client_->CheckErrorCode(SSL_ERROR_DC_CERT_VERIFY_ALG_MISMATCH);
 }
 
 class DCDelegation : public ::testing::Test {};
