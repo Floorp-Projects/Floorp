@@ -786,6 +786,8 @@ HttpObserverManager = {
       proxyInfo: channel.proxyInfo,
 
       serialize: serializeRequestData,
+      requestSize: channel.requestSize,
+      responseSize: channel.responseSize,
     };
 
     return Object.assign(data, extraData);
@@ -856,8 +858,6 @@ HttpObserverManager = {
         let { policy } = opts;
         if (policy && policy.extension.isPrivileged) {
           data.urlClassification = channel.urlClassification;
-          data.requestSize = channel.requestSize;
-          data.responseSize = channel.responseSize;
         }
 
         if (registerFilter && opts.blocking && opts.policy) {

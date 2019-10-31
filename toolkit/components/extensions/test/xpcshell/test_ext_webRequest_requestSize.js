@@ -13,8 +13,6 @@ const EXTENSION_DATA = {
     permissions: ["webRequest", "<all_urls>"],
   },
 
-  isPrivileged: true,
-
   async background() {
     browser.test.log("background script running");
 
