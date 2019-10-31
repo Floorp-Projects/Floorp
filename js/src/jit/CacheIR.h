@@ -244,6 +244,7 @@ extern const uint32_t ArgLengths[];
   _(GuardNoDenseElements, Id)                                                  \
   _(GuardAndGetIndexFromString, Id, Id)                                        \
   _(GuardAndGetNumberFromString, Id, Id)                                       \
+  _(GuardAndGetNumberFromBoolean, Id, Id)                                      \
   _(GuardAndGetIterator, Id, Id, Field, Field)                                 \
   _(GuardHasGetterSetter, Id, Field)                                           \
   _(GuardGroupHasUnanalyzedNewScript, Field)                                   \
@@ -1118,6 +1119,13 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
   NumberOperandId guardAndGetNumberFromString(StringOperandId str) {
     NumberOperandId res(nextOperandId_++);
     writeOpWithOperandId(CacheOp::GuardAndGetNumberFromString, str);
+    writeOperandId(res);
+    return res;
+  }
+
+  NumberOperandId guardAndGetNumberFromBoolean(Int32OperandId boolean) {
+    NumberOperandId res(nextOperandId_++);
+    writeOpWithOperandId(CacheOp::GuardAndGetNumberFromBoolean, boolean);
     writeOperandId(res);
     return res;
   }
@@ -2752,6 +2760,8 @@ class MOZ_RAII CompareIRGenerator : public IRGenerator {
   AttachDecision tryAttachStringNumber(ValOperandId lhsId, ValOperandId rhsId);
   AttachDecision tryAttachPrimitiveSymbol(ValOperandId lhsId,
                                           ValOperandId rhsId);
+  AttachDecision tryAttachBoolStringOrNumber(ValOperandId lhsId,
+                                             ValOperandId rhsId);
 
   void trackAttached(const char* name);
 

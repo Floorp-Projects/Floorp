@@ -2104,6 +2104,15 @@ bool CacheIRCompiler::emitGuardAndGetNumberFromString() {
   return true;
 }
 
+bool CacheIRCompiler::emitGuardAndGetNumberFromBoolean() {
+  JitSpew(JitSpew_Codegen, __FUNCTION__);
+  Register boolean = allocator.useRegister(masm, reader.int32OperandId());
+  ValueOperand output =
+      allocator.defineValueRegister(masm, reader.valOperandId());
+  masm.tagValue(JSVAL_TYPE_INT32, boolean, output);
+  return true;
+}
+
 bool CacheIRCompiler::emitGuardAndGetIndexFromString() {
   JitSpew(JitSpew_Codegen, __FUNCTION__);
   Register str = allocator.useRegister(masm, reader.stringOperandId());
