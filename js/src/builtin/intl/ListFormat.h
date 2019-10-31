@@ -34,6 +34,9 @@ class ListFormatObject : public NativeObject {
                 "INTERNALS_SLOT must match self-hosting define for internals "
                 "object slot");
 
+  // Estimated memory use for UListFormatter.
+  static constexpr size_t EstimatedMemoryUse = 24;
+
   UListFormatter* getListFormatter() const {
     const auto& slot = getFixedSlot(ULIST_FORMATTER_SLOT);
     if (slot.isUndefined()) {

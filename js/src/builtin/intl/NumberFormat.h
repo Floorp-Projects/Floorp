@@ -37,6 +37,9 @@ class NumberFormatObject : public NativeObject {
                 "INTERNALS_SLOT must match self-hosting define for internals "
                 "object slot");
 
+  // Estimated memory use for UNumberFormatter and UFormattedNumber.
+  static constexpr size_t EstimatedMemoryUse = 750;
+
   UNumberFormatter* getNumberFormatter() const {
     const auto& slot = getFixedSlot(UNUMBER_FORMATTER_SLOT);
     if (slot.isUndefined()) {

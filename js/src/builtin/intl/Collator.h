@@ -34,6 +34,9 @@ class CollatorObject : public NativeObject {
                 "INTERNALS_SLOT must match self-hosting define for internals "
                 "object slot");
 
+  // Estimated memory use for UCollator.
+  static constexpr size_t EstimatedMemoryUse = 1128;
+
   UCollator* getCollator() const {
     const auto& slot = getFixedSlot(UCOLLATOR_SLOT);
     if (slot.isUndefined()) {

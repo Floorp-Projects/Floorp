@@ -512,7 +512,7 @@ inline bool MemoryTracker::allowMultipleAssociations(MemoryUse use) const {
   // one-to-many relationship only where necessary.
   return use == MemoryUse::RegExpSharedBytecode ||
          use == MemoryUse::BreakpointSite || use == MemoryUse::Breakpoint ||
-         use == MemoryUse::ForOfPICStub;
+         use == MemoryUse::ForOfPICStub || use == MemoryUse::ICUObject;
 }
 
 void MemoryTracker::trackMemory(Cell* cell, size_t nbytes, MemoryUse use) {

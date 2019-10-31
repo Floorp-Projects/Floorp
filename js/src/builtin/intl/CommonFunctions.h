@@ -144,6 +144,10 @@ static JSString* CallICU(JSContext* cx, const ICUStringFunction& strFn) {
   return NewStringCopyN<CanGC>(cx, chars.begin(), size_t(size));
 }
 
+void AddICUCellMemory(JSObject* obj, size_t nbytes);
+
+void RemoveICUCellMemory(JSFreeOp* fop, JSObject* obj, size_t nbytes);
+
 }  // namespace intl
 
 }  // namespace js
