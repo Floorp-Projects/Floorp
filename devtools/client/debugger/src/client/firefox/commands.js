@@ -479,7 +479,9 @@ async function updateThreads(type: ThreadType) {
     observeAsmJS: true,
   };
 
-  const newTargets = await updateTargets(type, {
+  const oldActors = Object.keys(targets[type]);
+
+  await updateTargets(type, {
     currentTarget,
     debuggerClient,
     targets,
@@ -490,17 +492,15 @@ async function updateThreads(type: ThreadType) {
   // NOTE: This runs in the background and fails quitely because it is
   // pretty easy for sources to throw during the fetch if their thread
   // shuts down, which would cause test failures.
-  for (const actor in newTargets) {
-    if (!targets[type][actor]) {
-      const { threadFront } = newTargets[actor];
+  for (const entry of Object.entries(targets[type])) {
+    const [actor, { threadFront }] = (entry: any);
+    if (!oldActors.includes(actor)) {
       getSources(threadFront).catch(e => console.error(e));
     }
   }
 
-  targets = { ...targets, [type]: newTargets };
-
-  return Object.keys(newTargets).map(actor =>
-    createThread(actor, newTargets[actor])
+  return Object.entries(targets[type]).map(([actor, target]) =>
+    createThread((actor: any), (target: any))
   );
 }
 
