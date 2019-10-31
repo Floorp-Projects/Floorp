@@ -313,6 +313,7 @@ void XMLHttpRequestMainThread::ResetResponse() {
   mResponseXML = nullptr;
   mResponseBody.Truncate();
   TruncateResponseText();
+  mResponseBlobImpl = nullptr;
   mResponseBlob = nullptr;
   mBlobStorage = nullptr;
   mResultArrayBuffer = nullptr;
@@ -352,6 +353,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(XMLHttpRequestMainThread,
   tmp->mResultArrayBuffer = nullptr;
   tmp->mArrayBufferBuilder.reset();
   tmp->mResultJSON.setUndefined();
+  tmp->mResponseBlobImpl = nullptr;
+
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mContext)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mChannel)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mResponseXML)
@@ -691,9 +694,13 @@ void XMLHttpRequestMainThread::GetResponse(
         return;
       }
 
-      if (!mResponseBlob) {
+      if (!mResponseBlobImpl) {
         aResponse.setNull();
         return;
+      }
+
+      if (!mResponseBlob) {
+        mResponseBlob = Blob::Create(GetOwnerGlobal(), mResponseBlobImpl);
       }
 
       GetOrCreateDOMReflector(aCx, mResponseBlob, aResponse);
@@ -1649,7 +1656,7 @@ class FileCreationHandler final : public PromiseNativeHandler {
       return;
     }
 
-    mXHR->LocalFileToBlobCompleted(blob);
+    mXHR->LocalFileToBlobCompleted(blob->Impl());
   }
 
   void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
@@ -1670,10 +1677,10 @@ NS_IMPL_ISUPPORTS0(FileCreationHandler)
 
 }  // namespace
 
-void XMLHttpRequestMainThread::LocalFileToBlobCompleted(Blob* aBlob) {
+void XMLHttpRequestMainThread::LocalFileToBlobCompleted(BlobImpl* aBlobImpl) {
   MOZ_ASSERT(mState != XMLHttpRequest_Binding::DONE);
 
-  mResponseBlob = aBlob;
+  mResponseBlobImpl = aBlobImpl;
   mBlobStorage = nullptr;
   NS_ASSERTION(mResponseBody.IsEmpty(), "mResponseBody should be empty");
 
@@ -1700,12 +1707,7 @@ XMLHttpRequestMainThread::OnDataAvailable(nsIRequest* request,
       RefPtr<BlobImpl> blobImpl;
       rv = NS_GetBlobForBlobURI(blobURI, getter_AddRefs(blobImpl));
       if (NS_SUCCEEDED(rv)) {
-        if (blobImpl) {
-          mResponseBlob = Blob::Create(GetOwnerGlobal(), blobImpl);
-        }
-        if (!mResponseBlob) {
-          rv = NS_ERROR_FILE_NOT_FOUND;
-        }
+        mResponseBlobImpl = blobImpl;
       }
     } else {
       rv = GetLocalFileFromChannel(request, getter_AddRefs(localFile));
@@ -1714,7 +1716,7 @@ XMLHttpRequestMainThread::OnDataAvailable(nsIRequest* request,
       return rv;
     }
 
-    if (mResponseBlob || localFile) {
+    if (mResponseBlobImpl || localFile) {
       mBlobStorage = nullptr;
       NS_ASSERTION(mResponseBody.IsEmpty(), "mResponseBody should be empty");
 
@@ -2082,7 +2084,7 @@ XMLHttpRequestMainThread::OnStopRequest(nsIRequest* request, nsresult status) {
   }
 
   // If we were just reading a blob URL, we're already done
-  if (status == NS_ERROR_FILE_ALREADY_EXISTS && mResponseBlob) {
+  if (status == NS_ERROR_FILE_ALREADY_EXISTS && mResponseBlobImpl) {
     ChangeStateToDone(mFlagSyncLooping);
     return NS_OK;
   }
@@ -2092,7 +2094,7 @@ XMLHttpRequestMainThread::OnStopRequest(nsIRequest* request, nsresult status) {
   // If we have this error, we have to deal with a file: URL + responseType =
   // blob. We have this error because we canceled the channel. The status will
   // be set to NS_OK.
-  if (!mResponseBlob && status == NS_ERROR_FILE_ALREADY_EXISTS &&
+  if (!mResponseBlobImpl && status == NS_ERROR_FILE_ALREADY_EXISTS &&
       mResponseType == XMLHttpRequestResponseType::Blob) {
     nsCOMPtr<nsIFile> file;
     nsresult rv = GetLocalFileFromChannel(request, getter_AddRefs(file));
@@ -3591,7 +3593,7 @@ void XMLHttpRequestMainThread::BlobStoreCompleted(
 
   MOZ_ASSERT(mState != XMLHttpRequest_Binding::DONE);
 
-  mResponseBlob = Blob::Create(GetOwnerGlobal(), aBlobImpl);
+  mResponseBlobImpl = aBlobImpl;
   mBlobStorage = nullptr;
 
   ChangeStateToDone(mFlagSyncLooping);

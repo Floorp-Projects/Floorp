@@ -436,7 +436,7 @@ class XMLHttpRequestMainThread final : public XMLHttpRequest,
   void BlobStoreCompleted(MutableBlobStorage* aBlobStorage, BlobImpl* aBlobImpl,
                           nsresult aResult) override;
 
-  void LocalFileToBlobCompleted(Blob* aBlob);
+  void LocalFileToBlobCompleted(BlobImpl* aBlobImpl);
 
  protected:
   nsresult DetectCharset();
@@ -597,9 +597,12 @@ class XMLHttpRequestMainThread final : public XMLHttpRequest,
 
   XMLHttpRequestResponseType mResponseType;
 
-  // It is either a cached blob-response from the last call to GetResponse,
-  // but is also explicitly set in OnStopRequest.
+  RefPtr<BlobImpl> mResponseBlobImpl;
+
+  // This is the cached blob-response, created only at the first GetResponse()
+  // call.
   RefPtr<Blob> mResponseBlob;
+
   // We stream data to mBlobStorage when response type is "blob".
   RefPtr<MutableBlobStorage> mBlobStorage;
 
