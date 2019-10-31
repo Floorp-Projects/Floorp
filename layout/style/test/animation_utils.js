@@ -495,6 +495,10 @@ const ExpectComparisonTo = {
       "translate",
       "rotate",
       "scale",
+      "offset-path",
+      "offset-distance",
+      "offset-rotate",
+      "offset-anchor",
       "opacity",
       "background-color",
     ];
@@ -506,6 +510,10 @@ const ExpectComparisonTo = {
     var compare;
     var normalizedToString = JSON.stringify;
     switch (property) {
+      case "offset-path":
+      case "offset-distance":
+      case "offset-rotate":
+      case "offset-anchor":
       case "translate":
       case "rotate":
       case "scale":
