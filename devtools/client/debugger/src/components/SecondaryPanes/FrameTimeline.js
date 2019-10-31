@@ -4,16 +4,13 @@
 
 // @flow
 
+// import PropTypes from "prop-types";
 import React, { Component } from "react";
 import { isEqual } from "lodash";
 
 import { connect } from "../../utils/connect";
-import {
-  getFramePositions,
-  getSelectedFrame,
-  getThreadContext,
-} from "../../selectors";
-import type { SourceLocation, Frame } from "../../types";
+import { getFramePositions } from "../../selectors";
+import type { SourceLocation } from "../../types";
 
 import { getSelectedLocation } from "../../reducers/sources";
 
@@ -27,7 +24,6 @@ type Props = {
   selectedLocation: ?SourceLocation,
   previewLocation: typeof actions.previewPausedLocation,
   seekToPosition: typeof actions.seekToPosition,
-  selectedFrame: Frame,
 };
 type OwnProps = {};
 
@@ -35,7 +31,6 @@ type State = {
   scrubbing: boolean,
   percentage: number,
   displayedLocation: any,
-  displayedFrame: Frame,
 };
 
 function isSameLocation(
@@ -73,7 +68,6 @@ class FrameTimeline extends Component<Props, State> {
     scrubbing: false,
     percentage: 0,
     displayedLocation: null,
-    displayedFrame: {},
   };
 
   getProgress(clientX: number) {
@@ -164,16 +158,8 @@ class FrameTimeline extends Component<Props, State> {
   };
 
   getProgressForNewFrame() {
-    const { framePositions, selectedLocation, selectedFrame } = this.props;
-    this.setState({
-      displayedLocation: selectedLocation,
-      displayedFrame: selectedFrame,
-    });
-    let progress = 0;
-
-    if (!framePositions) {
-      return progress;
-    }
+    const { framePositions, selectedLocation } = this.props;
+    this.setState({ displayedLocation: selectedLocation });
 
     const displayedPositions = framePositions.filter(
       point => point.position.kind === "OnStep"
@@ -181,6 +167,8 @@ class FrameTimeline extends Component<Props, State> {
     const index = displayedPositions.findIndex(pos =>
       isSameLocation(pos.location, selectedLocation)
     );
+
+    let progress = 0;
 
     if (index != -1) {
       progress = Math.floor((index / displayedPositions.length) * 100);
@@ -191,21 +179,12 @@ class FrameTimeline extends Component<Props, State> {
   }
 
   getVisibleProgress() {
-    const {
-      percentage,
-      displayedLocation,
-      displayedFrame,
-      scrubbing,
-    } = this.state;
-    const { selectedLocation, selectedFrame } = this.props;
+    const { percentage, displayedLocation, scrubbing } = this.state;
+    const { selectedLocation } = this.props;
 
     let progress = percentage;
 
-    if (
-      !isEqual(displayedLocation, selectedLocation) &&
-      displayedFrame.index !== selectedFrame.index &&
-      !scrubbing
-    ) {
+    if (!isEqual(displayedLocation, selectedLocation) && !scrubbing) {
       progress = this.getProgressForNewFrame();
     }
 
@@ -275,7 +254,6 @@ const mapStateToProps = state => {
   return {
     framePositions: getFramePositions(state),
     selectedLocation: getSelectedLocation(state),
-    selectedFrame: getSelectedFrame(state, getThreadContext(state).thread),
   };
 };
 
