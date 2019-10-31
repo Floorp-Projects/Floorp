@@ -101,14 +101,11 @@ template bool IsStructurallyValidRegionTag(
 
 bool IsStructurallyValidVariantTag(const ConstCharRange& variant) {
   // unicode_variant_subtag = (alphanum{5,8} | digit alphanum{3}) ;
-  auto isAsciiLowercaseAlphanumeric = [](char c) {
-    return mozilla::IsAsciiLowercaseAlpha(c) || mozilla::IsAsciiDigit(c);
-  };
   size_t length = variant.length();
   const char* str = variant.begin().get();
   return ((5 <= length && length <= 8) ||
           (length == 4 && mozilla::IsAsciiDigit(str[0]))) &&
-         std::all_of(str, str + length, isAsciiLowercaseAlphanumeric);
+         std::all_of(str, str + length, mozilla::IsAsciiAlphanumeric<char>);
 }
 
 bool IsStructurallyValidUnicodeExtensionTag(const ConstCharRange& extension) {
@@ -265,28 +262,46 @@ bool LanguageTag::canonicalizeBaseName(JSContext* cx) {
   // The |LanguageTag| fields are already in normalized case, so we can skip
   // this step.
   // The following subtags are not in normalized case:
+  // - variants
   // - extensions and privateuse
   MOZ_ASSERT(IsStructurallyValidLanguageTag(language().range()));
   MOZ_ASSERT(script().length() == 0 ||
              IsStructurallyValidScriptTag(script().range()));
   MOZ_ASSERT(region().length() == 0 ||
              IsStructurallyValidRegionTag(region().range()));
-#ifdef DEBUG
-  auto validVariant = [](const auto& variant) {
-    const char* str = variant.get();
-    return IsStructurallyValidVariantTag({str, strlen(str)});
-  };
-  MOZ_ASSERT(std::all_of(variants().begin(), variants().end(), validVariant));
-#endif
+
+  // The canonical case for variant subtags is lowercase.
+  for (UniqueChars& variant : variants_) {
+    char* variantChars = variant.get();
+    size_t variantLength = strlen(variantChars);
+    AsciiToLowerCase(variantChars, variantLength, variantChars);
+
+    MOZ_ASSERT(IsStructurallyValidVariantTag({variantChars, variantLength}));
+  }
 
   // Extensions and privateuse subtags are case normalized in the
   // |canonicalizeExtensions| method.
 
   // The second step in UTS 35, 3.2.1, is to order all subtags.
 
-  // 1. Any variants are in alphabetical order.
-  if (!SortAlphabetically(cx, variants_)) {
-    return false;
+  if (variants_.length() > 1) {
+    // 1. Any variants are in alphabetical order.
+    if (!SortAlphabetically(cx, variants_)) {
+      return false;
+    }
+
+    // Reject the Locale identifier if a duplicate variant was found, e.g.
+    // "en-variant-Variant".
+    const UniqueChars* duplicate = std::adjacent_find(
+        variants().begin(), variants().end(), [](const auto& a, const auto& b) {
+          return strcmp(a.get(), b.get()) == 0;
+        });
+    if (duplicate != variants().end()) {
+      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                JSMSG_DUPLICATE_VARIANT_SUBTAG,
+                                duplicate->get());
+      return false;
+    }
   }
 
   // 2. Any extensions are in alphabetical order by their singleton.
@@ -1070,13 +1085,16 @@ UniqueChars LanguageTagParser::chars(JSContext* cx, size_t index,
 // The trailing |parseType| argument corresponds to one of two modes.
 //
 // In the |BaseNameParsing::Normal| mode, our input is in unknown case and is
-// potentially invalid. |tag| will be filled with canonically-cased output, and
-// duplicate variants will lead to an error.
+// potentially invalid. |tag| will be filled with canonically-cased output.
 //
 // In the |BaseNameParsing::WithinTransformExtension| mode, our input is the
 // `tlang` in a lowercased `transform_extensions`. |tag| subtags will be
-// directly copied from the input (i.e. in lowercase). Variant subtags in the
-// `tlang` subtag may contain duplicates.
+// directly copied from the input (i.e. in lowercase).
+//
+// If the input contains variant subtags, they will be added unaltered to |tag|,
+// without canonicalizing their case or detecting and rejecting duplicate
+// variants. Users must subsequently |canonicalizeBaseName| to perform these
+// actions.
 //
 // Do not use this function directly: use |parseBaseName| or
 // |parseTlangFromTransformExtension| instead.
@@ -1155,28 +1173,6 @@ JS::Result<bool> LanguageTagParser::internalParseBaseName(
     if (!variant) {
       return cx->alreadyReportedOOM();
     }
-
-    if (parseType == BaseNameParsing::Normal) {
-      // Locale identifiers are case insensitive (UTS 35, section 3.2).
-      // All seen variants are compared ignoring case differences by using the
-      // lower case form. This allows to properly detect and reject variant
-      // repetitions with differing case, e.g. "en-variant-Variant".
-      AsciiToLowerCase(variant.get(), tok.length(), variant.get());
-
-      // Reject the Locale identifier if a duplicate variant was found.
-      //
-      // This linear-time verification step means the whole variant subtag
-      // checking is potentially quadratic. Language tags are unlikely to be
-      // deliberately pathological, so this is okay at least for now.
-      for (const auto& seenVariant : variants) {
-        if (strcmp(variant.get(), seenVariant.get()) == 0) {
-          return false;
-        }
-      }
-    } else {
-      // When parsing variants in a `tlang` subtag, duplicates are allowed.
-    }
-
     if (!variants.append(std::move(variant))) {
       return cx->alreadyReportedOOM();
     }
