@@ -54,6 +54,7 @@ class IonCacheIRCompiler;
   _(GuardNoDetachedTypedObjects)          \
   _(GuardNoDenseElements)                 \
   _(GuardAndGetNumberFromString)          \
+  _(GuardAndGetNumberFromBoolean)         \
   _(GuardAndGetIndexFromString)           \
   _(GuardIndexIsNonNegative)              \
   _(GuardIndexGreaterThanDenseCapacity)   \
