@@ -7573,9 +7573,71 @@ bool BytecodeEmitter::emitLeftAssociative(ListNode* node) {
   return true;
 }
 
+bool BytecodeEmitter::emitNullCoalesce(ListNode* node) {
+  MOZ_ASSERT(node->isKind(ParseNodeKind::CoalesceExpr));
+
+  /*
+   * CoalesceExpr converts the operand on the stack to boolean depending on an
+   * equality check for undefined and null. If true, it leaves the original
+   * value on the stack and jumps; otherwise it falls into the next bytecode,
+   * which pops the left operand and then evaluates the right operand.
+   * The jump goes around the right operand evaluation.
+   */
+
+  TDZCheckCache tdzCache(this);
+
+  JumpList jump;
+  /* Left-associative operator chain: avoid too much recursion. */
+  for (ParseNode* expr = node->head();; expr = expr->pn_next) {
+    if (!emitTree(expr)) {
+      //            [stack] LHS
+      return false;
+    }
+
+    // if there are no nodes after this, break so that we don't emit
+    // unnecessary bytecode instructions
+    if (!expr->pn_next) {
+      break;
+    }
+
+    if (!emitPushNotUndefinedOrNull()) {
+      //            [stack] LHS NOT-UNDEF-OR-NULL
+      return false;
+    }
+
+    // We are using JSOP_IFEQ, so we need to invert the boolean
+    // pushed onto the stack by emitPushNotUndefinedOrNull.
+    // This is to address a constraint in Ion Monkey which throws
+    // if JSOP_IFNE is encountered.
+    if (!emit1(JSOP_NOT)) {
+      //              [stack] LHS UNDEF-OR-NULL
+      return false;
+    }
+
+    // Emit an annotated branch-if-false around the then part.
+    if(!this->newSrcNote(SRC_IF)) {
+      return false;
+    }
+
+    if (!emitJump(JSOP_IFEQ, &jump)) {
+      //              [stack] LHS
+      return false;
+    }
+
+    if (!emit1(JSOP_POP)) {
+      return false;
+    }
+  }
+
+  if (!emitJumpTargetAndPatch(jump)) {
+    return false;
+  }
+
+  return true;
+}
+
 bool BytecodeEmitter::emitLogical(ListNode* node) {
   MOZ_ASSERT(node->isKind(ParseNodeKind::OrExpr) ||
-             node->isKind(ParseNodeKind::CoalesceExpr) ||
              node->isKind(ParseNodeKind::AndExpr));
 
   /*
@@ -7592,13 +7654,12 @@ bool BytecodeEmitter::emitLogical(ListNode* node) {
 
   /* Left-associative operator chain: avoid too much recursion. */
   ParseNode* expr = node->head();
+
   if (!emitTree(expr)) {
     return false;
   }
-  JSOp op = (node->isKind(ParseNodeKind::OrExpr) ||
-             node->isKind(ParseNodeKind::CoalesceExpr))
-                ? JSOP_OR
-                : JSOP_AND;
+
+  JSOp op = node->isKind(ParseNodeKind::OrExpr) ? JSOP_OR : JSOP_AND;
   JumpList jump;
   if (!emitJump(op, &jump)) {
     return false;
@@ -9249,6 +9310,11 @@ bool BytecodeEmitter::emitTree(
       break;
 
     case ParseNodeKind::CoalesceExpr:
+      if (!emitNullCoalesce(&pn->as<ListNode>())) {
+        return false;
+      }
+      break;
+
     case ParseNodeKind::OrExpr:
     case ParseNodeKind::AndExpr:
       if (!emitLogical(&pn->as<ListNode>())) {
