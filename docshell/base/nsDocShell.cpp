@@ -3847,6 +3847,10 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI* aURI,
     // CSP error
     cssClass.AssignLiteral("neterror");
     error = "cspBlocked";
+  } else if (NS_ERROR_XFO_VIOLATION == aError) {
+    // XFO error
+    cssClass.AssignLiteral("neterror");
+    error = "xfoBlocked";
   } else if (NS_ERROR_GET_MODULE(aError) == NS_ERROR_MODULE_SECURITY) {
     nsCOMPtr<nsINSSErrorsService> nsserr =
         do_GetService(NS_NSS_ERRORS_SERVICE_CONTRACTID);
@@ -10253,10 +10257,10 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
 
   bool isActive =
       mIsActive || (mLoadType & (LOAD_CMD_NORMAL | LOAD_CMD_HISTORY));
-  if (!CreateChannelForLoadState(aLoadState, loadInfo, this, this,
-                                 initiatorType, loadFlags, mLoadType, cacheKey,
-                                 isActive, isTopLevelDoc, mBrowsingContext->GetSandboxFlags(), rv,
-                                 getter_AddRefs(channel))) {
+  if (!CreateChannelForLoadState(
+          aLoadState, loadInfo, this, this, initiatorType, loadFlags, mLoadType,
+          cacheKey, isActive, isTopLevelDoc,
+          mBrowsingContext->GetSandboxFlags(), rv, getter_AddRefs(channel))) {
     return rv;
   }
 
