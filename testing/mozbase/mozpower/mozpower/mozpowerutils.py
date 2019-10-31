@@ -30,7 +30,7 @@ def average_summary(values):
     :param list values: list of values to average.
     :returns: float
     """
-    return sum([float(v) for v in values])/len(values)
+    return sum([float(v[0]) for v in values])/len(values)
 
 
 def sum_summary(values):
@@ -39,4 +39,18 @@ def sum_summary(values):
     :param list values: list of values to sum.
     :returns: float
     """
-    return sum([float(v) for v in values])
+    return sum([float(v[0]) for v in values])
+
+
+def frequency_summary(values):
+    """Returns the average frequency as the summary value.
+
+    :param list values: list of values to search in.
+    :returns: float
+    """
+    avgfreq = 0
+    for val, name in values:
+        if 'avg' in name:
+            avgfreq = float(val)
+            break
+    return avgfreq
