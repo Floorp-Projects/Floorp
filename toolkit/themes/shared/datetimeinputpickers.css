@@ -80,13 +80,13 @@ button {
 }
 
 .nav > button.prev,
-.nav > button.next:dir(rtl) {
-  background: url("chrome://global/skin/icons/calendar-arrow-left.svg") no-repeat 50% 50%;
+.nav > button.next {
+  background: url("chrome://global/skin/icons/arrow-left.svg") no-repeat center;
 }
 
-.nav > button.next,
-.nav > button.prev:dir(rtl) {
-  background: url("chrome://global/skin/icons/calendar-arrow-right.svg") no-repeat 50% 50%;
+.nav > button.prev:dir(rtl),
+.nav > button.next:dir(ltr) {
+  transform: scaleX(-1);
 }
 
 .month-year-container {
