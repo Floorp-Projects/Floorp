@@ -2305,7 +2305,7 @@ void PeerConnectionImpl::SetSignalingState_m(RTCSignalingState aSignalingState,
     // Update the max channels used with each direction for each type
     uint16_t receiving[SdpMediaSection::kMediaTypes];
     uint16_t sending[SdpMediaSection::kMediaTypes];
-    mJsepSession->CountTracks(receiving, sending);
+    mJsepSession->CountTracksAndDatachannels(receiving, sending);
     for (size_t i = 0; i < SdpMediaSection::kMediaTypes; i++) {
       if (mMaxReceiving[i] < receiving[i]) {
         mMaxReceiving[i] = receiving[i];
