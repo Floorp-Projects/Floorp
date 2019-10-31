@@ -1168,6 +1168,15 @@ bool BigIntEqual(BigInt* x, BigInt* y);
 template <ComparisonKind Kind>
 bool BigIntCompare(BigInt* x, BigInt* y);
 
+template <EqualityKind Kind>
+bool BigIntNumberEqual(BigInt* x, double y);
+
+template <ComparisonKind Kind>
+bool BigIntNumberCompare(BigInt* x, double y);
+
+template <ComparisonKind Kind>
+bool NumberBigIntCompare(double x, BigInt* y);
+
 enum class TailCallVMFunctionId;
 enum class VMFunctionId;
 

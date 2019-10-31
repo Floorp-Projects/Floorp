@@ -192,6 +192,7 @@ class BigInt final
 
   static int8_t compare(BigInt* lhs, BigInt* rhs);
   static bool equal(BigInt* lhs, BigInt* rhs);
+  static bool equal(BigInt* lhs, double rhs);
   static JS::Result<bool> looselyEqual(JSContext* cx, Handle<BigInt*> lhs,
                                        HandleValue rhs);
 
@@ -350,8 +351,6 @@ class BigInt final
   static int8_t absoluteCompare(BigInt* lhs, BigInt* rhs);
 
   static int8_t compare(BigInt* lhs, double rhs);
-
-  static bool equal(BigInt* lhs, double rhs);
 
   template <js::AllowGC allowGC>
   static JSLinearString* toStringBasePowerOfTwo(JSContext* cx, Handle<BigInt*>,
