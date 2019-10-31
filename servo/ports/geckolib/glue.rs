@@ -4,6 +4,7 @@
 
 use super::error_reporter::ErrorReporter;
 use super::stylesheet_loader::{AsyncStylesheetParser, StylesheetLoader};
+use bincode::{deserialize, serialize};
 use cssparser::ToCss as ParserToCss;
 use cssparser::{ParseErrorKind, Parser, ParserInput, SourceLocation, UnicodeRange};
 use malloc_size_of::MallocSizeOfOps;
@@ -131,6 +132,7 @@ use style::use_counters::UseCounters;
 use style::values::animated::{Animate, Procedure, ToAnimatedZero};
 use style::values::computed::{self, Context, ToComputedValue};
 use style::values::distance::ComputeSquaredDistance;
+use style::values::generics;
 use style::values::specified;
 use style::values::specified::gecko::IntersectionObserverRootMargin;
 use style::values::specified::source_size_list::SourceSizeList;
@@ -898,6 +900,87 @@ pub extern "C" fn Servo_AnimationValue_Uncompute(
     )
     .into_strong()
 }
+
+// This is an intermediate type for passing Vec<u8> through FFI.
+// We convert this type into ByteBuf when passing it through IPC.
+#[repr(C)]
+pub struct VecU8 {
+    data: *mut u8,
+    length: usize,
+    capacity: usize,
+}
+
+impl VecU8 {
+    #[inline]
+    fn from_vec(mut v: Vec<u8>) -> Self {
+        let w = VecU8 {
+            data: v.as_mut_ptr(),
+            length: v.len(),
+            capacity: v.capacity(),
+        };
+        std::mem::forget(v);
+        w
+    }
+
+    #[inline]
+    fn flush_into_vec(&mut self) -> Vec<u8> {
+        if self.data.is_null() {
+            debug_assert_eq!(self.capacity, 0);
+            return Vec::new();
+        }
+
+        let vec = unsafe { Vec::from_raw_parts(self.data, self.length, self.capacity) };
+        self.data = ptr::null_mut();
+        self.length = 0;
+        self.capacity = 0;
+        vec
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_VecU8_Free(v: &mut VecU8) {
+    if !v.data.is_null() {
+        v.flush_into_vec();
+    }
+}
+
+macro_rules! impl_basic_serde_funcs {
+    ($ser_name:ident, $de_name:ident, $computed_type:ty) => {
+        #[no_mangle]
+        pub extern "C" fn $ser_name(v: &$computed_type, output: &mut VecU8) -> bool {
+            let buf = match serialize(v) {
+                Ok(buf) => buf,
+                Err(..) => return false,
+            };
+
+            *output = VecU8::from_vec(buf);
+            true
+        }
+
+        #[no_mangle]
+        pub extern "C" fn $de_name(input: &mut VecU8, v: &mut $computed_type) -> bool {
+            let buf = match deserialize(&input.flush_into_vec()) {
+                Ok(buf) => buf,
+                Err(..) => return false,
+            };
+
+            *v = buf;
+            true
+        }
+    };
+}
+
+impl_basic_serde_funcs!(
+    Servo_LengthPercentage_Serialize,
+    Servo_LengthPercentage_Deserialize,
+    computed::LengthPercentage
+);
+
+impl_basic_serde_funcs!(
+    Servo_RayFunction_Serialize,
+    Servo_RayFunction_Deserialize,
+    generics::motion::RayFunction<computed::Angle>
+);
 
 // Return the ComputedValues by a base ComputedValues and the rules.
 fn resolve_rules_for_element_with_context<'a>(
