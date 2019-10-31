@@ -58,6 +58,23 @@ type State = {
   hiddenTabs: SourcesList,
 };
 
+function haveTabSourcesChanged(
+  tabSources: SourcesList,
+  prevTabSources: SourcesList
+): boolean {
+  if (tabSources.length !== prevTabSources.length) {
+    return true;
+  }
+
+  for (let i = 0; i < tabSources.length; ++i) {
+    if (tabSources[i].id !== prevTabSources[i].id) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 class Tabs extends PureComponent<Props, State> {
   onTabContextMenu: Function;
   showContextMenu: Function;
@@ -83,7 +100,10 @@ class Tabs extends PureComponent<Props, State> {
   }
 
   componentDidUpdate(prevProps: Props) {
-    if (!(prevProps === this.props)) {
+    if (
+      this.props.selectedSource !== prevProps.selectedSource ||
+      haveTabSourcesChanged(this.props.tabSources, prevProps.tabSources)
+    ) {
       this.updateHiddenTabs();
     }
   }
