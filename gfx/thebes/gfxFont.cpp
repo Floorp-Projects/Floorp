@@ -3914,11 +3914,11 @@ gfxFontStyle::gfxFontStyle(FontSlantStyle aStyle, FontWeight aWeight,
   MOZ_ASSERT(!mozilla::IsNaN(size));
   MOZ_ASSERT(!mozilla::IsNaN(sizeAdjust));
 
-  if (weight > FontWeight(900)) {
-    weight = FontWeight(900);
+  if (weight > FontWeight(1000)) {
+    weight = FontWeight(1000);
   }
-  if (weight < FontWeight(100)) {
-    weight = FontWeight(100);
+  if (weight < FontWeight(1)) {
+    weight = FontWeight(1);
   }
 
   if (size >= FONT_MAX_SIZE) {
