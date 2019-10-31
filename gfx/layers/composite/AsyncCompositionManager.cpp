@@ -630,7 +630,11 @@ static void ApplyAnimatedValue(
     case eCSSProperty_rotate:
     case eCSSProperty_scale:
     case eCSSProperty_translate:
-    case eCSSProperty_transform: {
+    case eCSSProperty_transform:
+    case eCSSProperty_offset_path:
+    case eCSSProperty_offset_distance:
+    case eCSSProperty_offset_rotate:
+    case eCSSProperty_offset_anchor: {
       const TransformData& transformData = aAnimationData.ref();
 
       Matrix4x4 frameTransform =
@@ -715,7 +719,11 @@ static bool SampleAnimations(Layer* aLayer,
           case eCSSProperty_rotate:
           case eCSSProperty_scale:
           case eCSSProperty_translate:
-          case eCSSProperty_transform: {
+          case eCSSProperty_transform:
+          case eCSSProperty_offset_path:
+          case eCSSProperty_offset_distance:
+          case eCSSProperty_offset_rotate:
+          case eCSSProperty_offset_anchor: {
             MOZ_ASSERT(
                 layer->AsHostLayer()->GetShadowTransformSetByAnimation());
             MOZ_ASSERT(previousValue);

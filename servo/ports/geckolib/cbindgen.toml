@@ -529,6 +529,10 @@ renaming_overrides_prefixing = true
   }
 """
 
+"CoordPair" = """
+  explicit StyleCoordPair(const gfx::Point& aPoint): _0(aPoint.x), _1(aPoint.y) {}
+"""
+
 "TextOverflow" = """
   StyleTextOverflow()
     : first(StyleTextOverflowSide::Clip()),

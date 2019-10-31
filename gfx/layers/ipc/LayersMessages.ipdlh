@@ -16,6 +16,7 @@ include "ImageLayers.h";
 using mozilla::gfx::Glyph from "mozilla/gfx/2D.h";
 using mozilla::gfx::SamplingFilter from "mozilla/gfx/2D.h";
 using struct mozilla::gfx::Color from "mozilla/gfx/2D.h";
+using struct mozilla::gfx::Point from "mozilla/gfx/Point.h";
 using struct mozilla::gfx::Point3D from "mozilla/gfx/Point.h";
 using mozilla::gfx::IntPoint from "mozilla/gfx/Point.h";
 using class mozilla::gfx::Matrix4x4 from "mozilla/gfx/Matrix.h";
@@ -29,6 +30,8 @@ using mozilla::ScreenRotation from "mozilla/WidgetUtils.h";
 using nsCSSPropertyID from "nsCSSPropertyID.h";
 using hal::ScreenOrientation from "mozilla/HalScreenConfiguration.h";
 using struct mozilla::layers::TextureInfo from "mozilla/layers/CompositorTypes.h";
+using mozilla::CSSPoint from "Units.h";
+using mozilla::CSSRect from "Units.h";
 using mozilla::LayerMargin from "Units.h";
 using mozilla::LayerPoint from "Units.h";
 using mozilla::LayerCoord from "Units.h";
@@ -55,6 +58,9 @@ using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
 using mozilla::layers::LayersId from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::TransactionId from "mozilla/layers/LayersTypes.h";
 using mozilla::VsyncId from "mozilla/VsyncDispatcher.h";
+using mozilla::LengthPercentage from "mozilla/ServoStyleConsts.h";
+using mozilla::RayFunction from "mozilla/MotionPathUtils.h";
+using mozilla::RayReferenceData from "mozilla/MotionPathUtils.h";
 
 namespace mozilla {
 namespace layers {
@@ -163,6 +169,66 @@ union TransformFunction {
   TransformMatrix;
 };
 
+struct MoveTo { Point point; };
+struct LineTo { Point point; };
+struct HorizontalLineTo { float x; };
+struct VerticalLineTo { float y; };
+struct CurveTo {
+  Point control1;
+  Point control2;
+  Point point;
+};
+struct SmoothCurveTo { Point control2; Point point; };
+struct QuadBezierCurveTo { Point control1; Point point; };
+struct SmoothQuadBezierCurveTo { Point point; };
+struct EllipticalArc {
+  float rx;
+  float ry;
+  float angle;
+  bool largeArcFlag;
+  bool sweepFlag;
+  Point point;
+};
+
+// PathCommand should be always absolute because we normalize it when passing
+// it through ipc.
+union PathCommand {
+  // Use null_t to represent ClosePath.
+  null_t;
+  MoveTo;
+  LineTo;
+  HorizontalLineTo;
+  VerticalLineTo;
+  CurveTo;
+  SmoothCurveTo;
+  QuadBezierCurveTo;
+  SmoothQuadBezierCurveTo;
+  EllipticalArc;
+};
+
+union OffsetPath {
+  // null_t represents None.
+  null_t;
+  PathCommand[];
+  RayFunction;
+};
+
+struct OffsetRotate {
+  CSSAngle angle;
+  bool isAuto;
+};
+
+struct AnchorPosition {
+  LengthPercentage horizontal;
+  LengthPercentage vertical;
+};
+
+union OffsetAnchor {
+  // null_t represents auto
+  null_t;
+  AnchorPosition;
+};
+
 union Animatable {
   null_t;
   float;
@@ -171,6 +237,10 @@ union Animatable {
   Scale;
   Translation;
   TransformFunction[];
+  OffsetPath;
+  LengthPercentage;
+  OffsetRotate;
+  OffsetAnchor;
 };
 
 struct AnimationSegment {
@@ -185,11 +255,17 @@ struct AnimationSegment {
 
 // Transforms need extra information to correctly convert the list of transform
 // functions to a Matrix4x4 that can be applied directly to the layer.
+// FIXME: Bug 1591629: Move motion path data into an individual struct.
 struct TransformData {
   // the origin of the frame being transformed in app units
   nsPoint origin;
   // the transform-origin property for the transform in device pixels
   Point3D transformOrigin;
+  // the transform-origin property for motion in css pixels
+  CSSPoint motionPathOrigin;
+  // the position of the frame, which is used by motion path
+  CSSPoint motionPathFramePosition;
+  RayReferenceData motionPathRayReferenceData;
   nsRect bounds;
   int32_t appUnitsPerDevPixel;
   // The resolution scale inherited from the parent
