@@ -58,7 +58,7 @@ template <typename CharT>
 bool IsStructurallyValidRegionTag(const mozilla::Range<const CharT>& region);
 
 /**
- * Return true if |variant| is a valid, case-normalized variant subtag.
+ * Return true if |variant| is a valid variant subtag.
  */
 bool IsStructurallyValidVariantTag(const mozilla::Range<const char>& variant);
 
