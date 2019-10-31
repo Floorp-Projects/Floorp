@@ -178,6 +178,14 @@ mozilla::gfx::Matrix4x4 ReadTransforms(
 
 /**
  * Given the x and y values, compute the 2d position with respect to the given
+ * a reference box size that these values describe, in CSS pixels.
+ */
+mozilla::CSSPoint Convert2DPosition(const mozilla::LengthPercentage& aX,
+                                    const mozilla::LengthPercentage& aY,
+                                    const mozilla::CSSSize& aSize);
+
+/**
+ * Given the x and y values, compute the 2d position with respect to the given
  * TransformReferenceBox that these values describe, in CSS pixels.
  */
 mozilla::CSSPoint Convert2DPosition(const mozilla::LengthPercentage& aX,
