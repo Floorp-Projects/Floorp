@@ -2,7 +2,7 @@
 
 # &lt;init&gt;
 
-`Configuration(serverEndpoint: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)` = GleanCoreConfiguration.DEFAULT_TELEMETRY_ENDPOINT, channel: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`? = null, maxEvents: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`? = null, httpClient: PingUploader = ConceptFetchHttpUploader(lazy { HttpURLConnectionClient() }))`
+`Configuration(serverEndpoint: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)` = DEFAULT_TELEMETRY_ENDPOINT, channel: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`? = null, maxEvents: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`? = null, httpClient: PingUploader = ConceptFetchHttpUploader(lazy { HttpURLConnectionClient() }))`
 
 The Configuration class describes how to configure the Glean.
 

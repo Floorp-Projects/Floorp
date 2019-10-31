@@ -2,7 +2,7 @@
 
 # DownloadDialogFragment
 
-`abstract class DownloadDialogFragment : DialogFragment` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/downloads/src/main/java/mozilla/components/feature/downloads/DownloadDialogFragment.kt#L18)
+`abstract class DownloadDialogFragment : AppCompatDialogFragment` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/downloads/src/main/java/mozilla/components/feature/downloads/DownloadDialogFragment.kt#L19)
 
 This is a general representation of a dialog meant to be used in collaboration with [DownloadsFeature](../-downloads-feature/index.md)
 to show a dialog before a download is triggered.
@@ -26,7 +26,7 @@ Be mindful to call [onStartDownload](on-start-download.md) when you want to star
 
 | Name | Summary |
 |---|---|
-| [setDownload](set-download.md) | `fun setDownload(download: `[`DownloadState`](../../mozilla.components.browser.state.state.content/-download-state/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>add the metadata of this download object to the arguments of this fragment. |
+| [setDownload](set-download.md) | `fun setDownload(download: `[`DownloadState`](../../mozilla.components.browser.state.state.content/-download-state/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Add the metadata of this download object to the arguments of this fragment. |
 
 ### Companion Object Properties
 
@@ -36,6 +36,7 @@ Be mindful to call [onStartDownload](on-start-download.md) when you want to star
 | [KEY_CONTENT_LENGTH](-k-e-y_-c-o-n-t-e-n-t_-l-e-n-g-t-h.md) | `const val KEY_CONTENT_LENGTH: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Key for finding the content length in the arguments. |
 | [KEY_FILE_NAME](-k-e-y_-f-i-l-e_-n-a-m-e.md) | `const val KEY_FILE_NAME: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Key for finding the file name in the arguments. |
 | [KEY_URL](-k-e-y_-u-r-l.md) | `const val KEY_URL: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Key for finding the url in the arguments. |
+| [MEGABYTE](-m-e-g-a-b-y-t-e.md) | `const val MEGABYTE: `[`Double`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-double/index.html) |
 
 ### Extension Functions
 

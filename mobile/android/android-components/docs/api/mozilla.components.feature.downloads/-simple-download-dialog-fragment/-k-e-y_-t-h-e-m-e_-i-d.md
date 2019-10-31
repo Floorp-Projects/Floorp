@@ -2,4 +2,4 @@
 
 # KEY_THEME_ID
 
-`const val KEY_THEME_ID: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/downloads/src/main/java/mozilla/components/feature/downloads/SimpleDownloadDialogFragment.kt#L98)
+`const val KEY_THEME_ID: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/downloads/src/main/java/mozilla/components/feature/downloads/SimpleDownloadDialogFragment.kt#L192)
