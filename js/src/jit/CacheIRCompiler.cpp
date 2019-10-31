@@ -3565,6 +3565,7 @@ bool CacheIRCompiler::emitLoadTypedElementResult() {
   Register index = allocator.useRegister(masm, reader.int32OperandId());
   TypedThingLayout layout = reader.typedThingLayout();
   Scalar::Type type = reader.scalarType();
+  bool handleOOB = reader.readBool();
 
   AutoScratchRegister scratch1(allocator, masm);
 #ifdef JS_PUNBOX64
@@ -3601,8 +3602,10 @@ bool CacheIRCompiler::emitLoadTypedElementResult() {
   }
 
   // Bounds check.
+  Label outOfBounds;
   LoadTypedThingLength(masm, layout, obj, scratch1);
-  masm.spectreBoundsCheck32(index, scratch1, scratch2, failure->label());
+  masm.spectreBoundsCheck32(index, scratch1, scratch2,
+                            handleOOB ? &outOfBounds : failure->label());
 
   // Allocate BigInt if needed. The code after this should be infallible.
   Maybe<Register> bigInt;
@@ -3661,6 +3664,21 @@ bool CacheIRCompiler::emitLoadTypedElementResult() {
                               failure->label());
     }
   }
+
+  if (handleOOB) {
+    Label done;
+    masm.jump(&done);
+
+    masm.bind(&outOfBounds);
+    if (output.hasValue()) {
+      masm.moveValue(UndefinedValue(), output.valueReg());
+    } else {
+      masm.assumeUnreachable("Should have monitored undefined result");
+    }
+
+    masm.bind(&done);
+  }
+
   return true;
 }
 
