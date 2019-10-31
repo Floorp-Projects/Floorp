@@ -18,12 +18,14 @@ import mozilla.components.feature.pwa.ext.getTrustedScope
 import mozilla.components.feature.pwa.ext.getWebAppManifest
 import mozilla.components.feature.pwa.ext.putWebAppManifest
 import mozilla.components.feature.pwa.ext.trustedOrigins
+import mozilla.components.feature.pwa.feature.ManifestUpdateFeature
 import mozilla.components.feature.pwa.feature.WebAppActivityFeature
 import mozilla.components.feature.pwa.feature.WebAppHideToolbarFeature
 import mozilla.components.feature.pwa.feature.WebAppSiteControlsFeature
 import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.support.base.feature.BackHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
+import mozilla.components.support.ktx.android.arch.lifecycle.addObservers
 import org.mozilla.samples.browser.ext.components
 
 /**
@@ -70,14 +72,22 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), BackHandler {
         lifecycle.addObserver(windowFeature)
 
         if (manifest != null) {
-            activity?.lifecycle?.addObserver(
+            activity?.lifecycle?.addObservers(
                 WebAppActivityFeature(
-                    activity!!,
+                    requireActivity(),
                     components.icons,
+                    manifest
+                ),
+                ManifestUpdateFeature(
+                    requireContext(),
+                    components.sessionManager,
+                    components.webAppShortcutManager,
+                    components.webAppManifestStorage,
+                    sessionId!!,
                     manifest
                 )
             )
-            activity?.lifecycle?.addObserver(
+            viewLifecycleOwner.lifecycle.addObserver(
                 WebAppSiteControlsFeature(
                     context?.applicationContext!!,
                     components.sessionManager,

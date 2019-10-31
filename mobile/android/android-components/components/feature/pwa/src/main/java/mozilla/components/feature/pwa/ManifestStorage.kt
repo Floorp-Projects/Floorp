@@ -7,6 +7,7 @@ package mozilla.components.feature.pwa
 import android.content.Context
 import androidx.annotation.VisibleForTesting
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.withContext
 import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.feature.pwa.db.ManifestDatabase
@@ -33,7 +34,7 @@ class ManifestStorage(context: Context) {
     /**
      * Save a Web App Manifest to disk.
      */
-    suspend fun saveManifest(manifest: WebAppManifest) = withContext(Dispatchers.IO) {
+    suspend fun saveManifest(manifest: WebAppManifest) = withContext(IO) {
         val entity = ManifestEntity(
             manifest = manifest,
             updatedAt = System.currentTimeMillis(),
@@ -43,9 +44,19 @@ class ManifestStorage(context: Context) {
     }
 
     /**
+     * Update an existing Web App Manifest on disk.
+     */
+    suspend fun updateManifest(manifest: WebAppManifest) = withContext(IO) {
+        manifestDao.value.getManifest(manifest.startUrl)?.let { existing ->
+            val update = existing.copy(manifest = manifest, updatedAt = System.currentTimeMillis())
+            manifestDao.value.updateManifest(update)
+        }
+    }
+
+    /**
      * Delete all manifests associated with the list of URLs.
      */
-    suspend fun removeManifests(startUrls: List<String>) = withContext(Dispatchers.IO) {
+    suspend fun removeManifests(startUrls: List<String>) = withContext(IO) {
         manifestDao.value.deleteManifests(startUrls)
     }
 }

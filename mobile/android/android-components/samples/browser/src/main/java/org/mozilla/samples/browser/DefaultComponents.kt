@@ -129,8 +129,8 @@ open class DefaultComponents(private val applicationContext: Context) {
     val searchUseCases by lazy { SearchUseCases(applicationContext, searchEngineManager, sessionManager) }
     val defaultSearchUseCase by lazy { { searchTerms: String -> searchUseCases.defaultSearch.invoke(searchTerms) } }
 
-    private val webAppManifestStorage by lazy { ManifestStorage(applicationContext) }
-    private val webAppShortcutManager by lazy { WebAppShortcutManager(applicationContext, client, webAppManifestStorage) }
+    val webAppManifestStorage by lazy { ManifestStorage(applicationContext) }
+    val webAppShortcutManager by lazy { WebAppShortcutManager(applicationContext, client, webAppManifestStorage) }
     val webAppUseCases by lazy { WebAppUseCases(applicationContext, sessionManager, webAppShortcutManager) }
 
     // Intent

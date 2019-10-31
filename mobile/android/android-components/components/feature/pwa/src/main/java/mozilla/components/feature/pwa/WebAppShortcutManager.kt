@@ -52,7 +52,7 @@ const val SHORTCUT_CATEGORY = "mozilla.components.pwa.category.SHORTCUT"
 class WebAppShortcutManager(
     context: Context,
     httpClient: Client,
-    private val storage: ManifestStorage = ManifestStorage(context),
+    private val storage: ManifestStorage,
     internal val supportWebApps: Boolean = true
 ) {
 
