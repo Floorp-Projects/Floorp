@@ -1763,7 +1763,6 @@ pub struct Renderer {
 
     clear_color: Option<ColorF>,
     enable_clear_scissor: bool,
-    enable_picture_caching: bool,
     enable_advanced_blend_barriers: bool,
 
     debug: LazyInitializedDebugRenderer,
@@ -2135,7 +2134,7 @@ impl Renderer {
             dual_source_blending_is_enabled: true,
             dual_source_blending_is_supported: use_dual_source_blending,
             chase_primitive: options.chase_primitive,
-            enable_picture_caching: options.enable_picture_caching,
+            global_enable_picture_caching: options.enable_picture_caching,
             testing: options.testing,
             gpu_supports_fast_clears: options.gpu_supports_fast_clears,
             gpu_supports_advanced_blend: ext_blend_equation_advanced,
@@ -2252,7 +2251,7 @@ impl Renderer {
             let texture_cache = TextureCache::new(
                 max_texture_size,
                 max_texture_layers,
-                if config.enable_picture_caching {
+                if config.global_enable_picture_caching {
                     picture_tile_sizes
                 } else {
                     &[]
@@ -2332,7 +2331,6 @@ impl Renderer {
             clear_color: options.clear_color,
             enable_clear_scissor: options.enable_clear_scissor,
             enable_advanced_blend_barriers: !ext_blend_equation_advanced_coherent,
-            enable_picture_caching: options.enable_picture_caching,
             last_time: 0,
             gpu_profile,
             vaos: RendererVAOs {
@@ -4987,7 +4985,10 @@ impl Renderer {
                             surface_is_y_flipped,
                         };
 
-                        if self.enable_picture_caching {
+                        // Picture caching can be enabled / disabled dynamically from frame to
+                        // frame. This is determined by what the frame builder selected, and is
+                        // passed to the renderer via the composite state.
+                        if frame.composite_state.picture_caching_is_enabled {
                             // If we have a native OS compositor, then make use of that interface
                             // to specify how to composite each of the picture cache surfaces.
                             match self.compositor_config {

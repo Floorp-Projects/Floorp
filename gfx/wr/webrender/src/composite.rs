@@ -140,12 +140,26 @@ pub struct CompositeState {
     pub native_surface_updates: Vec<NativeSurfaceOperation>,
     /// The kind of compositor for picture cache tiles (e.g. drawn by WR, or OS compositor)
     pub compositor_kind: CompositorKind,
+    /// Picture caching may be disabled dynamically, based on debug flags, pinch zoom etc.
+    pub picture_caching_is_enabled: bool,
 }
 
 impl CompositeState {
     /// Construct a new state for compositing picture tiles. This is created
     /// during each frame construction and passed to the renderer.
-    pub fn new(compositor_kind: CompositorKind) -> Self {
+    pub fn new(
+        compositor_kind: CompositorKind,
+        mut picture_caching_is_enabled: bool,
+    ) -> Self {
+        // The native compositor interface requires picture caching to work, so
+        // force it here and warn if it was disabled.
+        if let CompositorKind::Native { .. } = compositor_kind {
+            if !picture_caching_is_enabled {
+                warn!("Picture caching cannot be disabled in native compositor config");
+            }
+            picture_caching_is_enabled = true;
+        }
+
         CompositeState {
             opaque_tiles: Vec::new(),
             alpha_tiles: Vec::new(),
@@ -154,6 +168,7 @@ impl CompositeState {
             dirty_rects_are_valid: true,
             native_surface_updates: Vec::new(),
             compositor_kind,
+            picture_caching_is_enabled,
         }
     }
 
