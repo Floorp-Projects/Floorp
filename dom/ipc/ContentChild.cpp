@@ -51,6 +51,7 @@
 #include "mozilla/dom/MemoryReportRequest.h"
 #include "mozilla/dom/PLoginReputationChild.h"
 #include "mozilla/dom/PSessionStorageObserverChild.h"
+#include "mozilla/dom/PlaybackController.h"
 #include "mozilla/dom/PostMessageEvent.h"
 #include "mozilla/dom/PushNotifier.h"
 #include "mozilla/dom/RemoteWorkerService.h"
@@ -3751,10 +3752,7 @@ mozilla::ipc::IPCResult ContentChild::RecvStartDelayedAutoplayMediaComponents(
 mozilla::ipc::IPCResult ContentChild::RecvUpdateMediaAction(
     BrowsingContext* aContext, MediaControlActions aAction) {
   MOZ_ASSERT(aContext);
-  nsCOMPtr<nsPIDOMWindowOuter> window = aContext->GetDOMWindow();
-  if (window) {
-    window->UpdateMediaAction(aAction);
-  }
+  MediaActionHandler::UpdateMediaAction(aContext, aAction);
   return IPC_OK();
 }
 
