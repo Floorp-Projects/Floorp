@@ -82,9 +82,11 @@ class ScrollAnchorContainer final {
 
   /**
    * Notify this scroll anchor container that its anchor node should be
-   * invalidated and recomputed at the next available opportunity.
+   * invalidated, and recomputed at the next available opportunity if
+   * ScheduleSelection is Yes.
    */
-  void InvalidateAnchor();
+  enum class ScheduleSelection { No, Yes };
+  void InvalidateAnchor(ScheduleSelection = ScheduleSelection::Yes);
 
   /**
    * Notify this scroll anchor container that it will be destroyed along with
