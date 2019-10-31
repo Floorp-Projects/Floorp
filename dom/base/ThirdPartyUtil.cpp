@@ -196,8 +196,9 @@ ThirdPartyUtil::IsThirdPartyURI(nsIURI* aFirstURI, nsIURI* aSecondURI,
   return IsThirdPartyInternal(firstHost, aSecondURI, aResult);
 }
 
-// Determine if any URI of the window hierarchy of aWindow is foreign with
-// respect to aSecondURI. See docs for mozIThirdPartyUtil.
+// If the optional aURI is provided, determine whether aWindow is foreign with
+// respect to aURI. If the optional aURI is not provided, determine whether the
+// given "window hierarchy" is third party. See docs for mozIThirdPartyUtil.
 NS_IMETHODIMP
 ThirdPartyUtil::IsThirdPartyWindow(mozIDOMWindowProxy* aWindow, nsIURI* aURI,
                                    bool* aResult) {
@@ -235,8 +236,15 @@ ThirdPartyUtil::IsThirdPartyWindow(mozIDOMWindowProxy* aWindow, nsIURI* aURI,
     // actual COM identity using SameCOMIdentity is expensive due to the virtual
     // calls involved.
     if (parent == current) {
-      // We're at the topmost content window. We already know the answer.
-      *aResult = false;
+      auto* const browsingContext = current->GetBrowsingContext();
+      MOZ_ASSERT(browsingContext);
+
+      // We're either at the topmost content window (i.e. no third party), or,
+      // with fission, we may be an out-of-process content subframe (i.e. third
+      // party), since GetInProcessScriptableParent above explicitly does not
+      // go beyond process boundaries. In either case, we already know the
+      // result.
+      *aResult = browsingContext->IsContentSubframe();
       return NS_OK;
     }
 
