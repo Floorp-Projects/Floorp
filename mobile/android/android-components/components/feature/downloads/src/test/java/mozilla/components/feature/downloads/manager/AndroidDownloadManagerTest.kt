@@ -23,6 +23,9 @@ import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyZeroInteractions
+import mozilla.components.feature.downloads.AbstractFetchDownloadService.Companion.EXTRA_DOWNLOAD_STATUS
+import mozilla.components.feature.downloads.AbstractFetchDownloadService.DownloadJobStatus
+import org.junit.Assert.assertEquals
 
 @RunWith(AndroidJUnit4::class)
 class AndroidDownloadManagerTest {
@@ -49,7 +52,7 @@ class AndroidDownloadManagerTest {
     fun `calling download must download the file`() {
         var downloadCompleted = false
 
-        downloadManager.onDownloadCompleted = { _, _ -> downloadCompleted = true }
+        downloadManager.onDownloadCompleted = { _, _, _ -> downloadCompleted = true }
 
         grantPermissions()
 
@@ -75,6 +78,7 @@ class AndroidDownloadManagerTest {
     @Test
     fun `calling registerListener with valid downloadID must call listener after download`() {
         var downloadCompleted = false
+        var downloadStatus: DownloadJobStatus? = null
         val downloadWithFileName = download.copy(fileName = "5MB.zip")
 
         grantPermissions()
@@ -84,7 +88,10 @@ class AndroidDownloadManagerTest {
             cookie = "yummy_cookie=choco"
         )!!
 
-        downloadManager.onDownloadCompleted = { _, _ -> downloadCompleted = true }
+        downloadManager.onDownloadCompleted = { _, _, status ->
+            downloadStatus = status
+            downloadCompleted = true
+        }
 
         notifyDownloadCompleted(id)
 
@@ -93,6 +100,7 @@ class AndroidDownloadManagerTest {
         downloadCompleted = false
         notifyDownloadCompleted(id)
 
+        assertEquals(DownloadJobStatus.COMPLETED, downloadStatus)
         assertFalse(downloadCompleted)
     }
 
@@ -118,6 +126,7 @@ class AndroidDownloadManagerTest {
     private fun notifyDownloadCompleted(id: Long) {
         val intent = Intent(ACTION_DOWNLOAD_COMPLETE)
         intent.putExtra(android.app.DownloadManager.EXTRA_DOWNLOAD_ID, id)
+        intent.putExtra(EXTRA_DOWNLOAD_STATUS, DownloadJobStatus.COMPLETED)
         testContext.sendBroadcast(intent)
     }
 

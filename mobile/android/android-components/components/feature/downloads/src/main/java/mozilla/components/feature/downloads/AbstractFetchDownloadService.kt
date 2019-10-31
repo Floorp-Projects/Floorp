@@ -70,11 +70,15 @@ abstract class AbstractFetchDownloadService : Service() {
         var foregroundServiceId: Int = 0
     )
 
-    internal enum class DownloadJobStatus {
+    /**
+     * Status of an ongoing download
+     */
+    enum class DownloadJobStatus {
         ACTIVE,
         PAUSED,
         CANCELLED,
-        FAILED
+        FAILED,
+        COMPLETED
     }
 
     internal val broadcastReceiver by lazy {
@@ -170,16 +174,17 @@ abstract class AbstractFetchDownloadService : Service() {
     }
 
     internal fun startDownloadJob(download: DownloadState) {
+        val currentDownloadJobState = downloadJobs[download.id] ?: return
+
         val notification = try {
             performDownload(download)
-            when (downloadJobs[download.id]?.status) {
-                DownloadJobStatus.CANCELLED -> { return }
-
+            when (currentDownloadJobState.status) {
                 DownloadJobStatus.PAUSED -> {
                     DownloadNotification.createPausedDownloadNotification(context, download)
                 }
 
                 DownloadJobStatus.ACTIVE -> {
+                    currentDownloadJobState.status = DownloadJobStatus.COMPLETED
                     DownloadNotification.createDownloadCompletedNotification(context, download)
                 }
 
@@ -187,18 +192,19 @@ abstract class AbstractFetchDownloadService : Service() {
                     DownloadNotification.createDownloadFailedNotification(context, download)
                 }
 
-                null -> { return }
+                else -> return
             }
         } catch (e: IOException) {
+            currentDownloadJobState.status = DownloadJobStatus.FAILED
             DownloadNotification.createDownloadFailedNotification(context, download)
         }
 
         NotificationManagerCompat.from(context).notify(
-                downloadJobs[download.id]?.foregroundServiceId ?: 0,
-                notification
+            currentDownloadJobState.foregroundServiceId,
+            notification
         )
 
-        sendDownloadCompleteBroadcast(download.id)
+        sendDownloadCompleteBroadcast(download.id, currentDownloadJobState.status)
     }
 
     private fun registerForUpdates() {
@@ -278,9 +284,10 @@ abstract class AbstractFetchDownloadService : Service() {
      * Informs [mozilla.components.feature.downloads.manager.FetchDownloadManager] that a download
      * has been completed.
      */
-    private fun sendDownloadCompleteBroadcast(downloadID: Long) {
+    private fun sendDownloadCompleteBroadcast(downloadID: Long, status: DownloadJobStatus) {
         val intent = Intent(ACTION_DOWNLOAD_COMPLETE)
         intent.putExtra(EXTRA_DOWNLOAD_ID, downloadID)
+        intent.putExtra(EXTRA_DOWNLOAD_STATUS, status)
         broadcastManager.sendBroadcast(intent)
     }
 
@@ -351,6 +358,7 @@ abstract class AbstractFetchDownloadService : Service() {
         private const val PARTIAL_CONTENT_STATUS = 206
         private const val OK_STATUS = 200
 
+        const val EXTRA_DOWNLOAD_STATUS = "mozilla.components.feature.downloads.extras.DOWNLOAD_STATUS"
         const val ACTION_OPEN = "mozilla.components.feature.downloads.OPEN"
         const val ACTION_PAUSE = "mozilla.components.feature.downloads.PAUSE"
         const val ACTION_RESUME = "mozilla.components.feature.downloads.RESUME"

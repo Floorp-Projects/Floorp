@@ -23,6 +23,7 @@ import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.concept.fetch.Headers.Names.COOKIE
 import mozilla.components.concept.fetch.Headers.Names.REFERRER
 import mozilla.components.concept.fetch.Headers.Names.USER_AGENT
+import mozilla.components.feature.downloads.AbstractFetchDownloadService
 import mozilla.components.feature.downloads.ext.isScheme
 import mozilla.components.support.utils.DownloadUtils
 
@@ -102,9 +103,11 @@ class AndroidDownloadManager(
 
         val downloadID = intent.getLongExtra(EXTRA_DOWNLOAD_ID, -1)
         val download = queuedDownloads[downloadID]
+        val downloadStatus = intent.getSerializableExtra(AbstractFetchDownloadService.EXTRA_DOWNLOAD_STATUS)
+            as AbstractFetchDownloadService.DownloadJobStatus
 
         if (download != null) {
-            onDownloadCompleted(download, downloadID)
+            onDownloadCompleted(download, downloadID, downloadStatus)
             queuedDownloads.remove(downloadID)
         }
 
