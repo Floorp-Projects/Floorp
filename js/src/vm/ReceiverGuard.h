@@ -86,8 +86,8 @@ class ReceiverGuard {
 class HeapReceiverGuard {
   friend class ReceiverGuard;
 
-  const GCPtrObjectGroup group_;
-  const GCPtrShape shape_;
+  GCPtrObjectGroup group_;
+  GCPtrShape shape_;
 
  public:
   explicit HeapReceiverGuard(const ReceiverGuard& guard)

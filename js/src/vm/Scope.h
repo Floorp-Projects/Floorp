@@ -279,14 +279,14 @@ class Scope : public js::gc::TenuredCell {
   friend class GCMarker;
 
   // The enclosing scope or nullptr.
-  const GCPtrScope enclosing_;
+  GCPtrScope enclosing_;
 
   // The kind determines data_.
-  const ScopeKind kind_;
+  ScopeKind kind_;
 
   // If there are any aliased bindings, the shape for the
   // EnvironmentObject. Otherwise nullptr.
-  const GCPtrShape environmentShape_;
+  GCPtrShape environmentShape_;
 
  protected:
   BaseScopeData* data_;

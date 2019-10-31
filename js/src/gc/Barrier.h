@@ -418,7 +418,7 @@ class MOZ_NON_MEMMOVABLE BarrieredBase {
   // instantiation. Friending to the generic template leads to a number of
   // unintended consequences, including template resolution ambiguity and a
   // circular dependency with Tracing.h.
-  T* unsafeUnbarrieredForTracing() const { return const_cast<T*>(&value); }
+  T* unsafeUnbarrieredForTracing() { return &value; }
 };
 
 // Base class for barriered pointer types that intercept only writes.
