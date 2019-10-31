@@ -376,16 +376,11 @@ static bool ApplyUnicodeExtensionToTag(JSContext* cx, LanguageTag& tag,
     return false;
   }
 
-  // Check if there's an existing Unicode extension subtag. (The extension
-  // subtags aren't necessarily sorted, so we can't use binary search here.)
-  const UniqueChars* existingUnicodeExtension =
-      std::find_if(tag.extensions().begin(), tag.extensions().end(),
-                   [](const auto& extension) { return extension[0] == 'u'; });
+  // Check if there's an existing Unicode extension subtag.
 
   const char* unicodeExtensionEnd = nullptr;
   const char* unicodeExtensionKeywords = nullptr;
-  if (existingUnicodeExtension != tag.extensions().end()) {
-    const char* unicodeExtension = existingUnicodeExtension->get();
+  if (const char* unicodeExtension = tag.unicodeExtension()) {
     unicodeExtensionEnd = unicodeExtension + strlen(unicodeExtension);
 
     SepKeywordIterator<char> iter(unicodeExtension, unicodeExtensionEnd);

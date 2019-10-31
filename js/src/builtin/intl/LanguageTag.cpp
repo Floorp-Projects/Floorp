@@ -185,15 +185,33 @@ bool IsStructurallyValidPrivateUseTag(const ConstCharRange& privateUse) {
 }
 #endif
 
+ptrdiff_t LanguageTag::unicodeExtensionIndex() const {
+  // The extension subtags aren't necessarily sorted, so we can't use binary
+  // search here.
+  auto p = std::find_if(
+      extensions().begin(), extensions().end(),
+      [](const auto& ext) { return ext[0] == 'u' || ext[0] == 'U'; });
+  if (p != extensions().end()) {
+    return std::distance(extensions().begin(), p);
+  }
+  return -1;
+}
+
+const char* LanguageTag::unicodeExtension() const {
+  ptrdiff_t index = unicodeExtensionIndex();
+  if (index >= 0) {
+    return extensions()[index].get();
+  }
+  return nullptr;
+}
+
 bool LanguageTag::setUnicodeExtension(UniqueChars extension) {
   MOZ_ASSERT(IsStructurallyValidUnicodeExtensionTag(
       {extension.get(), strlen(extension.get())}));
 
   // Replace the existing Unicode extension subtag or append a new one.
-  auto p = std::find_if(extensions().begin(), extensions().end(),
-                        [](const auto& ext) { return ext[0] == 'u'; });
-  if (p != extensions().end()) {
-    size_t index = std::distance(extensions().begin(), p);
+  ptrdiff_t index = unicodeExtensionIndex();
+  if (index >= 0) {
     extensions_[index] = std::move(extension);
     return true;
   }
@@ -201,10 +219,8 @@ bool LanguageTag::setUnicodeExtension(UniqueChars extension) {
 }
 
 void LanguageTag::clearUnicodeExtension() {
-  auto p = std::find_if(extensions().begin(), extensions().end(),
-                        [](const auto& ext) { return ext[0] == 'u'; });
-  if (p != extensions().end()) {
-    size_t index = std::distance(extensions().begin(), p);
+  ptrdiff_t index = unicodeExtensionIndex();
+  if (index >= 0) {
     extensions_.erase(extensions_.begin() + index);
   }
 }
