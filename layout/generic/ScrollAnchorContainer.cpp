@@ -328,14 +328,26 @@ void ScrollAnchorContainer::AdjustmentMade(nscoord aAdjustment) {
   double average = double(cssPixels) / consecutiveAdjustments;
   uint32_t minAverage = StaticPrefs::
       layout_css_scroll_anchoring_min_average_adjustment_threshold();
-  if (MOZ_UNLIKELY(std::abs(average) < double(minAverage))) {
-    ANCHOR_LOG(
-        "Disabled scroll anchoring for container: "
-        "%f average, %f total out of %u consecutive adjustments\n",
-        average, float(cssPixels), mConsecutiveScrollAnchoringAdjustments);
-
-    mDisabled = true;
+  if (MOZ_LIKELY(std::abs(average) >= double(minAverage))) {
+    return;
   }
+
+  mDisabled = true;
+
+  ANCHOR_LOG(
+      "Disabled scroll anchoring for container: "
+      "%f average, %f total out of %u consecutive adjustments\n",
+      average, float(cssPixels), consecutiveAdjustments);
+
+  AutoTArray<nsString, 3> arguments;
+  arguments.AppendElement()->AppendInt(consecutiveAdjustments);
+  arguments.AppendElement()->AppendFloat(average);
+  arguments.AppendElement()->AppendFloat(cssPixels);
+
+  nsContentUtils::ReportToConsole(
+      nsIScriptError::warningFlag, NS_LITERAL_CSTRING("Layout"),
+      Frame()->PresContext()->Document(), nsContentUtils::eLAYOUT_PROPERTIES,
+      "ScrollAnchoringDisabledInContainer", arguments);
 }
 
 void ScrollAnchorContainer::SuppressAdjustments() {
