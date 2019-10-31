@@ -1,4 +1,4 @@
-// |reftest| skip -- tail-call-optimization,coalesce-expression is not supported
+// |reftest| skip -- tail-call-optimization is not supported
 'use strict';
 // Copyright (C) 2019 Leo Balter. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
