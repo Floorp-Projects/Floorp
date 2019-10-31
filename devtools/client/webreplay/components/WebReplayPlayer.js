@@ -137,6 +137,7 @@ class WebReplayPlayer extends Component {
       hoveredMessageOffset: null,
       unscannedRegions: [],
       cachedPoints: [],
+      shouldAnimate: true,
       start: 0,
       end: 1,
     };
@@ -286,8 +287,10 @@ class WebReplayPlayer extends Component {
       unscannedRegions,
       cachedPoints,
     };
+
     if (recording) {
       newState.recordingEndpoint = executionPoint;
+      newState.shouldAnimate = true;
     }
 
     this.setState(newState);
@@ -305,7 +308,7 @@ class WebReplayPlayer extends Component {
 
       messages = sortBy(messages, message => getMessageProgress(message));
 
-      this.setState({ messages, visibleMessages });
+      this.setState({ messages, visibleMessages, shouldAnimate: false });
     }
   }
 
@@ -704,8 +707,11 @@ class WebReplayPlayer extends Component {
   render() {
     const percent = this.getVisiblePercent(this.state.executionPoint);
     const recording = this.isRecording();
+    const { shouldAnimate } = this.state;
     return div(
-      { className: "webreplay-player" },
+      {
+        className: "webreplay-player",
+      },
       div(
         {
           id: "overlay",
@@ -716,7 +722,11 @@ class WebReplayPlayer extends Component {
           onMouseLeave: this.onPlayerMouseLeave,
         },
         div(
-          { className: "overlay-container " },
+          {
+            className: classname("overlay-container", {
+              animate: shouldAnimate,
+            }),
+          },
           div({ className: "commands" }, ...this.renderCommands()),
           div(
             {
