@@ -1201,6 +1201,12 @@ nsLegacySHEntry::AbandonBFCacheEntry() {
   return NS_OK;
 }
 
+NS_IMETHODIMP_(void)
+nsLegacySHEntry::ClearEntry() {
+  nsSHEntry::ClearEntry();
+  AbandonBFCacheEntry();
+}
+
 NS_IMETHODIMP
 nsLegacySHEntry::GetBfcacheID(uint64_t* aBFCacheID) {
   *aBFCacheID = mShared->GetID();
