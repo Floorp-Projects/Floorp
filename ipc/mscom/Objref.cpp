@@ -16,6 +16,10 @@
 #include <objidl.h>
 #include <winnt.h>
 
+// {00000027-0000-0008-C000-000000000046}
+static const GUID CLSID_AggStdMarshal = {
+    0x27, 0x0, 0x8, {0xC0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x46}};
+
 namespace {
 
 #pragma pack(push, 1)
@@ -320,9 +324,11 @@ uint32_t GetOBJREFSize(NotNull<IStream*> aStream) {
       return 0;
     }
 
-    if (clsid != CLSID_StdMarshal) {
+    if (clsid != CLSID_StdMarshal && clsid != CLSID_AggStdMarshal) {
       // We can only calulate the size if the payload is a standard OBJREF as
-      // identified by clsid == CLSID_StdMarshal.
+      // identified by clsid being CLSID_StdMarshal or CLSID_AggStdMarshal.
+      // (CLSID_AggStdMarshal, the aggregated standard marshaler, is used when
+      // the handler marshals an interface.)
       return 0;
     }
 
