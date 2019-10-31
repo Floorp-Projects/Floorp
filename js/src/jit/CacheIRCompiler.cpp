@@ -5252,7 +5252,7 @@ bool CacheIRCompiler::emitCallNativeGetElementResult() {
 
   using Fn = bool (*)(JSContext*, HandleNativeObject, HandleValue, int32_t,
                       MutableHandleValue);
-  callVM<Fn, NativeGetElement>(masm);
+  callvm.call<Fn, NativeGetElement>();
 
   return true;
 }
@@ -5273,9 +5273,9 @@ bool CacheIRCompiler::emitCallProxyHasPropResult() {
   using Fn =
       bool (*)(JSContext*, HandleObject, HandleValue, MutableHandleValue);
   if (hasOwn) {
-    callVM<Fn, ProxyHasOwn>(masm);
+    callvm.call<Fn, ProxyHasOwn>();
   } else {
-    callVM<Fn, ProxyHas>(masm);
+    callvm.call<Fn, ProxyHas>();
   }
   return true;
 }
@@ -5293,7 +5293,7 @@ bool CacheIRCompiler::emitCallProxyGetByValueResult() {
 
   using Fn =
       bool (*)(JSContext*, HandleObject, HandleValue, MutableHandleValue);
-  callVM<Fn, ProxyGetPropertyByValue>(masm);
+  callvm.call<Fn, ProxyGetPropertyByValue>();
   return true;
 }
 
@@ -5311,7 +5311,7 @@ bool CacheIRCompiler::emitCallGetSparseElementResult() {
 
   using Fn = bool (*)(JSContext * cx, HandleArrayObject obj, int32_t int_id,
                       MutableHandleValue result);
-  callVM<Fn, GetSparseElementHelper>(masm);
+  callvm.call<Fn, GetSparseElementHelper>();
   return true;
 }
 
@@ -5369,22 +5369,20 @@ IonCacheIRCompiler* CacheIRCompiler::asIon() {
 AutoCallVM::AutoCallVM(MacroAssembler& masm, CacheIRCompiler* compiler,
                        CacheRegisterAllocator& allocator)
     : masm_(masm), compiler_(compiler), allocator_(allocator) {
-  // Ion needs to `prepareVMCall` before it can callVM
-  // Ion also needs to initialize AutoOutputRegister and AutoSaveLiveRegisters
-  // values
+  // Ion needs to `prepareVMCall` before it can callVM and it also needs to
+  // initialize AutoSaveLiveRegisters.
   if (compiler_->mode_ == CacheIRCompiler::Mode::Ion) {
     // Will need to use a downcast here as well, in order to pass the
     // stub to AutoSaveLiveRegisters
-    IonCacheIRCompiler* ionCompiler = compiler_->asIon();
-
-    save_.emplace(*ionCompiler);
-    output_.emplace(*ionCompiler);
-    return;
+    save_.emplace(*compiler_->asIon());
   }
-  MOZ_ASSERT(compiler_->mode_ == CacheIRCompiler::Mode::Baseline);
 
-  stubFrame_.emplace(*compiler_->asBaseline());
-  scratch_.emplace(allocator_, masm_);
+  output_.emplace(*compiler);
+
+  if (compiler_->mode_ == CacheIRCompiler::Mode::Baseline) {
+    stubFrame_.emplace(*compiler_->asBaseline());
+    scratch_.emplace(allocator_, masm_, output_.ref());
+  }
 }
 
 void AutoCallVM::prepare() {
@@ -5398,15 +5396,64 @@ void AutoCallVM::prepare() {
   stubFrame_->enter(masm_, scratch_.ref());
 }
 
-AutoCallVM::~AutoCallVM() {
-  if (compiler_->mode_ == CacheIRCompiler::Mode::Ion) {
-    if (output_.isSome()) {
-      masm_.storeCallResultValue(output_.ref());
+void AutoCallVM::storeResult(JSValueType returnType) {
+  MOZ_ASSERT(returnType != JSVAL_TYPE_DOUBLE);
+
+  if (returnType == JSVAL_TYPE_UNKNOWN) {
+    masm_.storeCallResultValue(output_.ref());
+  } else {
+    if (output_->hasValue()) {
+      masm_.tagValue(returnType, ReturnReg, output_->valueReg());
+    } else {
+      Register out = output_->typedReg().gpr();
+      if (out != ReturnReg) {
+        masm_.mov(ReturnReg, out);
+      }
     }
-    return;
   }
-  MOZ_ASSERT(compiler_->mode_ == CacheIRCompiler::Mode::Baseline);
-  stubFrame_->leave(masm_);
+
+  if (compiler_->mode_ == CacheIRCompiler::Mode::Baseline) {
+    stubFrame_->leave(masm_);
+  }
+}
+
+template <typename...>
+struct VMFunctionReturnType;
+
+template <class R, typename... Args>
+struct VMFunctionReturnType<R (*)(JSContext*, Args...)> {
+  using LastArgument = typename LastArg<Args...>::Type;
+
+  // By convention VMFunctions returning `bool` use an output parameter.
+  using ReturnType =
+      std::conditional_t<std::is_same<R, bool>::value, LastArgument, R>;
+};
+
+template <class>
+struct ReturnTypeToJSValueType;
+
+// Definitions for the currently used return types.
+template <>
+struct ReturnTypeToJSValueType<MutableHandleValue> {
+  static constexpr JSValueType result = JSVAL_TYPE_UNKNOWN;
+};
+template <>
+struct ReturnTypeToJSValueType<bool*> {
+  static constexpr JSValueType result = JSVAL_TYPE_BOOLEAN;
+};
+template <>
+struct ReturnTypeToJSValueType<JSString*> {
+  static constexpr JSValueType result = JSVAL_TYPE_STRING;
+};
+template <>
+struct ReturnTypeToJSValueType<BigInt*> {
+  static constexpr JSValueType result = JSVAL_TYPE_BIGINT;
+};
+
+template <typename Fn>
+void AutoCallVM::storeResult() {
+  using ReturnType = typename VMFunctionReturnType<Fn>::ReturnType;
+  storeResult(ReturnTypeToJSValueType<ReturnType>::result);
 }
 
 AutoScratchFloatRegister::AutoScratchFloatRegister(CacheIRCompiler* compiler,
