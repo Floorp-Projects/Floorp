@@ -193,6 +193,8 @@ class BigInt final
   static int8_t compare(BigInt* lhs, BigInt* rhs);
   static bool equal(BigInt* lhs, BigInt* rhs);
   static bool equal(BigInt* lhs, double rhs);
+  static JS::Result<bool> equal(JSContext* cx, Handle<BigInt*> lhs,
+                                HandleString rhs);
   static JS::Result<bool> looselyEqual(JSContext* cx, Handle<BigInt*> lhs,
                                        HandleValue rhs);
 

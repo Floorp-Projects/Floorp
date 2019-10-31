@@ -410,6 +410,8 @@ extern const uint32_t ArgLengths[];
   _(CompareInt32BigIntResult, Id, Id, Byte)                                    \
   _(CompareBigIntNumberResult, Id, Id, Byte)                                   \
   _(CompareNumberBigIntResult, Id, Id, Byte)                                   \
+  _(CompareBigIntStringResult, Id, Id, Byte)                                   \
+  _(CompareStringBigIntResult, Id, Id, Byte)                                   \
   _(CompareObjectUndefinedNullResult, Id, Byte)                                \
                                                                                \
   _(CallPrintString, Word)                                                     \
@@ -2099,6 +2101,20 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     buffer_.writeByte(uint32_t(op));
   }
 
+  void compareBigIntStringResult(uint32_t op, BigIntOperandId lhs,
+                                 StringOperandId rhs) {
+    writeOpWithOperandId(CacheOp::CompareBigIntStringResult, lhs);
+    writeOperandId(rhs);
+    buffer_.writeByte(uint32_t(op));
+  }
+
+  void compareStringBigIntResult(uint32_t op, StringOperandId lhs,
+                                 BigIntOperandId rhs) {
+    writeOpWithOperandId(CacheOp::CompareStringBigIntResult, lhs);
+    writeOperandId(rhs);
+    buffer_.writeByte(uint32_t(op));
+  }
+
   void callPrintString(const char* str) {
     writeOp(CacheOp::CallPrintString);
     writePointer(const_cast<char*>(str));
@@ -2796,6 +2812,7 @@ class MOZ_RAII CompareIRGenerator : public IRGenerator {
                                              ValOperandId rhsId);
   AttachDecision tryAttachBigIntInt32(ValOperandId lhsId, ValOperandId rhsId);
   AttachDecision tryAttachBigIntNumber(ValOperandId lhsId, ValOperandId rhsId);
+  AttachDecision tryAttachBigIntString(ValOperandId lhsId, ValOperandId rhsId);
 
   void trackAttached(const char* name);
 
