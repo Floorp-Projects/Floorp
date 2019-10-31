@@ -265,12 +265,12 @@ bool LanguageTag::canonicalizeBaseName(JSContext* cx) {
   // The first character of a script code needs to be capitalized.
   // "hans" -> "Hans"
   script_.toTitleCase();
-  MOZ_ASSERT(script().length() == 0 ||
+  MOZ_ASSERT(script().missing() ||
              IsStructurallyValidScriptTag(script().range()));
 
   // Region codes need to be in upper case. "bu" -> "BU"
   region_.toUpperCase();
-  MOZ_ASSERT(region().length() == 0 ||
+  MOZ_ASSERT(region().missing() ||
              IsStructurallyValidRegionTag(region().range()));
 
   // The canonical case for variant subtags is lowercase.
@@ -325,7 +325,7 @@ bool LanguageTag::canonicalizeBaseName(JSContext* cx) {
   // No script replacements are currently present.
 
   // Replace deprecated region subtags with their preferred values.
-  if (region().length() > 0) {
+  if (region().present()) {
     if (!regionMapping(region_) && complexRegionMapping(region_)) {
       performComplexRegionMappings();
     }
@@ -652,14 +652,14 @@ static bool LanguageTagToString(JSContext* cx, const LanguageTag& tag,
   }
 
   // Append the script subtag if present.
-  if (tag.script().length() > 0) {
+  if (tag.script().present()) {
     if (!sb.append('-') || !appendSubtag(tag.script())) {
       return false;
     }
   }
 
   // Append the region subtag if present.
-  if (tag.region().length() > 0) {
+  if (tag.region().present()) {
     if (!sb.append('-') || !appendSubtag(tag.region())) {
       return false;
     }
@@ -763,7 +763,7 @@ bool LanguageTag::canonicalizeTransformExtension(
   // [1] https://unicode.org/reports/tr35/#Language_Tag_to_Locale_Identifier
   // [2] https://unicode.org/reports/tr35/#Canonical_Unicode_Locale_Identifiers
   // [3] https://github.com/tc39/ecma402/issues/330
-  if (tag.language().length() > 0) {
+  if (tag.language().present()) {
     if (!sb.append('-')) {
       return false;
     }
@@ -829,14 +829,14 @@ static bool HasLikelySubtags(LikelySubtags likelySubtags,
   // used.
   if (likelySubtags == LikelySubtags::Add) {
     return !tag.language().equalTo("und") &&
-           (tag.script().length() > 0 && !tag.script().equalTo("Zzzz")) &&
-           (tag.region().length() > 0 && !tag.region().equalTo("ZZ"));
+           (tag.script().present() && !tag.script().equalTo("Zzzz")) &&
+           (tag.region().present() && !tag.region().equalTo("ZZ"));
   }
 
   // The language tag is already minimized if it only contains a language
   // subtag whose value is not the placeholder value "und".
-  return !tag.language().equalTo("und") && tag.script().length() == 0 &&
-         tag.region().length() == 0;
+  return !tag.language().equalTo("und") && tag.script().missing() &&
+         tag.region().missing();
 }
 
 // Create an ICU locale ID from the given language tag.
@@ -856,14 +856,14 @@ static bool CreateLocaleForLikelySubtags(const LanguageTag& tag,
   }
 
   // Append the script subtag if present.
-  if (tag.script().length() > 0) {
+  if (tag.script().present()) {
     if (!locale.append('_') || !appendSubtag(tag.script())) {
       return false;
     }
   }
 
   // Append the region subtag if present.
-  if (tag.region().length() > 0) {
+  if (tag.region().present()) {
     if (!locale.append('_') || !appendSubtag(tag.region())) {
       return false;
     }

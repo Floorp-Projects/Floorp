@@ -60,10 +60,10 @@ static inline bool IsLocale(HandleValue v) {
 // Return the length of the base-name subtags.
 static size_t BaseNameLength(const LanguageTag& tag) {
   size_t baseNameLength = tag.language().length();
-  if (tag.script().length() > 0) {
+  if (tag.script().present()) {
     baseNameLength += 1 + tag.script().length();
   }
-  if (tag.region().length() > 0) {
+  if (tag.region().present()) {
     baseNameLength += 1 + tag.region().length();
   }
   for (const auto& variant : tag.variants()) {
@@ -330,19 +330,19 @@ static bool ApplyOptionsToTag(JSContext* cx, LanguageTag& tag,
   // Step 9 (Already performed in caller).
 
   // Skip steps 10-13 when no subtags were modified.
-  if (language.length() > 0 || script.length() > 0 || region.length() > 0) {
+  if (language.present() || script.present() || region.present()) {
     // Step 10.
-    if (language.length() > 0) {
+    if (language.present()) {
       tag.setLanguage(language);
     }
 
     // Step 11.
-    if (script.length() > 0) {
+    if (script.present()) {
       tag.setScript(script);
     }
 
     // Step 12.
-    if (region.length() > 0) {
+    if (region.present()) {
       tag.setRegion(region);
     }
 

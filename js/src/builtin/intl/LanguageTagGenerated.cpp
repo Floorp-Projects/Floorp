@@ -349,7 +349,7 @@ void js::intl::LanguageTag::performComplexLanguageMappings() {
 
   if (language().equalTo("cnr")) {
     setLanguage("sr");
-    if (region().length() == 0) {
+    if (region().missing()) {
       setRegion("ME");
     }
   }
@@ -357,20 +357,20 @@ void js::intl::LanguageTag::performComplexLanguageMappings() {
            language().equalTo("prs") ||
            language().equalTo("tnf")) {
     setLanguage("fa");
-    if (region().length() == 0) {
+    if (region().missing()) {
       setRegion("AF");
     }
   }
   else if (language().equalTo("hbs") ||
            language().equalTo("sh")) {
     setLanguage("sr");
-    if (script().length() == 0) {
+    if (script().missing()) {
       setScript("Latn");
     }
   }
   else if (language().equalTo("swc")) {
     setLanguage("sw");
-    if (region().length() == 0) {
+    if (region().missing()) {
       setRegion("CD");
     }
   }
@@ -605,8 +605,8 @@ bool js::intl::LanguageTag::updateGrandfatheredMappings(JSContext* cx) {
   //     no-nyn, zh-min, and zh-min-nan require BCP47's extlang subtag
   //     that |unicode_locale_id| doesn't support.)
   //   * No RG tag contains |extensions| or |pu_extensions|.
-  if (script().length() != 0 ||
-      region().length() != 0 ||
+  if (script().present() ||
+      region().present() ||
       variants().length() != 1 ||
       extensions().length() != 0 ||
       privateuse()) {

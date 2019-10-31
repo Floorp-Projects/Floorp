@@ -148,6 +148,8 @@ class LanguageTagSubtag final {
   LanguageTagSubtag& operator=(const LanguageTagSubtag&) = delete;
 
   size_t length() const { return length_; }
+  bool missing() const { return length_ == 0; }
+  bool present() const { return length_ > 0; }
 
   mozilla::Range<const char> range() const { return {chars_, length_}; }
 
@@ -288,7 +290,7 @@ class MOZ_STACK_CLASS LanguageTag final {
    * string.
    */
   void setScript(const ScriptSubtag& script) {
-    MOZ_ASSERT(script.length() == 0 ||
+    MOZ_ASSERT(script.missing() ||
                IsStructurallyValidScriptTag(script.range()));
     script_.set(script.range());
   }
@@ -308,7 +310,7 @@ class MOZ_STACK_CLASS LanguageTag final {
    * empty string.
    */
   void setRegion(const RegionSubtag& region) {
-    MOZ_ASSERT(region.length() == 0 ||
+    MOZ_ASSERT(region.missing() ||
                IsStructurallyValidRegionTag(region.range()));
     region_.set(region.range());
   }
