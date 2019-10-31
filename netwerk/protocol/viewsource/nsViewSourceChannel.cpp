@@ -200,11 +200,6 @@ nsViewSourceChannel::GetTransferSize(uint64_t* aTransferSize) {
 }
 
 NS_IMETHODIMP
-nsViewSourceChannel::GetRequestSize(uint64_t* aRequestSize) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 nsViewSourceChannel::GetDecodedBodySize(uint64_t* aDecodedBodySize) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

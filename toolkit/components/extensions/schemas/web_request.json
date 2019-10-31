@@ -837,9 +837,7 @@
               "responseHeaders": {"$ref": "HttpHeaders", "optional": true, "description": "The HTTP response headers that were received along with this response."},
               "statusLine": {"type": "string", "description": "HTTP status line of the response or the 'HTTP/0.9 200 OK' string for HTTP/0.9 responses (i.e., responses that lack a status line) or an empty string if there are no headers."},
               "urlClassification": {"$ref": "UrlClassification","description": "Tracking classification if the request has been classified."},
-              "thirdParty": {"type": "boolean", "description": "Indicates if this request and its content window hierarchy is third party."},
-              "requestSize": {"type": "integer", "description": "For http requests, the bytes transferred in the request. Only available in onCompleted."},
-              "responseSize": {"type": "integer", "description": "For http requests, the bytes received in the request. Only available in onCompleted."}
+              "thirdParty": {"type": "boolean", "description": "Indicates if this request and its content window hierarchy is third party."}
             }
           }
         ],
