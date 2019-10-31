@@ -44,18 +44,8 @@ typedef ASTConsumer *ASTConsumerPtr;
 // preprocessor to decide which base class to pick.
 #ifdef CLANG_TIDY
 #include "../ClangTidy.h"
-typedef clang::tidy::ClangTidyCheck UpstreamBaseCheck;
+typedef clang::tidy::ClangTidyCheck BaseCheck;
 typedef clang::tidy::ClangTidyContext ContextType;
-
-class BaseCheck : public UpstreamBaseCheck {
-public:
-  BaseCheck(StringRef CheckName, ContextType *Context = nullptr)
-      : UpstreamBaseCheck(CheckName, Context) {}
-
-  // Additional functionality needed by Mozilla code
-  virtual void registerCompilerInstance(CompilerInstance &CI) {}
-};
-
 #else
 #include "BaseCheck.h"
 #endif
