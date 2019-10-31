@@ -112,10 +112,6 @@ var ReaderParent = {
       key.setAttribute("disabled", !browser.isArticle);
 
       if (browser.isArticle) {
-        win.A11yUtils.announce({
-          id: "reader-available-announcement",
-          source: button,
-        });
         Services.obs.notifyObservers(null, "reader-mode-available");
       }
     }
