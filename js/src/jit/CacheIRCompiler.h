@@ -1100,17 +1100,18 @@ class MOZ_RAII AutoScratchRegisterMaybeOutput {
 //     - Both use the `callVM` method.
 //
 //   Using AutoCallVM:
-//     - The constructor initializes `AutoOutputRegister` and
-//       `AutoSaveLiveRegisters` variables for CacheIRCompilers with the mode
-//       Ion, and initializes `AutoScratchRegister` and `AutoStubFrame`
-//       variables for CacheIRCompilers with mode Baseline.
+//     - The constructor initializes `AutoOutputRegister` for both compiler
+//       types. Additionally it initializes an `AutoSaveLiveRegisters` for
+//       CacheIRCompilers with the mode Ion, and initializes
+//       `AutoScratchRegisterMaybeOutput` and `AutoStubFrame` variables for
+//       compilers with mode Baseline.
 //     - The `prepare()` method calls the IonCacheIRCompiler method
 //       `prepareVMCall` for IonCacheIRCompilers, calls the `enter()` method of
 //       `AutoStubFrame` for BaselineCacheIRCompilers, and calls the
 //       `discardStack` method of the `Register` class for both compiler types.
-//     - The destructor calls the `masm` method `storeCallResultValue` for
-//       IonCacheIRCompilers, and calls the `leave` method of `AutoStubFrame`
-//       for BaselineCacheIRCompilers.
+//     - The `call()` method invokes `callVM` on the CacheIRCompiler and stores
+//       the call result according to its type. Finally it calls the `leave`
+//       method of `AutoStubFrame` for BaselineCacheIRCompilers.
 //
 //   Expected Usage Example:
 //     See: `CacheIRCompiler::emitCallGetSparseElementResult()`
@@ -1124,14 +1125,19 @@ class MOZ_RAII AutoCallVM {
   MacroAssembler& masm_;
   CacheIRCompiler* compiler_;
   CacheRegisterAllocator& allocator_;
+  mozilla::Maybe<AutoOutputRegister> output_;
 
   // Baseline specific stuff
   mozilla::Maybe<AutoStubFrame> stubFrame_;
-  mozilla::Maybe<AutoScratchRegister> scratch_;
+  mozilla::Maybe<AutoScratchRegisterMaybeOutput> scratch_;
 
   // Ion specific stuff
-  mozilla::Maybe<AutoOutputRegister> output_;
   mozilla::Maybe<AutoSaveLiveRegisters> save_;
+
+  void storeResult(JSValueType returnType);
+
+  template <typename Fn>
+  void storeResult();
 
  public:
   AutoCallVM(MacroAssembler& masm, CacheIRCompiler* compiler,
@@ -1139,7 +1145,11 @@ class MOZ_RAII AutoCallVM {
 
   void prepare();
 
-  ~AutoCallVM();
+  template <typename Fn, Fn fn>
+  void call() {
+    compiler_->callVM<Fn, fn>(masm_);
+    storeResult<Fn>();
+  }
 };
 
 // RAII class to allocate FloatReg0 as a scratch register and release it when
