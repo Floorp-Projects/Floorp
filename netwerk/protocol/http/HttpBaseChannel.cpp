@@ -1531,12 +1531,6 @@ HttpBaseChannel::GetTransferSize(uint64_t* aTransferSize) {
 }
 
 NS_IMETHODIMP
-HttpBaseChannel::GetRequestSize(uint64_t* aRequestSize) {
-  *aRequestSize = mRequestSize;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 HttpBaseChannel::GetDecodedBodySize(uint64_t* aDecodedBodySize) {
   *aDecodedBodySize = mDecodedBodySize;
   return NS_OK;

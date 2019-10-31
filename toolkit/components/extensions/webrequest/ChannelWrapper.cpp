@@ -825,22 +825,6 @@ void ChannelWrapper::GetStatusLine(nsCString& aRetVal) const {
   }
 }
 
-uint64_t ChannelWrapper::ResponseSize() const {
-  uint64_t result = 0;
-  if (nsCOMPtr<nsIHttpChannel> chan = MaybeHttpChannel()) {
-    Unused << chan->GetTransferSize(&result);
-  }
-  return result;
-}
-
-uint64_t ChannelWrapper::RequestSize() const {
-  uint64_t result = 0;
-  if (nsCOMPtr<nsIHttpChannel> chan = MaybeHttpChannel()) {
-    Unused << chan->GetRequestSize(&result);
-  }
-  return result;
-}
-
 /*****************************************************************************
  * ...
  *****************************************************************************/
