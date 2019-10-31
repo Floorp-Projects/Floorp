@@ -29,6 +29,9 @@ enum XDRMode { XDR_ENCODE, XDR_DECODE };
 
 using XDRResult = mozilla::Result<mozilla::Ok, JS::TranscodeResult>;
 
+using XDRAtomTable = JS::GCVector<PreBarriered<JSAtom*>>;
+using XDRAtomMap = JS::GCHashMap<PreBarriered<JSAtom*>, uint32_t>;
+
 class XDRBufferBase {
  public:
   explicit XDRBufferBase(JSContext* cx, size_t cursor = 0)
@@ -402,7 +405,22 @@ class XDRState : public XDRCoderBase {
 };
 
 using XDREncoder = XDRState<XDR_ENCODE>;
-using XDRDecoder = XDRState<XDR_DECODE>;
+using XDRDecoderBase = XDRState<XDR_DECODE>;
+
+class XDRDecoder : public XDRDecoderBase {
+ public:
+  XDRDecoder(JSContext* cx, JS::TranscodeBuffer& buffer, size_t cursor = 0)
+      : XDRDecoderBase(cx, buffer, cursor), atomTable_(cx) {}
+
+  template <typename RangeType>
+  XDRDecoder(JSContext* cx, const RangeType& range)
+      : XDRDecoderBase(cx, range), atomTable_(cx) {}
+
+  void trace(JSTracer* trc);
+
+ private:
+  XDRAtomTable atomTable_;
+};
 
 class XDROffThreadDecoder : public XDRDecoder {
   const JS::ReadOnlyCompileOptions* options_;
@@ -499,6 +517,7 @@ class XDRIncrementalEncoder : public XDREncoder {
   // Tree of slices.
   SlicesTree tree_;
   JS::TranscodeBuffer slices_;
+  XDRAtomMap atomMap_;
   bool oom_;
 
   class DepthFirstSliceIterator;
@@ -508,6 +527,7 @@ class XDRIncrementalEncoder : public XDREncoder {
       : XDREncoder(cx, slices_, 0),
         scope_(nullptr),
         node_(nullptr),
+        atomMap_(cx),
         oom_(false) {}
 
   virtual ~XDRIncrementalEncoder() {}
@@ -521,6 +541,8 @@ class XDRIncrementalEncoder : public XDREncoder {
   // Append the content collected during the incremental encoding into the
   // buffer given as argument.
   XDRResult linearize(JS::TranscodeBuffer& buffer);
+
+  void trace(JSTracer* trc);
 };
 
 template <XDRMode mode>
