@@ -2581,31 +2581,56 @@ nsresult nsHttpChannel::ContinueProcessResponse1() {
       return NS_OK;
     }
 
-    nsCOMPtr<nsIParentChannel> parentChannel;
-    NS_QueryNotificationCallbacks(this, parentChannel);
-
-    RefPtr<DocumentChannelParent> documentChannelParent =
-        do_QueryObject(parentChannel);
-
-    if (!documentChannelParent) {
-      // notify "http-on-may-change-process" observers
-      gHttpHandler->OnMayChangeProcess(this);
-
-      if (mRedirectContentProcessIdPromise) {
-        MOZ_ASSERT(!mOnStartRequestCalled);
-
-        PushRedirectAsyncFunc(&nsHttpChannel::ContinueProcessResponse2);
-        rv = StartCrossProcessRedirect();
-        if (NS_SUCCEEDED(rv)) {
-          return NS_OK;
-        }
-        PopRedirectAsyncFunc(&nsHttpChannel::ContinueProcessResponse2);
-      }
-    }
+    AssertNotDocumentChennel();
   }
 
   // No process switch needed, continue as normal.
   return ContinueProcessResponse2(rv);
+}
+
+void nsHttpChannel::AssertNotDocumentChennel() {
+  if (!mLoadInfo || !IsDocument()) {
+    return;
+  }
+
+  nsCOMPtr<nsIParentChannel> parentChannel;
+  NS_QueryNotificationCallbacks(this, parentChannel);
+  RefPtr<DocumentChannelParent> documentChannelParent =
+      do_QueryObject(parentChannel);
+  if (documentChannelParent) {
+    // The load is using document channel.
+    return;
+  }
+
+  RefPtr<HttpChannelParent> httpParent = do_QueryObject(parentChannel);
+  if (!httpParent) {
+    // The load was initiated in the parent and doesn't need document
+    // channel.
+    return;
+  }
+
+  nsContentPolicyType contentPolicy;
+  MOZ_ALWAYS_SUCCEEDS(mLoadInfo->GetExternalContentPolicyType(&contentPolicy));
+  RefPtr<BrowsingContext> bc;
+  if (contentPolicy == CSPService::TYPE_DOCUMENT) {
+    MOZ_ALWAYS_SUCCEEDS(mLoadInfo->GetBrowsingContext(getter_AddRefs(bc)));
+  } else {
+    MOZ_ALWAYS_SUCCEEDS(mLoadInfo->GetFrameBrowsingContext(getter_AddRefs(bc)));
+  }
+  if (!bc) {
+    return;
+  }
+
+  if (mLoadInfo->LoadingPrincipal() &&
+      mLoadInfo->LoadingPrincipal()->IsSystemPrincipal()) {
+    // Loads with the system principal can skip document channel
+    return;
+  }
+
+  // The load was supposed to use document channel but didn't.
+  MOZ_DIAGNOSTIC_ASSERT(
+      !StaticPrefs::browser_tabs_documentchannel(),
+      "DocumentChannel is enabled but this load was done without it");
 }
 
 nsresult nsHttpChannel::ContinueProcessResponse2(nsresult rv) {
@@ -7744,22 +7769,7 @@ nsHttpChannel::OnStartRequest(nsIRequest* request) {
       return NS_OK;
     }
 
-    nsCOMPtr<nsIParentChannel> parentChannel;
-    NS_QueryNotificationCallbacks(this, parentChannel);
-    RefPtr<DocumentChannelParent> documentChannelParent =
-        do_QueryObject(parentChannel);
-    if (!documentChannelParent) {
-      gHttpHandler->OnMayChangeProcess(this);
-
-      if (mRedirectContentProcessIdPromise) {
-        PushRedirectAsyncFunc(&nsHttpChannel::ContinueOnStartRequest1);
-        rv = StartCrossProcessRedirect();
-        if (NS_SUCCEEDED(rv)) {
-          return NS_OK;
-        }
-        PopRedirectAsyncFunc(&nsHttpChannel::ContinueOnStartRequest1);
-      }
-    }
+    AssertNotDocumentChennel();
   }
 
   // No process change is needed, so continue on to ContinueOnStartRequest1.
