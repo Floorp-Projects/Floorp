@@ -60,7 +60,8 @@ struct OffsetPathData {
   };
 
   static OffsetPathData None() { return OffsetPathData(); }
-  static OffsetPathData Path(const StyleSVGPathData& aPath);
+  static OffsetPathData Path(const StyleSVGPathData& aPath,
+                             gfx::PathBuilder* aPathBuilder);
   static OffsetPathData Ray(const RayFunction& aRay,
                             const RayReferenceData& aData) {
     return OffsetPathData(&aRay, aData);
