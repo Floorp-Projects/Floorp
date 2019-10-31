@@ -47,28 +47,20 @@ RayReferenceData::RayReferenceData(const nsIFrame* aFrame) {
 }
 
 static already_AddRefed<gfx::Path> BuildPath(
-    const Span<const StylePathCommand>& aPath) {
-  // Here we only need to build a valid path for motion path, so
-  // using the default values of stroke-width, stoke-linecap, and fill-rule
-  // is fine for now because what we want is get the point and its normal
-  // vector along the path, instead of rendering it.
-  RefPtr<gfx::DrawTarget> drawTarget =
-      gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget();
-  RefPtr<gfx::PathBuilder> builder =
-      drawTarget->CreatePathBuilder(gfx::FillRule::FILL_WINDING);
-
-  return SVGPathData::BuildPath(aPath, builder, NS_STYLE_STROKE_LINECAP_BUTT,
-                                0.0);
+    const Span<const StylePathCommand>& aPath, gfx::PathBuilder* aPathBuilder) {
+  return SVGPathData::BuildPath(aPath, aPathBuilder,
+                                NS_STYLE_STROKE_LINECAP_BUTT, 0.0);
 }
 
 /* static */
-OffsetPathData OffsetPathData::Path(const StyleSVGPathData& aPath) {
+OffsetPathData OffsetPathData::Path(const StyleSVGPathData& aPath,
+                                    gfx::PathBuilder* aPathBuilder) {
   const auto& path = aPath._0.AsSpan();
 
   // FIXME: Bug 1484780, we should cache the path to avoid rebuilding it here
   // at every restyle. (Caching the path avoids the cost of flattening it again
   // each time.)
-  RefPtr<gfx::Path> gfxPath = BuildPath(path);
+  RefPtr<gfx::Path> gfxPath = BuildPath(path, aPathBuilder);
   return OffsetPathData(gfxPath, !path.empty() && path.rbegin()->IsClosePath());
 }
 
@@ -463,8 +455,17 @@ Maybe<MotionPathData> MotionPathUtils::ResolveMotionPath(
 static OffsetPathData GenerateOffsetPathData(const nsIFrame* aFrame) {
   const StyleOffsetPath& path = aFrame->StyleDisplay()->mOffsetPath;
   switch (path.tag) {
-    case StyleOffsetPath::Tag::Path:
-      return OffsetPathData::Path(path.AsPath());
+    case StyleOffsetPath::Tag::Path: {
+      // Here we only need to build a valid path for motion path, so
+      // using the default values of stroke-width, stoke-linecap, and fill-rule
+      // is fine for now because what we want is get the point and its normal
+      // vector along the path, instead of rendering it.
+      RefPtr<gfx::DrawTarget> drawTarget =
+          gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget();
+      RefPtr<gfx::PathBuilder> builder =
+          drawTarget->CreatePathBuilder(gfx::FillRule::FILL_WINDING);
+      return OffsetPathData::Path(path.AsPath(), builder);
+    }
     case StyleOffsetPath::Tag::Ray:
       return OffsetPathData::Ray(path.AsRay(), RayReferenceData(aFrame));
     case StyleOffsetPath::Tag::None:
