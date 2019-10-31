@@ -56,7 +56,8 @@ pub struct FrameBuilderConfig {
     pub dual_source_blending_is_supported: bool,
     pub dual_source_blending_is_enabled: bool,
     pub chase_primitive: ChasePrimitive,
-    pub enable_picture_caching: bool,
+    /// The immutable global picture caching enable from `RendererOptions`
+    pub global_enable_picture_caching: bool,
     /// True if we're running tests (i.e. via wrench).
     pub testing: bool,
     pub gpu_supports_fast_clears: bool,
@@ -314,6 +315,7 @@ impl FrameBuilder {
             gpu_cache,
             &scene.clip_store,
             data_stores,
+            composite_state,
         );
 
         {
@@ -495,7 +497,18 @@ impl FrameBuilder {
 
         let output_size = scene.output_rect.size.to_i32();
         let screen_world_rect = (scene.output_rect.to_f32() / global_device_pixel_scale).round_out();
-        let mut composite_state = CompositeState::new(scene.config.compositor_kind);
+
+        // Determine if we will draw this frame with picture caching enabled. This depends on:
+        // (1) If globally enabled when WR was initialized
+        // (2) If current debug flags allow picture caching
+        // (3) [In future] Whether we are currently pinch zooming
+        let picture_caching_is_enabled =
+            scene.config.global_enable_picture_caching &&
+            !debug_flags.contains(DebugFlags::DISABLE_PICTURE_CACHING);
+        let mut composite_state = CompositeState::new(
+            scene.config.compositor_kind,
+            picture_caching_is_enabled,
+        );
 
         let main_render_task_id = self.build_layer_screen_rects_and_cull_layers(
             scene,

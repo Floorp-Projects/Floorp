@@ -705,6 +705,11 @@ fn render<'a>(
                         VirtualKeyCode::Escape => {
                             return winit::ControlFlow::Break;
                         }
+                        VirtualKeyCode::A => {
+                            debug_flags.toggle(DebugFlags::DISABLE_PICTURE_CACHING);
+                            wrench.api.send_debug_cmd(DebugCommand::SetFlags(debug_flags));
+                            do_render = true;
+                        }
                         VirtualKeyCode::P => {
                             debug_flags.toggle(DebugFlags::PROFILER_DBG);
                             wrench.api.send_debug_cmd(DebugCommand::SetFlags(debug_flags));

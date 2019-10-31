@@ -488,7 +488,7 @@ impl<'a> SceneBuilder<'a> {
         &mut self,
         main_prim_list: &mut PrimitiveList,
     ) {
-        if !self.config.enable_picture_caching {
+        if !self.config.global_enable_picture_caching {
             return;
         }
 
@@ -1693,7 +1693,7 @@ impl<'a> SceneBuilder<'a> {
             None
         };
 
-        if is_pipeline_root && create_tile_cache && self.config.enable_picture_caching {
+        if is_pipeline_root && create_tile_cache && self.config.global_enable_picture_caching {
             // we don't expect any nested tile-cache-enabled stacking contexts
             debug_assert!(!self.sc_stack.iter().any(|sc| sc.create_tile_cache));
         }
