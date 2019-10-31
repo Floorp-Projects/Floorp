@@ -131,22 +131,21 @@ function doTest1() {
 }
 
 function doTest2() {
-  // connection expected to be reused for an anonymous request
+  // Run the same test as above to make sure connection is marked experienced.
   dump("doTest2()\n");
-  origin = "https://foo.example.com:" + h2Port + "/origin-2";
+  origin = "https://foo.example.com:" + h2Port + "/origin-1";
   nextTest = doTest3;
   nextPortExpectedToBeSame = true;
-  anonymous = true;
   do_test_pending();
   doTest();
 }
 
 function doTest3() {
+  // connection expected to be reused for an anonymous request
   dump("doTest3()\n");
-  origin = "https://foo.example.com:" + h2Port + "/origin-3";
+  origin = "https://foo.example.com:" + h2Port + "/origin-2";
   nextTest = doTest4;
-  nextPortExpectedToBeSame = false;
-  forceReload = true;
+  nextPortExpectedToBeSame = true;
   anonymous = true;
   do_test_pending();
   doTest();
@@ -154,6 +153,29 @@ function doTest3() {
 
 function doTest4() {
   dump("doTest4()\n");
+  origin = "https://foo.example.com:" + h2Port + "/origin-3";
+  nextTest = doTest5;
+  nextPortExpectedToBeSame = false;
+  forceReload = true;
+  anonymous = true;
+  do_test_pending();
+  doTest();
+}
+
+function doTest5() {
+  // Run the same test as above just without forceReload to make sure connection
+  // is marked experienced.
+  dump("doTest5()\n");
+  origin = "https://foo.example.com:" + h2Port + "/origin-3";
+  nextTest = doTest6;
+  nextPortExpectedToBeSame = true;
+  anonymous = true;
+  do_test_pending();
+  doTest();
+}
+
+function doTest6() {
+  dump("doTest6()\n");
   origin = "https://foo.example.com:" + h2Port + "/origin-4";
   nextTest = testsDone;
   nextPortExpectedToBeSame = true;
