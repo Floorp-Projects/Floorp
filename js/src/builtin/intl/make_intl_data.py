@@ -245,12 +245,12 @@ void js::intl::LanguageTag::performComplexLanguageMappings() {
 
         if script is not None:
             println(u"""
-    if (script().length() == 0) {{
+    if (script().missing()) {{
       setScript("{}");
     }}""".format(script).strip("\n"))
         if region is not None:
             println(u"""
-    if (region().length() == 0) {{
+    if (region().missing()) {{
       setRegion("{}");
     }}""".format(region).strip("\n"))
         println(u"""
@@ -380,8 +380,8 @@ bool js::intl::LanguageTag::updateGrandfatheredMappings(JSContext* cx) {
   //     no-nyn, zh-min, and zh-min-nan require BCP47's extlang subtag
   //     that |unicode_locale_id| doesn't support.)
   //   * No RG tag contains |extensions| or |pu_extensions|.
-  if (script().length() != 0 ||
-      region().length() != 0 ||
+  if (script().present() ||
+      region().present() ||
       variants().length() != 1 ||
       extensions().length() != 0 ||
       privateuse()) {
