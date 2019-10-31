@@ -247,6 +247,7 @@ class ContentDelegateTest : BaseSessionTest() {
         mainSession.waitForPageStop()
         mainSession.evaluateJS("document.querySelector('#fullscreen').requestFullscreen(); true")
         sessionRule.waitUntilCalled(object : Callbacks.ContentDelegate {
+            @AssertCalled(count = 1)
             override  fun onFullScreen(session: GeckoSession, fullScreen: Boolean) {
                 assertThat("Div went fullscreen", fullScreen, equalTo(true))
             }
@@ -255,8 +256,9 @@ class ContentDelegateTest : BaseSessionTest() {
 
     private fun waitForFullscreenExit() {
         sessionRule.waitUntilCalled(object : Callbacks.ContentDelegate {
+            @AssertCalled(count = 1)
             override  fun onFullScreen(session: GeckoSession, fullScreen: Boolean) {
-                assertThat("Div went fullscreen", fullScreen, equalTo(false))
+                assertThat("Div left fullscreen", fullScreen, equalTo(false))
             }
         })
     }
