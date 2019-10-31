@@ -53,16 +53,22 @@ function getClosestMessage(visibleMessages, messages, executionPoint) {
   }
 
   const messageList = visibleMessages.map(id => messages.get(id));
+
   const precedingMessages = messageList.filter(m => {
     return (
-      m && m.executionPoint && pointPrecedes(m.executionPoint, executionPoint)
+      m &&
+      m.executionPoint &&
+      (pointPrecedes(m.executionPoint, executionPoint) ||
+        !pointPrecedes(executionPoint, m.executionPoint))
     );
   });
+
   if (precedingMessages.length != 0) {
     return precedingMessages.sort((a, b) => {
       return pointPrecedes(a.executionPoint, b.executionPoint);
     })[0];
   }
+
   return messageList
     .filter(m => m && m.executionPoint)
     .sort((a, b) => {
