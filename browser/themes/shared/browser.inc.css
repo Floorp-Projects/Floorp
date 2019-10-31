@@ -325,18 +325,6 @@ menupopup::part(drop-indicator) {
   background-color: rgba(216, 216, 216, 0.5);
 }
 
-:root[lwt-popup-brighttext] #contextual-feature-recommendation-notification[data-notification-bucket="CFR_MILESTONE_MESSAGE"] .popup-notification-button.popup-notification-primary-button {
-  background-color: rgba(216, 216, 216, 0.5);
-}
-
-:root[lwt-popup-brighttext] #contextual-feature-recommendation-notification[data-notification-bucket="CFR_MILESTONE_MESSAGE"] .popup-notification-button.popup-notification-primary-button:hover {
-  background-color: rgba(216, 216, 216, 0.4);
-}
-
-:root[lwt-popup-brighttext] #contextual-feature-recommendation-notification[data-notification-bucket="CFR_MILESTONE_MESSAGE"] .popup-notification-button.popup-notification-primary-button:active {
-  background-color: rgba(216, 216, 216, 0.2);
-}
-
 #contextual-feature-recommendation-notification[data-notification-bucket="CFR_MILESTONE_MESSAGE"] .popup-notification-header-container {
   color: white;
   max-width: unset;
