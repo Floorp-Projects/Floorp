@@ -386,6 +386,10 @@ class XMLHttpRequestMainThread final : public XMLHttpRequest,
   virtual void GetResponseText(DOMString& aResponseText,
                                ErrorResult& aRv) override;
 
+  // GetResponse* for workers:
+  already_AddRefed<BlobImpl> GetResponseBlobImpl();
+  already_AddRefed<ArrayBufferBuilder> GetResponseArrayBufferBuilder();
+  nsresult GetResponseTextForJSON(nsAString& aString);
   void GetResponseText(XMLHttpRequestStringSnapshot& aSnapshot,
                        ErrorResult& aRv);
 

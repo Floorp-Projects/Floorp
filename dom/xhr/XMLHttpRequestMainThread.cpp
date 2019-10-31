@@ -619,8 +619,9 @@ nsresult XMLHttpRequestMainThread::CreateResponseParsedJSON(JSContext* aCx) {
   }
 
   nsAutoString string;
-  if (!mResponseText.GetAsString(string)) {
-    return NS_ERROR_OUT_OF_MEMORY;
+  nsresult rv = GetResponseTextForJSON(string);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
   }
 
   // The Unicode converter has already zapped the BOM if there was one
@@ -743,6 +744,45 @@ void XMLHttpRequestMainThread::GetResponse(
   }
 
   aResponse.setNull();
+}
+
+already_AddRefed<BlobImpl> XMLHttpRequestMainThread::GetResponseBlobImpl() {
+  MOZ_DIAGNOSTIC_ASSERT(mForWorker);
+  MOZ_DIAGNOSTIC_ASSERT(mResponseType == XMLHttpRequestResponseType::Blob);
+
+  if (mState != XMLHttpRequest_Binding::DONE) {
+    return nullptr;
+  }
+
+  RefPtr<BlobImpl> blobImpl = mResponseBlobImpl;
+  return blobImpl.forget();
+}
+
+already_AddRefed<ArrayBufferBuilder>
+XMLHttpRequestMainThread::GetResponseArrayBufferBuilder() {
+  MOZ_DIAGNOSTIC_ASSERT(mForWorker);
+  MOZ_DIAGNOSTIC_ASSERT(mResponseType ==
+                        XMLHttpRequestResponseType::Arraybuffer);
+
+  if (mState != XMLHttpRequest_Binding::DONE) {
+    return nullptr;
+  }
+
+  RefPtr<ArrayBufferBuilder> builder = mArrayBufferBuilder;
+  return builder.forget();
+}
+
+nsresult XMLHttpRequestMainThread::GetResponseTextForJSON(nsAString& aString) {
+  if (mState != XMLHttpRequest_Binding::DONE) {
+    aString.SetIsVoid(true);
+    return NS_OK;
+  }
+
+  if (!mResponseText.GetAsString(aString)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  return NS_OK;
 }
 
 bool XMLHttpRequestMainThread::IsCrossSiteCORSRequest() const {
