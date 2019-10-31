@@ -460,6 +460,12 @@ const EmulationActor = protocol.ActorClassWithSpec(emulationSpec, {
   async captureScreenshot() {
     return this.screenshotActor.capture({});
   },
+
+  async setDocumentInRDMPane(inRDMPane) {
+    if (this.docShell && this.docShell.document) {
+      this.docShell.document.inRDMPane = inRDMPane;
+    }
+  },
 });
 
 exports.EmulationActor = EmulationActor;

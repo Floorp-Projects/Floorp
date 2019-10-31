@@ -179,6 +179,13 @@ const emulationSpec = generateActorSpec({
         value: RetVal("json"),
       },
     },
+
+    setDocumentInRDMPane: {
+      request: {
+        state: Arg(0, "boolean"),
+      },
+      response: {},
+    },
   },
 });
 
