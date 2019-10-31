@@ -207,6 +207,10 @@ class ResponsiveUI {
     // Restore the previous state of RDM.
     await this.restoreState();
 
+    if (this.isBrowserUIEnabled) {
+      await this.emulationFront.setDocumentInRDMPane(true);
+    }
+
     if (!this.isBrowserUIEnabled) {
       // Force the newly created Zoom actor to cache its 1.0 zoom level. This
       // prevents it from sending out FullZoomChange events when the content
@@ -300,6 +304,10 @@ class ResponsiveUI {
     // Ensure init has finished before starting destroy
     if (!isTabContentDestroying) {
       await this.inited;
+    }
+
+    if (this.isBrowserUIEnabled) {
+      await this.emulationFront.setDocumentInRDMPane(false);
     }
 
     this.tab.removeEventListener("TabClose", this);
