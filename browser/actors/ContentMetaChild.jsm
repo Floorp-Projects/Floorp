@@ -3,6 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 "use strict";
+
+const EXPORTED_SYMBOLS = ["ContentMetaChild"];
+
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
@@ -75,32 +78,34 @@ function checkLoadURIStr(aURL) {
   return true;
 }
 
-var EXPORTED_SYMBOLS = ["ContentMetaHandler"];
-
 /*
  * This listens to DOMMetaAdded events and collects relevant metadata about the
  * meta tag received. Then, it sends the metadata gathered from the meta tags
  * and the url of the page as it's payload to be inserted into moz_places.
  */
+class ContentMetaChild extends JSWindowActorChild {
+  constructor() {
+    super();
 
-var ContentMetaHandler = {
-  init(chromeGlobal) {
-    // Store a locally-scoped (for this chromeGlobal) mapping of the best
-    // description and preview image collected so far for a given URL
-    const metaTags = new Map();
-    chromeGlobal.addEventListener("DOMMetaAdded", event => {
-      const metaTag = event.originalTarget;
-      const window = metaTag.ownerGlobal;
+    // Store a mapping of the best description and preview
+    // image collected so far for a given URL.
+    this.metaTags = new Map();
+  }
 
-      // If there's no meta tag, or we're in a sub-frame, ignore this
-      if (!metaTag || !metaTag.ownerDocument || window != window.top) {
-        return;
-      }
-      this.handleMetaTag(metaTag, chromeGlobal, metaTags);
-    });
-  },
+  handleEvent(event) {
+    if (event.type != "DOMMetaAdded") {
+      return;
+    }
 
-  handleMetaTag(metaTag, chromeGlobal, metaTags) {
+    const metaTag = event.originalTarget;
+    const window = metaTag.ownerGlobal;
+
+    // If there's no meta tag, ignore this. Also verify that the window
+    // matches just to be safe.
+    if (!metaTag || !metaTag.ownerDocument || window != this.contentWindow) {
+      return;
+    }
+
     const url = metaTag.ownerDocument.documentURI;
 
     let name = metaTag.name;
@@ -111,7 +116,7 @@ var ContentMetaHandler = {
 
     let tag = name || prop;
 
-    const entry = metaTags.get(url) || {
+    const entry = this.metaTags.get(url) || {
       description: { value: null, currMaxScore: -1 },
       image: { value: null, currMaxScore: -1 },
       timeout: null,
@@ -144,8 +149,8 @@ var ContentMetaHandler = {
       return;
     }
 
-    if (!metaTags.has(url)) {
-      metaTags.set(url, entry);
+    if (!this.metaTags.has(url)) {
+      this.metaTags.set(url, entry);
     }
 
     if (entry.timeout) {
@@ -159,7 +164,7 @@ var ContentMetaHandler = {
           entry.timeout = null;
 
           // Save description and preview image to moz_places
-          chromeGlobal.sendAsyncMessage("Meta:SetPageInfo", {
+          this.sendAsyncMessage("Meta:SetPageInfo", {
             url,
             description: entry.description.value,
             previewImageURL: entry.image.value,
@@ -173,11 +178,11 @@ var ContentMetaHandler = {
           Services.telemetry
             .getHistogramById("PAGE_METADATA_SIZE")
             .add(metadataSize);
-          metaTags.delete(url);
+          this.metaTags.delete(url);
         },
         TIMEOUT_DELAY,
         Ci.nsITimer.TYPE_ONE_SHOT
       );
     }
-  },
-};
+  }
+}

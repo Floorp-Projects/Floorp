@@ -9,15 +9,5 @@
 /* eslint-env mozilla/frame-script */
 /* eslint no-unused-vars: ["error", {args: "none"}] */
 
-var { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
-);
-
-XPCOMUtils.defineLazyModuleGetters(this, {
-  ContentMetaHandler: "resource:///modules/ContentMetaHandler.jsm",
-});
-
-ContentMetaHandler.init(this);
-
 // This is a temporary hack to prevent regressions (bug 1471327).
 void content;

@@ -138,7 +138,6 @@ EXTRA_JS_MODULES += [
     'BrowserWindowTracker.jsm',
     'ContentClick.jsm',
     'ContentCrashHandlers.jsm',
-    'ContentMetaHandler.jsm',
     'ContentObservers.js',
     'ContentSearch.jsm',
     'Discovery.jsm',

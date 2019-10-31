@@ -46,6 +46,20 @@ let ACTORS = {
     },
   },
 
+  // Collects description and icon information from meta tags.
+  ContentMeta: {
+    parent: {
+      moduleURI: "resource:///actors/ContentMetaParent.jsm",
+    },
+
+    child: {
+      moduleURI: "resource:///actors/ContentMetaChild.jsm",
+      events: {
+        DOMMetaAdded: {},
+      },
+    },
+  },
+
   ContextMenu: {
     parent: {
       moduleURI: "resource:///actors/ContextMenuParent.jsm",

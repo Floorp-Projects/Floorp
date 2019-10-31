@@ -42,7 +42,6 @@ const whitelist = {
     // Browser front-end
     "resource:///actors/AboutReaderChild.jsm",
     "resource:///actors/BrowserTabChild.jsm",
-    "resource:///modules/ContentMetaHandler.jsm",
     "resource:///actors/LinkHandlerChild.jsm",
     "resource:///actors/SearchTelemetryChild.jsm",
     "resource://gre/actors/AutoCompleteChild.jsm",
