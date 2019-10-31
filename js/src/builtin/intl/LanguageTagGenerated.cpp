@@ -53,11 +53,46 @@ static inline const char* SearchReplacement(
   return nullptr;
 }
 
+#ifdef DEBUG
+static bool IsCanonicallyCasedLanguageTag(const mozilla::Range<const char>& range) {
+  // Tell the analysis the |std::all_of| function can't GC.
+  JS::AutoSuppressGCAnalysis nogc;
+
+  size_t length = range.length();
+  const char* str = range.begin().get();
+  return std::all_of(str, str + length, mozilla::IsAsciiLowercaseAlpha<char>);
+}
+
+static bool IsCanonicallyCasedRegionTag(const mozilla::Range<const char>& range) {
+  // Tell the analysis the |std::all_of| function can't GC.
+  JS::AutoSuppressGCAnalysis nogc;
+
+  size_t length = range.length();
+  const char* str = range.begin().get();
+  return std::all_of(str, str + length, mozilla::IsAsciiUppercaseAlpha<char>) ||
+         std::all_of(str, str + length, mozilla::IsAsciiDigit<char>);
+}
+
+static bool IsCanonicallyCasedVariantTag(const mozilla::Range<const char>& range) {
+  auto isAsciiLowercaseAlphaOrDigit = [](char c) {
+    return mozilla::IsAsciiLowercaseAlpha(c) || mozilla::IsAsciiDigit(c);
+  };
+
+  // Tell the analysis the |std::all_of| function can't GC.
+  JS::AutoSuppressGCAnalysis nogc;
+
+  size_t length = range.length();
+  const char* str = range.begin().get();
+  return std::all_of(str, str + length, isAsciiLowercaseAlphaOrDigit);
+}
+#endif
+
 // Mappings from language subtags to preferred values.
 // Derived from CLDR Supplemental Data, version 36.
 // https://unicode.org/Public/cldr/36/core.zip
 bool js::intl::LanguageTag::languageMapping(LanguageSubtag& language) {
   MOZ_ASSERT(IsStructurallyValidLanguageTag(language.range()));
+  MOZ_ASSERT(IsCanonicallyCasedLanguageTag(language.range()));
 
   if (language.length() == 2) {
     static const char languages[9][3] = {
@@ -165,6 +200,7 @@ bool js::intl::LanguageTag::languageMapping(LanguageSubtag& language) {
 // https://unicode.org/Public/cldr/36/core.zip
 bool js::intl::LanguageTag::complexLanguageMapping(const LanguageSubtag& language) {
   MOZ_ASSERT(IsStructurallyValidLanguageTag(language.range()));
+  MOZ_ASSERT(IsCanonicallyCasedLanguageTag(language.range()));
 
   if (language.length() == 2) {
     return language.equalTo("sh");
@@ -186,6 +222,7 @@ bool js::intl::LanguageTag::complexLanguageMapping(const LanguageSubtag& languag
 // https://unicode.org/Public/cldr/36/core.zip
 bool js::intl::LanguageTag::regionMapping(RegionSubtag& region) {
   MOZ_ASSERT(IsStructurallyValidRegionTag(region.range()));
+  MOZ_ASSERT(IsCanonicallyCasedRegionTag(region.range()));
 
   if (region.length() == 2) {
     static const char regions[23][3] = {
@@ -285,6 +322,7 @@ bool js::intl::LanguageTag::regionMapping(RegionSubtag& region) {
 // https://unicode.org/Public/cldr/36/core.zip
 bool js::intl::LanguageTag::complexRegionMapping(const RegionSubtag& region) {
   MOZ_ASSERT(IsStructurallyValidRegionTag(region.range()));
+  MOZ_ASSERT(IsCanonicallyCasedRegionTag(region.range()));
 
   if (region.length() == 2) {
     return region.equalTo("AN") ||
@@ -307,6 +345,7 @@ bool js::intl::LanguageTag::complexRegionMapping(const RegionSubtag& region) {
 // https://unicode.org/Public/cldr/36/core.zip
 void js::intl::LanguageTag::performComplexLanguageMappings() {
   MOZ_ASSERT(IsStructurallyValidLanguageTag(language().range()));
+  MOZ_ASSERT(IsCanonicallyCasedLanguageTag(language().range()));
 
   if (language().equalTo("cnr")) {
     setLanguage("sr");
@@ -342,7 +381,9 @@ void js::intl::LanguageTag::performComplexLanguageMappings() {
 // https://unicode.org/Public/cldr/36/core.zip
 void js::intl::LanguageTag::performComplexRegionMappings() {
   MOZ_ASSERT(IsStructurallyValidLanguageTag(language().range()));
+  MOZ_ASSERT(IsCanonicallyCasedLanguageTag(language().range()));
   MOZ_ASSERT(IsStructurallyValidRegionTag(region().range()));
+  MOZ_ASSERT(IsCanonicallyCasedRegionTag(region().range()));
 
   if (region().equalTo("172")) {
     if (language().equalTo("hy") ||
@@ -571,6 +612,10 @@ bool js::intl::LanguageTag::updateGrandfatheredMappings(JSContext* cx) {
       privateuse()) {
     return true;
   }
+
+  MOZ_ASSERT(IsCanonicallyCasedLanguageTag(language().range()));
+  MOZ_ASSERT(IsCanonicallyCasedVariantTag({variants()[0].get(),
+                                           strlen(variants()[0].get())}));
 
   auto variantEqualTo = [this](const char* variant) {
     return strcmp(variants()[0].get(), variant) == 0;
