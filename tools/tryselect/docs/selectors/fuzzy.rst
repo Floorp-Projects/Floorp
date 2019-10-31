@@ -63,8 +63,8 @@ selecting tasks. Here are the main shortcuts you'll need:
     Tab            => Select task + move cursor down
     Shift-Tab      => Select task + move cursor up
     Ctrl-A         => Select all currently filtered tasks
-    Ctrl-D         => De-select all currently filtered tasks
     Ctrl-T         => Toggle select all currently filtered tasks
+    Ctrl-D         => De-select all selected tasks (both filtered and not)
     Alt-Bspace     => Clear query from input bar
     Enter          => Accept selection and exit
     Ctrl-C / Esc   => Cancel selection and exit
@@ -97,25 +97,15 @@ the AND operator. For example:
 
 .. code-block:: text
 
-    'windows' 'mochitest'
+    'windows 'mochitest
 
 This query has two terms, and is the equivalent of saying: Give me all the tasks that match both the
 term ``'windows'`` and the term ``'mochitest'``. In other words, this query matches all Windows
 mochitest tasks.
 
-The single quotes around each term tell ``fzf`` to use exact substring matches, so only
-tasks that contain both the literal string ``windows`` AND the literal string ``mochitest`` will be
-matched. For convenience, the trailing quote is optional:
-
-.. code-block:: text
-
-    'windows 'mochitest
-
-This query is exactly the same as the one before.
-
-.. note::
-
-    From here on out the trailing quote will be omitted from examples.
+The single quote prefix before each term tells ``fzf`` to use exact substring matches, so only tasks
+that contain both the literal string ``windows`` AND the literal string ``mochitest`` will be
+matched.
 
 Another thing to note is that the order of the terms makes no difference, so ``'windows 'mochitest``
 and ``'mochitest 'windows`` are equivalent.
