@@ -241,6 +241,15 @@ class MOZ_STACK_CLASS LanguageTag final {
   const char* privateuse() const { return privateuse_.get(); }
 
   /**
+   * Return the Unicode extension subtag or nullptr if not present.
+   */
+  const char* unicodeExtension() const;
+
+ private:
+  ptrdiff_t unicodeExtensionIndex() const;
+
+ public:
+  /**
    * Set the language subtag. The input must be a valid, case-normalized
    * language subtag.
    */
