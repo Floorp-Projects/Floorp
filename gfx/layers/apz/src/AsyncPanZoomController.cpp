@@ -4992,7 +4992,7 @@ bool AsyncPanZoomController::HasReadyTouchBlock() const {
 }
 
 bool AsyncPanZoomController::CanHandleScrollOffsetUpdate(PanZoomState aState) {
-  return aState == PAN_MOMENTUM;
+  return aState == PAN_MOMENTUM || IsPanningState(aState);
 }
 
 void AsyncPanZoomController::SetState(PanZoomState aNewState) {
@@ -5061,9 +5061,13 @@ bool AsyncPanZoomController::IsTransformingState(PanZoomState aState) {
   return !(aState == NOTHING || aState == TOUCHING);
 }
 
+bool AsyncPanZoomController::IsPanningState(PanZoomState aState) {
+  return (aState == PANNING || aState == PANNING_LOCKED_X ||
+          aState == PANNING_LOCKED_Y);
+}
+
 bool AsyncPanZoomController::IsInPanningState() const {
-  return (mState == PANNING || mState == PANNING_LOCKED_X ||
-          mState == PANNING_LOCKED_Y);
+  return IsPanningState(mState);
 }
 
 void AsyncPanZoomController::UpdateZoomConstraints(
