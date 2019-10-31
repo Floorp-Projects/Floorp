@@ -527,6 +527,9 @@
   border-radius: 4.5px;
   top: calc(50% - 3.5px);
   background: var(--replaying-marker-background);
+}
+
+.webreplay-player .animate .message {
   transition-duration: 100ms;
 }
 
