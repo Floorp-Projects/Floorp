@@ -97,7 +97,7 @@ static nsresult EvalCert(const CERTCertificate* cert,
  * fingerprints from the given static fingerprints or the
  * dynamicFingerprints array, or to false otherwise.
  */
-static nsresult EvalChain(const RefPtr<nsNSSCertList>& certList,
+static nsresult EvalChain(const nsTArray<RefPtr<nsIX509Cert>>& certList,
                           const StaticFingerprints* fingerprints,
                           const nsTArray<nsCString>* dynamicFingerprints,
                           /*out*/ bool& certListIntersectsPinset) {
@@ -107,27 +107,21 @@ static nsresult EvalChain(const RefPtr<nsNSSCertList>& certList,
     return NS_ERROR_FAILURE;
   }
 
-  certList->ForEachCertificateInChain(
-      [&certListIntersectsPinset, &fingerprints, &dynamicFingerprints](
-          nsCOMPtr<nsIX509Cert> aCert, bool aHasMore,
-          /* out */ bool& aContinue) {
-        // We need an owning handle when calling nsIX509Cert::GetCert().
-        UniqueCERTCertificate nssCert(aCert->GetCert());
-        MOZ_LOG(gPublicKeyPinningLog, LogLevel::Debug,
-                ("pkpin: certArray subject: '%s'\n", nssCert->subjectName));
-        MOZ_LOG(gPublicKeyPinningLog, LogLevel::Debug,
-                ("pkpin: certArray issuer: '%s'\n", nssCert->issuerName));
-        nsresult rv = EvalCert(nssCert.get(), fingerprints, dynamicFingerprints,
-                               certListIntersectsPinset);
-        if (NS_FAILED(rv)) {
-          return rv;
-        }
-
-        if (certListIntersectsPinset) {
-          aContinue = false;
-        }
-        return NS_OK;
-      });
+  for (const auto& cert : certList) {
+    UniqueCERTCertificate nssCert(cert->GetCert());
+    MOZ_LOG(gPublicKeyPinningLog, LogLevel::Debug,
+            ("pkpin: certArray subject: '%s'\n", nssCert->subjectName));
+    MOZ_LOG(gPublicKeyPinningLog, LogLevel::Debug,
+            ("pkpin: certArray issuer: '%s'\n", nssCert->issuerName));
+    nsresult rv = EvalCert(nssCert.get(), fingerprints, dynamicFingerprints,
+                           certListIntersectsPinset);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    if (certListIntersectsPinset) {
+      break;
+    }
+  }
 
   if (!certListIntersectsPinset) {
     MOZ_LOG(gPublicKeyPinningLog, LogLevel::Debug,
@@ -151,7 +145,7 @@ class TransportSecurityPreloadBinarySearchComparator {
 };
 
 nsresult PublicKeyPinningService::ChainMatchesPinset(
-    const RefPtr<nsNSSCertList>& certList,
+    const nsTArray<RefPtr<nsIX509Cert>>& certList,
     const nsTArray<nsCString>& aSHA256keys,
     /*out*/ bool& chainMatchesPinset) {
   return EvalChain(certList, nullptr, &aSHA256keys, chainMatchesPinset);
@@ -257,13 +251,13 @@ static nsresult FindPinningInformation(
 // subject public key info data in the list and the most relevant non-expired
 // pinset for the host or there is no pinning information for the host.
 static nsresult CheckPinsForHostname(
-    const RefPtr<nsNSSCertList>& certList, const char* hostname,
+    const nsTArray<RefPtr<nsIX509Cert>>& certList, const char* hostname,
     bool enforceTestMode, mozilla::pkix::Time time,
     const OriginAttributes& originAttributes,
     /*out*/ bool& chainHasValidPins,
     /*optional out*/ PinningTelemetryInfo* pinningTelemetryInfo) {
   chainHasValidPins = false;
-  if (!certList) {
+  if (certList.IsEmpty()) {
     return NS_ERROR_INVALID_ARG;
   }
   if (!hostname || hostname[0] == 0) {
@@ -328,7 +322,7 @@ static nsresult CheckPinsForHostname(
       // We only collect per-CA pinning statistics upon failures.
       if (!enforceTestModeResult) {
         nsCOMPtr<nsIX509Cert> rootCert;
-        rv = certList->GetRootCertificate(rootCert);
+        rv = nsNSSCertificate::GetRootCertificate(certList, rootCert);
         if (NS_FAILED(rv)) {
           return rv;
         }
@@ -358,13 +352,13 @@ static nsresult CheckPinsForHostname(
 }
 
 nsresult PublicKeyPinningService::ChainHasValidPins(
-    const RefPtr<nsNSSCertList>& certList, const char* hostname,
+    const nsTArray<RefPtr<nsIX509Cert>>& certList, const char* hostname,
     mozilla::pkix::Time time, bool enforceTestMode,
     const OriginAttributes& originAttributes,
     /*out*/ bool& chainHasValidPins,
     /*optional out*/ PinningTelemetryInfo* pinningTelemetryInfo) {
   chainHasValidPins = false;
-  if (!certList) {
+  if (certList.IsEmpty()) {
     return NS_ERROR_INVALID_ARG;
   }
   if (!hostname || hostname[0] == 0) {

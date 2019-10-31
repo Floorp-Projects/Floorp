@@ -29,6 +29,7 @@
 #include "nsNSSCertHelper.h"
 #include "nsNSSCertValidity.h"
 #include "nsNSSCertificate.h"
+#include "nsNSSCertificateDB.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
 #include "nss.h"
@@ -1025,19 +1026,16 @@ Result NSSCertDBTrustDomain::IsChainValid(const DERArray& certArray, Time time,
   }
 
   // Modernization in-progress: Keep certList as a CERTCertList for storage into
-  // the mBuiltChain variable at the end, but let's use nsNSSCertList for the
-  // validity calculations.
-  UniqueCERTCertList certListCopy = nsNSSCertList::DupCertList(certList);
+  // the mBuiltChain variable at the end.
+  nsTArray<RefPtr<nsIX509Cert>> nssCertList;
+  nsresult nsrv = nsNSSCertificateDB::ConstructCertArrayFromUniqueCertList(
+      certList, nssCertList);
 
-  // This adopts the list
-  RefPtr<nsNSSCertList> nssCertList =
-      new nsNSSCertList(std::move(certListCopy));
-  if (!nssCertList) {
+  if (NS_FAILED(nsrv)) {
     return Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
-
   nsCOMPtr<nsIX509Cert> rootCert;
-  nsresult nsrv = nssCertList->GetRootCertificate(rootCert);
+  nsrv = nsNSSCertificate::GetRootCertificate(nssCertList, rootCert);
   if (NS_FAILED(nsrv)) {
     return Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
@@ -1082,10 +1080,11 @@ Result NSSCertDBTrustDomain::IsChainValid(const DERArray& certArray, Time time,
        (mDistrustedCAPolicy &
         DistrustedCAPolicy::DistrustSymantecRootsRegardlessOfDate))) {
     rootCert = nullptr;  // Clear the state for Segment...
-    nsCOMPtr<nsIX509CertList> intCerts;
+    nsTArray<RefPtr<nsIX509Cert>> intCerts;
     nsCOMPtr<nsIX509Cert> eeCert;
 
-    nsrv = nssCertList->SegmentCertificateChain(rootCert, intCerts, eeCert);
+    nsrv = nsNSSCertificate::SegmentCertificateChain(nssCertList, rootCert,
+                                                     intCerts, eeCert);
     if (NS_FAILED(nsrv)) {
       // This chain is supposed to be complete, so this is an error.
       return Result::ERROR_ADDITIONAL_POLICY_CONSTRAINT_FAILED;

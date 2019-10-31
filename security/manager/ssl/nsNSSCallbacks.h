@@ -23,7 +23,6 @@ using mozilla::TimeDuration;
 using mozilla::Vector;
 
 class nsILoadGroup;
-class nsIX509CertList;
 
 char* PK11PasswordPrompt(PK11SlotInfo* slot, PRBool retry, void* arg);
 

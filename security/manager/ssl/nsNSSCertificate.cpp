@@ -1124,6 +1124,59 @@ nsresult nsNSSCertList::GetRootCertificate(
   return NS_OK;
 }
 
+nsresult nsNSSCertificate::SegmentCertificateChain(
+    /* in */ const nsTArray<RefPtr<nsIX509Cert>>& aCertList,
+    /* out */ nsCOMPtr<nsIX509Cert>& aRoot,
+    /* out */ nsTArray<RefPtr<nsIX509Cert>>& aIntermediates,
+    /* out */ nsCOMPtr<nsIX509Cert>& aEndEntity) {
+  if (aRoot || aEndEntity) {
+    // All passed-in nsCOMPtrs should be empty for the state machine to work
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  if (!aIntermediates.IsEmpty()) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  for (size_t i = 0; i < aCertList.Length(); ++i) {
+    const auto& cert = aCertList[i];
+    if (!aEndEntity) {
+      aEndEntity = cert;
+    } else if (i == aCertList.Length() - 1) {
+      aRoot = cert;
+    } else {
+      // One of (potentially many) intermediates
+      aIntermediates.AppendElement(cert);
+    }
+  }
+
+  if (!aRoot || !aEndEntity) {
+    // No self-signed (or empty) chains allowed
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  return NS_OK;
+}
+
+nsresult nsNSSCertificate::GetRootCertificate(
+    /* in */ const nsTArray<RefPtr<nsIX509Cert>>& aCertList,
+    /* out */ nsCOMPtr<nsIX509Cert>& aRoot) {
+  if (aRoot) {
+    return NS_ERROR_UNEXPECTED;
+  }
+  // If the list is empty, leave aRoot empty.
+  if (aCertList.IsEmpty()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIX509Cert> cert(aCertList.LastElement());
+  aRoot = cert;
+  if (!aRoot) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  return NS_OK;
+}
+
 nsNSSCertListEnumerator::nsNSSCertListEnumerator(
     const std::vector<UniqueCERTCertificate>& certs) {
   mCerts.reserve(certs.size());
