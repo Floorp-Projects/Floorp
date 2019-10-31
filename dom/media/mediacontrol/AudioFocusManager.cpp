@@ -4,6 +4,7 @@
 
 #include "AudioFocusManager.h"
 
+#include "MediaControlUtils.h"
 #include "MediaControlService.h"
 
 #include "mozilla/Logging.h"
