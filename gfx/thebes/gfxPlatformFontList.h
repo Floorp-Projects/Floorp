@@ -446,6 +446,7 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
 
  protected:
   friend class mozilla::fontlist::FontList;
+  friend class InitOtherFamilyNamesForStylo;
 
   class InitOtherFamilyNamesRunnable : public mozilla::CancelableRunnable {
    public:
