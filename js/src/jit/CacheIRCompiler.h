@@ -127,6 +127,8 @@ class IonCacheIRCompiler;
   _(CompareInt32Result)                   \
   _(CompareDoubleResult)                  \
   _(CompareBigIntResult)                  \
+  _(CompareBigIntInt32Result)             \
+  _(CompareInt32BigIntResult)             \
   _(CompareBigIntNumberResult)            \
   _(CompareNumberBigIntResult)            \
   _(CompareObjectUndefinedNullResult)     \
@@ -898,6 +900,11 @@ class MOZ_RAII CacheIRCompiler {
   }
 
   bool emitComparePointerResultShared(bool symbol);
+
+  bool emitCompareBigIntInt32ResultShared(Register bigInt, Register int32,
+                                          Register scratch1, Register scratch2,
+                                          JSOp op,
+                                          const AutoOutputRegister& output);
 
   bool emitDoubleIncDecResult(bool isInc);
 

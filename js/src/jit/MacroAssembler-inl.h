@@ -342,6 +342,11 @@ void MacroAssembler::branchTwoByteString(Register string, Label* label) {
                Imm32(JSString::LATIN1_CHARS_BIT), label);
 }
 
+void MacroAssembler::branchIfNegativeBigInt(Register bigInt, Label* label) {
+  branchTest32(Assembler::NonZero, Address(bigInt, BigInt::offsetOfFlags()),
+               Imm32(BigInt::signBitMask()), label);
+}
+
 void MacroAssembler::branchTestFunctionFlags(Register fun, uint32_t flags,
                                              Condition cond, Label* label) {
   // 16-bit loads are slow and unaligned 32-bit loads may be too so
