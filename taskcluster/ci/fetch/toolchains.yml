@@ -215,15 +215,16 @@ nasm-2.13.02:
         sha256: 8ac3235f49a6838ff7a8d7ef7c19a4430d0deecc0c2d3e3e237b5e9f53291757
         size: 805744
 
-wix-3.1.1:
-    description: wix 3.1.1 binary release
+wix-3.14.0:
+    description: wix 3.14.0.2812 binary release
     # WIX doesn't use a wrapping toplevel DIR, so we should really repackage it when
     # Bug 1479533 and related code is ready.
     fetch:
         type: static-url
-        url: https://github.com/wixtoolset/wix3/releases/download/wix3111rtm/wix311-binaries.zip
-        sha256: 37f0a533b0978a454efb5dc3bd3598becf9660aaf4287e55bf68ca6b527d051d
-        size: 34358269
+        # This is a dev version of the toolset, upstream will purge over time...
+        url: http://wixtoolset.org/downloads/v3.14.0.2812/wix314-binaries.zip 
+        sha256: 923892298f37514622c58cbbd9c2cadf2822d9bb53df8ee83aaeb05280777611
+        size: 34664320
 
 grcov-osx-x86_64:
     description: grcov binary release
