@@ -252,6 +252,7 @@ nsContextMenu.prototype = {
     this.onCTPPlugin = context.onCTPPlugin;
     this.onDRMMedia = context.onDRMMedia;
     this.onPiPVideo = context.onPiPVideo;
+    this.onMediaStreamVideo = context.onMediaStreamVideo;
     this.onEditable = context.onEditable;
     this.onImage = context.onImage;
     this.onKeywordField = context.onKeywordField;
@@ -870,6 +871,7 @@ nsContextMenu.prototype = {
           "media.videocontrols.picture-in-picture.enabled"
         ) &&
         this.onVideo &&
+        !this.onMediaStreamVideo &&
         !this.target.ownerDocument.fullscreen;
       this.showItem("context-video-pictureinpicture", shouldDisplay);
     }

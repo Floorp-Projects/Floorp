@@ -874,6 +874,7 @@ class ContextMenuChild extends JSWindowActorChild {
     context.onCTPPlugin = false;
     context.onDRMMedia = false;
     context.onPiPVideo = false;
+    context.onMediaStreamVideo = false;
     context.onEditable = false;
     context.onImage = false;
     context.onKeywordField = false;
@@ -1015,6 +1016,8 @@ class ContextMenuChild extends JSWindowActorChild {
       if (context.target.isCloningElementVisually) {
         context.onPiPVideo = true;
       }
+
+      context.onMediaStreamVideo = !!context.target.srcObject;
 
       // Firefox always creates a HTMLVideoElement when loading an ogg file
       // directly. If the media is actually audio, be smarter and provide a
