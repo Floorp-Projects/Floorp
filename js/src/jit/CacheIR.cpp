@@ -295,6 +295,8 @@ AttachDecision GetPropIRGenerator::tryAttachStub() {
       return AttachDecision::NoAction;
     }
 
+    TRY_ATTACH(tryAttachTypedArrayNonInt32Index(obj, objId));
+
     trackAttached(IRGenerator::NotAttached);
     return AttachDecision::NoAction;
   }
@@ -2275,8 +2277,11 @@ AttachDecision GetPropIRGenerator::tryAttachTypedElement(
     writer.guardShapeForClass(objId, obj->as<TypedArrayObject>().shape());
   }
 
+  // Don't handle out-of-bounds accesses here because we have to ensure the
+  // |undefined| type is monitored. See also tryAttachTypedArrayNonInt32Index.
   writer.loadTypedElementResult(objId, indexId, layout,
-                                TypedThingElementType(obj));
+                                TypedThingElementType(obj),
+                                /* handleOOB = */ false);
 
   // Reading from Uint32Array may produce an int32 now but a double value
   // later, so ensure we monitor the result.
@@ -2287,6 +2292,34 @@ AttachDecision GetPropIRGenerator::tryAttachTypedElement(
   }
 
   trackAttached("TypedElement");
+  return AttachDecision::Attach;
+}
+
+AttachDecision GetPropIRGenerator::tryAttachTypedArrayNonInt32Index(
+    HandleObject obj, ObjOperandId objId) {
+  if (!obj->is<TypedArrayObject>()) {
+    return AttachDecision::NoAction;
+  }
+
+  if (!idVal_.isNumber()) {
+    return AttachDecision::NoAction;
+  }
+
+  ValOperandId keyId = getElemKeyValueId();
+  Int32OperandId indexId = writer.guardToTypedArrayIndex(keyId);
+
+  TypedThingLayout layout = GetTypedThingLayout(obj->getClass());
+
+  writer.guardShapeForClass(objId, obj->as<TypedArrayObject>().shape());
+
+  writer.loadTypedElementResult(objId, indexId, layout,
+                                TypedThingElementType(obj),
+                                /* handleOOB = */ true);
+
+  // Always monitor the result when out-of-bounds accesses are expected.
+  writer.typeMonitorResult();
+
+  trackAttached("TypedArrayNonInt32Index");
   return AttachDecision::Attach;
 }
 
