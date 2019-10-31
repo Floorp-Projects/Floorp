@@ -36,27 +36,26 @@ namespace js {
 
 namespace intl {
 
-#ifdef DEBUG
-
 /**
- * Return true if |language| is a valid, case-normalized language subtag.
+ * Return true if |language| is a valid language subtag.
  */
 template <typename CharT>
 bool IsStructurallyValidLanguageTag(
     const mozilla::Range<const CharT>& language);
 
 /**
- * Return true if |script| is a valid, case-normalized script subtag.
+ * Return true if |script| is a valid script subtag.
  */
 template <typename CharT>
 bool IsStructurallyValidScriptTag(const mozilla::Range<const CharT>& script);
 
 /**
- * Return true if |region| is a valid, case-normalized region subtag.
+ * Return true if |region| is a valid region subtag.
  */
 template <typename CharT>
 bool IsStructurallyValidRegionTag(const mozilla::Range<const CharT>& region);
 
+#ifdef DEBUG
 /**
  * Return true if |variant| is a valid variant subtag.
  */
@@ -249,8 +248,7 @@ class MOZ_STACK_CLASS LanguageTag final {
 
  public:
   /**
-   * Set the language subtag. The input must be a valid, case-normalized
-   * language subtag.
+   * Set the language subtag. The input must be a valid language subtag.
    */
   template <size_t N>
   void setLanguage(const char (&language)[N]) {
@@ -260,8 +258,7 @@ class MOZ_STACK_CLASS LanguageTag final {
   }
 
   /**
-   * Set the language subtag. The input must be a valid, case-normalized
-   * language subtag.
+   * Set the language subtag. The input must be a valid language subtag.
    */
   void setLanguage(const LanguageSubtag& language) {
     MOZ_ASSERT(IsStructurallyValidLanguageTag(language.range()));
@@ -269,8 +266,7 @@ class MOZ_STACK_CLASS LanguageTag final {
   }
 
   /**
-   * Set the script subtag. The input must be a valid, case-normalized
-   * script subtag or the empty string.
+   * Set the script subtag. The input must be a valid script subtag.
    */
   template <size_t N>
   void setScript(const char (&script)[N]) {
@@ -280,8 +276,8 @@ class MOZ_STACK_CLASS LanguageTag final {
   }
 
   /**
-   * Set the script subtag. The input must be a valid, case-normalized
-   * script subtag or the empty string.
+   * Set the script subtag. The input must be a valid script subtag or the empty
+   * string.
    */
   void setScript(const ScriptSubtag& script) {
     MOZ_ASSERT(script.length() == 0 ||
@@ -290,8 +286,7 @@ class MOZ_STACK_CLASS LanguageTag final {
   }
 
   /**
-   * Set the region subtag. The input must be a valid, case-normalized
-   * region subtag or the empty string.
+   * Set the region subtag. The input must be a valid region subtag.
    */
   template <size_t N>
   void setRegion(const char (&region)[N]) {
@@ -301,8 +296,8 @@ class MOZ_STACK_CLASS LanguageTag final {
   }
 
   /**
-   * Set the region subtag. The input must be a valid, case-normalized
-   * region subtag or the empty string.
+   * Set the region subtag. The input must be a valid region subtag or the empty
+   * empty string.
    */
   void setRegion(const RegionSubtag& region) {
     MOZ_ASSERT(region.length() == 0 ||
@@ -594,23 +589,18 @@ class MOZ_STACK_CLASS LanguageTagParser final {
     return 1 <= tok.length() && tok.length() <= 8;
   }
 
-  enum class BaseNameParsing : bool { Normal, WithinTransformExtension };
-
   // Helper function for use in |parseBaseName| and
   // |parseTlangInTransformExtension|.  Do not use this directly!
   static JS::Result<bool> internalParseBaseName(JSContext* cx,
                                                 LanguageTagParser& ts,
-                                                LanguageTag& tag, Token& tok,
-                                                BaseNameParsing parseType);
+                                                LanguageTag& tag, Token& tok);
 
   // Parse the `unicode_language_id` production, i.e. the
-  // language/script/region/variants portion of a language tag, into |tag|,
-  // which will be filled with canonical-cased components (lowercase language,
-  // titlecase script, uppercase region, lowercased and alphabetized and
-  // deduplicated variants). |tok| must be the current token.
+  // language/script/region/variants portion of a language tag, into |tag|.
+  // |tok| must be the current token.
   static JS::Result<bool> parseBaseName(JSContext* cx, LanguageTagParser& ts,
                                         LanguageTag& tag, Token& tok) {
-    return internalParseBaseName(cx, ts, tag, tok, BaseNameParsing::Normal);
+    return internalParseBaseName(cx, ts, tag, tok);
   }
 
   // Parse the `tlang` production within a parsed 't' transform extension.
@@ -624,17 +614,14 @@ class MOZ_STACK_CLASS LanguageTagParser final {
   // Return an error on internal failure. Otherwise, return a success value. If
   // there was no `tlang`, then |tag.language().missing()|. But if there was a
   // `tlang`, then |tag| is filled with subtags exactly as they appeared in the
-  // parse input: fully lowercase, variants in alphabetical order without
-  // duplicates.
+  // parse input.
   static JS::Result<JS::Ok> parseTlangInTransformExtension(
       JSContext* cx, LanguageTagParser& ts, LanguageTag& tag, Token& tok) {
     MOZ_ASSERT(ts.isLanguage(tok));
-    return internalParseBaseName(cx, ts, tag, tok,
-                                 BaseNameParsing::WithinTransformExtension)
-        .map([](bool parsed) {
-          MOZ_ASSERT(parsed);
-          return JS::Ok();
-        });
+    return internalParseBaseName(cx, ts, tag, tok).map([](bool parsed) {
+      MOZ_ASSERT(parsed);
+      return JS::Ok();
+    });
   }
 
   friend class LanguageTag;
@@ -700,24 +687,21 @@ MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(LanguageTagParser::TokenKind)
 
 /**
  * Parse a string as a standalone |language| tag. If |str| is a standalone
- * language tag, store it in case-normalized form in |result| and return true.
- * Otherwise return false.
+ * language tag, store it in |result| and return true. Otherwise return false.
  */
-MOZ_MUST_USE bool ParseStandaloneLanguagTag(JS::Handle<JSLinearString*> str,
-                                            LanguageSubtag& result);
+MOZ_MUST_USE bool ParseStandaloneLanguageTag(JS::Handle<JSLinearString*> str,
+                                             LanguageSubtag& result);
 
 /**
  * Parse a string as a standalone |script| tag. If |str| is a standalone script
- * tag, store it in case-normalized form in |result| and return true. Otherwise
- * return false.
+ * tag, store it in |result| and return true. Otherwise return false.
  */
 MOZ_MUST_USE bool ParseStandaloneScriptTag(JS::Handle<JSLinearString*> str,
                                            ScriptSubtag& result);
 
 /**
  * Parse a string as a standalone |region| tag. If |str| is a standalone region
- * tag, store it in case-normalized form in |result| and return true. Otherwise
- * return false.
+ * tag, store it in |result| and return true. Otherwise return false.
  */
 MOZ_MUST_USE bool ParseStandaloneRegionTag(JS::Handle<JSLinearString*> str,
                                            RegionSubtag& result);
