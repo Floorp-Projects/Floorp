@@ -44,20 +44,24 @@ async function runTests(browser, accDoc) {
     );
   }
 
-  await loadContentScripts(browser, "Layout.jsm");
-
   await testTextNode("p1");
   await testTextNode("p2");
   await testEmptyInputNode("i1");
 
-  await SpecialPowers.spawn(browser, [], () => {
-    content.Layout.zoomDocument(content.document, 2.0);
+  await invokeContentTask(browser, [], () => {
+    const { Layout } = ChromeUtils.import(
+      "chrome://mochitests/content/browser/accessible/tests/browser/Layout.jsm"
+    );
+    Layout.zoomDocument(content.document, 2.0);
   });
 
   await testTextNode("p1");
 
-  await SpecialPowers.spawn(browser, [], () => {
-    content.Layout.zoomDocument(content.document, 1.0);
+  await invokeContentTask(browser, [], () => {
+    const { Layout } = ChromeUtils.import(
+      "chrome://mochitests/content/browser/accessible/tests/browser/Layout.jsm"
+    );
+    Layout.zoomDocument(content.document, 1.0);
   });
 }
 
@@ -69,5 +73,6 @@ addAccessibleTask(
   <p id='p1' style='font-family: monospace;'>Tilimilitryamdiya</p>
   <p id='p2'>ل</p>
   <form><input id='i1' /></form>`,
-  runTests
+  runTests,
+  { iframe: true }
 );
