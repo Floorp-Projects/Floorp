@@ -70,11 +70,6 @@ function getBrowser(panel) {
   stack.appendChild(browser);
 
   return readyPromise.then(() => {
-    browser.messageManager.loadFrameScript(
-      "chrome://browser/content/content.js",
-      false,
-      true
-    );
     ExtensionParent.apiManager.emit(
       "extension-browser-inserted",
       browser,

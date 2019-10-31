@@ -118,3 +118,6 @@ addEventListener("MozAfterPaint", function onFirstNonBlankPaint() {
   removeEventListener("MozAfterPaint", onFirstNonBlankPaint);
   sendAsyncMessage("Browser:FirstNonBlankPaint");
 });
+
+// This is a temporary hack to prevent regressions (bug 1471327).
+void content;

@@ -1258,7 +1258,6 @@ class InlineOptionsBrowser extends HTMLElement {
         false,
         true
       );
-      mm.loadFrameScript("chrome://browser/content/content.js", false, true);
       mm.addMessageListener("Extension:BrowserContentLoaded", messageListener);
       mm.addMessageListener("Extension:BrowserResized", messageListener);
 
