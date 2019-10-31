@@ -87,7 +87,7 @@ internal fun JSONObject.getRating(): AddOn.Rating? {
     return if (jsonRating != null) {
         AddOn.Rating(
             reviews = jsonRating.optInt("count"),
-            average = jsonRating.optDouble("average")
+            average = jsonRating.optDouble("average").toFloat()
         )
     } else {
         null
