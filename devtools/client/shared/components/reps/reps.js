@@ -8424,7 +8424,7 @@ class ObjectInspectorItem extends Component {
       removeWatchpoint
     } = this.props;
 
-    if (!item || !item.contents || !item.contents.watchpoint) {
+    if (!item || !item.contents || !item.contents.watchpoint || typeof L10N === "undefined") {
       return;
     }
 
