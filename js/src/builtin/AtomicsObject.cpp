@@ -88,7 +88,7 @@ static bool ReportOutOfRange(JSContext* cx) {
   return false;
 }
 
-static bool GetSharedTypedArray(JSContext* cx, HandleValue v,
+static bool GetSharedTypedArray(JSContext* cx, HandleValue v, bool waitable,
                                 MutableHandle<TypedArrayObject*> viewp) {
   if (!v.isObject()) {
     return ReportBadArrayType(cx);
@@ -99,6 +99,29 @@ static bool GetSharedTypedArray(JSContext* cx, HandleValue v,
   viewp.set(&v.toObject().as<TypedArrayObject>());
   if (!viewp->isSharedMemory()) {
     return ReportBadArrayType(cx);
+  }
+  if (waitable) {
+    switch (viewp->type()) {
+      case Scalar::Int32:
+      case Scalar::BigInt64:
+        break;
+      default:
+        return ReportBadArrayType(cx);
+    }
+  } else {
+    switch (viewp->type()) {
+      case Scalar::Int8:
+      case Scalar::Uint8:
+      case Scalar::Int16:
+      case Scalar::Uint16:
+      case Scalar::Int32:
+      case Scalar::Uint32:
+      case Scalar::BigInt64:
+      case Scalar::BigUint64:
+        break;
+      default:
+        return ReportBadArrayType(cx);
+    }
   }
   return true;
 }
@@ -216,7 +239,7 @@ struct ArrayOps<uint64_t> {
 template <template <typename> class F, typename... Args>
 bool perform(JSContext* cx, HandleValue objv, HandleValue idxv, Args... args) {
   Rooted<TypedArrayObject*> view(cx, nullptr);
-  if (!GetSharedTypedArray(cx, objv, &view)) {
+  if (!GetSharedTypedArray(cx, objv, false, &view)) {
     return false;
   }
   uint32_t offset;
@@ -237,14 +260,13 @@ bool perform(JSContext* cx, HandleValue objv, HandleValue idxv, Args... args) {
       return F<int32_t>::run(cx, viewData.cast<int32_t*>() + offset, args...);
     case Scalar::Uint32:
       return F<uint32_t>::run(cx, viewData.cast<uint32_t*>() + offset, args...);
-    case Scalar::Float32:
-    case Scalar::Float64:
-    case Scalar::Uint8Clamped:
-      return ReportBadArrayType(cx);
     case Scalar::BigInt64:
       return F<int64_t>::run(cx, viewData.cast<int64_t*>() + offset, args...);
     case Scalar::BigUint64:
       return F<uint64_t>::run(cx, viewData.cast<uint64_t*>() + offset, args...);
+    case Scalar::Float32:
+    case Scalar::Float64:
+    case Scalar::Uint8Clamped:
     case Scalar::MaxTypedArrayViewType:
     case Scalar::Int64:
       break;
@@ -614,13 +636,10 @@ bool js::atomics_wait(JSContext* cx, unsigned argc, Value* vp) {
   MutableHandleValue r = args.rval();
 
   Rooted<TypedArrayObject*> view(cx, nullptr);
-  if (!GetSharedTypedArray(cx, objv, &view)) {
+  if (!GetSharedTypedArray(cx, objv, true, &view)) {
     return false;
   }
-
-  if (view->type() != Scalar::Int32 && view->type() != Scalar::BigInt64) {
-    return ReportBadArrayType(cx);
-  }
+  MOZ_ASSERT(view->type() == Scalar::Int32 || view->type() == Scalar::BigInt64);
 
   uint32_t offset;
   if (!GetTypedArrayIndex(cx, idxv, view, &offset)) {
@@ -686,12 +705,10 @@ bool js::atomics_notify(JSContext* cx, unsigned argc, Value* vp) {
   MutableHandleValue r = args.rval();
 
   Rooted<TypedArrayObject*> view(cx, nullptr);
-  if (!GetSharedTypedArray(cx, objv, &view)) {
+  if (!GetSharedTypedArray(cx, objv, true, &view)) {
     return false;
   }
-  if (view->type() != Scalar::Int32 && view->type() != Scalar::BigInt64) {
-    return ReportBadArrayType(cx);
-  }
+  MOZ_ASSERT(view->type() == Scalar::Int32 || view->type() == Scalar::BigInt64);
   uint32_t elementSize =
       view->type() == Scalar::Int32 ? sizeof(int32_t) : sizeof(int64_t);
   uint32_t offset;
