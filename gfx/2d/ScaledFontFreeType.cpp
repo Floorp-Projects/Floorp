@@ -8,6 +8,7 @@
 #include "UnscaledFontFreeType.h"
 #include "NativeFontResourceFreeType.h"
 #include "Logging.h"
+#include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/webrender/WebRenderTypes.h"
 
 #ifdef USE_SKIA
@@ -27,7 +28,10 @@ ScaledFontFreeType::ScaledFontFreeType(
       mApplySyntheticBold(aApplySyntheticBold) {}
 
 bool ScaledFontFreeType::UseSubpixelPosition() const {
-  return FT_IS_SCALABLE(mFace->GetFace());
+  return !MOZ_UNLIKELY(
+             StaticPrefs::
+                 gfx_text_subpixel_position_force_disabled_AtStartup()) &&
+         FT_IS_SCALABLE(mFace->GetFace());
 }
 
 #ifdef USE_SKIA
