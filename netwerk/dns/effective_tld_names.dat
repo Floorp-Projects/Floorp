@@ -1368,7 +1368,7 @@ it
 gov.it
 edu.it
 // Reserved geo-names (regions and provinces):
-// http://www.nic.it/sites/default/files/docs/Regulation_assignation_v7.1.pdf
+// https://www.nic.it/sites/default/files/archivio/docs/Regulation_assignation_v7.1.pdf
 // Regions
 abr.it
 abruzzo.it
@@ -7078,7 +7078,7 @@ org.zw
 
 // newGTLDs
 
-// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2019-10-24T16:58:26Z
+// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2019-10-29T17:00:12Z
 // This list is auto-generated, don't edit it manually.
 // aaa : 2015-02-26 American Automobile Association, Inc.
 aaa
@@ -8337,7 +8337,7 @@ gmail
 // gmbh : 2016-01-29 Binky Moon, LLC
 gmbh
 
-// gmo : 2014-01-09 GMO Internet Pte. Ltd.
+// gmo : 2014-01-09 GMO Internet, Inc.
 gmo
 
 // gmx : 2014-04-24 1&1 Mail & Media GmbH
