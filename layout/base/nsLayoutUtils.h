@@ -117,13 +117,6 @@ struct DisplayPortMarginsPropertyData {
   uint32_t mPriority;
 };
 
-struct MotionPathData {
-  gfx::Point mTranslate;
-  float mRotate;
-  // The delta value between transform-origin and offset-anchor.
-  gfx::Point mShift;
-};
-
 }  // namespace mozilla
 
 // For GetDisplayPort
@@ -2976,12 +2969,6 @@ class nsLayoutUtils {
    * used for the given scrollbar part frame.
    */
   static ComputedStyle* StyleForScrollbar(nsIFrame* aScrollbarPart);
-
-  /**
-   * Generate the motion path transform result.
-   **/
-  static mozilla::Maybe<mozilla::MotionPathData> ResolveMotionPath(
-      const nsIFrame* aFrame);
 
   /**
    * Returns true if |aFrame| is scrolled out of view by a scrollable element in

@@ -12,6 +12,7 @@
 #include "nsLayoutUtils.h"
 #include "nsPresContext.h"
 #include "nsSVGUtils.h"
+#include "mozilla/MotionPathUtils.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/StaticPrefs_svg.h"
 #include "mozilla/StyleAnimationValue.h"
