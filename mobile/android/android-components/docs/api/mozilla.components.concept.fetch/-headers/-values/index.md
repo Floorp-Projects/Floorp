@@ -2,7 +2,7 @@
 
 # Values
 
-`object Values` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/fetch/src/main/java/mozilla/components/concept/fetch/Headers.kt#L66)
+`object Values` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/fetch/src/main/java/mozilla/components/concept/fetch/Headers.kt#L68)
 
 A collection of common HTTP header values.
 

@@ -2,7 +2,7 @@
 
 # KEY_CONTENT_LENGTH
 
-`const val KEY_CONTENT_LENGTH: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/downloads/src/main/java/mozilla/components/feature/downloads/DownloadDialogFragment.kt#L49)
+`const val KEY_CONTENT_LENGTH: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/downloads/src/main/java/mozilla/components/feature/downloads/DownloadDialogFragment.kt#L50)
 
 Key for finding the content length in the arguments.
 

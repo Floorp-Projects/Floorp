@@ -10,7 +10,7 @@ The Configuration class describes how to configure the Glean.
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `Configuration(serverEndpoint: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)` = GleanCoreConfiguration.DEFAULT_TELEMETRY_ENDPOINT, channel: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`? = null, maxEvents: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`? = null, httpClient: PingUploader = ConceptFetchHttpUploader(lazy { HttpURLConnectionClient() }))`<br>The Configuration class describes how to configure the Glean. |
+| [&lt;init&gt;](-init-.md) | `Configuration(serverEndpoint: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)` = DEFAULT_TELEMETRY_ENDPOINT, channel: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`? = null, maxEvents: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`? = null, httpClient: PingUploader = ConceptFetchHttpUploader(lazy { HttpURLConnectionClient() }))`<br>The Configuration class describes how to configure the Glean. |
 
 ### Properties
 
@@ -26,6 +26,12 @@ The Configuration class describes how to configure the Glean.
 | Name | Summary |
 |---|---|
 | [toWrappedConfiguration](to-wrapped-configuration.md) | `fun toWrappedConfiguration(): Configuration`<br>Convert the Android Components configuration object to the Glean SDK configuration object. |
+
+### Companion Object Properties
+
+| Name | Summary |
+|---|---|
+| [DEFAULT_TELEMETRY_ENDPOINT](-d-e-f-a-u-l-t_-t-e-l-e-m-e-t-r-y_-e-n-d-p-o-i-n-t.md) | `const val DEFAULT_TELEMETRY_ENDPOINT: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
 
 ### Extension Functions
 

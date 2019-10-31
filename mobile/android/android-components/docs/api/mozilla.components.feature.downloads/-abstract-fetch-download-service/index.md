@@ -2,7 +2,7 @@
 
 # AbstractFetchDownloadService
 
-`abstract class AbstractFetchDownloadService : `[`CoroutineService`](../-coroutine-service/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/downloads/src/main/java/mozilla/components/feature/downloads/AbstractFetchDownloadService.kt#L49)
+`abstract class AbstractFetchDownloadService` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/downloads/src/main/java/mozilla/components/feature/downloads/AbstractFetchDownloadService.kt#L55)
 
 Service that performs downloads through a fetch [Client](../../mozilla.components.concept.fetch/-client/index.md) rather than through the native
 Android download manager.
@@ -26,14 +26,18 @@ To use this service, you must create a subclass in your application and it to th
 | Name | Summary |
 |---|---|
 | [onBind](on-bind.md) | `open fun onBind(intent: <ERROR CLASS>?): <ERROR CLASS>?` |
-| [onCreate](on-create.md) | `open fun onCreate(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
+| [onDestroy](on-destroy.md) | `open fun onDestroy(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
+| [onStartCommand](on-start-command.md) | `open fun onStartCommand(intent: <ERROR CLASS>?, flags: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`, startId: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`): `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) |
 
-### Inherited Functions
+### Companion Object Properties
 
 | Name | Summary |
 |---|---|
-| [onDestroy](../-coroutine-service/on-destroy.md) | `open fun onDestroy(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Stops all jobs when the service is destroyed. |
-| [onStartCommand](../-coroutine-service/on-start-command.md) | `fun onStartCommand(intent: <ERROR CLASS>?, flags: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`, startId: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`): `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)<br>Starts a job using [onStartCommand](#) then stops the service once all jobs are complete. |
+| [ACTION_CANCEL](-a-c-t-i-o-n_-c-a-n-c-e-l.md) | `const val ACTION_CANCEL: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
+| [ACTION_OPEN](-a-c-t-i-o-n_-o-p-e-n.md) | `const val ACTION_OPEN: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
+| [ACTION_PAUSE](-a-c-t-i-o-n_-p-a-u-s-e.md) | `const val ACTION_PAUSE: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
+| [ACTION_RESUME](-a-c-t-i-o-n_-r-e-s-u-m-e.md) | `const val ACTION_RESUME: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
+| [ACTION_TRY_AGAIN](-a-c-t-i-o-n_-t-r-y_-a-g-a-i-n.md) | `const val ACTION_TRY_AGAIN: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
 
 ### Extension Functions
 

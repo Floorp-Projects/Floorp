@@ -40,6 +40,7 @@ Gecko-based implementation of Engine interface.
 | Name | Summary |
 |---|---|
 | [registerWebNotificationDelegate](../../mozilla.components.concept.engine/-engine/register-web-notification-delegate.md) | `open fun registerWebNotificationDelegate(webNotificationDelegate: `[`WebNotificationDelegate`](../../mozilla.components.concept.engine.webnotifications/-web-notification-delegate/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Registers a [WebNotificationDelegate](../../mozilla.components.concept.engine.webnotifications/-web-notification-delegate/index.md) to be notified of engine events related to web notifications |
+| [registerWebPushDelegate](../../mozilla.components.concept.engine/-engine/register-web-push-delegate.md) | `open fun registerWebPushDelegate(webPushDelegate: `[`WebPushDelegate`](../../mozilla.components.concept.engine.webpush/-web-push-delegate/index.md)`): `[`WebPushHandler`](../../mozilla.components.concept.engine.webpush/-web-push-handler/index.md)<br>Registers a [WebPushDelegate](../../mozilla.components.concept.engine.webpush/-web-push-delegate/index.md) to be notified of engine events related to web extensions. |
 | [warmUp](../../mozilla.components.concept.engine/-engine/warm-up.md) | `open fun warmUp(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Makes sure all required engine initialization logic is executed. The details are specific to individual implementations, but the following must be true: |
 
 ### Extension Functions

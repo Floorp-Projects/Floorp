@@ -2,7 +2,7 @@
 
 # Glean
 
-`object Glean` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/Glean.kt#L19)
+`object Glean` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/Glean.kt#L20)
 
 In contrast with other glean-ac classes (i.e. Configuration), we can't
 use typealias to export mozilla.telemetry.glean.Glean, as we need to provide
