@@ -78,7 +78,7 @@ static bool CertMatchesStaticData(const CERTCertificate* cert,
 // "distrusted."
 template <size_t T>
 static nsresult CheckForSymantecDistrust(
-    const nsCOMPtr<nsIX509CertList>& intCerts,
+    const nsTArray<RefPtr<nsIX509Cert>>& intCerts,
     const nsCOMPtr<nsIX509Cert>& eeCert, const PRTime& permitAfterDate,
     const DataAndLength (&whitelist)[T],
     /* out */ bool& isDistrusted) {
@@ -113,21 +113,14 @@ static nsresult CheckForSymantecDistrust(
     }
   }
 
-  // Look for one of the intermediates to be in the whitelist
-  RefPtr<nsNSSCertList> intCertList = intCerts->GetCertList();
-
-  return intCertList->ForEachCertificateInChain(
-      [&isDistrusted, &whitelist](nsCOMPtr<nsIX509Cert> aCert, bool aHasMore,
-                                  /* out */ bool& aContinue) {
-        // We need an owning handle when calling nsIX509Cert::GetCert().
-        UniqueCERTCertificate nssCert(aCert->GetCert());
-        if (CertSPKIIsInList(nssCert.get(), whitelist)) {
-          // In the whitelist
-          isDistrusted = false;
-          aContinue = false;
-        }
-        return NS_OK;
-      });
+  for (const auto& cert : intCerts) {
+    UniqueCERTCertificate nssCert(cert->GetCert());
+    if (CertSPKIIsInList(nssCert.get(), whitelist)) {
+      isDistrusted = false;
+      break;
+    }
+  }
+  return NS_OK;
 }
 
 #endif  // TrustOverrides_h
