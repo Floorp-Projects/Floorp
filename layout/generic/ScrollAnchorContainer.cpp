@@ -23,15 +23,15 @@ using namespace mozilla::dom;
 #define ANCHOR_LOG(...)
 
 /*
-#define ANCHOR_LOG(fmt, ...)                  \
-  printf_stderr("ANCHOR(%p, %s): " fmt, this, \
-                Frame()                       \
-                    ->PresContext()           \
-                    ->Document()              \
-                    ->GetDocumentURI()        \
-                    ->GetSpecOrDefault()      \
-                    .get(),                   \
-                ##__VA_ARGS__)
+#define ANCHOR_LOG(fmt, ...)                            \
+  printf_stderr("ANCHOR(%p, %s, root: %d): " fmt, this, \
+                Frame()                                 \
+                    ->PresContext()                     \
+                    ->Document()                        \
+                    ->GetDocumentURI()                  \
+                    ->GetSpecOrDefault()                \
+                    .get(),                             \
+                mScrollFrame->mIsRoot, ##__VA_ARGS__)
 */
 
 namespace mozilla {
@@ -41,6 +41,7 @@ ScrollAnchorContainer::ScrollAnchorContainer(ScrollFrameHelper* aScrollFrame)
     : mScrollFrame(aScrollFrame),
       mAnchorNode(nullptr),
       mLastAnchorOffset(0),
+      mDisabled(false),
       mAnchorNodeIsDirty(true),
       mApplyingAnchorAdjustment(false),
       mSuppressAnchorAdjustment(false) {}
@@ -199,7 +200,7 @@ void ScrollAnchorContainer::SelectAnchor() {
   MOZ_ASSERT(mScrollFrame->mScrolledFrame);
   MOZ_ASSERT(mAnchorNodeIsDirty);
 
-  if (!StaticPrefs::layout_css_scroll_anchoring_enabled()) {
+  if (mDisabled || !StaticPrefs::layout_css_scroll_anchoring_enabled()) {
     return;
   }
 
@@ -285,6 +286,56 @@ void ScrollAnchorContainer::UserScrolled() {
     return;
   }
   InvalidateAnchor();
+  mConsecutiveScrollAnchoringAdjustments = SaturateUint32(0);
+  mConsecutiveScrollAnchoringAdjustmentLength = 0;
+}
+
+void ScrollAnchorContainer::AdjustmentMade(nscoord aAdjustment) {
+  // A reasonably large number of times that we want to check for this. If we
+  // haven't hit this limit after these many attempts we assume we'll never hit
+  // it.
+  //
+  // This is to prevent the number getting too large and making the limit round
+  // to zero by mere precision error.
+  //
+  // 100k should be enough for anyone :)
+  static const uint32_t kAnchorCheckCountLimit = 100000;
+
+  // Zero-length adjustments are common & don't have side effects, so we don't
+  // want them to consider them here; they'd bias our average towards 0.
+  MOZ_ASSERT(aAdjustment, "Don't call this API for zero-length adjustments");
+
+  mConsecutiveScrollAnchoringAdjustments++;
+  mConsecutiveScrollAnchoringAdjustmentLength = NSCoordSaturatingAdd(
+      mConsecutiveScrollAnchoringAdjustmentLength, aAdjustment);
+
+  uint32_t maxConsecutiveAdjustments =
+      StaticPrefs::layout_css_scroll_anchoring_max_consecutive_adjustments();
+
+  if (!maxConsecutiveAdjustments) {
+    return;
+  }
+
+  uint32_t consecutiveAdjustments =
+      mConsecutiveScrollAnchoringAdjustments.value();
+  if (consecutiveAdjustments < maxConsecutiveAdjustments ||
+      consecutiveAdjustments > kAnchorCheckCountLimit) {
+    return;
+  }
+
+  auto cssPixels =
+      CSSPixel::FromAppUnits(mConsecutiveScrollAnchoringAdjustmentLength);
+  double average = double(cssPixels) / consecutiveAdjustments;
+  uint32_t minAverage = StaticPrefs::
+      layout_css_scroll_anchoring_min_average_adjustment_threshold();
+  if (MOZ_UNLIKELY(std::abs(average) < double(minAverage))) {
+    ANCHOR_LOG(
+        "Disabled scroll anchoring for container: "
+        "%f average, %f total out of %u consecutive adjustments\n",
+        average, float(cssPixels), mConsecutiveScrollAnchoringAdjustments);
+
+    mDisabled = true;
+  }
 }
 
 void ScrollAnchorContainer::SuppressAdjustments() {
@@ -302,7 +353,7 @@ void ScrollAnchorContainer::InvalidateAnchor(ScheduleSelection aSchedule) {
   mAnchorNodeIsDirty = true;
   mLastAnchorOffset = 0;
 
-  if (aSchedule == ScheduleSelection::No ||
+  if (mDisabled || aSchedule == ScheduleSelection::No ||
       !StaticPrefs::layout_css_scroll_anchoring_enabled()) {
     return;
   }
@@ -315,14 +366,15 @@ void ScrollAnchorContainer::Destroy() {
 }
 
 void ScrollAnchorContainer::ApplyAdjustments() {
-  if (!mAnchorNode || mAnchorNodeIsDirty ||
+  if (!mAnchorNode || mAnchorNodeIsDirty || mDisabled ||
       mScrollFrame->HasPendingScrollRestoration() ||
       mScrollFrame->IsProcessingScrollEvent() ||
       mScrollFrame->IsProcessingAsyncScroll()) {
     ANCHOR_LOG(
-        "Ignoring post-reflow (anchor=%p, dirty=%d, pendingRestoration=%d, "
-        "scrollevent=%d asyncScroll=%d pendingSuppression=%d container=%p).\n",
-        mAnchorNode, mAnchorNodeIsDirty,
+        "Ignoring post-reflow (anchor=%p, dirty=%d, disabled=%d, "
+        "pendingRestoration=%d, scrollevent=%d, asyncScroll=%d, "
+        "pendingSuppression=%d, container=%p).\n",
+        mAnchorNode, mAnchorNodeIsDirty, mDisabled,
         mScrollFrame->HasPendingScrollRestoration(),
         mScrollFrame->IsProcessingScrollEvent(),
         mScrollFrame->IsProcessingAsyncScroll(), mSuppressAnchorAdjustment,
@@ -356,6 +408,8 @@ void ScrollAnchorContainer::ApplyAdjustments() {
 
   ANCHOR_LOG("Applying anchor adjustment of %d in %s with anchor %p.\n",
              logicalAdjustment, writingMode.DebugString(), mAnchorNode);
+
+  AdjustmentMade(logicalAdjustment);
 
   nsPoint physicalAdjustment;
   switch (writingMode.GetBlockDir()) {
