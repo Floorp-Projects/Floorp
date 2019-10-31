@@ -7,10 +7,10 @@ use api::{PipelineId, PropertyBinding, PropertyBindingId, MixBlendMode, Stacking
 use api::units::*;
 use crate::composite::CompositorKind;
 use crate::clip::{ClipStore, ClipDataStore};
-use crate::clip_scroll_tree::ClipScrollTree;
+use crate::clip_scroll_tree::{ClipScrollTree, SpatialNodeIndex};
 use crate::frame_builder::{ChasePrimitive, FrameBuilderConfig};
 use crate::hit_test::{HitTester, HitTestingScene, HitTestingSceneStats};
-use crate::internal_types::FastHashMap;
+use crate::internal_types::{FastHashMap, FastHashSet};
 use crate::prim_store::{PrimitiveStore, PrimitiveStoreStats, PictureIndex};
 use std::sync::Arc;
 
@@ -228,6 +228,7 @@ pub struct BuiltScene {
     pub clip_scroll_tree: ClipScrollTree,
     pub hit_testing_scene: Arc<HitTestingScene>,
     pub content_slice_count: usize,
+    pub picture_cache_spatial_nodes: FastHashSet<SpatialNodeIndex>,
 }
 
 impl BuiltScene {
@@ -242,6 +243,7 @@ impl BuiltScene {
             clip_scroll_tree: ClipScrollTree::new(),
             hit_testing_scene: Arc::new(HitTestingScene::new(&HitTestingSceneStats::empty())),
             content_slice_count: 0,
+            picture_cache_spatial_nodes: FastHashSet::default(),
             config: FrameBuilderConfig {
                 default_font_render_mode: FontRenderMode::Mono,
                 dual_source_blending_is_enabled: true,
