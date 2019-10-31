@@ -195,6 +195,7 @@ MSG_DEF(JSMSG_AWAIT_IN_PARAMETER,      0, JSEXN_SYNTAXERR, "await expression can
 MSG_DEF(JSMSG_AWAIT_OUTSIDE_ASYNC,     0, JSEXN_SYNTAXERR, "await is only valid in async functions and async generators")
 MSG_DEF(JSMSG_BAD_ARROW_ARGS,          0, JSEXN_SYNTAXERR, "invalid arrow-function arguments (parentheses around the arrow-function may help)")
 MSG_DEF(JSMSG_BAD_BINDING,             1, JSEXN_SYNTAXERR, "redefining {0} is deprecated")
+MSG_DEF(JSMSG_BAD_COALESCE_MIXING,     0, JSEXN_SYNTAXERR, "cannot use `??` unparenthesized within `||` and `&&` expressions")
 MSG_DEF(JSMSG_BAD_CONST_DECL,          0, JSEXN_SYNTAXERR, "missing = in const declaration")
 MSG_DEF(JSMSG_BAD_CONTINUE,            0, JSEXN_SYNTAXERR, "continue must be inside loop")
 MSG_DEF(JSMSG_BAD_DESTRUCT_ASS,        0, JSEXN_SYNTAXERR, "invalid destructuring assignment operator")
