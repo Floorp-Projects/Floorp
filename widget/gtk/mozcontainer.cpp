@@ -155,9 +155,9 @@ static gint moz_container_get_scale(MozContainer* container) {
 }
 
 void moz_container_move(MozContainer* container, int dx, int dy) {
-  if (container->subsurface) {
-    wl_subsurface_set_position(container->subsurface, dx, dy);
-  }
+  container->subsurface_dx = dx;
+  container->subsurface_dy = dy;
+  container->surface_position_update = true;
 }
 
 void moz_container_scale_update(MozContainer* container) {
@@ -215,6 +215,9 @@ void moz_container_init(MozContainer* container) {
   container->ready_to_draw = GDK_IS_X11_DISPLAY(gdk_display_get_default());
   container->surface_needs_clear = true;
   container->inital_draw_cb = nullptr;
+  container->subsurface_dx = 0;
+  container->subsurface_dy = 0;
+  container->surface_position_update = 0;
 #endif
 
   LOG(("%s [%p]\n", __FUNCTION__, (void*)container));
@@ -597,7 +600,8 @@ struct wl_surface* moz_container_get_wl_surface(MozContainer* container) {
     GdkWindow* window = gtk_widget_get_window(GTK_WIDGET(container));
     gint x, y;
     gdk_window_get_position(window, &x, &y);
-    wl_subsurface_set_position(container->subsurface, x, y);
+    moz_container_move(container, x, y);
+
     wl_subsurface_set_desync(container->subsurface);
 
     // Route input to parent wl_surface owned by Gtk+ so we get input
@@ -614,6 +618,20 @@ struct wl_surface* moz_container_get_wl_surface(MozContainer* container) {
 
     LOGWAYLAND(("%s [%p] created surface %p\n", __FUNCTION__, (void*)container,
                 (void*)container->surface));
+  }
+
+  // wl_subsurface_set_position is actually property of parent surface
+  // which is effective when parent surface is commited.
+  if (container->surface_position_update) {
+    wl_surface* parent_surface =
+        moz_container_get_gtk_container_surface(container);
+    if (parent_surface) {
+      wl_subsurface_set_position(container->subsurface,
+                                 container->subsurface_dx,
+                                 container->subsurface_dy);
+      wl_surface_commit(parent_surface);
+      container->surface_position_update = true;
+    }
   }
 
   return container->surface;
