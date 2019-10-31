@@ -13,6 +13,7 @@
 #include "mozilla/layers/CompositorThread.h"  // for CompositorThreadHolder
 #include "mozilla/layers/LayerAnimationUtils.h"  // for TimingFunctionToComputedTimingFunction
 #include "mozilla/LayerAnimationInfo.h"  // for GetCSSPropertiesFor()
+#include "mozilla/MotionPathUtils.h"     // for ResolveMotionPath()
 #include "mozilla/ServoBindings.h"  // for Servo_ComposeAnimationSegment, etc
 #include "mozilla/StyleAnimationValue.h"  // for StyleAnimationValue, etc
 #include "nsDeviceContext.h"              // for AppUnitsPerCSSPixel
@@ -594,7 +595,11 @@ bool AnimationHelper::SampleAnimations(CompositorAnimationStorage* aStorage,
       case eCSSProperty_rotate:
       case eCSSProperty_scale:
       case eCSSProperty_translate:
-      case eCSSProperty_transform: {
+      case eCSSProperty_transform:
+      case eCSSProperty_offset_path:
+      case eCSSProperty_offset_distance:
+      case eCSSProperty_offset_rotate:
+      case eCSSProperty_offset_anchor: {
         const TransformData& transformData =
             lastPropertyAnimationGroup.mAnimationData.ref();
 
@@ -639,8 +644,11 @@ gfx::Matrix4x4 AnimationHelper::ServoAnimationValueToMatrix4x4(
   const StyleRotate* rotate = nullptr;
   const StyleScale* scale = nullptr;
   const StyleTransform* transform = nullptr;
+  const StyleOffsetPath* path = nullptr;
+  const StyleLengthPercentage* distance = nullptr;
+  const StyleOffsetRotate* offsetRotate = nullptr;
+  const StylePositionOrAuto* anchor = nullptr;
 
-  // TODO: Bug 1429305: Support compositor animations for motion-path.
   for (const auto& value : aValues) {
     MOZ_ASSERT(value);
     nsCSSPropertyID id = Servo_AnimationValue_GetPropertyId(value);
@@ -661,16 +669,36 @@ gfx::Matrix4x4 AnimationHelper::ServoAnimationValueToMatrix4x4(
         MOZ_ASSERT(!scale);
         scale = Servo_AnimationValue_GetScale(value);
         break;
+      case eCSSProperty_offset_path:
+        MOZ_ASSERT(!path);
+        path = Servo_AnimationValue_GetOffsetPath(value);
+        break;
+      case eCSSProperty_offset_distance:
+        MOZ_ASSERT(!distance);
+        distance = Servo_AnimationValue_GetOffsetDistance(value);
+        break;
+      case eCSSProperty_offset_rotate:
+        MOZ_ASSERT(!offsetRotate);
+        offsetRotate = Servo_AnimationValue_GetOffsetRotate(value);
+        break;
+      case eCSSProperty_offset_anchor:
+        MOZ_ASSERT(!anchor);
+        anchor = Servo_AnimationValue_GetOffsetAnchor(value);
+        break;
       default:
         MOZ_ASSERT_UNREACHABLE("Unsupported transform-like property");
     }
   }
+
+  Maybe<MotionPathData> motion = MotionPathUtils::ResolveMotionPath(
+      path, distance, offsetRotate, anchor, aTransformData);
+
   // We expect all our transform data to arrive in device pixels
   gfx::Point3D transformOrigin = aTransformData.transformOrigin();
   nsDisplayTransform::FrameTransformProperties props(
       translate ? *translate : noneTranslate, rotate ? *rotate : noneRotate,
       scale ? *scale : noneScale, transform ? *transform : noneTransform,
-      transformOrigin);
+      motion, transformOrigin);
 
   return nsDisplayTransform::GetResultingTransformMatrix(
       props, aTransformData.origin(), aTransformData.appUnitsPerDevPixel(), 0,

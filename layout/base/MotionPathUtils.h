@@ -18,6 +18,11 @@ namespace mozilla {
 
 using RayFunction = StyleRayFunction<StyleAngle>;
 
+namespace layers {
+class PathCommand;
+class TransformData;
+}  // namespace layers
+
 struct MotionPathData {
   gfx::Point mTranslate;
   float mRotate;
@@ -31,7 +36,13 @@ struct RayReferenceData {
   // The rect of the containing block.
   CSSRect mContainingBlockRect;
 
+  RayReferenceData() = default;
   explicit RayReferenceData(const nsIFrame* aFrame);
+
+  bool operator==(const RayReferenceData& aOther) const {
+    return mInitialPosition == aOther.mInitialPosition &&
+           mContainingBlockRect == aOther.mContainingBlockRect;
+  }
 };
 
 // The collected information for offset-path. We preprocess the value of
@@ -151,9 +162,31 @@ class MotionPathUtils final {
       const Maybe<CSSPoint>& aFramePosition);
 
   /**
-   * Generate the motion path transform result with |nsIFrame|.
+   * Generate the motion path transform result with |nsIFrame|. This is only
+   * called in the main thread.
    **/
   static Maybe<MotionPathData> ResolveMotionPath(const nsIFrame* aFrame);
+
+  /**
+   * Generate the motion path transfrom result with styles and TransformData.
+   * This is only called by the compositor.
+   */
+  static Maybe<MotionPathData> ResolveMotionPath(
+      const StyleOffsetPath* aPath, const StyleLengthPercentage* aDistance,
+      const StyleOffsetRotate* aRotate, const StylePositionOrAuto* aAnchor,
+      const layers::TransformData& aTransformData);
+
+  /**
+   * Normalize and convert StyleSVGPathData into nsTArray<layers::PathCommand>.
+   *
+   * The algorithm of normalization is the same as normalize() in
+   * servo/components/style/values/specified/svg_path.rs
+   * FIXME: Bug 1489392: We don't have to normalize the path here if we accept
+   * the spec issue which would like to normalize svg paths ar computed time.
+   * https://github.com/w3c/svgwg/issues/321
+   */
+  static nsTArray<layers::PathCommand> NormalizeAndConvertToPathCommands(
+      const StyleSVGPathData& aPath);
 };
 
 }  // namespace mozilla
