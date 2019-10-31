@@ -4,10 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += [
-    'neqo_glue',
-]
-
 XPIDL_SOURCES += [
     'nsISocketProvider.idl',
     'nsISocketProviderService.idl',
@@ -46,7 +42,3 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     ]
 
 FINAL_LIBRARY = 'xul'
-
-CONFIGURE_SUBST_FILES += [
-    'neqo/extra-bindgen-flags'
-]

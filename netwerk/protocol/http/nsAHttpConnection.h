@@ -7,7 +7,6 @@
 
 #include "nsISupports.h"
 #include "nsAHttpTransaction.h"
-#include "HttpTrafficAnalyzer.h"
 
 class nsISocketTransport;
 class nsIAsyncInputStream;

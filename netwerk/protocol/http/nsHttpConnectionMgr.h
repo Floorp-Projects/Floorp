@@ -515,8 +515,6 @@ class nsHttpConnectionMgr final : public nsIObserver, public AltSvcCache {
     nsCOMPtr<nsISocketTransport> mBackupTransport;
     nsCOMPtr<nsIAsyncOutputStream> mBackupStreamOut;
     nsCOMPtr<nsIAsyncInputStream> mBackupStreamIn;
-
-    bool mIsHttp3;
   };
   friend class nsHalfOpenSocket;
 
@@ -655,7 +653,7 @@ class nsHttpConnectionMgr final : public nsIObserver, public AltSvcCache {
                                                        bool justKidding);
   void UpdateCoalescingForNewConn(nsHttpConnection* conn,
                                   nsConnectionEntry* ent);
-  nsHttpConnection* GetH2orH3ActiveConn(nsConnectionEntry* ent);
+  nsHttpConnection* GetSpdyActiveConn(nsConnectionEntry* ent);
 
   void ProcessSpdyPendingQ(nsConnectionEntry* ent);
   void DispatchSpdyPendingQ(nsTArray<RefPtr<PendingTransactionInfo>>& pendingQ,

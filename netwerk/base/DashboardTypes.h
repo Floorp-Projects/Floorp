@@ -41,7 +41,6 @@ struct HttpConnInfo {
 
   void SetHTTP1ProtocolVersion(HttpVersion pv);
   void SetHTTP2ProtocolVersion(SpdyVersion pv);
-  void SetHTTP3ProtocolVersion();
 };
 
 struct HttpRetParams {

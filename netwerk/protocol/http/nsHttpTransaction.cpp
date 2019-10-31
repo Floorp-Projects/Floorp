@@ -115,7 +115,6 @@ nsHttpTransaction::nsHttpTransaction()
       mContentDecodingCheck(false),
       mDeferredSendProgress(false),
       mWaitingOnPipeOut(false),
-      mDoNotRemoveAltSvc(false),
       mReportedStart(false),
       mReportedResponseHeader(false),
       mResponseHeadTaken(false),
@@ -1294,7 +1293,7 @@ nsresult nsHttpTransaction::Restart() {
   // to the next
   mReuseOnRestart = false;
 
-  if (!mDoNotRemoveAltSvc && !mConnInfo->GetRoutedHost().IsEmpty()) {
+  if (!mConnInfo->GetRoutedHost().IsEmpty()) {
     MutexAutoLock lock(*nsHttp::GetLock());
     RefPtr<nsHttpConnectionInfo> ci;
     mConnInfo->CloneAsDirectRoute(getter_AddRefs(ci));
@@ -1305,9 +1304,6 @@ nsresult nsHttpTransaction::Restart() {
       MOZ_ASSERT(NS_SUCCEEDED(rv));
     }
   }
-
-  // Reset mDoNotRemoveAltSvc for the next try.
-  mDoNotRemoveAltSvc = false;
 
   return gHttpHandler->InitiateTransaction(this, mPriority);
 }
@@ -1320,8 +1316,6 @@ char* nsHttpTransaction::LocateHttpStart(char* buf, uint32_t len,
   static const uint32_t HTTPHeaderLen = sizeof(HTTPHeader) - 1;
   static const char HTTP2Header[] = "HTTP/2.0";
   static const uint32_t HTTP2HeaderLen = sizeof(HTTP2Header) - 1;
-  static const char HTTP3Header[] = "HTTP/3.0";
-  static const uint32_t HTTP3HeaderLen = sizeof(HTTP3Header) - 1;
   // ShoutCast ICY is treated as HTTP/1.0
   static const char ICYHeader[] = "ICY ";
   static const uint32_t ICYHeaderLen = sizeof(ICYHeader) - 1;
@@ -1371,16 +1365,6 @@ char* nsHttpTransaction::LocateHttpStart(char* buf, uint32_t len,
     if (firstByte && !mInvalidResponseBytesRead && len >= HTTP2HeaderLen &&
         (PL_strncasecmp(buf, HTTP2Header, HTTP2HeaderLen) == 0)) {
       LOG(("nsHttpTransaction:: Identified HTTP/2.0 treating as 1.x\n"));
-      return buf;
-    }
-
-    // HTTP/3.0 responses to our HTTP/1 requests. Treat the minimal case of
-    // it as HTTP/1.1 to be compatible with old versions of ourselves and
-    // other browsers
-
-    if (firstByte && !mInvalidResponseBytesRead && len >= HTTP3HeaderLen &&
-        (PL_strncasecmp(buf, HTTP3Header, HTTP3HeaderLen) == 0)) {
-      LOG(("nsHttpTransaction:: Identified HTTP/3.0 treating as 1.x\n"));
       return buf;
     }
 
@@ -1670,7 +1654,7 @@ nsresult nsHttpTransaction::HandleContentStart() {
         if ((mEarlyDataDisposition == EARLY_425) && !mDoNotTryEarlyData) {
           mDoNotTryEarlyData = true;
           mForceRestart = true;  // force restart has built in loop protection
-          if (mConnection->Version() >= HttpVersion::v2_0) {
+          if (mConnection->Version() == HttpVersion::v2_0) {
             mReuseOnRestart = true;
           }
           return NS_ERROR_NET_RESET;
