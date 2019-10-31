@@ -218,8 +218,6 @@ const OPTIONAL_PROPERTIES = [
   "ip",
   "frameAncestors",
   "urlClassification",
-  "requestSize",
-  "responseSize",
 ];
 
 function serializeRequestData(eventName) {
@@ -786,8 +784,6 @@ HttpObserverManager = {
       proxyInfo: channel.proxyInfo,
 
       serialize: serializeRequestData,
-      requestSize: channel.requestSize,
-      responseSize: channel.responseSize,
     };
 
     return Object.assign(data, extraData);

@@ -7975,7 +7975,6 @@ nsHttpChannel::OnStopRequest(nsIRequest* request, nsresult status) {
     }
 
     mTransferSize = mTransaction->GetTransferSize();
-    mRequestSize = mTransaction->GetRequestSize();
 
     // If we are using the transaction to serve content, we also save the
     // time since async open in the cache entry so we can compare telemetry
