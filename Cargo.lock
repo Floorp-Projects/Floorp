@@ -555,7 +555,8 @@ dependencies = [
 
 [[package]]
 name = "coreaudio-sys"
-version = "0.2.2"
+version = "0.2.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "bindgen 0.51.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
@@ -565,7 +566,7 @@ name = "coreaudio-sys-utils"
 version = "0.1.0"
 dependencies = [
  "core-foundation-sys 0.6.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "coreaudio-sys 0.2.2",
+ "coreaudio-sys 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -3916,6 +3917,7 @@ dependencies = [
 "checksum core-foundation-sys 0.6.2 (registry+https://github.com/rust-lang/crates.io-index)" = "e7ca8a5221364ef15ce201e8ed2f609fc312682a8f4e0e3d4aa5879764e0fa3b"
 "checksum core-graphics 0.17.1 (registry+https://github.com/rust-lang/crates.io-index)" = "62ceafe1622ffc9a332199096841d0ff9912ec8cf8f9cde01e254a7d5217cd10"
 "checksum core-text 13.0.0 (registry+https://github.com/rust-lang/crates.io-index)" = "f3f46450d6f2397261af420b4ccce23807add2e45fa206410a03d66fb7f050ae"
+"checksum coreaudio-sys 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)" = "7e8f5954c1c7ccb55340443e8b29fca24013545a5e7d72c1ca7db4fc02b982ce"
 "checksum cose 0.1.4 (registry+https://github.com/rust-lang/crates.io-index)" = "72fa26cb151d3ae4b70f63d67d0fed57ce04220feafafbae7f503bef7aae590d"
 "checksum cose-c 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)" = "49726015ab0ca765144fcca61e4a7a543a16b795a777fa53f554da2fffff9a94"
 "checksum cranelift-bforest 0.46.1 (git+https://github.com/CraneStation/Cranelift?rev=da179e4fd83d49b7ad6c9f286b1ea04d4f64907e)" = "<none>"
