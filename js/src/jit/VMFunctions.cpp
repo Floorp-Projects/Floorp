@@ -2166,5 +2166,48 @@ template bool BigIntCompare<ComparisonKind::LessThan>(BigInt* x, BigInt* y);
 template bool BigIntCompare<ComparisonKind::GreaterThanOrEqual>(BigInt* x,
                                                                 BigInt* y);
 
+template <EqualityKind Kind>
+bool BigIntNumberEqual(BigInt* x, double y) {
+  AutoUnsafeCallWithABI unsafe;
+  bool res = BigInt::equal(x, y);
+  if (Kind != EqualityKind::Equal) {
+    res = !res;
+  }
+  return res;
+}
+
+template bool BigIntNumberEqual<EqualityKind::Equal>(BigInt* x, double y);
+template bool BigIntNumberEqual<EqualityKind::NotEqual>(BigInt* x, double y);
+
+template <ComparisonKind Kind>
+bool BigIntNumberCompare(BigInt* x, double y) {
+  AutoUnsafeCallWithABI unsafe;
+  mozilla::Maybe<bool> res = BigInt::lessThan(x, y);
+  if (Kind == ComparisonKind::LessThan) {
+    return res.valueOr(false);
+  }
+  return !res.valueOr(true);
+}
+
+template bool BigIntNumberCompare<ComparisonKind::LessThan>(BigInt* x,
+                                                            double y);
+template bool BigIntNumberCompare<ComparisonKind::GreaterThanOrEqual>(BigInt* x,
+                                                                      double y);
+
+template <ComparisonKind Kind>
+bool NumberBigIntCompare(double x, BigInt* y) {
+  AutoUnsafeCallWithABI unsafe;
+  mozilla::Maybe<bool> res = BigInt::lessThan(x, y);
+  if (Kind == ComparisonKind::LessThan) {
+    return res.valueOr(false);
+  }
+  return !res.valueOr(true);
+}
+
+template bool NumberBigIntCompare<ComparisonKind::LessThan>(double x,
+                                                            BigInt* y);
+template bool NumberBigIntCompare<ComparisonKind::GreaterThanOrEqual>(
+    double x, BigInt* y);
+
 }  // namespace jit
 }  // namespace js

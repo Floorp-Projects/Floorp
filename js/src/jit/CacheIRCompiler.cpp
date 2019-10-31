@@ -4114,6 +4114,8 @@ bool CacheIRCompiler::emitCompareDoubleResult() {
     return false;
   }
 
+  // Float register must be preserved. The Compare ICs use the fact that
+  // baseline has them available, as well as fixed temps on LBinaryBoolCache.
   allocator.ensureDoubleRegister(masm, reader.numberOperandId(), FloatReg0);
   allocator.ensureDoubleRegister(masm, reader.numberOperandId(), FloatReg1);
   JSOp op = reader.jsop();
@@ -4169,6 +4171,165 @@ bool CacheIRCompiler::emitCompareBigIntResult() {
   }
 
   masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, fn));
+  masm.storeCallBoolResult(scratch);
+
+  LiveRegisterSet ignore;
+  ignore.add(scratch);
+  masm.PopRegsInMaskIgnore(save, ignore);
+
+  EmitStoreResult(masm, scratch, JSVAL_TYPE_BOOLEAN, output);
+  return true;
+}
+
+bool CacheIRCompiler::emitCompareBigIntNumberResult() {
+  JitSpew(JitSpew_Codegen, __FUNCTION__);
+  AutoOutputRegister output(*this);
+
+  // Float register must be preserved. The Compare ICs use the fact that
+  // baseline has them available, as well as fixed temps on LBinaryBoolCache.
+  Register lhs = allocator.useRegister(masm, reader.bigIntOperandId());
+  allocator.ensureDoubleRegister(masm, reader.numberOperandId(), FloatReg0);
+  JSOp op = reader.jsop();
+
+  AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+
+  LiveRegisterSet save(GeneralRegisterSet::Volatile(), liveVolatileFloatRegs());
+  masm.PushRegsInMask(save);
+
+  masm.setupUnalignedABICall(scratch);
+
+  // Push the operands in reverse order for JSOP_LE and JSOP_GT:
+  // - |left <= right| is implemented as |right >= left|.
+  // - |left > right| is implemented as |right < left|.
+  if (op == JSOP_LE || op == JSOP_GT) {
+    masm.passABIArg(FloatReg0, MoveOp::DOUBLE);
+    masm.passABIArg(lhs);
+  } else {
+    masm.passABIArg(lhs);
+    masm.passABIArg(FloatReg0, MoveOp::DOUBLE);
+  }
+
+  using FnBigIntNumber = bool (*)(BigInt*, double);
+  using FnNumberBigInt = bool (*)(double, BigInt*);
+  void* fun;
+  switch (op) {
+    case JSOP_EQ: {
+      FnBigIntNumber fn = jit::BigIntNumberEqual<EqualityKind::Equal>;
+      fun = JS_FUNC_TO_DATA_PTR(void*, fn);
+      break;
+    }
+    case JSOP_NE: {
+      FnBigIntNumber fn = jit::BigIntNumberEqual<EqualityKind::NotEqual>;
+      fun = JS_FUNC_TO_DATA_PTR(void*, fn);
+      break;
+    }
+    case JSOP_LT: {
+      FnBigIntNumber fn = jit::BigIntNumberCompare<ComparisonKind::LessThan>;
+      fun = JS_FUNC_TO_DATA_PTR(void*, fn);
+      break;
+    }
+    case JSOP_GT: {
+      FnNumberBigInt fn = jit::NumberBigIntCompare<ComparisonKind::LessThan>;
+      fun = JS_FUNC_TO_DATA_PTR(void*, fn);
+      break;
+    }
+    case JSOP_LE: {
+      FnNumberBigInt fn =
+          jit::NumberBigIntCompare<ComparisonKind::GreaterThanOrEqual>;
+      fun = JS_FUNC_TO_DATA_PTR(void*, fn);
+      break;
+    }
+    case JSOP_GE: {
+      FnBigIntNumber fn =
+          jit::BigIntNumberCompare<ComparisonKind::GreaterThanOrEqual>;
+      fun = JS_FUNC_TO_DATA_PTR(void*, fn);
+      break;
+    }
+    default:
+      MOZ_CRASH("unhandled op");
+  }
+
+  masm.callWithABI(fun);
+  masm.storeCallBoolResult(scratch);
+
+  LiveRegisterSet ignore;
+  ignore.add(scratch);
+  masm.PopRegsInMaskIgnore(save, ignore);
+
+  EmitStoreResult(masm, scratch, JSVAL_TYPE_BOOLEAN, output);
+  return true;
+}
+
+bool CacheIRCompiler::emitCompareNumberBigIntResult() {
+  JitSpew(JitSpew_Codegen, __FUNCTION__);
+  AutoOutputRegister output(*this);
+
+  // Float register must be preserved. The Compare ICs use the fact that
+  // baseline has them available, as well as fixed temps on LBinaryBoolCache.
+  allocator.ensureDoubleRegister(masm, reader.numberOperandId(), FloatReg0);
+  Register rhs = allocator.useRegister(masm, reader.bigIntOperandId());
+  JSOp op = reader.jsop();
+
+  AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+
+  LiveRegisterSet save(GeneralRegisterSet::Volatile(), liveVolatileFloatRegs());
+  masm.PushRegsInMask(save);
+
+  masm.setupUnalignedABICall(scratch);
+
+  // Push the operands in reverse order for JSOP_LE and JSOP_GT:
+  // - |left <= right| is implemented as |right >= left|.
+  // - |left > right| is implemented as |right < left|.
+  // Also push the operands in reverse order for JSOP_EQ and JSOP_NE.
+  if (op == JSOP_LT || op == JSOP_GE) {
+    masm.passABIArg(FloatReg0, MoveOp::DOUBLE);
+    masm.passABIArg(rhs);
+  } else {
+    masm.passABIArg(rhs);
+    masm.passABIArg(FloatReg0, MoveOp::DOUBLE);
+  }
+
+  using FnBigIntNumber = bool (*)(BigInt*, double);
+  using FnNumberBigInt = bool (*)(double, BigInt*);
+  void* fun;
+  switch (op) {
+    case JSOP_EQ: {
+      FnBigIntNumber fn = jit::BigIntNumberEqual<EqualityKind::Equal>;
+      fun = JS_FUNC_TO_DATA_PTR(void*, fn);
+      break;
+    }
+    case JSOP_NE: {
+      FnBigIntNumber fn = jit::BigIntNumberEqual<EqualityKind::NotEqual>;
+      fun = JS_FUNC_TO_DATA_PTR(void*, fn);
+      break;
+    }
+    case JSOP_LT: {
+      FnNumberBigInt fn = jit::NumberBigIntCompare<ComparisonKind::LessThan>;
+      fun = JS_FUNC_TO_DATA_PTR(void*, fn);
+      break;
+    }
+    case JSOP_GT: {
+      FnBigIntNumber fn = jit::BigIntNumberCompare<ComparisonKind::LessThan>;
+      fun = JS_FUNC_TO_DATA_PTR(void*, fn);
+      break;
+    }
+    case JSOP_LE: {
+      FnBigIntNumber fn =
+          jit::BigIntNumberCompare<ComparisonKind::GreaterThanOrEqual>;
+      fun = JS_FUNC_TO_DATA_PTR(void*, fn);
+      break;
+    }
+    case JSOP_GE: {
+      FnNumberBigInt fn =
+          jit::NumberBigIntCompare<ComparisonKind::GreaterThanOrEqual>;
+      fun = JS_FUNC_TO_DATA_PTR(void*, fn);
+      break;
+    }
+    default:
+      MOZ_CRASH("unhandled op");
+  }
+
+  masm.callWithABI(fun);
   masm.storeCallBoolResult(scratch);
 
   LiveRegisterSet ignore;

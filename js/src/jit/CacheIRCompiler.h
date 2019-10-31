@@ -127,6 +127,8 @@ class IonCacheIRCompiler;
   _(CompareInt32Result)                   \
   _(CompareDoubleResult)                  \
   _(CompareBigIntResult)                  \
+  _(CompareBigIntNumberResult)            \
+  _(CompareNumberBigIntResult)            \
   _(CompareObjectUndefinedNullResult)     \
   _(ArrayJoinResult)                      \
   _(StoreTypedElement)                    \
