@@ -9,6 +9,7 @@
 #include "mozilla/dom/BrowsingContextGroup.h"
 #include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/dom/ContentProcessManager.h"
+#include "mozilla/dom/PlaybackController.h"
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/NullPrincipal.h"
 
@@ -191,10 +192,7 @@ void CanonicalBrowsingContext::NotifyMediaMutedChanged(bool aMuted) {
 }
 
 void CanonicalBrowsingContext::UpdateMediaAction(MediaControlActions aAction) {
-  nsPIDOMWindowOuter* window = GetDOMWindow();
-  if (window) {
-    window->UpdateMediaAction(aAction);
-  }
+  MediaActionHandler::UpdateMediaAction(this, aAction);
   Group()->EachParent([&](ContentParent* aParent) {
     Unused << aParent->SendUpdateMediaAction(this, aAction);
   });
