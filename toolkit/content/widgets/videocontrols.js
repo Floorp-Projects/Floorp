@@ -113,6 +113,7 @@ this.VideoControlsWidget = class {
    * 1. The video must be 45 seconds in length or longer.
    * 2. Neither the width or the height of the video can be less than 160px.
    * 3. The video must have audio.
+   * 4. The video must not a MediaStream video (Bug 1592539)
    *
    * This can be overridden via the
    * media.videocontrols.picture-in-picture.video-toggle.always-show pref, which
@@ -143,6 +144,15 @@ this.VideoControlsWidget = class {
     }
 
     if (!someVideo.mozHasAudio) {
+      return false;
+    }
+
+    // Bug 1592539 - It's possible to confuse the underlying visual
+    // cloning mechanism by switching which video stream a <video> is
+    // rendering. We try to head that case off for now by hiding the
+    // Picture-in-Picture capability on <video> elements that have
+    // srcObject != null.
+    if (someVideo.srcObject) {
       return false;
     }
 
