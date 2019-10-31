@@ -155,7 +155,7 @@ function getLDAPAttributes(host, base, filter, attribs, isSecure) {
     // user supplied method
     processLDAPValues(ldapquery.getQueryResults(url, gVersion));
   } catch (e) {
-    displayError("getLDAPAttibutes", e);
+    displayError("getLDAPAttributes", e);
   }
 }
 
