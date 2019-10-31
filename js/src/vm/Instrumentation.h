@@ -39,12 +39,12 @@ enum class InstrumentationKind {
 
 class RealmInstrumentation {
   // Callback invoked on instrumentation operations.
-  GCPtrObject callback;
+  const GCPtrObject callback;
 
   // Debugger with which the instrumentation is associated. This debugger's
   // Debugger.Script instances store instrumentation IDs for scripts in the
   // realm.
-  GCPtrObject dbgObject;
+  const GCPtrObject dbgObject;
 
   // Mask of the InstrumentationKind operations which should be instrumented.
   uint32_t kinds = 0;

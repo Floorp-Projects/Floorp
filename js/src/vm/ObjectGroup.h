@@ -324,7 +324,7 @@ class ObjectGroup : public gc::TenuredCell {
     // Identifier for this property, JSID_VOID for the aggregate integer
     // index property, or JSID_EMPTY for properties holding constraints
     // listening to changes in the group's state.
-    GCPtrId id;
+    const GCPtrId id;
 
     // Possible own types for this property.
     HeapTypeSet types;

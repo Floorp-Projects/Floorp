@@ -29,7 +29,7 @@ struct NativeIterator {
   GCPtrObject objectBeingIterated_ = {};
 
   // Internal iterator object.
-  GCPtrObject iterObj_ = {};
+  const GCPtrObject iterObj_ = {};
 
   // The end of HeapReceiverGuards that appear directly after |this|, as part
   // of an overall allocation that stores |*this|, receiver guards, and
