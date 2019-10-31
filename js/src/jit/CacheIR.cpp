@@ -6004,6 +6004,42 @@ AttachDecision CompareIRGenerator::tryAttachPrimitiveSymbol(
   return AttachDecision::Attach;
 }
 
+AttachDecision CompareIRGenerator::tryAttachBoolStringOrNumber(
+    ValOperandId lhsId, ValOperandId rhsId) {
+  // Ensure Boolean x {String, Number}.
+  if (!(lhsVal_.isBoolean() && (rhsVal_.isString() || rhsVal_.isNumber())) &&
+      !(rhsVal_.isBoolean() && (lhsVal_.isString() || lhsVal_.isNumber()))) {
+    return AttachDecision::NoAction;
+  }
+
+  // Case should have been handled by tryAttachStrictlDifferentTypes
+  MOZ_ASSERT(op_ != JSOP_STRICTEQ && op_ != JSOP_STRICTNE);
+
+  // Case should have been handled by tryAttachInt32
+  MOZ_ASSERT(!lhsVal_.isInt32() && !rhsVal_.isInt32());
+
+  auto createGuards = [&](HandleValue v, ValOperandId vId) {
+    if (v.isBoolean()) {
+      Int32OperandId boolId = writer.guardToBoolean(vId);
+      return writer.guardAndGetNumberFromBoolean(boolId);
+    }
+    if (v.isString()) {
+      StringOperandId strId = writer.guardToString(vId);
+      return writer.guardAndGetNumberFromString(strId);
+    }
+    MOZ_ASSERT(v.isNumber());
+    return writer.guardIsNumber(vId);
+  };
+
+  NumberOperandId lhsGuardedId = createGuards(lhsVal_, lhsId);
+  NumberOperandId rhsGuardedId = createGuards(rhsVal_, rhsId);
+  writer.compareDoubleResult(op_, lhsGuardedId, rhsGuardedId);
+  writer.returnFromIC();
+
+  trackAttached("BoolStringOrNumber");
+  return AttachDecision::Attach;
+}
+
 AttachDecision CompareIRGenerator::tryAttachStub() {
   MOZ_ASSERT(cacheKind_ == CacheKind::Compare);
   MOZ_ASSERT(IsEqualityOp(op_) || IsRelationalOp(op_));
@@ -6021,8 +6057,8 @@ AttachDecision CompareIRGenerator::tryAttachStub() {
 
   // For sloppy equality ops, there are cases this IC does not handle:
   // - {Object} x {String, Symbol, Bool, Number, BigInt}.
-  // - {String} x {Bool, BigInt}.
-  // - {Bool}   x {Double, BigInt}.
+  // - {String} x {BigInt}.
+  // - {Bool}   x {BigInt}.
   // - {Number} x {BigInt}
   //
   // (The above lists omits the equivalent case {B} x {A} when {A} x {B} is
@@ -6063,6 +6099,7 @@ AttachDecision CompareIRGenerator::tryAttachStub() {
   TRY_ATTACH(tryAttachString(lhsId, rhsId));
 
   TRY_ATTACH(tryAttachStringNumber(lhsId, rhsId));
+  TRY_ATTACH(tryAttachBoolStringOrNumber(lhsId, rhsId));
 
   trackAttached(IRGenerator::NotAttached);
   return AttachDecision::NoAction;
