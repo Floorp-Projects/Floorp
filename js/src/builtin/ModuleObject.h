@@ -212,8 +212,8 @@ struct FunctionDeclaration {
   FunctionDeclaration(HandleAtom name, HandleFunction fun);
   void trace(JSTracer* trc);
 
-  HeapPtr<JSAtom*> name;
-  HeapPtr<JSFunction*> fun;
+  const HeapPtr<JSAtom*> name;
+  const HeapPtr<JSFunction*> fun;
 };
 
 // A vector of function bindings to be instantiated. This can be created in a
