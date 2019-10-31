@@ -40,7 +40,6 @@ UNSUPPORTED_FEATURES = set([
     "Intl.Segmenter",
     "WeakRef",
     "FinalizationGroup",
-    "coalesce-expression",
     "optional-chaining",
     "top-level-await",
 ])
