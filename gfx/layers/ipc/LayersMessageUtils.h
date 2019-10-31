@@ -882,6 +882,22 @@ struct ParamTraits<mozilla::RayFunction> {
   }
 };
 
+template <>
+struct ParamTraits<mozilla::RayReferenceData> {
+  typedef mozilla::RayReferenceData paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam) {
+    WriteParam(aMsg, aParam.mInitialPosition);
+    WriteParam(aMsg, aParam.mContainingBlockRect);
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
+    return (ReadParam(aMsg, aIter, &aResult->mInitialPosition) &&
+            ReadParam(aMsg, aIter, &aResult->mContainingBlockRect));
+  }
+};
+
 } /* namespace IPC */
 
 #endif /* mozilla_layers_LayersMessageUtils */

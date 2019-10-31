@@ -467,6 +467,23 @@ static TimingFunction ToTimingFunction(
       aCTF->GetSteps().mSteps, static_cast<uint8_t>(aCTF->GetSteps().mPos)));
 }
 
+static Animatable GetOffsetPath(const StyleOffsetPath& aOffsetPath) {
+  Animatable result;
+  switch (aOffsetPath.tag) {
+    case StyleOffsetPath::Tag::Path:
+      result = OffsetPath(MotionPathUtils::NormalizeAndConvertToPathCommands(
+          aOffsetPath.AsPath()));
+      break;
+    case StyleOffsetPath::Tag::Ray:
+      result = OffsetPath(aOffsetPath.AsRay());
+      break;
+    case StyleOffsetPath::Tag::None:
+    default:
+      result = OffsetPath(null_t());
+  }
+  return result;
+}
+
 static void SetAnimatable(nsCSSPropertyID aProperty,
                           const AnimationValue& aAnimationValue,
                           nsIFrame* aFrame, TransformReferenceBox& aRefBox,
@@ -507,6 +524,27 @@ static void SetAnimatable(nsCSSPropertyID aProperty,
       aAnimatable = nsTArray<TransformFunction>();
       AddTransformFunctions(aAnimationValue.GetTransformProperty(), aRefBox,
                             aAnimatable.get_ArrayOfTransformFunction());
+      break;
+    }
+    case eCSSProperty_offset_path:
+      aAnimatable = GetOffsetPath(aAnimationValue.GetOffsetPathProperty());
+      break;
+    case eCSSProperty_offset_distance:
+      aAnimatable = aAnimationValue.GetOffsetDistanceProperty();
+      break;
+    case eCSSProperty_offset_rotate: {
+      const StyleOffsetRotate& r = aAnimationValue.GetOffsetRotateProperty();
+      aAnimatable = OffsetRotate(MakeCSSAngle(r.angle), r.auto_);
+      break;
+    }
+    case eCSSProperty_offset_anchor: {
+      const StylePositionOrAuto& p = aAnimationValue.GetOffsetAnchorProperty();
+      if (p.IsAuto()) {
+        aAnimatable = OffsetAnchor(null_t());
+        break;
+      }
+      aAnimatable = OffsetAnchor(
+          AnchorPosition(p.AsPosition().horizontal, p.AsPosition().vertical));
       break;
     }
     default:
@@ -786,7 +824,21 @@ static Maybe<TransformData> CreateAnimationData(
     origin = aFrame->GetOffsetToCrossDoc(referenceFrame);
   }
 
-  return Some(TransformData(origin, offsetToTransformOrigin, bounds,
+  // FIXME: Bug 1591629: Move motion path data into an individual struct.
+  const StyleTransformOrigin& styleOrigin =
+      aFrame->StyleDisplay()->mTransformOrigin;
+  CSSPoint motionPathOrigin = nsStyleTransformMatrix::Convert2DPosition(
+      styleOrigin.horizontal, styleOrigin.vertical, refBox);
+
+  CSSPoint framePosition(0, 0);
+  if (aFrame->HasAnyStateBits(NS_FRAME_SVG_LAYOUT) &&
+      aFrame->StyleDisplay()->mTransformBox != StyleGeometryBox::ViewBox &&
+      aFrame->StyleDisplay()->mTransformBox != StyleGeometryBox::BorderBox) {
+    framePosition = CSSPoint::FromAppUnits(aFrame->GetPosition());
+  }
+
+  return Some(TransformData(origin, offsetToTransformOrigin, motionPathOrigin,
+                            framePosition, RayReferenceData(aFrame), bounds,
                             devPixelsToAppUnits, scaleX, scaleY,
                             hasPerspectiveParent));
 }
@@ -809,32 +861,57 @@ static void AddNonAnimatingTransformLikePropertiesStyles(
     animation->isNotAnimating() = true;
   };
 
+  const nsStyleDisplay* display = aFrame->StyleDisplay();
   for (nsCSSPropertyID id : aNonAnimatingProperties) {
     switch (id) {
       case eCSSProperty_transform:
-        if (!aFrame->StyleDisplay()->mTransform.IsNone()) {
+        if (!display->mTransform.IsNone()) {
           TransformReferenceBox refBox(aFrame);
           nsTArray<TransformFunction> transformFunctions;
-          AddTransformFunctions(aFrame->StyleDisplay()->mTransform, refBox,
+          AddTransformFunctions(display->mTransform, refBox,
                                 transformFunctions);
           appendFakeAnimation(id, Animatable(std::move(transformFunctions)));
         }
         break;
       case eCSSProperty_translate:
-        if (!aFrame->StyleDisplay()->mTranslate.IsNone()) {
+        if (!display->mTranslate.IsNone()) {
           TransformReferenceBox refBox(aFrame);
-          appendFakeAnimation(
-              id, GetTranslate(aFrame->StyleDisplay()->mTranslate, refBox));
+          appendFakeAnimation(id, GetTranslate(display->mTranslate, refBox));
         }
         break;
       case eCSSProperty_rotate:
-        if (!aFrame->StyleDisplay()->mRotate.IsNone()) {
-          appendFakeAnimation(id, GetRotate(aFrame->StyleDisplay()->mRotate));
+        if (!display->mRotate.IsNone()) {
+          appendFakeAnimation(id, GetRotate(display->mRotate));
         }
         break;
       case eCSSProperty_scale:
-        if (!aFrame->StyleDisplay()->mScale.IsNone()) {
-          appendFakeAnimation(id, GetScale(aFrame->StyleDisplay()->mScale));
+        if (!display->mScale.IsNone()) {
+          appendFakeAnimation(id, GetScale(display->mScale));
+        }
+        break;
+      case eCSSProperty_offset_path:
+        if (!display->mOffsetPath.IsNone()) {
+          appendFakeAnimation(id, GetOffsetPath(display->mOffsetPath));
+        }
+        break;
+      case eCSSProperty_offset_distance:
+        if (!display->mOffsetDistance.IsDefinitelyZero()) {
+          appendFakeAnimation(id, display->mOffsetDistance);
+        }
+        break;
+      case eCSSProperty_offset_rotate:
+        if (!display->mOffsetRotate.auto_ ||
+            display->mOffsetRotate.angle.ToDegrees() != 0.0) {
+          const StyleOffsetRotate& rotate = display->mOffsetRotate;
+          appendFakeAnimation(
+              id, OffsetRotate(MakeCSSAngle(rotate.angle), rotate.auto_));
+        }
+        break;
+      case eCSSProperty_offset_anchor:
+        if (!display->mOffsetAnchor.IsAuto()) {
+          const StylePosition& position = display->mOffsetAnchor.AsPosition();
+          appendFakeAnimation(id, OffsetAnchor(AnchorPosition(
+                                      position.horizontal, position.vertical)));
         }
         break;
       default:
@@ -885,14 +962,19 @@ static void AddAnimationsForDisplayItem(nsIFrame* aFrame,
     return;
   }
 
+  // FIXME: Bug 1591629: We create TransformData for all animating properties
+  // and copy it to every animation property, and pass them through IPC. We
+  // should avoid the duplicates.
   const Maybe<TransformData> data =
       CreateAnimationData(aFrame, aItem, aType, aLayersBackend);
   const HashMap<nsCSSPropertyID, nsTArray<RefPtr<dom::Animation>>>
       compositorAnimations =
           GroupAnimationsByProperty(matchedAnimations, propertySet);
   // Bug 1424900: Drop this pref check after shipping individual transforms.
+  // Bug 1582554: Drop this pref check after shipping motion path.
   const bool hasMultipleTransformLikeProperties =
-      StaticPrefs::layout_css_individual_transform_enabled() &&
+      (StaticPrefs::layout_css_individual_transform_enabled() ||
+       StaticPrefs::layout_css_motion_path_enabled()) &&
       aType == DisplayItemType::TYPE_TRANSFORM;
   nsCSSPropertyIDSet nonAnimatingProperties =
       nsCSSPropertyIDSet::TransformLikeProperties();
@@ -907,9 +989,9 @@ static void AddAnimationsForDisplayItem(nsIFrame* aFrame,
 
   // If some transform-like properties have animations, but others not, and
   // those non-animating transform-like properties have non-none
-  // transform/translate/rotate/scale styles, we also pass their styles into
-  // the compositor, so the final transform matrix (on the compositor) could
-  // take them into account.
+  // transform/translate/rotate/scale styles or non-initial value for motion
+  // path properties, we also pass their styles into the compositor, so the
+  // final transform matrix (on the compositor) could take them into account.
   if (hasMultipleTransformLikeProperties &&
       // For these cases we don't need to send the property style values to
       // the compositor:

@@ -1656,6 +1656,12 @@ class GFX2D_API Factory {
                                                        SurfaceFormat aFormat);
 
   /**
+   * Create a simple PathBuilder, which uses SKIA backend. If USE_SKIA is not
+   * defined, this returns nullptr;
+   */
+  static already_AddRefed<PathBuilder> CreateSimplePathBuilder();
+
+  /**
    * Create a DrawTarget that captures the drawing commands to eventually be
    * replayed onto the DrawTarget provided. An optional byte size can be
    * provided as a limit for the CaptureCommandList. When the limit is reached,

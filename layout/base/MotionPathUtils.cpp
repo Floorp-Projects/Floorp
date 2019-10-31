@@ -10,6 +10,7 @@
 #include "mozilla/dom/SVGPathData.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Matrix.h"
+#include "mozilla/layers/LayersMessages.h"
 #include "mozilla/RefPtr.h"
 #include "nsIFrame.h"
 #include "nsStyleTransformMatrix.h"
@@ -48,6 +49,10 @@ RayReferenceData::RayReferenceData(const nsIFrame* aFrame) {
 
 static already_AddRefed<gfx::Path> BuildPath(
     const Span<const StylePathCommand>& aPath, gfx::PathBuilder* aPathBuilder) {
+  if (!aPathBuilder) {
+    return nullptr;
+  }
+
   return SVGPathData::BuildPath(aPath, aPathBuilder,
                                 NS_STYLE_STROKE_LINECAP_BUTT, 0.0);
 }
@@ -501,6 +506,133 @@ Maybe<MotionPathData> MotionPathUtils::ResolveMotionPath(
       CSSSize::FromAppUnits(nsSize(refBox.Width(), refBox.Height())),
       tweakForSVGLayout ? Some(CSSPoint::FromAppUnits(aFrame->GetPosition()))
                         : Nothing());
+}
+
+/* static */
+Maybe<MotionPathData> MotionPathUtils::ResolveMotionPath(
+    const StyleOffsetPath* aPath, const StyleLengthPercentage* aDistance,
+    const StyleOffsetRotate* aRotate, const StylePositionOrAuto* aAnchor,
+    const layers::TransformData& aTransformData) {
+  if (!aPath) {
+    return Nothing();
+  }
+
+  auto zeroOffsetDistance = LengthPercentage::Zero();
+  auto autoOffsetRotate = StyleOffsetRotate{true, StyleAngle::Zero()};
+  auto autoOffsetAnchor = StylePositionOrAuto::Auto();
+  Maybe<CSSPoint> framePosition =
+      Some(aTransformData.motionPathFramePosition());
+
+  auto generateOffsetPathData = [&](const StyleOffsetPath& aPath) {
+    switch (aPath.tag) {
+      case StyleOffsetPath::Tag::Path: {
+        // FIXME: Perhaps we need a PathBuilder which is independent on the
+        // backend.
+        RefPtr<gfx::PathBuilder> builder =
+            gfxPlatform::Initialized()
+                ? gfxPlatform::GetPlatform()
+                      ->ScreenReferenceDrawTarget()
+                      ->CreatePathBuilder(gfx::FillRule::FILL_WINDING)
+                : gfx::Factory::CreateSimplePathBuilder();
+        return OffsetPathData::Path(aPath.AsPath(), builder);
+      }
+      case StyleOffsetPath::Tag::Ray:
+        return OffsetPathData::Ray(aPath.AsRay(),
+                                   aTransformData.motionPathRayReferenceData());
+      case StyleOffsetPath::Tag::None:
+      default:
+        return OffsetPathData::None();
+    }
+  };
+
+  return MotionPathUtils::ResolveMotionPath(
+      generateOffsetPathData(*aPath),
+      aDistance ? *aDistance : zeroOffsetDistance,
+      aRotate ? *aRotate : autoOffsetRotate,
+      aAnchor ? *aAnchor : autoOffsetAnchor, aTransformData.motionPathOrigin(),
+      CSSSize::FromAppUnits(aTransformData.bounds().Size()),
+      // The frame position is (0, 0) if we don't have to tweak, so using
+      // Some() is fine.
+      Some(aTransformData.motionPathFramePosition()));
+}
+
+/* static */
+nsTArray<layers::PathCommand>
+MotionPathUtils::NormalizeAndConvertToPathCommands(
+    const StyleSVGPathData& aPath) {
+  // Normalization
+  StyleSVGPathData n;
+  Servo_SVGPathData_Normalize(&aPath, &n);
+
+  auto asPoint = [](const StyleCoordPair& aPair) {
+    return gfx::Point(aPair._0, aPair._1);
+  };
+
+  // Converstion
+  nsTArray<layers::PathCommand> commands;
+  for (const StylePathCommand& command : n._0.AsSpan()) {
+    switch (command.tag) {
+      case StylePathCommand::Tag::ClosePath:
+        commands.AppendElement(mozilla::null_t());
+        break;
+      case StylePathCommand::Tag::MoveTo: {
+        const auto& p = command.AsMoveTo().point;
+        commands.AppendElement(layers::MoveTo(asPoint(p)));
+        break;
+      }
+      case StylePathCommand::Tag::LineTo: {
+        const auto& p = command.AsLineTo().point;
+        commands.AppendElement(layers::LineTo(asPoint(p)));
+        break;
+      }
+      case StylePathCommand::Tag::HorizontalLineTo: {
+        const auto& h = command.AsHorizontalLineTo();
+        commands.AppendElement(layers::HorizontalLineTo(h.x));
+        break;
+      }
+      case StylePathCommand::Tag::VerticalLineTo: {
+        const auto& v = command.AsVerticalLineTo();
+        commands.AppendElement(layers::VerticalLineTo(v.y));
+        break;
+      }
+      case StylePathCommand::Tag::CurveTo: {
+        const auto& curve = command.AsCurveTo();
+        commands.AppendElement(layers::CurveTo(asPoint(curve.control1),
+                                               asPoint(curve.control2),
+                                               asPoint(curve.point)));
+        break;
+      }
+      case StylePathCommand::Tag::SmoothCurveTo: {
+        const auto& curve = command.AsSmoothCurveTo();
+        commands.AppendElement(layers::SmoothCurveTo(asPoint(curve.control2),
+                                                     asPoint(curve.point)));
+        break;
+      }
+      case StylePathCommand::Tag::QuadBezierCurveTo: {
+        const auto& curve = command.AsQuadBezierCurveTo();
+        commands.AppendElement(layers::QuadBezierCurveTo(
+            asPoint(curve.control1), asPoint(curve.point)));
+        break;
+      }
+      case StylePathCommand::Tag::SmoothQuadBezierCurveTo: {
+        const auto& curve = command.AsSmoothCurveTo();
+        commands.AppendElement(
+            layers::SmoothQuadBezierCurveTo(asPoint(curve.point)));
+        break;
+      }
+      case StylePathCommand::Tag::EllipticalArc: {
+        const auto& arc = command.AsEllipticalArc();
+        gfx::Point point = asPoint(arc.point);
+        commands.AppendElement(layers::EllipticalArc(arc.rx, arc.ry, arc.angle,
+                                                     arc.large_arc_flag._0,
+                                                     arc.sweep_flag._0, point));
+        break;
+      }
+      case StylePathCommand::Tag::Unknown:
+        MOZ_ASSERT_UNREACHABLE("Unsupported path command");
+    }
+  }
+  return commands;
 }
 
 }  // namespace mozilla

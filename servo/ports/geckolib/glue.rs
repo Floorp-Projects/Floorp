@@ -840,6 +840,50 @@ pub unsafe extern "C" fn Servo_AnimationValue_GetTransform(
 }
 
 #[no_mangle]
+pub unsafe extern "C" fn Servo_AnimationValue_GetOffsetPath(
+    value: &RawServoAnimationValue,
+) -> *const computed::motion::OffsetPath {
+    let value = AnimationValue::as_arc(&value);
+    match **value {
+        AnimationValue::OffsetPath(ref value) => value,
+        _ => unreachable!("Expected offset-path"),
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_AnimationValue_GetOffsetDistance(
+    value: &RawServoAnimationValue,
+) -> *const computed::LengthPercentage {
+    let value = AnimationValue::as_arc(&value);
+    match **value {
+        AnimationValue::OffsetDistance(ref value) => value,
+        _ => unreachable!("Expected offset-distance"),
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_AnimationValue_GetOffsetRotate(
+    value: &RawServoAnimationValue,
+) -> *const computed::motion::OffsetRotate {
+    let value = AnimationValue::as_arc(&value);
+    match **value {
+        AnimationValue::OffsetRotate(ref value) => value,
+        _ => unreachable!("Expected offset-rotate"),
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_AnimationValue_GetOffsetAnchor(
+    value: &RawServoAnimationValue,
+) -> *const computed::position::PositionOrAuto {
+    let value = AnimationValue::as_arc(&value);
+    match **value {
+        AnimationValue::OffsetAnchor(ref value) => value,
+        _ => unreachable!("Expected offset-anchor"),
+    }
+}
+
+#[no_mangle]
 pub unsafe extern "C" fn Servo_AnimationValue_Rotate(
     r: &computed::Rotate,
 ) -> Strong<RawServoAnimationValue> {
@@ -872,6 +916,56 @@ pub unsafe extern "C" fn Servo_AnimationValue_Transform(
         slice.iter().cloned().collect(),
     )))
     .into_strong()
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_AnimationValue_SVGPath(
+    list: *const specified::svg_path::PathCommand,
+    len: usize,
+) -> Strong<RawServoAnimationValue> {
+    use style::values::generics::motion::OffsetPath;
+    use style::values::specified::SVGPathData;
+
+    let slice = std::slice::from_raw_parts(list, len);
+    Arc::new(AnimationValue::OffsetPath(OffsetPath::Path(SVGPathData(
+        style_traits::arc_slice::ArcSlice::from_iter(slice.iter().cloned()),
+    ))))
+    .into_strong()
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_AnimationValue_RayFunction(
+    r: &generics::motion::RayFunction<computed::Angle>,
+) -> Strong<RawServoAnimationValue> {
+    use style::values::generics::motion::OffsetPath;
+    Arc::new(AnimationValue::OffsetPath(OffsetPath::Ray(r.clone()))).into_strong()
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_AnimationValue_NoneOffsetPath() -> Strong<RawServoAnimationValue> {
+    use style::values::generics::motion::OffsetPath;
+    Arc::new(AnimationValue::OffsetPath(OffsetPath::None)).into_strong()
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_AnimationValue_OffsetDistance(
+    d: &computed::length::LengthPercentage,
+) -> Strong<RawServoAnimationValue> {
+    Arc::new(AnimationValue::OffsetDistance(*d)).into_strong()
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_AnimationValue_OffsetRotate(
+    r: &computed::motion::OffsetRotate,
+) -> Strong<RawServoAnimationValue> {
+    Arc::new(AnimationValue::OffsetRotate(*r)).into_strong()
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_AnimationValue_OffsetAnchor(
+    p: &computed::position::PositionOrAuto,
+) -> Strong<RawServoAnimationValue> {
+    Arc::new(AnimationValue::OffsetAnchor(*p)).into_strong()
 }
 
 #[no_mangle]
@@ -981,6 +1075,14 @@ impl_basic_serde_funcs!(
     Servo_RayFunction_Deserialize,
     generics::motion::RayFunction<computed::Angle>
 );
+
+#[no_mangle]
+pub extern "C" fn Servo_SVGPathData_Normalize(
+    input: &specified::SVGPathData,
+    output: &mut specified::SVGPathData,
+) {
+    *output = input.normalize();
+}
 
 // Return the ComputedValues by a base ComputedValues and the rules.
 fn resolve_rules_for_element_with_context<'a>(
