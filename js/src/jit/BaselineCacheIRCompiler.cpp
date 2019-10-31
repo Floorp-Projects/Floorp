@@ -1875,8 +1875,6 @@ bool BaselineCacheIRCompiler::init(CacheKind kind) {
   return true;
 }
 
-static const size_t MaxOptimizedCacheIRStubs = 16;
-
 static void ResetEnteredCounts(ICFallbackStub* stub) {
   for (ICStubIterator iter = stub->beginChain(); !iter.atEnd(); iter++) {
     switch (iter->kind()) {
@@ -1912,7 +1910,10 @@ ICStub* js::jit::AttachBaselineCacheIRStub(
 
   // Just a sanity check: the caller should ensure we don't attach an
   // unlimited number of stubs.
+#ifdef DEBUG
+  static const size_t MaxOptimizedCacheIRStubs = 16;
   MOZ_ASSERT(stub->numOptimizedStubs() < MaxOptimizedCacheIRStubs);
+#endif
 
   uint32_t stubDataOffset = 0;
   switch (stubKind) {
