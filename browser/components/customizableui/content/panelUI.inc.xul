@@ -285,6 +285,7 @@
           <toolbarbutton id="appMenu-zoomReduce-button"
                          class="subviewbutton subviewbutton-iconic"
                          command="cmd_fullZoomReduce"
+                         data-l10n-id="appmenuitem-zoom-reduce"
                          tooltip="dynamic-shortcut-tooltip"/>
           <toolbarbutton id="appMenu-zoomReset-button"
                          class="subviewbutton"
@@ -293,10 +294,12 @@
           <toolbarbutton id="appMenu-zoomEnlarge-button"
                          class="subviewbutton subviewbutton-iconic"
                          command="cmd_fullZoomEnlarge"
+                         data-l10n-id="appmenuitem-zoom-enlarge"
                          tooltip="dynamic-shortcut-tooltip"/>
           <toolbarseparator orient="vertical"/>
           <toolbarbutton id="appMenu-fullscreen-button"
                          class="subviewbutton subviewbutton-iconic"
+                         label="&fullScreenCmd.label;"
                          observes="View:FullScreen"
                          type="checkbox"
                          closemenu="auto"
