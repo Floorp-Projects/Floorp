@@ -12,6 +12,7 @@ import android.widget.LinearLayout
 import android.widget.PopupWindow
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
+import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.extensions.LayoutContainer
 import kotlinx.android.synthetic.main.browser_toolbar_popup_window.view.*
 import mozilla.components.browser.domains.autocomplete.ShippedDomainsProvider
@@ -21,6 +22,7 @@ import mozilla.components.browser.toolbar.display.DisplayToolbar
 import mozilla.components.support.ktx.android.util.dpToFloat
 import org.jetbrains.anko.dimen
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.customtabs.CustomTabToolbarMenu
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.theme.ThemeManager
@@ -81,6 +83,11 @@ class BrowserToolbarView(
                 } else {
                     clipboard.text = selectedSession?.url
                 }
+
+                FenixSnackbar.make(view, Snackbar.LENGTH_SHORT)
+                    .setText(view.context.getString(R.string.browser_toolbar_url_copied_to_clipboard_snackbar))
+                    .setAnchorView(view)
+                    .show()
             }
 
             customView.paste.setOnClickListener {

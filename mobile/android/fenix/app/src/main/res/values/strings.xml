@@ -927,7 +927,9 @@
     <string name="browser_toolbar_long_press_popup_paste_and_go">Paste &amp; Go</string>
     <!-- Paste the text in the clipboard -->
     <string name="browser_toolbar_long_press_popup_paste">Paste</string>
-
+    <!-- Snackbar message shown after an URL has been copied to clipboard. -->
+    <string name="browser_toolbar_url_copied_to_clipboard_snackbar">URL copied to clipboard</string>
+  
     <!-- Title text for the Add To Homescreen dialog -->
     <string name="add_to_homescreen_title">Add to Home screen</string>
     <!-- Cancel button text for the Add to Homescreen dialog -->
