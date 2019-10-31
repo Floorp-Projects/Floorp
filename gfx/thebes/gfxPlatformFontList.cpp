@@ -519,6 +519,30 @@ void gfxPlatformFontList::GenerateFontListKey(const nsACString& aKeyName,
   ToLowerCase(aResult);
 }
 
+// Used if a stylo thread wants to trigger InitOtherFamilyNames in the main
+// process: we can't do IPC from the stylo thread so we post this to the main
+// thread instead.
+class InitOtherFamilyNamesForStylo : public mozilla::Runnable {
+ public:
+  explicit InitOtherFamilyNamesForStylo(bool aDeferOtherFamilyNamesLoading)
+      : Runnable("gfxPlatformFontList::InitOtherFamilyNamesForStylo"),
+        mDefer(aDeferOtherFamilyNamesLoading) {}
+
+  NS_IMETHOD Run() override {
+    auto pfl = gfxPlatformFontList::PlatformFontList();
+    auto list = pfl->SharedFontList();
+    if (!list) {
+      return NS_OK;
+    }
+    dom::ContentChild::GetSingleton()->SendInitOtherFamilyNames(
+        list->GetGeneration(), mDefer, &pfl->mOtherFamilyNamesInitialized);
+    return NS_OK;
+  }
+
+ private:
+  bool mDefer;
+};
+
 #define OTHERNAMES_TIMEOUT 200
 
 void gfxPlatformFontList::InitOtherFamilyNames(
@@ -528,9 +552,14 @@ void gfxPlatformFontList::InitOtherFamilyNames(
   }
 
   if (SharedFontList() && !XRE_IsParentProcess()) {
-    dom::ContentChild::GetSingleton()->SendInitOtherFamilyNames(
-        SharedFontList()->GetGeneration(), aDeferOtherFamilyNamesLoading,
-        &mOtherFamilyNamesInitialized);
+    if (NS_IsMainThread()) {
+      dom::ContentChild::GetSingleton()->SendInitOtherFamilyNames(
+          SharedFontList()->GetGeneration(), aDeferOtherFamilyNamesLoading,
+          &mOtherFamilyNamesInitialized);
+    } else {
+      NS_DispatchToMainThread(
+          new InitOtherFamilyNamesForStylo(aDeferOtherFamilyNamesLoading));
+    }
     return;
   }
 
