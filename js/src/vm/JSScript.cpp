@@ -1621,6 +1621,9 @@ void JSScript::resetScriptCounts() {
 void ScriptSourceObject::finalize(JSFreeOp* fop, JSObject* obj) {
   MOZ_ASSERT(fop->onMainThread());
   ScriptSourceObject* sso = &obj->as<ScriptSourceObject>();
+  if (sso->isCanonical()) {
+    sso->source()->finalizeGCData();
+  }
   sso->source()->decref();
 
   // Clear the private value, calling the release hook if necessary.
@@ -2523,6 +2526,7 @@ template bool ScriptSource::assignSource(JSContext* cx,
                                          SourceText<Utf8Unit>& srcBuf);
 
 void ScriptSource::trace(JSTracer* trc) {
+  // This should be kept in sync with ScriptSource::finalizeGCData below.
 #ifdef JS_BUILD_BINAST
   if (data.is<BinAST>()) {
     if (auto& metadata = data.as<BinAST>().metadata) {
@@ -2532,6 +2536,34 @@ void ScriptSource::trace(JSTracer* trc) {
 #else
   MOZ_ASSERT(!data.is<BinAST>());
 #endif  // JS_BUILD_BINAST
+}
+
+void ScriptSource::finalizeGCData() {
+  // This should be kept in sync with ScriptSource::trace above.
+
+  // When the canonical ScriptSourceObject's finalizer runs, this
+  // ScriptSource can no longer be accessed from the main
+  // thread. However, an offthread source compression task may still
+  // hold a reference. We must clean up any GC pointers owned by this
+  // ScriptSource now, because trying to run those prebarriers
+  // offthread later will fail.
+  MOZ_ASSERT(TlsContext.get() && TlsContext.get()->isMainThreadContext());
+
+#ifdef JS_BUILD_BINAST
+  if (hasBinASTSource()) {
+    if (auto& metadata = data.as<BinAST>().metadata) {
+      metadata.reset();
+    }
+  }
+#endif  // JS_BUILD_BINAST
+}
+
+ScriptSource::~ScriptSource() {
+  MOZ_ASSERT(refs == 0);
+
+  // GC pointers must have been cleared earlier, because this destructor could
+  // be called off-thread by SweepCompressionTasks. See above.
+  MOZ_ASSERT_IF(hasBinASTSource(), !data.as<BinAST>().metadata);
 }
 
 static MOZ_MUST_USE bool reallocUniquePtr(UniqueChars& unique, size_t size) {
