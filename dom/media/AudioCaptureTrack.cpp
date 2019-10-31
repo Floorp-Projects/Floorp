@@ -34,7 +34,7 @@ AudioCaptureTrack::AudioCaptureTrack(TrackRate aRate)
       mStarted(false) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_COUNT_CTOR(AudioCaptureTrack);
-  mMixer.AddCallback(this);
+  mMixer.AddCallback(WrapNotNull(this));
 }
 
 AudioCaptureTrack::~AudioCaptureTrack() {
