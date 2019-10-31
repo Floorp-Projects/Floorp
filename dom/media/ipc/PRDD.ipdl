@@ -41,9 +41,11 @@ parent:
 
   async UpdateVar(GfxVarUpdate var);
 
-  async InitVideoBridge(Endpoint<PVideoBridgeChild> endpoint);
+  async CreateVideoBridgeToParentProcess(Endpoint<PVideoBridgeChild> endpoint);
 
 child:
+  // args TBD, sent when init complete. Occurs once, after Init().
+  async InitComplete();
 
   async InitCrashReporter(Shmem shmem, NativeThreadId threadId);
 

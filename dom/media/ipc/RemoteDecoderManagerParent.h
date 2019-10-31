@@ -21,7 +21,7 @@ class RemoteDecoderManagerParent final : public PRemoteDecoderManagerParent {
   static bool CreateForContent(
       Endpoint<PRemoteDecoderManagerParent>&& aEndpoint);
 
-  static bool CreateVideoBridgeToOtherProcess(
+  static bool CreateVideoBridgeToParentProcess(
       Endpoint<layers::PVideoBridgeChild>&& aEndpoint);
 
   // Can be called from any thread
