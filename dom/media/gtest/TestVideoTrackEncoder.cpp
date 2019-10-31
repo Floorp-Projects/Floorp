@@ -331,7 +331,8 @@ TEST(VP8VideoTrackEncoder, TimestampFrameEncode)
   uint64_t totalDuration = 0;
   size_t i = 0;
   for (auto& frame : frames) {
-    EXPECT_EQ(expectedDurations[i++], frame->mDuration);
+    EXPECT_EQ(expectedDurations[i], frame->mDuration);
+    i++;
     totalDuration += frame->mDuration;
   }
   const uint64_t pointThree = (PR_USEC_PER_SEC / 10) * 3;
@@ -380,7 +381,8 @@ TEST(VP8VideoTrackEncoder, DriftingFrameEncode)
   uint64_t totalDuration = 0;
   size_t i = 0;
   for (auto& frame : frames) {
-    EXPECT_EQ(expectedDurations[i++], frame->mDuration);
+    EXPECT_EQ(expectedDurations[i], frame->mDuration);
+    i++;
     totalDuration += frame->mDuration;
   }
   const uint64_t pointSix = (PR_USEC_PER_SEC / 10) * 6;
