@@ -53,7 +53,7 @@ class AltSvcMapping {
                 bool isolated, uint32_t expiresAt,
                 const nsACString& alternateHost, int32_t alternatePort,
                 const nsACString& npnToken,
-                const OriginAttributes& originAttributes, bool aIsHttp3);
+                const OriginAttributes& originAttributes);
 
  public:
   AltSvcMapping(DataStorage* storage, int32_t storageEpoch,
@@ -103,8 +103,6 @@ class AltSvcMapping {
                           const nsACString& topWindowOrigin,
                           const OriginAttributes& originAttributes);
 
-  bool IsHttp3() { return mIsHttp3; }
-
  private:
   virtual ~AltSvcMapping() = default;
   void SyncString(const nsCString& val);
@@ -138,7 +136,6 @@ class AltSvcMapping {
   OriginAttributes mOriginAttributes;
 
   bool mSyncOnlyOnSuccess;
-  bool mIsHttp3;
 };
 
 class AltSvcOverride : public nsIInterfaceRequestor,

@@ -1,9 +1,0 @@
-Use stream events in h3 // grover or dragana?
-harmonize our rust usage:
- - use foo::* or use foo::{bar, baz} and ordering/grouping
- - remove extern crate
- - sort #[derive()] args
-cleanup public API
-write docs for public API
-write docs for everything else
-CI

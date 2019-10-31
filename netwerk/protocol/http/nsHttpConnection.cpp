@@ -44,7 +44,6 @@
 #include "NSSErrorsService.h"
 #include "TunnelUtils.h"
 #include "TCPFastOpenLayer.h"
-#include "Http3Session.h"
 
 namespace mozilla {
 namespace net {
@@ -201,7 +200,6 @@ nsresult nsHttpConnection::Init(
   mConnectedTransport = connectedTransport;
   mConnInfo = info;
   MOZ_ASSERT(mConnInfo);
-
   mLastWriteTime = mLastReadTime = PR_IntervalNow();
   mRtt = rtt;
   mMaxHangTime = PR_SecondsToInterval(maxHangTime);
@@ -209,20 +207,6 @@ nsresult nsHttpConnection::Init(
   mSocketTransport = transport;
   mSocketIn = instream;
   mSocketOut = outstream;
-
-  if (mConnInfo->IsHttp3()) {
-    mHttp3Session = new Http3Session();
-    nsresult rv =
-        mHttp3Session->Init(mConnInfo->GetOrigin(), mSocketTransport, this);
-    if (NS_FAILED(rv)) {
-      LOG(
-          ("nsHttpConnection::Init mHttp3Session->Init failed "
-           "[this=%p rv=%x]\n",
-           this, static_cast<uint32_t>(rv)));
-      return rv;
-    }
-    mTransaction = mHttp3Session;
-  }
 
   // See explanation for non-strictness of this operation in
   // SetSecurityCallbacks.
@@ -456,11 +440,6 @@ bool nsHttpConnection::EnsureNPNComplete(nsresult& aOut0RTTWriteHandshakeValue,
 
   if (mNPNComplete) {
     return true;
-  }
-
-  if (mHttp3Session) {
-    // Use Http3 veersion of EnsureNPNComplete.
-    return EnsureNPNCompleteHttp3();
   }
 
   nsresult rv = NS_OK;
@@ -742,25 +721,6 @@ npnComplete:
   return true;
 }
 
-bool nsHttpConnection::EnsureNPNCompleteHttp3() {
-  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
-
-  LOG(("nsHttpConnection::EnsureNPNCompleteHttp3 [this=%p].", this));
-  mHttp3Session->Process();
-  if (mHttp3Session->IsConnected()) {
-    mNPNComplete = true;
-    mIsReused = true;
-  } else if (mHttp3Session->IsClosing()) {
-    LOG(
-        ("nsHttpConnection::EnsureNPNCompleteHttp3 "
-         "mHttp3Session failed [this=%p rv=%x]",
-         this, static_cast<uint32_t>(mHttp3Session->GetError())));
-    mNPNComplete = true;
-  }
-
-  return mNPNComplete;
-}
-
 nsresult nsHttpConnection::OnTunnelNudged(TLSFilterTransaction* trans) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   LOG(("nsHttpConnection::OnTunnelNudged %p\n", this));
@@ -779,10 +739,7 @@ nsresult nsHttpConnection::Activate(nsAHttpTransaction* trans, uint32_t caps,
         caps));
 
   if (!mExperienced && !trans->IsNullTransaction()) {
-    // For QUIC and TFO we have nsHttpConneciton before the actual connection
-    // has been establish so wait fo TFO and TLS handshake to be finished before
-    // we mark the connection 'experienced'.
-    if (!mFastOpen && mNPNComplete) {
+    if (!mFastOpen) {
       mExperienced = true;
     }
     if (mBootstrappedTimingsSet) {
@@ -803,8 +760,7 @@ nsresult nsHttpConnection::Activate(nsAHttpTransaction* trans, uint32_t caps,
 
   mTransactionCaps = caps;
   mPriority = pri;
-  if (mTransaction &&
-      ((mUsingSpdyVersion != SpdyVersion::NONE) || mHttp3Session)) {
+  if (mTransaction && (mUsingSpdyVersion != SpdyVersion::NONE)) {
     return AddTransaction(trans, pri);
   }
 
@@ -884,15 +840,12 @@ nsresult nsHttpConnection::Activate(nsAHttpTransaction* trans, uint32_t caps,
                             mTransaction->ResponseTimeout() > 0 &&
                             mTransaction->ResponseTimeoutEnabled();
 
-  if (!mHttp3Session) {
-    // Http3 does not need TCP keepalive.
-    rv = StartShortLivedTCPKeepalives();
-    if (NS_FAILED(rv)) {
-      LOG(
-          ("nsHttpConnection::Activate [%p] "
-           "StartShortLivedTCPKeepalives failed rv[0x%" PRIx32 "]",
-           this, static_cast<uint32_t>(rv)));
-    }
+  rv = StartShortLivedTCPKeepalives();
+  if (NS_FAILED(rv)) {
+    LOG(
+        ("nsHttpConnection::Activate [%p] "
+         "StartShortLivedTCPKeepalives failed rv[0x%" PRIx32 "]",
+         this, static_cast<uint32_t>(rv)));
   }
 
   if (mTLSFilter) {
@@ -923,9 +876,6 @@ void nsHttpConnection::SetupSSL() {
   mSetupSSLCalled = true;
 
   if (mNPNComplete) return;
-
-  // For Http3 ssl is setup when Http3Session has been created.
-  if (mHttp3Session) return;
 
   // we flip this back to false if SetNPNList succeeds at the end
   // of this function
@@ -991,9 +941,8 @@ nsresult nsHttpConnection::SetupNPNList(nsISSLSocketControl* ssl,
 nsresult nsHttpConnection::AddTransaction(nsAHttpTransaction* httpTransaction,
                                           int32_t priority) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
-  MOZ_ASSERT((mSpdySession && (mUsingSpdyVersion != SpdyVersion::NONE)) ||
-                 mHttp3Session,
-             "AddTransaction to live http connection without spdy/quic");
+  MOZ_ASSERT(mSpdySession && (mUsingSpdyVersion != SpdyVersion::NONE),
+             "AddTransaction to live http connection without spdy");
 
   // If this is a wild card nshttpconnection (i.e. a spdy proxy) then
   // it is important to start the stream using the specific connection
@@ -1013,23 +962,14 @@ nsresult nsHttpConnection::AddTransaction(nsAHttpTransaction* httpTransaction,
     MOZ_ASSERT(!isWebsocket || !needTunnel, "Websocket and tunnel?!");
   }
 
-  LOG(("nsHttpConnection::AddTransaction for %s%s",
-       mSpdySession ? "SPDY" : "QUIC",
+  LOG(("nsHttpConnection::AddTransaction for SPDY%s",
        needTunnel ? " over tunnel" : (isWebsocket ? " websocket" : "")));
 
-  if (mSpdySession) {
-    if (!mSpdySession->AddStream(httpTransaction, priority, needTunnel,
-                                 isWebsocket, mCallbacks)) {
-      MOZ_ASSERT(false);  // this cannot happen!
-      httpTransaction->Close(NS_ERROR_ABORT);
-      return NS_ERROR_FAILURE;
-    }
-  } else {
-    if (!mHttp3Session->AddStream(httpTransaction, priority, mCallbacks)) {
-      MOZ_ASSERT(false);  // this cannot happen!
-      httpTransaction->Close(NS_ERROR_ABORT);
-      return NS_ERROR_FAILURE;
-    }
+  if (!mSpdySession->AddStream(httpTransaction, priority, needTunnel,
+                               isWebsocket, mCallbacks)) {
+    MOZ_ASSERT(false);  // this cannot happen!
+    httpTransaction->Close(NS_ERROR_ABORT);
+    return NS_ERROR_FAILURE;
   }
 
   Unused << ResumeSend();
@@ -1142,12 +1082,7 @@ void nsHttpConnection::DontReuse() {
   mKeepAlive = false;
   mDontReuse = true;
   mIdleTimeout = 0;
-  if (mSpdySession) {
-    mSpdySession->DontReuse();
-  }
-  if (mHttp3Session) {
-    mHttp3Session->DontReuse();
-  }
+  if (mSpdySession) mSpdySession->DontReuse();
 }
 
 bool nsHttpConnection::TestJoinConnection(const nsACString& hostname,
@@ -1155,11 +1090,6 @@ bool nsHttpConnection::TestJoinConnection(const nsACString& hostname,
   if (mSpdySession && CanDirectlyActivate()) {
     return mSpdySession->TestJoinConnection(hostname, port);
   }
-
-  if (mHttp3Session && CanDirectlyActivate()) {
-    return mHttp3Session->TestJoinConnection(hostname, port);
-  }
-
   return false;
 }
 
@@ -1168,11 +1098,6 @@ bool nsHttpConnection::JoinConnection(const nsACString& hostname,
   if (mSpdySession && CanDirectlyActivate()) {
     return mSpdySession->JoinConnection(hostname, port);
   }
-
-  if (mHttp3Session && CanDirectlyActivate()) {
-    return mHttp3Session->JoinConnection(hostname, port);
-  }
-
   return false;
 }
 
@@ -1189,12 +1114,9 @@ bool nsHttpConnection::CanReuse() {
   bool canReuse;
   if (mSpdySession) {
     canReuse = mSpdySession->CanReuse();
-  } else if (mHttp3Session) {
-    canReuse = mHttp3Session->CanReuse();
   } else {
     canReuse = IsKeepAlive();
   }
-
   canReuse = canReuse && (IdleTime() < mIdleTimeout) && IsAlive();
 
   // An idle persistent connection should not have data waiting to be read
@@ -1204,7 +1126,7 @@ bool nsHttpConnection::CanReuse() {
 
   uint64_t dataSize;
   if (canReuse && mSocketIn && (mUsingSpdyVersion == SpdyVersion::NONE) &&
-      !mHttp3Session && mHttp1xTransactionCount &&
+      mHttp1xTransactionCount &&
       NS_SUCCEEDED(mSocketIn->Available(&dataSize)) && dataSize) {
     LOG(
         ("nsHttpConnection::CanReuse %p %s"
@@ -1220,17 +1142,13 @@ bool nsHttpConnection::CanDirectlyActivate() {
   // time through Activate(). In practice this means this is a healthy SPDY
   // connection with room for more concurrent streams.
 
-  if (mHttp3Session) {
-    return CanReuse();
-  }
   return UsingSpdy() && CanReuse() && mSpdySession &&
          mSpdySession->RoomForMoreStreams();
 }
 
 PRIntervalTime nsHttpConnection::IdleTime() {
   return mSpdySession ? mSpdySession->IdleTime()
-                      : mHttp3Session ? mHttp3Session->IdleTime()
-                                      : (PR_IntervalNow() - mLastReadTime);
+                      : (PR_IntervalNow() - mLastReadTime);
 }
 
 // returns the number of seconds left before the allowable idle period
@@ -1255,13 +1173,6 @@ uint32_t nsHttpConnection::TimeToLive() {
 
 bool nsHttpConnection::IsAlive() {
   if (!mSocketTransport || !mConnectedTransport) return false;
-
-  if (mConnInfo->IsHttp3()) {
-    if (mHttp3Session) {
-      return true;
-    }
-    return false;
-  }
 
   // SocketTransport::IsAlive can run the SSL state machine, so make sure
   // the NPN options are set before that happens.
@@ -1399,9 +1310,8 @@ nsresult nsHttpConnection::OnHeadersAvailable(nsAHttpTransaction* trans,
   }
 
   if (!foundKeepAliveMax && mRemainingConnectionUses &&
-      ((mUsingSpdyVersion == SpdyVersion::NONE) && !mHttp3Session)) {
+      (mUsingSpdyVersion == SpdyVersion::NONE))
     --mRemainingConnectionUses;
-  }
 
   // If we're doing a proxy connect, we need to check whether or not
   // it was successful.  If so, we have to reset the transaction and step-up
@@ -1467,7 +1377,7 @@ nsresult nsHttpConnection::OnHeadersAvailable(nsAHttpTransaction* trans,
   // Also allow persistent conn for h2, as we don't want to waste connections
   // for multiplexed upgrades.
   if (!itWasProxyConnect && hasUpgradeReq && responseStatus != 401 &&
-      responseStatus != 407 && !mSpdySession && !mHttp3Session) {
+      responseStatus != 407 && !mSpdySession) {
     LOG(("HTTP Upgrade in play - disable keepalive for http/1.x\n"));
     DontReuse();
   }
@@ -1571,13 +1481,6 @@ uint32_t nsHttpConnection::ReadTimeoutTick(PRIntervalTime now) {
     return mSpdySession->ReadTimeoutTick(now);
   }
 
-  if (mHttp3Session && mNPNComplete) {
-    // After tls has been done, Http3Session will handle connection
-    // timeouts on its own.
-    // During tls handshake use nsHttpConnection timeouts.
-    return mHttp3Session->ReadTimeoutTick(now);
-  }
-
   uint32_t nextTickAfter = UINT32_MAX;
   // Timeout if the response is taking too long to arrive.
   if (mResponseTimeoutEnabled) {
@@ -1646,8 +1549,7 @@ void nsHttpConnection::UpdateTCPKeepalive(nsITimer* aTimer, void* aClosure) {
 
   nsHttpConnection* self = static_cast<nsHttpConnection*>(aClosure);
 
-  if (NS_WARN_IF((self->mUsingSpdyVersion != SpdyVersion::NONE) ||
-                 self->mHttp3Session)) {
+  if (NS_WARN_IF(self->mUsingSpdyVersion != SpdyVersion::NONE)) {
     return;
   }
 
@@ -1865,7 +1767,6 @@ void nsHttpConnection::BeginIdleMonitoring() {
   MOZ_ASSERT(!mTransaction, "BeginIdleMonitoring() while active");
   MOZ_ASSERT(mUsingSpdyVersion == SpdyVersion::NONE,
              "Idle monitoring of spdy not allowed");
-  MOZ_ASSERT(!mHttp3Session, "Idle monitoring of http3 not allowed");
 
   LOG(("Entering Idle Monitoring Mode [this=%p]", this));
   mIdleMonitoring = true;
@@ -1887,9 +1788,6 @@ void nsHttpConnection::EndIdleMonitoring() {
 HttpVersion nsHttpConnection::Version() {
   if (mUsingSpdyVersion != SpdyVersion::NONE) {
     return nsHttp::GetHttpVersionFromSpdy(mUsingSpdyVersion);
-  }
-  if (mHttp3Session) {
-    return HttpVersion::v3_0;
   }
   return mLastHttpResponseVersion;
 }
@@ -1920,10 +1818,6 @@ void nsHttpConnection::CloseTransaction(nsAHttpTransaction* trans,
     mSpdySession->SetCleanShutdown(aIsShutdown);
     mUsingSpdyVersion = SpdyVersion::NONE;
     mSpdySession = nullptr;
-  } else if (mHttp3Session) {
-    DontReuse();
-    mHttp3Session->SetCleanShutdown(aIsShutdown);
-    mHttp3Session = nullptr;
   }
 
   if (!mTransaction && mTLSFilter && gHttpHandler->Bug1556491()) {
@@ -1981,7 +1875,6 @@ nsresult nsHttpConnection::ReadFromStream(nsIInputStream* input, void* closure,
 
 nsresult nsHttpConnection::OnReadSegment(const char* buf, uint32_t count,
                                          uint32_t* countRead) {
-  LOG(("nsHttpConnection::OnReadSegment [this=%p]\n", this));
   if (count == 0) {
     // some ReadSegments implementations will erroneously call the writer
     // to consume 0 bytes worth of data.  we must protect against this case
@@ -2220,13 +2113,6 @@ nsresult nsHttpConnection::OnSocketReadable() {
   uint32_t n;
   bool again = true;
 
-  if (mHttp3Session && !mNPNComplete) {
-    // We are still doing handshake. TLS/TCP change poll flags therefore they
-    // only trigger OnSocketWritable. Http3/Quic do not do that so imitate
-    // behavior here.
-    return OnSocketWritable();
-  }
-
   do {
     if (!mProxyConnectInProgress && !mNPNComplete) {
       // Unless we are setting up a tunnel via CONNECT, prevent reading
@@ -2409,7 +2295,7 @@ nsresult nsHttpConnection::SetupProxyConnect() {
 }
 
 nsresult nsHttpConnection::StartShortLivedTCPKeepalives() {
-  if ((mUsingSpdyVersion != SpdyVersion::NONE) || mHttp3Session) {
+  if (mUsingSpdyVersion != SpdyVersion::NONE) {
     return NS_OK;
   }
   MOZ_ASSERT(mSocketTransport);
@@ -2484,10 +2370,7 @@ nsresult nsHttpConnection::StartShortLivedTCPKeepalives() {
 nsresult nsHttpConnection::StartLongLivedTCPKeepalives() {
   MOZ_ASSERT(mUsingSpdyVersion == SpdyVersion::NONE,
              "Don't use TCP Keepalive with SPDY!");
-  MOZ_ASSERT(
-      !mHttp3Session,
-      "Don't use TCP Keepalive with Http3, we don not have TCP connection!");
-  if (NS_WARN_IF((mUsingSpdyVersion != SpdyVersion::NONE) || mHttp3Session)) {
+  if (NS_WARN_IF(mUsingSpdyVersion != SpdyVersion::NONE)) {
     return NS_OK;
   }
   MOZ_ASSERT(mSocketTransport);
@@ -2677,8 +2560,8 @@ void nsHttpConnection::CheckForTraffic(bool check) {
       } else {
         LOG((" SendPing skipped due to network activity\n"));
       }
-    } else if (!mHttp3Session) {
-      // If not SPDY/Http3, Store snapshot amount of data right now
+    } else {
+      // If not SPDY, Store snapshot amount of data right now
       mTrafficCount = mTotalBytesWritten + mTotalBytesRead;
       mTrafficStamp = true;
     }
