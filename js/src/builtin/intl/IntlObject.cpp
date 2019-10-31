@@ -644,11 +644,7 @@ bool js::intl_BestAvailableLocale(JSContext* cx, unsigned argc, Value* vp) {
         cx, ok, intl::LanguageTagParser::tryParse(cx, locale, tag));
     MOZ_ASSERT(ok, "locale is a structurally valid language tag");
 
-    auto isUnicodeExtension = [](const auto& extension) {
-      return extension[0] == 'u';
-    };
-    MOZ_ASSERT(std::none_of(tag.extensions().begin(), tag.extensions().end(),
-                            isUnicodeExtension),
+    MOZ_ASSERT(!tag.unicodeExtension(),
                "locale must contain no Unicode extensions");
 
     if (!tag.canonicalize(
