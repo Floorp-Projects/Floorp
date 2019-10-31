@@ -132,12 +132,20 @@ void js::PluralRulesObject::finalize(JSFreeOp* fop, JSObject* obj) {
 
   if (pr) {
     uplrules_close(pr);
+
+    intl::RemoveICUCellMemory(
+        fop, obj, PluralRulesObject::UPluralRulesEstimatedMemoryUse);
   }
   if (nf) {
     unumf_close(nf);
+
+    intl::RemoveICUCellMemory(
+        fop, obj, PluralRulesObject::UNumberFormatterEstimatedMemoryUse);
   }
   if (formatted) {
     unumf_closeResult(formatted);
+
+    // UFormattedNumber memory tracked as part of UNumberFormatter.
   }
 }
 
@@ -303,6 +311,9 @@ bool js::intl_SelectPluralRule(JSContext* cx, unsigned argc, Value* vp) {
       return false;
     }
     pluralRules->setPluralRules(pr);
+
+    intl::AddICUCellMemory(pluralRules,
+                           PluralRulesObject::UPluralRulesEstimatedMemoryUse);
   }
 
   // Obtain a cached UNumberFormat object.
@@ -313,6 +324,9 @@ bool js::intl_SelectPluralRule(JSContext* cx, unsigned argc, Value* vp) {
       return false;
     }
     pluralRules->setNumberFormatter(nf);
+
+    intl::AddICUCellMemory(
+        pluralRules, PluralRulesObject::UNumberFormatterEstimatedMemoryUse);
   }
 
   // Obtain a cached UFormattedNumber object.
@@ -323,6 +337,8 @@ bool js::intl_SelectPluralRule(JSContext* cx, unsigned argc, Value* vp) {
       return false;
     }
     pluralRules->setFormattedNumber(formatted);
+
+    // UFormattedNumber memory tracked as part of UNumberFormatter.
   }
 
   UErrorCode status = U_ZERO_ERROR;
@@ -359,6 +375,9 @@ bool js::intl_GetPluralCategories(JSContext* cx, unsigned argc, Value* vp) {
       return false;
     }
     pluralRules->setPluralRules(pr);
+
+    intl::AddICUCellMemory(pluralRules,
+                           PluralRulesObject::UPluralRulesEstimatedMemoryUse);
   }
 
   UErrorCode status = U_ZERO_ERROR;
