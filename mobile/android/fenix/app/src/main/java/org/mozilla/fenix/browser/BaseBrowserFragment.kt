@@ -10,6 +10,7 @@ import android.content.pm.ActivityInfo
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -74,6 +75,7 @@ import org.mozilla.fenix.components.toolbar.ToolbarIntegration
 import org.mozilla.fenix.downloads.DownloadService
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.enterToImmersiveMode
+import org.mozilla.fenix.ext.getDimenInDip
 import org.mozilla.fenix.ext.getRootView
 import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.nav
@@ -261,6 +263,13 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler, SessionManager.Obs
                     downloadManager = FetchDownloadManager(
                         context.applicationContext,
                         DownloadService::class
+                    ),
+                    promptsStyling = DownloadsFeature.PromptsStyling(
+                        gravity = Gravity.BOTTOM,
+                        shouldWidthMatchParent = true,
+                        positiveButtonBackgroundColor = ThemeManager.resolveAttribute(R.attr.accent, context),
+                        positiveButtonTextColor = ThemeManager.resolveAttribute(R.attr.primaryText, context),
+                        positiveButtonRadius = context.getDimenInDip(R.dimen.tab_corner_radius)
                     ),
                     onNeedToRequestPermissions = { permissions ->
                         requestPermissions(permissions, REQUEST_CODE_DOWNLOAD_PERMISSIONS)
