@@ -91,9 +91,6 @@ abstract class AbstractFetchDownloadService : Service() {
                     }
 
                     ACTION_RESUME -> {
-                        NotificationManagerCompat.from(context).cancel(
-                            currentDownloadJobState.foregroundServiceId
-                        )
                         currentDownloadJobState.status = DownloadJobStatus.ACTIVE
 
                         currentDownloadJobState.job = CoroutineScope(IO).launch {
@@ -102,8 +99,11 @@ abstract class AbstractFetchDownloadService : Service() {
                     }
 
                     ACTION_CANCEL -> {
+                        NotificationManagerCompat.from(context).cancel(
+                            currentDownloadJobState.foregroundServiceId
+                        )
                         currentDownloadJobState.status = DownloadJobStatus.CANCELLED
-                        stopForeground(true)
+
                         currentDownloadJobState.job?.cancel()
                     }
 
@@ -219,8 +219,7 @@ abstract class AbstractFetchDownloadService : Service() {
             download
         )
 
-        // We want to startForeground so that the system is less likely to kill our service under memory pressure.
-        startForeground(
+        NotificationManagerCompat.from(context).notify(
             downloadJobs[download.id]?.foregroundServiceId ?: 0,
             ongoingDownloadNotification
         )
