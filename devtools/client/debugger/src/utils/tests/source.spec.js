@@ -536,10 +536,10 @@ describe("sources", () => {
   });
 
   describe("isUrlExtension", () => {
-    it("should detect mozilla extenstion", () => {
+    it("should detect mozilla extension", () => {
       expect(isUrlExtension("moz-extension://id/js/content.js")).toBe(true);
     });
-    it("should detect chrome extenstion", () => {
+    it("should detect chrome extension", () => {
       expect(isUrlExtension("chrome-extension://id/js/content.js")).toBe(true);
     });
     it("should return false for non-extension assets", () => {
@@ -548,13 +548,13 @@ describe("sources", () => {
   });
 
   describe("isExtensionDirectoryPath", () => {
-    it("should detect mozilla extenstion directory", () => {
+    it("should detect mozilla extension directory", () => {
       expect(isExtensionDirectoryPath("moz-extension://id")).toBe(true);
     });
-    it("should detect chrome extenstion directory", () => {
+    it("should detect chrome extension directory", () => {
       expect(isExtensionDirectoryPath("chrome-extension://id")).toBe(true);
     });
-    it("should return false for child file within the extenstion directory", () => {
+    it("should return false for child file within the extension directory", () => {
       expect(isExtensionDirectoryPath("moz-extension://id/js/content.js")).toBe(
         false
       );
