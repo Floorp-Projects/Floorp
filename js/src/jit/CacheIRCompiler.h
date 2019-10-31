@@ -100,6 +100,21 @@ class IonCacheIRCompiler;
   _(DoubleIncResult)                      \
   _(DoubleDecResult)                      \
   _(DoubleNegationResult)                 \
+  _(BigIntAddResult)                      \
+  _(BigIntSubResult)                      \
+  _(BigIntMulResult)                      \
+  _(BigIntDivResult)                      \
+  _(BigIntModResult)                      \
+  _(BigIntPowResult)                      \
+  _(BigIntBitOrResult)                    \
+  _(BigIntBitXorResult)                   \
+  _(BigIntBitAndResult)                   \
+  _(BigIntLeftShiftResult)                \
+  _(BigIntRightShiftResult)               \
+  _(BigIntNegationResult)                 \
+  _(BigIntNotResult)                      \
+  _(BigIntIncResult)                      \
+  _(BigIntDecResult)                      \
   _(TruncateDoubleToUInt32)               \
   _(LoadArgumentsObjectLengthResult)      \
   _(LoadFunctionLengthResult)             \
@@ -131,6 +146,8 @@ class IonCacheIRCompiler;
   _(CompareInt32BigIntResult)             \
   _(CompareBigIntNumberResult)            \
   _(CompareNumberBigIntResult)            \
+  _(CompareBigIntStringResult)            \
+  _(CompareStringBigIntResult)            \
   _(CompareObjectUndefinedNullResult)     \
   _(ArrayJoinResult)                      \
   _(StoreTypedElement)                    \
@@ -145,6 +162,7 @@ class IonCacheIRCompiler;
   _(CallInt32ToString)                    \
   _(CallNumberToString)                   \
   _(BooleanToString)                      \
+  _(CallStringConcatResult)               \
   _(CallIsSuspendedGeneratorResult)       \
   _(CallNativeGetElementResult)           \
   _(CallProxyHasPropResult)               \
@@ -905,6 +923,12 @@ class MOZ_RAII CacheIRCompiler {
                                           Register scratch1, Register scratch2,
                                           JSOp op,
                                           const AutoOutputRegister& output);
+
+  template <typename Fn, Fn fn>
+  MOZ_MUST_USE bool emitBigIntBinaryOperationShared();
+
+  template <typename Fn, Fn fn>
+  MOZ_MUST_USE bool emitBigIntUnaryOperationShared();
 
   bool emitDoubleIncDecResult(bool isInc);
 
