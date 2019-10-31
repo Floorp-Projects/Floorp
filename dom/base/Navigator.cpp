@@ -1402,7 +1402,8 @@ Promise* Navigator::Share(const ShareData& aData, ErrorResult& aRv) {
   // The spec does the "triggered by user activation" after the data checks.
   // Unfortunately, both Chrome and Safari behave this way, so interop wins.
   // https://github.com/w3c/web-share/pull/118
-  if (StaticPrefs::dom_webshare_requireinteraction() && !UserActivation::IsHandlingUserInput()) {
+  if (StaticPrefs::dom_webshare_requireinteraction() &&
+      !UserActivation::IsHandlingUserInput()) {
     NS_WARNING("Attempt to share not triggered by user activation");
     aRv.Throw(NS_ERROR_DOM_NOT_ALLOWED_ERR);
     return nullptr;
@@ -1486,6 +1487,7 @@ already_AddRefed<Promise> Navigator::GetVRDisplays(ErrorResult& aRv) {
   }
 
   RefPtr<Navigator> self(this);
+#ifndef MOZ_WIDGET_ANDROID
   RefPtr<BrowserChild> browser(BrowserChild::GetFrom(mWindow));
   int browserID = browser->ChromeOuterWindowID();
 
@@ -1493,6 +1495,7 @@ already_AddRefed<Promise> Navigator::GetVRDisplays(ErrorResult& aRv) {
       GetCurrentThreadSerialEventTarget(), __func__,
       [self, p](bool isSupportedLambda) {
         if (isSupportedLambda) {
+#endif
           nsGlobalWindowInner* win = nsGlobalWindowInner::Cast(self->mWindow);
           win->NotifyVREventListenerAdded();
           // We pass mWindow's id to RefreshVRDisplays, so
@@ -1506,6 +1509,7 @@ already_AddRefed<Promise> Navigator::GetVRDisplays(ErrorResult& aRv) {
 
             self->mVRGetDisplaysPromises.AppendElement(p);
           }
+#ifndef MOZ_WIDGET_ANDROID
         } else {
           // WebVR in this window is not supported, so resolve the promise
           // with no displays available
@@ -1516,6 +1520,7 @@ already_AddRefed<Promise> Navigator::GetVRDisplays(ErrorResult& aRv) {
       [](const mozilla::ipc::ResponseRejectReason) {
         MOZ_CRASH("Failed to make IPC call to IsWindowSupportingWebVR");
       });
+#endif
 
   return p.forget();
 }
