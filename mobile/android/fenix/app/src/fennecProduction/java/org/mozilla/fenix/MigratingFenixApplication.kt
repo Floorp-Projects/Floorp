@@ -23,10 +23,11 @@ class MigratingFenixApplication : FenixApplication() {
             return
         }
 
-        val migrator = FennecMigrator.Builder(this)
+        val migrator = FennecMigrator.Builder(this, this.components.analytics.crashReporter)
             .migrateOpenTabs(this.components.core.sessionManager)
             .migrateHistory(this.components.core.historyStorage)
             .migrateBookmarks(this.components.core.bookmarksStorage)
+            .migrateFxa(this.components.backgroundServices.accountManager)
             .build()
 
         migrator.migrateAsync()
