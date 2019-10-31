@@ -123,6 +123,32 @@ add_task(async () => {
           "Picture-in-Picture should be unchecked."
         );
         await closeContextMenu(menu);
+
+        // Due to bug 1592539, we're hiding the Picture-in-Picture
+        // context menu item for <video> elements that have srcObject
+        // set to anything but null.
+        await ContentTask.spawn(browser, videoID, async videoID => {
+          // Construct a new video element, and capture a stream from it
+          // to redirect to the video that we're testing.
+          let newVideo = content.document.createElement("video");
+          content.document.body.appendChild(newVideo);
+
+          let testedVideo = content.document.getElementById(videoID);
+          newVideo.src = testedVideo.src;
+
+          testedVideo.srcObject = newVideo.mozCaptureStream();
+          await newVideo.play();
+          await testedVideo.play();
+
+          await newVideo.pause();
+          await testedVideo.pause();
+        });
+        menu = await openContextMenu(browser, videoID);
+        Assert.ok(
+          menuItem.hidden,
+          "Should not be showing Picture-in-Picture menu item."
+        );
+        await closeContextMenu(menu);
       }
     );
   }

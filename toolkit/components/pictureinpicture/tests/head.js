@@ -288,7 +288,7 @@ async function testToggle(testURL, expectations, prepFn = async () => {}) {
       await prepFn(browser);
       await ensureVideosReady(browser);
 
-      for (let [videoID, canToggle] of Object.entries(expectations)) {
+      for (let [videoID, { canToggle }] of Object.entries(expectations)) {
         await SimpleTest.promiseFocus(browser);
         info(`Testing video with id: ${videoID}`);
 
@@ -333,8 +333,10 @@ async function testToggleHelper(browser, videoID, canToggle) {
     browser
   );
 
-  info("Waiting for toggle to become visible");
-  await toggleOpacityReachesThreshold(browser, videoID, HOVER_VIDEO_OPACITY);
+  if (canToggle) {
+    info("Waiting for toggle to become visible");
+    await toggleOpacityReachesThreshold(browser, videoID, HOVER_VIDEO_OPACITY);
+  }
 
   info("Hovering the toggle rect now.");
   // The toggle center, because of how it slides out, is actually outside
@@ -359,7 +361,10 @@ async function testToggleHelper(browser, videoID, canToggle) {
     browser
   );
 
-  await toggleOpacityReachesThreshold(browser, videoID, HOVER_TOGGLE_OPACITY);
+  if (canToggle) {
+    info("Waiting for toggle to reach full opacity");
+    await toggleOpacityReachesThreshold(browser, videoID, HOVER_TOGGLE_OPACITY);
+  }
 
   // First, ensure that a non-primary mouse click is ignored.
   info("Right-clicking on toggle.");
@@ -371,9 +376,16 @@ async function testToggleHelper(browser, videoID, canToggle) {
     browser
   );
 
-  // For videos without the built-in controls, we expect that all mouse events
-  // should have fired - otherwise, the events are all suppressed.
-  await assertSawMouseEvents(browser, !controls, false);
+  if (canToggle) {
+    // For videos without the built-in controls, we expect that all mouse events
+    // should have fired - otherwise, the events are all suppressed.
+    // Note that the right-click does not result in a "click" event firing.
+    await assertSawMouseEvents(browser, !controls, false);
+  } else {
+    // If we aren't showing the toggle, we expect all mouse events to be seen.
+    // Note that the right-click does not result in a "click" event firing.
+    await assertSawMouseEvents(browser, true, false);
+  }
 
   // The message to open the Picture-in-Picture window would normally be sent
   // immediately before this Promise resolved, so the window should have opened
@@ -418,9 +430,8 @@ async function testToggleHelper(browser, videoID, canToggle) {
       browser
     );
 
-    // For videos without the built-in controls, we expect that all mouse events
-    // should have fired - otherwise, the events are all suppressed.
-    await assertSawMouseEvents(browser, !controls);
+    // If we aren't showing the toggle, we expect all mouse events to be seen.
+    await assertSawMouseEvents(browser, true);
 
     // The message to open the Picture-in-Picture window would normally be sent
     // immediately before this Promise resolved, so the window should have opened
