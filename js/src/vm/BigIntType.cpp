@@ -3173,6 +3173,16 @@ bool BigInt::equal(BigInt* lhs, double rhs) {
   return compare(lhs, rhs) == 0;
 }
 
+JS::Result<bool> BigInt::equal(JSContext* cx, Handle<BigInt*> lhs,
+                               HandleString rhs) {
+  BigInt* rhsBigInt;
+  MOZ_TRY_VAR(rhsBigInt, StringToBigInt(cx, rhs));
+  if (!rhsBigInt) {
+    return false;
+  }
+  return equal(lhs, rhsBigInt);
+}
+
 // BigInt proposal section 3.2.5
 JS::Result<bool> BigInt::looselyEqual(JSContext* cx, HandleBigInt lhs,
                                       HandleValue rhs) {
@@ -3185,13 +3195,8 @@ JS::Result<bool> BigInt::looselyEqual(JSContext* cx, HandleBigInt lhs,
 
   // Steps 6-7.
   if (rhs.isString()) {
-    RootedBigInt rhsBigInt(cx);
     RootedString rhsString(cx, rhs.toString());
-    MOZ_TRY_VAR(rhsBigInt, StringToBigInt(cx, rhsString));
-    if (!rhsBigInt) {
-      return false;
-    }
-    return equal(lhs, rhsBigInt);
+    return equal(cx, lhs, rhsString);
   }
 
   // Steps 8-9 (not applicable).

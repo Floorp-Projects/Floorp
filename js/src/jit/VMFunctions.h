@@ -1177,6 +1177,18 @@ bool BigIntNumberCompare(BigInt* x, double y);
 template <ComparisonKind Kind>
 bool NumberBigIntCompare(double x, BigInt* y);
 
+template <EqualityKind Kind>
+bool BigIntStringEqual(JSContext* cx, HandleBigInt x, HandleString y,
+                       bool* res);
+
+template <ComparisonKind Kind>
+bool BigIntStringCompare(JSContext* cx, HandleBigInt x, HandleString y,
+                         bool* res);
+
+template <ComparisonKind Kind>
+bool StringBigIntCompare(JSContext* cx, HandleString x, HandleBigInt y,
+                         bool* res);
+
 enum class TailCallVMFunctionId;
 enum class VMFunctionId;
 

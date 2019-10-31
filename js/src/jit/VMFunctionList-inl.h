@@ -62,6 +62,14 @@ namespace jit {
   _(BigIntNeg, js::jit::BigIntNeg)                                             \
   _(BigIntPow, js::jit::BigIntPow)                                             \
   _(BigIntRightShift, js::jit::BigIntRightShift)                               \
+  _(BigIntStringEqual,                                                         \
+    js::jit::BigIntStringEqual<js::jit::EqualityKind::Equal>)                  \
+  _(BigIntStringGreaterThanOrEqual,                                            \
+    js::jit::BigIntStringCompare<js::jit::ComparisonKind::GreaterThanOrEqual>) \
+  _(BigIntStringLessThan,                                                      \
+    js::jit::BigIntStringCompare<js::jit::ComparisonKind::LessThan>)           \
+  _(BigIntStringNotEqual,                                                      \
+    js::jit::BigIntStringEqual<js::jit::EqualityKind::NotEqual>)               \
   _(BigIntSub, js::jit::BigIntSub)                                             \
   _(BindVarOperation, js::BindVarOperation)                                    \
   _(BitAnd, js::BitAnd)                                                        \
@@ -245,6 +253,10 @@ namespace jit {
   _(StartDynamicModuleImport, js::StartDynamicModuleImport)                    \
   _(StrictlyEqual, js::jit::StrictlyEqual<js::jit::EqualityKind::Equal>)       \
   _(StrictlyNotEqual, js::jit::StrictlyEqual<js::jit::EqualityKind::NotEqual>) \
+  _(StringBigIntGreaterThanOrEqual,                                            \
+    js::jit::StringBigIntCompare<js::jit::ComparisonKind::GreaterThanOrEqual>) \
+  _(StringBigIntLessThan,                                                      \
+    js::jit::StringBigIntCompare<js::jit::ComparisonKind::LessThan>)           \
   _(StringFlatReplaceString, js::StringFlatReplaceString)                      \
   _(StringFromCharCode, js::jit::StringFromCharCode)                           \
   _(StringFromCodePoint, js::jit::StringFromCodePoint)                         \
