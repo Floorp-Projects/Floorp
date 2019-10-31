@@ -134,6 +134,7 @@ class TlsAgent : public PollTarget {
   void AddDelegatedCredential(const std::string& dc_name,
                               SSLSignatureScheme dcCertVerifyAlg,
                               PRUint32 dcValidFor, PRTime now);
+  void UpdatePreliminaryChannelInfo();
 
   bool ConfigServerCert(const std::string& name, bool updateKeyBits = false,
                         const SSLExtraServerCertData* serverCertData = nullptr);
@@ -228,6 +229,9 @@ class TlsAgent : public PollTarget {
     EXPECT_EQ(STATE_CONNECTED, state_);
     return info_;
   }
+
+  const SSLPreliminaryChannelInfo& pre_info() const { return pre_info_; }
+
   bool is_compressed() const {
     return info().compressionMethod != ssl_compression_null;
   }
@@ -425,6 +429,7 @@ class TlsAgent : public PollTarget {
   bool handshake_callback_called_;
   bool resumption_callback_called_;
   SSLChannelInfo info_;
+  SSLPreliminaryChannelInfo pre_info_;
   SSLCipherSuiteInfo csinfo_;
   SSLVersionRange vrange_;
   PRErrorCode error_code_;

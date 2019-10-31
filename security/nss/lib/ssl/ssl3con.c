@@ -21,6 +21,7 @@
 #include "sslerr.h"
 #include "ssl3ext.h"
 #include "ssl3exthandle.h"
+#include "tls13subcerts.h"
 #include "prtime.h"
 #include "prinrval.h"
 #include "prerror.h"
@@ -11047,6 +11048,47 @@ ssl_SetAuthKeyBits(sslSocket *ss, const SECKEYPublicKey *pubKey)
                         : illegal_parameter);
         return SECFailure;
     }
+
+    /* PreliminaryChannelInfo.authKeyBits, scheme, and peerDelegCred are now valid. */
+    ss->ssl3.hs.preliminaryInfo |= ssl_preinfo_peer_auth;
+
+    return SECSuccess;
+}
+
+SECStatus
+ssl3_HandleServerSpki(sslSocket *ss)
+{
+    PORT_Assert(!ss->sec.isServer);
+    SECKEYPublicKey *pubKey;
+
+    if (ss->version >= SSL_LIBRARY_VERSION_TLS_1_3 &&
+        tls13_IsVerifyingWithDelegatedCredential(ss)) {
+        sslDelegatedCredential *dc = ss->xtnData.peerDelegCred;
+        pubKey = SECKEY_ExtractPublicKey(dc->spki);
+        if (!pubKey) {
+            PORT_SetError(SSL_ERROR_EXTRACT_PUBLIC_KEY_FAILURE);
+            return SECFailure;
+        }
+
+        /* Because we have only a single authType (ssl_auth_tls13_any)
+         * for TLS 1.3 at this point, set the scheme so that the
+         * callback can interpret |authKeyBits| correctly.
+         */
+        ss->sec.signatureScheme = dc->expectedCertVerifyAlg;
+    } else {
+        pubKey = CERT_ExtractPublicKey(ss->sec.peerCert);
+        if (!pubKey) {
+            PORT_SetError(SSL_ERROR_EXTRACT_PUBLIC_KEY_FAILURE);
+            return SECFailure;
+        }
+    }
+
+    SECStatus rv = ssl_SetAuthKeyBits(ss, pubKey);
+    SECKEY_DestroyPublicKey(pubKey);
+    if (rv != SECSuccess) {
+        return rv; /* Alert sent and code set. */
+    }
+
     return SECSuccess;
 }
 
@@ -11061,6 +11103,26 @@ ssl3_AuthCertificate(sslSocket *ss)
 
     PORT_Assert((ss->ssl3.hs.preliminaryInfo & ssl_preinfo_all) ==
                 ssl_preinfo_all);
+
+    if (!ss->sec.isServer) {
+        /* Set the |spki| used to verify the handshake. When verifying with a
+         * delegated credential (DC), this corresponds to the DC public key;
+         * otherwise it correspond to the public key of the peer's end-entity
+         * certificate. */
+        rv = ssl3_HandleServerSpki(ss);
+        if (rv != SECSuccess) {
+            /* Alert sent and code set (if not SSL_ERROR_EXTRACT_PUBLIC_KEY_FAILURE).
+             * In either case, we're done here. */
+            errCode = PORT_GetError();
+            goto loser;
+        }
+
+        if (ss->version < SSL_LIBRARY_VERSION_TLS_1_3) {
+            ss->sec.authType = ss->ssl3.hs.kea_def->authKeyType;
+            ss->sec.keaType = ss->ssl3.hs.kea_def->exchKeyType;
+        }
+    }
+
     /*
      * Ask caller-supplied callback function to validate cert chain.
      */
@@ -11099,21 +11161,6 @@ ssl3_AuthCertificate(sslSocket *ss)
     ss->sec.ci.sid->peerCert = CERT_DupCertificate(ss->sec.peerCert);
 
     if (!ss->sec.isServer) {
-        if (ss->version < SSL_LIBRARY_VERSION_TLS_1_3) {
-            /* These are filled in in tls13_HandleCertificateVerify and
-             * tls13_HandleServerKeyShare (keaType). */
-            SECKEYPublicKey *pubKey = CERT_ExtractPublicKey(ss->sec.peerCert);
-            if (pubKey) {
-                rv = ssl_SetAuthKeyBits(ss, pubKey);
-                SECKEY_DestroyPublicKey(pubKey);
-                if (rv != SECSuccess) {
-                    return SECFailure; /* Alert sent and code set. */
-                }
-            }
-            ss->sec.authType = ss->ssl3.hs.kea_def->authKeyType;
-            ss->sec.keaType = ss->ssl3.hs.kea_def->exchKeyType;
-        }
-
         if (ss->version >= SSL_LIBRARY_VERSION_TLS_1_3) {
             TLS13_SET_HS_STATE(ss, wait_cert_verify);
         } else {

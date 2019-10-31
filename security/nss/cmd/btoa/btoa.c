@@ -211,5 +211,8 @@ loser:
     if (outFile && closeOut) {
         fclose(outFile);
     }
+    if (suffix) {
+        PORT_Free(suffix);
+    }
     return exitCode;
 }
