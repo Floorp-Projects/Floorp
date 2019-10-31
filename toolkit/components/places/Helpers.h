@@ -261,20 +261,6 @@ bool GetHiddenState(bool aIsRedirect, uint32_t aTransitionType);
 /**
  * Used to notify a topic to system observers on async execute completion.
  */
-class AsyncStatementCallbackNotifier : public AsyncStatementCallback {
- public:
-  explicit AsyncStatementCallbackNotifier(const char* aTopic)
-      : mTopic(aTopic) {}
-
-  NS_IMETHOD HandleCompletion(uint16_t aReason) override;
-
- private:
-  const char* mTopic;
-};
-
-/**
- * Used to notify a topic to system observers on async execute completion.
- */
 class AsyncStatementTelemetryTimer : public AsyncStatementCallback {
  public:
   explicit AsyncStatementTelemetryTimer(Telemetry::HistogramID aHistogramId,
