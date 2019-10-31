@@ -10,6 +10,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/gfx/Matrix.h"
 #include "mozilla/EffectSet.h"
+#include "mozilla/MotionPathUtils.h"
 #include "mozilla/PodOperations.h"
 #include "gfx2DGlue.h"
 #include "nsExpirationTracker.h"
@@ -277,7 +278,7 @@ static void IncrementScaleRestyleCountIfNeeded(nsIFrame* aFrame,
   nsStyleTransformMatrix::TransformReferenceBox refBox(aFrame);
   Matrix4x4 transform = nsStyleTransformMatrix::ReadTransforms(
       display->mTranslate, display->mRotate, display->mScale,
-      nsLayoutUtils::ResolveMotionPath(aFrame), display->mTransform, refBox,
+      MotionPathUtils::ResolveMotionPath(aFrame), display->mTransform, refBox,
       AppUnitsPerCSSPixel());
   Matrix transform2D;
   if (!transform.Is2D(&transform2D)) {

@@ -38,6 +38,7 @@
 #include "mozilla/dom/RemoteBrowser.h"
 #include "mozilla/EffectCompositor.h"
 #include "mozilla/EnumeratedArray.h"
+#include "mozilla/MotionPathUtils.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/gfx/UserData.h"
@@ -73,7 +74,6 @@ struct WrFiltersHolder;
 namespace mozilla {
 class FrameLayerBuilder;
 class PresShell;
-struct MotionPathData;
 namespace layers {
 struct FrameMetrics;
 class RenderRootStateManager;
