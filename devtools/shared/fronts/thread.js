@@ -342,8 +342,10 @@ class ThreadFront extends FrontClassWithSpec(threadSpec) {
       return this._threadGrips[form.actor];
     }
 
-    this._threadGrips[form.actor] = new SourceFront(this.client, form);
-    return this._threadGrips[form.actor];
+    const sourceFront = new SourceFront(this.client, form);
+    this.manage(sourceFront);
+    this._threadGrips[form.actor] = sourceFront;
+    return sourceFront;
   }
 }
 

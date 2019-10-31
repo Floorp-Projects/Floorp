@@ -27,7 +27,6 @@ class SourceFront extends FrontClassWithSpec(sourceSpec) {
       // this is here for the time being, until the source front is managed
       // via protocol.js marshalling
       this.actorID = form.actor;
-      this.manage(this);
     }
   }
 
