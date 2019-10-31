@@ -577,6 +577,15 @@ Matrix4x4 ReadTransforms(const StyleTranslate& aTranslate,
   return result;
 }
 
+mozilla::CSSPoint Convert2DPosition(const mozilla::LengthPercentage& aX,
+                                    const mozilla::LengthPercentage& aY,
+                                    const CSSSize& aSize) {
+  return {
+      aX.ResolveToCSSPixels(aSize.width),
+      aY.ResolveToCSSPixels(aSize.height),
+  };
+}
+
 CSSPoint Convert2DPosition(const LengthPercentage& aX,
                            const LengthPercentage& aY,
                            TransformReferenceBox& aRefBox) {
