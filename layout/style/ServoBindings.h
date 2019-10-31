@@ -59,6 +59,16 @@ BASIC_RULE_FUNCS(CounterStyle)
 #undef BASIC_RULE_FUNCS
 #undef BASIC_RULE_FUNCS_WITHOUT_GETTER
 
+#define BASIC_SERDE_FUNCS(type_)                                 \
+  bool Servo_##type_##_Deserialize(StyleVecU8* input, type_* v); \
+  bool Servo_##type_##_Serialize(const type_* v, StyleVecU8* output);
+
+using RayFunction = StyleRayFunction<StyleAngle>;
+BASIC_SERDE_FUNCS(LengthPercentage)
+BASIC_SERDE_FUNCS(RayFunction)
+
+#undef BASIC_SERDE_FUNCS
+
 void Servo_CounterStyleRule_GetDescriptorCssText(
     const RawServoCounterStyleRule* rule, nsCSSCounterDesc desc,
     nsAString* result);
