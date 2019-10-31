@@ -47,28 +47,6 @@ RayReferenceData::RayReferenceData(const nsIFrame* aFrame) {
       CSSRect::FromAppUnits(container->GetRectRelativeToSelf());
 }
 
-static already_AddRefed<gfx::Path> BuildPath(
-    const Span<const StylePathCommand>& aPath, gfx::PathBuilder* aPathBuilder) {
-  if (!aPathBuilder) {
-    return nullptr;
-  }
-
-  return SVGPathData::BuildPath(aPath, aPathBuilder,
-                                NS_STYLE_STROKE_LINECAP_BUTT, 0.0);
-}
-
-/* static */
-OffsetPathData OffsetPathData::Path(const StyleSVGPathData& aPath,
-                                    gfx::PathBuilder* aPathBuilder) {
-  const auto& path = aPath._0.AsSpan();
-
-  // FIXME: Bug 1484780, we should cache the path to avoid rebuilding it here
-  // at every restyle. (Caching the path avoids the cost of flattening it again
-  // each time.)
-  RefPtr<gfx::Path> gfxPath = BuildPath(path, aPathBuilder);
-  return OffsetPathData(gfxPath, !path.empty() && path.rbegin()->IsClosePath());
-}
-
 // The distance is measured between the initial position and the intersection of
 // the ray with the box
 // https://drafts.fxtf.org/motion-1/#size-sides
@@ -465,11 +443,14 @@ static OffsetPathData GenerateOffsetPathData(const nsIFrame* aFrame) {
       // using the default values of stroke-width, stoke-linecap, and fill-rule
       // is fine for now because what we want is get the point and its normal
       // vector along the path, instead of rendering it.
-      RefPtr<gfx::DrawTarget> drawTarget =
-          gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget();
+      // FIXME: Use cache for main-thread in Bug 1484780.
       RefPtr<gfx::PathBuilder> builder =
-          drawTarget->CreatePathBuilder(gfx::FillRule::FILL_WINDING);
-      return OffsetPathData::Path(path.AsPath(), builder);
+          gfxPlatform::GetPlatform()
+              ->ScreenReferenceDrawTarget()
+              ->CreatePathBuilder(gfx::FillRule::FILL_WINDING);
+      RefPtr<gfx::Path> gfxPath =
+          MotionPathUtils::BuildPath(path.AsPath(), builder);
+      return OffsetPathData::Path(path.AsPath(), gfxPath.forget());
     }
     case StyleOffsetPath::Tag::Ray:
       return OffsetPathData::Ray(path.AsRay(), RayReferenceData(aFrame));
@@ -508,11 +489,36 @@ Maybe<MotionPathData> MotionPathUtils::ResolveMotionPath(
                         : Nothing());
 }
 
+static OffsetPathData GenerateOffsetPathData(
+    const StyleOffsetPath& aPath, const layers::TransformData& aTransformData,
+    gfx::Path* aCachedMotionPath) {
+  switch (aPath.tag) {
+    case StyleOffsetPath::Tag::Path: {
+      const StyleSVGPathData& svgPathData = aPath.AsPath();
+      // If aCachedMotionPath is valid, we have a fixed path.
+      // This means we have pre-built it already and no need to update.
+      RefPtr<gfx::Path> path = aCachedMotionPath;
+      if (!path) {
+        RefPtr<gfx::PathBuilder> builder =
+            MotionPathUtils::GetCompositorPathBuilder();
+        path = MotionPathUtils::BuildPath(svgPathData, builder);
+      }
+      return OffsetPathData::Path(svgPathData, path.forget());
+    }
+    case StyleOffsetPath::Tag::Ray:
+      return OffsetPathData::Ray(aPath.AsRay(),
+                                 aTransformData.motionPathRayReferenceData());
+    case StyleOffsetPath::Tag::None:
+    default:
+      return OffsetPathData::None();
+  }
+}
+
 /* static */
 Maybe<MotionPathData> MotionPathUtils::ResolveMotionPath(
     const StyleOffsetPath* aPath, const StyleLengthPercentage* aDistance,
     const StyleOffsetRotate* aRotate, const StylePositionOrAuto* aAnchor,
-    const layers::TransformData& aTransformData) {
+    const layers::TransformData& aTransformData, gfx::Path* aCachedMotionPath) {
   if (!aPath) {
     return Nothing();
   }
@@ -523,30 +529,8 @@ Maybe<MotionPathData> MotionPathUtils::ResolveMotionPath(
   Maybe<CSSPoint> framePosition =
       Some(aTransformData.motionPathFramePosition());
 
-  auto generateOffsetPathData = [&](const StyleOffsetPath& aPath) {
-    switch (aPath.tag) {
-      case StyleOffsetPath::Tag::Path: {
-        // FIXME: Perhaps we need a PathBuilder which is independent on the
-        // backend.
-        RefPtr<gfx::PathBuilder> builder =
-            gfxPlatform::Initialized()
-                ? gfxPlatform::GetPlatform()
-                      ->ScreenReferenceDrawTarget()
-                      ->CreatePathBuilder(gfx::FillRule::FILL_WINDING)
-                : gfx::Factory::CreateSimplePathBuilder();
-        return OffsetPathData::Path(aPath.AsPath(), builder);
-      }
-      case StyleOffsetPath::Tag::Ray:
-        return OffsetPathData::Ray(aPath.AsRay(),
-                                   aTransformData.motionPathRayReferenceData());
-      case StyleOffsetPath::Tag::None:
-      default:
-        return OffsetPathData::None();
-    }
-  };
-
   return MotionPathUtils::ResolveMotionPath(
-      generateOffsetPathData(*aPath),
+      GenerateOffsetPathData(*aPath, aTransformData, aCachedMotionPath),
       aDistance ? *aDistance : zeroOffsetDistance,
       aRotate ? *aRotate : autoOffsetRotate,
       aAnchor ? *aAnchor : autoOffsetAnchor, aTransformData.motionPathOrigin(),
@@ -633,6 +617,30 @@ MotionPathUtils::NormalizeAndConvertToPathCommands(
     }
   }
   return commands;
+}
+
+/* static */
+already_AddRefed<gfx::Path> MotionPathUtils::BuildPath(
+    const StyleSVGPathData& aPath, gfx::PathBuilder* aPathBuilder) {
+  if (!aPathBuilder) {
+    return nullptr;
+  }
+
+  const Span<const StylePathCommand>& path = aPath._0.AsSpan();
+  return SVGPathData::BuildPath(path, aPathBuilder,
+                                NS_STYLE_STROKE_LINECAP_BUTT, 0.0);
+}
+
+/* static */
+already_AddRefed<gfx::PathBuilder> MotionPathUtils::GetCompositorPathBuilder() {
+  // FIXME: Perhaps we need a PathBuilder which is independent on the backend.
+  RefPtr<gfx::PathBuilder> builder =
+      gfxPlatform::Initialized()
+          ? gfxPlatform::GetPlatform()
+                ->ScreenReferenceDrawTarget()
+                ->CreatePathBuilder(gfx::FillRule::FILL_WINDING)
+          : gfx::Factory::CreateSimplePathBuilder();
+  return builder.forget();
 }
 
 }  // namespace mozilla

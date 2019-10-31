@@ -116,6 +116,19 @@ struct AnimatedValue final {
   AnimatedValueType mValue;
 };
 
+struct AnimationStorageData {
+  nsTArray<PropertyAnimationGroup> mAnimation;
+  RefPtr<gfx::Path> mCachedMotionPath;
+
+  AnimationStorageData() = default;
+  AnimationStorageData(AnimationStorageData&& aOther) = default;
+  AnimationStorageData& operator=(AnimationStorageData&& aOther) = default;
+
+  // Avoid any copy because mAnimation could be a large array.
+  AnimationStorageData(const AnimationStorageData& aOther) = delete;
+  AnimationStorageData& operator=(const AnimationStorageData& aOther) = delete;
+};
+
 // CompositorAnimationStorage stores the animations and animated values
 // keyed by a CompositorAnimationsId. The "animations" are a representation of
 // an entire animation over time, while the "animated values" are values sampled
@@ -132,7 +145,7 @@ struct AnimatedValue final {
 // mechanism).
 class CompositorAnimationStorage final {
   typedef nsClassHashtable<nsUint64HashKey, AnimatedValue> AnimatedValueTable;
-  typedef nsClassHashtable<nsUint64HashKey, nsTArray<PropertyAnimationGroup>>
+  typedef nsDataHashtable<nsUint64HashKey, AnimationStorageData>
       AnimationsTable;
   typedef nsDataHashtable<nsUint64HashKey, wr::RenderRoot>
       AnimationsRenderRootsTable;
@@ -183,11 +196,6 @@ class CompositorAnimationStorage final {
    */
   void SetAnimations(uint64_t aId, const AnimationArray& aAnimations,
                      wr::RenderRoot aRenderRoot);
-
-  /**
-   * Return the animations if a given id can map to its animations
-   */
-  nsTArray<PropertyAnimationGroup>* GetAnimations(const uint64_t& aId) const;
 
   /**
    * Return the iterator of animations table
@@ -305,7 +313,7 @@ class AnimationHelper {
    * from the rather compact representation we use for transferring across the
    * IPC boundary into something we can readily use for sampling.
    */
-  static nsTArray<PropertyAnimationGroup> ExtractAnimations(
+  static AnimationStorageData ExtractAnimations(
       const AnimationArray& aAnimations);
 
   /**
@@ -340,7 +348,7 @@ class AnimationHelper {
    */
   static gfx::Matrix4x4 ServoAnimationValueToMatrix4x4(
       const nsTArray<RefPtr<RawServoAnimationValue>>& aValue,
-      const TransformData& aTransformData);
+      const TransformData& aTransformData, gfx::Path* aCachedMotionPath);
 };
 
 }  // namespace layers

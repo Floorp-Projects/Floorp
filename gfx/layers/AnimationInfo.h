@@ -11,6 +11,7 @@
 #include "nsCSSPropertyIDSet.h"
 #include "nsDisplayItemTypes.h"
 #include "mozilla/Array.h"
+#include "mozilla/MotionPathUtils.h"
 
 struct RawServoAnimationValue;
 class nsIContent;
@@ -72,6 +73,8 @@ class AnimationInfo final {
   bool ApplyPendingUpdatesForThisTransaction();
   bool HasTransformAnimation() const;
 
+  gfx::Path* CachedMotionPath() { return mCachedMotionPath; }
+
   // In case of continuation, |aFrame| must be the first or the last
   // continuation frame, otherwise this function might return Nothing().
   static Maybe<uint64_t> GetGenerationFromFrame(
@@ -108,7 +111,12 @@ class AnimationInfo final {
   // Each entry in the array represents an animation list for one property.  For
   // transform-like properties (e.g. transform, rotate etc.), there may be
   // multiple entries depending on how many transform-like properties we have.
+  // Note: we don't use AnimationStorageData here becuase including
+  // AnimationHelper.h causes build errors (because other modules may include
+  // this file but cannot see LayersMessages.h).
   nsTArray<PropertyAnimationGroup> mPropertyAnimationGroups;
+  // For motion path. We cached the gfx path for optimization.
+  RefPtr<gfx::Path> mCachedMotionPath;
   // If this layer is used for OMTA, then this counter is used to ensure we
   // stay in sync with the animation manager
   Maybe<uint64_t> mAnimationGeneration;

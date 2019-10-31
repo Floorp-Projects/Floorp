@@ -72,7 +72,11 @@ struct OffsetPathData {
 
   static OffsetPathData None() { return OffsetPathData(); }
   static OffsetPathData Path(const StyleSVGPathData& aPath,
-                             gfx::PathBuilder* aPathBuilder);
+                             already_AddRefed<gfx::Path>&& aGfxPath) {
+    const auto& path = aPath._0.AsSpan();
+    return OffsetPathData(std::move(aGfxPath),
+                          !path.empty() && path.rbegin()->IsClosePath());
+  }
   static OffsetPathData Ray(const RayFunction& aRay,
                             const RayReferenceData& aData) {
     return OffsetPathData(&aRay, aData);
@@ -136,8 +140,8 @@ struct OffsetPathData {
 
  private:
   OffsetPathData() : mType(Type::None) {}
-  OffsetPathData(const RefPtr<gfx::Path>& aPath, bool aIsClosed)
-      : mType(Type::Path), mPath{aPath, aIsClosed} {}
+  OffsetPathData(already_AddRefed<gfx::Path>&& aPath, bool aIsClosed)
+      : mType(Type::Path), mPath{std::move(aPath), aIsClosed} {}
   OffsetPathData(const RayFunction* aRay, RayReferenceData&& aRef)
       : mType(Type::Ray), mRay{aRay, std::move(aRef)} {}
   OffsetPathData(const RayFunction* aRay, const RayReferenceData& aRef)
@@ -174,7 +178,8 @@ class MotionPathUtils final {
   static Maybe<MotionPathData> ResolveMotionPath(
       const StyleOffsetPath* aPath, const StyleLengthPercentage* aDistance,
       const StyleOffsetRotate* aRotate, const StylePositionOrAuto* aAnchor,
-      const layers::TransformData& aTransformData);
+      const layers::TransformData& aTransformData,
+      gfx::Path* aCachedMotionPath);
 
   /**
    * Normalize and convert StyleSVGPathData into nsTArray<layers::PathCommand>.
@@ -187,6 +192,18 @@ class MotionPathUtils final {
    */
   static nsTArray<layers::PathCommand> NormalizeAndConvertToPathCommands(
       const StyleSVGPathData& aPath);
+
+  /**
+   * Build a gfx::Path from the computed svg path. We should give it a path
+   * builder. If |aPathBuilder| is nullptr, we return null path.
+   * */
+  static already_AddRefed<gfx::Path> BuildPath(const StyleSVGPathData& aPath,
+                                               gfx::PathBuilder* aPathBuilder);
+
+  /**
+   * Get a path builder for compositor.
+   */
+  static already_AddRefed<gfx::PathBuilder> GetCompositorPathBuilder();
 };
 
 }  // namespace mozilla
