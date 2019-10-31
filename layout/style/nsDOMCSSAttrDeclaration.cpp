@@ -189,7 +189,10 @@ nsresult nsDOMCSSAttributeDeclaration::SetPropertyValue(
   // the margin properties, see bug 1266287.
   if (aPropID == eCSSProperty_opacity || aPropID == eCSSProperty_transform ||
       aPropID == eCSSProperty_translate || aPropID == eCSSProperty_rotate ||
-      aPropID == eCSSProperty_scale || aPropID == eCSSProperty_left ||
+      aPropID == eCSSProperty_scale || aPropID == eCSSProperty_offset_path ||
+      aPropID == eCSSProperty_offset_distance ||
+      aPropID == eCSSProperty_offset_rotate ||
+      aPropID == eCSSProperty_offset_anchor || aPropID == eCSSProperty_left ||
       aPropID == eCSSProperty_top || aPropID == eCSSProperty_right ||
       aPropID == eCSSProperty_bottom ||
       aPropID == eCSSProperty_background_position_x ||

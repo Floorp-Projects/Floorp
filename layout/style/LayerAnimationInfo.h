@@ -30,8 +30,7 @@ struct LayerAnimationInfo {
   static inline const nsCSSPropertyIDSet& GetCSSPropertiesFor(
       DisplayItemType aDisplayItemType) {
     static const nsCSSPropertyIDSet transformProperties =
-        nsCSSPropertyIDSet{eCSSProperty_transform, eCSSProperty_translate,
-                           eCSSProperty_scale, eCSSProperty_rotate};
+        nsCSSPropertyIDSet::TransformLikeProperties();
     static const nsCSSPropertyIDSet opacityProperties =
         nsCSSPropertyIDSet{eCSSProperty_opacity};
     static const nsCSSPropertyIDSet backgroundColorProperties =

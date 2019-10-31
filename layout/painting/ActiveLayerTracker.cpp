@@ -75,9 +75,11 @@ class LayerActivity {
       case eCSSProperty_translate:
       case eCSSProperty_rotate:
       case eCSSProperty_scale:
-        // TODO: Bug 1186329: Add motion-path into ActiveLayerTracker.
-        // Note: All transform-like properties are mapping to the same activity
-        // index.
+      case eCSSProperty_offset_path:
+      case eCSSProperty_offset_distance:
+      case eCSSProperty_offset_rotate:
+      case eCSSProperty_offset_anchor:
+        // TODO: Bug 1559232: Add offset-position.
         return ACTIVITY_TRANSFORM;
       case eCSSProperty_left:
         return ACTIVITY_LEFT;
