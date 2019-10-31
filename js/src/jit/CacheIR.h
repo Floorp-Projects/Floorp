@@ -322,7 +322,7 @@ extern const uint32_t ArgLengths[];
   _(LoadDenseElementExistsResult, Id, Id)                                      \
   _(LoadTypedElementExistsResult, Id, Id, Byte)                                \
   _(LoadDenseElementHoleExistsResult, Id, Id)                                  \
-  _(LoadTypedElementResult, Id, Id, Byte, Byte)                                \
+  _(LoadTypedElementResult, Id, Id, Byte, Byte, Byte)                          \
   _(LoadInt32ArrayLengthResult, Id)                                            \
   _(LoadArgumentsObjectArgResult, Id, Id)                                      \
   _(LoadArgumentsObjectLengthResult, Id)                                       \
@@ -1784,12 +1784,13 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
   }
 
   void loadTypedElementResult(ObjOperandId obj, Int32OperandId index,
-                              TypedThingLayout layout,
-                              Scalar::Type elementType) {
+                              TypedThingLayout layout, Scalar::Type elementType,
+                              bool handleOOB) {
     writeOpWithOperandId(CacheOp::LoadTypedElementResult, obj);
     writeOperandId(index);
     buffer_.writeByte(uint32_t(layout));
     buffer_.writeByte(uint32_t(elementType));
+    buffer_.writeByte(uint32_t(handleOOB));
   }
 
   void loadStringLengthResult(StringOperandId str) {
@@ -2236,6 +2237,8 @@ class MOZ_RAII GetPropIRGenerator : public IRGenerator {
                                         uint32_t index, Int32OperandId indexId);
   AttachDecision tryAttachTypedElement(HandleObject obj, ObjOperandId objId,
                                        uint32_t index, Int32OperandId indexId);
+  AttachDecision tryAttachTypedArrayNonInt32Index(HandleObject obj,
+                                                  ObjOperandId objId);
 
   AttachDecision tryAttachGenericElement(HandleObject obj, ObjOperandId objId,
                                          uint32_t index,
