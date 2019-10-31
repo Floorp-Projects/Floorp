@@ -22,7 +22,7 @@
  */
 const whitelist = [
   {
-    file: "chrome://browser/skin/arrow-left.svg",
+    file: "chrome://global/skin/icons/arrow-left.svg",
     platforms: ["linux", "win", "macosx"],
   },
 

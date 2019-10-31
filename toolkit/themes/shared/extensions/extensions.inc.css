@@ -296,12 +296,12 @@ button.warning {
 }
 
 #go-back > .button-box > .button-icon {
-  list-style-image: url("chrome://global/skin/icons/calendar-arrow-left.svg");
+  list-style-image: url("chrome://global/skin/icons/arrow-left.svg");
   margin: 0;
 }
 
 #go-back > .button-box > .button-icon:-moz-locale-dir(rtl) {
-  list-style-image: url("chrome://global/skin/icons/calendar-arrow-right.svg");
+  transform: scaleX(-1);
 }
 
 #heading {
