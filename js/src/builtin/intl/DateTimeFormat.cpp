@@ -172,6 +172,9 @@ void js::DateTimeFormatObject::finalize(JSFreeOp* fop, JSObject* obj) {
   MOZ_ASSERT(fop->onMainThread());
 
   if (UDateFormat* df = obj->as<DateTimeFormatObject>().getDateFormat()) {
+    intl::RemoveICUCellMemory(fop, obj,
+                              DateTimeFormatObject::EstimatedMemoryUse);
+
     udat_close(df);
   }
 }
@@ -953,6 +956,9 @@ bool js::intl_FormatDateTime(JSContext* cx, unsigned argc, Value* vp) {
       return false;
     }
     dateTimeFormat->setDateFormat(df);
+
+    intl::AddICUCellMemory(dateTimeFormat,
+                           DateTimeFormatObject::EstimatedMemoryUse);
   }
 
   // Use the UDateFormat to actually format the time stamp.
