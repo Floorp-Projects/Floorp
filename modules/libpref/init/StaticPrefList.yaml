@@ -3453,6 +3453,16 @@
   value: false
   mirror: once
 
+- name: gfx.text.subpixel-position.force-enabled
+  type: bool
+  value: false
+  mirror: once
+
+- name: gfx.text.subpixel-position.force-disabled
+  type: bool
+  value: false
+  mirror: once
+
 # Disable surface sharing due to issues with compatible FBConfigs on
 # NVIDIA drivers as described in bug 1193015.
 - name: gfx.use-glx-texture-from-pixmap

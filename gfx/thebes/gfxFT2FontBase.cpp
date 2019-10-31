@@ -7,6 +7,7 @@
 #include "gfxFT2Utils.h"
 #include "harfbuzz/hb.h"
 #include "mozilla/Likely.h"
+#include "mozilla/StaticPrefs_gfx.h"
 #include "gfxFontConstants.h"
 #include "gfxFontUtils.h"
 #include <algorithm>
@@ -24,6 +25,7 @@
 #  define FT_FACE_FLAG_COLOR (1L << 14)
 #endif
 
+using namespace mozilla;
 using namespace mozilla::gfx;
 
 gfxFT2FontBase::gfxFT2FontBase(
@@ -472,17 +474,25 @@ uint32_t gfxFT2FontBase::GetGlyph(uint32_t unicode,
 }
 
 bool gfxFT2FontBase::ShouldRoundXOffset(cairo_t* aCairo) const {
-  // Force rounding if outputting to a Cairo context. Otherwise, allow subpixel
-  // positioning (no rounding) if rendering a scalable outline font with
-  // anti-aliasing. Monochrome rendering or some bitmap fonts can become too
-  // distorted with subpixel positioning, so force rounding in those cases.
-  // Also be careful not to use subpixel positioning if the user requests full
-  // hinting via Fontconfig, which we detect by checking that neither hinting
-  // was disabled nor light hinting was requested.
-  return aCairo != nullptr || !mFTFace || !FT_IS_SCALABLE(mFTFace->GetFace()) ||
+  // Force rounding if outputting to a Cairo context or if requested by pref to
+  // disable subpixel positioning. Otherwise, allow subpixel positioning (no
+  // rounding) if rendering a scalable outline font with anti-aliasing.
+  // Monochrome rendering or some bitmap fonts can become too distorted with
+  // subpixel positioning, so force rounding in those cases. Also be careful not
+  // to use subpixel positioning if the user requests full hinting via
+  // Fontconfig, which we detect by checking that neither hinting was disabled
+  // nor light hinting was requested. Allow pref to force subpixel positioning
+  // on even if full hinting was requested.
+  return MOZ_UNLIKELY(
+             StaticPrefs::
+                 gfx_text_subpixel_position_force_disabled_AtStartup()) ||
+         aCairo != nullptr || !mFTFace || !FT_IS_SCALABLE(mFTFace->GetFace()) ||
          (mFTLoadFlags & FT_LOAD_MONOCHROME) ||
          !((mFTLoadFlags & FT_LOAD_NO_HINTING) ||
-           FT_LOAD_TARGET_MODE(mFTLoadFlags) == FT_RENDER_MODE_LIGHT);
+           FT_LOAD_TARGET_MODE(mFTLoadFlags) == FT_RENDER_MODE_LIGHT ||
+           MOZ_UNLIKELY(
+               StaticPrefs::
+                   gfx_text_subpixel_position_force_enabled_AtStartup()));
 }
 
 FT_Vector gfxFT2FontBase::GetEmboldenStrength(FT_Face aFace) {

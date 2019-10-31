@@ -8,6 +8,7 @@
 #include "UnscaledFontFreeType.h"
 #include "NativeFontResourceFreeType.h"
 #include "Logging.h"
+#include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/webrender/WebRenderTypes.h"
 
 #ifdef USE_SKIA
@@ -38,10 +39,16 @@ ScaledFontFontconfig::ScaledFontFontconfig(
       mInstanceData(aInstanceData) {}
 
 bool ScaledFontFontconfig::UseSubpixelPosition() const {
-  return mInstanceData.mAntialias != AntialiasMode::NONE &&
+  return !MOZ_UNLIKELY(
+             StaticPrefs::
+                 gfx_text_subpixel_position_force_disabled_AtStartup()) &&
+         mInstanceData.mAntialias != AntialiasMode::NONE &&
          FT_IS_SCALABLE(mFace->GetFace()) &&
          (mInstanceData.mHinting == FontHinting::NONE ||
-          mInstanceData.mHinting == FontHinting::LIGHT);
+          mInstanceData.mHinting == FontHinting::LIGHT ||
+          MOZ_UNLIKELY(
+              StaticPrefs::
+                  gfx_text_subpixel_position_force_enabled_AtStartup()));
 }
 
 #ifdef USE_SKIA
