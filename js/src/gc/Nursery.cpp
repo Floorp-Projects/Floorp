@@ -44,9 +44,9 @@ using mozilla::PodCopy;
 using mozilla::TimeDuration;
 using mozilla::TimeStamp;
 
+#ifdef JS_GC_ZEAL
 constexpr uintptr_t CanaryMagicValue = 0xDEADB15D;
 
-#ifdef JS_GC_ZEAL
 struct js::Nursery::Canary {
   uintptr_t magicValue;
   Canary* next;
