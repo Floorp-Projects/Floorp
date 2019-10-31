@@ -98,7 +98,7 @@ def _install_host_utils(build_obj):
         path = os.path.join(MANIFEST_PATH, host_platform, 'hostutils.manifest')
         _get_tooltool_manifest(build_obj.substs, path, EMULATOR_HOME_DIR,
                                'releng.manifest')
-        _tooltool_fetch()
+        _tooltool_fetch(build_obj.substs)
         xre_path = glob.glob(os.path.join(EMULATOR_HOME_DIR, 'host-utils*'))
         for path in xre_path:
             if os.path.isdir(path) and os.path.isfile(os.path.join(path, 'xpcshell')):
@@ -436,7 +436,7 @@ class AndroidEmulator(object):
                 os.remove(ini_file)
             path = self.avd_info.tooltool_manifest
             _get_tooltool_manifest(self.substs, path, EMULATOR_HOME_DIR, 'releng.manifest')
-            _tooltool_fetch()
+            _tooltool_fetch(self.substs)
             self._update_avd_paths()
 
     def start(self):
@@ -772,8 +772,8 @@ def _get_tooltool_manifest(substs, src_path, dst_path, filename):
         _download_file(url, filename, dst_path)
 
 
-def _tooltool_fetch():
-    tooltool_full_path = os.path.abspath(TOOLTOOL_PATH)
+def _tooltool_fetch(substs):
+    tooltool_full_path = os.path.join(substs['top_srcdir'], TOOLTOOL_PATH)
     command = [sys.executable, tooltool_full_path,
                'fetch', '-o', '-m', 'releng.manifest']
     try:
