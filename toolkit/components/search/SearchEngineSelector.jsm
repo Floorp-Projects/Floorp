@@ -84,10 +84,13 @@ class SearchEngineSelector {
           this._copyObject(baseConfig, section);
         }
 
-        if ("webExtensionLocales" in baseConfig) {
-          for (const webExtensionLocale of baseConfig.webExtensionLocales) {
+        if (
+          "webExtension" in baseConfig &&
+          "locales" in baseConfig.webExtension
+        ) {
+          for (const webExtensionLocale of baseConfig.webExtension.locales) {
             const engine = { ...baseConfig };
-            engine.webExtensionLocales = [
+            engine.webExtension.locales = [
               webExtensionLocale == USER_LOCALE ? locale : webExtensionLocale,
             ];
             engines.push(engine);
@@ -197,7 +200,7 @@ class SearchEngineSelector {
         .getCharPref("ignoredJAREngines")
         .split(",");
       let filteredEngines = engines.filter(engine => {
-        let name = engine.webExtensionId.split("@")[0];
+        let name = engine.webExtension.id.split("@")[0];
         return !ignoredJAREngines.includes(name);
       });
       // Don't allow all engines to be hidden
@@ -228,7 +231,15 @@ class SearchEngineSelector {
       if (["included", "excluded", "appliesTo"].includes(key)) {
         continue;
       }
-      target[key] = source[key];
+      if (key == "webExtension") {
+        if (key in target) {
+          this._copyObject(target[key], source[key]);
+        } else {
+          target[key] = { ...source[key] };
+        }
+      } else {
+        target[key] = source[key];
+      }
     }
     return target;
   }
