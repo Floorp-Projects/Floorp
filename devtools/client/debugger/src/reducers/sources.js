@@ -131,7 +131,7 @@ export type SourcesState = {
   pendingSelectedLocation?: PendingSelectedLocation,
   selectedLocation: ?SourceLocation,
   projectDirectoryRoot: string,
-  chromeAndExtenstionsEnabled: boolean,
+  chromeAndExtensionsEnabled: boolean,
   focusedItem: ?FocusItem,
 };
 
@@ -148,7 +148,7 @@ export function initialSourcesState(): SourcesState {
     selectedLocation: undefined,
     pendingSelectedLocation: prefs.pendingSelectedLocation,
     projectDirectoryRoot: prefs.projectDirectoryRoot,
-    chromeAndExtenstionsEnabled: prefs.chromeAndExtenstionsEnabled,
+    chromeAndExtensionsEnabled: prefs.chromeAndExtensionsEnabled,
     focusedItem: null,
   };
 }
@@ -834,7 +834,7 @@ function getAllDisplayedSources(
 ): Array<SourceId> {
   return queryAllDisplayedSources(state.sources.sources, {
     projectDirectoryRoot: state.sources.projectDirectoryRoot,
-    chromeAndExtensionsEnabled: state.sources.chromeAndExtenstionsEnabled,
+    chromeAndExtensionsEnabled: state.sources.chromeAndExtensionsEnabled,
     debuggeeIsWebExtension: state.threads.isWebExtension,
     threadActors: [
       getMainThread(state).actor,
