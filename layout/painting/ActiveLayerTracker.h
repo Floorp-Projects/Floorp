@@ -31,6 +31,8 @@ class ActiveLayerTracker {
    * We track style changes to selected styles:
    *   eCSSProperty_transform, eCSSProperty_translate,
    *   eCSSProperty_rotate, eCSSProperty_scale
+   *   eCSSProperty_offset_path, eCSSProperty_offset_distance,
+   *   eCSSProperty_offset_rotate, eCSSProperty_offset_anchor,
    *   eCSSProperty_opacity
    *   eCSSProperty_left, eCSSProperty_top,
    *   eCSSProperty_right, eCSSProperty_bottom
