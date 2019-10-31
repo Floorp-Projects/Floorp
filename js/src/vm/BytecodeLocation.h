@@ -161,9 +161,7 @@ class BytecodeLocation {
 
   bool isEqualityOp() const { return IsEqualityOp(getOp()); }
 
-  bool isStrictEqualityOp() const {
-    return is(JSOP_STRICTEQ) || is(JSOP_STRICTNE);
-  }
+  bool isStrictEqualityOp() const { return IsStrictEqualityOp(getOp()); }
 
   bool isDetectingOp() const { return IsDetecting(getOp()); }
 

@@ -522,9 +522,16 @@ inline bool IsPropertyInitOp(JSOp op) {
   return CodeSpec[op].format & JOF_PROPINIT;
 }
 
+inline bool IsLooseEqualityOp(JSOp op) {
+  return op == JSOP_EQ || op == JSOP_NE;
+}
+
+inline bool IsStrictEqualityOp(JSOp op) {
+  return op == JSOP_STRICTEQ || op == JSOP_STRICTNE;
+}
+
 inline bool IsEqualityOp(JSOp op) {
-  return op == JSOP_EQ || op == JSOP_NE || op == JSOP_STRICTEQ ||
-         op == JSOP_STRICTNE;
+  return IsLooseEqualityOp(op) || IsStrictEqualityOp(op);
 }
 
 inline bool IsRelationalOp(JSOp op) {

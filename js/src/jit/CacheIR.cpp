@@ -6040,11 +6040,11 @@ AttachDecision CompareIRGenerator::tryAttachBoolStringOrNumber(
   return AttachDecision::Attach;
 }
 
-AttachDecision CompareIRGenerator::tryAttachBigIntNumber(ValOperandId lhsId,
-                                                         ValOperandId rhsId) {
-  // Ensure BigInt x {Number, Boolean}.
-  if (!(lhsVal_.isBigInt() && (rhsVal_.isNumber() || rhsVal_.isBoolean())) &&
-      !(rhsVal_.isBigInt() && (lhsVal_.isNumber() || lhsVal_.isBoolean()))) {
+AttachDecision CompareIRGenerator::tryAttachBigIntInt32(ValOperandId lhsId,
+                                                        ValOperandId rhsId) {
+  // Ensure BigInt x {Int32, Boolean}.
+  if (!(lhsVal_.isBigInt() && (rhsVal_.isInt32() || rhsVal_.isBoolean())) &&
+      !(rhsVal_.isBigInt() && (lhsVal_.isInt32() || lhsVal_.isBoolean()))) {
     return AttachDecision::NoAction;
   }
 
@@ -6053,20 +6053,47 @@ AttachDecision CompareIRGenerator::tryAttachBigIntNumber(ValOperandId lhsId,
 
   auto createGuards = [&](HandleValue v, ValOperandId vId) {
     if (v.isBoolean()) {
-      Int32OperandId boolId = writer.guardToBoolean(vId);
-      return writer.guardAndGetNumberFromBoolean(boolId);
+      return writer.guardToBoolean(vId);
     }
-    MOZ_ASSERT(v.isNumber());
-    return writer.guardIsNumber(vId);
+    MOZ_ASSERT(v.isInt32());
+    return writer.guardToInt32(vId);
   };
 
   if (lhsVal_.isBigInt()) {
     BigIntOperandId bigIntId = writer.guardToBigInt(lhsId);
-    NumberOperandId numId = createGuards(rhsVal_, rhsId);
+    Int32OperandId intId = createGuards(rhsVal_, rhsId);
+
+    writer.compareBigIntInt32Result(op_, bigIntId, intId);
+  } else {
+    Int32OperandId intId = createGuards(lhsVal_, lhsId);
+    BigIntOperandId bigIntId = writer.guardToBigInt(rhsId);
+
+    writer.compareInt32BigIntResult(op_, intId, bigIntId);
+  }
+  writer.returnFromIC();
+
+  trackAttached("BigIntInt32");
+  return AttachDecision::Attach;
+}
+
+AttachDecision CompareIRGenerator::tryAttachBigIntNumber(ValOperandId lhsId,
+                                                         ValOperandId rhsId) {
+  // Ensure BigInt x Number.
+  if (!(lhsVal_.isBigInt() && rhsVal_.isNumber()) &&
+      !(rhsVal_.isBigInt() && lhsVal_.isNumber())) {
+    return AttachDecision::NoAction;
+  }
+
+  // Case should have been handled by tryAttachStrictlDifferentTypes
+  MOZ_ASSERT(op_ != JSOP_STRICTEQ && op_ != JSOP_STRICTNE);
+
+  if (lhsVal_.isBigInt()) {
+    BigIntOperandId bigIntId = writer.guardToBigInt(lhsId);
+    NumberOperandId numId = writer.guardIsNumber(rhsId);
 
     writer.compareBigIntNumberResult(op_, bigIntId, numId);
   } else {
-    NumberOperandId numId = createGuards(lhsVal_, lhsId);
+    NumberOperandId numId = writer.guardIsNumber(lhsId);
     BigIntOperandId bigIntId = writer.guardToBigInt(rhsId);
 
     writer.compareNumberBigIntResult(op_, numId, bigIntId);
@@ -6136,6 +6163,7 @@ AttachDecision CompareIRGenerator::tryAttachStub() {
   TRY_ATTACH(tryAttachStringNumber(lhsId, rhsId));
   TRY_ATTACH(tryAttachBoolStringOrNumber(lhsId, rhsId));
 
+  TRY_ATTACH(tryAttachBigIntInt32(lhsId, rhsId));
   TRY_ATTACH(tryAttachBigIntNumber(lhsId, rhsId));
 
   trackAttached(IRGenerator::NotAttached);
