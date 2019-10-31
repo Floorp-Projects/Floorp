@@ -1454,6 +1454,20 @@ void MacroAssembler::addToCharPtr(Register chars, Register index,
   }
 }
 
+void MacroAssembler::loadBigIntDigits(Register bigInt, Register digits) {
+  MOZ_ASSERT(digits != bigInt);
+
+  // Load the inline digits.
+  computeEffectiveAddress(Address(bigInt, BigInt::offsetOfInlineDigits()),
+                          digits);
+
+  // If inline digits aren't used, load the heap digits. Use a conditional move
+  // to prevent speculative execution.
+  test32LoadPtr(Assembler::NonZero, Address(bigInt, BigInt::offsetOfLength()),
+                Imm32(int32_t(BigInt::nonInlineDigitsLengthMask())),
+                Address(bigInt, BigInt::offsetOfHeapDigits()), digits);
+}
+
 void MacroAssembler::loadBigInt64(Register bigInt, Register64 dest) {
   // This code follows the implementation of |BigInt::toUint64()|. We're also
   // using it for inline callers of |BigInt::toInt64()|, which works, because
@@ -1475,17 +1489,8 @@ void MacroAssembler::loadBigInt64(Register bigInt, Register64 dest) {
 #else
   Register digits = dest.high;
 #endif
-  MOZ_ASSERT(digits != bigInt);
 
-  // Load the inline digits.
-  computeEffectiveAddress(Address(bigInt, BigInt::offsetOfInlineDigits()),
-                          digits);
-
-  // If inline digits aren't used, load the heap digits. Use a conditional move
-  // to prevent speculative execution.
-  test32LoadPtr(Assembler::NonZero, Address(bigInt, BigInt::offsetOfLength()),
-                Imm32(int32_t(BigInt::nonInlineDigitsLengthMask())),
-                Address(bigInt, BigInt::offsetOfHeapDigits()), digits);
+  loadBigIntDigits(bigInt, digits);
 
 #if JS_PUNBOX64
   // Load the first digit into the destination register.
@@ -1512,6 +1517,25 @@ void MacroAssembler::loadBigInt64(Register bigInt, Register64 dest) {
   branchTest32(Assembler::Zero, Address(bigInt, BigInt::offsetOfFlags()),
                Imm32(BigInt::signBitMask()), &done);
   neg64(dest);
+
+  bind(&done);
+}
+
+void MacroAssembler::loadFirstBigIntDigitOrZero(Register bigInt,
+                                                Register dest) {
+  Label done, nonZero;
+  branch32(Assembler::NotEqual, Address(bigInt, BigInt::offsetOfLength()),
+           Imm32(0), &nonZero);
+  {
+    movePtr(ImmWord(0), dest);
+    jump(&done);
+  }
+  bind(&nonZero);
+
+  loadBigIntDigits(bigInt, dest);
+
+  // Load the first digit into the destination register.
+  loadPtr(Address(dest, 0), dest);
 
   bind(&done);
 }

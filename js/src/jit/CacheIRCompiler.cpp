@@ -10,6 +10,7 @@
 #include "mozilla/FunctionTypeTraits.h"
 #include "mozilla/ScopeExit.h"
 
+#include <type_traits>
 #include <utility>
 
 #include "jslibmath.h"
@@ -27,6 +28,7 @@
 #include "jit/MacroAssembler-inl.h"
 #include "jit/SharedICHelpers-inl.h"
 #include "jit/VMFunctionList-inl.h"
+#include "vm/BytecodeUtil-inl.h"
 #include "vm/Realm-inl.h"
 
 using namespace js;
@@ -4179,6 +4181,140 @@ bool CacheIRCompiler::emitCompareBigIntResult() {
 
   EmitStoreResult(masm, scratch, JSVAL_TYPE_BOOLEAN, output);
   return true;
+}
+
+bool CacheIRCompiler::emitCompareBigIntInt32ResultShared(
+    Register bigInt, Register int32, Register scratch1, Register scratch2,
+    JSOp op, const AutoOutputRegister& output) {
+  MOZ_ASSERT(IsLooseEqualityOp(op) || IsRelationalOp(op));
+
+  static_assert(std::is_same<BigInt::Digit, uintptr_t>::value,
+                "BigInt digit can be loaded in a pointer-sized register");
+  static_assert(sizeof(BigInt::Digit) >= sizeof(uint32_t),
+                "BigInt digit stores at least an uint32");
+
+  // Test for too large numbers.
+  //
+  // If the absolute value of the BigInt can't be expressed in an uint32/uint64,
+  // the result of the comparison is a constant.
+  Label ifTrue, ifFalse;
+  if (op == JSOP_EQ || op == JSOP_NE) {
+    Label* tooLarge = op == JSOP_EQ ? &ifFalse : &ifTrue;
+    masm.branch32(Assembler::GreaterThan,
+                  Address(bigInt, BigInt::offsetOfDigitLength()), Imm32(1),
+                  tooLarge);
+  } else {
+    Label doCompare;
+    masm.branch32(Assembler::LessThanOrEqual,
+                  Address(bigInt, BigInt::offsetOfDigitLength()), Imm32(1),
+                  &doCompare);
+
+    // Still need to take the sign-bit into account for relational operations.
+    if (op == JSOP_LT || op == JSOP_LE) {
+      masm.branchIfNegativeBigInt(bigInt, &ifTrue);
+      masm.jump(&ifFalse);
+    } else {
+      masm.branchIfNegativeBigInt(bigInt, &ifFalse);
+      masm.jump(&ifTrue);
+    }
+
+    masm.bind(&doCompare);
+  }
+
+  // Test for mismatched signs and, if the signs are equal, load |abs(x)| in
+  // |scratch1| and |abs(y)| in |scratch2| and then compare the absolute numbers
+  // against each other.
+  {
+    // Jump to |ifTrue| resp. |ifFalse| if the BigInt is strictly less than
+    // resp. strictly greater than the int32 value, depending on the comparison
+    // operator.
+    Label* greaterThan;
+    Label* lessThan;
+    if (op == JSOP_EQ) {
+      greaterThan = &ifFalse;
+      lessThan = &ifFalse;
+    } else if (op == JSOP_NE) {
+      greaterThan = &ifTrue;
+      lessThan = &ifTrue;
+    } else if (op == JSOP_LT || op == JSOP_LE) {
+      greaterThan = &ifFalse;
+      lessThan = &ifTrue;
+    } else {
+      MOZ_ASSERT(op == JSOP_GT || op == JSOP_GE);
+      greaterThan = &ifTrue;
+      lessThan = &ifFalse;
+    }
+
+    // BigInt digits are always stored as an absolute number.
+    masm.loadFirstBigIntDigitOrZero(bigInt, scratch1);
+
+    // Load the int32 into |scratch2| and negate it for negative numbers.
+    masm.move32(int32, scratch2);
+
+    Label isNegative, doCompare;
+    masm.branchIfNegativeBigInt(bigInt, &isNegative);
+    masm.branch32(Assembler::LessThan, int32, Imm32(0), greaterThan);
+    masm.jump(&doCompare);
+
+    masm.bind(&isNegative);
+    masm.branch32(Assembler::GreaterThanOrEqual, int32, Imm32(0), lessThan);
+    masm.neg32(scratch2);
+
+    // Reverse the relational comparator for negative numbers.
+    // |-x < -y| <=> |+x > +y|.
+    // |-x ≤ -y| <=> |+x ≥ +y|.
+    // |-x > -y| <=> |+x < +y|.
+    // |-x ≥ -y| <=> |+x ≤ +y|.
+    JSOp reversed = ReverseCompareOp(op);
+    if (reversed != op) {
+      masm.branchPtr(JSOpToCondition(reversed, /* signed = */ false), scratch1,
+                     scratch2, &ifTrue);
+      masm.jump(&ifFalse);
+    }
+
+    masm.bind(&doCompare);
+    masm.branchPtr(JSOpToCondition(op, /* signed = */ false), scratch1,
+                   scratch2, &ifTrue);
+  }
+
+  Label done;
+  masm.bind(&ifFalse);
+  EmitStoreBoolean(masm, false, output);
+  masm.jump(&done);
+
+  masm.bind(&ifTrue);
+  EmitStoreBoolean(masm, true, output);
+
+  masm.bind(&done);
+  return true;
+}
+
+bool CacheIRCompiler::emitCompareBigIntInt32Result() {
+  JitSpew(JitSpew_Codegen, __FUNCTION__);
+  AutoOutputRegister output(*this);
+  Register left = allocator.useRegister(masm, reader.bigIntOperandId());
+  Register right = allocator.useRegister(masm, reader.int32OperandId());
+  JSOp op = reader.jsop();
+
+  AutoScratchRegisterMaybeOutput scratch1(allocator, masm, output);
+  AutoScratchRegister scratch2(allocator, masm);
+
+  return emitCompareBigIntInt32ResultShared(left, right, scratch1, scratch2, op,
+                                            output);
+}
+
+bool CacheIRCompiler::emitCompareInt32BigIntResult() {
+  JitSpew(JitSpew_Codegen, __FUNCTION__);
+  AutoOutputRegister output(*this);
+  Register left = allocator.useRegister(masm, reader.int32OperandId());
+  Register right = allocator.useRegister(masm, reader.bigIntOperandId());
+  JSOp op = reader.jsop();
+
+  AutoScratchRegisterMaybeOutput scratch1(allocator, masm, output);
+  AutoScratchRegister scratch2(allocator, masm);
+
+  return emitCompareBigIntInt32ResultShared(right, left, scratch1, scratch2,
+                                            ReverseCompareOp(op), output);
 }
 
 bool CacheIRCompiler::emitCompareBigIntNumberResult() {

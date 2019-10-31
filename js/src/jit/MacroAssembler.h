@@ -1312,6 +1312,8 @@ class MacroAssembler : public MacroAssemblerSpecific {
   inline void branchLatin1String(Register string, Label* label);
   inline void branchTwoByteString(Register string, Label* label);
 
+  inline void branchIfNegativeBigInt(Register bigInt, Label* label);
+
   inline void branchTestFunctionFlags(Register fun, uint32_t flags,
                                       Condition cond, Label* label);
 
@@ -2542,10 +2544,22 @@ class MacroAssembler : public MacroAssemblerSpecific {
    */
   void addToCharPtr(Register chars, Register index, CharEncoding encoding);
 
+ private:
+  void loadBigIntDigits(Register bigInt, Register digits);
+
+ public:
   /**
    * Load the first [u]int64 value from |bigInt| into |dest|.
    */
   void loadBigInt64(Register bigInt, Register64 dest);
+
+  /**
+   * Load the first digit from |bigInt| into |dest|. Handles the case when the
+   * BigInt digits length is zero.
+   *
+   * Note: A BigInt digit is a pointer-sized value.
+   */
+  void loadFirstBigIntDigitOrZero(Register bigInt, Register dest);
 
   /**
    * Initialize a BigInt from |dest|. Clobbers |val|!
