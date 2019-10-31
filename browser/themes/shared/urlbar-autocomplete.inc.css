@@ -55,7 +55,7 @@
   border-inline: 1px solid transparent;
 }
 
-.urlbarView:not([hidden]) {
+.urlbarView {
   display: block;
 }
 
