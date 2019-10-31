@@ -77,6 +77,7 @@ h2 {
   align-items: center;
 }
 
+#manage-protections,
 .card-header > button,
 #get-proxy-extension-link,
 #open-about-logins-button,
@@ -100,6 +101,7 @@ h2 {
 }
 
 /* We want to hide certain components depending on its state. */
+#manage-protections,
 .etp-card .icon.dark,
 a.hidden,
 .loading .card-body.hidden,
@@ -178,6 +180,19 @@ a.hidden,
   font-size: .93em;
   cursor: default;
   color: var(--in-content-deemphasized-text);
+}
+
+.custom-not-blocking .content {
+  margin-bottom: 5px;
+}
+
+.etp-card.custom-not-blocking .card-body,
+.etp-card.custom-not-blocking #protection-details {
+  display: none;
+}
+
+.etp-card.custom-not-blocking #manage-protections {
+  display: block;
 }
 
 #protection-details {
@@ -670,6 +685,7 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
   grid-column: 2 / -1;
 }
 
+#manage-protections,
 #sign-up-for-monitor-link,
 #get-proxy-extension-link {
   -moz-appearance: button;
@@ -680,16 +696,19 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
   color: #fff;
 }
 
+#manage-protections:active,
 #sign-up-for-monitor-link:active,
 #get-proxy-extension-link:active {
   background-color: var(--blue-80) !important;
 }
 
+#manage-protections:hover,
 #sign-up-for-monitor-link:hover,
 #get-proxy-extension-link:hover {
   background-color: var(--blue-70);
 }
 
+#manage-protections:focus,
 #sign-up-for-monitor-link:focus,
 #get-proxy-extension-link:focus {
   box-shadow: 0 0 0 1px #0a84ff inset, 0 0 0 1px #0a84ff, 0 0 0 4px rgba(10, 132, 255, 0.3);
