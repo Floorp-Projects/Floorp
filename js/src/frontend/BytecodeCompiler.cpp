@@ -470,7 +470,7 @@ bool BytecodeCompiler::emplaceEmitter(Maybe<BytecodeEmitter>& emitter,
                                                  : BytecodeEmitter::Normal;
   emitter.emplace(/* parent = */ nullptr, parser, sharedContext, script,
                   /* lazyScript = */ nullptr, options.lineno, options.column,
-                  emitterMode);
+                  parseInfo, emitterMode);
   return emitter->init();
 }
 
@@ -745,7 +745,7 @@ JSScript* frontend::CompileGlobalBinASTScript(
   AutoAssertReportedException assertException(cx);
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
-  frontend::ParseInfo pci(cx, allocScope);
+  frontend::ParseInfo parseInfo(cx, allocScope);
 
   RootedScriptSourceObject sourceObj(cx, CreateScriptSourceObject(cx, options));
 
@@ -768,8 +768,8 @@ JSScript* frontend::CompileGlobalBinASTScript(
   GlobalSharedContext globalsc(cx, ScopeKind::Global, directives,
                                options.extraWarningsOption);
 
-  frontend::BinASTParser<BinASTTokenReaderMultipart> parser(cx, pci, options,
-                                                            sourceObj);
+  frontend::BinASTParser<BinASTTokenReaderMultipart> parser(cx, parseInfo,
+                                                            options, sourceObj);
 
   // Metadata stores internal pointers, so we must use the same buffer every
   // time, including for lazy parses
@@ -784,7 +784,8 @@ JSScript* frontend::CompileGlobalBinASTScript(
 
   sourceObj->source()->setBinASTSourceMetadata(metadata);
 
-  BytecodeEmitter bce(nullptr, &parser, &globalsc, script, nullptr, 0, 0);
+  BytecodeEmitter bce(nullptr, &parser, &globalsc, script, nullptr, 0, 0,
+                      parseInfo);
 
   if (!bce.init()) {
     return nullptr;
@@ -973,11 +974,11 @@ static bool CompileLazyFunctionImpl(JSContext* cx, Handle<LazyScript*> lazy,
   }
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
-  ParseInfo pci(cx, allocScope);
+  ParseInfo parseInfo(cx, allocScope);
 
   RootedScriptSourceObject sourceObject(cx, lazy->sourceObject());
   Parser<FullParseHandler, Unit> parser(cx, options, units, length,
-                                        /* foldConstants = */ true, pci,
+                                        /* foldConstants = */ true, parseInfo,
                                         nullptr, lazy, sourceObject,
                                         lazy->parseGoal());
   if (!parser.checkOptions()) {
@@ -1012,7 +1013,7 @@ static bool CompileLazyFunctionImpl(JSContext* cx, Handle<LazyScript*> lazy,
   }
 
   BytecodeEmitter bce(/* parent = */ nullptr, &parser, pn->funbox(), script,
-                      lazy, lazy->lineno(), lazy->column(),
+                      lazy, lazy->lineno(), lazy->column(), parseInfo,
                       BytecodeEmitter::LazyFunction, fieldInitializers);
   if (!bce.init(pn->pn_pos)) {
     return false;
@@ -1065,7 +1066,7 @@ bool frontend::CompileLazyBinASTFunction(JSContext* cx,
       .setSelfHostingMode(false);
 
   LifoAllocScope allocScope(&cx->tempLifoAlloc());
-  ParseInfo pci(cx, allocScope);
+  ParseInfo parseInfo(cx, allocScope);
 
   RootedScriptSourceObject sourceObj(cx, lazy->sourceObject());
   MOZ_ASSERT(sourceObj);
@@ -1083,8 +1084,8 @@ bool frontend::CompileLazyBinASTFunction(JSContext* cx,
     script->setHasBeenCloned();
   }
 
-  frontend::BinASTParser<BinASTTokenReaderMultipart> parser(cx, pci, options,
-                                                            sourceObj, lazy);
+  frontend::BinASTParser<BinASTTokenReaderMultipart> parser(
+      cx, parseInfo, options, sourceObj, lazy);
 
   auto parsed =
       parser.parseLazyFunction(lazy->scriptSource(), lazy->sourceStart());
@@ -1096,7 +1097,7 @@ bool frontend::CompileLazyBinASTFunction(JSContext* cx,
   FunctionNode* pn = parsed.unwrap();
 
   BytecodeEmitter bce(nullptr, &parser, pn->funbox(), script, lazy,
-                      lazy->lineno(), lazy->column(),
+                      lazy->lineno(), lazy->column(), parseInfo,
                       BytecodeEmitter::LazyFunction);
 
   if (!bce.init(pn->pn_pos)) {
