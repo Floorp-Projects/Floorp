@@ -360,10 +360,7 @@ class VideoFrameConverter {
     rtc::scoped_refptr<webrtc::I420Buffer> buffer =
         mBufferPool.CreateBuffer(aFrame.mSize.width, aFrame.mSize.height);
     if (!buffer) {
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-      ++mFramesDropped;
-#endif
-      MOZ_DIAGNOSTIC_ASSERT(mFramesDropped <= 100, "Buffers must be leaking");
+      MOZ_DIAGNOSTIC_ASSERT(++mFramesDropped <= 100, "Buffers must be leaking");
       MOZ_LOG(gVideoFrameConverterLog, LogLevel::Warning,
               ("Creating a buffer failed"));
       return;
