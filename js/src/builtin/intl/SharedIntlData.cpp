@@ -33,14 +33,12 @@
 #include "vm/JSAtom.h"
 #include "vm/StringType.h"
 
-using mozilla::IsAsciiLowercaseAlpha;
-
 using js::HashNumber;
 using js::intl::StringsAreEqual;
 
 template <typename Char>
 static constexpr Char ToUpperASCII(Char c) {
-  return IsAsciiLowercaseAlpha(c) ? (c & ~0x20) : c;
+  return mozilla::IsAsciiLowercaseAlpha(c) ? (c - 0x20) : c;
 }
 
 static_assert(ToUpperASCII('a') == 'A', "verifying 'a' uppercases correctly");
