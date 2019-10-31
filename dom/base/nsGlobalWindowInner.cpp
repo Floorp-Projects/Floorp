@@ -5619,7 +5619,7 @@ nsPIDOMWindowOuter* nsGlobalWindowInner::GetInProcessParentInternal() {
   return outer->GetInProcessParentInternal();
 }
 
-nsIPrincipal* nsGlobalWindowInner::GetTopLevelAntiTrackingPrincipal() {
+nsIPrincipal* nsGlobalWindowInner::GetTopLevelPrincipal() {
   nsPIDOMWindowOuter* outerWindow = GetOuterWindowInternal();
   if (!outerWindow) {
     return nullptr;
