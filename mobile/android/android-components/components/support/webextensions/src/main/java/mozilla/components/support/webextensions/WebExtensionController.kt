@@ -26,6 +26,7 @@ class WebExtensionController(
 ) {
     private val logger = Logger("mozac-webextensions")
     private var registerContentMessageHandler: (WebExtension) -> Unit? = { }
+    private var registerBackgroundMessageHandler: (WebExtension) -> Unit? = { }
 
     /**
      * Makes sure the web extension is installed in the provided engine. If a
@@ -42,6 +43,7 @@ class WebExtensionController(
                     logger.debug("Installed extension: ${it.id}")
                     synchronized(this@WebExtensionController) {
                         registerContentMessageHandler(it)
+                        registerBackgroundMessageHandler(it)
                         installedExtensions[extensionId] = it
                     }
                 },
@@ -76,6 +78,26 @@ class WebExtensionController(
     }
 
     /**
+     * Registers a background message handler for this extension. An existing handler
+     * will be replaced and there is no need to unregister.
+     *
+     * @param messageHandler the message handler to register.
+     * @param name (optional) name of the port, defaults to the provided extensionId.
+     * */
+    fun registerBackgroundMessageHandler(
+        messageHandler: MessageHandler,
+        name: String = extensionId
+    ) {
+        synchronized(this) {
+            registerBackgroundMessageHandler = {
+                it.registerBackgroundMessageHandler(name, messageHandler)
+            }
+
+            installedExtensions[extensionId]?.let { registerBackgroundMessageHandler(it) }
+        }
+    }
+
+    /**
      * Sends a content message to the provided session.
      *
      * @param msg the message to send
@@ -86,37 +108,49 @@ class WebExtensionController(
         engineSession?.let { session ->
             installedExtensions[extensionId]?.let { ext ->
                 val port = ext.getConnectedPort(name, session)
-                port?.postMessage(msg) ?: logger.error("No port connected for provided session. Message $msg not sent.")
+                port?.postMessage(msg)
+                        ?: logger.error("No port connected for provided session. Message $msg not sent.")
             }
+        }
+    }
+
+    /**
+     * Sends a background message to the provided extension.
+     *
+     * @param msg the message to send
+     * @param name (optional) name of the port, defaults to the provided extensionId.
+     */
+    fun sendBackgroundMessage(
+        msg: JSONObject,
+        name: String = extensionId
+    ) {
+        installedExtensions[extensionId]?.let { ext ->
+            val port = ext.getConnectedPort(name)
+            port?.postMessage(msg)
+                    ?: logger.error("No port connected for provided extension. Message $msg not sent.")
         }
     }
 
     /**
      * Checks whether or not a port is connected for the provided session.
      *
-     * @param engineSession the session the port should be connected to.
+     * @param engineSession the session the port should be connected to or null for a port to a background script.
      * @param name (optional) name of the port, defaults to the provided extensionId.
      */
     fun portConnected(engineSession: EngineSession?, name: String = extensionId): Boolean {
-        return engineSession?.let { session ->
-            installedExtensions[extensionId]?.let { ext ->
-                ext.getConnectedPort(name, session) != null
-            }
+        return installedExtensions[extensionId]?.let { ext ->
+            ext.getConnectedPort(name, engineSession) != null
         } ?: false
     }
 
     /**
      * Disconnects the port of the provided session.
      *
-     * @param engineSession the session the port is connected to.
+     * @param engineSession the session the port is connected to or null for a port to a background script.
      * @param name (optional) name of the port, defaults to the provided extensionId.
      */
     fun disconnectPort(engineSession: EngineSession?, name: String = extensionId) {
-        engineSession?.let { session ->
-            installedExtensions[extensionId]?.let { ext ->
-                ext.disconnectPort(name, session)
-            }
-        }
+        installedExtensions[extensionId]?.disconnectPort(name, engineSession)
     }
 
     companion object {

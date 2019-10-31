@@ -122,6 +122,59 @@ class WebExtensionControllerTest {
     }
 
     @Test
+    fun `register background message handler if extension installed`() {
+        val extension: WebExtension = mock()
+        val controller = WebExtensionController(extensionId, extensionUrl)
+        WebExtensionController.installedExtensions[extensionId] = extension
+
+        val messageHandler: MessageHandler = mock()
+        controller.registerBackgroundMessageHandler(messageHandler)
+        verify(extension).registerBackgroundMessageHandler(extensionId, messageHandler)
+    }
+
+    @Test
+    fun `register background message handler before extension is installed`() {
+        val engine: Engine = mock()
+        val controller = WebExtensionController(extensionId, extensionUrl)
+        controller.install(engine)
+
+        val onSuccess = argumentCaptor<((WebExtension) -> Unit)>()
+        val onError = argumentCaptor<((String, Throwable) -> Unit)>()
+        verify(engine, times(1)).installWebExtension(
+                eq(extensionId),
+                eq(extensionUrl),
+                eq(true),
+                onSuccess.capture(),
+                onError.capture()
+        )
+
+        val messageHandler: MessageHandler = mock()
+        controller.registerBackgroundMessageHandler(messageHandler)
+
+        val extension: WebExtension = mock()
+        onSuccess.value.invoke(extension)
+        verify(extension).registerBackgroundMessageHandler(extensionId, messageHandler)
+    }
+
+    @Test
+    fun `send background message`() {
+        val controller = WebExtensionController(extensionId, extensionUrl)
+
+        val message: JSONObject = mock()
+        val extension: WebExtension = mock()
+        val port: Port = mock()
+        whenever(extension.getConnectedPort(extensionId)).thenReturn(port)
+
+        controller.sendBackgroundMessage(message)
+        verify(port, never()).postMessage(message)
+
+        WebExtensionController.installedExtensions[extensionId] = extension
+
+        controller.sendBackgroundMessage(message)
+        verify(port, times(1)).postMessage(message)
+    }
+
+    @Test
     fun `check if port connected`() {
         val controller = WebExtensionController(extensionId, extensionUrl)
 
