@@ -430,15 +430,12 @@ NS_IMETHODIMP nsExtProtocolChannel::Delete() {
 }
 
 NS_IMETHODIMP nsExtProtocolChannel::OnStartRequest(nsIRequest* aRequest) {
-  // no data is expected
-  MOZ_CRASH("No data expected from external protocol channel");
   return NS_ERROR_UNEXPECTED;
 }
 
 NS_IMETHODIMP nsExtProtocolChannel::OnStopRequest(nsIRequest* aRequest,
                                                   nsresult aStatusCode) {
-  // no data is expected
-  MOZ_CRASH("No data expected from external protocol channel");
+  MOZ_ASSERT(NS_FAILED(aStatusCode));
   return NS_ERROR_UNEXPECTED;
 }
 
