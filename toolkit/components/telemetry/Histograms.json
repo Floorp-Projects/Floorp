@@ -597,13 +597,6 @@
     "releaseChannelCollection": "opt-out",
     "description": "GPU Device Reset Reason (ok, hung, removed, reset, internal error, invalid call, out of memory)"
   },
-  "FETCH_IS_MAINTHREAD": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "expires_in_version": "50",
-    "kind": "boolean",
-    "description": "Was Fetch request initiated from the main thread?"
-  },
   "FORCED_DEVICE_RESET_REASON": {
     "record_in_processes": ["main", "content", "gpu"],
     "products": ["firefox", "fennec", "geckoview"],
@@ -12202,13 +12195,6 @@
     "description": "Time (in ms) measured between when the fetch handler finished executing and when we reset the network channel."
   },
 
-  "SERVICE_WORKER_REQUEST_PASSTHROUGH": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "expires_in_version": "50",
-    "kind": "boolean",
-    "description": "Intercepted fetch sending back same Request object. File bugs in Core::DOM in case of a Telemetry regression."
-  },
   "ONBEFOREUNLOAD_PROMPT_ACTION" : {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "geckoview"],

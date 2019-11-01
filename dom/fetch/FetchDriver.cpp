@@ -369,9 +369,6 @@ nsresult FetchDriver::Fetch(AbortSignalImpl* aSignalImpl,
 
   mObserver = aObserver;
 
-  Telemetry::Accumulate(Telemetry::SERVICE_WORKER_REQUEST_PASSTHROUGH,
-                        mRequest->WasCreatedByFetchEvent());
-
   // FIXME(nsm): Deal with HSTS.
 
   MOZ_RELEASE_ASSERT(!mRequest->IsSynchronous(),
