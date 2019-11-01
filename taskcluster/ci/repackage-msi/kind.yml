@@ -45,4 +45,4 @@ job-template:
     package-formats: [msi]
     fetches:
         fetch:
-            - wix-3.1.1
+            - wix-3.14.0
