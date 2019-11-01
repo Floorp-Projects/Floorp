@@ -3199,7 +3199,8 @@ void GCRuntime::startDecommit() {
   }
   decommitTask.setChunksToScan(toDecommit);
 
-  if (sweepOnBackgroundThread && decommitTask.start()) {
+  if (sweepOnBackgroundThread) {
+    decommitTask.start();
     return;
   }
 
@@ -5218,11 +5219,14 @@ void js::gc::SweepFinalizationGroups(GCParallelTask* task) {
 
 void GCRuntime::startTask(GCParallelTask& task, gcstats::PhaseKind phase,
                           AutoLockHelperThreadState& lock) {
-  if (!CanUseExtraThreads() || !task.startWithLockHeld(lock)) {
+  if (!CanUseExtraThreads()) {
     AutoUnlockHelperThreadState unlock(lock);
     gcstats::AutoPhase ap(stats(), phase);
     task.runFromMainThread();
+    return;
   }
+
+  task.startWithLockHeld(lock);
 }
 
 void GCRuntime::joinTask(GCParallelTask& task, gcstats::PhaseKind phase,
