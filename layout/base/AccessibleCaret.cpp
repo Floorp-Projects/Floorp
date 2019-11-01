@@ -190,7 +190,7 @@ already_AddRefed<Element> AccessibleCaret::CreateCaretElement(
     Document* aDocument) const {
   // Content structure of AccessibleCaret
   // <div class="moz-accessiblecaret">  <- CaretElement()
-  //   <div id="text-overlay"           <- TextOverlayElement()
+  //   <div id="text-overlay">          <- TextOverlayElement()
   //   <div id="image">                 <- CaretImageElement()
 
   ErrorResult rv;
@@ -282,17 +282,14 @@ void AccessibleCaret::SetCaretElementStyle(const nsRect& aRect,
                                            float aZoomLevel) {
   nsPoint position = CaretElementPosition(aRect);
   nsAutoString styleStr;
-  styleStr.AppendPrintf(
-      "left: %dpx; top: %dpx; "
-      "width: ",
-      nsPresContext::AppUnitsToIntCSSPixels(position.x),
-      nsPresContext::AppUnitsToIntCSSPixels(position.y));
   // We can't use AppendPrintf here, because it does locale-specific
   // formatting of floating-point values.
+  styleStr.AppendLiteral("left: ");
+  styleStr.AppendFloat(nsPresContext::AppUnitsToFloatCSSPixels(position.x));
+  styleStr.AppendLiteral("px; top: ");
+  styleStr.AppendFloat(nsPresContext::AppUnitsToFloatCSSPixels(position.y));
+  styleStr.AppendLiteral("px; width: ");
   styleStr.AppendFloat(StaticPrefs::layout_accessiblecaret_width() /
-                       aZoomLevel);
-  styleStr.AppendLiteral("px; height: ");
-  styleStr.AppendFloat(StaticPrefs::layout_accessiblecaret_height() /
                        aZoomLevel);
   styleStr.AppendLiteral("px; margin-left: ");
   styleStr.AppendFloat(StaticPrefs::layout_accessiblecaret_margin_left() /
@@ -310,8 +307,9 @@ void AccessibleCaret::SetCaretElementStyle(const nsRect& aRect,
 void AccessibleCaret::SetTextOverlayElementStyle(const nsRect& aRect,
                                                  float aZoomLevel) {
   nsAutoString styleStr;
-  styleStr.AppendPrintf("height: %dpx;",
-                        nsPresContext::AppUnitsToIntCSSPixels(aRect.height));
+  styleStr.AppendLiteral("height: ");
+  styleStr.AppendFloat(nsPresContext::AppUnitsToFloatCSSPixels(aRect.height));
+  styleStr.AppendLiteral("px;");
   TextOverlayElement()->SetAttr(kNameSpaceID_None, nsGkAtoms::style, styleStr,
                                 true);
   AC_LOG("%s: %s", __FUNCTION__, NS_ConvertUTF16toUTF8(styleStr).get());
@@ -320,8 +318,10 @@ void AccessibleCaret::SetTextOverlayElementStyle(const nsRect& aRect,
 void AccessibleCaret::SetCaretImageElementStyle(const nsRect& aRect,
                                                 float aZoomLevel) {
   nsAutoString styleStr;
-  styleStr.AppendPrintf("margin-top: %dpx;",
-                        nsPresContext::AppUnitsToIntCSSPixels(aRect.height));
+  styleStr.AppendLiteral("height: ");
+  styleStr.AppendFloat(StaticPrefs::layout_accessiblecaret_height() /
+                       aZoomLevel);
+  styleStr.AppendLiteral("px;");
   CaretImageElement()->SetAttr(kNameSpaceID_None, nsGkAtoms::style, styleStr,
                                true);
   AC_LOG("%s: %s", __FUNCTION__, NS_ConvertUTF16toUTF8(styleStr).get());

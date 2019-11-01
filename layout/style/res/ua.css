@@ -402,18 +402,13 @@ div:-moz-native-anonymous.moz-accessiblecaret {
   /* Add transition effect to make caret size changing smoother. */
   transition-duration: 250ms;
   transition-property: width, height, margin-left;
-}
 
-div:-moz-native-anonymous.moz-accessiblecaret,
-div:-moz-native-anonymous.moz-accessiblecaret > #text-overlay,
-div:-moz-native-anonymous.moz-accessiblecaret > #image {
   position: absolute;
   z-index: 2147483647;
 }
 
 div:-moz-native-anonymous.moz-accessiblecaret > #text-overlay,
 div:-moz-native-anonymous.moz-accessiblecaret > #image {
-  top: 0;
   width: 100%;
 
   /* Override this property in moz-custom-content-container to make dummy touch
@@ -426,7 +421,6 @@ div:-moz-native-anonymous.moz-accessiblecaret > #image {
   background-size: 100%;
   background-repeat: no-repeat;
   background-origin: content-box;
-  height: 100%;
 }
 
 div:-moz-native-anonymous.moz-accessiblecaret.normal > #image {
