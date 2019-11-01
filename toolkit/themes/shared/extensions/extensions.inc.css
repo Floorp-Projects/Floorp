@@ -7,6 +7,8 @@
 
 .main-content {
   padding: 0;
+  /* The scrollable pane is now in the HTML browser. */
+  overflow: hidden;
 }
 
 #nav-header {

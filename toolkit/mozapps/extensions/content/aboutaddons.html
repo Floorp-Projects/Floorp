@@ -29,7 +29,8 @@
     <script defer src="chrome://mozapps/content/extensions/aboutaddons.js"></script>
   </head>
   <body>
-    <addon-page-header id="page-header"></addon-page-header>
+    <addon-page-header id="page-header" page-options-id="page-options"></addon-page-header>
+    <addon-page-options id="page-options"></addon-page-options>
 
     <message-bar-stack id="abuse-reports-messages" reverse max-message-bar-count="3">
     </message-bar-stack>
@@ -53,7 +54,6 @@
           <addon-updates-message id="updates-message" hidden></addon-updates-message>
           <div class="page-options-menu">
             <button class="more-options-button" action="page-options"></button>
-            <addon-page-options id="page-options"></addon-page-options>
           </div>
         </div>
       </div>
