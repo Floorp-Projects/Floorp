@@ -320,6 +320,35 @@ let ACTORS = {
 
     allFrames: true,
   },
+  PictureInPicture: {
+    parent: {
+      moduleURI: "resource://gre/modules/PictureInPicture.jsm",
+    },
+    child: {
+      moduleURI: "resource://gre/actors/PictureInPictureChild.jsm",
+      events: {
+        MozTogglePictureInPicture: { capture: true },
+        MozStopPictureInPicture: { capture: true },
+      },
+    },
+
+    allFrames: true,
+  },
+
+  PictureInPictureToggle: {
+    parent: {
+      moduleURI: "resource://gre/modules/PictureInPicture.jsm",
+    },
+    child: {
+      moduleURI: "resource://gre/actors/PictureInPictureChild.jsm",
+      events: {
+        UAWidgetSetupOrChange: {},
+        contextmenu: { capture: true },
+      },
+    },
+
+    allFrames: true,
+  },
 
   Select: {
     parent: {
@@ -399,34 +428,6 @@ let LEGACY_ACTORS = {
         "DOM:WebManifest:fetchIcon",
         "DOM:WebManifest:hasManifestLink",
       ],
-    },
-  },
-
-  PictureInPicture: {
-    child: {
-      module: "resource://gre/actors/PictureInPictureChild.jsm",
-      events: {
-        MozTogglePictureInPicture: { capture: true },
-        MozStopPictureInPicture: { capture: true },
-      },
-
-      messages: [
-        "PictureInPicture:SetupPlayer",
-        "PictureInPicture:Play",
-        "PictureInPicture:Pause",
-        "PictureInPicture:KeyToggle",
-      ],
-    },
-  },
-
-  PictureInPictureToggle: {
-    child: {
-      allFrames: true,
-      module: "resource://gre/actors/PictureInPictureChild.jsm",
-      events: {
-        UAWidgetSetupOrChange: {},
-        contextmenu: { capture: true },
-      },
     },
   },
 
