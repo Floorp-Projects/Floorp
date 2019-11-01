@@ -57,7 +57,7 @@ add_task(async function() {
   info("Checking the CSS grid highlighter is not shown.");
   ok(!highlighters.gridHighlighters.size, "No CSS grid highlighter is shown.");
   const noGridList = doc.querySelector(
-    ".grid-pane .devtools-sidepanel-no-result"
+    "#layout-grid-section .devtools-sidepanel-no-result"
   );
   ok(noGridList, "The message no grid containers is displayed.");
 });

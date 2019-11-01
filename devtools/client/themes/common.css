@@ -754,9 +754,10 @@ checkbox:-moz-focusring {
 
 .devtools-sidepanel-no-result {
   font-style: italic;
-  padding: 0.5em 21px;
+  padding: 0.5em 20px;
   user-select: none;
   font-size: 12px;
+  line-height: calc(16 / 12);
 }
 
 /* Checkbox Toggle */

@@ -44,7 +44,9 @@ add_task(async function() {
   );
 
   info("Check that the container header shows Flex Container.");
-  const flexAccordionHeader = flexPanes[0].querySelector("._header .truncate");
+  const flexAccordionHeader = flexPanes[0].querySelector(
+    ".accordion-header-label"
+  );
   is(
     flexAccordionHeader.textContent,
     "Flex Container",

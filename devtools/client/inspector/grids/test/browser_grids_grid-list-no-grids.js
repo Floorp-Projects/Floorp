@@ -23,7 +23,7 @@ add_task(async function() {
 
   await selectNode("#grid", inspector);
   const noGridList = doc.querySelector(
-    ".grid-pane .devtools-sidepanel-no-result"
+    "#layout-grid-section .devtools-sidepanel-no-result"
   );
   const gridList = doc.getElementById("grid-list");
 

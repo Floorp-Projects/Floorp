@@ -17,6 +17,8 @@ const TEST_URI = `
 `;
 
 const BOXMODEL_OPENED_PREF = "devtools.layout.boxmodel.opened";
+const ACCORDION_HEADER_SELECTOR = ".accordion-header";
+const ACCORDION_CONTENT_SELECTOR = ".accordion-content";
 
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
@@ -31,18 +33,14 @@ add_task(async function() {
 });
 
 function testAccordionStateAfterClickingHeader(doc) {
-  const header = doc.querySelector(
-    ".layout-container .box-model-pane ._header"
-  );
-  const bContent = doc.querySelector(
-    ".layout-container .box-model-pane ._content"
-  );
+  const item = doc.querySelector("#layout-section-boxmodel");
+  const header = item.querySelector(ACCORDION_HEADER_SELECTOR);
+  const content = item.querySelector(ACCORDION_CONTENT_SELECTOR);
 
   info("Checking initial state of the box model panel.");
-  is(
-    bContent.style.display,
-    "block",
-    "The box model panel content is 'display: block'."
+  ok(
+    !content.hidden && content.childElementCount > 0,
+    "The box model panel content is visible."
   );
   ok(
     Services.prefs.getBoolPref(BOXMODEL_OPENED_PREF),
@@ -53,11 +51,7 @@ function testAccordionStateAfterClickingHeader(doc) {
   header.click();
 
   info("Checking the new state of the box model panel.");
-  is(
-    bContent.style.display,
-    "none",
-    "The box model panel content is 'display: none'."
-  );
+  ok(content.hidden, "The box model panel content is hidden.");
   ok(
     !Services.prefs.getBoolPref(BOXMODEL_OPENED_PREF),
     `${BOXMODEL_OPENED_PREF} is pref off.`
@@ -69,10 +63,6 @@ function testAccordionStateAfterSwitchingSidebars(inspector, doc) {
     "Checking the box model accordion state is persistent after switching sidebars."
   );
 
-  const bContent = doc.querySelector(
-    ".layout-container .box-model-pane ._content"
-  );
-
   info("Selecting the computed view.");
   inspector.sidebar.select("computedview");
 
@@ -80,11 +70,10 @@ function testAccordionStateAfterSwitchingSidebars(inspector, doc) {
   inspector.sidebar.select("layoutview");
 
   info("Checking the state of the box model panel.");
-  is(
-    bContent.style.display,
-    "none",
-    "The box model panel content is 'display: none'."
-  );
+  const item = doc.querySelector("#layout-section-boxmodel");
+  const content = item.querySelector(ACCORDION_CONTENT_SELECTOR);
+
+  ok(content.hidden, "The box model panel content is hidden.");
   ok(
     !Services.prefs.getBoolPref(BOXMODEL_OPENED_PREF),
     `${BOXMODEL_OPENED_PREF} is pref off.`
@@ -102,17 +91,11 @@ async function testAccordionStateAfterReopeningLayoutView(toolbox) {
 
   info("Re-opening the layout view.");
   const { boxmodel } = await openLayoutView();
-  const { document: doc } = boxmodel;
-  const bContent = doc.querySelector(
-    ".layout-container .box-model-pane ._content"
-  );
+  const item = boxmodel.document.querySelector("#layout-section-boxmodel");
+  const content = item.querySelector(ACCORDION_CONTENT_SELECTOR);
 
   info("Checking the state of the box model panel.");
-  is(
-    bContent.children.length,
-    0,
-    "The box model panel content is not rendered."
-  );
+  ok(content.hidden, "The box model panel content is hidden.");
   ok(
     !Services.prefs.getBoolPref(BOXMODEL_OPENED_PREF),
     `${BOXMODEL_OPENED_PREF} is pref off.`

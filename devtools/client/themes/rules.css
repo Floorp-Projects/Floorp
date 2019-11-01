@@ -240,7 +240,12 @@
 }
 
 .ruleview-expandable-header:hover {
-  background-color: var(--theme-toolbar-background-hover);
+  background-color: var(--theme-accordion-header-hover);
+}
+
+.ruleview-expandable-header .theme-twisty {
+  margin-inline-start: 0;
+  margin-inline-end: 2px;
 }
 
 .ruleview-rule-pseudo-element {

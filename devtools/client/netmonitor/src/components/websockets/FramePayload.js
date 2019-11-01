@@ -154,14 +154,13 @@ class FramePayload extends Component {
     const items = [
       {
         className: "rawData",
-        component: RawData({
-          payload,
-        }),
+        component: RawData,
+        componentProps: { payload },
         header: L10N.getFormatStrWithNumbers(
           "netmonitor.ws.rawData.header",
           getFormattedSize(this.state.payload.length)
         ),
-        labelledby: "ws-frame-rawData-header",
+        id: "ws-frame-rawData",
         opened: true,
       },
     ];
@@ -173,7 +172,8 @@ class FramePayload extends Component {
        */
       items.unshift({
         className: "formattedData",
-        component: JSONPreview({
+        component: JSONPreview,
+        componentProps: {
           object: this.state.formattedData,
           columns: [
             {
@@ -181,11 +181,11 @@ class FramePayload extends Component {
               width: "100%",
             },
           ],
-        }),
+        },
         header: `${this.state.formattedDataTitle} (${getFormattedSize(
           this.state.payload.length
         )})`,
-        labelledby: "ws-frame-formattedData-header",
+        id: "ws-frame-formattedData",
         opened: true,
       });
     }

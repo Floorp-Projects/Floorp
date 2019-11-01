@@ -2,14 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-:root {
-  --accordion-header-background: var(--theme-toolbar-background);
-}
-
-:root.theme-dark {
-  --accordion-header-background: #222225;
-}
-
 .accordion {
   background-color: var(--theme-sidebar-background);
   width: 100%;
@@ -19,7 +11,7 @@
 }
 
 .accordion ._header {
-  background-color: var(--accordion-header-background);
+  background-color: var(--theme-accordion-header-background);
   border-bottom: 1px solid var(--theme-splitter-color);
   display: flex;
   font-size: 12px;
@@ -34,7 +26,7 @@
 }
 
 .accordion ._header:hover {
-  background-color: var(--theme-toolbar-background-hover);
+  background-color: var(--theme-accordion-header-hover);
 }
 
 .accordion ._header .arrow {
@@ -45,6 +37,7 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  color: var(--theme-toolbar-color);
 }
 
 .accordion ._header .header-buttons {

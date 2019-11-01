@@ -40,21 +40,21 @@
  * Common styles for the layout container
  */
 
-.layout-container ul {
+.layout-content ul {
   list-style: none;
 }
 
-.layout-container li {
+.layout-content li {
   padding: 3px 0;
   user-select: none;
 }
 
-.layout-container input {
+.layout-content input {
   margin-inline-end: 7px;
   vertical-align: middle;
 }
 
-.layout-container label {
+.layout-content label {
   margin-inline-start: -3px;
 }
 
