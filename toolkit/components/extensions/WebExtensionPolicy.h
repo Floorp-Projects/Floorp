@@ -105,6 +105,9 @@ class WebExtensionPolicy final : public nsISupports,
   const nsString& ExtensionPageCSP() const { return mExtensionPageCSP; }
   void GetExtensionPageCSP(nsAString& aCSP) const { aCSP = mExtensionPageCSP; }
 
+  const nsString& ContentScriptCSP() const { return mContentScriptCSP; }
+  void GetContentScriptCSP(nsAString& aCSP) const { aCSP = mContentScriptCSP; }
+
   already_AddRefed<MatchPatternSet> AllowedOrigins() {
     return do_AddRef(mHostPermissions);
   }
@@ -180,6 +183,7 @@ class WebExtensionPolicy final : public nsISupports,
 
   nsString mName;
   nsString mExtensionPageCSP;
+  nsString mContentScriptCSP;
 
   bool mActive = false;
   bool mAllowPrivateBrowsingByDefault = true;

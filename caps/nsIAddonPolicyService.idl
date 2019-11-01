@@ -34,6 +34,13 @@ interface nsIAddonPolicyService : nsISupports
   AString getExtensionPageCSP(in AString aAddonId);
 
   /**
+   * Returns the content security policy which applies to content scripts belonging
+   * to the extension with the given ID. This may be either a custom policy,
+   * if one was supplied, or the default policy if one was not.
+   */
+  AString getContentScriptCSP(in AString aAddonId);
+
+  /**
    * Returns the generated background page as a data-URI, if any. If the addon
    * does not have an auto-generated background page, an empty string is
    * returned.
