@@ -5,6 +5,8 @@
 
 #include "CompositorWidgetParent.h"
 
+#include "mozilla/layers/CompositorBridgeParent.h"
+#include "mozilla/layers/CompositorThread.h"
 #include "mozilla/Unused.h"
 #include "mozilla/widget/PlatformWidgetTypes.h"
 
@@ -60,9 +62,29 @@ RefPtr<VsyncObserver> CompositorWidgetParent::GetVsyncObserver() const {
 
 void CompositorWidgetParent::UpdateCompositorWnd(const HWND aCompositorWnd,
                                                  const HWND aParentWnd) {
-  Unused << SendUpdateCompositorWnd(
-      reinterpret_cast<WindowsHandle>(aCompositorWnd),
-      reinterpret_cast<WindowsHandle>(aParentWnd));
+  MOZ_ASSERT(layers::CompositorThreadHolder::IsInCompositorThread());
+  MOZ_ASSERT(mRootLayerTreeID.isSome());
+
+  RefPtr<CompositorWidgetParent> self = this;
+  SendUpdateCompositorWnd(reinterpret_cast<WindowsHandle>(aCompositorWnd),
+                          reinterpret_cast<WindowsHandle>(aParentWnd))
+      ->Then(
+          layers::CompositorThreadHolder::Loop()->SerialEventTarget(), __func__,
+          [self](const bool& aSuccess) {
+            if (aSuccess && self->mRootLayerTreeID.isSome()) {
+              self->mSetParentCompleted = true;
+              // Schedule composition after ::SetParent() call in parent
+              // process.
+              layers::CompositorBridgeParent::ScheduleForcedComposition(
+                  self->mRootLayerTreeID.ref());
+            }
+          },
+          [self](const mozilla::ipc::ResponseRejectReason&) {});
+}
+
+void CompositorWidgetParent::SetRootLayerTreeID(
+    const layers::LayersId& aRootLayerTreeId) {
+  mRootLayerTreeID = Some(aRootLayerTreeId);
 }
 
 void CompositorWidgetParent::ActorDestroy(ActorDestroyReason aWhy) {}
