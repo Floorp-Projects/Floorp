@@ -2290,6 +2290,7 @@ var gProtectionsHandler = {
           this._protectionsPopupSiteNotWorkingReportError.hidden = false;
         } else {
           this._protectionsPopup.hidePopup();
+          ConfirmationHint.show(this.iconBox, "breakageReport");
         }
       })
       .catch(Cu.reportError);
