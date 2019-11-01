@@ -20,6 +20,7 @@
 #include "frontend/BytecodeCompilation.h"  // frontend::CompileGlobalScript
 #include "frontend/FullParseHandler.h"     // frontend::FullParseHandler
 #include "frontend/ParseContext.h"         // frontend::UsedNameTracker
+#include "frontend/ParseInfo.h"            // for frontened::ParseInfo
 #include "frontend/Parser.h"       // frontend::Parser, frontend::ParseGoal
 #include "js/CharacterEncoding.h"  // JS::UTF8Chars, JS::UTF8CharsToNewTwoByteCharsZ
 #include "js/RootingAPI.h"         // JS::Rooted
@@ -65,7 +66,10 @@ static JSScript* CompileSourceBuffer(JSContext* cx,
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
 
-  frontend::GlobalScriptInfo info(cx, options, scopeKind);
+  LifoAllocScope allocScope(&cx->tempLifoAlloc());
+  frontend::ParseInfo parseInfo(cx, allocScope);
+
+  frontend::GlobalScriptInfo info(cx, parseInfo, options, scopeKind);
   return frontend::CompileGlobalScript(info, srcBuf);
 }
 
@@ -545,7 +549,10 @@ static bool EvaluateSourceBuffer(JSContext* cx, ScopeKind scopeKind,
 
   RootedScript script(cx);
   {
-    frontend::GlobalScriptInfo info(cx, options, scopeKind);
+    LifoAllocScope allocScope(&cx->tempLifoAlloc());
+    frontend::ParseInfo parseInfo(cx, allocScope);
+
+    frontend::GlobalScriptInfo info(cx, parseInfo, options, scopeKind);
     script = frontend::CompileGlobalScript(info, srcBuf);
     if (!script) {
       return false;

@@ -43,7 +43,6 @@ var Manager = {
     // the new tab.
     this.createdNavigationTargetByOuterWindowId = new Map();
 
-    Services.obs.addObserver(this, "autocomplete-did-enter-text", true);
     Services.obs.addObserver(this, "urlbar-user-start-navigation", true);
 
     Services.obs.addObserver(this, "webNavigation-createdNavigationTarget");
@@ -63,7 +62,6 @@ var Manager = {
 
   uninit() {
     // Stop collecting recent tab transition data and reset the WeakMap.
-    Services.obs.removeObserver(this, "autocomplete-did-enter-text");
     Services.obs.removeObserver(this, "urlbar-user-start-navigation");
     Services.obs.removeObserver(this, "webNavigation-createdNavigationTarget");
 
@@ -123,8 +121,7 @@ var Manager = {
   ]),
 
   /**
-   * Observe autocomplete-did-enter-text (to track the user interaction with the awesomebar)
-   * and webNavigation-createdNavigationTarget (to fire the onCreatedNavigationTarget
+   * Observe webNavigation-createdNavigationTarget (to fire the onCreatedNavigationTarget
    * related to windows or tabs opened from the main process) topics.
    *
    * @param {nsIAutoCompleteInput|Object} subject
@@ -134,10 +131,6 @@ var Manager = {
   observe: function(subject, topic, data) {
     if (topic == "urlbar-user-start-navigation") {
       this.onURLBarUserStartNavigation(subject.wrappedJSObject);
-    } else if (topic == "autocomplete-did-enter-text") {
-      // autocomplete-did-enter-text supports the legacy urlbar. Bug 1535379 will
-      // clean this up.
-      this.onURLBarAutoCompletion(subject);
     } else if (topic == "webNavigation-createdNavigationTarget") {
       // The observed notification is coming from privileged JavaScript components running
       // in the main process (e.g. when a new tab or window is opened using the context menu
@@ -229,50 +222,6 @@ var Manager = {
     }
 
     this.setRecentTabTransitionData(tabTransitionData);
-  },
-
-  /**
-   * Recognize the type of urlbar user interaction (e.g. typing a new url,
-   * clicking on an url generated from a searchengine or a keyword, or a
-   * bookmark found by the urlbar autocompletion).
-   *
-   * @param {nsIAutoCompleteInput} input
-   */
-  onURLBarAutoCompletion(input) {
-    if (input && input instanceof Ci.nsIAutoCompleteInput) {
-      // We are only interested in urlbar autocompletion events
-      if (input.id !== "urlbar") {
-        return;
-      }
-
-      let controller = input.popup.view.QueryInterface(
-        Ci.nsIAutoCompleteController
-      );
-      let idx = input.popup.selectedIndex;
-
-      let tabTransitionData = {
-        from_address_bar: true,
-      };
-
-      if (idx < 0 || idx >= controller.matchCount) {
-        // Recognize when no valid autocomplete results has been selected.
-        tabTransitionData.typed = true;
-      } else {
-        // Special handling for bookmark urlbar autocompletion
-        // (which happens when we got a null action and a valid selectedIndex)
-        let styles = new Set(controller.getStyleAt(idx).split(/\s+/));
-
-        if (styles.has("bookmark")) {
-          tabTransitionData.auto_bookmark = true;
-        } else {
-          // Fallback on "typed" if unable to detect a specific actionType
-          // (and when in the styles there are "autofill" or "history").
-          tabTransitionData.typed = true;
-        }
-      }
-
-      this.setRecentTabTransitionData(tabTransitionData);
-    }
   },
 
   /**
