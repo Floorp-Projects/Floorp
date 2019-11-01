@@ -307,6 +307,10 @@ class Thread {
   // Return whether this thread will remain in the idle state entered after
   // WaitForIdleThreads.
   bool ShouldIdle() { return mShouldIdle; }
+
+  // Return the total amount of data consumed by the event streams of every
+  // thread. If this increases over time, at least one thread had made progress.
+  static size_t TotalEventProgress();
 };
 
 // This uses a stack pointer instead of TLS to make sure events are passed

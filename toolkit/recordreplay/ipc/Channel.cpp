@@ -209,11 +209,6 @@ static bool MessageSubjectToSimulatedDelay(MessageType aType) {
 }
 
 void Channel::SendMessage(Message&& aMsg) {
-  MOZ_RELEASE_ASSERT(NS_IsMainThread() ||
-                     aMsg.mType == MessageType::BeginFatalError ||
-                     aMsg.mType == MessageType::FatalError ||
-                     aMsg.mType == MessageType::MiddlemanCallRequest);
-
   // Block until the channel is initialized.
   if (!mInitialized) {
     MonitorAutoLock lock(mMonitor);
