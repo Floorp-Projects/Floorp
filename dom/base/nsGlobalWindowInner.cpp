@@ -18,7 +18,9 @@
 #include "nsDOMNavigationTiming.h"
 #include "nsIDOMStorageManager.h"
 #include "mozilla/dom/CallbackDebuggerNotification.h"
+#include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentFrameMessageManager.h"
+#include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/CSPEvalChecker.h"
 #include "mozilla/dom/DebuggerNotification.h"
 #include "mozilla/dom/DocumentInlines.h"
@@ -2411,9 +2413,22 @@ bool nsGlobalWindowInner::IsCrossOriginIsolated() const {
 
   RefPtr<BrowsingContext> bc = GetBrowsingContext();
   MOZ_DIAGNOSTIC_ASSERT(bc);
-  // XXX Also check remoteType once Bug 1579992 is implemented.
-  return bc->Top()->GetOpenerPolicy() ==
-         nsILoadInfo::OPENER_POLICY_SAME_ORIGIN_EMBEDDER_POLICY_REQUIRE_CORP;
+  if (bc->Top()->GetOpenerPolicy() !=
+      nsILoadInfo::OPENER_POLICY_SAME_ORIGIN_EMBEDDER_POLICY_REQUIRE_CORP) {
+    return false;
+  }
+
+  ContentChild* cc = ContentChild::GetSingleton();
+  if (!cc ||
+      !StringBeginsWith(cc->GetRemoteType(),
+                        NS_LITERAL_STRING(WITH_COOP_COEP_REMOTE_TYPE_PREFIX))) {
+#if !defined(ANDROID)
+    MOZ_DIAGNOSTIC_ASSERT(false, "COOP+COEP not in webCOOP+COEP process");
+#endif
+    return false;
+  }
+
+  return true;
 }
 
 void nsPIDOMWindowInner::AddPeerConnection() {
