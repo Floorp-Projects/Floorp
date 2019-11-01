@@ -15,6 +15,8 @@
 #include "mozilla/EventStates.h"
 #include "mozilla/MappedDeclarations.h"
 #include "mozilla/MouseEvents.h"
+#include "mozilla/PresState.h"
+#include "mozilla/TextControlState.h"
 #include "nsAttrValueInlines.h"
 #include "nsBaseCommandController.h"
 #include "nsContentCID.h"
@@ -36,10 +38,8 @@
 #include "nsMappedAttributes.h"
 #include "nsPIDOMWindow.h"
 #include "nsPresContext.h"
-#include "mozilla/PresState.h"
 #include "nsReadableUtils.h"
 #include "nsStyleConsts.h"
-#include "nsTextEditorState.h"
 #include "nsBaseCommandController.h"
 #include "nsXULControllers.h"
 
@@ -102,7 +102,7 @@ nsresult HTMLTextAreaElement::Clone(dom::NodeInfo* aNodeInfo,
     GetValueInternal(value, true);
 
     // SetValueInternal handles setting mValueChanged for us
-    rv = it->SetValueInternal(value, nsTextEditorState::eSetValue_Notify);
+    rv = it->SetValueInternal(value, TextControlState::eSetValue_Notify);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -275,7 +275,7 @@ nsresult HTMLTextAreaElement::SetValueInternal(const nsAString& aValue,
   // (i.e. if eSetValue_Notify is in aFlags), so that
   // nsTextControlFrame::UpdateValueDisplay retrieves the correct value if
   // needed.
-  if (aFlags & nsTextEditorState::eSetValue_Notify) {
+  if (aFlags & TextControlState::eSetValue_Notify) {
     SetValueChanged(true);
   }
 
@@ -299,9 +299,9 @@ void HTMLTextAreaElement::SetValue(const nsAString& aValue,
   GetValueInternal(currentValue, true);
 
   nsresult rv = SetValueInternal(
-      aValue, nsTextEditorState::eSetValue_ByContent |
-                  nsTextEditorState::eSetValue_Notify |
-                  nsTextEditorState::eSetValue_MoveCursorToEndIfValueChanged);
+      aValue, TextControlState::eSetValue_ByContent |
+                  TextControlState::eSetValue_Notify |
+                  TextControlState::eSetValue_MoveCursorToEndIfValueChanged);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     aError.Throw(rv);
     return;
@@ -315,9 +315,9 @@ void HTMLTextAreaElement::SetValue(const nsAString& aValue,
 void HTMLTextAreaElement::SetUserInput(const nsAString& aValue,
                                        nsIPrincipal& aSubjectPrincipal) {
   SetValueInternal(
-      aValue, nsTextEditorState::eSetValue_BySetUserInput |
-                  nsTextEditorState::eSetValue_Notify |
-                  nsTextEditorState::eSetValue_MoveCursorToEndIfValueChanged);
+      aValue, TextControlState::eSetValue_BySetUserInput |
+                  TextControlState::eSetValue_Notify |
+                  TextControlState::eSetValue_MoveCursorToEndIfValueChanged);
 }
 
 NS_IMETHODIMP
@@ -638,8 +638,8 @@ void HTMLTextAreaElement::GetValueFromSetRangeText(nsAString& aValue) {
 
 nsresult HTMLTextAreaElement::SetValueFromSetRangeText(
     const nsAString& aValue) {
-  return SetValueInternal(aValue, nsTextEditorState::eSetValue_ByContent |
-                                      nsTextEditorState::eSetValue_Notify);
+  return SetValueInternal(aValue, TextControlState::eSetValue_ByContent |
+                                      TextControlState::eSetValue_Notify);
 }
 
 nsresult HTMLTextAreaElement::Reset() {
@@ -648,7 +648,7 @@ nsresult HTMLTextAreaElement::Reset() {
   SetValueChanged(false);
 
   nsresult rv =
-      SetValueInternal(resetVal, nsTextEditorState::eSetValue_Internal);
+      SetValueInternal(resetVal, TextControlState::eSetValue_Internal);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;

@@ -41,10 +41,10 @@ EXPORTS += [
     'nsIRadioGroupContainer.h',
     'nsIRadioVisitor.h',
     'nsITextControlElement.h',
-    'nsTextEditorState.h',
 ]
 
 EXPORTS.mozilla += [
+    'TextControlState.h',
     'TextInputListener.h',
 ]
 
@@ -211,9 +211,9 @@ UNIFIED_SOURCES += [
     'nsHTMLDocument.cpp',
     'nsIConstraintValidation.cpp',
     'nsRadioVisitor.cpp',
-    'nsTextEditorState.cpp',
     'PlayPromise.cpp',
     'RadioNodeList.cpp',
+    'TextControlState.cpp',
     'TextTrackManager.cpp',
     'TimeRanges.cpp',
     'ValidityState.cpp',

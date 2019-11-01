@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsTextEditorState_h__
-#define nsTextEditorState_h__
+#ifndef mozilla_TextControlState_h
+#define mozilla_TextControlState_h
 
 #include "mozilla/Assertions.h"
 #include "nsString.h"
@@ -21,8 +21,6 @@
 #include "mozilla/dom/Nullable.h"
 
 class nsTextControlFrame;
-class nsTextInputSelectionImpl;
-class nsAnonDivObserver;
 class nsISelectionController;
 class nsFrameSelection;
 class nsITextControlElement;
@@ -32,14 +30,14 @@ namespace mozilla {
 
 class ErrorResult;
 class TextInputListener;
+class TextInputSelectionController;
 
 namespace dom {
 class HTMLInputElement;
 }  // namespace dom
-}  // namespace mozilla
 
 /**
- * nsTextEditorState is a class which is responsible for managing the state of
+ * TextControlState is a class which is responsible for managing the state of
  * plaintext controls.  This currently includes the following HTML elements:
  *   <input type=text>
  *   <input type=search>
@@ -49,8 +47,8 @@ class HTMLInputElement;
  *   <input type=password>
  *   <textarea>
  *
- * This class is held as a member of HTMLInputElement and nsHTMLTextAreaElement.
- * The public functions in this class include the public APIs which content/
+ * This class is held as a member of HTMLInputElement and HTMLTextAreaElement.
+ * The public functions in this class include the public APIs which dom/
  * uses. Layout code uses the nsITextControlElement interface to invoke
  * functions on this class.
  *
@@ -67,13 +65,13 @@ class HTMLInputElement;
  * cycle, or might have several different ones, but at any given moment in time
  * there is a maximum of 1 bound frame to each text control.
  *
- *  * The control's associated editor.  This value is stored in the mEditor
- * member. An editor is initilized for the control only when necessary (that is,
- * when either the user is about to interact with the text control, or when some
- * other code needs to access the editor object.  Without a frame bound to the
- * control, an editor is never initialzied.  Once initialized, the editor might
- * outlive the frame, in which case the same editor will be used if a new frame
- * gets bound to the text control.
+ *  * The control's associated editor.  This value is stored in the mTextEditor
+ * member. An editor is initialized for the control only when necessary (that
+ * is, when either the user is about to interact with the text control, or when
+ * some other code needs to access the editor object.  Without a frame bound to
+ * the control, an editor is never initialized.  Once initialized, the editor
+ * might outlive the frame, in which case the same editor will be used if a new
+ * frame gets bound to the text control.
  *
  *  * The anonymous content associated with the text control's frame, including
  * the value div (the DIV element responsible for holding the value of the text
@@ -109,7 +107,7 @@ class HTMLInputElement;
  *    text field.
  *
  *
- * As a general rule, nsTextEditorState objects own the value of the text
+ * As a general rule, TextControlState objects own the value of the text
  * control, and any attempt to retrieve or set the value must be made through
  * those objects.  Internally, the value can be represented in several different
  * ways, based on the state the control is in.
@@ -121,27 +119,40 @@ class HTMLInputElement;
  *
  *   * If the value has been changed through the DOM node (before the editor for
  * the object is initialized), the value is stored as a simple string inside the
- * mValue member of the nsTextEditorState object.
+ * mValue member of the TextControlState object.
  *
  *   * If an editor has been initialized for the control, the value is set and
  * retrievd via the nsIPlaintextEditor interface, and is internally managed by
  * the editor as the native anonymous content tree attached to the control's
  * frame.
  *
- *   * If the text editor state object is unbound from the control's frame, the
+ *   * If the text control state object is unbound from the control's frame, the
  * value is transferred to the mValue member variable, and will be managed there
  * until a new frame is bound to the text editor state object.
  */
 
 class RestoreSelectionState;
 
-class nsTextEditorState : public mozilla::SupportsWeakPtr<nsTextEditorState> {
+class TextControlState final : public SupportsWeakPtr<TextControlState> {
  public:
-  MOZ_DECLARE_WEAKREFERENCE_TYPENAME(nsTextEditorState)
-  explicit nsTextEditorState(nsITextControlElement* aOwningElement);
-  static nsTextEditorState* Construct(nsITextControlElement* aOwningElement,
-                                      nsTextEditorState** aReusedState);
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY ~nsTextEditorState();
+  typedef dom::Element Element;
+  typedef dom::HTMLInputElement HTMLInputElement;
+
+  MOZ_DECLARE_WEAKREFERENCE_TYPENAME(TextControlState)
+
+  static TextControlState* Construct(nsITextControlElement* aOwningElement,
+                                     TextControlState** aReusedState);
+
+  explicit TextControlState(nsITextControlElement* aOwningElement);
+
+  TextControlState() = delete;
+  explicit TextControlState(const TextControlState&) = delete;
+  TextControlState(TextControlState&&) = delete;
+
+  void operator=(const TextControlState&) = delete;
+  void operator=(TextControlState&&) = delete;
+
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY ~TextControlState();
 
   void Traverse(nsCycleCollectionTraversalCallback& cb);
   MOZ_CAN_RUN_SCRIPT_BOUNDARY void Unlink();
@@ -153,15 +164,14 @@ class nsTextEditorState : public mozilla::SupportsWeakPtr<nsTextEditorState> {
     mTextCtrlElement = nullptr;
   }
 
-  mozilla::TextEditor* GetTextEditor();
-  mozilla::TextEditor* GetTextEditorWithoutCreation();
+  TextEditor* GetTextEditor();
+  TextEditor* GetTextEditorWithoutCreation();
   nsISelectionController* GetSelectionController() const;
   nsFrameSelection* GetConstFrameSelection();
   nsresult BindToFrame(nsTextControlFrame* aFrame);
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  void UnbindFromFrame(nsTextControlFrame* aFrame);
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  nsresult PrepareEditor(const nsAString* aValue = nullptr);
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void UnbindFromFrame(nsTextControlFrame* aFrame);
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult
+  PrepareEditor(const nsAString* aValue = nullptr);
   void InitializeKeyboardEventListeners();
 
   enum SetValueFlags {
@@ -196,11 +206,11 @@ class nsTextEditorState : public mozilla::SupportsWeakPtr<nsTextEditorState> {
     // it.
     eSetValue_MoveCursorToBeginSetSelectionDirectionForward = 1 << 6,
   };
-  MOZ_CAN_RUN_SCRIPT
-  MOZ_MUST_USE bool SetValue(const nsAString& aValue,
-                             const nsAString* aOldValue, uint32_t aFlags);
-  MOZ_CAN_RUN_SCRIPT
-  MOZ_MUST_USE bool SetValue(const nsAString& aValue, uint32_t aFlags) {
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE bool SetValue(const nsAString& aValue,
+                                                const nsAString* aOldValue,
+                                                uint32_t aFlags);
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE bool SetValue(const nsAString& aValue,
+                                                uint32_t aFlags) {
     return SetValue(aValue, nullptr, aFlags);
   }
   void GetValue(nsAString& aValue, bool aIgnoreWrap) const;
@@ -210,12 +220,14 @@ class nsTextEditorState : public mozilla::SupportsWeakPtr<nsTextEditorState> {
   // XXX We might have to add assertion when it is into editable,
   // or reconsider fixing bug 597525 to remove these.
   void EmptyValue() {
-    if (mValue) mValue->Truncate();
+    if (mValue) {
+      mValue->Truncate();
+    }
   }
   bool IsEmpty() const { return mValue ? mValue->IsEmpty() : true; }
 
-  mozilla::dom::Element* GetRootNode();
-  mozilla::dom::Element* GetPreviewNode();
+  Element* GetRootNode();
+  Element* GetPreviewNode();
 
   bool IsSingleLineTextControl() const {
     return mTextCtrlElement->IsSingleLineTextControl();
@@ -295,16 +307,15 @@ class nsTextEditorState : public mozilla::SupportsWeakPtr<nsTextEditorState> {
   // Sync up our selection properties with our editor prior to being destroyed.
   // This will invoke UnbindFromFrame() to ensure that we grab whatever
   // selection state may be at the moment.
-  MOZ_CAN_RUN_SCRIPT
-  void SyncUpSelectionPropertiesBeforeDestruction();
+  MOZ_CAN_RUN_SCRIPT void SyncUpSelectionPropertiesBeforeDestruction();
 
   // Get the selection range start and end points in our text.
   void GetSelectionRange(uint32_t* aSelectionStart, uint32_t* aSelectionEnd,
-                         mozilla::ErrorResult& aRv);
+                         ErrorResult& aRv);
 
   // Get the selection direction
   nsITextControlFrame::SelectionDirection GetSelectionDirection(
-      mozilla::ErrorResult& aRv);
+      ErrorResult& aRv);
 
   // Set the selection range (start, end, direction).  aEnd is allowed to be
   // smaller than aStart; in that case aStart will be reset to the same value as
@@ -320,49 +331,46 @@ class nsTextEditorState : public mozilla::SupportsWeakPtr<nsTextEditorState> {
   // frame or our cached selection state) work with uint32_t at the moment...
   void SetSelectionRange(uint32_t aStart, uint32_t aEnd,
                          nsITextControlFrame::SelectionDirection aDirection,
-                         mozilla::ErrorResult& aRv);
+                         ErrorResult& aRv);
 
   // Set the selection range, but with an optional string for the direction.
   // This will convert aDirection to an nsITextControlFrame::SelectionDirection
   // and then call our other SetSelectionRange overload.
   void SetSelectionRange(uint32_t aSelectionStart, uint32_t aSelectionEnd,
-                         const mozilla::dom::Optional<nsAString>& aDirection,
-                         mozilla::ErrorResult& aRv);
+                         const dom::Optional<nsAString>& aDirection,
+                         ErrorResult& aRv);
 
   // Set the selection start.  This basically implements the
   // https://html.spec.whatwg.org/multipage/forms.html#dom-textarea/input-selectionstart
   // setter.
-  void SetSelectionStart(const mozilla::dom::Nullable<uint32_t>& aStart,
-                         mozilla::ErrorResult& aRv);
+  void SetSelectionStart(const dom::Nullable<uint32_t>& aStart,
+                         ErrorResult& aRv);
 
   // Set the selection end.  This basically implements the
   // https://html.spec.whatwg.org/multipage/forms.html#dom-textarea/input-selectionend
   // setter.
-  void SetSelectionEnd(const mozilla::dom::Nullable<uint32_t>& aEnd,
-                       mozilla::ErrorResult& aRv);
+  void SetSelectionEnd(const dom::Nullable<uint32_t>& aEnd, ErrorResult& aRv);
 
   // Get the selection direction as a string.  This implements the
   // https://html.spec.whatwg.org/multipage/forms.html#dom-textarea/input-selectiondirection
   // getter.
-  void GetSelectionDirectionString(nsAString& aDirection,
-                                   mozilla::ErrorResult& aRv);
+  void GetSelectionDirectionString(nsAString& aDirection, ErrorResult& aRv);
 
   // Set the selection direction.  This basically implements the
   // https://html.spec.whatwg.org/multipage/forms.html#dom-textarea/input-selectiondirection
   // setter.
-  void SetSelectionDirection(const nsAString& aDirection,
-                             mozilla::ErrorResult& aRv);
+  void SetSelectionDirection(const nsAString& aDirection, ErrorResult& aRv);
 
   // Set the range text.  This basically implements
   // https://html.spec.whatwg.org/multipage/forms.html#dom-textarea/input-setrangetext
-  void SetRangeText(const nsAString& aReplacement, mozilla::ErrorResult& aRv);
+  void SetRangeText(const nsAString& aReplacement, ErrorResult& aRv);
   // The last two arguments are -1 if we don't know our selection range;
   // otherwise they're the start and end of our selection range.
-  void SetRangeText(
-      const nsAString& aReplacement, uint32_t aStart, uint32_t aEnd,
-      mozilla::dom::SelectionMode aSelectMode, mozilla::ErrorResult& aRv,
-      const mozilla::Maybe<uint32_t>& aSelectionStart = mozilla::Nothing(),
-      const mozilla::Maybe<uint32_t>& aSelectionEnd = mozilla::Nothing());
+  void SetRangeText(const nsAString& aReplacement, uint32_t aStart,
+                    uint32_t aEnd, dom::SelectionMode aSelectMode,
+                    ErrorResult& aRv,
+                    const Maybe<uint32_t>& aSelectionStart = Nothing(),
+                    const Maybe<uint32_t>& aSelectionEnd = Nothing());
 
   void UpdateEditableState(bool aNotify) {
     if (auto* root = GetRootNode()) {
@@ -371,13 +379,6 @@ class nsTextEditorState : public mozilla::SupportsWeakPtr<nsTextEditorState> {
   }
 
  private:
-  friend class RestoreSelectionState;
-
-  // not copy constructible
-  nsTextEditorState(const nsTextEditorState&);
-  // not assignable
-  void operator=(const nsTextEditorState&);
-
   void ValueWasChanged(bool aNotify);
 
   MOZ_CAN_RUN_SCRIPT void DestroyEditor();
@@ -387,13 +388,13 @@ class nsTextEditorState : public mozilla::SupportsWeakPtr<nsTextEditorState> {
 
   void FinishedRestoringSelection();
 
-  mozilla::dom::HTMLInputElement* GetParentNumberControl(nsFrame* aFrame) const;
+  HTMLInputElement* GetParentNumberControl(nsFrame* aFrame) const;
 
   bool EditorHasComposition();
 
   class InitializationGuard {
    public:
-    explicit InitializationGuard(nsTextEditorState& aState)
+    explicit InitializationGuard(TextControlState& aState)
         : mState(aState), mGuardSet(false) {
       if (!mState.mInitializing) {
         mGuardSet = true;
@@ -408,21 +409,19 @@ class nsTextEditorState : public mozilla::SupportsWeakPtr<nsTextEditorState> {
     bool IsInitializingRecursively() const { return !mGuardSet; }
 
    private:
-    nsTextEditorState& mState;
+    TextControlState& mState;
     bool mGuardSet;
   };
-  friend class InitializationGuard;
-  friend class PrepareEditorEvent;
 
   // The text control element owns this object, and ensures that this object
   // has a smaller lifetime.
   nsITextControlElement* MOZ_NON_OWNING_REF mTextCtrlElement;
-  RefPtr<nsTextInputSelectionImpl> mSelCon;
+  RefPtr<TextInputSelectionController> mSelCon;
   RefPtr<RestoreSelectionState> mRestoringSelection;
-  RefPtr<mozilla::TextEditor> mTextEditor;
+  RefPtr<TextEditor> mTextEditor;
   nsTextControlFrame* mBoundFrame;
-  RefPtr<mozilla::TextInputListener> mTextListener;
-  mozilla::Maybe<nsString> mValue;
+  RefPtr<TextInputListener> mTextListener;
+  Maybe<nsString> mValue;
   // mValueBeingSet is available only while SetValue() is requesting to commit
   // composition.  I.e., this is valid only while mIsCommittingComposition is
   // true.  While active composition is being committed, GetValue() needs
@@ -440,16 +439,21 @@ class nsTextEditorState : public mozilla::SupportsWeakPtr<nsTextEditorState> {
   bool mPlaceholderVisibility;
   bool mPreviewVisibility;
   bool mIsCommittingComposition;
+
+  friend class PrepareEditorEvent;
+  friend class RestoreSelectionState;
 };
 
-inline void ImplCycleCollectionUnlink(nsTextEditorState& aField) {
+inline void ImplCycleCollectionUnlink(TextControlState& aField) {
   aField.Unlink();
 }
 
 inline void ImplCycleCollectionTraverse(
-    nsCycleCollectionTraversalCallback& aCallback, nsTextEditorState& aField,
+    nsCycleCollectionTraversalCallback& aCallback, TextControlState& aField,
     const char* aName, uint32_t aFlags = 0) {
   aField.Traverse(aCallback);
 }
 
-#endif
+}  // namespace mozilla
+
+#endif  // #ifndef mozilla_TextControlState_h
