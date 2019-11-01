@@ -1031,4 +1031,15 @@ browsertime-tp6-1:
     mozharness:
         extra-options:
             - --browsertime
-            - --browsertime-video
+
+browsertime-speedometer:
+    description: "Raptor (browsertime) Speedometer on Firefox"
+    raptor-test: raptor-speedometer
+    run-on-projects: ['integration', 'try']
+    variants: ["fission"]
+    apps: ["firefox"]
+    treeherder-symbol: Btime(sp)
+    tier: 3
+    mozharness:
+        extra-options:
+            - --browsertime

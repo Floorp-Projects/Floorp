@@ -891,6 +891,7 @@ android-hw-arm7-raptor-nightly:
 
 browsertime:
     - browsertime-tp6-1
+    - browsertime-speedometer
 
 android-hw-aarch64-browsertime:
     - browsertime-tp6m-1
