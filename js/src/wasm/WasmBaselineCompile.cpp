@@ -6832,6 +6832,8 @@ class BaseCompiler final : public BaseCompilerInterface {
 
   RegI32 popMemoryAccess(MemoryAccessDesc* access, AccessCheck* check);
 
+  void pushHeapBase();
+
   ////////////////////////////////////////////////////////////
   //
   // Sundry helpers.
@@ -9766,6 +9768,25 @@ RegI32 BaseCompiler::popMemoryAccess(MemoryAccessDesc* access,
   return popI32();
 }
 
+void BaseCompiler::pushHeapBase() {
+#if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_ARM64)
+  RegI64 heapBase = needI64();
+  moveI64(RegI64(Register64(HeapReg)), heapBase);
+  pushI64(heapBase);
+#elif defined(JS_CODEGEN_ARM)
+  RegI32 heapBase = needI32();
+  moveI32(RegI32(HeapReg), heapBase);
+  pushI32(heapBase);
+#elif defined(JS_CODEGEN_X86)
+  RegI32 heapBase = needI32();
+  masm.loadWasmTlsRegFromFrame(heapBase);
+  masm.loadPtr(Address(heapBase, offsetof(TlsData, memoryBase)), heapBase);
+  pushI32(heapBase);
+#else
+  MOZ_CRASH("BaseCompiler platform hook: pushHeapBase");
+#endif
+}
+
 RegI32 BaseCompiler::maybeLoadTlsForAccess(const AccessCheck& check) {
   RegI32 tls;
   if (needTlsForAccess(check)) {
@@ -10653,6 +10674,7 @@ bool BaseCompiler::emitMemOrTableCopy(bool isMem) {
   if (isMem) {
     MOZ_ASSERT(srcMemOrTableIndex == 0);
     MOZ_ASSERT(dstMemOrTableIndex == 0);
+    pushHeapBase();
     if (!emitInstanceCall(
             lineOrBytecode,
             usesSharedMemory() ? SASigMemCopyShared : SASigMemCopy,
@@ -10711,6 +10733,7 @@ bool BaseCompiler::emitMemFill() {
     return true;
   }
 
+  pushHeapBase();
   return emitInstanceCall(
       lineOrBytecode, usesSharedMemory() ? SASigMemFillShared : SASigMemFill,
       /*pushReturnedValue=*/false);

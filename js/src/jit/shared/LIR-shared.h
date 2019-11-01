@@ -6272,6 +6272,17 @@ class LWasmLoadTls : public LInstructionHelper<1, 1, 0> {
   const LAllocation* tlsPtr() { return getOperand(0); }
 };
 
+class LWasmHeapBase : public LInstructionHelper<1, 1, 0> {
+ public:
+  LIR_HEADER(WasmHeapBase);
+  explicit LWasmHeapBase(const LAllocation& tlsPtr)
+      : LInstructionHelper(classOpcode) {
+    setOperand(0, tlsPtr);
+  }
+  MWasmHeapBase* mir() const { return mir_->toWasmHeapBase(); }
+  const LAllocation* tlsPtr() { return getOperand(0); }
+};
+
 namespace details {
 
 // This is a base class for LWasmLoad/LWasmLoadI64.
