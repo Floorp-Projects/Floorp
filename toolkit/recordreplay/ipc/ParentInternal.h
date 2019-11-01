@@ -153,9 +153,6 @@ class ChildProcessInfo {
   // Channel for communicating with the process.
   Channel* mChannel = nullptr;
 
-  // The last time we sent or received a message from this process.
-  TimeStamp mLastMessageTime;
-
   // Whether this process is recording.
   bool mRecording = false;
 
@@ -167,11 +164,33 @@ class ChildProcessInfo {
   bool mHasBegunFatalError = false;
   bool mHasFatalError = false;
 
+  // Whether the child might be rewinding and can't receive ping messages.
+  bool mMightRewind = false;
+
+  // Whether the child is considered to be hanged and has been instructed to
+  // crash.
+  bool mSentTerminateMessage = false;
+
+  // The last time we send a ping or terminate message.
+  TimeStamp mLastPingTime;
+
+  struct PingInfo {
+    uint32_t mId;
+    uint64_t mProgress;
+
+    explicit PingInfo(uint32_t aId) : mId(aId), mProgress(0) {}
+  };
+
+  // Information about all pings we have sent since they were reset.
+  InfallibleVector<PingInfo> mPings;
+
   void OnIncomingMessage(const Message& aMsg);
 
   static void MaybeProcessPendingMessageRunnable();
   void ReceiveChildMessageOnMainThread(Message::UniquePtr aMsg);
 
+  bool IsHanged();
+  void OnPingResponse(const PingResponseMessage& aMsg);
   void OnCrash(const char* aWhy);
   void LaunchSubprocess(
       const Maybe<RecordingProcessData>& aRecordingProcessData);
@@ -195,6 +214,9 @@ class ChildProcessInfo {
   void WaitUntilPaused();
 
   static void SetIntroductionMessage(IntroductionMessage* aMessage);
+
+  void ResetPings(bool aMightRewind);
+  void MaybePing();
 };
 
 }  // namespace parent
