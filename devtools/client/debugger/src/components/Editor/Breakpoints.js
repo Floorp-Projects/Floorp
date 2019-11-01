@@ -6,11 +6,7 @@
 import React, { Component } from "react";
 import Breakpoint from "./Breakpoint";
 
-import {
-  getSelectedSource,
-  getFirstVisibleBreakpoints,
-  getCanRewind,
-} from "../../selectors";
+import { getSelectedSource, getFirstVisibleBreakpoints } from "../../selectors";
 import { makeBreakpointId } from "../../utils/breakpoint";
 import { connect } from "../../utils/connect";
 import { breakpointItemActions } from "./menus/breakpoints";
@@ -35,7 +31,6 @@ type Props = {
   editor: Object,
   breakpointActions: BreakpointItemActions,
   editorActions: EditorItemActions,
-  canRewind: boolean,
 };
 
 class Breakpoints extends Component<Props> {
@@ -47,7 +42,6 @@ class Breakpoints extends Component<Props> {
       editor,
       breakpointActions,
       editorActions,
-      canRewind,
     } = this.props;
 
     if (!selectedSource || !breakpoints || selectedSource.isBlackBoxed) {
@@ -66,7 +60,6 @@ class Breakpoints extends Component<Props> {
               editor={editor}
               breakpointActions={breakpointActions}
               editorActions={editorActions}
-              canRewind={canRewind}
             />
           );
         })}
@@ -81,7 +74,6 @@ export default connect<Props, OwnProps, _, _, _, _>(
     // breakpoint marker represents only the first breakpoint
     breakpoints: getFirstVisibleBreakpoints(state),
     selectedSource: getSelectedSource(state),
-    canRewind: getCanRewind(state),
   }),
   dispatch => ({
     breakpointActions: breakpointItemActions(dispatch),

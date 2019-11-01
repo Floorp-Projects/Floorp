@@ -54,7 +54,7 @@ export type CallDeclaration = SymbolDeclaration & {
 };
 
 export type MemberDeclaration = SymbolDeclaration & {
-  computed: boolean,
+  computed: Boolean,
   expression: string,
 };
 
