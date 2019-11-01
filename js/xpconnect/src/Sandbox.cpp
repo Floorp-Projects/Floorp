@@ -64,9 +64,13 @@
 #include "mozilla/dom/XMLHttpRequest.h"
 #include "mozilla/dom/XMLSerializerBinding.h"
 #include "mozilla/dom/FormDataBinding.h"
+#include "mozilla/dom/nsCSPContext.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/DeferredFinalize.h"
+#include "mozilla/ExtensionPolicyService.h"
 #include "mozilla/NullPrincipal.h"
+#include "mozilla/ResultExtensions.h"
+#include "mozilla/StaticPrefs_extensions.h"
 
 using namespace mozilla;
 using namespace JS;
@@ -1018,6 +1022,75 @@ bool xpc::GlobalProperties::DefineInSandbox(JSContext* cx,
   return Define(cx, obj);
 }
 
+/**
+ * If enabled, apply the extension base CSP, then apply the
+ * content script CSP which will either be a default or one
+ * provided by the extension in its manifest.
+ */
+nsresult ApplyAddonContentScriptCSP(nsISupports* prinOrSop) {
+  if (!StaticPrefs::extensions_content_script_csp_enabled()) {
+    return NS_OK;
+  }
+  nsCOMPtr<nsIPrincipal> principal = do_QueryInterface(prinOrSop);
+  if (!principal) {
+    return NS_OK;
+  }
+
+  auto* basePrin = BasePrincipal::Cast(principal);
+  // We only get an addonPolicy if the principal is an
+  // expanded principal with an extension principal in it.
+  auto* addonPolicy = basePrin->ContentScriptAddonPolicy();
+  if (!addonPolicy) {
+    return NS_OK;
+  }
+
+  nsString url;
+  MOZ_TRY_VAR(url, addonPolicy->GetURL(NS_LITERAL_STRING("")));
+
+  nsCOMPtr<nsIURI> selfURI;
+  MOZ_TRY(NS_NewURI(getter_AddRefs(selfURI), url));
+
+  nsAutoString baseCSP;
+  MOZ_ALWAYS_SUCCEEDS(
+      ExtensionPolicyService::GetSingleton().GetBaseCSP(baseCSP));
+
+  // If we got here, we're definitly an expanded principal.
+  auto expanded = basePrin->As<ExpandedPrincipal>();
+  nsCOMPtr<nsIContentSecurityPolicy> csp;
+
+#ifdef MOZ_DEBUG
+  // Bug 1548468: Move CSP off ExpandedPrincipal
+  expanded->GetCsp(getter_AddRefs(csp));
+  if (csp) {
+    uint32_t count = 0;
+    csp->GetPolicyCount(&count);
+    if (count > 0) {
+      // Ensure that the policy was not already added.
+      nsAutoString parsedPolicyStr;
+      for (uint32_t i = 0; i < count; i++) {
+        csp->GetPolicyString(i, parsedPolicyStr);
+        MOZ_ASSERT(!parsedPolicyStr.Equals(baseCSP));
+      }
+    }
+  }
+#endif
+
+  csp = new nsCSPContext();
+  MOZ_TRY(
+      csp->SetRequestContextWithPrincipal(expanded, selfURI, EmptyString(), 0));
+
+  bool reportOnly = StaticPrefs::extensions_content_script_csp_report_only();
+
+  MOZ_TRY(csp->AppendPolicy(baseCSP, reportOnly, false));
+
+  // Set default or extension provided csp.
+  const nsAString& contentScriptCSP = addonPolicy->ContentScriptCSP();
+  MOZ_TRY(csp->AppendPolicy(contentScriptCSP, reportOnly, false));
+
+  expanded->SetCsp(csp);
+  return NS_OK;
+}
+
 nsresult xpc::CreateSandboxObject(JSContext* cx, MutableHandleValue vp,
                                   nsISupports* prinOrSop,
                                   SandboxOptions& options) {
@@ -1768,6 +1841,8 @@ nsresult nsXPCComponents_utils_Sandbox::CallOrConstruct(
       } else {
         ok = GetExpandedPrincipal(cx, obj, options, getter_AddRefs(expanded));
         prinOrSop = expanded;
+        // If this is an addon content script we need to apply the csp.
+        MOZ_TRY(ApplyAddonContentScriptCSP(prinOrSop));
       }
     } else {
       ok = GetPrincipalOrSOP(cx, obj, getter_AddRefs(prinOrSop));
