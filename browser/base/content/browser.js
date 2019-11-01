@@ -2108,6 +2108,10 @@ var gBrowserInit = {
         window.fullScreen = true;
       }
     }
+
+    if (!Services.policies.isAllowed("hideShowMenuBar")) {
+      document.getElementById("toolbar-menubar").removeAttribute("toolbarname");
+    }
   },
 
   _setInitialFocus() {
