@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-const pdfjsVersion = '2.4.71';
-const pdfjsBuild = 'd7f651aa';
+const pdfjsVersion = '2.4.91';
+const pdfjsBuild = '72bd8e8b';
 
 const pdfjsCoreWorker = __w_pdfjs_require__(1);
 
@@ -225,7 +225,7 @@ var WorkerMessageHandler = {
     var WorkerTasks = [];
     const verbosity = (0, _util.getVerbosityLevel)();
     const apiVersion = docParams.apiVersion;
-    const workerVersion = '2.4.71';
+    const workerVersion = '2.4.91';
 
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
@@ -2345,6 +2345,14 @@ class ChunkedStream {
       return missingChunks;
     };
 
+    ChunkedStreamSubstream.prototype.allChunksLoaded = function () {
+      if (this.numChunksLoaded === this.numChunks) {
+        return true;
+      }
+
+      return this.getMissingChunks().length === 0;
+    };
+
     const subStream = new ChunkedStreamSubstream();
     subStream.pos = subStream.start = start;
     subStream.end = start + length || this.end;
@@ -3479,8 +3487,6 @@ var _primitives = __w_pdfjs_require__(6);
 var _parser = __w_pdfjs_require__(12);
 
 var _core_utils = __w_pdfjs_require__(9);
-
-var _chunked_stream = __w_pdfjs_require__(8);
 
 var _crypto = __w_pdfjs_require__(23);
 
@@ -5570,12 +5576,12 @@ exports.FileSpec = FileSpec;
 
 let ObjectLoader = function () {
   function mayHaveChildren(value) {
-    return (0, _primitives.isRef)(value) || (0, _primitives.isDict)(value) || Array.isArray(value) || (0, _primitives.isStream)(value);
+    return value instanceof _primitives.Ref || value instanceof _primitives.Dict || Array.isArray(value) || (0, _primitives.isStream)(value);
   }
 
   function addChildren(node, nodesToVisit) {
-    if ((0, _primitives.isDict)(node) || (0, _primitives.isStream)(node)) {
-      let dict = (0, _primitives.isDict)(node) ? node : node.dict;
+    if (node instanceof _primitives.Dict || (0, _primitives.isStream)(node)) {
+      let dict = node instanceof _primitives.Dict ? node : node.dict;
       let dictKeys = dict.getKeys();
 
       for (let i = 0, ii = dictKeys.length; i < ii; i++) {
@@ -5605,14 +5611,12 @@ let ObjectLoader = function () {
   }
 
   ObjectLoader.prototype = {
-    load() {
-      this.capability = (0, _util.createPromiseCapability)();
-
-      if (!(this.xref.stream instanceof _chunked_stream.ChunkedStream) || this.xref.stream.getMissingChunks().length === 0) {
-        this.capability.resolve();
-        return this.capability.promise;
+    async load() {
+      if (!this.xref.stream.allChunksLoaded || this.xref.stream.allChunksLoaded()) {
+        return undefined;
       }
 
+      this.capability = (0, _util.createPromiseCapability)();
       let {
         keys,
         dict
@@ -5640,7 +5644,7 @@ let ObjectLoader = function () {
       while (nodesToVisit.length) {
         let currentNode = nodesToVisit.pop();
 
-        if ((0, _primitives.isRef)(currentNode)) {
+        if (currentNode instanceof _primitives.Ref) {
           if (this.refSet.has(currentNode)) {
             continue;
           }
@@ -5668,7 +5672,7 @@ let ObjectLoader = function () {
           for (let i = 0, ii = baseStreams.length; i < ii; i++) {
             let stream = baseStreams[i];
 
-            if (stream.getMissingChunks && stream.getMissingChunks().length) {
+            if (stream.allChunksLoaded && !stream.allChunksLoaded()) {
               foundMissingData = true;
               pendingRequests.push({
                 begin: stream.start,
@@ -5690,7 +5694,7 @@ let ObjectLoader = function () {
           for (let i = 0, ii = nodesToRevisit.length; i < ii; i++) {
             let node = nodesToRevisit[i];
 
-            if ((0, _primitives.isRef)(node)) {
+            if (node instanceof _primitives.Ref) {
               this.refSet.remove(node);
             }
           }
@@ -19894,8 +19898,25 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
     }
   };
 
-  function normalizeBlendMode(value) {
+  function normalizeBlendMode(value, parsingArray = false) {
+    if (Array.isArray(value)) {
+      for (let i = 0, ii = value.length; i < ii; i++) {
+        const maybeBM = normalizeBlendMode(value[i], true);
+
+        if (maybeBM) {
+          return maybeBM;
+        }
+      }
+
+      (0, _util.warn)(`Unsupported blend mode Array: ${value}`);
+      return 'source-over';
+    }
+
     if (!(0, _primitives.isName)(value)) {
+      if (parsingArray) {
+        return null;
+      }
+
       return 'source-over';
     }
 
@@ -19950,7 +19971,11 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
         return 'luminosity';
     }
 
-    (0, _util.warn)('Unsupported blend mode: ' + value.name);
+    if (parsingArray) {
+      return null;
+    }
+
+    (0, _util.warn)(`Unsupported blend mode: ${value.name}`);
     return 'source-over';
   }
 
@@ -20005,10 +20030,22 @@ var PartialEvaluator = function PartialEvaluatorClosure() {
               processed[graphicState.objId] = true;
             }
 
-            var bm = graphicState.get('BM');
+            const bm = graphicState.get('BM');
 
-            if (bm instanceof _primitives.Name && bm.name !== 'Normal') {
-              return true;
+            if (bm instanceof _primitives.Name) {
+              if (bm.name !== 'Normal') {
+                return true;
+              }
+
+              continue;
+            }
+
+            if (bm !== undefined && Array.isArray(bm)) {
+              for (let j = 0, jj = bm.length; j < jj; j++) {
+                if (bm[j] instanceof _primitives.Name && bm[j].name !== 'Normal') {
+                  return true;
+                }
+              }
             }
           }
         }
