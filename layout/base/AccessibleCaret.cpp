@@ -102,8 +102,7 @@ void AccessibleCaret::SetAppearance(Appearance aAppearance) {
 
   // Need to reset rect since the cached rect will be compared in SetPosition.
   if (mAppearance == Appearance::None) {
-    mImaginaryCaretRect = nsRect();
-    mZoomLevel = 0.0f;
+    ClearCachedData();
   }
 }
 
@@ -231,6 +230,12 @@ void AccessibleCaret::RemoveCaretElement(Document* aDocument) {
   aDocument->RemoveAnonymousContent(*mCaretElementHolder, IgnoreErrors());
 }
 
+void AccessibleCaret::ClearCachedData() {
+  mImaginaryCaretRect = nsRect();
+  mImaginaryCaretRectInContainerFrame = nsRect();
+  mZoomLevel = 0.0f;
+}
+
 AccessibleCaret::PositionChangedResult AccessibleCaret::SetPosition(
     nsIFrame* aFrame, int32_t aOffset) {
   if (!CustomContentContainerFrame()) {
@@ -245,27 +250,31 @@ AccessibleCaret::PositionChangedResult AccessibleCaret::SetPosition(
 
   if (imaginaryCaretRectInFrame.IsEmpty()) {
     // Don't bother to set the caret position since it's invisible.
-    mImaginaryCaretRect = nsRect();
-    mZoomLevel = 0.0f;
+    ClearCachedData();
     return PositionChangedResult::Invisible;
   }
 
-  nsRect imaginaryCaretRect = imaginaryCaretRectInFrame;
-  nsLayoutUtils::TransformRect(aFrame, RootFrame(), imaginaryCaretRect);
-  float zoomLevel = GetZoomLevel();
+  // SetCaretElementStyle() requires the input rect relative to the custom
+  // content container frame.
+  nsRect imaginaryCaretRectInContainerFrame = imaginaryCaretRectInFrame;
+  nsLayoutUtils::TransformRect(aFrame, CustomContentContainerFrame(),
+                               imaginaryCaretRectInContainerFrame);
+  const float zoomLevel = GetZoomLevel();
 
-  if (imaginaryCaretRect.IsEqualEdges(mImaginaryCaretRect) &&
+  if (imaginaryCaretRectInContainerFrame.IsEqualEdges(
+          mImaginaryCaretRectInContainerFrame) &&
       FuzzyEqualsMultiplicative(zoomLevel, mZoomLevel)) {
     return PositionChangedResult::NotChanged;
   }
 
+  nsRect imaginaryCaretRect = imaginaryCaretRectInFrame;
+  nsLayoutUtils::TransformRect(aFrame, RootFrame(), imaginaryCaretRect);
+
+  // Cache mImaginaryCaretRect, which is relative to the root frame.
   mImaginaryCaretRect = imaginaryCaretRect;
+  mImaginaryCaretRectInContainerFrame = imaginaryCaretRectInContainerFrame;
   mZoomLevel = zoomLevel;
 
-  // SetCaretElementStyle() requires the input rect relative to container frame.
-  nsRect imaginaryCaretRectInContainerFrame = imaginaryCaretRectInFrame;
-  nsLayoutUtils::TransformRect(aFrame, CustomContentContainerFrame(),
-                               imaginaryCaretRectInContainerFrame);
   SetCaretElementStyle(imaginaryCaretRectInContainerFrame, mZoomLevel);
 
   return PositionChangedResult::Changed;

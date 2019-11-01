@@ -168,6 +168,9 @@ class AccessibleCaret {
   // Remove caret element from custom content container.
   void RemoveCaretElement(dom::Document*);
 
+  // Clear the cached rects and zoom level.
+  void ClearCachedData();
+
   // The top-center of the imaginary caret to which this AccessibleCaret is
   // attached.
   static nsPoint CaretElementPosition(const nsRect& aRect) {
@@ -198,6 +201,10 @@ class AccessibleCaret {
 
   // mImaginaryCaretRect is relative to root frame.
   nsRect mImaginaryCaretRect;
+
+  // Cached mImaginaryCaretRect relative to the custom content container. This
+  // is used in SetPosition() to check whether the caret position has changed.
+  nsRect mImaginaryCaretRectInContainerFrame;
 
   // Cache current zoom level to determine whether position is changed.
   float mZoomLevel = 0.0f;
