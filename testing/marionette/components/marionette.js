@@ -38,7 +38,6 @@ const NOTIFY_RUNNING = "remote-active";
 // We also set this if Marionette is running in order to start the server
 // again after a Firefox restart.
 const ENV_ENABLED = "MOZ_MARIONETTE";
-const PREF_ENABLED = "marionette.enabled";
 
 // Besides starting based on existing prefs in a profile and a command
 // line flag, we also support inheriting prefs out of an env var, and to
@@ -304,23 +303,30 @@ class MarionetteParentProcess {
     // and that we are ready to start the Marionette server
     this.finalUIStartup = false;
 
-    this.enabled = env.exists(ENV_ENABLED);
     this.alteredPrefs = new Set();
 
-    Services.prefs.addObserver(PREF_ENABLED, this);
+    if (env.exists(ENV_ENABLED)) {
+      MarionettePrefs.enabled = true;
+    }
+
+    XPCOMUtils.defineLazyPreferenceGetter(
+      this,
+      "enabled",
+      "marionette.enabled",
+      false,
+      (aPreference, previousValue, newValue) => {
+        if (newValue) {
+          this.init(false);
+        } else {
+          this.uninit();
+        }
+      }
+    );
     Services.ppmm.addMessageListener("Marionette:IsRunning", this);
   }
 
   get running() {
     return !!this.server && this.server.alive;
-  }
-
-  set enabled(value) {
-    MarionettePrefs.enabled = value;
-  }
-
-  get enabled() {
-    return MarionettePrefs.enabled;
   }
 
   receiveMessage({ name }) {
@@ -338,14 +344,6 @@ class MarionetteParentProcess {
     log.trace(`Received observer notification ${topic}`);
 
     switch (topic) {
-      case "nsPref:changed":
-        if (this.enabled) {
-          this.init(false);
-        } else {
-          this.uninit();
-        }
-        break;
-
       case "profile-after-change":
         Services.obs.addObserver(this, "command-line-startup");
         Services.obs.addObserver(this, "toplevel-window-ready");
@@ -364,7 +362,7 @@ class MarionetteParentProcess {
         Services.obs.removeObserver(this, topic);
 
         if (!this.enabled && subject.handleFlag("marionette", false)) {
-          this.enabled = true;
+          MarionettePrefs.enabled = true;
         }
 
         // We want to suppress the modal dialog that's shown
