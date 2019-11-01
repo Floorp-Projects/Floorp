@@ -7,29 +7,28 @@ const URL =
   Date.now();
 
 // Test PageThumbs API function getThumbnailPath
-function* runTests() {
+add_task(async function thumbnails_bg_bug818225() {
   let path = PageThumbs.getThumbnailPath(URL);
-  yield testIfExists(path, false, "Thumbnail file does not exist");
+  await testIfExists(path, false, "Thumbnail file does not exist");
+  await promiseAddVisitsAndRepopulateNewTabLinks(URL);
 
-  yield addVisitsAndRepopulateNewTabLinks(URL, next);
-  yield createThumbnail(URL);
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: URL,
+    },
+    async browser => {
+      gBrowserThumbnails.clearTopSiteURLCache();
+      await whenFileExists(URL);
+    }
+  );
 
   path = PageThumbs.getThumbnailPath(URL);
   let expectedPath = PageThumbsStorageService.getFilePathForURL(URL);
   is(path, expectedPath, "Thumbnail file has correct path");
 
-  yield testIfExists(path, true, "Thumbnail file exists");
-}
-
-function createThumbnail(aURL) {
-  addTab(aURL, function() {
-    gBrowserThumbnails.clearTopSiteURLCache();
-    whenFileExists(aURL, function() {
-      gBrowser.removeTab(gBrowser.selectedTab);
-      next();
-    });
-  });
-}
+  await testIfExists(path, true, "Thumbnail file exists");
+});
 
 function testIfExists(aPath, aExpected, aMessage) {
   return OS.File.exists(aPath).then(
