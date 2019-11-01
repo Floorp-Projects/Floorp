@@ -26,14 +26,13 @@ type Props = {
   source: Source,
   columnBreakpoint: ColumnBreakpointType,
   breakpointActions: BreakpointItemActions,
-  canRewind: boolean,
 };
 
 const breakpointButton = document.createElement("button");
 breakpointButton.innerHTML =
   '<svg viewBox="0 0 11 13" width="11" height="13"><path d="M5.07.5H1.5c-.54 0-1 .46-1 1v10c0 .54.46 1 1 1h3.57c.58 0 1.15-.26 1.53-.7l3.7-5.3-3.7-5.3C6.22.76 5.65.5 5.07.5z"/></svg>';
 
-function makeBookmark({ breakpoint }, { onClick, onContextMenu, canRewind }) {
+function makeBookmark({ breakpoint }, { onClick, onContextMenu }) {
   const bp = breakpointButton.cloneNode(true);
 
   const isActive = breakpoint && !breakpoint.disabled;
@@ -41,11 +40,9 @@ function makeBookmark({ breakpoint }, { onClick, onContextMenu, canRewind }) {
   const condition = breakpoint && breakpoint.options.condition;
   const logValue = breakpoint && breakpoint.options.logValue;
 
-  const isLogPoint = canRewind ? logValue != "displayName" : logValue;
-
   bp.className = classnames("column-breakpoint", {
     "has-condition": condition,
-    "has-log": isLogPoint,
+    "has-log": logValue,
     active: isActive,
     disabled: isDisabled,
   });
@@ -64,7 +61,7 @@ export default class ColumnBreakpoint extends PureComponent<Props> {
   bookmark: ?Bookmark;
 
   addColumnBreakpoint = (nextProps: ?Props) => {
-    const { columnBreakpoint, source, canRewind } = nextProps || this.props;
+    const { columnBreakpoint, source } = nextProps || this.props;
 
     const sourceId = source.id;
     const doc = getDocument(sourceId);
@@ -76,7 +73,6 @@ export default class ColumnBreakpoint extends PureComponent<Props> {
     const widget = makeBookmark(columnBreakpoint, {
       onClick: this.onClick,
       onContextMenu: this.onContextMenu,
-      canRewind,
     });
 
     this.bookmark = doc.setBookmark({ line: line - 1, ch: column }, { widget });
