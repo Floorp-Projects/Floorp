@@ -142,9 +142,12 @@ class TextControlState final : public SupportsWeakPtr<TextControlState> {
   MOZ_DECLARE_WEAKREFERENCE_TYPENAME(TextControlState)
 
   static TextControlState* Construct(nsITextControlElement* aOwningElement,
-                                     TextControlState** aReusedState);
+                                     TextControlState** aReusedState = nullptr);
 
-  explicit TextControlState(nsITextControlElement* aOwningElement);
+  /**
+   * Destroy() deletes the instance immediately or later.
+   */
+  void Destroy();
 
   TextControlState() = delete;
   explicit TextControlState(const TextControlState&) = delete;
@@ -153,14 +156,13 @@ class TextControlState final : public SupportsWeakPtr<TextControlState> {
   void operator=(const TextControlState&) = delete;
   void operator=(TextControlState&&) = delete;
 
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY ~TextControlState();
-
   void Traverse(nsCycleCollectionTraversalCallback& cb);
   MOZ_CAN_RUN_SCRIPT_BOUNDARY void Unlink();
 
-  bool IsBusy() const { return !!mHandlingState; }
+  bool IsBusy() const { return !!mHandlingState || mValueTransferInProgress; }
 
   void PrepareForReuse() {
+    MOZ_ASSERT(!IsBusy());
     Unlink();
     mValue.reset();
     mTextCtrlElement = nullptr;
@@ -381,6 +383,9 @@ class TextControlState final : public SupportsWeakPtr<TextControlState> {
   }
 
  private:
+  explicit TextControlState(nsITextControlElement* aOwningElement);
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY ~TextControlState();
+
   void ValueWasChanged(bool aNotify);
 
   MOZ_CAN_RUN_SCRIPT void DestroyEditor();
@@ -400,7 +405,8 @@ class TextControlState final : public SupportsWeakPtr<TextControlState> {
   AutoTextControlHandlingState* mHandlingState = nullptr;
 
   // The text control element owns this object, and ensures that this object
-  // has a smaller lifetime.
+  // has a smaller lifetime except the owner releases the instance while it
+  // does something with this.
   nsITextControlElement* MOZ_NON_OWNING_REF mTextCtrlElement;
   RefPtr<TextInputSelectionController> mSelCon;
   RefPtr<RestoreSelectionState> mRestoringSelection;
@@ -423,16 +429,6 @@ class TextControlState final : public SupportsWeakPtr<TextControlState> {
   friend class PrepareEditorEvent;
   friend class RestoreSelectionState;
 };
-
-inline void ImplCycleCollectionUnlink(TextControlState& aField) {
-  aField.Unlink();
-}
-
-inline void ImplCycleCollectionTraverse(
-    nsCycleCollectionTraversalCallback& aCallback, TextControlState& aField,
-    const char* aName, uint32_t aFlags = 0) {
-  aField.Traverse(aCallback);
-}
 
 }  // namespace mozilla
 
