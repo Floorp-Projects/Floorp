@@ -173,7 +173,96 @@ add_task(async function test_query_parameter_filter_no_logins_for_site() {
     let loginIntro = content.document.querySelector("login-intro");
     ok(
       ContentTaskUtils.is_hidden(loginIntro),
-      "login-intro should be visible when a login is not selected and we're not in create mode"
+      "login-intro should be hidden when a login is not selected and we're not in create mode"
+    );
+
+    loginList._createLoginButton.click();
+
+    ok(loginItem.dataset.isNewLogin, "should be in create mode");
+    ok(loginItem.dataset.editing, "should be in edit mode");
+    ok(
+      ContentTaskUtils.is_visible(loginItem),
+      "login-item should be visible in create mode"
+    );
+    ok(
+      ContentTaskUtils.is_hidden(loginIntro),
+      "login-intro should be hidden in create mode"
+    );
+  });
+});
+
+add_task(async function test_query_parameter_filter_no_login_until_backspace() {
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  let tabOpenedPromise = BrowserTestUtils.waitForNewTab(
+    gBrowser,
+    "about:logins?filter=" + encodeURIComponent(TEST_LOGIN1.origin) + "x",
+    true
+  );
+  LoginHelper.openPasswordManager(window, {
+    filterString: TEST_LOGIN1.origin + "x",
+    entryPoint: "preferences",
+  });
+  await tabOpenedPromise;
+
+  let browser = gBrowser.selectedBrowser;
+  await ContentTask.spawn(browser, null, async () => {
+    let loginList = Cu.waiveXrays(content.document.querySelector("login-list"));
+    await ContentTaskUtils.waitForCondition(() => {
+      return loginList._loginGuidsSortedOrder.length == 2;
+    }, "Waiting for logins to be cached");
+    is(
+      loginList._loginGuidsSortedOrder.length,
+      2,
+      "login list should have two logins stored"
+    );
+
+    ok(
+      ContentTaskUtils.is_hidden(loginList._list),
+      "the login list should be hidden when there is a search with no results"
+    );
+
+    // Backspace the trailing 'x' to get matching logins
+    const EventUtils = ContentTaskUtils.getEventUtils(content);
+    EventUtils.sendChar("KEY_Backspace", content);
+
+    let intro = loginList.shadowRoot.querySelector(".intro");
+    ok(
+      ContentTaskUtils.is_hidden(intro),
+      "the intro should be hidden when there is no selection"
+    );
+    let emptySearchMessage = loginList.shadowRoot.querySelector(
+      ".empty-search-message"
+    );
+    ok(
+      ContentTaskUtils.is_hidden(emptySearchMessage),
+      "the empty search message should be hidden when there is matching logins"
+    );
+
+    let visibleLoginListItems = loginList.shadowRoot.querySelectorAll(
+      ".login-list-item:not([hidden])"
+    );
+    is(
+      visibleLoginListItems.length,
+      1,
+      "One login should be visible after backspacing"
+    );
+
+    ok(
+      !loginList._createLoginButton.disabled,
+      "create button should be enabled"
+    );
+
+    let loginItem = content.document.querySelector("login-item");
+    ok(!loginItem.dataset.isNewLogin, "should not be in create mode");
+    ok(!loginItem.dataset.editing, "should not be in edit mode");
+    ok(
+      ContentTaskUtils.is_hidden(loginItem),
+      "login-item should be hidden when a login is not selected and we're not in create mode"
+    );
+    let loginIntro = content.document.querySelector("login-intro");
+    ok(
+      ContentTaskUtils.is_hidden(loginIntro),
+      "login-intro should be hidden when a login is not selected and we're not in create mode"
     );
 
     loginList._createLoginButton.click();
