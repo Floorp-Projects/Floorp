@@ -261,7 +261,10 @@ class HTMLTextAreaElement final : public nsGenericHTMLFormElementWithState,
   // XPCOM adapter function widely used throughout code, leaving it as is.
   nsresult GetControllers(nsIControllers** aResult);
 
-  nsIEditor* GetEditor() { return mState.GetTextEditor(); }
+  nsIEditor* GetEditor() {
+    MOZ_ASSERT(mState);
+    return mState->GetTextEditor();
+  }
 
   bool IsInputEventTarget() const { return true; }
 
@@ -269,7 +272,7 @@ class HTMLTextAreaElement final : public nsGenericHTMLFormElementWithState,
   void SetUserInput(const nsAString& aValue, nsIPrincipal& aSubjectPrincipal);
 
  protected:
-  virtual ~HTMLTextAreaElement() {}
+  virtual ~HTMLTextAreaElement();
 
   // get rid of the compiler warning
   using nsGenericHTMLFormElementWithState::IsSingleLineTextControl;
@@ -305,7 +308,7 @@ class HTMLTextAreaElement final : public nsGenericHTMLFormElementWithState,
   nsString mFocusedValue;
 
   /** The state of the text editor (selection controller and the editor) **/
-  TextControlState mState;
+  TextControlState* mState;
 
   NS_IMETHOD SelectAll(nsPresContext* aPresContext);
   /**
