@@ -2,6 +2,7 @@
   --section-width: 664px;
   --addon-icon-size: 32px;
   --z-index-sticky-container: 1;
+  --z-index-popup: 10;
 }
 
 *|*[hidden] {
@@ -10,6 +11,8 @@
 
 body {
   cursor: default;
+  /* The page starts to look really bad lower than this. */
+  min-width: 500px;
 }
 
 .header-name {
@@ -17,21 +20,22 @@ body {
 }
 
 .sticky-container {
+  background: var(--in-content-page-background);
   width: 100%;
   position: sticky;
   top: 0;
   z-index: var(--z-index-sticky-container);
-  background: var(--in-content-page-background);
 }
 
 .main-search {
+  background: var(--in-content-page-background);
   display: flex;
   justify-content: flex-end;
   align-items: center;
   padding-inline-start: 28px;
   padding-top: 20px;
   padding-bottom: 30px;
-  width: var(--section-width);
+  max-width: var(--section-width);
 }
 
 search-addons > search-textbox {
@@ -44,10 +48,11 @@ search-addons > search-textbox {
 }
 
 .main-heading {
+  background: var(--in-content-page-background);
   display: flex;
   margin-inline-start: 28px;
   padding-bottom: 16px;
-  width: var(--section-width);
+  max-width: var(--section-width);
 }
 
 .spacer {
@@ -215,6 +220,7 @@ addon-card[expanded] .addon-card-message {
   background-size: 16px;
   background-repeat: no-repeat;
   background-position: center;
+  flex-shrink: 0;
 }
 
 .addon-badge-private-browsing-allowed {
@@ -239,9 +245,9 @@ addon-card[expanded] .addon-card-message {
 
 /* Prevent the content from wrapping unless expanded. */
 addon-card:not([expanded]) .card-contents {
-  /* Card padding times 4: 2 times for card, 1 between icon and content,
-   * 1 for the ... button. */
-  width: calc(var(--section-width) - var(--card-padding) * 4 - var(--addon-icon-size));
+  /* We're hiding the content when it's too long, so we need to define the
+   * width. As long as this is less than the width of its parent it works. */
+  width: 1px;
   white-space: nowrap;
 }
 
@@ -253,7 +259,6 @@ addon-card:not([expanded]) .addon-description {
 }
 
 .page-options-menu {
-  position: relative;
   align-self: center;
 }
 
@@ -264,7 +269,6 @@ addon-card:not([expanded]) .addon-description {
 }
 
 .more-options-menu {
-  position: relative;
   /* Add some negative margin to account for the button's padding */
   margin-top: -10px;
   margin-inline-end: -8px;
@@ -431,7 +435,6 @@ addon-details {
   background-image: url("chrome://global/skin/icons/more.svg");
   background-repeat: no-repeat;
   background-position: center center;
-  position: relative;
 }
 
 .more-options-button-badged::after {

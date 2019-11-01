@@ -670,31 +670,41 @@ class PanelList extends HTMLElement {
 
     // Wait for a layout flush, then find the bounds.
     let {
-      height,
-      width,
-      y,
-      left,
-      right,
+      anchorHeight,
+      anchorLeft,
+      anchorTop,
+      anchorWidth,
+      panelHeight,
+      panelWidth,
       winHeight,
+      winScrollY,
+      winScrollX,
       winWidth,
     } = await new Promise(resolve => {
+      this.style.left = 0;
+      this.style.top = 0;
+
       requestAnimationFrame(() =>
         setTimeout(() => {
+          let anchorNode =
+            (this.triggeringEvent && this.triggeringEvent.target) ||
+            this.parentNode;
           // Use y since top is reserved.
-          let { y, left, right } = window.windowUtils.getBoundsWithoutFlushing(
-            this.parentNode
+          let anchorBounds = window.windowUtils.getBoundsWithoutFlushing(
+            anchorNode
           );
-          let { height, width } = window.windowUtils.getBoundsWithoutFlushing(
-            this
-          );
+          let panelBounds = window.windowUtils.getBoundsWithoutFlushing(this);
           resolve({
-            height,
-            width,
-            y,
-            left,
-            right,
+            anchorHeight: anchorBounds.height,
+            anchorLeft: anchorBounds.left,
+            anchorTop: anchorBounds.top,
+            anchorWidth: anchorBounds.width,
+            panelHeight: panelBounds.height,
+            panelWidth: panelBounds.width,
             winHeight: innerHeight,
             winWidth: innerWidth,
+            winScrollX: scrollX,
+            winScrollY: scrollY,
           });
         }, 0)
       );
@@ -702,21 +712,40 @@ class PanelList extends HTMLElement {
 
     // Calculate the left/right alignment.
     let align;
+    let leftOffset;
+    // The tip of the arrow is 25px from the edge of the panel,
+    // but 26px looks right.
+    let arrowOffset = 26;
+    let leftAlignX = anchorLeft + anchorWidth / 2 - arrowOffset;
+    let rightAlignX = anchorLeft + anchorWidth / 2 - panelWidth + arrowOffset;
     if (Services.locale.isAppLocaleRTL) {
       // Prefer aligning on the right.
-      align = right - width + 14 < 0 ? "left" : "right";
+      align = rightAlignX < 0 ? "left" : "right";
     } else {
       // Prefer aligning on the left.
-      align = left + width - 14 > winWidth ? "right" : "left";
+      align = leftAlignX + panelWidth > winWidth ? "right" : "left";
     }
+    leftOffset = align === "left" ? leftAlignX : rightAlignX;
 
-    // "bottom" style will move the panel down 30px from the top of the parent.
-    let valign = y + height + 30 > winHeight ? "top" : "bottom";
+    let bottomAlignY = anchorTop + anchorHeight;
+    let valign;
+    let topOffset;
+    if (bottomAlignY + panelHeight > winHeight) {
+      topOffset = anchorTop - panelHeight;
+      valign = "top";
+    } else {
+      topOffset = bottomAlignY;
+      valign = "bottom";
+    }
 
     // Set the alignments and show the panel.
     this.setAttribute("align", align);
     this.setAttribute("valign", valign);
     this.parentNode.style.overflow = "";
+
+    this.style.left = `${leftOffset + winScrollX}px`;
+    this.style.top = `${topOffset + winScrollY}px`;
+
     this.removeAttribute("showing");
   }
 
@@ -1128,7 +1157,11 @@ class AddonPageHeader extends HTMLElement {
       this.heading = this.querySelector(".header-name");
       this.searchLabel = this.querySelector(".search-label");
       this.backButton = this.querySelector(".back-button");
-      this.pageOptionsMenu = this.querySelector("addon-page-options");
+      // The addon-page-options element is outside of this element since this is
+      // position: sticky and that would break the positioning of the menu.
+      this.pageOptionsMenu = document.getElementById(
+        this.getAttribute("page-options-id")
+      );
     }
     this.addEventListener("click", this);
   }
