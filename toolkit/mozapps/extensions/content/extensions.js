@@ -110,11 +110,6 @@ function initialize(event) {
     return false;
   });
 
-  let globalCommandSet = document.getElementById("globalCommandSet");
-  globalCommandSet.addEventListener("command", function(event) {
-    gViewController.doCommand(event.target.id);
-  });
-
   let addonPage = document.getElementById("addons-page");
   addonPage.addEventListener("dragenter", function(event) {
     gDragDrop.onDragOver(event);
@@ -445,8 +440,6 @@ var gEventManager = {
     AddonManager.addManagerListener(this);
     AddonManager.addInstallListener(this);
     AddonManager.addAddonListener(this);
-
-    this.refreshGlobalWarning();
   },
 
   shutdown() {
@@ -524,38 +517,6 @@ var gEventManager = {
         Cu.reportError(e);
       }
     }
-  },
-
-  refreshGlobalWarning() {
-    var page = document.getElementById("addons-page");
-
-    if (Services.appinfo.inSafeMode) {
-      page.setAttribute("warning", "safemode");
-      return;
-    }
-
-    if (
-      AddonManager.checkUpdateSecurityDefault &&
-      !AddonManager.checkUpdateSecurity
-    ) {
-      page.setAttribute("warning", "updatesecurity");
-      return;
-    }
-
-    if (!AddonManager.checkCompatibility) {
-      page.setAttribute("warning", "checkcompatibility");
-      return;
-    }
-
-    page.removeAttribute("warning");
-  },
-
-  onCompatibilityModeChanged() {
-    this.refreshGlobalWarning();
-  },
-
-  onCheckUpdateSecurityChanged() {
-    this.refreshGlobalWarning();
   },
 };
 
@@ -801,80 +762,6 @@ var gViewController = {
     var event = document.createEvent("Events");
     event.initEvent("ViewChanged", true, true);
     this.currentViewObj.node.dispatchEvent(event);
-  },
-
-  commands: {
-    cmd_enableCheckCompatibility: {
-      isEnabled() {
-        return true;
-      },
-      doCommand() {
-        AddonManager.checkCompatibility = true;
-      },
-    },
-
-    cmd_enableUpdateSecurity: {
-      isEnabled() {
-        return true;
-      },
-      doCommand() {
-        AddonManager.checkUpdateSecurity = true;
-      },
-    },
-  },
-
-  supportsCommand(aCommand) {
-    return aCommand in this.commands;
-  },
-
-  isCommandEnabled(aCommand) {
-    if (!this.supportsCommand(aCommand)) {
-      return false;
-    }
-    var addon = this.currentViewObj.getSelectedAddon();
-    return this.commands[aCommand].isEnabled(addon);
-  },
-
-  updateCommands() {
-    // wait until the view is initialized
-    if (!this.currentViewObj) {
-      return;
-    }
-    var addon = this.currentViewObj.getSelectedAddon();
-    for (let commandId in this.commands) {
-      this.updateCommand(commandId, addon);
-    }
-  },
-
-  updateCommand(aCommandId, aAddon) {
-    if (typeof aAddon == "undefined") {
-      aAddon = this.currentViewObj.getSelectedAddon();
-    }
-    var cmd = this.commands[aCommandId];
-    var cmdElt = document.getElementById(aCommandId);
-    cmdElt.setAttribute("disabled", !cmd.isEnabled(aAddon));
-    if ("getTooltip" in cmd) {
-      let tooltip = cmd.getTooltip(aAddon);
-      if (tooltip) {
-        cmdElt.setAttribute("tooltiptext", tooltip);
-      } else {
-        cmdElt.removeAttribute("tooltiptext");
-      }
-    }
-  },
-
-  doCommand(aCommand, aAddon) {
-    if (!this.supportsCommand(aCommand)) {
-      return;
-    }
-    var cmd = this.commands[aCommand];
-    if (!aAddon) {
-      aAddon = this.currentViewObj.getSelectedAddon();
-    }
-    if (!cmd.isEnabled(aAddon)) {
-      return;
-    }
-    cmd.doCommand(aAddon);
   },
 
   onEvent() {},
@@ -1315,8 +1202,6 @@ var gDiscoverView = {
   },
 
   async show(aParam, aRequest, aState, aIsRefresh) {
-    gViewController.updateCommands();
-
     // If we're being told to load a specific URL then just do that
     if (aState && "url" in aState) {
       this.loaded = true;
@@ -1427,8 +1312,6 @@ var gDiscoverView = {
       gViewController.lastHistoryIndex = gHistory.index;
     }
 
-    gViewController.updateCommands();
-
     // If the hostname is the same as the new location's host and either the
     // default scheme is insecure or the new location is secure then continue
     // with the load
@@ -1510,7 +1393,6 @@ var gDiscoverView = {
     } else {
       // Got a successful load, make sure the browser is visible
       this.node.selectedPanel = this._browser;
-      gViewController.updateCommands();
     }
 
     var listeners = this._loadListeners;
@@ -1747,7 +1629,6 @@ function htmlView(type) {
       this.node.setAttribute("type", type);
       this.node.setAttribute("param", param);
       await this._browser.contentWindow.show(type, param, state);
-      gViewController.updateCommands();
       gViewController.notifyViewChanged();
     },
 

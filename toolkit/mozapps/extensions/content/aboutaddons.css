@@ -82,12 +82,19 @@ search-addons > search-textbox {
   transform: scaleX(-1);
 }
 
+/* Plugins aren't yet disabled by safemode (bug 342333),
+   so don't show that warning when viewing plugins. */
+#page-header[current-param="plugin"] message-bar[warning-type="safe-mode"] {
+  display: none;
+}
+
 #main {
   margin-inline-start: 28px;
   margin-bottom: 28px;
   max-width: var(--section-width);
 }
 
+global-warnings,
 #abuse-reports-messages {
   margin-inline-start: 28px;
   max-width: var(--section-width);
