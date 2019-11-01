@@ -43,6 +43,8 @@ class RenderCompositor {
   virtual bool WaitForGPU() { return true; }
   virtual void Pause() = 0;
   virtual bool Resume() = 0;
+  // Called when WR rendering is skipped
+  virtual void Update() {}
 
   virtual gl::GLContext* gl() const { return nullptr; }
 
