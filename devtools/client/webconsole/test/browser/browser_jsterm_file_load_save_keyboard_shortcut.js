@@ -14,10 +14,6 @@ const LOCAL_FILE_NAME = "snippet.js";
 const LOCAL_FILE_ORIGINAL_CONTENT = `"Hello from local file"`;
 const LOCAL_FILE_NEW_CONTENT = `"Hello from console input"`;
 
-const { MockFilePicker } = SpecialPowers;
-MockFilePicker.init(window);
-MockFilePicker.returnValue = MockFilePicker.returnOK;
-
 add_task(async function() {
   info("Open the console");
   const hud = await openNewTabAndConsole(TEST_URI);
@@ -25,6 +21,10 @@ add_task(async function() {
 
   // create file to import first
   info("Create the file to import");
+  const { MockFilePicker } = SpecialPowers;
+  MockFilePicker.init(window);
+  MockFilePicker.returnValue = MockFilePicker.returnOK;
+
   const file = await createLocalFile();
   MockFilePicker.setFiles([file]);
 
@@ -64,6 +64,7 @@ add_task(async function() {
     LOCAL_FILE_NEW_CONTENT,
     "Saved file has the expected content"
   );
+  MockFilePicker.reset();
 });
 
 async function createLocalFile() {
