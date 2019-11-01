@@ -171,6 +171,8 @@
     <string name="developer_tools_category">Outils de développement</string>
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">Débogage distant par USB</string>
+    <!-- Preference title for switch preference to show search shortcuts -->
+    <string name="preferences_show_search_shortcuts">Afficher les raccourcis de recherche</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Afficher les suggestions de recherche</string>
     <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
@@ -925,6 +927,8 @@
     <string name="etp_tracking_content_title">Contenu utilisé pour le pistage</string>
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">Empêche le chargement des publicités, vidéos et autres contenus d’origine externe au site et contenant du code de pistage. Peut affecter certaines fonctionnalités du site.</string>
+    <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="etp_onboarding_message_2">%s bloque des traqueurs sur ce site quand le bouclier est violet. Appuyez dessus pour voir lesquels.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">Les protections sont activées pour ce site</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
