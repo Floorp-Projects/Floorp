@@ -942,19 +942,21 @@ bool HTMLInputElement::sShutdown = false;
 
 /* static */
 void HTMLInputElement::ReleaseTextControlState(TextControlState* aState) {
-  if (!sShutdown && !sCachedTextControlState) {
+  if (!sShutdown && !sCachedTextControlState && !aState->IsBusy()) {
     aState->PrepareForReuse();
     sCachedTextControlState = aState;
   } else {
-    delete aState;
+    aState->Destroy();
   }
 }
 
 /* static */
 void HTMLInputElement::Shutdown() {
   sShutdown = true;
-  delete sCachedTextControlState;
-  sCachedTextControlState = nullptr;
+  if (sCachedTextControlState) {
+    sCachedTextControlState->Destroy();
+    sCachedTextControlState = nullptr;
+  }
 }
 
 //
@@ -2656,6 +2658,8 @@ nsresult HTMLInputElement::SetValueInternal(const nsAString& aValue,
         // automatically dispatched by TextControlState::SetValue().
         // If you'd change condition of calling this method, you need to
         // maintain SetUserInput() too.
+        // FYI: After calling SetValue(), the input type might have been
+        //      modified so that mInputData may not store TextControlState.
         if (!mInputData.mState->SetValue(value, aOldValue, aFlags)) {
           return NS_ERROR_OUT_OF_MEMORY;
         }

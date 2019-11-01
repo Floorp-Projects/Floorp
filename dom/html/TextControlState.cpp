@@ -1062,13 +1062,16 @@ nsresult TextInputListener::UpdateTextInputCommands(
  * mozilla::AutoTextControlHandlingState
  *
  * This class is temporarily created in the stack and can manage nested
- * handling state of TextControlState.
+ * handling state of TextControlState.  While this instance exists, lifetime of
+ * TextControlState which created the instance is guaranteed.  In other words,
+ * you can use this class as "kungFuDeathGrip" for TextControlState.
  *****************************************************************************/
 
 enum class TextControlAction {
   PrepareEditor,
   CommitComposition,
   SetValue,
+  SetSelectionRange,
 };
 
 class MOZ_STACK_CLASS AutoTextControlHandlingState {
@@ -1088,6 +1091,7 @@ class MOZ_STACK_CLASS AutoTextControlHandlingState {
                                TextControlAction aTextControlAction)
       : mParent(aTextControlState.mHandlingState),
         mTextControlState(aTextControlState),
+        mTextCtrlElement(aTextControlState.mTextCtrlElement),
         mTextControlAction(aTextControlAction) {
     MOZ_ASSERT(aTextControlAction != TextControlAction::SetValue,
                "Use specific constructor");
@@ -1104,6 +1108,7 @@ class MOZ_STACK_CLASS AutoTextControlHandlingState {
                                const nsAString& aSettingValue, ErrorResult& aRv)
       : mParent(aTextControlState.mHandlingState),
         mTextControlState(aTextControlState),
+        mTextCtrlElement(aTextControlState.mTextCtrlElement),
         mTextControlAction(aTextControlAction) {
     MOZ_ASSERT(aTextControlAction == TextControlAction::SetValue,
                "Use generic constructor");
@@ -1120,8 +1125,9 @@ class MOZ_STACK_CLASS AutoTextControlHandlingState {
   }
 
   ~AutoTextControlHandlingState() {
-    if (!mTextControlStateDestroyed) {
-      mTextControlState.mHandlingState = mParent;
+    mTextControlState.mHandlingState = mParent;
+    if (!mParent && mTextControlStateDestroyed) {
+      mTextControlState.Destroy();
     }
   }
 
@@ -1132,6 +1138,9 @@ class MOZ_STACK_CLASS AutoTextControlHandlingState {
     }
   }
 
+  bool IsTextControlStateDestroyed() const {
+    return mTextControlStateDestroyed;
+  }
   bool IsHandling(TextControlAction aTextControlAction) const {
     if (mTextControlAction == aTextControlAction) {
       return true;
@@ -1158,6 +1167,10 @@ class MOZ_STACK_CLASS AutoTextControlHandlingState {
 
   AutoTextControlHandlingState* mParent;
   TextControlState& mTextControlState;
+  // mTextCtrlElement grabs TextControlState::mTextCtrlElement since
+  // if the text control element releases mTextControlState, only this
+  // can guarantee the instance of the text control element.
+  nsCOMPtr<nsITextControlElement> mTextCtrlElement;
   nsString mSettingValue;
   TextControlAction mTextControlAction;
   bool mTextControlStateDestroyed = false;
@@ -1187,8 +1200,9 @@ TextControlState::TextControlState(nsITextControlElement* aOwningElement)
 
 TextControlState* TextControlState::Construct(
     nsITextControlElement* aOwningElement, TextControlState** aReusedState) {
-  if (*aReusedState && !(*aReusedState)->IsBusy()) {
+  if (aReusedState && *aReusedState) {
     TextControlState* state = *aReusedState;
+    MOZ_ASSERT(!state->IsBusy());
     *aReusedState = nullptr;
     state->mTextCtrlElement = aOwningElement;
     state->mBoundFrame = nullptr;
@@ -1209,8 +1223,18 @@ TextControlState* TextControlState::Construct(
 }
 
 TextControlState::~TextControlState() {
+  MOZ_ASSERT(!mHandlingState);
   MOZ_COUNT_DTOR(TextControlState);
   Clear();
+}
+
+void TextControlState::Destroy() {
+  // If we're handling something, we should be deleted later.
+  if (mHandlingState) {
+    mHandlingState->OnDestroyTextControlState();
+    return;
+  }
+  delete this;
 }
 
 Element* TextControlState::GetRootNode() {
@@ -1804,6 +1828,9 @@ void TextControlState::SetSelectionRange(
   MOZ_ASSERT(IsSelectionCached() || mBoundFrame,
              "How can we have a non-cached selection but no frame?");
 
+  AutoTextControlHandlingState handlingSetSelectionRange(
+      *this, TextControlAction::SetSelectionRange);
+
   if (aStart > aEnd) {
     aStart = aEnd;
   }
@@ -1830,9 +1857,9 @@ void TextControlState::SetSelectionRange(
     props.SetDirection(aDirection);
   } else {
     MOZ_ASSERT(mBoundFrame, "Our frame should still be valid");
-    WeakPtr<TextControlState> self(this);
     aRv = mBoundFrame->SetSelectionRange(aStart, aEnd, aDirection);
-    if (aRv.Failed() || !self.get()) {
+    if (aRv.Failed() ||
+        handlingSetSelectionRange.IsTextControlStateDestroyed()) {
       return;
     }
     if (mBoundFrame) {
@@ -2104,6 +2131,10 @@ HTMLInputElement* TextControlState::GetParentNumberControl(
 void TextControlState::DestroyEditor() {
   // notify the editor that we are going away
   if (mEditorInitialized) {
+    // FYI: TextEditor checks whether it's destroyed or not immediately after
+    //      changes the DOM tree or selection so that it's safe to call
+    //      PreDestroy() here even while we're handling actions with
+    //      mTextEditor.
     RefPtr<TextEditor> textEditor = mTextEditor;
     textEditor->PreDestroy(true);
     mEditorInitialized = false;
@@ -2395,7 +2426,6 @@ bool TextControlState::SetValue(const nsAString& aValue,
       //       to set the editor value on the input event which is caused by
       //       forcibly committing composition.
       if (nsContentUtils::IsSafeToRunScript()) {
-        WeakPtr<TextControlState> self(this);
         // WARNING: During this call, compositionupdate, compositionend, input
         // events will be fired.  Therefore, everything can occur.  E.g., the
         // document may be unloaded.
@@ -2403,7 +2433,7 @@ bool TextControlState::SetValue(const nsAString& aValue,
             *this, TextControlAction::CommitComposition);
         RefPtr<TextEditor> textEditor = mTextEditor;
         nsresult rv = textEditor->CommitComposition();
-        if (!self.get()) {
+        if (handlingCommitComposition.IsTextControlStateDestroyed()) {
           return true;
         }
         if (NS_FAILED(rv)) {
