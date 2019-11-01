@@ -846,8 +846,6 @@ class HTMLInputElement final : public nsGenericHTMLFormElementWithState,
   void UpdateEntries(
       const nsTArray<OwningFileOrDirectory>& aFilesOrDirectories);
 
-  static void Shutdown();
-
   /**
    * Returns if the required attribute applies for the current type.
    */
@@ -1660,11 +1658,6 @@ class HTMLInputElement final : public nsGenericHTMLFormElementWithState,
     nsCOMPtr<nsIFilePicker> mFilePicker;
     RefPtr<HTMLInputElement> mInput;
   };
-
-  static void ReleaseTextControlState(TextControlState* aState);
-
-  static TextControlState* sCachedTextControlState;
-  static bool sShutdown;
 };
 
 }  // namespace dom
