@@ -23,7 +23,6 @@
 #include "mozilla/EventForwards.h"
 #include "mozilla/FlushType.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/Saturate.h"
 #include "mozilla/ScrollTypes.h"
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/ServoStyleConsts.h"
@@ -33,6 +32,7 @@
 #include "mozilla/WeakPtr.h"
 #include "mozilla/dom/HTMLDocumentBinding.h"
 #include "mozilla/layers/FocusTarget.h"
+#include "mozilla/layout/LayoutTelemetryTools.h"
 #include "nsChangeHint.h"
 #include "nsClassHashtable.h"
 #include "nsColor.h"
@@ -2794,15 +2794,10 @@ class PresShell final : public nsStubDocumentObserver,
   nsIFrame* mDrawEventTargetFrame = nullptr;
 #endif  // #ifdef DEBUG
 
-  enum class FlushKind : uint8_t { Style, Layout, Count };
-
-  // Send the current number of flush requests for aFlushType to telemetry and
-  // reset the count.
-  void PingReqsPerFlushTelemetry(FlushKind aFlushKind);
-
-  // Send the current non-zero number of style and layout flushes to telemetry
-  // and reset the count.
-  void PingFlushPerTickTelemetry(FlushType aFlushType);
+  // Send, and reset, the current per tick telemetry. This includes:
+  // * non-zero number of style and layout flushes
+  // * non-zero ms duration spent in style and reflow since the last tick.
+  void PingPerTickTelemetry(FlushType aFlushType);
 
  private:
   // IMPORTANT: The ownership implicit in the following member variables
@@ -3167,8 +3162,7 @@ class PresShell final : public nsStubDocumentObserver,
 
   static bool sProcessInteractable;
 
-  EnumeratedArray<FlushKind, FlushKind::Count, SaturateUint8> mReqsPerFlush;
-  EnumeratedArray<FlushKind, FlushKind::Count, SaturateUint8> mFlushesPerTick;
+  layout_telemetry::Data mLayoutTelemetry;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(PresShell, NS_PRESSHELL_IID)

@@ -88,6 +88,10 @@ EXPORTS.mozilla += [
     'StaticPresData.h',
 ]
 
+EXPORTS.mozilla.layout += [
+    'LayoutTelemetryTools.h',
+]
+
 UNIFIED_SOURCES += [
     'AccessibleCaret.cpp',
     'AccessibleCaretEventHub.cpp',
@@ -95,6 +99,7 @@ UNIFIED_SOURCES += [
     'GeckoMVMContext.cpp',
     'GeometryUtils.cpp',
     'LayoutLogging.cpp',
+    'LayoutTelemetryTools.cpp',
     'MobileViewportManager.cpp',
     'MotionPathUtils.cpp',
     'nsBidi.cpp',
