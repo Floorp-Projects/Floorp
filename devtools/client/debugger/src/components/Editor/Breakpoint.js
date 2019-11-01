@@ -32,7 +32,6 @@ type Props = {
   editor: Object,
   breakpointActions: BreakpointItemActions,
   editorActions: EditorItemActions,
-  canRewind: boolean,
 };
 
 class Breakpoint extends PureComponent<Props> {
@@ -119,7 +118,7 @@ class Breakpoint extends PureComponent<Props> {
   };
 
   addBreakpoint(props: Props) {
-    const { breakpoint, editor, selectedSource, canRewind } = props;
+    const { breakpoint, editor, selectedSource } = props;
     const selectedLocation = getSelectedLocation(breakpoint, selectedSource);
 
     // Hidden Breakpoints are never rendered on the client
@@ -146,11 +145,7 @@ class Breakpoint extends PureComponent<Props> {
       editor.codeMirror.addLineClass(line, "line", "breakpoint-disabled");
     }
 
-    const isLogPoint = canRewind
-      ? breakpoint.options.logValue != "displayName"
-      : breakpoint.options.logValue;
-
-    if (isLogPoint) {
+    if (breakpoint.options.logValue) {
       editor.codeMirror.addLineClass(line, "line", "has-log");
     } else if (breakpoint.options.condition) {
       editor.codeMirror.addLineClass(line, "line", "has-condition");
