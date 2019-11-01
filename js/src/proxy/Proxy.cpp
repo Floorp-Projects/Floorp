@@ -257,19 +257,13 @@ bool Proxy::has(JSContext* cx, HandleObject proxy, HandleId id, bool* bp) {
 }
 
 bool js::ProxyHas(JSContext* cx, HandleObject proxy, HandleValue idVal,
-                  MutableHandleValue result) {
+                  bool* result) {
   RootedId id(cx);
   if (!ValueToId<CanGC>(cx, idVal, &id)) {
     return false;
   }
 
-  bool has;
-  if (!Proxy::has(cx, proxy, id, &has)) {
-    return false;
-  }
-
-  result.setBoolean(has);
-  return true;
+  return Proxy::has(cx, proxy, id, result);
 }
 
 bool Proxy::hasOwn(JSContext* cx, HandleObject proxy, HandleId id, bool* bp) {
@@ -286,19 +280,13 @@ bool Proxy::hasOwn(JSContext* cx, HandleObject proxy, HandleId id, bool* bp) {
 }
 
 bool js::ProxyHasOwn(JSContext* cx, HandleObject proxy, HandleValue idVal,
-                     MutableHandleValue result) {
+                     bool* result) {
   RootedId id(cx);
   if (!ValueToId<CanGC>(cx, idVal, &id)) {
     return false;
   }
 
-  bool hasOwn;
-  if (!Proxy::hasOwn(cx, proxy, id, &hasOwn)) {
-    return false;
-  }
-
-  result.setBoolean(hasOwn);
-  return true;
+  return Proxy::hasOwn(cx, proxy, id, result);
 }
 
 static MOZ_ALWAYS_INLINE Value ValueToWindowProxyIfWindow(const Value& v,
