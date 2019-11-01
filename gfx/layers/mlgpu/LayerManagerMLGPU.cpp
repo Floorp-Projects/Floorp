@@ -249,6 +249,9 @@ void LayerManagerMLGPU::EndTransaction(const TimeStamp& aTimeStamp,
   }
 
   // Resize the window if needed.
+#ifdef XP_WIN
+  mWidget->AsWindows()->UpdateCompositorWndSizeIfNecessary();
+#endif
   if (mSwapChain->GetSize() != windowSize) {
     // Note: all references to the backbuffer must be cleared.
     mDevice->SetRenderTarget(nullptr);
