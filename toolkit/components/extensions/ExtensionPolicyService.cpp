@@ -536,10 +536,10 @@ nsresult ExtensionPolicyService::GetDefaultCSP(nsAString& aDefaultCSP) {
   return NS_OK;
 }
 
-nsresult ExtensionPolicyService::GetAddonCSP(const nsAString& aAddonId,
-                                             nsAString& aResult) {
+nsresult ExtensionPolicyService::GetExtensionPageCSP(const nsAString& aAddonId,
+                                                     nsAString& aResult) {
   if (WebExtensionPolicy* policy = GetByID(aAddonId)) {
-    policy->GetContentSecurityPolicy(aResult);
+    policy->GetExtensionPageCSP(aResult);
     return NS_OK;
   }
   return NS_ERROR_INVALID_ARG;

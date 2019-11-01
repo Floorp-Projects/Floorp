@@ -54,8 +54,7 @@ interface WebExtensionPolicy {
    * extension's moz-extension: protocol.
    */
   [Constant]
-  readonly attribute DOMString contentSecurityPolicy;
-
+  readonly attribute DOMString extensionPageCSP;
 
   /**
    * The list of currently-active permissions for the extension, as specified
@@ -232,7 +231,7 @@ dictionary WebExtensionInit {
 
   sequence<WebExtensionContentScriptInit> contentScripts = [];
 
-  DOMString? contentSecurityPolicy = null;
+  DOMString? extensionPageCSP = null;
 
   sequence<DOMString>? backgroundScripts = null;
 
