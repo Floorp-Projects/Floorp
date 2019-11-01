@@ -13,6 +13,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.plus
 import mozilla.appservices.fxaclient.FirefoxAccount as InternalFxAcct
 import mozilla.components.concept.sync.AccessTokenInfo
+import mozilla.components.concept.sync.AccessType
 import mozilla.components.concept.sync.AuthFlowUrl
 import mozilla.components.concept.sync.DeviceConstellation
 import mozilla.components.concept.sync.OAuthAccount
@@ -99,12 +100,6 @@ class FirefoxAccount internal constructor(
         persistCallback.setCallback(callback)
     }
 
-    /**
-     * Constructs a URL used to begin the OAuth flow for the requested scopes and keys.
-     *
-     * @param scopes List of OAuth scopes for which the client wants access
-     * @return Deferred<String> that resolves to the flow URL when complete
-     */
     override fun beginOAuthFlowAsync(scopes: Set<String>): Deferred<AuthFlowUrl?> {
         return scope.async {
             handleFxaExceptions(logger, "begin oauth flow", { null }) {
@@ -125,13 +120,6 @@ class FirefoxAccount internal constructor(
         }
     }
 
-    /**
-     * Fetches the profile object for the current client either from the existing cached account,
-     * or from the server (requires the client to have access to the profile scope).
-     *
-     * @param ignoreCache Fetch the profile information directly from the server
-     * @return Profile (optional, if successfully retrieved) representing the user's basic profile info
-     */
     override fun getProfileAsync(ignoreCache: Boolean): Deferred<Profile?> {
         return scope.async {
             handleFxaExceptions(logger, "getProfile", { null }) {
@@ -140,22 +128,23 @@ class FirefoxAccount internal constructor(
         }
     }
 
-    /**
-     * Returns current FxA Device ID for an authenticated account.
-     *
-     * @return Current device's FxA ID, if available. `null` otherwise.
-     */
     override fun getCurrentDeviceId(): String? {
         return handleFxaExceptions(logger, "getCurrentDeviceId", { null }) {
             inner.getCurrentDeviceId()
         }
     }
 
-    /**
-     * Returns session token for an authenticated account.
-     *
-     * @return Current account's session token, if available. `null` otherwise.
-     */
+    override fun authorizeOAuthCode(
+        clientId: String,
+        scopes: Array<String>,
+        state: String,
+        accessType: AccessType
+    ): String? {
+        return handleFxaExceptions(logger, "authorizeOAuthCode", { null }) {
+            inner.authorizeOAuthCode(clientId, scopes, state, accessType.msg)
+        }
+    }
+
     override fun getSessionToken(): String? {
         return handleFxaExceptions(logger, "getSessionToken", { null }) {
             inner.getSessionToken()
@@ -170,17 +159,6 @@ class FirefoxAccount internal constructor(
         }
     }
 
-    /**
-     * Convenience method to fetch the profile from a cached account by default, but fall back
-     * to retrieval from the server.
-     *
-     * @return Profile (optional, if successfully retrieved) representing the user's basic profile info
-     */
-    override fun getProfileAsync(): Deferred<Profile?> = getProfileAsync(false)
-
-    /**
-     * Fetches the token server endpoint, for authentication using the SAML bearer flow.
-     */
     override fun getTokenServerEndpointURL(): String {
         return inner.getTokenServerEndpointURL()
     }
@@ -192,12 +170,6 @@ class FirefoxAccount internal constructor(
         return inner.getConnectionSuccessURL()
     }
 
-    /**
-     * Authenticates the current account using the code and state parameters fetched from the
-     * redirect URL reached after completing the sign in flow triggered by [beginOAuthFlowAsync].
-     *
-     * Modifies the FirefoxAccount state.
-     */
     override fun completeOAuthFlowAsync(code: String, state: String): Deferred<Boolean> {
         return scope.async {
             handleFxaExceptions(logger, "complete oauth flow") {
@@ -206,13 +178,6 @@ class FirefoxAccount internal constructor(
         }
     }
 
-    /**
-     * Tries to fetch an access token for the given scope.
-     *
-     * @param singleScope Single OAuth scope (no spaces) for which the client wants access
-     * @return [AccessTokenInfo] that stores the token, along with its scope, key and
-     *                           expiration timestamp (in seconds) since epoch when complete
-     */
     override fun getAccessTokenAsync(singleScope: String): Deferred<AccessTokenInfo?> {
         return scope.async {
             handleFxaExceptions(logger, "get access token", { null }) {
@@ -221,19 +186,6 @@ class FirefoxAccount internal constructor(
         }
     }
 
-    /**
-     * This method should be called when a request made with an OAuth token failed with an
-     * authentication error. It will re-build cached state and perform a connectivity check.
-     *
-     * This will use the network.
-     *
-     * In time, fxalib will grow a similar method, at which point we'll just relay to it.
-     * See https://github.com/mozilla/application-services/issues/1263
-     *
-     * @param singleScope An oauth scope for which to check authorization state.
-     * @return An optional [Boolean] flag indicating if we're connected, or need to go through
-     * re-authentication. A null result means we were not able to determine state at this time.
-     */
     override fun checkAuthorizationStatusAsync(singleScope: String): Deferred<Boolean?> {
         // fxalib maintains some internal token caches that need to be cleared whenever we
         // hit an auth problem. Call below makes that clean-up happen.
@@ -263,15 +215,6 @@ class FirefoxAccount internal constructor(
         }
     }
 
-    /**
-     * Reset internal account state and destroy current device record.
-     * Use this when device record is no longer relevant, e.g. while logging out. On success, other
-     * devices will no longer see the current device in their device lists.
-     *
-     * @return A [Deferred] that will be resolved with a success flag once operation is complete.
-     * Failure indicates that we may have failed to destroy current device record. Nothing to do for
-     * the consumer; device record will be cleaned up eventually via TTL.
-     */
     override fun disconnectAsync(): Deferred<Boolean> {
         return scope.async {
             // TODO can this ever throw FxaUnauthorizedException? would that even make sense? or is that a bug?
@@ -286,13 +229,6 @@ class FirefoxAccount internal constructor(
         return deviceConstellation
     }
 
-    /**
-     * Saves the current account's authentication state as a JSON string, for persistence in
-     * the Android KeyStore/shared preferences. The authentication state can be restored using
-     * [FirefoxAccount.fromJSONString].
-     *
-     * @return String containing the authentication details in JSON format
-     */
     override fun toJSONString(): String = inner.toJSONString()
 
     companion object {

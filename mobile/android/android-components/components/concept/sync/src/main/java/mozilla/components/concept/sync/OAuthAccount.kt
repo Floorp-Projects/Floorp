@@ -8,11 +8,24 @@ import kotlinx.coroutines.Deferred
 
 /**
  * An auth-related exception type, for use with [AuthException].
+ *
+ * @property msg string value of the auth exception type
  */
 enum class AuthExceptionType(val msg: String) {
     KEY_INFO("Missing key info"),
     NO_TOKEN("Missing access token"),
     UNAUTHORIZED("Unauthorized")
+}
+
+/**
+ * The access-type determines whether the code can be exchanged for a refresh token for
+ * offline use or not.
+ *
+ * @property msg string value of the access-type
+ */
+enum class AccessType(val msg: String) {
+    ONLINE("online"),
+    OFFLINE("offline")
 }
 
 /**
@@ -33,20 +46,146 @@ data class AuthFlowUrl(val state: String, val url: String)
  */
 @SuppressWarnings("TooManyFunctions")
 interface OAuthAccount : AutoCloseable {
+
+    /**
+     * Constructs a URL used to begin the OAuth flow for the requested scopes and keys.
+     *
+     * @param scopes List of OAuth scopes for which the client wants access
+     * @return Deferred AuthFlowUrl that resolves to the flow URL when complete
+     */
     fun beginOAuthFlowAsync(scopes: Set<String>): Deferred<AuthFlowUrl?>
+
+    /**
+     * Constructs a URL used to begin the pairing flow for the requested scopes and pairingUrl.
+     *
+     * @param pairingUrl URL string for pairing
+     * @param scopes List of OAuth scopes for which the client wants access
+     * @return Deferred AuthFlowUrl Optional that resolves to the flow URL when complete
+     */
     fun beginPairingFlowAsync(pairingUrl: String, scopes: Set<String>): Deferred<AuthFlowUrl?>
+
+    /**
+     * Returns current FxA Device ID for an authenticated account.
+     *
+     * @return Current device's FxA ID, if available. `null` otherwise.
+     */
     fun getCurrentDeviceId(): String?
+
+    /**
+     * Returns session token for an authenticated account.
+     *
+     * @return Current account's session token, if available. `null` otherwise.
+     */
     fun getSessionToken(): String?
-    fun getProfileAsync(ignoreCache: Boolean): Deferred<Profile?>
-    fun getProfileAsync(): Deferred<Profile?>
+
+    /**
+     * Provisions a scoped OAuth code for a given [clientId] and the passed [scopes].
+     *
+     * @param clientId the client id string
+     * @param scopes the list of scopes to request access to
+     * @param state the state token string
+     * @param accessType the accessType method to be used by the returned code, determines whether
+     * the code can be exchanged for a refresh token to be used offline or not
+     * @return the authorized auth code string
+     */
+    fun authorizeOAuthCode(
+        clientId: String,
+        scopes: Array<String>,
+        state: String,
+        accessType: AccessType = AccessType.ONLINE
+    ): String?
+
+    /**
+     * Fetches the profile object for the current client either from the existing cached state
+     * or from the server (requires the client to have access to the profile scope).
+     *
+     * @param ignoreCache Fetch the profile information directly from the server
+     * @return Profile (optional, if successfully retrieved) representing the user's basic profile info
+     */
+    fun getProfileAsync(ignoreCache: Boolean = false): Deferred<Profile?>
+
+    /**
+     * Authenticates the current account using the [code] and [state] parameters obtained via the
+     * OAuth flow initiated by [beginOAuthFlowAsync].
+     *
+     * Modifies the FirefoxAccount state.
+     * @param code OAuth code string
+     * @param state state token string
+     * @return Deferred boolean representing success or failure
+     */
     fun completeOAuthFlowAsync(code: String, state: String): Deferred<Boolean>
+
+    /**
+     * Tries to fetch an access token for the given scope.
+     *
+     * @param singleScope Single OAuth scope (no spaces) for which the client wants access
+     * @return [AccessTokenInfo] that stores the token, along with its scope, key and
+     *                           expiration timestamp (in seconds) since epoch when complete
+     */
     fun getAccessTokenAsync(singleScope: String): Deferred<AccessTokenInfo?>
+
+    /**
+     * This method should be called when a request made with an OAuth token failed with an
+     * authentication error. It will re-build cached state and perform a connectivity check.
+     *
+     * In time, fxalib will grow a similar method, at which point we'll just relay to it.
+     * See https://github.com/mozilla/application-services/issues/1263
+     *
+     * @param singleScope An oauth scope for which to check authorization state.
+     * @return An optional [Boolean] flag indicating if we're connected, or need to go through
+     * re-authentication. A null result means we were not able to determine state at this time.
+     */
     fun checkAuthorizationStatusAsync(singleScope: String): Deferred<Boolean?>
+
+    /**
+     * Fetches the token server endpoint, for authentication using the SAML bearer flow.
+     *
+     * @return Token server endpoint URL string
+     */
     fun getTokenServerEndpointURL(): String
+
+    /**
+     * Registers a callback for when the account state gets persisted
+     *
+     * @param callback the account state persistence callback
+     */
     fun registerPersistenceCallback(callback: StatePersistenceCallback)
+
+    /**
+     * Attempts to migrate from an existing session token without user input
+     *
+     * @param sessionToken token string to use for login
+     * @param kSync sync string for login
+     * @param kXCS XCS string for login
+     * @return Deferred boolean success or failure for the migration event
+     */
     fun migrateFromSessionTokenAsync(sessionToken: String, kSync: String, kXCS: String): Deferred<Boolean>
+
+    /**
+     * Returns the device constellation for the current account
+     *
+     * @return Device constellation for the current account
+     */
     fun deviceConstellation(): DeviceConstellation
+
+    /**
+     * Reset internal account state and destroy current device record.
+     * Use this when device record is no longer relevant, e.g. while logging out. On success, other
+     * devices will no longer see the current device in their device lists.
+     *
+     * @return A [Deferred] that will be resolved with a success flag once operation is complete.
+     * Failure indicates that we may have failed to destroy current device record. Nothing to do for
+     * the consumer; device record will be cleaned up eventually via TTL.
+     */
     fun disconnectAsync(): Deferred<Boolean>
+
+    /**
+     * Serializes the current account's authentication state as a JSON string, for persistence in
+     * the Android KeyStore/shared preferences. The authentication state can be restored using
+     * [FirefoxAccount.fromJSONString].
+     *
+     * @return String containing the authentication details in JSON format
+     */
     fun toJSONString(): String
 }
 

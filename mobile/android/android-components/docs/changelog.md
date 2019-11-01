@@ -42,6 +42,9 @@ permalink: /changelog/
   
 * **support-webextensions**
   * Adds support for sending messages to background pages and scripts in WebExtensions.
+  
+* **service-firefox-accounts**
+  * Adds `authorizeOAuthCode` method for generating scoped OAuth codes.
 
 # 19.0.0
 

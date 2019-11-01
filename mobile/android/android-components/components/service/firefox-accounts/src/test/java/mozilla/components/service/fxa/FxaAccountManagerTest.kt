@@ -12,6 +12,7 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.runBlocking
 import mozilla.components.concept.sync.AccessTokenInfo
+import mozilla.components.concept.sync.AccessType
 import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.AuthException
 import mozilla.components.concept.sync.AuthExceptionType
@@ -778,8 +779,8 @@ class FxaAccountManagerTest {
             return CompletableDeferred(profile)
         }
 
-        override fun getProfileAsync(): Deferred<Profile?> {
-            return CompletableDeferred(profile)
+        override fun authorizeOAuthCode(clientId: String, scopes: Array<String>, state: String, accessType: AccessType): String? {
+            return "123abc"
         }
 
         override fun getCurrentDeviceId(): String? {
