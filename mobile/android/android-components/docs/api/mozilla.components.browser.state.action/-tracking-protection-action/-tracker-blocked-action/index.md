@@ -2,7 +2,7 @@
 
 # TrackerBlockedAction
 
-`data class TrackerBlockedAction : `[`TrackingProtectionAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L238)
+`data class TrackerBlockedAction : `[`TrackingProtectionAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L249)
 
 Adds a [Tracker](../../../mozilla.components.concept.engine.content.blocking/-tracker/index.md) to the [TrackingProtectionState.blockedTrackers](../../../mozilla.components.browser.state.state/-tracking-protection-state/blocked-trackers.md) list.
 

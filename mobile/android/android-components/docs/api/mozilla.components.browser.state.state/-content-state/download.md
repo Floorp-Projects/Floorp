@@ -2,7 +2,7 @@
 
 # download
 
-`val download: `[`DownloadState`](../../mozilla.components.browser.state.state.content/-download-state/index.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/ContentState.kt#L43)
+`val download: `[`DownloadState`](../../mozilla.components.browser.state.state.content/-download-state/index.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/state/ContentState.kt#L45)
 
 Last unhandled download request.
 

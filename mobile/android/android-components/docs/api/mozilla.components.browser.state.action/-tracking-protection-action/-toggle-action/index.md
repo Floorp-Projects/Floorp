@@ -2,7 +2,7 @@
 
 # ToggleAction
 
-`data class ToggleAction : `[`TrackingProtectionAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L228)
+`data class ToggleAction : `[`TrackingProtectionAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L239)
 
 Updates the [TrackingProtectionState.enabled](../../../mozilla.components.browser.state.state/-tracking-protection-state/enabled.md) flag.
 

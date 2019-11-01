@@ -10,7 +10,7 @@ WebView-based implementation of [WindowRequest](../../mozilla.components.concept
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `SystemWindowRequest(webView: <ERROR CLASS>, newEngineSession: `[`EngineSession`](../../mozilla.components.concept.engine/-engine-session/index.md)`? = null, newWebView: <ERROR CLASS>? = null, openAsDialog: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = false, triggeredByUser: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = false, resultMsg: <ERROR CLASS>? = null)`<br>WebView-based implementation of [WindowRequest](../../mozilla.components.concept.engine.window/-window-request/index.md). |
+| [&lt;init&gt;](-init-.md) | `SystemWindowRequest(webView: <ERROR CLASS>, newEngineSession: `[`EngineSession`](../../mozilla.components.concept.engine/-engine-session/index.md)`? = null, newWebView: <ERROR CLASS>? = null, openAsDialog: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = false, triggeredByUser: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = false, resultMsg: <ERROR CLASS>? = null, type: `[`Type`](../../mozilla.components.concept.engine.window/-window-request/-type/index.md)` = WindowRequest.Type.OPEN)`<br>WebView-based implementation of [WindowRequest](../../mozilla.components.concept.engine.window/-window-request/index.md). |
 
 ### Properties
 
@@ -18,6 +18,7 @@ WebView-based implementation of [WindowRequest](../../mozilla.components.concept
 |---|---|
 | [openAsDialog](open-as-dialog.md) | `val openAsDialog: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>whether or not the window should be opened as a dialog, defaults to false. |
 | [triggeredByUser](triggered-by-user.md) | `val triggeredByUser: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>whether or not the request was triggered by the user, defaults to false. |
+| [type](type.md) | `val type: `[`Type`](../../mozilla.components.concept.engine.window/-window-request/-type/index.md)<br>The [Type](../../mozilla.components.concept.engine.window/-window-request/-type/index.md) of this window request, indicating whether to open or close a window. |
 | [url](url.md) | `val url: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>The URL which should be opened in a new window. May be empty if the request was created from JavaScript (using window.open()). |
 
 ### Functions

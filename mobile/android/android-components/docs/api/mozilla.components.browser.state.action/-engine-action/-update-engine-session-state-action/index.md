@@ -2,7 +2,7 @@
 
 # UpdateEngineSessionStateAction
 
-`data class UpdateEngineSessionStateAction : `[`EngineAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L300)
+`data class UpdateEngineSessionStateAction : `[`EngineAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L311)
 
 Updates the [EngineSessionState](../../../mozilla.components.concept.engine/-engine-session-state/index.md) of the session with the provided [sessionId](session-id.md).
 

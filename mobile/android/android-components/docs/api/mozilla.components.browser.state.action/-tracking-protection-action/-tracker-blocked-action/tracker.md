@@ -2,4 +2,4 @@
 
 # tracker
 
-`val tracker: `[`Tracker`](../../../mozilla.components.concept.engine.content.blocking/-tracker/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L238)
+`val tracker: `[`Tracker`](../../../mozilla.components.concept.engine.content.blocking/-tracker/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L249)
