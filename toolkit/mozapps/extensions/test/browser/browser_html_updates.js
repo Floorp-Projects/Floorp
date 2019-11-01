@@ -65,7 +65,7 @@ add_task(async function testChangeAutoUpdates() {
 
   // Go back to the list view and check the details view again.
   let loaded = waitForViewLoad(win);
-  win.managerWindow.document.getElementById("go-back").click();
+  doc.querySelector(".back-button").click();
   await loaded;
 
   // Load the detail view again.
@@ -577,7 +577,6 @@ add_task(async function testAvailableUpdates() {
   let win = await loadInitialView("extension");
   let doc = win.document;
 
-  let managerDoc = win.managerWindow.document;
   let { gCategories } = win.managerWindow;
   let availableCat = gCategories.get("addons://updates/available");
 
@@ -586,7 +585,7 @@ add_task(async function testAvailableUpdates() {
 
   // Check for all updates.
   let updatesFound = TestUtils.topicObserved("EM-update-check-finished");
-  managerDoc.getElementById("utils-updateNow").doCommand();
+  doc.querySelector('#page-options [action="check-for-updates"]').click();
   await updatesFound;
 
   // Wait for the available updates count to finalize, it's async.
@@ -620,7 +619,7 @@ add_task(async function testAvailableUpdates() {
 
   // Go back to the last view.
   loaded = waitForViewLoad(win);
-  managerDoc.getElementById("go-back").click();
+  doc.querySelector(".back-button").click();
   await loaded;
 
   // We're back on the updates view.

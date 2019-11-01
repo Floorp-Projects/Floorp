@@ -14,11 +14,14 @@ async function installFile(filename) {
   MockFilePicker.setFiles([file]);
   MockFilePicker.afterOpenCallback = MockFilePicker.cleanup;
 
-  await BrowserOpenAddonsMgr("addons://list/extension");
-  let contentWin = gBrowser.selectedTab.linkedBrowser.contentWindow;
+  let managerWin = await BrowserOpenAddonsMgr("addons://list/extension");
 
   // Do the install...
-  contentWin.gViewController.doCommand("cmd_installFromFile");
+  await BrowserTestUtils.waitForEvent(managerWin.document, "ViewChanged");
+  let installButton = managerWin
+    .getHtmlBrowser()
+    .contentDocument.querySelector('[action="install-from-file"]');
+  installButton.click();
 }
 
 add_task(async function test_install_extension_from_local_file() {

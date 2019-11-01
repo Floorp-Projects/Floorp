@@ -6,9 +6,11 @@
 <html>
   <head>
     <!-- Bug 1571346 Remove 'unsafe-inline' from style-src within about:addons -->
-    <meta http-equiv="Content-Security-Policy" content="default-src chrome:; script-src chrome:; style-src chrome: 'unsafe-inline'; img-src chrome: file: jar: https: http:; connect-src chrome: data: https: http:; object-src 'none'">
+    <!-- @CSP the 'onclick' handler for the searchButtonIcon within the file search-textbox.js, using: sha512-kSDNX67wegjpcf8CSj/L6h46a0QUKm2CyijGxC5PhSWVvPU9gdd28QVBBFq9t8N5UGKUFdDcZsjYbGSlYG0y3g== -->
+    <meta http-equiv="Content-Security-Policy" content="default-src chrome:; script-src chrome: 'sha512-kSDNX67wegjpcf8CSj/L6h46a0QUKm2CyijGxC5PhSWVvPU9gdd28QVBBFq9t8N5UGKUFdDcZsjYbGSlYG0y3g=='; style-src chrome: 'unsafe-inline'; img-src chrome: file: jar: https: http:; connect-src chrome: data: https: http:; object-src 'none'">
     <link rel="stylesheet" href="chrome://global/content/tabprompts.css">
     <link rel="stylesheet" href="chrome://global/skin/tabprompts.css">
+    <link rel="stylesheet" href="chrome://global/skin/textbox.css">
 
     <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
     <link rel="stylesheet" href="chrome://mozapps/content/extensions/aboutaddons.css">
@@ -18,14 +20,17 @@
     <link rel="localization" href="toolkit/about/aboutAddons.ftl">
     <link rel="localization" href="toolkit/about/abuseReports.ftl">
 
-    <script src="chrome://mozapps/content/extensions/named-deck.js"></script>
-    <script src="chrome://mozapps/content/extensions/aboutaddonsCommon.js"></script>
-    <script src="chrome://mozapps/content/extensions/message-bar.js"></script>
-    <script src="chrome://mozapps/content/extensions/abuse-reports.js"></script>
-    <script src="chrome://mozapps/content/extensions/shortcuts.js"></script>
-    <script src="chrome://mozapps/content/extensions/aboutaddons.js"></script>
+    <!-- Defer scripts so all the templates are loaded by the time they run. -->
+    <script defer src="chrome://mozapps/content/extensions/named-deck.js"></script>
+    <script defer src="chrome://mozapps/content/extensions/aboutaddonsCommon.js"></script>
+    <script defer src="chrome://mozapps/content/extensions/message-bar.js"></script>
+    <script defer src="chrome://mozapps/content/extensions/abuse-reports.js"></script>
+    <script defer src="chrome://mozapps/content/extensions/shortcuts.js"></script>
+    <script defer src="chrome://mozapps/content/extensions/aboutaddons.js"></script>
   </head>
   <body>
+    <addon-page-header id="page-header"></addon-page-header>
+
     <message-bar-stack id="abuse-reports-messages" reverse max-message-bar-count="3">
     </message-bar-stack>
 
@@ -34,6 +39,40 @@
     <!-- Include helpers for the inline options browser select and context menus. -->
     <content-select-dropdown></content-select-dropdown>
     <proxy-context-menu id="contentAreaContextMenu"></proxy-context-menu>
+
+    <template name="addon-page-header">
+      <div class="sticky-container">
+        <div class="main-search">
+          <label for="search-addons" class="search-label"></label>
+          <search-addons data-l10n-id="search-header-shortcut" data-l10n-attrs="key"></search-addons>
+        </div>
+        <div class="main-heading">
+          <button class="back-button" action="go-back" data-l10n-id="go-back-button" hidden></button>
+          <h1 class="header-name"></h1>
+          <div class="spacer"></div>
+          <addon-updates-message id="updates-message" hidden></addon-updates-message>
+          <div class="page-options-menu">
+            <button class="more-options-button" action="page-options"></button>
+            <addon-page-options id="page-options"></addon-page-options>
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <template name="addon-page-options">
+      <panel-list>
+        <panel-item action="check-for-updates" data-l10n-id="addon-updates-check-for-updates" data-l10n-attrs="accesskey"></panel-item>
+        <panel-item action="view-recent-updates" data-l10n-id="addon-updates-view-updates" data-l10n-attrs="accesskey"></panel-item>
+        <panel-item-separator></panel-item-separator>
+        <panel-item action="install-from-file" data-l10n-id="addon-install-from-file" data-l10n-attrs="accesskey"></panel-item>
+        <panel-item action="debug-addons" data-l10n-id="addon-open-about-debugging" data-l10n-attrs="accesskey"></panel-item>
+        <panel-item-separator></panel-item-separator>
+        <panel-item action="set-update-automatically" data-l10n-id="addon-updates-update-addons-automatically" data-l10n-attrs="accesskey"></panel-item>
+        <panel-item action="reset-update-states" data-l10n-attrs="accesskey"></panel-item>
+        <panel-item-separator></panel-item-separator>
+        <panel-item action="manage-shortcuts" data-l10n-id="addon-manage-extensions-shortcuts" data-l10n-attrs="accesskey"></panel-item>
+      </panel-list>
+    </template>
 
     <template name="addon-options">
       <panel-list>
@@ -231,11 +270,6 @@
         <slot></slot>
       </div>
       <div class="arrow bottom" role="presentation"></div>
-    </template>
-
-    <template name="panel-item">
-      <link rel="stylesheet" href="chrome://mozapps/content/extensions/panel-item.css">
-      <button><slot></slot></button><slot name="support-link"></slot>
     </template>
 
     <template name="taar-notice">

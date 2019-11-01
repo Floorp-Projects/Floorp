@@ -13,15 +13,11 @@
 
 <!-- @CSP: Soon, about:addons will not be implemented using XUL anymore (see Bug 1558982).
    - Until then we have to whitelist the following things:
-   - *) the 'oncommand' handler for cmd_focusSearch within extensions.xul, using
-   -    sha512-4o5Uf4E4EG+90Mb820FH2YFDf4IuX4bfUwQC7reK1ZhgcXWJBKMK2330XIELaFJJ8HiPffS9mP60MPjuXMIrHA==
-   - *) the 'onclick' handler for the searchButtonIcon within the file search-textbox.js, using
-   -    sha512-kSDNX67wegjpcf8CSj/L6h46a0QUKm2CyijGxC5PhSWVvPU9gdd28QVBBFq9t8N5UGKUFdDcZsjYbGSlYG0y3g==
    - *) the extensions.webservice.discoverURL using data:, http:, and https:
    -->
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:xhtml="http://www.w3.org/1999/xhtml"
-        csp="default-src chrome:; frame-src chrome: data: http: https:; script-src chrome: 'sha512-4o5Uf4E4EG+90Mb820FH2YFDf4IuX4bfUwQC7reK1ZhgcXWJBKMK2330XIELaFJJ8HiPffS9mP60MPjuXMIrHA==' 'sha512-kSDNX67wegjpcf8CSj/L6h46a0QUKm2CyijGxC5PhSWVvPU9gdd28QVBBFq9t8N5UGKUFdDcZsjYbGSlYG0y3g=='; object-src 'none'"
+        csp="default-src chrome:; frame-src chrome: data: http: https:; script-src chrome:; object-src 'none'"
         id="addons-page" data-l10n-id="addons-window"
         role="application" windowtype="Addons:Manager">
 
@@ -32,7 +28,6 @@
     <xhtml:link rel="localization" href="toolkit/about/aboutAddons.ftl"/>
   </linkset>
 
-  <script src="chrome://global/content/contentAreaUtils.js"/>
   <script src="chrome://mozapps/content/extensions/aboutaddonsCommon.js"/>
   <script src="chrome://mozapps/content/extensions/extensions.js"/>
   <script src="chrome://mozapps/content/extensions/abuse-report-frame.js"/>
@@ -65,29 +60,9 @@
   <!-- global commands - these act on all addons, or affect the addons manager
        in some other way -->
   <commandset id="globalCommandSet">
-    <!-- XXXsw remove useless oncommand attribute once bug 371900 is fixed -->
-    <!-- If you remove/update the oncommand handler for cmd_focusSearch please
-         also remove/update the sha512 hash in the CSP above -->
-    <command id="cmd_focusSearch" oncommand=";"/>
-    <command id="cmd_findAllUpdates"/>
-    <command id="cmd_goToDiscoverPane"/>
-    <command id="cmd_goToRecentUpdates"/>
-    <command id="cmd_goToAvailableUpdates"/>
-    <command id="cmd_installFromFile"/>
-    <command id="cmd_debugAddons"/>
-    <command id="cmd_back"/>
-    <command id="cmd_forward"/>
     <command id="cmd_enableCheckCompatibility"/>
     <command id="cmd_enableUpdateSecurity"/>
-    <command id="cmd_toggleAutoUpdateDefault"/>
-    <command id="cmd_resetAddonAutoUpdate"/>
-    <command id="cmd_showShortcuts"/>
   </commandset>
-
-  <keyset>
-    <key id="focusSearch" data-l10n-id="search-header-shortcut"
-         modifiers="accel" command="cmd_focusSearch"/>
-  </keyset>
 
   <stack id="main-page-stack" flex="1">
   <hbox id="main-page-content" flex="1">
@@ -172,75 +147,6 @@
 
         <!-- container for views with the search/tools header -->
         <vbox id="headered-views" flex="1">
-          <!-- main header -->
-          <hbox id="header">
-            <hbox id="header-inner" align="center" pack="end">
-              <label id="search-label" control="header-search"/>
-              <search-textbox id="header-search" searchbutton="true"
-                       data-l10n-id="search-header"
-                       data-l10n-attrs="placeholder, searchbuttonlabel" maxlength="100"/>
-            </hbox>
-          </hbox>
-
-          <hbox id="heading">
-            <hbox class="heading-inner" align="stretch">
-              <hbox id="go-back-wrapper">
-                <button id="go-back" command="cmd_back" data-l10n-id="go-back-button" hidden="true"/>
-              </hbox>
-
-              <label id="heading-name" class="header-name" flex="1"/>
-
-              <hbox id="updates-container" align="center">
-                <image class="spinner"/>
-                <label id="updates-noneFound" hidden="true"
-                        data-l10n-id="extensions-updates-none-found"/>
-                <button id="updates-manualUpdatesFound-btn" class="button-link"
-                        hidden="true"
-                        data-l10n-id="extensions-updates-manual-updates-found"
-                        command="cmd_goToAvailableUpdates"/>
-                <label id="updates-progress" hidden="true"
-                       data-l10n-id="extensions-updates-updating"/>
-                <label id="updates-installed" hidden="true"
-                       data-l10n-id="extensions-updates-installed"/>
-                <label id="updates-downloaded" hidden="true"
-                       data-l10n-id="extensions-updates-downloaded"/>
-              </hbox>
-
-              <button id="header-utils-btn" type="menu" data-l10n-id="tools-menu">
-                <menupopup id="utils-menu">
-                  <menuitem id="utils-updateNow"
-                            data-l10n-id="extensions-updates-check-for-updates"
-                            command="cmd_findAllUpdates"/>
-                  <menuitem id="utils-viewUpdates"
-                            data-l10n-id="extensions-updates-view-updates"
-                            command="cmd_goToRecentUpdates"/>
-                  <menuseparator id="utils-installFromFile-separator"/>
-                  <menuitem id="utils-installFromFile"
-                      data-l10n-id="install-addon-from-file"
-                            command="cmd_installFromFile"/>
-                  <menuitem id="utils-debugAddons"
-                      data-l10n-id="debug-addons"
-                            command="cmd_debugAddons"/>
-                  <menuseparator/>
-                  <menuitem id="utils-autoUpdateDefault"
-                            data-l10n-id="extensions-updates-update-addons-automatically"
-                            type="checkbox" autocheck="false"
-                            command="cmd_toggleAutoUpdateDefault"/>
-                  <menuitem id="utils-resetAddonUpdatesToAutomatic"
-                            data-l10n-id="extensions-updates-reset-updates-to-automatic"
-                            command="cmd_resetAddonAutoUpdate"/>
-                  <menuitem id="utils-resetAddonUpdatesToManual"
-                            data-l10n-id="extensions-updates-reset-updates-to-manual"
-                            command="cmd_resetAddonAutoUpdate"/>
-                  <menuseparator/>
-                  <menuitem id="manage-shortcuts"
-                            data-l10n-id="manage-extensions-shortcuts"
-                            command="cmd_showShortcuts"/>
-                </menupopup>
-              </button>
-            </hbox>
-          </hbox>
-
           <deck id="headered-views-content" flex="1" selectedIndex="0">
             <vbox id="html-view" flex="1">
               <vbox class="alert-container html-alert-container" align="start">

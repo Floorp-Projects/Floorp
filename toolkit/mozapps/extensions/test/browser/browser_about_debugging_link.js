@@ -68,12 +68,12 @@ function waitForRequestsSuccess(store) {
 }
 
 add_task(async function testAboutDebugging() {
-  let win = await open_manager(null);
-  let categoryUtilities = new CategoryUtilities(win);
-  await categoryUtilities.openType("extension");
+  let win = await loadInitialView("extension");
 
   let aboutAddonsTab = gBrowser.selectedTab;
-  let debugAddonsBtn = win.document.getElementById("utils-debugAddons");
+  let debugAddonsBtn = win.document.querySelector(
+    '#page-options [action="debug-addons"]'
+  );
 
   // Verify the about:debugging is loaded.
   info(`Check about:debugging loads`);
@@ -82,7 +82,7 @@ add_task(async function testAboutDebugging() {
     "about:debugging#/runtime/this-firefox",
     true
   );
-  debugAddonsBtn.doCommand();
+  debugAddonsBtn.click();
   await loaded;
   let aboutDebuggingTab = gBrowser.selectedTab;
   const { AboutDebugging } = aboutDebuggingTab.linkedBrowser.contentWindow;
@@ -99,7 +99,21 @@ add_task(async function testAboutDebugging() {
   let switched = TestUtils.waitForCondition(
     () => gBrowser.selectedTab == aboutDebuggingTab
   );
-  debugAddonsBtn.doCommand();
+  debugAddonsBtn.click();
+  await switched;
+
+  info("Force about:debugging to a different hash URL");
+  aboutDebuggingTab.linkedBrowser.contentWindow.location.hash = "/setup";
+
+  info("Switch back to about:addons again");
+  await BrowserTestUtils.switchTab(gBrowser, aboutAddonsTab);
+  is(gBrowser.selectedTab, aboutAddonsTab, "Back to about:addons");
+
+  info("Re-open about:debugging a second time");
+  switched = TestUtils.waitForCondition(
+    () => gBrowser.selectedTab == aboutDebuggingTab
+  );
+  debugAddonsBtn.click();
   await switched;
 
   info("Wait until any new about:debugging request did settle");
@@ -110,5 +124,5 @@ add_task(async function testAboutDebugging() {
   info("Remove the about:debugging tab");
   BrowserTestUtils.removeTab(aboutDebuggingTab);
 
-  await close_manager(win);
+  await closeView(win);
 });

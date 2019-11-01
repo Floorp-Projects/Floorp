@@ -7,8 +7,6 @@
 var MockFilePicker = SpecialPowers.MockFilePicker;
 MockFilePicker.init(window);
 
-var gManagerWindow;
-
 async function checkInstallConfirmation(...names) {
   let notificationCount = 0;
   let observer = {
@@ -62,7 +60,7 @@ async function checkInstallConfirmation(...names) {
 }
 
 add_task(async function test_install_from_file() {
-  gManagerWindow = await open_manager("addons://list/extension");
+  let win = await loadInitialView("extension");
 
   var filePaths = [
     get_addon_file_url("browser_dragdrop1.xpi"),
@@ -81,10 +79,50 @@ add_task(async function test_install_from_file() {
     "Drag Drop test 2"
   );
 
-  gManagerWindow.gViewController.doCommand("cmd_installFromFile");
+  win.document
+    .querySelector('#page-options [action="install-from-file"]')
+    .click();
 
   await pInstallURIClosed;
 
   MockFilePicker.cleanup();
-  await close_manager(gManagerWindow);
+  await closeView(win);
+});
+
+add_task(async function test_install_disabled() {
+  let win = await loadInitialView("extension");
+  let doc = win.document;
+
+  let pageOptionsMenu = doc.querySelector("addon-page-options panel-list");
+
+  function openPageOptions() {
+    let opened = BrowserTestUtils.waitForEvent(pageOptionsMenu, "shown");
+    pageOptionsMenu.open = true;
+    return opened;
+  }
+
+  function closePageOptions() {
+    let closed = BrowserTestUtils.waitForEvent(pageOptionsMenu, "hidden");
+    pageOptionsMenu.open = false;
+    return closed;
+  }
+
+  await openPageOptions();
+  let installButton = doc.querySelector('[action="install-from-file"]');
+  ok(!installButton.hidden, "The install button is shown");
+  await closePageOptions();
+
+  await SpecialPowers.pushPrefEnv({ set: [[PREF_XPI_ENABLED, false]] });
+
+  await openPageOptions();
+  ok(installButton.hidden, "The install button is now hidden");
+  await closePageOptions();
+
+  await SpecialPowers.popPrefEnv();
+
+  await openPageOptions();
+  ok(!installButton.hidden, "The install button is shown again");
+  await closePageOptions();
+
+  await closeView(win);
 });
