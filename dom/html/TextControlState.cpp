@@ -1059,6 +1059,111 @@ nsresult TextInputListener::UpdateTextInputCommands(
 }
 
 /*****************************************************************************
+ * mozilla::AutoTextControlHandlingState
+ *
+ * This class is temporarily created in the stack and can manage nested
+ * handling state of TextControlState.
+ *****************************************************************************/
+
+enum class TextControlAction {
+  PrepareEditor,
+  CommitComposition,
+  SetValue,
+};
+
+class MOZ_STACK_CLASS AutoTextControlHandlingState {
+ public:
+  AutoTextControlHandlingState() = delete;
+  explicit AutoTextControlHandlingState(const AutoTextControlHandlingState&) =
+      delete;
+  AutoTextControlHandlingState(AutoTextControlHandlingState&&) = delete;
+  void operator=(AutoTextControlHandlingState&) = delete;
+  void operator=(const AutoTextControlHandlingState&) = delete;
+
+  /**
+   * Generic constructor.  If TextControlAction does not require additional
+   * data, must use this constructor.
+   */
+  AutoTextControlHandlingState(TextControlState& aTextControlState,
+                               TextControlAction aTextControlAction)
+      : mParent(aTextControlState.mHandlingState),
+        mTextControlState(aTextControlState),
+        mTextControlAction(aTextControlAction) {
+    MOZ_ASSERT(aTextControlAction != TextControlAction::SetValue,
+               "Use specific constructor");
+    mTextControlState.mHandlingState = this;
+  }
+
+  /**
+   * TextControlAction::SetValue specific constructor.  Current setting value
+   * must be specified and the creator should check whether we succeeded to
+   * allocate memory for line breaker conversion.
+   */
+  AutoTextControlHandlingState(TextControlState& aTextControlState,
+                               TextControlAction aTextControlAction,
+                               const nsAString& aSettingValue, ErrorResult& aRv)
+      : mParent(aTextControlState.mHandlingState),
+        mTextControlState(aTextControlState),
+        mTextControlAction(aTextControlAction) {
+    MOZ_ASSERT(aTextControlAction == TextControlAction::SetValue,
+               "Use generic constructor");
+    mTextControlState.mHandlingState = this;
+    // FYI: Using nsString may avoid copying the string buffer.
+    nsString settingValue(aSettingValue);
+    if (!nsContentUtils::PlatformToDOMLineBreaks(settingValue, fallible)) {
+      aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+      return;
+    }
+    // Update all setting value's new value because older value shouldn't
+    // overwrite newer value.
+    UpdateSettingValue(settingValue);
+  }
+
+  ~AutoTextControlHandlingState() {
+    if (!mTextControlStateDestroyed) {
+      mTextControlState.mHandlingState = mParent;
+    }
+  }
+
+  void OnDestroyTextControlState() {
+    mTextControlStateDestroyed = true;
+    if (mParent) {
+      mParent->OnDestroyTextControlState();
+    }
+  }
+
+  bool IsHandling(TextControlAction aTextControlAction) const {
+    if (mTextControlAction == aTextControlAction) {
+      return true;
+    }
+    return mParent ? mParent->IsHandling(aTextControlAction) : false;
+  }
+  const nsString& GetSettingValue() const {
+    MOZ_ASSERT(IsHandling(TextControlAction::SetValue));
+    if (mTextControlAction == TextControlAction::SetValue) {
+      return mSettingValue;
+    }
+    return mParent->GetSettingValue();
+  }
+
+ private:
+  void UpdateSettingValue(const nsString& aSettingValue) {
+    if (mTextControlAction == TextControlAction::SetValue) {
+      mSettingValue = aSettingValue;
+    }
+    if (mParent) {
+      mParent->UpdateSettingValue(aSettingValue);
+    }
+  }
+
+  AutoTextControlHandlingState* mParent;
+  TextControlState& mTextControlState;
+  nsString mSettingValue;
+  TextControlAction mTextControlAction;
+  bool mTextControlStateDestroyed = false;
+};
+
+/*****************************************************************************
  * mozilla::TextControlState
  *****************************************************************************/
 
@@ -1067,13 +1172,11 @@ TextControlState::TextControlState(nsITextControlElement* aOwningElement)
       mBoundFrame(nullptr),
       mEverInited(false),
       mEditorInitialized(false),
-      mInitializing(false),
       mValueTransferInProgress(false),
       mSelectionCached(true),
       mSelectionRestoreEagerInit(false),
       mPlaceholderVisibility(false),
-      mPreviewVisibility(false),
-      mIsCommittingComposition(false)
+      mPreviewVisibility(false)
 // When adding more member variable initializations here, add the same
 // also to ::Construct.
 {
@@ -1084,7 +1187,7 @@ TextControlState::TextControlState(nsITextControlElement* aOwningElement)
 
 TextControlState* TextControlState::Construct(
     nsITextControlElement* aOwningElement, TextControlState** aReusedState) {
-  if (*aReusedState) {
+  if (*aReusedState && !(*aReusedState)->IsBusy()) {
     TextControlState* state = *aReusedState;
     *aReusedState = nullptr;
     state->mTextCtrlElement = aOwningElement;
@@ -1092,13 +1195,11 @@ TextControlState* TextControlState::Construct(
     state->mSelectionProperties = SelectionProperties();
     state->mEverInited = false;
     state->mEditorInitialized = false;
-    state->mInitializing = false;
     state->mValueTransferInProgress = false;
     state->mSelectionCached = true;
     state->mSelectionRestoreEagerInit = false;
     state->mPlaceholderVisibility = false;
     state->mPreviewVisibility = false;
-    state->mIsCommittingComposition = false;
     // When adding more member variable initializations here, add the same
     // also to the constructor.
     return state;
@@ -1123,6 +1224,11 @@ Element* TextControlState::GetPreviewNode() {
 void TextControlState::Clear() {
   if (mTextEditor) {
     mTextEditor->SetTextInputListener(nullptr);
+  }
+
+  if (mHandlingState) {
+    mHandlingState->OnDestroyTextControlState();
+    mHandlingState = nullptr;
   }
 
   if (mBoundFrame) {
@@ -1316,10 +1422,12 @@ nsresult TextControlState::PrepareEditor(const nsAString* aValue) {
   AutoHideSelectionChanges hideSelectionChanges(GetConstFrameSelection());
 
   // Don't attempt to initialize recursively!
-  InitializationGuard guard(*this);
-  if (guard.IsInitializingRecursively()) {
+  if (mHandlingState &&
+      mHandlingState->IsHandling(TextControlAction::PrepareEditor)) {
     return NS_ERROR_NOT_INITIALIZED;
   }
+  AutoTextControlHandlingState preparingEditor(
+      *this, TextControlAction::PrepareEditor);
 
   // Note that we don't check mTextEditor here, because we might already have
   // one around, in which case we don't create a new one, and we'll just tie
@@ -2146,8 +2254,12 @@ void TextControlState::GetValue(nsAString& aValue, bool aIgnoreWrap) const {
   // IME, GetValue() may be called for appending text or something.  Then, we
   // need to return the latest aValue of SetValue() since the value hasn't
   // been set to the editor yet.
-  if (mIsCommittingComposition) {
-    aValue = mValueBeingSet;
+  // XXX After implementing "beforeinput" event, this becomes wrong.  The
+  //     value should be modified immediately after "beforeinput" event for
+  //     "insertReplacementText".
+  if (mHandlingState &&
+      mHandlingState->IsHandling(TextControlAction::CommitComposition)) {
+    aValue = mHandlingState->GetSettingValue();
     return;
   }
 
@@ -2221,17 +2333,16 @@ bool AreFlagsNotDemandingContradictingMovements(uint32_t aFlags) {
 
 bool TextControlState::SetValue(const nsAString& aValue,
                                 const nsAString* aOldValue, uint32_t aFlags) {
-  nsAutoString newValue(aValue);
+  ErrorResult error;
+  AutoTextControlHandlingState handlingSetValue(
+      *this, TextControlAction::SetValue, aValue, error);
+  if (error.Failed()) {
+    MOZ_ASSERT(error.ErrorCodeIs(NS_ERROR_OUT_OF_MEMORY));
+    error.SuppressException();
+    return false;
+  }
 
-  // While mIsCommittingComposition is true (that means that some event
-  // handlers which are fired during committing composition are the caller of
-  // this method), GetValue() uses mValueBeingSet for its result because the
-  // first calls of this methods hasn't set the value yet.  So, when it's true,
-  // we need to modify mValueBeingSet.  In this case, we will back to the first
-  // call of this method, then, mValueBeingSet will be truncated when
-  // mIsCommittingComposition is set false.  See below.
-  if (mIsCommittingComposition) {
-    mValueBeingSet = aValue;
+  if (handlingSetValue.IsHandling(TextControlAction::CommitComposition)) {
     // GetValue doesn't return current text frame's content during committing.
     // So we cannot trust this old value
     aOldValue = nullptr;
@@ -2243,10 +2354,11 @@ bool TextControlState::SetValue(const nsAString& aValue,
   if (aFlags & (eSetValue_BySetUserInput | eSetValue_ByContent)) {
     if (EditorHasComposition()) {
       // When this is called recursively, there shouldn't be composition.
-      if (NS_WARN_IF(mIsCommittingComposition)) {
+      if (NS_WARN_IF(handlingSetValue.IsHandling(
+              TextControlAction::CommitComposition))) {
         // Don't request to commit composition again.  But if it occurs,
         // we should skip to set the new value to the editor here.  It should
-        // be set later with the updated mValueBeingSet.
+        // be set later with the newest value.
         return true;
       }
       if (NS_WARN_IF(!mBoundFrame)) {
@@ -2264,7 +2376,7 @@ bool TextControlState::SetValue(const nsAString& aValue,
         } else {
           mBoundFrame->GetText(currentValue);
         }
-        if (newValue == currentValue) {
+        if (handlingSetValue.GetSettingValue() == currentValue) {
           // Note that in this case, we shouldn't fire any events with setting
           // value because event handlers may try to set value recursively but
           // we cannot commit composition at that time due to unsafe to run
@@ -2287,37 +2399,26 @@ bool TextControlState::SetValue(const nsAString& aValue,
         // WARNING: During this call, compositionupdate, compositionend, input
         // events will be fired.  Therefore, everything can occur.  E.g., the
         // document may be unloaded.
-        mValueBeingSet = aValue;
-        mIsCommittingComposition = true;
+        AutoTextControlHandlingState handlingCommitComposition(
+            *this, TextControlAction::CommitComposition);
         RefPtr<TextEditor> textEditor = mTextEditor;
         nsresult rv = textEditor->CommitComposition();
         if (!self.get()) {
           return true;
         }
-        mIsCommittingComposition = false;
-        // If this is called recursively during committing composition and
-        // some of them may be skipped above.  Therefore, we need to set
-        // value to the editor with the aValue of the latest call.
-        newValue = mValueBeingSet;
-        // When mIsCommittingComposition is false, mValueBeingSet won't be
-        // used.  Therefore, let's clear it.
-        mValueBeingSet.Truncate();
         if (NS_FAILED(rv)) {
           NS_WARNING("TextControlState failed to commit composition");
           return true;
         }
+        // Note that if a composition event listener sets editor value again,
+        // we should use the new value here.  The new value is stored in
+        // handlingSetValue right now.
       } else {
         NS_WARNING(
             "SetValue() is called when there is composition but "
             "it's not safe to request to commit the composition");
       }
     }
-  }
-
-  // \r is an illegal character in the dom, but people use them,
-  // so convert windows and mac platform linebreaks to \n:
-  if (!nsContentUtils::PlatformToDOMLineBreaks(newValue, fallible)) {
-    return false;
   }
 
   // mTextCtrlElement may be cleared when we dispatch an event so that
@@ -2334,7 +2435,8 @@ bool TextControlState::SetValue(const nsAString& aValue,
 
 #ifdef DEBUG
     if (IsSingleLineTextControl()) {
-      NS_ASSERTION(mEditorInitialized || mInitializing,
+      NS_ASSERTION(mEditorInitialized || handlingSetValue.IsHandling(
+                                             TextControlAction::PrepareEditor),
                    "We should never try to use the editor if we're not "
                    "initialized unless we're being initialized");
     }
@@ -2354,7 +2456,7 @@ bool TextControlState::SetValue(const nsAString& aValue,
     AutoWeakFrame weakFrame(mBoundFrame);
 
     // this is necessary to avoid infinite recursion
-    if (!currentValue.Equals(newValue)) {
+    if (currentValue != handlingSetValue.GetSettingValue()) {
       RefPtr<TextEditor> textEditor = mTextEditor;
 
       nsCOMPtr<Document> document = textEditor->GetDocument();
@@ -2393,8 +2495,8 @@ bool TextControlState::SetValue(const nsAString& aValue,
             // we're emulating the user's input.  Passing nullptr as
             // nsIPrincipal means that that may be user's input.  So, let's
             // do it.
-            DebugOnly<nsresult> rv =
-                textEditor->ReplaceTextAsAction(newValue, nullptr, nullptr);
+            DebugOnly<nsresult> rv = textEditor->ReplaceTextAsAction(
+                handlingSetValue.GetSettingValue(), nullptr, nullptr);
             NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                                  "Failed to set the new value");
           } else {
@@ -2421,8 +2523,10 @@ bool TextControlState::SetValue(const nsAString& aValue,
               //     However, this path won't be used in web content anymore.
               nsCOMPtr<nsISelectionController> kungFuDeathGrip = mSelCon.get();
               uint32_t currentLength = currentValue.Length();
-              uint32_t newlength = newValue.Length();
-              if (!currentLength || !StringBeginsWith(newValue, currentValue)) {
+              uint32_t newlength = handlingSetValue.GetSettingValue().Length();
+              if (!currentLength ||
+                  !StringBeginsWith(handlingSetValue.GetSettingValue(),
+                                    currentValue)) {
                 // Replace the whole text.
                 currentLength = 0;
                 kungFuDeathGrip->SelectAll();
@@ -2431,7 +2535,8 @@ bool TextControlState::SetValue(const nsAString& aValue,
                 mBoundFrame->SelectAllOrCollapseToEndOfText(false);
               }
               const nsAString& insertValue =
-                  StringTail(newValue, newlength - currentLength);
+                  StringTail(handlingSetValue.GetSettingValue(),
+                             newlength - currentLength);
 
               if (insertValue.IsEmpty()) {
                 // In this case, we makes the editor stop dispatching "input"
@@ -2466,7 +2571,8 @@ bool TextControlState::SetValue(const nsAString& aValue,
 
               // In this case, we makes the editor stop dispatching "input"
               // event so that passing nullptr as nsIPrincipal is safe for now.
-              textEditor->SetTextAsAction(newValue, nullptr);
+              textEditor->SetTextAsAction(handlingSetValue.GetSettingValue(),
+                                          nullptr);
 
               // Call the listener's HandleValueChanged() callback manually,
               // since we don't use the transaction manager in this path and it
@@ -2492,14 +2598,16 @@ bool TextControlState::SetValue(const nsAString& aValue,
           // as deleting the existing selection -- see bug 574558), in which
           // case we don't need to reset the value here.
           if (!mBoundFrame) {
-            return SetValue(newValue, aFlags & eSetValue_Notify);
+            return SetValue(handlingSetValue.GetSettingValue(),
+                            aFlags & eSetValue_Notify);
           }
           return true;
         }
 
         // The new value never includes line breaks caused by hard-wrap.
         // So, mCachedValue can always cache the new value.
-        if (!mBoundFrame->CacheValue(newValue, fallible)) {
+        if (!mBoundFrame->CacheValue(handlingSetValue.GetSettingValue(),
+                                     fallible)) {
           return false;
         }
       }
@@ -2509,11 +2617,11 @@ bool TextControlState::SetValue(const nsAString& aValue,
       mValue.emplace();
     }
 
-    // We can't just early-return here if mValue->Equals(newValue), because
-    // ValueWasChanged and OnValueChanged below still need to be called.
-    if (!mValue->Equals(newValue) ||
+    // We can't just early-return here, because ValueWasChanged and
+    // OnValueChanged below still need to be called.
+    if (!mValue->Equals(handlingSetValue.GetSettingValue()) ||
         !StaticPrefs::dom_input_skip_cursor_move_for_same_value_set()) {
-      if (!mValue->Assign(newValue, fallible)) {
+      if (!mValue->Assign(handlingSetValue.GetSettingValue(), fallible)) {
         return false;
       }
 
@@ -2523,8 +2631,8 @@ bool TextControlState::SetValue(const nsAString& aValue,
 
         SelectionProperties& props = GetSelectionProperties();
         if (aFlags & eSetValue_MoveCursorToEndIfValueChanged) {
-          props.SetStart(newValue.Length());
-          props.SetEnd(newValue.Length());
+          props.SetStart(handlingSetValue.GetSettingValue().Length());
+          props.SetEnd(handlingSetValue.GetSettingValue().Length());
           props.SetDirection(nsITextControlFrame::eForward);
         } else if (aFlags &
                    eSetValue_MoveCursorToBeginSetSelectionDirectionForward) {
@@ -2534,8 +2642,10 @@ bool TextControlState::SetValue(const nsAString& aValue,
         } else {
           // Make sure our cached selection position is not outside the new
           // value.
-          props.SetStart(std::min(props.GetStart(), newValue.Length()));
-          props.SetEnd(std::min(props.GetEnd(), newValue.Length()));
+          props.SetStart(std::min(props.GetStart(),
+                                  handlingSetValue.GetSettingValue().Length()));
+          props.SetEnd(std::min(props.GetEnd(),
+                                handlingSetValue.GetSettingValue().Length()));
         }
       }
 
@@ -2551,10 +2661,11 @@ bool TextControlState::SetValue(const nsAString& aValue,
       if (aFlags & eSetValue_BySetUserInput) {
         nsCOMPtr<Element> element = do_QueryInterface(textControlElement);
         MOZ_ASSERT(element);
-        MOZ_ASSERT(!newValue.IsVoid());
+        MOZ_ASSERT(!handlingSetValue.GetSettingValue().IsVoid());
         DebugOnly<nsresult> rvIgnored = nsContentUtils::DispatchInputEvent(
             element, EditorInputType::eInsertReplacementText, nullptr,
-            nsContentUtils::InputEventOptions(newValue));
+            nsContentUtils::InputEventOptions(
+                handlingSetValue.GetSettingValue()));
         NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
                              "Failed to dispatch input event");
       }
@@ -2589,7 +2700,8 @@ bool TextControlState::HasNonEmptyValue() {
   // If the frame for editor is alive, we can compute it with mTextEditor.
   // Otherwise, we need to check cached value via GetValue().
   if (mTextEditor && mBoundFrame && mEditorInitialized &&
-      !mIsCommittingComposition) {
+      !(mHandlingState &&
+        mHandlingState->IsHandling(TextControlAction::CommitComposition))) {
     return !mTextEditor->IsEmpty();
   }
 
