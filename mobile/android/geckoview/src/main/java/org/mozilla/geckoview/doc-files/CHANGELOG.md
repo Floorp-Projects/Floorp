@@ -14,6 +14,8 @@ exclude: true
 ⚠️  breaking change
 
 ## v71
+- Added a content blocking flag for blocked social cookies to [`ContentBlocking`][70.17].
+  ([bug 1584479]({{bugzilla}}1584479))
 - Added [`onBooleanScalar`][71.1], [`onLongScalar`][71.2],
   [`onStringScalar`][71.3] to [`RuntimeTelemetry.Delegate`][70.12] to support
   scalars in streaming telemetry. ⚠️  As part of this change,
@@ -402,4 +404,4 @@ exclude: true
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 6a71a9226b15eb40fb47f5da7400915f29fb4986
+[api-version]: 950568652bacb957f8af2a3cd68b4408eccbf78d

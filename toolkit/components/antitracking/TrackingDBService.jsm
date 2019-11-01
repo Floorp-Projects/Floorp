@@ -178,15 +178,9 @@ TrackingDBService.prototype = {
   identifyType(events) {
     let result = null;
     let isTracker = false;
-    let isSocialTracker = false;
     for (let [state, blocked] of events) {
       if (state & Ci.nsIWebProgressListener.STATE_LOADED_TRACKING_CONTENT) {
         isTracker = true;
-      }
-      if (
-        state & Ci.nsIWebProgressListener.STATE_LOADED_SOCIALTRACKING_CONTENT
-      ) {
-        isSocialTracker = true;
       }
       if (blocked) {
         if (
@@ -194,11 +188,10 @@ TrackingDBService.prototype = {
         ) {
           result = Ci.nsITrackingDBService.FINGERPRINTERS_ID;
         } else if (
-          // If STP is enabled and either a social tracker is blocked,
-          // or a cookie was blocked with a social tracking event
+          // If STP is enabled and either a social tracker or cookie is blocked.
           social_enabled &&
-          ((isSocialTracker &&
-            state & Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_TRACKER) ||
+          (state &
+            Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_SOCIALTRACKER ||
             state &
               Ci.nsIWebProgressListener.STATE_BLOCKED_SOCIALTRACKING_CONTENT)
         ) {
@@ -210,9 +203,10 @@ TrackingDBService.prototype = {
         ) {
           result = Ci.nsITrackingDBService.TRACKERS_ID;
         } else if (
-          // If a tracking cookie was blocked attribute it to tracking cookies. Possible social tracking content,
-          // but STP is not enabled.
-          state & Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_TRACKER
+          // If a tracking cookie was blocked attribute it to tracking cookies.
+          // This includes social tracking cookies since STP is not enabled.
+          state & Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_TRACKER ||
+          state & Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_SOCIALTRACKER
         ) {
           result = Ci.nsITrackingDBService.TRACKING_COOKIES_ID;
         } else if (

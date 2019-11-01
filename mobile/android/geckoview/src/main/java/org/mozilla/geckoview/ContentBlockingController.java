@@ -276,6 +276,12 @@ public class ContentBlockingController {
         public static final int COOKIES_BLOCKED_TRACKER         = 0x20000000;
 
         /**
+         * Rejected because the resource is a tracker from a social origin and
+         * cookie policy doesn't allow its loading.
+         */
+        public static final int COOKIES_BLOCKED_SOCIALTRACKER   = 0x01000000;
+
+        /**
          * Rejected because cookie policy blocks all cookies.
          */
         public static final int COOKIES_BLOCKED_ALL             = 0x40000000;
@@ -320,9 +326,9 @@ public class ContentBlockingController {
                       Event.BLOCKED_UNSAFE_CONTENT, Event.COOKIES_LOADED,
                       Event.COOKIES_LOADED_TRACKER, Event.COOKIES_LOADED_SOCIALTRACKER,
                       Event.COOKIES_BLOCKED_BY_PERMISSION, Event.COOKIES_BLOCKED_TRACKER,
-                      Event.COOKIES_BLOCKED_ALL, Event.COOKIES_PARTITIONED_FOREIGN,
-                      Event.COOKIES_BLOCKED_FOREIGN, Event.BLOCKED_SOCIALTRACKING_CONTENT,
-                      Event.LOADED_SOCIALTRACKING_CONTENT })
+                      Event.COOKIES_BLOCKED_SOCIALTRACKER, Event.COOKIES_BLOCKED_ALL,
+                      Event.COOKIES_PARTITIONED_FOREIGN, Event.COOKIES_BLOCKED_FOREIGN,
+                      Event.BLOCKED_SOCIALTRACKING_CONTENT, Event.LOADED_SOCIALTRACKING_CONTENT })
             /* package */ @interface LogEvent {}
 
             /**
