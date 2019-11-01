@@ -827,6 +827,7 @@ public class ContentBlocking {
     private static final long STATE_COOKIES_LOADED_TRACKER = 0x40000L;
     private static final long STATE_COOKIES_LOADED_SOCIALTRACKER = 0x80000L;
     private static final long STATE_COOKIES_BLOCKED_TRACKER = 0x20000000L;
+    private static final long STATE_COOKIES_BLOCKED_SOCIALTRACKER = 0x01000000L;
     private static final long STATE_COOKIES_BLOCKED_ALL = 0x40000000L;
     private static final long STATE_COOKIES_BLOCKED_FOREIGN = 0x80L;
 
@@ -834,6 +835,7 @@ public class ContentBlocking {
         return
             (geckoCat &
                 (STATE_COOKIES_BLOCKED_TRACKER |
+                 STATE_COOKIES_BLOCKED_SOCIALTRACKER |
                  STATE_COOKIES_BLOCKED_ALL |
                  STATE_COOKIES_BLOCKED_FOREIGN))
             != 0;
@@ -852,6 +854,7 @@ public class ContentBlocking {
         // If we receive STATE_COOKIES_LOADED_{SOCIAL,}TRACKER we know that this
         // setting would block this cookie.
         if ((geckoCat & (STATE_COOKIES_BLOCKED_TRACKER |
+                         STATE_COOKIES_BLOCKED_SOCIALTRACKER |
                          STATE_COOKIES_LOADED_TRACKER |
                          STATE_COOKIES_LOADED_SOCIALTRACKER)) != 0) {
             return CookieBehavior.ACCEPT_NON_TRACKERS;

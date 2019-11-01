@@ -554,14 +554,23 @@ bool UrlClassifierCommon::IsTrackingClassificationFlag(uint32_t aFlag) {
   }
 
   if (StaticPrefs::privacy_socialtracking_block_cookies_enabled() &&
-      (aFlag & nsIClassifiedChannel::ClassificationFlags::
-                   CLASSIFIED_ANY_SOCIAL_TRACKING)) {
+      IsSocialTrackingClassificationFlag(aFlag)) {
     return true;
   }
 
   return (
       aFlag &
       nsIClassifiedChannel::ClassificationFlags::CLASSIFIED_ANY_BASIC_TRACKING);
+}
+
+// static
+bool UrlClassifierCommon::IsSocialTrackingClassificationFlag(uint32_t aFlag) {
+  if (aFlag & nsIClassifiedChannel::ClassificationFlags::
+                  CLASSIFIED_ANY_SOCIAL_TRACKING) {
+    return true;
+  }
+
+  return false;
 }
 
 // static
