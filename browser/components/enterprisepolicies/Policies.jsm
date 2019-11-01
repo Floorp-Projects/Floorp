@@ -584,18 +584,53 @@ var Policies = {
 
   DisplayMenuBar: {
     onBeforeUIStartup(manager, param) {
-      let value = (!param).toString();
-      // This policy is meant to change the default behavior, not to force it.
-      // If this policy was alreay applied and the user chose to re-hide the
-      // menu bar, do not show it again.
-      runOncePerModification("displayMenuBar", value, () => {
+      let value;
+      if (
+        typeof param === "boolean" ||
+        param == "default-on" ||
+        param == "default-off"
+      ) {
+        switch (param) {
+          case "default-on":
+            value = "false";
+            break;
+          case "default-off":
+            value = "true";
+            break;
+          default:
+            value = (!param).toString();
+            break;
+        }
+        // This policy is meant to change the default behavior, not to force it.
+        // If this policy was already applied and the user chose to re-hide the
+        // menu bar, do not show it again.
+        runOncePerModification("displayMenuBar", value, () => {
+          gXulStore.setValue(
+            BROWSER_DOCUMENT_URL,
+            "toolbar-menubar",
+            "autohide",
+            value
+          );
+        });
+      } else {
+        switch (param) {
+          case "always":
+            value = "false";
+            break;
+          case "never":
+            // Make sure Alt key doesn't show the menubar
+            setAndLockPref("ui.key.menuAccessKeyFocuses", false);
+            value = "true";
+            break;
+        }
         gXulStore.setValue(
           BROWSER_DOCUMENT_URL,
           "toolbar-menubar",
           "autohide",
           value
         );
-      });
+        manager.disallowFeature("hideShowMenuBar");
+      }
     },
   },
 
