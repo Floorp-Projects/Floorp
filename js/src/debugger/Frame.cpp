@@ -892,7 +892,10 @@ static bool EvaluateInEnv(JSContext* cx, Handle<Env*> env,
       return false;
     }
 
-    frontend::EvalScriptInfo info(cx, options, env, scope);
+    LifoAllocScope allocScope(&cx->tempLifoAlloc());
+    frontend::ParseInfo parseInfo(cx, allocScope);
+
+    frontend::EvalScriptInfo info(cx, parseInfo, options, env, scope);
     script = frontend::CompileEvalScript(info, srcBuf);
     if (!script) {
       return false;
@@ -903,7 +906,11 @@ static bool EvaluateInEnv(JSContext* cx, Handle<Env*> env,
     // circumvent the fresh lexical scope that all eval have, so that the
     // users of executeInGlobal, like the web console, may add new bindings to
     // the global scope.
-    frontend::GlobalScriptInfo info(cx, options, scopeKind);
+
+    LifoAllocScope allocScope(&cx->tempLifoAlloc());
+    frontend::ParseInfo parseInfo(cx, allocScope);
+
+    frontend::GlobalScriptInfo info(cx, parseInfo, options, scopeKind);
     script = frontend::CompileGlobalScript(info, srcBuf);
     if (!script) {
       return false;

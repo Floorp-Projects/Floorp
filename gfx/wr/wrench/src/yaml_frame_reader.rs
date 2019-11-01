@@ -441,7 +441,11 @@ impl YamlFrameReader {
         let root_pipeline_id = wrench.root_pipeline_id;
         self.build_pipeline(wrench, root_pipeline_id, &yaml["root"]);
 
-        wrench.renderer.set_external_image_handler(self.external_image_handler.take().unwrap());
+        // If replaying the same frame during interactive use, the frame gets rebuilt,
+        // but the external image handler has already been consumed by the renderer.
+        if let Some(external_image_handler) = self.external_image_handler.take() {
+            wrench.renderer.set_external_image_handler(external_image_handler);
+        }
     }
 
     fn build_pipeline(

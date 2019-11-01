@@ -1024,7 +1024,10 @@ class ActivePS {
     uint64_t bufferRangeStart = sInstance->mProfileBuffer.BufferRangeStart();
     // Discard exit profiles that were gathered before our buffer RangeStart.
 #ifdef MOZ_BASE_PROFILER
-    if (bufferRangeStart != 0 && sInstance->mBaseProfileThreads) {
+    // The buffer range starts at 1 (the first valid entry, 0 is reserved as
+    // null marker). So if it now starts *after* 1, it means we have started to
+    // overwrite our oldest data, and we should get rid of Base profiles if any.
+    if (bufferRangeStart > 1 && sInstance->mBaseProfileThreads) {
       sInstance->mBaseProfileThreads.reset();
     }
 #endif
