@@ -15,25 +15,9 @@
   margin-bottom: 16px;
   box-shadow: var(--shadow-30);
   min-width: 12em;
-  z-index: 1;
+  z-index: var(--z-index-popup, 10);
   white-space: nowrap;
   cursor: default;
-}
-
-:host([valign="top"]) {
-  bottom: 30px;
-}
-
-:host([valign="bottom"]) {
-  top: 30px;
-}
-
-:host([align="left"]) {
-  left: -14px;
-}
-
-:host([align="right"]) {
-  right: -14px;
 }
 
 .list {

@@ -40,7 +40,7 @@ add_task(async function setup() {
 add_task(async function test_message_bar_stack() {
   const win = htmlAboutAddonsWindow;
 
-  let messageBarStack = win.document.querySelector("message-bar-stack");
+  let messageBarStack = win.document.getElementById("abuse-reports-messages");
 
   ok(messageBarStack, "Got a message-bar-stack in HTML about:addons page");
 
@@ -59,7 +59,7 @@ add_task(async function test_message_bar_stack() {
 
 add_task(async function test_create_message_bar_create_and_onclose() {
   const win = htmlAboutAddonsWindow;
-  const messageBarStack = win.document.querySelector("message-bar-stack");
+  const messageBarStack = win.document.getElementById("abuse-reports-messages");
 
   let messageEl = win.document.createElementNS(HTML_NS, "span");
   messageEl.textContent = "A message bar text";
@@ -112,7 +112,7 @@ add_task(async function test_create_message_bar_create_and_onclose() {
 
 add_task(async function test_max_message_bar_count() {
   const win = htmlAboutAddonsWindow;
-  const messageBarStack = win.document.querySelector("message-bar-stack");
+  const messageBarStack = win.document.getElementById("abuse-reports-messages");
 
   info("Create a new message-bar");
   let messageElement = document.createElementNS(HTML_NS, "span");
