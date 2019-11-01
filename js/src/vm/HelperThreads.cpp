@@ -1812,6 +1812,11 @@ void js::GCParallelTask::runFromHelperThread(AutoLockHelperThreadState& lock) {
 
 void GCParallelTask::runTask() {
   // Run the task from either the main thread or a helper thread.
+
+  // The hazard analysis can't tell what the call to func_ will do but it's not
+  // allowed to GC.
+  JS::AutoSuppressGCAnalysis nogc;
+
   TimeStamp timeStart = ReallyNow();
   func_(this);
   duration_ = TimeSince(timeStart);
