@@ -519,33 +519,17 @@ body {
   display: flex;
   flex-direction: column;
   flex: 1;
+  overflow-y: auto;
   white-space: nowrap;
   font: message-box;
   font-size: var(--accessibility-font-size);
+  background-color: var(--theme-sidebar-background);
 }
 
 .split-box:not(.horz) .right-sidebar {
   position: fixed;
   width: inherit;
   height: var(--accessibility-main-height)
-}
-
-.right-sidebar ._header {
-  background-color: var(--theme-toolbar-background);
-  border-bottom: 1px solid var(--theme-splitter-color);
-  height: var(--theme-toolbar-height);
-  line-height: var(--theme-toolbar-height);
-  padding-inline-start: 14px;
-  padding-inline-end: var(--accessibility-arrow-horizontal-padding);
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-}
-
-.right-sidebar ._content {
-  font-size: var(--accessibility-font-size);
-  flex: 2 0;
-  overflow: auto;
 }
 
 /* Tree customization */

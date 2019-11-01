@@ -12,7 +12,7 @@ const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
 const Accordion = createFactory(
-  require("devtools/client/inspector/layout/components/Accordion")
+  require("devtools/client/shared/components/Accordion")
 );
 const FontList = createFactory(require("./FontList"));
 
@@ -49,6 +49,7 @@ class FontOverview extends PureComponent {
       items: [
         {
           header: getStr("fontinspector.allFontsOnPageHeader"),
+          id: "font-list-details",
           component: FontList,
           componentProps: {
             fontOptions,
