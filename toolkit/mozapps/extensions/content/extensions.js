@@ -142,11 +142,15 @@ function initialize(event) {
   helpButton.setAttribute("href", helpUrl);
   helpButton.addEventListener("click", () => recordLinkTelemetry("support"));
 
-  document.getElementById("preferencesButton").addEventListener("click", () => {
+  document.getElementById("preferencesButton").addEventListener("click", e => {
+    if (e.button >= 2) {
+      return;
+    }
     let mainWindow = window.windowRoot.ownerGlobal;
     recordLinkTelemetry("about:preferences");
     if ("switchToTabHavingURI" in mainWindow) {
       mainWindow.switchToTabHavingURI("about:preferences", true, {
+        ignoreFragment: "whenComparing",
         triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
       });
     }
