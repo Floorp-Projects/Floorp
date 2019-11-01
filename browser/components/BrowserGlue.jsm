@@ -552,7 +552,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AsyncPrefs: "resource://gre/modules/AsyncPrefs.jsm",
   ContentClick: "resource:///modules/ContentClick.jsm",
   PluginManager: "resource:///actors/PluginParent.jsm",
-  PictureInPicture: "resource://gre/modules/PictureInPicture.jsm",
   ReaderParent: "resource:///modules/ReaderParent.jsm",
 });
 
@@ -652,11 +651,6 @@ const listeners = {
     "AboutLogins:UpdateLogin": ["AboutLoginsParent"],
     "Content:Click": ["ContentClick"],
     ContentSearch: ["ContentSearch"],
-    "PictureInPicture:Request": ["PictureInPicture"],
-    "PictureInPicture:Close": ["PictureInPicture"],
-    "PictureInPicture:Playing": ["PictureInPicture"],
-    "PictureInPicture:Paused": ["PictureInPicture"],
-    "PictureInPicture:OpenToggleContextMenu": ["PictureInPicture"],
     "Reader:FaviconRequest": ["ReaderParent"],
     "Reader:UpdateReaderButton": ["ReaderParent"],
     "rtcpeer:CancelRequest": ["webrtcUI"],
