@@ -472,6 +472,7 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
   //
   void BuildUserAgent();
   void InitUserAgentComponents();
+  static void PrefsChanged(const char* pref, void* self);
   void PrefsChanged(const char* pref);
 
   MOZ_MUST_USE nsresult SetAcceptLanguages();

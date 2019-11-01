@@ -194,6 +194,7 @@ class DataStorage : public nsIObserver {
   void ShutdownTimer();
   void NotifyObservers(const char* aTopic);
 
+  static void PrefChanged(const char* aPref, void* aSelf);
   void PrefChanged(const char* aPref);
 
   bool GetInternal(const nsCString& aKey, Entry* aEntry, DataStorageType aType,

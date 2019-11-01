@@ -174,8 +174,8 @@ static const char* kObservedPrefs[] = {
 nsFocusManager::nsFocusManager() : mEventHandlingNeedsFlush(false) {}
 
 nsFocusManager::~nsFocusManager() {
-  Preferences::UnregisterCallbacks(
-      PREF_CHANGE_METHOD(nsFocusManager::PrefChanged), kObservedPrefs, this);
+  Preferences::UnregisterCallbacks(nsFocusManager::PrefChanged, kObservedPrefs,
+                                   this);
 
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (obs) {
@@ -198,8 +198,8 @@ nsresult nsFocusManager::Init() {
 
   sTestMode = Preferences::GetBool("focusmanager.testmode", false);
 
-  Preferences::RegisterCallbacks(
-      PREF_CHANGE_METHOD(nsFocusManager::PrefChanged), kObservedPrefs, fm);
+  Preferences::RegisterCallbacks(nsFocusManager::PrefChanged, kObservedPrefs,
+                                 fm);
 
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (obs) {
@@ -211,6 +211,11 @@ nsresult nsFocusManager::Init() {
 
 // static
 void nsFocusManager::Shutdown() { NS_IF_RELEASE(sInstance); }
+
+// static
+void nsFocusManager::PrefChanged(const char* aPref, void* aSelf) {
+  static_cast<nsFocusManager*>(aSelf)->PrefChanged(aPref);
+}
 
 void nsFocusManager::PrefChanged(const char* aPref) {
   nsDependentCString pref(aPref);

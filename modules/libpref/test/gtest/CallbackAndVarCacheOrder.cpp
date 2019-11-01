@@ -19,10 +19,11 @@ struct Closure {
 };
 
 template <typename T, typename U>
-void VarChanged(const char* aPrefName, Closure<T, U>* aClosure) {
-  ASSERT_EQ(*aClosure->mLocation, aClosure->mExpected);
-  ASSERT_FALSE(aClosure->mCalled);
-  aClosure->mCalled = true;
+void VarChanged(const char* aPrefName, void* aClosure) {
+  auto closure = static_cast<Closure<T, U>*>(aClosure);
+  ASSERT_EQ(*closure->mLocation, closure->mExpected);
+  ASSERT_FALSE(closure->mCalled);
+  closure->mCalled = true;
 }
 
 void SetFunc(const nsCString& aPrefName, bool aValue) {
