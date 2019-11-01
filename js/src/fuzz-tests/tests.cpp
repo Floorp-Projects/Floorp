@@ -34,7 +34,8 @@ static JSObject* jsfuzz_createGlobal(JSContext* cx, JSPrincipals* principals) {
   options.creationOptions()
       .setStreamsEnabled(true)
       .setFieldsEnabled(false)
-      .setAwaitFixEnabled(true);
+      .setAwaitFixEnabled(true)
+      .setWeakRefsEnabled(true);
   return JS_NewGlobalObject(cx, getGlobalClass(), principals,
                             JS::FireOnNewGlobalHook, options);
 }

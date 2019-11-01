@@ -494,6 +494,7 @@ static bool enableBYOBStreamReaders = false;
 static bool enableWritableStreams = false;
 static bool enableFields = false;
 static bool enableAwaitFix = false;
+static bool enableWeakRefs = false;
 #ifdef JS_GC_ZEAL
 static uint32_t gZealBits = 0;
 static uint32_t gZealFrequency = 0;
@@ -3813,7 +3814,8 @@ static void SetStandardRealmOptions(JS::RealmOptions& options) {
       .setBYOBStreamReadersEnabled(enableBYOBStreamReaders)
       .setWritableStreamsEnabled(enableWritableStreams)
       .setFieldsEnabled(enableFields)
-      .setAwaitFixEnabled(enableAwaitFix);
+      .setAwaitFixEnabled(enableAwaitFix)
+      .setWeakRefsEnabled(enableWeakRefs);
   options.behaviors().setDeferredParserAlloc(enableDeferredMode);
 }
 
@@ -10288,6 +10290,7 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
   enableWritableStreams = op.getBoolOption("enable-writable-streams");
   enableFields = !op.getBoolOption("disable-experimental-fields");
   enableAwaitFix = op.getBoolOption("enable-experimental-await-fix");
+  enableWeakRefs = op.getBoolOption("enable-weak-refs");
 
   JS::ContextOptionsRef(cx)
       .setAsmJS(enableAsmJS)
@@ -11062,6 +11065,7 @@ int main(int argc, char** argv, char** envp) {
                         "Disable public fields in classes") ||
       !op.addBoolOption('\0', "enable-experimental-await-fix",
                         "Enable new, faster await semantics") ||
+      !op.addBoolOption('\0', "enable-weak-refs", "Enable weak references") ||
       !op.addStringOption('\0', "shared-memory", "on/off",
                           "SharedArrayBuffer and Atomics "
 #if SHARED_MEMORY_DEFAULT
