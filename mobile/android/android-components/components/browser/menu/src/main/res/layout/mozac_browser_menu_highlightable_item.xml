@@ -9,14 +9,14 @@
     android:layout_width="match_parent"
     android:orientation="horizontal"
     android:clickable="true"
-    android:focusable="true"
-    android:gravity="center_vertical">
+    android:focusable="true">
 
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/image"
         style="@style/Mozac.Browser.Menu.Item.ImageText.Icon"
         android:clickable="false"
         android:focusable="false"
+        android:layout_centerVertical="true"
         android:importantForAccessibility="no"
         android:background="@android:color/transparent"
         tools:src="@android:drawable/screen_background_dark"/>
@@ -30,6 +30,7 @@
         android:focusable="false"
         android:background="@android:color/transparent"
         android:gravity="center_vertical"
+        android:layout_centerVertical="true"
         tools:text="Item"
         android:importantForAccessibility="no"/>
 
@@ -40,6 +41,7 @@
         android:layout_gravity="center_vertical"
         android:clickable="false"
         android:focusable="false"
+        android:layout_centerVertical="true"
         android:importantForAccessibility="no"
         android:background="@android:color/transparent"
         tools:src="@android:drawable/screen_background_dark"/>
