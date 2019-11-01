@@ -115,6 +115,14 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <View
+        android:id="@+id/bottom_gradient"
+        android:layout_width="match_parent"
+        android:layout_height="102dp"
+        android:background="@drawable/simple_dark_grey_gradient"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:focusable="false"/>
+
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/bottom_button_bar_layout"
         android:layout_width="match_parent"

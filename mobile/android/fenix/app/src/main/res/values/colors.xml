@@ -21,6 +21,8 @@
     <color name="disabled_light_theme">#6620123A</color>
     <color name="scrimStart_light_theme">#F515141A</color>
     <color name="scrimEnd_light_theme">#F542414D</color>
+    <color name="dark_grey_90_gradient_start">#FF15141A</color>
+    <color name="dark_grey_90_gradient_end">#0015141A</color>
     <color name="collection_icon_color_violet_light_theme">#7542E5</color>
     <color name="collection_icon_color_blue_light_theme">#0250BB</color>
     <color name="collection_icon_color_pink_light_theme">#E31587</color>
