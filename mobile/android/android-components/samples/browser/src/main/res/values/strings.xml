@@ -12,4 +12,9 @@
 
     <string name="mozac_reader_view_description">Enable Reader View</string>
     <string name="mozac_reader_view_description_selected">Disable Reader View</string>
+    <string name="add_on_version">Version</string>
+    <string name="add_on_authors">Authors</string>
+    <string name="add_on_last_updated">Last updated</string>
+    <string name="add_on_home_page">Homepage</string>
+    <string name="add_on_rating">Rating</string>
 </resources>
