@@ -49,8 +49,8 @@ class FutexWaiter;
 class SharedArrayRawBuffer {
  private:
   mozilla::Atomic<uint32_t, mozilla::ReleaseAcquire> refcount_;
-  Mutex lock_;
-  uint32_t length_;
+  mozilla::Atomic<uint32_t, mozilla::SequentiallyConsistent> length_;
+  Mutex growLock_;
   uint32_t maxSize_;
   size_t mappedSize_;  // Does not include the page for the header
   bool preparedForWasm_;
@@ -69,8 +69,8 @@ class SharedArrayRawBuffer {
   SharedArrayRawBuffer(uint8_t* buffer, uint32_t length, uint32_t maxSize,
                        size_t mappedSize, bool preparedForWasm)
       : refcount_(1),
-        lock_(mutexid::SharedArrayGrow),
         length_(length),
+        growLock_(mutexid::SharedArrayGrow),
         maxSize_(maxSize),
         mappedSize_(mappedSize),
         preparedForWasm_(preparedForWasm),
@@ -86,8 +86,10 @@ class SharedArrayRawBuffer {
     SharedArrayRawBuffer* buf;
 
    public:
-    explicit Lock(SharedArrayRawBuffer* buf) : buf(buf) { buf->lock_.lock(); }
-    ~Lock() { buf->lock_.unlock(); }
+    explicit Lock(SharedArrayRawBuffer* buf) : buf(buf) {
+      buf->growLock_.lock();
+    }
+    ~Lock() { buf->growLock_.unlock(); }
   };
 
   // max must be Something for wasm, Nothing for other uses
@@ -109,7 +111,7 @@ class SharedArrayRawBuffer {
     return SharedMem<uint8_t*>::shared(ptr + sizeof(SharedArrayRawBuffer));
   }
 
-  uint32_t byteLength(const Lock&) const { return length_; }
+  uint32_t volatileByteLength() const { return length_; }
 
   uint32_t maxSize() const { return maxSize_; }
 
