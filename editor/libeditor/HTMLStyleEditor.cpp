@@ -2235,16 +2235,10 @@ HTMLEditor::GetIsCSSEnabled(bool* aIsCSSEnabled) {
   return NS_OK;
 }
 
-inline bool HasNonEmptyAttribute(Element& aElement, nsStaticAtom& aAttribute) {
-  nsAutoString value;
-  return aElement.GetAttr(kNameSpaceID_None, &aAttribute, value) &&
-         !value.IsEmpty();
-}
-
 bool HTMLEditor::HasStyleOrIdOrClassAttribute(Element& aElement) {
-  return HasNonEmptyAttribute(aElement, *nsGkAtoms::style) ||
-         HasNonEmptyAttribute(aElement, *nsGkAtoms::_class) ||
-         HasNonEmptyAttribute(aElement, *nsGkAtoms::id);
+  return aElement.HasNonEmptyAttr(nsGkAtoms::style) ||
+         aElement.HasNonEmptyAttr(nsGkAtoms::_class) ||
+         aElement.HasNonEmptyAttr(nsGkAtoms::id);
 }
 
 }  // namespace mozilla

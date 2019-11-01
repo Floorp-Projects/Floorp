@@ -67,9 +67,7 @@ bool TableAccessible::IsProbablyLayoutTable() {
   }
 
   // Check for legitimate data table attributes.
-  nsAutoString summary;
-  if (el->GetAttr(kNameSpaceID_None, nsGkAtoms::summary, summary) &&
-      !summary.IsEmpty()) {
+  if (el->Element::HasNonEmptyAttr(nsGkAtoms::summary)) {
     RETURN_LAYOUT_ANSWER(false, "Has summary -- legitimate table structures");
   }
 
