@@ -4263,6 +4263,8 @@ class MToString : public MUnaryInstruction, public ToStringPolicy::Data {
     return AliasSet::None();
   }
 
+  bool mightHaveSideEffects() const { return mightHaveSideEffects_; }
+
   bool supportSideEffects() const {
     return sideEffects_ == SideEffectHandling::Supported;
   }
