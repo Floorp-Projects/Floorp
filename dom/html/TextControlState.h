@@ -28,6 +28,7 @@ class nsFrame;
 
 namespace mozilla {
 
+class AutoTextControlHandlingState;
 class ErrorResult;
 class TextInputListener;
 class TextInputSelectionController;
@@ -157,10 +158,11 @@ class TextControlState final : public SupportsWeakPtr<TextControlState> {
   void Traverse(nsCycleCollectionTraversalCallback& cb);
   MOZ_CAN_RUN_SCRIPT_BOUNDARY void Unlink();
 
+  bool IsBusy() const { return !!mHandlingState; }
+
   void PrepareForReuse() {
     Unlink();
     mValue.reset();
-    mValueBeingSet.Truncate();
     mTextCtrlElement = nullptr;
   }
 
@@ -392,26 +394,10 @@ class TextControlState final : public SupportsWeakPtr<TextControlState> {
 
   bool EditorHasComposition();
 
-  class InitializationGuard {
-   public:
-    explicit InitializationGuard(TextControlState& aState)
-        : mState(aState), mGuardSet(false) {
-      if (!mState.mInitializing) {
-        mGuardSet = true;
-        mState.mInitializing = true;
-      }
-    }
-    ~InitializationGuard() {
-      if (mGuardSet) {
-        mState.mInitializing = false;
-      }
-    }
-    bool IsInitializingRecursively() const { return !mGuardSet; }
-
-   private:
-    TextControlState& mState;
-    bool mGuardSet;
-  };
+  // When this class handles something which may run script, this should be
+  // set to non-nullptr.  If so, this class claims that it's busy and that
+  // prevents destroying TextControlState instance.
+  AutoTextControlHandlingState* mHandlingState = nullptr;
 
   // The text control element owns this object, and ensures that this object
   // has a smaller lifetime.
@@ -422,15 +408,9 @@ class TextControlState final : public SupportsWeakPtr<TextControlState> {
   nsTextControlFrame* mBoundFrame;
   RefPtr<TextInputListener> mTextListener;
   Maybe<nsString> mValue;
-  // mValueBeingSet is available only while SetValue() is requesting to commit
-  // composition.  I.e., this is valid only while mIsCommittingComposition is
-  // true.  While active composition is being committed, GetValue() needs
-  // the latest value which is set by SetValue().  So, this is cache for that.
-  nsString mValueBeingSet;
   SelectionProperties mSelectionProperties;
   bool mEverInited;  // Have we ever been initialized?
   bool mEditorInitialized;
-  bool mInitializing;  // Whether we're in the process of initialization
   bool mValueTransferInProgress;  // Whether a value is being transferred to the
                                   // frame
   bool mSelectionCached;          // Whether mSelectionProperties is valid
@@ -438,8 +418,8 @@ class TextControlState final : public SupportsWeakPtr<TextControlState> {
                                             // because of selection restore
   bool mPlaceholderVisibility;
   bool mPreviewVisibility;
-  bool mIsCommittingComposition;
 
+  friend class AutoTextControlHandlingState;
   friend class PrepareEditorEvent;
   friend class RestoreSelectionState;
 };
