@@ -361,6 +361,10 @@ class App extends PureComponent {
 
   onUpdateDeviceModal(isOpen, modalOpenedFromViewport) {
     this.props.dispatch(updateDeviceModal(isOpen, modalOpenedFromViewport));
+
+    if (Services.prefs.getBoolPref("devtools.responsive.browserUI.enabled")) {
+      window.postMessage({ type: "update-device-modal", isOpen }, "*");
+    }
   }
 
   render() {

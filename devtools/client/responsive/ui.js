@@ -253,8 +253,8 @@ class ResponsiveUI {
 
     this.browserContainerEl.classList.add("responsive-mode");
 
-    // Prepend the RDM iframe inside of the current tab's browser container.
-    this.browserContainerEl.prepend(rdmFrame);
+    // Prepend the RDM iframe inside of the current tab's browser stack.
+    this.browserStackEl.prepend(rdmFrame);
 
     // Wait for the frame script to be loaded.
     message.wait(rdmFrame.contentWindow, "script-init").then(async () => {
@@ -465,6 +465,9 @@ class ResponsiveUI {
         break;
       case "screenshot":
         this.onScreenshot();
+        break;
+      case "update-device-modal":
+        this.onUpdateDeviceModal(event);
     }
   }
 
@@ -581,6 +584,13 @@ class ResponsiveUI {
 
       message.post(this.rdmFrame.contentWindow, "screenshot-captured");
     }
+  }
+
+  onUpdateDeviceModal(event) {
+    this.browserStackEl.classList.toggle(
+      "device-modal-opened",
+      event.data.isOpen
+    );
   }
 
   /**
