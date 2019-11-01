@@ -182,6 +182,11 @@ bool ObjectWeakMap::add(JSContext* cx, JSObject* obj, JSObject* target) {
   return true;
 }
 
+void ObjectWeakMap::remove(JSObject* key) {
+  MOZ_ASSERT(key);
+  map.remove(key);
+}
+
 void ObjectWeakMap::clear() { map.clear(); }
 
 void ObjectWeakMap::trace(JSTracer* trc) { map.trace(trc); }

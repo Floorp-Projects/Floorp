@@ -285,6 +285,8 @@ void js::gc::GCRuntime::traceRuntimeForMajorGC(JSTracer* trc,
         trc, Compartment::NonGrayEdges);
   }
 
+  markFinalizationGroupData(trc);
+
   traceRuntimeCommon(trc, MarkRuntime);
 }
 
@@ -477,8 +479,8 @@ void js::gc::GCRuntime::finishRoots() {
 
   rt->finishSelfHosting();
 
-  for (RealmsIter r(rt); !r.done(); r.next()) {
-    r->finishRoots();
+  for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next()) {
+    zone->finishRoots();
   }
 
 #ifdef JS_GC_ZEAL

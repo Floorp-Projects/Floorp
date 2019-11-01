@@ -26,6 +26,7 @@ UNIFIED_SOURCES += [
     'Allocator.cpp',
     'AtomMarking.cpp',
     'Barrier.cpp',
+    'FinalizationGroup.cpp',
     'GC.cpp',
     'GCTrace.cpp',
     'Marking.cpp',
