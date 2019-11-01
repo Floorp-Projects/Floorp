@@ -1863,8 +1863,15 @@ class Extension extends ExtensionData {
     return manifest;
   }
 
-  get contentSecurityPolicy() {
-    return this.manifest.content_security_policy;
+  get extensionPageCSP() {
+    const { content_security_policy } = this.manifest;
+    if (
+      content_security_policy &&
+      typeof content_security_policy === "object"
+    ) {
+      return content_security_policy.extension_pages;
+    }
+    return content_security_policy;
   }
 
   get backgroundScripts() {
@@ -1891,7 +1898,7 @@ class Extension extends ExtensionData {
       id: this.id,
       uuid: this.uuid,
       name: this.name,
-      contentSecurityPolicy: this.contentSecurityPolicy,
+      extensionPageCSP: this.extensionPageCSP,
       instanceId: this.instanceId,
       resourceURL: this.resourceURL,
       contentScripts: this.contentScripts,
