@@ -63,7 +63,7 @@ class ASpdySession : public nsAHttpTransaction {
   // soft errors are errors that terminate a stream without terminating the
   // connection. In general non-network errors are stream errors as well
   // as network specific items like cancels.
-  bool SoftStreamError(nsresult code) {
+  static bool SoftStreamError(nsresult code) {
     if (NS_SUCCEEDED(code) || code == NS_BASE_STREAM_WOULD_BLOCK) {
       return false;
     }
