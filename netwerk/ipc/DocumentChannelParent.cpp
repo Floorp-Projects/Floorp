@@ -122,6 +122,11 @@ bool DocumentChannelParent::Init(const DocumentChannelCreationArgs& aArgs) {
     httpChannelImpl->SetWarningReporter(this);
   }
 
+  nsCOMPtr<nsITimedChannel> timedChannel = do_QueryInterface(mChannel);
+  if (timedChannel) {
+    timedChannel->SetAsyncOpen(aArgs.asyncOpenTime());
+  }
+
   // Setup a ClientChannelHelper to watch for redirects, and copy
   // across any serviceworker related data between channels as needed.
   AddClientChannelHelperInParent(mChannel, GetMainThreadSerialEventTarget());

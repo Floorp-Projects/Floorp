@@ -115,6 +115,7 @@ class DocumentChannelChild final : public PDocumentChannelChild,
 
   RedirectToRealChannelResolver mRedirectResolver;
 
+  TimeStamp mAsyncOpenTime;
   const RefPtr<nsDocShellLoadState> mLoadState;
   const Maybe<nsString> mInitiatorType;
   const uint32_t mLoadType;

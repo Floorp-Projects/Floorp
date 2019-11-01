@@ -68,6 +68,7 @@ DocumentChannelChild::DocumentChannelChild(
   uint64_t channelId;
   Unused << handler->NewChannelId(channelId);
   mChannelId.emplace(channelId);
+  mAsyncOpenTime = TimeStamp::Now();
 }
 
 NS_IMETHODIMP
@@ -151,6 +152,7 @@ DocumentChannelChild::AsyncOpen(nsIStreamListener* aListener) {
   args.isTopLevelDoc() = mIsTopLevelDoc;
   args.hasNonEmptySandboxingFlags() = mHasNonEmptySandboxingFlags;
   args.channelId() = *mChannelId;
+  args.asyncOpenTime() = mAsyncOpenTime;
 
   nsCOMPtr<nsILoadContext> loadContext;
   NS_QueryNotificationCallbacks(this, loadContext);
