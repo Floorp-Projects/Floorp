@@ -2742,6 +2742,8 @@ class BaseCompiler final : public BaseCompilerInterface {
   operator MacroAssembler&() const { return masm; }
   operator BaseRegAlloc&() { return ra; }
 
+  bool usesSharedMemory() const { return env_.usesSharedMemory(); }
+
  private:
   ////////////////////////////////////////////////////////////
   //
@@ -10651,8 +10653,10 @@ bool BaseCompiler::emitMemOrTableCopy(bool isMem) {
   if (isMem) {
     MOZ_ASSERT(srcMemOrTableIndex == 0);
     MOZ_ASSERT(dstMemOrTableIndex == 0);
-    if (!emitInstanceCall(lineOrBytecode, SASigMemCopy,
-                          /*pushReturnedValue=*/false)) {
+    if (!emitInstanceCall(
+            lineOrBytecode,
+            usesSharedMemory() ? SASigMemCopyShared : SASigMemCopy,
+            /*pushReturnedValue=*/false)) {
       return false;
     }
   } else {
@@ -10707,8 +10711,9 @@ bool BaseCompiler::emitMemFill() {
     return true;
   }
 
-  return emitInstanceCall(lineOrBytecode, SASigMemFill,
-                          /*pushReturnedValue=*/false);
+  return emitInstanceCall(
+      lineOrBytecode, usesSharedMemory() ? SASigMemFillShared : SASigMemFill,
+      /*pushReturnedValue=*/false);
 }
 
 bool BaseCompiler::emitMemOrTableInit(bool isMem) {
