@@ -90,23 +90,26 @@ The `Deref` implementation uses a hidden static variable that is guarded by an a
 
 # Cargo features
 
-This crate provides two cargo features:
+This crate provides one cargo feature:
 
-- `nightly`: This uses unstable language features only available on the nightly release channel for a more optimal implementation. In practice this currently means avoiding a heap allocation per static. This feature might get deprecated at a later point once all relevant optimizations are usable from stable.
-- `spin_no_std` (implies `nightly`): This allows using this crate in a no-std environment, by depending on the standalone `spin` crate.
-
-Both features depend on unstable language features, which means
-no guarantees can be made about them in regard to SemVer stability.
+- `spin_no_std`: This allows using this crate in a no-std environment, by depending on the standalone `spin` crate.
 
 */
 
-#![doc(html_root_url = "https://docs.rs/lazy_static/1.2.0")]
+#![doc(html_root_url = "https://docs.rs/lazy_static/1.4.0")]
 #![no_std]
 
 #[cfg(not(feature = "spin_no_std"))]
 #[path="inline_lazy.rs"]
 #[doc(hidden)]
 pub mod lazy;
+
+#[cfg(test)]
+#[macro_use]
+extern crate doc_comment;
+
+#[cfg(test)]
+doctest!("../README.md");
 
 #[cfg(feature = "spin_no_std")]
 #[path="core_lazy.rs"]
@@ -196,7 +199,7 @@ pub trait LazyStatic {
 /// extern crate lazy_static;
 ///
 /// lazy_static! {
-///     static ref BUFFER: Vec<u8> = (0..65537).collect();
+///     static ref BUFFER: Vec<u8> = (0..255).collect();
 /// }
 ///
 /// fn main() {
