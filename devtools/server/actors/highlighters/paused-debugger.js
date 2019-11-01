@@ -151,7 +151,7 @@ PausedDebuggerOverlay.prototype = {
 
   onMouseMove(target) {
     // Not an element we care about
-    if (!target.id) {
+    if (!target || !target.id) {
       return;
     }
 
