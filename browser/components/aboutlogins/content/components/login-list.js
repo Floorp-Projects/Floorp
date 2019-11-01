@@ -36,6 +36,7 @@ export default class LoginList extends HTMLElement {
     this._filter = "";
     this._selectedGuid = null;
     this._blankLoginListItem = LoginListItemFactory.create({});
+    this._blankLoginListItem.hidden = true;
   }
 
   connectedCallback() {
