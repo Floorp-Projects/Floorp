@@ -52,18 +52,16 @@ function readUTF8InputStream(stream) {
 server.registerPathHandler(CSP_REPORT_PATH, (request, response) => {
   response.setStatusLine(request.httpVersion, 204, "No Content");
   let data = readUTF8InputStream(request.bodyInputStream);
-  info(`CSP-REPORT: ${data}`);
   Services.obs.notifyObservers(null, "extension-test-csp-report", data);
 });
 
 async function promiseCSPReport(test) {
   let res = await TestUtils.topicObserved("extension-test-csp-report", test);
-  info(`CSP-REPORT-RECEIVED: ${res[1]}`);
   return JSON.parse(res[1]);
 }
 
 // Test functions loaded into extension content script.
-function testImage(data) {
+function testImage(data = {}) {
   return new Promise(resolve => {
     let img = window.document.getElementById("testimg");
     img.onload = () => resolve(true);
@@ -75,7 +73,7 @@ function testImage(data) {
   });
 }
 
-function testFetch(data) {
+function testFetch(data = {}) {
   let f = data.content ? content.fetch : fetch;
   return f(data.url)
     .then(() => true)
@@ -89,6 +87,26 @@ function testFetch(data) {
     });
 }
 
+async function testEval(data = {}) {
+  try {
+    // eslint-disable-next-line no-eval
+    let ev = data.content ? window.eval : eval;
+    return ev("true");
+  } catch (e) {
+    return false;
+  }
+}
+
+async function testFunction(data = {}) {
+  try {
+    // eslint-disable-next-line no-eval
+    let fn = data.content ? window.Function : Function;
+    let sum = new fn("a", "b", "return a + b");
+    return sum(1, 1);
+  } catch (e) {
+    return 0;
+  }
+}
 // If the violation source is the extension the securitypolicyviolation event is not fired.
 // If the page is the source, the event is fired and both the content script or page scripts
 // will receive the event.  If we're expecting a moz-extension report  we'll  fail in the
@@ -186,12 +204,79 @@ let TESTS = [
   },
 
   // TODO Bug 1587939: Eval tests.
+  {
+    description: "Eval from content script uses page csp with unsafe-eval.",
+    pageCSP: `default-src 'none'; script-src 'unsafe-eval';`,
+    script: testEval,
+    data: { content: true },
+    expect: true,
+  },
+  {
+    description: "Eval from content script uses page csp.",
+    pageCSP: `default-src 'self' 'report-sample'; script-src 'self';`,
+    scriptCSP: `object-src 'self'; script-src 'self' 'unsafe-eval';`,
+    script: testEval,
+    data: { content: true },
+    expect: false,
+    report: {
+      "blocked-uri": "eval",
+      "document-uri": "http://example.com/plain.html",
+      "violated-directive": "script-src",
+    },
+  },
+  {
+    description: "Eval in content script uses extension csp.",
+    pageCSP: `script-src 'self' 'unsafe-eval';`,
+    script: testEval,
+    expect: false,
+  },
+  {
+    description: "Eval in content script uses extension csp.  unsafe-eval",
+    pageCSP: `default-src 'self'; script-src 'self';`,
+    scriptCSP: `object-src 'self'; script-src 'self' 'unsafe-eval';`,
+    script: testEval,
+    expect: true,
+  },
+
+  {
+    description: "Function from content script uses page csp.",
+    pageCSP: `default-src 'self'; script-src 'self' 'unsafe-eval';`,
+    script: testFunction,
+    data: { content: true },
+    expect: 2,
+  },
+  {
+    description: "Function from content script uses page csp.",
+    pageCSP: `default-src 'self' 'report-sample'; script-src 'self';`,
+    scriptCSP: `object-src 'self'; script-src 'self' 'unsafe-eval';`,
+    script: testFunction,
+    data: { content: true },
+    expect: 0,
+    report: {
+      "blocked-uri": "eval",
+      "document-uri": "http://example.com/plain.html",
+      "violated-directive": "script-src",
+    },
+  },
+  {
+    description: "Function in content script uses default extension csp.",
+    pageCSP: `default-src 'self'; script-src 'self' 'unsafe-eval';`,
+    script: testFunction,
+    expect: 0,
+  },
+  {
+    description:
+      "Function in content script uses extension csp, with unsafe-eval",
+    pageCSP: `default-src 'self'; script-src 'self';`,
+    scriptCSP: `default-src 'self'; object-src 'self'; script-src 'self' 'unsafe-eval';`,
+    script: testFunction,
+    expect: 2,
+  },
 ];
 
 async function runCSPTest(test) {
   // Set the CSP for the page loaded into the tab.
   gCSP = `${test.pageCSP || gDefaultCSP} report-uri ${CSP_REPORT_PATH}`;
-  info(`running test using CSP: ${gCSP}`);
   let data = {
     manifest: {
       content_scripts: [
@@ -216,7 +301,6 @@ async function runCSPTest(test) {
     },
   };
   if (test.scriptCSP) {
-    info(`ADDON-CSP: ${test.scriptCSP}`);
     data.manifest.content_security_policy = {
       content_scripts: `${test.scriptCSP} ${CSP_REPORT}`,
     };
@@ -224,7 +308,6 @@ async function runCSPTest(test) {
   let extension = ExtensionTestUtils.loadExtension(data);
   await extension.startup();
 
-  info(`TESTING: ${test.description}`);
   let reportPromise = test.report && promiseCSPReport();
   let contentPage = await ExtensionTestUtils.loadContentPage(pageURL);
 
