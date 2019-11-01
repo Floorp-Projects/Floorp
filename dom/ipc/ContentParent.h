@@ -56,6 +56,7 @@
 #define EXTENSION_REMOTE_TYPE "extension"
 #define PRIVILEGEDABOUT_REMOTE_TYPE "privilegedabout"
 #define PRIVILEGEDMOZILLA_REMOTE_TYPE "privilegedmozilla"
+#define WITH_COOP_COEP_REMOTE_TYPE_PREFIX "webCOOP+COEP="
 
 // This must start with the DEFAULT_REMOTE_TYPE above.
 #define LARGE_ALLOCATION_REMOTE_TYPE "webLargeAllocation"
