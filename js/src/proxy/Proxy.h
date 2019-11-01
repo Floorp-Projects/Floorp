@@ -94,10 +94,10 @@ size_t proxy_ObjectMoved(JSObject* obj, JSObject* old);
 // These functions are used by JIT code
 
 bool ProxyHas(JSContext* cx, HandleObject proxy, HandleValue idVal,
-              MutableHandleValue result);
+              bool* result);
 
 bool ProxyHasOwn(JSContext* cx, HandleObject proxy, HandleValue idVal,
-                 MutableHandleValue result);
+                 bool* result);
 
 bool ProxyGetProperty(JSContext* cx, HandleObject proxy, HandleId id,
                       MutableHandleValue vp);
