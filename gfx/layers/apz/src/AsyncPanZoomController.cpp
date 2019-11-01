@@ -4662,10 +4662,7 @@ void AsyncPanZoomController::NotifyLayersUpdated(
       // If an animation is underway, tell it about the scroll offset update.
       // Some animations can handle some scroll offset updates and continue
       // running. Those that can't will return false, and we cancel them.
-      if (relativeDelta != Some(CSSPoint()) &&
-          ((!mAnimation && !CanHandleScrollOffsetUpdate(mState)) ||
-           (mAnimation &&
-            !mAnimation->HandleScrollOffsetUpdate(relativeDelta)))) {
+      if (ShouldCancelAnimationForScrollUpdate(relativeDelta)) {
         // Cancel the animation (which might also trigger a repaint request)
         // after we update the scroll offset above. Otherwise we can be left
         // in a state where things are out of sync.
@@ -4996,6 +4993,20 @@ bool AsyncPanZoomController::HasReadyTouchBlock() const {
 
 bool AsyncPanZoomController::CanHandleScrollOffsetUpdate(PanZoomState aState) {
   return aState == PAN_MOMENTUM || IsPanningState(aState);
+}
+
+bool AsyncPanZoomController::ShouldCancelAnimationForScrollUpdate(
+    const Maybe<CSSPoint>& aRelativeDelta) {
+  // Never call CancelAnimation() for a no-op relative update.
+  if (aRelativeDelta == Some(CSSPoint())) {
+    return false;
+  }
+
+  if (mAnimation) {
+    return !mAnimation->HandleScrollOffsetUpdate(aRelativeDelta);
+  }
+
+  return !CanHandleScrollOffsetUpdate(mState);
 }
 
 void AsyncPanZoomController::SetState(PanZoomState aNewState) {
