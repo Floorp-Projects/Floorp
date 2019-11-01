@@ -146,6 +146,8 @@ class GestureEventListener final {
   void HandleInputTimeoutLongTap();
   void HandleInputTimeoutMaxTap(bool aDuringFastFling);
 
+  void EnterFirstSingleTouchDown();
+
   void TriggerSingleTapConfirmedEvent();
 
   bool MoveDistanceExceeds(ScreenCoord aThreshold) const;
