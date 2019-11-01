@@ -20,7 +20,6 @@ from mozproxy.utils import (
     transform_platform,
     tooltool_download,
     download_file_from_url,
-    get_available_port,
     LOG,
 )
 
@@ -54,8 +53,8 @@ POLICIES_CONTENT_ON = """{
     },
     "Proxy": {
       "Mode": "manual",
-      "HTTPProxy": "%(host)s:%(port)d",
-      "SSLProxy": "%(host)s:%(port)d",
+      "HTTPProxy": "%(host)s:8080",
+      "SSLProxy": "%(host)s:8080",
       "Passthrough": "%(host)s",
       "Locked": true
     }
@@ -75,8 +74,6 @@ POLICIES_CONTENT_OFF = """{
 class Mitmproxy(Playback):
     def __init__(self, config):
         self.config = config
-        self.host = self.config["host"]
-        self.port = None
         self.mitmproxy_proc = None
         self.mitmdump_path = None
         self.browser_path = config.get("binary")
@@ -192,7 +189,6 @@ class Mitmproxy(Playback):
         """Startup mitmproxy and replay the specified flow file"""
         if self.mitmproxy_proc is not None:
             raise Exception("Proxy already started.")
-        self.port = get_available_port()
         LOG.info("mitmdump path: %s" % mitmdump_path)
         LOG.info("browser path: %s" % browser_path)
 
@@ -219,8 +215,6 @@ class Mitmproxy(Playback):
             if self.config["playback_version"] == "4.0.4":
                 args = [
                     "-v",
-                    "--listen-host", self.host,
-                    "--listen-port", str(self.port),
                     "--set", "upstream_cert=false",
                     "--set", "websocket=false",
                     "--set", "server_replay_files={}".format(",".join(recording_paths)),
@@ -244,11 +238,11 @@ class Mitmproxy(Playback):
         end_time = time.time() + MITMDUMP_COMMAND_TIMEOUT
         ready = False
         while time.time() < end_time:
-            ready = self.check_proxy(host=self.host, port=self.port)
+            ready = self.check_proxy()
             if ready:
                 LOG.info(
-                    "Mitmproxy playback successfully started on %s:%d as pid %d"
-                    % (self.host, self.port, self.mitmproxy_proc.pid)
+                    "Mitmproxy playback successfully started as pid %d"
+                    % self.mitmproxy_proc.pid
                 )
                 return
             time.sleep(0.25)
@@ -282,7 +276,7 @@ class Mitmproxy(Playback):
 
         self.mitmproxy_proc = None
 
-    def check_proxy(self, host, port):
+    def check_proxy(self, host="localhost", port=8080):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
             s.connect((host, port))
@@ -338,8 +332,7 @@ class MitmproxyDesktop(Mitmproxy):
         self.write_policies_json(
             self.policies_dir,
             policies_content=POLICIES_CONTENT_ON % {"cert": self.cert_path,
-                                                    "host": self.host,
-                                                    "port": self.port},
+                                                    "host": self.config["host"]},
         )
 
         # cannot continue if failed to add CA cert to Firefox, need to check
@@ -373,7 +366,7 @@ class MitmproxyDesktop(Mitmproxy):
             LOG.info(contents)
             if (
                     POLICIES_CONTENT_ON
-                    % {"cert": self.cert_path, "host": self.host, "port": self.port}
+                    % {"cert": self.cert_path, "host": self.config["host"]}
             ) in contents:
                 LOG.info("Verified mitmproxy CA certificate is installed in Firefox")
             else:

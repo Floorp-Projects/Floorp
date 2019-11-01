@@ -12,8 +12,6 @@ class Playback(object):
 
     def __init__(self, config):
         self.config = config
-        self.host = None
-        self.port = None
 
     @abstractmethod
     def download(self):
