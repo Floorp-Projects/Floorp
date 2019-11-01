@@ -15,10 +15,10 @@ set +e
 # Install iris's pipenv
 cd $MOZ_FETCHES_DIR/iris_firefox
 PIPENV_MAX_RETRIES="5" pipenv install
-status=$?
+pip_status=$?
 
 # If pipenv installation fails for any reason, make another attempt.
-if [ $status -eq 0 ]
+if [ $pip_status -eq 0 ]
 then
     echo "Pipenv installed correctly, proceeding to Iris test run:"
 else
