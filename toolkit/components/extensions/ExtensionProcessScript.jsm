@@ -209,6 +209,7 @@ ExtensionManager = {
         webAccessibleResources: extension.webAccessibleResources,
 
         extensionPageCSP: extension.extensionPageCSP,
+        contentScriptCSP: extension.contentScriptCSP,
 
         localizeCallback,
 

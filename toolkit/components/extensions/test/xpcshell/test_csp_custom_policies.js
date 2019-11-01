@@ -14,7 +14,7 @@ const aps = Cc["@mozilla.org/addons/policy-service;1"].getService(
 
 let policy = null;
 
-function setExtensionPageCSP(csp) {
+function setExtensionCSP(csp) {
   if (policy) {
     policy.active = false;
   }
@@ -28,6 +28,7 @@ function setExtensionPageCSP(csp) {
     localizeCallback() {},
 
     extensionPageCSP: csp,
+    contentScriptCSP: csp,
   });
 
   policy.active = true;
@@ -53,19 +54,60 @@ add_task(async function test_addon_csp() {
   const CUSTOM_POLICY =
     "script-src: 'self' https://xpcshell.test.custom.csp; object-src: 'none'";
 
-  setExtensionPageCSP(CUSTOM_POLICY);
+  setExtensionCSP(CUSTOM_POLICY);
 
   equal(
     aps.getExtensionPageCSP(ADDON_ID),
     CUSTOM_POLICY,
-    "CSP should point to add-on's custom policy"
+    "CSP should point to add-on's custom extension page policy"
   );
 
-  setExtensionPageCSP(null);
+  equal(
+    aps.getContentScriptCSP(ADDON_ID),
+    CUSTOM_POLICY,
+    "CSP should point to add-on's custom content script policy"
+  );
+
+  setExtensionCSP(null);
 
   equal(
     aps.getExtensionPageCSP(ADDON_ID),
     aps.defaultCSP,
-    "CSP should revert to default when set to null"
+    "extension page CSP should be default when set to null"
   );
+
+  equal(
+    aps.getContentScriptCSP(ADDON_ID),
+    aps.defaultCSP,
+    "content script CSP should be default when set to null"
+  );
+});
+
+add_task(async function test_invalid_csp() {
+  let defaultPolicy = Preferences.get(
+    "extensions.webextensions.default-content-security-policy"
+  );
+  ExtensionTestUtils.failOnSchemaWarnings(false);
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      content_security_policy: {
+        extension_pages: `script-src 'none'`,
+        content_scripts: `script-src 'none'`,
+      },
+    },
+  });
+  await extension.startup();
+  let policy = WebExtensionPolicy.getByID(extension.id);
+  equal(
+    policy.extensionPageCSP,
+    defaultPolicy,
+    "csp is default when invalid csp is provided."
+  );
+  equal(
+    policy.contentScriptCSP,
+    defaultPolicy,
+    "csp is default when invalid csp is provided."
+  );
+  await extension.unload();
+  ExtensionTestUtils.failOnSchemaWarnings(true);
 });
