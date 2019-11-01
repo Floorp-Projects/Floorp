@@ -4724,7 +4724,7 @@ void AsyncPanZoomController::NotifyLayersUpdated(
     mCompositedLayoutViewport = Metrics().GetLayoutViewport();
     mCompositedScrollOffset = Metrics().GetScrollOffset();
     mExpectedGeckoMetrics = aLayerMetrics;
-    if (!mAnimation || !mAnimation->HandleScrollOffsetUpdate(Nothing())) {
+    if (ShouldCancelAnimationForScrollUpdate(Nothing())) {
       CancelAnimation();
     }
     // The main thread did not actually paint a displayport at the target
