@@ -87,6 +87,7 @@ class nsScriptSecurityManager final : public nsIScriptSecurityManager {
 
   nsresult InitPrefs();
 
+  static void ScriptSecurityPrefChanged(const char* aPref, void* aSelf);
   void ScriptSecurityPrefChanged(const char* aPref = nullptr);
 
   inline void AddSitesToFileURIAllowlist(const nsCString& aSiteList);

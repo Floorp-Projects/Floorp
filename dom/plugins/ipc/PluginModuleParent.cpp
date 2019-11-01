@@ -714,32 +714,33 @@ void PluginModuleParent::SetChildTimeout(const int32_t aChildTimeout) {
   SetReplyTimeoutMs(timeoutMs);
 }
 
-void PluginModuleParent::TimeoutChanged(const char* aPref,
-                                        PluginModuleParent* aModule) {
+void PluginModuleParent::TimeoutChanged(const char* aPref, void* aModule) {
+  auto module = static_cast<PluginModuleParent*>(aModule);
+
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 #ifndef XP_WIN
   if (!strcmp(aPref, kChildTimeoutPref)) {
-    MOZ_ASSERT(aModule->IsChrome());
+    MOZ_ASSERT(module->IsChrome());
     // The timeout value used by the parent for children
     int32_t timeoutSecs = Preferences::GetInt(kChildTimeoutPref, 0);
-    aModule->SetChildTimeout(timeoutSecs);
+    module->SetChildTimeout(timeoutSecs);
 #else
   if (!strcmp(aPref, kChildTimeoutPref) ||
       !strcmp(aPref, kHangUIMinDisplayPref) ||
       !strcmp(aPref, kHangUITimeoutPref)) {
-    MOZ_ASSERT(aModule->IsChrome());
-    static_cast<PluginModuleChromeParent*>(aModule)->EvaluateHangUIState(true);
+    MOZ_ASSERT(module->IsChrome());
+    static_cast<PluginModuleChromeParent*>(module)->EvaluateHangUIState(true);
 #endif  // XP_WIN
   } else if (!strcmp(aPref, kParentTimeoutPref)) {
     // The timeout value used by the child for its parent
-    MOZ_ASSERT(aModule->IsChrome());
+    MOZ_ASSERT(module->IsChrome());
     int32_t timeoutSecs = Preferences::GetInt(kParentTimeoutPref, 0);
-    Unused << static_cast<PluginModuleChromeParent*>(aModule)
+    Unused << static_cast<PluginModuleChromeParent*>(module)
                   ->SendSetParentHangTimeout(timeoutSecs);
   } else if (!strcmp(aPref, kContentTimeoutPref)) {
-    MOZ_ASSERT(!aModule->IsChrome());
+    MOZ_ASSERT(!module->IsChrome());
     int32_t timeoutSecs = Preferences::GetInt(kContentTimeoutPref, 0);
-    aModule->SetChildTimeout(timeoutSecs);
+    module->SetChildTimeout(timeoutSecs);
   }
 }
 
@@ -1762,9 +1763,10 @@ void PluginModuleChromeParent::CachedSettingChanged() {
 }
 
 /* static */
-void PluginModuleChromeParent::CachedSettingChanged(
-    const char* aPref, PluginModuleChromeParent* aModule) {
-  aModule->CachedSettingChanged();
+void PluginModuleChromeParent::CachedSettingChanged(const char* aPref,
+                                                    void* aModule) {
+  auto module = static_cast<PluginModuleChromeParent*>(aModule);
+  module->CachedSettingChanged();
 }
 
 #if defined(XP_UNIX) && !defined(XP_MACOSX)

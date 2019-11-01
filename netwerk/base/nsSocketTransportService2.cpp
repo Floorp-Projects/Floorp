@@ -587,9 +587,8 @@ static const char* gCallbackPrefs[] = {
 };
 
 /* static */
-void nsSocketTransportService::PrefCallback(const char* aPref,
-                                            nsSocketTransportService* aSelf) {
-  aSelf->UpdatePrefs();
+void nsSocketTransportService::UpdatePrefs(const char* aPref, void* aSelf) {
+  static_cast<nsSocketTransportService*>(aSelf)->UpdatePrefs();
 }
 
 // called from main thread only
@@ -615,7 +614,7 @@ nsSocketTransportService::Init() {
     thread.swap(mThread);
   }
 
-  Preferences::RegisterCallbacks(PrefCallback, gCallbackPrefs, this);
+  Preferences::RegisterCallbacks(UpdatePrefs, gCallbackPrefs, this);
   UpdatePrefs();
 
   nsCOMPtr<nsIObserverService> obsSvc = services::GetObserverService();
@@ -677,7 +676,7 @@ nsresult nsSocketTransportService::ShutdownThread() {
     mThread = nullptr;
   }
 
-  Preferences::UnregisterCallbacks(PrefCallback, gCallbackPrefs, this);
+  Preferences::UnregisterCallbacks(UpdatePrefs, gCallbackPrefs, this);
 
   nsCOMPtr<nsIObserverService> obsSvc = services::GetObserverService();
   if (obsSvc) {

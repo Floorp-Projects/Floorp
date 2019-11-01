@@ -311,16 +311,16 @@ void ConvertMethodChangeDetails(const IPCMethodChangeDetails& aIPCDetails,
 StaticRefPtr<PaymentRequestManager> gPaymentManager;
 const char kSupportedRegionsPref[] = "dom.payments.request.supportedRegions";
 
-void SupportedRegionsPrefChangedCallback(const char* aPrefName,
-                                         nsTArray<nsString>* aRetval) {
+void SupportedRegionsPrefChangedCallback(const char* aPrefName, void* aRetval) {
+  auto retval = static_cast<nsTArray<nsString>*>(aRetval);
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!strcmp(aPrefName, kSupportedRegionsPref));
 
   nsAutoString supportedRegions;
   Preferences::GetString(aPrefName, supportedRegions);
-  aRetval->Clear();
+  retval->Clear();
   for (const nsAString& each : supportedRegions.Split(',')) {
-    aRetval->AppendElement(each);
+    retval->AppendElement(each);
   }
 }
 

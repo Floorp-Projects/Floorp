@@ -4187,9 +4187,9 @@ void nsNavHistoryResult::OnMobilePrefChanged() {
 }
 
 void nsNavHistoryResult::OnMobilePrefChangedCallback(const char* prefName,
-                                                     nsNavHistoryResult* self) {
+                                                     void* self) {
   MOZ_ASSERT(!strcmp(prefName, MOBILE_BOOKMARKS_PREF),
              "We only expected Mobile Bookmarks pref change.");
 
-  self->OnMobilePrefChanged();
+  static_cast<nsNavHistoryResult*>(self)->OnMobilePrefChanged();
 }

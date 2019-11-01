@@ -149,12 +149,11 @@ Atomic<int32_t> gDataThresholdBytes(0);
 Atomic<int32_t> gMaxSerializedMsgSize(0);
 Atomic<bool> gPreprocessingEnabled(false);
 
-void AtomicBoolPrefChangedCallback(const char* aPrefName,
-                                   Atomic<bool>* aClosure) {
+void AtomicBoolPrefChangedCallback(const char* aPrefName, void* aBool) {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aClosure);
+  MOZ_ASSERT(aBool);
 
-  *aClosure = Preferences::GetBool(aPrefName);
+  *static_cast<Atomic<bool>*>(aBool) = Preferences::GetBool(aPrefName);
 }
 
 void DataThresholdPrefChangedCallback(const char* aPrefName, void* aClosure) {

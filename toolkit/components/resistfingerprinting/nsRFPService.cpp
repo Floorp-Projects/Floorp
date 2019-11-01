@@ -725,8 +725,8 @@ nsresult nsRFPService::Init() {
   NS_ENSURE_SUCCESS(rv, rv);
 #endif
 
-  Preferences::RegisterCallbacks(PREF_CHANGE_METHOD(nsRFPService::PrefChanged),
-                                 gCallbackPrefs, this);
+  Preferences::RegisterCallbacks(nsRFPService::PrefChanged, gCallbackPrefs,
+                                 this);
 
   // We backup the original TZ value here.
   const char* tzValue = PR_GetEnv("TZ");
@@ -835,8 +835,8 @@ void nsRFPService::StartShutdown() {
   if (obs) {
     obs->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
   }
-  Preferences::UnregisterCallbacks(
-      PREF_CHANGE_METHOD(nsRFPService::PrefChanged), gCallbackPrefs, this);
+  Preferences::UnregisterCallbacks(nsRFPService::PrefChanged, gCallbackPrefs,
+                                   this);
 }
 
 /* static */
@@ -1047,6 +1047,11 @@ bool nsRFPService::GetSpoofedKeyCode(const dom::Document* aDoc,
   }
 
   return false;
+}
+
+// static
+void nsRFPService::PrefChanged(const char* aPref, void* aSelf) {
+  static_cast<nsRFPService*>(aSelf)->PrefChanged(aPref);
 }
 
 void nsRFPService::PrefChanged(const char* aPref) {

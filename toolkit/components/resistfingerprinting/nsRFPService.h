@@ -243,6 +243,7 @@ class nsRFPService final : public nsIObserver {
   void StartShutdown();
 
   void PrefChanged(const char* aPref);
+  static void PrefChanged(const char* aPref, void* aSelf);
 
   static void MaybeCreateSpoofingKeyCodes(const KeyboardLangs aLang,
                                           const KeyboardRegions aRegion);

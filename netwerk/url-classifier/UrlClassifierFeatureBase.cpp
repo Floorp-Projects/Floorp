@@ -16,12 +16,13 @@ namespace net {
 
 namespace {
 
-void OnPrefsChange(const char* aPrefName, nsTArray<nsCString>* aArray) {
-  MOZ_ASSERT(aArray);
+void OnPrefsChange(const char* aPrefName, void* aArray) {
+  auto array = static_cast<nsTArray<nsCString>*>(aArray);
+  MOZ_ASSERT(array);
 
   nsAutoCString value;
   Preferences::GetCString(aPrefName, value);
-  Classifier::SplitTables(value, *aArray);
+  Classifier::SplitTables(value, *array);
 }
 
 }  // namespace

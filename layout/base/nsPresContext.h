@@ -1041,6 +1041,7 @@ class nsPresContext : public nsISupports,
   void SetSMILAnimations(mozilla::dom::Document* aDoc, uint16_t aNewMode,
                          uint16_t aOldMode);
 
+  static void PreferenceChanged(const char* aPrefName, void* aSelf);
   void PreferenceChanged(const char* aPrefName);
 
   void UpdateAfterPreferencesChanged();
