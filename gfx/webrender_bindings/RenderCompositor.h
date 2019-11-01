@@ -76,8 +76,6 @@ class RenderCompositor {
   virtual void AddSurface(wr::NativeSurfaceId aId, wr::DeviceIntPoint aPosition,
                           wr::DeviceIntRect aClipRect) {}
 
-  void wr_compositor_unbind(void* aCompositor) {}
-
   // Whether the surface contents are flipped vertically
   virtual bool SurfaceIsYFlipped() { return false; }
 

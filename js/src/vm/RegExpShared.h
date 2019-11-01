@@ -101,7 +101,7 @@ class RegExpShared : public gc::TenuredCell {
   RegExpCompilation compilationArray[4];
 
   /* Source to the RegExp, for lazy compilation. */
-  GCPtr<JSAtom*> source;
+  const GCPtrAtom source;
 
   uint32_t parenCount;
   JS::RegExpFlags flags;

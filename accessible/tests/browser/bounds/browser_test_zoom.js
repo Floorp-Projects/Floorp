@@ -9,9 +9,13 @@
 /* global getContentDPR */
 
 async function getContentBoundsForDOMElm(browser, id) {
-  return SpecialPowers.spawn(browser, [id], contentId =>
-    content.Layout.getBoundsForDOMElm(contentId, content.document)
-  );
+  return invokeContentTask(browser, [id], contentId => {
+    const { Layout } = ChromeUtils.import(
+      "chrome://mochitests/content/browser/accessible/tests/browser/Layout.jsm"
+    );
+
+    return Layout.getBoundsForDOMElm(contentId, content.document);
+  });
 }
 
 async function testContentBounds(browser, acc) {
@@ -32,8 +36,6 @@ async function testContentBounds(browser, acc) {
 }
 
 async function runTests(browser, accDoc) {
-  await loadContentScripts(browser, "Layout.jsm");
-
   let p1 = findAccessibleChildByID(accDoc, "p1");
   let p2 = findAccessibleChildByID(accDoc, "p2");
   let imgmap = findAccessibleChildByID(accDoc, "imgmap");
@@ -49,8 +51,11 @@ async function runTests(browser, accDoc) {
   await testContentBounds(browser, p2);
   await testContentBounds(browser, area);
 
-  await SpecialPowers.spawn(browser, [], () => {
-    content.Layout.zoomDocument(content.document, 2.0);
+  await invokeContentTask(browser, [], () => {
+    const { Layout } = ChromeUtils.import(
+      "chrome://mochitests/content/browser/accessible/tests/browser/Layout.jsm"
+    );
+    Layout.zoomDocument(content.document, 2.0);
   });
 
   await testContentBounds(browser, p1);
@@ -71,5 +76,6 @@ addAccessibleTask(
 <img id="imgmap" width="447" height="15"
      usemap="#atoz_map"
      src="http://example.com/a11y/accessible/tests/mochitest/letters.gif">`,
-  runTests
+  runTests,
+  { iframe: true }
 );

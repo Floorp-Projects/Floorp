@@ -14,6 +14,7 @@
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/layers/HelpersD3D11.h"
 #include "mozilla/layers/SyncObject.h"
+#include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/webrender/DCLayerTree.h"
 #include "mozilla/webrender/RenderThread.h"
 #include "mozilla/widget/CompositorWidget.h"
@@ -123,6 +124,16 @@ bool RenderCompositorANGLE::Initialize() {
     gfxCriticalNote << "[WR] failed to get shared GL context.";
     return false;
   }
+
+  // Force enable alpha channel to make sure ANGLE use correct framebuffer
+  // formart
+  const auto& gle = gl::GLContextEGL::Cast(gl);
+  const auto& egl = gle->mEgl;
+  if (!gl::CreateConfig(egl, &mEGLConfig, /* bpp */ 32,
+                        /* enableDepthBuffer */ true)) {
+    gfxCriticalNote << "Failed to create EGLConfig for WebRender";
+  }
+  MOZ_ASSERT(mEGLConfig);
 
   mDevice = GetDeviceOfEGLDisplay();
 
@@ -237,18 +248,10 @@ bool RenderCompositorANGLE::Initialize() {
     return false;
   }
 
-  // Force enable alpha channel to make sure ANGLE use correct framebuffer
-  // formart
-  const auto& gle = gl::GLContextEGL::Cast(gl);
-  const auto& egl = gle->mEgl;
-  if (!gl::CreateConfig(egl, &mEGLConfig, /* bpp */ 32,
-                        /* enableDepthBuffer */ true)) {
-    gfxCriticalNote << "Failed to create EGLConfig for WebRender";
-  }
-  MOZ_ASSERT(mEGLConfig);
-
-  if (!ResizeBufferIfNeeded()) {
-    return false;
+  if (!UseCompositor()) {
+    if (!ResizeBufferIfNeeded()) {
+      return false;
+    }
   }
 
   return true;
@@ -266,13 +269,16 @@ void RenderCompositorANGLE::CreateSwapChainForDCompIfPossible(
     return;
   }
 
-  mDCLayerTree = DCLayerTree::Create(hwnd);
+  mDCLayerTree = DCLayerTree::Create(gl(), mEGLConfig, mDevice, hwnd);
   if (!mDCLayerTree) {
     return;
   }
   MOZ_ASSERT(XRE_IsGPUProcess());
 
-  bool useTripleBuffering = gfx::gfxVars::UseWebRenderTripleBufferingWin();
+  // When compositor is enabled, CompositionSurface is used for rendering.
+  // It does not support triple buffering.
+  bool useTripleBuffering =
+      gfx::gfxVars::UseWebRenderTripleBufferingWin() && !UseCompositor();
   // Non Glass window is common since Windows 10.
   bool useAlpha = false;
   RefPtr<IDXGISwapChain1> swapChain1 =
@@ -352,29 +358,32 @@ RefPtr<IDXGISwapChain1> RenderCompositorANGLE::CreateSwapChainForDComp(
 bool RenderCompositorANGLE::BeginFrame() {
   mWidget->AsWindows()->UpdateCompositorWndSizeIfNecessary();
 
-  if (mDCLayerTree) {
-    bool useAlpha = mWidget->AsWindows()->HasGlass();
-    // When Alpha usage is changed, SwapChain needs to be recreatd.
-    if (useAlpha != mUseAlpha) {
-      DestroyEGLSurface();
-      mBufferSize.reset();
+  if (!UseCompositor()) {
+    if (mDCLayerTree) {
+      bool useAlpha = mWidget->AsWindows()->HasGlass();
+      // When Alpha usage is changed, SwapChain needs to be recreatd.
+      if (useAlpha != mUseAlpha) {
+        DestroyEGLSurface();
+        mBufferSize.reset();
 
-      RefPtr<IDXGISwapChain1> swapChain1 =
-          CreateSwapChainForDComp(mUseTripleBuffering, useAlpha);
-      if (swapChain1) {
-        mSwapChain = swapChain1;
-        mUseAlpha = useAlpha;
-        mDCLayerTree->SetDefaultSwapChain(swapChain1);
-      } else {
-        gfxCriticalNote << "Failed to re-create SwapChain";
-        RenderThread::Get()->HandleWebRenderError(WebRenderError::NEW_SURFACE);
-        return false;
+        RefPtr<IDXGISwapChain1> swapChain1 =
+            CreateSwapChainForDComp(mUseTripleBuffering, useAlpha);
+        if (swapChain1) {
+          mSwapChain = swapChain1;
+          mUseAlpha = useAlpha;
+          mDCLayerTree->SetDefaultSwapChain(swapChain1);
+        } else {
+          gfxCriticalNote << "Failed to re-create SwapChain";
+          RenderThread::Get()->HandleWebRenderError(
+              WebRenderError::NEW_SURFACE);
+          return false;
+        }
       }
     }
-  }
 
-  if (!ResizeBufferIfNeeded()) {
-    return false;
+    if (!ResizeBufferIfNeeded()) {
+      return false;
+    }
   }
 
   if (!MakeCurrent()) {
@@ -395,16 +404,18 @@ bool RenderCompositorANGLE::BeginFrame() {
 void RenderCompositorANGLE::EndFrame() {
   InsertPresentWaitQuery();
 
-  if (mWidget->AsWindows()->HasFxrOutputHandler()) {
-    // There is a Firefox Reality handler for this swapchain. Update this
-    // window's contents to the VR window.
-    FxROutputHandler* fxrHandler = mWidget->AsWindows()->GetFxrOutputHandler();
-    if (fxrHandler->TryInitialize(mSwapChain, mDevice)) {
-      fxrHandler->UpdateOutput(mCtx);
+  if (!UseCompositor()) {
+    if (mWidget->AsWindows()->HasFxrOutputHandler()) {
+      // There is a Firefox Reality handler for this swapchain. Update this
+      // window's contents to the VR window.
+      FxROutputHandler* fxrHandler =
+          mWidget->AsWindows()->GetFxrOutputHandler();
+      if (fxrHandler->TryInitialize(mSwapChain, mDevice)) {
+        fxrHandler->UpdateOutput(mCtx);
+      }
     }
+    mSwapChain->Present(0, 0);
   }
-
-  mSwapChain->Present(0, 0);
 
   if (mDCLayerTree) {
     mDCLayerTree->MaybeUpdateDebug();
@@ -548,11 +559,15 @@ bool RenderCompositorANGLE::MakeCurrent() {
 }
 
 LayoutDeviceIntSize RenderCompositorANGLE::GetBufferSize() {
-  MOZ_ASSERT(mBufferSize.isSome());
-  if (mBufferSize.isNothing()) {
-    return LayoutDeviceIntSize();
+  if (!UseCompositor()) {
+    MOZ_ASSERT(mBufferSize.isSome());
+    if (mBufferSize.isNothing()) {
+      return LayoutDeviceIntSize();
+    }
+    return mBufferSize.ref();
+  } else {
+    return mWidget->GetClientSize();
   }
-  return mBufferSize.ref();
 }
 
 RefPtr<ID3D11Query> RenderCompositorANGLE::GetD3D11Query() {
@@ -608,6 +623,49 @@ bool RenderCompositorANGLE::IsContextLost() {
     return true;
   }
   return false;
+}
+
+bool RenderCompositorANGLE::UseCompositor() {
+  if (!mDCLayerTree || !StaticPrefs::gfx_webrender_compositor_AtStartup()) {
+    return false;
+  }
+  return true;
+}
+
+bool RenderCompositorANGLE::ShouldUseNativeCompositor() {
+  return UseCompositor();
+}
+
+void RenderCompositorANGLE::CompositorBeginFrame() {
+  mDCLayerTree->CompositorBeginFrame();
+}
+
+void RenderCompositorANGLE::CompositorEndFrame() {
+  mDCLayerTree->CompositorEndFrame();
+}
+
+void RenderCompositorANGLE::Bind(wr::NativeSurfaceId aId,
+                                 wr::DeviceIntPoint* aOffset, uint32_t* aFboId,
+                                 wr::DeviceIntRect aDirtyRect) {
+  mDCLayerTree->Bind(aId, aOffset, aFboId, aDirtyRect);
+}
+
+void RenderCompositorANGLE::Unbind() { mDCLayerTree->Unbind(); }
+
+void RenderCompositorANGLE::CreateSurface(wr::NativeSurfaceId aId,
+                                          wr::DeviceIntSize aSize,
+                                          bool aIsOpaque) {
+  mDCLayerTree->CreateSurface(aId, aSize, aIsOpaque);
+}
+
+void RenderCompositorANGLE::DestroySurface(NativeSurfaceId aId) {
+  mDCLayerTree->DestroySurface(aId);
+}
+
+void RenderCompositorANGLE::AddSurface(wr::NativeSurfaceId aId,
+                                       wr::DeviceIntPoint aPosition,
+                                       wr::DeviceIntRect aClipRect) {
+  mDCLayerTree->AddSurface(aId, aPosition, aClipRect);
 }
 
 }  // namespace wr

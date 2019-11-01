@@ -313,7 +313,7 @@ class PerftestOutput(object):
             results = results[75::76]
             return 60 * 1000 / filters.geometric_mean(results) / correctionFactor
 
-        if testname.startswith(('raptor-kraken', 'raptor-sunspider', 'supporting_data')):
+        if testname.startswith(('raptor-kraken', 'raptor-sunspider')):
             return sum(_filter(vals))
 
         if testname.startswith(('raptor-unity-webgl', 'raptor-webaudio')):
@@ -335,10 +335,19 @@ class PerftestOutput(object):
             return round(filters.mean(_filter(vals)), 2)
 
         if testname.startswith('supporting_data'):
-            if unit and unit in ('%',):
-                return filters.mean(_filter(vals))
-            else:
-                return sum(_filter(vals))
+            if unit:
+                if unit in ('%',):
+                    return filters.mean(_filter(vals))
+                elif unit in ('W', 'MHz'):
+                    # For power in Watts and clock frequencies,
+                    # summarize with the sum of the averages
+                    allavgs = []
+                    for (val, subtest) in vals:
+                        if 'avg' in subtest:
+                            allavgs.append(val)
+                    if allavgs:
+                        return sum(allavgs)
+            return sum(_filter(vals))
 
         if len(vals) > 1:
             return round(filters.geometric_mean(_filter(vals)), 2)

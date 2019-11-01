@@ -12,7 +12,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Casting.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/Range.h"
+#include "mozilla/Span.h"
 #include "mozilla/TextUtils.h"
 
 #include <algorithm>
@@ -60,10 +60,10 @@ static inline bool IsLocale(HandleValue v) {
 // Return the length of the base-name subtags.
 static size_t BaseNameLength(const LanguageTag& tag) {
   size_t baseNameLength = tag.language().length();
-  if (tag.script().length() > 0) {
+  if (tag.script().present()) {
     baseNameLength += 1 + tag.script().length();
   }
-  if (tag.region().length() > 0) {
+  if (tag.region().present()) {
     baseNameLength += 1 + tag.region().length();
   }
   for (const auto& variant : tag.variants()) {
@@ -79,7 +79,7 @@ struct IndexAndLength {
   IndexAndLength(size_t index, size_t length) : index(index), length(length){};
 
   template <typename T>
-  mozilla::Range<const T> rangeOf(const T* ptr) const {
+  mozilla::Span<const T> spanOf(const T* ptr) const {
     return {ptr + index, length};
   }
 };
@@ -89,6 +89,9 @@ static mozilla::Maybe<IndexAndLength> UnicodeExtensionPosition(
     const LanguageTag& tag) {
   size_t index = 0;
   for (const auto& extension : tag.extensions()) {
+    MOZ_ASSERT(!mozilla::IsAsciiUppercaseAlpha(extension[0]),
+               "extensions are case normalized to lowercase");
+
     size_t extensionLength = strlen(extension.get());
     if (extension[0] == 'u') {
       return mozilla::Some(IndexAndLength{index, extensionLength});
@@ -283,7 +286,7 @@ static bool ApplyOptionsToTag(JSContext* cx, LanguageTag& tag,
 
   // Step 4.
   intl::LanguageSubtag language;
-  if (option && !intl::ParseStandaloneLanguagTag(option, language)) {
+  if (option && !intl::ParseStandaloneLanguageTag(option, language)) {
     if (UniqueChars str = QuoteString(cx, option, '"')) {
       JS_ReportErrorNumberASCII(cx, js::GetErrorMessage, nullptr,
                                 JSMSG_INVALID_OPTION_VALUE, "language",
@@ -327,19 +330,19 @@ static bool ApplyOptionsToTag(JSContext* cx, LanguageTag& tag,
   // Step 9 (Already performed in caller).
 
   // Skip steps 10-13 when no subtags were modified.
-  if (language.length() > 0 || script.length() > 0 || region.length() > 0) {
+  if (language.present() || script.present() || region.present()) {
     // Step 10.
-    if (language.length() > 0) {
+    if (language.present()) {
       tag.setLanguage(language);
     }
 
     // Step 11.
-    if (script.length() > 0) {
+    if (script.present()) {
       tag.setScript(script);
     }
 
     // Step 12.
-    if (region.length() > 0) {
+    if (region.present()) {
       tag.setRegion(region);
     }
 
@@ -376,16 +379,11 @@ static bool ApplyUnicodeExtensionToTag(JSContext* cx, LanguageTag& tag,
     return false;
   }
 
-  // Check if there's an existing Unicode extension subtag. (The extension
-  // subtags aren't necessarily sorted, so we can't use binary search here.)
-  const UniqueChars* existingUnicodeExtension =
-      std::find_if(tag.extensions().begin(), tag.extensions().end(),
-                   [](const auto& extension) { return extension[0] == 'u'; });
+  // Check if there's an existing Unicode extension subtag.
 
   const char* unicodeExtensionEnd = nullptr;
   const char* unicodeExtensionKeywords = nullptr;
-  if (existingUnicodeExtension != tag.extensions().end()) {
-    const char* unicodeExtension = existingUnicodeExtension->get();
+  if (const char* unicodeExtension = tag.unicodeExtension()) {
     unicodeExtensionEnd = unicodeExtension + strlen(unicodeExtension);
 
     SepKeywordIterator<char> iter(unicodeExtension, unicodeExtensionEnd);
@@ -421,8 +419,6 @@ static bool ApplyUnicodeExtensionToTag(JSContext* cx, LanguageTag& tag,
   // keyword with the same key is detected as a duplicate when canonicalizing
   // the Unicode extension subtag and gets discarded.
 
-  size_t startNewKeywords = newExtension.length();
-
   if (calendar) {
     if (!appendKeyword("-ca-", calendar)) {
       return false;
@@ -453,12 +449,6 @@ static bool ApplyUnicodeExtensionToTag(JSContext* cx, LanguageTag& tag,
       return false;
     }
   }
-
-  // Normalize the case of the new keywords.
-  std::transform(newExtension.begin() + startNewKeywords, newExtension.end(),
-                 newExtension.begin() + startNewKeywords, [](char c) {
-                   return mozilla::IsAsciiUppercaseAlpha(c) ? (c | 0x20) : c;
-                 });
 
   // Append the remaining keywords from the previous Unicode extension subtag.
   if (unicodeExtensionKeywords) {
@@ -845,18 +835,18 @@ static BaseNamePartsResult BaseNameParts(const CharT* baseName, size_t length) {
   }
 
   IndexAndLength language{0, languageLength};
-  MOZ_ASSERT(intl::IsStructurallyValidLanguageTag(language.rangeOf(baseName)));
+  MOZ_ASSERT(intl::IsStructurallyValidLanguageTag(language.spanOf(baseName)));
 
   mozilla::Maybe<IndexAndLength> script{};
   if (scriptIndex) {
     script.emplace(scriptIndex, ScriptLength);
-    MOZ_ASSERT(intl::IsStructurallyValidScriptTag(script->rangeOf(baseName)));
+    MOZ_ASSERT(intl::IsStructurallyValidScriptTag(script->spanOf(baseName)));
   }
 
   mozilla::Maybe<IndexAndLength> region{};
   if (regionIndex) {
     region.emplace(regionIndex, regionLength);
-    MOZ_ASSERT(intl::IsStructurallyValidRegionTag(region->rangeOf(baseName)));
+    MOZ_ASSERT(intl::IsStructurallyValidRegionTag(region->spanOf(baseName)));
   }
 
   return {language, script, region};

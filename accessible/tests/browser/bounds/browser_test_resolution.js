@@ -18,8 +18,11 @@ async function testScaledBounds(browser, accDoc, scale, id, type = "object") {
       ? getRangeExtents(acc, 0, -1, COORDTYPE_SCREEN_RELATIVE)
       : getBounds(acc);
 
-  await SpecialPowers.spawn(browser, [scale], _scale => {
-    content.Layout.setResolution(content.document, _scale);
+  await invokeContentTask(browser, [scale], _scale => {
+    const { Layout } = ChromeUtils.import(
+      "chrome://mochitests/content/browser/accessible/tests/browser/Layout.jsm"
+    );
+    Layout.setResolution(content.document, _scale);
   });
 
   let [scaledX, scaledY, scaledWidth, scaledHeight] =
@@ -33,14 +36,15 @@ async function testScaledBounds(browser, accDoc, scale, id, type = "object") {
   isWithin(scaledX - docX, (x - docX) * scale, 2, "Wrong scaled x of " + name);
   isWithin(scaledY - docY, (y - docY) * scale, 2, "Wrong scaled y of " + name);
 
-  await SpecialPowers.spawn(browser, [], () => {
-    content.Layout.setResolution(content.document, 1.0);
+  await invokeContentTask(browser, [], () => {
+    const { Layout } = ChromeUtils.import(
+      "chrome://mochitests/content/browser/accessible/tests/browser/Layout.jsm"
+    );
+    Layout.setResolution(content.document, 1.0);
   });
 }
 
 async function runTests(browser, accDoc) {
-  await loadContentScripts(browser, "Layout.jsm");
-
   await testScaledBounds(browser, accDoc, 2.0, "p1");
   await testScaledBounds(browser, accDoc, 0.5, "p2");
   await testScaledBounds(browser, accDoc, 3.5, "b1");
@@ -58,5 +62,6 @@ addAccessibleTask(
 <p id="p2">para 2</p>
 <button id="b1">Hello</button>
 `,
-  runTests
+  runTests,
+  { iframe: true }
 );
