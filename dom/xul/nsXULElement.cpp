@@ -1018,10 +1018,8 @@ void nsXULElement::GetEventTargetParent(EventChainPreVisitor& aVisitor) {
     // in a special way.
     // See if we have a command elt.  If so, we execute on the command
     // instead of on our content element.
-    nsAutoString command;
     if (aVisitor.mDOMEvent && aVisitor.mDOMEvent->AsXULCommandEvent() &&
-        GetAttr(kNameSpaceID_None, nsGkAtoms::command, command) &&
-        !command.IsEmpty()) {
+        HasNonEmptyAttr(nsGkAtoms::command)) {
       // Stop building the event target chain for the original event.
       // We don't want it to propagate to any DOM nodes.
       aVisitor.mCanHandle = false;
