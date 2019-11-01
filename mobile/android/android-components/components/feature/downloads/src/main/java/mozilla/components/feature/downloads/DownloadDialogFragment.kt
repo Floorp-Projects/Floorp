@@ -59,6 +59,9 @@ abstract class DownloadDialogFragment : AppCompatDialogFragment() {
     }
 }
 
-internal fun Long.toMegabyteString(): String {
+/**
+ * Converts the bytes to megabytes with two decimal places and returns a formatted string
+ */
+fun Long.toMegabyteString(): String {
     return String.format("%.2f MB", this / MEGABYTE)
 }
