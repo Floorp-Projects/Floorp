@@ -187,10 +187,32 @@ def test_mozpower_get_full_perfherder_data(mozpower_obj):
                 'dram': 0.1,
                 'gpu': 4.0
             }
+        },
+        'frequency-cpu': {
+            'type': 'power',
+            'test': 'mozpower',
+            'unit': 'MHz',
+            'values': {
+                'cpu-favg': 2.0,
+                'cpu-fmax': 5.0,
+                'cpu-fmin': 0.0,
+            }
+        },
+        'frequency-gpu': {
+            'type': 'power',
+            'test': 'mozpower',
+            'unit': 'MHz',
+            'values': {
+                'gpu-favg': 3.0,
+                'gpu-fmax': 6.0,
+                'gpu-fmin': 0.0
+            }
         }
     }
     utilization_vals = [0, 50]
     power_usage_vals = [2.0, 0.1, 4.0]
+    frequency_cpu_vals = [2.0, 5.0, 0.0]
+    frequency_gpu_vals = [3.0, 6.0, 0.0]
 
     with mock.patch(
             'mozpower.macintelpower.MacIntelPower.get_perfherder_data'
@@ -199,7 +221,7 @@ def test_mozpower_get_full_perfherder_data(mozpower_obj):
 
         full_perfherder = mozpower_obj.get_full_perfherder_data('mozpower')
         assert full_perfherder['framework']['name'] == 'mozpower'
-        assert len(full_perfherder['suites']) == 2
+        assert len(full_perfherder['suites']) == 4
 
         # Check that each of the two suites were created correctly.
         suites = full_perfherder['suites']
@@ -219,6 +241,10 @@ def test_mozpower_get_full_perfherder_data(mozpower_obj):
                     assert 'utilization' in subtest['name']
                 elif 'power-usage' in suite['name']:
                     assert 'power-usage' in subtest['name']
+                elif 'frequency-cpu' in suite['name']:
+                    assert 'frequency-cpu' in subtest['name']
+                elif 'frequency-gpu' in suite['name']:
+                    assert 'frequency-gpu' in subtest['name']
                 else:
                     assert False, "Unknown subtest name %s" % subtest['name']
 
@@ -236,6 +262,18 @@ def test_mozpower_get_full_perfherder_data(mozpower_obj):
                 assert suite['name'] == 'mozpower-power-usage'
                 assert not list(set(all_vals) - set(power_usage_vals))
                 assert suite['value'] == float(6.1)
+            elif 'frequency-cpu' in suite['name']:
+                assert len(all_vals) == 3
+                assert suite['unit'] == 'MHz'
+                assert suite['name'] == 'mozpower-frequency-cpu'
+                assert not list(set(all_vals) - set(frequency_cpu_vals))
+                assert suite['value'] == float(2.0)
+            elif 'frequency-gpu' in suite['name']:
+                assert len(all_vals) == 3
+                assert suite['unit'] == 'MHz'
+                assert suite['name'] == 'mozpower-frequency-gpu'
+                assert not list(set(all_vals) - set(frequency_gpu_vals))
+                assert suite['value'] == float(3.0)
             else:
                 assert False, "Unknown suite name %s" % suite['name']
 

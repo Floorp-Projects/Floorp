@@ -122,7 +122,7 @@ function lookupThreadFront(thread: string) {
 
 function listThreadFronts() {
   const targetList = (Object.values(getTargetsMap()): any);
-  return targetList.map(target => target.threadFront);
+  return targetList.map(target => target.threadFront).filter(t => !!t);
 }
 
 function forEachThread(iteratee) {
@@ -479,7 +479,9 @@ async function updateThreads(type: ThreadType) {
     observeAsmJS: true,
   };
 
-  const newTargets = await updateTargets(type, {
+  const oldActors = Object.keys(targets[type]);
+
+  await updateTargets(type, {
     currentTarget,
     debuggerClient,
     targets,
@@ -490,17 +492,15 @@ async function updateThreads(type: ThreadType) {
   // NOTE: This runs in the background and fails quitely because it is
   // pretty easy for sources to throw during the fetch if their thread
   // shuts down, which would cause test failures.
-  for (const actor in newTargets) {
-    if (!targets[type][actor]) {
-      const { threadFront } = newTargets[actor];
+  for (const entry of Object.entries(targets[type])) {
+    const [actor, { threadFront }] = (entry: any);
+    if (!oldActors.includes(actor)) {
       getSources(threadFront).catch(e => console.error(e));
     }
   }
 
-  targets = { ...targets, [type]: newTargets };
-
-  return Object.keys(newTargets).map(actor =>
-    createThread(actor, newTargets[actor])
+  return Object.entries(targets[type]).map(([actor, target]) =>
+    createThread((actor: any), (target: any))
   );
 }
 
@@ -521,10 +521,11 @@ async function getSourceActorBreakableLines({
   thread,
   actor,
 }: SourceActor): Promise<Array<number>> {
-  const sourceThreadFront = lookupThreadFront(thread);
-  const sourceFront = sourceThreadFront.source({ actor });
+  let sourceFront;
   let actorLines = [];
   try {
+    const sourceThreadFront = lookupThreadFront(thread);
+    sourceFront = sourceThreadFront.source({ actor });
     actorLines = await sourceFront.getBreakableLines();
   } catch (e) {
     // Handle backward compatibility
@@ -532,10 +533,11 @@ async function getSourceActorBreakableLines({
       e.message &&
       e.message.match(/does not recognize the packet type getBreakableLines/)
     ) {
-      const pos = await sourceFront.getBreakpointPositionsCompressed();
+      const pos = await (sourceFront: any).getBreakpointPositionsCompressed();
       actorLines = Object.keys(pos).map(line => Number(line));
-    } else if (!e.message || !e.message.match(/Connection closed/)) {
-      throw e;
+    } else {
+      // Other exceptions could be due to the target thread being shut down.
+      console.warn(`getSourceActorBreakableLines failed: ${e}`);
     }
   }
 

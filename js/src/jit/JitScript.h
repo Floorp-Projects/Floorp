@@ -143,7 +143,7 @@ class alignas(uintptr_t) JitScript final {
     // For functions with a call object, template objects to use for the call
     // object and decl env object (linked via the call object's enclosing
     // scope).
-    HeapPtr<EnvironmentObject*> templateEnv = nullptr;
+    const HeapPtr<EnvironmentObject*> templateEnv = nullptr;
 
     // Cached control flow graph for IonBuilder. Owned by JitZone::cfgSpace and
     // can be purged by Zone::discardJitCode.

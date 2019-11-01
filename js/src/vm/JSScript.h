@@ -1404,7 +1404,7 @@ class BaseScript : public gc::TenuredCell {
   // Object that determines what Realm this script is compiled for. In general
   // this refers to the realm's GlobalObject, but for a lazy-script we instead
   // refer to the associated function.
-  GCPtrObject functionOrGlobal_;
+  const GCPtrObject functionOrGlobal_;
 
   // The ScriptSourceObject for this script.
   GCPtr<ScriptSourceObject*> sourceObject_ = {};

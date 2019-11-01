@@ -1774,27 +1774,26 @@ SearchService.prototype = {
     );
 
     const defaultEngine = engines[0];
+    function getLocale(engineInfo) {
+      return "webExtension" in engineInfo &&
+        "locales" in engineInfo.webExtension
+        ? engineInfo.webExtension.locales[0]
+        : DEFAULT_TAG;
+    }
     this._searchDefault = {
-      id: defaultEngine.webExtensionId,
-      locale:
-        "webExtensionLocales" in defaultEngine
-          ? defaultEngine.webExtensionLocales[0]
-          : DEFAULT_TAG,
+      id: defaultEngine.webExtension.id,
+      locale: getLocale(defaultEngine),
     };
     this._searchOrder = engines.map(e => {
       return {
-        id: e.webExtensionId,
-        locale:
-          "webExtensionLocales" in e ? e.webExtensionLocales[0] : DEFAULT_TAG,
+        id: e.webExtension.id,
+        locale: getLocale(e),
       };
     });
     if (privateDefault) {
       this._searchPrivateDefault = {
-        id: privateDefault.webExtensionId,
-        locale:
-          "webExtensionLocales" in privateDefault
-            ? privateDefault.webExtensionLocales[0]
-            : DEFAULT_TAG,
+        id: privateDefault.webExtension.id,
+        locale: getLocale(privateDefault),
       };
     }
     return engines;
@@ -2510,7 +2509,7 @@ SearchService.prototype = {
     if (SearchUtils.loggingEnabled) {
       SearchUtils.log("makeEnginesFromConfig: " + JSON.stringify(config));
     }
-    let id = config.webExtensionId;
+    let id = config.webExtension.id;
     let policy = WebExtensionPolicy.getByID(id);
     if (!policy) {
       let idPrefix = id.split("@")[0];
@@ -2545,8 +2544,8 @@ SearchService.prototype = {
     }
 
     let locales =
-      "webExtensionLocales" in config
-        ? config.webExtensionLocales
+      "locales" in config.webExtension
+        ? config.webExtension.locales
         : [DEFAULT_TAG];
 
     let engines = [];

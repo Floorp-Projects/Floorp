@@ -57,7 +57,7 @@ class ScriptedOnStepHandler final : public OnStepHandler {
                       ResumeMode& resumeMode, MutableHandleValue vp) override;
 
  private:
-  HeapPtr<JSObject*> object_;
+  const HeapPtr<JSObject*> object_;
 };
 
 /*
@@ -91,7 +91,7 @@ class ScriptedOnPopHandler final : public OnPopHandler {
                      MutableHandleValue vp) override;
 
  private:
-  HeapPtr<JSObject*> object_;
+  const HeapPtr<JSObject*> object_;
 };
 
 enum class DebuggerFrameType { Eval, Global, Call, Module, WasmCall };

@@ -20,66 +20,63 @@ type Args = {
 };
 
 async function attachTargets(type, targetLists, args) {
-  const newTargets = {};
-  const targets = args.targets[type] || {};
+  const { targets } = args;
+
+  for (const actor of Object.keys(targets[type])) {
+    if (!targetLists.some(target => target.targetForm.threadActor == actor)) {
+      delete targets[type][actor];
+    }
+  }
 
   for (const targetFront of targetLists) {
     try {
       await targetFront.attach();
+
       const threadActorID = targetFront.targetForm.threadActor;
-      if (targets[threadActorID]) {
-        newTargets[threadActorID] = targets[threadActorID];
-      } else {
-        // Content process targets have already been attached by the toolbox.
-        // And the thread front has been initialized from there.
-        // So we only need to retrieve it here.
-        let threadFront = targetFront.threadFront;
-
-        // But workers targets are still only managed by the debugger codebase
-        // and so we have to attach their thread actor
-        if (!threadFront) {
-          [, threadFront] = await targetFront.attachThread({
-            ...defaultThreadOptions(),
-            ...args.options,
-          });
-          // NOTE: resume is not necessary for ProcessDescriptors and can be removed
-          // once we switch to WorkerDescriptors
-          threadFront.resume();
-        }
-
-        addThreadEventListeners(threadFront);
-
-        newTargets[threadFront.actor] = targetFront;
+      if (targets[type][threadActorID]) {
+        continue;
       }
+      targets[type][threadActorID] = targetFront;
+
+      // Content process targets have already been attached by the toolbox.
+      // And the thread front has been initialized from there.
+      // So we only need to retrieve it here.
+      let threadFront = targetFront.threadFront;
+
+      // But workers targets are still only managed by the debugger codebase
+      // and so we have to attach their thread actor
+      if (!threadFront) {
+        [, threadFront] = await targetFront.attachThread({
+          ...defaultThreadOptions(),
+          ...args.options,
+        });
+        // NOTE: resume is not necessary for ProcessDescriptors and can be removed
+        // once we switch to WorkerDescriptors
+        threadFront.resume();
+      }
+
+      addThreadEventListeners(threadFront);
     } catch (e) {
       // If any of the workers have terminated since the list command initiated
       // then we will get errors. Ignore these.
     }
   }
-
-  return newTargets;
 }
 
-export async function updateWorkerTargets(
-  type: ThreadType,
-  args: Args
-): Promise<{ string: Target }> {
+export async function updateWorkerTargets(type: ThreadType, args: Args) {
   const { currentTarget } = args;
   if (!currentTarget.isBrowsingContext || currentTarget.isContentProcess) {
-    return {};
+    return;
   }
 
   const { workers } = await currentTarget.listWorkers();
-  return attachTargets(type, workers, args);
+  await attachTargets(type, workers, args);
 }
 
-export async function updateProcessTargets(
-  type: ThreadType,
-  args: Args
-): Promise<{ string: Target }> {
+export async function updateProcessTargets(type: ThreadType, args: Args) {
   const { currentTarget, debuggerClient } = args;
   if (!prefs.fission || !currentTarget.chrome || currentTarget.isAddon) {
-    return Promise.resolve({});
+    return;
   }
 
   const { processes } = await debuggerClient.mainRoot.listProcesses();
@@ -89,17 +86,15 @@ export async function updateProcessTargets(
       .map(descriptor => descriptor.getTarget())
   );
 
-  return attachTargets(type, targets, args);
+  await attachTargets(type, targets, args);
 }
 
 export async function updateTargets(type: ThreadType, args: Args) {
   if (type == "worker") {
-    return updateWorkerTargets(type, args);
+    await updateWorkerTargets(type, args);
+  } else if (type == "contentProcess") {
+    await updateProcessTargets(type, args);
+  } else {
+    throw new Error(`Unable to fetch targts for ${type}`);
   }
-
-  if (type == "contentProcess") {
-    return updateProcessTargets(type, args);
-  }
-
-  throw new Error(`Unable to fetch targts for ${type}`);
 }
