@@ -104,6 +104,10 @@ bool CanvasEventRingBuffer::InitReader(
 }
 
 bool CanvasEventRingBuffer::WaitForAndRecalculateAvailableSpace() {
+  if (!good()) {
+    return false;
+  }
+
   uint32_t bufPos = mOurCount % kStreamSize;
   uint32_t maxToWrite = kStreamSize - bufPos;
   mAvailable = std::min(maxToWrite, WaitForBytesToWrite());
@@ -161,6 +165,10 @@ void CanvasEventRingBuffer::UpdateWriteTotalsBy(uint32_t aCount) {
 }
 
 bool CanvasEventRingBuffer::WaitForAndRecalculateAvailableData() {
+  if (!good()) {
+    return false;
+  }
+
   uint32_t bufPos = mOurCount % kStreamSize;
   uint32_t maxToRead = kStreamSize - bufPos;
   mAvailable = std::min(maxToRead, WaitForBytesToRead());

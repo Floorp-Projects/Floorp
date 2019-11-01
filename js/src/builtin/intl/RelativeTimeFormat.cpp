@@ -137,6 +137,9 @@ void js::RelativeTimeFormatObject::finalize(JSFreeOp* fop, JSObject* obj) {
 
   if (URelativeDateTimeFormatter* rtf =
           obj->as<RelativeTimeFormatObject>().getRelativeDateTimeFormatter()) {
+    intl::RemoveICUCellMemory(fop, obj,
+                              RelativeTimeFormatObject::EstimatedMemoryUse);
+
     ureldatefmt_close(rtf);
   }
 }
@@ -323,6 +326,9 @@ bool js::intl_FormatRelativeTime(JSContext* cx, unsigned argc, Value* vp) {
       return false;
     }
     relativeTimeFormat->setRelativeDateTimeFormatter(rtf);
+
+    intl::AddICUCellMemory(relativeTimeFormat,
+                           RelativeTimeFormatObject::EstimatedMemoryUse);
   }
 
   URelativeDateTimeUnit relDateTimeUnit;

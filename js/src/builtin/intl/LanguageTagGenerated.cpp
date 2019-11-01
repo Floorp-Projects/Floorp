@@ -3,7 +3,7 @@
 // URL: https://unicode.org/Public/cldr/36/core.zip
 
 #include "mozilla/Assertions.h"
-#include "mozilla/Range.h"
+#include "mozilla/Span.h"
 #include "mozilla/TextUtils.h"
 
 #include <algorithm>
@@ -18,8 +18,6 @@
 
 using namespace js::intl::LanguageTagLimits;
 
-using ConstCharRange = mozilla::Range<const char>;
-
 template <size_t Length, size_t TagLength, size_t SubtagLength>
 static inline bool HasReplacement(
     const char (&subtags)[Length][TagLength],
@@ -27,7 +25,7 @@ static inline bool HasReplacement(
   MOZ_ASSERT(subtag.length() == TagLength - 1,
              "subtag must have the same length as the list of subtags");
 
-  const char* ptr = subtag.range().begin().get();
+  const char* ptr = subtag.span().data();
   return std::binary_search(std::begin(subtags), std::end(subtags), ptr,
                             [](const char* a, const char* b) {
     return memcmp(a, b, TagLength - 1) < 0;
@@ -42,7 +40,7 @@ static inline const char* SearchReplacement(
   MOZ_ASSERT(subtag.length() == TagLength - 1,
              "subtag must have the same length as the list of subtags");
 
-  const char* ptr = subtag.range().begin().get();
+  const char* ptr = subtag.span().data();
   auto p = std::lower_bound(std::begin(subtags), std::end(subtags), ptr,
                             [](const char* a, const char* b) {
     return memcmp(a, b, TagLength - 1) < 0;
@@ -53,11 +51,40 @@ static inline const char* SearchReplacement(
   return nullptr;
 }
 
+#ifdef DEBUG
+static bool IsCanonicallyCasedLanguageTag(mozilla::Span<const char> span) {
+  // Tell the analysis the |std::all_of| function can't GC.
+  JS::AutoSuppressGCAnalysis nogc;
+
+  return std::all_of(span.begin(), span.end(), mozilla::IsAsciiLowercaseAlpha<char>);
+}
+
+static bool IsCanonicallyCasedRegionTag(mozilla::Span<const char> span) {
+  // Tell the analysis the |std::all_of| function can't GC.
+  JS::AutoSuppressGCAnalysis nogc;
+
+  return std::all_of(span.begin(), span.end(), mozilla::IsAsciiUppercaseAlpha<char>) ||
+         std::all_of(span.begin(), span.end(), mozilla::IsAsciiDigit<char>);
+}
+
+static bool IsCanonicallyCasedVariantTag(mozilla::Span<const char> span) {
+  auto isAsciiLowercaseAlphaOrDigit = [](char c) {
+    return mozilla::IsAsciiLowercaseAlpha(c) || mozilla::IsAsciiDigit(c);
+  };
+
+  // Tell the analysis the |std::all_of| function can't GC.
+  JS::AutoSuppressGCAnalysis nogc;
+
+  return std::all_of(span.begin(), span.end(), isAsciiLowercaseAlphaOrDigit);
+}
+#endif
+
 // Mappings from language subtags to preferred values.
 // Derived from CLDR Supplemental Data, version 36.
 // https://unicode.org/Public/cldr/36/core.zip
 bool js::intl::LanguageTag::languageMapping(LanguageSubtag& language) {
-  MOZ_ASSERT(IsStructurallyValidLanguageTag(language.range()));
+  MOZ_ASSERT(IsStructurallyValidLanguageTag(language.span()));
+  MOZ_ASSERT(IsCanonicallyCasedLanguageTag(language.span()));
 
   if (language.length() == 2) {
     static const char languages[9][3] = {
@@ -68,7 +95,7 @@ bool js::intl::LanguageTag::languageMapping(LanguageSubtag& language) {
     };
 
     if (const char* replacement = SearchReplacement(languages, aliases, language)) {
-      language.set(ConstCharRange(replacement, strlen(replacement)));
+      language.set(mozilla::MakeStringSpan(replacement));
       return true;
     }
     return false;
@@ -151,7 +178,7 @@ bool js::intl::LanguageTag::languageMapping(LanguageSubtag& language) {
     };
 
     if (const char* replacement = SearchReplacement(languages, aliases, language)) {
-      language.set(ConstCharRange(replacement, strlen(replacement)));
+      language.set(mozilla::MakeStringSpan(replacement));
       return true;
     }
     return false;
@@ -164,7 +191,8 @@ bool js::intl::LanguageTag::languageMapping(LanguageSubtag& language) {
 // Derived from CLDR Supplemental Data, version 36.
 // https://unicode.org/Public/cldr/36/core.zip
 bool js::intl::LanguageTag::complexLanguageMapping(const LanguageSubtag& language) {
-  MOZ_ASSERT(IsStructurallyValidLanguageTag(language.range()));
+  MOZ_ASSERT(IsStructurallyValidLanguageTag(language.span()));
+  MOZ_ASSERT(IsCanonicallyCasedLanguageTag(language.span()));
 
   if (language.length() == 2) {
     return language.equalTo("sh");
@@ -185,7 +213,8 @@ bool js::intl::LanguageTag::complexLanguageMapping(const LanguageSubtag& languag
 // Derived from CLDR Supplemental Data, version 36.
 // https://unicode.org/Public/cldr/36/core.zip
 bool js::intl::LanguageTag::regionMapping(RegionSubtag& region) {
-  MOZ_ASSERT(IsStructurallyValidRegionTag(region.range()));
+  MOZ_ASSERT(IsStructurallyValidRegionTag(region.span()));
+  MOZ_ASSERT(IsCanonicallyCasedRegionTag(region.span()));
 
   if (region.length() == 2) {
     static const char regions[23][3] = {
@@ -200,7 +229,7 @@ bool js::intl::LanguageTag::regionMapping(RegionSubtag& region) {
     };
 
     if (const char* replacement = SearchReplacement(regions, aliases, region)) {
-      region.set(ConstCharRange(replacement, strlen(replacement)));
+      region.set(mozilla::MakeStringSpan(replacement));
       return true;
     }
     return false;
@@ -273,7 +302,7 @@ bool js::intl::LanguageTag::regionMapping(RegionSubtag& region) {
     };
 
     if (const char* replacement = SearchReplacement(regions, aliases, region)) {
-      region.set(ConstCharRange(replacement, strlen(replacement)));
+      region.set(mozilla::MakeStringSpan(replacement));
       return true;
     }
     return false;
@@ -284,7 +313,8 @@ bool js::intl::LanguageTag::regionMapping(RegionSubtag& region) {
 // Derived from CLDR Supplemental Data, version 36.
 // https://unicode.org/Public/cldr/36/core.zip
 bool js::intl::LanguageTag::complexRegionMapping(const RegionSubtag& region) {
-  MOZ_ASSERT(IsStructurallyValidRegionTag(region.range()));
+  MOZ_ASSERT(IsStructurallyValidRegionTag(region.span()));
+  MOZ_ASSERT(IsCanonicallyCasedRegionTag(region.span()));
 
   if (region.length() == 2) {
     return region.equalTo("AN") ||
@@ -306,11 +336,12 @@ bool js::intl::LanguageTag::complexRegionMapping(const RegionSubtag& region) {
 // Derived from CLDR Supplemental Data, version 36.
 // https://unicode.org/Public/cldr/36/core.zip
 void js::intl::LanguageTag::performComplexLanguageMappings() {
-  MOZ_ASSERT(IsStructurallyValidLanguageTag(language().range()));
+  MOZ_ASSERT(IsStructurallyValidLanguageTag(language().span()));
+  MOZ_ASSERT(IsCanonicallyCasedLanguageTag(language().span()));
 
   if (language().equalTo("cnr")) {
     setLanguage("sr");
-    if (region().length() == 0) {
+    if (region().missing()) {
       setRegion("ME");
     }
   }
@@ -318,20 +349,20 @@ void js::intl::LanguageTag::performComplexLanguageMappings() {
            language().equalTo("prs") ||
            language().equalTo("tnf")) {
     setLanguage("fa");
-    if (region().length() == 0) {
+    if (region().missing()) {
       setRegion("AF");
     }
   }
   else if (language().equalTo("hbs") ||
            language().equalTo("sh")) {
     setLanguage("sr");
-    if (script().length() == 0) {
+    if (script().missing()) {
       setScript("Latn");
     }
   }
   else if (language().equalTo("swc")) {
     setLanguage("sw");
-    if (region().length() == 0) {
+    if (region().missing()) {
       setRegion("CD");
     }
   }
@@ -341,8 +372,10 @@ void js::intl::LanguageTag::performComplexLanguageMappings() {
 // Derived from CLDR Supplemental Data, version 36.
 // https://unicode.org/Public/cldr/36/core.zip
 void js::intl::LanguageTag::performComplexRegionMappings() {
-  MOZ_ASSERT(IsStructurallyValidLanguageTag(language().range()));
-  MOZ_ASSERT(IsStructurallyValidRegionTag(region().range()));
+  MOZ_ASSERT(IsStructurallyValidLanguageTag(language().span()));
+  MOZ_ASSERT(IsCanonicallyCasedLanguageTag(language().span()));
+  MOZ_ASSERT(IsStructurallyValidRegionTag(region().span()));
+  MOZ_ASSERT(IsCanonicallyCasedRegionTag(region().span()));
 
   if (region().equalTo("172")) {
     if (language().equalTo("hy") ||
@@ -564,13 +597,16 @@ bool js::intl::LanguageTag::updateGrandfatheredMappings(JSContext* cx) {
   //     no-nyn, zh-min, and zh-min-nan require BCP47's extlang subtag
   //     that |unicode_locale_id| doesn't support.)
   //   * No RG tag contains |extensions| or |pu_extensions|.
-  if (script().length() != 0 ||
-      region().length() != 0 ||
+  if (script().present() ||
+      region().present() ||
       variants().length() != 1 ||
       extensions().length() != 0 ||
       privateuse()) {
     return true;
   }
+
+  MOZ_ASSERT(IsCanonicallyCasedLanguageTag(language().span()));
+  MOZ_ASSERT(IsCanonicallyCasedVariantTag(mozilla::MakeStringSpan(variants()[0].get())));
 
   auto variantEqualTo = [this](const char* variant) {
     return strcmp(variants()[0].get(), variant) == 0;
@@ -621,34 +657,34 @@ bool js::intl::LanguageTag::updateGrandfatheredMappings(JSContext* cx) {
 }
 
 template <size_t Length>
-static inline bool IsUnicodeKey(const ConstCharRange& key,
+static inline bool IsUnicodeKey(mozilla::Span<const char> key,
                                 const char (&str)[Length]) {
   static_assert(Length == UnicodeKeyLength + 1,
                 "Unicode extension key is two characters long");
-  return memcmp(key.begin().get(), str, Length - 1) == 0;
+  return memcmp(key.data(), str, Length - 1) == 0;
 }
 
 template <size_t Length>
-static inline bool IsUnicodeType(const ConstCharRange& type,
+static inline bool IsUnicodeType(mozilla::Span<const char> type,
                                  const char (&str)[Length]) {
   static_assert(Length > UnicodeKeyLength + 1,
                 "Unicode extension type contains more than two characters");
-  return type.length() == (Length - 1) &&
-         memcmp(type.begin().get(), str, Length - 1) == 0;
+  return type.size() == (Length - 1) &&
+         memcmp(type.data(), str, Length - 1) == 0;
 }
 
-static int32_t CompareUnicodeType(const char* a, const ConstCharRange& b) {
+static int32_t CompareUnicodeType(const char* a, mozilla::Span<const char> b) {
 #ifdef DEBUG
   auto isNull = [](char c) {
     return c == '\0';
   };
 #endif
 
-  MOZ_ASSERT(std::none_of(b.begin().get(), b.end().get(), isNull),
+  MOZ_ASSERT(std::none_of(b.begin(), b.end(), isNull),
              "unexpected null-character in string");
 
   using UnsignedChar = unsigned char;
-  for (size_t i = 0; i < b.length(); i++) {
+  for (size_t i = 0; i < b.size(); i++) {
     // |a| is zero-terminated and |b| doesn't contain a null-terminator. So if
     // we've reached the end of |a|, the below if-statement will always be true.
     // That ensures we don't read past the end of |a|.
@@ -659,13 +695,13 @@ static int32_t CompareUnicodeType(const char* a, const ConstCharRange& b) {
 
   // Return zero if both strings are equal or a negative number if |b| is a
   // prefix of |a|.
-  return -int32_t(UnsignedChar(a[b.length()]));
+  return -int32_t(UnsignedChar(a[b.size()]));
 };
 
 template <size_t Length>
 static inline const char* SearchReplacement(const char* (&types)[Length],
                                             const char* (&aliases)[Length],
-                                            const ConstCharRange& type) {
+                                            mozilla::Span<const char> type) {
 
   auto p = std::lower_bound(std::begin(types), std::end(types), type,
                             [](const auto& a, const auto& b) {
@@ -684,7 +720,7 @@ static inline const char* SearchReplacement(const char* (&types)[Length],
  * Spec: https://www.unicode.org/reports/tr35/#Unicode_Locale_Extension_Data_Files
  */
 const char* js::intl::LanguageTag::replaceUnicodeExtensionType(
-    const ConstCharRange& key, const ConstCharRange& type) {
+    mozilla::Span<const char> key, mozilla::Span<const char> type) {
 #ifdef DEBUG
   static auto isAsciiLowercaseAlphanumeric = [](char c) {
     return mozilla::IsAsciiLowercaseAlpha(c) || mozilla::IsAsciiDigit(c);
@@ -695,12 +731,12 @@ const char* js::intl::LanguageTag::replaceUnicodeExtensionType(
   };
 #endif
 
-  MOZ_ASSERT(key.length() == UnicodeKeyLength);
-  MOZ_ASSERT(std::all_of(key.begin().get(), key.end().get(),
+  MOZ_ASSERT(key.size() == UnicodeKeyLength);
+  MOZ_ASSERT(std::all_of(key.begin(), key.end(),
                          isAsciiLowercaseAlphanumeric));
 
-  MOZ_ASSERT(type.length() > UnicodeKeyLength);
-  MOZ_ASSERT(std::all_of(type.begin().get(), type.end().get(),
+  MOZ_ASSERT(type.size() > UnicodeKeyLength);
+  MOZ_ASSERT(std::all_of(type.begin(), type.end(),
                          isAsciiLowercaseAlphanumericOrDash));
 
   if (IsUnicodeKey(key, "ca")) {

@@ -755,13 +755,13 @@ class IPGResultsHandler(object):
             :returns: str
             """
             lname = name.lower()
-            if ' ia ' in lname:
+            if 'ia ' in lname:
                 return 'processor-cores'
-            elif ' processor ' in lname:
+            elif 'processor ' in lname:
                 return 'processor-package'
-            elif ' gt ' in lname:
+            elif 'gt ' in lname:
                 return 'gpu'
-            elif ' dram ' in lname:
+            elif 'dram ' in lname:
                 return 'dram'
             else:
                 return name
@@ -787,6 +787,19 @@ class IPGResultsHandler(object):
                     cut_results[measure][-1]
                 )
 
+        # Get the power usage rate in Watts
+        watt_usage = {}
+        for measure in cut_results:
+            if 'watt' in measure.lower() and 'limit' not in measure.lower():
+                watt_usage[replace_measure_name(measure) + '-avg'] = sum([
+                    float(val)
+                    for val in cut_results[measure]
+                ])/len(cut_results[measure])
+                watt_usage[replace_measure_name(measure) + '-max'] = max([
+                    float(val)
+                    for val in cut_results[measure]
+                ])
+
         # Get average CPU and GPU utilization
         average_utilization = {}
         for utilization in ('CPU Utilization(%)', 'GT Utilization(%)'):
@@ -805,6 +818,34 @@ class IPGResultsHandler(object):
                 for val in cut_results[utilization]
             ])/len(cut_results[utilization])
 
+        # Get average and maximum CPU and GPU frequency
+        frequency_info = {'cpu': {}, 'gpu': {}}
+        for frequency_measure in ('CPU Frequency_0(MHz)', 'GT Frequency(MHz)'):
+            if frequency_measure not in cut_results:
+                self._logger.warning("Could not find measurements for: %s" % frequency_measure)
+                continue
+
+            fmeasure_name = frequency_measure.lower()
+            if 'cpu ' in fmeasure_name:
+                fmeasure_name = 'cpu'
+            elif 'gt ' in fmeasure_name:
+                fmeasure_name = 'gpu'
+
+            frequency_info[fmeasure_name]['favg'] = sum([
+                float(val)
+                for val in cut_results[frequency_measure]
+            ])/len(cut_results[frequency_measure])
+
+            frequency_info[fmeasure_name]['fmax'] = max([
+                float(val)
+                for val in cut_results[frequency_measure]
+            ])
+
+            frequency_info[fmeasure_name]['fmin'] = min([
+                float(val)
+                for val in cut_results[frequency_measure]
+            ])
+
         summarized_results = {
             "utilization": {
                 "type": "power",
@@ -817,6 +858,24 @@ class IPGResultsHandler(object):
                 "test": str(test_name) + '-cumulative',
                 "unit": "mWh",
                 "values": cumulative_mwh
+            },
+            "power-watts": {
+                "type": "power",
+                "test": str(test_name) + '-watts',
+                "unit": "W",
+                "values": watt_usage
+            },
+            "frequency-cpu": {
+                "type": "power",
+                "test": str(test_name) + '-frequency-cpu',
+                "unit": "MHz",
+                "values": frequency_info['cpu']
+            },
+            "frequency-gpu": {
+                "type": "power",
+                "test": str(test_name) + '-frequency-gpu',
+                "unit": "MHz",
+                "values": frequency_info['gpu']
             }
         }
 

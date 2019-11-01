@@ -497,17 +497,18 @@ template void js::TraceManuallyBarrieredCrossCompartmentEdge<LazyScript*>(
 
 template <typename T>
 void js::TraceCrossCompartmentEdge(JSTracer* trc, JSObject* src,
-                                   WriteBarriered<T>* dst, const char* name) {
+                                   const WriteBarriered<T>* dst,
+                                   const char* name) {
   if (ShouldTraceCrossCompartment(trc, src, dst->get())) {
     TraceEdgeInternal(trc, dst->unsafeUnbarrieredForTracing(), name);
   }
 }
 
-template void js::TraceCrossCompartmentEdge<Value>(JSTracer* trc, JSObject* src,
-                                                   WriteBarriered<Value>* dst,
-                                                   const char* name);
+template void js::TraceCrossCompartmentEdge<Value>(
+    JSTracer* trc, JSObject* src, const WriteBarriered<Value>* dst,
+    const char* name);
 template void js::TraceCrossCompartmentEdge<JSScript*>(
-    JSTracer* trc, JSObject* src, WriteBarriered<JSScript*>* dst,
+    JSTracer* trc, JSObject* src, const WriteBarriered<JSScript*>* dst,
     const char* name);
 
 template <typename T>

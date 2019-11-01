@@ -11,6 +11,7 @@ import re
 from .macintelpower import MacIntelPower
 from .mozpowerutils import (
     average_summary,
+    frequency_summary,
     get_logger,
     sum_summary
 )
@@ -22,6 +23,9 @@ OSCPU_COMBOS = {
 SUMMARY_METHODS = {
     'utilization': average_summary,
     'power-usage': sum_summary,
+    'power-watts': frequency_summary,
+    'frequency-cpu': frequency_summary,
+    'frequency-gpu': frequency_summary,
     'default': sum_summary
 }
 
@@ -367,7 +371,7 @@ class MozPower(object):
                     'alertThreshold': alertthreshold,
                     'unit': settings['unit']
                 }
-                values.append(value)
+                values.append((value, measure))
                 subtests.append(subtest)
 
             # Summarize the data based on the measurement type

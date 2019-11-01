@@ -237,6 +237,19 @@ For example, if Fenix Release depends on the ``engine-gecko (release)`` channel,
 
 Unless `Glean custom pings <https://mozilla.github.io/glean/book/user/pings/custom.html>`__ are used, all the metrics are reported through the `Glean metrics ping <https://mozilla.github.io/glean/book/user/pings/metrics.html>`__.
 
+Testing your metrics
+====================
+At this time, the procedure for testing that metrics are correctly exfiltrated from GeckoView to Glean SDK-enabled products is a bit involved.
+
+1. After adding your metric as described in the previous section, substitute the locally built GeckoView in your local copy of `Android Components <https://github.com/mozilla-mobile/android-components/>`__ as described in the `GeckoView docs <https://mozilla.github.io/geckoview/contributor/geckoview-quick-start#dependency-substiting-your-local-geckoview-into-a-mozilla-project>`__.
+2. Build Android Components and publish to a local Maven repository as `documented here <https://mozac.org/contributing/testing-components-inside-app>`__.
+3. Use the local version of Android Components in your local Mozilla application (e.g. Fenix) as `documented here <https://mozac.org/contributing/testing-components-inside-app>`__.
+4. Use the Glean SDK `debugging features <https://mozilla.github.io/glean/book/user/debugging.html>`__ to either dump the `metrics` ping or send it to the `Glean Debug View <https://docs.telemetry.mozilla.org/concepts/glean/debug_ping_view.html>`__.
+
+.. note::
+
+    It is important to substitute GeckoView in Android Components, even if it's possible to substitute it directly in the final product. This is because the bulk of the processing happens in Android Components, in the `engine-gecko-*` components wrapping GeckoView.
+
 Unsupported features
 ====================
 This is the list of the currently unsupported features:

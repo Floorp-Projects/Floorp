@@ -77,6 +77,21 @@ function runTests() {
       });
     }
 
+    function checkUndefined() {
+      let next = p.getCharPref("test.undefined");
+      next = next.then(
+        () => ok(false, "getCharPref should've thrown for an undefined preference"),
+        (ex) => {
+          is(
+            ex,
+            "Protocol error (unknownError): preference is not of the right type: test.undefined",
+            "getCharPref should throw an exception with the preference name"
+          );
+        }
+      );
+      return next;
+    }
+
     function updatePrefsProperty(key) {
       return function(value) {
         prefs[key] = value;
@@ -93,6 +108,7 @@ function runTests() {
     .then(() => p.clearUserPref("test.bool"))
     .then(() => p.clearUserPref("test.int"))
     .then(() => p.clearUserPref("test.string"))
+    .then(() => checkUndefined())
     .then(checkValues);
   });
 }

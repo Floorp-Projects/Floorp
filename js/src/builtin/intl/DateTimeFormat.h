@@ -32,6 +32,9 @@ class DateTimeFormatObject : public NativeObject {
                 "INTERNALS_SLOT must match self-hosting define for internals "
                 "object slot");
 
+  // Estimated memory use for UDateFormat.
+  static constexpr size_t EstimatedMemoryUse = 91626;
+
   UDateFormat* getDateFormat() const {
     const auto& slot = getFixedSlot(UDATE_FORMAT_SLOT);
     if (slot.isUndefined()) {
