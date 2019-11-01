@@ -5633,7 +5633,8 @@ JSObject* jit::NewWrapperWithObjectShape(JSContext* cx,
 void jit::LoadShapeWrapperContents(MacroAssembler& masm, Register obj,
                                    Register dst, Label* failure) {
   masm.loadPtr(Address(obj, ProxyObject::offsetOfReservedSlots()), dst);
-  Address privateAddr(dst, detail::ProxyReservedSlots::offsetOfPrivateSlot());
+  Address privateAddr(dst,
+                      js::detail::ProxyReservedSlots::offsetOfPrivateSlot());
   masm.branchTestObject(Assembler::NotEqual, privateAddr, failure);
   masm.unboxObject(privateAddr, dst);
   masm.unboxNonDouble(

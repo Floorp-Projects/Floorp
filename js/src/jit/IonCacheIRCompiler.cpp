@@ -2155,7 +2155,7 @@ bool IonCacheIRCompiler::emitLoadDOMExpandoValueGuardGeneration() {
 
   masm.loadPtr(Address(obj, ProxyObject::offsetOfReservedSlots()), scratch1);
   Address expandoAddr(scratch1,
-                      detail::ProxyReservedSlots::offsetOfPrivateSlot());
+                      js::detail::ProxyReservedSlots::offsetOfPrivateSlot());
 
   // Guard the ExpandoAndGeneration* matches the proxy's ExpandoAndGeneration.
   masm.loadValue(expandoAddr, output);
