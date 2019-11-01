@@ -1270,7 +1270,7 @@ nsresult FontFaceSet::LogMessage(gfxUserFontEntry* aUserFontEntry,
       href.AssignLiteral("unknown");
     }
 #endif
-    href.AssignLiteral("unknown");
+    // Leave href empty if we don't know how to get the correct sheet.
   }
 
   nsresult rv;
