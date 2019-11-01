@@ -4992,7 +4992,7 @@ bool AsyncPanZoomController::HasReadyTouchBlock() const {
 }
 
 bool AsyncPanZoomController::CanHandleScrollOffsetUpdate(PanZoomState aState) {
-  return aState == PAN_MOMENTUM || IsPanningState(aState);
+  return aState == PAN_MOMENTUM || aState == TOUCHING || IsPanningState(aState);
 }
 
 bool AsyncPanZoomController::ShouldCancelAnimationForScrollUpdate(
