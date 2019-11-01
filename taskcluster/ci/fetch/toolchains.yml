@@ -119,7 +119,7 @@ iris-2.0:
     fetch:
         type: git
         repo: https://github.com/mozilla/iris_firefox
-        revision: 5655e3aa3a3536049a35fc5b83c1aac18b8690e6
+        revision:  c631344281e0db2362052efc87860cf927013ae4
 
 isl-0.15:
     description: ISL 0.15 source code
