@@ -154,26 +154,34 @@ void GestureEventListener::SetLongTapEnabled(bool aLongTapEnabled) {
   sLongTapEnabled = aLongTapEnabled;
 }
 
+void GestureEventListener::EnterFirstSingleTouchDown() {
+  SetState(GESTURE_FIRST_SINGLE_TOUCH_DOWN);
+  mTouchStartPosition = mLastTouchInput.mTouches[0].mScreenPoint;
+  mTouchStartOffset = mLastTouchInput.mScreenOffset;
+
+  if (sLongTapEnabled) {
+    CreateLongTapTimeoutTask();
+  }
+  CreateMaxTapTimeoutTask();
+}
+
 nsEventStatus GestureEventListener::HandleInputTouchSingleStart() {
   switch (mState) {
     case GESTURE_NONE:
-      SetState(GESTURE_FIRST_SINGLE_TOUCH_DOWN);
-      mTouchStartPosition = mLastTouchInput.mTouches[0].mScreenPoint;
-      mTouchStartOffset = mLastTouchInput.mScreenOffset;
-
-      if (sLongTapEnabled) {
-        CreateLongTapTimeoutTask();
-      }
-      CreateMaxTapTimeoutTask();
+      EnterFirstSingleTouchDown();
       break;
     case GESTURE_FIRST_SINGLE_TOUCH_UP:
       if (SecondTapIsFar()) {
         // If the second tap goes down far away from the first, then bail out
-        // of the gesture.
+        // of any gesture that includes the first tap.
         CancelLongTapTimeoutTask();
         CancelMaxTapTimeoutTask();
         mSingleTapSent = Nothing();
-        SetState(GESTURE_NONE);
+
+        // But still allow the second tap to participate in a gesture
+        // (e.g. lead to a single tap, or a double tap if an additional
+        // tap occurs near the same location).
+        EnterFirstSingleTouchDown();
       } else {
         // Otherwise, reset the touch start position so that, if this turns into
         // a one-touch-pinch gesture, it uses the second tap's down position as
