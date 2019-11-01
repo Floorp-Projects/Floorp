@@ -15,8 +15,6 @@
 
 %include ../../shared/global.inc.css
 
-/* ::::: XBL bindings ::::: */
-
 @media (-moz-menubar-drag) {
   xul|toolbar[type="menubar"] {
     -moz-window-dragging: drag;
@@ -79,17 +77,6 @@ xul|iframe {
     width: auto;
     height: auto;
   }
-}
-
-/* XXXBlake yeah, shoot me -- these don't belong here.  I'll move them later. */
-
-xul|sidebarheader {
-  min-height: 25px;
-  text-shadow: none;
-}
-
-xul|sidebarheader > xul|label {
-  padding-inline-start: 4px;
 }
 
 xul|toolbar[mode="text"] .toolbarbutton-text {

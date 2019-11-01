@@ -1374,7 +1374,7 @@
   <hbox flex="1" id="browser" renderroot="content">
     <vbox id="browser-border-start" hidden="true" layer="true"/>
     <vbox id="sidebar-box" hidden="true" class="chromeclass-extrachrome">
-      <sidebarheader id="sidebar-header" align="center">
+      <box id="sidebar-header" align="center">
         <toolbarbutton id="sidebar-switcher-target" flex="1" class="tabbable">
           <image id="sidebar-icon" consumeanchor="sidebar-switcher-target"/>
           <label id="sidebar-title" crop="end" flex="1" control="sidebar"/>
@@ -1387,7 +1387,7 @@
 # spacer should significantly out-flex the button.
         <spacer flex="1000"/>
         <toolbarbutton id="sidebar-close" class="close-icon tabbable" tooltiptext="&sidebarCloseButton.tooltip;" oncommand="SidebarUI.hide();"/>
-      </sidebarheader>
+      </box>
       <browser id="sidebar" flex="1" autoscroll="false" disablehistory="true" disablefullscreen="true"
                 style="min-width: 14em; width: 18em; max-width: 36em;" tooltip="aHTMLTooltip"/>
     </vbox>
