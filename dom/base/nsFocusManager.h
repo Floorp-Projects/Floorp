@@ -63,6 +63,7 @@ class nsFocusManager final : public nsIFocusManager,
   // This raises the window and switches to the tab as needed.
   static void FocusWindow(nsPIDOMWindowOuter* aWindow);
 
+  static void PrefChanged(const char* aPref, void* aSelf);
   void PrefChanged(const char* aPref);
 
   /**

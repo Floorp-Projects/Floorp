@@ -454,8 +454,8 @@ nsresult nsHttpHandler::Init() {
   }
 
   // monitor some preference changes
-  Preferences::RegisterPrefixCallbacks(
-      PREF_CHANGE_METHOD(nsHttpHandler::PrefsChanged), gCallbackPrefs, this);
+  Preferences::RegisterPrefixCallbacks(nsHttpHandler::PrefsChanged,
+                                       gCallbackPrefs, this);
   PrefsChanged(nullptr);
 
   mMisc.AssignLiteral("rv:" MOZILLA_UAVERSION);
@@ -1083,6 +1083,11 @@ uint32_t nsHttpHandler::MaxSocketCount() {
     maxCount -= 8;
 
   return maxCount;
+}
+
+// static
+void nsHttpHandler::PrefsChanged(const char* pref, void* self) {
+  static_cast<nsHttpHandler*>(self)->PrefsChanged(pref);
 }
 
 void nsHttpHandler::PrefsChanged(const char* pref) {

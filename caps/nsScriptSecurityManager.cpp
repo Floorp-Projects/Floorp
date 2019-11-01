@@ -1393,8 +1393,7 @@ static StaticRefPtr<nsScriptSecurityManager> gScriptSecMan;
 
 nsScriptSecurityManager::~nsScriptSecurityManager(void) {
   Preferences::UnregisterPrefixCallbacks(
-      PREF_CHANGE_METHOD(nsScriptSecurityManager::ScriptSecurityPrefChanged),
-      kObservedPrefs, this);
+      nsScriptSecurityManager::ScriptSecurityPrefChanged, kObservedPrefs, this);
   if (mDomainPolicy) {
     mDomainPolicy->Deactivate();
   }
@@ -1467,6 +1466,13 @@ uint32_t SkipUntil(const nsCString& str, uint32_t base) {
   return base;
 }
 
+// static
+void nsScriptSecurityManager::ScriptSecurityPrefChanged(const char* aPref,
+                                                        void* aSelf) {
+  static_cast<nsScriptSecurityManager*>(aSelf)->ScriptSecurityPrefChanged(
+      aPref);
+}
+
 inline void nsScriptSecurityManager::ScriptSecurityPrefChanged(
     const char* aPref) {
   MOZ_ASSERT(mPrefInitialized);
@@ -1524,8 +1530,7 @@ nsresult nsScriptSecurityManager::InitPrefs() {
 
   // set observer callbacks in case the value of the prefs change
   Preferences::RegisterPrefixCallbacks(
-      PREF_CHANGE_METHOD(nsScriptSecurityManager::ScriptSecurityPrefChanged),
-      kObservedPrefs, this);
+      nsScriptSecurityManager::ScriptSecurityPrefChanged, kObservedPrefs, this);
 
   return NS_OK;
 }

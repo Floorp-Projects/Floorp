@@ -242,7 +242,7 @@ class nsSocketTransportService final : public nsPISocketTransportService,
 
   // Preference Monitor for SendBufferSize and Keepalive prefs.
   nsresult UpdatePrefs();
-  static void PrefCallback(const char* aPref, nsSocketTransportService* aSelf);
+  static void UpdatePrefs(const char* aPref, void* aSelf);
   void UpdateSendBufferPref();
   int32_t mSendBufferSize;
   // Number of seconds of connection is idle before first keepalive ping.

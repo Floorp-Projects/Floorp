@@ -63,7 +63,7 @@ class CachedPrefs final {
   CachedPrefs();
   ~CachedPrefs();
 
-  static void OnPrefsChange(const char* aPrefName, CachedPrefs*);
+  static void OnPrefsChange(const char* aPrefName, void*);
 
   nsCString mSkipHostnames;
 
@@ -73,12 +73,14 @@ class CachedPrefs final {
 StaticAutoPtr<CachedPrefs> CachedPrefs::sInstance;
 
 // static
-void CachedPrefs::OnPrefsChange(const char* aPref, CachedPrefs* aPrefs) {
+void CachedPrefs::OnPrefsChange(const char* aPref, void* aPrefs) {
+  auto prefs = static_cast<CachedPrefs*>(aPrefs);
+
   if (!strcmp(aPref, URLCLASSIFIER_SKIP_HOSTNAMES)) {
     nsCString skipHostnames;
     Preferences::GetCString(URLCLASSIFIER_SKIP_HOSTNAMES, skipHostnames);
     ToLowerCase(skipHostnames);
-    aPrefs->SetSkipHostnames(skipHostnames);
+    prefs->SetSkipHostnames(skipHostnames);
   }
 }
 

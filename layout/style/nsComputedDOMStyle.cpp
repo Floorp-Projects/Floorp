@@ -2504,9 +2504,8 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DummyGetter() {
   MOZ_CRASH("DummyGetter is not supposed to be invoked");
 }
 
-static void MarkComputedStyleMapDirty(const char* aPref,
-                                      ComputedStyleMap* aData) {
-  aData->MarkDirty();
+static void MarkComputedStyleMapDirty(const char* aPref, void* aMap) {
+  static_cast<ComputedStyleMap*>(aMap)->MarkDirty();
 }
 
 void nsComputedDOMStyle::ParentChainChanged(nsIContent* aContent) {
