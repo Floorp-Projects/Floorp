@@ -5390,7 +5390,8 @@ void nsGlobalWindowOuter::NotifyContentBlockingEvent(
         aReason) {
   MOZ_ASSERT(aURIHint);
   DebugOnly<bool> isCookiesBlockedTracker =
-      aEvent == nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER;
+      aEvent == nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER ||
+      aEvent == nsIWebProgressListener::STATE_COOKIES_BLOCKED_SOCIALTRACKER;
   MOZ_ASSERT_IF(aBlocked, aReason.isNothing());
   MOZ_ASSERT_IF(!isCookiesBlockedTracker, aReason.isNothing());
   MOZ_ASSERT_IF(isCookiesBlockedTracker && !aBlocked, aReason.isSome());
@@ -5499,6 +5500,19 @@ void nsGlobalWindowOuter::NotifyContentBlockingEvent(
 
           if (!aBlocked) {
             unblocked = !doc->GetHasTrackingCookiesBlocked();
+          }
+        } else if (aEvent == nsIWebProgressListener::
+                                 STATE_COOKIES_BLOCKED_SOCIALTRACKER) {
+          nsTArray<nsCString> trackingFullHashes;
+          if (trackingChannel) {
+            Unused << trackingChannel->GetMatchedTrackingFullHashes(
+                trackingFullHashes);
+          }
+          doc->SetHasSocialTrackingCookiesBlocked(aBlocked, origin, aReason,
+                                                  trackingFullHashes);
+
+          if (!aBlocked) {
+            unblocked = !doc->GetHasSocialTrackingCookiesBlocked();
           }
         } else if (aEvent ==
                    nsIWebProgressListener::STATE_COOKIES_BLOCKED_ALL) {

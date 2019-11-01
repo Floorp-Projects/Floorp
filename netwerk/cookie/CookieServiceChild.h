@@ -61,9 +61,9 @@ class CookieServiceChild : public PCookieServiceChild,
 
   void GetCookieStringFromCookieHashTable(
       nsIURI* aHostURI, bool aIsForeign, bool aIsTrackingResource,
-      bool aFirstPartyStorageAccessGranted, uint32_t aRejectedReason,
-      bool aIsSafeTopLevelNav, bool aIsSameSiteForeign, nsIChannel* aChannel,
-      nsACString& aCookieString);
+      bool aIsSocialTrackingResource, bool aFirstPartyStorageAccessGranted,
+      uint32_t aRejectedReason, bool aIsSafeTopLevelNav,
+      bool aIsSameSiteForeign, nsIChannel* aChannel, nsACString& aCookieString);
 
   nsresult SetCookieStringInternal(nsIURI* aHostURI, nsIChannel* aChannel,
                                    const nsACString& aCookieString,

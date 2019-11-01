@@ -151,7 +151,8 @@ interface nsIClassifiedChannel : nsISupports
    * tracker.
    * This is a helper attribute which returns the same value of
    * (classificationFlags & CLASSIFIED_ANY_BASIC_TRACKING) or
-   * (classificationFlags & CLASSIFIED_ANY_STRICT_TRACKING)
+   * (classificationFlags & CLASSIFIED_ANY_STRICT_TRACKING) or
+   * (classificationFlags & CLASSIFIED_ANY_SOCIAL_TRACKING)
    *
    * Note that top-level channels could be marked as tracking
    * resource. In order to identify third-party tracking resources
@@ -171,13 +172,14 @@ interface nsIClassifiedChannel : nsISupports
 %}
 
   /**
-   * Returns the classification flags if the channel has been processed by
-   * URL-Classifier features and is considered third-party with the top
-   * window URI.
+   * Returns true  if the channel has been processed by URL-Classifier features
+   * and is considered third-party with the top window URI, and if it has loaded
+   * a resource that is classified as a tracker.
    *
    * This is a helper attribute which returns the same value of
    * (thirdPartyClassificationFlags & CLASSIFIED_ANY_BASIC_TRACKING) or
-   * (thirdPartyClassificationFlags & CLASSIFIED_ANY_STRICT_TRACKING)
+   * (thirdPartyClassificationFlags & CLASSIFIED_ANY_STRICT_TRACKING) or
+   * (thirdPartyClassificationFlags & CLASSIFIED_ANY_SOCIAL_TRACKING)
    */
   boolean isThirdPartyTrackingResource();
 
@@ -186,6 +188,30 @@ interface nsIClassifiedChannel : nsISupports
   {
     bool value = false;
     if (NS_SUCCEEDED(IsThirdPartyTrackingResource(&value)) && value) {
+      return true;
+    }
+    return false;
+  }
+%}
+
+  /**
+   * Returns true if the channel has loaded a resource that is classified as
+   * a social tracker.
+   *
+   * This is a helper attribute which returns the same value of
+   * (classificationFlags & CLASSIFIED_ANY_SOCIAL_TRACKING)
+   *
+   * Note that top-level channels could be marked as tracking
+   * resources. In order to identify third-party social tracking resources
+   * specifically, check the flags manually or add a new helper here.
+   */
+  boolean isSocialTrackingResource();
+
+%{ C++
+  inline bool IsSocialTrackingResource()
+  {
+    bool value = false;
+    if (NS_SUCCEEDED(IsSocialTrackingResource(&value)) && value) {
       return true;
     }
     return false;
