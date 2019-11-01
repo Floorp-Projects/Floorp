@@ -5,6 +5,9 @@
 package mozilla.components.service.glean;
 
 import androidx.test.core.app.ApplicationProvider;
+import androidx.work.testing.WorkManagerTestInitHelper;
+
+import android.content.Context;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -23,14 +26,18 @@ public class GleanFromJavaTest {
 
     @Test
     public void testInitGleanWithDefaults() {
-        Glean.INSTANCE.initialize(ApplicationProvider.getApplicationContext());
+        Context context = ApplicationProvider.getApplicationContext();
+        WorkManagerTestInitHelper.initializeTestWorkManager(context);
+        Glean.INSTANCE.initialize(context);
     }
 
     @Test
     public void testInitGleanWithConfiguration() {
+        Context context = ApplicationProvider.getApplicationContext();
+        WorkManagerTestInitHelper.initializeTestWorkManager(context);
         Configuration config =
                 new Configuration(Configuration.DEFAULT_TELEMETRY_ENDPOINT, "test-channel");
-        Glean.INSTANCE.initialize(ApplicationProvider.getApplicationContext(), config);
+        Glean.INSTANCE.initialize(context, config);
     }
 
     @Test
