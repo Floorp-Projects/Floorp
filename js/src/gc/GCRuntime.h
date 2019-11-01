@@ -347,7 +347,7 @@ class GCRuntime {
   State state() const { return incrementalState; }
   bool isHeapCompacting() const { return state() == State::Compact; }
   bool isForegroundSweeping() const { return state() == State::Sweep; }
-  bool isBackgroundSweeping() const { return sweepTask.isRunning(); }
+  bool isBackgroundSweeping() const { return sweepTask.wasStarted(); }
   void waitBackgroundSweepEnd();
   void waitBackgroundAllocEnd() { allocTask.cancelAndWait(); }
   void waitBackgroundFreeEnd();
