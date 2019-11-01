@@ -5531,8 +5531,7 @@ bool CacheIRCompiler::emitCallProxyHasPropResult() {
   masm.Push(idVal);
   masm.Push(obj);
 
-  using Fn =
-      bool (*)(JSContext*, HandleObject, HandleValue, MutableHandleValue);
+  using Fn = bool (*)(JSContext*, HandleObject, HandleValue, bool*);
   if (hasOwn) {
     callvm.call<Fn, ProxyHasOwn>();
   } else {
