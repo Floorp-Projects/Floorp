@@ -44,6 +44,7 @@ class RenderCompositorANGLE : public RenderCompositor {
   bool WaitForGPU() override;
   void Pause() override;
   bool Resume() override;
+  void Update() override;
 
   gl::GLContext* gl() const override { return RenderThread::Get()->SharedGL(); }
 
