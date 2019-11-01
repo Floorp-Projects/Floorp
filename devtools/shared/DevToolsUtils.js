@@ -804,11 +804,24 @@ exports.openFileStream = function(filePath) {
  *        The data to write to the file.
  * @param {String} fileName
  *        The suggested filename.
+ * @param {Array} filters
+ *        An array of object of the following shape:
+ *          - pattern: A pattern for accepted files (example: "*.js")
+ *          - label: The label that will be displayed in the save file dialog.
  */
-exports.saveAs = async function(parentWindow, dataArray, fileName = "") {
+exports.saveAs = async function(
+  parentWindow,
+  dataArray,
+  fileName = "",
+  filters = []
+) {
   let returnFile;
   try {
-    returnFile = await exports.showSaveFileDialog(parentWindow, fileName);
+    returnFile = await exports.showSaveFileDialog(
+      parentWindow,
+      fileName,
+      filters
+    );
   } catch (ex) {
     return;
   }
@@ -821,16 +834,23 @@ exports.saveAs = async function(parentWindow, dataArray, fileName = "") {
 /**
  * Show file picker and return the file user selected.
  *
- * @param nsIWindow parentWindow
+ * @param {nsIWindow} parentWindow
  *        Optional parent window. If null the parent window of the file picker
  *        will be the window of the attached input element.
- * @param AString suggestedFilename
- *        The suggested filename when toSave is true.
- *
- * @return Promise
+ * @param {String} suggestedFilename
+ *        The suggested filename.
+ * @param {Array} filters
+ *        An array of object of the following shape:
+ *          - pattern: A pattern for accepted files (example: "*.js")
+ *          - label: The label that will be displayed in the save file dialog.
+ * @return {Promise}
  *         A promise that is resolved after the file is selected by the file picker
  */
-exports.showSaveFileDialog = function(parentWindow, suggestedFilename) {
+exports.showSaveFileDialog = function(
+  parentWindow,
+  suggestedFilename,
+  filters = []
+) {
   const fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
 
   if (suggestedFilename) {
@@ -838,7 +858,13 @@ exports.showSaveFileDialog = function(parentWindow, suggestedFilename) {
   }
 
   fp.init(parentWindow, null, fp.modeSave);
-  fp.appendFilters(fp.filterAll);
+  if (Array.isArray(filters) && filters.length > 0) {
+    for (const { pattern, label } of filters) {
+      fp.appendFilter(label, pattern);
+    }
+  } else {
+    fp.appendFilters(fp.filterAll);
+  }
 
   return new Promise((resolve, reject) => {
     fp.open(result => {

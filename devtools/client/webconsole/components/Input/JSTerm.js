@@ -267,7 +267,12 @@ class JSTerm extends Component {
               `${date.getMonth() + 1}-${date.getDate()}_${date.getHours()}-` +
               `${date.getMinutes()}-${date.getSeconds()}.js`;
             const data = new TextEncoder().encode(value);
-            return saveAs(window, data, suggestedName);
+            return saveAs(window, data, suggestedName, [
+              {
+                pattern: "*.js",
+                label: l10n.getStr("webconsole.input.openJavaScriptFileFilter"),
+              },
+            ]);
           },
 
           [Editor.accel("O")]: async () => this._openFile(),
