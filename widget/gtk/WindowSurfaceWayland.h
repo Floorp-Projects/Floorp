@@ -12,7 +12,7 @@
 #include "nsWaylandDisplay.h"
 #include "WaylandDMABufSurface.h"
 
-#define BACK_BUFFER_NUM 2
+#define BACK_BUFFER_NUM 3
 
 namespace mozilla {
 namespace widget {
@@ -43,6 +43,8 @@ class WaylandShmPool {
 // Holds actual graphics data for wl_surface
 class WindowBackBuffer {
  public:
+  virtual bool IsDMABufBuffer() { return false; };
+
   virtual already_AddRefed<gfx::DrawTarget> Lock() = 0;
   virtual void Unlock() = 0;
   virtual bool IsLocked() = 0;
@@ -105,7 +107,7 @@ class WindowBackBufferShm : public WindowBackBuffer {
   int GetWidth() { return mWidth; };
   int GetHeight() { return mHeight; };
 
-  wl_buffer* GetWlBuffer() { return mWaylandBuffer; };
+  wl_buffer* GetWlBuffer() { return mWLBuffer; };
 
  private:
   void Create(int aWidth, int aHeight);
@@ -116,7 +118,7 @@ class WindowBackBufferShm : public WindowBackBuffer {
 
   // wl_buffer is a wayland object that encapsulates the shared memory
   // and passes it to wayland compositor by wl_surface object.
-  wl_buffer* mWaylandBuffer;
+  wl_buffer* mWLBuffer;
   int mWidth;
   int mHeight;
   bool mAttached;
@@ -128,6 +130,8 @@ class WindowBackBufferDMABuf : public WindowBackBuffer {
   WindowBackBufferDMABuf(WindowSurfaceWayland* aWindowSurfaceWayland,
                          int aWidth, int aHeight);
   ~WindowBackBufferDMABuf();
+
+  bool IsDMABufBuffer() { return true; };
 
   bool IsAttached();
   void SetAttached();
@@ -227,8 +231,15 @@ class WindowSurfaceWayland : public WindowSurface {
   } RenderingCacheMode;
 
  private:
-  WindowBackBuffer* CreateWaylandBuffer(int aWidth, int aHeight);
-  WindowBackBuffer* GetWaylandBufferToDraw(bool aCanSwitchBuffer);
+  WindowBackBuffer* GetWaylandBufferWithSwitch();
+  WindowBackBuffer* GetWaylandBufferRecent();
+  WindowBackBuffer* SetNewWaylandBuffer(bool aAllowDMABufBackend);
+  WindowBackBuffer* CreateWaylandBuffer(int aWidth, int aHeight,
+                                        bool aUseDMABufBackend);
+  WindowBackBuffer* CreateWaylandBufferInternal(int aWidth, int aHeight,
+                                                bool aUseDMABufBackend);
+  WindowBackBuffer* WaylandBufferFindAvailable(int aWidth, int aHeight,
+                                               bool aUseDMABufBackend);
 
   already_AddRefed<gfx::DrawTarget> LockWaylandBuffer();
   void UnlockWaylandBuffer();
@@ -255,7 +266,12 @@ class WindowSurfaceWayland : public WindowSurface {
   // any uncommited drawings which needs to be send to wayland compositor
   // the mBufferPendingCommit is set.
   WindowBackBuffer* mWaylandBuffer;
-  WindowBackBuffer* mBackupBuffer[BACK_BUFFER_NUM];
+  WindowBackBuffer* mShmBackupBuffer[BACK_BUFFER_NUM];
+  WindowBackBuffer* mDMABackupBuffer[BACK_BUFFER_NUM];
+
+  // When mWaylandFullscreenDamage we invalidate whole surface,
+  // otherwise partial screen updates (mWaylandBufferDamage) are used.
+  bool mWaylandFullscreenDamage;
   LayoutDeviceIntRegion mWaylandBufferDamage;
 
   // After every commit to wayland compositor a frame callback is requested.
