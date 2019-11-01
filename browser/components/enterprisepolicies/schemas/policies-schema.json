@@ -277,8 +277,7 @@
     },
 
     "DisplayMenuBar": {
-      "type": ["boolean", "string"],
-      "enum": ["always", "never", "default-on", "default-off"]
+      "type": "boolean"
     },
 
     "DNSOverHTTPS": {
