@@ -1716,29 +1716,35 @@ void CodeGenerator::visitValueToString(LValueToString* lir) {
     masm.bind(&notBoolean);
   }
 
-  // Object
-  if (lir->mir()->input()->mightBeType(MIRType::Object)) {
-    if (lir->mir()->supportSideEffects()) {
-      masm.branchTestObject(Assembler::Equal, tag, ool->entry());
-    } else {
-      // Bail.
-      MOZ_ASSERT(lir->mir()->needsSnapshot());
-      Label bail;
-      masm.branchTestObject(Assembler::Equal, tag, &bail);
-      bailoutFrom(&bail, lir->snapshot());
+  // Note: when phis are involved, |mir->input()->mightBeType(MIRType::Object)|
+  // could return true even though |mir->mightHaveSideEffects()| is (still)
+  // false. In this case objects/symbols are not actually possible so we check
+  // |mir->mightHaveSideEffects()| first to avoid assertion failures.
+  if (lir->mir()->mightHaveSideEffects()) {
+    // Object
+    if (lir->mir()->input()->mightBeType(MIRType::Object)) {
+      if (lir->mir()->supportSideEffects()) {
+        masm.branchTestObject(Assembler::Equal, tag, ool->entry());
+      } else {
+        // Bail.
+        MOZ_ASSERT(lir->mir()->needsSnapshot());
+        Label bail;
+        masm.branchTestObject(Assembler::Equal, tag, &bail);
+        bailoutFrom(&bail, lir->snapshot());
+      }
     }
-  }
 
-  // Symbol
-  if (lir->mir()->input()->mightBeType(MIRType::Symbol)) {
-    if (lir->mir()->supportSideEffects()) {
-      masm.branchTestSymbol(Assembler::Equal, tag, ool->entry());
-    } else {
-      // Bail.
-      MOZ_ASSERT(lir->mir()->needsSnapshot());
-      Label bail;
-      masm.branchTestSymbol(Assembler::Equal, tag, &bail);
-      bailoutFrom(&bail, lir->snapshot());
+    // Symbol
+    if (lir->mir()->input()->mightBeType(MIRType::Symbol)) {
+      if (lir->mir()->supportSideEffects()) {
+        masm.branchTestSymbol(Assembler::Equal, tag, ool->entry());
+      } else {
+        // Bail.
+        MOZ_ASSERT(lir->mir()->needsSnapshot());
+        Label bail;
+        masm.branchTestSymbol(Assembler::Equal, tag, &bail);
+        bailoutFrom(&bail, lir->snapshot());
+      }
     }
   }
 
@@ -1748,9 +1754,7 @@ void CodeGenerator::visitValueToString(LValueToString* lir) {
     masm.branchTestBigInt(Assembler::Equal, tag, ool->entry());
   }
 
-#ifdef DEBUG
   masm.assumeUnreachable("Unexpected type for LValueToString.");
-#endif
 
   masm.bind(&done);
   masm.bind(ool->rejoin());
