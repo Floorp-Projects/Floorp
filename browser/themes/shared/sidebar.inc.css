@@ -9,14 +9,13 @@
   --sidebar-text-color: -moz-FieldText;
   background-color: var(--sidebar-background-color);
   color: var(--sidebar-text-color);
+  text-shadow: none;
 }
 
 #sidebar-header {
   font-size: 1.333em;
   padding: 8px;
   border-bottom: 1px solid var(--sidebar-border-color);
-  background-color: transparent;
-  color: inherit;
 }
 
 %ifndef MOZ_WIDGET_GTK

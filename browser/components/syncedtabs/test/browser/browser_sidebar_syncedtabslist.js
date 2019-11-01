@@ -548,7 +548,7 @@ async function testContextMenu(
   // `synthesizeMouseAtPoint` calls `nsIDOMWindowUtils.sendMouseEvent`,
   // which interprets the offsets relative to the containing *chrome* window.
   // This means we need to account for the width and height of any elements
-  // outside the `browser` element, like `sidebarheader`.
+  // outside the `browser` element, like `#sidebar-header`.
   let offsetX = contentRect.x + rect.x + rect.width / 2;
   let offsetY = contentRect.y + rect.y + rect.height / 4;
 
