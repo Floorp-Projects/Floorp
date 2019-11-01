@@ -66,7 +66,7 @@ use api::units::*;
 use crate::box_shadow::{BLUR_SAMPLE_SCALE};
 use crate::clip::{ClipStore, ClipChainInstance, ClipDataHandle, ClipChainId};
 use crate::clip_scroll_tree::{ROOT_SPATIAL_NODE_INDEX,
-    ClipScrollTree, CoordinateSpaceMapping, SpatialNodeIndex, VisibleFace, CoordinateSystemId
+    ClipScrollTree, CoordinateSpaceMapping, SpatialNodeIndex, VisibleFace
 };
 use crate::composite::{CompositorKind, CompositeState, NativeSurfaceId};
 use crate::debug_colors;
@@ -3662,17 +3662,7 @@ impl PicturePrimitive {
                 // Only allow picture caching composite mode if global picture caching setting
                 // is enabled this frame.
                 if state.composite_state.picture_caching_is_enabled {
-                    // Disable tile cache if the scroll root has a perspective transform, since
-                    // this breaks many assumptions (it's a very rare edge case anyway, and
-                    // is probably (?) going to be moving / animated in this case).
-                    let spatial_node = &frame_context
-                        .clip_scroll_tree
-                        .spatial_nodes[self.spatial_node_index.0 as usize];
-                    if spatial_node.coordinate_system_id == CoordinateSystemId::root() {
-                        Some(PictureCompositeMode::TileCache { })
-                    } else {
-                        None
-                    }
+                    Some(PictureCompositeMode::TileCache { })
                 } else {
                     None
                 }

@@ -3066,7 +3066,7 @@ bool Debugger::updateExecutionObservabilityOfFrames(
   }
 
   AbstractFramePtr oldestEnabledFrame;
-  for (FrameIter iter(cx); !iter.done(); ++iter) {
+  for (AllFramesIter iter(cx); !iter.done(); ++iter) {
     if (obs.shouldMarkAsDebuggee(iter)) {
       if (observing) {
         if (!iter.abstractFramePtr().isDebuggee()) {

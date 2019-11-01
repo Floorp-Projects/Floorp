@@ -372,32 +372,5 @@ void TokensToQueryString(const nsTArray<QueryKeyValuePair>& aTokens,
   }
 }
 
-////////////////////////////////////////////////////////////////////////////////
-//// AsyncStatementCallbackNotifier
-
-NS_IMETHODIMP
-AsyncStatementCallbackNotifier::HandleCompletion(uint16_t aReason) {
-  if (aReason != mozIStorageStatementCallback::REASON_FINISHED)
-    return NS_ERROR_UNEXPECTED;
-
-  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-  if (obs) {
-    (void)obs->NotifyObservers(nullptr, mTopic, nullptr);
-  }
-
-  return NS_OK;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-//// AsyncStatementCallbackNotifier
-
-NS_IMETHODIMP
-AsyncStatementTelemetryTimer::HandleCompletion(uint16_t aReason) {
-  if (aReason == mozIStorageStatementCallback::REASON_FINISHED) {
-    Telemetry::AccumulateTimeDelta(mHistogramId, mStart);
-  }
-  return NS_OK;
-}
-
 }  // namespace places
 }  // namespace mozilla
