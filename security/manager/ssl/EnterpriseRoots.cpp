@@ -269,6 +269,13 @@ OSStatus GatherEnterpriseCertsMacOS(Vector<EnterpriseCert>& certs) {
       continue;
     }
     ScopedCFType<SecTrustRef> trustHandle(trust);
+    // Disable AIA chasing to avoid network I/O.
+    rv = SecTrustSetNetworkFetchAllowed(trustHandle.get(), false);
+    if (rv != errSecSuccess) {
+      MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
+              ("SecTrustSetNetworkFetchAllowed failed"));
+      continue;
+    }
     bool isTrusted = false;
     bool fallBackToDeprecatedAPI = true;
 #  if defined MAC_OS_X_VERSION_10_14
