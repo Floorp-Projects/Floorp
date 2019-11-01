@@ -322,52 +322,44 @@ TouchSimulator.prototype = {
   },
 
   sendTouchEvent(evt, target, name) {
+    const win = target.ownerGlobal;
     const document = target.ownerDocument;
     const content = this.getContent(target);
     if (!content) {
       return;
     }
 
-    const touchEvent = document.createEvent("touchevent");
-    const point = document.createTouch(
-      content,
+    const point = new win.Touch({
+      identifier: 0,
       target,
-      0,
-      evt.pageX,
-      evt.pageY,
-      evt.screenX,
-      evt.screenY,
-      evt.clientX,
-      evt.clientY,
-      1,
-      1,
-      0,
-      0
-    );
+      pageX: evt.pageX,
+      pageY: evt.pageY,
+      screenX: evt.screenX,
+      screenY: evt.screenY,
+      clientX: evt.clientX,
+      clientY: evt.clientY,
+      radiusX: 1,
+      radiusY: 1,
+      rotationAngle: 0,
+      force: 1,
+    });
 
     let touches = document.createTouchList(point);
     let targetTouches = touches;
-    const changedTouches = touches;
+    let changedTouches = touches;
+
     if (name === "touchend" || name === "touchcancel") {
       // "touchend" and "touchcancel" events should not have the removed touch
       // neither in touches nor in targetTouches
-      touches = targetTouches = document.createTouchList();
+      touches = targetTouches = changedTouches = document.createTouchList();
     }
 
-    touchEvent.initTouchEvent(
-      name,
-      true,
-      true,
-      content,
-      0,
-      false,
-      false,
-      false,
-      false,
+    // Initialize TouchEvent and dispatch.
+    const touchEvent = new win.TouchEvent(name, {
       touches,
       targetTouches,
-      changedTouches
-    );
+      changedTouches,
+    });
     target.dispatchEvent(touchEvent);
   },
 
