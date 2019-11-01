@@ -26,6 +26,11 @@ add_task(async function() {
   const hasTestNode = await testActor.hasNode("#inner");
   ok(hasTestNode, "Check testActor has access to inner element");
 
+  info("Check the markup view is rendered correctly after switching frames");
+  const innerFront = await getNodeFront("#inner", inspector);
+  const innerContainer = inspector.markup.getContainer(innerFront);
+  ok(innerContainer, "Markup view is rendering the #inner node");
+
   info("Check highlighting is correct after switching iframe context");
   await selectAndHighlightNode("#inner", inspector);
   const isHighlightCorrect = await testActor.assertHighlightedNode("#inner");
