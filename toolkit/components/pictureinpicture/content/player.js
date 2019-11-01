@@ -51,7 +51,7 @@ let Player = {
     "resize",
     "unload",
   ],
-  mm: null,
+  actor: null,
   /**
    * Used for resizing Telemetry to avoid recording an event for every resize
    * event. Instead, we wait until RESIZE_DEBOUNCE_RATE_MS has passed since the
@@ -91,12 +91,10 @@ let Player = {
     browser.sameProcessAsFrameLoader = originatingBrowser.frameLoader;
     holder.appendChild(browser);
 
-    browser.loadURI("about:blank", {
-      triggeringPrincipal: originatingBrowser.contentPrincipal,
-    });
-
-    this.mm = browser.frameLoader.messageManager;
-    this.mm.sendAsyncMessage("PictureInPicture:SetupPlayer");
+    this.actor = browser.browsingContext.currentWindowGlobal.getActor(
+      "PictureInPicture"
+    );
+    this.actor.sendAsyncMessage("PictureInPicture:SetupPlayer");
 
     for (let eventType of this.WINDOW_EVENTS) {
       addEventListener(eventType, this);
@@ -186,10 +184,10 @@ let Player = {
 
       case "playpause": {
         if (!this.isPlaying) {
-          this.mm.sendAsyncMessage("PictureInPicture:Play");
+          this.actor.sendAsyncMessage("PictureInPicture:Play");
           this.revealControls(false);
         } else {
-          this.mm.sendAsyncMessage("PictureInPicture:Pause");
+          this.actor.sendAsyncMessage("PictureInPicture:Pause");
           this.revealControls(true);
         }
 

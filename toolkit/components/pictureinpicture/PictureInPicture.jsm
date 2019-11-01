@@ -4,7 +4,11 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["PictureInPicture"];
+var EXPORTED_SYMBOLS = [
+  "PictureInPicture",
+  "PictureInPictureParent",
+  "PictureInPictureToggleParent",
+];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { AppConstants } = ChromeUtils.import(
@@ -36,20 +40,34 @@ let gCloseReasons = new WeakMap();
  */
 let gNextWindowID = 0;
 
+class PictureInPictureToggleParent extends JSWindowActorParent {
+  receiveMessage(aMessage) {
+    let browsingContext = aMessage.target.browsingContext;
+    let browser = browsingContext.top.embedderElement;
+    switch (aMessage.name) {
+      case "PictureInPicture:OpenToggleContextMenu": {
+        let win = browser.ownerGlobal;
+        PictureInPicture.openToggleContextMenu(win, aMessage.data);
+        break;
+      }
+    }
+  }
+}
+
 /**
  * This module is responsible for creating a Picture in Picture window to host
  * a clone of a video element running in web content.
  */
 
-var PictureInPicture = {
-  // Listeners are added in nsBrowserGlue.js lazily
+class PictureInPictureParent extends JSWindowActorParent {
   receiveMessage(aMessage) {
-    let browser = aMessage.target;
+    let browsingContext = aMessage.target.browsingContext;
+    let browser = browsingContext.top.embedderElement;
 
     switch (aMessage.name) {
       case "PictureInPicture:Request": {
         let videoData = aMessage.data;
-        this.handlePictureInPictureRequest(browser, videoData);
+        PictureInPicture.handlePictureInPictureRequest(browser, videoData);
         break;
       }
       case "PictureInPicture:Close": {
@@ -57,31 +75,37 @@ var PictureInPicture = {
          * Content has requested that its Picture in Picture window go away.
          */
         let reason = aMessage.data.reason;
-        this.closePipWindow({ reason });
+        PictureInPicture.closePipWindow({ reason });
         break;
       }
       case "PictureInPicture:Playing": {
-        let player = this.weakPipPlayer && this.weakPipPlayer.get();
+        let player =
+          PictureInPicture.weakPipPlayer &&
+          PictureInPicture.weakPipPlayer.get();
         if (player) {
           player.setIsPlayingState(true);
         }
         break;
       }
       case "PictureInPicture:Paused": {
-        let player = this.weakPipPlayer && this.weakPipPlayer.get();
+        let player =
+          PictureInPicture.weakPipPlayer &&
+          PictureInPicture.weakPipPlayer.get();
         if (player) {
           player.setIsPlayingState(false);
         }
         break;
       }
-      case "PictureInPicture:OpenToggleContextMenu": {
-        let win = browser.ownerGlobal;
-        this.openToggleContextMenu(win, aMessage.data);
-        break;
-      }
     }
-  },
+  }
+}
 
+/**
+ * This module is responsible for creating a Picture in Picture window to host
+ * a clone of a video element running in web content.
+ */
+
+var PictureInPicture = {
   /**
    * Called when the browser UI handles the View:PictureInPicture command via
    * the keyboard.
