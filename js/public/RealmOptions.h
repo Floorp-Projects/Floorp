@@ -164,6 +164,12 @@ class JS_PUBLIC_API RealmCreationOptions {
     return *this;
   }
 
+  bool getWeakRefsEnabled() const { return weakRefs_; }
+  RealmCreationOptions& setWeakRefsEnabled(bool flag) {
+    weakRefs_ = flag;
+    return *this;
+  }
+
   // This flag doesn't affect JS engine behavior.  It is used by Gecko to
   // mark whether content windows and workers are "Secure Context"s. See
   // https://w3c.github.io/webappsec-secure-contexts/
@@ -192,6 +198,7 @@ class JS_PUBLIC_API RealmCreationOptions {
   bool writableStreams_ = false;
   bool fields_ = false;
   bool awaitFix_ = false;
+  bool weakRefs_ = false;
   bool secureContext_ = false;
 };
 
