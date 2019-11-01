@@ -32,6 +32,8 @@
   list-style-type: none;
   display: flex;
   flex-direction: column;
+  /* Show on top of .breach-alert which is also positioned */
+  z-index: 1;
 }
 
 .menuitem-button {
