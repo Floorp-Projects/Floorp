@@ -653,6 +653,7 @@ class GCRuntime {
   friend class SweepMarkTask;
   IncrementalProgress markUntilBudgetExhausted(SliceBudget& sliceBudget,
                                                gcstats::PhaseKind phase);
+  IncrementalProgress markUntilBudgetExhausted(SliceBudget& sliceBudget);
   void drainMarkStack();
   template <class ZoneIterT>
   void markWeakReferences(gcstats::PhaseKind phase);
