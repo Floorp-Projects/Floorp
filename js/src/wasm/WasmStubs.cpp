@@ -1287,7 +1287,7 @@ static void StackCopy(MacroAssembler& masm, MIRType type, Register scratch,
     GenPrintIsize(DebugChannel::Import, masm, scratch);
     masm.store64(scratch64, dst);
 #endif
-  } else if (type == MIRType::RefOrNull) {
+  } else if (type == MIRType::RefOrNull || type == MIRType::Pointer) {
     masm.loadPtr(src, scratch);
     GenPrintPtr(DebugChannel::Import, masm, scratch);
     masm.storePtr(scratch, dst);

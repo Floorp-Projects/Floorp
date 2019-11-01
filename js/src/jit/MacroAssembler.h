@@ -3321,6 +3321,8 @@ static inline MIRType ToMIRType(ABIArgType argType) {
       return MIRType::Float32;
     case ArgType_Int64:
       return MIRType::Int64;
+    case ArgType_Pointer:
+      return MIRType::Pointer;
     default:
       break;
   }

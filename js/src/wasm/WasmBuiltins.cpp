@@ -221,6 +221,49 @@ const SymbolicAddressSignature SASigStructNarrow = {
 #undef _FailOnNegI32
 #undef _FailOnNullPtr
 
+#ifdef DEBUG
+ABIArgType ToABIType(FailureMode mode) {
+  switch (mode) {
+    case FailureMode::FailOnNegI32:
+      return ArgType_General;
+    case FailureMode::FailOnNullPtr:
+    case FailureMode::FailOnInvalidRef:
+      return ArgType_Pointer;
+    default:
+      MOZ_CRASH("unexpected failure mode");
+  }
+}
+
+ABIArgType ToABIType(MIRType type) {
+  switch (type) {
+    case MIRType::None:
+    case MIRType::Int32:
+      return ArgType_General;
+    case MIRType::Int64:
+      return ArgType_Int64;
+    case MIRType::Pointer:
+    case MIRType::RefOrNull:
+      return ArgType_Pointer;
+    case MIRType::Float32:
+      return ArgType_Float32;
+    case MIRType::Double:
+      return ArgType_Double;
+    default:
+      MOZ_CRASH("unexpected type");
+  }
+}
+
+ABIFunctionType ToABIType(const SymbolicAddressSignature& sig) {
+  MOZ_ASSERT_IF(sig.failureMode != FailureMode::Infallible,
+                ToABIType(sig.failureMode) == ToABIType(sig.retType));
+  int abiType = ToABIType(sig.retType) << RetType_Shift;
+  for (int i = 0; i < sig.numArgs; i++) {
+    abiType |= (ToABIType(sig.argTypes[i]) << (ArgType_Shift * (i + 1)));
+  }
+  return ABIFunctionType(abiType);
+}
+#endif
+
 // ============================================================================
 // WebAssembly builtin C++ functions called from wasm code to implement internal
 // wasm operations: implementations.
@@ -674,22 +717,34 @@ void* wasm::AddressOf(SymbolicAddress imm, ABIFunctionType* abiType) {
       *abiType = Args_General0;
       return FuncCast(WasmReportInt64JSCall, *abiType);
     case SymbolicAddress::CallImport_Void:
-      *abiType = Args_General4;
+      *abiType = MakeABIFunctionType(
+          ArgType_General,
+          {ArgType_Pointer, ArgType_General, ArgType_General, ArgType_Pointer});
       return FuncCast(Instance::callImport_void, *abiType);
     case SymbolicAddress::CallImport_I32:
-      *abiType = Args_General4;
+      *abiType = MakeABIFunctionType(
+          ArgType_General,
+          {ArgType_Pointer, ArgType_General, ArgType_General, ArgType_Pointer});
       return FuncCast(Instance::callImport_i32, *abiType);
     case SymbolicAddress::CallImport_I64:
-      *abiType = Args_General4;
+      *abiType = MakeABIFunctionType(
+          ArgType_General,
+          {ArgType_Pointer, ArgType_General, ArgType_General, ArgType_Pointer});
       return FuncCast(Instance::callImport_i64, *abiType);
     case SymbolicAddress::CallImport_F64:
-      *abiType = Args_General4;
+      *abiType = MakeABIFunctionType(
+          ArgType_General,
+          {ArgType_Pointer, ArgType_General, ArgType_General, ArgType_Pointer});
       return FuncCast(Instance::callImport_f64, *abiType);
     case SymbolicAddress::CallImport_FuncRef:
-      *abiType = Args_General4;
+      *abiType = MakeABIFunctionType(
+          ArgType_General,
+          {ArgType_Pointer, ArgType_General, ArgType_General, ArgType_Pointer});
       return FuncCast(Instance::callImport_funcref, *abiType);
     case SymbolicAddress::CallImport_AnyRef:
-      *abiType = Args_General4;
+      *abiType = MakeABIFunctionType(
+          ArgType_General,
+          {ArgType_Pointer, ArgType_General, ArgType_General, ArgType_Pointer});
       return FuncCast(Instance::callImport_anyref, *abiType);
     case SymbolicAddress::CoerceInPlace_ToInt32:
       *abiType = Args_General1;
@@ -804,78 +859,140 @@ void* wasm::AddressOf(SymbolicAddress imm, ABIFunctionType* abiType) {
     case SymbolicAddress::ATan2D:
       *abiType = Args_Double_DoubleDouble;
       return FuncCast(ecmaAtan2, *abiType);
+
     case SymbolicAddress::MemoryGrow:
-      *abiType = Args_General2;
+      *abiType = MakeABIFunctionType(ArgType_General,
+                                     {ArgType_Pointer, ArgType_General});
+      MOZ_ASSERT(*abiType == ToABIType(SASigMemoryGrow));
       return FuncCast(Instance::memoryGrow_i32, *abiType);
     case SymbolicAddress::MemorySize:
-      *abiType = Args_General1;
+      *abiType = MakeABIFunctionType(ArgType_General, {ArgType_Pointer});
+      MOZ_ASSERT(*abiType == ToABIType(SASigMemorySize));
       return FuncCast(Instance::memorySize_i32, *abiType);
     case SymbolicAddress::WaitI32:
-      *abiType = Args_Int_GeneralGeneralGeneralInt64;
+      *abiType = MakeABIFunctionType(
+          ArgType_General,
+          {ArgType_Pointer, ArgType_General, ArgType_General, ArgType_Int64});
+      MOZ_ASSERT(*abiType == ToABIType(SASigWaitI32));
       return FuncCast(Instance::wait_i32, *abiType);
     case SymbolicAddress::WaitI64:
-      *abiType = Args_Int_GeneralGeneralInt64Int64;
+      *abiType = MakeABIFunctionType(
+          ArgType_General,
+          {ArgType_Pointer, ArgType_General, ArgType_Int64, ArgType_Int64});
+      MOZ_ASSERT(*abiType == ToABIType(SASigWaitI64));
       return FuncCast(Instance::wait_i64, *abiType);
     case SymbolicAddress::Wake:
-      *abiType = Args_General3;
+      *abiType = MakeABIFunctionType(
+          ArgType_General, {ArgType_Pointer, ArgType_General, ArgType_General});
+      MOZ_ASSERT(*abiType == ToABIType(SASigWake));
       return FuncCast(Instance::wake, *abiType);
     case SymbolicAddress::MemCopy:
-      *abiType = Args_General5;
+      *abiType = MakeABIFunctionType(
+          ArgType_General, {ArgType_Pointer, ArgType_General, ArgType_General,
+                            ArgType_General, ArgType_Pointer});
+      MOZ_ASSERT(*abiType == ToABIType(SASigMemCopy));
       return FuncCast(Instance::memCopy, *abiType);
     case SymbolicAddress::MemCopyShared:
-      *abiType = Args_General5;
+      *abiType = MakeABIFunctionType(
+          ArgType_General, {ArgType_Pointer, ArgType_General, ArgType_General,
+                            ArgType_General, ArgType_Pointer});
+      MOZ_ASSERT(*abiType == ToABIType(SASigMemCopyShared));
       return FuncCast(Instance::memCopyShared, *abiType);
     case SymbolicAddress::DataDrop:
-      *abiType = Args_General2;
+      *abiType = MakeABIFunctionType(ArgType_General,
+                                     {ArgType_Pointer, ArgType_General});
+      MOZ_ASSERT(*abiType == ToABIType(SASigDataDrop));
       return FuncCast(Instance::dataDrop, *abiType);
     case SymbolicAddress::MemFill:
-      *abiType = Args_General5;
+      *abiType = MakeABIFunctionType(
+          ArgType_General, {ArgType_Pointer, ArgType_General, ArgType_General,
+                            ArgType_General, ArgType_Pointer});
+      MOZ_ASSERT(*abiType == ToABIType(SASigMemFill));
       return FuncCast(Instance::memFill, *abiType);
     case SymbolicAddress::MemFillShared:
-      *abiType = Args_General5;
+      *abiType = MakeABIFunctionType(
+          ArgType_General, {ArgType_Pointer, ArgType_General, ArgType_General,
+                            ArgType_General, ArgType_Pointer});
+      MOZ_ASSERT(*abiType == ToABIType(SASigMemFillShared));
       return FuncCast(Instance::memFillShared, *abiType);
     case SymbolicAddress::MemInit:
-      *abiType = Args_General5;
+      *abiType = MakeABIFunctionType(
+          ArgType_General, {ArgType_Pointer, ArgType_General, ArgType_General,
+                            ArgType_General, ArgType_General});
+      MOZ_ASSERT(*abiType == ToABIType(SASigMemInit));
       return FuncCast(Instance::memInit, *abiType);
     case SymbolicAddress::TableCopy:
-      *abiType = Args_General6;
+      *abiType = MakeABIFunctionType(
+          ArgType_General, {ArgType_Pointer, ArgType_General, ArgType_General,
+                            ArgType_General, ArgType_General, ArgType_General});
+      MOZ_ASSERT(*abiType == ToABIType(SASigTableCopy));
       return FuncCast(Instance::tableCopy, *abiType);
     case SymbolicAddress::ElemDrop:
-      *abiType = Args_General2;
+      *abiType = MakeABIFunctionType(ArgType_General,
+                                     {ArgType_Pointer, ArgType_General});
+      MOZ_ASSERT(*abiType == ToABIType(SASigElemDrop));
       return FuncCast(Instance::elemDrop, *abiType);
     case SymbolicAddress::TableFill:
-      *abiType = Args_General5;
+      *abiType = MakeABIFunctionType(
+          ArgType_General, {ArgType_Pointer, ArgType_General, ArgType_Pointer,
+                            ArgType_General, ArgType_General});
+      MOZ_ASSERT(*abiType == ToABIType(SASigTableFill));
       return FuncCast(Instance::tableFill, *abiType);
     case SymbolicAddress::TableInit:
-      *abiType = Args_General6;
+      *abiType = MakeABIFunctionType(
+          ArgType_General, {ArgType_Pointer, ArgType_General, ArgType_General,
+                            ArgType_General, ArgType_General, ArgType_General});
+      MOZ_ASSERT(*abiType == ToABIType(SASigTableInit));
       return FuncCast(Instance::tableInit, *abiType);
     case SymbolicAddress::TableGet:
-      *abiType = Args_General3;
+      *abiType = MakeABIFunctionType(
+          ArgType_Pointer, {ArgType_Pointer, ArgType_General, ArgType_General});
+      MOZ_ASSERT(*abiType == ToABIType(SASigTableGet));
       return FuncCast(Instance::tableGet, *abiType);
     case SymbolicAddress::TableGrow:
-      *abiType = Args_General4;
+      *abiType = MakeABIFunctionType(
+          ArgType_General,
+          {ArgType_Pointer, ArgType_Pointer, ArgType_General, ArgType_General});
+      MOZ_ASSERT(*abiType == ToABIType(SASigTableGrow));
       return FuncCast(Instance::tableGrow, *abiType);
     case SymbolicAddress::TableSet:
-      *abiType = Args_General4;
+      *abiType = MakeABIFunctionType(
+          ArgType_General,
+          {ArgType_Pointer, ArgType_General, ArgType_Pointer, ArgType_General});
+      MOZ_ASSERT(*abiType == ToABIType(SASigTableSet));
       return FuncCast(Instance::tableSet, *abiType);
     case SymbolicAddress::TableSize:
-      *abiType = Args_General2;
+      *abiType = MakeABIFunctionType(ArgType_General,
+                                     {ArgType_Pointer, ArgType_General});
+      MOZ_ASSERT(*abiType == ToABIType(SASigTableSize));
       return FuncCast(Instance::tableSize, *abiType);
     case SymbolicAddress::FuncRef:
-      *abiType = Args_General2;
+      *abiType = MakeABIFunctionType(ArgType_Pointer,
+                                     {ArgType_Pointer, ArgType_General});
+      MOZ_ASSERT(*abiType == ToABIType(SASigFuncRef));
       return FuncCast(Instance::funcRef, *abiType);
     case SymbolicAddress::PostBarrier:
-      *abiType = Args_General2;
+      *abiType = MakeABIFunctionType(ArgType_General,
+                                     {ArgType_Pointer, ArgType_Pointer});
+      MOZ_ASSERT(*abiType == ToABIType(SASigPostBarrier));
       return FuncCast(Instance::postBarrier, *abiType);
     case SymbolicAddress::PostBarrierFiltering:
-      *abiType = Args_General2;
+      *abiType = MakeABIFunctionType(ArgType_General,
+                                     {ArgType_Pointer, ArgType_Pointer});
+      MOZ_ASSERT(*abiType == ToABIType(SASigPostBarrierFiltering));
       return FuncCast(Instance::postBarrierFiltering, *abiType);
     case SymbolicAddress::StructNew:
-      *abiType = Args_General2;
+      *abiType = MakeABIFunctionType(ArgType_Pointer,
+                                     {ArgType_Pointer, ArgType_General});
+      MOZ_ASSERT(*abiType == ToABIType(SASigStructNew));
       return FuncCast(Instance::structNew, *abiType);
     case SymbolicAddress::StructNarrow:
-      *abiType = Args_General4;
+      *abiType = MakeABIFunctionType(
+          ArgType_Pointer,
+          {ArgType_Pointer, ArgType_General, ArgType_General, ArgType_Pointer});
+      MOZ_ASSERT(*abiType == ToABIType(SASigStructNarrow));
       return FuncCast(Instance::structNarrow, *abiType);
+
 #if defined(JS_CODEGEN_MIPS32)
     case SymbolicAddress::js_jit_gAtomic64Lock:
       return &js::jit::gAtomic64Lock;

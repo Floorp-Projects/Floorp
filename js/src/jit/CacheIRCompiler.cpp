@@ -2165,7 +2165,7 @@ bool CacheIRCompiler::emitLoadWrapperTarget() {
 
   masm.loadPtr(Address(obj, ProxyObject::offsetOfReservedSlots()), reg);
   masm.unboxObject(
-      Address(reg, detail::ProxyReservedSlots::offsetOfPrivateSlot()), reg);
+      Address(reg, js::detail::ProxyReservedSlots::offsetOfPrivateSlot()), reg);
   return true;
 }
 
@@ -2189,7 +2189,7 @@ bool CacheIRCompiler::emitLoadDOMExpandoValue() {
   masm.loadPtr(Address(obj, ProxyObject::offsetOfReservedSlots()),
                val.scratchReg());
   masm.loadValue(Address(val.scratchReg(),
-                         detail::ProxyReservedSlots::offsetOfPrivateSlot()),
+                         js::detail::ProxyReservedSlots::offsetOfPrivateSlot()),
                  val);
   return true;
 }
@@ -2204,7 +2204,7 @@ bool CacheIRCompiler::emitLoadDOMExpandoValueIgnoreGeneration() {
   Register scratch = output.scratchReg();
   masm.loadPtr(Address(obj, ProxyObject::offsetOfReservedSlots()), scratch);
   Address expandoAddr(scratch,
-                      detail::ProxyReservedSlots::offsetOfPrivateSlot());
+                      js::detail::ProxyReservedSlots::offsetOfPrivateSlot());
 
 #ifdef DEBUG
   // Private values are stored as doubles, so assert we have a double.

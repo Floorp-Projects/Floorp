@@ -10,6 +10,7 @@
 #include "mozilla/HashFunctions.h"
 
 #include <algorithm>
+#include <initializer_list>
 #include <stdint.h>
 
 #include "jsfriendapi.h"
@@ -716,11 +717,27 @@ enum ABIArgType {
   ArgType_Double = 0x2,
   ArgType_Float32 = 0x3,
   ArgType_Int64 = 0x4,
+  ArgType_Pointer = 0x5,
 
   RetType_Shift = 0x0,
   ArgType_Shift = 0x3,
   ArgType_Mask = 0x7
 };
+
+namespace detail {
+
+static constexpr int MakeABIFunctionType(
+    ABIArgType ret, std::initializer_list<ABIArgType> args) {
+  int abiType = ret << RetType_Shift;
+  int i = 1;
+  for (auto arg : args) {
+    abiType |= (arg << (ArgType_Shift * i));
+    i++;
+  }
+  return abiType;
+}
+
+}  // namespace detail
 
 enum ABIFunctionType {
   // VM functions that take 0-9 non-double arguments
@@ -820,8 +837,60 @@ enum ABIFunctionType {
                                       (ArgType_General << (ArgType_Shift * 1)) |
                                       (ArgType_General << (ArgType_Shift * 2)) |
                                       (ArgType_Int64 << (ArgType_Shift * 3)) |
-                                      (ArgType_Int64 << (ArgType_Shift * 4))
+                                      (ArgType_Int64 << (ArgType_Shift * 4)),
+
+  Args_General_Pointer =
+      detail::MakeABIFunctionType(ArgType_General, {ArgType_Pointer}),
+  Args_General_PointerGeneral = detail::MakeABIFunctionType(
+      ArgType_General, {ArgType_Pointer, ArgType_General}),
+  Args_General_PointerGeneralGeneral = detail::MakeABIFunctionType(
+      ArgType_General, {ArgType_Pointer, ArgType_General, ArgType_General}),
+  Args_General_PointerGeneralGeneralGeneralGeneral =
+      detail::MakeABIFunctionType(
+          ArgType_General, {ArgType_Pointer, ArgType_General, ArgType_General,
+                            ArgType_General, ArgType_General}),
+  Args_General_PointerGeneralGeneralGeneralGeneralGeneral =
+      detail::MakeABIFunctionType(
+          ArgType_General, {ArgType_Pointer, ArgType_General, ArgType_General,
+                            ArgType_General, ArgType_General, ArgType_General}),
+  Args_General_PointerGeneralGeneralGeneralPointer =
+      detail::MakeABIFunctionType(
+          ArgType_General, {ArgType_Pointer, ArgType_General, ArgType_General,
+                            ArgType_General, ArgType_Pointer}),
+  Args_General_PointerGeneralGeneralInt64 = detail::MakeABIFunctionType(
+      ArgType_General,
+      {ArgType_Pointer, ArgType_General, ArgType_General, ArgType_Int64}),
+  Args_General_PointerGeneralGeneralPointer = detail::MakeABIFunctionType(
+      ArgType_General,
+      {ArgType_Pointer, ArgType_General, ArgType_General, ArgType_Pointer}),
+  Args_General_PointerGeneralInt64Int64 = detail::MakeABIFunctionType(
+      ArgType_General,
+      {ArgType_Pointer, ArgType_General, ArgType_Int64, ArgType_Int64}),
+  Args_General_PointerGeneralPointerGeneral = detail::MakeABIFunctionType(
+      ArgType_General,
+      {ArgType_Pointer, ArgType_General, ArgType_Pointer, ArgType_General}),
+  Args_General_PointerGeneralPointerGeneralGeneral =
+      detail::MakeABIFunctionType(
+          ArgType_General, {ArgType_Pointer, ArgType_General, ArgType_Pointer,
+                            ArgType_General, ArgType_General}),
+  Args_General_PointerPointer = detail::MakeABIFunctionType(
+      ArgType_General, {ArgType_Pointer, ArgType_Pointer}),
+  Args_General_PointerPointerGeneralGeneral = detail::MakeABIFunctionType(
+      ArgType_General,
+      {ArgType_Pointer, ArgType_Pointer, ArgType_General, ArgType_General}),
+  Args_Pointer_PointerGeneral = detail::MakeABIFunctionType(
+      ArgType_Pointer, {ArgType_Pointer, ArgType_General}),
+  Args_Pointer_PointerGeneralGeneral = detail::MakeABIFunctionType(
+      ArgType_Pointer, {ArgType_Pointer, ArgType_General, ArgType_General}),
+  Args_Pointer_PointerGeneralGeneralPointer = detail::MakeABIFunctionType(
+      ArgType_Pointer,
+      {ArgType_Pointer, ArgType_General, ArgType_General, ArgType_Pointer}),
 };
+
+static constexpr ABIFunctionType MakeABIFunctionType(
+    ABIArgType ret, std::initializer_list<ABIArgType> args) {
+  return ABIFunctionType(detail::MakeABIFunctionType(ret, args));
+}
 
 enum class BarrierKind : uint32_t {
   // No barrier is needed.
