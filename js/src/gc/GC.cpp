@@ -3298,7 +3298,8 @@ void GCRuntime::queueZonesAndStartBackgroundSweep(ZoneList& zones) {
     }
   }
   if (!sweepOnBackgroundThread) {
-    sweepTask.joinAndRunFromMainThread();
+    sweepTask.join();
+    sweepTask.runFromMainThread();
   }
 }
 
@@ -5193,9 +5194,9 @@ static void SweepUniqueIds(GCParallelTask* task) {
 }
 
 void GCRuntime::startTask(GCParallelTask& task, gcstats::PhaseKind phase,
-                          AutoLockHelperThreadState& locked) {
-  if (!CanUseExtraThreads() || !task.startWithLockHeld(locked)) {
-    AutoUnlockHelperThreadState unlock(locked);
+                          AutoLockHelperThreadState& lock) {
+  if (!CanUseExtraThreads() || !task.startWithLockHeld(lock)) {
+    AutoUnlockHelperThreadState unlock(lock);
     gcstats::AutoPhase ap(stats(), phase);
     task.runFromMainThread();
   }
@@ -5203,14 +5204,29 @@ void GCRuntime::startTask(GCParallelTask& task, gcstats::PhaseKind phase,
 
 void GCRuntime::joinTask(GCParallelTask& task, gcstats::PhaseKind phase,
                          AutoLockHelperThreadState& lock) {
+  // This is similar to GCParallelTask::joinWithLockHeld but handles recording
+  // execution and wait time.
+
   if (task.isIdle(lock)) {
+    return;
+  }
+
+  // If the task was dispatched but has not yet started then cancel the task and
+  // run it from the main thread. This stops us from blocking here when the
+  // helper threads are busy with other tasks.
+  if (task.isDispatched(lock)) {
+    task.cancelDispatchedTask(lock);
+    AutoUnlockHelperThreadState unlock(lock);
+    gcstats::AutoPhase ap(stats(), phase);
+    task.runFromMainThread();
     return;
   }
 
   {
     gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::JOIN_PARALLEL_TASKS);
-    task.joinWithLockHeld(lock);
+    task.joinRunningOrFinishedTask(lock);
   }
+
   stats().recordParallelPhase(phase, task.duration());
 }
 
@@ -5594,20 +5610,22 @@ bool ArenaLists::foregroundFinalize(JSFreeOp* fop, AllocKind thingKind,
 }
 
 void js::gc::SweepMarkTask::run() {
-  gc->sweepMarkResult = gc->markUntilBudgetExhausted(
-      this->budget, gcstats::PhaseKind::SWEEP_MARK);
+  gc->sweepMarkResult = gc->markUntilBudgetExhausted(this->budget);
 }
 
 IncrementalProgress GCRuntime::markUntilBudgetExhausted(
     SliceBudget& sliceBudget, gcstats::PhaseKind phase) {
+  gcstats::AutoPhase ap(stats(), phase);
+  return markUntilBudgetExhausted(sliceBudget);
+}
+
+IncrementalProgress GCRuntime::markUntilBudgetExhausted(
+    SliceBudget& sliceBudget) {
+  // Run a marking slice and return whether the stack is now empty.
+
   // Marked GC things may vary between recording and replaying, so marking
   // and sweeping should not perform any recorded events.
   mozilla::recordreplay::AutoDisallowThreadEvents disallow;
-
-  // Run a marking slice and return whether the stack is now empty.
-  // We don't record phaseTimes when we're running on a helper thread.
-  bool enable = TlsContext.get()->isMainThreadContext();
-  gcstats::AutoPhase ap(stats(), enable, phase);
 
 #ifdef DEBUG
   AutoSetThreadIsMarking threadIsMarking;
