@@ -493,6 +493,22 @@ typedef double (*Prototype_Double_DoubleDoubleDouble)(double arg0, double arg1, 
 typedef double (*Prototype_Double_DoubleDoubleDoubleDouble)(double arg0, double arg1,
                                                             double arg2, double arg3);
 
+typedef int64_t (*Prototype_General_Pointer)(int64_t);
+typedef int64_t (*Prototype_General_PointerGeneral)(int64_t, int64_t);
+typedef int64_t (*Prototype_General_PointerGeneralGeneral)(int64_t, int64_t, int64_t);
+typedef int64_t (*Prototype_General_PointerGeneralGeneralGeneralGeneral)(int64_t, int64_t, int64_t, int64_t, int64_t);
+typedef int64_t (*Prototype_General_PointerGeneralGeneralGeneralGeneralGeneral)(int64_t, int64_t, int64_t, int64_t, int64_t, int64_t);
+typedef int64_t (*Prototype_General_PointerGeneralGeneralGeneralPointer)(int64_t, int64_t, int64_t, int64_t, int64_t);
+typedef int64_t (*Prototype_General_PointerGeneralGeneralInt64)(int64_t, int64_t, int64_t, int64_t);
+typedef int64_t (*Prototype_General_PointerGeneralGeneralPointer)(int64_t, int64_t, int64_t, int64_t);
+typedef int64_t (*Prototype_General_PointerGeneralInt64Int64)(int64_t, int64_t, int64_t, int64_t);
+typedef int64_t (*Prototype_General_PointerGeneralPointerGeneral)(int64_t, int64_t, int64_t, int64_t);
+typedef int64_t (*Prototype_General_PointerGeneralPointerGeneralGeneral)(int64_t, int64_t, int64_t, int64_t, int64_t);
+typedef int64_t (*Prototype_General_PointerPointer)(int64_t, int64_t);
+typedef int64_t (*Prototype_General_PointerPointerGeneralGeneral)(int64_t, int64_t, int64_t, int64_t);
+typedef int64_t (*Prototype_Pointer_PointerGeneral)(int64_t, int64_t);
+typedef int64_t (*Prototype_Pointer_PointerGeneralGeneral)(int64_t, int64_t, int64_t);
+typedef int64_t (*Prototype_Pointer_PointerGeneralGeneralPointer)(int64_t, int64_t, int64_t, int64_t);
 
 // Simulator support for callWithABI().
 void
@@ -680,6 +696,87 @@ Simulator::VisitCallRedirection(const Instruction* instr)
     case js::jit::Args_Double_IntDouble: {
       double ret = reinterpret_cast<Prototype_Double_IntDouble>(nativeFn)(x0, d0);
       setFP64Result(ret);
+      break;
+    }
+
+    case js::jit::Args_General_Pointer: {
+      int64_t ret = reinterpret_cast<Prototype_General_Pointer>(nativeFn)(x0);
+      setGPR64Result(ret);
+      break;
+    }
+    case js::jit::Args_General_PointerGeneral: {
+      int64_t ret = reinterpret_cast<Prototype_General_PointerGeneral>(nativeFn)(x0, x1);
+      setGPR64Result(ret);
+      break;
+    }
+    case js::jit::Args_General_PointerGeneralGeneral: {
+      int64_t ret = reinterpret_cast<Prototype_General_PointerGeneralGeneral>(nativeFn)(x0, x1, x2);
+      setGPR64Result(ret);
+      break;
+    }
+    case js::jit::Args_General_PointerGeneralGeneralGeneralGeneral: {
+      int64_t ret = reinterpret_cast<Prototype_General_PointerGeneralGeneralGeneralGeneral>(nativeFn)(x0, x1, x2, x3, x4);
+      setGPR64Result(ret);
+      break;
+    }
+    case js::jit::Args_General_PointerGeneralGeneralGeneralGeneralGeneral: {
+      int64_t ret = reinterpret_cast<Prototype_General_PointerGeneralGeneralGeneralGeneralGeneral>(nativeFn)(x0, x1, x2, x3, x4, x5);
+      setGPR64Result(ret);
+      break;
+    }
+    case js::jit::Args_General_PointerGeneralGeneralGeneralPointer: {
+      int64_t ret = reinterpret_cast<Prototype_General_PointerGeneralGeneralGeneralPointer>(nativeFn)(x0, x1, x2, x3, x4);
+      setGPR64Result(ret);
+      break;
+    }
+    case js::jit::Args_General_PointerGeneralGeneralInt64: {
+      int64_t ret = reinterpret_cast<Prototype_General_PointerGeneralGeneralInt64>(nativeFn)(x0, x1, x2, x3);
+      setGPR64Result(ret);
+      break;
+    }
+    case js::jit::Args_General_PointerGeneralGeneralPointer: {
+      int64_t ret = reinterpret_cast<Prototype_General_PointerGeneralGeneralPointer>(nativeFn)(x0, x1, x2, x3);
+      setGPR64Result(ret);
+      break;
+    }
+    case js::jit::Args_General_PointerGeneralInt64Int64: {
+      int64_t ret = reinterpret_cast<Prototype_General_PointerGeneralInt64Int64>(nativeFn)(x0, x1, x2, x3);
+      setGPR64Result(ret);
+      break;
+    }
+    case js::jit::Args_General_PointerGeneralPointerGeneral: {
+      int64_t ret = reinterpret_cast<Prototype_General_PointerGeneralPointerGeneral>(nativeFn)(x0, x1, x2, x3);
+      setGPR64Result(ret);
+      break;
+    }
+    case js::jit::Args_General_PointerGeneralPointerGeneralGeneral: {
+      int64_t ret = reinterpret_cast<Prototype_General_PointerGeneralPointerGeneralGeneral>(nativeFn)(x0, x1, x2, x3, x4);
+      setGPR64Result(ret);
+      break;
+    }
+    case js::jit::Args_General_PointerPointer: {
+      int64_t ret = reinterpret_cast<Prototype_General_PointerPointer>(nativeFn)(x0, x1);
+      setGPR64Result(ret);
+      break;
+    }
+    case js::jit::Args_General_PointerPointerGeneralGeneral: {
+      int64_t ret = reinterpret_cast<Prototype_General_PointerPointerGeneralGeneral>(nativeFn)(x0, x1, x2, x3);
+      setGPR64Result(ret);
+      break;
+    }
+    case js::jit::Args_Pointer_PointerGeneral: {
+      int64_t ret = reinterpret_cast<Prototype_Pointer_PointerGeneral>(nativeFn)(x0, x1);
+      setGPR64Result(ret);
+      break;
+    }
+    case js::jit::Args_Pointer_PointerGeneralGeneral: {
+      int64_t ret = reinterpret_cast<Prototype_Pointer_PointerGeneralGeneral>(nativeFn)(x0, x1, x2);
+      setGPR64Result(ret);
+      break;
+    }
+    case js::jit::Args_Pointer_PointerGeneralGeneralPointer: {
+      int64_t ret = reinterpret_cast<Prototype_Pointer_PointerGeneralGeneralPointer>(nativeFn)(x0, x1, x2, x3);
+      setGPR64Result(ret);
       break;
     }
 

@@ -4860,8 +4860,8 @@ static void LoadDOMPrivate(MacroAssembler& masm, Register obj, Register priv,
     masm.bind(&isDOMProxy);
 #endif
     masm.loadPtr(Address(obj, ProxyObject::offsetOfReservedSlots()), priv);
-    masm.loadPrivate(Address(priv, detail::ProxyReservedSlots::offsetOfSlot(0)),
-                     priv);
+    masm.loadPrivate(
+        Address(priv, js::detail::ProxyReservedSlots::offsetOfSlot(0)), priv);
   }
 
   masm.bind(&done);
