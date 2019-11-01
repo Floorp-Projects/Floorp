@@ -227,28 +227,14 @@ extensions-view-available-updates =
 
 ## These are global warnings
 
-extensions-warning-safe-mode-label =
-    .value = All add-ons have been disabled by safe mode.
-extensions-warning-safe-mode-container =
-    .tooltiptext = { extensions-warning-safe-mode-label.value }
+extensions-warning-safe-mode = All add-ons have been disabled by safe mode.
+extensions-warning-check-compatibility = Add-on compatibility checking is disabled. You may have incompatible add-ons.
+extensions-warning-check-compatibility-button = Enable
+    .title = Enable add-on compatibility checking
+extensions-warning-update-security = Add-on update security checking is disabled. You may be compromised by updates.
+extensions-warning-update-security-button = Enable
+    .title = Enable add-on update security checking
 
-extensions-warning-check-compatibility-label =
-    .value = Add-on compatibility checking is disabled. You may have incompatible add-ons.
-extensions-warning-check-compatibility-container =
-    .tooltiptext = { extensions-warning-check-compatibility-label.value }
-
-extensions-warning-check-compatibility-enable =
-    .label = Enable
-    .tooltiptext = Enable add-on compatibility checking
-
-extensions-warning-update-security-label =
-    .value = Add-on update security checking is disabled. You may be compromised by updates.
-extensions-warning-update-security-container =
-    .tooltiptext = { extensions-warning-update-security-label.value }
-
-extensions-warning-update-security-enable =
-    .label = Enable
-    .tooltiptext = Enable add-on update security checking
 
 ## Strings connected to add-on updates
 

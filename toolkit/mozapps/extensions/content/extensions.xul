@@ -57,13 +57,6 @@
     </menupopup>
   </popupset>
 
-  <!-- global commands - these act on all addons, or affect the addons manager
-       in some other way -->
-  <commandset id="globalCommandSet">
-    <command id="cmd_enableCheckCompatibility"/>
-    <command id="cmd_enableUpdateSecurity"/>
-  </commandset>
-
   <stack id="main-page-stack" flex="1">
   <hbox id="main-page-content" flex="1">
     <vbox id="category-box">
@@ -149,47 +142,6 @@
         <vbox id="headered-views" flex="1">
           <deck id="headered-views-content" flex="1" selectedIndex="0">
             <vbox id="html-view" flex="1">
-              <vbox class="alert-container html-alert-container" align="start">
-                <hbox class="global-warning-safemode message-bar"
-                      data-l10n-id="extensions-warning-safe-mode-container"
-                      align="start">
-                  <image class="message-bar-icon"/>
-                  <vbox class="message-container">
-                    <description class="message-bar-description"
-                                 crop="end"
-                                 data-l10n-id="extensions-warning-safe-mode-label"/>
-                  </vbox>
-                </hbox>
-                <hbox class="global-warning-checkcompatibility message-bar"
-                      data-l10n-id="extensions-warning-check-compatibility-container"
-                      align="start">
-                  <image class="message-bar-icon"/>
-                  <vbox class="message-container">
-                    <description class="message-bar-description"
-                                 crop="end"
-                                 data-l10n-id="extensions-warning-check-compatibility-label"/>
-                    <hbox>
-                      <button class="html-global-warning-button"
-                              data-l10n-id="extensions-warning-check-compatibility-enable"
-                              command="cmd_enableCheckCompatibility"/>
-                    </hbox>
-                  </vbox>
-                </hbox>
-                <hbox class="global-warning-updatesecurity message-bar"
-                      data-l10n-id="extensions-warning-update-security-container">
-                  <image class="message-bar-icon"/>
-                  <vbox class="message-container">
-                    <description class="message-bar-description"
-                                 crop="end"
-                                 data-l10n-id="extensions-warning-update-security-label"/>
-                    <hbox>
-                      <button class="html-global-warning-button"
-                              data-l10n-id="extensions-warning-update-security-enable"
-                              command="cmd_enableUpdateSecurity"/>
-                    </hbox>
-                  </vbox>
-                </hbox>
-              </vbox>
               <browser id="html-view-browser" type="content" flex="1" disablehistory="true"/>
             </vbox>
           </deck>
