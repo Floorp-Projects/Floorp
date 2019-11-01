@@ -29,12 +29,17 @@ Services.prefs.setIntPref(
 // to use the right timeout for content scripts executed at document_idle.
 ExtensionTestUtils.mockAppInfo();
 
-const server = createHttpServer();
+const server = createHttpServer({
+  hosts: ["example.com", "csplog.example.net"],
+});
+
 server.registerDirectory("/data/", do_get_file("data"));
 
 var gContentSecurityPolicy = null;
 
+const BASE_URL = `http://example.com`;
 const CSP_REPORT_PATH = "/csp-report.sjs";
+const CSP_REPORT_URL = `http://csplog.example.net/csp-report.sjs`;
 
 /**
  * Registers a static HTML document with the given content at the given
@@ -53,8 +58,6 @@ function registerStaticPage(path, content) {
     response.write(content);
   });
 }
-
-const BASE_URL = `http://localhost:${server.identity.primaryPort}`;
 
 /**
  * A set of tags which are automatically closed in HTML documents, and
@@ -865,9 +868,14 @@ function computeBaseURLs(tests, expectedSources, forbiddenSources = {}) {
  *        If true, a strict CSP is enabled for this page, and inline page
  *        sources should be blocked. URLs present in these sources will not be
  *        expected to generate a CSP report, the inline sources themselves will.
+ * @param {boolean} [contentCspEnabled = false]
  * @returns {RequestedURLs}
  */
-function computeExpectedForbiddenURLs({ urls, sources }, cspEnabled = false) {
+function computeExpectedForbiddenURLs(
+  { urls, sources },
+  cspEnabled = false,
+  contentCspEnabled = false
+) {
   let expectedURLs = new Set();
   let forbiddenURLs = new Set();
   let blockedURLs = new Set();
@@ -880,6 +888,10 @@ function computeExpectedForbiddenURLs({ urls, sources }, cspEnabled = false) {
         forbiddenURLs.add(baseURL);
       } else {
         blockedURLs.add(baseURL);
+      }
+    } else if (contentCspEnabled && origin === "contentScript") {
+      if (inline) {
+        forbiddenURLs.add(baseURL);
       }
     } else {
       expectedURLs.add(baseURL);
@@ -1003,7 +1015,7 @@ function awaitCSP(urlsPromise) {
         if (blockedURLs.has(baseURL)) {
           blockedURLs.delete(baseURL);
 
-          info(`Got CSP report for forbidden URL ${origURL}`);
+          ok(true, `Got CSP report for forbidden URL ${origURL}`);
         }
       }
 
@@ -1012,7 +1024,8 @@ function awaitCSP(urlsPromise) {
         if (blockedSources.has(source)) {
           blockedSources.delete(source);
 
-          info(
+          ok(
+            true,
             `Got CSP report for forbidden inline source ${JSON.stringify(
               source
             )}`
@@ -1021,7 +1034,7 @@ function awaitCSP(urlsPromise) {
       }
 
       if (!blockedURLs.size && !blockedSources.size) {
-        info("Got all expected CSP reports");
+        ok(true, "Got all expected CSP reports");
         resolve();
       }
     }
@@ -1139,6 +1152,16 @@ const EXTENSION_SOURCES = {
   "contentScript-prop": {},
   "contentScript-prop-after-inject": {},
 };
+// When our default content script CSP is applied, only
+// liveSrc: true are loading.  IOW, the "script" test above
+// will fail.
+const EXTENSION_SOURCES_CONTENT_CSP = {
+  contentScript: { liveSrc: true },
+  "contentScript-attr-after-inject": { liveSrc: true },
+  "contentScript-content-inject-after-attr": { liveSrc: true },
+  "contentScript-prop": { liveSrc: true },
+  "contentScript-prop-after-inject": { liveSrc: true },
+};
 // All sources.
 const SOURCES = Object.assign({}, PAGE_SOURCES, EXTENSION_SOURCES);
 
@@ -1161,18 +1184,29 @@ registerStaticPage(
   </html>`
 );
 
+function catchViolation() {
+  // eslint-disable-next-line mozilla/balanced-listeners
+  document.addEventListener("securitypolicyviolation", e => {
+    browser.test.assertTrue(
+      e.documentURI !== "moz-extension",
+      `securitypolicyviolation: ${e.violatedDirective} ${e.documentURI}`
+    );
+  });
+}
+
 const EXTENSION_DATA = {
   manifest: {
     content_scripts: [
       {
         matches: ["http://*/page.html"],
         run_at: "document_start",
-        js: ["content_script.js"],
+        js: ["violation.js", "content_script.js"],
       },
     ],
   },
 
   files: {
+    "violation.js": catchViolation,
     "content_script.js": getInjectionScript(TESTS, {
       source: "contentScript",
       origin: "contentScript",
@@ -1255,6 +1289,63 @@ add_task(async function test_contentscript_csp() {
     return mergeSources(
       computeExpectedForbiddenURLs(msg, true),
       computeBaseURLs(TESTS, EXTENSION_SOURCES, PAGE_SOURCES)
+    );
+  });
+
+  let origins = getOrigins(extension.extension);
+
+  let finished = Promise.all([
+    awaitLoads(urlsPromise, origins),
+    checkCSPReports && awaitCSP(urlsPromise),
+  ]);
+
+  let contentPage = await ExtensionTestUtils.loadContentPage(pageURL);
+
+  await finished;
+
+  await extension.unload();
+  await contentPage.close();
+});
+
+/**
+ * Tests that the correct CSP is applied to loads of inline content
+ * depending on whether the load was initiated by an extension or the
+ * content page.
+ */
+add_task(async function test_extension_contentscript_csp() {
+  Services.prefs.setBoolPref("extensions.content_script_csp.enabled", true);
+  Services.prefs.setBoolPref(
+    "extensions.content_script_csp.report_only",
+    false
+  );
+
+  // Add reporting to base and default CSP as this cannot be done via manifest.
+  let baseCSP = Services.prefs.getStringPref(
+    "extensions.webextensions.base-content-security-policy"
+  );
+  Services.prefs.setStringPref(
+    "extensions.webextensions.base-content-security-policy",
+    `${baseCSP} report-uri ${CSP_REPORT_URL};`
+  );
+  Services.prefs.setStringPref(
+    "extensions.webextensions.default-content-security-policy",
+    `script-src 'self' 'report-sample'; object-src 'self' 'report-sample'; report-uri ${CSP_REPORT_URL};`
+  );
+
+  // TODO bug 1408193: We currently don't get the full set of CSP reports when
+  // running in network scheduling chaos mode. It's not entirely clear why.
+  let chaosMode = parseInt(env.get("MOZ_CHAOSMODE"), 16);
+  let checkCSPReports = !(chaosMode === 0 || chaosMode & 0x02);
+
+  gContentSecurityPolicy = `default-src 'none' 'report-sample'; script-src 'nonce-deadbeef' 'unsafe-eval' 'report-sample'; report-uri ${CSP_REPORT_PATH};`;
+
+  let extension = ExtensionTestUtils.loadExtension(EXTENSION_DATA);
+  await extension.startup();
+
+  let urlsPromise = extension.awaitMessage("css-sources").then(msg => {
+    return mergeSources(
+      computeExpectedForbiddenURLs(msg, true, true),
+      computeBaseURLs(TESTS, EXTENSION_SOURCES_CONTENT_CSP, PAGE_SOURCES)
     );
   });
 
