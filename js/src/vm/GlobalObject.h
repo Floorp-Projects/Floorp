@@ -513,6 +513,14 @@ class GlobalObject : public NativeObject {
     return &global->getPrototype(JSProto_TypedArray).toObject();
   }
 
+  static JSObject* getOrCreateFinalizationGroupPrototype(
+      JSContext* cx, Handle<GlobalObject*> global) {
+    if (!ensureConstructor(cx, global, JSProto_FinalizationGroup)) {
+      return nullptr;
+    }
+    return &global->getPrototype(JSProto_FinalizationGroup).toObject();
+  }
+
  private:
   typedef bool (*ObjectInitOp)(JSContext* cx, Handle<GlobalObject*> global);
 

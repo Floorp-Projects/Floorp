@@ -138,7 +138,10 @@ enum class ZealMode {
   _(DebuggerOnStepHandler)                 \
   _(DebuggerOnPopHandler)                  \
   _(RealmInstrumentation)                  \
-  _(ICUObject)
+  _(ICUObject)                             \
+  _(FinalizationGroupHoldingsVector)       \
+  _(FinalizationGroupRegistrations)        \
+  _(FinalizationRecordVector)
 
 #define JS_FOR_EACH_MEMORY_USE(_)  \
   JS_FOR_EACH_PUBLIC_MEMORY_USE(_) \
