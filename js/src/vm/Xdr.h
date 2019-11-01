@@ -207,18 +207,25 @@ class XDRCoderBase {
 template <XDRMode mode>
 class XDRState : public XDRCoderBase {
  protected:
-  XDRBuffer<mode> buf;
+  XDRBuffer<mode> mainBuf;
+  XDRBuffer<mode>* buf;
 
  public:
   XDRState(JSContext* cx, JS::TranscodeBuffer& buffer, size_t cursor = 0)
-      : buf(cx, buffer, cursor) {}
+      : mainBuf(cx, buffer, cursor), buf(&mainBuf) {}
 
   template <typename RangeType>
-  XDRState(JSContext* cx, const RangeType& range) : buf(cx, range) {}
+  XDRState(JSContext* cx, const RangeType& range)
+      : mainBuf(cx, range), buf(&mainBuf) {}
+
+  // No default copy constructor or copying assignment, because |buf|
+  // is an internal pointer.
+  XDRState(const XDRState&) = delete;
+  XDRState& operator=(const XDRState&) = delete;
 
   virtual ~XDRState(){};
 
-  JSContext* cx() const { return buf.cx(); }
+  JSContext* cx() const { return mainBuf.cx(); }
 
   virtual bool hasOptions() const { return false; }
   virtual const JS::ReadOnlyCompileOptions& options() {
@@ -227,6 +234,14 @@ class XDRState : public XDRCoderBase {
   virtual bool hasScriptSourceObjectOut() const { return false; }
   virtual ScriptSourceObject** scriptSourceObjectOut() {
     MOZ_CRASH("does not have scriptSourceObjectOut.");
+  }
+
+  virtual bool isMainBuf() { return true; }
+
+  virtual void switchToAtomBuf() { MOZ_CRASH("cannot switch to atom buffer."); }
+  virtual void switchToMainBuf() { MOZ_CRASH("cannot switch to main buffer."); }
+  virtual void switchToHeaderBuf() {
+    MOZ_CRASH("cannot switch to header buffer.");
   }
 
   XDRResult fail(JS::TranscodeResult code) {
@@ -239,7 +254,7 @@ class XDRState : public XDRCoderBase {
   }
 
   XDRResult peekData(const uint8_t** pptr, size_t length) {
-    const uint8_t* ptr = buf.read(length);
+    const uint8_t* ptr = buf->read(length);
     if (!ptr) {
       return fail(JS::TranscodeResult_Failure_BadDecode);
     }
@@ -249,13 +264,13 @@ class XDRState : public XDRCoderBase {
 
   XDRResult codeUint8(uint8_t* n) {
     if (mode == XDR_ENCODE) {
-      uint8_t* ptr = buf.write(sizeof(*n));
+      uint8_t* ptr = buf->write(sizeof(*n));
       if (!ptr) {
         return fail(JS::TranscodeResult_Throw);
       }
       *ptr = *n;
     } else {
-      const uint8_t* ptr = buf.read(sizeof(*n));
+      const uint8_t* ptr = buf->read(sizeof(*n));
       if (!ptr) {
         return fail(JS::TranscodeResult_Failure_BadDecode);
       }
@@ -266,13 +281,13 @@ class XDRState : public XDRCoderBase {
 
   XDRResult codeUint16(uint16_t* n) {
     if (mode == XDR_ENCODE) {
-      uint8_t* ptr = buf.write(sizeof(*n));
+      uint8_t* ptr = buf->write(sizeof(*n));
       if (!ptr) {
         return fail(JS::TranscodeResult_Throw);
       }
       mozilla::LittleEndian::writeUint16(ptr, *n);
     } else {
-      const uint8_t* ptr = buf.read(sizeof(*n));
+      const uint8_t* ptr = buf->read(sizeof(*n));
       if (!ptr) {
         return fail(JS::TranscodeResult_Failure_BadDecode);
       }
@@ -283,13 +298,13 @@ class XDRState : public XDRCoderBase {
 
   XDRResult codeUint32(uint32_t* n) {
     if (mode == XDR_ENCODE) {
-      uint8_t* ptr = buf.write(sizeof(*n));
+      uint8_t* ptr = buf->write(sizeof(*n));
       if (!ptr) {
         return fail(JS::TranscodeResult_Throw);
       }
       mozilla::LittleEndian::writeUint32(ptr, *n);
     } else {
-      const uint8_t* ptr = buf.read(sizeof(*n));
+      const uint8_t* ptr = buf->read(sizeof(*n));
       if (!ptr) {
         return fail(JS::TranscodeResult_Failure_BadDecode);
       }
@@ -300,13 +315,13 @@ class XDRState : public XDRCoderBase {
 
   XDRResult codeUint64(uint64_t* n) {
     if (mode == XDR_ENCODE) {
-      uint8_t* ptr = buf.write(sizeof(*n));
+      uint8_t* ptr = buf->write(sizeof(*n));
       if (!ptr) {
         return fail(JS::TranscodeResult_Throw);
       }
       mozilla::LittleEndian::writeUint64(ptr, *n);
     } else {
-      const uint8_t* ptr = buf.read(sizeof(*n));
+      const uint8_t* ptr = buf->read(sizeof(*n));
       if (!ptr) {
         return fail(JS::TranscodeResult_Failure_BadDecode);
       }
@@ -370,13 +385,13 @@ class XDRState : public XDRCoderBase {
       return Ok();
     }
     if (mode == XDR_ENCODE) {
-      uint8_t* ptr = buf.write(len);
+      uint8_t* ptr = buf->write(len);
       if (!ptr) {
         return fail(JS::TranscodeResult_Throw);
       }
       memcpy(ptr, bytes, len);
     } else {
-      const uint8_t* ptr = buf.read(len);
+      const uint8_t* ptr = buf->read(len);
       if (!ptr) {
         return fail(JS::TranscodeResult_Failure_BadDecode);
       }
@@ -517,7 +532,14 @@ class XDRIncrementalEncoder : public XDREncoder {
   // Tree of slices.
   SlicesTree tree_;
   JS::TranscodeBuffer slices_;
+  // Map from atoms to their index in the atom buffer
   XDRAtomMap atomMap_;
+  // Atom buffer.
+  JS::TranscodeBuffer atoms_;
+  XDRBuffer<XDR_ENCODE> atomBuf_;
+  // Header buffer.
+  JS::TranscodeBuffer header_;
+  XDRBuffer<XDR_ENCODE> headerBuf_;
   bool oom_;
 
   class DepthFirstSliceIterator;
@@ -528,9 +550,20 @@ class XDRIncrementalEncoder : public XDREncoder {
         scope_(nullptr),
         node_(nullptr),
         atomMap_(cx),
+        atomBuf_(cx, atoms_, 0),
+        headerBuf_(cx, header_, 0),
         oom_(false) {}
 
   virtual ~XDRIncrementalEncoder() {}
+
+  bool isMainBuf() override { return buf == &mainBuf; }
+
+  // Switch from streaming into the main buffer into the atom buffer.
+  void switchToAtomBuf() override { buf = &atomBuf_; }
+  // Switch to streaming into the main buffer.
+  void switchToMainBuf() override { buf = &mainBuf; }
+  // Switch to streaming into the header buffer.
+  void switchToHeaderBuf() override { buf = &headerBuf_; }
 
   AutoXDRTree::Key getTopLevelTreeKey() const override;
   AutoXDRTree::Key getTreeKey(JSFunction* fun) const override;
