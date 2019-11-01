@@ -514,6 +514,8 @@ void LIRGenerator::visitWasmTruncateToInt64(MWasmTruncateToInt64* ins) {
   MOZ_CRASH("NYI");
 }
 
+void LIRGenerator::visitWasmHeapBase(MWasmHeapBase* ins) { MOZ_CRASH("NYI"); }
+
 void LIRGenerator::visitWasmLoad(MWasmLoad* ins) { MOZ_CRASH("NYI"); }
 
 void LIRGenerator::visitWasmStore(MWasmStore* ins) { MOZ_CRASH("NYI"); }

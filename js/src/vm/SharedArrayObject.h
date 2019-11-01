@@ -111,6 +111,11 @@ class SharedArrayRawBuffer {
     return SharedMem<uint8_t*>::shared(ptr + sizeof(SharedArrayRawBuffer));
   }
 
+  static const SharedArrayRawBuffer* fromDataPtr(const uint8_t* dataPtr) {
+    return reinterpret_cast<const SharedArrayRawBuffer*>(
+        dataPtr - sizeof(SharedArrayRawBuffer));
+  }
+
   uint32_t volatileByteLength() const { return length_; }
 
   uint32_t maxSize() const { return maxSize_; }

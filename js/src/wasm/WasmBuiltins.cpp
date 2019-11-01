@@ -117,30 +117,32 @@ const SymbolicAddressSignature SASigWaitI64 = {SymbolicAddress::WaitI64,
                                                {_PTR, _I32, _I64, _I64, _END}};
 const SymbolicAddressSignature SASigWake = {
     SymbolicAddress::Wake, _I32, _FailOnNegI32, 3, {_PTR, _I32, _I32, _END}};
-const SymbolicAddressSignature SASigMemCopy = {SymbolicAddress::MemCopy,
-                                               _VOID,
-                                               _FailOnNegI32,
-                                               4,
-                                               {_PTR, _I32, _I32, _I32, _END}};
+const SymbolicAddressSignature SASigMemCopy = {
+    SymbolicAddress::MemCopy,
+    _VOID,
+    _FailOnNegI32,
+    5,
+    {_PTR, _I32, _I32, _I32, _PTR, _END}};
 const SymbolicAddressSignature SASigMemCopyShared = {
     SymbolicAddress::MemCopyShared,
     _VOID,
     _FailOnNegI32,
-    4,
-    {_PTR, _I32, _I32, _I32, _END}};
+    5,
+    {_PTR, _I32, _I32, _I32, _PTR, _END}};
 const SymbolicAddressSignature SASigDataDrop = {
     SymbolicAddress::DataDrop, _VOID, _FailOnNegI32, 2, {_PTR, _I32, _END}};
-const SymbolicAddressSignature SASigMemFill = {SymbolicAddress::MemFill,
-                                               _VOID,
-                                               _FailOnNegI32,
-                                               4,
-                                               {_PTR, _I32, _I32, _I32, _END}};
+const SymbolicAddressSignature SASigMemFill = {
+    SymbolicAddress::MemFill,
+    _VOID,
+    _FailOnNegI32,
+    5,
+    {_PTR, _I32, _I32, _I32, _PTR, _END}};
 const SymbolicAddressSignature SASigMemFillShared = {
     SymbolicAddress::MemFillShared,
     _VOID,
     _FailOnNegI32,
-    4,
-    {_PTR, _I32, _I32, _I32, _END}};
+    5,
+    {_PTR, _I32, _I32, _I32, _PTR, _END}};
 const SymbolicAddressSignature SASigMemInit = {
     SymbolicAddress::MemInit,
     _VOID,
@@ -818,19 +820,19 @@ void* wasm::AddressOf(SymbolicAddress imm, ABIFunctionType* abiType) {
       *abiType = Args_General3;
       return FuncCast(Instance::wake, *abiType);
     case SymbolicAddress::MemCopy:
-      *abiType = Args_General4;
+      *abiType = Args_General5;
       return FuncCast(Instance::memCopy, *abiType);
     case SymbolicAddress::MemCopyShared:
-      *abiType = Args_General4;
+      *abiType = Args_General5;
       return FuncCast(Instance::memCopyShared, *abiType);
     case SymbolicAddress::DataDrop:
       *abiType = Args_General2;
       return FuncCast(Instance::dataDrop, *abiType);
     case SymbolicAddress::MemFill:
-      *abiType = Args_General4;
+      *abiType = Args_General5;
       return FuncCast(Instance::memFill, *abiType);
     case SymbolicAddress::MemFillShared:
-      *abiType = Args_General4;
+      *abiType = Args_General5;
       return FuncCast(Instance::memFillShared, *abiType);
     case SymbolicAddress::MemInit:
       *abiType = Args_General5;

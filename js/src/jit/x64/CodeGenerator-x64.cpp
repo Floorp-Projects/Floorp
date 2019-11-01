@@ -395,6 +395,11 @@ void CodeGeneratorX64::wasmStore(const wasm::MemoryAccessDesc& access,
   }
 }
 
+void CodeGenerator::visitWasmHeapBase(LWasmHeapBase* ins) {
+  MOZ_ASSERT(ins->tlsPtr()->isBogus());
+  masm.movePtr(HeapReg, ToRegister(ins->output()));
+}
+
 template <typename T>
 void CodeGeneratorX64::emitWasmLoad(T* ins) {
   const MWasmLoad* mir = ins->mir();

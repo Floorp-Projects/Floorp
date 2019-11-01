@@ -696,6 +696,11 @@ class WasmArrayRawBuffer {
     return ptr + sizeof(WasmArrayRawBuffer);
   }
 
+  static const WasmArrayRawBuffer* fromDataPtr(const uint8_t* dataPtr) {
+    return reinterpret_cast<const WasmArrayRawBuffer*>(
+        dataPtr - sizeof(WasmArrayRawBuffer));
+  }
+
   uint8_t* basePointer() { return dataPointer() - gc::SystemPageSize(); }
 
   size_t mappedSize() const { return mappedSize_; }
