@@ -122,6 +122,12 @@ const SymbolicAddressSignature SASigMemCopy = {SymbolicAddress::MemCopy,
                                                _FailOnNegI32,
                                                4,
                                                {_PTR, _I32, _I32, _I32, _END}};
+const SymbolicAddressSignature SASigMemCopyShared = {
+    SymbolicAddress::MemCopyShared,
+    _VOID,
+    _FailOnNegI32,
+    4,
+    {_PTR, _I32, _I32, _I32, _END}};
 const SymbolicAddressSignature SASigDataDrop = {
     SymbolicAddress::DataDrop, _VOID, _FailOnNegI32, 2, {_PTR, _I32, _END}};
 const SymbolicAddressSignature SASigMemFill = {SymbolicAddress::MemFill,
@@ -129,6 +135,12 @@ const SymbolicAddressSignature SASigMemFill = {SymbolicAddress::MemFill,
                                                _FailOnNegI32,
                                                4,
                                                {_PTR, _I32, _I32, _I32, _END}};
+const SymbolicAddressSignature SASigMemFillShared = {
+    SymbolicAddress::MemFillShared,
+    _VOID,
+    _FailOnNegI32,
+    4,
+    {_PTR, _I32, _I32, _I32, _END}};
 const SymbolicAddressSignature SASigMemInit = {
     SymbolicAddress::MemInit,
     _VOID,
@@ -808,12 +820,18 @@ void* wasm::AddressOf(SymbolicAddress imm, ABIFunctionType* abiType) {
     case SymbolicAddress::MemCopy:
       *abiType = Args_General4;
       return FuncCast(Instance::memCopy, *abiType);
+    case SymbolicAddress::MemCopyShared:
+      *abiType = Args_General4;
+      return FuncCast(Instance::memCopyShared, *abiType);
     case SymbolicAddress::DataDrop:
       *abiType = Args_General2;
       return FuncCast(Instance::dataDrop, *abiType);
     case SymbolicAddress::MemFill:
       *abiType = Args_General4;
       return FuncCast(Instance::memFill, *abiType);
+    case SymbolicAddress::MemFillShared:
+      *abiType = Args_General4;
+      return FuncCast(Instance::memFillShared, *abiType);
     case SymbolicAddress::MemInit:
       *abiType = Args_General5;
       return FuncCast(Instance::memInit, *abiType);
@@ -954,8 +972,10 @@ bool wasm::NeedsBuiltinThunk(SymbolicAddress sym) {
     case SymbolicAddress::CoerceInPlace_JitEntry:
     case SymbolicAddress::ReportInt64JSCall:
     case SymbolicAddress::MemCopy:
+    case SymbolicAddress::MemCopyShared:
     case SymbolicAddress::DataDrop:
     case SymbolicAddress::MemFill:
+    case SymbolicAddress::MemFillShared:
     case SymbolicAddress::MemInit:
     case SymbolicAddress::TableCopy:
     case SymbolicAddress::ElemDrop:
