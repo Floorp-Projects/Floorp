@@ -516,13 +516,21 @@ class WalkerFront extends FrontClassWithSpec(walkerSpec) {
     };
     const nodeFront = await this.getRootNode();
 
-    // Check the "depth" of the walker.
-    // The `nodeSelectors` array starts from the topmost document, if the walker
-    // is targetting a nested iframe, the selectors needed to reach this iframe
-    // need to be excluded from the query.
+    // If rootSelectors are [frameSelector1, ..., frameSelectorN, rootSelector]
+    // we expect that [frameSelector1, ..., frameSelectorN] will also be in
+    // nodeSelectors.
+    // Otherwise it means the nodeSelectors target a node outside of this walker
+    // and we should return null.
     const rootFrontSelectors = await nodeFront.getAllSelectors();
-    const walkerDepth = rootFrontSelectors.length - 1;
-    nodeSelectors.splice(0, walkerDepth);
+    for (let i = 0; i < rootFrontSelectors.length - 1; i++) {
+      if (rootFrontSelectors[i] !== nodeSelectors[i]) {
+        return null;
+      }
+    }
+
+    // The query will start from the walker's rootNode, remove all the
+    // "frameSelectors".
+    nodeSelectors.splice(0, rootFrontSelectors.length - 1);
 
     return querySelectors(nodeFront);
   }
