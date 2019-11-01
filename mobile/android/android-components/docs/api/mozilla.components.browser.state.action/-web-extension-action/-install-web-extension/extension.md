@@ -2,4 +2,4 @@
 
 # extension
 
-`val extension: `[`WebExtensionState`](../../../mozilla.components.browser.state.state/-web-extension-state/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L259)
+`val extension: `[`WebExtensionState`](../../../mozilla.components.browser.state.state/-web-extension-state/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L270)

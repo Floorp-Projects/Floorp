@@ -2,7 +2,7 @@
 
 # Observer
 
-`interface Observer` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/Session.kt#L77)
+`interface Observer` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/Session.kt#L76)
 
 Interface to be implemented by classes that want to observe a session.
 
@@ -11,7 +11,6 @@ Interface to be implemented by classes that want to observe a session.
 | Name | Summary |
 |---|---|
 | [onAppPermissionRequested](on-app-permission-requested.md) | `open fun onAppPermissionRequested(session: `[`Session`](../index.md)`, permissionRequest: `[`PermissionRequest`](../../../mozilla.components.concept.engine.permission/-permission-request/index.md)`): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) |
-| [onCloseWindowRequested](on-close-window-requested.md) | `open fun onCloseWindowRequested(session: `[`Session`](../index.md)`, windowRequest: `[`WindowRequest`](../../../mozilla.components.concept.engine.window/-window-request/index.md)`): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) |
 | [onContentPermissionRequested](on-content-permission-requested.md) | `open fun onContentPermissionRequested(session: `[`Session`](../index.md)`, permissionRequest: `[`PermissionRequest`](../../../mozilla.components.concept.engine.permission/-permission-request/index.md)`): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) |
 | [onCrashStateChanged](on-crash-state-changed.md) | `open fun onCrashStateChanged(session: `[`Session`](../index.md)`, crashed: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [onCustomTabConfigChanged](on-custom-tab-config-changed.md) | `open fun onCustomTabConfigChanged(session: `[`Session`](../index.md)`, customTabConfig: `[`CustomTabConfig`](../../../mozilla.components.browser.state.state/-custom-tab-config/index.md)`?): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
@@ -25,7 +24,6 @@ Interface to be implemented by classes that want to observe a session.
 | [onMediaAdded](on-media-added.md) | `open fun onMediaAdded(session: `[`Session`](../index.md)`, media: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`Media`](../../../mozilla.components.concept.engine.media/-media/index.md)`>, added: `[`Media`](../../../mozilla.components.concept.engine.media/-media/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [onMediaRemoved](on-media-removed.md) | `open fun onMediaRemoved(session: `[`Session`](../index.md)`, media: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`Media`](../../../mozilla.components.concept.engine.media/-media/index.md)`>, removed: `[`Media`](../../../mozilla.components.concept.engine.media/-media/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [onNavigationStateChanged](on-navigation-state-changed.md) | `open fun onNavigationStateChanged(session: `[`Session`](../index.md)`, canGoBack: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`, canGoForward: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
-| [onOpenWindowRequested](on-open-window-requested.md) | `open fun onOpenWindowRequested(session: `[`Session`](../index.md)`, windowRequest: `[`WindowRequest`](../../../mozilla.components.concept.engine.window/-window-request/index.md)`): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) |
 | [onProgress](on-progress.md) | `open fun onProgress(session: `[`Session`](../index.md)`, progress: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [onReaderModeChanged](on-reader-mode-changed.md) | `open fun onReaderModeChanged(session: `[`Session`](../index.md)`, enabled: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [onReaderableStateUpdated](on-readerable-state-updated.md) | `open fun onReaderableStateUpdated(session: `[`Session`](../index.md)`, readerable: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |

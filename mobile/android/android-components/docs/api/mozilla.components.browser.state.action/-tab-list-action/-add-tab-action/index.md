@@ -2,7 +2,7 @@
 
 # AddTabAction
 
-`data class AddTabAction : `[`TabListAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L53)
+`data class AddTabAction : `[`TabListAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L54)
 
 Adds a new [TabSessionState](../../../mozilla.components.browser.state.state/-tab-session-state/index.md) to the [BrowserState.tabs](../../../mozilla.components.browser.state.state/-browser-state/tabs.md) list.
 

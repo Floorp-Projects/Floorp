@@ -2,7 +2,7 @@
 
 # prepare
 
-`fun prepare(): `[`EngineSession`](../../mozilla.components.concept.engine/-engine-session/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-beta/src/main/java/mozilla/components/browser/engine/gecko/window/GeckoWindowRequest.kt#L19)
+`fun prepare(): `[`EngineSession`](../../mozilla.components.concept.engine/-engine-session/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-gecko-beta/src/main/java/mozilla/components/browser/engine/gecko/window/GeckoWindowRequest.kt#L20)
 
 Overrides [WindowRequest.prepare](../../mozilla.components.concept.engine.window/-window-request/prepare.md)
 

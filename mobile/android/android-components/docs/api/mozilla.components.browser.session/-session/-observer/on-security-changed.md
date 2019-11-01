@@ -2,4 +2,4 @@
 
 # onSecurityChanged
 
-`open fun onSecurityChanged(session: `[`Session`](../index.md)`, securityInfo: `[`SecurityInfo`](../-security-info/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/Session.kt#L90)
+`open fun onSecurityChanged(session: `[`Session`](../index.md)`, securityInfo: `[`SecurityInfo`](../-security-info/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/Session.kt#L89)

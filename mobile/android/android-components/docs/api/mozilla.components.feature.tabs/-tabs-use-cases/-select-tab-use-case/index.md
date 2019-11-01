@@ -2,7 +2,7 @@
 
 # SelectTabUseCase
 
-`interface SelectTabUseCase` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/tabs/src/main/java/mozilla/components/feature/tabs/TabsUseCases.kt#L22)
+`interface SelectTabUseCase` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/tabs/src/main/java/mozilla/components/feature/tabs/TabsUseCases.kt#L23)
 
 Contract for use cases that select a tab.
 

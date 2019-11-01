@@ -6,5 +6,5 @@
 
 Overrides [LifecycleAwareFeature.start](../../mozilla.components.support.base.feature/-lifecycle-aware-feature/start.md)
 
-Starts the feature and a observer to listen for window requests.
+Starts observing the configured session to listen for window requests.
 

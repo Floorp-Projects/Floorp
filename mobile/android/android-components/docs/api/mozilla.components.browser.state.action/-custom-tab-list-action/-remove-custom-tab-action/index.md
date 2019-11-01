@@ -2,7 +2,7 @@
 
 # RemoveCustomTabAction
 
-`data class RemoveCustomTabAction : `[`CustomTabListAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L116)
+`data class RemoveCustomTabAction : `[`CustomTabListAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L117)
 
 Removes an existing [CustomTabSessionState](../../../mozilla.components.browser.state.state/-custom-tab-session-state/index.md) to [BrowserState.customTabs](../../../mozilla.components.browser.state.state/-browser-state/custom-tabs.md).
 

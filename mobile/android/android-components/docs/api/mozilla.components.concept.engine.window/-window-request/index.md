@@ -6,10 +6,17 @@
 
 Represents a request to open or close a browser window.
 
+### Types
+
+| Name | Summary |
+|---|---|
+| [Type](-type/index.md) | `enum class Type`<br>Describes the different types of window requests. |
+
 ### Properties
 
 | Name | Summary |
 |---|---|
+| [type](type.md) | `abstract val type: `[`Type`](-type/index.md)<br>The [Type](-type/index.md) of this window request, indicating whether to open or close a window. |
 | [url](url.md) | `abstract val url: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>The URL which should be opened in a new window. May be empty if the request was created from JavaScript (using window.open()). |
 
 ### Functions

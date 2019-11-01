@@ -2,7 +2,7 @@
 
 # FindResult
 
-`data class FindResult` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/Session.kt#L181)
+`data class FindResult` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/Session.kt#L178)
 
 A value type representing a result of a "find in page" operation.
 

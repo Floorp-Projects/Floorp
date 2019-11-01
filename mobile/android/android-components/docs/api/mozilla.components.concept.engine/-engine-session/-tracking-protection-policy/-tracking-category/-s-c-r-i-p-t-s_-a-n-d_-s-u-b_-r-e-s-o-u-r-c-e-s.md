@@ -2,7 +2,7 @@
 
 # SCRIPTS_AND_SUB_RESOURCES
 
-`SCRIPTS_AND_SUB_RESOURCES` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L229)
+`SCRIPTS_AND_SUB_RESOURCES` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L239)
 
 Blocks content like scripts and sub-resources.
 

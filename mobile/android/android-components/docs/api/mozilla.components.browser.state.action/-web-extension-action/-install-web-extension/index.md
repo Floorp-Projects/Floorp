@@ -2,7 +2,7 @@
 
 # InstallWebExtension
 
-`data class InstallWebExtension : `[`WebExtensionAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L259)
+`data class InstallWebExtension : `[`WebExtensionAction`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/action/BrowserAction.kt#L270)
 
 Installs the given [extension](extension.md) and adds it to the [BrowserState.extensions](../../../mozilla.components.browser.state.state/-browser-state/extensions.md).
 
