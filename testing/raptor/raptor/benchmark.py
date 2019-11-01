@@ -59,9 +59,10 @@ class Benchmark(object):
         # pick a free port
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.bind(('', 0))
+        self.host = self.config['host']
         self.port = sock.getsockname()[1]
         sock.close()
-        _webserver = '%s:%d' % (self.config['host'], self.port)
+        _webserver = '%s:%d' % (self.host, self.port)
 
         self.httpd = self.setup_webserver(_webserver)
         self.httpd.start()
