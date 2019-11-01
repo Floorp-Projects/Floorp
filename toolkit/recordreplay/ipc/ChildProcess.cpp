@@ -36,7 +36,7 @@ ChildProcessInfo::ChildProcessInfo(
   static bool gFirst = false;
   if (!gFirst) {
     gFirst = true;
-    gChildrenAreDebugging = !!getenv("WAIT_AT_START");
+    gChildrenAreDebugging = !!getenv("MOZ_REPLAYING_WAIT_AT_START");
   }
 
   LaunchSubprocess(aRecordingProcessData);
@@ -51,7 +51,6 @@ ChildProcessInfo::~ChildProcessInfo() {
 
 void ChildProcessInfo::OnIncomingMessage(const Message& aMsg) {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
-  mLastMessageTime = TimeStamp::Now();
 
   switch (aMsg.mType) {
     case MessageType::BeginFatalError:
@@ -85,6 +84,9 @@ void ChildProcessInfo::OnIncomingMessage(const Message& aMsg) {
     case MessageType::ResetMiddlemanCalls:
       ResetMiddlemanCalls(GetId());
       break;
+    case MessageType::PingResponse:
+      OnPingResponse(static_cast<const PingResponseMessage&>(aMsg));
+      break;
     default:
       break;
   }
@@ -100,7 +102,6 @@ void ChildProcessInfo::SendMessage(Message&& aMsg) {
     mPaused = false;
   }
 
-  mLastMessageTime = TimeStamp::Now();
   mChannel->SendMessage(std::move(aMsg));
 }
 
@@ -171,8 +172,6 @@ void ChildProcessInfo::LaunchSubprocess(
   } else {
     dom::ContentChild::GetSingleton()->SendCreateReplayingProcess(channelId);
   }
-
-  mLastMessageTime = TimeStamp::Now();
 
   SendGraphicsMemoryToChild();
 
@@ -258,23 +257,109 @@ static Message::UniquePtr ExtractChildMessage(ChildProcessInfo** aProcess) {
   return nullptr;
 }
 
-// Whether there is a pending task on the main thread's message loop to handle
-// all pending messages.
-static bool gHasPendingMessageRunnable;
+// Hang Detection
+//
+// Replaying processes will be terminated if no execution progress has been made
+// for some number of seconds. This generates a crash report for diagnosis and
+// allows another replaying process to be spawned in its place. We detect that
+// no progress is being made by periodically sending ping messages to the
+// replaying process, and comparing the progress values returned by them.
+// The ping messages are sent at least PingIntervalSeconds apart, and the
+// process is considered hanged if at any point the last MaxStalledPings ping
+// messages either did not respond or responded with the same progress value.
+//
+// Dividing our accounting between different ping messages avoids treating
+// processes as hanged when the computer wakes up after sleeping: no pings will
+// be sent while the computer is sleeping and processes are suspended, so the
+// computer will need to be awake for some time before any processes are marked
+// as hanged (before which they will hopefully be able to make progress).
 
-// How many seconds to wait without hearing from an unpaused child before
-// considering that child to be hung.
-static const size_t HangSeconds = 30;
+static const size_t PingIntervalSeconds = 2;
+static const size_t MaxStalledPings = 10;
+
+bool ChildProcessInfo::IsHanged() {
+  if (mPings.length() < MaxStalledPings) {
+    return false;
+  }
+
+  size_t firstIndex = mPings.length() - MaxStalledPings;
+  uint64_t firstValue = mPings[firstIndex].mProgress;
+  if (!firstValue) {
+    // The child hasn't responded to any of the pings.
+    return true;
+  }
+
+  for (size_t i = firstIndex; i < mPings.length(); i++) {
+    if (mPings[i].mProgress && mPings[i].mProgress != firstValue) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+void ChildProcessInfo::ResetPings(bool aMightRewind) {
+  mMightRewind = aMightRewind;
+  mPings.clear();
+  mLastPingTime = TimeStamp::Now();
+}
+
+static uint32_t gNumPings;
+
+void ChildProcessInfo::MaybePing() {
+  if (IsRecording() || IsPaused() || gChildrenAreDebugging) {
+    return;
+  }
+
+  TimeStamp now = TimeStamp::Now();
+
+  // After sending a terminate message we don't ping the process anymore, just
+  // make sure it eventually crashes instead of continuing to hang. Use this as
+  // a fallback if we can't ping the process because it might be rewinding.
+  if (mSentTerminateMessage || mMightRewind) {
+    size_t TerminateSeconds = PingIntervalSeconds * MaxStalledPings;
+    if (now >= mLastPingTime + TimeDuration::FromSeconds(TerminateSeconds)) {
+      OnCrash(mMightRewind
+              ? "Rewinding child process non-responsive"
+              : "Child process non-responsive");
+    }
+    return;
+  }
+
+  if (now < mLastPingTime + TimeDuration::FromSeconds(PingIntervalSeconds)) {
+    return;
+  }
+
+  if (IsHanged()) {
+    // Try to get the child to crash, so that we can get a minidump.
+    CrashReporter::AnnotateCrashReport(
+        CrashReporter::Annotation::RecordReplayHang, true);
+    SendMessage(TerminateMessage());
+    mSentTerminateMessage = true;
+  } else {
+    uint32_t id = ++gNumPings;
+    mPings.emplaceBack(id);
+    SendMessage(PingMessage(id));
+  }
+
+  mLastPingTime = now;
+}
+
+void ChildProcessInfo::OnPingResponse(const PingResponseMessage& aMsg) {
+  for (size_t i = 0; i < mPings.length(); i++) {
+    if (mPings[i].mId == aMsg.mId) {
+      mPings[i].mProgress = aMsg.mProgress;
+      break;
+    }
+  }
+}
 
 void ChildProcessInfo::WaitUntilPaused() {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
-  if (IsPaused()) {
-    return;
-  }
+  while (!IsPaused()) {
+    MaybePing();
 
-  bool sentTerminateMessage = false;
-  while (true) {
     Maybe<MonitorAutoLock> lock;
     lock.emplace(*gMonitor);
 
@@ -287,41 +372,19 @@ void ChildProcessInfo::WaitUntilPaused() {
     if (msg) {
       lock.reset();
       OnIncomingMessage(*msg);
-      if (IsPaused()) {
-        return;
-      }
     } else if (HasCrashed()) {
       // If the child crashed but we recovered, we don't have to keep waiting.
-      return;
-    } else if (gChildrenAreDebugging || IsRecording()) {
-      // Don't watch for hangs when children are being debugged. Recording
-      // children are never treated as hanged both because we can't recover if
-      // they crash and because they may just be idling.
-      gMonitor->Wait();
+      break;
     } else {
-      TimeStamp deadline =
-          mLastMessageTime + TimeDuration::FromSeconds(HangSeconds);
-      if (TimeStamp::Now() < deadline) {
-        gMonitor->WaitUntil(deadline);
-      } else {
-        MonitorAutoUnlock unlock(*gMonitor);
-        if (!sentTerminateMessage) {
-          // Try to get the child to crash, so that we can get a minidump.
-          // Sending the message will reset mLastMessageTime so we get to
-          // wait another HangSeconds before hitting the restart case below.
-          CrashReporter::AnnotateCrashReport(
-              CrashReporter::Annotation::RecordReplayHang, true);
-          SendMessage(TerminateMessage());
-          sentTerminateMessage = true;
-        } else {
-          // The child is still non-responsive after sending the terminate
-          // message.
-          OnCrash("Child process non-responsive");
-        }
-      }
+      TimeStamp deadline = TimeStamp::Now() + TimeDuration::FromSeconds(PingIntervalSeconds);
+      gMonitor->WaitUntil(deadline);
     }
   }
 }
+
+// Whether there is a pending task on the main thread's message loop to handle
+// all pending messages.
+static bool gHasPendingMessageRunnable;
 
 // Runnable created on the main thread to handle any tasks sent by the replay
 // message loop thread which were not handled while the main thread was blocked.

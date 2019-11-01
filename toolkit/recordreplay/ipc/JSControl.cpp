@@ -233,12 +233,28 @@ static bool Middleman_SendManifest(JSContext* aCx, unsigned aArgc, Value* aVp) {
     return false;
   }
 
+  bool mightRewind = ToBoolean(args.get(2));
+
   ManifestStartMessage* msg = ManifestStartMessage::New(
       manifestBuffer.begin(), manifestBuffer.length());
   child->SendMessage(std::move(*msg));
   free(msg);
 
+  child->ResetPings(mightRewind);
+
   args.rval().setUndefined();
+  return true;
+}
+
+static bool Middleman_MaybePing(JSContext* aCx, unsigned aArgc, Value* aVp) {
+  CallArgs args = CallArgsFromVp(aArgc, aVp);
+
+  parent::ChildProcessInfo* child = GetChildById(aCx, args.get(0), /* aAllowUnpaused */ true);
+  if (!child) {
+    return false;
+  }
+
+  child->MaybePing();
   return true;
 }
 
@@ -451,7 +467,8 @@ static ProgressCounter gProgressCounter;
 
 extern "C" {
 
-MOZ_EXPORT ProgressCounter* RecordReplayInterface_ExecutionProgressCounter() {
+MOZ_EXPORT ProgressCounter* RecordReplayInterface_ExecutionProgressCounter()
+{
   return &gProgressCounter;
 }
 
@@ -1318,7 +1335,8 @@ static const JSFunctionSpec gMiddlemanMethods[] = {
     JS_FN("registerReplayDebugger", Middleman_RegisterReplayDebugger, 1, 0),
     JS_FN("canRewind", Middleman_CanRewind, 0, 0),
     JS_FN("spawnReplayingChild", Middleman_SpawnReplayingChild, 0, 0),
-    JS_FN("sendManifest", Middleman_SendManifest, 2, 0),
+    JS_FN("sendManifest", Middleman_SendManifest, 3, 0),
+    JS_FN("maybePing", Middleman_MaybePing, 1, 0),
     JS_FN("hadRepaint", Middleman_HadRepaint, 1, 0),
     JS_FN("restoreMainGraphics", Middleman_RestoreMainGraphics, 0, 0),
     JS_FN("clearGraphics", Middleman_ClearGraphics, 0, 0),

@@ -53,6 +53,12 @@ namespace recordreplay {
   /* developer tools server-side code instead of the recording process itself. */ \
   _Macro(SetDebuggerRunsInMiddleman)                           \
                                                                \
+  /* Periodically sent to replaying processes to make sure they are */ \
+  /* responsive and determine how much progress they have made. This can be */ \
+  /* sent while the process is unpaused, but only when it will not be */ \
+  /* rewinding. */                                             \
+  _Macro(Ping)                                                 \
+                                                               \
   /* Sent to recording processes when exiting, or to force a hanged replaying */ \
   /* process to crash. */                                      \
   _Macro(Terminate)                                            \
@@ -71,6 +77,9 @@ namespace recordreplay {
                                                                \
   /* Pause after executing a manifest, specifying its response. */ \
   _Macro(ManifestFinished)                                     \
+                                                               \
+  /* Respond to a ping message */                              \
+  _Macro(PingResponse)                                         \
                                                                \
   /* A critical error occurred and execution cannot continue. The child will */ \
   /* stop executing after sending this message and will wait to be terminated. */ \
@@ -143,6 +152,7 @@ struct Message {
     return mType == MessageType::CreateCheckpoint ||
            mType == MessageType::SetDebuggerRunsInMiddleman ||
            mType == MessageType::MiddlemanCallResponse ||
+           mType == MessageType::Ping ||
            mType == MessageType::Terminate ||
            mType == MessageType::Introduction;
   }
@@ -292,6 +302,23 @@ typedef BinaryMessage<MessageType::MiddlemanCallResponse>
     MiddlemanCallResponseMessage;
 typedef EmptyMessage<MessageType::ResetMiddlemanCalls>
     ResetMiddlemanCallsMessage;
+
+struct PingMessage : public Message {
+  uint32_t mId;
+
+  explicit PingMessage(uint32_t aId)
+      : Message(MessageType::Ping, sizeof(*this)),
+        mId(aId) {}
+};
+
+struct PingResponseMessage : public Message {
+  uint32_t mId;
+  uint64_t mProgress;
+
+  PingResponseMessage(uint32_t aId, uint64_t aProgress)
+      : Message(MessageType::PingResponse, sizeof(*this)),
+        mId(aId), mProgress(aProgress) {}
+};
 
 class Channel {
  public:

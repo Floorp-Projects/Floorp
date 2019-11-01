@@ -104,6 +104,18 @@ static void ChannelMessageHandler(Message::UniquePtr aMsg) {
           [=]() { gDebuggerRunsInMiddleman = true; });
       break;
     }
+    case MessageType::Ping: {
+      // The progress value included in a ping response reflects both the JS
+      // execution progress counter and the progress that all threads have
+      // made in their event streams. This accounts for an assortment of
+      // scenarios which could be mistaken for a hang, such as a long-running
+      // script that doesn't interact with the recording, or a long-running
+      // operation running off the main thread.
+      const PingMessage& nmsg = (const PingMessage&)*aMsg;
+      uint64_t total = *ExecutionProgressCounter() + Thread::TotalEventProgress();
+      gChannel->SendMessage(PingResponseMessage(nmsg.mId, total));
+      break;
+    }
     case MessageType::Terminate: {
       // Terminate messages behave differently in recording vs. replaying
       // processes. When sent to a recording process (which the middleman
