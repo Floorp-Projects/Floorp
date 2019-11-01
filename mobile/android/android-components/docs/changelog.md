@@ -39,6 +39,9 @@ permalink: /changelog/
 
 * **concept-engine**
   * Adds support for WebPush abstraction to the Engine.
+  
+* **support-webextensions**
+  * Adds support for sending messages to background pages and scripts in WebExtensions.
 
 # 19.0.0
 
