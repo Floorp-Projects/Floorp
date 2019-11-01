@@ -937,28 +937,6 @@ static nsresult FireEventForAccessibility(HTMLInputElement* aTarget,
                                           EventMessage aEventMessage);
 #endif
 
-TextControlState* HTMLInputElement::sCachedTextControlState = nullptr;
-bool HTMLInputElement::sShutdown = false;
-
-/* static */
-void HTMLInputElement::ReleaseTextControlState(TextControlState* aState) {
-  if (!sShutdown && !sCachedTextControlState && !aState->IsBusy()) {
-    aState->PrepareForReuse();
-    sCachedTextControlState = aState;
-  } else {
-    aState->Destroy();
-  }
-}
-
-/* static */
-void HTMLInputElement::Shutdown() {
-  sShutdown = true;
-  if (sCachedTextControlState) {
-    sCachedTextControlState->Destroy();
-    sCachedTextControlState = nullptr;
-  }
-}
-
 //
 // construction, destruction
 //
@@ -1001,8 +979,7 @@ HTMLInputElement::HTMLInputElement(
                 "performance regression!");
 
   // We are in a type=text so we now we currenty need a TextControlState.
-  mInputData.mState =
-      TextControlState::Construct(this, &sCachedTextControlState);
+  mInputData.mState = TextControlState::Construct(this);
 
   void* memory = mInputTypeMem;
   mInputType = InputType::Create(this, mType, memory);
@@ -1033,7 +1010,7 @@ void HTMLInputElement::FreeData() {
     mInputData.mValue = nullptr;
   } else {
     UnbindFromFrame(nullptr);
-    ReleaseTextControlState(mInputData.mState);
+    mInputData.mState->Destroy();
     mInputData.mState = nullptr;
   }
 
@@ -4515,8 +4492,7 @@ void HTMLInputElement::HandleTypeChange(uint8_t aNewType, bool aNotify) {
   mInputType = InputType::Create(this, mType, memory);
 
   if (IsSingleLineTextControl()) {
-    mInputData.mState =
-        TextControlState::Construct(this, &sCachedTextControlState);
+    mInputData.mState = TextControlState::Construct(this);
     if (!sp.IsDefault()) {
       mInputData.mState->SetSelectionProperties(sp);
     }

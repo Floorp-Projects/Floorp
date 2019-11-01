@@ -1127,7 +1127,7 @@ class MOZ_STACK_CLASS AutoTextControlHandlingState {
   ~AutoTextControlHandlingState() {
     mTextControlState.mHandlingState = mParent;
     if (!mParent && mTextControlStateDestroyed) {
-      mTextControlState.Destroy();
+      mTextControlState.DeleteOrCacheForReuse();
     }
   }
 
@@ -1180,6 +1180,9 @@ class MOZ_STACK_CLASS AutoTextControlHandlingState {
  * mozilla::TextControlState
  *****************************************************************************/
 
+TextControlState* TextControlState::sReleasedInstance = nullptr;
+bool TextControlState::sHasShutDown = false;
+
 TextControlState::TextControlState(nsITextControlElement* aOwningElement)
     : mTextCtrlElement(aOwningElement),
       mBoundFrame(nullptr),
@@ -1199,11 +1202,11 @@ TextControlState::TextControlState(nsITextControlElement* aOwningElement)
 }
 
 TextControlState* TextControlState::Construct(
-    nsITextControlElement* aOwningElement, TextControlState** aReusedState) {
-  if (aReusedState && *aReusedState) {
-    TextControlState* state = *aReusedState;
-    MOZ_ASSERT(!state->IsBusy());
-    *aReusedState = nullptr;
+    nsITextControlElement* aOwningElement) {
+  if (sReleasedInstance) {
+    MOZ_ASSERT(!sReleasedInstance->IsBusy());
+    TextControlState* state = sReleasedInstance;
+    sReleasedInstance = nullptr;
     state->mTextCtrlElement = aOwningElement;
     state->mBoundFrame = nullptr;
     state->mSelectionProperties = SelectionProperties();
@@ -1228,10 +1231,30 @@ TextControlState::~TextControlState() {
   Clear();
 }
 
+void TextControlState::Shutdown() {
+  sHasShutDown = true;
+  if (sReleasedInstance) {
+    sReleasedInstance->DeleteOrCacheForReuse();
+    sReleasedInstance = nullptr;
+  }
+}
+
 void TextControlState::Destroy() {
   // If we're handling something, we should be deleted later.
   if (mHandlingState) {
     mHandlingState->OnDestroyTextControlState();
+    return;
+  }
+  DeleteOrCacheForReuse();
+}
+
+void TextControlState::DeleteOrCacheForReuse() {
+  MOZ_ASSERT(!IsBusy());
+
+  // If we can cache this instance, we should do it instead of deleting it.
+  if (!sHasShutDown && !sReleasedInstance) {
+    sReleasedInstance = this;
+    sReleasedInstance->PrepareForReuse();
     return;
   }
   delete this;

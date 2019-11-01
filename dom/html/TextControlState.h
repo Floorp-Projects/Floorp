@@ -141,8 +141,9 @@ class TextControlState final : public SupportsWeakPtr<TextControlState> {
 
   MOZ_DECLARE_WEAKREFERENCE_TYPENAME(TextControlState)
 
-  static TextControlState* Construct(nsITextControlElement* aOwningElement,
-                                     TextControlState** aReusedState = nullptr);
+  static TextControlState* Construct(nsITextControlElement* aOwningElement);
+
+  static void Shutdown();
 
   /**
    * Destroy() deletes the instance immediately or later.
@@ -160,13 +161,6 @@ class TextControlState final : public SupportsWeakPtr<TextControlState> {
   MOZ_CAN_RUN_SCRIPT_BOUNDARY void Unlink();
 
   bool IsBusy() const { return !!mHandlingState || mValueTransferInProgress; }
-
-  void PrepareForReuse() {
-    MOZ_ASSERT(!IsBusy());
-    Unlink();
-    mValue.reset();
-    mTextCtrlElement = nullptr;
-  }
 
   TextEditor* GetTextEditor();
   TextEditor* GetTextEditorWithoutCreation();
@@ -386,6 +380,18 @@ class TextControlState final : public SupportsWeakPtr<TextControlState> {
   explicit TextControlState(nsITextControlElement* aOwningElement);
   MOZ_CAN_RUN_SCRIPT_BOUNDARY ~TextControlState();
 
+  /**
+   * Delete the instance or cache to reuse it if possible.
+   */
+  void DeleteOrCacheForReuse();
+
+  void PrepareForReuse() {
+    MOZ_ASSERT(!IsBusy());
+    Unlink();
+    mValue.reset();
+    mTextCtrlElement = nullptr;
+  }
+
   void ValueWasChanged(bool aNotify);
 
   MOZ_CAN_RUN_SCRIPT void DestroyEditor();
@@ -424,6 +430,16 @@ class TextControlState final : public SupportsWeakPtr<TextControlState> {
                                             // because of selection restore
   bool mPlaceholderVisibility;
   bool mPreviewVisibility;
+
+  /**
+   * For avoiding allocation cost of the instance, we should reuse instances
+   * as far as possible.
+   * TODO: Maybe, we should cache more instances with array.  Then, it must
+   *       be faster to load pages which have a lot of `<input type="text">`
+   *       elements.
+   */
+  static TextControlState* sReleasedInstance;
+  static bool sHasShutDown;
 
   friend class AutoTextControlHandlingState;
   friend class PrepareEditorEvent;
