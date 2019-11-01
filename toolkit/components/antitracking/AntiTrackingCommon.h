@@ -42,7 +42,6 @@ class AntiTrackingCommon final {
   // storage permission is not granted:
   //  * nsIWebProgressListener::STATE_COOKIES_BLOCKED_BY_PERMISSION
   //  * nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER
-  //  * nsIWebProgressListener::STATE_COOKIES_BLOCKED_SOCIALTRACKER
   //  * nsIWebProgressListener::STATE_COOKIES_BLOCKED_ALL
   //  * nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN
   static bool IsFirstPartyStorageAccessGrantedFor(
@@ -163,7 +162,6 @@ class AntiTrackingCommon final {
   // aRejectedReason must be one of these values:
   //  * nsIWebProgressListener::STATE_COOKIES_BLOCKED_BY_PERMISSION
   //  * nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER
-  //  * nsIWebProgressListener::STATE_COOKIES_BLOCKED_SOCIALTRACKER
   //  * nsIWebProgressListener::STATE_COOKIES_BLOCKED_ALL
   //  * nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN
   static void NotifyBlockingDecision(nsIChannel* aChannel,

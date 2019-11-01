@@ -11,6 +11,8 @@ function runTest(obj) {
         ["privacy.trackingprotection.pbmode.enabled", false],
         ["privacy.trackingprotection.annotate_channels", true],
         ["privacy.storagePrincipal.enabledForTrackers", false],
+        ["urlclassifier.features.socialtracking.annotate.blacklistHosts", "not-tracking.example.com"],
+        ["urlclassifier.features.socialtracking.blacklistHosts", "not-tracking.example.com"],
         ["privacy.trackingprotection.socialtracking.enabled", obj.protectionEnabled],
         ["privacy.socialtracking.block_cookies.enabled", obj.cookieBlocking],
       ],
@@ -27,8 +29,8 @@ function runTest(obj) {
     await ContentTask.spawn(
       browser,
       {
-        page: TEST_3RD_PARTY_DOMAIN_STP + TEST_PATH + "localStorage.html",
-        image: TEST_3RD_PARTY_DOMAIN_STP + TEST_PATH + "raptor.jpg",
+        page: TEST_4TH_PARTY_DOMAIN + TEST_PATH + "localStorage.html",
+        image: TEST_4TH_PARTY_DOMAIN + TEST_PATH + "raptor.jpg",
         loading: obj.loading,
         result: obj.result,
       },
@@ -68,21 +70,6 @@ function runTest(obj) {
       }
     );
 
-    info("Checking content blocking log.");
-    let contentBlockingLog = JSON.parse(await browser.getContentBlockingLog());
-    for (let origin of Object.keys(contentBlockingLog)) {
-      is(
-        origin + "/",
-        TEST_3RD_PARTY_DOMAIN_STP,
-        "Correct tracker origin must be reported"
-      );
-      Assert.deepEqual(
-        contentBlockingLog[origin],
-        obj.expectedLogItems,
-        "Content blocking log should be as expected"
-      );
-    }
-
     BrowserTestUtils.removeTab(tab);
 
     UrlClassifierTestUtils.cleanupTestTrackers();
@@ -95,10 +82,6 @@ runTest({
   loading: true,
   cookieBlocking: false,
   result: true,
-  expectedLogItems: [
-    [Ci.nsIWebProgressListener.STATE_COOKIES_LOADED, true, 1],
-    [Ci.nsIWebProgressListener.STATE_COOKIES_LOADED_SOCIALTRACKER, true, 1]
-  ],
 });
 
 runTest({
@@ -107,12 +90,6 @@ runTest({
   loading: true,
   cookieBlocking: true,
   result: false,
-  expectedLogItems: [
-    [Ci.nsIWebProgressListener.STATE_COOKIES_LOADED, true, 1],
-    [Ci.nsIWebProgressListener.STATE_COOKIES_LOADED_SOCIALTRACKER, true, 1],
-    [Ci.nsIWebProgressListener.STATE_LOADED_SOCIALTRACKING_CONTENT, true, 2],
-    [Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_SOCIALTRACKER, true, 2]
-  ],
 });
 
 runTest({
@@ -121,7 +98,4 @@ runTest({
   loading: false,
   cookieBlocking: true,
   result: false,
-  expectedLogItems: [
-    [Ci.nsIWebProgressListener.STATE_BLOCKED_SOCIALTRACKING_CONTENT, true, 1]
-  ],
 });

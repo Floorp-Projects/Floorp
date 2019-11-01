@@ -60,8 +60,6 @@ class UrlClassifierCommon final {
 
   static bool IsTrackingClassificationFlag(uint32_t aFlag);
 
-  static bool IsSocialTrackingClassificationFlag(uint32_t aFlag);
-
   static bool IsCryptominingClassificationFlag(uint32_t aFlag);
 
   // Join the table names in 1 single string.
