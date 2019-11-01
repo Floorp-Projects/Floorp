@@ -2043,22 +2043,6 @@ struct DebuggerScript::SetBreakpointMatcher {
   RootedObject handler_;
   RootedObject debuggerObject_;
 
-  bool wrapCrossCompartmentEdges() {
-    if (!cx_->compartment()->wrap(cx_, &handler_) ||
-        !cx_->compartment()->wrap(cx_, &debuggerObject_)) {
-      return false;
-    }
-
-    // If the Debugger's compartment has killed incoming wrappers, we may not
-    // have gotten usable results from the 'wrap' calls. Treat it as a failure.
-    if (IsDeadProxyObject(handler_) || IsDeadProxyObject(debuggerObject_)) {
-      ReportAccessDenied(cx_);
-      return false;
-    }
-
-    return true;
-  }
-
  public:
   explicit SetBreakpointMatcher(JSContext* cx, Debugger* dbg, size_t offset,
                                 HandleObject handler)
@@ -2092,7 +2076,8 @@ struct DebuggerScript::SetBreakpointMatcher {
     // A Breakpoint belongs logically to its script's compartment, so its
     // references to its Debugger and handler must be properly wrapped.
     AutoRealm ar(cx_, script);
-    if (!wrapCrossCompartmentEdges()) {
+    if (!cx_->compartment()->wrap(cx_, &handler_) ||
+        !cx_->compartment()->wrap(cx_, &debuggerObject_)) {
       return false;
     }
 
@@ -2130,7 +2115,8 @@ struct DebuggerScript::SetBreakpointMatcher {
     // A Breakpoint belongs logically to its Instance's compartment, so its
     // references to its Debugger and handler must be properly wrapped.
     AutoRealm ar(cx_, wasmInstance);
-    if (!wrapCrossCompartmentEdges()) {
+    if (!cx_->compartment()->wrap(cx_, &handler_) ||
+        !cx_->compartment()->wrap(cx_, &debuggerObject_)) {
       return false;
     }
 
