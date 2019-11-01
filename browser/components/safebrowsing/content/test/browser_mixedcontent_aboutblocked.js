@@ -12,22 +12,27 @@ add_task(async function testNormalBrowsing() {
     // black list has been added to the database.
     await new Promise(resolve => waitForDBInit(resolve));
 
-    await ContentTask.spawn(browser, PHISH_URL, async function(aPhishUrl) {
-      return new Promise(resolve => {
-        // Register listener before loading phish URL.
-        let listener = e => {
-          removeEventListener("AboutBlockedLoaded", listener, false, true);
+    let promise = new Promise(resolve => {
+      // Register listener before loading phish URL.
+      let removeFunc = BrowserTestUtils.addContentEventListener(
+        browser,
+        "AboutBlockedLoaded",
+        () => {
+          removeFunc();
           resolve();
-        };
-        addEventListener("AboutBlockedLoaded", listener, false, true);
-
-        // Create an iframe which is going to load a phish url.
-        let iframe = content.document.createElement("iframe");
-        iframe.src = aPhishUrl;
-        content.document.body.appendChild(iframe);
-      });
+        },
+        { wantUntrusted: true }
+      );
     });
 
+    await ContentTask.spawn(browser, PHISH_URL, async function(aPhishUrl) {
+      // Create an iframe which is going to load a phish url.
+      let iframe = content.document.createElement("iframe");
+      iframe.src = aPhishUrl;
+      content.document.body.appendChild(iframe);
+    });
+
+    await promise;
     ok(true, "about:blocked is successfully loaded!");
   });
 });
