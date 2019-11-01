@@ -6,6 +6,7 @@
 
 #include "APZCBasicTester.h"
 #include "APZTestCommon.h"
+#include "mozilla/StaticPrefs_apz.h"
 
 // Note: There are additional tests that test gesture detection behaviour
 //       with multiple APZCs in TestTreeManager.cpp.
@@ -213,6 +214,28 @@ TEST_F(APZCGestureDetectorTester, Pan_With_Tap) {
   while (mcc->RunThroughDelayedTasks())
     ;
   apzc->AssertStateIsReset();
+}
+
+TEST_F(APZCGestureDetectorTester, SecondTapIsFar_Bug1586496) {
+  SCOPED_GFX_PREF_BOOL("layout.css.touch_action.enabled", false);
+
+  // Test that we receive two single-tap events when two tap gestures are
+  // close in time but far in distance.
+  EXPECT_CALL(*mcc, HandleTap(TapType::eSingleTap, _, 0, apzc->GetGuid(), _))
+      .Times(2);
+
+  TimeDuration brief =
+      TimeDuration::FromMilliseconds(StaticPrefs::apz_max_tap_time() / 10);
+
+  ScreenIntPoint point(10, 10);
+  Tap(apzc, point, brief);
+
+  mcc->AdvanceBy(brief);
+
+  point.x += apzc->GetSecondTapTolerance() * 2;
+  point.y += apzc->GetSecondTapTolerance() * 2;
+
+  Tap(apzc, point, brief);
 }
 
 class APZCFlingStopTester : public APZCGestureDetectorTester {
