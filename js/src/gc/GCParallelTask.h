@@ -7,6 +7,7 @@
 #ifndef gc_GCParallelTask_h
 #define gc_GCParallelTask_h
 
+#include "mozilla/LinkedList.h"
 #include "mozilla/Move.h"
 
 #include "js/TypeDecls.h"
@@ -23,7 +24,8 @@ struct HelperThread;
 // Note that we don't use virtual functions here because destructors can write
 // the vtable pointer on entry, which can causes races if synchronization
 // happens there.
-class GCParallelTask : public RunnableTask {
+class GCParallelTask : public mozilla::LinkedListElement<GCParallelTask>,
+                       public RunnableTask {
  public:
   using TaskFunc = void (*)(GCParallelTask*);
 
@@ -96,16 +98,19 @@ class GCParallelTask : public RunnableTask {
   // efficient to take the helper thread lock once and use these methods.
   MOZ_MUST_USE bool startWithLockHeld(AutoLockHelperThreadState& locked);
   void joinWithLockHeld(AutoLockHelperThreadState& locked);
+  void joinRunningOrFinishedTask(AutoLockHelperThreadState& locked);
 
   // Instead of dispatching to a helper, run the task on the current thread.
   void runFromMainThread();
-  void joinAndRunFromMainThread();
 
   // If the task is not already running, either start it or run it on the main
   // thread if that fails.
   void startOrRunIfIdle(AutoLockHelperThreadState& lock);
 
-  // Dispatch a cancelation request.
+  // Cancel a dispatched task before it started executing.
+  void cancelDispatchedTask(AutoLockHelperThreadState& lock);
+
+  // Set the cancel flag and wait for the task to finish.
   void cancelAndWait() {
     cancel_ = true;
     join();
@@ -124,6 +129,10 @@ class GCParallelTask : public RunnableTask {
   bool wasStarted() const;
   bool wasStarted(const AutoLockHelperThreadState& lock) const {
     return isDispatched(lock) || isRunning(lock);
+  }
+
+  bool isDispatched(const AutoLockHelperThreadState& lock) const {
+    return state_ == State::Dispatched;
   }
 
   ThreadType threadType() override {
@@ -145,9 +154,6 @@ class GCParallelTask : public RunnableTask {
     // Don't lock here because that adds extra synchronization in debug
     // builds that may hide bugs. There's no race if the assertion passes.
     MOZ_ASSERT(state_ == State::Idle);
-  }
-  bool isDispatched(const AutoLockHelperThreadState& lock) const {
-    return state_ == State::Dispatched;
   }
   bool isRunning(const AutoLockHelperThreadState& lock) const {
     return state_ == State::Running;
@@ -172,7 +178,7 @@ class GCParallelTask : public RunnableTask {
     state_ = State::Finished;
   }
   void setIdle(const AutoLockHelperThreadState& lock) {
-    MOZ_ASSERT(isFinished(lock));
+    MOZ_ASSERT(isDispatched(lock) || isFinished(lock));
     state_ = State::Idle;
   }
 

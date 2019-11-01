@@ -1689,7 +1689,7 @@ void GlobalHelperThreadState::scheduleCompressionTasks(
 
 bool GlobalHelperThreadState::canStartGCParallelTask(
     const AutoLockHelperThreadState& lock) {
-  return !gcParallelWorklist(lock).empty() &&
+  return !gcParallelWorklist(lock).isEmpty() &&
          checkTaskThreadLimit<GCParallelTask*>(maxGCParallelThreads());
 }
 
@@ -1712,9 +1712,7 @@ bool js::GCParallelTask::startWithLockHeld(AutoLockHelperThreadState& lock) {
     return false;
   }
 
-  if (!HelperThreadState().gcParallelWorklist(lock).append(this)) {
-    return false;
-  }
+  HelperThreadState().gcParallelWorklist(lock).insertBack(this);
   setDispatched(lock);
 
   HelperThreadState().notifyOne(GlobalHelperThreadState::PRODUCER, lock);
@@ -1728,7 +1726,7 @@ bool js::GCParallelTask::start() {
 }
 
 void js::GCParallelTask::startOrRunIfIdle(AutoLockHelperThreadState& lock) {
-  if (isRunning(lock)) {
+  if (wasStarted(lock)) {
     return;
   }
 
@@ -1742,11 +1740,35 @@ void js::GCParallelTask::startOrRunIfIdle(AutoLockHelperThreadState& lock) {
   }
 }
 
+void js::GCParallelTask::join() {
+  AutoLockHelperThreadState lock;
+  joinWithLockHeld(lock);
+}
+
 void js::GCParallelTask::joinWithLockHeld(AutoLockHelperThreadState& lock) {
+  // Task has not been started; there's nothing to do.
   if (isIdle(lock)) {
     return;
   }
 
+  // If the task was dispatched but has not yet started then cancel the task and
+  // run it from the main thread. This stops us from blocking here when the
+  // helper threads are busy with other tasks.
+  if (isDispatched(lock)) {
+    cancelDispatchedTask(lock);
+    AutoUnlockHelperThreadState unlock(lock);
+    runFromMainThread();
+    return;
+  }
+
+  joinRunningOrFinishedTask(lock);
+}
+
+void js::GCParallelTask::joinRunningOrFinishedTask(
+    AutoLockHelperThreadState& lock) {
+  MOZ_ASSERT(isRunning(lock) || isFinishing(lock) || isFinished(lock));
+
+  // Wait for the task to run to completion.
   while (!isFinished(lock)) {
     HelperThreadState().wait(lock, GlobalHelperThreadState::CONSUMER);
   }
@@ -1755,9 +1777,11 @@ void js::GCParallelTask::joinWithLockHeld(AutoLockHelperThreadState& lock) {
   cancel_ = false;
 }
 
-void js::GCParallelTask::join() {
-  AutoLockHelperThreadState helperLock;
-  joinWithLockHeld(helperLock);
+void js::GCParallelTask::cancelDispatchedTask(AutoLockHelperThreadState& lock) {
+  MOZ_ASSERT(isDispatched(lock));
+  MOZ_ASSERT(isInList());
+  remove();
+  setIdle(lock);
 }
 
 static inline TimeDuration TimeSince(TimeStamp prev) {
@@ -1768,16 +1792,6 @@ static inline TimeDuration TimeSince(TimeStamp prev) {
     now = prev;
   }
   return now - prev;
-}
-
-void GCParallelTask::joinAndRunFromMainThread() {
-  {
-    AutoLockHelperThreadState lock;
-    MOZ_ASSERT(!isRunning(lock));
-    joinWithLockHeld(lock);
-  }
-
-  runFromMainThread();
 }
 
 void js::GCParallelTask::runFromMainThread() {
@@ -1825,7 +1839,7 @@ void HelperThread::handleGCParallelWorkload(AutoLockHelperThreadState& lock) {
   TraceLoggerThread* logger = TraceLoggerForCurrentThread();
   AutoTraceLog logCompile(logger, TraceLogger_GC);
 
-  currentTask.emplace(HelperThreadState().gcParallelWorklist(lock).popCopy());
+  currentTask.emplace(HelperThreadState().gcParallelWorklist(lock).popFirst());
   gcParallelTask()->runFromHelperThread(lock);
   currentTask.reset();
 }
