@@ -772,6 +772,8 @@ void xpc::SetPrefableRealmOptions(JS::RealmOptions& options) {
   options.creationOptions()
       .setSharedMemoryAndAtomicsEnabled(sSharedMemoryEnabled)
       .setStreamsEnabled(sStreamsEnabled)
+      .setWritableStreamsEnabled(
+          StaticPrefs::javascript_options_writable_streams())
       .setFieldsEnabled(sFieldsEnabled)
       .setAwaitFixEnabled(sAwaitFixEnabled);
 }
