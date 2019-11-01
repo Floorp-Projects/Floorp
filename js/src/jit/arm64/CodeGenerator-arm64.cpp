@@ -1993,6 +1993,8 @@ void CodeGenerator::visitBitOpI64(LBitOpI64*) { MOZ_CRASH("NYI"); }
 
 void CodeGenerator::visitShiftI64(LShiftI64*) { MOZ_CRASH("NYI"); }
 
+void CodeGenerator::visitWasmHeapBase(LWasmHeapBase* ins) { MOZ_CRASH("NYI"); }
+
 void CodeGenerator::visitWasmLoad(LWasmLoad*) { MOZ_CRASH("NYI"); }
 
 void CodeGenerator::visitCopySignD(LCopySignD*) { MOZ_CRASH("NYI"); }

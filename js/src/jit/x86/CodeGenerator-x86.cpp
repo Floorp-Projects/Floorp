@@ -233,6 +233,12 @@ void CodeGenerator::visitWasmUint32ToFloat32(LWasmUint32ToFloat32* lir) {
   masm.convertUInt32ToFloat32(temp, output);
 }
 
+void CodeGenerator::visitWasmHeapBase(LWasmHeapBase* ins) {
+  masm.loadPtr(
+      Address(ToRegister(ins->tlsPtr()), offsetof(wasm::TlsData, memoryBase)),
+      ToRegister(ins->output()));
+}
+
 template <typename T>
 void CodeGeneratorX86::emitWasmLoad(T* ins) {
   const MWasmLoad* mir = ins->mir();

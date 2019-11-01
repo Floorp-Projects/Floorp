@@ -494,30 +494,32 @@ inline int32_t WasmMemoryCopy(T memBase, uint32_t memLen,
 
 /* static */ int32_t Instance::memCopy(Instance* instance,
                                        uint32_t dstByteOffset,
-                                       uint32_t srcByteOffset, uint32_t len) {
+                                       uint32_t srcByteOffset, uint32_t len,
+                                       uint8_t* memBase) {
   MOZ_ASSERT(SASigMemCopy.failureMode == FailureMode::FailOnNegI32);
 
-  WasmMemoryObject* mem = instance->memory();
-  uint32_t memLen = mem->volatileMemoryLength();
+  const WasmArrayRawBuffer* rawBuf = WasmArrayRawBuffer::fromDataPtr(memBase);
+  uint32_t memLen = rawBuf->byteLength();
 
-  return WasmMemoryCopy(mem->buffer().dataPointerEither().unwrap(), memLen,
-                        dstByteOffset, srcByteOffset, len, memmove);
+  return WasmMemoryCopy(memBase, memLen, dstByteOffset, srcByteOffset, len,
+                        memmove);
 }
 
 /* static */ int32_t Instance::memCopyShared(Instance* instance,
                                              uint32_t dstByteOffset,
                                              uint32_t srcByteOffset,
-                                             uint32_t len) {
+                                             uint32_t len, uint8_t* memBase) {
   MOZ_ASSERT(SASigMemCopy.failureMode == FailureMode::FailOnNegI32);
 
   typedef void (*RacyMemMove)(SharedMem<uint8_t*>, SharedMem<uint8_t*>, size_t);
 
-  WasmMemoryObject* mem = instance->memory();
-  uint32_t memLen = mem->volatileMemoryLength();
+  const SharedArrayRawBuffer* rawBuf =
+      SharedArrayRawBuffer::fromDataPtr(memBase);
+  uint32_t memLen = rawBuf->volatileByteLength();
 
   return WasmMemoryCopy<SharedMem<uint8_t*>, RacyMemMove>(
-      mem->buffer().dataPointerEither(), memLen, dstByteOffset, srcByteOffset,
-      len, AtomicOperations::memmoveSafeWhenRacy);
+      SharedMem<uint8_t*>::shared(memBase), memLen, dstByteOffset,
+      srcByteOffset, len, AtomicOperations::memmoveSafeWhenRacy);
 }
 
 /* static */ int32_t Instance::dataDrop(Instance* instance, uint32_t segIndex) {
@@ -581,26 +583,29 @@ inline int32_t WasmMemoryFill(T memBase, uint32_t memLen, uint32_t byteOffset,
 }
 
 /* static */ int32_t Instance::memFill(Instance* instance, uint32_t byteOffset,
-                                       uint32_t value, uint32_t len) {
+                                       uint32_t value, uint32_t len,
+                                       uint8_t* memBase) {
   MOZ_ASSERT(SASigMemFill.failureMode == FailureMode::FailOnNegI32);
 
-  WasmMemoryObject* mem = instance->memory();
-  uint32_t memLen = mem->volatileMemoryLength();
+  const WasmArrayRawBuffer* rawBuf = WasmArrayRawBuffer::fromDataPtr(memBase);
+  uint32_t memLen = rawBuf->byteLength();
 
-  return WasmMemoryFill(mem->buffer().dataPointerEither().unwrap(), memLen,
-                        byteOffset, value, len, memset);
+  return WasmMemoryFill(memBase, memLen, byteOffset, value, len, memset);
 }
 
 /* static */ int32_t Instance::memFillShared(Instance* instance,
                                              uint32_t byteOffset,
-                                             uint32_t value, uint32_t len) {
+                                             uint32_t value, uint32_t len,
+                                             uint8_t* memBase) {
   MOZ_ASSERT(SASigMemFill.failureMode == FailureMode::FailOnNegI32);
 
-  WasmMemoryObject* mem = instance->memory();
-  uint32_t memLen = mem->volatileMemoryLength();
+  const SharedArrayRawBuffer* rawBuf =
+      SharedArrayRawBuffer::fromDataPtr(memBase);
+  uint32_t memLen = rawBuf->volatileByteLength();
 
-  return WasmMemoryFill(mem->buffer().dataPointerEither(), memLen, byteOffset,
-                        value, len, AtomicOperations::memsetSafeWhenRacy);
+  return WasmMemoryFill(SharedMem<uint8_t*>::shared(memBase), memLen,
+                        byteOffset, value, len,
+                        AtomicOperations::memsetSafeWhenRacy);
 }
 
 /* static */ int32_t Instance::memInit(Instance* instance, uint32_t dstOffset,

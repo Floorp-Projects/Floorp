@@ -11246,6 +11246,27 @@ class MWasmLoadTls : public MUnaryInstruction, public NoTypePolicy::Data {
   AliasSet getAliasSet() const override { return aliases_; }
 };
 
+class MWasmHeapBase : public MUnaryInstruction, public NoTypePolicy::Data {
+  AliasSet aliases_;
+
+  explicit MWasmHeapBase(MDefinition* tlsPointer, AliasSet aliases)
+      : MUnaryInstruction(classOpcode, tlsPointer), aliases_(aliases) {
+    setMovable();
+    setResultType(MIRType::Pointer);
+  }
+
+ public:
+  INSTRUCTION_HEADER(WasmHeapBase)
+  TRIVIAL_NEW_WRAPPERS
+  NAMED_OPERANDS((0, tlsPtr))
+
+  bool congruentTo(const MDefinition* ins) const override {
+    return ins->isWasmHeapBase();
+  }
+
+  AliasSet getAliasSet() const override { return aliases_; }
+};
+
 class MWasmBoundsCheck : public MBinaryInstruction, public NoTypePolicy::Data {
   wasm::BytecodeOffset bytecodeOffset_;
 
