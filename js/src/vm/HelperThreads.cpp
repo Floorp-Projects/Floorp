@@ -1698,12 +1698,12 @@ js::GCParallelTask::~GCParallelTask() {
   // destructors run after those for derived classes' members, so a join in a
   // base class can't ensure that the task is done using the members. All we
   // can do now is check that someone has previously stopped the task.
-  assertNotStarted();
+  assertIdle();
 }
 
 bool js::GCParallelTask::startWithLockHeld(AutoLockHelperThreadState& lock) {
   MOZ_ASSERT(CanUseExtraThreads());
-  assertNotStarted();
+  assertIdle();
 
   // If we do the shutdown GC before running anything, we may never
   // have initialized the helper threads. Just use the serial path
@@ -1728,7 +1728,7 @@ bool js::GCParallelTask::start() {
 }
 
 void js::GCParallelTask::startOrRunIfIdle(AutoLockHelperThreadState& lock) {
-  if (isRunningWithLockHeld(lock)) {
+  if (isRunning(lock)) {
     return;
   }
 
@@ -1743,7 +1743,7 @@ void js::GCParallelTask::startOrRunIfIdle(AutoLockHelperThreadState& lock) {
 }
 
 void js::GCParallelTask::joinWithLockHeld(AutoLockHelperThreadState& lock) {
-  if (isNotStarted(lock)) {
+  if (isIdle(lock)) {
     return;
   }
 
@@ -1751,7 +1751,7 @@ void js::GCParallelTask::joinWithLockHeld(AutoLockHelperThreadState& lock) {
     HelperThreadState().wait(lock, GlobalHelperThreadState::CONSUMER);
   }
 
-  setNotStarted(lock);
+  setIdle(lock);
   cancel_ = false;
 }
 
@@ -1773,7 +1773,7 @@ static inline TimeDuration TimeSince(TimeStamp prev) {
 void GCParallelTask::joinAndRunFromMainThread() {
   {
     AutoLockHelperThreadState lock;
-    MOZ_ASSERT(!isRunningWithLockHeld(lock));
+    MOZ_ASSERT(!isRunning(lock));
     joinWithLockHeld(lock);
   }
 
@@ -1781,33 +1781,41 @@ void GCParallelTask::joinAndRunFromMainThread() {
 }
 
 void js::GCParallelTask::runFromMainThread() {
-  assertNotStarted();
+  assertIdle();
   MOZ_ASSERT(js::CurrentThreadCanAccessRuntime(gc->rt));
-  TimeStamp timeStart = ReallyNow();
   runTask();
-  duration_ = TimeSince(timeStart);
 }
 
 void js::GCParallelTask::runFromHelperThread(AutoLockHelperThreadState& lock) {
-  MOZ_ASSERT(isDispatched(lock));
+  setRunning(lock);
 
   {
     AutoUnlockHelperThreadState parallelSection(lock);
     AutoSetHelperThreadContext usesContext;
     AutoSetContextRuntime ascr(gc->rt);
     gc::AutoSetThreadIsPerformingGC performingGC;
-    TimeStamp timeStart = ReallyNow();
     runTask();
-    duration_ = TimeSince(timeStart);
   }
 
   setFinished(lock);
   HelperThreadState().notifyAll(GlobalHelperThreadState::CONSUMER, lock);
 }
 
-bool js::GCParallelTask::isRunning() const {
+void GCParallelTask::runTask() {
+  // Run the task from either the main thread or a helper thread.
+  TimeStamp timeStart = ReallyNow();
+  func_(this);
+  duration_ = TimeSince(timeStart);
+}
+
+bool js::GCParallelTask::isIdle() const {
   AutoLockHelperThreadState lock;
-  return isRunningWithLockHeld(lock);
+  return isIdle(lock);
+}
+
+bool js::GCParallelTask::wasStarted() const {
+  AutoLockHelperThreadState lock;
+  return wasStarted(lock);
 }
 
 void HelperThread::handleGCParallelWorkload(AutoLockHelperThreadState& lock) {
