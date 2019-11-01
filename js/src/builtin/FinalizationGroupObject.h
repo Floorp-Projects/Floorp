@@ -173,6 +173,17 @@ class FinalizationGroupObject : public NativeObject {
   static const JSPropertySpec properties_[];
 
   static bool construct(JSContext* cx, unsigned argc, Value* vp);
+  static bool register_(JSContext* cx, unsigned argc, Value* vp);
+  static bool unregister(JSContext* cx, unsigned argc, Value* vp);
+  static bool cleanupSome(JSContext* cx, unsigned argc, Value* vp);
+
+  static bool addRegistration(JSContext* cx,
+                              HandleFinalizationGroupObject group,
+                              HandleObject unregisterToken,
+                              HandleFinalizationRecordObject record);
+  static void removeRegistrationOnError(HandleFinalizationGroupObject group,
+                                        HandleObject unregisterToken,
+                                        HandleFinalizationRecordObject record);
 
   static void trace(JSTracer* trc, JSObject* obj);
   static void finalize(JSFreeOp* fop, JSObject* obj);
@@ -191,6 +202,9 @@ class FinalizationIteratorObject : public NativeObject {
 
   FinalizationGroupObject* finalizationGroup() const;
   size_t index() const;
+
+  void incIndex();
+  void clearFinalizationGroup();
 
  private:
   friend class GlobalObject;
