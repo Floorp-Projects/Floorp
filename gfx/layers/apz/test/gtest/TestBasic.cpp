@@ -445,11 +445,30 @@ TEST_F(APZCBasicTester, ResumeInterruptedTouchDrag_Bug1592435) {
     mcc->AdvanceByMillis(1);
     TouchMove(apzc, touchPos, mcc->Time());
   }
-  mcc->AdvanceByMillis(1);
-  TouchUp(apzc, touchPos, mcc->Time());
 
   // Check that the portion of the touch-drag that occurred after
   // the interruption caused additional scrolling.
   CSSPoint finalScrollOffset = apzc->GetFrameMetrics().GetScrollOffset();
   EXPECT_GT(finalScrollOffset.y, scrollOffsetBeforeInterruption.y);
+
+  // Now do the same thing, but for a visual scroll update.
+  scrollOffsetBeforeInterruption = apzc->GetFrameMetrics().GetScrollOffset();
+  mainThreadOffset = scrollOffsetBeforeInterruption;
+  mainThreadOffset.y -= 5;
+  metadata = apzc->GetScrollMetadata();
+  metadata.GetMetrics().SetVisualViewportOffset(mainThreadOffset);
+  metadata.GetMetrics().SetScrollGeneration(2);
+  metadata.GetMetrics().SetVisualScrollUpdateType(FrameMetrics::eMainThread);
+  apzc->NotifyLayersUpdated(metadata, false, true);
+  for (int i = 0; i < 20; ++i) {
+    touchPos.y -= 1;
+    mcc->AdvanceByMillis(1);
+    TouchMove(apzc, touchPos, mcc->Time());
+  }
+  finalScrollOffset = apzc->GetFrameMetrics().GetScrollOffset();
+  EXPECT_GT(finalScrollOffset.y, scrollOffsetBeforeInterruption.y);
+
+  // Clean up by ending the touch gesture.
+  mcc->AdvanceByMillis(1);
+  TouchUp(apzc, touchPos, mcc->Time());
 }
