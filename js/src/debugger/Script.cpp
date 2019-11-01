@@ -280,20 +280,6 @@ bool DebuggerScript::CallData::ToNative(JSContext* cx, unsigned argc,
   return (data.*MyMethod)();
 }
 
-template <typename Result>
-Result CallScriptMethod(HandleDebuggerScript obj,
-                        Result (JSScript::*ifJSScript)() const,
-                        Result (LazyScript::*ifLazyScript)() const) {
-  if (obj->getReferent().is<JSScript*>()) {
-    JSScript* script = obj->getReferent().as<JSScript*>();
-    return (script->*ifJSScript)();
-  }
-
-  MOZ_ASSERT(obj->getReferent().is<LazyScript*>());
-  LazyScript* lazyScript = obj->getReferent().as<LazyScript*>();
-  return (lazyScript->*ifLazyScript)();
-}
-
 bool DebuggerScript::CallData::getIsGeneratorFunction() {
   if (!ensureScriptMaybeLazy()) {
     return false;
@@ -315,9 +301,7 @@ bool DebuggerScript::CallData::getIsFunction() {
     return false;
   }
 
-  // Note: LazyScripts always have functions.
-  args.rval().setBoolean(!referent.is<JSScript*>() ||
-                         referent.as<JSScript*>()->function());
+  args.rval().setBoolean(obj->getReferentScript()->function());
   return true;
 }
 
@@ -334,8 +318,7 @@ bool DebuggerScript::CallData::getDisplayName() {
   if (!ensureScriptMaybeLazy()) {
     return false;
   }
-  JSFunction* func =
-      CallScriptMethod(obj, &JSScript::function, &LazyScript::function);
+  JSFunction* func = obj->getReferentScript()->function();
   Debugger* dbg = Debugger::fromChildJSObject(obj);
 
   JSString* name = func ? func->displayAtom() : nullptr;
