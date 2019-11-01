@@ -19,6 +19,7 @@ class RadioButtonInfoPreference @JvmOverloads constructor(
 ) : RadioButtonPreference(context, attrs) {
     private var infoClickListener: (() -> Unit)? = null
     private var infoView: ImageView? = null
+    var contentDescription: String? = null
 
     fun onInfoClickListener(listener: (() -> Unit)) {
         infoClickListener = listener
@@ -65,6 +66,7 @@ class RadioButtonInfoPreference @JvmOverloads constructor(
             infoClickListener?.invoke()
         }
         infoView?.alpha = if (isEnabled) FULL_ALPHA else HALF_ALPHA
+        contentDescription?.let { infoView?.contentDescription = it }
     }
 
     companion object {
