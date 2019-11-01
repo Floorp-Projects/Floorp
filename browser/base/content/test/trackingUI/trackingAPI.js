@@ -10,7 +10,9 @@ onmessage = event => {
       createIframe("https://trackertest.org/");
       break;
     case "socialtracking":
-      createIframe("https://socialtracking.example.com/");
+      createIframe(
+        "http://socialtracking.example.com/browser/browser/base/content/test/trackingUI/cookieServer.sjs"
+      );
       break;
     case "cryptomining":
       createIframe("http://cryptomining.example.com/");

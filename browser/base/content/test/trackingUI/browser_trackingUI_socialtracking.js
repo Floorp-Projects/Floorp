@@ -166,6 +166,7 @@ async function testSubview(hasException) {
 }
 
 async function testCategoryItem() {
+  Services.prefs.setBoolPref(ST_PROTECTION_PREF, false);
   Services.prefs.setBoolPref(ST_BLOCK_COOKIES_PREF, false);
 
   let promise = BrowserTestUtils.openNewForegroundTab({
@@ -186,17 +187,11 @@ async function testCategoryItem() {
     categoryItem.classList.contains("notFound"),
     "Category marked as not found"
   );
+
+  Services.prefs.setBoolPref(ST_PROTECTION_PREF, true);
   Services.prefs.setBoolPref(ST_BLOCK_COOKIES_PREF, true);
+
   ok(categoryItem.classList.contains("blocked"), "Category marked as blocked");
-  ok(
-    categoryItem.classList.contains("notFound"),
-    "Category marked as not found"
-  );
-  Services.prefs.setBoolPref(ST_BLOCK_COOKIES_PREF, false);
-  ok(
-    !categoryItem.classList.contains("blocked"),
-    "Category not marked as blocked"
-  );
   ok(
     categoryItem.classList.contains("notFound"),
     "Category marked as not found"
@@ -210,25 +205,11 @@ async function testCategoryItem() {
 
   await promise;
 
-  ok(
-    !categoryItem.classList.contains("blocked"),
-    "Category not marked as blocked"
-  );
-  ok(
-    !categoryItem.classList.contains("notFound"),
-    "Category not marked as not found"
-  );
-  Services.prefs.setBoolPref(ST_BLOCK_COOKIES_PREF, true);
   ok(categoryItem.classList.contains("blocked"), "Category marked as blocked");
-  ok(
-    !categoryItem.classList.contains("notFound"),
-    "Category not marked as not found"
-  );
-  Services.prefs.setBoolPref(ST_BLOCK_COOKIES_PREF, false);
-  ok(
-    !categoryItem.classList.contains("blocked"),
-    "Category not marked as blocked"
-  );
+
+  await TestUtils.waitForCondition(() => {
+    return !categoryItem.classList.contains("notFound");
+  });
   ok(
     !categoryItem.classList.contains("notFound"),
     "Category not marked as not found"
