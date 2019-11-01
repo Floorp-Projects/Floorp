@@ -345,6 +345,9 @@ var BrowserUtils = {
   canFindInPage(location) {
     return (
       !location.startsWith("about:addons") &&
+      !location.startsWith(
+        "chrome://mozapps/content/extensions/aboutaddons.html"
+      ) &&
       !location.startsWith("about:preferences")
     );
   },

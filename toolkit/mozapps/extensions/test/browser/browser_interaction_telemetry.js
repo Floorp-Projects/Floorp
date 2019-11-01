@@ -466,48 +466,58 @@ add_task(async function testExtensionEvents() {
 });
 
 add_task(async function testGeneralActions() {
-  await init("extension");
+  let win = await loadInitialView("extension");
+  info("Loaded");
 
-  let doc = gManagerWindow.document;
-  let menu = doc.getElementById("utils-menu");
-  let checkForUpdates = doc.getElementById("utils-updateNow");
-  let recentUpdates = doc.getElementById("utils-viewUpdates");
-  let debugAddons = doc.getElementById("utils-debugAddons");
-  let updatePolicy = doc.getElementById("utils-autoUpdateDefault");
-  let resetUpdatePolicy = doc.getElementById(
-    "utils-resetAddonUpdatesToAutomatic"
-  );
-  let manageShortcuts = doc.getElementById("manage-shortcuts");
+  let doc = win.document;
+  let pageOptionsButton = doc.querySelector('[action="page-options"]');
+  let menu = doc.querySelector("#page-options panel-list");
+  let checkForUpdates = menu.querySelector('[action="check-for-updates"]');
+  let recentUpdates = menu.querySelector('[action="view-recent-updates"]');
+  let updatePolicy = menu.querySelector('[action="set-update-automatically"]');
+  let resetUpdatePolicy = menu.querySelector('[action="reset-update-states"]');
+  let debugAddons = menu.querySelector('[action="debug-addons"]');
+  let manageShortcuts = menu.querySelector('[action="manage-shortcuts"]');
 
   async function clickInGearMenu(item) {
-    let shown = BrowserTestUtils.waitForEvent(menu, "popupshown");
-    menu.openPopup();
+    info(`Opening menu to click ${item.getAttribute("action")}`);
+    let shown = BrowserTestUtils.waitForEvent(menu, "shown");
+    // This should perform a click on the button to ensure that works. Other
+    // tests might just open the menu directly, or click items when it's closed.
+    pageOptionsButton.click();
     await shown;
+    info(`Clicking ${item.getAttribute("action")}`);
     item.click();
-    menu.hidePopup();
   }
 
   await clickInGearMenu(checkForUpdates);
+  let recentUpdatesLoaded = waitForViewLoad(win);
   await clickInGearMenu(recentUpdates);
-  await wait_for_view_load(gManagerWindow);
+  await recentUpdatesLoaded;
   await clickInGearMenu(updatePolicy);
   await clickInGearMenu(updatePolicy);
   await clickInGearMenu(resetUpdatePolicy);
 
   // Check shortcuts view.
+  let shortcutsLoaded = waitForViewLoad(win);
   await clickInGearMenu(manageShortcuts);
-  await wait_for_view_load(gManagerWindow);
+  await shortcutsLoaded;
   await clickInGearMenu(checkForUpdates);
 
   let waitForNewTab = BrowserTestUtils.waitForNewTab(gBrowser);
   await clickInGearMenu(debugAddons);
-  BrowserTestUtils.removeTab(await waitForNewTab);
+  info("Waiting for about:debugging tab");
+  let tab = await waitForNewTab;
+  BrowserTestUtils.removeTab(tab);
 
   waitForNewTab = BrowserTestUtils.waitForNewTab(gBrowser);
-  let searchBox = doc.getElementById("header-search");
+  let searchBox = doc.getElementById("search-addons");
   searchBox.value = "something";
-  searchBox.doCommand();
-  BrowserTestUtils.removeTab(await waitForNewTab);
+  searchBox.focus();
+  EventUtils.synthesizeKey("KEY_Enter", {}, win);
+  info("Waiting for AMO search tab");
+  tab = await waitForNewTab;
+  BrowserTestUtils.removeTab(tab);
 
   assertAboutAddonsTelemetryEvents(
     [
@@ -567,7 +577,7 @@ add_task(async function testGeneralActions() {
     { methods: TELEMETRY_METHODS }
   );
 
-  await close_manager(gManagerWindow);
+  await closeView(win);
 
   assertAboutAddonsTelemetryEvents([]);
 });
