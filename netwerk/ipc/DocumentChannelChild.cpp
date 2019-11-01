@@ -617,6 +617,19 @@ DocumentChannelChild::IsThirdPartyTrackingResource(bool* aIsTrackingResource) {
 }
 
 NS_IMETHODIMP
+DocumentChannelChild::IsSocialTrackingResource(
+    bool* aIsSocialTrackingResource) {
+  MOZ_ASSERT(!mFirstPartyClassificationFlags ||
+             !mThirdPartyClassificationFlags);
+  *aIsSocialTrackingResource =
+      UrlClassifierCommon::IsSocialTrackingClassificationFlag(
+          mThirdPartyClassificationFlags) ||
+      UrlClassifierCommon::IsSocialTrackingClassificationFlag(
+          mFirstPartyClassificationFlags);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 DocumentChannelChild::GetClassificationFlags(uint32_t* aClassificationFlags) {
   MOZ_ASSERT(aClassificationFlags);
   if (mThirdPartyClassificationFlags) {
