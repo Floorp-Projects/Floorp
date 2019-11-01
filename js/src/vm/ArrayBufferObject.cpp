@@ -613,6 +613,8 @@ MOZ_MUST_USE bool WasmArrayRawBuffer::growToSizeInPlace(uint32_t oldSize,
     return false;
   }
 
+  length_ = newSize;
+
   return true;
 }
 
@@ -671,7 +673,8 @@ WasmArrayRawBuffer* WasmArrayRawBuffer::Allocate(uint32_t numBytes,
   uint8_t* base = reinterpret_cast<uint8_t*>(data) + gc::SystemPageSize();
   uint8_t* header = base - sizeof(WasmArrayRawBuffer);
 
-  auto rawBuf = new (header) WasmArrayRawBuffer(base, maxSize, mappedSize);
+  auto rawBuf =
+      new (header) WasmArrayRawBuffer(base, maxSize, mappedSize, numBytes);
   return rawBuf;
 }
 
@@ -1281,6 +1284,8 @@ ArrayBufferObject* ArrayBufferObject::createFromNewRawBuffer(
     WasmArrayRawBuffer::Release(rawBuffer->dataPointer());
     return nullptr;
   }
+
+  MOZ_ASSERT(initialSize == rawBuffer->byteLength());
 
   buffer->setByteLength(initialSize);
   buffer->setFlags(0);
