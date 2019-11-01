@@ -6,7 +6,7 @@ const URL =
   "://example.com/browser/toolkit/components/thumbnails/" +
   "test/privacy_cache_control.sjs";
 
-function* runTests() {
+add_task(async function thumbnails_privacy() {
   registerCleanupFunction(function() {
     Services.prefs.clearUserPref(PREF_DISK_CACHE_SSL);
   });
@@ -37,39 +37,36 @@ function* runTests() {
     { scheme: "https", cacheControl: "private", diskCacheSSL: false },
   ];
 
-  yield checkCombinations(positive, true);
-  yield checkCombinations(negative, false);
-}
+  await checkCombinations(positive, true);
+  await checkCombinations(negative, false);
+});
 
-function checkCombinations(aCombinations, aResult) {
-  let combi = aCombinations.shift();
-  if (!combi) {
-    next();
-    return;
+async function checkCombinations(aCombinations, aResult) {
+  for (let combination of aCombinations) {
+    let url = combination.scheme + URL;
+    if (combination.cacheControl) {
+      url += "?" + combination.cacheControl;
+    }
+
+    await SpecialPowers.pushPrefEnv({
+      set: [[PREF_DISK_CACHE_SSL, combination.diskCacheSSL]],
+    });
+
+    // Add the test page as a top link so it has a chance to be thumbnailed
+    await promiseAddVisitsAndRepopulateNewTabLinks(url);
+
+    await BrowserTestUtils.withNewTab(
+      {
+        gBrowser,
+        url,
+      },
+      async browser => {
+        let msg = JSON.stringify(combination) + " == " + aResult;
+        let aIsSafeSite = await PageThumbs.shouldStoreThumbnail(browser);
+        Assert.equal(aIsSafeSite, aResult, msg);
+      }
+    );
+
+    await SpecialPowers.popPrefEnv();
   }
-
-  let url = combi.scheme + URL;
-  if (combi.cacheControl) {
-    url += "?" + combi.cacheControl;
-  }
-  Services.prefs.setBoolPref(PREF_DISK_CACHE_SSL, combi.diskCacheSSL);
-
-  // Add the test page as a top link so it has a chance to be thumbnailed
-  addVisitsAndRepopulateNewTabLinks(url, _ => {
-    testCombination(combi, url, aCombinations, aResult);
-  });
-}
-
-function testCombination(combi, url, aCombinations, aResult) {
-  let tab = (gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, url));
-  let browser = gBrowser.selectedBrowser;
-
-  BrowserTestUtils.browserLoaded(browser).then(async () => {
-    let msg = JSON.stringify(combi) + " == " + aResult;
-    let aIsSafeSite = await PageThumbs.shouldStoreThumbnail(browser);
-    is(aIsSafeSite, aResult, msg);
-    gBrowser.removeTab(tab);
-    // Continue with the next combination.
-    checkCombinations(aCombinations, aResult);
-  });
 }

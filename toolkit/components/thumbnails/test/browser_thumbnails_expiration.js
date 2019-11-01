@@ -15,7 +15,7 @@ Services.scriptloader.loadSubScript(
 const EXPIRATION_MIN_CHUNK_SIZE = 50;
 const { PageThumbsExpiration } = tmp;
 
-function* runTests() {
+add_task(async function thumbnails_expiration() {
   // Create dummy URLs.
   let dummyURLs = [];
   for (let i = 0; i < EXPIRATION_MIN_CHUNK_SIZE + 10; i++) {
@@ -26,47 +26,47 @@ function* runTests() {
   dontExpireThumbnailURLs([URL1, URL2, URL3].concat(dummyURLs));
 
   // Create three thumbnails.
-  yield createDummyThumbnail(URL1);
+  await createDummyThumbnail(URL1);
   ok(thumbnailExists(URL1), "first thumbnail created");
 
-  yield createDummyThumbnail(URL2);
+  await createDummyThumbnail(URL2);
   ok(thumbnailExists(URL2), "second thumbnail created");
 
-  yield createDummyThumbnail(URL3);
+  await createDummyThumbnail(URL3);
   ok(thumbnailExists(URL3), "third thumbnail created");
 
   // Remove the third thumbnail.
-  yield expireThumbnails([URL1, URL2]);
+  await expireThumbnails([URL1, URL2]);
   ok(thumbnailExists(URL1), "first thumbnail still exists");
   ok(thumbnailExists(URL2), "second thumbnail still exists");
   ok(!thumbnailExists(URL3), "third thumbnail has been removed");
 
   // Remove the second thumbnail.
-  yield expireThumbnails([URL1]);
+  await expireThumbnails([URL1]);
   ok(thumbnailExists(URL1), "first thumbnail still exists");
   ok(!thumbnailExists(URL2), "second thumbnail has been removed");
 
   // Remove all thumbnails.
-  yield expireThumbnails([]);
+  await expireThumbnails([]);
   ok(!thumbnailExists(URL1), "all thumbnails have been removed");
 
   // Create some more files than the min chunk size.
   for (let url of dummyURLs) {
-    yield createDummyThumbnail(url);
+    await createDummyThumbnail(url);
   }
 
   ok(dummyURLs.every(thumbnailExists), "all dummy thumbnails created");
 
   // Expire thumbnails and expect 10 remaining.
-  yield expireThumbnails([]);
+  await expireThumbnails([]);
   let remainingURLs = dummyURLs.filter(thumbnailExists);
   is(remainingURLs.length, 10, "10 dummy thumbnails remaining");
 
   // Expire thumbnails again. All should be gone by now.
-  yield expireThumbnails([]);
+  await expireThumbnails([]);
   remainingURLs = remainingURLs.filter(thumbnailExists);
   is(remainingURLs.length, 0, "no dummy thumbnails remaining");
-}
+});
 
 function createDummyThumbnail(aURL) {
   info("Creating dummy thumbnail for " + aURL);
@@ -74,25 +74,9 @@ function createDummyThumbnail(aURL) {
   for (let i = 0; i < 10; ++i) {
     dummy[i] = i;
   }
-  PageThumbsStorage.writeData(aURL, dummy).then(
-    function onSuccess() {
-      info("createDummyThumbnail succeeded");
-      executeSoon(next);
-    },
-    function onFailure(error) {
-      ok(false, "createDummyThumbnail failed " + error);
-    }
-  );
+  return PageThumbsStorage.writeData(aURL, dummy);
 }
 
 function expireThumbnails(aKeep) {
-  PageThumbsExpiration.expireThumbnails(aKeep).then(
-    function onSuccess() {
-      info("expireThumbnails succeeded");
-      executeSoon(next);
-    },
-    function onFailure(error) {
-      ok(false, "expireThumbnails failed " + error);
-    }
-  );
+  return PageThumbsExpiration.expireThumbnails(aKeep);
 }

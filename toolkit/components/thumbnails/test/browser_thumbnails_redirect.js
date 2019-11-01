@@ -12,21 +12,31 @@ const FINAL_URL =
 /**
  * These tests ensure that we save and provide thumbnails for redirecting sites.
  */
-function* runTests() {
+add_task(async function thumbnails_redirect() {
   dontExpireThumbnailURLs([URL, FINAL_URL]);
 
   // Kick off history by loading a tab first or the test fails in single mode.
-  yield addTab(URL);
-  gBrowser.removeTab(gBrowser.selectedTab);
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: URL,
+    },
+    browser => {}
+  );
 
   // Create a tab, redirecting to a page with a red background.
-  yield addTab(URL);
-  yield captureAndCheckColor(255, 0, 0, "we have a red thumbnail");
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: URL,
+    },
+    async browser => {
+      await captureAndCheckColor(255, 0, 0, "we have a red thumbnail");
 
-  // Wait until the referrer's thumbnail's file has been written.
-  yield whenFileExists(URL);
-  yield retrieveImageDataForURL(URL, function([r, g, b]) {
-    is("" + [r, g, b], "255,0,0", "referrer has a red thumbnail");
-    next();
-  });
-}
+      // Wait until the referrer's thumbnail's file has been written.
+      await whenFileExists(URL);
+      let [r, g, b] = await retrieveImageDataForURL(URL);
+      is("" + [r, g, b], "255,0,0", "referrer has a red thumbnail");
+    }
+  );
+});
