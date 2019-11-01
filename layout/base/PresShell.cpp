@@ -851,8 +851,6 @@ PresShell::PresShell()
   mReflowCountMgr->SetPresShell(this);
 #endif
   mLastOSWake = mLoadBegin = TimeStamp::Now();
-  PodZero(&mReqsPerFlush);
-  PodZero(&mFlushesPerTick);
 
   PointerEventHandler::Initialize();
 }
@@ -4114,6 +4112,7 @@ void PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush) {
                                                 innerWindowID);
 #endif
       PerfStats::AutoMetricRecording<PerfStats::Metric::Styling> autoRecording;
+      LAYOUT_TELEMETRY_RECORD_BASE(Restyle);
 
       mPresContext->RestyleManager()->ProcessPendingRestyles();
     }
@@ -4145,6 +4144,7 @@ void PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush) {
                                                 innerWindowID);
 #endif
       PerfStats::AutoMetricRecording<PerfStats::Metric::Styling> autoRecording;
+      LAYOUT_TELEMETRY_RECORD_BASE(Restyle);
 
       mPresContext->RestyleManager()->ProcessPendingRestyles();
       // Clear mNeedStyleFlush here agagin to make this flag work properly for
@@ -4201,11 +4201,11 @@ void PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush) {
 
   // Update flush counters
   if (didStyleFlush) {
-    mFlushesPerTick[FlushKind::Style]++;
+    mLayoutTelemetry.IncReqsPerFlush(FlushType::Style);
   }
 
   if (didLayoutFlush) {
-    mFlushesPerTick[FlushKind::Layout]++;
+    mLayoutTelemetry.IncReqsPerFlush(FlushType::Layout);
   }
 
   // Record telemetry for the number of requests per each flush type.
@@ -4217,10 +4217,10 @@ void PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush) {
   // by `isSafeToFlush == true`.)
   if (flushType >= FlushType::InterruptibleLayout && didLayoutFlush) {
     MOZ_ASSERT(didLayoutFlush == didStyleFlush);
-    PingReqsPerFlushTelemetry(FlushKind::Layout);
+    mLayoutTelemetry.PingReqsPerFlushTelemetry(FlushType::Layout);
   } else if (flushType >= FlushType::Style && didStyleFlush) {
     MOZ_ASSERT(!didLayoutFlush);
-    PingReqsPerFlushTelemetry(FlushKind::Style);
+    mLayoutTelemetry.PingReqsPerFlushTelemetry(FlushType::Style);
   }
 }
 
@@ -9101,6 +9101,9 @@ bool PresShell::DoReflow(nsIFrame* target, bool aInterruptible,
       "Reflow", LAYOUT_Reflow,
       uri ? uri->GetSpecOrDefault() : NS_LITERAL_CSTRING("N/A"));
 #endif
+
+  LAYOUT_TELEMETRY_RECORD_BASE(Reflow);
+
   PerfStats::AutoMetricRecording<PerfStats::Metric::Reflowing> autoRecording;
 
   gfxTextPerfMetrics* tp = mPresContext->GetTextPerfMetrics();
@@ -11222,37 +11225,6 @@ void PresShell::EndPaint() {
   }
 }
 
-void PresShell::PingReqsPerFlushTelemetry(FlushKind aFlushKind) {
-  if (aFlushKind == FlushKind::Layout) {
-    auto styleFlushReqs = mReqsPerFlush[FlushKind::Style].value();
-    auto layoutFlushReqs = mReqsPerFlush[FlushKind::Layout].value();
-    Telemetry::Accumulate(Telemetry::PRESSHELL_REQS_PER_LAYOUT_FLUSH,
-                          NS_LITERAL_CSTRING("Style"), styleFlushReqs);
-    Telemetry::Accumulate(Telemetry::PRESSHELL_REQS_PER_LAYOUT_FLUSH,
-                          NS_LITERAL_CSTRING("Layout"), layoutFlushReqs);
-    mReqsPerFlush[FlushKind::Style] = SaturateUint8(0);
-    mReqsPerFlush[FlushKind::Layout] = SaturateUint8(0);
-  } else {
-    auto styleFlushReqs = mReqsPerFlush[FlushKind::Style].value();
-    Telemetry::Accumulate(Telemetry::PRESSHELL_REQS_PER_STYLE_FLUSH,
-                          styleFlushReqs);
-    mReqsPerFlush[FlushKind::Style] = SaturateUint8(0);
-  }
-}
-
-void PresShell::PingFlushPerTickTelemetry(FlushType aFlushType) {
-  MOZ_ASSERT(aFlushType == FlushType::Style || aFlushType == FlushType::Layout);
-  auto styleFlushes = mFlushesPerTick[FlushKind::Style].value();
-  if (styleFlushes > 0) {
-    Telemetry::Accumulate(Telemetry::PRESSHELL_FLUSHES_PER_TICK,
-                          NS_LITERAL_CSTRING("Style"), styleFlushes);
-    mFlushesPerTick[FlushKind::Style] = SaturateUint8(0);
-  }
-
-  auto layoutFlushes = mFlushesPerTick[FlushKind::Layout].value();
-  if (aFlushType == FlushType::Layout && layoutFlushes > 0) {
-    Telemetry::Accumulate(Telemetry::PRESSHELL_FLUSHES_PER_TICK,
-                          NS_LITERAL_CSTRING("Layout"), layoutFlushes);
-    mFlushesPerTick[FlushKind::Layout] = SaturateUint8(0);
-  }
+void PresShell::PingPerTickTelemetry(FlushType aFlushType) {
+  mLayoutTelemetry.PingPerTickTelemetry(aFlushType);
 }

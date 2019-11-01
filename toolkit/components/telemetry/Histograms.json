@@ -15591,5 +15591,25 @@
     "n_buckets": 100,
     "bug_numbers": [1564179],
     "description": "milliseconds to complete a TLS handshake that used delegated credentials"
+  },
+  "PRESSHELL_LAYOUT_TOTAL_MS_PER_TICK": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec", "geckoview"],
+    "alert_emails": ["dglastonbury@mozilla.com"],
+    "bug_numbers": [1578319],
+    "expires_in_version": "76",
+    "keyed": true,
+    "keys": [
+      "Restyle",
+      "ReflowOther",
+      "ReflowFlex",
+      "ReflowGrid",
+      "ReflowTable",
+      "ReflowText"
+    ],
+    "kind": "exponential",
+    "high": 1000,
+    "n_buckets": 50,
+    "description": "Time in milliseconds spent in the layout system per Refresh Driver tick."
   }
 }

@@ -27,7 +27,7 @@ void PresShell::SetNeedLayoutFlush() {
   }
 #endif
 
-  mReqsPerFlush[FlushKind::Layout]++;
+  mLayoutTelemetry.IncReqsPerFlush(FlushType::Layout);
 }
 
 void PresShell::SetNeedStyleFlush() {
@@ -44,7 +44,7 @@ void PresShell::SetNeedStyleFlush() {
   }
 #endif
 
-  mReqsPerFlush[FlushKind::Style]++;
+  mLayoutTelemetry.IncReqsPerFlush(FlushType::Layout);
 }
 
 void PresShell::EnsureStyleFlush() {
