@@ -30,6 +30,7 @@ class AutoAccessAtomsZone;
 class AutoLockGC;
 class AutoLockGCBgAlloc;
 class AutoLockHelperThreadState;
+class FinalizationGroupObject;
 class VerifyPreTracer;
 class ZoneAllocator;
 
@@ -395,6 +396,9 @@ class GCRuntime {
   MOZ_MUST_USE bool addFinalizeCallback(JSFinalizeCallback callback,
                                         void* data);
   void removeFinalizeCallback(JSFinalizeCallback func);
+  void setHostCleanupFinalizationGroupCallback(
+      JSHostCleanupFinalizationGroupCallback callback, void* data);
+  void callHostCleanupFinalizationGroupCallback(FinalizationGroupObject* group);
   MOZ_MUST_USE bool addWeakPointerZonesCallback(
       JSWeakPointerZonesCallback callback, void* data);
   void removeWeakPointerZonesCallback(JSWeakPointerZonesCallback callback);
@@ -1045,6 +1049,8 @@ class GCRuntime {
   Callback<JS::DoCycleCollectionCallback> gcDoCycleCollectionCallback;
   Callback<JSObjectsTenuredCallback> tenuredCallback;
   CallbackVector<JSFinalizeCallback> finalizeCallbacks;
+  Callback<JSHostCleanupFinalizationGroupCallback>
+      hostCleanupFinalizationGroupCallback;
   CallbackVector<JSWeakPointerZonesCallback> updateWeakPointerZonesCallbacks;
   CallbackVector<JSWeakPointerCompartmentCallback>
       updateWeakPointerCompartmentCallbacks;
