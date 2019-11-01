@@ -357,6 +357,7 @@ struct DocumentChannelCreationArgs {
   DocShellLoadStateInit loadState;
   LoadInfoArgs loadInfo;
   PrincipalInfo? contentBlockingAllowListPrincipal;
+  TimeStamp asyncOpenTime;
   nsString? initiatorType;
   nsString customUserAgent;
   uint64_t channelId;
