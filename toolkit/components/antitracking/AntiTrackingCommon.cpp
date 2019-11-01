@@ -394,8 +394,6 @@ void ReportBlockingToConsole(nsPIDOMWindowOuter* aWindow, nsIURI* aURI,
       aRejectedReason ==
           nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER ||
       aRejectedReason ==
-          nsIWebProgressListener::STATE_COOKIES_BLOCKED_SOCIALTRACKER ||
-      aRejectedReason ==
           nsIWebProgressListener::STATE_COOKIES_PARTITIONED_FOREIGN ||
       aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_ALL ||
       aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN);
@@ -1450,18 +1448,6 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
       LOG(("Our window isn't a third-party tracking window"));
       return true;
     }
-
-    nsCOMPtr<nsIClassifiedChannel> classifiedChannel =
-        do_QueryInterface(document->GetChannel());
-    if (classifiedChannel) {
-      uint32_t classificationFlags =
-          classifiedChannel->GetThirdPartyClassificationFlags();
-      if (classificationFlags & nsIClassifiedChannel::ClassificationFlags::
-                                    CLASSIFIED_SOCIALTRACKING) {
-        blockedReason =
-            nsIWebProgressListener::STATE_COOKIES_BLOCKED_SOCIALTRACKER;
-      }
-    }
   } else {
     MOZ_ASSERT(behavior ==
                nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN);
@@ -1703,19 +1689,10 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
   nsCOMPtr<nsIClassifiedChannel> classifiedChannel =
       do_QueryInterface(aChannel);
   if (behavior == nsICookieService::BEHAVIOR_REJECT_TRACKER) {
-    if (classifiedChannel) {
-      if (!classifiedChannel->IsThirdPartyTrackingResource()) {
-        LOG(("Our channel isn't a third-party tracking channel"));
-        return true;
-      }
-
-      uint32_t classificationFlags =
-          classifiedChannel->GetThirdPartyClassificationFlags();
-      if (classificationFlags & nsIClassifiedChannel::ClassificationFlags::
-                                    CLASSIFIED_SOCIALTRACKING) {
-        blockedReason =
-            nsIWebProgressListener::STATE_COOKIES_BLOCKED_SOCIALTRACKER;
-      }
+    if (classifiedChannel &&
+        !classifiedChannel->IsThirdPartyTrackingResource()) {
+      LOG(("Our channel isn't a third-party tracking channel"));
+      return true;
     }
   } else {
     MOZ_ASSERT(behavior ==
@@ -2053,8 +2030,6 @@ void AntiTrackingCommon::NotifyBlockingDecision(nsIChannel* aChannel,
       aRejectedReason ==
           nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER ||
       aRejectedReason ==
-          nsIWebProgressListener::STATE_COOKIES_BLOCKED_SOCIALTRACKER ||
-      aRejectedReason ==
           nsIWebProgressListener::STATE_COOKIES_PARTITIONED_FOREIGN ||
       aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_ALL ||
       aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_FOREIGN);
@@ -2117,8 +2092,6 @@ void AntiTrackingCommon::NotifyBlockingDecision(nsPIDOMWindowInner* aWindow,
           nsIWebProgressListener::STATE_COOKIES_BLOCKED_BY_PERMISSION ||
       aRejectedReason ==
           nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER ||
-      aRejectedReason ==
-          nsIWebProgressListener::STATE_COOKIES_BLOCKED_SOCIALTRACKER ||
       aRejectedReason ==
           nsIWebProgressListener::STATE_COOKIES_PARTITIONED_FOREIGN ||
       aRejectedReason == nsIWebProgressListener::STATE_COOKIES_BLOCKED_ALL ||

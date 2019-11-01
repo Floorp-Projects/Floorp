@@ -167,10 +167,8 @@ void ContentBlockingLog::ReportOrigins() {
     }
 
     for (const auto& logEntry : Reversed(originEntry.mData->mLogs)) {
-      if ((logEntry.mType !=
-               nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER &&
-           logEntry.mType !=
-               nsIWebProgressListener::STATE_COOKIES_BLOCKED_SOCIALTRACKER) ||
+      if (logEntry.mType !=
+              nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER ||
           logEntry.mTrackingFullHashes.IsEmpty()) {
         continue;
       }
