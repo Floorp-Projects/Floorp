@@ -1820,8 +1820,7 @@ SharedArrayRawBuffer* WasmMemoryObject::sharedArrayRawBuffer() const {
 
 uint32_t WasmMemoryObject::volatileMemoryLength() const {
   if (isShared()) {
-    SharedArrayRawBuffer::Lock lock(sharedArrayRawBuffer());
-    return sharedArrayRawBuffer()->byteLength(lock);
+    return sharedArrayRawBuffer()->volatileByteLength();
   }
   return buffer().byteLength();
 }
@@ -1904,8 +1903,8 @@ uint32_t WasmMemoryObject::growShared(HandleWasmMemoryObject memory,
   SharedArrayRawBuffer* rawBuf = memory->sharedArrayRawBuffer();
   SharedArrayRawBuffer::Lock lock(rawBuf);
 
-  MOZ_ASSERT(rawBuf->byteLength(lock) % PageSize == 0);
-  uint32_t oldNumPages = rawBuf->byteLength(lock) / PageSize;
+  MOZ_ASSERT(rawBuf->volatileByteLength() % PageSize == 0);
+  uint32_t oldNumPages = rawBuf->volatileByteLength() / PageSize;
 
   CheckedInt<uint32_t> newSize = oldNumPages;
   newSize += delta;
