@@ -19,7 +19,9 @@ const {
 } = require("devtools/client/inspector/shared/utils");
 const { LocalizationHelper } = require("devtools/shared/l10n");
 
-const Accordion = createFactory(require("./Accordion"));
+const Accordion = createFactory(
+  require("devtools/client/shared/components/Accordion")
+);
 const BoxModel = createFactory(
   require("devtools/client/inspector/boxmodel/components/BoxModel")
 );
@@ -84,9 +86,11 @@ class LayoutApp extends PureComponent {
     return {
       component: BoxModel,
       componentProps: this.props,
+      contentClassName: "layout-content",
       header: BOXMODEL_L10N.getStr("boxmodel.title"),
+      id: "layout-section-boxmodel",
       opened: Services.prefs.getBoolPref(BOXMODEL_OPENED_PREF),
-      onToggled: opened => {
+      onToggle: opened => {
         Services.prefs.setBoolPref(BOXMODEL_OPENED_PREF, opened);
       },
     };
@@ -97,21 +101,21 @@ class LayoutApp extends PureComponent {
       // No flex container or flex item selected.
       return {
         pref: FLEXBOX_OPENED_PREF,
-        className: "flex-accordion flex-accordion-none",
+        id: "layout-section-flex",
         header: LAYOUT_L10N.getStr("flexbox.header"),
       };
     } else if (!flexContainer.flexItemShown) {
       // No flex item selected.
       return {
         pref: FLEX_CONTAINER_OPENED_PREF,
-        className: "flex-accordion flex-accordion-container",
+        id: "layout-section-flex-container",
         header: LAYOUT_L10N.getStr("flexbox.flexContainer"),
       };
     }
 
     return {
       pref: FLEX_ITEM_OPENED_PREF,
-      className: "flex-accordion flex-accordion-item",
+      id: "layout-section-flex-item",
       header: LAYOUT_L10N.getFormatStr(
         "flexbox.flexItemOf",
         getSelectorFromGrip(translateNodeFrontToGrip(flexContainer.nodeFront))
@@ -120,21 +124,21 @@ class LayoutApp extends PureComponent {
   }
 
   getFlexSection(flexContainer) {
-    const { pref, className, header } = this.getFlexAccordionData(
-      flexContainer
-    );
+    const { pref, id, header } = this.getFlexAccordionData(flexContainer);
 
     return {
-      className,
+      className: "flex-accordion",
       component: Flexbox,
       componentProps: {
         ...this.props,
         flexContainer,
         scrollToTop: this.scrollToTop,
       },
+      contentClassName: "layout-content",
       header,
+      id,
       opened: Services.prefs.getBoolPref(pref),
-      onToggled: opened => {
+      onToggle: opened => {
         Services.prefs.setBoolPref(pref, opened);
       },
     };
@@ -144,9 +148,11 @@ class LayoutApp extends PureComponent {
     return {
       component: Grid,
       componentProps: this.props,
+      contentClassName: "layout-content",
       header: LAYOUT_L10N.getStr("layout.header"),
+      id: "layout-grid-section",
       opened: Services.prefs.getBoolPref(GRID_OPENED_PREF),
-      onToggled: opened => {
+      onToggle: opened => {
         Services.prefs.setBoolPref(GRID_OPENED_PREF, opened);
       },
     };

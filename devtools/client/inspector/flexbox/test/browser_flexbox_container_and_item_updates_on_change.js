@@ -31,7 +31,7 @@ add_task(async function() {
   ok(flexSizingContainer, "The flex sizing info is rendered.");
 
   info("Changing the flexbox in the page.");
-  const onAccordionsChanged = waitForDOM(doc, ".accordion > div", 4);
+  const onAccordionsChanged = waitForDOM(doc, ".accordion-item", 4);
   testActor.eval(`
     document.getElementById("item").className = "container";
   `);

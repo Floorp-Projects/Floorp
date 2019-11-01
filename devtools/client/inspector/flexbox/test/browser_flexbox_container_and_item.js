@@ -24,7 +24,7 @@ add_task(async function() {
   const { inspector, flexboxInspector } = await openLayoutView();
   const { document: doc } = flexboxInspector;
 
-  const onAccordionsRendered = waitForDOM(doc, ".accordion > div", 4);
+  const onAccordionsRendered = waitForDOM(doc, ".accordion-item", 4);
   await selectNode("#item", inspector);
   const [flexItemPane, flexContainerPane] = await onAccordionsRendered;
 

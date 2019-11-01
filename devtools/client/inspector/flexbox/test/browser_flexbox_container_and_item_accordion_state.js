@@ -26,8 +26,9 @@ add_task(async function() {
   info("Check that there is only 1 accordion for displayed");
   let accordions = doc.querySelectorAll(".flex-accordion");
   is(accordions.length, 1, "There's only 1 accordion");
-  ok(
-    accordions[0].classList.contains("flex-accordion-container"),
+  is(
+    accordions[0].id,
+    "layout-section-flex-container",
     "The accordion is the container type"
   );
 
@@ -40,12 +41,14 @@ add_task(async function() {
   );
   accordions = doc.querySelectorAll(".flex-accordion");
   is(accordions.length, 2, "There are 2 accordions");
-  ok(
-    accordions[0].classList.contains("flex-accordion-container"),
+  is(
+    accordions[0].id,
+    "layout-section-flex-container",
     "The first accordion is the container type"
   );
-  ok(
-    accordions[1].classList.contains("flex-accordion-item"),
+  is(
+    accordions[1].id,
+    "layout-section-flex-item",
     "The second accordion is the item type"
   );
 
@@ -64,12 +67,14 @@ add_task(async function() {
   );
   accordions = doc.querySelectorAll(".flex-accordion");
   is(accordions.length, 2, "There are 2 accordions again");
-  ok(
-    accordions[0].classList.contains("flex-accordion-item"),
+  is(
+    accordions[0].id,
+    "layout-section-flex-item",
     "The first accordion is the item type"
   );
-  ok(
-    accordions[1].classList.contains("flex-accordion-container"),
+  is(
+    accordions[1].id,
+    "layout-section-flex-container",
     "The second accordion is the container type"
   );
 });

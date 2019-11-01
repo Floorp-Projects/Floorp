@@ -4,41 +4,36 @@
 
 /* Accordion */
 
-:root {
-  --accordion-header-background: var(--theme-toolbar-background);
-}
-
-:root.theme-dark {
-  --accordion-header-background: #222225;
-}
-
 .accordion {
-  background-color: var(--theme-sidebar-background);
-  list-style-type: none;
+  width: 100%;
   padding: 0;
   margin: 0;
-  width: 100%;
-  white-space: nowrap;
-  overflow: auto;
+  list-style-type: none;
+  /* Accordion root has tabindex="-1" to get focus programatically.
+   * This can give it a focus outline when clicked, which we don't want.
+   * The container itself is not in the focus order at all. */
+  outline: none;
+  background-color: var(--theme-sidebar-background);
 }
 
-.accordion .accordion-header {
-  background-color: var(--accordion-header-background);
-  border-bottom: 1px solid var(--theme-splitter-color);
+.accordion-header {
   box-sizing: border-box;
   display: flex;
-  font-size: 12px;
-  line-height: 16px;
-  transition: all 0.25s ease;
+  align-items: center;
   /* Reserve 1px for the border */
   min-height: calc(var(--theme-toolbar-height) + 1px);
+  margin: 0;
+  border-bottom: 1px solid var(--theme-splitter-color);
   padding: 2px 4px;
-  align-items: center;
-  margin: 0px;
+  font-size: inherit;
   font-weight: normal;
-
   user-select: none;
   cursor: default;
+  background-color: var(--theme-accordion-header-background);
+}
+
+.accordion-header:hover {
+  background-color: var(--theme-accordion-header-hover);
 }
 
 /*
@@ -48,26 +43,45 @@
   - distance between arrow and start edge = 6px
   - distance between arrow and text = 4px
 */
-.accordion .accordion-header .theme-twisty {
+.accordion-header .theme-twisty {
+  display: inline-block;
+  flex: none;
   width: 10px;
   height: 10px;
   margin-inline-start: 2px;
   margin-inline-end: 4px;
+  pointer-events: none;
 }
 
-.accordion .accordion-header:hover {
-  background-color: var(--theme-toolbar-background-hover);
-}
-
-.accordion .accordion-content:not(:empty) {
+.accordion-header-label {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   font-size: 12px;
-  overflow: auto;
+  line-height: 16px;
+  color: var(--theme-toolbar-color);
 }
 
-.accordion > li > .accordion-content:not(:empty) {
+.accordion-header-buttons {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  max-width: 50%;
+  margin-inline-start: auto;
+  padding-inline-start: 4px;
+}
+
+.accordion-content {
+  overflow: auto;
   border-bottom: 1px solid var(--theme-splitter-color);
 }
 
-.accordion li:last-child .accordion-content {
+.accordion-content[hidden] {
+  display: none;
+}
+
+.accordion-item:last-child > .accordion-content {
   border-bottom: none;
 }

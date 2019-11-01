@@ -6,7 +6,7 @@
 
 const {
   Component,
-  cloneElement,
+  createElement,
 } = require("devtools/client/shared/vendor/react");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const {
@@ -14,6 +14,7 @@ const {
   li,
   h2,
   div,
+  span,
 } = require("devtools/client/shared/vendor/react-dom-factories");
 
 class Accordion extends Component {
@@ -22,12 +23,13 @@ class Accordion extends Component {
       // A list of all items to be rendered using an Accordion component.
       items: PropTypes.arrayOf(
         PropTypes.shape({
-          component: PropTypes.object,
-          componentProps: PropTypes.object,
           buttons: PropTypes.arrayOf(PropTypes.object),
           className: PropTypes.string,
+          component: PropTypes.object,
+          componentProps: PropTypes.object,
+          contentClassName: PropTypes.string,
           header: PropTypes.string.isRequired,
-          labelledby: PropTypes.string.isRequired,
+          id: PropTypes.string.isRequired,
           onToggle: PropTypes.func,
           opened: PropTypes.bool.isRequired,
         })
@@ -35,95 +37,161 @@ class Accordion extends Component {
     };
   }
 
+  /**
+   * Add initial data to the state.opened map, and inject new data
+   * when receiving updated props.
+   */
+  static getDerivedStateFromProps(props, state) {
+    const newItems = props.items.filter(
+      ({ id }) => typeof state.opened[id] !== "boolean"
+    );
+
+    if (newItems.length) {
+      const everOpened = { ...state.everOpened };
+      const opened = { ...state.opened };
+      for (const item of newItems) {
+        everOpened[item.id] = item.opened;
+        opened[item.id] = item.opened;
+      }
+      return { everOpened, opened };
+    }
+
+    return null;
+  }
+
   constructor(props) {
     super(props);
 
     this.state = {
-      opened: Object.assign({}, props.items.map(item => item.opened)),
+      opened: {},
     };
+
+    this.onHeaderClick = this.onHeaderClick.bind(this);
+    this.onHeaderKeyDown = this.onHeaderKeyDown.bind(this);
   }
 
   /**
-   * Expand or collapse an accordian list item.
-   * @param  {Number} i
-   *         Index of the item to be collapsed/expanded.
+   * @param {Event} event Click event.
    */
-  handleHeaderClick(i) {
-    const { opened } = this.state;
+  onHeaderClick(event) {
+    event.preventDefault();
+    // In the Browser Toolbox's Inspector/Layout view, handleHeaderClick is
+    // called twice unless we call stopPropagation, making the accordion item
+    // open-and-close or close-and-open
+    event.stopPropagation();
+    this.toggleItem(event.currentTarget.parentElement.id);
+  }
+
+  /**
+   * @param {Event} event Keyboard event.
+   * @param {Object} item The item to be collapsed/expanded.
+   */
+  onHeaderKeyDown(event) {
+    if (event.key === " " || event.key === "Enter") {
+      event.preventDefault();
+      this.toggleItem(event.currentTarget.parentElement.id);
+    }
+  }
+
+  /**
+   * Expand or collapse an accordion list item.
+   * @param  {String} id Id of the item to be collapsed or expanded.
+   */
+  toggleItem(id) {
+    const item = this.props.items.find(x => x.id === id);
+    const opened = !this.state.opened[id];
+    // We could have no item if props just changed
+    if (!item) {
+      return;
+    }
+
     this.setState({
+      everOpened: {
+        ...this.state.everOpened,
+        [id]: true,
+      },
       opened: {
-        ...opened,
-        [i]: !opened[i],
+        ...this.state.opened,
+        [id]: opened,
       },
     });
 
-    const item = this.props.items[i];
-    if (item.onToggle) {
-      item.onToggle(!opened[i]);
+    if (typeof item.onToggle === "function") {
+      item.onToggle(opened);
     }
   }
 
-  /**
-   * Expand or collapse an accordian list item with keyboard.
-   * @param  {Event} e
-   *         Keyboard event.
-   * @param  {Number} i
-   *         Index of the item to be collapsed/expanded.
-   */
-  onHandleHeaderKeyDown(e, i) {
-    if (e && (e.key === " " || e.key === "Enter")) {
-      this.handleHeaderClick(i);
-    }
-  }
-
-  renderContainer(item, i) {
+  renderItem(item) {
     const {
       buttons,
-      className,
+      className = "",
       component,
-      componentProps,
-      labelledby,
+      componentProps = {},
+      contentClassName = "",
       header,
+      id,
     } = item;
-    const opened = this.state.opened[i];
+    const headerId = `${id}-header`;
+    const opened = this.state.opened[id];
+    let itemContent;
+
+    // Only render content if the accordion item is open or has been opened once
+    // before. This saves us rendering complex components when users are keeping
+    // them closed (e.g. in Inspector/Layout) or may not open them at all.
+    if (this.state.everOpened[id]) {
+      if (typeof component === "function") {
+        itemContent = createElement(component, componentProps);
+      } else if (typeof component === "object") {
+        itemContent = component;
+      }
+    }
 
     return li(
       {
-        className,
-        "aria-labelledby": labelledby,
-        key: labelledby,
+        key: id,
+        id,
+        className: `accordion-item ${className}`.trim(),
+        "aria-labelledby": headerId,
       },
       h2(
         {
+          id: headerId,
           className: "accordion-header",
-          id: labelledby,
           tabIndex: 0,
           "aria-expanded": opened,
-          onKeyDown: e => this.onHandleHeaderKeyDown(e, i),
-          onClick: () => this.handleHeaderClick(i),
+          // If the header contains buttons, make sure the heading name only
+          // contains the "header" text and not the button text
+          "aria-label": header,
+          onKeyDown: this.onHeaderKeyDown,
+          onClick: this.onHeaderClick,
         },
-        div({
-          className: `arrow theme-twisty${opened ? " open" : ""}`,
+        span({
+          className: `theme-twisty${opened ? " open" : ""}`,
           role: "presentation",
         }),
-        header,
+        span(
+          {
+            className: "accordion-header-label",
+          },
+          header
+        ),
         buttons &&
-          div(
+          span(
             {
-              className: "header-buttons",
+              className: "accordion-header-buttons",
               role: "presentation",
             },
             buttons
           )
       ),
-      opened &&
-        div(
-          {
-            className: "accordion-content",
-            role: "presentation",
-          },
-          cloneElement(component, componentProps || {})
-        )
+      div(
+        {
+          className: `accordion-content ${contentClassName}`.trim(),
+          hidden: !opened,
+          role: "presentation",
+        },
+        itemContent
+      )
     );
   }
 
@@ -133,7 +201,7 @@ class Accordion extends Component {
         className: "accordion",
         tabIndex: -1,
       },
-      this.props.items.map((item, i) => this.renderContainer(item, i))
+      this.props.items.map(item => this.renderItem(item))
     );
   }
 }
