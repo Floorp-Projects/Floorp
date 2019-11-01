@@ -14,7 +14,7 @@ const aps = Cc["@mozilla.org/addons/policy-service;1"].getService(
 
 let policy = null;
 
-function setAddonCSP(csp) {
+function setExtensionPageCSP(csp) {
   if (policy) {
     policy.active = false;
   }
@@ -27,7 +27,7 @@ function setAddonCSP(csp) {
     allowedOrigins: new MatchPatternSet([]),
     localizeCallback() {},
 
-    contentSecurityPolicy: csp,
+    extensionPageCSP: csp,
   });
 
   policy.active = true;
@@ -53,18 +53,18 @@ add_task(async function test_addon_csp() {
   const CUSTOM_POLICY =
     "script-src: 'self' https://xpcshell.test.custom.csp; object-src: 'none'";
 
-  setAddonCSP(CUSTOM_POLICY);
+  setExtensionPageCSP(CUSTOM_POLICY);
 
   equal(
-    aps.getAddonCSP(ADDON_ID),
+    aps.getExtensionPageCSP(ADDON_ID),
     CUSTOM_POLICY,
     "CSP should point to add-on's custom policy"
   );
 
-  setAddonCSP(null);
+  setExtensionPageCSP(null);
 
   equal(
-    aps.getAddonCSP(ADDON_ID),
+    aps.getExtensionPageCSP(ADDON_ID),
     aps.defaultCSP,
     "CSP should revert to default when set to null"
   );

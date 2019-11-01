@@ -3176,11 +3176,12 @@ nsresult Document::InitCSP(nsIChannel* aChannel) {
 
   // ----- if the doc is an addon, apply its CSP.
   if (addonPolicy) {
-    nsAutoString addonCSP;
-    Unused << ExtensionPolicyService::GetSingleton().GetBaseCSP(addonCSP);
-    mCSP->AppendPolicy(addonCSP, false, false);
+    nsAutoString extensionPageCSP;
+    Unused << ExtensionPolicyService::GetSingleton().GetBaseCSP(
+        extensionPageCSP);
+    mCSP->AppendPolicy(extensionPageCSP, false, false);
 
-    mCSP->AppendPolicy(addonPolicy->ContentSecurityPolicy(), false, false);
+    mCSP->AppendPolicy(addonPolicy->ExtensionPageCSP(), false, false);
     // Bug 1548468: Move CSP off ExpandedPrincipal
     // Currently the LoadInfo holds the source of truth for every resource load
     // because LoadInfo::GetCSP() queries the CSP from an ExpandedPrincipal
