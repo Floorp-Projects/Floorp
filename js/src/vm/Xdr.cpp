@@ -65,7 +65,7 @@ XDRResult XDRState<mode>::codeChars(Utf8Unit* units, size_t count) {
   }
 
   if (mode == XDR_ENCODE) {
-    uint8_t* ptr = buf.write(count);
+    uint8_t* ptr = buf->write(count);
     if (!ptr) {
       return fail(JS::TranscodeResult_Throw);
     }
@@ -73,7 +73,7 @@ XDRResult XDRState<mode>::codeChars(Utf8Unit* units, size_t count) {
     std::transform(units, units + count, ptr,
                    [](const Utf8Unit& unit) { return unit.toUint8(); });
   } else {
-    const uint8_t* ptr = buf.read(count);
+    const uint8_t* ptr = buf->read(count);
     if (!ptr) {
       return fail(JS::TranscodeResult_Failure_BadDecode);
     }
@@ -93,7 +93,7 @@ XDRResult XDRState<mode>::codeChars(char16_t* chars, size_t nchars) {
 
   size_t nbytes = nchars * sizeof(char16_t);
   if (mode == XDR_ENCODE) {
-    uint8_t* ptr = buf.write(nbytes);
+    uint8_t* ptr = buf->write(nbytes);
     if (!ptr) {
       return fail(JS::TranscodeResult_Throw);
     }
@@ -101,7 +101,7 @@ XDRResult XDRState<mode>::codeChars(char16_t* chars, size_t nchars) {
     // |mozilla::NativeEndian| correctly handles writing into unaligned |ptr|.
     mozilla::NativeEndian::copyAndSwapToLittleEndian(ptr, chars, nchars);
   } else {
-    const uint8_t* ptr = buf.read(nbytes);
+    const uint8_t* ptr = buf->read(nbytes);
     if (!ptr) {
       return fail(JS::TranscodeResult_Failure_BadDecode);
     }
@@ -266,6 +266,7 @@ XDRResult XDRState<mode>::codeScript(MutableHandleScript scriptp) {
   }
 
   MOZ_TRY(VersionCheck(this));
+  MOZ_ASSERT(isMainBuf());
   MOZ_TRY(XDRScript(this, nullptr, nullptr, nullptr, scriptp));
 
   guard.release();
@@ -373,7 +374,7 @@ void XDRIncrementalEncoder::createOrReplaceSubTree(AutoXDRTree* child) {
     return;
   }
 
-  size_t cursor = buf.cursor();
+  size_t cursor = buf->cursor();
 
   // End the parent slice here, set the key to the child.
   if (parent) {
@@ -415,7 +416,7 @@ void XDRIncrementalEncoder::endSubTree() {
     return;
   }
 
-  size_t cursor = buf.cursor();
+  size_t cursor = buf->cursor();
 
   // End the child sub-tree.
   Slice& last = node_->back();
