@@ -645,6 +645,9 @@ void Http3Session::ResetRecvd(uint64_t aStreamId, Http3AppError aError) {
     CloseStream(stream, NS_ERROR_NET_RESET);
   } else if (aError.tag == Http3AppError::Tag::RequestRejected) {
     // This request was rejected because server is probably busy or going away.
+    // We can restart the request using alt-svc. Without calling
+    // DoNotRemoveAltSvc the alt-svc route will be removed.
+    stream->Transaction()->DoNotRemoveAltSvc();
     CloseStream(stream, NS_ERROR_NET_RESET);
   } else {
     if (stream->RecvdData()) {
