@@ -442,6 +442,9 @@ MBasicBlock* MBasicBlock::New(MIRGraph& graph, const CompileInfo& info,
         block->setSlot(i, phi);
       }
     } else {
+      if (!block->ensureHasSlots(0)) {
+        return nullptr;
+      }
       block->copySlots(pred);
     }
 
@@ -505,6 +508,7 @@ bool MBasicBlock::ensureHasSlots(size_t num) {
 
 void MBasicBlock::copySlots(MBasicBlock* from) {
   MOZ_ASSERT(stackPosition_ <= from->stackPosition_);
+  MOZ_ASSERT(stackPosition_ <= nslots());
 
   MDefinition** thisSlots = slots_.begin();
   MDefinition** fromSlots = from->slots_.begin();
