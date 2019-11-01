@@ -198,6 +198,9 @@ either Raptor or browsertime."""
         # if 'alert_on' was provided in the test INI, add to our config for results/output
         self.config['subtest_alert_on'] = test.get('alert_on')
 
+        if test.get('playback') is not None and self.playback is None:
+            self.start_playback(test)
+
         if test.get("preferences") is not None:
             self.set_browser_test_prefs(test['preferences'])
 
@@ -393,7 +396,7 @@ class Browsertime(Perftest):
     def run_test_setup(self, test):
         super(Browsertime, self).run_test_setup(test)
 
-        if test.get('playback') is not None:
+        if test.get('playback') is not None and self.playback is None:
             self.start_playback(test)
 
         # TODO: geckodriver/chromedriver from tasks.
@@ -410,7 +413,7 @@ class Browsertime(Perftest):
 
         # if we were using a playback tool, stop it
         if self.playback is not None:
-            self.playback.stop()
+            self.playback = self.playback.stop()
 
     def check_for_crashes(self):
         super(Browsertime, self).check_for_crashes()
@@ -646,7 +649,7 @@ class Raptor(Perftest):
         super(Raptor, self).run_test_teardown(test)
 
         if self.playback is not None:
-            self.playback.stop()
+            self.playback = self.playback.stop()
 
         self.remove_raptor_webext()
 
@@ -871,9 +874,6 @@ class RaptorDesktop(Raptor):
 
             if test['browser_cycle'] == 1:
 
-                if test.get('playback') is not None:
-                    self.start_playback(test)
-
                 if self.config['host'] not in ('localhost', '127.0.0.1'):
                     self.delete_proxy_settings_from_profile()
 
@@ -897,9 +897,6 @@ class RaptorDesktop(Raptor):
 
     def __run_test_warm(self, test, timeout):
         self.run_test_setup(test)
-
-        if test.get('playback') is not None:
-            self.start_playback(test)
 
         if self.config['host'] not in ('localhost', '127.0.0.1'):
             self.delete_proxy_settings_from_profile()
@@ -984,7 +981,7 @@ class RaptorDesktopChrome(RaptorDesktop):
         # to turn on the proxy and ignore security certificate errors
         # if using host localhost, 127.0.0.1.
         chrome_args = [
-            '--proxy-server=127.0.0.1:8080',
+            '--proxy-server=%s:%d' % (self.playback.host, self.playback.port),
             '--proxy-bypass-list=localhost;127.0.0.1',
             '--ignore-certificate-errors',
         ]
@@ -1043,7 +1040,7 @@ class RaptorAndroid(Raptor):
 
         if self.config['host'] in ('localhost', '127.0.0.1'):
             LOG.info("making the raptor playback server port available to device")
-            self.set_reverse_port(8080)
+            self.set_reverse_port(self.playback.port)
 
         if is_benchmark and self.config['host'] in ('localhost', '127.0.0.1'):
             LOG.info("making the raptor benchmarks server port available to device")
@@ -1103,10 +1100,10 @@ class RaptorAndroid(Raptor):
         LOG.info("setting profile prefs to turn on the android app proxy")
         proxy_prefs = {}
         proxy_prefs["network.proxy.type"] = 1
-        proxy_prefs["network.proxy.http"] = self.config['host']
-        proxy_prefs["network.proxy.http_port"] = 8080
-        proxy_prefs["network.proxy.ssl"] = self.config['host']
-        proxy_prefs["network.proxy.ssl_port"] = 8080
+        proxy_prefs["network.proxy.http"] = self.playback.host
+        proxy_prefs["network.proxy.http_port"] = self.playback.port
+        proxy_prefs["network.proxy.ssl"] = self.playback.host
+        proxy_prefs["network.proxy.ssl_port"] = self.playback.port
         proxy_prefs["network.proxy.no_proxies_on"] = self.config['host']
         self.profile.set_preferences(proxy_prefs)
 
@@ -1296,7 +1293,6 @@ class RaptorAndroid(Raptor):
 
             if test['browser_cycle'] == 1:
                 if test.get('playback') is not None:
-                    self.start_playback(test)
 
                     # an ssl cert db has now been created in the profile; copy it out so we
                     # can use the same cert db in future test cycles / browser restarts
@@ -1358,9 +1354,6 @@ class RaptorAndroid(Raptor):
                  "page cycles" % test['name'])
 
         self.run_test_setup(test)
-
-        if test.get('playback') is not None:
-            self.start_playback(test)
 
         if self.config['host'] not in ('localhost', '127.0.0.1'):
             self.delete_proxy_settings_from_profile()
