@@ -46,5 +46,8 @@
          for native messaging webextension helper applications launched by
          Firefox which rely on Apple Events to signal other processes. -->
     <key>com.apple.security.automation.apple-events</key><true/>
+
+    <!-- For SmartCardServices(7) -->
+    <key>com.apple.security.smartcard</key><true/>
   </dict>
 </plist>
