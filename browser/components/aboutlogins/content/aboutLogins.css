@@ -44,7 +44,7 @@ login-list {
 :root:not(.no-logins):not(.empty-search):not(.login-selected) login-intro,
 login-item[data-editing="true"] + login-intro,
 .login-selected login-intro,
-.empty-search:not(.login-selected) login-item:not([data-editing="true"]),
+:root:not(.login-selected) login-item:not([data-editing="true"]),
 .no-logins login-item:not([data-editing="true"]) {
   display: none;
 }
