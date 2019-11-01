@@ -153,8 +153,6 @@ class nsMemoryReporterManager final : public nsIMemoryReporterManager,
 
     mozilla::InfallibleAmountFn mStorageSQLite;
 
-    mozilla::InfallibleAmountFn mLowMemoryEventsVirtual;
-    mozilla::InfallibleAmountFn mLowMemoryEventsCommitSpace;
     mozilla::InfallibleAmountFn mLowMemoryEventsPhysical;
 
     mozilla::InfallibleAmountFn mGhostWindows;
