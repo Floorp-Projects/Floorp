@@ -2437,7 +2437,11 @@ TokenStreamSpecific<Unit, AnyCharsAccess>::matchInteger(
     }
     unit = getCodeUnit();
     if (!isIntegerUnit(unit)) {
-      error(JSMSG_MISSING_DIGIT_AFTER_SEPARATOR);
+      if (unit == '_') {
+        error(JSMSG_NUMBER_MULTIPLE_ADJACENT_UNDERSCORES);
+      } else {
+        error(JSMSG_NUMBER_END_WITH_UNDERSCORE);
+      }
       return false;
     }
   }
