@@ -21,8 +21,8 @@ The following metrics are added to the ping:
 
 | Name | Type | Description | Data reviews | Extras | Expiration |
 | --- | --- | --- | --- | --- | --- |
-| activation.activation_id |[uuid](https://mozilla.github.io/glean/book/user/metrics/uuid.html) |An alternate identifier, not correlated with the client_id, generated once and only sent with the activation ping.  |[1](https://github.com/mozilla-mobile/fenix/pull/1707#issuecomment-486972209)||2019-10-01 |
-| activation.identifier |[string](https://mozilla.github.io/glean/book/user/metrics/string.html) |A hashed and salted version of the Google Advertising ID from the device. This will never be sent in a ping that also contains the client_id.  |[1](https://github.com/mozilla-mobile/fenix/pull/1707#issuecomment-486972209)||2019-10-01 |
+| activation.activation_id |[uuid](https://mozilla.github.io/glean/book/user/metrics/uuid.html) |An alternate identifier, not correlated with the client_id, generated once and only sent with the activation ping.  |[1](https://github.com/mozilla-mobile/fenix/pull/1707#issuecomment-486972209)||2020-03-01 |
+| activation.identifier |[string](https://mozilla.github.io/glean/book/user/metrics/string.html) |A hashed and salted version of the Google Advertising ID from the device. This will never be sent in a ping that also contains the client_id.  |[1](https://github.com/mozilla-mobile/fenix/pull/1707#issuecomment-486972209)||2020-03-01 |
 
 ## baseline
 This is a built-in ping that is assembled out of the box by the Glean SDK.

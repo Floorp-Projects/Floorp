@@ -684,7 +684,7 @@ activation:
     - https://github.com/mozilla-mobile/fenix/pull/1707#issuecomment-486972209
     notification_emails:
     - fenix-core@mozilla.com
-    expires: "2019-10-01"
+    expires: "2020-03-01"
 
   activation_id:
     type: uuid
@@ -700,7 +700,7 @@ activation:
     - https://github.com/mozilla-mobile/fenix/pull/1707#issuecomment-486972209
     notification_emails:
     - fenix-core@mozilla.com
-    expires: "2019-10-01"
+    expires: "2020-03-01"
 
 qr_scanner:
   opened:
