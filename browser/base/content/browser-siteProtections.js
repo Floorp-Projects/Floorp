@@ -653,6 +653,8 @@ var ThirdPartyCookies = {
   isBlocking(state) {
     return (
       (state & Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_TRACKER) != 0 ||
+      (state & Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_SOCIALTRACKER) !=
+        0 ||
       (state & Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_ALL) != 0 ||
       (state & Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_BY_PERMISSION) !=
         0 ||
@@ -670,7 +672,10 @@ var ThirdPartyCookies = {
       this.behaviorPref == Ci.nsICookieService.BEHAVIOR_ACCEPT
     ) {
       return (
-        (state & Ci.nsIWebProgressListener.STATE_COOKIES_LOADED_TRACKER) != 0
+        (state & Ci.nsIWebProgressListener.STATE_COOKIES_LOADED_TRACKER) != 0 ||
+        (state &
+          Ci.nsIWebProgressListener.STATE_COOKIES_LOADED_SOCIALTRACKER) !=
+          0
       );
     }
 
@@ -1013,24 +1018,27 @@ var SocialTracking = {
   },
 
   isBlocking(state) {
-    let cookieTrackerBlocked =
-      (state & Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_TRACKER) != 0;
     let socialtrackingContentBlocked =
       (state &
         Ci.nsIWebProgressListener.STATE_BLOCKED_SOCIALTRACKING_CONTENT) !=
       0;
-    let socialtrackingContentLoaded =
-      (state & Ci.nsIWebProgressListener.STATE_LOADED_SOCIALTRACKING_CONTENT) !=
+    let socialtrackingCookieBlocked =
+      (state & Ci.nsIWebProgressListener.STATE_BLOCKED_COOKIES_SOCIALTRACKER) !=
       0;
-    return (
-      (socialtrackingContentLoaded && cookieTrackerBlocked) ||
-      socialtrackingContentBlocked
-    );
+    return socialtrackingCookieBlocked || socialtrackingContentBlocked;
   },
 
   isAllowing(state) {
+    if (this.socialTrackingProtectionEnabled) {
+      return (
+        (state &
+          Ci.nsIWebProgressListener.STATE_LOADED_SOCIALTRACKING_CONTENT) !=
+        0
+      );
+    }
+
     return (
-      (state & Ci.nsIWebProgressListener.STATE_LOADED_SOCIALTRACKING_CONTENT) !=
+      (state & Ci.nsIWebProgressListener.STATE_COOKIES_LOADED_SOCIALTRACKER) !=
       0
     );
   },
