@@ -591,7 +591,7 @@ class GCRuntime {
 
   friend class BackgroundAllocTask;
   bool wantBackgroundAllocation(const AutoLockGC& lock) const;
-  bool startBackgroundAllocTaskIfIdle();
+  void startBackgroundAllocTaskIfIdle();
 
   void requestMajorGC(JS::GCReason reason);
   SliceBudget defaultBudget(JS::GCReason reason, int64_t millis);

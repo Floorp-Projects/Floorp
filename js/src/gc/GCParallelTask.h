@@ -91,14 +91,14 @@ class GCParallelTask : public mozilla::LinkedListElement<GCParallelTask>,
   mozilla::TimeDuration duration() const { return duration_; }
 
   // The simple interface to a parallel task works exactly like pthreads.
-  MOZ_MUST_USE bool start();
+  void start();
   void join();
 
   // If multiple tasks are to be started or joined at once, it is more
   // efficient to take the helper thread lock once and use these methods.
-  MOZ_MUST_USE bool startWithLockHeld(AutoLockHelperThreadState& locked);
-  void joinWithLockHeld(AutoLockHelperThreadState& locked);
-  void joinRunningOrFinishedTask(AutoLockHelperThreadState& locked);
+  void startWithLockHeld(AutoLockHelperThreadState& lock);
+  void joinWithLockHeld(AutoLockHelperThreadState& lock);
+  void joinRunningOrFinishedTask(AutoLockHelperThreadState& lock);
 
   // Instead of dispatching to a helper, run the task on the current thread.
   void runFromMainThread();

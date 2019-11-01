@@ -1701,28 +1701,20 @@ js::GCParallelTask::~GCParallelTask() {
   assertIdle();
 }
 
-bool js::GCParallelTask::startWithLockHeld(AutoLockHelperThreadState& lock) {
+void js::GCParallelTask::startWithLockHeld(AutoLockHelperThreadState& lock) {
   MOZ_ASSERT(CanUseExtraThreads());
+  MOZ_ASSERT(HelperThreadState().threads);
   assertIdle();
-
-  // If we do the shutdown GC before running anything, we may never
-  // have initialized the helper threads. Just use the serial path
-  // since we cannot safely intialize them at this point.
-  if (!HelperThreadState().threads) {
-    return false;
-  }
 
   HelperThreadState().gcParallelWorklist(lock).insertBack(this);
   setDispatched(lock);
 
   HelperThreadState().notifyOne(GlobalHelperThreadState::PRODUCER, lock);
-
-  return true;
 }
 
-bool js::GCParallelTask::start() {
-  AutoLockHelperThreadState helperLock;
-  return startWithLockHeld(helperLock);
+void js::GCParallelTask::start() {
+  AutoLockHelperThreadState lock;
+  startWithLockHeld(lock);
 }
 
 void js::GCParallelTask::startOrRunIfIdle(AutoLockHelperThreadState& lock) {
@@ -1734,10 +1726,13 @@ void js::GCParallelTask::startOrRunIfIdle(AutoLockHelperThreadState& lock) {
   // if the thread has never been started.
   joinWithLockHeld(lock);
 
-  if (!(CanUseExtraThreads() && startWithLockHeld(lock))) {
+  if (!CanUseExtraThreads()) {
     AutoUnlockHelperThreadState unlock(lock);
     runFromMainThread();
+    return;
   }
+
+  startWithLockHeld(lock);
 }
 
 void js::GCParallelTask::join() {
