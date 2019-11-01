@@ -437,12 +437,10 @@ already_AddRefed<Request> Request::Constructor(const GlobalObject& aGlobal,
   request->SetPrincipalInfo(std::move(principalInfo));
 
   if (mode != RequestMode::EndGuard_) {
-    request->ClearCreatedByFetchEvent();
     request->SetMode(mode);
   }
 
   if (credentials != RequestCredentials::EndGuard_) {
-    request->ClearCreatedByFetchEvent();
     request->SetCredentialsMode(credentials);
   }
 
@@ -456,7 +454,6 @@ already_AddRefed<Request> Request::Constructor(const GlobalObject& aGlobal,
       aRv.ThrowTypeError<MSG_ONLY_IF_CACHED_WITHOUT_SAME_ORIGIN>(modeString);
       return nullptr;
     }
-    request->ClearCreatedByFetchEvent();
     request->SetCacheMode(cache);
   }
 
@@ -488,7 +485,6 @@ already_AddRefed<Request> Request::Constructor(const GlobalObject& aGlobal,
     }
 
     // Step 14.2
-    request->ClearCreatedByFetchEvent();
     request->SetMethod(outMethod);
   }
 
@@ -501,7 +497,6 @@ already_AddRefed<Request> Request::Constructor(const GlobalObject& aGlobal,
     if (aRv.Failed()) {
       return nullptr;
     }
-    request->ClearCreatedByFetchEvent();
     headers = h->GetInternalHeaders();
   } else {
     headers = new InternalHeaders(*requestHeaders);
@@ -570,8 +565,6 @@ already_AddRefed<Request> Request::Constructor(const GlobalObject& aGlobal,
       if (NS_WARN_IF(aRv.Failed())) {
         return nullptr;
       }
-
-      request->ClearCreatedByFetchEvent();
 
       if (hasCopiedBody) {
         request->SetBody(nullptr, 0);

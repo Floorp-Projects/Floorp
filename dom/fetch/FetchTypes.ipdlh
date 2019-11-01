@@ -39,7 +39,6 @@ struct IPCInternalRequest {
   RequestRedirect requestRedirect;
   nsString integrity;
   nsCString fragment;
-  bool createdByFetchEvent;
   PrincipalInfo? principalInfo;
 };
 

@@ -326,7 +326,6 @@ nsresult GetIPCInternalRequest(nsIInterceptedChannel* aChannel,
       requestRedirect, requestCredentials, referrer, referrerPolicy,
       contentPolicyType, integrity);
   internalRequest->SetBody(uploadStream, uploadStreamContentLength);
-  internalRequest->SetCreatedByFetchEvent();
 
   nsAutoCString alternativeDataType;
   if (cacheInfoChannel &&
