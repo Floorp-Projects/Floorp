@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.4.71';
-var pdfjsBuild = 'd7f651aa';
+var pdfjsVersion = '2.4.91';
+var pdfjsBuild = '72bd8e8b';
 
 var pdfjsSharedUtil = __w_pdfjs_require__(1);
 
@@ -1271,7 +1271,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise('GetDocRequest', {
     docId,
-    apiVersion: '2.4.71',
+    apiVersion: '2.4.91',
     source: {
       data: source.data,
       url: source.url,
@@ -1518,7 +1518,7 @@ class PDFPageProxy {
     this.pageIndex = pageIndex;
     this._pageInfo = pageInfo;
     this._transport = transport;
-    this._stats = pdfBug ? new _display_utils.StatTimer() : _display_utils.DummyStatTimer;
+    this._stats = pdfBug ? new _display_utils.StatTimer() : null;
     this._pdfBug = pdfBug;
     this.commonObjs = transport.commonObjs;
     this.objs = new PDFObjects();
@@ -1551,12 +1551,16 @@ class PDFPageProxy {
   getViewport({
     scale,
     rotation = this.rotate,
+    offsetX = 0,
+    offsetY = 0,
     dontFlip = false
   } = {}) {
     return new _display_utils.PageViewport({
       viewBox: this.view,
       scale,
       rotation,
+      offsetX,
+      offsetY,
       dontFlip
     });
   }
@@ -1583,8 +1587,10 @@ class PDFPageProxy {
     canvasFactory = null,
     background = null
   }) {
-    const stats = this._stats;
-    stats.time('Overall');
+    if (this._stats) {
+      this._stats.time('Overall');
+    }
+
     const renderingIntent = intent === 'print' ? 'print' : 'display';
     this.pendingCleanup = false;
 
@@ -1611,7 +1617,10 @@ class PDFPageProxy {
         argsArray: [],
         lastChunk: false
       };
-      stats.time('Page Request');
+
+      if (this._stats) {
+        this._stats.time('Page Request');
+      }
 
       this._pumpOperatorList({
         pageIndex: this.pageNumber - 1,
@@ -1644,8 +1653,11 @@ class PDFPageProxy {
         internalRenderTask.capability.resolve();
       }
 
-      stats.timeEnd('Rendering');
-      stats.timeEnd('Overall');
+      if (this._stats) {
+        this._stats.timeEnd('Rendering');
+
+        this._stats.timeEnd('Overall');
+      }
     };
 
     const internalRenderTask = new InternalRenderTask({
@@ -1679,7 +1691,10 @@ class PDFPageProxy {
         return;
       }
 
-      stats.time('Rendering');
+      if (this._stats) {
+        this._stats.time('Rendering');
+      }
+
       internalRenderTask.initializeGraphics(transparency);
       internalRenderTask.operatorListChanged();
     }).catch(complete);
@@ -1719,7 +1734,9 @@ class PDFPageProxy {
         lastChunk: false
       };
 
-      this._stats.time('Page Request');
+      if (this._stats) {
+        this._stats.time('Page Request');
+      }
 
       this._pumpOperatorList({
         pageIndex: this.pageIndex,
@@ -1826,7 +1843,7 @@ class PDFPageProxy {
     this.objs.clear();
     this.annotationsPromise = null;
 
-    if (resetStats && this._stats instanceof _display_utils.StatTimer) {
+    if (resetStats && this._stats) {
       this._stats = new _display_utils.StatTimer();
     }
 
@@ -1840,7 +1857,9 @@ class PDFPageProxy {
       return;
     }
 
-    this._stats.timeEnd('Page Request');
+    if (this._stats) {
+      this._stats.timeEnd('Page Request');
+    }
 
     if (intentState.displayReadyCapability) {
       intentState.displayReadyCapability.resolve(transparency);
@@ -1969,7 +1988,7 @@ class PDFPageProxy {
   }
 
   get stats() {
-    return this._stats instanceof _display_utils.StatTimer ? this._stats : null;
+    return this._stats;
   }
 
 }
@@ -3186,9 +3205,9 @@ const InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-const version = '2.4.71';
+const version = '2.4.91';
 exports.version = version;
-const build = 'd7f651aa';
+const build = '72bd8e8b';
 exports.build = build;
 
 /***/ }),
@@ -3208,7 +3227,7 @@ exports.isValidFetchUrl = isValidFetchUrl;
 exports.loadScript = loadScript;
 exports.deprecated = deprecated;
 exports.releaseImageResources = releaseImageResources;
-exports.PDFDateString = exports.DummyStatTimer = exports.StatTimer = exports.DOMSVGFactory = exports.DOMCMapReaderFactory = exports.DOMCanvasFactory = exports.DEFAULT_LINK_REL = exports.LinkTarget = exports.RenderingCancelledException = exports.PageViewport = void 0;
+exports.PDFDateString = exports.StatTimer = exports.DOMSVGFactory = exports.DOMCMapReaderFactory = exports.DOMCanvasFactory = exports.DEFAULT_LINK_REL = exports.LinkTarget = exports.RenderingCancelledException = exports.PageViewport = void 0;
 
 var _util = __w_pdfjs_require__(1);
 
@@ -3407,14 +3426,16 @@ class PageViewport {
   clone({
     scale = this.scale,
     rotation = this.rotation,
+    offsetX = this.offsetX,
+    offsetY = this.offsetY,
     dontFlip = false
   } = {}) {
     return new PageViewport({
       viewBox: this.viewBox.slice(),
       scale,
       rotation,
-      offsetX: this.offsetX,
-      offsetY: this.offsetY,
+      offsetX,
+      offsetY,
       dontFlip
     });
   }
@@ -3492,31 +3513,22 @@ function getFilenameFromUrl(url) {
 }
 
 class StatTimer {
-  constructor(enable = true) {
-    this.enabled = !!enable;
+  constructor() {
     this.started = Object.create(null);
     this.times = [];
   }
 
   time(name) {
-    if (!this.enabled) {
-      return;
-    }
-
     if (name in this.started) {
-      (0, _util.warn)('Timer is already running for ' + name);
+      (0, _util.warn)(`Timer is already running for ${name}`);
     }
 
     this.started[name] = Date.now();
   }
 
   timeEnd(name) {
-    if (!this.enabled) {
-      return;
-    }
-
     if (!(name in this.started)) {
-      (0, _util.warn)('Timer has not been started for ' + name);
+      (0, _util.warn)(`Timer has not been started for ${name}`);
     }
 
     this.times.push({
@@ -3528,7 +3540,7 @@ class StatTimer {
   }
 
   toString() {
-    let out = '',
+    let outBuf = [],
         longest = 0;
 
     for (const time of this.times) {
@@ -3541,32 +3553,15 @@ class StatTimer {
 
     for (const time of this.times) {
       const duration = time.end - time.start;
-      out += `${time.name.padEnd(longest)} ${duration}ms\n`;
+      outBuf.push(`${time.name.padEnd(longest)} ${duration}ms\n`);
     }
 
-    return out;
+    return outBuf.join('');
   }
 
 }
 
 exports.StatTimer = StatTimer;
-
-class DummyStatTimer {
-  constructor() {
-    (0, _util.unreachable)('Cannot initialize DummyStatTimer.');
-  }
-
-  static time(name) {}
-
-  static timeEnd(name) {}
-
-  static toString() {
-    return '';
-  }
-
-}
-
-exports.DummyStatTimer = DummyStatTimer;
 
 function isFetchSupported() {
   return typeof fetch !== 'undefined' && typeof Response !== 'undefined' && 'body' in Response.prototype && typeof ReadableStream !== 'undefined';
