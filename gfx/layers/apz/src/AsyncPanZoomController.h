@@ -1237,6 +1237,18 @@ class AsyncPanZoomController {
    */
   static bool CanHandleScrollOffsetUpdate(PanZoomState aState);
 
+  /**
+   * Determine whether a main-thread scroll offset update should result in
+   * a call to CancelAnimation() (which interrupts in-progress animations and
+   * gestures).
+   *
+   * If the update is a relative update, |aRelativeDelta| contains its amount.
+   * If the update is not a relative update, GetMetrics() should already reflect
+   * the new offset at the time of the call.
+   */
+  bool ShouldCancelAnimationForScrollUpdate(
+      const Maybe<CSSPoint>& aRelativeDelta);
+
  private:
   friend class StateChangeNotificationBlocker;
   /**
