@@ -48,7 +48,7 @@
     }
 
     static get observedAttributes() {
-      return ["accesskey", "text"];
+      return ["accesskey"];
     }
 
     set textContent(val) {
@@ -66,13 +66,7 @@
         return;
       }
 
-      // As long as we are still hosted within XBL anonymous content and the [text]
-      // attribute inheritance, we need to handle changes this way, in addition to textContent:
-      if (name == "text") {
-        this._lastFormattedAccessKey = null;
-      }
-
-      // Note that this is only happening when "accesskey" or "text" attributes change:
+      // Note that this is only happening when "accesskey" attribute change:
       this.formatAccessKey();
     }
 
