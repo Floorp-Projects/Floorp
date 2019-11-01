@@ -1802,7 +1802,7 @@ void nsContentUtils::Shutdown() {
     NS_RELEASE(sUserInteractionObserver);
   }
 
-  HTMLInputElement::Shutdown();
+  TextControlState::Shutdown();
   nsMappedAttributes::Shutdown();
 }
 
