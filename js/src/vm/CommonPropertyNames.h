@@ -74,6 +74,7 @@
   MACRO(caseFirst, caseFirst, "caseFirst")                                     \
   MACRO(catch, catch_, "catch")                                                \
   MACRO(class, class_, "class")                                                \
+  MACRO(cleanupSome, cleanupSome, "cleanupSome")                               \
   MACRO(close, close, "close")                                                 \
   MACRO(collation, collation, "collation")                                     \
   MACRO(collections, collections, "collections")                               \
@@ -362,6 +363,7 @@
   MACRO(RegExpTester, RegExpTester, "RegExpTester")                            \
   MACRO(RegExp_prototype_Exec, RegExp_prototype_Exec, "RegExp_prototype_Exec") \
   MACRO(region, region, "region")                                              \
+  MACRO(register, register_, "register")                                       \
   MACRO(Reify, Reify, "Reify")                                                 \
   MACRO(reject, reject, "reject")                                              \
   MACRO(rejected, rejected, "rejected")                                        \
@@ -446,6 +448,7 @@
   MACRO(unitDisplay, unitDisplay, "unitDisplay")                               \
   MACRO(uninitialized, uninitialized, "uninitialized")                         \
   MACRO(unknown, unknown, "unknown")                                           \
+  MACRO(unregister, unregister, "unregister")                                  \
   MACRO(unsized, unsized, "unsized")                                           \
   MACRO(unwatch, unwatch, "unwatch")                                           \
   MACRO(UnwrapAndCallRegExpBuiltinExec, UnwrapAndCallRegExpBuiltinExec,        \

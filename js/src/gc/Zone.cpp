@@ -854,3 +854,12 @@ void Zone::clearScriptLCov(Realm* realm) {
     }
   }
 }
+
+void Zone::finishRoots() {
+  for (RealmsInZoneIter r(this); !r.done(); r.next()) {
+    r->finishRoots();
+  }
+
+  // Finalization callbacks are not called if we're shutting down.
+  finalizationRecordMap().clear();
+}

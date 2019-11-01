@@ -292,6 +292,7 @@ class ObjectWeakMap {
 
   JSObject* lookup(const JSObject* obj);
   bool add(JSContext* cx, JSObject* obj, JSObject* target);
+  void remove(JSObject* key);
   void clear();
 
   void trace(JSTracer* trc);

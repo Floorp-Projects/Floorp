@@ -631,6 +631,8 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   // a non-zero value since bug 1458011.
   uint32_t detachedTypedObjects = 0;
 
+  void finishRoots();
+
  private:
   // A map from finalization group targets to a list of finalization records
   // representing groups that the target is registered with and their associated
