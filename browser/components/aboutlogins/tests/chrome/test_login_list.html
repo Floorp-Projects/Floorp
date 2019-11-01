@@ -294,6 +294,7 @@ add_task(async function test_filtered_list() {
   is(JSON.parse(countSpan.getAttribute("data-l10n-args")).count, 0, "Count should match result amount");
   ok(gLoginList._sortSelect.disabled, "The sort should be disabled when there are no visible logins in the list");
   ok(!isHidden(emptySearchText), "The empty search text should be visible when there are no results in the list");
+  isnot(gLoginList.shadowRoot.querySelector(".container > ol").getAttribute("aria-activedescendant"), "new-login-list-item", "new-login-list-item shouldn't be the active descendant");
   loginListItems = gLoginList.shadowRoot.querySelectorAll(".login-list-item[data-guid]");
   ok(loginListItems[0].hidden, "user1 should be hidden");
   ok(loginListItems[1].hidden, "user2 should be hidden");
@@ -323,6 +324,34 @@ add_task(async function test_filtered_list() {
   ok(loginListItems[1].hidden, "user2 should be hidden");
   ok(!loginListItems[2].hidden, "http_auth_user should be visible");
   is(loginListItems[2].querySelector(".username").textContent, "http_auth_user", "Verify the login with a matching httpRealm is visible");
+
+  gLoginList.setLogins([TEST_LOGIN_1, TEST_LOGIN_2]);
+  window.dispatchEvent(new CustomEvent("AboutLoginsFilterLogins", {
+    bubbles: true,
+    detail: "",
+  }));
+  await asyncElementRendered();
+});
+
+add_task(async function test_initial_empty_results() {
+  // Create a new instance to reset state
+  gLoginList.remove();
+  gLoginList = document.createElement("login-list");
+  document.getElementById("display").appendChild(gLoginList);
+  await asyncElementRendered();
+
+  let emptySearchText = gLoginList.shadowRoot.querySelector(".empty-search-message");
+  let countSpan = gLoginList.shadowRoot.querySelector(".count");
+
+  window.dispatchEvent(new CustomEvent("AboutLoginsFilterLogins", {
+    bubbles: true,
+    detail: "foo",
+  }));
+  is(JSON.parse(countSpan.getAttribute("data-l10n-args")).count, 0, "Count should match result amount");
+  ok(gLoginList._sortSelect.disabled, "The sort should be disabled when there are no visible logins in the list");
+  ok(!isHidden(emptySearchText), "The empty search text should be visible when there are no results in the list");
+  isnot(gLoginList.shadowRoot.querySelector(".container > ol").getAttribute("aria-activedescendant"), "new-login-list-item", "new-login-list-item shouldn't be the active descendant");
+  ok(gLoginList.shadowRoot.querySelector("#new-login-list-item").hidden, "new-login-list-item should be @hidden");
 
   gLoginList.setLogins([TEST_LOGIN_1, TEST_LOGIN_2]);
   window.dispatchEvent(new CustomEvent("AboutLoginsFilterLogins", {

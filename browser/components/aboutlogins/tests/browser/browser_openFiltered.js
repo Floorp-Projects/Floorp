@@ -81,10 +81,10 @@ add_task(async function test_query_parameter_filter() {
     );
 
     let hiddenLoginListItems = loginList.shadowRoot.querySelectorAll(
-      ".login-list-item:not(#new-login-list-item)[hidden]"
+      ".login-list-item[hidden]"
     );
     let visibleLoginListItems = loginList.shadowRoot.querySelectorAll(
-      ".login-list-item:not(#new-login-list-item):not([hidden])"
+      ".login-list-item:not([hidden])"
     );
     is(visibleLoginListItems.length, 1, "The one login should be visible");
     is(
@@ -92,9 +92,18 @@ add_task(async function test_query_parameter_filter() {
       logins[0].guid,
       "TEST_LOGIN1 should be visible"
     );
-    is(hiddenLoginListItems.length, 1, "One login should be hidden");
     is(
-      hiddenLoginListItems[0].dataset.guid,
+      hiddenLoginListItems.length,
+      2,
+      "One saved login and one blank login should be hidden"
+    );
+    is(
+      hiddenLoginListItems[0].id,
+      "new-login-list-item",
+      "#new-login-list-item should be hidden"
+    );
+    is(
+      hiddenLoginListItems[1].dataset.guid,
       logins[1].guid,
       "TEST_LOGIN2 should be hidden"
     );
@@ -145,7 +154,7 @@ add_task(async function test_query_parameter_filter_no_logins_for_site() {
     );
 
     let visibleLoginListItems = loginList.shadowRoot.querySelectorAll(
-      ".login-list-item:not(#new-login-list-item):not([hidden])"
+      ".login-list-item:not([hidden])"
     );
     is(visibleLoginListItems.length, 0, "No login should be visible");
 
