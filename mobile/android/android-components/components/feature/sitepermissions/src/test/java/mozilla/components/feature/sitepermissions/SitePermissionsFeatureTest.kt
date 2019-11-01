@@ -483,6 +483,47 @@ class SitePermissionsFeatureTest {
     }
 
     @Test
+    fun `dismissing a permission request must call reject and consume contentPermissionRequest`() {
+        val permissions = listOf(
+                ContentGeoLocation(),
+                ContentNotification(),
+                ContentAudioCapture(),
+                ContentAudioMicrophone()
+        )
+
+        permissions.forEach { permission ->
+            val session = getSelectedSession()
+            var rejectWasCalled = false
+
+            val permissionRequest: PermissionRequest = object : PermissionRequest {
+                override val uri: String?
+                    get() = "http://www.mozilla.org"
+                override val permissions: List<Permission>
+                    get() = listOf(permission)
+
+                override fun reject() {
+                    rejectWasCalled = true
+                }
+
+                override fun grant(permissions: List<Permission>) = Unit
+            }
+            grantPermission(Manifest.permission.RECORD_AUDIO)
+
+            session.contentPermissionRequest = Consumable.from(permissionRequest)
+
+            runBlocking {
+                val prompt = sitePermissionFeature.onContentPermissionRequested(session, permissionRequest)
+
+                sitePermissionFeature.onDismiss(session.id)
+
+                assertNotNull(prompt)
+                assertTrue(rejectWasCalled)
+                assertTrue(session.contentPermissionRequest.isConsumed())
+            }
+        }
+    }
+
+    @Test
     fun `rejecting a content permission must call reject and consume contentPermissionRequest`() {
         val permissions = listOf(
             ContentGeoLocation(),

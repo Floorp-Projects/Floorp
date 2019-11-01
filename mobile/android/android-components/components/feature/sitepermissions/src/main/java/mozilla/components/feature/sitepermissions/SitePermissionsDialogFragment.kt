@@ -6,6 +6,7 @@ package mozilla.components.feature.sitepermissions
 
 import android.annotation.SuppressLint
 import android.app.Dialog
+import android.content.DialogInterface
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
@@ -95,6 +96,11 @@ internal class SitePermissionsDialogFragment : AppCompatDialogFragment() {
         }
 
         return sheetDialog
+    }
+
+    override fun onDismiss(dialog: DialogInterface) {
+        super.onDismiss(dialog)
+        feature?.onDismiss(sessionId)
     }
 
     private fun Dialog.setContainerView(rootView: View) {
