@@ -23,32 +23,6 @@ xhtml|link {
   visibility: hidden;
 }
 
-#addons-page:not([warning]) .global-warning,
-#addons-page:not([warning="safemode"]) .global-warning-safemode,
-#addons-page:not([warning="checkcompatibility"]) .global-warning-checkcompatibility,
-#addons-page:not([warning="updatesecurity"]) .global-warning-updatesecurity {
-  display: none;
-}
-
-/* Plugins aren't yet disabled by safemode (bug 342333),
-   so don't show that warning when viewing plugins. */
-#addons-page[warning="safemode"] #html-view[type="list"][param="plugin"] .global-warning-safemode,
-#addons-page[warning="safemode"] .view-pane[type="plugin"] .global-warning-container,
-#addons-page[warning="safemode"] #detail-view[loading="true"] .global-warning {
-  display: none;
-}
-#addons-page .view-pane:not([type="plugin"]) #plugindeprecation-notice {
-  display: none;
-}
-
-.html-alert-container > .message-bar {
-  margin-bottom: 8px;
-}
-
-.html-global-warning-button {
-  margin-inline: 0;
-}
-
 /* Elements in unselected richlistitems cannot be focused */
 richlistitem:not([selected]) * {
   -moz-user-focus: ignore;

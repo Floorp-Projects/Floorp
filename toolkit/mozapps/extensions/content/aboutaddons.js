@@ -5,7 +5,7 @@
 /* exported hide, initialize, show */
 /* import-globals-from aboutaddonsCommon.js */
 /* import-globals-from abuse-reports.js */
-/* global MozXULElement, windowRoot */
+/* global MozXULElement, MessageBarStackElement, windowRoot */
 
 "use strict";
 
@@ -1149,6 +1149,96 @@ class SearchAddons extends HTMLElement {
   }
 }
 customElements.define("search-addons", SearchAddons);
+
+class GlobalWarnings extends MessageBarStackElement {
+  constructor() {
+    super();
+    // This won't change at runtime, but we'll want to fake it in tests.
+    this.inSafeMode = Services.appinfo.inSafeMode;
+    this.globalWarning = null;
+  }
+
+  connectedCallback() {
+    this.refresh();
+    this.addEventListener("click", this);
+    AddonManager.addManagerListener(this);
+  }
+
+  disconnectedCallback() {
+    this.removeEventListener("click", this);
+    AddonManager.removeManagerListener(this);
+  }
+
+  refresh() {
+    if (this.inSafeMode) {
+      this.setWarning("safe-mode");
+    } else if (
+      AddonManager.checkUpdateSecurityDefault &&
+      !AddonManager.checkUpdateSecurity
+    ) {
+      this.setWarning("update-security", { action: true });
+    } else if (!AddonManager.checkCompatibility) {
+      this.setWarning("check-compatibility", { action: true });
+    } else {
+      this.removeWarning();
+    }
+  }
+
+  setWarning(type, opts) {
+    if (
+      this.globalWarning &&
+      this.globalWarning.getAttribute("warning-type") !== type
+    ) {
+      this.removeWarning();
+    }
+    if (!this.globalWarning) {
+      this.globalWarning = document.createElement("message-bar");
+      this.globalWarning.setAttribute("warning-type", type);
+      let textContainer = document.createElement("span");
+      document.l10n.setAttributes(textContainer, `extensions-warning-${type}`);
+      this.globalWarning.appendChild(textContainer);
+      if (opts && opts.action) {
+        let button = document.createElement("button");
+        document.l10n.setAttributes(
+          button,
+          `extensions-warning-${type}-button`
+        );
+        button.setAttribute("action", type);
+        this.globalWarning.appendChild(button);
+      }
+      this.appendChild(this.globalWarning);
+    }
+  }
+
+  removeWarning() {
+    if (this.globalWarning) {
+      this.globalWarning.remove();
+      this.globalWarning = null;
+    }
+  }
+
+  handleEvent(e) {
+    if (e.type === "click") {
+      switch (e.target.getAttribute("action")) {
+        case "update-security":
+          AddonManager.checkUpdateSecurity = true;
+          break;
+        case "check-compatibility":
+          AddonManager.checkCompatibility = true;
+          break;
+      }
+    }
+  }
+
+  onCompatibilityModeChanged() {
+    this.refresh();
+  }
+
+  onCheckUpdateSecurityChanged() {
+    this.refresh();
+  }
+}
+customElements.define("global-warnings", GlobalWarnings);
 
 class AddonPageHeader extends HTMLElement {
   connectedCallback() {
@@ -3837,9 +3927,9 @@ function initialize(opts) {
   window.addEventListener(
     "unload",
     () => {
-      // Clear out the main node so the disconnectedCallback will trigger
+      // Clear out the document so the disconnectedCallback will trigger
       // properly and all of the custom elements can cleanup.
-      mainEl.textContent = "";
+      document.body.textContent = "";
       AddonCardListenerHandler.shutdown();
     },
     { once: true }
