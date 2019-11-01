@@ -480,6 +480,13 @@ class nsSocketTransport final : public nsASocketHandler,
   // callback when mFD is nulled out to make sure the ssl layer cannot call
   // the callback after nsSocketTransport is destroyed.
   bool mSSLCallbackSet;
+
+  // If the connection is used for QUIC this is set to true. That will mean
+  // that UDP will be used. QUIC do not have a SocketProvider because it is a
+  // mix of transport and application(HTTP) level protocol. nsSocketTransport
+  // will creat a UDP socket and SecInfo(QuicSocketControl). The protocol
+  // handler will be created by nsHttpconnectionMgr.
+  bool mUsingQuic;
 };
 
 }  // namespace net
