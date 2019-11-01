@@ -33,6 +33,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 import argparse
 import logging
 import os
+import stat
 import sys
 
 from mach.decorators import CommandArgument, CommandProvider, Command
@@ -113,7 +114,7 @@ host_fetches = {
             # accommodating of multiple versions here.
             'url': 'https://imagemagick.org/download/binaries/ImageMagick-x86_64-apple-darwin18.7.0.tar.gz',  # noqa
             # An extension to `fetch` syntax.
-            'path': 'ImageMagick-18.7.0',
+            'path': 'ImageMagick-7.0.8',
         },
     },
     'linux64': {
@@ -210,6 +211,28 @@ class MachBrowsertime(MachCommandBase):
                         {'path': archive},
                         'Unpacking temporary location {path}')
                     unpack_file(archive)
+
+                    # Make sure the expected path exists after extraction
+                    path = os.path.join(self.state_path, fetch.get('path'))
+                    if not os.path.exists(path):
+                        raise Exception("Cannot find an extracted directory: %s" % path)
+
+                    try:
+                        # Some archives provide binaries that don't have the
+                        # executable bit set so we need to set it here
+                        for root, dirs, files in os.walk(path):
+                            for edir in dirs:
+                                loc_to_change = os.path.join(root, edir)
+                                st = os.stat(loc_to_change)
+                                os.chmod(loc_to_change, st.st_mode | stat.S_IEXEC)
+                            for efile in files:
+                                loc_to_change = os.path.join(root, efile)
+                                st = os.stat(loc_to_change)
+                                os.chmod(loc_to_change, st.st_mode | stat.S_IEXEC)
+                    except Exception as e:
+                        raise Exception(
+                            "Could not set executable bit in %s, error: %s" % (path, str(e))
+                        )
                 finally:
                     os.chdir(cwd)
 
