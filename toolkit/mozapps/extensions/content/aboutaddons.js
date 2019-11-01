@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 /* eslint max-len: ["error", 80] */
-/* exported initialize, hide, show */
+/* exported hide, initialize, show */
 /* import-globals-from aboutaddonsCommon.js */
 /* import-globals-from abuse-reports.js */
 /* global MozXULElement, windowRoot */
@@ -57,6 +57,13 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "",
   null,
   val => Services.urlFormatter.formatURL(val)
+);
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "XPINSTALL_ENABLED",
+  "xpinstall.enabled",
+  true
 );
 
 const UPDATES_RECENT_TIMESPAN = 2 * 24 * 3600000; // 2 days (in milliseconds)
@@ -124,19 +131,19 @@ const AddonCardListenerHandler = {
   },
 
   delegateEvent(name, addon, args) {
-    let cards;
+    let elements;
     if (this.MANAGER_EVENTS.has(name)) {
-      cards = document.querySelectorAll("addon-card");
+      elements = document.querySelectorAll("addon-card, addon-page-options");
     } else {
       let cardSelector = `addon-card[addon-id="${addon.id}"]`;
-      cards = document.querySelectorAll(
+      elements = document.querySelectorAll(
         `${cardSelector}, ${cardSelector} addon-details`
       );
     }
-    for (let card of cards) {
+    for (let el of elements) {
       try {
-        if (name in card) {
-          card[name](...args);
+        if (name in el) {
+          el[name](...args);
         }
       } catch (e) {
         Cu.reportError(e);
@@ -273,6 +280,55 @@ async function getAddonMessageInfo(addon) {
     };
   }
   return {};
+}
+
+function checkForUpdate(addon) {
+  return new Promise(resolve => {
+    let listener = {
+      onUpdateAvailable(addon, install) {
+        attachUpdateHandler(install);
+
+        if (AddonManager.shouldAutoUpdate(addon)) {
+          let failed = () => {
+            install.removeListener(updateListener);
+            resolve({ installed: false, pending: false, found: true });
+          };
+          let updateListener = {
+            onDownloadFailed: failed,
+            onInstallCancelled: failed,
+            onInstallFailed: failed,
+            onInstallEnded: (...args) => {
+              install.removeListener(updateListener);
+              resolve({ installed: true, pending: false, found: true });
+            },
+          };
+          install.addListener(updateListener);
+          install.install();
+        } else {
+          resolve({ installed: false, pending: true, found: true });
+        }
+      },
+      onNoUpdateAvailable() {
+        resolve({ found: false });
+      },
+    };
+    addon.findUpdates(listener, AddonManager.UPDATE_WHEN_USER_REQUESTED);
+  });
+}
+
+async function checkForUpdates() {
+  let addons = await AddonManager.getAddonsByTypes(null);
+  addons = addons.filter(addon => hasPermission(addon, "upgrade"));
+  let updates = await Promise.all(addons.map(addon => checkForUpdate(addon)));
+  Services.obs.notifyObservers(null, "EM-update-check-finished");
+  return updates.reduce(
+    (counts, update) => ({
+      installed: counts.installed + (update.installed ? 1 : 0),
+      pending: counts.pending + (update.pending ? 1 : 0),
+      found: counts.found + (update.found ? 1 : 0),
+    }),
+    { installed: 0, pending: 0, found: 0 }
+  );
 }
 
 // Don't change how we handle this while the page is open.
@@ -552,6 +608,9 @@ class PanelList extends HTMLElement {
     super();
     this.attachShadow({ mode: "open" });
     this.shadowRoot.appendChild(importTemplate("panel-list"));
+  }
+
+  connectedCallback() {
     this.setAttribute("role", "menu");
   }
 
@@ -579,8 +638,19 @@ class PanelList extends HTMLElement {
   }
 
   hide(triggeringEvent) {
+    let openingEvent = this.triggeringEvent;
     this.triggeringEvent = triggeringEvent;
     this.open = false;
+    // Since the previously focused element (which is inside the panel) is now
+    // hidden, move the focus back to the element that opened the panel if it
+    // was opened with the keyboard.
+    if (
+      openingEvent &&
+      openingEvent.target &&
+      openingEvent.mozInputSource === MouseEvent.MOZ_SOURCE_KEYBOARD
+    ) {
+      openingEvent.target.focus();
+    }
   }
 
   toggle(triggeringEvent) {
@@ -733,10 +803,15 @@ class PanelList extends HTMLElement {
           }
           break;
         } else if (e.key === "Escape") {
-          let { triggeringEvent } = this;
           this.hide();
-          if (triggeringEvent && triggeringEvent.target) {
-            triggeringEvent.target.focus();
+        } else if (!e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey) {
+          // Check if any of the children have an accesskey for this letter.
+          let item = this.querySelector(
+            `[accesskey="${e.key.toLowerCase()}"],
+             [accesskey="${e.key.toUpperCase()}"]`
+          );
+          if (item) {
+            item.click();
           }
         }
         break;
@@ -807,6 +882,7 @@ class PanelList extends HTMLElement {
   async onShow() {
     let { triggeringEvent } = this;
 
+    this.sendEvent("showing");
     this.addHideListeners();
     await this.setAlign();
 
@@ -838,12 +914,86 @@ class PanelList extends HTMLElement {
 customElements.define("panel-list", PanelList);
 
 class PanelItem extends HTMLElement {
+  static get observedAttributes() {
+    return ["accesskey"];
+  }
+
   constructor() {
     super();
     this.attachShadow({ mode: "open" });
-    this.shadowRoot.appendChild(importTemplate("panel-item"));
-    this.button = this.shadowRoot.querySelector("button");
+
+    let style = document.createElement("link");
+    style.rel = "stylesheet";
+    style.href = "chrome://mozapps/content/extensions/panel-item.css";
+
+    this.button = document.createElement("button");
     this.button.setAttribute("role", "menuitem");
+
+    // Use a XUL label element to show the accesskey.
+    this.label = document.createXULElement("label");
+    this.button.appendChild(this.label);
+
+    let supportLinkSlot = document.createElement("slot");
+    supportLinkSlot.name = "support-link";
+
+    let defaultSlot = document.createElement("slot");
+    defaultSlot.style.display = "none";
+
+    this.shadowRoot.append(style, this.button, supportLinkSlot, defaultSlot);
+
+    // When our content changes, move the text into the label. It doesn't work
+    // with a <slot>, unfortunately.
+    new MutationObserver(() => {
+      this.label.textContent = defaultSlot
+        .assignedNodes()
+        .map(node => node.textContent)
+        .join("");
+    }).observe(this, { characterData: true, childList: true, subtree: true });
+  }
+
+  connectedCallback() {
+    this.panel = this.closest("panel-list");
+
+    if (this.panel) {
+      this.panel.addEventListener("hidden", this);
+      this.panel.addEventListener("shown", this);
+    }
+  }
+
+  disconnectedCallback() {
+    if (this.panel) {
+      this.panel.removeEventListener("hidden", this);
+      this.panel.removeEventListener("shown", this);
+      this.panel = null;
+    }
+  }
+
+  attributeChangedCallback(name, oldVal, newVal) {
+    if (name === "accesskey") {
+      // Bug 1037709 - Accesskey doesn't work in shadow DOM.
+      // Ideally we'd have the accesskey set in shadow DOM, and on
+      // attributeChangedCallback we'd just update the shadow DOM accesskey.
+
+      // Skip this change event if we caused it.
+      if (this._modifyingAccessKey) {
+        this._modifyingAccessKey = false;
+        return;
+      }
+
+      this.label.accessKey = newVal || "";
+
+      // Bug 1588156 - Accesskey is not ignored for hidden non-input elements.
+      // Since the accesskey won't be ignored, we need to remove it ourselves
+      // when the panel is closed, and move it back when it opens.
+      if (!this.panel || !this.panel.open) {
+        // When the panel isn't open, just store the key for later.
+        this._accessKey = newVal || null;
+        this._modifyingAccessKey = true;
+        this.accessKey = "";
+      } else {
+        this._accessKey = null;
+      }
+    }
   }
 
   get disabled() {
@@ -865,8 +1015,407 @@ class PanelItem extends HTMLElement {
   focus() {
     this.button.focus();
   }
+
+  handleEvent(e) {
+    // Bug 1588156 - Accesskey is not ignored for hidden non-input elements.
+    // Since the accesskey won't be ignored, we need to remove it ourselves
+    // when the panel is closed, and move it back when it opens.
+    switch (e.type) {
+      case "shown":
+        if (this._accessKey) {
+          this.accessKey = this._accessKey;
+          this._accessKey = null;
+        }
+        break;
+      case "hidden":
+        if (this.accessKey) {
+          this._accessKey = this.accessKey;
+          this._modifyingAccessKey = true;
+          this.accessKey = "";
+        }
+        break;
+    }
+  }
 }
 customElements.define("panel-item", PanelItem);
+
+class SearchAddons extends HTMLElement {
+  connectedCallback() {
+    if (this.childElementCount === 0) {
+      this.input = document.createXULElement("search-textbox");
+      this.input.setAttribute("searchbutton", true);
+      this.input.setAttribute("maxlength", 100);
+      this.input.setAttribute("data-l10n-attrs", "placeholder");
+      this.input.inputField.id = "search-addons";
+      document.l10n.setAttributes(this.input, "addons-heading-search-input");
+      this.append(this.input);
+    }
+    this.input.addEventListener("command", this);
+    document.addEventListener("keypress", this);
+  }
+
+  disconnectedCallback() {
+    this.input.removeEventListener("command", this);
+    document.removeEventListener("keypress", this);
+  }
+
+  focus() {
+    this.input.focus();
+  }
+
+  get focusKey() {
+    return this.getAttribute("key");
+  }
+
+  handleEvent(e) {
+    if (e.type === "command") {
+      this.searchAddons(this.value);
+    } else if (e.type === "keypress") {
+      if (e.key === "/" && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        this.focus();
+      } else if (e.key == this.focusKey) {
+        if (e.altKey || e.shiftKey) {
+          return;
+        }
+
+        if (Services.appinfo.OS === "Darwin") {
+          if (e.metaKey && !e.ctrlKey) {
+            this.focus();
+          }
+        } else if (e.ctrlKey && !e.metaKey) {
+          this.focus();
+        }
+      }
+    }
+  }
+
+  get value() {
+    return this.input.value;
+  }
+
+  searchAddons(query) {
+    if (query.length === 0) {
+      return;
+    }
+
+    let url = AddonRepository.getSearchURL(query);
+
+    let browser = getBrowserElement();
+    let chromewin = browser.ownerGlobal;
+    chromewin.openLinkIn(url, "tab", {
+      fromChrome: true,
+      triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal(
+        {}
+      ),
+    });
+
+    AMTelemetry.recordLinkEvent({
+      object: "aboutAddons",
+      value: "search",
+      extra: {
+        type: this.closest("addon-page-header").getAttribute("type"),
+        view: getTelemetryViewName(this),
+      },
+    });
+  }
+}
+customElements.define("search-addons", SearchAddons);
+
+class AddonPageHeader extends HTMLElement {
+  connectedCallback() {
+    if (this.childElementCount === 0) {
+      this.appendChild(importTemplate("addon-page-header"));
+      this.heading = this.querySelector(".header-name");
+      this.searchLabel = this.querySelector(".search-label");
+      this.backButton = this.querySelector(".back-button");
+      this.pageOptionsMenu = this.querySelector("addon-page-options");
+    }
+    this.addEventListener("click", this);
+  }
+
+  disconnectedCallback() {
+    this.removeEventListener("click", this);
+  }
+
+  setViewInfo({ type, param }) {
+    this.setAttribute("current-view", type);
+    this.setAttribute("current-param", param);
+    let viewType = type === "list" ? param : type;
+    this.setAttribute("type", viewType);
+
+    this.heading.hidden = viewType === "detail";
+    this.backButton.hidden = viewType !== "detail" && viewType !== "shortcuts";
+
+    if (viewType !== "detail") {
+      document.l10n.setAttributes(this.heading, `${viewType}-heading`);
+    }
+
+    if (
+      viewType === "extension" ||
+      viewType === "theme" ||
+      viewType === "shortcuts"
+    ) {
+      let labelType = viewType === "shortcuts" ? "extension" : viewType;
+      document.l10n.setAttributes(
+        this.searchLabel,
+        `${labelType}-heading-search-label`
+      );
+    } else {
+      this.searchLabel.removeAttribute("data-l10n-id");
+      this.searchLabel.textContent = "";
+    }
+  }
+
+  handleEvent(e) {
+    if (e.type === "click") {
+      let action = e.target.getAttribute("action");
+      switch (action) {
+        case "go-back":
+          window.history.back();
+          break;
+        case "page-options":
+          this.pageOptionsMenu.toggle(e);
+          break;
+      }
+    }
+  }
+}
+customElements.define("addon-page-header", AddonPageHeader);
+
+class AddonUpdatesMessage extends HTMLElement {
+  static get observedAttributes() {
+    return ["state"];
+  }
+
+  constructor() {
+    super();
+    this.attachShadow({ mode: "open" });
+    let style = document.createElement("style");
+    style.textContent = `
+      @import "chrome://global/skin/in-content/common.css";
+      button {
+        margin: 0;
+      }
+    `;
+    this.message = document.createElement("span");
+    this.message.hidden = true;
+    this.button = document.createElement("button");
+    this.button.addEventListener("click", e => {
+      if (e.button === 0) {
+        loadViewFn("updates/available", e);
+      }
+    });
+    this.button.hidden = true;
+    this.shadowRoot.append(style, this.message, this.button);
+  }
+
+  attributeChangedCallback(name, oldVal, newVal) {
+    if (name === "state" && oldVal !== newVal) {
+      let l10nId = `addon-updates-${newVal}`;
+      switch (newVal) {
+        case "updating":
+        case "installed":
+        case "none-found":
+          this.button.hidden = true;
+          this.message.hidden = false;
+          document.l10n.setAttributes(this.message, l10nId);
+          break;
+        case "manual-updates-found":
+          this.message.hidden = true;
+          this.button.hidden = false;
+          document.l10n.setAttributes(this.button, l10nId);
+          break;
+      }
+    }
+  }
+
+  set state(val) {
+    this.setAttribute("state", val);
+  }
+}
+customElements.define("addon-updates-message", AddonUpdatesMessage);
+
+class AddonPageOptions extends HTMLElement {
+  connectedCallback() {
+    if (this.childElementCount === 0) {
+      this.render();
+    }
+    this.addEventListener("click", this);
+    this.panel.addEventListener("showing", this);
+  }
+
+  disconnectedCallback() {
+    this.removeEventListener("click", this);
+    this.panel.removeEventListener("showing", this);
+  }
+
+  toggle(...args) {
+    return this.panel.toggle(...args);
+  }
+
+  render() {
+    this.appendChild(importTemplate("addon-page-options"));
+    this.panel = this.querySelector("panel-list");
+    this.installFromFile = this.querySelector('[action="install-from-file"]');
+    this.toggleUpdatesEl = this.querySelector(
+      '[action="set-update-automatically"]'
+    );
+    this.resetUpdatesEl = this.querySelector('[action="reset-update-states"]');
+    this.onUpdateModeChanged();
+  }
+
+  async handleEvent(e) {
+    if (e.type === "click") {
+      e.target.disabled = true;
+      try {
+        await this.onClick(e);
+      } finally {
+        e.target.disabled = false;
+      }
+    } else if (e.type === "showing") {
+      this.installFromFile.hidden = !XPINSTALL_ENABLED;
+    }
+  }
+
+  async onClick(e) {
+    switch (e.target.getAttribute("action")) {
+      case "check-for-updates":
+        await this.checkForUpdates();
+        break;
+      case "view-recent-updates":
+        loadViewFn("updates/recent", e);
+        break;
+      case "install-from-file":
+        if (XPINSTALL_ENABLED) {
+          installAddonsFromFilePicker().then(installs => {
+            for (let install of installs) {
+              this.recordActionEvent({
+                action: "installFromFile",
+                value: install.installId,
+              });
+            }
+          });
+        }
+        break;
+      case "debug-addons":
+        this.openAboutDebugging();
+        break;
+      case "set-update-automatically":
+        await this.toggleAutomaticUpdates();
+        break;
+      case "reset-update-states":
+        await this.resetAutomaticUpdates();
+        break;
+      case "manage-shortcuts":
+        loadViewFn("shortcuts/shortcuts", e);
+        break;
+    }
+  }
+
+  onUpdateModeChanged() {
+    let updatesEnabled = this.automaticUpdatesEnabled();
+    this.toggleUpdatesEl.checked = updatesEnabled;
+    let resetType = updatesEnabled ? "automatic" : "manual";
+    let resetStringId = `addon-updates-reset-updates-to-${resetType}`;
+    document.l10n.setAttributes(this.resetUpdatesEl, resetStringId);
+  }
+
+  async checkForUpdates(e) {
+    this.recordActionEvent({ action: "checkForUpdates" });
+    let message = document.getElementById("updates-message");
+    message.state = "updating";
+    message.hidden = false;
+    let { installed, pending } = await checkForUpdates();
+    if (pending > 0) {
+      message.state = "manual-updates-found";
+    } else if (installed > 0) {
+      message.state = "installed";
+    } else {
+      message.state = "none-found";
+    }
+  }
+
+  openAboutDebugging() {
+    let mainWindow = window.windowRoot.ownerGlobal;
+    this.recordLinkEvent({ value: "about:debugging" });
+    if ("switchToTabHavingURI" in mainWindow) {
+      let principal = Services.scriptSecurityManager.getSystemPrincipal();
+      mainWindow.switchToTabHavingURI(
+        `about:debugging#/runtime/this-firefox`,
+        true,
+        {
+          ignoreFragment: "whenComparing",
+          triggeringPrincipal: principal,
+        }
+      );
+    }
+  }
+
+  automaticUpdatesEnabled() {
+    return AddonManager.updateEnabled && AddonManager.autoUpdateDefault;
+  }
+
+  toggleAutomaticUpdates() {
+    if (!this.automaticUpdatesEnabled()) {
+      // One or both of the prefs is false, i.e. the checkbox is not
+      // checked. Now toggle both to true. If the user wants us to
+      // auto-update add-ons, we also need to auto-check for updates.
+      AddonManager.updateEnabled = true;
+      AddonManager.autoUpdateDefault = true;
+    } else {
+      // Both prefs are true, i.e. the checkbox is checked.
+      // Toggle the auto pref to false, but don't touch the enabled check.
+      AddonManager.autoUpdateDefault = false;
+    }
+    // Record telemetry for changing the update policy.
+    let updatePolicy = [];
+    if (AddonManager.autoUpdateDefault) {
+      updatePolicy.push("default");
+    }
+    if (AddonManager.updateEnabled) {
+      updatePolicy.push("enabled");
+    }
+    this.recordActionEvent({
+      action: "setUpdatePolicy",
+      value: updatePolicy.join(","),
+    });
+  }
+
+  async resetAutomaticUpdates() {
+    let addons = await AddonManager.getAllAddons();
+    for (let addon of addons) {
+      if ("applyBackgroundUpdates" in addon) {
+        addon.applyBackgroundUpdates = AddonManager.AUTOUPDATE_DEFAULT;
+      }
+    }
+    this.recordActionEvent({ action: "resetUpdatePolicy" });
+  }
+
+  getTelemetryViewName() {
+    return getTelemetryViewName(document.getElementById("page-header"));
+  }
+
+  recordActionEvent({ action, value }) {
+    AMTelemetry.recordActionEvent({
+      object: "aboutAddons",
+      view: this.getTelemetryViewName(),
+      action,
+      addon: this.addon,
+      value,
+    });
+  }
+
+  recordLinkEvent({ value }) {
+    AMTelemetry.recordLinkEvent({
+      object: "aboutAddons",
+      value,
+      extra: {
+        view: this.getTelemetryViewName(),
+      },
+    });
+  }
+}
+customElements.define("addon-page-options", AddonPageOptions);
 
 class AddonOptions extends HTMLElement {
   connectedCallback() {
@@ -1719,6 +2268,8 @@ class AddonCard extends HTMLElement {
     let install = addon.updateInstall;
     if (install && install.state == AddonManager.STATE_AVAILABLE) {
       this.updateInstall = install;
+    } else {
+      this.updateInstall = null;
     }
     if (this.children.length) {
       this.render();
@@ -1760,18 +2311,14 @@ class AddonCard extends HTMLElement {
           this.recordActionEvent("disable");
           addon.userDisabled = true;
           break;
-        case "update-check":
+        case "update-check": {
           this.recordActionEvent("checkForUpdate");
-          let listener = {
-            onUpdateAvailable(addon, install) {
-              attachUpdateHandler(install);
-            },
-            onNoUpdateAvailable: () => {
-              this.sendEvent("no-update");
-            },
-          };
-          addon.findUpdates(listener, AddonManager.UPDATE_WHEN_USER_REQUESTED);
+          let { found } = await checkForUpdate(addon);
+          if (!found) {
+            this.sendEvent("no-update");
+          }
           break;
+        }
         case "install-update":
           this.updateInstall.install().then(
             () => {
@@ -3197,6 +3744,7 @@ class DiscoveryView {
 
 // Generic view management.
 let mainEl = null;
+let addonPageHeader = null;
 
 /**
  * The name of the view for an element, used for telemetry.
@@ -3248,6 +3796,7 @@ var ScrollOffsets = {
  */
 function initialize(opts) {
   mainEl = document.getElementById("main");
+  addonPageHeader = document.getElementById("page-header");
   loadViewFn = opts.loadViewFn;
   replaceWithDefaultViewFn = opts.replaceWithDefaultViewFn;
   setCategoryFn = opts.setCategoryFn;
@@ -3272,6 +3821,7 @@ function initialize(opts) {
 async function show(type, param, { isKeyboardNavigation, historyEntryId }) {
   let container = document.createElement("div");
   container.setAttribute("current-view", type);
+  addonPageHeader.setViewInfo({ type, param });
   if (type == "list") {
     await new ListView({ param, root: container }).render();
   } else if (type == "detail") {

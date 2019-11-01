@@ -1,6 +1,6 @@
 // Invoke the "Check for Updates" menu item
 function checkAll(win) {
-  win.gViewController.doCommand("cmd_findAllUpdates");
+  triggerPageOptionsAction(win, "check-for-updates");
   return new Promise(resolve => {
     let observer = {
       observe(subject, topic, data) {

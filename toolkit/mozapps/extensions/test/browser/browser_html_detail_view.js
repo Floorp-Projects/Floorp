@@ -200,7 +200,7 @@ add_task(async function testOpenDetailView() {
 
   const goBack = async win => {
     let loaded = waitForViewLoad(win);
-    win.managerWindow.document.getElementById("go-back").click();
+    win.document.querySelector(".back-button").click();
     await loaded;
   };
 
@@ -1097,7 +1097,7 @@ add_task(async function testGoBackButton() {
   let id = "addon1@mochi.test";
   let win = await loadInitialView("extension");
   let doc = win.document;
-  let backButton = win.managerWindow.document.getElementById("go-back");
+  let backButton = doc.querySelector(".back-button");
 
   let loadDetailView = () => {
     let loaded = waitForViewLoad(win);

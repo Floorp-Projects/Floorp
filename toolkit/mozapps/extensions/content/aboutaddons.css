@@ -1,6 +1,7 @@
 :root {
   --section-width: 664px;
   --addon-icon-size: 32px;
+  --z-index-sticky-container: 1;
 }
 
 *|*[hidden] {
@@ -13,6 +14,67 @@ body {
 
 .header-name {
   -moz-user-select: initial;
+}
+
+.sticky-container {
+  width: 100%;
+  position: sticky;
+  top: 0;
+  z-index: var(--z-index-sticky-container);
+  background: var(--in-content-page-background);
+}
+
+.main-search {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding-inline-start: 28px;
+  padding-top: 20px;
+  padding-bottom: 30px;
+  width: var(--section-width);
+}
+
+search-addons > search-textbox {
+  margin-inline-end: 0;
+  width: 20em;
+}
+
+.search-label {
+  margin-inline-end: 8px;
+}
+
+.main-heading {
+  display: flex;
+  margin-inline-start: 28px;
+  padding-bottom: 16px;
+  width: var(--section-width);
+}
+
+.spacer {
+  flex-grow: 1;
+}
+
+#updates-message {
+  display: flex;
+  align-items: center;
+  margin-inline-end: 8px;
+}
+
+.back-button {
+  -moz-context-properties: fill;
+  fill: currentColor;
+  background-image: url("chrome://global/skin/icons/arrow-left.svg");
+  background-repeat: no-repeat;
+  background-position: center;
+  min-width: auto;
+  width: 32px;
+  margin-block: 0;
+  margin-inline-start: 0;
+  margin-inline-end: 16px;
+}
+
+.back-button:dir(rtl) {
+  transform: scaleX(-1);
 }
 
 #main {
@@ -190,6 +252,17 @@ addon-card:not([expanded]) .addon-description {
   overflow-x: hidden;
 }
 
+.page-options-menu {
+  position: relative;
+  align-self: center;
+}
+
+.page-options-menu > .more-options-button {
+  background-image: url("chrome://mozapps/skin/extensions/utilities.svg");
+  width: 32px;
+  height: 32px;
+}
+
 .more-options-menu {
   position: relative;
   /* Add some negative margin to account for the button's padding */
@@ -355,7 +428,9 @@ addon-details {
   margin: 0;
   -moz-context-properties: fill;
   fill: currentColor;
-  background: url("chrome://global/skin/icons/more.svg") no-repeat center center;
+  background-image: url("chrome://global/skin/icons/more.svg");
+  background-repeat: no-repeat;
+  background-position: center center;
   position: relative;
 }
 
@@ -443,4 +518,8 @@ addon-permissions-list > .addon-detail-row:first-of-type {
   margin-top: 8px;
   /* Pull the buttons flush with the side of the card */
   margin-inline: calc(var(--card-padding) * -1);
+}
+
+panel-list {
+  font-size: 13px;
 }

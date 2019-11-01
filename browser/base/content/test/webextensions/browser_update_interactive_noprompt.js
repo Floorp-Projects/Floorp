@@ -35,6 +35,8 @@ async function testUpdateNoPrompt(
   // Go to Extensions in about:addons
   let win = await BrowserOpenAddonsMgr("addons://list/extension");
 
+  await BrowserTestUtils.waitForEvent(win.document, "ViewChanged");
+
   let sawPopup = false;
   function popupListener() {
     sawPopup = true;
@@ -43,7 +45,7 @@ async function testUpdateNoPrompt(
 
   // Trigger an update check, we should see the update get applied
   let updatePromise = waitForUpdate(addon);
-  win.gViewController.doCommand("cmd_findAllUpdates");
+  triggerPageOptionsAction(win, "check-for-updates");
   await updatePromise;
 
   addon = await AddonManager.getAddonByID(id);

@@ -30,10 +30,6 @@ list-empty-find-updates =
 list-empty-button =
     .label = Learn more about add-ons
 
-install-addon-from-file =
-    .label = Install Add-on From File…
-    .accesskey = I
-
 help-button = Add-ons Support
 
 preferences =
@@ -50,10 +46,6 @@ show-unsigned-extensions-button =
 
 show-all-extensions-button =
     .label = Show all extensions
-
-debug-addons =
-    .label = Debug Add-ons
-    .accesskey = b
 
 cmd-show-details =
     .label = Show More Information
@@ -260,19 +252,15 @@ extensions-warning-update-security-enable =
 
 ## Strings connected to add-on updates
 
-extensions-updates-check-for-updates =
-    .label = Check for Updates
+addon-updates-check-for-updates = Check for Updates
     .accesskey = C
-
-extensions-updates-view-updates =
-    .label = View Recent Updates
+addon-updates-view-updates = View Recent Updates
     .accesskey = V
 
 # This menu item is a checkbox that toggles the default global behavior for
 # add-on update checking.
 
-extensions-updates-update-addons-automatically =
-    .label = Update Add-ons Automatically
+addon-updates-update-addons-automatically = Update Add-ons Automatically
     .accesskey = A
 
 ## Specific add-ons can have custom update checking behaviors ("Manually",
@@ -281,37 +269,33 @@ extensions-updates-update-addons-automatically =
 ## (which itself is either "Automatically" or "Manually", controlled by the
 ## extensions-updates-update-addons-automatically.label menu item).
 
-extensions-updates-reset-updates-to-automatic =
-    .label = Reset All Add-ons to Update Automatically
+addon-updates-reset-updates-to-automatic = Reset All Add-ons to Update Automatically
     .accesskey = R
-
-extensions-updates-reset-updates-to-manual =
-    .label = Reset All Add-ons to Update Manually
+addon-updates-reset-updates-to-manual = Reset All Add-ons to Update Manually
     .accesskey = R
 
 ## Status messages displayed when updating add-ons
 
-extensions-updates-updating =
-    .value = Updating add-ons
-extensions-updates-installed =
-    .value = Your add-ons have been updated.
-extensions-updates-downloaded =
-    .value = Your add-on updates have been downloaded.
-extensions-updates-restart =
-    .label = Restart now to complete installation
-extensions-updates-none-found =
-    .value = No updates found
-extensions-updates-manual-updates-found =
-    .label = View Available Updates
-extensions-updates-update-selected =
-    .label = Install Updates
-    .tooltiptext = Install available updates in this list
+addon-updates-updating = Updating add-ons
+addon-updates-installed = Your add-ons have been updated.
+addon-updates-none-found = No updates found
+addon-updates-manual-updates-found = View Available Updates
+
+## Add-on install/debug strings for page options menu
+
+addon-install-from-file = Install Add-on From File…
+    .accesskey = I
+addon-install-from-file-dialog-title = Select add-on to install
+addon-install-from-file-filter-name = Add-ons
+addon-open-about-debugging = Debug Add-ons
+    .accesskey = b
 
 ## Extension shortcut management
 
-manage-extensions-shortcuts =
-    .label = Manage Extension Shortcuts
+# This is displayed in the page options menu
+addon-manage-extensions-shortcuts = Manage Extension Shortcuts
     .accesskey = S
+
 shortcuts-no-addons = You don’t have any extensions enabled.
 shortcuts-no-commands = The following extensions do not have shortcuts:
 shortcuts-input =
@@ -494,3 +478,19 @@ recommended-themes-heading = Recommended Themes
 # A recommendation for the Firefox Color theme shown at the bottom of the theme
 # list view. The "Firefox Color" name itself should not be translated.
 recommended-theme-1 = Feeling creative? <a data-l10n-name="link">Build your own theme with Firefox Color.</a>
+
+## Page headings
+
+extension-heading = Manage Your Extensions
+theme-heading = Manage Your Themes
+plugin-heading = Manage Your Plugins
+dictionary-heading = Manage Your Dictionaries
+locale-heading = Manage Your Languages
+updates-heading = Manage Your Updates
+discover-heading = Personalize Your { -brand-short-name }
+shortcuts-heading = Manage Extension Shortcuts
+
+theme-heading-search-label = Find more themes
+extension-heading-search-label = Find more extensions
+addons-heading-search-input =
+    .placeholder = Search addons.mozilla.org
