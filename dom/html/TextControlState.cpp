@@ -1136,10 +1136,14 @@ class MOZ_STACK_CLASS AutoTextControlHandlingState {
     }
   }
 
-  ~AutoTextControlHandlingState() {
+  MOZ_CAN_RUN_SCRIPT ~AutoTextControlHandlingState() {
     mTextControlState.mHandlingState = mParent;
     if (!mParent && mTextControlStateDestroyed) {
       mTextControlState.DeleteOrCacheForReuse();
+    }
+    if (!mTextControlStateDestroyed && mPreareEditorLater) {
+      MOZ_ASSERT(nsContentUtils::IsSafeToRunScript());
+      mTextControlState.PrepareEditor();
     }
   }
 
@@ -1148,6 +1152,20 @@ class MOZ_STACK_CLASS AutoTextControlHandlingState {
     if (mParent) {
       mParent->OnDestroyTextControlState();
     }
+  }
+
+  void PrepareEditorLater() {
+    MOZ_ASSERT(IsHandling(TextControlAction::SetValue));
+    MOZ_ASSERT(!IsHandling(TextControlAction::PrepareEditor));
+    // Look for the top most SetValue.
+    AutoTextControlHandlingState* settingValue = nullptr;
+    for (AutoTextControlHandlingState* handlingSomething = this;
+         handlingSomething; handlingSomething = handlingSomething->mParent) {
+      if (handlingSomething->Is(TextControlAction::SetValue)) {
+        settingValue = handlingSomething;
+      }
+    }
+    settingValue->mPreareEditorLater = true;
   }
 
   /**
@@ -1309,6 +1327,7 @@ class MOZ_STACK_CLASS AutoTextControlHandlingState {
   TextControlAction const mTextControlAction;
   bool mTextControlStateDestroyed = false;
   bool mEditActionHandled = false;
+  bool mPreareEditorLater = false;
 };
 
 /*****************************************************************************
@@ -1607,10 +1626,16 @@ nsresult TextControlState::PrepareEditor(const nsAString* aValue) {
 
   AutoHideSelectionChanges hideSelectionChanges(GetConstFrameSelection());
 
-  // Don't attempt to initialize recursively!
-  if (mHandlingState &&
-      mHandlingState->IsHandling(TextControlAction::PrepareEditor)) {
-    return NS_ERROR_NOT_INITIALIZED;
+  if (mHandlingState) {
+    // Don't attempt to initialize recursively!
+    if (mHandlingState->IsHandling(TextControlAction::PrepareEditor)) {
+      return NS_ERROR_NOT_INITIALIZED;
+    }
+    // Reschedule creating editor later if we're setting value.
+    if (mHandlingState->IsHandling(TextControlAction::SetValue)) {
+      mHandlingState->PrepareEditorLater();
+      return NS_ERROR_NOT_INITIALIZED;
+    }
   }
   AutoTextControlHandlingState preparingEditor(
       *this, TextControlAction::PrepareEditor);
@@ -2611,13 +2636,6 @@ bool TextControlState::SetValue(const nsAString& aValue,
   }
 
   if (mTextEditor && mBoundFrame) {
-    // The methods of mTextEditor might flush pending notifications, which
-    // could lead into a scheduled PrepareEditor to be called.  That will
-    // lead to crashes (or worse) because we'd be initializing the editor
-    // before InsertText returns.  This script blocker makes sure that
-    // PrepareEditor cannot be called prematurely.
-    nsAutoScriptBlocker scriptBlocker;
-
     AutoWeakFrame weakFrame(mBoundFrame);
 
     if (!SetValueWithTextEditor(handlingSetValue)) {
