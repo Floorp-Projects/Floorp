@@ -6,9 +6,10 @@ package mozilla.components.feature.downloads.manager
 
 import android.content.Context
 import mozilla.components.browser.state.state.content.DownloadState
+import mozilla.components.feature.downloads.AbstractFetchDownloadService
 import mozilla.components.support.ktx.android.content.isPermissionGranted
 
-typealias OnDownloadCompleted = (DownloadState, Long) -> Unit
+typealias OnDownloadCompleted = (DownloadState, Long, AbstractFetchDownloadService.DownloadJobStatus) -> Unit
 
 interface DownloadManager {
 
@@ -36,4 +37,4 @@ fun DownloadManager.validatePermissionGranted(context: Context) {
     }
 }
 
-internal val noop: OnDownloadCompleted = { _, _ -> }
+internal val noop: OnDownloadCompleted = { _, _, _ -> }

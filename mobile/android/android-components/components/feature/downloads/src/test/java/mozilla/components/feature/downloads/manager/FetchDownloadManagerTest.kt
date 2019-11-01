@@ -16,10 +16,12 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.concept.fetch.Client
 import mozilla.components.feature.downloads.AbstractFetchDownloadService
+import mozilla.components.feature.downloads.AbstractFetchDownloadService.Companion.EXTRA_DOWNLOAD_STATUS
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.grantPermission
 import mozilla.components.support.test.robolectric.testContext
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -27,6 +29,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.verify
+import mozilla.components.feature.downloads.AbstractFetchDownloadService.DownloadJobStatus
 
 @RunWith(AndroidJUnit4::class)
 class FetchDownloadManagerTest {
@@ -59,7 +62,7 @@ class FetchDownloadManagerTest {
         downloadManager = FetchDownloadManager(context, MockDownloadService::class, broadcastManager)
         var downloadCompleted = false
 
-        downloadManager.onDownloadCompleted = { _, _ -> downloadCompleted = true }
+        downloadManager.onDownloadCompleted = { _, _, _ -> downloadCompleted = true }
 
         grantPermissions()
 
@@ -87,11 +90,15 @@ class FetchDownloadManagerTest {
     @Test
     fun `calling registerListener with valid downloadID must call listener after download`() {
         var downloadCompleted = false
+        var downloadStatus: DownloadJobStatus? = null
         val downloadWithFileName = download.copy(fileName = "5MB.zip")
 
         grantPermissions()
 
-        downloadManager.onDownloadCompleted = { _, _ -> downloadCompleted = true }
+        downloadManager.onDownloadCompleted = { _, _, status ->
+            downloadStatus = status
+            downloadCompleted = true
+        }
 
         val id = downloadManager.download(
             downloadWithFileName,
@@ -105,12 +112,15 @@ class FetchDownloadManagerTest {
         downloadCompleted = false
         notifyDownloadCompleted(id)
 
+        assertEquals(DownloadJobStatus.COMPLETED, downloadStatus)
         assertFalse(downloadCompleted)
     }
 
     private fun notifyDownloadCompleted(id: Long) {
         val intent = Intent(ACTION_DOWNLOAD_COMPLETE)
         intent.putExtra(EXTRA_DOWNLOAD_ID, id)
+        intent.putExtra(EXTRA_DOWNLOAD_STATUS, DownloadJobStatus.COMPLETED)
+
         broadcastManager.sendBroadcast(intent)
     }
 
