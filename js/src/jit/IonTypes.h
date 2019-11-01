@@ -806,6 +806,11 @@ enum ABIFunctionType {
   Args_Int_IntDouble = Args_General0 | (ArgType_Double << (ArgType_Shift * 1)) |
                        (ArgType_General << (ArgType_Shift * 2)),
 
+  // int f(double, int)
+  Args_Int_DoubleInt = Args_General0 |
+                       (ArgType_General << (ArgType_Shift * 1)) |
+                       (ArgType_Double << (ArgType_Shift * 2)),
+
   // double f(double, double, double)
   Args_Double_DoubleDoubleDouble =
       Args_Double_DoubleDouble | (ArgType_Double << (ArgType_Shift * 3)),

@@ -149,6 +149,7 @@ ABIFunctionType MacroAssembler::signature() const {
     case Args_Double_DoubleDouble:
     case Args_Double_IntDouble:
     case Args_Int_IntDouble:
+    case Args_Int_DoubleInt:
     case Args_Int_DoubleIntInt:
     case Args_Int_IntDoubleIntInt:
     case Args_Double_DoubleDoubleDouble:
