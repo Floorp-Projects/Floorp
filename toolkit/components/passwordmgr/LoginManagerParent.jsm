@@ -370,8 +370,24 @@ this.LoginManagerParent = {
     // Note: previousResult is a regular object, not an
     // nsIAutoCompleteResult.
 
-    // Cancel if we unsuccessfully prompted for the master password too recently.
+    // Cancel if the master password prompt is already showing or we unsuccessfully prompted for it too recently.
     if (!Services.logins.isLoggedIn) {
+      if (Services.logins.uiBusy) {
+        log(
+          "Not searching logins for autocomplete since the master password prompt is already showing"
+        );
+        // Return an empty array to make LoginManagerChild clear the
+        // outstanding request it has temporarily saved.
+        target.messageManager.sendAsyncMessage(
+          "PasswordManager:loginsAutoCompleted",
+          {
+            requestId,
+            logins: [],
+          }
+        );
+        return;
+      }
+
       let timeDiff = Date.now() - this._lastMPLoginCancelled;
       if (timeDiff < this._repromptTimeout) {
         log(

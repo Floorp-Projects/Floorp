@@ -4,20 +4,20 @@ const URL =
   HOST + "/browser/toolkit/components/passwordmgr/test/browser/form_basic.html";
 const TIMEOUT_PREF = "signon.masterPasswordReprompt.timeout_ms";
 
-// Waits for the master password prompt and cancels it.
-function waitForDialog() {
-  let dialogShown = TestUtils.topicObserved("common-dialog-loaded");
-  return dialogShown.then(function([subject]) {
-    let dialog = subject.Dialog;
-    is(dialog.args.title, "Password Required");
-    dialog.ui.button1.click();
-    return BrowserTestUtils.waitForEvent(window, "DOMModalDialogClosed");
-  });
+// Waits for the master password prompt and cancels it when close() is called on the return value.
+async function waitForDialog() {
+  let [subject] = await TestUtils.topicObserved("common-dialog-loaded");
+  let dialog = subject.Dialog;
+  is(dialog.args.title, "Password Required", "Check common dialog title");
+  return {
+    async close(win = window) {
+      dialog.ui.button1.click();
+      return BrowserTestUtils.waitForEvent(win, "DOMModalDialogClosed");
+    },
+  };
 }
 
-// Test that autocomplete does not trigger a master password prompt
-// for a certain time after it was cancelled.
-add_task(async function test_mpAutocompleteTimeout() {
+add_task(async function setup() {
   let login = LoginTestUtils.testData.formLogin({
     origin: "https://example.com",
     formActionOrigin: "https://example.com",
@@ -29,18 +29,21 @@ add_task(async function test_mpAutocompleteTimeout() {
 
   registerCleanupFunction(function() {
     LoginTestUtils.masterPassword.disable();
-    Services.logins.removeAllLogins();
   });
 
   // Set master password prompt timeout to 3s.
   // If this test goes intermittent, you likely have to increase this value.
   await SpecialPowers.pushPrefEnv({ set: [[TIMEOUT_PREF, 3000]] });
+});
 
+// Test that autocomplete does not trigger a master password prompt
+// for a certain time after it was cancelled.
+add_task(async function test_mpAutocompleteTimeout() {
   // Wait for initial master password dialog after opening the tab.
   let dialogShown = waitForDialog();
 
   await BrowserTestUtils.withNewTab(URL, async function(browser) {
-    await dialogShown;
+    (await dialogShown).close();
 
     await ContentTask.spawn(browser, null, async function() {
       // Focus the password field to trigger autocompletion.
@@ -57,6 +60,67 @@ add_task(async function test_mpAutocompleteTimeout() {
       content.document.getElementById("form-basic-username").focus();
       content.document.getElementById("form-basic-password").focus();
     });
-    await dialogShown;
+    (await dialogShown).close();
   });
+
+  // Wait 4s for the timer to pass again and not interfere with the next test.
+  await new Promise(c => setTimeout(c, 4000));
+});
+
+// Test that autocomplete does not trigger a master password prompt
+// if one is already showing.
+add_task(async function test_mpAutocompleteUIBusy() {
+  // Wait for initial master password dialog after adding the login.
+  let dialogShown = waitForDialog();
+
+  let win = await BrowserTestUtils.openNewBrowserWindow();
+
+  Services.tm.dispatchToMainThread(() => {
+    try {
+      // Trigger a MP prompt in the new window by saving a login
+      Services.logins.addLogin(LoginTestUtils.testData.formLogin());
+    } catch (e) {
+      // Handle throwing from MP cancellation
+    }
+  });
+  let { close } = await dialogShown;
+
+  let loginManagerParent = LMP;
+  let arg1 = {
+    autocompleteInfo: {
+      section: "",
+      addressType: "",
+      contactType: "",
+      fieldName: "",
+      canAutomaticallyPersist: false,
+    },
+    formOrigin: "https://www.example.com",
+    actionOrigin: "",
+    searchString: "",
+    previousResult: null,
+    isSecure: false,
+    isPasswordField: true,
+  };
+
+  function dialogObserver(subject, topic, data) {
+    ok(false, "A second dialog shouldn't have been shown");
+    Services.obs.removeObserver(dialogObserver, topic);
+  }
+  Services.obs.addObserver(dialogObserver, "common-dialog-loaded");
+
+  let results = null;
+  let mockBrowser = {
+    messageManager: {
+      sendAsyncMessage(msgName, arg) {
+        results = arg;
+      },
+    },
+  };
+  loginManagerParent.doAutocompleteSearch(arg1, mockBrowser);
+  is(results.logins.length, 0, "No results since uiBusy is true");
+  await close(win);
+
+  await BrowserTestUtils.closeWindow(win);
+
+  Services.obs.removeObserver(dialogObserver, "common-dialog-loaded");
 });
