@@ -1996,9 +1996,8 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime) {
           presShell->NotifyFontFaceSetOnRefresh();
           mNeedToRecomputeVisibility = true;
 
-          // Record the telemetry for the # of flushes that occurred between
-          // ticks.
-          presShell->PingFlushPerTickTelemetry(FlushType::Style);
+          // Record the telemetry for events that occurred between ticks.
+          presShell->PingPerTickTelemetry(FlushType::Style);
         }
       }
     } else if (i == 2) {
@@ -2025,9 +2024,8 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime) {
         presShell->NotifyFontFaceSetOnRefresh();
         mNeedToRecomputeVisibility = true;
 
-        // Record the telemetry for the # of flushes that occured between
-        // ticks.
-        presShell->PingFlushPerTickTelemetry(FlushType::Layout);
+        // Record the telemetry for events that occurred between ticks.
+        presShell->PingPerTickTelemetry(FlushType::Layout);
       }
     }
 
