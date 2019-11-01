@@ -119,21 +119,11 @@ abstract class AbstractFetchDownloadService : Service() {
                     }
 
                     ACTION_OPEN -> {
-                        // Create a new file with the location of the saved file to extract the correct path
-                        // `file` has the wrong path, so we must construct it based on the `fileName` and `dir.path`s
-                        val fileLocation = File(currentDownloadJobState.state.filePath)
-                        val filePath = FileProvider.getUriForFile(
-                                context,
-                                context.packageName + FILE_PROVIDER_EXTENSION,
-                                fileLocation
+                        openFile(
+                            context = context,
+                            filePath = currentDownloadJobState.state.filePath,
+                            contentType = currentDownloadJobState.state.contentType
                         )
-
-                        val newIntent = Intent(ACTION_VIEW).apply {
-                            setDataAndType(filePath, currentDownloadJobState.state.contentType ?: "*/*")
-                            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION
-                        }
-
-                        startActivity(newIntent)
                     }
                 }
             }
@@ -346,6 +336,27 @@ abstract class AbstractFetchDownloadService : Service() {
     }
 
     companion object {
+        /**
+         * Launches an intent to open the given file
+         */
+        fun openFile(context: Context, filePath: String, contentType: String?) {
+            // Create a new file with the location of the saved file to extract the correct path
+            // `file` has the wrong path, so we must construct it based on the `fileName` and `dir.path`s
+            val fileLocation = File(filePath)
+            val constructedFilePath = FileProvider.getUriForFile(
+                context,
+                context.packageName + FILE_PROVIDER_EXTENSION,
+                fileLocation
+            )
+
+            val newIntent = Intent(ACTION_VIEW).apply {
+                setDataAndType(constructedFilePath, contentType ?: "*/*")
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION
+            }
+
+            context.startActivity(newIntent)
+        }
+
         private const val FILE_PROVIDER_EXTENSION = ".fileprovider"
         private const val CHUNK_SIZE = 4 * 1024
         private const val PARTIAL_CONTENT_STATUS = 206
