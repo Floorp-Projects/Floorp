@@ -2880,7 +2880,8 @@ static bool EmitMemOrTableCopy(FunctionCompiler& f, bool isMem) {
   uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
 
   const SymbolicAddressSignature& callee =
-      isMem ? SASigMemCopy : SASigTableCopy;
+      isMem ? (f.env().usesSharedMemory() ? SASigMemCopyShared : SASigMemCopy)
+            : SASigTableCopy;
   CallCompileState args;
   if (!f.passInstance(callee.argTypes[0], &args)) {
     return false;
@@ -2976,7 +2977,8 @@ static bool EmitMemFill(FunctionCompiler& f) {
 
   uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
 
-  const SymbolicAddressSignature& callee = SASigMemFill;
+  const SymbolicAddressSignature& callee =
+      f.env().usesSharedMemory() ? SASigMemFillShared : SASigMemFill;
   CallCompileState args;
   if (!f.passInstance(callee.argTypes[0], &args)) {
     return false;

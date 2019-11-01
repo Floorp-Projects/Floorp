@@ -437,14 +437,10 @@ static int32_t PerformWait(Instance* instance, uint32_t byteOffset, T value,
   return int32_t(woken);
 }
 
-/* static */ int32_t Instance::memCopy(Instance* instance,
-                                       uint32_t dstByteOffset,
-                                       uint32_t srcByteOffset, uint32_t len) {
-  MOZ_ASSERT(SASigMemCopy.failureMode == FailureMode::FailOnNegI32);
-
-  WasmMemoryObject* mem = instance->memory();
-  uint32_t memLen = mem->volatileMemoryLength();
-
+template <typename T, typename F>
+inline int32_t WasmMemoryCopy(T memBase, uint32_t memLen,
+                              uint32_t dstByteOffset, uint32_t srcByteOffset,
+                              uint32_t len, F memMove) {
   if (len == 0) {
     // Zero length copies that are out-of-bounds do not trap.
     return 0;
@@ -483,14 +479,7 @@ static int32_t PerformWait(Instance* instance, uint32_t byteOffset, T value,
     // the trap that may happen without writing anything, the direction is not
     // currently observable as there are no fences nor any read/write protect
     // operation.  So memmove is good enough to handle overlaps.
-    SharedMem<uint8_t*> dataPtr = mem->buffer().dataPointerEither();
-    if (mem->isShared()) {
-      AtomicOperations::memmoveSafeWhenRacy(
-          dataPtr + dstByteOffset, dataPtr + srcByteOffset, size_t(len));
-    } else {
-      uint8_t* rawBuf = dataPtr.unwrap(/*Unshared*/);
-      memmove(rawBuf + dstByteOffset, rawBuf + srcByteOffset, size_t(len));
-    }
+    memMove(memBase + dstByteOffset, memBase + srcByteOffset, size_t(len));
   }
 
   if (!mustTrap) {
@@ -501,6 +490,34 @@ static int32_t PerformWait(Instance* instance, uint32_t byteOffset, T value,
   JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                             JSMSG_WASM_OUT_OF_BOUNDS);
   return -1;
+}
+
+/* static */ int32_t Instance::memCopy(Instance* instance,
+                                       uint32_t dstByteOffset,
+                                       uint32_t srcByteOffset, uint32_t len) {
+  MOZ_ASSERT(SASigMemCopy.failureMode == FailureMode::FailOnNegI32);
+
+  WasmMemoryObject* mem = instance->memory();
+  uint32_t memLen = mem->volatileMemoryLength();
+
+  return WasmMemoryCopy(mem->buffer().dataPointerEither().unwrap(), memLen,
+                        dstByteOffset, srcByteOffset, len, memmove);
+}
+
+/* static */ int32_t Instance::memCopyShared(Instance* instance,
+                                             uint32_t dstByteOffset,
+                                             uint32_t srcByteOffset,
+                                             uint32_t len) {
+  MOZ_ASSERT(SASigMemCopy.failureMode == FailureMode::FailOnNegI32);
+
+  typedef void (*RacyMemMove)(SharedMem<uint8_t*>, SharedMem<uint8_t*>, size_t);
+
+  WasmMemoryObject* mem = instance->memory();
+  uint32_t memLen = mem->volatileMemoryLength();
+
+  return WasmMemoryCopy<SharedMem<uint8_t*>, RacyMemMove>(
+      mem->buffer().dataPointerEither(), memLen, dstByteOffset, srcByteOffset,
+      len, AtomicOperations::memmoveSafeWhenRacy);
 }
 
 /* static */ int32_t Instance::dataDrop(Instance* instance, uint32_t segIndex) {
@@ -523,13 +540,9 @@ static int32_t PerformWait(Instance* instance, uint32_t byteOffset, T value,
   return 0;
 }
 
-/* static */ int32_t Instance::memFill(Instance* instance, uint32_t byteOffset,
-                                       uint32_t value, uint32_t len) {
-  MOZ_ASSERT(SASigMemFill.failureMode == FailureMode::FailOnNegI32);
-
-  WasmMemoryObject* mem = instance->memory();
-  uint32_t memLen = mem->volatileMemoryLength();
-
+template <typename T, typename F>
+inline int32_t WasmMemoryFill(T memBase, uint32_t memLen, uint32_t byteOffset,
+                              uint32_t value, uint32_t len, F memSet) {
   if (len == 0) {
     // Zero length fills that are out-of-bounds do not trap.
     return 0;
@@ -554,14 +567,7 @@ static int32_t PerformWait(Instance* instance, uint32_t byteOffset, T value,
   if (len > 0) {
     // The required write direction is upward, but that is not currently
     // observable as there are no fences nor any read/write protect operation.
-    SharedMem<uint8_t*> dataPtr = mem->buffer().dataPointerEither();
-    if (mem->isShared()) {
-      AtomicOperations::memsetSafeWhenRacy(dataPtr + byteOffset, int(value),
-                                           size_t(len));
-    } else {
-      uint8_t* rawBuf = dataPtr.unwrap(/*Unshared*/);
-      memset(rawBuf + byteOffset, int(value), size_t(len));
-    }
+    memSet(memBase + byteOffset, int(value), size_t(len));
   }
 
   if (!mustTrap) {
@@ -572,6 +578,29 @@ static int32_t PerformWait(Instance* instance, uint32_t byteOffset, T value,
   JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                             JSMSG_WASM_OUT_OF_BOUNDS);
   return -1;
+}
+
+/* static */ int32_t Instance::memFill(Instance* instance, uint32_t byteOffset,
+                                       uint32_t value, uint32_t len) {
+  MOZ_ASSERT(SASigMemFill.failureMode == FailureMode::FailOnNegI32);
+
+  WasmMemoryObject* mem = instance->memory();
+  uint32_t memLen = mem->volatileMemoryLength();
+
+  return WasmMemoryFill(mem->buffer().dataPointerEither().unwrap(), memLen,
+                        byteOffset, value, len, memset);
+}
+
+/* static */ int32_t Instance::memFillShared(Instance* instance,
+                                             uint32_t byteOffset,
+                                             uint32_t value, uint32_t len) {
+  MOZ_ASSERT(SASigMemFill.failureMode == FailureMode::FailOnNegI32);
+
+  WasmMemoryObject* mem = instance->memory();
+  uint32_t memLen = mem->volatileMemoryLength();
+
+  return WasmMemoryFill(mem->buffer().dataPointerEither(), memLen, byteOffset,
+                        value, len, AtomicOperations::memsetSafeWhenRacy);
 }
 
 /* static */ int32_t Instance::memInit(Instance* instance, uint32_t dstOffset,

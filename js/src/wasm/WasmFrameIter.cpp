@@ -1352,10 +1352,12 @@ static const char* ThunkedNativeToDescription(SymbolicAddress func) {
     case SymbolicAddress::ReportInt64JSCall:
       return "jit call to int64 wasm function";
     case SymbolicAddress::MemCopy:
+    case SymbolicAddress::MemCopyShared:
       return "call to native memory.copy function";
     case SymbolicAddress::DataDrop:
       return "call to native data.drop function";
     case SymbolicAddress::MemFill:
+    case SymbolicAddress::MemFillShared:
       return "call to native memory.fill function";
     case SymbolicAddress::MemInit:
       return "call to native memory.init function";
