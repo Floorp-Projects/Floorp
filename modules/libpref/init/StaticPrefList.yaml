@@ -2782,6 +2782,18 @@
   value: @IS_ANDROID@
   mirror: always
 
+# This pref governs whether we enable content script CSP in extensions.
+- name: extensions.content_script_csp.enabled
+  type: bool
+  value: false
+  mirror: always
+
+# This pref governs whether content script CSP is report-only.
+- name: extensions.content_script_csp.report_only
+  type: bool
+  value: true
+  mirror: always
+
 # This pref governs whether we run webextensions in a separate process (true)
 # or the parent/main process (false)
 - name: extensions.webextensions.remote
