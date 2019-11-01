@@ -274,6 +274,7 @@ package org.mozilla.geckoview {
     field public static final int COOKIES_BLOCKED_ALL = 1073741824;
     field public static final int COOKIES_BLOCKED_BY_PERMISSION = 268435456;
     field public static final int COOKIES_BLOCKED_FOREIGN = 128;
+    field public static final int COOKIES_BLOCKED_SOCIALTRACKER = 16777216;
     field public static final int COOKIES_BLOCKED_TRACKER = 536870912;
     field public static final int COOKIES_LOADED = 32768;
     field public static final int COOKIES_LOADED_SOCIALTRACKER = 524288;
