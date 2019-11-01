@@ -1285,6 +1285,12 @@ JS_PUBLIC_API void JS_RemoveFinalizeCallback(JSContext* cx,
   cx->runtime()->gc.removeFinalizeCallback(cb);
 }
 
+JS_PUBLIC_API void JS::SetHostCleanupFinalizationGroupCallback(
+    JSContext* cx, JSHostCleanupFinalizationGroupCallback cb, void* data) {
+  AssertHeapIsIdle();
+  cx->runtime()->gc.setHostCleanupFinalizationGroupCallback(cb, data);
+}
+
 JS_PUBLIC_API bool JS_AddWeakPointerZonesCallback(JSContext* cx,
                                                   JSWeakPointerZonesCallback cb,
                                                   void* data) {

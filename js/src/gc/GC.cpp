@@ -213,6 +213,7 @@
 #include "jstypes.h"
 #include "jsutil.h"
 
+#include "builtin/FinalizationGroupObject.h"
 #include "debugger/DebugAPI.h"
 #include "gc/FindSCCs.h"
 #include "gc/FreeOp.h"
@@ -1543,6 +1544,20 @@ void GCRuntime::callFinalizeCallbacks(JSFreeOp* fop,
                                       JSFinalizeStatus status) const {
   for (auto& p : finalizeCallbacks.ref()) {
     p.op(fop, status, p.data);
+  }
+}
+
+void GCRuntime::setHostCleanupFinalizationGroupCallback(
+    JSHostCleanupFinalizationGroupCallback callback, void* data) {
+  hostCleanupFinalizationGroupCallback = {callback, data};
+}
+
+void GCRuntime::callHostCleanupFinalizationGroupCallback(
+    FinalizationGroupObject* group) {
+  JS::AutoSuppressGCAnalysis nogc;
+  auto& callback = hostCleanupFinalizationGroupCallback;
+  if (callback.op) {
+    callback.op(group, callback.data);
   }
 }
 
