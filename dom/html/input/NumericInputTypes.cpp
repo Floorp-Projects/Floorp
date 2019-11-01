@@ -6,9 +6,9 @@
 
 #include "NumericInputTypes.h"
 
+#include "mozilla/TextControlState.h"
 #include "mozilla/dom/HTMLInputElement.h"
 #include "nsNumberControlFrame.h"
-#include "nsTextEditorState.h"
 
 bool NumericInputTypeBase::IsRangeOverflow() const {
   mozilla::Decimal maximum = mInputElement->GetMaximum();
@@ -178,5 +178,5 @@ nsresult RangeInputType::MinMaxStepAttrChanged() {
   // example above were to change from 1 to -1.
   nsAutoString value;
   GetNonFileValueInternal(value);
-  return SetValueInternal(value, nsTextEditorState::eSetValue_Internal);
+  return SetValueInternal(value, mozilla::TextControlState::eSetValue_Internal);
 }
