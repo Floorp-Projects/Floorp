@@ -132,6 +132,7 @@ WebExtensionPolicy::WebExtensionPolicy(GlobalObject& aGlobal,
       mHostname(aInit.mMozExtensionHostname),
       mName(aInit.mName),
       mExtensionPageCSP(aInit.mExtensionPageCSP),
+      mContentScriptCSP(aInit.mContentScriptCSP),
       mLocalizeCallback(aInit.mLocalizeCallback),
       mIsPrivileged(aInit.mIsPrivileged),
       mPermissions(new AtomSet(aInit.mPermissions)) {
@@ -160,6 +161,10 @@ WebExtensionPolicy::WebExtensionPolicy(GlobalObject& aGlobal,
 
   if (mExtensionPageCSP.IsVoid()) {
     EPS().DefaultCSP(mExtensionPageCSP);
+  }
+
+  if (mContentScriptCSP.IsVoid()) {
+    EPS().DefaultCSP(mContentScriptCSP);
   }
 
   mContentScripts.SetCapacity(aInit.mContentScripts.Length());

@@ -123,6 +123,10 @@ add_task(async function startup() {
       min: 4,
       max: 55,
     },
+    "extensions.webextensions.default-content-security-policy": {
+      min: 0,
+      max: 50,
+    },
     "chrome.override_package.global": {
       min: 0,
       max: 50,

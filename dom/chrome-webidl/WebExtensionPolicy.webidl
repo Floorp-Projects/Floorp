@@ -51,10 +51,24 @@ interface WebExtensionPolicy {
 
   /**
    * The content security policy string to apply to all pages loaded from the
-   * extension's moz-extension: protocol.
+   * extension's moz-extension: protocol.  If one is not provided by the
+   * extension the default value from preferences is used.
+   * See extensions.webextensions.default-content-security-policy.
    */
   [Constant]
   readonly attribute DOMString extensionPageCSP;
+
+  /**
+   * The content security policy string to apply to all the content scripts
+   * belonging to the extension.  If one is not provided by the
+   * extension the default value from preferences is used.
+   * See extensions.webextensions.default-content-security-policy.
+   *
+   * This is currently disabled, see bug 1578284.  Developers may enable it
+   * for testing using extensions.content_script_csp.enabled.
+   */
+  [Constant]
+  readonly attribute DOMString contentScriptCSP;
 
   /**
    * The list of currently-active permissions for the extension, as specified
@@ -232,6 +246,7 @@ dictionary WebExtensionInit {
   sequence<WebExtensionContentScriptInit> contentScripts = [];
 
   DOMString? extensionPageCSP = null;
+  DOMString? contentScriptCSP = null;
 
   sequence<DOMString>? backgroundScripts = null;
 

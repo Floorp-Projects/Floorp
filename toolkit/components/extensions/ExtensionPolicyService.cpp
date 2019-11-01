@@ -545,6 +545,15 @@ nsresult ExtensionPolicyService::GetExtensionPageCSP(const nsAString& aAddonId,
   return NS_ERROR_INVALID_ARG;
 }
 
+nsresult ExtensionPolicyService::GetContentScriptCSP(const nsAString& aAddonId,
+                                                     nsAString& aResult) {
+  if (WebExtensionPolicy* policy = GetByID(aAddonId)) {
+    policy->GetContentScriptCSP(aResult);
+    return NS_OK;
+  }
+  return NS_ERROR_INVALID_ARG;
+}
+
 nsresult ExtensionPolicyService::GetGeneratedBackgroundPageUrl(
     const nsACString& aHostname, nsACString& aResult) {
   if (WebExtensionPolicy* policy = GetByHost(aHostname)) {

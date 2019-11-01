@@ -190,6 +190,12 @@
                 "properties": {
                   "extension_pages": {
                     "type": "string",
+                    "optional": true,
+                    "format": "contentSecurityPolicy"
+                  },
+                  "content_scripts": {
+                    "type": "string",
+                    "optional": true,
                     "format": "contentSecurityPolicy"
                   }
                 }
