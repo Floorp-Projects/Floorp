@@ -116,6 +116,7 @@ JS::Zone::Zone(JSRuntime* rt)
 #ifdef DEBUG
       gcSweepGroupIndex(0),
 #endif
+      finalizationRecordMap_(this, this),
       jitZone_(this, nullptr),
       gcScheduled_(false),
       gcScheduledSaved_(false),

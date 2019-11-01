@@ -214,6 +214,7 @@ UNIFIED_SOURCES += [
     'builtin/Boolean.cpp',
     'builtin/DataViewObject.cpp',
     'builtin/Eval.cpp',
+    'builtin/FinalizationGroupObject.cpp',
     'builtin/JSON.cpp',
     'builtin/MapObject.cpp',
     'builtin/ModuleObject.cpp',

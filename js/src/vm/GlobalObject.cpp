@@ -23,6 +23,7 @@
 #  include "builtin/intl/PluralRules.h"
 #  include "builtin/intl/RelativeTimeFormat.h"
 #endif
+#include "builtin/FinalizationGroupObject.h"
 #include "builtin/MapObject.h"
 #include "builtin/ModuleObject.h"
 #include "builtin/Object.h"
@@ -131,6 +132,10 @@ bool GlobalObject::skipDeselectedConstructor(JSContext* cx, JSProtoKey key) {
     case JSProto_Atomics:
     case JSProto_SharedArrayBuffer:
       return !cx->realm()->creationOptions().getSharedMemoryAndAtomicsEnabled();
+
+    case JSProto_FinalizationGroup:
+      return !cx->realm()->creationOptions().getWeakRefsEnabled();
+
     default:
       return false;
   }
