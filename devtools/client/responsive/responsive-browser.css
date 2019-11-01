@@ -16,13 +16,19 @@
   background-color: var(--rdm-browser-container-background);
 }
 
-.browserContainer.responsive-mode > .rdm-toolbar {
+.browserContainer.responsive-mode .browserStack > .rdm-toolbar {
   border: none;
+  position: absolute;
+  width: 100%;
   height: 30px;
 }
 
+.browserContainer.responsive-mode .browserStack.device-modal-opened > .rdm-toolbar {
+  height: 100%;
+}
+
 .browserContainer.responsive-mode > .browserStack {
-  margin-top: 15px;
+  position: relative;
   min-height: 0;
   min-width: 0;
   overflow: auto;
@@ -31,8 +37,11 @@
   display: grid;
 }
 
+.browserContainer.responsive-mode > .browserStack.device-modal-opened {
+  overflow: hidden;
+}
+
 .browserContainer.responsive-mode > .browserStack > * {
-  align-self: center;
   justify-self: center;
   /* This could go post https://bugzilla.mozilla.org/show_bug.cgi?id=1576946 */
   grid-area: 1 / 1;
@@ -43,4 +52,5 @@
 .browserContainer.responsive-mode > .browserStack > browser {
   border: 1px solid var(--devtools-splitter-color);
   box-shadow: var(--rdm-browser-box-shadow);
+  margin-top: 65px;
 }
