@@ -676,11 +676,12 @@ class MutableWrappedPtrOperations<InnerViewTable, Wrapper>
 class WasmArrayRawBuffer {
   mozilla::Maybe<uint32_t> maxSize_;
   size_t mappedSize_;  // Not including the header page
+  uint32_t length_;
 
  protected:
   WasmArrayRawBuffer(uint8_t* buffer, const mozilla::Maybe<uint32_t>& maxSize,
-                     size_t mappedSize)
-      : maxSize_(maxSize), mappedSize_(mappedSize) {
+                     size_t mappedSize, uint32_t length)
+      : maxSize_(maxSize), mappedSize_(mappedSize), length_(length) {
     MOZ_ASSERT(buffer == dataPointer());
   }
 
@@ -700,6 +701,8 @@ class WasmArrayRawBuffer {
   size_t mappedSize() const { return mappedSize_; }
 
   mozilla::Maybe<uint32_t> maxSize() const { return maxSize_; }
+
+  uint32_t byteLength() const { return length_; }
 
   MOZ_MUST_USE bool growToSizeInPlace(uint32_t oldSize, uint32_t newSize);
 
