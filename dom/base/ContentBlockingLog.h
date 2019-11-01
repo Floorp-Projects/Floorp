@@ -84,7 +84,8 @@ class ContentBlockingLog final {
       const Maybe<AntiTrackingCommon::StorageAccessGrantedReason>& aReason,
       const nsTArray<nsCString>& aTrackingFullHashes) {
     DebugOnly<bool> isCookiesBlockedTracker =
-        aType == nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER;
+        aType == nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER ||
+        aType == nsIWebProgressListener::STATE_COOKIES_BLOCKED_SOCIALTRACKER;
     MOZ_ASSERT_IF(aBlocked, aReason.isNothing());
     MOZ_ASSERT_IF(!isCookiesBlockedTracker, aReason.isNothing());
     MOZ_ASSERT_IF(isCookiesBlockedTracker && !aBlocked, aReason.isSome());

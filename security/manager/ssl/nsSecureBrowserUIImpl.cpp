@@ -225,6 +225,10 @@ void nsSecureBrowserUIImpl::CheckForContentBlockingEvents() {
     mEvent |= STATE_COOKIES_BLOCKED_TRACKER;
   }
 
+  if (doc->GetHasSocialTrackingCookiesBlocked()) {
+    mEvent |= STATE_COOKIES_BLOCKED_SOCIALTRACKER;
+  }
+
   if (doc->GetHasForeignCookiesBlocked()) {
     mEvent |= STATE_COOKIES_BLOCKED_FOREIGN;
   }
