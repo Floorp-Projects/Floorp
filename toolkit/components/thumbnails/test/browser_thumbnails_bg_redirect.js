@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-function* runTests() {
+add_task(async function thumbnails_bg_redirect() {
   let finalURL = "http://example.com/redirected";
   let originalURL = bgTestPageURL({ redirect: finalURL });
 
@@ -14,24 +14,13 @@ function* runTests() {
     "Thumbnail file for final URL should not exist yet."
   );
 
-  let captureOriginalPromise = new Promise(resolve => {
-    bgAddPageThumbObserver(originalURL).then(() => {
-      ok(true, `page-thumbnail created for ${originalURL}`);
-      resolve();
-    });
-  });
+  let captureOriginalPromise = bgAddPageThumbObserver(originalURL);
+  let captureFinalPromise = bgAddPageThumbObserver(finalURL);
 
-  let captureFinalPromise = new Promise(resolve => {
-    bgAddPageThumbObserver(finalURL).then(() => {
-      ok(true, `page-thumbnail created for ${finalURL}`);
-      resolve();
-    });
-  });
-
-  let capturedURL = yield bgCapture(originalURL);
+  let [capturedURL] = await bgCapture(originalURL);
   is(capturedURL, originalURL, "Captured URL should be URL passed to capture");
-  yield captureOriginalPromise;
-  yield captureFinalPromise;
+  await captureOriginalPromise;
+  await captureFinalPromise;
   ok(
     thumbnailExists(originalURL),
     "Thumbnail for original URL should be cached"
@@ -40,4 +29,4 @@ function* runTests() {
 
   removeThumbnail(originalURL);
   removeThumbnail(finalURL);
-}
+});

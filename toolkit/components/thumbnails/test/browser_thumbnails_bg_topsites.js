@@ -7,8 +7,8 @@ const image96x96 =
   "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAAAJCAYAAADNYymqAAAAKklEQVR42u3RMQEAAAjDMFCO9CGDg1RC00lN6awGAACADQAACAAAAXjXApPGFm+IdJG9AAAAAElFTkSuQmCC";
 const baseURL = "http://mozilla${i}.com/";
 
-function* runTests() {
-  yield SpecialPowers.pushPrefEnv({
+add_task(async function thumbnails_bg_topsites() {
+  await SpecialPowers.pushPrefEnv({
     set: [
       [
         "browser.newtabpage.activity-stream.improvesearch.topSiteSearchShortcuts",
@@ -18,18 +18,18 @@ function* runTests() {
   });
   // Add 3 top sites - 2 visits each so it can pass frecency threshold of the top sites query
   for (let i = 1; i <= 3; i++) {
-    yield PlacesTestUtils.addVisits(baseURL.replace("${i}", i));
-    yield PlacesTestUtils.addVisits(baseURL.replace("${i}", i));
+    await PlacesTestUtils.addVisits(baseURL.replace("${i}", i));
+    await PlacesTestUtils.addVisits(baseURL.replace("${i}", i));
   }
 
   // Add favicon data for 2 of the top sites
   let faviconData = new Map();
   faviconData.set("http://mozilla1.com/", image1x1);
   faviconData.set("http://mozilla2.com/", image96x96);
-  yield PlacesTestUtils.addFavicons(faviconData);
+  await PlacesTestUtils.addFavicons(faviconData);
 
   // Sanity check that we've successfully added all 3 urls to top sites
-  let links = yield NewTabUtils.activityStreamLinks.getTopSites();
+  let links = await NewTabUtils.activityStreamLinks.getTopSites();
   is(
     links[0].url,
     baseURL.replace("${i}", 3),
@@ -52,7 +52,7 @@ function* runTests() {
 
   // Check that the correct sites will capture screenshots
   gBrowserThumbnails.clearTopSiteURLCache();
-  let topSites = yield gBrowserThumbnails._topSiteURLs;
+  let topSites = await gBrowserThumbnails._topSiteURLs;
   ok(
     topSites.includes("http://mozilla1.com/"),
     "Top site did not have a rich icon - get a screenshot"
@@ -72,5 +72,5 @@ function* runTests() {
 
   // Clean up
   NewTabUtils.pinnedLinks.unpin(pinnedSite);
-  yield PlacesUtils.history.clear();
-}
+  await PlacesUtils.history.clear();
+});
