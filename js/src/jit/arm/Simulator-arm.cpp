@@ -2345,6 +2345,7 @@ typedef double (*Prototype_Double_DoubleInt)(double arg0, int32_t arg1);
 typedef double (*Prototype_Double_IntDouble)(int32_t arg0, double arg1);
 typedef double (*Prototype_Double_DoubleDouble)(double arg0, double arg1);
 typedef int32_t (*Prototype_Int_IntDouble)(int32_t arg0, double arg1);
+typedef int32_t (*Prototype_Int_DoubleInt)(double arg0, int32_t arg1);
 
 typedef double (*Prototype_Double_DoubleDoubleDouble)(double arg0, double arg1,
                                                       double arg2);
@@ -2711,6 +2712,22 @@ void Simulator::softwareInterrupt(SimInstruction* instr) {
           Prototype_Int_IntDouble target =
               reinterpret_cast<Prototype_Int_IntDouble>(external);
           int32_t result = target(ival, dval0);
+          scratchVolatileRegisters(/* scratchFloat = true */);
+          set_register(r0, result);
+          break;
+        }
+        case Args_Int_DoubleInt: {
+          double dval;
+          int32_t result;
+          Prototype_Int_DoubleInt target =
+              reinterpret_cast<Prototype_Int_DoubleInt>(external);
+          if (UseHardFpABI()) {
+            get_double_from_d_register(0, &dval);
+            result = target(dval, arg0);
+          } else {
+            dval = get_double_from_register_pair(0);
+            result = target(dval, arg2);
+          }
           scratchVolatileRegisters(/* scratchFloat = true */);
           set_register(r0, result);
           break;
