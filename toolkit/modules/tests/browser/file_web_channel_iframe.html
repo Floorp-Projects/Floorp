@@ -6,7 +6,7 @@
 </head>
 <body>
 <script>
-  var REDIRECTED_IFRAME_SRC_ROOT = "http://example.org/browser/browser/base/content/test/general/browser_web_channel_iframe.html";
+  var REDIRECTED_IFRAME_SRC_ROOT = "http://example.org/" + location.pathname;
 
   window.onload = function() {
     var testName = window.location.search.replace(/^\?/, "");

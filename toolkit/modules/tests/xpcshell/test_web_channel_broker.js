@@ -19,12 +19,10 @@ add_test(function test_web_channel_broker_channel_map() {
   let channel2 = {};
 
   Assert.equal(WebChannelBroker._channelMap.size, 0);
-  Assert.ok(!WebChannelBroker._messageListenerAttached);
 
   // make sure _channelMap works correctly
   WebChannelBroker.registerChannel(channel);
   Assert.equal(WebChannelBroker._channelMap.size, 1);
-  Assert.ok(WebChannelBroker._messageListenerAttached);
 
   WebChannelBroker.registerChannel(channel2);
   Assert.equal(WebChannelBroker._channelMap.size, 2);
@@ -64,18 +62,17 @@ add_task(function test_web_channel_broker_listener() {
     WebChannelBroker.registerChannel(channel);
 
     var mockEvent = {
-      data: {
-        id: VALID_WEB_CHANNEL_ID,
-        message: {
-          command: "hello",
-        },
+      id: VALID_WEB_CHANNEL_ID,
+      message: {
+        command: "hello",
       },
+    };
+
+    WebChannelBroker.tryToDeliver(mockEvent, {
+      browsingContext: {},
       principal: {
         origin: URL_STRING,
       },
-      objects: {},
-    };
-
-    WebChannelBroker._listener(mockEvent);
+    });
   });
 });

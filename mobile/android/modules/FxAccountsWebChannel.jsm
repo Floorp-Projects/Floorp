@@ -190,9 +190,9 @@ this.FxAccountsWebChannel.prototype = {
      *        Command message
      * @param sendingContext {Object}
      *        Message sending context.
-     *        @param sendingContext.browser {browser}
-     *               The <browser> object that captured the
-     *               WebChannelMessageToChrome.
+     *        @param sendingContext.browsingContext {BrowsingContext}
+     *               The browsing context from which the
+     *               WebChannelMessageToChrome was sent.
      *        @param sendingContext.eventTarget {EventTarget}
      *               The <EventTarget> where the message was sent.
      *        @param sendingContext.principal {Principal}
@@ -219,9 +219,11 @@ this.FxAccountsWebChannel.prototype = {
 
         switch (command) {
           case COMMAND_LOADED:
-            // Note: we want the child side of the message manager here, not the
-            // parent, so get it from the docshell, not the browser.
-            let mm = sendingContext.browser.docShell.messageManager;
+            // Note: we want a message manager here that about:accounts can
+            // add a listener to, so use the docshell's message manager,
+            // not the sending context itself.
+            let { docShell } = sendingContext.browsingContext;
+            let mm = docShell.messageManager;
             mm.sendAsyncMessage(COMMAND_LOADED);
             break;
 
@@ -276,10 +278,11 @@ this.FxAccountsWebChannel.prototype = {
                       "relinkVerify.message",
                       [data.email]
                     );
+                    let browser =
+                      sendingContext.browsingContext &&
+                      sendingContext.browsingContext.top.embedderElement;
                     new Prompt({
-                      window:
-                        sendingContext.browser &&
-                        sendingContext.browser.ownerGlobal,
+                      window: browser && browser.ownerGlobal,
                       title: strings.GetStringFromName("relinkVerify.title"),
                       message: message,
                       buttons: [

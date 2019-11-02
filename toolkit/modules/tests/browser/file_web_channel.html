@@ -6,7 +6,9 @@
 </head>
 <body>
 <script>
-   var IFRAME_SRC_ROOT = "http://mochi.test:8888/browser/browser/base/content/test/general/browser_web_channel_iframe.html";
+   var IFRAME_SRC_ROOT =
+     "http://mochi.test:8888" +
+     location.pathname.replace("web_channel.html", "web_channel_iframe.html");
 
   window.onload = function() {
     var testName = window.location.search.replace(/^\?/, "");
