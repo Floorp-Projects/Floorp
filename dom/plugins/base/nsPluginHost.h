@@ -96,12 +96,6 @@ class nsPluginHost final : public nsIPluginHost,
   NS_DECL_NSITIMERCALLBACK
   NS_DECL_NSINAMED
 
-  nsresult LoadPlugins();
-  nsresult UnloadPlugins();
-
-  nsresult SetUpPluginInstance(const nsACString& aMimeType, nsIURI* aURL,
-                               nsPluginInstanceOwner* aOwner);
-
   // Acts like a bitfield
   enum PluginFilter {
     eExcludeNone = nsIPluginHost::EXCLUDE_NONE,
@@ -119,11 +113,6 @@ class nsPluginHost final : public nsIPluginHost,
 
   void GetPlugins(nsTArray<nsCOMPtr<nsIInternalPluginTag>>& aPluginArray,
                   bool aIncludeDisabled = false);
-
-  nsresult FindPluginsForContent(
-      uint32_t aPluginEpoch, nsTArray<mozilla::plugins::PluginTag>* aPlugins,
-      nsTArray<mozilla::plugins::FakePluginTag>* aFakePlugins,
-      uint32_t* aNewPluginEpoch);
 
   nsresult GetURL(nsISupports* pluginInst, const char* url, const char* target,
                   nsNPAPIPluginStreamListener* streamListener,
@@ -243,6 +232,12 @@ class nsPluginHost final : public nsIPluginHost,
       nsTArray<mozilla::plugins::FakePluginTag>& aFakePlugins);
 
  private:
+  nsresult LoadPlugins();
+  nsresult UnloadPlugins();
+
+  nsresult SetUpPluginInstance(const nsACString& aMimeType, nsIURI* aURL,
+                               nsPluginInstanceOwner* aOwner);
+
   friend class nsPluginUnloadRunnable;
   friend class mozilla::plugins::BlocklistPromiseHandler;
 
@@ -305,6 +300,8 @@ class nsPluginHost final : public nsIPluginHost,
   void RegisterWithCategoryManager(const nsCString& aMimeType,
                                    nsRegisterType aType);
 
+  bool ShouldAddPlugin(const nsPluginInfo& aInfo);
+
   void AddPluginTag(nsPluginTag* aPluginTag);
 
   void UpdatePluginBlocklistState(nsPluginTag* aPluginTag,
@@ -321,11 +318,20 @@ class nsPluginHost final : public nsIPluginHost,
 
   bool IsRunningPlugin(nsPluginTag* aPluginTag);
 
-  // Stores all plugins info into the registry
+  nsresult EnsurePluginReg();
+
+  // Read plugin info (either from prefs or disk)
+  nsresult ReadPluginInfo();
+
+  // Stores all plugins info into the plugin registry
   nsresult WritePluginInfo();
 
-  // Loads all cached plugins info into mCachedPlugins
-  nsresult ReadPluginInfo();
+  // Loads all plugins info from the plugin registry
+  nsresult ReadPluginInfoFromDisk();
+
+  // The same, but only read/write flash info from/to prefs.
+  nsresult ReadFlashInfo();
+  nsresult WriteFlashInfo();
 
   // Given a file path, returns the plugins info from our cache
   // and removes it from the cache.
@@ -373,11 +379,15 @@ class nsPluginHost final : public nsIPluginHost,
   // set by pref plugin.disable
   bool mPluginsDisabled;
 
+  // set by pref plugin.load_flash_only
+  bool mFlashOnly;
+
   // Any instances in this array will have valid plugin objects via GetPlugin().
   // When removing an instance it might not die - be sure to null out it's
   // plugin.
   nsTArray<RefPtr<nsNPAPIPluginInstance>> mInstances;
 
+  // An nsIFile for the pluginreg.dat file in the profile.
   nsCOMPtr<nsIFile> mPluginRegFile;
 #ifdef XP_WIN
   RefPtr<nsPluginDirServiceProvider> mPrivateDirServiceProvider;
