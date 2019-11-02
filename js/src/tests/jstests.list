@@ -415,10 +415,11 @@ skip script test262/intl402/NumberFormat/numbering-system-options.js
 skip script test262/intl402/NumberFormat/constructor-numberingSystem-order.js
 skip script test262/intl402/NumberFormat/constructor-options-throwing-getters.js
 
-# The relatedYear field type required by this test is only supported in nightly
-# because the change hasn't been merged into the main spec yet.
+# The relatedYear field type required by these tests is only supported in
+# nightly because the change hasn't been merged into the main spec yet.
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1591664
 skip-if(release_or_beta) script test262/intl402/DateTimeFormat/prototype/formatToParts/related-year.js
+skip-if(release_or_beta) script test262/intl402/DateTimeFormat/prototype/formatToParts/pattern-on-calendar.js
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1277801
 skip script test262/built-ins/Object/prototype/toString/symbol-tag-non-str-builtin.js
