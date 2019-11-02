@@ -30,7 +30,7 @@ class TRRService : public nsIObserver,
   TRRService();
   nsresult Init();
   nsresult Start();
-  bool Enabled(nsIRequest::TRRMode aMode);
+  bool Enabled();
 
   uint32_t Mode() { return mMode; }
   bool AllowRFC1918() { return mRfc1918; }
@@ -40,9 +40,6 @@ class TRRService : public nsIObserver,
   bool WaitForAllResponses() { return mWaitForAllResponses; }
   bool DisableIPv6() { return mDisableIPv6; }
   bool DisableECS() { return mDisableECS; }
-  bool SkipTRRWhenParentalControlEnabled() {
-    return mSkipTRRWhenParentalControlEnabled;
-  }
   nsresult GetURI(nsCString& result);
   nsresult GetCredentials(nsCString& result);
   uint32_t GetRequestTimeout();
@@ -97,7 +94,6 @@ class TRRService : public nsIObserver,
   Atomic<bool, Relaxed> mWaitForAllResponses;  // Don't notify until all are in
   Atomic<bool, Relaxed> mDisableIPv6;          // don't even try
   Atomic<bool, Relaxed> mDisableECS;  // disable EDNS Client Subnet in requests
-  Atomic<bool, Relaxed> mSkipTRRWhenParentalControlEnabled;
   Atomic<uint32_t, Relaxed>
       mDisableAfterFails;  // this many fails in a row means failed TRR service
 
