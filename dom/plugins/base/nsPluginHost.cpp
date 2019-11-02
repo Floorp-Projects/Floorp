@@ -134,8 +134,6 @@ using mozilla::plugins::PluginTag;
     }                                                 \
   }
 
-static const char* kPrefWhitelist = "plugin.allowed_types";
-static const char* kPrefLoadInParentPrefix = "plugin.load_in_parent_process.";
 static const char* kPrefDisableFullPage =
     "plugin.disable_full_page_plugin_for_types";
 
@@ -2629,30 +2627,9 @@ void nsPluginHost::UpdateInMemoryPluginInfo(nsPluginTag* aPluginTag) {
 void nsPluginHost::UpdatePluginInfo(nsPluginTag* aPluginTag) {
   MOZ_ASSERT(XRE_IsParentProcess());
 
-  ReadPluginInfo();
-  WritePluginInfo();
-
   IncrementChromeEpoch();
 
   UpdateInMemoryPluginInfo(aPluginTag);
-}
-
-/* static */
-bool nsPluginHost::IsTypeWhitelisted(const char* aMimeType) {
-  nsAutoCString whitelist;
-  Preferences::GetCString(kPrefWhitelist, whitelist);
-  if (whitelist.IsEmpty()) {
-    return true;
-  }
-  nsDependentCString wrap(aMimeType);
-  return IsTypeInList(wrap, whitelist);
-}
-
-/* static */
-bool nsPluginHost::ShouldLoadTypeInParent(const nsACString& aMimeType) {
-  nsCString prefName(kPrefLoadInParentPrefix);
-  prefName += aMimeType;
-  return Preferences::GetBool(prefName.get(), false);
 }
 
 void nsPluginHost::RegisterWithCategoryManager(const nsCString& aMimeType,
