@@ -663,6 +663,10 @@ void AccessibleCaretEventHub::OnSelectionChange(Document* aDoc,
   mState->OnSelectionChanged(this, aDoc, aSel, aReason);
 }
 
+bool AccessibleCaretEventHub::ShouldDisableApz() const {
+  return mManager && mManager->ShouldDisableApz();
+}
+
 void AccessibleCaretEventHub::NotifyBlur(bool aIsLeavingDocument) {
   if (!mInitialized) {
     return;

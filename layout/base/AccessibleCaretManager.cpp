@@ -170,6 +170,7 @@ void AccessibleCaretManager::HideCarets() {
     AC_LOG("%s", __FUNCTION__);
     mFirstCaret->SetAppearance(Appearance::None);
     mSecondCaret->SetAppearance(Appearance::None);
+    mIsCaretPositionChanged = false;
     DispatchCaretStateChangedEvent(CaretChangedReason::Visibilitychange);
   }
 }
@@ -192,6 +193,8 @@ void AccessibleCaretManager::UpdateCarets(const UpdateCaretsHintSet& aHint) {
       UpdateCaretsForSelectionMode(aHint);
       break;
   }
+
+  UpdateShouldDisableApz();
 }
 
 bool AccessibleCaretManager::IsCaretDisplayableInCursorMode(
@@ -279,6 +282,8 @@ void AccessibleCaretManager::UpdateCaretsForCursorMode(
 
   mSecondCaret->SetAppearance(Appearance::None);
 
+  mIsCaretPositionChanged = (result == PositionChangedResult::Changed);
+
   if (!aHints.contains(UpdateCaretsHint::DispatchNoEvent) && !mActiveCaret) {
     DispatchCaretStateChangedEvent(CaretChangedReason::Updateposition);
   }
@@ -326,8 +331,11 @@ void AccessibleCaretManager::UpdateCaretsForSelectionMode(
   PositionChangedResult secondCaretResult =
       updateSingleCaret(mSecondCaret.get(), endFrame, endOffset);
 
-  if (firstCaretResult == PositionChangedResult::Changed ||
-      secondCaretResult == PositionChangedResult::Changed) {
+  mIsCaretPositionChanged =
+      firstCaretResult == PositionChangedResult::Changed ||
+      secondCaretResult == PositionChangedResult::Changed;
+
+  if (mIsCaretPositionChanged) {
     // Flush layout to make the carets intersection correct.
     if (!FlushLayout()) {
       return;
@@ -347,6 +355,39 @@ void AccessibleCaretManager::UpdateCaretsForSelectionMode(
 
   if (!aHints.contains(UpdateCaretsHint::DispatchNoEvent) && !mActiveCaret) {
     DispatchCaretStateChangedEvent(CaretChangedReason::Updateposition);
+  }
+}
+
+void AccessibleCaretManager::UpdateShouldDisableApz() {
+  if (mActiveCaret) {
+    // No need to disable APZ when dragging the caret.
+    mShouldDisableApz = false;
+    return;
+  }
+
+  if (mIsScrollStarted) {
+    // During scrolling, the caret's position is changed only if it is in a
+    // position:fixed or a "stuck" position:sticky frame subtree.
+    mShouldDisableApz = mIsCaretPositionChanged;
+    return;
+  }
+
+  // For other cases, we can only reliably detect whether the caret is in a
+  // position:fixed frame subtree.
+  switch (mLastUpdateCaretMode) {
+    case CaretMode::None:
+      mShouldDisableApz = false;
+      break;
+    case CaretMode::Cursor:
+      mShouldDisableApz = mFirstCaret->IsVisuallyVisible() &&
+                          mFirstCaret->IsInPositionFixedSubtree();
+      break;
+    case CaretMode::Selection:
+      mShouldDisableApz = (mFirstCaret->IsVisuallyVisible() &&
+                           mFirstCaret->IsInPositionFixedSubtree()) ||
+                          (mSecondCaret->IsVisuallyVisible() &&
+                           mSecondCaret->IsInPositionFixedSubtree());
+      break;
   }
 }
 
@@ -453,6 +494,7 @@ nsresult AccessibleCaretManager::ReleaseCaret() {
 
   mActiveCaret = nullptr;
   SetSelectionDragState(false);
+  UpdateShouldDisableApz();
   DispatchCaretStateChangedEvent(CaretChangedReason::Releasecaret);
   return NS_OK;
 }

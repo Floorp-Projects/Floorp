@@ -171,6 +171,17 @@ void AccessibleCaret::EnsureApzAware() {
   }
 }
 
+bool AccessibleCaret::IsInPositionFixedSubtree() const {
+  for (nsIFrame* f = mImaginaryCaretReferenceFrame.GetFrame(); f;
+       f = f->GetParent()) {
+    if (f->StyleDisplay()->mPosition == NS_STYLE_POSITION_FIXED &&
+        nsLayoutUtils::IsReallyFixedPos(f)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 void AccessibleCaret::InjectCaretElement(Document* aDocument) {
   ErrorResult rv;
   RefPtr<Element> element = CreateCaretElement(aDocument);
@@ -233,6 +244,7 @@ void AccessibleCaret::RemoveCaretElement(Document* aDocument) {
 void AccessibleCaret::ClearCachedData() {
   mImaginaryCaretRect = nsRect();
   mImaginaryCaretRectInContainerFrame = nsRect();
+  mImaginaryCaretReferenceFrame = nullptr;
   mZoomLevel = 0.0f;
 }
 
@@ -273,6 +285,7 @@ AccessibleCaret::PositionChangedResult AccessibleCaret::SetPosition(
   // Cache mImaginaryCaretRect, which is relative to the root frame.
   mImaginaryCaretRect = imaginaryCaretRect;
   mImaginaryCaretRectInContainerFrame = imaginaryCaretRectInContainerFrame;
+  mImaginaryCaretReferenceFrame = aFrame;
   mZoomLevel = zoomLevel;
 
   SetCaretElementStyle(imaginaryCaretRectInContainerFrame, mZoomLevel);

@@ -99,6 +99,8 @@ class AccessibleCaretEventHub : public nsIReflowObserver,
   void OnSelectionChange(dom::Document* aDocument, dom::Selection* aSelection,
                          int16_t aReason);
 
+  bool ShouldDisableApz() const;
+
  protected:
   virtual ~AccessibleCaretEventHub() = default;
 
