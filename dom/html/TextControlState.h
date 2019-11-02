@@ -405,6 +405,29 @@ class TextControlState final : public SupportsWeakPtr<TextControlState> {
 
   bool EditorHasComposition();
 
+  /**
+   * SetValueWithTextEditor() modifies the editor value with mTextEditor.
+   * This may cause destroying mTextEditor, mBoundFrame, the TextControlState
+   * itself.  Must be called when both mTextEditor and mBoundFrame are not
+   * nullptr.
+   *
+   * @param aHandlingState      Must be inner-most handling state for SetValue.
+   */
+  MOZ_CAN_RUN_SCRIPT void SetValueWithTextEditor(
+      AutoTextControlHandlingState& aHandlingState);
+
+  /**
+   * SetValueWithoutTextEditor() modifies the value without editor.  I.e.,
+   * modifying the value in this instance and mBoundFrame.  Must be called
+   * when at least mTextEditor or mBoundFrame is nullptr.
+   *
+   * @param aHandlingState      Must be inner-most handling state for SetValue.
+   * @return                    false if fallible allocation failed.  Otherwise,
+   *                            true.
+   */
+  MOZ_CAN_RUN_SCRIPT bool SetValueWithoutTextEditor(
+      AutoTextControlHandlingState& aHandlingState);
+
   // When this class handles something which may run script, this should be
   // set to non-nullptr.  If so, this class claims that it's busy and that
   // prevents destroying TextControlState instance.
