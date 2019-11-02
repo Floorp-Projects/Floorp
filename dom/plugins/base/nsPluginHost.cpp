@@ -15,6 +15,7 @@
 #include "nsNPAPIPluginInstance.h"
 #include "nsPluginInstanceOwner.h"
 #include "nsObjectLoadingContent.h"
+#include "nsIEventTarget.h"
 #include "nsIHTTPHeaderListener.h"
 #include "nsIHttpHeaderVisitor.h"
 #include "nsIObserverService.h"
@@ -277,6 +278,8 @@ nsPluginHost::nsPluginHost()
     : mPluginsLoaded(false),
       mOverrideInternalTypes(false),
       mPluginsDisabled(false),
+      mDoReloadOnceFindingFinished(false),
+      mAddedFinderShutdownBlocker(false),
       mPluginEpoch(0) {
   // check to see if pref is set at startup to let plugins take over in
   // full page mode for certain image mime types that we handle internally
@@ -317,6 +320,9 @@ nsPluginHost::nsPluginHost()
   PLUGIN_LOG(PLUGIN_LOG_ALWAYS, ("nsPluginHost::ctor\n"));
   PR_LogFlush();
 #endif
+  // We need to ensure that plugin tag sandbox info is available. This needs to
+  // be done from the main thread:
+  nsPluginTag::EnsureSandboxInformation();
 
   // Load plugins on creation, as there's a good chance we'll need to send them
   // to content processes directly after creation.
@@ -390,14 +396,25 @@ nsresult nsPluginHost::ReloadPlugins() {
   // if it was not created yet
   if (!mPluginsLoaded) return LoadPlugins();
 
+  // We're already in the process of finding more plugins. Do it again once
+  // done (because maybe things have changed since we started looking).
+  if (mPendingFinder) {
+    mDoReloadOnceFindingFinished = true;
+    return NS_ERROR_PLUGINS_PLUGINSNOTCHANGED;
+  }
+
   // we are re-scanning plugins. New plugins may have been added, also some
   // plugins may have been removed, so we should probably shut everything down
   // but don't touch running (active and not stopped) plugins
 
   // check if plugins changed, no need to do anything else
   // if no changes to plugins have been made
-  // false instructs not to touch the plugin list, just to
-  // look for possible changes
+  // We're doing this on the main thread, and we checked mPendingFinder
+  // above, so we don't need to do anything else to ensure we don't re-enter.
+  // Future work may make this asynchronous and do the finding away from
+  // the mainthread for the reload case, too, (in which case we should use
+  // mPendingFinder instead of a local copy, and update PluginFinder) but at
+  // the moment this is less important than the initial finding on startup.
   RefPtr<PluginFinder> pf = new PluginFinder(mFlashOnly);
   bool pluginschanged;
   MOZ_TRY(pf->HavePluginsChanged([&pluginschanged](bool aPluginsChanged) {
@@ -1846,6 +1863,21 @@ static void WatchRegKey(uint32_t aRoot, nsCOMPtr<nsIWindowsRegKey>& aKey) {
 }
 #endif
 
+already_AddRefed<nsIAsyncShutdownClient> GetProfileChangeTeardownPhase() {
+  nsCOMPtr<nsIAsyncShutdownService> asyncShutdownSvc =
+      services::GetAsyncShutdown();
+  MOZ_ASSERT(asyncShutdownSvc);
+  if (NS_WARN_IF(!asyncShutdownSvc)) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIAsyncShutdownClient> shutdownPhase;
+  DebugOnly<nsresult> rv =
+      asyncShutdownSvc->GetProfileChangeTeardown(getter_AddRefs(shutdownPhase));
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
+  return shutdownPhase.forget();
+}
+
 nsresult nsPluginHost::LoadPlugins() {
   // This should only be run in the parent process. On plugin list change, we'll
   // update observers in the content process as part of SetPluginsInContent
@@ -1856,6 +1888,13 @@ nsresult nsPluginHost::LoadPlugins() {
   // use ReloadPlugins() to enforce loading
   if (mPluginsLoaded) return NS_OK;
 
+  // Uh oh, someone's forcing us to load plugins, but we're already in the
+  // process of doing so. Schedule a reload for when we're done:
+  if (mPendingFinder) {
+    mDoReloadOnceFindingFinished = true;
+    return NS_OK;
+  }
+
   if (mPluginsDisabled) return NS_OK;
 
 #ifdef XP_WIN
@@ -1863,11 +1902,17 @@ nsresult nsPluginHost::LoadPlugins() {
   WatchRegKey(nsIWindowsRegKey::ROOT_KEY_CURRENT_USER, mRegKeyHKCU);
 #endif
 
-  // This is a runnable. In the future, we'll do some of this work async, on a
-  // different thread.
-  RefPtr<PluginFinder> pf = new PluginFinder(mFlashOnly);
+  // This is a runnable. The main part of its work will be done away from the
+  // main thread.
+  mPendingFinder = new PluginFinder(mFlashOnly);
+  mDoReloadOnceFindingFinished = false;
+  mAddedFinderShutdownBlocker = false;
   RefPtr<nsPluginHost> self = this;
-  nsresult rv = pf->DoFullSearch(
+  // Note that if we're in flash only mode, which is the default, then the
+  // callback will be called twice. Once for flash (or nothing, if we're not
+  // (yet) aware of flash being present), and then again after we've actually
+  // looked for it on disk.
+  nsresult rv = mPendingFinder->DoFullSearch(
       [self](
           bool aPluginsChanged, RefPtr<nsPluginTag> aPlugins,
           const nsTArray<Pair<bool, RefPtr<nsPluginTag>>>& aBlocklistRequests) {
@@ -1882,6 +1927,7 @@ nsresult nsPluginHost::LoadPlugins() {
             self->AddPluginTag(pluginTag);
           }
           self->IncrementChromeEpoch();
+          self->SendPluginsToContent();
         }
 
         // Do blocklist queries immediately after.
@@ -1903,14 +1949,61 @@ nsresult nsPluginHost::LoadPlugins() {
   // Deal with the profile not being ready yet by returning NS_OK - we'll get
   // the data later.
   if (NS_FAILED(rv)) {
+    mPendingFinder = nullptr;
     if (rv == NS_ERROR_NOT_AVAILABLE) {
       return NS_OK;
     }
     return rv;
   }
-  pf->Run();
+  bool dispatched = false;
+
+  // If we're only looking for flash (the default), try to do so away from
+  // the main thread. Note that in this case, the callback may have been called
+  // already, from the cached plugin info.
+  if (mFlashOnly) {
+    // First add the shutdown blocker, to avoid the potential for race
+    // conditions.
+    nsCOMPtr<nsIAsyncShutdownClient> shutdownPhase =
+        GetProfileChangeTeardownPhase();
+    if (shutdownPhase) {
+      rv =
+          shutdownPhase->AddBlocker(mPendingFinder, NS_LITERAL_STRING(__FILE__),
+                                    __LINE__, NS_LITERAL_STRING(""));
+      mAddedFinderShutdownBlocker = NS_SUCCEEDED(rv);
+    }
+
+    nsCOMPtr<nsIEventTarget> target =
+        do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID, &rv);
+    if (NS_SUCCEEDED(rv)) {
+      rv = target->Dispatch(mPendingFinder, nsIEventTarget::DISPATCH_NORMAL);
+      dispatched = NS_SUCCEEDED(rv);
+    }
+    // If we somehow failed to dispatch, remove the shutdown blocker.
+    if (mAddedFinderShutdownBlocker && !dispatched) {
+      shutdownPhase->RemoveBlocker(mPendingFinder);
+      mAddedFinderShutdownBlocker = false;
+    }
+  }
+  if (!dispatched) {
+    mPendingFinder->Run();
+    // We're running synchronously, so just remove the pending finder now.
+    mPendingFinder = nullptr;
+  }
 
   return NS_OK;
+}
+
+void nsPluginHost::FindingFinished() {
+  if (mAddedFinderShutdownBlocker) {
+    nsCOMPtr<nsIAsyncShutdownClient> shutdownPhase =
+        GetProfileChangeTeardownPhase();
+    shutdownPhase->RemoveBlocker(mPendingFinder);
+    mAddedFinderShutdownBlocker = false;
+  }
+  mPendingFinder = nullptr;
+  if (mDoReloadOnceFindingFinished) {
+    Unused << ReloadPlugins();
+  }
 }
 
 nsresult nsPluginHost::SetPluginsInContent(

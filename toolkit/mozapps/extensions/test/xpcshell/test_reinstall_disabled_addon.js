@@ -39,6 +39,7 @@ add_task(async function setup() {
 add_task(async function reinstallExistingDisabledAddonSameVersion() {
   await expectEvents(
     {
+      ignorePlugins: true,
       addonEvents: {
         [ID]: [{ event: "onInstalling" }, { event: "onInstalled" }],
       },
@@ -65,6 +66,7 @@ add_task(async function reinstallExistingDisabledAddonSameVersion() {
 
   await expectEvents(
     {
+      ignorePlugins: true,
       addonEvents: {
         [ID]: [{ event: "onDisabling" }, { event: "onDisabled" }],
       },
@@ -80,6 +82,7 @@ add_task(async function reinstallExistingDisabledAddonSameVersion() {
 
   await expectEvents(
     {
+      ignorePlugins: true,
       addonEvents: {
         [ID]: [{ event: "onEnabling" }, { event: "onEnabled" }],
       },
@@ -106,6 +109,7 @@ add_task(async function reinstallExistingDisabledAddonSameVersion() {
 
   await expectEvents(
     {
+      ignorePlugins: true,
       addonEvents: {
         [ID]: [{ event: "onUninstalling" }, { event: "onUninstalled" }],
       },
@@ -124,6 +128,7 @@ add_task(async function reinstallExistingDisabledAddonSameVersion() {
 add_task(async function reinstallExistingDisabledAddonDifferentVersion() {
   await expectEvents(
     {
+      ignorePlugins: true,
       addonEvents: {
         [ID]: [{ event: "onInstalling" }, { event: "onInstalled" }],
       },
@@ -151,6 +156,7 @@ add_task(async function reinstallExistingDisabledAddonDifferentVersion() {
 
   await expectEvents(
     {
+      ignorePlugins: true,
       addonEvents: {
         [ID]: [{ event: "onDisabling" }, { event: "onDisabled" }],
       },
@@ -166,6 +172,7 @@ add_task(async function reinstallExistingDisabledAddonDifferentVersion() {
 
   await expectEvents(
     {
+      ignorePlugins: true,
       addonEvents: {
         [ID]: [{ event: "onInstalling" }, { event: "onInstalled" }],
       },
@@ -193,6 +200,7 @@ add_task(async function reinstallExistingDisabledAddonDifferentVersion() {
 
   await expectEvents(
     {
+      ignorePlugins: true,
       addonEvents: {
         [ID]: [{ event: "onUninstalling" }, { event: "onUninstalled" }],
       },

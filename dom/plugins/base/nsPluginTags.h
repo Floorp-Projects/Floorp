@@ -103,7 +103,7 @@ class nsPluginTag final : public nsIInternalPluginTag {
  public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_PLUGINTAG_IID)
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIPLUGINTAG
 
   // These must match the STATE_* values in nsIPluginTag.idl
@@ -132,6 +132,8 @@ class nsPluginTag final : public nsIInternalPluginTag {
               int32_t aSandboxLevel, uint32_t aBlocklistState);
 
   void TryUnloadPlugin(bool inShutdown);
+
+  static void EnsureSandboxInformation();
 
   // plugin is enabled and not blocklisted
   bool IsActive();
