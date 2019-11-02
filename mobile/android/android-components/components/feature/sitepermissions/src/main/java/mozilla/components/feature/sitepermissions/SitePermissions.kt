@@ -4,14 +4,15 @@
 
 package mozilla.components.feature.sitepermissions
 
-import android.os.Parcel
 import android.os.Parcelable
+import kotlinx.android.parcel.Parcelize
 import mozilla.components.feature.sitepermissions.SitePermissions.Status.NO_DECISION
-import mozilla.components.feature.sitepermissions.db.StatusConverter
+import mozilla.components.feature.sitepermissions.SitePermissionsStorage.Permission
 
 /**
  * A site permissions and its state.
  */
+@Parcelize
 data class SitePermissions(
     val origin: String,
     val location: Status = NO_DECISION,
@@ -22,19 +23,6 @@ data class SitePermissions(
     val localStorage: Status = NO_DECISION,
     val savedAt: Long
 ) : Parcelable {
-
-    constructor(parcel: Parcel) :
-        this(
-            requireNotNull(parcel.readString()),
-            requireNotNull(converter.toStatus(parcel.readInt())),
-            requireNotNull(converter.toStatus(parcel.readInt())),
-            requireNotNull(converter.toStatus(parcel.readInt())),
-            requireNotNull(converter.toStatus(parcel.readInt())),
-            requireNotNull(converter.toStatus(parcel.readInt())),
-            requireNotNull(converter.toStatus(parcel.readInt())),
-            parcel.readLong()
-        )
-
     enum class Status(
         internal val id: Int
     ) {
@@ -50,30 +38,17 @@ data class SitePermissions(
         }
     }
 
-    override fun writeToParcel(parcel: Parcel, flags: Int) {
-        parcel.writeString(origin)
-        parcel.writeInt(converter.toInt(location))
-        parcel.writeInt(converter.toInt(notification))
-        parcel.writeInt(converter.toInt(microphone))
-        parcel.writeInt(converter.toInt(camera))
-        parcel.writeInt(converter.toInt(bluetooth))
-        parcel.writeInt(converter.toInt(localStorage))
-        parcel.writeLong(savedAt)
-    }
-
-    override fun describeContents(): Int {
-        return 0
-    }
-
-    companion object CREATOR : Parcelable.Creator<SitePermissions> {
-        override fun createFromParcel(parcel: Parcel): SitePermissions {
-            return SitePermissions(parcel)
+    /**
+     * Gets the current status for a [Permission] type
+     */
+    operator fun get(permissionType: Permission): Status {
+        return when (permissionType) {
+            Permission.MICROPHONE -> microphone
+            Permission.BLUETOOTH -> bluetooth
+            Permission.CAMERA -> camera
+            Permission.LOCAL_STORAGE -> localStorage
+            Permission.NOTIFICATION -> notification
+            Permission.LOCATION -> location
         }
-
-        override fun newArray(size: Int): Array<SitePermissions?> {
-            return arrayOfNulls(size)
-        }
-
-        private val converter = StatusConverter()
     }
 }
