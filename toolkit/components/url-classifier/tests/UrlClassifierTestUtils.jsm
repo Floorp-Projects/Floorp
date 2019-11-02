@@ -13,6 +13,13 @@ const TRACKING_TABLE_PREF = "urlclassifier.trackingTable";
 const WHITELIST_TABLE_NAME = "mochitest2-trackwhite-simple";
 const WHITELIST_TABLE_PREF = "urlclassifier.trackingWhitelistTable";
 
+const SOCIAL_ANNOTATION_TABLE_NAME = "mochitest3-track-simple";
+const SOCIAL_ANNOTATION_TABLE_PREF =
+  "urlclassifier.features.socialtracking.annotate.blacklistTables";
+const SOCIAL_TRACKING_TABLE_NAME = "mochitest4-track-simple";
+const SOCIAL_TRACKING_TABLE_PREF =
+  "urlclassifier.features.socialtracking.blacklistTables";
+
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
@@ -30,11 +37,12 @@ var UrlClassifierTestUtils = {
     let trackingURL2 = "itisatracker.org/";
     let trackingURL3 = "trackertest.org/";
     let whitelistedURL = "itisatrap.org/?resource=itisatracker.org";
+    let socialTrackingURL = "social-tracking.example.org/";
 
     let annotationUpdate =
       "n:1000\ni:" +
       ANNOTATION_TABLE_NAME +
-      "\nad:4\n" +
+      "\nad:5\n" +
       "a:1:32:" +
       annotationURL1.length +
       "\n" +
@@ -59,6 +67,15 @@ var UrlClassifierTestUtils = {
       annotationURL5.length +
       "\n" +
       annotationURL5 +
+      "\n";
+    let socialAnnotationUpdate =
+      "n:1000\ni:" +
+      SOCIAL_ANNOTATION_TABLE_NAME +
+      "\nad:1\n" +
+      "a:1:32:" +
+      socialTrackingURL.length +
+      "\n" +
+      socialTrackingURL +
       "\n";
     let annotationWhitelistUpdate =
       "n:1000\ni:" +
@@ -88,6 +105,15 @@ var UrlClassifierTestUtils = {
       "\n" +
       trackingURL3 +
       "\n";
+    let socialTrackingUpdate =
+      "n:1000\ni:" +
+      SOCIAL_TRACKING_TABLE_NAME +
+      "\nad:1\n" +
+      "a:1:32:" +
+      socialTrackingURL.length +
+      "\n" +
+      socialTrackingURL +
+      "\n";
     let whitelistUpdate =
       "n:1000\ni:" +
       WHITELIST_TABLE_NAME +
@@ -105,6 +131,11 @@ var UrlClassifierTestUtils = {
         update: annotationUpdate,
       },
       {
+        pref: SOCIAL_ANNOTATION_TABLE_PREF,
+        name: SOCIAL_ANNOTATION_TABLE_NAME,
+        update: socialAnnotationUpdate,
+      },
+      {
         pref: ANNOTATION_WHITELIST_TABLE_PREF,
         name: ANNOTATION_WHITELIST_TABLE_NAME,
         update: annotationWhitelistUpdate,
@@ -113,6 +144,11 @@ var UrlClassifierTestUtils = {
         pref: TRACKING_TABLE_PREF,
         name: TRACKING_TABLE_NAME,
         update: trackingUpdate,
+      },
+      {
+        pref: SOCIAL_TRACKING_TABLE_PREF,
+        name: SOCIAL_TRACKING_TABLE_NAME,
+        update: socialTrackingUpdate,
       },
       {
         pref: WHITELIST_TABLE_PREF,
@@ -145,8 +181,10 @@ var UrlClassifierTestUtils = {
 
   cleanupTestTrackers() {
     Services.prefs.clearUserPref(ANNOTATION_TABLE_PREF);
+    Services.prefs.clearUserPref(SOCIAL_ANNOTATION_TABLE_PREF);
     Services.prefs.clearUserPref(ANNOTATION_WHITELIST_TABLE_PREF);
     Services.prefs.clearUserPref(TRACKING_TABLE_PREF);
+    Services.prefs.clearUserPref(SOCIAL_TRACKING_TABLE_PREF);
     Services.prefs.clearUserPref(WHITELIST_TABLE_PREF);
   },
 
