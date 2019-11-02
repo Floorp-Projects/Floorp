@@ -19,7 +19,7 @@ const {
 const URL_STRING = "https://example.com";
 
 const mockSendingContext = {
-  browser: {},
+  browsingContext: { top: { embedderElement: {} } },
   principal: {},
   eventTarget: {},
 };
@@ -264,7 +264,10 @@ add_test(function test_sync_preferences_message() {
     helpers: {
       openSyncPreferences(browser, entryPoint) {
         Assert.equal(entryPoint, "fxa:verification_complete");
-        Assert.equal(browser, mockSendingContext.browser);
+        Assert.equal(
+          browser,
+          mockSendingContext.browsingContext.top.embedderElement
+        );
         run_next_test();
       },
     },
@@ -1048,7 +1051,10 @@ add_task(async function test_helpers_isPrivateBrowsingMode_private_browsing() {
     privateBrowsingUtils: {
       isBrowserPrivate(browser) {
         wasCalled.isBrowserPrivate = true;
-        Assert.equal(browser, mockSendingContext.browser);
+        Assert.equal(
+          browser,
+          mockSendingContext.browsingContext.top.embedderElement
+        );
         return true;
       },
     },
@@ -1067,7 +1073,10 @@ add_task(async function test_helpers_isPrivateBrowsingMode_private_browsing() {
     privateBrowsingUtils: {
       isBrowserPrivate(browser) {
         wasCalled.isBrowserPrivate = true;
-        Assert.equal(browser, mockSendingContext.browser);
+        Assert.equal(
+          browser,
+          mockSendingContext.browsingContext.top.embedderElement
+        );
         return false;
       },
     },

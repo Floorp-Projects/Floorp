@@ -222,17 +222,15 @@ this.FxAccountsWebChannel.prototype = {
           accountServer.asciiHost.endsWith("." + val)
         );
       });
-    if (
-      shouldCheckRemoteType &&
-      sendingContext.browser.remoteType != "privilegedmozilla"
-    ) {
+    let { currentRemoteType } = sendingContext.browsingContext;
+    if (shouldCheckRemoteType && currentRemoteType != "privilegedmozilla") {
       log.error(
-        "Rejected FxA webchannel message from remoteType = " +
-          sendingContext.browser.remoteType
+        `Rejected FxA webchannel message from remoteType = ${currentRemoteType}`
       );
       return;
     }
 
+    let browser = sendingContext.browsingContext.top.embedderElement;
     switch (command) {
       case COMMAND_PROFILE_CHANGE:
         Services.obs.notifyObservers(
@@ -265,14 +263,11 @@ this.FxAccountsWebChannel.prototype = {
         this._channel.send(response, sendingContext);
         break;
       case COMMAND_SYNC_PREFERENCES:
-        this._helpers.openSyncPreferences(
-          sendingContext.browser,
-          data.entryPoint
-        );
+        this._helpers.openSyncPreferences(browser, data.entryPoint);
         break;
       case COMMAND_PAIR_PREFERENCES:
         if (pairingEnabled) {
-          sendingContext.browser.loadURI("about:preferences?action=pair#sync", {
+          browser.loadURI("about:preferences?action=pair#sync", {
             triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
           });
         }
@@ -360,9 +355,9 @@ this.FxAccountsWebChannel.prototype = {
      *        Command message
      * @param sendingContext {Object}
      *        Message sending context.
-     *        @param sendingContext.browser {browser}
-     *               The <browser> object that captured the
-     *               WebChannelMessageToChrome.
+     *        @param sendingContext.browsingContext {BrowsingContext}
+     *               The browsingcontext from which the
+     *               WebChannelMessageToChrome was sent.
      *        @param sendingContext.eventTarget {EventTarget}
      *               The <EventTarget> where the message was sent.
      *        @param sendingContext.principal {Principal}
@@ -506,8 +501,9 @@ this.FxAccountsWebChannelHelpers.prototype = {
       return true;
     }
 
+    let browser = sendingContext.browsingContext.top.embedderElement;
     const isPrivateBrowsing = this._privateBrowsingUtils.isBrowserPrivate(
-      sendingContext.browser
+      browser
     );
     log.debug("is private browsing", isPrivateBrowsing);
     return isPrivateBrowsing;
