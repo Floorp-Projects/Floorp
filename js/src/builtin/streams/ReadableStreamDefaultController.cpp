@@ -337,8 +337,8 @@ MOZ_MUST_USE JSObject* js::ReadableStreamControllerCancelSteps(
     }
   }
 
-  Rooted<Value> unwrappedUnderlyingSource(cx);
-  unwrappedUnderlyingSource = unwrappedController->underlyingSource();
+  Rooted<Value> unwrappedUnderlyingSource(
+      cx, unwrappedController->underlyingSource());
 
   // Step 1 of 3.9.5.1, step 2 of 3.11.5.1: Perform ! ResetQueue(this).
   if (!ResetQueue(cx, unwrappedController)) {
@@ -397,11 +397,13 @@ MOZ_MUST_USE JSObject* js::ReadableStreamControllerCancelSteps(
     } else {
       // CreateAlgorithmFromUnderlyingMethod steps 6.c.i-ii.
       {
-        AutoRealm ar(cx, &unwrappedCancelMethod.toObject());
-        Rooted<Value> underlyingSource(cx, unwrappedUnderlyingSource);
-        if (!cx->compartment()->wrap(cx, &underlyingSource)) {
-          return nullptr;
-        }
+        AutoRealm ar(cx, unwrappedController);
+
+        // |unwrappedCancelMethod| and |unwrappedUnderlyingSource| come directly
+        // from |unwrappedController| slots so must be same-compartment with it.
+        cx->check(unwrappedCancelMethod);
+        cx->check(unwrappedUnderlyingSource);
+
         Rooted<Value> wrappedReason(cx, reason);
         if (!cx->compartment()->wrap(cx, &wrappedReason)) {
           return nullptr;
@@ -409,8 +411,8 @@ MOZ_MUST_USE JSObject* js::ReadableStreamControllerCancelSteps(
 
         // If PromiseCall fails, don't bail out until after the
         // ReadableStreamControllerClearAlgorithms call below.
-        result = PromiseCall(cx, unwrappedCancelMethod, underlyingSource,
-                             wrappedReason);
+        result = PromiseCall(cx, unwrappedCancelMethod,
+                             unwrappedUnderlyingSource, wrappedReason);
       }
       if (!cx->compartment()->wrap(cx, &result)) {
         result = nullptr;
