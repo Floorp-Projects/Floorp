@@ -117,6 +117,9 @@ class AccessibleCaretManager {
   // is used in part to determine if the carets should be shown or hidden.
   void SetLastInputSource(uint16_t aInputSource);
 
+  // Returns True indicating that we should disable APZ to avoid jumpy carets.
+  bool ShouldDisableApz() const { return mShouldDisableApz; }
+
  protected:
   // This enum representing the number of AccessibleCarets on the screen.
   enum class CaretMode : uint8_t {
@@ -168,6 +171,9 @@ class AccessibleCaretManager {
 
   MOZ_CAN_RUN_SCRIPT
   void UpdateCaretsForSelectionMode(const UpdateCaretsHintSet& aHints);
+
+  // A helper function to update mShouldDisableApz.
+  void UpdateShouldDisableApz();
 
   // Provide haptic / touch feedback, primarily for select on longpress.
   void ProvideHapticFeedback();
@@ -326,6 +332,12 @@ class AccessibleCaretManager {
   // Set to false to disallow flushing layout in some callbacks such as
   // OnReflow(), OnScrollStart(), OnScrollStart(), or OnScrollPositionChanged().
   bool mAllowFlushingLayout = true;
+
+  // Set to True if one of the caret's position is changed in last update.
+  bool mIsCaretPositionChanged = false;
+
+  // Set to true if we should disable APZ.
+  bool mShouldDisableApz = false;
 
   static const int32_t kAutoScrollTimerDelay = 30;
 
