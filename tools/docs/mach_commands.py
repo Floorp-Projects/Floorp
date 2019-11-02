@@ -66,6 +66,8 @@ install it globally by running:
 
     $ npm install -g jsdoc
 
+JSDoc >= 3.5 is required to build the docs.
+
 Bug 1498604 tracks bootstrapping jsdoc properly.
 """)
 
