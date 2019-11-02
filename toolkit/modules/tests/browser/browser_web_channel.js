@@ -10,7 +10,8 @@ ChromeUtils.defineModuleGetter(
 
 const HTTP_PATH = "http://example.com";
 const HTTP_ENDPOINT =
-  "/browser/browser/base/content/test/general/browser_web_channel.html";
+  getRootDirectory(gTestPath).replace("chrome://mochitests/content", "") +
+  "file_web_channel.html";
 const HTTP_MISMATCH_PATH = "http://example.org";
 const HTTP_IFRAME_PATH = "http://mochi.test:8888";
 const HTTP_REDIRECTED_IFRAME_PATH = "http://example.org";
@@ -265,7 +266,7 @@ var gTests = [
           channel.send(
             { command: "unsolicited" },
             {
-              browser: targetBrowser,
+              browsingContext: targetBrowser.browsingContext,
               principal: Services.scriptSecurityManager.getSystemPrincipal(),
             }
           );
@@ -302,7 +303,7 @@ var gTests = [
           channel.send(
             { command: "unsolicited" },
             {
-              browser: targetBrowser,
+              browsingContext: targetBrowser.browsingContext,
               principal: Services.scriptSecurityManager.createContentPrincipal(
                 targetURI,
                 {}
@@ -355,7 +356,7 @@ var gTests = [
           channel.send(
             { command: "unsolicited_no_response_expected" },
             {
-              browser: targetBrowser,
+              browsingContext: targetBrowser.browsingContext,
               principal: mismatchPrincipal,
             }
           );
@@ -370,7 +371,7 @@ var gTests = [
           channel.send(
             { command: "done" },
             {
-              browser: targetBrowser,
+              browsingContext: targetBrowser.browsingContext,
               principal: targetPrincipal,
             }
           );

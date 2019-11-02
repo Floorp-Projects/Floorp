@@ -8,27 +8,31 @@
 var EXPORTED_SYMBOLS = ["WebChannelChild"];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { ActorChild } = ChromeUtils.import(
-  "resource://gre/modules/ActorChild.jsm"
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
 );
-
-function getMessageManager(event) {
-  let window = Cu.getGlobalForObject(event.target);
-
-  return window.docShell.messageManager;
-}
+const { ContentDOMReference } = ChromeUtils.import(
+  "resource://gre/modules/ContentDOMReference.jsm"
+);
 
 // Preference containing the list (space separated) of origins that are
 // allowed to send non-string values through a WebChannel, mainly for
 // backwards compatability. See bug 1238128 for more information.
 const URL_WHITELIST_PREF = "webchannel.allowObject.urlWhitelist";
 
-// Cached list of whitelisted principals, we avoid constructing this if the
-// value in `_lastWhitelistValue` hasn't changed since we constructed it last.
-let _cachedWhitelist = [];
-let _lastWhitelistValue = "";
+let _cachedWhitelist = null;
 
-class WebChannelChild extends ActorChild {
+const CACHED_PREFS = {};
+XPCOMUtils.defineLazyPreferenceGetter(
+  CACHED_PREFS,
+  "URL_WHITELIST",
+  URL_WHITELIST_PREF,
+  "",
+  // Null this out so we update it.
+  () => (_cachedWhitelist = null)
+);
+
+class WebChannelChild extends JSWindowActorChild {
   handleEvent(event) {
     if (event.type === "WebChannelMessageToChrome") {
       return this._onMessageToChrome(event);
@@ -44,9 +48,8 @@ class WebChannelChild extends ActorChild {
   }
 
   _getWhitelistedPrincipals() {
-    let whitelist = Services.prefs.getCharPref(URL_WHITELIST_PREF);
-    if (whitelist != _lastWhitelistValue) {
-      let urls = whitelist.split(/\s+/);
+    if (!_cachedWhitelist) {
+      let urls = CACHED_PREFS.URL_WHITELIST.split(/\s+/);
       _cachedWhitelist = urls.map(origin =>
         Services.scriptSecurityManager.createContentPrincipalFromOrigin(origin)
       );
@@ -77,26 +80,36 @@ class WebChannelChild extends ActorChild {
         }
       }
 
-      let mm = getMessageManager(e);
-
-      mm.sendAsyncMessage(
-        "WebChannelMessageToChrome",
-        e.detail,
-        { eventTarget: e.target },
-        principal
-      );
+      let eventTarget =
+        e.target instanceof Ci.nsIDOMWindow
+          ? null
+          : ContentDOMReference.get(e.target);
+      this.sendAsyncMessage("WebChannelMessageToChrome", {
+        contentData: e.detail,
+        eventTarget,
+        principal,
+      });
     } else {
       Cu.reportError("WebChannel message failed. No message detail.");
     }
   }
 
   _onMessageToContent(msg) {
-    if (msg.data) {
+    if (msg.data && this.contentWindow) {
       // msg.objects.eventTarget will be defined if sending a response to
       // a WebChannelMessageToChrome event. An unsolicited send
       // may not have an eventTarget defined, in this case send to the
       // main content window.
-      let eventTarget = msg.objects.eventTarget || msg.target.content;
+      let { eventTarget, principal } = msg.data;
+      if (!eventTarget) {
+        eventTarget = this.contentWindow;
+      } else {
+        eventTarget = ContentDOMReference.resolve(eventTarget);
+      }
+      if (!eventTarget) {
+        Cu.reportError("WebChannel message failed. No target.");
+        return;
+      }
 
       // Use nodePrincipal if available, otherwise fallback to document principal.
       let targetPrincipal =
@@ -104,14 +117,8 @@ class WebChannelChild extends ActorChild {
           ? eventTarget.document.nodePrincipal
           : eventTarget.nodePrincipal;
 
-      if (msg.principal.subsumes(targetPrincipal)) {
-        // If eventTarget is a window, use it as the targetWindow, otherwise
-        // find the window that owns the eventTarget.
-        let targetWindow =
-          eventTarget instanceof Ci.nsIDOMWindow
-            ? eventTarget
-            : eventTarget.ownerGlobal;
-
+      if (principal.subsumes(targetPrincipal)) {
+        let targetWindow = this.contentWindow;
         eventTarget.dispatchEvent(
           new targetWindow.CustomEvent("WebChannelMessageToContent", {
             detail: Cu.cloneInto(

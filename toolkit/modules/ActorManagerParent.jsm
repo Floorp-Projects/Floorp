@@ -367,6 +367,20 @@ let ACTORS = {
     allFrames: true,
   },
 
+  WebChannel: {
+    parent: {
+      moduleURI: "resource://gre/actors/WebChannelParent.jsm",
+    },
+    child: {
+      moduleURI: "resource://gre/actors/WebChannelChild.jsm",
+      events: {
+        WebChannelMessageToChrome: { capture: true, wantUntrusted: true },
+      },
+    },
+
+    allFrames: true,
+  },
+
   Zoom: {
     parent: {
       moduleURI: "resource://gre/actors/ZoomParent.jsm",
@@ -483,16 +497,6 @@ let LEGACY_ACTORS = {
         "UnselectedTabHover:Disable": {},
       },
       messages: ["Browser:UnselectedTabHover"],
-    },
-  },
-
-  WebChannel: {
-    child: {
-      module: "resource://gre/actors/WebChannelChild.jsm",
-      events: {
-        WebChannelMessageToChrome: { capture: true, wantUntrusted: true },
-      },
-      messages: ["WebChannelMessageToContent"],
     },
   },
 
