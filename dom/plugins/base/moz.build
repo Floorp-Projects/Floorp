@@ -40,7 +40,6 @@ UNIFIED_SOURCES += [
     'nsPluginInstanceOwner.cpp',
     'nsPluginStreamListenerPeer.cpp',
     'nsPluginTags.cpp',
-    'PluginFinder.cpp',
 ]
 
 SOURCES += [
