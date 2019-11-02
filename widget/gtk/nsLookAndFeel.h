@@ -72,8 +72,8 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
   nscolor mNativeHyperLinkText = kBlack;
   nscolor mComboBoxText = kBlack;
   nscolor mComboBoxBackground = kWhite;
-  nscolor mMozFieldText = kBlack;
-  nscolor mMozFieldBackground = kWhite;
+  nscolor mFieldText = kBlack;
+  nscolor mFieldBackground = kWhite;
   nscolor mMozWindowText = kBlack;
   nscolor mMozWindowBackground = kWhite;
   nscolor mMozWindowActiveBorder = kBlack;

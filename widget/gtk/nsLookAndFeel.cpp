@@ -218,7 +218,7 @@ nsresult nsLookAndFeel::InitCellHighlightColors() {
   // on top of another background
   int32_t minLuminosityDifference = NS_SUFFICIENT_LUMINOSITY_DIFFERENCE / 5;
   int32_t backLuminosityDifference =
-      NS_LUMINOSITY_DIFFERENCE(mMozWindowBackground, mMozFieldBackground);
+      NS_LUMINOSITY_DIFFERENCE(mMozWindowBackground, mFieldBackground);
   if (backLuminosityDifference >= minLuminosityDifference) {
     mMozCellHighlightBackground = mMozWindowBackground;
     mMozCellHighlightText = mMozWindowText;
@@ -227,8 +227,8 @@ nsresult nsLookAndFeel::InitCellHighlightColors() {
 
   uint16_t hue, sat, luminance;
   uint8_t alpha;
-  mMozCellHighlightBackground = mMozFieldBackground;
-  mMozCellHighlightText = mMozFieldText;
+  mMozCellHighlightBackground = mFieldBackground;
+  mMozCellHighlightText = mFieldText;
 
   NS_RGB2HSV(mMozCellHighlightBackground, hue, sat, luminance, alpha);
 
@@ -425,11 +425,11 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, nscolor& aColor) {
       break;
 
     case ColorID::MozEventreerow:
-    case ColorID::MozField:
-      aColor = mMozFieldBackground;
+    case ColorID::Field:
+      aColor = mFieldBackground;
       break;
-    case ColorID::MozFieldtext:
-      aColor = mMozFieldText;
+    case ColorID::Fieldtext:
+      aColor = mFieldText;
       break;
     case ColorID::MozButtondefault:
       // default button border color
@@ -1062,9 +1062,9 @@ void nsLookAndFeel::EnsureInit() {
   style = GetStyleContext(MOZ_GTK_TEXT_VIEW_TEXT);
   gtk_style_context_get_background_color(style, GTK_STATE_FLAG_NORMAL, &color);
   ApplyColorOver(color, &bgColor);
-  mMozFieldBackground = GDK_RGBA_TO_NS_RGBA(bgColor);
+  mFieldBackground = GDK_RGBA_TO_NS_RGBA(bgColor);
   gtk_style_context_get_color(style, GTK_STATE_FLAG_NORMAL, &color);
-  mMozFieldText = GDK_RGBA_TO_NS_RGBA(color);
+  mFieldText = GDK_RGBA_TO_NS_RGBA(color);
 
   // Selected text and background
   gtk_style_context_get_background_color(
