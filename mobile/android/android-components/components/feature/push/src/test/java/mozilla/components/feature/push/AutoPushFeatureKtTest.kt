@@ -4,12 +4,19 @@
 
 package mozilla.components.feature.push
 
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runBlockingTest
+import mozilla.appservices.push.CommunicationError
+import mozilla.appservices.push.CommunicationServerError
+import mozilla.appservices.push.CryptoError
 import mozilla.appservices.push.KeyInfo
 import mozilla.appservices.push.SubscriptionInfo
 import mozilla.appservices.push.SubscriptionResponse
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
+@ExperimentalCoroutinesApi
 class AutoPushFeatureKtTest {
     @Test
     fun `transform response to PushSubscription`() {
@@ -38,5 +45,23 @@ class AutoPushFeatureKtTest {
         assertEquals("push.test.mozilla.com", config2.serverHost)
         assertEquals(Protocol.HTTP, config2.protocol)
         assertEquals(ServiceType.ADM, config2.serviceType)
+    }
+
+    @Test(expected = CryptoError::class)
+    fun `launchAndTry throws on unrecoverable Rust exceptions`() = runBlockingTest {
+        CoroutineScope(coroutineContext).launchAndTry({ throw CryptoError("unit test") }, { assert(false) })
+    }
+
+    @Test
+    fun `launchAndTry should NOT throw on recoverable Rust exceptions`() = runBlockingTest {
+        CoroutineScope(coroutineContext).launchAndTry(
+            { throw CommunicationServerError("should not fail test") },
+            { assert(true) }
+        )
+
+        CoroutineScope(coroutineContext).launchAndTry(
+            { throw CommunicationError("should not fail test") },
+            { assert(true) }
+        )
     }
 }

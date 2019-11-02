@@ -44,7 +44,7 @@ import org.mockito.Mockito.verifyNoMoreInteractions
 @RunWith(AndroidJUnit4::class)
 class AutoPushFeatureTest {
 
-    var lastVerified: Long
+    private var lastVerified: Long
         get() = preference(testContext).getLong(LAST_VERIFIED, System.currentTimeMillis())
         set(value) = preference(testContext).edit().putLong(LAST_VERIFIED, value).apply()
 

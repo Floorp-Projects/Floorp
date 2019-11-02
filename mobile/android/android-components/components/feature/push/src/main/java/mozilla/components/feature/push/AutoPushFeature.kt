@@ -15,6 +15,8 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
+import mozilla.appservices.push.CommunicationError
+import mozilla.appservices.push.CommunicationServerError
 import mozilla.appservices.push.SubscriptionResponse
 import mozilla.components.concept.push.Bus
 import mozilla.components.concept.push.EncryptedPushMessage
@@ -120,7 +122,7 @@ class AutoPushFeature(
         service.stop()
 
         DeliveryManager.with(connection) {
-            scope.launch {
+            job = scope.launch {
                 // TODO replace with unsubscribeAll API when available
                 PushType.values().forEach { type ->
                     unsubscribe(type.toChannelId())
@@ -138,7 +140,7 @@ class AutoPushFeature(
      * each push type and notifies the subscribers.
      */
     override fun onNewToken(newToken: String) {
-        scope.launchAndTry {
+        job = scope.launchAndTry {
             logger.info("Received a new registration token from push service.")
 
             connection.updateToken(newToken)
@@ -156,7 +158,7 @@ class AutoPushFeature(
      * New encrypted messages received from a supported push messaging service.
      */
     override fun onMessageReceived(message: EncryptedPushMessage) {
-        scope.launchAndTry {
+        job = scope.launchAndTry {
             val type = DeliveryManager.serviceForChannelId(message.channelId)
             DeliveryManager.with(connection) {
                 logger.info("New push message decrypted.")
@@ -212,7 +214,7 @@ class AutoPushFeature(
      */
     fun subscribeForType(type: PushType) {
         DeliveryManager.with(connection) {
-            scope.launchAndTry {
+            job = scope.launchAndTry {
                 val sub = subscribe(type.toChannelId()).toPushSubscription()
                 subscriptionObservers.notifyObservers { onSubscriptionAvailable(sub) }
             }
@@ -229,7 +231,7 @@ class AutoPushFeature(
      */
     fun unsubscribeForType(type: PushType) {
         DeliveryManager.with(connection) {
-            scope.launchAndTry {
+            job = scope.launchAndTry {
                 unsubscribe(type.toChannelId())
             }
         }
@@ -240,7 +242,7 @@ class AutoPushFeature(
      */
     fun subscribeAll() {
         DeliveryManager.with(connection) {
-            scope.launchAndTry {
+            job = scope.launchAndTry {
                 PushType.values().forEach { type ->
                     val sub = subscribe(type.toChannelId()).toPushSubscription()
                     subscriptionObservers.notifyObservers { onSubscriptionAvailable(sub) }
@@ -273,7 +275,7 @@ class AutoPushFeature(
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun verifyActiveSubscriptions() {
         DeliveryManager.with(connection) {
-            scope.launchAndTry {
+            job = scope.launchAndTry {
                 val notifyObservers = connection.verifyConnection()
 
                 if (notifyObservers) {
@@ -299,14 +301,10 @@ class AutoPushFeature(
         }
     }
 
-    private fun CoroutineScope.launchAndTry(block: suspend CoroutineScope.() -> Unit) {
-        job = launch {
-            try {
-                block()
-            } catch (e: RustPushError) {
-                onError(PushError.Rust(e.toString()))
-            }
-        }
+    private fun CoroutineScope.launchAndTry(block: suspend CoroutineScope.() -> Unit): Job {
+        return launchAndTry(block, { e ->
+            onError(PushError.Rust(e.toString()))
+        })
     }
 
     private fun saveToken(context: Context, value: String) {
@@ -334,6 +332,23 @@ class AutoPushFeature(
 
         internal const val LAST_VERIFIED = "last_verified_push_connection"
         internal const val PERIODIC_INTERVAL_MILLISECONDS = 24 * 60 * 60 * 1000L // 24 hours
+    }
+}
+
+internal fun CoroutineScope.launchAndTry(
+    block: suspend CoroutineScope.() -> Unit,
+    errorBlock: (Exception) -> Unit
+): Job {
+    return launch {
+        try {
+            block()
+        } catch (e: RustPushError) {
+            if (e !is CommunicationServerError && e !is CommunicationError) {
+                throw e
+            }
+
+            errorBlock(e)
+        }
     }
 }
 
