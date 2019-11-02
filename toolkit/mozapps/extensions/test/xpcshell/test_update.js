@@ -92,7 +92,6 @@ add_task(async function test_apply_update() {
 
   await expectEvents(
     {
-      ignorePlugins: true,
       addonEvents: {
         "addon1@tests.mozilla.org": [
           {
@@ -112,7 +111,6 @@ add_task(async function test_apply_update() {
   let install;
   await expectEvents(
     {
-      ignorePlugins: true,
       installEvents: [{ event: "onNewInstall" }],
     },
     async () => {
@@ -144,7 +142,6 @@ add_task(async function test_apply_update() {
 
   await expectEvents(
     {
-      ignorePlugins: true,
       installEvents: [
         { event: "onDownloadStarted" },
         { event: "onDownloadEnded", returnValue: false },
@@ -174,7 +171,6 @@ add_task(async function test_apply_update() {
 
   await expectEvents(
     {
-      ignorePlugins: true,
       addonEvents: {
         "addon1@tests.mozilla.org": [
           { event: "onInstalling" },
@@ -352,7 +348,6 @@ add_task(async function test_background_update() {
 
   await expectEvents(
     {
-      ignorePlugins: true,
       addonEvents: {
         "addon1@tests.mozilla.org": [
           { event: "onInstalling" },

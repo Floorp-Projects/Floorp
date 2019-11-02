@@ -1593,12 +1593,6 @@
   value: true
   mirror: always
 
-# How long we wait before unloading an idle plugin process.
-- name: dom.ipc.plugins.unloadTimeoutSecs
-  type: RelaxedAtomicUint32
-  value: 30
-  mirror: always
-
 - name: dom.ipc.tabs.disabled
   type: bool
   value: false
