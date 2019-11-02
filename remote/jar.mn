@@ -52,6 +52,7 @@ remote.jar:
   content/domains/parent/network/NetworkObserver.jsm (domains/parent/network/NetworkObserver.jsm)
   content/domains/parent/Page.jsm (domains/parent/Page.jsm)
   content/domains/parent/page/DialogHandler.jsm (domains/parent/page/DialogHandler.jsm)
+  content/domains/parent/Security.jsm (domains/parent/Security.jsm)
   content/domains/parent/Target.jsm (domains/parent/Target.jsm)
   content/domains/parent/target/TabManager.jsm (domains/parent/target/TabManager.jsm)
 
