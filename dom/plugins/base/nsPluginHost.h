@@ -310,15 +310,13 @@ class nsPluginHost final : public nsIPluginHost,
   nsresult ScanPluginsDirectory(nsIFile* pluginsDir, bool aCreatePluginList,
                                 bool* aPluginsChanged);
 
-  nsresult ScanPluginsDirectoryList(nsISimpleEnumerator* dirEnum,
-                                    bool aCreatePluginList,
-                                    bool* aPluginsChanged);
-
   nsresult EnsurePluginLoaded(nsPluginTag* aPluginTag);
 
   bool IsRunningPlugin(nsPluginTag* aPluginTag);
 
   nsresult EnsurePluginReg();
+
+  nsresult DeterminePluginDirs(nsTArray<nsCOMPtr<nsIFile>>& pluginDirs);
 
   // Read plugin info (either from prefs or disk)
   nsresult ReadPluginInfo();
@@ -345,8 +343,6 @@ class nsPluginHost final : public nsIPluginHost,
 
   // Returns the first plugin at |path|
   nsPluginTag* FirstPluginWithPath(const nsCString& path);
-
-  nsresult EnsurePrivateDirServiceProvider();
 
   void OnPluginInstanceDestroyed(nsPluginTag* aPluginTag);
 
@@ -390,8 +386,6 @@ class nsPluginHost final : public nsIPluginHost,
   // An nsIFile for the pluginreg.dat file in the profile.
   nsCOMPtr<nsIFile> mPluginRegFile;
 #ifdef XP_WIN
-  RefPtr<nsPluginDirServiceProvider> mPrivateDirServiceProvider;
-
   // In order to reload plugins when they change, we watch the registry via
   // this object.
   nsCOMPtr<nsIWindowsRegKey> mRegKeyHKLM;
