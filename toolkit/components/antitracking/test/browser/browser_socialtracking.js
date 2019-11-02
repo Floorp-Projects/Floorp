@@ -70,7 +70,9 @@ function runTest(obj) {
 
     info("Checking content blocking log.");
     let contentBlockingLog = JSON.parse(await browser.getContentBlockingLog());
-    for (let origin of Object.keys(contentBlockingLog)) {
+    let origins = Object.keys(contentBlockingLog);
+    is(origins.length, 1, "There should be one origin entry in the log.");
+    for (let origin of origins) {
       is(
         origin + "/",
         TEST_3RD_PARTY_DOMAIN_STP,
