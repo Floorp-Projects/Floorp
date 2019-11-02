@@ -370,11 +370,7 @@ class nsAppDirectoryEnumerator : public nsSimpleEnumerator {
       nsCOMPtr<nsIFile> testFile;
       (void)mProvider->GetFile(*mCurrentKey++, &dontCare,
                                getter_AddRefs(testFile));
-      // Don't return a file which does not exist.
-      bool exists;
-      if (testFile && NS_SUCCEEDED(testFile->Exists(&exists)) && exists) {
-        mNext = testFile;
-      }
+      mNext = testFile;
     }
     *aResult = mNext != nullptr;
     return NS_OK;
