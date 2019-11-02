@@ -5,6 +5,8 @@
 const ID = "addon@tests.mozilla.org";
 
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "42");
+// Force sync plugin loading to avoid spurious install events from plugins.
+Services.prefs.setBoolPref("plugin.load_flash_only", false);
 
 function waitForBootstrapEvent(expectedEvent, addonId) {
   return new Promise(resolve => {
