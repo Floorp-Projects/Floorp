@@ -954,9 +954,10 @@ bool nsLayoutUtils::ShouldDisableApzForElement(nsIContent* aContent) {
           rootPresShell->GetRootScrollFrame()
               ? rootPresShell->GetRootScrollFrame()->GetContent()
               : rootDoc->GetDocumentElement();
-      // For the AccessibleCaret: disable APZ on any scrollable subframes that
-      // are not the root scrollframe of a document, if the document has any
-      // visible anonymous contents.
+      // For the AccessibleCaret and other anonymous contents: disable APZ on
+      // any scrollable subframes that are not the root scrollframe of a
+      // document, if the document has any visible anonymous contents.
+      //
       // If we find this is triggering in too many scenarios then we might
       // want to tighten this check further. The main use cases for which we
       // want to disable APZ as of this writing are listed in bug 1316318.
@@ -969,6 +970,17 @@ bool nsLayoutUtils::ShouldDisableApzForElement(nsIContent* aContent) {
   if (!doc) {
     return false;
   }
+
+  if (PresShell* presShell = doc->GetPresShell()) {
+    if (RefPtr<AccessibleCaretEventHub> eventHub =
+            presShell->GetAccessibleCaretEventHub()) {
+      // Disable APZ for all elements if AccessibleCaret tells us to do so.
+      if (eventHub->ShouldDisableApz()) {
+        return true;
+      }
+    }
+  }
+
   return StaticPrefs::apz_disable_for_scroll_linked_effects() &&
          doc->HasScrollLinkedEffect();
 }
