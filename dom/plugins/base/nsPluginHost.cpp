@@ -361,6 +361,7 @@ nsPluginHost::nsPluginHost()
   // full page mode for certain image mime types that we handle internally
   mOverrideInternalTypes =
       Preferences::GetBool("plugin.override_internal_types", false);
+  mFlashOnly = Preferences::GetBool("plugin.load_flash_only", true);
 
   bool waylandBackend = false;
 #if MOZ_WIDGET_GTK
@@ -445,6 +446,155 @@ bool nsPluginHost::IsRunningPlugin(nsPluginTag* aPluginTag) {
   }
 
   return false;
+}
+
+nsresult nsPluginHost::ReadFlashInfo() {
+  nsCOMPtr<nsIXULRuntime> runtime = do_GetService("@mozilla.org/xre/runtime;1");
+  if (!runtime) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIPrefBranch> prefs = Preferences::GetRootBranch();
+  nsAutoCString arch;
+  nsresult rv = prefs->GetCharPref("plugin.flash.arch", arch);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  nsAutoCString ourArch;
+  rv = runtime->GetXPCOMABI(ourArch);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  // Bail if we've changed architectures.
+  if (!ourArch.Equals(arch)) {
+    return NS_OK;
+  }
+
+  nsAutoCString version;
+  rv = prefs->GetCharPref("plugin.flash.version", version);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  nsAutoCString path;
+  rv = prefs->GetCharPref("plugin.flash.path", path);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  nsCOMPtr<nsIFile> pluginFile;
+#ifdef XP_WIN
+  // "native" files don't use utf-8 paths, convert:
+  rv = NS_NewLocalFile(NS_ConvertUTF8toUTF16(path), false,
+                       getter_AddRefs(pluginFile));
+#else
+  rv = NS_NewNativeLocalFile(path, false, getter_AddRefs(pluginFile));
+#endif
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  nsAutoString filename;
+  rv = pluginFile->GetLeafName(filename);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  int32_t blocklistState;
+  rv = Preferences::GetInt("plugin.flash.blockliststate", &blocklistState);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  int32_t lastModLo;
+  int32_t lastModHi;
+  rv = Preferences::GetInt("plugin.flash.lastmod_lo", &lastModLo);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  rv = Preferences::GetInt("plugin.flash.lastmod_hi", &lastModHi);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  int64_t lastMod =
+      (int64_t)(((uint64_t)lastModHi) << 32 | (uint32_t)lastModLo);
+
+  nsAutoCString desc;
+  rv = prefs->GetCharPref("plugin.flash.desc", desc);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  const char* const mimetypes[3] = {"application/x-shockwave-flash",
+                                    "application/x-futuresplash", nullptr};
+  const char* const extensions[3] = {"swf", "spl", nullptr};
+  const int32_t mimetypecount = 2;
+  // For some reason, the descriptions are different between Windows and
+  // Linux/Mac:
+#ifdef XP_WIN
+  const char* const mimedescriptions[3] = {"Adobe Flash movie",
+                                           "FutureSplash movie", nullptr};
+#else
+  const char* const mimedescriptions[3] = {"Shockwave Flash",
+                                           "FutureSplash Player", nullptr};
+#endif
+  RefPtr<nsPluginTag> tag = new nsPluginTag(
+      "Shockwave Flash", desc.get(), NS_ConvertUTF16toUTF8(filename).get(),
+      path.get(), version.get(), mimetypes, mimedescriptions, extensions,
+      mimetypecount, lastMod, blocklistState, true);
+
+  tag->mNext = mCachedPlugins;
+  mCachedPlugins = tag;
+  return NS_OK;
+}
+
+nsresult nsPluginHost::WriteFlashInfo() {
+  nsCOMPtr<nsIXULRuntime> runtime = do_GetService("@mozilla.org/xre/runtime;1");
+  if (!runtime) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsAutoCString arch;
+  nsresult rv = runtime->GetXPCOMABI(arch);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  nsCOMPtr<nsIPrefBranch> prefs = Preferences::GetRootBranch();
+  prefs->SetCharPref("plugin.flash.arch", arch);
+
+  if (!mPlugins) {
+    Preferences::ClearUser("plugin.flash.blockliststate");
+    Preferences::ClearUser("plugin.flash.desc");
+    Preferences::ClearUser("plugin.flash.lastmod");
+    Preferences::ClearUser("plugin.flash.path");
+    Preferences::ClearUser("plugin.flash.version");
+    return NS_OK;
+  }
+  nsPluginTag* tag = mPlugins;
+
+  nsAutoCString path;
+  tag->GetFullpath(path);
+  prefs->SetCharPref("plugin.flash.path", path);
+
+  int64_t lastModifiedTime;
+  tag->GetLastModifiedTime(&lastModifiedTime);
+  uint32_t lastModHi = ((uint64_t)lastModifiedTime) >> 32;
+  Preferences::SetInt("plugin.flash.lastmod_hi", (int32_t)lastModHi);
+  uint32_t lastModLo = ((uint64_t)lastModifiedTime) & 0xffffffff;
+  Preferences::SetInt("plugin.flash.lastmod_lo", (int32_t)lastModLo);
+
+  nsAutoCString version;
+  tag->GetVersion(version);
+  prefs->SetCharPref("plugin.flash.version", version);
+
+  nsAutoCString desc;
+  tag->GetDescription(desc);
+  prefs->SetCharPref("plugin.flash.desc", desc);
+
+  uint32_t blocklistState;
+  tag->GetBlocklistState(&blocklistState);
+  Preferences::SetInt("plugin.flash.blockliststate", blocklistState);
+  return NS_OK;
 }
 
 nsresult nsPluginHost::ReloadPlugins() {
@@ -1895,9 +2045,9 @@ struct CompareFilesByTime {
 
 }  // namespace
 
-static bool ShouldAddPlugin(const nsPluginInfo& info, bool flashOnly) {
+bool nsPluginHost::ShouldAddPlugin(const nsPluginInfo& info) {
   if (!info.fName ||
-      (strcmp(info.fName, "Shockwave Flash") != 0 && flashOnly)) {
+      (strcmp(info.fName, "Shockwave Flash") != 0 && mFlashOnly)) {
     return false;
   }
   for (uint32_t i = 0; i < info.fVariantCount; ++i) {
@@ -1907,7 +2057,7 @@ static bool ShouldAddPlugin(const nsPluginInfo& info, bool flashOnly) {
                  "application/x-shockwave-flash-test"))) {
       return true;
     }
-    if (flashOnly) {
+    if (mFlashOnly) {
       continue;
     }
     if (info.fMimeTypeArray[i] &&
@@ -1958,8 +2108,6 @@ nsresult nsPluginHost::ScanPluginsDirectory(nsIFile* pluginsDir,
   PLUGIN_LOG(PLUGIN_LOG_BASIC,
              ("nsPluginHost::ScanPluginsDirectory dir=%s\n", dirPath.get()));
 #endif
-
-  bool flashOnly = Preferences::GetBool("plugin.load_flash_only", true);
 
   nsCOMPtr<nsIDirectoryEnumerator> iter;
   rv = pluginsDir->GetDirectoryEntries(getter_AddRefs(iter));
@@ -2053,8 +2201,7 @@ nsresult nsPluginHost::ScanPluginsDirectory(nsIFile* pluginsDir,
         res = pluginFile.GetPluginInfo(info, &library);
       }
       // if we don't have mime type don't proceed, this is not a plugin
-      if (NS_FAILED(res) || !info.fMimeTypeArray ||
-          (!ShouldAddPlugin(info, flashOnly))) {
+      if (NS_FAILED(res) || !info.fMimeTypeArray || !ShouldAddPlugin(info)) {
         RefPtr<nsInvalidPluginTag> invalidTag =
             new nsInvalidPluginTag(filePath.get(), fileModTime);
         pluginFile.FreePluginInfo(info);
@@ -2314,14 +2461,9 @@ nsresult nsPluginHost::FindPlugins(bool aCreatePluginList,
   Telemetry::AutoTimer<Telemetry::FIND_PLUGINS> telemetry;
 
   NS_ENSURE_ARG_POINTER(aPluginsChanged);
+  MOZ_ASSERT(XRE_IsParentProcess());
 
   *aPluginsChanged = false;
-
-  // If plugins are found or change, the content process will be notified by the
-  // parent process. Bail out early if this is called from the content process.
-  if (XRE_IsContentProcess()) {
-    return NS_OK;
-  }
 
   nsresult rv;
 
@@ -2615,22 +2757,17 @@ void nsPluginHost::RegisterWithCategoryManager(const nsCString& aMimeType,
 
 nsresult nsPluginHost::WritePluginInfo() {
   MOZ_ASSERT(XRE_IsParentProcess());
+  if (mFlashOnly) {
+    WriteFlashInfo();
+  }
 
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsIProperties> directoryService(
-      do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv));
+  nsresult rv = EnsurePluginReg();
   if (NS_FAILED(rv)) return rv;
 
-  directoryService->Get(NS_APP_USER_PROFILE_50_DIR, NS_GET_IID(nsIFile),
-                        getter_AddRefs(mPluginRegFile));
-
-  if (!mPluginRegFile) return NS_ERROR_FAILURE;
-
-  PRFileDesc* fd = nullptr;
-
+  // Get the tmp file by getting the parent and then re-appending
+  // kPluginRegistryFilename followed by `.tmp`.
   nsCOMPtr<nsIFile> pluginReg;
-
-  rv = mPluginRegFile->Clone(getter_AddRefs(pluginReg));
+  rv = mPluginRegFile->GetParent(getter_AddRefs(pluginReg));
   if (NS_FAILED(rv)) return rv;
 
   nsAutoCString filename(kPluginRegistryFilename);
@@ -2638,6 +2775,7 @@ nsresult nsPluginHost::WritePluginInfo() {
   rv = pluginReg->AppendNative(filename);
   if (NS_FAILED(rv)) return rv;
 
+  PRFileDesc* fd = nullptr;
   rv = pluginReg->OpenNSPRFileDesc(PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE,
                                    0600, &fd);
   if (NS_FAILED(rv)) return rv;
@@ -2653,13 +2791,11 @@ nsresult nsPluginHost::WritePluginInfo() {
     return rv;
   }
 
-  bool flashOnly = Preferences::GetBool("plugin.load_flash_only", true);
-
   PR_fprintf(fd, "Generated File. Do not edit.\n");
 
   PR_fprintf(fd, "\n[HEADER]\nVersion%c%s%c%c%c\nArch%c%s%c%c\n",
              PLUGIN_REGISTRY_FIELD_DELIMITER, kPluginRegistryVersion,
-             flashOnly ? 't' : 'f', PLUGIN_REGISTRY_FIELD_DELIMITER,
+             mFlashOnly ? 't' : 'f', PLUGIN_REGISTRY_FIELD_DELIMITER,
              PLUGIN_REGISTRY_END_OF_LINE_MARKER,
              PLUGIN_REGISTRY_FIELD_DELIMITER, arch.get(),
              PLUGIN_REGISTRY_FIELD_DELIMITER,
@@ -2668,7 +2804,8 @@ nsresult nsPluginHost::WritePluginInfo() {
   // Store all plugins in the mPlugins list - all plugins currently in use.
   PR_fprintf(fd, "\n[PLUGINS]\n");
 
-  for (nsPluginTag* tag = mPlugins; tag; tag = tag->mNext) {
+  // Do not write plugin info if we're in flash-only mode.
+  for (nsPluginTag* tag = mPlugins; !mFlashOnly && tag; tag = tag->mNext) {
     // store each plugin info into the registry
     // filename & fullpath are on separate line
     // because they can contain field delimiter char
@@ -2735,18 +2872,14 @@ nsresult nsPluginHost::WritePluginInfo() {
     MOZ_ASSERT(false, "PR_Close() failed.");
     return rv;
   }
-  nsCOMPtr<nsIFile> parent;
-  rv = pluginReg->GetParent(getter_AddRefs(parent));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = pluginReg->MoveToNative(parent, kPluginRegistryFilename);
+  rv = pluginReg->MoveToNative(nullptr, kPluginRegistryFilename);
   return rv;
 }
 
-nsresult nsPluginHost::ReadPluginInfo() {
-  MOZ_ASSERT(XRE_IsParentProcess());
-
-  const long PLUGIN_REG_MIMETYPES_ARRAY_SIZE = 12;
-  const long PLUGIN_REG_MAX_MIMETYPES = 1000;
+nsresult nsPluginHost::EnsurePluginReg() {
+  if (mPluginRegFile) {
+    return NS_OK;
+  }
 
   nsresult rv;
 
@@ -2760,21 +2893,38 @@ nsresult nsPluginHost::ReadPluginInfo() {
   if (!mPluginRegFile) {
     // There is no profile yet, this will tell us if there is going to be one
     // in the future.
+    nsCOMPtr<nsIFile> tmp;
     directoryService->Get(NS_APP_PROFILE_DIR_STARTUP, NS_GET_IID(nsIFile),
-                          getter_AddRefs(mPluginRegFile));
-    if (!mPluginRegFile) return NS_ERROR_FAILURE;
+                          getter_AddRefs(tmp));
+    if (!tmp) {
+      return NS_ERROR_FAILURE;
+    }
 
     return NS_ERROR_NOT_AVAILABLE;
   }
+  return mPluginRegFile->AppendNative(kPluginRegistryFilename);
+}
 
-  PRFileDesc* fd = nullptr;
+nsresult nsPluginHost::ReadPluginInfo() {
+  MOZ_ASSERT(XRE_IsParentProcess());
 
+  // By default, we only load flash. In which case, get info from prefs:
+  if (mFlashOnly) {
+    ReadFlashInfo();
+  }
+  return ReadPluginInfoFromDisk();
+}
+
+nsresult nsPluginHost::ReadPluginInfoFromDisk() {
+  nsresult rv = EnsurePluginReg();
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  // Cloning ensures we don't have a stat cache and get an
+  // accurate filesize.
   nsCOMPtr<nsIFile> pluginReg;
-
   rv = mPluginRegFile->Clone(getter_AddRefs(pluginReg));
-  if (NS_FAILED(rv)) return rv;
-
-  rv = pluginReg->AppendNative(kPluginRegistryFilename);
   if (NS_FAILED(rv)) return rv;
 
   int64_t fileSize;
@@ -2794,6 +2944,7 @@ nsresult nsPluginHost::ReadPluginInfo() {
   char* registry = reader.Init(flen);
   if (!registry) return NS_ERROR_OUT_OF_MEMORY;
 
+  PRFileDesc* fd = nullptr;
   rv = pluginReg->OpenNSPRFileDesc(PR_RDONLY, 0444, &fd);
   if (NS_FAILED(rv)) return rv;
 
@@ -2817,7 +2968,6 @@ nsresult nsPluginHost::ReadPluginInfo() {
   if (flen > bread) return rv;
 
   if (!ReadSectionHeader(reader, "HEADER")) return rv;
-  ;
 
   if (!reader.NextLine()) return rv;
 
@@ -2831,9 +2981,8 @@ nsresult nsPluginHost::ReadPluginInfo() {
 
   // If we're reading an old registry, ignore it
   // If we flipped the flash-only pref, ignore it
-  bool flashOnly = Preferences::GetBool("plugin.load_flash_only", true);
   nsAutoCString expectedVersion(kPluginRegistryVersion);
-  expectedVersion.Append(flashOnly ? 't' : 'f');
+  expectedVersion.Append(mFlashOnly ? 't' : 'f');
 
   if (!expectedVersion.Equals(values[1])) {
     return rv;
@@ -2876,6 +3025,12 @@ nsresult nsPluginHost::ReadPluginInfo() {
     if (*reader.LinePtr() == '[') {
       break;
     }
+    // Ignore all listed plugins if we're in flash-only mode.
+    // In that case, we're only reading this file to find invalid plugin info
+    // so we can avoid reading/loading those.
+    if (mFlashOnly) {
+      continue;
+    }
 
     const char* filename = reader.LinePtr();
     if (!reader.NextLine()) return rv;
@@ -2899,6 +3054,9 @@ nsresult nsPluginHost::ReadPluginInfo() {
 
     const char* name = reader.LinePtr();
     if (!reader.NextLine()) return rv;
+
+    const long PLUGIN_REG_MIMETYPES_ARRAY_SIZE = 12;
+    const long PLUGIN_REG_MAX_MIMETYPES = 1000;
 
     long mimetypecount = std::strtol(reader.LinePtr(), nullptr, 10);
     if (mimetypecount == LONG_MAX || mimetypecount == LONG_MIN ||
