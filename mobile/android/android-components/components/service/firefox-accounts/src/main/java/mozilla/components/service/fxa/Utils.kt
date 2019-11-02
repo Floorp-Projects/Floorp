@@ -31,10 +31,11 @@ fun <T> handleFxaExceptions(
         logger.info("Successfully executed: $operation")
         res
     } catch (e: FxaException) {
+        // We'd like to simply crash in case of certain errors (e.g. panics).
+        if (shouldThrow(e)) {
+            throw e
+        }
         when (e) {
-            is FxaPanicException -> {
-                throw e
-            }
             is FxaUnauthorizedException -> {
                 logger.warn("Auth error while running: $operation")
                 authErrorRegistry.notifyObservers { onAuthErrorAsync(AuthException(AuthExceptionType.UNAUTHORIZED, e)) }
@@ -64,4 +65,16 @@ fun handleFxaExceptions(logger: Logger, operation: String, block: () -> Unit): B
         block()
         true
     })
+}
+
+private fun shouldThrow(e: FxaException): Boolean {
+    return when (e) {
+        // Throw on panics
+        is FxaPanicException -> true
+        // Don't throw for recoverable errors.
+        is FxaNetworkException, is FxaUnauthorizedException, is FxaUnspecifiedException -> false
+        // Throw on newly encountered exceptions.
+        // If they're actually recoverable and you see them in crash reports, update this check.
+        else -> true
+    }
 }
