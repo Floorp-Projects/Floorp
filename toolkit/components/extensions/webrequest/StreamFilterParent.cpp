@@ -446,16 +446,6 @@ StreamFilterParent::SetLoadFlags(nsLoadFlags aLoadFlags) {
   return mChannel->SetLoadFlags(aLoadFlags);
 }
 
-NS_IMETHODIMP
-StreamFilterParent::GetTRRMode(nsIRequest::TRRMode* aTRRMode) {
-  return GetTRRModeImpl(aTRRMode);
-}
-
-NS_IMETHODIMP
-StreamFilterParent::SetTRRMode(nsIRequest::TRRMode aTRRMode) {
-  return SetTRRModeImpl(aTRRMode);
-}
-
 /*****************************************************************************
  * nsIStreamListener
  *****************************************************************************/

@@ -4099,8 +4099,9 @@ nsresult nsHttpConnectionMgr::nsHalfOpenSocket::SetupStreams(
   uint32_t tmpFlags = 0;
   if (mCaps & NS_HTTP_REFRESH_DNS) tmpFlags = nsISocketTransport::BYPASS_CACHE;
 
-  tmpFlags |= nsISocketTransport::GetFlagsFromTRRMode(
-      NS_HTTP_TRR_MODE_FROM_FLAGS(mCaps));
+  if (mCaps & NS_HTTP_DISABLE_TRR) {
+    tmpFlags = nsISocketTransport::DISABLE_TRR;
+  }
 
   if (mCaps & NS_HTTP_LOAD_ANONYMOUS)
     tmpFlags |= nsISocketTransport::ANONYMOUS_CONNECT;

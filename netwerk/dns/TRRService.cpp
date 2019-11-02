@@ -21,8 +21,7 @@ static const char kOpenCaptivePortalLoginEvent[] = "captive-portal-login";
 static const char kClearPrivateData[] = "clear-private-data";
 static const char kPurge[] = "browser:purge-session-history";
 static const char kDisableIpv6Pref[] = "network.dns.disableIPv6";
-static const char kPrefSkipTRRParentalControl[] =
-    "network.dns.skipTRR-when-parental-control-enabled";
+static const char kCaptivedetectCanonicalURL[] = "captivedetect.canonicalURL";
 
 #define TRR_PREF_PREFIX "network.trr."
 #define TRR_PREF(x) TRR_PREF_PREFIX x
@@ -49,7 +48,6 @@ TRRService::TRRService()
       mCaptiveIsPassed(false),
       mUseGET(false),
       mDisableECS(true),
-      mSkipTRRWhenParentalControlEnabled(true),
       mDisableAfterFails(5),
       mClearTRRBLStorage(false),
       mConfirmationState(CONFIRM_INIT),
@@ -80,7 +78,7 @@ nsresult TRRService::Init() {
   if (prefBranch) {
     prefBranch->AddObserver(TRR_PREF_PREFIX, this, true);
     prefBranch->AddObserver(kDisableIpv6Pref, this, true);
-    prefBranch->AddObserver(kPrefSkipTRRParentalControl, this, true);
+    prefBranch->AddObserver(kCaptivedetectCanonicalURL, this, true);
   }
   nsCOMPtr<nsICaptivePortalService> captivePortalService =
       do_GetService(NS_CAPTIVEPORTAL_CID);
@@ -116,13 +114,9 @@ void TRRService::GetParentalControlEnabledInternal() {
   }
 }
 
-bool TRRService::Enabled(nsIRequest::TRRMode aMode) {
-  if (mMode == MODE_TRROFF) {
-    return false;
-  }
+bool TRRService::Enabled() {
   if (mConfirmationState == CONFIRM_INIT &&
-      (!mWaitForCaptive || mCaptiveIsPassed ||
-       (mMode == MODE_TRRONLY || aMode == nsIRequest::TRR_ONLY_MODE))) {
+      (!mWaitForCaptive || mCaptiveIsPassed || (mMode == MODE_TRRONLY))) {
     LOG(("TRRService::Enabled => CONFIRM_TRYING\n"));
     mConfirmationState = CONFIRM_TRYING;
   }
@@ -310,7 +304,8 @@ nsresult TRRService::ReadPrefs(const char* name) {
     }
   }
   if (!name || !strcmp(name, TRR_PREF("excluded-domains")) ||
-      !strcmp(name, TRR_PREF("builtin-excluded-domains"))) {
+      !strcmp(name, TRR_PREF("builtin-excluded-domains")) ||
+      !strcmp(name, kCaptivedetectCanonicalURL)) {
     mExcludedDomains.Clear();
 
     auto parseExcludedDomains = [this](const char* aPrefName) {
@@ -332,12 +327,18 @@ nsresult TRRService::ReadPrefs(const char* name) {
     parseExcludedDomains(TRR_PREF("excluded-domains"));
     parseExcludedDomains(TRR_PREF("builtin-excluded-domains"));
     clearEntireCache = true;
-  }
 
-  if (!name || !strcmp(name, kPrefSkipTRRParentalControl)) {
-    bool tmp;
-    if (NS_SUCCEEDED(Preferences::GetBool(kPrefSkipTRRParentalControl, &tmp))) {
-      mSkipTRRWhenParentalControlEnabled = tmp;
+    nsAutoCString canonicalSiteURL;
+    Preferences::GetCString(kCaptivedetectCanonicalURL, canonicalSiteURL);
+
+    nsCOMPtr<nsIURI> uri;
+    nsresult rv = NS_NewURI(getter_AddRefs(uri), canonicalSiteURL,
+                            UTF_8_ENCODING, nullptr);
+    if (NS_SUCCEEDED(rv)) {
+      nsAutoCString host;
+      uri->GetHost(host);
+      LOG(("TRRService::ReadPrefs captive portal URL:[%s]\n", host.get()));
+      mExcludedDomains.PutEntry(host);
     }
   }
 
@@ -433,19 +434,16 @@ TRRService::Observe(nsISupports* aSubject, const char* aTopic,
       }
     }
 
-    // We should avoid doing calling MaybeConfirm in response to a pref change
-    // unless the service is in a TRR=enabled mode.
-    if (mMode == MODE_TRRFIRST || mMode == MODE_TRRONLY) {
-      if (!mCaptiveIsPassed) {
-        if (mConfirmationState != CONFIRM_OK) {
-          mConfirmationState = CONFIRM_TRYING;
-          MaybeConfirm();
-        }
-      } else {
-        LOG(("TRRservice CP clear when already up!\n"));
+    if (!mCaptiveIsPassed) {
+      if (mConfirmationState != CONFIRM_OK) {
+        mConfirmationState = CONFIRM_TRYING;
+        MaybeConfirm();
       }
-      mCaptiveIsPassed = true;
+    } else {
+      LOG(("TRRservice CP clear when already up!\n"));
     }
+
+    mCaptiveIsPassed = true;
 
   } else if (!strcmp(aTopic, kClearPrivateData) || !strcmp(aTopic, kPurge)) {
     // flush the TRR blacklist, both in-memory and on-disk
@@ -478,7 +476,7 @@ void TRRService::MaybeConfirm() {
 
 void TRRService::MaybeConfirm_locked() {
   mLock.AssertCurrentThreadOwns();
-  if (mMode == MODE_TRROFF || mConfirmer ||
+  if (TRR_DISABLED(mMode) || mConfirmer ||
       mConfirmationState != CONFIRM_TRYING) {
     LOG(
         ("TRRService:MaybeConfirm mode=%d, mConfirmer=%p "
@@ -503,7 +501,7 @@ void TRRService::MaybeConfirm_locked() {
 bool TRRService::MaybeBootstrap(const nsACString& aPossible,
                                 nsACString& aResult) {
   MutexAutoLock lock(mLock);
-  if (mMode == MODE_TRROFF || mBootstrapAddr.IsEmpty()) {
+  if (TRR_DISABLED(mMode) || mBootstrapAddr.IsEmpty()) {
     return false;
   }
 
@@ -560,7 +558,7 @@ bool TRRService::IsTRRBlacklisted(const nsACString& aHost,
     return true;
   }
 
-  if (!Enabled(nsIRequest::TRR_DEFAULT_MODE)) {
+  if (!Enabled()) {
     return true;
   }
 
