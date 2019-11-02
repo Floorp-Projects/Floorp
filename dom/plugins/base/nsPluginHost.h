@@ -165,11 +165,6 @@ class nsPluginHost final : public nsIPluginHost,
   // Always returns true if plugin.allowed_types is not set
   static bool IsTypeWhitelisted(const char* aType);
 
-  // Helper that checks if a plugin of a given MIME type can be loaded by the
-  // parent process. It checks the plugin.load_in_parent_process.<mime> pref.
-  // Always returns false if plugin.load_in_parent_process.<mime> is not set.
-  static bool ShouldLoadTypeInParent(const nsACString& aMimeType);
-
   /**
    * Returns true if a plugin can be used to load the requested MIME type. Used
    * for short circuiting before sending things to plugin code.

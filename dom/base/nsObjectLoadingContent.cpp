@@ -2952,18 +2952,10 @@ bool nsObjectLoadingContent::ShouldBlockContent() {
 bool nsObjectLoadingContent::ShouldPlay(FallbackType& aReason) {
   nsresult rv;
 
-  if (BrowserTabsRemoteAutostart()) {
-    bool shouldLoadInParent =
-        nsPluginHost::ShouldLoadTypeInParent(mContentType);
-    bool inParent = XRE_IsParentProcess();
-
-    if (shouldLoadInParent != inParent) {
-      // Plugins need to be locked to either the parent process or the content
-      // process. If a plugin is locked to one process type, it can't be used in
-      // the other. Otherwise we'll get hangs.
-      aReason = eFallbackDisabled;
-      return false;
-    }
+  if (BrowserTabsRemoteAutostart() && XRE_IsParentProcess()) {
+    // We no longer support loading plugins in the parent process.
+    aReason = eFallbackDisabled;
+    return false;
   }
 
   RefPtr<nsPluginHost> pluginHost = nsPluginHost::GetInst();
