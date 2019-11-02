@@ -43,12 +43,6 @@ using namespace mozilla;
 static const char kPrefDefaultEnabledState[] = "plugin.default.state";
 static const char kPrefDefaultEnabledStateXpi[] = "plugin.defaultXpi.state";
 
-// The defaults here will be read from prefs and overwritten
-static int32_t sFlashSandboxLevel = 3;
-static int32_t sDefaultSandboxLevel = 0;
-static bool sEnableSandboxLogging = false;
-static bool sInitializedSandboxingInfo = false;
-
 // check comma delimited extensions
 static bool ExtensionInList(const nsCString& aExtensionList,
                             const nsACString& aExtension) {
@@ -284,6 +278,10 @@ void nsPluginTag::InitMime(const char* const* aMimeTypes,
     // to properly handle a mixed-case type.
     ToLowerCase(mimeType);
 
+    if (!nsPluginHost::IsTypeWhitelisted(mimeType.get())) {
+      continue;
+    }
+
     // Look for certain special plugins.
     switch (nsPluginHost::GetSpecialType(mimeType)) {
       case nsPluginHost::eSpecialType_Flash:
@@ -342,16 +340,68 @@ void nsPluginTag::InitMime(const char* const* aMimeTypes,
 }
 
 void nsPluginTag::InitSandboxLevel() {
-  MOZ_ASSERT(sInitializedSandboxingInfo,
-             "Should have initialized global sandboxing info");
-#if defined(MOZ_SANDBOX)
-#  if defined(XP_MACOSX)
-  mSandboxLevel = mIsFlashPlugin ? sFlashSandboxLevel : sDefaultSandboxLevel;
-  mIsSandboxLoggingEnabled = mIsFlashPlugin && sEnableSandboxLogging;
-#  elif defined(XP_WIN)
-  mSandboxLevel = mIsFlashPlugin ? sFlashSandboxLevel : sDefaultSandboxLevel;
-#  endif /* defined(XP_MACOSX) / defined(XP_WIN) */
-#endif   /* defined(MOZ_SANDBOX) */
+#if defined(XP_WIN) && defined(MOZ_SANDBOX)
+  nsAutoCString sandboxPref("dom.ipc.plugins.sandbox-level.");
+  sandboxPref.Append(GetNiceFileName());
+  if (NS_FAILED(Preferences::GetInt(sandboxPref.get(), &mSandboxLevel))) {
+    mSandboxLevel =
+        Preferences::GetInt("dom.ipc.plugins.sandbox-level.default");
+  }
+
+#  if defined(_AMD64_)
+  // Level 3 is now the default NPAPI sandbox level for 64-bit flash.
+  // We permit the user to drop the sandbox level by at most 1.  This should
+  // be kept up to date with the default value in the firefox.js pref file.
+  if (mIsFlashPlugin && mSandboxLevel < 2) {
+    mSandboxLevel = 2;
+  }
+#  endif /* defined(_AMD64_) */
+
+#elif defined(XP_MACOSX) && defined(MOZ_SANDBOX)
+  if (mIsFlashPlugin) {
+    // For older OS versions, use a different Flash sandbox level.
+    // The following pref indicates which OS versions this applies to.
+    int legacyOSMinorMax = Preferences::GetInt(
+        "dom.ipc.plugins.sandbox-level.flash.max-legacy-os-minor", 10);
+
+    const char* levelPref = "dom.ipc.plugins.sandbox-level.flash";
+
+    if (PR_GetEnv("MOZ_DISABLE_NPAPI_SANDBOX")) {
+      // Flash sandbox disabled
+      mSandboxLevel = 0;
+    } else if (nsCocoaFeatures::OSXVersionMajor() == 10 &&
+               nsCocoaFeatures::OSXVersionMinor() <= legacyOSMinorMax) {
+      // We're on an older OS version. Use the minimum of both
+      // prefs so that setting the standard level pref to 0 is sufficient
+      // to disable the sandbox regardless of OS version.
+      const char* legacyLevelPref =
+          "dom.ipc.plugins.sandbox-level.flash.legacy";
+      int32_t compatLevel = Preferences::GetInt(legacyLevelPref, 0);
+      int32_t level = Preferences::GetInt(levelPref, 0);
+      mSandboxLevel = std::min(compatLevel, level);
+    } else {
+      // Use standard level
+      mSandboxLevel = Preferences::GetInt(levelPref, 0);
+    }
+
+    mSandboxLevel = ClampFlashSandboxLevel(mSandboxLevel);
+    if (mSandboxLevel > 0) {
+      // Enable sandbox logging in the plugin process if it has
+      // been turned on via prefs or environment variables.
+      if (Preferences::GetBool("security.sandbox.logging.enabled") ||
+          PR_GetEnv("MOZ_SANDBOX_LOGGING") ||
+          PR_GetEnv("MOZ_SANDBOX_MAC_FLASH_LOGGING")) {
+        mIsSandboxLoggingEnabled = true;
+      }
+    }
+  } else {
+    // This isn't the flash plugin. At present, Flash is the only
+    // supported plugin on macOS. Other test plugins are used during
+    // testing and they will use the default plugin sandbox level.
+    mSandboxLevel =
+        Preferences::GetInt("dom.ipc.plugins.sandbox-level.default");
+  }
+#endif /* defined(XP_MACOSX) && defined(MOZ_SANDBOX) */
 }
 
 #if !defined(XP_WIN) && !defined(XP_MACOSX)
@@ -582,58 +632,6 @@ void nsPluginTag::TryUnloadPlugin(bool inShutdown) {
     mPlugin->Shutdown();
     mPlugin = nullptr;
   }
-}
-
-/* static */ void nsPluginTag::EnsureSandboxInformation() {
-  if (sInitializedSandboxingInfo) {
-    return;
-  }
-  MOZ_ASSERT(NS_IsMainThread(), "Should be on the main thread.");
-#if defined(XP_WIN) && defined(MOZ_SANDBOX)
-  Preferences::GetInt("dom.ipc.plugins.sandbox-level.default",
-                      &sDefaultSandboxLevel);
-  Preferences::GetInt("dom.ipc.plugins.sandbox-level.flash",
-                      &sFlashSandboxLevel);
-#  if defined(_AMD64_)
-  // Level 3 is now the default NPAPI sandbox level for 64-bit flash.
-  // We permit the user to drop the sandbox level by at most 1.  This should
-  // be kept up to date with the default value in the firefox.js pref file.
-  sFlashSandboxLevel = std::max(sFlashSandboxLevel, 2);
-#  endif
-#elif defined(XP_MACOSX) && defined(MOZ_SANDBOX)
-  int legacyOSMinorMax = Preferences::GetInt(
-      "dom.ipc.plugins.sandbox-level.flash.max-legacy-os-minor", 10);
-  const char* levelPref = "dom.ipc.plugins.sandbox-level.flash";
-
-  if (PR_GetEnv("MOZ_DISABLE_NPAPI_SANDBOX")) {
-    // Flash sandbox disabled
-    sFlashSandboxLevel = 0;
-  } else if (nsCocoaFeatures::OSXVersionMajor() == 10 &&
-             nsCocoaFeatures::OSXVersionMinor() <= legacyOSMinorMax) {
-    const char* legacyLevelPref = "dom.ipc.plugins.sandbox-level.flash.legacy";
-    int32_t compatLevel = Preferences::GetInt(legacyLevelPref, 0);
-    int32_t level = Preferences::GetInt(levelPref, 0);
-    sFlashSandboxLevel = std::min(compatLevel, level);
-  } else {
-    sFlashSandboxLevel = Preferences::GetInt(levelPref, 0);
-  }
-  sFlashSandboxLevel = ClampFlashSandboxLevel(sFlashSandboxLevel);
-
-  // At present, Flash is the only supported plugin on macOS.
-  // Other test plugins are used during testing and they will use
-  // the default plugin sandbox level.
-  Preferences::GetInt("dom.ipc.plugins.sandbox-level.default",
-                      &sDefaultSandboxLevel);
-
-  // Enable sandbox logging in the plugin process if it has
-  // been turned on via prefs or environment variables.
-  sEnableSandboxLogging =
-      sFlashSandboxLevel > 0 &&
-      (Preferences::GetBool("security.sandbox.logging.enabled") ||
-       PR_GetEnv("MOZ_SANDBOX_LOGGING") ||
-       PR_GetEnv("MOZ_SANDBOX_MAC_FLASH_LOGGING"));
-#endif
-  sInitializedSandboxingInfo = true;
 }
 
 const nsCString& nsPluginTag::GetNiceFileName() {
