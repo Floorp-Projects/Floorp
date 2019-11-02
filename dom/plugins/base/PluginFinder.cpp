@@ -13,6 +13,7 @@
 #if defined(XP_MACOSX)
 #  include "nsILocalFileMac.h"
 #endif
+#include "nsIWritablePropertyBag2.h"
 
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Preferences.h"
@@ -114,13 +115,47 @@ nsPluginTag* PluginFinder::FirstPluginWithPath(const nsCString& path) {
   return nullptr;
 }
 
-NS_IMPL_ISUPPORTS(PluginFinder, nsIRunnable)
+NS_IMPL_ISUPPORTS(PluginFinder, nsIRunnable, nsIAsyncShutdownBlocker)
+
+// nsIAsyncShutdownBlocker
+nsresult PluginFinder::GetName(nsAString& aName) {
+  aName.AssignLiteral("PluginFinder: finding plugins to load");
+  return NS_OK;
+}
+
+NS_IMETHODIMP PluginFinder::BlockShutdown(
+    nsIAsyncShutdownClient* aBarrierClient) {
+  // Finding plugins isn't interruptable, but we can attempt to prevent loading
+  // the plugins in nsPluginHost.
+  mShutdown = true;
+  return NS_OK;
+}
+
+NS_IMETHODIMP PluginFinder::GetState(nsIPropertyBag** aBagOut) {
+  MOZ_ASSERT(aBagOut);
+  nsCOMPtr<nsIWritablePropertyBag2> propertyBag =
+      do_CreateInstance("@mozilla.org/hash-property-bag;1");
+
+  if (NS_WARN_IF(!propertyBag)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  propertyBag->SetPropertyAsBool(NS_LITERAL_STRING("Finding"),
+                                 !mFinishedFinding);
+  propertyBag->SetPropertyAsBool(NS_LITERAL_STRING("CreatingList"),
+                                 mCreateList);
+  propertyBag->SetPropertyAsBool(NS_LITERAL_STRING("FlashOnly"), mFlashOnly);
+  propertyBag->SetPropertyAsBool(NS_LITERAL_STRING("HavePlugins"), !!mPlugins);
+  propertyBag.forget(aBagOut);
+  return NS_OK;
+}
 
 PluginFinder::PluginFinder(bool aFlashOnly)
     : mFlashOnly(aFlashOnly),
       mCreateList(false),
       mPluginsChanged(false),
-      mFinishedFinding(false) {}
+      mFinishedFinding(false),
+      mCalledOnMainthread(false),  // overwritten from Run()
+      mShutdown(false) {}
 
 nsresult PluginFinder::DoFullSearch(const FoundPluginCallback& aCallback) {
   MOZ_ASSERT(XRE_IsParentProcess() && NS_IsMainThread());
@@ -135,6 +170,19 @@ nsresult PluginFinder::DoFullSearch(const FoundPluginCallback& aCallback) {
 
   // Figure out plugin directories:
   MOZ_TRY(DeterminePluginDirs());
+  // If we're only interested in flash, provide an initial update from
+  // cache. We'll do a scan async, away from the main thread, and if
+  // there are updates then we'll pass them in.
+  if (mFlashOnly) {
+    ReadFlashInfo();
+    // Don't do a blocklist check until we're done scanning,
+    // as the version might change anyway.
+    nsTArray<mozilla::Pair<bool, RefPtr<nsPluginTag>>> arr;
+    mFoundPluginCallback(!!mPlugins, mPlugins, arr);
+    // We've passed ownership of the flash plugin to the host, so make sure
+    // we don't accidentally try to use it when we leave the mainthread.
+    mPlugins = nullptr;
+  }
   return NS_OK;
 }
 
@@ -149,6 +197,11 @@ nsresult PluginFinder::HavePluginsChanged(
     return rv;
   }
 
+  // Read cached flash info if in flash-only mode.
+  if (mFlashOnly) {
+    ReadFlashInfo();
+  }
+
   // Figure out plugin directories:
   MOZ_TRY(DeterminePluginDirs());
   return NS_OK;
@@ -156,20 +209,25 @@ nsresult PluginFinder::HavePluginsChanged(
 
 nsresult PluginFinder::Run() {
   if (!mFinishedFinding) {
-    MOZ_TRY(FindPlugins());
+    mCalledOnMainthread = NS_IsMainThread();
     mFinishedFinding = true;
+    FindPlugins();  // Will call WritePluginInfo()
+    if (!mCalledOnMainthread) {
+      return NS_DispatchToMainThread(this);
+    }
   }
-  if (mPluginsChanged) {
-    WritePluginInfo(mFlashOnly, mPlugins, mInvalidPlugins);
-  }
-  // mPluginsChanged is false if all we have is flash and it hasn't changed.
-  // The host won't load plugins unless mPluginsChanged is true, so ensure it
-  // is.
-  if (mCreateList) {
-    mFoundPluginCallback(mPluginsChanged || !!mPlugins, mPlugins,
-                         mPluginBlocklistRequests);
-  } else {
-    mChangeCallback(mPluginsChanged);
+  MOZ_ASSERT(NS_IsMainThread());
+  if (!mShutdown) {
+    // Write flash info here because we can only do so when on the main thread.
+    // pluginreg.dat got written in FindPlugins if mPluginsChanged is true.
+    if (mFlashOnly && mPluginsChanged) {
+      WriteFlashInfo(mPlugins);
+    }
+    if (mCreateList) {
+      mFoundPluginCallback(mPluginsChanged, mPlugins, mPluginBlocklistRequests);
+    } else {
+      mChangeCallback(mPluginsChanged);
+    }
   }
 
   // The host will adopt these plugin tag instances when given them,
@@ -177,6 +235,16 @@ nsresult PluginFinder::Run() {
   mPlugins = nullptr;  // Don't iterate over these as the host needs them.
   NS_ITERATIVE_UNREF_LIST(RefPtr<nsInvalidPluginTag>, mInvalidPlugins, mNext);
   NS_ITERATIVE_UNREF_LIST(RefPtr<nsPluginTag>, mCachedPlugins, mNext);
+
+  // We need to tell the host we're done. We're on the main thread,
+  // but we could still be in the process of creating the pluginhost,
+  // if we were called synchronously. In that case, the host is
+  // responsible for cleaning us up, as we can't tell it to do so.
+  // So if we were called *async*, tell the host we're done:
+  if (mCreateList && !mCalledOnMainthread) {
+    RefPtr<nsPluginHost> host = nsPluginHost::GetInst();
+    host->FindingFinished();
+  }
   return NS_OK;
 }
 
@@ -269,13 +337,20 @@ nsresult PluginFinder::ReadFlashInfo() {
   const char* const mimedescriptions[3] = {"Shockwave Flash",
                                            "FutureSplash Player", nullptr};
 #endif
+
+  MOZ_ASSERT((!mPlugins) && (!mCachedPlugins));
+  // We will pass this to the host:
   RefPtr<nsPluginTag> tag = new nsPluginTag(
       "Shockwave Flash", desc.get(), NS_ConvertUTF16toUTF8(filename).get(),
       path.get(), version.get(), mimetypes, mimedescriptions, extensions,
       mimetypecount, lastMod, blocklistState, true);
-
-  tag->mNext = mCachedPlugins;
-  mCachedPlugins = tag;
+  mPlugins = tag;
+  // And keep this in cache:
+  RefPtr<nsPluginTag> cachedTag = new nsPluginTag(
+      "Shockwave Flash", desc.get(), NS_ConvertUTF16toUTF8(filename).get(),
+      path.get(), version.get(), mimetypes, mimedescriptions, extensions,
+      mimetypecount, lastMod, blocklistState, true);
+  mCachedPlugins = cachedTag;
   return NS_OK;
 }
 
@@ -531,7 +606,15 @@ nsresult PluginFinder::ScanPluginsDirectory(nsIFile* pluginsDir,
       // the library in the process then we want to attempt to unload it here.
       // Only do this if the pref is set for aggressive unloading.
       if (UnloadPluginsASAP()) {
-        pluginTag->TryUnloadPlugin(false);
+        if (NS_IsMainThread()) {
+          pluginTag->TryUnloadPlugin(false);
+        } else {
+          nsCOMPtr<nsIRunnable> unloadRunnable =
+              mozilla::NewRunnableMethod<bool>(
+                  "nsPluginTag::TryUnloadPlugin", pluginTag,
+                  &nsPluginTag::TryUnloadPlugin, false);
+          NS_DispatchToMainThread(unloadRunnable);
+        }
       }
     }
 
@@ -567,7 +650,8 @@ nsresult PluginFinder::ScanPluginsDirectory(nsIFile* pluginsDir,
 nsresult PluginFinder::FindPlugins() {
   Telemetry::AutoTimer<Telemetry::FIND_PLUGINS> telemetry;
 
-  // Read cached plugins info.
+  // Read cached plugins info. We ignore failures, as we can proceed
+  // without a pluginreg file.
   ReadPluginInfo();
 
   for (nsIFile* pluginDir : mPluginDirs) {
@@ -664,7 +748,11 @@ nsresult PluginFinder::FindPlugins() {
     bool aFlashOnly, nsPluginTag* aPlugins,
     nsInvalidPluginTag* aInvalidPlugins) {
   MOZ_ASSERT(XRE_IsParentProcess());
-  if (aFlashOnly) {
+  // We can't write to prefs from non-main threads. Run() will update prefs
+  // from the main thread if we're flash only.
+  // We can't separate this out completely because the blocklist updates
+  // from nsPluginHost expect to be able to write here.
+  if (NS_IsMainThread() && aFlashOnly) {
     WriteFlashInfo(aPlugins);
   }
 
@@ -787,6 +875,10 @@ nsresult PluginFinder::FindPlugins() {
     return NS_OK;
   }
 
+  if (!NS_IsMainThread()) {
+    return NS_ERROR_FAILURE;
+  }
+
   nsresult rv;
   nsCOMPtr<nsIProperties> directoryService(
       do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv));
@@ -863,15 +955,14 @@ nsresult PluginFinder::DeterminePluginDirs() {
 
 nsresult PluginFinder::ReadPluginInfo() {
   MOZ_ASSERT(XRE_IsParentProcess());
-
-  // By default, we only load flash. In which case, get info from prefs:
-  if (mFlashOnly) {
-    ReadFlashInfo();
+  // Non-flash-only (for tests that use other plugins) and updates to the list
+  // sadly still use the main thread - but assert about the flash startup case:
+  if (mFlashOnly && mCreateList) {
+    MOZ_ASSERT(!NS_IsMainThread());
+  } else {
+    MOZ_ASSERT(NS_IsMainThread());
   }
-  return ReadPluginInfoFromDisk();
-}
 
-nsresult PluginFinder::ReadPluginInfoFromDisk() {
   nsresult rv = EnsurePluginReg();
   if (NS_FAILED(rv)) {
     return rv;
