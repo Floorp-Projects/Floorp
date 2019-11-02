@@ -28,11 +28,6 @@ bool SetupBridge(uint32_t aPluginId, dom::ContentParent* aContentParent,
                  nsresult* aResult, uint32_t* aRunID,
                  ipc::Endpoint<PPluginModuleParent>* aEndpoint);
 
-nsresult FindPluginsForContent(uint32_t aPluginEpoch,
-                               nsTArray<PluginTag>* aPlugins,
-                               nsTArray<FakePluginTag>* aFakePlugins,
-                               uint32_t* aNewPluginEpoch);
-
 void TakeFullMinidump(uint32_t aPluginId, base::ProcessId aContentProcessId,
                       const nsAString& aBrowserDumpId, nsString& aDumpId);
 
