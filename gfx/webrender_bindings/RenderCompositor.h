@@ -37,7 +37,7 @@ class RenderCompositor {
   virtual ~RenderCompositor();
 
   virtual bool BeginFrame() = 0;
-  virtual void EndFrame() = 0;
+  virtual void EndFrame(const FfiVec<DeviceIntRect>& aDirtyRects) = 0;
   // Returns false when waiting gpu tasks is failed.
   // It might happen when rendering context is lost.
   virtual bool WaitForGPU() { return true; }
@@ -77,6 +77,10 @@ class RenderCompositor {
   virtual void DestroySurface(NativeSurfaceId aId) {}
   virtual void AddSurface(wr::NativeSurfaceId aId, wr::DeviceIntPoint aPosition,
                           wr::DeviceIntRect aClipRect) {}
+
+  // Interface for partial present
+  virtual bool RequestFullRender() { return false; }
+  virtual uint32_t GetMaxPartialPresentRects() { return 0; }
 
   // Whether the surface contents are flipped vertically
   virtual bool SurfaceIsYFlipped() { return false; }

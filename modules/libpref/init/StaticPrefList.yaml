@@ -3607,6 +3607,11 @@
   value: false
   mirror: once
 
+- name: gfx.webrender.max-partial-present-rects
+  type: uint32_t
+  value: 0
+  mirror: once
+
 #ifdef NIGHTLY_BUILD
   # Keep this pref hidden on non-nightly builds to avoid people accidentally
   # turning it on.
