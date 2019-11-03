@@ -2158,8 +2158,23 @@ void EditorBase::NotifyEditorObservers(
       mIsInEditSubAction = false;
 
       if (mTextInputListener) {
+        // TODO: TextInputListener::OnEditActionHandled() may return
+        //       NS_ERROR_OUT_OF_MEMORY.  If so and if
+        //       TextControlState::SetValue() setting value with us, we should
+        //       return the result to TextEditor::ReplaceTextAsAction(),
+        //       TextEditor::DeleteSelectionAsAction() and
+        //       TextEditor::InsertTextAsAction().  However, it requires a lot
+        //       of changes in editor classes, but it's not so important since
+        //       editor does not use fallible allocation.  Therefore, normally,
+        //       the process must be crashed anyway.
         RefPtr<TextInputListener> listener = mTextInputListener;
-        listener->OnEditActionHandled();
+        nsresult rv =
+            listener->OnEditActionHandled(MOZ_KnownLive(*AsTextEditor()));
+        MOZ_RELEASE_ASSERT(rv != NS_ERROR_OUT_OF_MEMORY,
+                           "Setting value failed due to out of memory");
+        NS_WARNING_ASSERTION(
+            NS_SUCCEEDED(rv),
+            "TextInputListener::OnEditActionHandled() failed but ignored");
       }
 
       if (mIMEContentObserver) {

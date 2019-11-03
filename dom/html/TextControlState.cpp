@@ -796,6 +796,8 @@ nsresult TextInputSelectionController::CheckVisibilityContent(
 TextInputListener::TextInputListener(nsITextControlElement* aTxtCtrlElement)
     : mFrame(nullptr),
       mTxtCtrlElement(aTxtCtrlElement),
+      mTextControlState(aTxtCtrlElement ? aTxtCtrlElement->GetTextControlState()
+                                        : nullptr),
       mSelectionWasCollapsed(true),
       mHadUndoItems(false),
       mHadRedoItems(false),
@@ -985,40 +987,33 @@ TextInputListener::HandleEvent(Event* aEvent) {
   return NS_OK;
 }
 
-void TextInputListener::OnEditActionHandled() {
-  if (!mFrame) {
-    // We've been disconnected from the TextControlState object, nothing to do
-    // here.
-    return;
+nsresult TextInputListener::OnEditActionHandled(TextEditor& aTextEditor) {
+  if (mFrame) {
+    AutoWeakFrame weakFrame = mFrame;
+
+    nsITextControlFrame* frameBase = do_QueryFrame(mFrame);
+    nsTextControlFrame* frame = static_cast<nsTextControlFrame*>(frameBase);
+    NS_ASSERTION(frame, "Where is our frame?");
+    //
+    // Update the undo / redo menus
+    //
+    size_t numUndoItems = aTextEditor.NumberOfUndoItems();
+    size_t numRedoItems = aTextEditor.NumberOfRedoItems();
+    if ((numUndoItems && !mHadUndoItems) || (!numUndoItems && mHadUndoItems) ||
+        (numRedoItems && !mHadRedoItems) || (!numRedoItems && mHadRedoItems)) {
+      // Modify the menu if undo or redo items are different
+      UpdateTextInputCommands(NS_LITERAL_STRING("undo"));
+
+      mHadUndoItems = numUndoItems != 0;
+      mHadRedoItems = numRedoItems != 0;
+    }
+
+    if (weakFrame.IsAlive()) {
+      HandleValueChanged(frame);
+    }
   }
 
-  AutoWeakFrame weakFrame = mFrame;
-
-  nsITextControlFrame* frameBase = do_QueryFrame(mFrame);
-  nsTextControlFrame* frame = static_cast<nsTextControlFrame*>(frameBase);
-  NS_ASSERTION(frame, "Where is our frame?");
-  //
-  // Update the undo / redo menus
-  //
-  RefPtr<TextEditor> textEditor = frame->GetTextEditor();
-
-  // Get the number of undo / redo items
-  size_t numUndoItems = textEditor->NumberOfUndoItems();
-  size_t numRedoItems = textEditor->NumberOfRedoItems();
-  if ((numUndoItems && !mHadUndoItems) || (!numUndoItems && mHadUndoItems) ||
-      (numRedoItems && !mHadRedoItems) || (!numRedoItems && mHadRedoItems)) {
-    // Modify the menu if undo or redo items are different
-    UpdateTextInputCommands(NS_LITERAL_STRING("undo"));
-
-    mHadUndoItems = numUndoItems != 0;
-    mHadRedoItems = numRedoItems != 0;
-  }
-
-  if (!weakFrame.IsAlive()) {
-    return;
-  }
-
-  HandleValueChanged(frame);
+  return mTextControlState ? mTextControlState->OnEditActionHandled() : NS_OK;
 }
 
 void TextInputListener::HandleValueChanged(nsTextControlFrame* aFrame) {
@@ -1155,9 +1150,100 @@ class MOZ_STACK_CLASS AutoTextControlHandlingState {
     }
   }
 
+  /**
+   * WillSetValueWithTextEditor() is called when TextControlState sets
+   * value with its mTextEditor.
+   */
+  void WillSetValueWithTextEditor() {
+    MOZ_ASSERT(Is(TextControlAction::SetValue));
+    MOZ_ASSERT(mTextControlState.mBoundFrame);
+    mTextControlFrame = mTextControlState.mBoundFrame;
+    // If we'reemulating user input, we don't need to manage mTextInputListener
+    // by ourselves since everything should be handled by TextEditor as normal
+    // user input.
+    if (mSetValueFlags & TextControlState::eSetValue_BySetUserInput) {
+      return;
+    }
+    // Otherwise, if we're setting the value programatically, we need to manage
+    // mTextInputListener by ourselves since TextEditor users special path
+    // for the performance.
+    mTextInputListener->SettingValue(true);
+    mTextInputListener->SetValueChanged(mSetValueFlags &
+                                        TextControlState::eSetValue_Notify);
+    mEditActionHandled = false;
+  }
+
+  /**
+   * OnEditActionHandled() is called when the TextEditor handles something
+   * and immediately before dispatching "input" event.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult OnEditActionHandled() {
+    MOZ_ASSERT(!mEditActionHandled);
+    mEditActionHandled = true;
+    if (!Is(TextControlAction::SetValue)) {
+      return NS_OK;
+    }
+    if (!(mSetValueFlags & TextControlState::eSetValue_BySetUserInput)) {
+      mTextInputListener->SetValueChanged(true);
+      mTextInputListener->SettingValue(
+          mParent && mParent->IsHandling(TextControlAction::SetValue));
+      if (!(mSetValueFlags & TextControlState::eSetValue_Notify)) {
+        // Listener doesn't update frame, but it is required for
+        // placeholder
+        mTextControlState.ValueWasChanged(true);
+      }
+    }
+    if (!IsOriginalTextControlFrameAlive()) {
+      return SetValueWithoutTextEditorAgain() ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    }
+    // The new value never includes line breaks caused by hard-wrap.
+    // So, mCachedValue can always cache the new value.
+    nsITextControlFrame* textControlFrame =
+        do_QueryFrame(mTextControlFrame.GetFrame());
+    return static_cast<nsTextControlFrame*>(textControlFrame)
+                   ->CacheValue(mSettingValue, fallible)
+               ? NS_OK
+               : NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  /**
+   * SetValueWithoutTextEditorAgain() should be called if the frame for
+   * mTextControlState was destroyed during setting value.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE bool SetValueWithoutTextEditorAgain() {
+    MOZ_ASSERT(!IsOriginalTextControlFrameAlive());
+    // If the frame was destroyed because of a flush somewhere inside
+    // TextEditor, mBoundFrame here will be nullptr.  But it's also
+    // possible for the frame to go away because of another reason (such
+    // as deleting the existing selection -- see bug 574558), in which
+    // case we don't need to reset the value here.
+    if (mTextControlState.mBoundFrame) {
+      return true;
+    }
+    // XXX It's odd to drop flags except eSetValue_Notify.  Probably, this
+    //     intended to drop eSetValue_BySetUserInput and eSetValue_ByContent,
+    //     but other flags are added later.
+    ErrorResult error;
+    AutoTextControlHandlingState handlingSetValueWithoutEditor(
+        mTextControlState, TextControlAction::SetValue, mSettingValue,
+        mOldValue, mSetValueFlags & TextControlState::eSetValue_Notify, error);
+    if (error.Failed()) {
+      MOZ_ASSERT(error.ErrorCodeIs(NS_ERROR_OUT_OF_MEMORY));
+      error.SuppressException();
+      return false;
+    }
+    return mTextControlState.SetValueWithoutTextEditor(
+        handlingSetValueWithoutEditor);
+  }
+
   bool IsTextControlStateDestroyed() const {
     return mTextControlStateDestroyed;
   }
+  bool IsOriginalTextControlFrameAlive() const {
+    return const_cast<AutoTextControlHandlingState*>(this)
+        ->mTextControlFrame.IsAlive();
+  }
+  bool HasEditActionHandled() const { return mEditActionHandled; }
   bool Is(TextControlAction aTextControlAction) const {
     return mTextControlAction == aTextControlAction;
   }
@@ -1206,6 +1292,10 @@ class MOZ_STACK_CLASS AutoTextControlHandlingState {
 
   AutoTextControlHandlingState* const mParent;
   TextControlState& mTextControlState;
+  // mTextControlFrame should be set immediately before calling methods
+  // which may destroy the frame.  Then, you can check whether the frame
+  // was destroyed/replaced.
+  AutoWeakFrame mTextControlFrame;
   // mTextCtrlElement grabs TextControlState::mTextCtrlElement since
   // if the text control element releases mTextControlState, only this
   // can guarantee the instance of the text control element.
@@ -1218,6 +1308,7 @@ class MOZ_STACK_CLASS AutoTextControlHandlingState {
   uint32_t mSetValueFlags = 0;
   TextControlAction const mTextControlAction;
   bool mTextControlStateDestroyed = false;
+  bool mEditActionHandled = false;
 };
 
 /*****************************************************************************
@@ -1302,6 +1393,10 @@ void TextControlState::DeleteOrCacheForReuse() {
     return;
   }
   delete this;
+}
+
+nsresult TextControlState::OnEditActionHandled() {
+  return mHandlingState ? mHandlingState->OnEditActionHandled() : NS_OK;
 }
 
 Element* TextControlState::GetRootNode() {
@@ -2525,38 +2620,12 @@ bool TextControlState::SetValue(const nsAString& aValue,
 
     AutoWeakFrame weakFrame(mBoundFrame);
 
-    SetValueWithTextEditor(handlingSetValue);
-
-    if (!weakFrame.IsAlive()) {
-      // If the frame was destroyed because of a flush somewhere inside
-      // InsertText, mBoundFrame here will be nullptr.  But it's also
-      // possible for the frame to go away because of another reason (such
-      // as deleting the existing selection -- see bug 574558), in which
-      // case we don't need to reset the value here.
-      if (mBoundFrame) {
-        return true;
-      }
-      // XXX It's odd to drop flags except eSetValue_Notify.  Probably, this
-      //     intended to drop eSetValue_BySetUserInput and eSetValue_ByContent,
-      //     but other flags are added later.
-      ErrorResult error;
-      AutoTextControlHandlingState handlingSetValueWithoutEditor(
-          *this, TextControlAction::SetValue,
-          handlingSetValue.GetSettingValue(), handlingSetValue.GetOldValue(),
-          handlingSetValue.GetSetValueFlags() & eSetValue_Notify, error);
-      if (error.Failed()) {
-        MOZ_ASSERT(error.ErrorCodeIs(NS_ERROR_OUT_OF_MEMORY));
-        error.SuppressException();
-        return false;
-      }
-      return SetValueWithoutTextEditor(handlingSetValueWithoutEditor);
+    if (!SetValueWithTextEditor(handlingSetValue)) {
+      return false;
     }
 
-    // The new value never includes line breaks caused by hard-wrap.
-    // So, mCachedValue can always cache the new value.
-    if (!mBoundFrame->CacheValue(handlingSetValue.GetSettingValue(),
-                                 fallible)) {
-      return false;
+    if (!weakFrame.IsAlive()) {
+      return true;
     }
   } else if (!SetValueWithoutTextEditor(handlingSetValue)) {
     return false;
@@ -2574,7 +2643,7 @@ bool TextControlState::SetValue(const nsAString& aValue,
   return true;
 }
 
-void TextControlState::SetValueWithTextEditor(
+bool TextControlState::SetValueWithTextEditor(
     AutoTextControlHandlingState& aHandlingSetValue) {
   MOZ_ASSERT(aHandlingSetValue.Is(TextControlAction::SetValue));
   MOZ_ASSERT(mTextEditor);
@@ -2603,18 +2672,16 @@ void TextControlState::SetValueWithTextEditor(
     mBoundFrame->GetText(currentValue);
   }
 
-  AutoWeakFrame weakFrame(mBoundFrame);
-
   // this is necessary to avoid infinite recursion
   if (currentValue == aHandlingSetValue.GetSettingValue()) {
-    return;
+    return true;
   }
 
   RefPtr<TextEditor> textEditor = mTextEditor;
 
   nsCOMPtr<Document> document = textEditor->GetDocument();
   if (NS_WARN_IF(!document)) {
-    return;
+    return true;
   }
 
   // Time to mess with our security context... See comments in GetValue()
@@ -2627,13 +2694,11 @@ void TextControlState::SetValueWithTextEditor(
   Selection* selection = mSelCon->GetSelection(SelectionType::eNormal);
   SelectionBatcher selectionBatcher(selection);
 
-  if (NS_WARN_IF(!weakFrame.IsAlive())) {
-    return;
-  }
-
   // get the flags, remove readonly, disabled and max-length,
   // set the value, restore flags
   AutoRestoreEditorState restoreState(textEditor);
+
+  aHandlingSetValue.WillSetValueWithTextEditor();
 
   if (aHandlingSetValue.GetSetValueFlags() & eSetValue_BySetUserInput) {
     // If the caller inserts text as part of user input, for example,
@@ -2646,22 +2711,15 @@ void TextControlState::SetValueWithTextEditor(
     // we're emulating the user's input.  Passing nullptr as
     // nsIPrincipal means that that may be user's input.  So, let's
     // do it.
-    DebugOnly<nsresult> rv = textEditor->ReplaceTextAsAction(
+    nsresult rv = textEditor->ReplaceTextAsAction(
         aHandlingSetValue.GetSettingValue(), nullptr, nullptr);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to set the new value");
-    return;
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                         "TextEditor::ReplaceTextAsAction() failed");
+    return rv != NS_ERROR_OUT_OF_MEMORY;
   }
 
-  // If we're emulating user input, we don't need to manage
-  // mTextListener state since it should use same path as user
-  // typing something.  On the other hand, if we're setting value
-  // programatically, we need to manage mTextListener by ourselves
-  // and suppress "input" events.
-  mTextListener->SettingValue(true);
-  bool notifyValueChanged =
-      !!(aHandlingSetValue.GetSetValueFlags() & eSetValue_Notify);
-  mTextListener->SetValueChanged(notifyValueChanged);
-
+  // Don't dispatch "beforeinput" event nor "input" event for setting value
+  // by script.
   AutoInputEventSuppresser suppressInputEventDispatching(textEditor);
 
   if (aHandlingSetValue.GetSetValueFlags() & eSetValue_ForXUL) {
@@ -2693,49 +2751,57 @@ void TextControlState::SetValueWithTextEditor(
       // In this case, we makes the editor stop dispatching "input"
       // event so that passing nullptr as nsIPrincipal is safe for
       // now.
-      DebugOnly<nsresult> rv = textEditor->DeleteSelectionAsAction(
+      nsresult rv = textEditor->DeleteSelectionAsAction(
           nsIEditor::eNone, nsIEditor::eStrip, nullptr);
-      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to remove the text");
-    } else {
-      // In this case, we makes the editor stop dispatching "input"
-      // event so that passing nullptr as nsIPrincipal is safe for
-      // now.
-      DebugOnly<nsresult> rv =
-          textEditor->InsertTextAsAction(insertValue, nullptr);
-      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to insert the new value");
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                           "TextEditor::DeleteSelectionAsAction() failed");
+      return rv != NS_ERROR_OUT_OF_MEMORY;
     }
-  } else {
-    // On <input> or <textarea>, we shouldn't preserve existing undo
-    // transactions because other browsers do not preserve them too
-    // and not preserving transactions makes setting value faster.
-    AutoDisableUndo disableUndo(textEditor);
-    if (selection) {
-      // Since we don't use undo transaction, we don't need to store
-      // selection state.  SetText will set selection to tail.
-      // Note that textEditor will collapse selection to the end.
-      // Therefore, it's safe to use RemoveAllRangesTemporarily()
-      // here.
-      selection->RemoveAllRangesTemporarily();
-    }
-
     // In this case, we makes the editor stop dispatching "input"
-    // event so that passing nullptr as nsIPrincipal is safe for now.
-    textEditor->SetTextAsAction(aHandlingSetValue.GetSettingValue(), nullptr);
-
-    // Call the listener's HandleValueChanged() callback manually,
-    // since we don't use the transaction manager in this path and it
-    // could be that the editor would bypass calling the listener for
-    // that reason.
-    aHandlingSetValue.GetTextInputListener()->HandleValueChanged();
+    // event so that passing nullptr as nsIPrincipal is safe for
+    // now.
+    nsresult rv = textEditor->InsertTextAsAction(insertValue, nullptr);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                         "TextEditor::InsertTextAsAction() failed");
+    return rv != NS_ERROR_OUT_OF_MEMORY;
   }
 
-  aHandlingSetValue.GetTextInputListener()->SetValueChanged(true);
-  aHandlingSetValue.GetTextInputListener()->SettingValue(false);
-  if (!notifyValueChanged) {
-    // Listener doesn't update frame, but it is required for
-    // placeholder
-    ValueWasChanged(true);
+  // On <input> or <textarea>, we shouldn't preserve existing undo
+  // transactions because other browsers do not preserve them too
+  // and not preserving transactions makes setting value faster.
+  AutoDisableUndo disableUndo(textEditor);
+  if (selection) {
+    // Since we don't use undo transaction, we don't need to store
+    // selection state.  SetText will set selection to tail.
+    // Note that textEditor will collapse selection to the end.
+    // Therefore, it's safe to use RemoveAllRangesTemporarily()
+    // here.
+    selection->RemoveAllRangesTemporarily();
   }
+
+  // In this case, we makes the editor stop dispatching "input"
+  // event so that passing nullptr as nsIPrincipal is safe for now.
+  nsresult rv =
+      textEditor->SetTextAsAction(aHandlingSetValue.GetSettingValue(), nullptr);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "TextEditor::SetTextAsAction() failed");
+
+  // Call the listener's OnEditActionHandled() callback manually if
+  // OnEditActionHandled() hasn't been called yet since TextEditor don't use
+  // the transaction manager in this path and it could be that the editor
+  // would bypass calling the listener for that reason.
+  if (!aHandlingSetValue.HasEditActionHandled()) {
+    nsresult rvOnEditActionHandled =
+        MOZ_KnownLive(aHandlingSetValue.GetTextInputListener())
+            ->OnEditActionHandled(*textEditor);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rvOnEditActionHandled),
+                         "TextInputListener::OnEditActionHandled() failed");
+    if (rv != NS_ERROR_OUT_OF_MEMORY) {
+      rv = rvOnEditActionHandled;
+    }
+  }
+
+  return rv != NS_ERROR_OUT_OF_MEMORY;
 }
 
 bool TextControlState::SetValueWithoutTextEditor(

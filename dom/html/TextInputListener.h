@@ -7,6 +7,7 @@
 #ifndef mozilla_TextInputListener_h
 #define mozilla_TextInputListener_h
 
+#include "mozilla/WeakPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIDOMEventListener.h"
 #include "nsStringFwd.h"
@@ -17,6 +18,7 @@ class nsITextControlElement;
 class nsTextControlFrame;
 
 namespace mozilla {
+class TextControlState;
 
 namespace dom {
 class Selection;
@@ -42,7 +44,8 @@ class TextInputListener final : public nsIDOMEventListener,
   /**
    * OnEditActionHandled() is called when the editor handles each edit action.
    */
-  void OnEditActionHandled();
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  OnEditActionHandled(TextEditor& aTextEditor);
 
   /**
    * OnSelectionChange() is called when selection is changed in the editor.
@@ -71,6 +74,7 @@ class TextInputListener final : public nsIDOMEventListener,
  protected:
   nsIFrame* mFrame;
   nsITextControlElement* const mTxtCtrlElement;
+  WeakPtr<TextControlState> const mTextControlState;
 
   bool mSelectionWasCollapsed;
 

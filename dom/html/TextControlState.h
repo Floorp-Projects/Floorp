@@ -172,6 +172,12 @@ class TextControlState final : public SupportsWeakPtr<TextControlState> {
   PrepareEditor(const nsAString* aValue = nullptr);
   void InitializeKeyboardEventListeners();
 
+  /**
+   * OnEditActionHandled() is called when mTextEditor handles something
+   * and immediately before dispatching "input" event.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult OnEditActionHandled();
+
   enum SetValueFlags {
     // The call is for internal processing.
     eSetValue_Internal = 1 << 0,
@@ -412,8 +418,10 @@ class TextControlState final : public SupportsWeakPtr<TextControlState> {
    * nullptr.
    *
    * @param aHandlingState      Must be inner-most handling state for SetValue.
+   * @return                    false if fallible allocation failed.  Otherwise,
+   *                            true.
    */
-  MOZ_CAN_RUN_SCRIPT void SetValueWithTextEditor(
+  MOZ_CAN_RUN_SCRIPT bool SetValueWithTextEditor(
       AutoTextControlHandlingState& aHandlingState);
 
   /**
