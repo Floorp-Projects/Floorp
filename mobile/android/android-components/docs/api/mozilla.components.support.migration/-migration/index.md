@@ -2,7 +2,7 @@
 
 # Migration
 
-`sealed class Migration` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L27)
+`sealed class Migration` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/migration/src/main/java/mozilla/components/support/migration/FennecMigrator.kt#L29)
 
 Supported Fennec migrations and their current versions.
 
@@ -11,6 +11,7 @@ Supported Fennec migrations and their current versions.
 | Name | Summary |
 |---|---|
 | [Bookmarks](-bookmarks.md) | `object Bookmarks : `[`Migration`](./index.md)<br>Migrates bookmarks. Must run after history was migrated. |
+| [FxA](-fx-a.md) | `object FxA : `[`Migration`](./index.md)<br>Migrates FxA state. |
 | [History](-history.md) | `object History : `[`Migration`](./index.md)<br>Migrates history (both "places" and "visits"). |
 | [OpenTabs](-open-tabs.md) | `object OpenTabs : `[`Migration`](./index.md)<br>Migrates open tabs. |
 
@@ -31,5 +32,6 @@ Supported Fennec migrations and their current versions.
 | Name | Summary |
 |---|---|
 | [Bookmarks](-bookmarks.md) | `object Bookmarks : `[`Migration`](./index.md)<br>Migrates bookmarks. Must run after history was migrated. |
+| [FxA](-fx-a.md) | `object FxA : `[`Migration`](./index.md)<br>Migrates FxA state. |
 | [History](-history.md) | `object History : `[`Migration`](./index.md)<br>Migrates history (both "places" and "visits"). |
 | [OpenTabs](-open-tabs.md) | `object OpenTabs : `[`Migration`](./index.md)<br>Migrates open tabs. |

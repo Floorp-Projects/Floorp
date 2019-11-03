@@ -14,7 +14,7 @@
 
 | Name | Summary |
 |---|---|
-| [OnDownloadCompleted](-on-download-completed.md) | `typealias OnDownloadCompleted = (`[`DownloadState`](../mozilla.components.browser.state.state.content/-download-state/index.md)`, `[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
+| [OnDownloadCompleted](-on-download-completed.md) | `typealias OnDownloadCompleted = (`[`DownloadState`](../mozilla.components.browser.state.state.content/-download-state/index.md)`, `[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html)`, `[`DownloadJobStatus`](../mozilla.components.feature.downloads/-abstract-fetch-download-service/-download-job-status/index.md)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [SystemDownloadManager](-system-download-manager.md) | `typealias SystemDownloadManager = <ERROR CLASS>` |
 | [SystemRequest](-system-request.md) | `typealias SystemRequest = <ERROR CLASS>` |
 

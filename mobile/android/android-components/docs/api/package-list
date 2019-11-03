@@ -5,6 +5,7 @@ $dokka.location:mozilla.components.browser.engine.gecko$launchGeckoResult(kotlin
 $dokka.location:mozilla.components.browser.engine.system.matcher$reverse(kotlin.String)mozilla.components.browser.engine.system.matcher/kotlin.-string/reverse.md
 $dokka.location:mozilla.components.browser.engine.system.matcher$reversible(kotlin.String)mozilla.components.browser.engine.system.matcher/kotlin.-string/reversible.md
 $dokka.location:mozilla.components.concept.fetch$toMutableHeaders(kotlin.collections.List((mozilla.components.concept.fetch.Header)))mozilla.components.concept.fetch/kotlin.collections.-list/to-mutable-headers.md
+$dokka.location:mozilla.components.feature.downloads$toMegabyteString(kotlin.Long)mozilla.components.feature.downloads/kotlin.-long/to-megabyte-string.md
 $dokka.location:mozilla.components.lib.jexl.ext$toJexl(kotlin.Boolean)mozilla.components.lib.jexl.ext/kotlin.-boolean/to-jexl.md
 $dokka.location:mozilla.components.lib.jexl.ext$toJexl(kotlin.Double)mozilla.components.lib.jexl.ext/kotlin.-double/to-jexl.md
 $dokka.location:mozilla.components.lib.jexl.ext$toJexl(kotlin.Float)mozilla.components.lib.jexl.ext/kotlin.-float/to-jexl.md

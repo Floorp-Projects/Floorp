@@ -2,7 +2,7 @@
 
 # &lt;init&gt;
 
-`Builder(context: <ERROR CLASS>)`
+`Builder(context: <ERROR CLASS>, crashReporter: `[`CrashReporter`](../../../mozilla.components.lib.crash/-crash-reporter/index.md)`)`
 
 Data migration builder. Allows configuring which migrations to run, their versions and relative order.
 

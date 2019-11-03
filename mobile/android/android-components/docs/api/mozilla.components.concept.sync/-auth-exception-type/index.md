@@ -2,7 +2,7 @@
 
 # AuthExceptionType
 
-`enum class AuthExceptionType` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/OAuthAccount.kt#L12)
+`enum class AuthExceptionType` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/OAuthAccount.kt#L14)
 
 An auth-related exception type, for use with [AuthException](../-auth-exception/index.md).
 
@@ -18,7 +18,7 @@ An auth-related exception type, for use with [AuthException](../-auth-exception/
 
 | Name | Summary |
 |---|---|
-| [msg](msg.md) | `val msg: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
+| [msg](msg.md) | `val msg: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>string value of the auth exception type |
 
 ### Extension Functions
 

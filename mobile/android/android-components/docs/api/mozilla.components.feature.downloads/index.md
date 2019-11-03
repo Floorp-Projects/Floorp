@@ -11,3 +11,9 @@
 | [DownloadsFeature](-downloads-feature/index.md) | `class DownloadsFeature : `[`LifecycleAwareFeature`](../mozilla.components.support.base.feature/-lifecycle-aware-feature/index.md)`, `[`PermissionsFeature`](../mozilla.components.support.base.feature/-permissions-feature/index.md)<br>Feature implementation to provide download functionality for the selected session. The feature will subscribe to the selected session and listen for downloads. |
 | [DownloadsUseCases](-downloads-use-cases/index.md) | `class DownloadsUseCases`<br>Contains use cases related to the downloads feature. |
 | [SimpleDownloadDialogFragment](-simple-download-dialog-fragment/index.md) | `class SimpleDownloadDialogFragment : `[`DownloadDialogFragment`](-download-dialog-fragment/index.md)<br>A confirmation dialog to be called before a download is triggered. Meant to be used in collaboration with [DownloadsFeature](-downloads-feature/index.md) |
+
+### Extensions for External Classes
+
+| Name | Summary |
+|---|---|
+| [kotlin.Long](kotlin.-long/index.md) |  |
