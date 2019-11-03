@@ -18,6 +18,7 @@ class nsTextControlFrame;
 namespace mozilla {
 
 class ErrorResult;
+class TextControlState;
 class TextEditor;
 
 namespace dom {
@@ -120,6 +121,8 @@ class nsITextControlElement : public nsISupports {
   NS_IMETHOD_(nsISelectionController*) GetSelectionController() = 0;
 
   NS_IMETHOD_(nsFrameSelection*) GetConstFrameSelection() = 0;
+
+  NS_IMETHOD_(mozilla::TextControlState*) GetTextControlState() const = 0;
 
   /**
    * Binds a frame to the text control.  This is performed when a frame
