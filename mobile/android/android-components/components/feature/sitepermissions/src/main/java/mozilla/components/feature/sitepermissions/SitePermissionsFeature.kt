@@ -161,6 +161,15 @@ class SitePermissionsFeature(
         }
     }
 
+    internal fun onDismiss(sessionId: String) {
+        sessionManager.runWithSession(sessionId) { session ->
+            session.contentPermissionRequest.consume {
+                onContentPermissionDeny(session, false)
+                true
+            }
+        }
+    }
+
     @Synchronized
     internal fun storeSitePermissions(
         session: Session,

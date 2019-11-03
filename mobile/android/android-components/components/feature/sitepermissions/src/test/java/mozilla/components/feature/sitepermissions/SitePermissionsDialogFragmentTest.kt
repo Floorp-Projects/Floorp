@@ -149,6 +149,31 @@ class SitePermissionsDialogFragmentTest {
     }
 
     @Test
+    fun `dismissing the dialog notifies the feature`() {
+        val mockFeature: SitePermissionsFeature = mock()
+
+        val fragment = spy(
+                SitePermissionsDialogFragment.newInstance(
+                        "sessionId",
+                        "title",
+                        R.drawable.notification_icon_background,
+                        mockFeature,
+                        shouldShowDoNotAskAgainCheckBox = false,
+                        shouldSelectDoNotAskAgainCheckBox = false
+                )
+        )
+
+        fragment.feature = mockFeature
+
+        doReturn(testContext).`when`(fragment).requireContext()
+        doReturn(mockFragmentManager()).`when`(fragment).fragmentManager
+
+        fragment.onDismiss(mock())
+
+        verify(mockFeature).onDismiss("sessionId")
+    }
+
+    @Test
     fun `clicking on negative button notifies the feature (temporary)`() {
         val mockFeature: SitePermissionsFeature = mock()
 
