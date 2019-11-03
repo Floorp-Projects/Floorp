@@ -111,7 +111,7 @@ bool RenderCompositorEGL::BeginFrame() {
   return true;
 }
 
-void RenderCompositorEGL::EndFrame() {
+void RenderCompositorEGL::EndFrame(const FfiVec<DeviceIntRect>& aDirtyRects) {
   if (mEGLSurface != EGL_NO_SURFACE) {
     gl()->SwapBuffers();
   }
