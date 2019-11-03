@@ -181,8 +181,6 @@ struct PictureInfo {
 pub struct PictureCacheState {
     /// The tiles retained by this picture cache.
     pub tiles: FastHashMap<TileOffset, Tile>,
-    /// The current fractional offset of the cache transform root.
-    fract_offset: PictureVector2D,
     /// State of the spatial nodes from previous frame
     spatial_nodes: FastHashMap<SpatialNodeIndex, SpatialNodeDependency>,
     /// State of opacity bindings from previous frame
@@ -310,19 +308,19 @@ struct TilePreUpdateContext {
     /// Maps from picture cache coords -> world space coords.
     pic_to_world_mapper: SpaceMapper<PicturePixel, WorldPixel>,
 
-    /// If true, the fractional position of the picture cache changed,
-    /// requiring invalidation of all tiles.
-    fract_changed: bool,
+    /// The fractional position of the picture cache, which may
+    /// require invalidation of all tiles.
+    fract_offset: PictureVector2D,
 
     /// The optional background color of the picture cache instance
     background_color: Option<ColorF>,
+
+    /// The visible part of the screen in world coords.
+    global_screen_world_rect: WorldRect,
 }
 
 // Immutable context passed to picture cache tiles during post_update
 struct TilePostUpdateContext<'a> {
-    /// The visible part of the screen in world coords.
-    global_screen_world_rect: WorldRect,
-
     /// The calculated backdrop information for this cache instance.
     backdrop: BackdropInfo,
 
@@ -512,6 +510,13 @@ pub struct Tile {
     /// cache handle can be used. Tiles are invalidated during the
     /// build_dirty_regions method.
     pub is_valid: bool,
+    /// If true, this tile intersects with the currently visible screen
+    /// rect, and will be drawn.
+    pub is_visible: bool,
+    /// The current fractional offset of the cache transform root. If this changes,
+    /// all tiles need to be invalidated and redrawn, since snapping differences are
+    /// likely to occur.
+    fract_offset: PictureVector2D,
     /// If true, the content on this tile is the same as last frame.
     is_same_content: bool,
     /// The tile id is stable between display lists and / or frames,
@@ -546,6 +551,8 @@ impl Tile {
             prev_descriptor: TileDescriptor::new(),
             is_same_content: false,
             is_valid: false,
+            is_visible: false,
+            fract_offset: PictureVector2D::zero(),
             id,
             is_opaque: false,
             root: TileNode::new_leaf(Vec::new()),
@@ -614,14 +621,30 @@ impl Tile {
             .map(&self.rect)
             .expect("bug: map local tile rect");
 
-        // Do tile invalidation for any dependencies that we know now.
+        // Check if this tile is currently on screen.
+        self.is_visible = self.world_rect.intersects(&ctx.global_screen_world_rect);
+
+        // If the tile isn't visible, early exit, skipping the normal set up to
+        // validate dependencies. Instead, we will only compare the current tile
+        // dependencies the next time it comes into view.
+        if !self.is_visible {
+            return;
+        }
 
         // Start frame assuming that the tile has the same content.
         self.is_same_content = true;
 
+        // Determine if the fractional offset of the transform is different this frame
+        // from the currently cached tile set.
+        let fract_changed = (self.fract_offset.x - ctx.fract_offset.x).abs() > 0.001 ||
+                            (self.fract_offset.y - ctx.fract_offset.y).abs() > 0.001;
+        if fract_changed {
+            self.fract_offset = ctx.fract_offset;
+        }
+
         // If the fractional offset of the transform root changed, or tthe background
         // color of this tile changed, invalidate the whole thing.
-        if ctx.fract_changed || ctx.background_color != self.background_color {
+        if fract_changed || ctx.background_color != self.background_color {
             self.background_color = ctx.background_color;
             self.is_same_content = false;
             self.dirty_rect = rect;
@@ -642,6 +665,12 @@ impl Tile {
         &mut self,
         info: &PrimitiveDependencyInfo,
     ) {
+        // If this tile isn't currently visible, we don't want to update the dependencies
+        // for this tile, as an optimization, since it won't be drawn anyway.
+        if !self.is_visible {
+            return;
+        }
+
         // Mark if the tile is cacheable at all.
         if !info.is_cacheable {
             self.is_same_content = false;
@@ -725,6 +754,13 @@ impl Tile {
         ctx: &TilePostUpdateContext,
         state: &mut TilePostUpdateState,
     ) -> bool {
+        // If tile is not visible, just early out from here - we don't update dependencies
+        // so don't want to invalidate, merge, split etc. The tile won't need to be drawn
+        // (and thus updated / invalidated) until it is on screen again.
+        if !self.is_visible {
+            return false;
+        }
+
         // Check if this tile can be considered opaque.
         let tile_is_opaque = ctx.backdrop.rect.contains_rect(&self.clipped_rect);
         let opacity_changed = tile_is_opaque != self.is_opaque;
@@ -735,10 +771,6 @@ impl Tile {
 
         // If there are no primitives there is no need to draw or cache it.
         if self.current_descriptor.prims.is_empty() {
-            return false;
-        }
-
-        if !self.world_rect.intersects(&ctx.global_screen_world_rect) {
             return false;
         }
 
@@ -1250,10 +1282,6 @@ pub struct TileCacheInstance {
     /// The allowed subpixel mode for this surface, which depends on the detected
     /// opacity of the background.
     pub subpixel_mode: SubpixelMode,
-    /// The current fractional offset of the cache transform root. If this changes,
-    /// all tiles need to be invalidated and redrawn, since snapping differences are
-    /// likely to occur.
-    fract_offset: PictureVector2D,
     /// A list of clip handles that exist on every (top-level) primitive in this picture.
     /// It's often the case that these are root / fixed position clips. By handling them
     /// here, we can avoid applying them to the items, which reduces work, but more importantly
@@ -1297,7 +1325,6 @@ impl TileCacheInstance {
             background_color,
             backdrop: BackdropInfo::empty(),
             subpixel_mode: SubpixelMode::Allow,
-            fract_offset: PictureVector2D::zero(),
             root_transform: TransformKey::Local,
             shared_clips,
             shared_clip_chain,
@@ -1413,7 +1440,6 @@ impl TileCacheInstance {
         // If there are pending retained state, retrieve it.
         if let Some(prev_state) = frame_state.retained_tiles.caches.remove(&self.slice) {
             self.tiles.extend(prev_state.tiles);
-            self.fract_offset = prev_state.fract_offset;
             self.root_transform = prev_state.root_transform;
             self.spatial_nodes = prev_state.spatial_nodes;
             self.opacity_bindings = prev_state.opacity_bindings;
@@ -1476,14 +1502,6 @@ impl TileCacheInstance {
             ref_point.x.fract(),
             ref_point.y.fract(),
         );
-
-        // Determine if the fractional offset of the transform is different this frame
-        // from the currently cached tile set.
-        let fract_changed = (self.fract_offset.x - fract_offset.x).abs() > 0.001 ||
-                            (self.fract_offset.y - fract_offset.y).abs() > 0.001;
-        if fract_changed {
-            self.fract_offset = fract_offset;
-        }
 
         // Do a hacky diff of opacity binding values from the last frame. This is
         // used later on during tile invalidation tests.
@@ -1560,8 +1578,9 @@ impl TileCacheInstance {
             local_rect: self.local_rect,
             local_clip_rect: self.local_clip_rect,
             pic_to_world_mapper,
-            fract_changed,
+            fract_offset,
             background_color: self.background_color,
+            global_screen_world_rect: frame_context.global_screen_world_rect,
         };
 
         for y in y0 .. y1 {
@@ -1591,7 +1610,21 @@ impl TileCacheInstance {
                     &ctx,
                 );
 
-                world_culling_rect = world_culling_rect.union(&tile.world_rect);
+                // Only include the tiles that are currently in view into the world culling
+                // rect. This is a very important optimization for a couple of reasons:
+                // (1) Primitives that intersect with tiles in the grid that are not currently
+                //     visible can be skipped from primitive preparation, clip chain building
+                //     and tile dependency updates.
+                // (2) When we need to allocate an off-screen surface for a child picture (for
+                //     example a CSS filter) we clip the size of the GPU surface to the world
+                //     culling rect below (to ensure we draw enough of it to be sampled by any
+                //     tiles that reference it). Making the world culling rect only affected
+                //     by visible tiles (rather than the entire virtual tile display port) can
+                //     result in allocating _much_ smaller GPU surfaces for cases where the
+                //     true off-screen surface size is very large.
+                if tile.is_visible {
+                    world_culling_rect = world_culling_rect.union(&tile.world_rect);
+                }
 
                 self.tiles.insert(key, tile);
             }
@@ -1912,7 +1945,6 @@ impl TileCacheInstance {
         }
 
         let ctx = TilePostUpdateContext {
-            global_screen_world_rect: frame_context.global_screen_world_rect,
             backdrop: self.backdrop,
             spatial_nodes: &self.spatial_nodes,
             opacity_bindings: &self.opacity_bindings,
@@ -2752,7 +2784,6 @@ impl PicturePrimitive {
                         tiles: tile_cache.tiles,
                         spatial_nodes: tile_cache.spatial_nodes,
                         opacity_bindings: tile_cache.opacity_bindings,
-                        fract_offset: tile_cache.fract_offset,
                         root_transform: tile_cache.root_transform,
                         current_tile_size: tile_cache.current_tile_size,
                     },
