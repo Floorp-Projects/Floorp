@@ -6889,9 +6889,11 @@ nsHttpChannel::SetChannelIsForDownload(bool aChannelIsForDownload) {
 base::ProcessId nsHttpChannel::ProcessId() {
   nsCOMPtr<nsIParentChannel> parentChannel;
   NS_QueryNotificationCallbacks(this, parentChannel);
-  RefPtr<HttpChannelParent> httpParent = do_QueryObject(parentChannel);
-  if (httpParent) {
+  if (RefPtr<HttpChannelParent> httpParent = do_QueryObject(parentChannel)) {
     return httpParent->OtherPid();
+  }
+  if (RefPtr<DocumentChannelParent> docParent = do_QueryObject(parentChannel)) {
+    return docParent->OtherPid();
   }
   return base::GetCurrentProcId();
 }
@@ -6902,9 +6904,11 @@ bool nsHttpChannel::AttachStreamFilter(
 {
   nsCOMPtr<nsIParentChannel> parentChannel;
   NS_QueryNotificationCallbacks(this, parentChannel);
-  RefPtr<HttpChannelParent> httpParent = do_QueryObject(parentChannel);
-  if (httpParent) {
+  if (RefPtr<HttpChannelParent> httpParent = do_QueryObject(parentChannel)) {
     return httpParent->SendAttachStreamFilter(std::move(aEndpoint));
+  }
+  if (RefPtr<DocumentChannelParent> docParent = do_QueryObject(parentChannel)) {
+    return docParent->SendAttachStreamFilter(std::move(aEndpoint));
   }
 
   extensions::StreamFilterParent::Attach(this, std::move(aEndpoint));

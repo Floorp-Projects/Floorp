@@ -58,6 +58,8 @@ isThirdParty);
 
   async SetClassifierMatchedInfo(nsCString list, nsCString provider, nsCString fullHash);
   async SetClassifierMatchedTrackingInfo(nsCString lists, nsCString fullHash);
+  
+  async AttachStreamFilter(Endpoint<PStreamFilterParent> aEndpoint);
 
   // This message is sent to a child that has been redirected to another process.
   // As a consequence, it should cleanup the channel listeners and remove the

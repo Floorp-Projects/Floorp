@@ -19,6 +19,7 @@
 #include "nsQueryObject.h"
 #include "nsSocketTransportService2.h"
 #include "nsStringStream.h"
+#include "mozilla/net/DocumentChannelChild.h"
 
 namespace mozilla {
 namespace extensions {
@@ -455,15 +456,21 @@ StreamFilterParent::OnStartRequest(nsIRequest* aRequest) {
   AssertIsMainThread();
 
   if (aRequest != mChannel) {
-    mDisconnected = true;
+    RefPtr<net::DocumentChannelChild> docChild = do_QueryObject(mChannel);
+    if (docChild && docChild->GetRedirectChain().IsEmpty()) {
+      mChannel = do_QueryInterface(aRequest);
+    } else {
+      mDisconnected = true;
 
-    RefPtr<StreamFilterParent> self(this);
-    RunOnActorThread(FUNC, [=] {
-      if (self->IPCActive()) {
-        self->mState = State::Disconnected;
-        CheckResult(self->SendError(NS_LITERAL_CSTRING("Channel redirected")));
-      }
-    });
+      RefPtr<StreamFilterParent> self(this);
+      RunOnActorThread(FUNC, [=] {
+        if (self->IPCActive()) {
+          self->mState = State::Disconnected;
+          CheckResult(
+              self->SendError(NS_LITERAL_CSTRING("Channel redirected")));
+        }
+      });
+    }
   }
 
   if (!mDisconnected) {
