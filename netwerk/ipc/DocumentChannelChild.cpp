@@ -23,6 +23,8 @@
 #include "nsSerializationHelper.h"
 #include "nsStringStream.h"
 #include "mozilla/dom/nsCSPContext.h"
+#include "nsStreamListenerWrapper.h"
+#include "mozilla/extensions/StreamFilterParent.h"
 
 using namespace mozilla::dom;
 using namespace mozilla::ipc;
@@ -42,6 +44,7 @@ NS_INTERFACE_MAP_BEGIN(DocumentChannelChild)
         "likely broken");
   }
   NS_INTERFACE_MAP_ENTRY(nsIClassifiedChannel)
+  NS_INTERFACE_MAP_ENTRY(nsITraceableChannel)
   NS_INTERFACE_MAP_ENTRY_CONCRETE(DocumentChannelChild)
 NS_INTERFACE_MAP_END_INHERITING(nsBaseChannel)
 
@@ -495,6 +498,28 @@ IPCResult DocumentChannelChild::RecvSetClassifierMatchedTrackingInfo(
 
   SetMatchedTrackingInfo(lists, fullhashes);
   return IPC_OK();
+}
+
+mozilla::ipc::IPCResult DocumentChannelChild::RecvAttachStreamFilter(
+    Endpoint<extensions::PStreamFilterParent>&& aEndpoint) {
+  extensions::StreamFilterParent::Attach(this, std::move(aEndpoint));
+  return IPC_OK();
+}
+
+//-----------------------------------------------------------------------------
+// DocumentChannelChild::nsITraceableChannel
+//-----------------------------------------------------------------------------
+
+NS_IMETHODIMP
+DocumentChannelChild::SetNewListener(nsIStreamListener* aListener,
+                                     nsIStreamListener** _retval) {
+  NS_ENSURE_ARG_POINTER(aListener);
+
+  nsCOMPtr<nsIStreamListener> wrapper = new nsStreamListenerWrapper(mListener);
+
+  wrapper.forget(_retval);
+  mListener = aListener;
+  return NS_OK;
 }
 
 //-----------------------------------------------------------------------------
