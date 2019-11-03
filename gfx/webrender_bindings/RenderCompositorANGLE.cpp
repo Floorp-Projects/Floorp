@@ -12,6 +12,7 @@
 #include "mozilla/gfx/DeviceManagerDx.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/Logging.h"
+#include "mozilla/gfx/StackArray.h"
 #include "mozilla/layers/HelpersD3D11.h"
 #include "mozilla/layers/SyncObject.h"
 #include "mozilla/StaticPrefs_gfx.h"
@@ -55,7 +56,9 @@ RenderCompositorANGLE::RenderCompositorANGLE(
       mEGLConfig(nullptr),
       mEGLSurface(nullptr),
       mUseTripleBuffering(false),
-      mUseAlpha(false) {}
+      mUseAlpha(false),
+      mUsePartialPresent(false),
+      mFullRender(false) {}
 
 RenderCompositorANGLE::~RenderCompositorANGLE() {
   DestroyEGLSurface();
@@ -207,6 +210,7 @@ bool RenderCompositorANGLE::Initialize() {
       DXGI_RGBA color = {1.0f, 1.0f, 1.0f, 1.0f};
       swapChain1->SetBackgroundColor(&color);
       mSwapChain = swapChain1;
+      mSwapChain1 = swapChain1;
       mUseTripleBuffering = useTripleBuffering;
     }
   }
@@ -236,6 +240,13 @@ bool RenderCompositorANGLE::Initialize() {
       gfxCriticalNote << "Could not create swap chain: " << gfx::hexa(hr);
       return false;
     }
+
+    RefPtr<IDXGISwapChain1> swapChain1;
+    hr = mSwapChain->QueryInterface(
+        (IDXGISwapChain1**)getter_AddRefs(swapChain1));
+    if (SUCCEEDED(hr)) {
+      mSwapChain1 = swapChain1;
+    }
   }
 
   // We need this because we don't want DXGI to respond to Alt+Enter.
@@ -253,6 +264,8 @@ bool RenderCompositorANGLE::Initialize() {
       return false;
     }
   }
+
+  InitializeUsePartialPresent();
 
   return true;
 }
@@ -285,6 +298,7 @@ void RenderCompositorANGLE::CreateSwapChainForDCompIfPossible(
       CreateSwapChainForDComp(useTripleBuffering, useAlpha);
   if (swapChain1) {
     mSwapChain = swapChain1;
+    mSwapChain1 = swapChain1;
     mUseTripleBuffering = useTripleBuffering;
     mUseAlpha = useAlpha;
     mDCLayerTree->SetDefaultSwapChain(swapChain1);
@@ -401,7 +415,7 @@ bool RenderCompositorANGLE::BeginFrame() {
   return true;
 }
 
-void RenderCompositorANGLE::EndFrame() {
+void RenderCompositorANGLE::EndFrame(const FfiVec<DeviceIntRect>& aDirtyRects) {
   InsertPresentWaitQuery();
 
   if (!UseCompositor()) {
@@ -414,7 +428,43 @@ void RenderCompositorANGLE::EndFrame() {
         fxrHandler->UpdateOutput(mCtx);
       }
     }
-    mSwapChain->Present(0, 0);
+
+    const LayoutDeviceIntSize& bufferSize = mBufferSize.ref();
+
+    if (mUsePartialPresent) {
+      // Clear full render flag.
+      mFullRender = false;
+      // If there is no diry rect, we skip SwapChain present.
+      if (aDirtyRects.length > 0) {
+        StackArray<RECT, 1> rects(aDirtyRects.length);
+        for (uintptr_t i = 0; i < aDirtyRects.length; i++) {
+          const DeviceIntRect& rect = aDirtyRects.data[i];
+          // Clip rect to bufferSize
+          rects[i].left =
+              std::max(0, std::min(rect.origin.x, bufferSize.width));
+          rects[i].top =
+              std::max(0, std::min(rect.origin.y, bufferSize.height));
+          rects[i].right = std::max(
+              0, std::min(rect.origin.x + rect.size.width, bufferSize.width));
+          rects[i].bottom = std::max(
+              0, std::min(rect.origin.y + rect.size.height, bufferSize.height));
+        }
+
+        DXGI_PRESENT_PARAMETERS params;
+        PodZero(&params);
+        params.DirtyRectsCount = aDirtyRects.length;
+        params.pDirtyRects = rects.data();
+
+        HRESULT hr;
+        hr = mSwapChain1->Present1(0, 0, &params);
+        if (FAILED(hr) && hr != DXGI_STATUS_OCCLUDED) {
+          gfxCriticalNote << "Present1 failed: " << gfx::hexa(hr);
+          mFullRender = true;
+        }
+      }
+    } else {
+      mSwapChain->Present(0, 0);
+    }
   }
 
   if (mDCLayerTree) {
@@ -464,6 +514,9 @@ bool RenderCompositorANGLE::ResizeBufferIfNeeded() {
     return false;
   }
 
+  if (mUsePartialPresent) {
+    mFullRender = true;
+  }
   return true;
 }
 
@@ -673,6 +726,25 @@ void RenderCompositorANGLE::AddSurface(wr::NativeSurfaceId aId,
                                        wr::DeviceIntPoint aPosition,
                                        wr::DeviceIntRect aClipRect) {
   mDCLayerTree->AddSurface(aId, aPosition, aClipRect);
+}
+
+void RenderCompositorANGLE::InitializeUsePartialPresent() {
+  if (UseCompositor() || !mSwapChain1 ||
+      mWidget->AsWindows()->HasFxrOutputHandler() ||
+      StaticPrefs::gfx_webrender_max_partial_present_rects_AtStartup() <= 0) {
+    mUsePartialPresent = false;
+  } else {
+    mUsePartialPresent = true;
+  }
+}
+
+bool RenderCompositorANGLE::RequestFullRender() { return mFullRender; }
+
+uint32_t RenderCompositorANGLE::GetMaxPartialPresentRects() {
+  if (!mUsePartialPresent) {
+    return 0;
+  }
+  return StaticPrefs::gfx_webrender_max_partial_present_rects_AtStartup();
 }
 
 }  // namespace wr

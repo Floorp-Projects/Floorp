@@ -91,7 +91,7 @@ bool RenderCompositorOGL::BeginFrame() {
   return true;
 }
 
-void RenderCompositorOGL::EndFrame() {
+void RenderCompositorOGL::EndFrame(const FfiVec<DeviceIntRect>& aDirtyRects) {
   InsertFrameDoneSync();
   mGL->SwapBuffers();
 

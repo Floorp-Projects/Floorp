@@ -40,7 +40,7 @@ class RenderCompositorANGLE : public RenderCompositor {
   bool Initialize();
 
   bool BeginFrame() override;
-  void EndFrame() override;
+  void EndFrame(const FfiVec<DeviceIntRect>& aDirtyRects) override;
   bool WaitForGPU() override;
   void Pause() override;
   bool Resume() override;
@@ -76,8 +76,13 @@ class RenderCompositorANGLE : public RenderCompositor {
   void AddSurface(wr::NativeSurfaceId aId, wr::DeviceIntPoint aPosition,
                   wr::DeviceIntRect aClipRect) override;
 
+  // Interface for partial present
+  bool RequestFullRender() override;
+  uint32_t GetMaxPartialPresentRects() override;
+
  protected:
   bool UseCompositor();
+  void InitializeUsePartialPresent();
   void InsertPresentWaitQuery();
   bool WaitForPreviousPresentQuery();
   bool ResizeBufferIfNeeded();
@@ -99,6 +104,7 @@ class RenderCompositorANGLE : public RenderCompositor {
   RefPtr<ID3D11Device> mDevice;
   RefPtr<ID3D11DeviceContext> mCtx;
   RefPtr<IDXGISwapChain> mSwapChain;
+  RefPtr<IDXGISwapChain1> mSwapChain1;
 
   UniquePtr<DCLayerTree> mDCLayerTree;
 
@@ -106,6 +112,8 @@ class RenderCompositorANGLE : public RenderCompositor {
   RefPtr<ID3D11Query> mRecycledQuery;
 
   Maybe<LayoutDeviceIntSize> mBufferSize;
+  bool mUsePartialPresent;
+  bool mFullRender;
 };
 
 }  // namespace wr

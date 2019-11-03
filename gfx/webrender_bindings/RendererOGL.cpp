@@ -19,6 +19,23 @@
 namespace mozilla {
 namespace wr {
 
+class MOZ_STACK_CLASS AutoWrRenderResult {
+ public:
+  explicit AutoWrRenderResult(WrRenderResult&& aResult) : mResult(aResult) {}
+
+  ~AutoWrRenderResult() { wr_render_result_delete(mResult); }
+
+  bool Result() const { return mResult.result; }
+
+  FfiVec<DeviceIntRect> DirtyRects() const { return mResult.dirty_rects; }
+
+ private:
+  const WrRenderResult mResult;
+
+  AutoWrRenderResult(const AutoWrRenderResult&) = delete;
+  AutoWrRenderResult& operator=(const AutoWrRenderResult&) = delete;
+};
+
 wr::WrExternalImage wr_renderer_lock_external_image(
     void* aObj, wr::ExternalImageId aId, uint8_t aChannelIndex,
     wr::ImageRendering aRendering) {
@@ -120,10 +137,15 @@ bool RendererOGL::UpdateAndRender(const Maybe<gfx::IntSize>& aReadbackSize,
 
   wr_renderer_update(mRenderer);
 
+  if (mCompositor->RequestFullRender()) {
+    wr_renderer_force_redraw(mRenderer);
+  }
+
   auto size = mCompositor->GetBufferSize();
 
-  if (!wr_renderer_render(mRenderer, size.width, size.height, aHadSlowFrame,
-                          aOutStats)) {
+  AutoWrRenderResult result(wr_renderer_render(
+      mRenderer, size.width, size.height, aHadSlowFrame, aOutStats));
+  if (!result.Result()) {
     RenderThread::Get()->HandleWebRenderError(WebRenderError::RENDER);
     mCompositor->GetWidget()->PostRender(&widgetContext);
     return false;
@@ -140,7 +162,7 @@ bool RendererOGL::UpdateAndRender(const Maybe<gfx::IntSize>& aReadbackSize,
 
   mScreenshotGrabber.MaybeGrabScreenshot(mRenderer, size.ToUnknownSize());
 
-  mCompositor->EndFrame();
+  mCompositor->EndFrame(result.DirtyRects());
 
   mCompositor->GetWidget()->PostRender(&widgetContext);
 

@@ -23,7 +23,7 @@ class RenderCompositorEGL : public RenderCompositor {
   virtual ~RenderCompositorEGL();
 
   bool BeginFrame() override;
-  void EndFrame() override;
+  void EndFrame(const FfiVec<DeviceIntRect>& aDirtyRects) override;
   void Pause() override;
   bool Resume() override;
 

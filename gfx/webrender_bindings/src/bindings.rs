@@ -611,19 +611,34 @@ pub extern "C" fn wr_renderer_update(renderer: &mut Renderer) {
     renderer.update();
 }
 
+#[repr(C)]
+pub struct WrRenderResult {
+    result: bool,
+    dirty_rects: FfiVec<DeviceIntRect>,
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn wr_render_result_delete(_result: WrRenderResult) {
+    // _result will be dropped here, and the drop impl on FfiVec will free
+    // the underlying vec memory
+}
+
 #[no_mangle]
 pub extern "C" fn wr_renderer_render(renderer: &mut Renderer,
                                      width: i32,
                                      height: i32,
                                      had_slow_frame: bool,
-                                     out_stats: &mut RendererStats) -> bool {
+                                     out_stats: &mut RendererStats) -> WrRenderResult {
     if had_slow_frame {
       renderer.notify_slow_frame();
     }
     match renderer.render(DeviceIntSize::new(width, height)) {
         Ok(results) => {
             *out_stats = results.stats;
-            true
+            WrRenderResult {
+                result: true,
+                dirty_rects: FfiVec::from_vec(results.dirty_rects),
+            }
         }
         Err(errors) => {
             for e in errors {
@@ -633,9 +648,17 @@ pub extern "C" fn wr_renderer_render(renderer: &mut Renderer,
                     gfx_critical_note(msg.as_ptr());
                 }
             }
-            false
+            WrRenderResult {
+                result: false,
+                dirty_rects: FfiVec::from_vec(vec![]),
+            }
         },
     }
+}
+
+#[no_mangle]
+pub extern "C" fn wr_renderer_force_redraw(renderer: &mut Renderer) {
+    renderer.force_redraw();
 }
 
 #[no_mangle]
@@ -1280,6 +1303,7 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
                                 enclosing_size_of_op: VoidPtrToSizeFn,
                                 document_id: u32,
                                 compositor: *mut c_void,
+                                max_partial_present_rects: usize,
                                 out_handle: &mut *mut DocumentHandle,
                                 out_renderer: &mut *mut Renderer,
                                 out_max_texture_size: *mut i32)
@@ -1339,7 +1363,7 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
         }
     } else {
         CompositorConfig::Draw {
-            max_partial_present_rects: 0,
+            max_partial_present_rects,
         }
     };
 
