@@ -182,6 +182,15 @@ const SELECT_INHERITED_COLORS_ON_OPTIONS_DONT_GET_UNIQUE_RULES_IF_RULE_SET_ON_SE
    </select></body></html>
 `;
 
+const SELECT_FONT_INHERITS_TO_OPTION = `
+   <html><head><style>
+     select { font-family: monospace }
+   </style></head><body><select id='one'>
+     <option>One</option>
+     <option style="font-family: sans-serif">Two</option>
+   </select></body></html>
+`;
+
 function getSystemColor(color) {
   // Need to convert system color to RGB color.
   let textarea = document.createElementNS(
@@ -246,7 +255,7 @@ function testOptionColors(index, item, menulist) {
   }
 }
 
-async function testSelectColors(select, itemCount, options) {
+async function openSelectPopup(select) {
   const pageUrl = "data:text/html," + escape(select);
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, pageUrl);
 
@@ -263,7 +272,11 @@ async function testSelectColors(select, itemCount, options) {
     gBrowser.selectedBrowser
   );
   await popupShownPromise;
+  return { tab, menulist, selectPopup };
+}
 
+async function testSelectColors(select, itemCount, options) {
+  let { tab, menulist, selectPopup } = await openSelectPopup(select);
   if (options.waitForComputedStyle) {
     let property = options.waitForComputedStyle.property;
     let value = options.waitForComputedStyle.value;
@@ -624,3 +637,29 @@ add_task(
     BrowserTestUtils.removeTab(gBrowser.selectedTab);
   }
 );
+
+add_task(async function test_select_font_inherits_to_option() {
+  let { tab, menulist, selectPopup } = await openSelectPopup(
+    SELECT_FONT_INHERITS_TO_OPTION
+  );
+
+  let popupFont = getComputedStyle(selectPopup).fontFamily;
+  let items = menulist.querySelectorAll("menuitem");
+  is(items.length, 2, "Should have two options");
+  let firstItemFont = getComputedStyle(items[0]).fontFamily;
+  let secondItemFont = getComputedStyle(items[1]).fontFamily;
+
+  is(
+    popupFont,
+    firstItemFont,
+    "First menuitem's font should be inherited from the select"
+  );
+  isnot(
+    popupFont,
+    secondItemFont,
+    "Second menuitem's font should be the author specified one"
+  );
+
+  await hideSelectPopup(selectPopup, "escape");
+  BrowserTestUtils.removeTab(tab);
+});

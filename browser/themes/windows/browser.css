@@ -859,6 +859,9 @@ panel[touchmode] .PanelUI-subView #appMenu-zoom-controls > .subviewbutton-iconic
 #ContentSelectDropdown > menupopup > menuitem {
   padding: 0 6px;
   border-width: 0;
+}
+
+#ContentSelectDropdown > menupopup {
   font: -moz-list;
 }
 
