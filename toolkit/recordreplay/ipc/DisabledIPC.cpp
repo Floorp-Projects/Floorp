@@ -13,6 +13,8 @@
 namespace mozilla {
 namespace recordreplay {
 
+void NewCheckpoint() { MOZ_CRASH(); }
+
 namespace child {
 
 void InitRecordingOrReplayingProcess(int* aArgc, char*** aArgv) {
@@ -25,8 +27,6 @@ char* PrefsShmemContents(size_t aPrefsLen) { MOZ_CRASH(); }
 base::ProcessId MiddlemanProcessId() { MOZ_CRASH(); }
 
 base::ProcessId ParentProcessId() { MOZ_CRASH(); }
-
-void CreateCheckpoint() { MOZ_CRASH(); }
 
 void SetVsyncObserver(VsyncObserver* aObserver) { MOZ_CRASH(); }
 
