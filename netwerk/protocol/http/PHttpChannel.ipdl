@@ -190,6 +190,10 @@ child:
 
   async OverrideReferrerInfoDuringBeginConnect(nsIReferrerInfo referrerInfo);
 
+  async OnProgress(int64_t progress, int64_t progressMax);
+
+  async OnStatus(nsresult status);
+
 both:
   // After receiving this message, the parent also calls
   // SendFinishInterceptedRedirect, and makes sure not to send any more messages
