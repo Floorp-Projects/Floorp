@@ -122,6 +122,17 @@ add_task(async function testNoTracking() {
   });
 });
 
+add_task(async function testReportBreakageError() {
+  Services.prefs.setBoolPref(TP_PREF, true);
+  // Make sure that we correctly strip the query.
+  let url = TRACKING_PAGE + "?a=b&1=abc&unicode=🦊";
+  await BrowserTestUtils.withNewTab(url, async function() {
+    await testReportBreakage(TRACKING_PAGE, "trackingprotection", true);
+  });
+
+  Services.prefs.clearUserPref(TP_PREF);
+});
+
 add_task(async function testTP() {
   Services.prefs.setBoolPref(TP_PREF, true);
   // Make sure that we correctly strip the query.
@@ -185,7 +196,7 @@ add_task(async function testCM() {
   Services.prefs.clearUserPref(CB_PREF);
 });
 
-async function testReportBreakage(url, tags) {
+async function testReportBreakage(url, tags, error = false) {
   // Setup a mock server for receiving breakage reports.
   let server = new HttpServer();
   server.start(-1);
@@ -299,12 +310,35 @@ async function testReportBreakage(url, tags) {
         "Should send the correct form data"
       );
 
+      if (error) {
+        response.setStatusLine(request.httpVersion, 500, "Request failed");
+      } else {
+        response.setStatusLine(request.httpVersion, 201, "Entry created");
+      }
+
       resolve();
     });
 
     comments.value = "This is a comment";
     submitButton.click();
   });
+
+  let errorMessage = document.getElementById(
+    "protections-popup-sendReportView-report-error"
+  );
+  if (error) {
+    await BrowserTestUtils.waitForCondition(() =>
+      BrowserTestUtils.is_visible(errorMessage)
+    );
+    is(
+      comments.value,
+      "This is a comment",
+      "Comment not cleared in case of an error"
+    );
+    gProtectionsHandler._protectionsPopup.hidePopup();
+  } else {
+    ok(BrowserTestUtils.is_hidden(errorMessage), "Error message not shown");
+  }
 
   await popuphidden;
 
