@@ -1809,12 +1809,9 @@ HttpChannelParent::OnProgress(nsIRequest* aRequest, nsISupports* aContext,
        "]\n",
        this, aProgress, aProgressMax));
   MOZ_ASSERT(NS_IsMainThread());
-  // Either IPC channel is closed or background channel
-  // is ready to send OnProgress.
-  MOZ_ASSERT(mIPCClosed || mBgParent);
 
   // If IPC channel is closed, there is nothing we can do. Just return NS_OK.
-  if (mIPCClosed || !mBgParent) {
+  if (mIPCClosed) {
     return NS_OK;
   }
 
@@ -1828,7 +1825,7 @@ HttpChannelParent::OnProgress(nsIRequest* aRequest, nsISupports* aContext,
   // Send OnProgress events to the child for data upload progress notifications
   // (i.e. status == NS_NET_STATUS_SENDING_TO) or if the channel has
   // LOAD_BACKGROUND set.
-  if (!mBgParent->OnProgress(aProgress, aProgressMax)) {
+  if (!SendOnProgress(aProgress, aProgressMax)) {
     return NS_ERROR_UNEXPECTED;
   }
 
@@ -1841,12 +1838,9 @@ HttpChannelParent::OnStatus(nsIRequest* aRequest, nsISupports* aContext,
   LOG(("HttpChannelParent::OnStatus [this=%p status=%" PRIx32 "]\n", this,
        static_cast<uint32_t>(aStatus)));
   MOZ_ASSERT(NS_IsMainThread());
-  // Either IPC channel is closed or background channel
-  // is ready to send OnStatus.
-  MOZ_ASSERT(mIPCClosed || mBgParent);
 
   // If IPC channel is closed, there is nothing we can do. Just return NS_OK.
-  if (mIPCClosed || !mBgParent) {
+  if (mIPCClosed) {
     return NS_OK;
   }
 
@@ -1861,7 +1855,7 @@ HttpChannelParent::OnStatus(nsIRequest* aRequest, nsISupports* aContext,
   }
 
   // Otherwise, send to child now
-  if (!mBgParent->OnStatus(aStatus)) {
+  if (!SendOnStatus(aStatus)) {
     return NS_ERROR_UNEXPECTED;
   }
 

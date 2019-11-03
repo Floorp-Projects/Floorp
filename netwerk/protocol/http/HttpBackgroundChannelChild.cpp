@@ -184,62 +184,6 @@ IPCResult HttpBackgroundChannelChild::RecvOnStopRequest(
   return IPC_OK();
 }
 
-IPCResult HttpBackgroundChannelChild::RecvOnProgress(
-    const int64_t& aProgress, const int64_t& aProgressMax) {
-  LOG(("HttpBackgroundChannelChild::RecvOnProgress [this=%p progress=%" PRId64
-       " max=%" PRId64 "]\n",
-       this, aProgress, aProgressMax));
-  MOZ_ASSERT(OnSocketThread());
-
-  if (NS_WARN_IF(!mChannelChild)) {
-    return IPC_OK();
-  }
-
-  if (IsWaitingOnStartRequest()) {
-    LOG(("  > pending until OnStartRequest [progress=%" PRId64 " max=%" PRId64
-         "]\n",
-         aProgress, aProgressMax));
-
-    mQueuedRunnables.AppendElement(
-        NewRunnableMethod<const int64_t, const int64_t>(
-            "HttpBackgroundChannelChild::RecvOnProgress", this,
-            &HttpBackgroundChannelChild::RecvOnProgress, aProgress,
-            aProgressMax));
-
-    return IPC_OK();
-  }
-
-  mChannelChild->ProcessOnProgress(aProgress, aProgressMax);
-
-  return IPC_OK();
-}
-
-IPCResult HttpBackgroundChannelChild::RecvOnStatus(const nsresult& aStatus) {
-  LOG(("HttpBackgroundChannelChild::RecvOnStatus [this=%p status=%" PRIx32
-       "]\n",
-       this, static_cast<uint32_t>(aStatus)));
-  MOZ_ASSERT(OnSocketThread());
-
-  if (NS_WARN_IF(!mChannelChild)) {
-    return IPC_OK();
-  }
-
-  if (IsWaitingOnStartRequest()) {
-    LOG(("  > pending until OnStartRequest [status=%" PRIx32 "]\n",
-         static_cast<uint32_t>(aStatus)));
-
-    mQueuedRunnables.AppendElement(NewRunnableMethod<const nsresult>(
-        "HttpBackgroundChannelChild::RecvOnStatus", this,
-        &HttpBackgroundChannelChild::RecvOnStatus, aStatus));
-
-    return IPC_OK();
-  }
-
-  mChannelChild->ProcessOnStatus(aStatus);
-
-  return IPC_OK();
-}
-
 IPCResult HttpBackgroundChannelChild::RecvFlushedForDiversion() {
   LOG(("HttpBackgroundChannelChild::RecvFlushedForDiversion [this=%p]\n",
        this));

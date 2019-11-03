@@ -213,6 +213,11 @@ class HttpChannelChild final : public PHttpChannelChild,
                                  const nsAString& aURL,
                                  const nsAString& aContentType) override;
 
+  mozilla::ipc::IPCResult RecvOnProgress(const int64_t& aProgress,
+                                         const int64_t& aProgressMax) override;
+
+  mozilla::ipc::IPCResult RecvOnStatus(const nsresult& aStatus) override;
+
  private:
   // We want to handle failure result of AsyncOpen, hence AsyncOpen calls the
   // Internal method
@@ -263,8 +268,6 @@ class HttpChannelChild final : public PHttpChannelChild,
   void ProcessOnStopRequest(const nsresult& aStatusCode,
                             const ResourceTimingStruct& aTiming,
                             const nsHttpHeaderArray& aResponseTrailers);
-  void ProcessOnProgress(const int64_t& aProgress, const int64_t& aProgressMax);
-  void ProcessOnStatus(const nsresult& aStatus);
   void ProcessFlushedForDiversion();
   void ProcessDivertMessages();
   void ProcessNotifyChannelClassifierProtectionDisabled(
@@ -487,8 +490,6 @@ class HttpChannelChild final : public PHttpChannelChild,
                      const ResourceTimingStruct& timing,
                      const nsHttpHeaderArray& aResponseTrailers);
   void MaybeDivertOnStop(const nsresult& aChannelStatus);
-  void OnProgress(const int64_t& progress, const int64_t& progressMax);
-  void OnStatus(const nsresult& status);
   void FailedAsyncOpen(const nsresult& status);
   void HandleAsyncAbort();
   void Redirect1Begin(const uint32_t& registrarId, const URIParams& newUri,
