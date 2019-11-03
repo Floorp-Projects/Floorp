@@ -108,31 +108,6 @@ add_task(async function testReportBreakageCancel() {
   Services.prefs.clearUserPref(TP_PREF);
 });
 
-add_task(async function testNoTracking() {
-  await BrowserTestUtils.withNewTab(BENIGN_PAGE, async function() {
-    await openProtectionsPopup();
-
-    let siteNotWorkingButton = document.getElementById(
-      "protections-popup-tp-switch-breakage-link"
-    );
-    ok(
-      BrowserTestUtils.is_hidden(siteNotWorkingButton),
-      "site not working button is not visible"
-    );
-  });
-});
-
-add_task(async function testReportBreakageError() {
-  Services.prefs.setBoolPref(TP_PREF, true);
-  // Make sure that we correctly strip the query.
-  let url = TRACKING_PAGE + "?a=b&1=abc&unicode=🦊";
-  await BrowserTestUtils.withNewTab(url, async function() {
-    await testReportBreakage(TRACKING_PAGE, "trackingprotection", true);
-  });
-
-  Services.prefs.clearUserPref(TP_PREF);
-});
-
 add_task(async function testTP() {
   Services.prefs.setBoolPref(TP_PREF, true);
   // Make sure that we correctly strip the query.
@@ -164,11 +139,9 @@ add_task(async function testFP() {
   // Make sure that we correctly strip the query.
   let url = TRACKING_PAGE + "?a=b&1=abc&unicode=🦊";
   await BrowserTestUtils.withNewTab(url, async function(browser) {
-    let promise = waitForContentBlockingEvent();
     await SpecialPowers.spawn(browser, [], function() {
       content.postMessage("fingerprinting", "*");
     });
-    await promise;
 
     await testReportBreakage(TRACKING_PAGE, "fingerprinting");
   });
@@ -183,11 +156,9 @@ add_task(async function testCM() {
   // Make sure that we correctly strip the query.
   let url = TRACKING_PAGE + "?a=b&1=abc&unicode=🦊";
   await BrowserTestUtils.withNewTab(url, async function(browser) {
-    let promise = waitForContentBlockingEvent();
     await SpecialPowers.spawn(browser, [], function() {
       content.postMessage("cryptomining", "*");
     });
-    await promise;
 
     await testReportBreakage(TRACKING_PAGE, "cryptomining");
   });
@@ -196,7 +167,7 @@ add_task(async function testCM() {
   Services.prefs.clearUserPref(CB_PREF);
 });
 
-async function testReportBreakage(url, tags, error = false) {
+async function testReportBreakage(url, tags) {
   // Setup a mock server for receiving breakage reports.
   let server = new HttpServer();
   server.start(-1);
@@ -310,35 +281,12 @@ async function testReportBreakage(url, tags, error = false) {
         "Should send the correct form data"
       );
 
-      if (error) {
-        response.setStatusLine(request.httpVersion, 500, "Request failed");
-      } else {
-        response.setStatusLine(request.httpVersion, 201, "Entry created");
-      }
-
       resolve();
     });
 
     comments.value = "This is a comment";
     submitButton.click();
   });
-
-  let errorMessage = document.getElementById(
-    "protections-popup-sendReportView-report-error"
-  );
-  if (error) {
-    await BrowserTestUtils.waitForCondition(() =>
-      BrowserTestUtils.is_visible(errorMessage)
-    );
-    is(
-      comments.value,
-      "This is a comment",
-      "Comment not cleared in case of an error"
-    );
-    gProtectionsHandler._protectionsPopup.hidePopup();
-  } else {
-    ok(BrowserTestUtils.is_hidden(errorMessage), "Error message not shown");
-  }
 
   await popuphidden;
 
