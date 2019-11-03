@@ -13,6 +13,7 @@
 #include "nsBaseChannel.h"
 #include "nsIChildChannel.h"
 #include "nsIClassifiedChannel.h"
+#include "nsITraceableChannel.h"
 
 #define DOCUMENT_CHANNEL_CHILD_IID                   \
   {                                                  \
@@ -26,7 +27,8 @@ namespace net {
 
 class DocumentChannelChild final : public PDocumentChannelChild,
                                    public nsBaseChannel,
-                                   public nsIClassifiedChannel {
+                                   public nsIClassifiedChannel,
+                                   public nsITraceableChannel {
  public:
   DocumentChannelChild(nsDocShellLoadState* aLoadState,
                        class LoadInfo* aLoadInfo,
@@ -37,6 +39,7 @@ class DocumentChannelChild final : public PDocumentChannelChild,
   NS_DECL_ISUPPORTS_INHERITED;
   NS_DECL_NSIASYNCVERIFYREDIRECTCALLBACK
   NS_DECL_NSICLASSIFIEDCHANNEL
+  NS_DECL_NSITRACEABLECHANNEL
 
   NS_DECLARE_STATIC_IID_ACCESSOR(DOCUMENT_CHANNEL_CHILD_IID)
 
@@ -68,6 +71,9 @@ class DocumentChannelChild final : public PDocumentChannelChild,
       const Maybe<uint32_t>& aContentDisposition,
       const Maybe<nsString>& aContentDispositionFilename,
       RedirectToRealChannelResolver&& aResolve);
+
+  mozilla::ipc::IPCResult RecvAttachStreamFilter(
+      Endpoint<extensions::PStreamFilterParent>&& aEndpoint);
 
   mozilla::ipc::IPCResult RecvNotifyClassificationFlags(
       const uint32_t& aClassificationFlags, const bool& aIsThirdParty);
