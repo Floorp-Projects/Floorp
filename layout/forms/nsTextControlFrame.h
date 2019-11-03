@@ -19,6 +19,7 @@
 class nsISelectionController;
 class EditorInitializerEntryTracker;
 namespace mozilla {
+class AutoTextControlHandlingState;
 class TextEditor;
 class TextControlState;
 enum class PseudoStyleType : uint8_t;
@@ -204,6 +205,8 @@ class nsTextControlFrame final : public nsContainerFrame,
  protected:
   class EditorInitializer;
   friend class EditorInitializer;
+  friend class mozilla::AutoTextControlHandlingState;  // needs access to
+                                                       // CacheValue
   friend class mozilla::TextControlState;  // needs access to UpdateValueDisplay
 
   // Temp reference to scriptrunner
