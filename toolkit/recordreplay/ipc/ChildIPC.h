@@ -16,6 +16,9 @@ namespace mozilla {
 class VsyncObserver;
 
 namespace recordreplay {
+
+void NewCheckpoint();
+
 namespace child {
 
 // This file has the public API for definitions used in facilitating IPC
@@ -30,7 +33,11 @@ base::ProcessId MiddlemanProcessId();
 base::ProcessId ParentProcessId();
 
 // Create a normal checkpoint, if execution has not diverged from the recording.
-void CreateCheckpoint();
+inline void CreateCheckpoint() {
+  if (IsRecordingOrReplaying() && !HasDivergedFromRecording()) {
+    NewCheckpoint();
+  }
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // Painting Coordination
