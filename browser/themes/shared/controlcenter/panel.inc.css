@@ -809,6 +809,10 @@ description#identity-popup-content-verifier,
   padding: 0 var(--horizontal-padding);
 }
 
+.protections-popup-category[uidisabled] {
+  display: none;
+}
+
 .identity-popup-permission-item {
   padding-inline-end: 8px;
   margin-top: 0.25em;
