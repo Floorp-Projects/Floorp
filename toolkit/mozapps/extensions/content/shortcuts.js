@@ -226,9 +226,17 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   }
 
   function setInputMessage(type, input, messageId, args) {
-    let { x, y, height } = input.getBoundingClientRect();
+    let { x, y, height, right } = input.getBoundingClientRect();
     error.style.top = `${y + window.scrollY + height - 5}px`;
-    error.style.left = `${x}px`;
+
+    if (document.dir == "ltr") {
+      error.style.left = `${x}px`;
+      error.style.right = null;
+    } else {
+      error.style.right = `${document.documentElement.clientWidth - right}px`;
+      error.style.left = null;
+    }
+
     error.setAttribute("type", type);
     document.l10n.setAttributes(
       error.querySelector(".error-message-label"),
