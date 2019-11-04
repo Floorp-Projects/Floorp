@@ -16,6 +16,7 @@ using mozilla::gfx::IntRect from "mozilla/gfx/Rect.h";
 using mozilla::gfx::IntSize from "mozilla/gfx/Point.h";
 using mozilla::ipc::SharedMemoryBasic::Handle from "mozilla/ipc/SharedMemoryBasic.h";
 using gfxImageFormat from "gfxTypes.h";
+using mozilla::layers::MaybeVideoBridgeSource from "mozilla/layers/VideoBridgeUtils.h";
 
 namespace mozilla {
 namespace layers {
@@ -101,6 +102,7 @@ union GPUVideoSubDescriptor {
 struct SurfaceDescriptorGPUVideo {
   uint64_t handle;
   GPUVideoSubDescriptor subdesc;
+  MaybeVideoBridgeSource source;
 };
 
 struct RGBDescriptor {
