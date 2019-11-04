@@ -44,27 +44,6 @@
 namespace mozilla {
 namespace dom {
 
-void XMLHttpRequestWorker::ResponseData::Unlink() {
-  mResponseBlobImpl = nullptr;
-  mResponseBlob = nullptr;
-  mResponseArrayBufferBuilder = nullptr;
-  mResponseArrayBufferValue = nullptr;
-  mResponseJSONValue.setUndefined();
-}
-
-void XMLHttpRequestWorker::ResponseData::Trace(const TraceCallbacks& aCallbacks,
-                                               void* aClosure) {
-  ResponseData* tmp = this;
-  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mResponseArrayBufferValue)
-  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mResponseJSONValue)
-}
-
-void XMLHttpRequestWorker::ResponseData::Traverse(
-    nsCycleCollectionTraversalCallback& cb) {
-  ResponseData* tmp = this;
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mResponseBlob)
-}
-
 /**
  *  XMLHttpRequest in workers
  *
@@ -1381,8 +1360,10 @@ void SendRunnable::RunOnMainThread(ErrorResult& aRv) {
 XMLHttpRequestWorker::XMLHttpRequestWorker(WorkerPrivate* aWorkerPrivate)
     : mWorkerPrivate(aWorkerPrivate),
       mResponseType(XMLHttpRequestResponseType::_empty),
-      mResponseData(new ResponseData()),
       mStateData(new StateData()),
+      mResponseData(new ResponseData()),
+      mResponseArrayBufferValue(nullptr),
+      mResponseJSONValue(JS::UndefinedValue()),
       mTimeout(0),
       mBackgroundRequest(false),
       mWithCredentials(false),
@@ -1416,19 +1397,23 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(XMLHttpRequestWorker)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(XMLHttpRequestWorker,
                                                   XMLHttpRequestEventTarget)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mUpload)
-  tmp->mResponseData->Traverse(cb);
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mResponseBlob)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(XMLHttpRequestWorker,
                                                 XMLHttpRequestEventTarget)
   tmp->ReleaseProxy(XHRIsGoingAway);
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mUpload)
-  tmp->mResponseData->Unlink();
+  tmp->mResponseData = nullptr;
+  tmp->mResponseBlob = nullptr;
+  tmp->mResponseArrayBufferValue = nullptr;
+  tmp->mResponseJSONValue.setUndefined();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(XMLHttpRequestWorker,
                                                XMLHttpRequestEventTarget)
-  tmp->mResponseData->Trace(aCallbacks, aClosure);
+  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mResponseArrayBufferValue)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mResponseJSONValue)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 /* static */
@@ -2189,16 +2174,16 @@ void XMLHttpRequestWorker::GetResponse(JSContext* aCx,
         return;
       }
 
-      if (!mResponseData->mResponseArrayBufferValue) {
-        mResponseData->mResponseArrayBufferValue =
+      if (!mResponseArrayBufferValue) {
+        mResponseArrayBufferValue =
             mResponseData->mResponseArrayBufferBuilder->TakeArrayBuffer(aCx);
-        if (!mResponseData->mResponseArrayBufferValue) {
+        if (!mResponseArrayBufferValue) {
           aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
           return;
         }
       }
 
-      aResponse.setObject(*mResponseData->mResponseArrayBufferValue);
+      aResponse.setObject(*mResponseArrayBufferValue);
       return;
     }
 
@@ -2208,13 +2193,12 @@ void XMLHttpRequestWorker::GetResponse(JSContext* aCx,
         return;
       }
 
-      if (!mResponseData->mResponseBlob) {
-        mResponseData->mResponseBlob =
+      if (!mResponseBlob) {
+        mResponseBlob =
             Blob::Create(GetOwnerGlobal(), mResponseData->mResponseBlobImpl);
       }
 
-      if (!GetOrCreateDOMReflector(aCx, mResponseData->mResponseBlob,
-                                   aResponse)) {
+      if (!GetOrCreateDOMReflector(aCx, mResponseBlob, aResponse)) {
         aResponse.setNull();
       }
 
@@ -2227,21 +2211,21 @@ void XMLHttpRequestWorker::GetResponse(JSContext* aCx,
         return;
       }
 
-      if (mResponseData->mResponseJSONValue.isUndefined()) {
+      if (mResponseJSONValue.isUndefined()) {
         // The Unicode converter has already zapped the BOM if there was one
         JS::Rooted<JS::Value> value(aCx);
         if (!JS_ParseJSON(aCx, mResponseData->mResponseJSON.BeginReading(),
                           mResponseData->mResponseJSON.Length(), &value)) {
           JS_ClearPendingException(aCx);
-          mResponseData->mResponseJSONValue.setNull();
+          mResponseJSONValue.setNull();
         } else {
-          mResponseData->mResponseJSONValue = value;
+          mResponseJSONValue = value;
         }
 
         mResponseData->mResponseJSON.Truncate();
       }
 
-      aResponse.set(mResponseData->mResponseJSONValue);
+      aResponse.set(mResponseJSONValue);
       return;
     }
 
@@ -2276,10 +2260,17 @@ void XMLHttpRequestWorker::UpdateState(
 
   UniquePtr<ResponseData> responseData = std::move(aResponseData);
   if (responseData) {
+    ResetResponseData();
     mResponseData = std::move(responseData);
   }
 
   XMLHttpRequest_Binding::ClearCachedResponseTextValue(this);
+}
+
+void XMLHttpRequestWorker::ResetResponseData() {
+  mResponseBlob = nullptr;
+  mResponseArrayBufferValue = nullptr;
+  mResponseJSONValue.setUndefined();
 }
 
 }  // namespace dom
