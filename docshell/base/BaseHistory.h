@@ -16,7 +16,7 @@ class BaseHistory : public IHistory {
  public:
   nsresult RegisterVisitedCallback(nsIURI*, dom::Link*) final;
   void UnregisterVisitedCallback(nsIURI*, dom::Link*) final;
-  void NotifyVisited(nsIURI* aURI) final;
+  void NotifyVisited(nsIURI*, VisitedStatus) final;
 
  protected:
   static constexpr const size_t kTrackedUrisInitialSize = 64;
@@ -34,7 +34,7 @@ class BaseHistory : public IHistory {
   using ObserverArray = nsTObserverArray<dom::Link*>;
   struct ObservingLinks {
     ObserverArray mLinks;
-    bool mKnownVisited = false;
+    VisitedStatus mStatus = VisitedStatus::Unknown;
 
     size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const {
       return mLinks.ShallowSizeOfExcludingThis(aMallocSizeOf);
@@ -46,21 +46,17 @@ class BaseHistory : public IHistory {
    * Mark all links for the given URI in the given document as visited. Used
    * within NotifyVisited.
    */
-  void NotifyVisitedForDocument(nsIURI*, dom::Document*);
+  void NotifyVisitedForDocument(nsIURI*, dom::Document*, VisitedStatus);
 
   /**
    * Dispatch a runnable for the document passed in which will call
    * NotifyVisitedForDocument with the correct URI and Document.
    */
-  void DispatchNotifyVisited(nsIURI*, dom::Document*);
+  void DispatchNotifyVisited(nsIURI*, dom::Document*, VisitedStatus);
 
  protected:
   // A map from URI to links that depend on that URI, and whether that URI is
-  // known-to-be-visited already.
-  //
-  // FIXME(emilio, bug 1506842): The known-to-be-visited stuff seems it could
-  // cause timeable differences, probably we should store whether it's
-  // known-to-be-unvisited too.
+  // known-to-be-visited-or-unvisited already.
   nsDataHashtable<nsURIHashKey, ObservingLinks> mTrackedURIs;
 };
 

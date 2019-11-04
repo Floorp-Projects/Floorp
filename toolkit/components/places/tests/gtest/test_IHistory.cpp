@@ -9,6 +9,7 @@
 #include "nsIPrefBranch.h"
 #include "nsString.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/StaticPrefs_layout.h"
 #include "nsNetUtil.h"
 
 #include "mock_Link.h"
@@ -119,7 +120,7 @@ void test_wait_checkpoint() {
 // sets the nsCOMPtr's to nullptr, freeing the reference.
 namespace test_unvisited_does_not_notify {
 nsCOMPtr<nsIURI> testURI;
-RefPtr<Link> testLink;
+RefPtr<mock_Link> testLink;
 }  // namespace test_unvisited_does_not_notify
 void test_unvisited_does_not_notify_part1() {
   using namespace test_unvisited_does_not_notify;
@@ -166,16 +167,14 @@ void test_unvisited_does_not_notify_part2() {
   using namespace test_unvisited_does_not_notify;
 
   // We would have had a failure at this point had the content node been told it
-  // was visited.  Therefore, it is safe to unregister our content node.
-  nsCOMPtr<IHistory> history = do_get_IHistory();
-  history->UnregisterVisitedCallback(testURI, testLink);
+  // was visited. Therefore, now we change it so that it expects a visited
+  // notification, and unregisters itself after addURI.
+  testLink->AwaitNewNotification(expect_visit);
+  addURI(testURI);
 
   // Clear the stored variables now.
   testURI = nullptr;
   testLink = nullptr;
-
-  // Run the next test.
-  run_next_test();
 }
 
 void test_same_uri_notifies_both() {
@@ -206,8 +205,6 @@ void test_unregistered_visited_does_not_notify() {
 
   nsCOMPtr<nsIURI> testURI = new_test_uri();
   RefPtr<Link> link = new mock_Link(expect_no_visit);
-
-  // Now, register our Link to be notified.
   nsCOMPtr<IHistory> history(do_get_IHistory());
   nsresult rv = history->RegisterVisitedCallback(testURI, link);
   do_check_success(rv);
@@ -230,13 +227,20 @@ void test_unregistered_visited_does_not_notify() {
 void test_new_visit_notifies_waiting_Link() {
   // Create our test Link.  The callback function will release the reference we
   // have on the link.
-  RefPtr<Link> link = new mock_Link(expect_visit);
+  //
+  // Note that this will query the database and we'll get an _unvisited_
+  // notification, then (after we addURI) a _visited_ one.
+  RefPtr<mock_Link> link = new mock_Link(expect_no_visit);
 
   // Now, register our content node to be notified.
   nsCOMPtr<nsIURI> testURI = new_test_uri();
   nsCOMPtr<IHistory> history = do_get_IHistory();
   nsresult rv = history->RegisterVisitedCallback(testURI, link);
   do_check_success(rv);
+
+  SpinEventLoopUntil([&]() { return link->GotNotified(); });
+
+  link->AwaitNewNotification(expect_visit);
 
   // Add ourselves to history.
   addURI(testURI);
@@ -504,7 +508,7 @@ void test_new_visit_adds_place_guid() {
   PlaceRecord place;
   do_get_place(visitedURI, place);
   do_check_eq(place.visitCount, 1);
-  do_check_eq(place.guid.Length(), 12);
+  do_check_eq(place.guid.Length(), 12u);
 
   run_next_test();
 }

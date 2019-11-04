@@ -11,6 +11,7 @@
 
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/ResultExtensions.h"
+#include "mozilla/StaticPrefs_layout.h"
 
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/Element.h"
@@ -244,12 +245,11 @@ class OnVisitedCallback final : public nsIAndroidEventCallback {
 
   NS_IMETHOD
   OnSuccess(JS::HandleValue aData, JSContext* aCx) override {
-    bool shouldNotify = false;
-    shouldNotify = ShouldNotifyVisited(aCx, aData);
+    Maybe<bool> visitedState = GetVisitedValue(aCx, aData);
     JS_ClearPendingException(aCx);
-    if (shouldNotify) {
+    if (visitedState) {
       AutoTArray<VisitedURI, 1> visitedURIs;
-      visitedURIs.AppendElement(VisitedURI{mURI, true});
+      visitedURIs.AppendElement(VisitedURI{mURI, *visitedState});
       mHistory->HandleVisitedState(visitedURIs);
     }
     return NS_OK;
@@ -261,11 +261,11 @@ class OnVisitedCallback final : public nsIAndroidEventCallback {
  private:
   virtual ~OnVisitedCallback() {}
 
-  bool ShouldNotifyVisited(JSContext* aCx, JS::HandleValue aData) {
+  Maybe<bool> GetVisitedValue(JSContext* aCx, JS::HandleValue aData) {
     if (NS_WARN_IF(!aData.isBoolean())) {
-      return false;
+      return Nothing();
     }
-    return aData.toBoolean();
+    return Some(aData.toBoolean());
   }
 
   RefPtr<GeckoViewHistory> mHistory;
@@ -541,14 +541,16 @@ void GeckoViewHistory::HandleVisitedState(
   nsTArray<ContentParent*> cplist;
   ContentParent::GetAll(cplist);
   if (!cplist.IsEmpty()) {
-    nsTArray<URIParams> visitedURIs(aVisitedURIs.Length());
+    nsTArray<VisitedQueryResult> visitedURIs(aVisitedURIs.Length());
     for (const VisitedURI& visitedURI : aVisitedURIs) {
-      if (!visitedURI.mVisited) {
+      if (!visitedURI.mVisited &&
+          !StaticPrefs::layout_css_notify_of_unvisited()) {
         continue;
       }
-      URIParams uri;
-      SerializeURI(visitedURI.mURI, uri);
-      visitedURIs.AppendElement(uri);
+
+      VisitedQueryResult& result = *visitedURIs.AppendElement();
+      SerializeURI(visitedURI.mURI, result.uri());
+      result.visited() = visitedURI.mVisited;
     }
     if (visitedURIs.IsEmpty()) {
       return;
@@ -562,9 +564,13 @@ void GeckoViewHistory::HandleVisitedState(
   // check if we're tracking any links in the parent, and notify them if so.
   if (!mTrackedURIs.IsEmpty()) {
     for (const VisitedURI& visitedURI : aVisitedURIs) {
-      if (visitedURI.mVisited) {
-        NotifyVisited(visitedURI.mURI);
+      if (!visitedURI.mVisited &&
+          !StaticPrefs::layout_css_notify_of_unvisited()) {
+        continue;
       }
+      auto status = visitedURI.mVisited ? VisitedStatus::Visited
+                                        : VisitedStatus::Unvisited;
+      NotifyVisited(visitedURI.mURI, status);
     }
   }
 }

@@ -38,6 +38,7 @@
 #include "nsPrintfCString.h"
 #include "nsTHashtable.h"
 #include "jsapi.h"
+#include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/dom/ContentProcessMessageManager.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/PlacesObservers.h"
@@ -455,16 +456,18 @@ class VisitedQuery final : public AsyncStatementCallback,
       return NS_OK;
     }
 
-    if (mIsVisited) {
+    if (mIsVisited || StaticPrefs::layout_css_notify_of_unvisited()) {
       History* history = History::GetService();
       NS_ENSURE_STATE(history);
-      history->NotifyVisited(mURI);
+      auto status = mIsVisited ? IHistory::VisitedStatus::Visited
+                               : IHistory::VisitedStatus::Unvisited;
+      history->NotifyVisited(mURI, status);
       if (BrowserTabsRemoteAutostart()) {
-        AutoTArray<URIParams, 1> uris;
-        URIParams uri;
-        SerializeURI(mURI, uri);
-        uris.AppendElement(std::move(uri));
-        history->NotifyVisitedParent(uris);
+        AutoTArray<VisitedQueryResult, 1> results;
+        VisitedQueryResult& result = *results.AppendElement();
+        result.visited() = mIsVisited;
+        SerializeURI(mURI, result.uri());
+        history->NotifyVisitedParent(results);
       }
     }
 
@@ -526,7 +529,7 @@ class NotifyManyVisitsObservers : public Runnable {
     if (aNow - aPlace.visitTime < RECENTLY_VISITED_URIS_MAX_AGE) {
       mHistory->AppendToRecentlyVisitedURIs(aURI, aPlace.hidden);
     }
-    mHistory->NotifyVisited(aURI);
+    mHistory->NotifyVisited(aURI, IHistory::VisitedStatus::Visited);
 
     if (aPlace.titleChanged) {
       aNavHistory->NotifyTitleChange(aURI, aPlace.title, aPlace.guid);
@@ -606,30 +609,30 @@ class NotifyManyVisitsObservers : public Runnable {
     }
 
     PRTime now = PR_Now();
-    if (mPlaces.Length() > 0) {
-      nsTArray<URIParams> serializableUris(mPlaces.Length());
+    if (!mPlaces.IsEmpty()) {
+      nsTArray<VisitedQueryResult> results(mPlaces.Length());
       for (uint32_t i = 0; i < mPlaces.Length(); ++i) {
         nsresult rv =
             NotifyVisit(navHistory, obsService, now, uris[i], mPlaces[i]);
         NS_ENSURE_SUCCESS(rv, rv);
 
         if (BrowserTabsRemoteAutostart()) {
-          URIParams serializedUri;
-          SerializeURI(uris[i], serializedUri);
-          serializableUris.AppendElement(std::move(serializedUri));
+          VisitedQueryResult& result = *results.AppendElement();
+          SerializeURI(uris[i], result.uri());
+          result.visited() = true;
         }
       }
-      mHistory->NotifyVisitedParent(serializableUris);
+      mHistory->NotifyVisitedParent(results);
     } else {
-      AutoTArray<URIParams, 1> serializableUris;
+      AutoTArray<VisitedQueryResult, 1> results;
       nsresult rv = NotifyVisit(navHistory, obsService, now, uris[0], mPlace);
       NS_ENSURE_SUCCESS(rv, rv);
 
       if (BrowserTabsRemoteAutostart()) {
-        URIParams serializedUri;
-        SerializeURI(uris[0], serializedUri);
-        serializableUris.AppendElement(std::move(serializedUri));
-        mHistory->NotifyVisitedParent(serializableUris);
+        VisitedQueryResult& result = *results.AppendElement();
+        SerializeURI(uris[0], result.uri());
+        result.visited() = true;
+        mHistory->NotifyVisitedParent(results);
       }
     }
 
@@ -1467,15 +1470,13 @@ History::~History() {
 
 void History::InitMemoryReporter() { RegisterWeakMemoryReporter(this); }
 
-void History::NotifyVisitedParent(const nsTArray<URIParams>& aURIs) {
+void History::NotifyVisitedParent(const nsTArray<VisitedQueryResult>& aURIs) {
   MOZ_ASSERT(XRE_IsParentProcess());
   nsTArray<ContentParent*> cplist;
   ContentParent::GetAll(cplist);
 
-  if (!cplist.IsEmpty()) {
-    for (uint32_t i = 0; i < cplist.Length(); ++i) {
-      Unused << cplist[i]->SendNotifyVisited(aURIs);
-    }
+  for (auto* cp : cplist) {
+    Unused << cp->SendNotifyVisited(aURIs);
   }
 }
 

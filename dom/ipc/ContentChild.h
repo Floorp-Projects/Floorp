@@ -321,7 +321,7 @@ class ContentChild final : public PContentChild,
   mozilla::ipc::IPCResult RecvBidiKeyboardNotify(const bool& isLangRTL,
                                                  const bool& haveBidiKeyboards);
 
-  mozilla::ipc::IPCResult RecvNotifyVisited(nsTArray<URIParams>&& aURIs);
+  mozilla::ipc::IPCResult RecvNotifyVisited(nsTArray<VisitedQueryResult>&&);
 
   // auto remove when alertfinished is received.
   nsresult AddRemoteAlertObserver(const nsString& aData,

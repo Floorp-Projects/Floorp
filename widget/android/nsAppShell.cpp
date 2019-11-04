@@ -337,17 +337,6 @@ class GeckoAppShellSupport final
     gLocationCallback->Update(geoPosition);
   }
 
-  static void NotifyUriVisited(jni::String::Param aUri) {
-#ifdef MOZ_ANDROID_HISTORY
-    nsCOMPtr<IHistory> history = services::GetHistoryService();
-    nsCOMPtr<nsIURI> visitedURI;
-    if (history &&
-        NS_SUCCEEDED(NS_NewURI(getter_AddRefs(visitedURI), aUri->ToString()))) {
-      history->NotifyVisited(visitedURI);
-    }
-#endif
-  }
-
   static void NotifyAlertListener(jni::String::Param aName,
                                   jni::String::Param aTopic,
                                   jni::String::Param aCookie) {
