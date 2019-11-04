@@ -48,6 +48,16 @@ permalink: /changelog/
 
 * **feature-push**
   * ⚠️ The `AutoPushFeature` now throws when reaching exceptions in the native layer that are unrecoverable.
+  
+# 19.0.1
+
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v19.0.0...v19.0.1)
+* [Dependencies](https://github.com/mozilla-mobile/android-components/blob/v19.0.1/buildSrc/src/main/java/Dependencies.kt)
+* [Gecko](https://github.com/mozilla-mobile/android-components/blob/v19.0.1/buildSrc/src/main/java/Gecko.kt)
+* [Configuration](https://github.com/mozilla-mobile/android-components/blob/v19.0.1/buildSrc/src/main/java/Config.kt)
+
+* **service-glean**
+   * Bumped the Glean SDK version to 19.1.0. This fixes a startup crash on Android SDK 22 devices due to missing `stderr`.
 
 # 19.0.0
 
