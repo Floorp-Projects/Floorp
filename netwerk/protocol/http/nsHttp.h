@@ -54,7 +54,7 @@ enum class SpdyVersion {
   // 31 was h2-16
 };
 
-const nsCString kHttp3Version = NS_LITERAL_CSTRING("h3-23");
+extern const nsCString kHttp3Version;
 const char kHttp3VersionHEX[] = "ff00000017";  // this is draft 23.
 
 //-----------------------------------------------------------------------------
