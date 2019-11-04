@@ -8783,7 +8783,7 @@ bool BaseCompiler::emitEnd() {
   LabelKind kind;
   ResultType type;
   NothingVector unused_values;
-  if (!iter_.readEnd(&kind, &type, &unused_values)) {
+  if (!iter_.readEnd(&kind, &type, &unused_values, &unused_values)) {
     return false;
   }
 

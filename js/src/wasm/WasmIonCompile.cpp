@@ -1836,7 +1836,8 @@ static bool EmitEnd(FunctionCompiler& f) {
   LabelKind kind;
   ResultType type;
   DefVector preJoinDefs;
-  if (!f.iter().readEnd(&kind, &type, &preJoinDefs)) {
+  DefVector resultsForEmptyElse;
+  if (!f.iter().readEnd(&kind, &type, &preJoinDefs, &resultsForEmptyElse)) {
     return false;
   }
 
@@ -1866,10 +1867,14 @@ static bool EmitEnd(FunctionCompiler& f) {
         return false;
       }
       break;
-    case LabelKind::Then:
+    case LabelKind::Then: {
       // If we didn't see an Else, create a trivial else block so that we create
       // a diamond anyway, to preserve Ion invariants.
       if (!f.switchToElse(block, &block)) {
+        return false;
+      }
+
+      if (!f.pushDefs(resultsForEmptyElse)) {
         return false;
       }
 
@@ -1877,6 +1882,7 @@ static bool EmitEnd(FunctionCompiler& f) {
         return false;
       }
       break;
+    }
     case LabelKind::Else:
       if (!f.joinIfElse(block, &postJoinDefs)) {
         return false;
