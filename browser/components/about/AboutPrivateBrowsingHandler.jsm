@@ -42,6 +42,9 @@ var AboutPrivateBrowsingHandler = {
   ],
 
   init() {
+    if (this._inited) {
+      return;
+    }
     this.receiveMessage = this.receiveMessage.bind(this);
     this.pageListener = new RemotePages("about:privatebrowsing");
     for (let topic of this._topics) {
