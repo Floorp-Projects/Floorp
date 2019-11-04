@@ -61,6 +61,7 @@ class SimulationMenuButton extends Component {
       simulator: PropTypes.object.isRequired,
       simulation: PropTypes.object.isRequired,
       dispatch: PropTypes.func.isRequired,
+      toolboxDoc: PropTypes.object.isRequired,
     };
   }
 
@@ -92,7 +93,7 @@ class SimulationMenuButton extends Component {
   }
 
   render() {
-    const { simulation } = this.props;
+    const { simulation, toolboxDoc } = this.props;
     const simulationMenuButtonId = "simulation-menu-button";
     const toolbarLabelID = "accessibility-simulation-label";
     const currSimulation = Object.entries(simulation).find(
@@ -145,7 +146,7 @@ class SimulationMenuButton extends Component {
           className: `devtools-button toolbar-menu-button simulation${
             currSimulation ? " active" : ""
           }`,
-          toolboxDoc: document,
+          toolboxDoc,
           label: L10N.getStr(
             SIMULATION_MENU_LABELS[currSimulation ? currSimulation[0] : "NONE"]
           ),

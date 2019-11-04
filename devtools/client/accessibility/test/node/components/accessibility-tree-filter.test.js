@@ -64,7 +64,9 @@ function checkFiltersState(wrapper, expected) {
 describe("AccessibilityTreeFilter component:", () => {
   it("audit filter not filtered", () => {
     const store = setupStore();
-    const wrapper = mount(Provider({ store }, AccessibilityTreeFilter()));
+    const wrapper = mount(
+      Provider({ store }, AccessibilityTreeFilter({ toolboxDoc: document }))
+    );
     const accTreeFilter = wrapper.find(AccessibilityTreeFilterClass);
     const toolbar = accTreeFilter.childAt(0);
 
@@ -110,7 +112,9 @@ describe("AccessibilityTreeFilter component:", () => {
         },
       },
     });
-    const wrapper = mount(Provider({ store }, AccessibilityTreeFilter()));
+    const wrapper = mount(
+      Provider({ store }, AccessibilityTreeFilter({ toolboxDoc: document }))
+    );
     expect(wrapper.html()).toMatchSnapshot();
     checkFiltersState(wrapper, {
       filters: [
@@ -134,7 +138,9 @@ describe("AccessibilityTreeFilter component:", () => {
         },
       },
     });
-    const wrapper = mount(Provider({ store }, AccessibilityTreeFilter()));
+    const wrapper = mount(
+      Provider({ store }, AccessibilityTreeFilter({ toolboxDoc: document }))
+    );
     expect(wrapper.html()).toMatchSnapshot();
     checkFiltersState(wrapper, {
       filters: [
@@ -158,7 +164,9 @@ describe("AccessibilityTreeFilter component:", () => {
         },
       },
     });
-    const wrapper = mount(Provider({ store }, AccessibilityTreeFilter()));
+    const wrapper = mount(
+      Provider({ store }, AccessibilityTreeFilter({ toolboxDoc: document }))
+    );
     expect(wrapper.html()).toMatchSnapshot();
     checkFiltersState(wrapper, {
       filters: [
@@ -182,7 +190,9 @@ describe("AccessibilityTreeFilter component:", () => {
         },
       },
     });
-    const wrapper = mount(Provider({ store }, AccessibilityTreeFilter()));
+    const wrapper = mount(
+      Provider({ store }, AccessibilityTreeFilter({ toolboxDoc: document }))
+    );
     const filters = getMenuItems(wrapper, ".filter");
     expect(wrapper.html()).toMatchSnapshot();
     checkMenuItem(filters[1], { checked: true, disabled: true });
@@ -202,7 +212,9 @@ describe("AccessibilityTreeFilter component:", () => {
         },
       },
     });
-    const wrapper = mount(Provider({ store }, AccessibilityTreeFilter()));
+    const wrapper = mount(
+      Provider({ store }, AccessibilityTreeFilter({ toolboxDoc: document }))
+    );
     expect(wrapper.html()).toMatchSnapshot();
     checkFiltersState(wrapper, {
       filters: [
@@ -217,7 +229,9 @@ describe("AccessibilityTreeFilter component:", () => {
 
   it("toggle filter", () => {
     const store = setupStore();
-    const wrapper = mount(Provider({ store }, AccessibilityTreeFilter()));
+    const wrapper = mount(
+      Provider({ store }, AccessibilityTreeFilter({ toolboxDoc: document }))
+    );
     const filters = getMenuItems(wrapper, ".filter");
 
     expect(wrapper.html()).toMatchSnapshot();
@@ -228,7 +242,9 @@ describe("AccessibilityTreeFilter component:", () => {
 
   it("render filters after state changes", () => {
     const store = setupStore();
-    const wrapper = mount(Provider({ store }, AccessibilityTreeFilter()));
+    const wrapper = mount(
+      Provider({ store }, AccessibilityTreeFilter({ toolboxDoc: document }))
+    );
     const tests = [
       {
         expected: {

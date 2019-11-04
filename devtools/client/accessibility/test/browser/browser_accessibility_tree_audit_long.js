@@ -3,7 +3,7 @@
 
 "use strict";
 
-/* global toggleMenuItem */
+/* global toggleMenuItem, TREE_FILTERS_MENU_ID */
 
 const header =
   '<h1 style="color:rgba(255,0,0,0.1); ' +
@@ -64,8 +64,8 @@ const tests = [
   },
   {
     desc: "Run an audit from a11y panel toolbar by activating a filter.",
-    setup: async ({ doc }) => {
-      await toggleMenuItem(doc, 0, 1);
+    setup: async ({ doc, toolbox }) => {
+      await toggleMenuItem(doc, toolbox.doc, TREE_FILTERS_MENU_ID, 1);
     },
     expected: {
       tree: auditInitial,
@@ -83,8 +83,8 @@ const tests = [
   },
   {
     desc: "Click on the filter again.",
-    setup: async ({ doc }) => {
-      await toggleMenuItem(doc, 0, 1);
+    setup: async ({ doc, toolbox }) => {
+      await toggleMenuItem(doc, toolbox.doc, TREE_FILTERS_MENU_ID, 1);
     },
     expected: {
       tree: resetAfterAudit,
