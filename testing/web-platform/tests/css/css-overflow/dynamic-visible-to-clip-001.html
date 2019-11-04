@@ -1,5 +1,4 @@
 <!doctype html>
-<html class="reftest-wait">
 <meta charset="utf-8">
 <title>Overflow areas are updated when dynamically changed to overflow: clip</title>
 <link rel="help" href="https://drafts.csswg.org/css-overflow/#valdef-overflow-clip">
@@ -31,10 +30,7 @@
 onload = function() {
   let target = document.getElementById("target");
   window.unused = target.getBoundingClientRect(); // Update layout
-  requestAnimationFrame(() => requestAnimationFrame(() => {
-    target.style.overflow = "-moz-hidden-unscrollable";
-    target.style.overflow = "clip";
-    document.documentElement.removeAttribute("class");
-  }));
+  target.style.overflow = "-moz-hidden-unscrollable";
+  target.style.overflow = "clip";
 }
 </script>
