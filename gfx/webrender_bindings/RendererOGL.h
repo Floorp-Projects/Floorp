@@ -58,13 +58,16 @@ class RendererOGL {
   void Update();
 
   /// This can be called on the render thread only.
-  bool UpdateAndRender(const Maybe<gfx::IntSize>& aReadbackSize,
-                       const Maybe<wr::ImageFormat>& aReadbackFormat,
-                       const Maybe<Range<uint8_t>>& aReadbackBuffer,
-                       bool aHadSlowFrame, RendererStats* aOutStats);
+  RenderedFrameId UpdateAndRender(const Maybe<gfx::IntSize>& aReadbackSize,
+                                  const Maybe<wr::ImageFormat>& aReadbackFormat,
+                                  const Maybe<Range<uint8_t>>& aReadbackBuffer,
+                                  bool aHadSlowFrame, RendererStats* aOutStats);
 
   /// This can be called on the render thread only.
   void WaitForGPU();
+
+  /// This can be called on the render thread only.
+  RenderedFrameId GetLastCompletedFrameId();
 
   /// This can be called on the render thread only.
   void SetProfilerEnabled(bool aEnabled);
