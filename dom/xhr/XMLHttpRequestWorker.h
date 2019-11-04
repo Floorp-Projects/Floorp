@@ -22,45 +22,28 @@ class WorkerPrivate;
 
 class XMLHttpRequestWorker final : public XMLHttpRequest {
  public:
-  // This defines the xhr.response value.
-  struct ResponseData {
-    nsresult mResponseResult;
-
-    // responseType is empty or text.
-    XMLHttpRequestStringSnapshot mResponseText;
-
-    // responseType is blob
-    RefPtr<BlobImpl> mResponseBlobImpl;
-    RefPtr<Blob> mResponseBlob;
-
-    // responseType is arrayBuffer;
-    RefPtr<ArrayBufferBuilder> mResponseArrayBufferBuilder;
-    JS::Heap<JSObject*> mResponseArrayBufferValue;
-
-    // responseType is json
-    nsString mResponseJSON;
-    JS::Heap<JS::Value> mResponseJSONValue;
-
-    ResponseData()
-        : mResponseResult(NS_OK),
-          mResponseArrayBufferValue(nullptr),
-          mResponseJSONValue(JS::UndefinedValue()) {}
-
-    void Unlink();
-    void Trace(const TraceCallbacks& aCallbacks, void* aClosure);
-    void Traverse(nsCycleCollectionTraversalCallback& aCb);
-  };
-
   struct StateData {
+    XMLHttpRequestStringSnapshot mResponseText;
     nsString mResponseURL;
     uint32_t mStatus;
     nsCString mStatusText;
     uint16_t mReadyState;
     bool mFlagSend;
+    JS::Heap<JS::Value> mResponse;
+    nsresult mResponseTextResult;
     nsresult mStatusResult;
+    nsresult mResponseResult;
 
     StateData()
-        : mStatus(0), mReadyState(0), mFlagSend(false), mStatusResult(NS_OK) {}
+        : mStatus(0),
+          mReadyState(0),
+          mFlagSend(false),
+          mResponse(JS::UndefinedValue()),
+          mResponseTextResult(NS_OK),
+          mStatusResult(NS_OK),
+          mResponseResult(NS_OK) {}
+
+    void trace(JSTracer* trc);
   };
 
  private:
@@ -68,11 +51,8 @@ class XMLHttpRequestWorker final : public XMLHttpRequest {
   WorkerPrivate* mWorkerPrivate;
   RefPtr<StrongWorkerRef> mWorkerRef;
   RefPtr<Proxy> mProxy;
-
   XMLHttpRequestResponseType mResponseType;
-
-  UniquePtr<ResponseData> mResponseData;
-  UniquePtr<StateData> mStateData;
+  StateData mStateData;
 
   uint32_t mTimeout;
 
@@ -97,7 +77,7 @@ class XMLHttpRequestWorker final : public XMLHttpRequest {
   void Unpin();
 
   virtual uint16_t ReadyState() const override {
-    return mStateData->mReadyState;
+    return mStateData.mReadyState;
   }
 
   virtual void Open(const nsACString& aMethod, const nsAString& aUrl,
@@ -161,17 +141,17 @@ class XMLHttpRequestWorker final : public XMLHttpRequest {
   virtual void Abort(ErrorResult& aRv) override;
 
   virtual void GetResponseURL(nsAString& aUrl) override {
-    aUrl = mStateData->mResponseURL;
+    aUrl = mStateData.mResponseURL;
   }
 
   uint32_t GetStatus(ErrorResult& aRv) override {
-    aRv = mStateData->mStatusResult;
-    return mStateData->mStatus;
+    aRv = mStateData.mStatusResult;
+    return mStateData.mStatus;
   }
 
   virtual void GetStatusText(nsACString& aStatusText,
                              ErrorResult& aRv) override {
-    aStatusText = mStateData->mStatusText;
+    aStatusText = mStateData.mStatusText;
   }
 
   virtual void GetResponseHeader(const nsACString& aHeader,
@@ -215,8 +195,13 @@ class XMLHttpRequestWorker final : public XMLHttpRequest {
 
   XMLHttpRequestUpload* GetUploadObjectNoCreate() const { return mUpload; }
 
-  void UpdateState(UniquePtr<StateData>&& aStateData,
-                   UniquePtr<ResponseData>&& aResponseData);
+  void UpdateState(const StateData& aStateData,
+                   bool aUseCachedArrayBufferResponse);
+
+  void NullResponseText() {
+    mStateData.mResponseText.SetVoid();
+    mStateData.mResponse.setNull();
+  }
 
   virtual uint16_t ErrorCode() const override {
     return 0;  // eOK
