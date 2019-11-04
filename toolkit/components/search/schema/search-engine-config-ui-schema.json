@@ -3,8 +3,8 @@
     "ui:autofocus": true
   },
   "ui:order": [
-    "webExtension",
     "engineName",
+    "webExtension",
     "default",
     "defaultPrivate",
     "application",
