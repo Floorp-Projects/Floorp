@@ -367,8 +367,6 @@ Instead of outputting the two different colors in two separate passes, we output
 as two separate fragment shader outputs.
 Those outputs can then be treated as two different sources in the blend equation.
 
-This method of text blending has not been implemented in WebRender yet.
-
 ## Subpixel Text Rendering to Transparent Destinations with a Background Color Hint
 
 ### Motivation
