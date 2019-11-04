@@ -7,7 +7,7 @@
 == mask-transformed-to-empty-rect.yaml mask-transformed-to-empty-rect-ref.yaml
 platform(linux,mac) == rounded-corners.yaml rounded-corners.png
 != mask.yaml out-of-bounds.yaml
-platform(linux,mac) fuzzy(1,17500) color_targets(6) alpha_targets(1) == mask-atomicity.yaml mask-atomicity-ref.yaml
+platform(linux,mac) fuzzy(1,17500) color_targets(3) alpha_targets(1) == mask-atomicity.yaml mask-atomicity-ref.yaml
 platform(linux,mac) fuzzy(1,17500) == mask-atomicity-tiling.yaml mask-atomicity-ref.yaml
 platform(linux,mac) == mask-perspective.yaml mask-perspective.png
 == fuzzy(1,7) mask-perspective-tiling.yaml mask-perspective.yaml

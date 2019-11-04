@@ -92,7 +92,7 @@ use crate::render_task::{RenderTask, RenderTaskLocation, BlurTaskCache, ClearMod
 use crate::resource_cache::ResourceCache;
 use crate::scene::SceneProperties;
 use smallvec::SmallVec;
-use std::{mem, u8, marker};
+use std::{mem, u8, marker, u32};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use crate::texture_cache::TextureCacheHandle;
 use crate::util::{TransformedRectKind, MatrixHelpers, MaxRect, scale_factors, VecHelper};
@@ -226,18 +226,34 @@ pub type TileSize = Size2D<i32, TileCoordinate>;
 pub type TileRect = Rect<i32, TileCoordinate>;
 
 /// The size in device pixels of a normal cached tile.
-pub const TILE_SIZE_LARGE: DeviceIntSize = DeviceIntSize {
-    width: 2048,
+pub const TILE_SIZE_DEFAULT: DeviceIntSize = DeviceIntSize {
+    width: 1024,
     height: 512,
     _unit: marker::PhantomData,
 };
 
-/// The size in device pixels of a tile for small picture caches.
-pub const TILE_SIZE_SMALL: DeviceIntSize = DeviceIntSize {
-    width: 128,
-    height: 128,
+/// The size in device pixels of a tile for horizontal scroll bars
+pub const TILE_SIZE_SCROLLBAR_HORIZONTAL: DeviceIntSize = DeviceIntSize {
+    width: 512,
+    height: 16,
     _unit: marker::PhantomData,
 };
+
+/// The size in device pixels of a tile for vertical scroll bars
+pub const TILE_SIZE_SCROLLBAR_VERTICAL: DeviceIntSize = DeviceIntSize {
+    width: 16,
+    height: 512,
+    _unit: marker::PhantomData,
+};
+
+// Return the list of tile sizes for the renderer to allocate texture arrays for.
+pub fn tile_cache_sizes() -> &'static [DeviceIntSize] {
+    &[
+        TILE_SIZE_DEFAULT,
+        TILE_SIZE_SCROLLBAR_HORIZONTAL,
+        TILE_SIZE_SCROLLBAR_VERTICAL,
+    ]
+}
 
 /// The maximum size per axis of a surface,
 ///  in WorldPixel coordinates.
@@ -789,21 +805,17 @@ impl Tile {
         // TODO(gw): Consider using smaller tiles and/or tile splits for
         //           native compositors that don't support dirty rects.
         if supports_dirty_rects {
-            // For small tiles, only allow splitting once, since otherwise we
-            // end up splitting into tiny dirty rects that aren't saving much
-            // in the way of pixel work.
-            let max_split_level = if ctx.current_tile_size == TILE_SIZE_LARGE {
-                3
-            } else {
-                1
-            };
+            // Only allow splitting for normal content sized tiles
+            if ctx.current_tile_size == TILE_SIZE_DEFAULT {
+                let max_split_level = 3;
 
-            // Consider splitting / merging dirty regions
-            self.root.maybe_merge_or_split(
-                0,
-                &self.current_descriptor.prims,
-                max_split_level,
-            );
+                // Consider splitting / merging dirty regions
+                self.root.maybe_merge_or_split(
+                    0,
+                    &self.current_descriptor.prims,
+                    max_split_level,
+                );
+            }
         }
 
         // See if this tile is a simple color, in which case we can just draw
@@ -1292,6 +1304,11 @@ pub struct TileCacheInstance {
     shared_clip_chain: ClipChainId,
     /// The current transform of the picture cache root spatial node
     root_transform: TransformKey,
+    /// The number of frames until this cache next evaluates what tile size to use.
+    /// If a picture rect size is regularly changing just around a size threshold,
+    /// we don't want to constantly invalidate and reallocate different tile size
+    /// configuration each frame.
+    frames_until_size_eval: usize,
 }
 
 impl TileCacheInstance {
@@ -1329,6 +1346,7 @@ impl TileCacheInstance {
             shared_clips,
             shared_clip_chain,
             current_tile_size: DeviceIntSize::zero(),
+            frames_until_size_eval: 0,
         }
     }
 
@@ -1446,28 +1464,39 @@ impl TileCacheInstance {
             self.current_tile_size = prev_state.current_tile_size;
         }
 
-        // Work out what size tile is appropriate for this picture cache.
-        let desired_tile_size = if pic_rect.size.width < 2.0 * TILE_SIZE_SMALL.width as f32 ||
-           pic_rect.size.height < 2.0 * TILE_SIZE_SMALL.height as f32 {
-            TILE_SIZE_SMALL
-        } else {
-            TILE_SIZE_LARGE
-        };
+        // Only evaluate what tile size to use fairly infrequently, so that we don't end
+        // up constantly invalidating and reallocating tiles if the picture rect size is
+        // changing near a threshold value.
+        if self.frames_until_size_eval == 0 {
+            const TILE_SIZE_TINY: f32 = 32.0;
+            const TILE_SIZE_LARGE: f32 = 512.0;
 
-        // If the desired tile size has changed, then invalidate and drop any
-        // existing tiles.
-        // TODO(gw): This could in theory result in invalidating every frame if the
-        //           size of a picture is dynamically changing, just around the
-        //           threshold above. If we ever see this happening we can improve
-        //           the theshold logic above.
-        if desired_tile_size != self.current_tile_size {
-            // Destroy any native surfaces on the tiles that will be dropped due
-            // to resizing.
-            frame_state.composite_state.destroy_native_surfaces(
-                self.tiles.values(),
-            );
-            self.tiles.clear();
-            self.current_tile_size = desired_tile_size;
+            // Work out what size tile is appropriate for this picture cache.
+            let desired_tile_size;
+
+            if pic_rect.size.width <= TILE_SIZE_TINY && pic_rect.size.height > TILE_SIZE_LARGE {
+                desired_tile_size = TILE_SIZE_SCROLLBAR_VERTICAL;
+            } else if pic_rect.size.width > TILE_SIZE_LARGE && pic_rect.size.height <= TILE_SIZE_TINY {
+                desired_tile_size = TILE_SIZE_SCROLLBAR_HORIZONTAL;
+            } else {
+                desired_tile_size = TILE_SIZE_DEFAULT;
+            }
+
+            // If the desired tile size has changed, then invalidate and drop any
+            // existing tiles.
+            if desired_tile_size != self.current_tile_size {
+                // Destroy any native surfaces on the tiles that will be dropped due
+                // to resizing.
+                frame_state.composite_state.destroy_native_surfaces(
+                    self.tiles.values(),
+                );
+                self.tiles.clear();
+                self.current_tile_size = desired_tile_size;
+            }
+
+            // Reset counter until next evaluating the desired tile size. This is an
+            // arbitrary value.
+            self.frames_until_size_eval = 120;
         }
 
         // Map an arbitrary point in picture space to world space, to work out

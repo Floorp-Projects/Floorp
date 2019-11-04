@@ -71,7 +71,7 @@ use crate::internal_types::{CacheTextureId, DebugOutput, FastHashMap, FastHashSe
 use crate::internal_types::{TextureCacheAllocationKind, TextureCacheUpdate, TextureUpdateList, TextureUpdateSource};
 use crate::internal_types::{RenderTargetInfo, SavedTargetIndex, Swizzle};
 use malloc_size_of::MallocSizeOfOps;
-use crate::picture::{RecordedDirtyRegion, TILE_SIZE_LARGE, TILE_SIZE_SMALL, ResolvedSurfaceTexture};
+use crate::picture::{RecordedDirtyRegion, tile_cache_sizes, ResolvedSurfaceTexture};
 use crate::prim_store::DeferredResolve;
 use crate::profiler::{BackendProfileCounters, FrameProfileCounters, TimeProfileCounter,
                GpuProfileTag, RendererProfileCounters, RendererProfileTimers};
@@ -2239,16 +2239,11 @@ impl Renderer {
                 thread_listener.thread_started(&rb_thread_name);
             }
 
-            let picture_tile_sizes = &[
-                TILE_SIZE_LARGE,
-                TILE_SIZE_SMALL,
-            ];
-
             let texture_cache = TextureCache::new(
                 max_texture_size,
                 max_texture_layers,
                 if config.global_enable_picture_caching {
-                    picture_tile_sizes
+                    tile_cache_sizes()
                 } else {
                     &[]
                 },
