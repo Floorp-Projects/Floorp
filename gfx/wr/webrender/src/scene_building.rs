@@ -352,9 +352,8 @@ pub struct SceneBuilder<'a> {
     /// Helper struct to map spatial nodes to external scroll offsets.
     external_scroll_mapper: ScrollOffsetMapper,
 
-    /// If true, a stacking context with create_tile_cache set to true was found
-    /// during building.
-    found_explicit_tile_cache: bool,
+    /// If true, picture caching setup has already been completed.
+    picture_caching_initialized: bool,
 
     /// The current recursion depth of iframes encountered. Used to restrict picture
     /// caching slices to only the top-level content frame.
@@ -407,7 +406,7 @@ impl<'a> SceneBuilder<'a> {
             root_pic_index: PictureIndex(0),
             rf_mapper: ReferenceFrameMapper::new(),
             external_scroll_mapper: ScrollOffsetMapper::new(),
-            found_explicit_tile_cache: false,
+            picture_caching_initialized: false,
             iframe_depth: 0,
             content_slice_count: 0,
             picture_cache_spatial_nodes: FastHashSet::default(),
@@ -502,6 +501,9 @@ impl<'a> SceneBuilder<'a> {
         if !self.config.global_enable_picture_caching {
             return;
         }
+
+        // Ensure that setup_picture_caching has executed
+        debug_assert!(self.picture_caching_initialized);
 
         // Unconditionally insert a marker to create a picture cache slice on the
         // first cluster. This handles implicit picture caches, and also the common
@@ -1883,7 +1885,7 @@ impl<'a> SceneBuilder<'a> {
                             self.content_slice_count = stacking_context.init_picture_caching(&self.clip_scroll_tree);
 
                             // Mark that a user supplied tile cache was specified.
-                            self.found_explicit_tile_cache = true;
+                            self.picture_caching_initialized = true;
                         }
 
                         // If the parent context primitives list is empty, it's faster
@@ -1904,6 +1906,14 @@ impl<'a> SceneBuilder<'a> {
         };
 
         if self.sc_stack.is_empty() {
+            // If we didn't encounter a content iframe, then set up picture caching slice markers
+            // on the root stacking context. This can happen in Gecko when the parent process
+            // provides the content display list (e.g. about:support, about:config etc).
+            if !self.picture_caching_initialized {
+                self.content_slice_count = stacking_context.init_picture_caching(&self.clip_scroll_tree);
+                self.picture_caching_initialized = true;
+            }
+
             self.setup_picture_caching(
                 &mut stacking_context.prim_list,
             );

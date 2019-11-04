@@ -58,6 +58,16 @@
 //! which defines the scissor rect used when replaying the tile's drawing commands and
 //! can be used for partial present.
 //!
+//! ## Display List shape
+//!
+//! WR will first look for an iframe item in the root stacking context to apply
+//! picture caching to. If that's not found, it will apply to the entire root
+//! stacking context of the display list. Apart from that, the format of the
+//! display list is not important to picture caching. Each time a new scroll root
+//! is encountered, a new picture cache slice will be created. If the display
+//! list contains more than some arbitrary number of slices (currently 8), the
+//! content will all be squashed into a single slice, in order to save GPU memory
+//! and compositing performance.
 
 use api::{MixBlendMode, PipelineId, PremultipliedColorF, FilterPrimitiveKind};
 use api::{PropertyBinding, PropertyBindingId, FilterPrimitive, FontRenderMode};
