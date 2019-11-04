@@ -31,7 +31,8 @@ using namespace js::frontend;
 
 using mozilla::Maybe;
 
-PropertyEmitter::PropertyEmitter(BytecodeEmitter* bce) : bce_(bce) {}
+PropertyEmitter::PropertyEmitter(BytecodeEmitter* bce)
+    : bce_(bce), obj_(bce->cx) {}
 
 bool PropertyEmitter::prepareForProtoValue(const Maybe<uint32_t>& keyPos) {
   MOZ_ASSERT(propertyState_ == PropertyState::Start ||
@@ -61,6 +62,7 @@ bool PropertyEmitter::emitMutateProto() {
     return false;
   }
 
+  obj_ = nullptr;
 #ifdef DEBUG
   propertyState_ = PropertyState::Init;
 #endif
@@ -100,6 +102,7 @@ bool PropertyEmitter::emitSpread() {
     return false;
   }
 
+  obj_ = nullptr;
 #ifdef DEBUG
   propertyState_ = PropertyState::Init;
 #endif
@@ -160,6 +163,8 @@ bool PropertyEmitter::prepareForIndexPropKey(
 
   //                [stack] CTOR? OBJ
 
+  obj_ = nullptr;
+
   if (!prepareForProp(keyPos,
                       /* isStatic_ = */ kind == Kind::Static,
                       /* isIndexOrComputed = */ true)) {
@@ -190,6 +195,8 @@ bool PropertyEmitter::prepareForComputedPropKey(
              propertyState_ == PropertyState::Init);
 
   //                [stack] CTOR? OBJ
+
+  obj_ = nullptr;
 
   if (!prepareForProp(keyPos,
                       /* isStatic_ = */ kind == Kind::Static,
@@ -266,11 +273,13 @@ bool PropertyEmitter::emitInitProp(JS::Handle<JSAtom*> key) {
 }
 
 bool PropertyEmitter::emitInitGetter(JS::Handle<JSAtom*> key) {
+  obj_ = nullptr;
   return emitInit(isClass_ ? JSOP_INITHIDDENPROP_GETTER : JSOP_INITPROP_GETTER,
                   key);
 }
 
 bool PropertyEmitter::emitInitSetter(JS::Handle<JSAtom*> key) {
+  obj_ = nullptr;
   return emitInit(isClass_ ? JSOP_INITHIDDENPROP_SETTER : JSOP_INITPROP_SETTER,
                   key);
 }
@@ -281,11 +290,13 @@ bool PropertyEmitter::emitInitIndexProp() {
 }
 
 bool PropertyEmitter::emitInitIndexGetter() {
+  obj_ = nullptr;
   return emitInitIndexOrComputed(isClass_ ? JSOP_INITHIDDENELEM_GETTER
                                           : JSOP_INITELEM_GETTER);
 }
 
 bool PropertyEmitter::emitInitIndexSetter() {
+  obj_ = nullptr;
   return emitInitIndexOrComputed(isClass_ ? JSOP_INITHIDDENELEM_SETTER
                                           : JSOP_INITELEM_SETTER);
 }
@@ -296,11 +307,13 @@ bool PropertyEmitter::emitInitComputedProp() {
 }
 
 bool PropertyEmitter::emitInitComputedGetter() {
+  obj_ = nullptr;
   return emitInitIndexOrComputed(isClass_ ? JSOP_INITHIDDENELEM_GETTER
                                           : JSOP_INITELEM_GETTER);
 }
 
 bool PropertyEmitter::emitInitComputedSetter() {
+  obj_ = nullptr;
   return emitInitIndexOrComputed(isClass_ ? JSOP_INITHIDDENELEM_SETTER
                                           : JSOP_INITELEM_SETTER);
 }
@@ -318,6 +331,19 @@ bool PropertyEmitter::emitInit(JSOp op, JS::Handle<JSAtom*> key) {
   uint32_t index;
   if (!bce_->makeAtomIndex(key, &index)) {
     return false;
+  }
+
+  if (obj_) {
+    MOZ_ASSERT(!IsHiddenInitOp(op));
+    MOZ_ASSERT(!obj_->inDictionaryMode());
+    JS::Rooted<JS::PropertyKey> propKey(bce_->cx, AtomToId(key));
+    if (!NativeDefineDataProperty(bce_->cx, obj_, propKey, UndefinedHandleValue,
+                                  JSPROP_ENUMERATE)) {
+      return false;
+    }
+    if (obj_->inDictionaryMode()) {
+      obj_ = nullptr;
+    }
   }
 
   if (!bce_->emitIndex32(op, index)) {
@@ -386,20 +412,25 @@ bool ObjectEmitter::emitObject(size_t propertyCount) {
   // Emit code for {p:a, '%q':b, 2:c} that is equivalent to constructing
   // a new object and defining (in source order) each property on the object
   // (or mutating the object's [[Prototype]], in the case of __proto__).
+  top_ = bce_->bytecodeSection().offset();
   if (!bce_->emitNewInit()) {
     //              [stack] OBJ
     return false;
   }
 
-#ifdef DEBUG
-  objectState_ = ObjectState::Object;
-#endif
-  return true;
-}
+  // Try to construct the shape of the object as we go, so we can emit a
+  // JSOP_NEWOBJECT with the final shape instead.
+  // In the case of computed property names and indices, we cannot fix the
+  // shape at bytecode compile time. When the shape cannot be determined,
+  // |obj| is nulled out.
 
-bool ObjectEmitter::emitObjectWithTemplateOnStack() {
-  MOZ_ASSERT(propertyState_ == PropertyState::Start);
-  MOZ_ASSERT(objectState_ == ObjectState::Start);
+  // No need to do any guessing for the object kind, since we know the upper
+  // bound of how many properties we plan to have.
+  gc::AllocKind kind = gc::GetGCObjectKind(propertyCount);
+  obj_ = NewBuiltinClassInstance<PlainObject>(bce_->cx, kind, TenuredObject);
+  if (!obj_) {
+    return false;
+  }
 
 #ifdef DEBUG
   objectState_ = ObjectState::Object;
@@ -413,6 +444,15 @@ bool ObjectEmitter::emitEnd() {
   MOZ_ASSERT(objectState_ == ObjectState::Object);
 
   //                [stack] OBJ
+
+  if (obj_) {
+    // The object survived and has a predictable shape: update the original
+    // bytecode.
+    if (!bce_->replaceNewInitWithNewObject(obj_, top_)) {
+      //            [stack] OBJ
+      return false;
+    }
+  }
 
 #ifdef DEBUG
   objectState_ = ObjectState::End;

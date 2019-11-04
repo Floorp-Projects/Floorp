@@ -45,7 +45,6 @@ UNIFIED_SOURCES += [
     'NameFunctions.cpp',
     'NameOpEmitter.cpp',
     'ObjectEmitter.cpp',
-    'ObjLiteral.cpp',
     'ParseContext.cpp',
     'ParseNode.cpp',
     'ParseNodeVerify.cpp',

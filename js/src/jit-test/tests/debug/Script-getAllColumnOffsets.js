@@ -21,9 +21,8 @@ assertOffsetColumns(
 
 // getColumnOffsets correctly places object properties.
 assertOffsetColumns(
-  // Should hit each property in the object if OBJLITERAL optimization is not
-  // hit.
-  "function f(n){var o={a:1,b:2,c:n}}",
+  // Should hit each property in the object.
+  "function f(n){var o={a:1,b:2,c:3}}",
   "                    ^^   ^   ^   ^"
 );
 
