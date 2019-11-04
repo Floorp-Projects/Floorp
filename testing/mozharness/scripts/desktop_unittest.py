@@ -569,6 +569,9 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin,
     @PreScriptAction('download-and-extract')
     def _pre_download_and_extract(self, action):
         """Abort if --artifact try syntax is used with compiled-code tests"""
+        dir = self.query_abs_dirs()['abs_blob_upload_dir']
+        self.mkdir_p(dir)
+
         if not self.try_message_has_flag('artifact'):
             return
         self.info('Artifact build requested in try syntax.')
@@ -778,8 +781,6 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin,
         """
         try:
             import psutil
-            dir = self.query_abs_dirs()['abs_blob_upload_dir']
-            self.mkdir_p(dir)
             path = os.path.join(dir, "system-info.log")
             with open(path, "w") as f:
                 f.write("System info collected at %s\n\n" % datetime.now())

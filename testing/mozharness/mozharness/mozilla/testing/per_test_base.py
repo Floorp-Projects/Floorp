@@ -269,6 +269,9 @@ class SingleTestMixin(object):
         # chunk files
         total_tests = sum([len(self.suites[x]) for x in self.suites])
 
+        if total_tests == 0:
+            self.fatal("No tests to verify: exiting.", 0)
+
         files_per_chunk = total_tests / float(self.config.get('total_chunks', 1))
         files_per_chunk = int(math.ceil(files_per_chunk))
 
