@@ -123,8 +123,8 @@ startupRecorder.prototype = {
     // not other types (for example, the gfx sanity test window)
     if (topic == firstPaintNotification) {
       // In the case we're handling xul-window-visible, we'll have been handed
-      // an nsIXULWindow instead of an nsIDOMWindow.
-      if (subject instanceof Ci.nsIXULWindow) {
+      // an nsIAppWindow instead of an nsIDOMWindow.
+      if (subject instanceof Ci.nsIAppWindow) {
         subject = subject
           .QueryInterface(Ci.nsIInterfaceRequestor)
           .getInterface(Ci.nsIDOMWindow);

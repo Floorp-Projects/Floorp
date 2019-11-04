@@ -131,7 +131,7 @@ var DownloadsTaskbar = {
     // Activate the indicator on the specified window.
     let docShell = aWindow.docShell.treeOwner
       .QueryInterface(Ci.nsIInterfaceRequestor)
-      .getInterface(Ci.nsIXULWindow).docShell;
+      .getInterface(Ci.nsIAppWindow).docShell;
     this._taskbarProgress = gWinTaskbar.getTaskbarProgress(docShell);
 
     // If the DownloadSummary object has already been created, we should update

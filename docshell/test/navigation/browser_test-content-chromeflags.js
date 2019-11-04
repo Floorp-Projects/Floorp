@@ -33,7 +33,7 @@ add_task(async function() {
 
       let chromeFlags = win.docShell.treeOwner
         .QueryInterface(Ci.nsIInterfaceRequestor)
-        .getInterface(Ci.nsIXULWindow).chromeFlags;
+        .getInterface(Ci.nsIAppWindow).chromeFlags;
 
       let expected = CHROME_ALL;
 
