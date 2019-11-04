@@ -47,7 +47,6 @@ DIRS += [
     'base',
     'chrome',
     'components',
-    'extensions',
     'modules',
     'themes/core',
     'themes/geckoview',
