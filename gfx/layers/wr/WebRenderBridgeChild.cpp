@@ -380,6 +380,9 @@ void WebRenderBridgeChild::RemoveExpiredFontKeys(
 }
 
 CompositorBridgeChild* WebRenderBridgeChild::GetCompositorBridgeChild() {
+  if (!IPCOpen()) {
+    return nullptr;
+  }
   return static_cast<CompositorBridgeChild*>(Manager());
 }
 
@@ -576,6 +579,9 @@ void WebRenderBridgeChild::SetWebRenderLayerManager(
 }
 
 ipc::IShmemAllocator* WebRenderBridgeChild::GetShmemAllocator() {
+  if (!IPCOpen()) {
+    return nullptr;
+  }
   return static_cast<CompositorBridgeChild*>(Manager());
 }
 
