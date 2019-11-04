@@ -282,35 +282,6 @@ class nsTString : public nsTSubstring<T> {
   }
 
   /**
-   * Compares a given string to this string.
-   *
-   * @param   aString is the string to be compared
-   * @param   aIgnoreCase tells us how to treat case
-   * @param   aCount tells us how many chars to compare
-   * @return  -1,0,1
-   */
-  template <typename Q = T, typename EnableIfChar = mozilla::CharOnlyT<Q>>
-  int32_t Compare(const char_type* aString, bool aIgnoreCase = false,
-                  int32_t aCount = -1) const;
-
-  /**
-   * Equality check between given string and this string.
-   *
-   * @param   aString is the string to check
-   * @param   aIgnoreCase tells us how to treat case
-   * @param   aCount tells us how many chars to compare
-   * @return  boolean
-   */
-  template <typename Q = T, typename EnableIfChar = mozilla::CharOnlyT<Q>>
-  bool EqualsIgnoreCase(const char_type* aString, int32_t aCount = -1) const {
-    return Compare(aString, true, aCount) == 0;
-  }
-
-  template <typename Q = T, typename EnableIfChar16 = mozilla::Char16OnlyT<Q>>
-  bool EqualsIgnoreCase(const incompatible_char_type* aString,
-                        int32_t aCount = -1) const;
-
-  /**
    * Perform string to double-precision float conversion.
    *
    * @param   aErrorCode will contain error if one occurs
