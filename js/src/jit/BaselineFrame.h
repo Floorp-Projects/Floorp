@@ -339,7 +339,7 @@ class BaselineFrame {
   void trace(JSTracer* trc, const JSJitFrameIter& frame);
 
   bool isGlobalFrame() const { return script()->isGlobalCode(); }
-  bool isModuleFrame() const { return script()->module(); }
+  bool isModuleFrame() const { return script()->isModule(); }
   bool isEvalFrame() const { return script()->isForEval(); }
   bool isStrictEvalFrame() const { return isEvalFrame() && script()->strict(); }
   bool isNonStrictEvalFrame() const {
