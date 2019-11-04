@@ -43,7 +43,7 @@ window.onload = async function () {
     await forceRender(tree);
 
     let arrows = document.querySelectorAll(".arrow");
-    for (let a of arrows) {
+    for (const a of arrows) {
       ok(a.classList.contains("open"), "Every arrow should be open.");
     }
 
@@ -51,7 +51,7 @@ window.onload = async function () {
     await forceRender(tree);
 
     arrows = document.querySelectorAll(".arrow");
-    for (let a of arrows) {
+    for (const a of arrows) {
       ok(!a.classList.contains("open"), "Every arrow should be closed.");
     }
   } catch(e) {

@@ -55,7 +55,7 @@ window.onload = async function () {
 
     function addTabWithPanel(tabId) {
       // Setup for InspectorTabPanel
-      let panel = document.createElement("div");
+      const panel = document.createElement("div");
       panel.id = `sidebar-${tabId}`;
       document.body.appendChild(panel);
 

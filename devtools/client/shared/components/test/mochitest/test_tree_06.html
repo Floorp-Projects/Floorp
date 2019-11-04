@@ -298,7 +298,7 @@ window.onload = async function () {
     ], "After the RIGHT, K should be focused.");
 
     // Check that keys are ignored if any modifier is present.
-    let keysWithModifier = [
+    const keysWithModifier = [
       { key: "ArrowDown", altKey: true },
       { key: "ArrowDown", ctrlKey: true },
       { key: "ArrowDown", metaKey: true },
@@ -306,7 +306,7 @@ window.onload = async function () {
     ];
     await forceRender(tree);
 
-    for (let key of keysWithModifier) {
+    for (const key of keysWithModifier) {
       Simulate.keyDown(document.querySelector(".tree"), key);
       await forceRender(tree);
 

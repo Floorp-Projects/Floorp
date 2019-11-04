@@ -23,9 +23,9 @@ with optional columns, unknown and non-URL sources.
 <script type="application/javascript">
 window.onload = async function () {
   try {
-    let ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
-    let React = browserRequire("devtools/client/shared/vendor/react");
-    let Frame = React.createFactory(browserRequire("devtools/client/shared/components/Frame"));
+    const ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
+    const React = browserRequire("devtools/client/shared/vendor/react");
+    const Frame = React.createFactory(browserRequire("devtools/client/shared/components/Frame"));
     ok(Frame, "Should get Frame");
 
     // Check when there's a column
@@ -295,7 +295,7 @@ window.onload = async function () {
       line: 23,
       sourceUrl: "https://bugzilla.mozilla.org/original.js",
     };
-    let mockSourceMapService = {
+    const mockSourceMapService = {
       subscribe: function (url, line, column, callback) {
 	// Resolve immediately.
         callback(true, resolvedLocation.sourceUrl, resolvedLocation.line);
@@ -335,10 +335,10 @@ window.onload = async function () {
     });
 
     function checkFrameComponent(input, expected) {
-      let props = Object.assign({ onClick: () => {} }, input);
-      let frame = ReactDOM.render(Frame(props), window.document.body);
-      let el = ReactDOM.findDOMNode(frame);
-      let { source } = input.frame;
+      const props = Object.assign({ onClick: () => {} }, input);
+      const frame = ReactDOM.render(Frame(props), window.document.body);
+      const el = ReactDOM.findDOMNode(frame);
+      const { source } = input.frame;
       checkFrameString(Object.assign({ el, source }, expected));
       ReactDOM.unmountComponentAtNode(window.document.body);
     }
