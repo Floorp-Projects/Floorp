@@ -36,6 +36,7 @@ var gHaveCanvasSnapshot = false;
 var gExplicitPendingPaintCount = 0;
 var gExplicitPendingPaintsCompleteHook;
 var gCurrentURL;
+var gCurrentURLRecordResults;
 var gCurrentURLTargetType;
 var gCurrentTestType;
 var gTimeoutHook = null;
@@ -166,6 +167,7 @@ function StartTestURI(type, uri, uriTargetType, timeout)
     gCurrentTestType = type;
     gCurrentURL = uri;
     gCurrentURLTargetType = uriTargetType;
+    gCurrentURLRecordResults = 0;
 
     gCurrentTestStartTime = Date.now();
     if (gFailureTimeout != null) {
@@ -548,7 +550,7 @@ function FlushRendering(aFlushMode) {
     }
 }
 
-function WaitForTestEnd(contentRootElement, inPrintMode, spellCheckedElements) {
+function WaitForTestEnd(contentRootElement, inPrintMode, spellCheckedElements, forURL) {
     var stopAfterPaintReceived = false;
     var currentDoc = content.document;
     var state = STATE_WAITING_TO_FIRE_INVALIDATE_EVENT;
@@ -787,7 +789,7 @@ function WaitForTestEnd(contentRootElement, inPrintMode, spellCheckedElements) {
             gFailureReason = "timed out while taking snapshot (bug in harness?)";
             RemoveListeners();
             CheckForProcessCrashExpectation();
-            setTimeout(RecordResult, 0);
+            setTimeout(RecordResult, 0, forURL);
             return;
         }
     }
@@ -820,7 +822,7 @@ function WaitForTestEnd(contentRootElement, inPrintMode, spellCheckedElements) {
     // Take a full snapshot now that all our listeners are set up. This
     // ensures it's impossible for us to miss updates between taking the snapshot
     // and adding our listeners.
-    SendInitCanvasWithSnapshot();
+    SendInitCanvasWithSnapshot(forURL);
     MakeProgress();
 }
 
@@ -850,6 +852,8 @@ function OnDocumentLoad(event)
         // Ignore load events for previous documents.
         return;
     }
+
+    let ourURL = currentDoc.location.href;
 
     // Collect all editable, spell-checked elements.  It may be the case that
     // not all the elements that match this selector will be spell checked: for
@@ -884,7 +888,7 @@ function OnDocumentLoad(event)
         // we should wait, since this might trigger dispatching of
         // MozPaintWait events and make shouldWaitForExplicitPaintWaiters() true
         // below.
-        var painted = SendInitCanvasWithSnapshot();
+        var painted = SendInitCanvasWithSnapshot(ourURL);
 
         if (shouldWaitForExplicitPaintWaiters() ||
             (!inPrintMode && doPrintMode(contentRootElement)) ||
@@ -894,11 +898,11 @@ function OnDocumentLoad(event)
             !painted) {
             LogInfo("AfterOnLoadScripts belatedly entering WaitForTestEnd");
             // Go into reftest-wait mode belatedly.
-            WaitForTestEnd(contentRootElement, inPrintMode, []);
+            WaitForTestEnd(contentRootElement, inPrintMode, [], ourURL);
         } else {
             CheckLayerAssertions(contentRootElement);
             CheckForProcessCrashExpectation(contentRootElement);
-            RecordResult();
+            RecordResult(ourURL);
         }
     }
 
@@ -909,7 +913,7 @@ function OnDocumentLoad(event)
         // unsuppressed, after the onload event has finished dispatching.
         gFailureReason = "timed out waiting for test to complete (trying to get into WaitForTestEnd)";
         LogInfo("OnDocumentLoad triggering WaitForTestEnd");
-        setTimeout(function () { WaitForTestEnd(contentRootElement, inPrintMode, spellCheckedElements); }, 0);
+        setTimeout(function () { WaitForTestEnd(contentRootElement, inPrintMode, spellCheckedElements, ourURL); }, 0);
     } else {
         if (doPrintMode(contentRootElement)) {
             LogInfo("OnDocumentLoad setting up print mode");
@@ -994,8 +998,20 @@ function CheckForProcessCrashExpectation(contentRootElement)
     }
 }
 
-function RecordResult()
+function RecordResult(forURL)
 {
+    if (forURL != gCurrentURL) {
+        LogInfo("RecordResult fired for previous document");
+        return;
+    }
+
+    if (gCurrentURLRecordResults > 0) {
+        LogInfo("RecordResult fired extra times");
+        FinishTestItem();
+        return;
+    }
+    gCurrentURLRecordResults++;
+
     LogInfo("RecordResult fired");
 
     var currentTestRunTime = Date.now() - gCurrentTestStartTime;
@@ -1276,8 +1292,16 @@ function SendFailedAssignedLayer(why)
 }
 
 // Return true if a snapshot was taken.
-function SendInitCanvasWithSnapshot()
+function SendInitCanvasWithSnapshot(forURL)
 {
+    if (forURL != gCurrentURL) {
+        LogInfo("SendInitCanvasWithSnapshot called for previous document");
+        // Lie and say we painted because it doesn't matter, this is a test we
+        // are already done with that is clearing out. Then AfterOnLoadScripts
+        // should finish quicker if that is who is calling us.
+        return true;
+    }
+
     // If we're in the same process as the top-level XUL window, then
     // drawing that window will also update our layers, so no
     // synchronization is needed.
