@@ -18,8 +18,8 @@ Test the searchbox component
 <script>
 "use strict";
 window.onload = function () {
-  let React = browserRequire("devtools/client/shared/vendor/react");
-  let SearchBox = React.createFactory(
+  const React = browserRequire("devtools/client/shared/vendor/react");
+  const SearchBox = React.createFactory(
     browserRequire("devtools/client/shared/components/SearchBox")
   );
   ok(SearchBox, "Got the SearchBox factory");
