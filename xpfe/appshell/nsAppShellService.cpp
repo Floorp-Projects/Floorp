@@ -17,7 +17,7 @@
 #include "nsIWindowWatcher.h"
 #include "nsPIWindowWatcher.h"
 #include "nsPIDOMWindow.h"
-#include "nsWebShellWindow.h"
+#include "nsXULWindow.h"
 
 #include "nsWidgetInitData.h"
 #include "nsWidgetsCID.h"
@@ -133,7 +133,7 @@ nsAppShellService::CreateHiddenWindow() {
   rv = NS_NewURI(getter_AddRefs(url), hiddenWindowURL);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  RefPtr<nsWebShellWindow> newWindow;
+  RefPtr<nsXULWindow> newWindow;
   rv =
       JustCreateTopWindow(nullptr, url, chromeMask, initialWidth, initialHeight,
                           true, nullptr, nullptr, getter_AddRefs(newWindow));
@@ -175,7 +175,7 @@ nsAppShellService::CreateTopLevelWindow(
 
   StartupTimeline::RecordOnce(StartupTimeline::CREATE_TOP_LEVEL_WINDOW);
 
-  RefPtr<nsWebShellWindow> newWindow;
+  RefPtr<nsXULWindow> newWindow;
   rv = JustCreateTopWindow(aParent, aUrl, aChromeMask, aInitialWidth,
                            aInitialHeight, false, aOpeningTab, aOpenerWindow,
                            getter_AddRefs(newWindow));
@@ -558,14 +558,14 @@ nsresult nsAppShellService::JustCreateTopWindow(
     nsIXULWindow* aParent, nsIURI* aUrl, uint32_t aChromeMask,
     int32_t aInitialWidth, int32_t aInitialHeight, bool aIsHiddenWindow,
     nsIRemoteTab* aOpeningTab, mozIDOMWindowProxy* aOpenerWindow,
-    nsWebShellWindow** aResult) {
+    nsXULWindow** aResult) {
   *aResult = nullptr;
   NS_ENSURE_STATE(!mXPCOMWillShutDown);
 
   nsCOMPtr<nsIXULWindow> parent;
   if (aChromeMask & nsIWebBrowserChrome::CHROME_DEPENDENT) parent = aParent;
 
-  RefPtr<nsWebShellWindow> window = new nsWebShellWindow(aChromeMask);
+  RefPtr<nsXULWindow> window = new nsXULWindow(aChromeMask);
 
 #ifdef XP_WIN
   // If the parent is currently fullscreen, tell the child to ignore persisted
