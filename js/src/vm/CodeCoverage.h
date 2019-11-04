@@ -36,15 +36,11 @@ class LCovSource {
 
   // Iterate over the bytecode and collect the lcov output based on the
   // ScriptCounts counters.
-  void writeScript(JSScript* script);
+  void writeScript(JSScript* script, const char* scriptName);
 
   // Write the Lcov output in a buffer, such as the one associated with
   // the runtime code coverage trace file.
   void exportInto(GenericPrinter& out);
-
- private:
-  // Write the script name in out.
-  bool writeScriptName(LSprinter& out, JSScript* script);
 
  private:
   // Name of the source file.
@@ -96,6 +92,10 @@ class LCovRealm {
 
   // Return the LCovSource entry which matches the given ScriptSourceObject.
   LCovSource* lookupOrAdd(const char* name);
+
+  // Generate escaped form of script atom and allocate inside our LifoAlloc if
+  // necessary.
+  const char* getScriptName(JSScript* script);
 
  private:
   typedef mozilla::Vector<LCovSource*, 16, LifoAllocPolicy<Fallible>>
