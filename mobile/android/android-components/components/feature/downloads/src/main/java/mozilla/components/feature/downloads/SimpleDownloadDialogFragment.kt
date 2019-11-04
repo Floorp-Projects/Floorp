@@ -54,7 +54,7 @@ class SimpleDownloadDialogFragment : DownloadDialogFragment() {
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val sheetDialog = Dialog(requireContext())
         sheetDialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
-        sheetDialog.setCanceledOnTouchOutside(true)
+        sheetDialog.setCanceledOnTouchOutside(false)
 
         val rootView = createContainer()
         sheetDialog.setContainerView(rootView)
@@ -118,6 +118,7 @@ class SimpleDownloadDialogFragment : DownloadDialogFragment() {
             )
 
             rootView.close_button.setOnClickListener {
+                onCancelDownload()
                 dismiss()
             }
 

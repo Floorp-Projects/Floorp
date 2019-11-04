@@ -9,6 +9,7 @@ import android.graphics.drawable.GradientDrawable
 import android.view.Gravity
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.ImageButton
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentTransaction
@@ -70,22 +71,47 @@ class SimpleDownloadDialogFragmentTest {
     }
 
     @Test
+    fun `when the cancel button is clicked onCancelDownload must be called`() {
+        var isDownloadCancelledCalled = false
+
+        val onCancelDownload = {
+            isDownloadCancelledCalled = true
+        }
+
+        val fragment = Mockito.spy(SimpleDownloadDialogFragment.newInstance())
+
+        fragment.onCancelDownload = onCancelDownload
+        fragment.testingContext = testContext
+
+        doReturn(testContext).`when`(fragment).requireContext()
+        doReturn(mockFragmentManager()).`when`(fragment).fragmentManager
+
+        val downloadDialog = fragment.onCreateDialog(null)
+        downloadDialog.show()
+
+        val closeButton = downloadDialog.findViewById<ImageButton>(R.id.close_button)
+        closeButton.performClick()
+
+        assertTrue(isDownloadCancelledCalled)
+    }
+
+    @Test
     fun `dialog must adhere to promptsStyling`() {
         val promptsStyling = DownloadsFeature.PromptsStyling(
-                gravity = Gravity.TOP,
-                shouldWidthMatchParent = true,
-                positiveButtonBackgroundColor = android.R.color.white,
-                positiveButtonTextColor = android.R.color.black,
-                positiveButtonRadius = 4f
+            gravity = Gravity.TOP,
+            shouldWidthMatchParent = true,
+            positiveButtonBackgroundColor = android.R.color.white,
+            positiveButtonTextColor = android.R.color.black,
+            positiveButtonRadius = 4f
         )
 
         val fragment = Mockito.spy(
-                SimpleDownloadDialogFragment.newInstance(
-                        R.string.mozac_feature_downloads_dialog_title2,
-                        R.string.mozac_feature_downloads_dialog_download,
-                        0,
-                        promptsStyling
-                )
+            SimpleDownloadDialogFragment.newInstance(
+                R.string.mozac_feature_downloads_dialog_title2,
+                R.string.mozac_feature_downloads_dialog_download,
+                0,
+                promptsStyling
+            )
         )
         doReturn(testContext).`when`(fragment).requireContext()
 
