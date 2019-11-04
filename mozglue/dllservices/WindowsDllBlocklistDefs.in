@@ -225,6 +225,10 @@ ALL_PROCESSES += [
     DllBlocklistEntry("oly.dll", ALL_VERSIONS, condition='defined(NIGHTLY_BUILD)'),
     DllBlocklistEntry("pdzipmenu64.dll", ALL_VERSIONS, condition='defined(NIGHTLY_BUILD)'),
     DllBlocklistEntry("pdzipmenu32.dll", ALL_VERSIONS, condition='defined(NIGHTLY_BUILD)'),
+
+    # Old versions of Digital Guardian, bug 1318858
+    DllBlocklistEntry("dgapi.dll", (7, 5, 0, 0xffff)),
+    DllBlocklistEntry("dgapi64.dll", (7, 5, 0, 0xffff)),
 ]
 
 ALL_PROCESSES_TESTS += [
