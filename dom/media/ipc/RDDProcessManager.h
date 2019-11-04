@@ -19,6 +19,8 @@ class RDDChild;
 // objects that may live in another process. Currently, it provides access
 // to the RDD process via ContentParent.
 class RDDProcessManager final : public RDDProcessHost::Listener {
+  friend class RDDChild;
+
  public:
   static void Initialize();
   static void Shutdown();
