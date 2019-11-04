@@ -110,6 +110,22 @@ let ACTORS = {
     allFrames: true,
   },
 
+  LinkHandler: {
+    parent: {
+      moduleURI: "resource:///actors/LinkHandlerParent.jsm",
+    },
+    child: {
+      moduleURI: "resource:///actors/LinkHandlerChild.jsm",
+      events: {
+        DOMHeadElementParsed: {},
+        DOMLinkAdded: {},
+        DOMLinkChanged: {},
+        pageshow: {},
+        pagehide: {},
+      },
+    },
+  },
+
   PageInfo: {
     child: {
       moduleURI: "resource:///actors/PageInfoChild.jsm",
@@ -304,19 +320,6 @@ let LEGACY_ACTORS = {
       matches: ["about:home", "about:newtab", "about:welcome"],
       events: {
         pageshow: { mozSystemGroup: true },
-      },
-    },
-  },
-
-  LinkHandler: {
-    child: {
-      module: "resource:///actors/LinkHandlerChild.jsm",
-      events: {
-        DOMHeadElementParsed: {},
-        DOMLinkAdded: {},
-        DOMLinkChanged: {},
-        pageshow: {},
-        pagehide: {},
       },
     },
   },

@@ -504,8 +504,8 @@ function selectIcons(iconInfos, preferredWidth) {
 }
 
 class IconLoader {
-  constructor(mm) {
-    this.mm = mm;
+  constructor(actor) {
+    this.actor = actor;
   }
 
   async load(iconInfo) {
@@ -525,7 +525,7 @@ class IconLoader {
       } catch (ex) {
         return;
       }
-      this.mm.sendAsyncMessage("Link:SetIcon", {
+      this.actor.sendAsyncMessage("Link:SetIcon", {
         pageURL: iconInfo.pageUri.spec,
         originalURL: iconInfo.iconUri.spec,
         canUseForTab: !iconInfo.isRichIcon,
@@ -536,7 +536,7 @@ class IconLoader {
     }
 
     // Let the main process that a tab icon is possibly coming.
-    this.mm.sendAsyncMessage("Link:LoadingIcon", {
+    this.actor.sendAsyncMessage("Link:LoadingIcon", {
       originalURL: iconInfo.iconUri.spec,
       canUseForTab: !iconInfo.isRichIcon,
     });
@@ -545,7 +545,7 @@ class IconLoader {
       this._loader = new FaviconLoad(iconInfo);
       let { dataURL, expiration } = await this._loader.load();
 
-      this.mm.sendAsyncMessage("Link:SetIcon", {
+      this.actor.sendAsyncMessage("Link:SetIcon", {
         pageURL: iconInfo.pageUri.spec,
         originalURL: iconInfo.iconUri.spec,
         canUseForTab: !iconInfo.isRichIcon,
@@ -557,7 +557,7 @@ class IconLoader {
         Cu.reportError(e);
 
         // Used mainly for tests currently.
-        this.mm.sendAsyncMessage("Link:SetFailedIcon", {
+        this.actor.sendAsyncMessage("Link:SetFailedIcon", {
           originalURL: iconInfo.iconUri.spec,
           canUseForTab: !iconInfo.isRichIcon,
         });
@@ -578,14 +578,14 @@ class IconLoader {
 }
 
 class FaviconLoader {
-  constructor(mm) {
-    this.mm = mm;
+  constructor(actor) {
+    this.actor = actor;
     this.iconInfos = [];
 
     // For every page we attempt to find a rich icon and a tab icon. These
     // objects take care of the load process for each.
-    this.richIconLoader = new IconLoader(mm);
-    this.tabIconLoader = new IconLoader(mm);
+    this.richIconLoader = new IconLoader(actor);
+    this.tabIconLoader = new IconLoader(actor);
 
     this.iconTask = new DeferredTask(
       () => this.loadIcons(),
@@ -603,7 +603,7 @@ class FaviconLoader {
     }
 
     let preferredWidth =
-      PREFERRED_WIDTH * Math.ceil(this.mm.content.devicePixelRatio);
+      PREFERRED_WIDTH * Math.ceil(this.actor.contentWindow.devicePixelRatio);
     let { richIcon, tabIcon } = selectIcons(this.iconInfos, preferredWidth);
     this.iconInfos = [];
 
@@ -638,7 +638,7 @@ class FaviconLoader {
       width: -1,
       isRichIcon: false,
       type: TYPE_ICO,
-      node: this.mm.content.document,
+      node: this.actor.document,
     });
     this.iconTask.arm();
   }

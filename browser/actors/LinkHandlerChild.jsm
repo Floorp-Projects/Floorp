@@ -7,9 +7,6 @@
 const EXPORTED_SYMBOLS = ["LinkHandlerChild"];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { ActorChild } = ChromeUtils.import(
-  "resource://gre/modules/ActorChild.jsm"
-);
 
 ChromeUtils.defineModuleGetter(
   this,
@@ -17,7 +14,7 @@ ChromeUtils.defineModuleGetter(
   "resource:///modules/FaviconLoader.jsm"
 );
 
-class LinkHandlerChild extends ActorChild {
+class LinkHandlerChild extends JSWindowActorChild {
   constructor(dispatcher) {
     super(dispatcher);
 
@@ -27,7 +24,7 @@ class LinkHandlerChild extends ActorChild {
 
   get iconLoader() {
     if (!this._iconLoader) {
-      this._iconLoader = new FaviconLoader(this.mm);
+      this._iconLoader = new FaviconLoader(this);
     }
     return this._iconLoader;
   }
@@ -40,7 +37,7 @@ class LinkHandlerChild extends ActorChild {
     ) {
       // Inject the default icon. Use documentURIObject so that we do the right
       // thing with about:-style error pages. See bug 453442
-      let pageURI = this.content.document.documentURIObject;
+      let pageURI = this.document.documentURIObject;
       if (["http", "https"].includes(pageURI.scheme)) {
         this.seenTabIcon = true;
         this.iconLoader.addDefaultIcon(pageURI);
@@ -49,7 +46,7 @@ class LinkHandlerChild extends ActorChild {
   }
 
   onHeadParsed(event) {
-    if (event.target.ownerDocument != this.content.document) {
+    if (event.target.ownerDocument != this.document) {
       return;
     }
 
@@ -65,7 +62,7 @@ class LinkHandlerChild extends ActorChild {
   }
 
   onPageShow(event) {
-    if (event.target != this.content.document) {
+    if (event.target != this.document) {
       return;
     }
 
@@ -77,7 +74,7 @@ class LinkHandlerChild extends ActorChild {
   }
 
   onPageHide(event) {
-    if (event.target != this.content.document) {
+    if (event.target != this.document) {
       return;
     }
 
@@ -91,7 +88,7 @@ class LinkHandlerChild extends ActorChild {
   onLinkEvent(event) {
     let link = event.target;
     // Ignore sub-frames (bugs 305472, 479408).
-    if (link.ownerGlobal != this.content) {
+    if (link.ownerGlobal != this.contentWindow) {
       return;
     }
 
@@ -156,7 +153,7 @@ class LinkHandlerChild extends ActorChild {
               re.test(link.href)
             ) {
               let engine = { title: link.title, href: link.href };
-              this.mm.sendAsyncMessage("Link:AddSearch", {
+              this.sendAsyncMessage("Link:AddSearch", {
                 engine,
                 url: link.ownerDocument.documentURI,
               });
