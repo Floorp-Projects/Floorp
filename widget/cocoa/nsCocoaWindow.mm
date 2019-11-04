@@ -19,7 +19,7 @@
 #include "nsIAppShellService.h"
 #include "nsIBaseWindow.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsIAppWindow.h"
+#include "nsIXULWindow.h"
 #include "nsToolkit.h"
 #include "nsTouchBarNativeAPIDefines.h"
 #include "nsPIDOMWindow.h"
@@ -665,7 +665,7 @@ void nsCocoaWindow::SetModal(bool aState) {
     // appears over behave as they should.  We can't rely on native methods to
     // do this, for the following reason:  The OS runs modal non-sheet windows
     // in an event loop (using [NSApplication runModalForWindow:] or similar
-    // methods) that's incompatible with the modal event loop in AppWindow::
+    // methods) that's incompatible with the modal event loop in nsXULWindow::
     // ShowModal() (each of these event loops is "exclusive", and can't run at
     // the same time as other (similar) event loops).
     if (mWindowType != eWindowType_sheet) {
@@ -1653,7 +1653,7 @@ void nsCocoaWindow::BackingScaleFactorChanged() {
 
   mBackingScaleFactor = newScale;
 
-  if (!mWidgetListener || mWidgetListener->GetAppWindow()) {
+  if (!mWidgetListener || mWidgetListener->GetXULWindow()) {
     return;
   }
 

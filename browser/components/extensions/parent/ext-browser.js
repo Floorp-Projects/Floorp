@@ -1009,7 +1009,7 @@ class Window extends WindowBase {
   }
 
   get alwaysOnTop() {
-    return this.appWindow.zLevel >= Ci.nsIAppWindow.raisedZ;
+    return this.xulWindow.zLevel >= Ci.nsIXULWindow.raisedZ;
   }
 
   get isLastFocused() {

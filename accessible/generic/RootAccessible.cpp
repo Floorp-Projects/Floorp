@@ -45,7 +45,7 @@
 #include "nsGlobalWindow.h"
 
 #ifdef MOZ_XUL
-#  include "nsIAppWindow.h"
+#  include "nsIXULWindow.h"
 #endif
 
 using namespace mozilla;
@@ -97,18 +97,18 @@ role RootAccessible::NativeRole() const {
 uint32_t RootAccessible::GetChromeFlags() const {
   // Return the flag set for the top level window as defined
   // by nsIWebBrowserChrome::CHROME_WINDOW_[FLAGNAME]
-  // Not simple: nsIAppWindow is not just a QI from nsIDOMWindow
+  // Not simple: nsIXULWindow is not just a QI from nsIDOMWindow
   nsCOMPtr<nsIDocShell> docShell = nsCoreUtils::GetDocShellFor(mDocumentNode);
   NS_ENSURE_TRUE(docShell, 0);
   nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
   docShell->GetTreeOwner(getter_AddRefs(treeOwner));
   NS_ENSURE_TRUE(treeOwner, 0);
-  nsCOMPtr<nsIAppWindow> appWin(do_GetInterface(treeOwner));
-  if (!appWin) {
+  nsCOMPtr<nsIXULWindow> xulWin(do_GetInterface(treeOwner));
+  if (!xulWin) {
     return 0;
   }
   uint32_t chromeFlags;
-  appWin->GetChromeFlags(&chromeFlags);
+  xulWin->GetChromeFlags(&chromeFlags);
   return chromeFlags;
 }
 #endif

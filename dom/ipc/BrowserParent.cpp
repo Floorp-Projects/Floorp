@@ -72,7 +72,7 @@
 #include "nsIWebBrowserChrome.h"
 #include "nsIWebProtocolHandlerRegistrar.h"
 #include "nsIXULBrowserWindow.h"
-#include "nsIAppWindow.h"
+#include "nsIXULWindow.h"
 #include "nsViewManager.h"
 #include "nsVariant.h"
 #include "nsIWidget.h"
@@ -410,7 +410,7 @@ nsIXULBrowserWindow* BrowserParent::GetXULBrowserWindow() {
     return nullptr;
   }
 
-  nsCOMPtr<nsIAppWindow> window = do_GetInterface(treeOwner);
+  nsCOMPtr<nsIXULWindow> window = do_GetInterface(treeOwner);
   if (!window) {
     return nullptr;
   }
@@ -798,9 +798,9 @@ mozilla::ipc::IPCResult BrowserParent::RecvSizeShellTo(
     height = mDimensions.height;
   }
 
-  nsCOMPtr<nsIAppWindow> appWin(do_GetInterface(treeOwner));
-  NS_ENSURE_TRUE(appWin, IPC_OK());
-  appWin->SizeShellToWithLimit(width, height, aShellItemWidth,
+  nsCOMPtr<nsIXULWindow> xulWin(do_GetInterface(treeOwner));
+  NS_ENSURE_TRUE(xulWin, IPC_OK());
+  xulWin->SizeShellToWithLimit(width, height, aShellItemWidth,
                                aShellItemHeight);
 
   return IPC_OK();

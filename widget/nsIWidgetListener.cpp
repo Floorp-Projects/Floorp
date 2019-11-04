@@ -8,14 +8,14 @@
 #include "nsRegion.h"
 #include "nsView.h"
 #include "nsIWidget.h"
-#include "nsIAppWindow.h"
+#include "nsIXULWindow.h"
 
 #include "mozilla/BasicEvents.h"
 #include "mozilla/PresShell.h"
 
 using namespace mozilla;
 
-nsIAppWindow* nsIWidgetListener::GetAppWindow() { return nullptr; }
+nsIXULWindow* nsIWidgetListener::GetXULWindow() { return nullptr; }
 
 nsView* nsIWidgetListener::GetView() { return nullptr; }
 
