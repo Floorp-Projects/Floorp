@@ -11,9 +11,9 @@ import mozilla.components.browser.storage.sync.PlacesHistoryStorage
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
-import org.junit.Ignore
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
@@ -174,6 +174,7 @@ class HistoryTest {
     }
 
     @Test
+    @Ignore("Temp disable flakey test - see: https://github.com/mozilla-mobile/fenix/issues/5462")
     fun deleteMultipleSelectionTest() {
         val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
         val secondWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 2)
@@ -226,6 +227,7 @@ class HistoryTest {
             verifyHomeScreen()
         }
     }
+
     @Ignore("Test will be included after back navigation from History Fragment is sorted")
     @Test
     fun verifyCloseMenu() {
