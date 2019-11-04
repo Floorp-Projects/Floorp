@@ -1470,32 +1470,27 @@ function testTooLargeFrame() {
       await waitForFrame();
 
       // viewport depends on test environment.
-      const isWebRender =
-        SpecialPowers.DOMWindowUtils.layerManagerType == 'WebRender';
       var expectedWarning = new RegExp(
         "Animation cannot be run on the compositor because the area of the frame " +
         "\\(\\d+\\) is too large relative to the viewport " +
         "\\(larger than \\d+\\)");
-      if (isWebRender) {
-        // With WebRender, the large size frame could run on compositor.
-        assert_animation_property_state_equals(
-          animation.effect.getProperties(),
-          [ { property: subtest.property, runningOnCompositor: true } ]);
-      } else {
-        assert_animation_property_state_equals(
-          animation.effect.getProperties(),
-          [ {
-            property: subtest.property,
-            runningOnCompositor: false,
-            warning: expectedWarning
-          } ]);
-      }
+      assert_animation_property_state_equals(
+        animation.effect.getProperties(),
+        [ {
+          property: subtest.property,
+          runningOnCompositor: false,
+          warning: expectedWarning
+        } ]);
       animation.effect.target.style = 'width: 100px; height: 100px';
       await waitForFrame();
 
+      // With WebRender we appear to stick to the previous layerization decision
+      // after changing the bounds back to a smaller object.
+      const isWebRender =
+        SpecialPowers.DOMWindowUtils.layerManagerType == 'WebRender';
       assert_animation_property_state_equals(
         animation.effect.getProperties(),
-        [ { property: subtest.property, runningOnCompositor: true } ]);
+        [ { property: subtest.property, runningOnCompositor: !isWebRender } ]);
     }, subtest.property + ' on too big element - area');
 
     promise_test(async t => {
@@ -1512,33 +1507,26 @@ function testTooLargeFrame() {
       await waitForFrame();
 
       // viewport depends on test environment.
-      const isWebRender =
-        SpecialPowers.DOMWindowUtils.layerManagerType == 'WebRender';
       var expectedWarning = new RegExp(
         "Animation cannot be run on the compositor because the frame size " +
         "\\(20000, 1\\) is too large relative to the viewport " +
         "\\(larger than \\(\\d+, \\d+\\)\\) or larger than the " +
         "maximum allowed value \\(\\d+, \\d+\\)");
-      if (isWebRender) {
-        // With WebRender, the large size frame could run on compositor.
-        assert_animation_property_state_equals(
-          animation.effect.getProperties(),
-          [ { property: subtest.property, runningOnCompositor: true } ]);
-      } else {
-        assert_animation_property_state_equals(
-          animation.effect.getProperties(),
-          [ {
-            property: subtest.property,
-            runningOnCompositor: false,
-            warning: expectedWarning
-          } ]);
-      }
+      assert_animation_property_state_equals(
+        animation.effect.getProperties(),
+        [ {
+          property: subtest.property,
+          runningOnCompositor: false,
+          warning: expectedWarning
+        } ]);
       animation.effect.target.style = 'width: 100px; height: 100px';
       await waitForFrame();
 
+      const isWebRender =
+        SpecialPowers.DOMWindowUtils.layerManagerType == 'WebRender';
       assert_animation_property_state_equals(
         animation.effect.getProperties(),
-        [ { property: subtest.property, runningOnCompositor: true } ]);
+        [ { property: subtest.property, runningOnCompositor: !isWebRender } ]);
     }, subtest.property + ' on too big element - dimensions');
   });
 }
