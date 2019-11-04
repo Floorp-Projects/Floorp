@@ -22,11 +22,8 @@ add_task(async function setup() {
         "social-tracking.example.org",
       ],
       // Whitelist trackertest.org loaded by default in trackingPage.html
-      ["urlclassifier.trackingWhitelistTable.testEntries", "example.com"],
-      [
-        "urlclassifier.trackingAnnotationWhitelistTable.testEntries",
-        "example.com",
-      ],
+      ["urlclassifier.trackingSkipURLs", "trackertest.org"],
+      ["urlclassifier.trackingAnnotationSkipURLs", "trackertest.org"],
       ["privacy.trackingprotection.enabled", false],
       ["privacy.trackingprotection.annotate_channels", true],
     ],
