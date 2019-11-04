@@ -186,7 +186,7 @@ bool RemoteDecoderManagerParent::CreateVideoBridgeToOtherProcess(
   }
 
   RefPtr<Runnable> task = NewRunnableFunction(
-      "gfx::VideoBridgeChild::Open", &VideoBridgeChild::OpenToParentProcess,
+      "gfx::VideoBridgeChild::Open", &VideoBridgeChild::Open,
       std::move(aEndpoint));
   sRemoteDecoderManagerParentThread->Dispatch(task.forget(),
                                               NS_DISPATCH_NORMAL);

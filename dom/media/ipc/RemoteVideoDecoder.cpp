@@ -37,9 +37,7 @@ class KnowsCompositorVideo : public layers::KnowsCompositor {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(KnowsCompositorVideo, override)
 
   layers::TextureForwarder* GetTextureForwarder() override {
-    return mTextureFactoryIdentifier.mParentProcessType == GeckoProcessType_GPU
-               ? VideoBridgeChild::GetSingletonToGPUProcess()
-               : VideoBridgeChild::GetSingletonToParentProcess();
+    return VideoBridgeChild::GetSingleton();
   }
   layers::LayersIPCActor* GetLayersIPCActor() override {
     return GetTextureForwarder();
@@ -47,10 +45,7 @@ class KnowsCompositorVideo : public layers::KnowsCompositor {
 
   static already_AddRefed<KnowsCompositorVideo> TryCreateForIdentifier(
       const layers::TextureFactoryIdentifier& aIdentifier) {
-    VideoBridgeChild* child =
-        (aIdentifier.mParentProcessType == GeckoProcessType_GPU)
-            ? VideoBridgeChild::GetSingletonToGPUProcess()
-            : VideoBridgeChild::GetSingletonToParentProcess();
+    VideoBridgeChild* child = VideoBridgeChild::GetSingleton();
     if (!child) {
       return nullptr;
     }
