@@ -698,8 +698,6 @@ template <typename ObjT, typename RawbufT>
 static bool CreateSpecificWasmBuffer(
     JSContext* cx, uint32_t initialSize, const Maybe<uint32_t>& maxSize,
     MutableHandleArrayBufferObjectMaybeShared maybeSharedObject) {
-#define ROUND_UP(v, a) ((v) % (a) == 0 ? (v) : v + a - ((v) % (a)))
-
   bool useHugeMemory = wasm::IsHugeMemoryEnabled();
 
   Maybe<uint32_t> clampedMaxSize = maxSize;
@@ -761,7 +759,7 @@ static bool CreateSpecificWasmBuffer(
     uint32_t cur = clampedMaxSize.value() / 2;
 
     for (; cur > initialSize; cur /= 2) {
-      uint32_t clampedMaxSize = ROUND_UP(cur, wasm::PageSize);
+      uint32_t clampedMaxSize = JS_ROUNDUP(cur, wasm::PageSize);
       buffer = RawbufT::Allocate(initialSize, Some(clampedMaxSize), mappedSize);
       if (buffer) {
         break;
@@ -776,11 +774,9 @@ static bool CreateSpecificWasmBuffer(
 
     // Try to grow our chunk as much as possible.
     for (size_t d = cur / 2; d >= wasm::PageSize; d /= 2) {
-      buffer->tryGrowMaxSizeInPlace(ROUND_UP(d, wasm::PageSize));
+      buffer->tryGrowMaxSizeInPlace(JS_ROUNDUP(d, wasm::PageSize));
     }
   }
-
-#undef ROUND_UP
 
   // ObjT::createFromNewRawBuffer assumes ownership of |buffer| even in case
   // of failure.
