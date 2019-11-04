@@ -22,6 +22,12 @@
                     "minimum": -1000000000000.0,
                     "maximum": 1000000000000.0
                 },
+                "unit": {
+                    "title": "Measurement unit",
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 20
+                },
                 "lowerIsBetter": {
                     "description": "Whether lower values are better for subtest",
                     "title": "Lower is better",
@@ -95,6 +101,12 @@
                     "type": "number",
                     "minimum": -1000000000000.0,
                     "maximum": 1000000000000.0
+                },
+                "unit": {
+                    "title": "Measurement unit",
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 20
                 },
                 "lowerIsBetter": {
                     "description": "Whether lower values are better for suite",
