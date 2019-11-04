@@ -200,8 +200,8 @@ void CanvasChild::EndTransaction() {
 }
 
 bool CanvasChild::ShouldBeCleanedUp() const {
-  // We can't be cleaned up if we have stored objects still alive.
-  if (!mRecorder->IsEmpty()) {
+  // We can only be cleaned up if nothing else references our recorder.
+  if (!mRecorder->hasOneRef()) {
     return false;
   }
 
