@@ -1553,7 +1553,7 @@ class XPCWrappedNative final : public nsIXPConnectWrappedNative {
  private:
   enum {
     // Flags bits for mFlatJSObject:
-    FLAT_JS_OBJECT_VALID = JS_BIT(0)
+    FLAT_JS_OBJECT_VALID = js::Bit(0)
   };
 
   bool Init(JSContext* cx, nsIXPCScriptable* scriptable);

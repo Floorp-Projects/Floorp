@@ -477,7 +477,7 @@ bool BytecodeEmitter::emitDupAt(unsigned slotFromTop, unsigned count) {
     return emit1(JSOP_DUP2);
   }
 
-  if (slotFromTop >= JS_BIT(24)) {
+  if (slotFromTop >= Bit(24)) {
     reportError(nullptr, JSMSG_TOO_MANY_LOCALS);
     return false;
   }
@@ -2069,11 +2069,11 @@ bool BytecodeEmitter::emitNumberOp(double dval) {
     }
 
     uint32_t u = uint32_t(ival);
-    if (u < JS_BIT(16)) {
+    if (u < Bit(16)) {
       if (!emitUint16Operand(JSOP_UINT16, u)) {
         return false;
       }
-    } else if (u < JS_BIT(24)) {
+    } else if (u < Bit(24)) {
       BytecodeOffset off;
       if (!emitN(JSOP_UINT24, 3, &off)) {
         return false;
@@ -2272,7 +2272,7 @@ bool BytecodeEmitter::isRunOnceLambda() {
 
 bool BytecodeEmitter::allocateResumeIndex(BytecodeOffset offset,
                                           uint32_t* resumeIndex) {
-  static constexpr uint32_t MaxResumeIndex = JS_BITMASK(24);
+  static constexpr uint32_t MaxResumeIndex = BitMask(24);
 
   static_assert(
       MaxResumeIndex < uint32_t(AbstractGeneratorObject::RESUME_INDEX_RUNNING),

@@ -262,17 +262,17 @@ class JSString : public js::gc::CellWithLengthAndFlags<js::gc::Cell> {
                 "JSString::flags must reserve enough bits for Cell");
 
   static const uint32_t NON_ATOM_BIT = js::gc::Cell::JSSTRING_BIT;
-  static const uint32_t LINEAR_BIT = JS_BIT(4);
-  static const uint32_t DEPENDENT_BIT = JS_BIT(5);
-  static const uint32_t INLINE_CHARS_BIT = JS_BIT(6);
+  static const uint32_t LINEAR_BIT = js::Bit(4);
+  static const uint32_t DEPENDENT_BIT = js::Bit(5);
+  static const uint32_t INLINE_CHARS_BIT = js::Bit(6);
 
   static const uint32_t EXTENSIBLE_FLAGS =
-      NON_ATOM_BIT | LINEAR_BIT | JS_BIT(7);
-  static const uint32_t EXTERNAL_FLAGS = NON_ATOM_BIT | LINEAR_BIT | JS_BIT(8);
+      NON_ATOM_BIT | LINEAR_BIT | js::Bit(7);
+  static const uint32_t EXTERNAL_FLAGS = NON_ATOM_BIT | LINEAR_BIT | js::Bit(8);
 
-  static const uint32_t FAT_INLINE_MASK = INLINE_CHARS_BIT | JS_BIT(7);
-  static const uint32_t PERMANENT_ATOM_MASK = NON_ATOM_BIT | JS_BIT(8);
-  static const uint32_t PERMANENT_ATOM_FLAGS = JS_BIT(8);
+  static const uint32_t FAT_INLINE_MASK = INLINE_CHARS_BIT | js::Bit(7);
+  static const uint32_t PERMANENT_ATOM_MASK = NON_ATOM_BIT | js::Bit(8);
+  static const uint32_t PERMANENT_ATOM_FLAGS = js::Bit(8);
 
   /* Initial flags for thin inline and fat inline strings. */
   static const uint32_t INIT_THIN_INLINE_FLAGS =
@@ -285,14 +285,14 @@ class JSString : public js::gc::CellWithLengthAndFlags<js::gc::Cell> {
       NON_ATOM_BIT | LINEAR_BIT | DEPENDENT_BIT;
 
   static const uint32_t TYPE_FLAGS_MASK =
-      JS_BITMASK(9) - JS_BITMASK(3) + js::gc::Cell::JSSTRING_BIT;
+      js::BitMask(9) - js::BitMask(3) + js::gc::Cell::JSSTRING_BIT;
 
-  static const uint32_t LATIN1_CHARS_BIT = JS_BIT(9);
+  static const uint32_t LATIN1_CHARS_BIT = js::Bit(9);
 
-  static const uint32_t INDEX_VALUE_BIT = JS_BIT(10);
+  static const uint32_t INDEX_VALUE_BIT = js::Bit(10);
   static const uint32_t INDEX_VALUE_SHIFT = 16;
 
-  static const uint32_t PINNED_ATOM_BIT = JS_BIT(11);
+  static const uint32_t PINNED_ATOM_BIT = js::Bit(11);
 
   static const uint32_t MAX_LENGTH = js::MaxStringLength;
 

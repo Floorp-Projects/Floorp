@@ -759,7 +759,7 @@ static bool CreateSpecificWasmBuffer(
     uint32_t cur = clampedMaxSize.value() / 2;
 
     for (; cur > initialSize; cur /= 2) {
-      uint32_t clampedMaxSize = JS_ROUNDUP(cur, wasm::PageSize);
+      uint32_t clampedMaxSize = RoundUp(cur, wasm::PageSize);
       buffer = RawbufT::Allocate(initialSize, Some(clampedMaxSize), mappedSize);
       if (buffer) {
         break;
@@ -774,7 +774,7 @@ static bool CreateSpecificWasmBuffer(
 
     // Try to grow our chunk as much as possible.
     for (size_t d = cur / 2; d >= wasm::PageSize; d /= 2) {
-      buffer->tryGrowMaxSizeInPlace(JS_ROUNDUP(d, wasm::PageSize));
+      buffer->tryGrowMaxSizeInPlace(RoundUp(d, wasm::PageSize));
     }
   }
 
@@ -974,7 +974,7 @@ inline size_t ArrayBufferObject::associatedBytes() const {
   if (bufferKind() == MALLOCED) {
     return byteLength();
   } else if (bufferKind() == MAPPED) {
-    return JS_ROUNDUP(byteLength(), js::gc::SystemPageSize());
+    return RoundUp(byteLength(), js::gc::SystemPageSize());
   } else {
     MOZ_CRASH("Unexpected buffer kind");
   }
@@ -1168,7 +1168,7 @@ ArrayBufferObject* ArrayBufferObject::createForContents(
   } else if (contents.kind() == EXTERNAL) {
     // Store the FreeInfo in the inline data slots so that we
     // don't use up slots for it in non-refcounted array buffers.
-    size_t freeInfoSlots = JS_HOWMANY(sizeof(FreeInfo), sizeof(Value));
+    size_t freeInfoSlots = HowMany(sizeof(FreeInfo), sizeof(Value));
     MOZ_ASSERT(reservedSlots + freeInfoSlots <= NativeObject::MAX_FIXED_SLOTS,
                "FreeInfo must fit in inline slots");
     nslots += freeInfoSlots;
@@ -1176,7 +1176,7 @@ ArrayBufferObject* ArrayBufferObject::createForContents(
     // The ABO is taking ownership, so account the bytes against the zone.
     nAllocated = nbytes;
     if (contents.kind() == MAPPED) {
-      nAllocated = JS_ROUNDUP(nbytes, js::gc::SystemPageSize());
+      nAllocated = RoundUp(nbytes, js::gc::SystemPageSize());
     } else {
       MOZ_ASSERT(contents.kind() == MALLOCED,
                  "should have handled all possible callers' kinds");
@@ -1220,7 +1220,7 @@ ArrayBufferObject* ArrayBufferObject::createZeroed(
   size_t nslots = JSCLASS_RESERVED_SLOTS(&class_);
   uint8_t* data;
   if (nbytes <= MaxInlineBytes) {
-    int newSlots = JS_HOWMANY(nbytes, sizeof(Value));
+    int newSlots = HowMany(nbytes, sizeof(Value));
     MOZ_ASSERT(int(nbytes) <= newSlots * int(sizeof(Value)));
 
     nslots += newSlots;

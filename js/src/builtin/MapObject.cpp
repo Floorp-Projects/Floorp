@@ -219,7 +219,7 @@ MapIteratorObject* MapIteratorObject::create(JSContext* cx, HandleObject obj,
     iterobj->setSlot(RangeSlot, PrivateValue(nullptr));
     iterobj->setSlot(KindSlot, Int32Value(int32_t(kind)));
 
-    const size_t size = JS_ROUNDUP(sizeof(ValueMap::Range), gc::CellAlignBytes);
+    const size_t size = RoundUp(sizeof(ValueMap::Range), gc::CellAlignBytes);
     buffer = nursery.allocateBufferSameLocation(iterobj, size);
     if (buffer) {
       break;
@@ -992,7 +992,7 @@ SetIteratorObject* SetIteratorObject::create(JSContext* cx, HandleObject obj,
     iterobj->setSlot(RangeSlot, PrivateValue(nullptr));
     iterobj->setSlot(KindSlot, Int32Value(int32_t(kind)));
 
-    const size_t size = JS_ROUNDUP(sizeof(ValueSet::Range), gc::CellAlignBytes);
+    const size_t size = RoundUp(sizeof(ValueSet::Range), gc::CellAlignBytes);
     buffer = nursery.allocateBufferSameLocation(iterobj, size);
     if (buffer) {
       break;

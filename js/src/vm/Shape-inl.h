@@ -291,7 +291,7 @@ MOZ_ALWAYS_INLINE ShapeTable::Entry& ShapeTable::searchUnchecked(jsid id) {
   /* Collision: double hash. */
   uint32_t sizeLog2 = HASH_BITS - hashShift_;
   HashNumber hash2 = Hash2(hash0, sizeLog2, hashShift_);
-  uint32_t sizeMask = JS_BITMASK(sizeLog2);
+  uint32_t sizeMask = BitMask(sizeLog2);
 
   /* Save the first removed entry pointer so we can recycle it if adding. */
   Entry* firstRemoved;

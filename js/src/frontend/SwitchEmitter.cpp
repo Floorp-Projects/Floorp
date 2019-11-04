@@ -32,7 +32,7 @@ bool SwitchEmitter::TableGenerator::addNumber(int32_t caseValue) {
     return true;
   }
 
-  if (unsigned(caseValue + int(JS_BIT(15))) >= unsigned(JS_BIT(16))) {
+  if (unsigned(caseValue + int(Bit(15))) >= unsigned(Bit(16))) {
     setInvalid();
     return true;
   }
@@ -48,7 +48,7 @@ bool SwitchEmitter::TableGenerator::addNumber(int32_t caseValue) {
   // We bias caseValue by 65536 if it's negative, and hope that's a rare case
   // (because it requires a malloc'd bitmap).
   if (caseValue < 0) {
-    caseValue += JS_BIT(16);
+    caseValue += Bit(16);
   }
   if (caseValue >= intmapBitLength_) {
     size_t newLength = NumWordsForBitArrayOfLength(caseValue + 1);
@@ -87,7 +87,7 @@ void SwitchEmitter::TableGenerator::finish(uint32_t caseCount) {
   // Compute table length and select condswitch instead if overlarge
   // or more than half-sparse.
   tableLength_ = uint32_t(high_ - low_ + 1);
-  if (tableLength_ >= JS_BIT(16) || tableLength_ > 2 * caseCount) {
+  if (tableLength_ >= Bit(16) || tableLength_ > 2 * caseCount) {
     setInvalid();
   }
 }
@@ -139,7 +139,7 @@ bool SwitchEmitter::emitLexical(Handle<LexicalScope::Data*> bindings) {
 
 bool SwitchEmitter::validateCaseCount(uint32_t caseCount) {
   MOZ_ASSERT(state_ == State::Discriminant || state_ == State::Lexical);
-  if (caseCount > JS_BIT(16)) {
+  if (caseCount > Bit(16)) {
     bce_->reportError(switchPos_, JSMSG_TOO_MANY_CASES);
     return false;
   }
