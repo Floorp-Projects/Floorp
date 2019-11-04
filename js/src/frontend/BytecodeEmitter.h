@@ -11,8 +11,9 @@
 
 #include "mozilla/Assertions.h"  // MOZ_ASSERT
 #include "mozilla/Attributes.h"  // MOZ_STACK_CLASS, MOZ_MUST_USE, MOZ_ALWAYS_INLINE, MOZ_NEVER_INLINE, MOZ_RAII
-#include "mozilla/Maybe.h"  // mozilla::Maybe, mozilla::Some
-#include "mozilla/Span.h"   // mozilla::Span
+#include "mozilla/Maybe.h"   // mozilla::Maybe, mozilla::Some
+#include "mozilla/Span.h"    // mozilla::Span
+#include "mozilla/Vector.h"  // mozilla::Vector
 
 #include <stddef.h>  // ptrdiff_t
 #include <stdint.h>  // uint16_t, uint32_t
@@ -482,8 +483,28 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
 
   MOZ_MUST_USE bool emitHoistedFunctionsInList(ListNode* stmtList);
 
+  // Can we use the object-literal writer either in singleton-object mode (with
+  // values) or in template mode (field names only, no values) for the property
+  // list?
+  void isPropertyListObjLiteralCompatible(ListNode* obj, PropListType type,
+                                          bool* withValues,
+                                          bool* withoutValues);
+  bool isArrayObjLiteralCompatible(ParseNode* arrayHead);
+
   MOZ_MUST_USE bool emitPropertyList(ListNode* obj, PropertyEmitter& pe,
                                      PropListType type);
+
+  MOZ_MUST_USE bool emitPropertyListObjLiteral(ListNode* obj, PropListType type,
+                                               bool isSingletonContext,
+                                               bool noValuesMode);
+
+  MOZ_MUST_USE bool emitObjLiteralArray(ParseNode* arrayHead, bool isSingleton);
+
+  // Is a field value OBJLITERAL-compatible?
+  MOZ_MUST_USE bool isRHSObjLiteralCompatible(ParseNode* value);
+
+  MOZ_MUST_USE bool emitObjLiteralValue(ObjLiteralCreationData* data,
+                                        ParseNode* value);
 
   FieldInitializers setupFieldInitializers(ListNode* classMembers);
   MOZ_MUST_USE bool emitCreateFieldKeys(ListNode* obj);
