@@ -925,7 +925,9 @@ this.DateInputImplWidget = class extends DateTimeInputBaseImplWidget {
         this.advanceToNextField();
       }
       targetField.setAttribute("typeBuffer", buffer);
-      this.setInputValueFromFields();
+      if (!this.isAnyFieldEmpty()) {
+        this.setInputValueFromFields();
+      }
     }
   }
 
@@ -1635,7 +1637,9 @@ this.TimeInputImplWidget = class extends DateTimeInputBaseImplWidget {
       } else if (key == "p" || key == "P") {
         this.setDayPeriodValue(this.mPMIndicator);
       }
-      this.setInputValueFromFields();
+      if (!this.isAnyFieldEmpty()) {
+        this.setInputValueFromFields();
+      }
       return;
     }
 
@@ -1653,7 +1657,9 @@ this.TimeInputImplWidget = class extends DateTimeInputBaseImplWidget {
         this.advanceToNextField();
       }
       targetField.setAttribute("typeBuffer", buffer);
-      this.setInputValueFromFields();
+      if (!this.isAnyFieldEmpty()) {
+        this.setInputValueFromFields();
+      }
     }
   }
 
