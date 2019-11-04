@@ -103,55 +103,6 @@ template <>
 struct ParamTraits<mozilla::dom::RTCIceTransportPolicy>
     : public WebidlEnumSerializer<mozilla::dom::RTCIceTransportPolicy> {};
 
-// A couple of recursive helper functions, allows syntax like:
-// WriteParams(aMsg, aParam.foo, aParam.bar, aParam.baz)
-// ReadParams(aMsg, aIter, aParam.foo, aParam.bar, aParam.baz)
-
-// Base case
-static void WriteParams(Message* aMsg) {}
-
-template <typename T0, typename... Tn>
-static void WriteParams(Message* aMsg, const T0& aArg,
-                        const Tn&... aRemainingArgs) {
-  WriteParam(aMsg, aArg);                // Write first arg
-  WriteParams(aMsg, aRemainingArgs...);  // Recurse for the rest
-}
-
-// Base case
-static bool ReadParams(const Message* aMsg, PickleIterator* aIter) {
-  return true;
-}
-
-template <typename T0, typename... Tn>
-static bool ReadParams(const Message* aMsg, PickleIterator* aIter, T0& aArg,
-                       Tn&... aRemainingArgs) {
-  return ReadParam(aMsg, aIter, &aArg) &&             // Read first arg
-         ReadParams(aMsg, aIter, aRemainingArgs...);  // Recurse for the rest
-}
-
-// Macros that allow syntax like:
-// DEFINE_IPC_SERIALIZER_WITH_FIELDS(SomeType, member1, member2, member3)
-// Makes sure that serialize/deserialize code do the same members in the same
-// order.
-#define ACCESS_PARAM_FIELD(Field) aParam.Field
-
-#define DEFINE_IPC_SERIALIZER_WITH_FIELDS(Type, ...)                         \
-  template <>                                                                \
-  struct ParamTraits<Type> {                                                 \
-    typedef Type paramType;                                                  \
-    static void Write(Message* aMsg, const paramType& aParam) {              \
-      WriteParams(aMsg, MOZ_FOR_EACH_SEPARATED(ACCESS_PARAM_FIELD, (, ), (), \
-                                               (__VA_ARGS__)));              \
-    }                                                                        \
-                                                                             \
-    static bool Read(const Message* aMsg, PickleIterator* aIter,             \
-                     paramType* aResult) {                                   \
-      paramType& aParam = *aResult;                                          \
-      return ReadParams(aMsg, aIter,                                         \
-                        MOZ_FOR_EACH_SEPARATED(ACCESS_PARAM_FIELD, (, ), (), \
-                                               (__VA_ARGS__)));              \
-    }                                                                        \
-  };
 
 DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::dom::RTCIceServer, mCredential,
                                   mCredentialType, mUrl, mUrls, mUsername)

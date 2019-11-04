@@ -19,4 +19,8 @@ bool ByteLengthIsValid(uint32_t aNumElements, size_t aElementSize,
   return true;
 }
 
+void WriteParams(Message* aMsg) {}
+
+bool ReadParams(const Message* aMsg, PickleIterator* aIter) { return true; }
+
 }  // namespace IPC
