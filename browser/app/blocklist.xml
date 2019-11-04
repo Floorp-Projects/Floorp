@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1572443230107">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1572613220594">
   <emItems>
     <emItem blockID="i334" id="{0F827075-B026-42F3-885D-98981EE7B1AE}">
       <prefs/>
@@ -3525,6 +3525,10 @@
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
+    <emItem blockID="11fd123a-e67d-44ab-909f-b776ea2e8d0a" id="/^((\{3c8970fa-1340-45ad-82fe-81f3beccfbdc\})|(\{4ab99b95-4d05-438c-8a3e-adb1b3fe8d81\})|(\{7f87a05d-dba7-448e-9af2-ee0f4a294c01\})|(\{59a219a8-45cd-458d-9b3e-8d86c19dfc31\})|(\{79f4bfc7-b1da-4dc4-85cc-ecbcc5dd152e\})|(\{484dc5ad-4d6a-4ee4-91b7-b5b8166e6b3d\})|(\{2643d75f-9d64-47ef-9c23-78f0f055c7b8\})|(\{76399bf2-8354-4b11-bf43-6c863b195b1d\})|(\{110791c0-2883-4301-8214-90be7549df43\})|(\{a33e004d-2ac0-4d77-8e14-50780bc231a3\})|(\{aaaa5840-6b3b-49d8-92c2-9696798c4e2a\})|(\{bfc55377-7210-4e7a-828f-6fdb9df02847\})|(\{c6c78b9a-370d-49c5-b9c6-96d7e38861c5\})|(\{c115eb3a-4746-472b-8f1f-d8596c49b3b6\})|(\{deaa22e5-33ed-440f-a734-c3175e6228a7\})|(\{e34d5840-6b3b-49d8-92c2-9696798c4e2a\})|(aapbdbdomjkkjkaonfhkkikfgjllcleb@chromeStoreFoxified-\d+)|(babelfox_client@rami)|(blndkmebkmenignoajhoemebccmmfjib@chrome-store-foxified-\d+)|(bridge-translate-app@chrome-store-foxified-\d+)|(dephbpajmknbniclommefdlnflkfnpgh@chrome-store-foxified-\d+)|(extension@newtab\.biz)|(generated-74o6bact7xu7y32fvfju4s@chrome-store-foxified-\d+)|(generated-axbwzwbksnnig1ug9v5dly@chrome-store-foxified-\d+)|(googletranslateelement@developer\.org)|(icdahkkjdchifpnbebileaelbcgipepe@chrome-store-foxified-\d+)|(ifgljfjnflaadalpmkkgdailepedeehd@chrome-store-foxified-\d+)|(knpgbkpddpcepnloiijojmgbdhihkjkl@chrome-store-foxified-\d+)|(translate-4@chrome-store-foxified-\d+))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
   </emItems>
   <pluginItems>
     <pluginItem blockID="p332">
@@ -3560,12 +3564,12 @@
     <pluginItem blockID="49b843cc-a8fc-4ede-be0c-a0da56d0214f" os="Linux">
       <match name="filename" exp="libflashplayer\.so"/>
       <infoURL>https://get.adobe.com/flashplayer/</infoURL>
-      <versionRange maxVersion="32.0.0.238" minVersion="0" severity="0" vulnerabilitystatus="1"/>
+      <versionRange maxVersion="32.0.0.255" minVersion="0" severity="0" vulnerabilitystatus="1"/>
     </pluginItem>
     <pluginItem blockID="832dc9ff-3314-4df2-abcf-7bd65a645371">
       <match name="filename" exp="(NPSWF32.*\.dll)|(NPSWF64.*\.dll)|(Flash\ Player\.plugin)"/>
       <infoURL>https://get.adobe.com/flashplayer/</infoURL>
-      <versionRange maxVersion="32.0.0.238" minVersion="0" severity="0" vulnerabilitystatus="1"/>
+      <versionRange maxVersion="32.0.0.255" minVersion="0" severity="0" vulnerabilitystatus="1"/>
     </pluginItem>
   </pluginItems>
   <gfxItems>
