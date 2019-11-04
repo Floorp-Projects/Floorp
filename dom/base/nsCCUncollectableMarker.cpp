@@ -18,7 +18,7 @@
 #include "nsISHEntry.h"
 #include "nsIWindowWatcher.h"
 #include "mozilla/Services.h"
-#include "nsIAppWindow.h"
+#include "nsIXULWindow.h"
 #include "nsIAppShellService.h"
 #include "nsAppShellCID.h"
 #include "nsContentUtils.h"
@@ -351,7 +351,7 @@ nsresult nsCCUncollectableMarker::Observe(nsISupports* aSubject,
     bool hasHiddenWindow = false;
     appShell->GetHasHiddenWindow(&hasHiddenWindow);
     if (hasHiddenWindow) {
-      nsCOMPtr<nsIAppWindow> hw;
+      nsCOMPtr<nsIXULWindow> hw;
       appShell->GetHiddenWindow(getter_AddRefs(hw));
       nsCOMPtr<nsIDocShell> shell;
       hw->GetDocShell(getter_AddRefs(shell));
