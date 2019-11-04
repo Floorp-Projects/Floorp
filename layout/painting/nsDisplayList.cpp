@@ -8502,14 +8502,6 @@ auto nsDisplayTransform::ShouldPrerenderTransformedContent(
     return FullPrerender;
   }
 
-  // If painting is for WebRender, allow full prerender even for large size
-  // frame. With WebRender, memory usage increase for async animation is limited
-  // compared to non-WebRender case.
-  if (aBuilder->IsPaintingForWebRender()) {
-    *aDirtyRect = overflow;
-    return FullPrerender;
-  }
-
   float viewportRatioX =
       StaticPrefs::layout_animation_prerender_viewport_ratio_limit_x();
   float viewportRatioY =
