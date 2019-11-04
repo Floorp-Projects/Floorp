@@ -742,6 +742,188 @@ contentblocking:
     record_in_processes:
       - main
 
+datasanitization:
+  network_cookie_lifetimePolicy:
+    bug_numbers:
+      - 1589753 
+    description: >
+      This scalar reports the value of the network.cookie.lifetimePolicy pref.      
+    expires: "76"
+    kind: uint
+    notification_emails:
+      - ewright@mozilla.com
+      - seceng-telemetry@mozilla.com
+    release_channel_collection: opt-in
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+  privacy_sanitize_sanitizeOnShutdown:
+    bug_numbers:
+      - 1589753 
+    description: >
+      A boolean reporting the value of the privacy.sanitize.sanitizeOnShutdown pref.
+    expires: "76"
+    kind: boolean
+    notification_emails:
+      - ewright@mozilla.com
+      - seceng-telemetry@mozilla.com
+    release_channel_collection: opt-in
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+  privacy_clearOnShutdown_cookies:
+    bug_numbers:
+      - 1589753 
+    description: >
+      A boolean reporting the value of the privacy.clearOnShutdown.cookies pref.
+    expires: "76"
+    kind: boolean
+    notification_emails:
+      - ewright@mozilla.com
+      - seceng-telemetry@mozilla.com
+    release_channel_collection: opt-in
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+  privacy_clearOnShutdown_history:
+    bug_numbers:
+      - 1589753 
+    description: >
+      A boolean reporting the value of the privacy.clearOnShutdown.history pref.
+    expires: "76"
+    kind: boolean
+    notification_emails:
+      - ewright@mozilla.com
+      - seceng-telemetry@mozilla.com
+    release_channel_collection: opt-in
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+  privacy_clearOnShutdown_formdata:
+    bug_numbers:
+      - 1589753 
+    description: >
+      A boolean reporting the value of the privacy.clearOnShutdown.formdata pref.
+    expires: "76"
+    kind: boolean
+    notification_emails:
+      - ewright@mozilla.com
+      - seceng-telemetry@mozilla.com
+    release_channel_collection: opt-in
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+  privacy_clearOnShutdown_downloads:
+    bug_numbers:
+      - 1589753 
+    description: >
+      A boolean reporting the value of the privacy.clearOnShutdown.downloads pref.
+    expires: "76"
+    kind: boolean
+    notification_emails:
+      - ewright@mozilla.com
+      - seceng-telemetry@mozilla.com
+    release_channel_collection: opt-in
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+  privacy_clearOnShutdown_cache:
+    bug_numbers:
+      - 1589753 
+    description: >
+      A boolean reporting the value of the privacy.clearOnShutdown.cache pref.
+    expires: "76"
+    kind: boolean
+    notification_emails:
+      - ewright@mozilla.com
+      - seceng-telemetry@mozilla.com
+    release_channel_collection: opt-in
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+  privacy_clearOnShutdown_sessions:
+    bug_numbers:
+      - 1589753 
+    description: >
+      A boolean reporting the value of the privacy.clearOnShutdown.sessions pref.
+    expires: "76"
+    kind: boolean
+    notification_emails:
+      - ewright@mozilla.com
+      - seceng-telemetry@mozilla.com
+    release_channel_collection: opt-in
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+  privacy_clearOnShutdown_offlineApps:
+    bug_numbers:
+      - 1589753 
+    description: >
+      A boolean reporting the value of the privacy.clearOnShutdown.offlineApps pref.
+    expires: "76"
+    kind: boolean
+    notification_emails:
+      - ewright@mozilla.com
+      - seceng-telemetry@mozilla.com
+    release_channel_collection: opt-in
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+  privacy_clearOnShutdown_siteSettings:
+    bug_numbers:
+      - 1589753 
+    description: >
+      A boolean reporting the value of the privacy.clearOnShutdown.siteSettings pref.
+    expires: "76"
+    kind: boolean
+    notification_emails:
+      - ewright@mozilla.com
+      - seceng-telemetry@mozilla.com
+    release_channel_collection: opt-in
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+  privacy_clearOnShutdown_openWindows:
+    bug_numbers:
+      - 1589753 
+    description: >
+      A boolean reporting the value of the privacy.clearOnShutdown.openWindows pref.
+    expires: "76"
+    kind: boolean
+    notification_emails:
+      - ewright@mozilla.com
+      - seceng-telemetry@mozilla.com
+    release_channel_collection: opt-in
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+  session_permission_exceptions:
+    bug_numbers:
+      - 1589753
+    description: >
+      A count of how many "session" cookie exceptions a user has set.
+    expires: "76"
+    kind: uint
+    notification_emails:
+      - ewright@mozilla.com
+      - seceng-telemetry@mozilla.com
+    release_channel_collection: opt-in
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+
 sandbox:
   no_job:
     bug_numbers:

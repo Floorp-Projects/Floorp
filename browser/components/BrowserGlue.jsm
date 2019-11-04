@@ -1834,6 +1834,70 @@ BrowserGlue.prototype = {
     });
   },
 
+  _recordDataSanitizationPrefs() {
+    Services.telemetry.scalarSet(
+      "datasanitization.network_cookie_lifetimePolicy",
+      Services.prefs.getIntPref("network.cookie.lifetimePolicy")
+    );
+    Services.telemetry.scalarSet(
+      "datasanitization.privacy_sanitize_sanitizeOnShutdown",
+      Services.prefs.getBoolPref("privacy.sanitize.sanitizeOnShutdown")
+    );
+    Services.telemetry.scalarSet(
+      "datasanitization.privacy_clearOnShutdown_cookies",
+      Services.prefs.getBoolPref("privacy.clearOnShutdown.cookies")
+    );
+    Services.telemetry.scalarSet(
+      "datasanitization.privacy_clearOnShutdown_history",
+      Services.prefs.getBoolPref("privacy.clearOnShutdown.history")
+    );
+    Services.telemetry.scalarSet(
+      "datasanitization.privacy_clearOnShutdown_formdata",
+      Services.prefs.getBoolPref("privacy.clearOnShutdown.formdata")
+    );
+    Services.telemetry.scalarSet(
+      "datasanitization.privacy_clearOnShutdown_downloads",
+      Services.prefs.getBoolPref("privacy.clearOnShutdown.downloads")
+    );
+    Services.telemetry.scalarSet(
+      "datasanitization.privacy_clearOnShutdown_cache",
+      Services.prefs.getBoolPref("privacy.clearOnShutdown.cache")
+    );
+    Services.telemetry.scalarSet(
+      "datasanitization.privacy_clearOnShutdown_sessions",
+      Services.prefs.getBoolPref("privacy.clearOnShutdown.sessions")
+    );
+    Services.telemetry.scalarSet(
+      "datasanitization.privacy_clearOnShutdown_offlineApps",
+      Services.prefs.getBoolPref("privacy.clearOnShutdown.offlineApps")
+    );
+    Services.telemetry.scalarSet(
+      "datasanitization.privacy_clearOnShutdown_siteSettings",
+      Services.prefs.getBoolPref("privacy.clearOnShutdown.siteSettings")
+    );
+    Services.telemetry.scalarSet(
+      "datasanitization.privacy_clearOnShutdown_openWindows",
+      Services.prefs.getBoolPref("privacy.clearOnShutdown.openWindows")
+    );
+
+    let exceptions = 0;
+    for (let permission of Services.perms.all) {
+      let uri = permission.principal.URI;
+      // We consider just permissions set for http, https and file URLs.
+      if (
+        permission.type == "cookie" &&
+        permission.capability == Ci.nsICookiePermission.ACCESS_SESSION &&
+        (uri.scheme == "http" || uri.scheme == "https" || uri.scheme == "file")
+      ) {
+        exceptions++;
+      }
+    }
+    Services.telemetry.scalarSet(
+      "datasanitization.session_permission_exceptions",
+      exceptions
+    );
+  },
+
   _sendMediaTelemetry() {
     let win = Services.wm.getMostRecentWindow("navigator:browser");
     if (win) {
@@ -2058,6 +2122,10 @@ BrowserGlue.prototype = {
 
     Services.tm.idleDispatchToMainThread(() => {
       this._recordContentBlockerTelemetry();
+    });
+
+    Services.tm.idleDispatchToMainThread(() => {
+      this._recordDataSanitizationPrefs();
     });
 
     // Load the Login Manager data from disk off the main thread, some time
