@@ -1074,6 +1074,12 @@ interface nsIDocShell : nsIDocShellTreeItem
 
   void setColorMatrix(in Array<float> aMatrix);
 
+  /**
+   * Returns true if the current load is a forced reload,
+   * e.g. started by holding shift whilst triggering reload.
+   */
+  readonly attribute bool isForceReloading;
+
   Array<float> getColorMatrix();
 
   /**

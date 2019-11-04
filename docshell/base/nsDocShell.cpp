@@ -13342,6 +13342,12 @@ nsDocShell::GetColorMatrix(nsTArray<float>& aMatrix) {
 
 #undef MATRIX_LENGTH
 
+NS_IMETHODIMP
+nsDocShell::GetIsForceReloading(bool* aForceReload) {
+  *aForceReload = IsForceReloading();
+  return NS_OK;
+}
+
 bool nsDocShell::IsForceReloading() { return IsForceReloadType(mLoadType); }
 
 NS_IMETHODIMP
