@@ -95,7 +95,7 @@ use smallvec::SmallVec;
 use std::{mem, u8, marker, u32};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use crate::texture_cache::TextureCacheHandle;
-use crate::util::{TransformedRectKind, MatrixHelpers, MaxRect, scale_factors, VecHelper};
+use crate::util::{TransformedRectKind, MatrixHelpers, MaxRect, scale_factors, VecHelper, RectHelpers};
 use crate::filterdata::{FilterDataHandle};
 
 /// Specify whether a surface allows subpixel AA text rendering.
@@ -824,6 +824,7 @@ impl Tile {
         //           color tiles. We can definitely support this in DC, so this
         //           should be added as a follow up.
         let is_simple_prim =
+            ctx.backdrop.kind.can_be_promoted_to_compositor_surface() &&
             self.current_descriptor.prims.len() == 1 &&
             self.is_opaque &&
             supports_simple_prims;
@@ -841,6 +842,10 @@ impl Tile {
                 }
                 BackdropKind::Clear => {
                     TileSurface::Clear
+                }
+                BackdropKind::Image => {
+                    // This should be prevented by the is_simple_prim check above.
+                    unreachable!();
                 }
             }
         } else {
@@ -1216,6 +1221,17 @@ enum BackdropKind {
         color: ColorF,
     },
     Clear,
+    Image,
+}
+
+impl BackdropKind {
+    /// Returns true if the compositor can directly draw this backdrop.
+    fn can_be_promoted_to_compositor_surface(&self) -> bool {
+        match self {
+            BackdropKind::Color { .. } | BackdropKind::Clear => true,
+            BackdropKind::Image => false,
+        }
+    }
 }
 
 /// Stores information about the calculated opaque backdrop of this slice.
@@ -1749,6 +1765,10 @@ impl TileCacheInstance {
             }
         }
 
+        // Certain primitives may select themselves to be a backdrop candidate, which is
+        // then applied below.
+        let mut backdrop_candidate = None;
+
         // For pictures, we don't (yet) know the valid clip rect, so we can't correctly
         // use it to calculate the local bounding rect for the tiles. If we include them
         // then we may calculate a bounding rect that is too large, since it won't include
@@ -1770,46 +1790,16 @@ impl TileCacheInstance {
             }
             PrimitiveInstanceKind::Rectangle { data_handle, opacity_binding_index, .. } => {
                 if opacity_binding_index == OpacityBindingIndex::INVALID {
-                    // Check a number of conditions to see if we can consider this
-                    // primitive as an opaque rect. Several of these are conservative
-                    // checks and could be relaxed in future. However, these checks
-                    // are quick and capture the common cases of background rects.
-                    // Specifically, we currently require:
-                    //  - No opacity binding (to avoid resolving the opacity here).
-                    //  - Color.a >= 1.0 (the primitive is opaque).
-                    //  - Same coord system as picture cache (ensures rects are axis-aligned).
-                    //  - No clip masks exist.
-
-                    let on_picture_surface = surface_index == self.surface_index;
-
+                    // Rectangles can only form a backdrop candidate if they are known opaque.
+                    // TODO(gw): We could resolve the opacity binding here, but the common
+                    //           case for background rects is that they don't have animated opacity.
                     let color = match data_stores.prim[data_handle].kind {
                         PrimitiveTemplateKind::Rectangle { color, .. } => color,
                         _ => unreachable!(),
                     };
-
-                    let prim_is_opaque = color.a >= 1.0;
-
-                    let same_coord_system = {
-                        let prim_spatial_node = &clip_scroll_tree
-                            .spatial_nodes[prim_spatial_node_index.0 as usize];
-                        let surface_spatial_node = &clip_scroll_tree
-                            .spatial_nodes[self.spatial_node_index.0 as usize];
-
-                        prim_spatial_node.coordinate_system_id == surface_spatial_node.coordinate_system_id
-                    };
-
-                    if let Some(ref clip_chain) = prim_clip_chain {
-                        if prim_is_opaque && same_coord_system && !clip_chain.needs_mask && on_picture_surface {
-                            if clip_chain.pic_clip_rect.contains_rect(&self.backdrop.rect) {
-                                self.backdrop = BackdropInfo {
-                                    rect: clip_chain.pic_clip_rect,
-                                    kind: BackdropKind::Color {
-                                        color,
-                                    },
-                                };
-                            }
-                        }
-                    };
+                    if color.a >= 1.0 {
+                        backdrop_candidate = Some(BackdropKind::Color { color });
+                    }
                 } else {
                     let opacity_binding = &opacity_binding_store[opacity_binding_index];
                     for binding in &opacity_binding.bindings {
@@ -1824,7 +1814,14 @@ impl TileCacheInstance {
                 let image_instance = &image_instances[image_instance_index];
                 let opacity_binding_index = image_instance.opacity_binding_index;
 
-                if opacity_binding_index != OpacityBindingIndex::INVALID {
+                if opacity_binding_index == OpacityBindingIndex::INVALID {
+                    if let Some(image_properties) = resource_cache.get_image_properties(image_data.key) {
+                        // If this image is opaque, it can be considered as a possible opaque backdrop
+                        if image_properties.descriptor.is_opaque {
+                            backdrop_candidate = Some(BackdropKind::Image);
+                        }
+                    }
+                } else {
                     let opacity_binding = &opacity_binding_store[opacity_binding_index];
                     for binding in &opacity_binding.bindings {
                         prim_info.opacity_bindings.push(OpacityBinding::from(*binding));
@@ -1872,12 +1869,7 @@ impl TileCacheInstance {
                 }
             }
             PrimitiveInstanceKind::Clear { .. } => {
-                if let Some(ref clip_chain) = prim_clip_chain {
-                    self.backdrop = BackdropInfo {
-                        rect: clip_chain.pic_clip_rect,
-                        kind: BackdropKind::Clear,
-                    };
-                }
+                backdrop_candidate = Some(BackdropKind::Clear);
             }
             PrimitiveInstanceKind::LineDecoration { .. } |
             PrimitiveInstanceKind::NormalBorder { .. } |
@@ -1887,6 +1879,53 @@ impl TileCacheInstance {
                 // These don't contribute dependencies
             }
         };
+
+        // If this primitive considers itself a backdrop candidate, apply further
+        // checks to see if it matches all conditions to be a backdrop.
+        if let Some(backdrop_candidate) = backdrop_candidate {
+            let is_suitable_backdrop = match backdrop_candidate {
+                BackdropKind::Clear => {
+                    // Clear prims are special - they always end up in their own slice,
+                    // and always set the backdrop. In future, we hope to completely
+                    // remove clear prims, since they don't integrate with the compositing
+                    // system cleanly.
+                    true
+                }
+                BackdropKind::Image | BackdropKind::Color { .. } => {
+                    // Check a number of conditions to see if we can consider this
+                    // primitive as an opaque backdrop rect. Several of these are conservative
+                    // checks and could be relaxed in future. However, these checks
+                    // are quick and capture the common cases of background rects and images.
+                    // Specifically, we currently require:
+                    //  - The primitive is on the main picture cache surface.
+                    //  - Same coord system as picture cache (ensures rects are axis-aligned).
+                    //  - No clip masks exist.
+                    let on_picture_surface = surface_index == self.surface_index;
+
+                    let same_coord_system = {
+                        let prim_spatial_node = &clip_scroll_tree
+                            .spatial_nodes[prim_spatial_node_index.0 as usize];
+                        let surface_spatial_node = &clip_scroll_tree
+                            .spatial_nodes[self.spatial_node_index.0 as usize];
+
+                        prim_spatial_node.coordinate_system_id == surface_spatial_node.coordinate_system_id
+                    };
+
+                    same_coord_system && on_picture_surface
+                }
+            };
+
+            if is_suitable_backdrop {
+                if let Some(ref clip_chain) = prim_clip_chain {
+                    if !clip_chain.needs_mask && clip_chain.pic_clip_rect.contains_rect(&self.backdrop.rect) {
+                        self.backdrop = BackdropInfo {
+                            rect: clip_chain.pic_clip_rect,
+                            kind: backdrop_candidate,
+                        }
+                    }
+                }
+            }
+        }
 
         // Record any new spatial nodes in the used list.
         self.used_spatial_nodes.extend(&prim_info.spatial_nodes);
@@ -1923,6 +1962,34 @@ impl TileCacheInstance {
     ) {
         self.tiles_to_draw.clear();
         self.dirty_region.clear();
+
+        // Register the opaque region of this tile cache as an occluder, which
+        // is used later in the frame to occlude other tiles.
+        if self.backdrop.rect.is_well_formed_and_nonempty() {
+            let backdrop_rect = self.backdrop.rect
+                .intersection(&self.local_rect)
+                .and_then(|r| {
+                    r.intersection(&self.local_clip_rect)
+                });
+
+            if let Some(backdrop_rect) = backdrop_rect {
+                let map_pic_to_world = SpaceMapper::new_with_target(
+                    ROOT_SPATIAL_NODE_INDEX,
+                    self.spatial_node_index,
+                    frame_context.global_screen_world_rect,
+                    frame_context.clip_scroll_tree,
+                );
+
+                let world_backdrop_rect = map_pic_to_world
+                    .map(&backdrop_rect)
+                    .expect("bug: unable to map backdrop to world space");
+
+                frame_state.composite_state.register_occluder(
+                    self.slice,
+                    world_backdrop_rect,
+                );
+            }
+        }
 
         // Detect if the picture cache was scrolled or scaled. In this case,
         // the device space dirty rects aren't applicable (until we properly
@@ -3222,8 +3289,36 @@ impl PicturePrimitive {
                         let tile_cache = self.tile_cache.as_mut().unwrap();
                         let mut first = true;
 
+                        // Get the overall world space rect of the picture cache. Used to clip
+                        // the tile rects below for occlusion testing to the relevant area.
+                        let local_clip_rect = tile_cache.local_rect
+                            .intersection(&tile_cache.local_clip_rect)
+                            .unwrap_or(PictureRect::zero());
+
+                        let world_clip_rect = map_pic_to_world
+                            .map(&local_clip_rect)
+                            .expect("bug: unable to map clip rect");
+
                         for key in &tile_cache.tiles_to_draw {
                             let tile = tile_cache.tiles.get_mut(key).expect("bug: no tile found!");
+
+                            // Get the world space rect that this tile will actually occupy on screem
+                            let tile_draw_rect = match world_clip_rect.intersection(&tile.world_rect) {
+                                Some(rect) => rect,
+                                None => {
+                                    tile.is_visible = false;
+                                    continue;
+                                }
+                            };
+
+                            // If that draw rect is occluded by some set of tiles in front of it,
+                            // then mark it as not visible and skip drawing. When it's not occluded
+                            // it will fail this test, and get rasterized by the render task setup
+                            // code below.
+                            if frame_state.composite_state.is_tile_occluded(tile_cache.slice, tile_draw_rect) {
+                                tile.is_visible = false;
+                                continue;
+                            }
 
                             // Register active image keys of valid tile.
                             // TODO(gw): For now, we will register images on any visible
@@ -3251,8 +3346,9 @@ impl PicturePrimitive {
                                     scratch.push_debug_string(
                                         tile_device_rect.origin + label_offset,
                                         debug_colors::RED,
-                                        format!("{:?}: is_opaque={} surface={}",
+                                        format!("{:?}: s={} is_opaque={} surface={}",
                                                 tile.id,
+                                                tile_cache.slice,
                                                 tile.is_opaque,
                                                 surface.kind(),
                                         ),
