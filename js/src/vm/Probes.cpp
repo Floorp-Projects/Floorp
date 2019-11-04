@@ -13,8 +13,6 @@
 #  include "vm/JSScript-inl.h"
 #endif
 
-#define TYPEOF(cx, v) (v.isNull() ? JSTYPE_NULL : JS_TypeOfValue(cx, v))
-
 using namespace js;
 
 const char probes::nullName[] = "(null)";
