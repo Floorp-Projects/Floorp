@@ -1355,19 +1355,35 @@ class StaticStrings {
   }
 
  private:
-  typedef uint8_t SmallChar;
+  using SmallChar = uint8_t;
+
+  struct SmallCharArray {
+    SmallChar storage[SMALL_CHAR_LIMIT];
+
+    constexpr SmallChar& operator[](size_t idx) { return storage[idx]; }
+    constexpr const SmallChar& operator[](size_t idx) const {
+      return storage[idx];
+    }
+  };
+
   static const SmallChar INVALID_SMALL_CHAR = -1;
 
   static bool fitsInSmallChar(char16_t c) {
-    return c < SMALL_CHAR_LIMIT && toSmallChar[c] != INVALID_SMALL_CHAR;
+    return c < SMALL_CHAR_LIMIT && toSmallCharArray[c] != INVALID_SMALL_CHAR;
   }
 
-  static const SmallChar toSmallChar[];
+  static constexpr Latin1Char fromSmallChar(SmallChar c);
+
+  static constexpr SmallChar toSmallChar(uint32_t c);
+
+  static constexpr SmallCharArray createSmallCharArray();
+
+  static const SmallCharArray toSmallCharArray;
 
   MOZ_ALWAYS_INLINE JSAtom* getLength2(char16_t c1, char16_t c2) {
     MOZ_ASSERT(fitsInSmallChar(c1));
     MOZ_ASSERT(fitsInSmallChar(c2));
-    size_t index = (size_t(toSmallChar[c1]) << 6) + toSmallChar[c2];
+    size_t index = (size_t(toSmallCharArray[c1]) << 6) + toSmallCharArray[c2];
     return length2StaticTable[index];
   }
   JSAtom* getLength2(uint32_t u) {
