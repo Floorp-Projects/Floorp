@@ -1,15 +1,9 @@
 {
   "type": "object",
   "required": [
-    "engineName"
+    "webExtension"
   ],
   "properties": {
-    "engineName": {
-      "type": "string",
-      "title": "Engine Name",
-      "description": "General short name for this engine, only used as an identifier",
-      "pattern": "^[a-zA-Z-]+$"
-    },
     "default": {
       "$ref": "#/definitions/default"
     },

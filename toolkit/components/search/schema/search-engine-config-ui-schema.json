@@ -1,9 +1,5 @@
 {
-  "engineName": {
-    "ui:autofocus": true
-  },
   "ui:order": [
-    "engineName",
     "webExtension",
     "default",
     "defaultPrivate",
