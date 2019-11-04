@@ -7,6 +7,7 @@
 %define fieldBorderColor hsla(240,5%,5%,.25)
 %define fieldHoverBorderColor hsla(240,5%,5%,.35)
 %define urlbarMarginInline 5px
+%define urlbarBreakoutExtend 2px
 %define urlbarSearchIconWidth calc(16px + 2 * @identityBoxPaddingInline@)
 
 :root {
@@ -204,9 +205,9 @@
 }
 
 #urlbar[breakout][breakout-extend] {
-  top: 0;
-  left: -@urlbarMarginInline@;
-  width: calc(100% + 2 * @urlbarMarginInline@);
+  top: -@urlbarBreakoutExtend@;
+  left: calc(-@urlbarMarginInline@ - @urlbarBreakoutExtend@);
+  width: calc(100% + 2 * @urlbarMarginInline@ + 2 * @urlbarBreakoutExtend@);
 }
 
 #urlbar[breakout][breakout-extend] > #urlbar-background {
@@ -214,9 +215,9 @@
 }
 
 #urlbar[breakout][breakout-extend] > #urlbar-input-container {
-  height: var(--urlbar-toolbar-height);
-  padding-block: calc((var(--urlbar-toolbar-height) - var(--urlbar-height)) / 2);
-  padding-inline: @urlbarMarginInline@;
+  height: calc(var(--urlbar-toolbar-height) + 2 * @urlbarBreakoutExtend@);
+  padding-block: calc(@urlbarBreakoutExtend@ + (var(--urlbar-toolbar-height) - var(--urlbar-height)) / 2);
+  padding-inline: calc(@urlbarMarginInline@ + @urlbarBreakoutExtend@);
 }
 
 #urlbar[breakout][breakout-extend] > #urlbar-input-container > #urlbar-search-icon {
