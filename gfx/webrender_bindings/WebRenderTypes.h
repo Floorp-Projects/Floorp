@@ -45,6 +45,9 @@ typedef wr::WrFontKey FontKey;
 typedef wr::WrFontInstanceKey FontInstanceKey;
 typedef wr::WrEpoch Epoch;
 
+class RenderedFrameIdType {};
+typedef layers::BaseTransactionId<RenderedFrameIdType> RenderedFrameId;
+
 typedef mozilla::Maybe<mozilla::wr::IdNamespace> MaybeIdNamespace;
 typedef mozilla::Maybe<mozilla::wr::ImageMask> MaybeImageMask;
 typedef Maybe<ExternalImageId> MaybeExternalImageId;

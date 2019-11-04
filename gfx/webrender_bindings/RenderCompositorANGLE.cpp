@@ -415,8 +415,10 @@ bool RenderCompositorANGLE::BeginFrame() {
   return true;
 }
 
-void RenderCompositorANGLE::EndFrame(const FfiVec<DeviceIntRect>& aDirtyRects) {
-  InsertPresentWaitQuery();
+RenderedFrameId RenderCompositorANGLE::EndFrame(
+    const FfiVec<DeviceIntRect>& aDirtyRects) {
+  RenderedFrameId frameId = GetNextRenderFrameId();
+  InsertPresentWaitQuery(frameId);
 
   if (!UseCompositor()) {
     if (mWidget->AsWindows()->HasFxrOutputHandler()) {
@@ -470,6 +472,8 @@ void RenderCompositorANGLE::EndFrame(const FfiVec<DeviceIntRect>& aDirtyRects) {
   if (mDCLayerTree) {
     mDCLayerTree->MaybeUpdateDebug();
   }
+
+  return frameId;
 }
 
 bool RenderCompositorANGLE::WaitForGPU() {
@@ -647,7 +651,7 @@ RefPtr<ID3D11Query> RenderCompositorANGLE::GetD3D11Query() {
   return query;
 }
 
-void RenderCompositorANGLE::InsertPresentWaitQuery() {
+void RenderCompositorANGLE::InsertPresentWaitQuery(RenderedFrameId aFrameId) {
   RefPtr<ID3D11Query> query;
   query = GetD3D11Query();
   if (!query) {
@@ -655,25 +659,44 @@ void RenderCompositorANGLE::InsertPresentWaitQuery() {
   }
 
   mCtx->End(query);
-  mWaitForPresentQueries.emplace(query);
+  mWaitForPresentQueries.emplace(aFrameId, query);
 }
 
 bool RenderCompositorANGLE::WaitForPreviousPresentQuery() {
   size_t waitLatency = mUseTripleBuffering ? 3 : 2;
 
   while (mWaitForPresentQueries.size() >= waitLatency) {
-    RefPtr<ID3D11Query>& query = mWaitForPresentQueries.front();
+    auto queryPair = mWaitForPresentQueries.front();
     BOOL result;
-    bool ret = layers::WaitForFrameGPUQuery(mDevice, mCtx, query, &result);
+    bool ret =
+        layers::WaitForFrameGPUQuery(mDevice, mCtx, queryPair.second, &result);
 
-    // Recycle query for later use.
-    mRecycledQuery = query;
-    mWaitForPresentQueries.pop();
     if (!ret) {
+      mWaitForPresentQueries.pop();
       return false;
     }
+
+    // Recycle query for later use.
+    mRecycledQuery = queryPair.second;
+    mLastCompletedFrameId = queryPair.first;
+    mWaitForPresentQueries.pop();
   }
   return true;
+}
+
+RenderedFrameId RenderCompositorANGLE::GetLastCompletedFrameId() {
+  while (!mWaitForPresentQueries.empty()) {
+    auto queryPair = mWaitForPresentQueries.front();
+    if (mCtx->GetData(queryPair.second, nullptr, 0, 0) != S_OK) {
+      break;
+    }
+
+    mRecycledQuery = queryPair.second;
+    mLastCompletedFrameId = queryPair.first;
+    mWaitForPresentQueries.pop();
+  }
+
+  return mLastCompletedFrameId;
 }
 
 bool RenderCompositorANGLE::IsContextLost() {

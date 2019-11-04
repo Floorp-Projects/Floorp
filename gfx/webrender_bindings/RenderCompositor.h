@@ -37,10 +37,22 @@ class RenderCompositor {
   virtual ~RenderCompositor();
 
   virtual bool BeginFrame() = 0;
-  virtual void EndFrame(const FfiVec<DeviceIntRect>& aDirtyRects) = 0;
+
+  // Called to notify the RenderCompositor that all of the commands for a frame
+  // have been pushed to the queue.
+  // @return a RenderedFrameId for the frame
+  virtual RenderedFrameId EndFrame(
+      const FfiVec<DeviceIntRect>& aDirtyRects) = 0;
   // Returns false when waiting gpu tasks is failed.
   // It might happen when rendering context is lost.
   virtual bool WaitForGPU() { return true; }
+
+  // Check for and return the last completed frame.
+  // @return the last (highest) completed RenderedFrameId
+  virtual RenderedFrameId GetLastCompletedFrameId() {
+    return mLatestRenderFrameId.Prev();
+  }
+
   virtual void Pause() = 0;
   virtual bool Resume() = 0;
   // Called when WR rendering is skipped
@@ -86,6 +98,13 @@ class RenderCompositor {
   virtual bool SurfaceIsYFlipped() { return false; }
 
  protected:
+  // We default this to 2, so that mLatestRenderFrameId.Prev() is always valid.
+  RenderedFrameId mLatestRenderFrameId = RenderedFrameId{2};
+  RenderedFrameId GetNextRenderFrameId() {
+    mLatestRenderFrameId = mLatestRenderFrameId.Next();
+    return mLatestRenderFrameId;
+  }
+
   RefPtr<widget::CompositorWidget> mWidget;
   RefPtr<layers::SyncObjectHost> mSyncObject;
 };
