@@ -1202,6 +1202,10 @@ impl BatchBuilder {
                                 let z_id = composite_state.z_generator.next();
                                 for key in &tile_cache.tiles_to_draw {
                                     let tile = &tile_cache.tiles[key];
+                                    if !tile.is_visible {
+                                        // This can occur when a tile is found to be occluded during frame building.
+                                        continue;
+                                    }
                                     let device_rect = (tile.world_rect * ctx.global_device_pixel_scale).round();
                                     let dirty_rect = (tile.world_dirty_rect * ctx.global_device_pixel_scale).round();
                                     let surface = tile.surface.as_ref().expect("no tile surface set!");

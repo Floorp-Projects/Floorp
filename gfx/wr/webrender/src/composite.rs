@@ -3,9 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::ColorF;
-use api::units::{DeviceRect, DeviceIntSize, DeviceIntRect, DeviceIntPoint};
+use api::units::{DeviceRect, DeviceIntSize, DeviceIntRect, DeviceIntPoint, WorldRect, DevicePixelScale};
 use crate::gpu_types::{ZBufferId, ZBufferIdGenerator};
 use crate::picture::{ResolvedSurfaceTexture, SurfaceTextureDescriptor};
+use std::ops;
 
 /*
  Types and definitions related to compositing picture cache tiles
@@ -120,6 +121,14 @@ impl Default for CompositorKind {
     }
 }
 
+/// Information about an opaque surface used to occlude tiles.
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+struct Occluder {
+    slice: usize,
+    device_rect: DeviceIntRect,
+}
+
 /// The list of tiles to be drawn this frame
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
@@ -142,6 +151,10 @@ pub struct CompositeState {
     pub compositor_kind: CompositorKind,
     /// Picture caching may be disabled dynamically, based on debug flags, pinch zoom etc.
     pub picture_caching_is_enabled: bool,
+    /// The overall device pixel scale, used for tile occlusion conversions.
+    global_device_pixel_scale: DevicePixelScale,
+    /// List of registered occluders
+    occluders: Vec<Occluder>,
 }
 
 impl CompositeState {
@@ -150,6 +163,7 @@ impl CompositeState {
     pub fn new(
         compositor_kind: CompositorKind,
         mut picture_caching_is_enabled: bool,
+        global_device_pixel_scale: DevicePixelScale,
     ) -> Self {
         // The native compositor interface requires picture caching to work, so
         // force it here and warn if it was disabled.
@@ -169,6 +183,8 @@ impl CompositeState {
             native_surface_updates: Vec::new(),
             compositor_kind,
             picture_caching_is_enabled,
+            global_device_pixel_scale,
+            occluders: Vec::new(),
         }
     }
 
@@ -208,6 +224,52 @@ impl CompositeState {
                 details: NativeSurfaceOperationDetails::DestroySurface,
             }
         );
+    }
+
+    /// Register an occluder during picture cache updates that can be
+    /// used during frame building to occlude tiles.
+    pub fn register_occluder(
+        &mut self,
+        slice: usize,
+        rect: WorldRect,
+    ) {
+        let device_rect = (rect * self.global_device_pixel_scale).round().to_i32();
+
+        self.occluders.push(Occluder {
+            device_rect,
+            slice,
+        });
+    }
+
+    /// Returns true if a tile with the specified rectangle and slice
+    /// is occluded by an opaque surface in front of it.
+    pub fn is_tile_occluded(
+        &self,
+        slice: usize,
+        rect: WorldRect,
+    ) -> bool {
+        // It's often the case that a tile is only occluded by considering multiple
+        // picture caches in front of it (for example, the background tiles are
+        // often occluded by a combination of the content slice + the scrollbar slices).
+
+        // The basic algorithm is:
+        //    For every occluder:
+        //      If this occluder is in front of the tile we are querying:
+        //         Clip the occluder rectangle to the query rectangle.
+        //    Calculate the total non-overlapping area of those clipped occluders.
+        //    If the cumulative area of those occluders is the same as the area of the query tile,
+        //       Then the entire tile must be occluded and can be skipped during rasterization and compositing.
+
+        // Get the reference area we will compare against.
+        let device_rect = (rect * self.global_device_pixel_scale).round().to_i32();
+        let ref_area = device_rect.size.width * device_rect.size.height;
+
+        // Calculate the non-overlapping area of the valid occluders.
+        let cover_area = area_of_occluders(&self.occluders, slice, &device_rect);
+        debug_assert!(cover_area <= ref_area);
+
+        // Check if the tile area is completely covered
+        ref_area == cover_area
     }
 }
 
@@ -310,4 +372,113 @@ pub trait Compositor {
     /// this once when all surface and visual updates are complete, to signal
     /// that the OS composite transaction should be applied.
     fn end_frame(&mut self);
+}
+
+/// Return the total area covered by a set of occluders, accounting for
+/// overlapping areas between those rectangles.
+fn area_of_occluders(
+    occluders: &[Occluder],
+    slice: usize,
+    clip_rect: &DeviceIntRect,
+) -> i32 {
+    // This implementation is based on the article https://leetcode.com/articles/rectangle-area-ii/.
+    // This is not a particularly efficient implementation (it skips building segment trees), however
+    // we typically use this where the length of the rectangles array is < 10, so simplicity is more important.
+
+    let mut area = 0;
+
+    // Whether this event is the start or end of a rectangle
+    #[derive(Debug)]
+    enum EventKind {
+        Begin,
+        End,
+    }
+
+    // A list of events on the y-axis, with the rectangle range that it affects on the x-axis
+    #[derive(Debug)]
+    struct Event {
+        y: i32,
+        x_range: ops::Range<i32>,
+        kind: EventKind,
+    }
+
+    impl Event {
+        fn new(y: i32, kind: EventKind, x0: i32, x1: i32) -> Self {
+            Event {
+                y,
+                x_range: ops::Range {
+                    start: x0,
+                    end: x1,
+                },
+                kind,
+            }
+        }
+    }
+
+    // Step through each rectangle and build the y-axis event list
+    let mut events = Vec::with_capacity(occluders.len() * 2);
+    for occluder in occluders {
+        // Only consider occluders in front of this rect
+        if occluder.slice > slice {
+            // Clip the source rect to the rectangle we care about, since we only
+            // want to record area for the tile we are comparing to.
+            if let Some(rect) = occluder.device_rect.intersection(clip_rect) {
+                let x0 = rect.origin.x;
+                let x1 = x0 + rect.size.width;
+                events.push(Event::new(rect.origin.y, EventKind::Begin, x0, x1));
+                events.push(Event::new(rect.origin.y + rect.size.height, EventKind::End, x0, x1));
+            }
+        }
+    }
+
+    // If we didn't end up with any valid events, the area must be 0
+    if events.is_empty() {
+        return 0;
+    }
+
+    // Sort the events by y-value
+    events.sort_by_key(|e| e.y);
+    let mut active: Vec<ops::Range<i32>> = Vec::new();
+    let mut cur_y = events[0].y;
+
+    // Step through each y interval
+    for event in &events {
+        // This is the dimension of the y-axis we are accumulating areas for
+        let dy = event.y - cur_y;
+
+        // If we have active events covering x-ranges in this y-interval, process them
+        if dy != 0 && !active.is_empty() {
+            assert!(dy > 0);
+
+            // Step through the x-ranges, ordered by x0 of each event
+            active.sort_by_key(|i| i.start);
+            let mut query = 0;
+            let mut cur = active[0].start;
+
+            // Accumulate the non-overlapping x-interval that contributes to area for this y-interval.
+            for interval in &active {
+                cur = interval.start.max(cur);
+                query += (interval.end - cur).max(0);
+                cur = cur.max(interval.end);
+            }
+
+            // Accumulate total area for this y-interval
+            area += query * dy;
+        }
+
+        // Update the active events list
+        match event.kind {
+            EventKind::Begin => {
+                active.push(event.x_range.clone());
+            }
+            EventKind::End => {
+                let index = active.iter().position(|i| *i == event.x_range).unwrap();
+                active.remove(index);
+            }
+        }
+
+        cur_y = event.y;
+    }
+
+    area
 }
