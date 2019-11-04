@@ -686,6 +686,8 @@ void LCovRuntime::writeLCovResult(LCovRealm& realm) {
 
 bool InitScriptCoverage(JSContext* cx, JSScript* script) {
   MOZ_ASSERT(IsLCovEnabled());
+  MOZ_ASSERT(!script->isUncompleted(),
+             "Only initialize coverage data for fully initialized scripts.");
 
   // Don't allocate LCovSource if we on helper thread since we will have our
   // realm migrated. The 'GCRunime::mergeRealms' code will do this
