@@ -1958,11 +1958,18 @@ impl ResourceCache {
             self.delete_image_template(key);
         }
 
-        let blob_f = |key: &BlobImageKey| { f(&key.as_image()) };
-        debug_assert!(!self.resources.image_templates.images.keys().any(&f));
-        debug_assert!(!self.cached_images.resources.keys().any(&f));
-        debug_assert!(!self.blob_image_templates.keys().any(&blob_f));
-        debug_assert!(!self.rasterized_blob_images.keys().any(&blob_f));
+        #[cfg(features="leak_checks")]
+        let check_leaks = true;
+        #[cfg(not(features="leak_checks"))]
+        let check_leaks = false;
+
+        if check_leaks {
+            let blob_f = |key: &BlobImageKey| { f(&key.as_image()) };
+            assert!(!self.resources.image_templates.images.keys().any(&f));
+            assert!(!self.cached_images.resources.keys().any(&f));
+            assert!(!self.blob_image_templates.keys().any(&blob_f));
+            assert!(!self.rasterized_blob_images.keys().any(&blob_f));
+        }
     }
 }
 
