@@ -207,8 +207,8 @@ typedef JSGetterOp GetterOp;
 typedef JSSetterOp SetterOp;
 
 /* Limit on the number of slotful properties in an object. */
-static const uint32_t SHAPE_INVALID_SLOT = JS_BIT(24) - 1;
-static const uint32_t SHAPE_MAXIMUM_SLOT = JS_BIT(24) - 2;
+static const uint32_t SHAPE_INVALID_SLOT = Bit(24) - 1;
+static const uint32_t SHAPE_MAXIMUM_SLOT = Bit(24) - 2;
 
 enum class MaybeAdding { Adding = true, NotAdding = false };
 
@@ -337,7 +337,7 @@ class ShapeTable {
   // This value is low because it's common for a ShapeTable to be created
   // with an entryCount of zero.
   static const uint32_t MIN_SIZE_LOG2 = 2;
-  static const uint32_t MIN_SIZE = JS_BIT(MIN_SIZE_LOG2);
+  static const uint32_t MIN_SIZE = Bit(MIN_SIZE_LOG2);
 
   uint32_t hashShift_; /* multiplicative hash shift */
 
@@ -415,7 +415,7 @@ class ShapeTable {
   }
 
   // By definition, hashShift = HASH_BITS - log2(capacity).
-  uint32_t capacity() const { return JS_BIT(HASH_BITS - hashShift_); }
+  uint32_t capacity() const { return Bit(HASH_BITS - hashShift_); }
 
   // Whether we need to grow.  We want to do this if the load factor
   // is >= 0.75
@@ -903,7 +903,7 @@ class Shape : public gc::TenuredCell {
     // For other shapes in the property tree with a parent, stores the
     // parent's slot index (which may be invalid), and invalid for all
     // other shapes.
-    SLOT_MASK = JS_BIT(24) - 1,
+    SLOT_MASK = BitMask(24),
 
     // Number of fixed slots in objects with this shape.
     // FIXED_SLOTS_MAX is the biggest count of fixed slots a Shape can store.

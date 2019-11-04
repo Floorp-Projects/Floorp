@@ -140,8 +140,8 @@ void js::NurseryDecommitTask::queueRange(
 
   // Only save this to decommit later if there's at least one page to
   // decommit.
-  if (JS_ROUNDUP(newCapacity, SystemPageSize()) >=
-      JS_ROUNDDOWN(Nursery::NurseryChunkUsableSize, SystemPageSize())) {
+  if (RoundUp(newCapacity, SystemPageSize()) >=
+      RoundDown(Nursery::NurseryChunkUsableSize, SystemPageSize())) {
     // Clear the existing decommit request because it may be a larger request
     // for the same chunk.
     partialChunk = nullptr;
@@ -384,7 +384,7 @@ void js::Nursery::enterZealMode() {
                            JS_FRESH_NURSERY_PATTERN,
                            MemCheckKind::MakeUndefined);
     }
-    capacity_ = JS_ROUNDUP(tunables().gcMaxNurseryBytes(), ChunkSize);
+    capacity_ = RoundUp(tunables().gcMaxNurseryBytes(), ChunkSize);
     setCurrentEnd();
   }
 }
@@ -445,8 +445,7 @@ Cell* js::Nursery::allocateString(Zone* zone, size_t size, AllocKind kind) {
   // RelocationOverlay.
   MOZ_ASSERT(size >= sizeof(RelocationOverlay));
 
-  size_t allocSize =
-      JS_ROUNDUP(sizeof(StringLayout) - 1 + size, CellAlignBytes);
+  size_t allocSize = RoundUp(sizeof(StringLayout) - 1 + size, CellAlignBytes);
   auto header = static_cast<StringLayout*>(allocate(allocSize));
   if (!header) {
     return nullptr;
@@ -1327,7 +1326,7 @@ bool js::Nursery::allocateNextChunk(const unsigned chunkno,
   MOZ_ASSERT((chunkno == currentChunk_ + 1) ||
              (chunkno == 0 && allocatedChunkCount() == 0));
   MOZ_ASSERT(chunkno == allocatedChunkCount());
-  MOZ_ASSERT(chunkno < JS_HOWMANY(capacity(), ChunkSize));
+  MOZ_ASSERT(chunkno < HowMany(capacity(), ChunkSize));
 
   if (!chunks_.resize(newCount)) {
     return false;
@@ -1442,10 +1441,10 @@ bool js::Nursery::maybeResizeExact(JS::GCReason reason) {
 
 size_t js::Nursery::roundSize(size_t size) {
   if (size >= ChunkSize) {
-    size = JS_ROUND(size, ChunkSize);
+    size = Round(size, ChunkSize);
   } else {
-    size = Min(JS_ROUND(size, SubChunkStep),
-               JS_ROUNDDOWN(NurseryChunkUsableSize, SubChunkStep));
+    size = Min(Round(size, SubChunkStep),
+               RoundDown(NurseryChunkUsableSize, SubChunkStep));
   }
   MOZ_ASSERT(size >= ArenaSize);
   return size;
@@ -1529,7 +1528,7 @@ void js::Nursery::shrinkAllocableSpace(size_t newCapacity) {
   }
   MOZ_ASSERT(newCapacity < capacity_);
 
-  unsigned newCount = JS_HOWMANY(newCapacity, ChunkSize);
+  unsigned newCount = HowMany(newCapacity, ChunkSize);
   if (newCount < allocatedChunkCount()) {
     freeChunksFrom(newCount);
   }

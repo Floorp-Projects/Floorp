@@ -124,7 +124,7 @@ bool TypedArrayObject::ensureHasBuffer(JSContext* cx,
 
   // If the object is in the nursery, the buffer will be freed by the next
   // nursery GC. Free the data slot pointer if the object has no inline data.
-  size_t nbytes = JS_ROUNDUP(tarray->byteLength(), sizeof(Value));
+  size_t nbytes = RoundUp(tarray->byteLength(), sizeof(Value));
   Nursery& nursery = cx->nursery();
   if (tarray->isTenured() && !tarray->hasInlineElements() &&
       !nursery.isInside(tarray->elements())) {
@@ -170,7 +170,7 @@ void TypedArrayObject::finalize(JSFreeOp* fop, JSObject* obj) {
 
   // Free the data slot pointer if it does not point into the old JSObject.
   if (!curObj->hasInlineElements()) {
-    size_t nbytes = JS_ROUNDUP(curObj->byteLength(), sizeof(Value));
+    size_t nbytes = RoundUp(curObj->byteLength(), sizeof(Value));
     fop->free_(obj, curObj->elements(), nbytes, MemoryUse::TypedArrayElements);
   }
 }
@@ -207,7 +207,7 @@ size_t TypedArrayObject::objectMoved(JSObject* obj, JSObject* old) {
   Nursery& nursery = obj->runtimeFromMainThread()->gc.nursery();
   if (!nursery.isInside(buf)) {
     nursery.removeMallocedBuffer(buf);
-    size_t nbytes = JS_ROUNDUP(newObj->byteLength(), sizeof(Value));
+    size_t nbytes = RoundUp(newObj->byteLength(), sizeof(Value));
     AddCellMemory(newObj, nbytes, MemoryUse::TypedArrayElements);
     return 0;
   }
@@ -236,10 +236,10 @@ size_t TypedArrayObject::objectMoved(JSObject* obj, JSObject* old) {
   } else {
     MOZ_ASSERT(!oldObj->hasInlineElements());
     MOZ_ASSERT((CheckedUint32(nbytes) + sizeof(Value)).isValid(),
-               "JS_ROUNDUP must not overflow");
+               "RoundUp must not overflow");
 
     AutoEnterOOMUnsafeRegion oomUnsafe;
-    nbytes = JS_ROUNDUP(nbytes, sizeof(Value));
+    nbytes = RoundUp(nbytes, sizeof(Value));
     void* data = newObj->zone()->pod_arena_malloc<uint8_t>(
         js::ArrayBufferContentsArena, nbytes);
     if (!data) {
@@ -566,9 +566,9 @@ class TypedArrayObjectTemplate : public TypedArrayObject {
     if (!fitsInline) {
       MOZ_ASSERT(len > 0);
       MOZ_ASSERT((CheckedUint32(nbytes) + sizeof(Value)).isValid(),
-                 "JS_ROUNDUP must not overflow");
+                 "RoundUp must not overflow");
 
-      nbytes = JS_ROUNDUP(nbytes, sizeof(Value));
+      nbytes = RoundUp(nbytes, sizeof(Value));
       buf = cx->nursery().allocateZeroedBuffer(obj, nbytes,
                                                js::ArrayBufferContentsArena);
       if (!buf) {

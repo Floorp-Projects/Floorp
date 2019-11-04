@@ -46,7 +46,7 @@ bool ShapeIC::init(JSContext* cx) {
 
 bool ShapeTable::init(JSContext* cx, Shape* lastProp) {
   uint32_t sizeLog2 = CeilingLog2Size(entryCount_);
-  uint32_t size = JS_BIT(sizeLog2);
+  uint32_t size = Bit(sizeLog2);
   if (entryCount_ >= size - (size >> 2)) {
     sizeLog2++;
   }
@@ -54,7 +54,7 @@ bool ShapeTable::init(JSContext* cx, Shape* lastProp) {
     sizeLog2 = MIN_SIZE_LOG2;
   }
 
-  size = JS_BIT(sizeLog2);
+  size = Bit(sizeLog2);
   entries_.reset(cx->pod_calloc<Entry>(size));
   if (!entries_) {
     return false;
@@ -225,8 +225,8 @@ bool ShapeTable::change(JSContext* cx, int log2Delta) {
    */
   uint32_t oldLog2 = HASH_BITS - hashShift_;
   uint32_t newLog2 = oldLog2 + log2Delta;
-  uint32_t oldSize = JS_BIT(oldLog2);
-  uint32_t newSize = JS_BIT(newLog2);
+  uint32_t oldSize = Bit(oldLog2);
+  uint32_t newSize = Bit(newLog2);
   Entry* newTable = cx->maybe_pod_calloc<Entry>(newSize);
   if (!newTable) {
     return false;

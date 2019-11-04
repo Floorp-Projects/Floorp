@@ -48,7 +48,7 @@ class BigInt final
 
  private:
   // The low NumFlagBitsReservedForGC flag bits are reserved.
-  static constexpr uintptr_t SignBit = JS_BIT(Base::NumFlagBitsReservedForGC);
+  static constexpr uintptr_t SignBit = js::Bit(Base::NumFlagBitsReservedForGC);
   static constexpr size_t InlineDigitsLength =
       (js::gc::MinCellSize - sizeof(Base)) / sizeof(Digit);
 

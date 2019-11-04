@@ -659,8 +659,7 @@ void AtomicMemcpyDownUnsynchronized(uint8_t* dest, const uint8_t* src,
     void (*copyWord)(uint8_t * dest, const uint8_t* src);
 
     if (((uintptr_t(dest) ^ uintptr_t(src)) & WORDMASK) == 0) {
-      const uint8_t* cutoff =
-          (const uint8_t*)JS_ROUNDUP(uintptr_t(src), WORDSIZE);
+      const uint8_t* cutoff = (const uint8_t*)RoundUp(uintptr_t(src), WORDSIZE);
       MOZ_ASSERT(cutoff <= lim);  // because nbytes >= WORDSIZE
       while (src < cutoff) {
         AtomicCopyByteUnsynchronized(dest++, src++);
@@ -861,7 +860,7 @@ bool InitializeJittedAtomics() {
 
   // Allocate executable memory.
   uint32_t codeLength = masm.bytesNeeded();
-  size_t roundedCodeLength = JS_ROUNDUP(codeLength, ExecutableCodePageSize);
+  size_t roundedCodeLength = RoundUp(codeLength, ExecutableCodePageSize);
   uint8_t* code = (uint8_t*)AllocateExecutableMemory(
       roundedCodeLength, ProtectionSetting::Writable,
       MemCheckKind::MakeUndefined);

@@ -194,7 +194,7 @@ class Nursery {
   // collection.
   unsigned maxChunkCount() const {
     MOZ_ASSERT(capacity());
-    return JS_HOWMANY(capacity(), gc::ChunkSize);
+    return HowMany(capacity(), gc::ChunkSize);
   }
 
   void enable();

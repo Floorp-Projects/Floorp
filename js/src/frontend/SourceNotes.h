@@ -214,9 +214,9 @@ inline bool SN_IS_TERMINATOR(jssrcnote* sn) { return *sn == SRC_NULL; }
 #define SN_TYPE_BITS 5
 #define SN_DELTA_BITS 3
 #define SN_XDELTA_BITS 6
-#define SN_TYPE_MASK (JS_BITMASK(SN_TYPE_BITS) << SN_DELTA_BITS)
-#define SN_DELTA_MASK ((ptrdiff_t)JS_BITMASK(SN_DELTA_BITS))
-#define SN_XDELTA_MASK ((ptrdiff_t)JS_BITMASK(SN_XDELTA_BITS))
+#define SN_TYPE_MASK (js::BitMask(SN_TYPE_BITS) << SN_DELTA_BITS)
+#define SN_DELTA_MASK ((ptrdiff_t)js::BitMask(SN_DELTA_BITS))
+#define SN_XDELTA_MASK ((ptrdiff_t)js::BitMask(SN_XDELTA_BITS))
 
 #define SN_MAKE_NOTE(sn, t, d) \
   (*(sn) = (jssrcnote)(((t) << SN_DELTA_BITS) | ((d)&SN_DELTA_MASK)))
@@ -235,8 +235,8 @@ inline bool SN_IS_TERMINATOR(jssrcnote* sn) { return *sn == SRC_NULL; }
   (SN_IS_XDELTA(sn) ? SN_MAKE_XDELTA(sn, delta) \
                     : SN_MAKE_NOTE(sn, SN_TYPE(sn), delta))
 
-#define SN_DELTA_LIMIT ((ptrdiff_t)JS_BIT(SN_DELTA_BITS))
-#define SN_XDELTA_LIMIT ((ptrdiff_t)JS_BIT(SN_XDELTA_BITS))
+#define SN_DELTA_LIMIT ((ptrdiff_t)js::Bit(SN_DELTA_BITS))
+#define SN_XDELTA_LIMIT ((ptrdiff_t)js::Bit(SN_XDELTA_BITS))
 
 /*
  * Offset fields follow certain notes and are frequency-encoded: an offset in
