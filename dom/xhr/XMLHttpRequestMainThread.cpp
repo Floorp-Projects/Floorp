@@ -229,6 +229,7 @@ XMLHttpRequestMainThread::XMLHttpRequestMainThread()
       mFirstStartRequestSeen(false),
       mInLoadProgressEvent(false),
       mResultJSON(JS::UndefinedValue()),
+      mArrayBufferBuilder(new ArrayBufferBuilder()),
       mResultArrayBuffer(nullptr),
       mIsMappedArrayBuffer(false),
       mXPCOMifier(nullptr),
@@ -317,7 +318,7 @@ void XMLHttpRequestMainThread::ResetResponse() {
   mResponseBlob = nullptr;
   mBlobStorage = nullptr;
   mResultArrayBuffer = nullptr;
-  mArrayBufferBuilder.reset();
+  mArrayBufferBuilder = new ArrayBufferBuilder();
   mResultJSON.setUndefined();
   mLoadTransferred = 0;
   mResponseBodyDecodedPos = 0;
@@ -351,7 +352,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(XMLHttpRequestMainThread,
                                                 XMLHttpRequestEventTarget)
   tmp->mResultArrayBuffer = nullptr;
-  tmp->mArrayBufferBuilder.reset();
+  tmp->mArrayBufferBuilder = nullptr;
   tmp->mResultJSON.setUndefined();
   tmp->mResponseBlobImpl = nullptr;
 
@@ -679,7 +680,7 @@ void XMLHttpRequestMainThread::GetResponse(
       }
 
       if (!mResultArrayBuffer) {
-        mResultArrayBuffer = mArrayBufferBuilder.getArrayBuffer(aCx);
+        mResultArrayBuffer = mArrayBufferBuilder->GetArrayBuffer(aCx);
         if (!mResultArrayBuffer) {
           aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
           return;
@@ -1512,11 +1513,11 @@ nsresult XMLHttpRequestMainThread::StreamReaderFunc(
              !xmlHttpRequest->mIsMappedArrayBuffer) {
     // get the initial capacity to something reasonable to avoid a bunch of
     // reallocs right at the start
-    if (xmlHttpRequest->mArrayBufferBuilder.capacity() == 0)
-      xmlHttpRequest->mArrayBufferBuilder.setCapacity(
+    if (xmlHttpRequest->mArrayBufferBuilder->Capacity() == 0)
+      xmlHttpRequest->mArrayBufferBuilder->SetCapacity(
           std::max(count, XML_HTTP_REQUEST_ARRAYBUFFER_MIN_SIZE));
 
-    if (NS_WARN_IF(!xmlHttpRequest->mArrayBufferBuilder.append(
+    if (NS_WARN_IF(!xmlHttpRequest->mArrayBufferBuilder->Append(
             reinterpret_cast<const uint8_t*>(fromRawSegment), count,
             XML_HTTP_REQUEST_ARRAYBUFFER_MAX_GROWTH))) {
       return NS_ERROR_OUT_OF_MEMORY;
@@ -1861,7 +1862,7 @@ XMLHttpRequestMainThread::OnStartRequest(nsIRequest* request) {
           if (!jarFile) {
             mIsMappedArrayBuffer = false;
           } else {
-            rv = mArrayBufferBuilder.mapToFileInPackage(file, jarFile);
+            rv = mArrayBufferBuilder->MapToFileInPackage(file, jarFile);
             // This can happen legitimately if there are compressed files
             // in the jarFile. See bug #1357219. No need to warn on the error.
             if (NS_FAILED(rv)) {
@@ -1881,7 +1882,7 @@ XMLHttpRequestMainThread::OnStartRequest(nsIRequest* request) {
       rv = channel->GetContentLength(&contentLength);
       if (NS_SUCCEEDED(rv) && contentLength > 0 &&
           contentLength < XML_HTTP_REQUEST_MAX_CONTENT_LENGTH_PREALLOCATE) {
-        mArrayBufferBuilder.setCapacity(static_cast<int32_t>(contentLength));
+        mArrayBufferBuilder->SetCapacity(static_cast<int32_t>(contentLength));
       }
     }
   }
@@ -2154,7 +2155,7 @@ XMLHttpRequestMainThread::OnStopRequest(nsIRequest* request, nsresult status) {
              mResponseType == XMLHttpRequestResponseType::Arraybuffer) {
     // set the capacity down to the actual length, to realloc back
     // down to the actual size
-    if (!mArrayBufferBuilder.setCapacity(mArrayBufferBuilder.length())) {
+    if (!mArrayBufferBuilder->SetCapacity(mArrayBufferBuilder->Length())) {
       // this should never happen!
       status = NS_ERROR_UNEXPECTED;
     }
@@ -3651,11 +3652,13 @@ nsXMLHttpRequestXPCOMifier::GetInterface(const nsIID& aIID, void** aResult) {
 }
 
 ArrayBufferBuilder::ArrayBufferBuilder()
-    : mDataPtr(nullptr), mCapacity(0), mLength(0), mMapPtr(nullptr) {}
+    : mMutex("ArrayBufferBuilder"),
+      mDataPtr(nullptr),
+      mCapacity(0),
+      mLength(0),
+      mMapPtr(nullptr) {}
 
-ArrayBufferBuilder::~ArrayBufferBuilder() { reset(); }
-
-void ArrayBufferBuilder::reset() {
+ArrayBufferBuilder::~ArrayBufferBuilder() {
   if (mDataPtr) {
     JS_free(nullptr, mDataPtr);
   }
@@ -3669,7 +3672,13 @@ void ArrayBufferBuilder::reset() {
   mCapacity = mLength = 0;
 }
 
-bool ArrayBufferBuilder::setCapacity(uint32_t aNewCap) {
+bool ArrayBufferBuilder::SetCapacity(uint32_t aNewCap) {
+  MutexAutoLock lock(mMutex);
+  return SetCapacityInternal(aNewCap, lock);
+}
+
+bool ArrayBufferBuilder::SetCapacityInternal(
+    uint32_t aNewCap, const MutexAutoLock& aProofOfLock) {
   MOZ_ASSERT(!mMapPtr);
 
   // To ensure that realloc won't free mDataPtr, use a size of 1
@@ -3693,8 +3702,9 @@ bool ArrayBufferBuilder::setCapacity(uint32_t aNewCap) {
   return true;
 }
 
-bool ArrayBufferBuilder::append(const uint8_t* aNewData, uint32_t aDataLen,
+bool ArrayBufferBuilder::Append(const uint8_t* aNewData, uint32_t aDataLen,
                                 uint32_t aMaxGrowth) {
+  MutexAutoLock lock(mMutex);
   MOZ_ASSERT(!mMapPtr);
 
   CheckedUint32 neededCapacity = mLength;
@@ -3720,14 +3730,14 @@ bool ArrayBufferBuilder::append(const uint8_t* aNewData, uint32_t aDataLen,
       newcap = neededCapacity;
     }
 
-    if (!setCapacity(newcap.value())) {
+    if (!SetCapacityInternal(newcap.value(), lock)) {
       return false;
     }
   }
 
   // Assert that the region isn't overlapping so we can memcpy.
   MOZ_ASSERT(
-      !areOverlappingRegions(aNewData, aDataLen, mDataPtr + mLength, aDataLen));
+      !AreOverlappingRegions(aNewData, aDataLen, mDataPtr + mLength, aDataLen));
 
   memcpy(mDataPtr + mLength, aNewData, aDataLen);
   mLength += aDataLen;
@@ -3735,7 +3745,19 @@ bool ArrayBufferBuilder::append(const uint8_t* aNewData, uint32_t aDataLen,
   return true;
 }
 
-JSObject* ArrayBufferBuilder::getArrayBuffer(JSContext* aCx) {
+uint32_t ArrayBufferBuilder::Length() {
+  MutexAutoLock lock(mMutex);
+  return mLength;
+}
+
+uint32_t ArrayBufferBuilder::Capacity() {
+  MutexAutoLock lock(mMutex);
+  return mCapacity;
+}
+
+JSObject* ArrayBufferBuilder::GetArrayBuffer(JSContext* aCx) {
+  MutexAutoLock lock(mMutex);
+
   if (mMapPtr) {
     JSObject* obj = JS::NewMappedArrayBufferWithContents(aCx, mLength, mMapPtr);
     if (!obj) {
@@ -3751,7 +3773,7 @@ JSObject* ArrayBufferBuilder::getArrayBuffer(JSContext* aCx) {
   // we need to check for mLength == 0, because nothing may have been
   // added
   if (mCapacity > mLength || mLength == 0) {
-    if (!setCapacity(mLength)) {
+    if (!SetCapacityInternal(mLength, lock)) {
       return nullptr;
     }
   }
@@ -3765,8 +3787,10 @@ JSObject* ArrayBufferBuilder::getArrayBuffer(JSContext* aCx) {
   return obj;
 }
 
-nsresult ArrayBufferBuilder::mapToFileInPackage(const nsCString& aFile,
+nsresult ArrayBufferBuilder::MapToFileInPackage(const nsCString& aFile,
                                                 nsIFile* aJarFile) {
+  MutexAutoLock lock(mMutex);
+
   nsresult rv;
 
   // Open Jar file to get related attributes of target file.
@@ -3801,7 +3825,7 @@ nsresult ArrayBufferBuilder::mapToFileInPackage(const nsCString& aFile,
 }
 
 /* static */
-bool ArrayBufferBuilder::areOverlappingRegions(const uint8_t* aStart1,
+bool ArrayBufferBuilder::AreOverlappingRegions(const uint8_t* aStart1,
                                                uint32_t aLength1,
                                                const uint8_t* aStart2,
                                                uint32_t aLength2) {
