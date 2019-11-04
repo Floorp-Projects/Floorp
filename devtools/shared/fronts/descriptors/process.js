@@ -54,6 +54,10 @@ class ProcessDescriptorFront extends FrontClassWithSpec(processDescriptorSpec) {
     return front;
   }
 
+  getCachedTarget() {
+    return this._processTargetFront;
+  }
+
   async getTarget() {
     // Only return the cached Target if it is still alive.
     if (this._processTargetFront && this._processTargetFront.actorID) {
@@ -89,7 +93,10 @@ class ProcessDescriptorFront extends FrontClassWithSpec(processDescriptorSpec) {
   }
 
   destroy() {
-    this._processTargetFront = null;
+    if (this._processTargetFront) {
+      this._processTargetFront.destroy();
+      this._processTargetFront = null;
+    }
     this._targetFrontPromise = null;
     super.destroy();
   }
