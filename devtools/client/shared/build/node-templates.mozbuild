@@ -5,11 +5,6 @@
 
 @template
 def CompiledModules(*modules):
-  # Compute where to put compiled files into omni.ja package
-  # All DevTools modules are used via resource://devtools/ URI
-  # See devtools/shared/jar.mn for how this resource is mapped into jar package.
-  base = FINAL_TARGET_FILES.chrome.devtools.modules
-
   compiled_directory_whitelist = (
     "devtools/client/debugger/src",
   )
@@ -17,23 +12,23 @@ def CompiledModules(*modules):
   if not RELATIVEDIR.startswith(compiled_directory_whitelist):
     error("File in directory provided to CompiledModules not allowed: " + RELATIVEDIR)
 
-  # Now, navigate to the right sub-directory into devtools root modules folder
-  for dir in RELATIVEDIR.split('/'):
-    base = base[dir]
+  # HACK. Template export() propagation is janky so we have to re-implement the
+  # logic for computing FINAL_TARGET from scratch. Here we emulate the
+  # DIST_SUBDIR export in devtools/moz.build.
+  if CONFIG['MOZ_BUILD_APP'] == 'browser':
+    final_target = 'dist/bin/browser'
+  else:
+    final_target = 'dist/bin'
 
-  size = 0
-  for m in modules:
-    base += ["!" + m]
-    size += 1
-
-  if size == 0:
-    return
-
+  final = '/'.join([TOPOBJDIR, final_target, 'chrome/devtools/modules',
+                    RELATIVEDIR])
   # For the same reason as https://searchfox.org/mozilla-central/source/mobile/android/base/moz.build#180-184
   # we have to insert a first entry as recursivemake overrides the first entry and we end up with empty files
   # for the first file only.
   GeneratedFile(
-      "node.stub", *modules,
+      "node.stub", *[final + '/' + module for module in modules],
       script='/python/mozbuild/mozbuild/action/node.py',
       entry_point='generate',
-      inputs=['/devtools/client/shared/build/build.js'] + [module for module in modules])
+      inputs=['/devtools/client/shared/build/build.js'] +
+             [module for module in modules],
+      flags=[final])

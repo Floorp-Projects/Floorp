@@ -28,6 +28,7 @@ from mozbuild.frontend.context import (
     ObjDirPath,
 )
 from .common import CommonBackend
+from .make import MakeBackend
 from ..frontend.data import (
     BaseLibrary,
     BaseProgram,
@@ -362,7 +363,7 @@ class RecursiveMakeTraversal(object):
         return result
 
 
-class RecursiveMakeBackend(CommonBackend):
+class RecursiveMakeBackend(MakeBackend):
     """Backend that integrates with the existing recursive make build system.
 
     This backend facilitates the transition from Makefile.in to moz.build
@@ -378,7 +379,7 @@ class RecursiveMakeBackend(CommonBackend):
     """
 
     def _init(self):
-        CommonBackend._init(self)
+        MakeBackend._init(self)
 
         self._backend_files = {}
         self._idl_dirs = set()
@@ -546,106 +547,11 @@ class RecursiveMakeBackend(CommonBackend):
                 tier = 'misc'
             if tier:
                 self._no_skip[tier].add(backend_file.relobjdir)
-
-            # Localized generated files can use {AB_CD} and {AB_rCD} in their
-            # output paths.
-            if obj.localized:
-                substs = {'AB_CD': '$(AB_CD)', 'AB_rCD': '$(AB_rCD)'}
-            else:
-                substs = {}
-            outputs = []
-
-            needs_AB_rCD = False
-            for o in obj.outputs:
-                needs_AB_rCD = needs_AB_rCD or ('AB_rCD' in o)
-                try:
-                    outputs.append(o.format(**substs))
-                except KeyError as e:
-                    raise ValueError('%s not in %s is not a valid substitution in %s'
-                                     % (e.args[0], ', '.join(sorted(substs.keys())), o))
-
-            first_output = outputs[0]
-            dep_file = "%s.pp" % first_output
-            # The stub target file needs to go in MDDEPDIR so that it doesn't
-            # get written into generated Android resource directories, breaking
-            # Gradle tooling and/or polluting the Android packages.
-            stub_file = "$(MDDEPDIR)/%s.stub" % first_output
-
-            if obj.inputs:
-                if obj.localized:
-                    # Localized generated files can have locale-specific inputs, which are
-                    # indicated by paths starting with `en-US/` or containing `locales/en-US/`.
-                    def srcpath(p):
-                        if 'locales/en-US' in p:
-                            # We need an "absolute source path" relative to
-                            # topsrcdir, like "/source/path".
-                            if not p.startswith('/'):
-                                p = '/' + mozpath.relpath(p.full_path, obj.topsrcdir)
-                            e, f = p.split('locales/en-US/', 1)
-                            assert(f)
-                            return '$(call MERGE_RELATIVE_FILE,{},{}locales)'.format(
-                                f, e if not e.startswith('/') else e[len('/'):])
-                        elif p.startswith('en-US/'):
-                            e, f = p.split('en-US/', 1)
-                            assert(not e)
-                            return '$(call MERGE_FILE,%s)' % f
-                        return self._pretty_path(p, backend_file)
-                    inputs = [srcpath(f) for f in obj.inputs]
-                else:
-                    inputs = [self._pretty_path(f, backend_file) for f in obj.inputs]
-            else:
-                inputs = []
-
-            if needs_AB_rCD:
-                backend_file.write_once('include $(topsrcdir)/config/AB_rCD.mk\n')
-
-            force = ''
-            if obj.force:
-                force = ' FORCE'
-            elif obj.localized:
-                force = ' $(if $(IS_LANGUAGE_REPACK),FORCE)'
-
-            if obj.script:
-                # If we are doing an artifact build, we don't run compiler, so
-                # we can skip generated files that are needed during compile,
-                # or let the rule run as the result of something depending on
-                # it.
-                if not (obj.required_before_compile or obj.required_during_compile) or \
-                        not self.environment.is_artifact_build:
-                    if tier and not needs_AB_rCD:
-                        # Android localized resources have special Makefile
-                        # handling.
-                        backend_file.write('%s:: %s\n' % (tier, stub_file))
-                for output in outputs:
-                    backend_file.write('%s: %s ;\n' % (output, stub_file))
-                    backend_file.write('GARBAGE += %s\n' % output)
-                backend_file.write('GARBAGE += %s\n' % stub_file)
-                backend_file.write('EXTRA_MDDEPEND_FILES += %s\n' % dep_file)
-
-                backend_file.write((
-                    """{stub}: {script}{inputs}{backend}{force}
-\t$(REPORT_BUILD)
-\t$(call py_action,file_generate,{locale}{script} """  # wrap for E501
-                    """{method} {output} $(MDDEPDIR)/{dep_file} {stub}{inputs}{flags})
-\t@$(TOUCH) $@
-
-""").format(
-                    stub=stub_file,
-                    output=first_output,
-                    dep_file=dep_file,
-                    inputs=' ' + ' '.join(inputs) if inputs else '',
-                    flags=' ' + ' '.join(shell_quote(f) for f in obj.flags) if obj.flags else '',
-                    backend=' backend.mk' if obj.flags else '',
-                    # Locale repacks repack multiple locales from a single configured objdir,
-                    # so standard mtime dependencies won't work properly when the build is re-run
-                    # with a different locale as input. IS_LANGUAGE_REPACK will reliably be set
-                    # in this situation, so simply force the generation to run in that case.
-                    force=force,
-                    locale='--locale=$(AB_CD) ' if obj.localized else '',
-                    script=obj.script,
-                    method=obj.method
-                    )
-                )
+            backend_file.write_once('include $(topsrcdir)/config/AB_rCD.mk\n')
+            for stmt in self._format_statements_for_generated_file(
+                    obj, tier,
+                    extra_dependencies='backend.mk' if obj.flags else ''):
+                backend_file.write(stmt + '\n')
 
         elif isinstance(obj, JARManifest):
             self._no_skip['libs'].add(backend_file.relobjdir)
@@ -1833,3 +1739,28 @@ class RecursiveMakeBackend(CommonBackend):
             self._compile_graph[mozpath.join(
                 mozpath.relpath(bindings_dir, self.environment.topobjdir),
                 'test', 'target-objects')]
+
+    def _format_generated_file_input_name(self, path, obj):
+        if obj.localized:
+            # Localized generated files can have locale-specific inputs, which
+            # are indicated by paths starting with `en-US/` or containing
+            # `locales/en-US/`.
+            if 'locales/en-US' in path:
+                # We need an "absolute source path" relative to
+                # topsrcdir, like "/source/path".
+                if not path.startswith('/'):
+                    path = '/' + mozpath.relpath(path.full_path, obj.topsrcdir)
+                e, f = path.split('locales/en-US/', 1)
+                assert(f)
+                return '$(call MERGE_RELATIVE_FILE,{},{}locales)'.format(
+                    f, e if not e.startswith('/') else e[len('/'):])
+            elif path.startswith('en-US/'):
+                e, f = path.split('en-US/', 1)
+                assert(not e)
+                return '$(call MERGE_FILE,%s)' % f
+            return self._pretty_path(path, self._get_backend_file_for(obj))
+        else:
+            return self._pretty_path(path, self._get_backend_file_for(obj))
+
+    def _format_generated_file_output_name(self, path, obj):
+        return path
