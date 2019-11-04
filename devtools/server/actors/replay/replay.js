@@ -559,8 +559,8 @@ function findAllScriptHits(script, frameIndex, offsets, startpoint, endpoint) {
   return allHits;
 }
 
-function findChangeFrames(checkpoint, which, kind) {
-  const hits = RecordReplayControl.findChangeFrames(checkpoint, which);
+function findChangeFrames(checkpoint, which, kind, filter) {
+  const hits = RecordReplayControl.findChangeFrames(checkpoint, which, filter);
   return hits.map(({ script, progress, frameIndex }) => ({
     checkpoint,
     progress,
@@ -574,9 +574,9 @@ function findFrameSteps({ targetPoint, breakpointOffsets }) {
     position: { script: targetScript, frameIndex: targetIndex },
   } = targetPoint;
 
-  const potentialStepsFilter = point => {
-    const { frameIndex, script } = point.position;
-    return frameIndex == targetIndex && script == targetScript;
+  const stepsFilter = {
+    frameIndex: targetIndex,
+    script: targetScript,
   };
 
   // Find the entry point of the frame whose steps contain |targetPoint|.
@@ -585,9 +585,9 @@ function findFrameSteps({ targetPoint, breakpointOffsets }) {
     entryPoint = targetPoint;
   } else {
     const entryHits = [
-      ...findChangeFrames(checkpoint, 0, "EnterFrame"),
-      ...findChangeFrames(checkpoint, 2, "EnterFrame"),
-    ].filter(potentialStepsFilter);
+      ...findChangeFrames(checkpoint, 0, "EnterFrame", stepsFilter),
+      ...findChangeFrames(checkpoint, 2, "EnterFrame", stepsFilter),
+    ];
 
     // Find the last frame entry or resume for the frame's script preceding the
     // target point. Since frames do not span checkpoints the hit must be in the
@@ -602,9 +602,7 @@ function findFrameSteps({ targetPoint, breakpointOffsets }) {
   }
 
   // Find the exit point of the frame.
-  const exitHits = findChangeFrames(checkpoint, 1, "OnPop").filter(
-    potentialStepsFilter
-  );
+  const exitHits = findChangeFrames(checkpoint, 1, "OnPop", stepsFilter);
   const exitPoint = findClosestPoint(
     exitHits,
     targetPoint,
@@ -622,9 +620,11 @@ function findFrameSteps({ targetPoint, breakpointOffsets }) {
     checkpoint,
     checkpoint + 1
   );
-  const enterFrameHits = findChangeFrames(checkpoint, 0, "EnterFrame").filter(
-    point => point.position.frameIndex == targetIndex + 1
-  );
+  const enterFrameHits = findChangeFrames(checkpoint, 0, "EnterFrame", {
+    frameIndex: targetIndex + 1,
+    minProgress: entryPoint.progress,
+    maxProgress: exitPoint.progress,
+  });
   const steps = breakpointHits.concat(enterFrameHits).filter(point => {
     return pointPrecedes(entryPoint, point) && pointPrecedes(point, exitPoint);
   });
@@ -638,8 +638,8 @@ function findFrameSteps({ targetPoint, breakpointOffsets }) {
 }
 
 function findParentFrameEntryPoint(point) {
-  const hits = findChangeFrames(point.checkpoint, 0, "EnterFrame").filter(p => {
-    return p.position.frameIndex == point.position.frameIndex - 1;
+  const hits = findChangeFrames(point.checkpoint, 0, "EnterFrame", {
+    frameIndex: point.position.frameIndex - 1,
   });
   const parentPoint = findClosestPoint(
     hits,
@@ -651,8 +651,9 @@ function findParentFrameEntryPoint(point) {
 }
 
 function findEventFrameEntry({ checkpoint, progress }) {
-  return findChangeFrames(checkpoint, 0, "EnterFrame").filter(point => {
-    return point.progress == progress + 1;
+  return findChangeFrames(checkpoint, 0, "EnterFrame", {
+    minProgress: progress + 1,
+    maxProgress: progress + 1,
   })[0];
 }
 
