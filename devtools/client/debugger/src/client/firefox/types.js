@@ -303,6 +303,7 @@ export type Grip = {
   sealed: boolean,
   optimizedOut: boolean,
   type: string,
+  release: () => Promise<*>,
 };
 
 export type FunctionGrip = {|
@@ -346,6 +347,7 @@ export type ObjectFront = {
     watchpointType: string
   ) => {},
   removeWatchpoint: (property: string) => {},
+  release: () => Promise<*>,
 };
 
 /**
