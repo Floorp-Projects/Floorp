@@ -103,7 +103,7 @@ void Worker::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
 
   JS::CloneDataPolicy clonePolicy;
   if (NS_IsMainThread()) {
-    nsGlobalWindowInner* win = nsContentUtils::CallerInnerWindow(aCx);
+    nsGlobalWindowInner* win = nsContentUtils::CallerInnerWindow();
     if (win && win->IsCrossOriginIsolated()) {
       clonePolicy.allowSharedMemory();
     }

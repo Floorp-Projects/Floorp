@@ -10118,11 +10118,13 @@ bool nsContentUtils::
 }
 
 /* static */
-nsGlobalWindowInner* nsContentUtils::CallerInnerWindow(JSContext* aCx) {
+nsGlobalWindowInner* nsContentUtils::CallerInnerWindow() {
   nsIGlobalObject* global = GetIncumbentGlobal();
   NS_ENSURE_TRUE(global, nullptr);
-  JS::Rooted<JSObject*> scope(aCx, global->GetGlobalJSObject());
-  NS_ENSURE_TRUE(scope, nullptr);
+
+  if (auto* window = global->AsInnerWindow()) {
+    return nsGlobalWindowInner::Cast(window);
+  }
 
   // When Extensions run content scripts inside a sandbox, it uses
   // sandboxPrototype to make them appear as though they're running in the
@@ -10130,10 +10132,16 @@ nsGlobalWindowInner* nsContentUtils::CallerInnerWindow(JSContext* aCx) {
   // the |source| of the received message to be the window set as the
   // sandboxPrototype. This used to work incidentally for unrelated reasons, but
   // now we need to do some special handling to support it.
+  JS::Rooted<JSObject*> scope(RootingCx(), global->GetGlobalJSObject());
+  NS_ENSURE_TRUE(scope, nullptr);
+
   if (xpc::IsSandbox(scope)) {
-    JSAutoRealm ar(aCx, scope);
-    JS::Rooted<JSObject*> scopeProto(aCx);
-    bool ok = JS_GetPrototype(aCx, scope, &scopeProto);
+    AutoJSAPI jsapi;
+    MOZ_ALWAYS_TRUE(jsapi.Init(scope));
+    JSContext* cx = jsapi.cx();
+
+    JS::Rooted<JSObject*> scopeProto(cx);
+    bool ok = JS_GetPrototype(cx, scope, &scopeProto);
     NS_ENSURE_TRUE(ok, nullptr);
     if (scopeProto && xpc::IsSandboxPrototypeProxy(scopeProto) &&
         // Our current Realm on aCx is the sandbox.  Using that for the
@@ -10141,7 +10149,7 @@ nsGlobalWindowInner* nsContentUtils::CallerInnerWindow(JSContext* aCx) {
         // window, we can use it.  And we do want CheckedUnwrapDynamic, because
         // the whole point is to unwrap windows.
         (scopeProto = js::CheckedUnwrapDynamic(
-             scopeProto, aCx, /* stopAtWindowProxy = */ false))) {
+             scopeProto, cx, /* stopAtWindowProxy = */ false))) {
       global = xpc::NativeGlobal(scopeProto);
       NS_ENSURE_TRUE(global, nullptr);
     }
@@ -10149,8 +10157,7 @@ nsGlobalWindowInner* nsContentUtils::CallerInnerWindow(JSContext* aCx) {
 
   // The calling window must be holding a reference, so we can return a weak
   // pointer.
-  nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(global);
-  return nsGlobalWindowInner::Cast(win);
+  return nsGlobalWindowInner::Cast(global->AsInnerWindow());
 }
 
 /* static */
