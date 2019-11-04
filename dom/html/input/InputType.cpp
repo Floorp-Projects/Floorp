@@ -165,9 +165,9 @@ nsresult InputType::GetValidationMessage(
       strMaxLength.AppendInt(maxLength);
       strTextLength.AppendInt(textLength);
 
-      rv = nsContentUtils::FormatMaybeLocalizedString(
+      rv = nsContentUtils::FormatLocalizedString(
           message, nsContentUtils::eDOM_PROPERTIES, "FormValidationTextTooLong",
-          mInputElement->OwnerDoc(), strMaxLength, strTextLength);
+          strMaxLength, strTextLength);
       aValidationMessage = message;
       break;
     }
@@ -182,10 +182,9 @@ nsresult InputType::GetValidationMessage(
       strMinLength.AppendInt(minLength);
       strTextLength.AppendInt(textLength);
 
-      rv = nsContentUtils::FormatMaybeLocalizedString(
+      rv = nsContentUtils::FormatLocalizedString(
           message, nsContentUtils::eDOM_PROPERTIES,
-          "FormValidationTextTooShort", mInputElement->OwnerDoc(), strMinLength,
-          strTextLength);
+          "FormValidationTextTooShort", strMinLength, strTextLength);
 
       aValidationMessage = message;
       break;
@@ -215,19 +214,18 @@ nsresult InputType::GetValidationMessage(
       nsAutoString title;
       mInputElement->GetAttr(kNameSpaceID_None, nsGkAtoms::title, title);
       if (title.IsEmpty()) {
-        rv = nsContentUtils::GetMaybeLocalizedString(
-            nsContentUtils::eDOM_PROPERTIES, "FormValidationPatternMismatch",
-            mInputElement->OwnerDoc(), message);
+        rv = nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
+                                                "FormValidationPatternMismatch",
+                                                message);
       } else {
         if (title.Length() >
             nsIConstraintValidation::sContentSpecifiedMaxLengthMessage) {
           title.Truncate(
               nsIConstraintValidation::sContentSpecifiedMaxLengthMessage);
         }
-        rv = nsContentUtils::FormatMaybeLocalizedString(
+        rv = nsContentUtils::FormatLocalizedString(
             message, nsContentUtils::eDOM_PROPERTIES,
-            "FormValidationPatternMismatchWithTitle", mInputElement->OwnerDoc(),
-            title);
+            "FormValidationPatternMismatchWithTitle", title);
       }
       aValidationMessage = message;
       break;
@@ -276,24 +274,21 @@ nsresult InputType::GetValidationMessage(
         ConvertNumberToString(valueHigh, valueHighStr);
 
         if (valueLowStr.Equals(valueHighStr)) {
-          rv = nsContentUtils::FormatMaybeLocalizedString(
+          rv = nsContentUtils::FormatLocalizedString(
               message, nsContentUtils::eDOM_PROPERTIES,
-              "FormValidationStepMismatchOneValue", mInputElement->OwnerDoc(),
-              valueLowStr);
+              "FormValidationStepMismatchOneValue", valueLowStr);
         } else {
-          rv = nsContentUtils::FormatMaybeLocalizedString(
+          rv = nsContentUtils::FormatLocalizedString(
               message, nsContentUtils::eDOM_PROPERTIES,
-              "FormValidationStepMismatch", mInputElement->OwnerDoc(),
-              valueLowStr, valueHighStr);
+              "FormValidationStepMismatch", valueLowStr, valueHighStr);
         }
       } else {
         nsAutoString valueLowStr;
         ConvertNumberToString(valueLow, valueLowStr);
 
-        rv = nsContentUtils::FormatMaybeLocalizedString(
+        rv = nsContentUtils::FormatLocalizedString(
             message, nsContentUtils::eDOM_PROPERTIES,
-            "FormValidationStepMismatchOneValue", mInputElement->OwnerDoc(),
-            valueLowStr);
+            "FormValidationStepMismatchOneValue", valueLowStr);
       }
 
       aValidationMessage = message;
@@ -317,9 +312,8 @@ nsresult InputType::GetValidationMessage(
 }
 
 nsresult InputType::GetValueMissingMessage(nsAString& aMessage) {
-  return nsContentUtils::GetMaybeLocalizedString(
-      nsContentUtils::eDOM_PROPERTIES, "FormValidationValueMissing",
-      mInputElement->OwnerDoc(), aMessage);
+  return nsContentUtils::GetLocalizedString(
+      nsContentUtils::eDOM_PROPERTIES, "FormValidationValueMissing", aMessage);
 }
 
 nsresult InputType::GetTypeMismatchMessage(nsAString& aMessage) {

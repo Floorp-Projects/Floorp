@@ -21,7 +21,6 @@ bool FileInputType::IsValueMissing() const {
 }
 
 nsresult FileInputType::GetValueMissingMessage(nsAString& aMessage) {
-  return nsContentUtils::GetMaybeLocalizedString(
-      nsContentUtils::eDOM_PROPERTIES, "FormValidationFileMissing",
-      mInputElement->OwnerDoc(), aMessage);
+  return nsContentUtils::GetLocalizedString(
+      nsContentUtils::eDOM_PROPERTIES, "FormValidationFileMissing", aMessage);
 }

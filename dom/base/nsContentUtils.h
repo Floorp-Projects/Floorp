@@ -1098,8 +1098,8 @@ class nsContentUtils {
     eMATHML_PROPERTIES,
     eSECURITY_PROPERTIES,
     eNECKO_PROPERTIES,
+    eFORMS_PROPERTIES_MAYBESPOOF,
     eFORMS_PROPERTIES_en_US,
-    eDOM_PROPERTIES_en_US,
     PropertiesFile_COUNT
   };
   static nsresult ReportToConsole(
@@ -1113,22 +1113,11 @@ class nsContentUtils {
 
   static void LogMessageToConsole(const char* aMsg);
 
-  static bool SpoofLocaleEnglish();
-
   /**
    * Get the localized string named |aKey| in properties file |aFile|.
    */
   static nsresult GetLocalizedString(PropertiesFile aFile, const char* aKey,
                                      nsAString& aResult);
-
-  /**
-   * Same as GetLocalizedString, except that it might use en-US locale depending
-   * on SpoofLocaleEnglish() and whether the document is a built-in browser
-   * page.
-   */
-  static nsresult GetMaybeLocalizedString(PropertiesFile aFile,
-                                          const char* aKey, Document* aDocument,
-                                          nsAString& aResult);
 
   /**
    * A helper function that parses a sandbox attribute (of an <iframe> or a CSP
@@ -1215,24 +1204,6 @@ class nsContentUtils {
   }
 
   /**
-   * Same as FormatLocalizedString template version, except that it might use
-   * en-US locale depending on SpoofLocaleEnglish() and whether the document is
-   * a built-in browser page.
-   */
-  template <typename... T>
-  static nsresult FormatMaybeLocalizedString(nsAString& aResult,
-                                             PropertiesFile aFile,
-                                             const char* aKey,
-                                             Document* aDocument,
-                                             const T&... aParams) {
-    static_assert(sizeof...(aParams) != 0, "Use GetMaybeLocalizedString()");
-    AutoTArray<nsString, sizeof...(aParams)> params = {
-        aParams...,
-    };
-    return FormatMaybeLocalizedString(aFile, aKey, aDocument, params, aResult);
-  }
-
-  /**
    * Fill (with the parameters given) the localized string named |aKey| in
    * properties file |aFile| consuming an nsTArray of nsString parameters rather
    * than a char16_t** for the sake of avoiding use-after-free errors involving
@@ -1241,15 +1212,6 @@ class nsContentUtils {
   static nsresult FormatLocalizedString(PropertiesFile aFile, const char* aKey,
                                         const nsTArray<nsString>& aParamArray,
                                         nsAString& aResult);
-
-  /**
-   * Same as FormatLocalizedString, except that it might use en-US locale
-   * depending on SpoofLocaleEnglish() and whether the document is a built-in
-   * browser page.
-   */
-  static nsresult FormatMaybeLocalizedString(
-      PropertiesFile aFile, const char* aKey, Document* aDocument,
-      const nsTArray<nsString>& aParamArray, nsAString& aResult);
 
   /**
    * Returns true if aDocument is a chrome document
