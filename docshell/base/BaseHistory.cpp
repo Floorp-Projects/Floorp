@@ -20,11 +20,14 @@ static Document* GetLinkDocument(const Link& aLink) {
   return element ? element->OwnerDoc() : nullptr;
 }
 
-void BaseHistory::DispatchNotifyVisited(nsIURI* aURI, dom::Document* aDoc) {
+void BaseHistory::DispatchNotifyVisited(nsIURI* aURI, dom::Document* aDoc,
+                                        VisitedStatus aStatus) {
+  MOZ_ASSERT(aStatus != VisitedStatus::Unknown);
+
   nsCOMPtr<nsIRunnable> runnable =
-      NewRunnableMethod<nsCOMPtr<nsIURI>, RefPtr<dom::Document>>(
+      NewRunnableMethod<nsCOMPtr<nsIURI>, RefPtr<dom::Document>, VisitedStatus>(
           "BaseHistory::DispatchNotifyVisited", this,
-          &BaseHistory::NotifyVisitedForDocument, aURI, aDoc);
+          &BaseHistory::NotifyVisitedForDocument, aURI, aDoc, aStatus);
   if (aDoc) {
     aDoc->Dispatch(TaskCategory::Other, runnable.forget());
   } else {
@@ -32,8 +35,11 @@ void BaseHistory::DispatchNotifyVisited(nsIURI* aURI, dom::Document* aDoc) {
   }
 }
 
-void BaseHistory::NotifyVisitedForDocument(nsIURI* aURI, dom::Document* aDoc) {
+void BaseHistory::NotifyVisitedForDocument(nsIURI* aURI, dom::Document* aDoc,
+                                           VisitedStatus aStatus) {
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aStatus != VisitedStatus::Unknown);
+
   // Make sure that nothing invalidates our observer array while we're walking
   // over it.
   nsAutoScriptBlocker scriptBlocker;
@@ -46,6 +52,7 @@ void BaseHistory::NotifyVisitedForDocument(nsIURI* aURI, dom::Document* aDoc) {
 
   ObservingLinks& links = entry.Data();
 
+  const bool visited = aStatus == VisitedStatus::Visited;
   {
     // Update status of each Link node. We iterate over the array backwards so
     // we can remove the items as we encounter them.
@@ -53,8 +60,10 @@ void BaseHistory::NotifyVisitedForDocument(nsIURI* aURI, dom::Document* aDoc) {
     while (iter.HasMore()) {
       Link* link = iter.GetNext();
       if (GetLinkDocument(*link) == aDoc) {
-        link->SetLinkState(eLinkState_Visited);
-        iter.Remove();
+        link->VisitedQueryFinished(visited);
+        if (visited) {
+          iter.Remove();
+        }
       }
     }
   }
@@ -113,8 +122,8 @@ nsresult BaseHistory::RegisterVisitedCallback(nsIURI* aURI, Link* aLink) {
   // If this link has already been visited, we cannot synchronously mark
   // ourselves as visited, so instead we fire a runnable into our docgroup,
   // which will handle it for us.
-  if (links.mKnownVisited) {
-    DispatchNotifyVisited(aURI, GetLinkDocument(*aLink));
+  if (links.mStatus != VisitedStatus::Unknown) {
+    DispatchNotifyVisited(aURI, GetLinkDocument(*aLink), links.mStatus);
   }
 
   return NS_OK;
@@ -145,8 +154,9 @@ void BaseHistory::UnregisterVisitedCallback(nsIURI* aURI, Link* aLink) {
   }
 }
 
-void BaseHistory::NotifyVisited(nsIURI* aURI) {
+void BaseHistory::NotifyVisited(nsIURI* aURI, VisitedStatus aStatus) {
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aStatus != VisitedStatus::Unknown);
   if (NS_WARN_IF(!aURI)) {
     return;
   }
@@ -158,7 +168,7 @@ void BaseHistory::NotifyVisited(nsIURI* aURI) {
   }
 
   ObservingLinks& links = entry.Data();
-  links.mKnownVisited = true;
+  links.mStatus = aStatus;
 
   // If we have a key, it should have at least one observer.
   MOZ_ASSERT(!links.mLinks.IsEmpty());
@@ -176,7 +186,7 @@ void BaseHistory::NotifyVisited(nsIURI* aURI) {
       continue;
     }
     seen.AppendElement(doc);
-    DispatchNotifyVisited(aURI, doc);
+    DispatchNotifyVisited(aURI, doc, aStatus);
   }
 }
 

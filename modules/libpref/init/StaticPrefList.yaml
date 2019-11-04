@@ -4714,6 +4714,12 @@
   value: 4096
   mirror: always
 
+# Whether we get notified of history queries for visited even if unvisited.
+- name: layout.css.notify-of-unvisited
+  type: RelaxedAtomicBool
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
+
 # Make `zoom` a `transform` + `transform-origin` alias.
 - name: layout.css.zoom-transform-hack.enabled
   type: RelaxedAtomicBool

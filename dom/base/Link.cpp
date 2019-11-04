@@ -86,15 +86,21 @@ void Link::CancelDNSPrefetch(nsWrapperCache::FlagsType aDeferredFlag,
   }
 }
 
-void Link::SetLinkState(nsLinkState aState) {
+void Link::VisitedQueryFinished(bool aVisited) {
   MOZ_ASSERT(mRegistered, "Setting the link state of an unregistered Link!");
-  MOZ_ASSERT(mLinkState != aState, "Setting state to the currently set state!");
+  MOZ_ASSERT(mLinkState == eLinkState_Unvisited,
+             "Why would we want to know our visited state otherwise?");
+
+  auto newState = aVisited ? eLinkState_Visited : eLinkState_Unvisited;
 
   // Set our current state as appropriate.
-  mLinkState = aState;
+  mLinkState = newState;
 
-  // Per IHistory interface documentation, we are no longer registered.
-  mRegistered = false;
+  // We will be no longer registered if we're visited, as it'd be pointless, we
+  // never transition from visited -> unvisited.
+  if (aVisited) {
+    mRegistered = false;
+  }
 
   MOZ_ASSERT(LinkState() == NS_EVENT_STATE_VISITED ||
                  LinkState() == NS_EVENT_STATE_UNVISITED,
@@ -102,6 +108,8 @@ void Link::SetLinkState(nsLinkState aState) {
 
   // Tell the element to update its visited state
   mElement->UpdateState(true);
+
+  // FIXME(emilio, bug 1506842): Repaint here unconditionally.
 }
 
 EventStates Link::LinkState() const {

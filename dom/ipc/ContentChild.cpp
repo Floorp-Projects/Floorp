@@ -2522,16 +2522,19 @@ mozilla::ipc::IPCResult ContentChild::RecvNotifyAlertsObserver(
 // NOTE: This method is being run in the SystemGroup, and thus cannot directly
 // touch pages. See GetSpecificMessageEventTarget.
 mozilla::ipc::IPCResult ContentChild::RecvNotifyVisited(
-    nsTArray<URIParams>&& aURIs) {
-  for (const URIParams& uri : aURIs) {
-    nsCOMPtr<nsIURI> newURI = DeserializeURI(uri);
+    nsTArray<VisitedQueryResult>&& aURIs) {
+  nsCOMPtr<IHistory> history = services::GetHistoryService();
+  if (!history) {
+    return IPC_OK();
+  }
+  for (const VisitedQueryResult& result : aURIs) {
+    nsCOMPtr<nsIURI> newURI = DeserializeURI(result.uri());
     if (!newURI) {
       return IPC_FAIL_NO_REASON(this);
     }
-    nsCOMPtr<IHistory> history = services::GetHistoryService();
-    if (history) {
-      history->NotifyVisited(newURI);
-    }
+    auto status = result.visited() ? IHistory::VisitedStatus::Visited
+                                   : IHistory::VisitedStatus::Unvisited;
+    history->NotifyVisited(newURI, status);
   }
   return IPC_OK();
 }
