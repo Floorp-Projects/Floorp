@@ -134,7 +134,7 @@ button.case-sensitive-btn {
   mask-image: url(resource://devtools/client/debugger/images/loader.svg);
   width: 16px;
   height: 16px;
-  margin-left: 10px;
+  margin-inline-start: 10px;
   animation: search-loader-rotate 0.5s linear infinite;
   background-color: var(--theme-selection-background);
   display: inline-block;
