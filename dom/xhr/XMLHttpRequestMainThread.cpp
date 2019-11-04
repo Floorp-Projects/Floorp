@@ -685,7 +685,7 @@ void XMLHttpRequestMainThread::GetResponse(
       }
 
       if (!mResultArrayBuffer) {
-        mResultArrayBuffer = mArrayBufferBuilder->GetArrayBuffer(aCx);
+        mResultArrayBuffer = mArrayBufferBuilder->TakeArrayBuffer(aCx);
         if (!mResultArrayBuffer) {
           aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
           return;
@@ -3703,7 +3703,8 @@ ArrayBufferBuilder::ArrayBufferBuilder()
       mDataPtr(nullptr),
       mCapacity(0),
       mLength(0),
-      mMapPtr(nullptr) {}
+      mMapPtr(nullptr),
+      mNeutered(false) {}
 
 ArrayBufferBuilder::~ArrayBufferBuilder() {
   if (mDataPtr) {
@@ -3727,6 +3728,7 @@ bool ArrayBufferBuilder::SetCapacity(uint32_t aNewCap) {
 bool ArrayBufferBuilder::SetCapacityInternal(
     uint32_t aNewCap, const MutexAutoLock& aProofOfLock) {
   MOZ_ASSERT(!mMapPtr);
+  MOZ_ASSERT(!mNeutered);
 
   // To ensure that realloc won't free mDataPtr, use a size of 1
   // instead of 0.
@@ -3753,6 +3755,7 @@ bool ArrayBufferBuilder::Append(const uint8_t* aNewData, uint32_t aDataLen,
                                 uint32_t aMaxGrowth) {
   MutexAutoLock lock(mMutex);
   MOZ_ASSERT(!mMapPtr);
+  MOZ_ASSERT(!mNeutered);
 
   CheckedUint32 neededCapacity = mLength;
   neededCapacity += aDataLen;
@@ -3794,25 +3797,28 @@ bool ArrayBufferBuilder::Append(const uint8_t* aNewData, uint32_t aDataLen,
 
 uint32_t ArrayBufferBuilder::Length() {
   MutexAutoLock lock(mMutex);
+  MOZ_ASSERT(!mNeutered);
   return mLength;
 }
 
 uint32_t ArrayBufferBuilder::Capacity() {
   MutexAutoLock lock(mMutex);
+  MOZ_ASSERT(!mNeutered);
   return mCapacity;
 }
 
-JSObject* ArrayBufferBuilder::GetArrayBuffer(JSContext* aCx) {
+JSObject* ArrayBufferBuilder::TakeArrayBuffer(JSContext* aCx) {
   MutexAutoLock lock(mMutex);
+  MOZ_DIAGNOSTIC_ASSERT(!mNeutered);
 
   if (mMapPtr) {
-    MOZ_ASSERT(NS_IsMainThread());
-
     JSObject* obj = JS::NewMappedArrayBufferWithContents(aCx, mLength, mMapPtr);
     if (!obj) {
       JS::ReleaseMappedArrayBufferContents(mMapPtr, mLength);
     }
+
     mMapPtr = nullptr;
+    mNeutered = true;
 
     // The memory-mapped contents will be released when the ArrayBuffer becomes
     // detached or is GC'd.
@@ -3827,13 +3833,15 @@ JSObject* ArrayBufferBuilder::GetArrayBuffer(JSContext* aCx) {
     }
   }
 
-  JSObject* obj = JS::NewExternalArrayBuffer(
-      aCx, mLength, mDataPtr, ArrayBufferBuilder::FreeBuffer, this);
+  JSObject* obj = JS::NewArrayBufferWithContents(aCx, mLength, mDataPtr);
   if (!obj) {
     return nullptr;
   }
 
-  NS_ADDREF(this);
+  mDataPtr = nullptr;
+  mCapacity = mLength = 0;
+
+  mNeutered = true;
   return obj;
 }
 
@@ -3841,6 +3849,7 @@ nsresult ArrayBufferBuilder::MapToFileInPackage(const nsCString& aFile,
                                                 nsIFile* aJarFile) {
   MutexAutoLock lock(mMutex);
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!mNeutered);
 
   nsresult rv;
 
@@ -3887,14 +3896,6 @@ bool ArrayBufferBuilder::AreOverlappingRegions(const uint8_t* aStart1,
   const uint8_t* min_end = end1 < end2 ? end1 : end2;
 
   return max_start < min_end;
-}
-
-/* static */
-void ArrayBufferBuilder::FreeBuffer(void* aContents, void* aSelf) {
-  RefPtr<ArrayBufferBuilder> builder =
-      dont_AddRef(static_cast<ArrayBufferBuilder*>(aSelf));
-  // Nothing to do here. If this was the last reference, the builder will free
-  // the buffer.
 }
 
 RequestHeaders::RequestHeader* RequestHeaders::Find(const nsACString& aName) {
