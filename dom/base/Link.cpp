@@ -10,6 +10,8 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/IHistory.h"
+#include "mozilla/StaticPrefs_layout.h"
+#include "nsLayoutUtils.h"
 #include "nsIURL.h"
 #include "nsIURIMutator.h"
 #include "nsISizeOf.h"
@@ -109,7 +111,12 @@ void Link::VisitedQueryFinished(bool aVisited) {
   // Tell the element to update its visited state
   mElement->UpdateState(true);
 
-  // FIXME(emilio, bug 1506842): Repaint here unconditionally.
+  if (StaticPrefs::layout_css_always_repaint_on_unvisited()) {
+    // Even if the state didn't actually change, we need to repaint in order for
+    // the visited state not to be observable.
+    nsLayoutUtils::PostRestyleEvent(GetElement(), RestyleHint::RestyleSubtree(),
+                                    nsChangeHint_RepaintFrame);
+  }
 }
 
 EventStates Link::LinkState() const {
