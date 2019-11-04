@@ -72,13 +72,17 @@ class IHistory : public nsISupports {
    */
   virtual void UnregisterVisitedCallback(nsIURI* aURI, dom::Link* aLink) = 0;
 
+  enum class VisitedStatus : uint8_t {
+    Unknown,
+    Visited,
+    Unvisited,
+  };
+
   /**
-   * Notifies about the visited status of a given URI.
-   *
-   * @param aURI
-   *        The URI to notify about.
+   * Notifies about the visited status of a given URI. The visited status cannot
+   * be unknown, otherwise there's no point in notifying of anything.
    */
-  virtual void NotifyVisited(nsIURI* aURI) = 0;
+  virtual void NotifyVisited(nsIURI*, VisitedStatus) = 0;
 
   enum VisitFlags {
     /**

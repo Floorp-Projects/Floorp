@@ -18,33 +18,39 @@ class mock_Link : public mozilla::dom::Link {
  public:
   NS_DECL_ISUPPORTS
 
-  explicit mock_Link(void (*aHandlerFunction)(nsLinkState),
-                     bool aRunNextTest = true)
-      : mozilla::dom::Link(),
-        mHandler(aHandlerFunction),
-        mRunNextTest(aRunNextTest) {
+  typedef void (*Handler)(nsLinkState);
+
+  explicit mock_Link(Handler aHandlerFunction, bool aRunNextTest = true)
+      : mozilla::dom::Link(), mRunNextTest(aRunNextTest) {
+    AwaitNewNotification(aHandlerFunction);
+  }
+
+  void VisitedQueryFinished(bool aVisited) final {
+    // Notify our callback function.
+    mHandler(aVisited ? eLinkState_Visited : eLinkState_Unvisited);
+
+    // Break the cycle so the object can be destroyed.
+    mDeathGrip = nullptr;
+  }
+
+  size_t SizeOfExcludingThis(mozilla::SizeOfState& aState) const final {
+    return 0;  // the value shouldn't matter
+  }
+
+  void NodeInfoChanged(mozilla::dom::Document* aOldDoc) final {}
+
+  bool GotNotified() const { return !mDeathGrip; }
+
+  void AwaitNewNotification(Handler aNewHandler) {
+    MOZ_ASSERT(!mDeathGrip, "Still waiting for a notification");
     // Create a cyclic ownership, so that the link will be released only
     // after its status has been updated.  This will ensure that, when it should
     // run the next test, it will happen at the end of the test function, if
     // the link status has already been set before.  Indeed the link status is
     // updated on a separate connection, thus may happen at any time.
     mDeathGrip = this;
+    mHandler = aNewHandler;
   }
-
-  virtual void SetLinkState(nsLinkState aState) override {
-    // Notify our callback function.
-    mHandler(aState);
-
-    // Break the cycle so the object can be destroyed.
-    mDeathGrip = nullptr;
-  }
-
-  virtual size_t SizeOfExcludingThis(
-      mozilla::SizeOfState& aState) const override {
-    return 0;  // the value shouldn't matter
-  }
-
-  void NodeInfoChanged(mozilla::dom::Document* aOldDoc) final {}
 
  protected:
   ~mock_Link() {
@@ -55,7 +61,7 @@ class mock_Link : public mozilla::dom::Link {
   }
 
  private:
-  void (*mHandler)(nsLinkState);
+  Handler mHandler = nullptr;
   bool mRunNextTest;
   RefPtr<Link> mDeathGrip;
 };
