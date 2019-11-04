@@ -89,11 +89,12 @@ export function generateInlinePreview(cx: ThreadContext, frame: ?Frame) {
         // We want to show values of properties of objects only and not
         // function calls on other data types like someArr.forEach etc..
         let properties = null;
-        if (bindings[name].value.class === "Object") {
+        const objectFront = bindings[name].value;
+        if (objectFront.actorID && objectFront.class === "Object") {
           properties = await client.loadObjectProperties({
             name,
             path: name,
-            contents: { value: bindings[name].value },
+            contents: { value: objectFront },
           });
         }
 
