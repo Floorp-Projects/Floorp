@@ -10,9 +10,11 @@ from abc import ABCMeta, abstractmethod
 import json
 import os
 import posixpath
+import re
 import shutil
 import signal
 import six
+import subprocess
 import sys
 import tempfile
 import time
@@ -23,6 +25,7 @@ import mozcrash
 import mozinfo
 import mozprocess
 import mozproxy.utils as mpu
+import mozversion
 from logger.logger import RaptorLogger
 from mozdevice import ADBDevice
 from mozlog import commandline
@@ -93,7 +96,7 @@ either Raptor or browsertime."""
     __metaclass__ = ABCMeta
 
     def __init__(self, app, binary, run_local=False, noinstall=False,
-                 obj_path=None, profile_class=None,
+                 obj_path=None, profile_class=None, installerpath=None,
                  gecko_profile=False, gecko_profile_interval=None, gecko_profile_entries=None,
                  symbols_path=None, host=None, power_test=False, cpu_test=False, memory_test=False,
                  is_release_build=False, debug_mode=False, post_startup_delay=None,
@@ -129,7 +132,11 @@ either Raptor or browsertime."""
         if self.config['app'] == 'fennec':
             self.config['e10s'] = False
 
+        self.browser_name = None
+        self.browser_version = None
+
         self.raptor_venv = os.path.join(os.getcwd(), 'raptor-venv')
+        self.installerpath = installerpath
         self.playback = None
         self.benchmark = None
         self.benchmark_port = 0
@@ -140,6 +147,8 @@ either Raptor or browsertime."""
         self.firefox_android_apps = FIREFOX_ANDROID_APPS
         self.interrupt_handler = interrupt_handler
         self.results_handler = results_handler_class(self.config)
+
+        self.browser_name, self.browser_version = self.get_browser_meta()
 
         # debug mode is currently only supported when running locally
         self.debug_mode = debug_mode if self.config['run_local'] else False
@@ -200,6 +209,10 @@ either Raptor or browsertime."""
 
         if test.get("preferences") is not None:
             self.set_browser_test_prefs(test['preferences'])
+
+    @abstractmethod
+    def get_browser_meta(self):
+        pass
 
     def run_tests(self, tests, test_names):
         try:
@@ -334,8 +347,122 @@ either Raptor or browsertime."""
         self.log_recording_dates(test)
 
 
+class PerftestDesktop(Perftest):
+    """Mixin class for Desktop-specific Perftest subclasses"""
+
+    def get_browser_meta(self):
+        '''Returns the browser name and version in a tuple (name, version).
+
+        On desktop, we use mozversion but a fallback method also exists
+        for non-firefox browsers, where mozversion is known to fail. The
+        methods are OS-specific, with windows being the outlier.
+        '''
+        browser_name = None
+        browser_version = None
+
+        try:
+            meta = mozversion.get_version(binary=self.config['binary'])
+            browser_name = meta.get('application_name')
+            browser_version = meta.get('application_version')
+        except Exception as e:
+            LOG.warning(
+                "Failed to get browser meta data through mozversion: %s-%s" %
+                (e.__class__.__name__, e)
+            )
+            LOG.info("Attempting to get version through fallback method...")
+
+            # Fall-back method to get browser version on desktop
+            try:
+                if 'linux' in self.config['platform'] or 'mac' in self.config['platform']:
+                    command = [self.config['binary'], '--version']
+                    proc = mozprocess.ProcessHandler(command)
+                    proc.run(timeout=10, outputTimeout=10)
+                    proc.wait()
+
+                    bmeta = proc.output
+                    meta_re = re.compile(r"([A-z\s]+)\s+([\w.]*)")
+                    if len(bmeta) != 0:
+                        match = meta_re.match(bmeta[0])
+                        if match:
+                            browser_name = self.config['app']
+                            browser_version = match.group(2)
+                    else:
+                        LOG.info("Couldn't get browser version and name")
+                else:
+                    # On windows we need to use wimc to get the version
+                    command = r'wmic datafile where name="{0}"'.format(
+                        self.config['binary'].replace('\\', r"\\")
+                    )
+                    bmeta = subprocess.check_output(command)
+
+                    meta_re = re.compile(r"\s+([\d.a-z]+)\s+")
+                    match = meta_re.findall(bmeta)
+                    if len(match) > 0:
+                        browser_name = self.config['app']
+                        browser_version = match[-1]
+                    else:
+                        LOG.info("Couldn't get browser version and name")
+            except Exception as e:
+                LOG.warning(
+                    "Failed to get browser meta data through fallback method: %s-%s" %
+                    (e.__class__.__name__, e)
+                )
+
+        if not browser_name:
+            LOG.warning("Could not find a browser name")
+        else:
+            LOG.info("Browser name: %s" % browser_name)
+
+        if not browser_version:
+            LOG.warning("Could not find a browser version")
+        else:
+            LOG.info("Browser version: %s" % browser_version)
+
+        return (browser_name, browser_version)
+
+
+class PerftestAndroid(Perftest):
+    """Mixin class for Android-specific Perftest subclasses."""
+
+    def get_browser_meta(self):
+        '''Returns the browser name and version in a tuple (name, version).
+
+        Uses mozversion as the primary method to get this meta data and for
+        android this is the only method which exists to get this data. With android,
+        we use the installerpath attribute to determine this and this only works
+        with Firefox browsers.
+        '''
+        browser_name = None
+        browser_version = None
+
+        if self.config['app'] in self.firefox_android_apps:
+            try:
+                meta = mozversion.get_version(binary=self.installerpath)
+                browser_name = meta.get('application_name')
+                browser_version = meta.get('application_version')
+            except Exception as e:
+                LOG.warning(
+                    "Failed to get android browser meta data through mozversion: %s-%s" %
+                    (e.__class__.__name__, e)
+                )
+
+        if not browser_name:
+            LOG.warning("Could not find a browser name")
+        else:
+            LOG.info("Browser name: %s" % browser_name)
+
+        if not browser_version:
+            LOG.warning("Could not find a browser version")
+        else:
+            LOG.info("Browser version: %s" % browser_version)
+
+        return (browser_name, browser_version)
+
+
 class Browsertime(Perftest):
-    """Container class for Browsertime"""
+    """Abstract base class for Browsertime"""
+
+    __metaclass__ = ABCMeta
 
     def __init__(self, *args, **kwargs):
         for key in kwargs.keys():
@@ -364,6 +491,11 @@ class Browsertime(Perftest):
                 LOG.info("{}: {}".format(k, os.stat(getattr(self, k))))
             except Exception as e:
                 LOG.info("{}: {}".format(k, e))
+
+    @property
+    @abstractmethod
+    def browsertime_args(self):
+        pass
 
     def build_browser_profile(self):
         super(Browsertime, self).build_browser_profile()
@@ -423,13 +555,6 @@ class Browsertime(Perftest):
 
     def clean_up(self):
         super(Browsertime, self).clean_up()
-
-    @property
-    def browsertime_args(self):
-        binary_path = self.config['binary']
-        LOG.info('binary_path: {}'.format(binary_path))
-
-        return ['--browser', 'firefox', '--firefox.binaryPath', binary_path]
 
     def run_test(self, test, timeout):
         self.run_test_setup(test)
@@ -534,7 +659,19 @@ class Browsertime(Perftest):
             raise
 
 
-class BrowsertimeAndroid(Browsertime):
+class BrowsertimeDesktop(PerftestDesktop, Browsertime):
+    def __init__(self, *args, **kwargs):
+        super(BrowsertimeDesktop, self).__init__(*args, **kwargs)
+
+    @property
+    def browsertime_args(self):
+        binary_path = self.config['binary']
+        LOG.info('binary_path: {}'.format(binary_path))
+
+        return ['--browser', 'firefox', '--firefox.binaryPath', binary_path]
+
+
+class BrowsertimeAndroid(PerftestAndroid, Browsertime):
 
     def __init__(self, app, binary, activity=None, intent=None, **kwargs):
         super(BrowsertimeAndroid, self).__init__(app, binary, profile_class="firefox", **kwargs)
@@ -767,7 +904,7 @@ class Raptor(Perftest):
         return response.text
 
 
-class RaptorDesktop(Raptor):
+class RaptorDesktop(PerftestDesktop, Raptor):
 
     def __init__(self, *args, **kwargs):
         super(RaptorDesktop, self).__init__(*args, **kwargs)
@@ -1029,7 +1166,7 @@ class RaptorDesktopChrome(RaptorDesktop):
                         we currently do not install them on non-Firefox browsers.")
 
 
-class RaptorAndroid(Raptor):
+class RaptorAndroid(PerftestAndroid, Raptor):
 
     def __init__(self, app, binary, activity=None, intent=None, **kwargs):
         super(RaptorAndroid, self).__init__(app, binary, profile_class="firefox", **kwargs)
@@ -1486,10 +1623,8 @@ def main(args=sys.argv[1:]):
                     value = outer_kwargs.pop(key)
                     inner_kwargs[key] = value
 
-            if args.app == "firefox":
-                klass = Browsertime
-            elif args.app in CHROMIUM_DISTROS:
-                klass = Browsertime
+            if args.app == "firefox"or args.app in CHROMIUM_DISTROS:
+                klass = BrowsertimeDesktop
             else:
                 klass = BrowsertimeAndroid
 
@@ -1499,6 +1634,7 @@ def main(args=sys.argv[1:]):
                           args.binary,
                           run_local=args.run_local,
                           noinstall=args.noinstall,
+                          installerpath=args.installerpath,
                           obj_path=args.obj_path,
                           gecko_profile=args.gecko_profile,
                           gecko_profile_interval=args.gecko_profile_interval,

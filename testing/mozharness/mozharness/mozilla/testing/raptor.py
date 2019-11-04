@@ -430,6 +430,11 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
         options = []
         kw_options = {}
 
+        # Get the APK location to be able to get the browser version
+        # through mozversion
+        if self.app in self.firefox_android_browsers and not self.run_local:
+            kw_options['installerpath'] = self.installer_path
+
         # If testing on Firefox, the binary path already came from mozharness/pro;
         # otherwise the binary path is forwarded from command-line arg (raptor_cmd_line_args).
         kw_options['app'] = self.app
