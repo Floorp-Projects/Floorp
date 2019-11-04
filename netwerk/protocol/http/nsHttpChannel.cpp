@@ -8668,26 +8668,11 @@ nsHttpChannel::OnTransportStatus(nsITransport* trans, nsresult status,
          (mLoadFlags & LOAD_BACKGROUND) ? "" : " and status", this,
          static_cast<uint32_t>(status), progress, progressMax));
 
-    nsAutoCString host;
-    mURI->GetHost(host);
     if (!(mLoadFlags & LOAD_BACKGROUND)) {
+      nsAutoCString host;
+      mURI->GetHost(host);
       mProgressSink->OnStatus(this, nullptr, status,
                               NS_ConvertUTF8toUTF16(host).get());
-    } else {
-      nsCOMPtr<nsIParentChannel> parentChannel;
-      NS_QueryNotificationCallbacks(this, parentChannel);
-      RefPtr<HttpChannelParent> httpParent = do_QueryObject(parentChannel);
-      nsCOMPtr<nsIProgressEventSink> eventSink = do_QueryObject(httpParent);
-      // If the event sink is |HttpChannelParent|, we have to send status events
-      // to it even if LOAD_BACKGROUND is set. |HttpChannelParent| needs to be
-      // aware of whether the status is |NS_NET_STATUS_RECEIVING_FROM| or
-      // |NS_NET_STATUS_READING|.
-      // LOAD_BACKGROUND is checked again in |HttpChannelChild|, so the final
-      // consumer won't get this event.
-      if (eventSink) {
-        eventSink->OnStatus(this, nullptr, status,
-                            NS_ConvertUTF8toUTF16(host).get());
-      }
     }
 
     if (progress > 0) {
