@@ -53,6 +53,11 @@ class HttpBackgroundChannelChild final : public PHttpBackgroundChannelChild {
                               const TimeStamp& aLastActiveTabOptHit,
                               const nsHttpHeaderArray& aResponseTrailers);
 
+  IPCResult RecvOnProgress(const int64_t& aProgress,
+                           const int64_t& aProgressMax);
+
+  IPCResult RecvOnStatus(const nsresult& aStatus);
+
   IPCResult RecvFlushedForDiversion();
 
   IPCResult RecvDivertMessages();
