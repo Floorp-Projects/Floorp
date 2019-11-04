@@ -10,6 +10,10 @@
   --replay-head-background: var(--theme-highlight-purple);
 }
 
+body.scrubbing {
+  user-select: none;
+}
+
 .frame-timeline-container {
   border-bottom: 1px solid var(--theme-splitter-color);
   background-color: var(--accordion-header-background);
