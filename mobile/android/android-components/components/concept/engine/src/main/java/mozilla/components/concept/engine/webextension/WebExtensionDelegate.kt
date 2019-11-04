@@ -22,9 +22,7 @@ interface WebExtensionDelegate {
 
     /**
      * Invoked when a web extension attempts to open a new tab via
-     * browser.tabs.create. Note that browser.tabs.remove is currently
-     * not supported:
-     * https://github.com/mozilla-mobile/android-components/issues/4682
+     * browser.tabs.create.
      *
      * @param webExtension An instance of [WebExtension] or null if extension
      * was not registered with the engine.
@@ -32,4 +30,14 @@ interface WebExtensionDelegate {
      * @param engineSession an instance of engine session to open a new tab with.
      */
     fun onNewTab(webExtension: WebExtension?, url: String, engineSession: EngineSession) = Unit
+
+    /**
+     * Invoked when a web extension attempts to close a tab via browser.tabs.remove.
+     *
+     * @param webExtension An instance of [WebExtension] or null if extension
+     * was not registered with the engine.
+     * @param engineSession then engine session fo the tab to be closed.
+     * @return true if the tab was closed, otherwise false.
+     */
+    fun onCloseTab(webExtension: WebExtension?, engineSession: EngineSession) = false
 }
