@@ -1528,7 +1528,7 @@ bool NetlinkService::CalculateIDForFamily(uint8_t aFamily, SHA1Sum* aSHA1) {
   nsTArray<nsCString> linkNamesToHash;
   if (!gwNeighbors.Length()) {
     // If we don't know MAC of the gateway and link is up, it's probably not
-    // an ethernet link. If the name of the link begins with "rmnet_data" then
+    // an ethernet link. If the name of the link begins with "rmnet" then
     // the mobile data is used. We cannot easily differentiate when user
     // switches sim cards so let's treat mobile data as a single network. We'll
     // simply hash link name. If the traffic is redirected via some VPN, it'll
@@ -1540,7 +1540,7 @@ bool NetlinkService::CalculateIDForFamily(uint8_t aFamily, SHA1Sum* aSHA1) {
       if (linkInfo->mIsUp) {
         nsAutoCString linkName;
         linkInfo->mLink->GetName(linkName);
-        if (StringBeginsWith(linkName, NS_LITERAL_CSTRING("rmnet_data"))) {
+        if (StringBeginsWith(linkName, NS_LITERAL_CSTRING("rmnet"))) {
           // Check whether there is some non-local address associated with this
           // link.
           for (uint32_t i = 0; i < linkInfo->mAddresses.Length(); ++i) {
