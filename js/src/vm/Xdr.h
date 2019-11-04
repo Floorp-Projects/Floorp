@@ -236,6 +236,14 @@ class XDRState : public XDRCoderBase {
     MOZ_CRASH("does not have scriptSourceObjectOut.");
   }
 
+  virtual bool hasAtomMap() const { return false; }
+  virtual XDRAtomMap& atomMap() { MOZ_CRASH("does not have atomMap"); }
+  virtual uint32_t& natoms() { MOZ_CRASH("does not have atomMap."); }
+
+  virtual bool hasAtomTable() const { return false; }
+  virtual XDRAtomTable& atomTable() { MOZ_CRASH("does not have atomTable"); }
+  virtual void finishAtomTable() { MOZ_CRASH("does not have atomTable"); }
+
   virtual bool isMainBuf() { return true; }
 
   virtual void switchToAtomBuf() { MOZ_CRASH("cannot switch to atom buffer."); }
@@ -431,10 +439,15 @@ class XDRDecoder : public XDRDecoderBase {
   XDRDecoder(JSContext* cx, const RangeType& range)
       : XDRDecoderBase(cx, range), atomTable_(cx) {}
 
+  bool hasAtomTable() const override { return hasFinishedAtomTable_; }
+  XDRAtomTable& atomTable() override { return atomTable_; }
+  void finishAtomTable() override { hasFinishedAtomTable_ = true; }
+
   void trace(JSTracer* trc);
 
  private:
   XDRAtomTable atomTable_;
+  bool hasFinishedAtomTable_ = false;
 };
 
 class XDROffThreadDecoder : public XDRDecoder {
@@ -541,6 +554,7 @@ class XDRIncrementalEncoder : public XDREncoder {
   JS::TranscodeBuffer header_;
   XDRBuffer<XDR_ENCODE> headerBuf_;
   bool oom_;
+  uint32_t natoms_ = 0;
 
   class DepthFirstSliceIterator;
 
@@ -555,6 +569,10 @@ class XDRIncrementalEncoder : public XDREncoder {
         oom_(false) {}
 
   virtual ~XDRIncrementalEncoder() {}
+
+  bool hasAtomMap() const override { return true; }
+  XDRAtomMap& atomMap() override { return atomMap_; }
+  uint32_t& natoms() override { return natoms_; }
 
   bool isMainBuf() override { return buf == &mainBuf; }
 
@@ -580,6 +598,9 @@ class XDRIncrementalEncoder : public XDREncoder {
 
 template <XDRMode mode>
 XDRResult XDRAtom(XDRState<mode>* xdr, js::MutableHandleAtom atomp);
+
+template <XDRMode mode>
+XDRResult XDRAtomData(XDRState<mode>* xdr, js::MutableHandleAtom atomp);
 
 } /* namespace js */
 

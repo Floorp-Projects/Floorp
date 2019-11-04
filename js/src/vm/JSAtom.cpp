@@ -1220,27 +1220,75 @@ static JSAtom* AtomizeLittleEndianTwoByteChars(JSContext* cx,
 }
 
 template <XDRMode mode>
+static XDRResult XDRAtomIndex(XDRState<mode>* xdr, uint32_t* index) {
+  return xdr->codeUint32(index);
+}
+
+template <XDRMode mode>
 XDRResult js::XDRAtom(XDRState<mode>* xdr, MutableHandleAtom atomp) {
+  if (!xdr->hasAtomMap() && !xdr->hasAtomTable()) {
+    return XDRAtomData(xdr, atomp);
+  }
+
+  if (mode == XDR_ENCODE) {
+    MOZ_ASSERT(xdr->hasAtomMap());
+
+    // Atom contents are encoded in a separate buffer, which is joined to the
+    // final result in XDRIncrementalEncoder::linearize. References to atoms
+    // are encoded as indices into the atom stream.
+    uint32_t atomIndex;
+    XDRAtomMap::AddPtr p = xdr->atomMap().lookupForAdd(atomp.get());
+    if (p) {
+      atomIndex = p->value();
+    } else {
+      xdr->switchToAtomBuf();
+      MOZ_TRY(XDRAtomData(xdr, atomp));
+      xdr->switchToMainBuf();
+
+      atomIndex = xdr->natoms();
+      xdr->natoms() += 1;
+      if (!xdr->atomMap().add(p, atomp.get(), atomIndex)) {
+        return xdr->fail(JS::TranscodeResult_Throw);
+      }
+    }
+    MOZ_TRY(XDRAtomIndex(xdr, &atomIndex));
+    return Ok();
+  }
+
+  MOZ_ASSERT(mode == XDR_DECODE && xdr->hasAtomTable());
+
+  uint32_t atomIndex;
+  MOZ_TRY(XDRAtomIndex(xdr, &atomIndex));
+  JSAtom* atom = xdr->atomTable()[atomIndex];
+
+  if (!atom) {
+    return xdr->fail(JS::TranscodeResult_Throw);
+  }
+
+  atomp.set(atom);
+  return Ok();
+}
+
+template XDRResult js::XDRAtom(XDRState<XDR_DECODE>* xdr,
+                               MutableHandleAtom atomp);
+
+template XDRResult js::XDRAtom(XDRState<XDR_ENCODE>* xdr,
+                               MutableHandleAtom atomp);
+
+template <XDRMode mode>
+XDRResult js::XDRAtomData(XDRState<mode>* xdr, MutableHandleAtom atomp) {
   bool latin1 = false;
   uint32_t length = 0;
   uint32_t lengthAndEncoding = 0;
+
   if (mode == XDR_ENCODE) {
+    JS::AutoCheckCannotGC nogc;
     static_assert(JSString::MAX_LENGTH <= INT32_MAX,
                   "String length must fit in 31 bits");
     latin1 = atomp->hasLatin1Chars();
     length = atomp->length();
     lengthAndEncoding = (length << 1) | uint32_t(latin1);
-  }
-
-  MOZ_TRY(xdr->codeUint32(&lengthAndEncoding));
-
-  if (mode == XDR_DECODE) {
-    length = lengthAndEncoding >> 1;
-    latin1 = lengthAndEncoding & 0x1;
-  }
-
-  if (mode == XDR_ENCODE) {
-    JS::AutoCheckCannotGC nogc;
+    MOZ_TRY(xdr->codeUint32(&lengthAndEncoding));
     if (latin1) {
       return xdr->codeChars(
           const_cast<JS::Latin1Char*>(atomp->latin1Chars(nogc)), length);
@@ -1252,7 +1300,11 @@ XDRResult js::XDRAtom(XDRState<mode>* xdr, MutableHandleAtom atomp) {
   MOZ_ASSERT(mode == XDR_DECODE);
   /* Avoid JSString allocation for already existing atoms. See bug 321985. */
   JSContext* cx = xdr->cx();
-  JSAtom* atom;
+  JSAtom* atom = nullptr;
+  MOZ_TRY(xdr->codeUint32(&lengthAndEncoding));
+  length = lengthAndEncoding >> 1;
+  latin1 = lengthAndEncoding & 0x1;
+
   if (latin1) {
     const Latin1Char* chars = nullptr;
     if (length) {
@@ -1268,7 +1320,6 @@ XDRResult js::XDRAtom(XDRState<mode>* xdr, MutableHandleAtom atomp) {
       size_t nbyte = length * sizeof(char16_t);
       MOZ_TRY(xdr->peekData(&twoByteCharsLE, nbyte));
     }
-
     atom = AtomizeLittleEndianTwoByteChars(cx, twoByteCharsLE, length);
   }
 
@@ -1279,11 +1330,11 @@ XDRResult js::XDRAtom(XDRState<mode>* xdr, MutableHandleAtom atomp) {
   return Ok();
 }
 
-template XDRResult js::XDRAtom(XDRState<XDR_ENCODE>* xdr,
-                               MutableHandleAtom atomp);
+template XDRResult js::XDRAtomData(XDRState<XDR_ENCODE>* xdr,
+                                   MutableHandleAtom atomp);
 
-template XDRResult js::XDRAtom(XDRState<XDR_DECODE>* xdr,
-                               MutableHandleAtom atomp);
+template XDRResult js::XDRAtomData(XDRState<XDR_DECODE>* xdr,
+                                   MutableHandleAtom atomp);
 
 Handle<PropertyName*> js::ClassName(JSProtoKey key, JSContext* cx) {
   return ClassName(key, cx->names());
