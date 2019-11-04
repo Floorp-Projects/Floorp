@@ -12,6 +12,13 @@ enum class ReleaseChannel {
             Debug -> false
             else -> true
         }
+
+    val isReleaseOrBeta: Boolean
+        get() = when (this) {
+            Production -> true
+            Beta -> true
+            else -> false
+        }
 }
 
 object Config {

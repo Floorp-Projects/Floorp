@@ -9,6 +9,7 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreference
+import org.mozilla.fenix.Config
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getPreferenceKey
@@ -66,6 +67,7 @@ class DataChoicesFragment : PreferenceFragmentCompat() {
 
         findPreference<SwitchPreference>(getPreferenceKey(R.string.pref_key_experimentation))?.apply {
             isChecked = context.settings().isExperimentationEnabled
+            isVisible = Config.channel.isReleaseOrBeta
             onPreferenceChangeListener = SharedPreferenceUpdater()
         }
     }

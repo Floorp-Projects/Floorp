@@ -82,7 +82,7 @@ open class FenixApplication : Application() {
         experimentLoader = loadExperiments()
 
         // Enable the service-experiments component
-        if (settings().isExperimentationEnabled) {
+        if (settings().isExperimentationEnabled && Config.channel.isReleaseOrBeta) {
             Experiments.initialize(
                 applicationContext,
                 mozilla.components.service.experiments.Configuration(
