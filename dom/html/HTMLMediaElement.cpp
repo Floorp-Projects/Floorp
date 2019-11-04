@@ -4867,7 +4867,7 @@ void HTMLMediaElement::UpdateSrcMediaStreamPlaying(uint32_t aFlags) {
   }
 }
 
-void HTMLMediaElement::UpdateSrcTrackTime() {
+void HTMLMediaElement::UpdateSrcStreamTime() {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (mSrcStreamPlaybackEnded) {
@@ -4887,7 +4887,7 @@ void HTMLMediaElement::SetupSrcMediaStreamPlayback(DOMMediaStream* aStream) {
   mMediaStreamRenderer = MakeAndAddRef<MediaStreamRenderer>(
       mAbstractMainThread, GetVideoFrameContainer(), this);
   mWatchManager.Watch(mMediaStreamRenderer->CurrentGraphTime(),
-                      &HTMLMediaElement::UpdateSrcTrackTime);
+                      &HTMLMediaElement::UpdateSrcStreamTime);
   SetVolumeInternal();
 
   UpdateSrcMediaStreamPlaying();
@@ -4927,7 +4927,7 @@ void HTMLMediaElement::EndSrcMediaStreamPlayback() {
 
   if (mMediaStreamRenderer) {
     mWatchManager.Unwatch(mMediaStreamRenderer->CurrentGraphTime(),
-                          &HTMLMediaElement::UpdateSrcTrackTime);
+                          &HTMLMediaElement::UpdateSrcStreamTime);
     mMediaStreamRenderer = nullptr;
   }
 
