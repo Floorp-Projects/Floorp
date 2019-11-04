@@ -99,6 +99,12 @@ let gWhitelist = [
     key: "PatternAttributeCompileFailure",
     type: "single-quote",
   },
+  // dom.properties is packaged twice so we need to have two exceptions for this string.
+  {
+    file: "dom.properties",
+    key: "PatternAttributeCompileFailure",
+    type: "single-quote",
+  },
   {
     file: "netError.dtd",
     key: "inadequateSecurityError.longDesc",
