@@ -837,6 +837,18 @@ class MOZ_STACK_CLASS OpIter : private Policy {
     }
   }
 
+  bool getResults(size_t count, ValueVector* values) {
+    MOZ_ASSERT(valueStack_.length() >= count);
+    if (!values->resize(count)) {
+      return false;
+    }
+    size_t base = valueStack_.length() - count;
+    for (size_t i = 0; i < count; i++) {
+      (*values)[i] = valueStack_[base + i].value();
+    }
+    return true;
+  }
+
   // Set the result value of the current top-of-value-stack expression.
   void setResult(Value value) { valueStack_.back().setValue(value); }
 
