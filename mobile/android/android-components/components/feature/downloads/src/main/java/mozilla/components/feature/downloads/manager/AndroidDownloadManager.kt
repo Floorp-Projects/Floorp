@@ -17,7 +17,6 @@ import android.util.LongSparseArray
 import androidx.annotation.RequiresPermission
 import androidx.core.content.getSystemService
 import androidx.core.net.toUri
-import androidx.core.util.isEmpty
 import androidx.core.util.set
 import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.concept.fetch.Headers.Names.COOKIE
@@ -40,8 +39,16 @@ class AndroidDownloadManager(
     override var onDownloadCompleted: OnDownloadCompleted = noop
 ) : BroadcastReceiver(), DownloadManager {
 
-    private val queuedDownloads = LongSparseArray<DownloadState>()
+    private val queuedDownloads = LongSparseArray<DownloadStateWithRequest>()
     private var isSubscribedReceiver = false
+
+    /**
+     * Holds both the state and the Android DownloadManager.Request for the queued download
+     */
+    data class DownloadStateWithRequest(
+        val state: DownloadState,
+        val request: SystemRequest
+    )
 
     override val permissions = arrayOf(INTERNET, WRITE_EXTERNAL_STORAGE)
 
@@ -68,11 +75,20 @@ class AndroidDownloadManager(
         val request = download.toAndroidRequest(cookie)
 
         val downloadID = androidDownloadManager.enqueue(request)
-        queuedDownloads[downloadID] = download
+
+        queuedDownloads[downloadID] = DownloadStateWithRequest(
+            state = download,
+            request = request
+        )
 
         registerBroadcastReceiver()
 
         return downloadID
+    }
+
+    override fun tryAgain(downloadId: Long) {
+        val androidDownloadManager: SystemDownloadManager = applicationContext.getSystemService()!!
+        androidDownloadManager.enqueue(queuedDownloads[downloadId].request)
     }
 
     /**
@@ -99,19 +115,14 @@ class AndroidDownloadManager(
      * broadcast receiver if there are no more queued downloads.
      */
     override fun onReceive(context: Context, intent: Intent) {
-        if (queuedDownloads.isEmpty()) unregisterListeners()
-
         val downloadID = intent.getLongExtra(EXTRA_DOWNLOAD_ID, -1)
         val download = queuedDownloads[downloadID]
         val downloadStatus = intent.getSerializableExtra(AbstractFetchDownloadService.EXTRA_DOWNLOAD_STATUS)
             as AbstractFetchDownloadService.DownloadJobStatus
 
         if (download != null) {
-            onDownloadCompleted(download, downloadID, downloadStatus)
-            queuedDownloads.remove(downloadID)
+            onDownloadCompleted(download.state, downloadID, downloadStatus)
         }
-
-        if (queuedDownloads.isEmpty()) unregisterListeners()
     }
 }
 

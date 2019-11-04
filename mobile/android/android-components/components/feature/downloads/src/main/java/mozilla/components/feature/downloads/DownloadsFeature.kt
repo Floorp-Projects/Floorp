@@ -67,7 +67,7 @@ class DownloadsFeature(
     @VisibleForTesting(otherwise = PRIVATE)
     internal var dialog: DownloadDialogFragment = SimpleDownloadDialogFragment.newInstance(
         promptsStyling = promptsStyling
-)
+    )
 ) : LifecycleAwareFeature, PermissionsFeature {
 
     var onDownloadCompleted: OnDownloadCompleted
@@ -108,6 +108,14 @@ class DownloadsFeature(
                     }
                 }
         }
+    }
+
+    /**
+     * Calls the tryAgain function of the corresponding [DownloadManager]
+     */
+    @Suppress("Unused")
+    fun tryAgain(id: Long) {
+        downloadManager.tryAgain(id)
     }
 
     /**
@@ -176,7 +184,7 @@ class DownloadsFeature(
             applicationContext.getString(
                 R.string.mozac_feature_downloads_file_not_supported2,
                 applicationContext.appName),
-                Toast.LENGTH_LONG
+            Toast.LENGTH_LONG
         ).show()
     }
 

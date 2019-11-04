@@ -140,7 +140,8 @@ abstract class AbstractFetchDownloadService : Service() {
         val download = intent?.getDownloadExtra() ?: return START_REDELIVER_INTENT
         registerForUpdates()
 
-        val foregroundServiceId = Random.nextInt()
+        // If the job already exists, then don't create a new ID. This can happen when calling tryAgain
+        val foregroundServiceId = downloadJobs[download.id]?.foregroundServiceId ?: Random.nextInt()
 
         // Create a new job and add it, with its downloadState to the map
         downloadJobs[download.id] = DownloadJobState(

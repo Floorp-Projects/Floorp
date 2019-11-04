@@ -14,7 +14,6 @@ import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.grantPermission
 import mozilla.components.support.test.robolectric.testContext
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -64,6 +63,28 @@ class AndroidDownloadManagerTest {
     }
 
     @Test
+    fun `calling tryAgain starts the download again`() {
+        var downloadCompleted = false
+
+        downloadManager.onDownloadCompleted = { _, _, _ -> downloadCompleted = true }
+
+        grantPermissions()
+
+        val id = downloadManager.download(download)!!
+
+        notifyDownloadCompleted(id)
+
+        assertTrue(downloadCompleted)
+
+        downloadCompleted = false
+
+        downloadManager.tryAgain(id)
+
+        notifyDownloadCompleted(id)
+        assertTrue(downloadCompleted)
+    }
+
+    @Test
     fun `trying to download a file with invalid protocol must NOT triggered a download`() {
 
         val invalidDownload = download.copy(url = "ftp://ipv4.download.thinkbroadband.com/5MB.zip")
@@ -76,7 +97,7 @@ class AndroidDownloadManagerTest {
     }
 
     @Test
-    fun `calling registerListener with valid downloadID must call listener after download`() {
+    fun `sendBroadcast with valid downloadID must call onDownloadCompleted after download`() {
         var downloadCompleted = false
         var downloadStatus: DownloadJobStatus? = null
         val downloadWithFileName = download.copy(fileName = "5MB.zip")
@@ -96,12 +117,7 @@ class AndroidDownloadManagerTest {
         notifyDownloadCompleted(id)
 
         assertTrue(downloadCompleted)
-
-        downloadCompleted = false
-        notifyDownloadCompleted(id)
-
         assertEquals(DownloadJobStatus.COMPLETED, downloadStatus)
-        assertFalse(downloadCompleted)
     }
 
     @Test

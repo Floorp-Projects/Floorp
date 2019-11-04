@@ -22,7 +22,6 @@ import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.grantPermission
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -30,6 +29,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.verify
 import mozilla.components.feature.downloads.AbstractFetchDownloadService.DownloadJobStatus
+import org.mockito.Mockito.times
 
 @RunWith(AndroidJUnit4::class)
 class FetchDownloadManagerTest {
@@ -76,6 +76,31 @@ class FetchDownloadManagerTest {
     }
 
     @Test
+    fun `calling tryAgain starts the download again`() {
+        val context: Context = mock()
+        downloadManager = FetchDownloadManager(context, MockDownloadService::class, broadcastManager)
+        var downloadCompleted = false
+
+        downloadManager.onDownloadCompleted = { _, _, _ -> downloadCompleted = true }
+
+        grantPermissions()
+
+        val id = downloadManager.download(download)!!
+
+        verify(context).startService(any())
+        notifyDownloadCompleted(id)
+        assertTrue(downloadCompleted)
+
+        downloadCompleted = false
+
+        downloadManager.tryAgain(id)
+
+        verify(context, times(2)).startService(any())
+        notifyDownloadCompleted(id)
+        assertTrue(downloadCompleted)
+    }
+
+    @Test
     fun `trying to download a file with invalid protocol must NOT triggered a download`() {
 
         val invalidDownload = download.copy(url = "ftp://ipv4.download.thinkbroadband.com/5MB.zip")
@@ -88,7 +113,7 @@ class FetchDownloadManagerTest {
     }
 
     @Test
-    fun `calling registerListener with valid downloadID must call listener after download`() {
+    fun `sendBroadcast with valid downloadID must call onDownloadCompleted after download`() {
         var downloadCompleted = false
         var downloadStatus: DownloadJobStatus? = null
         val downloadWithFileName = download.copy(fileName = "5MB.zip")
@@ -109,11 +134,7 @@ class FetchDownloadManagerTest {
 
         assertTrue(downloadCompleted)
 
-        downloadCompleted = false
-        notifyDownloadCompleted(id)
-
         assertEquals(DownloadJobStatus.COMPLETED, downloadStatus)
-        assertFalse(downloadCompleted)
     }
 
     private fun notifyDownloadCompleted(id: Long) {

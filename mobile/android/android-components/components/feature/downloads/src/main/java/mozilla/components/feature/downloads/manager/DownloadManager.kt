@@ -28,6 +28,14 @@ interface DownloadManager {
         cookie: String = ""
     ): Long?
 
+    /**
+     * Schedules another attempt at downloading the given download.
+     * @param downloadId the id of the previously attempted download
+     */
+    fun tryAgain(
+        downloadId: Long
+    )
+
     fun unregisterListeners() = Unit
 }
 

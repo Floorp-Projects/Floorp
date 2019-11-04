@@ -124,6 +124,28 @@ class DownloadsFeatureTest {
     }
 
     @Test
+    fun `Try again calls download manager`() {
+        val fragmentManager: FragmentManager = mockFragmentManager()
+
+        val downloadManager: DownloadManager = mock()
+
+        grantPermissions()
+
+        val feature = DownloadsFeature(
+            testContext,
+            store,
+            useCases = mock(),
+            fragmentManager = fragmentManager,
+            downloadManager = downloadManager
+        )
+
+        feature.start()
+        feature.tryAgain(0)
+
+        verify(downloadManager).tryAgain(0)
+    }
+
+    @Test
     fun `Adding a download without a fragment manager will start download immediately`() {
         grantPermissions()
 

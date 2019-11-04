@@ -16,7 +16,6 @@ import android.content.IntentFilter
 import android.os.Build.VERSION.SDK_INT
 import android.os.Build.VERSION_CODES.P
 import android.util.LongSparseArray
-import androidx.core.util.isEmpty
 import androidx.core.util.set
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import mozilla.components.browser.state.state.content.DownloadState
@@ -75,6 +74,16 @@ class FetchDownloadManager<T : AbstractFetchDownloadService>(
         return download.id
     }
 
+    override fun tryAgain(downloadId: Long) {
+        val download = queuedDownloads[downloadId]
+
+        val intent = Intent(applicationContext, service.java)
+        intent.putDownloadExtra(download)
+        applicationContext.startService(intent)
+
+        registerBroadcastReceiver()
+    }
+
     /**
      * Remove all the listeners.
      */
@@ -99,8 +108,6 @@ class FetchDownloadManager<T : AbstractFetchDownloadService>(
      * broadcast receiver if there are no more queued downloads.
      */
     override fun onReceive(context: Context, intent: Intent) {
-        if (queuedDownloads.isEmpty()) unregisterListeners()
-
         val downloadID = intent.getLongExtra(EXTRA_DOWNLOAD_ID, -1)
         val downloadStatus = intent.getSerializableExtra(EXTRA_DOWNLOAD_STATUS)
             as AbstractFetchDownloadService.DownloadJobStatus
@@ -108,9 +115,6 @@ class FetchDownloadManager<T : AbstractFetchDownloadService>(
 
         if (download != null) {
             onDownloadCompleted(download, downloadID, downloadStatus)
-            queuedDownloads.remove(downloadID)
         }
-
-        if (queuedDownloads.isEmpty()) unregisterListeners()
     }
 }

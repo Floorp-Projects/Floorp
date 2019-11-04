@@ -120,7 +120,8 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler {
                     requestPermissions(permissions, REQUEST_CODE_DOWNLOAD_PERMISSIONS)
                 }),
             owner = this,
-            view = layout)
+            view = layout
+        )
 
         val scrollFeature = CoordinateScrollingFeature(components.sessionManager, layout.engineView, layout.toolbar)
 

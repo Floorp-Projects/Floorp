@@ -12,6 +12,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
+* **feature-downloads**
+  * Added `tryAgain` which can be called on the feature in order to restart a failed download.
+
 # 20.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v19.0.0...v20.0.0)
