@@ -96,6 +96,24 @@ class PictureInPictureParent extends JSWindowActorParent {
         }
         break;
       }
+      case "PictureInPicture:Muting": {
+        let player =
+          PictureInPicture.weakPipPlayer &&
+          PictureInPicture.weakPipPlayer.get();
+        if (player) {
+          player.setIsMutedState(true);
+        }
+        break;
+      }
+      case "PictureInPicture:Unmuting": {
+        let player =
+          PictureInPicture.weakPipPlayer &&
+          PictureInPicture.weakPipPlayer.get();
+        if (player) {
+          player.setIsMutedState(false);
+        }
+        break;
+      }
     }
   }
 }
@@ -182,6 +200,7 @@ var PictureInPicture = {
     let win = await this.openPipWindow(parentWin, videoData);
     this.weakPipPlayer = Cu.getWeakReference(win);
     win.setIsPlayingState(videoData.playing);
+    win.setIsMutedState(videoData.isMuted);
 
     // set attribute which shows pip icon in tab
     let tab = parentWin.gBrowser.getTabForBrowser(browser);

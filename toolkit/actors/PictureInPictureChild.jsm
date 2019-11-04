@@ -800,6 +800,10 @@ class PictureInPictureChild extends JSWindowActorChild {
     );
   }
 
+  static videoIsMuted(video) {
+    return video.muted;
+  }
+
   handleEvent(event) {
     switch (event.type) {
       case "MozTogglePictureInPicture": {
@@ -826,6 +830,14 @@ class PictureInPictureChild extends JSWindowActorChild {
       }
       case "pause": {
         this.sendAsyncMessage("PictureInPicture:Paused");
+        break;
+      }
+      case "volumechange": {
+        if (this.weakVideo.muted) {
+          this.sendAsyncMessage("PictureInPicture:Muting");
+        } else {
+          this.sendAsyncMessage("PictureInPicture:Unmuting");
+        }
         break;
       }
     }
@@ -881,6 +893,7 @@ class PictureInPictureChild extends JSWindowActorChild {
 
       gWeakVideo = Cu.getWeakReference(video);
       this.sendAsyncMessage("PictureInPicture:Request", {
+        isMuted: PictureInPictureChild.videoIsMuted(video),
         playing: PictureInPictureChild.videoIsPlaying(video),
         videoHeight: video.videoHeight,
         videoWidth: video.videoWidth,
@@ -948,6 +961,14 @@ class PictureInPictureChild extends JSWindowActorChild {
         this.pause();
         break;
       }
+      case "PictureInPicture:Mute": {
+        this.mute();
+        break;
+      }
+      case "PictureInPicture:Unmute": {
+        this.unmute();
+        break;
+      }
       case "PictureInPicture:KeyToggle": {
         this.keyToggle();
         break;
@@ -966,6 +987,7 @@ class PictureInPictureChild extends JSWindowActorChild {
       originatingWindow.addEventListener("pagehide", this);
       originatingVideo.addEventListener("play", this);
       originatingVideo.addEventListener("pause", this);
+      originatingVideo.addEventListener("volumechange", this);
     }
   }
 
@@ -981,6 +1003,7 @@ class PictureInPictureChild extends JSWindowActorChild {
       originatingWindow.removeEventListener("pagehide", this);
       originatingVideo.removeEventListener("play", this);
       originatingVideo.removeEventListener("pause", this);
+      originatingVideo.removeEventListener("volumechange", this);
     }
   }
 
@@ -1065,6 +1088,20 @@ class PictureInPictureChild extends JSWindowActorChild {
     let video = this.weakVideo;
     if (video) {
       video.pause();
+    }
+  }
+
+  mute() {
+    let video = this.weakVideo;
+    if (video) {
+      video.muted = true;
+    }
+  }
+
+  unmute() {
+    let video = this.weakVideo;
+    if (video) {
+      video.muted = false;
     }
   }
 

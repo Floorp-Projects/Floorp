@@ -116,3 +116,5 @@ toolkit.jar:
   skin/classic/global/plugins/contentPluginStripe.png       (../../shared/plugins/contentPluginStripe.png)
   skin/classic/global/pictureinpicture/player.css           (../../shared/pictureinpicture/player.css)
   skin/classic/global/media/pictureinpicture.svg            (../../shared/media/pictureinpicture.svg)
+  skin/classic/global/pictureinpicture/audio.svg            (../../shared/pictureinpicture/audio.svg)
+  skin/classic/global/pictureinpicture/audio-mute.svg       (../../shared/pictureinpicture/audio-mute.svg)

@@ -1527,6 +1527,9 @@ pref("media.autoplay.default", 1); // 0=Allowed, 1=Blocked, 5=All Blocked
   #endif
 #endif
 
+// Show the audio toggle for Picture-in-Picture.
+pref("media.videocontrols.picture-in-picture.audio-toggle.enabled", false);
+
 pref("browser.translation.detectLanguage", false);
 pref("browser.translation.neverForLanguages", "");
 // Show the translation UI bits, like the info bar, notification icon and preferences.
