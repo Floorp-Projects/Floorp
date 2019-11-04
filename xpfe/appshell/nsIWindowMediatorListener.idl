@@ -5,12 +5,12 @@
 
 #include "nsISupports.idl"
 
-interface nsIXULWindow;
+interface nsIAppWindow;
 
 [scriptable, uuid(2F276982-0D60-4377-A595-D350BA516395)]
 interface nsIWindowMediatorListener : nsISupports
 {
-    void onOpenWindow(in nsIXULWindow window);
-    void onCloseWindow(in nsIXULWindow window);
+    void onOpenWindow(in nsIAppWindow window);
+    void onCloseWindow(in nsIAppWindow window);
 };
 

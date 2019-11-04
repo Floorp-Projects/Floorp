@@ -13,7 +13,7 @@ this.damp = class extends ExtensionAPI {
       damp: {
         startTest() {
           let { rootURI } = context.extension;
-          let window = context.xulWindow;
+          let window = context.appWindow;
           if (!("Damp" in window)) {
             let script = rootURI.resolve("content/damp.js");
             Services.scriptloader.loadSubScript(script, window);

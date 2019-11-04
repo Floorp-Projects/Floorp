@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsXULWindow_h__
-#define nsXULWindow_h__
+#ifndef mozilla_AppWindow_h__
+#define mozilla_AppWindow_h__
 
 // Local Includes
 #include "nsChromeTreeOwner.h"
@@ -27,7 +27,7 @@
 #include "nsIDocShellTreeItem.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsIXULWindow.h"
+#include "nsIAppWindow.h"
 #include "nsIPrompt.h"
 #include "nsIAuthPrompt.h"
 #include "nsIXULBrowserWindow.h"
@@ -52,12 +52,12 @@ struct nsWidgetInitData;
 
 namespace mozilla {
 class PresShell;
-class nsXULWindowTimerCallback;
+class AppWindowTimerCallback;
 }  // namespace mozilla
 
-// nsXULWindow
+// AppWindow
 
-#define NS_XULWINDOW_IMPL_CID                        \
+#define NS_APPWINDOW_IMPL_CID                        \
   { /* 8eaec2f3-ed02-4be2-8e0f-342798477298 */       \
     0x8eaec2f3, 0xed02, 0x4be2, {                    \
       0x8e, 0x0f, 0x34, 0x27, 0x98, 0x47, 0x72, 0x98 \
@@ -66,25 +66,27 @@ class nsXULWindowTimerCallback;
 
 class nsContentShellInfo;
 
-class nsXULWindow final : public nsIBaseWindow,
-                          public nsIInterfaceRequestor,
-                          public nsIXULWindow,
-                          public nsSupportsWeakReference,
-                          public nsIWebProgressListener {
-  friend class nsChromeTreeOwner;
-  friend class nsContentTreeOwner;
+namespace mozilla {
+
+class AppWindow final : public nsIBaseWindow,
+                        public nsIInterfaceRequestor,
+                        public nsIAppWindow,
+                        public nsSupportsWeakReference,
+                        public nsIWebProgressListener {
+  friend class ::nsChromeTreeOwner;
+  friend class ::nsContentTreeOwner;
 
  public:
   // The implementation of non-refcounted nsIWidgetListener, which would hold a
-  // strong reference on stack before calling nsXULWindow's
+  // strong reference on stack before calling AppWindow's
   // MOZ_CAN_RUN_SCRIPT methods.
   class WidgetListenerDelegate : public nsIWidgetListener {
    public:
-    explicit WidgetListenerDelegate(nsXULWindow* aXULWindow)
-        : mXULWindow(aXULWindow) {}
+    explicit WidgetListenerDelegate(AppWindow* aAppWindow)
+        : mAppWindow(aAppWindow) {}
 
     MOZ_CAN_RUN_SCRIPT_BOUNDARY
-    virtual nsIXULWindow* GetXULWindow() override;
+    virtual nsIAppWindow* GetAppWindow() override;
     MOZ_CAN_RUN_SCRIPT_BOUNDARY
     virtual mozilla::PresShell* GetPresShell() override;
     MOZ_CAN_RUN_SCRIPT_BOUNDARY
@@ -116,26 +118,26 @@ class nsXULWindow final : public nsIBaseWindow,
     virtual void WindowDeactivated() override;
 
    private:
-    // The lifetime of WidgetListenerDelegate is bound to nsXULWindow so
+    // The lifetime of WidgetListenerDelegate is bound to AppWindow so
     // we just use a raw pointer here.
-    nsXULWindow* mXULWindow;
+    AppWindow* mAppWindow;
   };
 
   NS_DECL_THREADSAFE_ISUPPORTS
 
   NS_DECL_NSIINTERFACEREQUESTOR
-  NS_DECL_NSIXULWINDOW
+  NS_DECL_NSIAPPWINDOW
   NS_DECL_NSIBASEWINDOW
 
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_XULWINDOW_IMPL_CID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_APPWINDOW_IMPL_CID)
 
   void LockUntilChromeLoad() { mLockedUntilChromeLoad = true; }
   bool IsLocked() const { return mLockedUntilChromeLoad; }
   void IgnoreXULSizeMode(bool aEnable) { mIgnoreXULSizeMode = aEnable; }
   void WasRegistered() { mRegistered = true; }
 
-  // nsXULWindow methods...
-  nsresult Initialize(nsIXULWindow* aParent, nsIXULWindow* aOpener,
+  // AppWindow methods...
+  nsresult Initialize(nsIAppWindow* aParent, nsIAppWindow* aOpener,
                       nsIURI* aUrl, int32_t aInitialWidth,
                       int32_t aInitialHeight, bool aIsHiddenWindow,
                       nsIRemoteTab* aOpeningTab,
@@ -148,7 +150,7 @@ class nsXULWindow final : public nsIBaseWindow,
   NS_DECL_NSIWEBPROGRESSLISTENER
 
   // nsIWidgetListener methods for WidgetListenerDelegate.
-  nsIXULWindow* GetXULWindow() { return this; }
+  nsIAppWindow* GetAppWindow() { return this; }
   mozilla::PresShell* GetPresShell();
   MOZ_CAN_RUN_SCRIPT
   bool WindowMoved(nsIWidget* aWidget, int32_t aX, int32_t aY);
@@ -167,7 +169,7 @@ class nsXULWindow final : public nsIBaseWindow,
   MOZ_CAN_RUN_SCRIPT void WindowActivated();
   MOZ_CAN_RUN_SCRIPT void WindowDeactivated();
 
-  explicit nsXULWindow(uint32_t aChromeFlags);
+  explicit AppWindow(uint32_t aChromeFlags);
 
  protected:
   enum persistentAttributes {
@@ -176,9 +178,9 @@ class nsXULWindow final : public nsIBaseWindow,
     PAD_SIZE = 0x4
   };
 
-  virtual ~nsXULWindow();
+  virtual ~AppWindow();
 
-  friend class mozilla::nsXULWindowTimerCallback;
+  friend class mozilla::AppWindowTimerCallback;
 
   bool ExecuteCloseHandler();
   void ConstrainToOpenerScreen(int32_t* aX, int32_t* aY);
@@ -227,19 +229,19 @@ class nsXULWindow final : public nsIBaseWindow,
   NS_IMETHOD CreateNewChromeWindow(int32_t aChromeFlags,
                                    nsIRemoteTab* aOpeningTab,
                                    mozIDOMWindowProxy* aOpenerWindow,
-                                   nsIXULWindow** _retval);
+                                   nsIAppWindow** _retval);
   NS_IMETHOD CreateNewContentWindow(int32_t aChromeFlags,
                                     nsIRemoteTab* aOpeningTab,
                                     mozIDOMWindowProxy* aOpenerWindow,
                                     uint64_t aNextRemoteTabId,
-                                    nsIXULWindow** _retval);
+                                    nsIAppWindow** _retval);
   NS_IMETHOD GetHasPrimaryContent(bool* aResult);
 
   void EnableParent(bool aEnable);
   bool ConstrainToZLevel(bool aImmediate, nsWindowZ* aPlacement,
                          nsIWidget* aReqBelow, nsIWidget** aActualBelow);
   void PlaceWindowLayersBehind(uint32_t aLowLevel, uint32_t aHighLevel,
-                               nsIXULWindow* aBehind);
+                               nsIAppWindow* aBehind);
   void SetContentScrollbarVisibility(bool aVisible);
   bool GetContentScrollbarVisibility();
   void PersistentAttributesDirty(uint32_t aDirtyFlags);
@@ -304,5 +306,8 @@ class nsXULWindow final : public nsIBaseWindow,
 #endif
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(nsXULWindow, NS_XULWINDOW_IMPL_CID)
-#endif /* nsXULWindow_h__ */
+NS_DEFINE_STATIC_IID_ACCESSOR(AppWindow, NS_APPWINDOW_IMPL_CID)
+
+}  // namespace mozilla
+
+#endif /* mozilla_AppWindow_h__ */
