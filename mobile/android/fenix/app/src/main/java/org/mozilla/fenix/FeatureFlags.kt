@@ -39,5 +39,5 @@ object FeatureFlags {
     /**
      * Gives option in Settings to see logins and sync logins
      */
-    const val logins = false
+    val logins = Config.channel.isNightlyOrDebug
 }

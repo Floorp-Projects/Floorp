@@ -50,15 +50,24 @@ class BackgroundServicesTest {
         val context = mockk<Context>(relaxed = true)
 
         every { context.isInExperiment(eq(Experiments.asFeatureWebChannelsDisabled)) } returns false
-        assertEquals("urn:ietf:wg:oauth:2.0:oob:oauth-redirect-webchannel", FxaServer.redirectUrl(context))
+        assertEquals(
+            "urn:ietf:wg:oauth:2.0:oob:oauth-redirect-webchannel",
+            FxaServer.redirectUrl(context)
+        )
 
         every { context.isInExperiment(eq(Experiments.asFeatureWebChannelsDisabled)) } returns true
-        assertEquals("https://accounts.firefox.com/oauth/success/a2270f727f45f648", FxaServer.redirectUrl(context))
+        assertEquals(
+            "https://accounts.firefox.com/oauth/success/a2270f727f45f648",
+            FxaServer.redirectUrl(context)
+        )
 
         every { context.isInExperiment(eq(Experiments.asFeatureSyncDisabled)) } returns false
         var backgroundServices = TestableBackgroundServices(context)
         assertEquals(
-            SyncConfig(setOf(SyncEngine.History, SyncEngine.Bookmarks), syncPeriodInMinutes = 240L),
+            SyncConfig(
+                setOf(SyncEngine.History, SyncEngine.Bookmarks, SyncEngine.Passwords),
+                syncPeriodInMinutes = 240L
+            ),
             backgroundServices.syncConfig
         )
 

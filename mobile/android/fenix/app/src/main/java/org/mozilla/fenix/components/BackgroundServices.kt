@@ -26,6 +26,7 @@ import mozilla.components.feature.push.PushConfig
 import mozilla.components.feature.push.PushSubscriptionObserver
 import mozilla.components.feature.push.PushType
 import mozilla.components.lib.crash.CrashReporter
+import mozilla.components.lib.dataprotect.SecureAbove22Preferences
 import mozilla.components.service.fxa.DeviceConfig
 import mozilla.components.service.fxa.ServerConfig
 import mozilla.components.service.fxa.SyncConfig
@@ -33,6 +34,7 @@ import mozilla.components.service.fxa.SyncEngine
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.service.fxa.manager.SCOPE_SYNC
 import mozilla.components.service.fxa.sync.GlobalSyncableStoreProvider
+import mozilla.components.service.sync.logins.SyncableLoginsStore
 import mozilla.components.support.base.log.logger.Logger
 import org.mozilla.fenix.Experiments
 import org.mozilla.fenix.R
@@ -53,7 +55,9 @@ class BackgroundServices(
     private val context: Context,
     crashReporter: CrashReporter,
     historyStorage: PlacesHistoryStorage,
-    bookmarkStorage: PlacesBookmarksStorage
+    bookmarkStorage: PlacesBookmarksStorage,
+    passwordsStorage: SyncableLoginsStore,
+    secureAbove22Preferences: SecureAbove22Preferences
 ) {
     // // A malformed string is causing crashes.
     // This will be removed when the string is fixed. See #5552
@@ -87,8 +91,9 @@ class BackgroundServices(
     val syncConfig = if (context.isInExperiment(Experiments.asFeatureSyncDisabled)) {
         null
     } else {
-        // TODO Add Passwords Here Waiting On https://github.com/mozilla-mobile/android-components/issues/4741
-        SyncConfig(setOf(SyncEngine.History, SyncEngine.Bookmarks), syncPeriodInMinutes = 240L) // four hours
+        SyncConfig(
+            setOf(SyncEngine.History, SyncEngine.Bookmarks, SyncEngine.Passwords),
+            syncPeriodInMinutes = 240L) // four hours
     }
 
     private val pushService by lazy { FirebasePush() }
@@ -96,11 +101,11 @@ class BackgroundServices(
     val push by lazy { makePushConfig()?.let { makePush(it) } }
 
     init {
-        // Make the "history", "bookmark", and "logins" stores accessible to workers spawned by the sync manager.
+        // Make the "history", "bookmark", and "passwords" stores accessible to workers spawned by the sync manager.
         GlobalSyncableStoreProvider.configureStore(SyncEngine.History to historyStorage)
         GlobalSyncableStoreProvider.configureStore(SyncEngine.Bookmarks to bookmarkStorage)
-        // TODO Add Passwords Here Waiting On https://github.com/mozilla-mobile/android-components/issues/4741
-        // GlobalSyncableStoreProvider.configureStore(SyncEngine.Passwords to loginsStorage)
+        GlobalSyncableStoreProvider.configureStore(SyncEngine.Passwords to passwordsStorage)
+        GlobalSyncableStoreProvider.configureKeyStorage(secureAbove22Preferences)
     }
 
     private val deviceEventObserver = object : DeviceEventsObserver {
@@ -170,7 +175,11 @@ class BackgroundServices(
     ).also { accountManager ->
         // TODO this needs to change once we have a SyncManager
         context.settings().fxaHasSyncedItems = syncConfig?.supportedEngines?.isNotEmpty() ?: false
-        accountManager.registerForDeviceEvents(deviceEventObserver, ProcessLifecycleOwner.get(), false)
+        accountManager.registerForDeviceEvents(
+            deviceEventObserver,
+            ProcessLifecycleOwner.get(),
+            false
+        )
 
         // Register a telemetry account observer to keep track of FxA auth metrics.
         accountManager.register(telemetryAccountObserver)

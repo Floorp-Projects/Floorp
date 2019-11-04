@@ -7,6 +7,7 @@ package org.mozilla.fenix.components
 import GeckoProvider
 import android.content.Context
 import android.content.res.Configuration
+import io.sentry.Sentry
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -34,6 +35,8 @@ import mozilla.components.feature.pwa.ManifestStorage
 import mozilla.components.feature.pwa.WebAppShortcutManager
 import mozilla.components.feature.session.HistoryDelegate
 import mozilla.components.feature.webcompat.WebCompatFeature
+import mozilla.components.lib.dataprotect.SecureAbove22Preferences
+import mozilla.components.lib.dataprotect.generateEncryptionKey
 import mozilla.components.service.sync.logins.AsyncLoginsStorageAdapter
 import mozilla.components.service.sync.logins.SyncableLoginsStore
 import org.mozilla.fenix.AppRequestInterceptor
@@ -171,7 +174,7 @@ class Core(private val context: Context) {
 
     val webAppManifestStorage by lazy { ManifestStorage(context) }
 
-    val loginsStorage by lazy {
+    val passwordsStorage by lazy {
         SyncableLoginsStore(
             AsyncLoginsStorageAdapter.forDatabase(
                 File(
@@ -180,9 +183,28 @@ class Core(private val context: Context) {
                 ).canonicalPath
             )
         ) {
-            CompletableDeferred("very-insecure-key")
+            CompletableDeferred(passwordsEncryptionKey)
         }
     }
+
+    /**
+     * Shared Preferences that encrypt/decrypt using Android KeyStore and lib-dataprotect for 23+
+     * otherwise simply stored
+     */
+    val secureAbove22Preferences by lazy {
+        SecureAbove22Preferences(context, KEY_STORAGE_NAME)
+    }
+
+    private val passwordsEncryptionKey =
+        secureAbove22Preferences.getString(PASSWORDS_KEY)
+            ?: generateEncryptionKey(KEY_STRENGTH).also {
+                if (context.settings().passwordsEncryptionKeyGenerated) {
+                    // We already had previously generated an encryption key, but we have lost it
+                    Sentry.capture("Passwords encryption key for passwords storage was lost and we generated a new one")
+                }
+                context.settings().recordPasswordsEncryptionKeyGenerated()
+                secureAbove22Preferences.putString(PASSWORDS_KEY, it)
+            }
 
     /**
      * Constructs a [TrackingProtectionPolicy] based on current preferences.
@@ -222,5 +244,11 @@ class Core(private val context: Context) {
             inDark -> PreferredColorScheme.Dark
             else -> PreferredColorScheme.Light
         }
+    }
+
+    companion object {
+        private const val KEY_STRENGTH = 256
+        private const val KEY_STORAGE_NAME = "core_prefs"
+        private const val PASSWORDS_KEY = "passwords"
     }
 }

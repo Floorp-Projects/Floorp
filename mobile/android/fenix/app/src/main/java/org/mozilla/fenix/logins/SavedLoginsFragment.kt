@@ -80,7 +80,7 @@ class SavedLoginsFragment : Fragment() {
     private fun loadAndMapLogins() {
         lifecycleScope.launch(IO) {
             val syncedLogins = async {
-                context!!.components.core.loginsStorage.withUnlocked {
+                context!!.components.core.passwordsStorage.withUnlocked {
                     it.list().await().map { item ->
                         SavedLoginsItem(
                             item.hostname,
