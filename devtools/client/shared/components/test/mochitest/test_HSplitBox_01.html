@@ -24,6 +24,9 @@ Basic tests for the HSplitBox component.
 <pre id="test">
 <script src="head.js" type="application/javascript"></script>
 <script type="application/javascript">
+
+'use strict'
+
 const FUDGE_FACTOR = .1;
 function aboutEq(a, b) {
   dumpn(`Checking ${a} ~= ${b}`);
@@ -57,7 +60,7 @@ window.onload = async function () {
       return el;
     }
 
-    const box = await renderBox();
+    await renderBox();
 
     // Test that we properly rendered our two panes.
 

@@ -20,6 +20,7 @@
         function initialSetup(event) {
           const button = document.getElementById("initialSetup");
           button.removeEventListener("click", initialSetup);
+          // eslint-disable-next-line no-debugger
           debugger;
         }
 
@@ -27,24 +28,24 @@
           window.foobar = "clicker";
         }
 
-        function handleEventClick() {
+        function HandleEventClick() {
           const button = document.getElementById("handleEventClick");
           // Create a long prototype chain to test for weird edge cases.
           button.addEventListener("click", Object.create(Object.create(this)));
         }
 
-        handleEventClick.prototype.handleEvent = function() {
-          window.foobar = "handleEventClick";
+        HandleEventClick.prototype.handleEvent = function() {
+          window.foobar = "HandleEventClick";
         };
 
-        function boundHandleEventClick() {
+        function BoundHandleEventClick() {
           const button = document.getElementById("boundHandleEventClick");
           this.handleEvent = this.handleEvent.bind(this);
           button.addEventListener("click", this);
         }
 
-        boundHandleEventClick.prototype.handleEvent = function() {
-          window.foobar = "boundHandleEventClick";
+        BoundHandleEventClick.prototype.handleEvent = function() {
+          window.foobar = "BoundHandleEventClick";
         };
 
         const button = document.getElementById("clicker");
@@ -52,8 +53,8 @@
         const boundClicker = clicker.bind(this).bind(this).bind(this);
         button.addEventListener("click", boundClicker);
 
-        new handleEventClick();
-        new boundHandleEventClick();
+        new HandleEventClick();
+        new BoundHandleEventClick();
 
         const initButton = document.getElementById("initialSetup");
         initButton.addEventListener("click", initialSetup);
