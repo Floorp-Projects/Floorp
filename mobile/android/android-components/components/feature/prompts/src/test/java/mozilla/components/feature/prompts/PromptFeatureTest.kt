@@ -4,6 +4,7 @@
 
 package mozilla.components.feature.prompts
 
+import android.app.Activity
 import android.app.Activity.RESULT_CANCELED
 import android.app.Activity.RESULT_OK
 import android.content.ClipData
@@ -37,8 +38,11 @@ import mozilla.components.concept.engine.prompt.PromptRequest.MenuChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.MultipleChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.SingleChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.TextPrompt
+import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.feature.prompts.FilePicker.Companion.FILE_PICKER_ACTIVITY_REQUEST_CODE
+import mozilla.components.feature.prompts.share.ShareDelegate
 import mozilla.components.support.test.any
+import mozilla.components.support.test.eq
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.whenever
@@ -753,6 +757,81 @@ class PromptFeatureTest {
 
         assertTrue(feature.promptAbuserDetector.shouldShowMoreDialogs)
         verify(fragmentManager).beginTransaction()
+    }
+
+    @Test
+    fun `Share prompt calls ShareDelegate`() {
+        val delegate: ShareDelegate = mock()
+        val activity: Activity = mock()
+        val feature = spy(
+            PromptFeature(
+                activity,
+                store,
+                customTabId = "custom-tab",
+                shareDelegate = delegate,
+                fragmentManager = fragmentManager) { }
+        )
+        feature.start()
+
+        val promptRequest = PromptRequest.Share(ShareData("Title", "Text", null), {}, {}, {})
+        store.dispatch(ContentAction.UpdatePromptRequestAction("custom-tab", promptRequest)).joinBlocking()
+        testDispatcher.advanceUntilIdle()
+
+        verify(feature).onPromptRequested(store.state.customTabs.first())
+        verify(delegate).showShareSheet(
+            eq(activity),
+            eq(promptRequest.data),
+            onDismiss = any(),
+            onSuccess = any()
+        )
+    }
+
+    @Test
+    fun `Selecting an item in a share dialog will consume promptRequest`() {
+        val delegate: ShareDelegate = mock()
+        val feature = PromptFeature(activity = mock(), store = store, fragmentManager = fragmentManager, shareDelegate = delegate) { }
+        feature.start()
+
+        var onSuccessCalled = false
+
+        val shareRequest = PromptRequest.Share(
+            ShareData("Title", "Text", null),
+            onSuccess = { onSuccessCalled = true },
+            onFailure = {},
+            onDismiss = {}
+        )
+        store.dispatch(ContentAction.UpdatePromptRequestAction(tabId, shareRequest)).joinBlocking()
+
+        assertEquals(shareRequest, tab()?.content?.promptRequest)
+        feature.onConfirm(tabId, null)
+
+        processActions()
+        assertNull(tab()?.content?.promptRequest)
+        assertTrue(onSuccessCalled)
+    }
+
+    @Test
+    fun `Dismissing a share dialog will consume promptRequest`() {
+        val delegate: ShareDelegate = mock()
+        val feature = PromptFeature(activity = mock(), store = store, fragmentManager = fragmentManager, shareDelegate = delegate) { }
+        feature.start()
+
+        var onDismissCalled = false
+
+        val shareRequest = PromptRequest.Share(
+            ShareData("Title", "Text", null),
+            onSuccess = {},
+            onFailure = {},
+            onDismiss = { onDismissCalled = true }
+        )
+        store.dispatch(ContentAction.UpdatePromptRequestAction(tabId, shareRequest)).joinBlocking()
+
+        assertEquals(shareRequest, tab()?.content?.promptRequest)
+        feature.onCancel(tabId)
+
+        processActions()
+        assertNull(tab()?.content?.promptRequest)
+        assertTrue(onDismissCalled)
     }
 
     private fun mockFragmentManager(): FragmentManager {

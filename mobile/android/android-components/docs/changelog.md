@@ -38,6 +38,7 @@ permalink: /changelog/
 
 * **concept-engine**
   * Adds support for WebPush abstraction to the Engine.
+  * Adds support for WebShare abstraction as a PromptRequest.
 
 * **support-webextensions**
   * Adds support for sending messages to background pages and scripts in WebExtensions.
@@ -47,7 +48,10 @@ permalink: /changelog/
 
 * **feature-push**
   * ⚠️ The `AutoPushFeature` now throws when reaching exceptions in the native layer that are unrecoverable.
-  
+
+* **feature-prompts**
+  * Adds support for Web Share API using `ShareDelegate`.
+
 # 19.0.1
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v19.0.0...v19.0.1)

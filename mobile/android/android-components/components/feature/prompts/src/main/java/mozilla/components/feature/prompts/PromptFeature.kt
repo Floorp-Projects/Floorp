@@ -28,12 +28,15 @@ import mozilla.components.concept.engine.prompt.PromptRequest.Color
 import mozilla.components.concept.engine.prompt.PromptRequest.File
 import mozilla.components.concept.engine.prompt.PromptRequest.MenuChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.MultipleChoice
+import mozilla.components.concept.engine.prompt.PromptRequest.Share
 import mozilla.components.concept.engine.prompt.PromptRequest.SingleChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.TextPrompt
 import mozilla.components.concept.engine.prompt.PromptRequest.TimeSelection
 import mozilla.components.feature.prompts.ChoiceDialogFragment.Companion.MENU_CHOICE_DIALOG_TYPE
 import mozilla.components.feature.prompts.ChoiceDialogFragment.Companion.MULTIPLE_CHOICE_DIALOG_TYPE
 import mozilla.components.feature.prompts.ChoiceDialogFragment.Companion.SINGLE_CHOICE_DIALOG_TYPE
+import mozilla.components.feature.prompts.share.DefaultShareDelegate
+import mozilla.components.feature.prompts.share.ShareDelegate
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.base.feature.OnNeedToRequestPermissions
@@ -67,7 +70,8 @@ internal const val FRAGMENT_TAG = "mozac_feature_prompt_dialog"
  * for this custom tab if an id is provided.
  * @property fragmentManager The [FragmentManager] to be used when displaying
  * a dialog (fragment).
- * @property onNeedToRequestPermissions a callback invoked when permissions
+ * @property shareDelegate Delegate used to display share sheet.
+ * @property onNeedToRequestPermissions A callback invoked when permissions
  * need to be requested before a prompt (e.g. a file picker) can be displayed.
  * Once the request is completed, [onPermissionsResult] needs to be invoked.
  */
@@ -77,6 +81,7 @@ class PromptFeature internal constructor(
     private val store: BrowserStore,
     private var customTabId: String? = null,
     private val fragmentManager: FragmentManager,
+    private val shareDelegate: ShareDelegate,
     onNeedToRequestPermissions: OnNeedToRequestPermissions
 ) : LifecycleAwareFeature, PermissionsFeature, Prompter {
     private var scope: CoroutineScope? = null
@@ -89,18 +94,30 @@ class PromptFeature internal constructor(
         store: BrowserStore,
         customTabId: String? = null,
         fragmentManager: FragmentManager,
+        shareDelegate: ShareDelegate = DefaultShareDelegate(),
         onNeedToRequestPermissions: OnNeedToRequestPermissions
     ) : this(
-        PromptContainer.Activity(activity), store, customTabId, fragmentManager, onNeedToRequestPermissions
+        container = PromptContainer.Activity(activity),
+        store = store,
+        customTabId = customTabId,
+        fragmentManager = fragmentManager,
+        shareDelegate = shareDelegate,
+        onNeedToRequestPermissions = onNeedToRequestPermissions
     )
     constructor(
         fragment: Fragment,
         store: BrowserStore,
         customTabId: String? = null,
         fragmentManager: FragmentManager,
+        shareDelegate: ShareDelegate = DefaultShareDelegate(),
         onNeedToRequestPermissions: OnNeedToRequestPermissions
     ) : this(
-        PromptContainer.Fragment(fragment), store, customTabId, fragmentManager, onNeedToRequestPermissions
+        container = PromptContainer.Fragment(fragment),
+        store = store,
+        customTabId = customTabId,
+        fragmentManager = fragmentManager,
+        shareDelegate = shareDelegate,
+        onNeedToRequestPermissions = onNeedToRequestPermissions
     )
     @Deprecated("Pass only activity or fragment instead")
     constructor(
@@ -111,16 +128,17 @@ class PromptFeature internal constructor(
         fragmentManager: FragmentManager,
         onNeedToRequestPermissions: OnNeedToRequestPermissions
     ) : this(
-        activity?.let { PromptContainer.Activity(it) }
+        container = activity?.let { PromptContainer.Activity(it) }
             ?: fragment?.let { PromptContainer.Fragment(it) }
             ?: throw IllegalStateException(
                 "activity and fragment references " +
                     "must not be both null, at least one must be initialized."
             ),
-        store,
-        customTabId,
-        fragmentManager,
-        onNeedToRequestPermissions
+        store = store,
+        customTabId = customTabId,
+        fragmentManager = fragmentManager,
+        shareDelegate = DefaultShareDelegate(),
+        onNeedToRequestPermissions = onNeedToRequestPermissions
     )
 
     private val filePicker = FilePicker(container, store, customTabId, onNeedToRequestPermissions)
@@ -201,6 +219,7 @@ class PromptFeature internal constructor(
         session.content.promptRequest?.let { promptRequest ->
             when (promptRequest) {
                 is File -> filePicker.handleFileRequest(promptRequest)
+                is Share -> handleShareRequest(promptRequest, session)
                 else -> handleDialogsRequest(promptRequest, session)
             }
         }
@@ -223,7 +242,7 @@ class PromptFeature internal constructor(
 
     /**
      * Invoked when the user confirms the action on the dialog. This consumes
-     * the [PromptFeature] value from the [Session] indicated by [sessionId].
+     * the [PromptFeature] value from the [SessionState] indicated by [sessionId].
      *
      * @param sessionId that requested to show the dialog.
      * @param value an optional value provided by the dialog as a result of confirming the action.
@@ -256,6 +275,8 @@ class PromptFeature internal constructor(
                     it.onConfirm(!shouldNotShowMoreDialogs, text)
                 }
 
+                is Share -> it.onSuccess()
+
                 is PromptRequest.Confirm -> {
                     val (isCheckBoxChecked, buttonType) = value as Pair<Boolean, MultiButtonDialogFragment.ButtonType>
                     promptAbuserDetector.userWantsMoreDialogs(!isCheckBoxChecked)
@@ -274,7 +295,7 @@ class PromptFeature internal constructor(
 
     /**
      * Invoked when the user is requesting to clear the selected value from the dialog.
-     * This consumes the [PromptFeature] value from the [Session] indicated by [sessionId].
+     * This consumes the [PromptFeature] value from the [SessionState] indicated by [sessionId].
      *
      * @param sessionId that requested to show the dialog.
      */
@@ -300,6 +321,15 @@ class PromptFeature internal constructor(
         // Re-assign the feature instance so that the fragment can invoke us once the user makes a selection or cancels
         // the dialog.
         fragment.feature = this
+    }
+
+    private fun handleShareRequest(promptRequest: Share, session: SessionState) {
+        shareDelegate.showShareSheet(
+            context = container.context,
+            shareData = promptRequest.data,
+            onDismiss = { onCancel(session.id) },
+            onSuccess = { onConfirm(session.id, null) }
+        )
     }
 
     @Suppress("ComplexMethod", "LongMethod")
@@ -448,7 +478,8 @@ class PromptFeature internal constructor(
             is File,
             is Color,
             is Authentication,
-            is PromptRequest.Popup -> true
+            is PromptRequest.Popup,
+            is Share -> true
             is Alert, is TextPrompt, is PromptRequest.Confirm -> promptAbuserDetector.shouldShowMoreDialogs
         }
     }
