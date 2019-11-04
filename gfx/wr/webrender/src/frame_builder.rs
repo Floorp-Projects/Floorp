@@ -155,6 +155,7 @@ pub struct FrameBuildingState<'a> {
     pub segment_builder: SegmentBuilder,
     pub surfaces: &'a mut Vec<SurfaceInfo>,
     pub dirty_region_stack: Vec<DirtyRegion>,
+    pub composite_state: &'a mut CompositeState,
 }
 
 impl<'a> FrameBuildingState<'a> {
@@ -379,6 +380,7 @@ impl FrameBuilder {
             segment_builder: SegmentBuilder::new(),
             surfaces,
             dirty_region_stack: Vec::new(),
+            composite_state,
         };
 
         frame_state
@@ -516,6 +518,7 @@ impl FrameBuilder {
         let mut composite_state = CompositeState::new(
             scene.config.compositor_kind,
             picture_caching_is_enabled,
+            global_device_pixel_scale,
         );
 
         let main_render_task_id = self.build_layer_screen_rects_and_cull_layers(
