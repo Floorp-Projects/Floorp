@@ -21,7 +21,7 @@ from mach.decorators import (
 import mozpack.path as mozpath
 from mozpack.files import FileFinder
 
-from mozlog import commandline  # , get_default_logger
+from mozlog import commandline
 
 here = os.path.abspath(os.path.dirname(__file__))
 
@@ -31,7 +31,7 @@ class MachCommands(MachCommandBase):
     @Command('python-safety', category='testing',
              description='Run python requirements safety checks')
     @CommandArgument('--python',
-                     default='2.7',
+                     default='3.5',
                      help='Version of Python for Pipenv to use. When given a '
                           'Python version, Pipenv will automatically scan your '
                           'system for a Python that matches that given version.')
@@ -44,7 +44,7 @@ class MachCommands(MachCommandBase):
         pattern = '**/*requirements*.txt'
         path = mozpath.normsep(os.path.dirname(os.path.dirname(here)))
         finder = FileFinder(path)
-        files = [os.path.join(path, p) for p, f in finder.find(pattern)]
+        files = [os.path.join(path, p) for p, _ in finder.find(pattern)]
 
         return_code = 0
 
@@ -62,11 +62,11 @@ class MachCommands(MachCommandBase):
         self.logger.test_start(test_path)
 
         def _line_handler(line):
-            output.append(line)
+            output.append(line.decode('UTF-8'))
 
         cmd = ['safety', 'check', '--cache', '--json', '-r', test_path]
         env = os.environ.copy()
-        env[b'PYTHONDONTWRITEBYTECODE'] = b'1'
+        env['PYTHONDONTWRITEBYTECODE'] = '1'
 
         proc = ProcessHandler(
             cmd, env=env, processOutputLine=_line_handler, storeOutput=False)
@@ -74,7 +74,8 @@ class MachCommands(MachCommandBase):
 
         return_code = proc.wait()
 
-        """Example output for an error in json.
+        """
+        Example output for an error in json.
         [
             "pycrypto",
             "<=2.6.1",

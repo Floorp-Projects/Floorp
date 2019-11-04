@@ -64,7 +64,6 @@ py2commands="
     prettier-format
     puppeteer-test
     python
-    python-safety
     python-test
     raptor
     raptor-test
