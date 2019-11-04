@@ -3,6 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 add_task(async function test_profile_single_frame_page_info() {
+  // Requesting the complete log to be able to debug Bug 1586105.
+  SimpleTest.requestCompleteLog();
   if (!AppConstants.MOZ_GECKO_PROFILER) {
     return;
   }
