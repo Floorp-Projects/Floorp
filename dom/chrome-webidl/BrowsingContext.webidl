@@ -47,23 +47,6 @@ interface BrowsingContext {
    * See nsSandboxFlags.h for the possible flags.
    */
   attribute unsigned long sandboxFlags;
-
-  /**
-   * Loads a given URI.  This will give priority to loading the requested URI
-   * in the object implementing this interface.  If it can't be loaded here
-   * however, the URI dispatcher will go through its normal process of content
-   * loading.
-   *
-   * @param aURI
-   *        The URI string to load.  For HTTP and FTP URLs and possibly others,
-   *        characters above U+007F will be converted to UTF-8 and then URL-
-   *        escaped per the rules of RFC 2396.
-   * @param aLoadURIOptions
-   *        A JSObject defined in LoadURIOptions.webidl holding info like e.g.
-   *        the triggeringPrincipal, the referrer info.
-   */
-  [Throws]
-  void loadURI(DOMString aURI, optional LoadURIOptions aOptions = {});
 };
 
 [Exposed=Window, ChromeOnly]
@@ -82,6 +65,23 @@ interface CanonicalBrowsingContext : BrowsingContext {
 
   void notifyStartDelayedAutoplayMedia();
   void notifyMediaMutedChanged(boolean muted);
+
+  /**
+   * Loads a given URI.  This will give priority to loading the requested URI
+   * in the object implementing this interface.  If it can't be loaded here
+   * however, the URI dispatcher will go through its normal process of content
+   * loading.
+   *
+   * @param aURI
+   *        The URI string to load.  For HTTP and FTP URLs and possibly others,
+   *        characters above U+007F will be converted to UTF-8 and then URL-
+   *        escaped per the rules of RFC 2396.
+   * @param aLoadURIOptions
+   *        A JSObject defined in LoadURIOptions.webidl holding info like e.g.
+   *        the triggeringPrincipal, the referrer info.
+   */
+  [Throws]
+  void loadURI(DOMString aURI, optional LoadURIOptions aOptions = {});
 
   [Throws]
   Promise<unsigned long long> changeFrameRemoteness(

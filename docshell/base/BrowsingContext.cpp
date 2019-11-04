@@ -845,37 +845,6 @@ void BrowsingContext::Location(JSContext* aCx,
   }
 }
 
-void BrowsingContext::LoadURI(const nsAString& aURI,
-                              const LoadURIOptions& aOptions,
-                              ErrorResult& aError) {
-  nsCOMPtr<nsIURIFixup> uriFixup = components::URIFixup::Service();
-
-  nsCOMPtr<nsISupports> consumer = mDocShell.get();
-  if (!consumer) {
-    consumer = mEmbedderElement;
-  }
-  if (!consumer) {
-    aError.Throw(NS_ERROR_UNEXPECTED);
-    return;
-  }
-
-  RefPtr<nsDocShellLoadState> loadState;
-  nsresult rv = nsDocShellLoadState::CreateFromLoadURIOptions(
-      consumer, uriFixup, aURI, aOptions, getter_AddRefs(loadState));
-
-  if (rv == NS_ERROR_MALFORMED_URI) {
-    DisplayLoadError(aURI);
-    return;
-  }
-
-  if (NS_FAILED(rv)) {
-    aError.Throw(rv);
-    return;
-  }
-
-  LoadURI(nullptr, loadState, true);
-}
-
 nsresult BrowsingContext::LoadURI(BrowsingContext* aAccessor,
                                   nsDocShellLoadState* aLoadState,
                                   bool aSetNavigating) {
