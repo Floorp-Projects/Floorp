@@ -29,7 +29,6 @@ window.onload = async function() {
       Simulate,
       findRenderedDOMComponentWithClass,
       findRenderedDOMComponentWithTag,
-      scryRenderedDOMComponentsWithTag,
     } = browserRequire("devtools/client/shared/vendor/react-dom-test-utils");
     const Tree = createFactory(
       browserRequire("devtools/client/shared/components/VirtualizedTree"));
@@ -209,7 +208,7 @@ window.onload = async function() {
     }];
 
     for (const test of tests) {
-      const { action, condition, event, props, name } = test;
+      const { action, event, props, name } = test;
 
       info(name);
       if (event) {
@@ -225,6 +224,7 @@ window.onload = async function() {
       if (test.activeElement) {
         const expected = typeof test.activeElement === "string" ?
           els[test.activeElement] : test.activeElement;
+        // eslint-disable-next-line no-debugger
         if (document.activeElement!==expected) {debugger;}
         is(document.activeElement, expected, "Focus is set correctly.");
       }

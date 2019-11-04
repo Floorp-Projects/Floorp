@@ -17,6 +17,9 @@ Test that when an item in the Tree component is expanded or collapsed the approp
 <pre id="test">
 <script src="head.js" type="application/javascript"></script>
 <script type="application/javascript">
+
+'use strict'
+
 window.onload = async function () {
   try {
     const ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
@@ -32,7 +35,7 @@ window.onload = async function () {
       return ReactDOM.render(Tree(treeProps), window.document.body);
     }
 
-    const tree = renderTree({ focused: "A" });
+    renderTree({ focused: "A" });
 
     isRenderedTree(document.body.textContent, [
       "A:true",

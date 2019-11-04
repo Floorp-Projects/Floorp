@@ -63,7 +63,7 @@ window.onload = function() {
 
     const tree = ReactDOM.render(list, document.body);
     const listEl = findRenderedDOMComponentWithClass(tree, "list");
-    const items = scryRenderedDOMComponentsWithTag(tree, "li");
+    scryRenderedDOMComponentsWithTag(tree, "li");
     const defaultFocus = listEl.ownerDocument.body;
 
     function blurEl(el) {
@@ -250,7 +250,7 @@ window.onload = function() {
     }];
 
     for (const test of tests) {
-      const { action, condition, event, state, name } = test;
+      const { action, event, state, name } = test;
 
       is(listEl, findRenderedDOMComponentWithClass(tree, "list"), "Sanity check");
 

@@ -56,9 +56,6 @@ browser/extensions/formautofill/phonenumberutils/PhoneNumberMetaData.jsm
 # devtools/ exclusions
 devtools/client/inspector/markup/test/doc_markup_events_*.html
 devtools/client/performance/components/test/test_jit_optimizations_01.html
-devtools/client/shared/test/*.html
-devtools/client/shared/components/test/mochitest/*.html
-!devtools/client/shared/components/test/mochitest/test_stack-trace.html
 devtools/server/tests/browser/storage-*.html
 !devtools/server/tests/browser/storage-unsecured-iframe.html
 devtools/server/tests/browser/stylesheets-nested-iframes.html

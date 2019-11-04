@@ -35,7 +35,7 @@ window.onload = function() {
     const TreeView =
       browserRequire("devtools/client/shared/components/tree/TreeView");
 
-    const props = {
+    const _props = {
       ...TEST_TREE_VIEW_INTERFACE,
       renderValue: props => {
         return (props.value === "C" ?
@@ -47,7 +47,7 @@ window.onload = function() {
         );
       },
     };
-    const treeView = React.createElement(TreeView, props);
+    const treeView = React.createElement(TreeView, _props);
     const tree = ReactDOM.render(treeView, document.body);
     const treeViewEl = findRenderedDOMComponentWithClass(tree, "treeTable");
     const rows = scryRenderedDOMComponentsWithClass(tree, "treeRow");
@@ -251,7 +251,7 @@ window.onload = function() {
     }];
 
     for (const test of tests) {
-      const { action, condition, event, state, name } = test;
+      const { action, event, state, name } = test;
 
       info(name);
       if (event) {
