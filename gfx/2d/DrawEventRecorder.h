@@ -51,11 +51,6 @@ class DrawEventRecorderPrivate : public DrawEventRecorder {
     mStoredSurfaces.clear();
   }
 
-  bool IsEmpty() {
-    // ScaledFonts aren't added to mStoredObjects, so we need to check both.
-    return mStoredObjects.empty() && mScaledFonts.empty();
-  }
-
   void ClearResources() {
     mStoredObjects.clear();
     mStoredFontData.clear();
