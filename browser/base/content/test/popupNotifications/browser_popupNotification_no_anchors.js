@@ -11,7 +11,7 @@ function test() {
   setup();
 }
 
-const FALLBACK_ANCHOR = gURLBar.megabar
+const FALLBACK_ANCHOR = gURLBar.searchIcon
   ? "urlbar-search-icon"
   : "identity-icon";
 
