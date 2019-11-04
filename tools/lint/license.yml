@@ -47,9 +47,7 @@ license:
         - media/mtransport/mdns_service/mdns_service.h
         - media/webrtc/signaling/src/sdp
         - mobile/android/branding
-        - mobile/android/chrome/content/ExtensionPermissions.js
         - mobile/android/components/extensions
-        - mobile/android/extensions/webcompat
         - mobile/android/geckoview/src/main/AndroidManifest.xml
         - mobile/android/geckoview/src/main/res/drawable/ic_generic_file.xml
         - mobile/android/geckoview_example/src/main
