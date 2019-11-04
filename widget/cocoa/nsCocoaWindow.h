@@ -50,6 +50,7 @@ typedef struct _nsCocoaWindowList {
   BOOL mDrawTitle;
   BOOL mBrightTitlebarForeground;
   BOOL mUseMenuStyle;
+  BOOL mIsAnimationSuppressed;
 
   nsTouchBar* mTouchBar;
 }
@@ -78,6 +79,9 @@ typedef struct _nsCocoaWindowList {
 - (void)setBeingShown:(BOOL)aValue;
 - (BOOL)isBeingShown;
 - (BOOL)isVisibleOrBeingShown;
+
+- (void)setIsAnimationSuppressed:(BOOL)aValue;
+- (BOOL)isAnimationSuppressed;
 
 // Returns an autoreleased NSArray containing the NSViews that we consider the
 // "contents" of this window. All views in the returned array are subviews of
