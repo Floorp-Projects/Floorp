@@ -21,6 +21,12 @@ add_task(async function setup() {
         "urlclassifier.features.socialtracking.annotate.blacklistHosts",
         "social-tracking.example.org",
       ],
+      // Whitelist trackertest.org loaded by default in trackingPage.html
+      ["urlclassifier.trackingWhitelistTable.testEntries", "example.com"],
+      [
+        "urlclassifier.trackingAnnotationWhitelistTable.testEntries",
+        "example.com",
+      ],
       ["privacy.trackingprotection.enabled", false],
       ["privacy.trackingprotection.annotate_channels", true],
     ],
@@ -179,25 +185,74 @@ async function testCategoryItem(blockLoads) {
   });
   let [tab] = await Promise.all([promise, waitForContentBlockingEvent()]);
 
+  await openProtectionsPopup();
+
   let categoryItem = document.getElementById(
     "protections-popup-category-socialblock"
   );
+
+  let noTrackersDetectedDesc = document.getElementById(
+    "protections-popup-no-trackers-found-description"
+  );
+
+  ok(categoryItem.hasAttribute("uidisabled"), "Category should be uidisabled");
 
   ok(
     !categoryItem.classList.contains("blocked"),
     "Category not marked as blocked"
   );
+  ok(!BrowserTestUtils.is_visible(categoryItem), "Item should be hidden");
   ok(
-    categoryItem.classList.contains("notFound"),
-    "Category marked as not found"
+    !gProtectionsHandler._protectionsPopup.hasAttribute("detected"),
+    "trackers are not detected"
   );
 
+  await SpecialPowers.spawn(tab.linkedBrowser, [], function() {
+    content.postMessage("socialtracking", "*");
+  });
+
+  ok(
+    !categoryItem.classList.contains("blocked"),
+    "Category not marked as blocked"
+  );
+  ok(!BrowserTestUtils.is_visible(categoryItem), "Item should be hidden");
+  ok(
+    !gProtectionsHandler._protectionsPopup.hasAttribute("detected"),
+    "trackers are not detected"
+  );
+  ok(
+    BrowserTestUtils.is_visible(noTrackersDetectedDesc),
+    "No Trackers Detcted should be shown"
+  );
+
+  BrowserTestUtils.removeTab(tab);
+
   Services.prefs.setBoolPref(ST_BLOCK_COOKIES_PREF, true);
+
+  promise = BrowserTestUtils.openNewForegroundTab({
+    url: TRACKING_PAGE,
+    gBrowser,
+  });
+  [tab] = await Promise.all([promise, waitForContentBlockingEvent()]);
+
+  await openProtectionsPopup();
+
+  ok(!categoryItem.hasAttribute("uidisabled"), "Item shouldn't be uidisabled");
 
   ok(categoryItem.classList.contains("blocked"), "Category marked as blocked");
   ok(
     categoryItem.classList.contains("notFound"),
     "Category marked as not found"
+  );
+  // At this point we should still be showing "No Trackers Detected"
+  ok(!BrowserTestUtils.is_visible(categoryItem), "Item should not be visible");
+  ok(
+    BrowserTestUtils.is_visible(noTrackersDetectedDesc),
+    "No Trackers Detcted should be shown"
+  );
+  ok(
+    !gProtectionsHandler._protectionsPopup.hasAttribute("detected"),
+    "trackers are not detected"
   );
 
   await SpecialPowers.spawn(tab.linkedBrowser, [], function() {
@@ -209,10 +264,18 @@ async function testCategoryItem(blockLoads) {
   });
 
   ok(categoryItem.classList.contains("blocked"), "Category marked as blocked");
-
   ok(
     !categoryItem.classList.contains("notFound"),
     "Category not marked as not found"
+  );
+  ok(BrowserTestUtils.is_visible(categoryItem), "Item should be visible");
+  ok(
+    !BrowserTestUtils.is_visible(noTrackersDetectedDesc),
+    "No Trackers Detcted should be hidden"
+  );
+  ok(
+    gProtectionsHandler._protectionsPopup.hasAttribute("detected"),
+    "trackers are not detected"
   );
 
   BrowserTestUtils.removeTab(tab);
