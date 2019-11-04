@@ -15,7 +15,7 @@ import requests
 import re
 import sys
 import tarfile
-from urlparse import urlparse
+from urllib.parse import urlparse
 
 
 class VendorAOM(MozbuildObject):
