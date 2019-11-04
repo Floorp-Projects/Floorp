@@ -98,8 +98,7 @@ button > hbox > label {
 }
 
 .tail-with-learn-more {
-  margin-inline-start: 0px;
-  margin-inline-end: 10px;
+  margin-inline: 0 10px;
 }
 
 /* Add a bit of space to the end of descriptions to
@@ -109,7 +108,7 @@ button > hbox > label {
 }
 
 .learnMore {
-  margin-inline-start: 0px;
+  margin-inline-start: 0;
   font-weight: normal;
   white-space: nowrap;
 }
@@ -138,10 +137,8 @@ button > hbox > label {
 }
 
 [data-subcategory] {
-  margin-left: -4px;
-  margin-right: -4px;
-  padding-left: 4px;
-  padding-right: 4px;
+  margin-inline: -4px;
+  padding-inline: 4px;
 }
 
 .ac-site-icon {
@@ -218,8 +215,7 @@ button > hbox > label {
 
 .info-panel,
 .extension-controlled {
-  margin-top: 18px !important;
-  margin-bottom: 18px !important;
+  margin-block: 18px !important;
   background: var(--in-content-warning-container);
   border-radius: 5px;
   padding-inline-end: 10px;
@@ -293,13 +289,11 @@ button > hbox > label {
 }
 
 #updateBox {
-  margin-top: 4px;
-  margin-bottom: 32px;
+  margin-block: 4px 32px;
 }
 
 #updateDeck > hbox > button {
-  margin-top: 0;
-  margin-bottom: 0;
+  margin-block: 0;
   margin-inline-end: 0;
 }
 
@@ -330,20 +324,17 @@ button > hbox > label {
 }
 
 #handlersView > richlistitem > hbox > hbox > menulist {
-  margin-top: 0;
-  margin-bottom: 0;
+  margin-block: 0;
   margin-inline-end: 0;
   min-height: 0;
 }
 
 .typeIcon {
-  margin-inline-start: 10px !important;
-  margin-inline-end: 9px !important;
+  margin-inline: 10px 9px !important;
 }
 
 .actionIcon {
-  margin-inline-start: 11px !important;
-  margin-inline-end: 8px !important;
+  margin-inline: 11px 8px !important;
 }
 
 .actionsMenu {
@@ -423,25 +414,13 @@ button > hbox > label {
 
 /* Privacy Pane */
 
-.doNotTrackLearnMore {
-  margin-inline-start: calc(1em + 30px);
-  margin-bottom: 1em;
-  font-weight: normal;
-}
-
-.doNotTrackLearnMore > label {
-  font-size: 1em !important;
-  margin-left: 0;
-}
-
 #locationBarGroup > .text-link {
   margin-top: 6px;
   line-height: 30px;
 }
 
 #allowSmartSize {
-  margin-top: 0;
-  margin-bottom: 4px;
+  margin-block: 0 4px;
 }
 
 #doNotTrackLearnMoreBox {
@@ -603,14 +582,13 @@ button > hbox > label {
   border-color: #ff9500;
 }
 
-#useFirefoxSync  {
+#useFirefoxSync {
   font-size: 90%;
   margin-inline-end: 8px !important;
 }
 
 #fxaNoLoginStatus {
-  margin-top: 46px;
-  margin-bottom: 64px;
+  margin-block: 46px 64px;
 }
 
 #fxaSyncComputerName {
@@ -620,14 +598,12 @@ button > hbox > label {
 }
 
 #fxaChangeDeviceName {
-  margin-top: 4px;
-  margin-bottom: 4px;
+  margin-block: 4px;
 }
 
 #noFxaCaption {
   line-height: 30px;
-  margin-top: 0;
-  margin-bottom: 4px;
+  margin-block: 0 4px;
 }
 
 #noFxaSignIn {
@@ -667,8 +643,7 @@ button > hbox > label {
 
 .fxaLoginRejectedWarning {
   list-style-image: url(chrome://browser/skin/warning.svg);
-  margin-inline-start: 4px;
-  margin-inline-end: 8px;
+  margin-inline: 4px 8px;
 }
 
 #syncStatus {
@@ -678,8 +653,7 @@ button > hbox > label {
 .sync-group {
   border-radius: 4px;
   padding: 16px;
-  margin-top: 16px;
-  margin-bottom: 16px;
+  margin-block: 16px;
   background-color: var(--in-content-box-info-background);
   border: 1px solid var(--in-content-border-color);
 }
@@ -690,7 +664,7 @@ button > hbox > label {
 
 .sync-engines-list > div,
 .sync-engines-list + hbox {
-  margin-top: 0px;
+  margin-top: 0;
   padding-top: 16px;
   max-width: 300px;
   height: auto;
@@ -698,13 +672,12 @@ button > hbox > label {
 
 dialog > .sync-engines-list > div,
 dialog > .sync-engines-list + hbox {
-  padding-top: 0px;
+  padding-top: 0;
 }
 
 .sync-engines-list checkbox .checkbox-icon,
 .sync-engine-image {
-  margin-inline-start: 4px;
-  margin-inline-end: 8px;
+  margin-inline: 4px 8px;
   min-width: 16px;
   min-height: 16px;
   -moz-context-properties: fill;
@@ -766,8 +739,7 @@ dialog > .sync-engines-list + hbox {
 
 .androidIcon,
 .iOSIcon {
-  margin-inline-start: 2px;
-  margin-inline-end: 4px;
+  margin-inline: 2px 4px;
   width: 20px;
   height: 20px;
   vertical-align: text-bottom;
@@ -780,9 +752,8 @@ dialog > .sync-engines-list + hbox {
 .update-throbber {
   width: 16px;
   min-height: 16px;
+  margin-block: 7px;
   margin-inline-end: 8px;
-  margin-top: 7px;
-  margin-bottom: 7px;
 }
 
 html|img.update-throbber {
@@ -808,35 +779,33 @@ image.update-throbber {
   list-style-image: url("chrome://browser/skin/preferences/in-content/face-sad.svg");
   width: 20px;
   height: 20px;
+  margin-block: 5px;
   margin-inline-end: 8px;
-  margin-top: 5px;
-  margin-bottom: 5px;
 }
 
 .face-smile {
   list-style-image: url("chrome://browser/skin/preferences/in-content/face-smile.svg");
   width: 20px;
   height: 20px;
+  margin-block: 5px;
   margin-inline-end: 8px;
-  margin-top: 5px;
-  margin-bottom: 5px;
 }
 
 #policies-container,
 #searchInput {
   min-height: 32px;
-  margin: 20px 0 30px 0px;
+  margin: 20px 0 30px;
 }
 
 #policies-container {
   background-color: var(--in-content-warning-container);
-  padding: 0px 8px;
+  padding: 0 8px;
   margin-inline-end: 16px;
   border-radius: 2px;
 }
 
 .policies-label {
-  margin-left: 2px;
+  margin-inline-start: 2px;
 }
 
 .info-icon {
@@ -853,10 +822,8 @@ image.update-throbber {
   z-index: 1;
   /* The sticky-container should have the capability to cover all spotlight area. */
   width: calc(100% + 8px);
-  margin-left: -4px;
-  margin-right: -4px;
-  padding-left: 4px;
-  padding-right: 4px;
+  margin-inline: -4px;
+  padding-inline: 4px;
   font-size: 85%;
 }
 
@@ -915,8 +882,7 @@ image.update-throbber {
 
 menulist {
   height: 30px;
-  margin-top: 4px;
-  margin-bottom: 4px;
+  margin-block: 4px;
 }
 
 menulist[indicator=true] > menupopup menuitem:not([image]) > .menu-iconic-left {
@@ -1017,9 +983,7 @@ menulist[indicator=true] > menupopup menuitem[indicator=true]:not([image]) > .me
 .updateSettingCrossUserWarningContainer {
   background: var(--in-content-warning-container);
   border-radius: 5px;
-  padding-inline: 8px;
-  padding-block-start: 2px;
-  padding-block-end: 8px;
+  padding: 2px 8px 8px;
   margin-block-end: 17px;
 }
 
