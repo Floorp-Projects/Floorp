@@ -234,6 +234,17 @@ def lto(value, c_compiler, ld64_known_good, target):
             ldflags.append("-flto=%s" % num_cores)
             ldflags.append("-flifetime-dse=1")
 
+        # Tell LTO not to inline functions above a certain size, to mitigate
+        # binary size growth while still getting good performance.
+        # (For hot functions, PGO will put a multiplier on this limit.)
+        if target.os == 'WINNT':
+            ldflags.append('-mllvm:-import-instr-limit=10');
+        elif target.os == 'OSX':
+            # Until OSX gets PGO, too small of a limit will cause slowdowns.
+            ldflags.append('-Wl,-mllvm,-import-instr-limit=40');
+        else:
+            ldflags.append('-Wl,-plugin-opt=-import-instr-limit=10');
+
     return namespace(
         enabled=enabled,
         cflags=cflags,
