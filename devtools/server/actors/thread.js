@@ -1421,6 +1421,14 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     }
   },
 
+  removeAllWatchpoints: function() {
+    for (const actor of this.threadLifetimePool.poolChildren()) {
+      if (actor.typeName == "obj") {
+        actor.removeWatchpoints();
+      }
+    }
+  },
+
   /**
    * Handle a protocol request to pause the debuggee.
    */
@@ -1771,6 +1779,8 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       this.unsafeSynchronize(Promise.resolve(this.doResume()));
       this.dbg.disable();
     }
+
+    this.removeAllWatchpoints();
     this.disableAllBreakpoints();
   },
 

@@ -66,6 +66,10 @@ function setupCommands(dependencies: Dependencies) {
 }
 
 function createObjectFront(grip: Grip) {
+  if (!grip.actor) {
+    throw new Error("Actor is missing");
+  }
+
   return debuggerClient.createObjectFront(grip);
 }
 
@@ -85,7 +89,6 @@ function releaseActor(actor: String) {
   if (!actor) {
     return;
   }
-
   const objFront = debuggerClient.getFrontByID(actor);
 
   if (objFront) {
@@ -199,10 +202,11 @@ function addWatchpoint(
   }
 }
 
-function removeWatchpoint(object: Grip, property: string) {
+async function removeWatchpoint(object: Grip, property: string) {
   if (currentTarget.traits.watchpoints) {
     const objectFront = createObjectFront(object);
-    return objectFront.removeWatchpoint(property);
+    await objectFront.removeWatchpoint(property);
+    objectFront.release().catch(() => {});
   }
 }
 

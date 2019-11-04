@@ -125,15 +125,14 @@ const proto = {
     }
 
     const obj = this.rawValue();
-    const desc =
-      Object.getOwnPropertyDescriptor(obj, property) ||
-      this.obj.getOwnPropertyDescriptor(property);
+    const dbgDesc = this.obj.getOwnPropertyDescriptor(property);
+    const desc = Object.getOwnPropertyDescriptor(obj, property) || dbgDesc;
 
     if (desc.set || desc.get || !desc.configurable) {
       return;
     }
 
-    this._originalDescriptors.set(property, { desc, watchpointType });
+    this._originalDescriptors.set(property, { desc, dbgDesc, watchpointType });
 
     const pauseAndRespond = type => {
       const frame = this.thread.dbg.getNewestFrame();
@@ -189,9 +188,9 @@ const proto = {
       return;
     }
 
-    const desc = this._originalDescriptors.get(property).desc;
+    const { dbgDesc } = this._originalDescriptors.get(property);
     this._originalDescriptors.delete(property);
-    this.obj.defineProperty(property, desc);
+    this.obj.defineProperty(property, dbgDesc);
   },
 
   removeWatchpoints() {
