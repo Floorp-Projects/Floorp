@@ -523,7 +523,12 @@ class ContextMenuChild extends JSWindowActorChild {
 
     let defaultPrevented = aEvent.defaultPrevented;
 
-    if (!Services.prefs.getBoolPref("dom.event.contextmenu.enabled")) {
+    if (
+      // If the event is not from a chrome-privileged document, and if
+      // `dom.event.contextmenu.enabled` is false, force defaultPrevented=false.
+      !aEvent.composedTarget.nodePrincipal.isSystemPrincipal &&
+      !Services.prefs.getBoolPref("dom.event.contextmenu.enabled")
+    ) {
       let plugin = null;
 
       try {
