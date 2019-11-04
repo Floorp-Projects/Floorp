@@ -71,9 +71,9 @@ nsresult NumericInputTypeBase::GetRangeOverflowMessage(nsAString& aMessage) {
   maxStr.AssignASCII(buf);
   MOZ_ASSERT(ok, "buf not big enough");
 
-  return nsContentUtils::FormatMaybeLocalizedString(
+  return nsContentUtils::FormatLocalizedString(
       aMessage, nsContentUtils::eDOM_PROPERTIES,
-      "FormValidationNumberRangeOverflow", mInputElement->OwnerDoc(), maxStr);
+      "FormValidationNumberRangeOverflow", maxStr);
 }
 
 nsresult NumericInputTypeBase::GetRangeUnderflowMessage(nsAString& aMessage) {
@@ -87,9 +87,9 @@ nsresult NumericInputTypeBase::GetRangeUnderflowMessage(nsAString& aMessage) {
   minStr.AssignASCII(buf);
   MOZ_ASSERT(ok, "buf not big enough");
 
-  return nsContentUtils::FormatMaybeLocalizedString(
+  return nsContentUtils::FormatLocalizedString(
       aMessage, nsContentUtils::eDOM_PROPERTIES,
-      "FormValidationNumberRangeUnderflow", mInputElement->OwnerDoc(), minStr);
+      "FormValidationNumberRangeUnderflow", minStr);
 }
 
 bool NumericInputTypeBase::ConvertStringToNumber(
@@ -148,15 +148,15 @@ bool NumberInputType::HasBadInput() const {
 }
 
 nsresult NumberInputType::GetValueMissingMessage(nsAString& aMessage) {
-  return nsContentUtils::GetMaybeLocalizedString(
-      nsContentUtils::eDOM_PROPERTIES, "FormValidationBadInputNumber",
-      mInputElement->OwnerDoc(), aMessage);
+  return nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
+                                            "FormValidationBadInputNumber",
+                                            aMessage);
 }
 
 nsresult NumberInputType::GetBadInputMessage(nsAString& aMessage) {
-  return nsContentUtils::GetMaybeLocalizedString(
-      nsContentUtils::eDOM_PROPERTIES, "FormValidationBadInputNumber",
-      mInputElement->OwnerDoc(), aMessage);
+  return nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
+                                            "FormValidationBadInputNumber",
+                                            aMessage);
 }
 
 bool NumberInputType::IsMutable() const {

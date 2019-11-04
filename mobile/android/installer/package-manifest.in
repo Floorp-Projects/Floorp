@@ -206,9 +206,6 @@
 @BINPATH@/res/dtd/*
 @BINPATH@/res/language.properties
 @BINPATH@/res/locale/layout/HtmlForm.properties
-@BINPATH@/res/locale/layout/MediaDocument.properties
-@BINPATH@/res/locale/layout/xmlparser.properties
-@BINPATH@/res/locale/dom/dom.properties
 
 #ifndef MOZ_ANDROID_EXCLUDE_FONTS
 @BINPATH@/res/fonts/*

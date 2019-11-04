@@ -3653,7 +3653,7 @@ bool Document::DocumentSupportsL10n(JSContext* aCx, JSObject* aObject) {
 }
 
 void Document::LocalizationLinkAdded(Element* aLinkElement) {
-  if (!AllowsL10n()) {
+  if (!nsContentUtils::PrincipalAllowsL10n(NodePrincipal(), GetDocumentURI())) {
     return;
   }
 
@@ -3691,7 +3691,7 @@ void Document::LocalizationLinkAdded(Element* aLinkElement) {
 }
 
 void Document::LocalizationLinkRemoved(Element* aLinkElement) {
-  if (!AllowsL10n()) {
+  if (!nsContentUtils::PrincipalAllowsL10n(NodePrincipal(), GetDocumentURI())) {
     return;
   }
 
@@ -3755,10 +3755,6 @@ void Document::InitialDocumentTranslationCompleted() {
   if (proto) {
     proto->SetIsL10nCached();
   }
-}
-
-bool Document::AllowsL10n() const {
-  return nsContentUtils::PrincipalAllowsL10n(NodePrincipal(), GetDocumentURI());
 }
 
 bool Document::IsWebAnimationsEnabled(JSContext* aCx, JSObject* /*unused*/) {

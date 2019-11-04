@@ -11,9 +11,6 @@
 #define XMLPARSER_PROPERTIES \
   "chrome://global/locale/layout/xmlparser.properties"
 
-#define XMLPARSER_PROPERTIES_en_US \
-  "resource://gre/res/locale/layout/xmlparser.properties"
-
 class nsParserMsgUtils {
   nsParserMsgUtils();   // Currently this is not meant to be created, use the
                         // static methods
