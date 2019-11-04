@@ -288,7 +288,7 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock> {
   // phis at the loop header, returns a disabling abort.
   MOZ_MUST_USE AbortReason setBackedge(TempAllocator& alloc,
                                        MBasicBlock* block);
-  MOZ_MUST_USE bool setBackedgeWasm(MBasicBlock* block);
+  MOZ_MUST_USE bool setBackedgeWasm(MBasicBlock* block, size_t paramCount);
 
   // Resets a LOOP_HEADER block to a NORMAL block.  This is needed when
   // optimizations remove the backedge.
