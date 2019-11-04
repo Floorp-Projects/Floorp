@@ -852,13 +852,14 @@ void nsTString<T>::ReplaceChar(const char* aSet, char16_t aNewChar) {
   }
 }
 
-namespace mozilla {
-namespace detail {
+/**
+ * nsTString::Compare,CompareWithConversion,etc.
+ */
 
 template <typename T>
 template <typename Q, typename EnableIfChar>
-int32_t nsTStringRepr<T>::Compare(const char_type* aString, bool aIgnoreCase,
-                                  int32_t aCount) const {
+int32_t nsTString<T>::Compare(const char_type* aString, bool aIgnoreCase,
+                              int32_t aCount) const {
   uint32_t strLen = char_traits::length(aString);
 
   int32_t maxCount = int32_t(XPCOM_MIN(this->mLength, strLen));
@@ -885,8 +886,8 @@ int32_t nsTStringRepr<T>::Compare(const char_type* aString, bool aIgnoreCase,
 
 template <typename T>
 template <typename Q, typename EnableIfChar16>
-bool nsTStringRepr<T>::EqualsIgnoreCase(const incompatible_char_type* aString,
-                                        int32_t aCount) const {
+bool nsTString<T>::EqualsIgnoreCase(const incompatible_char_type* aString,
+                                    int32_t aCount) const {
   uint32_t strLen = nsCharTraits<char>::length(aString);
 
   int32_t maxCount = int32_t(XPCOM_MIN(this->mLength, strLen));
@@ -911,9 +912,6 @@ bool nsTStringRepr<T>::EqualsIgnoreCase(const incompatible_char_type* aString,
   }
   return result == 0;
 }
-
-}  // namespace detail
-}  // namespace mozilla
 
 /**
  * nsTString::ToDouble
