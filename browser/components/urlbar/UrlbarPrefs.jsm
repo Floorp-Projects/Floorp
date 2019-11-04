@@ -106,6 +106,9 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // Whether the quantum bar displays the major design update.
   ["megabar", false],
 
+  // Whether the megabar displays the permanent search icon.
+  ["searchIcon", false],
+
   // One-off search buttons enabled status.
   ["oneOffSearches", false],
 
