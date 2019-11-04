@@ -932,19 +932,10 @@ void HttpChannelChild::DoOnStatus(nsIRequest* aRequest, nsresult status) {
   // cache the progress sink so we don't have to query for it each time.
   if (!mProgressSink) GetCallback(mProgressSink);
 
-  // Temporary fix for bug 1116124
-  // See 1124971 - Child removes LOAD_BACKGROUND flag from channel
-  if (status == NS_OK) return;
-
   // block status/progress after Cancel or OnStopRequest has been called,
   // or if channel has LOAD_BACKGROUND set.
   if (mProgressSink && NS_SUCCEEDED(mStatus) && mIsPending &&
       !(mLoadFlags & LOAD_BACKGROUND)) {
-    // OnStatus
-    //
-    MOZ_ASSERT(status == NS_NET_STATUS_RECEIVING_FROM ||
-               status == NS_NET_STATUS_READING);
-
     nsAutoCString host;
     mURI->GetHost(host);
     mProgressSink->OnStatus(aRequest, nullptr, status,
@@ -964,8 +955,7 @@ void HttpChannelChild::DoOnProgress(nsIRequest* aRequest, int64_t progress,
 
   // block status/progress after Cancel or OnStopRequest has been called,
   // or if channel has LOAD_BACKGROUND set.
-  if (mProgressSink && NS_SUCCEEDED(mStatus) && mIsPending &&
-      !(mLoadFlags & LOAD_BACKGROUND)) {
+  if (mProgressSink && NS_SUCCEEDED(mStatus) && mIsPending) {
     // OnProgress
     //
     if (progress > 0) {
@@ -1283,41 +1273,20 @@ class ProgressEvent : public NeckoTargetChannelEvent<HttpChannelChild> {
         mProgress(progress),
         mProgressMax(progressMax) {}
 
-  void Run() override { mChild->OnProgress(mProgress, mProgressMax); }
+  void Run() override {
+    AutoEventEnqueuer ensureSerialDispatch(mChild->mEventQ);
+    mChild->DoOnProgress(mChild, mProgress, mProgressMax);
+  }
 
  private:
   int64_t mProgress, mProgressMax;
 };
 
-void HttpChannelChild::ProcessOnProgress(const int64_t& aProgress,
-                                         const int64_t& aProgressMax) {
-  LOG(("HttpChannelChild::ProcessOnProgress [this=%p]\n", this));
-  MOZ_ASSERT(OnSocketThread());
+mozilla::ipc::IPCResult HttpChannelChild::RecvOnProgress(
+    const int64_t& aProgress, const int64_t& aProgressMax) {
+  LOG(("HttpChannelChild::RecvOnProgress [this=%p]\n", this));
   mEventQ->RunOrEnqueue(new ProgressEvent(this, aProgress, aProgressMax));
-}
-
-void HttpChannelChild::OnProgress(const int64_t& progress,
-                                  const int64_t& progressMax) {
-  AUTO_PROFILER_LABEL("HttpChannelChild::OnProgress", NETWORK);
-  LOG(("HttpChannelChild::OnProgress [this=%p progress=%" PRId64 "/%" PRId64
-       "]\n",
-       this, progress, progressMax));
-
-  if (mCanceled) return;
-
-  // cache the progress sink so we don't have to query for it each time.
-  if (!mProgressSink) {
-    GetCallback(mProgressSink);
-  }
-
-  AutoEventEnqueuer ensureSerialDispatch(mEventQ);
-
-  // Block socket status event after Cancel or OnStopRequest has been called.
-  if (mProgressSink && NS_SUCCEEDED(mStatus) && mIsPending) {
-    if (progress > 0) {
-      mProgressSink->OnProgress(this, nullptr, progress, progressMax);
-    }
-  }
+  return IPC_OK();
 }
 
 class StatusEvent : public NeckoTargetChannelEvent<HttpChannelChild> {
@@ -1325,39 +1294,20 @@ class StatusEvent : public NeckoTargetChannelEvent<HttpChannelChild> {
   StatusEvent(HttpChannelChild* child, const nsresult& status)
       : NeckoTargetChannelEvent<HttpChannelChild>(child), mStatus(status) {}
 
-  void Run() override { mChild->OnStatus(mStatus); }
+  void Run() override {
+    AutoEventEnqueuer ensureSerialDispatch(mChild->mEventQ);
+    mChild->DoOnStatus(mChild, mStatus);
+  }
 
  private:
   nsresult mStatus;
 };
 
-void HttpChannelChild::ProcessOnStatus(const nsresult& aStatus) {
-  LOG(("HttpChannelChild::ProcessOnStatus [this=%p]\n", this));
-  MOZ_ASSERT(OnSocketThread());
+mozilla::ipc::IPCResult HttpChannelChild::RecvOnStatus(
+    const nsresult& aStatus) {
+  LOG(("HttpChannelChild::RecvOnStatus [this=%p]\n", this));
   mEventQ->RunOrEnqueue(new StatusEvent(this, aStatus));
-}
-
-void HttpChannelChild::OnStatus(const nsresult& status) {
-  AUTO_PROFILER_LABEL("HttpChannelChild::OnStatus", NETWORK);
-  LOG(("HttpChannelChild::OnStatus [this=%p status=%" PRIx32 "]\n", this,
-       static_cast<uint32_t>(status)));
-
-  if (mCanceled) return;
-
-  // cache the progress sink so we don't have to query for it each time.
-  if (!mProgressSink) GetCallback(mProgressSink);
-
-  AutoEventEnqueuer ensureSerialDispatch(mEventQ);
-
-  // block socket status event after Cancel or OnStopRequest has been called,
-  // or if channel has LOAD_BACKGROUND set
-  if (mProgressSink && NS_SUCCEEDED(mStatus) && mIsPending &&
-      !(mLoadFlags & LOAD_BACKGROUND)) {
-    nsAutoCString host;
-    mURI->GetHost(host);
-    mProgressSink->OnStatus(this, nullptr, status,
-                            NS_ConvertUTF8toUTF16(host).get());
-  }
+  return IPC_OK();
 }
 
 class FailedAsyncOpenEvent : public NeckoTargetChannelEvent<HttpChannelChild> {

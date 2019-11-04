@@ -53,12 +53,6 @@ class HttpBackgroundChannelParent final : public PHttpBackgroundChannelParent {
                      const ResourceTimingStruct& aTiming,
                      const nsHttpHeaderArray& aResponseTrailers);
 
-  // To send OnProgress message over background channel.
-  bool OnProgress(const int64_t& aProgress, const int64_t& aProgressMax);
-
-  // To send OnStatus message over background channel.
-  bool OnStatus(const nsresult& aStatus);
-
   // To send FlushedForDiversion and DivertMessages messages
   // over background channel.
   bool OnDiversion();
