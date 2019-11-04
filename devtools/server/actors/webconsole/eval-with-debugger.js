@@ -170,6 +170,12 @@ function getEvalResult(string, evalOptions, bindings, frame, dbgWindow) {
 }
 
 function parseErrorOutput(dbgWindow, string) {
+  // Reflect is not usable in workers, so return early to avoid logging an error
+  // to the console when loading it.
+  if (isWorker) {
+    return;
+  }
+
   let ast;
   // Parse errors will raise an exception. We can/should ignore the error
   // since it's already being handled elsewhere and we are only interested
