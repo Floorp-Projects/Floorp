@@ -2581,14 +2581,14 @@ nsresult nsHttpChannel::ContinueProcessResponse1() {
       return NS_OK;
     }
 
-    AssertNotDocumentChennel();
+    AssertNotDocumentChannel();
   }
 
   // No process switch needed, continue as normal.
   return ContinueProcessResponse2(rv);
 }
 
-void nsHttpChannel::AssertNotDocumentChennel() {
+void nsHttpChannel::AssertNotDocumentChannel() {
   if (!mLoadInfo || !IsDocument()) {
     return;
   }
@@ -7773,7 +7773,7 @@ nsHttpChannel::OnStartRequest(nsIRequest* request) {
       return NS_OK;
     }
 
-    AssertNotDocumentChennel();
+    AssertNotDocumentChannel();
   }
 
   // No process change is needed, so continue on to ContinueOnStartRequest1.
