@@ -1023,7 +1023,7 @@ var SocialTracking = {
         Ci.nsIWebProgressListener.STATE_BLOCKED_SOCIALTRACKING_CONTENT) !=
       0;
     let socialtrackingCookieBlocked =
-      (state & Ci.nsIWebProgressListener.STATE_BLOCKED_COOKIES_SOCIALTRACKER) !=
+      (state & Ci.nsIWebProgressListener.STATE_COOKIES_BLOCKED_SOCIALTRACKER) !=
       0;
     return socialtrackingCookieBlocked || socialtrackingContentBlocked;
   },
