@@ -37,6 +37,10 @@ class ToolbarPresenter(
 
     private var scope: CoroutineScope? = null
 
+    // This maps web extension id to [WebExtensionToolbarAction]
+    @VisibleForTesting
+    internal val webExtensionBrowserActions = HashMap<String, WebExtensionToolbarAction>()
+
     /**
      * Start presenter: Display data in toolbar.
      */
@@ -97,26 +101,21 @@ class ToolbarPresenter(
 
         extensions.forEach { extension ->
             extension.browserAction?.let { extensionAction ->
-                val toolbarAction = convertToToolbarAction(extensionAction)
-                // We need to verify, if we this toolbarAction already exits on the toolbar
-                // if so, we don't need to re-add it, just replace it with the new one.
-                // https://github.com/mozilla-mobile/android-components/issues/4651
-                toolbar.addBrowserAction(toolbarAction)
+                val existingBrowserAction = webExtensionBrowserActions[extension.id]
+
+                if (existingBrowserAction != null) {
+                    existingBrowserAction.browserAction = extensionAction
+                } else {
+                    val toolbarAction = WebExtensionToolbarAction(
+                        browserAction = extensionAction,
+                        listener = extensionAction.onClick)
+                    toolbar.addBrowserAction(toolbarAction)
+                    webExtensionBrowserActions[extension.id] = toolbarAction
+                }
                 toolbar.invalidateActions()
             }
         }
     }
-
-    internal fun convertToToolbarAction(browserAction: WebExtensionBrowserAction) =
-        WebExtensionToolbarAction(
-            contentDescription = browserAction.title,
-            imageDrawable = browserAction.icon,
-            enabled = browserAction.enabled,
-            badgeText = browserAction.badgeText,
-            badgeTextColor = browserAction.badgeTextColor,
-            badgeBackgroundColor = browserAction.badgeBackgroundColor,
-            listener = browserAction.onClick
-        )
 
     @VisibleForTesting(otherwise = PRIVATE)
     internal fun clear() {

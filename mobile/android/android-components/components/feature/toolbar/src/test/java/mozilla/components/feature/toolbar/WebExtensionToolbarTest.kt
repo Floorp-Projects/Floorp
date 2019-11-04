@@ -11,6 +11,7 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import mozilla.components.concept.engine.webextension.BrowserAction
 import mozilla.components.support.base.android.Padding
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
@@ -35,14 +36,17 @@ class WebExtensionToolbarTest {
         whenever(view.findViewById<ImageView>(R.id.action_image)).thenReturn(imageView)
         whenever(view.findViewById<TextView>(R.id.badge_text)).thenReturn(textView)
 
-        val action = WebExtensionToolbarAction(
-            imageDrawable = drawable,
-            contentDescription = "title",
+        val browserAction = BrowserAction(
+            title = "title",
+            icon = drawable,
             enabled = true,
             badgeText = "badgeText",
             badgeTextColor = Color.WHITE,
-            badgeBackgroundColor = Color.BLUE
+            badgeBackgroundColor = Color.BLUE,
+            uri = "uri"
         ) {}
+
+        val action = WebExtensionToolbarAction(browserAction) {}
 
         action.bind(view)
 
@@ -57,11 +61,19 @@ class WebExtensionToolbarTest {
     fun createView() {
         val drawable: Drawable = mock()
         var listenerWasClicked = false
+
+        val browserAction = BrowserAction(
+                title = "title",
+                icon = drawable,
+                enabled = false,
+                badgeText = "badgeText",
+                badgeTextColor = Color.WHITE,
+                badgeBackgroundColor = Color.BLUE,
+                uri = "uri"
+        ) {}
+
         val action = WebExtensionToolbarAction(
-            imageDrawable = drawable,
-            contentDescription = "title",
-            enabled = false,
-            badgeText = "badgeText",
+            browserAction,
             padding = Padding(1, 2, 3, 4)
         ) {
             listenerWasClicked = true

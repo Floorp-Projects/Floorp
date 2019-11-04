@@ -4,7 +4,6 @@
 
 package mozilla.components.feature.toolbar
 
-import android.graphics.drawable.Drawable
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -18,22 +17,11 @@ import mozilla.components.support.ktx.android.content.res.resolveAttribute
 /**
  * An action button that represents an web extension item to be added to the toolbar.
  *
- * @param imageDrawable The drawable to be shown.
- * @param contentDescription The content description to use.
- * @param enabled Indicates whether this button is enabled or not.
- * @param badgeText The text shown above of the [imageDrawable].
- * @param badgeTextColor The color of the [badgeText].
- * @param badgeBackgroundColor The background color of the badge.
- * @param padding A optional custom padding.
+ * @param browserAction Associated [WebExtensionBrowserAction]
  * @param listener Callback that will be invoked whenever the button is pressed
  */
 open class WebExtensionToolbarAction(
-    internal val imageDrawable: Drawable,
-    internal val contentDescription: String,
-    internal val enabled: Boolean,
-    internal val badgeText: String,
-    internal val badgeTextColor: Int = 0,
-    internal val badgeBackgroundColor: Int = 0,
+    internal var browserAction: WebExtensionBrowserAction,
     internal val padding: Padding? = null,
     internal val listener: () -> Unit
 ) : Toolbar.Action {
@@ -42,7 +30,7 @@ open class WebExtensionToolbarAction(
         val rootView = LayoutInflater.from(parent.context)
             .inflate(R.layout.mozac_feature_toolbar_web_extension_action_layout, parent)
 
-        rootView.isEnabled = enabled
+        rootView.isEnabled = browserAction.enabled
         rootView.setOnClickListener { listener.invoke() }
 
         val backgroundResource =
@@ -57,11 +45,11 @@ open class WebExtensionToolbarAction(
         val imageView = view.findViewById<ImageView>(R.id.action_image)
         val textView = view.findViewById<TextView>(R.id.badge_text)
 
-        imageView.setImageDrawable(imageDrawable)
-        imageView.contentDescription = contentDescription
+        imageView.setImageDrawable(browserAction.icon)
+        imageView.contentDescription = browserAction.title
 
-        textView.text = badgeText
-        textView.setTextColor(badgeTextColor)
-        textView.setBackgroundColor(badgeBackgroundColor)
+        textView.text = browserAction.badgeText
+        textView.setTextColor(browserAction.badgeTextColor)
+        textView.setBackgroundColor(browserAction.badgeBackgroundColor)
     }
 }
