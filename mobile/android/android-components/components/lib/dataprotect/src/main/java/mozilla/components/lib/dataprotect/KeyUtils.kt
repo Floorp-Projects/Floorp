@@ -1,8 +1,6 @@
-/*
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
- */
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 package mozilla.components.lib.dataprotect
 
@@ -11,7 +9,9 @@ import java.security.SecureRandom
 /**
  * @param keyStrength The strength of the generated key in bits
  */
+@Suppress("MagicNumber")
 fun generateEncryptionKey(keyStrength: Int): String {
+    require(keyStrength >= 256) { "Key strength must be at least 256 bits" }
     val bytes = ByteArray(keyStrength / 8)
     val random = SecureRandom()
     random.nextBytes(bytes)

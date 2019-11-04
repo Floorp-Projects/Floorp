@@ -52,6 +52,15 @@ permalink: /changelog/
 * **feature-prompts**
   * Adds support for Web Share API using `ShareDelegate`.
 
+* **lib-dataprotect**
+  * Added new `KeySharedPreferences` helper class, which is an encryption-aware wrapper for `SharedPreferences`. Only actually encrypts stored values when running on API23+.
+
+* **service-firefox-accounts**
+  * Support for keeping `SyncEngine.Passwords` engine unlocked during sync.
+
+* **concept-sync**
+  * Added new `LockableStore` to facilitate syncing of "lockable" stores (such as `SyncableLoginsStore`).
+
 # 19.0.1
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v19.0.0...v19.0.1)

@@ -15,7 +15,6 @@ import mozilla.appservices.logins.LoginsStorage
 import mozilla.appservices.logins.MemoryLoginsStorage
 import mozilla.components.concept.sync.SyncAuthInfo
 import mozilla.components.concept.sync.SyncStatus
-import mozilla.components.concept.sync.SyncableStore
 import mozilla.appservices.sync15.SyncTelemetryPing
 import mozilla.components.concept.sync.LockableStore
 

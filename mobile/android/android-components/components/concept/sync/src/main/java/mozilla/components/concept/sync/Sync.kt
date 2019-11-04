@@ -42,8 +42,21 @@ data class SyncAuthInfo(
     val tokenServerUrl: String
 )
 
+/**
+ * An extension of [SyncableStore] that can be locked/unlocked using an encryption key.
+ */
 interface LockableStore : SyncableStore {
+    /**
+     * Unlocks underlying storage using [encryptionKey]. Storage must be [ensureLocked] after use.
+     *
+     * @param encryptionKey Plaintext encryption key used by the underlying storage implementation (e.g. sqlcipher)
+     * to key the store.
+     */
     suspend fun ensureUnlocked(encryptionKey: String)
+
+    /**
+     * Locks the underlying storage. Call this after you're done with the store following [ensureLocked].
+     */
     suspend fun ensureLocked()
 }
 
