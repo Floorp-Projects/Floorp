@@ -822,6 +822,13 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   void UpdateSrcMediaStreamPlaying(uint32_t aFlags = 0);
 
   /**
+   * Ensure currentTime progresses if and only if we're potentially playing
+   * mSrcStream. Called by the watch manager while we're playing mSrcStream, and
+   * one of the inputs to the potentially playing algorithm changes.
+   */
+  void UpdateSrcStreamPotentiallyPlaying();
+
+  /**
    * mSrcStream's graph's CurrentTime() has been updated. It might be time to
    * fire "timeupdate".
    */
