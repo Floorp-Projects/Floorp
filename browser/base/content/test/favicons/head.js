@@ -11,43 +11,48 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/PlacesUtils.jsm"
 );
 
+ChromeUtils.defineModuleGetter(
+  this,
+  "LinkHandlerParent",
+  "resource:///actors/LinkHandlerParent.jsm"
+);
+
 // Clear the network cache between every test to make sure we get a stable state
 Services.cache2.clear();
 
 function waitForFaviconMessage(isTabIcon = undefined, expectedURL = undefined) {
   return new Promise((resolve, reject) => {
-    let listener = msg => {
+    let listener = (name, data) => {
+      if (name != "SetIcon" && name != "SetFailedIcon") {
+        return; // Ignore unhandled messages
+      }
+
       // If requested filter out loads of the wrong kind of icon.
-      if (isTabIcon != undefined && isTabIcon != msg.data.canUseForTab) {
+      if (isTabIcon != undefined && isTabIcon != data.canUseForTab) {
         return;
       }
 
-      if (expectedURL && msg.data.originalURL != expectedURL) {
+      if (expectedURL && data.originalURL != expectedURL) {
         return;
       }
 
-      window.messageManager.removeMessageListener("Link:SetIcon", listener);
-      window.messageManager.removeMessageListener(
-        "Link:SetFailedIcon",
-        listener
-      );
+      LinkHandlerParent.removeListenerForTests(listener);
 
-      if (msg.name == "Link:SetIcon") {
+      if (name == "SetIcon") {
         resolve({
-          iconURL: msg.data.originalURL,
-          dataURL: msg.data.iconURL,
-          canUseForTab: msg.data.canUseForTab,
+          iconURL: data.originalURL,
+          dataURL: data.iconURL,
+          canUseForTab: data.canUseForTab,
         });
       } else {
         reject({
-          iconURL: msg.data.originalURL,
-          canUseForTab: msg.data.canUseForTab,
+          iconURL: data.originalURL,
+          canUseForTab: data.canUseForTab,
         });
       }
     };
 
-    window.messageManager.addMessageListener("Link:SetIcon", listener);
-    window.messageManager.addMessageListener("Link:SetFailedIcon", listener);
+    LinkHandlerParent.addListenerForTests(listener);
   });
 }
 

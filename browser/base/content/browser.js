@@ -1807,7 +1807,6 @@ var gBrowserInit = {
     // loading the frame script to ensure that we don't miss any
     // message sent between when the frame script is loaded and when
     // the listener is registered.
-    DOMEventHandler.init();
     LanguageDetectionListener.init();
     BrowserOnClick.init();
     CaptivePortalWatcher.init();
@@ -4145,120 +4144,6 @@ var newWindowButtonObserver = {
         });
       }
     }
-  },
-};
-const DOMEventHandler = {
-  init() {
-    let mm = window.messageManager;
-    mm.addMessageListener("Link:LoadingIcon", this);
-    mm.addMessageListener("Link:SetIcon", this);
-    mm.addMessageListener("Link:SetFailedIcon", this);
-    mm.addMessageListener("Link:AddSearch", this);
-  },
-
-  receiveMessage(aMsg) {
-    switch (aMsg.name) {
-      case "Link:LoadingIcon":
-        if (aMsg.data.canUseForTab) {
-          this.setPendingIcon(aMsg.target);
-        }
-        break;
-
-      case "Link:SetIcon":
-        this.setIconFromLink(
-          aMsg.target,
-          aMsg.data.pageURL,
-          aMsg.data.originalURL,
-          aMsg.data.canUseForTab,
-          aMsg.data.expiration,
-          aMsg.data.iconURL
-        );
-        break;
-
-      case "Link:SetFailedIcon":
-        if (aMsg.data.canUseForTab) {
-          this.clearPendingIcon(aMsg.target);
-        }
-        break;
-
-      case "Link:AddSearch":
-        this.addSearch(aMsg.target, aMsg.data.engine, aMsg.data.url);
-        break;
-    }
-  },
-
-  setPendingIcon(aBrowser) {
-    let tab = gBrowser.getTabForBrowser(aBrowser);
-    if (tab.hasAttribute("busy")) {
-      tab.setAttribute("pendingicon", "true");
-    }
-  },
-
-  clearPendingIcon(aBrowser) {
-    let tab = gBrowser.getTabForBrowser(aBrowser);
-    tab.removeAttribute("pendingicon");
-  },
-
-  setIconFromLink(
-    aBrowser,
-    aPageURL,
-    aOriginalURL,
-    aCanUseForTab,
-    aExpiration,
-    aIconURL
-  ) {
-    let tab = gBrowser.getTabForBrowser(aBrowser);
-    if (!tab) {
-      return;
-    }
-
-    if (aCanUseForTab) {
-      this.clearPendingIcon(aBrowser);
-    }
-
-    let iconURI;
-    try {
-      iconURI = Services.io.newURI(aIconURL);
-    } catch (ex) {
-      Cu.reportError(ex);
-      return;
-    }
-    if (iconURI.scheme != "data") {
-      try {
-        Services.scriptSecurityManager.checkLoadURIWithPrincipal(
-          aBrowser.contentPrincipal,
-          iconURI,
-          Services.scriptSecurityManager.ALLOW_CHROME
-        );
-      } catch (ex) {
-        return;
-      }
-    }
-    try {
-      PlacesUIUtils.loadFavicon(
-        aBrowser,
-        Services.scriptSecurityManager.getSystemPrincipal(),
-        makeURI(aPageURL),
-        makeURI(aOriginalURL),
-        aExpiration,
-        iconURI
-      );
-    } catch (ex) {
-      Cu.reportError(ex);
-    }
-
-    if (aCanUseForTab) {
-      gBrowser.setIcon(tab, aIconURL, aOriginalURL);
-    }
-  },
-
-  addSearch(aBrowser, aEngine, aURL) {
-    let tab = gBrowser.getTabForBrowser(aBrowser);
-    if (!tab) {
-      return;
-    }
-
-    BrowserSearch.addEngine(aBrowser, aEngine, makeURI(aURL));
   },
 };
 
