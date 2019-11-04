@@ -64,8 +64,7 @@
   position: absolute;
   bottom: 0;
   top: calc(var(--theme-toolbar-height) + 1px);
-  left: 0;
-  right: 0;
+  inset-inline: 0;
   overflow-y: auto;
 }
 

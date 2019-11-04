@@ -62,10 +62,7 @@ body,
   justify-content: center;
   position: absolute;
   text-align: center;
-  top: 25px;
-  right: 25px;
-  bottom: 25px;
-  left: 25px;
+  inset: 25px;
   z-index: 100;
   font-size: 3.5rem;
   color: gray;

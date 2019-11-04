@@ -12,8 +12,7 @@
 
 .empty-notice-element {
   padding-top: 12px;
-  padding-left: 12px;
-  padding-right: 12px;
+  padding-inline: 12px;
   font-size: 1.2rem;
 }
 
@@ -153,8 +152,7 @@
   display: none;
   width: 7px;
   height: 4px;
-  margin-inline-start: 3px;
-  margin-inline-end: 6px;
+  margin-inline: 3px 6px;
   vertical-align: middle;
 }
 
@@ -192,7 +190,7 @@
 .requests-list-headers .column-resizer {
   z-index: 1000;
   cursor: ew-resize;
-  margin-left: -3px;
+  margin-inline-start: -3px;
   width: 7px;
   min-height: 23px;
   position: absolute;
@@ -220,8 +218,7 @@
   background: #fff;
   height: 10px;
   width: 10px;
-  margin-inline-start: 5px;
-  margin-inline-end: 5px;
+  margin-inline: 5px;
   border-radius: 10px;
   transition: box-shadow 0.5s ease-in-out;
 }
@@ -252,8 +249,7 @@
   background-color: var(--status-code-color-3xx);
   width: 0;
   height: 0;
-  border-left: 5px solid transparent;
-  border-right: 5px solid transparent;
+  border-inline: 5px solid transparent;
   border-bottom: 10px solid var(--theme-highlight-lightorange);
   border-radius: 0;
 }
@@ -270,11 +266,8 @@
   transform: rotate(45deg);
 }
 
+.requests-list-domain.requests-list-column,
 .requests-list-file.requests-list-column {
-  text-align: start;
-}
-
-.requests-list-domain.requests-list-column {
   text-align: start;
 }
 
@@ -283,8 +276,7 @@
   vertical-align: top;
   align-items: center;
   height: 24px;
-  margin-inline-start: -2px;
-  margin-inline-end: 3px;
+  margin-inline: -2px 3px;
 }
 
 .requests-security-state-icon {
@@ -348,11 +340,11 @@
 }
 
 .request-list-item .requests-list-waterfall {
-  padding-inline-start: 0px;
+  padding-inline-start: 0;
 }
 
 .request-list-item .status-code {
-  margin-inline-start: 0px;
+  margin-inline-start: 0;
 }
 
 .requests-list-cause-stack {
