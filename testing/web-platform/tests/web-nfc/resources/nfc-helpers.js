@@ -111,7 +111,10 @@ function createOpaqueRecord(buffer) {
   return createRecord('opaque', 'application/octet-stream', buffer);
 }
 
-function createUrlRecord(url) {
+function createUrlRecord(url, isAbsUrl) {
+  if (isAbsUrl) {
+    return createRecord('absolute-url', 'text/plain', url);
+  }
   return createRecord('url', 'text/plain', url);
 }
 
