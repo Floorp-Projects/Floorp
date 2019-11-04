@@ -222,9 +222,6 @@ mobile/android/tests/browser/chrome/tp5/
 mobile/android/app/mobile.js
 mobile/android/app/geckoview-prefs.js
 
-# Uses `#expand`
-mobile/android/chrome/content/about.js
-
 # Not much JS to lint and non-standard at that
 mobile/android/installer/
 mobile/android/locales/
