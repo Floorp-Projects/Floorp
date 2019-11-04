@@ -7,9 +7,10 @@
   grid-row: 1 / 1;
 }
 
-.network-monitor .custom-method-and-url .custom-url-value{
+.network-monitor .custom-method-and-url .custom-url-value {
   grid-column: 2 / 2;
   grid-row: 2 / 2;
+  margin-inline-start: 12px;
 }
 
 .network-monitor .custom-method-and-url .custom-method-value {
@@ -17,11 +18,10 @@
   grid-row: 2 / 2;
 }
 
-
 .network-monitor .custom-method-and-url .custom-url-value-label {
   grid-column: 2 / 2;
   grid-row: 1 / 1 ;
-  margin-left: 12px;
+  margin-inline-start: 12px;
 }
 
 .network-monitor .tabpanel-summary-container.custom-method-and-url {
@@ -40,10 +40,7 @@
   font-weight: 400;
   margin-top: 4px;
   padding: 8px;
-}
-
-.network-monitor .custom-method-and-url .custom-url-value {
-  margin-left: 12px;
+  direction: ltr;
 }
 
 .network-monitor .custom-request-panel {
@@ -52,16 +49,15 @@
   height: 100%;
 }
 
-.network-monitor .custom-request-panel .custom-request-panel-content{
- flex: 1 1 auto;
- height: auto;
- overflow: auto;
+.network-monitor .custom-request-panel .custom-request-panel-content {
+  flex: 1 1 auto;
+  height: auto;
+  overflow: auto;
 }
 
 .network-monitor .custom-request-panel-content > div:not(.custom-request) {
   margin-bottom: 12px;
-  padding-left: 16px;
-  padding-right: 16px;
+  padding-inline: 16px;
 }
 
 .network-monitor .custom-request {
@@ -85,8 +81,7 @@
 .network-monitor .custom-request button {
   height: 24px;
   margin-bottom: 4px;
-  padding-left: 8px;
-  padding-right: 8px;
+  padding-inline: 8px;
   width: auto;
 }
 
@@ -109,7 +104,7 @@
 }
 
 .network-monitor .custom-request #custom-request-close-button {
-  margin-right: 4px;
+  margin-inline-end: 4px;
 }
 
 .network-monitor .custom-header {
