@@ -13,7 +13,6 @@
 #include "mozilla/Move.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Sprintf.h"
-#include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TimelineConsumers.h"
 #include "mozilla/TimelineMarker.h"
@@ -322,8 +321,7 @@ void CycleCollectedJSContext::PromiseRejectionTrackerCallback(
 
   if (state == JS::PromiseRejectionHandlingState::Unhandled) {
     PromiseDebugging::AddUncaughtRejection(aPromise);
-    if (mozilla::StaticPrefs::dom_promise_rejection_events_enabled() &&
-        !aMutedErrors) {
+    if (!aMutedErrors) {
       RefPtr<Promise> promise =
           Promise::CreateFromExisting(xpc::NativeGlobal(aPromise), aPromise);
       aboutToBeNotified.AppendElement(promise);
@@ -331,36 +329,34 @@ void CycleCollectedJSContext::PromiseRejectionTrackerCallback(
     }
   } else {
     PromiseDebugging::AddConsumedRejection(aPromise);
-    if (mozilla::StaticPrefs::dom_promise_rejection_events_enabled()) {
-      for (size_t i = 0; i < aboutToBeNotified.Length(); i++) {
-        if (aboutToBeNotified[i] &&
-            aboutToBeNotified[i]->PromiseObj() == aPromise) {
-          // To avoid large amounts of memmoves, we don't shrink the vector
-          // here. Instead, we filter out nullptrs when iterating over the
-          // vector later.
-          aboutToBeNotified[i] = nullptr;
-          DebugOnly<bool> isFound = unhandled.Remove(promiseID);
-          MOZ_ASSERT(isFound);
-          return;
-        }
+    for (size_t i = 0; i < aboutToBeNotified.Length(); i++) {
+      if (aboutToBeNotified[i] &&
+          aboutToBeNotified[i]->PromiseObj() == aPromise) {
+        // To avoid large amounts of memmoves, we don't shrink the vector
+        // here. Instead, we filter out nullptrs when iterating over the
+        // vector later.
+        aboutToBeNotified[i] = nullptr;
+        DebugOnly<bool> isFound = unhandled.Remove(promiseID);
+        MOZ_ASSERT(isFound);
+        return;
       }
-      RefPtr<Promise> promise;
-      unhandled.Remove(promiseID, getter_AddRefs(promise));
-      if (!promise && !aMutedErrors) {
-        nsIGlobalObject* global = xpc::NativeGlobal(aPromise);
-        if (nsCOMPtr<EventTarget> owner = do_QueryInterface(global)) {
-          RootedDictionary<PromiseRejectionEventInit> init(aCx);
-          init.mPromise = Promise::CreateFromExisting(global, aPromise);
-          init.mReason = JS::GetPromiseResult(aPromise);
+    }
+    RefPtr<Promise> promise;
+    unhandled.Remove(promiseID, getter_AddRefs(promise));
+    if (!promise && !aMutedErrors) {
+      nsIGlobalObject* global = xpc::NativeGlobal(aPromise);
+      if (nsCOMPtr<EventTarget> owner = do_QueryInterface(global)) {
+        RootedDictionary<PromiseRejectionEventInit> init(aCx);
+        init.mPromise = Promise::CreateFromExisting(global, aPromise);
+        init.mReason = JS::GetPromiseResult(aPromise);
 
-          RefPtr<PromiseRejectionEvent> event =
-              PromiseRejectionEvent::Constructor(
-                  owner, NS_LITERAL_STRING("rejectionhandled"), init);
+        RefPtr<PromiseRejectionEvent> event =
+            PromiseRejectionEvent::Constructor(
+                owner, NS_LITERAL_STRING("rejectionhandled"), init);
 
-          RefPtr<AsyncEventDispatcher> asyncDispatcher =
-              new AsyncEventDispatcher(owner, event);
-          asyncDispatcher->PostDOMEvent();
-        }
+        RefPtr<AsyncEventDispatcher> asyncDispatcher =
+            new AsyncEventDispatcher(owner, event);
+        asyncDispatcher->PostDOMEvent();
       }
     }
   }
@@ -673,8 +669,6 @@ void CycleCollectedJSContext::PerformDebuggerMicroTaskCheckpoint() {
 }
 
 NS_IMETHODIMP CycleCollectedJSContext::NotifyUnhandledRejections::Run() {
-  MOZ_ASSERT(mozilla::StaticPrefs::dom_promise_rejection_events_enabled());
-
   for (size_t i = 0; i < mUnhandledRejections.Length(); ++i) {
     RefPtr<Promise>& promise = mUnhandledRejections[i];
     if (!promise) {
@@ -719,8 +713,6 @@ NS_IMETHODIMP CycleCollectedJSContext::NotifyUnhandledRejections::Run() {
 }
 
 nsresult CycleCollectedJSContext::NotifyUnhandledRejections::Cancel() {
-  MOZ_ASSERT(mozilla::StaticPrefs::dom_promise_rejection_events_enabled());
-
   for (size_t i = 0; i < mUnhandledRejections.Length(); ++i) {
     RefPtr<Promise>& promise = mUnhandledRejections[i];
     if (!promise) {

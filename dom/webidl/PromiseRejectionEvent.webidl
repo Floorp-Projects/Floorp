@@ -4,8 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-[Exposed=(Window,Worker),
- Pref="dom.promise_rejection_events.enabled"]
+[Exposed=(Window,Worker)]
 interface PromiseRejectionEvent : Event
 {
   constructor(DOMString type, PromiseRejectionEventInit eventInitDict);

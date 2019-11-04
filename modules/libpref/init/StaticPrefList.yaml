@@ -1963,13 +1963,6 @@
   value: false
   mirror: always
 
-# WHATWG promise rejection events. See
-# https://html.spec.whatwg.org/multipage/webappapis.html#promiserejectionevent
-- name: dom.promise_rejection_events.enabled
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
 # This currently only affects XHTML. For XUL the cache is always allowed.
 - name: dom.prototype_document_cache.enabled
   type: bool
