@@ -14,7 +14,7 @@ class ConsoleCommands {
     this.currentTarget = currentTarget;
   }
 
-  evaluateJSAsync(expression, options) {
+  evaluateJSAsync(expression, options = {}) {
     const { selectedNodeFront, webConsoleFront } = options;
     let front = this.proxy.webConsoleFront;
 
