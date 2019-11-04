@@ -57,9 +57,6 @@ is an array of engines:
       ]
     }
 
-.. note::
-    The engine name is intended only as a key/identifier.
-
 Engine Objects
 --------------
 
@@ -69,11 +66,10 @@ An engine that is deployed globally could be listed simply as:
 .. code-block:: js
 
     {
-      "engineName": "engine1",
       "default": "no",
       "telemetryId": "engine1-telem",
       "webExtension": {
-        "id": "webext",
+        "id": "web@ext",
         "version": "1.0"
       },
       "appliesTo": [{
@@ -94,9 +90,8 @@ located specific regions or with certain locales. For example:
 .. code-block:: js
 
     {
-      "engineName": "engine1",
       "webExtension": {
-        "id": "webext",
+        "id": "web@ext",
         "version": "1.0"
       },
       "appliesTo": [{
@@ -104,7 +99,7 @@ located specific regions or with certain locales. For example:
           "region": "us"
         },
         "webExtension": {
-          "id": "webext-us",
+          "id": "web-us@ext",
           "version": "1.1"
         }
       }, {
@@ -112,15 +107,15 @@ located specific regions or with certain locales. For example:
           "region": "gb"
         },
         "webExtension": {
-          "id": "webext-gb",
+          "id": "web-gb@ext",
           "version": "1.2"
         }
       }]
     }
 
 In this case users identified as being in the US region would use the WebExtension
-with identifier ``webext-engine1``, version 1.1. GB region users would get
-``webext-gb`` version 1.2, and all other users would get ``webext`` version 1.0.
+with identifier ``web-us@ext``, version 1.1. GB region users would get
+``web-gb@ext`` version 1.2, and all other users would get ``web@ext`` version 1.0.
 
 Special Attributes
 ------------------
@@ -135,9 +130,8 @@ configuration object with the users locale. For example:
 .. code-block:: js
 
     {
-      "engineName": "engine1",
       "webExtension": {
-        "id": "webext",
+        "id": "web@ext",
         "version": "1.0"
       },
       "appliesTo": [{
@@ -174,9 +168,8 @@ Sections which have a ``cohort`` will not be used unless a matching
 .. code-block:: js
 
     {
-      "engineName": "engine1",
       "webExtension": {
-        "id": "webext",
+        "id": "web@ext",
         "version": "1.0"
       },
       "appliesTo": [{
@@ -185,14 +178,14 @@ Sections which have a ``cohort`` will not be used unless a matching
         },
         "cohort": "nov-16",
         "webExtension": {
-          "id": "webext-experimental"
+          "id": "web-experimental@ext"
         }
       }, {
         "included": {
           "everywhere": true
         },
         "webExtension": {
-          "id": "webext-gb",
+          "id": "web-gb@ext",
           "version": "1.2"
         }
       }]
@@ -219,7 +212,10 @@ property is a tri-state value with states of ``yes``, ``yes-if-no-other`` and
 .. code-block:: js
 
     {
-      "engineName": "engine1",
+      "webExtension": {
+        "id": "engine1@ext",
+        "version": "1.0"
+      },
       "appliesTo": [{
         "included": {
           "region": "us"
@@ -233,7 +229,10 @@ property is a tri-state value with states of ``yes``, ``yes-if-no-other`` and
       }]
     },
     {
-      "engineName": "engine2",
+      "webExtension": {
+        "id": "engine2@ext",
+        "version": "1.0"
+      },
       "appliesTo": [{
         "included": {
           "region": "gb"
@@ -241,8 +240,10 @@ property is a tri-state value with states of ``yes``, ``yes-if-no-other`` and
         "default": "yes"
       }]
     },
-    {
-      "engineName": "engine3",
+      "webExtension": {
+        "id": "engine3@ext",
+        "version": "1.0"
+      },
       "default": "no"
       "appliesTo": [{
         "included": {
@@ -251,7 +252,10 @@ property is a tri-state value with states of ``yes``, ``yes-if-no-other`` and
       }]
     },
     {
-      "engineName": "engine4",
+      "webExtension": {
+        "id": "engine4@ext",
+        "version": "1.0"
+      },
       "defaultPrivate": "yes",
       "appliesTo": [{
         "included": {
@@ -262,16 +266,16 @@ property is a tri-state value with states of ``yes``, ``yes-if-no-other`` and
 
 In this example, for normal mode:
 
-    - engine1 is default in the US region, and all other regions except for GB
-    - engine2 is default in only the GB region
-    - engine3 and engine4 are never default anywhere
+    - engine1@ext is default in the US region, and all other regions except for GB
+    - engine2@ext is default in only the GB region
+    - engine3@ext and engine4 are never default anywhere
 
 In private browsing mode:
 
-    - engine1 is default in the US region, and all other regions execpt for GB and FR
-    - engine2 is default in only the GB region
-    - engine3 is never default anywhere
-    - engine4 is default in the FR region.
+    - engine1@ext is default in the US region, and all other regions execpt for GB and FR
+    - engine2@ext is default in only the GB region
+    - engine3@ext is never default anywhere
+    - engine4@ext is default in the FR region.
 
 Engine Ordering
 ---------------
@@ -292,22 +296,31 @@ Example:
 .. code-block:: js
 
     {
-      "engineName": "engine1",
+      "webExtension": {
+        "id": "engine1@ext",
+        "version": "1.0"
+      },
       "orderHint": 2000,
       "default": "no",
     },
     {
-      "engineName": "engine2",
+      "webExtension": {
+        "id": "engine2@ext",
+        "version": "1.0"
+      },
       "orderHint": 1000,
       "default": "yes"
     },
     {
-      "engineName": "engine3",
+      "webExtension": {
+        "id": "engine3@ext",
+        "version": "1.0"
+      },
       "orderHint": 500,
       "default": "no"
     }
 
-This would result in the order: ``engine2, engine1, engine3``.
+This would result in the order: ``engine2@ext, engine1@ext, engine3@ext``.
 
 Engine Updates
 --------------
@@ -318,7 +331,7 @@ Within each engine definition is the extension id and version, for example:
 
   {
       "webExtension": {
-        "id": "webext",
+        "id": "web@ext",
         "version": "1.0"
       },
     }
