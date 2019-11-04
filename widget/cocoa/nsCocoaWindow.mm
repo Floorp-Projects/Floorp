@@ -1198,8 +1198,10 @@ void nsCocoaWindow::SetSizeMode(nsSizeMode aMode) {
 void nsCocoaWindow::SuppressAnimation(bool aSuppress) {
   if ([mWindow respondsToSelector:@selector(setAnimationBehavior:)]) {
     if (aSuppress) {
+      [mWindow setIsAnimationSuppressed:YES];
       [mWindow setAnimationBehavior:NSWindowAnimationBehaviorNone];
     } else {
+      [mWindow setIsAnimationSuppressed:NO];
       [mWindow setAnimationBehavior:mWindowAnimationBehavior];
     }
   }
@@ -2848,6 +2850,7 @@ static NSMutableSet* gSwizzledFrameViewClasses = nil;
   mBrightTitlebarForeground = NO;
   mUseMenuStyle = NO;
   mTouchBar = nil;
+  mIsAnimationSuppressed = NO;
   [self updateTrackingArea];
 
   return self;
@@ -2927,6 +2930,14 @@ static NSImage* GetMenuMaskImage() {
   return [super isVisible] || mBeingShown;
 }
 
+- (void)setIsAnimationSuppressed:(BOOL)aValue {
+  mIsAnimationSuppressed = aValue;
+}
+
+- (BOOL)isAnimationSuppressed {
+  return mIsAnimationSuppressed;
+}
+
 - (void)disableSetNeedsDisplay {
   mDisabledNeedsDisplay = YES;
 }
@@ -3002,6 +3013,15 @@ static const NSString* kStateWantsTitleDrawn = @"wantsTitleDrawn";
   NSUInteger styleMask = [self styleMask];
   styleMask &= ~NSFullSizeContentViewWindowMask;
   return [NSWindow frameRectForContentRect:aChildViewRect styleMask:styleMask];
+}
+
+- (NSTimeInterval)animationResizeTime:(NSRect)newFrame {
+  if (mIsAnimationSuppressed) {
+    // Should not animate the initial session-restore size change
+    return 0.0;
+  }
+
+  return [super animationResizeTime:newFrame];
 }
 
 - (void)setWantsTitleDrawn:(BOOL)aDrawTitle {
