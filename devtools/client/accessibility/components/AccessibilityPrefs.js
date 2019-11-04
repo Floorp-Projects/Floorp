@@ -42,6 +42,7 @@ class AccessibilityTreeFilter extends Component {
     return {
       dispatch: PropTypes.func.isRequired,
       [PREFS.SCROLL_INTO_VIEW]: PropTypes.bool.isRequired,
+      toolboxDoc: PropTypes.object.isRequired,
     };
   }
 
@@ -64,7 +65,7 @@ class AccessibilityTreeFilter extends Component {
     return MenuButton(
       {
         menuId: "accessibility-tree-filters-prefs-menu",
-        toolboxDoc: document,
+        toolboxDoc: this.props.toolboxDoc,
         className: `devtools-button badge toolbar-menu-button prefs`,
         title: L10N.getStr("accessibility.tree.filters.prefs"),
       },

@@ -60,7 +60,9 @@ function checkPrefsState(wrapper, expected) {
 describe("AccessibilityPrefs component:", () => {
   it("prefs not set by default", () => {
     const store = setupStore();
-    const wrapper = mount(Provider({ store }, AccessibilityPrefs()));
+    const wrapper = mount(
+      Provider({ store }, AccessibilityPrefs({ toolboxDoc: document }))
+    );
     const accPrefs = wrapper.find(AccessibilityPrefsClass);
     const menuButton = accPrefs.childAt(0);
 
@@ -83,7 +85,9 @@ describe("AccessibilityPrefs component:", () => {
         },
       },
     });
-    const wrapper = mount(Provider({ store }, AccessibilityPrefs()));
+    const wrapper = mount(
+      Provider({ store }, AccessibilityPrefs({ toolboxDoc: document }))
+    );
     expect(wrapper.html()).toMatchSnapshot();
     checkPrefsState(wrapper, {
       prefs: [
@@ -94,7 +98,9 @@ describe("AccessibilityPrefs component:", () => {
 
   it("toggle pref", () => {
     const store = setupStore();
-    const wrapper = mount(Provider({ store }, AccessibilityPrefs()));
+    const wrapper = mount(
+      Provider({ store }, AccessibilityPrefs({ toolboxDoc: document }))
+    );
 
     expect(wrapper.html()).toMatchSnapshot();
     for (const pref of getMenuItems(wrapper, ".pref")) {

@@ -65,8 +65,17 @@ AccessibilityView.prototype = {
    *        - simulator             {Object}
    *                                front for simulator actor responsible for setting
    *                                color matrices in docShell
+   *        - toolboxDoc            {Document}
+   *                                toolbox document that will used by menus.
    */
-  async initialize({ front, walker, supports, fluentBundles, simulator }) {
+  async initialize({
+    front,
+    walker,
+    supports,
+    fluentBundles,
+    simulator,
+    toolboxDoc,
+  }) {
     // Make sure state is reset every time accessibility panel is initialized.
     await this.store.dispatch(reset(front, supports));
     const container = document.getElementById("content");
@@ -81,6 +90,7 @@ AccessibilityView.prototype = {
       accessibilityWalker: walker,
       fluentBundles,
       simulator,
+      toolboxDoc,
     });
     // Render top level component
     const provider = createElement(Provider, { store: this.store }, mainFrame);
