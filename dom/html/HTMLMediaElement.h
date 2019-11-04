@@ -825,7 +825,7 @@ class HTMLMediaElement : public nsGenericHTMLElement,
    * mSrcStream's graph's CurrentTime() has been updated. It might be time to
    * fire "timeupdate".
    */
-  void UpdateSrcTrackTime();
+  void UpdateSrcStreamTime();
 
   /**
    * Called by our DOMMediaStream::TrackListener when a new MediaStreamTrack has
