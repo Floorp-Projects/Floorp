@@ -39,14 +39,14 @@ window.onload = async function () {
       "Autocomplete items are rendered as expected");
   }
 
-  let React = browserRequire("devtools/client/shared/vendor/react");
-  let SearchBox = React.createFactory(
+  const React = browserRequire("devtools/client/shared/vendor/react");
+  const SearchBox = React.createFactory(
     browserRequire("devtools/client/shared/components/SearchBox")
   );
   const { component, $ } = await createComponentTest(SearchBox, {
     type: "search",
     autocompleteProvider: (filter) => {
-      let baseList = [
+      const baseList = [
         "foo",
         "BAR",
         "baZ",
@@ -64,9 +64,9 @@ window.onload = async function () {
         return [];
       }
 
-      let tokens = filter.split(/\s+/g);
-      let lastToken = tokens[tokens.length - 1];
-      let previousTokens = tokens.slice(0, tokens.length - 1);
+      const tokens = filter.split(/\s+/g);
+      const lastToken = tokens[tokens.length - 1];
+      const previousTokens = tokens.slice(0, tokens.length - 1);
 
       if (!lastToken) {
         return [];

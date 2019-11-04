@@ -19,14 +19,14 @@ Test for Notification Box. The test is checking:
 <script type="application/javascript">
 window.onload = async function () {
   try {
-    let ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
-    let React = browserRequire("devtools/client/shared/vendor/react");
-    let { NotificationBox, PriorityLevels } = browserRequire("devtools/client/shared/components/NotificationBox");
+    const ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
+    const React = browserRequire("devtools/client/shared/vendor/react");
+    const { NotificationBox, PriorityLevels } = browserRequire("devtools/client/shared/components/NotificationBox");
 
     // Test rendering
-    let boxElement = React.createElement(NotificationBox);
-    let notificationBox = TestUtils.renderIntoDocument(boxElement);
-    let notificationNode = ReactDOM.findDOMNode(notificationBox);
+    const boxElement = React.createElement(NotificationBox);
+    const notificationBox = TestUtils.renderIntoDocument(boxElement);
+    const notificationNode = ReactDOM.findDOMNode(notificationBox);
 
     let callbackExecuted = false;
 
@@ -47,7 +47,7 @@ window.onload = async function () {
       notificationBox, "notification").length, 1,
       "There must be one notification");
 
-    let closeButton = notificationNode.querySelector(
+    const closeButton = notificationNode.querySelector(
       ".messageCloseButton");
 
     // Click the close button to close the notification.

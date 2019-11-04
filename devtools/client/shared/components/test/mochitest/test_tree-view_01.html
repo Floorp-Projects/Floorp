@@ -266,7 +266,7 @@ window.onload = function() {
           "Focus is set correctly.");
       }
 
-      for (let key in state) {
+      for (const key in state) {
         is(tree.state[key], state[key], `${key} state is correct.`);
       }
     }

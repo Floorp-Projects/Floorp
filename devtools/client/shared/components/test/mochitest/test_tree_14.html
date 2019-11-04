@@ -229,7 +229,7 @@ window.onload = async function() {
         is(document.activeElement, expected, "Focus is set correctly.");
       }
 
-      for (let key in props) {
+      for (const key in props) {
         is(gTree.props[key], props[key], `${key} prop is correct.`);
       }
     }

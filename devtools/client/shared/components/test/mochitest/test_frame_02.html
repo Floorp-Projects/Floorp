@@ -19,16 +19,16 @@ Test that the frame component reacts to source-map pref changse.
 window.onload = async function () {
   try {
     const Services = browserRequire("Services");
-    let ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
-    let React = browserRequire("devtools/client/shared/vendor/react");
-    let Frame = React.createFactory(browserRequire("devtools/client/shared/components/Frame"));
+    const ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
+    const React = browserRequire("devtools/client/shared/vendor/react");
+    const Frame = React.createFactory(browserRequire("devtools/client/shared/components/Frame"));
 
     const resolvedLocation = {
       sourceId: "whatever",
       line: 23,
       sourceUrl: "https://bugzilla.mozilla.org/original.js",
     };
-    let mockSourceMapService = {
+    const mockSourceMapService = {
       _update: function () {
         this._callback(Services.prefs.getBoolPref(PREF),
                        resolvedLocation.sourceUrl,
@@ -43,7 +43,7 @@ window.onload = async function () {
       },
     };
 
-    let props = {
+    const props = {
       onClick: () => {},
       frame: {
 	line: 97,
@@ -55,18 +55,18 @@ window.onload = async function () {
     const PREF = "devtools.source-map.client-service.enabled";
     Services.prefs.setBoolPref(PREF, false);
 
-    let frame = ReactDOM.render(Frame(props), window.document.body);
-    let el = ReactDOM.findDOMNode(frame);
-    let { source } = props.frame;
+    const frame = ReactDOM.render(Frame(props), window.document.body);
+    const el = ReactDOM.findDOMNode(frame);
+    const { source } = props.frame;
 
-    let expectedOriginal = {
+    const expectedOriginal = {
       file: "original.js",
       line: resolvedLocation.line,
       shouldLink: true,
       tooltip: "View source in Debugger → https://bugzilla.mozilla.org/original.js:23",
       source: "https://bugzilla.mozilla.org/original.js",
     };
-    let expectedGenerated = {
+    const expectedGenerated = {
       file: "bundle.js",
       line: 97,
       shouldLink: true,

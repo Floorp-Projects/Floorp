@@ -19,14 +19,14 @@ Test for Notification Box. The test is checking:
 <script type="application/javascript">
 window.onload = async function () {
   try {
-    let ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
-    let React = browserRequire("devtools/client/shared/vendor/react");
-    let { NotificationBox, PriorityLevels } = browserRequire("devtools/client/shared/components/NotificationBox");
+    const ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
+    const React = browserRequire("devtools/client/shared/vendor/react");
+    const { NotificationBox, PriorityLevels } = browserRequire("devtools/client/shared/components/NotificationBox");
 
     // Test rendering
-    let boxElement = React.createElement(NotificationBox);
-    let notificationBox = TestUtils.renderIntoDocument(boxElement);
-    let notificationNode = ReactDOM.findDOMNode(notificationBox);
+    const boxElement = React.createElement(NotificationBox);
+    const notificationBox = TestUtils.renderIntoDocument(boxElement);
+    const notificationNode = ReactDOM.findDOMNode(notificationBox);
 
     let buttonCallbackExecuted = false;
     var buttons = [{
@@ -53,7 +53,7 @@ window.onload = async function () {
       buttons
     );
 
-    let buttonNodes = notificationNode.querySelectorAll(
+    const buttonNodes = notificationNode.querySelectorAll(
       ".notificationButton");
 
     is(buttonNodes.length, 2, "There must be two buttons");

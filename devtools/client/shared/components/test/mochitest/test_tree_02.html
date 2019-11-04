@@ -18,9 +18,9 @@ Test that collapsed subtrees aren't rendered.
 <script type="application/javascript">
 window.onload = async function () {
   try {
-    let ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
-    let React = browserRequire("devtools/client/shared/vendor/react");
-    let Tree = React.createFactory(browserRequire("devtools/client/shared/components/VirtualizedTree"));
+    const ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
+    const React = browserRequire("devtools/client/shared/vendor/react");
+    const Tree = React.createFactory(browserRequire("devtools/client/shared/components/VirtualizedTree"));
 
     const tree = ReactDOM.render(Tree(TEST_TREE_INTERFACE), window.document.body);
 

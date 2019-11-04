@@ -61,7 +61,7 @@ window.onload = async function() {
     const list = renderIntoDocument(listReactEl);
     const listEl = findRenderedDOMComponentWithClass(list, "list");
     const items = scryRenderedComponentsWithType(list, ListItem);
-    let itemEls = scryRenderedDOMComponentsWithTag(list, "li");
+    const itemEls = scryRenderedDOMComponentsWithTag(list, "li");
 
     function testCurrent(index) {
       is(list.state.current, index, "Correct current item.");

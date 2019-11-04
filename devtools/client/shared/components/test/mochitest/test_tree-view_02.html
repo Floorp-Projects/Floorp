@@ -84,7 +84,7 @@ window.onload = function() {
             action();
           }
 
-          for (let key in state) {
+          for (const key in state) {
             is(tree.state[key], state[key], `${key} state is correct.`);
           }
         }
