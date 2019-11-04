@@ -1320,7 +1320,8 @@ class HTMLMediaElement : public nsGenericHTMLElement,
 
   // True once PlaybackEnded() is called and we're playing a MediaStream.
   // Reset to false if we start playing mSrcStream again.
-  bool mSrcStreamPlaybackEnded = false;
+  Watchable<bool> mSrcStreamPlaybackEnded = {
+      false, "HTMLMediaElement::mSrcStreamPlaybackEnded"};
 
   // Holds a reference to the stream connecting this stream to the window
   // capture sink.
@@ -1371,7 +1372,8 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   // Media loading flags. See:
   //   http://www.whatwg.org/specs/web-apps/current-work/#video)
   nsMediaNetworkState mNetworkState = HTMLMediaElement_Binding::NETWORK_EMPTY;
-  nsMediaReadyState mReadyState = HTMLMediaElement_Binding::HAVE_NOTHING;
+  Watchable<nsMediaReadyState> mReadyState = {
+      HTMLMediaElement_Binding::HAVE_NOTHING, "HTMLMediaElement::mReadyState"};
 
   enum LoadAlgorithmState {
     // No load algorithm instance is waiting for a source to be added to the
