@@ -4720,6 +4720,12 @@
   value: @IS_NIGHTLY_BUILD@
   mirror: always
 
+# Whether we always restyle / repaint as a result of a visited query
+- name: layout.css.always-repaint-on-unvisited
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # Make `zoom` a `transform` + `transform-origin` alias.
 - name: layout.css.zoom-transform-hack.enabled
   type: RelaxedAtomicBool
