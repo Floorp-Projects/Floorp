@@ -148,20 +148,38 @@
         }
       }
     },
+    "searchUrlCodes": {
+      "type": "object",
+      "title": "Codes",
+      "description": "A map of parameter name to the parameter value.",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
     "codes": {
       "type": "object",
       "title": "Codes",
       "description": "Various codes for the search engines",
       "properties": {
-        "searchUrlGetExtraCodes": {
-          "type": "string",
-          "title": "Search URL Get Extra codes",
-          "description": "Extra params (for SAP codes) for the search URL (e.g. 'pc=foo')."
+        "searchUrlGetParams": {
+          "title": "Search URL GET Parameters",
+          "description": "Extra parameters for search URLs (e.g. 'pc=foo').",
+          "$ref": "#/definitions/searchUrlCodes"
         },
-        "searchFormExtraCodes": {
-          "type": "string",
-          "title": "Search Form Extra codes",
-          "description": "Extra params (for SAP codes) for the search form URL (e.g. 'pc=foo')."
+        "suggestUrlGetParams": {
+          "title": "Suggestion URL GET Parameters",
+          "description": "Extra parameters for search suggestion URLs (e.g. 'pc=foo').",
+          "$ref": "#/definitions/searchUrlCodes"
+        },
+        "searchUrlGetParams": {
+          "title": "Search URL POST Parameters",
+          "description": "Extra parameters for search URLs (e.g. 'pc=foo').",
+          "$ref": "#/definitions/searchUrlCodes"
+        },
+        "suggestUrlGetParams": {
+          "title": "Suggestion URL POST Parameters",
+          "description": "Extra parameters for search suggestion URLs (e.g. 'pc=foo').",
+          "$ref": "#/definitions/searchUrlCodes"
         },
         "sapCodes": {
           "$ref": "#/definitions/sapCodes"
@@ -178,10 +196,10 @@
       "title": "WebExtension",
       "dependencies": {
         "id": [
-          "webExtensionVersion"
+          "version"
         ],
         "version": [
-          "webExtensionId"
+          "id"
         ]
       },
       "properties": {
