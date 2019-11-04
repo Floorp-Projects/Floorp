@@ -439,9 +439,39 @@ class HTMLMediaElement::MediaStreamRenderer
         mAudioOutputKey(aAudioOutputKey),
         mWatchManager(this, aMainThread) {}
 
+  void Shutdown() {
+    for (const auto& t : nsTArray<WeakPtr<MediaStreamTrack>>(mAudioTracks)) {
+      if (t) {
+        RemoveTrack(t->AsAudioStreamTrack());
+      }
+    }
+    if (mVideoTrack) {
+      RemoveTrack(mVideoTrack->AsVideoStreamTrack());
+    }
+    mWatchManager.Shutdown();
+  }
+
   void UpdateGraphTime() {
     mGraphTime =
         mGraphTimeDummy->mTrack->Graph()->CurrentTime() - *mGraphTimeOffset;
+  }
+
+  void SetProgressingCurrentTime(bool aProgress) {
+    if (aProgress == mProgressingCurrentTime) {
+      return;
+    }
+
+    MOZ_DIAGNOSTIC_ASSERT(mGraphTimeDummy);
+    mProgressingCurrentTime = aProgress;
+    MediaTrackGraph* graph = mGraphTimeDummy->mTrack->Graph();
+    if (mProgressingCurrentTime) {
+      mGraphTimeOffset = Some(graph->CurrentTime().Ref() - mGraphTime);
+      mWatchManager.Watch(graph->CurrentTime(),
+                          &MediaStreamRenderer::UpdateGraphTime);
+    } else {
+      mWatchManager.Unwatch(graph->CurrentTime(),
+                            &MediaStreamRenderer::UpdateGraphTime);
+    }
   }
 
   void Start() {
@@ -454,11 +484,6 @@ class HTMLMediaElement::MediaStreamRenderer
     if (!mGraphTimeDummy) {
       return;
     }
-
-    MediaTrackGraph* graph = mGraphTimeDummy->mTrack->Graph();
-    mGraphTimeOffset = Some(graph->CurrentTime().Ref() - mGraphTime);
-    mWatchManager.Watch(graph->CurrentTime(),
-                        &MediaStreamRenderer::UpdateGraphTime);
 
     for (const auto& t : mAudioTracks) {
       if (t) {
@@ -483,9 +508,6 @@ class HTMLMediaElement::MediaStreamRenderer
     if (!mGraphTimeDummy) {
       return;
     }
-
-    mWatchManager.Unwatch(mGraphTimeDummy->mTrack->Graph()->CurrentTime(),
-                          &MediaStreamRenderer::UpdateGraphTime);
 
     for (const auto& t : mAudioTracks) {
       if (t) {
@@ -571,17 +593,9 @@ class HTMLMediaElement::MediaStreamRenderer
 
  private:
   ~MediaStreamRenderer() {
-    for (const auto& t : nsTArray<WeakPtr<MediaStreamTrack>>(mAudioTracks)) {
-      if (t) {
-        RemoveTrack(t->AsAudioStreamTrack());
-      }
-    }
-    if (mVideoTrack) {
-      RemoveTrack(mVideoTrack->AsVideoStreamTrack());
-    }
-
     MOZ_DIAGNOSTIC_ASSERT(mAudioTracks.IsEmpty());
     MOZ_DIAGNOSTIC_ASSERT(!mVideoTrack);
+    MOZ_DIAGNOSTIC_ASSERT(mWatchManager.IsShutdown());
   }
 
   void EnsureGraphTimeDummy() {
@@ -608,17 +622,14 @@ class HTMLMediaElement::MediaStreamRenderer
     // This dummy keeps `graph` alive and ensures access to it.
     mGraphTimeDummy = MakeRefPtr<SharedDummyTrack>(
         graph->CreateSourceTrack(MediaSegment::AUDIO));
-
-    if (mRendering) {
-      mGraphTimeOffset = Some(graph->CurrentTime() - mGraphTime);
-      mWatchManager.Watch(graph->CurrentTime(),
-                          &MediaStreamRenderer::UpdateGraphTime);
-    }
   }
 
   // True when all tracks are being rendered, i.e., when the media element is
   // playing.
   bool mRendering = false;
+
+  // True while we're progressing mGraphTime. False otherwise.
+  bool mProgressingCurrentTime = false;
 
   // The audio output volume for all audio tracks.
   float mAudioOutputVolume = 1.0f;
@@ -2172,8 +2183,11 @@ void HTMLMediaElement::ResetState() {
     mVideoFrameContainer->ForgetElement();
     mVideoFrameContainer = nullptr;
   }
-  // mMediaStreamRenderer, has a strong reference to mVideoFrameContainer.
-  mMediaStreamRenderer = nullptr;
+  if (mMediaStreamRenderer) {
+    // mMediaStreamRenderer, has a strong reference to mVideoFrameContainer.
+    mMediaStreamRenderer->Shutdown();
+    mMediaStreamRenderer = nullptr;
+  }
 }
 
 void HTMLMediaElement::SelectResourceWrapper() {
@@ -4867,6 +4881,15 @@ void HTMLMediaElement::UpdateSrcMediaStreamPlaying(uint32_t aFlags) {
   }
 }
 
+void HTMLMediaElement::UpdateSrcStreamPotentiallyPlaying() {
+  if (!mMediaStreamRenderer) {
+    // Notifications are async, the renderer could have been cleared.
+    return;
+  }
+
+  mMediaStreamRenderer->SetProgressingCurrentTime(IsPotentiallyPlaying());
+}
+
 void HTMLMediaElement::UpdateSrcStreamTime() {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -4886,11 +4909,18 @@ void HTMLMediaElement::SetupSrcMediaStreamPlayback(DOMMediaStream* aStream) {
 
   mMediaStreamRenderer = MakeAndAddRef<MediaStreamRenderer>(
       mAbstractMainThread, GetVideoFrameContainer(), this);
+  mWatchManager.Watch(mPaused,
+                      &HTMLMediaElement::UpdateSrcStreamPotentiallyPlaying);
+  mWatchManager.Watch(mReadyState,
+                      &HTMLMediaElement::UpdateSrcStreamPotentiallyPlaying);
+  mWatchManager.Watch(mSrcStreamPlaybackEnded,
+                      &HTMLMediaElement::UpdateSrcStreamPotentiallyPlaying);
   mWatchManager.Watch(mMediaStreamRenderer->CurrentGraphTime(),
                       &HTMLMediaElement::UpdateSrcStreamTime);
   SetVolumeInternal();
 
   UpdateSrcMediaStreamPlaying();
+  UpdateSrcStreamPotentiallyPlaying();
   mSrcStreamVideoPrincipal = NodePrincipal();
 
   // If we pause this media element, track changes in the underlying stream
@@ -4926,8 +4956,15 @@ void HTMLMediaElement::EndSrcMediaStreamPlayback() {
   mFirstFrameListener = nullptr;
 
   if (mMediaStreamRenderer) {
+    mWatchManager.Unwatch(mPaused,
+                          &HTMLMediaElement::UpdateSrcStreamPotentiallyPlaying);
+    mWatchManager.Unwatch(mReadyState,
+                          &HTMLMediaElement::UpdateSrcStreamPotentiallyPlaying);
+    mWatchManager.Unwatch(mSrcStreamPlaybackEnded,
+                          &HTMLMediaElement::UpdateSrcStreamPotentiallyPlaying);
     mWatchManager.Unwatch(mMediaStreamRenderer->CurrentGraphTime(),
                           &HTMLMediaElement::UpdateSrcStreamTime);
+    mMediaStreamRenderer->Shutdown();
     mMediaStreamRenderer = nullptr;
   }
 
