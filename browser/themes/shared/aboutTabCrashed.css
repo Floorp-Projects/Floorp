@@ -10,13 +10,6 @@ body {
   background-image: url("chrome://browser/skin/tab-crashed.svg");
 }
 
-.title > h1 {
-  /**
-   * Add commentary?
-   */
-  padding-right: 14px;
-}
-
 #reportSent {
   font-weight: bold;
 }
@@ -33,11 +26,6 @@ body {
   margin-top: 0;
 }
 
-#crash-reporter-title {
-  font-weight: bold;
-  margin: 0 0 14px 0;
-}
-
 input[type="text"],
 textarea {
   width: 100%;
@@ -47,7 +35,7 @@ textarea {
 
 input[type="text"],
 input[type="checkbox"] {
-  -moz-margin-start: 0px;
+  margin-inline-start: 0;
 }
 
 #options {
@@ -65,6 +53,5 @@ input[type="checkbox"] {
 }
 
 .checkbox-with-label > label {
-  margin-top: auto;
-  margin-bottom: auto;
+  margin-block: auto;
 }
