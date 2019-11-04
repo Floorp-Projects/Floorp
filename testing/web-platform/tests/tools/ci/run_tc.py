@@ -51,9 +51,6 @@ except ImportError:
     from urllib.request import urlopen
 
 
-QUEUE_BASE = "https://queue.taskcluster.net/v1/task"
-
-
 root = os.path.abspath(
     os.path.join(os.path.dirname(__file__),
                  os.pardir,
@@ -325,7 +322,14 @@ def fetch_event_data():
         # For example under local testing
         return None
 
-    resp = urlopen("%s/%s" % (QUEUE_BASE, task_id))
+    root_url = os.environ['TASKCLUSTER_ROOT_URL']
+    if root_url == 'https://taskcluster.net':
+        queue_base = "https://queue.taskcluster.net/v1/task"
+    else:
+        queue_base = root_url + "/api/queue/v1/task"
+
+
+    resp = urlopen("%s/%s" % (queue_base, task_id))
 
     task_data = json.load(resp)
     event_data = task_data.get("extra", {}).get("github_event")
