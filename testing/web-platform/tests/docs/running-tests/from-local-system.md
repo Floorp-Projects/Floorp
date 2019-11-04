@@ -48,15 +48,6 @@ python wpt make-hosts-file | Out-File %SystemRoot%\System32\drivers\etc\hosts -E
 If you are behind a proxy, you also need to make sure the domains above are
 excluded from your proxy lookups.
 
-[The Ahem font](../writing-tests/ahem) is used to test precise rendering
-behavior. This font should be loaded as a web font in tests, using the
-`/fonts/ahem.css` stylesheet, as follows:
-
-```
-<link rel="stylesheet" type="text/css" href="/fonts/ahem.css" />
-```
-
-
 ### Windows Notes
 
 Generally Windows Subsystem for Linux will provide the smoothest user
