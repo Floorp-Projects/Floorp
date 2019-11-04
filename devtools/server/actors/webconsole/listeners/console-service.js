@@ -105,10 +105,6 @@ ConsoleServiceListener.prototype = {
       case "component javascript":
       case "chrome javascript":
       case "chrome registration":
-      case "XBL":
-      case "XBL Prototype Handler":
-      case "XBL Content Sink":
-      case "xbl javascript":
         return false;
     }
 
