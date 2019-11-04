@@ -31,24 +31,14 @@ class XMLHttpRequestWorker final : public XMLHttpRequest {
 
     // responseType is blob
     RefPtr<BlobImpl> mResponseBlobImpl;
-    RefPtr<Blob> mResponseBlob;
 
     // responseType is arrayBuffer;
     RefPtr<ArrayBufferBuilder> mResponseArrayBufferBuilder;
-    JS::Heap<JSObject*> mResponseArrayBufferValue;
 
     // responseType is json
     nsString mResponseJSON;
-    JS::Heap<JS::Value> mResponseJSONValue;
 
-    ResponseData()
-        : mResponseResult(NS_OK),
-          mResponseArrayBufferValue(nullptr),
-          mResponseJSONValue(JS::UndefinedValue()) {}
-
-    void Unlink();
-    void Trace(const TraceCallbacks& aCallbacks, void* aClosure);
-    void Traverse(nsCycleCollectionTraversalCallback& aCb);
+    ResponseData() : mResponseResult(NS_OK) {}
   };
 
   struct StateData {
@@ -71,8 +61,12 @@ class XMLHttpRequestWorker final : public XMLHttpRequest {
 
   XMLHttpRequestResponseType mResponseType;
 
-  UniquePtr<ResponseData> mResponseData;
   UniquePtr<StateData> mStateData;
+
+  UniquePtr<ResponseData> mResponseData;
+  RefPtr<Blob> mResponseBlob;
+  JS::Heap<JSObject*> mResponseArrayBufferValue;
+  JS::Heap<JS::Value> mResponseJSONValue;
 
   uint32_t mTimeout;
 
@@ -247,6 +241,8 @@ class XMLHttpRequestWorker final : public XMLHttpRequest {
   void Send(JSContext* aCx, JS::Handle<JSObject*> aBody, ErrorResult& aRv);
 
   void SendInternal(SendRunnable* aRunnable, ErrorResult& aRv);
+
+  void ResetResponseData();
 };
 
 }  // namespace dom
