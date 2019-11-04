@@ -20,7 +20,7 @@ that is opened reports itself as being modal.
     BrowserTestUtils.domWindowOpened().then((win) => {
       let treeOwner = win.docShell.treeOwner;
       let chromeFlags = treeOwner.QueryInterface(Ci.nsIInterfaceRequestor)
-                                 .getInterface(Ci.nsIAppWindow)
+                                 .getInterface(Ci.nsIXULWindow)
                                  .chromeFlags;
       ok(chromeFlags & Ci.nsIWebBrowserChrome.CHROME_MODAL,
          "Should have the modal chrome flag");

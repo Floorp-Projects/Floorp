@@ -55,7 +55,7 @@ async function startTest(context) {
   Cu.forceGC();
   Cu.forceCC();
   Cu.forceShrinkingGC();
-  let win = context.appWindow;
+  let win = context.xulWindow;
   await openDelay(win);
   let mozAfterPaint = waitForBrowserPaint();
 
