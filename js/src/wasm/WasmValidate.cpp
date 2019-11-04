@@ -488,7 +488,7 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
     switch (op.b0) {
       case uint16_t(Op::End): {
         LabelKind unusedKind;
-        if (!iter.readEnd(&unusedKind, &unusedType, &nothings)) {
+        if (!iter.readEnd(&unusedKind, &unusedType, &nothings, &nothings)) {
           return false;
         }
         iter.popEnd();

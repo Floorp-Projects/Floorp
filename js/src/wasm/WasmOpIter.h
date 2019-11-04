@@ -595,7 +595,7 @@ class MOZ_STACK_CLASS OpIter : private Policy {
   const ModuleEnvironment& env_;
 
   TypeAndValueStack valueStack_;
-  TypeAndValueStack thenParamStack_;
+  TypeAndValueStack elseParamStack_;
   ControlStack controlStack_;
 
 #ifdef DEBUG
@@ -724,9 +724,10 @@ class MOZ_STACK_CLASS OpIter : private Policy {
   MOZ_MUST_USE bool readLoop(ResultType* paramType);
   MOZ_MUST_USE bool readIf(ResultType* paramType, Value* condition);
   MOZ_MUST_USE bool readElse(ResultType* paramType, ResultType* resultType,
-                             ValueVector* thenValues);
+                             ValueVector* thenResults);
   MOZ_MUST_USE bool readEnd(LabelKind* kind, ResultType* type,
-                            ValueVector* values);
+                            ValueVector* results,
+                            ValueVector* resultsForEmptyElse);
   void popEnd();
   MOZ_MUST_USE bool readBr(uint32_t* relativeDepth, ResultType* type,
                            ValueVector* values);
@@ -1221,7 +1222,7 @@ inline void OpIter<Policy>::peekOp(OpBytes* op) {
 
 template <typename Policy>
 inline bool OpIter<Policy>::readFunctionStart(uint32_t funcIndex) {
-  MOZ_ASSERT(thenParamStack_.empty());
+  MOZ_ASSERT(elseParamStack_.empty());
   MOZ_ASSERT(valueStack_.empty());
   MOZ_ASSERT(controlStack_.empty());
   MOZ_ASSERT(op_.b0 == uint16_t(Op::Limit));
@@ -1238,7 +1239,7 @@ inline bool OpIter<Policy>::readFunctionEnd(const uint8_t* bodyEnd) {
   if (!controlStack_.empty()) {
     return fail("unbalanced function body control flow");
   }
-  MOZ_ASSERT(thenParamStack_.empty());
+  MOZ_ASSERT(elseParamStack_.empty());
 
 #ifdef DEBUG
   op_ = OpBytes(Op::Limit);
@@ -1307,13 +1308,13 @@ inline bool OpIter<Policy>::readIf(ResultType* paramType, Value* condition) {
 
   *paramType = type.params();
   size_t paramsLength = type.params().length();
-  return thenParamStack_.append(valueStack_.end() - paramsLength, paramsLength);
+  return elseParamStack_.append(valueStack_.end() - paramsLength, paramsLength);
 }
 
 template <typename Policy>
 inline bool OpIter<Policy>::readElse(ResultType* paramType,
                                      ResultType* resultType,
-                                     ValueVector* values) {
+                                     ValueVector* thenResults) {
   MOZ_ASSERT(Classify(op_) == OpKind::Else);
 
   Control& block = controlStack_.back();
@@ -1322,19 +1323,16 @@ inline bool OpIter<Policy>::readElse(ResultType* paramType,
   }
 
   *paramType = block.type().params();
-  if (!checkStackAtEndOfBlock(resultType, values)) {
+  if (!checkStackAtEndOfBlock(resultType, thenResults)) {
     return false;
   }
 
-  // Restore to the entry state of the then block. Since the then block may
-  // clobbered any value in the block's params, we must restore from a
-  // snapshot.
   valueStack_.shrinkTo(block.valueStackBase());
-  size_t thenParamsLength = block.type().params().length();
-  MOZ_ASSERT(thenParamStack_.length() >= thenParamsLength);
-  valueStack_.infallibleAppend(thenParamStack_.end() - thenParamsLength,
-                               thenParamsLength);
-  thenParamStack_.shrinkBy(thenParamsLength);
+
+  size_t nparams = block.type().params().length();
+  MOZ_ASSERT(elseParamStack_.length() >= nparams);
+  valueStack_.infallibleAppend(elseParamStack_.end() - nparams, nparams);
+  elseParamStack_.shrinkBy(nparams);
 
   block.switchToElse();
   return true;
@@ -1342,22 +1340,35 @@ inline bool OpIter<Policy>::readElse(ResultType* paramType,
 
 template <typename Policy>
 inline bool OpIter<Policy>::readEnd(LabelKind* kind, ResultType* type,
-                                    ValueVector* values) {
+                                    ValueVector* results,
+                                    ValueVector* resultsForEmptyElse) {
   MOZ_ASSERT(Classify(op_) == OpKind::End);
 
-  if (!checkStackAtEndOfBlock(type, values)) {
+  if (!checkStackAtEndOfBlock(type, results)) {
     return false;
   }
 
   Control& block = controlStack_.back();
 
-  // If an `if` block ends with `end` instead of `else`, then we must
-  // additionally validate that the then-block doesn't push anything.
   if (block.kind() == LabelKind::Then) {
-    if (block.type().params() != block.type().results()) {
+    ResultType params = block.type().params();
+    // If an `if` block ends with `end` instead of `else`, then the `else` block
+    // implicitly passes the `if` parameters as the `else` results.  In that
+    // case, assert that the `if`'s param type matches the result type.
+    if (params != block.type().results()) {
       return fail("if without else with a result value");
     }
-    thenParamStack_.shrinkBy(block.type().params().length());
+
+    size_t nparams = params.length();
+    MOZ_ASSERT(elseParamStack_.length() >= nparams);
+    if (!resultsForEmptyElse->resize(nparams)) {
+      return false;
+    }
+    const TypeAndValue* elseParams = elseParamStack_.end() - nparams;
+    for (size_t i = 0; i < nparams; i++) {
+      (*resultsForEmptyElse)[i] = elseParams[i].value();
+    }
+    elseParamStack_.shrinkBy(nparams);
   }
 
   *kind = block.kind();
