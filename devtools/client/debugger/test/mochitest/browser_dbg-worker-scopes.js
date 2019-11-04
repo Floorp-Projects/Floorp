@@ -33,7 +33,7 @@ add_task(async function() {
   const workerSource = findSource(dbg, "scopes-worker.js");
 
   await addBreakpoint(dbg, workerSource, 11);
-  await dbg.toolbox._target.waitForRequestsToSettle();
+  await dbg.toolbox.target.waitForRequestsToSettle();
   invokeInTab("startWorker");
   await waitForPaused(dbg, "scopes-worker.js");
   const onRemoved = waitForDispatch(dbg, "REMOVE_BREAKPOINT");
