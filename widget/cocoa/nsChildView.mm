@@ -615,6 +615,10 @@ void nsChildView::SetTransparencyMode(nsTransparencyMode aMode) {
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
+void nsChildView::SuppressAnimation(bool aSuppress) {
+  GetXULWindowWidget()->SuppressAnimation(aSuppress);
+}
+
 bool nsChildView::IsVisible() const {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 

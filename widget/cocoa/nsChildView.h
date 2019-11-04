@@ -442,6 +442,7 @@ class nsChildView final : public nsBaseWidget {
 
   virtual nsTransparencyMode GetTransparencyMode() override;
   virtual void SetTransparencyMode(nsTransparencyMode aMode) override;
+  virtual void SuppressAnimation(bool aSuppress) override;
 
   virtual nsresult SynthesizeNativeKeyEvent(int32_t aNativeKeyboardLayout, int32_t aNativeKeyCode,
                                             uint32_t aModifierFlags, const nsAString& aCharacters,
