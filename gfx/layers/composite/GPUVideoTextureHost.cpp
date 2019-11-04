@@ -37,7 +37,7 @@ TextureHost* GPUVideoTextureHost::EnsureWrappedTextureHost() {
   // one from RDD). We'll need to flag which one to use to lookup our
   // descriptor, or just try both.
   mWrappedTextureHost =
-      VideoBridgeParent::GetSingleton()->LookupTexture(mDescriptor.handle());
+      VideoBridgeParent::GetSingleton(mDescriptor.source())->LookupTexture(mDescriptor.handle());
   return mWrappedTextureHost;
 }
 
