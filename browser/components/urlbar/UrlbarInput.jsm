@@ -85,6 +85,10 @@ class UrlbarInput {
     if (this.megabar) {
       this.textbox.classList.add("megabar");
       this.textbox.parentNode.classList.add("megabar");
+      this.searchIcon = UrlbarPrefs.get("searchIcon");
+      if (this.searchIcon) {
+        this.textbox.classList.add("searchIcon");
+      }
     }
 
     this.controller = new UrlbarController({

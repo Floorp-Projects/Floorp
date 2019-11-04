@@ -130,7 +130,7 @@
   caret-color: transparent;
 }
 
-#urlbar.megabar > #urlbar-input-container > #urlbar-search-icon {
+#urlbar.searchIcon > #urlbar-input-container > #urlbar-search-icon {
   width: @urlbarSearchIconWidth@;
   background-image: url(chrome://browser/skin/search-glass.svg);
   background-repeat: no-repeat;
@@ -140,7 +140,7 @@
   fill-opacity: var(--toolbarbutton-icon-fill-opacity);
 }
 
-#urlbar.megabar > #urlbar-input-container[pageproxystate="invalid"] > #urlbar-search-icon {
+#urlbar.searchIcon > #urlbar-input-container[pageproxystate="invalid"] > #urlbar-search-icon {
   margin-inline-end: 6px;
 }
 
@@ -162,8 +162,8 @@
   inset: 0;
 }
 
-:root:not([chromehidden~="toolbar"]) #urlbar.megabar:not([breakout]) > #urlbar-background,
-:root:not([chromehidden~="toolbar"]) #urlbar.megabar:not([breakout-extend]) > #urlbar-background {
+:root:not([chromehidden~="toolbar"]) #urlbar.searchIcon:not([breakout]) > #urlbar-background,
+:root:not([chromehidden~="toolbar"]) #urlbar.searchIcon:not([breakout-extend]) > #urlbar-background {
   inset-inline-start: @urlbarSearchIconWidth@;
 }
 
@@ -220,7 +220,7 @@
   padding-inline: calc(@urlbarMarginInline@ + @urlbarBreakoutExtend@);
 }
 
-#urlbar[breakout][breakout-extend] > #urlbar-input-container > #urlbar-search-icon {
+#urlbar.searchIcon[breakout][breakout-extend] > #urlbar-input-container > #urlbar-search-icon {
   fill: currentColor;
   fill-opacity: .6;
 }
