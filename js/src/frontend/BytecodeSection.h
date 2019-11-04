@@ -19,6 +19,7 @@
 #include "frontend/BytecodeOffset.h"   // BytecodeOffset
 #include "frontend/JumpList.h"         // JumpTarget
 #include "frontend/NameCollections.h"  // AtomIndexMap, PooledMapPtr
+#include "frontend/ObjLiteral.h"       // ObjLiteralCreationData
 #include "frontend/ParseNode.h"        // BigIntLiteral
 #include "frontend/SourceNotes.h"      // jssrcnote
 #include "gc/Barrier.h"                // GCPtrObject, GCPtrScope, GCPtrValue
@@ -43,7 +44,8 @@ class BigIntLiteral;
 class ObjectBox;
 
 struct MOZ_STACK_CLASS GCThingList {
-  using ListType = mozilla::Variant<StackGCCellPtr, BigIntCreationData>;
+  using ListType = mozilla::Variant<StackGCCellPtr, BigIntCreationData,
+                                    ObjLiteralCreationData>;
   JS::RootedVector<ListType> vector;
 
   // Last emitted object.
@@ -72,6 +74,10 @@ struct MOZ_STACK_CLASS GCThingList {
     }
     return vector.append(
         mozilla::AsVariant(StackGCCellPtr(JS::GCCellPtr(literal->value()))));
+  }
+  MOZ_MUST_USE bool append(ObjLiteralCreationData objlit, uint32_t* index) {
+    *index = vector.length();
+    return vector.append(mozilla::AsVariant(std::move(objlit)));
   }
   MOZ_MUST_USE bool append(ObjectBox* obj, uint32_t* index);
 
