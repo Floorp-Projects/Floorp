@@ -488,11 +488,16 @@ bool nsToolkitProfileService::IsProfileForCurrentInstall(
 
 #ifdef XP_WIN
 #  if defined(MOZ_THUNDERBIRD) || defined(MOZ_SUITE)
-  // Convert a 64-bit install path to what would have been the 32-bit install
-  // path to allow users to migrate their profiles from one to the other.
   mozilla::PathString lastGreDirPath, currentGreDirPath;
   lastGreDirPath = lastGreDir->NativePath();
   currentGreDirPath = currentGreDir->NativePath();
+  if (lastGreDirPath.Equals(currentGreDirPath,
+                            nsCaseInsensitiveStringComparator())) {
+    return true;
+  }
+
+  // Convert a 64-bit install path to what would have been the 32-bit install
+  // path to allow users to migrate their profiles from one to the other.
   PWSTR pathX86 = nullptr;
   HRESULT hres =
       SHGetKnownFolderPath(FOLDERID_ProgramFilesX86, 0, nullptr, &pathX86);
