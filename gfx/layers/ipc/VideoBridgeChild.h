@@ -67,6 +67,9 @@ class VideoBridgeChild final : public PVideoBridgeChild,
 
   static void Open(Endpoint<PVideoBridgeChild>&& aEndpoint);
 
+ protected:
+  void HandleFatalError(const char* aMsg) const override;
+
  private:
   VideoBridgeChild();
   virtual ~VideoBridgeChild();
