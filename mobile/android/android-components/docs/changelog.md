@@ -20,19 +20,18 @@ permalink: /changelog/
   * Added support for multiple, continuous downloads.
   * Added size of the file to the `DownloadNotification`.
   * Added open file funcitonality to the `DownloadNotification`.
-      * Note: you must add a `FileProvider` to your manifest as well as `file_paths.xml`. See SampleBrowser for an example.
-      * To open .apk files, you must still add the permisison `android.permission.INSTALL_PACKAGES` to your manifest.
+    * Note: you must add a `FileProvider` to your manifest as well as `file_paths.xml`. See SampleBrowser for an example.
+    * To open .apk files, you must still add the permisison `android.permission.INSTALL_PACKAGES` to your manifest.
   * Improved visuals of `SimpleDownloadDialogFragment` to better match `SitePermissionsDialogFragment`.
-      * `SimpleDownloadDialogFragment` can similarly be themed by using `PromptsStyling` properties.
+    * `SimpleDownloadDialogFragment` can similarly be themed by using `PromptsStyling` properties.
 
 * **feature-webnotifications**
   * Adds feature implementation for configuring and displaying web notifications to the user
-  *
-  * ```Kotlin
-  * WebNotificationFeature(
-  *     applicationContext, engine, icons, R.mipmap.ic_launcher, BrowserActivity::class.java
-  * )
-  * ```
+  ```Kotlin
+  WebNotificationFeature(
+      applicationContext, engine, icons, R.mipmap.ic_launcher, BrowserActivity::class.java
+  )
+  ```
 
 * **service-glean**
    * Bumped the Glean SDK version to 19.1.0. This fixes a startup crash on Android SDK 22 devices due to missing `stderr`.
