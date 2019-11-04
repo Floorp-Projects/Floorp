@@ -53,6 +53,7 @@ class HistoryTest {
     }
 
     @Test
+    @Ignore("Temp disable flakey test - see: https://github.com/mozilla-mobile/fenix/issues/5462")
     fun noHistoryItemsInCacheTest() {
         homeScreen {
         }.openThreeDotMenu {
@@ -64,6 +65,7 @@ class HistoryTest {
     }
 
     @Test
+    @Ignore("Temp disable flakey test - see: https://github.com/mozilla-mobile/fenix/issues/5462")
     fun visitedUrlHistoryTest() {
         val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
@@ -80,6 +82,7 @@ class HistoryTest {
     }
 
     @Test
+    @Ignore("Temp disable flakey test - see: https://github.com/mozilla-mobile/fenix/issues/5462")
     fun deleteHistoryItemTest() {
         val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
@@ -95,6 +98,7 @@ class HistoryTest {
     }
 
     @Test
+    @Ignore("Temp disable flakey test - see: https://github.com/mozilla-mobile/fenix/issues/5462")
     fun deleteAllHistoryTest() {
         val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
@@ -111,6 +115,7 @@ class HistoryTest {
     }
 
     @Test
+    @Ignore("Temp disable flakey test - see: https://github.com/mozilla-mobile/fenix/issues/5462")
     fun multiSelectionToolbarItemsTest() {
         val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
@@ -133,6 +138,7 @@ class HistoryTest {
     }
 
     @Test
+    @Ignore("Temp disable flakey test - see: https://github.com/mozilla-mobile/fenix/issues/5462")
     fun openHistoryInNewTabTest() {
         val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
@@ -154,6 +160,7 @@ class HistoryTest {
     }
 
     @Test
+    @Ignore("Temp disable flakey test - see: https://github.com/mozilla-mobile/fenix/issues/5462")
     fun openHistoryInPrivateTabTest() {
         val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
