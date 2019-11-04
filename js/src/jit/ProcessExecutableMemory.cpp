@@ -322,6 +322,12 @@ static void DecommitPages(void* addr, size_t bytes) {
 #  endif
 
 static void* ComputeRandomAllocationAddress() {
+#ifdef __OpenBSD__
+  // OpenBSD already has random mmap and the idea that all x64 cpus
+  // have 48-bit address space is not correct. Returning nullptr
+  // allows OpenBSD do to the right thing.
+  return nullptr;
+#else
   uint64_t rand = js::GenerateRandomSeed();
 
 #  ifdef HAVE_64BIT_BUILD
@@ -341,6 +347,7 @@ static void* ComputeRandomAllocationAddress() {
   // Ensure page alignment.
   uintptr_t mask = ~uintptr_t(gc::SystemPageSize() - 1);
   return (void*)uintptr_t(rand & mask);
+#endif
 }
 
 static void* ReserveProcessExecutableMemory(size_t bytes) {
