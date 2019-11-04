@@ -76,6 +76,26 @@ class FrameTimeline extends Component<Props, State> {
     displayedFrame: {},
   };
 
+  componentDidUpdate(prevProps: Props, prevState: State) {
+    if (!document.body) {
+      return;
+    }
+
+    // To please Flow.
+    const bodyClassList = document.body.classList;
+
+    if (this.state.scrubbing && !prevState.scrubbing) {
+      document.addEventListener("mousemove", this.onMouseMove);
+      document.addEventListener("mouseup", this.onMouseUp);
+      bodyClassList.add("scrubbing");
+    }
+    if (!this.state.scrubbing && prevState.scrubbing) {
+      document.removeEventListener("mousemove", this.onMouseMove);
+      document.removeEventListener("mouseup", this.onMouseUp);
+      bodyClassList.remove("scrubbing");
+    }
+  }
+
   getProgress(clientX: number) {
     const { width, left } = getBoundingClientRect(this._timeline);
     const progress = ((clientX - left) / width) * 100;
@@ -124,13 +144,8 @@ class FrameTimeline extends Component<Props, State> {
     this.setState({ scrubbing: true, percentage: progress });
   };
 
-  onMouseUp = (event: SyntheticMouseEvent<>) => {
+  onMouseUp = (event: MouseEvent) => {
     const { seekToPosition, selectedLocation } = this.props;
-    const { scrubbing } = this.state;
-
-    if (!scrubbing) {
-      return;
-    }
 
     const progress = this.getProgress(event.clientX);
     const position = this.getPosition(progress);
@@ -145,19 +160,8 @@ class FrameTimeline extends Component<Props, State> {
     }
   };
 
-  onMouseMove = (event: SyntheticMouseEvent<>) => {
-    const { scrubbing } = this.state;
-
-    if (!scrubbing) {
-      return;
-    }
-
-    const { width, left } = getBoundingClientRect(this._timeline);
-    const percentage = ((event.clientX - left) / width) * 100;
-
-    if (percentage < 0 || percentage > 100) {
-      return;
-    }
+  onMouseMove = (event: MouseEvent) => {
+    const percentage = this.getProgress(event.clientX);
 
     this.displayPreview(percentage);
     this.setState({ percentage });
@@ -260,11 +264,7 @@ class FrameTimeline extends Component<Props, State> {
     }
 
     return (
-      <div
-        onMouseUp={this.onMouseUp}
-        onMouseMove={this.onMouseMove}
-        className={classnames("frame-timeline-container", { scrubbing })}
-      >
+      <div className={classnames("frame-timeline-container", { scrubbing })}>
         {this.renderTimeline()}
       </div>
     );
