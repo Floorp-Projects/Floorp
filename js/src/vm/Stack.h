@@ -432,11 +432,11 @@ class InterpreterFrame {
 
   bool isGlobalFrame() const { return script_->isGlobalCode(); }
 
-  bool isModuleFrame() const { return script_->module(); }
+  bool isModuleFrame() const { return script_->isModule(); }
 
   bool isEvalFrame() const { return script_->isForEval(); }
 
-  bool isFunctionFrame() const { return script_->function(); }
+  bool isFunctionFrame() const { return script_->isFunction(); }
 
   inline bool isStrictEvalFrame() const {
     return isEvalFrame() && script()->strict();

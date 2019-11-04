@@ -139,9 +139,9 @@ class RematerializedFrame {
     return *argsObj_;
   }
 
-  bool isFunctionFrame() const { return !!script_->function(); }
+  bool isFunctionFrame() const { return script_->isFunction(); }
   bool isGlobalFrame() const { return script_->isGlobalCode(); }
-  bool isModuleFrame() const { return script_->module(); }
+  bool isModuleFrame() const { return script_->isModule(); }
 
   JSScript* script() const { return script_; }
   JSFunction* callee() const {

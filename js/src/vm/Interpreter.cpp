@@ -820,7 +820,7 @@ bool js::Execute(JSContext* cx, HandleScript script, JSObject& envChainArg,
   RootedObject envChain(cx, &envChainArg);
   MOZ_ASSERT(!IsWindowProxy(envChain));
 
-  if (script->module()) {
+  if (script->isModule()) {
     MOZ_RELEASE_ASSERT(
         envChain == script->module()->environment(),
         "Module scripts can only be executed in the module's environment");

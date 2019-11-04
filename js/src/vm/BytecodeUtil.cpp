@@ -2191,7 +2191,7 @@ JSAtom* ExpressionDecompiler::loadAtom(jsbytecode* pc) {
 }
 
 JSAtom* ExpressionDecompiler::getArg(unsigned slot) {
-  MOZ_ASSERT(script->function());
+  MOZ_ASSERT(script->isFunction());
   MOZ_ASSERT(slot < script->numArgs());
 
   for (PositionalFormalParameterIter fi(script); fi; fi++) {

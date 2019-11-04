@@ -2089,7 +2089,7 @@ JSObject* GlobalHelperThreadState::finishModuleParseTask(
     return nullptr;
   }
 
-  MOZ_ASSERT(script->module());
+  MOZ_ASSERT(script->isModule());
 
   RootedModuleObject module(cx, script->module());
   module->fixEnvironmentsAfterRealmMerge();

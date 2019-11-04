@@ -1550,7 +1550,8 @@ class BaseScript : public gc::TenuredCell {
     // Whether the Parser declared 'arguments'.
     ShouldDeclareArguments = 1 << 25,
 
-    // (1 << 26) is unused.
+    // Script is for function.
+    IsFunction = 1 << 26,
 
     // Whether this script contains a direct eval statement.
     HasDirectEval = 1 << 27,
@@ -1769,6 +1770,7 @@ setterLevel:                                                                  \
                                NeedsFunctionEnvironmentObjects)
   IMMUTABLE_FLAG_GETTER_SETTER_PUBLIC(shouldDeclareArguments,
                                       ShouldDeclareArguments)
+  IMMUTABLE_FLAG_GETTER(isFunction, IsFunction)
   IMMUTABLE_FLAG_GETTER_SETTER_PUBLIC(hasDirectEval, HasDirectEval)
 
   MUTABLE_FLAG_GETTER_SETTER(warnedAboutUndefinedProp, WarnedAboutUndefinedProp)
@@ -2754,16 +2756,12 @@ class JSScript : public js::BaseScript {
     return hasFlag(ImmutableFlags::IsModule);
   }
   js::ModuleObject* module() const {
-    if (isModule()) {
+    if (bodyScope()->is<js::ModuleScope>()) {
       return bodyScope()->as<js::ModuleScope>().module();
     }
     return nullptr;
   }
 
-  bool isGlobalOrEvalCode() const {
-    return bodyScope()->is<js::GlobalScope>() ||
-           bodyScope()->is<js::EvalScope>();
-  }
   bool isGlobalCode() const { return bodyScope()->is<js::GlobalScope>(); }
 
   // Returns true if the script may read formal arguments on the stack
@@ -2788,9 +2786,9 @@ class JSScript : public js::BaseScript {
  public:
   /* Return whether this script was compiled for 'eval' */
   bool isForEval() const {
-    bool forEval = hasFlag(ImmutableFlags::IsForEval);
-    MOZ_ASSERT_IF(forEval, bodyScope()->is<js::EvalScope>());
-    return forEval;
+    MOZ_ASSERT(hasFlag(ImmutableFlags::IsForEval) ==
+               bodyScope()->is<js::EvalScope>());
+    return hasFlag(ImmutableFlags::IsForEval);
   }
 
   /* Return whether this is a 'direct eval' script in a function scope. */
@@ -2811,7 +2809,7 @@ class JSScript : public js::BaseScript {
    * If this script has a function associated to it, then it is not the
    * top-level of a file.
    */
-  bool isTopLevel() { return code() && !function(); }
+  bool isTopLevel() { return code() && !isFunction(); }
 
   /* Ensure the script has a JitScript. */
   inline bool ensureHasJitScript(JSContext* cx, js::jit::AutoKeepJitScripts&);

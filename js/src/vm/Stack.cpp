@@ -948,7 +948,7 @@ bool FrameIter::isFunctionFrame() const {
         if (jsJitFrame().isBaselineJS()) {
           return jsJitFrame().baselineFrame()->isFunctionFrame();
         }
-        return script()->function();
+        return script()->isFunction();
       }
       MOZ_ASSERT(isWasm());
       return false;
