@@ -124,18 +124,19 @@ nsresult DateTimeInputTypeBase::GetRangeOverflowMessage(nsAString& aMessage) {
   nsAutoString maxStr;
   mInputElement->GetAttr(kNameSpaceID_None, nsGkAtoms::max, maxStr);
 
-  return nsContentUtils::FormatLocalizedString(
+  return nsContentUtils::FormatMaybeLocalizedString(
       aMessage, nsContentUtils::eDOM_PROPERTIES,
-      "FormValidationDateTimeRangeOverflow", maxStr);
+      "FormValidationDateTimeRangeOverflow", mInputElement->OwnerDoc(), maxStr);
 }
 
 nsresult DateTimeInputTypeBase::GetRangeUnderflowMessage(nsAString& aMessage) {
   nsAutoString minStr;
   mInputElement->GetAttr(kNameSpaceID_None, nsGkAtoms::min, minStr);
 
-  return nsContentUtils::FormatLocalizedString(
+  return nsContentUtils::FormatMaybeLocalizedString(
       aMessage, nsContentUtils::eDOM_PROPERTIES,
-      "FormValidationDateTimeRangeUnderflow", minStr);
+      "FormValidationDateTimeRangeUnderflow", mInputElement->OwnerDoc(),
+      minStr);
 }
 
 nsresult DateTimeInputTypeBase::MinMaxStepAttrChanged() {
@@ -179,8 +180,9 @@ nsresult DateInputType::GetBadInputMessage(nsAString& aMessage) {
     return NS_ERROR_UNEXPECTED;
   }
 
-  return nsContentUtils::GetLocalizedString(
-      nsContentUtils::eDOM_PROPERTIES, "FormValidationInvalidDate", aMessage);
+  return nsContentUtils::GetMaybeLocalizedString(
+      nsContentUtils::eDOM_PROPERTIES, "FormValidationInvalidDate",
+      mInputElement->OwnerDoc(), aMessage);
 }
 
 bool DateInputType::ConvertStringToNumber(
