@@ -147,6 +147,8 @@ def create_parser(mach_interface=False):
                 help="Browser-build obj_path (received when running in production)")
     add_arg('--noinstall', dest="noinstall", default=False, action="store_true",
             help="Flag which indicates if Raptor should not offer to install Android APK.")
+    add_arg('--installerpath', dest="installerpath", default=None, type=str,
+            help="Location where Android browser APK was extracted to before installation.")
 
     # Arguments for invoking browsertime.
     add_arg('--browsertime', dest='browsertime', default=False, action="store_true",
