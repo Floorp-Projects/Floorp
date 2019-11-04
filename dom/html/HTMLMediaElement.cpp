@@ -3780,7 +3780,7 @@ void HTMLMediaElement::UpdateHadAudibleAutoplayState() {
 
 already_AddRefed<Promise> HTMLMediaElement::Play(ErrorResult& aRv) {
   LOG(LogLevel::Debug,
-      ("%p Play() called by JS readyState=%d", this, mReadyState));
+      ("%p Play() called by JS readyState=%d", this, mReadyState.Ref()));
 
   // 4.8.12.8
   // When the play() method on a media element is invoked, the user agent must
