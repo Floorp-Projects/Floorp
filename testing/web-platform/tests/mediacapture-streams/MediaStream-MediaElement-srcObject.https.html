@@ -231,6 +231,22 @@ promise_test(async t => {
     "currentTime advanced after stopping");
 }, "Tests that a media element with an assigned MediaStream reports the currentTime attribute as expected");
 
+promise_test(async t => {
+  const stream = await navigator.mediaDevices.getUserMedia({video: true});
+  t.add_cleanup(() => {
+    vid.srcObject = null;
+    stream.getTracks().forEach(track => track.stop());
+  });
+  vid.srcObject = stream;
+
+  await new Promise(r => t.step_timeout(r, 500));
+
+  vid.play();
+  await new Promise(r => vid.ontimeupdate = r);
+  assert_between_exclusive(vid.currentTime, 0, 0.5,
+    "currentTime starts at 0 and has progressed at first timeupdate");
+}, "Tests that a media element with an assigned MediaStream starts its timeline at 0 regardless of when the MediaStream was created");
+
 
 promise_test(async t => {
   const stream = await navigator.mediaDevices.getUserMedia({video: true});
