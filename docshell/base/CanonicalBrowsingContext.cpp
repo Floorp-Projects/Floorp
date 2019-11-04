@@ -198,6 +198,39 @@ void CanonicalBrowsingContext::UpdateMediaAction(MediaControlActions aAction) {
   });
 }
 
+void CanonicalBrowsingContext::LoadURI(const nsAString& aURI,
+                                       const LoadURIOptions& aOptions,
+                                       ErrorResult& aError) {
+  nsCOMPtr<nsIURIFixup> uriFixup = components::URIFixup::Service();
+
+  nsCOMPtr<nsISupports> consumer = GetDocShell();
+  if (!consumer) {
+    consumer = GetEmbedderElement();
+  }
+  if (!consumer) {
+    aError.Throw(NS_ERROR_UNEXPECTED);
+    return;
+  }
+
+  RefPtr<nsDocShellLoadState> loadState;
+  nsresult rv = nsDocShellLoadState::CreateFromLoadURIOptions(
+      consumer, uriFixup, aURI, aOptions, getter_AddRefs(loadState));
+
+  if (rv == NS_ERROR_MALFORMED_URI) {
+    DisplayLoadError(aURI);
+    return;
+  }
+
+  if (NS_FAILED(rv)) {
+    aError.Throw(rv);
+    return;
+  }
+
+  // NOTE: It's safe to call `LoadURI` without an accessor from the parent
+  // process. The load will be performed with ambient "chrome" authority.
+  LoadURI(nullptr, loadState, true);
+}
+
 namespace {
 
 using NewOrUsedPromise = MozPromise<RefPtr<ContentParent>, nsresult, false>;
