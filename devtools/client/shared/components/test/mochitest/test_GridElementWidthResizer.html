@@ -75,6 +75,9 @@
     <pre id="test">
 <script src="head.js" type="application/javascript"></script>
 <script type="application/javascript">
+
+'use strict'
+
 const FUDGE_FACTOR = .5;
 function aboutEq(a, b) {
   dumpn(`Checking ${a} ~= ${b}`);
@@ -93,7 +96,7 @@ window.onload = async function () {
     const resizedA = [];
     const resizedD = [];
 
-    const scene = ReactDOM.render([
+    ReactDOM.render([
       dom.header({}, "header"),
       dom.aside({className: "a"}, "A"),
       GridElementWidthResizer({
