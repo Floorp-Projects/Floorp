@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.feature.prompts
+package mozilla.components.feature.prompts.dialog
 
 import android.view.LayoutInflater
 import android.view.View
@@ -11,6 +11,7 @@ import android.widget.CheckedTextView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.concept.engine.prompt.Choice
+import mozilla.components.feature.prompts.R
 
 /**
  * RecyclerView adapter for displaying choice items.

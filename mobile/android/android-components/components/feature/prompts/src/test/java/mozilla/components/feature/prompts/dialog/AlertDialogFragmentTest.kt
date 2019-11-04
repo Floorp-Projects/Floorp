@@ -2,13 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.feature.prompts
+package mozilla.components.feature.prompts.dialog
 
 import android.content.DialogInterface.BUTTON_POSITIVE
 import android.widget.CheckBox
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import mozilla.components.feature.prompts.PromptFeature
 import mozilla.components.feature.prompts.R.id
 import mozilla.components.support.test.mock
 import mozilla.ext.appCompatContext

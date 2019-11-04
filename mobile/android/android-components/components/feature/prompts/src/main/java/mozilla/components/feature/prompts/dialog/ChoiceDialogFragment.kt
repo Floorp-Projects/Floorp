@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.feature.prompts
+package mozilla.components.feature.prompts.dialog
 
 import android.annotation.SuppressLint
 import android.app.Dialog
@@ -16,6 +16,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.concept.engine.prompt.Choice
+import mozilla.components.feature.prompts.R
 
 private const val KEY_CHOICES = "KEY_CHOICES"
 private const val KEY_DIALOG_TYPE = "KEY_DIALOG_TYPE"

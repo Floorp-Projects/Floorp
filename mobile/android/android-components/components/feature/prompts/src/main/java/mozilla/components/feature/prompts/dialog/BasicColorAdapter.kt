@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.feature.prompts
+package mozilla.components.feature.prompts.dialog
 
 import android.graphics.BlendMode
 import android.graphics.BlendModeColorFilter
@@ -23,6 +23,7 @@ import androidx.annotation.VisibleForTesting
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import mozilla.components.feature.prompts.R
 import mozilla.components.support.utils.ColorUtils
 
 /**

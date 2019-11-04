@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.feature.prompts
+package mozilla.components.feature.prompts.dialog
 
 import android.annotation.SuppressLint
 import android.app.Dialog
@@ -11,29 +11,20 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.widget.CheckBox
 import androidx.appcompat.app.AlertDialog
+import mozilla.components.feature.prompts.R
 
 private const val KEY_MANY_ALERTS = "KEY_MANY_ALERTS"
 private const val KEY_USER_CHECK_BOX = "KEY_USER_CHECK_BOX"
-private const val KEY_POSITIVE_BUTTON_TITLE = "KEY_POSITIVE_BUTTON_TITLE"
-private const val KEY_NEGATIVE_BUTTON_TITLE = "KEY_NEGATIVE_BUTTON_TITLE"
-private const val KEY_NEUTRAL_BUTTON_TITLE = "KEY_NEUTRAL_BUTTON_TITLE"
 
 /**
- * [android.support.v4.app.DialogFragment] implementation to display a confirm dialog,
- *  it can have up to three buttons, they could be positive, negative or neutral.
+ * [android.support.v4.app.DialogFragment] implementation to display web Alerts with native dialogs.
  */
-internal class MultiButtonDialogFragment : PromptDialogFragment() {
+internal class AlertDialogFragment : PromptDialogFragment() {
 
     /**
      * Tells if a checkbox should be shown for preventing this [sessionId] from showing more dialogs.
      */
     internal val hasShownManyDialogs: Boolean by lazy { safeArguments.getBoolean(KEY_MANY_ALERTS) }
-
-    internal val positiveButtonTitle: String? by lazy { safeArguments.getString(KEY_POSITIVE_BUTTON_TITLE) }
-
-    internal val negativeButtonTitle: String? by lazy { safeArguments.getString(KEY_NEGATIVE_BUTTON_TITLE) }
-
-    internal val neutralButtonTitle: String? by lazy { safeArguments.getString(KEY_NEUTRAL_BUTTON_TITLE) }
 
     /**
      * Stores the user's decision from the checkbox
@@ -50,7 +41,9 @@ internal class MultiButtonDialogFragment : PromptDialogFragment() {
             .setTitle(title)
             .setCancelable(true)
             .setMessage(message)
-            .setupButtons()
+            .setPositiveButton(android.R.string.ok) { _, _ ->
+                onPositiveClickAction()
+            }
         return (if (hasShownManyDialogs) addCheckbox(builder) else builder)
             .create()
     }
@@ -58,6 +51,14 @@ internal class MultiButtonDialogFragment : PromptDialogFragment() {
     override fun onCancel(dialog: DialogInterface) {
         super.onCancel(dialog)
         feature?.onCancel(sessionId)
+    }
+
+    private fun onPositiveClickAction() {
+        if (!userSelectionNoMoreDialogs) {
+            feature?.onCancel(sessionId)
+        } else {
+            feature?.onConfirm(sessionId, userSelectionNoMoreDialogs)
+        }
     }
 
     @SuppressLint("InflateParams")
@@ -73,38 +74,24 @@ internal class MultiButtonDialogFragment : PromptDialogFragment() {
         return builder
     }
 
-    private fun AlertDialog.Builder.setupButtons(): AlertDialog.Builder {
-        if (!positiveButtonTitle.isNullOrBlank()) {
-            setPositiveButton(positiveButtonTitle) { _, _ ->
-                feature?.onConfirm(sessionId, userSelectionNoMoreDialogs to ButtonType.POSITIVE)
-            }
-        }
-        if (!negativeButtonTitle.isNullOrBlank()) {
-            setNegativeButton(negativeButtonTitle) { _, _ ->
-                feature?.onConfirm(sessionId, userSelectionNoMoreDialogs to ButtonType.NEGATIVE)
-            }
-        }
-        if (!neutralButtonTitle.isNullOrBlank()) {
-            setNeutralButton(neutralButtonTitle) { _, _ ->
-                feature?.onConfirm(sessionId, userSelectionNoMoreDialogs to ButtonType.NEUTRAL)
-            }
-        }
-        return this
-    }
-
     companion object {
-        @Suppress("LongParameterList")
+        /**
+         * A builder method for creating a [AlertDialogFragment]
+         * @param sessionId to create the dialog.
+         * @param title the title of the dialog.
+         * @param message the message of the dialog.
+         * @param hasShownManyDialogs tells if this [sessionId] has shown many dialogs
+         * in a short period of time, if is true a checkbox will be part of the dialog, for the user
+         * to choose if wants to prevent this [sessionId] continuing showing dialogs.
+         */
         fun newInstance(
             sessionId: String,
             title: String,
             message: String,
-            hasShownManyDialogs: Boolean,
-            positiveButton: String = "",
-            negativeButton: String = "",
-            neutralButton: String = ""
-        ): MultiButtonDialogFragment {
+            hasShownManyDialogs: Boolean
+        ): AlertDialogFragment {
 
-            val fragment = MultiButtonDialogFragment()
+            val fragment = AlertDialogFragment()
             val arguments = fragment.arguments ?: Bundle()
 
             with(arguments) {
@@ -112,18 +99,10 @@ internal class MultiButtonDialogFragment : PromptDialogFragment() {
                 putString(KEY_TITLE, title)
                 putString(KEY_MESSAGE, message)
                 putBoolean(KEY_MANY_ALERTS, hasShownManyDialogs)
-                putString(KEY_POSITIVE_BUTTON_TITLE, positiveButton)
-                putString(KEY_NEGATIVE_BUTTON_TITLE, negativeButton)
-                putString(KEY_NEUTRAL_BUTTON_TITLE, neutralButton)
             }
+
             fragment.arguments = arguments
             return fragment
         }
-    }
-
-    enum class ButtonType {
-        POSITIVE,
-        NEGATIVE,
-        NEUTRAL
     }
 }

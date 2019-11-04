@@ -32,9 +32,21 @@ import mozilla.components.concept.engine.prompt.PromptRequest.Share
 import mozilla.components.concept.engine.prompt.PromptRequest.SingleChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.TextPrompt
 import mozilla.components.concept.engine.prompt.PromptRequest.TimeSelection
-import mozilla.components.feature.prompts.ChoiceDialogFragment.Companion.MENU_CHOICE_DIALOG_TYPE
-import mozilla.components.feature.prompts.ChoiceDialogFragment.Companion.MULTIPLE_CHOICE_DIALOG_TYPE
-import mozilla.components.feature.prompts.ChoiceDialogFragment.Companion.SINGLE_CHOICE_DIALOG_TYPE
+import mozilla.components.feature.prompts.dialog.AlertDialogFragment
+import mozilla.components.feature.prompts.dialog.AuthenticationDialogFragment
+import mozilla.components.feature.prompts.dialog.ChoiceDialogFragment
+import mozilla.components.feature.prompts.dialog.ChoiceDialogFragment.Companion.MENU_CHOICE_DIALOG_TYPE
+import mozilla.components.feature.prompts.dialog.ChoiceDialogFragment.Companion.MULTIPLE_CHOICE_DIALOG_TYPE
+import mozilla.components.feature.prompts.dialog.ChoiceDialogFragment.Companion.SINGLE_CHOICE_DIALOG_TYPE
+import mozilla.components.feature.prompts.dialog.ColorPickerDialogFragment
+import mozilla.components.feature.prompts.dialog.ConfirmDialogFragment
+import mozilla.components.feature.prompts.dialog.MultiButtonDialogFragment
+import mozilla.components.feature.prompts.dialog.PromptAbuserDetector
+import mozilla.components.feature.prompts.dialog.PromptDialogFragment
+import mozilla.components.feature.prompts.dialog.Prompter
+import mozilla.components.feature.prompts.dialog.TextPromptDialogFragment
+import mozilla.components.feature.prompts.dialog.TimePickerDialogFragment
+import mozilla.components.feature.prompts.file.FilePicker
 import mozilla.components.feature.prompts.share.DefaultShareDelegate
 import mozilla.components.feature.prompts.share.ShareDelegate
 import mozilla.components.lib.state.ext.flowScoped
@@ -76,10 +88,10 @@ internal const val FRAGMENT_TAG = "mozac_feature_prompt_dialog"
  * Once the request is completed, [onPermissionsResult] needs to be invoked.
  */
 @Suppress("TooManyFunctions", "LargeClass")
-class PromptFeature internal constructor(
+class PromptFeature private constructor(
     private val container: PromptContainer,
     private val store: BrowserStore,
-    private var customTabId: String? = null,
+    private var customTabId: String?,
     private val fragmentManager: FragmentManager,
     private val shareDelegate: ShareDelegate,
     onNeedToRequestPermissions: OnNeedToRequestPermissions

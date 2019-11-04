@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.feature.prompts
+package mozilla.components.feature.prompts.dialog
 
 import android.content.DialogInterface.BUTTON_NEGATIVE
 import android.content.DialogInterface.BUTTON_POSITIVE
@@ -14,19 +14,20 @@ import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.concept.engine.prompt.Choice
-import mozilla.components.feature.prompts.ChoiceAdapter.Companion.TYPE_GROUP
-import mozilla.components.feature.prompts.ChoiceAdapter.Companion.TYPE_MENU
-import mozilla.components.feature.prompts.ChoiceAdapter.Companion.TYPE_MENU_SEPARATOR
-import mozilla.components.feature.prompts.ChoiceAdapter.Companion.TYPE_MULTIPLE
-import mozilla.components.feature.prompts.ChoiceAdapter.Companion.TYPE_SINGLE
-import mozilla.components.feature.prompts.ChoiceAdapter.GroupViewHolder
-import mozilla.components.feature.prompts.ChoiceAdapter.MenuViewHolder
-import mozilla.components.feature.prompts.ChoiceAdapter.MultipleViewHolder
-import mozilla.components.feature.prompts.ChoiceAdapter.SingleViewHolder
-import mozilla.components.feature.prompts.ChoiceDialogFragment.Companion.MENU_CHOICE_DIALOG_TYPE
-import mozilla.components.feature.prompts.ChoiceDialogFragment.Companion.MULTIPLE_CHOICE_DIALOG_TYPE
-import mozilla.components.feature.prompts.ChoiceDialogFragment.Companion.SINGLE_CHOICE_DIALOG_TYPE
-import mozilla.components.feature.prompts.ChoiceDialogFragment.Companion.newInstance
+import mozilla.components.feature.prompts.R
+import mozilla.components.feature.prompts.dialog.ChoiceAdapter.Companion.TYPE_GROUP
+import mozilla.components.feature.prompts.dialog.ChoiceAdapter.Companion.TYPE_MENU
+import mozilla.components.feature.prompts.dialog.ChoiceAdapter.Companion.TYPE_MENU_SEPARATOR
+import mozilla.components.feature.prompts.dialog.ChoiceAdapter.Companion.TYPE_MULTIPLE
+import mozilla.components.feature.prompts.dialog.ChoiceAdapter.Companion.TYPE_SINGLE
+import mozilla.components.feature.prompts.dialog.ChoiceAdapter.GroupViewHolder
+import mozilla.components.feature.prompts.dialog.ChoiceAdapter.MenuViewHolder
+import mozilla.components.feature.prompts.dialog.ChoiceAdapter.MultipleViewHolder
+import mozilla.components.feature.prompts.dialog.ChoiceAdapter.SingleViewHolder
+import mozilla.components.feature.prompts.dialog.ChoiceDialogFragment.Companion.MENU_CHOICE_DIALOG_TYPE
+import mozilla.components.feature.prompts.dialog.ChoiceDialogFragment.Companion.MULTIPLE_CHOICE_DIALOG_TYPE
+import mozilla.components.feature.prompts.dialog.ChoiceDialogFragment.Companion.SINGLE_CHOICE_DIALOG_TYPE
+import mozilla.components.feature.prompts.dialog.ChoiceDialogFragment.Companion.newInstance
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.ext.appCompatContext
 import org.junit.Assert.assertEquals
