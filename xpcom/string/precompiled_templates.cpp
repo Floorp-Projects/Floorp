@@ -80,11 +80,17 @@ template int32_t nsTString<char16_t>::RFind(const char_type*, int32_t,
 
 template int32_t nsTString<char16_t>::FindCharInSet(const char*, int32_t) const;
 
-template int32_t nsTString<char>::Compare(const char_type*, bool,
-                                          int32_t) const;
+namespace mozilla {
+namespace detail {
 
-template bool nsTString<char16_t>::EqualsIgnoreCase(
+template int32_t nsTStringRepr<char>::Compare(const char_type*, bool,
+                                              int32_t) const;
+
+template bool nsTStringRepr<char16_t>::EqualsIgnoreCase(
     const incompatible_char_type*, int32_t) const;
+
+}  // namespace detail
+}  // namespace mozilla
 
 template bool nsTString<char16_t>::StripChars(const incompatible_char_type*,
                                               const fallible_t&);
