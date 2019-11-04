@@ -1759,7 +1759,7 @@ var gBrowserInit = {
     // This needs setting up before we create the first remote browser.
     window.docShell.treeOwner
       .QueryInterface(Ci.nsIInterfaceRequestor)
-      .getInterface(Ci.nsIXULWindow).XULBrowserWindow = window.XULBrowserWindow;
+      .getInterface(Ci.nsIAppWindow).XULBrowserWindow = window.XULBrowserWindow;
     window.browserDOMWindow = new nsBrowserAccess();
 
     gBrowser = window._gBrowser;
@@ -2534,7 +2534,7 @@ var gBrowserInit = {
     window.XULBrowserWindow = null;
     window.docShell.treeOwner
       .QueryInterface(Ci.nsIInterfaceRequestor)
-      .getInterface(Ci.nsIXULWindow).XULBrowserWindow = null;
+      .getInterface(Ci.nsIAppWindow).XULBrowserWindow = null;
     window.browserDOMWindow = null;
   },
 };

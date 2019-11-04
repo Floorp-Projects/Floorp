@@ -312,7 +312,7 @@
 #ifdef MOZ_XUL
 #  include "mozilla/dom/XULBroadcastManager.h"
 #  include "mozilla/dom/XULPersist.h"
-#  include "nsIXULWindow.h"
+#  include "nsIAppWindow.h"
 #  include "nsIChromeRegistry.h"
 #  include "nsXULPrototypeDocument.h"
 #  include "nsXULCommandDispatcher.h"
@@ -8377,7 +8377,7 @@ void Document::SetMayStartLayout(bool aMayStartLayout) {
     // Before starting layout, check whether we're a toplevel chrome
     // window.  If we are, setup some state so that we don't have to restyle
     // the whole tree after StartLayout.
-    if (nsCOMPtr<nsIXULWindow> win = GetXULWindowIfToplevelChrome()) {
+    if (nsCOMPtr<nsIAppWindow> win = GetAppWindowIfToplevelChrome()) {
       // We're the chrome document!
       win->BeforeStartLayout();
     }
@@ -14271,23 +14271,23 @@ already_AddRefed<XPathResult> Document::Evaluate(
                                     aType, aResult, rv);
 }
 
-already_AddRefed<nsIXULWindow> Document::GetXULWindowIfToplevelChrome() const {
+already_AddRefed<nsIAppWindow> Document::GetAppWindowIfToplevelChrome() const {
   nsCOMPtr<nsIDocShellTreeItem> item = GetDocShell();
   if (!item) {
     return nullptr;
   }
   nsCOMPtr<nsIDocShellTreeOwner> owner;
   item->GetTreeOwner(getter_AddRefs(owner));
-  nsCOMPtr<nsIXULWindow> xulWin = do_GetInterface(owner);
-  if (!xulWin) {
+  nsCOMPtr<nsIAppWindow> appWin = do_GetInterface(owner);
+  if (!appWin) {
     return nullptr;
   }
-  nsCOMPtr<nsIDocShell> xulWinShell;
-  xulWin->GetDocShell(getter_AddRefs(xulWinShell));
-  if (!SameCOMIdentity(xulWinShell, item)) {
+  nsCOMPtr<nsIDocShell> appWinShell;
+  appWin->GetDocShell(getter_AddRefs(appWinShell));
+  if (!SameCOMIdentity(appWinShell, item)) {
     return nullptr;
   }
-  return xulWin.forget();
+  return appWin.forget();
 }
 
 Document* Document::GetTopLevelContentDocument() {
