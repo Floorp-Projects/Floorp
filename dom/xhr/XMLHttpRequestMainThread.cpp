@@ -229,7 +229,6 @@ XMLHttpRequestMainThread::XMLHttpRequestMainThread()
       mFirstStartRequestSeen(false),
       mInLoadProgressEvent(false),
       mResultJSON(JS::UndefinedValue()),
-      mArrayBufferBuilder(new ArrayBufferBuilder()),
       mResultArrayBuffer(nullptr),
       mIsMappedArrayBuffer(false),
       mXPCOMifier(nullptr),
@@ -314,11 +313,10 @@ void XMLHttpRequestMainThread::ResetResponse() {
   mResponseXML = nullptr;
   mResponseBody.Truncate();
   TruncateResponseText();
-  mResponseBlobImpl = nullptr;
   mResponseBlob = nullptr;
   mBlobStorage = nullptr;
   mResultArrayBuffer = nullptr;
-  mArrayBufferBuilder = new ArrayBufferBuilder();
+  mArrayBufferBuilder.reset();
   mResultJSON.setUndefined();
   mLoadTransferred = 0;
   mResponseBodyDecodedPos = 0;
@@ -352,10 +350,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(XMLHttpRequestMainThread,
                                                 XMLHttpRequestEventTarget)
   tmp->mResultArrayBuffer = nullptr;
-  tmp->mArrayBufferBuilder = nullptr;
+  tmp->mArrayBufferBuilder.reset();
   tmp->mResultJSON.setUndefined();
-  tmp->mResponseBlobImpl = nullptr;
-
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mContext)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mChannel)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mResponseXML)
@@ -546,8 +542,6 @@ nsresult XMLHttpRequestMainThread::AppendToResponseText(
 
 void XMLHttpRequestMainThread::GetResponseText(DOMString& aResponseText,
                                                ErrorResult& aRv) {
-  MOZ_DIAGNOSTIC_ASSERT(!mForWorker);
-
   XMLHttpRequestStringSnapshot snapshot;
   GetResponseText(snapshot, aRv);
   if (aRv.Failed()) {
@@ -621,9 +615,8 @@ nsresult XMLHttpRequestMainThread::CreateResponseParsedJSON(JSContext* aCx) {
   }
 
   nsAutoString string;
-  nsresult rv = GetResponseTextForJSON(string);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  if (!mResponseText.GetAsString(string)) {
+    return NS_ERROR_OUT_OF_MEMORY;
   }
 
   // The Unicode converter has already zapped the BOM if there was one
@@ -662,8 +655,6 @@ void XMLHttpRequestMainThread::SetResponseType(
 
 void XMLHttpRequestMainThread::GetResponse(
     JSContext* aCx, JS::MutableHandle<JS::Value> aResponse, ErrorResult& aRv) {
-  MOZ_DIAGNOSTIC_ASSERT(!mForWorker);
-
   switch (mResponseType) {
     case XMLHttpRequestResponseType::_empty:
     case XMLHttpRequestResponseType::Text: {
@@ -685,7 +676,7 @@ void XMLHttpRequestMainThread::GetResponse(
       }
 
       if (!mResultArrayBuffer) {
-        mResultArrayBuffer = mArrayBufferBuilder->TakeArrayBuffer(aCx);
+        mResultArrayBuffer = mArrayBufferBuilder.getArrayBuffer(aCx);
         if (!mResultArrayBuffer) {
           aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
           return;
@@ -700,19 +691,12 @@ void XMLHttpRequestMainThread::GetResponse(
         return;
       }
 
-      if (!mResponseBlobImpl) {
+      if (!mResponseBlob) {
         aResponse.setNull();
         return;
       }
 
-      if (!mResponseBlob) {
-        mResponseBlob = Blob::Create(GetOwnerGlobal(), mResponseBlobImpl);
-      }
-
-      if (!GetOrCreateDOMReflector(aCx, mResponseBlob, aResponse)) {
-        aResponse.setNull();
-      }
-
+      GetOrCreateDOMReflector(aCx, mResponseBlob, aResponse);
       return;
     }
     case XMLHttpRequestResponseType::Document: {
@@ -751,45 +735,6 @@ void XMLHttpRequestMainThread::GetResponse(
   }
 
   aResponse.setNull();
-}
-
-already_AddRefed<BlobImpl> XMLHttpRequestMainThread::GetResponseBlobImpl() {
-  MOZ_DIAGNOSTIC_ASSERT(mForWorker);
-  MOZ_DIAGNOSTIC_ASSERT(mResponseType == XMLHttpRequestResponseType::Blob);
-
-  if (mState != XMLHttpRequest_Binding::DONE) {
-    return nullptr;
-  }
-
-  RefPtr<BlobImpl> blobImpl = mResponseBlobImpl;
-  return blobImpl.forget();
-}
-
-already_AddRefed<ArrayBufferBuilder>
-XMLHttpRequestMainThread::GetResponseArrayBufferBuilder() {
-  MOZ_DIAGNOSTIC_ASSERT(mForWorker);
-  MOZ_DIAGNOSTIC_ASSERT(mResponseType ==
-                        XMLHttpRequestResponseType::Arraybuffer);
-
-  if (mState != XMLHttpRequest_Binding::DONE) {
-    return nullptr;
-  }
-
-  RefPtr<ArrayBufferBuilder> builder = mArrayBufferBuilder;
-  return builder.forget();
-}
-
-nsresult XMLHttpRequestMainThread::GetResponseTextForJSON(nsAString& aString) {
-  if (mState != XMLHttpRequest_Binding::DONE) {
-    aString.SetIsVoid(true);
-    return NS_OK;
-  }
-
-  if (!mResponseText.GetAsString(aString)) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  return NS_OK;
 }
 
 bool XMLHttpRequestMainThread::IsCrossSiteCORSRequest() const {
@@ -1560,11 +1505,11 @@ nsresult XMLHttpRequestMainThread::StreamReaderFunc(
              !xmlHttpRequest->mIsMappedArrayBuffer) {
     // get the initial capacity to something reasonable to avoid a bunch of
     // reallocs right at the start
-    if (xmlHttpRequest->mArrayBufferBuilder->Capacity() == 0)
-      xmlHttpRequest->mArrayBufferBuilder->SetCapacity(
+    if (xmlHttpRequest->mArrayBufferBuilder.capacity() == 0)
+      xmlHttpRequest->mArrayBufferBuilder.setCapacity(
           std::max(count, XML_HTTP_REQUEST_ARRAYBUFFER_MIN_SIZE));
 
-    if (NS_WARN_IF(!xmlHttpRequest->mArrayBufferBuilder->Append(
+    if (NS_WARN_IF(!xmlHttpRequest->mArrayBufferBuilder.append(
             reinterpret_cast<const uint8_t*>(fromRawSegment), count,
             XML_HTTP_REQUEST_ARRAYBUFFER_MAX_GROWTH))) {
       return NS_ERROR_OUT_OF_MEMORY;
@@ -1704,7 +1649,7 @@ class FileCreationHandler final : public PromiseNativeHandler {
       return;
     }
 
-    mXHR->LocalFileToBlobCompleted(blob->Impl());
+    mXHR->LocalFileToBlobCompleted(blob);
   }
 
   void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
@@ -1725,10 +1670,10 @@ NS_IMPL_ISUPPORTS0(FileCreationHandler)
 
 }  // namespace
 
-void XMLHttpRequestMainThread::LocalFileToBlobCompleted(BlobImpl* aBlobImpl) {
+void XMLHttpRequestMainThread::LocalFileToBlobCompleted(Blob* aBlob) {
   MOZ_ASSERT(mState != XMLHttpRequest_Binding::DONE);
 
-  mResponseBlobImpl = aBlobImpl;
+  mResponseBlob = aBlob;
   mBlobStorage = nullptr;
   NS_ASSERTION(mResponseBody.IsEmpty(), "mResponseBody should be empty");
 
@@ -1755,7 +1700,12 @@ XMLHttpRequestMainThread::OnDataAvailable(nsIRequest* request,
       RefPtr<BlobImpl> blobImpl;
       rv = NS_GetBlobForBlobURI(blobURI, getter_AddRefs(blobImpl));
       if (NS_SUCCEEDED(rv)) {
-        mResponseBlobImpl = blobImpl;
+        if (blobImpl) {
+          mResponseBlob = Blob::Create(GetOwnerGlobal(), blobImpl);
+        }
+        if (!mResponseBlob) {
+          rv = NS_ERROR_FILE_NOT_FOUND;
+        }
       }
     } else {
       rv = GetLocalFileFromChannel(request, getter_AddRefs(localFile));
@@ -1764,7 +1714,7 @@ XMLHttpRequestMainThread::OnDataAvailable(nsIRequest* request,
       return rv;
     }
 
-    if (mResponseBlobImpl || localFile) {
+    if (mResponseBlob || localFile) {
       mBlobStorage = nullptr;
       NS_ASSERTION(mResponseBody.IsEmpty(), "mResponseBody should be empty");
 
@@ -1909,7 +1859,7 @@ XMLHttpRequestMainThread::OnStartRequest(nsIRequest* request) {
           if (!jarFile) {
             mIsMappedArrayBuffer = false;
           } else {
-            rv = mArrayBufferBuilder->MapToFileInPackage(file, jarFile);
+            rv = mArrayBufferBuilder.mapToFileInPackage(file, jarFile);
             // This can happen legitimately if there are compressed files
             // in the jarFile. See bug #1357219. No need to warn on the error.
             if (NS_FAILED(rv)) {
@@ -1929,7 +1879,7 @@ XMLHttpRequestMainThread::OnStartRequest(nsIRequest* request) {
       rv = channel->GetContentLength(&contentLength);
       if (NS_SUCCEEDED(rv) && contentLength > 0 &&
           contentLength < XML_HTTP_REQUEST_MAX_CONTENT_LENGTH_PREALLOCATE) {
-        mArrayBufferBuilder->SetCapacity(static_cast<int32_t>(contentLength));
+        mArrayBufferBuilder.setCapacity(static_cast<int32_t>(contentLength));
       }
     }
   }
@@ -2132,7 +2082,7 @@ XMLHttpRequestMainThread::OnStopRequest(nsIRequest* request, nsresult status) {
   }
 
   // If we were just reading a blob URL, we're already done
-  if (status == NS_ERROR_FILE_ALREADY_EXISTS && mResponseBlobImpl) {
+  if (status == NS_ERROR_FILE_ALREADY_EXISTS && mResponseBlob) {
     ChangeStateToDone(mFlagSyncLooping);
     return NS_OK;
   }
@@ -2142,7 +2092,7 @@ XMLHttpRequestMainThread::OnStopRequest(nsIRequest* request, nsresult status) {
   // If we have this error, we have to deal with a file: URL + responseType =
   // blob. We have this error because we canceled the channel. The status will
   // be set to NS_OK.
-  if (!mResponseBlobImpl && status == NS_ERROR_FILE_ALREADY_EXISTS &&
+  if (!mResponseBlob && status == NS_ERROR_FILE_ALREADY_EXISTS &&
       mResponseType == XMLHttpRequestResponseType::Blob) {
     nsCOMPtr<nsIFile> file;
     nsresult rv = GetLocalFileFromChannel(request, getter_AddRefs(file));
@@ -2202,7 +2152,7 @@ XMLHttpRequestMainThread::OnStopRequest(nsIRequest* request, nsresult status) {
              mResponseType == XMLHttpRequestResponseType::Arraybuffer) {
     // set the capacity down to the actual length, to realloc back
     // down to the actual size
-    if (!mArrayBufferBuilder->SetCapacity(mArrayBufferBuilder->Length())) {
+    if (!mArrayBufferBuilder.setCapacity(mArrayBufferBuilder.length())) {
       // this should never happen!
       status = NS_ERROR_UNEXPECTED;
     }
@@ -3641,7 +3591,7 @@ void XMLHttpRequestMainThread::BlobStoreCompleted(
 
   MOZ_ASSERT(mState != XMLHttpRequest_Binding::DONE);
 
-  mResponseBlobImpl = aBlobImpl;
+  mResponseBlob = Blob::Create(GetOwnerGlobal(), aBlobImpl);
   mBlobStorage = nullptr;
 
   ChangeStateToDone(mFlagSyncLooping);
@@ -3699,14 +3649,11 @@ nsXMLHttpRequestXPCOMifier::GetInterface(const nsIID& aIID, void** aResult) {
 }
 
 ArrayBufferBuilder::ArrayBufferBuilder()
-    : mMutex("ArrayBufferBuilder"),
-      mDataPtr(nullptr),
-      mCapacity(0),
-      mLength(0),
-      mMapPtr(nullptr),
-      mNeutered(false) {}
+    : mDataPtr(nullptr), mCapacity(0), mLength(0), mMapPtr(nullptr) {}
 
-ArrayBufferBuilder::~ArrayBufferBuilder() {
+ArrayBufferBuilder::~ArrayBufferBuilder() { reset(); }
+
+void ArrayBufferBuilder::reset() {
   if (mDataPtr) {
     JS_free(nullptr, mDataPtr);
   }
@@ -3720,15 +3667,8 @@ ArrayBufferBuilder::~ArrayBufferBuilder() {
   mCapacity = mLength = 0;
 }
 
-bool ArrayBufferBuilder::SetCapacity(uint32_t aNewCap) {
-  MutexAutoLock lock(mMutex);
-  return SetCapacityInternal(aNewCap, lock);
-}
-
-bool ArrayBufferBuilder::SetCapacityInternal(
-    uint32_t aNewCap, const MutexAutoLock& aProofOfLock) {
+bool ArrayBufferBuilder::setCapacity(uint32_t aNewCap) {
   MOZ_ASSERT(!mMapPtr);
-  MOZ_ASSERT(!mNeutered);
 
   // To ensure that realloc won't free mDataPtr, use a size of 1
   // instead of 0.
@@ -3751,11 +3691,9 @@ bool ArrayBufferBuilder::SetCapacityInternal(
   return true;
 }
 
-bool ArrayBufferBuilder::Append(const uint8_t* aNewData, uint32_t aDataLen,
+bool ArrayBufferBuilder::append(const uint8_t* aNewData, uint32_t aDataLen,
                                 uint32_t aMaxGrowth) {
-  MutexAutoLock lock(mMutex);
   MOZ_ASSERT(!mMapPtr);
-  MOZ_ASSERT(!mNeutered);
 
   CheckedUint32 neededCapacity = mLength;
   neededCapacity += aDataLen;
@@ -3780,14 +3718,14 @@ bool ArrayBufferBuilder::Append(const uint8_t* aNewData, uint32_t aDataLen,
       newcap = neededCapacity;
     }
 
-    if (!SetCapacityInternal(newcap.value(), lock)) {
+    if (!setCapacity(newcap.value())) {
       return false;
     }
   }
 
   // Assert that the region isn't overlapping so we can memcpy.
   MOZ_ASSERT(
-      !AreOverlappingRegions(aNewData, aDataLen, mDataPtr + mLength, aDataLen));
+      !areOverlappingRegions(aNewData, aDataLen, mDataPtr + mLength, aDataLen));
 
   memcpy(mDataPtr + mLength, aNewData, aDataLen);
   mLength += aDataLen;
@@ -3795,30 +3733,13 @@ bool ArrayBufferBuilder::Append(const uint8_t* aNewData, uint32_t aDataLen,
   return true;
 }
 
-uint32_t ArrayBufferBuilder::Length() {
-  MutexAutoLock lock(mMutex);
-  MOZ_ASSERT(!mNeutered);
-  return mLength;
-}
-
-uint32_t ArrayBufferBuilder::Capacity() {
-  MutexAutoLock lock(mMutex);
-  MOZ_ASSERT(!mNeutered);
-  return mCapacity;
-}
-
-JSObject* ArrayBufferBuilder::TakeArrayBuffer(JSContext* aCx) {
-  MutexAutoLock lock(mMutex);
-  MOZ_DIAGNOSTIC_ASSERT(!mNeutered);
-
+JSObject* ArrayBufferBuilder::getArrayBuffer(JSContext* aCx) {
   if (mMapPtr) {
     JSObject* obj = JS::NewMappedArrayBufferWithContents(aCx, mLength, mMapPtr);
     if (!obj) {
       JS::ReleaseMappedArrayBufferContents(mMapPtr, mLength);
     }
-
     mMapPtr = nullptr;
-    mNeutered = true;
 
     // The memory-mapped contents will be released when the ArrayBuffer becomes
     // detached or is GC'd.
@@ -3828,29 +3749,22 @@ JSObject* ArrayBufferBuilder::TakeArrayBuffer(JSContext* aCx) {
   // we need to check for mLength == 0, because nothing may have been
   // added
   if (mCapacity > mLength || mLength == 0) {
-    if (!SetCapacityInternal(mLength, lock)) {
+    if (!setCapacity(mLength)) {
       return nullptr;
     }
   }
 
   JSObject* obj = JS::NewArrayBufferWithContents(aCx, mLength, mDataPtr);
+  mLength = mCapacity = 0;
   if (!obj) {
-    return nullptr;
+    js_free(mDataPtr);
   }
-
   mDataPtr = nullptr;
-  mCapacity = mLength = 0;
-
-  mNeutered = true;
   return obj;
 }
 
-nsresult ArrayBufferBuilder::MapToFileInPackage(const nsCString& aFile,
+nsresult ArrayBufferBuilder::mapToFileInPackage(const nsCString& aFile,
                                                 nsIFile* aJarFile) {
-  MutexAutoLock lock(mMutex);
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(!mNeutered);
-
   nsresult rv;
 
   // Open Jar file to get related attributes of target file.
@@ -3885,7 +3799,7 @@ nsresult ArrayBufferBuilder::MapToFileInPackage(const nsCString& aFile,
 }
 
 /* static */
-bool ArrayBufferBuilder::AreOverlappingRegions(const uint8_t* aStart1,
+bool ArrayBufferBuilder::areOverlappingRegions(const uint8_t* aStart1,
                                                uint32_t aLength1,
                                                const uint8_t* aStart2,
                                                uint32_t aLength2) {
