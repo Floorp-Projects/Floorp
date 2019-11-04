@@ -19,7 +19,9 @@ add_task(async function() {
       // 2.  Add a promise that will be resolved when the 'content viewer evicted' event goes off
       testDone.promise = ContentTask.spawn(browser, null, async function() {
         return new Promise(resolve => {
-          let webNavigation = content.docShell.QueryInterface(Ci.nsIWebNavigation);
+          let webNavigation = content.docShell.QueryInterface(
+            Ci.nsIWebNavigation
+          );
           let { legacySHistory } = webNavigation.sessionHistory;
           // 3. Register a session history listener to listen for a 'content viewer evicted' event.
           let historyListener = {

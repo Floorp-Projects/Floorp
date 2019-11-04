@@ -68,10 +68,12 @@ add_task(async function runTests() {
     }
 
     function checkListenersAsync(aLast, aMessage) {
-      return listenOnce("bug422543:getListenerStatus").then(listenerStatuses => {
-        is(listenerStatuses[0], aLast, aMessage);
-        is(listenerStatuses[1], aLast, aMessage);
-      });
+      return listenOnce("bug422543:getListenerStatus").then(
+        listenerStatuses => {
+          is(listenerStatuses[0], aLast, aMessage);
+          is(listenerStatuses[1], aLast, aMessage);
+        }
+      );
     }
 
     function resetListenersAsync() {
@@ -161,8 +163,7 @@ add_task(async function runTests() {
   checkListeners("reload", "saw the reload notification");
 });
 
-function SHistoryListener() {
-}
+function SHistoryListener() {}
 
 SHistoryListener.prototype = {
   retval: true,
@@ -187,11 +188,13 @@ SHistoryListener.prototype = {
 
   OnHistoryReplaceEntry() {},
 
-  QueryInterface: ChromeUtils.generateQI([Ci.nsISHistoryListener,
-                                          Ci.nsISupportsWeakReference]),
+  QueryInterface: ChromeUtils.generateQI([
+    Ci.nsISHistoryListener,
+    Ci.nsISupportsWeakReference,
+  ]),
 };
 
-let listeners = [ new SHistoryListener(), new SHistoryListener() ];
+let listeners = [new SHistoryListener(), new SHistoryListener()];
 
 function checkListeners(aLast, aMessage) {
   is(listeners[0].last, aLast, aMessage);
