@@ -927,9 +927,9 @@ static void AllocateAndInitTypedArrayBuffer(JSContext* cx,
 
   size_t nbytes = count * obj->bytesPerElement();
   MOZ_ASSERT((CheckedUint32(nbytes) + sizeof(Value)).isValid(),
-             "JS_ROUNDUP must not overflow");
+             "RoundUp must not overflow");
 
-  nbytes = JS_ROUNDUP(nbytes, sizeof(Value));
+  nbytes = RoundUp(nbytes, sizeof(Value));
   void* buf = cx->nursery().allocateZeroedBuffer(obj, nbytes,
                                                  js::ArrayBufferContentsArena);
   if (buf) {

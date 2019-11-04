@@ -162,7 +162,7 @@ static size_t NextSize(size_t start, size_t used) {
   // After 1 MB, grow more gradually, to waste less memory.
   // The sequence (in megabytes) begins:
   // 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 4, 4, 5, ...
-  return JS_ROUNDUP(used / 8, mb);
+  return RoundUp(used / 8, mb);
 }
 
 LifoAlloc::UniqueBumpChunk LifoAlloc::newChunkWithCapacity(size_t n,

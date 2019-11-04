@@ -2036,14 +2036,14 @@ JSString* JSStructuredCloneReader::readStringImpl(uint32_t nchars) {
 }
 
 JSString* JSStructuredCloneReader::readString(uint32_t data) {
-  uint32_t nchars = data & JS_BITMASK(31);
+  uint32_t nchars = data & BitMask(31);
   bool latin1 = data & (1 << 31);
   return latin1 ? readStringImpl<Latin1Char>(nchars)
                 : readStringImpl<char16_t>(nchars);
 }
 
 BigInt* JSStructuredCloneReader::readBigInt(uint32_t data) {
-  size_t length = data & JS_BITMASK(31);
+  size_t length = data & BitMask(31);
   bool isNegative = data & (1 << 31);
   if (length == 0) {
     return BigInt::zero(context());
