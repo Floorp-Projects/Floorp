@@ -136,7 +136,7 @@ void JsepTrack::AddToAnswer(const SdpMediaSection& offer,
     std::vector<JsConstraints> constraints;
     if (answer->IsSending()) {
       constraints = mJsEncodeConstraints;
-      std::vector<SdpRidAttributeList::Rid> rids;
+      std::vector<std::pair<SdpRidAttributeList::Rid, bool>> rids;
       GetRids(offer, sdp::kRecv, &rids);
       NegotiateRids(rids, &constraints);
     }
@@ -192,14 +192,15 @@ void JsepTrack::AddToMsection(
 // Updates the |id| values in |constraintsList| with the rid values in |rids|,
 // where necessary.
 void JsepTrack::NegotiateRids(
-    const std::vector<SdpRidAttributeList::Rid>& rids,
+    const std::vector<std::pair<SdpRidAttributeList::Rid, bool>>& rids,
     std::vector<JsConstraints>* constraintsList) const {
-  for (const SdpRidAttributeList::Rid& rid : rids) {
-    if (!FindConstraints(rid.id, *constraintsList)) {
+  for (const auto& ridAndPaused : rids) {
+    if (!FindConstraints(ridAndPaused.first.id, *constraintsList)) {
       // Pair up the first JsConstraints with an empty id, if it exists.
       JsConstraints* constraints = FindConstraints("", *constraintsList);
       if (constraints) {
-        constraints->rid = rid.id;
+        constraints->rid = ridAndPaused.first.id;
+        constraints->paused = ridAndPaused.second;
       }
     }
   }
@@ -239,7 +240,8 @@ void JsepTrack::AddToMsection(const std::vector<JsConstraints>& constraintsList,
       rids->mRids.push_back(rid);
 
       SdpSimulcastAttribute::Version version;
-      version.choices.push_back(constraints.rid);
+      version.choices.push_back(
+          SdpSimulcastAttribute::Encoding(constraints.rid, false));
       if (direction == sdp::kSend) {
         simulcast->sendVersions.push_back(version);
       } else {
@@ -259,9 +261,9 @@ void JsepTrack::AddToMsection(const std::vector<JsConstraints>& constraintsList,
   }
 }
 
-void JsepTrack::GetRids(const SdpMediaSection& msection,
-                        sdp::Direction direction,
-                        std::vector<SdpRidAttributeList::Rid>* rids) const {
+void JsepTrack::GetRids(
+    const SdpMediaSection& msection, sdp::Direction direction,
+    std::vector<std::pair<SdpRidAttributeList::Rid, bool>>* rids) const {
   rids->clear();
   if (!msection.GetAttributeList().HasAttribute(
           SdpAttribute::kSimulcastAttribute)) {
@@ -285,15 +287,11 @@ void JsepTrack::GetRids(const SdpMediaSection& msection,
     return;
   }
 
-  if (versions->type != SdpSimulcastAttribute::Versions::kRid) {
-    // No support for PT-based simulcast, yet.
-    return;
-  }
-
   for (const SdpSimulcastAttribute::Version& version : *versions) {
     if (!version.choices.empty()) {
       // We validate that rids are present (and sane) elsewhere.
-      rids->push_back(*msection.FindRid(version.choices[0]));
+      rids->push_back(std::make_pair(*msection.FindRid(version.choices[0].rid),
+                                     version.choices[0].paused));
     }
   }
 }
@@ -315,13 +313,13 @@ void JsepTrack::CreateEncodings(
   negotiatedDetails->mTias = remote.GetBandwidth("TIAS");
   // TODO add support for b=AS if TIAS is not set (bug 976521)
 
-  std::vector<SdpRidAttributeList::Rid> rids;
+  std::vector<std::pair<SdpRidAttributeList::Rid, bool>> rids;
   GetRids(remote, sdp::kRecv, &rids);  // Get rids we will send
   NegotiateRids(rids, &mJsEncodeConstraints);
   if (rids.empty()) {
     // Add dummy value with an empty id to make sure we get a single unicast
     // stream.
-    rids.push_back(SdpRidAttributeList::Rid());
+    rids.push_back(std::make_pair(SdpRidAttributeList::Rid(), false));
   }
 
   size_t max_streams = 1;
@@ -345,17 +343,18 @@ void JsepTrack::CreateEncodings(
     auto& encoding = negotiatedDetails->mEncodings[i];
 
     for (const auto& codec : negotiatedCodecs) {
-      if (rids[i].HasFormat(codec->mDefaultPt)) {
+      if (rids[i].first.HasFormat(codec->mDefaultPt)) {
         encoding->AddCodec(*codec);
       }
     }
 
-    encoding->mRid = rids[i].id;
+    encoding->mRid = rids[i].first.id;
+    encoding->mPaused = rids[i].second;
     // If we end up supporting params for rid, we would handle that here.
 
     // Incorporate the corresponding JS encoding constraints, if they exist
     for (const JsConstraints& jsConstraints : mJsEncodeConstraints) {
-      if (jsConstraints.rid == rids[i].id) {
+      if (jsConstraints.rid == rids[i].first.id) {
         encoding->mConstraints = jsConstraints.constraints;
       }
     }

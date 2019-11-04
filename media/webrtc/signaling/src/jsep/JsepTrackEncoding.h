@@ -46,6 +46,7 @@ class JsepTrackEncoding {
 
   EncodingConstraints mConstraints;
   std::string mRid;
+  bool mPaused = false;
 
  private:
   std::vector<UniquePtr<JsepCodecDescription>> mCodecs;
