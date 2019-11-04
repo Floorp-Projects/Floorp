@@ -24,11 +24,15 @@ use rayon::prelude::*;
 use euclid::approxeq::ApproxEq;
 use euclid::size2;
 use std::cmp;
+use std::cell::Cell;
 use std::hash::{Hash, Hasher};
 use std::mem;
 use std::ops::Deref;
 use std::sync::{Arc, Condvar, Mutex, MutexGuard};
 use std::sync::mpsc::{channel, Receiver, Sender};
+use std::sync::atomic::{AtomicBool, Ordering};
+
+pub static GLYPH_FLASHING: AtomicBool = AtomicBool::new(false);
 
 impl FontContexts {
     /// Get access to the font context associated to the current thread.
@@ -42,8 +46,19 @@ impl FontContexts {
     }
 }
 
-impl GlyphRasterizer {
+thread_local! {
+    pub static SEED: Cell<u32> = Cell::new(0);
+}
 
+// super simple random to avoid dependency on rand
+fn random() -> u32 {
+    SEED.with(|seed| {
+        seed.set(seed.get().wrapping_mul(22695477).wrapping_add(1));
+        seed.get()
+    })
+}
+
+impl GlyphRasterizer {
     pub fn request_glyphs(
         &mut self,
         glyph_cache: &mut GlyphCache,
@@ -118,6 +133,22 @@ impl GlyphRasterizer {
                             glyph.bytes.len(),
                             bpp * (glyph.width * glyph.height) as usize
                         );
+
+                        // a quick-and-dirty monochrome over
+                        fn over(dst: u8, src: u8) -> u8 {
+                            let a = src as u32;
+                            let a = 256 - a;
+                            let dst = ((dst as u32 * a) >> 8) as u8;
+                            src + dst
+                        }
+
+                        if GLYPH_FLASHING.load(Ordering::Relaxed) {
+                            let color = (random() & 0xff) as u8;
+                            for i in &mut glyph.bytes {
+                                *i = over(*i, color);
+                            }
+                        }
+
                         assert_eq!((glyph.left.fract(), glyph.top.fract()), (0.0, 0.0));
 
                         // Check if the glyph has a bitmap that needs to be downscaled.
