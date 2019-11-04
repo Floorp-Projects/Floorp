@@ -23,6 +23,11 @@ ChromeUtils.defineModuleGetter(
   "AppConstants",
   "resource://gre/modules/AppConstants.jsm"
 );
+ChromeUtils.defineModuleGetter(
+  this,
+  "FileUtils",
+  "resource://gre/modules/FileUtils.jsm"
+);
 
 XPCOMUtils.defineLazyGetter(this, "Telemetry", function() {
   return require("devtools/client/shared/telemetry");
@@ -51,7 +56,8 @@ var processes = new Set();
 this.BrowserToolboxProcess = function BrowserToolboxProcess(
   onClose,
   onRun,
-  overwritePreferences
+  overwritePreferences,
+  binaryPath
 ) {
   const emitter = new EventEmitter();
   this.on = emitter.on.bind(emitter);
@@ -76,7 +82,7 @@ this.BrowserToolboxProcess = function BrowserToolboxProcess(
   Services.obs.addObserver(this.close, "quit-application");
   this._initServer();
   this._initProfile(overwritePreferences);
-  this._create();
+  this._create(binaryPath);
 
   processes.add(this);
 };
@@ -87,7 +93,12 @@ EventEmitter.decorate(BrowserToolboxProcess);
  * Initializes and starts a chrome toolbox process.
  * @return object
  */
-BrowserToolboxProcess.init = function(onClose, onRun, overwritePreferences) {
+BrowserToolboxProcess.init = function(
+  onClose,
+  onRun,
+  overwritePreferences,
+  binaryPath
+) {
   if (
     !Services.prefs.getBoolPref("devtools.chrome.enabled") ||
     !Services.prefs.getBoolPref("devtools.debugger.remote-enabled")
@@ -95,7 +106,12 @@ BrowserToolboxProcess.init = function(onClose, onRun, overwritePreferences) {
     console.error("Could not start Browser Toolbox, you need to enable it.");
     return null;
   }
-  return new BrowserToolboxProcess(onClose, onRun, overwritePreferences);
+  return new BrowserToolboxProcess(
+    onClose,
+    onRun,
+    overwritePreferences,
+    binaryPath
+  );
 };
 
 /**
@@ -212,20 +228,28 @@ BrowserToolboxProcess.prototype = {
   /**
    * Creates and initializes the profile & process for the remote debugger.
    */
-  _create: function() {
+  _create: function(binaryPath) {
     dumpn("Initializing chrome debugging process.");
 
-    const command = Services.dirsvc.get("XREExeF", Ci.nsIFile).path;
+    let command = Services.dirsvc.get("XREExeF", Ci.nsIFile).path;
+    let profilePath = this._dbgProfilePath;
+
+    if (binaryPath) {
+      command = binaryPath;
+      profilePath = FileUtils.getDir("TmpD", ["browserToolboxProfile"], true)
+        .path;
+    }
 
     dumpn("Running chrome debugging process.");
     const args = [
       "-no-remote",
       "-foreground",
       "-profile",
-      this._dbgProfilePath,
+      profilePath,
       "-chrome",
       DBG_XUL,
     ];
+
     const environment = {
       // Disable safe mode for the new process in case this was opened via the
       // keyboard shortcut.
@@ -244,6 +268,7 @@ BrowserToolboxProcess.prototype = {
       args.push("-purgecaches");
     }
 
+    dump(`Starting Browser Toolbox ${command} ${args.join(" ")}\n`);
     this._dbgProcessPromise = Subprocess.call({
       command,
       arguments: args,
