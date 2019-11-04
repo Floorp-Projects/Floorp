@@ -279,6 +279,8 @@ class nsPrintJob final : public nsIObserver,
 
   nsPagePrintTimer* mPagePrintTimer = nullptr;
 
+  nsString mFallbackDocTitle;
+
   float mScreenDPI = 115.0f;
   int32_t mLoadCounter = 0;
 
