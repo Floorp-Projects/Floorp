@@ -796,6 +796,9 @@ function DoneTests()
         }
 
         function onStopped() {
+            if (g.logFile) {
+                g.logFile.close()
+            }
             let appStartup = Cc["@mozilla.org/toolkit/app-startup;1"].getService(Ci.nsIAppStartup);
             appStartup.quit(Ci.nsIAppStartup.eForceQuit);
         }
