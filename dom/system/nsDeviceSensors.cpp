@@ -572,5 +572,7 @@ bool nsDeviceSensors::IsSensorAllowedByPref(uint32_t aType,
     return true;
   }
 
-  return !nsContentUtils::ShouldResistFingerprinting(window->GetDocShell());
+  nsCOMPtr<nsIScriptObjectPrincipal> soPrincipal = do_QueryInterface(window);
+  return !nsContentUtils::ShouldResistFingerprinting(
+      soPrincipal->GetPrincipal());
 }
