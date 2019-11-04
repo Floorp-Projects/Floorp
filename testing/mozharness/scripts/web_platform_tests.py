@@ -213,11 +213,6 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidM
         cmd = [self.query_python_path('python'), '-u']
         cmd.append(os.path.join(dirs["abs_wpttest_dir"], run_file_name))
 
-        # Make sure that the logging directory exists
-        if self.mkdir_p(dirs["abs_blob_upload_dir"]) == -1:
-            self.fatal("Could not create blobber upload directory")
-            # Exit
-
         mozinfo.find_and_update_from_json(dirs['abs_test_install_dir'])
 
         cmd += ["--log-raw=-",
@@ -318,9 +313,13 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidM
                           "mozpack/*",
                           "mozbuild/*"],
             suite_categories=["web-platform"])
+        dirs = self.query_abs_dirs()
         if self.is_android:
-            dirs = self.query_abs_dirs()
             self.xre_path = self.download_hostutils(dirs['abs_xre_dir'])
+        # Make sure that the logging directory exists
+        if self.mkdir_p(dirs["abs_blob_upload_dir"]) == -1:
+            self.fatal("Could not create blobber upload directory")
+            # Exit
 
     def install(self):
         if self.is_android:
