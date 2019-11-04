@@ -1054,7 +1054,8 @@ ifneq (,$(filter host-objects host all default,$(MAKECMDGOALS)))
 _MDDEPEND_FILES += $(addsuffix .pp,$(notdir $(sort $(HOST_OBJS) $(HOST_PROGOBJS))))
 endif
 
-MDDEPEND_FILES := $(strip $(wildcard $(addprefix $(MDDEPDIR)/,$(_MDDEPEND_FILES) $(EXTRA_MDDEPEND_FILES))))
+MDDEPEND_FILES := $(strip $(wildcard $(addprefix $(MDDEPDIR)/,$(_MDDEPEND_FILES))))
+MDDEPEND_FILES += $(EXTRA_MDDEPEND_FILES)
 
 ifneq (,$(MDDEPEND_FILES))
 -include $(MDDEPEND_FILES)
