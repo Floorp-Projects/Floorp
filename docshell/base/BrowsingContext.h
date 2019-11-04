@@ -192,9 +192,6 @@ class BrowsingContext : public nsISupports,
   nsresult LoadURI(BrowsingContext* aAccessor, nsDocShellLoadState* aLoadState,
                    bool aSetNavigating = false);
 
-  void LoadURI(const nsAString& aURI, const LoadURIOptions& aOptions,
-               ErrorResult& aError);
-
   void DisplayLoadError(const nsAString& aURI);
 
   // Determine if the current BrowsingContext was 'cached' by the logic in
