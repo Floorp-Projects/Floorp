@@ -135,7 +135,7 @@ def evaluate(variables, cache_variables, parsed):
                 variable = arguments[1]
                 values = arguments[2:]
                 if action == 'APPEND':
-                    if not variables.has_key(variable):
+                    if variable not in variables:
                         variables[variable] = ' '.join(values)
                     else:
                         variables[variable] += ' ' + ' '.join(values)
@@ -145,7 +145,7 @@ def evaluate(variables, cache_variables, parsed):
             variable = arguments[0]
             value = arguments[2]
             # Allow options to be override without changing CMake files
-            if not variables.has_key(variable):
+            if variable not in variables:
                 variables[variable] = value
         elif command == 'return':
             return False, sources
@@ -156,7 +156,7 @@ def evaluate(variables, cache_variables, parsed):
             try:
                 cache = values.index('CACHE')
                 values = values[0:cache]
-                if not variables.has_key(variable):
+                if variable not in variables:
                     variables[variable] = ' '.join(values)
                 cache_variables.append(variable)
             except ValueError:

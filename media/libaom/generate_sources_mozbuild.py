@@ -82,7 +82,7 @@ if __name__ == '__main__':
         'AOM_TEST_TEST_CMAKE_': 1, #prevent building tests
     }
 
-    f = open('sources.mozbuild', 'wb')
+    f = open('sources.mozbuild', 'w')
     f.write('# This file is generated. Do not edit.\n\n')
     f.write('files = {\n')
 
@@ -130,6 +130,8 @@ if __name__ == '__main__':
             exports = filter(lambda x: not re.search('(internal|src)', x), exports)
             exports = filter(lambda x: not re.search('(emmintrin_compat.h|mem_.*|msvc.h|aom_once.h)$', x), exports)
 
+            sources = list(sources)
+            
             for export in exports:
                 sources.remove(export)
 
@@ -138,7 +140,7 @@ if __name__ == '__main__':
 
             # The build system is unhappy if two files have the same prefix
             # In libaom, sometimes .asm and .c files share the same prefix
-            for i in xrange(len(sources) - 1):
+            for i in range(len(sources) - 1):
                 if sources[i].endswith('.asm'):
                     if os.path.splitext(sources[i])[0] == os.path.splitext(sources[i + 1])[0]:
                         old = sources[i]
