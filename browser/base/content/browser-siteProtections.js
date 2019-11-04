@@ -673,9 +673,10 @@ var ThirdPartyCookies = {
     ) {
       return (
         (state & Ci.nsIWebProgressListener.STATE_COOKIES_LOADED_TRACKER) != 0 ||
-        (state &
-          Ci.nsIWebProgressListener.STATE_COOKIES_LOADED_SOCIALTRACKER) !=
-          0
+        (SocialTracking.enabled &&
+          (state &
+            Ci.nsIWebProgressListener.STATE_COOKIES_LOADED_SOCIALTRACKER) !=
+            0)
       );
     }
 
@@ -993,7 +994,7 @@ var SocialTracking = {
     );
     XPCOMUtils.defineLazyPreferenceGetter(
       this,
-      "blockSocialTrackingCookies",
+      "enabled",
       this.PREF_STP_COOKIE_ENABLED,
       false,
       this.updateCategoryItem.bind(this)
@@ -1001,19 +1002,19 @@ var SocialTracking = {
     this.updateCategoryItem();
   },
 
-  get enabled() {
-    return this.blockSocialTrackingCookies;
-  },
-
   get blockingEnabled() {
     return (
       (this.socialTrackingProtectionEnabled || this.rejectTrackingCookies) &&
-      this.blockSocialTrackingCookies
+      this.enabled
     );
   },
 
   updateCategoryItem() {
-    this.categoryItem.hidden = !this.enabled;
+    if (this.enabled) {
+      this.categoryItem.removeAttribute("uidisabled");
+    } else {
+      this.categoryItem.setAttribute("uidisabled", true);
+    }
     this.categoryItem.classList.toggle("blocked", this.blockingEnabled);
   },
 
@@ -1661,6 +1662,9 @@ var gProtectionsHandler = {
     this.noTrackersDetectedDescription.hidden = false;
 
     for (let blocker of this.blockers) {
+      if (blocker.categoryItem.hasAttribute("uidisabled")) {
+        continue;
+      }
       // Store data on whether the blocker is activated in the current document for
       // reporting it using the "report breakage" dialog. Under normal circumstances this
       // dialog should only be able to open in the currently selected tab and onSecurityChange
@@ -1877,7 +1881,10 @@ var gProtectionsHandler = {
     this._protectionsPopupNotFoundHeader.hidden = true;
 
     for (let { categoryItem } of this.blockers) {
-      if (categoryItem.classList.contains("notFound")) {
+      if (
+        categoryItem.classList.contains("notFound") ||
+        categoryItem.hasAttribute("uidisabled")
+      ) {
         // Add the item to the bottom of the list. This will be under
         // the "None Detected" section.
         categoryItem.parentNode.insertAdjacentElement(
