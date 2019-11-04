@@ -16,6 +16,8 @@ const { AppConstants } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  AboutPrivateBrowsingHandler:
+    "resource:///modules/aboutpages/AboutPrivateBrowsingHandler.jsm",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   HeadlessShell: "resource:///modules/HeadlessShell.jsm",
   HomePage: "resource:///modules/HomePage.jsm",
@@ -513,6 +515,9 @@ nsBrowserContentHandler.prototype = {
         false
       );
       if (privateWindowParam) {
+        // Ensure we initialize the handler before trying to load
+        // about:privatebrowsing.
+        AboutPrivateBrowsingHandler.init();
         let forcePrivate = true;
         let resolvedURI;
         if (!PrivateBrowsingUtils.enabled) {
@@ -538,6 +543,9 @@ nsBrowserContentHandler.prototype = {
       }
       // NS_ERROR_INVALID_ARG is thrown when flag exists, but has no param.
       if (cmdLine.handleFlag("private-window", false)) {
+        // Ensure we initialize the handler before trying to load
+        // about:privatebrowsing.
+        AboutPrivateBrowsingHandler.init();
         openBrowserWindow(
           cmdLine,
           gSystemPrincipal,
