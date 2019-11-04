@@ -3,7 +3,7 @@
 
 "use strict";
 
-/* global toggleMenuItem */
+/* global toggleMenuItem, PREFS_MENU_ID */
 
 const TEST_URI = `<html>
   <head>
@@ -40,8 +40,8 @@ const tests = [
   {
     desc:
       "Toggle scroll into view checkbox to set the pref. Scroll into view pref should be enabled.",
-    setup: async ({ doc }) => {
-      await toggleMenuItem(doc, 1, 0);
+    setup: async ({ doc, toolbox }) => {
+      await toggleMenuItem(doc, toolbox.doc, PREFS_MENU_ID, 0);
     },
     expected: {
       activeToolbarFilters: [true, false, false, false],
@@ -53,8 +53,8 @@ const tests = [
   {
     desc:
       "Toggle off scroll into view checkbox to unset the pref. Scroll into view pref disabled.",
-    setup: async ({ doc }) => {
-      await toggleMenuItem(doc, 1, 0);
+    setup: async ({ doc, toolbox }) => {
+      await toggleMenuItem(doc, toolbox.doc, PREFS_MENU_ID, 0);
     },
     expected: {
       activeToolbarFilters: [true, false, false, false],

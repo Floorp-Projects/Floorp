@@ -56,6 +56,7 @@ class AccessibilityTreeFilter extends Component {
       dispatch: PropTypes.func.isRequired,
       accessibilityWalker: PropTypes.object.isRequired,
       describedby: PropTypes.string,
+      toolboxDoc: PropTypes.object.isRequired,
     };
   }
 
@@ -82,7 +83,7 @@ class AccessibilityTreeFilter extends Component {
   }
 
   render() {
-    const { auditing, filters, describedby } = this.props;
+    const { auditing, filters, describedby, toolboxDoc } = this.props;
     const toolbarLabelID = "accessibility-tree-filters-label";
     const filterNoneChecked = !Object.values(filters).includes(true);
     const items = [
@@ -146,7 +147,7 @@ class AccessibilityTreeFilter extends Component {
       MenuButton(
         {
           menuId: "accessibility-tree-filters-menu",
-          toolboxDoc: document,
+          toolboxDoc,
           className: `devtools-button badge toolbar-menu-button filters`,
           label,
         },

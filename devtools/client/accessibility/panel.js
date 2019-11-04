@@ -177,6 +177,7 @@ AccessibilityPanel.prototype = {
       supports: this.supports,
       fluentBundles: this.fluentBundles,
       simulator: this.simulator,
+      toolboxDoc: this._toolbox.doc,
     });
   },
 

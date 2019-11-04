@@ -34,6 +34,7 @@ class Toolbar extends Component {
       accessibility: PropTypes.object.isRequired,
       canBeDisabled: PropTypes.bool.isRequired,
       simulator: PropTypes.object,
+      toolboxDoc: PropTypes.object.isRequired,
     };
   }
 
@@ -76,7 +77,12 @@ class Toolbar extends Component {
   }
 
   render() {
-    const { canBeDisabled, accessibilityWalker, simulator } = this.props;
+    const {
+      canBeDisabled,
+      accessibilityWalker,
+      simulator,
+      toolboxDoc,
+    } = this.props;
     const { disabling } = this.state;
     const disableButtonStr = disabling
       ? "accessibility.disabling"
@@ -98,7 +104,7 @@ class Toolbar extends Component {
             role: "separator",
             className: "devtools-separator",
           }),
-          SimulationMenuButton({ simulator }),
+          SimulationMenuButton({ simulator, toolboxDoc }),
         ]
       : [];
 
@@ -131,10 +137,14 @@ class Toolbar extends Component {
         },
         L10N.getStr("accessibility.beta")
       ),
-      AccessibilityTreeFilter({ accessibilityWalker, describedby: betaID }),
+      AccessibilityTreeFilter({
+        accessibilityWalker,
+        describedby: betaID,
+        toolboxDoc,
+      }),
       // Simulation section is shown if webrender is enabled
       ...optionalSimulationSection,
-      AccessibilityPrefs()
+      AccessibilityPrefs({ toolboxDoc })
     );
   }
 }
