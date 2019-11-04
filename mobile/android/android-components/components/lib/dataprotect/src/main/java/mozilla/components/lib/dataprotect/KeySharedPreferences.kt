@@ -6,7 +6,6 @@
 
 package mozilla.components.lib.dataprotect
 
-import android.annotation.TargetApi
 import android.content.Context
 import android.content.Context.MODE_PRIVATE
 import android.os.Build

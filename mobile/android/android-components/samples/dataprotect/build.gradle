@@ -24,7 +24,6 @@ android {
 }
 
 dependencies {
-    implementation project(':support-base')
     implementation project(':support-ktx')
     implementation project(':lib-dataprotect')
 

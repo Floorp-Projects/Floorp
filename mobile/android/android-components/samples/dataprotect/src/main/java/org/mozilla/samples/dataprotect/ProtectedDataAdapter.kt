@@ -4,28 +4,17 @@
 
 package org.mozilla.samples.dataprotect
 
-import android.content.SharedPreferences
-import android.util.Base64
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import mozilla.components.lib.dataprotect.Keystore
-import org.mozilla.samples.dataprotect.Constants.B64_FLAGS
-import java.nio.charset.StandardCharsets
+import mozilla.components.lib.dataprotect.KeySharedPreferences
 
 class ProtectedDataAdapter(
-    private val prefs: SharedPreferences,
-    private val keystore: Keystore,
+    private val prefs: KeySharedPreferences,
     private val itemKeys: List<String>
 ) : RecyclerView.Adapter<ProtectedDataAdapter.Holder>() {
-    var unlocked: Boolean = false
-    fun toggleUnlock(): Boolean {
-        unlocked = !unlocked
-        return unlocked
-    }
-
     override fun getItemCount(): Int = itemKeys.size
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): Holder {
@@ -37,14 +26,7 @@ class ProtectedDataAdapter(
 
     override fun onBindViewHolder(holder: Holder, position: Int) {
         val key = itemKeys[position]
-        var value = prefs.getString(key, "")
-
-        if (unlocked) {
-            val encrypted = Base64.decode(value, B64_FLAGS)
-            val plain = keystore.decryptBytes(encrypted)
-            value = String(plain, StandardCharsets.UTF_8)
-        }
-
+        var value = prefs.getString(key)
         holder.keyView.text = key
         holder.valView.text = value
     }
