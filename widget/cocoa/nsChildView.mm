@@ -492,7 +492,7 @@ void nsChildView::TearDownView() {
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-nsCocoaWindow* nsChildView::GetXULWindowWidget() const {
+nsCocoaWindow* nsChildView::GetAppWindowWidget() const {
   id windowDelegate = [[mView window] delegate];
   if (windowDelegate && [windowDelegate isKindOfClass:[WindowDelegate class]]) {
     return [(WindowDelegate*)windowDelegate geckoWidget];
@@ -594,7 +594,7 @@ void* nsChildView::GetNativeData(uint32_t aDataType) {
 nsTransparencyMode nsChildView::GetTransparencyMode() {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
-  nsCocoaWindow* windowWidget = GetXULWindowWidget();
+  nsCocoaWindow* windowWidget = GetAppWindowWidget();
   return windowWidget ? windowWidget->GetTransparencyMode() : eTransparencyOpaque;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(eTransparencyOpaque);
@@ -605,7 +605,7 @@ nsTransparencyMode nsChildView::GetTransparencyMode() {
 void nsChildView::SetTransparencyMode(nsTransparencyMode aMode) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  nsCocoaWindow* windowWidget = GetXULWindowWidget();
+  nsCocoaWindow* windowWidget = GetAppWindowWidget();
   if (windowWidget) {
     windowWidget->SetTransparencyMode(aMode);
   }
@@ -626,7 +626,7 @@ bool nsChildView::IsVisible() const {
     return mVisible;
   }
 
-  if (!GetXULWindowWidget()->IsVisible()) {
+  if (!GetAppWindowWidget()->IsVisible()) {
     return false;
   }
 
@@ -833,7 +833,7 @@ void nsChildView::BackingScaleFactorChanged() {
     mNativeLayerRoot->SetBackingScale(mBackingScaleFactor);
   }
 
-  if (mWidgetListener && !mWidgetListener->GetXULWindow()) {
+  if (mWidgetListener && !mWidgetListener->GetAppWindow()) {
     if (PresShell* presShell = mWidgetListener->GetPresShell()) {
       presShell->BackingScaleFactorChanged();
     }
@@ -1167,7 +1167,7 @@ static NSMenuItem* NativeMenuItemWithLocation(NSMenu* menubar, NSString* locatio
 
 bool nsChildView::SendEventToNativeMenuSystem(NSEvent* aEvent) {
   bool handled = false;
-  nsCocoaWindow* widget = GetXULWindowWidget();
+  nsCocoaWindow* widget = GetAppWindowWidget();
   if (widget) {
     nsMenuBarX* mb = widget->GetMenuBar();
     if (mb) {
@@ -1232,7 +1232,7 @@ nsresult nsChildView::ActivateNativeMenuItemAt(const nsAString& indexString) {
 nsresult nsChildView::ForceUpdateNativeMenuAt(const nsAString& indexString) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  nsCocoaWindow* widget = GetXULWindowWidget();
+  nsCocoaWindow* widget = GetAppWindowWidget();
   if (widget) {
     nsMenuBarX* mb = widget->GetMenuBar();
     if (mb) {
@@ -1912,7 +1912,7 @@ void nsChildView::PrepareWindowEffects() {
     mIsCoveringTitlebar = [mView isCoveringTitlebar];
     NSInteger styleMask = [[mView window] styleMask];
     bool wasFullscreen = mIsFullscreen;
-    nsCocoaWindow* windowWidget = GetXULWindowWidget();
+    nsCocoaWindow* windowWidget = GetAppWindowWidget();
     mIsFullscreen =
         (styleMask & NSFullScreenWindowMask) || (windowWidget && windowWidget->InFullScreenMode());
 
@@ -3438,7 +3438,7 @@ NSEvent* gLastDragMouseDownEvent = nil;  // [strong]
 }
 
 - (void)viewWillStartLiveResize {
-  nsCocoaWindow* windowWidget = mGeckoChild ? mGeckoChild->GetXULWindowWidget() : nullptr;
+  nsCocoaWindow* windowWidget = mGeckoChild ? mGeckoChild->GetAppWindowWidget() : nullptr;
   if (windowWidget) {
     windowWidget->NotifyLiveResizeStarted();
   }
@@ -3451,7 +3451,7 @@ NSEvent* gLastDragMouseDownEvent = nil;  // [strong]
   // is null here, that might be problematic because we might get stuck with
   // a content process that has the displayport suppressed. If that scenario
   // arises (I'm not sure that it does) we will need to handle it gracefully.
-  nsCocoaWindow* windowWidget = mGeckoChild ? mGeckoChild->GetXULWindowWidget() : nullptr;
+  nsCocoaWindow* windowWidget = mGeckoChild ? mGeckoChild->GetAppWindowWidget() : nullptr;
   if (windowWidget) {
     windowWidget->NotifyLiveResizeStopped();
   }

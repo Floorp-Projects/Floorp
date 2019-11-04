@@ -17,7 +17,7 @@
 #include "nsIWindowWatcher.h"
 #include "nsPIWindowWatcher.h"
 #include "nsPIDOMWindow.h"
-#include "nsXULWindow.h"
+#include "AppWindow.h"
 
 #include "nsWidgetInitData.h"
 #include "nsWidgetsCID.h"
@@ -133,7 +133,7 @@ nsAppShellService::CreateHiddenWindow() {
   rv = NS_NewURI(getter_AddRefs(url), hiddenWindowURL);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  RefPtr<nsXULWindow> newWindow;
+  RefPtr<AppWindow> newWindow;
   rv =
       JustCreateTopWindow(nullptr, url, chromeMask, initialWidth, initialHeight,
                           true, nullptr, nullptr, getter_AddRefs(newWindow));
@@ -166,16 +166,16 @@ nsAppShellService::DestroyHiddenWindow() {
  */
 NS_IMETHODIMP
 nsAppShellService::CreateTopLevelWindow(
-    nsIXULWindow* aParent, nsIURI* aUrl, uint32_t aChromeMask,
+    nsIAppWindow* aParent, nsIURI* aUrl, uint32_t aChromeMask,
     int32_t aInitialWidth, int32_t aInitialHeight, nsIRemoteTab* aOpeningTab,
-    mozIDOMWindowProxy* aOpenerWindow, nsIXULWindow** aResult)
+    mozIDOMWindowProxy* aOpenerWindow, nsIAppWindow** aResult)
 
 {
   nsresult rv;
 
   StartupTimeline::RecordOnce(StartupTimeline::CREATE_TOP_LEVEL_WINDOW);
 
-  RefPtr<nsXULWindow> newWindow;
+  RefPtr<AppWindow> newWindow;
   rv = JustCreateTopWindow(aParent, aUrl, aChromeMask, aInitialWidth,
                            aInitialHeight, false, aOpeningTab, aOpenerWindow,
                            getter_AddRefs(newWindow));
@@ -184,7 +184,7 @@ nsAppShellService::CreateTopLevelWindow(
   if (NS_SUCCEEDED(rv)) {
     // the addref resulting from this is the owning addref for this window
     RegisterTopLevelWindow(*aResult);
-    nsCOMPtr<nsIXULWindow> parent;
+    nsCOMPtr<nsIAppWindow> parent;
     if (aChromeMask & nsIWebBrowserChrome::CHROME_DEPENDENT) parent = aParent;
     (*aResult)->SetZLevel(CalculateWindowZLevel(parent, aChromeMask));
   }
@@ -485,15 +485,15 @@ nsAppShellService::CreateWindowlessBrowser(bool aIsChrome,
   return NS_OK;
 }
 
-uint32_t nsAppShellService::CalculateWindowZLevel(nsIXULWindow* aParent,
+uint32_t nsAppShellService::CalculateWindowZLevel(nsIAppWindow* aParent,
                                                   uint32_t aChromeMask) {
   uint32_t zLevel;
 
-  zLevel = nsIXULWindow::normalZ;
+  zLevel = nsIAppWindow::normalZ;
   if (aChromeMask & nsIWebBrowserChrome::CHROME_WINDOW_RAISED)
-    zLevel = nsIXULWindow::raisedZ;
+    zLevel = nsIAppWindow::raisedZ;
   else if (aChromeMask & nsIWebBrowserChrome::CHROME_WINDOW_LOWERED)
-    zLevel = nsIXULWindow::loweredZ;
+    zLevel = nsIAppWindow::loweredZ;
 
 #ifdef XP_MACOSX
   /* Platforms on which modal windows are always application-modal, not
@@ -528,7 +528,7 @@ static bool CheckForFullscreenWindow() {
   if (!wm) return false;
 
   nsCOMPtr<nsISimpleEnumerator> windowList;
-  wm->GetXULWindowEnumerator(nullptr, getter_AddRefs(windowList));
+  wm->GetAppWindowEnumerator(nullptr, getter_AddRefs(windowList));
   if (!windowList) return false;
 
   for (;;) {
@@ -555,17 +555,17 @@ static bool CheckForFullscreenWindow() {
  * Just do the window-making part of CreateTopLevelWindow
  */
 nsresult nsAppShellService::JustCreateTopWindow(
-    nsIXULWindow* aParent, nsIURI* aUrl, uint32_t aChromeMask,
+    nsIAppWindow* aParent, nsIURI* aUrl, uint32_t aChromeMask,
     int32_t aInitialWidth, int32_t aInitialHeight, bool aIsHiddenWindow,
     nsIRemoteTab* aOpeningTab, mozIDOMWindowProxy* aOpenerWindow,
-    nsXULWindow** aResult) {
+    AppWindow** aResult) {
   *aResult = nullptr;
   NS_ENSURE_STATE(!mXPCOMWillShutDown);
 
-  nsCOMPtr<nsIXULWindow> parent;
+  nsCOMPtr<nsIAppWindow> parent;
   if (aChromeMask & nsIWebBrowserChrome::CHROME_DEPENDENT) parent = aParent;
 
-  RefPtr<nsXULWindow> window = new nsXULWindow(aChromeMask);
+  RefPtr<AppWindow> window = new AppWindow(aChromeMask);
 
 #ifdef XP_WIN
   // If the parent is currently fullscreen, tell the child to ignore persisted
@@ -737,7 +737,7 @@ nsresult nsAppShellService::JustCreateTopWindow(
 }
 
 NS_IMETHODIMP
-nsAppShellService::GetHiddenWindow(nsIXULWindow** aWindow) {
+nsAppShellService::GetHiddenWindow(nsIAppWindow** aWindow) {
   NS_ENSURE_ARG_POINTER(aWindow);
 
   EnsureHiddenWindow();
@@ -784,7 +784,7 @@ nsAppShellService::GetApplicationProvidedHiddenWindow(bool* aAPHW) {
  * Register a new top level window (created elsewhere)
  */
 NS_IMETHODIMP
-nsAppShellService::RegisterTopLevelWindow(nsIXULWindow* aWindow) {
+nsAppShellService::RegisterTopLevelWindow(nsIAppWindow* aWindow) {
   NS_ENSURE_ARG_POINTER(aWindow);
 
   nsCOMPtr<nsIDocShell> docShell;
@@ -816,15 +816,15 @@ nsAppShellService::RegisterTopLevelWindow(nsIXULWindow* aWindow) {
 
   if (obssvc) {
     obssvc->NotifyObservers(aWindow, "xul-window-registered", nullptr);
-    nsXULWindow* xulWindow = static_cast<nsXULWindow*>(aWindow);
-    xulWindow->WasRegistered();
+    AppWindow* appWindow = static_cast<AppWindow*>(aWindow);
+    appWindow->WasRegistered();
   }
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsAppShellService::UnregisterTopLevelWindow(nsIXULWindow* aWindow) {
+nsAppShellService::UnregisterTopLevelWindow(nsIAppWindow* aWindow) {
   if (mXPCOMShuttingDown) {
     /* return an error code in order to:
        - avoid doing anything with other member variables while we are in
