@@ -1205,6 +1205,12 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
   }
 
   if (mode == XDR_DECODE) {
+    if (coverage::IsLCovEnabled()) {
+      if (!coverage::InitScriptCoverage(cx, script)) {
+        return xdr->fail(JS::TranscodeResult_Throw);
+      }
+    }
+
     /* see BytecodeEmitter::tellDebuggerAboutCompiledScript */
     if (!fun && !cx->isHelperThreadContext()) {
       DebugAPI::onNewScript(cx, script);
@@ -3932,12 +3938,6 @@ JSScript* JSScript::Create(JSContext* cx, HandleObject functionOrGlobal,
   script->setFlag(MutableFlags::TrackRecordReplayProgress,
                   ShouldTrackRecordReplayProgress(script));
 
-  if (coverage::IsLCovEnabled()) {
-    if (!coverage::InitScriptCoverage(cx, script)) {
-      return nullptr;
-    }
-  }
-
   return script;
 }
 
@@ -3955,12 +3955,6 @@ JSScript* JSScript::Create(JSContext* cx, HandleObject functionOrGlobal,
 
   script->setFlag(MutableFlags::TrackRecordReplayProgress,
                   ShouldTrackRecordReplayProgress(script));
-
-  if (coverage::IsLCovEnabled()) {
-    if (!coverage::InitScriptCoverage(cx, script)) {
-      return nullptr;
-    }
-  }
 
   return script;
 }
@@ -4151,6 +4145,12 @@ bool JSScript::fullyInitFromEmitter(JSContext* cx, HandleScript script,
 #ifdef DEBUG
   script->assertValidJumpTargets();
 #endif
+
+  if (coverage::IsLCovEnabled()) {
+    if (!coverage::InitScriptCoverage(cx, script)) {
+      return false;
+    }
+  }
 
   scriptDataGuard.release();
   return true;
@@ -4744,7 +4744,19 @@ JSScript* js::CloneGlobalScript(JSContext* cx, ScopeKind scopeKind,
   }
 
   RootedObject global(cx, cx->global());
-  return detail::CopyScript(cx, src, global, sourceObject, &scopes);
+  RootedScript dst(cx,
+                   detail::CopyScript(cx, src, global, sourceObject, &scopes));
+  if (!dst) {
+    return nullptr;
+  }
+
+  if (coverage::IsLCovEnabled()) {
+    if (!coverage::InitScriptCoverage(cx, dst)) {
+      return nullptr;
+    }
+  }
+
+  return dst;
 }
 
 JSScript* js::CloneScriptIntoFunction(
@@ -4793,6 +4805,12 @@ JSScript* js::CloneScriptIntoFunction(
     fun->setUnlazifiedScript(dst);
   } else {
     fun->initScript(dst);
+  }
+
+  if (coverage::IsLCovEnabled()) {
+    if (!coverage::InitScriptCoverage(cx, dst)) {
+      return nullptr;
+    }
   }
 
   return dst;
