@@ -52,7 +52,7 @@ class RequestListColumnTransferredSize extends Component {
     if (blockedReason) {
       text =
         BLOCKED_REASON_MESSAGES[blockedReason] ||
-        L10N.getStr("networkMenu.blocked");
+        L10N.getStr("networkMenu.blocked2");
     } else if (fromCache || status === "304") {
       text = SIZE_CACHED;
     } else if (fromServiceWorker) {
