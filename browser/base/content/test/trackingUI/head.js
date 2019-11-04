@@ -84,10 +84,10 @@ function waitForContentBlockingEvent(numChanges = 1, win = null) {
   return new Promise(resolve => {
     let n = 0;
     let listener = {
-      onContentBlockingEvent() {
+      onContentBlockingEvent(webProgress, request, event) {
         n = n + 1;
         info(
-          "Received onContentBlockingEvent event " + n + " of " + numChanges
+          `Received onContentBlockingEvent event: ${event} (${n} of ${numChanges})`
         );
         if (n >= numChanges) {
           win.gBrowser.removeProgressListener(listener);

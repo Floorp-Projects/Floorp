@@ -11,7 +11,7 @@ onmessage = event => {
       break;
     case "socialtracking":
       createIframe(
-        "http://socialtracking.example.com/browser/browser/base/content/test/trackingUI/cookieServer.sjs"
+        "https://social-tracking.example.org/browser/browser/base/content/test/trackingUI/cookieServer.sjs"
       );
       break;
     case "cryptomining":
