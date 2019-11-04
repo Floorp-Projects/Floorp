@@ -9,6 +9,12 @@ Android download manager.
 
 To use this service, you must create a subclass in your application and it to the manifest.
 
+### Types
+
+| Name | Summary |
+|---|---|
+| [DownloadJobStatus](-download-job-status/index.md) | `enum class DownloadJobStatus`<br>Status of an ongoing download |
+
 ### Constructors
 
 | Name | Summary |
@@ -38,6 +44,13 @@ To use this service, you must create a subclass in your application and it to th
 | [ACTION_PAUSE](-a-c-t-i-o-n_-p-a-u-s-e.md) | `const val ACTION_PAUSE: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
 | [ACTION_RESUME](-a-c-t-i-o-n_-r-e-s-u-m-e.md) | `const val ACTION_RESUME: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
 | [ACTION_TRY_AGAIN](-a-c-t-i-o-n_-t-r-y_-a-g-a-i-n.md) | `const val ACTION_TRY_AGAIN: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
+| [EXTRA_DOWNLOAD_STATUS](-e-x-t-r-a_-d-o-w-n-l-o-a-d_-s-t-a-t-u-s.md) | `const val EXTRA_DOWNLOAD_STATUS: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
+
+### Companion Object Functions
+
+| Name | Summary |
+|---|---|
+| [openFile](open-file.md) | `fun openFile(context: <ERROR CLASS>, filePath: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, contentType: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Launches an intent to open the given file |
 
 ### Extension Functions
 

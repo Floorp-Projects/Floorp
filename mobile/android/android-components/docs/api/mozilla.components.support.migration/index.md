@@ -8,11 +8,17 @@
 |---|---|
 | [FennecMigrator](-fennec-migrator/index.md) | `class FennecMigrator`<br>Entrypoint for Fennec data migration. See [Builder](-fennec-migrator/-builder/index.md) for public API. |
 | [FennecProfile](-fennec-profile/index.md) | `data class FennecProfile`<br>A profile of "Fennec" (Firefox for Android). |
-| [FennecSessionMigration](-fennec-session-migration/index.md) | `object FennecSessionMigration`<br>Helper for importing/migrating "open tabs" from Fennec. |
+| [FxaMigrationResult](-fxa-migration-result/index.md) | `sealed class FxaMigrationResult`<br>Result of an FxA migration. |
 | [Migration](-migration/index.md) | `sealed class Migration`<br>Supported Fennec migrations and their current versions. |
 | [MigrationRun](-migration-run/index.md) | `data class MigrationRun`<br>Results of running a single versioned migration. |
 | [Result](-result/index.md) | `sealed class Result<T>`<br>Class representing the result of a successful or failed migration action. |
 | [VersionedMigration](-versioned-migration/index.md) | `data class VersionedMigration`<br>Describes a [Migration](-migration/index.md) at a specific version, enforcing in-range version specification. |
+
+### Exceptions
+
+| Name | Summary |
+|---|---|
+| [FxaMigrationException](-fxa-migration-exception/index.md) | `class FxaMigrationException : `[`Exception`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-exception/index.html)<br>Wraps [FxaMigrationResult](-fxa-migration-result/index.md) in an exception so that it can be returned via [Result.Failure](-result/-failure/index.md). |
 
 ### Type Aliases
 

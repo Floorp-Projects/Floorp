@@ -2,7 +2,7 @@
 
 # AddOn
 
-`data class AddOn` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/AddOn.kt#L29)
+`data class AddOn` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/addons/src/main/java/mozilla/components/feature/addons/AddOn.kt#L33)
 
 Represents an add-on based on the AMO store:
 https://addons.mozilla.org/en-US/firefox/

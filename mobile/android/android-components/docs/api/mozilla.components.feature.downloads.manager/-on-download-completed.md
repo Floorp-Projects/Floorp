@@ -2,4 +2,4 @@
 
 # OnDownloadCompleted
 
-`typealias OnDownloadCompleted = (`[`DownloadState`](../mozilla.components.browser.state.state.content/-download-state/index.md)`, `[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/downloads/src/main/java/mozilla/components/feature/downloads/manager/DownloadManager.kt#L11)
+`typealias OnDownloadCompleted = (`[`DownloadState`](../mozilla.components.browser.state.state.content/-download-state/index.md)`, `[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html)`, `[`DownloadJobStatus`](../mozilla.components.feature.downloads/-abstract-fetch-download-service/-download-job-status/index.md)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/downloads/src/main/java/mozilla/components/feature/downloads/manager/DownloadManager.kt#L12)

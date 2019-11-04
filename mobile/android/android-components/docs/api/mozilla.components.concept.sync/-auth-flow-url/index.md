@@ -2,7 +2,7 @@
 
 # AuthFlowUrl
 
-`data class AuthFlowUrl` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/OAuthAccount.kt#L29)
+`data class AuthFlowUrl` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/OAuthAccount.kt#L42)
 
 An object that represents a login flow initiated by [OAuthAccount](../-o-auth-account/index.md).
 

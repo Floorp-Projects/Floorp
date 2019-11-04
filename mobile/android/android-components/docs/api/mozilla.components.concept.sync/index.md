@@ -7,6 +7,7 @@
 | Name | Summary |
 |---|---|
 | [AccessTokenInfo](-access-token-info/index.md) | `data class AccessTokenInfo`<br>The result of authentication with FxA via an OAuth flow. |
+| [AccessType](-access-type/index.md) | `enum class AccessType`<br>The access-type determines whether the code can be exchanged for a refresh token for offline use or not. |
 | [AccountObserver](-account-observer/index.md) | `interface AccountObserver`<br>Observer interface which lets its users monitor account state changes and major events. |
 | [AuthExceptionType](-auth-exception-type/index.md) | `enum class AuthExceptionType`<br>An auth-related exception type, for use with [AuthException](-auth-exception/index.md). |
 | [AuthFlowUrl](-auth-flow-url/index.md) | `data class AuthFlowUrl`<br>An object that represents a login flow initiated by [OAuthAccount](-o-auth-account/index.md). |

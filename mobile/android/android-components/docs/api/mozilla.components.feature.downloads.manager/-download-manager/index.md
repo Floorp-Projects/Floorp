@@ -2,7 +2,7 @@
 
 # DownloadManager
 
-`interface DownloadManager` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/downloads/src/main/java/mozilla/components/feature/downloads/manager/DownloadManager.kt#L13)
+`interface DownloadManager` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/downloads/src/main/java/mozilla/components/feature/downloads/manager/DownloadManager.kt#L14)
 
 ### Properties
 

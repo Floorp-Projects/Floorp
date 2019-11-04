@@ -2,7 +2,7 @@
 
 # Shared
 
-`object Shared : `[`AuthType`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/OAuthAccount.kt#L92)
+`object Shared : `[`AuthType`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/OAuthAccount.kt#L231)
 
 Account created via a shared account state from another app.
 
