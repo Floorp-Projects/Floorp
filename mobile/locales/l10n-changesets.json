@@ -153,7 +153,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "ff3aee9708bf"
+        "revision": "45e384e8f064"
     },
     "fa": {
         "platforms": [
@@ -495,7 +495,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "39b74fc365a3"
+        "revision": "ffbaf9f663bd"
     },
     "ur": {
         "platforms": [
