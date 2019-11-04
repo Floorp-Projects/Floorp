@@ -23,8 +23,7 @@ class VideoBridgeChild final : public PVideoBridgeChild,
   static void StartupForGPUProcess();
   static void Shutdown();
 
-  static VideoBridgeChild* GetSingletonToParentProcess();
-  static VideoBridgeChild* GetSingletonToGPUProcess();
+  static VideoBridgeChild* GetSingleton();
 
   // PVideoBridgeChild
   PTextureChild* AllocPTextureChild(const SurfaceDescriptor& aSharedData,
@@ -66,8 +65,7 @@ class VideoBridgeChild final : public PVideoBridgeChild,
 
   bool CanSend() { return mCanSend; }
 
-  static void OpenToParentProcess(Endpoint<PVideoBridgeChild>&& aEndpoint);
-  static void OpenToGPUProcess(Endpoint<PVideoBridgeChild>&& aEndpoint);
+  static void Open(Endpoint<PVideoBridgeChild>&& aEndpoint);
 
  private:
   VideoBridgeChild();
