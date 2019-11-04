@@ -120,7 +120,6 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), BackHandler {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        activity?.title = getString(R.string.library_bookmarks)
         setHasOptionsMenu(true)
     }
 

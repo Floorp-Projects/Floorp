@@ -255,7 +255,6 @@
     <fragment
         android:id="@+id/bookmarkFragment"
         android:name="org.mozilla.fenix.library.bookmarks.BookmarkFragment"
-        android:label="@string/library_bookmarks"
         tools:layout="@layout/fragment_bookmark">
         <argument
             android:name="currentRoot"

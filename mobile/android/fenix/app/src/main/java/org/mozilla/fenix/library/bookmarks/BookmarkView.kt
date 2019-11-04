@@ -150,7 +150,7 @@ class BookmarkView(
 
     private fun setUiForNormalMode(root: BookmarkNode?) {
         super.setUiForNormalMode(
-            if (BookmarkRoot.Mobile.matches(root)) context.getString(R.string.library_bookmarks) else root?.title,
+            if (BookmarkRoot.Mobile.id == root?.guid) context.getString(R.string.library_bookmarks) else root?.title,
             view.bookmark_list
         )
     }
