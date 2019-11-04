@@ -31,8 +31,6 @@ EXPORTS.vrhost = [
   'vrhostex.h'
 ]
 
-
-
 DIRS += [
   'testhost'
 ]
@@ -43,6 +41,10 @@ DEFINES['XP_WIN'] = True
 DEFINES['MOZ_NO_MOZALLOC'] = True
 # fixes "STL code can only be used with infallible ::operator new()"
 DisableStlWrapping()
+
+# Define UNICODE for default support in this dll
+DEFINES['UNICODE'] = True
+DEFINES['_UNICODE'] = True
 
 # Use SharedLibrary to generate the dll
 SharedLibrary('vrhost')
