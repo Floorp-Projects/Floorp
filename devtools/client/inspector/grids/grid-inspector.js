@@ -318,11 +318,6 @@ class GridInspector {
 
     const gridFronts = await this.getGrids();
 
-    // Stop if the panel has been destroyed during the call to getGrids
-    if (!this.inspector) {
-      return;
-    }
-
     if (!gridFronts.length) {
       try {
         this.store.dispatch(updateGrids([]));
@@ -368,10 +363,6 @@ class GridInspector {
         } catch (e) {
           // This call might fail if called asynchrously after the toolbox is finished
           // closing.
-          return;
-        }
-        // Stop if the panel has been destroyed during the call getNodeFromActor
-        if (!this.inspector) {
           return;
         }
       }
@@ -544,47 +535,53 @@ class GridInspector {
    * grid.
    */
   async onReflow() {
-    if (!this.isPanelVisible()) {
-      return;
+    try {
+      if (!this.isPanelVisible()) {
+        return;
+      }
+
+      // The list of grids currently displayed.
+      const { grids } = this.store.getState();
+
+      // The new list of grids from the server.
+      const newGridFronts = await this.getGrids();
+
+      // In some cases, the nodes for current grids may have been removed from the DOM in
+      // which case we need to update.
+      if (grids.length && grids.some(grid => !grid.nodeFront.actorID)) {
+        await this.updateGridPanel(newGridFronts);
+        return;
+      }
+
+      // Get the node front(s) from the current grid(s) so we can compare them to them to
+      // the node(s) of the new grids.
+      const oldNodeFronts = grids.map(grid => grid.nodeFront.actorID);
+      const newNodeFronts = newGridFronts
+        .filter(grid => grid.containerNode)
+        .map(grid => grid.containerNodeFront.actorID);
+
+      if (
+        grids.length === newGridFronts.length &&
+        oldNodeFronts.sort().join(",") == newNodeFronts.sort().join(",") &&
+        !this.haveCurrentFragmentsChanged(newGridFronts)
+      ) {
+        // Same list of containers and the geometry of all the displayed grids remained the
+        // same, we can safely abort.
+        return;
+      }
+
+      // Either the list of containers or the current fragments have changed, do update.
+      await this.updateGridPanel(newGridFronts);
+    } catch (e) {
+      if (!this.inspector) {
+        // onReflow/updateGridPanel are highly asynchronous and might still run
+        // after the inspector was destroyed. Swallow the error in this case.
+        console.warn("Inspector destroyed while executing onReflow callback");
+      } else {
+        // If the grid inspector was not destroyed, this is an unexpected error.
+        throw e;
+      }
     }
-
-    // The list of grids currently displayed.
-    const { grids } = this.store.getState();
-
-    // The new list of grids from the server.
-    const newGridFronts = await this.getGrids();
-
-    // Stop if the panel has been destroyed during the call to getGrids
-    if (!this.inspector) {
-      return;
-    }
-
-    // In some cases, the nodes for current grids may have been removed from the DOM in
-    // which case we need to update.
-    if (grids.length && grids.some(grid => !grid.nodeFront.actorID)) {
-      this.updateGridPanel(newGridFronts);
-      return;
-    }
-
-    // Get the node front(s) from the current grid(s) so we can compare them to them to
-    // the node(s) of the new grids.
-    const oldNodeFronts = grids.map(grid => grid.nodeFront.actorID);
-    const newNodeFronts = newGridFronts
-      .filter(grid => grid.containerNode)
-      .map(grid => grid.containerNodeFront.actorID);
-
-    if (
-      grids.length === newGridFronts.length &&
-      oldNodeFronts.sort().join(",") == newNodeFronts.sort().join(",") &&
-      !this.haveCurrentFragmentsChanged(newGridFronts)
-    ) {
-      // Same list of containers and the geometry of all the displayed grids remained the
-      // same, we can safely abort.
-      return;
-    }
-
-    // Either the list of containers or the current fragments have changed, do update.
-    this.updateGridPanel(newGridFronts);
   }
 
   /**
