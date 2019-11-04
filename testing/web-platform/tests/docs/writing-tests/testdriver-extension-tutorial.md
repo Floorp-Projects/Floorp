@@ -1,5 +1,4 @@
-# testdriver.js Tutorial
-
+# Testdriver extension tutorial
 Adding new commands to testdriver.js
 
 ## Assumptions
