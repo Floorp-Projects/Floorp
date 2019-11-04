@@ -60,7 +60,7 @@ static inline JSScript* CalleeTokenToScript(CalleeToken token) {
 }
 static inline bool CalleeTokenIsModuleScript(CalleeToken token) {
   CalleeTokenTag tag = GetCalleeTokenTag(token);
-  return tag == CalleeToken_Script && CalleeTokenToScript(token)->module();
+  return tag == CalleeToken_Script && CalleeTokenToScript(token)->isModule();
 }
 
 static inline JSScript* ScriptFromCalleeToken(CalleeToken token) {
