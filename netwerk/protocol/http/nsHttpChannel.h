@@ -334,7 +334,7 @@ class nsHttpChannel final : public HttpBaseChannel,
   MOZ_MUST_USE nsresult ContinueProcessResponse2(nsresult);
 
  private:
-  void AssertNotDocumentChennel();
+  void AssertNotDocumentChannel();
 
  public:
   void UpdateCacheDisposition(bool aSuccessfulReval, bool aPartialContentUsed);
