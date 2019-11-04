@@ -56,7 +56,7 @@ const XULStore = {
     const value = node.getAttribute(attr);
 
     if (node.localName == "window") {
-      log("Persisting attributes to windows is handled by nsXULWindow.");
+      log("Persisting attributes to windows is handled by AppWindow.");
       return;
     }
 

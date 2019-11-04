@@ -784,7 +784,7 @@
         try {
           this._xulBrowserWindow = window.docShell.treeOwner
             .QueryInterface(Ci.nsIInterfaceRequestor)
-            .getInterface(Ci.nsIXULWindow).XULBrowserWindow;
+            .getInterface(Ci.nsIAppWindow).XULBrowserWindow;
         } catch (ex) {}
         if (!this._xulBrowserWindow) {
           return false;

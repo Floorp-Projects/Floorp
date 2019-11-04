@@ -5,7 +5,7 @@
 
 #include "nsISupports.idl"
 
-interface nsIXULWindow;
+interface nsIAppWindow;
 interface nsIWindowlessBrowser;
 interface nsIURI;
 interface mozIDOMWindowProxy;
@@ -42,7 +42,7 @@ interface nsIAppShellService : nsISupports
    *                      Can be left null.
    */
   const long SIZE_TO_CONTENT = -1;
-  nsIXULWindow createTopLevelWindow(in nsIXULWindow aParent,
+  nsIAppWindow createTopLevelWindow(in nsIAppWindow aParent,
                                     in nsIURI aUrl,
                                     in uint32_t aChromeMask,
                                     in long aInitialWidth,
@@ -79,7 +79,7 @@ interface nsIAppShellService : nsISupports
    * @param aResult the hidden window.  Do not unhide hidden window.
    *                Do not taunt hidden window.
    */
-  readonly attribute nsIXULWindow hiddenWindow;
+  readonly attribute nsIAppWindow hiddenWindow;
 
   /**
    * Return the (singleton) application hidden window, automatically created
@@ -104,7 +104,7 @@ interface nsIAppShellService : nsISupports
    * @note When this method is successful, it fires the global notification
    *       "xul-window-registered"
    */
-  void registerTopLevelWindow(in nsIXULWindow aWindow);
+  void registerTopLevelWindow(in nsIAppWindow aWindow);
 
   /**
    * Remove a window from the application's window registry. Note that
@@ -112,7 +112,7 @@ interface nsIAppShellService : nsISupports
    * the last window is unregistered. For that, see Quit().
    * @param aWindow you see the pattern
    */
-  void unregisterTopLevelWindow(in nsIXULWindow aWindow);
+  void unregisterTopLevelWindow(in nsIAppWindow aWindow);
 
   /**
    * Whether the hidden window has been lazily created.
