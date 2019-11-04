@@ -10,7 +10,6 @@ import json
 import math
 import os
 import posixpath
-import re
 import sys
 import mozinfo
 from manifestparser import TestManifest
@@ -81,12 +80,13 @@ class SingleTestMixin(object):
             if os.path.exists(path):
                 man = manifest.ReftestManifest()
                 man.load(path)
-                for t in man.files:
-                    relpath = os.path.relpath(t, self.reftest_test_dir)
-                    tests_by_path[relpath] = (suite, subsuite)
-                    self._map_test_path_to_source(t, relpath)
+                for t in man.tests:
+                    relpath = os.path.relpath(t['path'], self.reftest_test_dir)
+                    referenced = t['referenced-test'] if 'referenced-test' in t else None
+                    tests_by_path[relpath] = (suite, subsuite, referenced)
+                    self._map_test_path_to_source(t['path'], relpath)
                 self.info("Per-test run updated with manifest %s (%d tests)" %
-                          (path, len(man.files)))
+                          (path, len(man.tests)))
 
         suite = 'jsreftest'
         self.jsreftest_test_dir = os.path.join(dirs['abs_test_install_dir'], 'jsreftest', 'tests')
@@ -131,6 +131,14 @@ class SingleTestMixin(object):
                 self.info("Per-test run (non-gpu) discarded gpu test %s (%s)" % (file, entry[1]))
                 continue
 
+            if entry[2] is not None:
+                # Test name substitution, for reftest reference file handling:
+                #  - if both test and reference modified, run the test file
+                #  - if only reference modified, run the test file
+                test_file = os.path.join(os.path.dirname(file), entry[2])
+                self.info("Per-test run substituting %s for %s" % (test_file, file))
+                file = test_file
+
             self.info("Per-test run found test %s (%s/%s)" % (file, entry[0], entry[1]))
             subsuite_mapping = {
                 # Map (<suite>, <subsuite>): <full-suite>
@@ -158,7 +166,8 @@ class SingleTestMixin(object):
             suite_files = self.suites.get(suite)
             if not suite_files:
                 suite_files = []
-            suite_files.append(file)
+            if file not in suite_files:
+                suite_files.append(file)
             self.suites[suite] = suite_files
 
     def _find_wpt_tests(self, dirs, changed_files):
@@ -305,7 +314,6 @@ class SingleTestMixin(object):
         if not self.per_test_coverage and not self.verify_enabled:
             return [[]]
 
-        references = re.compile(r"(-ref|-notref|-noref|-noref.)\.")
         files = []
         jsreftest_extra_dir = os.path.join('js', 'src', 'tests')
         # For some suites, the test path needs to be updated before passing to
@@ -314,15 +322,6 @@ class SingleTestMixin(object):
             if (self.config.get('per_test_category') != "web-platform" and
                 suite in ['reftest', 'crashtest']):
                 file = os.path.join(self.reftest_test_dir, file)
-                if suite == 'reftest':
-                    # Special handling for modified reftest reference files:
-                    #  - if both test and reference modified, run the test file
-                    #  - if only reference modified, run the test file
-                    nonref = references.sub('.', file)
-                    if nonref != file:
-                        file = None
-                        if nonref not in files and os.path.exists(nonref):
-                            file = nonref
             elif (self.config.get('per_test_category') != "web-platform" and
                   suite == 'jsreftest'):
                 file = os.path.relpath(file, jsreftest_extra_dir)
