@@ -4038,6 +4038,11 @@ class Document : public nsINode,
    */
   void InitialDocumentTranslationCompleted();
 
+  /**
+   * Returns whether the document allows localization.
+   */
+  bool AllowsL10n() const;
+
  protected:
   RefPtr<DocumentL10n> mDocumentL10n;
 

@@ -326,6 +326,9 @@
 @RESPATH@/res/dtd/*
 @RESPATH@/res/language.properties
 @RESPATH@/res/locale/layout/HtmlForm.properties
+@RESPATH@/res/locale/layout/MediaDocument.properties
+@RESPATH@/res/locale/layout/xmlparser.properties
+@RESPATH@/res/locale/dom/dom.properties
 #ifdef XP_MACOSX
 @RESPATH@/res/MainMenu.nib/
 #endif
