@@ -62,4 +62,10 @@ JAR_MANIFESTS += ['jar.mn']
 
 RESOURCE_FILES.locale.layout += [
     'en-US/chrome/layout/HtmlForm.properties',
+    'en-US/chrome/layout/MediaDocument.properties',
+    'en-US/chrome/layout/xmlparser.properties',
+]
+
+RESOURCE_FILES.locale.dom += [
+    'en-US/chrome/dom/dom.properties',
 ]
