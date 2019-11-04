@@ -24,7 +24,6 @@ class XMLHttpRequestWorker final : public XMLHttpRequest {
  public:
   // This defines the xhr.response value.
   struct ResponseData {
-    XMLHttpRequestResponseType mResponseType;
     nsresult mResponseResult;
 
     // responseType is empty or text.
@@ -43,8 +42,7 @@ class XMLHttpRequestWorker final : public XMLHttpRequest {
     JS::Heap<JS::Value> mResponseJSONValue;
 
     ResponseData()
-        : mResponseType(XMLHttpRequestResponseType::_empty),
-          mResponseResult(NS_OK),
+        : mResponseResult(NS_OK),
           mResponseArrayBufferValue(nullptr),
           mResponseJSONValue(JS::UndefinedValue()) {}
 
@@ -54,7 +52,6 @@ class XMLHttpRequestWorker final : public XMLHttpRequest {
   };
 
   struct StateData {
-    UniquePtr<ResponseData> mResponseData;
     nsString mResponseURL;
     uint32_t mStatus;
     nsCString mStatusText;
@@ -63,15 +60,7 @@ class XMLHttpRequestWorker final : public XMLHttpRequest {
     nsresult mStatusResult;
 
     StateData()
-        : mResponseData(new ResponseData()),
-          mStatus(0),
-          mReadyState(0),
-          mFlagSend(false),
-          mStatusResult(NS_OK) {}
-
-    void Unlink();
-    void Trace(const TraceCallbacks& aCallbacks, void* aClosure);
-    void Traverse(nsCycleCollectionTraversalCallback& aCb);
+        : mStatus(0), mReadyState(0), mFlagSend(false), mStatusResult(NS_OK) {}
   };
 
  private:
@@ -79,8 +68,10 @@ class XMLHttpRequestWorker final : public XMLHttpRequest {
   WorkerPrivate* mWorkerPrivate;
   RefPtr<StrongWorkerRef> mWorkerRef;
   RefPtr<Proxy> mProxy;
+
   XMLHttpRequestResponseType mResponseType;
 
+  UniquePtr<ResponseData> mResponseData;
   UniquePtr<StateData> mStateData;
 
   uint32_t mTimeout;
@@ -224,7 +215,8 @@ class XMLHttpRequestWorker final : public XMLHttpRequest {
 
   XMLHttpRequestUpload* GetUploadObjectNoCreate() const { return mUpload; }
 
-  void UpdateState(UniquePtr<StateData>&& aStateData);
+  void UpdateState(UniquePtr<StateData>&& aStateData,
+                   UniquePtr<ResponseData>&& aResponseData);
 
   virtual uint16_t ErrorCode() const override {
     return 0;  // eOK

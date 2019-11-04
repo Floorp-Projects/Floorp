@@ -44,11 +44,6 @@
 namespace mozilla {
 namespace dom {
 
-void XMLHttpRequestWorker::StateData::Unlink() {
-  MOZ_DIAGNOSTIC_ASSERT(mResponseData);
-  mResponseData->Unlink();
-}
-
 void XMLHttpRequestWorker::ResponseData::Unlink() {
   mResponseBlobImpl = nullptr;
   mResponseBlob = nullptr;
@@ -57,23 +52,11 @@ void XMLHttpRequestWorker::ResponseData::Unlink() {
   mResponseJSONValue.setUndefined();
 }
 
-void XMLHttpRequestWorker::StateData::Trace(const TraceCallbacks& aCallbacks,
-                                            void* aClosure) {
-  MOZ_DIAGNOSTIC_ASSERT(mResponseData);
-  mResponseData->Trace(aCallbacks, aClosure);
-}
-
 void XMLHttpRequestWorker::ResponseData::Trace(const TraceCallbacks& aCallbacks,
                                                void* aClosure) {
   ResponseData* tmp = this;
   NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mResponseArrayBufferValue)
   NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mResponseJSONValue)
-}
-
-void XMLHttpRequestWorker::StateData::Traverse(
-    nsCycleCollectionTraversalCallback& cb) {
-  MOZ_DIAGNOSTIC_ASSERT(mResponseData);
-  mResponseData->Traverse(cb);
 }
 
 void XMLHttpRequestWorker::ResponseData::Traverse(
@@ -1042,37 +1025,41 @@ bool EventRunnable::PreDispatch(WorkerPrivate* /* unused */) {
   RefPtr<XMLHttpRequestMainThread>& xhr = mProxy->mXHR;
   MOZ_ASSERT(xhr);
 
-  mResponseData->mResponseType = xhr->ResponseType();
-
   ErrorResult rv;
-  switch (mResponseData->mResponseType) {
-    case XMLHttpRequestResponseType::_empty:
-    case XMLHttpRequestResponseType::Text: {
-      xhr->GetResponseText(mResponseData->mResponseText, rv);
-      mResponseData->mResponseResult = rv.StealNSResult();
-      break;
-    }
 
-    case XMLHttpRequestResponseType::Blob: {
-      mResponseData->mResponseBlobImpl = xhr->GetResponseBlobImpl();
-      break;
-    }
+  XMLHttpRequestResponseType type = xhr->ResponseType();
 
-    case XMLHttpRequestResponseType::Arraybuffer: {
-      mResponseData->mResponseArrayBufferBuilder =
-          xhr->GetResponseArrayBufferBuilder();
-      break;
-    }
+  // We want to take the result data only if this is available.
+  if (mType.EqualsASCII(sEventStrings[STRING_readystatechange])) {
+    switch (type) {
+      case XMLHttpRequestResponseType::_empty:
+      case XMLHttpRequestResponseType::Text: {
+        xhr->GetResponseText(mResponseData->mResponseText, rv);
+        mResponseData->mResponseResult = rv.StealNSResult();
+        break;
+      }
 
-    case XMLHttpRequestResponseType::Json: {
-      mResponseData->mResponseResult =
-          xhr->GetResponseTextForJSON(mResponseData->mResponseJSON);
-      break;
-    }
+      case XMLHttpRequestResponseType::Blob: {
+        mResponseData->mResponseBlobImpl = xhr->GetResponseBlobImpl();
+        break;
+      }
 
-    default:
-      MOZ_CRASH("Invalid response type");
-      break;
+      case XMLHttpRequestResponseType::Arraybuffer: {
+        mResponseData->mResponseArrayBufferBuilder =
+            xhr->GetResponseArrayBufferBuilder();
+        break;
+      }
+
+      case XMLHttpRequestResponseType::Json: {
+        mResponseData->mResponseResult =
+            xhr->GetResponseTextForJSON(mResponseData->mResponseJSON);
+        break;
+      }
+
+      default:
+        MOZ_CRASH("Invalid response type");
+        break;
+    }
   }
 
   mStatus = xhr->GetStatus(rv);
@@ -1139,8 +1126,6 @@ bool EventRunnable::WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) {
   UniquePtr<XMLHttpRequestWorker::StateData> state(
       new XMLHttpRequestWorker::StateData());
 
-  state->mResponseData = std::move(mResponseData);
-
   state->mStatusResult = mStatusResult;
   state->mStatus = mStatus;
 
@@ -1151,7 +1136,10 @@ bool EventRunnable::WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) {
   state->mResponseURL = mResponseURL;
 
   XMLHttpRequestWorker* xhr = mProxy->mXMLHttpRequestPrivate;
-  xhr->UpdateState(std::move(state));
+  xhr->UpdateState(std::move(state),
+                   mType.EqualsASCII(sEventStrings[STRING_readystatechange])
+                       ? std::move(mResponseData)
+                       : nullptr);
 
   if (mUploadEvent && !xhr->GetUploadObjectNoCreate()) {
     return true;
@@ -1393,6 +1381,7 @@ void SendRunnable::RunOnMainThread(ErrorResult& aRv) {
 XMLHttpRequestWorker::XMLHttpRequestWorker(WorkerPrivate* aWorkerPrivate)
     : mWorkerPrivate(aWorkerPrivate),
       mResponseType(XMLHttpRequestResponseType::_empty),
+      mResponseData(new ResponseData()),
       mStateData(new StateData()),
       mTimeout(0),
       mBackgroundRequest(false),
@@ -1427,19 +1416,19 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(XMLHttpRequestWorker)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(XMLHttpRequestWorker,
                                                   XMLHttpRequestEventTarget)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mUpload)
-  tmp->mStateData->Traverse(cb);
+  tmp->mResponseData->Traverse(cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(XMLHttpRequestWorker,
                                                 XMLHttpRequestEventTarget)
   tmp->ReleaseProxy(XHRIsGoingAway);
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mUpload)
-  tmp->mStateData->Unlink();
+  tmp->mResponseData->Unlink();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(XMLHttpRequestWorker,
                                                XMLHttpRequestEventTarget)
-  tmp->mStateData->Trace(aCallbacks, aClosure);
+  tmp->mResponseData->Trace(aCallbacks, aClosure);
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 /* static */
@@ -2166,23 +2155,23 @@ void XMLHttpRequestWorker::SetResponseType(
 void XMLHttpRequestWorker::GetResponse(JSContext* aCx,
                                        JS::MutableHandle<JS::Value> aResponse,
                                        ErrorResult& aRv) {
-  if (NS_FAILED(mStateData->mResponseData->mResponseResult)) {
-    aRv.Throw(mStateData->mResponseData->mResponseResult);
+  if (NS_FAILED(mResponseData->mResponseResult)) {
+    aRv.Throw(mResponseData->mResponseResult);
     return;
   }
 
-  switch (mStateData->mResponseData->mResponseType) {
+  switch (mResponseType) {
     case XMLHttpRequestResponseType::_empty:
     case XMLHttpRequestResponseType::Text: {
       JSString* str;
 
-      if (mStateData->mResponseData->mResponseText.IsEmpty()) {
+      if (mResponseData->mResponseText.IsEmpty()) {
         aResponse.set(JS_GetEmptyStringValue(aCx));
         return;
       }
 
       XMLHttpRequestStringSnapshotReaderHelper helper(
-          mStateData->mResponseData->mResponseText);
+          mResponseData->mResponseText);
 
       str = JS_NewUCStringCopyN(aCx, helper.Buffer(), helper.Length());
       if (!str) {
@@ -2195,39 +2184,37 @@ void XMLHttpRequestWorker::GetResponse(JSContext* aCx,
     }
 
     case XMLHttpRequestResponseType::Arraybuffer: {
-      if (!mStateData->mResponseData->mResponseArrayBufferBuilder) {
+      if (!mResponseData->mResponseArrayBufferBuilder) {
         aResponse.setNull();
         return;
       }
 
-      if (!mStateData->mResponseData->mResponseArrayBufferValue) {
-        mStateData->mResponseData->mResponseArrayBufferValue =
-            mStateData->mResponseData->mResponseArrayBufferBuilder
-                ->GetArrayBuffer(aCx);
-        if (!mStateData->mResponseData->mResponseArrayBufferValue) {
+      if (!mResponseData->mResponseArrayBufferValue) {
+        mResponseData->mResponseArrayBufferValue =
+            mResponseData->mResponseArrayBufferBuilder->TakeArrayBuffer(aCx);
+        if (!mResponseData->mResponseArrayBufferValue) {
           aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
           return;
         }
       }
 
-      aResponse.setObject(
-          *mStateData->mResponseData->mResponseArrayBufferValue);
+      aResponse.setObject(*mResponseData->mResponseArrayBufferValue);
       return;
     }
 
     case XMLHttpRequestResponseType::Blob: {
-      if (!mStateData->mResponseData->mResponseBlobImpl) {
+      if (!mResponseData->mResponseBlobImpl) {
         aResponse.setNull();
         return;
       }
 
-      if (!mStateData->mResponseData->mResponseBlob) {
-        mStateData->mResponseData->mResponseBlob = Blob::Create(
-            GetOwnerGlobal(), mStateData->mResponseData->mResponseBlobImpl);
+      if (!mResponseData->mResponseBlob) {
+        mResponseData->mResponseBlob =
+            Blob::Create(GetOwnerGlobal(), mResponseData->mResponseBlobImpl);
       }
 
-      if (!GetOrCreateDOMReflector(
-              aCx, mStateData->mResponseData->mResponseBlob, aResponse)) {
+      if (!GetOrCreateDOMReflector(aCx, mResponseData->mResponseBlob,
+                                   aResponse)) {
         aResponse.setNull();
       }
 
@@ -2235,27 +2222,26 @@ void XMLHttpRequestWorker::GetResponse(JSContext* aCx,
     }
 
     case XMLHttpRequestResponseType::Json: {
-      if (mStateData->mResponseData->mResponseJSON.IsVoid()) {
+      if (mResponseData->mResponseJSON.IsVoid()) {
         aResponse.setNull();
         return;
       }
 
-      if (mStateData->mResponseData->mResponseJSONValue.isUndefined()) {
+      if (mResponseData->mResponseJSONValue.isUndefined()) {
         // The Unicode converter has already zapped the BOM if there was one
         JS::Rooted<JS::Value> value(aCx);
-        if (!JS_ParseJSON(
-                aCx, mStateData->mResponseData->mResponseJSON.BeginReading(),
-                mStateData->mResponseData->mResponseJSON.Length(), &value)) {
+        if (!JS_ParseJSON(aCx, mResponseData->mResponseJSON.BeginReading(),
+                          mResponseData->mResponseJSON.Length(), &value)) {
           JS_ClearPendingException(aCx);
-          mStateData->mResponseData->mResponseJSONValue.setNull();
+          mResponseData->mResponseJSONValue.setNull();
         } else {
-          mStateData->mResponseData->mResponseJSONValue = value;
+          mResponseData->mResponseJSONValue = value;
         }
 
-        mStateData->mResponseData->mResponseJSON.Truncate();
+        mResponseData->mResponseJSON.Truncate();
       }
 
-      aResponse.set(mStateData->mResponseData->mResponseJSONValue);
+      aResponse.set(mResponseData->mResponseJSONValue);
       return;
     }
 
@@ -2268,26 +2254,31 @@ void XMLHttpRequestWorker::GetResponse(JSContext* aCx,
 
 void XMLHttpRequestWorker::GetResponseText(DOMString& aResponseText,
                                            ErrorResult& aRv) {
-  MOZ_DIAGNOSTIC_ASSERT(mStateData->mResponseData);
+  MOZ_DIAGNOSTIC_ASSERT(mResponseData);
 
-  if (mStateData->mResponseData->mResponseType !=
-          XMLHttpRequestResponseType::_empty &&
-      mStateData->mResponseData->mResponseType !=
-          XMLHttpRequestResponseType::Text) {
+  if (mResponseType != XMLHttpRequestResponseType::_empty &&
+      mResponseType != XMLHttpRequestResponseType::Text) {
     aRv.Throw(
         NS_ERROR_DOM_INVALID_STATE_XHR_HAS_WRONG_RESPONSETYPE_FOR_RESPONSETEXT);
     return;
   }
 
-  if (!mStateData->mResponseData->mResponseText.GetAsString(aResponseText)) {
+  if (!mResponseData->mResponseText.GetAsString(aResponseText)) {
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
     return;
   }
 }
 
-void XMLHttpRequestWorker::UpdateState(UniquePtr<StateData>&& aStateData) {
-  mStateData->Unlink();
+void XMLHttpRequestWorker::UpdateState(
+    UniquePtr<StateData>&& aStateData,
+    UniquePtr<ResponseData>&& aResponseData) {
   mStateData = std::move(aStateData);
+
+  UniquePtr<ResponseData> responseData = std::move(aResponseData);
+  if (responseData) {
+    mResponseData = std::move(responseData);
+  }
+
   XMLHttpRequest_Binding::ClearCachedResponseTextValue(this);
 }
 
