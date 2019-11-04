@@ -137,7 +137,7 @@ void LocationBase::SetURI(nsIURI* aURI, nsIPrincipal& aSubjectPrincipal,
 
     // Get the incumbent script's browsing context to set as source.
     nsCOMPtr<nsPIDOMWindowInner> sourceWindow =
-        do_QueryInterface(mozilla::dom::GetIncumbentGlobal());
+        nsContentUtils::CallerInnerWindow();
     RefPtr<BrowsingContext> accessingBC;
     if (sourceWindow) {
       accessingBC = sourceWindow->GetBrowsingContext();
