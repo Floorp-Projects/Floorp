@@ -155,10 +155,8 @@ interface mixin WindowEventHandlers {
            attribute EventHandler onpagehide;
            attribute EventHandler onpageshow;
            attribute EventHandler onpopstate;
-           [Pref="dom.promise_rejection_events.enabled"]
            attribute EventHandler onrejectionhandled;
            attribute EventHandler onstorage;
-           [Pref="dom.promise_rejection_events.enabled"]
            attribute EventHandler onunhandledrejection;
            attribute EventHandler onunload;
 };
