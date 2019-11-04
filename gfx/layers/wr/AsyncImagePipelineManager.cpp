@@ -6,6 +6,9 @@
 
 #include "AsyncImagePipelineManager.h"
 
+#include <algorithm>
+#include <iterator>
+
 #include "CompositableHost.h"
 #include "gfxEnv.h"
 #include "mozilla/gfx/gfxVars.h"
@@ -33,13 +36,6 @@ AsyncImagePipelineManager::AsyncImagePipeline::AsyncImagePipeline()
       mFilter(wr::ImageRendering::Auto),
       mMixBlendMode(wr::MixBlendMode::Normal) {}
 
-AsyncImagePipelineManager::PipelineUpdates::PipelineUpdates(
-    RefPtr<wr::WebRenderPipelineInfo> aPipelineInfo,
-    const uint64_t aUpdatesCount, const bool aRendered)
-    : mPipelineInfo(aPipelineInfo),
-      mUpdatesCount(aUpdatesCount),
-      mRendered(aRendered) {}
-
 AsyncImagePipelineManager::AsyncImagePipelineManager(
     nsTArray<RefPtr<wr::WebRenderAPI>>&& aApis, bool aUseCompositorWnd)
     : mApis(aApis),
@@ -50,8 +46,8 @@ AsyncImagePipelineManager::AsyncImagePipelineManager(
       mAsyncImageEpoch{0},
       mWillGenerateFrame{},
       mDestroyed(false),
-      mUpdatesLock("UpdatesLock"),
-      mUpdatesCount(0) {
+      mRenderSubmittedUpdatesLock("SubmittedUpdatesLock"),
+      mLastCompletedFrameId(0) {
   MOZ_COUNT_CTOR(AsyncImagePipelineManager);
 }
 
@@ -497,8 +493,15 @@ void AsyncImagePipelineManager::HoldExternalImage(
   if (!holder) {
     return;
   }
-  // Hold WebRenderTextureHost until end of its usage on RenderThread
-  holder->mTextureHosts.push(ForwardingTextureHost(aEpoch, aTexture));
+  if (aTexture->HasIntermediateBuffer()) {
+    // Hold WebRenderTextureHost until submitted for rendering if it has an
+    // intermediate buffer.
+    holder->mTextureHostsUntilRenderSubmitted.emplace_back(aEpoch, aTexture);
+  } else {
+    // Hold WebRenderTextureHost until rendering completed if not.
+    holder->mTextureHostsUntilRenderCompleted.emplace_back(
+        MakeUnique<ForwardingTextureHost>(aEpoch, aTexture));
+  }
 }
 
 void AsyncImagePipelineManager::HoldExternalImage(
@@ -517,35 +520,49 @@ void AsyncImagePipelineManager::HoldExternalImage(
     return;
   }
 
-  auto image = MakeUnique<ForwardingExternalImage>(aEpoch, aImageId);
-  holder->mExternalImages.push(std::move(image));
+  holder->mExternalImages.emplace_back(
+      MakeUnique<ForwardingExternalImage>(aEpoch, aImageId));
 }
 
 void AsyncImagePipelineManager::NotifyPipelinesUpdated(
-    RefPtr<wr::WebRenderPipelineInfo> aInfo, bool aRender) {
-  // This is called on the render thread, so we just stash the data into
-  // UpdatesQueue and process it later on the compositor thread.
+    RefPtr<wr::WebRenderPipelineInfo> aInfo, wr::RenderedFrameId aLatestFrameId,
+    wr::RenderedFrameId aLastCompletedFrameId) {
   MOZ_ASSERT(wr::RenderThread::IsInRenderThread());
+  MOZ_ASSERT(mLastCompletedFrameId <= aLastCompletedFrameId.mId);
 
-  // Increment the count when render happens.
-  uint64_t currCount = aRender ? ++mUpdatesCount : mUpdatesCount;
-  auto updates = MakeUnique<PipelineUpdates>(aInfo, currCount, aRender);
+  // This is called on the render thread, so we just stash the data into
+  // mPendingUpdates and process it later on the compositor thread.
+  mPendingUpdates.push_back(aInfo);
 
-  {
-    // Scope lock to push UpdatesQueue to mUpdatesQueues.
-    MutexAutoLock lock(mUpdatesLock);
-    mUpdatesQueues.push(std::move(updates));
+  // If aLatestFrameId is valid then a render has been submitted.
+  if (aLatestFrameId.IsValid()) {
+    mLastCompletedFrameId = aLastCompletedFrameId.mId;
+
+    {
+      // We need to lock for mRenderSubmittedUpdates because it can be accessed
+      // on the compositor thread.
+      MutexAutoLock lock(mRenderSubmittedUpdatesLock);
+
+      // Move the pending updates into the submitted ones. Note that this clears
+      // mPendingUpdates.
+      mRenderSubmittedUpdates.emplace_back(aLatestFrameId,
+                                           std::move(mPendingUpdates));
+    }
+
+    // Queue a runnable on the compositor thread to process the updates.
+    // This will also call CheckForTextureHostsNotUsedByGPU.
+    layers::CompositorThreadHolder::Loop()->PostTask(
+        NewRunnableMethod("ProcessPipelineUpdates", this,
+                          &AsyncImagePipelineManager::ProcessPipelineUpdates));
+  } else if (mLastCompletedFrameId < aLastCompletedFrameId.mId) {
+    // We're not running ProcessPipelineUpdates but a later frame has completed,
+    // so queue a runnable on the compositor thread to check if any TextureHosts
+    // can be released.
+    mLastCompletedFrameId = aLastCompletedFrameId.mId;
+    layers::CompositorThreadHolder::Loop()->PostTask(NewRunnableMethod(
+        "CheckForTextureHostsNotUsedByGPU", this,
+        &AsyncImagePipelineManager::CheckForTextureHostsNotUsedByGPU));
   }
-
-  if (!aRender) {
-    // Do not post ProcessPipelineUpdate when rendering did not happen.
-    return;
-  }
-
-  // Queue a runnable on the compositor thread to process the queue
-  layers::CompositorThreadHolder::Loop()->PostTask(
-      NewRunnableMethod("ProcessPipelineUpdates", this,
-                        &AsyncImagePipelineManager::ProcessPipelineUpdates));
 }
 
 void AsyncImagePipelineManager::ProcessPipelineUpdates() {
@@ -555,37 +572,28 @@ void AsyncImagePipelineManager::ProcessPipelineUpdates() {
     return;
   }
 
-  UniquePtr<PipelineUpdates> updates;
+  std::vector<std::pair<wr::RenderedFrameId, PipelineInfoVector>>
+      submittedUpdates;
+  {
+    // We need to lock for mRenderSubmittedUpdates because it can be accessed on
+    // the compositor thread.
+    MutexAutoLock lock(mRenderSubmittedUpdatesLock);
+    mRenderSubmittedUpdates.swap(submittedUpdates);
+  }
 
-  while (true) {
-    {
-      // Scope lock to extract UpdatesQueue from mUpdatesQueues.
-      MutexAutoLock lock(mUpdatesLock);
-      if (mUpdatesQueues.empty()) {
-        // No more PipelineUpdates to process for now.
-        break;
+  // submittedUpdates is a vector of RenderedFrameIds paired with vectors of
+  // WebRenderPipelineInfo.
+  for (auto update : submittedUpdates) {
+    for (auto pipelineInfo : update.second) {
+      auto& info = pipelineInfo->Raw();
+
+      for (uintptr_t i = 0; i < info.epochs.length; i++) {
+        ProcessPipelineRendered(info.epochs.data[i].pipeline_id,
+                                info.epochs.data[i].epoch, update.first);
       }
-      // Check if PipelineUpdates is ready to process.
-      uint64_t currCount = mUpdatesCount;
-      if (mUpdatesQueues.front()->NeedsToWait(currCount)) {
-        // PipelineUpdates is not ready for processing for now.
-        break;
+      for (uintptr_t i = 0; i < info.removed_pipelines.length; i++) {
+        ProcessPipelineRemoved(info.removed_pipelines.data[i], update.first);
       }
-      updates = std::move(mUpdatesQueues.front());
-      mUpdatesQueues.pop();
-    }
-    MOZ_ASSERT(updates);
-
-    auto& info = updates->mPipelineInfo->Raw();
-
-    for (uintptr_t i = 0; i < info.epochs.length; i++) {
-      ProcessPipelineRendered(info.epochs.data[i].pipeline_id,
-                              info.epochs.data[i].epoch,
-                              updates->mUpdatesCount);
-    }
-    for (uintptr_t i = 0; i < info.removed_pipelines.length; i++) {
-      ProcessPipelineRemoved(info.removed_pipelines.data[i],
-                             updates->mUpdatesCount);
     }
   }
   CheckForTextureHostsNotUsedByGPU();
@@ -593,30 +601,53 @@ void AsyncImagePipelineManager::ProcessPipelineUpdates() {
 
 void AsyncImagePipelineManager::ProcessPipelineRendered(
     const wr::PipelineId& aPipelineId, const wr::Epoch& aEpoch,
-    const uint64_t aUpdatesCount) {
+    wr::RenderedFrameId aRenderedFrameId) {
   if (auto entry = mPipelineTexturesHolders.Lookup(wr::AsUint64(aPipelineId))) {
     PipelineTexturesHolder* holder = entry.Data();
-    // Release TextureHosts based on Epoch
-    while (!holder->mTextureHosts.empty()) {
-      if (aEpoch <= holder->mTextureHosts.front().mEpoch) {
-        break;
-      }
-      // Need to extend holding TextureHost if it is direct bounded texture.
-      HoldUntilNotUsedByGPU(holder->mTextureHosts.front().mTexture,
-                            aUpdatesCount);
-      holder->mTextureHosts.pop();
+    // For TextureHosts that can be released on render submission, using aEpoch
+    // find the first that we can't release and then release all prior to that.
+    auto firstSubmittedHostToKeep = std::find_if(
+        holder->mTextureHostsUntilRenderSubmitted.begin(),
+        holder->mTextureHostsUntilRenderSubmitted.end(),
+        [&aEpoch](const auto& entry) { return aEpoch <= entry.mEpoch; });
+    holder->mTextureHostsUntilRenderSubmitted.erase(
+        holder->mTextureHostsUntilRenderSubmitted.begin(),
+        firstSubmittedHostToKeep);
+
+    // For TextureHosts that need to wait until render completed, find the first
+    // that is later than aEpoch and then move all prior to that to
+    // mTexturesInUseByGPU paired with aRenderedFrameId.  These will be released
+    // once rendering has completed for aRenderedFrameId.
+    auto firstCompletedHostToKeep = std::find_if(
+        holder->mTextureHostsUntilRenderCompleted.begin(),
+        holder->mTextureHostsUntilRenderCompleted.end(),
+        [&aEpoch](const auto& entry) { return aEpoch <= entry->mEpoch; });
+    if (firstCompletedHostToKeep !=
+        holder->mTextureHostsUntilRenderCompleted.begin()) {
+      std::vector<UniquePtr<ForwardingTextureHost>> hostsUntilCompleted(
+          std::make_move_iterator(
+              holder->mTextureHostsUntilRenderCompleted.begin()),
+          std::make_move_iterator(firstCompletedHostToKeep));
+      mTexturesInUseByGPU.emplace_back(aRenderedFrameId,
+                                       std::move(hostsUntilCompleted));
+      holder->mTextureHostsUntilRenderCompleted.erase(
+          holder->mTextureHostsUntilRenderCompleted.begin(),
+          firstCompletedHostToKeep);
     }
-    while (!holder->mExternalImages.empty()) {
-      if (aEpoch <= holder->mExternalImages.front()->mEpoch) {
-        break;
-      }
-      holder->mExternalImages.pop();
-    }
+
+    // Using aEpoch, find the first external image that we can't release and
+    // then release all prior to that.
+    auto firstImageToKeep = std::find_if(
+        holder->mExternalImages.begin(), holder->mExternalImages.end(),
+        [&aEpoch](const auto& entry) { return aEpoch <= entry->mEpoch; });
+    holder->mExternalImages.erase(holder->mExternalImages.begin(),
+                                  firstImageToKeep);
   }
 }
 
 void AsyncImagePipelineManager::ProcessPipelineRemoved(
-    const wr::RemovedPipeline& aRemovedPipeline, const uint64_t aUpdatesCount) {
+    const wr::RemovedPipeline& aRemovedPipeline,
+    wr::RenderedFrameId aRenderedFrameId) {
   if (mDestroyed) {
     return;
   }
@@ -624,48 +655,35 @@ void AsyncImagePipelineManager::ProcessPipelineRemoved(
           wr::AsUint64(aRemovedPipeline.pipeline_id))) {
     PipelineTexturesHolder* holder = entry.Data();
     if (holder->mDestroyedEpoch.isSome()) {
-      while (!holder->mTextureHosts.empty()) {
-        // Need to extend holding TextureHost if it is direct bounded texture.
-        HoldUntilNotUsedByGPU(holder->mTextureHosts.front().mTexture,
-                              aUpdatesCount);
-        holder->mTextureHosts.pop();
+      if (!holder->mTextureHostsUntilRenderCompleted.empty()) {
+        // Move all TextureHosts that must be held until render completed to
+        // mTexturesInUseByGPU paired with aRenderedFrameId.
+        mTexturesInUseByGPU.emplace_back(
+            aRenderedFrameId,
+            std::move(holder->mTextureHostsUntilRenderCompleted));
       }
-      // Remove Pipeline
+
+      // Remove Pipeline releasing all remaining TextureHosts and external
+      // images.
       entry.Remove();
     }
+
     // If mDestroyedEpoch contains nothing it means we reused the same pipeline
     // id (probably because we moved the tab to another window). In this case we
     // need to keep the holder.
   }
 }
 
-void AsyncImagePipelineManager::HoldUntilNotUsedByGPU(
-    const CompositableTextureHostRef& aTextureHost, uint64_t aUpdatesCount) {
-  MOZ_ASSERT(aTextureHost);
-
-  if (aTextureHost->HasIntermediateBuffer()) {
-    // If texutre is not direct binding texture, gpu has already finished using
-    // it. We could release it now.
-    return;
-  }
-
-  // When Triple buffer is used, we need wait one more WebRender rendering,
-  if (mUseTripleBuffering) {
-    ++aUpdatesCount;
-  }
-
-  mTexturesInUseByGPU.emplace(std::make_pair(aUpdatesCount, aTextureHost));
-}
-
 void AsyncImagePipelineManager::CheckForTextureHostsNotUsedByGPU() {
-  uint64_t currCount = mUpdatesCount;
+  uint64_t lastCompletedFrameId = mLastCompletedFrameId;
 
-  while (!mTexturesInUseByGPU.empty()) {
-    if (currCount <= mTexturesInUseByGPU.front().first) {
-      break;
-    }
-    mTexturesInUseByGPU.pop();
-  }
+  // Find first entry after mLastCompletedFrameId and release all prior ones.
+  auto firstTexturesToKeep =
+      std::find_if(mTexturesInUseByGPU.begin(), mTexturesInUseByGPU.end(),
+                   [lastCompletedFrameId](const auto& entry) {
+                     return lastCompletedFrameId < entry.first.mId;
+                   });
+  mTexturesInUseByGPU.erase(mTexturesInUseByGPU.begin(), firstTexturesToKeep);
 }
 
 wr::Epoch AsyncImagePipelineManager::GetNextImageEpoch() {

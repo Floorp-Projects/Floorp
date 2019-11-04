@@ -111,10 +111,13 @@ bool RenderCompositorEGL::BeginFrame() {
   return true;
 }
 
-void RenderCompositorEGL::EndFrame(const FfiVec<DeviceIntRect>& aDirtyRects) {
+RenderedFrameId RenderCompositorEGL::EndFrame(
+    const FfiVec<DeviceIntRect>& aDirtyRects) {
+  RenderedFrameId frameId = GetNextRenderFrameId();
   if (mEGLSurface != EGL_NO_SURFACE) {
     gl()->SwapBuffers();
   }
+  return frameId;
 }
 
 void RenderCompositorEGL::Pause() {

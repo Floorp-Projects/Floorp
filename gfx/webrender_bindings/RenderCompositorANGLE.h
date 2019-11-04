@@ -40,8 +40,9 @@ class RenderCompositorANGLE : public RenderCompositor {
   bool Initialize();
 
   bool BeginFrame() override;
-  void EndFrame(const FfiVec<DeviceIntRect>& aDirtyRects) override;
+  RenderedFrameId EndFrame(const FfiVec<DeviceIntRect>& aDirtyRects) final;
   bool WaitForGPU() override;
+  RenderedFrameId GetLastCompletedFrameId() final;
   void Pause() override;
   bool Resume() override;
   void Update() override;
@@ -83,7 +84,7 @@ class RenderCompositorANGLE : public RenderCompositor {
  protected:
   bool UseCompositor();
   void InitializeUsePartialPresent();
-  void InsertPresentWaitQuery();
+  void InsertPresentWaitQuery(RenderedFrameId aRenderedFrameId);
   bool WaitForPreviousPresentQuery();
   bool ResizeBufferIfNeeded();
   bool CreateEGLSurface();
@@ -108,8 +109,10 @@ class RenderCompositorANGLE : public RenderCompositor {
 
   UniquePtr<DCLayerTree> mDCLayerTree;
 
-  std::queue<RefPtr<ID3D11Query>> mWaitForPresentQueries;
+  std::queue<std::pair<RenderedFrameId, RefPtr<ID3D11Query>>>
+      mWaitForPresentQueries;
   RefPtr<ID3D11Query> mRecycledQuery;
+  RenderedFrameId mLastCompletedFrameId;
 
   Maybe<LayoutDeviceIntSize> mBufferSize;
   bool mUsePartialPresent;

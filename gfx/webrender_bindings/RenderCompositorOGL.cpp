@@ -91,13 +91,17 @@ bool RenderCompositorOGL::BeginFrame() {
   return true;
 }
 
-void RenderCompositorOGL::EndFrame(const FfiVec<DeviceIntRect>& aDirtyRects) {
+RenderedFrameId RenderCompositorOGL::EndFrame(
+    const FfiVec<DeviceIntRect>& aDirtyRects) {
+  RenderedFrameId frameId = GetNextRenderFrameId();
   InsertFrameDoneSync();
   mGL->SwapBuffers();
 
   if (mNativeLayerForEntireWindow) {
     mNativeLayerForEntireWindow->NotifySurfaceReady();
   }
+
+  return frameId;
 }
 
 void RenderCompositorOGL::InsertFrameDoneSync() {
