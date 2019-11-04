@@ -36,22 +36,7 @@ nsPrintData::nsPrintData(ePrintDataType aType)
       mShrinkToFit(false),
       mNumPrintablePages(0),
       mNumPagesPrinted(0),
-      mShrinkRatio(1.0) {
-  nsCOMPtr<nsIStringBundle> brandBundle;
-  nsCOMPtr<nsIStringBundleService> svc =
-      mozilla::services::GetStringBundleService();
-  if (svc) {
-    svc->CreateBundle("chrome://branding/locale/brand.properties",
-                      getter_AddRefs(brandBundle));
-    if (brandBundle) {
-      brandBundle->GetStringFromName("brandShortName", mBrandName);
-    }
-  }
-
-  if (mBrandName.IsEmpty()) {
-    mBrandName.AssignLiteral(u"Mozilla Document");
-  }
-}
+      mShrinkRatio(1.0) {}
 
 nsPrintData::~nsPrintData() {
   if (mPPEventSuppressor) {
