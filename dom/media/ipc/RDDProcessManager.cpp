@@ -11,6 +11,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/dom/ContentParent.h"
+#include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/layers/VideoBridgeParent.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "nsAppRunner.h"
@@ -20,7 +21,8 @@
 
 namespace mozilla {
 
-using namespace mozilla::layers;
+using namespace gfx;
+using namespace layers;
 
 static StaticAutoPtr<RDDProcessManager> sRDDSingleton;
 
@@ -124,7 +126,7 @@ bool RDDProcessManager::LaunchRDDProcess() {
     return false;
   }
 
-  return true;
+  return CreateVideoBridge();
 }
 
 bool RDDProcessManager::EnsureRDDReady() {
@@ -155,24 +157,6 @@ void RDDProcessManager::OnProcessLaunchComplete(RDDProcessHost* aHost) {
     Unused << NS_WARN_IF(!mRDDChild->SendPreferenceUpdate(pref));
   }
   mQueuedPrefs.Clear();
-
-  ipc::Endpoint<PVideoBridgeParent> parentPipe;
-  ipc::Endpoint<PVideoBridgeChild> childPipe;
-
-  // Currently hardcoded to use the current process as the parent side,
-  // we need to add support for the GPU process.
-  nsresult rv = PVideoBridge::CreateEndpoints(
-      base::GetCurrentProcId(), mRDDChild->OtherPid(), &parentPipe, &childPipe);
-  if (NS_FAILED(rv)) {
-    MOZ_LOG(sPDMLog, LogLevel::Debug,
-            ("Could not create video bridge: %d", int(rv)));
-    DestroyProcess();
-    return;
-  }
-
-  mRDDChild->SendCreateVideoBridgeToParentProcess(std::move(childPipe));
-
-  VideoBridgeParent::CreateForContent(std::move(parentPipe));
 
   CrashReporter::AnnotateCrashReport(
       CrashReporter::Annotation::RDDProcessStatus,
@@ -248,6 +232,39 @@ bool RDDProcessManager::CreateContentBridge(
   mRDDChild->SendNewContentRemoteDecoderManager(std::move(parentPipe));
 
   *aOutRemoteDecoderManager = std::move(childPipe);
+  return true;
+}
+
+bool RDDProcessManager::CreateVideoBridge() {
+  ipc::Endpoint<PVideoBridgeParent> parentPipe;
+  ipc::Endpoint<PVideoBridgeChild> childPipe;
+
+  GPUProcessManager* gpuManager = GPUProcessManager::Get();
+  base::ProcessId gpuProcessPid = gpuManager ? gpuManager->GPUProcessPid() : -1;
+
+  // The child end is the producer of video frames; the parent end is the
+  // consumer.
+  base::ProcessId childPid = RDDProcessPid();
+  base::ProcessId parentPid =
+      gpuProcessPid != -1 ? gpuProcessPid : base::GetCurrentProcId();
+
+  nsresult rv = PVideoBridge::CreateEndpoints(parentPid, childPid, &parentPipe,
+                                              &childPipe);
+  if (NS_FAILED(rv)) {
+    MOZ_LOG(sPDMLog, LogLevel::Debug,
+            ("Could not create video bridge: %d", int(rv)));
+    DestroyProcess();
+    return false;
+  }
+
+  mRDDChild->SendInitVideoBridge(std::move(childPipe));
+  if (gpuProcessPid != -1) {
+    gpuManager->InitVideoBridge(std::move(parentPipe));
+  } else {
+    VideoBridgeParent::Open(std::move(parentPipe),
+                            VideoBridgeSource::RddProcess);
+  }
+
   return true;
 }
 

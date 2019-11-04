@@ -13,6 +13,7 @@ include protocol PImageBridge;
 include protocol PProfiler;
 include protocol PVRGPU;
 include protocol PVRManager;
+include protocol PVideoBridge;
 include protocol PVsyncBridge;
 include protocol PUiCompositorController;
 include protocol PRemoteDecoderManager;
@@ -61,6 +62,7 @@ parent:
   async InitCompositorManager(Endpoint<PCompositorManagerParent> endpoint);
   async InitVsyncBridge(Endpoint<PVsyncBridgeParent> endpoint);
   async InitImageBridge(Endpoint<PImageBridgeParent> endpoint);
+  async InitVideoBridge(Endpoint<PVideoBridgeParent> endpoint);
   async InitVRManager(Endpoint<PVRManagerParent> endpoint);
   async InitUiCompositorController(LayersId rootLayerTreeId, Endpoint<PUiCompositorControllerParent> endpoint);
   async InitProfiler(Endpoint<PProfilerChild> endpoint);

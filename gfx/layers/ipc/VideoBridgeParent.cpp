@@ -44,9 +44,8 @@ VideoBridgeParent::~VideoBridgeParent() {
 }
 
 /* static */
-void VideoBridgeParent::CreateForGPUProcess(
-    Endpoint<PVideoBridgeParent>&& aEndpoint, VideoBridgeSource aSource) {
-  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_GPU);
+void VideoBridgeParent::Open(Endpoint<PVideoBridgeParent>&& aEndpoint,
+                             VideoBridgeSource aSource) {
   RefPtr<VideoBridgeParent> parent = new VideoBridgeParent(aSource);
 
   CompositorThreadHolder::Loop()->PostTask(
@@ -54,20 +53,6 @@ void VideoBridgeParent::CreateForGPUProcess(
           "gfx::layers::VideoBridgeParent::Bind", parent,
           &VideoBridgeParent::Bind, std::move(aEndpoint)));
 }
-
-/* static */
-void VideoBridgeParent::CreateForContent(
-    Endpoint<PVideoBridgeParent>&& aEndpoint) {
-  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
-  RefPtr<VideoBridgeParent> parent =
-      new VideoBridgeParent(VideoBridgeSource::RddProcess);
-
-  CompositorThreadHolder::Loop()->PostTask(
-      NewRunnableMethod<Endpoint<PVideoBridgeParent>&&>(
-          "gfx::layers::VideoBridgeParent::Bind", parent,
-          &VideoBridgeParent::Bind, std::move(aEndpoint)));
-}
-
 
 void VideoBridgeParent::Bind(Endpoint<PVideoBridgeParent>&& aEndpoint) {
   if (!aEndpoint.Bind(this)) {
