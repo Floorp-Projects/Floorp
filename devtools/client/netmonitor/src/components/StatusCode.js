@@ -68,11 +68,11 @@ class StatusCode extends Component {
         {
           className:
             "requests-list-status-code status-code status-code-blocked",
-          title: L10N.getStr("networkMenu.blocked"),
+          title: L10N.getStr("networkMenu.blockedTooltip"),
         },
         img({
           src: BLOCKED_ICON,
-          alt: L10N.getStr("networkMenu.blocked"),
+          alt: L10N.getStr("networkMenu.blockedTooltip"),
         })
       );
     }
