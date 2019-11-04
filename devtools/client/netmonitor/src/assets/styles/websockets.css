@@ -10,7 +10,7 @@
   margin: 0;
   padding: 0;
   border: none;
- }
+}
 
 /* Empty notice */
 
@@ -132,7 +132,7 @@
 #messages-panel .truncated-messages-warning-icon {
   width: 12px;
   height: 12px;
-  margin-right: 8px;
+  margin-inline-end: 8px;
   background-image: url(chrome://global/skin/icons/info.svg);
   background-repeat: no-repeat;
   -moz-context-properties: fill;
@@ -140,7 +140,7 @@
 }
 
 #messages-panel .truncation-checkbox {
-  margin-right: 5px;
+  margin-inline-end: 5px;
 }
 
 #messages-panel .truncated-message {
