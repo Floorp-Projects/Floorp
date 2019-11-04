@@ -230,58 +230,6 @@ bool HttpBackgroundChannelParent::OnStopRequest(
                            aResponseTrailers);
 }
 
-bool HttpBackgroundChannelParent::OnProgress(const int64_t& aProgress,
-                                             const int64_t& aProgressMax) {
-  LOG(("HttpBackgroundChannelParent::OnProgress [this=%p progress=%" PRId64
-       " max=%" PRId64 "]\n",
-       this, aProgress, aProgressMax));
-  AssertIsInMainProcess();
-
-  if (NS_WARN_IF(!mIPCOpened)) {
-    return false;
-  }
-
-  if (!IsOnBackgroundThread()) {
-    MutexAutoLock lock(mBgThreadMutex);
-    nsresult rv = mBackgroundThread->Dispatch(
-        NewRunnableMethod<const int64_t, const int64_t>(
-            "net::HttpBackgroundChannelParent::OnProgress", this,
-            &HttpBackgroundChannelParent::OnProgress, aProgress, aProgressMax),
-        NS_DISPATCH_NORMAL);
-
-    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-
-    return NS_SUCCEEDED(rv);
-  }
-
-  return SendOnProgress(aProgress, aProgressMax);
-}
-
-bool HttpBackgroundChannelParent::OnStatus(const nsresult& aStatus) {
-  LOG(("HttpBackgroundChannelParent::OnStatus [this=%p stauts=%" PRIx32 "]\n",
-       this, static_cast<uint32_t>(aStatus)));
-  AssertIsInMainProcess();
-
-  if (NS_WARN_IF(!mIPCOpened)) {
-    return false;
-  }
-
-  if (!IsOnBackgroundThread()) {
-    MutexAutoLock lock(mBgThreadMutex);
-    nsresult rv = mBackgroundThread->Dispatch(
-        NewRunnableMethod<const nsresult>(
-            "net::HttpBackgroundChannelParent::OnStatus", this,
-            &HttpBackgroundChannelParent::OnStatus, aStatus),
-        NS_DISPATCH_NORMAL);
-
-    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-
-    return NS_SUCCEEDED(rv);
-  }
-
-  return SendOnStatus(aStatus);
-}
-
 bool HttpBackgroundChannelParent::OnDiversion() {
   LOG(("HttpBackgroundChannelParent::OnDiversion [this=%p]\n", this));
   AssertIsInMainProcess();

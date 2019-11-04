@@ -43,10 +43,6 @@ child:
                       TimeStamp lastActiveTabOptimization,
                       nsHttpHeaderArray responseTrailers);
 
-  async OnProgress(int64_t progress, int64_t progressMax);
-
-  async OnStatus(nsresult status);
-
   // Parent has been suspended for diversion; no more events to be enqueued.
   async FlushedForDiversion();
 
