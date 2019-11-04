@@ -322,6 +322,13 @@ nfc_test(async (t, mockNFC) => {
   assertNDEFMessagesEqual(test_buffer_data, mockNFC.pushedMessage());
 }, "Test that NDEFWriter.push succeeds when message is ArrayBuffer.");
 
+nfc_test(async (t, mockNFC) => {
+  let buffer_view = new Uint8Array(test_buffer_data, 2, 5);
+  const writer = new NDEFWriter();
+  await writer.push(buffer_view);
+  assertNDEFMessagesEqual(buffer_view, mockNFC.pushedMessage());
+}, "Test that NDEFWriter.push succeeds when message is ArrayBufferView.");
+
 nfc_test(async () => {
   const writer = new NDEFWriter();
   await writer.push(createMessage([createRecord('empty')]));
