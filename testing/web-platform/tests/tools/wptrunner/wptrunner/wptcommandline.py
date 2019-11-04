@@ -575,7 +575,7 @@ def check_args_update(kwargs):
 def create_parser_update(product_choices=None):
     from mozlog.structured import commandline
 
-    import products
+    from . import products
 
     if product_choices is None:
         config_data = config.load()
