@@ -359,11 +359,6 @@
       if (nodes.length == 1) {
         let node = nodes[0];
         if (
-          node.localName == "children" &&
-          node.namespaceURI == "http://www.mozilla.org/xbl"
-        ) {
-          nodes = document.getBindingParent(this).children;
-        } else if (
           node.localName == "slot" &&
           node.namespaceURI == "http://www.w3.org/1999/xhtml"
         ) {
