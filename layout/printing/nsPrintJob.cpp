@@ -642,6 +642,20 @@ nsresult nsPrintJob::Initialize(nsIDocumentViewerPrint* aDocViewerPrint,
   mHasMozPrintCallback =
       hasMozPrintCallback || AnySubdocHasPrintCallbackCanvas(aOriginalDoc);
 
+  nsCOMPtr<nsIStringBundle> brandBundle;
+  nsCOMPtr<nsIStringBundleService> svc =
+      mozilla::services::GetStringBundleService();
+  if (svc) {
+    svc->CreateBundle("chrome://branding/locale/brand.properties",
+                      getter_AddRefs(brandBundle));
+    if (brandBundle) {
+      brandBundle->GetStringFromName("brandShortName", mFallbackDocTitle);
+    }
+  }
+  if (mFallbackDocTitle.IsEmpty()) {
+    mFallbackDocTitle.AssignLiteral(u"Mozilla Document");
+  }
+
   return NS_OK;
 }
 
@@ -1329,8 +1343,8 @@ void nsPrintJob::GetDisplayTitleAndURL(const UniquePtr<nsPrintObject>& aPO,
       if (aDefType == eDocTitleDefURLDoc) {
         if (!aURLStr.IsEmpty()) {
           aTitle = aURLStr;
-        } else if (!mPrt->mBrandName.IsEmpty()) {
-          aTitle = mPrt->mBrandName;
+        } else if (!mFallbackDocTitle.IsEmpty()) {
+          aTitle = mFallbackDocTitle;
         }
       }
     }
