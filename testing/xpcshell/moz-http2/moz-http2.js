@@ -660,6 +660,13 @@ function handleRequest(req, res) {
         });
       }
 
+      if (req.headers["accept-language"]) {
+        // If we get this header, don't send back any response. This should
+        // cause the tests to fail. This is easier then actually sending back
+        // the header value into test_trr.js
+        answers = [];
+      }
+
       let buf = dnsPacket.encode({
         type: 'response',
         id: packet.id,

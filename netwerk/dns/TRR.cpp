@@ -26,6 +26,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs_network.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Tokenizer.h"
@@ -301,6 +302,14 @@ nsresult TRR::SendHTTPRequest() {
     rv = uploadChannel->ExplicitSetUploadStream(
         uploadStream, NS_LITERAL_CSTRING("application/dns-message"),
         streamLength, NS_LITERAL_CSTRING("POST"), false);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // Sanitize the request by removing the Accept-Language header so we minimize
+  // the amount of fingerprintable information we send to the server.
+  if (!StaticPrefs::network_trr_send_accept_language_headers()) {
+    rv = httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Accept-Language"),
+                                       EmptyCString(), false);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
