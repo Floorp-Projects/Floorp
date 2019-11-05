@@ -345,7 +345,7 @@ class TestAgentReceive : public TestAgent {
     audio_pipeline_ = new mozilla::MediaPipelineReceiveAudio(
         test_pc, transport_, nullptr, test_utils->sts_target(),
         static_cast<mozilla::AudioSessionConduit*>(audio_conduit_.get()),
-        nullptr);
+        nullptr, PRINCIPAL_HANDLE_NONE);
 
     audio_pipeline_->Start();
 
