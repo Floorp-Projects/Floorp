@@ -726,7 +726,7 @@ class UrlbarView {
     }
     // Add remaining results, if we have fewer rows than results.
     for (; resultIndex < results.length; ++resultIndex) {
-      let row = this._createRow(results[resultIndex].type);
+      let row = this._createRow();
       this._updateRow(row, results[resultIndex]);
       // Due to stale rows, we may have more rows than maxResults, thus we must
       // hide them, and we'll revert this when stale rows are removed.
@@ -739,82 +739,108 @@ class UrlbarView {
     this._updateIndices();
   }
 
-  _createRow(type) {
+  _createRow() {
     let item = this._createElement("div");
     item.className = "urlbarView-row";
     item.setAttribute("role", "option");
     item._elements = new Map();
+    return item;
+  }
 
-    let content = this._createElement("span");
-    content.className = "urlbarView-row-inner";
-    item.appendChild(content);
-    item._elements.set("rowInner", content);
-
+  _createRowContent(item) {
     let typeIcon = this._createElement("span");
     typeIcon.className = "urlbarView-type-icon";
-    content.appendChild(typeIcon);
+    item._content.appendChild(typeIcon);
 
     let favicon = this._createElement("img");
     favicon.className = "urlbarView-favicon";
-    content.appendChild(favicon);
+    item._content.appendChild(favicon);
     item._elements.set("favicon", favicon);
 
     let title = this._createElement("span");
     title.className = "urlbarView-title";
-    content.appendChild(title);
+    item._content.appendChild(title);
     item._elements.set("title", title);
 
-    if (type == UrlbarUtils.RESULT_TYPE.TIP) {
-      // We use role="group" so screen readers will read the group's label
-      // when a button inside it gets focus. (Screen readers don't do this for
-      // role="option".)
-      // we set aria-labelledby for the group in _updateIndices.
-      content.setAttribute("role", "group");
-      let buttonSpacer = this._createElement("span");
-      buttonSpacer.className = "urlbarView-tip-button-spacer";
-      content.appendChild(buttonSpacer);
+    let tagsContainer = this._createElement("span");
+    tagsContainer.className = "urlbarView-tags";
+    item._content.appendChild(tagsContainer);
+    item._elements.set("tagsContainer", tagsContainer);
 
-      let tipButton = this._createElement("span");
-      tipButton.className = "urlbarView-tip-button";
-      tipButton.setAttribute("role", "button");
-      content.appendChild(tipButton);
-      item._elements.set("tipButton", tipButton);
+    let titleSeparator = this._createElement("span");
+    titleSeparator.className = "urlbarView-title-separator";
+    item._content.appendChild(titleSeparator);
+    item._elements.set("titleSeparator", titleSeparator);
 
-      let helpIcon = this._createElement("span");
-      helpIcon.className = "urlbarView-tip-help";
-      helpIcon.setAttribute("role", "button");
-      helpIcon.setAttribute("data-l10n-id", "urlbar-tip-help-icon");
-      item._elements.set("helpButton", helpIcon);
-      // We will unhide the help icon if our payload has a helpUrl.
-      helpIcon.style.display = "none";
-      content.appendChild(helpIcon);
-    } else {
-      let tagsContainer = this._createElement("span");
-      tagsContainer.className = "urlbarView-tags";
-      content.appendChild(tagsContainer);
-      item._elements.set("tagsContainer", tagsContainer);
+    let action = this._createElement("span");
+    action.className = "urlbarView-secondary urlbarView-action";
+    item._content.appendChild(action);
+    item._elements.set("action", action);
 
-      let titleSeparator = this._createElement("span");
-      titleSeparator.className = "urlbarView-title-separator";
-      content.appendChild(titleSeparator);
-      item._elements.set("titleSeparator", titleSeparator);
+    let url = this._createElement("span");
+    url.className = "urlbarView-secondary urlbarView-url";
+    item._content.appendChild(url);
+    item._elements.set("url", url);
+  }
 
-      let action = this._createElement("span");
-      action.className = "urlbarView-secondary urlbarView-action";
-      content.appendChild(action);
-      item._elements.set("action", action);
+  _createRowContentForTip(item) {
+    // We use role="group" so screen readers will read the group's label when a
+    // button inside it gets focus. (Screen readers don't do this for
+    // role="option".) We set aria-labelledby for the group in _updateIndices.
+    item._content.setAttribute("role", "group");
 
-      let url = this._createElement("span");
-      url.className = "urlbarView-secondary urlbarView-url";
-      content.appendChild(url);
-      item._elements.set("url", url);
-    }
-    return item;
+    let favicon = this._createElement("img");
+    favicon.className = "urlbarView-favicon";
+    item._content.appendChild(favicon);
+    item._elements.set("favicon", favicon);
+
+    let title = this._createElement("span");
+    title.className = "urlbarView-title";
+    item._content.appendChild(title);
+    item._elements.set("title", title);
+
+    let buttonSpacer = this._createElement("span");
+    buttonSpacer.className = "urlbarView-tip-button-spacer";
+    item._content.appendChild(buttonSpacer);
+
+    let tipButton = this._createElement("span");
+    tipButton.className = "urlbarView-tip-button";
+    tipButton.setAttribute("role", "button");
+    item._content.appendChild(tipButton);
+    item._elements.set("tipButton", tipButton);
+
+    let helpIcon = this._createElement("span");
+    helpIcon.className = "urlbarView-tip-help";
+    helpIcon.setAttribute("role", "button");
+    helpIcon.setAttribute("data-l10n-id", "urlbar-tip-help-icon");
+    item._elements.set("helpButton", helpIcon);
+    item._content.appendChild(helpIcon);
   }
 
   _updateRow(item, result) {
+    let oldResultType = item.result && item.result.type;
     item.result = result;
     item.removeAttribute("stale");
+
+    let needsNewContent =
+      oldResultType === undefined ||
+      (oldResultType == UrlbarUtils.RESULT_TYPE.TIP) !=
+        (result.type == UrlbarUtils.RESULT_TYPE.TIP);
+
+    if (needsNewContent) {
+      if (item._content) {
+        item._content.remove();
+        item._elements.clear();
+      }
+      item._content = this._createElement("span");
+      item._content.className = "urlbarView-row-inner";
+      item.appendChild(item._content);
+      if (item.result.type == UrlbarUtils.RESULT_TYPE.TIP) {
+        this._createRowContentForTip(item);
+      } else {
+        this._createRowContent(item);
+      }
+    }
 
     if (
       result.type == UrlbarUtils.RESULT_TYPE.SEARCH &&
@@ -828,6 +854,8 @@ class UrlbarView {
       item.setAttribute("type", "switchtab");
     } else if (result.type == UrlbarUtils.RESULT_TYPE.TIP) {
       item.setAttribute("type", "tip");
+      this._updateRowForTip(item, result);
+      return;
     } else if (result.source == UrlbarUtils.RESULT_SOURCE.BOOKMARKS) {
       item.setAttribute("type", "bookmark");
     } else {
@@ -840,28 +868,11 @@ class UrlbarView {
       result.type == UrlbarUtils.RESULT_TYPE.KEYWORD
     ) {
       favicon.src = result.payload.icon || UrlbarUtils.ICON.SEARCH_GLASS;
-    } else if (result.type == UrlbarUtils.RESULT_TYPE.TIP) {
-      favicon.src = result.payload.icon || UrlbarUtils.ICON.TIP;
     } else {
       favicon.src = result.payload.icon || UrlbarUtils.ICON.DEFAULT;
     }
 
     let title = item._elements.get("title");
-
-    if (result.type == UrlbarUtils.RESULT_TYPE.TIP) {
-      title.textContent = result.payload.text;
-      let tipButton = item._elements.get("tipButton");
-      tipButton.textContent = result.payload.buttonText;
-
-      if (result.payload.helpUrl) {
-        let helpIcon = item._elements.get("helpButton");
-        helpIcon.style.display = "";
-      }
-      // Tips are dissimilar to other types of results and don't need the rest
-      // of this markup. We return early.
-      return;
-    }
-
     this._addTextContentWithHighlights(
       title,
       result.title,
@@ -962,6 +973,20 @@ class UrlbarView {
     item._elements.get("titleSeparator").hidden = !action && !setURL;
   }
 
+  _updateRowForTip(item, result) {
+    let favicon = item._elements.get("favicon");
+    favicon.src = result.payload.icon || UrlbarUtils.ICON.TIP;
+
+    let title = item._elements.get("title");
+    title.textContent = result.payload.text;
+
+    let tipButton = item._elements.get("tipButton");
+    tipButton.textContent = result.payload.buttonText;
+
+    let helpIcon = item._elements.get("helpButton");
+    helpIcon.style.display = result.payload.helpUrl ? "" : "none";
+  }
+
   _updateIndices() {
     for (let i = 0; i < this._rows.children.length; i++) {
       let item = this._rows.children[i];
@@ -970,8 +995,7 @@ class UrlbarView {
       if (item.result.type == UrlbarUtils.RESULT_TYPE.TIP) {
         let title = item._elements.get("title");
         title.id = item.id + "-title";
-        let content = item._elements.get("rowInner");
-        content.setAttribute("aria-labelledby", title.id);
+        item._content.setAttribute("aria-labelledby", title.id);
         let tipButton = item._elements.get("tipButton");
         tipButton.id = item.id + "-tip-button";
         let helpButton = item._elements.get("helpButton");
@@ -988,7 +1012,7 @@ class UrlbarView {
 
   _setRowVisibility(row, visible) {
     row.style.display = visible ? "" : "none";
-    if (!visible) {
+    if (!visible && row.result.type != UrlbarUtils.RESULT_TYPE.TIP) {
       // Reset the overflow state of elements that can overflow in case their
       // content changes while they're hidden. When making the row visible
       // again, we'll get new overflow events if needed.
