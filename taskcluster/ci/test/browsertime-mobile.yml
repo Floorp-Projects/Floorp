@@ -53,6 +53,6 @@ job-defaults:
 browsertime-tp6m-1:
     description: "Raptor (browsertime) tp6m-1"
     apps: ["fenix", "geckoview", "refbrow"]
-    cold: true
+    pageload: both
     treeherder-symbol: Btime(tp6m-1)
     raptor-test: raptor-tp6m-1

@@ -1290,7 +1290,10 @@ class BrowsertimeOutput(PerftestOutput):
             return subtest
 
         def _process_suite(suite):
-            suite['subtests'] = [_process(subtest) for subtest in suite['subtests'].values()]
+            suite['subtests'] = [
+                _process(subtest) for subtest in suite['subtests'].values()
+                if subtest['replicates']
+            ]
             suite['subtests'].sort(key=lambda subtest: subtest['name'])
 
             # for pageload tests, if there are > 1 subtests here, that means there

@@ -23,11 +23,12 @@ class PerftestResultsHandler(object):
     __metaclass__ = ABCMeta
 
     def __init__(self, gecko_profile=False, power_test=False,
-                 cpu_test=False, memory_test=False, **kwargs):
+                 cpu_test=False, memory_test=False, app=None, **kwargs):
         self.gecko_profile = gecko_profile
         self.power_test = power_test
         self.cpu_test = cpu_test
         self.memory_test = memory_test
+        self.app = app
         self.results = []
         self.page_timeout_list = []
         self.images = []
@@ -210,7 +211,7 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
     """Process Browsertime results"""
 
     def __init__(self, config, root_results_dir=None):
-        super(BrowsertimeResultsHandler, self).__init__(config)
+        super(BrowsertimeResultsHandler, self).__init__(**config)
         self._root_results_dir = root_results_dir
 
     def result_dir_for_test(self, test):
@@ -338,13 +339,43 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
                       ('dcf', 'timeToDomContentFlushed'),
                       ('loadtime', 'loadEventEnd'))
 
+        chrome_raptor_conversion = {
+            'timeToContentfulPaint': ['paintTiming', 'first-contentful-paint']
+        }
+
+        def _get_raptor_val(mdict, mname, retval=False):
+            # gets the measurement requested, returns the value
+            # if one was found, or retval if it couldn't be found
+            #
+            # mname: either a path to follow (as a list) to get to
+            #        a requested field value, or a string to check
+            #        if mdict contains it. i.e.
+            #        'first-contentful-paint'/'fcp' is found by searching
+            #        in mdict['paintTiming'].
+            # mdict: a dictionary to look through to find the mname
+            #        value.
+
+            if type(mname) != list:
+                if mname in mdict:
+                    return mdict[mname]
+                return retval
+            target = mname[-1]
+            tmpdict = mdict
+            for name in mname[:-1]:
+                tmpdict = tmpdict.get(name, {})
+            if target in tmpdict:
+                return tmpdict[target]
+
+            return retval
+
         results = []
 
         for raw_result in raw_btresults:
             if not raw_result['browserScripts']:
                 raise ValueError("Browsertime produced no measurements.")
 
-            bt_browser = raw_result['browserScripts'][0]['browser']
+            # Desktop chrome doesn't have `browser` scripts data available for now
+            bt_browser = raw_result['browserScripts'][0].get('browser', None)
             bt_ver = raw_result['info']['browsertime']['version']
             bt_url = raw_result['info']['url'],
             bt_result = {'bt_ver': bt_ver,
@@ -360,12 +391,34 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
             else:
                 # extracting values from browserScripts and statistics
                 for bt, raptor in conversion:
+                    # skip fnbpaint measurement on chrome
+                    if self.app and 'chrome' in self.app.lower() and bt == 'fnbpaint':
+                        continue
+
+                    # chrome currently uses different names (and locations) for some metrics
+                    if raptor in chrome_raptor_conversion and \
+                       _get_raptor_val(
+                        raw_result['browserScripts'][0]['timings'],
+                        chrome_raptor_conversion[raptor]
+                       ):
+                        raptor = chrome_raptor_conversion[raptor]
+
                     # XXX looping several times in the list, could do better
-                    bt_result['measurements'][bt] = [cycle['timings'][raptor] for cycle in
-                                                     raw_result['browserScripts']]
+                    for cycle in raw_result['browserScripts']:
+                        if bt not in bt_result['measurements']:
+                            bt_result['measurements'][bt] = []
+                        val = _get_raptor_val(cycle['timings'], raptor)
+                        if not val:
+                            continue
+                        bt_result['measurements'][bt].append(val)
+
                     # let's add the browsertime statistics; we'll use those for overall values
                     # instead of calculating our own based on the replicates
-                    bt_result['statistics'][bt] = raw_result['statistics']['timings'][raptor]
+                    bt_result['statistics'][bt] = _get_raptor_val(
+                        raw_result['statistics']['timings'],
+                        raptor,
+                        retval={}
+                    )
 
             results.append(bt_result)
 
