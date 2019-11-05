@@ -14,7 +14,7 @@
 
 #include "builtin/Promise.h"                 // js::PromiseObject
 #include "builtin/streams/ClassSpecMacro.h"  // JS_STREAMS_CLASS_SPEC
-#include "builtin/streams/MiscellaneousOperations.h"  // js::IsMaybeWrapped, js::PromiseCall
+#include "builtin/streams/MiscellaneousOperations.h"  // js::IsMaybeWrapped
 #include "builtin/streams/PullIntoDescriptor.h"  // js::PullIntoDescriptor
 #include "builtin/streams/QueueWithSizes.h"  // js::{DequeueValue,ResetQueue}
 #include "builtin/streams/ReadableStream.h"  // js::ReadableStream, js::SetUpExternalReadableByteStreamController
@@ -34,6 +34,7 @@
 #include "vm/SelfHosting.h"
 
 #include "builtin/streams/HandlerFunction-inl.h"       // js::TargetFromHandler
+#include "builtin/streams/MiscellaneousOperations-inl.h"  // js::PromiseCall
 #include "builtin/streams/ReadableStreamReader-inl.h"  // js::UnwrapReaderFromStream
 #include "vm/Compartment-inl.h"  // JS::Compartment::wrap, js::UnwrapAnd{DowncastObject,TypeCheckThis}
 #include "vm/JSContext-inl.h"  // JSContext::check

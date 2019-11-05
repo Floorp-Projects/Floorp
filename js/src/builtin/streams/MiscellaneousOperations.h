@@ -62,15 +62,6 @@ extern MOZ_MUST_USE bool InvokeOrNoop(JSContext* cx, JS::Handle<JS::Value> O,
                                       JS::MutableHandle<JS::Value> rval);
 
 /**
- * Streams spec, 6.3.5. PromiseCall ( F, V, args )
- * As it happens, all callers pass exactly one argument.
- */
-extern MOZ_MUST_USE JSObject* PromiseCall(JSContext* cx,
-                                          JS::Handle<JS::Value> F,
-                                          JS::Handle<JS::Value> V,
-                                          JS::Handle<JS::Value> arg);
-
-/**
  * Streams spec, 6.3.7. ValidateAndNormalizeHighWaterMark ( highWaterMark )
  */
 extern MOZ_MUST_USE bool ValidateAndNormalizeHighWaterMark(

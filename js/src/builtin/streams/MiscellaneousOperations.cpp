@@ -137,33 +137,6 @@ MOZ_MUST_USE bool js::InvokeOrNoop(JSContext* cx, Handle<Value> O,
 }
 
 /**
- * Streams spec, 6.3.5. PromiseCall ( F, V, args )
- * As it happens, all callers pass exactly one argument.
- */
-MOZ_MUST_USE JSObject* js::PromiseCall(JSContext* cx, Handle<Value> F,
-                                       Handle<Value> V, Handle<Value> arg) {
-  cx->check(F, V, arg);
-
-  // Step 1: Assert: ! IsCallable(F) is true.
-  MOZ_ASSERT(IsCallable(F));
-
-  // Step 2: Assert: V is not undefined.
-  MOZ_ASSERT(!V.isUndefined());
-
-  // Step 3: Assert: args is a List (implicit).
-  // Step 4: Let returnValue be Call(F, V, args).
-  Rooted<Value> rval(cx);
-  if (!Call(cx, F, V, arg, &rval)) {
-    // Step 5: If returnValue is an abrupt completion, return a promise rejected
-    // with returnValue.[[Value]].
-    return PromiseRejectedWithPendingError(cx);
-  }
-
-  // Step 6: Otherwise, return a promise resolved with returnValue.[[Value]].
-  return PromiseObject::unforgeableResolve(cx, rval);
-}
-
-/**
  * Streams spec, 6.3.7. ValidateAndNormalizeHighWaterMark ( highWaterMark )
  */
 MOZ_MUST_USE bool js::ValidateAndNormalizeHighWaterMark(
