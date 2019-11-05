@@ -9,7 +9,6 @@
 interface nsIInterfaceRequestor;
 interface nsIWebBrowserChrome;
 interface nsIURIContentListener;
-interface nsIDOMWindow;
 interface mozIDOMWindowProxy;
 interface nsIWeakReference;
 
@@ -72,8 +71,6 @@ interface nsIWebBrowser : nsISupports
     /**
      * The top-level DOM window. The embedder may walk the entire
      * DOM starting from this value.
-     *
-     * @see nsIDOMWindow
      */
     readonly attribute mozIDOMWindowProxy contentDOMWindow;
 

@@ -500,7 +500,7 @@ partial interface Window {
 
   /**
    * This is the scriptable version of
-   * nsIDOMWindow::openDialog() that takes 3 optional
+   * nsPIDOMWindow::OpenDialog() that takes 3 optional
    * arguments, plus any additional arguments are passed on as
    * arguments on the dialog's window object (window.arguments).
    */

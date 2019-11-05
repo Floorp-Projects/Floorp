@@ -12,8 +12,6 @@
 #include "nsIPrintSettings.idl"
 #include "nsIObserver.idl"
 
-interface nsIDOMWindow;
-
 [scriptable, uuid(72006d06-a2a5-4250-ae92-04b2f0e2ab8d)]
 interface nsIPrintingPromptService : nsISupports
 {
