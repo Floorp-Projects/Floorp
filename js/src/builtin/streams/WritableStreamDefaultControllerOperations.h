@@ -76,6 +76,11 @@ extern MOZ_MUST_USE bool WritableStreamDefaultControllerGetChunkSize(
 extern double WritableStreamDefaultControllerGetDesiredSize(
     const WritableStreamDefaultController* controller);
 
+extern MOZ_MUST_USE bool WritableStreamDefaultControllerWrite(
+    JSContext* cx,
+    JS::Handle<WritableStreamDefaultController*> unwrappedController,
+    JS::Handle<JS::Value> chunk, JS::Handle<JS::Value> chunkSize);
+
 extern MOZ_MUST_USE bool WritableStreamDefaultControllerErrorIfNeeded(
     JSContext* cx,
     JS::Handle<WritableStreamDefaultController*> unwrappedController,
