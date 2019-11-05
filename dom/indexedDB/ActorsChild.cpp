@@ -3227,6 +3227,16 @@ BackgroundCursorChild::CachedResponse::CachedResponse(
       mObjectStoreKey{std::move(aObjectStoreKey)},
       mCloneInfo{std::move(aCloneInfo)} {}
 
+BackgroundCursorChild::CachedResponse::CachedResponse(Key aKey)
+    : mKey{std::move(aKey)} {}
+
+BackgroundCursorChild::CachedResponse::CachedResponse(Key aKey,
+                                                      Key aLocaleAwareKey,
+                                                      Key aObjectStoreKey)
+    : mKey{std::move(aKey)},
+      mLocaleAwareKey{std::move(aLocaleAwareKey)},
+      mObjectStoreKey{std::move(aObjectStoreKey)} {}
+
 // Does not need to be threadsafe since this only runs on one thread, but
 // inheriting from CancelableRunnable is easy.
 class BackgroundCursorChild::DelayedActionRunnable final
@@ -3433,9 +3443,6 @@ void BackgroundCursorChild::CompleteContinueRequestFromCache() {
   MOZ_ASSERT(mCursor);
   MOZ_ASSERT(mStrongCursor);
   MOZ_ASSERT(!mDelayedResponses.empty());
-  // TODO: Also support the other types.
-  MOZ_ASSERT(mCursor->GetType() == IDBCursor::Type_ObjectStore ||
-             mCursor->GetType() == IDBCursor::Type_Index);
 
   RefPtr<IDBCursor> cursor;
   mStrongCursor.swap(cursor);
@@ -3450,8 +3457,14 @@ void BackgroundCursorChild::CompleteContinueRequestFromCache() {
                      std::move(item.mObjectStoreKey),
                      std::move(item.mCloneInfo));
       break;
+    case IDBCursor::Type_ObjectStoreKey:
+      mCursor->Reset(std::move(item.mKey));
+      break;
+    case IDBCursor::Type_IndexKey:
+      mCursor->Reset(std::move(item.mKey), std::move(item.mLocaleAwareKey),
+                     std::move(item.mObjectStoreKey));
+      break;
     default:
-      // TODO: Also support the other types.
       MOZ_CRASH("Should never get here.");
   }
   mDelayedResponses.pop_front();
@@ -3629,28 +3642,25 @@ void BackgroundCursorChild::HandleResponse(
 }
 
 void BackgroundCursorChild::HandleResponse(
-    const ObjectStoreKeyCursorResponse& aResponse) {
+    const nsTArray<ObjectStoreKeyCursorResponse>& aResponses) {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(mRequest);
-  MOZ_ASSERT(mTransaction);
   MOZ_ASSERT(mObjectStore);
-  MOZ_ASSERT(!mStrongRequest);
-  MOZ_ASSERT(!mStrongCursor);
 
-  // XXX Fix this somehow...
-  auto& response = const_cast<ObjectStoreKeyCursorResponse&>(aResponse);
+  HandleMultipleCursorResponses(
+      aResponses, [this](ObjectStoreKeyCursorResponse& response) {
+        RefPtr<IDBCursor> newCursor;
 
-  RefPtr<IDBCursor> newCursor;
-
-  if (mCursor) {
-    mCursor->Reset(std::move(response.key()));
-  } else {
-    newCursor = IDBCursor::Create(this, std::move(response.key()));
-    mCursor = newCursor;
-  }
-
-  ResultHelper helper(mRequest, mTransaction, mCursor);
-  DispatchSuccessEvent(&helper);
+        if (mCursor) {
+          if (mCursor->IsContinueCalled()) {
+            mCursor->Reset(std::move(response.key()));
+          } else {
+            mCachedResponses.emplace_back(std::move(response.key()));
+          }
+        } else {
+          newCursor = IDBCursor::Create(this, std::move(response.key()));
+          mCursor = newCursor;
+        }
+      });
 }
 
 void BackgroundCursorChild::HandleResponse(
@@ -3688,31 +3698,31 @@ void BackgroundCursorChild::HandleResponse(
 }
 
 void BackgroundCursorChild::HandleResponse(
-    const IndexKeyCursorResponse& aResponse) {
+    const nsTArray<IndexKeyCursorResponse>& aResponses) {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(mRequest);
-  MOZ_ASSERT(mTransaction);
   MOZ_ASSERT(mIndex);
-  MOZ_ASSERT(!mStrongRequest);
-  MOZ_ASSERT(!mStrongCursor);
 
-  // XXX Fix this somehow...
-  auto& response = const_cast<IndexKeyCursorResponse&>(aResponse);
+  HandleMultipleCursorResponses(
+      aResponses, [this](IndexKeyCursorResponse& response) {
+        RefPtr<IDBCursor> newCursor;
 
-  RefPtr<IDBCursor> newCursor;
-
-  if (mCursor) {
-    mCursor->Reset(std::move(response.key()), std::move(response.sortKey()),
-                   std::move(response.objectKey()));
-  } else {
-    newCursor = IDBCursor::Create(this, std::move(response.key()),
-                                  std::move(response.sortKey()),
-                                  std::move(response.objectKey()));
-    mCursor = newCursor;
-  }
-
-  ResultHelper helper(mRequest, mTransaction, mCursor);
-  DispatchSuccessEvent(&helper);
+        if (mCursor) {
+          if (mCursor->IsContinueCalled()) {
+            mCursor->Reset(std::move(response.key()),
+                           std::move(response.sortKey()),
+                           std::move(response.objectKey()));
+          } else {
+            mCachedResponses.emplace_back(std::move(response.key()),
+                                          std::move(response.sortKey()),
+                                          std::move(response.objectKey()));
+          }
+        } else {
+          newCursor = IDBCursor::Create(this, std::move(response.key()),
+                                        std::move(response.sortKey()),
+                                        std::move(response.objectKey()));
+          mCursor = newCursor;
+        }
+      });
 }
 
 void BackgroundCursorChild::ActorDestroy(ActorDestroyReason aWhy) {
@@ -3774,16 +3784,16 @@ mozilla::ipc::IPCResult BackgroundCursorChild::RecvResponse(
       HandleResponse(aResponse.get_ArrayOfObjectStoreCursorResponse());
       break;
 
-    case CursorResponse::TObjectStoreKeyCursorResponse:
-      HandleResponse(aResponse.get_ObjectStoreKeyCursorResponse());
+    case CursorResponse::TArrayOfObjectStoreKeyCursorResponse:
+      HandleResponse(aResponse.get_ArrayOfObjectStoreKeyCursorResponse());
       break;
 
     case CursorResponse::TArrayOfIndexCursorResponse:
       HandleResponse(aResponse.get_ArrayOfIndexCursorResponse());
       break;
 
-    case CursorResponse::TIndexKeyCursorResponse:
-      HandleResponse(aResponse.get_IndexKeyCursorResponse());
+    case CursorResponse::TArrayOfIndexKeyCursorResponse:
+      HandleResponse(aResponse.get_ArrayOfIndexKeyCursorResponse());
       break;
 
     default:
