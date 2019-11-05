@@ -333,6 +333,11 @@ already_AddRefed<IDBRequest> IDBIndex::GetInternal(bool aKeyOnly,
         IDB_LOG_STRINGIFY(this), IDB_LOG_STRINGIFY(keyRange));
   }
 
+  // TODO: This is necessary to preserve request ordering only. Proper
+  // sequencing of requests should be done in a more sophisticated manner that
+  // doesn't require invalidating cursor caches (Bug 1580499).
+  transaction->InvalidateCursorCaches();
+
   transaction->StartRequest(request, params);
 
   return request.forget();
@@ -402,6 +407,11 @@ already_AddRefed<IDBRequest> IDBIndex::GetAllInternal(
         IDB_LOG_STRINGIFY(this), IDB_LOG_STRINGIFY(keyRange),
         IDB_LOG_STRINGIFY(aLimit));
   }
+
+  // TODO: This is necessary to preserve request ordering only. Proper
+  // sequencing of requests should be done in a more sophisticated manner that
+  // doesn't require invalidating cursor caches (Bug 1580499).
+  transaction->InvalidateCursorCaches();
 
   transaction->StartRequest(request, params);
 
@@ -480,6 +490,11 @@ already_AddRefed<IDBRequest> IDBIndex::OpenCursorInternal(
   BackgroundCursorChild* const actor =
       new BackgroundCursorChild(request, this, direction);
 
+  // TODO: This is necessary to preserve request ordering only. Proper
+  // sequencing of requests should be done in a more sophisticated manner that
+  // doesn't require invalidating cursor caches (Bug 1580499).
+  transaction->InvalidateCursorCaches();
+
   mObjectStore->Transaction()->OpenCursor(actor, params);
 
   return request.forget();
@@ -528,6 +543,11 @@ already_AddRefed<IDBRequest> IDBIndex::Count(JSContext* aCx,
       IDB_LOG_STRINGIFY(transaction->Database()),
       IDB_LOG_STRINGIFY(transaction), IDB_LOG_STRINGIFY(mObjectStore),
       IDB_LOG_STRINGIFY(this), IDB_LOG_STRINGIFY(keyRange));
+
+  // TODO: This is necessary to preserve request ordering only. Proper
+  // sequencing of requests should be done in a more sophisticated manner that
+  // doesn't require invalidating cursor caches (Bug 1580499).
+  transaction->InvalidateCursorCaches();
 
   transaction->StartRequest(request, params);
 
