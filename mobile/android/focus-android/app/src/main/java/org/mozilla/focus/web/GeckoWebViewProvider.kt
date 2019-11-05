@@ -5,6 +5,7 @@
 
 package org.mozilla.focus.web
 
+import android.app.Activity
 import android.content.Context
 import android.content.SharedPreferences
 import android.net.Uri
@@ -31,6 +32,7 @@ import org.json.JSONException
 import org.mozilla.focus.R
 import org.mozilla.focus.browser.LocalizedContent
 import org.mozilla.focus.ext.savedWebViewState
+import org.mozilla.focus.gecko.GeckoViewPrompt
 import org.mozilla.focus.gecko.NestedGeckoView
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.AppConstants
@@ -161,6 +163,7 @@ class GeckoWebViewProvider : IWebViewProvider {
             geckoSession.progressDelegate = createProgressDelegate()
             geckoSession.navigationDelegate = createNavigationDelegate()
             geckoSession.contentBlockingDelegate = createTrackingProtectionDelegate()
+            geckoSession.promptDelegate = createPromptDelegate()
             finder = geckoSession.finder
             finder.displayFlags = GeckoSession.FINDER_DISPLAY_HIGHLIGHT_ALL
         }
@@ -574,6 +577,10 @@ class GeckoWebViewProvider : IWebViewProvider {
                     callback?.countBlockedTracker()
                 }
             }
+        }
+
+        private fun createPromptDelegate(): GeckoSession.PromptDelegate {
+            return GeckoViewPrompt(context as Activity)
         }
 
         override fun canGoForward(): Boolean {
