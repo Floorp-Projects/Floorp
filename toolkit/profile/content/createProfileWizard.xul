@@ -19,15 +19,15 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="initWizard();"
         style="&window.size;">
-<wizard>
-  <script src="chrome://global/content/customElements.js"/>
-  <script src="chrome://global/content/globalOverlay.js"/>
-  <script src="chrome://global/content/editMenuOverlay.js"/>
 
+<script src="chrome://global/content/customElements.js"/>
+<script src="chrome://global/content/globalOverlay.js"/>
+<script src="chrome://global/content/editMenuOverlay.js"/>
+<script src="chrome://mozapps/content/profile/createProfileWizard.js"/>
+
+<wizard>
   <stringbundle id="bundle_profileManager"
                 src="chrome://mozapps/locale/profile/profileSelection.properties"/>
-
-  <script src="chrome://mozapps/content/profile/createProfileWizard.js"/>
 
   <wizardpage id="explanation">
     <description>&profileCreationExplanation_1.text;</description>
