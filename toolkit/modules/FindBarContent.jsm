@@ -16,7 +16,7 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/Services.jsm"
 );
 
-/* Please keep in sync with toolkit/content/widgets/findbar.xml */
+/* Please keep in sync with toolkit/content/widgets/findbar.js */
 const FIND_NORMAL = 0;
 const FIND_TYPEAHEAD = 1;
 const FIND_LINKS = 2;
