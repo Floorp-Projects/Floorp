@@ -330,9 +330,10 @@
   font-size: .85em;
 }
 
-.urlbarView-title > strong,
-.urlbarView-url > strong,
-.urlbarView-tag > strong {
+/* The megabar uses full bold weight (700). */
+.urlbarView:not(.megabar) .urlbarView-title > strong,
+.urlbarView:not(.megabar) .urlbarView-url > strong,
+.urlbarView:not(.megabar) .urlbarView-tag > strong {
   font-weight: 600;
 }
 
