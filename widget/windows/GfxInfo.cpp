@@ -1451,13 +1451,14 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
     // Bug 1548410. Disable hardware accelerated video decoding on
     // Qualcomm drivers used on Windows on ARM64 which are known to
     // cause BSOD's and output suprious green frames while decoding video.
+    // Bug 1592826 expands the blacklist.
     APPEND_TO_DRIVER_BLOCKLIST2(
         OperatingSystem::Windows10,
         (nsAString&)GfxDriverInfo::GetDeviceVendor(VendorQualcomm),
         (nsAString&)GfxDriverInfo::GetDriverVendor(DriverVendorAll),
         GfxDriverInfo::allDevices, nsIGfxInfo::FEATURE_HARDWARE_VIDEO_DECODING,
         nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION, DRIVER_LESS_THAN_OR_EQUAL,
-        V(23, 18, 9310, 0), "FEATURE_FAILURE_BUG_1548410");
+        V(25, 18, 10440, 0), "FEATURE_FAILURE_BUG_1592826");
 
     /* Disable D2D on AMD Catalyst 14.4 until 14.6
      * See bug 984488
