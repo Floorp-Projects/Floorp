@@ -112,6 +112,8 @@ const int32_t kDefaultDataThresholdBytes = 1024 * 1024;  // 1MB
 // The maximal size of a serialized object to be transfered through IPC.
 const int32_t kDefaultMaxSerializedMsgSize = IPC::Channel::kMaximumMessageSize;
 
+const int32_t kDefaultMaxPreloadExtraRecords = 0;
+
 #define IDB_PREF_BRANCH_ROOT "dom.indexedDB."
 
 const char kTestingPref[] = IDB_PREF_BRANCH_ROOT "testing";
@@ -123,6 +125,8 @@ const char kPrefMaxSerilizedMsgSize[] =
 const char kPrefErrorEventToSelfError[] =
     IDB_PREF_BRANCH_ROOT "errorEventToSelfError";
 const char kPreprocessingPref[] = IDB_PREF_BRANCH_ROOT "preprocessing";
+const char kPrefMaxPreloadExtraRecords[] =
+    IDB_PREF_BRANCH_ROOT "maxPreloadExtraRecords";
 
 #define IDB_PREF_LOGGING_BRANCH_ROOT IDB_PREF_BRANCH_ROOT "logging."
 
@@ -148,6 +152,7 @@ Atomic<bool> gPrefErrorEventToSelfError(false);
 Atomic<int32_t> gDataThresholdBytes(0);
 Atomic<int32_t> gMaxSerializedMsgSize(0);
 Atomic<bool> gPreprocessingEnabled(false);
+Atomic<int32_t> gMaxPreloadExtraRecords(0);
 
 void AtomicBoolPrefChangedCallback(const char* aPrefName, void* aBool) {
   MOZ_ASSERT(NS_IsMainThread());
@@ -181,6 +186,21 @@ void MaxSerializedMsgSizePrefChangeCallback(const char* aPrefName,
   gMaxSerializedMsgSize =
       Preferences::GetInt(aPrefName, kDefaultMaxSerializedMsgSize);
   MOZ_ASSERT(gMaxSerializedMsgSize > 0);
+}
+
+void MaxPreloadExtraRecordsPrefChangeCallback(const char* aPrefName,
+                                              void* aClosure) {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!strcmp(aPrefName, kPrefMaxPreloadExtraRecords));
+  MOZ_ASSERT(!aClosure);
+
+  gMaxPreloadExtraRecords =
+      Preferences::GetInt(aPrefName, kDefaultMaxPreloadExtraRecords);
+  MOZ_ASSERT(gMaxPreloadExtraRecords >= 0);
+
+  // TODO: We could also allow setting a negative value to preload all available
+  // records, but this doesn't seem to be too useful in general, and it would
+  // require adaptations in ActorsParent.cpp
 }
 
 }  // namespace
@@ -284,6 +304,9 @@ nsresult IndexedDatabaseManager::Init() {
   Preferences::RegisterCallbackAndCall(AtomicBoolPrefChangedCallback,
                                        kPreprocessingPref,
                                        &gPreprocessingEnabled);
+
+  Preferences::RegisterCallbackAndCall(MaxPreloadExtraRecordsPrefChangeCallback,
+                                       kPrefMaxPreloadExtraRecords);
 
   nsAutoCString acceptLang;
   Preferences::GetLocalizedCString("intl.accept_languages", acceptLang);
@@ -631,6 +654,15 @@ bool IndexedDatabaseManager::PreprocessingEnabled() {
              "initialized!");
 
   return gPreprocessingEnabled;
+}
+
+// static
+int32_t IndexedDatabaseManager::MaxPreloadExtraRecords() {
+  MOZ_ASSERT(gDBManager,
+             "MaxPreloadExtraRecords() called before indexedDB has been "
+             "initialized!");
+
+  return gMaxPreloadExtraRecords;
 }
 
 void IndexedDatabaseManager::ClearBackgroundActor() {
