@@ -87,7 +87,13 @@ class DOMFullscreenParent extends JSWindowActorParent {
       }
       case "MozDOMFullscreen:Exited": {
         TelemetryStopwatch.start("FULLSCREEN_CHANGE_MS");
-        if (!this.requestOrigin) {
+
+        // Make sure that the actor has not been destroyed before
+        // accessing its browsing context. Otherwise, a error may
+        // occur and hence cleanupDomFullscreen not executed, resulting
+        // in the browser window being in an unstable state.
+        // (Bug 1590138).
+        if (!this.hasBeenDestroyed() && !this.requestOrigin) {
           this.requestOrigin = this;
         }
         window.FullScreen.cleanupDomFullscreen(this);
@@ -139,6 +145,18 @@ class DOMFullscreenParent extends JSWindowActorParent {
       );
     } else {
       delete this.browsingContext.top.fullscreenRequestOrigin;
+    }
+  }
+
+  hasBeenDestroyed() {
+    // The 'didDestroy' callback is not always getting called.
+    // So we can't rely on it here. Instead, we will try to access
+    // the browsing context to judge wether the actor has
+    // been destroyed or not.
+    try {
+      return !this.browsingContext;
+    } catch {
+      return true;
     }
   }
 }
