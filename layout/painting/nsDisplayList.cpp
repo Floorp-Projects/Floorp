@@ -4113,7 +4113,7 @@ nsDisplayBackgroundImage::nsDisplayBackgroundImage(
 }
 
 // Should have an identical argument signature to the above ctor
-uint16_t nsDisplayBackgroundImage::CalculatePerFrameKey(
+uint16_t nsDisplayBackgroundImage::CalculatePerFrameIndex(
     nsDisplayListBuilder* aBuilder, nsIFrame* aFrame, const InitData& aInitData,
     nsIFrame* aFrameForBounds) {
   return aInitData.layer;
@@ -4936,7 +4936,7 @@ nsDisplayTableBackgroundImage::nsDisplayTableBackgroundImage(
 }
 
 // Should have an identical argument signature to the above ctor
-uint16_t nsDisplayTableBackgroundImage::CalculatePerFrameKey(
+uint16_t nsDisplayTableBackgroundImage::CalculatePerFrameIndex(
     nsDisplayListBuilder* aBuilder, nsIFrame* aFrame, const InitData& aData,
     nsIFrame* aCellFrame) {
   return CalculateTablePerFrameKey(aData.layer,
@@ -5594,7 +5594,7 @@ nsDisplayCompositorHitTestInfo::nsDisplayCompositorHitTestInfo(
 }
 
 // Should have the same argument signature as the above ctor
-uint16_t nsDisplayCompositorHitTestInfo::CalculatePerFrameKey(
+uint16_t nsDisplayCompositorHitTestInfo::CalculatePerFrameIndex(
     nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
     const mozilla::gfx::CompositorHitTestInfo& aHitTestFlags, uint16_t aIndex,
     const mozilla::Maybe<nsRect>& aArea) {
@@ -5613,7 +5613,7 @@ nsDisplayCompositorHitTestInfo::nsDisplayCompositorHitTestInfo(
 }
 
 // Should have the same argument signature as the above ctor
-uint16_t nsDisplayCompositorHitTestInfo::CalculatePerFrameKey(
+uint16_t nsDisplayCompositorHitTestInfo::CalculatePerFrameIndex(
     nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
     mozilla::UniquePtr<HitTestInfo>&& aHitTestInfo) {
   return 0;
