@@ -93,6 +93,14 @@ static bool IsWindowAllowedToPlay(nsPIDOMWindowInner* aWindow) {
     return true;
   }
 
+  RefPtr<BrowsingContext> topLevelBC = aWindow->GetBrowsingContext()->Top();
+  if (topLevelBC->HasBeenUserGestureActivated()) {
+    AUTOPLAY_LOG(
+        "Allow autoplay as top-level context has been activated by user "
+        "gesture.");
+    return true;
+  }
+
   if (!aWindow->GetExtantDoc()) {
     return false;
   }
@@ -100,11 +108,6 @@ static bool IsWindowAllowedToPlay(nsPIDOMWindowInner* aWindow) {
   Document* approver = ApproverDocOf(*aWindow->GetExtantDoc());
   if (!approver) {
     return false;
-  }
-
-  if (approver->HasBeenUserGestureActivated()) {
-    AUTOPLAY_LOG("Allow autoplay as document activated by user gesture.");
-    return true;
   }
 
   if (approver->IsExtensionPage()) {
