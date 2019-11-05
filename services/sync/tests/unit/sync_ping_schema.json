@@ -17,6 +17,10 @@
       "type": "string",
       "pattern": "^[0-9a-f]{64}$"
     },
+    "devices": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/device" }
+    },
     "sessionStartDate": { "type": "string" },
     "syncs": {
       "type": "array",
@@ -51,10 +55,6 @@
       "properties": {
         "didLogin": { "type": "boolean" },
         "when": { "type": "integer" },
-        "devices": {
-          "type": "array",
-          "items": { "$ref": "#/definitions/device" }
-        },
         "status": {
           "type": "object",
           "anyOf": [
@@ -78,13 +78,15 @@
       }
     },
     "device": {
-      "required": ["os", "id", "version"],
+      "required": ["id"],
       "additionalProperties": false,
       "type": "object",
       "properties": {
         "id": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
         "os": { "type": "string" },
-        "version": { "type": "string" }
+        "version": { "type": "string" },
+        "type": {"type": "string" },
+        "syncID": {"type": "string", "pattern": "^[0-9a-f]{64}$" }
       }
     },
     "engine": {

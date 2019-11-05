@@ -277,6 +277,7 @@ function mockGetWindowEnumerator(url, numWindows, numTabs, indexes, moreURLs) {
 function get_sync_test_telemetry() {
   let ns = {};
   ChromeUtils.import("resource://services-sync/telemetry.js", ns);
+  ns.SyncTelemetry.tryRefreshDevices = function() {};
   let testEngines = ["rotary", "steam", "sterling", "catapult"];
   for (let engineName of testEngines) {
     ns.SyncTelemetry.allowedEngines.add(engineName);
@@ -311,14 +312,6 @@ function assert_valid_ping(record) {
     equal(record.version, 1);
     record.syncs.forEach(p => {
       lessOrEqual(p.when, Date.now());
-      if (p.devices) {
-        ok(!p.devices.some(device => device.id == record.deviceID));
-        equal(
-          new Set(p.devices.map(device => device.id)).size,
-          p.devices.length,
-          "Duplicate device ids in ping devices list"
-        );
-      }
     });
   }
 }
