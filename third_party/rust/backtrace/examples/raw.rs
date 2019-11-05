@@ -4,12 +4,20 @@ fn main() {
     foo();
 }
 
-fn foo() { bar() }
-fn bar() { baz() }
-fn baz() { print() }
+fn foo() {
+    bar()
+}
+fn bar() {
+    baz()
+}
+fn baz() {
+    print()
+}
 
-#[cfg(target_pointer_width = "32")] const HEX_WIDTH: usize = 10;
-#[cfg(target_pointer_width = "64")] const HEX_WIDTH: usize = 20;
+#[cfg(target_pointer_width = "32")]
+const HEX_WIDTH: usize = 10;
+#[cfg(target_pointer_width = "64")]
+const HEX_WIDTH: usize = 20;
 
 fn print() {
     let mut cnt = 0;
@@ -33,12 +41,10 @@ fn print() {
             }
             if let Some(file) = symbol.filename() {
                 if let Some(l) = symbol.lineno() {
-                    print!("\n{:13}{:4$}@ {}:{}", "", "", file.display(), l,
-                           HEX_WIDTH);
+                    print!("\n{:13}{:4$}@ {}:{}", "", "", file.display(), l, HEX_WIDTH);
                 }
             }
             println!("");
-
         });
         if !resolved {
             println!(" - <no info>");

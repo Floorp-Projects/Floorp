@@ -22,6 +22,46 @@ __ https://docs.rs/arrayvec
 Recent Changes (arrayvec)
 -------------------------
 
+- 0.5.1
+
+  - Add ``as_ptr``, ``as_mut_ptr`` accessors directly on the ``ArrayVec`` by @tbu-
+    (matches the same addition to ``Vec`` which happened in Rust 1.37).
+  - Add method ``ArrayString::len`` (now available directly, not just through deref to str).
+  - Use raw pointers instead of ``&mut [u8]`` for encoding chars into ``ArrayString``
+    (uninit best practice fix).
+  - Use raw pointers instead of ``get_unchecked_mut`` where the target may be
+    uninitialized a everywhere relevant in the ArrayVec implementation
+    (uninit best practice fix).
+  - Changed inline hints on many methods, mainly removing inline hints
+  - ``ArrayVec::dispose`` is now deprecated (it has no purpose anymore)
+
+- 0.4.12
+
+  - Use raw pointers instead of ``get_unchecked_mut`` where the target may be
+    uninitialized a everywhere relevant in the ArrayVec implementation.
+
+- 0.5.0
+
+  - Use ``MaybeUninit`` (now unconditionally) in the implementation of
+    ``ArrayVec``
+  - Use ``MaybeUninit`` (now unconditionally) in the implementation of
+    ``ArrayString``
+  - The crate feature for serde serialization is now named ``serde``.
+  - Updated the ``Array`` trait interface, and it is now easier to use for
+    users outside the crate.
+  - Add ``FromStr`` impl for ``ArrayString`` by @despawnerer
+  - Add method ``try_extend_from_slice`` to ``ArrayVec``, which is always
+    effecient by @Thomasdezeeuw.
+  - Add method ``remaining_capacity`` by @Thomasdezeeuw
+  - Improve performance of the ``extend`` method.
+  - The index type of zero capacity vectors is now itself zero size, by
+    @clarfon
+  - Use ``drop_in_place`` for truncate and clear methods. This affects drop order
+    and resume from panic during drop.
+  - Use Rust 2018 edition for the implementation
+  - Require Rust 1.36 or later, for the unconditional ``MaybeUninit``
+    improvements.
+
 - 0.4.11
 
   - In Rust 1.36 or later, use newly stable MaybeUninit. This extends the
