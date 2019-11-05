@@ -484,7 +484,7 @@ class PeerConnectionImpl final
 
   bool IsClosed() const;
   // called when DTLS connects; we only need this once
-  nsresult OnAlpnNegotiated(const std::string& aAlpn);
+  nsresult OnAlpnNegotiated(bool aPrivacyRequested);
 
   bool HasMedia() const;
 
