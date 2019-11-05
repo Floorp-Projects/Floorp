@@ -1,19 +1,14 @@
-//! Empty symbolication strategy used to compile for platforms that have no
-//! support.
+use std::path::Path;
+use std::os::raw::c_void;
 
-use crate::symbolize::ResolveWhat;
-use crate::types::BytesOrWideString;
-use crate::SymbolName;
-use core::ffi::c_void;
-use core::marker;
+use SymbolName;
 
-pub unsafe fn resolve(_addr: ResolveWhat, _cb: &mut FnMut(&super::Symbol)) {}
-
-pub struct Symbol<'a> {
-    _marker: marker::PhantomData<&'a i32>,
+pub fn resolve(_addr: *mut c_void, _cb: &mut FnMut(&super::Symbol)) {
 }
 
-impl Symbol<'_> {
+pub struct Symbol;
+
+impl Symbol {
     pub fn name(&self) -> Option<SymbolName> {
         None
     }
@@ -22,12 +17,7 @@ impl Symbol<'_> {
         None
     }
 
-    pub fn filename_raw(&self) -> Option<BytesOrWideString> {
-        None
-    }
-
-    #[cfg(feature = "std")]
-    pub fn filename(&self) -> Option<&::std::path::Path> {
+    pub fn filename(&self) -> Option<&Path> {
         None
     }
 
