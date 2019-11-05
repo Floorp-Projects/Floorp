@@ -1168,6 +1168,7 @@ nsresult nsSocketTransport::BuildSocket(PRFileDesc*& fd, bool& proxyTransparent,
 
   nsCOMPtr<nsISocketProviderService> spserv =
       nsSocketProviderService::GetOrCreate();
+  nsCOMPtr<nsIProxyInfo> proxyInfo = mProxyInfo;
 
   uint32_t i;
   for (i = 0; i < mTypes.Length(); ++i) {
@@ -1177,8 +1178,6 @@ nsresult nsSocketTransport::BuildSocket(PRFileDesc*& fd, bool& proxyTransparent,
 
     rv = spserv->GetSocketProvider(mTypes[i].get(), getter_AddRefs(provider));
     if (NS_FAILED(rv)) break;
-
-    nsCOMPtr<nsIProxyInfo> proxyInfo = mProxyInfo;
 
     nsCOMPtr<nsISupports> secinfo;
     if (i == 0) {
