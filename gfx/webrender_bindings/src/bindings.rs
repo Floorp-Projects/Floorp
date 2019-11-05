@@ -1369,6 +1369,7 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
 
     let opts = RendererOptions {
         enable_aa: true,
+        force_subpixel_aa: false,
         enable_subpixel_aa: cfg!(not(target_os = "android")),
         support_low_priority_transactions,
         allow_texture_swizzling,
