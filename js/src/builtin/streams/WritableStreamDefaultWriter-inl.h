@@ -22,7 +22,7 @@
 
 #include "vm/Compartment-inl.h"  // js::UnwrapInternalSlot
 
-struct JSContext;
+struct JS_PUBLIC_API JSContext;
 
 namespace js {
 
