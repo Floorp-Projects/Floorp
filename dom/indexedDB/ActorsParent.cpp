@@ -15217,8 +15217,9 @@ void Cursor::SendResponseInternal(
   MOZ_ASSERT_IF(
       aResponse.type() == CursorResponse::Tnsresult ||
           aResponse.type() == CursorResponse::Tvoid_t ||
-          aResponse.type() == CursorResponse::TObjectStoreKeyCursorResponse ||
-          aResponse.type() == CursorResponse::TIndexKeyCursorResponse,
+          aResponse.type() ==
+              CursorResponse::TArrayOfObjectStoreKeyCursorResponse ||
+          aResponse.type() == CursorResponse::TArrayOfIndexKeyCursorResponse,
       aFiles.IsEmpty());
   MOZ_ASSERT(!mActorDestroyed);
   MOZ_ASSERT(mCurrentlyRunningOp);
@@ -25729,7 +25730,12 @@ nsresult Cursor::CursorOpBase::PopulateResponseFromStatement(
   Transaction()->AssertIsOnConnectionThread();
   MOZ_ASSERT(aInitializeResponse ==
              (mResponse.type() == CursorResponse::T__None));
-  MOZ_ASSERT_IF(mFiles.IsEmpty(), aInitializeResponse);
+  MOZ_ASSERT_IF(
+      mFiles.IsEmpty() &&
+          (mResponse.type() ==
+               CursorResponse::TArrayOfObjectStoreCursorResponse ||
+           mResponse.type() == CursorResponse::TArrayOfIndexCursorResponse),
+      aInitializeResponse);
 
   nsresult rv = mCursor->mPosition.SetFromStatement(aStmt, 0);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -25774,8 +25780,16 @@ nsresult Cursor::CursorOpBase::PopulateResponseFromStatement(
     }
 
     case OpenCursorParams::TObjectStoreOpenKeyCursorParams: {
-      MOZ_ASSERT(aInitializeResponse);
-      mResponse = ObjectStoreKeyCursorResponse(mCursor->mPosition);
+      if (aInitializeResponse) {
+        mResponse = nsTArray<ObjectStoreKeyCursorResponse>();
+      } else {
+        MOZ_ASSERT(mResponse.type() ==
+                   CursorResponse::TArrayOfObjectStoreKeyCursorResponse);
+      }
+
+      auto& responses = mResponse.get_ArrayOfObjectStoreKeyCursorResponse();
+      auto& response = *responses.AppendElement();
+      response.key() = mCursor->mPosition;
       break;
     }
 
@@ -25832,10 +25846,18 @@ nsresult Cursor::CursorOpBase::PopulateResponseFromStatement(
         return rv;
       }
 
-      MOZ_ASSERT(aInitializeResponse);
-      mResponse = IndexKeyCursorResponse(mCursor->mPosition,
-                                         mCursor->mLocaleAwarePosition,
-                                         mCursor->mObjectStorePosition);
+      if (aInitializeResponse) {
+        mResponse = nsTArray<IndexKeyCursorResponse>();
+      } else {
+        MOZ_ASSERT(mResponse.type() ==
+                   CursorResponse::TArrayOfIndexKeyCursorResponse);
+      }
+
+      auto& responses = mResponse.get_ArrayOfIndexKeyCursorResponse();
+      auto& response = *responses.AppendElement();
+      response.key() = mCursor->mPosition;
+      response.sortKey() = mCursor->mLocaleAwarePosition;
+      response.objectKey() = mCursor->mObjectStorePosition;
       break;
     }
 
@@ -25850,14 +25872,6 @@ nsresult Cursor::CursorOpBase::PopulateExtraResponses(
     mozIStorageStatement* const aStmt, const uint32_t aMaxExtraCount,
     const nsCString& aOperation) {
   AssertIsOnConnectionThread();
-
-  if (mCursor->mType != OpenCursorParams::TObjectStoreOpenCursorParams &&
-      mCursor->mType != OpenCursorParams::TIndexOpenCursorParams) {
-    IDB_WARNING(
-        "PRELOAD: Not yet implemented. Extra results were queried, but are "
-        "discarded for now.");
-    return NS_OK;
-  }
 
   // For unique cursors, we need to skip records with the same key. The SQL
   // queries currently do not filter these out.

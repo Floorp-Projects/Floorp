@@ -79,9 +79,9 @@ union CursorResponse
   void_t;
   nsresult;
   ObjectStoreCursorResponse[];
-  ObjectStoreKeyCursorResponse;
+  ObjectStoreKeyCursorResponse[];
   IndexCursorResponse[];
-  IndexKeyCursorResponse;
+  IndexKeyCursorResponse[];
 };
 
 protocol PBackgroundIDBCursor
