@@ -2026,7 +2026,7 @@ already_AddRefed<IDBRequest> IDBObjectStore::DeleteInternal(
   if (!aFromCursor) {
     IDB_LOG_MARK_CHILD_TRANSACTION_REQUEST(
         "database(%s).transaction(%s).objectStore(%s).delete(%s)",
-        " IDBObjectStore.delete()", mTransaction->LoggingSerialNumber(),
+        "IDBObjectStore.delete()", mTransaction->LoggingSerialNumber(),
         request->LoggingSerialNumber(),
         IDB_LOG_STRINGIFY(mTransaction->Database()),
         IDB_LOG_STRINGIFY(mTransaction), IDB_LOG_STRINGIFY(this),
