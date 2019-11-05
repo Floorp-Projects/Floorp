@@ -187,8 +187,6 @@ class DocumentChannelParent : public nsIInterfaceRequestor,
   // value we need here.
   nsCOMPtr<nsIURI> mChannelCreationURI;
 
-  RefPtr<mozilla::dom::BrowserParent> mBrowserParent;
-
   nsTArray<DocumentChannelRedirect> mRedirects;
 
   // Corresponding redirect channel registrar Id for the final channel that
