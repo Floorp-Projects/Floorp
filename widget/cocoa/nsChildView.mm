@@ -332,7 +332,6 @@ nsChildView::nsChildView()
       mIsDispatchPaint(false),
       mPluginFocused{false},
       mCompositingState("nsChildView::mCompositingState"),
-      mOpaqueRegion("nsChildView::mOpaqueRegion"),
       mCurrentPanGestureBelongsToSwipe{false} {}
 
 nsChildView::~nsChildView() {
@@ -606,8 +605,6 @@ void nsChildView::SetTransparencyMode(nsTransparencyMode aMode) {
   if (windowWidget) {
     windowWidget->SetTransparencyMode(aMode);
   }
-
-  UpdateInternalOpaqueRegion();
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -1504,11 +1501,6 @@ void nsChildView::EnsureContentLayerForMainThreadPainting() {
 void nsChildView::PaintWindowInContentLayer() {
   EnsureContentLayerForMainThreadPainting();
   mContentLayer->SetRect(GetBounds().ToUnknownRect());
-  {
-    auto opaqueRegion = mOpaqueRegion.Lock();
-    bool isOpaque = *opaqueRegion == GetBounds();
-    mContentLayer->SetIsOpaque(isOpaque);
-  }
   mContentLayer->SetSurfaceIsFlipped(false);
   RefPtr<DrawTarget> dt = mContentLayer->NextSurfaceAsDrawTarget(gfx::BackendType::SKIA);
   if (!dt) {
@@ -1590,11 +1582,6 @@ LayoutDeviceIntPoint nsChildView::WidgetToScreenOffset() {
   return CocoaPointsToDevPixels(origin);
 
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(LayoutDeviceIntPoint(0, 0));
-}
-
-LayoutDeviceIntRegion nsChildView::GetOpaqueWidgetRegion() {
-  auto opaqueRegion = mOpaqueRegion.Lock();
-  return *opaqueRegion;
 }
 
 nsresult nsChildView::SetTitle(const nsAString& title) {
@@ -2457,8 +2444,6 @@ void nsChildView::UpdateVibrancy(const nsTArray<ThemeGeometry>& aThemeGeometries
   changed |= vm.UpdateVibrantRegion(VibrancyType::ACTIVE_SOURCE_LIST_SELECTION,
                                     activeSourceListSelectionRegion);
 
-  UpdateInternalOpaqueRegion();
-
   if (changed) {
     SuspendAsyncCATransactions();
   }
@@ -2470,19 +2455,6 @@ mozilla::VibrancyManager& nsChildView::EnsureVibrancyManager() {
     mVibrancyManager = MakeUnique<VibrancyManager>(*this, [mView vibrancyViewsContainer]);
   }
   return *mVibrancyManager;
-}
-
-void nsChildView::UpdateInternalOpaqueRegion() {
-  MOZ_RELEASE_ASSERT(NS_IsMainThread(), "This should only be called on the main thread.");
-  auto opaqueRegion = mOpaqueRegion.Lock();
-  bool widgetIsOpaque = GetTransparencyMode() == eTransparencyOpaque;
-  if (!widgetIsOpaque) {
-    opaqueRegion->SetEmpty();
-  } else if (VibrancyManager::SystemSupportsVibrancy()) {
-    opaqueRegion->Sub(mBounds, EnsureVibrancyManager().GetUnionOfVibrantRegions());
-  } else {
-    *opaqueRegion = mBounds;
-  }
 }
 
 nsChildView::SwipeInfo nsChildView::SendMayStartSwipe(
