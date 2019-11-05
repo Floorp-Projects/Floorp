@@ -4852,6 +4852,12 @@ pref("devtools.errorconsole.deprecation_warnings", true);
   pref("devtools.debugger.remote-enabled", true, sticky);
 #endif
 
+#if defined(MOZ_DEV_EDITION) || defined(NIGHTLY_BUILD)
+  pref("devtools.debugger.features.watchpoints", true);
+#else
+  pref("devtools.debugger.features.watchpoints", false);
+#endif
+
 // Disable remote debugging protocol logging.
 pref("devtools.debugger.log", false);
 pref("devtools.debugger.log.verbose", false);
