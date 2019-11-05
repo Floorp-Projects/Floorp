@@ -177,10 +177,11 @@ void main(void) {
     int prim_header_address = aData.x;
     int glyph_index = aData.y & 0xffff;
     int render_task_index = aData.y >> 16;
-    int raster_space = aData.z >> 16;
-    int subpx_dir = (aData.z >> 8) & 0xff;
-    int color_mode = aData.z & 0xff;
+    int raster_space = aData.z & 0xffff;
+    int subpx_dir = (aData.z >> 24) & 0xff;
+    int color_mode = (aData.z >> 16) & 0xff;
     int resource_address = aData.w;
+
 
     PrimitiveHeader ph = fetch_prim_header(prim_header_address);
     Transform transform = fetch_transform(ph.transform_id);
