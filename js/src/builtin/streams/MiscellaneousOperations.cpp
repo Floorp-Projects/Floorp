@@ -97,7 +97,7 @@ MOZ_MUST_USE bool js::CreateAlgorithmFromUnderlyingMethod(
     //     Step ii: Return ! PromiseCall(method, underlyingObject,
     //                                   fullArgs).
     // (These steps are deferred to the code that performs the algorithm.
-    // See ReadableStreamControllerCancelSteps and
+    // See PerformCloseAlgorithm, ReadableStreamControllerCancelSteps, and
     // ReadableStreamControllerCallPullIfNeeded.)
     return true;
   }
