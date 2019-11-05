@@ -338,7 +338,8 @@ WebRenderImageData* WebRenderFallbackData::PaintIntoImage() {
 
 WebRenderAnimationData::WebRenderAnimationData(RenderRootStateManager* aManager,
                                                nsDisplayItem* aItem)
-    : WebRenderUserData(aManager, aItem) {}
+    : WebRenderUserData(aManager, static_cast<uint32_t>(aItem->GetType()),
+                        aItem->Frame()) {}
 
 WebRenderAnimationData::~WebRenderAnimationData() {
   // It may be the case that nsDisplayItem that created this WebRenderUserData
