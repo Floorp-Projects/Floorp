@@ -264,7 +264,7 @@ void TestCreateVRWindow() {
   char currentDir[MAX_PATH] = {0};
   char currentDirProfile[MAX_PATH] = {0};
   DWORD currentDirLength =
-      ::GetCurrentDirectory(ARRAYSIZE(currentDir), currentDir);
+      ::GetCurrentDirectoryA(ARRAYSIZE(currentDir), currentDir);
   currentDir[currentDirLength] = '\\';
 
   int err = sprintf_s(currentDirProfile, ARRAYSIZE(currentDirProfile),
@@ -286,20 +286,24 @@ void TestCreateVRWindow() {
                                       (void*)fnWaitForVRMsg, 0, &dwTid);
 
     // Wait for Fx to finish launch
+#ifdef DEBUG
     ::Sleep(5000);
+#else
+    ::Sleep(2000);
+#endif
 
     printf(
-        "Now, simulating a click on the Home button, which should look "
+        "1. Simulating a click on the Home button, which should look "
         "pressed\n");
     POINT pt;
     pt.x = 180;
-    pt.y = 790;
+    pt.y = 700;
     fnSendMsg(windowId, WM_LBUTTONDOWN, 0, POINTTOPOINTS(pt));
     ::Sleep(3000);
     fnSendMsg(windowId, WM_LBUTTONUP, 0, POINTTOPOINTS(pt));
 
     printf(
-        "Next, simulating hovering across the URL bar, which should turn "
+        "2. Simulating hovering across the URL bar, which should turn "
         "blue\n");
     pt.x = 600;
     for (int i = 0; i < 100; ++i) {
@@ -309,16 +313,23 @@ void TestCreateVRWindow() {
     }
 
     printf(
-        "Next, simulating clicking inside the URL bar, which should "
+        "3. Simulating clicking inside the URL bar, which should "
         "highlight the text\n");
     pt.x = 700;
-    pt.y = 790;
+    pt.y = 700;
     fnSendMsg(windowId, WM_LBUTTONDOWN, 0, POINTTOPOINTS(pt));
     fnSendMsg(windowId, WM_LBUTTONUP, 0, POINTTOPOINTS(pt));
+
     ::Sleep(3000);
 
+    printf("4. Type some UTF16 characters in the URL bar\n");
+    fnSendMsg(windowId, WM_CHAR, 0x4E64, 0);
+    fnSendMsg(windowId, WM_CHAR, 0x312D, 0);
+    fnSendMsg(windowId, WM_CHAR, 0x0BB9, 0);
+    fnSendMsg(windowId, WM_CHAR, 0x2745, 0);
+
     printf(
-        "Finally, simulating clicking outside the URL bar, which should "
+        "5. Simulating clicking outside the URL bar, which should "
         "send a keyboard blur event\n");
     pt.x = 80;
     fnSendMsg(windowId, WM_LBUTTONDOWN, 0, POINTTOPOINTS(pt));
