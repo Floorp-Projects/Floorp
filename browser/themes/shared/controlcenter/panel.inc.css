@@ -1120,6 +1120,7 @@ description#identity-popup-content-verifier,
 }
 
 #protections-popup-milestones-content {
+  -moz-appearance: none;
   padding: var(--vertical-section-padding) calc(var(--horizontal-padding) * 0.5);
   margin: 0;
 }
