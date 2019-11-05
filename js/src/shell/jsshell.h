@@ -92,6 +92,52 @@ struct RCFile {
   bool release();
 };
 
+// Shell command-line arguments and count.
+extern int sArgc;
+extern char** sArgv;
+
+// Shell state set once at startup.
+extern bool enableDeferredMode;
+extern bool enableCodeCoverage;
+extern bool enableDisassemblyDumps;
+extern bool offthreadCompilation;
+extern bool enableAsmJS;
+extern bool enableWasm;
+extern bool enableSharedMemory;
+extern bool enableWasmBaseline;
+extern bool enableWasmIon;
+extern bool enableWasmCranelift;
+#ifdef ENABLE_WASM_GC
+extern bool enableWasmGc;
+#endif
+extern bool enableWasmVerbose;
+extern bool enableTestWasmAwaitTier2;
+extern bool enableAsyncStacks;
+extern bool enableStreams;
+extern bool enableReadableByteStreams;
+extern bool enableBYOBStreamReaders;
+extern bool enableWritableStreams;
+extern bool enableFields;
+extern bool enableAwaitFix;
+extern bool enableWeakRefs;
+#ifdef JS_GC_ZEAL
+extern uint32_t gZealBits;
+extern uint32_t gZealFrequency;
+#endif
+extern bool printTiming;
+extern RCFile* gErrFile;
+extern RCFile* gOutFile;
+extern bool reportWarnings;
+extern bool compileOnly;
+extern bool fuzzingSafe;
+extern bool disableOOMFunctions;
+extern bool defaultToSameCompartment;
+
+#ifdef DEBUG
+extern bool dumpEntrainedVariables;
+extern bool OOM_printAllocationCount;
+#endif
+
 // Alias the global dstName to namespaceObj.srcName. For example, if dstName is
 // "snarf", namespaceObj represents "os.file", and srcName is "readFile", then
 // this is equivalent to the JS code:
@@ -189,6 +235,9 @@ struct ShellContext {
 };
 
 extern ShellContext* GetShellContext(JSContext* cx);
+
+extern MOZ_MUST_USE bool PrintStackTrace(JSContext* cx,
+                                         JS::Handle<JSObject*> stackObj);
 
 } /* namespace shell */
 } /* namespace js */
