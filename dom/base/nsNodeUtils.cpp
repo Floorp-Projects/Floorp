@@ -221,18 +221,11 @@ void nsNodeUtils::ContentRemoved(nsINode* aContainer, nsIContent* aChild,
                              IsRemoveNotification::Yes);
 }
 
-Maybe<NonOwningAnimationTarget> nsNodeUtils::GetTargetForAnimation(
-    const dom::Animation* aAnimation) {
-  AnimationEffect* effect = aAnimation->GetEffect();
-  if (!effect || !effect->AsKeyframeEffect()) {
-    return Nothing();
-  }
-  return effect->AsKeyframeEffect()->GetTarget();
-}
+void nsNodeUtils::AnimationMutated(
+    dom::Animation* aAnimation, AnimationMutationType aMutatedType) {
+  MOZ_ASSERT(aAnimation);
 
-void nsNodeUtils::AnimationMutated(dom::Animation* aAnimation,
-                                   AnimationMutationType aMutatedType) {
-  Maybe<NonOwningAnimationTarget> target = GetTargetForAnimation(aAnimation);
+  Maybe<NonOwningAnimationTarget> target = aAnimation->GetTargetForAnimation();
   if (!target) {
     return;
   }
