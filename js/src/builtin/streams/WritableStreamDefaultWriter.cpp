@@ -15,10 +15,10 @@
 
 #include "builtin/streams/ClassSpecMacro.h"  // JS_STREAMS_CLASS_SPEC
 #include "builtin/streams/MiscellaneousOperations.h"  // js::ReturnPromiseRejectedWithPendingError
-#include "builtin/streams/WritableStreamWriterOperations.h"  // js::WritableStreamDefaultWriterGetDesiredSize
+#include "builtin/streams/WritableStreamWriterOperations.h"  // js::WritableStreamDefaultWriter{GetDesiredSize,Write}
 #include "js/CallArgs.h"                              // JS::CallArgs{,FromVp}
 #include "js/Class.h"                        // js::ClassSpec, JS_NULL_CLASS_OPS
-#include "js/PropertySpec.h"  // JS{Function,Property}Spec, JS_{FS,PS}_END
+#include "js/PropertySpec.h"  // JS{Function,Property}Spec, JS_{FS,PS}_END, JS_{FN,PSG}
 #include "js/RootingAPI.h"    // JS::Handle
 #include "js/Value.h"         // JS::Value
 #include "vm/Compartment.h"   // JS::Compartment
@@ -38,6 +38,7 @@ using js::ReturnPromiseRejectedWithPendingError;
 using js::UnwrapAndTypeCheckThis;
 using js::WritableStreamDefaultWriter;
 using js::WritableStreamDefaultWriterGetDesiredSize;
+using js::WritableStreamDefaultWriterWrite;
 
 /*** 4.5. Class WritableStreamDefaultWriter *********************************/
 
@@ -147,12 +148,49 @@ static MOZ_MUST_USE bool WritableStream_ready(JSContext* cx, unsigned argc,
   return true;
 }
 
+/**
+ * Streams spec, 4.5.4.7. write(chunk)
+ */
+static MOZ_MUST_USE bool WritableStream_write(JSContext* cx, unsigned argc,
+                                              Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  // Step 1: If ! IsWritableStreamDefaultWriter(this) is false, return a promise
+  //         rejected with a TypeError exception.
+  Rooted<WritableStreamDefaultWriter*> unwrappedWriter(
+      cx,
+      UnwrapAndTypeCheckThis<WritableStreamDefaultWriter>(cx, args, "write"));
+  if (!unwrappedWriter) {
+    return ReturnPromiseRejectedWithPendingError(cx, args);
+  }
+
+  // Step 2: If this.[[ownerWritableStream]] is undefined, return a promise
+  //         rejected with a TypeError exception.
+  if (!unwrappedWriter->hasStream()) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_WRITABLESTREAMWRITER_NOT_OWNED, "write");
+    return ReturnPromiseRejectedWithPendingError(cx, args);
+  }
+
+  // Step 3: Return this.[[readyPromise]].
+  JSObject* promise =
+      WritableStreamDefaultWriterWrite(cx, unwrappedWriter, args.get(0));
+  if (!promise) {
+    return false;
+  }
+  cx->check(promise);
+
+  args.rval().setObject(*promise);
+  return true;
+}
+
 static const JSPropertySpec WritableStreamDefaultWriter_properties[] = {
     JS_PSG("closed", WritableStream_closed, 0),
     JS_PSG("desiredSize", WritableStream_desiredSize, 0),
     JS_PSG("ready", WritableStream_ready, 0), JS_PS_END};
 
-static const JSFunctionSpec WritableStreamDefaultWriter_methods[] = {JS_FS_END};
+static const JSFunctionSpec WritableStreamDefaultWriter_methods[] = {
+    JS_FN("write", WritableStream_write, 1, 0), JS_FS_END};
 
 JS_STREAMS_CLASS_SPEC(WritableStreamDefaultWriter, 0, SlotCount,
                       ClassSpec::DontDefineConstructor, 0, JS_NULL_CLASS_OPS);
