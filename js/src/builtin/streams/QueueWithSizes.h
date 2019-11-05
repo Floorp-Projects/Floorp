@@ -9,11 +9,13 @@
 #ifndef builtin_streams_QueueWithSizes_h
 #define builtin_streams_QueueWithSizes_h
 
+#include "mozilla/Assertions.h"  // MOZ_ASSERT
 #include "mozilla/Attributes.h"  // MOZ_MUST_USE
 
 #include "jstypes.h"        // JS_PUBLIC_API
 #include "js/RootingAPI.h"  // JS::{,Mutable}Handle
 #include "js/Value.h"       // JS::Value
+#include "vm/List.h"        // js::ListObject
 
 struct JS_PUBLIC_API JSContext;
 
@@ -27,6 +29,13 @@ class StreamController;
 extern MOZ_MUST_USE bool DequeueValue(
     JSContext* cx, JS::Handle<StreamController*> unwrappedContainer,
     JS::MutableHandle<JS::Value> chunk);
+
+/**
+ * Streams spec, 6.2.1. DequeueValue ( container ) nothrow
+ * when the dequeued value is ignored.
+ */
+extern void DequeueValue(StreamController* unwrappedContainer, JSContext* cx);
+
 /**
  * Streams spec, 6.2.2. EnqueueValueWithSize ( container, value, size ) throws
  */

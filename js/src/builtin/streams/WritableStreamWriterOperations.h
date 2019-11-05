@@ -14,8 +14,8 @@
 #include "js/RootingAPI.h"  // JS::{,Mutable}Handle
 #include "js/Value.h"       // JS::Value
 
-struct JSContext;
-class JSObject;
+struct JS_PUBLIC_API JSContext;
+class JS_PUBLIC_API JSObject;
 
 namespace js {
 
