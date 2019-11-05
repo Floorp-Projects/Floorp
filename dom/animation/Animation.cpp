@@ -61,8 +61,7 @@ class MOZ_RAII AutoMutationBatchForAnimation {
   explicit AutoMutationBatchForAnimation(
       const Animation& aAnimation MOZ_GUARD_OBJECT_NOTIFIER_PARAM) {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    Maybe<NonOwningAnimationTarget> target =
-        nsNodeUtils::GetTargetForAnimation(&aAnimation);
+    Maybe<NonOwningAnimationTarget> target = aAnimation.GetTargetForAnimation();
     if (!target) {
       return;
     }
@@ -82,6 +81,15 @@ class MOZ_RAII AutoMutationBatchForAnimation {
 // Animation interface:
 //
 // ---------------------------------------------------------------------------
+
+Maybe<NonOwningAnimationTarget> Animation::GetTargetForAnimation() const {
+  AnimationEffect* effect = GetEffect();
+  if (!effect || !effect->AsKeyframeEffect()) {
+    return Nothing();
+  }
+  return effect->AsKeyframeEffect()->GetTarget();
+}
+
 /* static */
 already_AddRefed<Animation> Animation::Constructor(
     const GlobalObject& aGlobal, AnimationEffect* aEffect,
