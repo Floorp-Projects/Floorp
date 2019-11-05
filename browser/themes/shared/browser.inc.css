@@ -297,6 +297,7 @@ menupopup::part(drop-indicator) {
 
 #contextual-feature-recommendation-notification[data-notification-bucket="CFR_MILESTONE_MESSAGE"] .popup-notification-button.popup-notification-primary-button {
   background-color: rgba(216, 216, 216, 0.2);
+  border: none;
   border-radius: 2px;
   margin: 4px;
   padding: 3px 12px;
