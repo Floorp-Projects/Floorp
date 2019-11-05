@@ -891,7 +891,7 @@ impl BatchBuilder {
                         (run.reference_frame_relative_offset.x * 256.0) as i32,
                         (run.reference_frame_relative_offset.y * 256.0) as i32,
                         (raster_scale * 65535.0).round() as i32,
-                        clip_task_address.unwrap().0 as i32,
+                        (rasterization_space as i32),
                     ],
                 );
                 let base_instance = GlyphInstance::new(
@@ -979,7 +979,8 @@ impl BatchBuilder {
 
                                 for glyph in glyphs {
                                     batch.push(base_instance.build(
-                                        (rasterization_space as i32) | ((render_task_address.0 as i32) << 16),
+                                        ((render_task_address.0 as i32) << 16)
+                                        | clip_task_address.unwrap().0 as i32,
                                         (subpx_dir as u32 as i32) << 24
                                         | (color_mode as u32 as i32) << 16
                                         | glyph.index_in_text_run,
