@@ -880,25 +880,43 @@ nsHttpServer.prototype = {
 var HttpServer = nsHttpServer;
 
 class NodeServer {
-  // Executes command on the already running node server
+  // Executes command in the context of a node server.
   // See handler in moz-http2.js
   //
   // Example use:
-  // await NodeServer.execute(`"hello"`)
+  // let id = NodeServer.fork(); // id is a random string
+  // await NodeServer.execute(id, `"hello"`)
   // > "hello"
-  // await NodeServer.execute(`(() => "hello")()`)
+  // await NodeServer.execute(id, `(() => "hello")()`)
   // > "hello"
-  // await NodeServer.execute(`(() => var_defined_on_server)()`)
+  // await NodeServer.execute(id, `(() => var_defined_on_server)()`)
   // > "0"
-  // await NodeServer.execute(`var_defined_on_server`)
+  // await NodeServer.execute(id, `var_defined_on_server`)
   // > "0"
   // function f(param) { if (param) return param; return "bla"; }
-  // await NodeServer.execute(f); // Defines the function on the server
-  // await NodeServer.execute(`f()`) // executes defined function
+  // await NodeServer.execute(id, f); // Defines the function on the server
+  // await NodeServer.execute(id, `f()`) // executes defined function
   // > "bla"
-  // let result = await NodeServer.execute(`f("test")`);
+  // let result = await NodeServer.execute(id, `f("test")`);
   // > "test"
-  static execute(command) {
+  // await NodeServer.kill(id); // shuts down the server
+
+  // Forks a new node server using moz-http2-child.js as a starting point
+  static fork() {
+    return this.sendCommand("", "/fork");
+  }
+  // Executes command in the context of the node server indicated by `id`
+  static execute(id, command) {
+    return this.sendCommand(command, `/execute/${id}`);
+  }
+  // Shuts down the server
+  static kill(id) {
+    return this.sendCommand("", `/kill/${id}`);
+  }
+
+  // Issues a request to the node server (handler defined in moz-http2.js)
+  // This method should not be called directly.
+  static sendCommand(command, path) {
     let env = Cc["@mozilla.org/process/environment;1"].getService(
       Ci.nsIEnvironment
     );
@@ -908,7 +926,7 @@ class NodeServer {
     }
 
     let req = new XMLHttpRequest();
-    req.open("POST", `http://127.0.0.1:${h2Port}/execute`);
+    req.open("POST", `http://127.0.0.1:${h2Port}${path}`);
 
     // Passing a function to NodeServer.execute will define that function
     // in node. It can be called in a later execute command.
