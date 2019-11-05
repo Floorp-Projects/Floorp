@@ -4,6 +4,8 @@
 
 package mozilla.components.service.experiments
 
+import mozilla.components.service.experiments.util.VersionString
+
 /**
  * Represents an A/B test experiment,
  * independent of the underlying
@@ -83,11 +85,11 @@ internal data class Experiment(
         /**
          * App minimum version, expected dotted numeric version E.g. 1.0.2, or 67.0.1
          */
-        val appMinVersion: String?,
+        val appMinVersion: VersionString?,
         /**
          * App maximum version, expected dotted numeric version E.g. 1.0.2, or 67.0.1
          */
-        val appMaxVersion: String?,
+        val appMaxVersion: VersionString?,
         /**
          * Locale language, as a regex.
          */

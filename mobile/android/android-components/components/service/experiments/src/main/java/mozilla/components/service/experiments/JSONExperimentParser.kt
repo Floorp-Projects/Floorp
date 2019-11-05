@@ -4,6 +4,7 @@
 
 package mozilla.components.service.experiments
 
+import mozilla.components.service.experiments.util.VersionString
 import mozilla.components.support.ktx.android.org.json.putIfNotNull
 import mozilla.components.support.ktx.android.org.json.toList
 import mozilla.components.support.ktx.android.org.json.tryGetLong
@@ -46,8 +47,8 @@ internal class JSONExperimentParser {
         val matcher = Experiment.Matcher(
                 appId = matchObject.tryGetString(MATCH_APP_ID_KEY),
                 appDisplayVersion = matchObject.tryGetString(MATCH_APP_DISPLAY_VERSION_KEY),
-                appMinVersion = matchObject.tryGetString(MATCH_APP_MIN_VERSION_KEY),
-                appMaxVersion = matchObject.tryGetString(MATCH_APP_MAX_VERSION_KEY),
+                appMinVersion = matchObject.tryGetVersionString(MATCH_APP_MIN_VERSION_KEY),
+                appMaxVersion = matchObject.tryGetVersionString(MATCH_APP_MAX_VERSION_KEY),
                 localeLanguage = matchObject.tryGetString(MATCH_LOCALE_LANGUAGE_KEY),
                 localeCountry = matchObject.tryGetString(MATCH_LOCALE_COUNTRY_KEY),
                 deviceManufacturer = matchObject.tryGetString(MATCH_DEVICE_MANUFACTURER_KEY),
@@ -142,5 +143,14 @@ internal class JSONExperimentParser {
         private const val MATCH_DEVICE_MODEL_KEY = "device_model"
         private const val MATCH_REGIONS_KEY = "regions"
         private const val MATCH_DEBUG_TAGS_KEY = "debug_tags"
+    }
+}
+
+private fun JSONObject.tryGetVersionString(key: String): VersionString? {
+    val s = tryGetString(key)
+    if (s != null) {
+        return VersionString(s)
+    } else {
+        return null
     }
 }

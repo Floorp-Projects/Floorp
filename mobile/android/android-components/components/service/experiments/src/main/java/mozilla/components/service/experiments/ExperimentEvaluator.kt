@@ -87,7 +87,7 @@ internal class ExperimentEvaluator(
     private fun matches(context: Context, experiment: Experiment): Boolean {
         val match = experiment.match
         val region = valuesProvider.getRegion(context)
-        val version = valuesProvider.getVersion(context) ?: ""
+        val version = VersionString(valuesProvider.getVersion(context) ?: "")
         val matchesRegion = (region == null) ||
             match.regions.isNullOrEmpty() ||
             match.regions.any { it == region }
@@ -95,14 +95,15 @@ internal class ExperimentEvaluator(
         val matchesTag = (tag == null) ||
             match.debugTags.isNullOrEmpty() ||
             match.debugTags.any { it == tag }
-        val matchesMinVersion = match.appMinVersion.isNullOrEmpty() ||
-            VersionString(match.appMinVersion) <= VersionString(version)
-        val matchesMaxVersion = match.appMaxVersion.isNullOrEmpty() ||
-            VersionString(match.appMaxVersion) >= VersionString(version)
+
+        val matchesMinVersion = match.appMinVersion == null ||
+                version.isValid() && match.appMinVersion.isValid() && match.appMinVersion <= version
+        val matchesMaxVersion = match.appMaxVersion == null ||
+                version.isValid() && match.appMaxVersion.isValid() && match.appMaxVersion >= version
 
         return matchesRegion && matchesTag && matchesMinVersion && matchesMaxVersion &&
             matchesExperiment(match.appId, valuesProvider.getAppId(context)) &&
-            matchesExperiment(match.appDisplayVersion, version) &&
+            matchesExperiment(match.appDisplayVersion, version.toString()) &&
             matchesExperiment(match.localeLanguage, valuesProvider.getLanguage(context)) &&
             matchesExperiment(match.localeCountry, valuesProvider.getCountry(context)) &&
             matchesExperiment(match.deviceManufacturer, valuesProvider.getManufacturer(context)) &&
