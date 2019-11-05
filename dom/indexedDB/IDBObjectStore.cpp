@@ -1675,6 +1675,8 @@ already_AddRefed<IDBRequest> IDBObjectStore::AddOrPut(
 
   mTransaction->StartRequest(request, params);
 
+  mTransaction->InvalidateCursorCaches();
+
   return request.forget();
 }
 
@@ -1740,6 +1742,11 @@ already_AddRefed<IDBRequest> IDBObjectStore::GetAllInternal(
         IDB_LOG_STRINGIFY(keyRange), IDB_LOG_STRINGIFY(aLimit));
   }
 
+  // TODO: This is necessary to preserve request ordering only. Proper
+  // sequencing of requests should be done in a more sophisticated manner that
+  // doesn't require invalidating cursor caches (Bug 1580499).
+  mTransaction->InvalidateCursorCaches();
+
   mTransaction->StartRequest(request, params);
 
   return request.forget();
@@ -1775,6 +1782,8 @@ already_AddRefed<IDBRequest> IDBObjectStore::Clear(JSContext* aCx,
       request->LoggingSerialNumber(),
       IDB_LOG_STRINGIFY(mTransaction->Database()),
       IDB_LOG_STRINGIFY(mTransaction), IDB_LOG_STRINGIFY(this));
+
+  mTransaction->InvalidateCursorCaches();
 
   mTransaction->StartRequest(request, params);
 
@@ -1965,6 +1974,11 @@ already_AddRefed<IDBRequest> IDBObjectStore::GetInternal(
       IDB_LOG_STRINGIFY(mTransaction), IDB_LOG_STRINGIFY(this),
       IDB_LOG_STRINGIFY(keyRange));
 
+  // TODO: This is necessary to preserve request ordering only. Proper
+  // sequencing of requests should be done in a more sophisticated manner that
+  // doesn't require invalidating cursor caches (Bug 1580499).
+  mTransaction->InvalidateCursorCaches();
+
   mTransaction->StartRequest(request, params);
 
   return request.forget();
@@ -2020,6 +2034,8 @@ already_AddRefed<IDBRequest> IDBObjectStore::DeleteInternal(
   }
 
   mTransaction->StartRequest(request, params);
+
+  mTransaction->InvalidateCursorCaches();
 
   return request.forget();
 }
@@ -2237,6 +2253,11 @@ already_AddRefed<IDBRequest> IDBObjectStore::Count(JSContext* aCx,
       IDB_LOG_STRINGIFY(mTransaction), IDB_LOG_STRINGIFY(this),
       IDB_LOG_STRINGIFY(keyRange));
 
+  // TODO: This is necessary to preserve request ordering only. Proper
+  // sequencing of requests should be done in a more sophisticated manner that
+  // doesn't require invalidating cursor caches (Bug 1580499).
+  mTransaction->InvalidateCursorCaches();
+
   mTransaction->StartRequest(request, params);
 
   return request.forget();
@@ -2312,6 +2333,11 @@ already_AddRefed<IDBRequest> IDBObjectStore::OpenCursorInternal(
 
   BackgroundCursorChild* const actor =
       new BackgroundCursorChild(request, this, direction);
+
+  // TODO: This is necessary to preserve request ordering only. Proper
+  // sequencing of requests should be done in a more sophisticated manner that
+  // doesn't require invalidating cursor caches (Bug 1580499).
+  mTransaction->InvalidateCursorCaches();
 
   mTransaction->OpenCursor(actor, params);
 
