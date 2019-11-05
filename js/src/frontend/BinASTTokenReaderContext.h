@@ -250,11 +250,6 @@ class HuffmanLookupResult {
   }
 };
 
-// The default inline buffer length for instances of HuffmanTableValue.
-// Specific type (e.g. booleans) will override this to provide something
-// more suited to their type.
-const size_t HUFFMAN_TABLE_DEFAULT_INLINE_BUFFER_LENGTH = 8;
-
 // A flag that determines only whether a value is `null`.
 // Used for optional interface.
 enum class Nullable {
@@ -778,12 +773,6 @@ using TwoLookupsHuffmanTable =
 using ThreeLookupsHuffmanTable =
     MultiLookupHuffmanTable<TwoLookupsHuffmanTable, 6>;
 
-// An empty Huffman table. Attempting to get a value from this table is a syntax
-// error. This is the default value for `HuffmanTableValue` and represents all
-// states that may not be reached.
-//
-// Part of variants `HuffmanTableValue` and
-// `GenericHuffmanTable::implementation`.
 struct HuffmanTableUnreachable {};
 
 // Generic implementation of Huffman tables.
@@ -875,20 +864,6 @@ struct GenericHuffmanTable {
       implementation_;
 };
 
-// While reading the Huffman prelude, whenever we first encounter a
-// `HuffmanTableUnreachable`, we replace it with a `HuffmanTableInitializing`
-// to mark that we should not attempt to read/initialize it again.
-//
-// Attempting to get a value from this table is an internal error.
-//
-// Part of variants `HuffmanTableValue`.
-struct HuffmanTableInitializing {};
-
-// A single Huffman table, used for values.
-using HuffmanTableValue =
-    mozilla::Variant<HuffmanTableUnreachable,  // Default value.
-                     HuffmanTableInitializing, GenericHuffmanTable>;
-
 // A Huffman dictionary for the current file.
 //
 // A Huffman dictionary consists in a (contiguous) set of Huffman tables
@@ -896,12 +871,50 @@ using HuffmanTableValue =
 // to predict list lengths.
 class HuffmanDictionary {
  public:
-  HuffmanDictionary();
+  HuffmanDictionary() {}
+  ~HuffmanDictionary();
 
-  HuffmanTableValue& tableForField(NormalizedInterfaceAndField index);
-  HuffmanTableValue& tableForListLength(BinASTList list);
+  // While reading the Huffman prelude, whenever we first encounter a
+  // table with `Unreachable` status, we set its status with a `Initializing`
+  // to mark that we should not attempt to read/initialize it again.
+  // Once the table is initialized, it becomes `Ready`.
+  enum class TableStatus : uint8_t {
+    Unreachable,
+    Initializing,
+    Ready,
+  };
+
+  TableStatus& fieldStatus(NormalizedInterfaceAndField index);
+  GenericHuffmanTable& tableForField(NormalizedInterfaceAndField index);
+
+  TableStatus& listLengthStatus(BinASTList list);
+  GenericHuffmanTable& tableForListLength(BinASTList list);
 
  private:
+  // For the following purpose, tables are stored as an array of status
+  // and a uninitialized buffer to store an array of tables.
+  //
+  //   * In most case a single BinAST file doesn't use all tables
+  //   * GenericHuffmanTable constructor/destructor costs are not negligible,
+  //     and we don't want to call them for unused tables
+  //   * Initializing status for whether the table is used or not takes
+  //     less time if they're stored in contiguous memory, instead of
+  //     placed before each table (using `Variant` or `Maybe`)
+  //
+  // Tables with `Ready` status are destructed in HuffmanDictionary destructor.
+  TableStatus fieldStatus_[BINAST_INTERFACE_AND_FIELD_LIMIT] = {
+      TableStatus::Unreachable};
+  TableStatus listLengthStatus_[BINAST_NUMBER_OF_LIST_TYPES] = {
+      TableStatus::Unreachable};
+
+  TableStatus& fieldStatus(size_t i) {
+    return fieldStatus_[i];
+  }
+
+  TableStatus& listLengthStatus(size_t i) {
+    return listLengthStatus_[i];
+  }
+
   // Huffman tables for `(Interface, Field)` pairs, used to decode the value of
   // `Interface::Field`. Some tables may be `HuffmanTableUnreacheable`
   // if they represent fields of interfaces that actually do not show up
@@ -909,7 +922,18 @@ class HuffmanDictionary {
   //
   // The mapping from `(Interface, Field) -> index` is extracted statically from
   // the webidl specs.
-  mozilla::Array<HuffmanTableValue, BINAST_INTERFACE_AND_FIELD_LIMIT> fields_;
+  //
+  // Semantically this is `GenericHuffmanTable fields_[...]`, but items are
+  // constructed lazily.
+  alignas(GenericHuffmanTable) char fields_[sizeof(GenericHuffmanTable) *
+                                            BINAST_INTERFACE_AND_FIELD_LIMIT];
+
+  GenericHuffmanTable& tableForField(size_t i) {
+    return (reinterpret_cast<GenericHuffmanTable*>(fields_))[i];
+  }
+  GenericHuffmanTable& tableForListLength(size_t i) {
+    return (reinterpret_cast<GenericHuffmanTable*>(listLengths_))[i];
+  }
 
   // Huffman tables for list lengths. Some tables may be
   // `HuffmanTableUnreacheable` if they represent lists that actually do not
@@ -917,7 +941,11 @@ class HuffmanDictionary {
   //
   // The mapping from `List -> index` is extracted statically from the webidl
   // specs.
-  mozilla::Array<HuffmanTableValue, BINAST_NUMBER_OF_LIST_TYPES> listLengths_;
+  //
+  // Semantically this is `GenericHuffmanTable listLengths_[...]`, but items are
+  // constructed lazily.
+  alignas(GenericHuffmanTable) char listLengths_[sizeof(GenericHuffmanTable) *
+                                                 BINAST_NUMBER_OF_LIST_TYPES];
 };
 
 /**
