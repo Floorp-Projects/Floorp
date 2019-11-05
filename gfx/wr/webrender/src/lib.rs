@@ -211,7 +211,7 @@ pub use crate::profiler::{ProfilerHooks, set_profiler_hooks};
 pub use crate::renderer::{
     AsyncPropertySampler, CpuProfile, DebugFlags, OutputImageHandler, RendererKind, ExternalImage,
     ExternalImageHandler, ExternalImageSource, GpuProfile, GraphicsApi, GraphicsApiInfo,
-    PipelineInfo, Renderer, RendererOptions, RenderResults, RendererStats, SceneBuilderHooks,
+    PipelineInfo, Renderer, RendererError, RendererOptions, RenderResults, RendererStats, SceneBuilderHooks,
     ThreadListener, ShaderPrecacheFlags, MAX_VERTEX_TEXTURE_WIDTH,
 };
 pub use crate::screen_capture::{AsyncScreenshotHandle, RecordedFrameHandle};
