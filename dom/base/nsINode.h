@@ -476,6 +476,13 @@ class nsINode : public mozilla::dom::EventTarget {
       const;  // Implemented in Document.h
 
   /**
+   * Returns the first child of a node or the first child of
+   * a template element's content if the provided node is a
+   * template element.
+   */
+  nsIContent* GetFirstChildOfTemplateOrNode();
+
+  /**
    * Return the scope chain parent for this node, for use in things
    * like event handler compilation.  Returning null means to use the
    * global object as the scope chain parent.
