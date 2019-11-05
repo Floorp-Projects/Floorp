@@ -27,7 +27,7 @@ NS_IMPL_ISUPPORTS(nsTouchBarUpdater, nsITouchBarUpdater);
 NS_IMETHODIMP
 nsTouchBarUpdater::UpdateTouchBarInputs(nsIBaseWindow* aWindow,
                                         const nsTArray<RefPtr<nsITouchBarInput>>& aInputs) {
-  if (!sTouchBarIsInitialized) {
+  if (!sTouchBarIsInitialized || !aWindow) {
     return NS_OK;
   }
 
@@ -54,7 +54,7 @@ nsTouchBarUpdater::UpdateTouchBarInputs(nsIBaseWindow* aWindow,
 
 NS_IMETHODIMP
 nsTouchBarUpdater::ShowPopover(nsIBaseWindow* aWindow, nsITouchBarInput* aPopover, bool aShowing) {
-  if (!sTouchBarIsInitialized || !aPopover) {
+  if (!sTouchBarIsInitialized || !aPopover || !aWindow) {
     return NS_OK;
   }
 
