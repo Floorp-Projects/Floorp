@@ -157,7 +157,7 @@ void Http3Session::Shutdown() {
       MOZ_ASSERT(NS_FAILED(mError));
       stream->Close(mError);
     } else if (!stream->HasStreamId()) {
-      // Connection has nto been started yet. We can restart it.
+      // Connection has not been started yet. We can restart it.
       stream->Transaction()->DoNotRemoveAltSvc();
       stream->Close(NS_ERROR_NET_RESET);
     } else if (stream->RecvdData()) {
@@ -328,6 +328,7 @@ nsresult Http3Session::ProcessEvents(uint32_t count, uint32_t* countWritten,
         break;
       case Http3Event::Tag::ConnectionClosed:
         LOG(("Http3Session::ProcessEvents - ConnectionClosed"));
+        CloseInternal(false);
         mState = CLOSED;
         break;
       default:
