@@ -226,7 +226,6 @@ fuzzy-if(skiaContent,0-1,0-4) fuzzy-if(webrender&&isDebugBuild,0-1,0-8) == 22016
 == 229591-1.html 229591-1-ref.html
 # == 231823-1.html 231823-1-ref.html
 == 232990-1a.xhtml 232990-1-ref.xhtml
-skip-if(!xbl) == 232990-1b.xhtml 232990-1-ref.xhtml
 == 233094-1.html 233094-1-ref.html
 == 233094-2a.html 233094-2-ref.html
 == 233094-2b.html 233094-2-ref.html
@@ -352,7 +351,6 @@ fails-if(Android) != 301726-2.html 301726-2-ref.html
 == 308406-1.html 308406-1-ref.html
 == 308406-2.html 308406-2-ref.html
 == 309550-1.html 309550-1-ref.html
-skip-if(!xbl) == chrome://reftest/content/bugs/309914-1.xul chrome://reftest/content/bugs/309914-1-ref.xul
 == 311366-unknown-inline-1.html 311366-unknown-inline-1-ref.html
 == 311366-unknown-block-1.html 311366-unknown-block-1-ref.html
 == 311366-unknown-block-3.html 311366-unknown-block-3-ref.html
@@ -454,8 +452,6 @@ random == 328829-1.xhtml 328829-1-ref.xhtml # bug 369046 (intermittent)
 == 333970-1.html 333970-1-ref.html
 == 334829-1a-shadow.xhtml 334829-1-ref.xhtml
 == 334829-1b-shadow.xhtml 334829-1-ref.xhtml
-skip-if(!xbl) == 334829-1a.xhtml 334829-1-ref.xhtml
-skip-if(!xbl) == 334829-1b.xhtml 334829-1-ref.xhtml
 == 335628-1.html 335628-1-ref.html
 == chrome://reftest/content/bugs/336096-1.xul chrome://reftest/content/bugs/336096-1-ref.xul
 == 336147-1.html 336147-1-ref.html
@@ -576,7 +572,6 @@ fuzzy-if(skiaContent||Android,0-4,0-11) == 363858-1.html 363858-1-ref.html
 == chrome://reftest/content/bugs/364968-1.xul 364968-1-ref.html
 == 364989-1.html 364989-1-ref.html
 == 365173-1.html 365173-1-ref.html
-skip-if(!xbl) == chrome://reftest/content/bugs/366207-1.xul chrome://reftest/content/bugs/366207-1-ref.xul
 == chrome://reftest/content/bugs/366616-1.xul chrome://reftest/content/bugs/366616-1-ref.xul
 == 367220-1.html 367220-1-ref.html
 == 367247-s-visible.html 367247-s-hidden.html
@@ -655,7 +650,6 @@ fails-if(Android&&!asyncPan) == 371561-1.html 371561-1-ref.html
 == 372037-1.html 372037-1-ref.html
 == 372062-1.html 372062-1-ref.html
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 372063-1.html 372063-1-ref.html # Bug 1392106
-skip-if(!xbl) == 372323-1.xhtml 372323-1-ref.xhtml
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 372553-1.html 372553-1-ref.html # Bug 1392106
 == 372632-1.html 372632-1-ref.html
 == 372768-1.html 372768-1-ref.html
@@ -669,7 +663,6 @@ random-if(d2d) == 373381-3.html 373381-3-ref.html
 == 373433-1.html 373433-1-ref.html
 == chrome://reftest/content/bugs/374038-1.xul chrome://reftest/content/bugs/374038-1-ref.xul
 == chrome://reftest/content/bugs/374038-2.xul chrome://reftest/content/bugs/374038-2-ref.xul
-random-if(d2d) skip-if(!xbl) == chrome://reftest/content/bugs/374719-1.xul chrome://reftest/content/bugs/374719-1-ref.xul
 fails == 374927-1.html 374927-1-ref.html # Was broken by patch for bug 368600; fails until bug 400776 is fixed
 == 375508-1.html 375508-1-ref.html
 == 375716-1.html 375716-1-ref.html
@@ -749,9 +742,6 @@ fuzzy-if(skiaContent,0-2,0-3) == 385870-2.html 385870-2-ref.html
 == 386310-1b-shadow.html 386310-1-ref.html
 == 386310-1c-shadow.html 386310-1-ref.html
 == 386310-1d-shadow.html 386310-1-ref.html
-skip-if(!xbl) == 386310-1b.html 386310-1-ref.html
-skip-if(!xbl) == 386310-1c.html 386310-1-ref.html
-skip-if(!xbl) == 386310-1d.html 386310-1-ref.html
 == 386401-1.html 386401-1-ref.html
 == 386401-2.html 386401-2-ref.html
 == 386401-3.html 386401-3-ref.html
@@ -808,7 +798,6 @@ fuzzy-if(skiaContent,0-1,0-600) == 393649-1.html 393649-1-ref.html
 == 393671-3.html 393671-3-ref.html
 == 394111-1.html about:blank  # Really an assertion test rather than a rendering test
 == 394534-1.html 394534-1-ref.html
-skip-if(!xbl) == 394676-1.xhtml 394676-1-ref.xhtml
 == 395107-1.html 395107-1-ref.html
 fuzzy-if(Android,0-4,0-2) == 395107-2.html 395107-2-ref.html # bug 1309533 fuzzy after test rebucketed
 fuzzy-if(skiaContent,0-1,0-118) fuzzy-if(geckoview,0-4,0-2) == 395107-3.html 395107-3-ref.html
@@ -816,9 +805,7 @@ fuzzy-if(skiaContent,0-1,0-118) fuzzy-if(geckoview,0-4,0-2) == 395107-3.html 395
 fuzzy-if(geckoview,0-4,0-1) == 395107-5.html 395107-5-ref.html
 == 395130-1.html 395130-1-ref.html
 == 395130-2.html 395130-2-ref.html
-skip-if(!xbl) == 395331-1.xml 395331-1-ref.xml
 == 395390-1.html 395390-1-ref.html
-skip-if(!xbl) == 396286-1.html about:blank  # crash test
 fuzzy-if(Android,0-5,0-283) == 397428-1.html 397428-1-ref.html
 == 397844-1.xhtml 397844-1-ref.xhtml
 == 398092-1.html 398092-1-ref.html
@@ -887,7 +874,6 @@ fuzzy-if(webrender,130-131,177-177) skip-if(winWidget&&!isDebugBuild&&webrender)
 == 403656-5.html 403656-5-ref.html
 #== 403657-1.html 403657-1-ref.html  # Fails depending on the fonts...
 == 403733-1.html 403733-1-ref.html
-skip-if(!xbl) == 403962-1.xhtml 403962-1-ref.xhtml
 == 404030-1.html 404030-1-ref.html
 != 404030-1-notref.html 404030-1.html
 != 404030-1-notref2.html 404030-1.html
@@ -905,7 +891,6 @@ random-if(cocoaWidget) == chrome://reftest/content/bugs/404149-1.xul chrome://re
 fuzzy-if(Android,0-8,0-50) == 404553-1.html 404553-1-ref.html  # assertion test, also tests that marquee binding is applied correctly
 == 404666-1.html 404666-1-ref.html
 == 404666-2.html 404666-2-ref.html
-skip-if(!xbl) == 405186-1.xhtml about:blank
 == 405305-1.html 405305-1-ref.html
 == 405380-1.html 405380-1-ref.html
 == 405517-1.xhtml 405517-1-ref.xhtml
@@ -996,7 +981,6 @@ fuzzy-if(Android,0-11,0-17) fuzzy-if(webrender,0-1,0-10) == 413361-1.html 413361
 == 420069-1.html 420069-1-ref.html
 == 420069-2.html 420069-2-ref.html
 == 420351-1.html 420351-1-ref.html
-skip-if(!xbl) == 420790-1.xhtml 420790-1-ref.xhtml
 == 421069.html 421069-ref.html
 == 421069.html 421069-ref2.html
 == 421069-ref.html 421069-ref2.html
@@ -1242,12 +1226,7 @@ fuzzy-if(webrender,16-16,3392-4020) == chrome://reftest/content/bugs/463217-1.xu
 == 467444-1.html 467444-1-ref.html
 == 467460-1.html 467460-1-ref.html
 == chrome://reftest/content/bugs/468473-1.xul chrome://reftest/content/bugs/468473-1-ref.xul
-skip-if(!xbl) == 468546-1.xhtml 468546-1-ref.xhtml
 == 471356-1.html 471356-1-ref.html
-skip-if(!xbl) == 471594-1.xhtml 471594-1-ref.html
-fuzzy(0-255,0-15) skip-if(!xbl) == chrome://reftest/content/bugs/472020-1a.xul chrome://reftest/content/bugs/472020-1-ref.xul
-fails skip-if(!xbl) == chrome://reftest/content/bugs/472020-1b.xul chrome://reftest/content/bugs/472020-1-ref.xul
-fails skip-if(!xbl) == chrome://reftest/content/bugs/472020-2.xul chrome://reftest/content/bugs/472020-2-ref.xul
 == chrome://reftest/content/bugs/472500-1.xul chrome://reftest/content/bugs/472500-1-ref.xul
 == 472769-1a.html 472769-1-ref.html
 == 472769-1b.html 472769-1-ref.html
@@ -1319,8 +1298,6 @@ fails-if(Android||gtkWidget) random-if(winWidget||cocoaWidget) == 481948-3.html 
 == 482398-1.html 482398-1-ref.html
 random-if(d2d) == 482592-1a-shadow.xhtml 482592-1-ref.html # bug 586771
 random-if(d2d) == 482592-1b-shadow.xhtml 482592-1-ref.html # bug 586771
-random-if(d2d) skip-if(!xbl) == 482592-1a.xhtml 482592-1-ref.html # bug 586771
-random-if(d2d) skip-if(!xbl) == 482592-1b.xhtml 482592-1-ref.html # bug 586771
 random-if(winWidget) fuzzy-if(skiaContent,0-1,0-5) == 482659-1a.html 482659-1-ref.html
 fuzzy-if(skiaContent,0-1,0-5) == 482659-1b.html 482659-1-ref.html
 fuzzy-if(skiaContent,0-1,0-5) == 482659-1c.html 482659-1-ref.html
@@ -1361,8 +1338,6 @@ pref(browser.display.focus_ring_width,1) == 491180-2.html 491180-2-ref.html
 == 494667-1.html 494667-1-ref.html
 == 494667-2.html 494667-2-ref.html
 == 495274-1.html 495274-1-ref.html
-skip-if(!xbl) == 495354-1a.xhtml 495354-1-ref.xhtml
-skip-if(!xbl) == 495354-1b.xhtml 495354-1-ref.xhtml
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 495385-1a.html 495385-1-ref.html # Bug 1392106
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 495385-1b.html 495385-1-ref.html # Bug 1392106
 random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 495385-1c.html 495385-1-ref.html # Bug 1392106
@@ -1405,7 +1380,6 @@ fuzzy-if(Android,0-5,0-2800) == 506481-1.html 506481-1-ref.html
 == 507762-2.html 507762-2-ref.html
 == 507762-3.html 507762-1-ref.html
 == 507762-4.html 507762-2-ref.html
-random skip-if(!xbl) == chrome://reftest/content/bugs/508816-1.xul chrome://reftest/content/bugs/508816-1-ref.xul # Bug 1375012. The skip-if(!xbl) should be removed once this is converted to a CE (bug 1566675).
 pref(layout.css.xul-box-display-values.content.enabled,true) == 508816-2.html 508816-2-ref.html
 skip-if(isDebugBuild) == chrome://reftest/content/bugs/508908-1.xul chrome://reftest/content/bugs/508908-1-ref.xul
 == 508919-1.xhtml 508919-1-ref.xhtml
