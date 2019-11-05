@@ -7,11 +7,16 @@
 package org.mozilla.geckoview;
 
 import android.graphics.Bitmap;
+import android.graphics.Rect;
+import android.support.annotation.AnyThread;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.UiThread;
 import android.view.Surface;
 
 import org.mozilla.gecko.util.ThreadUtils;
+
+import java.nio.ByteBuffer;
 
 /**
  * Applications use a GeckoDisplay instance to provide {@link GeckoSession} with a {@link Surface} for
@@ -65,7 +70,6 @@ public class GeckoDisplay {
         if ((left < 0) || (top < 0)) {
             throw new IllegalArgumentException("Parameters can not be negative.");
         }
-
         if (mSession.getDisplay() == this) {
             mSession.onSurfaceChanged(surface, left, top, width, height);
         }
@@ -156,13 +160,203 @@ public class GeckoDisplay {
      */
     @UiThread
     public @NonNull GeckoResult<Bitmap> capturePixels() {
-        ThreadUtils.assertOnUiThread();
-        if (!mSession.isCompositorReady()) {
-            return GeckoResult.fromException(
-                    new IllegalStateException("Compositor must be ready before pixels can be captured"));
+        return screenshot().capture();
+    }
+
+    /**
+     * Builder to construct screenshot requests.
+     */
+    final static public class ScreenshotBuilder {
+        private static final int NONE = 0;
+        private static final int SCALE = 1;
+        private static final int ASPECT = 2;
+        private static final int FULL = 3;
+        private static final int RECYCLE = 4;
+
+        private final GeckoSession mSession;
+        private int mOffsetX;
+        private int mOffsetY;
+        private int mSrcWidth;
+        private int mSrcHeight;
+        private int mOutWidth;
+        private int mOutHeight;
+        private int mAspectPreservingWidth;
+        private float mScale;
+        private Bitmap mRecycle;
+        private int mSizeType;
+
+        /* package */ ScreenshotBuilder(final GeckoSession session) {
+            this.mSizeType = NONE;
+            this.mSession = session;
         }
-        GeckoResult<Bitmap> result = new GeckoResult<>();
-        mSession.mCompositor.requestScreenPixels(result);
-        return result;
+
+        /**
+         * The screenshot will be of a region instead of the entire screen
+         * @param x Left most pixel of the source region.
+         * @param y Top most pixel of the source region.
+         * @param width Width of the source region in screen pixels
+         * @param height Height of the source region in screen pixels
+         * @return The builder
+         */
+        @AnyThread
+        public @NonNull ScreenshotBuilder source(final int x, final int y, final int width, final int height) {
+            mOffsetX = x;
+            mOffsetY = y;
+            mSrcWidth = width;
+            mSrcHeight = height;
+            return this;
+        }
+
+        /**
+         * The screenshot will be of a region instead of the entire screen
+         * @param source Region of the screen to capture in screen pixels
+         * @return The builder
+         */
+        @AnyThread
+        public @NonNull ScreenshotBuilder source(final @NonNull Rect source) {
+            mOffsetX = source.left;
+            mOffsetY = source.top;
+            mSrcWidth = source.width();
+            mSrcHeight = source.height();
+            return this;
+        }
+
+        private void checkAndSetSizeType(final int sizeType) {
+            if (mSizeType != NONE) {
+                throw new IllegalStateException("Size has already been set.");
+            }
+            mSizeType = sizeType;
+        }
+
+        /**
+         * The width of the bitmap to create when taking the screenshot. The height will be
+         * calculated to match the aspect ratio of the source as closely as possible. The source
+         * screenshot will be scaled into the resulting Bitmap.
+         * @param width of the result Bitmap in screen pixels.
+         * @return The builder
+         * @throws IllegalStateException if the size has already been set in some other way.
+         */
+        @AnyThread
+        public @NonNull ScreenshotBuilder aspectPreservingSize(final int width) {
+            checkAndSetSizeType(ASPECT);
+            mAspectPreservingWidth = width;
+            return this;
+        }
+
+        /**
+         * The scale of the bitmap relative to the source. The height and width of the output
+         * bitmap will be within one pixel of this multiple of the source dimensions. The source
+         * screenshot will be scaled into the resulting Bitmap.
+         * @param scale of the result Bitmap relative to the source.
+         * @return The builder
+         * @throws IllegalStateException if the size has already been set in some other way.
+         */
+        @AnyThread
+        public @NonNull ScreenshotBuilder scale(final float scale) {
+            checkAndSetSizeType(SCALE);
+            mScale = scale;
+            return this;
+        }
+
+        /**
+         * Size of the bitmap to create when taking the screenshot. The source screenshot will be
+         * scaled into the resulting Bitmap
+         * @param width of the result Bitmap in screen pixels.
+         * @param height of the result Bitmap in screen pixels.
+         * @return The builder
+         * @throws IllegalStateException if the size has already been set in some other way.
+         */
+        @AnyThread
+        public @NonNull ScreenshotBuilder size(final int width, final int height) {
+            checkAndSetSizeType(FULL);
+            mOutWidth = width;
+            mOutHeight = height;
+            return this;
+        }
+
+        /**
+         * Instead of creating a new Bitmap for the result, the builder will use the passed Bitmap.
+         * @param bitmap The Bitmap to use in the result.
+         * @return The builder.
+         * @throws IllegalStateException if the size has already been set in some other way.
+         */
+        @AnyThread
+        public @NonNull ScreenshotBuilder bitmap(final @Nullable Bitmap bitmap) {
+            checkAndSetSizeType(RECYCLE);
+            mRecycle = bitmap;
+            return this;
+        }
+
+        /**
+         * Request a {@link Bitmap} of the requested portion of the web page currently being
+         * rendered using any parameters specified with the builder.
+         *
+         * This function must be called on the UI thread.
+         *
+         * @return A {@link GeckoResult} that completes with a {@link Bitmap} containing
+         * the pixels and size information of the requested portion of the visible web page.
+         */
+        @UiThread
+        public @NonNull GeckoResult<Bitmap> capture() {
+            ThreadUtils.assertOnUiThread();
+            if (!mSession.isCompositorReady()) {
+                throw new IllegalStateException("Compositor must be ready before pixels can be captured");
+            }
+
+            final GeckoResult<ByteBuffer> result = new GeckoResult<>();
+            final Bitmap target;
+            final Rect rect = new Rect();
+
+            if (mSrcWidth == 0 || mSrcHeight == 0) {
+                // Source is unset or invalid, use defaults.
+                mSession.getSurfaceBounds(rect);
+                mSrcWidth = rect.width();
+                mSrcHeight = rect.height();
+            }
+
+            switch (mSizeType) {
+                case NONE:
+                    mOutWidth = mSrcWidth;
+                    mOutHeight = mSrcHeight;
+                    break;
+                case SCALE:
+                    mSession.getSurfaceBounds(rect);
+                    mOutWidth = (int) (rect.width() * mScale);
+                    mOutHeight = (int) (rect.height() * mScale);
+                    break;
+                case ASPECT:
+                    mSession.getSurfaceBounds(rect);
+                    mOutWidth = mAspectPreservingWidth;
+                    mOutHeight = (int) (rect.height() * (mAspectPreservingWidth / (double) rect.width()));
+                    break;
+                case RECYCLE:
+                    mOutWidth = mRecycle.getWidth();
+                    mOutHeight = mRecycle.getHeight();
+                    break;
+                // case FULL does not need to be handled, as width and height are already set.
+            }
+
+            if (mRecycle == null) {
+                target = Bitmap.createBitmap(mOutWidth, mOutHeight, Bitmap.Config.ARGB_8888);
+            } else {
+                target = mRecycle;
+            }
+
+            mSession.mCompositor.requestScreenPixels(result, mOffsetX, mOffsetY, mSrcWidth, mSrcHeight, mOutWidth, mOutHeight);
+
+            return result.then( buffer -> {
+                target.copyPixelsFromBuffer(buffer);
+                return GeckoResult.fromValue(target);
+            });
+        }
+    }
+
+    /**
+     * Creates a new screenshot builder.
+     * @return The new {@link ScreenshotBuilder}
+     */
+    @UiThread
+    public @NonNull ScreenshotBuilder screenshot() {
+        return new ScreenshotBuilder(mSession);
     }
 }
