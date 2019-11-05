@@ -50,6 +50,10 @@ function encodeEnvVar(name, value) {
   return Uint8Array.of(...encode(name), ...encode("="), ...encode(value), 0);
 }
 
+function platformSupportsDisclaimedSpawn() {
+  return AppConstants.isPlatformAndVersionAtLeast("macosx", 18);
+}
+
 /**
  * Allows for creation of and communication with OS-level sub-processes.
  * @namespace
@@ -93,6 +97,13 @@ var Subprocess = {
    * @param {string} [options.workdir]
    *        The working directory in which to launch the new process.
    *
+   * @param {boolean} [options.disclaim]
+   * macOS-specific option for 10.14+ OS versions. If true, enables a
+   * macOS-specific process launch option allowing the parent process to
+   * disclaim responsibility for the child process with respect to privacy/
+   * security permission prompts and decisions. This option is ignored on
+   * platforms that do not support it.
+   *
    * @returns {Promise<Process>}
    *
    * @rejects {Error}
@@ -112,6 +123,7 @@ var Subprocess = {
 
     options.stderr = options.stderr || "ignore";
     options.workdir = options.workdir || null;
+    options.disclaim = options.disclaim || false;
 
     let environment = {};
     if (!options.environment || options.environmentAppend) {
@@ -127,6 +139,10 @@ var Subprocess = {
     );
 
     options.arguments = Array.from(options.arguments || []);
+
+    if (options.disclaim && !platformSupportsDisclaimedSpawn()) {
+      options.disclaim = false;
+    }
 
     return Promise.resolve(
       SubprocessImpl.isExecutableFile(options.command)
