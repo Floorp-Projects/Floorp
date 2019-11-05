@@ -22,7 +22,6 @@
 #include "mozilla/RemoteDecoderManagerChild.h"
 #include "mozilla/RemoteDecoderManagerParent.h"
 #include "mozilla/dom/MemoryReportRequest.h"
-#include "mozilla/webgpu/WebGPUThreading.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/image/ImageMemoryReporter.h"
@@ -271,10 +270,6 @@ mozilla::ipc::IPCResult GPUParent::RecvInit(
     }
   }
 #endif
-
-  if (gfxConfig::IsEnabled(Feature::WEBGPU)) {
-    webgpu::WebGPUThreading::Start();
-  }
 
   VRManager::ManagerInit();
   // Send a message to the UI process that we're done.
@@ -558,10 +553,6 @@ void GPUParent::ActorDestroy(ActorDestroyReason aWhy) {
 #endif
 
   image::ImageMemoryReporter::ShutdownForWebRender();
-
-  if (gfxConfig::IsEnabled(Feature::WEBGPU)) {
-    webgpu::WebGPUThreading::ShutDown();
-  }
 
   // Shut down the default GL context provider.
   gl::GLContextProvider::Shutdown();

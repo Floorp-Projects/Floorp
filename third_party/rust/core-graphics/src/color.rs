@@ -12,6 +12,8 @@ use base::CGFloat;
 use core_foundation::base::TCFType;
 use super::sys::{CGColorRef};
 
+pub use super::sys::CGColorRef as SysCGColorRef;
+
 declare_TCFType!{
     CGColor, CGColorRef
 }

@@ -8,39 +8,54 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::mem;
-use std::os::raw::{c_void, c_int};
+//! Unwinding through the `backtrace` function provided in Unix.
+//!
+//! This is an alternative unwinding strategy for Unix platforms which don't
+//! have support for libunwind but do have support for `backtrace`. Currently
+//! there's not a whole lot of those though. This module is a relatively
+//! straightforward binding of the `backtrace` API to the `Frame` API that we'd
+//! like to have.
 
+use core::ffi::c_void;
+use core::mem;
+use libc::c_int;
+
+#[derive(Clone)]
 pub struct Frame {
-    addr: *mut c_void,
+    addr: usize,
 }
 
 impl Frame {
-    pub fn ip(&self) -> *mut c_void { self.addr }
-    pub fn symbol_address(&self) -> *mut c_void { self.addr }
+    pub fn ip(&self) -> *mut c_void {
+        self.addr as *mut c_void
+    }
+    pub fn symbol_address(&self) -> *mut c_void {
+        self.ip()
+    }
 }
 
-extern {
+extern "C" {
     fn backtrace(buf: *mut *mut c_void, sz: c_int) -> c_int;
 }
 
 #[inline(always)]
-pub fn trace(cb: &mut FnMut(&super::Frame) -> bool) {
+pub unsafe fn trace(cb: &mut FnMut(&super::Frame) -> bool) {
     const SIZE: usize = 100;
 
     let mut buf: [*mut c_void; SIZE];
     let cnt;
-    unsafe {
-        buf = mem::zeroed();
-        cnt = backtrace(buf.as_mut_ptr(), SIZE as c_int);
-    }
+
+    buf = mem::zeroed();
+    cnt = backtrace(buf.as_mut_ptr(), SIZE as c_int);
 
     for addr in buf[..cnt as usize].iter() {
         let cx = super::Frame {
-            inner: Frame { addr: *addr },
+            inner: Frame {
+                addr: *addr as usize,
+            },
         };
         if !cb(&cx) {
-            return
+            return;
         }
     }
 }
