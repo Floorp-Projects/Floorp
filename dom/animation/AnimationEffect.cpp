@@ -79,7 +79,7 @@ void AnimationEffect::SetSpecifiedTiming(TimingParams&& aTiming) {
     mAnimation->NotifyEffectTimingUpdated();
 
     if (mAnimation->IsRelevant()) {
-      nsNodeUtils::AnimationChanged(mAnimation);
+      MutationObservers::NotifyAnimationChanged(mAnimation);
     }
 
     if (AsKeyframeEffect()) {

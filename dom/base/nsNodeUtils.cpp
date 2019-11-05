@@ -226,7 +226,7 @@ void MutationObservers::NotifyContentRemoved(nsINode* aContainer,
 }
 }  // namespace mozilla
 
-void nsNodeUtils::AnimationMutated(
+void MutationObservers::NotifyAnimationMutated(
     dom::Animation* aAnimation, AnimationMutationType aMutatedType) {
   MOZ_ASSERT(aAnimation);
 
@@ -256,15 +256,14 @@ void nsNodeUtils::AnimationMutated(
   }
 }
 
-void nsNodeUtils::AnimationAdded(dom::Animation* aAnimation) {
-  AnimationMutated(aAnimation, AnimationMutationType::Added);
+void MutationObservers::NotifyAnimationAdded(dom::Animation* aAnimation) {
+  NotifyAnimationMutated(aAnimation, AnimationMutationType::Added);
 }
 
-void nsNodeUtils::AnimationChanged(dom::Animation* aAnimation) {
-  AnimationMutated(aAnimation, AnimationMutationType::Changed);
+void MutationObservers::NotifyAnimationChanged(dom::Animation* aAnimation) {
+  NotifyAnimationMutated(aAnimation, AnimationMutationType::Changed);
 }
 
-void nsNodeUtils::AnimationRemoved(dom::Animation* aAnimation) {
-  AnimationMutated(aAnimation, AnimationMutationType::Removed);
+void MutationObservers::NotifyAnimationRemoved(dom::Animation* aAnimation) {
+  NotifyAnimationMutated(aAnimation, AnimationMutationType::Removed);
 }
-
