@@ -232,17 +232,6 @@ IPCResult BrowserBridgeParent::RecvSetEmbedderAccessible(
 #ifdef ACCESSIBILITY
   mEmbedderAccessibleDoc = static_cast<a11y::DocAccessibleParent*>(aDoc);
   mEmbedderAccessibleID = aID;
-  if (auto embeddedBrowser = GetBrowserParent()) {
-    a11y::DocAccessibleParent* childDocAcc =
-        embeddedBrowser->GetTopLevelDocAccessible();
-    if (childDocAcc && !childDocAcc->IsShutdown()) {
-      // The embedded DocAccessibleParent has already been created. This can
-      // happen if, for example, an iframe is hidden and then shown or
-      // an iframe is reflowed by layout.
-      mEmbedderAccessibleDoc->AddChildDoc(childDocAcc, aID,
-                                          /* aCreating */ false);
-    }
-  }
 #endif
   return IPC_OK();
 }
