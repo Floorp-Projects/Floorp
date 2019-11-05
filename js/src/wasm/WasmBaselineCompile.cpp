@@ -8587,6 +8587,8 @@ bool BaseCompiler::emitLoop() {
     topBlockResults(params);
     masm.nopAlign(CodeAlignment);
     masm.bind(&controlItem(0).label);
+    // The interrupt check barfs if there are live registers.
+    sync();
     if (!addInterruptCheck()) {
       return false;
     }
