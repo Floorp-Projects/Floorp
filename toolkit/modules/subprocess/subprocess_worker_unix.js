@@ -387,8 +387,6 @@ class Process extends BaseProcess {
     let actions = unix.posix_spawn_file_actions_t();
     let actionsp = actions.address();
 
-    let attr = null;
-
     let fds = this.initPipes(options);
 
     let cwd;
@@ -409,25 +407,12 @@ class Process extends BaseProcess {
         libc.posix_spawn_file_actions_adddup2(actionsp, fd, i);
       }
 
-      if (options.disclaim) {
-        attr = unix.posix_spawnattr_t();
-        libc.posix_spawnattr_init(attr.address());
-        // Disclaim is a Mac-specific posix_spawn attribute
-        let rv = libc.responsibility_spawnattrs_setdisclaim(attr.address(), 1);
-        if (rv != 0) {
-          throw new Error(
-            `Failed to execute command "${command}" ` +
-              `due to disclaim error (${rv}).`
-          );
-        }
-      }
-
       let pid = unix.pid_t();
       let rv = libc.posix_spawn(
         pid.address(),
         command,
         actionsp,
-        attr !== null ? attr.address() : null,
+        null,
         argv,
         envp
       );
@@ -441,10 +426,6 @@ class Process extends BaseProcess {
 
       this.pid = pid.value;
     } finally {
-      if (attr !== null) {
-        libc.posix_spawnattr_destroy(attr.address());
-      }
-
       libc.posix_spawn_file_actions_destroy(actionsp);
 
       this.stringArrays.length = 0;
