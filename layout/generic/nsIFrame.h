@@ -2358,17 +2358,23 @@ class nsIFrame : public nsQueryFrame {
                                   InlinePrefISizeData* aData) = 0;
 
   /**
-   * Return the horizontal components of padding, border, and margin
+   * Intrinsic size of a frame in a single axis.
+   *
+   * This can represent either isize or bsize.
+   */
+  struct IntrinsicSizeOffsetData {
+    nscoord padding = 0;
+    nscoord border = 0;
+    nscoord margin = 0;
+  };
+
+  /**
+   * Return the isize components of padding, border, and margin
    * that contribute to the intrinsic width that applies to the parent.
    * @param aPercentageBasis the percentage basis to use for padding/margin -
    *   i.e. the Containing Block's inline-size
    */
-  struct IntrinsicISizeOffsetData {
-    nscoord hPadding, hBorder, hMargin;
-
-    IntrinsicISizeOffsetData() : hPadding(0), hBorder(0), hMargin(0) {}
-  };
-  virtual IntrinsicISizeOffsetData IntrinsicISizeOffsets(
+  virtual IntrinsicSizeOffsetData IntrinsicISizeOffsets(
       nscoord aPercentageBasis = NS_UNCONSTRAINEDSIZE) = 0;
 
   /**
@@ -2377,7 +2383,7 @@ class nsIFrame : public nsQueryFrame {
    * @param aPercentageBasis the percentage basis to use for padding/margin -
    *   i.e. the Containing Block's inline-size
    */
-  IntrinsicISizeOffsetData IntrinsicBSizeOffsets(
+  IntrinsicSizeOffsetData IntrinsicBSizeOffsets(
       nscoord aPercentageBasis = NS_UNCONSTRAINEDSIZE);
 
   virtual mozilla::IntrinsicSize GetIntrinsicSize() = 0;
