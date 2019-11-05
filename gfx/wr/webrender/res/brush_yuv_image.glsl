@@ -126,7 +126,7 @@ void brush_vs(
     RectWithSize local_rect,
     RectWithSize segment_rect,
     ivec4 prim_user_data,
-    int segment_user_data,
+    int specific_resource_address,
     mat4 transform,
     PictureTask pic_task,
     int brush_flags,
