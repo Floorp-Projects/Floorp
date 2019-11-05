@@ -287,12 +287,7 @@ void NativeLayerCA::InvalidateRegionThroughoutSwapchain(const IntRegion& aRegion
   }
 }
 
-CFTypeRefPtr<IOSurfaceRef> NativeLayerCA::NextSurface() {
-  MutexAutoLock lock(mMutex);
-  return NextSurfaceLocked(lock);
-}
-
-CFTypeRefPtr<IOSurfaceRef> NativeLayerCA::NextSurfaceLocked(const MutexAutoLock& aLock) {
+CFTypeRefPtr<IOSurfaceRef> NativeLayerCA::NextSurface(const MutexAutoLock& aLock) {
   IntSize surfaceSize = mSize;
   if (surfaceSize.IsEmpty()) {
     NSLog(@"NextSurface returning nullptr because of invalid surfaceSize (%d, %d).",
@@ -356,7 +351,7 @@ CFTypeRefPtr<IOSurfaceRef> NativeLayerCA::NextSurfaceLocked(const MutexAutoLock&
 
 RefPtr<gfx::DrawTarget> NativeLayerCA::NextSurfaceAsDrawTarget(gfx::BackendType aBackendType) {
   MutexAutoLock lock(mMutex);
-  CFTypeRefPtr<IOSurfaceRef> surface = NextSurfaceLocked(lock);
+  CFTypeRefPtr<IOSurfaceRef> surface = NextSurface(lock);
   if (!surface) {
     return nullptr;
   }
@@ -385,7 +380,7 @@ gl::GLContext* NativeLayerCA::GetGLContext() {
 
 Maybe<GLuint> NativeLayerCA::NextSurfaceAsFramebuffer(bool aNeedsDepth) {
   MutexAutoLock lock(mMutex);
-  CFTypeRefPtr<IOSurfaceRef> surface = NextSurfaceLocked(lock);
+  CFTypeRefPtr<IOSurfaceRef> surface = NextSurface(lock);
   if (!surface) {
     return Nothing();
   }

@@ -11,8 +11,6 @@
 #include <unistd.h>
 #include <math.h>
 
-#include <IOSurface/IOSurface.h>
-
 #include "nsChildView.h"
 #include "nsCocoaWindow.h"
 
@@ -88,7 +86,6 @@
 #include "gfxUtils.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/BorrowedContext.h"
-#include "mozilla/gfx/MacIOSurface.h"
 #ifdef ACCESSIBILITY
 #  include "nsAccessibilityService.h"
 #  include "mozilla/a11y/Platform.h"
@@ -1493,16 +1490,6 @@ bool nsChildView::PaintWindowInContext(CGContextRef aContext, const LayoutDevice
   return painted;
 }
 
-bool nsChildView::PaintWindowInIOSurface(CFTypeRefPtr<IOSurfaceRef> aSurface,
-                                         const LayoutDeviceIntRegion& aInvalidRegion) {
-  RefPtr<MacIOSurface> surf = new MacIOSurface(std::move(aSurface));
-  surf->Lock(false);
-  RefPtr<gfx::DrawTarget> dt = surf->GetAsDrawTargetLocked(gfx::BackendType::SKIA);
-  bool result = PaintWindowInDrawTarget(dt, aInvalidRegion, dt->GetSize());
-  surf->Unlock(false);
-  return result;
-}
-
 void nsChildView::EnsureContentLayerForMainThreadPainting() {
   if (!mContentLayer) {
     // The content layer gets created on demand for BasicLayers windows. We do
@@ -1523,13 +1510,14 @@ void nsChildView::PaintWindowInContentLayer() {
     mContentLayer->SetIsOpaque(isOpaque);
   }
   mContentLayer->SetSurfaceIsFlipped(false);
-  CFTypeRefPtr<IOSurfaceRef> surf = mContentLayer->NextSurface();
-  if (!surf) {
+  RefPtr<DrawTarget> dt = mContentLayer->NextSurfaceAsDrawTarget(gfx::BackendType::SKIA);
+  if (!dt) {
     return;
   }
 
-  PaintWindowInIOSurface(
-      surf, LayoutDeviceIntRegion::FromUnknownRegion(mContentLayer->CurrentSurfaceInvalidRegion()));
+  PaintWindowInDrawTarget(
+      dt, LayoutDeviceIntRegion::FromUnknownRegion(mContentLayer->CurrentSurfaceInvalidRegion()),
+      dt->GetSize());
   mContentLayer->NotifySurfaceReady();
 }
 

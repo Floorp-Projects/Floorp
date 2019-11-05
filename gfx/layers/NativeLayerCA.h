@@ -120,17 +120,6 @@ class NativeLayerCA : public NativeLayer {
   void SetSurfaceIsFlipped(bool aIsFlipped) override;
   bool SurfaceIsFlipped() override;
 
-  // Returns an IOSurface that can be drawn to. The size of the IOSurface will
-  // be the size of the rect that has been passed to SetRect.
-  // The returned surface is guaranteed to be not in use by the window server.
-  // After a call to NextSurface, NextSurface must not be called again until
-  // after NotifySurfaceReady has been called. Can be called on any thread. When
-  // used from multiple threads, callers need to make sure that they still only
-  // call NextSurface and NotifySurfaceReady alternatingly and not in any other
-  // order.
-  CFTypeRefPtr<IOSurfaceRef> NextSurface();
-  CFTypeRefPtr<IOSurfaceRef> NextSurfaceLocked(const MutexAutoLock&);
-
   // Consumers may provide an object that implements the IOSurfaceRegistry
   // interface.
   // The registry's methods, Register/UnregisterSurface, will be called
@@ -154,6 +143,16 @@ class NativeLayerCA : public NativeLayer {
 
   NativeLayerCA();
   ~NativeLayerCA() override;
+
+  // Returns an IOSurface that can be drawn to. The size of the IOSurface will
+  // be the size of the rect that has been passed to SetRect.
+  // The returned surface is guaranteed to be not in use by the window server.
+  // After a call to NextSurface, NextSurface must not be called again until
+  // after NotifySurfaceReady has been called. Can be called on any thread. When
+  // used from multiple threads, callers need to make sure that they still only
+  // call NextSurface and NotifySurfaceReady alternatingly and not in any other
+  // order.
+  CFTypeRefPtr<IOSurfaceRef> NextSurface(const MutexAutoLock&);
 
   // To be called by NativeLayerRootCA:
   CALayer* UnderlyingCALayer() { return mWrappingCALayer; }
