@@ -16,11 +16,11 @@
         style="width: 40em;"
         buttons="accept,cancel"
         branded="true">
+
+<script src="chrome://global/content/customElements.js"/>
+<script src="chrome://browser/content/migration/migration.js"/>
+
 <wizard>
-
-  <script src="chrome://global/content/customElements.js"/>
-  <script src="chrome://browser/content/migration/migration.js"/>
-
   <wizardpage id="importSource" pageid="importSource" next="selectProfile"
               label="&importSource.title;">
 #ifdef XP_WIN
