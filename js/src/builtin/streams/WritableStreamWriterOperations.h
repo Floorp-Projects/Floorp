@@ -24,6 +24,10 @@ class WritableStreamDefaultWriter;
 extern JSObject* WritableStreamDefaultWriterClose(
     JSContext* cx, JS::Handle<WritableStreamDefaultWriter*> unwrappedWriter);
 
+extern MOZ_MUST_USE bool WritableStreamDefaultWriterEnsureClosedPromiseRejected(
+    JSContext* cx, JS::Handle<WritableStreamDefaultWriter*> unwrappedWriter,
+    JS::Handle<JS::Value> error);
+
 extern MOZ_MUST_USE bool WritableStreamDefaultWriterEnsureReadyPromiseRejected(
     JSContext* cx, JS::Handle<WritableStreamDefaultWriter*> unwrappedWriter,
     JS::Handle<JS::Value> error);
@@ -31,6 +35,9 @@ extern MOZ_MUST_USE bool WritableStreamDefaultWriterEnsureReadyPromiseRejected(
 extern MOZ_MUST_USE bool WritableStreamDefaultWriterGetDesiredSize(
     JSContext* cx, JS::Handle<WritableStreamDefaultWriter*> unwrappedWriter,
     JS::MutableHandle<JS::Value> size);
+
+extern MOZ_MUST_USE bool WritableStreamDefaultWriterRelease(
+    JSContext* cx, JS::Handle<WritableStreamDefaultWriter*> unwrappedWriter);
 
 extern JSObject* WritableStreamDefaultWriterWrite(
     JSContext* cx, JS::Handle<WritableStreamDefaultWriter*> unwrappedWriter,
