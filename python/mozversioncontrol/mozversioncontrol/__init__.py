@@ -364,7 +364,7 @@ class HgRepository(Repository):
 
     def add_remove_files(self, path):
         args = ['addremove', path]
-        if self.tool_version >= b'3.9':
+        if self.tool_version >= str('3.9'):
             args = ['--config', 'extensions.automv='] + args
         self._run(*args)
 
