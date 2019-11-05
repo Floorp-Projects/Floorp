@@ -18,7 +18,7 @@
 #include "builtin/streams/MiscellaneousOperations.h"  // js::ReturnPromiseRejectedWithPendingError
 #include "builtin/streams/WritableStream.h"           // js::WritableStream
 #include "builtin/streams/WritableStreamOperations.h"  // js::WritableStreamCloseQueuedOrInFlight
-#include "builtin/streams/WritableStreamWriterOperations.h"  // js::WritableStreamDefaultWriter{GetDesiredSize,Release,Write}
+#include "builtin/streams/WritableStreamWriterOperations.h"  // js::WritableStreamDefaultWriter{Abort,GetDesiredSize,Release,Write}
 #include "js/CallArgs.h"                              // JS::CallArgs{,FromVp}
 #include "js/Class.h"                        // js::ClassSpec, JS_NULL_CLASS_OPS
 #include "js/PropertySpec.h"  // JS{Function,Property}Spec, JS_{FS,PS}_END, JS_{FN,PSG}
@@ -151,6 +151,42 @@ static MOZ_MUST_USE bool WritableStream_ready(JSContext* cx, unsigned argc,
   }
 
   args.rval().setObject(*readyPromise);
+  return true;
+}
+
+/**
+ * Streams spec, 4.5.4.4. abort(reason)
+ */
+static MOZ_MUST_USE bool WritableStream_abort(JSContext* cx, unsigned argc,
+                                              Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  // Step 1: If ! IsWritableStreamDefaultWriter(this) is false, return a promise
+  //         rejected with a TypeError exception.
+  Rooted<WritableStreamDefaultWriter*> unwrappedWriter(
+      cx,
+      UnwrapAndTypeCheckThis<WritableStreamDefaultWriter>(cx, args, "abort"));
+  if (!unwrappedWriter) {
+    return ReturnPromiseRejectedWithPendingError(cx, args);
+  }
+
+  // Step 2: If this.[[ownerWritableStream]] is undefined, return a promise
+  //         rejected with a TypeError exception.
+  if (!unwrappedWriter->hasStream()) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_WRITABLESTREAMWRITER_NOT_OWNED, "abort");
+    return ReturnPromiseRejectedWithPendingError(cx, args);
+  }
+
+  // Step 3: Return ! WritableStreamDefaultWriterAbort(this, reason).
+  JSObject* promise =
+      WritableStreamDefaultWriterAbort(cx, unwrappedWriter, args.get(0));
+  if (!promise) {
+    return false;
+  }
+  cx->check(promise);
+
+  args.rval().setObject(*promise);
   return true;
 }
 
@@ -289,6 +325,7 @@ static const JSPropertySpec WritableStreamDefaultWriter_properties[] = {
     JS_PSG("ready", WritableStream_ready, 0), JS_PS_END};
 
 static const JSFunctionSpec WritableStreamDefaultWriter_methods[] = {
+    JS_FN("abort", WritableStream_abort, 1, 0),
     JS_FN("close", WritableStream_close, 0, 0),
     JS_FN("releaseLock", WritableStream_releaseLock, 0, 0),
     JS_FN("write", WritableStream_write, 1, 0), JS_FS_END};
