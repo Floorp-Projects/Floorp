@@ -1,9 +1,12 @@
+extern crate cc;
+extern crate tempdir;
+
 use std::env;
-use std::ffi::OsString;
 use std::path::Path;
+use std::ffi::OsString;
 
 mod support;
-use crate::support::Test;
+use support::Test;
 
 #[test]
 fn main() {
@@ -60,16 +63,14 @@ fn ccache_env_flags() {
             .cflags_env()
             .into_string()
             .unwrap()
-            .contains("ccache")
-            == false
+            .contains("ccache") == false
     );
     assert!(
         compiler
             .cflags_env()
             .into_string()
             .unwrap()
-            .contains(" lol-this-is-not-a-compiler")
-            == false
+            .contains(" lol-this-is-not-a-compiler") == false
     );
 
     env::set_var("CC", "");
