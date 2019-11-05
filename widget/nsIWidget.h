@@ -261,6 +261,12 @@ enum nsTopLevelWidgetZPlacement {  // for PlaceBehind()
  */
 #define NS_WIDGET_RESUME_PROCESS_OBSERVER_TOPIC "resume_process_notification"
 
+/**
+ * When an app(-shell) is activated by the OS, this topic is notified.
+ * Currently, this only happens on Mac OSX.
+ */
+#define NS_WIDGET_MAC_APP_ACTIVATE_OBSERVER_TOPIC "mac_app_activate"
+
 namespace mozilla {
 namespace widget {
 
