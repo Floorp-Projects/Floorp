@@ -157,8 +157,7 @@ class nsDisplayTextOverflowMarker final : public nsPaintedDisplayItem {
       : nsPaintedDisplayItem(aBuilder, aFrame),
         mRect(aRect),
         mStyle(aStyle),
-        mAscent(aAscent),
-        mIndex((aLineNumber << 1) + aIndex) {
+        mAscent(aAscent) {
     MOZ_COUNT_CTOR(nsDisplayTextOverflowMarker);
   }
 
@@ -214,7 +213,6 @@ class nsDisplayTextOverflowMarker final : public nsPaintedDisplayItem {
   nsRect mRect;  // in reference frame coordinates
   const StyleTextOverflowSide mStyle;
   nscoord mAscent;  // baseline for the marker text in mRect
-  uint16_t mIndex;
 };
 
 static void PaintTextShadowCallback(gfxContext* aCtx, nsPoint aShadowOffset,
