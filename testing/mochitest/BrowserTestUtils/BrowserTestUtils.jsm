@@ -77,10 +77,11 @@ const kAboutPageRegistrationContentScript =
   "chrome://mochikit/content/tests/BrowserTestUtils/content-about-page-utils.js";
 
 /**
- * Create and register BrowserTestUtils Window Actor.
+ * Create and register the BrowserTestUtils and ContentEventListener window
+ * actors.
  */
-function registerActor() {
-  let actorOptions = {
+function registerActors() {
+  ChromeUtils.registerWindowActor("BrowserTestUtils", {
     parent: {
       moduleURI: "resource://testing-common/BrowserTestUtilsParent.jsm",
     },
@@ -93,30 +94,25 @@ function registerActor() {
     },
     allFrames: true,
     includeChrome: true,
-  };
-  ChromeUtils.registerWindowActor("BrowserTestUtils", actorOptions);
-}
+  });
 
-function registerContentEventListenerActor() {
-  let actorOptions = {
+  ChromeUtils.registerWindowActor("ContentEventListener", {
     parent: {
       moduleURI: "resource://testing-common/ContentEventListenerParent.jsm",
     },
-
     child: {
       moduleURI: "resource://testing-common/ContentEventListenerChild.jsm",
       events: {
         // We need to see the creation of all new windows, in case they have
-        // a browsing context we are interesting in.
+        // a browsing context we are interested in.
         DOMWindowCreated: { capture: true },
       },
     },
     allFrames: true,
-  };
-  ChromeUtils.registerWindowActor("ContentEventListener", actorOptions);
+  });
 }
 
-registerActor();
+registerActors();
 
 var BrowserTestUtils = {
   /**
@@ -526,8 +522,6 @@ var BrowserTestUtils = {
   _contentEventListenerSharedState: new Map(),
 
   _contentEventListeners: new Map(),
-
-  _contentEventListenerActorRegistered: false,
 
   /**
    * Waits for the web progress listener associated with this tab to fire a
@@ -1238,10 +1232,6 @@ var BrowserTestUtils = {
    * fire until it is removed. A callable object is returned that,
    * when called, removes the event listener. Note that this function
    * works even if the browser's frameloader is swapped.
-   * Note: This will only listen for events that either have the browsing
-   * context of the browser element at the time of the call, or that are fired
-   * on windows that were created after any call to the function since the start
-   * of the test. This could be improved if needed.
    *
    * @param {xul:browser} browser
    *        The browser element to listen for events in.
@@ -1285,35 +1275,6 @@ var BrowserTestUtils = {
       eventListenerState
     );
     Services.ppmm.sharedData.flush();
-
-    if (!this._contentEventListenerActorRegistered) {
-      this._contentEventListenerActorRegistered = true;
-      registerContentEventListenerActor();
-
-      // We hadn't registered the actor yet, so any existing window
-      // for browser's BC will not have been created yet. Explicitly
-      // make sure the actors are created and ready to go now. This
-      // happens after the updating of sharedData so that the actors
-      // don't have to get created and do nothing, and then later have
-      // to be updated.
-      // Note: As mentioned in the comment at the start of this function,
-      // this will miss any windows that existed at the time that the function
-      // was initially called during this test, but that did not have the
-      // browser's browsing context.
-      let contextsToVisit = [browser.browsingContext];
-      while (contextsToVisit.length) {
-        let currentContext = contextsToVisit.pop();
-        let global = currentContext.currentWindowGlobal;
-        if (!global) {
-          continue;
-        }
-        let actor = browser.browsingContext.currentWindowGlobal.getActor(
-          "ContentEventListener"
-        );
-        actor.sendAsyncMessage("ContentEventListener:LateCreate");
-        contextsToVisit.push(...currentContext.getChildren());
-      }
-    }
 
     let unregisterFunction = function() {
       if (!eventListenerState.has(id)) {
