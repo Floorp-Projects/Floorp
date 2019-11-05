@@ -3563,6 +3563,24 @@ void BackgroundCursorChild::HandleResponse(const void_t& aResponse) {
   }
 }
 
+template <typename... Args>
+void BackgroundCursorChild::HandleIndividualCursorResponse(Args&&... aArgs) {
+  if (mCursor) {
+    if (mCursor->IsContinueCalled()) {
+      mCursor->Reset(std::forward<Args>(aArgs)...);
+    } else {
+      mCachedResponses.emplace_back(std::forward<Args>(aArgs)...);
+    }
+  } else {
+    // TODO: This looks particularly dangerous to me. Why do we need to
+    // have an extra newCursor of type RefPtr? Why can't we directly
+    // assign to mCursor? Why is mCursor not a RefPtr?
+    RefPtr<IDBCursor> newCursor =
+        IDBCursor::Create(this, std::forward<Args>(aArgs)...);
+    mCursor = newCursor;
+  }
+}
+
 template <typename T, typename Func>
 void BackgroundCursorChild::HandleMultipleCursorResponses(
     const nsTArray<T>& aResponses, const Func& aHandleRecord) {
@@ -3628,27 +3646,9 @@ void BackgroundCursorChild::HandleResponse(
         // TODO: Maybe move the deserialization of the clone-read-info into the
         // cursor, so that it is only done for records actually accessed, which
         // might not be the case for all cached records.
-        auto cloneReadInfo =
-            PrepareCloneReadInfo(std::move(response.cloneInfo()));
-
-        // TODO: the structure of the rest of this function is the same for all
-        // cursor responses, and it can be unified with a template function,
-        // only the arguments to IDBCursor::Reset, IDBCursor::Create and the
-        // fields for the cached response differ.
-        RefPtr<IDBCursor> newCursor;
-
-        if (mCursor) {
-          if (mCursor->IsContinueCalled()) {
-            mCursor->Reset(std::move(response.key()), std::move(cloneReadInfo));
-          } else {
-            mCachedResponses.emplace_back(std::move(response.key()),
-                                          std::move(cloneReadInfo));
-          }
-        } else {
-          newCursor = IDBCursor::Create(this, std::move(response.key()),
-                                        std::move(cloneReadInfo));
-          mCursor = newCursor;
-        }
+        HandleIndividualCursorResponse(
+            std::move(response.key()),
+            PrepareCloneReadInfo(std::move(response.cloneInfo())));
       });
 }
 
@@ -3659,18 +3659,7 @@ void BackgroundCursorChild::HandleResponse(
 
   HandleMultipleCursorResponses(
       aResponses, [this](ObjectStoreKeyCursorResponse& response) {
-        RefPtr<IDBCursor> newCursor;
-
-        if (mCursor) {
-          if (mCursor->IsContinueCalled()) {
-            mCursor->Reset(std::move(response.key()));
-          } else {
-            mCachedResponses.emplace_back(std::move(response.key()));
-          }
-        } else {
-          newCursor = IDBCursor::Create(this, std::move(response.key()));
-          mCursor = newCursor;
-        }
+        HandleIndividualCursorResponse(std::move(response.key()));
       });
 }
 
@@ -3679,33 +3668,13 @@ void BackgroundCursorChild::HandleResponse(
   AssertIsOnOwningThread();
   MOZ_ASSERT(mIndex);
 
-  HandleMultipleCursorResponses(aResponses, [this](
-                                                IndexCursorResponse& response) {
-    auto cloneReadInfo = PrepareCloneReadInfo(std::move(response.cloneInfo()));
-
-    RefPtr<IDBCursor> newCursor;
-
-    if (mCursor) {
-      if (mCursor->IsContinueCalled()) {
-        mCursor->Reset(std::move(response.key()), std::move(response.sortKey()),
-                       std::move(response.objectKey()),
-                       std::move(cloneReadInfo));
-      } else {
-        mCachedResponses.emplace_back(
+  HandleMultipleCursorResponses(
+      aResponses, [this](IndexCursorResponse& response) {
+        HandleIndividualCursorResponse(
             std::move(response.key()), std::move(response.sortKey()),
-            std::move(response.objectKey()), std::move(cloneReadInfo));
-      }
-    } else {
-      // TODO: This looks particularly dangerous to me. Why do we need to
-      // have an extra newCursor of type RefPtr? Why can't we directly
-      // assign to mCursor? Why is mCursor not a RefPtr? (A similar
-      // construct exists in the other HandleResponse overloads).
-      newCursor = IDBCursor::Create(
-          this, std::move(response.key()), std::move(response.sortKey()),
-          std::move(response.objectKey()), std::move(cloneReadInfo));
-      mCursor = newCursor;
-    }
-  });
+            std::move(response.objectKey()),
+            PrepareCloneReadInfo(std::move(response.cloneInfo())));
+      });
 }
 
 void BackgroundCursorChild::HandleResponse(
@@ -3715,24 +3684,9 @@ void BackgroundCursorChild::HandleResponse(
 
   HandleMultipleCursorResponses(
       aResponses, [this](IndexKeyCursorResponse& response) {
-        RefPtr<IDBCursor> newCursor;
-
-        if (mCursor) {
-          if (mCursor->IsContinueCalled()) {
-            mCursor->Reset(std::move(response.key()),
-                           std::move(response.sortKey()),
-                           std::move(response.objectKey()));
-          } else {
-            mCachedResponses.emplace_back(std::move(response.key()),
-                                          std::move(response.sortKey()),
-                                          std::move(response.objectKey()));
-          }
-        } else {
-          newCursor = IDBCursor::Create(this, std::move(response.key()),
-                                        std::move(response.sortKey()),
-                                        std::move(response.objectKey()));
-          mCursor = newCursor;
-        }
+        HandleIndividualCursorResponse(std::move(response.key()),
+                                       std::move(response.sortKey()),
+                                       std::move(response.objectKey()));
       });
 }
 
