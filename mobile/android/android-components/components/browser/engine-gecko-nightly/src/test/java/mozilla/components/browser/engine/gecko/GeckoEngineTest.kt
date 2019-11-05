@@ -50,6 +50,7 @@ import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoWebExecutor
 import org.mozilla.geckoview.StorageController
 import org.mozilla.geckoview.WebExtensionController
+import org.mozilla.geckoview.WebPushController
 import org.robolectric.Robolectric
 import java.io.IOException
 import java.lang.Exception
@@ -697,6 +698,32 @@ class GeckoEngineTest {
         )
 
         assertTrue(onErrorCalled)
+    }
+
+    @Test
+    fun `registerWebNotificationDelegate sets delegate`() {
+        val runtime = mock<GeckoRuntime>()
+        val engine = GeckoEngine(context, runtime = runtime)
+
+        engine.registerWebNotificationDelegate(mock())
+
+        verify(runtime).webNotificationDelegate = any()
+    }
+
+    @Test
+    fun `registerWebPushDelegate sets delegate and returns same handler`() {
+        val runtime = mock<GeckoRuntime>()
+        val controller: WebPushController = mock()
+        val engine = GeckoEngine(context, runtime = runtime)
+
+        whenever(runtime.webPushController).thenReturn(controller)
+
+        val handler1 = engine.registerWebPushDelegate(mock())
+        val handler2 = engine.registerWebPushDelegate(mock())
+
+        verify(controller, times(2)).setDelegate(any())
+
+        assert(handler1 == handler2)
     }
 
     private fun createDummyLogEntryList(): List<ContentBlockingController.LogEntry> {

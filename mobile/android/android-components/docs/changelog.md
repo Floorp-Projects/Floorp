@@ -19,9 +19,9 @@ permalink: /changelog/
   * Added ability to pause, resume, cancel, and try again on a download through the `DownloadNotification`.
   * Added support for multiple, continuous downloads.
   * Added size of the file to the `DownloadNotification`.
-  * Added open file funcitonality to the `DownloadNotification`.
+  * Added open file functionality to the `DownloadNotification`.
     * Note: you must add a `FileProvider` to your manifest as well as `file_paths.xml`. See SampleBrowser for an example.
-    * To open .apk files, you must still add the permisison `android.permission.INSTALL_PACKAGES` to your manifest.
+    * To open .apk files, you must still add the permission `android.permission.INSTALL_PACKAGES` to your manifest.
   * Improved visuals of `SimpleDownloadDialogFragment` to better match `SitePermissionsDialogFragment`.
     * `SimpleDownloadDialogFragment` can similarly be themed by using `PromptsStyling` properties.
 
@@ -39,6 +39,9 @@ permalink: /changelog/
 * **concept-engine**
   * Adds support for WebPush abstraction to the Engine.
   * Adds support for WebShare abstraction as a PromptRequest.
+  
+* **engine-gecko-nightly**
+  * Adds support for WebPush in GeckoEngine.
 
 * **support-webextensions**
   * Adds support for sending messages to background pages and scripts in WebExtensions.

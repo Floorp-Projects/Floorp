@@ -11,6 +11,8 @@ import mozilla.components.browser.engine.gecko.mediaquery.from
 import mozilla.components.browser.engine.gecko.mediaquery.toGeckoValue
 import mozilla.components.browser.engine.gecko.webextension.GeckoWebExtension
 import mozilla.components.browser.engine.gecko.webnotifications.GeckoWebNotificationDelegate
+import mozilla.components.browser.engine.gecko.webpush.GeckoWebPushDelegate
+import mozilla.components.browser.engine.gecko.webpush.GeckoWebPushHandler
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
@@ -27,6 +29,8 @@ import mozilla.components.concept.engine.utils.EngineVersion
 import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.concept.engine.webextension.WebExtensionDelegate
 import mozilla.components.concept.engine.webnotifications.WebNotificationDelegate
+import mozilla.components.concept.engine.webpush.WebPushDelegate
+import mozilla.components.concept.engine.webpush.WebPushHandler
 import org.json.JSONObject
 import org.mozilla.geckoview.ContentBlocking
 import org.mozilla.geckoview.ContentBlockingController
@@ -42,6 +46,7 @@ import java.lang.IllegalStateException
 /**
  * Gecko-based implementation of Engine interface.
  */
+@Suppress("TooManyFunctions")
 class GeckoEngine(
     context: Context,
     private val defaultSettings: Settings? = null,
@@ -53,6 +58,7 @@ class GeckoEngine(
     private val executor by lazy { executorProvider.invoke() }
     private val localeUpdater = LocaleSettingUpdater(context, runtime)
     private var webExtensionDelegate: WebExtensionDelegate? = null
+    private var webPushHandler: WebPushHandler? = null
 
     init {
         runtime.delegate = GeckoRuntime.Delegate {
@@ -182,6 +188,21 @@ class GeckoEngine(
         webNotificationDelegate: WebNotificationDelegate
     ) {
         runtime.webNotificationDelegate = GeckoWebNotificationDelegate(webNotificationDelegate)
+    }
+
+    /**
+     * See [Engine.registerWebPushDelegate].
+     */
+    override fun registerWebPushDelegate(
+        webPushDelegate: WebPushDelegate
+    ): WebPushHandler {
+        runtime.webPushController.setDelegate(GeckoWebPushDelegate(webPushDelegate))
+
+        if (webPushHandler == null) {
+            webPushHandler = GeckoWebPushHandler(runtime)
+        }
+
+        return requireNotNull(webPushHandler)
     }
 
     /**
