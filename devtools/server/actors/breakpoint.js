@@ -46,15 +46,17 @@ function BreakpointActor(threadActor, location) {
 
 BreakpointActor.prototype = {
   setOptions(options) {
-    for (const [script, offsets] of this.scripts) {
-      this._newOffsetsOrOptions(script, offsets, this.options, options);
-    }
-
+    const oldOptions = this.options;
     this.options = options;
+
+    for (const [script, offsets] of this.scripts) {
+      this._newOffsetsOrOptions(script, offsets, oldOptions);
+    }
   },
 
   destroy: function() {
     this.removeScripts();
+    this.options = null;
   },
 
   hasScript: function(script) {
@@ -72,7 +74,7 @@ BreakpointActor.prototype = {
    */
   addScript: function(script, offsets) {
     this.scripts.set(script, offsets.concat(this.scripts.get(offsets) || []));
-    this._newOffsetsOrOptions(script, offsets, null, this.options);
+    this._newOffsetsOrOptions(script, offsets, null);
   },
 
   /**
@@ -88,35 +90,36 @@ BreakpointActor.prototype = {
   /**
    * Called on changes to this breakpoint's script offsets or options.
    */
-  _newOffsetsOrOptions(script, offsets, oldOptions, options) {
+  _newOffsetsOrOptions(script, offsets, oldOptions) {
     // When replaying, logging breakpoints are handled using an API to get logged
     // messages from throughout the recording.
-    if (this.threadActor.dbg.replaying && options.logValue) {
-      if (
-        oldOptions &&
-        oldOptions.logValue == options.logValue &&
-        oldOptions.condition == options.condition
-      ) {
+    if (this.threadActor.dbg.replaying && this.options.logGroupId) {
+      const { logGroupId } = this.options;
+
+      if (oldOptions && oldOptions.logGroupId == logGroupId) {
         return;
       }
       for (const offset of offsets) {
         const { lineNumber, columnNumber } = script.getOffsetLocation(offset);
-        script.replayVirtualConsoleLog(
+        script.replayVirtualConsoleLog({
           offset,
-          options.logValue,
-          options.condition,
-          (executionPoint, rv) => {
+          text: this.options.logValue,
+          condition: this.options.condition,
+          messageCallback: (executionPoint, rv) => {
             const message = {
               filename: script.url,
               lineNumber,
               columnNumber,
               executionPoint,
               arguments: rv,
-              logpointId: options.logGroupId,
+              logpointId: logGroupId,
             };
             this.threadActor._parent._consoleActor.onConsoleAPICall(message);
-          }
-        );
+          },
+          validCallback: () => {
+            return this.options && this.options.logGroupId == logGroupId;
+          },
+        });
       }
       return;
     }
