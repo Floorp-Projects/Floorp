@@ -28,6 +28,13 @@ permalink: /changelog/
   val addOns = addOnsProvider.getAvailableAddOns(allowCache = false)
   ```
 
+* **lib-nearby**
+  * 🆕 New component for communicating directly between two devices
+  using Google Nearby API.
+  
+* **sample-nearby-chat**
+  * 🆕 New sample program demonstrating use of `lib-nearby`.
+
 # 21.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v20.0.0...v21.0.0)
@@ -734,7 +741,7 @@ permalink: /changelog/
 
 * **feature-media**
   * `MediaFeature` is no longer showing a notification for playing media with a very short duration.
-  * Lowererd priority of media notification channel to avoid the media notification makign any sounds itself.
+  * Lowered priority of media notification channel to avoid the media notification making any sounds itself.
 
 # 7.0.0
 

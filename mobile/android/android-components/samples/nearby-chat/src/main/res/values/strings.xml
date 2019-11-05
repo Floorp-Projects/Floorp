@@ -1,0 +1,34 @@
+<resources>
+    <string name="mozac_samples_nearby_chat_app_name">Nearby Chat</string>
+
+    <!-- String prompting user for message to send to connected device -->
+    <string name="mozac_samples_nearby_chat_message_prompt">Message to send</string>
+
+    <!-- String labeling button to send message to connected device. -->
+    <string name="mozac_samples_nearby_chat_send_prompt">Send</string>
+
+    <!-- String informing user that the application cannot continue due to the user denying needed permissions. -->
+    <string name="mozac_samples_nearby_chat_permissions_denied">Cannot continue due to denied permissions</string>
+
+    <!-- String labeling button to advertise the presence of this device to other nearby devices.. -->
+    <string name="mozac_samples_nearby_chat_advertise">Advertise</string>
+
+    <!-- String labeling button to try to discover other nearby devices. -->
+    <string name="mozac_samples_nearby_chat_discover">Discover</string>
+
+    <!-- String labeling button to reset communication with other nearby devices. -->
+    <string name="mozac_samples_nearby_chat_reset">Reset</string>
+
+    <!-- String title of AlertDialog asking if the user wants to accept a connection to a neighbor; %1$s will be replaced by the neighbor's name. -->
+    <string name="mozac_samples_nearby_chat_accept_connection">Accept connection to %1$s</string>
+
+    <!-- String in AlertDialog asking user to confirm that that the shown token (which will replace %1$s) is the same on both devices. -->
+    <string name="mozac_samples_nearby_chat_confirm_token">Confirm the code matches on both devices: %1$s</string>
+
+    <!-- String to display when a message is received from the neighbor; %1$s will be replaced by the neighbor name, %2$s will be replaced by the message. "\n" indicates a line break. -->
+    <string name="mozac_samples_nearby_chat_message_received">Received from %1$s:\n%2$s</string>
+
+    <!-- Brief string indicating that a message was successfully delivered to a neighbor. -->
+    <string name="mozac_samples_nearby_chat_message_delivered">Message delivered</string>
+
+</resources>
