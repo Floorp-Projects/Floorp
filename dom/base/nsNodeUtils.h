@@ -128,19 +128,14 @@ class MutationObservers {
                                               ParentChainChanged, (aContent));
     }
   }
-};
-}  // namespace dom
-}  // namespace mozilla
 
-class nsNodeUtils {
- public:
   /**
    * Notify that an animation is added/changed/removed.
    * @param aAnimation The animation we added/changed/removed.
    */
-  static void AnimationAdded(mozilla::dom::Animation* aAnimation);
-  static void AnimationChanged(mozilla::dom::Animation* aAnimation);
-  static void AnimationRemoved(mozilla::dom::Animation* aAnimation);
+  static void NotifyAnimationAdded(mozilla::dom::Animation* aAnimation);
+  static void NotifyAnimationChanged(mozilla::dom::Animation* aAnimation);
+  static void NotifyAnimationRemoved(mozilla::dom::Animation* aAnimation);
 
  private:
   enum class AnimationMutationType { Added, Changed, Removed };
@@ -150,8 +145,11 @@ class nsNodeUtils {
    * @param aMutationType The mutation type of this animation. It could be
    *                      Added, Changed, or Removed.
    */
-  static void AnimationMutated(mozilla::dom::Animation* aAnimation,
-                               AnimationMutationType aMutatedType);
+  static void NotifyAnimationMutated(mozilla::dom::Animation* aAnimation,
+                                     AnimationMutationType aMutatedType);
 };
+
+}  // namespace dom
+}  // namespace mozilla
 
 #endif  // nsNodeUtils_h___
