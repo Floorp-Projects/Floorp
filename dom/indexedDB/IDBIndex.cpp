@@ -479,7 +479,7 @@ already_AddRefed<IDBRequest> IDBIndex::OpenCursorInternal(
     IDB_LOG_MARK_CHILD_TRANSACTION_REQUEST(
         "database(%s).transaction(%s).objectStore(%s).index(%s)."
         "openCursor(%s, %s)",
-        "IDBObjectStore.openCursor()", transaction->LoggingSerialNumber(),
+        "IDBIndex.openCursor()", transaction->LoggingSerialNumber(),
         request->LoggingSerialNumber(),
         IDB_LOG_STRINGIFY(transaction->Database()),
         IDB_LOG_STRINGIFY(transaction), IDB_LOG_STRINGIFY(mObjectStore),
@@ -538,7 +538,7 @@ already_AddRefed<IDBRequest> IDBIndex::Count(JSContext* aCx,
   IDB_LOG_MARK_CHILD_TRANSACTION_REQUEST(
       "database(%s).transaction(%s).objectStore(%s).index(%s)."
       "count(%s)",
-      "IDBObjectStore.count()", transaction->LoggingSerialNumber(),
+      "IDBIndex.count()", transaction->LoggingSerialNumber(),
       request->LoggingSerialNumber(),
       IDB_LOG_STRINGIFY(transaction->Database()),
       IDB_LOG_STRINGIFY(transaction), IDB_LOG_STRINGIFY(mObjectStore),
