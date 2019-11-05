@@ -773,7 +773,9 @@ using TwoLookupsHuffmanTable =
 using ThreeLookupsHuffmanTable =
     MultiLookupHuffmanTable<TwoLookupsHuffmanTable, 6>;
 
-struct HuffmanTableUnreachable {};
+// The initial value of GenericHuffmanTable.implementation_, that indicates
+// the table isn't yet initialized.
+struct TableImplementationUninitialized {};
 
 // Generic implementation of Huffman tables.
 //
@@ -860,7 +862,7 @@ struct GenericHuffmanTable {
  private:
   mozilla::Variant<SingleEntryHuffmanTable, TwoEntriesHuffmanTable,
                    SingleLookupHuffmanTable, TwoLookupsHuffmanTable,
-                   ThreeLookupsHuffmanTable, HuffmanTableUnreachable>
+                   ThreeLookupsHuffmanTable, TableImplementationUninitialized>
       implementation_;
 };
 

@@ -1694,7 +1694,7 @@ const BinASTSymbol* GenericHuffmanTable::Iterator::operator->() const {
 }
 
 GenericHuffmanTable::GenericHuffmanTable()
-    : implementation_(HuffmanTableUnreachable{}) {}
+    : implementation_(TableImplementationUninitialized{}) {}
 
 JS::Result<Ok> GenericHuffmanTable::initComplete(JSContext* cx) {
   return implementation_.match(
@@ -1713,7 +1713,7 @@ JS::Result<Ok> GenericHuffmanTable::initComplete(JSContext* cx) {
       [cx](ThreeLookupsHuffmanTable& implementation) -> JS::Result<Ok> {
         return implementation.initComplete(cx);
       },
-      [](HuffmanTableUnreachable&) -> JS::Result<Ok> {
+      [](TableImplementationUninitialized&) -> JS::Result<Ok> {
         MOZ_CRASH("GenericHuffmanTable is unitialized!");
       });
 }
@@ -1740,7 +1740,7 @@ typename GenericHuffmanTable::Iterator GenericHuffmanTable::begin() const {
           -> GenericHuffmanTable::Iterator {
         return Iterator(implementation.begin());
       },
-      [](const HuffmanTableUnreachable&) -> GenericHuffmanTable::Iterator {
+      [](const TableImplementationUninitialized&) -> GenericHuffmanTable::Iterator {
         MOZ_CRASH("GenericHuffmanTable is unitialized!");
       });
 }
@@ -1767,7 +1767,7 @@ typename GenericHuffmanTable::Iterator GenericHuffmanTable::end() const {
           -> GenericHuffmanTable::Iterator {
         return Iterator(implementation.end());
       },
-      [](const HuffmanTableUnreachable&) -> GenericHuffmanTable::Iterator {
+      [](const TableImplementationUninitialized&) -> GenericHuffmanTable::Iterator {
         MOZ_CRASH("GenericHuffmanTable is unitialized!");
       });
 }
@@ -1776,7 +1776,7 @@ JS::Result<Ok> GenericHuffmanTable::initWithSingleValue(
     JSContext* cx, const BinASTSymbol& value) {
   // Only one value: use HuffmanImplementationSaturated
   MOZ_ASSERT(implementation_.template is<
-             HuffmanTableUnreachable>());  // Make sure that we're initializing.
+             TableImplementationUninitialized>());  // Make sure that we're initializing.
 
   implementation_ = {mozilla::VariantType<SingleEntryHuffmanTable>{}, value};
   return Ok();
@@ -1790,7 +1790,7 @@ JS::Result<Ok> GenericHuffmanTable::initStart(JSContext* cx,
                 "ThreeLookupsHuffmanTable cannot hold all bit lengths");
 
   // Make sure that we're initializing.
-  MOZ_ASSERT(implementation_.template is<HuffmanTableUnreachable>());
+  MOZ_ASSERT(implementation_.template is<TableImplementationUninitialized>());
 
   // Make sure we don't accidentally end up with only one symbol.
   MOZ_ASSERT(numberOfSymbols != 1,
@@ -1858,7 +1858,7 @@ JS::Result<Ok> GenericHuffmanTable::addSymbol(size_t index, uint32_t bits,
       -> JS::Result<Ok> {
         return implementation.addSymbol(index, bits, bitLength, value);
       },
-      [](HuffmanTableUnreachable&) -> JS::Result<Ok> {
+      [](TableImplementationUninitialized&) -> JS::Result<Ok> {
         MOZ_CRASH("GenericHuffmanTable is unitialized!");
         return Ok();
       });
@@ -1876,7 +1876,7 @@ HuffmanLookupResult GenericHuffmanTable::lookup(HuffmanLookup key) const {
           -> HuffmanLookupResult { return implementation.lookup(key); },
       [key](const ThreeLookupsHuffmanTable& implementation)
           -> HuffmanLookupResult { return implementation.lookup(key); },
-      [](const HuffmanTableUnreachable&) -> HuffmanLookupResult {
+      [](const TableImplementationUninitialized&) -> HuffmanLookupResult {
         MOZ_CRASH("GenericHuffmanTable is unitialized!");
       });
 }
@@ -1898,7 +1898,7 @@ size_t GenericHuffmanTable::length() const {
       [](const ThreeLookupsHuffmanTable& implementation) -> size_t {
         return implementation.length();
       },
-      [](const HuffmanTableUnreachable& implementation) -> size_t {
+      [](const TableImplementationUninitialized& implementation) -> size_t {
         MOZ_CRASH("GenericHuffmanTable is unitialized!");
       });
 }
