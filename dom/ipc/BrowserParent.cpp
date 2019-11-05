@@ -10,8 +10,6 @@
 
 #ifdef ACCESSIBILITY
 #  include "mozilla/a11y/DocAccessibleParent.h"
-#  include "mozilla/a11y/Platform.h"
-#  include "mozilla/a11y/ProxyAccessibleBase.h"
 #  include "nsAccessibilityService.h"
 #endif
 #include "mozilla/BrowserElementParent.h"
@@ -1175,44 +1173,35 @@ mozilla::ipc::IPCResult BrowserParent::RecvPDocAccessibleConstructor(
     return IPC_OK();
   }
 
-  if (GetBrowserBridgeParent()) {
+  a11y::DocAccessibleParent* embedderDoc;
+  uint64_t embedderID;
+  Tie(embedderDoc, embedderID) = doc->GetRemoteEmbedder();
+  if (embedderDoc) {
     // Iframe document rendered in a different process to its embedder.
     // In this case, we don't get aParentDoc and aParentID.
     MOZ_ASSERT(!aParentDoc && !aParentID);
+    MOZ_ASSERT(embedderID);
     doc->SetTopLevelInContentProcess();
 #  ifdef XP_WIN
     MOZ_ASSERT(!aDocCOMProxy.IsNull());
     RefPtr<IAccessible> proxy(aDocCOMProxy.Get());
     doc->SetCOMInterface(proxy);
 #  endif
-    a11y::ProxyCreated(
-        doc, a11y::Interfaces::DOCUMENT | a11y::Interfaces::HYPERTEXT);
+    mozilla::ipc::IPCResult added = embedderDoc->AddChildDoc(doc, embedderID);
+    if (!added) {
+#  ifdef DEBUG
+      return added;
+#  else
+      return IPC_OK();
+#  endif
+    }
 #  ifdef XP_WIN
-    // This *must* be called after ProxyCreated because WrapperFor will fail
-    // before that.
+    // This *must* be called after AddChildDoc because AddChildDoc
+    // calls ProxyCreated and WrapperFor will fail before that.
     a11y::AccessibleWrap* wrapper = a11y::WrapperFor(doc);
     MOZ_ASSERT(wrapper);
     wrapper->SetID(aMsaaID);
 #  endif
-    a11y::DocAccessibleParent* embedderDoc;
-    uint64_t embedderID;
-    Tie(embedderDoc, embedderID) = doc->GetRemoteEmbedder();
-    // It's possible the embedder accessible hasn't been set yet; e.g.
-    // a hidden iframe. In that case, embedderDoc will be null and this will
-    // be handled when the embedder is set.
-    if (embedderDoc) {
-      MOZ_ASSERT(embedderID);
-      mozilla::ipc::IPCResult added =
-          embedderDoc->AddChildDoc(doc, embedderID,
-                                   /* aCreating */ false);
-      if (!added) {
-#  ifdef DEBUG
-        return added;
-#  else
-        return IPC_OK();
-#  endif
-      }
-    }
     return IPC_OK();
   } else {
     // null aParentDoc means this document is at the top level in the child
