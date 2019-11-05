@@ -50,7 +50,10 @@ class LegacyImplementationProcesses {
         this.descriptors.add(descriptor);
         const target = await descriptor.getTarget();
         if (!target) {
-          console.error("Wasn't able to retrieve the target for", target);
+          console.error(
+            "Wasn't able to retrieve the target for",
+            descriptor.actorID
+          );
           return;
         }
         this.onTargetAvailable(target);
@@ -91,7 +94,10 @@ class LegacyImplementationFrames {
       ) {
         const target = await frame.getTarget();
         if (!target) {
-          console.error("Wasn't able to retrieve the target for", frame);
+          console.error(
+            "Wasn't able to retrieve the target for",
+            frame.actorID
+          );
           continue;
         }
         this.onTargetAvailable(target);
@@ -230,7 +236,7 @@ class TargetList {
       if (targetFront != this.targetFront) {
         console.error(
           "Target is already registered in the TargetList",
-          targetFront
+          targetFront.actorID
         );
       }
       return;
