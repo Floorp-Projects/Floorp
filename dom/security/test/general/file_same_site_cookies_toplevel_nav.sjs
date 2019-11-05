@@ -14,9 +14,6 @@ const FRAME = `
   <body>
     <script type="application/javascript">
       let myWin = window.open("http://mochi.test:8888/tests/dom/security/test/general/file_same_site_cookies_toplevel_nav.sjs?loadWin");
-      myWin.onload = function() {
-        myWin.close();
-      }
     </script>
   </body>
   </html>`;
@@ -26,6 +23,11 @@ const WIN = `
   <html>
   <body>
     just a dummy window
+    <script>
+      window.addEventListner("load",()=>{
+        window.close();
+      });
+    </script>
   </body>
   </html>`;
 
