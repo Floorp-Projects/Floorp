@@ -44,8 +44,6 @@
  *                         "soft" shutdown, passwords are flushed.
  */
 
-interface nsIXULWindow;
-
 [scriptable, uuid(5fdf8480-1f98-11d4-8077-00600811a9c3)]
 interface nsINativeAppSupport : nsISupports {
     // Startup/shutdown.
