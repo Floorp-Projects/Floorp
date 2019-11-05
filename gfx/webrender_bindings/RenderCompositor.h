@@ -91,6 +91,7 @@ class RenderCompositor {
                           wr::DeviceIntRect aClipRect) {}
 
   // Interface for partial present
+  virtual bool UsePartialPresent() { return false; }
   virtual bool RequestFullRender() { return false; }
   virtual uint32_t GetMaxPartialPresentRects() { return 0; }
 
