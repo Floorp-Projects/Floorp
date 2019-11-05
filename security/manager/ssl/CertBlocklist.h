@@ -78,7 +78,7 @@ class CertBlocklist : public nsICertBlocklist {
   nsCOMPtr<nsIFile> mBackingFile;
 
  protected:
-  static void PreferenceChanged(const char* aPref, CertBlocklist* aBlocklist);
+  static void PreferenceChanged(const char* aPref, void* aBlocklist);
   static uint32_t sLastBlocklistUpdate;
   static uint32_t sLastKintoUpdate;
   static uint32_t sMaxStaleness;
