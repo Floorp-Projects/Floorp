@@ -624,6 +624,19 @@ class BackgroundCursorChild final : public PBackgroundIDBCursorChild {
 
   class DelayedActionRunnable;
 
+  struct CachedResponse {
+    CachedResponse() = default;
+
+    CachedResponse(CachedResponse&& aOther) = default;
+    CachedResponse& operator=(CachedResponse&& aOther) = default;
+    CachedResponse(const CachedResponse& aOther) = delete;
+    CachedResponse& operator=(const CachedResponse& aOther) = delete;
+
+    Key mKey;
+    Key mObjectKey;  // TODO: This is not used anywhere right now
+    StructuredCloneReadInfo mCloneInfo;
+  };
+
   IDBRequest* mRequest;
   IDBTransaction* mTransaction;
   IDBObjectStore* mObjectStore;
@@ -637,6 +650,8 @@ class BackgroundCursorChild final : public PBackgroundIDBCursorChild {
   Direction mDirection;
 
   NS_DECL_OWNINGTHREAD
+
+  std::deque<CachedResponse> mCachedResponses, mDelayedResponses;
 
  public:
   BackgroundCursorChild(IDBRequest* aRequest, IDBObjectStore* aObjectStore,
@@ -653,6 +668,8 @@ class BackgroundCursorChild final : public PBackgroundIDBCursorChild {
                             const Key& aCurrentKey);
 
   void SendDeleteMeInternal();
+
+  void InvalidateCachedResponses();
 
   IDBRequest* GetRequest() const {
     AssertIsOnOwningThread();
@@ -682,6 +699,8 @@ class BackgroundCursorChild final : public PBackgroundIDBCursorChild {
   // Only destroyed by BackgroundTransactionChild or
   // BackgroundVersionChangeTransactionChild.
   ~BackgroundCursorChild();
+
+  void CompleteContinueRequestFromCache();
 
   void HandleResponse(nsresult aResponse);
 
