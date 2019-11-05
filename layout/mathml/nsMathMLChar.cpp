@@ -1720,7 +1720,6 @@ class nsDisplayMathMLCharForeground final : public nsPaintedDisplayItem {
                                 uint16_t aIndex, bool aIsSelected)
       : nsPaintedDisplayItem(aBuilder, aFrame),
         mChar(aChar),
-        mIndex(aIndex),
         mIsSelected(aIsSelected) {
     MOZ_COUNT_CTOR(nsDisplayMathMLCharForeground);
   }
@@ -1768,7 +1767,6 @@ class nsDisplayMathMLCharForeground final : public nsPaintedDisplayItem {
 
  private:
   nsMathMLChar* mChar;
-  uint16_t mIndex;
   bool mIsSelected;
 };
 

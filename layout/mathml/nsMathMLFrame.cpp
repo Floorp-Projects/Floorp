@@ -304,7 +304,7 @@ class nsDisplayMathMLBar final : public nsPaintedDisplayItem {
  public:
   nsDisplayMathMLBar(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                      const nsRect& aRect, uint16_t aIndex)
-      : nsPaintedDisplayItem(aBuilder, aFrame), mRect(aRect), mIndex(aIndex) {
+      : nsPaintedDisplayItem(aBuilder, aFrame), mRect(aRect) {
     MOZ_COUNT_CTOR(nsDisplayMathMLBar);
   }
 
@@ -323,7 +323,6 @@ class nsDisplayMathMLBar final : public nsPaintedDisplayItem {
   NS_DISPLAY_DECL_NAME("MathMLBar", TYPE_MATHML_BAR)
  private:
   nsRect mRect;
-  uint16_t mIndex;
 };
 
 void nsDisplayMathMLBar::Paint(nsDisplayListBuilder* aBuilder,
