@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_AppWindow_h__
-#define mozilla_AppWindow_h__
+#ifndef nsXULWindow_h__
+#define nsXULWindow_h__
 
 // Local Includes
 #include "nsChromeTreeOwner.h"
@@ -19,7 +19,6 @@
 #include "nsCOMArray.h"
 #include "nsRect.h"
 #include "Units.h"
-#include "mozilla/Mutex.h"
 
 // Interfaces needed
 #include "nsIBaseWindow.h"
@@ -27,14 +26,12 @@
 #include "nsIDocShellTreeItem.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsIAppWindow.h"
+#include "nsIXULWindow.h"
 #include "nsIPrompt.h"
 #include "nsIAuthPrompt.h"
 #include "nsIXULBrowserWindow.h"
 #include "nsIWidgetListener.h"
 #include "nsIRemoteTab.h"
-#include "nsIWebProgressListener.h"
-#include "nsITimer.h"
 
 #ifndef MOZ_NEW_XULSTORE
 #  include "nsIXULStore.h"
@@ -48,16 +45,10 @@ class Element;
 
 class nsAtom;
 class nsXULTooltipListener;
-struct nsWidgetInitData;
 
-namespace mozilla {
-class PresShell;
-class AppWindowTimerCallback;
-}  // namespace mozilla
+// nsXULWindow
 
-// AppWindow
-
-#define NS_APPWINDOW_IMPL_CID                        \
+#define NS_XULWINDOW_IMPL_CID                        \
   { /* 8eaec2f3-ed02-4be2-8e0f-342798477298 */       \
     0x8eaec2f3, 0xed02, 0x4be2, {                    \
       0x8e, 0x0f, 0x34, 0x27, 0x98, 0x47, 0x72, 0x98 \
@@ -66,110 +57,26 @@ class AppWindowTimerCallback;
 
 class nsContentShellInfo;
 
-namespace mozilla {
-
-class AppWindow final : public nsIBaseWindow,
-                        public nsIInterfaceRequestor,
-                        public nsIAppWindow,
-                        public nsSupportsWeakReference,
-                        public nsIWebProgressListener {
-  friend class ::nsChromeTreeOwner;
-  friend class ::nsContentTreeOwner;
+class nsXULWindow : public nsIBaseWindow,
+                    public nsIInterfaceRequestor,
+                    public nsIXULWindow,
+                    public nsSupportsWeakReference {
+  friend class nsChromeTreeOwner;
+  friend class nsContentTreeOwner;
 
  public:
-  // The implementation of non-refcounted nsIWidgetListener, which would hold a
-  // strong reference on stack before calling AppWindow's
-  // MOZ_CAN_RUN_SCRIPT methods.
-  class WidgetListenerDelegate : public nsIWidgetListener {
-   public:
-    explicit WidgetListenerDelegate(AppWindow* aAppWindow)
-        : mAppWindow(aAppWindow) {}
-
-    MOZ_CAN_RUN_SCRIPT_BOUNDARY
-    virtual nsIAppWindow* GetAppWindow() override;
-    MOZ_CAN_RUN_SCRIPT_BOUNDARY
-    virtual mozilla::PresShell* GetPresShell() override;
-    MOZ_CAN_RUN_SCRIPT_BOUNDARY
-    virtual bool WindowMoved(nsIWidget* aWidget, int32_t x, int32_t y) override;
-    MOZ_CAN_RUN_SCRIPT_BOUNDARY
-    virtual bool WindowResized(nsIWidget* aWidget, int32_t aWidth,
-                               int32_t aHeight) override;
-    MOZ_CAN_RUN_SCRIPT_BOUNDARY
-    virtual bool RequestWindowClose(nsIWidget* aWidget) override;
-    MOZ_CAN_RUN_SCRIPT_BOUNDARY
-    virtual void SizeModeChanged(nsSizeMode sizeMode) override;
-    MOZ_CAN_RUN_SCRIPT_BOUNDARY
-    virtual void UIResolutionChanged() override;
-    MOZ_CAN_RUN_SCRIPT_BOUNDARY
-    virtual void FullscreenWillChange(bool aInFullscreen) override;
-    MOZ_CAN_RUN_SCRIPT_BOUNDARY
-    virtual void FullscreenChanged(bool aInFullscreen) override;
-    MOZ_CAN_RUN_SCRIPT_BOUNDARY
-    virtual void OcclusionStateChanged(bool aIsFullyOccluded) override;
-    MOZ_CAN_RUN_SCRIPT_BOUNDARY
-    virtual void OSToolbarButtonPressed() override;
-    MOZ_CAN_RUN_SCRIPT_BOUNDARY
-    virtual bool ZLevelChanged(bool aImmediate, nsWindowZ* aPlacement,
-                               nsIWidget* aRequestBelow,
-                               nsIWidget** aActualBelow) override;
-    MOZ_CAN_RUN_SCRIPT_BOUNDARY
-    virtual void WindowActivated() override;
-    MOZ_CAN_RUN_SCRIPT_BOUNDARY
-    virtual void WindowDeactivated() override;
-
-   private:
-    // The lifetime of WidgetListenerDelegate is bound to AppWindow so
-    // we just use a raw pointer here.
-    AppWindow* mAppWindow;
-  };
-
   NS_DECL_THREADSAFE_ISUPPORTS
 
   NS_DECL_NSIINTERFACEREQUESTOR
-  NS_DECL_NSIAPPWINDOW
+  NS_DECL_NSIXULWINDOW
   NS_DECL_NSIBASEWINDOW
 
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_APPWINDOW_IMPL_CID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_XULWINDOW_IMPL_CID)
 
   void LockUntilChromeLoad() { mLockedUntilChromeLoad = true; }
   bool IsLocked() const { return mLockedUntilChromeLoad; }
   void IgnoreXULSizeMode(bool aEnable) { mIgnoreXULSizeMode = aEnable; }
   void WasRegistered() { mRegistered = true; }
-
-  // AppWindow methods...
-  nsresult Initialize(nsIAppWindow* aParent, nsIAppWindow* aOpener,
-                      nsIURI* aUrl, int32_t aInitialWidth,
-                      int32_t aInitialHeight, bool aIsHiddenWindow,
-                      nsIRemoteTab* aOpeningTab,
-                      mozIDOMWindowProxy* aOpenerWIndow,
-                      nsWidgetInitData& widgetInitData);
-
-  nsresult Toolbar();
-
-  // nsIWebProgressListener
-  NS_DECL_NSIWEBPROGRESSLISTENER
-
-  // nsIWidgetListener methods for WidgetListenerDelegate.
-  nsIAppWindow* GetAppWindow() { return this; }
-  mozilla::PresShell* GetPresShell();
-  MOZ_CAN_RUN_SCRIPT
-  bool WindowMoved(nsIWidget* aWidget, int32_t aX, int32_t aY);
-  MOZ_CAN_RUN_SCRIPT
-  bool WindowResized(nsIWidget* aWidget, int32_t aWidth, int32_t aHeight);
-  MOZ_CAN_RUN_SCRIPT bool RequestWindowClose(nsIWidget* aWidget);
-  MOZ_CAN_RUN_SCRIPT void SizeModeChanged(nsSizeMode aSizeMode);
-  MOZ_CAN_RUN_SCRIPT void UIResolutionChanged();
-  MOZ_CAN_RUN_SCRIPT void FullscreenWillChange(bool aInFullscreen);
-  MOZ_CAN_RUN_SCRIPT void FullscreenChanged(bool aInFullscreen);
-  MOZ_CAN_RUN_SCRIPT void OcclusionStateChanged(bool aIsFullyOccluded);
-  MOZ_CAN_RUN_SCRIPT void OSToolbarButtonPressed();
-  MOZ_CAN_RUN_SCRIPT
-  bool ZLevelChanged(bool aImmediate, nsWindowZ* aPlacement,
-                     nsIWidget* aRequestBelow, nsIWidget** aActualBelow);
-  MOZ_CAN_RUN_SCRIPT void WindowActivated();
-  MOZ_CAN_RUN_SCRIPT void WindowDeactivated();
-
-  explicit AppWindow(uint32_t aChromeFlags);
 
  protected:
   enum persistentAttributes {
@@ -178,15 +85,8 @@ class AppWindow final : public nsIBaseWindow,
     PAD_SIZE = 0x4
   };
 
-  virtual ~AppWindow();
-
-  friend class mozilla::AppWindowTimerCallback;
-
-  bool ExecuteCloseHandler();
-  void ConstrainToOpenerScreen(int32_t* aX, int32_t* aY);
-
-  void SetPersistenceTimer(uint32_t aDirtyFlags);
-  void FirePersistenceTimer();
+  explicit nsXULWindow(uint32_t aChromeFlags);
+  virtual ~nsXULWindow();
 
   NS_IMETHOD EnsureChromeTreeOwner();
   NS_IMETHOD EnsureContentTreeOwner();
@@ -229,19 +129,19 @@ class AppWindow final : public nsIBaseWindow,
   NS_IMETHOD CreateNewChromeWindow(int32_t aChromeFlags,
                                    nsIRemoteTab* aOpeningTab,
                                    mozIDOMWindowProxy* aOpenerWindow,
-                                   nsIAppWindow** _retval);
+                                   nsIXULWindow** _retval);
   NS_IMETHOD CreateNewContentWindow(int32_t aChromeFlags,
                                     nsIRemoteTab* aOpeningTab,
                                     mozIDOMWindowProxy* aOpenerWindow,
                                     uint64_t aNextRemoteTabId,
-                                    nsIAppWindow** _retval);
+                                    nsIXULWindow** _retval);
   NS_IMETHOD GetHasPrimaryContent(bool* aResult);
 
   void EnableParent(bool aEnable);
   bool ConstrainToZLevel(bool aImmediate, nsWindowZ* aPlacement,
                          nsIWidget* aReqBelow, nsIWidget** aActualBelow);
   void PlaceWindowLayersBehind(uint32_t aLowLevel, uint32_t aHighLevel,
-                               nsIAppWindow* aBehind);
+                               nsIXULWindow* aBehind);
   void SetContentScrollbarVisibility(bool aVisible);
   bool GetContentScrollbarVisibility();
   void PersistentAttributesDirty(uint32_t aDirtyFlags);
@@ -289,10 +189,6 @@ class AppWindow final : public nsIBaseWindow,
 
   nsCOMPtr<nsIRemoteTab> mPrimaryBrowserParent;
 
-  nsCOMPtr<nsITimer> mSPTimer;
-  mozilla::Mutex mSPTimerLock;
-  WidgetListenerDelegate mWidgetListenerDelegate;
-
  private:
   // GetPrimaryBrowserParentSize is called from xpidl methods and we don't have
   // a good way to annotate those with MOZ_CAN_RUN_SCRIPT yet.  It takes no
@@ -306,8 +202,5 @@ class AppWindow final : public nsIBaseWindow,
 #endif
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(AppWindow, NS_APPWINDOW_IMPL_CID)
-
-}  // namespace mozilla
-
-#endif /* mozilla_AppWindow_h__ */
+NS_DEFINE_STATIC_IID_ACCESSOR(nsXULWindow, NS_XULWINDOW_IMPL_CID)
+#endif /* nsXULWindow_h__ */

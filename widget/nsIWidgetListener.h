@@ -16,7 +16,7 @@
 
 class nsView;
 class nsIWidget;
-class nsIAppWindow;
+class nsIXULWindow;
 
 namespace mozilla {
 class PresShell;
@@ -45,11 +45,11 @@ enum nsWindowZ {
 class nsIWidgetListener {
  public:
   /**
-   * If this listener is for an nsIAppWindow, return it. If this is null, then
+   * If this listener is for an nsIXULWindow, return it. If this is null, then
    * this is likely a listener for a view, which can be determined using
    * GetView. If both methods return null, this will be an nsWebBrowser.
    */
-  virtual nsIAppWindow* GetAppWindow();
+  virtual nsIXULWindow* GetXULWindow();
 
   /**
    * If this listener is for an nsView, return it.

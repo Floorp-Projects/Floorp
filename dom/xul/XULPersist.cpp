@@ -13,7 +13,7 @@
 #  include "nsIStringEnumerator.h"
 #endif
 
-#include "nsIAppWindow.h"
+#include "nsIXULWindow.h"
 
 namespace mozilla {
 namespace dom {
@@ -25,12 +25,12 @@ static bool IsRootElement(Element* aElement) {
 static bool ShouldPersistAttribute(Element* aElement, nsAtom* aAttribute) {
   if (IsRootElement(aElement)) {
     // This is not an element of the top document, its owner is
-    // not an AppWindow. Persist it.
+    // not an nsXULWindow. Persist it.
     if (aElement->OwnerDoc()->GetInProcessParentDocument()) {
       return true;
     }
     // The following attributes of xul:window should be handled in
-    // AppWindow::SavePersistentAttributes instead of here.
+    // nsXULWindow::SavePersistentAttributes instead of here.
     if (aAttribute == nsGkAtoms::screenX || aAttribute == nsGkAtoms::screenY ||
         aAttribute == nsGkAtoms::width || aAttribute == nsGkAtoms::height ||
         aAttribute == nsGkAtoms::sizemode) {
@@ -66,7 +66,7 @@ void XULPersist::AttributeChanged(dom::Element* aElement, int32_t aNameSpaceID,
   //
   // XXX Namespace handling broken :-(
   nsAutoString persist;
-  // Persistence of attributes of xul:window is handled in AppWindow.
+  // Persistence of attributes of xul:window is handled in nsXULWindow.
   if (aElement->GetAttr(kNameSpaceID_None, nsGkAtoms::persist, persist) &&
       ShouldPersistAttribute(aElement, aAttribute) && !persist.IsEmpty() &&
       // XXXldb This should check that it's a token, not just a substring.
@@ -135,10 +135,10 @@ void XULPersist::Persist(Element* aElement, int32_t aNameSpaceID,
     return;
   }
 
-  // Persisting attributes to top level windows is handled by AppWindow.
+  // Persisting attributes to top level windows is handled by nsXULWindow.
   if (IsRootElement(aElement)) {
-    if (nsCOMPtr<nsIAppWindow> win =
-            mDocument->GetAppWindowIfToplevelChrome()) {
+    if (nsCOMPtr<nsIXULWindow> win =
+            mDocument->GetXULWindowIfToplevelChrome()) {
       return;
     }
   }
@@ -300,10 +300,10 @@ nsresult XULPersist::ApplyPersistentAttributesToElements(
       }
 
       // Applying persistent attributes to top level windows is handled
-      // by AppWindow.
+      // by nsXULWindow.
       if (IsRootElement(element)) {
-        if (nsCOMPtr<nsIAppWindow> win =
-                mDocument->GetAppWindowIfToplevelChrome()) {
+        if (nsCOMPtr<nsIXULWindow> win =
+                mDocument->GetXULWindowIfToplevelChrome()) {
           continue;
         }
       }
