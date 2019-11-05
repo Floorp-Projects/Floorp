@@ -690,6 +690,7 @@ MSG_DEF(JSMSG_WRITABLESTREAM_CLOSED_OR_ERRORED,          0, JSEXN_TYPEERR, "writ
 MSG_DEF(JSMSG_WRITABLESTREAM_RELEASED_DURING_WRITE,      0, JSEXN_TYPEERR, "writer's lock on the stream was released before writing completed")
 MSG_DEF(JSMSG_WRITABLESTREAM_WRITE_CLOSING_OR_CLOSED,    0, JSEXN_TYPEERR, "can't write to a stream that's currently closing or already closed")
 MSG_DEF(JSMSG_CANT_ABORT_LOCKED_WRITABLESTREAM,          0, JSEXN_TYPEERR, "can't abort a WritableStream that's locked to a writer")
+MSG_DEF(JSMSG_WRITABLESTREAM_CLOSE_CLOSING_OR_CLOSED,    0, JSEXN_TYPEERR, "can't close a stream that's currently closing or already closed")
 MSG_DEF(JSMSG_READABLESTREAM_NYI,                        0, JSEXN_ERR,     "full WritableStream support is not yet implemented")
 
 // Other Stream-related
