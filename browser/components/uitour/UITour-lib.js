@@ -119,7 +119,6 @@ if (typeof Mozilla == "undefined") {
    * <li>screenshots
    * <li>search
    * <li>searchIcon
-   * <li>searchPrefsLink
    * <li>selectedTabIcon
    * <li>urlbar
    * </ul>
