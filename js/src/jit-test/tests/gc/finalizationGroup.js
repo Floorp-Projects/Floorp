@@ -259,8 +259,18 @@ gc();
 drainJobQueue();
 
 // Test combinations of arguments in different compartments.
-function ccw() {
+function ccwToObject() {
     return evalcx('({})', newGlobal({newCompartment: true}));
+}
+function ccwToGroup() {
+    let global = newGlobal({newCompartment: true});
+    global.holdings = holdings;
+    return global.eval(`
+      new FinalizationGroup(iterator => {
+        for (const holding of iterator) {
+          holdings.push(holding);
+        }
+      })`);
 }
 function incrementalGC() {
     startgc(1);
@@ -268,21 +278,24 @@ function incrementalGC() {
         gcslice(1000);
     }
 }
-for (let x of [false, true]) {
-    for (let y of [false, true]) {
-        for (let z of [false, true]) {
-            let target = x ? ccw() : {};
-            let holding = x ? ccw() : {};
-            let token = x ? ccw() : {};
-            group.register(target, holding, token);
-            group.unregister(token);
-            group.register(target, holding, token);
-            target = undefined;
-            incrementalGC();
-            holdings = [];
-            group.cleanupSome();
-            assertEq(holdings.length, 1);
-            assertEq(holdings[0], holding);
+for (let w of [false, true]) {
+    for (let x of [false, true]) {
+        for (let y of [false, true]) {
+            for (let z of [false, true]) {
+                let g = w ? ccwToGroup(w) : group;
+                let target = x ? ccwToObject() : {};
+                let holding = y ? ccwToObject() : {};
+                let token = z ? ccwToObject() : {};
+                g.register(target, holding, token);
+                g.unregister(token);
+                g.register(target, holding, token);
+                target = undefined;
+                incrementalGC();
+                holdings.length = 0; // Clear, don't replace.
+                g.cleanupSome();
+                assertEq(holdings.length, 1);
+                assertEq(holdings[0], holding);
+            }
         }
     }
 }

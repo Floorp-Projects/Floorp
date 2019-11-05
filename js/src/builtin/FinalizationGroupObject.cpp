@@ -549,7 +549,7 @@ bool FinalizationGroupObject::cleanupSome(JSContext* cx, unsigned argc,
 bool FinalizationGroupObject::cleanupQueuedHoldings(
     JSContext* cx, HandleFinalizationGroupObject group,
     HandleObject callbackArg) {
-  MOZ_ASSERT(cx->realm() == group->realm());
+  MOZ_ASSERT(cx->compartment() == group->compartment());
 
   // 2. If CheckForEmptyCells(finalizationGroup) is false, return.
   HoldingsVector* holdings = group->holdingsToBeCleanedUp();
