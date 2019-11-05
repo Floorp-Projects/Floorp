@@ -1260,15 +1260,12 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
         assertThat("Callback count should be correct", counter, equalTo(2))
     }
 
-    @WithDisplay(width = 10, height = 10)
+    @WithDisplay(width = 100, height = 100)
     @Test fun synthesizeTap() {
-        // synthesizeTap is unreliable under e10s.
-        assumeThat(sessionRule.env.isMultiprocess, equalTo(false))
-
         sessionRule.session.loadTestPath(CLICK_TO_RELOAD_HTML_PATH)
         sessionRule.session.waitForPageStop()
 
-        sessionRule.session.synthesizeTap(5, 5)
+        sessionRule.session.synthesizeTap(50, 50)
         sessionRule.session.waitForPageStop()
     }
 

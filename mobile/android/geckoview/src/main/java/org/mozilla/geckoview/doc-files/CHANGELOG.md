@@ -13,6 +13,13 @@ exclude: true
 
 ⚠️  breaking change
 
+## v72
+- Added [`GeckoSession.NavigationDelegate.LoadRequest#hasUserGesture`][72.1]. This indicates
+  if a load was requested while a user gesture was active (e.g., a tap).
+  ([bug 1555337]({{bugzilla}}1555337))
+
+[72.1]: {{javadoc_uri}}/GeckoSession.NavigationDelegate.LoadRequest#hasUserGesture-
+
 ## v71
 - Added a content blocking flag for blocked social cookies to [`ContentBlocking`][70.17].
   ([bug 1584479]({{bugzilla}}1584479))
@@ -407,4 +414,4 @@ exclude: true
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 950568652bacb957f8af2a3cd68b4408eccbf78d
+[api-version]: c01c3629db0185ce919b026400328804d27985a6
