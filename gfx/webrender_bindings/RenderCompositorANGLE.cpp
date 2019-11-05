@@ -761,6 +761,8 @@ void RenderCompositorANGLE::InitializeUsePartialPresent() {
   }
 }
 
+bool RenderCompositorANGLE::UsePartialPresent() { return mUsePartialPresent; }
+
 bool RenderCompositorANGLE::RequestFullRender() { return mFullRender; }
 
 uint32_t RenderCompositorANGLE::GetMaxPartialPresentRects() {
