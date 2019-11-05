@@ -1046,7 +1046,7 @@ pub struct Device {
     /// Dumps the source of the shader with the given name
     dump_shader_source: Option<String>,
 
-    surface_is_y_flipped: bool,
+    surface_origin_is_top_left: bool,
 }
 
 /// Contains the parameters necessary to bind a draw target.
@@ -1059,7 +1059,7 @@ pub enum DrawTarget {
         rect: FramebufferIntRect,
         /// Total size of the target.
         total_size: FramebufferIntSize,
-        surface_is_y_flipped: bool,
+        surface_origin_is_top_left: bool,
     },
     /// Use the provided texture.
     Texture {
@@ -1092,12 +1092,12 @@ pub enum DrawTarget {
 }
 
 impl DrawTarget {
-    pub fn new_default(size: DeviceIntSize, surface_is_y_flipped: bool) -> Self {
+    pub fn new_default(size: DeviceIntSize, surface_origin_is_top_left: bool) -> Self {
         let total_size = FramebufferIntSize::from_untyped(size.to_untyped());
         DrawTarget::Default {
             rect: total_size.into(),
             total_size,
-            surface_is_y_flipped,
+            surface_origin_is_top_left,
         }
     }
 
@@ -1144,9 +1144,9 @@ impl DrawTarget {
     pub fn to_framebuffer_rect(&self, device_rect: DeviceIntRect) -> FramebufferIntRect {
         let mut fb_rect = FramebufferIntRect::from_untyped(&device_rect.to_untyped());
         match *self {
-            DrawTarget::Default { ref rect, surface_is_y_flipped, .. } => {
+            DrawTarget::Default { ref rect, surface_origin_is_top_left, .. } => {
                 // perform a Y-flip here
-                if !surface_is_y_flipped {
+                if !surface_origin_is_top_left {
                     fb_rect.origin.y = rect.origin.y + rect.size.height - fb_rect.origin.y - fb_rect.size.height;
                     fb_rect.origin.x += rect.origin.x;
                 }
@@ -1245,7 +1245,7 @@ impl Device {
         allow_texture_storage_support: bool,
         allow_texture_swizzling: bool,
         dump_shader_source: Option<String>,
-        surface_is_y_flipped: bool,
+        surface_origin_is_top_left: bool,
     ) -> Device {
         let mut max_texture_size = [0];
         let mut max_texture_layers = [0];
@@ -1482,7 +1482,7 @@ impl Device {
             requires_null_terminated_shader_source,
             optimal_pbo_stride,
             dump_shader_source,
-            surface_is_y_flipped,
+            surface_origin_is_top_left,
         }
     }
 
@@ -1510,8 +1510,8 @@ impl Device {
         self.max_texture_size
     }
 
-    pub fn surface_is_y_flipped(&self) -> bool {
-        self.surface_is_y_flipped
+    pub fn surface_origin_is_top_left(&self) -> bool {
+        self.surface_origin_is_top_left
     }
 
     /// Returns the limit on texture array layers.

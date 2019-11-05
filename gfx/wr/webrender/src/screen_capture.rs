@@ -292,7 +292,7 @@ impl AsyncScreenshotGrabber {
 
         let read_target_rect = FramebufferIntRect::from_untyped(&read_target_rect.to_untyped());
 
-        if level == 0 && !device.surface_is_y_flipped() {
+        if level == 0 && !device.surface_origin_is_top_left() {
             device.blit_render_target_invert_y(
                 read_target,
                 read_target_rect,

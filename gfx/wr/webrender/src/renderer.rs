@@ -1934,7 +1934,7 @@ impl Renderer {
             options.allow_texture_storage_support,
             options.allow_texture_swizzling,
             options.dump_shader_source.take(),
-            options.surface_is_y_flipped,
+            options.surface_origin_is_top_left,
         );
 
         let color_cache_formats = device.preferred_color_formats();
@@ -4251,7 +4251,7 @@ impl Renderer {
                     }
                 };
                 let (src_rect, _) = render_tasks[output.task_id].get_target_rect();
-                if !self.device.surface_is_y_flipped() {
+                if !self.device.surface_origin_is_top_left() {
                     self.device.blit_render_target_invert_y(
                         draw_target.into(),
                         draw_target.to_framebuffer_rect(src_rect.translate(-content_origin.to_vector())),
@@ -4928,8 +4928,8 @@ impl Renderer {
 
                         let offset = frame.content_origin.to_f32();
                         let size = frame.device_rect.size.to_f32();
-                        let surface_is_y_flipped = self.device.surface_is_y_flipped();
-                        let (bottom, top) = if surface_is_y_flipped {
+                        let surface_origin_is_top_left = self.device.surface_origin_is_top_left();
+                        let (bottom, top) = if surface_origin_is_top_left {
                           (offset.y, offset.y + size.height)
                         } else {
                           (offset.y + size.height, offset.y)
@@ -4947,14 +4947,14 @@ impl Renderer {
                         let fb_scale = Scale::<_, _, FramebufferPixel>::new(1i32);
                         let mut fb_rect = frame.device_rect * fb_scale;
 
-                        if !surface_is_y_flipped {
+                        if !surface_origin_is_top_left {
                             fb_rect.origin.y = device_size.height - fb_rect.origin.y - fb_rect.size.height;
                         }
 
                         let draw_target = DrawTarget::Default {
                             rect: fb_rect,
                             total_size: device_size * fb_scale,
-                            surface_is_y_flipped,
+                            surface_origin_is_top_left,
                         };
 
                         // Picture caching can be enabled / disabled dynamically from frame to
@@ -5406,7 +5406,7 @@ impl Renderer {
         }
 
         // Copy frame buffer into the zoom texture
-        let read_target = DrawTarget::new_default(device_size, self.device.surface_is_y_flipped());
+        let read_target = DrawTarget::new_default(device_size, self.device.surface_origin_is_top_left());
         self.device.blit_render_target(
             read_target.into(),
             read_target.to_framebuffer_rect(source_rect),
@@ -5542,18 +5542,18 @@ impl Renderer {
                 // we're blitting from a texture to the main framebuffer, which
                 // use different conventions.
                 let dest_rect = rect(x, y + tag_height, size, size);
-                if !device.surface_is_y_flipped() {
+                if !device.surface_origin_is_top_left() {
                     device.blit_render_target_invert_y(
                         ReadTarget::from_texture(texture, layer),
                         src_rect,
-                        DrawTarget::new_default(device_size, device.surface_is_y_flipped()),
+                        DrawTarget::new_default(device_size, device.surface_origin_is_top_left()),
                         FramebufferIntRect::from_untyped(&dest_rect),
                     );
                 } else {
                     device.blit_render_target(
                         ReadTarget::from_texture(texture, layer),
                         src_rect,
-                        DrawTarget::new_default(device_size, device.surface_is_y_flipped()),
+                        DrawTarget::new_default(device_size, device.surface_origin_is_top_left()),
                         FramebufferIntRect::from_untyped(&dest_rect),
                         TextureFilter::Linear,
                     );
@@ -5997,7 +5997,7 @@ pub struct RendererOptions {
     pub start_debug_server: bool,
     /// Output the source of the shader with the given name.
     pub dump_shader_source: Option<String>,
-    pub surface_is_y_flipped: bool,
+    pub surface_origin_is_top_left: bool,
     /// The configuration options defining how WR composites the final scene.
     pub compositor_config: CompositorConfig,
 }
@@ -6051,7 +6051,7 @@ impl Default for RendererOptions {
             // needed.
             start_debug_server: true,
             dump_shader_source: None,
-            surface_is_y_flipped: false,
+            surface_origin_is_top_left: false,
             compositor_config: CompositorConfig::default(),
         }
     }
