@@ -70,6 +70,15 @@ permalink: /changelog/
 * **experiments**
   * Fixes a crash when the app version or the experiment's version specifiers are not in the expected format.
 
+* **lib-dataprotect**
+  * Added new `SecureAbove22Preferences` helper class, which is an encryption-aware wrapper for `SharedPreferences`. Only actually encrypts stored values when running on API23+.
+
+* **service-firefox-accounts**
+  * Support for keeping `SyncEngine.Passwords` engine unlocked during sync.
+
+* **concept-sync**
+  * Added new `LockableStore` to facilitate syncing of "lockable" stores (such as `SyncableLoginsStore`).
+
 # 19.0.1
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v19.0.0...v19.0.1)

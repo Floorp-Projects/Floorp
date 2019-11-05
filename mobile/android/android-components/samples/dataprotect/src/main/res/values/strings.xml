@@ -3,6 +3,4 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <resources>
     <string name="app_name">DataProtect Demo App</string>
-    <string name="btn_toggle_unlock">Unlock</string>
-    <string name="btn_toggle_lock">Lock</string>
 </resources>

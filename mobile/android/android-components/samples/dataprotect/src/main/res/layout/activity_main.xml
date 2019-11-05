@@ -9,12 +9,6 @@
     android:orientation="vertical"
     tools:context="org.mozilla.samples.dataprotect.MainActivity">
 
-    <Button
-        android:id="@+id/toggle_locked_btn"
-        android:text="@string/btn_toggle_unlock"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
-
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/protecteddata_list"
         android:layout_width="match_parent"

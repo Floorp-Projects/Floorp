@@ -25,6 +25,8 @@ import mozilla.appservices.syncmanager.SyncServiceStatus
 import mozilla.appservices.syncmanager.SyncManager as RustSyncManager
 import mozilla.components.concept.sync.AuthException
 import mozilla.components.concept.sync.AuthExceptionType
+import mozilla.components.concept.sync.LockableStore
+import mozilla.components.lib.dataprotect.SecureAbove22Preferences
 import mozilla.components.service.fxa.FxaDeviceSettingsCache
 import mozilla.components.service.fxa.SyncAuthInfoCache
 import mozilla.components.service.fxa.SyncConfig
@@ -299,17 +301,17 @@ class WorkManagerSyncWorker(
             // Short-circuit if there are no configured stores.
             // Don't update the "last-synced" timestamp because we haven't actually synced anything.
             return Result.success()
-        }.also { stores ->
-            // We need to tell RustSyncManager about instances of supported stores ('places' and 'logins').
-            stores.entries.forEach {
-                // We're assuming all syncable stores live in Rust.
-                // Currently `RustSyncManager` doesn't support non-Rust sync engines.
-                when (it.key) {
-                    // NB: History and Bookmarks will have the same handle.
-                    SyncEngine.History -> RustSyncManager.setPlaces(it.value.getHandle())
-                    SyncEngine.Bookmarks -> RustSyncManager.setPlaces(it.value.getHandle())
-                    SyncEngine.Passwords -> RustSyncManager.setLogins(it.value.getHandle())
-                }
+        }
+
+        // We need to tell RustSyncManager about instances of supported stores ('places' and 'logins').
+        syncableStores.entries.forEach {
+            // We're assuming all syncable stores live in Rust.
+            // Currently `RustSyncManager` doesn't support non-Rust sync engines.
+            when (it.key) {
+                // NB: History and Bookmarks will have the same handle.
+                SyncEngine.History -> RustSyncManager.setPlaces(it.value.getHandle())
+                SyncEngine.Bookmarks -> RustSyncManager.setPlaces(it.value.getHandle())
+                SyncEngine.Passwords -> RustSyncManager.setLogins(it.value.getHandle())
             }
         }
 
@@ -363,6 +365,16 @@ class WorkManagerSyncWorker(
         // to implement/reason about than worker reconfiguration.
         val deviceSettings = FxaDeviceSettingsCache(context).getCached()!!
 
+        // We need a password storage encryption key, if password storage is configured to be synced. It needs to be
+        // unlocked for the duration of a sync.
+        val passwordStore = syncableStores.entries.find { it.key == SyncEngine.Passwords }?.value as? LockableStore
+        val passwordsKey = if (passwordStore == null) {
+            null
+        } else {
+            SecureAbove22Preferences(context).getString("passwords_key")
+                ?: throw IllegalStateException("'passwords_key' must be set if password sync is enabled")
+        }
+
         // We're now ready to sync.
         val syncParams = SyncParams(
             reason = reason.toRustSyncReason(),
@@ -372,7 +384,14 @@ class WorkManagerSyncWorker(
             persistedState = currentSyncState,
             deviceSettings = deviceSettings
         )
-        val syncResult = RustSyncManager.sync(syncParams)
+
+        // Issue tracking moving locking/unlocking of storage layers to RustSyncManager:
+        // https://github.com/mozilla/application-services/issues/2102
+        val syncResult = if (passwordStore != null) {
+            passwordStore.unlocked(passwordsKey!!) { RustSyncManager.sync(syncParams) }
+        } else {
+            RustSyncManager.sync(syncParams)
+        }
 
         // Persist the sync state; it may have changed during a sync, and RustSyncManager relies on us
         // to store it.

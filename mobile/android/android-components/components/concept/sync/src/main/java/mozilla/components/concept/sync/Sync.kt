@@ -43,6 +43,20 @@ data class SyncAuthInfo(
 )
 
 /**
+ * An extension of [SyncableStore] that can be locked/unlocked using an encryption key.
+ */
+interface LockableStore : SyncableStore {
+    /**
+     * Executes a [block] while keeping the store in an unlocked state. Store is locked once [block] is finished.
+     *
+     * @param encryptionKey Plaintext encryption key used by the underlying storage implementation (e.g. sqlcipher)
+     * to key the store.
+     * @param block A lambda to execute while the store is unlocked.
+     */
+    suspend fun <T> unlocked(encryptionKey: String, block: (store: LockableStore) -> T): T
+}
+
+/**
  * Describes a "sync" entry point for a storage layer.
  */
 interface SyncableStore {
