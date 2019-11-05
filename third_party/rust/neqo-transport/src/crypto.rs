@@ -325,7 +325,7 @@ pub struct CryptoStream {
     pub rx: RxStreamOrderer,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct CryptoRecoveryToken {
     epoch: u16,
     offset: u64,

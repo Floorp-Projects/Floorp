@@ -61,6 +61,8 @@ codegen-units = 1
 [patch.crates-io]
 libudev-sys = { path = "dom/webauthn/libudev-sys" }
 packed_simd = { git = "https://github.com/hsivonen/packed_simd", branch = "rust_1_32" }
+spirv_cross = { git = "https://github.com/kvark/spirv_cross", branch = "wgpu-test" }
+objc_exception = { git = "https://github.com/kvark/rust-objc-exception", branch = "cc" }
 
 [patch.crates-io.cranelift-codegen]
 git = "https://github.com/CraneStation/Cranelift"
