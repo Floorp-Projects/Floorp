@@ -40,6 +40,9 @@ XPCOMUtils.defineLazyServiceGetter(
  *        Intended to be shorter and more readable than the XUL command.
  */
 function execCommand(commandName, telemetryKey) {
+  if (!TouchBarHelper.window) {
+    return;
+  }
   let command = TouchBarHelper.window.document.getElementById(commandName);
   if (command) {
     command.doCommand();
@@ -261,6 +264,9 @@ class TouchBarHelper {
   }
 
   get activeTitle() {
+    if (!TouchBarHelper.window) {
+      return "";
+    }
     let tabbrowser = TouchBarHelper.window.ownerGlobal.gBrowser;
     let activeTitle;
     if (tabbrowser) {
@@ -300,9 +306,11 @@ class TouchBarHelper {
   }
 
   static get baseWindow() {
-    return TouchBarHelper.window.docShell.treeOwner.QueryInterface(
-      Ci.nsIBaseWindow
-    );
+    return TouchBarHelper.window
+      ? TouchBarHelper.window.docShell.treeOwner.QueryInterface(
+          Ci.nsIBaseWindow
+        )
+      : null;
   }
 
   getTouchBarInput(inputName) {
@@ -384,6 +392,9 @@ class TouchBarHelper {
    *        sourced from UrlbarTokenizer.RESTRICT.
    */
   insertRestrictionInUrlbar(restrictionToken) {
+    if (!TouchBarHelper.window) {
+      return;
+    }
     let searchString = TouchBarHelper.window.gURLBar.lastSearchString.trimStart();
     if (Object.values(UrlbarTokenizer.RESTRICT).includes(searchString[0])) {
       searchString = searchString.substring(1).trimStart();
@@ -533,7 +544,9 @@ class TouchBarInput {
   }
   // Required as context to load our input icons.
   get document() {
-    return BrowserWindowTracker.getTopWindow().document;
+    return BrowserWindowTracker.getTopWindow()
+      ? BrowserWindowTracker.getTopWindow().document
+      : null;
   }
   get type() {
     return this._type == "" ? "button" : this._type;
