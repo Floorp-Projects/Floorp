@@ -43,7 +43,8 @@ TASK_DURATION_TAG_FILE = os.path.join(get_state_dir(
 TARGET_TASK_FILTERS = (
     '.*-ccov\/.*',
     'windows10-aarch64/opt.*',
-    'android-hw.*'
+    'android-hw.*',
+    '.*android-geckoview-docs.*',
 )
 
 
