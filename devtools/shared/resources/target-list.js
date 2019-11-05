@@ -224,10 +224,15 @@ class TargetList {
   // or if it has just been created
   async _onTargetAvailable(targetFront) {
     if (this._targets.has(targetFront)) {
-      console.error(
-        "Target is already registered in the TargetList",
-        targetFront
-      );
+      // The top level target front can be reported via listRemoteFrames as well as listProcesses
+      // in the case of the BrowserToolbox. For any other target, log an error if it is already
+      // registered.
+      if (targetFront != this.targetFront) {
+        console.error(
+          "Target is already registered in the TargetList",
+          targetFront
+        );
+      }
       return;
     }
 
