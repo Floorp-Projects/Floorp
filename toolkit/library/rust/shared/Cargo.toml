@@ -43,6 +43,7 @@ shift_or_euc_c = "0.1.0"
 audio_thread_priority = "0.20.2"
 mdns_service = { path="../../../../media/mtransport/mdns_service", optional = true }
 neqo_glue = { path = "../../../../netwerk/socket/neqo_glue" }
+wgpu-remote = { path = "../../../../dom/webgpu/wgpu-remote", optional = true }
 
 [build-dependencies]
 rustc_version = "0.2"
@@ -70,6 +71,7 @@ new_xulstore = ["xulstore"]
 new_cert_storage = ["cert_storage"]
 fuzzing_interfaces = []
 webrtc = ["mdns_service"]
+webgpu = ["wgpu-remote"]
 
 [lib]
 path = "lib.rs"

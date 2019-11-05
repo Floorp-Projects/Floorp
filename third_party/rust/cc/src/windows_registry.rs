@@ -13,15 +13,7 @@
 
 use std::process::Command;
 
-use Tool;
-
-#[cfg(windows)]
-macro_rules! otry {
-    ($expr:expr) => (match $expr {
-        Some(val) => val,
-        None => return None,
-    })
-}
+use crate::Tool;
 
 /// Attempts to find a tool within an MSVC installation using the Windows
 /// registry as a point to search from.
@@ -171,17 +163,18 @@ pub fn find_vs_version() -> Result<VsVers, String> {
 
 #[cfg(windows)]
 mod impl_ {
+    use crate::com;
+    use crate::registry::{RegistryKey, LOCAL_MACHINE};
+    use crate::setup_config::{EnumSetupInstances, SetupConfiguration, SetupInstance};
     use std::env;
     use std::ffi::OsString;
-    use std::mem;
-    use std::path::{Path, PathBuf};
     use std::fs::File;
     use std::io::Read;
-    use registry::{RegistryKey, LOCAL_MACHINE};
-    use com;
-    use setup_config::{EnumSetupInstances, SetupConfiguration, SetupInstance};
+    use std::iter;
+    use std::mem;
+    use std::path::{Path, PathBuf};
 
-    use Tool;
+    use crate::Tool;
 
     struct MsvcTool {
         tool: PathBuf,
@@ -215,6 +208,44 @@ mod impl_ {
         }
     }
 
+    #[allow(bare_trait_objects)]
+    fn vs16_instances() -> Box<Iterator<Item = PathBuf>> {
+        let instances = if let Some(instances) = vs15_instances() {
+            instances
+        } else {
+            return Box::new(iter::empty());
+        };
+        Box::new(instances.filter_map(|instance| {
+            let instance = instance.ok()?;
+            let installation_name = instance.installation_name().ok()?;
+            if installation_name.to_str()?.starts_with("VisualStudio/16.") {
+                Some(PathBuf::from(instance.installation_path().ok()?))
+            } else {
+                None
+            }
+        }))
+    }
+
+    fn find_tool_in_vs16_path(tool: &str, target: &str) -> Option<Tool> {
+        vs16_instances()
+            .filter_map(|path| {
+                let path = path.join(tool);
+                if !path.is_file() {
+                    return None;
+                }
+                let mut tool = Tool::new(path);
+                if target.contains("x86_64") {
+                    tool.env.push(("Platform".into(), "X64".into()));
+                }
+                Some(tool)
+            })
+            .next()
+    }
+
+    fn find_msbuild_vs16(target: &str) -> Option<Tool> {
+        find_tool_in_vs16_path(r"MSBuild\Current\Bin\MSBuild.exe", target)
+    }
+
     // In MSVC 15 (2017) MS once again changed the scheme for locating
     // the tooling.  Now we must go through some COM interfaces, which
     // is super fun for Rust.
@@ -223,16 +254,16 @@ mod impl_ {
     //
     // [online]: https://blogs.msdn.microsoft.com/vcblog/2017/03/06/finding-the-visual-c-compiler-tools-in-visual-studio-2017/
     fn vs15_instances() -> Option<EnumSetupInstances> {
-        otry!(com::initialize().ok());
+        com::initialize().ok()?;
 
-        let config = otry!(SetupConfiguration::new().ok());
+        let config = SetupConfiguration::new().ok()?;
         config.enum_all_instances().ok()
     }
 
     pub fn find_msvc_15(tool: &str, target: &str) -> Option<Tool> {
-        let iter = otry!(vs15_instances());
+        let iter = vs15_instances()?;
         for instance in iter {
-            let instance = otry!(instance.ok());
+            let instance = instance.ok()?;
             let tool = tool_from_vs15_instance(tool, target, &instance);
             if tool.is_some() {
                 return tool;
@@ -256,7 +287,8 @@ mod impl_ {
                     instance
                         .ok()
                         .and_then(|instance| instance.installation_path().ok())
-                }).map(|path| PathBuf::from(path).join(tool))
+                })
+                .map(|path| PathBuf::from(path).join(tool))
                 .find(|ref path| path.is_file()),
             None => None,
         };
@@ -268,7 +300,7 @@ mod impl_ {
                 .ok()
                 .and_then(|key| key.query_str("15.0").ok())
                 .map(|path| PathBuf::from(path).join(tool))
-                .filter(|ref path| path.is_file());
+                .and_then(|path| if path.is_file() { Some(path) } else { None });
         }
 
         path.map(|path| {
@@ -281,8 +313,7 @@ mod impl_ {
     }
 
     fn tool_from_vs15_instance(tool: &str, target: &str, instance: &SetupInstance) -> Option<Tool> {
-        let (bin_path, host_dylib_path, lib_path, include_path) =
-            otry!(vs15_vc_paths(target, instance));
+        let (bin_path, host_dylib_path, lib_path, include_path) = vs15_vc_paths(target, instance)?;
         let tool_path = bin_path.join(tool);
         if !tool_path.exists() {
             return None;
@@ -298,7 +329,7 @@ mod impl_ {
             tool.include.push(atl_include_path);
         }
 
-        otry!(add_sdks(&mut tool, target));
+        add_sdks(&mut tool, target)?;
 
         Some(tool.into_tool())
     }
@@ -307,30 +338,32 @@ mod impl_ {
         target: &str,
         instance: &SetupInstance,
     ) -> Option<(PathBuf, PathBuf, PathBuf, PathBuf)> {
-        let instance_path: PathBuf = otry!(instance.installation_path().ok()).into();
+        let instance_path: PathBuf = instance.installation_path().ok()?.into();
         let version_path =
             instance_path.join(r"VC\Auxiliary\Build\Microsoft.VCToolsVersion.default.txt");
-        let mut version_file = otry!(File::open(version_path).ok());
+        let mut version_file = File::open(version_path).ok()?;
         let mut version = String::new();
-        otry!(version_file.read_to_string(&mut version).ok());
+        version_file.read_to_string(&mut version).ok()?;
         let version = version.trim();
         let host = match host_arch() {
             X86 => "X86",
             X86_64 => "X64",
             _ => return None,
         };
-        let target = otry!(lib_subdir(target));
+        let target = lib_subdir(target)?;
         // The directory layout here is MSVC/bin/Host$host/$target/
         let path = instance_path.join(r"VC\Tools\MSVC").join(version);
         // This is the path to the toolchain for a particular target, running
         // on a given host
-        let bin_path = path.join("bin")
+        let bin_path = path
+            .join("bin")
             .join(&format!("Host{}", host))
             .join(&target);
         // But! we also need PATH to contain the target directory for the host
         // architecture, because it contains dlls like mspdb140.dll compiled for
         // the host architecture.
-        let host_dylib_path = path.join("bin")
+        let host_dylib_path = path
+            .join("bin")
             .join(&format!("Host{}", host))
             .join(&host.to_lowercase());
         let lib_path = path.join("lib").join(&target);
@@ -340,7 +373,7 @@ mod impl_ {
 
     fn atl_paths(target: &str, path: &Path) -> Option<(PathBuf, PathBuf)> {
         let atl_path = path.join("atlfmc");
-        let sub = otry!(lib_subdir(target));
+        let sub = lib_subdir(target)?;
         if atl_path.exists() {
             Some((atl_path.join("lib").join(sub), atl_path.join("include")))
         } else {
@@ -351,15 +384,15 @@ mod impl_ {
     // For MSVC 14 we need to find the Universal CRT as well as either
     // the Windows 10 SDK or Windows 8.1 SDK.
     pub fn find_msvc_14(tool: &str, target: &str) -> Option<Tool> {
-        let vcdir = otry!(get_vc_dir("14.0"));
-        let mut tool = otry!(get_tool(tool, &vcdir, target));
-        otry!(add_sdks(&mut tool, target));
+        let vcdir = get_vc_dir("14.0")?;
+        let mut tool = get_tool(tool, &vcdir, target)?;
+        add_sdks(&mut tool, target)?;
         Some(tool.into_tool())
     }
 
     fn add_sdks(tool: &mut MsvcTool, target: &str) -> Option<()> {
-        let sub = otry!(lib_subdir(target));
-        let (ucrt, ucrt_version) = otry!(get_ucrt_dir());
+        let sub = lib_subdir(target)?;
+        let (ucrt, ucrt_version) = get_ucrt_dir()?;
 
         tool.path
             .push(ucrt.join("bin").join(&ucrt_version).join(sub));
@@ -394,10 +427,10 @@ mod impl_ {
 
     // For MSVC 12 we need to find the Windows 8.1 SDK.
     pub fn find_msvc_12(tool: &str, target: &str) -> Option<Tool> {
-        let vcdir = otry!(get_vc_dir("12.0"));
-        let mut tool = otry!(get_tool(tool, &vcdir, target));
-        let sub = otry!(lib_subdir(target));
-        let sdk81 = otry!(get_sdk81_dir());
+        let vcdir = get_vc_dir("12.0")?;
+        let mut tool = get_tool(tool, &vcdir, target)?;
+        let sub = lib_subdir(target)?;
+        let sdk81 = get_sdk81_dir()?;
         tool.path.push(sdk81.join("bin").join(sub));
         let sdk_lib = sdk81.join("lib").join("winv6.3");
         tool.libs.push(sdk_lib.join("um").join(sub));
@@ -410,10 +443,10 @@ mod impl_ {
 
     // For MSVC 11 we need to find the Windows 8 SDK.
     pub fn find_msvc_11(tool: &str, target: &str) -> Option<Tool> {
-        let vcdir = otry!(get_vc_dir("11.0"));
-        let mut tool = otry!(get_tool(tool, &vcdir, target));
-        let sub = otry!(lib_subdir(target));
-        let sdk8 = otry!(get_sdk8_dir());
+        let vcdir = get_vc_dir("11.0")?;
+        let mut tool = get_tool(tool, &vcdir, target)?;
+        let sub = lib_subdir(target)?;
+        let sdk8 = get_sdk8_dir()?;
         tool.path.push(sdk8.join("bin").join(sub));
         let sdk_lib = sdk8.join("lib").join("win8");
         tool.libs.push(sdk_lib.join("um").join(sub));
@@ -450,7 +483,7 @@ mod impl_ {
                 tool
             })
             .filter_map(|mut tool| {
-                let sub = otry!(vc_lib_subdir(target));
+                let sub = vc_lib_subdir(target)?;
                 tool.libs.push(path.join("lib").join(sub));
                 tool.include.push(path.join("include"));
                 let atlmfc_path = path.join("atlmfc");
@@ -467,8 +500,8 @@ mod impl_ {
     // trying to find.
     fn get_vc_dir(ver: &str) -> Option<PathBuf> {
         let key = r"SOFTWARE\Microsoft\VisualStudio\SxS\VC7";
-        let key = otry!(LOCAL_MACHINE.open(key.as_ref()).ok());
-        let path = otry!(key.query_str(ver).ok());
+        let key = LOCAL_MACHINE.open(key.as_ref()).ok()?;
+        let path = key.query_str(ver).ok()?;
         Some(path.into())
     }
 
@@ -480,20 +513,20 @@ mod impl_ {
     // Returns a pair of (root, version) for the ucrt dir if found
     fn get_ucrt_dir() -> Option<(PathBuf, String)> {
         let key = r"SOFTWARE\Microsoft\Windows Kits\Installed Roots";
-        let key = otry!(LOCAL_MACHINE.open(key.as_ref()).ok());
-        let root = otry!(key.query_str("KitsRoot10").ok());
-        let readdir = otry!(Path::new(&root).join("lib").read_dir().ok());
-        let max_libdir = otry!(
-            readdir
-                .filter_map(|dir| dir.ok())
-                .map(|dir| dir.path())
-                .filter(|dir| dir.components()
+        let key = LOCAL_MACHINE.open(key.as_ref()).ok()?;
+        let root = key.query_str("KitsRoot10").ok()?;
+        let readdir = Path::new(&root).join("lib").read_dir().ok()?;
+        let max_libdir = readdir
+            .filter_map(|dir| dir.ok())
+            .map(|dir| dir.path())
+            .filter(|dir| {
+                dir.components()
                     .last()
                     .and_then(|c| c.as_os_str().to_str())
                     .map(|c| c.starts_with("10.") && dir.join("ucrt").is_dir())
-                    .unwrap_or(false))
-                .max()
-        );
+                    .unwrap_or(false)
+            })
+            .max()?;
         let version = max_libdir.components().last().unwrap();
         let version = version.as_os_str().to_str().unwrap().to_string();
         Some((root.into(), version))
@@ -509,20 +542,19 @@ mod impl_ {
     // asciibetically to find the newest one as that is what vcvars does.
     fn get_sdk10_dir() -> Option<(PathBuf, String)> {
         let key = r"SOFTWARE\Microsoft\Microsoft SDKs\Windows\v10.0";
-        let key = otry!(LOCAL_MACHINE.open(key.as_ref()).ok());
-        let root = otry!(key.query_str("InstallationFolder").ok());
-        let readdir = otry!(Path::new(&root).join("lib").read_dir().ok());
+        let key = LOCAL_MACHINE.open(key.as_ref()).ok()?;
+        let root = key.query_str("InstallationFolder").ok()?;
+        let readdir = Path::new(&root).join("lib").read_dir().ok()?;
         let mut dirs = readdir
             .filter_map(|dir| dir.ok())
             .map(|dir| dir.path())
             .collect::<Vec<_>>();
         dirs.sort();
-        let dir = otry!(
-            dirs.into_iter()
-                .rev()
-                .filter(|dir| dir.join("um").join("x64").join("kernel32.lib").is_file())
-                .next()
-        );
+        let dir = dirs
+            .into_iter()
+            .rev()
+            .filter(|dir| dir.join("um").join("x64").join("kernel32.lib").is_file())
+            .next()?;
         let version = dir.components().last().unwrap();
         let version = version.as_os_str().to_str().unwrap().to_string();
         Some((root.into(), version))
@@ -534,15 +566,15 @@ mod impl_ {
     // instead of user mode applications, we would care.
     fn get_sdk81_dir() -> Option<PathBuf> {
         let key = r"SOFTWARE\Microsoft\Microsoft SDKs\Windows\v8.1";
-        let key = otry!(LOCAL_MACHINE.open(key.as_ref()).ok());
-        let root = otry!(key.query_str("InstallationFolder").ok());
+        let key = LOCAL_MACHINE.open(key.as_ref()).ok()?;
+        let root = key.query_str("InstallationFolder").ok()?;
         Some(root.into())
     }
 
     fn get_sdk8_dir() -> Option<PathBuf> {
         let key = r"SOFTWARE\Microsoft\Microsoft SDKs\Windows\v8.0";
-        let key = otry!(LOCAL_MACHINE.open(key.as_ref()).ok());
-        let root = otry!(key.query_str("InstallationFolder").ok());
+        let key = LOCAL_MACHINE.open(key.as_ref()).ok()?;
+        let root = key.query_str("InstallationFolder").ok()?;
         Some(root.into())
     }
 
@@ -642,7 +674,7 @@ mod impl_ {
         for subkey in key.iter().filter_map(|k| k.ok()) {
             let val = subkey
                 .to_str()
-                .and_then(|s| s.trim_start_matches("v").replace(".", "").parse().ok());
+                .and_then(|s| s.trim_left_matches("v").replace(".", "").parse().ok());
             let val = match val {
                 Some(s) => s,
                 None => continue,
@@ -659,6 +691,10 @@ mod impl_ {
 
     pub fn has_msbuild_version(version: &str) -> bool {
         match version {
+            "16.0" => {
+                find_msbuild_vs16("x86_64-pc-windows-msvc").is_some()
+                    || find_msbuild_vs16("i686-pc-windows-msvc").is_some()
+            }
             "15.0" => {
                 find_msbuild_vs15("x86_64-pc-windows-msvc").is_some()
                     || find_msbuild_vs15("i686-pc-windows-msvc").is_some()
@@ -684,7 +720,9 @@ mod impl_ {
     // see http://stackoverflow.com/questions/328017/path-to-msbuild
     pub fn find_msbuild(target: &str) -> Option<Tool> {
         // VS 15 (2017) changed how to locate msbuild
-        if let Some(r) = find_msbuild_vs15(target) {
+        if let Some(r) = find_msbuild_vs16(target) {
+            return Some(r);
+        } else if let Some(r) = find_msbuild_vs15(target) {
             return Some(r);
         } else {
             find_old_msbuild(target)

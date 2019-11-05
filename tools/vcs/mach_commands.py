@@ -32,6 +32,12 @@ PR_REPOSITORIES = {
         'bugzilla_product': 'Core',
         'bugzilla_component': 'Graphics: WebRender',
     },
+    'webgpu': {
+        'github': 'gfx-rs/wgpu',
+        'path': 'dom/webgpu',
+        'bugzilla_product': 'Core',
+        'bugzilla_component': 'Graphics: WebGPU',
+    },
     'debugger': {
         'github': 'firefox-devtools/debugger',
         'path': 'devtools/client/debugger',

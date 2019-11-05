@@ -115,7 +115,7 @@ macro_rules! DEFINE_GUID {
             Data3: $w2,
             Data4: [$b1, $b2, $b3, $b4, $b5, $b6, $b7, $b8],
         };
-    }
+    };
 }
 
 macro_rules! RIDL {
@@ -207,7 +207,7 @@ macro_rules! RIDL {
     );
 }
 
-RIDL!{#[uuid(0x00000000, 0x0000, 0x0000, 0xc0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46)]
+RIDL! {#[uuid(0x00000000, 0x0000, 0x0000, 0xc0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46)]
 interface IUnknown(IUnknownVtbl) {
     fn QueryInterface(
         riid: REFIID,

@@ -31,6 +31,11 @@ namespace dom {
 class BrowserChild;
 }  // namespace dom
 
+namespace webgpu {
+class PWebGPUChild;
+class WebGPUChild;
+}  // namespace webgpu
+
 namespace widget {
 class CompositorWidget;
 }  // namespace widget
@@ -127,6 +132,8 @@ class CompositorBridgeChild final : public PCompositorBridgeChild,
 
   void EndCanvasTransaction();
 
+  RefPtr<webgpu::WebGPUChild> GetWebGPUChild();
+
   /**
    * Request that the parent tell us when graphics are ready on GPU.
    * When we get that message, we bounce it to the BrowserParent via
@@ -220,6 +227,9 @@ class CompositorBridgeChild final : public PCompositorBridgeChild,
   PWebRenderBridgeChild* AllocPWebRenderBridgeChild(
       const wr::PipelineId& aPipelineId, const LayoutDeviceIntSize&);
   bool DeallocPWebRenderBridgeChild(PWebRenderBridgeChild* aActor);
+
+  webgpu::PWebGPUChild* AllocPWebGPUChild();
+  bool DeallocPWebGPUChild(webgpu::PWebGPUChild* aActor);
 
   wr::MaybeExternalImageId GetNextExternalImageId() override;
 
@@ -399,6 +409,8 @@ class CompositorBridgeChild final : public PCompositorBridgeChild,
   uintptr_t mTotalFlushCount;
 
   RefPtr<CanvasChild> mCanvasChild;
+
+  RefPtr<webgpu::WebGPUChild> mWebGPUChild;
 };
 
 }  // namespace layers
