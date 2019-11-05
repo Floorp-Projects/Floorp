@@ -65,6 +65,7 @@
             android:orientation="vertical"/>
 
     </LinearLayout>
+
     <com.google.android.material.button.MaterialButton
         android:id="@+id/learn_button"
         style="@style/ThemeIndependentMaterialGreyButton"

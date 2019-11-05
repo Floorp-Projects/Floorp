@@ -11,6 +11,7 @@ import androidx.annotation.VisibleForTesting
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.account_share_list_item.view.*
+import mozilla.components.concept.sync.DeviceType
 import org.mozilla.fenix.R
 import org.mozilla.fenix.lib.Do
 import org.mozilla.fenix.share.ShareToAccountDevicesInteractor
@@ -35,8 +36,7 @@ class AccountDeviceViewHolder(
                 SyncShareOption.SignIn -> interactor.onSignIn()
                 SyncShareOption.AddNewDevice -> interactor.onAddNewDevice()
                 is SyncShareOption.SendAll -> interactor.onShareToAllDevices(option.devices)
-                is SyncShareOption.Mobile -> interactor.onShareToDevice(option.device)
-                is SyncShareOption.Desktop -> interactor.onShareToDevice(option.device)
+                is SyncShareOption.SingleDevice -> interactor.onShareToDevice(option.device)
                 SyncShareOption.Reconnect -> interactor.onReauth()
                 SyncShareOption.Offline -> {
                     // nothing we are offline
@@ -46,7 +46,25 @@ class AccountDeviceViewHolder(
     }
 
     private fun bindView(option: SyncShareOption) {
-        val (name, drawableRes, colorRes) = when (option) {
+        val (name, drawableRes, colorRes) = getNameIconBackground(context, option)
+
+        itemView.deviceIcon.apply {
+            setImageResource(drawableRes)
+            background.setColorFilter(ContextCompat.getColor(context, colorRes), PorterDuff.Mode.SRC_IN)
+            drawable.setTint(ContextCompat.getColor(context, R.color.device_foreground))
+        }
+        itemView.isClickable = option != SyncShareOption.Offline
+        itemView.deviceName.text = name
+    }
+
+    companion object {
+        const val LAYOUT_ID = R.layout.account_share_list_item
+
+        /**
+         * Returns a triple with the name, icon drawable resource, and background color drawable resource
+         * corresponding to the given [SyncShareOption].
+         */
+        private fun getNameIconBackground(context: Context, option: SyncShareOption) = when (option) {
             SyncShareOption.SignIn -> Triple(
                 context.getText(R.string.sync_sign_in),
                 R.drawable.mozac_ic_sync,
@@ -72,28 +90,18 @@ class AccountDeviceViewHolder(
                 R.drawable.mozac_ic_select_all,
                 R.color.default_share_background
             )
-            is SyncShareOption.Mobile -> Triple(
-                option.name,
-                R.drawable.mozac_ic_device_mobile,
-                R.color.device_type_mobile_background
-            )
-            is SyncShareOption.Desktop -> Triple(
-                option.name,
-                R.drawable.mozac_ic_device_desktop,
-                R.color.device_type_desktop_background
-            )
+            is SyncShareOption.SingleDevice -> when (option.device.deviceType) {
+                DeviceType.MOBILE -> Triple(
+                    option.device.displayName,
+                    R.drawable.mozac_ic_device_mobile,
+                    R.color.device_type_mobile_background
+                )
+                else -> Triple(
+                    option.device.displayName,
+                    R.drawable.mozac_ic_device_desktop,
+                    R.color.device_type_desktop_background
+                )
+            }
         }
-
-        itemView.deviceIcon.apply {
-            setImageResource(drawableRes)
-            background.setColorFilter(ContextCompat.getColor(context, colorRes), PorterDuff.Mode.SRC_IN)
-            drawable.setTint(ContextCompat.getColor(context, R.color.device_foreground))
-        }
-        itemView.isClickable = option != SyncShareOption.Offline
-        itemView.deviceName.text = name
-    }
-
-    companion object {
-        const val LAYOUT_ID = R.layout.account_share_list_item
     }
 }

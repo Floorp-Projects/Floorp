@@ -26,7 +26,7 @@ import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.getRootView
 import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.nav
-import org.mozilla.fenix.share.listadapters.AppShareOption
+import org.mozilla.fenix.share.listadapters.AndroidShareOption
 
 /**
  * [ShareFragment] controller.
@@ -36,7 +36,7 @@ import org.mozilla.fenix.share.listadapters.AppShareOption
 interface ShareController {
     fun handleReauth()
     fun handleShareClosed()
-    fun handleShareToApp(app: AppShareOption)
+    fun handleShareToApp(app: AndroidShareOption.App)
     fun handleAddNewDevice()
     fun handleShareToDevice(device: Device)
     fun handleShareToAllDevices(devices: List<Device>)
@@ -72,7 +72,7 @@ class DefaultShareController(
         dismiss()
     }
 
-    override fun handleShareToApp(app: AppShareOption) {
+    override fun handleShareToApp(app: AndroidShareOption.App) {
         val intent = Intent(ACTION_SEND).apply {
             putExtra(EXTRA_TEXT, getShareText())
             type = "text/plain"
@@ -116,9 +116,10 @@ class DefaultShareController(
     private fun shareToDevicesWithRetry(shareOperation: () -> Deferred<Boolean>) {
         // Use GlobalScope to allow the continuation of this method even if the share fragment is closed.
         GlobalScope.launch(Dispatchers.Main) {
-            when (shareOperation.invoke().await()) {
-                true -> showSuccess()
-                false -> showFailureWithRetryOption { shareToDevicesWithRetry(shareOperation) }
+            if (shareOperation.invoke().await()) {
+                showSuccess()
+            } else {
+                showFailureWithRetryOption { shareToDevicesWithRetry(shareOperation) }
             }
             dismiss()
         }

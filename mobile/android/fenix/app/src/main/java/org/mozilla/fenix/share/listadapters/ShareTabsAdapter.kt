@@ -16,8 +16,11 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.loadIntoView
 import org.mozilla.fenix.share.ShareTab
 
+/**
+ * Adapter for a list of tabs to be shared.
+ */
 class ShareTabsAdapter :
-    ListAdapter<ShareTab, ShareTabsAdapter.ShareTabViewHolder>(ShareTabDiffCallback()) {
+    ListAdapter<ShareTab, ShareTabsAdapter.ShareTabViewHolder>(ShareTabDiffCallback) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) = ShareTabViewHolder(
         LayoutInflater.from(parent.context)
@@ -27,13 +30,7 @@ class ShareTabsAdapter :
     override fun onBindViewHolder(holder: ShareTabViewHolder, position: Int) =
         holder.bind(getItem(position))
 
-    fun setTabs(tabs: List<ShareTab>) {
-        submitList(tabs.toMutableList())
-    }
-
-    inner class ShareTabViewHolder(
-        itemView: View
-    ) : RecyclerView.ViewHolder(itemView) {
+    class ShareTabViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
         fun bind(item: ShareTab) = with(itemView) {
             context.components.core.icons.loadIntoView(itemView.share_tab_favicon, item.url)
@@ -42,19 +39,11 @@ class ShareTabsAdapter :
         }
     }
 
-    private class ShareTabDiffCallback : DiffUtil.ItemCallback<ShareTab>() {
-        override fun areItemsTheSame(
-            oldItem: ShareTab,
-            newItem: ShareTab
-        ): Boolean {
-            return oldItem.url == newItem.url
-        }
+    private object ShareTabDiffCallback : DiffUtil.ItemCallback<ShareTab>() {
+        override fun areItemsTheSame(oldItem: ShareTab, newItem: ShareTab) =
+            oldItem.url == newItem.url
 
-        override fun areContentsTheSame(
-            oldItem: ShareTab,
-            newItem: ShareTab
-        ): Boolean {
-            return oldItem.url == newItem.url && oldItem.title == newItem.title
-        }
+        override fun areContentsTheSame(oldItem: ShareTab, newItem: ShareTab) =
+            oldItem == newItem
     }
 }

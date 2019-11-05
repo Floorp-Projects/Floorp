@@ -26,18 +26,19 @@ interface ShareToAccountDevicesInteractor {
 
 class ShareToAccountDevicesView(
     override val containerView: ViewGroup,
-    private val interactor: ShareToAccountDevicesInteractor
+    interactor: ShareToAccountDevicesInteractor
 ) : LayoutContainer {
+
+    private val adapter = AccountDevicesShareAdapter(interactor)
+
     init {
         LayoutInflater.from(containerView.context)
             .inflate(R.layout.share_to_account_devices, containerView, true)
 
-        devicesList.adapter = AccountDevicesShareAdapter(interactor)
+        devicesList.adapter = adapter
     }
 
-    fun setSharetargets(targets: List<SyncShareOption>) {
-        with(devicesList.adapter as AccountDevicesShareAdapter) {
-            updateData(targets)
-        }
+    fun setShareTargets(targets: List<SyncShareOption>) {
+        adapter.submitList(targets)
     }
 }

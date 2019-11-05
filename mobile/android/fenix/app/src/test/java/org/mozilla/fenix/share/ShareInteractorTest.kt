@@ -8,7 +8,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import mozilla.components.concept.sync.Device
 import org.junit.Test
-import org.mozilla.fenix.share.listadapters.AppShareOption
+import org.mozilla.fenix.share.listadapters.AndroidShareOption
 
 class ShareInteractorTest {
     private val controller = mockk<ShareController>(relaxed = true)
@@ -62,7 +62,7 @@ class ShareInteractorTest {
 
     @Test
     fun onShareToApp() {
-        val app = mockk<AppShareOption>()
+        val app = mockk<AndroidShareOption.App>()
 
         interactor.onShareToApp(app)
 

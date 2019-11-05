@@ -13,6 +13,9 @@ import kotlinx.android.synthetic.main.fragment_add_new_device.*
 import org.mozilla.fenix.R
 import org.mozilla.fenix.settings.SupportUtils
 
+/**
+ * Fragment to add a new device. Tabs can be shared to devices after they are added.
+ */
 class AddNewDeviceFragment : Fragment(R.layout.fragment_add_new_device) {
 
     override fun onResume() {

@@ -23,6 +23,7 @@ class ShareCloseView(
     override val containerView: ViewGroup,
     private val interactor: ShareCloseInteractor
 ) : LayoutContainer {
+
     val adapter = ShareTabsAdapter()
 
     init {
@@ -36,6 +37,6 @@ class ShareCloseView(
     }
 
     fun setTabs(tabs: List<ShareTab>) {
-        adapter.setTabs(tabs)
+        adapter.submitList(tabs)
     }
 }

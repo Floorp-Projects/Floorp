@@ -40,7 +40,7 @@ import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.nav
-import org.mozilla.fenix.share.listadapters.AppShareOption
+import org.mozilla.fenix.share.listadapters.AndroidShareOption
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
@@ -84,7 +84,7 @@ class ShareControllerTest {
     fun `handleShareToApp should start a new sharing activity and close this`() {
         val appPackageName = "package"
         val appClassName = "activity"
-        val appShareOption = AppShareOption("app", mockk(), appPackageName, appClassName)
+        val appShareOption = AndroidShareOption.App("app", mockk(), appPackageName, appClassName)
         val shareIntent = slot<Intent>()
         // Our share Intent uses `FLAG_ACTIVITY_NEW_TASK` but when resolving the startActivity call
         // needed for capturing the actual Intent used the `slot` one doesn't have this flag so we

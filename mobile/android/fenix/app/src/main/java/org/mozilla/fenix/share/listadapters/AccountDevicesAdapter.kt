@@ -6,15 +6,19 @@ package org.mozilla.fenix.share.listadapters
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
 import mozilla.components.concept.sync.Device
 import org.mozilla.fenix.share.ShareToAccountDevicesInteractor
 import org.mozilla.fenix.share.viewholders.AccountDeviceViewHolder
 
+/**
+ * Adapter for a list of devices that can be shared to.
+ * May also display buttons to reconnect, add a device, or send to all devices.
+ */
 class AccountDevicesShareAdapter(
-    private val interactor: ShareToAccountDevicesInteractor,
-    private val devices: MutableList<SyncShareOption> = mutableListOf()
-) : RecyclerView.Adapter<AccountDeviceViewHolder>() {
+    private val interactor: ShareToAccountDevicesInteractor
+) : ListAdapter<SyncShareOption, AccountDeviceViewHolder>(DiffCallback) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AccountDeviceViewHolder {
         val view = LayoutInflater.from(parent.context)
@@ -23,25 +27,33 @@ class AccountDevicesShareAdapter(
         return AccountDeviceViewHolder(view, interactor)
     }
 
-    override fun getItemCount(): Int = devices.size
-
     override fun onBindViewHolder(holder: AccountDeviceViewHolder, position: Int) {
-        holder.bind(devices[position])
+        holder.bind(getItem(position))
     }
 
-    fun updateData(deviceOptions: List<SyncShareOption>) {
-        this.devices.clear()
-        this.devices.addAll(deviceOptions)
-        notifyDataSetChanged()
+    private object DiffCallback : DiffUtil.ItemCallback<SyncShareOption>() {
+        override fun areItemsTheSame(oldItem: SyncShareOption, newItem: SyncShareOption) =
+            when (oldItem) {
+                is SyncShareOption.SendAll -> newItem is SyncShareOption.SendAll
+                is SyncShareOption.SingleDevice ->
+                    newItem is SyncShareOption.SingleDevice && oldItem.device.id == newItem.device.id
+                else -> oldItem === newItem
+            }
+
+        @Suppress("DiffUtilEquals")
+        override fun areContentsTheSame(oldItem: SyncShareOption, newItem: SyncShareOption) =
+            oldItem == newItem
     }
 }
 
+/**
+ * Different options to be displayed by [AccountDevicesShareAdapter].
+ */
 sealed class SyncShareOption {
     object Reconnect : SyncShareOption()
     object Offline : SyncShareOption()
     object SignIn : SyncShareOption()
     object AddNewDevice : SyncShareOption()
     data class SendAll(val devices: List<Device>) : SyncShareOption()
-    data class Mobile(val name: String, val device: Device) : SyncShareOption()
-    data class Desktop(val name: String, val device: Device) : SyncShareOption()
+    data class SingleDevice(val device: Device) : SyncShareOption()
 }
