@@ -263,78 +263,6 @@ void nsNodeUtils::AnimationRemoved(dom::Animation* aAnimation) {
   AnimationMutated(aAnimation, AnimationMutationType::Removed);
 }
 
-void nsNodeUtils::LastRelease(nsINode* aNode) {
-  nsINode::nsSlots* slots = aNode->GetExistingSlots();
-  if (slots) {
-    if (!slots->mMutationObservers.IsEmpty()) {
-      NS_OBSERVER_AUTO_ARRAY_NOTIFY_OBSERVERS(slots->mMutationObservers,
-                                              nsIMutationObserver, 1,
-                                              NodeWillBeDestroyed, (aNode));
-    }
-
-    delete slots;
-    aNode->mSlots = nullptr;
-  }
-
-  // Kill properties first since that may run external code, so we want to
-  // be in as complete state as possible at that time.
-  if (aNode->IsDocument()) {
-    // Delete all properties before tearing down the document. Some of the
-    // properties are bound to nsINode objects and the destructor functions of
-    // the properties may want to use the owner document of the nsINode.
-    aNode->AsDocument()->DeleteAllProperties();
-  } else {
-    if (aNode->HasProperties()) {
-      // Strong reference to the document so that deleting properties can't
-      // delete the document.
-      nsCOMPtr<Document> document = aNode->OwnerDoc();
-      document->DeleteAllPropertiesFor(aNode);
-    }
-
-    // I wonder whether it's faster to do the HasFlag check first....
-    if (aNode->IsNodeOfType(nsINode::eHTML_FORM_CONTROL) &&
-        aNode->HasFlag(ADDED_TO_FORM)) {
-      // Tell the form (if any) this node is going away.  Don't
-      // notify, since we're being destroyed in any case.
-      static_cast<nsGenericHTMLFormElement*>(aNode)->ClearForm(true, true);
-    }
-
-    if (aNode->IsHTMLElement(nsGkAtoms::img) && aNode->HasFlag(ADDED_TO_FORM)) {
-      HTMLImageElement* imageElem = static_cast<HTMLImageElement*>(aNode);
-      imageElem->ClearForm(true);
-    }
-  }
-  aNode->UnsetFlags(NODE_HAS_PROPERTIES);
-
-  if (aNode->NodeType() != nsINode::DOCUMENT_NODE &&
-      aNode->HasFlag(NODE_HAS_LISTENERMANAGER)) {
-#ifdef DEBUG
-    if (nsContentUtils::IsInitialized()) {
-      EventListenerManager* manager =
-          nsContentUtils::GetExistingListenerManagerForNode(aNode);
-      if (!manager) {
-        NS_ERROR(
-            "Huh, our bit says we have a listener manager list, "
-            "but there's nothing in the hash!?!!");
-      }
-    }
-#endif
-
-    nsContentUtils::RemoveListenerManager(aNode);
-    aNode->UnsetFlags(NODE_HAS_LISTENERMANAGER);
-  }
-
-#ifdef MOZ_XBL
-  NS_ASSERTION(
-      !Element::FromNode(aNode) || !Element::FromNode(aNode)->GetXBLBinding(),
-      "Node has binding on destruction");
-#endif
-
-  aNode->ReleaseWrapper(aNode);
-
-  FragmentOrElement::RemoveBlackMarkedNode(aNode);
-}
-
 /* static */
 already_AddRefed<nsINode> nsNodeUtils::CloneNodeImpl(nsINode* aNode, bool aDeep,
                                                      ErrorResult& aError) {
@@ -631,4 +559,3 @@ already_AddRefed<nsINode> nsNodeUtils::CloneAndAdopt(
 
   return clone.forget();
 }
-
