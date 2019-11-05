@@ -9,7 +9,7 @@ use crate::connection::{Http3ClientHandler, Http3Connection, Http3State, Http3Tr
 
 use crate::transaction_client::TransactionClient;
 use crate::Header;
-use neqo_common::{qinfo, qtrace, Datagram};
+use neqo_common::{qdebug, qtrace, Datagram};
 use neqo_crypto::{agent::CertificateInfo, AuthenticationStatus, SecretAgentInfo};
 use neqo_transport::{AppError, Connection, ConnectionIdManager, Output, Role, StreamType};
 use std::cell::RefCell;
@@ -88,7 +88,7 @@ impl Http3Client {
     }
 
     pub fn close(&mut self, now: Instant, error: AppError, msg: &str) {
-        qinfo!([self] "Close the connection error={} msg={}.", error, msg);
+        qdebug!([self] "Closed.");
         self.base_handler.close(now, error, msg);
     }
 
@@ -100,7 +100,7 @@ impl Http3Client {
         path: &str,
         headers: &[Header],
     ) -> Res<u64> {
-        qinfo!(
+        qdebug!(
             [self]
             "Fetch method={}, scheme={}, host={}, path={}",
             method,
@@ -125,17 +125,17 @@ impl Http3Client {
     }
 
     pub fn stream_reset(&mut self, stream_id: u64, error: AppError) -> Res<()> {
-        qinfo!([self] "reset_stream {} error={}.", stream_id, error);
+        qdebug!([self] "reset_stream {}.", stream_id);
         self.base_handler.stream_reset(stream_id, error)
     }
 
     pub fn stream_close_send(&mut self, stream_id: u64) -> Res<()> {
-        qinfo!([self] "Close senidng side stream={}.", stream_id);
+        qdebug!([self] "close_stream {}.", stream_id);
         self.base_handler.stream_close_send(stream_id)
     }
 
     pub fn send_request_body(&mut self, stream_id: u64, buf: &[u8]) -> Res<usize> {
-        qinfo!([self] "send_request_body from stream {} sending {} bytes.", stream_id, buf.len());
+        qtrace!([self] "send_request_body from stream {}.", stream_id);
         self.base_handler
             .transactions
             .get_mut(&stream_id)
@@ -144,7 +144,7 @@ impl Http3Client {
     }
 
     pub fn read_response_headers(&mut self, stream_id: u64) -> Res<(Vec<Header>, bool)> {
-        qinfo!([self] "read_response_headers from stream {}.", stream_id);
+        qtrace!([self] "read_response_headers from stream {}.", stream_id);
         let transaction = self
             .base_handler
             .transactions
@@ -167,7 +167,7 @@ impl Http3Client {
         stream_id: u64,
         buf: &mut [u8],
     ) -> Res<(usize, bool)> {
-        qinfo!([self] "read_data from stream {}.", stream_id);
+        qtrace!([self] "read_data from stream {}.", stream_id);
         let transaction = self
             .base_handler
             .transactions
@@ -200,22 +200,8 @@ impl Http3Client {
         }
     }
 
-    /// Get all current events. Best used just in debug/testing code, use
-    /// next_event() instead.
     pub fn events(&mut self) -> impl Iterator<Item = Http3ClientEvent> {
         self.base_handler.events.events()
-    }
-
-    /// Return true if there are outstanding events.
-    pub fn has_events(&self) -> bool {
-        self.base_handler.events.has_events()
-    }
-
-    /// Get events that indicate state changes on the connection. This method
-    /// correctly handles cases where handling one event can obsolete
-    /// previously-queued events, or cause new events to be generated.
-    pub fn next_event(&mut self) -> Option<Http3ClientEvent> {
-        self.base_handler.events.next_event()
     }
 
     pub fn process(&mut self, dgram: Option<Datagram>, now: Instant) -> Output {
@@ -315,8 +301,9 @@ mod tests {
         assert_eq!(hconn.state(), Http3State::Connected);
         neqo_trans_conn.process(out.dgram(), now());
 
+        let events = neqo_trans_conn.events();
         let mut connected = false;
-        while let Some(e) = neqo_trans_conn.next_event() {
+        for e in events {
             match e {
                 ConnectionEvent::NewStream {
                     stream_id,
@@ -512,8 +499,9 @@ mod tests {
         peer_conn.conn.process(out.dgram(), now());
 
         // check for stop-sending with Error::HttpStreamCreationError.
+        let events = peer_conn.conn.events();
         let mut stop_sending_event_found = false;
-        while let Some(e) = peer_conn.conn.next_event() {
+        for e in events {
             if let ConnectionEvent::SendStreamStopSending {
                 stream_id,
                 app_error,
@@ -556,7 +544,8 @@ mod tests {
         peer_conn.conn.process(out.dgram(), now());
 
         // find the new request/response stream and send frame v on it.
-        while let Some(e) = peer_conn.conn.next_event() {
+        let events = peer_conn.conn.events();
+        for e in events {
             if let ConnectionEvent::NewStream {
                 stream_id,
                 stream_type,
@@ -798,7 +787,8 @@ mod tests {
         let out = neqo_trans_conn.process(None, now());
         hconn.process(out.dgram(), now());
 
-        while let Some(e) = hconn.next_event() {
+        let http_events = hconn.events();
+        for e in http_events {
             match e {
                 Http3ClientEvent::HeaderReady { stream_id } => {
                     assert_eq!(stream_id, request_stream_id);
@@ -862,7 +852,8 @@ mod tests {
         peer_conn.conn.process(out.dgram(), now());
 
         // find the new request/response stream and send response on it.
-        while let Some(e) = peer_conn.conn.next_event() {
+        let events = peer_conn.conn.events();
+        for e in events {
             match e {
                 ConnectionEvent::NewStream {
                     stream_id,
@@ -931,7 +922,8 @@ mod tests {
         }
 
         // find the new request/response stream, check received frames and send a response.
-        while let Some(e) = peer_conn.conn.next_event() {
+        let events = peer_conn.conn.events();
+        for e in events {
             if let ConnectionEvent::RecvStreamReadable { stream_id } = e {
                 if stream_id == request_stream_id {
                     // Read only the HEADER frame
@@ -1038,7 +1030,8 @@ mod tests {
         }
 
         // find the new request/response stream, check received frames and send a response.
-        while let Some(e) = peer_conn.conn.next_event() {
+        let events = peer_conn.conn.events();
+        for e in events {
             if let ConnectionEvent::RecvStreamReadable { stream_id } = e {
                 if stream_id == request_stream_id {
                     // Read only the HEADER frame
@@ -1182,7 +1175,8 @@ mod tests {
 
     fn read_request(mut neqo_trans_conn: &mut Connection, request_stream_id: u64) {
         // find the new request/response stream and check request data.
-        while let Some(e) = neqo_trans_conn.next_event() {
+        let events = neqo_trans_conn.events();
+        for e in events {
             if let ConnectionEvent::RecvStreamReadable { stream_id } = e {
                 if stream_id == request_stream_id {
                     // Read only header frame
@@ -1245,7 +1239,8 @@ mod tests {
 
         let mut response_headers = false;
         let mut response_body = false;
-        while let Some(e) = hconn.next_event() {
+        let http_events = hconn.events();
+        for e in http_events {
             match e {
                 Http3ClientEvent::StopSending { stream_id, error } => {
                     assert_eq!(stream_id, request_stream_id);
@@ -1339,7 +1334,8 @@ mod tests {
         let out = peer_conn.conn.process(None, now());
         hconn.process(out.dgram(), now());
 
-        while let Some(e) = hconn.next_event() {
+        let http_events = hconn.events();
+        for e in http_events {
             match e {
                 Http3ClientEvent::StopSending { .. } => {
                     panic!("We should not get StopSending.");
@@ -1400,7 +1396,8 @@ mod tests {
         let out = peer_conn.conn.process(None, now());
         hconn.process(out.dgram(), now());
 
-        while let Some(e) = hconn.next_event() {
+        let http_events = hconn.events();
+        for e in http_events {
             match e {
                 Http3ClientEvent::StopSending { .. } => {
                     panic!("We should not get StopSending.");
@@ -1482,7 +1479,8 @@ mod tests {
         let out = peer_conn.conn.process(None, now());
         hconn.process(out.dgram(), now());
 
-        while let Some(e) = hconn.next_event() {
+        let http_events = hconn.events();
+        for e in http_events {
             match e {
                 Http3ClientEvent::StopSending { .. } => {
                     panic!("We should not get StopSending.");
@@ -1559,7 +1557,8 @@ mod tests {
         let out = peer_conn.conn.process(None, now());
         hconn.process(out.dgram(), now());
 
-        while let Some(e) = hconn.next_event() {
+        let http_events = hconn.events();
+        for e in http_events {
             match e {
                 Http3ClientEvent::StopSending { .. } => {
                     panic!("We should not get StopSending.");
@@ -1619,7 +1618,8 @@ mod tests {
         let out = peer_conn.conn.process(None, now());
         hconn.process(out.dgram(), now());
 
-        while let Some(e) = hconn.next_event() {
+        let http_events = hconn.events();
+        for e in http_events {
             match e {
                 Http3ClientEvent::StopSending { .. } => {
                     panic!("We should not get StopSending.");
@@ -1656,7 +1656,8 @@ mod tests {
         let out = peer_conn.conn.process(None, now());
         hconn.process(out.dgram(), now());
 
-        while let Some(e) = hconn.next_event() {
+        let http_events = hconn.events();
+        for e in http_events {
             if let Http3ClientEvent::DataReadable { stream_id } = e {
                 assert_eq!(stream_id, request_stream_id);
                 let mut buf = [0u8; 100];
@@ -1724,7 +1725,8 @@ mod tests {
             .stream_send(peer_conn.control_stream_id, &[0x7, 0x1, 0x8]);
 
         // find the new request/response stream and send frame v on it.
-        while let Some(e) = peer_conn.conn.next_event() {
+        let events = peer_conn.conn.events();
+        for e in events {
             match e {
                 ConnectionEvent::NewStream { .. } => {}
                 ConnectionEvent::RecvStreamReadable { stream_id } => {
@@ -1813,7 +1815,8 @@ mod tests {
         peer_conn.conn.process(out.dgram(), now());
 
         // find the new request/response stream and send frame v on it.
-        while let Some(e) = peer_conn.conn.next_event() {
+        let events = peer_conn.conn.events();
+        for e in events {
             match e {
                 ConnectionEvent::NewStream {
                     stream_id,
@@ -1921,7 +1924,8 @@ mod tests {
         hconn.process(out.dgram(), now());
 
         // Recv headers wo fin
-        while let Some(e) = hconn.next_event() {
+        let http_events = hconn.events();
+        for e in http_events {
             match e {
                 Http3ClientEvent::HeaderReady { stream_id } => {
                     assert_eq!(stream_id, request_stream_id);
@@ -1951,7 +1955,8 @@ mod tests {
         hconn.process(out.dgram(), now());
 
         // Recv DataReadable wo data with fin
-        while let Some(e) = hconn.next_event() {
+        let http_events = hconn.events();
+        for e in http_events {
             match e {
                 Http3ClientEvent::HeaderReady { .. } => {
                     panic!("We should not get another HeaderReady!");
@@ -1995,7 +2000,8 @@ mod tests {
         hconn.process(out.dgram(), now());
 
         // Recv HeaderReady with fin.
-        while let Some(e) = hconn.next_event() {
+        let http_events = hconn.events();
+        for e in http_events {
             match e {
                 Http3ClientEvent::HeaderReady { stream_id } => {
                     assert_eq!(stream_id, request_stream_id);
@@ -2043,7 +2049,8 @@ mod tests {
         hconn.process(out.dgram(), now());
 
         // Recv headers wo fin
-        while let Some(e) = hconn.next_event() {
+        let http_events = hconn.events();
+        for e in http_events {
             match e {
                 Http3ClientEvent::HeaderReady { stream_id } => {
                     assert_eq!(stream_id, request_stream_id);
@@ -2073,7 +2080,8 @@ mod tests {
         hconn.process(out.dgram(), now());
 
         // Recv no data, but do get fin
-        while let Some(e) = hconn.next_event() {
+        let http_events = hconn.events();
+        for e in http_events {
             match e {
                 Http3ClientEvent::HeaderReady { .. } => {
                     panic!("We should not get another HeaderReady!");
@@ -2113,7 +2121,8 @@ mod tests {
         hconn.process(out.dgram(), now());
 
         // Recv some good data wo fin
-        while let Some(e) = hconn.next_event() {
+        let http_events = hconn.events();
+        for e in http_events {
             match e {
                 Http3ClientEvent::HeaderReady { stream_id } => {
                     assert_eq!(stream_id, request_stream_id);
@@ -2321,7 +2330,8 @@ mod tests {
         let mut recv_header = false;
         let mut recv_data = false;
         // Now the stream is unblocked and both headers and data will be consumed.
-        while let Some(e) = hconn.next_event() {
+        let events = hconn.events();
+        for e in events {
             match e {
                 Http3ClientEvent::HeaderReady { stream_id } => {
                     assert_eq!(stream_id, request_stream_id);

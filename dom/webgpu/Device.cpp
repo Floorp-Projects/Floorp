@@ -7,7 +7,6 @@
 #include "Device.h"
 
 #include "Adapter.h"
-#include "ipc/WebGPUChild.h"
 
 namespace mozilla {
 namespace webgpu {
@@ -16,18 +15,9 @@ NS_IMPL_CYCLE_COLLECTION_INHERITED(Device, DOMEventTargetHelper)
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(Device, DOMEventTargetHelper)
 GPU_IMPL_JS_WRAP(Device)
 
-Device::Device(RefPtr<Adapter> aParent, RawId aId)
-    : DOMEventTargetHelper(aParent->GetParentObject()),
-      mBridge(aParent->GetBridge()),
-      mId(aId) {
-  Unused << mId;  // TODO: remove
-}
+Device::Device(nsIGlobalObject* aGlobal) : DOMEventTargetHelper(aGlobal) {}
 
-Device::~Device() {
-  if (mBridge->IsOpen()) {
-    mBridge->SendDeviceDestroy(mId);
-  }
-}
+Device::~Device() = default;
 
 void Device::GetLabel(nsAString& aValue) const { aValue = mLabel; }
 void Device::SetLabel(const nsAString& aLabel) { mLabel = aLabel; }

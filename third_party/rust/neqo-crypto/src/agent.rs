@@ -23,7 +23,7 @@ use neqo_common::{qdebug, qinfo, qwarn};
 use std::cell::RefCell;
 use std::convert::{TryFrom, TryInto};
 use std::ffi::CString;
-use std::mem::{self, MaybeUninit};
+use std::mem;
 use std::ops::{Deref, DerefMut};
 use std::os::raw::{c_uint, c_void};
 use std::ptr::{null, null_mut, NonNull};
@@ -97,17 +97,17 @@ macro_rules! preinfo_arg {
 
 impl SecretAgentPreInfo {
     fn new(fd: *mut ssl::PRFileDesc) -> Res<Self> {
-        let mut info: MaybeUninit<ssl::SSLPreliminaryChannelInfo> = MaybeUninit::uninit();
+        let mut info: ssl::SSLPreliminaryChannelInfo = unsafe { mem::uninitialized() };
         secstatus_to_res(unsafe {
             ssl::SSL_GetPreliminaryChannelInfo(
                 fd,
-                info.as_mut_ptr(),
+                &mut info,
                 c_uint::try_from(mem::size_of::<ssl::SSLPreliminaryChannelInfo>())?,
             )
         })?;
 
         Ok(Self {
-            info: unsafe { info.assume_init() },
+            info,
             alpn: get_alpn(fd, true)?,
         })
     }
@@ -147,15 +147,14 @@ pub struct SecretAgentInfo {
 
 impl SecretAgentInfo {
     fn new(fd: *mut ssl::PRFileDesc) -> Res<Self> {
-        let mut info: MaybeUninit<ssl::SSLChannelInfo> = MaybeUninit::uninit();
+        let mut info: ssl::SSLChannelInfo = unsafe { mem::uninitialized() };
         secstatus_to_res(unsafe {
             ssl::SSL_GetChannelInfo(
                 fd,
-                info.as_mut_ptr(),
+                &mut info,
                 c_uint::try_from(mem::size_of::<ssl::SSLChannelInfo>())?,
             )
         })?;
-        let info = unsafe { info.assume_init() };
         Ok(Self {
             version: info.protocolVersion as Version,
             cipher: info.cipherSuite as Cipher,
