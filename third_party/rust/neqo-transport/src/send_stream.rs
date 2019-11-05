@@ -819,7 +819,7 @@ fn stream_frame_hdr_len(stream_id: StreamId, offset: u64, remaining: usize) -> u
     hdr_len + Encoder::varint_len(remaining as u64)
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct StreamRecoveryToken {
     pub(crate) id: StreamId,
     offset: u64,
