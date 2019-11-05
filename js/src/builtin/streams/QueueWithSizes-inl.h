@@ -65,6 +65,13 @@ inline MOZ_MUST_USE bool QueueAppendValueAndSize(
 
 }  // namespace detail
 
+/**
+ * Streams spec, 6.2.3. PeekQueueValue ( container ) nothrow
+ */
+inline JS::Value PeekQueueValue(ListObject* queue) {
+  return detail::QueueFirstValue(queue);
+}
+
 }  // namespace js
 
 #endif  // builtin_streams_QueueWithSizes_inl_h

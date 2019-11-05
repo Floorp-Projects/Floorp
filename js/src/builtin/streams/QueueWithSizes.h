@@ -49,6 +49,17 @@ extern MOZ_MUST_USE bool EnqueueValueWithSize(
 extern MOZ_MUST_USE bool ResetQueue(
     JSContext* cx, JS::Handle<StreamController*> unwrappedContainer);
 
+inline bool QueueIsEmpty(ListObject* unwrappedQueue) {
+  if (unwrappedQueue->isEmpty()) {
+    return true;
+  }
+
+  MOZ_ASSERT((unwrappedQueue->length() % 2) == 0,
+             "queue-with-sizes must consist of (value, size) element pairs and "
+             "so must have even length");
+  return false;
+}
+
 }  // namespace js
 
 #endif  // builtin_streams_QueueWithSizes_h
