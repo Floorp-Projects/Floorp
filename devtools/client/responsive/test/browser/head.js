@@ -131,28 +131,68 @@ var closeRDM = async function(tab, options) {
 /**
  * Adds a new test task that adds a tab with the given URL, opens responsive
  * design mode, runs the given generator, closes responsive design mode, and
- * removes the tab.
+ * removes the tab. If includeBrowserEmbeddedUI is truthy, the task will be
+ * run a second time with the devtools.responsive.browserUI.enabled pref set.
  *
  * Example usage:
  *
- *   addRDMTask(TEST_URL, async function ({ ui, manager }) {
- *     // Your tests go here...
- *   });
+ *   addRDMTask(
+ *     TEST_URL,
+ *     async function ({ ui, manager, browser, usingBrowserUI }) {
+ *       // Your tests go here...
+ *     },
+ *     true
+ *   );
  */
-function addRDMTask(url, task) {
-  add_task(async function() {
-    const tab = await addTab(url);
-    const results = await openRDM(tab);
+function addRDMTask(rdmUrl, rdmTask, includeBrowserEmbeddedUI) {
+  // Define a task setup function that can work with our without the
+  // browser embedded UI.
+  function taskSetup(url, task) {
+    add_task(async function() {
+      const tab = await addTab(url);
+      const { ui, manager } = await openRDM(tab);
+      const usingBrowserUI = Services.prefs.getBoolPref(
+        "devtools.responsive.browserUI.enabled"
+      );
+      const browser = usingBrowserUI
+        ? tab.linkedBrowser
+        : ui.getViewportBrowser();
+      try {
+        await task({ ui, manager, browser, usingBrowserUI });
+      } catch (err) {
+        ok(
+          false,
+          "Got an error with usingBrowserUI " +
+            usingBrowserUI +
+            ": " +
+            DevToolsUtils.safeErrorString(err)
+        );
+      }
 
-    try {
-      await task(results);
-    } catch (err) {
-      ok(false, "Got an error: " + DevToolsUtils.safeErrorString(err));
-    }
+      await closeRDM(tab);
+      await removeTab(tab);
+    });
+  }
 
-    await closeRDM(tab);
-    await removeTab(tab);
-  });
+  // Call the task setup function without using the browser UI pref.
+  const oldPrefValue = Services.prefs.getBoolPref(
+    "devtools.responsive.browserUI.enabled"
+  );
+  Services.prefs.setBoolPref("devtools.responsive.browserUI.enabled", false);
+
+  taskSetup(rdmUrl, rdmTask);
+
+  if (includeBrowserEmbeddedUI) {
+    // Set the pref and then call the task setup function again.
+    Services.prefs.setBoolPref("devtools.responsive.browserUI.enabled", true);
+
+    taskSetup(rdmUrl, rdmTask);
+  }
+
+  Services.prefs.setBoolPref(
+    "devtools.responsive.browserUI.enabled",
+    oldPrefValue
+  );
 }
 
 function spawnViewportTask(ui, args, task) {
