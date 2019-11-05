@@ -50,7 +50,7 @@ exports.naturalSortCaseInsensitive = function naturalSortCaseInsensitive(a, b) {
  * @param  {Boolean} insensitive
  *         Should the search be case insensitive?
  */
-/* eslint-disable complexity */
+// eslint-disable-next-line complexity
 function naturalSort(a, b, insensitive) {
   // convert all to strings strip whitespace
   const i = function(s) {
@@ -118,4 +118,3 @@ function naturalSort(a, b, insensitive) {
   }
   return null;
 }
-/* eslint-enable complexity */

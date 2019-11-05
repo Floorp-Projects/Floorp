@@ -144,7 +144,7 @@ function cloneState(state) {
  * @param {UiState} uiState: The ui state.
  * @returns {MessageState} a new messages state.
  */
-/* eslint-disable complexity */
+// eslint-disable-next-line complexity
 function addMessage(newMessage, state, filtersState, prefsState, uiState) {
   const { messagesById, groupsById, currentGroup, repeatById } = state;
 
@@ -354,9 +354,8 @@ function addMessage(newMessage, state, filtersState, prefsState, uiState) {
 
   return removeMessagesFromState(state, removedIds);
 }
-/* eslint-enable complexity */
 
-/* eslint-disable complexity */
+// eslint-disable-next-line complexity
 function messages(
   state = MessageState(),
   action,
@@ -692,7 +691,6 @@ function messages(
 
   return state;
 }
-/* eslint-enable complexity */
 
 function setVisibleMessages({
   messagesState,
@@ -986,7 +984,7 @@ function getToplevelMessageCount(state) {
  *         - visible {Boolean}: true if the message should be visible
  *         - cause {String}: if visible is false, what causes the message to be hidden.
  */
-/* eslint-disable complexity */
+// eslint-disable-next-line complexity
 function getMessageVisibility(
   message,
   {
@@ -1177,7 +1175,6 @@ function getMessageVisibility(
     visible: true,
   };
 }
-/* eslint-enable complexity */
 
 function isUnfilterable(message) {
   return [

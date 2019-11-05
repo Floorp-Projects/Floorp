@@ -326,7 +326,6 @@ OutputParser.prototype = {
     return variableNode;
   },
 
-  /* eslint-disable complexity */
   /**
    * The workhorse for @see _parse. This parses some CSS text,
    * stopping at EOF; or optionally when an umatched close paren is
@@ -343,6 +342,7 @@ OutputParser.prototype = {
    * @return {DocumentFragment}
    *         A document fragment.
    */
+  // eslint-disable-next-line complexity
   _doParse: function(text, options, tokenStream, stopAtCloseParen) {
     let parenDepth = stopAtCloseParen ? 1 : 0;
     let outerMostFunctionTakesColor = false;
@@ -594,7 +594,6 @@ OutputParser.prototype = {
 
     return result;
   },
-  /* eslint-enable complexity */
 
   /**
    * Parse a string.
@@ -775,7 +774,7 @@ OutputParser.prototype = {
    *        The node to which spans containing points are added.
    * @returns {Node} The container to which spans have been added.
    */
-  /* eslint-disable complexity */
+  // eslint-disable-next-line complexity
   _addPolygonPointNodes: function(coords, container) {
     const tokenStream = getCSSLexer(coords);
     let token = tokenStream.nextToken();
@@ -914,7 +913,6 @@ OutputParser.prototype = {
     }
     return container;
   },
-  /* eslint-enable complexity */
 
   /**
    * Parse the given circle coordinates and populate the given container appropriately
@@ -926,7 +924,7 @@ OutputParser.prototype = {
    *        The node to which the definition is added.
    * @returns {Node} The container to which the definition has been added.
    */
-  /* eslint-disable complexity */
+  // eslint-disable-next-line complexity
   _addCirclePointNodes: function(coords, container) {
     const tokenStream = getCSSLexer(coords);
     let token = tokenStream.nextToken();
@@ -1076,7 +1074,6 @@ OutputParser.prototype = {
     }
     return container;
   },
-  /* eslint-enable complexity */
 
   /**
    * Parse the given ellipse coordinates and populate the given container appropriately
@@ -1088,7 +1085,7 @@ OutputParser.prototype = {
    *        The node to which the definition is added.
    * @returns {Node} The container to which the definition has been added.
    */
-  /* eslint-disable complexity */
+  // eslint-disable-next-line complexity
   _addEllipsePointNodes: function(coords, container) {
     const tokenStream = getCSSLexer(coords);
     let token = tokenStream.nextToken();
@@ -1248,7 +1245,6 @@ OutputParser.prototype = {
     }
     return container;
   },
-  /* eslint-enable complexity */
 
   /**
    * Parse the given inset coordinates and populate the given container appropriately.
@@ -1259,7 +1255,7 @@ OutputParser.prototype = {
    *        The node to which the definition is added.
    * @returns {Node} The container to which the definition has been added.
    */
-  /* eslint-disable complexity */
+  // eslint-disable-next-line complexity
   _addInsetPointNodes: function(coords, container) {
     const insetPoints = ["top", "right", "bottom", "left"];
     const tokenStream = getCSSLexer(coords);
@@ -1394,7 +1390,6 @@ OutputParser.prototype = {
 
     return container;
   },
-  /* eslint-enable complexity */
 
   /**
    * Append a angle value to the output

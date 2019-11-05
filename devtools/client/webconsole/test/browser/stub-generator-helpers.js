@@ -14,7 +14,7 @@ const {
 
 const cachedPackets = {};
 
-/* eslint-disable complexity */
+// eslint-disable-next-line complexity
 function getCleanedPacket(key, packet) {
   if (Object.keys(cachedPackets).includes(key)) {
     return cachedPackets[key];
@@ -279,7 +279,6 @@ function getCleanedPacket(key, packet) {
   cachedPackets[key] = res;
   return res;
 }
-/* eslint-enable complexity */
 
 function formatPacket(key, packet) {
   const stringifiedPacket = JSON.stringify(

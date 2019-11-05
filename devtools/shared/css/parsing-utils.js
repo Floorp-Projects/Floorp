@@ -284,7 +284,7 @@ function cssTrim(str) {
  *        rewriteDeclarations, and skip the usual name-checking
  *        heuristic.
  */
-/* eslint-disable complexity */
+// eslint-disable-next-line complexity
 function parseDeclarationsInternal(
   isCssPropertyKnown,
   inputString,
@@ -505,7 +505,6 @@ function parseDeclarationsInternal(
 
   return declarations;
 }
-/* eslint-enable complexity */
 
 /**
  * Returns an array of CSS declarations given a string.
@@ -592,7 +591,7 @@ function parseNamedDeclarations(
  * @return {Array} an array of objects with the following signature:
  *         [{ "value": string, "type": integer }, ...]
  */
-/* eslint-disable complexity */
+// eslint-disable-next-line complexity
 function parsePseudoClassesAndAttributes(value) {
   if (!value) {
     throw new Error("empty input string");
@@ -678,7 +677,6 @@ function parsePseudoClassesAndAttributes(value) {
 
   return result;
 }
-/* eslint-enable complexity */
 
 /**
  * Expects a single CSS value to be passed as the input and parses the value

@@ -253,7 +253,7 @@ class WalkerFront extends FrontClassWithSpec(walkerSpec) {
   /**
    * Get any unprocessed mutation records and process them.
    */
-  /* eslint-disable complexity */
+  // eslint-disable-next-line complexity
   async getMutations(options = {}) {
     const mutations = await super.getMutations(options);
     const emitMutations = [];
@@ -410,7 +410,6 @@ class WalkerFront extends FrontClassWithSpec(walkerSpec) {
 
     this.emit("mutations", emitMutations);
   }
-  /* eslint-enable complexity */
 
   /**
    * Handle the `new-mutations` notification by fetching the

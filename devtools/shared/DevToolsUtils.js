@@ -562,7 +562,7 @@ function mainThreadFetch(
       ).loadGroup;
     }
 
-    /* eslint-disable complexity */
+    // eslint-disable-next-line complexity
     const onResponse = (stream, status, request) => {
       if (!components.isSuccessCode(status)) {
         reject(new Error(`Failed to fetch ${url}. Code ${status}.`));

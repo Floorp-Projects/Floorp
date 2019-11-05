@@ -500,7 +500,7 @@ var WebExtensionInspectedWindowActor = protocol.ActorClassWithSpec(
      *   it is called over the remote debugging protocol the target window is always
      *   `targetActor.window`.
      */
-    /* eslint-disable complexity */
+    // eslint-disable-next-line complexity
     eval(callerInfo, expression, options, customTargetWindow) {
       const window = customTargetWindow || this.window;
       options = options || {};
@@ -689,7 +689,6 @@ var WebExtensionInspectedWindowActor = protocol.ActorClassWithSpec(
 
       return { value: evalResult };
     },
-    /* eslint-enable complexity */
   }
 );
 
