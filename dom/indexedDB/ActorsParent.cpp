@@ -300,6 +300,7 @@ constexpr auto kStmtParamNameLimit = NS_LITERAL_CSTRING("limit");
 // GetBindingClauseForKeyRange.
 constexpr auto kColumnNameKey = NS_LITERAL_CSTRING("key");
 constexpr auto kColumnNameValue = NS_LITERAL_CSTRING("value");
+constexpr auto kColumnNameAliasSortKey = NS_LITERAL_CSTRING("sort_column");
 
 // SQL fragments used at multiple locations.
 constexpr auto kOpenLimit = NS_LITERAL_CSTRING(" LIMIT ");
@@ -9363,6 +9364,44 @@ nsAutoCString ToAutoCString(const uint32_t aInt) {
   nsAutoCString result;
   result.AppendInt(aInt);
   return result;
+}
+
+enum struct ComparisonOperator {
+  LessThan,
+  LessOrEquals,
+  Equals,
+  GreaterThan,
+  GreaterOrEquals,
+};
+
+constexpr nsLiteralCString GetComparisonOperatorString(
+    const ComparisonOperator aComparisonOperator) {
+  switch (aComparisonOperator) {
+    case ComparisonOperator::LessThan:
+      return NS_LITERAL_CSTRING("<");
+    case ComparisonOperator::LessOrEquals:
+      return NS_LITERAL_CSTRING("<=");
+    case ComparisonOperator::Equals:
+      return NS_LITERAL_CSTRING("==");
+    case ComparisonOperator::GreaterThan:
+      return NS_LITERAL_CSTRING(">");
+    case ComparisonOperator::GreaterOrEquals:
+      return NS_LITERAL_CSTRING(">=");
+  }
+}
+
+nsAutoCString GetKeyClause(const nsCString& aColumnName,
+                           const ComparisonOperator aComparisonOperator,
+                           const nsLiteralCString& aStmtParamName) {
+  return aColumnName + NS_LITERAL_CSTRING(" ") +
+         GetComparisonOperatorString(aComparisonOperator) +
+         NS_LITERAL_CSTRING(" :") + aStmtParamName;
+}
+
+nsAutoCString GetSortKeyClause(const ComparisonOperator aComparisonOperator,
+                               const nsLiteralCString& aStmtParamName) {
+  return GetKeyClause(kColumnNameAliasSortKey, aComparisonOperator,
+                      aStmtParamName);
 }
 }  // namespace
 
@@ -18937,9 +18976,10 @@ nsresult DatabaseOperationBase::DeleteObjectStoreDataTableRowsWithIndexes(
         MaybeGetBindingClauseForKeyRange(aKeyRange, kColumnNameKey);
 
     rv = aConnection->GetCachedStatement(
-        NS_LITERAL_CSTRING("SELECT index_data_values, key "
-                           "FROM object_data "
-                           "WHERE object_store_id = :") +
+        NS_LITERAL_CSTRING("SELECT index_data_values, ") + kColumnNameKey +
+            NS_LITERAL_CSTRING(" "
+                               "FROM object_data "
+                               "WHERE object_store_id = :") +
             kStmtParamNameObjectStoreId + keyRangeClause +
             NS_LITERAL_CSTRING(";"),
         &selectStmt);
@@ -26011,47 +26051,60 @@ void Cursor::OpenOp::PrepareIndexKeyConditionClause(
     }
   }
 
-  const auto& comparisonChar =
-      isIncreasingOrder ? NS_LITERAL_CSTRING(">") : NS_LITERAL_CSTRING("<");
-
   mCursor->mContinueToQuery =
-      aQueryStart + NS_LITERAL_CSTRING(" AND sort_column ") + comparisonChar +
-      NS_LITERAL_CSTRING("= :") + kStmtParamNameCurrentKey;
+      aQueryStart + NS_LITERAL_CSTRING(" AND ") +
+      GetSortKeyClause(isIncreasingOrder ? ComparisonOperator::GreaterOrEquals
+                                         : ComparisonOperator::LessOrEquals,
+                       kStmtParamNameCurrentKey);
 
   switch (mCursor->mDirection) {
     case IDBCursor::NEXT:
     case IDBCursor::PREV:
       mCursor->mContinueQuery =
-          aQueryStart + NS_LITERAL_CSTRING(" AND sort_column ") +
-          comparisonChar + NS_LITERAL_CSTRING("= :") +
-          kStmtParamNameCurrentKey + NS_LITERAL_CSTRING(" AND ( sort_column ") +
-          comparisonChar + NS_LITERAL_CSTRING(" :") + kStmtParamNameCurrentKey +
-          NS_LITERAL_CSTRING(" OR ") + aObjectDataKeyPrefix +
-          NS_LITERAL_CSTRING("object_data_key ") + comparisonChar +
-          NS_LITERAL_CSTRING(" :") + kStmtParamNameObjectStorePosition +
+          aQueryStart + NS_LITERAL_CSTRING(" AND ") +
+          GetSortKeyClause(isIncreasingOrder
+                               ? ComparisonOperator::GreaterOrEquals
+                               : ComparisonOperator::LessOrEquals,
+                           kStmtParamNameCurrentKey) +
+          NS_LITERAL_CSTRING(" AND ( ") +
+          GetSortKeyClause(isIncreasingOrder ? ComparisonOperator::GreaterThan
+                                             : ComparisonOperator::LessThan,
+                           kStmtParamNameCurrentKey) +
+          NS_LITERAL_CSTRING(" OR ") +
+          GetKeyClause(
+              aObjectDataKeyPrefix + NS_LITERAL_CSTRING("object_data_key"),
+              isIncreasingOrder ? ComparisonOperator::GreaterThan
+                                : ComparisonOperator::LessThan,
+              kStmtParamNameObjectStorePosition) +
           NS_LITERAL_CSTRING(" ) ");
 
       mCursor->mContinuePrimaryKeyQuery =
           aQueryStart +
           NS_LITERAL_CSTRING(
               " AND ("
-              "(sort_column == :") +
-          kStmtParamNameCurrentKey + NS_LITERAL_CSTRING(" AND ") +
-          aObjectDataKeyPrefix + NS_LITERAL_CSTRING("object_data_key ") +
-          comparisonChar + NS_LITERAL_CSTRING("= :") +
-          kStmtParamNameObjectStorePosition +
-          NS_LITERAL_CSTRING(
-              ") OR "
-              "sort_column ") +
-          comparisonChar + NS_LITERAL_CSTRING(" :") + kStmtParamNameCurrentKey +
+              "(") +
+          GetSortKeyClause(ComparisonOperator::Equals,
+                           kStmtParamNameCurrentKey) +
+          NS_LITERAL_CSTRING(" AND ") +
+          GetKeyClause(
+              aObjectDataKeyPrefix + NS_LITERAL_CSTRING("object_data_key"),
+              isIncreasingOrder ? ComparisonOperator::GreaterOrEquals
+                                : ComparisonOperator::LessOrEquals,
+              kStmtParamNameObjectStorePosition) +
+          NS_LITERAL_CSTRING(") OR ") +
+          GetSortKeyClause(isIncreasingOrder ? ComparisonOperator::GreaterThan
+                                             : ComparisonOperator::LessThan,
+                           kStmtParamNameCurrentKey) +
           NS_LITERAL_CSTRING(")");
       break;
 
     case IDBCursor::NEXT_UNIQUE:
     case IDBCursor::PREV_UNIQUE:
       mCursor->mContinueQuery =
-          aQueryStart + NS_LITERAL_CSTRING(" AND sort_column ") +
-          comparisonChar + NS_LITERAL_CSTRING(" :") + kStmtParamNameCurrentKey;
+          aQueryStart + NS_LITERAL_CSTRING(" AND ") +
+          GetSortKeyClause(isIncreasingOrder ? ComparisonOperator::GreaterThan
+                                             : ComparisonOperator::LessThan,
+                           kStmtParamNameCurrentKey);
       break;
 
     default:
@@ -26234,14 +26287,12 @@ nsresult Cursor::OpenOp::DoIndexDatabaseWork(DatabaseConnection* aConnection) {
                                ? NS_LITERAL_CSTRING("unique_index_data")
                                : NS_LITERAL_CSTRING("index_data");
 
-  NS_NAMED_LITERAL_CSTRING(sortColumn, "sort_column");
-
   // The result of MakeColumnPairSelectionList is stored in a local variable,
   // since inlining it into the next statement causes a crash on some Mac OS X
   // builds (see https://bugzilla.mozilla.org/show_bug.cgi?id=1168606#c110).
   const auto columnPairSelectionList = MakeColumnPairSelectionList(
       NS_LITERAL_CSTRING("index_table.value"),
-      NS_LITERAL_CSTRING("index_table.value_locale"), sortColumn,
+      NS_LITERAL_CSTRING("index_table.value_locale"), kColumnNameAliasSortKey,
       mCursor->IsLocaleAware());
   const nsCString sortColumnAlias = NS_LITERAL_CSTRING("SELECT ") +
                                     columnPairSelectionList +
@@ -26264,10 +26315,11 @@ nsresult Cursor::OpenOp::DoIndexDatabaseWork(DatabaseConnection* aConnection) {
                                  "WHERE index_table.index_id = :") +
                              kStmtParamNameId;
 
-  const auto keyRangeClause =
-      MaybeGetBindingClauseForKeyRange(mOptionalKeyRange, sortColumn);
+  const auto keyRangeClause = MaybeGetBindingClauseForKeyRange(
+      mOptionalKeyRange, kColumnNameAliasSortKey);
 
-  nsAutoCString directionClause = NS_LITERAL_CSTRING(" ORDER BY ") + sortColumn;
+  nsAutoCString directionClause =
+      NS_LITERAL_CSTRING(" ORDER BY ") + kColumnNameAliasSortKey;
 
   switch (mCursor->mDirection) {
     case IDBCursor::NEXT:
@@ -26333,7 +26385,7 @@ nsresult Cursor::OpenOp::DoIndexDatabaseWork(DatabaseConnection* aConnection) {
   }
 
   // Now we need to make the query to get the next match.
-  PrepareIndexKeyConditionClause(sortColumn, directionClause,
+  PrepareIndexKeyConditionClause(kColumnNameAliasSortKey, directionClause,
                                  NS_LITERAL_CSTRING("index_table."),
                                  std::move(queryStart));
 
@@ -26362,14 +26414,12 @@ nsresult Cursor::OpenOp::DoIndexKeyDatabaseWork(
                           ? NS_LITERAL_CSTRING("unique_index_data")
                           : NS_LITERAL_CSTRING("index_data");
 
-  NS_NAMED_LITERAL_CSTRING(sortColumn, "sort_column");
-
   // The result of MakeColumnPairSelectionList is stored in a local variable,
   // since inlining it into the next statement causes a crash on some Mac OS X
   // builds (see https://bugzilla.mozilla.org/show_bug.cgi?id=1168606#c110).
   const auto columnPairSelectionList = MakeColumnPairSelectionList(
       NS_LITERAL_CSTRING("value"), NS_LITERAL_CSTRING("value_locale"),
-      sortColumn, mCursor->IsLocaleAware());
+      kColumnNameAliasSortKey, mCursor->IsLocaleAware());
   const nsCString sortColumnAlias = NS_LITERAL_CSTRING("SELECT ") +
                                     columnPairSelectionList +
                                     NS_LITERAL_CSTRING(", ");
@@ -26381,10 +26431,11 @@ nsresult Cursor::OpenOp::DoIndexKeyDatabaseWork(
                              table + NS_LITERAL_CSTRING(" WHERE index_id = :") +
                              kStmtParamNameId;
 
-  const auto keyRangeClause =
-      MaybeGetBindingClauseForKeyRange(mOptionalKeyRange, sortColumn);
+  const auto keyRangeClause = MaybeGetBindingClauseForKeyRange(
+      mOptionalKeyRange, kColumnNameAliasSortKey);
 
-  nsAutoCString directionClause = NS_LITERAL_CSTRING(" ORDER BY ") + sortColumn;
+  nsAutoCString directionClause =
+      NS_LITERAL_CSTRING(" ORDER BY ") + kColumnNameAliasSortKey;
 
   switch (mCursor->mDirection) {
     case IDBCursor::NEXT:
@@ -26449,7 +26500,7 @@ nsresult Cursor::OpenOp::DoIndexKeyDatabaseWork(
   }
 
   // Now we need to make the query to get the next match.
-  PrepareIndexKeyConditionClause(sortColumn, directionClause,
+  PrepareIndexKeyConditionClause(kColumnNameAliasSortKey, directionClause,
                                  NS_LITERAL_CSTRING(""), std::move(queryStart));
 
   return NS_OK;
