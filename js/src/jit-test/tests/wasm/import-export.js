@@ -589,7 +589,7 @@ assertEq(mem8[npages*64*1024-1], 2);
 assertEq(tbl.get(0), i.exports.f);
 assertEq(tbl.get(1), i.exports.g);
 
-// Element segment applies partially and prevents subsequent elem segment and
+// Element segment doesn't apply and prevents subsequent elem segment and
 // data segment from being applied.
 
 if (wasmBulkMemSupported()) {
@@ -609,13 +609,13 @@ if (wasmBulkMemSupported()) {
                        LinkError,
                        /elem segment does not fit/);
     assertEq(tbl.get(0), null);
-    assertEq(typeof tbl.get(1), "function");
-    assertEq(typeof tbl.get(2), "function");
+    assertEq(tbl.get(1), null);
+    assertEq(tbl.get(2), null);
     let v = new Uint8Array(mem.buffer);
     assertEq(v[0], 0);
 }
 
-// Data segment applies partially and prevents subsequent data segment from
+// Data segment doesn't apply and prevents subsequent data segment from
 // being applied.
 
 if (wasmBulkMemSupported()) {
@@ -630,8 +630,8 @@ if (wasmBulkMemSupported()) {
                        LinkError,
                        /data segment does not fit/);
     let v = new Uint8Array(mem.buffer);
-    assertEq(v[65534], 1);
-    assertEq(v[65535], 2);
+    assertEq(v[65534], 0);
+    assertEq(v[65535], 0);
     assertEq(v[0], 0);
 }
 

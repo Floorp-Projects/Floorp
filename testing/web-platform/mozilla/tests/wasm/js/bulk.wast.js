@@ -43,10 +43,10 @@ run(() => call($3, "fill", [0, 0, 65_536]));
 assert_trap(() => call($3, "fill", [65_280, 1, 257]));
 
 // bulk.wast:45
-assert_return(() => call($3, "load8_u", [65_280]), 1);
+assert_return(() => call($3, "load8_u", [65_280]), 0);
 
 // bulk.wast:46
-assert_return(() => call($3, "load8_u", [65_535]), 1);
+assert_return(() => call($3, "load8_u", [65_535]), 0);
 
 // bulk.wast:49
 run(() => call($3, "fill", [65_536, 0, 0]));
@@ -157,16 +157,16 @@ assert_return(() => call($5, "load8_u", [1]), 204);
 assert_return(() => call($5, "load8_u", [2]), 0);
 
 // bulk.wast:132
-run(() => call($5, "init", [65_532, 0, 4]));
-
-// bulk.wast:135
 assert_trap(() => call($5, "init", [65_534, 0, 3]));
 
-// bulk.wast:137
-assert_return(() => call($5, "load8_u", [65_534]), 170);
+// bulk.wast:134
+assert_return(() => call($5, "load8_u", [65_534]), 0);
+
+// bulk.wast:135
+assert_return(() => call($5, "load8_u", [65_535]), 0);
 
 // bulk.wast:138
-assert_return(() => call($5, "load8_u", [65_535]), 187);
+run(() => call($5, "init", [65_532, 0, 4]));
 
 // bulk.wast:141
 run(() => call($5, "init", [65_536, 0, 0]));
@@ -204,115 +204,115 @@ assert_trap(() => call($6, "init_active", []));
 // bulk.wast:172
 let $7 = instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x90\x80\x80\x80\x00\x03\x60\x00\x01\x7f\x60\x03\x7f\x7f\x7f\x00\x60\x01\x7f\x01\x7f\x03\x85\x80\x80\x80\x00\x04\x00\x00\x01\x02\x04\x84\x80\x80\x80\x00\x01\x70\x00\x03\x07\x8f\x80\x80\x80\x00\x02\x04\x69\x6e\x69\x74\x00\x02\x04\x63\x61\x6c\x6c\x00\x03\x09\x90\x80\x80\x80\x00\x01\x05\x70\x04\xd2\x00\x0b\xd2\x01\x0b\xd2\x00\x0b\xd2\x01\x0b\x0a\xb0\x80\x80\x80\x00\x04\x84\x80\x80\x80\x00\x00\x41\x00\x0b\x84\x80\x80\x80\x00\x00\x41\x01\x0b\x8c\x80\x80\x80\x00\x00\x20\x00\x20\x01\x20\x02\xfc\x0c\x00\x00\x0b\x87\x80\x80\x80\x00\x00\x20\x00\x11\x00\x00\x0b");
 
-// bulk.wast:191
-run(() => call($7, "init", [0, 1, 2]));
-
 // bulk.wast:192
-assert_return(() => call($7, "call", [0]), 1);
-
-// bulk.wast:193
-assert_return(() => call($7, "call", [1]), 0);
+assert_trap(() => call($7, "init", [2, 0, 2]));
 
 // bulk.wast:194
 assert_trap(() => call($7, "call", [2]));
 
 // bulk.wast:197
-run(() => call($7, "init", [1, 2, 2]));
+run(() => call($7, "init", [0, 1, 2]));
+
+// bulk.wast:198
+assert_return(() => call($7, "call", [0]), 1);
+
+// bulk.wast:199
+assert_return(() => call($7, "call", [1]), 0);
 
 // bulk.wast:200
-assert_trap(() => call($7, "init", [2, 0, 2]));
+assert_trap(() => call($7, "call", [2]));
 
-// bulk.wast:202
-assert_return(() => call($7, "call", [2]), 0);
-
-// bulk.wast:205
-run(() => call($7, "init", [3, 0, 0]));
+// bulk.wast:203
+run(() => call($7, "init", [1, 2, 2]));
 
 // bulk.wast:206
+run(() => call($7, "init", [3, 0, 0]));
+
+// bulk.wast:207
 run(() => call($7, "init", [0, 4, 0]));
 
-// bulk.wast:209
+// bulk.wast:210
 run(() => call($7, "init", [4, 0, 0]));
 
-// bulk.wast:210
+// bulk.wast:211
 run(() => call($7, "init", [0, 5, 0]));
 
-// bulk.wast:214
+// bulk.wast:215
 let $8 = instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x84\x80\x80\x80\x00\x01\x60\x00\x00\x03\x86\x80\x80\x80\x00\x05\x00\x00\x00\x00\x00\x04\x84\x80\x80\x80\x00\x01\x70\x00\x01\x07\xbb\x80\x80\x80\x00\x04\x0c\x64\x72\x6f\x70\x5f\x70\x61\x73\x73\x69\x76\x65\x00\x01\x0c\x69\x6e\x69\x74\x5f\x70\x61\x73\x73\x69\x76\x65\x00\x02\x0b\x64\x72\x6f\x70\x5f\x61\x63\x74\x69\x76\x65\x00\x03\x0b\x69\x6e\x69\x74\x5f\x61\x63\x74\x69\x76\x65\x00\x04\x09\x8d\x80\x80\x80\x00\x02\x05\x70\x01\xd2\x00\x0b\x00\x41\x00\x0b\x01\x00\x0a\xbe\x80\x80\x80\x00\x05\x82\x80\x80\x80\x00\x00\x0b\x85\x80\x80\x80\x00\x00\xfc\x0d\x00\x0b\x8c\x80\x80\x80\x00\x00\x41\x00\x41\x00\x41\x00\xfc\x0c\x00\x00\x0b\x85\x80\x80\x80\x00\x00\xfc\x0d\x01\x0b\x8c\x80\x80\x80\x00\x00\x41\x00\x41\x00\x41\x00\xfc\x0c\x01\x00\x0b");
 
-// bulk.wast:229
+// bulk.wast:230
 run(() => call($8, "init_passive", []));
 
-// bulk.wast:230
+// bulk.wast:231
 run(() => call($8, "drop_passive", []));
 
-// bulk.wast:231
+// bulk.wast:232
 assert_trap(() => call($8, "drop_passive", []));
 
-// bulk.wast:232
+// bulk.wast:233
 assert_trap(() => call($8, "init_passive", []));
 
-// bulk.wast:233
+// bulk.wast:234
 assert_trap(() => call($8, "drop_active", []));
 
-// bulk.wast:234
+// bulk.wast:235
 assert_trap(() => call($8, "init_active", []));
 
-// bulk.wast:238
+// bulk.wast:239
 let $9 = instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x90\x80\x80\x80\x00\x03\x60\x00\x01\x7f\x60\x03\x7f\x7f\x7f\x00\x60\x01\x7f\x01\x7f\x03\x86\x80\x80\x80\x00\x05\x00\x00\x00\x01\x02\x04\x84\x80\x80\x80\x00\x01\x70\x00\x0a\x07\x8f\x80\x80\x80\x00\x02\x04\x63\x6f\x70\x79\x00\x03\x04\x63\x61\x6c\x6c\x00\x04\x09\x89\x80\x80\x80\x00\x01\x00\x41\x00\x0b\x03\x00\x01\x02\x0a\xb9\x80\x80\x80\x00\x05\x84\x80\x80\x80\x00\x00\x41\x00\x0b\x84\x80\x80\x80\x00\x00\x41\x01\x0b\x84\x80\x80\x80\x00\x00\x41\x02\x0b\x8c\x80\x80\x80\x00\x00\x20\x00\x20\x01\x20\x02\xfc\x0e\x00\x00\x0b\x87\x80\x80\x80\x00\x00\x20\x00\x11\x00\x00\x0b");
 
-// bulk.wast:257
+// bulk.wast:258
 run(() => call($9, "copy", [3, 0, 3]));
 
-// bulk.wast:259
+// bulk.wast:260
 assert_return(() => call($9, "call", [3]), 0);
 
-// bulk.wast:260
+// bulk.wast:261
 assert_return(() => call($9, "call", [4]), 1);
 
-// bulk.wast:261
+// bulk.wast:262
 assert_return(() => call($9, "call", [5]), 2);
 
-// bulk.wast:264
+// bulk.wast:265
 run(() => call($9, "copy", [0, 1, 3]));
 
-// bulk.wast:266
+// bulk.wast:267
 assert_return(() => call($9, "call", [0]), 1);
 
-// bulk.wast:267
+// bulk.wast:268
 assert_return(() => call($9, "call", [1]), 2);
 
-// bulk.wast:268
+// bulk.wast:269
 assert_return(() => call($9, "call", [2]), 0);
 
-// bulk.wast:271
+// bulk.wast:272
 run(() => call($9, "copy", [2, 0, 3]));
 
-// bulk.wast:273
+// bulk.wast:274
 assert_return(() => call($9, "call", [2]), 1);
 
-// bulk.wast:274
+// bulk.wast:275
 assert_return(() => call($9, "call", [3]), 2);
 
-// bulk.wast:275
+// bulk.wast:276
 assert_return(() => call($9, "call", [4]), 0);
 
-// bulk.wast:278
+// bulk.wast:279
 run(() => call($9, "copy", [6, 8, 2]));
 
-// bulk.wast:279
+// bulk.wast:280
 run(() => call($9, "copy", [8, 6, 2]));
 
-// bulk.wast:282
+// bulk.wast:283
 run(() => call($9, "copy", [10, 0, 0]));
 
-// bulk.wast:283
+// bulk.wast:284
 run(() => call($9, "copy", [0, 10, 0]));
 
-// bulk.wast:286
+// bulk.wast:287
 run(() => call($9, "copy", [11, 0, 0]));
 
-// bulk.wast:287
+// bulk.wast:288
 run(() => call($9, "copy", [0, 11, 0]));
 reinitializeRegistry();
 })();

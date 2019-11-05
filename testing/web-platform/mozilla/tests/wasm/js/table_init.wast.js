@@ -580,100 +580,100 @@ let $18 = instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x8f\x80\x80\x80\x00\x03
 assert_trap(() => call($18, "run", [24, 16]));
 
 // table_init.wast:1116
-assert_return(() => call($18, "test", [24]), 0);
-
-// table_init.wast:1117
-assert_return(() => call($18, "test", [25]), 1);
-
-// table_init.wast:1118
-assert_return(() => call($18, "test", [26]), 2);
-
-// table_init.wast:1119
-assert_return(() => call($18, "test", [27]), 3);
-
-// table_init.wast:1120
-assert_return(() => call($18, "test", [28]), 4);
-
-// table_init.wast:1121
-assert_return(() => call($18, "test", [29]), 5);
-
-// table_init.wast:1122
-assert_return(() => call($18, "test", [30]), 6);
-
-// table_init.wast:1123
-assert_return(() => call($18, "test", [31]), 7);
-
-// table_init.wast:1124
 assert_trap(() => call($18, "test", [0]));
 
-// table_init.wast:1125
+// table_init.wast:1117
 assert_trap(() => call($18, "test", [1]));
 
-// table_init.wast:1126
+// table_init.wast:1118
 assert_trap(() => call($18, "test", [2]));
 
-// table_init.wast:1127
+// table_init.wast:1119
 assert_trap(() => call($18, "test", [3]));
 
-// table_init.wast:1128
+// table_init.wast:1120
 assert_trap(() => call($18, "test", [4]));
 
-// table_init.wast:1129
+// table_init.wast:1121
 assert_trap(() => call($18, "test", [5]));
 
-// table_init.wast:1130
+// table_init.wast:1122
 assert_trap(() => call($18, "test", [6]));
 
-// table_init.wast:1131
+// table_init.wast:1123
 assert_trap(() => call($18, "test", [7]));
 
-// table_init.wast:1132
+// table_init.wast:1124
 assert_trap(() => call($18, "test", [8]));
 
-// table_init.wast:1133
+// table_init.wast:1125
 assert_trap(() => call($18, "test", [9]));
 
-// table_init.wast:1134
+// table_init.wast:1126
 assert_trap(() => call($18, "test", [10]));
 
-// table_init.wast:1135
+// table_init.wast:1127
 assert_trap(() => call($18, "test", [11]));
 
-// table_init.wast:1136
+// table_init.wast:1128
 assert_trap(() => call($18, "test", [12]));
 
-// table_init.wast:1137
+// table_init.wast:1129
 assert_trap(() => call($18, "test", [13]));
 
-// table_init.wast:1138
+// table_init.wast:1130
 assert_trap(() => call($18, "test", [14]));
 
-// table_init.wast:1139
+// table_init.wast:1131
 assert_trap(() => call($18, "test", [15]));
 
-// table_init.wast:1140
+// table_init.wast:1132
 assert_trap(() => call($18, "test", [16]));
 
-// table_init.wast:1141
+// table_init.wast:1133
 assert_trap(() => call($18, "test", [17]));
 
-// table_init.wast:1142
+// table_init.wast:1134
 assert_trap(() => call($18, "test", [18]));
 
-// table_init.wast:1143
+// table_init.wast:1135
 assert_trap(() => call($18, "test", [19]));
 
-// table_init.wast:1144
+// table_init.wast:1136
 assert_trap(() => call($18, "test", [20]));
 
-// table_init.wast:1145
+// table_init.wast:1137
 assert_trap(() => call($18, "test", [21]));
 
-// table_init.wast:1146
+// table_init.wast:1138
 assert_trap(() => call($18, "test", [22]));
 
-// table_init.wast:1147
+// table_init.wast:1139
 assert_trap(() => call($18, "test", [23]));
+
+// table_init.wast:1140
+assert_trap(() => call($18, "test", [24]));
+
+// table_init.wast:1141
+assert_trap(() => call($18, "test", [25]));
+
+// table_init.wast:1142
+assert_trap(() => call($18, "test", [26]));
+
+// table_init.wast:1143
+assert_trap(() => call($18, "test", [27]));
+
+// table_init.wast:1144
+assert_trap(() => call($18, "test", [28]));
+
+// table_init.wast:1145
+assert_trap(() => call($18, "test", [29]));
+
+// table_init.wast:1146
+assert_trap(() => call($18, "test", [30]));
+
+// table_init.wast:1147
+assert_trap(() => call($18, "test", [31]));
 
 // table_init.wast:1149
 let $19 = instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x8f\x80\x80\x80\x00\x03\x60\x00\x01\x7f\x60\x01\x7f\x01\x7f\x60\x02\x7f\x7f\x00\x03\x93\x80\x80\x80\x00\x12\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x02\x04\x85\x80\x80\x80\x00\x01\x70\x01\x20\x40\x07\xe4\x80\x80\x80\x00\x12\x02\x66\x30\x00\x00\x02\x66\x31\x00\x01\x02\x66\x32\x00\x02\x02\x66\x33\x00\x03\x02\x66\x34\x00\x04\x02\x66\x35\x00\x05\x02\x66\x36\x00\x06\x02\x66\x37\x00\x07\x02\x66\x38\x00\x08\x02\x66\x39\x00\x09\x03\x66\x31\x30\x00\x0a\x03\x66\x31\x31\x00\x0b\x03\x66\x31\x32\x00\x0c\x03\x66\x31\x33\x00\x0d\x03\x66\x31\x34\x00\x0e\x03\x66\x31\x35\x00\x0f\x04\x74\x65\x73\x74\x00\x10\x03\x72\x75\x6e\x00\x11\x09\xb4\x80\x80\x80\x00\x01\x05\x70\x10\xd2\x00\x0b\xd2\x01\x0b\xd2\x02\x0b\xd2\x03\x0b\xd2\x04\x0b\xd2\x05\x0b\xd2\x06\x0b\xd2\x07\x0b\xd2\x08\x0b\xd2\x09\x0b\xd2\x0a\x0b\xd2\x0b\x0b\xd2\x0c\x0b\xd2\x0d\x0b\xd2\x0e\x0b\xd2\x0f\x0b\x0a\xae\x81\x80\x80\x00\x12\x84\x80\x80\x80\x00\x00\x41\x00\x0b\x84\x80\x80\x80\x00\x00\x41\x01\x0b\x84\x80\x80\x80\x00\x00\x41\x02\x0b\x84\x80\x80\x80\x00\x00\x41\x03\x0b\x84\x80\x80\x80\x00\x00\x41\x04\x0b\x84\x80\x80\x80\x00\x00\x41\x05\x0b\x84\x80\x80\x80\x00\x00\x41\x06\x0b\x84\x80\x80\x80\x00\x00\x41\x07\x0b\x84\x80\x80\x80\x00\x00\x41\x08\x0b\x84\x80\x80\x80\x00\x00\x41\x09\x0b\x84\x80\x80\x80\x00\x00\x41\x0a\x0b\x84\x80\x80\x80\x00\x00\x41\x0b\x0b\x84\x80\x80\x80\x00\x00\x41\x0c\x0b\x84\x80\x80\x80\x00\x00\x41\x0d\x0b\x84\x80\x80\x80\x00\x00\x41\x0e\x0b\x84\x80\x80\x80\x00\x00\x41\x0f\x0b\x87\x80\x80\x80\x00\x00\x20\x00\x11\x00\x00\x0b\x8c\x80\x80\x80\x00\x00\x20\x00\x41\x00\x20\x01\xfc\x0c\x00\x00\x0b");
@@ -682,100 +682,100 @@ let $19 = instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x8f\x80\x80\x80\x00\x03
 assert_trap(() => call($19, "run", [25, 16]));
 
 // table_init.wast:1178
-assert_return(() => call($19, "test", [25]), 0);
-
-// table_init.wast:1179
-assert_return(() => call($19, "test", [26]), 1);
-
-// table_init.wast:1180
-assert_return(() => call($19, "test", [27]), 2);
-
-// table_init.wast:1181
-assert_return(() => call($19, "test", [28]), 3);
-
-// table_init.wast:1182
-assert_return(() => call($19, "test", [29]), 4);
-
-// table_init.wast:1183
-assert_return(() => call($19, "test", [30]), 5);
-
-// table_init.wast:1184
-assert_return(() => call($19, "test", [31]), 6);
-
-// table_init.wast:1185
 assert_trap(() => call($19, "test", [0]));
 
-// table_init.wast:1186
+// table_init.wast:1179
 assert_trap(() => call($19, "test", [1]));
 
-// table_init.wast:1187
+// table_init.wast:1180
 assert_trap(() => call($19, "test", [2]));
 
-// table_init.wast:1188
+// table_init.wast:1181
 assert_trap(() => call($19, "test", [3]));
 
-// table_init.wast:1189
+// table_init.wast:1182
 assert_trap(() => call($19, "test", [4]));
 
-// table_init.wast:1190
+// table_init.wast:1183
 assert_trap(() => call($19, "test", [5]));
 
-// table_init.wast:1191
+// table_init.wast:1184
 assert_trap(() => call($19, "test", [6]));
 
-// table_init.wast:1192
+// table_init.wast:1185
 assert_trap(() => call($19, "test", [7]));
 
-// table_init.wast:1193
+// table_init.wast:1186
 assert_trap(() => call($19, "test", [8]));
 
-// table_init.wast:1194
+// table_init.wast:1187
 assert_trap(() => call($19, "test", [9]));
 
-// table_init.wast:1195
+// table_init.wast:1188
 assert_trap(() => call($19, "test", [10]));
 
-// table_init.wast:1196
+// table_init.wast:1189
 assert_trap(() => call($19, "test", [11]));
 
-// table_init.wast:1197
+// table_init.wast:1190
 assert_trap(() => call($19, "test", [12]));
 
-// table_init.wast:1198
+// table_init.wast:1191
 assert_trap(() => call($19, "test", [13]));
 
-// table_init.wast:1199
+// table_init.wast:1192
 assert_trap(() => call($19, "test", [14]));
 
-// table_init.wast:1200
+// table_init.wast:1193
 assert_trap(() => call($19, "test", [15]));
 
-// table_init.wast:1201
+// table_init.wast:1194
 assert_trap(() => call($19, "test", [16]));
 
-// table_init.wast:1202
+// table_init.wast:1195
 assert_trap(() => call($19, "test", [17]));
 
-// table_init.wast:1203
+// table_init.wast:1196
 assert_trap(() => call($19, "test", [18]));
 
-// table_init.wast:1204
+// table_init.wast:1197
 assert_trap(() => call($19, "test", [19]));
 
-// table_init.wast:1205
+// table_init.wast:1198
 assert_trap(() => call($19, "test", [20]));
 
-// table_init.wast:1206
+// table_init.wast:1199
 assert_trap(() => call($19, "test", [21]));
 
-// table_init.wast:1207
+// table_init.wast:1200
 assert_trap(() => call($19, "test", [22]));
 
-// table_init.wast:1208
+// table_init.wast:1201
 assert_trap(() => call($19, "test", [23]));
 
-// table_init.wast:1209
+// table_init.wast:1202
 assert_trap(() => call($19, "test", [24]));
+
+// table_init.wast:1203
+assert_trap(() => call($19, "test", [25]));
+
+// table_init.wast:1204
+assert_trap(() => call($19, "test", [26]));
+
+// table_init.wast:1205
+assert_trap(() => call($19, "test", [27]));
+
+// table_init.wast:1206
+assert_trap(() => call($19, "test", [28]));
+
+// table_init.wast:1207
+assert_trap(() => call($19, "test", [29]));
+
+// table_init.wast:1208
+assert_trap(() => call($19, "test", [30]));
+
+// table_init.wast:1209
+assert_trap(() => call($19, "test", [31]));
 
 // table_init.wast:1211
 let $20 = instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x8f\x80\x80\x80\x00\x03\x60\x00\x01\x7f\x60\x01\x7f\x01\x7f\x60\x02\x7f\x7f\x00\x03\x93\x80\x80\x80\x00\x12\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x02\x04\x87\x80\x80\x80\x00\x01\x70\x01\xa0\x01\xc0\x02\x07\xe4\x80\x80\x80\x00\x12\x02\x66\x30\x00\x00\x02\x66\x31\x00\x01\x02\x66\x32\x00\x02\x02\x66\x33\x00\x03\x02\x66\x34\x00\x04\x02\x66\x35\x00\x05\x02\x66\x36\x00\x06\x02\x66\x37\x00\x07\x02\x66\x38\x00\x08\x02\x66\x39\x00\x09\x03\x66\x31\x30\x00\x0a\x03\x66\x31\x31\x00\x0b\x03\x66\x31\x32\x00\x0c\x03\x66\x31\x33\x00\x0d\x03\x66\x31\x34\x00\x0e\x03\x66\x31\x35\x00\x0f\x04\x74\x65\x73\x74\x00\x10\x03\x72\x75\x6e\x00\x11\x09\xb4\x80\x80\x80\x00\x01\x05\x70\x10\xd2\x00\x0b\xd2\x01\x0b\xd2\x02\x0b\xd2\x03\x0b\xd2\x04\x0b\xd2\x05\x0b\xd2\x06\x0b\xd2\x07\x0b\xd2\x08\x0b\xd2\x09\x0b\xd2\x0a\x0b\xd2\x0b\x0b\xd2\x0c\x0b\xd2\x0d\x0b\xd2\x0e\x0b\xd2\x0f\x0b\x0a\xae\x81\x80\x80\x00\x12\x84\x80\x80\x80\x00\x00\x41\x00\x0b\x84\x80\x80\x80\x00\x00\x41\x01\x0b\x84\x80\x80\x80\x00\x00\x41\x02\x0b\x84\x80\x80\x80\x00\x00\x41\x03\x0b\x84\x80\x80\x80\x00\x00\x41\x04\x0b\x84\x80\x80\x80\x00\x00\x41\x05\x0b\x84\x80\x80\x80\x00\x00\x41\x06\x0b\x84\x80\x80\x80\x00\x00\x41\x07\x0b\x84\x80\x80\x80\x00\x00\x41\x08\x0b\x84\x80\x80\x80\x00\x00\x41\x09\x0b\x84\x80\x80\x80\x00\x00\x41\x0a\x0b\x84\x80\x80\x80\x00\x00\x41\x0b\x0b\x84\x80\x80\x80\x00\x00\x41\x0c\x0b\x84\x80\x80\x80\x00\x00\x41\x0d\x0b\x84\x80\x80\x80\x00\x00\x41\x0e\x0b\x84\x80\x80\x80\x00\x00\x41\x0f\x0b\x87\x80\x80\x80\x00\x00\x20\x00\x11\x00\x00\x0b\x8c\x80\x80\x80\x00\x00\x20\x00\x41\x00\x20\x01\xfc\x0c\x00\x00\x0b");
@@ -784,484 +784,484 @@ let $20 = instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x8f\x80\x80\x80\x00\x03
 assert_trap(() => call($20, "run", [96, 32]));
 
 // table_init.wast:1240
-assert_return(() => call($20, "test", [96]), 0);
-
-// table_init.wast:1241
-assert_return(() => call($20, "test", [97]), 1);
-
-// table_init.wast:1242
-assert_return(() => call($20, "test", [98]), 2);
-
-// table_init.wast:1243
-assert_return(() => call($20, "test", [99]), 3);
-
-// table_init.wast:1244
-assert_return(() => call($20, "test", [100]), 4);
-
-// table_init.wast:1245
-assert_return(() => call($20, "test", [101]), 5);
-
-// table_init.wast:1246
-assert_return(() => call($20, "test", [102]), 6);
-
-// table_init.wast:1247
-assert_return(() => call($20, "test", [103]), 7);
-
-// table_init.wast:1248
-assert_return(() => call($20, "test", [104]), 8);
-
-// table_init.wast:1249
-assert_return(() => call($20, "test", [105]), 9);
-
-// table_init.wast:1250
-assert_return(() => call($20, "test", [106]), 10);
-
-// table_init.wast:1251
-assert_return(() => call($20, "test", [107]), 11);
-
-// table_init.wast:1252
-assert_return(() => call($20, "test", [108]), 12);
-
-// table_init.wast:1253
-assert_return(() => call($20, "test", [109]), 13);
-
-// table_init.wast:1254
-assert_return(() => call($20, "test", [110]), 14);
-
-// table_init.wast:1255
-assert_return(() => call($20, "test", [111]), 15);
-
-// table_init.wast:1256
-assert_trap(() => call($20, "test", [112]));
-
-// table_init.wast:1257
-assert_trap(() => call($20, "test", [113]));
-
-// table_init.wast:1258
-assert_trap(() => call($20, "test", [114]));
-
-// table_init.wast:1259
-assert_trap(() => call($20, "test", [115]));
-
-// table_init.wast:1260
-assert_trap(() => call($20, "test", [116]));
-
-// table_init.wast:1261
-assert_trap(() => call($20, "test", [117]));
-
-// table_init.wast:1262
-assert_trap(() => call($20, "test", [118]));
-
-// table_init.wast:1263
-assert_trap(() => call($20, "test", [119]));
-
-// table_init.wast:1264
-assert_trap(() => call($20, "test", [120]));
-
-// table_init.wast:1265
-assert_trap(() => call($20, "test", [121]));
-
-// table_init.wast:1266
-assert_trap(() => call($20, "test", [122]));
-
-// table_init.wast:1267
-assert_trap(() => call($20, "test", [123]));
-
-// table_init.wast:1268
-assert_trap(() => call($20, "test", [124]));
-
-// table_init.wast:1269
-assert_trap(() => call($20, "test", [125]));
-
-// table_init.wast:1270
-assert_trap(() => call($20, "test", [126]));
-
-// table_init.wast:1271
-assert_trap(() => call($20, "test", [127]));
-
-// table_init.wast:1272
-assert_trap(() => call($20, "test", [128]));
-
-// table_init.wast:1273
-assert_trap(() => call($20, "test", [129]));
-
-// table_init.wast:1274
-assert_trap(() => call($20, "test", [130]));
-
-// table_init.wast:1275
-assert_trap(() => call($20, "test", [131]));
-
-// table_init.wast:1276
-assert_trap(() => call($20, "test", [132]));
-
-// table_init.wast:1277
-assert_trap(() => call($20, "test", [133]));
-
-// table_init.wast:1278
-assert_trap(() => call($20, "test", [134]));
-
-// table_init.wast:1279
-assert_trap(() => call($20, "test", [135]));
-
-// table_init.wast:1280
-assert_trap(() => call($20, "test", [136]));
-
-// table_init.wast:1281
-assert_trap(() => call($20, "test", [137]));
-
-// table_init.wast:1282
-assert_trap(() => call($20, "test", [138]));
-
-// table_init.wast:1283
-assert_trap(() => call($20, "test", [139]));
-
-// table_init.wast:1284
-assert_trap(() => call($20, "test", [140]));
-
-// table_init.wast:1285
-assert_trap(() => call($20, "test", [141]));
-
-// table_init.wast:1286
-assert_trap(() => call($20, "test", [142]));
-
-// table_init.wast:1287
-assert_trap(() => call($20, "test", [143]));
-
-// table_init.wast:1288
-assert_trap(() => call($20, "test", [144]));
-
-// table_init.wast:1289
-assert_trap(() => call($20, "test", [145]));
-
-// table_init.wast:1290
-assert_trap(() => call($20, "test", [146]));
-
-// table_init.wast:1291
-assert_trap(() => call($20, "test", [147]));
-
-// table_init.wast:1292
-assert_trap(() => call($20, "test", [148]));
-
-// table_init.wast:1293
-assert_trap(() => call($20, "test", [149]));
-
-// table_init.wast:1294
-assert_trap(() => call($20, "test", [150]));
-
-// table_init.wast:1295
-assert_trap(() => call($20, "test", [151]));
-
-// table_init.wast:1296
-assert_trap(() => call($20, "test", [152]));
-
-// table_init.wast:1297
-assert_trap(() => call($20, "test", [153]));
-
-// table_init.wast:1298
-assert_trap(() => call($20, "test", [154]));
-
-// table_init.wast:1299
-assert_trap(() => call($20, "test", [155]));
-
-// table_init.wast:1300
-assert_trap(() => call($20, "test", [156]));
-
-// table_init.wast:1301
-assert_trap(() => call($20, "test", [157]));
-
-// table_init.wast:1302
-assert_trap(() => call($20, "test", [158]));
-
-// table_init.wast:1303
-assert_trap(() => call($20, "test", [159]));
-
-// table_init.wast:1304
 assert_trap(() => call($20, "test", [0]));
 
-// table_init.wast:1305
+// table_init.wast:1241
 assert_trap(() => call($20, "test", [1]));
 
-// table_init.wast:1306
+// table_init.wast:1242
 assert_trap(() => call($20, "test", [2]));
 
-// table_init.wast:1307
+// table_init.wast:1243
 assert_trap(() => call($20, "test", [3]));
 
-// table_init.wast:1308
+// table_init.wast:1244
 assert_trap(() => call($20, "test", [4]));
 
-// table_init.wast:1309
+// table_init.wast:1245
 assert_trap(() => call($20, "test", [5]));
 
-// table_init.wast:1310
+// table_init.wast:1246
 assert_trap(() => call($20, "test", [6]));
 
-// table_init.wast:1311
+// table_init.wast:1247
 assert_trap(() => call($20, "test", [7]));
 
-// table_init.wast:1312
+// table_init.wast:1248
 assert_trap(() => call($20, "test", [8]));
 
-// table_init.wast:1313
+// table_init.wast:1249
 assert_trap(() => call($20, "test", [9]));
 
-// table_init.wast:1314
+// table_init.wast:1250
 assert_trap(() => call($20, "test", [10]));
 
-// table_init.wast:1315
+// table_init.wast:1251
 assert_trap(() => call($20, "test", [11]));
 
-// table_init.wast:1316
+// table_init.wast:1252
 assert_trap(() => call($20, "test", [12]));
 
-// table_init.wast:1317
+// table_init.wast:1253
 assert_trap(() => call($20, "test", [13]));
 
-// table_init.wast:1318
+// table_init.wast:1254
 assert_trap(() => call($20, "test", [14]));
 
-// table_init.wast:1319
+// table_init.wast:1255
 assert_trap(() => call($20, "test", [15]));
 
-// table_init.wast:1320
+// table_init.wast:1256
 assert_trap(() => call($20, "test", [16]));
 
-// table_init.wast:1321
+// table_init.wast:1257
 assert_trap(() => call($20, "test", [17]));
 
-// table_init.wast:1322
+// table_init.wast:1258
 assert_trap(() => call($20, "test", [18]));
 
-// table_init.wast:1323
+// table_init.wast:1259
 assert_trap(() => call($20, "test", [19]));
 
-// table_init.wast:1324
+// table_init.wast:1260
 assert_trap(() => call($20, "test", [20]));
 
-// table_init.wast:1325
+// table_init.wast:1261
 assert_trap(() => call($20, "test", [21]));
 
-// table_init.wast:1326
+// table_init.wast:1262
 assert_trap(() => call($20, "test", [22]));
 
-// table_init.wast:1327
+// table_init.wast:1263
 assert_trap(() => call($20, "test", [23]));
 
-// table_init.wast:1328
+// table_init.wast:1264
 assert_trap(() => call($20, "test", [24]));
 
-// table_init.wast:1329
+// table_init.wast:1265
 assert_trap(() => call($20, "test", [25]));
 
-// table_init.wast:1330
+// table_init.wast:1266
 assert_trap(() => call($20, "test", [26]));
 
-// table_init.wast:1331
+// table_init.wast:1267
 assert_trap(() => call($20, "test", [27]));
 
-// table_init.wast:1332
+// table_init.wast:1268
 assert_trap(() => call($20, "test", [28]));
 
-// table_init.wast:1333
+// table_init.wast:1269
 assert_trap(() => call($20, "test", [29]));
 
-// table_init.wast:1334
+// table_init.wast:1270
 assert_trap(() => call($20, "test", [30]));
 
-// table_init.wast:1335
+// table_init.wast:1271
 assert_trap(() => call($20, "test", [31]));
 
-// table_init.wast:1336
+// table_init.wast:1272
 assert_trap(() => call($20, "test", [32]));
 
-// table_init.wast:1337
+// table_init.wast:1273
 assert_trap(() => call($20, "test", [33]));
 
-// table_init.wast:1338
+// table_init.wast:1274
 assert_trap(() => call($20, "test", [34]));
 
-// table_init.wast:1339
+// table_init.wast:1275
 assert_trap(() => call($20, "test", [35]));
 
-// table_init.wast:1340
+// table_init.wast:1276
 assert_trap(() => call($20, "test", [36]));
 
-// table_init.wast:1341
+// table_init.wast:1277
 assert_trap(() => call($20, "test", [37]));
 
-// table_init.wast:1342
+// table_init.wast:1278
 assert_trap(() => call($20, "test", [38]));
 
-// table_init.wast:1343
+// table_init.wast:1279
 assert_trap(() => call($20, "test", [39]));
 
-// table_init.wast:1344
+// table_init.wast:1280
 assert_trap(() => call($20, "test", [40]));
 
-// table_init.wast:1345
+// table_init.wast:1281
 assert_trap(() => call($20, "test", [41]));
 
-// table_init.wast:1346
+// table_init.wast:1282
 assert_trap(() => call($20, "test", [42]));
 
-// table_init.wast:1347
+// table_init.wast:1283
 assert_trap(() => call($20, "test", [43]));
 
-// table_init.wast:1348
+// table_init.wast:1284
 assert_trap(() => call($20, "test", [44]));
 
-// table_init.wast:1349
+// table_init.wast:1285
 assert_trap(() => call($20, "test", [45]));
 
-// table_init.wast:1350
+// table_init.wast:1286
 assert_trap(() => call($20, "test", [46]));
 
-// table_init.wast:1351
+// table_init.wast:1287
 assert_trap(() => call($20, "test", [47]));
 
-// table_init.wast:1352
+// table_init.wast:1288
 assert_trap(() => call($20, "test", [48]));
 
-// table_init.wast:1353
+// table_init.wast:1289
 assert_trap(() => call($20, "test", [49]));
 
-// table_init.wast:1354
+// table_init.wast:1290
 assert_trap(() => call($20, "test", [50]));
 
-// table_init.wast:1355
+// table_init.wast:1291
 assert_trap(() => call($20, "test", [51]));
 
-// table_init.wast:1356
+// table_init.wast:1292
 assert_trap(() => call($20, "test", [52]));
 
-// table_init.wast:1357
+// table_init.wast:1293
 assert_trap(() => call($20, "test", [53]));
 
-// table_init.wast:1358
+// table_init.wast:1294
 assert_trap(() => call($20, "test", [54]));
 
-// table_init.wast:1359
+// table_init.wast:1295
 assert_trap(() => call($20, "test", [55]));
 
-// table_init.wast:1360
+// table_init.wast:1296
 assert_trap(() => call($20, "test", [56]));
 
-// table_init.wast:1361
+// table_init.wast:1297
 assert_trap(() => call($20, "test", [57]));
 
-// table_init.wast:1362
+// table_init.wast:1298
 assert_trap(() => call($20, "test", [58]));
 
-// table_init.wast:1363
+// table_init.wast:1299
 assert_trap(() => call($20, "test", [59]));
 
-// table_init.wast:1364
+// table_init.wast:1300
 assert_trap(() => call($20, "test", [60]));
 
-// table_init.wast:1365
+// table_init.wast:1301
 assert_trap(() => call($20, "test", [61]));
 
-// table_init.wast:1366
+// table_init.wast:1302
 assert_trap(() => call($20, "test", [62]));
 
-// table_init.wast:1367
+// table_init.wast:1303
 assert_trap(() => call($20, "test", [63]));
 
-// table_init.wast:1368
+// table_init.wast:1304
 assert_trap(() => call($20, "test", [64]));
 
-// table_init.wast:1369
+// table_init.wast:1305
 assert_trap(() => call($20, "test", [65]));
 
-// table_init.wast:1370
+// table_init.wast:1306
 assert_trap(() => call($20, "test", [66]));
 
-// table_init.wast:1371
+// table_init.wast:1307
 assert_trap(() => call($20, "test", [67]));
 
-// table_init.wast:1372
+// table_init.wast:1308
 assert_trap(() => call($20, "test", [68]));
 
-// table_init.wast:1373
+// table_init.wast:1309
 assert_trap(() => call($20, "test", [69]));
 
-// table_init.wast:1374
+// table_init.wast:1310
 assert_trap(() => call($20, "test", [70]));
 
-// table_init.wast:1375
+// table_init.wast:1311
 assert_trap(() => call($20, "test", [71]));
 
-// table_init.wast:1376
+// table_init.wast:1312
 assert_trap(() => call($20, "test", [72]));
 
-// table_init.wast:1377
+// table_init.wast:1313
 assert_trap(() => call($20, "test", [73]));
 
-// table_init.wast:1378
+// table_init.wast:1314
 assert_trap(() => call($20, "test", [74]));
 
-// table_init.wast:1379
+// table_init.wast:1315
 assert_trap(() => call($20, "test", [75]));
 
-// table_init.wast:1380
+// table_init.wast:1316
 assert_trap(() => call($20, "test", [76]));
 
-// table_init.wast:1381
+// table_init.wast:1317
 assert_trap(() => call($20, "test", [77]));
 
-// table_init.wast:1382
+// table_init.wast:1318
 assert_trap(() => call($20, "test", [78]));
 
-// table_init.wast:1383
+// table_init.wast:1319
 assert_trap(() => call($20, "test", [79]));
 
-// table_init.wast:1384
+// table_init.wast:1320
 assert_trap(() => call($20, "test", [80]));
 
-// table_init.wast:1385
+// table_init.wast:1321
 assert_trap(() => call($20, "test", [81]));
 
-// table_init.wast:1386
+// table_init.wast:1322
 assert_trap(() => call($20, "test", [82]));
 
-// table_init.wast:1387
+// table_init.wast:1323
 assert_trap(() => call($20, "test", [83]));
 
-// table_init.wast:1388
+// table_init.wast:1324
 assert_trap(() => call($20, "test", [84]));
 
-// table_init.wast:1389
+// table_init.wast:1325
 assert_trap(() => call($20, "test", [85]));
 
-// table_init.wast:1390
+// table_init.wast:1326
 assert_trap(() => call($20, "test", [86]));
 
-// table_init.wast:1391
+// table_init.wast:1327
 assert_trap(() => call($20, "test", [87]));
 
-// table_init.wast:1392
+// table_init.wast:1328
 assert_trap(() => call($20, "test", [88]));
 
-// table_init.wast:1393
+// table_init.wast:1329
 assert_trap(() => call($20, "test", [89]));
 
-// table_init.wast:1394
+// table_init.wast:1330
 assert_trap(() => call($20, "test", [90]));
 
-// table_init.wast:1395
+// table_init.wast:1331
 assert_trap(() => call($20, "test", [91]));
 
-// table_init.wast:1396
+// table_init.wast:1332
 assert_trap(() => call($20, "test", [92]));
 
-// table_init.wast:1397
+// table_init.wast:1333
 assert_trap(() => call($20, "test", [93]));
 
-// table_init.wast:1398
+// table_init.wast:1334
 assert_trap(() => call($20, "test", [94]));
 
-// table_init.wast:1399
+// table_init.wast:1335
 assert_trap(() => call($20, "test", [95]));
+
+// table_init.wast:1336
+assert_trap(() => call($20, "test", [96]));
+
+// table_init.wast:1337
+assert_trap(() => call($20, "test", [97]));
+
+// table_init.wast:1338
+assert_trap(() => call($20, "test", [98]));
+
+// table_init.wast:1339
+assert_trap(() => call($20, "test", [99]));
+
+// table_init.wast:1340
+assert_trap(() => call($20, "test", [100]));
+
+// table_init.wast:1341
+assert_trap(() => call($20, "test", [101]));
+
+// table_init.wast:1342
+assert_trap(() => call($20, "test", [102]));
+
+// table_init.wast:1343
+assert_trap(() => call($20, "test", [103]));
+
+// table_init.wast:1344
+assert_trap(() => call($20, "test", [104]));
+
+// table_init.wast:1345
+assert_trap(() => call($20, "test", [105]));
+
+// table_init.wast:1346
+assert_trap(() => call($20, "test", [106]));
+
+// table_init.wast:1347
+assert_trap(() => call($20, "test", [107]));
+
+// table_init.wast:1348
+assert_trap(() => call($20, "test", [108]));
+
+// table_init.wast:1349
+assert_trap(() => call($20, "test", [109]));
+
+// table_init.wast:1350
+assert_trap(() => call($20, "test", [110]));
+
+// table_init.wast:1351
+assert_trap(() => call($20, "test", [111]));
+
+// table_init.wast:1352
+assert_trap(() => call($20, "test", [112]));
+
+// table_init.wast:1353
+assert_trap(() => call($20, "test", [113]));
+
+// table_init.wast:1354
+assert_trap(() => call($20, "test", [114]));
+
+// table_init.wast:1355
+assert_trap(() => call($20, "test", [115]));
+
+// table_init.wast:1356
+assert_trap(() => call($20, "test", [116]));
+
+// table_init.wast:1357
+assert_trap(() => call($20, "test", [117]));
+
+// table_init.wast:1358
+assert_trap(() => call($20, "test", [118]));
+
+// table_init.wast:1359
+assert_trap(() => call($20, "test", [119]));
+
+// table_init.wast:1360
+assert_trap(() => call($20, "test", [120]));
+
+// table_init.wast:1361
+assert_trap(() => call($20, "test", [121]));
+
+// table_init.wast:1362
+assert_trap(() => call($20, "test", [122]));
+
+// table_init.wast:1363
+assert_trap(() => call($20, "test", [123]));
+
+// table_init.wast:1364
+assert_trap(() => call($20, "test", [124]));
+
+// table_init.wast:1365
+assert_trap(() => call($20, "test", [125]));
+
+// table_init.wast:1366
+assert_trap(() => call($20, "test", [126]));
+
+// table_init.wast:1367
+assert_trap(() => call($20, "test", [127]));
+
+// table_init.wast:1368
+assert_trap(() => call($20, "test", [128]));
+
+// table_init.wast:1369
+assert_trap(() => call($20, "test", [129]));
+
+// table_init.wast:1370
+assert_trap(() => call($20, "test", [130]));
+
+// table_init.wast:1371
+assert_trap(() => call($20, "test", [131]));
+
+// table_init.wast:1372
+assert_trap(() => call($20, "test", [132]));
+
+// table_init.wast:1373
+assert_trap(() => call($20, "test", [133]));
+
+// table_init.wast:1374
+assert_trap(() => call($20, "test", [134]));
+
+// table_init.wast:1375
+assert_trap(() => call($20, "test", [135]));
+
+// table_init.wast:1376
+assert_trap(() => call($20, "test", [136]));
+
+// table_init.wast:1377
+assert_trap(() => call($20, "test", [137]));
+
+// table_init.wast:1378
+assert_trap(() => call($20, "test", [138]));
+
+// table_init.wast:1379
+assert_trap(() => call($20, "test", [139]));
+
+// table_init.wast:1380
+assert_trap(() => call($20, "test", [140]));
+
+// table_init.wast:1381
+assert_trap(() => call($20, "test", [141]));
+
+// table_init.wast:1382
+assert_trap(() => call($20, "test", [142]));
+
+// table_init.wast:1383
+assert_trap(() => call($20, "test", [143]));
+
+// table_init.wast:1384
+assert_trap(() => call($20, "test", [144]));
+
+// table_init.wast:1385
+assert_trap(() => call($20, "test", [145]));
+
+// table_init.wast:1386
+assert_trap(() => call($20, "test", [146]));
+
+// table_init.wast:1387
+assert_trap(() => call($20, "test", [147]));
+
+// table_init.wast:1388
+assert_trap(() => call($20, "test", [148]));
+
+// table_init.wast:1389
+assert_trap(() => call($20, "test", [149]));
+
+// table_init.wast:1390
+assert_trap(() => call($20, "test", [150]));
+
+// table_init.wast:1391
+assert_trap(() => call($20, "test", [151]));
+
+// table_init.wast:1392
+assert_trap(() => call($20, "test", [152]));
+
+// table_init.wast:1393
+assert_trap(() => call($20, "test", [153]));
+
+// table_init.wast:1394
+assert_trap(() => call($20, "test", [154]));
+
+// table_init.wast:1395
+assert_trap(() => call($20, "test", [155]));
+
+// table_init.wast:1396
+assert_trap(() => call($20, "test", [156]));
+
+// table_init.wast:1397
+assert_trap(() => call($20, "test", [157]));
+
+// table_init.wast:1398
+assert_trap(() => call($20, "test", [158]));
+
+// table_init.wast:1399
+assert_trap(() => call($20, "test", [159]));
 
 // table_init.wast:1401
 let $21 = instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x8f\x80\x80\x80\x00\x03\x60\x00\x01\x7f\x60\x01\x7f\x01\x7f\x60\x02\x7f\x7f\x00\x03\x93\x80\x80\x80\x00\x12\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x02\x04\x87\x80\x80\x80\x00\x01\x70\x01\xa0\x01\xc0\x02\x07\xe4\x80\x80\x80\x00\x12\x02\x66\x30\x00\x00\x02\x66\x31\x00\x01\x02\x66\x32\x00\x02\x02\x66\x33\x00\x03\x02\x66\x34\x00\x04\x02\x66\x35\x00\x05\x02\x66\x36\x00\x06\x02\x66\x37\x00\x07\x02\x66\x38\x00\x08\x02\x66\x39\x00\x09\x03\x66\x31\x30\x00\x0a\x03\x66\x31\x31\x00\x0b\x03\x66\x31\x32\x00\x0c\x03\x66\x31\x33\x00\x0d\x03\x66\x31\x34\x00\x0e\x03\x66\x31\x35\x00\x0f\x04\x74\x65\x73\x74\x00\x10\x03\x72\x75\x6e\x00\x11\x09\xb4\x80\x80\x80\x00\x01\x05\x70\x10\xd2\x00\x0b\xd2\x01\x0b\xd2\x02\x0b\xd2\x03\x0b\xd2\x04\x0b\xd2\x05\x0b\xd2\x06\x0b\xd2\x07\x0b\xd2\x08\x0b\xd2\x09\x0b\xd2\x0a\x0b\xd2\x0b\x0b\xd2\x0c\x0b\xd2\x0d\x0b\xd2\x0e\x0b\xd2\x0f\x0b\x0a\xae\x81\x80\x80\x00\x12\x84\x80\x80\x80\x00\x00\x41\x00\x0b\x84\x80\x80\x80\x00\x00\x41\x01\x0b\x84\x80\x80\x80\x00\x00\x41\x02\x0b\x84\x80\x80\x80\x00\x00\x41\x03\x0b\x84\x80\x80\x80\x00\x00\x41\x04\x0b\x84\x80\x80\x80\x00\x00\x41\x05\x0b\x84\x80\x80\x80\x00\x00\x41\x06\x0b\x84\x80\x80\x80\x00\x00\x41\x07\x0b\x84\x80\x80\x80\x00\x00\x41\x08\x0b\x84\x80\x80\x80\x00\x00\x41\x09\x0b\x84\x80\x80\x80\x00\x00\x41\x0a\x0b\x84\x80\x80\x80\x00\x00\x41\x0b\x0b\x84\x80\x80\x80\x00\x00\x41\x0c\x0b\x84\x80\x80\x80\x00\x00\x41\x0d\x0b\x84\x80\x80\x80\x00\x00\x41\x0e\x0b\x84\x80\x80\x80\x00\x00\x41\x0f\x0b\x87\x80\x80\x80\x00\x00\x20\x00\x11\x00\x00\x0b\x8c\x80\x80\x80\x00\x00\x20\x00\x41\x00\x20\x01\xfc\x0c\x00\x00\x0b");
@@ -1270,484 +1270,484 @@ let $21 = instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x8f\x80\x80\x80\x00\x03
 assert_trap(() => call($21, "run", [97, 31]));
 
 // table_init.wast:1430
-assert_return(() => call($21, "test", [97]), 0);
-
-// table_init.wast:1431
-assert_return(() => call($21, "test", [98]), 1);
-
-// table_init.wast:1432
-assert_return(() => call($21, "test", [99]), 2);
-
-// table_init.wast:1433
-assert_return(() => call($21, "test", [100]), 3);
-
-// table_init.wast:1434
-assert_return(() => call($21, "test", [101]), 4);
-
-// table_init.wast:1435
-assert_return(() => call($21, "test", [102]), 5);
-
-// table_init.wast:1436
-assert_return(() => call($21, "test", [103]), 6);
-
-// table_init.wast:1437
-assert_return(() => call($21, "test", [104]), 7);
-
-// table_init.wast:1438
-assert_return(() => call($21, "test", [105]), 8);
-
-// table_init.wast:1439
-assert_return(() => call($21, "test", [106]), 9);
-
-// table_init.wast:1440
-assert_return(() => call($21, "test", [107]), 10);
-
-// table_init.wast:1441
-assert_return(() => call($21, "test", [108]), 11);
-
-// table_init.wast:1442
-assert_return(() => call($21, "test", [109]), 12);
-
-// table_init.wast:1443
-assert_return(() => call($21, "test", [110]), 13);
-
-// table_init.wast:1444
-assert_return(() => call($21, "test", [111]), 14);
-
-// table_init.wast:1445
-assert_return(() => call($21, "test", [112]), 15);
-
-// table_init.wast:1446
-assert_trap(() => call($21, "test", [113]));
-
-// table_init.wast:1447
-assert_trap(() => call($21, "test", [114]));
-
-// table_init.wast:1448
-assert_trap(() => call($21, "test", [115]));
-
-// table_init.wast:1449
-assert_trap(() => call($21, "test", [116]));
-
-// table_init.wast:1450
-assert_trap(() => call($21, "test", [117]));
-
-// table_init.wast:1451
-assert_trap(() => call($21, "test", [118]));
-
-// table_init.wast:1452
-assert_trap(() => call($21, "test", [119]));
-
-// table_init.wast:1453
-assert_trap(() => call($21, "test", [120]));
-
-// table_init.wast:1454
-assert_trap(() => call($21, "test", [121]));
-
-// table_init.wast:1455
-assert_trap(() => call($21, "test", [122]));
-
-// table_init.wast:1456
-assert_trap(() => call($21, "test", [123]));
-
-// table_init.wast:1457
-assert_trap(() => call($21, "test", [124]));
-
-// table_init.wast:1458
-assert_trap(() => call($21, "test", [125]));
-
-// table_init.wast:1459
-assert_trap(() => call($21, "test", [126]));
-
-// table_init.wast:1460
-assert_trap(() => call($21, "test", [127]));
-
-// table_init.wast:1461
-assert_trap(() => call($21, "test", [128]));
-
-// table_init.wast:1462
-assert_trap(() => call($21, "test", [129]));
-
-// table_init.wast:1463
-assert_trap(() => call($21, "test", [130]));
-
-// table_init.wast:1464
-assert_trap(() => call($21, "test", [131]));
-
-// table_init.wast:1465
-assert_trap(() => call($21, "test", [132]));
-
-// table_init.wast:1466
-assert_trap(() => call($21, "test", [133]));
-
-// table_init.wast:1467
-assert_trap(() => call($21, "test", [134]));
-
-// table_init.wast:1468
-assert_trap(() => call($21, "test", [135]));
-
-// table_init.wast:1469
-assert_trap(() => call($21, "test", [136]));
-
-// table_init.wast:1470
-assert_trap(() => call($21, "test", [137]));
-
-// table_init.wast:1471
-assert_trap(() => call($21, "test", [138]));
-
-// table_init.wast:1472
-assert_trap(() => call($21, "test", [139]));
-
-// table_init.wast:1473
-assert_trap(() => call($21, "test", [140]));
-
-// table_init.wast:1474
-assert_trap(() => call($21, "test", [141]));
-
-// table_init.wast:1475
-assert_trap(() => call($21, "test", [142]));
-
-// table_init.wast:1476
-assert_trap(() => call($21, "test", [143]));
-
-// table_init.wast:1477
-assert_trap(() => call($21, "test", [144]));
-
-// table_init.wast:1478
-assert_trap(() => call($21, "test", [145]));
-
-// table_init.wast:1479
-assert_trap(() => call($21, "test", [146]));
-
-// table_init.wast:1480
-assert_trap(() => call($21, "test", [147]));
-
-// table_init.wast:1481
-assert_trap(() => call($21, "test", [148]));
-
-// table_init.wast:1482
-assert_trap(() => call($21, "test", [149]));
-
-// table_init.wast:1483
-assert_trap(() => call($21, "test", [150]));
-
-// table_init.wast:1484
-assert_trap(() => call($21, "test", [151]));
-
-// table_init.wast:1485
-assert_trap(() => call($21, "test", [152]));
-
-// table_init.wast:1486
-assert_trap(() => call($21, "test", [153]));
-
-// table_init.wast:1487
-assert_trap(() => call($21, "test", [154]));
-
-// table_init.wast:1488
-assert_trap(() => call($21, "test", [155]));
-
-// table_init.wast:1489
-assert_trap(() => call($21, "test", [156]));
-
-// table_init.wast:1490
-assert_trap(() => call($21, "test", [157]));
-
-// table_init.wast:1491
-assert_trap(() => call($21, "test", [158]));
-
-// table_init.wast:1492
-assert_trap(() => call($21, "test", [159]));
-
-// table_init.wast:1493
 assert_trap(() => call($21, "test", [0]));
 
-// table_init.wast:1494
+// table_init.wast:1431
 assert_trap(() => call($21, "test", [1]));
 
-// table_init.wast:1495
+// table_init.wast:1432
 assert_trap(() => call($21, "test", [2]));
 
-// table_init.wast:1496
+// table_init.wast:1433
 assert_trap(() => call($21, "test", [3]));
 
-// table_init.wast:1497
+// table_init.wast:1434
 assert_trap(() => call($21, "test", [4]));
 
-// table_init.wast:1498
+// table_init.wast:1435
 assert_trap(() => call($21, "test", [5]));
 
-// table_init.wast:1499
+// table_init.wast:1436
 assert_trap(() => call($21, "test", [6]));
 
-// table_init.wast:1500
+// table_init.wast:1437
 assert_trap(() => call($21, "test", [7]));
 
-// table_init.wast:1501
+// table_init.wast:1438
 assert_trap(() => call($21, "test", [8]));
 
-// table_init.wast:1502
+// table_init.wast:1439
 assert_trap(() => call($21, "test", [9]));
 
-// table_init.wast:1503
+// table_init.wast:1440
 assert_trap(() => call($21, "test", [10]));
 
-// table_init.wast:1504
+// table_init.wast:1441
 assert_trap(() => call($21, "test", [11]));
 
-// table_init.wast:1505
+// table_init.wast:1442
 assert_trap(() => call($21, "test", [12]));
 
-// table_init.wast:1506
+// table_init.wast:1443
 assert_trap(() => call($21, "test", [13]));
 
-// table_init.wast:1507
+// table_init.wast:1444
 assert_trap(() => call($21, "test", [14]));
 
-// table_init.wast:1508
+// table_init.wast:1445
 assert_trap(() => call($21, "test", [15]));
 
-// table_init.wast:1509
+// table_init.wast:1446
 assert_trap(() => call($21, "test", [16]));
 
-// table_init.wast:1510
+// table_init.wast:1447
 assert_trap(() => call($21, "test", [17]));
 
-// table_init.wast:1511
+// table_init.wast:1448
 assert_trap(() => call($21, "test", [18]));
 
-// table_init.wast:1512
+// table_init.wast:1449
 assert_trap(() => call($21, "test", [19]));
 
-// table_init.wast:1513
+// table_init.wast:1450
 assert_trap(() => call($21, "test", [20]));
 
-// table_init.wast:1514
+// table_init.wast:1451
 assert_trap(() => call($21, "test", [21]));
 
-// table_init.wast:1515
+// table_init.wast:1452
 assert_trap(() => call($21, "test", [22]));
 
-// table_init.wast:1516
+// table_init.wast:1453
 assert_trap(() => call($21, "test", [23]));
 
-// table_init.wast:1517
+// table_init.wast:1454
 assert_trap(() => call($21, "test", [24]));
 
-// table_init.wast:1518
+// table_init.wast:1455
 assert_trap(() => call($21, "test", [25]));
 
-// table_init.wast:1519
+// table_init.wast:1456
 assert_trap(() => call($21, "test", [26]));
 
-// table_init.wast:1520
+// table_init.wast:1457
 assert_trap(() => call($21, "test", [27]));
 
-// table_init.wast:1521
+// table_init.wast:1458
 assert_trap(() => call($21, "test", [28]));
 
-// table_init.wast:1522
+// table_init.wast:1459
 assert_trap(() => call($21, "test", [29]));
 
-// table_init.wast:1523
+// table_init.wast:1460
 assert_trap(() => call($21, "test", [30]));
 
-// table_init.wast:1524
+// table_init.wast:1461
 assert_trap(() => call($21, "test", [31]));
 
-// table_init.wast:1525
+// table_init.wast:1462
 assert_trap(() => call($21, "test", [32]));
 
-// table_init.wast:1526
+// table_init.wast:1463
 assert_trap(() => call($21, "test", [33]));
 
-// table_init.wast:1527
+// table_init.wast:1464
 assert_trap(() => call($21, "test", [34]));
 
-// table_init.wast:1528
+// table_init.wast:1465
 assert_trap(() => call($21, "test", [35]));
 
-// table_init.wast:1529
+// table_init.wast:1466
 assert_trap(() => call($21, "test", [36]));
 
-// table_init.wast:1530
+// table_init.wast:1467
 assert_trap(() => call($21, "test", [37]));
 
-// table_init.wast:1531
+// table_init.wast:1468
 assert_trap(() => call($21, "test", [38]));
 
-// table_init.wast:1532
+// table_init.wast:1469
 assert_trap(() => call($21, "test", [39]));
 
-// table_init.wast:1533
+// table_init.wast:1470
 assert_trap(() => call($21, "test", [40]));
 
-// table_init.wast:1534
+// table_init.wast:1471
 assert_trap(() => call($21, "test", [41]));
 
-// table_init.wast:1535
+// table_init.wast:1472
 assert_trap(() => call($21, "test", [42]));
 
-// table_init.wast:1536
+// table_init.wast:1473
 assert_trap(() => call($21, "test", [43]));
 
-// table_init.wast:1537
+// table_init.wast:1474
 assert_trap(() => call($21, "test", [44]));
 
-// table_init.wast:1538
+// table_init.wast:1475
 assert_trap(() => call($21, "test", [45]));
 
-// table_init.wast:1539
+// table_init.wast:1476
 assert_trap(() => call($21, "test", [46]));
 
-// table_init.wast:1540
+// table_init.wast:1477
 assert_trap(() => call($21, "test", [47]));
 
-// table_init.wast:1541
+// table_init.wast:1478
 assert_trap(() => call($21, "test", [48]));
 
-// table_init.wast:1542
+// table_init.wast:1479
 assert_trap(() => call($21, "test", [49]));
 
-// table_init.wast:1543
+// table_init.wast:1480
 assert_trap(() => call($21, "test", [50]));
 
-// table_init.wast:1544
+// table_init.wast:1481
 assert_trap(() => call($21, "test", [51]));
 
-// table_init.wast:1545
+// table_init.wast:1482
 assert_trap(() => call($21, "test", [52]));
 
-// table_init.wast:1546
+// table_init.wast:1483
 assert_trap(() => call($21, "test", [53]));
 
-// table_init.wast:1547
+// table_init.wast:1484
 assert_trap(() => call($21, "test", [54]));
 
-// table_init.wast:1548
+// table_init.wast:1485
 assert_trap(() => call($21, "test", [55]));
 
-// table_init.wast:1549
+// table_init.wast:1486
 assert_trap(() => call($21, "test", [56]));
 
-// table_init.wast:1550
+// table_init.wast:1487
 assert_trap(() => call($21, "test", [57]));
 
-// table_init.wast:1551
+// table_init.wast:1488
 assert_trap(() => call($21, "test", [58]));
 
-// table_init.wast:1552
+// table_init.wast:1489
 assert_trap(() => call($21, "test", [59]));
 
-// table_init.wast:1553
+// table_init.wast:1490
 assert_trap(() => call($21, "test", [60]));
 
-// table_init.wast:1554
+// table_init.wast:1491
 assert_trap(() => call($21, "test", [61]));
 
-// table_init.wast:1555
+// table_init.wast:1492
 assert_trap(() => call($21, "test", [62]));
 
-// table_init.wast:1556
+// table_init.wast:1493
 assert_trap(() => call($21, "test", [63]));
 
-// table_init.wast:1557
+// table_init.wast:1494
 assert_trap(() => call($21, "test", [64]));
 
-// table_init.wast:1558
+// table_init.wast:1495
 assert_trap(() => call($21, "test", [65]));
 
-// table_init.wast:1559
+// table_init.wast:1496
 assert_trap(() => call($21, "test", [66]));
 
-// table_init.wast:1560
+// table_init.wast:1497
 assert_trap(() => call($21, "test", [67]));
 
-// table_init.wast:1561
+// table_init.wast:1498
 assert_trap(() => call($21, "test", [68]));
 
-// table_init.wast:1562
+// table_init.wast:1499
 assert_trap(() => call($21, "test", [69]));
 
-// table_init.wast:1563
+// table_init.wast:1500
 assert_trap(() => call($21, "test", [70]));
 
-// table_init.wast:1564
+// table_init.wast:1501
 assert_trap(() => call($21, "test", [71]));
 
-// table_init.wast:1565
+// table_init.wast:1502
 assert_trap(() => call($21, "test", [72]));
 
-// table_init.wast:1566
+// table_init.wast:1503
 assert_trap(() => call($21, "test", [73]));
 
-// table_init.wast:1567
+// table_init.wast:1504
 assert_trap(() => call($21, "test", [74]));
 
-// table_init.wast:1568
+// table_init.wast:1505
 assert_trap(() => call($21, "test", [75]));
 
-// table_init.wast:1569
+// table_init.wast:1506
 assert_trap(() => call($21, "test", [76]));
 
-// table_init.wast:1570
+// table_init.wast:1507
 assert_trap(() => call($21, "test", [77]));
 
-// table_init.wast:1571
+// table_init.wast:1508
 assert_trap(() => call($21, "test", [78]));
 
-// table_init.wast:1572
+// table_init.wast:1509
 assert_trap(() => call($21, "test", [79]));
 
-// table_init.wast:1573
+// table_init.wast:1510
 assert_trap(() => call($21, "test", [80]));
 
-// table_init.wast:1574
+// table_init.wast:1511
 assert_trap(() => call($21, "test", [81]));
 
-// table_init.wast:1575
+// table_init.wast:1512
 assert_trap(() => call($21, "test", [82]));
 
-// table_init.wast:1576
+// table_init.wast:1513
 assert_trap(() => call($21, "test", [83]));
 
-// table_init.wast:1577
+// table_init.wast:1514
 assert_trap(() => call($21, "test", [84]));
 
-// table_init.wast:1578
+// table_init.wast:1515
 assert_trap(() => call($21, "test", [85]));
 
-// table_init.wast:1579
+// table_init.wast:1516
 assert_trap(() => call($21, "test", [86]));
 
-// table_init.wast:1580
+// table_init.wast:1517
 assert_trap(() => call($21, "test", [87]));
 
-// table_init.wast:1581
+// table_init.wast:1518
 assert_trap(() => call($21, "test", [88]));
 
-// table_init.wast:1582
+// table_init.wast:1519
 assert_trap(() => call($21, "test", [89]));
 
-// table_init.wast:1583
+// table_init.wast:1520
 assert_trap(() => call($21, "test", [90]));
 
-// table_init.wast:1584
+// table_init.wast:1521
 assert_trap(() => call($21, "test", [91]));
 
-// table_init.wast:1585
+// table_init.wast:1522
 assert_trap(() => call($21, "test", [92]));
 
-// table_init.wast:1586
+// table_init.wast:1523
 assert_trap(() => call($21, "test", [93]));
 
-// table_init.wast:1587
+// table_init.wast:1524
 assert_trap(() => call($21, "test", [94]));
 
-// table_init.wast:1588
+// table_init.wast:1525
 assert_trap(() => call($21, "test", [95]));
 
-// table_init.wast:1589
+// table_init.wast:1526
 assert_trap(() => call($21, "test", [96]));
+
+// table_init.wast:1527
+assert_trap(() => call($21, "test", [97]));
+
+// table_init.wast:1528
+assert_trap(() => call($21, "test", [98]));
+
+// table_init.wast:1529
+assert_trap(() => call($21, "test", [99]));
+
+// table_init.wast:1530
+assert_trap(() => call($21, "test", [100]));
+
+// table_init.wast:1531
+assert_trap(() => call($21, "test", [101]));
+
+// table_init.wast:1532
+assert_trap(() => call($21, "test", [102]));
+
+// table_init.wast:1533
+assert_trap(() => call($21, "test", [103]));
+
+// table_init.wast:1534
+assert_trap(() => call($21, "test", [104]));
+
+// table_init.wast:1535
+assert_trap(() => call($21, "test", [105]));
+
+// table_init.wast:1536
+assert_trap(() => call($21, "test", [106]));
+
+// table_init.wast:1537
+assert_trap(() => call($21, "test", [107]));
+
+// table_init.wast:1538
+assert_trap(() => call($21, "test", [108]));
+
+// table_init.wast:1539
+assert_trap(() => call($21, "test", [109]));
+
+// table_init.wast:1540
+assert_trap(() => call($21, "test", [110]));
+
+// table_init.wast:1541
+assert_trap(() => call($21, "test", [111]));
+
+// table_init.wast:1542
+assert_trap(() => call($21, "test", [112]));
+
+// table_init.wast:1543
+assert_trap(() => call($21, "test", [113]));
+
+// table_init.wast:1544
+assert_trap(() => call($21, "test", [114]));
+
+// table_init.wast:1545
+assert_trap(() => call($21, "test", [115]));
+
+// table_init.wast:1546
+assert_trap(() => call($21, "test", [116]));
+
+// table_init.wast:1547
+assert_trap(() => call($21, "test", [117]));
+
+// table_init.wast:1548
+assert_trap(() => call($21, "test", [118]));
+
+// table_init.wast:1549
+assert_trap(() => call($21, "test", [119]));
+
+// table_init.wast:1550
+assert_trap(() => call($21, "test", [120]));
+
+// table_init.wast:1551
+assert_trap(() => call($21, "test", [121]));
+
+// table_init.wast:1552
+assert_trap(() => call($21, "test", [122]));
+
+// table_init.wast:1553
+assert_trap(() => call($21, "test", [123]));
+
+// table_init.wast:1554
+assert_trap(() => call($21, "test", [124]));
+
+// table_init.wast:1555
+assert_trap(() => call($21, "test", [125]));
+
+// table_init.wast:1556
+assert_trap(() => call($21, "test", [126]));
+
+// table_init.wast:1557
+assert_trap(() => call($21, "test", [127]));
+
+// table_init.wast:1558
+assert_trap(() => call($21, "test", [128]));
+
+// table_init.wast:1559
+assert_trap(() => call($21, "test", [129]));
+
+// table_init.wast:1560
+assert_trap(() => call($21, "test", [130]));
+
+// table_init.wast:1561
+assert_trap(() => call($21, "test", [131]));
+
+// table_init.wast:1562
+assert_trap(() => call($21, "test", [132]));
+
+// table_init.wast:1563
+assert_trap(() => call($21, "test", [133]));
+
+// table_init.wast:1564
+assert_trap(() => call($21, "test", [134]));
+
+// table_init.wast:1565
+assert_trap(() => call($21, "test", [135]));
+
+// table_init.wast:1566
+assert_trap(() => call($21, "test", [136]));
+
+// table_init.wast:1567
+assert_trap(() => call($21, "test", [137]));
+
+// table_init.wast:1568
+assert_trap(() => call($21, "test", [138]));
+
+// table_init.wast:1569
+assert_trap(() => call($21, "test", [139]));
+
+// table_init.wast:1570
+assert_trap(() => call($21, "test", [140]));
+
+// table_init.wast:1571
+assert_trap(() => call($21, "test", [141]));
+
+// table_init.wast:1572
+assert_trap(() => call($21, "test", [142]));
+
+// table_init.wast:1573
+assert_trap(() => call($21, "test", [143]));
+
+// table_init.wast:1574
+assert_trap(() => call($21, "test", [144]));
+
+// table_init.wast:1575
+assert_trap(() => call($21, "test", [145]));
+
+// table_init.wast:1576
+assert_trap(() => call($21, "test", [146]));
+
+// table_init.wast:1577
+assert_trap(() => call($21, "test", [147]));
+
+// table_init.wast:1578
+assert_trap(() => call($21, "test", [148]));
+
+// table_init.wast:1579
+assert_trap(() => call($21, "test", [149]));
+
+// table_init.wast:1580
+assert_trap(() => call($21, "test", [150]));
+
+// table_init.wast:1581
+assert_trap(() => call($21, "test", [151]));
+
+// table_init.wast:1582
+assert_trap(() => call($21, "test", [152]));
+
+// table_init.wast:1583
+assert_trap(() => call($21, "test", [153]));
+
+// table_init.wast:1584
+assert_trap(() => call($21, "test", [154]));
+
+// table_init.wast:1585
+assert_trap(() => call($21, "test", [155]));
+
+// table_init.wast:1586
+assert_trap(() => call($21, "test", [156]));
+
+// table_init.wast:1587
+assert_trap(() => call($21, "test", [157]));
+
+// table_init.wast:1588
+assert_trap(() => call($21, "test", [158]));
+
+// table_init.wast:1589
+assert_trap(() => call($21, "test", [159]));
 
 // table_init.wast:1591
 let $22 = instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x8f\x80\x80\x80\x00\x03\x60\x00\x01\x7f\x60\x01\x7f\x01\x7f\x60\x02\x7f\x7f\x00\x03\x93\x80\x80\x80\x00\x12\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x02\x04\x85\x80\x80\x80\x00\x01\x70\x01\x40\x40\x07\xe4\x80\x80\x80\x00\x12\x02\x66\x30\x00\x00\x02\x66\x31\x00\x01\x02\x66\x32\x00\x02\x02\x66\x33\x00\x03\x02\x66\x34\x00\x04\x02\x66\x35\x00\x05\x02\x66\x36\x00\x06\x02\x66\x37\x00\x07\x02\x66\x38\x00\x08\x02\x66\x39\x00\x09\x03\x66\x31\x30\x00\x0a\x03\x66\x31\x31\x00\x0b\x03\x66\x31\x32\x00\x0c\x03\x66\x31\x33\x00\x0d\x03\x66\x31\x34\x00\x0e\x03\x66\x31\x35\x00\x0f\x04\x74\x65\x73\x74\x00\x10\x03\x72\x75\x6e\x00\x11\x09\xb4\x80\x80\x80\x00\x01\x05\x70\x10\xd2\x00\x0b\xd2\x01\x0b\xd2\x02\x0b\xd2\x03\x0b\xd2\x04\x0b\xd2\x05\x0b\xd2\x06\x0b\xd2\x07\x0b\xd2\x08\x0b\xd2\x09\x0b\xd2\x0a\x0b\xd2\x0b\x0b\xd2\x0c\x0b\xd2\x0d\x0b\xd2\x0e\x0b\xd2\x0f\x0b\x0a\xae\x81\x80\x80\x00\x12\x84\x80\x80\x80\x00\x00\x41\x00\x0b\x84\x80\x80\x80\x00\x00\x41\x01\x0b\x84\x80\x80\x80\x00\x00\x41\x02\x0b\x84\x80\x80\x80\x00\x00\x41\x03\x0b\x84\x80\x80\x80\x00\x00\x41\x04\x0b\x84\x80\x80\x80\x00\x00\x41\x05\x0b\x84\x80\x80\x80\x00\x00\x41\x06\x0b\x84\x80\x80\x80\x00\x00\x41\x07\x0b\x84\x80\x80\x80\x00\x00\x41\x08\x0b\x84\x80\x80\x80\x00\x00\x41\x09\x0b\x84\x80\x80\x80\x00\x00\x41\x0a\x0b\x84\x80\x80\x80\x00\x00\x41\x0b\x0b\x84\x80\x80\x80\x00\x00\x41\x0c\x0b\x84\x80\x80\x80\x00\x00\x41\x0d\x0b\x84\x80\x80\x80\x00\x00\x41\x0e\x0b\x84\x80\x80\x80\x00\x00\x41\x0f\x0b\x87\x80\x80\x80\x00\x00\x20\x00\x11\x00\x00\x0b\x8c\x80\x80\x80\x00\x00\x20\x00\x41\x00\x20\x01\xfc\x0c\x00\x00\x0b");
@@ -1756,196 +1756,196 @@ let $22 = instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x8f\x80\x80\x80\x00\x03
 assert_trap(() => call($22, "run", [48, -16]));
 
 // table_init.wast:1620
-assert_return(() => call($22, "test", [48]), 0);
-
-// table_init.wast:1621
-assert_return(() => call($22, "test", [49]), 1);
-
-// table_init.wast:1622
-assert_return(() => call($22, "test", [50]), 2);
-
-// table_init.wast:1623
-assert_return(() => call($22, "test", [51]), 3);
-
-// table_init.wast:1624
-assert_return(() => call($22, "test", [52]), 4);
-
-// table_init.wast:1625
-assert_return(() => call($22, "test", [53]), 5);
-
-// table_init.wast:1626
-assert_return(() => call($22, "test", [54]), 6);
-
-// table_init.wast:1627
-assert_return(() => call($22, "test", [55]), 7);
-
-// table_init.wast:1628
-assert_return(() => call($22, "test", [56]), 8);
-
-// table_init.wast:1629
-assert_return(() => call($22, "test", [57]), 9);
-
-// table_init.wast:1630
-assert_return(() => call($22, "test", [58]), 10);
-
-// table_init.wast:1631
-assert_return(() => call($22, "test", [59]), 11);
-
-// table_init.wast:1632
-assert_return(() => call($22, "test", [60]), 12);
-
-// table_init.wast:1633
-assert_return(() => call($22, "test", [61]), 13);
-
-// table_init.wast:1634
-assert_return(() => call($22, "test", [62]), 14);
-
-// table_init.wast:1635
-assert_return(() => call($22, "test", [63]), 15);
-
-// table_init.wast:1636
 assert_trap(() => call($22, "test", [0]));
 
-// table_init.wast:1637
+// table_init.wast:1621
 assert_trap(() => call($22, "test", [1]));
 
-// table_init.wast:1638
+// table_init.wast:1622
 assert_trap(() => call($22, "test", [2]));
 
-// table_init.wast:1639
+// table_init.wast:1623
 assert_trap(() => call($22, "test", [3]));
 
-// table_init.wast:1640
+// table_init.wast:1624
 assert_trap(() => call($22, "test", [4]));
 
-// table_init.wast:1641
+// table_init.wast:1625
 assert_trap(() => call($22, "test", [5]));
 
-// table_init.wast:1642
+// table_init.wast:1626
 assert_trap(() => call($22, "test", [6]));
 
-// table_init.wast:1643
+// table_init.wast:1627
 assert_trap(() => call($22, "test", [7]));
 
-// table_init.wast:1644
+// table_init.wast:1628
 assert_trap(() => call($22, "test", [8]));
 
-// table_init.wast:1645
+// table_init.wast:1629
 assert_trap(() => call($22, "test", [9]));
 
-// table_init.wast:1646
+// table_init.wast:1630
 assert_trap(() => call($22, "test", [10]));
 
-// table_init.wast:1647
+// table_init.wast:1631
 assert_trap(() => call($22, "test", [11]));
 
-// table_init.wast:1648
+// table_init.wast:1632
 assert_trap(() => call($22, "test", [12]));
 
-// table_init.wast:1649
+// table_init.wast:1633
 assert_trap(() => call($22, "test", [13]));
 
-// table_init.wast:1650
+// table_init.wast:1634
 assert_trap(() => call($22, "test", [14]));
 
-// table_init.wast:1651
+// table_init.wast:1635
 assert_trap(() => call($22, "test", [15]));
 
-// table_init.wast:1652
+// table_init.wast:1636
 assert_trap(() => call($22, "test", [16]));
 
-// table_init.wast:1653
+// table_init.wast:1637
 assert_trap(() => call($22, "test", [17]));
 
-// table_init.wast:1654
+// table_init.wast:1638
 assert_trap(() => call($22, "test", [18]));
 
-// table_init.wast:1655
+// table_init.wast:1639
 assert_trap(() => call($22, "test", [19]));
 
-// table_init.wast:1656
+// table_init.wast:1640
 assert_trap(() => call($22, "test", [20]));
 
-// table_init.wast:1657
+// table_init.wast:1641
 assert_trap(() => call($22, "test", [21]));
 
-// table_init.wast:1658
+// table_init.wast:1642
 assert_trap(() => call($22, "test", [22]));
 
-// table_init.wast:1659
+// table_init.wast:1643
 assert_trap(() => call($22, "test", [23]));
 
-// table_init.wast:1660
+// table_init.wast:1644
 assert_trap(() => call($22, "test", [24]));
 
-// table_init.wast:1661
+// table_init.wast:1645
 assert_trap(() => call($22, "test", [25]));
 
-// table_init.wast:1662
+// table_init.wast:1646
 assert_trap(() => call($22, "test", [26]));
 
-// table_init.wast:1663
+// table_init.wast:1647
 assert_trap(() => call($22, "test", [27]));
 
-// table_init.wast:1664
+// table_init.wast:1648
 assert_trap(() => call($22, "test", [28]));
 
-// table_init.wast:1665
+// table_init.wast:1649
 assert_trap(() => call($22, "test", [29]));
 
-// table_init.wast:1666
+// table_init.wast:1650
 assert_trap(() => call($22, "test", [30]));
 
-// table_init.wast:1667
+// table_init.wast:1651
 assert_trap(() => call($22, "test", [31]));
 
-// table_init.wast:1668
+// table_init.wast:1652
 assert_trap(() => call($22, "test", [32]));
 
-// table_init.wast:1669
+// table_init.wast:1653
 assert_trap(() => call($22, "test", [33]));
 
-// table_init.wast:1670
+// table_init.wast:1654
 assert_trap(() => call($22, "test", [34]));
 
-// table_init.wast:1671
+// table_init.wast:1655
 assert_trap(() => call($22, "test", [35]));
 
-// table_init.wast:1672
+// table_init.wast:1656
 assert_trap(() => call($22, "test", [36]));
 
-// table_init.wast:1673
+// table_init.wast:1657
 assert_trap(() => call($22, "test", [37]));
 
-// table_init.wast:1674
+// table_init.wast:1658
 assert_trap(() => call($22, "test", [38]));
 
-// table_init.wast:1675
+// table_init.wast:1659
 assert_trap(() => call($22, "test", [39]));
 
-// table_init.wast:1676
+// table_init.wast:1660
 assert_trap(() => call($22, "test", [40]));
 
-// table_init.wast:1677
+// table_init.wast:1661
 assert_trap(() => call($22, "test", [41]));
 
-// table_init.wast:1678
+// table_init.wast:1662
 assert_trap(() => call($22, "test", [42]));
 
-// table_init.wast:1679
+// table_init.wast:1663
 assert_trap(() => call($22, "test", [43]));
 
-// table_init.wast:1680
+// table_init.wast:1664
 assert_trap(() => call($22, "test", [44]));
 
-// table_init.wast:1681
+// table_init.wast:1665
 assert_trap(() => call($22, "test", [45]));
 
-// table_init.wast:1682
+// table_init.wast:1666
 assert_trap(() => call($22, "test", [46]));
 
-// table_init.wast:1683
+// table_init.wast:1667
 assert_trap(() => call($22, "test", [47]));
+
+// table_init.wast:1668
+assert_trap(() => call($22, "test", [48]));
+
+// table_init.wast:1669
+assert_trap(() => call($22, "test", [49]));
+
+// table_init.wast:1670
+assert_trap(() => call($22, "test", [50]));
+
+// table_init.wast:1671
+assert_trap(() => call($22, "test", [51]));
+
+// table_init.wast:1672
+assert_trap(() => call($22, "test", [52]));
+
+// table_init.wast:1673
+assert_trap(() => call($22, "test", [53]));
+
+// table_init.wast:1674
+assert_trap(() => call($22, "test", [54]));
+
+// table_init.wast:1675
+assert_trap(() => call($22, "test", [55]));
+
+// table_init.wast:1676
+assert_trap(() => call($22, "test", [56]));
+
+// table_init.wast:1677
+assert_trap(() => call($22, "test", [57]));
+
+// table_init.wast:1678
+assert_trap(() => call($22, "test", [58]));
+
+// table_init.wast:1679
+assert_trap(() => call($22, "test", [59]));
+
+// table_init.wast:1680
+assert_trap(() => call($22, "test", [60]));
+
+// table_init.wast:1681
+assert_trap(() => call($22, "test", [61]));
+
+// table_init.wast:1682
+assert_trap(() => call($22, "test", [62]));
+
+// table_init.wast:1683
+assert_trap(() => call($22, "test", [63]));
 
 // table_init.wast:1685
 let $23 = instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x8f\x80\x80\x80\x00\x03\x60\x00\x01\x7f\x60\x01\x7f\x01\x7f\x60\x02\x7f\x7f\x00\x03\x93\x80\x80\x80\x00\x12\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x02\x04\x85\x80\x80\x80\x00\x01\x70\x01\x10\x10\x07\xe4\x80\x80\x80\x00\x12\x02\x66\x30\x00\x00\x02\x66\x31\x00\x01\x02\x66\x32\x00\x02\x02\x66\x33\x00\x03\x02\x66\x34\x00\x04\x02\x66\x35\x00\x05\x02\x66\x36\x00\x06\x02\x66\x37\x00\x07\x02\x66\x38\x00\x08\x02\x66\x39\x00\x09\x03\x66\x31\x30\x00\x0a\x03\x66\x31\x31\x00\x0b\x03\x66\x31\x32\x00\x0c\x03\x66\x31\x33\x00\x0d\x03\x66\x31\x34\x00\x0e\x03\x66\x31\x35\x00\x0f\x04\x74\x65\x73\x74\x00\x10\x03\x72\x75\x6e\x00\x11\x09\xb4\x80\x80\x80\x00\x01\x05\x70\x10\xd2\x00\x0b\xd2\x01\x0b\xd2\x02\x0b\xd2\x03\x0b\xd2\x04\x0b\xd2\x05\x0b\xd2\x06\x0b\xd2\x07\x0b\xd2\x08\x0b\xd2\x09\x0b\xd2\x0a\x0b\xd2\x0b\x0b\xd2\x0c\x0b\xd2\x0d\x0b\xd2\x0e\x0b\xd2\x0f\x0b\x0a\xae\x81\x80\x80\x00\x12\x84\x80\x80\x80\x00\x00\x41\x00\x0b\x84\x80\x80\x80\x00\x00\x41\x01\x0b\x84\x80\x80\x80\x00\x00\x41\x02\x0b\x84\x80\x80\x80\x00\x00\x41\x03\x0b\x84\x80\x80\x80\x00\x00\x41\x04\x0b\x84\x80\x80\x80\x00\x00\x41\x05\x0b\x84\x80\x80\x80\x00\x00\x41\x06\x0b\x84\x80\x80\x80\x00\x00\x41\x07\x0b\x84\x80\x80\x80\x00\x00\x41\x08\x0b\x84\x80\x80\x80\x00\x00\x41\x09\x0b\x84\x80\x80\x80\x00\x00\x41\x0a\x0b\x84\x80\x80\x80\x00\x00\x41\x0b\x0b\x84\x80\x80\x80\x00\x00\x41\x0c\x0b\x84\x80\x80\x80\x00\x00\x41\x0d\x0b\x84\x80\x80\x80\x00\x00\x41\x0e\x0b\x84\x80\x80\x80\x00\x00\x41\x0f\x0b\x87\x80\x80\x80\x00\x00\x20\x00\x11\x00\x00\x0b\x8c\x80\x80\x80\x00\x00\x20\x00\x41\x08\x20\x01\xfc\x0c\x00\x00\x0b");
@@ -1954,27 +1954,51 @@ let $23 = instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x8f\x80\x80\x80\x00\x03
 assert_trap(() => call($23, "run", [0, -4]));
 
 // table_init.wast:1714
-assert_return(() => call($23, "test", [0]), 8);
+assert_trap(() => call($23, "test", [0]));
 
 // table_init.wast:1715
-assert_return(() => call($23, "test", [1]), 9);
+assert_trap(() => call($23, "test", [1]));
 
 // table_init.wast:1716
-assert_return(() => call($23, "test", [2]), 10);
+assert_trap(() => call($23, "test", [2]));
 
 // table_init.wast:1717
-assert_return(() => call($23, "test", [3]), 11);
+assert_trap(() => call($23, "test", [3]));
 
 // table_init.wast:1718
-assert_return(() => call($23, "test", [4]), 12);
+assert_trap(() => call($23, "test", [4]));
 
 // table_init.wast:1719
-assert_return(() => call($23, "test", [5]), 13);
+assert_trap(() => call($23, "test", [5]));
 
 // table_init.wast:1720
-assert_return(() => call($23, "test", [6]), 14);
+assert_trap(() => call($23, "test", [6]));
 
 // table_init.wast:1721
-assert_return(() => call($23, "test", [7]), 15);
+assert_trap(() => call($23, "test", [7]));
+
+// table_init.wast:1722
+assert_trap(() => call($23, "test", [8]));
+
+// table_init.wast:1723
+assert_trap(() => call($23, "test", [9]));
+
+// table_init.wast:1724
+assert_trap(() => call($23, "test", [10]));
+
+// table_init.wast:1725
+assert_trap(() => call($23, "test", [11]));
+
+// table_init.wast:1726
+assert_trap(() => call($23, "test", [12]));
+
+// table_init.wast:1727
+assert_trap(() => call($23, "test", [13]));
+
+// table_init.wast:1728
+assert_trap(() => call($23, "test", [14]));
+
+// table_init.wast:1729
+assert_trap(() => call($23, "test", [15]));
 reinitializeRegistry();
 })();
