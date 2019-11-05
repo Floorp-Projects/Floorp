@@ -19,10 +19,8 @@ namespace mozilla {
 struct NonOwningAnimationTarget;
 namespace dom {
 class Animation;
-}  // namespace dom
-}  // namespace mozilla
 
-class nsNodeUtils {
+class MutationObservers {
  public:
   /**
    * Send CharacterDataWillChange notifications to nsIMutationObservers.
@@ -30,8 +28,8 @@ class nsNodeUtils {
    * @param aInfo     Struct with information details about the change
    * @see nsIMutationObserver::CharacterDataWillChange
    */
-  static void CharacterDataWillChange(nsIContent* aContent,
-                                      const CharacterDataChangeInfo&);
+  static void NotifyCharacterDataWillChange(nsIContent* aContent,
+                                            const CharacterDataChangeInfo&);
 
   /**
    * Send CharacterDataChanged notifications to nsIMutationObservers.
@@ -39,8 +37,8 @@ class nsNodeUtils {
    * @param aInfo     Struct with information details about the change
    * @see nsIMutationObserver::CharacterDataChanged
    */
-  static void CharacterDataChanged(nsIContent* aContent,
-                                   const CharacterDataChangeInfo&);
+  static void NotifyCharacterDataChanged(nsIContent* aContent,
+                                         const CharacterDataChangeInfo&);
 
   /**
    * Send AttributeWillChange notifications to nsIMutationObservers.
@@ -52,9 +50,9 @@ class nsNodeUtils {
    *                      preparsed it!!!
    * @see nsIMutationObserver::AttributeWillChange
    */
-  static void AttributeWillChange(mozilla::dom::Element* aElement,
-                                  int32_t aNameSpaceID, nsAtom* aAttribute,
-                                  int32_t aModType);
+  static void NotifyAttributeWillChange(mozilla::dom::Element* aElement,
+                                        int32_t aNameSpaceID,
+                                        nsAtom* aAttribute, int32_t aModType);
 
   /**
    * Send AttributeChanged notifications to nsIMutationObservers.
@@ -66,9 +64,10 @@ class nsNodeUtils {
    *                      that value, otherwise null
    * @see nsIMutationObserver::AttributeChanged
    */
-  static void AttributeChanged(mozilla::dom::Element* aElement,
-                               int32_t aNameSpaceID, nsAtom* aAttribute,
-                               int32_t aModType, const nsAttrValue* aOldValue);
+  static void NotifyAttributeChanged(mozilla::dom::Element* aElement,
+                                     int32_t aNameSpaceID, nsAtom* aAttribute,
+                                     int32_t aModType,
+                                     const nsAttrValue* aOldValue);
 
   /**
    * Send AttributeSetToCurrentValue notifications to nsIMutationObservers.
@@ -77,9 +76,9 @@ class nsNodeUtils {
    * @param aAttribute    Local-name of the attribute
    * @see nsIMutationObserver::AttributeSetToCurrentValue
    */
-  static void AttributeSetToCurrentValue(mozilla::dom::Element* aElement,
-                                         int32_t aNameSpaceID,
-                                         nsAtom* aAttribute);
+  static void NotifyAttributeSetToCurrentValue(mozilla::dom::Element* aElement,
+                                               int32_t aNameSpaceID,
+                                               nsAtom* aAttribute);
 
   /**
    * Send ContentAppended notifications to nsIMutationObservers
@@ -87,8 +86,8 @@ class nsNodeUtils {
    * @param aFirstNewContent     First new child
    * @see nsIMutationObserver::ContentAppended
    */
-  static void ContentAppended(nsIContent* aContainer,
-                              nsIContent* aFirstNewContent);
+  static void NotifyContentAppended(nsIContent* aContainer,
+                                    nsIContent* aFirstNewContent);
 
   /**
    * Send NativeAnonymousChildList notifications to nsIMutationObservers
@@ -96,8 +95,8 @@ class nsNodeUtils {
    * @param aIsRemove            True if it's a removal, false if an addition
    * @see nsIMutationObserver::NativeAnonymousChildListChange
    */
-  static void NativeAnonymousChildListChange(nsIContent* aContent,
-                                             bool aIsRemove);
+  static void NotifyNativeAnonymousChildListChange(nsIContent* aContent,
+                                                   bool aIsRemove);
 
   /**
    * Send ContentInserted notifications to nsIMutationObservers
@@ -105,7 +104,7 @@ class nsNodeUtils {
    * @param aChild            Newly inserted child
    * @see nsIMutationObserver::ContentInserted
    */
-  static void ContentInserted(nsINode* aContainer, nsIContent* aChild);
+  static void NotifyContentInserted(nsINode* aContainer, nsIContent* aChild);
   /**
    * Send ContentRemoved notifications to nsIMutationObservers
    * @param aContainer        Node from which child was removed
@@ -113,14 +112,15 @@ class nsNodeUtils {
    * @param aPreviousSibling  Previous sibling of the removed child
    * @see nsIMutationObserver::ContentRemoved
    */
-  static void ContentRemoved(nsINode* aContainer, nsIContent* aChild,
-                             nsIContent* aPreviousSibling);
+  static void NotifyContentRemoved(nsINode* aContainer, nsIContent* aChild,
+                                   nsIContent* aPreviousSibling);
+
   /**
    * Send ParentChainChanged notifications to nsIMutationObservers
    * @param aContent  The piece of content that had its parent changed.
    * @see nsIMutationObserver::ParentChainChanged
    */
-  static inline void ParentChainChanged(nsIContent* aContent) {
+  static inline void NotifyParentChainChanged(nsIContent* aContent) {
     nsINode::nsSlots* slots = aContent->GetExistingSlots();
     if (slots && !slots->mMutationObservers.IsEmpty()) {
       NS_OBSERVER_AUTO_ARRAY_NOTIFY_OBSERVERS(slots->mMutationObservers,
@@ -128,7 +128,12 @@ class nsNodeUtils {
                                               ParentChainChanged, (aContent));
     }
   }
+};
+}  // namespace dom
+}  // namespace mozilla
 
+class nsNodeUtils {
+ public:
   /**
    * Notify that an animation is added/changed/removed.
    * @param aAnimation The animation we added/changed/removed.

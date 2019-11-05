@@ -1200,7 +1200,7 @@ void nsContentSink::NotifyAppend(nsIContent* aContainer, uint32_t aStartIndex) {
     //
     // Note that aContainer->OwnerDoc() may not be mDocument.
     MOZ_AUTO_DOC_UPDATE(aContainer->OwnerDoc(), true);
-    nsNodeUtils::ContentAppended(
+    MutationObservers::NotifyContentAppended(
         aContainer, aContainer->GetChildAt_Deprecated(aStartIndex));
     mLastNotificationTime = PR_Now();
   }

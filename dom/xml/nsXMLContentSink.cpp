@@ -369,7 +369,7 @@ nsXMLContentSink::OnTransformDone(nsresult aResult, Document* aResultDocument) {
     NS_ASSERTION(mDocument->ComputeIndexOf(rootElement) != -1,
                  "rootElement not in doc?");
     mDocument->BeginUpdate();
-    nsNodeUtils::ContentInserted(mDocument, rootElement);
+    MutationObservers::NotifyContentInserted(mDocument, rootElement);
     mDocument->EndUpdate();
   }
 
