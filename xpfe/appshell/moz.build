@@ -11,11 +11,11 @@ MOCHITEST_CHROME_MANIFESTS += ['test/chrome.ini']
 
 XPIDL_SOURCES += [
     'nsIAppShellService.idl',
+    'nsIAppWindow.idl',
     'nsIWindowlessBrowser.idl',
     'nsIWindowMediator.idl',
     'nsIWindowMediatorListener.idl',
     'nsIXULBrowserWindow.idl',
-    'nsIXULWindow.idl',
 ]
 
 XPIDL_MODULE = 'appshell'
@@ -26,12 +26,12 @@ EXPORTS += [
 ]
 
 UNIFIED_SOURCES += [
+    'AppWindow.cpp',
     'nsAppShellService.cpp',
     'nsAppShellWindowEnumerator.cpp',
     'nsChromeTreeOwner.cpp',
     'nsContentTreeOwner.cpp',
     'nsWindowMediator.cpp',
-    'nsXULWindow.cpp',
 ]
 
 XPCOM_MANIFESTS += [

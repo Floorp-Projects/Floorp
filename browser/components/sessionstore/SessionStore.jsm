@@ -5259,7 +5259,7 @@ var SessionStoreInternal = {
   },
 
   /**
-   * on popup windows, the XULWindow's attributes seem not to be set correctly
+   * on popup windows, the AppWindow's attributes seem not to be set correctly
    * we use thus JSDOMWindow attributes for sizemode and normal window attributes
    * (and hope for reasonable values when maximized/minimized - since then
    * outerWidth/outerHeight aren't the dimensions of the restored window)
@@ -5298,13 +5298,13 @@ var SessionStoreInternal = {
         }
         // Width and height attribute report the inner size, but we want
         // to store the outer size, so add the difference.
-        let xulWin = aWindow.docShell.treeOwner
+        let appWin = aWindow.docShell.treeOwner
           .QueryInterface(Ci.nsIInterfaceRequestor)
-          .getInterface(Ci.nsIXULWindow);
+          .getInterface(Ci.nsIAppWindow);
         let diff =
           aAttribute == "width"
-            ? xulWin.outerToInnerWidthDifferenceInCSSPixels
-            : xulWin.outerToInnerHeightDifferenceInCSSPixels;
+            ? appWin.outerToInnerWidthDifferenceInCSSPixels
+            : appWin.outerToInnerHeightDifferenceInCSSPixels;
         return attr + diff;
       }
     }

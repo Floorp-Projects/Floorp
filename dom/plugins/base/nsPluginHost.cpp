@@ -2692,7 +2692,7 @@ static void CheckForDisabledWindows() {
   if (!wm) return;
 
   nsCOMPtr<nsISimpleEnumerator> windowList;
-  wm->GetXULWindowEnumerator(nullptr, getter_AddRefs(windowList));
+  wm->GetAppWindowEnumerator(nullptr, getter_AddRefs(windowList));
   if (!windowList) return;
 
   bool haveWindows;

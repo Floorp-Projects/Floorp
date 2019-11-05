@@ -244,10 +244,10 @@ class TelemetryHandler {
    * This is called when a new window is opened, and handles registration of
    * that window if it is a browser window.
    *
-   * @param {nsIXULWindow} xulWin The xul window that was opened.
+   * @param {nsIAppWindow} appWin The xul window that was opened.
    */
-  onOpenWindow(xulWin) {
-    let win = xulWin.docShell.domWindow;
+  onOpenWindow(appWin) {
+    let win = appWin.docShell.domWindow;
     win.addEventListener(
       "load",
       () => {
@@ -268,10 +268,10 @@ class TelemetryHandler {
    * Listener that is called when a window is closed, and handles deregistration of
    * that window if it is a browser window.
    *
-   * @param {nsIXULWindow} xulWin The xul window that was closed.
+   * @param {nsIAppWindow} appWin The xul window that was closed.
    */
-  onCloseWindow(xulWin) {
-    let win = xulWin.docShell.domWindow;
+  onCloseWindow(appWin) {
+    let win = appWin.docShell.domWindow;
 
     if (
       win.document.documentElement.getAttribute("windowtype") !=

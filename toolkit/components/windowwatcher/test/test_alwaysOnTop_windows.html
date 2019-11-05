@@ -20,7 +20,7 @@ Tests the alwaysOnTop window feature for the Windows OS.
     let docShell = win.docShell;
     let chromeFlags = docShell.treeOwner
                               .QueryInterface(Ci.nsIInterfaceRequestor)
-                              .getInterface(Ci.nsIXULWindow)
+                              .getInterface(Ci.nsIAppWindow)
                               .chromeFlags;
     let hasFlag = !!(chromeFlags & Ci.nsIWebBrowserChrome.CHROME_ALWAYS_ON_TOP);
     is(hasFlag, expected, "Window should have CHROME_ALWAYS_ON_TOP flag.");

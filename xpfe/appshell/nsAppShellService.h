@@ -10,7 +10,7 @@
 #include "nsIObserver.h"
 
 // Interfaces Needed
-#include "nsXULWindow.h"
+#include "AppWindow.h"
 #include "nsStringFwd.h"
 #include "nsAutoPtr.h"
 #include "nsIRemoteTab.h"
@@ -37,15 +37,15 @@ class nsAppShellService final : public nsIAppShellService, public nsIObserver {
 
   void EnsureHiddenWindow();
 
-  nsresult JustCreateTopWindow(nsIXULWindow* aParent, nsIURI* aUrl,
+  nsresult JustCreateTopWindow(nsIAppWindow* aParent, nsIURI* aUrl,
                                uint32_t aChromeMask, int32_t aInitialWidth,
                                int32_t aInitialHeight, bool aIsHiddenWindow,
                                nsIRemoteTab* aOpeningTab,
                                mozIDOMWindowProxy* aOpenerWindow,
-                               nsXULWindow** aResult);
-  uint32_t CalculateWindowZLevel(nsIXULWindow* aParent, uint32_t aChromeMask);
+                               mozilla::AppWindow** aResult);
+  uint32_t CalculateWindowZLevel(nsIAppWindow* aParent, uint32_t aChromeMask);
 
-  RefPtr<nsXULWindow> mHiddenWindow;
+  RefPtr<mozilla::AppWindow> mHiddenWindow;
   bool mXPCOMWillShutDown;
   bool mXPCOMShuttingDown;
   uint16_t mModalWindowCount;

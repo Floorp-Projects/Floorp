@@ -20,7 +20,7 @@
 #include "nsIDocShell.h"
 #include "nsISupportsImpl.h"
 #include "nsIWidget.h"
-#include "nsIXULWindow.h"
+#include "nsIAppWindow.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
 #include "nsWindowDefs.h"
@@ -42,7 +42,7 @@ class HWNDGetter : public mozilla::Runnable {
     // Jump through some hoops to locate the hidden window.
     nsCOMPtr<nsIAppShellService> appShell(
         do_GetService(NS_APPSHELLSERVICE_CONTRACTID));
-    nsCOMPtr<nsIXULWindow> hiddenWindow;
+    nsCOMPtr<nsIAppWindow> hiddenWindow;
 
     nsresult rv = appShell->GetHiddenWindow(getter_AddRefs(hiddenWindow));
     if (NS_FAILED(rv)) {
