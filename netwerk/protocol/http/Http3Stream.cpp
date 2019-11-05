@@ -282,6 +282,7 @@ nsresult Http3Stream::OnWriteSegment(char* buf, uint32_t count,
     case RECEIVED_FIN:
     case RECEIVED_RESET:
       rv = NS_BASE_STREAM_CLOSED;
+      mState = DONE;
       break;
     case DONE:
       rv = NS_ERROR_UNEXPECTED;
