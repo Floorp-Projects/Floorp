@@ -44,6 +44,7 @@
 #include "nsContentCreatorFunctions.h"
 #include "nsContentList.h"
 #include "nsContentUtils.h"
+#include "nsCOMArray.h"
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/dom/Attr.h"
 #include "nsDOMAttributeMap.h"
@@ -2755,7 +2756,7 @@ JSObject* nsINode::WrapObject(JSContext* aCx,
 }
 
 already_AddRefed<nsINode> nsINode::CloneNode(bool aDeep, ErrorResult& aError) {
-  return nsNodeUtils::Clone(this, aDeep, nullptr, nullptr, aError);
+  return Clone(aDeep, nullptr, nullptr, aError);
 }
 
 nsDOMAttributeMap* nsINode::GetAttributes() {
@@ -2821,6 +2822,14 @@ void nsINode::AddAnimationObserverUnlessExists(
     nsIAnimationObserver* aAnimationObserver) {
   AddMutationObserverUnlessExists(aAnimationObserver);
   OwnerDoc()->SetMayHaveAnimationObservers();
+}
+
+already_AddRefed<nsINode> nsINode::Clone(
+    bool aDeep, nsNodeInfoManager* aNewNodeInfoManager,
+    nsCOMArray<nsINode>* aNodesWithProperties, mozilla::ErrorResult& aError) {
+  return nsNodeUtils::CloneAndAdopt(this, true, aDeep, aNewNodeInfoManager,
+                                    nullptr, aNodesWithProperties, nullptr,
+                                    aError);
 }
 
 void nsINode::GenerateXPath(nsAString& aResult) {

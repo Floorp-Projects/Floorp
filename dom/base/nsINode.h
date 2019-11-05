@@ -37,6 +37,8 @@
 
 class AttrArray;
 class nsAttrChildContentList;
+template <typename T>
+class nsCOMArray;
 class nsDOMAttributeMap;
 class nsIAnimationObserver;
 class nsIContent;
@@ -1054,6 +1056,31 @@ class nsINode : public mozilla::dom::EventTarget {
       s->mMutationObservers.RemoveElement(aMutationObserver);
     }
   }
+
+  /**
+   * Clones the node, its attributes and, if aDeep is true, its descendant nodes
+   * If aNewNodeInfoManager is not null, it is used to create new nodeinfos for
+   * the clones. aNodesWithProperties will be filled with all the nodes that
+   * have properties, and every node in it will be followed by its clone.
+   *
+   * @param aDeep If true the function will be called recursively on
+   *              descendants of the node
+   * @param aNewNodeInfoManager The nodeinfo manager to use to create new
+   *                            nodeinfos for the node and its attributes and
+   *                            descendants. May be null if the nodeinfos
+   *                            shouldn't be changed.
+   * @param aNodesWithProperties All nodes (from amongst the node and its
+   *                             descendants) with properties. Every node will
+   *                             be followed by its clone. Null can be passed to
+   *                             prevent this from being used.
+   * @param aError The error, if any.
+   *
+   * @return The newly created node.  Null in error conditions.
+   */
+  already_AddRefed<nsINode> Clone(bool aDeep,
+                                  nsNodeInfoManager* aNewNodeInfoManager,
+                                  nsCOMArray<nsINode>* aNodesWithProperties,
+                                  mozilla::ErrorResult& aError);
 
   /**
    * Clones this node. This needs to be overriden by all node classes. aNodeInfo
