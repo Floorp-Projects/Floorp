@@ -114,6 +114,7 @@ add_task(async function test_browser_settings() {
       ftp: "",
       ssl: "",
       socks: "",
+      respectBeConservative: true,
     };
 
     expectedConfig.proxyType = expectedConfig.proxyType || "system";
@@ -166,6 +167,7 @@ add_task(async function test_browser_settings() {
       "network.proxy.type": proxySvc.PROXYCONFIG_SYSTEM,
       "signon.autologin.proxy": false,
       "network.proxy.socks_remote_dns": false,
+      "network.http.proxy.respect-be-conservative": true,
     }
   );
 
@@ -177,6 +179,7 @@ add_task(async function test_browser_settings() {
     {
       "network.proxy.type": proxySvc.PROXYCONFIG_PAC,
       "network.proxy.autoconfig_url": "http://mozilla.org",
+      "network.http.proxy.respect-be-conservative": true,
     }
   );
 
@@ -240,6 +243,7 @@ add_task(async function test_browser_settings() {
       socks: "mozilla.org:8083",
       socksVersion: 4,
       passthrough: ".mozilla.org",
+      respectBeConservative: true,
     },
     {
       "network.proxy.type": proxySvc.PROXYCONFIG_MANUAL,
@@ -254,6 +258,7 @@ add_task(async function test_browser_settings() {
       "network.proxy.socks_port": 8083,
       "network.proxy.socks_version": 4,
       "network.proxy.no_proxies_on": ".mozilla.org",
+      "network.http.proxy.respect-be-conservative": true,
     }
   );
 
@@ -266,6 +271,7 @@ add_task(async function test_browser_settings() {
       socks: "mozilla.org",
       socksVersion: 4,
       passthrough: ".mozilla.org",
+      respectBeConservative: false,
     },
     {
       "network.proxy.type": proxySvc.PROXYCONFIG_MANUAL,
@@ -280,6 +286,7 @@ add_task(async function test_browser_settings() {
       "network.proxy.socks_port": 1080,
       "network.proxy.socks_version": 4,
       "network.proxy.no_proxies_on": ".mozilla.org",
+      "network.http.proxy.respect-be-conservative": false,
     },
     {
       proxyType: "manual",
@@ -290,6 +297,7 @@ add_task(async function test_browser_settings() {
       socks: "mozilla.org:1080",
       socksVersion: 4,
       passthrough: ".mozilla.org",
+      respectBeConservative: false,
     }
   );
 
@@ -302,6 +310,7 @@ add_task(async function test_browser_settings() {
       socks: "mozilla.org:1080",
       socksVersion: 4,
       passthrough: ".mozilla.org",
+      respectBeConservative: true,
     },
     {
       "network.proxy.type": proxySvc.PROXYCONFIG_MANUAL,
@@ -316,6 +325,7 @@ add_task(async function test_browser_settings() {
       "network.proxy.socks_port": 1080,
       "network.proxy.socks_version": 4,
       "network.proxy.no_proxies_on": ".mozilla.org",
+      "network.http.proxy.respect-be-conservative": true,
     },
     {
       proxyType: "manual",
@@ -326,6 +336,7 @@ add_task(async function test_browser_settings() {
       socks: "mozilla.org:1080",
       socksVersion: 4,
       passthrough: ".mozilla.org",
+      respectBeConservative: true,
     }
   );
 
@@ -338,6 +349,7 @@ add_task(async function test_browser_settings() {
       socks: "mozilla.org:80",
       socksVersion: 4,
       passthrough: ".mozilla.org",
+      respectBeConservative: false,
     },
     {
       "network.proxy.type": proxySvc.PROXYCONFIG_MANUAL,
@@ -352,6 +364,7 @@ add_task(async function test_browser_settings() {
       "network.proxy.socks_port": 80,
       "network.proxy.socks_version": 4,
       "network.proxy.no_proxies_on": ".mozilla.org",
+      "network.http.proxy.respect-be-conservative": false,
     },
     {
       proxyType: "manual",
@@ -362,6 +375,7 @@ add_task(async function test_browser_settings() {
       socks: "mozilla.org:80",
       socksVersion: 4,
       passthrough: ".mozilla.org",
+      respectBeConservative: false,
     }
   );
 
@@ -375,6 +389,7 @@ add_task(async function test_browser_settings() {
       socks: "",
       socksVersion: 5,
       passthrough: "",
+      respectBeConservative: true,
     },
     {
       "network.proxy.type": proxySvc.PROXYCONFIG_DIRECT,
@@ -388,6 +403,7 @@ add_task(async function test_browser_settings() {
       "network.proxy.socks_port": 0,
       "network.proxy.socks_version": 5,
       "network.proxy.no_proxies_on": "",
+      "network.http.proxy.respect-be-conservative": true,
     }
   );
 
