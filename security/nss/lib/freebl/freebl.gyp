@@ -361,15 +361,6 @@
       'MP_API_COMPATIBLE'
     ],
     'conditions': [
-      [ 'OS=="mac"', {
-        'xcode_settings': {
-          # I'm not sure since when this is supported.
-          # But I hope that doesn't matter. We also assume this is x86/x64.
-          'OTHER_CFLAGS': [
-            '-std=gnu99',
-          ],
-        },
-      }],
       [ 'OS=="win" and target_arch=="ia32"', {
         'msvs_settings': {
           'VCCLCompilerTool': {
@@ -423,14 +414,6 @@
         'defines': [
           'FREEBL_LOWHASH',
           'FREEBL_NO_DEPEND',
-        ],
-        'cflags': [
-          '-std=gnu99',
-        ],
-      }],
-      [ 'OS=="dragonfly" or OS=="freebsd" or OS=="netbsd" or OS=="openbsd"', {
-        'cflags': [
-          '-std=gnu99',
         ],
       }],
       [ 'OS=="linux" or OS=="android"', {

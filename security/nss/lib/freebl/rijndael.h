@@ -68,7 +68,7 @@ struct AESContextStr {
         __m128i keySchedule[15];
 #endif
         PRUint32 expandedKey[RIJNDAEL_MAX_EXP_KEY_SIZE];
-    };
+    } k;
     unsigned int Nb;
     unsigned int Nr;
     freeblCipherFunc worker;

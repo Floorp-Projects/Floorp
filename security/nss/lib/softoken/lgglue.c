@@ -171,6 +171,8 @@ sftkdb_encrypt_stub(PLArenaPool *arena, SDB *sdb, SECItem *plainText,
 {
     SFTKDBHandle *handle = sdb->app_private;
     SECStatus rv;
+    SECItem *key;
+    int iterationCount;
 
     if (handle == NULL) {
         return SECFailure;
@@ -192,9 +194,18 @@ sftkdb_encrypt_stub(PLArenaPool *arena, SDB *sdb, SECItem *plainText,
         /* PORT_SetError */
         return SECFailure;
     }
+    key = handle->newKey ? handle->newKey : &handle->passwordKey;
+    if (sftk_isLegacyIterationCountAllowed()) {
+        if (handle->newKey) {
+            iterationCount = handle->newDefaultIterationCount;
+        } else {
+            iterationCount = handle->defaultIterationCount;
+        }
+    } else {
+        iterationCount = 1;
+    }
 
-    rv = sftkdb_EncryptAttribute(arena,
-                                 handle->newKey ? handle->newKey : &handle->passwordKey,
+    rv = sftkdb_EncryptAttribute(arena, key, iterationCount,
                                  plainText, cipherText);
     PZ_Unlock(handle->passwordLock);
 

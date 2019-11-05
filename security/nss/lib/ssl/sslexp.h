@@ -536,7 +536,7 @@ typedef SECStatus(PR_CALLBACK *SSLResumptionTokenCallback)(
  * group -- the named group this key corresponds to
  * pubKey -- the public key for the key pair
  * pad -- the length to pad to
- * notBefore/notAfter -- validity range
+ * notBefore/notAfter -- validity range in seconds since epoch
  * out/outlen/maxlen -- where to output the data
  */
 #define SSL_EncodeESNIKeys(cipherSuites, cipherSuiteCount,          \
@@ -791,12 +791,12 @@ typedef PRTime(PR_CALLBACK *SSLTimeFunc)(void *arg);
  * handshake (Client Hello).
  *
  * The *Get function puts the current set of active (enabled and policy set as
- * PR_TRUE) cipher suites in the cipherOrder outparam. Cipher suites that 
+ * PR_TRUE) cipher suites in the cipherOrder outparam. Cipher suites that
  * aren't active aren't included. The paramenters are:
  *   - PRFileDesc *fd = FileDescriptor to get information.
  *   - PRUint16 *cipherOrder = The memory allocated for cipherOrder needs to be
  *     SSL_GetNumImplementedCiphers() * sizeof(PRUint16) or more.
- *   - PRUint16 numCiphers = The number of active ciphersuites listed in 
+ *   - PRUint16 numCiphers = The number of active ciphersuites listed in
  *     *cipherOrder is written here.
  *
  * The *Set function permits reorder the CipherSuites list for the Handshake
@@ -812,7 +812,7 @@ typedef PRTime(PR_CALLBACK *SSLTimeFunc)(void *arg);
  *   - const PRUint16 *cipherOrder = Must receive all ciphers to be ordered, in
  *     the desired order. They will be set in the begin of the list. Only
  *     suites listed by SSL_ImplementedCiphers() can be included.
- *   - PRUint16 numCiphers = Must receive the number of items in *cipherOrder. 
+ *   - PRUint16 numCiphers = Must receive the number of items in *cipherOrder.
  * */
 #define SSL_CipherSuiteOrderGet(fd, cipherOrder, numCiphers)         \
     SSL_EXPERIMENTAL_API("SSL_CipherSuiteOrderGet",                  \

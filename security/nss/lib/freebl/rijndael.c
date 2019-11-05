@@ -20,7 +20,8 @@
 #include "gcm.h"
 #include "mpi.h"
 
-#if !defined(IS_LITTLE_ENDIAN) && !defined(NSS_X86_OR_X64)
+#if (!defined(IS_LITTLE_ENDIAN) && !defined(NSS_X86_OR_X64)) || \
+    (defined(__arm__) && !defined(__ARM_NEON) && !defined(__ARM_NEON__))
 // not test yet on big endian platform of arm
 #undef USE_HW_AES
 #endif
@@ -330,7 +331,7 @@ rijndael_key_expansion7(AESContext *cx, const unsigned char *key, unsigned int N
     PRUint32 *W;
     PRUint32 *pW;
     PRUint32 tmp;
-    W = cx->expandedKey;
+    W = cx->k.expandedKey;
     /* 1.  the first Nk words contain the cipher key */
     memcpy(W, key, Nk * 4);
     i = Nk;
@@ -362,7 +363,7 @@ rijndael_key_expansion(AESContext *cx, const unsigned char *key, unsigned int Nk
         rijndael_key_expansion7(cx, key, Nk);
         return;
     }
-    W = cx->expandedKey;
+    W = cx->k.expandedKey;
     /* The first Nk words contain the input cipher key */
     memcpy(W, key, Nk * 4);
     i = Nk;
@@ -439,7 +440,7 @@ rijndael_invkey_expansion(AESContext *cx, const unsigned char *key, unsigned int
     /* ... but has the additional step of InvMixColumn,
      * excepting the first and last round keys.
      */
-    roundkeyw = cx->expandedKey + cx->Nb;
+    roundkeyw = cx->k.expandedKey + cx->Nb;
     for (r = 1; r < cx->Nr; ++r) {
         /* each key word, roundkeyw, represents a column in the key
          * matrix.  Each column is multiplied by the InvMixColumn matrix.
@@ -537,7 +538,7 @@ rijndael_encryptBlock128(AESContext *cx,
         pOut = (unsigned char *)output;
     }
 #endif
-    roundkeyw = cx->expandedKey;
+    roundkeyw = cx->k.expandedKey;
     /* Step 1: Add Round Key 0 to initial state */
     COLUMN_0(state) = *((PRUint32 *)(pIn)) ^ *roundkeyw++;
     COLUMN_1(state) = *((PRUint32 *)(pIn + 4)) ^ *roundkeyw++;
@@ -632,7 +633,7 @@ rijndael_decryptBlock128(AESContext *cx,
         pOut = (unsigned char *)output;
     }
 #endif
-    roundkeyw = cx->expandedKey + cx->Nb * cx->Nr + 3;
+    roundkeyw = cx->k.expandedKey + cx->Nb * cx->Nr + 3;
     /* reverse the final key addition */
     COLUMN_3(state) = *((PRUint32 *)(pIn + 12)) ^ *roundkeyw--;
     COLUMN_2(state) = *((PRUint32 *)(pIn + 8)) ^ *roundkeyw--;

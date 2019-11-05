@@ -64,8 +64,14 @@ gtest_start()
     pushd "$DIR"
     GTESTREPORT="$DIR/report.xml"
     PARSED_REPORT="$DIR/report.parsed"
+    # The mozilla::pkix gtests cause an ODR violation that we ignore.
+    # See bug 1588567.
+    if [ "$i" = "mozpkix_gtest" ]; then
+      EXTRA_ASAN_OPTIONS="detect_odr_violation=0"
+    fi
     echo "executing $i"
-    "${BINDIR}/$i" "${SOURCE_DIR}/gtests/freebl_gtest/kat/Hash_DRBG.rsp" \
+    ASAN_OPTIONS="$ASAN_OPTIONS:$EXTRA_ASAN_OPTIONS" "${BINDIR}/$i" \
+                 "${SOURCE_DIR}/gtests/freebl_gtest/kat/Hash_DRBG.rsp" \
                  -d "$DIR" -w --gtest_output=xml:"${GTESTREPORT}" \
                               --gtest_filter="${GTESTFILTER:-*}"
     html_msg $? 0 "$i run successfully"
@@ -93,7 +99,7 @@ gtest_cleanup()
 }
 
 ################## main #################################################
-GTESTS="${GTESTS:-prng_gtest certhigh_gtest certdb_gtest der_gtest pk11_gtest util_gtest freebl_gtest softoken_gtest sysinit_gtest blake2b_gtest smime_gtest}"
+GTESTS="${GTESTS:-prng_gtest certhigh_gtest certdb_gtest der_gtest pk11_gtest util_gtest freebl_gtest softoken_gtest sysinit_gtest blake2b_gtest smime_gtest mozpkix_gtest}"
 gtest_init "$0"
 gtest_start
 gtest_cleanup
