@@ -348,11 +348,22 @@ package org.mozilla.geckoview {
     ctor protected GeckoDisplay(GeckoSession);
     method @UiThread @NonNull public GeckoResult<Bitmap> capturePixels();
     method @UiThread public void screenOriginChanged(int, int);
+    method @UiThread @NonNull public GeckoDisplay.ScreenshotBuilder screenshot();
     method @UiThread public void setVerticalClipping(int);
     method @UiThread public boolean shouldPinOnScreen();
     method @UiThread public void surfaceChanged(@NonNull Surface, int, int);
     method @UiThread public void surfaceChanged(@NonNull Surface, int, int, int, int);
     method @UiThread public void surfaceDestroyed();
+  }
+
+  public static final class GeckoDisplay.ScreenshotBuilder {
+    method @AnyThread @NonNull public GeckoDisplay.ScreenshotBuilder aspectPreservingSize(int);
+    method @AnyThread @NonNull public GeckoDisplay.ScreenshotBuilder bitmap(@Nullable Bitmap);
+    method @UiThread @NonNull public GeckoResult<Bitmap> capture();
+    method @AnyThread @NonNull public GeckoDisplay.ScreenshotBuilder scale(float);
+    method @AnyThread @NonNull public GeckoDisplay.ScreenshotBuilder size(int, int);
+    method @AnyThread @NonNull public GeckoDisplay.ScreenshotBuilder source(int, int, int, int);
+    method @AnyThread @NonNull public GeckoDisplay.ScreenshotBuilder source(@NonNull Rect);
   }
 
   public interface GeckoResponse<T> {

@@ -60,6 +60,8 @@ exclude: true
   an efficient way to pre-allocate memory when filling `ViewStructure`.
 - Added [`GeckoSession.PromptDelegate.onSharePrompt`][71.22] to support the WebShare API.
   ([bug 1402369]({{bugzilla}}1402369))
+- Added [`GeckoDisplay.screenshot`][71.23] allowing apps finer grain control over screenshots.
+  ([bug 1577192]({{bugzilla}}1577192))
 
 [71.1]: {{javadoc_uri}}/RuntimeTelemetry.Delegate.html#onBooleanScalar-org.mozilla.geckoview.RuntimeTelemetry.Metric-
 [71.2]: {{javadoc_uri}}/RuntimeTelemetry.Delegate.html#onLongScalar-org.mozilla.geckoview.RuntimeTelemetry.Metric-
@@ -82,6 +84,7 @@ exclude: true
 [71.20]: {{javadoc_uri}}/AutofillElement.html
 [71.21]: {{javadoc_uri}}/GeckoView.html#setAutofillEnabled-boolean-
 [71.22]: {{javadoc_uri}}/GeckoSession.PromptDelegate.html#onSharePrompt-org.mozilla.geckoview.GeckoSession-org.mozilla.geckoview.GeckoSession.PromptDelegate.SharePrompt-
+[71.23]: {{javadoc_uri}}/GeckoDisplay.html#screenshot--
 
 ## v70
 - Added API for session context assignment

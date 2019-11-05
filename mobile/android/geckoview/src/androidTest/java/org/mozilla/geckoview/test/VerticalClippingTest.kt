@@ -13,12 +13,15 @@ import org.junit.runner.RunWith
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDisplay
 import android.graphics.Bitmap
+import org.hamcrest.Matchers
 import org.hamcrest.Matchers.equalTo
-import java.nio.ByteBuffer
+import org.mozilla.geckoview.GeckoSession
+import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
+import org.mozilla.geckoview.test.util.Callbacks
 
 
-private const val SCREEN_HEIGHT = 100
-private const val SCREEN_WIDTH = 100
+private const val SCREEN_HEIGHT = 800
+private const val SCREEN_WIDTH = 800
 private const val BANNER_HEIGHT = SCREEN_HEIGHT * 0.1f // height: 10%
 
 @RunWith(AndroidJUnit4::class)
@@ -49,23 +52,25 @@ class VerticalClippingTest : BaseSessionTest() {
             assertThat("Heights are the same", comparisonImage.height, equalTo(it.height))
             assertThat("Byte counts are the same", comparisonImage.byteCount, equalTo(it.byteCount))
             assertThat("Configs are the same", comparisonImage.config, equalTo(it.config))
-            val comparisonPixels: ByteBuffer = ByteBuffer.allocate(comparisonImage.byteCount)
-            comparisonImage.copyPixelsToBuffer(comparisonPixels)
-            val itPixels: ByteBuffer = ByteBuffer.allocate(it.byteCount)
-            it.copyPixelsToBuffer(itPixels)
-            assertThat("Bytes are the same", comparisonPixels, equalTo(itPixels))        }
+            assertThat("Images are almost identical",
+                    ScreenshotTest.Companion.imageElementDifference(comparisonImage, it),
+                    Matchers.lessThanOrEqualTo(1))
+        }
     }
 
 
     @WithDisplay(height = SCREEN_HEIGHT, width = SCREEN_WIDTH)
     @Test
     fun verticalClippingSucceeds() {
-        sessionRule.session.loadTestPath(BaseSessionTest.FIXED_BOTTOM)
-        sessionRule.waitForPageStop()
+        sessionRule.display?.setVerticalClipping(45)
+        sessionRule.session.loadTestPath(FIXED_BOTTOM)
+        sessionRule.waitUntilCalled(object : Callbacks.ContentDelegate {
+            @AssertCalled(count = 1)
+            override fun onFirstContentfulPaint(session: GeckoSession) {
+            }
+        })
 
         sessionRule.display?.let {
-            assertScreenshotResult(it.capturePixels(), getComparisonScreenshot(0))
-            it.setVerticalClipping(45)
             assertScreenshotResult(it.capturePixels(), getComparisonScreenshot(45))
         }
     }
