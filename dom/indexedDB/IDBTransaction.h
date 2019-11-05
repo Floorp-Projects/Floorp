@@ -25,6 +25,7 @@ namespace dom {
 
 class DOMException;
 class DOMStringList;
+class IDBCursor;
 class IDBDatabase;
 class IDBObjectStore;
 class IDBOpenDBRequest;
@@ -67,6 +68,7 @@ class IDBTransaction final : public DOMEventTargetHelper, public nsIRunnable {
   nsTArray<RefPtr<IDBObjectStore>> mObjectStores;
   nsTArray<RefPtr<IDBObjectStore>> mDeletedObjectStores;
   RefPtr<StrongWorkerRef> mWorkerRef;
+  nsTArray<IDBCursor*> mCursors;
 
   // Tagged with mMode. If mMode is VERSION_CHANGE then mBackgroundActor will be
   // a BackgroundVersionChangeTransactionChild. Otherwise it will be a
@@ -250,6 +252,10 @@ class IDBTransaction final : public DOMEventTargetHelper, public nsIRunnable {
   // Only for VERSION_CHANGE transactions.
   int64_t NextIndexId();
 
+  void InvalidateCursorCaches();
+  void RegisterCursor(IDBCursor* aCursor);
+  void UnregisterCursor(IDBCursor* aCursor);
+
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIRUNNABLE
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(IDBTransaction, DOMEventTargetHelper)
@@ -279,7 +285,7 @@ class IDBTransaction final : public DOMEventTargetHelper, public nsIRunnable {
 
   void OnNewRequest();
 
-  void OnRequestFinished(bool aActorDestroyedNormally);
+  void OnRequestFinished(bool aRequestCompletedSuccessfully);
 };
 
 }  // namespace dom
