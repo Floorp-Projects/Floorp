@@ -24,7 +24,7 @@ import logging
 import os
 
 from taskgraph.transforms.base import TransformSequence
-from taskgraph.util.attributes import match_run_on_projects
+from taskgraph.util.attributes import match_run_on_projects, keymatch
 from taskgraph.util.keyed_by import evaluate_keyed_by
 from taskgraph.util.schema import resolve_keyed_by, OptimizationSchema
 from taskgraph.util.templates import merge
@@ -439,6 +439,13 @@ test_description_schema = Schema({
     # the platform on which the tests will run
     'test-platform': basestring,
 
+    # limit the test-platforms (as defined in test-platforms.yml)
+    # that the test will run on
+    Optional('limit-platforms'): optionally_keyed_by(
+        'app',
+        [basestring]
+    ),
+
     # the name of the test (the key in tests.yml)
     'test-name': basestring,
 
@@ -544,6 +551,7 @@ def set_defaults(config, tests):
         test.setdefault('virtualization', 'virtual')
         test.setdefault('loopback-audio', False)
         test.setdefault('loopback-video', False)
+        test.setdefault('limit-platforms', [])
         if config.params['try_task_config'].get('debian-tests'):
             test.setdefault('docker-image', {'in-tree': 'debian10-test'})
         else:
@@ -585,6 +593,18 @@ def setup_raptor(config, tests):
 
         for t in raptor_transforms(config, [test]):
             yield t
+
+
+@transforms.add
+def limit_platforms(config, tests):
+    for test in tests:
+        if not test['limit-platforms']:
+            yield test
+            continue
+
+        limited_platforms = {key: key for key in test['limit-platforms']}
+        if keymatch(limited_platforms, test['test-platform']):
+            yield test
 
 
 transforms.add_validate(test_description_schema)
@@ -908,11 +928,36 @@ def setup_browsertime(config, tests):
         fs = {
             'by-test-platform': {
                 'android.*': ['linux64-chromedriver', 'linux64-ffmpeg-4.1.4'],
-                'linux.*': ['linux64-chromedriver', 'linux64-ffmpeg-4.1.4'],
-                'macosx.*': ['mac64-chromedriver', 'mac64-ffmpeg-4.1.1'],
-                'windows.*aarch64.*': ['win32-chromedriver', 'win64-ffmpeg-4.1.1'],
-                'windows.*-32.*': ['win32-chromedriver', 'win64-ffmpeg-4.1.1'],
-                'windows.*-64.*': ['win32-chromedriver', 'win64-ffmpeg-4.1.1'],
+                'linux.*': [
+                    'linux64-chromedriver-76',
+                    'linux64-chromedriver-77',
+                    'linux64-chromedriver-78',
+                    'linux64-ffmpeg-4.1.4'
+                ],
+                'macosx.*': [
+                    'mac64-chromedriver-76',
+                    'mac64-chromedriver-77',
+                    'mac64-chromedriver-78',
+                    'mac64-ffmpeg-4.1.1'
+                ],
+                'windows.*aarch64.*': [
+                    'win32-chromedriver-76',
+                    'win32-chromedriver-77',
+                    'win32-chromedriver-78',
+                    'win64-ffmpeg-4.1.1'
+                ],
+                'windows.*-32.*': [
+                    'win32-chromedriver-76',
+                    'win32-chromedriver-77',
+                    'win32-chromedriver-78',
+                    'win64-ffmpeg-4.1.1'
+                ],
+                'windows.*-64.*': [
+                    'win32-chromedriver-76',
+                    'win32-chromedriver-77',
+                    'win32-chromedriver-78',
+                    'win64-ffmpeg-4.1.1'
+                ],
             },
         }
 
@@ -930,7 +975,7 @@ def setup_browsertime(config, tests):
                  '--browsertime-geckodriver',
                  '$MOZ_FETCHES_DIR/geckodriver.exe',
                  '--browsertime-chromedriver',
-                 '$MOZ_FETCHES_DIR/chromedriver.exe',
+                 '$MOZ_FETCHES_DIR/{}chromedriver.exe',
                  '--browsertime-ffmpeg',
                  '$MOZ_FETCHES_DIR/ffmpeg-4.1.1-win64-static/bin/ffmpeg.exe',
                  ],
@@ -940,7 +985,7 @@ def setup_browsertime(config, tests):
                  '--browsertime-geckodriver',
                  '$MOZ_FETCHES_DIR/geckodriver',
                  '--browsertime-chromedriver',
-                 '$MOZ_FETCHES_DIR/chromedriver',
+                 '$MOZ_FETCHES_DIR/{}chromedriver',
                  '--browsertime-ffmpeg',
                  '$MOZ_FETCHES_DIR/ffmpeg-4.1.1-macos64-static/bin/ffmpeg',
                  ],
@@ -950,7 +995,7 @@ def setup_browsertime(config, tests):
                  '--browsertime-geckodriver',
                  '$MOZ_FETCHES_DIR/geckodriver',
                  '--browsertime-chromedriver',
-                 '$MOZ_FETCHES_DIR/chromedriver',
+                 '$MOZ_FETCHES_DIR/{}chromedriver',
                  '--browsertime-ffmpeg',
                  '$MOZ_FETCHES_DIR/ffmpeg-4.1.4-i686-static/ffmpeg',
                  ],

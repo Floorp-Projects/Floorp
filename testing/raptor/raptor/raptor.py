@@ -74,6 +74,8 @@ LOG = RaptorLogger(component='raptor-main')
 # - mozproxy.utils LOG displayed INFO messages even when LOG.error() was used in mitm.py
 mpu.LOG = RaptorLogger(component='raptor-mitmproxy')
 
+DEFAULT_CHROMEVERSION = '77'
+
 
 class SignalHandler:
 
@@ -146,7 +148,7 @@ either Raptor or browsertime."""
         self.profile_class = profile_class or app
         self.firefox_android_apps = FIREFOX_ANDROID_APPS
         self.interrupt_handler = interrupt_handler
-        self.results_handler = results_handler_class(self.config)
+        self.results_handler = results_handler_class(**self.config)
 
         self.browser_name, self.browser_version = self.get_browser_meta()
 
@@ -209,6 +211,10 @@ either Raptor or browsertime."""
 
         if test.get("preferences") is not None:
             self.set_browser_test_prefs(test['preferences'])
+
+    @abstractmethod
+    def setup_chrome_args(self):
+        pass
 
     @abstractmethod
     def get_browser_meta(self):
@@ -350,6 +356,41 @@ either Raptor or browsertime."""
 class PerftestDesktop(Perftest):
     """Mixin class for Desktop-specific Perftest subclasses"""
 
+    def setup_chrome_args(self, test):
+        '''Sets up chrome/chromium cmd-line arguments.
+
+        Needs to be "implemented" here to deal with Python 2
+        unittest failures.
+        '''
+        raise NotImplementedError
+
+    def desktop_chrome_args(self, test):
+        '''Returns cmd line options required to run pageload tests on Desktop Chrome
+        and Chromium. Also add the cmd line options to turn on the proxy and
+        ignore security certificate errors if using host localhost, 127.0.0.1.
+        '''
+        chrome_args = [
+            '--use-mock-keychain',
+            '--no-default-browser-check',
+        ]
+
+        if test.get('playback', False):
+            pb_args = [
+                '--proxy-server=127.0.0.1:8080',
+                '--proxy-bypass-list=localhost;127.0.0.1',
+                '--ignore-certificate-errors',
+            ]
+
+            if self.config['host'] not in ('localhost', '127.0.0.1'):
+                pb_args[0] = pb_args[0].replace('127.0.0.1', self.config['host'])
+
+            chrome_args.extend(pb_args)
+
+        if self.debug_mode:
+            chrome_args.extend(['--auto-open-devtools-for-tabs'])
+
+        return chrome_args
+
     def get_browser_meta(self):
         '''Returns the browser name and version in a tuple (name, version).
 
@@ -424,6 +465,14 @@ class PerftestDesktop(Perftest):
 class PerftestAndroid(Perftest):
     """Mixin class for Android-specific Perftest subclasses."""
 
+    def setup_chrome_args(self, test):
+        '''Sets up chrome/chromium cmd-line arguments.
+
+        Needs to be "implemented" here to deal with Python 2
+        unittest failures.
+        '''
+        raise NotImplementedError
+
     def get_browser_meta(self):
         '''Returns the browser name and version in a tuple (name, version).
 
@@ -470,7 +519,7 @@ class Browsertime(Perftest):
                 value = kwargs.pop(key)
                 setattr(self, key, value)
 
-        def klass(config):
+        def klass(**config):
             root_results_dir = os.path.join(os.environ.get('MOZ_UPLOAD_DIR', os.getcwd()),
                                             'browsertime-results')
             return BrowsertimeResultsHandler(config, root_results_dir=root_results_dir)
@@ -539,7 +588,21 @@ class Browsertime(Perftest):
         if self.browsertime_geckodriver:
             self.driver_paths.extend(['--firefox.geckodriverPath', self.browsertime_geckodriver])
         if self.browsertime_chromedriver:
-            self.driver_paths.extend(['--chrome.chromedriverPath', self.browsertime_chromedriver])
+            if not self.config.get('run_local', None) or '{}' in self.browsertime_chromedriver:
+                if self.browser_version:
+                    bvers = str(self.browser_version)
+                    chromedriver_version = bvers.split('.')[0]
+                else:
+                    chromedriver_version = DEFAULT_CHROMEVERSION
+
+                self.browsertime_chromedriver = self.browsertime_chromedriver.format(
+                    chromedriver_version
+                )
+
+            self.driver_paths.extend([
+                '--chrome.chromedriverPath',
+                self.browsertime_chromedriver
+            ])
 
         LOG.info('test: {}'.format(test))
 
@@ -562,7 +625,11 @@ class Browsertime(Perftest):
         browsertime_script = [os.path.join(os.path.dirname(__file__), "..",
                               "browsertime", "browsertime_pageload.js")]
 
-        browsertime_script.extend(self.browsertime_args)
+        btime_args = self.browsertime_args
+        if self.config['app'] in ('chrome', 'chromium'):
+            btime_args.extend(self.setup_chrome_args(test))
+
+        browsertime_script.extend(btime_args)
 
         # timeout is a single page-load timeout value (ms) from the test INI
         # this will be used for btime --timeouts.pageLoad
@@ -668,7 +735,25 @@ class BrowsertimeDesktop(PerftestDesktop, Browsertime):
         binary_path = self.config['binary']
         LOG.info('binary_path: {}'.format(binary_path))
 
-        return ['--browser', 'firefox', '--firefox.binaryPath', binary_path]
+        if self.config['app'] == 'chrome':
+            return ['--browser', self.config['app'], '--chrome.binaryPath', binary_path]
+        return ['--browser', self.config['app'], '--firefox.binaryPath', binary_path]
+
+    def setup_chrome_args(self, test):
+        # Setup required chrome arguments
+        chrome_args = self.desktop_chrome_args(test)
+
+        # Add this argument here, it's added by mozrunner
+        # for raptor
+        chrome_args.append('--no-first-run')
+
+        btime_chrome_args = []
+        for arg in chrome_args:
+            btime_chrome_args.extend([
+                '--chrome.args=' + str(arg.replace("'", '"'))
+            ])
+
+        return btime_chrome_args
 
 
 class BrowsertimeAndroid(PerftestAndroid, Browsertime):
@@ -1132,32 +1217,17 @@ class RaptorDesktopFirefox(RaptorDesktop):
 
 class RaptorDesktopChrome(RaptorDesktop):
 
-    def setup_chrome_desktop_for_playback(self):
-        # if running a pageload test on google chrome, add the cmd line options
-        # to turn on the proxy and ignore security certificate errors
-        # if using host localhost, 127.0.0.1.
-        chrome_args = [
-            '--proxy-server=127.0.0.1:8080',
-            '--proxy-bypass-list=localhost;127.0.0.1',
-            '--ignore-certificate-errors',
-        ]
-        if self.config['host'] not in ('localhost', '127.0.0.1'):
-            chrome_args[0] = chrome_args[0].replace('127.0.0.1', self.config['host'])
+    def setup_chrome_args(self, test):
+        # Setup chrome args and add them to the runner's args
+        chrome_args = self.desktop_chrome_args(test)
         if ' '.join(chrome_args) not in ' '.join(self.runner.cmdargs):
             self.runner.cmdargs.extend(chrome_args)
 
     def launch_desktop_browser(self, test):
         LOG.info("starting %s" % self.config['app'])
-        # some chromium-specfic cmd line opts required
-        self.runner.cmdargs.extend(['--use-mock-keychain', '--no-default-browser-check'])
 
-        # if running in debug-mode, open the devtools on the raptor test tab
-        if self.debug_mode:
-            self.runner.cmdargs.extend(['--auto-open-devtools-for-tabs'])
-
-        if test.get('playback') is not None:
-            self.setup_chrome_desktop_for_playback()
-
+        # Setup chrome/chromium specific arguments then start the runner
+        self.setup_chrome_args(test)
         self.start_runner_proc()
 
     def set_browser_test_prefs(self, raw_prefs):

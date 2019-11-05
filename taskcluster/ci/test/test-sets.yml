@@ -289,6 +289,10 @@ raptor-fetch-chromium:
     - raptor-assorted-dom-chromium
     - raptor-jetstream2-chromium
 
+browsertime:
+    - browsertime-tp6-1
+    - browsertime-speedometer
+
 # Raptor desktop power tests
 # (requires Intel Power Gadget to be pre-installed)
 raptor-firefox-power:
@@ -888,10 +892,6 @@ android-hw-arm7-raptor-nightly:
     - raptor-tp6m-8-fennec68
     - raptor-tp6m-9-fennec68
     - raptor-tp6m-10-fennec68
-
-browsertime:
-    - browsertime-tp6-1
-    - browsertime-speedometer
 
 android-hw-aarch64-browsertime:
     - browsertime-tp6m-1
