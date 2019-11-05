@@ -607,7 +607,9 @@ menuitem.bookmark-item {
 .tab-drop-indicator {
   list-style-image: url(chrome://browser/skin/tabbrowser/tabDragIndicator.png);
   margin-bottom: -9px;
-  z-index: 3;
+  /* The z-index needs to be big enough to trump other positioned UI pieces
+     that we want to overlay. The expanded urlbar uses 3. */
+  z-index: 4;
 }
 
 /* All tabs menupopup */
