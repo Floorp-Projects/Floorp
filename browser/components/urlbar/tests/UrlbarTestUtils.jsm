@@ -138,13 +138,12 @@ var UrlbarTestUtils = {
     let actions = element.getElementsByClassName("urlbarView-action");
     let urls = element.getElementsByClassName("urlbarView-url");
     let typeIcon = element.querySelector(".urlbarView-type-icon");
+    let typeIconStyle = win.getComputedStyle(typeIcon);
     details.displayed = {
       title: element.getElementsByClassName("urlbarView-title")[0].textContent,
       action: actions.length ? actions[0].textContent : null,
       url: urls.length ? urls[0].textContent : null,
-      typeIcon: typeIcon
-        ? win.getComputedStyle(typeIcon)["background-image"]
-        : null,
+      typeIcon: typeIconStyle["background-image"],
     };
     details.element = {
       action: element.getElementsByClassName("urlbarView-action")[0],
