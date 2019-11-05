@@ -529,6 +529,66 @@ double js::WritableStreamDefaultControllerGetDesiredSize(
   return controller->strategyHWM() - controller->queueTotalSize();
 }
 
+/**
+ * Streams spec, 4.8.8.
+ *      WritableStreamDefaultControllerWrite ( controller, chunk, chunkSize )
+ */
+bool js::WritableStreamDefaultControllerWrite(
+    JSContext* cx, Handle<WritableStreamDefaultController*> unwrappedController,
+    Handle<Value> chunk, Handle<Value> chunkSize) {
+  MOZ_ASSERT(!chunk.isMagic());
+  cx->check(chunk);
+  cx->check(chunkSize);
+
+  // Step 1: Let writeRecord be Record {[[chunk]]: chunk}.
+  // Step 2: Let enqueueResult be
+  //         EnqueueValueWithSize(controller, writeRecord, chunkSize).
+  bool succeeded =
+      EnqueueValueWithSize(cx, unwrappedController, chunk, chunkSize);
+
+  // Step 3: If enqueueResult is an abrupt completion,
+  if (!succeeded) {
+    Rooted<Value> enqueueResult(cx);
+    if (!cx->isExceptionPending() || !cx->getPendingException(&enqueueResult)) {
+      // Uncatchable error.  Die immediately without erroring the stream.
+      return false;
+    }
+    cx->check(enqueueResult);
+
+    cx->clearPendingException();
+
+    // Step 3.a: Perform ! WritableStreamDefaultControllerErrorIfNeeded(
+    //                 controller, enqueueResult.[[Value]]).
+    // Step 3.b: Return.
+    return WritableStreamDefaultControllerErrorIfNeeded(cx, unwrappedController,
+                                                        enqueueResult);
+  }
+
+  // Step 4: Let stream be controller.[[controlledWritableStream]].
+  Rooted<WritableStream*> unwrappedStream(cx, unwrappedController->stream());
+
+  // Step 5: If ! WritableStreamCloseQueuedOrInFlight(stream) is false and
+  //         stream.[[state]] is "writable",
+  if (!WritableStreamCloseQueuedOrInFlight(unwrappedStream) &&
+      unwrappedStream->writable()) {
+    // Step 5.a: Let backpressure be
+    //           ! WritableStreamDefaultControllerGetBackpressure(controller).
+    bool backpressure =
+        WritableStreamDefaultControllerGetBackpressure(unwrappedController);
+
+    // Step 5.b: Perform
+    //           ! WritableStreamUpdateBackpressure(stream, backpressure).
+    if (!WritableStreamUpdateBackpressure(cx, unwrappedStream, backpressure)) {
+      return false;
+    }
+  }
+
+  // Step 6: Perform
+  //         ! WritableStreamDefaultControllerAdvanceQueueIfNeeded(controller).
+  return WritableStreamDefaultControllerAdvanceQueueIfNeeded(
+      cx, unwrappedController);
+}
+
 static MOZ_MUST_USE bool WritableStreamDefaultControllerProcessIfNeeded(
     JSContext* cx,
     Handle<WritableStreamDefaultController*> unwrappedController);
