@@ -183,6 +183,8 @@ void DCLayerTree::Bind(wr::NativeSurfaceId aId, wr::DeviceIntPoint* aOffset,
   MOZ_ASSERT(layer->GetEGLSurface() != EGL_NO_SURFACE);
   gl::GLContextEGL::Cast(mGL)->SetEGLSurfaceOverride(layer->GetEGLSurface());
   mCurrentId = Some(aId);
+
+  *aFboId = 0;
 }
 
 void DCLayerTree::Unbind() {
