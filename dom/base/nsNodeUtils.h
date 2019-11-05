@@ -237,15 +237,6 @@ class nsNodeUtils {
   static already_AddRefed<nsINode> CloneNodeImpl(nsINode* aNode, bool aDeep,
                                                  mozilla::ErrorResult& aError);
 
-  /**
-   * Returns the first child of a node or the first child of
-   * a template element's content if the provided node is a
-   * template element.
-   *
-   * @param aNode A node from which to retrieve the first child.
-   */
-  static nsIContent* GetFirstChildOfTemplateOrNode(nsINode* aNode);
-
  private:
   /**
    * Walks aNode, its attributes and, if aDeep is true, its descendant nodes.

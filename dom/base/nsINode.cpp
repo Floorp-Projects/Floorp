@@ -33,6 +33,7 @@
 #include "mozilla/dom/DocumentType.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"
+#include "mozilla/dom/HTMLTemplateElement.h"
 #include "mozilla/dom/ShadowRoot.h"
 #include "mozilla/dom/SVGUseElement.h"
 #include "mozilla/dom/ScriptSettings.h"
@@ -281,6 +282,15 @@ nsINode* nsINode::GetRootNode(const GetRootNodeOptions& aOptions) {
   }
 
   return SubtreeRoot();
+}
+
+nsIContent* nsINode::GetFirstChildOfTemplateOrNode() {
+  if (IsTemplateElement()) {
+    DocumentFragment* frag = static_cast<HTMLTemplateElement*>(this)->Content();
+    return frag->GetFirstChild();
+  }
+
+  return GetFirstChild();
 }
 
 nsINode* nsINode::GetParentOrShadowHostNode() const {

@@ -632,13 +632,3 @@ already_AddRefed<nsINode> nsNodeUtils::CloneAndAdopt(
   return clone.forget();
 }
 
-
-nsIContent* nsNodeUtils::GetFirstChildOfTemplateOrNode(nsINode* aNode) {
-  if (aNode->IsTemplateElement()) {
-    DocumentFragment* frag =
-        static_cast<HTMLTemplateElement*>(aNode)->Content();
-    return frag->GetFirstChild();
-  }
-
-  return aNode->GetFirstChild();
-}
