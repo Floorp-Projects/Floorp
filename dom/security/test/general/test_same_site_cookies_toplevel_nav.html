@@ -7,7 +7,6 @@
 </head>
 <body>
 <img id="cookieImage">
-<iframe id="testframe"></iframe>
 
 <script class="testbody" type="text/javascript">
 
@@ -36,6 +35,7 @@ const PATH = "tests/dom/security/test/general/file_same_site_cookies_toplevel_na
 
 let curTest = 0;
 
+let currentWindow;
 var tests = [
   {
     description: "same origin navigation using cookie policy 'samesite=strict'",
@@ -64,6 +64,10 @@ var tests = [
 ];
 
 function checkResult(aCookieVal) {
+  if(currentWindow){
+    currentWindow.close();
+    currentWindow= null;
+  }
   is(aCookieVal, tests[curTest].result, tests[curTest].description);
   curTest += 1;
 
@@ -79,8 +83,8 @@ function checkResult(aCookieVal) {
 function setupQueryResultAndRunTest() {
   var myXHR = new XMLHttpRequest();
   myXHR.open("GET", "file_same_site_cookies_toplevel_nav.sjs?queryresult" + curTest);
-  myXHR.onload = function(e) {
-    checkResult(myXHR.responseText);
+  myXHR.onload = function(e) { 
+    checkResult( myXHR.responseText);
   }
   myXHR.onerror = function(e) {
     ok(false, "could not query results from server (" + e.message + ")");
@@ -89,8 +93,7 @@ function setupQueryResultAndRunTest() {
 
   // give it some time and load the test window
   SimpleTest.executeSoon(function() {
-    let testframe = document.getElementById("testframe");
-    testframe.src = tests[curTest].frameSRC + curTest;
+    currentWindow = window.open(tests[curTest].frameSRC + curTest);
   });
 }
 
