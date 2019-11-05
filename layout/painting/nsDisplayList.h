@@ -4417,6 +4417,21 @@ class nsDisplaySolidColor : public nsDisplaySolidColorBase {
     }
   }
 
+  /**
+   * If we have multiple SolidColor items in a single frame's
+   * display list, aIndex should be used as their unique
+   * identifier. Note this mapping remains stable even if the
+   * dirty rect changes.
+   */
+  // Should have an identical argument signature to the above ctor
+  static uint16_t CalculatePerFrameIndex(nsDisplayListBuilder* aBuilder,
+                                         nsIFrame* aFrame,
+                                         const nsRect& aBounds, nscolor aColor,
+                                         uint16_t aIndex = 0,
+                                         bool aCanBeReused = true) {
+    return aIndex;
+  }
+
 #ifdef NS_BUILD_REFCNT_LOGGING
   ~nsDisplaySolidColor() override { MOZ_COUNT_DTOR(nsDisplaySolidColor); }
 #endif
@@ -4449,13 +4464,6 @@ class nsDisplaySolidColor : public nsDisplaySolidColorBase {
   void SetOverrideZIndex(int32_t aZIndex) {
     mOverrideZIndex = mozilla::Some(aZIndex);
   }
-  /**
-   * If we have multiple SolidColor items in a single frame's
-   * display list, mIndex should be used as their unique
-   * identifier. Note this mapping remains stable even if the
-   * dirty rect changes.
-   */
-  uint16_t CalculatePerFrameKey() const override { return mIndex; }
 
  private:
   nsRect mBounds;
@@ -5466,6 +5474,12 @@ class nsDisplayWrapList : public nsDisplayHitTestInfoItem {
     mListPtr = &mList;
   }
 
+  // Should have an identical argument signature to the above ctor
+  static uint16_t CalculatePerFrameIndex(nsDisplayListBuilder* aBuilder,
+                                         nsIFrame* aFrame) {
+    return 0;
+  }
+
   nsDisplayWrapList() = delete;
 
   /**
@@ -6165,8 +6179,9 @@ class nsDisplayOwnLayer : public nsDisplayWrapList {
       const ActiveScrolledRoot* aActiveScrolledRoot,
       nsDisplayOwnLayerFlags aFlags = nsDisplayOwnLayerFlags::None,
       const ScrollbarData& aScrollbarData = ScrollbarData{},
-      bool aForceActive = true, bool aClearClipChain = false) {
-    return 0;
+      bool aForceActive = true, bool aClearClipChain = false,
+      uint16_t aIndex = 0) {
+    return aIndex;
   }
 
   nsDisplayOwnLayer(nsDisplayListBuilder* aBuilder,
@@ -6206,8 +6221,6 @@ class nsDisplayOwnLayer : public nsDisplayWrapList {
     // Don't allow merging, each sublist must have its own layer
     return false;
   }
-
-  uint16_t CalculatePerFrameKey() const override { return mIndex; }
 
   bool ShouldFlattenAway(nsDisplayListBuilder* aBuilder) override {
     return false;
@@ -6942,6 +6955,12 @@ class nsDisplayBackdropFilters : public nsDisplayWrapList {
       : nsDisplayWrapList(aBuilder, aFrame, aList),
         mBackdropRect(aBackdropRect) {
     MOZ_COUNT_CTOR(nsDisplayBackdropFilters);
+  }
+
+  static uint16_t CalculatePerFrameIndex(nsDisplayListBuilder* aBuilder,
+                                         nsIFrame* aFrame, nsDisplayList* aList,
+                                         const nsRect& aBackdropRect) {
+    return 0;
   }
 
 #ifdef NS_BUILD_REFCNT_LOGGING
