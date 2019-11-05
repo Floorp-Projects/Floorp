@@ -44,17 +44,17 @@ class nsCOMArray_base {
 
   bool EnumerateBackwards(nsBaseArrayEnumFunc aFunc, void* aData) const;
 
-  typedef int (*nsBaseArrayComparatorFunc)(nsISupports* aElement1,
+  typedef int (*nsISupportsComparatorFunc)(nsISupports* aElement1,
                                            nsISupports* aElement2, void* aData);
 
-  struct nsCOMArrayComparatorContext {
-    nsBaseArrayComparatorFunc mComparatorFunc;
+  struct nsISupportsComparatorContext {
+    nsISupportsComparatorFunc mComparatorFunc;
     void* mData;
   };
 
-  static int nsCOMArrayComparator(const void* aElement1, const void* aElement2,
-                                  void* aData);
-  void Sort(nsBaseArrayComparatorFunc aFunc, void* aData);
+  static int VoidStarComparator(const void* aElement1, const void* aElement2,
+                                void* aData);
+  void Sort(nsISupportsComparatorFunc aFunc, void* aData);
 
   bool InsertObjectAt(nsISupports* aObject, int32_t aIndex);
   void InsertElementAt(uint32_t aIndex, nsISupports* aElement);
@@ -297,11 +297,10 @@ class nsCOMArray : public nsCOMArray_base {
     nsCOMArray_base::ReplaceElementAt(aIndex, aElement);
   }
 
-  typedef int (*nsCOMArrayComparatorFunc)(T* aElement1, T* aElement2,
-                                          void* aData);
+  typedef int (*TComparatorFunc)(T* aElement1, T* aElement2, void* aData);
 
-  void Sort(nsCOMArrayComparatorFunc aFunc, void* aData) {
-    nsCOMArray_base::Sort(nsBaseArrayComparatorFunc(aFunc), aData);
+  void Sort(TComparatorFunc aFunc, void* aData) {
+    nsCOMArray_base::Sort(nsISupportsComparatorFunc(aFunc), aData);
   }
 
   // append an object, growing the array as necessary
