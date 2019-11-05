@@ -3,6 +3,7 @@ name = "neqo-transport"
 version = "0.1.4"
 authors = ["EKR <ekr@rtfm.com>"]
 edition = "2018"
+license = "MIT/Apache-2.0"
 
 [dependencies]
 neqo-crypto = { path = "../neqo-crypto" }

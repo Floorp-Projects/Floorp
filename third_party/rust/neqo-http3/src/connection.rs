@@ -4,7 +4,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use crate::client_events::{Http3ClientEvent, Http3ClientEvents};
+use crate::client_events::Http3ClientEvents;
 use crate::control_stream_local::{ControlStreamLocal, HTTP3_UNI_STREAM_TYPE_CONTROL};
 use crate::control_stream_remote::ControlStreamRemote;
 use crate::hframe::{HFrame, HSettingType};
@@ -35,9 +35,7 @@ const HTTP3_UNI_STREAM_TYPE_PUSH: u64 = 0x1;
 const MAX_HEADER_LIST_SIZE_DEFAULT: u64 = u64::max_value();
 
 pub trait Http3Events: Default + Debug {
-    fn data_writable(&self, stream_id: u64);
     fn reset(&self, stream_id: u64, error: AppError);
-    fn new_requests_creatable(&self, stream_type: StreamType);
     fn connection_state_change(&self, state: Http3State);
     fn remove_events_for_stream_id(&self, remove_stream_id: u64);
 }
@@ -55,9 +53,18 @@ pub trait Http3Transaction: Debug {
 
 pub trait Http3Handler<E: Http3Events, T: Http3Transaction> {
     fn new() -> Self;
+    fn handle_stream_creatable(&mut self, events: &mut E, stream_type: StreamType) -> Res<()>;
+    fn handle_new_push_stream(&mut self) -> Res<()>;
     fn handle_new_bidi_stream(
         &mut self,
         transactions: &mut HashMap<u64, T>,
+        events: &mut E,
+        stream_id: u64,
+    ) -> Res<()>;
+    fn handle_send_stream_writable(
+        &mut self,
+        transactions: &mut HashMap<u64, T>,
+        events: &mut E,
         stream_id: u64,
     ) -> Res<()>;
     fn handle_stream_stop_sending(
@@ -68,7 +75,6 @@ pub trait Http3Handler<E: Http3Events, T: Http3Transaction> {
         stop_stream_id: u64,
         app_err: AppError,
     ) -> Res<()>;
-    fn handle_new_push_stream(&mut self) -> Res<()>;
     fn handle_goaway(
         &mut self,
         transactions: &mut HashMap<u64, T>,
@@ -187,7 +193,7 @@ impl<E: Http3Events + Default, T: Http3Transaction, H: Http3Handler<E, T>>
     }
 
     fn initialize_http3_connection(&mut self) -> Res<()> {
-        qtrace!([self] "Initialize the http3 connection.");
+        qinfo!([self] "Initialize the http3 connection.");
         self.control_stream_local.create(&mut self.conn)?;
         self.send_settings();
         self.create_qpack_streams()?;
@@ -195,7 +201,7 @@ impl<E: Http3Events + Default, T: Http3Transaction, H: Http3Handler<E, T>>
     }
 
     fn send_settings(&mut self) {
-        qtrace!([self] "Send settings.");
+        qdebug!([self] "Send settings.");
         self.control_stream_local.queue_frame(HFrame::Settings {
             settings: vec![
                 (
@@ -211,7 +217,7 @@ impl<E: Http3Events + Default, T: Http3Transaction, H: Http3Handler<E, T>>
     }
 
     fn create_qpack_streams(&mut self) -> Res<()> {
-        qtrace!([self] "create_qpack_streams.");
+        qdebug!([self] "create_qpack_streams.");
         self.qpack_encoder
             .add_send_stream(self.conn.stream_create(StreamType::UniDi)?);
         self.qpack_decoder
@@ -283,6 +289,15 @@ impl<E: Http3Events + Default, T: Http3Transaction, H: Http3Handler<E, T>>
         self.conn.process_output(now)
     }
 
+    pub fn stream_stop_sending(&mut self, stream_id: u64, app_error: AppError) -> Res<()> {
+        self.conn.stream_stop_sending(stream_id, app_error)?;
+        Ok(())
+    }
+
+    pub fn insert_streams_have_data_to_send(&mut self, stream_id: u64) {
+        self.streams_have_data_to_send.insert(stream_id);
+    }
+
     fn process_sending(&mut self) -> Res<()> {
         // check if control stream has data to send.
         self.control_stream_local.send(&mut self.conn)?;
@@ -305,14 +320,18 @@ impl<E: Http3Events + Default, T: Http3Transaction, H: Http3Handler<E, T>>
     fn check_connection_events(&mut self) -> Res<()> {
         qtrace!([self] "Check connection events.");
         while let Some(e) = self.conn.next_event() {
-            qtrace!([self] "check_connection_events - event {:?}.", e);
+            qdebug!([self] "check_connection_events - event {:?}.", e);
             match e {
                 ConnectionEvent::NewStream {
                     stream_id,
                     stream_type,
                 } => self.handle_new_stream(stream_id, stream_type)?,
                 ConnectionEvent::SendStreamWritable { stream_id } => {
-                    self.handle_send_stream_writable(stream_id)?
+                    self.handler.handle_send_stream_writable(
+                        &mut self.transactions,
+                        &mut self.events,
+                        stream_id,
+                    )?
                 }
                 ConnectionEvent::RecvStreamReadable { stream_id } => {
                     self.handle_stream_readable(stream_id)?
@@ -334,9 +353,9 @@ impl<E: Http3Events + Default, T: Http3Transaction, H: Http3Handler<E, T>>
                 ConnectionEvent::SendStreamComplete { stream_id } => {
                     self.handle_stream_complete(stream_id)?
                 }
-                ConnectionEvent::SendStreamCreatable { stream_type } => {
-                    self.handle_stream_creatable(stream_type)?
-                }
+                ConnectionEvent::SendStreamCreatable { stream_type } => self
+                    .handler
+                    .handle_stream_creatable(&mut self.events, stream_type)?,
                 ConnectionEvent::AuthenticationNeeded => self
                     .handler
                     .handle_authentication_needed(&mut self.events)?,
@@ -362,11 +381,14 @@ impl<E: Http3Events + Default, T: Http3Transaction, H: Http3Handler<E, T>>
     }
 
     fn handle_new_stream(&mut self, stream_id: u64, stream_type: StreamType) -> Res<()> {
-        qdebug!([self] "A new stream: {:?} {}.", stream_type, stream_id);
+        qinfo!([self] "A new stream: {:?} {}.", stream_type, stream_id);
+        assert!(self.state_active());
         match stream_type {
-            StreamType::BiDi => self
-                .handler
-                .handle_new_bidi_stream(&mut self.transactions, stream_id),
+            StreamType::BiDi => self.handler.handle_new_bidi_stream(
+                &mut self.transactions,
+                &mut self.events,
+                stream_id,
+            ),
             StreamType::UniDi => {
                 let stream_type;
                 let fin;
@@ -393,19 +415,10 @@ impl<E: Http3Events + Default, T: Http3Transaction, H: Http3Handler<E, T>>
         }
     }
 
-    fn handle_send_stream_writable(&mut self, stream_id: u64) -> Res<()> {
-        qtrace!([self] "Writable stream {}.", stream_id);
-
-        if let Some(t) = self.transactions.get_mut(&stream_id) {
-            if t.is_state_sending_data() {
-                self.events.data_writable(stream_id);
-            }
-        }
-        Ok(())
-    }
-
     fn handle_stream_readable(&mut self, stream_id: u64) -> Res<()> {
         qtrace!([self] "Readable stream {}.", stream_id);
+
+        assert!(self.state_active());
 
         let label = if ::log::log_enabled!(::log::Level::Debug) {
             format!("{}", self)
@@ -469,17 +482,18 @@ impl<E: Http3Events + Default, T: Http3Transaction, H: Http3Handler<E, T>>
         }
 
         for stream_id in unblocked_streams {
-            qdebug!([self] "Stream {} is unblocked", stream_id);
+            qinfo!([self] "Stream {} is unblocked", stream_id);
             self.handle_read_stream(stream_id)?;
         }
         Ok(())
     }
 
     fn handle_stream_reset(&mut self, stream_id: u64, app_err: AppError) -> Res<()> {
-        qtrace!([self] "Handle a stream reset stream_id={} app_err={}", stream_id, app_err);
+        qinfo!([self] "Handle a stream reset stream_id={} app_err={}", stream_id, app_err);
+
+        assert!(self.state_active());
+
         if let Some(t) = self.transactions.get_mut(&stream_id) {
-            // Remove all events for this stream.
-            self.events.remove_events_for_stream_id(stream_id);
             // Post the reset event.
             self.events.reset(stream_id, app_err);
             // Close both sides of the transaction_client.
@@ -498,11 +512,6 @@ impl<E: Http3Events + Default, T: Http3Transaction, H: Http3Handler<E, T>>
         Ok(())
     }
 
-    fn handle_stream_creatable(&mut self, stream_type: StreamType) -> Res<()> {
-        self.events.new_requests_creatable(stream_type);
-        Ok(())
-    }
-
     fn handle_connection_connected(&mut self) -> Res<()> {
         assert_eq!(self.state, Http3State::Initializing);
         self.events.connection_state_change(Http3State::Connected);
@@ -511,6 +520,7 @@ impl<E: Http3Events + Default, T: Http3Transaction, H: Http3Handler<E, T>>
     }
 
     fn handle_connection_closing(&mut self, error_code: CloseError) -> Res<()> {
+        assert!(self.state_active());
         self.events
             .connection_state_change(Http3State::Closing(error_code));
         self.state = Http3State::Closing(error_code);
@@ -531,11 +541,13 @@ impl<E: Http3Events + Default, T: Http3Transaction, H: Http3Handler<E, T>>
             String::new()
         };
 
+        assert!(self.state_active());
+
         if let Some(transaction) = &mut self.transactions.get_mut(&stream_id) {
-            qtrace!([label] "Request/response stream {} is readable.", stream_id);
+            qinfo!([label] "Request/response stream {} is readable.", stream_id);
             match transaction.receive(&mut self.conn, &mut self.qpack_decoder) {
                 Err(e) => {
-                    qdebug!([label] "Error {} ocurred", e);
+                    qerror!([label] "Error {} ocurred", e);
                     return Err(e);
                 }
                 Ok(()) => {
@@ -558,7 +570,7 @@ impl<E: Http3Events + Default, T: Http3Transaction, H: Http3Handler<E, T>>
             }
 
             HTTP3_UNI_STREAM_TYPE_PUSH => {
-                qdebug!([self] "A new push stream {}.", stream_id);
+                qinfo!([self] "A new push stream {}.", stream_id);
                 self.handler.handle_new_push_stream()
             }
             QPACK_UNI_STREAM_TYPE_ENCODER => {
@@ -583,7 +595,8 @@ impl<E: Http3Events + Default, T: Http3Transaction, H: Http3Handler<E, T>>
     }
 
     pub fn close(&mut self, now: Instant, error: AppError, msg: &str) {
-        qdebug!([self] "Closed.");
+        qinfo!([self] "Close connection error {:?} msg={}.", error, msg);
+        assert!(self.state_active());
         self.state = Http3State::Closing(CloseError::Application(error));
         if !self.transactions.is_empty() && (error == 0) {
             qwarn!("close() called when streams still active");
@@ -593,7 +606,8 @@ impl<E: Http3Events + Default, T: Http3Transaction, H: Http3Handler<E, T>>
     }
 
     pub fn stream_reset(&mut self, stream_id: u64, error: AppError) -> Res<()> {
-        qtrace!([self] "Reset stream {}.", stream_id);
+        qinfo!([self] "Reset stream {} error={}.", stream_id, error);
+        assert!(self.state_active());
         let mut transaction = self
             .transactions
             .remove(&stream_id)
@@ -609,7 +623,8 @@ impl<E: Http3Events + Default, T: Http3Transaction, H: Http3Handler<E, T>>
     }
 
     pub fn stream_close_send(&mut self, stream_id: u64) -> Res<()> {
-        qtrace!([self] "Close stream {}.", stream_id);
+        qinfo!([self] "Close sending side for stream {}.", stream_id);
+        assert!(self.state_active());
         let transaction = self
             .transactions
             .get_mut(&stream_id)
@@ -627,15 +642,15 @@ impl<E: Http3Events + Default, T: Http3Transaction, H: Http3Handler<E, T>>
         }
         if self.control_stream_remote.frame_reader_done() {
             let f = self.control_stream_remote.get_frame()?;
-            qdebug!([self] "Handle a control frame {:?}", f);
+            qinfo!([self] "Handle a control frame {:?}", f);
             if let HFrame::Settings { .. } = f {
                 if self.settings_received {
-                    qdebug!([self] "SETTINGS frame already received");
+                    qerror!([self] "SETTINGS frame already received");
                     return Err(Error::HttpFrameUnexpected);
                 }
                 self.settings_received = true;
             } else if !self.settings_received {
-                qdebug!([self] "SETTINGS frame not received");
+                qerror!([self] "SETTINGS frame not received");
                 return Err(Error::HttpMissingSettings);
             }
             return match f {
@@ -658,9 +673,9 @@ impl<E: Http3Events + Default, T: Http3Transaction, H: Http3Handler<E, T>>
     }
 
     fn handle_settings(&mut self, s: &[(HSettingType, u64)]) -> Res<()> {
-        qdebug!([self] "Handle SETTINGS frame.");
+        qinfo!([self] "Handle SETTINGS frame.");
         for (t, v) in s {
-            qdebug!([self] " {:?} = {:?}", t, v);
+            qinfo!([self] " {:?} = {:?}", t, v);
             match t {
                 HSettingType::MaxHeaderListSize => {
                     self.max_header_list_size = *v;
@@ -672,6 +687,13 @@ impl<E: Http3Events + Default, T: Http3Transaction, H: Http3Handler<E, T>>
             }
         }
         Ok(())
+    }
+
+    fn state_active(&self) -> bool {
+        match self.state {
+            Http3State::Connected | Http3State::GoingAway => true,
+            _ => false,
+        }
     }
 
     pub fn state(&self) -> Http3State {
@@ -694,13 +716,45 @@ impl Http3Handler<Http3ClientEvents, TransactionClient> for Http3ClientHandler {
         Http3ClientHandler::default()
     }
 
+    fn handle_stream_creatable(
+        &mut self,
+        events: &mut Http3ClientEvents,
+        stream_type: StreamType,
+    ) -> Res<()> {
+        events.new_requests_creatable(stream_type);
+        Ok(())
+    }
+
+    fn handle_new_push_stream(&mut self) -> Res<()> {
+        // TODO implement PUSH
+        qerror!([self] "PUSH is not implemented!");
+        Err(Error::HttpIdError)
+    }
+
     fn handle_new_bidi_stream(
         &mut self,
         _transactions: &mut HashMap<u64, TransactionClient>,
+        _events: &mut Http3ClientEvents,
         _stream_id: u64,
     ) -> Res<()> {
         qerror!("Client received a new bidirectional stream!");
         Err(Error::HttpStreamCreationError)
+    }
+
+    fn handle_send_stream_writable(
+        &mut self,
+        transactions: &mut HashMap<u64, TransactionClient>,
+        events: &mut Http3ClientEvents,
+        stream_id: u64,
+    ) -> Res<()> {
+        qtrace!([self] "Writable stream {}.", stream_id);
+
+        if let Some(t) = transactions.get_mut(&stream_id) {
+            if t.is_state_sending_data() {
+                events.data_writable(stream_id);
+            }
+        }
+        Ok(())
     }
 
     fn handle_stream_stop_sending(
@@ -711,7 +765,7 @@ impl Http3Handler<Http3ClientEvents, TransactionClient> for Http3ClientHandler {
         stop_stream_id: u64,
         app_err: AppError,
     ) -> Res<()> {
-        qdebug!([self] "Handle stream_stop_sending stream_id={} app_err={}", stop_stream_id, app_err);
+        qinfo!([self] "Handle stream_stop_sending stream_id={} app_err={}", stop_stream_id, app_err);
 
         if let Some(t) = transactions.get_mut(&stop_stream_id) {
             // close sending side.
@@ -720,15 +774,10 @@ impl Http3Handler<Http3ClientEvents, TransactionClient> for Http3ClientHandler {
             // If error is Error::EarlyResponse we will post StopSending event,
             // otherwise post reset.
             if app_err == Error::HttpEarlyResponse.code() && !t.is_sending_closed() {
-                // Remove DataWritable event if any.
-                events.remove(&Http3ClientEvent::DataWritable {
-                    stream_id: stop_stream_id,
-                });
                 events.stop_sending(stop_stream_id, app_err);
             }
             // if error is not Error::EarlyResponse we will close receiving part as well.
             if app_err != Error::HttpEarlyResponse.code() {
-                events.remove_events_for_stream_id(stop_stream_id);
                 events.reset(stop_stream_id, app_err);
                 // The server may close its sending side as well, but just to be sure
                 // we will do it ourselves.
@@ -741,11 +790,6 @@ impl Http3Handler<Http3ClientEvents, TransactionClient> for Http3ClientHandler {
         }
         Ok(())
     }
-    fn handle_new_push_stream(&mut self) -> Res<()> {
-        // TODO implement PUSH
-        qtrace!([self] "PUSH is not implemented!");
-        Err(Error::HttpIdError)
-    }
 
     fn handle_goaway(
         &mut self,
@@ -754,17 +798,15 @@ impl Http3Handler<Http3ClientEvents, TransactionClient> for Http3ClientHandler {
         state: &mut Http3State,
         goaway_stream_id: u64,
     ) -> Res<()> {
-        qtrace!([self] "handle_goaway");
+        qinfo!([self] "handle_goaway");
         // Issue reset events for streams >= goaway stream id
         for id in transactions
             .iter()
             .filter(|(id, _)| **id >= goaway_stream_id)
             .map(|(id, _)| *id)
         {
-            events.remove_events_for_stream_id(id);
             events.reset(id, Error::HttpRequestRejected.code())
         }
-        events.remove(&Http3ClientEvent::RequestsCreatable);
         events.goaway_received();
 
         // Actually remove (i.e. don't retain) these streams
@@ -777,7 +819,7 @@ impl Http3Handler<Http3ClientEvents, TransactionClient> for Http3ClientHandler {
     }
 
     fn handle_max_push_id(&mut self, stream_id: u64) -> Res<()> {
-        qtrace!([self] "handle_max_push_id={}.", stream_id);
+        qerror!([self] "handle_max_push_id={}.", stream_id);
         Err(Error::HttpFrameUnexpected)
     }
 
@@ -801,13 +843,47 @@ impl Http3Handler<Http3ServerEvents, TransactionServer> for Http3ServerHandler {
         Http3ServerHandler::default()
     }
 
+    fn handle_stream_creatable(
+        &mut self,
+        _events: &mut Http3ServerEvents,
+        _stream_type: StreamType,
+    ) -> Res<()> {
+        Ok(())
+    }
+
+    fn handle_new_push_stream(&mut self) -> Res<()> {
+        qerror!([self] "Error: server receives a push stream!");
+        Err(Error::HttpStreamCreationError)
+    }
+
     fn handle_new_bidi_stream(
         &mut self,
         transactions: &mut HashMap<u64, TransactionServer>,
+        events: &mut Http3ServerEvents,
         stream_id: u64,
     ) -> Res<()> {
-        transactions.insert(stream_id, TransactionServer::new(stream_id));
+        transactions.insert(stream_id, TransactionServer::new(stream_id, events.clone()));
         Ok(())
+    }
+
+    fn handle_send_stream_writable(
+        &mut self,
+        _transactions: &mut HashMap<u64, TransactionServer>,
+        _events: &mut Http3ServerEvents,
+        _stream_id: u64,
+    ) -> Res<()> {
+        Ok(())
+    }
+
+    fn handle_goaway(
+        &mut self,
+        _transactions: &mut HashMap<u64, TransactionServer>,
+        _events: &mut Http3ServerEvents,
+        _state: &mut Http3State,
+        _goaway_stream_id: u64,
+    ) -> Res<()> {
+        qerror!([self] "handle_goaway");
+        Err(Error::HttpFrameUnexpected)
     }
 
     fn handle_stream_stop_sending(
@@ -821,24 +897,8 @@ impl Http3Handler<Http3ServerEvents, TransactionServer> for Http3ServerHandler {
         Ok(())
     }
 
-    fn handle_new_push_stream(&mut self) -> Res<()> {
-        qtrace!([self] "Error: server receives a push stream!");
-        Err(Error::HttpStreamCreationError)
-    }
-
-    fn handle_goaway(
-        &mut self,
-        _transactions: &mut HashMap<u64, TransactionServer>,
-        _events: &mut Http3ServerEvents,
-        _state: &mut Http3State,
-        _goaway_stream_id: u64,
-    ) -> Res<()> {
-        qtrace!([self] "handle_goaway");
-        Err(Error::HttpFrameUnexpected)
-    }
-
     fn handle_max_push_id(&mut self, stream_id: u64) -> Res<()> {
-        qtrace!([self] "handle_max_push_id={}.", stream_id);
+        qinfo!([self] "handle_max_push_id={}.", stream_id);
         // TODO
         Ok(())
     }

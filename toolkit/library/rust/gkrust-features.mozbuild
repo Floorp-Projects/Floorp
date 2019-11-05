@@ -12,7 +12,7 @@ if CONFIG['MOZ_DEBUG']:
         'gecko_refcount_logging',
     ]
 
-gkrust_features += ['quantum_render']
+gkrust_features += ['quantum_render', 'webgpu']
 if CONFIG['MOZ_WEBRENDER_DEBUGGER']:
     gkrust_features += ['webrender_debugger']
 

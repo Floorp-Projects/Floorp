@@ -3,6 +3,7 @@ name = "neqo-http3"
 version = "0.1.4"
 authors = ["draganadamjanovic"]
 edition = "2018"
+license = "MIT/Apache-2.0"
 
 [dependencies]
 neqo-common = { path = "./../neqo-common" }
