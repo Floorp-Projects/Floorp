@@ -518,6 +518,11 @@ var FullScreen = {
    *         or false otherwise.
    */
   _sendMessageToTheRightContent(aActor, aMessage) {
+    if (aActor.hasBeenDestroyed()) {
+      // Just restore the chrome UI when the actor is dead.
+      return true;
+    }
+
     let childBC = aActor.browsingContext;
     let parentBC = childBC.parent;
 
