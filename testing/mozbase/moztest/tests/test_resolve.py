@@ -69,57 +69,57 @@ def create_tests():
 @pytest.fixture(scope='module')
 def all_tests(create_tests):
     return create_tests(*[
-        ("accessible/tests/mochitest/actions/test_anchors.html", {
+        ("apple/test_a11y.html", {
              "expected": "pass",
              "flavor": "a11y",
          }),
-        ("services/common/tests/unit/test_async_chain.js", {
+        ("banana/currant/test_xpcshell_A.js", {
             "firefox-appdir": "browser",
             "flavor": "xpcshell",
             "head": "head_global.js head_helpers.js head_http.js",
          }),
-        ("services/common/tests/unit/test_async_querySpinningly.js", {
+        ("banana/currant/test_xpcshell_B.js", {
             "firefox-appdir": "browser",
             "flavor": "xpcshell",
             "head": "head_global.js head_helpers.js head_http.js",
          }),
-        ("toolkit/mozapps/update/test/unit/test_0201_app_launch_apply_update.js", {
+        ("dragonfruit/elderberry/test_xpcshell_C.js", {
             "flavor": "xpcshell",
             "generated-files": "head_update.js",
             "head": "head_update.js",
-            "manifest": "toolkit/mozapps/update/test/unit/xpcshell_updater.ini",
-            "reason": "bug 820380",
+            "manifest": "dragonfruit/elderberry/xpcshell_updater.ini",
+            "reason": "busted",
             "run-sequentially": "Launches application.",
             "skip-if": "os == 'android'",
          }),
-        ("toolkit/mozapps/update/test/unit/test_0201_app_launch_apply_update.js", {
+        ("dragonfruit/elderberry/test_xpcshell_C.js", {
             "flavor": "xpcshell",
             "generated-files": "head_update.js",
             "head": "head_update.js head2.js",
-            "manifest": "toolkit/mozapps/update/test/unit/xpcshell_updater.ini",
-            "reason": "bug 820380",
+            "manifest": "dragonfruit/elderberry/xpcshell_updater.ini",
+            "reason": "don't work",
             "run-sequentially": "Launches application.",
             "skip-if": "os == 'android'",
          }),
-        ("mobile/android/tests/background/junit3/src/common/TestAndroidLogWriters.java", {
+        ("fig/grape/src/TestInstrumentationA.java", {
             "flavor": "instrumentation",
-            "manifest": "mobile/android/tests/background/junit3/instrumentation.ini",
+            "manifest": "fig/grape/instrumentation.ini",
             "subsuite": "background",
          }),
-        ("mobile/android/tests/browser/junit3/src/TestDistribution.java", {
+        ("fig/huckleberry/src/TestInstrumentationB.java", {
             "flavor": "instrumentation",
-            "manifest": "mobile/android/tests/browser/junit3/instrumentation.ini",
+            "manifest": "fig/huckleberry/instrumentation.ini",
             "subsuite": "browser",
          }),
-        ("image/test/browser/browser_bug666317.js", {
+        ("juniper/browser_chrome.js", {
             "flavor": "browser-chrome",
-            "manifest": "image/test/browser/browser.ini",
-            "skip-if": "e10s # Bug 948194 - Decoded Images seem to not be discarded on memory-pressure notification with e10s enabled",
+            "manifest": "juniper/browser.ini",
+            "skip-if": "e10s  # broken",
             "subsuite": "",
          }),
-        ("devtools/client/markupview/test/browser_markupview_copy_image_data.js", {
+        ("kiwi/browser_devtools.js", {
             "flavor": "browser-chrome",
-            "manifest": "devtools/client/markupview/test/browser.ini",
+            "manifest": "kiwi/browser.ini",
             "subsuite": "devtools",
             "tags": "devtools",
          }),
@@ -129,7 +129,7 @@ def all_tests(create_tests):
 @pytest.fixture(scope='module')
 def defaults():
     return {
-        "/firefox/toolkit/mozapps/update/test/unit/xpcshell_updater.ini": {
+        "/firefox/dragonfruit/elderberry/xpcshell_updater.ini": {
             "support-files": "\ndata/**\nxpcshell_updater.ini"
         }
     }
@@ -171,22 +171,22 @@ def test_resolve_filter_flavor(resolver):
 
 
 def test_resolve_by_dir(resolver):
-    assert len(list(resolver._resolve(paths=['services/common']))) == 2
+    assert len(list(resolver._resolve(paths=['banana/currant']))) == 2
 
 
 def test_resolve_under_path(resolver):
-    assert len(list(resolver._resolve(under_path='services'))) == 2
-    assert len(list(resolver._resolve(flavor='xpcshell', under_path='services'))) == 2
+    assert len(list(resolver._resolve(under_path='banana'))) == 2
+    assert len(list(resolver._resolve(flavor='xpcshell', under_path='banana'))) == 2
 
 
 def test_resolve_multiple_paths(resolver):
-    result = list(resolver.resolve_tests(paths=['services', 'toolkit']))
+    result = list(resolver.resolve_tests(paths=['banana', 'dragonfruit']))
     assert len(result) == 4
 
 
 def test_resolve_support_files(resolver):
     expected_support_files = "\ndata/**\nxpcshell_updater.ini"
-    result = list(resolver.resolve_tests(paths=['toolkit']))
+    result = list(resolver.resolve_tests(paths=['dragonfruit']))
     assert len(result) == 2
 
     for test in result:
@@ -194,7 +194,7 @@ def test_resolve_support_files(resolver):
 
 
 def test_resolve_path_prefix(resolver):
-    result = list(resolver._resolve(paths=['image']))
+    result = list(resolver._resolve(paths=['juniper']))
     assert len(result) == 1
 
 
@@ -202,55 +202,55 @@ def test_cwd_children_only(resolver):
     """If cwd is defined, only resolve tests under the specified cwd."""
     # Pretend we're under '/services' and ask for 'common'. This should
     # pick up all tests from '/services/common'
-    tests = list(resolver.resolve_tests(paths=['common'], cwd=os.path.join(resolver.topsrcdir,
-        'services')))
+    tests = list(resolver.resolve_tests(paths=['currant'], cwd=os.path.join(resolver.topsrcdir,
+        'banana')))
 
     assert len(tests) == 2
 
     # Tests should be rewritten to objdir.
     for t in tests:
         assert t['here'] == mozpath.join(resolver.topobjdir,
-                                         '_tests/xpcshell/services/common/tests/unit')
+                                         '_tests/xpcshell/banana/currant')
 
 def test_various_cwd(resolver):
     """Test various cwd conditions are all equal."""
-    expected = list(resolver.resolve_tests(paths=['services']))
-    actual = list(resolver.resolve_tests(paths=['services'], cwd='/'))
+    expected = list(resolver.resolve_tests(paths=['banana']))
+    actual = list(resolver.resolve_tests(paths=['banana'], cwd='/'))
     assert actual == expected
 
-    actual = list(resolver.resolve_tests(paths=['services'], cwd=resolver.topsrcdir))
+    actual = list(resolver.resolve_tests(paths=['banana'], cwd=resolver.topsrcdir))
     assert actual == expected
 
-    actual = list(resolver.resolve_tests(paths=['services'], cwd=resolver.topobjdir))
+    actual = list(resolver.resolve_tests(paths=['banana'], cwd=resolver.topobjdir))
     assert actual == expected
 
 
 def test_subsuites(resolver):
     """Test filtering by subsuite."""
-    tests = list(resolver.resolve_tests(paths=['mobile']))
+    tests = list(resolver.resolve_tests(paths=['fig']))
     assert len(tests) == 2
 
-    tests = list(resolver.resolve_tests(paths=['mobile'], subsuite='browser'))
+    tests = list(resolver.resolve_tests(paths=['fig'], subsuite='browser'))
     assert len(tests) == 1
-    assert tests[0]['name'] == 'src/TestDistribution.java'
+    assert tests[0]['name'] == 'src/TestInstrumentationB.java'
 
-    tests = list(resolver.resolve_tests(paths=['mobile'], subsuite='background'))
+    tests = list(resolver.resolve_tests(paths=['fig'], subsuite='background'))
     assert len(tests) == 1
-    assert tests[0]['name'] == 'src/common/TestAndroidLogWriters.java'
+    assert tests[0]['name'] == 'src/TestInstrumentationA.java'
 
 
 def test_wildcard_patterns(resolver):
     """Test matching paths by wildcard."""
-    tests = list(resolver.resolve_tests(paths=['mobile/**']))
+    tests = list(resolver.resolve_tests(paths=['fig/**']))
     assert len(tests) == 2
     for t in tests:
-        assert t['file_relpath'].startswith('mobile')
+        assert t['file_relpath'].startswith('fig')
 
-    tests = list(resolver.resolve_tests(paths=['**/**.js', 'accessible/**']))
+    tests = list(resolver.resolve_tests(paths=['**/**.js', 'apple/**']))
     assert len(tests) == 7
     for t in tests:
         path = t['file_relpath']
-        assert path.startswith('accessible') or path.endswith('.js')
+        assert path.startswith('apple') or path.endswith('.js')
 
 
 def test_resolve_metadata(resolver):
@@ -262,10 +262,10 @@ def test_resolve_metadata(resolver):
     suites, tests = resolver.resolve_metadata(['mochitest-a11y', '/browser', 'xpcshell'])
     assert suites == {'mochitest-a11y', 'xpcshell'}
     assert sorted(t['file_relpath'] for t in tests) == [
-        'devtools/client/markupview/test/browser_markupview_copy_image_data.js',
-        'image/test/browser/browser_bug666317.js',
-        'mobile/android/tests/browser/junit3/src/TestDistribution.java',
+        'juniper/browser_chrome.js',
+        'kiwi/browser_devtools.js',
     ]
+
 
 def test_task_regexes():
     """Test the task_regexes defined in TEST_SUITES."""
