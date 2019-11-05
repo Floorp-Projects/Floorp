@@ -26,7 +26,6 @@
 #include "mozilla/MouseEvents.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/webrender/WebRenderTypes.h"
-#include "mozilla/gfx/MacIOSurface.h"
 
 #include "nsString.h"
 #include "nsIDragService.h"
@@ -478,8 +477,6 @@ class nsChildView final : public nsBaseWidget {
                                const mozilla::gfx::IntSize& aSurfaceSize);
   bool PaintWindowInContext(CGContextRef aContext, const LayoutDeviceIntRegion& aRegion,
                             mozilla::gfx::IntSize aSurfaceSize);
-  bool PaintWindowInIOSurface(CFTypeRefPtr<IOSurfaceRef> aSurface,
-                              const LayoutDeviceIntRegion& aInvalidRegion);
 
   void PaintWindowInContentLayer();
   void HandleMainThreadCATransaction();
