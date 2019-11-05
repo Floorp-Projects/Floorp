@@ -16,7 +16,6 @@ class nsDocShellLoadState;
 
 webidl BrowsingContext;
 interface mozIDOMWindowProxy;
-interface nsIDOMWindow;
 interface nsISimpleEnumerator;
 interface nsIWebBrowserChrome;
 interface nsIDocShellTreeItem;
@@ -56,7 +55,7 @@ interface nsPIWindowWatcher : nsISupports
              aUrl in it (if aUrl is not null) and return it.
       @param aFeatures window features from JS window.open. can be null.
       @param aCalledFromScript true if we were called from script.
-      @param aDialog use dialog defaults (see nsIDOMWindow::openDialog)
+      @param aDialog use dialog defaults (see nsGlobalWindowOuter::OpenInternal)
       @param aNavigate true if we should navigate the new window to the
              specified URL.
       @param aArgs Window argument

@@ -7,7 +7,6 @@
 #include "nsISupports.idl"
 
 interface nsIURI;
-interface nsIDOMWindow;
 interface nsIDOMGeoPosition;
 interface nsIGeolocationPrompt;
 
