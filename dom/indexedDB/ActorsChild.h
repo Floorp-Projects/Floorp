@@ -682,6 +682,9 @@ class BackgroundCursorChild final : public PBackgroundIDBCursorChild {
 
   void InvalidateCachedResponses();
 
+  template <typename Condition>
+  void DiscardCachedResponses(const Condition& aConditionFunc);
+
   IDBRequest* GetRequest() const {
     AssertIsOnOwningThread();
 
