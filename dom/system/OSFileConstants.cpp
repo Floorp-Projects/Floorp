@@ -522,6 +522,10 @@ static const dom::ConstantSpec gLibcProperties[] = {
      JS::Int32Value(sizeof(posix_spawn_file_actions_t))},
 #  endif  // !defined(ANDROID)
 
+    // The size of |posix_spawnattr_t|.
+    {"OSFILE_SIZEOF_POSIX_SPAWNATTR_T",
+     JS::Int32Value(sizeof(posix_spawnattr_t))},
+
     // Defining |dirent|.
     // Size
     {"OSFILE_SIZEOF_DIRENT", JS::Int32Value(sizeof(dirent))},
