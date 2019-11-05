@@ -65,6 +65,10 @@ nsFxrCommandLineHandler::Handle(nsICommandLine* aCmdLine) {
   nsresult result =
       aCmdLine->HandleFlag(NS_LITERAL_STRING("fxr"), false, &handleFlagRetVal);
   if (result == NS_OK && handleFlagRetVal) {
+    if (XRE_IsParentProcess() && !XRE_IsE10sParentProcess()) {
+      MOZ_CRASH("--fxr not supported without e10s");
+    }
+
     aCmdLine->SetPreventDefault(true);
 
     nsCOMPtr<nsIWindowWatcher> wwatch =
