@@ -7,6 +7,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 from copy import deepcopy
 
 from voluptuous import (
+    Any,
     Optional,
     Required,
     Extra,
@@ -35,9 +36,9 @@ raptor_description_schema = Schema({
         'app',
         basestring
     ),
-    Optional('cold'): optionally_keyed_by(
+    Optional('pageload'): optionally_keyed_by(
         'test-platform', 'app',
-        bool,
+        Any('cold', 'warm', 'both'),
     ),
     # Configs defined in the 'test_description_schema'.
     Optional('max-run-time'): optionally_keyed_by(
@@ -52,6 +53,10 @@ raptor_description_schema = Schema({
         'app',
         test_description_schema['target']
     ),
+    Optional('run-visual-metrics'): optionally_keyed_by(
+        'app',
+        bool
+    ),
     Required('test-name'): test_description_schema['test-name'],
     Required('test-platform'): test_description_schema['test-platform'],
     Required('require-signed-extensions'): test_description_schema['require-signed-extensions'],
@@ -64,9 +69,17 @@ transforms.add_validate(raptor_description_schema)
 
 
 @transforms.add
+def set_defaults(config, tests):
+    for test in tests:
+        test.setdefault('pageload', 'warm')
+        test.setdefault('run-visual-metrics', False)
+        yield test
+
+
+@transforms.add
 def split_apps(config, tests):
     app_symbols = {
-        'chrome': 'Chr',
+        'chrome': 'ChR',
         'chromium': 'Cr',
         'fenix': 'fenix',
         'refbrow': 'refbrow',
@@ -104,12 +117,14 @@ def split_apps(config, tests):
 @transforms.add
 def handle_keyed_by_app(config, tests):
     fields = [
+        'limit-platforms',
         'activity',
         'binary-path',
-        'cold',
+        'pageload',
         'max-run-time',
         'run-on-projects',
         'target',
+        'run-visual-metrics'
     ]
     for test in tests:
         for field in fields:
@@ -118,16 +133,17 @@ def handle_keyed_by_app(config, tests):
 
 
 @transforms.add
-def split_cold(config, tests):
+def split_pageload(config, tests):
     for test in tests:
-        cold = test.pop('cold', False)
+        pageload = test.pop('pageload', 'warm')
 
-        if not cold:
+        if pageload not in ('cold', 'both'):
             yield test
             continue
 
-        orig = deepcopy(test)
-        yield orig
+        if pageload == 'both':
+            orig = deepcopy(test)
+            yield orig
 
         assert 'raptor-test' in test
         test['description'] += " using cold pageload"
@@ -146,6 +162,10 @@ def split_cold(config, tests):
 def add_extra_options(config, tests):
     for test in tests:
         extra_options = test.setdefault('mozharness', {}).setdefault('extra-options', [])
+
+        if test.pop('run-visual-metrics', False):
+            extra_options.append('--browsertime-video')
+            test['attributes']['run-visual-metrics'] = True
 
         if 'app' in test:
             extra_options.append('--app={}'.format(test.pop('app')))
