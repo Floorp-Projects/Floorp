@@ -19,6 +19,7 @@
 #include "nsCOMArray.h"
 #include "nsRect.h"
 #include "Units.h"
+#include "mozilla/Mutex.h"
 
 // Interfaces needed
 #include "nsIBaseWindow.h"
@@ -32,6 +33,8 @@
 #include "nsIXULBrowserWindow.h"
 #include "nsIWidgetListener.h"
 #include "nsIRemoteTab.h"
+#include "nsIWebProgressListener.h"
+#include "nsITimer.h"
 
 #ifndef MOZ_NEW_XULSTORE
 #  include "nsIXULStore.h"
@@ -45,6 +48,12 @@ class Element;
 
 class nsAtom;
 class nsXULTooltipListener;
+struct nsWidgetInitData;
+
+namespace mozilla {
+class PresShell;
+class nsXULWindowTimerCallback;
+}  // namespace mozilla
 
 // nsXULWindow
 
@@ -57,14 +66,61 @@ class nsXULTooltipListener;
 
 class nsContentShellInfo;
 
-class nsXULWindow : public nsIBaseWindow,
-                    public nsIInterfaceRequestor,
-                    public nsIXULWindow,
-                    public nsSupportsWeakReference {
+class nsXULWindow final : public nsIBaseWindow,
+                          public nsIInterfaceRequestor,
+                          public nsIXULWindow,
+                          public nsSupportsWeakReference,
+                          public nsIWebProgressListener {
   friend class nsChromeTreeOwner;
   friend class nsContentTreeOwner;
 
  public:
+  // The implementation of non-refcounted nsIWidgetListener, which would hold a
+  // strong reference on stack before calling nsXULWindow's
+  // MOZ_CAN_RUN_SCRIPT methods.
+  class WidgetListenerDelegate : public nsIWidgetListener {
+   public:
+    explicit WidgetListenerDelegate(nsXULWindow* aXULWindow)
+        : mXULWindow(aXULWindow) {}
+
+    MOZ_CAN_RUN_SCRIPT_BOUNDARY
+    virtual nsIXULWindow* GetXULWindow() override;
+    MOZ_CAN_RUN_SCRIPT_BOUNDARY
+    virtual mozilla::PresShell* GetPresShell() override;
+    MOZ_CAN_RUN_SCRIPT_BOUNDARY
+    virtual bool WindowMoved(nsIWidget* aWidget, int32_t x, int32_t y) override;
+    MOZ_CAN_RUN_SCRIPT_BOUNDARY
+    virtual bool WindowResized(nsIWidget* aWidget, int32_t aWidth,
+                               int32_t aHeight) override;
+    MOZ_CAN_RUN_SCRIPT_BOUNDARY
+    virtual bool RequestWindowClose(nsIWidget* aWidget) override;
+    MOZ_CAN_RUN_SCRIPT_BOUNDARY
+    virtual void SizeModeChanged(nsSizeMode sizeMode) override;
+    MOZ_CAN_RUN_SCRIPT_BOUNDARY
+    virtual void UIResolutionChanged() override;
+    MOZ_CAN_RUN_SCRIPT_BOUNDARY
+    virtual void FullscreenWillChange(bool aInFullscreen) override;
+    MOZ_CAN_RUN_SCRIPT_BOUNDARY
+    virtual void FullscreenChanged(bool aInFullscreen) override;
+    MOZ_CAN_RUN_SCRIPT_BOUNDARY
+    virtual void OcclusionStateChanged(bool aIsFullyOccluded) override;
+    MOZ_CAN_RUN_SCRIPT_BOUNDARY
+    virtual void OSToolbarButtonPressed() override;
+    MOZ_CAN_RUN_SCRIPT_BOUNDARY
+    virtual bool ZLevelChanged(bool aImmediate, nsWindowZ* aPlacement,
+                               nsIWidget* aRequestBelow,
+                               nsIWidget** aActualBelow) override;
+    MOZ_CAN_RUN_SCRIPT_BOUNDARY
+    virtual void WindowActivated() override;
+    MOZ_CAN_RUN_SCRIPT_BOUNDARY
+    virtual void WindowDeactivated() override;
+
+   private:
+    // The lifetime of WidgetListenerDelegate is bound to nsXULWindow so
+    // we just use a raw pointer here.
+    nsXULWindow* mXULWindow;
+  };
+
   NS_DECL_THREADSAFE_ISUPPORTS
 
   NS_DECL_NSIINTERFACEREQUESTOR
@@ -78,6 +134,41 @@ class nsXULWindow : public nsIBaseWindow,
   void IgnoreXULSizeMode(bool aEnable) { mIgnoreXULSizeMode = aEnable; }
   void WasRegistered() { mRegistered = true; }
 
+  // nsXULWindow methods...
+  nsresult Initialize(nsIXULWindow* aParent, nsIXULWindow* aOpener,
+                      nsIURI* aUrl, int32_t aInitialWidth,
+                      int32_t aInitialHeight, bool aIsHiddenWindow,
+                      nsIRemoteTab* aOpeningTab,
+                      mozIDOMWindowProxy* aOpenerWIndow,
+                      nsWidgetInitData& widgetInitData);
+
+  nsresult Toolbar();
+
+  // nsIWebProgressListener
+  NS_DECL_NSIWEBPROGRESSLISTENER
+
+  // nsIWidgetListener methods for WidgetListenerDelegate.
+  nsIXULWindow* GetXULWindow() { return this; }
+  mozilla::PresShell* GetPresShell();
+  MOZ_CAN_RUN_SCRIPT
+  bool WindowMoved(nsIWidget* aWidget, int32_t aX, int32_t aY);
+  MOZ_CAN_RUN_SCRIPT
+  bool WindowResized(nsIWidget* aWidget, int32_t aWidth, int32_t aHeight);
+  MOZ_CAN_RUN_SCRIPT bool RequestWindowClose(nsIWidget* aWidget);
+  MOZ_CAN_RUN_SCRIPT void SizeModeChanged(nsSizeMode aSizeMode);
+  MOZ_CAN_RUN_SCRIPT void UIResolutionChanged();
+  MOZ_CAN_RUN_SCRIPT void FullscreenWillChange(bool aInFullscreen);
+  MOZ_CAN_RUN_SCRIPT void FullscreenChanged(bool aInFullscreen);
+  MOZ_CAN_RUN_SCRIPT void OcclusionStateChanged(bool aIsFullyOccluded);
+  MOZ_CAN_RUN_SCRIPT void OSToolbarButtonPressed();
+  MOZ_CAN_RUN_SCRIPT
+  bool ZLevelChanged(bool aImmediate, nsWindowZ* aPlacement,
+                     nsIWidget* aRequestBelow, nsIWidget** aActualBelow);
+  MOZ_CAN_RUN_SCRIPT void WindowActivated();
+  MOZ_CAN_RUN_SCRIPT void WindowDeactivated();
+
+  explicit nsXULWindow(uint32_t aChromeFlags);
+
  protected:
   enum persistentAttributes {
     PAD_MISC = 0x1,
@@ -85,8 +176,15 @@ class nsXULWindow : public nsIBaseWindow,
     PAD_SIZE = 0x4
   };
 
-  explicit nsXULWindow(uint32_t aChromeFlags);
   virtual ~nsXULWindow();
+
+  friend class mozilla::nsXULWindowTimerCallback;
+
+  bool ExecuteCloseHandler();
+  void ConstrainToOpenerScreen(int32_t* aX, int32_t* aY);
+
+  void SetPersistenceTimer(uint32_t aDirtyFlags);
+  void FirePersistenceTimer();
 
   NS_IMETHOD EnsureChromeTreeOwner();
   NS_IMETHOD EnsureContentTreeOwner();
@@ -188,6 +286,10 @@ class nsXULWindow : public nsIBaseWindow,
   nsIntRect mOpenerScreenRect;  // the screen rect of the opener
 
   nsCOMPtr<nsIRemoteTab> mPrimaryBrowserParent;
+
+  nsCOMPtr<nsITimer> mSPTimer;
+  mozilla::Mutex mSPTimerLock;
+  WidgetListenerDelegate mWidgetListenerDelegate;
 
  private:
   // GetPrimaryBrowserParentSize is called from xpidl methods and we don't have

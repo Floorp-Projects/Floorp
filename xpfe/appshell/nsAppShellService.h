@@ -10,7 +10,7 @@
 #include "nsIObserver.h"
 
 // Interfaces Needed
-#include "nsWebShellWindow.h"
+#include "nsXULWindow.h"
 #include "nsStringFwd.h"
 #include "nsAutoPtr.h"
 #include "nsIRemoteTab.h"
@@ -42,10 +42,10 @@ class nsAppShellService final : public nsIAppShellService, public nsIObserver {
                                int32_t aInitialHeight, bool aIsHiddenWindow,
                                nsIRemoteTab* aOpeningTab,
                                mozIDOMWindowProxy* aOpenerWindow,
-                               nsWebShellWindow** aResult);
+                               nsXULWindow** aResult);
   uint32_t CalculateWindowZLevel(nsIXULWindow* aParent, uint32_t aChromeMask);
 
-  RefPtr<nsWebShellWindow> mHiddenWindow;
+  RefPtr<nsXULWindow> mHiddenWindow;
   bool mXPCOMWillShutDown;
   bool mXPCOMShuttingDown;
   uint16_t mModalWindowCount;

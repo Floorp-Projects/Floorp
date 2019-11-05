@@ -30,7 +30,6 @@ UNIFIED_SOURCES += [
     'nsAppShellWindowEnumerator.cpp',
     'nsChromeTreeOwner.cpp',
     'nsContentTreeOwner.cpp',
-    'nsWebShellWindow.cpp',
     'nsWindowMediator.cpp',
     'nsXULWindow.cpp',
 ]
