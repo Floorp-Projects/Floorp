@@ -61,7 +61,7 @@ class RenderCompositorANGLE : public RenderCompositor {
 
   bool IsContextLost() override;
 
-  bool SurfaceIsYFlipped() override { return true; }
+  bool SurfaceOriginIsTopLeft() override { return true; }
 
   bool ShouldUseNativeCompositor() override;
 
