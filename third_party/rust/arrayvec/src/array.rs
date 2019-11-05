@@ -12,37 +12,45 @@
 ///   (a few in this range are included by default).
 /// - `array-sizes-129-255`: All sizes 129 to 255 are implemented
 ///   (a few in this range are included by default).
+///
+/// ## Safety
+///
+/// This trait can *only* be implemented by fixed-size arrays or types with
+/// *exactly* the representation of a fixed size array (of the right element
+/// type and capacity).
+///
+/// Normally this trait is an implementation detail of arrayvec and doesn’t
+/// need implementing.
 pub unsafe trait Array {
     /// The array’s element type
     type Item;
+    /// The smallest type that can index and tell the length of the array.
     #[doc(hidden)]
-    /// The smallest index type that indexes the array.
     type Index: Index;
-    #[doc(hidden)]
-    fn as_ptr(&self) -> *const Self::Item;
-    #[doc(hidden)]
-    fn as_mut_ptr(&mut self) -> *mut Self::Item;
-    #[doc(hidden)]
-    fn capacity() -> usize;
+    /// The array's element capacity
+    const CAPACITY: usize;
+    fn as_slice(&self) -> &[Self::Item];
+    fn as_mut_slice(&mut self) -> &mut [Self::Item];
 }
 
 pub trait Index : PartialEq + Copy {
     fn to_usize(self) -> usize;
-    fn from(usize) -> Self;
+    fn from(_: usize) -> Self;
 }
 
-use std::slice::{from_raw_parts};
-
-pub trait ArrayExt : Array {
+impl Index for () {
     #[inline(always)]
-    fn as_slice(&self) -> &[Self::Item] {
-        unsafe {
-            from_raw_parts(self.as_ptr(), Self::capacity())
-        }
-    }
+    fn to_usize(self) -> usize { 0 }
+    #[inline(always)]
+    fn from(_ix: usize) ->  Self { () }
 }
 
-impl<A> ArrayExt for A where A: Array { }
+impl Index for bool {
+    #[inline(always)]
+    fn to_usize(self) -> usize { self as usize }
+    #[inline(always)]
+    fn from(ix: usize) ->  Self { ix != 0 }
+}
 
 impl Index for u8 {
     #[inline(always)]
@@ -77,15 +85,11 @@ macro_rules! fix_array_impl {
         unsafe impl<T> Array for [T; $len] {
             type Item = T;
             type Index = $index_type;
+            const CAPACITY: usize = $len;
             #[doc(hidden)]
-            #[inline(always)]
-            fn as_ptr(&self) -> *const T { self as *const _ as *const _ }
+            fn as_slice(&self) -> &[Self::Item] { self }
             #[doc(hidden)]
-            #[inline(always)]
-            fn as_mut_ptr(&mut self) -> *mut T { self as *mut _ as *mut _}
-            #[doc(hidden)]
-            #[inline(always)]
-            fn capacity() -> usize { $len }
+            fn as_mut_slice(&mut self) -> &mut [Self::Item] { self }
         }
     )
 }
@@ -97,7 +101,10 @@ macro_rules! fix_array_impl_recursive {
     );
 }
 
-fix_array_impl_recursive!(u8, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14,
+
+fix_array_impl_recursive!((), 0,);
+fix_array_impl_recursive!(bool, 1,);
+fix_array_impl_recursive!(u8, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14,
                           15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27,
                           28, 29, 30, 31, );
 

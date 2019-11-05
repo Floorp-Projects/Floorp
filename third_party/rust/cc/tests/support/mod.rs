@@ -1,10 +1,11 @@
 #![allow(dead_code)]
 
 use std::env;
-use std::ffi::OsStr;
+use std::ffi::{OsStr, OsString};
 use std::fs::{self, File};
+use std::io;
 use std::io::prelude::*;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use cc;
 use tempdir::TempDir;
@@ -26,9 +27,10 @@ impl Test {
         if gcc.ends_with("deps") {
             gcc.pop();
         }
+        let td = TempDir::new_in(&gcc, "gcc-test").unwrap();
         gcc.push(format!("gcc-shim{}", env::consts::EXE_SUFFIX));
         Test {
-            td: TempDir::new("gcc-test").unwrap(),
+            td: td,
             gcc: gcc,
             msvc: false,
         }
@@ -48,17 +50,18 @@ impl Test {
     }
 
     pub fn shim(&self, name: &str) -> &Test {
-        let fname = format!("{}{}", name, env::consts::EXE_SUFFIX);
-        fs::hard_link(&self.gcc, self.td.path().join(&fname))
-            .or_else(|_| fs::copy(&self.gcc, self.td.path().join(&fname)).map(|_| ()))
-            .unwrap();
+        link_or_copy(
+            &self.gcc,
+            self.td
+                .path()
+                .join(&format!("{}{}", name, env::consts::EXE_SUFFIX)),
+        )
+        .unwrap();
         self
     }
 
     pub fn gcc(&self) -> cc::Build {
         let mut cfg = cc::Build::new();
-        let mut path = env::split_paths(&env::var_os("PATH").unwrap()).collect::<Vec<_>>();
-        path.insert(0, self.td.path().to_owned());
         let target = if self.msvc {
             "x86_64-pc-windows-msvc"
         } else {
@@ -70,13 +73,19 @@ impl Test {
             .opt_level(2)
             .debug(false)
             .out_dir(self.td.path())
-            .__set_env("PATH", env::join_paths(path).unwrap())
+            .__set_env("PATH", self.path())
             .__set_env("GCCTEST_OUT_DIR", self.td.path());
         if self.msvc {
             cfg.compiler(self.td.path().join("cl"));
             cfg.archiver(self.td.path().join("lib.exe"));
         }
         cfg
+    }
+
+    fn path(&self) -> OsString {
+        let mut path = env::split_paths(&env::var_os("PATH").unwrap()).collect::<Vec<_>>();
+        path.insert(0, self.td.path().to_owned());
+        env::join_paths(path).unwrap()
     }
 
     pub fn cmd(&self, i: u32) -> Execution {
@@ -113,10 +122,12 @@ impl Execution {
     }
 
     pub fn must_have_in_order(&self, before: &str, after: &str) -> &Execution {
-        let before_position = self.args
+        let before_position = self
+            .args
             .iter()
             .rposition(|x| OsStr::new(x) == OsStr::new(before));
-        let after_position = self.args
+        let after_position = self
+            .args
             .iter()
             .rposition(|x| OsStr::new(x) == OsStr::new(after));
         match (before_position, after_position) {
@@ -128,4 +139,23 @@ impl Execution {
         };
         self
     }
+}
+
+/// Hard link an executable or copy it if that fails.
+///
+/// We first try to hard link an executable to save space. If that fails (as on Windows with
+/// different mount points, issue #60), we copy.
+#[cfg(not(target_os = "macos"))]
+fn link_or_copy<P: AsRef<Path>, Q: AsRef<Path>>(from: P, to: Q) -> io::Result<()> {
+    let from = from.as_ref();
+    let to = to.as_ref();
+    fs::hard_link(from, to).or_else(|_| fs::copy(from, to).map(|_| ()))
+}
+
+/// Copy an executable.
+///
+/// On macOS, hard linking the executable leads to strange failures (issue #419), so we just copy.
+#[cfg(target_os = "macos")]
+fn link_or_copy<P: AsRef<Path>, Q: AsRef<Path>>(from: P, to: Q) -> io::Result<()> {
+    fs::copy(from, to).map(|_| ())
 }

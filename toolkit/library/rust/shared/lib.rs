@@ -53,6 +53,8 @@ extern crate audio_thread_priority;
 #[cfg(feature = "webrtc")]
 extern crate mdns_service;
 extern crate neqo_glue;
+#[cfg(feature = "webgpu")]
+extern crate wgpu_remote;
 
 use std::boxed::Box;
 use std::env;

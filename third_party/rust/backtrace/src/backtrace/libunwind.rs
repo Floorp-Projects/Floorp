@@ -8,37 +8,64 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::os::raw::c_void;
+//! Backtrace support using libunwind/gcc_s/etc APIs.
+//!
+//! This module contains the ability to unwind the stack using libunwind-style
+//! APIs. Note that there's a whole bunch of implementations of the
+//! libunwind-like API, and this is just trying to be compatible with most of
+//! them all at once instead of being picky.
+//!
+//! The libunwind API is powered by `_Unwind_Backtrace` and is in practice very
+//! reliable at generating a backtrace. It's not entirely clear how it does it
+//! (frame pointers? eh_frame info? both?) but it seems to work!
+//!
+//! Most of the complexity of this module is handling the various platform
+//! differences across libunwind implementations. Otherwise this is a pretty
+//! straightforward Rust binding to the libunwind APIs.
+//!
+//! This is the default unwinding API for all non-Windows platforms currently.
 
-pub struct Frame {
-    ctx: *mut uw::_Unwind_Context,
+use core::ffi::c_void;
+
+pub enum Frame {
+    Raw(*mut uw::_Unwind_Context),
+    Cloned {
+        ip: *mut c_void,
+        symbol_address: *mut c_void,
+    },
 }
+
+// With a raw libunwind pointer it should only ever be access in a readonly
+// threadsafe fashion, so it's `Sync`. When sending to other threads via `Clone`
+// we always switch to a version which doesn't retain interior pointers, so we
+// should be `Send` as well.
+unsafe impl Send for Frame {}
+unsafe impl Sync for Frame {}
 
 impl Frame {
     pub fn ip(&self) -> *mut c_void {
-        let mut ip_before_insn = 0;
-        let mut ip = unsafe {
-            uw::_Unwind_GetIPInfo(self.ctx, &mut ip_before_insn) as *mut c_void
+        let ctx = match *self {
+            Frame::Raw(ctx) => ctx,
+            Frame::Cloned { ip, .. } => return ip,
         };
-        if !ip.is_null() && ip_before_insn == 0 {
-            // this is a non-signaling frame, so `ip` refers to the address
-            // after the calling instruction. account for that.
-            ip = (ip as usize - 1) as *mut _;
+        unsafe {
+            uw::_Unwind_GetIP(ctx) as *mut c_void
         }
-        return ip
     }
 
     pub fn symbol_address(&self) -> *mut c_void {
-        // dladdr() on osx gets whiny when we use FindEnclosingFunction, and
-        // it appears to work fine without it, so we only use
-        // FindEnclosingFunction on non-osx platforms. In doing so, we get a
-        // slightly more accurate stack trace in the process.
+        if let Frame::Cloned { symbol_address, .. } = *self {
+            return symbol_address;
+        }
+
+        // It seems that on OSX `_Unwind_FindEnclosingFunction` returns a
+        // pointer to... something that's unclear. It's definitely not always
+        // the enclosing function for whatever reason. It's not entirely clear
+        // to me what's going on here, so pessimize this for now and just always
+        // return the ip.
         //
-        // This is often because panic involves the last instruction of a
-        // function being "call std::rt::begin_unwind", with no ret
-        // instructions after it. This means that the return instruction
-        // pointer points *outside* of the calling function, and by
-        // unwinding it we go back to the original function.
+        // Note the `skip_inner_frames.rs` test is skipped on OSX due to this
+        // clause, and if this is fixed that test in theory can be run on OSX!
         if cfg!(target_os = "macos") || cfg!(target_os = "ios") {
             self.ip()
         } else {
@@ -47,20 +74,27 @@ impl Frame {
     }
 }
 
-#[inline(always)]
-pub fn trace(mut cb: &mut FnMut(&super::Frame) -> bool) {
-    unsafe {
-        uw::_Unwind_Backtrace(trace_fn, &mut cb as *mut _ as *mut _);
+impl Clone for Frame {
+    fn clone(&self) -> Frame {
+        Frame::Cloned {
+            ip: self.ip(),
+            symbol_address: self.symbol_address(),
+        }
     }
+}
+
+#[inline(always)]
+pub unsafe fn trace(mut cb: &mut FnMut(&super::Frame) -> bool) {
+    uw::_Unwind_Backtrace(trace_fn, &mut cb as *mut _ as *mut _);
 
     extern fn trace_fn(ctx: *mut uw::_Unwind_Context,
                        arg: *mut c_void) -> uw::_Unwind_Reason_Code {
         let cb = unsafe { &mut *(arg as *mut &mut FnMut(&super::Frame) -> bool) };
         let cx = super::Frame {
-            inner: Frame { ctx: ctx },
+            inner: Frame::Raw(ctx),
         };
 
-        let mut bomb = ::Bomb { enabled: true };
+        let mut bomb = crate::Bomb { enabled: true };
         let keep_going = cb(&cx);
         bomb.enabled = false;
 
@@ -83,8 +117,7 @@ pub fn trace(mut cb: &mut FnMut(&super::Frame) -> bool) {
 mod uw {
     pub use self::_Unwind_Reason_Code::*;
 
-    use libc;
-    use std::os::raw::{c_int, c_void};
+    use core::ffi::c_void;
 
     #[repr(C)]
     pub enum _Unwind_Reason_Code {
@@ -115,12 +148,13 @@ mod uw {
 
         // available since GCC 4.2.0, should be fine for our purpose
         #[cfg(all(not(all(target_os = "android", target_arch = "arm")),
+                  not(all(target_os = "freebsd", target_arch = "arm")),
                   not(all(target_os = "linux", target_arch = "arm"))))]
-        pub fn _Unwind_GetIPInfo(ctx: *mut _Unwind_Context,
-                                 ip_before_insn: *mut c_int)
+        pub fn _Unwind_GetIP(ctx: *mut _Unwind_Context)
                     -> libc::uintptr_t;
 
         #[cfg(all(not(target_os = "android"),
+                  not(all(target_os = "freebsd", target_arch = "arm")),
                   not(all(target_os = "linux", target_arch = "arm"))))]
         pub fn _Unwind_FindEnclosingFunction(pc: *mut c_void)
             -> *mut c_void;
@@ -130,6 +164,7 @@ mod uw {
     // expansion of the macro. This is all copy/pasted directly from the
     // header file with the definition of _Unwind_GetIP.
     #[cfg(any(all(target_os = "android", target_arch = "arm"),
+              all(target_os = "freebsd", target_arch = "arm"),
               all(target_os = "linux", target_arch = "arm")))]
     pub unsafe fn _Unwind_GetIP(ctx: *mut _Unwind_Context) -> libc::uintptr_t {
         #[repr(C)]
@@ -174,21 +209,10 @@ mod uw {
         (val & !1) as libc::uintptr_t
     }
 
-    // This function doesn't exist on Android or ARM/Linux, so make it same
-    // to _Unwind_GetIP
-    #[cfg(any(all(target_os = "android", target_arch = "arm"),
-              all(target_os = "linux", target_arch = "arm")))]
-    pub unsafe fn _Unwind_GetIPInfo(ctx: *mut _Unwind_Context,
-                                    ip_before_insn: *mut c_int)
-        -> libc::uintptr_t
-    {
-        *ip_before_insn = 0;
-        _Unwind_GetIP(ctx)
-    }
-
     // This function also doesn't exist on Android or ARM/Linux, so make it
     // a no-op
     #[cfg(any(target_os = "android",
+              all(target_os = "freebsd", target_arch = "arm"),
               all(target_os = "linux", target_arch = "arm")))]
     pub unsafe fn _Unwind_FindEnclosingFunction(pc: *mut c_void)
         -> *mut c_void
