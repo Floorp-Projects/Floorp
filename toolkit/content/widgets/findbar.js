@@ -13,28 +13,6 @@
   const { AppConstants } = ChromeUtils.import(
     "resource://gre/modules/AppConstants.jsm"
   );
-  let LazyConstants = {};
-  ChromeUtils.defineModuleGetter(
-    LazyConstants,
-    "PluralForm",
-    "resource://gre/modules/PluralForm.jsm"
-  );
-
-  const PREFS_TO_OBSERVE_BOOL = new Map([
-    ["findAsYouType", "accessibility.typeaheadfind"],
-    ["manualFAYT", "accessibility.typeaheadfind.manual"],
-    ["typeAheadLinksOnly", "accessibility.typeaheadfind.linksonly"],
-    ["entireWord", "findbar.entireword"],
-    ["highlightAll", "findbar.highlightAll"],
-    ["useModalHighlight", "findbar.modalHighlight"],
-  ]);
-  const PREFS_TO_OBSERVE_INT = new Map([
-    ["typeAheadCaseSensitive", "accessibility.typeaheadfind.casesensitive"],
-  ]);
-  const PREFS_TO_OBSERVE_ALL = new Map([
-    ...PREFS_TO_OBSERVE_BOOL,
-    ...PREFS_TO_OBSERVE_INT,
-  ]);
 
   class MozFindbar extends XULElement {
     constructor() {
@@ -61,26 +39,19 @@
       <hbox anonid="findbar-container" class="findbar-container" flex="1" align="center">
         <hbox anonid="findbar-textbox-wrapper" align="stretch">
           <html:input anonid="findbar-textbox" class="findbar-textbox findbar-find-fast" />
-          <toolbarbutton anonid="find-previous" class="findbar-find-previous tabbable"
-            data-l10n-attrs="tooltiptext" data-l10n-id="findbar-previous"
-            oncommand="onFindAgainCommand(true);" disabled="true" />
-          <toolbarbutton anonid="find-next" class="findbar-find-next tabbable"
-            data-l10n-id="findbar-next" oncommand="onFindAgainCommand(false);" disabled="true" />
+          <toolbarbutton anonid="find-previous" class="findbar-find-previous tabbable" data-l10n-attrs="tooltiptext" data-l10n-id="findbar-previous" oncommand="onFindAgainCommand(true);" disabled="true" />
+          <toolbarbutton anonid="find-next" class="findbar-find-next tabbable" data-l10n-id="findbar-next" oncommand="onFindAgainCommand(false);" disabled="true" />
         </hbox>
-        <toolbarbutton anonid="highlight" class="findbar-highlight findbar-button tabbable"
-          data-l10n-id="findbar-highlight-all2" oncommand="toggleHighlight(this.checked);" type="checkbox" />
-        <toolbarbutton anonid="find-case-sensitive" class="findbar-case-sensitive findbar-button tabbable"
-          data-l10n-id="findbar-case-sensitive" oncommand="_setCaseSensitivity(this.checked ? 1 : 0);" type="checkbox" />
-        <toolbarbutton anonid="find-entire-word" class="findbar-entire-word findbar-button tabbable"
-          data-l10n-id="findbar-entire-word" oncommand="toggleEntireWord(this.checked);" type="checkbox" />
+        <toolbarbutton anonid="highlight" class="findbar-highlight findbar-button tabbable" data-l10n-id="findbar-highlight-all2" oncommand="toggleHighlight(this.checked);" type="checkbox" />
+        <toolbarbutton anonid="find-case-sensitive" class="findbar-case-sensitive findbar-button tabbable" data-l10n-id="findbar-case-sensitive" oncommand="_setCaseSensitivity(this.checked ? 1 : 0);" type="checkbox" />
+        <toolbarbutton anonid="find-entire-word" class="findbar-entire-word findbar-button tabbable" data-l10n-id="findbar-entire-word" oncommand="toggleEntireWord(this.checked);" type="checkbox" />
         <label anonid="match-case-status" class="findbar-find-fast" />
         <label anonid="entire-word-status" class="findbar-find-fast" />
         <label anonid="found-matches" class="findbar-find-fast found-matches" hidden="true" />
         <image anonid="find-status-icon" class="findbar-find-fast find-status-icon" />
         <description anonid="find-status" control="findbar-textbox" class="findbar-find-fast findbar-find-status" />
       </hbox>
-      <toolbarbutton anonid="find-closebutton" class="findbar-closebutton close-icon"
-        data-l10n-id="findbar-find-button-close" oncommand="close();" />
+      <toolbarbutton anonid="find-closebutton" class="findbar-closebutton close-icon" data-l10n-id="findbar-find-button-close" oncommand="close();" />
     `);
     }
 
@@ -93,7 +64,7 @@
       this.appendChild(document.importNode(this.content, true));
 
       /**
-       * Please keep in sync with toolkit/modules/FindBarContent.jsm
+       * Please keep in sync with toolkit/modules/FindBarChild.jsm
        */
       this.FIND_NORMAL = 0;
 
@@ -101,27 +72,81 @@
 
       this.FIND_LINKS = 2;
 
-      this._findMode = 0;
+      this.__findMode = 0;
 
       this._flashFindBar = 0;
 
       this._initialFlashFindBarCount = 6;
 
       /**
-       * For tests that need to know when the find bar is finished
-       * initializing, we store a promise to notify on.
+       * - For tests that need to know when the find bar is finished
+       * - initializing, we store a promise to notify on.
        */
       this._startFindDeferred = null;
 
       this._browser = null;
 
+      this.__prefsvc = null;
+
+      this._observer = {
+        _self: this,
+
+        QueryInterface: ChromeUtils.generateQI([
+          "nsIObserver",
+          "nsISupportsWeakReference",
+        ]),
+
+        observe(aSubject, aTopic, aPrefName) {
+          if (aTopic != "nsPref:changed") {
+            return;
+          }
+
+          let prefsvc = this._self._prefsvc;
+
+          switch (aPrefName) {
+            case "accessibility.typeaheadfind":
+              this._self._findAsYouType = prefsvc.getBoolPref(aPrefName);
+              break;
+            case "accessibility.typeaheadfind.manual":
+              this._self._manualFAYT = prefsvc.getBoolPref(aPrefName);
+              break;
+            case "accessibility.typeaheadfind.timeout":
+              this._self.quickFindTimeoutLength = prefsvc.getIntPref(aPrefName);
+              break;
+            case "accessibility.typeaheadfind.linksonly":
+              this._self._typeAheadLinksOnly = prefsvc.getBoolPref(aPrefName);
+              break;
+            case "accessibility.typeaheadfind.casesensitive":
+              this._self._setCaseSensitivity(prefsvc.getIntPref(aPrefName));
+              break;
+            case "findbar.entireword":
+              this._self._entireWord = prefsvc.getBoolPref(aPrefName);
+              this._self.toggleEntireWord(this._self._entireWord, true);
+              break;
+            case "findbar.highlightAll":
+              this._self.toggleHighlight(prefsvc.getBoolPref(aPrefName), true);
+              break;
+            case "findbar.modalHighlight":
+              this._self._useModalHighlight = prefsvc.getBoolPref(aPrefName);
+              if (this._self.browser.finder) {
+                this._self.browser.finder.onModalHighlightChange(
+                  this._self._useModalHighlight
+                );
+              }
+              break;
+          }
+        },
+      };
+
       this._destroyed = false;
+
+      this._pluralForm = null;
 
       this._strBundle = null;
 
       this._xulBrowserWindow = null;
 
-      // These elements are accessed frequently and are therefore cached.
+      // These elements are accessed frequently and are therefore cached
       this._findField = this.getElement("findbar-textbox");
       this._foundMatches = this.getElement("found-matches");
       this._findStatusIcon = this.getElement("find-status-icon");
@@ -129,7 +154,7 @@
 
       this._foundURL = null;
 
-      let prefsvc = Services.prefs;
+      let prefsvc = this._prefsvc;
 
       this.quickFindTimeoutLength = prefsvc.getIntPref(
         "accessibility.typeaheadfind.timeout"
@@ -137,23 +162,53 @@
       this._flashFindBar = prefsvc.getIntPref(
         "accessibility.typeaheadfind.flashBar"
       );
+      this._useModalHighlight = prefsvc.getBoolPref("findbar.modalHighlight");
 
-      let observe = (this._observe = this.observe.bind(this));
-      for (let [propName, prefName] of PREFS_TO_OBSERVE_ALL) {
-        prefsvc.addObserver(prefName, observe);
-        let prefGetter = PREFS_TO_OBSERVE_BOOL.has(propName) ? "Bool" : "Int";
-        this["_" + propName] = prefsvc[`get${prefGetter}Pref`](prefName);
-      }
+      prefsvc.addObserver("accessibility.typeaheadfind", this._observer);
+      prefsvc.addObserver("accessibility.typeaheadfind.manual", this._observer);
+      prefsvc.addObserver(
+        "accessibility.typeaheadfind.linksonly",
+        this._observer
+      );
+      prefsvc.addObserver(
+        "accessibility.typeaheadfind.casesensitive",
+        this._observer
+      );
+      prefsvc.addObserver("findbar.entireword", this._observer);
+      prefsvc.addObserver("findbar.highlightAll", this._observer);
+      prefsvc.addObserver("findbar.modalHighlight", this._observer);
+
+      this._findAsYouType = prefsvc.getBoolPref("accessibility.typeaheadfind");
+      this._manualFAYT = prefsvc.getBoolPref(
+        "accessibility.typeaheadfind.manual"
+      );
+      this._typeAheadLinksOnly = prefsvc.getBoolPref(
+        "accessibility.typeaheadfind.linksonly"
+      );
+      this._typeAheadCaseSensitive = prefsvc.getIntPref(
+        "accessibility.typeaheadfind.casesensitive"
+      );
+      this._entireWord = prefsvc.getBoolPref("findbar.entireword");
+      this._highlightAll = prefsvc.getBoolPref("findbar.highlightAll");
+
+      // Convenience
+      this.nsITypeAheadFind = Ci.nsITypeAheadFind;
+      this.nsISelectionController = Ci.nsISelectionController;
+      this._findSelection = this.nsISelectionController.SELECTION_FIND;
 
       this._findResetTimeout = -1;
 
       // Make sure the FAYT keypress listener is attached by initializing the
-      // browser property.
+      // browser property
       if (this.getAttribute("browserid")) {
-        setTimeout(() => {
-          // eslint-disable-next-line no-self-assign
-          this.browser = this.browser;
-        }, 0);
+        setTimeout(
+          function(aSelf) {
+            // eslint-disable-next-line no-self-assign
+            aSelf.browser = aSelf.browser;
+          },
+          0,
+          this
+        );
       }
 
       window.addEventListener("unload", this.destroy);
@@ -182,7 +237,7 @@
       this._findField.addEventListener("keypress", event => {
         switch (event.keyCode) {
           case KeyEvent.DOM_VK_RETURN:
-            if (this.findMode == this.FIND_NORMAL) {
+            if (this._findMode == this.FIND_NORMAL) {
               let findString = this._findField;
               if (!findString.value) {
                 return;
@@ -200,7 +255,7 @@
           case KeyEvent.DOM_VK_TAB:
             let shouldHandle =
               !event.altKey && !event.ctrlKey && !event.metaKey;
-            if (shouldHandle && this.findMode != this.FIND_NORMAL) {
+            if (shouldHandle && this._findMode != this.FIND_NORMAL) {
               this._finishFAYT(event);
             }
             break;
@@ -250,7 +305,7 @@
 
       this._findField.addEventListener("compositionend", event => {
         this._isIMEComposing = false;
-        if (this.findMode != this.FIND_NORMAL) {
+        if (this._findMode != this.FIND_NORMAL) {
           this._setFindCloseTimeout();
         }
       });
@@ -270,14 +325,14 @@
       });
     }
 
-    set findMode(val) {
-      this._findMode = val;
+    set _findMode(val) {
+      this.__findMode = val;
       this._updateBrowserWithState();
       return val;
     }
 
-    get findMode() {
-      return this._findMode;
+    get _findMode() {
+      return this.__findMode;
     }
 
     set prefillWithSelection(val) {
@@ -287,6 +342,10 @@
 
     get prefillWithSelection() {
       return this.getAttribute("prefillwithselection") != "false";
+    }
+
+    get findMode() {
+      return this._findMode;
     }
 
     get hasTransactions() {
@@ -347,6 +406,20 @@
       return this._browser;
     }
 
+    get _prefsvc() {
+      return Services.prefs;
+    }
+
+    get pluralForm() {
+      if (!this._pluralForm) {
+        this._pluralForm = ChromeUtils.import(
+          "resource://gre/modules/PluralForm.jsm",
+          {}
+        ).PluralForm;
+      }
+      return this._pluralForm;
+    }
+
     get strBundle() {
       if (!this._strBundle) {
         this._strBundle = Services.strings.createBundle(
@@ -356,53 +429,14 @@
       return this._strBundle;
     }
 
-    observe(subject, topic, prefName) {
-      if (topic != "nsPref:changed") {
-        return;
-      }
-
-      let prefsvc = Services.prefs;
-
-      switch (prefName) {
-        case "accessibility.typeaheadfind":
-          this._findAsYouType = prefsvc.getBoolPref(prefName);
-          break;
-        case "accessibility.typeaheadfind.manual":
-          this._manualFAYT = prefsvc.getBoolPref(prefName);
-          break;
-        case "accessibility.typeaheadfind.timeout":
-          this.quickFindTimeoutLength = prefsvc.getIntPref(prefName);
-          break;
-        case "accessibility.typeaheadfind.linksonly":
-          this._typeAheadLinksOnly = prefsvc.getBoolPref(prefName);
-          break;
-        case "accessibility.typeaheadfind.casesensitive":
-          this._setCaseSensitivity(prefsvc.getIntPref(prefName));
-          break;
-        case "findbar.entireword":
-          this._entireWord = prefsvc.getBoolPref(prefName);
-          this.toggleEntireWord(this._entireWord, true);
-          break;
-        case "findbar.highlightAll":
-          this.toggleHighlight(prefsvc.getBoolPref(prefName), true);
-          break;
-        case "findbar.modalHighlight":
-          this._useModalHighlight = prefsvc.getBoolPref(prefName);
-          if (this.browser.finder) {
-            this.browser.finder.onModalHighlightChange(this._useModalHighlight);
-          }
-          break;
-      }
-    }
-
     getElement(aAnonymousID) {
       return this.querySelector(`[anonid=${aAnonymousID}]`);
     }
 
     /**
-     * This is necessary because the destructor isn't called when we are removed
-     * from a document that is not destroyed. This needs to be explicitly called
-     * in this case.
+     * This is necessary because the destructor isn't called when
+     * we are removed from a document that is not destroyed. This
+     * needs to be explicitly called in this case
      */
     destroy() {
       if (this._destroyed) {
@@ -415,14 +449,25 @@
         this.browser.finder.destroy();
       }
 
-      // Invoking this setter also removes the message listeners.
       this.browser = null;
 
-      let prefsvc = Services.prefs;
-      let observe = this._observe;
-      for (let [, prefName] of PREFS_TO_OBSERVE_ALL) {
-        prefsvc.removeObserver(prefName, observe);
-      }
+      let prefsvc = this._prefsvc;
+      prefsvc.removeObserver("accessibility.typeaheadfind", this._observer);
+      prefsvc.removeObserver(
+        "accessibility.typeaheadfind.manual",
+        this._observer
+      );
+      prefsvc.removeObserver(
+        "accessibility.typeaheadfind.linksonly",
+        this._observer
+      );
+      prefsvc.removeObserver(
+        "accessibility.typeaheadfind.casesensitive",
+        this._observer
+      );
+      prefsvc.removeObserver("findbar.entireword", this._observer);
+      prefsvc.removeObserver("findbar.highlightAll", this._observer);
+      prefsvc.removeObserver("findbar.modalHighlight", this._observer);
 
       // Clear all timers that might still be running.
       this._cancelTimers();
@@ -460,7 +505,7 @@
         this._quickFindTimeout = null;
       } else {
         this._quickFindTimeout = setTimeout(() => {
-          if (this.findMode != this.FIND_NORMAL) {
+          if (this._findMode != this.FIND_NORMAL) {
             this.close();
           }
           this._quickFindTimeout = null;
@@ -470,7 +515,9 @@
     }
 
     /**
-     * Updates the search match count after each find operation on a new string.
+     * - Updates the search match count after each find operation on a new string.
+     * - @param aRes
+     * -        the result of the find operation
      */
     _updateMatchesCount() {
       if (!this._dispatchFindEvent("matchescount")) {
@@ -479,26 +526,26 @@
 
       this.browser.finder.requestMatchesCount(
         this._findField.value,
-        this.findMode == this.FIND_LINKS
+        this._findMode == this.FIND_LINKS
       );
     }
 
     /**
-     * Turns highlighting of all occurrences on or off.
-     *
-     * @param {Boolean} highlight Whether to turn the highlight on or off.
-     * @param {Boolean} fromPrefObserver Whether the callee is the pref
-     *                                   observer, which means we should not set
-     *                                   the same pref again.
+     * - Turns highlight on or off.
+     * - @param aHighlight (boolean)
+     * -        Whether to turn the highlight on or off
+     * - @param aFromPrefObserver (boolean)
+     * -        Whether the callee is the pref observer, which means we should
+     * -        not set the same pref again.
      */
-    toggleHighlight(highlight, fromPrefObserver) {
-      if (highlight === this._highlightAll) {
+    toggleHighlight(aHighlight, aFromPrefObserver) {
+      if (aHighlight === this._highlightAll) {
         return;
       }
 
-      this.browser.finder.onHighlightAllChange(highlight);
+      this.browser.finder.onHighlightAllChange(aHighlight);
 
-      this._setHighlightAll(highlight, fromPrefObserver);
+      this._setHighlightAll(aHighlight, aFromPrefObserver);
 
       if (!this._dispatchFindEvent("highlightallchange")) {
         return;
@@ -506,36 +553,36 @@
 
       let word = this._findField.value;
       // Bug 429723. Don't attempt to highlight ""
-      if (highlight && !word) {
+      if (aHighlight && !word) {
         return;
       }
 
       this.browser.finder.highlight(
-        highlight,
+        aHighlight,
         word,
-        this.findMode == this.FIND_LINKS
+        this._findMode == this.FIND_LINKS
       );
 
       // Update the matches count
-      this._updateMatchesCount(Ci.nsITypeAheadFind.FIND_FOUND);
+      this._updateMatchesCount(this.nsITypeAheadFind.FIND_FOUND);
     }
 
     /**
-     * Updates the highlight-all mode of the findbar and its UI.
-     *
-     * @param {Boolean} highlight Whether to turn the highlight on or off.
-     * @param {Boolean} fromPrefObserver Whether the callee is the pref
-     *                                   observer, which means we should not set
-     *                                   the same pref again.
+     * - Updates the highlight-all mode of the findbar and its UI.
+     * - @param aHighlight (boolean)
+     * -        Whether to turn the highlight on or off.
+     * - @param aFromPrefObserver (boolean)
+     * -        Whether the callee is the pref observer, which means we should
+     * -        not set the same pref again.
      */
-    _setHighlightAll(highlight, fromPrefObserver) {
-      if (typeof highlight != "boolean") {
-        highlight = this._highlightAll;
+    _setHighlightAll(aHighlight, aFromPrefObserver) {
+      if (typeof aHighlight != "boolean") {
+        aHighlight = this._highlightAll;
       }
-      if (highlight !== this._highlightAll) {
-        this._highlightAll = highlight;
-        if (!fromPrefObserver) {
-          Services.prefs.setBoolPref("findbar.highlightAll", highlight);
+      if (aHighlight !== this._highlightAll) {
+        this._highlightAll = aHighlight;
+        if (!aFromPrefObserver) {
+          this._prefsvc.setBoolPref("findbar.highlightAll", aHighlight);
         }
       }
       let checkbox = this.getElement("highlight");
@@ -543,17 +590,15 @@
     }
 
     /**
-     * Updates the case-sensitivity mode of the findbar and its UI.
-     *
-     * @param {String} [str] The string for which case sensitivity might be
-     *                       turned on. This only used when case-sensitivity is
-     *                       in auto mode, see `_shouldBeCaseSensitive`. The
-     *                       default value for this parameter is the find-field
-     *                       value.
-     * @see _shouldBeCaseSensitive
+     * - Updates the case-sensitivity mode of the findbar and its UI.
+     * - @param [optional] aString
+     * -        The string for which case sensitivity might be turned on.
+     * -        This only used when case-sensitivity is in auto mode,
+     * -        @see _shouldBeCaseSensitive. The default value for this
+     * -        parameter is the find-field value.
      */
-    _updateCaseSensitivity(str) {
-      let val = str || this._findField.value;
+    _updateCaseSensitivity(aString) {
+      let val = aString || this._findField.value;
 
       let caseSensitive = this._shouldBeCaseSensitive(val);
       let checkbox = this.getElement("find-case-sensitive");
@@ -565,7 +610,7 @@
       // Show the checkbox on the full Find bar in non-auto mode.
       // Show the label in all other cases.
       let hideCheckbox =
-        this.findMode != this.FIND_NORMAL ||
+        this._findMode != this.FIND_NORMAL ||
         (this._typeAheadCaseSensitive != 0 &&
           this._typeAheadCaseSensitive != 1);
       checkbox.hidden = hideCheckbox;
@@ -575,16 +620,15 @@
     }
 
     /**
-     * Sets the findbar case-sensitivity mode.
-     *
-     * @param {Number} caseSensitivity 0 - case insensitive,
-     *                                 1 - case sensitive,
-     *                                 2 - auto = case sensitive if the matching
-     *                                     string contains upper case letters.
-     * @see _shouldBeCaseSensitive
+     * - Sets the findbar case-sensitivity mode
+     * - @param aCaseSensitivity (int)
+     * -   0 - case insensitive
+     * -   1 - case sensitive
+     * -   2 - auto = case sensitive iff match string contains upper case letters
+     * -   @see _shouldBeCaseSensitive
      */
-    _setCaseSensitivity(caseSensitivity) {
-      this._typeAheadCaseSensitive = caseSensitivity;
+    _setCaseSensitivity(aCaseSensitivity) {
+      this._typeAheadCaseSensitive = aCaseSensitivity;
       this._updateCaseSensitivity();
       this._findFailedString = null;
       this._find();
@@ -593,7 +637,7 @@
     }
 
     /**
-     * Updates the entire-word mode of the findbar and its UI.
+     * - Updates the entire-word mode of the findbar and its UI.
      */
     _setEntireWord() {
       let entireWord = this._entireWord;
@@ -605,7 +649,7 @@
 
       // Show the checkbox on the full Find bar in non-auto mode.
       // Show the label in all other cases.
-      let hideCheckbox = this.findMode != this.FIND_NORMAL;
+      let hideCheckbox = this._findMode != this.FIND_NORMAL;
       checkbox.hidden = hideCheckbox;
       statusLabel.hidden = !hideCheckbox;
 
@@ -613,15 +657,14 @@
     }
 
     /**
-     * Sets the findbar entire-word mode.
-     *
-     * @param {Boolean} entireWord Whether or not entire-word mode should be
-     *                             turned on.
+     * - Sets the findbar entire-word mode
+     * - @param aEntireWord (boolean)
+     * - Whether or not entire-word mode should be turned on.
      */
-    toggleEntireWord(entireWord, fromPrefObserver) {
-      if (!fromPrefObserver) {
+    toggleEntireWord(aEntireWord, aFromPrefObserver) {
+      if (!aFromPrefObserver) {
         // Just set the pref; our observer will change the find bar behavior.
-        Services.prefs.setBoolPref("findbar.entireword", entireWord);
+        this._prefsvc.setBoolPref("findbar.entireword", aEntireWord);
         return;
       }
 
@@ -630,30 +673,35 @@
     }
 
     /**
-     * Opens and displays the find bar.
-     *
-     * @param {Number} mode The find mode to be used, which is either
-     *                      FIND_NORMAL, FIND_TYPEAHEAD or FIND_LINKS. If not
-     *                      passed, we revert to the last find mode if any or
-     *                      FIND_NORMAL.
-     * @return {Boolean} `true` if the find bar wasn't previously open, `false`
-     *                   otherwise.
+     * - Opens and displays the find bar.
+     * -
+     * - @param aMode
+     * -        the find mode to be used, which is either FIND_NORMAL,
+     * -        FIND_TYPEAHEAD or FIND_LINKS. If not passed, the last
+     * -        find mode if any or FIND_NORMAL.
+     * - @returns true if the find bar wasn't previously open, false otherwise.
      */
-    open(mode) {
-      if (mode != undefined) {
-        this.findMode = mode;
+    open(aMode) {
+      if (aMode != undefined) {
+        this._findMode = aMode;
       }
 
       if (!this._notFoundStr) {
-        var bundle = this.strBundle;
-        this._notFoundStr = bundle.GetStringFromName("NotFound");
-        this._wrappedToTopStr = bundle.GetStringFromName("WrappedToTop");
-        this._wrappedToBottomStr = bundle.GetStringFromName("WrappedToBottom");
-        this._normalFindStr = bundle.GetStringFromName("NormalFind");
-        this._fastFindStr = bundle.GetStringFromName("FastFind");
-        this._fastFindLinksStr = bundle.GetStringFromName("FastFindLinks");
-        this._caseSensitiveStr = bundle.GetStringFromName("CaseSensitive");
-        this._entireWordStr = bundle.GetStringFromName("EntireWord");
+        var stringsBundle = this.strBundle;
+        this._notFoundStr = stringsBundle.GetStringFromName("NotFound");
+        this._wrappedToTopStr = stringsBundle.GetStringFromName("WrappedToTop");
+        this._wrappedToBottomStr = stringsBundle.GetStringFromName(
+          "WrappedToBottom"
+        );
+        this._normalFindStr = stringsBundle.GetStringFromName("NormalFind");
+        this._fastFindStr = stringsBundle.GetStringFromName("FastFind");
+        this._fastFindLinksStr = stringsBundle.GetStringFromName(
+          "FastFindLinks"
+        );
+        this._caseSensitiveStr = stringsBundle.GetStringFromName(
+          "CaseSensitive"
+        );
+        this._entireWordStr = stringsBundle.GetStringFromName("EntireWord");
       }
 
       this._findFailedString = null;
@@ -663,7 +711,7 @@
         this.removeAttribute("noanim");
         this.hidden = false;
 
-        this._updateStatusUI(Ci.nsITypeAheadFind.FIND_FOUND);
+        this._updateStatusUI(this.nsITypeAheadFind.FIND_FOUND);
 
         let event = document.createEvent("Events");
         event.initEvent("findbaropen", true, false);
@@ -677,18 +725,14 @@
     }
 
     /**
-     * Closes the findbar.
-     *
-     * @param {Boolean} [noAnim] Whether to disable to closing animation. Used
-     *                           to close instantly and synchronously, when
-     *                           other operations depend on this state.
+     * - Closes the findbar.
      */
-    close(noAnim) {
+    close(aNoAnim) {
       if (this.hidden) {
         return;
       }
 
-      if (noAnim) {
+      if (aNoAnim) {
         this.setAttribute("noanim", true);
       }
       this.hidden = true;
@@ -720,22 +764,22 @@
       this._enableFindButtons(false);
     }
 
-    _dispatchKeypressEvent(target, fakeEvent) {
-      if (!target) {
+    _dispatchKeypressEvent(aTarget, fakeEvent) {
+      if (!aTarget) {
         return;
       }
 
       // The event information comes from the child process. If we need more
       // properties/information here, change the list of sent properties in
-      // browser-content.js.
-      let event = new target.ownerGlobal.KeyboardEvent(
+      // browser-content.js
+      let event = new aTarget.ownerGlobal.KeyboardEvent(
         fakeEvent.type,
         fakeEvent
       );
-      target.dispatchEvent(event);
+      aTarget.dispatchEvent(event);
     }
 
-    _updateStatusUIBar(foundURL) {
+    _updateStatusUIBar(aFoundURL) {
       if (!this._xulBrowserWindow) {
         try {
           this._xulBrowserWindow = window.docShell.treeOwner
@@ -749,24 +793,24 @@
 
       // Call this has the same effect like hovering over link,
       // the browser shows the URL as a tooltip.
-      this._xulBrowserWindow.setOverLink(foundURL || "", null);
+      this._xulBrowserWindow.setOverLink(aFoundURL || "", null);
       return true;
     }
 
-    _finishFAYT(keypressEvent) {
+    _finishFAYT(aKeypressEvent) {
       this.browser.finder.focusContent();
 
-      if (keypressEvent) {
-        keypressEvent.preventDefault();
+      if (aKeypressEvent) {
+        aKeypressEvent.preventDefault();
       }
 
-      this.browser.finder.keyPress(keypressEvent);
+      this.browser.finder.keyPress(aKeypressEvent);
 
       this.close();
       return true;
     }
 
-    _shouldBeCaseSensitive(str) {
+    _shouldBeCaseSensitive(aString) {
       if (this._typeAheadCaseSensitive == 0) {
         return false;
       }
@@ -774,11 +818,11 @@
         return true;
       }
 
-      return str != str.toLowerCase();
+      return aString != aString.toLowerCase();
     }
 
     onMouseUp() {
-      if (!this.hidden && this.findMode != this.FIND_NORMAL) {
+      if (!this.hidden && this._findMode != this.FIND_NORMAL) {
         this.close();
       }
     }
@@ -786,28 +830,25 @@
     /**
      * We get a fake event object through an IPC message when FAYT is being used
      * from within the browser. We then stuff that input in the find bar here.
-     *
-     * @param {Object} fakeEvent Event object that looks and quacks like a
-     *                           native DOM KeyPress event.
      */
-    _onBrowserKeypress(fakeEvent) {
+    _onBrowserKeypress(aFakeEvent) {
       const FAYT_LINKS_KEY = "'";
       const FAYT_TEXT_KEY = "/";
 
       if (!this.hidden && this._findField == document.activeElement) {
-        this._dispatchKeypressEvent(this._findField, fakeEvent);
+        this._dispatchKeypressEvent(this._findField, aFakeEvent);
         return;
       }
 
-      if (this.findMode != this.FIND_NORMAL && this._quickFindTimeout) {
+      if (this._findMode != this.FIND_NORMAL && this._quickFindTimeout) {
         this._findField.select();
         this._findField.focus();
-        this._dispatchKeypressEvent(this._findField, fakeEvent);
+        this._dispatchKeypressEvent(this._findField, aFakeEvent);
         return;
       }
 
-      let key = fakeEvent.charCode
-        ? String.fromCharCode(fakeEvent.charCode)
+      let key = aFakeEvent.charCode
+        ? String.fromCharCode(aFakeEvent.charCode)
         : null;
       let manualstartFAYT =
         (key == FAYT_LINKS_KEY || key == FAYT_TEXT_KEY) && this._manualFAYT;
@@ -829,9 +870,9 @@
         this._findField.focus();
 
         if (autostartFAYT) {
-          this._dispatchKeypressEvent(this._findField, fakeEvent);
+          this._dispatchKeypressEvent(this._findField, aFakeEvent);
         } else {
-          this._updateStatusUI(Ci.nsITypeAheadFind.FIND_FOUND);
+          this._updateStatusUI(this.nsITypeAheadFind.FIND_FOUND);
         }
       }
     }
@@ -841,7 +882,7 @@
         this._browser.sendMessageToActor(
           "Findbar:UpdateState",
           {
-            findMode: this.findMode,
+            findMode: this._findMode,
             isOpenAndFocused:
               !this.hidden && document.activeElement == this._findField,
             hasQuickFindTimeout: !!this._quickFindTimeout,
@@ -858,11 +899,11 @@
     }
 
     /**
-     * Determines whether minimalist or general-purpose search UI is to be
-     * displayed when the find bar is activated.
+     * - Determines whether minimalist or general-purpose search UI is to be
+     * - displayed when the find bar is activated.
      */
     _updateFindUI() {
-      let showMinimalUI = this.findMode != this.FIND_NORMAL;
+      let showMinimalUI = this._findMode != this.FIND_NORMAL;
 
       let nodes = this.getElement("findbar-container").children;
       let wrapper = this.getElement("findbar-textbox-wrapper");
@@ -887,24 +928,25 @@
         this._findField.classList.remove("minimal");
       }
 
-      if (this.findMode == this.FIND_TYPEAHEAD) {
+      if (this._findMode == this.FIND_TYPEAHEAD) {
         this._findField.placeholder = this._fastFindStr;
-      } else if (this.findMode == this.FIND_LINKS) {
+      } else if (this._findMode == this.FIND_LINKS) {
         this._findField.placeholder = this._fastFindLinksStr;
       } else {
         this._findField.placeholder = this._normalFindStr;
       }
     }
 
-    _find(value) {
+    _find(aValue) {
       if (!this._dispatchFindEvent("")) {
         return;
       }
 
-      let val = value || this._findField.value;
+      let val = aValue || this._findField.value;
 
-      // We have to carry around an explicit version of this, because
-      // finder.searchString doesn't update on failed searches.
+      // We have to carry around an explicit version of this,
+      // because finder.searchString doesn't update on failed
+      // searches.
       this.browser._lastSearchString = val;
 
       // Only search on input if we don't have a last-failed string,
@@ -931,12 +973,12 @@
 
         this.browser.finder.fastFind(
           val,
-          this.findMode == this.FIND_LINKS,
-          this.findMode != this.FIND_NORMAL
+          this._findMode == this.FIND_LINKS,
+          this._findMode != this.FIND_NORMAL
         );
       }
 
-      if (this.findMode != this.FIND_NORMAL) {
+      if (this._findMode != this.FIND_NORMAL) {
         this._setFindCloseTimeout();
       }
 
@@ -944,9 +986,9 @@
         clearTimeout(this._findResetTimeout);
       }
 
-      // allow a search to happen on input again after a second has expired
-      // since the previous input, to allow for dynamic content and/ or page
-      // loading.
+      // allow a search to happen on input again after a second has
+      // expired since the previous input, to allow for dynamic
+      // content and/or page loading
       this._findResetTimeout = setTimeout(() => {
         this._findFailedString = null;
         this._findResetTimeout = -1;
@@ -971,35 +1013,35 @@
       );
     }
 
-    _findAgain(findPrevious) {
+    _findAgain(aFindPrevious) {
       this.browser.finder.findAgain(
         this._findField.value,
-        findPrevious,
-        this.findMode == this.FIND_LINKS,
-        this.findMode != this.FIND_NORMAL
+        aFindPrevious,
+        this._findMode == this.FIND_LINKS,
+        this._findMode != this.FIND_NORMAL
       );
     }
 
-    _updateStatusUI(res, findPrevious) {
+    _updateStatusUI(res, aFindPrevious) {
       switch (res) {
-        case Ci.nsITypeAheadFind.FIND_WRAPPED:
+        case this.nsITypeAheadFind.FIND_WRAPPED:
           this._findStatusIcon.setAttribute("status", "wrapped");
-          this._findStatusDesc.textContent = findPrevious
+          this._findStatusDesc.textContent = aFindPrevious
             ? this._wrappedToBottomStr
             : this._wrappedToTopStr;
           this._findField.removeAttribute("status");
           break;
-        case Ci.nsITypeAheadFind.FIND_NOTFOUND:
+        case this.nsITypeAheadFind.FIND_NOTFOUND:
           this._findStatusIcon.setAttribute("status", "notfound");
           this._findStatusDesc.textContent = this._notFoundStr;
           this._findField.setAttribute("status", "notfound");
           break;
-        case Ci.nsITypeAheadFind.FIND_PENDING:
+        case this.nsITypeAheadFind.FIND_PENDING:
           this._findStatusIcon.setAttribute("status", "pending");
           this._findStatusDesc.textContent = "";
           this._findField.removeAttribute("status");
           break;
-        case Ci.nsITypeAheadFind.FIND_FOUND:
+        case this.nsITypeAheadFind.FIND_FOUND:
         default:
           this._findStatusIcon.removeAttribute("status");
           this._findStatusDesc.textContent = "";
@@ -1008,40 +1050,38 @@
       }
     }
 
-    updateControlState(result, findPrevious) {
-      this._updateStatusUI(result, findPrevious);
+    updateControlState(aResult, aFindPrevious) {
+      this._updateStatusUI(aResult, aFindPrevious);
       this._enableFindButtons(
-        result !== Ci.nsITypeAheadFind.FIND_NOTFOUND && !!this._findField.value
+        aResult !== this.nsITypeAheadFind.FIND_NOTFOUND &&
+          !!this._findField.value
       );
     }
 
-    _dispatchFindEvent(type, findPrevious) {
+    _dispatchFindEvent(aType, aFindPrevious) {
       let event = document.createEvent("CustomEvent");
-      event.initCustomEvent("find" + type, true, true, {
+      event.initCustomEvent("find" + aType, true, true, {
         query: this._findField.value,
         caseSensitive: !!this._typeAheadCaseSensitive,
         entireWord: this._entireWord,
         highlightAll: this._highlightAll,
-        findPrevious,
+        findPrevious: aFindPrevious,
       });
       return this.dispatchEvent(event);
     }
 
     /**
-     * Opens the findbar, focuses the findfield and selects its contents.
-     * Also flashes the findbar the first time it's used.
-     *
-     * @param {Number} mode The find mode to be used, which is either
-     *                      FIND_NORMAL, FIND_TYPEAHEAD or FIND_LINKS. If not
-     *                      passed, we revert to the last find mode if any or
-     *                      FIND_NORMAL.
-     * @return {Promise} A promise that will be resolved when the findbar is
-     *                   fully opened.
+     * - Opens the findbar, focuses the findfield and selects its contents.
+     * - Also flashes the findbar the first time it's used.
+     * - @param aMode
+     * -        the find mode to be used, which is either FIND_NORMAL,
+     * -        FIND_TYPEAHEAD or FIND_LINKS. If not passed, the last
+     * -        find mode if any or FIND_NORMAL.
      */
-    startFind(mode) {
-      let prefsvc = Services.prefs;
+    startFind(aMode) {
+      let prefsvc = this._prefsvc;
       let userWantsPrefill = true;
-      this.open(mode);
+      this.open(aMode);
 
       if (this._flashFindBar) {
         this._flashFindBarTimeout = setInterval(() => this._flash(), 500);
@@ -1087,22 +1127,21 @@
     }
 
     /**
-     * Convenient alias to startFind(gFindBar.FIND_NORMAL);
-     *
-     * You should generally map the window's find command to this method.
-     *   e.g. <command name="cmd_find" oncommand="gFindBar.onFindCommand();"/>
+     * - Convenient alias to startFind(gFindBar.FIND_NORMAL);
+     * -
+     * - You should generally map the window's find command to this method.
+     * -   e.g. <command name="cmd_find" oncommand="gFindBar.onFindCommand();"/>
      */
     onFindCommand() {
       return this.startFind(this.FIND_NORMAL);
     }
 
     /**
-     * Stub for find-next and find-previous commands.
-     *
-     * @param {Boolean} findPrevious `true` for find-previous, `false`
-     *                               otherwise.
+     * - Stub for find-next and find-previous commands
+     * - @param aFindPrevious
+     * -        true for find-previous, false otherwise.
      */
-    onFindAgainCommand(findPrevious) {
+    onFindAgainCommand(aFindPrevious) {
       let findString =
         this._browser.finder.searchString || this._findField.value;
       if (!findString) {
@@ -1113,7 +1152,7 @@
       // if there is a find event handler that prevents the default then
       // finder.searchString will never get updated which in turn means
       // there would never be findAgain events because of the logic below.
-      if (!this._dispatchFindEvent("again", findPrevious)) {
+      if (!this._dispatchFindEvent("again", aFindPrevious)) {
         return undefined;
       }
 
@@ -1124,7 +1163,7 @@
       if (this._findField.value != this._browser.finder.searchString) {
         this._find(this._findField.value);
       } else {
-        this._findAgain(findPrevious);
+        this._findAgain(aFindPrevious);
         if (this._useModalHighlight) {
           this.open();
           this._findField.focus();
@@ -1134,10 +1173,8 @@
       return undefined;
     }
 
-    /**
-     * Fetches the currently selected text and sets that as the text to search
-     * next. This is a MacOS specific feature.
-     */
+    /* Fetches the currently selected text and sets that as the text to search
+     next. This is a MacOS specific feature. */
     onFindSelectionCommand() {
       this.browser.finder.setSearchStringToSelection().then(searchInfo => {
         if (searchInfo.selectedText) {
@@ -1147,8 +1184,9 @@
     }
 
     _onFindFieldFocus() {
+      let prefsvc = this._prefsvc;
       const kPref = "accessibility.typeaheadfind.prefillwithselection";
-      if (this.prefillWithSelection && Services.prefs.getBoolPref(kPref)) {
+      if (this.prefillWithSelection && prefsvc.getBoolPref(kPref)) {
         return;
       }
 
@@ -1167,67 +1205,62 @@
     }
 
     /**
-     * This handles all the result changes for both type-ahead-find and
-     * highlighting.
-     *
-     * @param {Object} data A dictionary that holds the following properties:
-     *                      - {Number} result  One of the FIND_* constants
-     *                                         indicating the result of a search
-     *                                         operation.
-     *                      - {Boolean} findBackwards If the search was done
-     *                                                from the bottom to the
-     *                                                top. This is used for
-     *                                                status messages when
-     *                                                reaching "the end of the
-     *                                                page".
-     *                      - {String} linkURL When a link matched, then its
-     *                                         URL. Always null when not in
-     *                                         FIND_LINKS mode.
+     * - This handles all the result changes for both
+     * - type-ahead-find and highlighting.
+     * - @param aResult
+     * -   One of the nsITypeAheadFind.FIND_* constants
+     * -   indicating the result of a search operation.
+     * - @param aFindBackwards
+     * -   If the search was done from the bottom to
+     * -   the top. This is used for right error messages
+     * -   when reaching "the end of the page".
+     * - @param aLinkURL
+     * -   When a link matched then its URK. Always null
+     * -   when not in FIND_LINKS mode.
      */
-    onFindResult(data) {
-      if (data.result == Ci.nsITypeAheadFind.FIND_NOTFOUND) {
+    onFindResult(aData) {
+      if (aData.result == this.nsITypeAheadFind.FIND_NOTFOUND) {
         // If an explicit Find Again command fails, re-open the toolbar.
-        if (data.storeResult && this.open()) {
+        if (aData.storeResult && this.open()) {
           this._findField.select();
           this._findField.focus();
         }
-        this._findFailedString = data.searchString;
+        this._findFailedString = aData.searchString;
       } else {
         this._findFailedString = null;
       }
 
-      this._updateStatusUI(data.result, data.findBackwards);
-      this._updateStatusUIBar(data.linkURL);
+      this._updateStatusUI(aData.result, aData.findBackwards);
+      this._updateStatusUIBar(aData.linkURL);
 
-      if (this.findMode != this.FIND_NORMAL) {
+      if (this._findMode != this.FIND_NORMAL) {
         this._setFindCloseTimeout();
       }
     }
 
     /**
-     * This handles all the result changes for matches counts.
-     *
-     * @param {Object} result Result Object, containing the total amount of
-     *                 matches and a vector of the current result.
-     *                 - {Number} total Total count number of matches found.
-     *                 - {Number} limit Current setting of the number of matches
-     *                                  to hit to hit the limit.
-     *                 - {Number} current Vector of the current result.
+     * - This handles all the result changes for matches counts.
+     * - @param aResult
+     * -   Result Object, containing the total amount of matches and a vector
+     * -   of the current result.
      */
-    onMatchesCountResult(result) {
-      if (result.total !== 0) {
-        if (result.total == -1) {
-          this._foundMatches.value = LazyConstants.PluralForm.get(
-            result.limit,
-            this.strBundle.GetStringFromName("FoundMatchesCountLimit")
-          ).replace("#1", result.limit);
+    onMatchesCountResult(aResult) {
+      if (aResult.total !== 0) {
+        if (aResult.total == -1) {
+          this._foundMatches.value = this.pluralForm
+            .get(
+              aResult.limit,
+              this.strBundle.GetStringFromName("FoundMatchesCountLimit")
+            )
+            .replace("#1", aResult.limit);
         } else {
-          this._foundMatches.value = LazyConstants.PluralForm.get(
-            result.total,
-            this.strBundle.GetStringFromName("FoundMatches")
-          )
-            .replace("#1", result.current)
-            .replace("#2", result.total);
+          this._foundMatches.value = this.pluralForm
+            .get(
+              aResult.total,
+              this.strBundle.GetStringFromName("FoundMatches")
+            )
+            .replace("#1", aResult.current)
+            .replace("#2", aResult.total);
         }
         this._foundMatches.hidden = false;
       } else {
@@ -1240,29 +1273,29 @@
       // Noop.
     }
 
-    onCurrentSelection(selectionString, isInitialSelection) {
+    onCurrentSelection(aSelectionString, aIsInitialSelection) {
       // Ignore the prefill if the user has already typed in the findbar,
       // it would have been overwritten anyway. See bug 1198465.
-      if (isInitialSelection && !this._startFindDeferred) {
+      if (aIsInitialSelection && !this._startFindDeferred) {
         return;
       }
 
       if (
         AppConstants.platform == "macosx" &&
-        isInitialSelection &&
-        !selectionString
+        aIsInitialSelection &&
+        !aSelectionString
       ) {
         let clipboardSearchString = this.browser.finder.clipboardSearchString;
         if (clipboardSearchString) {
-          selectionString = clipboardSearchString;
+          aSelectionString = clipboardSearchString;
         }
       }
 
-      if (selectionString) {
-        this._findField.value = selectionString;
+      if (aSelectionString) {
+        this._findField.value = aSelectionString;
       }
 
-      if (isInitialSelection) {
+      if (aIsInitialSelection) {
         this._enableFindButtons(!!this._findField.value);
         this._findField.select();
         this._findField.focus();
@@ -1273,8 +1306,8 @@
     }
 
     /**
-     * This handler may cancel a request to focus content by returning |false|
-     * explicitly.
+     * - This handler may cancel a request to focus content by returning |false|
+     * - explicitly.
      */
     shouldFocusContent() {
       const fm = Services.focus;
