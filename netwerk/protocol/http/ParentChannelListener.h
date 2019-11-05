@@ -11,6 +11,7 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsINetworkInterceptController.h"
 #include "nsIStreamListener.h"
+#include "mozilla/dom/BrowserParent.h"
 
 namespace mozilla {
 namespace net {
@@ -38,7 +39,8 @@ class ParentChannelListener final : public nsIInterfaceRequestor,
 
   NS_DECLARE_STATIC_IID_ACCESSOR(PARENT_CHANNEL_LISTENER)
 
-  explicit ParentChannelListener(nsIStreamListener* aListener);
+  explicit ParentChannelListener(nsIStreamListener* aListener,
+                                 dom::BrowserParent* aBrowserParent);
 
   // For channel diversion from child to parent.
   MOZ_MUST_USE nsresult DivertTo(nsIStreamListener* aListener);
@@ -83,6 +85,8 @@ class ParentChannelListener final : public nsIInterfaceRequestor,
   // This will be populated with a real network controller if parent-side
   // interception is enabled.
   nsCOMPtr<nsINetworkInterceptController> mInterceptController;
+
+  RefPtr<mozilla::dom::BrowserParent> mBrowserParent;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(ParentChannelListener, PARENT_CHANNEL_LISTENER)

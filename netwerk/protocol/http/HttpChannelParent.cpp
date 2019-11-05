@@ -299,14 +299,6 @@ NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP
 HttpChannelParent::GetInterface(const nsIID& aIID, void** result) {
-  if (aIID.Equals(NS_GET_IID(nsIAuthPromptProvider)) ||
-      aIID.Equals(NS_GET_IID(nsISecureBrowserUI)) ||
-      aIID.Equals(NS_GET_IID(nsIRemoteTab))) {
-    if (mBrowserParent) {
-      return mBrowserParent->QueryInterface(aIID, result);
-    }
-  }
-
   // Only support nsIAuthPromptProvider in Content process
   if (XRE_IsParentProcess() && aIID.Equals(NS_GET_IID(nsIAuthPromptProvider))) {
     *result = nullptr;
@@ -318,31 +310,6 @@ HttpChannelParent::GetInterface(const nsIID& aIID, void** result) {
     nsCOMPtr<nsILoadContext> copy = mLoadContext;
     copy.forget(result);
     return NS_OK;
-  }
-
-  if (mBrowserParent && aIID.Equals(NS_GET_IID(nsIPrompt))) {
-    nsCOMPtr<Element> frameElement = mBrowserParent->GetOwnerElement();
-    if (frameElement) {
-      nsCOMPtr<nsPIDOMWindowOuter> win = frameElement->OwnerDoc()->GetWindow();
-      NS_ENSURE_TRUE(win, NS_ERROR_UNEXPECTED);
-
-      nsresult rv;
-      nsCOMPtr<nsIWindowWatcher> wwatch =
-          do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv);
-
-      if (NS_WARN_IF(!NS_SUCCEEDED(rv))) {
-        return rv;
-      }
-
-      nsCOMPtr<nsIPrompt> prompt;
-      rv = wwatch->GetNewPrompter(win, getter_AddRefs(prompt));
-      if (NS_WARN_IF(!NS_SUCCEEDED(rv))) {
-        return rv;
-      }
-
-      prompt.forget(result);
-      return NS_OK;
-    }
   }
 
   return QueryInterface(aIID, result);
@@ -523,7 +490,7 @@ bool HttpChannelParent::DoAsyncOpen(
   }
 
   RefPtr<ParentChannelListener> parentListener =
-      new ParentChannelListener(this);
+      new ParentChannelListener(this, mBrowserParent);
 
   httpChannel->SetRequestMethod(nsDependentCString(requestMethod.get()));
 

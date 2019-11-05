@@ -29,12 +29,14 @@ using mozilla::dom::ServiceWorkerParentInterceptEnabled;
 namespace mozilla {
 namespace net {
 
-ParentChannelListener::ParentChannelListener(nsIStreamListener* aListener)
+ParentChannelListener::ParentChannelListener(nsIStreamListener* aListener,
+                                             dom::BrowserParent* aBrowserParent)
     : mNextListener(aListener),
       mSuspendedForDiversion(false),
       mShouldIntercept(false),
       mShouldSuspendIntercept(false),
-      mInterceptCanceled(false) {
+      mInterceptCanceled(false),
+      mBrowserParent(aBrowserParent) {
   LOG(("ParentChannelListener::ParentChannelListener [this=%p, next=%p]", this,
        aListener));
 
@@ -119,6 +121,39 @@ NS_IMETHODIMP
 ParentChannelListener::GetInterface(const nsIID& aIID, void** result) {
   if (aIID.Equals(NS_GET_IID(nsINetworkInterceptController))) {
     return QueryInterface(aIID, result);
+  }
+
+  if (aIID.Equals(NS_GET_IID(nsIAuthPromptProvider)) ||
+      aIID.Equals(NS_GET_IID(nsISecureBrowserUI)) ||
+      aIID.Equals(NS_GET_IID(nsIRemoteTab))) {
+    if (mBrowserParent) {
+      return mBrowserParent->QueryInterface(aIID, result);
+    }
+  }
+
+  if (mBrowserParent && aIID.Equals(NS_GET_IID(nsIPrompt))) {
+    nsCOMPtr<Element> frameElement = mBrowserParent->GetOwnerElement();
+    if (frameElement) {
+      nsCOMPtr<nsPIDOMWindowOuter> win = frameElement->OwnerDoc()->GetWindow();
+      NS_ENSURE_TRUE(win, NS_ERROR_UNEXPECTED);
+
+      nsresult rv;
+      nsCOMPtr<nsIWindowWatcher> wwatch =
+          do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv);
+
+      if (NS_WARN_IF(!NS_SUCCEEDED(rv))) {
+        return rv;
+      }
+
+      nsCOMPtr<nsIPrompt> prompt;
+      rv = wwatch->GetNewPrompter(win, getter_AddRefs(prompt));
+      if (NS_WARN_IF(!NS_SUCCEEDED(rv))) {
+        return rv;
+      }
+
+      prompt.forget(result);
+      return NS_OK;
+    }
   }
 
   nsCOMPtr<nsIInterfaceRequestor> ir;
