@@ -345,6 +345,14 @@ class TestBuildReader(unittest.TestCase):
         self.assertEqual([ctx.relsrcdir for ctx in paths['d2/file']],
                          ['', 'd2'])
 
+    def test_all_mozbuild_paths(self):
+        reader = self.reader('reader-relevant-mozbuild')
+
+        paths = list(reader.all_mozbuild_paths())
+        # Ensure no duplicate paths.
+        self.assertEqual(sorted(paths), sorted(set(paths)))
+        self.assertEqual(len(paths), 10)
+
     def test_files_bad_bug_component(self):
         reader = self.reader('files-info')
 
