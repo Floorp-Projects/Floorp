@@ -15,6 +15,15 @@ permalink: /changelog/
 * **feature-downloads**
   * Added `tryAgain` which can be called on the feature in order to restart a failed download.
 
+* **lib-dataprotect**
+  * Added new `SecureAbove22Preferences` helper class, which is an encryption-aware wrapper for `SharedPreferences`. Only actually encrypts stored values when running on API23+.
+
+* **service-firefox-accounts**
+  * Support for keeping `SyncEngine.Passwords` engine unlocked during sync.
+
+* **concept-sync**
+  * Added new `LockableStore` to facilitate syncing of "lockable" stores (such as `SyncableLoginsStore`).
+
 # 20.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v19.0.0...v20.0.0)
@@ -69,15 +78,6 @@ permalink: /changelog/
   
 * **experiments**
   * Fixes a crash when the app version or the experiment's version specifiers are not in the expected format.
-
-* **lib-dataprotect**
-  * Added new `SecureAbove22Preferences` helper class, which is an encryption-aware wrapper for `SharedPreferences`. Only actually encrypts stored values when running on API23+.
-
-* **service-firefox-accounts**
-  * Support for keeping `SyncEngine.Passwords` engine unlocked during sync.
-
-* **concept-sync**
-  * Added new `LockableStore` to facilitate syncing of "lockable" stores (such as `SyncableLoginsStore`).
 
 * **engine**, **engine-gecko-***, **support-webextensions**
   * Added support `browser.tabs.remove()` in web extensions.
