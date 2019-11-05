@@ -218,19 +218,6 @@ class nsNodeUtils {
     nsMutationGuard::DidMutate();
   }
 
-  /**
-   * A basic implementation of the DOM cloneNode method. Calls nsINode::Clone to
-   * do the actual cloning of the node.
-   *
-   * @param aNode the node to clone
-   * @param aDeep if true all descendants will be cloned too
-   * @param aError the error, if any.
-   *
-   * @return the clone, or null if an error occurs.
-   */
-  static already_AddRefed<nsINode> CloneNodeImpl(nsINode* aNode, bool aDeep,
-                                                 mozilla::ErrorResult& aError);
-
  private:
   /**
    * Walks aNode, its attributes and, if aDeep is true, its descendant nodes.
