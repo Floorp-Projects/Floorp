@@ -146,12 +146,23 @@ class DisplayToolbarTest {
             trackingProtectionException = drawable3
         )
 
-        val newTrackingProtectionIcon = displayToolbar.views.trackingProtectionIndicator.drawable
-        assertNotNull(newTrackingProtectionIcon)
+        assertNotEquals(
+            oldTrackingProtectionIcon,
+            displayToolbar.views.trackingProtectionIndicator.drawable
+        )
+
+        assertEquals(drawable2, displayToolbar.views.trackingProtectionIndicator.drawable)
+
+        displayToolbar.setTrackingProtectionState(SiteTrackingProtection.ON_TRACKERS_BLOCKED)
 
         assertNotEquals(
             oldTrackingProtectionIcon,
-            newTrackingProtectionIcon
+            displayToolbar.views.trackingProtectionIndicator.drawable
+        )
+
+        assertEquals(
+            drawable1,
+            displayToolbar.views.trackingProtectionIndicator.drawable
         )
     }
 
