@@ -66,7 +66,8 @@ uint32_t ABIResult::size() const { return ResultStackSize(type()); }
 
 void ABIResultIter::settleRegister(ValType type) {
   MOZ_ASSERT(!done());
-  MOZ_ASSERT(index() < RegisterResultCount);
+  MOZ_ASSERT_IF(direction_ == Next, index() < RegisterResultCount);
+  MOZ_ASSERT_IF(direction_ == Prev, index() >= count_ - RegisterResultCount);
   static_assert(RegisterResultCount == 1, "expected a single register result");
 
   switch (type.code()) {
