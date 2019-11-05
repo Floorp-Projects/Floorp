@@ -1893,49 +1893,14 @@ class BooleanLiteral : public NullaryNode {
   }
 };
 
-// This owns a set of characters, previously syntax checked as a RegExp. Used
-// to avoid allocating the RegExp on the GC heap during parsing.
-class RegExpCreationData {
-  UniquePtr<char16_t[], JS::FreePolicy> buf_;
-  size_t length_ = 0;
-  JS::RegExpFlags flags_;
-
- public:
-  RegExpCreationData() = default;
-
-  MOZ_MUST_USE bool init(JSContext* cx, mozilla::Range<const char16_t> range,
-                         JS::RegExpFlags flags) {
-    length_ = range.length();
-    buf_ = js::DuplicateString(cx, range.begin().get(), range.length());
-    if (!buf_) {
-      return false;
-    }
-    flags_ = flags;
-    return true;
-  }
-
-  RegExpObject* createRegExp(JSContext* cx) const;
-};
-
 class RegExpLiteral : public ParseNode {
-  mozilla::Variant<mozilla::Nothing, ObjectBox*, RegExpCreationData> data_;
+  ObjectBox* objbox_;
 
  public:
   RegExpLiteral(ObjectBox* reobj, const TokenPos& pos)
-      : ParseNode(ParseNodeKind::RegExpExpr, pos), data_(reobj) {}
+      : ParseNode(ParseNodeKind::RegExpExpr, pos), objbox_(reobj) {}
 
-  RegExpLiteral(const TokenPos& pos)
-      : ParseNode(ParseNodeKind::RegExpExpr, pos), data_(mozilla::Nothing()) {}
-
-  void init(RegExpCreationData data) {
-    data_ = mozilla::AsVariant(std::move(data));
-  }
-
-  bool isDeferred() const { return data_.is<RegExpCreationData>(); }
-
-  ObjectBox* objbox() const { return data_.as<ObjectBox*>(); }
-
-  RegExpObject* getOrCreate(JSContext* cx) const;
+  ObjectBox* objbox() const { return objbox_; }
 
 #ifdef DEBUG
   void dumpImpl(GenericPrinter& out, int indent);
@@ -1951,8 +1916,6 @@ class RegExpLiteral : public ParseNode {
   bool accept(Visitor& visitor) {
     return true;
   }
-
-  RegExpCreationData& creationData() { return data_.as<RegExpCreationData>(); }
 };
 
 class PropertyAccess : public BinaryNode {

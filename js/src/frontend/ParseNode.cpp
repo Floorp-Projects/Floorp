@@ -12,7 +12,6 @@
 #include "jsnum.h"
 
 #include "frontend/Parser.h"
-#include "vm/RegExpObject.h"
 
 #include "vm/JSContext-inl.h"
 
@@ -407,19 +406,6 @@ bool BigIntLiteral::isZero() {
 }
 
 BigInt* BigIntLiteral::value() { return box()->value(); }
-
-RegExpObject* RegExpCreationData::createRegExp(JSContext* cx) const {
-  MOZ_ASSERT(buf_);
-  return RegExpObject::createSyntaxChecked(cx, buf_.get(), length_, flags_,
-                                           TenuredObject);
-}
-
-RegExpObject* RegExpLiteral::getOrCreate(JSContext* cx) const {
-  if (data_.is<ObjectBox*>()) {
-    return &objbox()->object()->as<RegExpObject>();
-  }
-  return data_.as<RegExpCreationData>().createRegExp(cx);
-}
 
 FunctionBox* ObjectBox::asFunctionBox() {
   MOZ_ASSERT(isFunctionBox());
