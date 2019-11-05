@@ -89,7 +89,7 @@ intel_AES_GCM_CreateContext(void *context,
     gcm->Mlen = 0;
 
     /* first prepare H and its derivatives for ghash */
-    intel_aes_gcmINIT(gcm->Htbl, (unsigned char *)aes->expandedKey, aes->Nr);
+    intel_aes_gcmINIT(gcm->Htbl, (unsigned char *)aes->k.expandedKey, aes->Nr);
 
     /* Initial TAG value is zero */
     _mm_storeu_si128((__m128i *)gcm->T, _mm_setzero_si128());

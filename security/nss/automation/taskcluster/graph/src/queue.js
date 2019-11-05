@@ -96,7 +96,8 @@ function convertTask(def) {
 
   let env = merge({
     NSS_HEAD_REPOSITORY: process.env.NSS_HEAD_REPOSITORY,
-    NSS_HEAD_REVISION: process.env.NSS_HEAD_REVISION
+    NSS_HEAD_REVISION: process.env.NSS_HEAD_REVISION,
+    NSS_MAX_MP_PBE_ITERATION_COUNT: "100",
   }, def.env || {});
 
   if (def.parent) {

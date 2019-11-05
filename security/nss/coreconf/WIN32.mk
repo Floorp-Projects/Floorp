@@ -261,6 +261,12 @@ else
 endif
 endif
 
+# clear any CSTD and CXXSTD unless we're using GCC
+ifndef NS_USE_GCC
+        CSTD    =
+        CXXSTD  =
+endif
+
 #
 # override the definitions of RELEASE_TREE found in tree.mk
 #
