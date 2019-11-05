@@ -18,7 +18,7 @@ class JSObjectTypeCache(object):
         baseshape_flags = gdb.lookup_type('js::BaseShape::Flag')
         self.flag_DELEGATE = prettyprinters.enum_value(baseshape_flags, 'js::BaseShape::DELEGATE')
         self.func_ptr_type = gdb.lookup_type('JSFunction').pointer()
-        self.class_NON_NATIVE = gdb.parse_and_eval('js::Class::NON_NATIVE')
+        self.class_NON_NATIVE = gdb.parse_and_eval('JSClass::NON_NATIVE')
         self.NativeObject_ptr_t = gdb.lookup_type('js::NativeObject').pointer()
         self.Shape_ptr_t = gdb.lookup_type('js::Shape').pointer()
 
