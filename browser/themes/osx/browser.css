@@ -612,9 +612,7 @@
 .tab-drop-indicator {
   list-style-image: url(chrome://browser/skin/tabbrowser/tabDragIndicator.png);
   margin-top: -2px;
-  /* The z-index needs to be big enough to trump other positioned UI pieces
-     that we want to overlay. The expanded urlbar uses 3. */
-  z-index: 4;
+  z-index: 3;
 }
 
 @media (min-resolution: 2dppx) {
