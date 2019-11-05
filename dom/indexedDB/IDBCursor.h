@@ -125,8 +125,6 @@ class IDBCursor final : public nsISupports, public nsWrapperCache {
 
   Type GetType() const;
 
-  bool IsContinueCalled() const { return mContinueCalled; }
-
   void GetKey(JSContext* aCx, JS::MutableHandle<JS::Value> aResult,
               ErrorResult& aRv);
 
