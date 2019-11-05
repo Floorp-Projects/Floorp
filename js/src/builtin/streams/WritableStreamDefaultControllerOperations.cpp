@@ -704,14 +704,61 @@ static MOZ_MUST_USE JSObject* PerformCloseAlgorithm(
   return PromiseCall(cx, closeMethod, underlyingSink);
 }
 
+// 4.8.12 step 3: Let sinkWritePromise be the result of performing
+//                controller.[[writeAlgorithm]], passing in chunk.
 static MOZ_MUST_USE JSObject* PerformWriteAlgorithm(
     JSContext* cx, Handle<WritableStreamDefaultController*> unwrappedController,
     Handle<Value> chunk) {
   cx->check(chunk);
 
-  // XXX jwalden fill me in!
-  JS_ReportErrorASCII(cx, "boo");
-  return nullptr;
+  // 4.8.3 step 4: Let writeAlgorithm be
+  //               ? CreateAlgorithmFromUnderlyingMethod(underlyingSink,
+  //                                                     "write", 1,
+  //                                                     « controller »).
+
+  // Step 1: Assert: underlyingObject is not undefined.
+  // Step 2: Assert: ! IsPropertyKey(methodName) is true (implicit).
+  // Step 3: Assert: algoArgCount is 0 or 1 (omitted).
+  // Step 4: Assert: extraArgs is a List (omitted).
+  // Step 5: Let method be ? GetV(underlyingObject, methodName).
+  //
+  // These steps were performed in |CreateAlgorithmFromUnderlyingMethod|.  The
+  // spec stores away algorithms for later invocation; we instead store the
+  // value that determines the algorithm to be created -- either |undefined|, or
+  // a callable object that's called with context-specific arguments.
+
+  // Step 7: (If method is undefined,) Return an algorithm which returns a
+  //         promise resolved with undefined (implicit).
+  if (unwrappedController->writeMethod().isUndefined()) {
+    return PromiseObject::unforgeableResolve(cx, UndefinedHandleValue);
+  }
+
+  // Step 6: If method is not undefined,
+
+  // Step 6.a: If ! IsCallable(method) is false, throw a TypeError exception.
+  MOZ_ASSERT(IsCallable(unwrappedController->writeMethod()));
+
+  // Step 6.c: Otherwise (if algoArgCount is not 0), return an algorithm that
+  //           performs the following steps, taking an arg argument:
+  // Step 6.c.i:  Let fullArgs be a List consisting of arg followed by the
+  //              elements of extraArgs in order.
+  // Step 6.c.ii: Return ! PromiseCall(method, underlyingObject, fullArgs).
+  Rooted<Value> writeMethod(cx, unwrappedController->writeMethod());
+  if (!cx->compartment()->wrap(cx, &writeMethod)) {
+    return nullptr;
+  }
+
+  Rooted<Value> underlyingSink(cx, unwrappedController->underlyingSink());
+  if (!cx->compartment()->wrap(cx, &underlyingSink)) {
+    return nullptr;
+  }
+
+  Rooted<Value> controller(cx, ObjectValue(*unwrappedController));
+  if (!cx->compartment()->wrap(cx, &controller)) {
+    return nullptr;
+  }
+
+  return PromiseCall(cx, writeMethod, underlyingSink, chunk, controller);
 }
 
 /**
