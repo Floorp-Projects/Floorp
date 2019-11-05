@@ -2,49 +2,18 @@
 Mozilla Source Tree Documentation
 =================================
 
-Source code doc
+.. toctree::
+   :maxdepth: 1
+
+   {indexes}
+
+Python Packages
 ===============
 
 .. toctree::
    :maxdepth: 2
 
-   {source_doc}
-
-
-Build
-=====
-
-.. toctree::
-   :maxdepth: 1
-
-   {build_doc}
-
-
-Testing
-=======
-
-.. toctree::
-   :maxdepth: 1
-
-   {testing_doc}
-
-Python
-======
-
-.. toctree::
-   :maxdepth: 1
-
-   {python_doc}
-
-
-Code quality
-============
-
-.. toctree::
-   :maxdepth: 1
-
-   {code_quality_doc}
-
+   {python_packages}
 
 Managing Documentation
 ======================
@@ -80,9 +49,6 @@ for it:
    documentation for, you can use ``SPHINX_PYTHON_PACKAGE_DIRS`` to
    declare directories containing Python packages. e.g.
    ``SPHINX_PYTHON_PACKAGE_DIRS += ['mozpackage']``.
-5. In ``tools/docs/tree.json``, defines in which category the doc
-   should go.
-
 
 Indices and tables
 ==================
