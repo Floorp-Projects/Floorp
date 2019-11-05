@@ -9,12 +9,11 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.mapNotNull
 import mozilla.components.browser.state.action.ContentAction
-import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.window.WindowRequest
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.base.feature.LifecycleAwareFeature
-import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
+import mozilla.components.support.ktx.kotlinx.coroutines.flow.filterChanged
 
 /**
  * Feature implementation for handling window requests by opening and closing tabs.
@@ -32,8 +31,8 @@ class WindowFeature(
      */
     override fun start() {
         scope = store.flowScoped { flow ->
-            flow.mapNotNull { state -> state.selectedTab }
-                .ifChanged {
+            flow.mapNotNull { state -> state.tabs }
+                .filterChanged {
                     it.content.windowRequest
                 }
                 .collect { state ->
