@@ -54,8 +54,6 @@ using namespace mozilla::ipc;
 
 namespace {
 
-const char kPrefIndexedDBEnabled[] = "dom.indexedDB.enabled";
-
 Telemetry::LABELS_IDB_CUSTOM_OPEN_WITH_OPTIONS_COUNT IdentifyPrincipalType(
     const mozilla::ipc::PrincipalInfo& aPrincipalInfo) {
   switch (aPrincipalInfo.type()) {
@@ -143,12 +141,6 @@ nsresult IDBFactory::CreateForWindow(nsPIDOMWindowInner* aWindow,
 
   nsCOMPtr<nsIPrincipal> principal;
   nsresult rv = AllowedForWindowInternal(aWindow, getter_AddRefs(principal));
-
-  if (!(NS_SUCCEEDED(rv) && nsContentUtils::IsSystemPrincipal(principal)) &&
-      NS_WARN_IF(!Preferences::GetBool(kPrefIndexedDBEnabled, false))) {
-    *aFactory = nullptr;
-    return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
-  }
 
   if (rv == NS_ERROR_DOM_NOT_SUPPORTED_ERR) {
     NS_WARNING("IndexedDB is not permitted in a third-party window.");
@@ -267,12 +259,6 @@ nsresult IDBFactory::CreateForMainThreadJSInternal(
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aGlobal);
   MOZ_ASSERT(aPrincipalInfo);
-
-  if (aPrincipalInfo->type() != PrincipalInfo::TSystemPrincipalInfo &&
-      NS_WARN_IF(!Preferences::GetBool(kPrefIndexedDBEnabled, false))) {
-    *aFactory = nullptr;
-    return NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR;
-  }
 
   IndexedDatabaseManager* mgr = IndexedDatabaseManager::GetOrCreate();
   if (NS_WARN_IF(!mgr)) {
