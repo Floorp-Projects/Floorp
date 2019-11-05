@@ -34,7 +34,7 @@
 #include "builtin/streams/QueueWithSizes-inl.h"           // js::PeekQueueValue
 #include "vm/Compartment-inl.h"                   // JS::Compartment::wrap
 #include "vm/JSContext-inl.h"                     // JSContext::check
-#include "vm/JSObject-inl.h"  // js::NewBuiltinClassInstance, js::NewObjectWithClassProto
+#include "vm/JSObject-inl.h"  // js::IsCallable, js::NewBuiltinClassInstance, js::NewObjectWithClassProto
 #include "vm/Realm-inl.h"     // js::AutoRealm
 
 using JS::CallArgs;
@@ -47,9 +47,11 @@ using JS::Rooted;
 using JS::UndefinedHandleValue;
 using JS::Value;
 
+using js::IsCallable;
 using js::ListObject;
 using js::NewHandler;
 using js::PeekQueueValue;
+using js::PromiseObject;
 using js::TargetFromHandler;
 using js::WritableStream;
 using js::WritableStreamCloseQueuedOrInFlight;
@@ -655,12 +657,51 @@ bool js::WritableStreamDefaultControllerErrorIfNeeded(
   return true;
 }
 
+// 4.8.11 step 5: Let sinkClosePromise be the result of performing
+//                controller.[[closeAlgorithm]].
 static MOZ_MUST_USE JSObject* PerformCloseAlgorithm(
     JSContext* cx,
     Handle<WritableStreamDefaultController*> unwrappedController) {
-  // XXX jwalden fill me in!
-  JS_ReportErrorASCII(cx, "boo");
-  return nullptr;
+  // 4.8.3 step 5: Let closeAlgorithm be
+  //               ? CreateAlgorithmFromUnderlyingMethod(underlyingSink,
+  //                                                     "close", 0, « »).
+
+  // Step 1: Assert: underlyingObject is not undefined.
+  // Step 2: Assert: ! IsPropertyKey(methodName) is true (implicit).
+  // Step 3: Assert: algoArgCount is 0 or 1 (omitted).
+  // Step 4: Assert: extraArgs is a List (omitted).
+  // Step 5: Let method be ? GetV(underlyingObject, methodName).
+  //
+  // These steps were performed in |CreateAlgorithmFromUnderlyingMethod|.  The
+  // spec stores away algorithms for later invocation; we instead store the
+  // value that determines the algorithm to be created -- either |undefined|, or
+  // a callable object that's called with context-specific arguments.
+
+  // Step 7: (If method is undefined,) Return an algorithm which returns a
+  //         promise resolved with undefined (implicit).
+  if (unwrappedController->closeMethod().isUndefined()) {
+    return PromiseObject::unforgeableResolve(cx, UndefinedHandleValue);
+  }
+
+  // Step 6: If method is not undefined,
+
+  // Step 6.a: If ! IsCallable(method) is false, throw a TypeError exception.
+  MOZ_ASSERT(IsCallable(unwrappedController->closeMethod()));
+
+  // Step 6.b: If algoArgCount is 0, return an algorithm that performs the
+  //           following steps:
+  // Step 6.b.ii: Return ! PromiseCall(method, underlyingObject, extraArgs).
+  Rooted<Value> closeMethod(cx, unwrappedController->closeMethod());
+  if (!cx->compartment()->wrap(cx, &closeMethod)) {
+    return nullptr;
+  }
+
+  Rooted<Value> underlyingSink(cx, unwrappedController->underlyingSink());
+  if (!cx->compartment()->wrap(cx, &underlyingSink)) {
+    return nullptr;
+  }
+
+  return PromiseCall(cx, closeMethod, underlyingSink);
 }
 
 static MOZ_MUST_USE JSObject* PerformWriteAlgorithm(
