@@ -209,14 +209,19 @@ class AndroidEnv(BaseEnv):
         return "%s-%s" % (self.device_name, app)
 
     def dump_logs(self):
-        logcat = self.device.get_logcat()
+        try:
+            logcat = self.device.get_logcat()
+        except ADBError:
+            ERROR("logcat call failure")
+            return
+
         if logcat:
             # local path, not using posixpath
             logfile = os.path.join(self.archive, "logcat.log")
             LOG("Writing logcat at %s" % logfile)
-            with open(logfile, "w") as f:
+            with open(logfile, "wb") as f:
                 for line in logcat:
-                    f.write(line + "\n")
+                    f.write(line.encode("utf8") + b"\n")
         else:
             LOG("logcat came back empty")
 
