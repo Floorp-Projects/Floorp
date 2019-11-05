@@ -294,7 +294,7 @@ add_task(async function setup() {
 
   Services.prefs.setStringPref(
     "services.settings.server",
-    `http://localhost:${proxy_port + 1}/remote-settings-dummy/v1`
+    `data:text/html,test`
   );
 
   Services.prefs.setBoolPref("network.http.spdy.enabled", true);
