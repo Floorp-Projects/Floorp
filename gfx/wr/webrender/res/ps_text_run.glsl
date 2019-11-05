@@ -175,9 +175,9 @@ VertexInfo write_text_vertex(RectWithSize local_clip_rect,
 
 void main(void) {
     int prim_header_address = aData.x;
-    int glyph_index = aData.y & 0xffff;
     int render_task_index = aData.y >> 16;
-    int raster_space = aData.z & 0xffff;
+    int raster_space = aData.y & 0xffff;
+    int glyph_index = aData.z & 0xffff;
     int subpx_dir = (aData.z >> 24) & 0xff;
     int color_mode = (aData.z >> 16) & 0xff;
     int resource_address = aData.w;
