@@ -73,6 +73,16 @@ class ZoomChild extends JSWindowActorChild {
   }
 
   handleEvent(event) {
+    if (event.type == "ZoomChangeUsingMouseWheel") {
+      this.sendAsyncMessage("ZoomChangeUsingMouseWheel", {});
+      return;
+    }
+
+    // Only handle this event for top-level content.
+    if (this.browsingContext != this.browsingContext.top) {
+      return;
+    }
+
     if (event.type == "FullZoomChange") {
       if (this.refreshFullZoom()) {
         this.sendAsyncMessage("FullZoomChange", { value: this.fullZoom });
@@ -81,8 +91,6 @@ class ZoomChild extends JSWindowActorChild {
       if (this.refreshTextZoom()) {
         this.sendAsyncMessage("TextZoomChange", { value: this.textZoom });
       }
-    } else if (event.type == "ZoomChangeUsingMouseWheel") {
-      this.sendAsyncMessage("ZoomChangeUsingMouseWheel", {});
     }
   }
 }
