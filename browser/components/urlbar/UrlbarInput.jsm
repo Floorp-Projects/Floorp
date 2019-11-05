@@ -1009,11 +1009,11 @@ class UrlbarInput {
     }
   }
 
-  endLayoutExtend(force) {
+  endLayoutExtend() {
     if (
       !this.hasAttribute("breakout-extend") ||
       this.view.isOpen ||
-      (!force && this.getAttribute("focused") == "true")
+      this.getAttribute("focused") == "true"
     ) {
       return;
     }
@@ -1746,10 +1746,11 @@ class UrlbarInput {
     // We handle mouse-based expansion events separately in _on_click.
     if (this._focusedViaMousedown) {
       this._focusedViaMousedown = false;
-    } else if (this.inputField.hasAttribute("refocused-by-panel")) {
-      this._maybeSelectAll(true);
     } else {
       this.startLayoutExtend();
+      if (this.inputField.hasAttribute("refocused-by-panel")) {
+        this._maybeSelectAll(true);
+      }
     }
 
     this._updateUrlTooltip();
@@ -1834,17 +1835,7 @@ class UrlbarInput {
         if (!UrlbarPrefs.get("ui.popup.disable_autohide")) {
           this.view.close();
         }
-
-        if (
-          event.target.id == "tabs-newtab-button" ||
-          event.target.id == "new-tab-button" ||
-          event.target.classList.contains("tab-close-button")
-        ) {
-          break;
-        }
-
-        // We collapse the urlbar for any clicks outside of it.
-        this.endLayoutExtend(true);
+        break;
     }
   }
 
