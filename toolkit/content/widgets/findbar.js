@@ -10,9 +10,6 @@
   const { Services } = ChromeUtils.import(
     "resource://gre/modules/Services.jsm"
   );
-  const { AppConstants } = ChromeUtils.import(
-    "resource://gre/modules/AppConstants.jsm"
-  );
   let LazyConstants = {};
   ChromeUtils.defineModuleGetter(
     LazyConstants,
@@ -35,6 +32,7 @@
     ...PREFS_TO_OBSERVE_BOOL,
     ...PREFS_TO_OBSERVE_INT,
   ]);
+  const TOPIC_MAC_APP_ACTIVATE = "mac_app_activate";
 
   class MozFindbar extends XULElement {
     constructor() {
@@ -144,6 +142,7 @@
         let prefGetter = PREFS_TO_OBSERVE_BOOL.has(propName) ? "Bool" : "Int";
         this["_" + propName] = prefsvc[`get${prefGetter}Pref`](prefName);
       }
+      Services.obs.addObserver(observe, TOPIC_MAC_APP_ACTIVATE);
 
       this._findResetTimeout = -1;
 
@@ -231,9 +230,6 @@
       });
 
       this._findField.addEventListener("focus", event => {
-        if (AppConstants.platform == "macosx") {
-          this._onFindFieldFocus();
-        }
         this._updateBrowserWithState();
       });
 
@@ -357,6 +353,11 @@
     }
 
     observe(subject, topic, prefName) {
+      if (topic == TOPIC_MAC_APP_ACTIVATE) {
+        this._onAppActivateMac();
+        return;
+      }
+
       if (topic != "nsPref:changed") {
         return;
       }
@@ -423,6 +424,8 @@
       for (let [, prefName] of PREFS_TO_OBSERVE_ALL) {
         prefsvc.removeObserver(prefName, observe);
       }
+
+      Services.obs.removeObserver(observe, TOPIC_MAC_APP_ACTIVATE);
 
       // Clear all timers that might still be running.
       this._cancelTimers();
@@ -1146,7 +1149,7 @@
       });
     }
 
-    _onFindFieldFocus() {
+    _onAppActivateMac() {
       const kPref = "accessibility.typeaheadfind.prefillwithselection";
       if (this.prefillWithSelection && Services.prefs.getBoolPref(kPref)) {
         return;
