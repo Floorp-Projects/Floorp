@@ -112,7 +112,7 @@ host_fetches = {
             # It's sad that the macOS URLs don't include version numbers.  If
             # ImageMagick is released frequently, we'll need to be more
             # accommodating of multiple versions here.
-            'url': 'https://imagemagick.org/download/binaries/ImageMagick-x86_64-apple-darwin18.7.0.tar.gz',  # noqa
+            'url': 'https://ftp.icm.edu.pl/packages/ImageMagick/binaries/ImageMagick-x86_64-apple-darwin18.7.0.tar.gz',  # noqa
             # An extension to `fetch` syntax.
             'path': 'ImageMagick-7.0.8',
         },
