@@ -3564,14 +3564,17 @@ void BackgroundCursorChild::HandleResponse(const void_t& aResponse) {
 }
 
 template <typename... Args>
-void BackgroundCursorChild::HandleIndividualCursorResponse(Args&&... aArgs) {
+void BackgroundCursorChild::HandleIndividualCursorResponse(
+    const bool aUseAsCurrentResult, Args&&... aArgs) {
   if (mCursor) {
-    if (mCursor->IsContinueCalled()) {
+    if (aUseAsCurrentResult) {
       mCursor->Reset(std::forward<Args>(aArgs)...);
     } else {
       mCachedResponses.emplace_back(std::forward<Args>(aArgs)...);
     }
   } else {
+    MOZ_ASSERT(aUseAsCurrentResult);
+
     // TODO: This looks particularly dangerous to me. Why do we need to
     // have an extra newCursor of type RefPtr? Why can't we directly
     // assign to mCursor? Why is mCursor not a RefPtr?
@@ -3600,13 +3603,20 @@ void BackgroundCursorChild::HandleMultipleCursorResponses(
   // XXX Fix this somehow...
   auto& responses = const_cast<nsTArray<T>&>(aResponses);
 
+  bool isFirst = true;
   for (auto& response : responses) {
     IDB_LOG_MARK_CHILD_TRANSACTION_REQUEST(
         "PRELOAD: Processing response for key %s", "Processing",
         mTransaction->LoggingSerialNumber(), mRequest->LoggingSerialNumber(),
         response.key().GetBuffer().get());
 
-    aHandleRecord(response);
+    // TODO: At the moment, we only send a cursor request to the parent if
+    // requested by the user code. Therefore, the first result is always used as
+    // the current result, and the potential extra results are cached. If we
+    // extended this towards preloading in the background, all results might
+    // need to be cached.
+    aHandleRecord(/* aUseAsCurrentResult */ isFirst, response);
+    isFirst = false;
   }
 
   ResultHelper helper(mRequest, mTransaction, mCursor);
@@ -3642,12 +3652,13 @@ void BackgroundCursorChild::HandleResponse(
   MOZ_ASSERT(mObjectStore);
 
   HandleMultipleCursorResponses(
-      aResponses, [this](ObjectStoreCursorResponse& response) {
+      aResponses, [this](const bool useAsCurrentResult,
+                         ObjectStoreCursorResponse& response) {
         // TODO: Maybe move the deserialization of the clone-read-info into the
         // cursor, so that it is only done for records actually accessed, which
         // might not be the case for all cached records.
         HandleIndividualCursorResponse(
-            std::move(response.key()),
+            useAsCurrentResult, std::move(response.key()),
             PrepareCloneReadInfo(std::move(response.cloneInfo())));
       });
 }
@@ -3658,8 +3669,10 @@ void BackgroundCursorChild::HandleResponse(
   MOZ_ASSERT(mObjectStore);
 
   HandleMultipleCursorResponses(
-      aResponses, [this](ObjectStoreKeyCursorResponse& response) {
-        HandleIndividualCursorResponse(std::move(response.key()));
+      aResponses, [this](const bool useAsCurrentResult,
+                         ObjectStoreKeyCursorResponse& response) {
+        HandleIndividualCursorResponse(useAsCurrentResult,
+                                       std::move(response.key()));
       });
 }
 
@@ -3669,10 +3682,11 @@ void BackgroundCursorChild::HandleResponse(
   MOZ_ASSERT(mIndex);
 
   HandleMultipleCursorResponses(
-      aResponses, [this](IndexCursorResponse& response) {
+      aResponses,
+      [this](const bool useAsCurrentResult, IndexCursorResponse& response) {
         HandleIndividualCursorResponse(
-            std::move(response.key()), std::move(response.sortKey()),
-            std::move(response.objectKey()),
+            useAsCurrentResult, std::move(response.key()),
+            std::move(response.sortKey()), std::move(response.objectKey()),
             PrepareCloneReadInfo(std::move(response.cloneInfo())));
       });
 }
@@ -3683,10 +3697,11 @@ void BackgroundCursorChild::HandleResponse(
   MOZ_ASSERT(mIndex);
 
   HandleMultipleCursorResponses(
-      aResponses, [this](IndexKeyCursorResponse& response) {
-        HandleIndividualCursorResponse(std::move(response.key()),
-                                       std::move(response.sortKey()),
-                                       std::move(response.objectKey()));
+      aResponses,
+      [this](const bool useAsCurrentResult, IndexKeyCursorResponse& response) {
+        HandleIndividualCursorResponse(
+            useAsCurrentResult, std::move(response.key()),
+            std::move(response.sortKey()), std::move(response.objectKey()));
       });
 }
 
