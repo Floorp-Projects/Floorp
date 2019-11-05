@@ -34,7 +34,13 @@ class RunNextTest : public mozilla::Runnable {
   }
 };
 
+static const bool kDebugRunNextTest = false;
+
 void run_next_test() {
+  if (kDebugRunNextTest) {
+    printf_stderr("run_next_test()\n");
+    nsTraceRefcnt::WalkTheStack(stderr);
+  }
   nsCOMPtr<nsIRunnable> event = new RunNextTest();
   do_check_success(NS_DispatchToCurrentThread(event));
 }
@@ -43,6 +49,10 @@ int gPendingTests = 0;
 
 void do_test_pending() {
   NS_ASSERTION(NS_IsMainThread(), "Not running on the main thread?");
+  if (kDebugRunNextTest) {
+    printf_stderr("do_test_pending()\n");
+    nsTraceRefcnt::WalkTheStack(stderr);
+  }
   gPendingTests++;
 }
 
