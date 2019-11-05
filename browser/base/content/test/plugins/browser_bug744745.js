@@ -3,23 +3,9 @@ var gTestRoot = getRootDirectory(gTestPath).replace(
   "http://127.0.0.1:8888/"
 );
 var gTestBrowser = null;
-var gNumPluginBindingsAttached = 0;
-
-function pluginBindingAttached() {
-  gNumPluginBindingsAttached++;
-  if (gNumPluginBindingsAttached != 1) {
-    ok(false, "if we've gotten here, something is quite wrong");
-  }
-}
 
 add_task(async function() {
   registerCleanupFunction(function() {
-    gTestBrowser.removeEventListener(
-      "PluginBindingAttached",
-      pluginBindingAttached,
-      true,
-      true
-    );
     clearAllPluginPermissions();
     setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED, "Test Plug-in");
     setTestPluginEnabledState(
@@ -38,25 +24,20 @@ add_task(async function() {
 
   setTestPluginEnabledState(Ci.nsIPluginTag.STATE_CLICKTOPLAY, "Test Plug-in");
 
-  BrowserTestUtils.addContentEventListener(
+  let promisePluginBindingAttached = BrowserTestUtils.waitForContentEvent(
     gTestBrowser,
     "PluginBindingAttached",
-    pluginBindingAttached,
-    { capture: true, wantUntrusted: true }
+    true,
+    null,
+    true
   );
 
-  let testRoot = getRootDirectory(gTestPath).replace(
-    "chrome://mochitests/content/",
-    "http://127.0.0.1:8888/"
-  );
   await promiseTabLoadEvent(
     gBrowser.selectedTab,
-    testRoot + "plugin_bug744745.html"
+    gTestRoot + "plugin_bug744745.html"
   );
 
-  await promiseForCondition(function() {
-    return gNumPluginBindingsAttached == 1;
-  });
+  await promisePluginBindingAttached;
 
   await ContentTask.spawn(gTestBrowser, {}, async function() {
     let plugin = content.document.getElementById("test");
