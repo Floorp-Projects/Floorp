@@ -67,7 +67,7 @@ class TaskQueue : public AbstractThread {
     nsCOMPtr<nsIRunnable> r = aRunnable;
     {
       MonitorAutoLock mon(mQueueMonitor);
-      return DispatchLocked(/* passed by ref */ r, aReason);
+      return DispatchLocked(/* passed by ref */ r, NS_DISPATCH_NORMAL, aReason);
     }
     // If the ownership of |r| is not transferred in DispatchLocked() due to
     // dispatch failure, it will be deleted here outside the lock. We do so
@@ -111,7 +111,7 @@ class TaskQueue : public AbstractThread {
   // mQueueMonitor must be held.
   void AwaitIdleLocked();
 
-  nsresult DispatchLocked(nsCOMPtr<nsIRunnable>& aRunnable,
+  nsresult DispatchLocked(nsCOMPtr<nsIRunnable>& aRunnable, uint32_t aFlags,
                           DispatchReason aReason = NormalDispatch);
 
   void MaybeResolveShutdown() {
