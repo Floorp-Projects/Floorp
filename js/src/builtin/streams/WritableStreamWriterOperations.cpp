@@ -114,6 +114,20 @@ JSObject* js::WritableStreamDefaultWriterClose(
 }
 
 /**
+ * Streams spec, 4.6.5.
+ *  WritableStreamDefaultWriterEnsureClosedPromiseRejected( writer, error )
+ */
+MOZ_MUST_USE bool js::WritableStreamDefaultWriterEnsureClosedPromiseRejected(
+    JSContext* cx, Handle<WritableStreamDefaultWriter*> unwrappedWriter,
+    Handle<Value> error) {
+  cx->check(error);
+
+  // XXX jwalden flesh me out!
+  JS_ReportErrorASCII(cx, "epic fail");
+  return false;
+}
+
+/**
  * Streams spec, 4.6.6.
  *  WritableStreamDefaultWriterEnsureReadyPromiseRejected( writer, error )
  */
@@ -158,6 +172,66 @@ bool js::WritableStreamDefaultWriterGetDesiredSize(
         unwrappedStream->controller()));
   }
 
+  return true;
+}
+
+/**
+ * Streams spec, 4.6.8.
+ * WritableStreamDefaultWriterRelease ( writer )
+ */
+bool js::WritableStreamDefaultWriterRelease(
+    JSContext* cx, Handle<WritableStreamDefaultWriter*> unwrappedWriter) {
+  // Step 1: Let stream be writer.[[ownerWritableStream]].
+  // Step 2: Assert: stream is not undefined.
+  MOZ_ASSERT(unwrappedWriter->hasStream());
+  Rooted<WritableStream*> unwrappedStream(
+      cx, UnwrapStreamFromWriter(cx, unwrappedWriter));
+  if (!unwrappedStream) {
+    return false;
+  }
+
+  // Step 3: Assert: stream.[[writer]] is writer.
+#ifdef DEBUG
+  {
+    WritableStreamDefaultWriter* unwrappedStreamWriter =
+        UnwrapWriterFromStream(cx, unwrappedStream);
+    if (!unwrappedStreamWriter) {
+      return false;
+    }
+
+    MOZ_ASSERT(unwrappedStreamWriter == unwrappedWriter);
+  }
+#endif
+
+  // Step 4: Let releasedError be a new TypeError.
+  Rooted<Value> releasedError(cx);
+  JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                            JSMSG_WRITABLESTREAM_CANT_RELEASE_ALREADY_CLOSED);
+  if (!cx->isExceptionPending() || !cx->getPendingException(&releasedError)) {
+    return false;
+  }
+
+  // Step 5: Perform
+  //         ! WritableStreamDefaultWriterEnsureReadyPromiseRejected(
+  //               writer, releasedError).
+  if (!WritableStreamDefaultWriterEnsureReadyPromiseRejected(
+          cx, unwrappedWriter, releasedError)) {
+    return false;
+  }
+
+  // Step 6: Perform
+  //         ! WritableStreamDefaultWriterEnsureClosedPromiseRejected(
+  //               writer, releasedError).
+  if (!WritableStreamDefaultWriterEnsureClosedPromiseRejected(
+          cx, unwrappedWriter, releasedError)) {
+    return false;
+  }
+
+  // Step 7: Set stream.[[writer]] to undefined.
+  unwrappedStream->clearWriter();
+
+  // Step 8: Set writer.[[ownerWritableStream]] to undefined.
+  unwrappedWriter->clearStream();
   return true;
 }
 
