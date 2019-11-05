@@ -56,7 +56,8 @@ class TransceiverImpl : public nsISupports {
                   nsIEventTarget* aMainThread, nsIEventTarget* aStsThread,
                   dom::MediaStreamTrack* aReceiveTrack,
                   dom::MediaStreamTrack* aSendTrack,
-                  WebRtcCallWrapper* aCallWrapper);
+                  WebRtcCallWrapper* aCallWrapper,
+                  const PrincipalHandle& aPrincipalHandle);
 
   bool IsValid() const { return !!mConduit; }
 
@@ -133,8 +134,8 @@ class TransceiverImpl : public nsISupports {
 
  private:
   virtual ~TransceiverImpl();
-  void InitAudio();
-  void InitVideo();
+  void InitAudio(const PrincipalHandle& aPrincipalHandle);
+  void InitVideo(const PrincipalHandle& aPrincipalHandle);
   nsresult UpdateAudioConduit();
   nsresult UpdateVideoConduit();
   nsresult ConfigureVideoCodecMode(VideoSessionConduit& aConduit);

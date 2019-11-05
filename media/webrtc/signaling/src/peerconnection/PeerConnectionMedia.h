@@ -82,6 +82,7 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
   nsresult AddTransceiver(JsepTransceiver* aJsepTransceiver,
                           dom::MediaStreamTrack& aReceiveTrack,
                           dom::MediaStreamTrack* aSendTrack,
+                          const PrincipalHandle& aPrincipalHandle,
                           RefPtr<TransceiverImpl>* aTransceiverImpl);
 
   void GetTransmitPipelinesMatching(
