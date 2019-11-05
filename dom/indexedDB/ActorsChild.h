@@ -618,6 +618,9 @@ class BackgroundRequestChild final : public BackgroundRequestChildBase,
       const PreprocessParams& aParams) override;
 };
 
+// TODO: Consider defining different subclasses for the different cursor types,
+// possibly using the CRTP, which would remove the need for various case
+// distinctions.
 class BackgroundCursorChild final : public PBackgroundIDBCursorChild {
   friend class BackgroundTransactionChild;
   friend class BackgroundVersionChangeTransactionChild;
@@ -625,7 +628,11 @@ class BackgroundCursorChild final : public PBackgroundIDBCursorChild {
   class DelayedActionRunnable;
 
   struct CachedResponse {
-    CachedResponse() = default;
+    CachedResponse() = delete;
+
+    CachedResponse(Key aKey, StructuredCloneReadInfo&& aCloneInfo);
+    CachedResponse(Key aKey, Key aLocaleAwareKey, Key aObjectStoreKey,
+                   StructuredCloneReadInfo&& aCloneInfo);
 
     CachedResponse(CachedResponse&& aOther) = default;
     CachedResponse& operator=(CachedResponse&& aOther) = default;
@@ -633,7 +640,8 @@ class BackgroundCursorChild final : public PBackgroundIDBCursorChild {
     CachedResponse& operator=(const CachedResponse& aOther) = delete;
 
     Key mKey;
-    Key mObjectKey;  // TODO: This is not used anywhere right now
+    Key mLocaleAwareKey;
+    Key mObjectStoreKey;
     StructuredCloneReadInfo mCloneInfo;
   };
 
@@ -665,7 +673,8 @@ class BackgroundCursorChild final : public PBackgroundIDBCursorChild {
   }
 
   void SendContinueInternal(const CursorRequestParams& aParams,
-                            const Key& aCurrentKey);
+                            const Key& aCurrentKey,
+                            const Key& aCurrentObjectStoreKey);
 
   void SendDeleteMeInternal();
 
@@ -706,11 +715,18 @@ class BackgroundCursorChild final : public PBackgroundIDBCursorChild {
 
   void HandleResponse(const void_t& aResponse);
 
-  void HandleResponse(const nsTArray<ObjectStoreCursorResponse>& aResponse);
+  void HandleResponse(const nsTArray<ObjectStoreCursorResponse>& aResponses);
 
   void HandleResponse(const ObjectStoreKeyCursorResponse& aResponse);
 
-  void HandleResponse(const IndexCursorResponse& aResponse);
+  void HandleResponse(const nsTArray<IndexCursorResponse>& aResponses);
+
+  StructuredCloneReadInfo PrepareCloneReadInfo(
+      SerializedStructuredCloneReadInfo&& aCloneInfo) const;
+
+  template <typename T, typename Func>
+  void HandleMultipleCursorResponses(const nsTArray<T>& aResponses,
+                                     const Func& aHandleRecord);
 
   void HandleResponse(const IndexKeyCursorResponse& aResponse);
 
@@ -722,8 +738,8 @@ class BackgroundCursorChild final : public PBackgroundIDBCursorChild {
 
  public:
   // Force callers to use SendContinueInternal.
-  bool SendContinue(const CursorRequestParams& aParams,
-                    const Key& aCurrentKey) = delete;
+  bool SendContinue(const CursorRequestParams& aParams, const Key& aCurrentKey,
+                    const Key& aCurrentObjectStoreKey) = delete;
 
   bool SendDeleteMe() = delete;
 };

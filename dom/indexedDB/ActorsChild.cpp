@@ -3215,6 +3215,18 @@ BackgroundRequestChild::PreprocessHelper::OnFileMetadataReady(
  * BackgroundCursorChild
  ******************************************************************************/
 
+BackgroundCursorChild::CachedResponse::CachedResponse(
+    Key aKey, StructuredCloneReadInfo&& aCloneInfo)
+    : mKey{std::move(aKey)}, mCloneInfo{std::move(aCloneInfo)} {}
+
+BackgroundCursorChild::CachedResponse::CachedResponse(
+    Key aKey, Key aLocaleAwareKey, Key aObjectStoreKey,
+    StructuredCloneReadInfo&& aCloneInfo)
+    : mKey{std::move(aKey)},
+      mLocaleAwareKey{std::move(aLocaleAwareKey)},
+      mObjectStoreKey{std::move(aObjectStoreKey)},
+      mCloneInfo{std::move(aCloneInfo)} {}
+
 // Does not need to be threadsafe since this only runs on one thread, but
 // inheriting from CancelableRunnable is easy.
 class BackgroundCursorChild::DelayedActionRunnable final
@@ -3285,7 +3297,8 @@ BackgroundCursorChild::~BackgroundCursorChild() {
 }
 
 void BackgroundCursorChild::SendContinueInternal(
-    const CursorRequestParams& aParams, const Key& aCurrentKey) {
+    const CursorRequestParams& aParams, const Key& aCurrentKey,
+    const Key& aCurrentObjectStoreKey) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mRequest);
   MOZ_ASSERT(mTransaction);
@@ -3303,6 +3316,7 @@ void BackgroundCursorChild::SendContinueInternal(
 
   CursorRequestParams params = aParams;
   Key currentKey = aCurrentKey;
+  Key currentObjectStoreKey = aCurrentObjectStoreKey;
 
   switch (params.type()) {
     case CursorRequestParams::TContinueParams: {
@@ -3314,20 +3328,30 @@ void BackgroundCursorChild::SendContinueInternal(
       // Invalidate cache entries.
       size_t discardedCount = 0;
       while (!mCachedResponses.empty()) {
+        // This duplicates the logic from the parent. We could avoid this
+        // duplication if we invalidated the cached records always for any
+        // continue-with-key operation, but would lose the benefits of
+        // preloading then.
+        const auto& cachedSortKey =
+            mCursor->IsLocaleAware() ? mCachedResponses.front().mLocaleAwareKey
+                                     : mCachedResponses.front().mKey;
         const auto& keyOperator = GetKeyOperator(mDirection);
-        if ((mCachedResponses.front().mKey.*keyOperator)(key)) {
+        if ((cachedSortKey.*keyOperator)(key)) {
           IDB_LOG_MARK_CHILD_TRANSACTION_REQUEST(
-              "PRELOAD: Continue to key %s, keeping cached key %s and further",
+              "PRELOAD: Continue to key %s, keeping cached key %s/%s and "
+              "further",
               "Continue/keep", mTransaction->LoggingSerialNumber(),
               mRequest->LoggingSerialNumber(), key.GetBuffer().get(),
-              mCachedResponses.front().mKey.GetBuffer().get());
+              mCachedResponses.front().mKey.GetBuffer().get(),
+              mCachedResponses.front().mObjectStoreKey.GetBuffer().get());
           break;
         }
         IDB_LOG_MARK_CHILD_TRANSACTION_REQUEST(
-            "PRELOAD: Continue to key %s, discarding cached key %s",
+            "PRELOAD: Continue to key %s, discarding cached key %s/%s",
             "Continue/discard", mTransaction->LoggingSerialNumber(),
             mRequest->LoggingSerialNumber(), key.GetBuffer().get(),
-            mCachedResponses.front().mKey.GetBuffer().get());
+            mCachedResponses.front().mKey.GetBuffer().get(),
+            mCachedResponses.front().mObjectStoreKey.GetBuffer().get());
         mCachedResponses.pop_front();
         ++discardedCount;
       }
@@ -3360,6 +3384,7 @@ void BackgroundCursorChild::SendContinueInternal(
         // TODO: We only need to update currentKey on the last entry, the others
         // are overwritten in the next iteration anyway.
         currentKey = mCachedResponses.front().mKey;
+        currentObjectStoreKey = mCachedResponses.front().mObjectStoreKey;
         mCachedResponses.pop_front();
         ++discardedCount;
       }
@@ -3397,8 +3422,8 @@ void BackgroundCursorChild::SendContinueInternal(
     // mCachedResponses falls under some threshold? Or does the response
     // handling model disallow this?
   } else {
-    MOZ_ALWAYS_TRUE(
-        PBackgroundIDBCursorChild::SendContinue(params, currentKey));
+    MOZ_ALWAYS_TRUE(PBackgroundIDBCursorChild::SendContinue(
+        params, currentKey, currentObjectStoreKey));
   }
 }
 
@@ -3408,12 +3433,27 @@ void BackgroundCursorChild::CompleteContinueRequestFromCache() {
   MOZ_ASSERT(mCursor);
   MOZ_ASSERT(mStrongCursor);
   MOZ_ASSERT(!mDelayedResponses.empty());
+  // TODO: Also support the other types.
+  MOZ_ASSERT(mCursor->GetType() == IDBCursor::Type_ObjectStore ||
+             mCursor->GetType() == IDBCursor::Type_Index);
 
   RefPtr<IDBCursor> cursor;
   mStrongCursor.swap(cursor);
 
   auto& item = mDelayedResponses.front();
-  mCursor->Reset(std::move(item.mKey), std::move(item.mCloneInfo));
+  switch (mCursor->GetType()) {
+    case IDBCursor::Type_ObjectStore:
+      mCursor->Reset(std::move(item.mKey), std::move(item.mCloneInfo));
+      break;
+    case IDBCursor::Type_Index:
+      mCursor->Reset(std::move(item.mKey), std::move(item.mLocaleAwareKey),
+                     std::move(item.mObjectStoreKey),
+                     std::move(item.mCloneInfo));
+      break;
+    default:
+      // TODO: Also support the other types.
+      MOZ_CRASH("Should never get here.");
+  }
   mDelayedResponses.pop_front();
 
   IDB_LOG_MARK_CHILD_TRANSACTION_REQUEST(
@@ -3499,14 +3539,15 @@ void BackgroundCursorChild::HandleResponse(const void_t& aResponse) {
   }
 }
 
-void BackgroundCursorChild::HandleResponse(
-    const nsTArray<ObjectStoreCursorResponse>& aResponses) {
+template <typename T, typename Func>
+void BackgroundCursorChild::HandleMultipleCursorResponses(
+    const nsTArray<T>& aResponses, const Func& aHandleRecord) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mRequest);
   MOZ_ASSERT(mTransaction);
-  MOZ_ASSERT(mObjectStore);
   MOZ_ASSERT(!mStrongRequest);
   MOZ_ASSERT(!mStrongCursor);
+  MOZ_ASSERT(aResponses.Length() > 0);
 
   IDB_LOG_MARK_CHILD_TRANSACTION_REQUEST(
       "PRELOAD: Received %zu cursor responses", "Received",
@@ -3515,43 +3556,76 @@ void BackgroundCursorChild::HandleResponse(
   MOZ_ASSERT_IF(aResponses.Length() > 1, mCachedResponses.empty());
 
   // XXX Fix this somehow...
-  auto& responses =
-      const_cast<nsTArray<ObjectStoreCursorResponse>&>(aResponses);
+  auto& responses = const_cast<nsTArray<T>&>(aResponses);
 
-  for (ObjectStoreCursorResponse& response : responses) {
-    StructuredCloneReadInfo cloneReadInfo(std::move(response.cloneInfo()));
-    cloneReadInfo.mDatabase = mTransaction->Database();
+  for (auto& response : responses) {
+    IDB_LOG_MARK_CHILD_TRANSACTION_REQUEST(
+        "PRELOAD: Processing response for key %s", "Processing",
+        mTransaction->LoggingSerialNumber(), mRequest->LoggingSerialNumber(),
+        response.key().GetBuffer().get());
 
-    // TODO: This uses response.cloneInfo() after it was apparently moved above,
-    // which would be invalid. However, it was not really moved, since
-    // StructuredCloneReadInfo::StructuredCloneReadInfo(SerializedStructuredCloneReadInfo&&)
-    // does not touch 'files' at all. This is, however, confusing.
-    // Can't this be done in the constructor of StructuredCloneReadInfo as well?
-    // Note: this will be fixed in a subsequent patch for bug 1168606.
-    DeserializeStructuredCloneFiles(
-        mTransaction->Database(), response.cloneInfo().files(),
-        /* aForPreprocess */ false, cloneReadInfo.mFiles);
-
-    RefPtr<IDBCursor> newCursor;
-
-    if (mCursor) {
-      if (mCursor->IsContinueCalled()) {
-        mCursor->Reset(std::move(response.key()), std::move(cloneReadInfo));
-      } else {
-        CachedResponse cachedResponse;
-        cachedResponse.mKey = std::move(response.key());
-        cachedResponse.mCloneInfo = std::move(cloneReadInfo);
-        mCachedResponses.emplace_back(std::move(cachedResponse));
-      }
-    } else {
-      newCursor = IDBCursor::Create(this, std::move(response.key()),
-                                    std::move(cloneReadInfo));
-      mCursor = newCursor;
-    }
+    aHandleRecord(response);
   }
 
   ResultHelper helper(mRequest, mTransaction, mCursor);
   DispatchSuccessEvent(&helper);
+}
+
+// Note: the parameter type is an rvalue reference, since passing it by value
+// yields a 'Type must not be used as parameter' error
+StructuredCloneReadInfo BackgroundCursorChild::PrepareCloneReadInfo(
+    SerializedStructuredCloneReadInfo&& aCloneInfo) const {
+  StructuredCloneReadInfo cloneReadInfo(
+      std::forward<SerializedStructuredCloneReadInfo>(aCloneInfo));
+  cloneReadInfo.mDatabase = mTransaction->Database();
+
+  // TODO: This uses response.cloneInfo() after it was apparently moved
+  // above, which would be invalid. However, it was not really moved,
+  // since
+  // StructuredCloneReadInfo::StructuredCloneReadInfo(SerializedStructuredCloneReadInfo&&)
+  // does not touch 'files' at all. This is, however, confusing.
+  // Can't this be done in the constructor of StructuredCloneReadInfo as
+  // well?
+  // Note: this will be fixed in a subsequent patch for bug 1168606.
+  DeserializeStructuredCloneFiles(mTransaction->Database(), aCloneInfo.files(),
+                                  /* aForPreprocess */ false,
+                                  cloneReadInfo.mFiles);
+
+  return cloneReadInfo;
+}
+
+void BackgroundCursorChild::HandleResponse(
+    const nsTArray<ObjectStoreCursorResponse>& aResponses) {
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mObjectStore);
+
+  HandleMultipleCursorResponses(
+      aResponses, [this](ObjectStoreCursorResponse& response) {
+        // TODO: Maybe move the deserialization of the clone-read-info into the
+        // cursor, so that it is only done for records actually accessed, which
+        // might not be the case for all cached records.
+        auto cloneReadInfo =
+            PrepareCloneReadInfo(std::move(response.cloneInfo()));
+
+        // TODO: the structure of the rest of this function is the same for all
+        // cursor responses, and it can be unified with a template function,
+        // only the arguments to IDBCursor::Reset, IDBCursor::Create and the
+        // fields for the cached response differ.
+        RefPtr<IDBCursor> newCursor;
+
+        if (mCursor) {
+          if (mCursor->IsContinueCalled()) {
+            mCursor->Reset(std::move(response.key()), std::move(cloneReadInfo));
+          } else {
+            mCachedResponses.emplace_back(std::move(response.key()),
+                                          std::move(cloneReadInfo));
+          }
+        } else {
+          newCursor = IDBCursor::Create(this, std::move(response.key()),
+                                        std::move(cloneReadInfo));
+          mCursor = newCursor;
+        }
+      });
 }
 
 void BackgroundCursorChild::HandleResponse(
@@ -3580,42 +3654,37 @@ void BackgroundCursorChild::HandleResponse(
 }
 
 void BackgroundCursorChild::HandleResponse(
-    const IndexCursorResponse& aResponse) {
+    const nsTArray<IndexCursorResponse>& aResponses) {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(mRequest);
-  MOZ_ASSERT(mTransaction);
   MOZ_ASSERT(mIndex);
-  MOZ_ASSERT(!mStrongRequest);
-  MOZ_ASSERT(!mStrongCursor);
 
-  // XXX Fix this somehow...
-  auto& response = const_cast<IndexCursorResponse&>(aResponse);
+  HandleMultipleCursorResponses(aResponses, [this](
+                                                IndexCursorResponse& response) {
+    auto cloneReadInfo = PrepareCloneReadInfo(std::move(response.cloneInfo()));
 
-  StructuredCloneReadInfo cloneReadInfo(std::move(response.cloneInfo()));
-  cloneReadInfo.mDatabase = mTransaction->Database();
+    RefPtr<IDBCursor> newCursor;
 
-  DeserializeStructuredCloneFiles(
-      mTransaction->Database(), aResponse.cloneInfo().files(),
-      /* aForPreprocess */ false, cloneReadInfo.mFiles);
-
-  RefPtr<IDBCursor> newCursor;
-
-  if (mCursor) {
-    mCursor->Reset(std::move(response.key()), std::move(response.sortKey()),
-                   std::move(response.objectKey()), std::move(cloneReadInfo));
-  } else {
-    // TODO: This looks particularly dangerous to me. Why do we need to have an
-    // extra newCursor of type RefPtr? Why can't we directly assign to mCursor?
-    // Why is mCursor not a RefPtr? (A similar construct exists in the other
-    // HandleResponse overloads).
-    newCursor = IDBCursor::Create(
-        this, std::move(response.key()), std::move(response.sortKey()),
-        std::move(response.objectKey()), std::move(cloneReadInfo));
-    mCursor = newCursor;
-  }
-
-  ResultHelper helper(mRequest, mTransaction, mCursor);
-  DispatchSuccessEvent(&helper);
+    if (mCursor) {
+      if (mCursor->IsContinueCalled()) {
+        mCursor->Reset(std::move(response.key()), std::move(response.sortKey()),
+                       std::move(response.objectKey()),
+                       std::move(cloneReadInfo));
+      } else {
+        mCachedResponses.emplace_back(
+            std::move(response.key()), std::move(response.sortKey()),
+            std::move(response.objectKey()), std::move(cloneReadInfo));
+      }
+    } else {
+      // TODO: This looks particularly dangerous to me. Why do we need to
+      // have an extra newCursor of type RefPtr? Why can't we directly
+      // assign to mCursor? Why is mCursor not a RefPtr? (A similar
+      // construct exists in the other HandleResponse overloads).
+      newCursor = IDBCursor::Create(
+          this, std::move(response.key()), std::move(response.sortKey()),
+          std::move(response.objectKey()), std::move(cloneReadInfo));
+      mCursor = newCursor;
+    }
+  });
 }
 
 void BackgroundCursorChild::HandleResponse(
@@ -3709,8 +3778,8 @@ mozilla::ipc::IPCResult BackgroundCursorChild::RecvResponse(
       HandleResponse(aResponse.get_ObjectStoreKeyCursorResponse());
       break;
 
-    case CursorResponse::TIndexCursorResponse:
-      HandleResponse(aResponse.get_IndexCursorResponse());
+    case CursorResponse::TArrayOfIndexCursorResponse:
+      HandleResponse(aResponse.get_ArrayOfIndexCursorResponse());
       break;
 
     case CursorResponse::TIndexKeyCursorResponse:
