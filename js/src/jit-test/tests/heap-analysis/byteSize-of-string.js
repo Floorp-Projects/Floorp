@@ -71,10 +71,10 @@ function tByteSize(str) {
 //                      32-bit                  64-bit                test
 // representation       Latin-1   char16_t      Latin-1   char16_t    label
 // ========================================================================
-// JSExternalString            (cannot be tested in shell)            -
+// JSExternalString            - limited by MaxStringLength -         E
 // JSThinInlineString   8         4             16        8           T
 // JSFatInlineString    24        12            24        12          F
-// JSExtensibleString          - limited by available memory -        X
+// JSExtensibleString          - limited by MaxStringLength -         X
 
 // Notes:
 //  - labels are suffixed with A for atoms and N for non-atoms
@@ -89,6 +89,7 @@ const FN = m32 ? 32 : 32; // FatInlineString
 const XN = m32 ? 16 : 24; // ExtensibleString, has additional storage buffer
 const RN = m32 ? 16 : 24; // Rope
 const DN = m32 ? 16 : 24; // DependentString
+const EN = m32 ? 16 : 24; // ExternalString
 
 // A function that pads out a tenured size to the nursery size. We store a zone
 // pointer in the nursery just before the string (4 bytes on 32-bit, 8 bytes on
@@ -226,3 +227,26 @@ assertEq(byteSize(rope16a),                                             s(Nurser
 rope16a.match(/x/, function() { assertEq(true, false); });
 assertEq(byteSize(rope16a),                                             s(Nursery(XN) + 131072, Nursery(XN) + 131072));
 assertEq(byteSize(rope16),                                              s(Nursery(XN), Nursery(XN)));
+
+// Test external strings.
+//
+// We only support char16_t external strings and external strings are never
+// allocated in the nursery. If this ever changes, please add tests for the new
+// cases. Also note that on Windows mozmalloc's smallest allocation size is
+// two words compared to one word on other platforms.
+if (config['windows']) {
+  assertEq(byteSize(newExternalString("")),                             s(EN+8, EN+16));
+  assertEq(byteSize(newExternalString("1")),                            s(EN+8, EN+16));
+  assertEq(byteSize(newExternalString("12")),                           s(EN+8, EN+16));
+  assertEq(byteSize(newExternalString("123")),                          s(EN+8, EN+16));
+  assertEq(byteSize(newExternalString("1234")),                         s(EN+8, EN+16));
+} else {
+  assertEq(byteSize(newExternalString("")),                             s(EN+4, EN+8));
+  assertEq(byteSize(newExternalString("1")),                            s(EN+4, EN+8));
+  assertEq(byteSize(newExternalString("12")),                           s(EN+4, EN+8));
+  assertEq(byteSize(newExternalString("123")),                          s(EN+8, EN+8));
+  assertEq(byteSize(newExternalString("1234")),                         s(EN+8, EN+8));
+}
+assertEq(byteSize(newExternalString("12345")),                          s(EN+16, EN+16));
+assertEq(byteSize(newExternalString("123456789.123456789.1234")),       s(EN+48, EN+48));
+assertEq(byteSize(newExternalString("123456789.123456789.12345")),      s(EN+64, EN+64));
