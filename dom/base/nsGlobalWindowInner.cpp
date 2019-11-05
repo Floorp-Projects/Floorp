@@ -4092,6 +4092,7 @@ void nsGlobalWindowInner::DisableGamepadUpdates() {
 }
 
 void nsGlobalWindowInner::EnableVRUpdates() {
+  MOZ_ASSERT(!IsDying());
   if (mHasVREvents && !mVREventObserver) {
     mVREventObserver = new VREventObserver(this);
     nsPIDOMWindowOuter* outer = GetOuterWindow();
