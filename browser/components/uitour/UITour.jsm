@@ -196,27 +196,6 @@ var UITour = {
       },
     ],
     [
-      "searchPrefsLink",
-      {
-        query: aDocument => {
-          let element = null;
-          let popup = aDocument.getElementById("PopupSearchAutoComplete");
-          if (popup.state != "open") {
-            return null;
-          }
-          element = aDocument.getAnonymousElementByAttribute(
-            popup,
-            "anonid",
-            "search-settings"
-          );
-          if (!element || !UITour.isElementVisible(element)) {
-            return null;
-          }
-          return element;
-        },
-      },
-    ],
-    [
       "selectedTabIcon",
       {
         query: aDocument => {
