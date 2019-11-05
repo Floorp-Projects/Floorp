@@ -135,7 +135,7 @@ TextureClientRecycleAllocator* CompositableClient::GetTextureClientRecycler() {
     return mTextureClientRecycler;
   }
 
-  if (!mForwarder) {
+  if (!mForwarder || !mForwarder->GetTextureForwarder()) {
     return nullptr;
   }
 
