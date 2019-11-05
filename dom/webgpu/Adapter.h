@@ -7,7 +7,6 @@
 #define GPU_Adapter_H_
 
 #include "mozilla/AlreadyAddRefed.h"
-#include "mozilla/webgpu/WebGPUTypes.h"
 #include "nsString.h"
 #include "ObjectModel.h"
 
@@ -22,28 +21,20 @@ struct GPUFeatures;
 namespace webgpu {
 class Device;
 class Instance;
-class WebGPUChild;
 
 class Adapter final : public ObjectBase, public ChildOf<Instance> {
  public:
   GPU_DECL_CYCLE_COLLECTION(Adapter)
   GPU_DECL_JS_WRAP(Adapter)
 
+  const nsString mName;
+
  private:
   Adapter() = delete;
   virtual ~Adapter();
 
-  const RefPtr<WebGPUChild> mBridge;
-  const RawId mId;
-  const nsString mName;
-
  public:
-  explicit Adapter(RefPtr<Instance> aParent, RawId aId);
   void GetName(nsString& out) const { out = mName; }
-  RefPtr<WebGPUChild> GetBridge() const;
-
-  already_AddRefed<dom::Promise> RequestDevice(
-      const dom::GPUDeviceDescriptor& aDesc, ErrorResult& aRv);
 };
 
 }  // namespace webgpu
