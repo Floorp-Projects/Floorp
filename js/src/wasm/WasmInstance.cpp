@@ -441,55 +441,24 @@ template <typename T, typename F>
 inline int32_t WasmMemoryCopy(T memBase, uint32_t memLen,
                               uint32_t dstByteOffset, uint32_t srcByteOffset,
                               uint32_t len, F memMove) {
-  if (len == 0) {
-    // Zero length copies that are out-of-bounds do not trap.
-    return 0;
-  }
+  // Bounds check and deal with arithmetic overflow.
+  uint64_t dstOffsetLimit = uint64_t(dstByteOffset) + uint64_t(len);
+  uint64_t srcOffsetLimit = uint64_t(srcByteOffset) + uint64_t(len);
 
-  // Here, we know that |len - 1| cannot underflow.
-  bool mustTrap = false;
-
-  // As we're supposed to write data until we trap we have to deal with
-  // arithmetic overflow in the limit calculation.
-  uint64_t highestDstOffset = uint64_t(dstByteOffset) + uint64_t(len - 1);
-  uint64_t highestSrcOffset = uint64_t(srcByteOffset) + uint64_t(len - 1);
-
-  bool copyDown = srcByteOffset < dstByteOffset;
-
-  if (highestDstOffset >= memLen || highestSrcOffset >= memLen) {
-    // We would read past the end of the source or write past the end of the
-    // target.
-    if (copyDown) {
-      // We would trap on the first read or write, so don't read or write
-      // anything.
-      len = 0;
-    } else {
-      // Compute what we have space for in target and what's available in the
-      // source and pick the lowest value as the new len.
-      uint64_t srcAvail = memLen < srcByteOffset ? 0 : memLen - srcByteOffset;
-      uint64_t dstAvail = memLen < dstByteOffset ? 0 : memLen - dstByteOffset;
-      MOZ_ASSERT(len > Min(srcAvail, dstAvail));
-      len = uint32_t(Min(srcAvail, dstAvail));
+  if (dstOffsetLimit > memLen || srcOffsetLimit > memLen) {
+    if (len == 0) {
+      // Zero length copies that are out-of-bounds do not trap.
+      return 0;
     }
-    mustTrap = true;
+
+    JSContext* cx = TlsContext.get();
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_WASM_OUT_OF_BOUNDS);
+    return -1;
   }
 
-  if (len > 0) {
-    // The required write direction is indicated by `copyDown`, but apart from
-    // the trap that may happen without writing anything, the direction is not
-    // currently observable as there are no fences nor any read/write protect
-    // operation.  So memmove is good enough to handle overlaps.
-    memMove(memBase + dstByteOffset, memBase + srcByteOffset, size_t(len));
-  }
-
-  if (!mustTrap) {
-    return 0;
-  }
-
-  JSContext* cx = TlsContext.get();
-  JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                            JSMSG_WASM_OUT_OF_BOUNDS);
-  return -1;
+  memMove(memBase + dstByteOffset, memBase + srcByteOffset, size_t(len));
+  return 0;
 }
 
 /* static */ int32_t Instance::memCopy(Instance* instance,
@@ -545,41 +514,25 @@ inline int32_t WasmMemoryCopy(T memBase, uint32_t memLen,
 template <typename T, typename F>
 inline int32_t WasmMemoryFill(T memBase, uint32_t memLen, uint32_t byteOffset,
                               uint32_t value, uint32_t len, F memSet) {
-  if (len == 0) {
-    // Zero length fills that are out-of-bounds do not trap.
-    return 0;
+  // Bounds check and deal with arithmetic overflow.
+  uint64_t offsetLimit = uint64_t(byteOffset) + uint64_t(len);
+
+  if (offsetLimit > memLen) {
+    if (len == 0) {
+      // Zero length fills that are out-of-bounds do not trap.
+      return 0;
+    }
+
+    JSContext* cx = TlsContext.get();
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_WASM_OUT_OF_BOUNDS);
+    return -1;
   }
 
-  // Here, we know that |len - 1| cannot underflow.
-
-  bool mustTrap = false;
-
-  // We must write data until we trap, so we have to deal with arithmetic
-  // overflow in the limit calculation.
-  uint64_t highestOffset = uint64_t(byteOffset) + uint64_t(len - 1);
-  if (highestOffset >= memLen) {
-    // We would write past the end.  Compute what we have space for in the
-    // target and make that the new len.
-    uint64_t avail = memLen < byteOffset ? 0 : memLen - byteOffset;
-    MOZ_ASSERT(len > avail);
-    len = uint32_t(avail);
-    mustTrap = true;
-  }
-
-  if (len > 0) {
-    // The required write direction is upward, but that is not currently
-    // observable as there are no fences nor any read/write protect operation.
-    memSet(memBase + byteOffset, int(value), size_t(len));
-  }
-
-  if (!mustTrap) {
-    return 0;
-  }
-
-  JSContext* cx = TlsContext.get();
-  JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                            JSMSG_WASM_OUT_OF_BOUNDS);
-  return -1;
+  // The required write direction is upward, but that is not currently
+  // observable as there are no fences nor any read/write protect operation.
+  memSet(memBase + byteOffset, int(value), size_t(len));
+  return 0;
 }
 
 /* static */ int32_t Instance::memFill(Instance* instance, uint32_t byteOffset,
@@ -636,52 +589,32 @@ inline int32_t WasmMemoryFill(T memBase, uint32_t memLen, uint32_t byteOffset,
   // to
   //   memoryBase[ dstOffset .. dstOffset + len - 1 ]
 
-  if (len == 0) {
+  // Bounds check and deal with arithmetic overflow.
+  uint64_t dstOffsetLimit = uint64_t(dstOffset) + uint64_t(len);
+  uint64_t srcOffsetLimit = uint64_t(srcOffset) + uint64_t(len);
+
+  if (dstOffsetLimit > memLen || srcOffsetLimit > segLen) {
     // Zero length inits that are out-of-bounds do not trap.
-    return 0;
-  }
-
-  // Here, we know that |len - 1| cannot underflow.
-
-  bool mustTrap = false;
-
-  // As we're supposed to write data until we trap we have to deal with
-  // arithmetic overflow in the limit calculation.
-  uint64_t highestDstOffset = uint64_t(dstOffset) + uint64_t(len - 1);
-  uint64_t highestSrcOffset = uint64_t(srcOffset) + uint64_t(len - 1);
-
-  if (highestDstOffset >= memLen || highestSrcOffset >= segLen) {
-    // We would read past the end of the source or write past the end of the
-    // target.  Compute what we have space for in target and what's available
-    // in the source and pick the lowest value as the new len.
-    uint64_t srcAvail = segLen < srcOffset ? 0 : segLen - srcOffset;
-    uint64_t dstAvail = memLen < dstOffset ? 0 : memLen - dstOffset;
-    MOZ_ASSERT(len > Min(srcAvail, dstAvail));
-    len = uint32_t(Min(srcAvail, dstAvail));
-    mustTrap = true;
-  }
-
-  if (len > 0) {
-    // The required read/write direction is upward, but that is not currently
-    // observable as there are no fences nor any read/write protect operation.
-    SharedMem<uint8_t*> dataPtr = mem->buffer().dataPointerEither();
-    if (mem->isShared()) {
-      AtomicOperations::memcpySafeWhenRacy(
-          dataPtr + dstOffset, (uint8_t*)seg.bytes.begin() + srcOffset, len);
-    } else {
-      uint8_t* rawBuf = dataPtr.unwrap(/*Unshared*/);
-      memcpy(rawBuf + dstOffset, (const char*)seg.bytes.begin() + srcOffset,
-             len);
+    if (len == 0) {
+      return 0;
     }
+
+    JS_ReportErrorNumberASCII(TlsContext.get(), GetErrorMessage, nullptr,
+                              JSMSG_WASM_OUT_OF_BOUNDS);
+    return -1;
   }
 
-  if (!mustTrap) {
-    return 0;
+  // The required read/write direction is upward, but that is not currently
+  // observable as there are no fences nor any read/write protect operation.
+  SharedMem<uint8_t*> dataPtr = mem->buffer().dataPointerEither();
+  if (mem->isShared()) {
+    AtomicOperations::memcpySafeWhenRacy(
+        dataPtr + dstOffset, (uint8_t*)seg.bytes.begin() + srcOffset, len);
+  } else {
+    uint8_t* rawBuf = dataPtr.unwrap(/*Unshared*/);
+    memcpy(rawBuf + dstOffset, (const char*)seg.bytes.begin() + srcOffset, len);
   }
-
-  JS_ReportErrorNumberASCII(TlsContext.get(), GetErrorMessage, nullptr,
-                            JSMSG_WASM_OUT_OF_BOUNDS);
-  return -1;
+  return 0;
 }
 
 /* static */ int32_t Instance::tableCopy(Instance* instance, uint32_t dstOffset,
@@ -696,75 +629,46 @@ inline int32_t WasmMemoryFill(T memBase, uint32_t memLen, uint32_t byteOffset,
   const SharedTable& dstTable = instance->tables()[dstTableIndex];
   uint32_t dstTableLen = dstTable->length();
 
-  if (len == 0) {
+  // Bounds check and deal with arithmetic overflow.
+  uint64_t dstOffsetLimit = uint64_t(dstOffset) + len;
+  uint64_t srcOffsetLimit = uint64_t(srcOffset) + len;
+
+  if (dstOffsetLimit > dstTableLen || srcOffsetLimit > srcTableLen) {
     // Zero length copies that are out-of-bounds do not trap.
-    return 0;
-  }
-
-  // Here, we know that |len - 1| cannot underflow.
-  bool isOOB = false;
-
-  // As we're supposed to write data until we trap we have to deal with
-  // arithmetic overflow in the limit calculation.
-  uint64_t highestDstOffset = uint64_t(dstOffset) + (len - 1);
-  uint64_t highestSrcOffset = uint64_t(srcOffset) + (len - 1);
-
-  bool copyDown = srcOffset < dstOffset;
-
-  if (highestDstOffset >= dstTableLen || highestSrcOffset >= srcTableLen) {
-    // We would read past the end of the source or write past the end of the
-    // target.
-    if (copyDown) {
-      // We would trap on the first read or write, so don't read or write
-      // anything.
-      len = 0;
-    } else {
-      // Compute what we have space for in target and what's available in the
-      // source and pick the lowest value as the new len.
-      uint64_t srcAvail = srcTableLen < srcOffset ? 0 : srcTableLen - srcOffset;
-      uint64_t dstAvail = dstTableLen < dstOffset ? 0 : dstTableLen - dstOffset;
-      MOZ_ASSERT(len > Min(srcAvail, dstAvail));
-      len = uint32_t(Min(srcAvail, dstAvail));
+    if (len == 0) {
+      return 0;
     }
-    isOOB = true;
+
+    JS_ReportErrorNumberASCII(TlsContext.get(), GetErrorMessage, nullptr,
+                              JSMSG_WASM_OUT_OF_BOUNDS);
+    return -1;
   }
 
   bool isOOM = false;
 
-  if (len > 0) {
-    // The required write direction is indicated by `copyDown`, but apart from
-    // the trap that may happen without writing anything, the direction is not
-    // currently observable as there are no fences nor any read/write protect
-    // operation.  So Table::copy is good enough, so long as we handle
-    // overlaps.
-    if (&srcTable == &dstTable && dstOffset > srcOffset) {
-      for (uint32_t i = len; i > 0; i--) {
-        if (!dstTable->copy(*srcTable, dstOffset + (i - 1),
-                            srcOffset + (i - 1))) {
-          isOOM = true;
-          break;
-        }
+  if (&srcTable == &dstTable && dstOffset > srcOffset) {
+    for (uint32_t i = len; i > 0; i--) {
+      if (!dstTable->copy(*srcTable, dstOffset + (i - 1),
+                          srcOffset + (i - 1))) {
+        isOOM = true;
+        break;
       }
-    } else if (&srcTable == &dstTable && dstOffset == srcOffset) {
-      // No-op
-    } else {
-      for (uint32_t i = 0; i < len; i++) {
-        if (!dstTable->copy(*srcTable, dstOffset + i, srcOffset + i)) {
-          isOOM = true;
-          break;
-        }
+    }
+  } else if (&srcTable == &dstTable && dstOffset == srcOffset) {
+    // No-op
+  } else {
+    for (uint32_t i = 0; i < len; i++) {
+      if (!dstTable->copy(*srcTable, dstOffset + i, srcOffset + i)) {
+        isOOM = true;
+        break;
       }
     }
   }
 
-  if (!isOOB && !isOOM) {
-    return 0;
+  if (isOOM) {
+    return -1;
   }
-  if (isOOB && !isOOM) {
-    JS_ReportErrorNumberASCII(TlsContext.get(), GetErrorMessage, nullptr,
-                              JSMSG_WASM_OUT_OF_BOUNDS);
-  }
-  return -1;
+  return 0;
 }
 
 /* static */ int32_t Instance::elemDrop(Instance* instance, uint32_t segIndex) {
@@ -873,43 +777,26 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
   // to
   //   tableBase[ dstOffset .. dstOffset + len - 1 ]
 
-  if (len == 0) {
+  // Bounds check and deal with arithmetic overflow.
+  uint64_t dstOffsetLimit = uint64_t(dstOffset) + uint64_t(len);
+  uint64_t srcOffsetLimit = uint64_t(srcOffset) + uint64_t(len);
+
+  if (dstOffsetLimit > tableLen || srcOffsetLimit > segLen) {
     // Zero length inits that are out-of-bounds do not trap.
-    return 0;
-  }
-
-  // Here, we know that |len - 1| cannot underflow.
-  bool mustTrap = false;
-
-  // As we're supposed to write data until we trap we have to deal with
-  // arithmetic overflow in the limit calculation.
-  uint64_t highestDstOffset = uint64_t(dstOffset) + uint64_t(len - 1);
-  uint64_t highestSrcOffset = uint64_t(srcOffset) + uint64_t(len - 1);
-
-  if (highestDstOffset >= tableLen || highestSrcOffset >= segLen) {
-    // We would read past the end of the source or write past the end of the
-    // target.  Compute what we have space for in target and what's available
-    // in the source and pick the lowest value as the new len.
-    uint64_t srcAvail = segLen < srcOffset ? 0 : segLen - srcOffset;
-    uint64_t dstAvail = tableLen < dstOffset ? 0 : tableLen - dstOffset;
-    MOZ_ASSERT(len > Min(srcAvail, dstAvail));
-    len = uint32_t(Min(srcAvail, dstAvail));
-    mustTrap = true;
-  }
-
-  if (len > 0) {
-    if (!instance->initElems(tableIndex, seg, dstOffset, srcOffset, len)) {
-      return -1;  // OOM, which has already been reported.
+    if (len == 0) {
+      return 0;
     }
+
+    JS_ReportErrorNumberASCII(TlsContext.get(), GetErrorMessage, nullptr,
+                              JSMSG_WASM_OUT_OF_BOUNDS);
+    return -1;
   }
 
-  if (!mustTrap) {
-    return 0;
+  if (!instance->initElems(tableIndex, seg, dstOffset, srcOffset, len)) {
+    return -1;  // OOM, which has already been reported.
   }
 
-  JS_ReportErrorNumberASCII(TlsContext.get(), GetErrorMessage, nullptr,
-                            JSMSG_WASM_OUT_OF_BOUNDS);
-  return -1;
+  return 0;
 }
 
 /* static */ int32_t Instance::tableFill(Instance* instance, uint32_t start,
@@ -920,25 +807,18 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
   JSContext* cx = TlsContext.get();
   Table& table = *instance->tables()[tableIndex];
 
-  if (len == 0) {
+  // Bounds check and deal with arithmetic overflow.
+  uint64_t offsetLimit = uint64_t(start) + uint64_t(len);
+
+  if (offsetLimit > table.length()) {
     // Zero length fills that are out-of-bounds do not trap.
-    return 0;
-  }
+    if (len == 0) {
+      return 0;
+    }
 
-  // Here, we know that |len - 1| cannot underflow.
-
-  bool mustTrap = false;
-
-  // We must write the table until we trap, so we have to deal with
-  // arithmetic overflow in the limit calculation.
-  uint64_t highestOffset = uint64_t(start) + uint64_t(len - 1);
-  if (highestOffset >= table.length()) {
-    // We would write past the end.  Compute what we have space for in the
-    // target and make that the new len.
-    uint64_t avail = table.length() < start ? 0 : table.length() - start;
-    MOZ_ASSERT(len > avail);
-    len = uint32_t(avail);
-    mustTrap = true;
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_WASM_TABLE_OUT_OF_BOUNDS);
+    return -1;
   }
 
   AnyRef ref = AnyRef::fromCompiledCode(value);
@@ -954,13 +834,7 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
       MOZ_CRASH("not asm.js");
   }
 
-  if (!mustTrap) {
-    return 0;
-  }
-
-  JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                            JSMSG_WASM_TABLE_OUT_OF_BOUNDS);
-  return -1;
+  return 0;
 }
 
 /* static */ void* Instance::tableGet(Instance* instance, uint32_t index,

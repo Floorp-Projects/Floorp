@@ -517,7 +517,8 @@ bool Module::initSegments(JSContext* cx, HandleWasmInstanceObject instanceObj,
   Instance& instance = instanceObj->instance();
   const SharedTableVector& tables = instance.tables();
 
-  // Bulk memory changes the error checking behavior: we may write partial data.
+  // Bulk memory changes the error checking behavior: we apply segments
+  // in-order and terminate if one has an out-of-bounds range.
   // We enable bulk memory semantics if shared memory is enabled.
 #ifdef ENABLE_WASM_BULKMEM_OPS
   const bool eagerBoundsCheck = false;
@@ -580,26 +581,17 @@ bool Module::initSegments(JSContext* cx, HandleWasmInstanceObject instanceObj,
         continue;
       }
 
-      bool fail = false;
       if (!eagerBoundsCheck) {
         uint32_t tableLength = tables[seg->tableIndex]->length();
-        if (offset > tableLength) {
-          fail = true;
-          count = 0;
-        } else if (tableLength - offset < count) {
-          fail = true;
-          count = tableLength - offset;
+        if (offset > tableLength || tableLength - offset < count) {
+          JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                                   JSMSG_WASM_BAD_FIT, "elem", "table");
+          return false;
         }
       }
-      if (count) {
-        if (!instance.initElems(seg->tableIndex, *seg, offset, 0, count)) {
-          return false;  // OOM
-        }
-      }
-      if (fail) {
-        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                                 JSMSG_WASM_BAD_FIT, "elem", "table");
-        return false;
+
+      if (!instance.initElems(seg->tableIndex, *seg, offset, 0, count)) {
+        return false;  // OOM
       }
     }
   }
@@ -625,24 +617,14 @@ bool Module::initSegments(JSContext* cx, HandleWasmInstanceObject instanceObj,
         continue;
       }
 
-      bool fail = false;
       if (!eagerBoundsCheck) {
-        if (offset > memoryLength) {
-          fail = true;
-          count = 0;
-        } else if (memoryLength - offset < count) {
-          fail = true;
-          count = memoryLength - offset;
+        if (offset > memoryLength || memoryLength - offset < count) {
+          JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                                   JSMSG_WASM_BAD_FIT, "data", "memory");
+          return false;
         }
       }
-      if (count) {
-        memcpy(memoryBase + offset, seg->bytes.begin(), count);
-      }
-      if (fail) {
-        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                                 JSMSG_WASM_BAD_FIT, "data", "memory");
-        return false;
-      }
+      memcpy(memoryBase + offset, seg->bytes.begin(), count);
     }
   }
 
