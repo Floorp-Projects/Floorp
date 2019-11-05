@@ -97,6 +97,10 @@ class IndexedDatabaseManager final {
 
   static bool PreprocessingEnabled();
 
+  // The maximum number of extra entries to preload in an Cursor::OpenOp or
+  // Cursor::ContinueOp.
+  static int32_t MaxPreloadExtraRecords();
+
   void ClearBackgroundActor();
 
   already_AddRefed<FileManager> GetFileManager(PersistenceType aPersistenceType,
