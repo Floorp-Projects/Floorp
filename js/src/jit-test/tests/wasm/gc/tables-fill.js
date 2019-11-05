@@ -55,6 +55,14 @@ function testTableFill(tbl_type, val_type, obj) {
 
   // Now a bunch of tests involving only table 1.
 
+  // Partly outside the table
+  assertErrorMessage(() => ins.exports.fill1(8, obj[5], 3),
+                     RangeError, /table index out of bounds/);
+
+  assertEq(ins.exports.get1(7), null);
+  assertEq(ins.exports.get1(8), null);
+  assertEq(ins.exports.get1(9), null);
+
   // Within the table
   assertEq(ins.exports.fill1(2, obj[0], 3), undefined);
   assertEq(ins.exports.get1(1), null);
@@ -90,14 +98,6 @@ function testTableFill(tbl_type, val_type, obj) {
   // Within the table
   assertEq(ins.exports.fill1(10, obj[4], 0), undefined);
   assertEq(ins.exports.get1(9), null);
-
-  // Partly outside the table
-  assertErrorMessage(() => ins.exports.fill1(8, obj[5], 3),
-                     RangeError, /table index out of bounds/);
-
-  assertEq(ins.exports.get1(7), null);
-  assertEq(ins.exports.get1(8), obj[5]);
-  assertEq(ins.exports.get1(9), obj[5]);
 
   // Boundary tests on table 1: at the edge of the table.
 

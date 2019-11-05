@@ -2,8 +2,8 @@
 
 // Sundry test cases for the "partial write" bounds checking semantics.
 
-// table.init: out of bounds of the table or the element segment, but should
-// perform the operation up to the appropriate bound.
+// table.init: out of bounds of the table or the element segment, and should
+// not perform the operation at all.
 //
 // Arithmetic overflow of tableoffset + len or of segmentoffset + len should not
 // affect the behavior.
@@ -44,13 +44,9 @@ function tbl_init(min, max, backup, write, segoffs=0) {
                        WebAssembly.RuntimeError,
                        /index out of bounds/);
     let tbl = ins.exports.tbl;
-    for (let i=0; i < Math.min(backup, tbl_init_len - segoffs); i++) {
-        assertEq(tbl.get(offs + i), ins.exports["f" + (i + segoffs)]);
-    }
-    for (let i=Math.min(backup, tbl_init_len); i < backup; i++)
-        assertEq(tbl.get(offs + i), null);
-    for (let i=0; i < offs; i++)
+    for (let i=0; i < min; i++) {
         assertEq(tbl.get(i), null);
+    }
 }
 
 // We exceed the bounds of the table but not of the element segment
@@ -67,8 +63,8 @@ tbl_init(tbl_init_len*4, tbl_init_len*4, tbl_init_len, 0xFFFFFFF0);
 // We arithmetically overflow the segment limit but not the table limit
 tbl_init(tbl_init_len, tbl_init_len, tbl_init_len, 0xFFFFFFFC, Math.floor(tbl_init_len/2));
 
-// table.copy: out of bounds of the table for the source or target, but should
-// perform the operation up to the appropriate bound.  Major cases:
+// table.copy: out of bounds of the table for the source or target, and should
+// perform the operation at all.  Major cases:
 //
 // - non-overlapping regions
 // - overlapping regions with src > dest
@@ -116,9 +112,7 @@ function tbl_copy(min, max, srcOffs, targetOffs, len) {
     let copyDown = srcOffs < targetOffs;
     let targetAvail = tbl.length - targetOffs;
     let srcAvail = tbl.length - srcOffs;
-    let targetLim = targetOffs + Math.min(len, targetAvail, srcAvail);
     let srcLim = srcOffs + Math.min(len, targetAvail, srcAvail);
-    let immediateOOB = copyDown && (srcOffs + len > tbl.length || targetOffs + len > tbl.length);
 
     for (let i=srcOffs, j=0; i < srcLim; i++, j++)
         tbl.set(i, ins.exports["f" + j]);
@@ -126,37 +120,10 @@ function tbl_copy(min, max, srcOffs, targetOffs, len) {
                        WebAssembly.RuntimeError,
                        /index out of bounds/);
 
-    var t = 0;
-    var s = 0;
-    var i = 0;
-    function checkTarget() {
-        if (i >= targetOffs && i < targetLim) {
-            assertEq(tbl.get(i), ins.exports["f" + (t++)]);
-            if (i >= srcOffs && i < srcLim)
-                s++;
-            return true;
-        }
-        return false;
-    }
-    function checkSource() {
+    for (var i=0, s=0; i < tbl.length; i++ ) {
         if (i >= srcOffs && i < srcLim) {
             assertEq(tbl.get(i), ins.exports["f" + (s++)]);
-            if (i >= targetOffs && i < targetLim)
-                t++;
-            return true;
-        }
-        return false;
-    }
-
-    for (i=0; i < tbl.length; i++ ) {
-        if (immediateOOB) {
-            if (checkSource())
-                continue;
-        } else {
-            if (copyDown && (checkSource() || checkTarget()))
-                continue;
-            if (!copyDown && (checkTarget() || checkSource()))
-                continue;
+            continue;
         }
         assertEq(tbl.get(i), null);
     }

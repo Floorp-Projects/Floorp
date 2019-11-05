@@ -1045,28 +1045,28 @@ let $22 = instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x90\x80\x80\x80\x00\x03
 assert_trap(() => call($22, "run", [0, 24, 16]));
 
 // table_copy.wast:860
-assert_return(() => call($22, "test", [0]), 0);
+assert_trap(() => call($22, "test", [0]));
 
 // table_copy.wast:861
-assert_return(() => call($22, "test", [1]), 1);
+assert_trap(() => call($22, "test", [1]));
 
 // table_copy.wast:862
-assert_return(() => call($22, "test", [2]), 2);
+assert_trap(() => call($22, "test", [2]));
 
 // table_copy.wast:863
-assert_return(() => call($22, "test", [3]), 3);
+assert_trap(() => call($22, "test", [3]));
 
 // table_copy.wast:864
-assert_return(() => call($22, "test", [4]), 4);
+assert_trap(() => call($22, "test", [4]));
 
 // table_copy.wast:865
-assert_return(() => call($22, "test", [5]), 5);
+assert_trap(() => call($22, "test", [5]));
 
 // table_copy.wast:866
-assert_return(() => call($22, "test", [6]), 6);
+assert_trap(() => call($22, "test", [6]));
 
 // table_copy.wast:867
-assert_return(() => call($22, "test", [7]), 7);
+assert_trap(() => call($22, "test", [7]));
 
 // table_copy.wast:868
 assert_trap(() => call($22, "test", [8]));
@@ -1147,31 +1147,31 @@ let $23 = instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x90\x80\x80\x80\x00\x03
 assert_trap(() => call($23, "run", [0, 23, 15]));
 
 // table_copy.wast:921
-assert_return(() => call($23, "test", [0]), 0);
+assert_trap(() => call($23, "test", [0]));
 
 // table_copy.wast:922
-assert_return(() => call($23, "test", [1]), 1);
+assert_trap(() => call($23, "test", [1]));
 
 // table_copy.wast:923
-assert_return(() => call($23, "test", [2]), 2);
+assert_trap(() => call($23, "test", [2]));
 
 // table_copy.wast:924
-assert_return(() => call($23, "test", [3]), 3);
+assert_trap(() => call($23, "test", [3]));
 
 // table_copy.wast:925
-assert_return(() => call($23, "test", [4]), 4);
+assert_trap(() => call($23, "test", [4]));
 
 // table_copy.wast:926
-assert_return(() => call($23, "test", [5]), 5);
+assert_trap(() => call($23, "test", [5]));
 
 // table_copy.wast:927
-assert_return(() => call($23, "test", [6]), 6);
+assert_trap(() => call($23, "test", [6]));
 
 // table_copy.wast:928
-assert_return(() => call($23, "test", [7]), 7);
+assert_trap(() => call($23, "test", [7]));
 
 // table_copy.wast:929
-assert_return(() => call($23, "test", [8]), 8);
+assert_trap(() => call($23, "test", [8]));
 
 // table_copy.wast:930
 assert_trap(() => call($23, "test", [9]));
@@ -1384,28 +1384,28 @@ assert_trap(() => call($25, "test", [9]));
 assert_trap(() => call($25, "test", [10]));
 
 // table_copy.wast:1054
-assert_return(() => call($25, "test", [11]), 0);
+assert_trap(() => call($25, "test", [11]));
 
 // table_copy.wast:1055
-assert_return(() => call($25, "test", [12]), 1);
+assert_trap(() => call($25, "test", [12]));
 
 // table_copy.wast:1056
-assert_return(() => call($25, "test", [13]), 2);
+assert_trap(() => call($25, "test", [13]));
 
 // table_copy.wast:1057
-assert_return(() => call($25, "test", [14]), 3);
+assert_trap(() => call($25, "test", [14]));
 
 // table_copy.wast:1058
-assert_return(() => call($25, "test", [15]), 4);
+assert_trap(() => call($25, "test", [15]));
 
 // table_copy.wast:1059
-assert_return(() => call($25, "test", [16]), 5);
+assert_trap(() => call($25, "test", [16]));
 
 // table_copy.wast:1060
-assert_return(() => call($25, "test", [17]), 6);
+assert_trap(() => call($25, "test", [17]));
 
 // table_copy.wast:1061
-assert_return(() => call($25, "test", [18]), 7);
+assert_trap(() => call($25, "test", [18]));
 
 // table_copy.wast:1062
 assert_trap(() => call($25, "test", [19]));
@@ -1618,28 +1618,28 @@ assert_trap(() => call($27, "test", [19]));
 assert_trap(() => call($27, "test", [20]));
 
 // table_copy.wast:1186
-assert_return(() => call($27, "test", [21]), 0);
+assert_trap(() => call($27, "test", [21]));
 
 // table_copy.wast:1187
-assert_return(() => call($27, "test", [22]), 1);
+assert_trap(() => call($27, "test", [22]));
 
 // table_copy.wast:1188
-assert_return(() => call($27, "test", [23]), 2);
+assert_trap(() => call($27, "test", [23]));
 
 // table_copy.wast:1189
-assert_return(() => call($27, "test", [24]), 3);
+assert_return(() => call($27, "test", [24]), 0);
 
 // table_copy.wast:1190
-assert_return(() => call($27, "test", [25]), 4);
+assert_return(() => call($27, "test", [25]), 1);
 
 // table_copy.wast:1191
-assert_return(() => call($27, "test", [26]), 5);
+assert_return(() => call($27, "test", [26]), 2);
 
 // table_copy.wast:1192
-assert_return(() => call($27, "test", [27]), 6);
+assert_return(() => call($27, "test", [27]), 3);
 
 // table_copy.wast:1193
-assert_return(() => call($27, "test", [28]), 7);
+assert_return(() => call($27, "test", [28]), 4);
 
 // table_copy.wast:1194
 assert_return(() => call($27, "test", [29]), 5);
@@ -1759,52 +1759,52 @@ let $29 = instance("\x00\x61\x73\x6d\x01\x00\x00\x00\x01\x90\x80\x80\x80\x00\x03
 assert_trap(() => call($29, "run", [0, 112, -32]));
 
 // table_copy.wast:1287
-assert_return(() => call($29, "test", [0]), 0);
+assert_trap(() => call($29, "test", [0]));
 
 // table_copy.wast:1288
-assert_return(() => call($29, "test", [1]), 1);
+assert_trap(() => call($29, "test", [1]));
 
 // table_copy.wast:1289
-assert_return(() => call($29, "test", [2]), 2);
+assert_trap(() => call($29, "test", [2]));
 
 // table_copy.wast:1290
-assert_return(() => call($29, "test", [3]), 3);
+assert_trap(() => call($29, "test", [3]));
 
 // table_copy.wast:1291
-assert_return(() => call($29, "test", [4]), 4);
+assert_trap(() => call($29, "test", [4]));
 
 // table_copy.wast:1292
-assert_return(() => call($29, "test", [5]), 5);
+assert_trap(() => call($29, "test", [5]));
 
 // table_copy.wast:1293
-assert_return(() => call($29, "test", [6]), 6);
+assert_trap(() => call($29, "test", [6]));
 
 // table_copy.wast:1294
-assert_return(() => call($29, "test", [7]), 7);
+assert_trap(() => call($29, "test", [7]));
 
 // table_copy.wast:1295
-assert_return(() => call($29, "test", [8]), 8);
+assert_trap(() => call($29, "test", [8]));
 
 // table_copy.wast:1296
-assert_return(() => call($29, "test", [9]), 9);
+assert_trap(() => call($29, "test", [9]));
 
 // table_copy.wast:1297
-assert_return(() => call($29, "test", [10]), 10);
+assert_trap(() => call($29, "test", [10]));
 
 // table_copy.wast:1298
-assert_return(() => call($29, "test", [11]), 11);
+assert_trap(() => call($29, "test", [11]));
 
 // table_copy.wast:1299
-assert_return(() => call($29, "test", [12]), 12);
+assert_trap(() => call($29, "test", [12]));
 
 // table_copy.wast:1300
-assert_return(() => call($29, "test", [13]), 13);
+assert_trap(() => call($29, "test", [13]));
 
 // table_copy.wast:1301
-assert_return(() => call($29, "test", [14]), 14);
+assert_trap(() => call($29, "test", [14]));
 
 // table_copy.wast:1302
-assert_return(() => call($29, "test", [15]), 15);
+assert_trap(() => call($29, "test", [15]));
 
 // table_copy.wast:1303
 assert_trap(() => call($29, "test", [16]));
