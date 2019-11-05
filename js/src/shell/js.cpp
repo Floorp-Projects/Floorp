@@ -1037,6 +1037,8 @@ static void MaybeRunFinalizationGroupCleanupTasks(JSContext* cx) {
   for (const auto& g : groups) {
     group = g;
 
+    AutoRealm ar(cx, group);
+
     {
       AutoReportException are(cx);
       mozilla::Unused << JS::CleanupQueuedFinalizationGroup(cx, group);
