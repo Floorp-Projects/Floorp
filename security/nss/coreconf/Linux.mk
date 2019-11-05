@@ -21,6 +21,7 @@ ifeq ($(USE_PTHREADS),1)
 endif
 
 DEFAULT_COMPILER = gcc
+DEFINES += -D_DEFAULT_SOURCE -D_BSD_SOURCE
 
 ifeq ($(OS_TARGET),Android)
 ifndef ANDROID_NDK

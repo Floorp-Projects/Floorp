@@ -236,7 +236,7 @@ GenerateKeyPairInner()
   }
   PK11RSAGenParams params;
   params.keySizeInBits = 2048;
-  params.pe = 3;
+  params.pe = 65537;
 
   // Bug 1012786: PK11_GenerateKeyPair can fail if there is insufficient
   // entropy to generate a random key. Attempting to add some entropy and
