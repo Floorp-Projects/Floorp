@@ -736,7 +736,8 @@ class BackgroundCursorChild final : public PBackgroundIDBCursorChild {
   void HandleResponse(const nsTArray<IndexKeyCursorResponse>& aResponses);
 
   template <typename... Args>
-  void HandleIndividualCursorResponse(Args&&... aArgs);
+  void HandleIndividualCursorResponse(bool aUseAsCurrentResult,
+                                      Args&&... aArgs);
 
   // IPDL methods are only called by IPDL.
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
