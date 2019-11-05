@@ -47,7 +47,7 @@ class MediaTransportParent::Impl : public sigslot::has_slots<> {
     NS_ENSURE_TRUE_VOID(mParent->SendOnCandidate(aTransportId, aCandidateInfo));
   }
 
-  void OnAlpnNegotiated(const std::string& aAlpn) {
+  void OnAlpnNegotiated(const std::string& aAlpn, bool aPrivacyRequested) {
     NS_ENSURE_TRUE_VOID(mParent->SendOnAlpnNegotiated(aAlpn));
   }
 
