@@ -31,32 +31,6 @@ LayoutDeviceIntRegion VibrancyManager::GetUnionOfVibrantRegions() const {
   return result;
 }
 
-@interface NSView (CurrentFillColor)
-- (NSColor*)_currentFillColor;
-@end
-
-static NSColor* AdjustedColor(NSColor* aFillColor, VibrancyType aType) {
-  if (aType == VibrancyType::MENU && [aFillColor alphaComponent] == 1.0) {
-    // The opaque fill color that's used for the menu background when "Reduce
-    // vibrancy" is checked in the system accessibility prefs is too dark.
-    // This is probably because we're not using the right material for menus,
-    // see VibrancyManager::CreateEffectView.
-    return [NSColor colorWithDeviceWhite:0.96 alpha:1.0];
-  }
-  return aFillColor;
-}
-
-NSColor* VibrancyManager::VibrancyFillColorForType(VibrancyType aType) {
-  NSView* view = mVibrantRegions.LookupOrAdd(uint32_t(aType))->GetAnyView();
-
-  if (view && [view respondsToSelector:@selector(_currentFillColor)]) {
-    // -[NSVisualEffectView _currentFillColor] is the color that the view
-    // draws in its drawRect implementation.
-    return AdjustedColor([view _currentFillColor], aType);
-  }
-  return [NSColor whiteColor];
-}
-
 static NSView* HitTestNil(id self, SEL _cmd, NSPoint aPoint) {
   // This view must be transparent to mouse events.
   return nil;

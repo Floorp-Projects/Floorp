@@ -280,8 +280,6 @@ class WidgetRenderingContext;
 - (void)viewWillStartLiveResize;
 - (void)viewDidEndLiveResize;
 
-- (NSColor*)vibrancyFillColorForThemeGeometryType:(nsITheme::ThemeGeometryType)aThemeGeometryType;
-
 /*
  * Gestures support
  *
@@ -525,10 +523,6 @@ class nsChildView final : public nsBaseWidget {
   virtual void ReparentNativeWidget(nsIWidget* aNewParent) override;
 
   mozilla::widget::TextInputHandler* GetTextInputHandler() { return mTextInputHandler; }
-
-  NSColor* VibrancyFillColorForThemeGeometryType(nsITheme::ThemeGeometryType aThemeGeometryType);
-  NSColor* VibrancyFontSmoothingBackgroundColorForThemeGeometryType(
-      nsITheme::ThemeGeometryType aThemeGeometryType);
 
   // unit conversion convenience functions
   int32_t CocoaPointsToDevPixels(CGFloat aPts) const {
