@@ -127,10 +127,9 @@ Bug 1498604 tracks bootstrapping jsdoc properly.
                      open_url_delay=0.1 if auto_open else None)
 
     def _run_sphinx(self, docdir, savedir, config=None, fmt='html', jobs=None):
-        import sphinx
+        import sphinx.cmd.build
         config = config or self.manager.conf_py_path
         args = [
-            'sphinx',
             '-b', fmt,
             '-c', os.path.dirname(config),
             docdir,
@@ -138,7 +137,7 @@ Bug 1498604 tracks bootstrapping jsdoc properly.
         ]
         if jobs:
             args.extend(['-j', jobs])
-        return sphinx.build_main(args)
+        return sphinx.cmd.build.build_main(args)
 
     @property
     def manager(self):
