@@ -14,6 +14,7 @@
 #include "jsapi.h"        // JS_ReportErrorASCII, JS_ReportErrorNumberASCII
 #include "jsfriendapi.h"  // js::GetErrorMessage, JSMSG_*
 
+#include "builtin/Promise.h"                 // js::PromiseObject
 #include "builtin/streams/ClassSpecMacro.h"  // JS_STREAMS_CLASS_SPEC
 #include "builtin/streams/MiscellaneousOperations.h"  // js::ReturnPromiseRejectedWithPendingError
 #include "builtin/streams/WritableStream.h"           // js::WritableStream
@@ -27,7 +28,10 @@
 #include "vm/Compartment.h"   // JS::Compartment
 #include "vm/JSContext.h"     // JSContext
 
-#include "vm/Compartment-inl.h"  // JS::Compartment::wrap, js::UnwrapAndTypeCheckThis
+#include "vm/Compartment-inl.h"  // JS::Compartment::wrap, js::UnwrapAndTypeCheck{Argument,This}
+#include "vm/JSObject-inl.h"      // js::NewObjectWithClassProto
+#include "vm/NativeObject-inl.h"  // js::ThrowIfNotConstructing
+#include "vm/Realm-inl.h"         // js::AutoRealm
 
 using JS::CallArgs;
 using JS::CallArgsFromVp;
@@ -38,6 +42,7 @@ using JS::Value;
 using js::ClassSpec;
 using js::GetErrorMessage;
 using js::ReturnPromiseRejectedWithPendingError;
+using js::UnwrapAndTypeCheckArgument;
 using js::UnwrapAndTypeCheckThis;
 using js::WritableStream;
 using js::WritableStreamCloseQueuedOrInFlight;
@@ -48,22 +53,208 @@ using js::WritableStreamDefaultWriterWrite;
 
 /*** 4.5. Class WritableStreamDefaultWriter *********************************/
 
+/**
+ * Stream spec, 4.5.3. new WritableStreamDefaultWriter(stream)
+ * Steps 3-9.
+ */
 MOZ_MUST_USE WritableStreamDefaultWriter* js::CreateWritableStreamDefaultWriter(
-    JSContext* cx, Handle<WritableStream*> unwrappedStream) {
-  // XXX jwalden flesh me out!
-  JS_ReportErrorASCII(cx, "epic fail");
-  return nullptr;
+    JSContext* cx, Handle<WritableStream*> unwrappedStream,
+    Handle<JSObject*> proto /* = nullptr */) {
+  Rooted<WritableStreamDefaultWriter*> writer(
+      cx, NewObjectWithClassProto<WritableStreamDefaultWriter>(cx, proto));
+  if (!writer) {
+    return nullptr;
+  }
+
+  // Step 3: Set this.[[ownerWritableStream]] to stream.
+  {
+    Rooted<JSObject*> stream(cx, unwrappedStream);
+    if (!cx->compartment()->wrap(cx, &stream)) {
+      return nullptr;
+    }
+    writer->setStream(stream);
+  }
+
+  // Step 4 is moved to the end.
+
+  // Step 5: Let state be stream.[[state]].
+  // Step 6: If state is "writable",
+  if (unwrappedStream->writable()) {
+    // Step 6.a: If ! WritableStreamCloseQueuedOrInFlight(stream) is false and
+    //           stream.[[backpressure]] is true, set this.[[readyPromise]] to a
+    //           new promise.
+    JSObject* promise;
+    if (!WritableStreamCloseQueuedOrInFlight(unwrappedStream) &&
+        unwrappedStream->backpressure()) {
+      promise = PromiseObject::createSkippingExecutor(cx);
+    }
+    // Step 6.b: Otherwise, set this.[[readyPromise]] to a promise resolved with
+    //           undefined.
+    else {
+      promise = PromiseObject::unforgeableResolve(cx, UndefinedHandleValue);
+    }
+    if (!promise) {
+      return nullptr;
+    }
+    writer->setReadyPromise(promise);
+
+    // Step 6.c: Set this.[[closedPromise]] to a new promise.
+    promise = PromiseObject::createSkippingExecutor(cx);
+    if (!promise) {
+      return nullptr;
+    }
+
+    writer->setClosedPromise(promise);
+  }
+  // Step 8: Otherwise, if state is "closed",
+  else if (unwrappedStream->closed()) {
+    // Step 8.a: Set this.[[readyPromise]] to a promise resolved with undefined.
+    JSObject* readyPromise =
+        PromiseObject::unforgeableResolve(cx, UndefinedHandleValue);
+    if (!readyPromise) {
+      return nullptr;
+    }
+
+    writer->setReadyPromise(readyPromise);
+
+    // Step 8.b: Set this.[[closedPromise]] to a promise resolved with
+    //           undefined.
+    JSObject* closedPromise =
+        PromiseObject::unforgeableResolve(cx, UndefinedHandleValue);
+    if (!closedPromise) {
+      return nullptr;
+    }
+
+    writer->setClosedPromise(closedPromise);
+  } else {
+    // Wrap stream.[[StoredError]] just once for either step 7 or step 9.
+    Rooted<Value> storedError(cx, unwrappedStream->storedError());
+    if (!cx->compartment()->wrap(cx, &storedError)) {
+      return nullptr;
+    }
+
+    // Step 7: Otherwise, if state is "erroring",
+    if (unwrappedStream->erroring()) {
+      // Step 7.a: Set this.[[readyPromise]] to a promise rejected with
+      //           stream.[[storedError]].
+      JSObject* promise = PromiseObject::unforgeableReject(cx, storedError);
+      if (!promise) {
+        return nullptr;
+      }
+
+      writer->setReadyPromise(promise);
+
+      // Step 7.b: Set this.[[readyPromise]].[[PromiseIsHandled]] to true.
+      Rooted<PromiseObject*> readyPromise(cx, &promise->as<PromiseObject>());
+      readyPromise->setHandled();
+      cx->runtime()->removeUnhandledRejectedPromise(cx, readyPromise);
+
+      // Step 7.c: Set this.[[closedPromise]] to a new promise.
+      JSObject* closedPromise = PromiseObject::createSkippingExecutor(cx);
+      if (!closedPromise) {
+        return nullptr;
+      }
+
+      writer->setClosedPromise(closedPromise);
+    }
+    // Step 9: Otherwise,
+    else {
+      // Step 9.a: Assert: state is "errored".
+      MOZ_ASSERT(unwrappedStream->errored());
+
+      Rooted<JSObject*> promise(cx);
+
+      // Step 9.b: Let storedError be stream.[[storedError]].
+      // Step 9.c: Set this.[[readyPromise]] to a promise rejected with
+      //           storedError.
+      promise = PromiseObject::unforgeableReject(cx, storedError);
+      if (!promise) {
+        return nullptr;
+      }
+
+      writer->setReadyPromise(promise);
+
+      // Step 9.d: Set this.[[readyPromise]].[[PromiseIsHandled]] to true.
+      promise->as<PromiseObject>().setHandled();
+      cx->runtime()->removeUnhandledRejectedPromise(cx, promise);
+
+      // Step 9.e: Set this.[[closedPromise]] to a promise rejected with
+      //           storedError.
+      promise = PromiseObject::unforgeableReject(cx, storedError);
+      if (!promise) {
+        return nullptr;
+      }
+
+      writer->setClosedPromise(promise);
+
+      // Step 9.f: Set this.[[closedPromise]].[[PromiseIsHandled]] to true.
+      promise->as<PromiseObject>().setHandled();
+      cx->runtime()->removeUnhandledRejectedPromise(cx, promise);
+    }
+  }
+
+  // Step 4 (reordered): Set stream.[[writer]] to this.
+  // Doing this last prevents a partially-initialized writer from being attached
+  // to the stream (and possibly left there on OOM).
+  {
+    AutoRealm ar(cx, unwrappedStream);
+    Rooted<JSObject*> wrappedWriter(cx, writer);
+    if (!cx->compartment()->wrap(cx, &wrappedWriter)) {
+      return nullptr;
+    }
+    unwrappedStream->setWriter(wrappedWriter);
+  }
+
+  return writer;
 }
 
 /**
- * Streams spec, 4.5.
+ * Streams spec, 4.5.3.
  * new WritableStreamDefaultWriter(stream)
  */
 bool WritableStreamDefaultWriter::constructor(JSContext* cx, unsigned argc,
                                               Value* vp) {
-  // XXX jwalden flesh me out!
-  JS_ReportErrorASCII(cx, "epic fail");
-  return false;
+  MOZ_ASSERT(cx->realm()->creationOptions().getWritableStreamsEnabled(),
+             "WritableStream should be enabled in this realm if we reach here");
+
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  if (!ThrowIfNotConstructing(cx, args, "WritableStreamDefaultWriter")) {
+    return false;
+  }
+
+  // Step 1: If ! IsWritableStream(stream) is false, throw a TypeError
+  //         exception.
+  Rooted<WritableStream*> unwrappedStream(
+      cx, UnwrapAndTypeCheckArgument<WritableStream>(
+              cx, args, "WritableStreamDefaultWriter constructor", 0));
+  if (!unwrappedStream) {
+    return false;
+  }
+
+  // Step 2: If ! IsWritableStreamLocked(stream) is true, throw a TypeError
+  //         exception.
+  if (unwrappedStream->isLocked()) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_WRITABLESTREAM_ALREADY_LOCKED);
+    return false;
+  }
+
+  // Implicit in the spec: Find the prototype object to use.
+  Rooted<JSObject*> proto(cx);
+  if (!GetPrototypeFromBuiltinConstructor(cx, args, JSProto_Null, &proto)) {
+    return false;
+  }
+
+  // Steps 3-9.
+  Rooted<WritableStreamDefaultWriter*> writer(
+      cx, CreateWritableStreamDefaultWriter(cx, unwrappedStream, proto));
+  if (!writer) {
+    return false;
+  }
+
+  args.rval().setObject(*writer);
+  return true;
 }
 
 /**
