@@ -211,7 +211,6 @@ BrowserParent::BrowserParent(ContentParent* aManager, const TabId& aTabId,
       mMarkedDestroying(false),
       mIsDestroyed(false),
       mTabSetsCursor(false),
-      mHasContentOpener(false),
       mPreserveLayers(false),
       mRenderLayers(true),
       mActiveInPriorityManager(false),
@@ -3350,12 +3349,6 @@ void BrowserParent::Deprioritize() {
     ProcessPriorityManager::TabActivityChanged(this, false);
     mActiveInPriorityManager = false;
   }
-}
-
-bool BrowserParent::GetHasContentOpener() { return mHasContentOpener; }
-
-void BrowserParent::SetHasContentOpener(bool aHasContentOpener) {
-  mHasContentOpener = aHasContentOpener;
 }
 
 bool BrowserParent::StartApzAutoscroll(float aAnchorX, float aAnchorY,
