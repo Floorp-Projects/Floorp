@@ -862,7 +862,7 @@ PeerConnectionImpl::EnsureDataConnection(uint16_t aLocalPort,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIEventTarget> target =
+  nsCOMPtr<nsISerialEventTarget> target =
       mWindow ? mWindow->EventTargetFor(TaskCategory::Other) : nullptr;
   Maybe<uint64_t> mms = aMMSSet ? Some(aMaxMessageSize) : Nothing();
   if (auto res = DataChannelConnection::Create(this, target, mTransportHandler,

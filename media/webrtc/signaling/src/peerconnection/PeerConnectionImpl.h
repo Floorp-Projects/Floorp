@@ -231,7 +231,7 @@ class PeerConnectionImpl final
   nsCOMPtr<nsIThread> GetMainThread() { return mThread; }
 
   // Get the STS thread
-  nsIEventTarget* GetSTSThread() {
+  nsISerialEventTarget* GetSTSThread() {
     PC_AUTO_ENTER_API_CALL_NO_CHECK();
     return mSTSThread;
   }
