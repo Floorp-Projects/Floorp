@@ -979,10 +979,10 @@ impl BatchBuilder {
 
                                 for glyph in glyphs {
                                     batch.push(base_instance.build(
-                                        glyph.index_in_text_run | ((render_task_address.0 as i32) << 16),
+                                        (rasterization_space as i32) | ((render_task_address.0 as i32) << 16),
                                         (subpx_dir as u32 as i32) << 24
                                         | (color_mode as u32 as i32) << 16
-                                        | (rasterization_space as i32),
+                                        | glyph.index_in_text_run,
                                         glyph.uv_rect_address.as_int(),
                                     ));
                                 }
