@@ -114,8 +114,7 @@ ScreenManager::ScreenForRect(int32_t aX, int32_t aY, int32_t aWidth,
                           !GDK_IS_X11_DISPLAY(gdk_display_get_default());
 
   if (inWayland) {
-    *aOutScreen = nullptr;
-    return NS_OK;
+    NS_WARNING("Getting screen in wayland, primary display will be returned.");
   }
 #endif
 

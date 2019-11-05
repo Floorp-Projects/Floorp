@@ -1671,7 +1671,13 @@ LayoutDeviceIntRect nsMenuPopupFrame::GetConstraintRect(
   nsCOMPtr<nsIScreen> screen;
   nsCOMPtr<nsIScreenManager> sm(
       do_GetService("@mozilla.org/gfx/screenmanager;1"));
-  if (sm) {
+#ifdef MOZ_WAYLAND
+  static bool inWayland = gdk_display_get_default() &&
+                          !GDK_IS_X11_DISPLAY(gdk_display_get_default());
+#else
+  static bool inWayland = false;
+#endif
+  if (sm && !inWayland) {
     // for content shells, get the screen where the root frame is located.
     // This is because we need to constrain the content to this content area,
     // so we should use the same screen. Otherwise, use the screen where the
@@ -1695,15 +1701,14 @@ LayoutDeviceIntRect nsMenuPopupFrame::GetConstraintRect(
         screen->GetAvailRect(&screenRectPixels.x, &screenRectPixels.y,
                              &screenRectPixels.width, &screenRectPixels.height);
     }
-#ifdef MOZ_WAYLAND
-    else {
-      if (GetWidget() &&
-          GetWidget()->GetScreenRect(&screenRectPixels) != NS_OK) {
-        NS_WARNING("Cannot get screen rect from widget!");
-      }
-    }
-#endif
   }
+#ifdef MOZ_WAYLAND
+  else {
+    if (GetWidget() && GetWidget()->GetScreenRect(&screenRectPixels) != NS_OK) {
+      NS_WARNING("Cannot get screen rect from widget!");
+    }
+  }
+#endif
 
   if (mInContentShell) {
     // for content shells, clip to the client area rather than the screen area
