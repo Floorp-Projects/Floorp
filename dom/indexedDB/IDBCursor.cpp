@@ -258,6 +258,8 @@ IDBCursorDirection IDBCursor::GetDirection() const {
   }
 }
 
+IDBCursor::Type IDBCursor::GetType() const { return mType; }
+
 void IDBCursor::GetSource(OwningIDBObjectStoreOrIDBIndex& aSource) const {
   AssertIsOnOwningThread();
 
@@ -453,7 +455,8 @@ void IDBCursor::Continue(JSContext* aCx, JS::Handle<JS::Value> aKey,
         IDB_LOG_STRINGIFY(key));
   }
 
-  mBackgroundActor->SendContinueInternal(ContinueParams(key), mKey);
+  mBackgroundActor->SendContinueInternal(ContinueParams(key), mKey,
+                                         mPrimaryKey);
 
   mContinueCalled = true;
 }
@@ -559,7 +562,7 @@ void IDBCursor::ContinuePrimaryKey(JSContext* aCx, JS::Handle<JS::Value> aKey,
       IDB_LOG_STRINGIFY(key), IDB_LOG_STRINGIFY(primaryKey));
 
   mBackgroundActor->SendContinueInternal(
-      ContinuePrimaryKeyParams(key, primaryKey), mKey);
+      ContinuePrimaryKeyParams(key, primaryKey), mKey, mPrimaryKey);
 
   mContinueCalled = true;
 }
@@ -604,7 +607,8 @@ void IDBCursor::Advance(uint32_t aCount, ErrorResult& aRv) {
         IDB_LOG_STRINGIFY(mSourceIndex), IDB_LOG_STRINGIFY(mDirection), aCount);
   }
 
-  mBackgroundActor->SendContinueInternal(AdvanceParams(aCount), mKey);
+  mBackgroundActor->SendContinueInternal(AdvanceParams(aCount), mKey,
+                                         mPrimaryKey);
 
   mContinueCalled = true;
 }
