@@ -301,17 +301,17 @@ void MediaPipeline::DetachTransport_s() {
   mPacketDumper = nullptr;
 }
 
-void MediaPipeline::UpdateTransport_m(const std::string& aTransportId,
-                                      nsAutoPtr<MediaPipelineFilter> aFilter) {
-  RUN_ON_THREAD(
-      mStsThread,
-      WrapRunnable(RefPtr<MediaPipeline>(this),
-                   &MediaPipeline::UpdateTransport_s, aTransportId, aFilter),
-      NS_DISPATCH_NORMAL);
+void MediaPipeline::UpdateTransport_m(
+    const std::string& aTransportId, UniquePtr<MediaPipelineFilter>&& aFilter) {
+  mStsThread->Dispatch(NS_NewRunnableFunction(
+      __func__, [aTransportId, filter = std::move(aFilter),
+                 self = RefPtr<MediaPipeline>(this)]() mutable {
+        self->UpdateTransport_s(aTransportId, std::move(filter));
+      }));
 }
 
-void MediaPipeline::UpdateTransport_s(const std::string& aTransportId,
-                                      nsAutoPtr<MediaPipelineFilter> aFilter) {
+void MediaPipeline::UpdateTransport_s(
+    const std::string& aTransportId, UniquePtr<MediaPipelineFilter>&& aFilter) {
   ASSERT_ON_THREAD(mStsThread);
   if (!mSignalsConnected) {
     mTransportHandler->SignalStateChange.connect(
@@ -339,7 +339,7 @@ void MediaPipeline::UpdateTransport_s(const std::string& aTransportId,
     // by receiving traffic.
     mFilter->Update(*aFilter);
   } else {
-    mFilter = aFilter;
+    mFilter = std::move(aFilter);
   }
 }
 
@@ -363,7 +363,7 @@ void MediaPipeline::AddRIDFilter_m(const std::string& aRid) {
 }
 
 void MediaPipeline::AddRIDFilter_s(const std::string& aRid) {
-  mFilter = new MediaPipelineFilter;
+  mFilter = MakeUnique<MediaPipelineFilter>();
   mFilter->AddRemoteRtpStreamId(aRid);
 }
 
