@@ -553,7 +553,8 @@ MOZ_MUST_USE bool WritableStreamDefaultControllerAdvanceQueueIfNeeded(
 
   // Step 7: If controller.[[queue]] is empty, return.
   Rooted<ListObject*> unwrappedQueue(cx, unwrappedController->queue());
-  if (unwrappedQueue->length() == 0) {
+  MOZ_ASSERT((unwrappedQueue->length() % 2) == 0);
+  if (unwrappedQueue->isEmpty()) {
     return true;
   }
 

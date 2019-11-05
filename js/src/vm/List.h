@@ -37,6 +37,8 @@ class ListObject : public NativeObject {
 
   uint32_t length() const { return getDenseInitializedLength(); }
 
+  bool isEmpty() const { return length() == 0; }
+
   const Value& get(uint32_t index) const { return getDenseElement(index); }
 
   template <class T>
@@ -50,11 +52,29 @@ class ListObject : public NativeObject {
   inline MOZ_MUST_USE bool append(JSContext* cx, HandleValue value);
 
   /**
+   * Adds |value| and |size| elements to a list consisting of (value, size)
+   * pairs stored in successive elements.
+   *
+   * This function is intended for use by streams code's queue-with-sizes data
+   * structure and related operations.  See builtin/streams/QueueWithSizes*.
+   * (You *could* use this on any list of even length without issue, but it's
+   * hard to imagine realistic situations where you'd want to...)
+   */
+  inline MOZ_MUST_USE bool appendValueAndSize(JSContext* cx, HandleValue value,
+                                              double size);
+
+  /**
    * Remove and return the first element of the list.
    *
    * Precondition: This list is not empty.
    */
   inline JS::Value popFirst(JSContext* cx);
+
+  /**
+   * Remove the first two elements from a nonempty list of (value, size) pairs
+   * of elements.
+   */
+  inline void popFirstPair(JSContext* cx);
 
   /**
    * Remove and return the first element of the list.

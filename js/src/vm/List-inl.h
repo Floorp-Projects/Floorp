@@ -40,6 +40,21 @@ inline bool js::ListObject::append(JSContext* cx, JS::Handle<JS::Value> value) {
   return true;
 }
 
+inline bool js::ListObject::appendValueAndSize(JSContext* cx,
+                                               JS::Handle<JS::Value> value,
+                                               double size) {
+  uint32_t len = length();
+
+  if (!ensureElements(cx, len + 2)) {
+    return false;
+  }
+
+  ensureDenseInitializedLength(cx, len, 2);
+  setDenseElementWithType(cx, len, value);
+  setDenseElementWithType(cx, len + 1, JS::DoubleValue(size));
+  return true;
+}
+
 inline JS::Value js::ListObject::popFirst(JSContext* cx) {
   uint32_t len = length();
   MOZ_ASSERT(len > 0);
@@ -53,6 +68,20 @@ inline JS::Value js::ListObject::popFirst(JSContext* cx) {
 
   MOZ_ASSERT(length() == len - 1);
   return entry;
+}
+
+inline void js::ListObject::popFirstPair(JSContext* cx) {
+  uint32_t len = length();
+  MOZ_ASSERT(len > 0);
+  MOZ_ASSERT((len % 2) == 0);
+
+  if (!tryShiftDenseElements(2)) {
+    moveDenseElements(0, 2, len - 2);
+    setDenseInitializedLength(len - 2);
+    shrinkElements(cx, len - 2);
+  }
+
+  MOZ_ASSERT(length() == len - 2);
 }
 
 template <class T>

@@ -6,7 +6,7 @@
 
 /* Queue-with-sizes operations. */
 
-#include "builtin/streams/QueueWithSizes.h"
+#include "builtin/streams/QueueWithSizes-inl.h"
 
 #include "mozilla/Assertions.h"     // MOZ_ASSERT
 #include "mozilla/Attributes.h"     // MOZ_MUST_USE
@@ -38,32 +38,6 @@ using JS::Rooted;
 using JS::ToNumber;
 using JS::Value;
 
-class QueueEntry : public js::NativeObject {
- private:
-  enum Slots { Slot_Value = 0, Slot_Size, SlotCount };
-
- public:
-  static const JSClass class_;
-
-  Value value() { return getFixedSlot(Slot_Value); }
-  double size() { return getFixedSlot(Slot_Size).toNumber(); }
-
-  static QueueEntry* create(JSContext* cx, Handle<Value> value, double size) {
-    Rooted<QueueEntry*> entry(cx, js::NewBuiltinClassInstance<QueueEntry>(cx));
-    if (!entry) {
-      return nullptr;
-    }
-
-    entry->setFixedSlot(Slot_Value, value);
-    entry->setFixedSlot(Slot_Size, NumberValue(size));
-
-    return entry;
-  }
-};
-
-const JSClass QueueEntry::class_ = {"QueueEntry",
-                                    JSCLASS_HAS_RESERVED_SLOTS(SlotCount)};
-
 /*** 6.2. Queue-with-sizes operations ***************************************/
 
 /**
@@ -76,14 +50,14 @@ MOZ_MUST_USE bool js::DequeueValue(JSContext* cx,
   //         slots (implicit).
   // Step 2: Assert: queue is not empty.
   Rooted<ListObject*> unwrappedQueue(cx, unwrappedContainer->queue());
-  MOZ_ASSERT(unwrappedQueue->length() > 0);
 
   // Step 3. Let pair be the first element of queue.
+  double chunkSize = detail::QueueFirstSize(unwrappedQueue);
+  chunk.set(detail::QueueFirstValue(unwrappedQueue));
+
   // Step 4. Remove pair from queue, shifting all other elements downward
   //         (so that the second becomes the first, and so on).
-  Rooted<QueueEntry*> unwrappedPair(
-      cx, &unwrappedQueue->popFirstAs<QueueEntry>(cx));
-  MOZ_ASSERT(unwrappedPair);
+  detail::QueueRemoveFirstValueAndSize(unwrappedQueue, cx);
 
   // Step 5: Set container.[[queueTotalSize]] to
   //         container.[[queueTotalSize]] − pair.[[size]].
@@ -91,20 +65,43 @@ MOZ_MUST_USE bool js::DequeueValue(JSContext* cx,
   //         container.[[queueTotalSize]] to 0.
   //         (This can occur due to rounding errors.)
   double totalSize = unwrappedContainer->queueTotalSize();
-  totalSize -= unwrappedPair->size();
+  totalSize -= chunkSize;
   if (totalSize < 0) {
     totalSize = 0;
   }
   unwrappedContainer->setQueueTotalSize(totalSize);
 
   // Step 7: Return pair.[[value]].
-  Rooted<Value> val(cx, unwrappedPair->value());
-  if (!cx->compartment()->wrap(cx, &val)) {
-    return false;
-  }
+  return cx->compartment()->wrap(cx, chunk);
+}
 
-  chunk.set(val);
-  return true;
+void js::DequeueValue(StreamController* unwrappedContainer, JSContext* cx) {
+  // Step 1: Assert: container has [[queue]] and [[queueTotalSize]] internal
+  //         slots (implicit).
+  // Step 2: Assert: queue is not empty.
+  ListObject* unwrappedQueue = unwrappedContainer->queue();
+
+  // Step 3. Let pair be the first element of queue.
+  // (The value is being discarded, so all we must extract is the size.)
+  double chunkSize = detail::QueueFirstSize(unwrappedQueue);
+
+  // Step 4. Remove pair from queue, shifting all other elements downward
+  //         (so that the second becomes the first, and so on).
+  detail::QueueRemoveFirstValueAndSize(unwrappedQueue, cx);
+
+  // Step 5: Set container.[[queueTotalSize]] to
+  //         container.[[queueTotalSize]] − pair.[[size]].
+  // Step 6: If container.[[queueTotalSize]] < 0, set
+  //         container.[[queueTotalSize]] to 0.
+  //         (This can occur due to rounding errors.)
+  double totalSize = unwrappedContainer->queueTotalSize();
+  totalSize -= chunkSize;
+  if (totalSize < 0) {
+    totalSize = 0;
+  }
+  unwrappedContainer->setQueueTotalSize(totalSize);
+
+  // Step 7: Return pair.[[value]].  (omitted because not used)
 }
 
 /**
@@ -135,18 +132,14 @@ MOZ_MUST_USE bool js::EnqueueValueWithSize(
   //         element of container.[[queue]].
   {
     AutoRealm ar(cx, unwrappedContainer);
-    Rooted<ListObject*> queue(cx, unwrappedContainer->queue());
+    Rooted<ListObject*> unwrappedQueue(cx, unwrappedContainer->queue());
     Rooted<Value> wrappedVal(cx, value);
     if (!cx->compartment()->wrap(cx, &wrappedVal)) {
       return false;
     }
 
-    QueueEntry* entry = QueueEntry::create(cx, wrappedVal, size);
-    if (!entry) {
-      return false;
-    }
-    Rooted<Value> val(cx, ObjectValue(*entry));
-    if (!queue->append(cx, val)) {
+    if (!detail::QueueAppendValueAndSize(cx, unwrappedQueue, wrappedVal,
+                                         size)) {
       return false;
     }
   }
