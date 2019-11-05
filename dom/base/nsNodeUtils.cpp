@@ -136,32 +136,37 @@ enum class IsRemoveNotification {
   }                                                           \
   PR_END_MACRO
 
-void nsNodeUtils::CharacterDataWillChange(
+namespace mozilla {
+void MutationObservers::NotifyCharacterDataWillChange(
     nsIContent* aContent, const CharacterDataChangeInfo& aInfo) {
   Document* doc = aContent->OwnerDoc();
   IMPL_MUTATION_NOTIFICATION(CharacterDataWillChange, aContent,
                              (aContent, aInfo), IsRemoveNotification::No);
 }
 
-void nsNodeUtils::CharacterDataChanged(nsIContent* aContent,
-                                       const CharacterDataChangeInfo& aInfo) {
+void MutationObservers::NotifyCharacterDataChanged(
+    nsIContent* aContent, const CharacterDataChangeInfo& aInfo) {
   Document* doc = aContent->OwnerDoc();
   doc->Changed();
   IMPL_MUTATION_NOTIFICATION(CharacterDataChanged, aContent, (aContent, aInfo),
                              IsRemoveNotification::No);
 }
 
-void nsNodeUtils::AttributeWillChange(Element* aElement, int32_t aNameSpaceID,
-                                      nsAtom* aAttribute, int32_t aModType) {
+void MutationObservers::NotifyAttributeWillChange(Element* aElement,
+                                                  int32_t aNameSpaceID,
+                                                  nsAtom* aAttribute,
+                                                  int32_t aModType) {
   Document* doc = aElement->OwnerDoc();
   IMPL_MUTATION_NOTIFICATION(AttributeWillChange, aElement,
                              (aElement, aNameSpaceID, aAttribute, aModType),
                              IsRemoveNotification::No);
 }
 
-void nsNodeUtils::AttributeChanged(Element* aElement, int32_t aNameSpaceID,
-                                   nsAtom* aAttribute, int32_t aModType,
-                                   const nsAttrValue* aOldValue) {
+void MutationObservers::NotifyAttributeChanged(Element* aElement,
+                                               int32_t aNameSpaceID,
+                                               nsAtom* aAttribute,
+                                               int32_t aModType,
+                                               const nsAttrValue* aOldValue) {
   Document* doc = aElement->OwnerDoc();
   doc->Changed();
   IMPL_MUTATION_NOTIFICATION(
@@ -170,25 +175,25 @@ void nsNodeUtils::AttributeChanged(Element* aElement, int32_t aNameSpaceID,
       IsRemoveNotification::No);
 }
 
-void nsNodeUtils::AttributeSetToCurrentValue(Element* aElement,
-                                             int32_t aNameSpaceID,
-                                             nsAtom* aAttribute) {
+void MutationObservers::NotifyAttributeSetToCurrentValue(Element* aElement,
+                                                         int32_t aNameSpaceID,
+                                                         nsAtom* aAttribute) {
   Document* doc = aElement->OwnerDoc();
   IMPL_MUTATION_NOTIFICATION(AttributeSetToCurrentValue, aElement,
                              (aElement, aNameSpaceID, aAttribute),
                              IsRemoveNotification::No);
 }
 
-void nsNodeUtils::ContentAppended(nsIContent* aContainer,
-                                  nsIContent* aFirstNewContent) {
+void MutationObservers::NotifyContentAppended(nsIContent* aContainer,
+                                              nsIContent* aFirstNewContent) {
   Document* doc = aContainer->OwnerDoc();
   doc->Changed();
   IMPL_MUTATION_NOTIFICATION(ContentAppended, aContainer, (aFirstNewContent),
                              IsRemoveNotification::No);
 }
 
-void nsNodeUtils::NativeAnonymousChildListChange(nsIContent* aContent,
-                                                 bool aIsRemove) {
+void MutationObservers::NotifyNativeAnonymousChildListChange(
+    nsIContent* aContent, bool aIsRemove) {
   Document* doc = aContent->OwnerDoc();
   auto isRemove =
       aIsRemove ? IsRemoveNotification::Yes : IsRemoveNotification::No;
@@ -196,7 +201,8 @@ void nsNodeUtils::NativeAnonymousChildListChange(nsIContent* aContent,
                              (aContent, aIsRemove), isRemove);
 }
 
-void nsNodeUtils::ContentInserted(nsINode* aContainer, nsIContent* aChild) {
+void MutationObservers::NotifyContentInserted(nsINode* aContainer,
+                                              nsIContent* aChild) {
   MOZ_ASSERT(aContainer->IsContent() || aContainer->IsDocument(),
              "container must be an nsIContent or an Document");
   Document* doc = aContainer->OwnerDoc();
@@ -205,8 +211,9 @@ void nsNodeUtils::ContentInserted(nsINode* aContainer, nsIContent* aChild) {
                              IsRemoveNotification::No);
 }
 
-void nsNodeUtils::ContentRemoved(nsINode* aContainer, nsIContent* aChild,
-                                 nsIContent* aPreviousSibling) {
+void MutationObservers::NotifyContentRemoved(nsINode* aContainer,
+                                             nsIContent* aChild,
+                                             nsIContent* aPreviousSibling) {
   MOZ_ASSERT(aContainer->IsContent() || aContainer->IsDocument(),
              "container must be an nsIContent or an Document");
   Document* doc = aContainer->OwnerDoc();
@@ -217,6 +224,7 @@ void nsNodeUtils::ContentRemoved(nsINode* aContainer, nsIContent* aChild,
                              (aChild, aPreviousSibling),
                              IsRemoveNotification::Yes);
 }
+}  // namespace mozilla
 
 void nsNodeUtils::AnimationMutated(
     dom::Animation* aAnimation, AnimationMutationType aMutatedType) {

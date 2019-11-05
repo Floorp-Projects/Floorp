@@ -1291,7 +1291,8 @@ nsAttrValue SVGElement::WillChangeValue(nsAtom* aName) {
   uint8_t modType =
       attrValue ? static_cast<uint8_t>(MutationEvent_Binding::MODIFICATION)
                 : static_cast<uint8_t>(MutationEvent_Binding::ADDITION);
-  nsNodeUtils::AttributeWillChange(this, kNameSpaceID_None, aName, modType);
+  MutationObservers::NotifyAttributeWillChange(this, kNameSpaceID_None, aName,
+                                               modType);
 
   // This is not strictly correct--the attribute value parameter for
   // BeforeSetAttr should reflect the value that *will* be set but that implies
@@ -2040,13 +2041,13 @@ void SVGElement::DidAnimateTransformList(int32_t aModType) {
     nsAtom* transformAttr = GetTransformListAttrName();
     frame->AttributeChanged(kNameSpaceID_None, transformAttr, aModType);
     // When script changes the 'transform' attribute, Element::SetAttrAndNotify
-    // will call nsNodeUtils::AttributeChanged, under which
+    // will call MutationObservers::NotifyAttributeChanged, under which
     // SVGTransformableElement::GetAttributeChangeHint will be called and an
     // appropriate change event posted to update our frame's overflow rects.
     // The SetAttrAndNotify doesn't happen for transform changes caused by
     // 'animateTransform' though (and sending out the mutation events that
-    // nsNodeUtils::AttributeChanged dispatches would be inappropriate
-    // anyway), so we need to post the change event ourself.
+    // MutationObservers::NotifyAttributeChanged dispatches would be
+    // inappropriate anyway), so we need to post the change event ourself.
     nsChangeHint changeHint = GetAttributeChangeHint(transformAttr, aModType);
     if (changeHint) {
       nsLayoutUtils::PostRestyleEvent(this, RestyleHint{0}, changeHint);

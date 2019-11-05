@@ -96,8 +96,8 @@ void nsStyledElement::InlineStyleDeclarationWillChange(
   aData.mModType =
       modification ? static_cast<uint8_t>(MutationEvent_Binding::MODIFICATION)
                    : static_cast<uint8_t>(MutationEvent_Binding::ADDITION);
-  nsNodeUtils::AttributeWillChange(this, kNameSpaceID_None, nsGkAtoms::style,
-                                   aData.mModType);
+  MutationObservers::NotifyAttributeWillChange(
+      this, kNameSpaceID_None, nsGkAtoms::style, aData.mModType);
 
   // XXXsmaug In order to make attribute handling more consistent, consider to
   //         call BeforeSetAttr and pass kCallAfterSetAttr to

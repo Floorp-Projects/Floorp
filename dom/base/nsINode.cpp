@@ -1390,9 +1390,9 @@ nsresult nsINode::InsertChildBefore(nsIContent* aKid,
     // Note that we always want to call ContentInserted when things are added
     // as kids to documents
     if (parent && !aChildToInsertBefore) {
-      nsNodeUtils::ContentAppended(parent, aKid);
+      MutationObservers::NotifyContentAppended(parent, aKid);
     } else {
-      nsNodeUtils::ContentInserted(this, aKid);
+      MutationObservers::NotifyContentInserted(this, aKid);
     }
 
     if (nsContentUtils::HasMutationListeners(
@@ -1901,7 +1901,7 @@ void nsINode::RemoveChildNode(nsIContent* aKid, bool aNotify) {
   InvalidateChildNodes();
 
   if (aNotify) {
-    nsNodeUtils::ContentRemoved(this, aKid, previousSibling);
+    MutationObservers::NotifyContentRemoved(this, aKid, previousSibling);
   }
 
   aKid->UnbindFromTree();
@@ -2444,8 +2444,8 @@ nsINode* nsINode::ReplaceOrInsertBefore(bool aReplace, nsINode* aNewChild,
       if (aError.Failed()) {
         // Make sure to notify on any children that we did succeed to insert
         if (appending && i != 0) {
-          nsNodeUtils::ContentAppended(static_cast<nsIContent*>(this),
-                                       firstInsertedContent);
+          MutationObservers::NotifyContentAppended(
+              static_cast<nsIContent*>(this), firstInsertedContent);
         }
         return nullptr;
       }
@@ -2457,8 +2457,8 @@ nsINode* nsINode::ReplaceOrInsertBefore(bool aReplace, nsINode* aNewChild,
 
     // Notify and fire mutation events when appending
     if (appending) {
-      nsNodeUtils::ContentAppended(static_cast<nsIContent*>(this),
-                                   firstInsertedContent);
+      MutationObservers::NotifyContentAppended(static_cast<nsIContent*>(this),
+                                               firstInsertedContent);
       if (mutationBatch) {
         mutationBatch->NodesAdded();
       }

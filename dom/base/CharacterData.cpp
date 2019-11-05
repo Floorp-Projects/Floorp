@@ -247,7 +247,7 @@ nsresult CharacterData::SetTextInternal(
   if (aNotify) {
     CharacterDataChangeInfo info = {aOffset == textLength, aOffset, endOffset,
                                     aLength, aDetails};
-    nsNodeUtils::CharacterDataWillChange(this, info);
+    MutationObservers::NotifyCharacterDataWillChange(this, info);
   }
 
   Directionality oldDir = eDir_NotSet;
@@ -326,7 +326,7 @@ nsresult CharacterData::SetTextInternal(
   if (aNotify) {
     CharacterDataChangeInfo info = {aOffset == textLength, aOffset, endOffset,
                                     aLength, aDetails};
-    nsNodeUtils::CharacterDataChanged(this, info);
+    MutationObservers::NotifyCharacterDataChanged(this, info);
 
     if (haveMutationListeners) {
       InternalMutationEvent mutation(true, eLegacyCharacterDataModified);
@@ -484,9 +484,9 @@ nsresult CharacterData::BindToTree(BindContext& aContext, nsINode& aParent) {
     SetSubtreeRootPointer(aParent.SubtreeRoot());
   }
 
-  nsNodeUtils::ParentChainChanged(this);
+  MutationObservers::NotifyParentChainChanged(this);
   if (!hadParent && IsRootOfNativeAnonymousSubtree()) {
-    nsNodeUtils::NativeAnonymousChildListChange(this, false);
+    MutationObservers::NotifyNativeAnonymousChildListChange(this, false);
   }
 
   UpdateEditableState(false);
@@ -521,7 +521,7 @@ void CharacterData::UnbindFromTree(bool aNullParent) {
 
   if (aNullParent) {
     if (IsRootOfNativeAnonymousSubtree()) {
-      nsNodeUtils::NativeAnonymousChildListChange(this, true);
+      MutationObservers::NotifyNativeAnonymousChildListChange(this, true);
     }
     if (GetParent()) {
       NS_RELEASE(mParent);
@@ -561,7 +561,7 @@ void CharacterData::UnbindFromTree(bool aNullParent) {
     }
   }
 
-  nsNodeUtils::ParentChainChanged(this);
+  MutationObservers::NotifyParentChainChanged(this);
 
 #if defined(ACCESSIBILITY) && defined(DEBUG)
   MOZ_ASSERT(!GetAccService() || !GetAccService()->HasAccessible(this),

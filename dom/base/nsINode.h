@@ -85,6 +85,7 @@ class DOMQuad;
 class DOMRectReadOnly;
 class Element;
 class EventHandlerNonNull;
+class MutationObservers;
 template <typename T>
 class Optional;
 class OwningNodeOrString;
@@ -356,6 +357,7 @@ class nsINode : public mozilla::dom::EventTarget {
   void AddSizeOfIncludingThis(nsWindowSizes& aSizes, size_t* aNodeSize) const;
 
   friend class nsNodeUtils;
+  friend class mozilla::dom::MutationObservers;
   friend class nsNodeWeakReference;
   friend class nsNodeSupportsWeakRefTearoff;
   friend class AttrArray;
