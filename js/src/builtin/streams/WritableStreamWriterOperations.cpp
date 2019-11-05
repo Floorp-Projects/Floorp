@@ -21,6 +21,7 @@
 #include "builtin/streams/WritableStreamDefaultControllerOperations.h"  // js::WritableStreamDefaultController{Close,GetDesiredSize}
 #include "builtin/streams/WritableStreamDefaultWriter.h"  // js::WritableStreamDefaultWriter
 #include "builtin/streams/WritableStreamOperations.h"  // js::WritableStream{Abort,CloseQueuedOrInFlight}
+#include "js/Promise.h"                                // JS::PromiseState
 #include "js/Value.h"  // JS::Value, JS::{Int32,Null}Value
 #include "vm/Compartment.h"  // JS::Compartment
 #include "vm/JSContext.h"    // JSContext
@@ -28,7 +29,7 @@
 #include "builtin/streams/MiscellaneousOperations-inl.h"  // js::ResolveUnwrappedPromiseWithUndefined
 #include "builtin/streams/WritableStream-inl.h"  // js::WritableStream::setCloseRequest
 #include "builtin/streams/WritableStreamDefaultWriter-inl.h"  // js::UnwrapStreamFromWriter
-#include "vm/Compartment-inl.h"  // js::UnwrapAndTypeCheckThis
+#include "vm/Compartment-inl.h"  // js::UnwrapAnd{DowncastObject,TypeCheckThis}
 #include "vm/JSContext-inl.h"    // JSContext::check
 #include "vm/Realm-inl.h"        // js::AutoRealm
 
@@ -40,7 +41,10 @@ using JS::NumberValue;
 using JS::Rooted;
 using JS::Value;
 
+using js::AutoRealm;
 using js::PromiseObject;
+using js::UnwrapAndDowncastObject;
+using js::WritableStreamDefaultWriter;
 
 /*** 4.6. Writable stream writer abstract operations ************************/
 
@@ -135,6 +139,56 @@ JSObject* js::WritableStreamDefaultWriterClose(
   return promise;
 }
 
+using GetField = JSObject* (WritableStreamDefaultWriter::*)() const;
+using SetField = void (WritableStreamDefaultWriter::*)(JSObject*);
+
+static bool EnsurePromiseRejected(
+    JSContext* cx, Handle<WritableStreamDefaultWriter*> unwrappedWriter,
+    GetField getField, SetField setField, Handle<Value> error) {
+  cx->check(error);
+
+  Rooted<PromiseObject*> unwrappedPromise(
+      cx, UnwrapAndDowncastObject<PromiseObject>(
+              cx, (unwrappedWriter->*getField)()));
+  if (!unwrappedPromise) {
+    return false;
+  }
+
+  // 4.6.{5,6} step 1: If writer.[[<field>]].[[PromiseState]] is "pending",
+  //                   reject writer.[[<field>]] with error.
+  if (unwrappedPromise->state() == JS::PromiseState::Pending) {
+    if (!RejectUnwrappedPromiseWithError(cx, unwrappedPromise, error)) {
+      return false;
+    }
+  } else {
+    // 4.6.{5,6} step 2: Otherwise, set writer.[[<field>]] to a promise rejected
+    //                   with error.
+    Rooted<JSObject*> rejectedWithError(
+        cx, PromiseObject::unforgeableReject(cx, error));
+    if (!rejectedWithError) {
+      return false;
+    }
+
+    {
+      AutoRealm ar(cx, unwrappedWriter);
+      if (!cx->compartment()->wrap(cx, &rejectedWithError)) {
+        return false;
+      }
+      (unwrappedWriter->*setField)(rejectedWithError);
+    }
+
+    // Directly-unobservable rejected promises aren't collapsed like resolved
+    // promises, and this promise is created in the current realm, so it's
+    // always an actual Promise.
+    unwrappedPromise = &rejectedWithError->as<PromiseObject>();
+  }
+
+  // 4.6.{5,6} step 3: Set writer.[[<field>]].[[PromiseIsHandled]] to true.
+  unwrappedPromise->setHandled();
+  cx->runtime()->removeUnhandledRejectedPromise(cx, unwrappedPromise);
+  return true;
+}
+
 /**
  * Streams spec, 4.6.5.
  *  WritableStreamDefaultWriterEnsureClosedPromiseRejected( writer, error )
@@ -142,11 +196,9 @@ JSObject* js::WritableStreamDefaultWriterClose(
 MOZ_MUST_USE bool js::WritableStreamDefaultWriterEnsureClosedPromiseRejected(
     JSContext* cx, Handle<WritableStreamDefaultWriter*> unwrappedWriter,
     Handle<Value> error) {
-  cx->check(error);
-
-  // XXX jwalden flesh me out!
-  JS_ReportErrorASCII(cx, "epic fail");
-  return false;
+  return EnsurePromiseRejected(
+      cx, unwrappedWriter, &WritableStreamDefaultWriter::closedPromise,
+      &WritableStreamDefaultWriter::setClosedPromise, error);
 }
 
 /**
@@ -156,11 +208,9 @@ MOZ_MUST_USE bool js::WritableStreamDefaultWriterEnsureClosedPromiseRejected(
 MOZ_MUST_USE bool js::WritableStreamDefaultWriterEnsureReadyPromiseRejected(
     JSContext* cx, Handle<WritableStreamDefaultWriter*> unwrappedWriter,
     Handle<Value> error) {
-  cx->check(error);
-
-  // XXX jwalden flesh me out!
-  JS_ReportErrorASCII(cx, "epic fail");
-  return false;
+  return EnsurePromiseRejected(
+      cx, unwrappedWriter, &WritableStreamDefaultWriter::readyPromise,
+      &WritableStreamDefaultWriter::setReadyPromise, error);
 }
 
 /**

@@ -782,7 +782,12 @@ MOZ_MUST_USE bool js::WritableStreamRejectCloseAndClosedPromiseIfNeeded(
 
     // Step 4.b: Set writer.[[closedPromise]].[[PromiseIsHandled]] to true.
     Rooted<PromiseObject*> unwrappedClosedPromise(
-        cx, unwrappedWriter->closedPromise());
+        cx, UnwrapAndDowncastObject<PromiseObject>(
+                cx, unwrappedWriter->closedPromise()));
+    if (!unwrappedClosedPromise) {
+      return false;
+    }
+
     unwrappedClosedPromise->setHandled();
     cx->runtime()->removeUnhandledRejectedPromise(cx, unwrappedClosedPromise);
   }

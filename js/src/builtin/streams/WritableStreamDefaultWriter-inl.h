@@ -38,14 +38,4 @@ inline MOZ_MUST_USE WritableStream* UnwrapStreamFromWriter(
 
 }  // namespace js
 
-inline js::PromiseObject* js::WritableStreamDefaultWriter::closedPromise()
-    const {
-  return &getFixedSlot(Slot_ClosedPromise).toObject().as<PromiseObject>();
-}
-
-inline void js::WritableStreamDefaultWriter::setClosedPromise(
-    PromiseObject* promise) {
-  setFixedSlot(Slot_ClosedPromise, JS::ObjectValue(*promise));
-}
-
 #endif  // builtin_streams_WritableStreamDefaultWriter_inl_h
