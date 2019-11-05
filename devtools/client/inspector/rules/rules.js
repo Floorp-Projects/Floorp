@@ -455,7 +455,7 @@ CssRuleView.prototype = {
    * - value {Object} Depends on the type of the node
    * returns null of the node isn't anything we care about
    */
-  /* eslint-disable complexity */
+  // eslint-disable-next-line complexity
   getNodeInfo: function(node) {
     if (!node) {
       return null;
@@ -581,7 +581,6 @@ CssRuleView.prototype = {
       value,
     };
   },
-  /* eslint-enable complexity */
 
   /**
    * Retrieve the RuleEditor instance.
@@ -1303,7 +1302,7 @@ CssRuleView.prototype = {
   /**
    * Creates editor UI for each of the rules in _elementStyle.
    */
-  /* eslint-disable complexity */
+  // eslint-disable-next-line complexity
   _createEditors: function() {
     // Run through the current list of rules, attaching
     // their editors in order.  Create editors if needed.
@@ -1386,7 +1385,6 @@ CssRuleView.prototype = {
 
     return promise.all(editorReadyPromises);
   },
-  /* eslint-enable complexity */
 
   /**
    * Highlight rules that matches the filter search value and returns a

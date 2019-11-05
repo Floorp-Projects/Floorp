@@ -92,7 +92,7 @@ TouchSimulator.prototype = {
     this._isPicking = state;
   },
 
-  /* eslint-disable complexity */
+  // eslint-disable-next-line complexity
   handleEvent(evt) {
     // Bail out if devtools is in pick mode in the same tab.
     if (this._isPicking) {
@@ -282,7 +282,6 @@ TouchSimulator.prototype = {
       evt.stopImmediatePropagation();
     }
   },
-  /* eslint-enable complexity */
 
   fireMouseEvent(type, evt) {
     const content = this.getContent(evt.target);

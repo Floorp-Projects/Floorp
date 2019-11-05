@@ -716,7 +716,7 @@ class Telemetry {
  *        The ID of the tool that has been opened.
  *
  */
-/* eslint-disable complexity */
+// eslint-disable-next-line complexity
 function getChartsFromToolId(id) {
   if (!id) {
     return null;
@@ -794,7 +794,6 @@ function getChartsFromToolId(id) {
     countScalar: countScalar,
   };
 }
-/* eslint-enable complexity */
 
 /**
  * Displays the first caller and calling line outside of this file in the

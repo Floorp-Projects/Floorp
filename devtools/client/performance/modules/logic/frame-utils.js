@@ -42,7 +42,7 @@ const gFrameData = new WeakMap();
  * Parses the raw location of this function call to retrieve the actual
  * function name, source url, host name, line and column.
  */
-/* eslint-disable complexity */
+// eslint-disable-next-line complexity
 function parseLocation(location, fallbackLine, fallbackColumn) {
   // Parse the `location` for the function name, source url, line, column etc.
 
@@ -198,7 +198,6 @@ function parseLocation(location, fallbackLine, fallbackColumn) {
 
   return { functionName, fileName, host, port, url, line, column };
 }
-/* eslint-enable complexity */
 
 /**
  * Sets the properties of `isContent` and `category` on a frame.

@@ -101,7 +101,7 @@ function getUniqueIdentifiers(identifiers) {
   return newIdentifiers;
 }
 
-/* eslint-disable complexity */
+// eslint-disable-next-line complexity
 function extractSymbol(path: SimplePath, symbols, state) {
   if (isFunction(path)) {
     const name = getFunctionName(path.node, path.parent);
@@ -262,8 +262,6 @@ function extractSymbol(path: SimplePath, symbols, state) {
     symbols.identifiers.push(...getPatternIdentifiers(nodeId));
   }
 }
-
-/* eslint-enable complexity */
 
 function extractSymbols(sourceId): SymbolDeclarations {
   const symbols = {

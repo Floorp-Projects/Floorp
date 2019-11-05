@@ -287,7 +287,6 @@ class FontInspector {
     // Round pixel values.
     return Math.round(out);
   }
-  /* eslint-enable complexity */
 
   /**
    * Destruction function called when the inspector is destroyed. Removes event listeners

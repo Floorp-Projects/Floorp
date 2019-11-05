@@ -123,7 +123,7 @@ class Frame extends Component {
     };
   }
 
-  /* eslint-disable complexity */
+  // eslint-disable-next-line complexity
   render() {
     let frame, isSourceMapped;
     const {
@@ -306,7 +306,6 @@ class Frame extends Component {
 
     return dom.span(attributes, ...elements);
   }
-  /* eslint-enable complexity */
 }
 
 module.exports = Frame;
