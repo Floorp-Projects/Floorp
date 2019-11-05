@@ -278,8 +278,10 @@ menu-help-safe-mode-with-addons =
     .label = Restart with Add-ons Enabled
     .accesskey = R
 # Label of the Help menu item. Either this or
-# safeb.palm.notdeceptive.label from
-# phishing-afterload-warning-message.dtd is shown.
+# menu-help-notdeceptive is shown.
 menu-help-report-deceptive-site =
     .label = Report Deceptive Site…
     .accesskey = D
+menu-help-not-deceptive =
+    .label = This isn’t a deceptive site…
+    .accesskey = d
