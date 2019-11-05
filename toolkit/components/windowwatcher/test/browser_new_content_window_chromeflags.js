@@ -152,7 +152,7 @@ registerCleanupFunction(() => {
 function getParentChromeFlags(win) {
   return win.docShell.treeOwner
     .QueryInterface(Ci.nsIInterfaceRequestor)
-    .getInterface(Ci.nsIXULWindow).chromeFlags;
+    .getInterface(Ci.nsIAppWindow).chromeFlags;
 }
 
 /**

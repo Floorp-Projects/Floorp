@@ -16,7 +16,7 @@
 #include "nsIRunnable.h"
 #include "nsIURI.h"
 #include "nsIWebBrowserChrome.h"
-#include "nsIXULWindow.h"
+#include "nsIAppWindow.h"
 
 #include "nsAppShellCID.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -361,14 +361,14 @@ bool Test4Internal(nsIAppShell* aAppShell) {
 
   uint32_t flags = nsIWebBrowserChrome::CHROME_DEFAULT;
 
-  nsCOMPtr<nsIXULWindow> xulWindow;
+  nsCOMPtr<nsIAppWindow> appWindow;
   if (NS_FAILED(appService->CreateTopLevelWindow(
-          nullptr, uri, flags, 100, 100, nullptr, getter_AddRefs(xulWindow)))) {
+          nullptr, uri, flags, 100, 100, nullptr, getter_AddRefs(appWindow)))) {
     fail("Failed to create new window");
     return false;
   }
 
-  nsCOMPtr<nsIDOMWindow> window = do_GetInterface(xulWindow);
+  nsCOMPtr<nsIDOMWindow> window = do_GetInterface(appWindow);
   if (!window) {
     fail("Can't get dom window!");
     return false;

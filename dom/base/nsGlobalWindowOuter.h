@@ -56,6 +56,7 @@
 #include "nsCheapSets.h"
 #include "mozilla/dom/ImageBitmapSource.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/dom/BrowsingContext.h"
 
 class nsDocShell;
 class nsIArray;
@@ -89,7 +90,6 @@ class DOMEventTargetHelper;
 class ThrottledEventQueue;
 namespace dom {
 class BarProp;
-class BrowsingContext;
 struct ChannelPixelLayout;
 class Console;
 class Crypto;
