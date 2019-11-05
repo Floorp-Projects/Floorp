@@ -279,17 +279,7 @@ class TabsPanel extends TabsListBase {
 
   _setImageAttributes(row, tab) {
     let button = row.firstElementChild;
-    let image =
-      this.doc.getAnonymousElementByAttribute(
-        button,
-        "class",
-        "toolbarbutton-icon"
-      ) ||
-      this.doc.getAnonymousElementByAttribute(
-        button,
-        "class",
-        "toolbarbutton-icon tab-throbber-tabslist"
-      );
+    let image = button.icon;
 
     if (image) {
       let busy = tab.getAttribute("busy");
