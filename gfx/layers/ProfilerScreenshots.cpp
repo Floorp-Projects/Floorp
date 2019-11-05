@@ -64,7 +64,7 @@ void ProfilerScreenshots::SubmitScreenshot(
 
   RefPtr<ProfilerScreenshots> self = this;
 
-  NS_DispatchToBackgroundThread(NS_NewRunnableFunction(
+  NS_DispatchBackgroundTask(NS_NewRunnableFunction(
       "ProfilerScreenshots::SubmitScreenshot",
       [self{std::move(self)}, backingSurface, sourceThread, windowIdentifier,
        originalSize, scaledSize, timeStamp]() {

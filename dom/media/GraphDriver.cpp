@@ -1047,7 +1047,7 @@ void AudioCallbackDriver::DeviceChangedCallback() {
 #ifdef XP_MACOSX
   RefPtr<AudioCallbackDriver> self(this);
   bool hasInput = mInputChannelCount;
-  NS_DispatchToBackgroundThread(NS_NewRunnableFunction(
+  NS_DispatchBackgroundTask(NS_NewRunnableFunction(
       "PanOutputIfNeeded", [self{std::move(self)}, hasInput]() {
         self->PanOutputIfNeeded(hasInput);
       }));

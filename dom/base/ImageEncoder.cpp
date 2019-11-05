@@ -246,7 +246,7 @@ nsresult ImageEncoder::ExtractDataFromLayersImageAsync(
       new EncodingRunnable(aType, aOptions, nullptr, aImage, encoder,
                            completeEvent, imgIEncoder::INPUT_FORMAT_HOSTARGB,
                            size, aUsePlaceholder, aUsingCustomOptions);
-  return NS_DispatchToBackgroundThread(event.forget());
+  return NS_DispatchBackgroundTask(event.forget());
 }
 
 /* static */
@@ -265,7 +265,7 @@ nsresult ImageEncoder::ExtractDataAsync(
   nsCOMPtr<nsIRunnable> event = new EncodingRunnable(
       aType, aOptions, std::move(aImageBuffer), nullptr, encoder, completeEvent,
       aFormat, aSize, aUsePlaceholder, aUsingCustomOptions);
-  return NS_DispatchToBackgroundThread(event.forget());
+  return NS_DispatchBackgroundTask(event.forget());
 }
 
 /*static*/
