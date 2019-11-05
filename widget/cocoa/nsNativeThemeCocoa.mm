@@ -2690,15 +2690,6 @@ Maybe<nsNativeThemeCocoa::WidgetInfo> nsNativeThemeCocoa::ComputeWidgetInfo(
   EventStates eventState = GetContentState(aFrame, aAppearance);
 
   switch (aAppearance) {
-    case StyleAppearance::Dialog:
-      if (IsWindowSheet(aFrame)) {
-        if (VibrancyManager::SystemSupportsVibrancy()) {
-          return Nothing();
-        }
-        return Some(WidgetInfo::SheetBackground());
-      }
-      return Some(WidgetInfo::DialogBackground());
-
     case StyleAppearance::Menupopup:
       if (VibrancyManager::SystemSupportsVibrancy()) {
         return Nothing();
@@ -3371,12 +3362,6 @@ bool nsNativeThemeCocoa::CreateWebRenderCommandsForWidget(
   //  - If the case in DrawWidgetBackground draws something complicated for the
   //    given widget type, return false here.
   switch (aAppearance) {
-    case StyleAppearance::Dialog:
-      if (IsWindowSheet(aFrame) && VibrancyManager::SystemSupportsVibrancy()) {
-        return true;
-      }
-      return false;
-
     case StyleAppearance::Menupopup:
       if (VibrancyManager::SystemSupportsVibrancy()) {
         return true;
@@ -4366,10 +4351,8 @@ nsITheme::Transparency nsNativeThemeCocoa::GetWidgetTransparency(nsIFrame* aFram
   switch (aAppearance) {
     case StyleAppearance::Menupopup:
     case StyleAppearance::Tooltip:
-      return eTransparent;
-
     case StyleAppearance::Dialog:
-      return IsWindowSheet(aFrame) ? eTransparent : eOpaque;
+      return eTransparent;
 
     case StyleAppearance::ScrollbarSmall:
     case StyleAppearance::Scrollbar:
