@@ -901,9 +901,6 @@ class BuildReader(object):
         # In the future, we may traverse moz.build files by looking
         # for DIRS references in the AST, even if a directory is added behind
         # a conditional. For now, just walk the filesystem.
-        # The root doesn't get picked up by FileFinder.
-        yield 'moz.build'
-
         for path, f in self._relevant_mozbuild_finder.find('**/moz.build'):
             yield path
 
