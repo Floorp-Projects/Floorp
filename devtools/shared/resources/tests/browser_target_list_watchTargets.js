@@ -180,10 +180,9 @@ async function testContentProcessTarget(mainRoot) {
 
   await targetList.startListening([TargetList.TYPES.PROCESS]);
 
-  // Note that ppmm also includes the parent process, which is considered as a frame rather than a process
-  const originalProcessesCount = Services.ppmm.childCount - 1;
-
-  // Assert that watchTargets will call the create callback for all existing frames
+  // Assert that watchTargets is only called for the top level content process target
+  // as listening for additional target is only enable for the parent process target.
+  // See bug 1593928.
   const targets = new Set();
   const onAvailable = (type, newTarget, isTopLevel) => {
     if (targets.has(newTarget)) {
@@ -196,29 +195,12 @@ async function testContentProcessTarget(mainRoot) {
       TargetList.TYPES.PROCESS,
       "We are only notified about process targets"
     );
-    ok(
-      newTarget == target ? isTopLevel : !isTopLevel,
-      "isTopLevel argument is correct"
-    );
+    is(newTarget, target, "This is the existing top level target");
+    ok(isTopLevel, "We are only notified about the top level target");
     targets.add(newTarget);
   };
   const onDestroyed = (type, newTarget, isTopLevel) => {
-    if (!targets.has(newTarget)) {
-      ok(
-        false,
-        "A target is declared destroyed via onDestroyed without being notified via onAvailable"
-      );
-    }
-    is(
-      type,
-      TargetList.TYPES.PROCESS,
-      "We are only notified about process targets"
-    );
-    ok(
-      !isTopLevel,
-      "We are not notified about the top level target destruction"
-    );
-    targets.delete(newTarget);
+    ok(false, "onDestroyed should never be called in this test");
   };
   await targetList.watchTargets(
     [TargetList.TYPES.PROCESS],
@@ -228,11 +210,7 @@ async function testContentProcessTarget(mainRoot) {
 
   // This may fail if the top level target is reported by LegacyImplementation
   // to TargetList and registers a duplicated entry
-  is(
-    targets.size,
-    originalProcessesCount,
-    "retrieved the same number of processes via watchTargets"
-  );
+  is(targets.size, 1, "We were only notified about the top level target");
 
   targetList.stopListening([TargetList.TYPES.PROCESS]);
 }
