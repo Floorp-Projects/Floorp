@@ -5,7 +5,6 @@
 package mozilla.components.service.fxa.sync
 
 import android.content.Context
-import android.os.Build
 import androidx.annotation.UiThread
 import androidx.work.BackoffPolicy
 import androidx.work.Constraints
@@ -27,8 +26,7 @@ import mozilla.appservices.syncmanager.SyncManager as RustSyncManager
 import mozilla.components.concept.sync.AuthException
 import mozilla.components.concept.sync.AuthExceptionType
 import mozilla.components.concept.sync.LockableStore
-import mozilla.components.lib.dataprotect.KeySharedPreferences
-import mozilla.components.lib.dataprotect.Keystore
+import mozilla.components.lib.dataprotect.SecureAbove22Preferences
 import mozilla.components.service.fxa.FxaDeviceSettingsCache
 import mozilla.components.service.fxa.SyncAuthInfoCache
 import mozilla.components.service.fxa.SyncConfig
@@ -309,14 +307,7 @@ class WorkManagerSyncWorker(
 
         // If password storage is configured to be synced, we need to make sure it's decrypted during a sync.
         passwordStore?.let {
-            val keySharedPreferences = KeySharedPreferences(
-                context,
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    Keystore(context.packageName)
-                } else {
-                    null
-                }
-            )
+            val keySharedPreferences = SecureAbove22Preferences(context)
 
             (it as LockableStore).ensureUnlocked(
                 keySharedPreferences.getString("passwords_key") ?: throw IllegalStateException(

@@ -9,10 +9,10 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import mozilla.components.lib.dataprotect.KeySharedPreferences
+import mozilla.components.lib.dataprotect.SecureAbove22Preferences
 
 class ProtectedDataAdapter(
-    private val prefs: KeySharedPreferences,
+    private val prefs: SecureAbove22Preferences,
     private val itemKeys: List<String>
 ) : RecyclerView.Adapter<ProtectedDataAdapter.Holder>() {
     override fun getItemCount(): Int = itemKeys.size

@@ -53,7 +53,7 @@ permalink: /changelog/
   * Adds support for Web Share API using `ShareDelegate`.
 
 * **lib-dataprotect**
-  * Added new `KeySharedPreferences` helper class, which is an encryption-aware wrapper for `SharedPreferences`. Only actually encrypts stored values when running on API23+.
+  * Added new `SecureAbove22Preferences` helper class, which is an encryption-aware wrapper for `SharedPreferences`. Only actually encrypts stored values when running on API23+.
 
 * **service-firefox-accounts**
   * Support for keeping `SyncEngine.Passwords` engine unlocked during sync.

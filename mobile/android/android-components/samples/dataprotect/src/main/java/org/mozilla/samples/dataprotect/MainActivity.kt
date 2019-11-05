@@ -9,7 +9,7 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import mozilla.components.lib.dataprotect.KeySharedPreferences
+import mozilla.components.lib.dataprotect.SecureAbove22Preferences
 import mozilla.components.lib.dataprotect.Keystore
 import org.mozilla.samples.dataprotect.Constants.KEYSTORE_LABEL
 
@@ -24,7 +24,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val prefs = KeySharedPreferences(
+        val prefs = SecureAbove22Preferences(
             this,
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) Keystore(KEYSTORE_LABEL) else null
         )
@@ -41,7 +41,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun prepareProtectedData(prefs: KeySharedPreferences) {
+    private fun prepareProtectedData(prefs: SecureAbove22Preferences) {
         for (datakey in itemKeys) {
             val plain = "value for $datakey"
             prefs.putString(datakey, plain)

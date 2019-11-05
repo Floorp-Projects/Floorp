@@ -15,11 +15,11 @@ import org.robolectric.annotation.Config
 import java.security.Security
 
 @RunWith(AndroidJUnit4::class)
-class KeySharedPreferencesTest {
+class SecureAbove22PreferencesTest {
     @Config(sdk = [21])
     @Test
     fun `CRUD tests API level 21 unencrypted`() {
-        val storage = KeySharedPreferences(testContext)
+        val storage = SecureAbove22Preferences(testContext)
 
         // no keys
         assertNull(storage.getString("hello"))
@@ -47,7 +47,7 @@ class KeySharedPreferencesTest {
     @Config(sdk = [22])
     @Test
     fun `CRUD tests API level 22 unencrypted`() {
-        val storage = KeySharedPreferences(testContext)
+        val storage = SecureAbove22Preferences(testContext)
 
         // no keys
         assertNull(storage.getString("hello"))
@@ -73,12 +73,13 @@ class KeySharedPreferencesTest {
     }
 
     @Ignore("https://github.com/mozilla-mobile/android-components/issues/4956")
+    @Config(sdk = [23])
     @Test
     fun `CRUD tests API level 23+ encrypted`() {
-        // TODO find out what this is.
+        // TODO find out what this is; lockwise tests set it.
         Security.setProperty("crypto.policy", "unlimited")
 
-        val storage = KeySharedPreferences(testContext, Keystore("test-keys", true, MockStoreWrapper()))
+        val storage = SecureAbove22Preferences(testContext)
 
         // no keys
         assertNull(storage.getString("hello"))

@@ -14,8 +14,6 @@ import mozilla.components.support.base.log.logger.Logger
 import java.nio.charset.StandardCharsets
 import java.security.GeneralSecurityException
 
-private const val BASE_64_FLAGS = Base64.URL_SAFE or Base64.NO_PADDING
-
 /**
  * A wrapper around [SharedPreferences] which encrypts contents on supported API versions (23+).
  * Otherwise, this simply delegates to [SharedPreferences].
@@ -24,30 +22,20 @@ private const val BASE_64_FLAGS = Base64.URL_SAFE or Base64.NO_PADDING
  * in which case previously stored values will be lost as well. Applications are encouraged to instrument such events.
  *
  * @param context A [Context], used for accessing [SharedPreferences].
- * @param keystore An optional [Keystore]: required when running on API23+, expected as `null` otherwise.
  */
-class KeySharedPreferences(
-    context: Context,
-    private val keystore: Keystore? = null
-) {
-
+class SecureAbove22Preferences(context: Context) {
     companion object {
         const val KEY_PREFERENCES = "key_preferences"
+        private const val BASE_64_FLAGS = Base64.URL_SAFE or Base64.NO_PADDING
     }
 
-    init {
-        if (Build.VERSION.SDK_INT < M) {
-            require(keystore == null) {
-                "Keystore isn't supported for pre-23 API versions"
-            }
-        } else {
-            require(keystore != null) {
-                "Keystore must be configured for 23+ API versions"
-            }
-        }
+    private val keystore: Keystore? = if (Build.VERSION.SDK_INT < M) {
+        null
+    } else {
+        Keystore(context.packageName)
     }
 
-    private val logger = Logger("KeySharedPreferences")
+    private val logger = Logger("SecureAbove22Preferences")
     private val prefs = context.getSharedPreferences(KEY_PREFERENCES, MODE_PRIVATE)
 
     /**

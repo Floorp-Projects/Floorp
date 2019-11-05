@@ -8,7 +8,7 @@ import mozilla.components.concept.sync.DeviceCapability
 import mozilla.components.concept.sync.DeviceType
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.service.fxa.sync.GlobalSyncableStoreProvider
-import mozilla.components.lib.dataprotect.KeySharedPreferences
+import mozilla.components.lib.dataprotect.SecureAbove22Preferences
 
 typealias ServerConfig = mozilla.appservices.fxaclient.Config
 
@@ -68,7 +68,7 @@ sealed class SyncEngine(val nativeName: String) {
 
     /**
      * A 'logins/passwords' engine. When using this engine, make sure to set an encryption key used to unlock the store
-     * as 'passwords_key' via [KeySharedPreferences].
+     * as 'passwords_key' via [SecureAbove22Preferences].
      */
     object Passwords : SyncEngine("passwords")
 
