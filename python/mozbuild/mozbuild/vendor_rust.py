@@ -77,10 +77,10 @@ class VendorRust(MozbuildObject):
         Ensure that cargo is new enough. cargo 1.37 added support
         for the vendor command.
         '''
-        out = subprocess.check_output([cargo, '--version']).splitlines()[0]
+        out = subprocess.check_output([cargo, '--version']).splitlines()[0].decode('UTF-8')
         if not out.startswith('cargo'):
             return False
-        return LooseVersion(out.split()[1]) >= b'1.37'
+        return LooseVersion(out.split()[1]) >= '1.37'
 
     def check_modified_files(self):
         '''
@@ -282,7 +282,7 @@ Please commit or stash these changes before vendoring, or re-run with `--ignore-
             # with [target.'cfg(...)'.dependencies sections, so we resort
             # to scanning individual lines.
             with open(toml_file, 'r') as f:
-                license_lines = [l for l in f if l.strip().startswith(b'license')]
+                license_lines = [l for l in f if l.strip().startswith('license')]
                 license_matches = list(
                     filter(lambda x: x, [LICENSE_LINE_RE.match(l) for l in license_lines]))
                 license_file_matches = list(
@@ -324,7 +324,7 @@ to the whitelist of packages whose licenses are suitable.
                     approved_hash = self.RUNTIME_LICENSE_FILE_PACKAGE_WHITELIST[package]
                     license_contents = open(os.path.join(
                         vendor_dir, package, license_file), 'r').read()
-                    current_hash = hashlib.sha256(license_contents).hexdigest()
+                    current_hash = hashlib.sha256(license_contents.encode('UTF-8')).hexdigest()
                     if current_hash != approved_hash:
                         self.log(logging.ERROR, 'package_license_file_mismatch', {},
                                  '''Package {} has changed its license file: {} (hash {}).
@@ -364,7 +364,7 @@ license file's hash.
 
         output = subprocess.check_output([cargo, 'vendor', vendor_dir],
                                          stderr=subprocess.STDOUT,
-                                         cwd=self.topsrcdir)
+                                         cwd=self.topsrcdir).decode('UTF-8')
 
         # Get the snippet of configuration that cargo vendor outputs, and
         # update .cargo/config with it.
