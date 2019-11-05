@@ -152,11 +152,11 @@ nsresult TransceiverImpl::UpdateTransport() {
   }
 
   ASSERT_ON_THREAD(mMainThread);
-  nsAutoPtr<MediaPipelineFilter> filter;
+  UniquePtr<MediaPipelineFilter> filter;
 
   if (mJsepTransceiver->HasBundleLevel() &&
       mJsepTransceiver->mRecvTrack.GetNegotiatedDetails()) {
-    filter = new MediaPipelineFilter;
+    filter = MakeUnique<MediaPipelineFilter>();
 
     // Add remote SSRCs so we can distinguish which RTP packets actually
     // belong to this pipeline (also RTCP sender reports).
@@ -175,9 +175,9 @@ nsresult TransceiverImpl::UpdateTransport() {
   }
 
   mReceivePipeline->UpdateTransport_m(mJsepTransceiver->mTransport.mTransportId,
-                                      filter);
+                                      std::move(filter));
   mTransmitPipeline->UpdateTransport_m(
-      mJsepTransceiver->mTransport.mTransportId, filter);
+      mJsepTransceiver->mTransport.mTransportId, nullptr);
   return NS_OK;
 }
 
