@@ -2755,7 +2755,7 @@ JSObject* nsINode::WrapObject(JSContext* aCx,
 }
 
 already_AddRefed<nsINode> nsINode::CloneNode(bool aDeep, ErrorResult& aError) {
-  return nsNodeUtils::CloneNodeImpl(this, aDeep, aError);
+  return nsNodeUtils::Clone(this, aDeep, nullptr, nullptr, aError);
 }
 
 nsDOMAttributeMap* nsINode::GetAttributes() {
