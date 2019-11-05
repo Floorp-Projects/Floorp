@@ -1854,7 +1854,7 @@
     "products": ["firefox", "fennec", "geckoview"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
-    "alert_emails": ["necko@mozilla.com", "pmcmanus@mozilla.com"],
+    "alert_emails": ["necko@mozilla.com"],
     "kind": "exponential",
     "high": 30000,
     "n_buckets": 50,
@@ -1864,7 +1864,7 @@
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "geckoview"],
     "expires_in_version": "never",
-    "alert_emails": ["necko@mozilla.com", "pmcmanus@mozilla.com"],
+    "alert_emails": ["necko@mozilla.com"],
     "bug_numbers": [772589],
     "kind": "exponential",
     "high": 30000,
@@ -1875,7 +1875,7 @@
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "geckoview"],
     "expires_in_version": "never",
-    "alert_emails": ["necko@mozilla.com", "pmcmanus@mozilla.com"],
+    "alert_emails": ["necko@mozilla.com"],
     "bug_numbers": [772589],
     "kind": "exponential",
     "high": 30000,
@@ -1980,14 +1980,14 @@
     "high": 30000,
     "n_buckets": 50,
     "releaseChannelCollection": "opt-out",
-    "alert_emails": ["necko@mozilla.com", "pmcmanus@mozilla.com"],
+    "alert_emails": ["necko@mozilla.com"],
     "description": "HTTP subitem channel: DNS lookup time (ms)"
   },
   "HTTP_SUB_TLS_HANDSHAKE": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "geckoview"],
     "expires_in_version": "never",
-    "alert_emails": ["necko@mozilla.com", "pmcmanus@mozilla.com"],
+    "alert_emails": ["necko@mozilla.com"],
     "bug_numbers": [772589],
     "kind": "exponential",
     "high": 30000,
@@ -1997,7 +1997,7 @@
   "HTTP_SUB_TCP_CONNECTION_2": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["necko@mozilla.com", "pmcmanus@mozilla.com"],
+    "alert_emails": ["necko@mozilla.com"],
     "bug_numbers": [772589],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -2929,7 +2929,7 @@
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "geckoview"],
     "expires_in_version": "never",
-    "alert_emails": ["necko@mozilla.com", "pmcmanus@mozilla.com"],
+    "alert_emails": ["necko@mozilla.com"],
     "bug_numbers": [1324855],
     "kind": "exponential",
     "high": 32000000,
@@ -2945,7 +2945,7 @@
     "high": 256,
     "n_buckets": 50,
     "description": "HPACK: Number of items removed from dynamic table to make room for 1 new item",
-    "alert_emails": ["necko@mozilla.com", "hurley@mozilla.com"],
+    "alert_emails": ["necko@mozilla.com"],
     "bug_numbers": [1296280]
   },
   "HPACK_BYTES_EVICTED_DECOMPRESSOR": {
@@ -2956,7 +2956,7 @@
     "high": 8192,
     "n_buckets": 50,
     "description": "HPACK: Number of bytes removed from dynamic table to make room for 1 new item",
-    "alert_emails": ["necko@mozilla.com", "hurley@mozilla.com"],
+    "alert_emails": ["necko@mozilla.com"],
     "bug_numbers": [1296280]
   },
   "HPACK_BYTES_EVICTED_RATIO_DECOMPRESSOR": {
@@ -2967,7 +2967,7 @@
     "high": 256,
     "n_buckets": 50,
     "description": "HPACK: Ratio of bytes evicted to bytes added (* 100)",
-    "alert_emails": ["necko@mozilla.com", "hurley@mozilla.com"],
+    "alert_emails": ["necko@mozilla.com"],
     "bug_numbers": [1296280]
   },
   "HPACK_PEAK_COUNT_DECOMPRESSOR": {
@@ -2978,7 +2978,7 @@
     "high": 1024,
     "n_buckets": 50,
     "description": "HPACK: peak number of items in the dynamic table",
-    "alert_emails": ["necko@mozilla.com", "hurley@mozilla.com"],
+    "alert_emails": ["necko@mozilla.com"],
     "bug_numbers": [1296280]
   },
   "HPACK_PEAK_SIZE_DECOMPRESSOR": {
@@ -2989,7 +2989,7 @@
     "high": 16384,
     "n_buckets": 100,
     "description": "HPACK: peak size in bytes of the table",
-    "alert_emails": ["necko@mozilla.com", "hurley@mozilla.com"],
+    "alert_emails": ["necko@mozilla.com"],
     "bug_numbers": [1296280]
   },
   "HPACK_ELEMENTS_EVICTED_COMPRESSOR": {
@@ -3000,7 +3000,7 @@
     "high": 256,
     "n_buckets": 50,
     "description": "HPACK: Number of items removed from dynamic table to make room for 1 new item",
-    "alert_emails": ["necko@mozilla.com", "hurley@mozilla.com"],
+    "alert_emails": ["necko@mozilla.com"],
     "bug_numbers": [1296280]
   },
   "HPACK_BYTES_EVICTED_COMPRESSOR": {
@@ -3011,7 +3011,7 @@
     "high": 8192,
     "n_buckets": 50,
     "description": "HPACK: Number of bytes removed from dynamic table to make room for 1 new item",
-    "alert_emails": ["necko@mozilla.com", "hurley@mozilla.com"],
+    "alert_emails": ["necko@mozilla.com"],
     "bug_numbers": [1296280]
   },
   "HPACK_BYTES_EVICTED_RATIO_COMPRESSOR": {
@@ -3022,7 +3022,7 @@
     "high": 256,
     "n_buckets": 50,
     "description": "HPACK: Ratio of bytes evicted to bytes added (* 100)",
-    "alert_emails": ["necko@mozilla.com", "hurley@mozilla.com"],
+    "alert_emails": ["necko@mozilla.com"],
     "bug_numbers": [1296280]
   },
   "HPACK_PEAK_COUNT_COMPRESSOR": {
@@ -3033,7 +3033,7 @@
     "high": 1024,
     "n_buckets": 50,
     "description": "HPACK: peak number of items in the dynamic table",
-    "alert_emails": ["necko@mozilla.com", "hurley@mozilla.com"],
+    "alert_emails": ["necko@mozilla.com"],
     "bug_numbers": [1296280]
   },
   "HPACK_PEAK_SIZE_COMPRESSOR": {
@@ -3044,7 +3044,7 @@
     "high": 16384,
     "n_buckets": 100,
     "description": "HPACK: peak size in bytes of the table",
-    "alert_emails": ["necko@mozilla.com", "hurley@mozilla.com"],
+    "alert_emails": ["necko@mozilla.com"],
     "bug_numbers": [1296280]
   },
   "HTTP2_FAIL_BEFORE_SETTINGS": {
@@ -3053,7 +3053,7 @@
     "expires_in_version": "never",
     "kind": "boolean",
     "description": "Whether an HTTP/2 session failed because the peer did not handshake properly",
-    "alert_emails": ["hurley@mozilla.com"],
+    "alert_emails": ["necko@mozilla.com"],
     "bug_numbers": [1050329]
   },
   "HTTP_CHANNEL_DISPOSITION" : {
@@ -3809,7 +3809,7 @@
     "kind": "enumerated",
     "n_values": 16,
     "releaseChannelCollection": "opt-out",
-    "alert_emails": ["necko@mozilla.com", "pmcmanus@mozilla.com"],
+    "alert_emails": ["necko@mozilla.com"],
     "description": "DNS Lookup Type (hit, renewal, negative-hit, literal, overflow, network-first, network-shared)"
   },
   "DNS_CLEANUP_AGE": {
@@ -3840,7 +3840,7 @@
     "kind": "exponential",
     "high": 1440,
     "releaseChannelCollection": "opt-out",
-    "alert_emails": ["necko@mozilla.com", "dstenberg@mozilla.com"],
+    "alert_emails": ["necko@mozilla.com"],
     "bug_numbers": [1460305],
     "n_buckets": 50,
     "description": "DNS Cache Entry Age at Removal Time of non-expired entries (minutes)"
@@ -3864,7 +3864,7 @@
     "kind": "exponential",
     "high": 60000,
     "releaseChannelCollection": "opt-out",
-    "alert_emails": ["necko@mozilla.com", "pmcmanus@mozilla.com"],
+    "alert_emails": ["necko@mozilla.com"],
     "n_buckets": 50,
     "description": "Time for a successful DNS resolution (msec)"
   },
@@ -3875,7 +3875,7 @@
     "kind": "exponential",
     "high": 60000,
     "releaseChannelCollection": "opt-out",
-    "alert_emails": ["necko@mozilla.com", "dstenberg@mozilla.com"],
+    "alert_emails": ["necko@mozilla.com"],
     "bug_numbers": [1434852],
     "n_buckets": 50,
     "description": "Time for a completed TRR resolution (msec)"
@@ -3887,7 +3887,7 @@
     "kind": "exponential",
     "high": 60000,
     "releaseChannelCollection": "opt-out",
-    "alert_emails": ["necko@mozilla.com", "dstenberg@mozilla.com"],
+    "alert_emails": ["necko@mozilla.com"],
     "bug_numbers": [1434852],
     "n_buckets": 50,
     "description": "Time for a completed native name resolution (msec)"
@@ -3923,7 +3923,7 @@
     "kind": "exponential",
     "high": 60000,
     "releaseChannelCollection": "opt-out",
-    "alert_emails": ["necko@mozilla.com", "dstenberg@mozilla.com"],
+    "alert_emails": ["necko@mozilla.com"],
     "bug_numbers": [1470215],
     "n_buckets": 50,
     "description": "Time in resolve queue waiting to getaddrinfo (msec)"
@@ -3931,7 +3931,7 @@
   "DNS_TRR_RACE2": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["necko@mozilla.com", "dstenberg@mozilla.com"],
+    "alert_emails": ["necko@mozilla.com"],
     "expires_in_version": "never",
     "kind": "categorical",
     "labels": ["TRRFasterBy100", "TRRFasterBy50", "TRRFaster", "NativeFaster", "NativeFasterBy50",
@@ -3942,7 +3942,7 @@
   "DNS_TRR_COMPARE": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["necko@mozilla.com", "dstenberg@mozilla.com"],
+    "alert_emails": ["necko@mozilla.com"],
     "expires_in_version": "never",
     "kind": "categorical",
     "labels": ["BothWorked", "NativeWorked", "TRRWorked", "BothFailed"],
@@ -3953,7 +3953,7 @@
   "DNS_TRR_FIRST2": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["necko@mozilla.com", "dstenberg@mozilla.com"],
+    "alert_emails": ["necko@mozilla.com"],
     "expires_in_version": "never",
     "kind": "categorical",
     "labels": ["TRR", "NativeAfterTRR", "Native", "BothFailed"],
@@ -3969,7 +3969,7 @@
     "description": "Resolve success rate when in TRR-first and called TRR-disabled (fall-back mode)",
     "bug_numbers": [1472659],
     "releaseChannelCollection": "opt-out",
-    "alert_emails": ["necko@mozilla.com", "dstenberg@mozilla.com"]
+    "alert_emails": ["necko@mozilla.com"]
   },
   "DNS_TRR_BLACKLISTED": {
     "record_in_processes": ["main"],
@@ -3978,7 +3978,7 @@
     "kind": "boolean",
     "description": "DNS check for TRR was blocked by blacklist",
     "bug_numbers": [1434852],
-    "alert_emails": ["necko@mozilla.com", "dstenberg@mozilla.com"]
+    "alert_emails": ["necko@mozilla.com"]
   },
   "DNS_TRR_NS_VERFIFIED": {
     "record_in_processes": ["main"],
@@ -3987,12 +3987,12 @@
     "kind": "boolean",
     "description": "TRR managed to verify NS entry",
     "bug_numbers": [1453825],
-    "alert_emails": ["necko@mozilla.com", "dstenberg@mozilla.com"]
+    "alert_emails": ["necko@mozilla.com"]
   },
   "DNS_TRR_REQUEST_PER_CONN": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["necko@mozilla.com", "dstenberg@mozilla.com"],
+    "alert_emails": ["necko@mozilla.com"],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": 5000,
@@ -4009,12 +4009,12 @@
     "description": "How often TRR (Trusted Recursive Resolver) requests are fine, time-out or error.",
     "bug_numbers": [1497438],
     "releaseChannelCollection": "opt-out",
-    "alert_emails": ["necko@mozilla.com", "dstenberg@mozilla.com"]
+    "alert_emails": ["necko@mozilla.com"]
   },
   "DNS_LOOKUP_ALGORITHM": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["necko@mozilla.com", "dstenberg@mozilla.com"],
+    "alert_emails": ["necko@mozilla.com"],
     "expires_in_version": "never",
     "kind": "categorical",
     "labels": ["nativeOnly", "trrRace", "trrFirst", "trrOnly", "trrShadow"],
@@ -4024,7 +4024,7 @@
   "DNS_LOOKUP_DISPOSITION": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["necko@mozilla.com", "dstenberg@mozilla.com"],
+    "alert_emails": ["necko@mozilla.com"],
     "expires_in_version": "never",
     "kind": "categorical",
     "labels": ["trrOK", "trrFail", "trrAOK", "trrAFail",
@@ -4058,7 +4058,7 @@
     "kind": "exponential",
     "high": 60000,
     "releaseChannelCollection": "opt-out",
-    "alert_emails": ["necko@mozilla.com", "pmcmanus@mozilla.com"],
+    "alert_emails": ["necko@mozilla.com"],
     "n_buckets": 50,
     "description": "Time for an unsuccessful DNS OS resolution (msec)"
   },
@@ -4067,7 +4067,7 @@
     "products": ["firefox", "fennec", "geckoview"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
-    "alert_emails": ["necko@mozilla.com", "pmcmanus@mozilla.com"],
+    "alert_emails": ["necko@mozilla.com"],
     "kind": "linear",
     "high": 21,
     "n_buckets": 20,
@@ -4117,7 +4117,7 @@
   "PREDICTOR_PREDICT_ATTEMPTS": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["hurley@mozilla.com"],
+    "alert_emails": ["necko@mozilla.com"],
     "bug_numbers": [881804],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -4128,7 +4128,7 @@
   "PREDICTOR_LEARN_ATTEMPTS": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["hurley@mozilla.com"],
+    "alert_emails": ["necko@mozilla.com"],
     "bug_numbers": [881804],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -4139,7 +4139,7 @@
   "PREDICTOR_PREDICT_FULL_QUEUE": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["hurley@mozilla.com"],
+    "alert_emails": ["necko@mozilla.com"],
     "bug_numbers": [881804],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -4150,7 +4150,7 @@
   "PREDICTOR_LEARN_FULL_QUEUE": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["hurley@mozilla.com"],
+    "alert_emails": ["necko@mozilla.com"],
     "bug_numbers": [881804],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -4161,7 +4161,7 @@
   "PREDICTOR_WAIT_TIME": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["hurley@mozilla.com"],
+    "alert_emails": ["necko@mozilla.com"],
     "bug_numbers": [881804],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -4183,7 +4183,7 @@
   "PREDICTOR_LEARN_WORK_TIME": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["hurley@mozilla.com"],
+    "alert_emails": ["necko@mozilla.com"],
     "bug_numbers": [881804],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -4194,7 +4194,7 @@
   "PREDICTOR_TOTAL_PREDICTIONS": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["hurley@mozilla.com"],
+    "alert_emails": ["necko@mozilla.com"],
     "bug_numbers": [881804],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -4206,7 +4206,7 @@
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
     "expires_in_version": "never",
-    "alert_emails": ["hurley@mozilla.com"],
+    "alert_emails": ["necko@mozilla.com"],
     "bug_numbers": [1016628],
     "kind": "exponential",
     "high": 1000000,
@@ -4217,7 +4217,7 @@
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
     "expires_in_version": "never",
-    "alert_emails": ["hurley@mozilla.com"],
+    "alert_emails": ["necko@mozilla.com"],
     "bug_numbers": [1016628],
     "kind": "exponential",
     "high": 1000000,
@@ -4228,7 +4228,7 @@
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
     "expires_in_version": "never",
-    "alert_emails": ["hurley@mozilla.com"],
+    "alert_emails": ["necko@mozilla.com"],
     "bug_numbers": [1016628],
     "kind": "exponential",
     "high": 3000,
@@ -4239,7 +4239,7 @@
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
     "expires_in_version": "never",
-    "alert_emails": ["hurley@mozilla.com"],
+    "alert_emails": ["necko@mozilla.com"],
     "bug_numbers": [881804],
     "kind": "exponential",
     "high": 1000000,
@@ -4249,7 +4249,7 @@
   "PREDICTOR_TOTAL_PRECONNECTS_CREATED": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["hurley@mozilla.com"],
+    "alert_emails": ["necko@mozilla.com"],
     "bug_numbers": [881804],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -4260,7 +4260,7 @@
   "PREDICTOR_TOTAL_PRECONNECTS_USED": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["hurley@mozilla.com"],
+    "alert_emails": ["necko@mozilla.com"],
     "bug_numbers": [881804],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -4271,7 +4271,7 @@
   "PREDICTOR_TOTAL_PRECONNECTS_UNUSED": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["hurley@mozilla.com"],
+    "alert_emails": ["necko@mozilla.com"],
     "bug_numbers": [881804],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -4282,7 +4282,7 @@
   "PREDICTOR_TOTAL_PRERESOLVES": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["hurley@mozilla.com"],
+    "alert_emails": ["necko@mozilla.com"],
     "bug_numbers": [881804],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -4293,7 +4293,7 @@
   "PREDICTOR_PREDICTIONS_CALCULATED": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["hurley@mozilla.com"],
+    "alert_emails": ["necko@mozilla.com"],
     "bug_numbers": [881804],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -4304,7 +4304,7 @@
   "PREDICTOR_GLOBAL_DEGRADATION": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["hurley@mozilla.com"],
+    "alert_emails": ["necko@mozilla.com"],
     "bug_numbers": [881804],
     "expires_in_version": "never",
     "kind": "linear",
@@ -4315,7 +4315,7 @@
   "PREDICTOR_SUBRESOURCE_DEGRADATION": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["hurley@mozilla.com"],
+    "alert_emails": ["necko@mozilla.com"],
     "bug_numbers": [881804],
     "expires_in_version": "never",
     "kind": "linear",
@@ -4326,7 +4326,7 @@
   "PREDICTOR_BASE_CONFIDENCE": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["hurley@mozilla.com"],
+    "alert_emails": ["necko@mozilla.com"],
     "bug_numbers": [881804],
     "expires_in_version": "never",
     "kind": "linear",
@@ -4337,7 +4337,7 @@
   "PREDICTOR_CONFIDENCE": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["hurley@mozilla.com"],
+    "alert_emails": ["necko@mozilla.com"],
     "bug_numbers": [881804],
     "expires_in_version": "never",
     "kind": "linear",
@@ -4359,7 +4359,7 @@
   "PREDICTOR_PREDICT_TIME_TO_INACTION": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["hurley@mozilla.com"],
+    "alert_emails": ["necko@mozilla.com"],
     "bug_numbers": [881804],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -4373,7 +4373,7 @@
     "expires_in_version": "65",
     "kind": "enumerated",
     "n_values": 15,
-    "alert_emails": ["hurley@mozilla.com"],
+    "alert_emails": ["necko@mozilla.com"],
     "bug_numbers": [1409542, 1430322],
     "description": "Why the predictor determined a particular resource was eligible for future prefetch (or not). See PrefetchDecisionReason in Predictor.cpp for value meanings"
   },
@@ -4383,7 +4383,7 @@
     "expires_in_version": "65",
     "kind": "enumerated",
     "n_values": 15,
-    "alert_emails": ["hurley@mozilla.com"],
+    "alert_emails": ["necko@mozilla.com"],
     "bug_numbers": [1409542, 1430322],
     "description": "Why the predictor determined a particular resource that was marked eligible for prefetch should not be prefetched. See PrefetchIgnoreReason in Predictor.cpp for value meanings"
   },
@@ -10927,7 +10927,7 @@
   "NETWORK_CACHE_V2_MISS_TIME_MS": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["hbambas@mozilla.com", "mnovotny@mozilla.com", "jduell@mozilla.com"],
+    "alert_emails": ["hbambas@mozilla.com", "mnovotny@mozilla.com", "necko@mozilla.com"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
     "kind": "exponential",
@@ -10939,7 +10939,7 @@
   "NETWORK_CACHE_V2_HIT_TIME_MS": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["hbambas@mozilla.com", "mnovotny@mozilla.com", "jduell@mozilla.com"],
+    "alert_emails": ["hbambas@mozilla.com", "mnovotny@mozilla.com", "necko@mozilla.com"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
     "kind": "exponential",
@@ -13883,7 +13883,7 @@
   "TIME_TO_DOM_LOADING_MS": {
     "record_in_processes": ["content"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["hbambas@mozilla.com", "vgosu@mozilla.com", "jduell@mozilla.com"],
+    "alert_emails": ["hbambas@mozilla.com", "vgosu@mozilla.com", "necko@mozilla.com"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
     "kind": "exponential",
@@ -13895,7 +13895,7 @@
   "TIME_TO_DOM_INTERACTIVE_MS": {
     "record_in_processes": ["content"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["hbambas@mozilla.com", "vgosu@mozilla.com", "jduell@mozilla.com"],
+    "alert_emails": ["hbambas@mozilla.com", "vgosu@mozilla.com", "necko@mozilla.com"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
     "kind": "exponential",
@@ -13952,7 +13952,7 @@
   "TIME_TO_DOM_COMPLETE_MS": {
     "record_in_processes": ["content"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["hbambas@mozilla.com", "vgosu@mozilla.com", "jduell@mozilla.com"],
+    "alert_emails": ["hbambas@mozilla.com", "vgosu@mozilla.com", "necko@mozilla.com"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
     "kind": "exponential",
