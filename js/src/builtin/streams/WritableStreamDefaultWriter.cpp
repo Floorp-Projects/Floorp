@@ -8,6 +8,7 @@
 
 #include "builtin/streams/WritableStreamDefaultWriter-inl.h"
 
+#include "mozilla/Assertions.h"  // MOZ_ASSERT
 #include "mozilla/Attributes.h"  // MOZ_MUST_USE
 
 #include "jsapi.h"        // JS_ReportErrorASCII, JS_ReportErrorNumberASCII
@@ -17,7 +18,7 @@
 #include "builtin/streams/MiscellaneousOperations.h"  // js::ReturnPromiseRejectedWithPendingError
 #include "builtin/streams/WritableStream.h"           // js::WritableStream
 #include "builtin/streams/WritableStreamOperations.h"  // js::WritableStreamCloseQueuedOrInFlight
-#include "builtin/streams/WritableStreamWriterOperations.h"  // js::WritableStreamDefaultWriter{GetDesiredSize,Write}
+#include "builtin/streams/WritableStreamWriterOperations.h"  // js::WritableStreamDefaultWriter{GetDesiredSize,Release,Write}
 #include "js/CallArgs.h"                              // JS::CallArgs{,FromVp}
 #include "js/Class.h"                        // js::ClassSpec, JS_NULL_CLASS_OPS
 #include "js/PropertySpec.h"  // JS{Function,Property}Spec, JS_{FS,PS}_END, JS_{FN,PSG}
@@ -42,6 +43,7 @@ using js::WritableStream;
 using js::WritableStreamCloseQueuedOrInFlight;
 using js::WritableStreamDefaultWriter;
 using js::WritableStreamDefaultWriterGetDesiredSize;
+using js::WritableStreamDefaultWriterRelease;
 using js::WritableStreamDefaultWriterWrite;
 
 /*** 4.5. Class WritableStreamDefaultWriter *********************************/
@@ -202,6 +204,50 @@ static MOZ_MUST_USE bool WritableStream_close(JSContext* cx, unsigned argc,
 }
 
 /**
+ * Streams spec, 4.5.4.6. releaseLock()
+ */
+static MOZ_MUST_USE bool WritableStream_releaseLock(JSContext* cx,
+                                                    unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  // Step 1: If ! IsWritableStreamDefaultWriter(this) is false, return a promise
+  //         rejected with a TypeError exception.
+  Rooted<WritableStreamDefaultWriter*> unwrappedWriter(
+      cx,
+      UnwrapAndTypeCheckThis<WritableStreamDefaultWriter>(cx, args, "close"));
+  if (!unwrappedWriter) {
+    return false;
+  }
+
+  // Step 2: Let stream be this.[[ownerWritableStream]].
+  // Step 3: If stream is undefined, return.
+  if (!unwrappedWriter->hasStream()) {
+    args.rval().setUndefined();
+    return true;
+  }
+
+  // Step 4: Assert: stream.[[writer]] is not undefined.
+#ifdef DEBUG
+  {
+    WritableStream* unwrappedStream =
+        UnwrapStreamFromWriter(cx, unwrappedWriter);
+    if (!unwrappedStream) {
+      return false;
+    }
+    MOZ_ASSERT(unwrappedStream->hasWriter());
+  }
+#endif
+
+  // Step 5: Perform ! WritableStreamDefaultWriterRelease(this).
+  if (!WritableStreamDefaultWriterRelease(cx, unwrappedWriter)) {
+    return false;
+  }
+
+  args.rval().setUndefined();
+  return true;
+}
+
+/**
  * Streams spec, 4.5.4.7. write(chunk)
  */
 static MOZ_MUST_USE bool WritableStream_write(JSContext* cx, unsigned argc,
@@ -244,6 +290,7 @@ static const JSPropertySpec WritableStreamDefaultWriter_properties[] = {
 
 static const JSFunctionSpec WritableStreamDefaultWriter_methods[] = {
     JS_FN("close", WritableStream_close, 0, 0),
+    JS_FN("releaseLock", WritableStream_releaseLock, 0, 0),
     JS_FN("write", WritableStream_write, 1, 0), JS_FS_END};
 
 JS_STREAMS_CLASS_SPEC(WritableStreamDefaultWriter, 0, SlotCount,
