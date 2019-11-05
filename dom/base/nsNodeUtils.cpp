@@ -498,7 +498,6 @@ already_AddRefed<nsINode> nsNodeUtils::CloneAndAdopt(
         }
       }
     }
-
     if (wasRegistered && oldDoc != newDoc) {
       nsIContent* content = aNode->AsContent();
       if (auto mediaElem = HTMLMediaElement::FromNodeOrNull(content)) {
@@ -615,7 +614,7 @@ already_AddRefed<nsINode> nsNodeUtils::CloneAndAdopt(
   }
 
   // Cloning template element.
-  if (aDeep && aClone && IsTemplateElement(aNode)) {
+  if (aDeep && aClone && aNode->IsTemplateElement()) {
     DocumentFragment* origContent =
         static_cast<HTMLTemplateElement*>(aNode)->Content();
     DocumentFragment* cloneContent =
@@ -640,12 +639,9 @@ already_AddRefed<nsINode> nsNodeUtils::CloneAndAdopt(
   return clone.forget();
 }
 
-bool nsNodeUtils::IsTemplateElement(const nsINode* aNode) {
-  return aNode->IsHTMLElement(nsGkAtoms::_template);
-}
 
 nsIContent* nsNodeUtils::GetFirstChildOfTemplateOrNode(nsINode* aNode) {
-  if (nsNodeUtils::IsTemplateElement(aNode)) {
+  if (aNode->IsTemplateElement()) {
     DocumentFragment* frag =
         static_cast<HTMLTemplateElement*>(aNode)->Content();
     return frag->GetFirstChild();
