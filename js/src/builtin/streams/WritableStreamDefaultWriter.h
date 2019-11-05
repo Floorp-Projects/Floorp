@@ -84,7 +84,9 @@ class WritableStreamDefaultWriter : public NativeObject {
   }
 
   bool hasStream() const { return !getFixedSlot(Slot_Stream).isUndefined(); }
-  inline void setStream(JSObject* stream);
+  void setStream(JSObject* stream) {
+    setFixedSlot(Slot_Stream, JS::ObjectValue(*stream));
+  }
   void clearStream() { setFixedSlot(Slot_Stream, JS::UndefinedValue()); }
 
   JSObject* readyPromise() const {
@@ -103,7 +105,8 @@ class WritableStreamDefaultWriter : public NativeObject {
 
 extern MOZ_MUST_USE WritableStreamDefaultWriter*
 CreateWritableStreamDefaultWriter(JSContext* cx,
-                                  JS::Handle<WritableStream*> unwrappedStream);
+                                  JS::Handle<WritableStream*> unwrappedStream,
+                                  JS::Handle<JSObject*> proto = nullptr);
 
 }  // namespace js
 
