@@ -160,3 +160,100 @@ bool js::WritableStreamDefaultWriterGetDesiredSize(
 
   return true;
 }
+
+/**
+ * Streams spec, 4.6.9.
+ * WritableStreamDefaultWriterWrite ( writer, chunk )
+ */
+JSObject* js::WritableStreamDefaultWriterWrite(
+    JSContext* cx, Handle<WritableStreamDefaultWriter*> unwrappedWriter,
+    Handle<Value> chunk) {
+  cx->check(chunk);
+
+  // Step 1: Let stream be writer.[[ownerWritableStream]].
+  // Step 2: Assert: stream is not undefined.
+  MOZ_ASSERT(unwrappedWriter->hasStream());
+  Rooted<WritableStream*> unwrappedStream(
+      cx, UnwrapStreamFromWriter(cx, unwrappedWriter));
+  if (!unwrappedStream) {
+    return nullptr;
+  }
+
+  // Step 3: Let controller be stream.[[writableStreamController]].
+  Rooted<WritableStreamDefaultController*> unwrappedController(
+      cx, unwrappedStream->controller());
+
+  // Step 4: Let chunkSize be
+  //         ! WritableStreamDefaultControllerGetChunkSize(controller, chunk).
+  Rooted<Value> chunkSize(cx);
+  if (!WritableStreamDefaultControllerGetChunkSize(cx, unwrappedController,
+                                                   chunk, &chunkSize)) {
+    return nullptr;
+  }
+  cx->check(chunkSize);
+
+  // Step 5: If stream is not equal to writer.[[ownerWritableStream]], return a
+  //         promise rejected with a TypeError exception.
+  // (This is just an obscure way of saying "If step 4 caused writer's lock on
+  // stream to be released", or concretely, "If writer.[[ownerWritableStream]]
+  // is [now, newly] undefined".)
+  if (!unwrappedWriter->hasStream()) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_WRITABLESTREAM_RELEASED_DURING_WRITE);
+    return PromiseRejectedWithPendingError(cx);
+  }
+
+  auto RejectWithStoredError =
+      [](JSContext* cx, Handle<WritableStream*> unwrappedStream) -> JSObject* {
+    Rooted<Value> storedError(cx, unwrappedStream->storedError());
+    if (!cx->compartment()->wrap(cx, &storedError)) {
+      return nullptr;
+    }
+
+    return PromiseObject::unforgeableReject(cx, storedError);
+  };
+
+  // Step 6: Let state be stream.[[state]].
+  // Step 7: If state is "errored", return a promise rejected with
+  //         stream.[[storedError]].
+  if (unwrappedStream->errored()) {
+    return RejectWithStoredError(cx, unwrappedStream);
+  }
+
+  // Step 8: If ! WritableStreamCloseQueuedOrInFlight(stream) is true or state
+  //         is "closed", return a promise rejected with a TypeError exception
+  //         indicating that the stream is closing or closed.
+  if (WritableStreamCloseQueuedOrInFlight(unwrappedStream) ||
+      unwrappedStream->closed()) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_WRITABLESTREAM_WRITE_CLOSING_OR_CLOSED);
+    return PromiseRejectedWithPendingError(cx);
+  }
+
+  // Step 9: If state is "erroring", return a promise rejected with
+  //         stream.[[storedError]].
+  if (unwrappedStream->erroring()) {
+    return RejectWithStoredError(cx, unwrappedStream);
+  }
+
+  // Step 10: Assert: state is "writable".
+  MOZ_ASSERT(unwrappedStream->writable());
+
+  // Step 11: Let promise be ! WritableStreamAddWriteRequest(stream).
+  Rooted<PromiseObject*> promise(
+      cx, WritableStreamAddWriteRequest(cx, unwrappedStream));
+  if (!promise) {
+    return nullptr;
+  }
+
+  // Step 12: Perform
+  //          ! WritableStreamDefaultControllerWrite(controller, chunk,
+  //                                                 chunkSize).
+  if (!WritableStreamDefaultControllerWrite(cx, unwrappedController, chunk,
+                                            chunkSize)) {
+    return nullptr;
+  }
+
+  // Step 13: Return promise.
+  return promise;
+}
