@@ -94,19 +94,19 @@ struct StartFirefoxParams {
 
 // Helper threadproc function for CreateVRWindow
 DWORD StartFirefoxThreadProc(_In_ LPVOID lpParameter) {
-  char cmd[] = "%sfirefox.exe -wait-for-browser -profile %s --fxr";
+  wchar_t cmd[] = L"%Sfirefox.exe -wait-for-browser -profile %S --fxr";
 
   StartFirefoxParams* params = static_cast<StartFirefoxParams*>(lpParameter);
-  char cmdWithPath[MAX_PATH + MAX_PATH] = {0};
-  int err = sprintf_s(cmdWithPath, ARRAYSIZE(cmdWithPath), cmd,
-                      params->firefoxFolder, params->firefoxProfileFolder);
+  wchar_t cmdWithPath[MAX_PATH + MAX_PATH] = {0};
+  int err = swprintf_s(cmdWithPath, ARRAYSIZE(cmdWithPath), cmd,
+                       params->firefoxFolder, params->firefoxProfileFolder);
 
   if (err != -1) {
     PROCESS_INFORMATION procFx = {0};
     STARTUPINFO startupInfoFx = {0};
 
 #if defined(DEBUG) && defined(NIGHTLY_BUILD)
-    printf("Starting Firefox via: %s\n", cmdWithPath);
+    printf("Starting Firefox via: %S\n", cmdWithPath);
 #endif
 
     // Start Firefox
