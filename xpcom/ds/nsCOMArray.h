@@ -299,8 +299,21 @@ class nsCOMArray : public nsCOMArray_base {
 
   typedef int (*TComparatorFunc)(T* aElement1, T* aElement2, void* aData);
 
+  struct TComparatorContext {
+    TComparatorFunc mComparatorFunc;
+    void* mData;
+  };
+
+  static int nsISupportsComparator(nsISupports* aElement1,
+                                   nsISupports* aElement2, void* aData) {
+    auto ctx = static_cast<TComparatorContext*>(aData);
+    return (*ctx->mComparatorFunc)(static_cast<T*>(aElement1),
+                                   static_cast<T*>(aElement2), ctx->mData);
+  }
+
   void Sort(TComparatorFunc aFunc, void* aData) {
-    nsCOMArray_base::Sort(nsISupportsComparatorFunc(aFunc), aData);
+    TComparatorContext ctx = {aFunc, aData};
+    nsCOMArray_base::Sort(nsISupportsComparator, &ctx);
   }
 
   // append an object, growing the array as necessary
