@@ -473,6 +473,7 @@
                           disabled="true"
                           oncommand="ReportFalseDeceptiveSite();"
                           onclick="checkForMiddleClick(this, event);"
+                          data-l10n-id="menu-help-not-deceptive"
                           hidden="true"/>
                 <menuseparator id="helpPolicySeparator"
                           hidden="true"/>

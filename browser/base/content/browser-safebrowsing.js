@@ -25,10 +25,6 @@ var gSafeBrowsing = {
       "menu_HelpPopup_reportPhishingErrortoolmenu"
     );
     reportErrorMenu.hidden = !isPhishingPage;
-    if (isPhishingPage && !reportErrorMenu.hasAttribute("data-l10n-id")) {
-      MozXULElement.insertFTLIfNeeded("browser/safebrowsing/blockedSite.ftl");
-      document.l10n.setAttributes(reportErrorMenu, "safeb-palm-notdeceptive");
-    }
 
     // Now look at the currentURI to learn which page we were trying
     // to browse to.
