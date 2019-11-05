@@ -309,13 +309,23 @@ class GridInspector {
    * Updates the grid panel by dispatching the new grid data. This is called when the
    * layout view becomes visible or the view needs to be updated with new grid data.
    */
-  // eslint-disable-next-line complexity
   async updateGridPanel() {
     // Stop refreshing if the inspector or store is already destroyed.
     if (!this.inspector || !this.store) {
       return;
     }
 
+    try {
+      await this._updateGridPanel();
+    } catch (e) {
+      this._throwUnlessDestroyed(
+        e,
+        "Inspector destroyed while executing updateGridPanel"
+      );
+    }
+  }
+
+  async _updateGridPanel() {
     const gridFronts = await this.getGrids();
 
     if (!gridFronts.length) {
@@ -573,14 +583,10 @@ class GridInspector {
       // Either the list of containers or the current fragments have changed, do update.
       await this.updateGridPanel(newGridFronts);
     } catch (e) {
-      if (!this.inspector) {
-        // onReflow/updateGridPanel are highly asynchronous and might still run
-        // after the inspector was destroyed. Swallow the error in this case.
-        console.warn("Inspector destroyed while executing onReflow callback");
-      } else {
-        // If the grid inspector was not destroyed, this is an unexpected error.
-        throw e;
-      }
+      this._throwUnlessDestroyed(
+        e,
+        "Inspector destroyed while executing onReflow callback"
+      );
     }
   }
 
@@ -759,6 +765,26 @@ class GridInspector {
       if (grid.highlighted) {
         this.highlighters.showGridHighlighter(grid.nodeFront);
       }
+    }
+  }
+
+  /**
+   * Some grid-inspector methods are highly asynchronous and might still run
+   * after the inspector was destroyed. Swallow errors if the grid inspector is
+   * already destroyed, throw otherwise.
+   *
+   * @param {Error} error
+   *        The original error object.
+   * @param {String} message
+   *        The message to log in case the inspector is already destroyed and
+   *        the error is swallowed.
+   */
+  _throwUnlessDestroyed(error, message) {
+    if (!this.inspector) {
+      console.warn(message);
+    } else {
+      // If the grid inspector was not destroyed, this is an unexpected error.
+      throw error;
     }
   }
 
