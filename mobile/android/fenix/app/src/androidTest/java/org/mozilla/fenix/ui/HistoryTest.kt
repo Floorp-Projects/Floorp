@@ -205,6 +205,7 @@ class HistoryTest {
     }
 
     @Test
+    @Ignore("Temp disable flakey test - see: https://github.com/mozilla-mobile/fenix/issues/5462")
     fun shareButtonTest() {
         val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
@@ -226,6 +227,7 @@ class HistoryTest {
     }
 
     @Test
+    @Ignore("Temp disable flakey test - see: https://github.com/mozilla-mobile/fenix/issues/5462")
     fun verifyBackNavigation() {
         homeScreen {
         }.openThreeDotMenu {
