@@ -44,6 +44,7 @@ const LoadURIDelegate = {
       where: aWhere,
       flags: aFlags,
       triggerUri: triggerUri && triggerUri.displaySpec,
+      hasUserGesture: aWindow.document.hasValidTransientUserGestureActivation,
     };
 
     let handled = undefined;
