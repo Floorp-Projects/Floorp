@@ -366,16 +366,6 @@ static void InflateControlRect(NSRect* rect, NSControlSize cocoaControlSize,
   rect->size.height += buttonMargins[bottomMargin] + buttonMargins[topMargin];
 }
 
-static ChildView* ChildViewForFrame(nsIFrame* aFrame) {
-  if (!aFrame) return nil;
-
-  nsIWidget* widget = aFrame->GetNearestWidget();
-  if (!widget) return nil;
-
-  NSWindow* window = (NSWindow*)widget->GetNativeData(NS_NATIVE_WINDOW);
-  return [window isKindOfClass:[BaseWindow class]] ? [(BaseWindow*)window mainChildView] : nil;
-}
-
 static NSWindow* NativeWindowForFrame(nsIFrame* aFrame, nsIWidget** aTopLevelWidget = NULL) {
   if (!aFrame) return nil;
 
@@ -1042,89 +1032,31 @@ void nsNativeThemeCocoa::DrawSearchField(CGContextRef cgContext, const HIRect& i
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-static Color NSColorToColor(NSColor* aColor) {
-  NSColor* deviceColor = [aColor colorUsingColorSpaceName:NSDeviceRGBColorSpace];
-  return Color([deviceColor redComponent], [deviceColor greenComponent],
-               [deviceColor blueComponent], [deviceColor alphaComponent]);
-}
-
-static Color VibrancyFillColor(nsIFrame* aFrame, nsITheme::ThemeGeometryType aThemeGeometryType) {
-  ChildView* childView = ChildViewForFrame(aFrame);
-  if (childView) {
-    return NSColorToColor([childView vibrancyFillColorForThemeGeometryType:aThemeGeometryType]);
-  }
-  return Color();
-}
-
-static void DrawVibrancyBackground(CGContextRef cgContext, CGRect inBoxRect, const Color& aColor,
-                                   int aCornerRadiusIfOpaque = 0) {
-  NSRect rect = NSRectFromCGRect(inBoxRect);
-  NSGraphicsContext* savedContext = [NSGraphicsContext currentContext];
-  NSGraphicsContext* context = [NSGraphicsContext graphicsContextWithGraphicsPort:cgContext
-                                                                          flipped:YES];
-  [NSGraphicsContext setCurrentContext:context];
-  [NSGraphicsContext saveGraphicsState];
-
-  NSColor* fillColor = [NSColor colorWithDeviceRed:aColor.r
-                                             green:aColor.g
-                                              blue:aColor.b
-                                             alpha:aColor.a];
-
-  if ([fillColor alphaComponent] == 1.0 && aCornerRadiusIfOpaque > 0) {
-    // The fillColor being opaque means that the system-wide pref "reduce
-    // transparency" is set. In that scenario, we still go through all the
-    // vibrancy rendering paths (VibrancyManager::SystemSupportsVibrancy()
-    // will still return true), but the result just won't look "vibrant".
-    // However, there's one unfortunate change of behavior that this pref
-    // has: It stops the window server from applying window masks. We use
-    // a window mask to get rounded corners on menus. So since the mask
-    // doesn't work in "reduce vibrancy" mode, we need to do our own rounded
-    // corner clipping here.
-    [[NSBezierPath bezierPathWithRoundedRect:rect
-                                     xRadius:aCornerRadiusIfOpaque
-                                     yRadius:aCornerRadiusIfOpaque] addClip];
-  }
-
-  [fillColor set];
-  NSRectFill(rect);
-
-  [NSGraphicsContext restoreGraphicsState];
-  [NSGraphicsContext setCurrentContext:savedContext];
-}
-
 nsNativeThemeCocoa::MenuBackgroundParams nsNativeThemeCocoa::ComputeMenuBackgroundParams(
     nsIFrame* aFrame, EventStates aEventState) {
   MenuBackgroundParams params;
-  if (VibrancyManager::SystemSupportsVibrancy()) {
-    params.vibrancyColor = Some(VibrancyFillColor(aFrame, eThemeGeometryTypeMenu));
-  } else {
-    params.disabled = IsDisabled(aFrame, aEventState);
-    bool isLeftOfParent = false;
-    params.submenuRightOfParent = IsSubmenu(aFrame, &isLeftOfParent) && !isLeftOfParent;
-  }
+  params.disabled = IsDisabled(aFrame, aEventState);
+  bool isLeftOfParent = false;
+  params.submenuRightOfParent = IsSubmenu(aFrame, &isLeftOfParent) && !isLeftOfParent;
   return params;
 }
 
 void nsNativeThemeCocoa::DrawMenuBackground(CGContextRef cgContext, const CGRect& inBoxRect,
                                             const MenuBackgroundParams& aParams) {
-  if (aParams.vibrancyColor) {
-    DrawVibrancyBackground(cgContext, inBoxRect, *aParams.vibrancyColor, 4);
-  } else {
-    HIThemeMenuDrawInfo mdi;
-    memset(&mdi, 0, sizeof(mdi));
-    mdi.version = 0;
-    mdi.menuType = aParams.disabled ? static_cast<ThemeMenuType>(kThemeMenuTypeInactive)
-                                    : static_cast<ThemeMenuType>(kThemeMenuTypePopUp);
+  HIThemeMenuDrawInfo mdi;
+  memset(&mdi, 0, sizeof(mdi));
+  mdi.version = 0;
+  mdi.menuType = aParams.disabled ? static_cast<ThemeMenuType>(kThemeMenuTypeInactive)
+                                  : static_cast<ThemeMenuType>(kThemeMenuTypePopUp);
 
-    if (aParams.submenuRightOfParent) {
-      mdi.menuType = kThemeMenuTypeHierarchical;
-    }
-
-    // The rounded corners draw outside the frame.
-    CGRect deflatedRect = CGRectMake(inBoxRect.origin.x, inBoxRect.origin.y + 4,
-                                     inBoxRect.size.width, inBoxRect.size.height - 8);
-    HIThemeDrawMenuBackground(&deflatedRect, &mdi, cgContext, HITHEME_ORIENTATION);
+  if (aParams.submenuRightOfParent) {
+    mdi.menuType = kThemeMenuTypeHierarchical;
   }
+
+  // The rounded corners draw outside the frame.
+  CGRect deflatedRect = CGRectMake(inBoxRect.origin.x, inBoxRect.origin.y + 4, inBoxRect.size.width,
+                                   inBoxRect.size.height - 8);
+  HIThemeDrawMenuBackground(&deflatedRect, &mdi, cgContext, HITHEME_ORIENTATION);
 }
 
 static const NSSize kCheckmarkSize = NSMakeSize(11, 11);
@@ -1220,10 +1152,7 @@ nsNativeThemeCocoa::MenuItemParams nsNativeThemeCocoa::ComputeMenuItemParams(
   bool isDisabled = IsDisabled(aFrame, aEventState);
 
   MenuItemParams params;
-  if (VibrancyManager::SystemSupportsVibrancy()) {
-    ThemeGeometryType type = ThemeGeometryTypeForWidget(aFrame, StyleAppearance::Menuitem);
-    params.vibrancyColor = Some(VibrancyFillColor(aFrame, type));
-  }
+  params.backgroundIsVibrant = VibrancyManager::SystemSupportsVibrancy();
   params.checked = aIsChecked;
   params.disabled = isDisabled;
   params.selected = !isDisabled && CheckBooleanAttr(aFrame, nsGkAtoms::menuactive);
@@ -1247,10 +1176,9 @@ static void SetCGContextStrokeColor(CGContextRef cgContext, nscolor aColor) {
 
 void nsNativeThemeCocoa::DrawMenuItem(CGContextRef cgContext, const CGRect& inBoxRect,
                                       const MenuItemParams& aParams) {
-  if (aParams.vibrancyColor) {
-    SetCGContextFillColor(cgContext, *aParams.vibrancyColor);
-    CGContextFillRect(cgContext, inBoxRect);
-  } else {
+  // If the background is contributed by vibrancy (which is part of the window background), we don't
+  // need to draw any background here.
+  if (!aParams.backgroundIsVibrant) {
     HIThemeMenuItemDrawInfo drawInfo;
     memset(&drawInfo, 0, sizeof(drawInfo));
     drawInfo.version = 0;
@@ -2765,14 +2693,16 @@ Maybe<nsNativeThemeCocoa::WidgetInfo> nsNativeThemeCocoa::ComputeWidgetInfo(
     case StyleAppearance::Dialog:
       if (IsWindowSheet(aFrame)) {
         if (VibrancyManager::SystemSupportsVibrancy()) {
-          ThemeGeometryType type = ThemeGeometryTypeForWidget(aFrame, aAppearance);
-          return Some(WidgetInfo::ColorFill(VibrancyFillColor(aFrame, type)));
+          return Nothing();
         }
         return Some(WidgetInfo::SheetBackground());
       }
       return Some(WidgetInfo::DialogBackground());
 
     case StyleAppearance::Menupopup:
+      if (VibrancyManager::SystemSupportsVibrancy()) {
+        return Nothing();
+      }
       return Some(WidgetInfo::MenuBackground(ComputeMenuBackgroundParams(aFrame, eventState)));
 
     case StyleAppearance::Menuarrow:
@@ -2797,8 +2727,7 @@ Maybe<nsNativeThemeCocoa::WidgetInfo> nsNativeThemeCocoa::ComputeWidgetInfo(
 
     case StyleAppearance::Tooltip:
       if (VibrancyManager::SystemSupportsVibrancy()) {
-        ThemeGeometryType type = ThemeGeometryTypeForWidget(aFrame, aAppearance);
-        return Some(WidgetInfo::ColorFill(VibrancyFillColor(aFrame, type)));
+        return Nothing();
       }
       return Some(WidgetInfo::Tooltip());
 
@@ -3103,8 +3032,7 @@ Maybe<nsNativeThemeCocoa::WidgetInfo> nsNativeThemeCocoa::ComputeWidgetInfo(
 
     case StyleAppearance::MozMacSourceList: {
       if (VibrancyManager::SystemSupportsVibrancy()) {
-        ThemeGeometryType type = ThemeGeometryTypeForWidget(aFrame, aAppearance);
-        return Some(WidgetInfo::ColorFill(VibrancyFillColor(aFrame, type)));
+        return Nothing();
       }
       return Some(WidgetInfo::SourceList(FrameIsInActiveWindow(aFrame)));
     }
@@ -3117,8 +3045,7 @@ Maybe<nsNativeThemeCocoa::WidgetInfo> nsNativeThemeCocoa::ComputeWidgetInfo(
       // smoothing background. So, to simplify a bit, we only support vibrancy
       // if we're in a source list.
       if (VibrancyManager::SystemSupportsVibrancy() && IsInSourceList(aFrame)) {
-        ThemeGeometryType type = ThemeGeometryTypeForWidget(aFrame, aAppearance);
-        return Some(WidgetInfo::ColorFill(VibrancyFillColor(aFrame, type)));
+        return Nothing();
       }
       bool isInActiveWindow = FrameIsInActiveWindow(aFrame);
       if (aAppearance == StyleAppearance::MozMacActiveSourceListSelection) {
@@ -3139,13 +3066,6 @@ Maybe<nsNativeThemeCocoa::WidgetInfo> nsNativeThemeCocoa::ComputeWidgetInfo(
     case StyleAppearance::Resizer:
       return Some(WidgetInfo::Resizer(IsFrameRTL(aFrame)));
 
-    case StyleAppearance::MozMacVibrancyLight:
-    case StyleAppearance::MozMacVibrancyDark:
-    case StyleAppearance::MozMacVibrantTitlebarLight:
-    case StyleAppearance::MozMacVibrantTitlebarDark: {
-      ThemeGeometryType type = ThemeGeometryTypeForWidget(aFrame, aAppearance);
-      return Some(WidgetInfo::ColorFill(VibrancyFillColor(aFrame, type)));
-    }
     default:
       break;
   }
@@ -3453,26 +3373,28 @@ bool nsNativeThemeCocoa::CreateWebRenderCommandsForWidget(
   switch (aAppearance) {
     case StyleAppearance::Dialog:
       if (IsWindowSheet(aFrame) && VibrancyManager::SystemSupportsVibrancy()) {
-        ThemeGeometryType type = ThemeGeometryTypeForWidget(aFrame, aAppearance);
-        aBuilder.PushRect(bounds, bounds, true, wr::ToColorF(VibrancyFillColor(aFrame, type)));
         return true;
       }
       return false;
 
     case StyleAppearance::Menupopup:
+      if (VibrancyManager::SystemSupportsVibrancy()) {
+        return true;
+      }
+      return false;
+
     case StyleAppearance::Menuarrow:
     case StyleAppearance::Menuitem:
     case StyleAppearance::Checkmenuitem:
     case StyleAppearance::Menuseparator:
+      return false;
+
     case StyleAppearance::ButtonArrowUp:
     case StyleAppearance::ButtonArrowDown:
       return false;
 
     case StyleAppearance::Tooltip:
-      if (VibrancyManager::SystemSupportsVibrancy()) {
-        ThemeGeometryType type = ThemeGeometryTypeForWidget(aFrame, aAppearance);
-        aBuilder.PushRect(bounds, bounds, true, wr::ToColorF(VibrancyFillColor(aFrame, type)));
-      } else {
+      if (!VibrancyManager::SystemSupportsVibrancy()) {
         aBuilder.PushRect(bounds, bounds, true, wr::ToColorF(kTooltipBackgroundColor));
       }
       return true;
@@ -3581,20 +3503,9 @@ bool nsNativeThemeCocoa::CreateWebRenderCommandsForWidget(
 
     case StyleAppearance::MozMacSourceList:
       if (VibrancyManager::SystemSupportsVibrancy()) {
-        ThemeGeometryType type = ThemeGeometryTypeForWidget(aFrame, aAppearance);
-        aBuilder.PushRect(bounds, bounds, true, wr::ToColorF(VibrancyFillColor(aFrame, type)));
         return true;
       }
       return false;
-
-    case StyleAppearance::MozMacVibrancyLight:
-    case StyleAppearance::MozMacVibrancyDark:
-    case StyleAppearance::MozMacVibrantTitlebarLight:
-    case StyleAppearance::MozMacVibrantTitlebarDark: {
-      ThemeGeometryType type = ThemeGeometryTypeForWidget(aFrame, aAppearance);
-      aBuilder.PushRect(bounds, bounds, true, wr::ToColorF(VibrancyFillColor(aFrame, type)));
-      return true;
-    }
 
     case StyleAppearance::Tab:
     case StyleAppearance::Tabpanels:
