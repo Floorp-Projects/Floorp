@@ -1701,10 +1701,10 @@ extern mozilla::TimeStamp NS_GetTimerDeadlineHintOnCurrentThread(
  * means less resource usage, as the underlying implementation here can manage
  * spinning up and shutting down threads appropriately.
  */
-extern nsresult NS_DispatchToBackgroundThread(
+extern nsresult NS_DispatchBackgroundTask(
     already_AddRefed<nsIRunnable> aEvent,
     uint32_t aDispatchFlags = NS_DISPATCH_NORMAL);
-extern nsresult NS_DispatchToBackgroundThread(
+extern nsresult NS_DispatchBackgroundTask(
     nsIRunnable* aEvent, uint32_t aDispatchFlags = NS_DISPATCH_NORMAL);
 
 namespace mozilla {

@@ -344,7 +344,7 @@ void WebCryptoTask::DispatchWithPromise(Promise* aResultPromise) {
   }
   MAYBE_EARLY_FAIL(mEarlyRv);
 
-  mEarlyRv = NS_DispatchToBackgroundThread(this);
+  mEarlyRv = NS_DispatchBackgroundTask(this);
   MAYBE_EARLY_FAIL(mEarlyRv)
 }
 
