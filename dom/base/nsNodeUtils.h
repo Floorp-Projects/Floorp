@@ -142,34 +142,6 @@ class nsNodeUtils {
   static void AnimationRemoved(mozilla::dom::Animation* aAnimation);
 
   /**
-   * Clones aNode, its attributes and, if aDeep is true, its descendant nodes
-   * If aNewNodeInfoManager is not null, it is used to create new nodeinfos for
-   * the clones. aNodesWithProperties will be filled with all the nodes that
-   * have properties, and every node in it will be followed by its clone.
-   *
-   * @param aNode Node to clone.
-   * @param aDeep If true the function will be called recursively on
-   *              descendants of the node
-   * @param aNewNodeInfoManager The nodeinfo manager to use to create new
-   *                            nodeinfos for aNode and its attributes and
-   *                            descendants. May be null if the nodeinfos
-   *                            shouldn't be changed.
-   * @param aNodesWithProperties All nodes (from amongst aNode and its
-   *                             descendants) with properties. Every node will
-   *                             be followed by its clone. Null can be passed to
-   *                             prevent this from being used.
-   * @param aError The error, if any.
-   *
-   * @return The newly created node.  Null in error conditions.
-   */
-  static already_AddRefed<nsINode> Clone(
-      nsINode* aNode, bool aDeep, nsNodeInfoManager* aNewNodeInfoManager,
-      nsCOMArray<nsINode>* aNodesWithProperties, mozilla::ErrorResult& aError) {
-    return CloneAndAdopt(aNode, true, aDeep, aNewNodeInfoManager, nullptr,
-                         aNodesWithProperties, nullptr, aError);
-  }
-
-  /**
    * Walks aNode, its attributes and descendant nodes. If aNewNodeInfoManager is
    * not null, it is used to create new nodeinfos for the nodes. Also reparents
    * the XPConnect wrappers for the nodes into aReparentScope if non-null.
@@ -218,7 +190,6 @@ class nsNodeUtils {
     nsMutationGuard::DidMutate();
   }
 
- private:
   /**
    * Walks aNode, its attributes and, if aDeep is true, its descendant nodes.
    * If aClone is true the nodes will be cloned. If aNewNodeInfoManager is
@@ -259,6 +230,7 @@ class nsNodeUtils {
       nsCOMArray<nsINode>* aNodesWithProperties, nsINode* aParent,
       mozilla::ErrorResult& aError);
 
+ private:
   enum class AnimationMutationType { Added, Changed, Removed };
   /**
    * Notify the observers of the target of an animation

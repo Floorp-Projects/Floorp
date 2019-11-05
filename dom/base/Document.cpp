@@ -7855,7 +7855,7 @@ already_AddRefed<nsINode> Document::ImportNode(nsINode& aNode, bool aDeep,
     case CDATA_SECTION_NODE:
     case COMMENT_NODE:
     case DOCUMENT_TYPE_NODE: {
-      return nsNodeUtils::Clone(imported, aDeep, mNodeInfoManager, nullptr, rv);
+      return imported->Clone(aDeep, mNodeInfoManager, nullptr, rv);
     }
     default: {
       NS_WARNING("Don't know how to clone this nodetype for importNode.");

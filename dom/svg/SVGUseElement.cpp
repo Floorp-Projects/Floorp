@@ -336,8 +336,8 @@ void SVGUseElement::UpdateShadowTree() {
                                              ? nullptr
                                              : OwnerDoc()->NodeInfoManager();
 
-    nsCOMPtr<nsINode> newNode = nsNodeUtils::Clone(
-        targetElement, true, nodeInfoManager, nullptr, IgnoreErrors());
+    nsCOMPtr<nsINode> newNode =
+        targetElement->Clone(true, nodeInfoManager, nullptr, IgnoreErrors());
     if (!newNode) {
       return;
     }
