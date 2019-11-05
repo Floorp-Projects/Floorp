@@ -15,4 +15,5 @@ This is the nascent documentation of the Firefox front-end code.
    installer/windows/installer/index
    base/sslerrorreport/index
    base/tabbrowser/index
+   touchbar/index
    components/payments/docs/index

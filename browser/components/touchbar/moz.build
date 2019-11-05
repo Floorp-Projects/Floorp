@@ -11,3 +11,5 @@ EXTRA_COMPONENTS += [
     'MacTouchBar.js',
     'MacTouchBar.manifest',
 ]
+
+SPHINX_TREES['/browser/touchbar'] = 'docs'
