@@ -4,10 +4,7 @@
      Entitlements to apply to the .app bundle and all executable files
      contained within it during codesigning of production channel builds that
      will be notarized. These entitlements enable hardened runtime protections
-     to the extent possible for Firefox. Some supporting binaries within the
-     bundle could use more restrictive entitlements, but they are launched by
-     the main Firefox process and therefore inherit the parent process
-     entitlements.
+     to the extent possible for Firefox.
 -->
 <plist version="1.0">
   <dict>
@@ -41,12 +38,7 @@
 
     <!-- Firefox needs to access the location on sites the user allows -->
     <key>com.apple.security.personal-information.location</key><true/>
-
-    <!-- Allow Firefox to send Apple events to other applications. Needed
-         for native messaging webextension helper applications launched by
-         Firefox which rely on Apple Events to signal other processes. -->
-    <key>com.apple.security.automation.apple-events</key><true/>
-
+    
     <!-- For SmartCardServices(7) -->
     <key>com.apple.security.smartcard</key><true/>
   </dict>
