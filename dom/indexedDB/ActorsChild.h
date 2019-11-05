@@ -633,6 +633,8 @@ class BackgroundCursorChild final : public PBackgroundIDBCursorChild {
     CachedResponse(Key aKey, StructuredCloneReadInfo&& aCloneInfo);
     CachedResponse(Key aKey, Key aLocaleAwareKey, Key aObjectStoreKey,
                    StructuredCloneReadInfo&& aCloneInfo);
+    explicit CachedResponse(Key aKey);
+    CachedResponse(Key aKey, Key aLocaleAwareKey, Key aObjectStoreKey);
 
     CachedResponse(CachedResponse&& aOther) = default;
     CachedResponse& operator=(CachedResponse&& aOther) = default;
@@ -717,7 +719,7 @@ class BackgroundCursorChild final : public PBackgroundIDBCursorChild {
 
   void HandleResponse(const nsTArray<ObjectStoreCursorResponse>& aResponses);
 
-  void HandleResponse(const ObjectStoreKeyCursorResponse& aResponse);
+  void HandleResponse(const nsTArray<ObjectStoreKeyCursorResponse>& aResponses);
 
   void HandleResponse(const nsTArray<IndexCursorResponse>& aResponses);
 
@@ -728,7 +730,7 @@ class BackgroundCursorChild final : public PBackgroundIDBCursorChild {
   void HandleMultipleCursorResponses(const nsTArray<T>& aResponses,
                                      const Func& aHandleRecord);
 
-  void HandleResponse(const IndexKeyCursorResponse& aResponse);
+  void HandleResponse(const nsTArray<IndexKeyCursorResponse>& aResponses);
 
   // IPDL methods are only called by IPDL.
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
