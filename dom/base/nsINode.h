@@ -661,6 +661,11 @@ class nsINode : public mozilla::dom::EventTarget {
       const;
 
   /**
+   * To be called when reference count of the node drops to zero.
+   */
+  void LastRelease();
+
+  /**
    * The values returned by this function are the ones defined for
    * Node.nodeType
    */

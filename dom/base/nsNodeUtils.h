@@ -142,12 +142,6 @@ class nsNodeUtils {
   static void AnimationRemoved(mozilla::dom::Animation* aAnimation);
 
   /**
-   * To be called when reference count of aNode drops to zero.
-   * @param aNode The node which is going to be deleted.
-   */
-  static void LastRelease(nsINode* aNode);
-
-  /**
    * Clones aNode, its attributes and, if aDeep is true, its descendant nodes
    * If aNewNodeInfoManager is not null, it is used to create new nodeinfos for
    * the clones. aNodesWithProperties will be filled with all the nodes that
