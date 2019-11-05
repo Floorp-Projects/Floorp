@@ -197,7 +197,7 @@ nsINode::nsINode(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
 #endif
 
 nsINode::~nsINode() {
-  MOZ_ASSERT(!HasSlots(), "nsNodeUtils::LastRelease was not called?");
+  MOZ_ASSERT(!HasSlots(), "LastRelease was not called?");
   MOZ_ASSERT(mSubtreeRoot == this, "Didn't restore state properly?");
 }
 
@@ -470,6 +470,77 @@ DocumentOrShadowRoot* nsINode::GetUncomposedDocOrConnectedShadowRoot() const {
   }
 
   return nullptr;
+}
+
+void nsINode::LastRelease() {
+  nsINode::nsSlots* slots = GetExistingSlots();
+  if (slots) {
+    if (!slots->mMutationObservers.IsEmpty()) {
+      NS_OBSERVER_AUTO_ARRAY_NOTIFY_OBSERVERS(slots->mMutationObservers,
+                                              nsIMutationObserver, 1,
+                                              NodeWillBeDestroyed, (this));
+    }
+
+    delete slots;
+    mSlots = nullptr;
+  }
+
+  // Kill properties first since that may run external code, so we want to
+  // be in as complete state as possible at that time.
+  if (IsDocument()) {
+    // Delete all properties before tearing down the document. Some of the
+    // properties are bound to nsINode objects and the destructor functions of
+    // the properties may want to use the owner document of the nsINode.
+    AsDocument()->DeleteAllProperties();
+  } else {
+    if (HasProperties()) {
+      // Strong reference to the document so that deleting properties can't
+      // delete the document.
+      nsCOMPtr<Document> document = OwnerDoc();
+      document->DeleteAllPropertiesFor(this);
+    }
+
+    // I wonder whether it's faster to do the HasFlag check first....
+    if (IsNodeOfType(nsINode::eHTML_FORM_CONTROL) && HasFlag(ADDED_TO_FORM)) {
+      // Tell the form (if any) this node is going away.  Don't
+      // notify, since we're being destroyed in any case.
+      static_cast<nsGenericHTMLFormElement*>(this)->ClearForm(true, true);
+    }
+
+    if (IsHTMLElement(nsGkAtoms::img) && HasFlag(ADDED_TO_FORM)) {
+      HTMLImageElement* imageElem = static_cast<HTMLImageElement*>(this);
+      imageElem->ClearForm(true);
+    }
+  }
+  UnsetFlags(NODE_HAS_PROPERTIES);
+
+  if (NodeType() != nsINode::DOCUMENT_NODE &&
+      HasFlag(NODE_HAS_LISTENERMANAGER)) {
+#ifdef DEBUG
+    if (nsContentUtils::IsInitialized()) {
+      EventListenerManager* manager =
+          nsContentUtils::GetExistingListenerManagerForNode(this);
+      if (!manager) {
+        NS_ERROR(
+            "Huh, our bit says we have a listener manager list, "
+            "but there's nothing in the hash!?!!");
+      }
+    }
+#endif
+
+    nsContentUtils::RemoveListenerManager(this);
+    UnsetFlags(NODE_HAS_LISTENERMANAGER);
+  }
+
+#ifdef MOZ_XBL
+  NS_ASSERTION(
+      !Element::FromNode(this) || !Element::FromNode(this)->GetXBLBinding(),
+      "Node has binding on destruction");
+#endif
+
+  ReleaseWrapper(this);
+
+  FragmentOrElement::RemoveBlackMarkedNode(this);
 }
 
 #ifdef DEBUG
