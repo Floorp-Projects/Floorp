@@ -303,192 +303,188 @@ class WorkManagerSyncWorker(
             return Result.success()
         }
 
-        val passwordStore = syncableStores.entries.find { it.key == SyncEngine.Passwords }?.value
-
-        // If password storage is configured to be synced, we need to make sure it's decrypted during a sync.
-        passwordStore?.let {
-            val keySharedPreferences = SecureAbove22Preferences(context)
-
-            (it as LockableStore).ensureUnlocked(
-                keySharedPreferences.getString("passwords_key") ?: throw IllegalStateException(
-                    "'passwords_key' encryption key must be set if password sync is enabled"
-                )
-            )
+        // We need to tell RustSyncManager about instances of supported stores ('places' and 'logins').
+        syncableStores.entries.forEach {
+            // We're assuming all syncable stores live in Rust.
+            // Currently `RustSyncManager` doesn't support non-Rust sync engines.
+            when (it.key) {
+                // NB: History and Bookmarks will have the same handle.
+                SyncEngine.History -> RustSyncManager.setPlaces(it.value.getHandle())
+                SyncEngine.Bookmarks -> RustSyncManager.setPlaces(it.value.getHandle())
+                SyncEngine.Passwords -> RustSyncManager.setLogins(it.value.getHandle())
+            }
         }
 
-        try {
-            // We need to tell RustSyncManager about instances of supported stores ('places' and 'logins').
-            syncableStores.entries.forEach {
-                // We're assuming all syncable stores live in Rust.
-                // Currently `RustSyncManager` doesn't support non-Rust sync engines.
-                when (it.key) {
-                    // NB: History and Bookmarks will have the same handle.
-                    SyncEngine.History -> RustSyncManager.setPlaces(it.value.getHandle())
-                    SyncEngine.Bookmarks -> RustSyncManager.setPlaces(it.value.getHandle())
-                    SyncEngine.Passwords -> RustSyncManager.setLogins(it.value.getHandle())
+        // We need to know the reason we're syncing.
+        val reason = params.inputData.getString(KEY_REASON)!!.toSyncReason()
+
+        // We need a cached "sync auth info" object.
+        val syncAuthInfo = SyncAuthInfoCache(context).getCached() ?: return Result.failure()
+
+        // We need any persisted state that we received from RustSyncManager in the past.
+        // We should be able to pass a `null` value, but currently the library will crash.
+        // See https://github.com/mozilla/application-services/issues/1829
+        val currentSyncState = getSyncState(context) ?: ""
+
+        // We need to tell RustSyncManager about our local "which engines are enabled/disabled" state.
+        // This is a global state, shared by every sync client for this account. State that we will
+        // pass here will overwrite current global state and may be propagated to every sync client.
+        // This should be empty if there have been no changes to this state.
+        // We pass this state if user changed it (EngineChange) or if we're in a first sync situation.
+        // A "first sync" will happen after signing up or signing in.
+        // In both cases, user may have been asked which engines they'd like to sync.
+        val enabledChanges = when (reason) {
+            SyncReason.EngineChange, SyncReason.FirstSync -> {
+                val engineMap = SyncEnginesStorage(context).getStatus().toMutableMap()
+                // For historical reasons, a "history engine" really means two sync collections: history and forms.
+                // Underlying library doesn't manage this for us, and other clients will get confused
+                // if we modify just "history" without also modifying "forms", and vice versa.
+                // So: whenever a change to the "history" engine happens locally, inject the same "forms" change.
+                // This should be handled by RustSyncManager. See https://github.com/mozilla/application-services/issues/1832
+                engineMap[SyncEngine.History]?.let {
+                    engineMap[SyncEngine.Forms] = it
                 }
+                engineMap.mapKeys { it.key.nativeName }
+            }
+            else -> emptyMap()
+        }
+
+        // We need to tell RustSyncManager which engines to sync. 'null' means "sync all", which is an
+        // intersection of stores for which we've set a 'handle' and those that are enabled.
+        // This should be an empty list if we only want to sync metadata (e.g. which engines are enabled).
+        val enginesToSync = null
+
+        // We need to tell RustSyncManager about our current FxA device. It needs that information
+        // in order to sync the 'clients' collection.
+        // We're depending on cache being populated. An alternative to using a "cache" is to
+        // configure the worker with the values stored in it: device name, type and fxaDeviceID.
+        // While device type and fxaDeviceID are stable, users are free to change device name whenever.
+        // We need to reflect these changes during a sync. Our options are then: provide a global cache,
+        // or re-configure our workers every time a change is made to the device name.
+        // We have the same basic story already with syncAuthInfo cache, and a cache is much easier
+        // to implement/reason about than worker reconfiguration.
+        val deviceSettings = FxaDeviceSettingsCache(context).getCached()!!
+
+        // We need a password storage encryption key, if password storage is configured to be synced. It needs to be
+        // unlocked for the duration of a sync.
+        val passwordStore = syncableStores.entries.find { it.key == SyncEngine.Passwords }?.value as? LockableStore
+        val passwordsKey = if (passwordStore == null) {
+            null
+        } else {
+            SecureAbove22Preferences(context).getString("passwords_key")
+                ?: throw IllegalStateException("'passwords_key' must be set if password sync is enabled")
+        }
+
+        // We're now ready to sync.
+        val syncParams = SyncParams(
+            reason = reason.toRustSyncReason(),
+            engines = enginesToSync,
+            authInfo = syncAuthInfo.toNative(),
+            enabledChanges = enabledChanges,
+            persistedState = currentSyncState,
+            deviceSettings = deviceSettings
+        )
+
+        // Issue tracking moving locking/unlocking of storage layers to RustSyncManager:
+        // https://github.com/mozilla/application-services/issues/2102
+        val syncResult = if (passwordStore != null) {
+            passwordStore.unlocked(passwordsKey!!) { RustSyncManager.sync(syncParams) }
+        } else {
+            RustSyncManager.sync(syncParams)
+        }
+
+        // Persist the sync state; it may have changed during a sync, and RustSyncManager relies on us
+        // to store it.
+        setSyncState(context, syncResult.persistedState)
+
+        // Log the results.
+        syncResult.failures.entries.forEach {
+            logger.error("Failed to sync ${it.key}, reason: ${it.value}")
+        }
+        syncResult.successful.forEach {
+            logger.info("Successfully synced $it")
+        }
+
+        // Process any changes to the list of declined/accepted engines.
+        // NB: We may have received engine state information about an engine we're unfamiliar with.
+        // `SyncEngine.Other(string)` stands in for unknown engines.
+        val declinedEngines = syncResult.declined?.map { it.toSyncEngine() }?.toSet() ?: emptySet()
+        // We synthesize the 'accepted' list ourselves: engines we know about - declined engines.
+        // This assumes that "engines we know about" is a subset of engines RustSyncManager knows about.
+        // RustSyncManager will handle this, eventually.
+        // See: https://github.com/mozilla/application-services/issues/1685
+        val acceptedEngines = syncableStores.keys.filter { !declinedEngines.contains(it) }
+
+        // Persist engine state changes.
+        with(SyncEnginesStorage(context)) {
+            declinedEngines.forEach { setStatus(it, status = false) }
+            acceptedEngines.forEach { setStatus(it, status = true) }
+        }
+
+        // Process telemetry.
+        syncResult.telemetry?.let {
+            // Yes, this is complete garbage.
+            // But, what this does: individual 'process' function will report global sync errors
+            // as part of its corresponding ping. We don't want to report a global sync error twice,
+            // so we check for the boolean flag that indicates if this happened or not.
+            // There's a complete mismatch between what Glean supports and what we need
+            // it to do here. They don't support "nested metrics" and so we resort to these hacks.
+            // It shouldn't matter in which order these 'process' functions are called.
+            val noGlobalErrorsReported = SyncTelemetry.processBookmarksPing(it)
+            if (noGlobalErrorsReported) {
+                SyncTelemetry.processHistoryPing(it)
+            }
+            // TODO telemetry for the passwords engine.
+            // See https://github.com/mozilla-mobile/android-components/issues/4556
+        }
+
+        // Finally, declare success, failure or request a retry based on 'sync status'.
+        return when (syncResult.status) {
+            // Happy case.
+            SyncServiceStatus.OK -> {
+                // Worker should set the "last-synced" timestamp, and since we have a single timestamp,
+                // it's not clear if a single failure should prevent its update. That's the current behaviour
+                // in Fennec, but for very specific reasons that aren't relevant here. We could have
+                // a timestamp per store, or whatever we want here really.
+                // For now, we just update it every time we succeed to sync.
+                setLastSynced(context, System.currentTimeMillis())
+                Result.success()
             }
 
-            // We need to know the reason we're syncing.
-            val reason = params.inputData.getString(KEY_REASON)!!.toSyncReason()
-
-            // We need a cached "sync auth info" object.
-            val syncAuthInfo = SyncAuthInfoCache(context).getCached() ?: return Result.failure()
-
-            // We need any persisted state that we received from RustSyncManager in the past.
-            // We should be able to pass a `null` value, but currently the library will crash.
-            // See https://github.com/mozilla/application-services/issues/1829
-            val currentSyncState = getSyncState(context) ?: ""
-
-            // We need to tell RustSyncManager about our local "which engines are enabled/disabled" state.
-            // This is a global state, shared by every sync client for this account. State that we will
-            // pass here will overwrite current global state and may be propagated to every sync client.
-            // This should be empty if there have been no changes to this state.
-            // We pass this state if user changed it (EngineChange) or if we're in a first sync situation.
-            // A "first sync" will happen after signing up or signing in.
-            // In both cases, user may have been asked which engines they'd like to sync.
-            val enabledChanges = when (reason) {
-                SyncReason.EngineChange, SyncReason.FirstSync -> {
-                    val engineMap = SyncEnginesStorage(context).getStatus().toMutableMap()
-                    // For historical reasons, a "history engine" really means two sync collections: history and forms.
-                    // Underlying library doesn't manage this for us, and other clients will get confused
-                    // if we modify just "history" without also modifying "forms", and vice versa.
-                    // So: whenever a change to the "history" engine happens locally, inject the same "forms" change.
-                    // This should be handled by RustSyncManager. See https://github.com/mozilla/application-services/issues/1832
-                    engineMap[SyncEngine.History]?.let {
-                        engineMap[SyncEngine.Forms] = it
-                    }
-                    engineMap.mapKeys { it.key.nativeName }
-                }
-                else -> emptyMap()
+            // Retry cases.
+            // NB: retry doesn't mean "immediate retry". It means "retry, but respecting this worker's
+            // backoff policy, as configured during worker's creation.
+            // TODO FOR ALL retries: look at workerParams.mRunAttemptCount, don't retry after a certain number.
+            SyncServiceStatus.NETWORK_ERROR -> {
+                logger.error("Network error")
+                Result.retry()
+            }
+            SyncServiceStatus.BACKED_OFF -> {
+                logger.error("Backed-off error")
+                // As part of `syncResult`, we get back `nextSyncAllowedAt`. Ideally, we should not retry
+                // before that passes. However, we can not reconfigure back-off policy for an already
+                // created Worker. So, we just rely on a sensible default. `RustSyncManager` will fail
+                // to sync with a BACKED_OFF error without hitting the server if we don't respect
+                // `nextSyncAllowedAt`, so we should be good either way.
+                Result.retry()
             }
 
-            // We need to tell RustSyncManager which engines to sync. 'null' means "sync all", which is an
-            // intersection of stores for which we've set a 'handle' and those that are enabled.
-            // This should be an empty list if we only want to sync metadata (e.g. which engines are enabled).
-            val enginesToSync = null
-
-            // We need to tell RustSyncManager about our current FxA device. It needs that information
-            // in order to sync the 'clients' collection.
-            // We're depending on cache being populated. An alternative to using a "cache" is to
-            // configure the worker with the values stored in it: device name, type and fxaDeviceID.
-            // While device type and fxaDeviceID are stable, users are free to change device name whenever.
-            // We need to reflect these changes during a sync. Our options are then: provide a global cache,
-            // or re-configure our workers every time a change is made to the device name.
-            // We have the same basic story already with syncAuthInfo cache, and a cache is much easier
-            // to implement/reason about than worker reconfiguration.
-            val deviceSettings = FxaDeviceSettingsCache(context).getCached()!!
-
-            // We're now ready to sync.
-            val syncParams = SyncParams(
-                    reason = reason.toRustSyncReason(),
-                    engines = enginesToSync,
-                    authInfo = syncAuthInfo.toNative(),
-                    enabledChanges = enabledChanges,
-                    persistedState = currentSyncState,
-                    deviceSettings = deviceSettings
-            )
-            val syncResult = RustSyncManager.sync(syncParams)
-
-            // Persist the sync state; it may have changed during a sync, and RustSyncManager relies on us
-            // to store it.
-            setSyncState(context, syncResult.persistedState)
-
-            // Log the results.
-            syncResult.failures.entries.forEach {
-                logger.error("Failed to sync ${it.key}, reason: ${it.value}")
+            // Failure cases.
+            SyncServiceStatus.AUTH_ERROR -> {
+                logger.error("Auth error")
+                authErrorRegistry.notifyObservers {
+                    // TODO simplify this nesting
+                    onAuthErrorAsync(AuthException(AuthExceptionType.UNAUTHORIZED))
+                }
+                Result.failure()
             }
-            syncResult.successful.forEach {
-                logger.info("Successfully synced $it")
+            SyncServiceStatus.SERVICE_ERROR -> {
+                logger.error("Service error")
+                Result.failure()
             }
-
-            // Process any changes to the list of declined/accepted engines.
-            // NB: We may have received engine state information about an engine we're unfamiliar with.
-            // `SyncEngine.Other(string)` stands in for unknown engines.
-            val declinedEngines = syncResult.declined?.map { it.toSyncEngine() }?.toSet() ?: emptySet()
-            // We synthesize the 'accepted' list ourselves: engines we know about - declined engines.
-            // This assumes that "engines we know about" is a subset of engines RustSyncManager knows about.
-            // RustSyncManager will handle this, eventually.
-            // See: https://github.com/mozilla/application-services/issues/1685
-            val acceptedEngines = syncableStores.keys.filter { !declinedEngines.contains(it) }
-
-            // Persist engine state changes.
-            with(SyncEnginesStorage(context)) {
-                declinedEngines.forEach { setStatus(it, status = false) }
-                acceptedEngines.forEach { setStatus(it, status = true) }
-            }
-
-            // Process telemetry.
-            syncResult.telemetry?.let {
-                // Yes, this is complete garbage.
-                // But, what this does: individual 'process' function will report global sync errors
-                // as part of its corresponding ping. We don't want to report a global sync error twice,
-                // so we check for the boolean flag that indicates if this happened or not.
-                // There's a complete mismatch between what Glean supports and what we need
-                // it to do here. They don't support "nested metrics" and so we resort to these hacks.
-                // It shouldn't matter in which order these 'process' functions are called.
-                val noGlobalErrorsReported = SyncTelemetry.processBookmarksPing(it)
-                if (noGlobalErrorsReported) {
-                    SyncTelemetry.processHistoryPing(it)
-                }
-                // TODO telemetry for the passwords engine.
-                // See https://github.com/mozilla-mobile/android-components/issues/4556
-            }
-
-            // Finally, declare success, failure or request a retry based on 'sync status'.
-            return when (syncResult.status) {
-                // Happy case.
-                SyncServiceStatus.OK -> {
-                    // Worker should set the "last-synced" timestamp, and since we have a single timestamp,
-                    // it's not clear if a single failure should prevent its update. That's the current behaviour
-                    // in Fennec, but for very specific reasons that aren't relevant here. We could have
-                    // a timestamp per store, or whatever we want here really.
-                    // For now, we just update it every time we succeed to sync.
-                    setLastSynced(context, System.currentTimeMillis())
-                    Result.success()
-                }
-
-                // Retry cases.
-                // NB: retry doesn't mean "immediate retry". It means "retry, but respecting this worker's
-                // backoff policy, as configured during worker's creation.
-                // TODO FOR ALL retries: look at workerParams.mRunAttemptCount, don't retry after a certain number.
-                SyncServiceStatus.NETWORK_ERROR -> {
-                    logger.error("Network error")
-                    Result.retry()
-                }
-                SyncServiceStatus.BACKED_OFF -> {
-                    logger.error("Backed-off error")
-                    // As part of `syncResult`, we get back `nextSyncAllowedAt`. Ideally, we should not retry
-                    // before that passes. However, we can not reconfigure back-off policy for an already
-                    // created Worker. So, we just rely on a sensible default. `RustSyncManager` will fail
-                    // to sync with a BACKED_OFF error without hitting the server if we don't respect
-                    // `nextSyncAllowedAt`, so we should be good either way.
-                    Result.retry()
-                }
-
-                // Failure cases.
-                SyncServiceStatus.AUTH_ERROR -> {
-                    logger.error("Auth error")
-                    authErrorRegistry.notifyObservers {
-                        // TODO simplify this nesting
-                        onAuthErrorAsync(AuthException(AuthExceptionType.UNAUTHORIZED))
-                    }
-                    Result.failure()
-                }
-                SyncServiceStatus.SERVICE_ERROR -> {
-                    logger.error("Service error")
-                    Result.failure()
-                }
-                SyncServiceStatus.OTHER_ERROR -> {
-                    logger.error("'Other' error :(")
-                    Result.failure()
-                }
-            }
-        } finally {
-            // If password store was configured to be synced, we've unlocked it above. Now we need to "lock" it.
-            passwordStore?.let {
-                logger.debug("Locking password store")
-                (it as LockableStore).ensureLocked()
+            SyncServiceStatus.OTHER_ERROR -> {
+                logger.error("'Other' error :(")
+                Result.failure()
             }
         }
     }

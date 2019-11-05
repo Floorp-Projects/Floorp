@@ -400,12 +400,13 @@ data class SyncableLoginsStore(
         }
     }
 
-    override suspend fun ensureUnlocked(encryptionKey: String) {
-        store.ensureUnlocked(encryptionKey).await()
-    }
-
-    override suspend fun ensureLocked() {
-        store.ensureLocked().await()
+    override suspend fun <T> unlocked(encryptionKey: String, block: (store: LockableStore) -> T): T {
+        return try {
+            store.ensureUnlocked(encryptionKey).await()
+            block(this)
+        } finally {
+            store.ensureLocked().await()
+        }
     }
 
     override fun getHandle(): Long {

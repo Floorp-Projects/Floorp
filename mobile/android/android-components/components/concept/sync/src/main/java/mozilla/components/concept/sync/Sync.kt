@@ -47,17 +47,13 @@ data class SyncAuthInfo(
  */
 interface LockableStore : SyncableStore {
     /**
-     * Unlocks underlying storage using [encryptionKey]. Storage must be [ensureLocked] after use.
+     * Executes a [block] while keeping the store in an unlocked state. Store is locked once [block] is finished.
      *
      * @param encryptionKey Plaintext encryption key used by the underlying storage implementation (e.g. sqlcipher)
      * to key the store.
+     * @param block A lambda to execute while the store is unlocked.
      */
-    suspend fun ensureUnlocked(encryptionKey: String)
-
-    /**
-     * Locks the underlying storage. Call this after you're done with the store following [ensureLocked].
-     */
-    suspend fun ensureLocked()
+    suspend fun <T> unlocked(encryptionKey: String, block: (store: LockableStore) -> T): T
 }
 
 /**

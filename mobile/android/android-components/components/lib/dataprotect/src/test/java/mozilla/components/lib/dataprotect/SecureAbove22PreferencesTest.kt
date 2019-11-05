@@ -43,6 +43,19 @@ class SecureAbove22PreferencesTest {
         assertNull(storage.getString("hello"))
         storage.remove("test")
         assertNull(storage.getString("test"))
+
+        // clearing
+        storage.putString("one", "two")
+        assertEquals("two", storage.getString("one"))
+        storage.putString("three", "four")
+        assertEquals("four", storage.getString("three"))
+        storage.putString("five", "six")
+        assertEquals("six", storage.getString("five"))
+
+        storage.clear()
+        assertNull(storage.getString("one"))
+        assertNull(storage.getString("three"))
+        assertNull(storage.getString("five"))
     }
 
     @Config(sdk = [22])
@@ -71,6 +84,19 @@ class SecureAbove22PreferencesTest {
         assertNull(storage.getString("hello"))
         storage.remove("test")
         assertNull(storage.getString("test"))
+
+        // clearing
+        storage.putString("one", "two")
+        assertEquals("two", storage.getString("one"))
+        storage.putString("three", "four")
+        assertEquals("four", storage.getString("three"))
+        storage.putString("five", "six")
+        assertEquals("six", storage.getString("five"))
+
+        storage.clear()
+        assertNull(storage.getString("one"))
+        assertNull(storage.getString("three"))
+        assertNull(storage.getString("five"))
     }
 
     @Config(sdk = [22])

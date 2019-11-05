@@ -4,14 +4,11 @@
 
 package org.mozilla.samples.dataprotect
 
-import android.os.Build
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.lib.dataprotect.SecureAbove22Preferences
-import mozilla.components.lib.dataprotect.Keystore
-import org.mozilla.samples.dataprotect.Constants.KEYSTORE_LABEL
 
 class MainActivity : AppCompatActivity() {
     @Suppress("MagicNumber")
@@ -24,10 +21,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val prefs = SecureAbove22Preferences(
-            this,
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) Keystore(KEYSTORE_LABEL) else null
-        )
+        val prefs = SecureAbove22Preferences(this)
 
         prepareProtectedData(prefs)
 

@@ -10,7 +10,7 @@ import java.security.SecureRandom
  * @param keyStrength The strength of the generated key in bits
  */
 @Suppress("MagicNumber")
-fun generateEncryptionKey(keyStrength: Int): String {
+internal fun generateEncryptionKey(keyStrength: Int): String {
     require(keyStrength >= 256) { "Key strength must be at least 256 bits" }
     val bytes = ByteArray(keyStrength / 8)
     val random = SecureRandom()
