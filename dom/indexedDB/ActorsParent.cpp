@@ -9389,6 +9389,7 @@ constexpr nsLiteralCString GetComparisonOperatorString(
     case ComparisonOperator::GreaterOrEquals:
       return NS_LITERAL_CSTRING(">=");
   }
+  MOZ_CRASH("Should never get here.");
 }
 
 nsAutoCString GetKeyClause(const nsCString& aColumnName,
