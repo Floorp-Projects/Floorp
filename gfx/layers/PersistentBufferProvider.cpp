@@ -261,7 +261,8 @@ TextureClient* PersistentBufferProviderShared::GetTexture(
 already_AddRefed<gfx::DrawTarget>
 PersistentBufferProviderShared::BorrowDrawTarget(
     const gfx::IntRect& aPersistedRect) {
-  if (!mKnowsCompositor->GetTextureForwarder()->IPCOpen()) {
+  if (!mKnowsCompositor->GetTextureForwarder() ||
+      !mKnowsCompositor->GetTextureForwarder()->IPCOpen()) {
     return nullptr;
   }
 
