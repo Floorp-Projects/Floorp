@@ -32,7 +32,6 @@ fuzzy-if(webrender,0-1,0-125414) == mask-html-01.xhtml mask-html-01-ref.svg
 fuzzy-if(webrender,0-1,0-125414) == mask-html-01-extref-01.xhtml mask-html-01-ref.svg
 random == mask-html-01-extref-02.xhtml mask-html-01-ref.svg # random due to bug 877661
 fuzzy-if(webrender,0-1,0-125414) == mask-html-zoomed-01.xhtml mask-html-01-ref.svg
-fuzzy-if(webrender,0-1,0-125414) skip-if(!xbl) == mask-html-xbl-bound-01.html mask-html-01-ref.svg
 == mask-transformed-html-01.xhtml ../pass.svg
 == mask-transformed-html-02.xhtml ../pass.svg
 fuzzy-if(skiaContent,0-1,0-5) == patterned-svg-under-transformed-html-01.xhtml ../pass.svg

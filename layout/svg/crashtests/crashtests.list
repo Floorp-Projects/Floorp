@@ -61,13 +61,11 @@ load 385552-2.svg
 load 385840-1.svg
 load 385852-1.svg
 load 386475-1.xhtml
-skip-if(!xbl) load 386566-1.svg
 load 386690-1.svg
 load 387290-1.svg
 load 402408-1.svg
 load 404677-1.xhtml
 load 409565-1.xhtml
-skip-if(!xbl) load 409573-1.svg
 load 420697-1.svg
 load 420697-2.svg
 load 429774-1.svg

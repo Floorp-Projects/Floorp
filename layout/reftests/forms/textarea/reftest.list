@@ -12,6 +12,5 @@ skip-if(Android) != rtl.html no-resize.html # bug 834724
 fuzzy-if(skiaContent,0-1,0-1) == rtl.html rtl-dynamic-attr.html
 fuzzy-if(skiaContent,0-1,0-1) == rtl.html rtl-dynamic-style.html
 == rtl.html in-dynamic-rtl-doc.html
-fuzzy-if(skiaContent,0-1,0-3) skip-if(!xbl) == setvalue-framereconstruction-1.html setvalue-framereconstruction-ref.html
 fuzzy-if(asyncPan&&!layersGPUAccelerated,0-102,0-4168) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == padding-scrollbar-placement.html padding-scrollbar-placement-ref.html # Bug 1392106
 == various-cols.html various-cols-ref.html
