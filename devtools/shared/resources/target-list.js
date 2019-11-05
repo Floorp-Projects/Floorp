@@ -211,11 +211,12 @@ class TargetList {
     const fissionBrowserToolboxEnabled = Services.prefs.getBoolPref(
       BROWSERTOOLBOX_FISSION_ENABLED
     );
-    const isParentProcessToolboxOrBrowserConsole =
-      this.targetFront.chrome && !this.targetFront.isAddon;
-    return (
-      fissionBrowserToolboxEnabled && isParentProcessToolboxOrBrowserConsole
-    );
+    // For now, only enable additional targets when:
+    // - browser toolbox's fission pref is turned on, and,
+    // - we are in the browser toolbox or the browser console.
+    // These are the main two cases where the top level target is the ParentProcessTargetFront.
+    // Note that it can also happen when debugging remotely the main process.
+    return fissionBrowserToolboxEnabled && this.targetFront.isParentProcess;
   }
 
   // Called whenever a new Target front is available.
