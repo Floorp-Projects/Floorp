@@ -1265,9 +1265,9 @@ class nsDisplayXULEventRedirector final : public nsDisplayWrapList {
         mTargetFrame(aTargetFrame) {}
 
   // Should have an identical argument signature to the above ctor
-  static uint16_t CalculatePerFrameKey(nsDisplayListBuilder* aBuilder,
-                                       nsIFrame* aFrame, nsDisplayItem* aItem,
-                                       nsIFrame* aTargetFrame) {
+  static uint16_t CalculatePerFrameIndex(nsDisplayListBuilder* aBuilder,
+                                         nsIFrame* aFrame, nsDisplayItem* aItem,
+                                         nsIFrame* aTargetFrame) {
     return 0;
   }
 
@@ -1277,9 +1277,9 @@ class nsDisplayXULEventRedirector final : public nsDisplayWrapList {
         mTargetFrame(aTargetFrame) {}
 
   // Should have an identical argument signature to the above ctor
-  static uint16_t CalculatePerFrameKey(nsDisplayListBuilder* aBuilder,
-                                       nsIFrame* aFrame, nsDisplayList* aList,
-                                       nsIFrame* aTargetFrame) {
+  static uint16_t CalculatePerFrameIndex(nsDisplayListBuilder* aBuilder,
+                                         nsIFrame* aFrame, nsDisplayList* aList,
+                                         nsIFrame* aTargetFrame) {
     return 0;
   }
 
