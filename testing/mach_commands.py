@@ -497,7 +497,24 @@ def executable_name(name):
 
 
 @CommandProvider
-class CheckSpiderMonkeyCommand(MachCommandBase):
+class SpiderMonkeyTests(MachCommandBase):
+    def has_js_binary(binary):
+        def has_binary(cls):
+            try:
+                name = binary + cls.substs['BIN_SUFFIX']
+            except BuildEnvironmentNotFoundException:
+                return False
+
+            path = os.path.join(cls.topobjdir, 'dist', 'bin', name)
+
+            has_binary.__doc__ = """
+    `{}` not found in <objdir>/dist/bin. Make sure you aren't using an artifact build
+    and try rebuilding with `ac_add_options --enable-js-shell`.
+    """.format(name).lstrip()
+
+            return os.path.isfile(path)
+        return has_binary
+
     @Command('jstests', category='testing',
              description='Run SpiderMonkey JS tests in the JavaScript shell.')
     @CommandArgument('--shell', help='The shell to be used')
@@ -539,6 +556,23 @@ class CheckSpiderMonkeyCommand(MachCommandBase):
 
         return subprocess.call(jittest_cmd)
 
+    @Command('jsapi-tests', category='testing',
+             conditions=[has_js_binary('jsapi-tests')],
+             description='Run jsapi tests (JavaScript engine).')
+    @CommandArgument('test_name', nargs='?', metavar='N',
+                     help='Test to run. Can be a prefix or omitted. If '
+                     'omitted, the entire test suite is executed.')
+    def run_jsapitests(self, **params):
+        import subprocess
+
+        jsapi_tests_cmd = [
+            os.path.join(self.bindir, executable_name('jsapi-tests'))
+        ]
+        if params['test_name']:
+            jsapi_tests_cmd.append(params['test_name'])
+
+        return subprocess.call(jsapi_tests_cmd)
+
     @Command('check-spidermonkey', category='testing',
              description='Run SpiderMonkey tests (JavaScript engine).')
     @CommandArgument('--valgrind', action='store_true',
@@ -564,9 +598,7 @@ class CheckSpiderMonkeyCommand(MachCommandBase):
         jstest_result = self.run_jstests(js, [])
 
         print('running jsapi-tests')
-        jsapi_tests_cmd = [os.path.join(
-            self.bindir, executable_name('jsapi-tests'))]
-        jsapi_tests_result = subprocess.call(jsapi_tests_cmd)
+        jsapi_tests_result = self.run_jsapitests(test_name=None)
 
         print('running check-js-msg-encoding')
         check_js_msg_cmd = [python, os.path.join(
@@ -578,46 +610,6 @@ class CheckSpiderMonkeyCommand(MachCommandBase):
             check_js_msg_result
 
         return all_passed
-
-
-def has_js_binary(binary):
-    def has_binary(cls):
-        try:
-            name = binary + cls.substs['BIN_SUFFIX']
-        except BuildEnvironmentNotFoundException:
-            return False
-
-        path = os.path.join(cls.topobjdir, 'dist', 'bin', name)
-
-        has_binary.__doc__ = """
-`{}` not found in <objdir>/dist/bin. Make sure you aren't using an artifact build
-and try rebuilding with `ac_add_options --enable-js-shell`.
-""".format(name).lstrip()
-
-        return os.path.isfile(path)
-    return has_binary
-
-
-@CommandProvider
-class JsapiTestsCommand(MachCommandBase):
-    @Command('jsapi-tests', category='testing',
-             conditions=[has_js_binary('jsapi-tests')],
-             description='Run jsapi tests (JavaScript engine).')
-    @CommandArgument('test_name', nargs='?', metavar='N',
-                     help='Test to run. Can be a prefix or omitted. If omitted, the entire '
-                     'test suite is executed.')
-    def run_jsapitests(self, **params):
-        import subprocess
-
-        print('running jsapi-tests')
-        jsapi_tests_cmd = [os.path.join(
-            self.bindir, executable_name('jsapi-tests'))]
-        if params['test_name']:
-            jsapi_tests_cmd.append(params['test_name'])
-
-        jsapi_tests_result = subprocess.call(jsapi_tests_cmd)
-
-        return jsapi_tests_result
 
 
 def get_jsshell_parser():
