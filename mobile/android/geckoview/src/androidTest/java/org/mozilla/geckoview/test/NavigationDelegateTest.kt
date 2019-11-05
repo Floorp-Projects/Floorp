@@ -634,6 +634,7 @@ class NavigationDelegateTest : BaseSessionTest() {
                 assertThat("Target should match", request.target,
                            equalTo(GeckoSession.NavigationDelegate.TARGET_WINDOW_CURRENT))
                 assertThat("Redirect flag is not set", request.isRedirect, equalTo(false))
+                assertThat("Should not have a user gesture", request.hasUserGesture, equalTo(false))
                 return null
             }
 
@@ -1395,6 +1396,22 @@ class NavigationDelegateTest : BaseSessionTest() {
             override fun onCanGoForward(session: GeckoSession, canGoForward: Boolean) {
                 assertThat("Session should not be null", session, notNullValue())
                 assertThat("Cannot go forward", canGoForward, equalTo(false))
+            }
+        })
+    }
+
+    @WithDisplay(width = 100, height = 100)
+    @Test fun userGesture() {
+        mainSession.loadUri("$TEST_ENDPOINT$CLICK_TO_RELOAD_HTML_PATH")
+        mainSession.waitForPageStop()
+
+        mainSession.synthesizeTap(50, 50)
+
+        sessionRule.waitUntilCalled(object : Callbacks.NavigationDelegate {
+            @AssertCalled(count = 1)
+            override fun onLoadRequest(session: GeckoSession, request: LoadRequest): GeckoResult<AllowOrDeny>? {
+                assertThat("Should have a user gesture", request.hasUserGesture, equalTo(true))
+                return GeckoResult.fromValue(AllowOrDeny.ALLOW)
             }
         })
     }

@@ -577,7 +577,8 @@ public class GeckoSession implements Parcelable {
                               message.getString("uri"),
                               message.getString("triggerUri"),
                               message.getInt("where"),
-                              message.getInt("flags"));
+                              message.getInt("flags"),
+                              message.getBoolean("hasUserGesture"));
 
                     if (!IntentUtils.isUriSafeForScheme(request.uri)) {
                         callback.sendError("Blocked unsafe intent URI");
@@ -3433,11 +3434,13 @@ public class GeckoSession implements Parcelable {
             /* package */ LoadRequest(@NonNull final String uri,
                                       @Nullable final String triggerUri,
                                       final int geckoTarget,
-                                      final int flags) {
+                                      final int flags,
+                                      final boolean hasUserGesture) {
                 this.uri = uri;
                 this.triggerUri = triggerUri;
                 this.target = convertGeckoTarget(geckoTarget);
                 this.isRedirect = (flags & LOAD_REQUEST_IS_REDIRECT) != 0;
+                this.hasUserGesture = hasUserGesture;
             }
 
             /**
@@ -3448,6 +3451,7 @@ public class GeckoSession implements Parcelable {
                 triggerUri = null;
                 target = 0;
                 isRedirect = false;
+                hasUserGesture = false;
             }
 
             // This needs to match nsIBrowserDOMWindow.idl
@@ -3487,6 +3491,11 @@ public class GeckoSession implements Parcelable {
              * <code>isRedirect = true</code>.
              */
             public final boolean isRedirect;
+
+            /**
+             * True if there was an active user gesture when the load was requested.
+             */
+            public final boolean hasUserGesture;
         }
 
         /**
