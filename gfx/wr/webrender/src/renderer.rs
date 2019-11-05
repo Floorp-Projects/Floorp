@@ -1737,6 +1737,24 @@ pub struct RendererVAOs {
     composite_vao: VAO,
 }
 
+/// Information about the state of the debugging / profiler overlay in native compositing mode.
+struct DebugOverlayState {
+    /// True if any of the current debug flags will result in drawing a debug overlay.
+    is_enabled: bool,
+
+    /// The current size of the debug overlay surface. None implies that the
+    /// debug surface isn't currently allocated.
+    current_size: Option<DeviceIntSize>,
+}
+
+impl DebugOverlayState {
+    fn new() -> Self {
+        DebugOverlayState {
+            is_enabled: false,
+            current_size: None,
+        }
+    }
+}
 
 /// The renderer is responsible for submitting to the GPU the work prepared by the
 /// RenderBackend.
@@ -1863,6 +1881,9 @@ pub struct Renderer {
     /// If true, partial present state has been reset and everything needs to
     /// be drawn on the next render.
     force_redraw: bool,
+
+    /// State related to the debug / profiling overlays
+    debug_overlay_state: DebugOverlayState,
 }
 
 #[derive(Debug)]
@@ -2371,6 +2392,7 @@ impl Renderer {
             force_redraw: true,
             compositor_config: options.compositor_config,
             allocated_native_surfaces: FastHashSet::default(),
+            debug_overlay_state: DebugOverlayState::new(),
         };
 
         // We initially set the flags to default and then now call set_debug_flags
@@ -2877,6 +2899,101 @@ impl Renderer {
         result
     }
 
+    /// Update the state of any debug / profiler overlays. This is currently only needed
+    /// when running with the native compositor enabled.
+    fn update_debug_overlay(&mut self, framebuffer_size: DeviceIntSize) {
+        // If any of the following debug flags are set, something will be drawn on the debug overlay.
+        self.debug_overlay_state.is_enabled = self.debug_flags.intersects(
+            DebugFlags::PROFILER_DBG |
+            DebugFlags::RENDER_TARGET_DBG |
+            DebugFlags::TEXTURE_CACHE_DBG |
+            DebugFlags::EPOCHS |
+            DebugFlags::NEW_FRAME_INDICATOR |
+            DebugFlags::NEW_SCENE_INDICATOR |
+            DebugFlags::GPU_CACHE_DBG |
+            DebugFlags::SLOW_FRAME_INDICATOR |
+            DebugFlags::PICTURE_CACHING_DBG |
+            DebugFlags::PRIMITIVE_DBG |
+            DebugFlags::ZOOM_DBG
+        );
+
+        // Update the debug overlay surface, if we are running in native compositor mode.
+        if let CompositorConfig::Native { ref mut compositor, .. } = self.compositor_config {
+            // If there is a current surface, destroy it if we don't need it for this frame, or if
+            // the size has changed.
+            if let Some(current_size) = self.debug_overlay_state.current_size {
+                if !self.debug_overlay_state.is_enabled || current_size != framebuffer_size {
+                    compositor.destroy_surface(NativeSurfaceId::DEBUG_OVERLAY);
+                    self.debug_overlay_state.current_size = None;
+                }
+            }
+
+            // Allocate a new surface, if we need it and there isn't one.
+            if self.debug_overlay_state.is_enabled && self.debug_overlay_state.current_size.is_none() {
+                compositor.create_surface(
+                    NativeSurfaceId::DEBUG_OVERLAY,
+                    framebuffer_size,
+                    false,
+                );
+                self.debug_overlay_state.current_size = Some(framebuffer_size);
+            }
+        }
+    }
+
+    /// Bind a draw target for the debug / profiler overlays, if required.
+    fn bind_debug_overlay(&mut self) {
+        // Debug overlay setup are only required in native compositing mode
+        if self.debug_overlay_state.is_enabled {
+            if let CompositorConfig::Native { ref mut compositor, .. } = self.compositor_config {
+                let surface_size = self.debug_overlay_state.current_size.unwrap();
+
+                // Bind the native surface
+                let surface_info = compositor.bind(
+                    NativeSurfaceId::DEBUG_OVERLAY,
+                    DeviceIntRect::new(
+                        DeviceIntPoint::zero(),
+                        surface_size,
+                    ),
+                );
+
+                // Bind the native surface to current FBO target
+                let draw_target = DrawTarget::NativeSurface {
+                    offset: surface_info.origin,
+                    external_fbo_id: surface_info.fbo_id,
+                    dimensions: surface_size,
+                };
+                self.device.bind_draw_target(draw_target);
+
+                // When native compositing, clear the debug overlay each frame.
+                self.device.clear_target(
+                    Some([0.0, 0.0, 0.0, 0.0]),
+                    Some(1.0),
+                    None,
+                );
+            }
+        }
+    }
+
+    /// Unbind the draw target for debug / profiler overlays, if required.
+    fn unbind_debug_overlay(&mut self) {
+        // Debug overlay setup are only required in native compositing mode
+        if self.debug_overlay_state.is_enabled {
+            if let CompositorConfig::Native { ref mut compositor, .. } = self.compositor_config {
+                // Unbind the draw target and add it to the visual tree to be composited
+                compositor.unbind();
+
+                compositor.add_surface(
+                    NativeSurfaceId::DEBUG_OVERLAY,
+                    DeviceIntPoint::zero(),
+                    DeviceIntRect::new(
+                        DeviceIntPoint::zero(),
+                        self.debug_overlay_state.current_size.unwrap(),
+                    ),
+                );
+            }
+        }
+    }
+
     // If device_size is None, don't render
     // to the main frame buffer. This is useful
     // to update texture cache render tasks but
@@ -2936,6 +3053,13 @@ impl Renderer {
             frame_id
         });
 
+        // Inform the client that we are starting a composition transaction if native
+        // compositing is enabled. This needs to be done early in the frame, so that
+        // we can create debug overlays after drawing the main surfaces.
+        if let CompositorConfig::Native { ref mut compositor, .. } = self.compositor_config {
+            compositor.begin_frame();
+        }
+
         profile_timers.cpu_time.profile(|| {
             //Note: another borrowck dance
             let mut active_documents = mem::replace(&mut self.active_documents, Vec::default());
@@ -2993,6 +3117,13 @@ impl Renderer {
         });
 
         if let Some(device_size) = device_size {
+            // Update the state of the debug overlay surface, ensuring that
+            // the compositor mode has a suitable surface to draw to, if required.
+            self.update_debug_overlay(device_size);
+
+            // Bind a surface to draw the debug / profiler information to.
+            self.bind_debug_overlay();
+
             self.draw_render_target_debug(device_size);
             self.draw_texture_cache_debug(device_size);
             self.draw_gpu_cache_debug(device_size);
@@ -3099,7 +3230,18 @@ impl Renderer {
             if let Some(debug_renderer) = self.debug.try_get_mut() {
                 let small_screen = self.debug_flags.contains(DebugFlags::SMALL_SCREEN);
                 let scale = if small_screen { 1.6 } else { 1.0 };
-                debug_renderer.render(&mut self.device, device_size, scale);
+                // TODO(gw): Tidy this up so that compositor config integrates better
+                //           with the (non-compositor) surface y-flip options.
+                let surface_origin_is_top_left = match self.compositor_config {
+                    CompositorConfig::Native { .. } => true,
+                    CompositorConfig::Draw { .. } => self.device.surface_origin_is_top_left(),
+                };
+                debug_renderer.render(
+                    &mut self.device,
+                    device_size,
+                    scale,
+                    surface_origin_is_top_left,
+                );
             }
             // See comment for texture_resolver.begin_frame() for explanation
             // of why this must be done after all rendering, including debug
@@ -3112,6 +3254,17 @@ impl Renderer {
 
         if device_size.is_some() {
             self.last_time = current_time;
+
+            // Unbind the target for the debug overlay. No debug or profiler drawing
+            // can occur afer this point.
+            self.unbind_debug_overlay();
+        }
+
+        // Inform the client that we are finished this composition transaction if native
+        // compositing is enabled. This must be called after any debug / profiling compositor
+        // surfaces have been drawn and added to the visual tree.
+        if let CompositorConfig::Native { ref mut compositor, .. } = self.compositor_config {
+            compositor.end_frame();
         }
 
         self.documents_seen.clear();
@@ -5675,6 +5828,10 @@ impl Renderer {
             for id in self.allocated_native_surfaces.drain() {
                 compositor.destroy_surface(id);
             }
+            // Destroy the debug overlay surface, if currently allocated.
+            if self.debug_overlay_state.current_size.is_some() {
+                compositor.destroy_surface(NativeSurfaceId::DEBUG_OVERLAY);
+            }
         }
         self.gpu_cache_texture.deinit(&mut self.device);
         if let Some(dither_matrix_texture) = self.dither_matrix_texture {
@@ -6591,9 +6748,6 @@ impl CompositeState {
         &self,
         compositor: &mut dyn Compositor,
     ) {
-        // Inform the client that we are starting a composition transaction
-        compositor.begin_frame();
-
         // For each tile, update the properties with the native OS compositor,
         // such as position and clip rect. z-order of the tiles are implicit based
         // on the order they are added in this loop.
@@ -6611,8 +6765,5 @@ impl CompositeState {
                 tile.clip_rect.to_i32(),
             );
         }
-
-        // Inform the client that we are finished this composition transaction
-        compositor.end_frame();
     }
 }
