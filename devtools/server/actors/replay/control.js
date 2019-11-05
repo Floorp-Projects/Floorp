@@ -1019,21 +1019,9 @@ async function queuePauseData({
 
   await waitForFlushed(point.checkpoint);
 
-  sendAsyncManifest({
+  await sendAsyncManifest({
     shouldSkip() {
       if (maybeGetPauseData(point)) {
-        return true;
-      }
-
-      // If there is a logpoint at a position we will see a breakpoint as well.
-      // When the logpoint's text is resolved at this point then the pause data
-      // will be fetched as well.
-      if (
-        point.position &&
-        gLogpoints.some(({ position }) =>
-          positionSubsumes(position, point.position)
-        )
-      ) {
         return true;
       }
 
@@ -1559,53 +1547,98 @@ function simulateNearbyNavigation() {
 // associated with the logpoint.
 const gLogpoints = [];
 
-async function evaluateLogpoint({ point, text, condition, callback }) {
+async function evaluateLogpoint({
+  point,
+  text,
+  condition,
+  callback,
+  snapshot,
+  fast,
+}) {
   assert(point);
-  if (!condition) {
-    callback(point, ["Loading..."]);
-  }
-  let skipPauseData = false;
-  const manifest = {
+  await sendAsyncManifest({
     shouldSkip: () => false,
     contents() {
-      return { kind: "hitLogpoint", text, condition, skipPauseData };
+      return { kind: "hitLogpoint", text, condition, fast };
     },
-    onFinished(child, { pauseData, result, resultData, restoredSnapshot }) {
+    onFinished(child, { result, resultData, restoredSnapshot }) {
       if (restoredSnapshot) {
-        if (!skipPauseData) {
-          // Gathering pause data sometimes triggers a snapshot restore.
-          skipPauseData = true;
-          sendAsyncManifest(manifest);
-        } else {
-          callback(point, ["Recording divergence evaluating logpoint"]);
-        }
+        callback(point, ["Recording divergence evaluating logpoint"]);
       } else {
         if (result) {
-          if (!skipPauseData) {
-            addPauseData(point, pauseData, /* trackCached */ true);
-          }
           callback(point, result, resultData);
         }
-        child.divergedFromRecording = true;
+        if (!fast) {
+          child.divergedFromRecording = true;
+        }
       }
     },
     point,
+    snapshot,
     expectedDuration: 250,
     lowPriority: true,
     mightRewind: true,
-  };
-  sendAsyncManifest(manifest);
+  });
 }
 
 // Asynchronously invoke a logpoint's callback with all results from hitting
 // the logpoint in the range of the recording covered by checkpoint.
 async function findLogpointHits(
   checkpoint,
-  { position, text, condition, callback }
+  { position, text, condition, messageCallback, validCallback }
 ) {
+  if (!validCallback()) {
+    return;
+  }
+
   const hits = await findHits(checkpoint, position);
+  hits.sort((a, b) => pointPrecedes(b, a));
+
+  // Show an initial message while we evaluate the logpoint at each point.
+  if (!condition) {
+    for (const point of hits) {
+      messageCallback(point, ["Loading..."]);
+    }
+  }
+
   for (const point of hits) {
-    evaluateLogpoint({ point, text, condition, callback });
+    // When the fast logpoints mode is set, replaying children do not diverge
+    // from the recording when evaluating logpoints. If the evaluation has side
+    // effects then the page can behave differently later, including crashes if
+    // the recording is perturbed. Caveat emptor!
+    const fast = getPreference("fastLogpoints");
+
+    // Create a snapshot at the most recent checkpoint in case there are other
+    // nearby logpoints, except in fast mode where there is no need to rewind.
+    const snapshot = !fast && checkpointExecutionPoint(point.checkpoint);
+
+    // We wait on each logpoint in the list before starting the next one, so
+    // that hopefully all the logpoints associated with the same save checkpoint
+    // will be handled by the same process, with no duplicated work due to
+    // different processes handling logpoints that are very close to each other.
+    await evaluateLogpoint({
+      point,
+      text,
+      condition,
+      callback: messageCallback,
+      snapshot,
+      fast,
+    });
+
+    if (!validCallback()) {
+      return;
+    }
+  }
+
+  // Now that we've done the evaluation, gather pause data for each point we
+  // logged. We do this in a second pass because we want to do the evaluations
+  // as quickly as possible.
+  for (const point of hits) {
+    await queuePauseData({ point, trackCached: true });
+
+    if (!validCallback()) {
+      return;
+    }
   }
 }
 
@@ -1646,6 +1679,7 @@ async function findEventLogpointHits(checkpoint, event, callback) {
     if (info.event == event) {
       const point = await findEventFrameEntry(info.checkpoint, info.progress);
       if (point) {
+        callback(point, ["Loading..."]);
         evaluateLogpoint({ point, text: "arguments[0]", callback });
       }
     }

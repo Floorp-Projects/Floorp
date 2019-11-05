@@ -469,10 +469,6 @@ function messages(
         }
       }
 
-      if (removedIds.length === 0) {
-        return state;
-      }
-
       return removeMessagesFromState(
         {
           ...state,

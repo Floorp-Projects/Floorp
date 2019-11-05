@@ -546,8 +546,6 @@ MOZ_EXPORT void RecordReplayInterface_BeginContentParse(
   MOZ_RELEASE_ASSERT(IsRecordingOrReplaying());
   MOZ_RELEASE_ASSERT(aToken);
 
-  RecordReplayAssert("BeginContentParse %s", aURL);
-
   MonitorAutoLock lock(*child::gMonitor);
   for (ContentInfo& info : gContent) {
     MOZ_RELEASE_ASSERT(info.mToken != aToken);
@@ -559,8 +557,6 @@ MOZ_EXPORT void RecordReplayInterface_AddContentParseData8(
     const void* aToken, const Utf8Unit* aUtf8Buffer, size_t aLength) {
   MOZ_RELEASE_ASSERT(IsRecordingOrReplaying());
   MOZ_RELEASE_ASSERT(aToken);
-
-  RecordReplayAssert("AddContentParseData8ForRecordReplay %d", (int)aLength);
 
   MonitorAutoLock lock(*child::gMonitor);
   for (ContentInfo& info : gContent) {
@@ -577,8 +573,6 @@ MOZ_EXPORT void RecordReplayInterface_AddContentParseData16(
     const void* aToken, const char16_t* aBuffer, size_t aLength) {
   MOZ_RELEASE_ASSERT(IsRecordingOrReplaying());
   MOZ_RELEASE_ASSERT(aToken);
-
-  RecordReplayAssert("AddContentParseData16ForRecordReplay %d", (int)aLength);
 
   MonitorAutoLock lock(*child::gMonitor);
   for (ContentInfo& info : gContent) {
@@ -685,10 +679,17 @@ static bool RecordReplay_ProgressCounter(JSContext* aCx, unsigned aArgc,
   return true;
 }
 
-static bool RecordReplay_AdvanceProgressCounter(JSContext* aCx, unsigned aArgc,
+static bool RecordReplay_SetProgressCounter(JSContext* aCx, unsigned aArgc,
                                                 Value* aVp) {
   CallArgs args = CallArgsFromVp(aArgc, aVp);
-  AdvanceExecutionProgressCounter();
+
+  if (!args.get(0).isNumber()) {
+    JS_ReportErrorASCII(aCx, "Expected numeric argument");
+    return false;
+  }
+
+  gProgressCounter = args.get(0).toNumber();
+
   args.rval().setUndefined();
   return true;
 }
@@ -1385,7 +1386,7 @@ static const JSFunctionSpec gRecordReplayMethods[] = {
     JS_FN("newSnapshot", RecordReplay_NewSnapshot, 0, 0),
     JS_FN("divergeFromRecording", RecordReplay_DivergeFromRecording, 0, 0),
     JS_FN("progressCounter", RecordReplay_ProgressCounter, 0, 0),
-    JS_FN("advanceProgressCounter", RecordReplay_AdvanceProgressCounter, 0, 0),
+    JS_FN("setProgressCounter", RecordReplay_SetProgressCounter, 1, 0),
     JS_FN("shouldUpdateProgressCounter",
           RecordReplay_ShouldUpdateProgressCounter, 1, 0),
     JS_FN("manifestFinished", RecordReplay_ManifestFinished, 1, 0),

@@ -409,6 +409,11 @@ function eventListenerOnNewGlobal(global) {
   } catch (e) {}
 }
 
+function advanceProgressCounter() {
+  const progress = RecordReplayControl.progressCounter();
+  RecordReplayControl.setProgressCounter(progress + 1);
+}
+
 function eventBreakpointListener(notification) {
   const event = eventBreakpointForNotification(dbg, notification);
   if (!event) {
@@ -417,7 +422,7 @@ function eventBreakpointListener(notification) {
 
   // Advance the progress counter before and after each event, so that we can
   // determine later if any JS ran between the two points.
-  RecordReplayControl.advanceProgressCounter();
+  advanceProgressCounter();
 
   if (notification.phase == "pre") {
     const progress = RecordReplayControl.progressCounter();
@@ -1040,8 +1045,10 @@ const gManifestStartHandlers = {
     RecordReplayControl.manifestFinished(data);
   },
 
-  hitLogpoint({ text, condition, skipPauseData }) {
-    divergeFromRecording();
+  hitLogpoint({ text, condition, fast }) {
+    if (!fast) {
+      divergeFromRecording();
+    }
 
     const frame = scriptFrameForIndex(countScriptFrames() - 1);
     if (condition) {
@@ -1052,10 +1059,15 @@ const gManifestStartHandlers = {
       }
     }
 
+    const progress = RecordReplayControl.progressCounter();
+
     const displayName = formatDisplayName(frame);
     const rv = frame.evalWithBindings(`[${text}]`, { displayName });
 
-    const pauseData = skipPauseData ? undefined : getPauseData();
+    // The frame evaluation and any called scripts will advance the progress
+    // counter. In the fast logpoints mode we will not be rewinding after this,
+    // so reset the progress counter to its expected value.
+    RecordReplayControl.setProgressCounter(progress);
 
     let result;
     if (rv.return) {
@@ -1068,7 +1080,7 @@ const gManifestStartHandlers = {
     const resultData = new PreviewedObjects();
     result.forEach(v => resultData.addValue(v, PropertyLevels.FULL));
 
-    RecordReplayControl.manifestFinished({ result, resultData, pauseData });
+    RecordReplayControl.manifestFinished({ result, resultData });
   },
 };
 
