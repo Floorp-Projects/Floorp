@@ -17,6 +17,12 @@
 //! of defaults is chosen for the current platform, but the features activated
 //! can also be controlled at a finer granularity.
 //!
+//! # Platform Support
+//!
+//! Currently this library is verified to work on Linux, OSX, and Windows, but
+//! it may work on other platforms as well. Note that the quality of the
+//! backtrace may vary across platforms.
+//!
 //! # API Principles
 //!
 //! This library attempts to be as flexible as possible to accommodate different
@@ -31,7 +37,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! backtrace = "0.3"
+//! backtrace = "0.2"
 //! ```
 //!
 //! Next:
@@ -40,14 +46,12 @@
 //! extern crate backtrace;
 //!
 //! fn main() {
-//! # // Unsafe here so test passes on no_std.
-//! # #[cfg(feature = "std")] {
 //!     backtrace::trace(|frame| {
 //!         let ip = frame.ip();
 //!         let symbol_address = frame.symbol_address();
 //!
 //!         // Resolve this instruction pointer to a symbol name
-//!         backtrace::resolve_frame(frame, |symbol| {
+//!         backtrace::resolve(ip, |symbol| {
 //!             if let Some(name) = symbol.name() {
 //!                 // ...
 //!             }
@@ -59,44 +63,54 @@
 //!         true // keep going to the next frame
 //!     });
 //! }
-//! # }
 //! ```
 
 #![doc(html_root_url = "https://docs.rs/backtrace")]
 #![deny(missing_docs)]
-#![no_std]
-#![cfg_attr(all(feature = "std", target_env = "sgx"), feature(sgx_platform))]
-#![allow(bare_trait_objects)] // TODO: remove when updating to 2018 edition
-#![allow(rust_2018_idioms)] // TODO: remove when updating to 2018 edition
+#![deny(warnings)]
 
-#[cfg(feature = "std")]
+#[cfg(unix)]
+extern crate libc;
+#[cfg(all(windows, feature = "winapi"))] extern crate winapi;
+
+#[cfg(feature = "serde_derive")]
+#[cfg_attr(feature = "serde_derive", macro_use)]
+extern crate serde_derive;
+
+#[cfg(feature = "rustc-serialize")]
+extern crate rustc_serialize;
+
 #[macro_use]
-extern crate std;
+extern crate cfg_if;
 
-pub use crate::backtrace::{trace_unsynchronized, Frame};
-mod backtrace;
+extern crate rustc_demangle;
 
-pub use crate::symbolize::resolve_frame_unsynchronized;
-pub use crate::symbolize::{resolve_unsynchronized, Symbol, SymbolName};
-mod symbolize;
+#[cfg(feature = "cpp_demangle")]
+extern crate cpp_demangle;
 
-pub use crate::types::BytesOrWideString;
-mod types;
-
-#[cfg(feature = "std")]
-pub use crate::symbolize::clear_symbol_cache;
-
-mod print;
-pub use print::{BacktraceFmt, BacktraceFrameFmt, PrintFmt};
-
-cfg_if::cfg_if! {
-    if #[cfg(feature = "std")] {
-        pub use crate::backtrace::trace;
-        pub use crate::symbolize::{resolve, resolve_frame};
-        pub use crate::capture::{Backtrace, BacktraceFrame, BacktraceSymbol};
-        mod capture;
+cfg_if! {
+    if #[cfg(all(feature = "gimli-symbolize", unix, target_os = "linux"))] {
+        extern crate addr2line;
+        extern crate findshlibs;
+        extern crate gimli;
+        extern crate memmap;
+        extern crate object;
     }
 }
+
+#[allow(dead_code)] // not used everywhere
+#[cfg(unix)]
+#[macro_use]
+mod dylib;
+
+pub use backtrace::{trace, Frame};
+mod backtrace;
+
+pub use symbolize::{resolve, Symbol, SymbolName};
+mod symbolize;
+
+pub use capture::{Backtrace, BacktraceFrame, BacktraceSymbol};
+mod capture;
 
 #[allow(dead_code)]
 struct Bomb {
@@ -113,44 +127,52 @@ impl Drop for Bomb {
 }
 
 #[allow(dead_code)]
-#[cfg(feature = "std")]
 mod lock {
-    use std::boxed::Box;
     use std::cell::Cell;
-    use std::sync::{Mutex, MutexGuard, Once};
+    use std::mem;
+    use std::sync::{Once, Mutex, MutexGuard, ONCE_INIT};
 
-    pub struct LockGuard(Option<MutexGuard<'static, ()>>);
+    pub struct LockGuard(MutexGuard<'static, ()>);
 
     static mut LOCK: *mut Mutex<()> = 0 as *mut _;
-    static INIT: Once = Once::new();
+    static INIT: Once = ONCE_INIT;
     thread_local!(static LOCK_HELD: Cell<bool> = Cell::new(false));
 
     impl Drop for LockGuard {
         fn drop(&mut self) {
-            if self.0.is_some() {
-                LOCK_HELD.with(|slot| {
-                    assert!(slot.get());
-                    slot.set(false);
-                });
-            }
+            LOCK_HELD.with(|slot| {
+                assert!(slot.get());
+                slot.set(false);
+            });
         }
     }
 
-    pub fn lock() -> LockGuard {
+    pub fn lock() -> Option<LockGuard> {
         if LOCK_HELD.with(|l| l.get()) {
-            return LockGuard(None);
+            return None
         }
         LOCK_HELD.with(|s| s.set(true));
         unsafe {
             INIT.call_once(|| {
-                LOCK = Box::into_raw(Box::new(Mutex::new(())));
+                LOCK = mem::transmute(Box::new(Mutex::new(())));
             });
-            LockGuard(Some((*LOCK).lock().unwrap()))
+            Some(LockGuard((*LOCK).lock().unwrap()))
         }
     }
 }
 
-#[cfg(all(windows, feature = "dbghelp", not(target_vendor = "uwp")))]
-mod dbghelp;
-#[cfg(windows)]
-mod windows;
+// requires external synchronization
+#[cfg(all(windows, feature = "dbghelp"))]
+unsafe fn dbghelp_init() {
+    use winapi::shared::minwindef;
+    use winapi::um::{dbghelp, processthreadsapi};
+
+    static mut INITIALIZED: bool = false;
+
+    if !INITIALIZED {
+        dbghelp::SymInitializeW(processthreadsapi::GetCurrentProcess(),
+                                0 as *mut _,
+                                minwindef::TRUE);
+        INITIALIZED = true;
+    }
+}
