@@ -175,3 +175,19 @@ wrench-deps:
             - android-rs-glue
         toolchain:
             - linux64-rust-1.37  # whatever m-c is built with
+
+lucetc:
+    description: "lucetc build process"
+    treeherder:
+        symbol: TL(lucetc)
+    run:
+        script: build-lucetc.sh
+        toolchain-artifact: public/build/lucetc.tar.xz
+    fetches:
+        fetch:
+            - cmake
+            - lucetc-source
+        toolchain:
+            - linux64-binutils
+            - linux64-clang
+            - linux64-rust
