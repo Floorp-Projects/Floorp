@@ -1600,17 +1600,7 @@ class TreeMetadataEmitter(LoggingMixin):
                            flavor=flavor, install_prefix='%s/' % flavor,
                            relpath=mozpath.join(manifest_reldir,
                                                 mozpath.basename(manifest_path)))
-
-        for test, source_manifest in sorted(manifest.tests):
-            obj.tests.append({
-                'path': test,
-                'here': mozpath.dirname(test),
-                'manifest': source_manifest,
-                'name': mozpath.basename(test),
-                'head': '',
-                'support-files': '',
-                'subsuite': '',
-            })
+        obj.tests = list(sorted(manifest.tests, key=lambda t: t['path']))
 
         yield obj
 

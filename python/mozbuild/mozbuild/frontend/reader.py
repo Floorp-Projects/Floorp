@@ -1418,11 +1418,10 @@ class BuildReader(object):
                             result_context.test_files.add(mozpath.dirname(t) + '/**')
                     else:
                         for t in obj.tests:
-                            if isinstance(t, tuple):
-                                path, _ = t
-                                relpath = mozpath.relpath(path,
-                                                          self.config.topsrcdir)
-                            else:
+                            if 'relpath' in t:
                                 relpath = t['relpath']
+                            else:
+                                relpath = mozpath.relpath(t['path'],
+                                                          self.config.topsrcdir)
                             result_context.test_files.add(mozpath.dirname(relpath) + '/**')
         return result_context
