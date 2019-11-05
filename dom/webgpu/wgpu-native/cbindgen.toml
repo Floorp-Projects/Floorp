@@ -1,0 +1,37 @@
+header = """
+#define WGPU_LOCAL
+"""
+include_version = true
+braces = "SameLine"
+line_length = 100
+tab_width = 2
+language = "C"
+
+[export]
+prefix = "WGPU"
+#TODO: figure out why cbindgen even tries to export a private type...
+exclude = ["BufferMapResult"]
+
+[parse]
+parse_deps = false
+
+[parse.expand]
+features = ["local"]
+
+[fn]
+
+[struct]
+derive_eq = true
+
+[enum]
+prefix_with_name = true
+derive_helper_methods = true
+
+[macro_expansion]
+bitflags = true
+
+[defines]
+"feature = local" = "WGPU_LOCAL"
+"feature = gfx-backend-gl" = "WGPU_BACKEND_GL"
+"feature = winit" = "WGPU_WINIT"
+"feature = glutin" = "WGPU_GLUTIN"

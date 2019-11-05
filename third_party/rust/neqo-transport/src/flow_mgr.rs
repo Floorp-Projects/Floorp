@@ -180,6 +180,25 @@ impl FlowMgr {
                 application_error_code,
                 final_size
             );
+
+            if self
+                .from_streams
+                .remove(&(
+                    stream_id.into(),
+                    mem::discriminant(&Frame::ResetStream {
+                        stream_id,
+                        application_error_code,
+                        final_size,
+                    }),
+                ))
+                .is_some()
+            {
+                qinfo!(
+                    "Queued ResetStream for {} removed because previous ResetStream was acked",
+                    stream_id
+                );
+            }
+
             send_streams.reset_acked(stream_id.into());
         }
     }
