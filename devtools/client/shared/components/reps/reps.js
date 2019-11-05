@@ -3008,14 +3008,12 @@ async function getSourceLocation(location, sourceMapService) {
       const {
         sourceUrl,
         line,
-        column,
-        sourceId
+        column
       } = originalLocation;
       return {
         url: sourceUrl,
         line,
-        column,
-        sourceId
+        column
       };
     }
   } catch (e) {}
