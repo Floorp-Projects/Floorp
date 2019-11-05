@@ -31,17 +31,34 @@ def rebuild_check(args):
         deptime = mtime(dep)
         if deptime < 0:
             removed.append(dep)
-        elif mtime(dep) > t:
+        elif deptime > t:
             newer.append(dep)
+
+    def format_filelist(filelist):
+        if not filelist:
+            return None
+
+        limit = 5
+        length = len(filelist)
+        if length < limit:
+            return ', '.join(filelist)
+
+        truncated = filelist[:limit]
+        remaining = length - limit
+
+        return '%s (and %d other files)' % (', '.join(truncated), remaining)
+
+    newer = format_filelist(newer)
+    removed = format_filelist(removed)
 
     if newer and removed:
         print('Rebuilding %s because %s changed and %s was removed' % (
-            target, ', '.join(newer), ', '.join(removed)))
+            target, newer, removed))
     elif newer:
-        print('Rebuilding %s because %s changed' % (target, ', '.join(newer)))
+        print('Rebuilding %s because %s changed' % (target, newer))
     elif removed:
         print('Rebuilding %s because %s was removed' % (
-            target, ', '.join(removed)))
+            target, removed))
     else:
         print('Rebuilding %s for an unknown reason' % target)
 
