@@ -24,6 +24,8 @@
 #include "nsISecureBrowserUI.h"
 #include "nsRedirectHistoryEntry.h"
 #include "nsSerializationHelper.h"
+#include "nsIPrompt.h"
+#include "nsIWindowWatcher.h"
 
 using namespace mozilla::dom;
 
@@ -49,10 +51,12 @@ DocumentChannelParent::DocumentChannelParent(
     const PBrowserOrId& iframeEmbedding, nsILoadContext* aLoadContext,
     PBOverrideStatus aOverrideStatus)
     : mLoadContext(aLoadContext), mPBOverride(aOverrideStatus) {
+  RefPtr<dom::BrowserParent> parent;
   if (iframeEmbedding.type() == PBrowserOrId::TPBrowserParent) {
-    mBrowserParent =
+    parent =
         static_cast<dom::BrowserParent*>(iframeEmbedding.get_PBrowserParent());
   }
+  mListener = new ParentChannelListener(this, parent);
 }
 
 bool DocumentChannelParent::Init(const DocumentChannelCreationArgs& aArgs) {
@@ -63,8 +67,6 @@ bool DocumentChannelParent::Init(const DocumentChannelCreationArgs& aArgs) {
   nsresult rv = mozilla::ipc::LoadInfoArgsToLoadInfo(Some(aArgs.loadInfo()),
                                                      getter_AddRefs(loadInfo));
   MOZ_ASSERT(NS_SUCCEEDED(rv));
-
-  mListener = new ParentChannelListener(this);
 
   bool result = nsDocShell::CreateChannelForLoadState(
       loadState, loadInfo, mListener, nullptr,
@@ -683,16 +685,7 @@ DocumentChannelParent::GetInterface(const nsIID& aIID, void** result) {
     return NS_OK;
   }
 
-  if (aIID.Equals(NS_GET_IID(nsIAuthPromptProvider)) ||
-      aIID.Equals(NS_GET_IID(nsISecureBrowserUI)) ||
-      aIID.Equals(NS_GET_IID(nsIRemoteTab))) {
-    if (mBrowserParent) {
-      return mBrowserParent->QueryInterface(aIID, result);
-    }
-  }
-
-  nsresult rv = QueryInterface(aIID, result);
-  return rv;
+  return QueryInterface(aIID, result);
 }
 
 // Rather than forwarding all these nsIParentChannel functions to the child, we
