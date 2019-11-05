@@ -477,6 +477,11 @@ async function checkClickOnNode(
 ) {
   info("checking click on node location");
 
+  // If the debugger hasn't fully loaded yet and breakpoints are still being
+  // added when we click on the logpoint link, the logpoint panel might not
+  // render. Work around this for now, see bug 1592854.
+  await waitForTime(1000);
+
   const onSourceInDebuggerOpened = once(hud, "source-in-debugger-opened");
 
   EventUtils.sendMouseEvent(
