@@ -25,10 +25,10 @@ internal class VersionString(
 
     @Suppress("ComplexMethod")
     override fun compareTo(other: VersionString): Int {
-        if (!version.matches(VERSION_REGEX)) {
+        if (!isValid()) {
             throw IllegalArgumentException("Unexpected format in VersionString")
         }
-        if (!other.version.matches(VERSION_REGEX)) {
+        if (!other.isValid()) {
             throw IllegalArgumentException("Unexpected format in VersionString")
         }
         val thisParts = version.split(".")
@@ -75,4 +75,8 @@ internal class VersionString(
     override fun hashCode(): Int {
         return version.hashCode()
     }
+
+    fun isValid(): Boolean = version.matches(VERSION_REGEX)
+
+    override fun toString(): String = version
 }

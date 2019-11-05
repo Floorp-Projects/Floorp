@@ -54,6 +54,9 @@ permalink: /changelog/
 
 * **feature-prompts**
   * Adds support for Web Share API using `ShareDelegate`.
+  
+* **experiments**
+  * Fixes a crash when the app version or the experiment's version specifiers are not in the expected format.
 
 # 19.0.1
 

@@ -9,6 +9,7 @@ import android.content.SharedPreferences
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import mozilla.components.service.experiments.util.VersionString
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert
@@ -261,7 +262,7 @@ class ExperimentEvaluatorTest {
                 localeLanguage = "eng",
                 appId = "test.appId",
                 regions = listOf("USA", "GBR"),
-                appMinVersion = "1.0.0",
+                appMinVersion = VersionString("1.0.0"),
                 deviceManufacturer = "unknown",
                 deviceModel = "robolectric",
                 localeCountry = "USA"
@@ -308,7 +309,7 @@ class ExperimentEvaluatorTest {
                 localeLanguage = "eng",
                 appId = "test.appId",
                 regions = listOf("USA", "GBR"),
-                appMaxVersion = "2.0.0",
+                appMaxVersion = VersionString("2.0.0"),
                 deviceManufacturer = "unknown",
                 deviceModel = "robolectric",
                 localeCountry = "USA"
@@ -352,8 +353,8 @@ class ExperimentEvaluatorTest {
                 localeLanguage = "eng",
                 appId = "test.appId",
                 regions = listOf("USA", "GBR"),
-                appMinVersion = "1.0.0",
-                appMaxVersion = "2.0.0",
+                appMinVersion = VersionString("1.0.0"),
+                appMaxVersion = VersionString("2.0.0"),
                 deviceManufacturer = "unknown",
                 deviceModel = "robolectric",
                 localeCountry = "USA"
@@ -392,6 +393,132 @@ class ExperimentEvaluatorTest {
         assertNull(evaluator.evaluate(context, ExperimentDescriptor("testexperiment"), listOf(experiment), 20))
 
         packageInfo.versionName = "2.1.18"
+        assertNull(evaluator.evaluate(context, ExperimentDescriptor("testexperiment"), listOf(experiment), 20))
+    }
+
+    @Test
+    fun `evaluate appMinVersion with invalid app version should never match`() {
+        testReset(appId = "test.appId", versionName = "Invalid version")
+
+        val experiment = createDefaultExperiment(
+                id = "testexperiment",
+                match = createDefaultMatcher(
+                        localeLanguage = "eng",
+                        appId = "test.appId",
+                        regions = listOf("USA", "GBR"),
+                        appMinVersion = VersionString("1.0.0"),
+                        deviceManufacturer = "unknown",
+                        deviceModel = "robolectric",
+                        localeCountry = "USA"
+                ),
+                buckets = Experiment.Buckets(20, 70),
+                lastModified = currentTime
+        )
+
+        val evaluator = ExperimentEvaluator()
+        assertNull(evaluator.evaluate(context, ExperimentDescriptor("testexperiment"), listOf(experiment), 20))
+    }
+
+    @Test
+    fun `evaluate appMaxVersion with invalid app version should never match`() {
+        testReset(appId = "test.appId", versionName = "Invalid version")
+
+        val experiment = createDefaultExperiment(
+                id = "testexperiment",
+                match = createDefaultMatcher(
+                        localeLanguage = "eng",
+                        appId = "test.appId",
+                        regions = listOf("USA", "GBR"),
+                        appMaxVersion = VersionString("1.0.0"),
+                        deviceManufacturer = "unknown",
+                        deviceModel = "robolectric",
+                        localeCountry = "USA"
+                ),
+                buckets = Experiment.Buckets(20, 70),
+                lastModified = currentTime
+        )
+
+        val evaluator = ExperimentEvaluator()
+        assertNull(evaluator.evaluate(context, ExperimentDescriptor("testexperiment"), listOf(experiment), 20))
+    }
+
+    @Test
+    fun `invalid app version doesn't prevent other matches`() {
+        testReset(appId = "test.appId", versionName = "Invalid version")
+
+        val experiment = createDefaultExperiment(
+                id = "testexperiment",
+                match = createDefaultMatcher(
+                        localeLanguage = "eng",
+                        appId = "test.appId",
+                        regions = listOf("USA", "GBR"),
+                        deviceManufacturer = "unknown",
+                        deviceModel = "robolectric",
+                        localeCountry = "USA"
+                ),
+                buckets = Experiment.Buckets(20, 70),
+                lastModified = currentTime
+        )
+
+        val evaluator = ExperimentEvaluator()
+        assertNotNull(evaluator.evaluate(context, ExperimentDescriptor("testexperiment"), listOf(experiment), 20))
+    }
+
+    @Test
+    fun `invalid appMinVersion never matches`() {
+        testReset(appId = "test.appId", versionName = "1.0.0")
+
+        val experiment = createDefaultExperiment(
+                id = "testexperiment",
+                match = createDefaultMatcher(
+                        localeLanguage = "eng",
+                        appId = "test.appId",
+                        regions = listOf("USA", "GBR"),
+                        appMinVersion = VersionString("Invalid"),
+                        deviceManufacturer = "unknown",
+                        deviceModel = "robolectric",
+                        localeCountry = "USA"
+                ),
+                buckets = Experiment.Buckets(20, 70),
+                lastModified = currentTime
+        )
+
+        val evaluator = ExperimentEvaluator()
+        assertNull(evaluator.evaluate(context, ExperimentDescriptor("testexperiment"), listOf(experiment), 20))
+
+        packageInfo.versionName = "1.1.0"
+        assertNull(evaluator.evaluate(context, ExperimentDescriptor("testexperiment"), listOf(experiment), 20))
+
+        packageInfo.versionName = "0.9"
+        assertNull(evaluator.evaluate(context, ExperimentDescriptor("testexperiment"), listOf(experiment), 20))
+    }
+
+    @Test
+    fun `invalid appMaxVersion never matches`() {
+        testReset(appId = "test.appId", versionName = "1.0.0")
+
+        val experiment = createDefaultExperiment(
+                id = "testexperiment",
+                match = createDefaultMatcher(
+                        localeLanguage = "eng",
+                        appId = "test.appId",
+                        regions = listOf("USA", "GBR"),
+                        appMaxVersion = VersionString("Invalid"),
+                        deviceManufacturer = "unknown",
+                        deviceModel = "robolectric",
+                        localeCountry = "USA"
+                ),
+                buckets = Experiment.Buckets(20, 70),
+                lastModified = currentTime
+        )
+
+        val evaluator = ExperimentEvaluator()
+        assertNull(evaluator.evaluate(context, ExperimentDescriptor("testexperiment"), listOf(experiment), 20))
+
+        packageInfo.versionName = "1.1.0"
+        assertNull(evaluator.evaluate(context, ExperimentDescriptor("testexperiment"), listOf(experiment), 20))
+
+        packageInfo.versionName = "0.9"
         assertNull(evaluator.evaluate(context, ExperimentDescriptor("testexperiment"), listOf(experiment), 20))
     }
 

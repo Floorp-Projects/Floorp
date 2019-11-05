@@ -7,6 +7,7 @@ package mozilla.components.service.experiments
 import android.content.Context
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
+import mozilla.components.service.experiments.util.VersionString
 import java.util.concurrent.ExecutionException
 
 /**
@@ -65,8 +66,8 @@ internal fun getWorkInfoByTag(context: Context, tag: String): WorkInfo? {
 internal fun createDefaultMatcher(
     appId: String? = null,
     appDisplayVersion: String? = null,
-    appMinVersion: String? = null,
-    appMaxVersion: String? = null,
+    appMinVersion: VersionString? = null,
+    appMaxVersion: VersionString? = null,
     localeLanguage: String? = null,
     localeCountry: String? = null,
     deviceManufacturer: String? = null,
