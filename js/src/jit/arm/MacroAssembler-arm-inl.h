@@ -1916,6 +1916,13 @@ void MacroAssembler::cmp32Load32(Condition cond, Register lhs, Register rhs,
   MOZ_CRASH("No known use cases");
 }
 
+void MacroAssembler::cmp32LoadPtr(Condition cond, const Address& lhs, Imm32 rhs,
+                                  const Address& src, Register dest) {
+  cmp32(lhs, rhs);
+  ScratchRegisterScope scratch(*this);
+  ma_ldr(src, dest, scratch, Offset, cond);
+}
+
 void MacroAssembler::test32LoadPtr(Condition cond, const Address& addr,
                                    Imm32 mask, const Address& src,
                                    Register dest) {

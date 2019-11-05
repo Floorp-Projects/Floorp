@@ -1614,6 +1614,19 @@ void MacroAssembler::cmp32MovePtr(Condition cond, Register lhs, Imm32 rhs,
        cond);
 }
 
+void MacroAssembler::cmp32LoadPtr(Condition cond, const Address& lhs, Imm32 rhs,
+                                  const Address& src, Register dest) {
+  // ARM64 does not support conditional loads, so we use a branch with a CSel
+  // (to prevent Spectre attacks).
+  vixl::UseScratchRegisterScope temps(this);
+  const ARMRegister scratch64 = temps.AcquireX();
+  Label done;
+  branch32(Assembler::InvertCondition(cond), lhs, rhs, &done);
+  loadPtr(src, scratch64.asUnsized());
+  Csel(ARMRegister(dest, 64), scratch64, ARMRegister(dest, 64), cond);
+  bind(&done);
+}
+
 void MacroAssembler::test32LoadPtr(Condition cond, const Address& addr,
                                    Imm32 mask, const Address& src,
                                    Register dest) {
