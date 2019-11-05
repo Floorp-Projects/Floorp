@@ -2031,16 +2031,17 @@ nsUrlClassifierDBService::SendThreatHitReport(nsIChannel* aChannel,
 
 NS_IMETHODIMP
 nsUrlClassifierDBService::Lookup(nsIPrincipal* aPrincipal,
-                                 const nsACString& aTables,
-                                 nsIUrlClassifierCallback* aCallback) {
-  // We don't expect someone with SystemPrincipal calls this API(See Bug
-  // 813897).
-  MOZ_ASSERT(!nsContentUtils::IsSystemPrincipal(aPrincipal));
-
+                                 const nsACString& tables,
+                                 nsIUrlClassifierCallback* c) {
   NS_ENSURE_TRUE(gDbBackgroundThread, NS_ERROR_NOT_INITIALIZED);
 
+  if (nsContentUtils::IsSystemPrincipal(aPrincipal)) {
+    // FIXME: we don't call 'c' here!
+    return NS_OK;
+  }
+
   nsTArray<nsCString> tableArray;
-  Classifier::SplitTables(aTables, tableArray);
+  Classifier::SplitTables(tables, tableArray);
 
   nsCOMPtr<nsIUrlClassifierFeature> feature;
   nsresult rv =
@@ -2076,7 +2077,7 @@ nsUrlClassifierDBService::Lookup(nsIPrincipal* aPrincipal,
   rv = utilsService->GetKeyForURI(uri, key);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return LookupURI(key, holder, aCallback);
+  return LookupURI(key, holder, c);
 }
 
 nsresult nsUrlClassifierDBService::LookupURI(
