@@ -32,6 +32,10 @@ extern MOZ_MUST_USE bool WritableStreamDefaultWriterGetDesiredSize(
     JSContext* cx, JS::Handle<WritableStreamDefaultWriter*> unwrappedWriter,
     JS::MutableHandle<JS::Value> size);
 
+extern JSObject* WritableStreamDefaultWriterWrite(
+    JSContext* cx, JS::Handle<WritableStreamDefaultWriter*> unwrappedWriter,
+    JS::Handle<JS::Value> chunk);
+
 }  // namespace js
 
 #endif  // builtin_streams_WritableStreamWriterOperations_h
