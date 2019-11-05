@@ -81,6 +81,15 @@ extern MOZ_MUST_USE bool WritableStreamDefaultControllerErrorIfNeeded(
     JS::Handle<WritableStreamDefaultController*> unwrappedController,
     JS::Handle<JS::Value> error);
 
+extern MOZ_MUST_USE bool WritableStreamDefaultControllerProcessClose(
+    JSContext* cx,
+    JS::Handle<WritableStreamDefaultController*> unwrappedController);
+
+extern MOZ_MUST_USE bool WritableStreamDefaultControllerProcessWrite(
+    JSContext* cx,
+    JS::Handle<WritableStreamDefaultController*> unwrappedController,
+    JS::Handle<JS::Value> chunk);
+
 extern bool WritableStreamDefaultControllerGetBackpressure(
     const WritableStreamDefaultController* unwrappedController);
 
