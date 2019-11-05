@@ -1,0 +1,5 @@
+#version 450
+
+layout (constant_id = 10) const int CONSTANT = 123;
+
+void main() {}

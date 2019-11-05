@@ -2554,7 +2554,7 @@ mod tests {
         assert_eq!(res, Output::Callback(Duration::from_secs(60)));
 
         assert_eq!(client.stream_create(StreamType::UniDi).unwrap(), 2);
-        assert_eq!(client.stream_send(2, b"hello").unwrap(), 5);;
+        assert_eq!(client.stream_send(2, b"hello").unwrap(), 5);
 
         let out = client.process(None, now + Duration::from_secs(10));
         let out = server.process(out.dgram(), now + Duration::from_secs(10));
@@ -2581,11 +2581,11 @@ mod tests {
         assert_eq!(res, Output::Callback(Duration::from_secs(60)));
 
         assert_eq!(client.stream_create(StreamType::UniDi).unwrap(), 2);
-        assert_eq!(client.stream_send(2, b"hello").unwrap(), 5);;
+        assert_eq!(client.stream_send(2, b"hello").unwrap(), 5);
 
         let _out = client.process(None, now + Duration::from_secs(10));
 
-        assert_eq!(client.stream_send(2, b"there").unwrap(), 5);;
+        assert_eq!(client.stream_send(2, b"there").unwrap(), 5);
         let _out = client.process(None, now + Duration::from_secs(20));
 
         // Still connected after 69 seconds.

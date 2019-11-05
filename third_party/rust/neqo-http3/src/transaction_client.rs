@@ -7,7 +7,7 @@
 use crate::hframe::{HFrame, HFrameReader};
 
 use crate::client_events::Http3ClientEvents;
-use crate::connection::{Http3Events, Http3Transaction};
+use crate::connection::Http3Transaction;
 use crate::Header;
 use neqo_common::{qdebug, qinfo, qtrace, Encoder};
 use neqo_qpack::decoder::QPackDecoder;
@@ -58,7 +58,7 @@ impl Request {
             return;
         }
 
-        qdebug!([self] "Encoding headers for {}/{}", self.host, self.path);
+        qinfo!([self] "Encoding headers for {}/{}", self.host, self.path);
         let encoded_headers = encoder.encode_header_block(&self.headers, stream_id);
         let f = HFrame::Headers {
             len: encoded_headers.len() as u64,
@@ -83,10 +83,10 @@ impl Request {
         self.ensure_encoded(encoder, stream_id);
         if let Some(buf) = &mut self.buf {
             let sent = conn.stream_send(stream_id, &buf)?;
-            qdebug!([label] "{} bytes sent", sent);
+            qinfo!([label] "{} bytes sent", sent);
 
             if sent == buf.len() {
-                qdebug!([label] "done sending request");
+                qinfo!([label] "done sending request");
                 Ok(true)
             } else {
                 let b = buf.split_off(sent);
@@ -196,7 +196,7 @@ impl TransactionClient {
     }
 
     pub fn send_request_body(&mut self, conn: &mut Connection, buf: &[u8]) -> Res<usize> {
-        qdebug!([self] "send_request_body: send_state={:?} len={}", self.send_state, buf.len());
+        qinfo!([self] "send_request_body: send_state={:?} len={}", self.send_state, buf.len());
         match self.send_state {
             TransactionSendState::SendingHeaders { .. } => Ok(0),
             TransactionSendState::SendingData => {
@@ -218,7 +218,7 @@ impl TransactionClient {
                     to_send = min(buf.len(), available - 9);
                 }
 
-                qtrace!([self] "send_request_body: available={} to_send={}.", available, to_send);
+                qinfo!([self] "send_request_body: available={} to_send={}.", available, to_send);
 
                 let data_frame = HFrame::Data {
                     len: to_send as u64,
@@ -241,7 +241,7 @@ impl TransactionClient {
     }
 
     fn handle_frame_in_state_waiting_for_headers(&mut self, frame: HFrame, fin: bool) -> Res<()> {
-        qdebug!([self] "A new frame has been received: {:?}", frame);
+        qinfo!([self] "A new frame has been received: {:?}; state={:?}", frame, self.recv_state);
         match frame {
             HFrame::Headers { len } => self.handle_headers_frame(len, fin),
             HFrame::PushPromise { .. } => Err(Error::HttpIdError),
@@ -265,6 +265,7 @@ impl TransactionClient {
     }
 
     fn handle_frame_in_state_waiting_for_data(&mut self, frame: HFrame, fin: bool) -> Res<()> {
+        qinfo!([self] "A new frame has been received: {:?}; state={:?}", frame, self.recv_state);
         match frame {
             HFrame::Data { len } => self.handle_data_frame(len, fin),
             HFrame::PushPromise { .. } => Err(Error::HttpIdError),
@@ -360,7 +361,7 @@ impl TransactionClient {
             }
 
             // we have read the headers, try decoding them.
-            qdebug!([label] "read_headers: read all headers, try decoding them.");
+            qinfo!([label] "read_headers: read all headers, try decoding them.");
             match decoder.decode_header_block(buf, self.stream_id)? {
                 Some(headers) => {
                     self.add_headers(Some(headers))?;
@@ -468,11 +469,11 @@ impl Http3Transaction for TransactionClient {
                 if fin {
                     conn.stream_close_send(self.stream_id)?;
                     self.send_state = TransactionSendState::Closed;
-                    qdebug!([label] "done sending request");
+                    qinfo!([label] "done sending request");
                 } else {
                     self.send_state = TransactionSendState::SendingData;
                     self.conn_events.data_writable(self.stream_id);
-                    qdebug!([label] "change to state SendingData");
+                    qinfo!([label] "change to state SendingData");
                 }
             }
         }
@@ -515,7 +516,7 @@ impl Http3Transaction for TransactionClient {
                             }
                         }
                         None => {
-                            qdebug!([self] "decoding header is blocked.");
+                            qinfo!([self] "decoding header is blocked.");
                             break Ok(());
                         }
                     }
