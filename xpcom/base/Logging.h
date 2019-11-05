@@ -34,6 +34,9 @@
 // the file piece number still at the end.
 #define MOZ_LOG_FILE_EXTENSION ".moz_log"
 
+// Token for Process ID substitution.
+#define MOZ_LOG_PID_TOKEN "%PID"
+
 namespace mozilla {
 
 // While not a 100% mapping to PR_LOG's numeric values, mozilla::LogLevel does
