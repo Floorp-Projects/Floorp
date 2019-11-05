@@ -109,7 +109,7 @@ void KeyframeEffect::SetIterationComposite(
   }
 
   if (mAnimation && mAnimation->IsRelevant()) {
-    nsNodeUtils::AnimationChanged(mAnimation);
+    MutationObservers::NotifyAnimationChanged(mAnimation);
   }
 
   mEffectOptions.mIterationComposite = aIterationComposite;
@@ -128,7 +128,7 @@ void KeyframeEffect::SetComposite(const CompositeOperation& aComposite) {
   mEffectOptions.mComposite = aComposite;
 
   if (mAnimation && mAnimation->IsRelevant()) {
-    nsNodeUtils::AnimationChanged(mAnimation);
+    MutationObservers::NotifyAnimationChanged(mAnimation);
   }
 
   if (mTarget) {
@@ -149,7 +149,7 @@ void KeyframeEffect::NotifySpecifiedTimingUpdated() {
     mAnimation->NotifyEffectTimingUpdated();
 
     if (mAnimation->IsRelevant()) {
-      nsNodeUtils::AnimationChanged(mAnimation);
+      MutationObservers::NotifyAnimationChanged(mAnimation);
     }
 
     RequestRestyle(EffectCompositor::RestyleType::Layer);
@@ -242,7 +242,7 @@ void KeyframeEffect::SetKeyframes(nsTArray<Keyframe>&& aKeyframes,
   KeyframeUtils::DistributeKeyframes(mKeyframes);
 
   if (mAnimation && mAnimation->IsRelevant()) {
-    nsNodeUtils::AnimationChanged(mAnimation);
+    MutationObservers::NotifyAnimationChanged(mAnimation);
   }
 
   // We need to call UpdateProperties() unless the target element doesn't have
@@ -986,7 +986,7 @@ void KeyframeEffect::SetTarget(
 
     nsAutoAnimationMutationBatch mb(mTarget->mElement->OwnerDoc());
     if (mAnimation) {
-      nsNodeUtils::AnimationRemoved(mAnimation);
+      MutationObservers::NotifyAnimationRemoved(mAnimation);
     }
   }
 
@@ -1003,7 +1003,7 @@ void KeyframeEffect::SetTarget(
 
     nsAutoAnimationMutationBatch mb(mTarget->mElement->OwnerDoc());
     if (mAnimation) {
-      nsNodeUtils::AnimationAdded(mAnimation);
+      MutationObservers::NotifyAnimationAdded(mAnimation);
       mAnimation->ReschedulePendingTasks();
     }
   }
