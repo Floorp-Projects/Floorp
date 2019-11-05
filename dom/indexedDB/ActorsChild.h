@@ -618,34 +618,11 @@ class BackgroundRequestChild final : public BackgroundRequestChildBase,
       const PreprocessParams& aParams) override;
 };
 
-// TODO: Consider defining different subclasses for the different cursor types,
-// possibly using the CRTP, which would remove the need for various case
-// distinctions.
 class BackgroundCursorChild final : public PBackgroundIDBCursorChild {
   friend class BackgroundTransactionChild;
   friend class BackgroundVersionChangeTransactionChild;
 
   class DelayedActionRunnable;
-
-  struct CachedResponse {
-    CachedResponse() = delete;
-
-    CachedResponse(Key aKey, StructuredCloneReadInfo&& aCloneInfo);
-    CachedResponse(Key aKey, Key aLocaleAwareKey, Key aObjectStoreKey,
-                   StructuredCloneReadInfo&& aCloneInfo);
-    explicit CachedResponse(Key aKey);
-    CachedResponse(Key aKey, Key aLocaleAwareKey, Key aObjectStoreKey);
-
-    CachedResponse(CachedResponse&& aOther) = default;
-    CachedResponse& operator=(CachedResponse&& aOther) = default;
-    CachedResponse(const CachedResponse& aOther) = delete;
-    CachedResponse& operator=(const CachedResponse& aOther) = delete;
-
-    Key mKey;
-    Key mLocaleAwareKey;
-    Key mObjectStoreKey;
-    StructuredCloneReadInfo mCloneInfo;
-  };
 
   IDBRequest* mRequest;
   IDBTransaction* mTransaction;
@@ -661,8 +638,6 @@ class BackgroundCursorChild final : public PBackgroundIDBCursorChild {
 
   NS_DECL_OWNINGTHREAD
 
-  std::deque<CachedResponse> mCachedResponses, mDelayedResponses;
-
  public:
   BackgroundCursorChild(IDBRequest* aRequest, IDBObjectStore* aObjectStore,
                         Direction aDirection);
@@ -675,15 +650,9 @@ class BackgroundCursorChild final : public PBackgroundIDBCursorChild {
   }
 
   void SendContinueInternal(const CursorRequestParams& aParams,
-                            const Key& aCurrentKey,
-                            const Key& aCurrentObjectStoreKey);
+                            const Key& aCurrentKey);
 
   void SendDeleteMeInternal();
-
-  void InvalidateCachedResponses();
-
-  template <typename Condition>
-  void DiscardCachedResponses(const Condition& aConditionFunc);
 
   IDBRequest* GetRequest() const {
     AssertIsOnOwningThread();
@@ -714,30 +683,17 @@ class BackgroundCursorChild final : public PBackgroundIDBCursorChild {
   // BackgroundVersionChangeTransactionChild.
   ~BackgroundCursorChild();
 
-  void CompleteContinueRequestFromCache();
-
   void HandleResponse(nsresult aResponse);
 
   void HandleResponse(const void_t& aResponse);
 
-  void HandleResponse(const nsTArray<ObjectStoreCursorResponse>& aResponses);
+  void HandleResponse(const nsTArray<ObjectStoreCursorResponse>& aResponse);
 
-  void HandleResponse(const nsTArray<ObjectStoreKeyCursorResponse>& aResponses);
+  void HandleResponse(const ObjectStoreKeyCursorResponse& aResponse);
 
-  void HandleResponse(const nsTArray<IndexCursorResponse>& aResponses);
+  void HandleResponse(const IndexCursorResponse& aResponse);
 
-  StructuredCloneReadInfo PrepareCloneReadInfo(
-      SerializedStructuredCloneReadInfo&& aCloneInfo) const;
-
-  template <typename T, typename Func>
-  void HandleMultipleCursorResponses(const nsTArray<T>& aResponses,
-                                     const Func& aHandleRecord);
-
-  void HandleResponse(const nsTArray<IndexKeyCursorResponse>& aResponses);
-
-  template <typename... Args>
-  void HandleIndividualCursorResponse(bool aUseAsCurrentResult,
-                                      Args&&... aArgs);
+  void HandleResponse(const IndexKeyCursorResponse& aResponse);
 
   // IPDL methods are only called by IPDL.
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
@@ -747,8 +703,8 @@ class BackgroundCursorChild final : public PBackgroundIDBCursorChild {
 
  public:
   // Force callers to use SendContinueInternal.
-  bool SendContinue(const CursorRequestParams& aParams, const Key& aCurrentKey,
-                    const Key& aCurrentObjectStoreKey) = delete;
+  bool SendContinue(const CursorRequestParams& aParams,
+                    const Key& aCurrentKey) = delete;
 
   bool SendDeleteMe() = delete;
 };
