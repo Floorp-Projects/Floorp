@@ -741,6 +741,11 @@ TEST(GeckoProfiler, Markers)
   PROFILER_ADD_MARKER_WITH_PAYLOAD("VsyncMarkerPayload marker", OTHER,
                                    VsyncMarkerPayload, (ts1));
 
+  PROFILER_ADD_MARKER_WITH_PAYLOAD(
+      "IPCMarkerPayload marker", IPC, IPCMarkerPayload,
+      (1111, 1, 3 /* PAPZ::Msg_LayerTransforms */, mozilla::ipc::ParentSide,
+       mozilla::ipc::MessageDirection::eSending, false, ts1));
+
   SpliceableChunkedJSONWriter w;
   w.Start();
   EXPECT_TRUE(profiler_stream_json_for_this_process(w));
@@ -795,6 +800,7 @@ TEST(GeckoProfiler, Markers)
     S_UserTimingMarkerPayload_mark,
     S_UserTimingMarkerPayload_measure,
     S_VsyncMarkerPayload,
+    S_IPCMarkerPayload,
 
     S_LAST,
   } state = State(0);
@@ -1214,6 +1220,23 @@ TEST(GeckoProfiler, Markers)
                 // Timestamp is stored in marker outside of payload.
                 EXPECT_EQ_JSON(marker[1], Double, ts1Double);
                 EXPECT_TRUE(payload["stack"].isNull());
+
+              } else if (nameString == "IPCMarkerPayload marker") {
+                EXPECT_EQ(state, S_IPCMarkerPayload);
+                state = State(S_IPCMarkerPayload + 1);
+                EXPECT_EQ(typeString, "IPC");
+                EXPECT_EQ_JSON(payload["startTime"], Double, ts1Double);
+                // Start timestamp is also stored in marker outside of payload.
+                EXPECT_EQ_JSON(marker[1], Double, ts1Double);
+                EXPECT_EQ_JSON(payload["endTime"], Double, ts1Double);
+                EXPECT_TRUE(payload["stack"].isNull());
+                EXPECT_EQ_JSON(payload["otherPid"], Int, 1111);
+                EXPECT_EQ_JSON(payload["messageSeqno"], Int, 1);
+                EXPECT_EQ_JSON(payload["messageType"], String,
+                               "PAPZ::Msg_LayerTransforms");
+                EXPECT_EQ_JSON(payload["side"], String, "parent");
+                EXPECT_EQ_JSON(payload["direction"], String, "sending");
+                EXPECT_EQ_JSON(payload["sync"], Bool, false);
               }
             }  // marker with payload
           }    // for (marker:data)
