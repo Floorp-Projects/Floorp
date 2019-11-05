@@ -161,6 +161,16 @@ class nsDisplayTextOverflowMarker final : public nsPaintedDisplayItem {
         mIndex((aLineNumber << 1) + aIndex) {
     MOZ_COUNT_CTOR(nsDisplayTextOverflowMarker);
   }
+
+  // Should have the same argument signature as the above ctor
+  static uint16_t CalculatePerFrameKey(nsDisplayListBuilder* aBuilder,
+                                       nsIFrame* aFrame, const nsRect& aRect,
+                                       nscoord aAscent,
+                                       const StyleTextOverflowSide& aStyle,
+                                       uint32_t aLineNumber, uint16_t aIndex) {
+    return (aLineNumber << 1) + aIndex;
+  }
+
 #ifdef NS_BUILD_REFCNT_LOGGING
   virtual ~nsDisplayTextOverflowMarker() {
     MOZ_COUNT_DTOR(nsDisplayTextOverflowMarker);
@@ -188,8 +198,6 @@ class nsDisplayTextOverflowMarker final : public nsPaintedDisplayItem {
   }
 
   virtual void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;
-
-  virtual uint16_t CalculatePerFrameKey() const override { return mIndex; }
 
   void PaintTextToContext(gfxContext* aCtx, nsPoint aOffsetFromRect);
 
