@@ -2038,7 +2038,7 @@ void FragmentOrElement::SetInnerHTMLInternal(const nsAString& aInnerHTML,
                                              ErrorResult& aError) {
   FragmentOrElement* target = this;
   // Handle template case.
-  if (nsNodeUtils::IsTemplateElement(target)) {
+  if (target->IsTemplateElement()) {
     DocumentFragment* frag =
         static_cast<HTMLTemplateElement*>(target)->Content();
     MOZ_ASSERT(frag);

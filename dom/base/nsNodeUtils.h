@@ -247,13 +247,6 @@ class nsNodeUtils {
                                                  mozilla::ErrorResult& aError);
 
   /**
-   * Returns a true if the node is a HTMLTemplate element.
-   *
-   * @param aNode a node to test for HTMLTemplate elementness.
-   */
-  static bool IsTemplateElement(const nsINode* aNode);
-
-  /**
    * Returns the first child of a node or the first child of
    * a template element's content if the provided node is a
    * template element.
