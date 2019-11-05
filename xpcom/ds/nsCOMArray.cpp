@@ -98,8 +98,7 @@ bool nsCOMArray_base::EnumerateBackwards(nsBaseArrayEnumFunc aFunc,
 
 int nsCOMArray_base::VoidStarComparator(const void* aElement1,
                                         const void* aElement2, void* aData) {
-  nsISupportsComparatorContext* ctx =
-      static_cast<nsISupportsComparatorContext*>(aData);
+  auto ctx = static_cast<nsISupportsComparatorContext*>(aData);
   return (*ctx->mComparatorFunc)(*static_cast<nsISupports* const*>(aElement1),
                                  *static_cast<nsISupports* const*>(aElement2),
                                  ctx->mData);
