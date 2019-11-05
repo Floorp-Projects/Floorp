@@ -409,7 +409,7 @@ class DOMEventCollector extends MainEventCollector {
  * Get or detect jQuery events.
  */
 class JQueryEventCollector extends MainEventCollector {
-  /* eslint-disable complexity */
+  // eslint-disable-next-line complexity
   getListeners(node, { checkOnly } = {}) {
     const jQuery = this.getJQuery(node);
     const handlers = [];
@@ -501,14 +501,13 @@ class JQueryEventCollector extends MainEventCollector {
     }
     return handlers;
   }
-  /* eslint-enable complexity */
 }
 
 /**
  * Get or detect jQuery live events.
  */
 class JQueryLiveEventCollector extends MainEventCollector {
-  /* eslint-disable complexity */
+  // eslint-disable-next-line complexity
   getListeners(node, { checkOnly } = {}) {
     const jQuery = this.getJQuery(node);
     const handlers = [];
@@ -601,7 +600,6 @@ class JQueryLiveEventCollector extends MainEventCollector {
     }
     return handlers;
   }
-  /* eslint-enable complexity */
 
   normalizeListener(handlerDO) {
     function isFunctionInProxy(funcDO) {
@@ -903,7 +901,7 @@ class EventCollector {
    *             native: false
    *           }
    */
-  /* eslint-disable complexity */
+  // eslint-disable-next-line complexity
   processHandlerForEvent(listenerArray, listener, dbg) {
     let globalDO;
 
@@ -1067,7 +1065,6 @@ class EventCollector {
       }
     }
   }
-  /* eslint-enable complexity */
 }
 
 exports.EventCollector = EventCollector;

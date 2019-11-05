@@ -172,7 +172,7 @@ BreakpointActor.prototype = {
    * @param frame Debugger.Frame
    *        The stack frame that contained the breakpoint.
    */
-  /* eslint-disable complexity */
+  // eslint-disable-next-line complexity
   hit: function(frame) {
     // Don't pause if we are currently stepping (in or over) or the frame is
     // black-boxed.
@@ -234,7 +234,6 @@ BreakpointActor.prototype = {
 
     return this.threadActor._pauseAndRespond(frame, reason);
   },
-  /* eslint-enable complexity */
 
   delete: function() {
     // Remove from the breakpoint store.

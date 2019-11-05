@@ -444,7 +444,7 @@ TextPropertyEditor.prototype = {
   /**
    * Populate the span based on changes to the TextProperty.
    */
-  /* eslint-disable complexity */
+  // eslint-disable-next-line complexity
   update: function() {
     if (this.ruleView.isDestroyed) {
       return;
@@ -711,7 +711,6 @@ TextPropertyEditor.prototype = {
       }
     }
   },
-  /* eslint-enable complexity */
 
   _onStartEditing: function() {
     this.element.classList.remove("ruleview-overridden");

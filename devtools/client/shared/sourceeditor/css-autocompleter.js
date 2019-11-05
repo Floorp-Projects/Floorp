@@ -4,7 +4,6 @@
 
 "use strict";
 
-/* eslint-disable complexity */
 const {
   cssTokenizer,
   cssTokenizerWithLineColumn,
@@ -166,6 +165,7 @@ CSSCompleter.prototype = {
    * @returns CSS_STATE
    *          One of CSS_STATE enum or null if the state cannot be resolved.
    */
+  // eslint-disable-next-line complexity
   resolveState: function(source, { line, ch }) {
     // Function to return the last element of an array
     const peek = arr => arr[arr.length - 1];

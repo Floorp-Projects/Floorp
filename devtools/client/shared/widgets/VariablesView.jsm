@@ -812,7 +812,7 @@ VariablesView.prototype = {
   /**
    * Listener handling a key down event on the view.
    */
-  /* eslint-disable complexity */
+  // eslint-disable-next-line complexity
   _onViewKeyDown: function(e) {
     const item = this.getFocusedItem();
 
@@ -919,7 +919,6 @@ VariablesView.prototype = {
         item._onAddProperty(e);
     }
   },
-  /* eslint-enable complexity */
 
   /**
    * Sets the text displayed in this container when there are no available items.
@@ -2963,7 +2962,7 @@ Variable.prototype = extend(Scope.prototype, {
    * and specifies if it's a 'this', '<exception>', '<return>' or '__proto__'
    * reference.
    */
-  /* eslint-disable complexity */
+  // eslint-disable-next-line complexity
   _setAttributes: function() {
     const ownerView = this.ownerView;
     if (ownerView.preventDescriptorModifiers) {
@@ -3021,7 +3020,6 @@ Variable.prototype = extend(Scope.prototype, {
       target.setAttribute("pseudo-item", "");
     }
   },
-  /* eslint-enable complexity */
 
   /**
    * Adds the necessary event listeners for this variable.

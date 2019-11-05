@@ -207,7 +207,7 @@ function getLineCountInComments(text) {
  *                              // between the original source and prettified source
  *          }
  */
-/* eslint-disable complexity */
+// eslint-disable-next-line complexity
 function prettifyCSS(text, ruleCount) {
   if (prettifyCSS.LINE_SEPARATOR == null) {
     const os = Services.appinfo.OS;
@@ -475,7 +475,6 @@ function prettifyCSS(text, ruleCount) {
 
   return { result, mappings };
 }
-/* eslint-enable complexity */
 
 exports.prettifyCSS = prettifyCSS;
 

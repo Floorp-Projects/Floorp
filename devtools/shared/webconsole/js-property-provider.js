@@ -79,7 +79,7 @@ const MAX_AUTOCOMPLETIONS = (exports.MAX_AUTOCOMPLETIONS = 1500);
  *                               access (e.g. `window["addEvent`).
  *            }
  */
-/* eslint-disable complexity */
+// eslint-disable-next-line complexity
 function JSPropertyProvider({
   dbgObject,
   environment,
@@ -348,7 +348,6 @@ function JSPropertyProvider({
 
   return prepareReturnedObject(getMatchedPropsInDbgObject(obj, search));
 }
-/* eslint-enable complexity */
 
 function hasArrayIndex(str) {
   return /\[\d+\]$/.test(str);
@@ -396,7 +395,7 @@ const OPERATOR_CHARS_SET = new Set(";,:=<>+-*%|&^~?!".split(""));
  *                               element access (e.g. `x["match`).
  *            }
  */
-/* eslint-disable complexity */
+// eslint-disable-next-line complexity
 function analyzeInputString(str) {
   // work variables.
   const bodyStack = [];
@@ -598,7 +597,6 @@ function analyzeInputString(str) {
     isElementAccess,
   };
 }
-/* eslint-enable complexity */
 
 /**
  * For a given environment and constructor name, returns its Debugger.Object wrapped

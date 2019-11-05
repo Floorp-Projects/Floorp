@@ -278,7 +278,7 @@ class Message extends Component {
     );
   }
 
-  /* eslint-disable complexity */
+  // eslint-disable-next-line complexity
   render() {
     if (this.state && this.state.error) {
       return this.renderErrorState();
@@ -490,7 +490,6 @@ class Message extends Component {
       attachment ? null : dom.br()
     );
   }
-  /* eslint-enable complexity */
 }
 
 module.exports = Message;

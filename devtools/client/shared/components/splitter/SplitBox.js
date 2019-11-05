@@ -220,7 +220,7 @@ class SplitBox extends Component {
 
   // Rendering
 
-  /* eslint-disable complexity */
+  // eslint-disable-next-line complexity
   render() {
     const { endPanelControl, splitterSize, vert } = this.state;
     const {
@@ -331,7 +331,6 @@ class SplitBox extends Component {
         : null
     );
   }
-  /* eslint-enable complexity */
 }
 
 module.exports = SplitBox;

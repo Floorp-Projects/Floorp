@@ -495,7 +495,7 @@ const proto = {
    *         An object that maps property names to safe getter descriptors as
    *         defined by the remote debugging protocol.
    */
-  /* eslint-disable complexity */
+  // eslint-disable-next-line complexity
   _findSafeGetterValues: function(ownProperties, limit = 0) {
     const safeGetterValues = Object.create(null);
     let obj = this.obj;
@@ -599,7 +599,6 @@ const proto = {
 
     return safeGetterValues;
   },
-  /* eslint-enable complexity */
 
   /**
    * Find the safe getters for a given Debugger.Object. Safe getters are native
