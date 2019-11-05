@@ -783,14 +783,18 @@ class EntryGetter {
 // (
 //   ( /* Samples */
 //     ThreadId
-//     Time
-//     ( NativeLeafAddr
-//     | Label FrameFlags? DynamicStringFragment* LineNumber? CategoryPair?
-//     | JitReturnAddr
-//     )+
-//     Marker*
-//     Responsiveness?
+//     TimeBeforeCompactStack
+//     CompactStack
+//         /* internally including:
+//           ( NativeLeafAddr
+//           | Label FrameFlags? DynamicStringFragment*
+//             LineNumber? CategoryPair?
+//           | JitReturnAddr
+//           )+
+//           Responsiveness?
+//         */
 //   )
+//   | MarkerData
 //   | ( /* Counters */
 //       CounterId
 //       Time
