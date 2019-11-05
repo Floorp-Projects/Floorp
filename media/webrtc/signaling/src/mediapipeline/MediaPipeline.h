@@ -81,8 +81,9 @@ class MediaPipeline : public sigslot::has_slots<> {
   enum class DirectionType { TRANSMIT, RECEIVE };
   MediaPipeline(const std::string& aPc,
                 MediaTransportHandler* aTransportHandler,
-                DirectionType aDirection, nsCOMPtr<nsIEventTarget> aMainThread,
-                nsCOMPtr<nsIEventTarget> aStsThread,
+                DirectionType aDirection,
+                nsCOMPtr<nsISerialEventTarget> aMainThread,
+                nsCOMPtr<nsISerialEventTarget> aStsThread,
                 RefPtr<MediaSessionConduit> aConduit);
 
   virtual void Start() = 0;
@@ -166,7 +167,7 @@ class MediaPipeline : public sigslot::has_slots<> {
   class PipelineTransport : public TransportInterface {
    public:
     // Implement the TransportInterface functions
-    explicit PipelineTransport(nsIEventTarget* aStsThread)
+    explicit PipelineTransport(nsISerialEventTarget* aStsThread)
         : mPipeline(nullptr), mStsThread(aStsThread) {}
 
     void Attach(MediaPipeline* pipeline) { mPipeline = pipeline; }
@@ -181,7 +182,7 @@ class MediaPipeline : public sigslot::has_slots<> {
 
     // Creates a cycle, which we break with Detach
     RefPtr<MediaPipeline> mPipeline;
-    const nsCOMPtr<nsIEventTarget> mStsThread;
+    const nsCOMPtr<nsISerialEventTarget> mStsThread;
   };
 
  protected:
@@ -226,8 +227,8 @@ class MediaPipeline : public sigslot::has_slots<> {
 
   // Pointers to the threads we need. Initialized at creation
   // and used all over the place.
-  const nsCOMPtr<nsIEventTarget> mMainThread;
-  const nsCOMPtr<nsIEventTarget> mStsThread;
+  const nsCOMPtr<nsISerialEventTarget> mMainThread;
+  const nsCOMPtr<nsISerialEventTarget> mStsThread;
 
   // Created in c'tor. Referenced by the conduit.
   RefPtr<PipelineTransport> mTransport;
@@ -269,9 +270,9 @@ class MediaPipelineTransmit : public MediaPipeline {
   // Set aRtcpTransport to nullptr to use rtcp-mux
   MediaPipelineTransmit(const std::string& aPc,
                         MediaTransportHandler* aTransportHandler,
-                        nsCOMPtr<nsIEventTarget> aMainThread,
-                        nsCOMPtr<nsIEventTarget> aStsThread, bool aIsVideo,
-                        RefPtr<MediaSessionConduit> aConduit);
+                        nsCOMPtr<nsISerialEventTarget> aMainThread,
+                        nsCOMPtr<nsISerialEventTarget> aStsThread,
+                        bool aIsVideo, RefPtr<MediaSessionConduit> aConduit);
 
   bool Transmitting() const;
 
@@ -326,8 +327,8 @@ class MediaPipelineReceive : public MediaPipeline {
   // Set aRtcpTransport to nullptr to use rtcp-mux
   MediaPipelineReceive(const std::string& aPc,
                        MediaTransportHandler* aTransportHandler,
-                       nsCOMPtr<nsIEventTarget> aMainThread,
-                       nsCOMPtr<nsIEventTarget> aStsThread,
+                       nsCOMPtr<nsISerialEventTarget> aMainThread,
+                       nsCOMPtr<nsISerialEventTarget> aStsThread,
                        RefPtr<MediaSessionConduit> aConduit);
 
   // Sets the PrincipalHandle we set on the media chunks produced by this
@@ -345,8 +346,8 @@ class MediaPipelineReceiveAudio : public MediaPipelineReceive {
  public:
   MediaPipelineReceiveAudio(const std::string& aPc,
                             MediaTransportHandler* aTransportHandler,
-                            nsCOMPtr<nsIEventTarget> aMainThread,
-                            nsCOMPtr<nsIEventTarget> aStsThread,
+                            nsCOMPtr<nsISerialEventTarget> aMainThread,
+                            nsCOMPtr<nsISerialEventTarget> aStsThread,
                             RefPtr<AudioSessionConduit> aConduit,
                             dom::MediaStreamTrack* aTrack,
                             const PrincipalHandle& aPrincipalHandle);
@@ -375,8 +376,8 @@ class MediaPipelineReceiveVideo : public MediaPipelineReceive {
  public:
   MediaPipelineReceiveVideo(const std::string& aPc,
                             MediaTransportHandler* aTransportHandler,
-                            nsCOMPtr<nsIEventTarget> aMainThread,
-                            nsCOMPtr<nsIEventTarget> aStsThread,
+                            nsCOMPtr<nsISerialEventTarget> aMainThread,
+                            nsCOMPtr<nsISerialEventTarget> aStsThread,
                             RefPtr<VideoSessionConduit> aConduit,
                             dom::MediaStreamTrack* aTrack,
                             const PrincipalHandle& aPrincipalHandle);
