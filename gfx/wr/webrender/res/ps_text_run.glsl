@@ -174,19 +174,17 @@ VertexInfo write_text_vertex(RectWithSize local_clip_rect,
 }
 
 void main(void) {
-    int prim_header_address = aData.x;
-    int render_task_index = aData.y >> 16;
-    int clip_address = aData.y & 0xffff;
-    int glyph_index = aData.z & 0xffff;
-    int subpx_dir = (aData.z >> 24) & 0xff;
-    int color_mode = (aData.z >> 16) & 0xff;
-    int resource_address = aData.w;
+    Instance instance = decode_instance_attributes();
 
+    int glyph_index = instance.segment_index;
+    int subpx_dir = (instance.flags >> 24) & 0xff;
+    int color_mode = (instance.flags >> 16) & 0xff;
+    int resource_address = instance.user_data;
 
-    PrimitiveHeader ph = fetch_prim_header(prim_header_address);
+    PrimitiveHeader ph = fetch_prim_header(instance.prim_header_address);
     Transform transform = fetch_transform(ph.transform_id);
-    ClipArea clip_area = fetch_clip_area(clip_address);
-    PictureTask task = fetch_picture_task(render_task_index);
+    ClipArea clip_area = fetch_clip_area(instance.clip_address);
+    PictureTask task = fetch_picture_task(instance.picture_task_address);
 
     int raster_space = ph.user_data.w;
 

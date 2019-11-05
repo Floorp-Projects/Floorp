@@ -50,6 +50,29 @@ in ivec4 aData;
 #define VECS_PER_PRIM_HEADER_F 2U
 #define VECS_PER_PRIM_HEADER_I 2U
 
+struct Instance
+{
+    int prim_header_address;
+    int picture_task_address;
+    int clip_address;
+    int segment_index;
+    int flags;
+    int user_data;
+};
+
+Instance decode_instance_attributes() {
+    Instance instance;
+
+    instance.prim_header_address = aData.x;
+    instance.picture_task_address = aData.y >> 16;
+    instance.clip_address = aData.y & 0xffff;
+    instance.segment_index = aData.z & 0xffff;
+    instance.flags = aData.z & 0xffff0000;
+    instance.user_data = aData.w;
+
+    return instance;
+}
+
 struct PrimitiveHeader {
     RectWithSize local_rect;
     RectWithSize local_clip_rect;
