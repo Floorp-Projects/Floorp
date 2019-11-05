@@ -413,9 +413,7 @@ describe("Function - Jump to definition", () => {
     expect(originalPositionFor.mock.calls).toHaveLength(1);
     expect(originalPositionFor.mock.calls[0]).toEqual([url, line, column]);
     expect(onViewSourceInDebugger.mock.calls).toHaveLength(1);
-    console.log(onViewSourceInDebugger.mock.calls[0]);
-    const expectedLocation = { ...object.location, sourceId };
-    expect(onViewSourceInDebugger.mock.calls[0][0]).toEqual(expectedLocation);
+    expect(onViewSourceInDebugger.mock.calls[0][0]).toEqual(object.location);
   });
 });
 
