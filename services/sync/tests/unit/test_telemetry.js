@@ -758,8 +758,11 @@ add_task(async function test_discarding() {
 
     server = httpd_setup(handlers);
     await configureIdentity({ username: "johndoe" }, server);
-    telem.submit = () =>
-      ok(false, "Submitted telemetry ping when we should not have");
+    telem.submit = p =>
+      ok(
+        false,
+        "Submitted telemetry ping when we should not have" + JSON.stringify(p)
+      );
 
     for (let i = 0; i < 5; ++i) {
       await Service.sync();
@@ -1025,5 +1028,214 @@ add_task(async function test_no_ping_for_self_hosters() {
     telem.submit = oldSubmit;
     await cleanAndGo(engine, server);
     await Service.engineManager.unregister(engine);
+  }
+});
+
+add_task(async function test_fxa_device_telem() {
+  let t = get_sync_test_telemetry();
+  let syncEnabled = true;
+  let oldGetClientsEngineRecords = t.getClientsEngineRecords;
+  let oldGetFxaDevices = t.getFxaDevices;
+  let oldSyncIsEnabled = t.syncIsEnabled;
+  let oldSanitizeFxaDeviceId = t.sanitizeFxaDeviceId;
+  t.syncIsEnabled = () => syncEnabled;
+  t.sanitizeFxaDeviceId = id => `So clean: ${id}`;
+  try {
+    let keep0 = Utils.makeGUID();
+    let keep1 = Utils.makeGUID();
+    let keep2 = Utils.makeGUID();
+    let curdev = Utils.makeGUID();
+
+    let keep1Sync = Utils.makeGUID();
+    let keep2Sync = Utils.makeGUID();
+    let curdevSync = Utils.makeGUID();
+    let fxaDevices = [
+      // current device. First for easy access later
+      {
+        id: curdev,
+        isCurrentDevice: true,
+        lastAccessTime: Date.now() - 1000 * 60 * 60 * 24 * 1,
+        pushEndpointExpired: false,
+        type: "desktop",
+        name: "current device",
+      },
+      // Valid but push expired
+      {
+        id: Utils.makeGUID(),
+        isCurrentDevice: false,
+        lastAccessTime: Date.now() - 1000 * 60 * 60 * 24 * 15,
+        pushEndpointExpired: true,
+        type: "desktop",
+        name: "push expired",
+      },
+      // three with same name, should ignore older.
+      {
+        id: Utils.makeGUID(),
+        isCurrentDevice: false,
+        lastAccessTime: Date.now() - 1000 * 60 * 60 * 24 * 15,
+        pushEndpointExpired: false,
+        type: "mobile",
+        name: "dupe",
+      },
+      {
+        // should keep
+        id: keep0,
+        isCurrentDevice: false,
+        lastAccessTime: Date.now() - 1000 * 60 * 60 * 24 * 10,
+        pushEndpointExpired: false,
+        type: "mobile",
+        name: "dupe",
+      },
+      {
+        id: Utils.makeGUID(),
+        isCurrentDevice: false,
+        lastAccessTime: Date.now() - 1000 * 60 * 60 * 24 * 12,
+        pushEndpointExpired: false,
+        type: "mobile",
+        name: "dupe",
+      },
+      // Valid but too old.
+      {
+        id: Utils.makeGUID(),
+        isCurrentDevice: false,
+        lastAccessTime: Date.now() - 1000 * 60 * 60 * 24 * 90,
+        pushEndpointExpired: false,
+        type: "desktop",
+        name: "too old",
+      },
+      // Valid but null date (saw locally).
+      {
+        id: Utils.makeGUID(),
+        isCurrentDevice: false,
+        lastAccessTime: null,
+        pushEndpointExpired: false,
+        type: "desktop",
+        name: "null date",
+      },
+      // Valid 2
+      {
+        id: keep1,
+        isCurrentDevice: false,
+        lastAccessTime: Date.now() - 1000 * 60 * 60 * 24 * 1,
+        pushEndpointExpired: false,
+        type: "desktop",
+        name: "valid2",
+      },
+      // Valid 3
+      {
+        id: keep2,
+        isCurrentDevice: false,
+        lastAccessTime: Date.now() - 1000 * 60 * 60 * 24 * 5,
+        pushEndpointExpired: false,
+        type: "desktop",
+        name: "valid3",
+      },
+    ];
+    let clientInfo = [
+      {
+        id: keep1Sync,
+        fxaDeviceId: keep1,
+        os: "Windows 30",
+        version: "Firefox 1 million",
+      },
+      {
+        id: keep2Sync,
+        fxaDeviceId: keep2,
+        os: "firefox, but an os",
+        verison: "twelve",
+      },
+      {
+        id: Utils.makeGUID(),
+        fxaDeviceId: null,
+        os: "apparently ios used to keep write these IDs as null.",
+        version: "Doesn't seem to anymore",
+      },
+      {
+        id: curdevSync,
+        fxaDeviceId: curdev,
+        os: "emacs",
+        version: "22",
+      },
+      {
+        id: Utils.makeGUID(),
+        fxaDeviceId: Utils.makeGUID(),
+        os: "not part of the fxa device set at all",
+        version: "foo bar baz",
+      },
+      // keep0 intententionally omitted.
+    ];
+    t.getClientsEngineRecords = () => clientInfo;
+    let devInfo = t.updateFxaDevices(fxaDevices);
+    equal(devInfo.deviceID, t.sanitizeFxaDeviceId(curdev));
+    for (let d of devInfo.devices) {
+      ok(d.id.startsWith("So clean:"));
+      if (d.syncID) {
+        ok(d.syncID.startsWith("So clean:"));
+      }
+    }
+    equal(devInfo.devices.length, 4);
+    let k0 = devInfo.devices.find(d => d.id == t.sanitizeFxaDeviceId(keep0));
+    let k1 = devInfo.devices.find(d => d.id == t.sanitizeFxaDeviceId(keep1));
+    let k2 = devInfo.devices.find(d => d.id == t.sanitizeFxaDeviceId(keep2));
+
+    deepEqual(k0, {
+      id: t.sanitizeFxaDeviceId(keep0),
+      type: "mobile",
+      os: undefined,
+      version: undefined,
+      syncID: undefined,
+    });
+    deepEqual(k1, {
+      id: t.sanitizeFxaDeviceId(keep1),
+      type: "desktop",
+      os: clientInfo[0].os,
+      version: clientInfo[0].version,
+      syncID: t.sanitizeFxaDeviceId(keep1Sync),
+    });
+    deepEqual(k2, {
+      id: t.sanitizeFxaDeviceId(keep2),
+      type: "desktop",
+      os: clientInfo[1].os,
+      version: clientInfo[1].version,
+      syncID: t.sanitizeFxaDeviceId(keep2Sync),
+    });
+    let newCurId = Utils.makeGUID();
+    // Update the ID
+    fxaDevices[0].id = newCurId;
+
+    let keep3 = Utils.makeGUID();
+    fxaDevices.push({
+      id: keep3,
+      isCurrentDevice: false,
+      lastAccessTime: Date.now() - 1000 * 60 * 60 * 24 * 1,
+      pushEndpointExpired: false,
+      type: "desktop",
+      name: "valid 4",
+    });
+    devInfo = t.updateFxaDevices(fxaDevices);
+
+    let afterSubmit = [keep0, keep1, keep2, keep3, newCurId]
+      .map(id => t.sanitizeFxaDeviceId(id))
+      .sort();
+    deepEqual(devInfo.devices.map(d => d.id).sort(), afterSubmit);
+
+    // Reset this, as our override doesn't check for sync being enabled.
+    t.sanitizeFxaDeviceId = oldSanitizeFxaDeviceId;
+    syncEnabled = false;
+    devInfo = t.updateFxaDevices(fxaDevices);
+    equal(devInfo.deviceID, undefined);
+    equal(devInfo.devices.length, 5);
+    for (let d of devInfo.devices) {
+      equal(d.os, undefined);
+      equal(d.version, undefined);
+      equal(d.syncID, undefined);
+      // Type should still be present.
+      notEqual(d.type, undefined);
+    }
+  } finally {
+    t.getClientsEngineRecords = oldGetClientsEngineRecords;
+    t.getFxaDevices = oldGetFxaDevices;
+    t.syncIsEnabled = oldSyncIsEnabled;
+    t.sanitizeFxaDeviceId = oldSanitizeFxaDeviceId;
   }
 });
