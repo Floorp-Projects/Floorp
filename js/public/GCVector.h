@@ -148,13 +148,20 @@ class GCVector {
   bool needsSweep() const { return !this->empty(); }
 
   void sweep() {
-    // This is similar to Vector::eraseIf, but passes a non-const pointer to
-    // needsSweep().
-    T* newEnd = std::remove_if(
-        begin(), end(), [](T& t) { return GCPolicy<T>::needsSweep(&t); });
+    T* src = begin();
+    T* dst = begin();
+    while (src != end()) {
+      if (!GCPolicy<T>::needsSweep(src)) {
+        if (src != dst) {
+          *dst = std::move(*src);
+        }
+        dst++;
+      }
+      src++;
+    }
 
-    MOZ_ASSERT(newEnd <= end());
-    shrinkBy(end() - newEnd);
+    MOZ_ASSERT(dst <= end());
+    shrinkBy(end() - dst);
   }
 };
 
