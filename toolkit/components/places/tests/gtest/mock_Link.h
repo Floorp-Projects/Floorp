@@ -13,6 +13,7 @@
 
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/Link.h"
+#include "mozilla/StaticPrefs_layout.h"
 
 class mock_Link : public mozilla::dom::Link {
  public:
@@ -42,7 +43,9 @@ class mock_Link : public mozilla::dom::Link {
   bool GotNotified() const { return !mDeathGrip; }
 
   void AwaitNewNotification(Handler aNewHandler) {
-    MOZ_ASSERT(!mDeathGrip, "Still waiting for a notification");
+    MOZ_ASSERT(
+        !mDeathGrip || !mozilla::StaticPrefs::layout_css_notify_of_unvisited(),
+        "Still waiting for a notification");
     // Create a cyclic ownership, so that the link will be released only
     // after its status has been updated.  This will ensure that, when it should
     // run the next test, it will happen at the end of the test function, if
