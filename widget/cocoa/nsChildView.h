@@ -487,6 +487,8 @@ class nsChildView final : public nsBaseWidget {
   virtual void PrepareWindowEffects() override;
   virtual void CleanupWindowEffects() override;
 
+  virtual bool WidgetPaintsBackground() override { return true; }
+
   virtual void AddWindowOverlayWebRenderCommands(
       mozilla::layers::WebRenderBridgeChild* aWrBridge, mozilla::wr::DisplayListBuilder& aBuilder,
       mozilla::wr::IpcResourceUpdateQueue& aResourceUpdates) override;
