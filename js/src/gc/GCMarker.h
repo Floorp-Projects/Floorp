@@ -455,7 +455,7 @@ class GCMarker : public JSTracer {
    * If the weakKeys table OOMs, disable the linear algorithm and fall back
    * to iterating until the next GC.
    */
-  MainThreadData<bool> linearWeakMarkingDisabled_;
+  MainThreadOrGCTaskData<bool> linearWeakMarkingDisabled_;
 
   /* The count of marked objects during GC. */
   size_t markCount;
