@@ -41,9 +41,11 @@ Structure:
 
           // Optional, excluded if we couldn't get a valid uid or local device id
           devices: [{
-            os: <string>, // OS string as reported by Services.appinfo.OS,
-            version: <string>, // Firefox version, as reported by Services.appinfo.version
+            os: <string>, // OS string as reported by Services.appinfo.OS, if known
+            version: <string>, // Firefox version, as reported by Services.appinfo.version if known
             id: <string>, // Hashed FxA device id for device
+            type: <string>, // broad device "type", as reported by fxa ("mobile", "tv", etc).
+            syncID: <string>, // Hashed Sync device id for device, if the user is a sync user.
           }],
 
           // Internal sync status information. Omitted if it would be empty.
