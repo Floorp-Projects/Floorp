@@ -9351,8 +9351,8 @@ nsINode* Document::AdoptNode(nsINode& aAdoptedNode, ErrorResult& rv) {
   }
 
   nsCOMArray<nsINode> nodesWithProperties;
-  nsNodeUtils::Adopt(adoptedNode, sameDocument ? nullptr : mNodeInfoManager,
-                     newScope, nodesWithProperties, rv);
+  adoptedNode->Adopt(sameDocument ? nullptr : mNodeInfoManager, newScope,
+                     nodesWithProperties, rv);
   if (rv.Failed()) {
     // Disconnect all nodes from their parents, since some have the old document
     // as their ownerDocument and some have this as their ownerDocument.
