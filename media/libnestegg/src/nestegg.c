@@ -2134,7 +2134,10 @@ ne_match_webm(nestegg_io io, int64_t max_offset)
     return 0;
   }
 
-  ne_ctx_push(ctx, ne_top_level_elements, ctx);
+  if (ne_ctx_push(ctx, ne_top_level_elements, ctx) < 0) {
+    nestegg_destroy(ctx);
+    return -1;
+  }
 
   /* we don't check the return value of ne_parse, that might fail because
      max_offset is not on a valid element end point. We only want to check
@@ -2190,7 +2193,10 @@ nestegg_init(nestegg ** context, nestegg_io io, nestegg_log callback, int64_t ma
 
   ctx->log(ctx, NESTEGG_LOG_DEBUG, "ctx %p", ctx);
 
-  ne_ctx_push(ctx, ne_top_level_elements, ctx);
+  if (ne_ctx_push(ctx, ne_top_level_elements, ctx) < 0) {
+    nestegg_destroy(ctx);
+    return -1;
+  }
 
   r = ne_parse(ctx, NULL, max_offset);
   while (ctx->ancestor)
@@ -2250,7 +2256,8 @@ void
 nestegg_destroy(nestegg * ctx)
 {
   assert(ctx->ancestor == NULL);
-  ne_pool_destroy(ctx->alloc_pool);
+  if (ctx->alloc_pool)
+    ne_pool_destroy(ctx->alloc_pool);
   free(ctx->io);
   free(ctx);
 }
@@ -2903,7 +2910,18 @@ nestegg_read_packet(nestegg * ctx, nestegg_packet ** pkt)
       if (r != 1)
         return r;
 
-      /* Timecode must be the first element in a Cluster, per spec. */
+      /* Matroska may place a CRC32 before the Timecode. Skip and continue parsing. */
+      if (id == ID_CRC32) {
+        r = ne_io_read_skip(ctx->io, size);
+        if (r != 1)
+          return r;
+
+        r = ne_read_element(ctx, &id, &size);
+        if (r != 1)
+          return r;
+      }
+
+      /* Timecode must be the first element in a Cluster, per WebM spec. */
       if (id != ID_TIMECODE)
         return -1;
 
