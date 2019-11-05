@@ -91,7 +91,6 @@ class nsNativeThemeCocoa : private nsNativeTheme, public nsITheme {
   };
 
   struct MenuBackgroundParams {
-    mozilla::Maybe<mozilla::gfx::Color> vibrancyColor;
     bool disabled = false;
     bool submenuRightOfParent = false;
   };
@@ -105,7 +104,7 @@ class nsNativeThemeCocoa : private nsNativeTheme, public nsITheme {
   };
 
   struct MenuItemParams {
-    mozilla::Maybe<mozilla::gfx::Color> vibrancyColor;
+    bool backgroundIsVibrant = false;
     bool checked = false;
     bool disabled = false;
     bool selected = false;
