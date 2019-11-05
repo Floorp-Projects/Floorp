@@ -828,6 +828,13 @@ impl Tile {
             }
         }
 
+        // The dirty rect will be set correctly by now. If the underlying platform
+        // doesn't support partial updates, and this tile isn't valid, force the dirty
+        // rect to be the size of the entire tile.
+        if !self.is_valid && !supports_dirty_rects {
+            self.dirty_rect = self.rect;
+        }
+
         // See if this tile is a simple color, in which case we can just draw
         // it as a rect, and avoid allocating a texture surface and drawing it.
         // TODO(gw): Initial native compositor interface doesn't support simple
