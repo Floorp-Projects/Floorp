@@ -4,29 +4,43 @@
 
 package org.mozilla.fenix
 
+import io.sentry.Sentry
+
 enum class ReleaseChannel {
-    Debug, Nightly, Beta, Production;
+    FenixDebug, FenixNightly, FenixBeta, FenixProduction, FennecProduction;
 
     val isReleased: Boolean
         get() = when (this) {
-            Debug -> false
+            FenixDebug -> false
             else -> true
         }
 
     val isReleaseOrBeta: Boolean
         get() = when (this) {
-            Production -> true
-            Beta -> true
+            FenixProduction -> true
+            FenixBeta -> true
+            else -> false
+        }
+
+    val isNightlyOrDebug: Boolean
+        get() = when (this) {
+            FenixNightly -> true
+            FenixDebug -> true
             else -> false
         }
 }
 
 object Config {
     val channel = when (BuildConfig.BUILD_TYPE) {
-        "production" -> ReleaseChannel.Production
-        "beta" -> ReleaseChannel.Beta
-        "nightly" -> ReleaseChannel.Nightly
-        "debug" -> ReleaseChannel.Debug
-        else -> ReleaseChannel.Production // Performance-test builds should test production behaviour
+        "fenixProduction" -> ReleaseChannel.FenixProduction
+        "fenixBeta" -> ReleaseChannel.FenixBeta
+        "fenixNightly" -> ReleaseChannel.FenixNightly
+        "debug" -> ReleaseChannel.FenixDebug
+        "fennecProduction" -> ReleaseChannel.FennecProduction
+        else -> {
+            Sentry.capture("BuildConfig.BUILD_TYPE ${BuildConfig.BUILD_TYPE} did not match expected channels")
+            // Performance-test builds should test production behaviour
+            ReleaseChannel.FenixProduction
+        }
     }
 }
