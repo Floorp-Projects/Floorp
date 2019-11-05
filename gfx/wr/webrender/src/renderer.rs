@@ -2114,7 +2114,8 @@ impl Renderer {
 
         let backend_notifier = notifier.clone();
 
-        let default_font_render_mode = match (options.enable_aa, options.enable_subpixel_aa) {
+        let prefer_subpixel_aa = options.force_subpixel_aa || (options.enable_subpixel_aa && use_dual_source_blending);
+        let default_font_render_mode = match (options.enable_aa, prefer_subpixel_aa) {
             (true, true) => FontRenderMode::Subpixel,
             (true, false) => FontRenderMode::Alpha,
             (false, _) => FontRenderMode::Mono,
@@ -5948,7 +5949,10 @@ pub struct RendererOptions {
     pub max_recorded_profiles: usize,
     pub precache_flags: ShaderPrecacheFlags,
     pub renderer_kind: RendererKind,
+    /// Enable sub-pixel anti-aliasing if a fast implementation is available.
     pub enable_subpixel_aa: bool,
+    /// Enable sub-pixel anti-aliasing if it requires a slow implementation.
+    pub force_subpixel_aa: bool,
     pub clear_color: Option<ColorF>,
     pub enable_clear_scissor: bool,
     pub max_texture_size: Option<i32>,
@@ -6014,6 +6018,7 @@ impl Default for RendererOptions {
             precache_flags: ShaderPrecacheFlags::empty(),
             renderer_kind: RendererKind::Native,
             enable_subpixel_aa: false,
+            force_subpixel_aa: false,
             clear_color: Some(ColorF::new(1.0, 1.0, 1.0, 1.0)),
             enable_clear_scissor: true,
             max_texture_size: None,
