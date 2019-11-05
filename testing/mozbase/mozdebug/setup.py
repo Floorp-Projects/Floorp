@@ -6,7 +6,9 @@ from __future__ import absolute_import
 
 from setuptools import setup
 
-PACKAGE_VERSION = '0.1.1'
+PACKAGE_VERSION = '0.2.0'
+DEPS = ['mozinfo']
+
 
 setup(name='mozdebug',
       version=PACKAGE_VERSION,
@@ -24,8 +26,5 @@ setup(name='mozdebug',
       packages=['mozdebug'],
       include_package_data=True,
       zip_safe=False,
-      install_requires=['mozinfo'],
-      entry_points="""
-      # -*- Entry points: -*-
-      """,
+      install_requires=DEPS,
       )
