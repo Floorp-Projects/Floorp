@@ -34,7 +34,7 @@
 #include "ClientLayerManager.h"
 #include "mozilla/layers/Compositor.h"
 #include "nsIXULRuntime.h"
-#include "nsIAppWindow.h"
+#include "nsIXULWindow.h"
 #include "nsIBaseWindow.h"
 #include "nsXULPopupManager.h"
 #include "nsIWidgetListener.h"
@@ -1642,10 +1642,10 @@ nsIRollupListener* nsBaseWidget::GetActiveRollupListener() {
 void nsBaseWidget::NotifyWindowDestroyed() {
   if (!mWidgetListener) return;
 
-  nsCOMPtr<nsIAppWindow> window = mWidgetListener->GetAppWindow();
-  nsCOMPtr<nsIBaseWindow> appWindow(do_QueryInterface(window));
-  if (appWindow) {
-    appWindow->Destroy();
+  nsCOMPtr<nsIXULWindow> window = mWidgetListener->GetXULWindow();
+  nsCOMPtr<nsIBaseWindow> xulWindow(do_QueryInterface(window));
+  if (xulWindow) {
+    xulWindow->Destroy();
   }
 }
 
@@ -2028,11 +2028,11 @@ void nsBaseWidget::NotifyLiveResizeStarted() {
   if (!mWidgetListener) {
     return;
   }
-  nsCOMPtr<nsIAppWindow> appWindow = mWidgetListener->GetAppWindow();
-  if (!appWindow) {
+  nsCOMPtr<nsIXULWindow> xulWindow = mWidgetListener->GetXULWindow();
+  if (!xulWindow) {
     return;
   }
-  mLiveResizeListeners = appWindow->GetLiveResizeListeners();
+  mLiveResizeListeners = xulWindow->GetLiveResizeListeners();
   for (uint32_t i = 0; i < mLiveResizeListeners.Length(); i++) {
     mLiveResizeListeners[i]->LiveResizeStarted();
   }

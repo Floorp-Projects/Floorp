@@ -20,7 +20,7 @@ function assertFlags(win) {
   let loadContext = docShell.QueryInterface(Ci.nsILoadContext);
   let chromeFlags = docShell.treeOwner
     .QueryInterface(Ci.nsIInterfaceRequestor)
-    .getInterface(Ci.nsIAppWindow).chromeFlags;
+    .getInterface(Ci.nsIXULWindow).chromeFlags;
   Assert.ok(
     loadContext.useRemoteTabs,
     "Should be using remote tabs on the load context"

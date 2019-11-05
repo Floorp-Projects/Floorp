@@ -178,7 +178,7 @@
 #include "nsIURIFixup.h"
 #include "nsIURL.h"
 #include "nsIDocShellTreeOwner.h"
-#include "nsIAppWindow.h"
+#include "nsIXULWindow.h"
 #include "nsIDOMChromeWindow.h"
 #include "nsIWindowWatcher.h"
 #include "nsPIWindowWatcher.h"

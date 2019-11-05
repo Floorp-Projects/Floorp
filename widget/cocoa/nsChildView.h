@@ -523,7 +523,7 @@ class nsChildView final : public nsBaseWidget {
 
   NSView<mozView>* GetEditorView();
 
-  nsCocoaWindow* GetAppWindowWidget() const;
+  nsCocoaWindow* GetXULWindowWidget() const;
 
   virtual void ReparentNativeWidget(nsIWidget* aNewParent) override;
 
