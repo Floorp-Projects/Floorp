@@ -189,6 +189,7 @@
 .urlbarView-row[type=tip] > .urlbarView-row-inner > .urlbarView-favicon {
   min-width: 24px;
   height: 24px;
+  margin-inline-start: calc(12px + @urlbarViewIconMarginEnd@);
   margin-inline-end: 12px;
 }
 
