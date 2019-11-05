@@ -62,6 +62,13 @@ class DOMFullscreenChild extends JSWindowActorChild {
   }
 
   handleEvent(aEvent) {
+    if (this.hasBeenDestroyed()) {
+      // Make sure that this actor is alive before going further because
+      // if it's not the case, any attempt to send a message or access
+      // objects such as 'contentWindow' will fail. (See bug 1590138)
+      return;
+    }
+
     switch (aEvent.type) {
       case "MozDOMFullscreen:Request": {
         this.sendAsyncMessage("DOMFullscreen:Request", {});
@@ -113,6 +120,18 @@ class DOMFullscreenChild extends JSWindowActorChild {
         }
         break;
       }
+    }
+  }
+
+  hasBeenDestroyed() {
+    // The 'didDestroy' callback is not always getting called.
+    // So we can't rely on it here. Instead, we will try to access
+    // the browsing context to judge wether the actor has
+    // been destroyed or not.
+    try {
+      return !this.browsingContext;
+    } catch {
+      return true;
     }
   }
 }
