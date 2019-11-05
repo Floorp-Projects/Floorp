@@ -85,4 +85,9 @@ pref("devtools.debugger.features.dom-mutation-breakpoints", true);
 pref("devtools.debugger.features.log-points", true);
 pref("devtools.debugger.features.overlay", true);
 pref("devtools.debugger.features.inline-preview", true);
-pref("devtools.debugger.features.watchpoints", false);
+
+#if defined(MOZ_DEV_EDITION) || defined(NIGHTLY_BUILD)
+  pref("devtools.debugger.features.watchpoints", true);
+#else
+  pref("devtools.debugger.features.watchpoints", false);
+#endif
