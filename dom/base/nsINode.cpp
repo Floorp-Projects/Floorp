@@ -2824,6 +2824,36 @@ void nsINode::AddAnimationObserverUnlessExists(
   OwnerDoc()->SetMayHaveAnimationObservers();
 }
 
+void nsINode::Adopt(nsNodeInfoManager* aNewNodeInfoManager,
+                    JS::Handle<JSObject*> aReparentScope,
+                    nsCOMArray<nsINode>& aNodesWithProperties,
+                    mozilla::ErrorResult& aError) {
+  if (aNewNodeInfoManager) {
+    mozilla::dom::Document* afterAdoptDoc = aNewNodeInfoManager->GetDocument();
+    mozilla::dom::Document* beforeAdoptDoc = OwnerDoc();
+
+    if (afterAdoptDoc && beforeAdoptDoc &&
+        (afterAdoptDoc->GetDocGroup() != beforeAdoptDoc->GetDocGroup())) {
+      // This is a temporary solution for Bug 1590526 to only limit
+      // the restriction to chrome level documents because web extensions
+      // rely on content to content node adoption.
+      if (nsContentUtils::IsChromeDoc(afterAdoptDoc) ||
+          nsContentUtils::IsChromeDoc(beforeAdoptDoc)) {
+        aError.Throw(NS_ERROR_DOM_SECURITY_ERR);
+        return;
+      }
+    }
+  }
+
+  // Just need to store the return value of CloneAndAdopt in a
+  // temporary nsCOMPtr to make sure we release it.
+  nsCOMPtr<nsINode> node = nsNodeUtils::CloneAndAdopt(
+      this, false, true, aNewNodeInfoManager, aReparentScope,
+      &aNodesWithProperties, nullptr, aError);
+
+  nsMutationGuard::DidMutate();
+}
+
 already_AddRefed<nsINode> nsINode::Clone(
     bool aDeep, nsNodeInfoManager* aNewNodeInfoManager,
     nsCOMArray<nsINode>* aNodesWithProperties, mozilla::ErrorResult& aError) {

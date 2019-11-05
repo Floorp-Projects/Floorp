@@ -142,55 +142,6 @@ class nsNodeUtils {
   static void AnimationRemoved(mozilla::dom::Animation* aAnimation);
 
   /**
-   * Walks aNode, its attributes and descendant nodes. If aNewNodeInfoManager is
-   * not null, it is used to create new nodeinfos for the nodes. Also reparents
-   * the XPConnect wrappers for the nodes into aReparentScope if non-null.
-   * aNodesWithProperties will be filled with all the nodes that have
-   * properties.
-   *
-   * @param aNode Node to adopt.
-   * @param aNewNodeInfoManager The nodeinfo manager to use to create new
-   *                            nodeinfos for aNode and its attributes and
-   *                            descendants. May be null if the nodeinfos
-   *                            shouldn't be changed.
-   * @param aReparentScope New scope for the wrappers, or null if no reparenting
-   *                       should be done.
-   * @param aNodesWithProperties All nodes (from amongst aNode and its
-   *                             descendants) with properties.
-   * @param aError The error, if any.
-   */
-  static void Adopt(nsINode* aNode, nsNodeInfoManager* aNewNodeInfoManager,
-                    JS::Handle<JSObject*> aReparentScope,
-                    nsCOMArray<nsINode>& aNodesWithProperties,
-                    mozilla::ErrorResult& aError) {
-    if (aNode && aNewNodeInfoManager) {
-      mozilla::dom::Document* afterAdoptDoc =
-          aNewNodeInfoManager->GetDocument();
-      mozilla::dom::Document* beforeAdoptDoc = aNode->OwnerDoc();
-
-      if (afterAdoptDoc && beforeAdoptDoc &&
-          (afterAdoptDoc->GetDocGroup() != beforeAdoptDoc->GetDocGroup())) {
-        // This is a temporary solution for Bug 1590526 to only limit
-        // the restriction to chrome level documents because web extensions
-        // rely on content to content node adoption.
-        if (nsContentUtils::IsChromeDoc(afterAdoptDoc) ||
-            nsContentUtils::IsChromeDoc(beforeAdoptDoc)) {
-          aError.Throw(NS_ERROR_DOM_SECURITY_ERR);
-          return;
-        }
-      }
-    }
-
-    // Just need to store the return value of CloneAndAdopt in a
-    // temporary nsCOMPtr to make sure we release it.
-    nsCOMPtr<nsINode> node =
-        CloneAndAdopt(aNode, false, true, aNewNodeInfoManager, aReparentScope,
-                      &aNodesWithProperties, nullptr, aError);
-
-    nsMutationGuard::DidMutate();
-  }
-
-  /**
    * Walks aNode, its attributes and, if aDeep is true, its descendant nodes.
    * If aClone is true the nodes will be cloned. If aNewNodeInfoManager is
    * not null, it is used to create new nodeinfos for the nodes. Also reparents

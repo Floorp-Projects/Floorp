@@ -1058,6 +1058,28 @@ class nsINode : public mozilla::dom::EventTarget {
   }
 
   /**
+   * Walks the node, its attributes and descendant nodes. If aNewNodeInfoManager
+   * is not null, it is used to create new nodeinfos for the nodes. Also
+   * reparents the XPConnect wrappers for the nodes into aReparentScope if
+   * non-null. aNodesWithProperties will be filled with all the nodes that have
+   * properties.
+   *
+   * @param aNewNodeInfoManager The nodeinfo manager to use to create new
+   *                            nodeinfos for the node and its attributes and
+   *                            descendants. May be null if the nodeinfos
+   *                            shouldn't be changed.
+   * @param aReparentScope New scope for the wrappers, or null if no reparenting
+   *                       should be done.
+   * @param aNodesWithProperties All nodes (from amongst the node and its
+   *                             descendants) with properties.
+   * @param aError The error, if any.
+   */
+  void Adopt(nsNodeInfoManager* aNewNodeInfoManager,
+             JS::Handle<JSObject*> aReparentScope,
+             nsCOMArray<nsINode>& aNodesWithProperties,
+             mozilla::ErrorResult& aError);
+
+  /**
    * Clones the node, its attributes and, if aDeep is true, its descendant nodes
    * If aNewNodeInfoManager is not null, it is used to create new nodeinfos for
    * the clones. aNodesWithProperties will be filled with all the nodes that
