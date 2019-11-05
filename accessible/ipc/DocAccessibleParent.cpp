@@ -139,6 +139,7 @@ uint32_t DocAccessibleParent::AddSubtree(
       break;
     }
   }
+  DebugOnly<bool> isOuterDoc = newProxy->ChildrenCount() == 1;
 
   uint32_t accessibles = 1;
   uint32_t kids = newChild.ChildrenCount();
@@ -149,7 +150,7 @@ uint32_t DocAccessibleParent::AddSubtree(
     accessibles += consumed;
   }
 
-  MOZ_ASSERT(newProxy->ChildrenCount() == kids);
+  MOZ_ASSERT((isOuterDoc && kids == 0) || newProxy->ChildrenCount() == kids);
 
   return accessibles;
 }
