@@ -85,7 +85,7 @@ class NewRenderer : public RendererEvent {
 #else
             false,
 #endif
-            compositor->gl(), compositor->SurfaceIsYFlipped(),
+            compositor->gl(), compositor->SurfaceOriginIsTopLeft(),
             aRenderThread.GetProgramCache()
                 ? aRenderThread.GetProgramCache()->Raw()
                 : nullptr,
