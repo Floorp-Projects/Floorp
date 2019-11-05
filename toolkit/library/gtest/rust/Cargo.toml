@@ -27,7 +27,6 @@ new_xulstore = ["gkrust-shared/new_xulstore"]
 new_cert_storage = ["gkrust-shared/new_cert_storage"]
 fuzzing_interfaces = ["gkrust-shared/fuzzing_interfaces", "gecko-fuzz-targets"]
 webrtc = ["gkrust-shared/webrtc"]
-webgpu = ["gkrust-shared/webgpu"]
 
 [dependencies]
 bench-collections-gtest = { path = "../../../../xpcom/rust/gtest/bench-collections" }

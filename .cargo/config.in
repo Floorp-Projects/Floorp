@@ -7,16 +7,6 @@ branch = "master"
 git = "https://github.com/mozilla/neqo"
 replace-with = "vendored-sources"
 
-[source."https://github.com/kvark/spirv_cross"]
-branch = "wgpu-test"
-git = "https://github.com/kvark/spirv_cross"
-replace-with = "vendored-sources"
-
-[source."https://github.com/kvark/rust-objc-exception"]
-branch = "cc"
-git = "https://github.com/kvark/rust-objc-exception"
-replace-with = "vendored-sources"
-
 [source."https://github.com/hsivonen/packed_simd"]
 branch = "rust_1_32"
 git = "https://github.com/hsivonen/packed_simd"

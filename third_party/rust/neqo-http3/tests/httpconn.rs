@@ -8,82 +8,36 @@
 
 use neqo_common::{matches, Datagram};
 use neqo_crypto::AuthenticationStatus;
-use neqo_http3::{Http3Client, Http3ClientEvent, Http3Server, Http3ServerEvent, Http3State};
+use neqo_http3::transaction_server::Response;
+use neqo_http3::{Header, Http3Client, Http3ClientEvent, Http3Server, Http3State};
 use test_fixture::*;
 
-const RESPONSE_DATA: &[u8] = &[0x61, 0x62, 0x63];
+fn new_stream_callback(request_headers: &[Header], error: bool) -> Response {
+    println!("Error: {}", error);
 
-fn process_server_events(conn: &mut Http3Server) {
-    let mut request_found = false;
-    while let Some(event) = conn.next_event() {
-        if let Http3ServerEvent::Headers {
-            stream_id,
-            headers,
-            fin,
-        } = event
-        {
-            assert_eq!(
-                headers,
-                vec![
-                    (String::from(":method"), String::from("GET")),
-                    (String::from(":scheme"), String::from("https")),
-                    (String::from(":authority"), String::from("something.com")),
-                    (String::from(":path"), String::from("/"))
-                ]
-            );
-            assert_eq!(fin, true);
-            conn.set_response(
-                stream_id,
-                &[
-                    (String::from(":status"), String::from("200")),
-                    (String::from("content-length"), String::from("3")),
-                ],
-                RESPONSE_DATA.to_vec(),
-            )
-            .unwrap();
-            request_found = true;
-        }
-    }
-    assert_eq!(request_found, true);
-}
+    assert_eq!(
+        request_headers,
+        &[
+            (String::from(":method"), String::from("GET")),
+            (String::from(":scheme"), String::from("https")),
+            (String::from(":authority"), String::from("something.com")),
+            (String::from(":path"), String::from("/"))
+        ]
+    );
 
-fn process_client_events(conn: &mut Http3Client) {
-    let mut response_header_found = false;
-    let mut response_data_found = false;
-    while let Some(event) = conn.next_event() {
-        match event {
-            Http3ClientEvent::HeaderReady { stream_id } => {
-                let h = conn.read_response_headers(stream_id);
-                assert_eq!(
-                    h,
-                    Ok((
-                        vec![
-                            (String::from(":status"), String::from("200")),
-                            (String::from("content-length"), String::from("3")),
-                        ],
-                        false
-                    ))
-                );
-                response_header_found = true;
-            }
-            Http3ClientEvent::DataReadable { stream_id } => {
-                let mut buf = [0u8; 100];
-                let (amount, fin) = conn.read_response_data(now(), stream_id, &mut buf).unwrap();
-                assert_eq!(fin, true);
-                assert_eq!(amount, RESPONSE_DATA.len());
-                assert_eq!(&buf[..RESPONSE_DATA.len()], RESPONSE_DATA);
-                response_data_found = true;
-            }
-            _ => {}
-        }
-    }
-    assert_eq!(response_header_found, true);
-    assert_eq!(response_data_found, true)
+    (
+        vec![
+            (String::from(":status"), String::from("200")),
+            (String::from("content-length"), String::from("3")),
+        ],
+        b"123".to_vec(),
+        None,
+    )
 }
 
 fn connect() -> (Http3Client, Http3Server, Option<Datagram>) {
     let mut hconn_c = default_http3_client();
-    let mut hconn_s = default_http3_server();
+    let mut hconn_s = default_http3_server(Some(Box::new(new_stream_callback)));
 
     assert_eq!(hconn_c.state(), Http3State::Initializing);
     assert_eq!(hconn_s.state(), Http3State::Initializing);
@@ -121,15 +75,13 @@ fn test_fetch() {
         .fetch("GET", "https", "something.com", "/", &[])
         .unwrap();
     assert_eq!(req, 0);
-    hconn_c.stream_close_send(req).unwrap();
     let out = hconn_c.process(dgram, now());
     eprintln!("-----server");
     let out = hconn_s.process(out.dgram(), now());
-    let _ = hconn_c.process(out.dgram(), now());
-    process_server_events(&mut hconn_s);
-    let out = hconn_s.process(None, now());
 
     eprintln!("-----client");
     let _ = hconn_c.process(out.dgram(), now());
-    process_client_events(&mut hconn_c);
+    // TODO: some kind of client API needed to read result of fetch
+    // TODO: assert result is as expected e.g. (200 "abc")
+    // assert!(false);
 }

@@ -27,7 +27,6 @@ pub use connection::Http3State;
 pub use connection_client::Http3Client;
 pub use connection_server::Http3Server;
 pub use neqo_qpack::Header;
-pub use server_events::Http3ServerEvent;
 pub use transaction_server::TransactionServer;
 
 type Res<T> = Result<T, Error>;
