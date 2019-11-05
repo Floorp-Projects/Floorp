@@ -155,10 +155,10 @@ add_task(async function testDuplicatePinnedTab() {
           // Duplicate the pinned tab, example.net.
           browser.tabs.duplicate(tabs[0].id, tab => {
             browser.test.assertEq("http://example.net/", tab.url);
-            // Should be the second tab, next to the one duplicated.
+            // Should be the second tab, next to the original.
             browser.test.assertEq(1, tab.index);
-            // Should be pinned.
-            browser.test.assertTrue(tab.pinned);
+            // Duplicated tab is not pinned, even if the original tab is.
+            browser.test.assertFalse(tab.pinned);
 
             browser.tabs.remove([tabs[0].id, tab.id]);
             browser.test.notifyPass("tabs.duplicate.pinned");

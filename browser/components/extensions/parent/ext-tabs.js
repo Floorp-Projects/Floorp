@@ -1096,20 +1096,10 @@ this.tabs = class extends ExtensionAPI {
 
           return new Promise(resolve => {
             // We need to use SSTabRestoring because any attributes set before
-            // are ignored. SSTabRestored is too late and results in a jump in
-            // the UI. See http://bit.ly/session-store-api for more information.
+            // are ignored.
             newTab.addEventListener(
               "SSTabRestoring",
               function() {
-                // As the tab is restoring, move it to the correct position.
-
-                // Pinned tabs that are duplicated are inserted
-                // after the existing pinned tab and pinned.
-                if (nativeTab.pinned) {
-                  gBrowser.pinTab(newTab);
-                }
-                gBrowser.moveTabTo(newTab, nativeTab._tPos + 1);
-
                 gBrowser.selectedTab = newTab;
                 resolve(tabManager.convert(newTab));
               },
