@@ -10,6 +10,7 @@
 
 #include "Role.h"
 #include "Accessible.h"
+#include "Accessible-inl.h"
 #include "HTMLListAccessible.h"
 #include "SessionAccessibility.h"
 #include "nsAccUtils.h"

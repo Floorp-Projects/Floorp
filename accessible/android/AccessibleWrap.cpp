@@ -5,12 +5,13 @@
 
 #include "AccessibleWrap.h"
 
+#include "JavaBuiltins.h"
 #include "Accessible-inl.h"
+#include "HyperTextAccessible-inl.h"
 #include "AccEvent.h"
 #include "AndroidInputType.h"
 #include "DocAccessibleWrap.h"
 #include "IDSet.h"
-#include "JavaBuiltins.h"
 #include "SessionAccessibility.h"
 #include "TraversalRule.h"
 #include "Pivot.h"
@@ -27,6 +28,13 @@
 #include "mozilla/jni/GeckoBundleUtils.h"
 
 #define ROLE_STRINGS_URL "chrome://global/locale/AccessFu.properties"
+
+// icu TRUE conflicting with java::sdk::Boolean::TRUE()
+// https://searchfox.org/mozilla-central/rev/ce02064d8afc8673cef83c92896ee873bd35e7ae/intl/icu/source/common/unicode/umachine.h#265
+// https://searchfox.org/mozilla-central/source/__GENERATED__/widget/android/bindings/JavaBuiltins.h#78
+#ifdef TRUE
+#  undef TRUE
+#endif
 
 using namespace mozilla::a11y;
 
