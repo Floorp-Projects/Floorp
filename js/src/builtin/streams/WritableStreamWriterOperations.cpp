@@ -20,7 +20,7 @@
 #include "builtin/streams/WritableStreamDefaultController.h"  // js::WritableStream::controller
 #include "builtin/streams/WritableStreamDefaultControllerOperations.h"  // js::WritableStreamDefaultController{Close,GetDesiredSize}
 #include "builtin/streams/WritableStreamDefaultWriter.h"  // js::WritableStreamDefaultWriter
-#include "builtin/streams/WritableStreamOperations.h"  // js::WritableStreamCloseQueuedOrInFlight
+#include "builtin/streams/WritableStreamOperations.h"  // js::WritableStream{Abort,CloseQueuedOrInFlight}
 #include "js/Value.h"  // JS::Value, JS::{Int32,Null}Value
 #include "vm/Compartment.h"  // JS::Compartment
 #include "vm/JSContext.h"    // JSContext
@@ -43,6 +43,28 @@ using JS::Value;
 using js::PromiseObject;
 
 /*** 4.6. Writable stream writer abstract operations ************************/
+
+/**
+ * Streams spec, 4.6.2.
+ * WritableStreamDefaultWriterAbort ( writer, reason )
+ */
+JSObject* js::WritableStreamDefaultWriterAbort(
+    JSContext* cx, Handle<WritableStreamDefaultWriter*> unwrappedWriter,
+    Handle<Value> reason) {
+  cx->check(reason);
+
+  // Step 1: Let stream be writer.[[ownerWritableStream]].
+  // Step 2: Assert: stream is not undefined.
+  MOZ_ASSERT(unwrappedWriter->hasStream());
+  Rooted<WritableStream*> unwrappedStream(
+      cx, UnwrapStreamFromWriter(cx, unwrappedWriter));
+  if (!unwrappedStream) {
+    return nullptr;
+  }
+
+  // Step 3: Return ! WritableStreamAbort(stream, reason).
+  return WritableStreamAbort(cx, unwrappedStream, reason);
+}
 
 /**
  * Streams spec, 4.6.3.

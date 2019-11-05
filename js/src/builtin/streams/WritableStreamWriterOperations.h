@@ -21,6 +21,10 @@ namespace js {
 
 class WritableStreamDefaultWriter;
 
+extern JSObject* WritableStreamDefaultWriterAbort(
+    JSContext* cx, JS::Handle<WritableStreamDefaultWriter*> unwrappedWriter,
+    JS::Handle<JS::Value> reason);
+
 extern JSObject* WritableStreamDefaultWriterClose(
     JSContext* cx, JS::Handle<WritableStreamDefaultWriter*> unwrappedWriter);
 
