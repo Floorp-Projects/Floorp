@@ -88,7 +88,6 @@ py2commands="
     tps-build
     try
     valgrind-test
-    vendor
     visualmetrics
     warnings-list
     warnings-summary

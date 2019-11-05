@@ -62,7 +62,7 @@ class VendorPython(MozbuildObject):
                 if with_windows_wheel:
                     # This is hardcoded to CPython 2.7 for win64, which is good
                     # enough for what we need currently. If we need psutil for Python 3
-                    # in the future that coudl be added here as well.
+                    # in the future that could be added here as well.
                     self.virtualenv_manager._run_pip([
                         'download',
                         '--dest', tmp,
