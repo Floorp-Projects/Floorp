@@ -52,11 +52,6 @@ namespace mozilla {
 
 class CancelableRunnable;
 
-namespace webgpu {
-class PWebGPUParent;
-class WebGPUParent;
-}  // namespace webgpu
-
 namespace gfx {
 class DrawTarget;
 class GPUProcessManager;
@@ -235,9 +230,6 @@ class CompositorBridgeParentBase : public PCompositorBridgeParent,
       const PipelineId& pipelineId, const LayoutDeviceIntSize& aSize) = 0;
   virtual bool DeallocPWebRenderBridgeParent(
       PWebRenderBridgeParent* aActor) = 0;
-
-  virtual webgpu::PWebGPUParent* AllocPWebGPUParent() = 0;
-  virtual bool DeallocPWebGPUParent(webgpu::PWebGPUParent* aActor) = 0;
 
   virtual PCompositorWidgetParent* AllocPCompositorWidgetParent(
       const CompositorWidgetInitData& aInitData) = 0;
@@ -647,9 +639,6 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
   RefPtr<WebRenderBridgeParent> GetWebRenderBridgeParent() const;
   Maybe<TimeStamp> GetTestingTimeStamp() const;
 
-  webgpu::PWebGPUParent* AllocPWebGPUParent() override;
-  bool DeallocPWebGPUParent(webgpu::PWebGPUParent* aActor) override;
-
   static CompositorBridgeParent* GetCompositorBridgeParentFromLayersId(
       const LayersId& aLayersId);
   static RefPtr<CompositorBridgeParent> GetCompositorBridgeParentFromWindowId(
@@ -668,8 +657,6 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
 #endif  // defined(MOZ_WIDGET_ANDROID)
 
   WebRenderBridgeParent* GetWrBridge() { return mWrBridge; }
-
-  webgpu::WebGPUParent* GetWebGPUBridge() { return mWebGPUBridge; }
 
  private:
   void Initialize();
@@ -767,7 +754,6 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
   RefPtr<AsyncCompositionManager> mCompositionManager;
   RefPtr<AsyncImagePipelineManager> mAsyncImageManager;
   RefPtr<WebRenderBridgeParent> mWrBridge;
-  RefPtr<webgpu::WebGPUParent> mWebGPUBridge;
   widget::CompositorWidget* mWidget;
   Maybe<TimeStamp> mTestTime;
   CSSToLayoutDeviceScale mScale;

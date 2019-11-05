@@ -1,5 +1,8 @@
 extern crate backtrace;
 
+#[cfg(all(windows, feature = "dbghelp"))]
+extern crate winapi;
+
 use backtrace::Backtrace;
 
 // 50-character module name
@@ -9,8 +12,8 @@ mod _234567890_234567890_234567890_234567890_234567890 {
     pub struct _234567890_234567890_234567890_234567890_234567890<T>(T);
     impl<T> _234567890_234567890_234567890_234567890_234567890<T> {
         #[allow(dead_code)]
-        pub fn new() -> crate::Backtrace {
-            crate::Backtrace::new()
+        pub fn new() -> ::Backtrace {
+            ::Backtrace::new()
         }
     }
 }
@@ -20,7 +23,9 @@ mod _234567890_234567890_234567890_234567890_234567890 {
 #[test]
 #[cfg(all(windows, feature = "dbghelp", target_env = "msvc"))]
 fn test_long_fn_name() {
-    use _234567890_234567890_234567890_234567890_234567890::_234567890_234567890_234567890_234567890_234567890 as S;
+    use winapi::um::dbghelp;
+    use _234567890_234567890_234567890_234567890_234567890::
+        _234567890_234567890_234567890_234567890_234567890 as S;
 
     // 10 repetitions of struct name, so fully qualified function name is
     // atleast 10 * (50 + 50) * 2 = 2000 characters long.
@@ -39,9 +44,11 @@ fn test_long_fn_name() {
 
         if let Some(function_name) = symbols[0].name() {
             let function_name = function_name.as_str().unwrap();
-            if function_name.contains("::_234567890_234567890_234567890_234567890_234567890") {
+            if function_name.contains(
+                "::_234567890_234567890_234567890_234567890_234567890")
+            {
                 found_long_name_frame = true;
-                assert!(function_name.len() > 200);
+                assert_eq!(function_name.len(), dbghelp::MAX_SYM_NAME - 1);
             }
         }
     }
