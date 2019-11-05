@@ -55,7 +55,12 @@ void nsTouchBarInputIcon::Destroy() {
 nsresult nsTouchBarInputIcon::SetupIcon(nsCOMPtr<nsIURI> aIconURI) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  // Still don't have one, then something is wrong, get out of here.
+  // We might not have a document if the Touch Bar tries to update when the main
+  // window is closed.
+  if (!mDocument) {
+    return NS_OK;
+  }
+
   if (!(mButton || mShareScrubber || mPopoverItem)) {
     NS_ERROR("No Touch Bar button");
     return NS_ERROR_FAILURE;
