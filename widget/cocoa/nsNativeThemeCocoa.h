@@ -43,7 +43,6 @@ class nsNativeThemeCocoa : private nsNativeTheme, public nsITheme {
     eThemeGeometryTypeVibrantTitlebarLight,
     eThemeGeometryTypeVibrantTitlebarDark,
     eThemeGeometryTypeTooltip,
-    eThemeGeometryTypeSheet,
     eThemeGeometryTypeSourceList,
     eThemeGeometryTypeSourceListSelection,
     eThemeGeometryTypeActiveSourceListSelection
@@ -439,7 +438,6 @@ class nsNativeThemeCocoa : private nsNativeTheme, public nsITheme {
   LayoutDeviceIntMargin DirectionAwareMargin(const LayoutDeviceIntMargin& aMargin,
                                              nsIFrame* aFrame);
   nsIFrame* SeparatorResponsibility(nsIFrame* aBefore, nsIFrame* aAfter);
-  bool IsWindowSheet(nsIFrame* aFrame);
   ControlParams ComputeControlParams(nsIFrame* aFrame, mozilla::EventStates aEventState);
   MenuBackgroundParams ComputeMenuBackgroundParams(nsIFrame* aFrame,
                                                    mozilla::EventStates aEventState);
