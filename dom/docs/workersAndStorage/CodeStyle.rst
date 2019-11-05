@@ -4,6 +4,8 @@ DOM Workers & Storage C++ Code Style
 
 This page describes the code style for the components maintained by the DOM Workers & Storage team. They live in-tree under the 'dom/docs/indexedDB' directory.
 
+This document is currently owned by Simon Giesecke <sgiesecke@mozilla.com>.
+
 .. contents::
    :depth: 4
 
@@ -12,9 +14,13 @@ Introduction
 
 This code style currently applies to the components living in the following directories:
 
+* ``dom/file``
 * ``dom/indexedDB``
 * ``dom/localstorage``
+* ``dom/payments``
 * ``dom/quota``
+* ``dom/serviceworkers``
+* ``dom/workers``
 
 In the long-term, the code is intended to use the
 `Mozilla Coding Style <https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Coding_Style>`_,
@@ -179,3 +185,142 @@ factory functions:
 +------------------------+-------------------------+------------------------+
 | ``std::shared_ptr``    | ``std::make_shared``    | ``<memory>``           |
 +------------------------+-------------------------+------------------------+
+
+Evolution Process
+=================
+
+This section explains the process to evolve the coding style described in this
+document. For clarity, we will distinguish coding tasks from code style
+evolution tasks in this section.
+
+Managing code style evolution tasks
+-----------------------------------
+
+A code style evolution task is a task that ought to amend or revise the
+coding style as described in this document.
+
+Code style evolution tasks should be managed in Bugzilla, as individual bugs
+for each topic. All such tasks
+should block the meta-bug
+`1586788 <https://bugzilla.mozilla.org/show_bug.cgi?id=1586788>`.
+
+When you take on to work on a code style evolution task:
+- The task may already include a sketch of a resolution. If no preferred
+  solution is obvious, discuss options to resolve it via comments on the bug
+  first.
+- When the general idea is ready to be spelled out in this document, amend or
+  revise it accordingly.
+- Submit the changes to this document as a patch to Phabricator, and put it up
+  for review. Since this will affect a number of people, every change should
+  be reviewed by at least two people. Ideally, this should include the owner
+  of this style document and one person with good knowledge of the parts of
+  the code base this style applies to.
+- If there are known violations of the amendment to the coding style, consider
+  fixing some of them, so that the amendment is tested on actual code. If
+  the code style evolution task refers to a particular code location from a
+  review, at least that location should be fixed to comply with the amended
+  coding style.
+- When you have two r+, land the patch.
+- Report on the addition in the next team meeting to raise awareness.
+
+Basis for code style evolution tasks
+------------------------------------
+
+The desire or necessity to evolve the code style can originate from
+different activities, including
+- reviews
+- reading or writing code locally
+- reading the coding style
+- general thoughts on coding style
+
+The code style should not be cluttered with aspects that are rarely
+relevant or rarely leads to discussions, as the maintenance of the
+code style has a cost as well. The code style should be as comprehensive
+as necessary to reduce the overall maintenance costs of the code and
+code style combined.
+
+A particular focus is therefore on aspects that led to some discussion in
+a code review, as reducing the number or verbosity of necessary style
+discussions in reviews is a major indicator for the effectiveness of the
+documented style.
+
+Evolving code style based on reviews
+------------------------------------
+
+The goal of the process described here is to take advantage of style-related
+discussions that originate from a code review, but to decouple evolution of
+the code style from the review process, so that it does not block progress on
+the underlying bug.
+
+The following should be considered when performing a review:
+- Remind yourself of the code style, maybe skim through the document before
+  starting the review, or have it open side-by-side while doing the review.
+- If you find a violation of an existing rule, add an inline comment.
+- Have an eye on style-relevant aspects in the code itself or after a
+  discussions with the author. Consider if this could be generalized into a
+  style rule, but is not yet  covered by the documented global or local style.
+  This might be something that is in a different style as opposed to other
+  locations, differs from your personal style, etc.
+- In that case, find an acceptable temporary solution for the code fragments
+  at hand, which is acceptable for an r+ of the patch. Maybe agree with the
+  code author on adding a comment that this should be revised later, when
+  a rule is codified.
+- Create a code style evolution task in Bugzilla as described above. In the
+  description of the bug, reference the review comment that gave rise to it.
+  If you can suggest a resolution, include that in the description, but this
+  is not a necessary condition for creating the task.
+
+Improving code style compliance when writing code
+-------------------------------------------------
+
+Periodically look into the code style document, and remind yourself of its
+rules, and give particular attention to recent changes.
+
+When writing code, i.e. adding new code or modify existing code,
+remind yourself of checking the code for style compliance.
+
+Time permitting, resolve existing violations on-the-go as part of other work
+in the code area. Submit such changes in dedicated patches. If you identify
+major violations that are too complex to resolve on-the-go, consider
+creating a bug dedicated to the resolution of that violation, which
+then can be scheduled in the planning process.
+
+Syncing with the global Mozilla C++ Coding Style
+------------------------------------------------
+
+Several aspects of the coding style described here will be applicable to
+the overall code base. However, amendments to the global coding style will
+affect a large number of code authors and may require extended discussion.
+Deviations from the global coding style should be limited in the long term.
+On the other hand, amendments that are not relevant to all parts of the code
+base, or where it is difficult to reach a consensus at the global scope,
+may make sense to be kept in the local style.
+
+The details of synchronizing with the global style are subject to discussion
+with the owner and peers of the global coding style (see 
+`Bug 1587810 <https://bugzilla.mozilla.org/show_bug.cgi?id=1587810>`).
+
+FAQ
+---
+
+* When someone introduces new code that adheres to the current style, but the
+  remainder of the function/class/file does not, is it their responsibility
+  to update that remainder on-the-go?
+
+  The code author is not obliged to update the remainder, but they are
+  encouraged to do so, time permitting. Whether that is the case depends on a
+  number of factors, including the number and complexity of existing style
+  violations, the risk introduced by changing that on the go etc. Judging this
+  is left to the code author.
+  At the very least, the function/class/file should not be left in a worse
+  state than before.
+
+* Are stylistic inconsistencies introduced by applying the style as defined
+  here only to new code considered acceptable?
+
+  While this is certainly not optimal, accepting such inconsistencies to
+  some degree is inevitable to allow making progress towards an improved style.
+  Personal preferences regarding the degree may differ, but in doubt such
+  inconsistencies should be considered acceptable. They should not block a bug
+  from being closed.
+
