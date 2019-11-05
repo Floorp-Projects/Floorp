@@ -1486,19 +1486,19 @@ nscoord nsTableFrame::GetPrefISize(gfxContext* aRenderingContext) {
   return LayoutStrategy()->GetPrefISize(aRenderingContext, false);
 }
 
-/* virtual */ nsIFrame::IntrinsicISizeOffsetData
+/* virtual */ nsIFrame::IntrinsicSizeOffsetData
 nsTableFrame::IntrinsicISizeOffsets(nscoord aPercentageBasis) {
-  IntrinsicISizeOffsetData result =
+  IntrinsicSizeOffsetData result =
       nsContainerFrame::IntrinsicISizeOffsets(aPercentageBasis);
 
-  result.hMargin = 0;
+  result.margin = 0;
 
   if (IsBorderCollapse()) {
-    result.hPadding = 0;
+    result.padding = 0;
 
     WritingMode wm = GetWritingMode();
     LogicalMargin outerBC = GetIncludedOuterBCBorder(wm);
-    result.hBorder = outerBC.IStartEnd(wm);
+    result.border = outerBC.IStartEnd(wm);
   }
 
   return result;
