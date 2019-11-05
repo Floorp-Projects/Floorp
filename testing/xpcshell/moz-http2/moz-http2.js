@@ -16,6 +16,8 @@ var url = require('url');
 var crypto = require('crypto');
 const dnsPacket = require(`${node_http2_root}/../dns-packet`);
 const ip = require(`${node_http2_root}/../node-ip`);
+const { fork } = require('child_process');
+const path = require("path");
 
 let http2_internal = null;
 try {
@@ -1186,129 +1188,6 @@ function makeid(length) {
 }
 
 let globalObjects = {}
-function startNewProxy() {
-  if (!http2_internal) {
-    throw new Error("http2_internal is null");
-  }
-  let myProxy = http2_internal ? http2_internal.createSecureServer(options) : null;
-  if (!myProxy) {
-    throw new Error("proxy creation failed");
-  }
-  setupProxy(myProxy);
-  return listen(myProxy).then(port => {
-    let serverId = makeid(6);
-    globalObjects[serverId] = myProxy;
-    return {name: serverId, port: port, success: true};
-  });
-}
-
-function closeProxy(id) {
-  let proxy = globalObjects[id];
-  if (!proxy) {
-    return;
-  }
-  delete globalObjects[id];
-  proxy.closeSockets();
-  return new Promise(resolve => {
-    proxy.close(resolve);
-  });
-}
-
-function proxySessionCount(id) {
-  let proxy = globalObjects[id];
-  if (!proxy) {
-    return 0;
-  }
-  return proxy.proxy_session_count;
-}
-
-function setupProxy(proxy) {
-  if (!http2_internal) {
-    throw new Error("http2_internal is null");
-  }
-  if (!proxy) {
-    throw new Error("proxy is null");
-  }
-  proxy.proxy_session_count = 0;
-  proxy.on('session', () => {
-    ++proxy.proxy_session_count;
-  });
-
-  // We need to track active connections so we can forcefully close keep-alive
-  // connections when shutting down the proxy.
-  proxy.socketIndex = 0;
-  proxy.socketMap = {};
-  proxy.on('connection', function(socket) {
-    let index = proxy.socketIndex++;
-    proxy.socketMap[index] = socket;
-    socket.on('close', function() {
-        delete proxy.socketMap[index];
-    });
-  });
-  proxy.closeSockets = function() {
-    for (let i in proxy.socketMap) {
-      proxy.socketMap[i].destroy();
-    }
-  }
-
-  proxy.on('stream', (stream, headers) => {
-    if (headers[':method'] !== 'CONNECT') {
-      // Only accept CONNECT requests
-      stream.respond({ ':status': 405 });
-      stream.end();
-      return;
-    }
-
-    const target = headers[':authority'];
-
-    const authorization_token = headers['proxy-authorization'];
-    if ('authorization-token' != authorization_token || target == '407.example.com:443') {
-      stream.respond({ ':status': 407 });
-      // Deliberately send no Proxy-Authenticate header
-      stream.end();
-      return;
-    }
-    if (target == '404.example.com:443') {
-      // 404 Not Found, a response code that a proxy should return when the host can't be found
-      stream.respond({ ':status': 404 });
-      stream.end();
-      return;
-    }
-    if (target == '429.example.com:443') {
-      // 429 Too Many Requests, a response code that a proxy should return when receiving too many requests
-      stream.respond({ ':status': 429 });
-      stream.end();
-      return;
-    }
-    if (target == '502.example.com:443') {
-      // 502 Bad Gateway, a response code mostly resembling immediate connection error
-      stream.respond({ ':status': 502 });
-      stream.end();
-      return;
-    }
-    if (target == '504.example.com:443') {
-      // 504 Gateway Timeout, did not receive a timely response from an upstream server
-      stream.respond({ ':status': 504 });
-      stream.end();
-      return;
-    }
-
-    const socket = net.connect(serverPort, '127.0.0.1', () => {
-      try {
-        stream.respond({ ':status': 200 });
-        socket.pipe(stream);
-        stream.pipe(socket);
-      } catch (exception) {
-        console.log(exception);
-        stream.close(http2_internal.constants.NGHTTP2_STREAM_CLOSED);
-      }
-    });
-    socket.on('error', (error) => {
-      throw `Unxpected error when conneting the HTTP/2 server from the HTTP/2 proxy during CONNECT handling: '${error}'`;
-    });
-  });
-}
-
 var serverPort;
 
 const listen = (server, envport) => {
@@ -1334,6 +1213,13 @@ const listen = (server, envport) => {
 const http = require("http");
 let httpServer = http.createServer((req, res) => {
   if (req.method != "POST") {
+    let u = url.parse(req.url, true);
+    if (u.pathname == "/test") {
+      // This path is used to test that the server is working properly
+      res.writeHead(200);
+      res.end("OK");
+      return;
+    }
     res.writeHead(405);
     res.end('Unexpected method: ' + req.method);
     return;
@@ -1344,29 +1230,63 @@ let httpServer = http.createServer((req, res) => {
     code += chunk;
   });
   req.on('end', function finishPost() {
-    let output =  "";
-    let evalResult = null;
-    try {
-      evalResult = eval(code);
-
-      if (evalResult instanceof Promise) {
-        evalResult
-          .then(x => sendBackResponse(x))
-          .catch(e => sendBackResponse(undefined, e));
-        return;
-      }
-    } catch (e) {
-      sendBackResponse(undefined, e);
+    let u = url.parse(req.url, true);
+    if (u.pathname == "/fork") {
+      let id = forkProcess();
+      computeAndSendBackResponse(id);
       return;
     }
 
+    if (u.pathname.startsWith("/kill/")) {
+      let id = u.pathname.slice(6);
+      let forked = globalObjects[id];
+      if (!forked) {
+        computeAndSendBackResponse(undefined, new Error("could not find id"));
+        return;
+      }
 
-    function sendBackResponse(evalResult, e) {
+      new Promise((resolve, reject) => {
+        forked.resolve = resolve;
+        forked.reject = reject;
+        forked.kill();
+      }).then(x => computeAndSendBackResponse(undefined, new Error(`incorrectly resolved ${x}`)))
+      .catch(e => {
+        // We indicate a proper shutdown by resolving with undefined.
+        if (e && e.toString().match(/child process exit closing code/)) {
+          e = undefined;
+        }
+        computeAndSendBackResponse(undefined, e);
+      })
+      return;
+    }
+
+    if (u.pathname.startsWith("/execute/")) {
+      let id = u.pathname.slice(9);
+      let forked = globalObjects[id];
+      if (!forked) {
+        computeAndSendBackResponse(undefined, new Error("could not find id"));
+        return;
+      }
+
+      new Promise((resolve, reject) => {
+        forked.resolve = resolve;
+        forked.reject = reject;
+        forked.send({code: code});
+      }).then(x => sendBackResponse(x))
+        .catch(e => computeAndSendBackResponse(undefined, e));
+    }
+
+
+    function computeAndSendBackResponse(evalResult, e) {
       let output = { result: evalResult, error: "", errorStack: ""};
       if (e) {
         output.error = e.toString();
         output.errorStack = e.stack;
       }
+      sendBackResponse(output);
+    }
+
+    function sendBackResponse(output) {
       output = JSON.stringify(output);
 
       res.setHeader('Content-Length', output.length);
@@ -1376,11 +1296,57 @@ let httpServer = http.createServer((req, res) => {
       res.end("");
     }
 
-    sendBackResponse(evalResult);
   });
 
   return;
 });
+
+function forkProcess() {
+  let scriptPath = path.resolve(__dirname, "moz-http2-child.js");
+  let id = makeid(6);
+  let forked = fork(scriptPath);
+  forked.errors = "";
+  globalObjects[id] = forked;
+  forked.on("message", (msg) => {
+    if (forked.resolve) {
+      forked.resolve(msg);
+      forked.resolve = null;
+    } else {
+      console.log(`forked process without handler sent: ${msg}`);
+      forked.errors += `forked process without handler sent: ${JSON.stringify(msg)}\n`;
+    }
+  });
+
+  let exitFunction = (code, signal) => {
+    if (globalObjects[id]) {
+      delete globalObjects[id];
+    } else {
+      // already called
+      return;
+    }
+
+    if (!forked.reject) {
+      console.log(`child process ${id} closing code: ${code} signal: ${signal}`);
+      return;
+    }
+
+    if (forked.errors != "") {
+      forked.reject(forked.errors);
+      forked.errors = "";
+      forked.reject = null;
+      return;
+    }
+
+    forked.reject(`child process exit closing code: ${code} signal: ${signal}`);
+    forked.reject = null;
+  }
+
+  forked.on("error", exitFunction);
+  forked.on("close", exitFunction);
+  forked.on("exit", exitFunction);
+
+  return id;
+}
 
 Promise.all([
   listen(server, process.env.MOZHTTP2_PORT).then(port => serverPort = port),
