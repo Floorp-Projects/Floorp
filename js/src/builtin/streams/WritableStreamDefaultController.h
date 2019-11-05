@@ -39,6 +39,14 @@ class WritableStreamDefaultController : public StreamController {
      */
     Slot_Stream = StreamController::SlotCount,
 
+    /**
+     * The underlying sink object that this controller and its associated stream
+     * write to.
+     *
+     * This is a user-provided value, the first argument passed to
+     * |new WritableStream|, so it may be a cross-compartment wrapper around an
+     * object from another realm.
+     */
     Slot_UnderlyingSink,
 
     /** Number stored as DoubleValue. */

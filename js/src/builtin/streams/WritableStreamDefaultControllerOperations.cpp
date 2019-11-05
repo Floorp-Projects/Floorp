@@ -284,6 +284,9 @@ MOZ_MUST_USE bool js::SetUpWritableStreamDefaultController(
   // Step 9: Set controller.[[writeAlgorithm]] to writeAlgorithm.
   // Step 10: Set controller.[[closeAlgorithm]] to closeAlgorithm.
   // Step 11: Set controller.[[abortAlgorithm]] to abortAlgorithm.
+  // (In this implementation, all [[*Algorithm]] are determined by the
+  // underlyingSink in combination with the corresponding *Method field.)
+  controller->setUnderlyingSink(underlyingSink);
   controller->setWriteMethod(writeMethod);
   controller->setCloseMethod(closeMethod);
   controller->setAbortMethod(abortMethod);
