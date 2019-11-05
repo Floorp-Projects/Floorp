@@ -7,9 +7,11 @@ package mozilla.components.lib.dataprotect
 import android.annotation.TargetApi
 import android.content.Context
 import android.content.Context.MODE_PRIVATE
+import android.content.SharedPreferences
 import android.os.Build
 import android.os.Build.VERSION_CODES.M
 import android.util.Base64
+import androidx.annotation.VisibleForTesting
 import mozilla.components.support.base.log.logger.Logger
 import java.nio.charset.StandardCharsets
 import java.security.GeneralSecurityException
@@ -25,7 +27,9 @@ import java.security.GeneralSecurityException
  */
 class SecureAbove22Preferences(context: Context) {
     companion object {
-        const val KEY_PREFERENCES = "key_preferences"
+        const val KEY_PREFERENCES_POST_M = "key_preferences_post_m"
+        const val KEY_PREFERENCES_PRE_M = "key_preferences_pre_m"
+
         private const val BASE_64_FLAGS = Base64.URL_SAFE or Base64.NO_PADDING
     }
 
@@ -36,7 +40,23 @@ class SecureAbove22Preferences(context: Context) {
     }
 
     private val logger = Logger("SecureAbove22Preferences")
-    private val prefs = context.getSharedPreferences(KEY_PREFERENCES, MODE_PRIVATE)
+    private val prefs = if (Build.VERSION.SDK_INT < M) {
+        context.getSharedPreferences(KEY_PREFERENCES_PRE_M, MODE_PRIVATE)
+    } else {
+        context.getSharedPreferences(KEY_PREFERENCES_POST_M, MODE_PRIVATE)
+    }
+
+    init {
+        // If we're running on an API level for which we support encryption, see if we have any plaintext values stored
+        // on disk. That indicates that we've hit an API upgrade situation - we just went from pre-M to post-M. Since
+        // we already have the plaintext keys, we can transparently migrate them to use the encrypted storage layer.
+        if (Build.VERSION.SDK_INT >= M) {
+            val plaintextPrefs = context.getSharedPreferences(KEY_PREFERENCES_PRE_M, MODE_PRIVATE)
+            if (plaintextPrefs.all.isNotEmpty()) {
+                migratePrefs(plaintextPrefs)
+            }
+        }
+    }
 
     /**
      * Retrieves a stored [key]. See [putString] for storing a [key].
@@ -123,5 +143,24 @@ class SecureAbove22Preferences(context: Context) {
         if (!keystore!!.available()) {
             keystore.generateKey()
         }
+    }
+
+    /**
+     * Copies over [String] preferences from [plaintextPrefs].
+     */
+    @VisibleForTesting
+    @Suppress("ApplySharedPref")
+    internal fun migratePrefs(plaintextPrefs: SharedPreferences) {
+        plaintextPrefs.all.forEach {
+            if (it.value is String) {
+                putString(it.key, it.value as String)
+            } else {
+                logger.error(
+                    "Dropping key during migration because its value type isn't supported: ${it.key}"
+                )
+            }
+        }
+        // Using 'commit' here an not apply to speed up how quickly plaintext prefs are erased from disk.
+        plaintextPrefs.edit().clear().commit()
     }
 }

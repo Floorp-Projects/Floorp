@@ -4,6 +4,7 @@
 
 package mozilla.components.lib.dataprotect
 
+import android.content.Context.MODE_PRIVATE
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
@@ -70,6 +71,39 @@ class SecureAbove22PreferencesTest {
         assertNull(storage.getString("hello"))
         storage.remove("test")
         assertNull(storage.getString("test"))
+    }
+
+    @Config(sdk = [22])
+    @Test
+    fun `pref migration`() {
+        // NB: this test is targeting 22, even though we're testing 22->23 migration scenario.
+        // Internally, `migratePrefs` simply writes values from the provided prefs into current prefs. If our encryption
+        // roundtrip tests worked, we could have tests that for sdk=23, but they do not (see https://github.com/mozilla-mobile/android-components/issues/4956),
+        // and so we're just testing this backed by regular SharedPreferences.
+        // This covers the core logic of migration, so it's an acceptable "hack".
+
+        val plainPrefs = testContext.getSharedPreferences("test", MODE_PRIVATE)
+        val storage = SecureAbove22Preferences(testContext)
+
+        // can migrate empty prefs
+        storage.migratePrefs(plainPrefs)
+
+        // can migrate mixed prefs
+        plainPrefs
+            .edit()
+            .putString("hello", "world")
+            .putBoolean("some_flag", false)
+            .putString("another", "string")
+            .putInt("counter", 42)
+            .commit()
+
+        storage.migratePrefs(plainPrefs)
+
+        assertEquals("world", storage.getString("hello"))
+        assertEquals("string", storage.getString("another"))
+
+        // original prefs empty after migrating
+        assertEquals(0, plainPrefs.all.size)
     }
 
     @Ignore("https://github.com/mozilla-mobile/android-components/issues/4956")
