@@ -435,3 +435,10 @@ cmake:
         artifact-name: cmake.tar.zst
         strip-components: 1
         add-prefix: cmake/
+
+lucetc-source:
+    description: lucetc source code
+    fetch:
+        type: git
+        repo: https://github.com/PLSysSec/lucet_sandbox_compiler/
+        revision: 5c22392b5b1aaa60e915c75e92b57391e1e61e6d
