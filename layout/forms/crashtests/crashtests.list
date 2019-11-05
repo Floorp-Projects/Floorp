@@ -20,8 +20,6 @@ load 367587-1.html
 load 370703-1.html
 load 370940-1.html
 load 370967.html
-skip-if(!xbl) load 373586-1.xhtml
-skip-if(!xbl) load 375299.html
 load 378369.html
 load 378413-1.xhtml
 load 380116-1.xhtml

@@ -1,4 +1,3 @@
 == usercss.html usercss-ref.html
 == usercss-uppercase.html usercss-ref.html
-skip-if(!xbl) == usercss-xbl.html usercss-ref.html
 fails-if(geckoview&&webrender) == usercss-moz-document.html usercss-moz-document-ref.html

@@ -181,7 +181,6 @@ load 1344210.html
 load 1353312.html
 load 1356601-1.html
 load 1364139-1.html
-skip-if(!xbl) load 1370793-1.xhtml
 load 1371450-1.html
 load 1374175-1.html
 load 1375812-1.html
