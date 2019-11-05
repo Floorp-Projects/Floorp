@@ -10,7 +10,7 @@
 #include "nsString.h"
 
 #include "nsSimpleEnumerator.h"
-#include "nsIAppWindow.h"
+#include "nsIXULWindow.h"
 
 class nsWindowMediator;
 
@@ -19,10 +19,10 @@ class nsWindowMediator;
 //
 
 struct nsWindowInfo {
-  nsWindowInfo(nsIAppWindow* inWindow, int32_t inTimeStamp);
+  nsWindowInfo(nsIXULWindow* inWindow, int32_t inTimeStamp);
   ~nsWindowInfo();
 
-  nsCOMPtr<nsIAppWindow> mWindow;
+  nsCOMPtr<nsIXULWindow> mWindow;
   int32_t mTimeStamp;
   uint32_t mZLevel;
 
@@ -72,14 +72,14 @@ class nsASDOMWindowEnumerator : public nsAppShellWindowEnumerator {
   NS_IMETHOD GetNext(nsISupports** retval) override;
 };
 
-class nsASAppWindowEnumerator : public nsAppShellWindowEnumerator {
+class nsASXULWindowEnumerator : public nsAppShellWindowEnumerator {
  public:
-  nsASAppWindowEnumerator(const char16_t* aTypeString,
+  nsASXULWindowEnumerator(const char16_t* aTypeString,
                           nsWindowMediator& inMediator);
-  virtual ~nsASAppWindowEnumerator();
+  virtual ~nsASXULWindowEnumerator();
   NS_IMETHOD GetNext(nsISupports** retval) override;
 
-  const nsID& DefaultInterface() override { return NS_GET_IID(nsIAppWindow); }
+  const nsID& DefaultInterface() override { return NS_GET_IID(nsIXULWindow); }
 };
 
 //
@@ -97,34 +97,34 @@ class nsASDOMWindowEarlyToLateEnumerator : public nsASDOMWindowEnumerator {
   virtual nsWindowInfo* FindNext() override;
 };
 
-class nsASAppWindowEarlyToLateEnumerator : public nsASAppWindowEnumerator {
+class nsASXULWindowEarlyToLateEnumerator : public nsASXULWindowEnumerator {
  public:
-  nsASAppWindowEarlyToLateEnumerator(const char16_t* aTypeString,
+  nsASXULWindowEarlyToLateEnumerator(const char16_t* aTypeString,
                                      nsWindowMediator& inMediator);
 
-  virtual ~nsASAppWindowEarlyToLateEnumerator();
+  virtual ~nsASXULWindowEarlyToLateEnumerator();
 
  protected:
   virtual nsWindowInfo* FindNext() override;
 };
 
-class nsASAppWindowFrontToBackEnumerator : public nsASAppWindowEnumerator {
+class nsASXULWindowFrontToBackEnumerator : public nsASXULWindowEnumerator {
  public:
-  nsASAppWindowFrontToBackEnumerator(const char16_t* aTypeString,
+  nsASXULWindowFrontToBackEnumerator(const char16_t* aTypeString,
                                      nsWindowMediator& inMediator);
 
-  virtual ~nsASAppWindowFrontToBackEnumerator();
+  virtual ~nsASXULWindowFrontToBackEnumerator();
 
  protected:
   virtual nsWindowInfo* FindNext() override;
 };
 
-class nsASAppWindowBackToFrontEnumerator : public nsASAppWindowEnumerator {
+class nsASXULWindowBackToFrontEnumerator : public nsASXULWindowEnumerator {
  public:
-  nsASAppWindowBackToFrontEnumerator(const char16_t* aTypeString,
+  nsASXULWindowBackToFrontEnumerator(const char16_t* aTypeString,
                                      nsWindowMediator& inMediator);
 
-  virtual ~nsASAppWindowBackToFrontEnumerator();
+  virtual ~nsASXULWindowBackToFrontEnumerator();
 
  protected:
   virtual nsWindowInfo* FindNext() override;

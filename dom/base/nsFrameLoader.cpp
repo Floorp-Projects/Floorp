@@ -39,7 +39,7 @@
 #include "nsSubDocumentFrame.h"
 #include "nsError.h"
 #include "nsISHistory.h"
-#include "nsIAppWindow.h"
+#include "nsIXULWindow.h"
 #include "nsIMozBrowserFrame.h"
 #include "nsISHistory.h"
 #include "nsIScriptError.h"
@@ -2598,7 +2598,7 @@ bool nsFrameLoader::TryRemoteBrowserInternal() {
       !parentOwner) {
     return false;
   }
-  nsCOMPtr<nsIAppWindow> window(do_GetInterface(parentOwner));
+  nsCOMPtr<nsIXULWindow> window(do_GetInterface(parentOwner));
   if (window && NS_FAILED(window->GetChromeFlags(&chromeFlags))) {
     return false;
   }

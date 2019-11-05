@@ -289,12 +289,12 @@ BrowserTabList.prototype._getChildren = function(window) {
 };
 
 BrowserTabList.prototype.getList = function(browserActorOptions) {
-  const topAppWindow = Services.wm.getMostRecentWindow(
+  const topXULWindow = Services.wm.getMostRecentWindow(
     DebuggerServer.chromeWindowType
   );
   let selectedBrowser = null;
-  if (topAppWindow) {
-    selectedBrowser = this._getSelectedBrowser(topAppWindow);
+  if (topXULWindow) {
+    selectedBrowser = this._getSelectedBrowser(topXULWindow);
   }
 
   // As a sanity check, make sure all the actors presently in our map get
@@ -416,11 +416,11 @@ BrowserTabList.prototype.getTab = function(
     });
   }
 
-  const topAppWindow = Services.wm.getMostRecentWindow(
+  const topXULWindow = Services.wm.getMostRecentWindow(
     DebuggerServer.chromeWindowType
   );
-  if (topAppWindow) {
-    const selectedBrowser = this._getSelectedBrowser(topAppWindow);
+  if (topXULWindow) {
+    const selectedBrowser = this._getSelectedBrowser(topXULWindow);
     return this._getActorForBrowser(selectedBrowser, browserActorOptions);
   }
   return Promise.reject({
@@ -781,7 +781,7 @@ BrowserTabList.prototype.onOpenWindow = DevToolsUtils.makeInfallible(function(
 BrowserTabList.prototype.onCloseWindow = DevToolsUtils.makeInfallible(function(
   window
 ) {
-  if (window instanceof Ci.nsIAppWindow) {
+  if (window instanceof Ci.nsIXULWindow) {
     window = window.docShell.domWindow;
   }
 

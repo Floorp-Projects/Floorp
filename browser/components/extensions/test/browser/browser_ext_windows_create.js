@@ -172,7 +172,7 @@ add_task(async function testWindowCreate() {
     if (expected.chromeFlags) {
       let { chromeFlags } = latestWindow.docShell.treeOwner
         .QueryInterface(Ci.nsIInterfaceRequestor)
-        .getInterface(Ci.nsIAppWindow);
+        .getInterface(Ci.nsIXULWindow);
       for (let flag of expected.chromeFlags) {
         ok(
           chromeFlags & Ci.nsIWebBrowserChrome[flag],

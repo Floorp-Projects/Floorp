@@ -15,10 +15,10 @@
 #include "nsTObserverArray.h"
 
 class nsAppShellWindowEnumerator;
-class nsASAppWindowEarlyToLateEnumerator;
+class nsASXULWindowEarlyToLateEnumerator;
 class nsASDOMWindowEarlyToLateEnumerator;
-class nsASAppWindowFrontToBackEnumerator;
-class nsASAppWindowBackToFrontEnumerator;
+class nsASXULWindowFrontToBackEnumerator;
+class nsASXULWindowBackToFrontEnumerator;
 class nsIWindowMediatorListener;
 struct nsWindowInfo;
 
@@ -26,10 +26,10 @@ class nsWindowMediator : public nsIWindowMediator,
                          public nsIObserver,
                          public nsSupportsWeakReference {
   friend class nsAppShellWindowEnumerator;
-  friend class nsASAppWindowEarlyToLateEnumerator;
+  friend class nsASXULWindowEarlyToLateEnumerator;
   friend class nsASDOMWindowEarlyToLateEnumerator;
-  friend class nsASAppWindowFrontToBackEnumerator;
-  friend class nsASAppWindowBackToFrontEnumerator;
+  friend class nsASXULWindowFrontToBackEnumerator;
+  friend class nsASXULWindowBackToFrontEnumerator;
 
  protected:
   virtual ~nsWindowMediator();
@@ -43,7 +43,7 @@ class nsWindowMediator : public nsIWindowMediator,
   NS_DECL_NSIWINDOWMEDIATOR
   NS_DECL_NSIOBSERVER
 
-  static nsresult GetDOMWindow(nsIAppWindow* inWindow,
+  static nsresult GetDOMWindow(nsIXULWindow* inWindow,
                                nsCOMPtr<nsPIDOMWindowOuter>& outDOMWindow);
 
  private:
@@ -53,7 +53,7 @@ class nsWindowMediator : public nsIWindowMediator,
                                      bool aSkipPrivateBrowsingOrClosed = false);
 
   nsresult UnregisterWindow(nsWindowInfo* inInfo);
-  nsWindowInfo* GetInfoFor(nsIAppWindow* aWindow);
+  nsWindowInfo* GetInfoFor(nsIXULWindow* aWindow);
   nsWindowInfo* GetInfoFor(nsIWidget* aWindow);
   void SortZOrderFrontToBack();
   void SortZOrderBackToFront();

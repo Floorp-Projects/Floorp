@@ -280,7 +280,7 @@ nsNativeAppSupportCocoa::ReOpen() {
     return NS_ERROR_FAILURE;
   } else {
     nsCOMPtr<nsISimpleEnumerator> windowList;
-    wm->GetAppWindowEnumerator(nullptr, getter_AddRefs(windowList));
+    wm->GetXULWindowEnumerator(nullptr, getter_AddRefs(windowList));
     bool more;
     windowList->HasMoreElements(&more);
     while (more) {
