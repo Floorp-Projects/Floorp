@@ -17,7 +17,7 @@
       window.addEventListener("message",
         (event) => {
           if (event.data == "click") {
-            synthesizeMouseAtCenter(document.body, {});
+            SpecialPowers.wrap(document).notifyUserGestureActivation();
           } else if (event.data == "play-audible") {
             playAndPostResult(false, event.source);
           } else if (event.data == "play-muted") {

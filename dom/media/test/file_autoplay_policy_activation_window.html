@@ -50,7 +50,7 @@
             let test_case = event.data;
             // Click the window to activate if appropriate.
             if (test_case.activated_parent) {
-              synthesizeMouseAtCenter(document.body, {});
+              SpecialPowers.wrap(document).notifyUserGestureActivation();
             }
             let parent_window = event.source;
             if (test_case.same_origin_child === undefined) {
