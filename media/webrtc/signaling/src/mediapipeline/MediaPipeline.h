@@ -348,7 +348,8 @@ class MediaPipelineReceiveAudio : public MediaPipelineReceive {
                             nsCOMPtr<nsIEventTarget> aMainThread,
                             nsCOMPtr<nsIEventTarget> aStsThread,
                             RefPtr<AudioSessionConduit> aConduit,
-                            dom::MediaStreamTrack* aTrack);
+                            dom::MediaStreamTrack* aTrack,
+                            const PrincipalHandle& aPrincipalHandle);
 
   void DetachMedia() override;
 
@@ -365,7 +366,7 @@ class MediaPipelineReceiveAudio : public MediaPipelineReceive {
   // Separate class to allow ref counting
   class PipelineListener;
 
-  RefPtr<PipelineListener> mListener;
+  const RefPtr<PipelineListener> mListener;
 };
 
 // A specialization of pipeline for reading from the network and
@@ -377,7 +378,8 @@ class MediaPipelineReceiveVideo : public MediaPipelineReceive {
                             nsCOMPtr<nsIEventTarget> aMainThread,
                             nsCOMPtr<nsIEventTarget> aStsThread,
                             RefPtr<VideoSessionConduit> aConduit,
-                            dom::MediaStreamTrack* aTrack);
+                            dom::MediaStreamTrack* aTrack,
+                            const PrincipalHandle& aPrincipalHandle);
 
   // Called on the main thread.
   void DetachMedia() override;
@@ -399,7 +401,7 @@ class MediaPipelineReceiveVideo : public MediaPipelineReceive {
   class PipelineListener;
 
   const RefPtr<PipelineRenderer> mRenderer;
-  RefPtr<PipelineListener> mListener;
+  const RefPtr<PipelineListener> mListener;
 };
 
 }  // namespace mozilla
