@@ -145,15 +145,24 @@ class DNSListener {
   }
 }
 
+Cu.importGlobalProperties(["fetch"]);
+
 add_task(async function test0_nodeExecute() {
   // This test checks that moz-http2.js running in node is working.
   // This should always be the first test in this file (except for setup)
   // otherwise we may encounter random failures when the http2 server is down.
-  equal(
-    await NodeServer.execute(`"hello"`),
-    "hello",
-    "Check that moz-http2.js is running"
+
+  let env = Cc["@mozilla.org/process/environment;1"].getService(
+    Ci.nsIEnvironment
   );
+  let execPort = env.get("MOZNODE_EXEC_PORT");
+  await fetch(`http://127.0.0.1:${execPort}/test`)
+    .then(response => {
+      ok(true, "NodeServer is working");
+    })
+    .catch(e => {
+      ok(false, `There was an error ${e}`);
+    });
 });
 
 // verify basic A record
