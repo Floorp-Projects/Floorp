@@ -203,8 +203,8 @@ async function getSourceLocation(location, sourceMapService) {
       location.column
     );
     if (originalLocation) {
-      const { sourceUrl, line, column, sourceId } = originalLocation;
-      return { url: sourceUrl, line, column, sourceId };
+      const { sourceUrl, line, column } = originalLocation;
+      return { url: sourceUrl, line, column };
     }
   } catch (e) {}
   return location;
