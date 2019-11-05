@@ -4263,16 +4263,6 @@ bool nsNativeThemeCocoa::WidgetAppearanceDependsOnWindowFocus(StyleAppearance aA
   }
 }
 
-bool nsNativeThemeCocoa::IsWindowSheet(nsIFrame* aFrame) {
-  NSWindow* win = NativeWindowForFrame(aFrame);
-  id winDelegate = [win delegate];
-  nsIWidget* widget = [(WindowDelegate*)winDelegate geckoWidget];
-  if (!widget) {
-    return false;
-  }
-  return (widget->WindowType() == eWindowType_sheet);
-}
-
 bool nsNativeThemeCocoa::NeedToClearBackgroundBehindWidget(nsIFrame* aFrame,
                                                            StyleAppearance aAppearance) {
   switch (aAppearance) {
@@ -4292,8 +4282,6 @@ bool nsNativeThemeCocoa::NeedToClearBackgroundBehindWidget(nsIFrame* aFrame,
     case StyleAppearance::Menuitem:
     case StyleAppearance::Checkmenuitem:
       return true;
-    case StyleAppearance::Dialog:
-      return IsWindowSheet(aFrame);
     default:
       return false;
   }
@@ -4331,8 +4319,6 @@ nsITheme::ThemeGeometryType nsNativeThemeCocoa::ThemeGeometryTypeForWidget(
       bool isSelected = !isDisabled && CheckBooleanAttr(aFrame, nsGkAtoms::menuactive);
       return isSelected ? eThemeGeometryTypeHighlightedMenuItem : eThemeGeometryTypeMenu;
     }
-    case StyleAppearance::Dialog:
-      return IsWindowSheet(aFrame) ? eThemeGeometryTypeSheet : eThemeGeometryTypeUnknown;
     case StyleAppearance::MozMacSourceList:
       return eThemeGeometryTypeSourceList;
     case StyleAppearance::MozMacSourceListSelection:
