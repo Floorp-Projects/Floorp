@@ -35,7 +35,7 @@ XPCOMUtils.defineLazyServiceGetter(
  * TouchBarInput.
  * @param {string} commandName
  *        A XUL command.
- * @param {string} telemetryKey
+ * @param {string} [telemetryKey]
  *        A string describing the command, sent for telemetry purposes.
  *        Intended to be shorter and more readable than the XUL command.
  */
@@ -47,6 +47,11 @@ function execCommand(commandName, telemetryKey) {
   if (command) {
     command.doCommand();
   }
+
+  if (!telemetryKey) {
+    return;
+  }
+
   let telemetry = Services.telemetry.getHistogramById(
     "TOUCHBAR_BUTTON_PRESSES"
   );
