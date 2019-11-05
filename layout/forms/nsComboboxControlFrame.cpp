@@ -721,10 +721,8 @@ nscoord nsComboboxControlFrame::GetIntrinsicISize(
   nscoord displayISize = 0;
   if (MOZ_LIKELY(mDisplayFrame)) {
     if (isContainSize) {
-      // Note: the "h" in "hPadding" here really means "inline-axis".
-      // Its struct uses "h" prefixes for historical reasons, but they're all
-      // for the inline-axis, not (necessarily) the horizontal axis.
-      displayISize = mDisplayFrame->IntrinsicISizeOffsets().hPadding;
+      // Get padding from the inline-axis
+      displayISize = mDisplayFrame->IntrinsicISizeOffsets().padding;
     } else {
       displayISize = nsLayoutUtils::IntrinsicForContainer(aRenderingContext,
                                                           mDisplayFrame, aType);

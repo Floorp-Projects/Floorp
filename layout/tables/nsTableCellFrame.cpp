@@ -742,15 +742,15 @@ nscoord nsTableCellFrame::GetPrefISize(gfxContext* aRenderingContext) {
   return result;
 }
 
-/* virtual */ nsIFrame::IntrinsicISizeOffsetData
+/* virtual */ nsIFrame::IntrinsicSizeOffsetData
 nsTableCellFrame::IntrinsicISizeOffsets(nscoord aPercentageBasis) {
-  IntrinsicISizeOffsetData result =
+  IntrinsicSizeOffsetData result =
       nsContainerFrame::IntrinsicISizeOffsets(aPercentageBasis);
 
-  result.hMargin = 0;
+  result.margin = 0;
 
   WritingMode wm = GetWritingMode();
-  result.hBorder = GetBorderWidth(wm).IStartEnd(wm);
+  result.border = GetBorderWidth(wm).IStartEnd(wm);
 
   return result;
 }

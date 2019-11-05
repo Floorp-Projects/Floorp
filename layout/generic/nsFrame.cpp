@@ -5730,38 +5730,37 @@ static nscoord ResolvePadding(const LengthPercentage& aStyle,
   return nsLayoutUtils::ResolveToLength<true>(aStyle, aPercentageBasis);
 }
 
-static nsIFrame::IntrinsicISizeOffsetData IntrinsicSizeOffsets(
+static nsIFrame::IntrinsicSizeOffsetData IntrinsicSizeOffsets(
     nsIFrame* aFrame, nscoord aPercentageBasis, bool aForISize) {
-  nsIFrame::IntrinsicISizeOffsetData result;
+  nsIFrame::IntrinsicSizeOffsetData result;
   WritingMode wm = aFrame->GetWritingMode();
   const auto& margin = aFrame->StyleMargin()->mMargin;
   bool verticalAxis = aForISize == wm.IsVertical();
   if (verticalAxis) {
-    result.hMargin += ResolveMargin(margin.Get(eSideTop), aPercentageBasis);
-    result.hMargin += ResolveMargin(margin.Get(eSideBottom), aPercentageBasis);
+    result.margin += ResolveMargin(margin.Get(eSideTop), aPercentageBasis);
+    result.margin += ResolveMargin(margin.Get(eSideBottom), aPercentageBasis);
   } else {
-    result.hMargin += ResolveMargin(margin.Get(eSideLeft), aPercentageBasis);
-    result.hMargin += ResolveMargin(margin.Get(eSideRight), aPercentageBasis);
+    result.margin += ResolveMargin(margin.Get(eSideLeft), aPercentageBasis);
+    result.margin += ResolveMargin(margin.Get(eSideRight), aPercentageBasis);
   }
 
   const auto& padding = aFrame->StylePadding()->mPadding;
   if (verticalAxis) {
-    result.hPadding += ResolvePadding(padding.Get(eSideTop), aPercentageBasis);
-    result.hPadding +=
+    result.padding += ResolvePadding(padding.Get(eSideTop), aPercentageBasis);
+    result.padding +=
         ResolvePadding(padding.Get(eSideBottom), aPercentageBasis);
   } else {
-    result.hPadding += ResolvePadding(padding.Get(eSideLeft), aPercentageBasis);
-    result.hPadding +=
-        ResolvePadding(padding.Get(eSideRight), aPercentageBasis);
+    result.padding += ResolvePadding(padding.Get(eSideLeft), aPercentageBasis);
+    result.padding += ResolvePadding(padding.Get(eSideRight), aPercentageBasis);
   }
 
   const nsStyleBorder* styleBorder = aFrame->StyleBorder();
   if (verticalAxis) {
-    result.hBorder += styleBorder->GetComputedBorderWidth(eSideTop);
-    result.hBorder += styleBorder->GetComputedBorderWidth(eSideBottom);
+    result.border += styleBorder->GetComputedBorderWidth(eSideTop);
+    result.border += styleBorder->GetComputedBorderWidth(eSideBottom);
   } else {
-    result.hBorder += styleBorder->GetComputedBorderWidth(eSideLeft);
-    result.hBorder += styleBorder->GetComputedBorderWidth(eSideRight);
+    result.border += styleBorder->GetComputedBorderWidth(eSideLeft);
+    result.border += styleBorder->GetComputedBorderWidth(eSideRight);
   }
 
   const nsStyleDisplay* disp = aFrame->StyleDisplay();
@@ -5770,26 +5769,26 @@ static nsIFrame::IntrinsicISizeOffsetData IntrinsicSizeOffsets(
 
     LayoutDeviceIntMargin border = presContext->GetTheme()->GetWidgetBorder(
         presContext->DeviceContext(), aFrame, disp->mAppearance);
-    result.hBorder = presContext->DevPixelsToAppUnits(
+    result.border = presContext->DevPixelsToAppUnits(
         verticalAxis ? border.TopBottom() : border.LeftRight());
 
     LayoutDeviceIntMargin padding;
     if (presContext->GetTheme()->GetWidgetPadding(presContext->DeviceContext(),
                                                   aFrame, disp->mAppearance,
                                                   &padding)) {
-      result.hPadding = presContext->DevPixelsToAppUnits(
+      result.padding = presContext->DevPixelsToAppUnits(
           verticalAxis ? padding.TopBottom() : padding.LeftRight());
     }
   }
   return result;
 }
 
-/* virtual */ nsIFrame::IntrinsicISizeOffsetData nsFrame::IntrinsicISizeOffsets(
+/* virtual */ nsIFrame::IntrinsicSizeOffsetData nsFrame::IntrinsicISizeOffsets(
     nscoord aPercentageBasis) {
   return IntrinsicSizeOffsets(this, aPercentageBasis, true);
 }
 
-nsIFrame::IntrinsicISizeOffsetData nsIFrame::IntrinsicBSizeOffsets(
+nsIFrame::IntrinsicSizeOffsetData nsIFrame::IntrinsicBSizeOffsets(
     nscoord aPercentageBasis) {
   return IntrinsicSizeOffsets(this, aPercentageBasis, false);
 }
