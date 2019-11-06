@@ -41,16 +41,11 @@ enum class GeckoViewVisitFlags : int32_t {
   VISIT_UNRECOVERABLE_ERROR = 1 << 5,
 };
 
-// The number of milliseconds to wait between tracking a link and dispatching a
-// `GetVisited` request for the link to Java. Used to debounce requests and
-// reduce the number of IPC and JNI calls.
-static const uint32_t GET_VISITS_WAIT_MS = 250;
-
 GeckoViewHistory::GeckoViewHistory() {}
 
-NS_IMPL_ISUPPORTS(GeckoViewHistory, IHistory, nsITimerCallback, nsINamed)
-
 GeckoViewHistory::~GeckoViewHistory() {}
+
+NS_IMPL_ISUPPORTS(GeckoViewHistory, IHistory)
 
 StaticRefPtr<GeckoViewHistory> GeckoViewHistory::sHistory;
 
@@ -64,15 +59,10 @@ already_AddRefed<GeckoViewHistory> GeckoViewHistory::GetSingleton() {
   return history.forget();
 }
 
-NS_IMETHODIMP
-GeckoViewHistory::GetName(nsACString& aName) {
-  aName.AssignLiteral("GeckoViewHistory");
-  return NS_OK;
-}
-
 // Handles a request to fetch visited statuses for new tracked URIs in the
 // content process (e10s).
-void GeckoViewHistory::QueryVisitedStateInContentProcess() {
+void GeckoViewHistory::QueryVisitedStateInContentProcess(
+    const PendingVisitedQueries& aQueries) {
   // Holds an array of new tracked URIs for a tab in the content process.
   struct NewURIEntry {
     explicit NewURIEntry(BrowserChild* aBrowserChild, nsIURI* aURI)
@@ -93,9 +83,8 @@ void GeckoViewHistory::QueryVisitedStateInContentProcess() {
   // instead, but, since we don't expect to have many tab children, we can avoid
   // the cost of hashing.
   AutoTArray<NewURIEntry, 8> newEntries;
-  for (auto newURIsIter = mNewURIs.ConstIter(); !newURIsIter.Done();
-       newURIsIter.Next()) {
-    nsIURI* uri = newURIsIter.Get()->GetKey();
+  for (auto query = aQueries.ConstIter(); !query.Done(); query.Next()) {
+    nsIURI* uri = query.Get()->GetKey();
     auto entry = mTrackedURIs.Lookup(uri);
     if (!entry) {
       continue;
@@ -128,8 +117,6 @@ void GeckoViewHistory::QueryVisitedStateInContentProcess() {
     }
   }
 
-  mNewURIs.Clear();
-
   // Send the request to the parent process, one message per tab child.
   for (const NewURIEntry& entry : newEntries) {
     Unused << NS_WARN_IF(
@@ -139,7 +126,8 @@ void GeckoViewHistory::QueryVisitedStateInContentProcess() {
 
 // Handles a request to fetch visited statuses for new tracked URIs in the
 // parent process (non-e10s).
-void GeckoViewHistory::QueryVisitedStateInParentProcess() {
+void GeckoViewHistory::QueryVisitedStateInParentProcess(
+    const PendingVisitedQueries& aQueries) {
   // Holds an array of new URIs for a window in the parent process. Unlike
   // the content process case, we don't need to track tab children, since we
   // have the outer window and can send the request directly to Java.
@@ -157,9 +145,8 @@ void GeckoViewHistory::QueryVisitedStateInParentProcess() {
   MOZ_ASSERT(XRE_IsParentProcess());
 
   nsTArray<NewURIEntry> newEntries;
-  for (auto newURIsIter = mNewURIs.ConstIter(); !newURIsIter.Done();
-       newURIsIter.Next()) {
-    nsIURI* uri = newURIsIter.Get()->GetKey();
+  for (auto query = aQueries.ConstIter(); !query.Done(); query.Next()) {
+    nsIURI* uri = query.Get()->GetKey();
     auto entry = mTrackedURIs.Lookup(uri);
     if (!entry) {
       continue;  // Nobody cares about this uri anymore.
@@ -189,46 +176,18 @@ void GeckoViewHistory::QueryVisitedStateInParentProcess() {
     }
   }
 
-  mNewURIs.Clear();
   for (const NewURIEntry& entry : newEntries) {
     QueryVisitedState(entry.mWidget, entry.mURIs);
   }
 }
 
-NS_IMETHODIMP
-GeckoViewHistory::Notify(nsITimer* aTimer) {
-  MOZ_ASSERT(aTimer == mQueryVisitedStateTimer);
-  MOZ_ASSERT(mQueryVisitedStateTimerPending);
-  mQueryVisitedStateTimerPending = false;
-
-  if (!mNewURIs.IsEmpty()) {
-    if (XRE_IsContentProcess()) {
-      QueryVisitedStateInContentProcess();
-    } else {
-      QueryVisitedStateInParentProcess();
-    }
+void GeckoViewHistory::StartPendingVisitedQueries(
+    const PendingVisitedQueries& aQueries) {
+  if (XRE_IsContentProcess()) {
+    QueryVisitedStateInContentProcess(aQueries);
+  } else {
+    QueryVisitedStateInParentProcess(aQueries);
   }
-
-  return NS_OK;
-}
-
-Result<Ok, nsresult> GeckoViewHistory::StartVisitedQuery(nsIURI* aURI) {
-  mNewURIs.PutEntry(aURI);
-  if (mQueryVisitedStateTimerPending) {
-    MOZ_ASSERT(mQueryVisitedStateTimer);
-    return Ok();
-  }
-  if (!mQueryVisitedStateTimer) {
-    mQueryVisitedStateTimer = NS_NewTimer();
-  }
-  nsresult rv = mQueryVisitedStateTimer->InitWithCallback(
-      this, GET_VISITS_WAIT_MS, nsITimer::TYPE_ONE_SHOT);
-  mQueryVisitedStateTimerPending = NS_SUCCEEDED(rv);
-  return ToResult(rv);
-}
-
-void GeckoViewHistory::CancelVisitedQueryIfPossible(nsIURI* aURI) {
-  mNewURIs.RemoveEntry(aURI);
 }
 
 /**
