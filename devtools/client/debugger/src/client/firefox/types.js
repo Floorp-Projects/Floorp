@@ -18,7 +18,6 @@ import type {
   Script,
   Pause,
   PendingLocation,
-  Frame,
   SourceId,
   QueuedSourceData,
   Range,
@@ -66,21 +65,27 @@ type URL = string;
  * @static
  */
 
+export type FramePacket = {|
+  +actor: ActorId,
+  +arguments: any[],
+  +displayName: string,
+  +environment: any,
+  +this: any,
+  +depth?: number,
+  +oldest?: boolean,
+  +type: "pause" | "call",
+  +where: {| actor: string, line: number, column: number |},
+|};
+
 /**
  * Frame Packet
  * @memberof firefox/packets
  * @static
  */
-export type FramePacket = {
-  actor: ActorId,
-  arguments: any[],
-  displayName: string,
-  environment: any,
-  this: any,
-  depth?: number,
-  oldest?: boolean,
-  type: "pause" | "call",
-  where: {| actor: string, line: number, column: number |},
+export type FrameFront = {
+  +typeName: "frame",
+  +data: FramePacket,
+  +getEnvironment: () => Promise<*>,
 };
 
 /**
@@ -144,10 +149,6 @@ export type PausedPacket = {
  * @memberof firefox
  * @static
  */
-export type FramesResponse = {
-  frames: FramePacket[],
-  from: ActorId,
-};
 
 export type TabPayload = {
   actor: ActorId,
@@ -359,6 +360,7 @@ export type ObjectFront = {
  * @static
  */
 export type ThreadFront = {
+  getFrames: (number, number) => Promise<{| frames: FramePacket[] |}>,
   resume: Function => Promise<*>,
   stepIn: Function => Promise<*>,
   stepOver: Function => Promise<*>,
@@ -376,8 +378,6 @@ export type ThreadFront = {
   removeXHRBreakpoint: (path: string, method: string) => Promise<boolean>,
   interrupt: () => Promise<*>,
   eventListeners: () => Promise<*>,
-  getFrames: (number, number) => FramesResponse,
-  getEnvironment: (frame: Frame) => Promise<*>,
   on: (string, Function) => void,
   getSources: () => Promise<SourcesPacket>,
   reconfigure: ({ observeAsmJS: boolean }) => Promise<*>,
@@ -393,6 +393,7 @@ export type ThreadFront = {
   detach: () => Promise<void>,
   timeWarp: Function => Promise<*>,
   fetchAncestorFramePositions: Function => Promise<*>,
+  get: string => FrameFront,
 };
 
 export type Panel = {|

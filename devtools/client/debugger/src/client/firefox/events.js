@@ -84,17 +84,13 @@ async function paused(threadFront: ThreadFront, packet: PausedPacket) {
     return;
   }
 
-  // NOTE: this happens if we fetch frames and then immediately navigate
-  if (!response.hasOwnProperty("frames")) {
+  if (!response || why.type == "alreadyPaused") {
     return;
   }
 
-  if (why.type != "alreadyPaused") {
-    const pause = createPause(threadFront.actor, packet, response);
-    await sourceQueue.flush();
-    actions.paused(pause);
-  }
-
+  const pause = createPause(threadFront.actor, packet, response.frames);
+  await sourceQueue.flush();
+  actions.paused(pause);
   recordEvent("pause", { reason: why.type });
 }
 
