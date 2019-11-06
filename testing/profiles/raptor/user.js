@@ -18,3 +18,6 @@ user_pref("devtools.console.stdout.content", true);
 
 // prevent pages from opening after a crash
 user_pref("browser.sessionstore.resume_from_crash", false);
+
+// disable the background hang monitor
+user_pref("toolkit.content-background-hang-monitor.disabled", true);
