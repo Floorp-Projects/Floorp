@@ -47,6 +47,7 @@
 
 .editor.text .whitespace::before {
   content: attr(data-label);
+  margin-inline-start: 0;
 }
 
 @media (min-resolution: 1.1dppx) {
