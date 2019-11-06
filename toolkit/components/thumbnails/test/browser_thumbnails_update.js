@@ -64,12 +64,12 @@ function* simpleCaptureTest() {
   let browser = gBrowser.selectedBrowser;
 
   // Capture the screenshot.
-  PageThumbs.captureAndStore(browser, function() {
+  PageThumbs.captureAndStore(browser).then(function() {
     // We've got a capture so should have seen the observer.
     is(numNotifications, 1, "got notification of item being created.");
     // The capture is now "fresh" - so requesting the URL should not cause
     // a new capture.
-    PageThumbs.captureAndStoreIfStale(browser, function() {
+    PageThumbs.captureAndStoreIfStale(browser).then(function() {
       is(
         numNotifications,
         1,
@@ -105,7 +105,9 @@ function* capIfStaleErrorResponseUpdateTest() {
   // As we set the thumbnail very stale, allowing 1 second of "slop" here
   // works around this while still keeping the test valid.
   let now = Date.now() - 1000;
-  PageThumbs.captureAndStoreIfStale(gBrowser.selectedBrowser, () => {
+  PageThumbs.captureAndStoreIfStale(gBrowser.selectedBrowser).then(() => {
+    PageThumbsStorageService.getFilePathForURL(URL);
+
     ok(getThumbnailModifiedTime(URL) < now, "modified time should be < now");
     retrieveImageDataForURL(URL, function([r, g, b]) {
       is("" + [r, g, b], "" + [0, 255, 0], "thumbnail is still green");
@@ -136,7 +138,7 @@ function* capIfStaleGoodResponseUpdateTest() {
   // As we set the thumbnail very stale, allowing 1 second of "slop" here
   // works around this while still keeping the test valid.
   let now = Date.now() - 1000;
-  PageThumbs.captureAndStoreIfStale(browser, () => {
+  PageThumbs.captureAndStoreIfStale(browser).then(() => {
     ok(getThumbnailModifiedTime(URL) >= now, "modified time should be >= now");
     // the captureAndStoreIfStale request saw a 200 response with the red body,
     // so we expect to see the red version here.

@@ -470,11 +470,15 @@
         }
         // PageThumb is async with e10s but that's fine
         // since we can update the image during the dnd.
-        PageThumbs.captureToCanvas(browser, canvas, captureListener);
+        PageThumbs.captureToCanvas(browser, canvas)
+          .then(captureListener)
+          .catch(e => Cu.reportError(e));
       } else {
         // For the non e10s case we can just use PageThumbs
         // sync, so let's use the canvas for setDragImage.
-        PageThumbs.captureToCanvas(browser, canvas);
+        PageThumbs.captureToCanvas(browser, canvas).catch(e =>
+          Cu.reportError(e)
+        );
         dragImageOffset = dragImageOffset * scale;
       }
       dt.setDragImage(toDrag, dragImageOffset, dragImageOffset);

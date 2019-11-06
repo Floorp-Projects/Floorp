@@ -43,9 +43,9 @@ var tabPreviews = {
     let browser = aTab.linkedBrowser;
     let uri = browser.currentURI.spec;
     let canvas = PageThumbs.createCanvas(window);
-    PageThumbs.shouldStoreThumbnail(browser, aDoStore => {
+    PageThumbs.shouldStoreThumbnail(browser).then(aDoStore => {
       if (aDoStore && aShouldCache) {
-        PageThumbs.captureAndStore(browser, function() {
+        PageThumbs.captureAndStore(browser).then(function() {
           let img = new Image();
           img.src = PageThumbs.getThumbnailURL(uri);
           aTab.__thumbnail = img;
@@ -53,12 +53,14 @@ var tabPreviews = {
           canvas.getContext("2d").drawImage(img, 0, 0);
         });
       } else {
-        PageThumbs.captureToCanvas(browser, canvas, () => {
-          if (aShouldCache) {
-            aTab.__thumbnail = canvas;
-            aTab.__thumbnail_lastURI = uri;
-          }
-        });
+        PageThumbs.captureToCanvas(browser, canvas)
+          .then(() => {
+            if (aShouldCache) {
+              aTab.__thumbnail = canvas;
+              aTab.__thumbnail_lastURI = uri;
+            }
+          })
+          .catch(e => Cu.reportError(e));
       }
     });
     return canvas;

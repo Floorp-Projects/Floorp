@@ -12,7 +12,7 @@ function* runTests() {
   yield BrowserTestUtils.waitForContentEvent(browser, "DOMContentLoaded");
 
   yield new Promise(resolve => {
-    PageThumbs.shouldStoreThumbnail(browser, aResult => {
+    PageThumbs.shouldStoreThumbnail(browser).then(aResult => {
       ok(!aResult, "we're not going to capture an error page");
       resolve();
     });
