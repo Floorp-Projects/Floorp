@@ -157,7 +157,6 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), BackHandler {
                 sessionId = session.id,
                 url = session.url,
                 isSecured = session.securityInfo.secure,
-                isTrackingProtectionOn = session.trackerBlockingEnabled,
                 sitePermissions = sitePermissions,
                 gravity = getAppropriateLayoutGravity()
             )

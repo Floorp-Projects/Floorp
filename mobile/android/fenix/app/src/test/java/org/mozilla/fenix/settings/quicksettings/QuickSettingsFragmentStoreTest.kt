@@ -10,7 +10,6 @@ import assertk.assertThat
 import assertk.assertions.isEqualTo
 import assertk.assertions.isFalse
 import assertk.assertions.isInstanceOf
-import assertk.assertions.isNotEqualTo
 import assertk.assertions.isNotNull
 import assertk.assertions.isNotSameAs
 import assertk.assertions.isSameAs
@@ -56,17 +55,15 @@ class QuickSettingsFragmentStoreTest {
     fun `createStore constructs a QuickSettingsFragmentState`() {
         val settings = mockk<Settings>(relaxed = true)
         val permissions = mockk<SitePermissions>(relaxed = true)
-        every { settings.shouldUseTrackingProtection } returns true
 
         val store = QuickSettingsFragmentStore.createStore(
-            context, "url", true, true, permissions, settings
+            context, "url", true, permissions, settings
         )
 
         assertAll {
             assertThat(store).isNotNull()
             assertThat(store.state).isNotNull()
             assertThat(store.state.webInfoState).isNotNull()
-            assertThat(store.state.trackingProtectionState).isNotNull()
             assertThat(store.state.websitePermissionsState).isNotNull()
         }
     }
@@ -104,28 +101,14 @@ class QuickSettingsFragmentStoreTest {
     }
 
     @Test
-    fun `createTrackingProtectionState helps in constructing an initial TrackingProtectionState for it's Store`() {
-        val websiteUrl = "https://host.com/pageThatShouldUseTrackingProtection"
-        val trackingPerWebsiteStatus = true
-        val trackingPerAppStatus = true
-        every { appSettings.shouldUseTrackingProtection } returns trackingPerAppStatus
-
-        val state = QuickSettingsFragmentStore.createTrackingProtectionState(
-            websiteUrl, trackingPerWebsiteStatus, appSettings
-        )
-
-        assertAll {
-            assertThat(state).isNotNull()
-            assertThat(state).isNotNull()
-            assertThat(state.websiteUrl).isSameAs(websiteUrl)
-            assertThat(state.isTrackingProtectionEnabledPerWebsite).isSameAs(trackingPerWebsiteStatus)
-            assertThat(state.isTrackingProtectionEnabledPerApp).isEqualTo(trackingPerAppStatus)
-        }
-    }
-
-    @Test
     fun `createWebsitePermissionState helps in constructing an initial WebsitePermissionState for it's Store`() {
-        every { context.checkPermission(any(), any(), any()) }.returns(PackageManager.PERMISSION_GRANTED)
+        every {
+            context.checkPermission(
+                any(),
+                any(),
+                any()
+            )
+        }.returns(PackageManager.PERMISSION_GRANTED)
         every { permissions.camera } returns SitePermissions.Status.ALLOWED
         every { permissions.microphone } returns SitePermissions.Status.NO_DECISION
         every { permissions.notification } returns SitePermissions.Status.BLOCKED
@@ -150,7 +133,13 @@ class QuickSettingsFragmentStoreTest {
     fun `PhoneFeature#toWebsitePermission helps in constructing the right WebsitePermission`() {
         val cameraFeature = PhoneFeature.CAMERA
         val allowedStatus = testContext.getString(R.string.preference_option_phone_feature_allowed)
-        every { context.checkPermission(any(), any(), any()) }.returns(PackageManager.PERMISSION_GRANTED)
+        every {
+            context.checkPermission(
+                any(),
+                any(),
+                any()
+            )
+        }.returns(PackageManager.PERMISSION_GRANTED)
         every { permissions.camera } returns SitePermissions.Status.ALLOWED
 
         val websitePermission = cameraFeature.toWebsitePermission(context, permissions, appSettings)
@@ -187,117 +176,135 @@ class QuickSettingsFragmentStoreTest {
         }
     }
 
-    @ExperimentalCoroutinesApi
-    @Test
-    fun `TrackingProtectionToggled should update only the tracking enabled status`() = runBlocking {
-        val initialUrl = "https://host.com/page1"
-        val initialTrackingPerApp = true
-        val initialTrackingPerWebsite = true
-        val updatedTrackingPerWebsite = false
-        val appSettings = mockk<Settings>()
-        every { appSettings.shouldUseTrackingProtection } returns initialTrackingPerApp
-        val initialTrackingProtectionState = QuickSettingsFragmentStore.createTrackingProtectionState(
-            initialUrl, initialTrackingPerWebsite, appSettings
-        )
-        val initialWebsiteInfoState = mockk<WebsiteInfoState>()
-        val initialWebsitePermissionsState = mockk<WebsitePermissionsState>()
-        val store = QuickSettingsFragmentStore(QuickSettingsFragmentState(
-            initialTrackingProtectionState, initialWebsiteInfoState, initialWebsitePermissionsState
-        ))
-
-        store.dispatch(TrackingProtectionAction.TrackingProtectionToggled(updatedTrackingPerWebsite)).join()
-
-        assertAll {
-            assertThat(store.state.webInfoState).isSameAs(initialWebsiteInfoState)
-            assertThat(store.state.websitePermissionsState).isSameAs(initialWebsitePermissionsState)
-            assertThat(store.state.trackingProtectionState).isNotSameAs(initialTrackingProtectionState)
-
-            assertThat(store.state.trackingProtectionState.isTrackingProtectionEnabledPerWebsite)
-                .isNotEqualTo(initialTrackingPerWebsite)
-            assertThat(store.state.trackingProtectionState.isTrackingProtectionEnabledPerWebsite)
-                .isEqualTo(updatedTrackingPerWebsite)
-            assertThat(store.state.trackingProtectionState.isTrackingProtectionEnabledPerApp)
-                .isSameAs(initialTrackingPerApp)
-            assertThat(store.state.trackingProtectionState.websiteUrl).isSameAs(initialUrl)
-        }
-    }
-
     @Test
     @ExperimentalCoroutinesApi
-    fun `TogglePermission should only modify status and visibility of a specific WebsitePermissionsState`() = runBlocking {
-        val cameraPermissionName = "Camera"
-        val microphonePermissionName = "Microphone"
-        val notificationPermissionName = "Notification"
-        val locationPermissionName = "Location"
-        val initialCameraStatus = "initialCameraStatus"
-        val initialMicStatus = "initialMicStatus"
-        val initialNotificationStatus = "initialNotificationStatus"
-        val initialLocationStatus = "initialLocationStatus"
-        val updatedMicrophoneStatus = "updatedNotificationStatus"
-        val updatedMicrophoneEnabledStatus = false
-        val defaultVisibilityStatus = true
-        val defaultEnabledStatus = true
-        val defaultBlockedByAndroidStatus = true
-        val websiteInfoState = mockk<WebsiteInfoState>()
-        val trackingProtectionState = mockk<TrackingProtectionState>()
-        val initialWebsitePermissionsState = WebsitePermissionsState(
-            isVisible = true,
-            camera = WebsitePermission.Camera(initialCameraStatus, defaultVisibilityStatus,
-                defaultEnabledStatus, defaultBlockedByAndroidStatus, cameraPermissionName),
-            microphone = WebsitePermission.Microphone(initialMicStatus, defaultVisibilityStatus,
-                defaultEnabledStatus, defaultBlockedByAndroidStatus, microphonePermissionName),
-            notification = WebsitePermission.Notification(initialNotificationStatus, defaultVisibilityStatus,
-                defaultEnabledStatus, defaultBlockedByAndroidStatus, notificationPermissionName),
-            location = WebsitePermission.Location(initialLocationStatus, defaultVisibilityStatus,
-                defaultEnabledStatus, defaultBlockedByAndroidStatus, locationPermissionName)
-        )
-        val initialState = QuickSettingsFragmentState(
-            trackingProtectionState, websiteInfoState, initialWebsitePermissionsState
-        )
-        val store = QuickSettingsFragmentStore(initialState)
+    fun `TogglePermission should only modify status and visibility of a specific WebsitePermissionsState`() =
+        runBlocking {
+            val cameraPermissionName = "Camera"
+            val microphonePermissionName = "Microphone"
+            val notificationPermissionName = "Notification"
+            val locationPermissionName = "Location"
+            val initialCameraStatus = "initialCameraStatus"
+            val initialMicStatus = "initialMicStatus"
+            val initialNotificationStatus = "initialNotificationStatus"
+            val initialLocationStatus = "initialLocationStatus"
+            val updatedMicrophoneStatus = "updatedNotificationStatus"
+            val updatedMicrophoneEnabledStatus = false
+            val defaultVisibilityStatus = true
+            val defaultEnabledStatus = true
+            val defaultBlockedByAndroidStatus = true
+            val websiteInfoState = mockk<WebsiteInfoState>()
+            val initialWebsitePermissionsState = WebsitePermissionsState(
+                isVisible = true,
+                camera = WebsitePermission.Camera(
+                    initialCameraStatus, defaultVisibilityStatus,
+                    defaultEnabledStatus, defaultBlockedByAndroidStatus, cameraPermissionName
+                ),
+                microphone = WebsitePermission.Microphone(
+                    initialMicStatus, defaultVisibilityStatus,
+                    defaultEnabledStatus, defaultBlockedByAndroidStatus, microphonePermissionName
+                ),
+                notification = WebsitePermission.Notification(
+                    initialNotificationStatus, defaultVisibilityStatus,
+                    defaultEnabledStatus, defaultBlockedByAndroidStatus, notificationPermissionName
+                ),
+                location = WebsitePermission.Location(
+                    initialLocationStatus, defaultVisibilityStatus,
+                    defaultEnabledStatus, defaultBlockedByAndroidStatus, locationPermissionName
+                )
+            )
+            val initialState = QuickSettingsFragmentState(
+                websiteInfoState, initialWebsitePermissionsState
+            )
+            val store = QuickSettingsFragmentStore(initialState)
 
-        store.dispatch(WebsitePermissionAction.TogglePermission(
-            mockk<WebsitePermission.Microphone>(), updatedMicrophoneStatus, updatedMicrophoneEnabledStatus)
-        ).join()
+            store.dispatch(
+                WebsitePermissionAction.TogglePermission(
+                    mockk<WebsitePermission.Microphone>(),
+                    updatedMicrophoneStatus,
+                    updatedMicrophoneEnabledStatus
+                )
+            ).join()
 
-        assertAll {
-            assertThat(store.state).isNotNull()
-            assertThat(store.state).isNotSameAs(initialState)
-            assertThat(store.state.websitePermissionsState).isNotSameAs(initialWebsitePermissionsState)
-            assertThat(store.state.webInfoState).isSameAs(websiteInfoState)
-            assertThat(store.state.trackingProtectionState).isSameAs(trackingProtectionState)
+            assertAll {
+                assertThat(store.state).isNotNull()
+                assertThat(store.state).isNotSameAs(initialState)
+                assertThat(store.state.websitePermissionsState).isNotSameAs(
+                    initialWebsitePermissionsState
+                )
+                assertThat(store.state.webInfoState).isSameAs(websiteInfoState)
 
-            assertThat(store.state.websitePermissionsState.camera).isNotNull()
-            assertThat((store.state.websitePermissionsState.camera as WebsitePermission.Camera).name).isEqualTo(cameraPermissionName)
-            assertThat(store.state.websitePermissionsState.camera.status).isEqualTo(initialCameraStatus)
-            assertThat(store.state.websitePermissionsState.camera.isVisible).isEqualTo(defaultVisibilityStatus)
-            assertThat(store.state.websitePermissionsState.camera.isEnabled).isEqualTo(defaultEnabledStatus)
-            assertThat(store.state.websitePermissionsState.camera.isBlockedByAndroid).isEqualTo(defaultBlockedByAndroidStatus)
+                assertThat(store.state.websitePermissionsState.camera).isNotNull()
+                assertThat((store.state.websitePermissionsState.camera as WebsitePermission.Camera).name).isEqualTo(
+                    cameraPermissionName
+                )
+                assertThat(store.state.websitePermissionsState.camera.status).isEqualTo(
+                    initialCameraStatus
+                )
+                assertThat(store.state.websitePermissionsState.camera.isVisible).isEqualTo(
+                    defaultVisibilityStatus
+                )
+                assertThat(store.state.websitePermissionsState.camera.isEnabled).isEqualTo(
+                    defaultEnabledStatus
+                )
+                assertThat(store.state.websitePermissionsState.camera.isBlockedByAndroid).isEqualTo(
+                    defaultBlockedByAndroidStatus
+                )
 
-            assertThat(store.state.websitePermissionsState.microphone).isNotNull()
-            assertThat((store.state.websitePermissionsState.microphone as WebsitePermission.Microphone).name).isEqualTo(microphonePermissionName)
-            // Only the following two properties must have been changed!
-            assertThat(store.state.websitePermissionsState.microphone.status).isEqualTo(updatedMicrophoneStatus)
-            assertThat(store.state.websitePermissionsState.microphone.isEnabled).isEqualTo(updatedMicrophoneEnabledStatus)
+                assertThat(store.state.websitePermissionsState.microphone).isNotNull()
+                assertThat((store.state.websitePermissionsState.microphone as WebsitePermission.Microphone).name).isEqualTo(
+                    microphonePermissionName
+                )
+                // Only the following two properties must have been changed!
+                assertThat(store.state.websitePermissionsState.microphone.status).isEqualTo(
+                    updatedMicrophoneStatus
+                )
+                assertThat(store.state.websitePermissionsState.microphone.isEnabled).isEqualTo(
+                    updatedMicrophoneEnabledStatus
+                )
 
-            assertThat(store.state.websitePermissionsState.microphone.isVisible).isEqualTo(defaultVisibilityStatus)
-            assertThat(store.state.websitePermissionsState.microphone.isBlockedByAndroid).isEqualTo(defaultBlockedByAndroidStatus)
+                assertThat(store.state.websitePermissionsState.microphone.isVisible).isEqualTo(
+                    defaultVisibilityStatus
+                )
+                assertThat(store.state.websitePermissionsState.microphone.isBlockedByAndroid).isEqualTo(
+                    defaultBlockedByAndroidStatus
+                )
 
-            assertThat(store.state.websitePermissionsState.notification).isNotNull()
-            assertThat((store.state.websitePermissionsState.notification as WebsitePermission.Notification).name).isEqualTo(notificationPermissionName)
-            assertThat(store.state.websitePermissionsState.notification.status).isEqualTo(initialNotificationStatus)
-            assertThat(store.state.websitePermissionsState.notification.isVisible).isEqualTo(defaultVisibilityStatus)
-            assertThat(store.state.websitePermissionsState.notification.isEnabled).isEqualTo(defaultEnabledStatus)
-            assertThat(store.state.websitePermissionsState.notification.isBlockedByAndroid).isEqualTo(defaultBlockedByAndroidStatus)
+                assertThat(store.state.websitePermissionsState.notification).isNotNull()
+                assertThat((store.state.websitePermissionsState.notification as WebsitePermission.Notification).name).isEqualTo(
+                    notificationPermissionName
+                )
+                assertThat(store.state.websitePermissionsState.notification.status).isEqualTo(
+                    initialNotificationStatus
+                )
+                assertThat(store.state.websitePermissionsState.notification.isVisible).isEqualTo(
+                    defaultVisibilityStatus
+                )
+                assertThat(store.state.websitePermissionsState.notification.isEnabled).isEqualTo(
+                    defaultEnabledStatus
+                )
+                assertThat(store.state.websitePermissionsState.notification.isBlockedByAndroid).isEqualTo(
+                    defaultBlockedByAndroidStatus
+                )
 
-            assertThat(store.state.websitePermissionsState.location).isNotNull()
-            assertThat((store.state.websitePermissionsState.location as WebsitePermission.Location).name).isEqualTo(locationPermissionName)
-            assertThat(store.state.websitePermissionsState.location.status).isEqualTo(initialLocationStatus)
-            assertThat(store.state.websitePermissionsState.location.isVisible).isEqualTo(defaultVisibilityStatus)
-            assertThat(store.state.websitePermissionsState.location.isEnabled).isEqualTo(defaultEnabledStatus)
-            assertThat(store.state.websitePermissionsState.location.isBlockedByAndroid).isEqualTo(defaultBlockedByAndroidStatus)
+                assertThat(store.state.websitePermissionsState.location).isNotNull()
+                assertThat((store.state.websitePermissionsState.location as WebsitePermission.Location).name).isEqualTo(
+                    locationPermissionName
+                )
+                assertThat(store.state.websitePermissionsState.location.status).isEqualTo(
+                    initialLocationStatus
+                )
+                assertThat(store.state.websitePermissionsState.location.isVisible).isEqualTo(
+                    defaultVisibilityStatus
+                )
+                assertThat(store.state.websitePermissionsState.location.isEnabled).isEqualTo(
+                    defaultEnabledStatus
+                )
+                assertThat(store.state.websitePermissionsState.location.isBlockedByAndroid).isEqualTo(
+                    defaultBlockedByAndroidStatus
+                )
+            }
         }
-    }
 
     @Test
     fun `getSecuredWebsiteUiValues() should return the right values`() {

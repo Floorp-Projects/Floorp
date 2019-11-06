@@ -11,7 +11,6 @@ import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreference
 import org.mozilla.fenix.BrowserDirection
-import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
@@ -88,9 +87,8 @@ class TrackingProtectionFragment : PreferenceFragmentCompat() {
     }
 
     private fun bindStrict() {
-        val keyStrict = getString(R.string.pref_key_tracking_protection_strict)
+        val keyStrict = getString(R.string.pref_key_tracking_protection_strict_default)
         radioStrict = requireNotNull(findPreference(keyStrict))
-        radioStrict.isVisible = FeatureFlags.etpCategories
         radioStrict.onPreferenceChangeListener = object : SharedPreferenceUpdater() {
             override fun onPreferenceChange(preference: Preference, newValue: Any?): Boolean {
                 if (newValue == true) {
@@ -114,9 +112,8 @@ class TrackingProtectionFragment : PreferenceFragmentCompat() {
     }
 
     private fun bindStandard() {
-        val keyStandard = getString(R.string.pref_key_tracking_protection_standard)
+        val keyStandard = getString(R.string.pref_key_tracking_protection_standard_option)
         radioStandard = requireNotNull(findPreference(keyStandard))
-        radioStandard.isVisible = FeatureFlags.etpCategories
         radioStandard.onPreferenceChangeListener = object : SharedPreferenceUpdater() {
             override fun onPreferenceChange(preference: Preference, newValue: Any?): Boolean {
                 if (newValue == true) {

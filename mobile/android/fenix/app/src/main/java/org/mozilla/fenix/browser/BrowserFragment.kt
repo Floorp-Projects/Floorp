@@ -42,7 +42,6 @@ import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.support.base.feature.BackHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import org.jetbrains.anko.dimen
-import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.readermode.DefaultReaderModeController
@@ -217,7 +216,6 @@ class BrowserFragment : BaseBrowserFragment(), BackHandler {
                 sessionId = session.id,
                 url = session.url,
                 isSecured = session.securityInfo.secure,
-                isTrackingProtectionOn = session.trackerBlockingEnabled,
                 sitePermissions = sitePermissions,
                 gravity = getAppropriateLayoutGravity()
             )
@@ -360,9 +358,6 @@ class BrowserFragment : BaseBrowserFragment(), BackHandler {
     }
 
     private fun showTrackingProtectionOnboarding() {
-        if (!FeatureFlags.etpCategories) {
-            return
-        }
         context?.let {
             val layout = LayoutInflater.from(it)
                 .inflate(R.layout.tracking_protection_onboarding_popup, null)

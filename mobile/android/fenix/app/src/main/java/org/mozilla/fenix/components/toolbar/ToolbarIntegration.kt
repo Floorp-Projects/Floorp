@@ -20,7 +20,6 @@ import mozilla.components.feature.toolbar.ToolbarPresenter
 import mozilla.components.lib.publicsuffixlist.PublicSuffixList
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.ktx.android.view.hideKeyboard
-import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
@@ -62,19 +61,22 @@ class ToolbarIntegration(
                     val lottieDrawable = LottieDrawable()
                     lottieDrawable.composition = result
 
-                    toolbar.display.indicators = if (
-                        context.settings().shouldUseTrackingProtection && FeatureFlags.etpCategories
-                    ) {
-                        listOf(
-                            DisplayToolbar.Indicators.TRACKING_PROTECTION,
-                            DisplayToolbar.Indicators.SECURITY,
-                            DisplayToolbar.Indicators.EMPTY)
-                    } else {
-                        listOf(DisplayToolbar.Indicators.SECURITY, DisplayToolbar.Indicators.EMPTY)
-                    }
+                    toolbar.display.indicators =
+                        if (context.settings().shouldUseTrackingProtection) {
+                            listOf(
+                                DisplayToolbar.Indicators.TRACKING_PROTECTION,
+                                DisplayToolbar.Indicators.SECURITY,
+                                DisplayToolbar.Indicators.EMPTY
+                            )
+                        } else {
+                            listOf(
+                                DisplayToolbar.Indicators.SECURITY,
+                                DisplayToolbar.Indicators.EMPTY
+                            )
+                        }
 
                     toolbar.display.displayIndicatorSeparator =
-                        context.settings().shouldUseTrackingProtection && FeatureFlags.etpCategories
+                        context.settings().shouldUseTrackingProtection
 
                     toolbar.display.icons = toolbar.display.icons.copy(
                         emptyIcon = AppCompatResources.getDrawable(

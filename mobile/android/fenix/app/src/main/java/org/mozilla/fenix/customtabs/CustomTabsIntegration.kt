@@ -18,7 +18,6 @@ import mozilla.components.browser.toolbar.display.DisplayToolbar
 import mozilla.components.feature.customtabs.CustomTabsToolbarFeature
 import mozilla.components.support.base.feature.BackHandler
 import mozilla.components.support.base.feature.LifecycleAwareFeature
-import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.toolbar.ToolbarMenu
 import org.mozilla.fenix.ext.settings
@@ -66,7 +65,7 @@ class CustomTabsIntegration(
             lottieDrawable.composition = result
 
             toolbar.display.displayIndicatorSeparator = false
-            if (activity.settings().shouldUseTrackingProtection && FeatureFlags.etpCategories) {
+            if (activity.settings().shouldUseTrackingProtection) {
                 toolbar.display.indicators = listOf(
                     DisplayToolbar.Indicators.SECURITY,
                     DisplayToolbar.Indicators.TRACKING_PROTECTION

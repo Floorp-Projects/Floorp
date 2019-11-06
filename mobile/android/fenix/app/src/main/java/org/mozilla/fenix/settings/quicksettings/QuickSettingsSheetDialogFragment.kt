@@ -26,7 +26,6 @@ import com.google.android.material.bottomsheet.BottomSheetDialog
 import kotlinx.android.synthetic.main.fragment_quick_settings_dialog_sheet.*
 import kotlinx.android.synthetic.main.fragment_quick_settings_dialog_sheet.view.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import mozilla.components.feature.session.TrackingProtectionUseCases
 import mozilla.components.lib.state.ext.consumeFrom
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.IntentReceiverActivity
@@ -47,7 +46,6 @@ class QuickSettingsSheetDialogFragment : AppCompatDialogFragment() {
     private lateinit var quickSettingsController: QuickSettingsController
     private lateinit var websiteInfoView: WebsiteInfoView
     private lateinit var websitePermissionsView: WebsitePermissionsView
-    private lateinit var websiteTrackingProtectionView: TrackingProtectionView
     private lateinit var interactor: QuickSettingsInteractor
     private val safeArguments get() = requireNotNull(arguments)
     private val promptGravity: Int by lazy {
@@ -70,7 +68,6 @@ class QuickSettingsSheetDialogFragment : AppCompatDialogFragment() {
             context = context,
             websiteUrl = args.url,
             isSecured = args.isSecured,
-            isTrackingProtectionOn = args.isTrackingProtectionOn,
             permissions = args.sitePermissions,
             settings = Settings.getInstance(context)
         )
@@ -90,19 +87,12 @@ class QuickSettingsSheetDialogFragment : AppCompatDialogFragment() {
                 requestPermissions(permissions, REQUEST_CODE_QUICK_SETTINGS_PERMISSIONS)
             },
             reportSiteIssue = ::launchIntentReceiver,
-            displayTrackingProtection = ::showTrackingProtectionView,
             displayPermissions = ::showPermissionsView,
-            dismiss = ::dismiss,
-            trackingProtectionUseCases = TrackingProtectionUseCases(
-                context.components.core.sessionManager,
-                context.components.core.engine
-            )
+            dismiss = ::dismiss
         )
 
         interactor = QuickSettingsInteractor(quickSettingsController)
 
-        websiteTrackingProtectionView =
-            TrackingProtectionView(rootView.trackingProtectionLayout, interactor)
         websiteInfoView = WebsiteInfoView(rootView.websiteInfoLayout)
         websitePermissionsView =
             WebsitePermissionsView(rootView.websitePermissionsLayout, interactor)
@@ -143,7 +133,6 @@ class QuickSettingsSheetDialogFragment : AppCompatDialogFragment() {
 
         consumeFrom(quickSettingsStore) {
             websiteInfoView.update(it.webInfoState)
-            websiteTrackingProtectionView.update(it.trackingProtectionState)
             websitePermissionsView.update(it.websitePermissionsState)
         }
     }
@@ -180,10 +169,6 @@ class QuickSettingsSheetDialogFragment : AppCompatDialogFragment() {
 
     private fun arePermissionsGranted(requestCode: Int, grantResults: IntArray) =
         requestCode == REQUEST_CODE_QUICK_SETTINGS_PERMISSIONS && grantResults.all { it == PERMISSION_GRANTED }
-
-    private fun showTrackingProtectionView() {
-        trackingProtectionGroup.isVisible = true
-    }
 
     private fun showPermissionsView() {
         websitePermissionsGroup.isVisible = true

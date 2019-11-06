@@ -9,19 +9,13 @@ import androidx.annotation.VisibleForTesting
 import androidx.navigation.NavController
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.ObsoleteCoroutinesApi
 import kotlinx.coroutines.launch
 import mozilla.components.browser.session.Session
 import mozilla.components.feature.session.SessionUseCases.ReloadUrlUseCase
-import mozilla.components.feature.session.TrackingProtectionUseCases
 import mozilla.components.feature.sitepermissions.SitePermissions
 import mozilla.components.feature.tabs.TabsUseCases.AddNewTabUseCase
 import mozilla.components.support.base.feature.OnNeedToRequestPermissions
-import org.mozilla.fenix.browser.BrowserFragment
 import org.mozilla.fenix.components.PermissionStorage
-import org.mozilla.fenix.components.metrics.Event
-import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.settings.PhoneFeature
 import org.mozilla.fenix.settings.quicksettings.ext.shouldBeEnabled
 import org.mozilla.fenix.settings.toggle
@@ -34,29 +28,6 @@ import org.mozilla.fenix.utils.Settings
  * complex Android interactions or communication with other features.
  */
 interface QuickSettingsController {
-    /**
-     * Handles turning on/off tracking protection.
-     *
-     * */
-    fun handleTrackingProtectionToggled(trackingEnabled: Boolean)
-
-    /**
-     * Handles showing the tracking protection settings.
-     */
-    fun handleTrackingProtectionSettingsSelected()
-
-    /**
-     * Handles reporting a webcompat issue for the indicated website.
-     *
-     * @param websiteUrl [String] the URL of the web page for which to report a site issue.
-     */
-    fun handleReportTrackingProblem(websiteUrl: String)
-
-    /**
-     * Handles the case of the [TrackingProtectionView] needed to be displayed to the user.
-     */
-    fun handleTrackingProtectionShown()
-
     /**
      * Handles the case of the [WebsitePermissionsView] needed to be displayed to the user.
      */
@@ -94,10 +65,8 @@ interface QuickSettingsController {
  * @param requestRuntimePermissions [OnNeedToRequestPermissions] callback allowing for requesting
  * specific Android runtime permissions.
  * @param reportSiteIssue callback allowing to report an issue with the current web page.
- * @param displayTrackingProtection callback for when the [TrackingProtectionView] needs to be displayed.
  * @param displayPermissions callback for when [WebsitePermissionsView] needs to be displayed.
  * @param dismiss callback allowing to request this entire Fragment to be dismissed.
- * @param trackingProtectionUseCases usecase allowing us to add or remove tracking protection exceptions
  */
 @Suppress("TooManyFunctions")
 class DefaultQuickSettingsController(
@@ -113,55 +82,9 @@ class DefaultQuickSettingsController(
     private val addNewTab: AddNewTabUseCase,
     private val requestRuntimePermissions: OnNeedToRequestPermissions = { },
     private val reportSiteIssue: () -> Unit,
-    private val displayTrackingProtection: () -> Unit,
     private val displayPermissions: () -> Unit,
-    private val dismiss: () -> Unit,
-    private val trackingProtectionUseCases: TrackingProtectionUseCases
+    private val dismiss: () -> Unit
 ) : QuickSettingsController {
-
-    override fun handleTrackingProtectionToggled(
-        trackingEnabled: Boolean
-    ) {
-        session?.let {
-            if (trackingEnabled) {
-                trackingProtectionUseCases.removeException(it)
-            } else {
-                context.metrics.track(Event.TrackingProtectionException)
-                trackingProtectionUseCases.addException(it)
-            }
-        }
-
-        reload(session)
-
-        quickSettingsStore.dispatch(
-            TrackingProtectionAction.TrackingProtectionToggled(trackingEnabled)
-        )
-    }
-
-    override fun handleTrackingProtectionSettingsSelected() {
-        val directions =
-            QuickSettingsSheetDialogFragmentDirections
-                .actionQuickSettingsSheetDialogFragmentToTrackingProtectionFragment()
-        navController.navigate(directions)
-    }
-
-    @ExperimentalCoroutinesApi
-    @UseExperimental(ObsoleteCoroutinesApi::class)
-    override fun handleReportTrackingProblem(websiteUrl: String) {
-        val reportUrl = String.format(BrowserFragment.REPORT_SITE_ISSUE_URL, websiteUrl)
-        addNewTab(reportUrl)
-
-        if (session?.isCustomTabSession() == true) {
-            reportSiteIssue()
-        }
-
-        dismiss()
-    }
-
-    override fun handleTrackingProtectionShown() {
-        displayTrackingProtection()
-    }
-
     override fun handlePermissionsShown() {
         displayPermissions()
     }

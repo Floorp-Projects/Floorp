@@ -14,9 +14,9 @@ import mozilla.components.lib.state.Action
 import mozilla.components.lib.state.Reducer
 import mozilla.components.lib.state.State
 import mozilla.components.lib.state.Store
-import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
 import org.mozilla.fenix.settings.PhoneFeature
+import org.mozilla.fenix.settings.quicksettings.QuickSettingsFragmentStore.Companion.createStore
 import org.mozilla.fenix.settings.quicksettings.ext.shouldBeEnabled
 import org.mozilla.fenix.settings.quicksettings.ext.shouldBeVisible
 import org.mozilla.fenix.utils.Settings
@@ -68,8 +68,6 @@ class QuickSettingsFragmentStore(
          * @param context [Context] used for access to various Android resources.
          * @param websiteUrl [String] the URL of the current web page.
          * @param isSecured [Boolean] whether the connection is secured (TLS) or not.
-         * @param isTrackingProtectionOn [Boolean] whether the "Standard" (as in not "Strict")
-         * tracking protection is enabled for the current website or not.
          * @param permissions [SitePermissions]? list of website permissions and their status.
          * @param settings [Settings] application settings.
          */
@@ -78,38 +76,17 @@ class QuickSettingsFragmentStore(
             context: Context,
             websiteUrl: String,
             isSecured: Boolean,
-            isTrackingProtectionOn: Boolean,
             permissions: SitePermissions?,
             settings: Settings
         ) = QuickSettingsFragmentStore(
             QuickSettingsFragmentState(
-                trackingProtectionState = createTrackingProtectionState(websiteUrl, isTrackingProtectionOn, settings),
                 webInfoState = createWebsiteInfoState(websiteUrl, isSecured),
-                websitePermissionsState = createWebsitePermissionState(context, permissions, settings)
+                websitePermissionsState = createWebsitePermissionState(
+                    context,
+                    permissions,
+                    settings
+                )
             )
-        )
-
-        /**
-         * Construct an initial [TrackingProtectionState] to be rendered by [TrackingProtectionView]
-         * based on the current state of the app / website.
-         *
-         * Users can modify the returned [TrackingProtectionState] after it is initially displayed.
-         *
-         * @param websiteUrl [String] the URL of the current web page.
-         * @param isTrackingProtectionOn [Boolean] whether the "Standard" (as in not "Strict")
-         * tracking protection is enabled for the current website or not.
-         * @param settings [Settings] application settings.
-         */
-        @VisibleForTesting
-        fun createTrackingProtectionState(
-            websiteUrl: String,
-            isTrackingProtectionOn: Boolean,
-            settings: Settings
-        ) = TrackingProtectionState(
-            isVisible = FeatureFlags.etpCategories.not(),
-            isTrackingProtectionEnabledPerApp = settings.shouldUseTrackingProtection,
-            websiteUrl = websiteUrl,
-            isTrackingProtectionEnabledPerWebsite = isTrackingProtectionOn
         )
 
         /**
@@ -149,14 +126,19 @@ class QuickSettingsFragmentStore(
             permissions: SitePermissions?,
             settings: Settings
         ): WebsitePermissionsState {
-            val cameraPermission = PhoneFeature.CAMERA.toWebsitePermission(context, permissions, settings)
-            val microphonePermission = PhoneFeature.MICROPHONE.toWebsitePermission(context, permissions, settings)
-            val notificationPermission = PhoneFeature.NOTIFICATION.toWebsitePermission(context, permissions, settings)
-            val locationPermission = PhoneFeature.LOCATION.toWebsitePermission(context, permissions, settings)
+            val cameraPermission =
+                PhoneFeature.CAMERA.toWebsitePermission(context, permissions, settings)
+            val microphonePermission =
+                PhoneFeature.MICROPHONE.toWebsitePermission(context, permissions, settings)
+            val notificationPermission =
+                PhoneFeature.NOTIFICATION.toWebsitePermission(context, permissions, settings)
+            val locationPermission =
+                PhoneFeature.LOCATION.toWebsitePermission(context, permissions, settings)
             val shouldBeVisible = cameraPermission.isVisible || microphonePermission.isVisible ||
                     notificationPermission.isVisible || locationPermission.isVisible
 
-            return WebsitePermissionsState(shouldBeVisible, cameraPermission, microphonePermission,
+            return WebsitePermissionsState(
+                shouldBeVisible, cameraPermission, microphonePermission,
                 notificationPermission, locationPermission
             )
         }
@@ -227,26 +209,8 @@ class QuickSettingsFragmentStore(
  * Partitioned further to contain mutiple states for each standalone View this Fragment holds.
  */
 data class QuickSettingsFragmentState(
-    val trackingProtectionState: TrackingProtectionState,
     val webInfoState: WebsiteInfoState,
     val websitePermissionsState: WebsitePermissionsState
-) : State
-
-/**
- * [State] to be rendered by [TrackingProtectionView] indicating the app is blocking certain tracking
- * functionality or not.
- *
- * @param isVisible [Boolean] whether this contains data that needs to be displayed to the user.
- * @param websiteUrl [String] the URL of the current web page.
- * @param isTrackingProtectionEnabledPerApp [Boolean] whether tracking protection is on/off globally.
- * @param isTrackingProtectionEnabledPerWebsite [Boolean] whether the "Standard" (as in not "Strict")
- * tracking protection is enabled for the current website or not.
- */
-data class TrackingProtectionState(
-    val isVisible: Boolean,
-    val websiteUrl: String,
-    val isTrackingProtectionEnabledPerApp: Boolean,
-    val isTrackingProtectionEnabledPerWebsite: Boolean
 ) : State
 
 /**
@@ -429,16 +393,6 @@ sealed class WebsitePermission {
 sealed class QuickSettingsFragmentAction : Action
 
 /**
- * All possible [TrackingProtectionState] changes as result of user / system interactions.
- */
-sealed class TrackingProtectionAction : QuickSettingsFragmentAction() {
-    /**
-     * Change resulting from toggling the tracking protection status for the current website.
-     */
-    class TrackingProtectionToggled(val trackingEnabled: Boolean) : TrackingProtectionAction()
-}
-
-/**
  * All possible [WebsiteInfoState] changes as result of user / system interactions.
  */
 sealed class WebsiteInfoAction : QuickSettingsFragmentAction()
@@ -475,12 +429,6 @@ fun quickSettingsFragmentReducer(
     action: QuickSettingsFragmentAction
 ): QuickSettingsFragmentState {
     return when (action) {
-        is TrackingProtectionAction -> state.copy(
-            trackingProtectionState = TrackingProtectionStateReducer.reduce(
-                state.trackingProtectionState,
-                action
-            )
-        )
         is WebsiteInfoAction -> state.copy(
             webInfoState = WebsiteInfoStateReducer.reduce(
                 state.webInfoState,
@@ -493,22 +441,6 @@ fun quickSettingsFragmentReducer(
                 action
             )
         )
-    }
-}
-
-object TrackingProtectionStateReducer {
-    /**
-     * Handles creating a new [TrackingProtectionState] based on the specific [TrackingProtectionAction]
-     */
-    fun reduce(
-        state: TrackingProtectionState,
-        action: TrackingProtectionAction
-    ): TrackingProtectionState {
-        return when (action) {
-            is TrackingProtectionAction.TrackingProtectionToggled -> state.copy(
-                isTrackingProtectionEnabledPerWebsite = action.trackingEnabled
-            )
-        }
     }
 }
 

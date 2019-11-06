@@ -15,24 +15,7 @@ package org.mozilla.fenix.settings.quicksettings
  */
 class QuickSettingsInteractor(
     private val controller: QuickSettingsController
-) : WebsitePermissionInteractor, TrackingProtectionInteractor {
-
-    override fun onReportProblemSelected(websiteUrl: String) {
-        controller.handleReportTrackingProblem(websiteUrl)
-    }
-
-    override fun onProtectionToggled(trackingEnabled: Boolean) {
-        controller.handleTrackingProtectionToggled(trackingEnabled)
-    }
-
-    override fun onProtectionSettingsSelected() {
-        controller.handleTrackingProtectionSettingsSelected()
-    }
-
-    override fun onTrackingProtectionShown() {
-        controller.handleTrackingProtectionShown()
-    }
-
+) : WebsitePermissionInteractor {
     override fun onPermissionsShown() {
         controller.handlePermissionsShown()
     }

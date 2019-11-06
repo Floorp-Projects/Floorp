@@ -24,7 +24,6 @@ import kotlinx.coroutines.ObsoleteCoroutinesApi
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.session.Session
 import mozilla.components.feature.session.SessionUseCases
-import mozilla.components.feature.session.TrackingProtectionUseCases
 import mozilla.components.feature.sitepermissions.SitePermissions
 import mozilla.components.feature.sitepermissions.SitePermissions.Status.NO_DECISION
 import mozilla.components.feature.tabs.TabsUseCases
@@ -32,10 +31,7 @@ import mozilla.components.support.test.robolectric.testContext
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.TestApplication
-import org.mozilla.fenix.browser.BrowserFragment
 import org.mozilla.fenix.components.PermissionStorage
-import org.mozilla.fenix.components.metrics.Event
-import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.settings.PhoneFeature
 import org.mozilla.fenix.settings.quicksettings.ext.shouldBeEnabled
 import org.mozilla.fenix.settings.toggle
@@ -59,10 +55,8 @@ class DefaultQuickSettingsControllerTest {
     private val addNewTab = mockk<TabsUseCases.AddNewTabUseCase>(relaxed = true)
     private val requestPermissions = mockk<(Array<String>) -> Unit>(relaxed = true)
     private val reportIssue = mockk<() -> Unit>(relaxed = true)
-    private val displayTrackingProtection = mockk<() -> Unit>(relaxed = true)
     private val displayPermissions = mockk<() -> Unit>(relaxed = true)
     private val dismiss = mockk<() -> Unit>(relaxed = true)
-    private val trackingProtectionUseCases = mockk<TrackingProtectionUseCases>(relaxed = true)
     private val controller = DefaultQuickSettingsController(
         context = context,
         quickSettingsStore = store,
@@ -76,98 +70,9 @@ class DefaultQuickSettingsControllerTest {
         addNewTab = addNewTab,
         requestRuntimePermissions = requestPermissions,
         reportSiteIssue = reportIssue,
-        displayTrackingProtection = displayTrackingProtection,
         displayPermissions = displayPermissions,
-        dismiss = dismiss,
-        trackingProtectionUseCases = trackingProtectionUseCases
+        dismiss = dismiss
     )
-
-    @Test
-    fun `handleTrackingProtectionToggled should toggle tracking and reload website`() {
-        val session = slot<Session>()
-        every { store.dispatch(any()) } returns mockk()
-
-        controller.handleTrackingProtectionToggled(false)
-
-        verifyOrder {
-            trackingProtectionUseCases.addException(capture(session))
-            context.metrics.track(Event.TrackingProtectionException)
-            reload(capture(session))
-        }
-
-        assertAll {
-            assertThat(session.isCaptured).isTrue()
-            assertThat(session.captured).isEqualTo(browserSession)
-        }
-    }
-
-    @Test
-    fun `handleTrackingProtectionSettingsSelected should navigate to TrackingProtectionFragment`() {
-        controller.handleTrackingProtectionSettingsSelected()
-
-        verify {
-            navController.navigate(
-                QuickSettingsSheetDialogFragmentDirections
-                    .actionQuickSettingsSheetDialogFragmentToTrackingProtectionFragment()
-            )
-        }
-    }
-
-    @Test
-    @ObsoleteCoroutinesApi
-    @ExperimentalCoroutinesApi
-    fun `handleReportTrackingProblem should open a report issue webpage and dismiss when in normal mode`() {
-        val websiteWithIssuesUrl = "https://host.com/page1"
-        val testReportUrl =
-            String.format(BrowserFragment.REPORT_SITE_ISSUE_URL, websiteWithIssuesUrl)
-        val reportUrl = slot<String>()
-        // `handleReportTrackingProblem` will behave differently depending on `isCustomTabSession`
-        every { browserSession.isCustomTabSession() } returns false
-
-        controller.handleReportTrackingProblem(websiteWithIssuesUrl)
-
-        verify {
-            addNewTab(capture(reportUrl))
-            dismiss()
-        }
-        assertAll {
-            assertThat(reportUrl.isCaptured).isTrue()
-            assertThat(reportUrl.captured).isEqualTo(testReportUrl)
-        }
-    }
-
-    @Test
-    @ObsoleteCoroutinesApi
-    @ExperimentalCoroutinesApi
-    fun `handleReportTrackingProblem should open a report issue in browser from custom tab and dismiss`() {
-        val websiteWithIssuesUrl = "https://host.com/page1"
-        val testReportUrl =
-            String.format(BrowserFragment.REPORT_SITE_ISSUE_URL, websiteWithIssuesUrl)
-        val reportUrl = slot<String>()
-        // `handleReportTrackingProblem` will behave differently depending on `isCustomTabSession`
-        every { browserSession.isCustomTabSession() } returns true
-
-        controller.handleReportTrackingProblem(websiteWithIssuesUrl)
-
-        verify {
-            addNewTab(capture(reportUrl))
-            reportIssue()
-            dismiss()
-        }
-        assertAll {
-            assertThat(reportUrl.isCaptured).isTrue()
-            assertThat(reportUrl.captured).isEqualTo(testReportUrl)
-        }
-    }
-
-    @Test
-    fun `handleTrackingProtectionShown should delegate to an injected parameter`() {
-        controller.handleTrackingProtectionShown()
-
-        verify {
-            displayTrackingProtection()
-        }
-    }
 
     @Test
     fun `handlePermissionsShown should delegate to an injected parameter`() {

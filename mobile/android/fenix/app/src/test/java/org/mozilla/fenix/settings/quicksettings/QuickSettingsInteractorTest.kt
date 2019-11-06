@@ -11,62 +11,11 @@ import assertk.assertions.isTrue
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
-import io.mockk.verifyAll
 import org.junit.Test
 
 class QuickSettingsInteractorTest {
     private val controller = mockk<QuickSettingsController>(relaxed = true)
     private val interactor = QuickSettingsInteractor(controller)
-
-    @Test
-    fun `onReportProblemSelected should delegate the controller`() {
-        val websiteUrl = "https://host.com/page1"
-        val url = slot<String>()
-
-        interactor.onReportProblemSelected(websiteUrl)
-
-        verify {
-            controller.handleReportTrackingProblem(capture(url))
-        }
-        assertAll {
-            assertThat(url.isCaptured).isTrue()
-            assertThat(url.captured).isEqualTo(websiteUrl)
-        }
-    }
-
-    @Test
-    fun `onProtectionToggled should delegate the controller`() {
-        val trackingEnabled = true
-        val trackingStatus = slot<Boolean>()
-
-        interactor.onProtectionToggled(trackingEnabled)
-
-        verifyAll {
-            controller.handleTrackingProtectionToggled(capture(trackingStatus))
-        }
-        assertAll {
-            assertThat(trackingStatus.isCaptured).isTrue()
-            assertThat(trackingStatus.captured).isEqualTo(trackingEnabled)
-        }
-    }
-
-    @Test
-    fun `onProtectionSettingsSelected should delegate the controller`() {
-        interactor.onProtectionSettingsSelected()
-
-        verify {
-            controller.handleTrackingProtectionSettingsSelected()
-        }
-    }
-
-    @Test
-    fun `onTrackingProtectionShown should delegate the controller`() {
-        interactor.onTrackingProtectionShown()
-
-        verify {
-            controller.handleTrackingProtectionShown()
-        }
-    }
 
     @Test
     fun `onPermissionsShown should delegate the controller`() {

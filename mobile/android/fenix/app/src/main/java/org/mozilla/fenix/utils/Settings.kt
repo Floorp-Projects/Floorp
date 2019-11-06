@@ -197,35 +197,9 @@ class Settings private constructor(
     )
 
     val useStrictTrackingProtection by booleanPreference(
-        appContext.getPreferenceKey(R.string.pref_key_tracking_protection_strict),
+        appContext.getPreferenceKey(R.string.pref_key_tracking_protection_strict_default),
         true
     )
-
-    fun setUseStrictTrackingProtection() {
-        preferences.edit()
-            .putBoolean(
-                appContext.getPreferenceKey(R.string.pref_key_tracking_protection_standard),
-                false
-            )
-            .putBoolean(
-                appContext.getPreferenceKey(R.string.pref_key_tracking_protection_strict),
-                true
-            )
-            .apply()
-    }
-
-    fun setUseStandardTrackingProtection() {
-        preferences.edit()
-            .putBoolean(
-                appContext.getPreferenceKey(R.string.pref_key_tracking_protection_standard),
-                true
-            )
-            .putBoolean(
-                appContext.getPreferenceKey(R.string.pref_key_tracking_protection_strict),
-                false
-            )
-            .apply()
-    }
 
     var shouldDeleteBrowsingDataOnQuit by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_delete_browsing_data_on_quit),

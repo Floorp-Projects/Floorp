@@ -25,11 +25,6 @@ object FeatureFlags {
     const val mediaIntegration = true
 
     /**
-     * Displays the categories blocked by ETP in a panel in the toolbar
-     */
-    val etpCategories = Config.channel.isNightlyOrDebug
-
-    /**
      * Gives option in Settings to disable auto play media
      */
     val autoPlayMedia = Config.channel.isNightlyOrDebug

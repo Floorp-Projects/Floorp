@@ -97,8 +97,8 @@
     <string name="pref_key_tracking_protection_settings" translatable="false">pref_key_tracking_protection_settings</string>
     <string name="pref_key_tracking_protection" translatable="false">pref_key_tracking_protection</string>
     <string name="pref_key_tracking_protection_exceptions" translatable="false">pref_key_tracking_protection_exceptions</string>
-    <string name="pref_key_tracking_protection_standard" translatable="false">pref_key_tracking_protection_standard</string>
-    <string name="pref_key_tracking_protection_strict" translatable="false">pref_key_tracking_protection_strict</string>
+    <string name="pref_key_tracking_protection_standard_option" translatable="false">pref_key_tracking_protection_standard_option</string>
+    <string name="pref_key_tracking_protection_strict_default" translatable="false">pref_key_tracking_protection_strict_default</string>
     <string name="pref_key_tracking_protection_onboarding" translatable="false">pref_key_tracking_protection_onboarding</string>
 
     <!-- Logins Settings -->

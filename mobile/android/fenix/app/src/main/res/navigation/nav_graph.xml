@@ -564,8 +564,7 @@
     </dialog>
     <dialog
         android:id="@+id/quickSettingsSheetDialogFragment"
-        android:name="org.mozilla.fenix.settings.quicksettings.QuickSettingsSheetDialogFragment"
-        android:label="QuickSettingsSheetDialogFragment">
+        android:name="org.mozilla.fenix.settings.quicksettings.QuickSettingsSheetDialogFragment">
         <argument
             android:name="sessionId"
             app:argType="string" />
@@ -576,9 +575,6 @@
             android:name="isSecured"
             app:argType="boolean" />
         <argument
-            android:name="isTrackingProtectionOn"
-            app:argType="boolean" />
-        <argument
             android:name="sitePermissions"
             app:argType="mozilla.components.feature.sitepermissions.SitePermissions"
             app:nullable="true" />
@@ -586,11 +582,6 @@
             android:name="gravity"
             android:defaultValue="80"
             app:argType="integer" />
-        <action
-            android:id="@+id/action_quickSettingsSheetDialogFragment_to_trackingProtectionFragment"
-            app:destination="@id/trackingProtectionFragment"
-            app:popUpTo="@id/quickSettingsSheetDialogFragment"
-            app:popUpToInclusive="true" />
     </dialog>
     <fragment
         android:id="@+id/accountProblemFragment"

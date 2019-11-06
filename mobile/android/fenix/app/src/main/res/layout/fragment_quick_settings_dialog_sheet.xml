@@ -22,12 +22,6 @@
             android:id="@+id/websiteInfoLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:layout_constraintBottom_toTopOf="@id/trackingProtectionDivider" />
-
-        <FrameLayout
-            android:id="@+id/trackingProtectionLayout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
             app:layout_constraintBottom_toTopOf="@id/webSitePermissionsDivider" />
 
         <FrameLayout
@@ -44,23 +38,6 @@
             android:layout_marginBottom="8dp"
             android:background="?neutralFaded"
             app:layout_constraintBottom_toTopOf="@id/websitePermissionsLayout" />
-
-        <View
-            android:id="@+id/trackingProtectionDivider"
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:layout_marginTop="8dp"
-            android:layout_marginBottom="8dp"
-            android:background="?neutralFaded"
-            app:layout_constraintBottom_toTopOf="@id/trackingProtectionLayout" />
-
-        <androidx.constraintlayout.widget.Group
-            android:id="@+id/trackingProtectionGroup"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:visibility="gone"
-            app:constraint_referenced_ids="trackingProtectionLayout,trackingProtectionDivider"
-            tools:visibility="visible" />
 
         <androidx.constraintlayout.widget.Group
             android:id="@+id/websitePermissionsGroup"
