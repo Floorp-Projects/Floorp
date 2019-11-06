@@ -312,6 +312,30 @@
         <item name="android:background">@drawable/onboarding_card_background_dark</item>
     </style>
 
+    <style name="SearchShortcutsLabelStyle">
+        <item name="android:fontFamily">Inter UI</item>
+        <item name="android:letterSpacing">0.15</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:textColor">?secondaryText</item>
+        <item name="android:textSize">@dimen/search_fragment_shortcuts_label_text_size</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="SearchClipboardStyle">
+        <item name="android:ellipsize">end</item>
+        <item name="android:maxLines">1</item>
+    </style>
+
+    <style name="SearchClipboardTitleStyle" parent="SearchClipboardStyle">
+        <item name="android:textColor">?primaryText</item>
+        <item name="android:textSize">@dimen/search_fragment_clipboard_title_text_size</item>
+    </style>
+
+    <style name="SearchClipboardUrlStyle" parent="SearchClipboardStyle">
+        <item name="android:textAppearance">@style/Subtitle12TextStyle</item>
+        <item name="android:textColor">?fillLinkFromClipboard</item>
+    </style>
+
     <style name="CreateCollectionDialogStyle" parent="DialogStyleBase"/>
     <style name="CreateShortcutDialogStyle" parent="DialogStyleBase"/>
     <style name="CreateShortcutDialogButton" parent="Widget.MaterialComponents.Button.TextButton.Dialog">

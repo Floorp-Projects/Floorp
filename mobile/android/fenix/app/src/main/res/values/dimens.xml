@@ -63,4 +63,23 @@
 
     <!-- ETP Onboarding Popup -->
     <dimen name="etp_onboarding_popup_width">256dp</dimen>
+
+    <!-- Search Fragment -->
+    <dimen name="search_fragment_clipboard_item_height">56dp</dimen>
+    <dimen name="search_fragment_clipboard_item_horizontal_margin">12dp</dimen>
+    <dimen name="search_fragment_clipboard_item_vertical_margin">8dp</dimen>
+    <dimen name="search_fragment_clipboard_item_title_margin_start">8dp</dimen>
+    <dimen name="search_fragment_shortcuts_label_margin_horizontal">8dp</dimen>
+    <dimen name="search_fragment_shortcuts_label_margin_vertical">18dp</dimen>
+    <dimen name="search_fragment_pill_height">40dp</dimen>
+    <dimen name="search_fragment_pill_padding_start">20dp</dimen>
+    <dimen name="search_fragment_pill_padding_end">16dp</dimen>
+    <dimen name="search_fragment_pill_padding_vertical">4dp</dimen>
+    <dimen name="search_fragment_scan_button_margin_end">8dp</dimen>
+
+    <dimen name="search_fragment_shortcuts_label_text_size">12sp</dimen>
+    <dimen name="search_fragment_clipboard_title_text_size">15sp</dimen>
+
+
+
 </resources>

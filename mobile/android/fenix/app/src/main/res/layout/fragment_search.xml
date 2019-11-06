@@ -14,7 +14,7 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/toolbar_wrapper"
         android:layout_width="0dp"
-        android:layout_height="56dp"
+        android:layout_height="@dimen/browser_toolbar_height"
         android:layout_margin="0dp"
         android:outlineProvider="paddedBounds"
         android:transitionName="toolbar_wrapper_transition"
@@ -36,10 +36,10 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/fill_link_from_clipboard"
         android:layout_width="0dp"
-        android:layout_height="56dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginStart="12dp"
-        android:layout_marginEnd="12dp"
+        android:layout_height="@dimen/search_fragment_clipboard_item_height"
+        android:layout_marginTop="@dimen/search_fragment_clipboard_item_vertical_margin"
+        android:layout_marginStart="@dimen/search_fragment_clipboard_item_horizontal_margin"
+        android:layout_marginEnd="@dimen/search_fragment_clipboard_item_horizontal_margin"
         android:focusable="true"
         android:clickable="true"
         android:background="?selectableItemBackground"
@@ -61,33 +61,27 @@
 
         <TextView
             android:id="@+id/clipboard_title"
+            style="@style/SearchClipboardTitleStyle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:textSize="15sp"
-            android:textColor="?primaryText"
-            android:maxLines="1"
-            android:ellipsize="end"
-            app:layout_constraintTop_toTopOf="parent"
+            android:layout_marginStart="@dimen/search_fragment_clipboard_item_title_margin_start"
+            android:text="@string/awesomebar_clipboard_title"
             app:layout_constraintBottom_toTopOf="@id/clipboard_url"
-            app:layout_constraintStart_toEndOf="@id/link_icon"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintVertical_chainStyle="packed"
-            android:text="@string/awesomebar_clipboard_title"/>
+            app:layout_constraintStart_toEndOf="@id/link_icon"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_chainStyle="packed" />
 
         <TextView
             android:id="@+id/clipboard_url"
+            style="@style/SearchClipboardUrlStyle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:textColor="?fillLinkFromClipboard"
-            android:textAppearance="@style/Subtitle12TextStyle"
-            android:maxLines="1"
-            android:ellipsize="end"
-            app:layout_constraintTop_toBottomOf="@id/clipboard_title"
-            app:layout_constraintStart_toStartOf="@id/clipboard_title"
-            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintVertical_chainStyle="packed"/>
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="@id/clipboard_title"
+            app:layout_constraintTop_toBottomOf="@id/clipboard_title"
+            app:layout_constraintVertical_chainStyle="packed" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <View
@@ -102,19 +96,17 @@
 
     <TextView
         android:id="@+id/search_with_shortcuts"
+        style="@style/SearchShortcutsLabelStyle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="18dp"
-        android:fontFamily="Inter UI"
-        android:letterSpacing="0.15"
+        android:layout_marginStart="@dimen/search_fragment_shortcuts_label_margin_horizontal"
+        android:layout_marginTop="@dimen/search_fragment_shortcuts_label_margin_vertical"
+        android:layout_marginEnd="@dimen/search_fragment_shortcuts_label_margin_horizontal"
         android:text="@string/search_shortcuts_search_with"
-        android:textAllCaps="true"
-        android:textColor="?secondaryText"
-        android:textSize="12sp"
-        android:textStyle="bold"
         android:visibility="gone"
         app:layout_constraintStart_toStartOf="@id/toolbar_wrapper"
-        app:layout_constraintTop_toBottomOf="@id/fill_link_from_clipboard" />
+        app:layout_constraintTop_toBottomOf="@id/fill_link_from_clipboard"
+        tools:text="Search with" />
 
     <View
         android:id="@+id/search_divider"
@@ -128,13 +120,13 @@
     <LinearLayout
         android:id="@+id/pillWrapper"
         android:layout_width="0dp"
-        android:layout_height="40dp"
+        android:layout_height="@dimen/search_fragment_pill_height"
         android:background="?foundation"
         android:orientation="horizontal"
-        android:paddingStart="20dp"
-        android:paddingTop="4dp"
-        android:paddingEnd="16dp"
-        android:paddingBottom="4dp"
+        android:paddingStart="@dimen/search_fragment_pill_padding_start"
+        android:paddingTop="@dimen/search_fragment_pill_padding_vertical"
+        android:paddingEnd="@dimen/search_fragment_pill_padding_end"
+        android:paddingBottom="@dimen/search_fragment_pill_padding_vertical"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent">
@@ -142,7 +134,7 @@
         <ToggleButton
             android:id="@+id/searchScanButton"
             style="@style/search_pill"
-            android:layout_marginEnd="8dp"
+            android:layout_marginEnd="@dimen/search_fragment_scan_button_margin_end"
             android:drawableStart="@drawable/ic_qr"
             android:textOff="@string/search_scan_button"
             android:textOn="@string/search_scan_button" />
