@@ -23,6 +23,11 @@ object Build {
     const val applicationServicesVersion: String = BuildConfig.APPLICATION_SERVICES_VERSION
 
     /**
+     * The version of the "Glean SDK" library this version was *build* against.
+     */
+    const val gleanSdkVersion: String = BuildConfig.GLEAN_SDK_VERSION
+
+    /**
      * Git hash of the latest commit in the Android Components repository checkout this version was built from.
      */
     const val gitHash: String = BuildConfig.GIT_HASH

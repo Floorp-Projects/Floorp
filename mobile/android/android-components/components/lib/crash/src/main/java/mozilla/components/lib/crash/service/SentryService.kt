@@ -52,6 +52,7 @@ class SentryService(
             addTag("ac.version", Build.version)
             addTag("ac.git", Build.gitHash)
             addTag("ac.as.build_version", Build.applicationServicesVersion)
+            addTag("ac.glean.build_version", Build.gleanSdkVersion)
         }
     }
 

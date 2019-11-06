@@ -27,6 +27,7 @@ android {
 
         buildConfigField("String", "LIBRARY_VERSION", "\"" + config.componentsVersion + "\"")
         buildConfigField("String", "APPLICATION_SERVICES_VERSION", "\"" + Versions.mozilla_appservices + "\"")
+        buildConfigField("String", "GLEAN_SDK_VERSION", "\"" + Versions.mozilla_glean + "\"")
         buildConfigField("String", "GIT_HASH", "\"dev build\"")
     }
 
