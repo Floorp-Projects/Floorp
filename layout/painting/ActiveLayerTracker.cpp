@@ -453,17 +453,31 @@ bool ActiveLayerTracker::IsBackgroundPositionAnimated(
                                   eCSSProperty_background_position_y}));
 }
 
+static bool IsMotionPathAnimated(nsDisplayListBuilder* aBuilder,
+                                 nsIFrame* aFrame) {
+  return ActiveLayerTracker::IsStyleAnimated(
+             aBuilder, aFrame, nsCSSPropertyIDSet{eCSSProperty_offset_path}) ||
+         (!aFrame->StyleDisplay()->mOffsetPath.IsNone() &&
+          ActiveLayerTracker::IsStyleAnimated(
+              aBuilder, aFrame,
+              nsCSSPropertyIDSet{eCSSProperty_offset_distance,
+                                 eCSSProperty_offset_rotate,
+                                 eCSSProperty_offset_anchor}));
+}
+
 /* static */
 bool ActiveLayerTracker::IsTransformAnimated(nsDisplayListBuilder* aBuilder,
                                              nsIFrame* aFrame) {
   return IsStyleAnimated(aBuilder, aFrame,
-                         nsCSSPropertyIDSet::TransformLikeProperties());
+                         nsCSSPropertyIDSet::CSSTransformProperties()) ||
+         IsMotionPathAnimated(aBuilder, aFrame);
 }
 
 /* static */
 bool ActiveLayerTracker::IsTransformMaybeAnimated(nsIFrame* aFrame) {
   return IsStyleAnimated(nullptr, aFrame,
-                         nsCSSPropertyIDSet::TransformLikeProperties());
+                         nsCSSPropertyIDSet::CSSTransformProperties()) ||
+         IsMotionPathAnimated(nullptr, aFrame);
 }
 
 /* static */
