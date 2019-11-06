@@ -96,13 +96,13 @@ $excerpt-line-height: 20;
 
     .title {
       // show only 3 lines of copy
-      @include limit-visibile-lines(3, $header-line-height, $header-font-size);
+      @include limit-visible-lines(3, $header-line-height, $header-font-size);
       font-weight: 600;
     }
 
     .excerpt {
       // show only 3 lines of copy
-      @include limit-visibile-lines(
+      @include limit-visible-lines(
         3,
         $excerpt-line-height,
         $excerpt-font-size
@@ -123,8 +123,9 @@ $excerpt-line-height: 20;
     .cta-button {
       @include dark-theme-only {
         color: $grey-10;
-        background: $grey-90-30;
+        background: $grey-90-70;
       }
+
       width: 100%;
       margin: 12px 0 4px;
       box-shadow: none;
@@ -137,13 +138,14 @@ $excerpt-line-height: 20;
       color: $grey-90;
       background: $grey-90-10;
 
-
-      &:active {
+      &:focus {
         @include dark-theme-only {
           background: $grey-90-70;
+          box-shadow: 0 0 0 2px $grey-80, 0 0 0 5px $blue-50-50;
         }
 
-        background: $grey-90-30;
+        background: $grey-90-10;
+        box-shadow: 0 0 0 2px $white, 0 0 0 5px $blue-50-50;
       }
 
       &:hover {
@@ -151,16 +153,15 @@ $excerpt-line-height: 20;
           background: $grey-90-50;
         }
 
-        background: $grey-90-30;
+        background: $grey-90-20;
       }
 
-      &:focus {
+      &:active {
         @include dark-theme-only {
-          background: $grey-90-30;
-          box-shadow: 0 0 0 2px $grey-80, 0 0 0 5px $blue-50-50;
+          background: $grey-90-70;
         }
 
-        box-shadow: 0 0 0 2px $white, 0 0 0 5px $blue-50-50;
+        background: $grey-90-30;
       }
     }
 

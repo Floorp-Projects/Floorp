@@ -2742,20 +2742,21 @@ main {
       background: rgba(12, 12, 13, 0.1); }
       [lwt-newtab-brighttext] .ds-card .meta .cta-button {
         color: #F9F9FA;
-        background: rgba(12, 12, 13, 0.3); }
+        background: rgba(12, 12, 13, 0.7); }
+      .ds-card .meta .cta-button:focus {
+        background: rgba(12, 12, 13, 0.1);
+        box-shadow: 0 0 0 2px #FFF, 0 0 0 5px rgba(10, 132, 255, 0.5); }
+        [lwt-newtab-brighttext] .ds-card .meta .cta-button:focus {
+          background: rgba(12, 12, 13, 0.7);
+          box-shadow: 0 0 0 2px #2A2A2E, 0 0 0 5px rgba(10, 132, 255, 0.5); }
+      .ds-card .meta .cta-button:hover {
+        background: rgba(12, 12, 13, 0.2); }
+        [lwt-newtab-brighttext] .ds-card .meta .cta-button:hover {
+          background: rgba(12, 12, 13, 0.5); }
       .ds-card .meta .cta-button:active {
         background: rgba(12, 12, 13, 0.3); }
         [lwt-newtab-brighttext] .ds-card .meta .cta-button:active {
           background: rgba(12, 12, 13, 0.7); }
-      .ds-card .meta .cta-button:hover {
-        background: rgba(12, 12, 13, 0.3); }
-        [lwt-newtab-brighttext] .ds-card .meta .cta-button:hover {
-          background: rgba(12, 12, 13, 0.5); }
-      .ds-card .meta .cta-button:focus {
-        box-shadow: 0 0 0 2px #FFF, 0 0 0 5px rgba(10, 132, 255, 0.5); }
-        [lwt-newtab-brighttext] .ds-card .meta .cta-button:focus {
-          background: rgba(12, 12, 13, 0.3);
-          box-shadow: 0 0 0 2px #2A2A2E, 0 0 0 5px rgba(10, 132, 255, 0.5); }
     .ds-card .meta .cta-link {
       font-size: 15px;
       font-weight: 600;
@@ -3109,6 +3110,9 @@ main {
     display: inline-block; }
     [lwt-newtab-brighttext] .ds-chevron-link::after {
       background-color: #45A1FF; }
+
+.ds-privacy-modal a:hover {
+  text-decoration: underline; }
 
 .ds-privacy-modal .privacy-notice {
   width: 492px;
@@ -4244,7 +4248,7 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
 .inline-onboarding.activity-stream.welcome {
   overflow-y: hidden; }
 
-.inline-onboarding .modalOverlayInner {
+.inline-onboarding .trailhead.modalOverlayInner {
   position: absolute; }
 
 .inline-onboarding .outer-wrapper {

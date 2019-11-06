@@ -750,7 +750,7 @@ describe("ASRouter", () => {
         data: {
           action: "asrouter_undesired_event",
           event: "ASR_RS_ERROR",
-          value: "remotey-settingsy",
+          event_context: "remotey-settingsy",
           message_id: "n/a",
         },
         meta: { from: "ActivityStream:Content", to: "ActivityStream:Main" },
@@ -766,7 +766,7 @@ describe("ASRouter", () => {
         data: {
           action: "asrouter_undesired_event",
           event: "ASR_RS_NO_MESSAGES",
-          value: "remotey-settingsy",
+          event_context: "remotey-settingsy",
           message_id: "n/a",
         },
         meta: { from: "ActivityStream:Content", to: "ActivityStream:Main" },
@@ -814,7 +814,7 @@ describe("ASRouter", () => {
         data: {
           action: "asrouter_undesired_event",
           event: "ASR_RS_NO_MESSAGES",
-          value: "ms-language-packs",
+          event_context: "ms-language-packs",
           message_id: "n/a",
         },
         meta: { from: "ActivityStream:Content", to: "ActivityStream:Main" },

@@ -4,7 +4,6 @@
 
 import React from "react";
 import { actionCreators as ac } from "common/Actions.jsm";
-import { SafeAnchor } from "../SafeAnchor/SafeAnchor";
 import { ModalOverlayWrapper } from "content-src/asrouter/components/ModalOverlay/ModalOverlay";
 
 export class DSPrivacyModal extends React.PureComponent {
@@ -39,12 +38,11 @@ export class DSPrivacyModal extends React.PureComponent {
         <div className="privacy-notice">
           <h3 data-l10n-id="newtab-privacy-modal-header" />
           <p data-l10n-id="newtab-privacy-modal-paragraph" />
-          <SafeAnchor
-            onLinkClick={this.onLinkClick}
-            url="https://www.mozilla.org/en-US/privacy/firefox/"
-          >
-            <span data-l10n-id="newtab-privacy-modal-link" />
-          </SafeAnchor>
+          <a
+            data-l10n-id="newtab-privacy-modal-link"
+            onClick={this.onLinkClick}
+            href="https://www.mozilla.org/en-US/privacy/firefox/"
+          />
         </div>
         <section className="actions">
           <button
