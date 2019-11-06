@@ -47,7 +47,7 @@ const SEARCH_PROVIDER_INFO = {
     codePrefixes: ["firefox"],
     followonParams: ["oq", "ved", "ei"],
     extraAdServersRegexps: [
-      /^https:\/\/www\.googleadservices\.com\/(?:pagead\/)?aclk/,
+      /^https:\/\/www\.google(?:adservices)?\.com\/(?:pagead\/)?aclk/,
     ],
   },
   duckduckgo: {
@@ -417,7 +417,7 @@ class TelemetryHandler {
       SEARCH_COUNTS_HISTOGRAM_KEY
     );
     histogram.add(payload);
-    LOG(`SearchTelemetry: ${payload} for ${url}`);
+    LOG(`${payload} for ${url}`);
   }
 
   /**
@@ -484,7 +484,7 @@ class ContentHandler {
    */
   receiveMessage(msg) {
     if (msg.name != "SearchTelemetry:PageInfo") {
-      LOG(`"Received unexpected message: ${msg.name}`);
+      LOG("Received unexpected message: " + msg.name);
       return;
     }
 
@@ -506,63 +506,71 @@ class ContentHandler {
    * from a search provider page was followed, and if then if that link was an
    * ad click or not.
    *
-   * @param {nsISupports} httpChannel The channel that generated the activity.
-   * @param {number} activityType The type of activity.
-   * @param {number} activitySubtype The subtype for the activity.
-   * @param {PRTime} timestamp The time of the activity.
-   * @param {number} [extraSizeData] Any size data available for the activity.
-   * @param {string} [extraStringData] Any extra string data available for the
-   *   activity.
+   * @param {nsIChannel} nativeChannel   The channel that generated the activity.
+   * @param {number}     activityType    The type of activity.
+   * @param {number}     activitySubtype The subtype for the activity.
    */
   observeActivity(
-    httpChannel,
+    nativeChannel,
     activityType,
-    activitySubtype,
+    activitySubtype /*,
     timestamp,
     extraSizeData,
-    extraStringData
+    extraStringData*/
   ) {
+    // NOTE: the channel handling code here is inspired by WebRequest.jsm.
     if (
       !this._browserInfoByUrl.size ||
       activityType !=
         Ci.nsIHttpActivityObserver.ACTIVITY_TYPE_HTTP_TRANSACTION ||
       activitySubtype !=
-        Ci.nsIHttpActivityObserver.ACTIVITY_SUBTYPE_TRANSACTION_CLOSE
+        Ci.nsIHttpActivityObserver.ACTIVITY_SUBTYPE_RESPONSE_COMPLETE
     ) {
       return;
     }
 
-    let channel = httpChannel.QueryInterface(Ci.nsIHttpChannel);
-    let loadInfo;
-    try {
-      loadInfo = channel.loadInfo;
-    } catch (e) {
-      // Channels without a loadInfo are not pertinent.
+    // Sometimes we get a NullHttpChannel, which implements nsIHttpChannel but
+    // not nsIChannel.
+    if (!(nativeChannel instanceof Ci.nsIChannel)) {
+      return;
+    }
+    let channel = ChannelWrapper.get(nativeChannel);
+    // The wrapper is consistent across redirects, so we can use it to track state.
+    if (channel._adClickRecorded) {
+      LOG("Ad click already recorded");
       return;
     }
 
-    try {
-      let uri = channel.URI;
-      let triggerURI = loadInfo.triggeringPrincipal.URI;
-
-      if (!triggerURI || !this._browserInfoByUrl.has(triggerURI.spec)) {
+    // Make a trip through the event loop to make sure statuses have a chance to
+    // be processed before we get all the info.
+    Services.tm.dispatchToMainThread(() => {
+      // We suspect that No Content (204) responses are used to transfer or
+      // update beacons. They lead to use double-counting ad-clicks, so let's
+      // ignore them.
+      if (channel.statusCode == 204) {
+        LOG("Ignoring activity from ambiguous responses");
         return;
       }
 
-      let info = this._getProviderInfoForUrl(uri.spec, true);
+      let originURL = channel.originURI && channel.originURI.spec;
+      if (!originURL || !this._browserInfoByUrl.has(originURL)) {
+        return;
+      }
+
+      let URL = channel.finalURL;
+      let info = this._getProviderInfoForUrl(URL, true);
       if (!info) {
         return;
       }
 
-      Services.telemetry.keyedScalarAdd(SEARCH_AD_CLICKS_SCALAR, info[0], 1);
-      LOG(
-        `SearchTelemetry: Counting ad click in page for ${info[0]} ${
-          triggerURI.spec
-        }`
-      );
-    } catch (e) {
-      Cu.reportError(e);
-    }
+      try {
+        Services.telemetry.keyedScalarAdd(SEARCH_AD_CLICKS_SCALAR, info[0], 1);
+        channel._adClickRecorded = true;
+        LOG(`Counting ad click in page for ${info[0]} ${originURL} ${URL}`);
+      } catch (e) {
+        Cu.reportError(e);
+      }
+    });
   }
 
   /**
@@ -595,7 +603,7 @@ class ContentHandler {
   _reportPageWithAds(info) {
     let item = this._browserInfoByUrl.get(info.url);
     if (!item) {
-      LOG(`Expected to report URI with ads but couldn't find the information`);
+      LOG("Expected to report URI with ads but couldn't find the information");
       return;
     }
 
@@ -604,11 +612,7 @@ class ContentHandler {
       item.info.provider,
       1
     );
-    LOG(
-      `SearchTelemetry: Counting ads in page for ${item.info.provider} ${
-        info.url
-      }`
-    );
+    LOG(`Counting ads in page for ${item.info.provider} ${info.url}`);
   }
 }
 
