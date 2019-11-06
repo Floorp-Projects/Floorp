@@ -221,6 +221,10 @@ class FullParseHandler {
     return new_<RegExpLiteral>(objbox, pos);
   }
 
+  RegExpLiteralType newRegExp(const TokenPos& pos) {
+    return new_<RegExpLiteral>(pos);
+  }
+
   ConditionalExpressionType newConditional(Node cond, Node thenExpr,
                                            Node elseExpr) {
     return new_<ConditionalExpression>(cond, thenExpr, elseExpr);

@@ -249,6 +249,26 @@ RegExpObject* RegExpObject::create(JSContext* cx, HandleAtom source,
     return nullptr;
   }
 
+  return createSyntaxChecked(cx, source, flags, newKind);
+}
+
+RegExpObject* RegExpObject::createSyntaxChecked(JSContext* cx,
+                                                const char16_t* chars,
+                                                size_t length,
+                                                RegExpFlags flags,
+                                                NewObjectKind newKind) {
+  RootedAtom source(cx, AtomizeChars(cx, chars, length));
+  if (!source) {
+    return nullptr;
+  }
+
+  return createSyntaxChecked(cx, source, flags, newKind);
+}
+
+RegExpObject* RegExpObject::createSyntaxChecked(JSContext* cx,
+                                                HandleAtom source,
+                                                RegExpFlags flags,
+                                                NewObjectKind newKind) {
   Rooted<RegExpObject*> regexp(cx, RegExpAlloc(cx, newKind));
   if (!regexp) {
     return nullptr;
