@@ -254,6 +254,7 @@ class BrowserParent final : public PBrowserParent,
     mBrowserDOMWindow = aBrowserDOMWindow;
   }
 
+  void SetHasContentOpener(bool aHasContentOpener);
 
   void SwapFrameScriptsFrom(nsTArray<FrameScriptInfo>& aFrameScripts) {
     aFrameScripts.SwapElements(mDelayedFrameScripts);
@@ -740,6 +741,8 @@ class BrowserParent final : public PBrowserParent,
 
   void Deprioritize();
 
+  bool GetHasContentOpener();
+
   bool StartApzAutoscroll(float aAnchorX, float aAnchorY, nsViewID aScrollId,
                           uint32_t aPresShellId);
   void StopApzAutoscroll(nsViewID aScrollId, uint32_t aPresShellId);
@@ -944,6 +947,8 @@ class BrowserParent final : public PBrowserParent,
   // True if the cursor changes from the BrowserChild should change the widget
   // cursor.  This happens whenever the cursor is in the tab's region.
   bool mTabSetsCursor;
+
+  bool mHasContentOpener;
 
   // If this flag is set, then the tab's layers will be preserved even when
   // the tab's docshell is inactive.
