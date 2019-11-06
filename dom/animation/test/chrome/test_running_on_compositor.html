@@ -1117,6 +1117,19 @@ promise_test(async t => {
 
 promise_test(async t => {
   const div = addDiv(t);
+  const animation = div.animate({ offsetPath: ['none', 'none'] },
+                                100 * MS_PER_SEC);
+
+  await waitForAnimationReadyToRestyle(animation);
+  await waitForPaints();
+
+  assert_animation_is_running_on_compositor(animation,
+    'offset-path animation should be running on the compositor even if ' +
+    'it is always none');
+}, 'offset-path none animation runs on the compositor');
+
+promise_test(async t => {
+  const div = addDiv(t);
   const animation = div.animate({ offsetPath: ['path("M0 0l100 100")',
                                                'path("M0 0l200 200")'] },
                                 100 * MS_PER_SEC);
@@ -1128,9 +1141,6 @@ promise_test(async t => {
     'offset-path animation should be running on the compositor');
 }, 'offset-path animation runs on the compositor');
 
-// FIXME:  Bug 1592787: We should stop sending offset-* properties to the
-// compositor and skip restyling entirely if offset-path is none and we don't
-// have any animation of it.
 promise_test(async t => {
   const div = addDiv(t);
   const animation = div.animate({ offsetDistance: ['0%', '100%'] },
@@ -1139,8 +1149,19 @@ promise_test(async t => {
   await waitForAnimationReadyToRestyle(animation);
   await waitForPaints();
 
+  assert_animation_is_not_running_on_compositor(animation,
+    'offset-distance animation is not running on the compositor because ' +
+    'offset-path is none');
+
+  const newAnim = div.animate({ offsetPath: ['None', 'None'] },
+                              100 * MS_PER_SEC);
+  await waitForAnimationReadyToRestyle(newAnim);
+  await waitForPaints();
+
   assert_animation_is_running_on_compositor(animation,
     'offset-distance animation should be running on the compositor');
+  assert_animation_is_running_on_compositor(newAnim,
+    'new added offset-path animation should be running on the compositor');
 }, 'offset-distance animation runs on the compositor');
 
 promise_test(async t => {
@@ -1151,8 +1172,19 @@ promise_test(async t => {
   await waitForAnimationReadyToRestyle(animation);
   await waitForPaints();
 
+  assert_animation_is_not_running_on_compositor(animation,
+    'offset-rotate animation is not running on the compositor because ' +
+    'offset-path is none');
+
+  const newAnim = div.animate({ offsetPath: ['None', 'None'] },
+                              100 * MS_PER_SEC);
+  await waitForAnimationReadyToRestyle(newAnim);
+  await waitForPaints();
+
   assert_animation_is_running_on_compositor(animation,
     'offset-rotate animation should be running on the compositor');
+  assert_animation_is_running_on_compositor(newAnim,
+    'new added offset-path animation should be running on the compositor');
 }, 'offset-rotate animation runs on the compositor');
 
 promise_test(async t => {
@@ -1163,8 +1195,19 @@ promise_test(async t => {
   await waitForAnimationReadyToRestyle(animation);
   await waitForPaints();
 
+  assert_animation_is_not_running_on_compositor(animation,
+    'offset-anchor animation is not running on the compositor because ' +
+    'offset-path is none');
+
+  const newAnim = div.animate({ offsetPath: ['None', 'None'] },
+                              100 * MS_PER_SEC);
+  await waitForAnimationReadyToRestyle(newAnim);
+  await waitForPaints();
+
   assert_animation_is_running_on_compositor(animation,
     'offset-anchor animation should be running on the compositor');
+  assert_animation_is_running_on_compositor(newAnim,
+    'new added offset-path animation should be running on the compositor');
 }, 'offset-anchor animation runs on the compositor');
 
 promise_test(async t => {

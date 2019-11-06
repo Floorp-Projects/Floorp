@@ -82,6 +82,18 @@ class nsCSSPropertyIDSet {
     return COMPOSITOR_ANIMATABLE_PROPERTY_LIST_LENGTH - 7;
   }
 
+  static constexpr nsCSSPropertyIDSet CSSTransformProperties() {
+    return nsCSSPropertyIDSet{eCSSProperty_transform, eCSSProperty_translate,
+                              eCSSProperty_rotate, eCSSProperty_scale};
+  }
+
+  static constexpr nsCSSPropertyIDSet MotionPathProperties() {
+    // FIXME: Bug 1559232: Add offset-position.
+    return nsCSSPropertyIDSet{
+        eCSSProperty_offset_path, eCSSProperty_offset_distance,
+        eCSSProperty_offset_rotate, eCSSProperty_offset_anchor};
+  }
+
   static constexpr nsCSSPropertyIDSet TransformLikeProperties() {
     // FIXME: Bug 1559232: Add offset-position.
     return nsCSSPropertyIDSet{
