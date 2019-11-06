@@ -929,37 +929,55 @@ def setup_browsertime(config, tests):
             'by-test-platform': {
                 'android.*': ['linux64-chromedriver', 'linux64-ffmpeg-4.1.4'],
                 'linux.*': [
-                    'linux64-chromedriver-76',
-                    'linux64-chromedriver-77',
-                    'linux64-chromedriver-78',
                     'linux64-ffmpeg-4.1.4'
                 ],
                 'macosx.*': [
-                    'mac64-chromedriver-76',
-                    'mac64-chromedriver-77',
-                    'mac64-chromedriver-78',
                     'mac64-ffmpeg-4.1.1'
                 ],
                 'windows.*aarch64.*': [
-                    'win32-chromedriver-76',
-                    'win32-chromedriver-77',
-                    'win32-chromedriver-78',
                     'win64-ffmpeg-4.1.1'
                 ],
                 'windows.*-32.*': [
-                    'win32-chromedriver-76',
-                    'win32-chromedriver-77',
-                    'win32-chromedriver-78',
                     'win64-ffmpeg-4.1.1'
                 ],
                 'windows.*-64.*': [
-                    'win32-chromedriver-76',
-                    'win32-chromedriver-77',
-                    'win32-chromedriver-78',
                     'win64-ffmpeg-4.1.1'
                 ],
             },
         }
+
+        cd_fetches = {
+            'linux.*': [
+                'linux64-chromedriver-76',
+                'linux64-chromedriver-77',
+                'linux64-chromedriver-78'
+            ],
+            'macosx.*': [
+                'mac64-chromedriver-76',
+                'mac64-chromedriver-77',
+                'mac64-chromedriver-78'
+            ],
+            'windows.*aarch64.*': [
+                'win32-chromedriver-76',
+                'win32-chromedriver-77',
+                'win32-chromedriver-78'
+            ],
+            'windows.*-32.*': [
+                'win32-chromedriver-76',
+                'win32-chromedriver-77',
+                'win32-chromedriver-78'
+            ],
+            'windows.*-64.*': [
+                'win32-chromedriver-76',
+                'win32-chromedriver-77',
+                'win32-chromedriver-78'
+            ],
+        }
+
+        if '--app=chrome' in extra_options or '--app=chromium' in extra_options:
+            # Only add the chromedriver fetches when chrome/chromium is running
+            for platform in cd_fetches:
+                fs['by-test-platform'][platform].extend(cd_fetches[platform])
 
         test.setdefault('fetches', {}).setdefault('fetch', []).extend(
             evaluate_keyed_by(fs, 'fetches.fetch', test))

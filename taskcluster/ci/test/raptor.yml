@@ -1016,9 +1016,12 @@ raptor-jetstream2-firefox-profiling:
 browsertime-tp6-1:
     description: "Raptor (browsertime) tp6-1"
     raptor-test: raptor-tp6-1
-    run-on-projects: ['integration', 'try']
+    run-on-projects: ['mozilla-central','integration', 'try']
     apps: ['firefox', 'chrome']
-    variants: ['fission']
+    variants:
+        by-app:
+            firefox: ['fission']
+            default: []
     pageload:
         by-app:
             firefox: 'both'
