@@ -114,7 +114,8 @@ bool RemoteSandboxBroker::LaunchApp(const wchar_t* aPath,
   return true;
 }
 
-bool RemoteSandboxBroker::SetSecurityLevelForGMPlugin(SandboxLevel aLevel) {
+bool RemoteSandboxBroker::SetSecurityLevelForGMPlugin(SandboxLevel aLevel,
+                                                      bool aIsRemoteLaunch) {
   mParameters.sandboxLevel() = uint32_t(aLevel);
   return true;
 }
