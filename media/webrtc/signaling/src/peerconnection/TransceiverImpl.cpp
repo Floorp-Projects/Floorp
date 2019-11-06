@@ -33,9 +33,10 @@ using LocalDirection = MediaSessionConduitLocalDirection;
 
 TransceiverImpl::TransceiverImpl(
     const std::string& aPCHandle, MediaTransportHandler* aTransportHandler,
-    JsepTransceiver* aJsepTransceiver, nsIEventTarget* aMainThread,
-    nsIEventTarget* aStsThread, dom::MediaStreamTrack* aReceiveTrack,
-    dom::MediaStreamTrack* aSendTrack, WebRtcCallWrapper* aCallWrapper)
+    JsepTransceiver* aJsepTransceiver, nsISerialEventTarget* aMainThread,
+    nsISerialEventTarget* aStsThread, dom::MediaStreamTrack* aReceiveTrack,
+    dom::MediaStreamTrack* aSendTrack, WebRtcCallWrapper* aCallWrapper,
+    const PrincipalHandle& aPrincipalHandle)
     : mPCHandle(aPCHandle),
       mTransportHandler(aTransportHandler),
       mJsepTransceiver(aJsepTransceiver),
@@ -47,9 +48,9 @@ TransceiverImpl::TransceiverImpl(
       mSendTrack(aSendTrack),
       mCallWrapper(aCallWrapper) {
   if (IsVideo()) {
-    InitVideo();
+    InitVideo(aPrincipalHandle);
   } else {
-    InitAudio();
+    InitAudio(aPrincipalHandle);
   }
 
   if (!IsValid()) {
@@ -69,7 +70,7 @@ TransceiverImpl::~TransceiverImpl() = default;
 
 NS_IMPL_ISUPPORTS0(TransceiverImpl)
 
-void TransceiverImpl::InitAudio() {
+void TransceiverImpl::InitAudio(const PrincipalHandle& aPrincipalHandle) {
   mConduit = AudioSessionConduit::Create(mCallWrapper, mStsThread);
 
   if (!mConduit) {
@@ -82,10 +83,11 @@ void TransceiverImpl::InitAudio() {
 
   mReceivePipeline = new MediaPipelineReceiveAudio(
       mPCHandle, mTransportHandler, mMainThread.get(), mStsThread.get(),
-      static_cast<AudioSessionConduit*>(mConduit.get()), mReceiveTrack);
+      static_cast<AudioSessionConduit*>(mConduit.get()), mReceiveTrack,
+      aPrincipalHandle);
 }
 
-void TransceiverImpl::InitVideo() {
+void TransceiverImpl::InitVideo(const PrincipalHandle& aPrincipalHandle) {
   mConduit = VideoSessionConduit::Create(mCallWrapper, mStsThread);
 
   if (!mConduit) {
@@ -98,7 +100,8 @@ void TransceiverImpl::InitVideo() {
 
   mReceivePipeline = new MediaPipelineReceiveVideo(
       mPCHandle, mTransportHandler, mMainThread.get(), mStsThread.get(),
-      static_cast<VideoSessionConduit*>(mConduit.get()), mReceiveTrack);
+      static_cast<VideoSessionConduit*>(mConduit.get()), mReceiveTrack,
+      aPrincipalHandle);
 }
 
 nsresult TransceiverImpl::UpdateSinkIdentity(
@@ -149,11 +152,11 @@ nsresult TransceiverImpl::UpdateTransport() {
   }
 
   ASSERT_ON_THREAD(mMainThread);
-  nsAutoPtr<MediaPipelineFilter> filter;
+  UniquePtr<MediaPipelineFilter> filter;
 
   if (mJsepTransceiver->HasBundleLevel() &&
       mJsepTransceiver->mRecvTrack.GetNegotiatedDetails()) {
-    filter = new MediaPipelineFilter;
+    filter = MakeUnique<MediaPipelineFilter>();
 
     // Add remote SSRCs so we can distinguish which RTP packets actually
     // belong to this pipeline (also RTCP sender reports).
@@ -172,9 +175,9 @@ nsresult TransceiverImpl::UpdateTransport() {
   }
 
   mReceivePipeline->UpdateTransport_m(mJsepTransceiver->mTransport.mTransportId,
-                                      filter);
+                                      std::move(filter));
   mTransmitPipeline->UpdateTransport_m(
-      mJsepTransceiver->mTransport.mTransportId, filter);
+      mJsepTransceiver->mTransport.mTransportId, nullptr);
   return NS_OK;
 }
 
@@ -249,21 +252,6 @@ void TransceiverImpl::SetReceiveTrackMuted(bool aMuted) {
 
   // This sets the muted state for mReceiveTrack and all its clones.
   static_cast<RemoteTrackSource&>(mReceiveTrack->GetSource()).SetMuted(aMuted);
-}
-
-nsresult TransceiverImpl::UpdatePrincipal(nsIPrincipal* aPrincipal) {
-  if (mJsepTransceiver->IsStopped()) {
-    return NS_OK;
-  }
-
-  // This blasts away the existing principal.
-  // We only do this when we become certain that all tracks are safe to make
-  // accessible to the script principal.
-  static_cast<RemoteTrackSource&>(mReceiveTrack->GetSource())
-      .SetPrincipal(aPrincipal);
-
-  mReceivePipeline->SetPrincipalHandle_m(MakePrincipalHandle(aPrincipal));
-  return NS_OK;
 }
 
 void TransceiverImpl::ResetSync() {

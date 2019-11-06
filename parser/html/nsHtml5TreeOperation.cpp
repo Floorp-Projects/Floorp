@@ -13,6 +13,7 @@
 #include "mozilla/dom/HTMLFormElement.h"
 #include "mozilla/dom/HTMLImageElement.h"
 #include "mozilla/dom/HTMLTemplateElement.h"
+#include "mozilla/dom/MutationObservers.h"
 #include "mozilla/dom/Text.h"
 #include "nsAttrName.h"
 #include "nsContentCreatorFunctions.h"
@@ -36,7 +37,6 @@
 #include "nsISupportsImpl.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
-#include "nsNodeUtils.h"
 #include "nsTextNode.h"
 #ifdef MOZ_XBL
 #  include "nsBindingManager.h"
@@ -218,12 +218,12 @@ nsresult nsHtml5TreeOperation::AppendTextToTextNode(
   MOZ_ASSERT(aBuilder->IsInDocUpdate());
   uint32_t oldLength = aTextNode->TextLength();
   CharacterDataChangeInfo info = {true, oldLength, oldLength, aLength};
-  nsNodeUtils::CharacterDataWillChange(aTextNode, info);
+  MutationObservers::NotifyCharacterDataWillChange(aTextNode, info);
 
   nsresult rv = aTextNode->AppendText(aBuffer, aLength, false);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsNodeUtils::CharacterDataChanged(aTextNode, info);
+  MutationObservers::NotifyCharacterDataChanged(aTextNode, info);
   return rv;
 }
 
@@ -256,7 +256,7 @@ nsresult nsHtml5TreeOperation::Append(nsIContent* aNode, nsIContent* aParent,
   rv = aParent->AppendChildTo(aNode, false);
   if (NS_SUCCEEDED(rv)) {
     aNode->SetParserHasNotified();
-    nsNodeUtils::ContentAppended(aParent, aNode);
+    MutationObservers::NotifyContentAppended(aParent, aNode);
   }
   return rv;
 }
@@ -276,7 +276,7 @@ nsresult nsHtml5TreeOperation::AppendToDocument(
   }
   NS_ENSURE_SUCCESS(rv, rv);
   aNode->SetParserHasNotified();
-  nsNodeUtils::ContentInserted(doc, aNode);
+  MutationObservers::NotifyContentInserted(doc, aNode);
 
   NS_ASSERTION(!nsContentUtils::IsSafeToRunScript(),
                "Someone forgot to block scripts");
@@ -295,7 +295,7 @@ static bool IsElementOrTemplateContent(nsINode* aNode) {
     if (aNode->IsDocumentFragment()) {
       // Check if the node is a template content.
       nsIContent* fragHost = aNode->AsDocumentFragment()->GetHost();
-      if (fragHost && nsNodeUtils::IsTemplateElement(fragHost)) {
+      if (fragHost && fragHost->IsTemplateElement()) {
         return true;
       }
     }
@@ -329,7 +329,7 @@ nsresult nsHtml5TreeOperation::AppendChildrenToNewParent(
     didAppend = true;
   }
   if (didAppend) {
-    nsNodeUtils::ContentAppended(aParent, aParent->GetLastChild());
+    MutationObservers::NotifyContentAppended(aParent, aParent->GetLastChild());
   }
   return NS_OK;
 }
@@ -347,7 +347,7 @@ nsresult nsHtml5TreeOperation::FosterParent(nsIContent* aNode,
 
     nsresult rv = foster->InsertChildBefore(aNode, aTable, false);
     NS_ENSURE_SUCCESS(rv, rv);
-    nsNodeUtils::ContentInserted(foster, aNode);
+    MutationObservers::NotifyContentInserted(foster, aNode);
     return rv;
   }
 
@@ -665,7 +665,7 @@ nsresult nsHtml5TreeOperation::FosterParentText(
 
     rv = foster->InsertChildBefore(text, aTable, false);
     NS_ENSURE_SUCCESS(rv, rv);
-    nsNodeUtils::ContentInserted(foster, text);
+    MutationObservers::NotifyContentInserted(foster, text);
     return rv;
   }
 

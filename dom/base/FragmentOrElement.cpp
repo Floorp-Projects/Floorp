@@ -58,7 +58,6 @@
 #include "nsIScriptSecurityManager.h"
 #include "mozilla/InternalMutationEvent.h"
 #include "mozilla/MouseEvents.h"
-#include "nsNodeUtils.h"
 #include "nsAttrValueOrString.h"
 #include "nsQueryObject.h"
 #ifdef MOZ_XUL
@@ -160,7 +159,7 @@ NS_INTERFACE_MAP_END
 
 NS_IMPL_MAIN_THREAD_ONLY_CYCLE_COLLECTING_ADDREF(nsIContent)
 NS_IMPL_MAIN_THREAD_ONLY_CYCLE_COLLECTING_RELEASE_WITH_LAST_RELEASE(
-    nsIContent, nsNodeUtils::LastRelease(this))
+    nsIContent, LastRelease())
 
 nsIContent* nsIContent::FindFirstNonChromeOnlyAccessContent() const {
   // This handles also nested native anonymous content.
@@ -2038,7 +2037,7 @@ void FragmentOrElement::SetInnerHTMLInternal(const nsAString& aInnerHTML,
                                              ErrorResult& aError) {
   FragmentOrElement* target = this;
   // Handle template case.
-  if (nsNodeUtils::IsTemplateElement(target)) {
+  if (target->IsTemplateElement()) {
     DocumentFragment* frag =
         static_cast<HTMLTemplateElement*>(target)->Content();
     MOZ_ASSERT(frag);

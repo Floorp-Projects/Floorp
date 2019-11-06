@@ -15,6 +15,7 @@
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/EffectCompositor.h"  // For EffectCompositor::CascadeLevel
 #include "mozilla/LinkedList.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/PostRestyleMode.h"
 #include "mozilla/TimeStamp.h"             // for TimeStamp, TimeDuration
 #include "mozilla/dom/AnimationBinding.h"  // for AnimationPlayState
@@ -57,6 +58,13 @@ class Animation : public DOMEventTargetHelper,
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(Animation, DOMEventTargetHelper)
 
   nsIGlobalObject* GetParentObject() const { return GetOwnerGlobal(); }
+
+  /**
+   * Utility function to get the target (pseudo-)element associated with an
+   * animation.
+   */
+  Maybe<NonOwningAnimationTarget> GetTargetForAnimation() const;
+
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
 

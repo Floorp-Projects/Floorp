@@ -22,6 +22,7 @@
 #include "mozilla/dom/Flex.h"
 #include "mozilla/dom/Grid.h"
 #include "mozilla/dom/Link.h"
+#include "mozilla/dom/MutationObservers.h"
 #include "mozilla/dom/ScriptLoader.h"
 #include "mozilla/dom/Text.h"
 #include "mozilla/gfx/Matrix.h"
@@ -77,7 +78,6 @@
 #include "mozilla/SizeOfState.h"
 #include "mozilla/TextEditor.h"
 #include "mozilla/TextEvents.h"
-#include "nsNodeUtils.h"
 #include "mozilla/dom/DirectionalityUtils.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/DocumentInlines.h"
@@ -1627,9 +1627,9 @@ nsresult Element::BindToTree(BindContext& aContext, nsINode& aParent) {
     }
   }
 
-  nsNodeUtils::ParentChainChanged(this);
+  MutationObservers::NotifyParentChainChanged(this);
   if (!hadParent && IsRootOfNativeAnonymousSubtree()) {
-    nsNodeUtils::NativeAnonymousChildListChange(this, false);
+    MutationObservers::NotifyNativeAnonymousChildListChange(this, false);
   }
 
   // Ensure we only run this once, in the case we move the ShadowRoot around.
@@ -1769,7 +1769,7 @@ void Element::UnbindFromTree(bool aNullParent) {
 
   if (aNullParent) {
     if (IsRootOfNativeAnonymousSubtree()) {
-      nsNodeUtils::NativeAnonymousChildListChange(this, true);
+      MutationObservers::NotifyNativeAnonymousChildListChange(this, true);
     }
 
     if (GetParent()) {
@@ -1909,7 +1909,7 @@ void Element::UnbindFromTree(bool aNullParent) {
     child->UnbindFromTree(false);
   }
 
-  nsNodeUtils::ParentChainChanged(this);
+  MutationObservers::NotifyParentChainChanged(this);
 
   // Unbind children of shadow root.
   if (ShadowRoot* shadowRoot = GetShadowRoot()) {
@@ -2236,7 +2236,8 @@ bool Element::OnlyNotifySameValueSet(int32_t aNamespaceID, nsAtom* aName,
   }
 
   nsAutoScriptBlocker scriptBlocker;
-  nsNodeUtils::AttributeSetToCurrentValue(this, aNamespaceID, aName);
+  MutationObservers::NotifyAttributeSetToCurrentValue(this, aNamespaceID,
+                                                      aName);
   return true;
 }
 
@@ -2285,7 +2286,8 @@ nsresult Element::SetAttr(int32_t aNamespaceID, nsAtom* aName, nsAtom* aPrefix,
   }
 
   if (aNotify) {
-    nsNodeUtils::AttributeWillChange(this, aNamespaceID, aName, modType);
+    MutationObservers::NotifyAttributeWillChange(this, aNamespaceID, aName,
+                                                 modType);
   }
 
   // Hold a script blocker while calling ParseAttribute since that can call
@@ -2331,7 +2333,8 @@ nsresult Element::SetParsedAttr(int32_t aNamespaceID, nsAtom* aName,
   }
 
   if (aNotify) {
-    nsNodeUtils::AttributeWillChange(this, aNamespaceID, aName, modType);
+    MutationObservers::NotifyAttributeWillChange(this, aNamespaceID, aName,
+                                                 modType);
   }
 
   nsresult rv = BeforeSetAttr(aNamespaceID, aName, &value, aNotify);
@@ -2467,7 +2470,7 @@ nsresult Element::SetAttrAndNotify(
     // Don't pass aOldValue to AttributeChanged since it may not be reliable.
     // Callers only compute aOldValue under certain conditions which may not
     // be triggered by all nsIMutationObservers.
-    nsNodeUtils::AttributeChanged(
+    MutationObservers::NotifyAttributeChanged(
         this, aNamespaceID, aName, aModType,
         aParsedValue.StoresOwnData() ? &aParsedValue : nullptr);
   }
@@ -2672,8 +2675,8 @@ nsresult Element::UnsetAttr(int32_t aNameSpaceID, nsAtom* aName, bool aNotify) {
   mozAutoDocUpdate updateBatch(document, aNotify);
 
   if (aNotify) {
-    nsNodeUtils::AttributeWillChange(this, aNameSpaceID, aName,
-                                     MutationEvent_Binding::REMOVAL);
+    MutationObservers::NotifyAttributeWillChange(
+        this, aNameSpaceID, aName, MutationEvent_Binding::REMOVAL);
   }
 
   nsresult rv = BeforeSetAttr(aNameSpaceID, aName, nullptr, aNotify);
@@ -2750,8 +2753,8 @@ nsresult Element::UnsetAttr(int32_t aNameSpaceID, nsAtom* aName, bool aNotify) {
   if (aNotify) {
     // We can always pass oldValue here since there is no new value which could
     // have corrupted it.
-    nsNodeUtils::AttributeChanged(this, aNameSpaceID, aName,
-                                  MutationEvent_Binding::REMOVAL, &oldValue);
+    MutationObservers::NotifyAttributeChanged(
+        this, aNameSpaceID, aName, MutationEvent_Binding::REMOVAL, &oldValue);
   }
 
   if (aNameSpaceID == kNameSpaceID_None && aName == nsGkAtoms::dir) {

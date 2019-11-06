@@ -13,12 +13,12 @@ EXPORTS += [
 ]
 
 EXPORTS.mozilla.dom += [
-    'PositionError.h',
+    'GeolocationPositionError.h',
 ]
 
 SOURCES += [
+    'GeolocationPositionError.cpp',
     'nsGeolocation.cpp',
-    'PositionError.cpp',
 ]
 
 UNIFIED_SOURCES += [

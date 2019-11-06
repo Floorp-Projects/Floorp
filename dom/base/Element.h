@@ -22,7 +22,6 @@
 #include "nsDOMAttributeMap.h"
 #include "nsINodeList.h"
 #include "nsIScrollableFrame.h"
-#include "nsNodeUtils.h"
 #include "nsPresContext.h"
 #include "Units.h"
 #include "mozilla/Attributes.h"

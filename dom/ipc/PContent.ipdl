@@ -934,7 +934,7 @@ parent:
 
     // Services remoting
 
-    async StartVisitedQuery(URIParams uri);
+    async StartVisitedQueries(URIParams[] uri);
     async SetURITitle(URIParams uri, nsString title);
 
     async LoadURIExternal(URIParams uri, PBrowser windowContext);

@@ -62,6 +62,13 @@ function identityPcTest(remoteOptions) {
 
     function REMOTE_STREAMS_ARE_RESTRICTED(test) {
       var remoteStream = test.pcLocal._pc.getRemoteStreams()[0];
+      for (const track of remoteStream.getTracks()) {
+        mustThrowWith(
+          `Freshly received ${track.kind} track with peerIdentity`,
+          "SecurityError",
+          () => new MediaRecorder(new MediaStream([track])).start()
+        );
+      }
       return Promise.all([
         audioIsSilence(true, remoteStream),
         videoIsBlack(true, remoteStream),

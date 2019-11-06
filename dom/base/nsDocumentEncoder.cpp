@@ -32,7 +32,6 @@
 #include "nsITransferable.h"  // for kUnicodeMime
 #include "nsContentUtils.h"
 #include "nsElementTable.h"
-#include "nsNodeUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsReadableUtils.h"
 #include "nsTArray.h"
@@ -766,7 +765,7 @@ nsresult nsDocumentEncoder::SerializeToStringRecursive(nsINode* aNode,
                       ? maybeFixedNode
                       : aNode;
 
-  for (nsINode* child = nsNodeUtils::GetFirstChildOfTemplateOrNode(node); child;
+  for (nsINode* child = node->GetFirstChildOfTemplateOrNode(); child;
        child = child->GetNextSibling()) {
     rv = SerializeToStringRecursive(child, false, aMaxLength);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -787,12 +786,12 @@ nsresult nsDocumentEncoder::SerializeToStringRecursive(nsINode* aNode,
 nsresult nsDocumentEncoder::SerializeToStringIterative(nsINode* aNode) {
   nsresult rv;
 
-  nsINode* node = nsNodeUtils::GetFirstChildOfTemplateOrNode(aNode);
+  nsINode* node = aNode->GetFirstChildOfTemplateOrNode();
   while (node) {
     nsINode* current = node;
     rv = SerializeNodeStart(*current, 0, -1, current);
     NS_ENSURE_SUCCESS(rv, rv);
-    node = nsNodeUtils::GetFirstChildOfTemplateOrNode(current);
+    node = current->GetFirstChildOfTemplateOrNode();
     while (!node && current && current != aNode) {
       rv = SerializeNodeEnd(*current);
       NS_ENSURE_SUCCESS(rv, rv);

@@ -10,7 +10,7 @@ void brush_vs(
     RectWithSize local_rect,
     RectWithSize segment_rect,
     ivec4 prim_user_data,
-    int segment_user_data,
+    int specific_resource_address,
     mat4 transform,
     PictureTask pic_task,
     int brush_flags,
@@ -29,25 +29,21 @@ void brush_vs(
 
 void main(void) {
     // Load the brush instance from vertex attributes.
-    int prim_header_address = aData.x;
-    int render_task_index = aData.y >> 16;
-    int clip_address = aData.y & 0xffff;
-    int segment_index = aData.z & 0xffff;
-    int edge_flags = (aData.z >> 16) & 0xff;
-    int brush_flags = (aData.z >> 24) & 0xff;
-    int segment_user_data = aData.w;
-    PrimitiveHeader ph = fetch_prim_header(prim_header_address);
+    Instance instance = decode_instance_attributes();
+    int edge_flags = (instance.flags >> 16) & 0xff;
+    int brush_flags = (instance.flags >> 24) & 0xff;
+    PrimitiveHeader ph = fetch_prim_header(instance.prim_header_address);
 
     // Fetch the segment of this brush primitive we are drawing.
     vec4 segment_data;
     RectWithSize segment_rect;
-    if (segment_index == INVALID_SEGMENT_INDEX) {
+    if (instance.segment_index == INVALID_SEGMENT_INDEX) {
         segment_rect = ph.local_rect;
         segment_data = vec4(0.0);
     } else {
         int segment_address = ph.specific_prim_address +
                               VECS_PER_SPECIFIC_BRUSH +
-                              segment_index * VECS_PER_SEGMENT;
+                              instance.segment_index * VECS_PER_SEGMENT;
 
         vec4[2] segment_info = fetch_from_gpu_cache_2(segment_address);
         segment_rect = RectWithSize(segment_info[0].xy, segment_info[0].zw);
@@ -58,8 +54,8 @@ void main(void) {
     VertexInfo vi;
 
     // Fetch the dynamic picture that we are drawing on.
-    PictureTask pic_task = fetch_picture_task(render_task_index);
-    ClipArea clip_area = fetch_clip_area(clip_address);
+    PictureTask pic_task = fetch_picture_task(instance.picture_task_address);
+    ClipArea clip_area = fetch_clip_area(instance.clip_address);
 
     Transform transform = fetch_transform(ph.transform_id);
 
@@ -117,7 +113,7 @@ void main(void) {
         ph.local_rect,
         segment_rect,
         ph.user_data,
-        segment_user_data,
+        instance.user_data,
         transform.m,
         pic_task,
         brush_flags,

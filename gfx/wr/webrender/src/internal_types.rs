@@ -535,6 +535,7 @@ pub enum ResultMsg {
         BackendProfileCounters,
     ),
     AppendNotificationRequests(Vec<NotificationRequest>),
+    ForceRedraw,
 }
 
 #[derive(Clone, Debug)]

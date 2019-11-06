@@ -13,6 +13,7 @@
 #include "mozilla/Components.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/dom/Document.h"
+#include "mozilla/dom/MutationObservers.h"
 #include "mozilla/css/Loader.h"
 #include "mozilla/dom/SRILogHelper.h"
 #include "nsStyleLinkElement.h"
@@ -1200,7 +1201,7 @@ void nsContentSink::NotifyAppend(nsIContent* aContainer, uint32_t aStartIndex) {
     //
     // Note that aContainer->OwnerDoc() may not be mDocument.
     MOZ_AUTO_DOC_UPDATE(aContainer->OwnerDoc(), true);
-    nsNodeUtils::ContentAppended(
+    MutationObservers::NotifyContentAppended(
         aContainer, aContainer->GetChildAt_Deprecated(aStartIndex));
     mLastNotificationTime = PR_Now();
   }

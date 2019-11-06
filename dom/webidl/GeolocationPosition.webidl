@@ -10,12 +10,8 @@
  * liability, trademark and document use rules apply.
  */
 
-[NoInterfaceObject,
- Exposed=Window]
-interface PositionError {
-  const unsigned short PERMISSION_DENIED = 1;
-  const unsigned short POSITION_UNAVAILABLE = 2;
-  const unsigned short TIMEOUT = 3;
-  readonly attribute unsigned short code;
-  readonly attribute DOMString message;
+[Exposed=Window, SecureContext]
+interface GeolocationPosition {
+  readonly attribute GeolocationCoordinates coords;
+  readonly attribute DOMTimeStamp timestamp;
 };

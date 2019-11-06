@@ -23,6 +23,7 @@ use api::CaptureBits;
 #[cfg(feature = "replay")]
 use api::CapturedDocument;
 use crate::clip_scroll_tree::SpatialNodeIndex;
+use crate::composite::CompositorKind;
 #[cfg(feature = "debugger")]
 use crate::debug_server;
 use crate::frame_builder::{FrameBuilder, FrameBuilderConfig};
@@ -1494,6 +1495,13 @@ impl RenderBackend {
         // external image with NativeTexture or when platform requested to composite frame.
         if invalidate_rendered_frame {
             doc.rendered_frame_is_valid = false;
+            if let CompositorKind::Draw { max_partial_present_rects } = self.frame_config.compositor_kind {
+              // When partial present is enabled, we need to force redraw.
+              if max_partial_present_rects > 0 {
+                  let msg = ResultMsg::ForceRedraw;
+                  self.result_tx.send(msg).unwrap();
+              }
+            }
         }
 
         let mut frame_build_time = None;
