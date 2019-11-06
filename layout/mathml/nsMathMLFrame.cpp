@@ -304,25 +304,20 @@ class nsDisplayMathMLBar final : public nsPaintedDisplayItem {
  public:
   nsDisplayMathMLBar(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                      const nsRect& aRect, uint16_t aIndex)
-      : nsPaintedDisplayItem(aBuilder, aFrame), mRect(aRect) {
+      : nsPaintedDisplayItem(aBuilder, aFrame), mRect(aRect), mIndex(aIndex) {
     MOZ_COUNT_CTOR(nsDisplayMathMLBar);
   }
-
-  // Should have the same argument signature as the above ctor
-  static uint16_t CalculatePerFrameIndex(nsDisplayListBuilder* aBuilder,
-                                         nsIFrame* aFrame, const nsRect& aRect,
-                                         uint16_t aIndex) {
-    return aIndex;
-  }
-
 #ifdef NS_BUILD_REFCNT_LOGGING
   virtual ~nsDisplayMathMLBar() { MOZ_COUNT_DTOR(nsDisplayMathMLBar); }
 #endif
+
+  virtual uint16_t CalculatePerFrameKey() const override { return mIndex; }
 
   virtual void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;
   NS_DISPLAY_DECL_NAME("MathMLBar", TYPE_MATHML_BAR)
  private:
   nsRect mRect;
+  uint16_t mIndex;
 };
 
 void nsDisplayMathMLBar::Paint(nsDisplayListBuilder* aBuilder,
