@@ -16,6 +16,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_layout.h"
+#include "mozilla/StaticPrefs_full_screen_api.h"
 #include "mozilla/dom/Animation.h"
 #include "mozilla/dom/Attr.h"
 #include "mozilla/dom/BindContext.h"
@@ -2514,6 +2515,12 @@ bool Element::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
   if (aNamespaceID == kNameSpaceID_None) {
     if (aAttribute == nsGkAtoms::_class || aAttribute == nsGkAtoms::part) {
       aResult.ParseAtomArray(aValue);
+      return true;
+    }
+
+    if (aAttribute == nsGkAtoms::exportparts &&
+        StaticPrefs::layout_css_shadow_parts_enabled()) {
+      aResult.ParsePartMapping(aValue);
       return true;
     }
 
