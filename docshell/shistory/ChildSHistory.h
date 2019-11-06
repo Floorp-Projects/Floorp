@@ -28,6 +28,7 @@
 
 class nsSHistory;
 class nsDocShell;
+class nsISHEntry;
 class nsISHistory;
 class nsIWebNavigation;
 class nsIGlobalObject;
@@ -103,9 +104,11 @@ class ChildSHistory : public nsISupports, public nsWrapperCache {
   };
 
   RefPtr<nsDocShell> mDocShell;
-  RefPtr<nsSHistory> mHistory;
+  nsCOMPtr<nsISHistory> mHistory;
   mozilla::LinkedList<PendingAsyncHistoryNavigation> mPendingNavigations;
 };
+
+already_AddRefed<nsISHEntry> CreateSHEntryForDocShell(nsISHistory* aSHistory);
 
 }  // namespace dom
 }  // namespace mozilla

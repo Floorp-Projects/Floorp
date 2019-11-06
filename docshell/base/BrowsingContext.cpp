@@ -148,6 +148,8 @@ already_AddRefed<BrowsingContext> BrowsingContext::Create(
     context->mEmbedderPolicy = inherit->mEmbedderPolicy;
   }
 
+  nsContentUtils::GenerateUUIDInPlace(context->mHistoryID);
+
   Register(context);
 
   // Attach the browsing context to the tree.

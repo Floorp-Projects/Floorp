@@ -1,0 +1,69 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PContent;
+include protocol PSHEntry;
+
+include DOMTypes;
+
+using refcounted class mozilla::dom::BrowsingContext from "mozilla/dom/BrowsingContext.h";
+using refcounted class mozilla::dom::CrossProcessSHEntry from "mozilla/dom/MaybeNewPSHEntry.h";
+using refcounted class nsDocShellLoadState from "mozilla/dom/DocShellMessageUtils.h";
+
+using struct nsID from "nsID.h";
+using struct mozilla::null_t from "ipc/IPCMessageUtils.h";
+
+namespace mozilla {
+namespace dom {
+
+struct LoadSHEntryData
+{
+  CrossProcessSHEntry shEntry;
+  BrowsingContext browsingContext;
+  nsDocShellLoadState loadState;
+};
+
+union LoadSHEntryResult {
+  nsresult;
+  LoadSHEntryData;
+};
+
+sync protocol PSHistory {
+  // IPDLParamTraits<dom::CrossProcessSHEntry*>::Write relies on PContent being
+  // the manager.
+  manager PContent;
+
+parent:
+  sync GetCount() returns (int32_t count);
+  sync GetIndex() returns (int32_t index);
+  sync SetIndex(int32_t index) returns (nsresult result);
+  sync GetRequestedIndex() returns (int32_t index);
+  async InternalSetRequestedIndex(int32_t index);
+  sync GetEntryAtIndex(int32_t index) returns (nsresult result, CrossProcessSHEntry entry);
+  sync PurgeHistory(int32_t numEntries) returns (nsresult result);
+  sync ReloadCurrentEntry() returns (LoadSHEntryResult load);
+  sync GotoIndex(int32_t index) returns (LoadSHEntryResult load);
+  sync GetIndexOfEntry(PSHEntry entry) returns (int32_t index);
+  sync AddEntry(PSHEntry entry, bool persist) returns (nsresult result, int32_t entriesPurged);
+  async UpdateIndex();
+  sync ReplaceEntry(int32_t index, PSHEntry entry) returns (nsresult result);
+  sync NotifyOnHistoryReload() returns (bool ok);
+  async EvictOutOfRangeContentViewers(int32_t index);
+  async EvictAllContentViewers();
+  async RemoveDynEntries(int32_t index, PSHEntry entry);
+  sync RemoveEntries(nsID[] ids, int32_t index) returns (bool didRemove);
+  async RemoveFrameEntries(PSHEntry entry);
+  sync Reload(uint32_t reloadFlags) returns (LoadSHEntryResult load);
+  sync GetAllEntries() returns (CrossProcessSHEntry[] entries);
+  sync FindEntryForBFCache(uint64_t sharedID, bool includeCurrentEntry)
+    returns (CrossProcessSHEntry entries, int32_t startIndex);
+  async Evict(PSHEntry[] entry);
+  async EnsureCorrectEntryAtCurrIndex(PSHEntry entry);
+  async EvictContentViewersOrReplaceEntry(nullable PSHEntry newSHEntry, bool replace);
+  async NotifyListenersContentViewerEvicted(uint32_t numEvicted);
+  async __delete__();
+};
+
+} // namespace dom
+} // namespace mozilla

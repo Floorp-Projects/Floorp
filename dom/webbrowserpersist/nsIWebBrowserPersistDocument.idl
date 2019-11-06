@@ -14,6 +14,9 @@ interface nsIRemoteTab;
 interface nsIWebBrowserPersistResourceVisitor;
 interface nsIWebBrowserPersistWriteCompletion;
 interface nsIReferrerInfo;
+interface nsISHEntry;
+
+native SHEntryRef(already_AddRefed<nsISHEntry>);
 
 /**
  * Interface for the URI-mapping information that can be supplied when
@@ -51,7 +54,7 @@ interface nsIWebBrowserPersistURIMap : nsISupports
  * changes made to the underlying document; most of these are
  * self-explanatory from their names and types.
  */
-[scriptable, uuid(74aa4918-5d15-46b6-9ccf-74f9696d721d)]
+[scriptable, builtinclass, uuid(74aa4918-5d15-46b6-9ccf-74f9696d721d)]
 interface nsIWebBrowserPersistDocument : nsISupports
 {
   readonly attribute boolean isPrivate;
@@ -69,6 +72,7 @@ interface nsIWebBrowserPersistDocument : nsISupports
    * The cache key.  Unlike in nsISHEntry, where it's wrapped in an
    * nsISupportsPRUint32, this is just the integer.
    */
+  [infallible]
   readonly attribute unsigned long cacheKey;
 
   /**
@@ -120,6 +124,8 @@ interface nsIWebBrowserPersistDocument : nsISupports
                     in unsigned long aEncoderFlags,
                     in unsigned long aWrapColumn,
                     in nsIWebBrowserPersistWriteCompletion aCompletion);
+
+  [notxpcom, nostdcall] SHEntryRef GetHistory();
 };
 
 /**
