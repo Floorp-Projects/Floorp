@@ -63,17 +63,18 @@ const OPEN_WINDOW_FUNCS = [
 const ACTION_FUNCS = [
   function navigate(win) {
     info("About to navigate to another page");
-    var deferred = new Deferred();
-    win.location = "data:text/html,<html>";
-    setTimeout(() => {
-      SimpleTest.waitForFocus(() => {
-        checkIsChromeFullscreen(win, false).then(() => {
-          win.close();
-          deferred.resolve();
-        });
-      }, win);
-    }, 0);
-    return deferred.promise;
+    var promise = new Promise(resolve => {
+      window.addEventListener("message", () => {
+        SimpleTest.waitForFocus(() => {
+          checkIsChromeFullscreen(win, false).then(() => {
+            win.close();
+            resolve();
+          });
+        }, win);
+      }, { once: true });
+    });
+    win.location = `data:text/html,<body onload="window.opener.postMessage('ready', '*');">`;
+    return promise;
   },
   function closeWindow(win) {
     info("About to close the window");

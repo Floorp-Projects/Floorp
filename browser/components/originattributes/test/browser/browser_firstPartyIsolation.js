@@ -254,25 +254,33 @@ add_task(async function openWindow_test() {
   });
 
   let tab = BrowserTestUtils.addTab(gBrowser, BASE_URL + "window.html");
-  let win = await BrowserTestUtils.waitForNewWindow();
+  await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
   await SpecialPowers.spawn(
-    win.gBrowser.selectedBrowser,
+    tab.linkedBrowser,
     [{ firstPartyDomain: "mochi.test" }],
     async function(attrs) {
+      let promise = new Promise(resolve => {
+        content.addEventListener("message", resolve, { once: true });
+      });
+      var w = content.wrappedJSObject.open();
+      w.document.body.innerHTML = `<iframe id='iframe1' onload="window.opener.postMessage('ready', '*');" src='data:text/plain,test2'></iframe>`;
+
+      await promise;
+
       Assert.equal(
-        content.docShell.getOriginAttributes().firstPartyDomain,
+        w.content.docShell.getOriginAttributes().firstPartyDomain,
         attrs.firstPartyDomain,
         "window.open() should have firstPartyDomain attribute"
       );
       Assert.equal(
-        content.document.nodePrincipal.originAttributes.firstPartyDomain,
+        w.content.document.nodePrincipal.originAttributes.firstPartyDomain,
         attrs.firstPartyDomain,
         "The document should have firstPartyDomain"
       );
 
-      let iframe = content.document.getElementById("iframe1");
-      SpecialPowers.spawn(iframe, [attrs.firstPartyDomain], function(
+      let iframe = w.content.document.getElementById("iframe1");
+      await SpecialPowers.spawn(iframe, [attrs.firstPartyDomain], function(
         firstPartyDomain
       ) {
         Assert.equal(
@@ -287,11 +295,12 @@ add_task(async function openWindow_test() {
           "iframe should have firstPartyDomain"
         );
       });
+
+      w.close();
     }
   );
 
   gBrowser.removeTab(tab);
-  await BrowserTestUtils.closeWindow(win);
 });
 
 /**
