@@ -2,7 +2,7 @@
 
 # SyncableLoginsStore
 
-`data class SyncableLoginsStore : `[`SyncableStore`](../../mozilla.components.concept.sync/-syncable-store/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/sync-logins/src/main/java/mozilla/components/service/sync/logins/AsyncLoginsStorage.kt#L388)
+`data class SyncableLoginsStore : `[`LockableStore`](../../mozilla.components.concept.sync/-lockable-store/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/sync-logins/src/main/java/mozilla/components/service/sync/logins/AsyncLoginsStorage.kt#L388)
 
 Wraps [AsyncLoginsStorage](../-async-logins-storage/index.md) instance along with a lazy encryption key.
 
@@ -29,6 +29,7 @@ consumers of [FirefoxSyncFeature](#).
 |---|---|
 | [getHandle](get-handle.md) | `fun getHandle(): `[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html)<br>This should be removed. See: https://github.com/mozilla/application-services/issues/1877 |
 | [sync](sync.md) | `suspend fun sync(authInfo: `[`SyncAuthInfo`](../../mozilla.components.concept.sync/-sync-auth-info/index.md)`): `[`SyncStatus`](../../mozilla.components.concept.sync/-sync-status/index.md)<br>Performs a sync. |
+| [unlocked](unlocked.md) | `suspend fun <T> unlocked(encryptionKey: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, block: (store: `[`LockableStore`](../../mozilla.components.concept.sync/-lockable-store/index.md)`) -> `[`T`](unlocked.md#T)`): `[`T`](unlocked.md#T)<br>Executes a [block](../../mozilla.components.concept.sync/-lockable-store/unlocked.md#mozilla.components.concept.sync.LockableStore$unlocked(kotlin.String, kotlin.Function1((mozilla.components.concept.sync.LockableStore, mozilla.components.concept.sync.LockableStore.unlocked.T)))/block) while keeping the store in an unlocked state. Store is locked once [block](../../mozilla.components.concept.sync/-lockable-store/unlocked.md#mozilla.components.concept.sync.LockableStore$unlocked(kotlin.String, kotlin.Function1((mozilla.components.concept.sync.LockableStore, mozilla.components.concept.sync.LockableStore.unlocked.T)))/block) is finished. |
 | [withUnlocked](with-unlocked.md) | `suspend fun <T> withUnlocked(block: suspend (`[`AsyncLoginsStorage`](../-async-logins-storage/index.md)`) -> `[`T`](with-unlocked.md#T)`): `[`T`](with-unlocked.md#T)<br>Run some [block](with-unlocked.md#mozilla.components.service.sync.logins.SyncableLoginsStore$withUnlocked(kotlin.SuspendFunction1((mozilla.components.service.sync.logins.AsyncLoginsStorage, mozilla.components.service.sync.logins.SyncableLoginsStore.withUnlocked.T)))/block) which operates over an unlocked instance of [AsyncLoginsStorage](../-async-logins-storage/index.md). Database is locked once [block](with-unlocked.md#mozilla.components.service.sync.logins.SyncableLoginsStore$withUnlocked(kotlin.SuspendFunction1((mozilla.components.service.sync.logins.AsyncLoginsStorage, mozilla.components.service.sync.logins.SyncableLoginsStore.withUnlocked.T)))/block) is done. |
 
 ### Extension Functions

@@ -2,7 +2,7 @@
 
 # getKeyStore
 
-`fun getKeyStore(): `[`KeyStore`](https://developer.android.com/reference/java/security/KeyStore.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/dataprotect/src/main/java/mozilla/components/lib/dataprotect/Keystore.kt#L44)
+`fun getKeyStore(): `[`KeyStore`](https://developer.android.com/reference/java/security/KeyStore.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/dataprotect/src/main/java/mozilla/components/lib/dataprotect/Keystore.kt#L47)
 
 Retrieves the underlying KeyStore, loading it if necessary.
 

@@ -2,7 +2,7 @@
 
 # sync
 
-`abstract suspend fun sync(authInfo: `[`SyncAuthInfo`](../-sync-auth-info/index.md)`): `[`SyncStatus`](../-sync-status/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/Sync.kt#L55)
+`abstract suspend fun sync(authInfo: `[`SyncAuthInfo`](../-sync-auth-info/index.md)`): `[`SyncStatus`](../-sync-status/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/Sync.kt#L69)
 
 Performs a sync.
 

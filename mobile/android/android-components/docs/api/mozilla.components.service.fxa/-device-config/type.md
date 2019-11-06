@@ -2,7 +2,7 @@
 
 # type
 
-`val type: `[`DeviceType`](../../mozilla.components.concept.sync/-device-type/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/Config.kt#L29)
+`val type: `[`DeviceType`](../../mozilla.components.concept.sync/-device-type/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/Config.kt#L30)
 
 Type of a device - mobile, desktop - used for displaying identifying icons on other devices.
 This cannot be changed once device record is created.

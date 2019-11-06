@@ -2,7 +2,7 @@
 
 # onDownloadCompleted
 
-`var onDownloadCompleted: `[`OnDownloadCompleted`](../-on-download-completed.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/downloads/src/main/java/mozilla/components/feature/downloads/manager/FetchDownloadManager.kt#L39)
+`var onDownloadCompleted: `[`OnDownloadCompleted`](../-on-download-completed.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/downloads/src/main/java/mozilla/components/feature/downloads/manager/FetchDownloadManager.kt#L38)
 
 Overrides [DownloadManager.onDownloadCompleted](../-download-manager/on-download-completed.md)
 

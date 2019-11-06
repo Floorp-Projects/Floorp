@@ -2,7 +2,7 @@
 
 # nativeName
 
-`val nativeName: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/Config.kt#L54)
+`val nativeName: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/Config.kt#L55)
 
 Internally, Rust SyncManager represents engines as strings. Forward-compatibility
 with new engines is one of the reasons for this. E.g. during any sync, an engine may appear that we

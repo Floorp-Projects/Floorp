@@ -2,7 +2,7 @@
 
 # History
 
-`object History : `[`SyncEngine`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/Config.kt#L61)
+`object History : `[`SyncEngine`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/Config.kt#L62)
 
 A history engine.
 

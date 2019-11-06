@@ -8,7 +8,7 @@
 |---|---|
 | [AsyncLoginsStorage](-async-logins-storage/index.md) | `interface AsyncLoginsStorage : `[`AutoCloseable`](https://developer.android.com/reference/java/lang/AutoCloseable.html)<br>An interface equivalent to the LoginsStorage interface, but where operations are asynchronous. |
 | [AsyncLoginsStorageAdapter](-async-logins-storage-adapter/index.md) | `open class AsyncLoginsStorageAdapter<T : LoginsStorage> : `[`AsyncLoginsStorage`](-async-logins-storage/index.md)`, `[`AutoCloseable`](https://developer.android.com/reference/java/lang/AutoCloseable.html)<br>A helper class to wrap a synchronous [LoginsStorage](#) implementation and make it asynchronous. |
-| [SyncableLoginsStore](-syncable-logins-store/index.md) | `data class SyncableLoginsStore : `[`SyncableStore`](../mozilla.components.concept.sync/-syncable-store/index.md)<br>Wraps [AsyncLoginsStorage](-async-logins-storage/index.md) instance along with a lazy encryption key. |
+| [SyncableLoginsStore](-syncable-logins-store/index.md) | `data class SyncableLoginsStore : `[`LockableStore`](../mozilla.components.concept.sync/-lockable-store/index.md)<br>Wraps [AsyncLoginsStorage](-async-logins-storage/index.md) instance along with a lazy encryption key. |
 
 ### Type Aliases
 
