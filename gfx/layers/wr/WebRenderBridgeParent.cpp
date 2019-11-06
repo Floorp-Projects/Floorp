@@ -1035,6 +1035,11 @@ WebRenderBridgeParent::WriteCollectedFrames() {
   return Api(wr::RenderRoot::Default)->WriteCollectedFrames();
 }
 
+RefPtr<wr::WebRenderAPI::GetCollectedFramesPromise>
+WebRenderBridgeParent::GetCollectedFrames() {
+  return Api(wr::RenderRoot::Default)->GetCollectedFrames();
+}
+
 CompositorBridgeParent* WebRenderBridgeParent::GetRootCompositorBridgeParent()
     const {
   if (!mCompositorBridge) {

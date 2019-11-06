@@ -270,6 +270,8 @@ class WebRenderAPI final {
       UniquePtr<layers::WebRenderCompositionRecorder> aRecorder);
 
   typedef MozPromise<bool, nsresult, true> WriteCollectedFramesPromise;
+  typedef MozPromise<layers::CollectedFrames, nsresult, true>
+      GetCollectedFramesPromise;
 
   /**
    * Write the frames collected by the |WebRenderCompositionRecorder| to disk.
@@ -277,6 +279,15 @@ class WebRenderAPI final {
    * If there is not currently a recorder, this is a no-op.
    */
   RefPtr<WriteCollectedFramesPromise> WriteCollectedFrames();
+
+  /**
+   * Return the frames collected by the |WebRenderCompositionRecorder| encoded
+   * as data URIs.
+   *
+   * If there is not currently a recorder, this is a no-op and the promise will
+   * be rejected.
+   */
+  RefPtr<GetCollectedFramesPromise> GetCollectedFrames();
 
  protected:
   WebRenderAPI(wr::DocumentHandle* aHandle, wr::WindowId aId,
