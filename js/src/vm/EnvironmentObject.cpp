@@ -1820,7 +1820,7 @@ class DebugEnvironmentProxyHandler : public BaseProxyHandler {
   static bool isMissingArgumentsBinding(EnvironmentObject& env) {
     return isFunctionEnvironment(env) && !env.as<CallObject>()
                                               .callee()
-                                              .nonLazyScript()
+                                              .baseScript()
                                               ->argumentsHasVarBinding();
   }
 
@@ -1892,7 +1892,7 @@ class DebugEnvironmentProxyHandler : public BaseProxyHandler {
           }
         }
       }
-      MOZ_ASSERT(callee && callee->nonLazyScript()->argumentsHasVarBinding());
+      MOZ_ASSERT(callee && callee->baseScript()->argumentsHasVarBinding());
     }
 #endif
 
