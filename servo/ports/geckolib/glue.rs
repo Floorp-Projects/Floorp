@@ -1973,7 +1973,11 @@ pub extern "C" fn Servo_StyleSheet_SizeOfIncludingThis(
         Some(malloc_enclosing_size_of.unwrap()),
         None,
     );
-    StylesheetContents::as_arc(&sheet).size_of(&guard, &mut ops)
+    let arc = StylesheetContents::as_arc(&sheet);
+    if arc.with_arc(|arc| arc.is_static()) {
+        return 0;
+    }
+    arc.size_of(&guard, &mut ops)
 }
 
 #[no_mangle]
