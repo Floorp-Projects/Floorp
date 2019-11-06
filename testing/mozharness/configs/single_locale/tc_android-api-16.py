@@ -1,3 +1,10 @@
+import os
+
+tooltool_url = 'http://taskcluster/tooltool.mozilla-releng.net/'
+if os.environ.get('TASKCLUSTER_ROOT_URL', 'https://taskcluster.net') != 'https://taskcluster.net':
+    # Pre-point tooltool at staging cluster so we can run in parallel with legacy cluster
+    tooltool_url = 'http://taskcluster/tooltool.staging.mozilla-releng.net/'
+
 config = {
     "l10n_dir": "l10n-central",
     "locales_dir": "mobile/android/locales",
@@ -15,7 +22,7 @@ config = {
         "manifest": "mobile/android/config/tooltool-manifests/android/releng.manifest",
         "output_dir": "%(abs_work_dir)s/src",
     },
-    "tooltool_servers": ['http://taskcluster/tooltool.mozilla-releng.net/'],
+    "tooltool_servers": [tooltool_url],
 
     "upload_env": {
         'UPLOAD_PATH': '/builds/worker/artifacts/',
