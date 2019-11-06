@@ -530,7 +530,6 @@ sftk_signTemplate(PLArenaPool *arena, SFTKDBHandle *handle,
                 goto loser;
             }
             rv = sftkdb_SignAttribute(arena, &keyHandle->passwordKey,
-                                      keyHandle->defaultIterationCount,
                                       objectID, template[i].type,
                                       &plainText, &signText);
             PZ_Unlock(keyHandle->passwordLock);
@@ -664,7 +663,6 @@ sftk_ExtractTemplate(PLArenaPool *arena, SFTKObject *object,
                     break;
                 }
                 rv = sftkdb_EncryptAttribute(arena, &handle->passwordKey,
-                                             handle->defaultIterationCount,
                                              &plainText, &cipherText);
                 PZ_Unlock(handle->passwordLock);
                 if (rv == SECSuccess) {
@@ -2451,7 +2449,7 @@ sftk_getDBForTokenObject(SFTKSlot *slot, CK_OBJECT_HANDLE objectID)
  * initialize a new database handle
  */
 static SFTKDBHandle *
-sftk_NewDBHandle(SDB *sdb, int type, PRBool legacy)
+sftk_NewDBHandle(SDB *sdb, int type)
 {
     SFTKDBHandle *handle = PORT_New(SFTKDBHandle);
     handle->ref = 1;
@@ -2463,7 +2461,6 @@ sftk_NewDBHandle(SDB *sdb, int type, PRBool legacy)
     handle->updatePasswordKey = NULL;
     handle->updateID = NULL;
     handle->type = type;
-    handle->usesLegacyStorage = legacy;
     handle->passwordKey.data = NULL;
     handle->passwordKey.len = 0;
     handle->passwordLock = NULL;
@@ -2623,7 +2620,6 @@ sftk_DBInit(const char *configdir, const char *certPrefix,
     PRBool newInit = PR_FALSE;
     PRBool needUpdate = PR_FALSE;
     char *nconfdir = NULL;
-    PRBool legacy = PR_TRUE;
 
     if (!readOnly) {
         flags = SDB_CREATE;
@@ -2656,14 +2652,12 @@ sftk_DBInit(const char *configdir, const char *certPrefix,
         case NSS_DB_TYPE_EXTERN: /* SHOULD open a loadable db */
             crv = s_open(confdir, certPrefix, keyPrefix, 9, 4, flags,
                          noCertDB ? NULL : &certSDB, noKeyDB ? NULL : &keySDB, &newInit);
-            legacy = PR_FALSE;
 
             /*
              * if we failed to open the DB's read only, use the old ones if
              * the exists.
              */
             if (crv != CKR_OK) {
-                legacy = PR_TRUE;
                 if ((flags & SDB_RDONLY) == SDB_RDONLY) {
                     nconfdir = sftk_legacyPathFromSDBPath(confdir);
                 }
@@ -2717,12 +2711,12 @@ sftk_DBInit(const char *configdir, const char *certPrefix,
         goto done;
     }
     if (!noCertDB) {
-        *certDB = sftk_NewDBHandle(certSDB, SFTK_CERTDB_TYPE, legacy);
+        *certDB = sftk_NewDBHandle(certSDB, SFTK_CERTDB_TYPE);
     } else {
         *certDB = NULL;
     }
     if (!noKeyDB) {
-        *keyDB = sftk_NewDBHandle(keySDB, SFTK_KEYDB_TYPE, legacy);
+        *keyDB = sftk_NewDBHandle(keySDB, SFTK_KEYDB_TYPE);
     } else {
         *keyDB = NULL;
     }
@@ -2765,7 +2759,7 @@ sftk_DBInit(const char *configdir, const char *certPrefix,
                     (sftkdb_HasPasswordSet(*keyDB) == SECSuccess) ? PR_TRUE : PR_FALSE;
                 /* if the password on the key db is NULL, kick off our update
                  * chain of events */
-                sftkdb_CheckPasswordNull((*keyDB), &tokenRemoved);
+                sftkdb_CheckPassword((*keyDB), "", &tokenRemoved);
             } else {
                 /* we don't have a key DB, update the certificate DB now */
                 sftkdb_Update(*certDB, NULL);

@@ -34,41 +34,6 @@
 #include "secerr.h"
 #include "softoken.h"
 
-static const int NSS_MP_PBE_ITERATION_COUNT = 10000;
-
-static int
-getPBEIterationCount(void)
-{
-    int c = NSS_MP_PBE_ITERATION_COUNT;
-
-    char *val = getenv("NSS_MIN_MP_PBE_ITERATION_COUNT");
-    if (val) {
-        int minimum = atoi(val);
-        if (c < minimum) {
-            c = minimum;
-        }
-    }
-
-    val = getenv("NSS_MAX_MP_PBE_ITERATION_COUNT");
-    if (val) {
-        int maximum = atoi(val);
-        if (c > maximum) {
-            c = maximum;
-        }
-    }
-
-    return c;
-}
-
-PRBool
-sftk_isLegacyIterationCountAllowed(void)
-{
-    static const char *legacyCountEnvVar =
-        "NSS_ALLOW_LEGACY_DBM_ITERATION_COUNT";
-    char *iterEnv = getenv(legacyCountEnvVar);
-    return (iterEnv && strcmp("0", iterEnv) != 0);
-}
-
 /******************************************************************
  *
  * Key DB password handling functions
@@ -167,7 +132,7 @@ const SEC_ASN1Template sftkdb_EncryptedDataInfoTemplate[] = {
  * to data in cipherText, if cipherText is freed, cipherValue will be invalid.
  */
 static SECStatus
-sftkdb_decodeCipherText(const SECItem *cipherText, sftkCipherValue *cipherValue)
+sftkdb_decodeCipherText(SECItem *cipherText, sftkCipherValue *cipherValue)
 {
     PLArenaPool *arena = NULL;
     SFTKDBEncryptedDataInfo edi;
@@ -260,8 +225,7 @@ loser:
  * with SECITEM_FreeItem by the caller.
  */
 SECStatus
-sftkdb_DecryptAttribute(SECItem *passKey, SECItem *cipherText,
-                        SECItem **plain)
+sftkdb_DecryptAttribute(SECItem *passKey, SECItem *cipherText, SECItem **plain)
 {
     SECStatus rv;
     sftkCipherValue cipherValue;
@@ -271,7 +235,6 @@ sftkdb_DecryptAttribute(SECItem *passKey, SECItem *cipherText,
     if (rv != SECSuccess) {
         goto loser;
     }
-    /* fprintf(stderr, "sftkdb_DecryptAttribute iteration: %d\n", cipherValue.param->iter); */
 
     *plain = nsspkcs5_CipherData(cipherValue.param, passKey, &cipherValue.value,
                                  PR_FALSE, NULL);
@@ -298,8 +261,7 @@ loser:
  */
 SECStatus
 sftkdb_EncryptAttribute(PLArenaPool *arena, SECItem *passKey,
-                        int iterationCount, SECItem *plainText,
-                        SECItem **cipherText)
+                        SECItem *plainText, SECItem **cipherText)
 {
     SECStatus rv;
     sftkCipherValue cipherValue;
@@ -313,7 +275,7 @@ sftkdb_EncryptAttribute(PLArenaPool *arena, SECItem *passKey,
     RNG_GenerateGlobalRandomBytes(saltData, cipherValue.salt.len);
 
     param = nsspkcs5_NewParam(cipherValue.alg, HASH_AlgSHA1, &cipherValue.salt,
-                              iterationCount);
+                              1);
     if (param == NULL) {
         rv = SECFailure;
         goto loser;
@@ -451,8 +413,7 @@ loser:
  */
 SECStatus
 sftkdb_SignAttribute(PLArenaPool *arena, SECItem *passKey,
-                     int iterationCount, CK_OBJECT_HANDLE objectID,
-                     CK_ATTRIBUTE_TYPE attrType,
+                     CK_OBJECT_HANDLE objectID, CK_ATTRIBUTE_TYPE attrType,
                      SECItem *plainText, SECItem **signature)
 {
     SECStatus rv;
@@ -485,8 +446,7 @@ sftkdb_SignAttribute(PLArenaPool *arena, SECItem *passKey,
     RNG_GenerateGlobalRandomBytes(saltData, prfLength);
 
     /* initialize our pkcs5 parameter */
-    param = nsspkcs5_NewParam(signValue.alg, HASH_AlgSHA1, &signValue.salt,
-                              iterationCount);
+    param = nsspkcs5_NewParam(signValue.alg, HASH_AlgSHA1, &signValue.salt, 1);
     if (param == NULL) {
         rv = SECFailure;
         goto loser;
@@ -531,7 +491,7 @@ loser:
  *  and sftkdb_DecryptAttribute calls.
  */
 static void
-sftkdb_switchKeys(SFTKDBHandle *keydb, SECItem *passKey, int iterationCount)
+sftkdb_switchKeys(SFTKDBHandle *keydb, SECItem *passKey)
 {
     unsigned char *data;
     int len;
@@ -547,7 +507,6 @@ sftkdb_switchKeys(SFTKDBHandle *keydb, SECItem *passKey, int iterationCount)
     len = keydb->passwordKey.len;
     keydb->passwordKey.data = passKey->data;
     keydb->passwordKey.len = passKey->len;
-    keydb->defaultIterationCount = iterationCount;
     passKey->data = data;
     passKey->len = len;
     SKIP_AFTER_FORK(PZ_Unlock(keydb->passwordLock));
@@ -701,90 +660,6 @@ sftkdb_HasPasswordSet(SFTKDBHandle *keydb)
     return (crv == CKR_OK) ? SECSuccess : SECFailure;
 }
 
-/* pull out the common final part of checking a password */
-SECStatus
-sftkdb_finishPasswordCheck(SFTKDBHandle *keydb, SECItem *key,
-                           const char *pw, SECItem *value,
-                           PRBool *tokenRemoved);
-
-/*
- * check to see if we have the NULL password set.
- * We special case the NULL password so that if you have no password set, you
- * don't do thousands of hash rounds. This allows us to startup and get
- * webpages without slowdown in normal mode.
- */
-SECStatus
-sftkdb_CheckPasswordNull(SFTKDBHandle *keydb, PRBool *tokenRemoved)
-{
-    /* just like sftkdb_CheckPassowd, we get the salt and value, and
-     * create a dbkey */
-    SECStatus rv;
-    SECItem salt, value;
-    unsigned char saltData[SDB_MAX_META_DATA_LEN];
-    unsigned char valueData[SDB_MAX_META_DATA_LEN];
-    SECItem key;
-    SDB *db;
-    CK_RV crv;
-    sftkCipherValue cipherValue;
-
-    cipherValue.param = NULL;
-    cipherValue.arena = NULL;
-
-    if (keydb == NULL) {
-        return SECFailure;
-    }
-
-    db = sftk_getPWSDB(keydb);
-    if (db == NULL) {
-        return SECFailure;
-    }
-
-    key.data = NULL;
-    key.len = 0;
-
-    /* get the entry from the database */
-    salt.data = saltData;
-    salt.len = sizeof(saltData);
-    value.data = valueData;
-    value.len = sizeof(valueData);
-    crv = (*db->sdb_GetMetaData)(db, "password", &salt, &value);
-    if (crv != CKR_OK) {
-        rv = SECFailure;
-        goto done;
-    }
-
-    /* get our intermediate key based on the entry salt value */
-    rv = sftkdb_passwordToKey(keydb, &salt, "", &key);
-    if (rv != SECSuccess) {
-        goto done;
-    }
-
-    /* First get the cipher type */
-    rv = sftkdb_decodeCipherText(&value, &cipherValue);
-    if (rv != SECSuccess) {
-        goto done;
-    }
-
-    if (cipherValue.param->iter != 1) {
-        rv = SECFailure;
-        goto done;
-    }
-
-    rv = sftkdb_finishPasswordCheck(keydb, &key, "", &value, tokenRemoved);
-
-done:
-    if (key.data) {
-        PORT_ZFree(key.data, key.len);
-    }
-    if (cipherValue.param) {
-        nsspkcs5_DestroyPBEParameter(cipherValue.param);
-    }
-    if (cipherValue.arena) {
-        PORT_FreeArena(cipherValue.arena, PR_FALSE);
-    }
-    return rv;
-}
-
 #define SFTK_PW_CHECK_STRING "password-check"
 #define SFTK_PW_CHECK_LEN 14
 
@@ -799,6 +674,7 @@ sftkdb_CheckPassword(SFTKDBHandle *keydb, const char *pw, PRBool *tokenRemoved)
     unsigned char saltData[SDB_MAX_META_DATA_LEN];
     unsigned char valueData[SDB_MAX_META_DATA_LEN];
     SECItem key;
+    SECItem *result = NULL;
     SDB *db;
     CK_RV crv;
 
@@ -834,33 +710,8 @@ sftkdb_CheckPassword(SFTKDBHandle *keydb, const char *pw, PRBool *tokenRemoved)
         goto done;
     }
 
-    rv = sftkdb_finishPasswordCheck(keydb, &key, pw, &value, tokenRemoved);
-
-done:
-    if (key.data) {
-        PORT_ZFree(key.data, key.len);
-    }
-    return rv;
-}
-
-/* we need to pass iterationCount in case we are updating a new database
- * and from an old one. */
-SECStatus
-sftkdb_finishPasswordCheck(SFTKDBHandle *keydb, SECItem *key, const char *pw,
-                           SECItem *value, PRBool *tokenRemoved)
-{
-    SECItem *result = NULL;
-    SECStatus rv;
-    int iterationCount = getPBEIterationCount();
-
-    if (*pw == 0) {
-        iterationCount = 1;
-    } else if (keydb->usesLegacyStorage && !sftk_isLegacyIterationCountAllowed()) {
-        iterationCount = 1;
-    }
-
     /* decrypt the entry value */
-    rv = sftkdb_DecryptAttribute(key, value, &result);
+    rv = sftkdb_DecryptAttribute(&key, &value, &result);
     if (rv != SECSuccess) {
         goto done;
     }
@@ -901,7 +752,7 @@ sftkdb_finishPasswordCheck(SFTKDBHandle *keydb, SECItem *key, const char *pw,
              * as well as changing which database is returned from
              * SFTK_GET_PW_DB (thus effecting both sftkdb_CheckPassword()
              * and sftkdb_HasPasswordSet()) */
-            keydb->updatePasswordKey = SECITEM_DupItem(key);
+            keydb->updatePasswordKey = SECITEM_DupItem(&key);
             PZ_Unlock(keydb->passwordLock);
             if (keydb->updatePasswordKey == NULL) {
                 /* PORT_Error set by SECITEM_DupItem */
@@ -936,7 +787,7 @@ sftkdb_finishPasswordCheck(SFTKDBHandle *keydb, SECItem *key, const char *pw,
                      * are good to go */
                     goto done;
                 }
-                sftkdb_CheckPasswordNull(keydb, tokenRemoved);
+                sftkdb_CheckPassword(keydb, "", tokenRemoved);
 
                 /*
                  * Important 'NULL' code here. At this point either we
@@ -970,15 +821,15 @@ sftkdb_finishPasswordCheck(SFTKDBHandle *keydb, SECItem *key, const char *pw,
             PZ_Unlock(keydb->passwordLock);
         }
         /* load the keys, so the keydb can parse it's key set */
-        sftkdb_switchKeys(keydb, key, iterationCount);
+        sftkdb_switchKeys(keydb, &key);
 
         /* we need to update, do it now */
         if (((keydb->db->sdb_flags & SDB_RDONLY) == 0) && keydb->update) {
             /* update the peer certdb if it exists */
             if (keydb->peerDB) {
-                sftkdb_Update(keydb->peerDB, key);
+                sftkdb_Update(keydb->peerDB, &key);
             }
-            sftkdb_Update(keydb, key);
+            sftkdb_Update(keydb, &key);
         }
     } else {
         rv = SECFailure;
@@ -986,6 +837,9 @@ sftkdb_finishPasswordCheck(SFTKDBHandle *keydb, SECItem *key, const char *pw,
     }
 
 done:
+    if (key.data) {
+        PORT_ZFree(key.data, key.len);
+    }
     if (result) {
         SECITEM_FreeItem(result, PR_TRUE);
     }
@@ -1003,7 +857,7 @@ sftkdb_PWCached(SFTKDBHandle *keydb)
 
 static CK_RV
 sftk_updateMacs(PLArenaPool *arena, SFTKDBHandle *handle,
-                CK_OBJECT_HANDLE id, SECItem *newKey, int iterationCount)
+                CK_OBJECT_HANDLE id, SECItem *newKey)
 {
     SFTKDBHandle *keyHandle = handle;
     SDB *keyTarget = NULL;
@@ -1070,8 +924,7 @@ sftk_updateMacs(PLArenaPool *arena, SFTKDBHandle *handle,
         SECItem plainText;
         plainText.data = authAttr.pValue;
         plainText.len = authAttr.ulValueLen;
-        if (sftkdb_SignAttribute(arena, newKey, iterationCount, id,
-                                 authAttr.type, &plainText,
+        if (sftkdb_SignAttribute(arena, newKey, id, authAttr.type, &plainText,
                                  &signText) != SECSuccess) {
             return CKR_GENERAL_ERROR;
         }
@@ -1086,7 +939,7 @@ sftk_updateMacs(PLArenaPool *arena, SFTKDBHandle *handle,
 
 static CK_RV
 sftk_updateEncrypted(PLArenaPool *arena, SFTKDBHandle *keydb,
-                     CK_OBJECT_HANDLE id, SECItem *newKey, int iterationCount)
+                     CK_OBJECT_HANDLE id, SECItem *newKey)
 {
     CK_ATTRIBUTE_TYPE privAttrTypes[] = {
         CKA_VALUE,
@@ -1127,8 +980,7 @@ sftk_updateEncrypted(PLArenaPool *arena, SFTKDBHandle *keydb,
         SECItem *result;
         plainText.data = privAttr.pValue;
         plainText.len = privAttr.ulValueLen;
-        if (sftkdb_EncryptAttribute(arena, newKey, iterationCount,
-                                    &plainText, &result) != SECSuccess) {
+        if (sftkdb_EncryptAttribute(arena, newKey, &plainText, &result) != SECSuccess) {
             return CKR_GENERAL_ERROR;
         }
         privAttr.pValue = result->data;
@@ -1139,7 +991,6 @@ sftk_updateEncrypted(PLArenaPool *arena, SFTKDBHandle *keydb,
         // Write the newly encrypted attributes out directly.
         CK_OBJECT_HANDLE newId = id & SFTK_OBJ_ID_MASK;
         keydb->newKey = newKey;
-        keydb->newDefaultIterationCount = iterationCount;
         crv = (*keydb->db->sdb_SetAttributeValue)(keydb->db, newId, &privAttr, 1);
         keydb->newKey = NULL;
         if (crv != CKR_OK) {
@@ -1151,8 +1002,8 @@ sftk_updateEncrypted(PLArenaPool *arena, SFTKDBHandle *keydb,
 }
 
 static CK_RV
-sftk_convertAttributes(SFTKDBHandle *handle, CK_OBJECT_HANDLE id,
-                       SECItem *newKey, int iterationCount)
+sftk_convertAttributes(SFTKDBHandle *handle,
+                       CK_OBJECT_HANDLE id, SECItem *newKey)
 {
     CK_RV crv = CKR_OK;
     PLArenaPool *arena = NULL;
@@ -1166,14 +1017,13 @@ sftk_convertAttributes(SFTKDBHandle *handle, CK_OBJECT_HANDLE id,
     /*
      * first handle the MACS
      */
-    crv = sftk_updateMacs(arena, handle, id, newKey, iterationCount);
+    crv = sftk_updateMacs(arena, handle, id, newKey);
     if (crv != CKR_OK) {
         goto loser;
     }
 
     if (handle->type == SFTK_KEYDB_TYPE) {
-        crv = sftk_updateEncrypted(arena, handle, id, newKey,
-                                   iterationCount);
+        crv = sftk_updateEncrypted(arena, handle, id, newKey);
         if (crv != CKR_OK) {
             goto loser;
         }
@@ -1195,7 +1045,7 @@ loser:
  */
 CK_RV
 sftkdb_convertObjects(SFTKDBHandle *handle, CK_ATTRIBUTE *template,
-                      CK_ULONG count, SECItem *newKey, int iterationCount)
+                      CK_ULONG count, SECItem *newKey)
 {
     SDBFind *find = NULL;
     CK_ULONG idCount = SFTK_MAX_IDS;
@@ -1211,8 +1061,7 @@ sftkdb_convertObjects(SFTKDBHandle *handle, CK_ATTRIBUTE *template,
     while ((crv == CKR_OK) && (idCount == SFTK_MAX_IDS)) {
         crv = sftkdb_FindObjects(handle, find, ids, SFTK_MAX_IDS, &idCount);
         for (i = 0; (crv == CKR_OK) && (i < idCount); i++) {
-            crv = sftk_convertAttributes(handle, ids[i], newKey,
-                                         iterationCount);
+            crv = sftk_convertAttributes(handle, ids[i], newKey);
         }
     }
     crv2 = sftkdb_FindObjectsFinal(handle, find);
@@ -1237,7 +1086,6 @@ sftkdb_ChangePassword(SFTKDBHandle *keydb,
     SFTKDBHandle *certdb;
     unsigned char saltData[SDB_MAX_META_DATA_LEN];
     unsigned char valueData[SDB_MAX_META_DATA_LEN];
-    int iterationCount = getPBEIterationCount();
     CK_RV crv;
     SDB *db;
 
@@ -1273,12 +1121,6 @@ sftkdb_ChangePassword(SFTKDBHandle *keydb,
         RNG_GenerateGlobalRandomBytes(salt.data, salt.len);
     }
 
-    if (newPin && *newPin == 0) {
-        iterationCount = 1;
-    } else if (keydb->usesLegacyStorage && !sftk_isLegacyIterationCountAllowed()) {
-        iterationCount = 1;
-    }
-
     rv = sftkdb_passwordToKey(keydb, &salt, newPin, &newKey);
     if (rv != SECSuccess) {
         goto loser;
@@ -1287,7 +1129,7 @@ sftkdb_ChangePassword(SFTKDBHandle *keydb,
     /*
      * convert encrypted entries here.
      */
-    crv = sftkdb_convertObjects(keydb, NULL, 0, &newKey, iterationCount);
+    crv = sftkdb_convertObjects(keydb, NULL, 0, &newKey);
     if (crv != CKR_OK) {
         rv = SECFailure;
         goto loser;
@@ -1299,15 +1141,13 @@ sftkdb_ChangePassword(SFTKDBHandle *keydb,
         CK_OBJECT_CLASS myClass = CKO_NETSCAPE_TRUST;
 
         objectType.pValue = &myClass;
-        crv = sftkdb_convertObjects(certdb, &objectType, 1, &newKey,
-                                    iterationCount);
+        crv = sftkdb_convertObjects(certdb, &objectType, 1, &newKey);
         if (crv != CKR_OK) {
             rv = SECFailure;
             goto loser;
         }
         myClass = CKO_PUBLIC_KEY;
-        crv = sftkdb_convertObjects(certdb, &objectType, 1, &newKey,
-                                    iterationCount);
+        crv = sftkdb_convertObjects(certdb, &objectType, 1, &newKey);
         if (crv != CKR_OK) {
             rv = SECFailure;
             goto loser;
@@ -1317,8 +1157,7 @@ sftkdb_ChangePassword(SFTKDBHandle *keydb,
     plainText.data = (unsigned char *)SFTK_PW_CHECK_STRING;
     plainText.len = SFTK_PW_CHECK_LEN;
 
-    rv = sftkdb_EncryptAttribute(NULL, &newKey, iterationCount,
-                                 &plainText, &result);
+    rv = sftkdb_EncryptAttribute(NULL, &newKey, &plainText, &result);
     if (rv != SECSuccess) {
         goto loser;
     }
@@ -1337,7 +1176,7 @@ sftkdb_ChangePassword(SFTKDBHandle *keydb,
 
     keydb->newKey = NULL;
 
-    sftkdb_switchKeys(keydb, &newKey, iterationCount);
+    sftkdb_switchKeys(keydb, &newKey);
 
 loser:
     if (newKey.data) {
@@ -1362,7 +1201,7 @@ sftkdb_ClearPassword(SFTKDBHandle *keydb)
     SECItem oldKey;
     oldKey.data = NULL;
     oldKey.len = 0;
-    sftkdb_switchKeys(keydb, &oldKey, 1);
+    sftkdb_switchKeys(keydb, &oldKey);
     if (oldKey.data) {
         PORT_ZFree(oldKey.data, oldKey.len);
     }

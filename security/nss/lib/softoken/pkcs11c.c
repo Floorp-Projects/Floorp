@@ -1002,10 +1002,6 @@ sftk_CryptInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism,
                 crv = CKR_KEY_TYPE_INCONSISTENT;
                 break;
             }
-            if (pMechanism->ulParameterLen < 8) {
-                crv = CKR_DOMAIN_PARAMS_INVALID;
-                break;
-            }
             t = NSS_DES_CBC;
             goto finish_des;
         case CKM_DES3_ECB:
@@ -1021,10 +1017,6 @@ sftk_CryptInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism,
         case CKM_DES3_CBC:
             if ((key_type != CKK_DES2) && (key_type != CKK_DES3)) {
                 crv = CKR_KEY_TYPE_INCONSISTENT;
-                break;
-            }
-            if (pMechanism->ulParameterLen < 8) {
-                crv = CKR_DOMAIN_PARAMS_INVALID;
                 break;
             }
             t = NSS_DES_EDE3_CBC;
@@ -1767,12 +1759,10 @@ NSC_Decrypt(CK_SESSION_HANDLE hSession,
         }
         finalLen = maxoutlen;
         crv2 = NSC_DecryptFinal(hSession, pData, &finalLen);
-        if (crv == CKR_OK) {
-            *pulDataLen = CT_SEL(CK_RVToMask(crv2), updateLen + finalLen, *pulDataLen);
-            return crv2;
-        } else {
-            return crv;
+        if (crv == CKR_OK && crv2 == CKR_OK) {
+            *pulDataLen = updateLen + finalLen;
         }
+        return crv == CKR_OK ? crv2 : crv;
     }
 
     rv = (*context->update)(context->cipherInfo, pData, &outlen, maxoutlen,

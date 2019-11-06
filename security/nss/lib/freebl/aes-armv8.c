@@ -5,10 +5,9 @@
 #include "secerr.h"
 #include "rijndael.h"
 
-#if ((defined(__clang__) ||                                         \
-      (defined(__GNUC__) && defined(__GNUC_MINOR__) &&              \
-       (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ > 8)))) && \
-     (defined(__ARM_NEON) || defined(__ARM_NEON__)))
+#if (defined(__clang__) ||                            \
+     (defined(__GNUC__) && defined(__GNUC_MINOR__) && \
+      (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ > 8))))
 
 #ifndef __ARM_FEATURE_CRYPTO
 #error "Compiler option is invalid"
@@ -29,7 +28,7 @@ arm_aes_encrypt_ecb_128(AESContext *cx, unsigned char *output,
 #endif
     uint8x16_t key1, key2, key3, key4, key5, key6, key7, key8, key9, key10;
     uint8x16_t key11;
-    const PRUint8 *key = (const PRUint8 *)cx->k.expandedKey;
+    const PRUint8 *key = (const PRUint8 *)cx->expandedKey;
 
     if (!inputLen) {
         return SECSuccess;
@@ -114,7 +113,7 @@ arm_aes_decrypt_ecb_128(AESContext *cx, unsigned char *output,
 #endif
     uint8x16_t key1, key2, key3, key4, key5, key6, key7, key8, key9, key10;
     uint8x16_t key11;
-    const PRUint8 *key = (const PRUint8 *)cx->k.expandedKey;
+    const PRUint8 *key = (const PRUint8 *)cx->expandedKey;
 
     if (inputLen == 0) {
         return SECSuccess;
@@ -200,7 +199,7 @@ arm_aes_encrypt_cbc_128(AESContext *cx, unsigned char *output,
     uint8x16_t key1, key2, key3, key4, key5, key6, key7, key8, key9, key10;
     uint8x16_t key11;
     uint8x16_t iv;
-    const PRUint8 *key = (const PRUint8 *)cx->k.expandedKey;
+    const PRUint8 *key = (const PRUint8 *)cx->expandedKey;
 
     if (!inputLen) {
         return SECSuccess;
@@ -294,7 +293,7 @@ arm_aes_decrypt_cbc_128(AESContext *cx, unsigned char *output,
     uint8x16_t iv;
     uint8x16_t key1, key2, key3, key4, key5, key6, key7, key8, key9, key10;
     uint8x16_t key11;
-    const PRUint8 *key = (const PRUint8 *)cx->k.expandedKey;
+    const PRUint8 *key = (const PRUint8 *)cx->expandedKey;
 
     if (!inputLen) {
         return SECSuccess;
@@ -389,7 +388,7 @@ arm_aes_encrypt_ecb_192(AESContext *cx, unsigned char *output,
 #endif
     uint8x16_t key1, key2, key3, key4, key5, key6, key7, key8, key9, key10;
     uint8x16_t key11, key12, key13;
-    PRUint8 *key = (PRUint8 *)cx->k.expandedKey;
+    PRUint8 *key = (PRUint8 *)cx->expandedKey;
 
     if (!inputLen) {
         return SECSuccess;
@@ -480,7 +479,7 @@ arm_aes_decrypt_ecb_192(AESContext *cx, unsigned char *output,
 #endif
     uint8x16_t key1, key2, key3, key4, key5, key6, key7, key8, key9, key10;
     uint8x16_t key11, key12, key13;
-    const PRUint8 *key = (const PRUint8 *)cx->k.expandedKey;
+    const PRUint8 *key = (const PRUint8 *)cx->expandedKey;
 
     if (!inputLen) {
         return SECSuccess;
@@ -572,7 +571,7 @@ arm_aes_encrypt_cbc_192(AESContext *cx, unsigned char *output,
     uint8x16_t key1, key2, key3, key4, key5, key6, key7, key8, key9, key10;
     uint8x16_t key11, key12, key13;
     uint8x16_t iv;
-    PRUint8 *key = (PRUint8 *)cx->k.expandedKey;
+    PRUint8 *key = (PRUint8 *)cx->expandedKey;
 
     if (!inputLen) {
         return SECSuccess;
@@ -671,7 +670,7 @@ arm_aes_decrypt_cbc_192(AESContext *cx, unsigned char *output,
     uint8x16_t iv;
     uint8x16_t key1, key2, key3, key4, key5, key6, key7, key8, key9, key10;
     uint8x16_t key11, key12, key13;
-    const PRUint8 *key = (const PRUint8 *)cx->k.expandedKey;
+    const PRUint8 *key = (const PRUint8 *)cx->expandedKey;
 
     if (!inputLen) {
         return SECSuccess;
@@ -772,7 +771,7 @@ arm_aes_encrypt_ecb_256(AESContext *cx, unsigned char *output,
 #endif
     uint8x16_t key1, key2, key3, key4, key5, key6, key7, key8, key9, key10;
     uint8x16_t key11, key12, key13, key14, key15;
-    PRUint8 *key = (PRUint8 *)cx->k.expandedKey;
+    PRUint8 *key = (PRUint8 *)cx->expandedKey;
 
     if (inputLen == 0) {
         return SECSuccess;
@@ -868,7 +867,7 @@ arm_aes_decrypt_ecb_256(AESContext *cx, unsigned char *output,
 #endif
     uint8x16_t key1, key2, key3, key4, key5, key6, key7, key8, key9, key10;
     uint8x16_t key11, key12, key13, key14, key15;
-    const PRUint8 *key = (const PRUint8 *)cx->k.expandedKey;
+    const PRUint8 *key = (const PRUint8 *)cx->expandedKey;
 
     if (!inputLen) {
         return SECSuccess;
@@ -966,7 +965,7 @@ arm_aes_encrypt_cbc_256(AESContext *cx, unsigned char *output,
     uint8x16_t key1, key2, key3, key4, key5, key6, key7, key8, key9, key10;
     uint8x16_t key11, key12, key13, key14, key15;
     uint8x16_t iv;
-    const PRUint8 *key = (const PRUint8 *)cx->k.expandedKey;
+    const PRUint8 *key = (const PRUint8 *)cx->expandedKey;
 
     if (!inputLen) {
         return SECSuccess;
@@ -1072,7 +1071,7 @@ arm_aes_decrypt_cbc_256(AESContext *cx, unsigned char *output,
     uint8x16_t iv;
     uint8x16_t key1, key2, key3, key4, key5, key6, key7, key8, key9, key10;
     uint8x16_t key11, key12, key13, key14, key15;
-    const PRUint8 *key = (const PRUint8 *)cx->k.expandedKey;
+    const PRUint8 *key = (const PRUint8 *)cx->expandedKey;
 
     if (!inputLen) {
         return SECSuccess;
