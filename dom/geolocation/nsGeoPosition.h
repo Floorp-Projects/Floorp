@@ -64,46 +64,47 @@ class nsGeoPosition final : public nsIDOMGeoPosition {
 namespace mozilla {
 namespace dom {
 
-class Coordinates;
+class GeolocationCoordinates;
 
-class Position final : public nsISupports, public nsWrapperCache {
-  ~Position();
+class GeolocationPosition final : public nsISupports, public nsWrapperCache {
+  ~GeolocationPosition();
 
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Position)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(GeolocationPosition)
 
  public:
-  Position(nsISupports* aParent, nsIDOMGeoPosition* aGeoPosition);
+  GeolocationPosition(nsISupports* aParent, nsIDOMGeoPosition* aGeoPosition);
 
   nsISupports* GetParentObject() const;
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
 
-  Coordinates* Coords();
+  GeolocationCoordinates* Coords();
 
   uint64_t Timestamp() const;
 
   nsIDOMGeoPosition* GetWrappedGeoPosition() { return mGeoPosition; }
 
  private:
-  RefPtr<Coordinates> mCoordinates;
+  RefPtr<GeolocationCoordinates> mCoordinates;
   nsCOMPtr<nsISupports> mParent;
   nsCOMPtr<nsIDOMGeoPosition> mGeoPosition;
 };
 
-class Coordinates final : public nsISupports, public nsWrapperCache {
-  ~Coordinates();
+class GeolocationCoordinates final : public nsISupports, public nsWrapperCache {
+  ~GeolocationCoordinates();
 
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Coordinates)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(GeolocationCoordinates)
 
  public:
-  Coordinates(Position* aPosition, nsIDOMGeoPositionCoords* aCoords);
+  GeolocationCoordinates(GeolocationPosition* aPosition,
+                         nsIDOMGeoPositionCoords* aCoords);
 
-  Position* GetParentObject() const;
+  GeolocationPosition* GetParentObject() const;
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
@@ -123,7 +124,7 @@ class Coordinates final : public nsISupports, public nsWrapperCache {
   Nullable<double> GetSpeed() const;
 
  private:
-  RefPtr<Position> mPosition;
+  RefPtr<GeolocationPosition> mPosition;
   nsCOMPtr<nsIDOMGeoPositionCoords> mCoords;
 };
 

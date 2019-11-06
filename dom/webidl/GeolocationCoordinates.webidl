@@ -10,9 +10,8 @@
  * liability, trademark and document use rules apply.
  */
 
-[NoInterfaceObject,
- Exposed=Window]
-interface Coordinates {
+[Exposed=Window, SecureContext]
+interface GeolocationCoordinates {
   readonly attribute double latitude;
   readonly attribute double longitude;
   readonly attribute double? altitude;

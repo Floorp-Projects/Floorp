@@ -412,6 +412,14 @@ var interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "GamepadTouch", insecureContext: false, disabled: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
+  { name: "Geolocation", insecureContext: true },
+  // IMPORTANT: Do not change this list without review from a DOM peer!
+  { name: "GeolocationCoordinates", insecureContext: false },
+  // IMPORTANT: Do not change this list without review from a DOM peer!
+  { name: "GeolocationPosition", insecureContext: false },
+  // IMPORTANT: Do not change this list without review from a DOM peer!
+  { name: "GeolocationPositionError", insecureContext: true },
+  // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "HashChangeEvent", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "Headers", insecureContext: true },
