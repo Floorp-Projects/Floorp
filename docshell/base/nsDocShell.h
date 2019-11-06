@@ -348,8 +348,6 @@ class nsDocShell final : public nsDocLoader,
   void SetInFrameSwap(bool aInSwap) { mInFrameSwap = aInSwap; }
   bool InFrameSwap();
 
-  void SetIsFrame() { mIsFrame = true; };
-
   const mozilla::Encoding* GetForcedCharset() { return mForcedCharset; }
 
   mozilla::HTMLEditor* GetHTMLEditorInternal();
@@ -971,7 +969,7 @@ class nsDocShell final : public nsDocLoader,
   void RecomputeCanExecuteScripts();
   void ClearFrameHistory(nsISHEntry* aEntry);
   void UpdateGlobalHistoryTitle(nsIURI* aURI);
-  bool IsFrame();
+  bool IsFrame() { return mBrowsingContext->GetParent(); }
   bool CanSetOriginAttributes();
   bool ShouldBlockLoadingForBackButton();
   bool ShouldDiscardLayoutState(nsIHttpChannel* aChannel);
@@ -1329,8 +1327,6 @@ class nsDocShell final : public nsDocLoader,
 
   // This flag indicates when the title is valid for the current URI.
   bool mTitleValidForCurrentURI : 1;
-
-  bool mIsFrame : 1;
 
   // If mSkipBrowsingContextDetachOnDestroy is set to true, then when the
   // docshell is destroyed, the browsing context will not be detached. This is
