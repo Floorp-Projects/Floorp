@@ -138,6 +138,7 @@ function tunnelToInnerBrowser(outer, inner) {
       // Various browser methods access the `frameLoader` property, including:
       //   * `saveBrowser` from contentAreaUtils.js
       //   * `docShellIsActive` from browser.js
+      //   * `hasContentOpener` from browser.js
       //   * `preserveLayers` from browser.js
       //   * `receiveMessage` from SessionStore.jsm
       // In general, these methods are interested in the `frameLoader` for the content,

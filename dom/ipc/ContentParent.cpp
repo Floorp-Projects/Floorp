@@ -4948,6 +4948,10 @@ mozilla::ipc::IPCResult ContentParent::RecvCreateWindow(
     }
   });
 
+  // Content has requested that we open this new content window, so
+  // we must have an opener.
+  newTab->SetHasContentOpener(true);
+
   BrowserParent::AutoUseNewTab aunt(newTab, &cwi.urlToLoad());
   const uint64_t nextRemoteTabId = ++sNextRemoteTabId;
   sNextBrowserParents.Put(nextRemoteTabId, newTab);
