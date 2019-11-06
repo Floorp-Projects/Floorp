@@ -6876,7 +6876,7 @@ void nsCSSFrameConstructor::ContentAppended(nsIContent* aFirstNewContent,
   }
 
   LAYOUT_PHASE_TEMP_EXIT();
-  if (WipeInsertionParent(parentFrame, aFirstNewContent, nullptr)) {
+  if (WipeInsertionParent(parentFrame)) {
     LAYOUT_PHASE_TEMP_REENTER();
     return;
   }
@@ -7277,7 +7277,7 @@ void nsCSSFrameConstructor::ContentRangeInserted(
   }
 
   LAYOUT_PHASE_TEMP_EXIT();
-  if (WipeInsertionParent(insertion.mParentFrame, aStartChild, aEndChild)) {
+  if (WipeInsertionParent(insertion.mParentFrame)) {
     LAYOUT_PHASE_TEMP_REENTER();
     return;
   }
@@ -11408,33 +11408,12 @@ static bool IsSafeToAppendToIBSplitInline(nsIFrame* aParentFrame,
   return true;
 }
 
-bool nsCSSFrameConstructor::WipeInsertionParent(nsContainerFrame* aFrame,
-                                                nsIContent* aStartChild,
-                                                nsIContent* aEndChild) {
+bool nsCSSFrameConstructor::WipeInsertionParent(nsContainerFrame* aFrame) {
 #define TRACE(reason)                                                \
   PROFILER_TRACING("Layout", "WipeInsertionParent: " reason, LAYOUT, \
                    TRACING_EVENT)
 
-  MOZ_ASSERT(aStartChild, "Must always pass aStartChild!");
-
   const LayoutFrameType frameType = aFrame->Type();
-
-  if (aFrame->GetContent() == mDocument->GetRootElement()) {
-    // If we insert a content that becomes the canonical body element, we need
-    // to reframe the root element so that the root element's frames has the
-    // correct writing-mode propagated from body element. (See
-    // nsCSSFrameConstructor::ConstructDocElementFrame.)
-    nsIContent* bodyElement = mDocument->GetBodyElement();
-    for (nsIContent* child = aStartChild; child != aEndChild;
-         child = child->GetNextSibling()) {
-      if (child == bodyElement) {
-        TRACE("Root");
-        RecreateFramesForContent(mDocument->GetRootElement(),
-                                 InsertionKind::Async);
-        return true;
-      }
-    }
-  }
 
   // FIXME(emilio): This looks terribly inefficient if you insert elements deep
   // in a MathML subtree.
@@ -11502,6 +11481,29 @@ bool nsCSSFrameConstructor::WipeContainingBlock(
 
   // Before we go and append the frames, we must check for several
   // special situations.
+
+  if (aFrame->GetContent() == mDocument->GetRootElement()) {
+    // If we insert a content that becomes the canonical body element, and its
+    // used WritingMode is different from the root element's used WritingMode,
+    // we need to reframe the root element so that the root element's frames has
+    // the correct writing-mode propagated from body element. (See
+    // nsCSSFrameConstructor::ConstructDocElementFrame.)
+    //
+    // Bug 1594297: When inserting a new <body>, we may need to reframe the old
+    // <body> which has a "overflow" value other than simple "visible". But it's
+    // tricky, see bug 1593752.
+    nsIContent* bodyElement = mDocument->GetBodyElement();
+    for (FCItemIterator iter(aItems); !iter.IsDone(); iter.Next()) {
+      const WritingMode bodyWM(iter.item().mComputedStyle);
+      if (iter.item().mContent == bodyElement &&
+          bodyWM != aFrame->GetWritingMode()) {
+        TRACE("Root");
+        RecreateFramesForContent(mDocument->GetRootElement(),
+                                 InsertionKind::Async);
+        return true;
+      }
+    }
+  }
 
   // Situation #1 is a XUL frame that contains frames that are required
   // to be wrapped in blocks.
