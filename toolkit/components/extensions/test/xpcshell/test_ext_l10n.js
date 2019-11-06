@@ -8,9 +8,7 @@ const { FileUtils } = ChromeUtils.import(
 );
 const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 
-// Test that privileged extensions can use fluent to get strings from
-// language packs (and that unprivileged extensions cannot)
-add_task(async function test_l10n() {
+add_task(async function setup() {
   // Add a test .ftl file
   // (Note: other tests do this by patching L10nRegistry.load() but in
   // this test L10nRegistry is also loaded in the extension process --
@@ -37,7 +35,11 @@ add_task(async function test_l10n() {
     "resource://l10ntest/"
   );
   L10nRegistry.registerSource(source);
+});
 
+// Test that privileged extensions can use fluent to get strings from
+// language packs (and that unprivileged extensions cannot)
+add_task(async function test_l10n_dom() {
   const PAGE = `<!DOCTYPE html>
                 <html><head>
                   <meta charset="utf8">
@@ -101,5 +103,48 @@ add_task(async function test_l10n() {
     results.msg,
     "document.l10n is undefined",
     "Translation failed due to missing document.l10n"
+  );
+});
+
+add_task(async function test_l10n_manifest() {
+  // Fluent can't be used to localize properties that the AddonManager
+  // reads (see comment inside ExtensionData.parseManifest for details)
+  // so test by localizing a property that only the extension framework
+  // cares about: page_action.  This means we can only do this test from
+  // browser.
+  if (AppConstants.MOZ_BUILD_APP != "browser") {
+    return;
+  }
+
+  AddonTestUtils.initializeURLPreloader();
+
+  async function runTest(isPrivileged) {
+    let extension = ExtensionTestUtils.loadExtension({
+      isPrivileged,
+      manifest: {
+        l10n_resources: ["test.ftl"],
+        page_action: {
+          default_title: "__MSG_key__",
+        },
+      },
+    });
+
+    await extension.startup();
+    let title = extension.extension.manifest.page_action.default_title;
+    await extension.unload();
+    return title;
+  }
+
+  let title = await runTest(true);
+  equal(
+    title,
+    "value",
+    "Manifest key localized with fluent in privileged extension"
+  );
+  title = await runTest(false);
+  equal(
+    title,
+    "__MSG_key__",
+    "Manifest key not localized in unprivileged extension"
   );
 });
