@@ -22,7 +22,7 @@ types.addDictType("available-breakpoint-event", {
 });
 
 types.addDictType("thread.frames", {
-  frames: "array:frame"
+  frames: "array:frame",
 });
 
 types.addDictType("paused-reason", {
