@@ -8,13 +8,19 @@
 // turned off once it is closed.
 
 add_task(async function test() {
+  // We need to reuse the content process when we navigate so the entire process
+  // with the possible-leaking window doesn't get torn down.
+  await SpecialPowers.pushPrefEnv({
+    set: [["dom.ipc.keepProcessesAlive.webIsolated.perOrigin", 1]],
+  });
+
   const url =
     "http://mochi.test:8888/browser/dom/xhr/tests/browser_xhr_onchange_leak.html";
   let newTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
   let browser = gBrowser.selectedBrowser;
   let done = await ContentTask.spawn(browser, {}, async function() {
     let promise = ContentTaskUtils.waitForEvent(this, "DOMContentLoaded", true);
-    content.location = "http://example.org/";
+    content.location = "http://mochi.test:8888/";
     await promise;
     return true;
   });
