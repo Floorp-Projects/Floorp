@@ -101,22 +101,25 @@ static bool IsWindowAllowedToPlay(nsPIDOMWindowInner* aWindow) {
     return true;
   }
 
-  if (!aWindow->GetExtantDoc()) {
+  Document* currentDoc = aWindow->GetExtantDoc();
+  if (!currentDoc) {
     return false;
   }
 
-  Document* approver = ApproverDocOf(*aWindow->GetExtantDoc());
+  bool isTopLevelContent = !aWindow->GetBrowsingContext()->GetParent();
+  if (currentDoc->MediaDocumentKind() == Document::MediaDocumentKind::Video &&
+      isTopLevelContent) {
+    AUTOPLAY_LOG("Allow top-level video document to autoplay.");
+    return true;
+  }
+
+  Document* approver = ApproverDocOf(*currentDoc);
   if (!approver) {
     return false;
   }
 
   if (approver->IsExtensionPage()) {
     AUTOPLAY_LOG("Allow autoplay as in extension document.");
-    return true;
-  }
-
-  if (approver->MediaDocumentKind() == Document::MediaDocumentKind::Video) {
-    AUTOPLAY_LOG("Allow video document to autoplay.");
     return true;
   }
 
