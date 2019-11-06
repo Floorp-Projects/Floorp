@@ -7,11 +7,6 @@ external_tools_path = os.path.join(
     'external_tools',
 )
 
-tooltool_url = 'http://taskcluster/tooltool.mozilla-releng.net/'
-if os.environ.get('TASKCLUSTER_ROOT_URL', 'https://taskcluster.net') != 'https://taskcluster.net':
-    # Pre-point tooltool at staging cluster so we can run in parallel with legacy cluster
-    tooltool_url = 'http://taskcluster/tooltool.staging.mozilla-releng.net/'
-
 config = {
     'tooltool_manifest_file': "osx.manifest",
     'tooltool_cache': "/builds/tooltool_cache",
@@ -37,6 +32,6 @@ config = {
         'PATH': ('{MOZ_FETCHES_DIR}/clang/bin/:%(PATH)s'
                  .format(MOZ_FETCHES_DIR=os.environ['MOZ_FETCHES_DIR'])),
     },
-    "tooltool_servers": [tooltool_url],
-    "tooltool_url": tooltool_url,
+    "tooltool_servers": ['http://taskcluster/tooltool.mozilla-releng.net/'],
+    "tooltool_url": 'http://taskcluster/tooltool.mozilla-releng.net/',
 }
