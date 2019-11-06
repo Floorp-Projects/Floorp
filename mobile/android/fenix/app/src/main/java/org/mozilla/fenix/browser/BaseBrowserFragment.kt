@@ -47,10 +47,10 @@ import mozilla.components.feature.session.FullScreenFeature
 import mozilla.components.feature.session.SessionFeature
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.session.SwipeRefreshFeature
-import mozilla.components.feature.tabs.WindowFeature
 import mozilla.components.feature.sitepermissions.SitePermissions
 import mozilla.components.feature.sitepermissions.SitePermissionsFeature
 import mozilla.components.feature.sitepermissions.SitePermissionsRules
+import mozilla.components.feature.tabs.WindowFeature
 import mozilla.components.support.base.feature.BackHandler
 import mozilla.components.support.base.feature.PermissionsFeature
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
@@ -271,7 +271,7 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler, SessionManager.Obs
                         gravity = Gravity.BOTTOM,
                         shouldWidthMatchParent = true,
                         positiveButtonBackgroundColor = ThemeManager.resolveAttribute(R.attr.accent, context),
-                        positiveButtonTextColor = ThemeManager.resolveAttribute(R.attr.primaryText, context),
+                        positiveButtonTextColor = ThemeManager.resolveAttribute(R.attr.contrastText, context),
                         positiveButtonRadius = context.getDimenInDip(R.dimen.tab_corner_radius)
                     ),
                     onNeedToRequestPermissions = { permissions ->
