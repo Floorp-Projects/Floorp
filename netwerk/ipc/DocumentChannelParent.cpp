@@ -74,7 +74,6 @@ bool DocumentChannelParent::Init(const DocumentChannelCreationArgs& aArgs) {
       aArgs.cacheKey(), aArgs.isActive(), aArgs.isTopLevelDoc(),
       aArgs.hasNonEmptySandboxingFlags(), rv, getter_AddRefs(mChannel));
   if (!result) {
-    mListener = nullptr;
     return SendFailedAsyncOpen(rv);
   }
 
@@ -136,7 +135,6 @@ bool DocumentChannelParent::Init(const DocumentChannelCreationArgs& aArgs) {
 
   rv = mChannel->AsyncOpen(mListener);
   if (NS_FAILED(rv)) {
-    mListener = nullptr;
     return SendFailedAsyncOpen(rv);
   }
 
@@ -528,7 +526,9 @@ void DocumentChannelParent::TriggerRedirectToRealChannel(
       return;
     }
 
-    cp->SendCrossProcessRedirect(mRedirectChannelId, uri, config, loadInfoArgs,
+    MOZ_ASSERT(config);
+
+    cp->SendCrossProcessRedirect(mRedirectChannelId, uri, *config, loadInfoArgs,
                                  channelId, originalURI, aIdentifier,
                                  redirectMode)
         ->Then(

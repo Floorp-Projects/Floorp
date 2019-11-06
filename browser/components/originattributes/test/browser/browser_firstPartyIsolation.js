@@ -254,53 +254,44 @@ add_task(async function openWindow_test() {
   });
 
   let tab = BrowserTestUtils.addTab(gBrowser, BASE_URL + "window.html");
-  await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+  let win = await BrowserTestUtils.waitForNewWindow();
 
   await SpecialPowers.spawn(
-    tab.linkedBrowser,
+    win.gBrowser.selectedBrowser,
     [{ firstPartyDomain: "mochi.test" }],
     async function(attrs) {
-      let promise = new Promise(resolve => {
-        content.addEventListener("message", resolve, { once: true });
-      });
-      let w = Cu.unwaiveXrays(content.wrappedJSObject.open());
-      w.document.body.innerHTML = `<iframe id='iframe1' onload="window.opener.postMessage('ready', '*');" src='data:text/plain,test2'></iframe>`;
-
-      await promise;
-
       Assert.equal(
-        w.docShell.getOriginAttributes().firstPartyDomain,
+        content.docShell.getOriginAttributes().firstPartyDomain,
         attrs.firstPartyDomain,
-        "window.open() should have correct firstPartyDomain attribute"
+        "window.open() should have firstPartyDomain attribute"
       );
       Assert.equal(
-        w.document.nodePrincipal.originAttributes.firstPartyDomain,
+        content.document.nodePrincipal.originAttributes.firstPartyDomain,
         attrs.firstPartyDomain,
-        "The document should have correct firstPartyDomain"
+        "The document should have firstPartyDomain"
       );
 
-      let iframe = w.document.getElementById("iframe1");
-      await SpecialPowers.spawn(iframe, [attrs.firstPartyDomain], function(
+      let iframe = content.document.getElementById("iframe1");
+      SpecialPowers.spawn(iframe, [attrs.firstPartyDomain], function(
         firstPartyDomain
       ) {
         Assert.equal(
           content.docShell.getOriginAttributes().firstPartyDomain,
           firstPartyDomain,
-          "iframe's docshell should have correct rirstPartyDomain"
+          "iframe's docshell should have firstPartyDomain"
         );
 
         Assert.equal(
           content.document.nodePrincipal.originAttributes.firstPartyDomain,
           firstPartyDomain,
-          "iframe should have correct firstPartyDomain"
+          "iframe should have firstPartyDomain"
         );
       });
-
-      w.close();
     }
   );
 
   gBrowser.removeTab(tab);
+  await BrowserTestUtils.closeWindow(win);
 });
 
 /**
