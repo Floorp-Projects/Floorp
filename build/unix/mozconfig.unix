@@ -13,7 +13,12 @@ if [ -n "$FORCE_GCC" ]; then
 else
     CC="$MOZ_FETCHES_DIR/clang/bin/clang"
     CXX="$MOZ_FETCHES_DIR/clang/bin/clang++"
-    export ENABLE_CLANG_PLUGIN=1
+
+    # For some builds we don't want to have Clang based static-analysis activated
+    if [ -z "$DISABLE_CLANG_PLUGIN" ]; then
+        export ENABLE_CLANG_PLUGIN=1
+    fi
+
     case "$PERFHERDER_EXTRA_OPTIONS" in
     base-toolchains*)
       # Clang versions < 7.0 don't support the -fcrash-diagnostics-dir flag.

@@ -311,6 +311,7 @@ linux64-base-toolchains-clang/opt:
         max-run-time: 7200
         env:
             PERFHERDER_EXTRA_OPTIONS: base-toolchains-clang
+            DISABLE_CLANG_PLUGIN: '1'
     run:
         using: mozharness
         actions: [get-secrets, build]
@@ -344,6 +345,7 @@ linux64-base-toolchains-clang/debug:
         max-run-time: 5400
         env:
             PERFHERDER_EXTRA_OPTIONS: base-toolchains-clang
+            DISABLE_CLANG_PLUGIN: '1'
     run:
         using: mozharness
         actions: [get-secrets, build]
