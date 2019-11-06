@@ -38,7 +38,6 @@ class ProfilerCodeAddressService;
   MACRO(ColumnNumber, int, sizeof(int))                              \
   MACRO(NativeLeafAddr, void*, sizeof(void*))                        \
   MACRO(Pause, double, sizeof(double))                               \
-  MACRO(Responsiveness, double, sizeof(double))                      \
   MACRO(Resume, double, sizeof(double))                              \
   MACRO(ThreadId, int, sizeof(int))                                  \
   MACRO(Time, double, sizeof(double))                                \
@@ -78,6 +77,9 @@ class ProfileBufferEntry {
 
     // Marker data, including payload.
     MarkerData = LEGACY_LIMIT,
+
+    // Optional between TimeBeforeCompactStack and CompactStack.
+    UnresponsiveDurationMs,
 
     // Collection of legacy stack entries, must follow a ThreadId and
     // TimeBeforeCompactStack (which are not included in the CompactStack;
