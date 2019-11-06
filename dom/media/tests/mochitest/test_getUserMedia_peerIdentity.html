@@ -11,23 +11,36 @@ createHTML({
   title: "Test getUserMedia peerIdentity Constraint",
   bug: "942367"
 });
-function theTest() {
-  function testPeerIdentityConstraint(withConstraint) {
-    var config = { audio: true, video: true };
+async function theTest() {
+  async function testPeerIdentityConstraint(withConstraint) {
+    const config = { audio: true, video: true };
     if (withConstraint) {
       config.peerIdentity = 'user@example.com';
     }
     info('getting media with constraints: ' + JSON.stringify(config));
-    return getUserMedia(config)
-      .then(stream => Promise.all([
-        audioIsSilence(withConstraint, stream),
-        videoIsBlack(withConstraint, stream)
-      ]).then(() => stream.getTracks().forEach(t => t.stop())));
+    const stream = await getUserMedia(config);
+    for (const track of stream.getTracks()) {
+      const recorder = new MediaRecorder(new MediaStream([track]));
+      try {
+        recorder.start();
+        ok(!withConstraint,
+          `gUM ${track.kind} track without peerIdentity must not throw`);
+        recorder.stop();
+      } catch(e) {
+        ok(withConstraint,
+          `gUM ${track.kind} track with peerIdentity must throw`);
+      }
+    }
+    await Promise.all([
+      audioIsSilence(withConstraint, stream),
+      videoIsBlack(withConstraint, stream),
+    ]);
+    stream.getTracks().forEach(t => t.stop());
   };
 
   // both without and with the constraint
-  return testPeerIdentityConstraint(false)
-    .then(() => testPeerIdentityConstraint(true));
+  await testPeerIdentityConstraint(false);
+  await testPeerIdentityConstraint(true);
 }
 
 runTest(theTest);
