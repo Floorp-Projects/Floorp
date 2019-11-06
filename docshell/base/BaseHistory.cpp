@@ -74,6 +74,30 @@ void BaseHistory::NotifyVisitedForDocument(nsIURI* aURI, dom::Document* aDoc,
   }
 }
 
+void BaseHistory::ScheduleVisitedQuery(nsIURI* aURI) {
+  mPendingQueries.PutEntry(aURI);
+  if (mStartPendingVisitedQueriesScheduled) {
+    return;
+  }
+  mStartPendingVisitedQueriesScheduled =
+      NS_SUCCEEDED(NS_DispatchToMainThreadQueue(
+          NS_NewRunnableFunction(
+              "BaseHistory::StartPendingVisitedQueries",
+              [self = RefPtr<BaseHistory>(this)] {
+                self->mStartPendingVisitedQueriesScheduled = false;
+                auto queries = std::move(self->mPendingQueries);
+                self->StartPendingVisitedQueries(queries);
+                MOZ_DIAGNOSTIC_ASSERT(self->mPendingQueries.IsEmpty());
+              }),
+          EventQueuePriority::Idle));
+}
+
+void BaseHistory::CancelVisitedQueryIfPossible(nsIURI* aURI) {
+  mPendingQueries.RemoveEntry(aURI);
+  // TODO(bug 1591393): It could be worth to make this virtual and allow places
+  // to stop the existing database query? Needs some measurement.
+}
+
 nsresult BaseHistory::RegisterVisitedCallback(nsIURI* aURI, Link* aLink) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aURI, "Must pass a non-null URI!");
@@ -86,13 +110,7 @@ nsresult BaseHistory::RegisterVisitedCallback(nsIURI* aURI, Link* aLink) {
   MOZ_DIAGNOSTIC_ASSERT(!entry || !entry.Data().mLinks.IsEmpty(),
                         "An empty key was kept around in our hashtable!");
   if (!entry) {
-    // This is the first request for this URI, thus we must query its visited
-    // state.
-    auto result = StartVisitedQuery(aURI);
-    if (result.isErr()) {
-      entry.OrRemove();
-      return result.unwrapErr();
-    }
+    ScheduleVisitedQuery(aURI);
   }
 
   if (!aLink) {
