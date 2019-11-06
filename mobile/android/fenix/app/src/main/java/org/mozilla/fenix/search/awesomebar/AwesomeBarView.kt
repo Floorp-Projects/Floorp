@@ -180,13 +180,12 @@ class AwesomeBarView(
 
     fun update(state: SearchFragmentState) {
         updateSearchShortcutsIcon(state)
+        updateSuggestionProvidersVisibility(state)
 
-        // Do not make suggestions based on user's current URL
-        if (state.query == state.session?.url) {
+        // Do not make suggestions based on user's current URL unless it's a search shortcut
+        if (state.query == state.session?.url && !state.showSearchShortcuts) {
             return
         }
-
-        updateSuggestionProvidersVisibility(state)
 
         view.onInputChanged(state.query)
     }
