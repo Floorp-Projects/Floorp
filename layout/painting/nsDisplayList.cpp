@@ -862,6 +862,13 @@ static void AddNonAnimatingTransformLikePropertiesStyles(
   };
 
   const nsStyleDisplay* display = aFrame->StyleDisplay();
+  // A simple optimization. We don't need to send offset-* properties if we
+  // don't have offset-path and offset-position.
+  // FIXME: Bug 1559232: Add offset-position here.
+  bool hasMotion =
+      !display->mOffsetPath.IsNone() ||
+      !aNonAnimatingProperties.HasProperty(eCSSProperty_offset_path);
+
   for (nsCSSPropertyID id : aNonAnimatingProperties) {
     switch (id) {
       case eCSSProperty_transform:
@@ -895,20 +902,20 @@ static void AddNonAnimatingTransformLikePropertiesStyles(
         }
         break;
       case eCSSProperty_offset_distance:
-        if (!display->mOffsetDistance.IsDefinitelyZero()) {
+        if (hasMotion && !display->mOffsetDistance.IsDefinitelyZero()) {
           appendFakeAnimation(id, display->mOffsetDistance);
         }
         break;
       case eCSSProperty_offset_rotate:
-        if (!display->mOffsetRotate.auto_ ||
-            display->mOffsetRotate.angle.ToDegrees() != 0.0) {
+        if (hasMotion && (!display->mOffsetRotate.auto_ ||
+                          display->mOffsetRotate.angle.ToDegrees() != 0.0)) {
           const StyleOffsetRotate& rotate = display->mOffsetRotate;
           appendFakeAnimation(
               id, OffsetRotate(MakeCSSAngle(rotate.angle), rotate.auto_));
         }
         break;
       case eCSSProperty_offset_anchor:
-        if (!display->mOffsetAnchor.IsAuto()) {
+        if (hasMotion && !display->mOffsetAnchor.IsAuto()) {
           const StylePosition& position = display->mOffsetAnchor.AsPosition();
           appendFakeAnimation(id, OffsetAnchor(AnchorPosition(
                                       position.horizontal, position.vertical)));
@@ -979,6 +986,12 @@ static void AddAnimationsForDisplayItem(nsIFrame* aFrame,
   nsCSSPropertyIDSet nonAnimatingProperties =
       nsCSSPropertyIDSet::TransformLikeProperties();
   for (auto iter = compositorAnimations.iter(); !iter.done(); iter.next()) {
+    // Note: We can skip offset-* if there is no offset-path/offset-position
+    // animations and styles. However, it should be fine and may be better to
+    // send these information to the compositor because 1) they are simple data
+    // structure, 2) AddAnimationsForProperty() marks these animations as
+    // running on the composiror, so CanThrottle() returns true for them, and
+    // we avoid running these animations on the main thread.
     bool added =
         AddAnimationsForProperty(aFrame, effects, iter.get().value(), data,
                                  iter.get().key(), aSendFlag, aAnimationInfo);
