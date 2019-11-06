@@ -70,7 +70,7 @@ struct InlinePoisoner<N, N> {
 // bloated to boot.  So provide a fallback to the out-of-line poisoner.
 template <size_t ObjectSize>
 struct OutOfLinePoisoner {
-  static void poison(void* p, const uintptr_t) {
+  static MOZ_NEVER_INLINE void poison(void* p, const uintptr_t) {
     mozWritePoison(p, ObjectSize);
   }
 };
