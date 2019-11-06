@@ -67,7 +67,7 @@ add_UITour_task(async function test_firefoxAccountsNoParams() {
   await BrowserTestUtils.browserLoaded(
     gTestTab.linkedBrowser,
     false,
-    "https://example.com/signup?service=sync&context=fx_desktop_v3&entrypoint=uitour"
+    "https://example.com/?service=sync&context=fx_desktop_v3&entrypoint=uitour&action=email"
   );
 });
 
@@ -77,7 +77,7 @@ add_UITour_task(async function test_firefoxAccountsValidParams() {
   await BrowserTestUtils.browserLoaded(
     gTestTab.linkedBrowser,
     false,
-    "https://example.com/signup?service=sync&context=fx_desktop_v3&entrypoint=uitour&utm_foo=foo&utm_bar=bar"
+    "https://example.com/?service=sync&context=fx_desktop_v3&entrypoint=uitour&action=email&utm_foo=foo&utm_bar=bar"
   );
 });
 
@@ -103,7 +103,7 @@ add_UITour_task(async function test_firefoxAccountsNonAlphaValue() {
   await BrowserTestUtils.browserLoaded(
     gTestTab.linkedBrowser,
     false,
-    "https://example.com/signup?service=sync&context=fx_desktop_v3&entrypoint=uitour&utm_foo=" +
+    "https://example.com/?service=sync&context=fx_desktop_v3&entrypoint=uitour&action=email&utm_foo=" +
       expected
   );
 });
