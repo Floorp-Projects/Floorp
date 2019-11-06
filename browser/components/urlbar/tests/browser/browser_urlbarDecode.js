@@ -54,8 +54,7 @@ add_task(async function actionURILosslessDecode() {
 
   // At this point the heuristic result is selected but the urlbar's value is
   // simply `url`.  Key down and back around until the heuristic result is
-  // selected again, and at that point the urlbar's value should be a visiturl
-  // moz-action.
+  // selected again.
   do {
     EventUtils.synthesizeKey("KEY_ArrowDown");
   } while (UrlbarTestUtils.getSelectedRowIndex(window) != 0);
