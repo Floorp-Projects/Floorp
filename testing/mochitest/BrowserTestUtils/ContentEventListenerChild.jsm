@@ -25,6 +25,13 @@ class ContentEventListenerChild extends JSWindowActorChild {
     }
   }
 
+  receiveMessage(msg) {
+    if (msg.name != "ContentEventListener:LateCreate") {
+      return;
+    }
+    this._updateContentEventListeners();
+  }
+
   handleEvent(event) {
     switch (event.type) {
       case "DOMWindowCreated": {
