@@ -9,6 +9,47 @@
     <!-- The button that appears at the bottom of an error page. -->
     <string name="mozac_browser_errorpages_page_go_back">பின் செல் </string>
 
+    <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_title">கோரிக்கையை முடிக்க முடியவில்லை</string>
+    <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_message"><![CDATA[
+      <p>இச்சிக்கல் அல்லது பிழைகுறித்து கூடுதல் விவரங்கள் தற்போது இல்லை.</p>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_title">பாதுகாப்பான இணைப்பு முறிந்தது</string>
+    <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[
+      <ul>
+        <li>பெற்ற தரவின் நம்பகத்தன்மையை சரிபார்க்க முடியவில்லை, ஏனெனில் நீங்கள் காண முயற்சிக்கும் பக்கம் பார்க்க முடியாது.</li>
+        <li>இந்தப் பிரச்சனைகுறித்து இணையதளத்தில் உரிமையாளர்களை தொடர்பு கொள்க.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">பாதுகாப்பான இணைப்பு முறிந்தது</string>
+    <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
+      <ul>
+        <li>இந்தச் சேவையகத்தின் கட்டமைப்பில் சிக்கல் இருக்க வேண்டும், அல்லது அதில் யாராவது ஆள்மாறாட்டம் செய்ய முயற்சி செய்திருப்பார்கள்.</li>
+        <li>நீங்கள் இதற்கு முன்பு வெற்றிகரமாக இந்தச் சேவையகத்துடன் இணைந்து இருந்தால், இந்தப் பிழை தற்காலிகமானதாக இருக்கும், மேலும் நீங்கள் பிறகு மீண்டும் முயற்சி செய்யலாம்.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_title">இணைப்பில் தடங்கல் உள்ளது</string>
+    <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[
+      <p>உலாவி வெற்றிகரமாக இணைக்கப்பட்டது, ஆனால் தகவலை மாற்றும்போது இணைப்பு தடைப்பட்டது. மீண்டும் முயற்சிக்கவும்.</p>
+      <ul>
+        <li>இந்தத் தளம் தற்காலிகமாகக் கிடைக்கவில்லை அல்லது மிகவும் பிஸியாக இருக்கலாம். சிறிது நேரத்திற்க்கு பின் மீண்டும் முயற்சிக்கவும்.</li>
+        <li>உங்களால் எந்தப் பக்கங்களையும் ஏற்ற முடியவில்லை என்றால், உங்கள் சாதனத்தின் தரவு அல்லது வைஃபை இணைப்பைச் சரிபார்க்கவும்.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website takes too long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_title">இணைப்பு நேரம் முடிந்தது</string>
+
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title_alternative">இந்த முகவரி தவறானது</string>
 
