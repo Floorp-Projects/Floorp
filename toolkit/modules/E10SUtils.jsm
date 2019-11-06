@@ -95,7 +95,7 @@ const NOT_REMOTE = null;
 
 // These must match any similar ones in ContentParent.h and ProcInfo.h
 const WEB_REMOTE_TYPE = "web";
-const FISSION_WEB_REMOTE_TYPE_PREFIX = "webIsolated=";
+const FISSION_WEB_REMOTE_TYPE = "webIsolated";
 const WEB_REMOTE_COOP_COEP_TYPE_PREFIX = "webCOOP+COEP=";
 const FILE_REMOTE_TYPE = "file";
 const EXTENSION_REMOTE_TYPE = "extension";
@@ -173,7 +173,7 @@ function validatedWebRemoteType(
   if (aRemoteSubframes && hasPotentiallyWebHandledScheme(aTargetUri)) {
     if (
       Services.appinfo.processType != Services.appinfo.PROCESS_TYPE_DEFAULT &&
-      Services.appinfo.remoteType.startsWith(FISSION_WEB_REMOTE_TYPE_PREFIX)
+      Services.appinfo.remoteType.startsWith(FISSION_WEB_REMOTE_TYPE + "=")
     ) {
       // If we're in a child process, assume we're OK to load this non-web
       // URL for now. We'll either load it externally or re-evaluate once
@@ -235,7 +235,7 @@ function validatedWebRemoteType(
       return aPreferredRemoteType;
     }
 
-    return FISSION_WEB_REMOTE_TYPE_PREFIX + targetPrincipal.siteOrigin;
+    return `${FISSION_WEB_REMOTE_TYPE}=${targetPrincipal.siteOrigin}`;
   }
 
   if (!aPreferredRemoteType) {
