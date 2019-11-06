@@ -479,6 +479,11 @@ description#identity-popup-content-verifier,
   margin-inline-start: 0;
 }
 
+#protections-popup-sendReportView-report-error {
+  margin-bottom: 24px;
+  color: #d74345;
+}
+
 .protections-popup-category {
   /* Overwrite toolbarbutton styles */
   -moz-appearance: none;
