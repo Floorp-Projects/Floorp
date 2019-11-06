@@ -339,13 +339,15 @@ let gDebugger;
 // Asynchronous Manifests
 ////////////////////////////////////////////////////////////////////////////////
 
-// Asynchronous manifest worklists.
-const gAsyncManifests = new Set();
-const gAsyncManifestsLowPriority = new Set();
+// Priority levels for asynchronous manifests.
+const Priority = {
+  HIGH: 0,
+  MEDIUM: 1,
+  LOW: 2,
+};
 
-function asyncManifestWorklist(lowPriority) {
-  return lowPriority ? gAsyncManifestsLowPriority : gAsyncManifests;
-}
+// Asynchronous manifest worklists.
+const gAsyncManifests = [new Set(), new Set(), new Set()];
 
 // Send a manifest asynchronously, returning a promise that resolves when the
 // manifest has been finished. Async manifests have the following properties:
@@ -369,8 +371,7 @@ function asyncManifestWorklist(lowPriority) {
 //   whose range the child must have scanned. Such manifests do not have side
 //   effects in the child, and can be sent to the active child.
 //
-// lowPriority: True if this manifest should be processed only after all other
-//   manifests have been processed.
+// priority: Optional priority for this manifest. Default is HIGH.
 //
 // destination: An optional destination where the child will end up.
 //
@@ -382,13 +383,14 @@ function sendAsyncManifest(manifest) {
   pokeChildrenSoon();
   return new Promise(resolve => {
     manifest.resolve = resolve;
-    asyncManifestWorklist(manifest.lowPriority).add(manifest);
+    const priority = manifest.priority || Priority.HIGH;
+    gAsyncManifests[priority].add(manifest);
   });
 }
 
 // Pick the best async manifest for a child to process.
-function pickAsyncManifest(child, lowPriority) {
-  const worklist = asyncManifestWorklist(lowPriority);
+function pickAsyncManifest(child, priority) {
+  const worklist = gAsyncManifests[priority];
 
   let best = null,
     bestTime = Infinity;
@@ -447,12 +449,14 @@ function processAsyncManifest(child) {
   }
 
   if (!manifest) {
-    manifest = pickAsyncManifest(child, /* lowPriority */ false);
-    if (!manifest) {
-      manifest = pickAsyncManifest(child, /* lowPriority */ true);
-      if (!manifest) {
-        return false;
+    for (const priority of Object.values(Priority)) {
+      manifest = pickAsyncManifest(child, priority);
+      if (manifest) {
+        break;
       }
+    }
+    if (!manifest) {
+      return false;
     }
   }
 
@@ -1039,7 +1043,7 @@ async function queuePauseData({
     point,
     snapshot,
     expectedDuration: 250,
-    lowPriority: true,
+    priority: Priority.LOW,
     mightRewind: true,
   });
 }
@@ -1576,7 +1580,7 @@ async function evaluateLogpoint({
     point,
     snapshot,
     expectedDuration: 250,
-    lowPriority: true,
+    priority: Priority.MEDIUM,
     mightRewind: true,
   });
 }
