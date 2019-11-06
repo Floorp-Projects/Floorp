@@ -23,7 +23,7 @@
 
         let test_cases = [
           {
-            name: "inaudible playback in unactivated same-origin iframe in activated parent allowed",
+            name: "inaudible playback in unactivated same-origin iframe in activated parent -> allowed",
             muted: true,
             same_origin_child: true,
             activated_from: "parent",
@@ -32,7 +32,7 @@
           },
 
           {
-            name: "inaudible playback in unactivated same-origin iframe in unactivated parent allowed",
+            name: "inaudible playback in unactivated same-origin iframe in unactivated parent -> allowed",
             muted: true,
             same_origin_child: true,
             activated_from: "none",
@@ -41,7 +41,7 @@
           },
 
           {
-            name: "audible playback in unactivated same-origin iframe in activated parent allowed",
+            name: "audible playback in unactivated same-origin iframe in activated parent -> allowed",
             muted: false,
             same_origin_child: true,
             activated_from: "parent",
@@ -50,52 +50,52 @@
           },
 
           {
-            name: "audible playback in unactivated same-origin iframe in unactivated parent blocked",
+            name: "audible playback in unactivated same-origin iframe in unactivated parent -> blocked",
             muted: false,
             same_origin_child: true,
-            activated_from: "none",
-            play_from: "child",
-            should_play: false,
-          },
-
-          {
-            name: "inaudible playback in unactivated cross-origin iframe in activated parent allowed",
-            muted: true,
-            same_origin_child: false,
-            activated_from: "parent",
-            play_from: "child",
-            should_play: true,
-          },
-
-          {
-            name: "inaudible playback in unactivated cross-origin iframe in unactivated parent allowed",
-            muted: true,
-            same_origin_child: false,
-            activated_from: "none",
-            play_from: "child",
-            should_play: true,
-          },
-
-          {
-            name: "audible playback in unactivated cross-origin iframe in activated parent allowed",
-            muted: false,
-            same_origin_child: false,
-            activated_from: "parent",
-            play_from: "child",
-            should_play: true,
-          },
-
-          {
-            name: "audible playback in unactivated cross-origin iframe in unactivated parent blocked",
-            muted: false,
-            same_origin_child: false,
             activated_from: "none",
             play_from: "child",
             should_play: false,
           },
 
           {
-            name: "audible playback in activated cross-origin iframe allowed",
+            name: "inaudible playback in unactivated cross-origin iframe in activated parent -> allowed",
+            muted: true,
+            same_origin_child: false,
+            activated_from: "parent",
+            play_from: "child",
+            should_play: true,
+          },
+
+          {
+            name: "inaudible playback in unactivated cross-origin iframe in unactivated parent -> allowed",
+            muted: true,
+            same_origin_child: false,
+            activated_from: "none",
+            play_from: "child",
+            should_play: true,
+          },
+
+          {
+            name: "audible playback in unactivated cross-origin iframe in activated parent -> allowed",
+            muted: false,
+            same_origin_child: false,
+            activated_from: "parent",
+            play_from: "child",
+            should_play: true,
+          },
+
+          {
+            name: "audible playback in unactivated cross-origin iframe in unactivated parent -> blocked",
+            muted: false,
+            same_origin_child: false,
+            activated_from: "none",
+            play_from: "child",
+            should_play: false,
+          },
+
+          {
+            name: "audible playback in activated cross-origin iframe -> allowed",
             muted: false,
             same_origin_child: false,
             activated_from: "child",
@@ -104,7 +104,7 @@
           },
 
           {
-            name: "audible playback in activated document allowed",
+            name: "audible playback in activated document -> allowed",
             muted: false,
             activated_from: "parent",
             play_from: "parent",
@@ -112,7 +112,7 @@
           },
 
           {
-            name: "audible playback in unactivated document blocked",
+            name: "audible playback in unactivated document -> blocked",
             muted: false,
             activated_from: "none",
             play_from: "parent",
@@ -120,7 +120,7 @@
           },
 
           {
-            name: "inaudible playback in activated document allowed",
+            name: "inaudible playback in activated document -> allowed",
             muted: true,
             activated_from: "parent",
             play_from: "parent",
@@ -128,7 +128,7 @@
           },
 
           {
-            name: "inaudible playback in unactivated document allowed",
+            name: "inaudible playback in unactivated document -> allowed",
             muted: true,
             activated_from: "none",
             play_from: "parent",
