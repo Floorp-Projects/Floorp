@@ -756,15 +756,18 @@ void PeerConnectionMedia::OnCandidateFound_m(
   }
 }
 
-void PeerConnectionMedia::AlpnNegotiated_s(const std::string& aAlpn) {
+void PeerConnectionMedia::AlpnNegotiated_s(const std::string& aAlpn,
+                                           bool aPrivacyRequested) {
+  MOZ_DIAGNOSTIC_ASSERT((aAlpn == "c-webrtc") == aPrivacyRequested);
   GetMainThread()->Dispatch(
-      WrapRunnable(this, &PeerConnectionMedia::AlpnNegotiated_m, aAlpn),
+      WrapRunnable(this, &PeerConnectionMedia::AlpnNegotiated_m,
+                   aPrivacyRequested),
       NS_DISPATCH_NORMAL);
 }
 
-void PeerConnectionMedia::AlpnNegotiated_m(const std::string& aAlpn) {
+void PeerConnectionMedia::AlpnNegotiated_m(bool aPrivacyRequested) {
   if (mParent) {
-    mParent->OnAlpnNegotiated(aAlpn);
+    mParent->OnAlpnNegotiated(aPrivacyRequested);
   }
 }
 
@@ -787,15 +790,6 @@ bool PeerConnectionMedia::AnyLocalTrackHasPeerIdentity() const {
     }
   }
   return false;
-}
-
-void PeerConnectionMedia::UpdateRemoteStreamPrincipals_m(
-    nsIPrincipal* aPrincipal) {
-  ASSERT_ON_THREAD(mMainThread);
-
-  for (RefPtr<TransceiverImpl>& transceiver : mTransceivers) {
-    transceiver->UpdatePrincipal(aPrincipal);
-  }
 }
 
 void PeerConnectionMedia::UpdateSinkIdentity_m(
