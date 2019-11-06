@@ -202,7 +202,12 @@ function testOnWindow(aTestData) {
       wp.addProgressListener(progressListener, wp.NOTIFY_CONTENT_BLOCKING);
 
       await BrowserTestUtils.loadURI(browser, aTestData.url);
-      await BrowserTestUtils.waitForContentEvent(browser, "DOMContentLoaded");
+      await BrowserTestUtils.browserLoaded(
+        browser,
+        false,
+        `http://${aTestData.url}`,
+        true
+      );
       checkResults(aTestData, expected);
       win.close();
       resolve();
