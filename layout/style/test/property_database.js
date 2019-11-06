@@ -12959,8 +12959,8 @@ if (IsCSSPropertyPrefEnabled("layout.css.zoom-transform-hack.enabled")) {
     inherited: false,
     type: CSS_TYPE_LEGACY_SHORTHAND,
     subproperties: ["transform", "transform-origin"],
-    initial_values: ["normal", "1.0", "100%"],
-    other_values: ["0", "0%", "10%", "2", "2.5"],
+    initial_values: ["normal", "1.0", "0", "0%", "100%"],
+    other_values: ["10%", "2", "2.5"],
     invalid_values: ["0 0", "foo", "10px"],
   };
 }
