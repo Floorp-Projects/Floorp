@@ -24,6 +24,7 @@ import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.Engine.BrowsingData
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.request.RequestInterceptor
+import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.whenever
@@ -476,7 +477,8 @@ class SystemEngineSessionTest {
 
         engineSession.webView.webViewClient.shouldInterceptRequest(engineSession.webView, request)
 
-        verify(observer).onLoadRequest(anyString(), eq(true), eq(true))
+        val allowOrDeny = argumentCaptor<(Boolean) -> Unit>()
+        verify(observer).onLoadRequest(anyString(), eq(true), eq(true), allowOrDeny.capture())
 
         val redirect: WebResourceRequest = mock()
         doReturn(true).`when`(redirect).isForMainFrame
@@ -485,7 +487,7 @@ class SystemEngineSessionTest {
 
         engineSession.webView.webViewClient.shouldInterceptRequest(engineSession.webView, redirect)
 
-        verify(observer).onLoadRequest(anyString(), eq(true), eq(true))
+        verify(observer).onLoadRequest(anyString(), eq(true), eq(true), allowOrDeny.capture())
     }
 
     @Test
@@ -515,7 +517,8 @@ class SystemEngineSessionTest {
             engineSession.webView,
             request)
 
-        verify(observer, never()).onLoadRequest(anyString(), anyBoolean(), anyBoolean())
+        val allowOrDeny = argumentCaptor<(Boolean) -> Unit>()
+        verify(observer, never()).onLoadRequest(anyString(), anyBoolean(), anyBoolean(), allowOrDeny.capture())
     }
 
     @Test

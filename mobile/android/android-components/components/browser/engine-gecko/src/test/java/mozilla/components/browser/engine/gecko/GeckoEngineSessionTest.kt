@@ -1857,7 +1857,12 @@ class GeckoEngineSessionTest {
         var observedTriggeredByRedirect: Boolean? = null
 
         engineSession.register(object : EngineSession.Observer {
-            override fun onLoadRequest(url: String, triggeredByRedirect: Boolean, triggeredByWebContent: Boolean) {
+            override fun onLoadRequest(
+                url: String,
+                triggeredByRedirect: Boolean,
+                triggeredByWebContent: Boolean,
+                shouldLoadUri: (Boolean) -> Unit
+            ) {
                 observedTriggeredByRedirect = triggeredByRedirect
                 observedUrl = url
             }
@@ -1889,7 +1894,12 @@ class GeckoEngineSessionTest {
         var observedTriggeredByWebContent: Boolean?
 
         engineSession.register(object : EngineSession.Observer {
-            override fun onLoadRequest(url: String, triggeredByRedirect: Boolean, triggeredByWebContent: Boolean) {
+            override fun onLoadRequest(
+                url: String,
+                triggeredByRedirect: Boolean,
+                triggeredByWebContent: Boolean,
+                shouldLoadUri: (Boolean) -> Unit
+            ) {
                 observedTriggeredByWebContent = triggeredByWebContent
                 observedUrl = url
             }
@@ -1975,7 +1985,7 @@ class GeckoEngineSessionTest {
         navigationDelegate.value.onLoadRequest(
             mock(), mockLoadRequest(fakeUri, triggeredByRedirect = true))
 
-        verify(observer, never()).onLoadRequest(eq(fakeUri), anyBoolean(), anyBoolean())
+        verify(observer, never()).onLoadRequest(eq(fakeUri), anyBoolean(), anyBoolean(), any())
     }
 
     @Test

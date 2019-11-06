@@ -493,7 +493,7 @@
     <ID>UndocumentedPublicFunction:Session.kt$Session.Observer$fun onFindResult(session: Session, result: FindResult)</ID>
     <ID>UndocumentedPublicFunction:Session.kt$Session.Observer$fun onFullScreenChanged(session: Session, enabled: Boolean)</ID>
     <ID>UndocumentedPublicFunction:Session.kt$Session.Observer$fun onIconChanged(session: Session, icon: Bitmap?)</ID>
-    <ID>UndocumentedPublicFunction:Session.kt$Session.Observer$fun onLoadRequest( session: Session, url: String, triggeredByRedirect: Boolean, triggeredByWebContent: Boolean )</ID>
+    <ID>UndocumentedPublicFunction:Session.kt$Session.Observer$fun onLoadRequest( session: Session, url: String, triggeredByRedirect: Boolean, triggeredByWebContent: Boolean ): Boolean</ID>
     <ID>UndocumentedPublicFunction:Session.kt$Session.Observer$fun onLoadingStateChanged(session: Session, loading: Boolean)</ID>
     <ID>UndocumentedPublicFunction:Session.kt$Session.Observer$fun onLongPress(session: Session, hitResult: HitResult): Boolean</ID>
     <ID>UndocumentedPublicFunction:Session.kt$Session.Observer$fun onMediaAdded(session: Session, media: List&lt;Media&gt;, added: Media)</ID>

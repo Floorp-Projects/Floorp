@@ -84,7 +84,7 @@ class Session(
             url: String,
             triggeredByRedirect: Boolean,
             triggeredByWebContent: Boolean
-        ) = Unit
+        ): Boolean = false
         fun onSearch(session: Session, searchTerms: String) = Unit
         fun onSecurityChanged(session: Session, securityInfo: SecurityInfo) = Unit
         fun onCustomTabConfigChanged(session: Session, customTabConfig: CustomTabConfig?) = Unit
@@ -238,15 +238,29 @@ class Session(
     /**
      * Set when a load request is received, indicating if the request came from web content, or via a redirect.
      */
-    var loadRequestMetadata: LoadRequestMetadata by Delegates.observable(LoadRequestMetadata.blank) { _, _, new ->
-        notifyObservers {
-            onLoadRequest(
-                this@Session,
-                new.url,
-                new.isSet(LoadRequestOption.REDIRECT),
-                new.isSet(LoadRequestOption.WEB_CONTENT)
-            )
-        }
+    var loadRequestMetadata: Consumable<LoadRequestMetadata>
+        by Delegates.vetoable(Consumable.empty()) { _, _, request ->
+            if (request.peek() == null) {
+                false
+            } else {
+                val new = request.peek() as LoadRequestMetadata
+                val consumers = wrapConsumers<LoadRequestMetadata> {
+                    onLoadRequest(
+                        this@Session,
+                        new.url,
+                        new.isSet(LoadRequestOption.REDIRECT),
+                        new.isSet(LoadRequestOption.WEB_CONTENT)
+                    )
+                }
+
+                val consumed = request.consumeBy(consumers)
+                when (consumed) {
+                    true -> new.allowOrDeny(false)
+                    false -> new.allowOrDeny(true)
+                }
+
+                !consumed
+            }
     }
 
     /**

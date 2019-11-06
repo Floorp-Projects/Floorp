@@ -18,6 +18,7 @@ import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.whenever
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -87,8 +88,8 @@ class AppLinksFeatureTest {
         return session
     }
 
-    private fun userTapsOnSession(url: String, private: Boolean) {
-        feature.observer.onLoadRequest(
+    private fun userTapsOnSession(url: String, private: Boolean): Boolean {
+        return feature.observer.onLoadRequest(
             createSession(private),
             url,
             triggeredByRedirect = false,
@@ -216,7 +217,6 @@ class AppLinksFeatureTest {
     @Test
     fun `an external app is not opened if it does not match`() {
         val mockDialog = spy(RedirectDialogFragment::class.java)
-
         val featureWithDialog =
             spy(AppLinksFeature(
                 context = mockContext,
@@ -229,8 +229,9 @@ class AppLinksFeatureTest {
         `when`(mockLegacySessionManager.getOrCreateEngineSession(any())).thenReturn(mockEngineSession)
         featureWithDialog.start()
 
-        userTapsOnSession(webUrl, true)
+        val consumed = userTapsOnSession(webUrl, true)
 
+        assertEquals(true, consumed)
         verifyNoMoreInteractions(mockDialog)
         verifyNoMoreInteractions(mockOpenRedirect)
     }
@@ -238,7 +239,6 @@ class AppLinksFeatureTest {
     @Test
     fun `an external app is not opened if it is typed in to the URL bar`() {
         val mockDialog = spy(RedirectDialogFragment::class.java)
-
         `when`(mockFragmentManager.beginTransaction()).thenReturn(mock())
 
         val featureWithDialog =
@@ -252,13 +252,14 @@ class AppLinksFeatureTest {
 
         featureWithDialog.start()
 
-        feature.observer.onLoadRequest(
+        val consumed = feature.observer.onLoadRequest(
             createSession(true),
             webUrl,
             triggeredByRedirect = false,
             triggeredByWebContent = false
         )
 
+        assertEquals(false, consumed)
         verifyNoMoreInteractions(mockDialog)
         verifyNoMoreInteractions(mockOpenRedirect)
     }
@@ -295,7 +296,6 @@ class AppLinksFeatureTest {
     fun `in non-private mode an external app is opened without a dialog`() {
         val mockDialog = spy(RedirectDialogFragment::class.java)
         val mockFragmentManager = mock<FragmentManager>()
-
         `when`(mockFragmentManager.beginTransaction()).thenReturn(mock())
 
         val featureWithDialog =
@@ -309,8 +309,9 @@ class AppLinksFeatureTest {
 
         featureWithDialog.start()
 
-        userTapsOnSession(intentUrl, false)
+        val consumed = userTapsOnSession(intentUrl, false)
 
+        assertEquals(true, consumed)
         verifyNoMoreInteractions(mockDialog)
         verify(mockOpenRedirect).invoke(any())
     }

@@ -350,7 +350,7 @@ class GeckoEngineSession(
             session: GeckoSession,
             request: NavigationDelegate.LoadRequest
         ): GeckoResult<AllowOrDeny> {
-            if (request.target == GeckoSession.NavigationDelegate.TARGET_WINDOW_NEW) {
+            if (request.target == NavigationDelegate.TARGET_WINDOW_NEW) {
                 return GeckoResult.fromValue(AllowOrDeny.ALLOW)
             }
 
@@ -367,6 +367,12 @@ class GeckoEngineSession(
             return if (response != null) {
                 GeckoResult.fromValue(AllowOrDeny.DENY)
             } else {
+                val geckoResult: GeckoResult<AllowOrDeny> = GeckoResult()
+                val allowOrDeny: (Boolean) -> Unit = { shouldAllow ->
+                    val result = if (shouldAllow) AllowOrDeny.ALLOW else AllowOrDeny.DENY
+                    geckoResult.complete(result)
+                }
+
                 notifyObservers {
                     // Unlike the name LoadRequest.isRedirect may imply this flag is not about http redirects. The flag
                     // is "True if and only if the request was triggered by an HTTP redirect."
@@ -374,11 +380,12 @@ class GeckoEngineSession(
                     onLoadRequest(
                         url = request.uri,
                         triggeredByRedirect = request.isRedirect,
-                        triggeredByWebContent = requestFromWebContent
+                        triggeredByWebContent = requestFromWebContent,
+                        shouldLoadUri = allowOrDeny
                     )
                 }
 
-                GeckoResult.fromValue(AllowOrDeny.ALLOW)
+                geckoResult
             }
         }
 

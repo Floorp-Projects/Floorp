@@ -186,7 +186,8 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler {
                 sessionManager = components.sessionManager,
                 sessionId = sessionId,
                 fragmentManager = requireFragmentManager(),
-                interceptLinkClicks = true
+                interceptLinkClicks = true,
+                launchInApp = { components.preferences.getBoolean(DefaultComponents.PREF_LAUNCH_EXTERNAL_APP, false) }
             ),
             owner = this,
             view = layout

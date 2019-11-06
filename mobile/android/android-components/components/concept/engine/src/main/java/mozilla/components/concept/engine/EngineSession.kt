@@ -86,8 +86,14 @@ abstract class EngineSession(
          * @param triggeredByRedirect True if and only if the request was triggered by an HTTP redirect.
          * @param triggeredByWebContent True if and only if the request was triggered from within
          * web content (as opposed to via the browser chrome).
+         * @param shouldLoadUri Function to be called when request is consumed.
          */
-        fun onLoadRequest(url: String, triggeredByRedirect: Boolean, triggeredByWebContent: Boolean) = Unit
+        fun onLoadRequest(
+            url: String,
+            triggeredByRedirect: Boolean,
+            triggeredByWebContent: Boolean,
+            shouldLoadUri: (Boolean) -> Unit
+        ) = Unit
 
         @Suppress("LongParameterList")
         fun onExternalResource(

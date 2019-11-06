@@ -6,6 +6,7 @@ package org.mozilla.samples.browser
 
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.widget.Toast
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -59,6 +60,13 @@ private const val DAY_IN_MINUTES = 24 * 60L
 
 @Suppress("LargeClass")
 open class DefaultComponents(private val applicationContext: Context) {
+    companion object {
+        const val SAMPLE_BROWSER_PREFERENCES = "sample_browser_preferences"
+        const val PREF_LAUNCH_EXTERNAL_APP = "sample_browser_launch_external_app"
+    }
+
+    val preferences: SharedPreferences =
+        applicationContext.getSharedPreferences(SAMPLE_BROWSER_PREFERENCES, Context.MODE_PRIVATE)
 
     // Engine Settings
     val engineSettings by lazy {
@@ -210,6 +218,13 @@ open class DefaultComponents(private val applicationContext: Context) {
                 sessionManager.selectedSessionOrThrow.desktopMode
             }) { checked ->
                 sessionUseCases.requestDesktopSite(checked)
+            }
+        )
+        items.add(
+            BrowserMenuCheckbox("Open links in apps", {
+                preferences.getBoolean(PREF_LAUNCH_EXTERNAL_APP, false)
+            }) { checked ->
+                preferences.edit().putBoolean(PREF_LAUNCH_EXTERNAL_APP, checked).apply()
             }
         )
 
