@@ -69,8 +69,6 @@ class TransceiverImpl : public nsISupports {
 
   nsresult UpdateConduit();
 
-  nsresult UpdatePrincipal(nsIPrincipal* aPrincipal);
-
   void ResetSync();
 
   nsresult SyncWithMatchingVideoConduits(
