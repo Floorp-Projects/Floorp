@@ -37,10 +37,13 @@ import mozilla.components.feature.session.HistoryDelegate
 import mozilla.components.feature.webcompat.WebCompatFeature
 import mozilla.components.lib.dataprotect.SecureAbove22Preferences
 import mozilla.components.lib.dataprotect.generateEncryptionKey
+import mozilla.components.feature.webnotifications.WebNotificationFeature
 import mozilla.components.service.sync.logins.AsyncLoginsStorageAdapter
 import mozilla.components.service.sync.logins.SyncableLoginsStore
 import org.mozilla.fenix.AppRequestInterceptor
 import org.mozilla.fenix.FeatureFlags
+import org.mozilla.fenix.HomeActivity
+import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.test.Mockable
 import java.io.File
@@ -138,6 +141,9 @@ class Core(private val context: Context) {
                 // media in web content is playing.
                 MediaFeature(context).enable()
             }
+
+            WebNotificationFeature(context, engine, icons, R.drawable.ic_status_logo,
+                HomeActivity::class.java)
         }
     }
 
