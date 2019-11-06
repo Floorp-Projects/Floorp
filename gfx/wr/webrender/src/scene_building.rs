@@ -1114,6 +1114,12 @@ impl<'a> SceneBuilder<'a> {
                 );
             }
             DisplayItem::Text(ref info) => {
+                // TODO(aosmond): Snapping text primitives does not make much sense, given the
+                // primitive bounds and clip are supposed to be conservative, not definitive.
+                // E.g. they should be able to grow and not impact the output. However there
+                // are subtle interactions between the primitive origin and the glyph offset
+                // which appear to be significant (presumably due to some sort of accumulated
+                // error throughout the layers). We should fix this at some point.
                 let (layout, _, clip_and_scroll) = self.process_common_properties_with_bounds(
                     &info.common,
                     &info.bounds,
