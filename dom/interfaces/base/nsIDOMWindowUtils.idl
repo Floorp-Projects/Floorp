@@ -1914,31 +1914,8 @@ interface nsIDOMWindowUtils : nsISupports {
 
   /**
    * Toggle recording of composition on and off.
-   *
-   * This is equivalent to calling |startCompositionRecorder()| or
-   * |stopCompositionRecorder(true)|.
    */
-  Promise setCompositionRecording(in boolean aValue);
-
-  /**
-   * Start the composition recorder.
-   *
-   * @return A promise that is resolved to true if the composion recorder was
-   *         started successfully.
-   */
-  Promise startCompositionRecording();
-
-  /**
-   * Stop the composition recorder.
-   *
-   * @param aWriteToDisk Whether or not the frames should be written to disk.
-   *                     If false, they will be returned in the promise.
-   * @return A promise that resolves when the frames have been collected.
-   *         When |aWriteToDisk| is true, the promise will resolve to |undefined|.
-   *         Otherwise, the promise will resolve to a |DOMCollectedFrames| dictionary,
-   *         which contains the timestamps and contents of the captured frames.
-   */
-  Promise stopCompositionRecording(in boolean aWriteToDisk);
+  void setCompositionRecording(in boolean aValue);
 
   /**
    * Toggle transaction logging on and off.

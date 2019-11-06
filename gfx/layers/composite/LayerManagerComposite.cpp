@@ -137,17 +137,6 @@ void HostLayerManager::WriteCollectedFrames() {
   }
 }
 
-Maybe<CollectedFrames> HostLayerManager::GetCollectedFrames() {
-  Maybe<CollectedFrames> maybeFrames;
-
-  if (mCompositionRecorder) {
-    maybeFrames.emplace(mCompositionRecorder->GetCollectedFrames());
-    mCompositionRecorder = nullptr;
-  }
-
-  return maybeFrames;
-}
-
 /**
  * LayerManagerComposite
  */
