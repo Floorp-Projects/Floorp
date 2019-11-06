@@ -12,8 +12,9 @@ a new tab.
 
 | Name | Summary |
 |---|---|
+| [onCloseTab](on-close-tab.md) | `open fun onCloseTab(webExtension: `[`WebExtension`](../-web-extension/index.md)`?, engineSession: `[`EngineSession`](../../mozilla.components.concept.engine/-engine-session/index.md)`): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Invoked when a web extension attempts to close a tab via browser.tabs.remove. |
 | [onInstalled](on-installed.md) | `open fun onInstalled(webExtension: `[`WebExtension`](../-web-extension/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Invoked when a web extension was installed successfully. |
-| [onNewTab](on-new-tab.md) | `open fun onNewTab(webExtension: `[`WebExtension`](../-web-extension/index.md)`?, url: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, engineSession: `[`EngineSession`](../../mozilla.components.concept.engine/-engine-session/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Invoked when a web extension attempts to open a new tab via browser.tabs.create. Note that browser.tabs.remove is currently not supported: https://github.com/mozilla-mobile/android-components/issues/4682 |
+| [onNewTab](on-new-tab.md) | `open fun onNewTab(webExtension: `[`WebExtension`](../-web-extension/index.md)`?, url: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, engineSession: `[`EngineSession`](../../mozilla.components.concept.engine/-engine-session/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Invoked when a web extension attempts to open a new tab via browser.tabs.create. |
 
 ### Extension Functions
 

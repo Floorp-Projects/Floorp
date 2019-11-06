@@ -2,7 +2,7 @@
 
 # DeviceConfig
 
-`data class DeviceConfig` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/Config.kt#L27)
+`data class DeviceConfig` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/Config.kt#L28)
 
 Configuration for the current device.
 

@@ -2,7 +2,7 @@
 
 # KeyStoreWrapper
 
-`open class KeyStoreWrapper` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/dataprotect/src/main/java/mozilla/components/lib/dataprotect/Keystore.kt#L38)
+`open class KeyStoreWrapper` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/lib/dataprotect/src/main/java/mozilla/components/lib/dataprotect/Keystore.kt#L41)
 
 Wraps the critical functions around a Java KeyStore to better facilitate testing
 and instrumenting.
