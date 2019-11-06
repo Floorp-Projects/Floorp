@@ -28,7 +28,7 @@
           return frame;
         }
 
-        function activateDocument(testInfo) {
+        async function activateDocument(testInfo) {
           // Click the window to activate if appropriate.
           if (testInfo.activated_from == "parent") {
             info(`activate parent's document`);
@@ -36,6 +36,7 @@
           } else if (testInfo.activated_from == "child") {
             info(`activate child's document`);
             testInfo.childFrame.contentWindow.postMessage("click", "*");
+            is((await nextWindowMessage()).data, "activated", "has activated child frame.");
           }
         }
 
@@ -61,7 +62,7 @@
             testInfo.parentWindow = event.source;
             testInfo.childFrame = await createChildFrame(testInfo);
 
-            activateDocument(testInfo);
+            await activateDocument(testInfo);
             switch (testInfo.play_from) {
               case "parent":
                 testAutoplayInWindow(testInfo);

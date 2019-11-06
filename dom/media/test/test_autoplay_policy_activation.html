@@ -120,6 +120,24 @@
           },
 
           {
+            name: "audible playback in activated document (via cross-origin child) -> allowed",
+            muted: false,
+            same_origin_child: false,
+            activated_from: "child",
+            play_from: "parent",
+            should_play: true,
+          },
+
+          {
+            name: "audible playback in activated document (via same-origin child) -> allowed",
+            muted: false,
+            same_origin_child: true,
+            activated_from: "child",
+            play_from: "parent",
+            should_play: true,
+          },
+
+          {
             name: "inaudible playback in activated document -> allowed",
             muted: true,
             activated_from: "parent",
