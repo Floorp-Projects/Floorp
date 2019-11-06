@@ -4,6 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include <ctime>
+
 #include "secerr.h"
 #include "ssl.h"
 
@@ -55,7 +57,7 @@ static void UpdateEsniKeysChecksum(DataBuffer* buf) {
   buf->Write(2, sha256, 4);
 }
 
-static void GenerateEsniKey(PRTime now, SSLNamedGroup group,
+static void GenerateEsniKey(time_t windowStart, SSLNamedGroup group,
                             std::vector<uint16_t>& cipher_suites,
                             DataBuffer* record,
                             ScopedSECKEYPublicKey* pubKey = nullptr,
@@ -71,9 +73,8 @@ static void GenerateEsniKey(PRTime now, SSLNamedGroup group,
   unsigned int encoded_len = 0;
 
   SECStatus rv = SSL_EncodeESNIKeys(
-      &cipher_suites[0], cipher_suites.size(), group, pub, 100,
-      (now / PR_USEC_PER_SEC) - 1, (now / PR_USEC_PER_SEC) + 10, encoded,
-      &encoded_len, sizeof(encoded));
+      &cipher_suites[0], cipher_suites.size(), group, pub, 100, windowStart,
+      windowStart + 10, encoded, &encoded_len, sizeof(encoded));
   ASSERT_EQ(SECSuccess, rv);
   ASSERT_GT(encoded_len, 0U);
 
@@ -91,15 +92,15 @@ static void GenerateEsniKey(PRTime now, SSLNamedGroup group,
   record->Write(0, encoded, encoded_len);
 }
 
-static void SetupEsni(PRTime now, const std::shared_ptr<TlsAgent>& client,
+static void SetupEsni(const std::shared_ptr<TlsAgent>& client,
                       const std::shared_ptr<TlsAgent>& server,
                       SSLNamedGroup group = ssl_grp_ec_curve25519) {
   ScopedSECKEYPublicKey pub;
   ScopedSECKEYPrivateKey priv;
   DataBuffer record;
 
-  GenerateEsniKey(now, ssl_grp_ec_curve25519, kDefaultSuites, &record, &pub,
-                  &priv);
+  GenerateEsniKey(time(nullptr), ssl_grp_ec_curve25519, kDefaultSuites, &record,
+                  &pub, &priv);
   SECStatus rv = SSL_SetESNIKeyPair(server->ssl_fd(), priv.get(), record.data(),
                                     record.len());
   ASSERT_EQ(SECSuccess, rv);
@@ -123,87 +124,77 @@ static void CheckSniExtension(const DataBuffer& data) {
   ASSERT_EQ(expected, name);
 }
 
-class TlsAgentEsniTest : public TlsAgentTestClient13 {
- public:
-  void SetUp() override { now_ = PR_Now(); }
-
- protected:
-  PRTime now() const { return now_; }
-
-  void InstallEsni(const DataBuffer& record, PRErrorCode err = 0) {
-    SECStatus rv = SSL_EnableESNI(agent_->ssl_fd(), record.data(), record.len(),
-                                  kDummySni);
-    if (err == 0) {
-      ASSERT_EQ(SECSuccess, rv);
-    } else {
-      ASSERT_EQ(SECFailure, rv);
-      ASSERT_EQ(err, PORT_GetError());
-    }
+static void ClientInstallEsni(std::shared_ptr<TlsAgent>& agent,
+                              const DataBuffer& record, PRErrorCode err = 0) {
+  SECStatus rv =
+      SSL_EnableESNI(agent->ssl_fd(), record.data(), record.len(), kDummySni);
+  if (err == 0) {
+    ASSERT_EQ(SECSuccess, rv);
+  } else {
+    ASSERT_EQ(SECFailure, rv);
+    ASSERT_EQ(err, PORT_GetError());
   }
+}
 
- private:
-  PRTime now_ = 0;
-};
-
-TEST_P(TlsAgentEsniTest, EsniInstall) {
+TEST_P(TlsAgentTestClient13, EsniInstall) {
   EnsureInit();
   DataBuffer record;
-  GenerateEsniKey(now(), ssl_grp_ec_curve25519, kDefaultSuites, &record);
-  InstallEsni(record);
+  GenerateEsniKey(time(0), ssl_grp_ec_curve25519, kDefaultSuites, &record);
+  ClientInstallEsni(agent_, record);
 }
 
 // The next set of tests fail at setup time.
-TEST_P(TlsAgentEsniTest, EsniInvalidHash) {
+TEST_P(TlsAgentTestClient13, EsniInvalidHash) {
   EnsureInit();
   DataBuffer record;
   GenerateEsniKey(time(0), ssl_grp_ec_curve25519, kDefaultSuites, &record);
   record.data()[2]++;
-  InstallEsni(record, SSL_ERROR_RX_MALFORMED_ESNI_KEYS);
+  ClientInstallEsni(agent_, record, SSL_ERROR_RX_MALFORMED_ESNI_KEYS);
 }
 
-TEST_P(TlsAgentEsniTest, EsniInvalidVersion) {
+TEST_P(TlsAgentTestClient13, EsniInvalidVersion) {
   EnsureInit();
   DataBuffer record;
-  GenerateEsniKey(now(), ssl_grp_ec_curve25519, kDefaultSuites, &record);
+  GenerateEsniKey(time(0), ssl_grp_ec_curve25519, kDefaultSuites, &record);
   record.Write(0, 0xffff, 2);
-  InstallEsni(record, SSL_ERROR_UNSUPPORTED_VERSION);
+  ClientInstallEsni(agent_, record, SSL_ERROR_UNSUPPORTED_VERSION);
 }
 
-TEST_P(TlsAgentEsniTest, EsniShort) {
+TEST_P(TlsAgentTestClient13, EsniShort) {
   EnsureInit();
   DataBuffer record;
-  GenerateEsniKey(now(), ssl_grp_ec_curve25519, kDefaultSuites, &record);
+  GenerateEsniKey(time(0), ssl_grp_ec_curve25519, kDefaultSuites, &record);
   record.Truncate(record.len() - 1);
   UpdateEsniKeysChecksum(&record);
-  InstallEsni(record, SSL_ERROR_RX_MALFORMED_ESNI_KEYS);
+  ClientInstallEsni(agent_, record, SSL_ERROR_RX_MALFORMED_ESNI_KEYS);
 }
 
-TEST_P(TlsAgentEsniTest, EsniLong) {
+TEST_P(TlsAgentTestClient13, EsniLong) {
   EnsureInit();
   DataBuffer record;
-  GenerateEsniKey(now(), ssl_grp_ec_curve25519, kDefaultSuites, &record);
+  GenerateEsniKey(time(0), ssl_grp_ec_curve25519, kDefaultSuites, &record);
   record.Write(record.len(), 1, 1);
   UpdateEsniKeysChecksum(&record);
-  InstallEsni(record, SSL_ERROR_RX_MALFORMED_ESNI_KEYS);
+  ClientInstallEsni(agent_, record, SSL_ERROR_RX_MALFORMED_ESNI_KEYS);
 }
 
-TEST_P(TlsAgentEsniTest, EsniExtensionMismatch) {
+TEST_P(TlsAgentTestClient13, EsniExtensionMismatch) {
   EnsureInit();
   DataBuffer record;
-  GenerateEsniKey(now(), ssl_grp_ec_curve25519, kDefaultSuites, &record);
+  GenerateEsniKey(time(0), ssl_grp_ec_curve25519, kDefaultSuites, &record);
   record.Write(record.len() - 1, 1, 1);
   UpdateEsniKeysChecksum(&record);
-  InstallEsni(record, SSL_ERROR_RX_MALFORMED_ESNI_KEYS);
+  ClientInstallEsni(agent_, record, SSL_ERROR_RX_MALFORMED_ESNI_KEYS);
 }
 
 // The following tests fail by ignoring the Esni block.
-TEST_P(TlsAgentEsniTest, EsniUnknownGroup) {
+TEST_P(TlsAgentTestClient13, EsniUnknownGroup) {
   EnsureInit();
   DataBuffer record;
-  GenerateEsniKey(now(), ssl_grp_ec_curve25519, kDefaultSuites, &record);
+  GenerateEsniKey(time(0), ssl_grp_ec_curve25519, kDefaultSuites, &record);
   record.Write(8, 0xffff, 2);  // Fake group
   UpdateEsniKeysChecksum(&record);
-  InstallEsni(record, 0);
+  ClientInstallEsni(agent_, record, 0);
   auto filter =
       MakeTlsFilter<TlsExtensionCapture>(agent_, ssl_tls13_encrypted_sni_xtn);
   agent_->Handshake();
@@ -211,11 +202,11 @@ TEST_P(TlsAgentEsniTest, EsniUnknownGroup) {
   ASSERT_TRUE(!filter->captured());
 }
 
-TEST_P(TlsAgentEsniTest, EsniUnknownCS) {
+TEST_P(TlsAgentTestClient13, EsniUnknownCS) {
   EnsureInit();
   DataBuffer record;
-  GenerateEsniKey(now(), ssl_grp_ec_curve25519, kBogusSuites, &record);
-  InstallEsni(record, 0);
+  GenerateEsniKey(time(0), ssl_grp_ec_curve25519, kBogusSuites, &record);
+  ClientInstallEsni(agent_, record, 0);
   auto filter =
       MakeTlsFilter<TlsExtensionCapture>(agent_, ssl_tls13_encrypted_sni_xtn);
   agent_->Handshake();
@@ -223,12 +214,12 @@ TEST_P(TlsAgentEsniTest, EsniUnknownCS) {
   ASSERT_TRUE(!filter->captured());
 }
 
-TEST_P(TlsAgentEsniTest, EsniInvalidCS) {
+TEST_P(TlsAgentTestClient13, EsniInvalidCS) {
   EnsureInit();
   DataBuffer record;
-  GenerateEsniKey(now(), ssl_grp_ec_curve25519, kTls12Suites, &record);
+  GenerateEsniKey(time(0), ssl_grp_ec_curve25519, kTls12Suites, &record);
   UpdateEsniKeysChecksum(&record);
-  InstallEsni(record, 0);
+  ClientInstallEsni(agent_, record, 0);
   auto filter =
       MakeTlsFilter<TlsExtensionCapture>(agent_, ssl_tls13_encrypted_sni_xtn);
   agent_->Handshake();
@@ -236,34 +227,36 @@ TEST_P(TlsAgentEsniTest, EsniInvalidCS) {
   ASSERT_TRUE(!filter->captured());
 }
 
-TEST_P(TlsAgentEsniTest, EsniNotReady) {
+TEST_P(TlsAgentTestClient13, EsniNotReady) {
   EnsureInit();
   DataBuffer record;
-  GenerateEsniKey(now() + 1000, ssl_grp_ec_curve25519, kDefaultSuites, &record);
-  InstallEsni(record, 0);
+  GenerateEsniKey(time(0) + 1000, ssl_grp_ec_curve25519, kDefaultSuites,
+                  &record);
+  ClientInstallEsni(agent_, record, 0);
   auto filter =
       MakeTlsFilter<TlsExtensionCapture>(agent_, ssl_tls13_encrypted_sni_xtn);
   agent_->Handshake();
   ASSERT_TRUE(!filter->captured());
 }
 
-TEST_P(TlsAgentEsniTest, EsniExpired) {
+TEST_P(TlsAgentTestClient13, EsniExpired) {
   EnsureInit();
   DataBuffer record;
-  GenerateEsniKey(now() - 1000, ssl_grp_ec_curve25519, kDefaultSuites, &record);
-  InstallEsni(record, 0);
+  GenerateEsniKey(time(0) - 1000, ssl_grp_ec_curve25519, kDefaultSuites,
+                  &record);
+  ClientInstallEsni(agent_, record, 0);
   auto filter =
       MakeTlsFilter<TlsExtensionCapture>(agent_, ssl_tls13_encrypted_sni_xtn);
   agent_->Handshake();
   ASSERT_TRUE(!filter->captured());
 }
 
-TEST_P(TlsAgentEsniTest, NoSniSoNoEsni) {
+TEST_P(TlsAgentTestClient13, NoSniSoNoEsni) {
   EnsureInit();
   DataBuffer record;
-  GenerateEsniKey(now(), ssl_grp_ec_curve25519, kDefaultSuites, &record);
+  GenerateEsniKey(time(0), ssl_grp_ec_curve25519, kDefaultSuites, &record);
   SSL_SetURL(agent_->ssl_fd(), "");
-  InstallEsni(record, 0);
+  ClientInstallEsni(agent_, record, 0);
   auto filter =
       MakeTlsFilter<TlsExtensionCapture>(agent_, ssl_tls13_encrypted_sni_xtn);
   agent_->Handshake();
@@ -282,7 +275,7 @@ static int32_t SniCallback(TlsAgent* agent, const SECItem* srvNameAddr,
 
 TEST_P(TlsConnectTls13, ConnectEsni) {
   EnsureTlsSetup();
-  SetupEsni(now(), client_, server_);
+  SetupEsni(client_, server_);
   auto cFilterSni =
       MakeTlsFilter<TlsExtensionCapture>(client_, ssl_server_name_xtn);
   auto cFilterEsni =
@@ -307,7 +300,7 @@ TEST_P(TlsConnectTls13, ConnectEsniHrr) {
   EnsureTlsSetup();
   const std::vector<SSLNamedGroup> groups = {ssl_grp_ec_secp384r1};
   server_->ConfigNamedGroups(groups);
-  SetupEsni(now(), client_, server_);
+  SetupEsni(client_, server_);
   auto hrr_capture = MakeTlsFilter<TlsHandshakeRecorder>(
       server_, kTlsHandshakeHelloRetryRequest);
   auto filter =
@@ -329,8 +322,8 @@ TEST_P(TlsConnectTls13, ConnectEsniNoDummy) {
   ScopedSECKEYPrivateKey priv;
   DataBuffer record;
 
-  GenerateEsniKey(now(), ssl_grp_ec_curve25519, kDefaultSuites, &record, &pub,
-                  &priv);
+  GenerateEsniKey(time(nullptr), ssl_grp_ec_curve25519, kDefaultSuites, &record,
+                  &pub, &priv);
   SECStatus rv = SSL_SetESNIKeyPair(server_->ssl_fd(), priv.get(),
                                     record.data(), record.len());
   ASSERT_EQ(SECSuccess, rv);
@@ -353,8 +346,8 @@ TEST_P(TlsConnectTls13, ConnectEsniNullDummy) {
   ScopedSECKEYPrivateKey priv;
   DataBuffer record;
 
-  GenerateEsniKey(now(), ssl_grp_ec_curve25519, kDefaultSuites, &record, &pub,
-                  &priv);
+  GenerateEsniKey(time(nullptr), ssl_grp_ec_curve25519, kDefaultSuites, &record,
+                  &pub, &priv);
   SECStatus rv = SSL_SetESNIKeyPair(server_->ssl_fd(), priv.get(),
                                     record.data(), record.len());
   ASSERT_EQ(SECSuccess, rv);
@@ -379,15 +372,14 @@ TEST_P(TlsConnectTls13, ConnectEsniCSMismatch) {
   ScopedSECKEYPrivateKey priv;
   DataBuffer record;
 
-  GenerateEsniKey(now(), ssl_grp_ec_curve25519, kDefaultSuites, &record, &pub,
-                  &priv);
+  GenerateEsniKey(time(nullptr), ssl_grp_ec_curve25519, kDefaultSuites, &record,
+                  &pub, &priv);
   PRUint8 encoded[1024];
   unsigned int encoded_len = 0;
 
   SECStatus rv = SSL_EncodeESNIKeys(
       &kChaChaSuite[0], kChaChaSuite.size(), ssl_grp_ec_curve25519, pub.get(),
-      100, (now() / PR_USEC_PER_SEC) - 1, (now() / PR_USEC_PER_SEC) + 10,
-      encoded, &encoded_len, sizeof(encoded));
+      100, time(0), time(0) + 10, encoded, &encoded_len, sizeof(encoded));
   ASSERT_EQ(SECSuccess, rv);
   ASSERT_LT(0U, encoded_len);
   rv = SSL_SetESNIKeyPair(server_->ssl_fd(), priv.get(), encoded, encoded_len);
@@ -400,7 +392,7 @@ TEST_P(TlsConnectTls13, ConnectEsniCSMismatch) {
 
 TEST_P(TlsConnectTls13, ConnectEsniP256) {
   EnsureTlsSetup();
-  SetupEsni(now(), client_, server_, ssl_grp_ec_secp256r1);
+  SetupEsni(client_, server_, ssl_grp_ec_secp256r1);
   auto cfilter =
       MakeTlsFilter<TlsExtensionCapture>(client_, ssl_server_name_xtn);
   auto sfilter =
@@ -413,21 +405,18 @@ TEST_P(TlsConnectTls13, ConnectEsniP256) {
 
 TEST_P(TlsConnectTls13, ConnectMismatchedEsniKeys) {
   EnsureTlsSetup();
-  SetupEsni(now(), client_, server_);
+  SetupEsni(client_, server_);
   // Now install a new set of keys on the client, so we have a mismatch.
   DataBuffer record;
-  GenerateEsniKey(now(), ssl_grp_ec_curve25519, kDefaultSuites, &record);
-
-  SECStatus rv =
-      SSL_EnableESNI(client_->ssl_fd(), record.data(), record.len(), kDummySni);
-  ASSERT_EQ(SECSuccess, rv);
+  GenerateEsniKey(time(0), ssl_grp_ec_curve25519, kDefaultSuites, &record);
+  ClientInstallEsni(client_, record, 0);
   ConnectExpectAlert(server_, illegal_parameter);
   server_->CheckErrorCode(SSL_ERROR_RX_MALFORMED_CLIENT_HELLO);
 }
 
 TEST_P(TlsConnectTls13, ConnectDamagedEsniExtensionCH) {
   EnsureTlsSetup();
-  SetupEsni(now(), client_, server_);
+  SetupEsni(client_, server_);
   auto filter = MakeTlsFilter<TlsExtensionDamager>(
       client_, ssl_tls13_encrypted_sni_xtn, 50);  // in the ciphertext
   ConnectExpectAlert(server_, illegal_parameter);
@@ -436,7 +425,7 @@ TEST_P(TlsConnectTls13, ConnectDamagedEsniExtensionCH) {
 
 TEST_P(TlsConnectTls13, ConnectRemoveEsniExtensionEE) {
   EnsureTlsSetup();
-  SetupEsni(now(), client_, server_);
+  SetupEsni(client_, server_);
   auto filter =
       MakeTlsFilter<TlsExtensionDropper>(server_, ssl_tls13_encrypted_sni_xtn);
   filter->EnableDecryption();
@@ -446,7 +435,7 @@ TEST_P(TlsConnectTls13, ConnectRemoveEsniExtensionEE) {
 
 TEST_P(TlsConnectTls13, ConnectShortEsniExtensionEE) {
   EnsureTlsSetup();
-  SetupEsni(now(), client_, server_);
+  SetupEsni(client_, server_);
   DataBuffer shortNonce;
   auto filter = MakeTlsFilter<TlsExtensionReplacer>(
       server_, ssl_tls13_encrypted_sni_xtn, shortNonce);
@@ -457,7 +446,7 @@ TEST_P(TlsConnectTls13, ConnectShortEsniExtensionEE) {
 
 TEST_P(TlsConnectTls13, ConnectBogusEsniExtensionEE) {
   EnsureTlsSetup();
-  SetupEsni(now(), client_, server_);
+  SetupEsni(client_, server_);
   const uint8_t bogusNonceBuf[16] = {0};
   DataBuffer bogusNonce(bogusNonceBuf, sizeof(bogusNonceBuf));
   auto filter = MakeTlsFilter<TlsExtensionReplacer>(
@@ -472,7 +461,7 @@ TEST_P(TlsConnectTls13, ConnectBogusEsniExtensionEE) {
 // The client then aborts when it sees the server did TLS 1.2.
 TEST_P(TlsConnectTls13, EsniButTLS12Server) {
   EnsureTlsSetup();
-  SetupEsni(now(), client_, server_);
+  SetupEsni(client_, server_);
   client_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_2,
                            SSL_LIBRARY_VERSION_TLS_1_3);
   server_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_2,

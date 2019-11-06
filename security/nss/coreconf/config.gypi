@@ -355,8 +355,6 @@
               'LINUX2_1',
               'LINUX',
               'linux',
-              '_DEFAULT_SOURCE', # for <endian.h> functions, strdup, realpath, and getentropy
-              '_BSD_SOURCE', # for the above in glibc <= 2.19
             ],
           }],
           [ 'OS=="dragonfly" or OS=="freebsd"', {
@@ -393,11 +391,8 @@
               '-ffunction-sections',
               '-fdata-sections',
             ],
-            'cflags_c': [
-              '-std=c99',
-            ],
             'cflags_cc': [
-              '-std=c++11',
+              '-std=c++0x',
             ],
             'ldflags': [
               '-z', 'noexecstack',
