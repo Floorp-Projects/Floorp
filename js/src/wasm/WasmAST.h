@@ -172,36 +172,36 @@ class AstValType {
 
 struct AstBlockType {
   enum class Which {
-    IsVoid,       // [] -> []
-    IsOneResult,  // [] -> T
-    IsRef         // ft: index of [T,..] -> [T,..]
+    VoidToVoid,    // [] -> []
+    VoidToSingle,  // [] -> T
+    Func           // ft: index of [T,..] -> [T,..]
   };
 
  private:
   Which which_;
   union {
-    AstValType oneResult_;
-    AstRef ref_;
+    AstValType voidToSingle_;
+    AstRef func_;
   };
 
  public:
-  AstBlockType() : which_(Which::IsVoid) {}
+  AstBlockType() : which_(Which::VoidToVoid) {}
   Which which() const { return which_; }
-  AstValType& oneResult() {
-    MOZ_ASSERT(which_ == Which::IsOneResult);
-    return oneResult_;
+  AstValType& voidToSingleType() {
+    MOZ_ASSERT(which_ == Which::VoidToSingle);
+    return voidToSingle_;
   }
-  void setOneResult(AstValType t) {
-    which_ = Which::IsOneResult;
-    oneResult_ = t;
+  void setVoidToSingle(AstValType t) {
+    which_ = Which::VoidToSingle;
+    voidToSingle_ = t;
   }
-  AstRef& ref() {
-    MOZ_ASSERT(which_ == Which::IsRef);
-    return ref_;
+  AstRef& funcType() {
+    MOZ_ASSERT(which_ == Which::Func);
+    return func_;
   }
-  void setRef(AstRef ref) {
-    which_ = Which::IsRef;
-    ref_ = ref;
+  void setFunc(AstRef t) {
+    which_ = Which::Func;
+    func_ = t;
   }
 };
 
