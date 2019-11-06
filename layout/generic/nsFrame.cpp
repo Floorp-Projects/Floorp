@@ -2615,17 +2615,18 @@ Maybe<nsRect> nsIFrame::GetClipPropClipRect(const nsStyleDisplay* aDisp,
  *
  * Return true if clipping was applied.
  */
-static void ApplyOverflowClipping(
+static bool ApplyOverflowClipping(
     nsDisplayListBuilder* aBuilder, const nsIFrame* aFrame,
+    const nsStyleDisplay* aDisp,
     DisplayListClipState::AutoClipMultiple& aClipState) {
   // Only -moz-hidden-unscrollable is handled here (and 'hidden' for table
   // frames, and any non-visible value for blocks in a paginated context).
   // We allow -moz-hidden-unscrollable to apply to any kind of frame. This
   // is required by comboboxes which make their display text (an inline frame)
   // have clipping.
-  MOZ_ASSERT(
-      nsFrame::ShouldApplyOverflowClipping(aFrame, aFrame->StyleDisplay()));
-
+  if (!nsFrame::ShouldApplyOverflowClipping(aFrame, aDisp)) {
+    return false;
+  }
   nsRect clipRect;
   bool haveRadii = false;
   nscoord radii[8];
@@ -2654,6 +2655,7 @@ static void ApplyOverflowClipping(
   haveRadii = aFrame->GetBoxBorderRadii(radii, bp, false);
   aClipState.ClipContainingBlockDescendantsExtra(clipRect,
                                                  haveRadii ? radii : nullptr);
+  return true;
 }
 
 #ifdef DEBUG
@@ -3900,25 +3902,13 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
   }
 
   nsIFrame* child = aChild;
-  auto* placeholder = child->IsPlaceholderFrame()
-                          ? static_cast<nsPlaceholderFrame*>(child)
-                          : nullptr;
-  nsIFrame* childOrOutOfFlow =
-      placeholder ? placeholder->GetOutOfFlowFrame() : child;
-
-  nsIFrame* parent = childOrOutOfFlow->GetParent();
-  const bool shouldApplyOverflowClip =
-      nsFrame::ShouldApplyOverflowClipping(parent, parent->StyleDisplay());
 
   const bool isPaintingToWindow = aBuilder->IsPaintingToWindow();
   const bool doingShortcut =
       isPaintingToWindow &&
       (child->GetStateBits() & NS_FRAME_SIMPLE_DISPLAYLIST) &&
       // Animations may change the stacking context state.
-      // ShouldApplyOverflowClipping is affected by the parent style, which does
-      // not invalidate the NS_FRAME_SIMPLE_DISPLAYLIST bit.
-      !(shouldApplyOverflowClip || child->MayHaveTransformAnimation() ||
-        child->MayHaveOpacityAnimation());
+      !(child->MayHaveTransformAnimation() || child->MayHaveOpacityAnimation());
 
   if (aBuilder->IsForPainting()) {
     aBuilder->ClearWillChangeBudgetStatus(child);
@@ -3949,7 +3939,9 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
   nsRect dirty = aBuilder->GetDirtyRect() - offset;
 
   nsDisplayListBuilder::OutOfFlowDisplayData* savedOutOfFlowData = nullptr;
-  if (placeholder) {
+  const bool isPlaceholder = child->IsPlaceholderFrame();
+  if (isPlaceholder) {
+    nsPlaceholderFrame* placeholder = static_cast<nsPlaceholderFrame*>(child);
     if (placeholder->GetStateBits() & PLACEHOLDER_FOR_TOPLAYER) {
       // If the out-of-flow frame is in the top layer, the viewport frame
       // will paint it. Skip it here. Note that, only out-of-flow frames
@@ -3959,8 +3951,10 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
       return;
     }
 
-    child = childOrOutOfFlow;
-    if (aBuilder->IsForPainting()) {
+    child = placeholder->GetOutOfFlowFrame();
+    NS_ASSERTION(child, "No out of flow frame?");
+
+    if (child && aBuilder->IsForPainting()) {
       aBuilder->ClearWillChangeBudgetStatus(child);
     }
 
@@ -3971,11 +3965,12 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
     static const nsFrameState skipFlags =
         (NS_FRAME_IS_PUSHED_FLOAT | NS_FRAME_TOO_DEEP_IN_FRAME_TREE |
          NS_FRAME_IS_NONDISPLAY);
-    if (child->HasAnyStateBits(skipFlags) || nsLayoutUtils::IsPopup(child)) {
+    if (!child || (child->GetStateBits() & skipFlags) ||
+        nsLayoutUtils::IsPopup(child)) {
       return;
     }
 
-    MOZ_ASSERT(child->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW));
+    MOZ_ASSERT(child->GetStateBits() & NS_FRAME_OUT_OF_FLOW);
     savedOutOfFlowData = nsDisplayListBuilder::GetOutOfFlowData(child);
 
     if (aBuilder->GetIncludeAllOutOfFlows()) {
@@ -4048,7 +4043,7 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
       child->IsStackingContext(disp, pos, effects, isPositioned);
 
   if (pseudoStackingContext || isStackingContext || isPositioned ||
-      placeholder || (!isSVG && disp->IsFloating(child)) ||
+      isPlaceholder || (!isSVG && disp->IsFloating(child)) ||
       (isSVG && effects->mClip.IsRect() && IsSVGContentWithCSSClip(child))) {
     pseudoStackingContext = true;
     awayFromCommonPath = true;
@@ -4072,8 +4067,8 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
         savedOutOfFlowData->mContainingBlockActiveScrolledRoot);
     MOZ_ASSERT(awayFromCommonPath,
                "It is impossible when savedOutOfFlowData is true");
-  } else if (HasAnyStateBits(NS_FRAME_FORCE_DISPLAY_LIST_DESCEND_INTO) &&
-             placeholder) {
+  } else if (GetStateBits() & NS_FRAME_FORCE_DISPLAY_LIST_DESCEND_INTO &&
+             isPlaceholder) {
     NS_ASSERTION(visible.IsEmpty(), "should have empty visible rect");
     // Every item we build from now until we descent into an out of flow that
     // does have saved out of flow data should be invisible. This state gets
@@ -4095,12 +4090,10 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
   // Don't use overflowClip to restrict the dirty rect, since some of the
   // descendants may not be clipped by it. Even if we end up with unnecessary
   // display items, they'll be pruned during ComputeVisibility.
-  //
-  // FIXME(emilio): Why can't we handle this more similarly to `clip` (on the
-  // parent, rather than on the children)? Would ClipContentDescendants do what
-  // we want?
-  if (shouldApplyOverflowClip) {
-    ApplyOverflowClipping(aBuilder, parent, clipState);
+  nsIFrame* parent = child->GetParent();
+  const nsStyleDisplay* parentDisp =
+      parent == this ? ourDisp : parent->StyleDisplay();
+  if (ApplyOverflowClipping(aBuilder, parent, parentDisp, clipState)) {
     awayFromCommonPath = true;
   }
 
@@ -10896,9 +10889,9 @@ bool nsIFrame::IsStackingContext(const nsStyleDisplay* aStyleDisplay,
                                  bool aIsPositioned) {
   return HasOpacity(aStyleDisplay, aStyleEffects, nullptr) ||
          IsTransformed(aStyleDisplay) ||
-         ((aStyleDisplay->IsContainPaint() ||
-           aStyleDisplay->IsContainLayout()) &&
-          IsFrameOfType(eSupportsContainLayoutAndPaint)) ||
+         (IsFrameOfType(eSupportsContainLayoutAndPaint) &&
+          (aStyleDisplay->IsContainPaint() ||
+           aStyleDisplay->IsContainLayout())) ||
          // strictly speaking, 'perspective' doesn't require visual atomicity,
          // but the spec says it acts like the rest of these
          ChildrenHavePerspective(aStyleDisplay) ||
