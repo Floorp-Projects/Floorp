@@ -507,10 +507,6 @@ class BrowserParent final : public PBrowserParent,
       const uint64_t& aOuterWindowID,
       IsWindowSupportingProtectedMediaResolver&& aResolve);
 
-  mozilla::ipc::IPCResult RecvIsWindowSupportingWebVR(
-      const uint64_t& aOuterWindowID,
-      IsWindowSupportingWebVRResolver&& aResolve);
-
   void LoadURL(nsIURI* aURI);
 
   void ResumeLoad(uint64_t aPendingSwitchID);
