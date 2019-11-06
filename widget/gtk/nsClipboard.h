@@ -62,6 +62,9 @@ class nsClipboard : public nsIClipboard, public nsIObserver {
  private:
   virtual ~nsClipboard();
 
+  // Save global clipboard content to gtk
+  nsresult Store(void);
+
   // Get our hands on the correct transferable, given a specific
   // clipboard
   nsITransferable* GetTransferable(int32_t aWhichClipboard);
@@ -70,8 +73,6 @@ class nsClipboard : public nsIClipboard, public nsIObserver {
   void SetTransferableData(nsITransferable* aTransferable, nsCString& aFlavor,
                            const char* aClipboardData,
                            uint32_t aClipboardDataLength);
-
-  void ClearTransferable(int32_t aWhichClipboard);
 
   // Hang on to our owners and transferables so we can transfer data
   // when asked.
