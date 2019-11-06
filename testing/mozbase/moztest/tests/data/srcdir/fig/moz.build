@@ -1,0 +1,4 @@
+ANDROID_INSTRUMENTATION_MANIFESTS += [
+    'grape/instrumentation.ini',
+    'huckleberry/instrumentation.ini',
+]

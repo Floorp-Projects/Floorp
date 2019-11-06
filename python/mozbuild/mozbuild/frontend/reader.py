@@ -841,6 +841,7 @@ class BuildReader(object):
         ignores = {
             # Ignore fake moz.build files used for testing moz.build.
             'python/mozbuild/mozbuild/test',
+            'testing/mozbase/moztest/tests/data',
 
             # Ignore object directories.
             'obj*',
