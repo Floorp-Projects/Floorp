@@ -3662,7 +3662,7 @@ mozilla::ipc::IPCResult ContentChild::RecvSaveRecording(
 
 mozilla::ipc::IPCResult ContentChild::RecvCrossProcessRedirect(
     const uint32_t& aRegistrarId, nsIURI* aURI,
-    const ReplacementChannelConfigInit& aConfig,
+    const Maybe<ReplacementChannelConfigInit>& aConfig,
     const Maybe<LoadInfoArgs>& aLoadInfo, const uint64_t& aChannelId,
     nsIURI* aOriginalURI, const uint64_t& aIdentifier,
     const uint32_t& aRedirectMode, CrossProcessRedirectResolver&& aResolve) {
@@ -3677,18 +3677,19 @@ mozilla::ipc::IPCResult ContentChild::RecvCrossProcessRedirect(
   nsCOMPtr<nsIChannel> newChannel;
   rv = NS_NewChannelInternal(getter_AddRefs(newChannel), aURI, loadInfo);
 
-  // We are sure this is a HttpChannelChild because the parent
-  // is always a HTTP channel.
-  RefPtr<HttpChannelChild> httpChild = do_QueryObject(newChannel);
-  if (NS_FAILED(rv) || !httpChild) {
+  RefPtr<nsIChildChannel> childChannel = do_QueryObject(newChannel);
+  if (NS_FAILED(rv) || !childChannel) {
     MOZ_DIAGNOSTIC_ASSERT(false, "NS_NewChannelInternal failed");
     return IPC_OK();
   }
 
   // This is used to report any errors back to the parent by calling
   // CrossProcessRedirectFinished.
+  RefPtr<HttpChannelChild> httpChild = do_QueryObject(newChannel);
   auto scopeExit = MakeScopeExit([&]() {
-    rv = httpChild->CrossProcessRedirectFinished(rv);
+    if (httpChild) {
+      rv = httpChild->CrossProcessRedirectFinished(rv);
+    }
     nsCOMPtr<nsILoadInfo> loadInfo;
     MOZ_ALWAYS_SUCCEEDS(newChannel->GetLoadInfo(getter_AddRefs(loadInfo)));
     Maybe<LoadInfoArgs> loadInfoArgs;
@@ -3698,28 +3699,32 @@ mozilla::ipc::IPCResult ContentChild::RecvCrossProcessRedirect(
         Tuple<const nsresult&, const Maybe<LoadInfoArgs>&>(rv, loadInfoArgs));
   });
 
-  rv = httpChild->SetChannelId(aChannelId);
-  if (NS_FAILED(rv)) {
-    return IPC_OK();
+  if (httpChild) {
+    rv = httpChild->SetChannelId(aChannelId);
+    if (NS_FAILED(rv)) {
+      return IPC_OK();
+    }
+
+    rv = httpChild->SetOriginalURI(aOriginalURI);
+    if (NS_FAILED(rv)) {
+      return IPC_OK();
+    }
+
+    rv = httpChild->SetRedirectMode(aRedirectMode);
+    if (NS_FAILED(rv)) {
+      return IPC_OK();
+    }
   }
 
-  rv = httpChild->SetOriginalURI(aOriginalURI);
-  if (NS_FAILED(rv)) {
-    return IPC_OK();
+  if (aConfig) {
+    HttpBaseChannel::ReplacementChannelConfig config(*aConfig);
+    HttpBaseChannel::ConfigureReplacementChannel(
+        newChannel, config,
+        HttpBaseChannel::ConfigureReason::DocumentChannelReplacement);
   }
-
-  rv = httpChild->SetRedirectMode(aRedirectMode);
-  if (NS_FAILED(rv)) {
-    return IPC_OK();
-  }
-
-  HttpBaseChannel::ReplacementChannelConfig config(aConfig);
-  HttpBaseChannel::ConfigureReplacementChannel(
-      newChannel, config,
-      HttpBaseChannel::ConfigureReason::DocumentChannelReplacement);
 
   // connect parent.
-  rv = httpChild->ConnectParent(aRegistrarId);  // creates parent channel
+  rv = childChannel->ConnectParent(aRegistrarId);  // creates parent channel
   if (NS_FAILED(rv)) {
     return IPC_OK();
   }
@@ -3727,7 +3732,7 @@ mozilla::ipc::IPCResult ContentChild::RecvCrossProcessRedirect(
   nsCOMPtr<nsIChildProcessChannelListener> processListener =
       do_GetService("@mozilla.org/network/childProcessChannelListener;1");
   // The listener will call completeRedirectSetup on the channel.
-  rv = processListener->OnChannelReady(httpChild, aIdentifier);
+  rv = processListener->OnChannelReady(childChannel, aIdentifier);
   if (NS_FAILED(rv)) {
     return IPC_OK();
   }
