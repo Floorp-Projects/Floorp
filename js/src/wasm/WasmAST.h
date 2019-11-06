@@ -406,7 +406,7 @@ class AstExpr : public AstNode {
   const AstExprKind kind_;
 
  protected:
-  AstExpr(AstExprKind kind) : kind_(kind) {}
+  explicit AstExpr(AstExprKind kind) : kind_(kind) {}
 
  public:
   AstExprKind kind() const { return kind_; }
