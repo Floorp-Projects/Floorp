@@ -784,6 +784,7 @@ class EntryGetter {
 //   ( /* Samples */
 //     ThreadId
 //     TimeBeforeCompactStack
+//     UnresponsivenessDurationMs?
 //     CompactStack
 //         /* internally including:
 //           ( NativeLeafAddr
@@ -791,7 +792,6 @@ class EntryGetter {
 //             LineNumber? CategoryPair?
 //           | JitReturnAddr
 //           )+
-//           Responsiveness?
 //         */
 //   )
 //   | MarkerData
@@ -971,7 +971,8 @@ void ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter,
 
       ProfileSample sample;
 
-      auto ReadStack = [&](EntryGetter& e, uint64_t entryPosition) {
+      auto ReadStack = [&](EntryGetter& e, uint64_t entryPosition,
+                           const Maybe<double>& unresponsiveDuration) {
         UniqueStacks::StackKey stack =
             aUniqueStacks.BeginStack(UniqueStacks::FrameKey("(root)"));
 
@@ -1120,9 +1121,8 @@ void ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter,
 
         sample.mStack = aUniqueStacks.GetOrAddStackIndex(stack);
 
-        if (e.Has() && e.Get().IsResponsiveness()) {
-          sample.mResponsiveness = Some(e.Get().GetDouble());
-          e.Next();
+        if (unresponsiveDuration.isSome()) {
+          sample.mResponsiveness = unresponsiveDuration;
         }
 
         WriteSample(aWriter, *aUniqueStacks.mUniqueStrings, sample);
@@ -1137,7 +1137,7 @@ void ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter,
           continue;
         }
 
-        ReadStack(e, 0);
+        ReadStack(e, 0, Nothing{});
       } else if (e.Has() && e.Get().IsTimeBeforeCompactStack()) {
         sample.mTime = e.Get().GetDouble();
 
@@ -1146,6 +1146,8 @@ void ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter,
           e.Next();
           continue;
         }
+
+        Maybe<double> unresponsiveDuration;
 
         BlocksRingBuffer::BlockIterator it = e.Iterator();
         for (;;) {
@@ -1156,6 +1158,13 @@ void ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter,
           BlocksRingBuffer::EntryReader er = *it;
           ProfileBufferEntry::Kind kind =
               er.ReadObject<ProfileBufferEntry::Kind>();
+
+          // There may be an UnresponsiveDurationMs before the CompactStack.
+          if (kind == ProfileBufferEntry::Kind::UnresponsiveDurationMs) {
+            unresponsiveDuration = Some(er.ReadObject<double>());
+            continue;
+          }
+
           if (kind == ProfileBufferEntry::Kind::CompactStack) {
             BlocksRingBuffer tempBuffer(
                 BlocksRingBuffer::ThreadSafety::WithoutMutex,
@@ -1167,11 +1176,13 @@ void ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter,
               EntryGetter stackEntryGetter(*aReader);
               if (stackEntryGetter.Has()) {
                 ReadStack(stackEntryGetter,
-                          er.CurrentBlockIndex().ConvertToU64());
+                          er.CurrentBlockIndex().ConvertToU64(),
+                          unresponsiveDuration);
               }
             });
             break;
           }
+
           MOZ_ASSERT(kind >= ProfileBufferEntry::Kind::LEGACY_LIMIT,
                      "There should be no legacy entries between "
                      "TimeBeforeCompactStack and CompactStack");
@@ -1786,7 +1797,6 @@ bool ProfileBuffer::DuplicateLastSample(int aThreadId,
         case ProfileBufferEntry::Kind::CounterKey:
         case ProfileBufferEntry::Kind::Number:
         case ProfileBufferEntry::Kind::Count:
-        case ProfileBufferEntry::Kind::Responsiveness:
           // Don't copy anything not part of a thread's stack sample
           break;
         case ProfileBufferEntry::Kind::CounterId:
