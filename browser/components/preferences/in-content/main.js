@@ -857,7 +857,9 @@ var gMainPane = {
       win.openTrustedLinkIn("about:preferences#sync", "current");
       return;
     }
-    let url = await FxAccounts.config.promiseSignInURI("dev-edition-setup");
+    let url = await FxAccounts.config.promiseConnectAccountURI(
+      "dev-edition-setup"
+    );
     let accountsTab = win.gBrowser.addWebTab(url);
     win.gBrowser.selectedTab = accountsTab;
   },
