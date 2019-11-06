@@ -1082,7 +1082,7 @@ This reports when an error has occurred when parsing/evaluating a JEXL targeting
   "locale": "en-US",
   "message_id": "some_message_id",
   "event": "TARGETING_EXPRESSION_ERROR",
-  "value": ["MALFORMED_EXPRESSION" | "OTHER_ERROR"]
+  "event_context": ["MALFORMED_EXPRESSION" | "OTHER_ERROR"]
 }
 ```
 
@@ -1099,7 +1099,7 @@ This reports a failure in the Remote Settings loader to load messages for Activi
   "user_prefs": 7,
   "event": ["ASR_RS_NO_MESSAGES" | "ASR_RS_ERROR"],
   // The value is set to the ID of the message provider. For example: remote-cfr, remote-onboarding, etc.
-  "value": "REMOTE_PROVIDER_ID"
+  "event_context": "REMOTE_PROVIDER_ID"
 }
 ```
 

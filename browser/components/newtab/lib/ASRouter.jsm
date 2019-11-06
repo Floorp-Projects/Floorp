@@ -350,7 +350,7 @@ const MessageLoaderUtils = {
           action: "asrouter_undesired_event",
           event,
           message_id: "n/a",
-          value: providerId,
+          event_context: providerId,
         })
       );
     }
@@ -963,7 +963,7 @@ class _ASRouter {
           message_id: message.id,
           action: "asrouter_undesired_event",
           event: "TARGETING_EXPRESSION_ERROR",
-          value: type,
+          event_context: type,
         })
       );
     }

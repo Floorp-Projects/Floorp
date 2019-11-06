@@ -315,17 +315,15 @@ class PingCentre {
     return payload;
   }
 
-  async _createStructuredIngestionPing(data, options) {
-    let filter = options && options.filter;
+  _createStructuredIngestionPing(data, options = {}) {
+    let { filter } = options;
     let experiments = TelemetryEnvironment.getActiveExperiments();
     let experimentsString = this._createExperimentsString(experiments, filter);
 
-    let clientID = data.client_id || (await this.telemetryClientId);
     let locale = data.locale || Services.locale.appLocaleAsLangTag;
     const payload = Object.assign(
       {
         locale,
-        client_id: clientID,
         version: AppConstants.MOZ_APP_VERSION,
         release_channel: UpdateUtils.getUpdateChannel(false),
       },
@@ -448,12 +446,12 @@ class PingCentre {
    *                          https://github.com/mozilla/gcp-ingestion/blob/master/docs/edge.md#postput-request
    * @param {Object} options  Other options for this ping.
    */
-  async sendStructuredIngestionPing(data, endpoint, options) {
+  sendStructuredIngestionPing(data, endpoint, options) {
     if (!this.enabled) {
       return Promise.resolve();
     }
 
-    const ping = await this._createStructuredIngestionPing(data, options);
+    const ping = this._createStructuredIngestionPing(data, options);
     const payload = JSON.stringify(ping);
 
     if (this.logging) {

@@ -190,12 +190,12 @@ export class ASRouterUISurface extends React.PureComponent {
     this.sendUserActionTelemetry({ event: "IMPRESSION", ...extraProps });
   }
 
-  // If link has a `metric` data attribute send it as part of the `value`
+  // If link has a `metric` data attribute send it as part of the `event_context`
   // telemetry field which can have arbitrary values.
   // Used for router messages with links as part of the content.
   sendClick(event) {
     const metric = {
-      value: event.target.dataset.metric,
+      event_context: event.target.dataset.metric,
       // Used for the `source` of the event. Needed to differentiate
       // from other snippet or onboarding events that may occur.
       id: "NEWTAB_FOOTER_BAR_CONTENT",

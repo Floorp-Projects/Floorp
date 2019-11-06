@@ -411,6 +411,13 @@ describe("DiscoveryStreamFeed", () => {
         data: { placements: [{ name: "first" }, { name: "second" }] },
       });
     });
+    it("should fire update placements from loadLayout", async () => {
+      sandbox.spy(feed, "updatePlacements");
+
+      await feed.loadLayout(feed.store.dispatch);
+
+      assert.calledOnce(feed.updatePlacements);
+    });
   });
 
   describe("#placementsForEach", () => {

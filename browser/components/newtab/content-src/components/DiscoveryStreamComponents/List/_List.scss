@@ -25,7 +25,7 @@ $item-line-height: 20;
   }
 
   .ds-list-item-title {
-    @include limit-visibile-lines(3, $line-height, $font-size);
+    @include limit-visible-lines(3, $line-height, $font-size);
   }
 
   .ds-list-image {
@@ -205,7 +205,7 @@ $item-line-height: 20;
   }
 
   .ds-list-item-excerpt {
-    @include limit-visibile-lines(2, $item-line-height, $item-font-size);
+    @include limit-visible-lines(2, $item-line-height, $item-font-size);
     @include dark-theme-only {
       color: $grey-10-80;
     }
@@ -220,7 +220,7 @@ $item-line-height: 20;
   }
 
   .ds-list-item-info {
-    @include limit-visibile-lines(1, $item-line-height, $item-font-size);
+    @include limit-visible-lines(1, $item-line-height, $item-font-size);
     @include dark-theme-only {
       color: $grey-40;
     }

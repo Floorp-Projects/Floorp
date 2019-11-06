@@ -67,12 +67,12 @@ $col4-header-font-size: 14;
       }
 
       .excerpt {
-        @include limit-visibile-lines(3, 24, 15);
+        @include limit-visible-lines(3, 24, 15);
       }
     }
 
     &.ds-card-grid-divisible-by-4 .title {
-      @include limit-visibile-lines(3, 20, 15);
+      @include limit-visible-lines(3, 20, 15);
     }
   }
 
