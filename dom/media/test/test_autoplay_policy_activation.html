@@ -28,6 +28,7 @@
             same_origin_child: true,
             activated_child: false,
             activated_parent: true,
+            play_from: "child",
             should_play: true,
           },
 
@@ -37,6 +38,7 @@
             same_origin_child: true,
             activated_child: false,
             activated_parent: false,
+            play_from: "child",
             should_play: true,
           },
 
@@ -46,6 +48,7 @@
             same_origin_child: true,
             activated_child: false,
             activated_parent: true,
+            play_from: "child",
             should_play: true,
           },
 
@@ -55,6 +58,7 @@
             same_origin_child: true,
             activated_child: false,
             activated_parent: false,
+            play_from: "child",
             should_play: false,
           },
 
@@ -64,6 +68,7 @@
             same_origin_child: false,
             activated_child: false,
             activated_parent: true,
+            play_from: "child",
             should_play: true,
           },
 
@@ -73,6 +78,7 @@
             same_origin_child: false,
             activated_child: false,
             activated_parent: false,
+            play_from: "child",
             should_play: true,
           },
 
@@ -82,6 +88,7 @@
             same_origin_child: false,
             activated_child: false,
             activated_parent: true,
+            play_from: "child",
             should_play: true,
           },
 
@@ -91,6 +98,7 @@
             same_origin_child: false,
             activated_child: false,
             activated_parent: false,
+            play_from: "child",
             should_play: false,
           },
 
@@ -100,6 +108,7 @@
             same_origin_child: false,
             activated_child: true,
             activated_parent: false,
+            play_from: "child",
             should_play: true,
           },
 
@@ -107,6 +116,7 @@
             name: "audible playback in activated document allowed",
             muted: false,
             activated_parent: true,
+            play_from: "parent",
             should_play: true,
           },
 
@@ -114,6 +124,7 @@
             name: "audible playback in unactivated document blocked",
             muted: false,
             activated_parent: false,
+            play_from: "parent",
             should_play: false,
           },
 
@@ -121,6 +132,7 @@
             name: "inaudible playback in activated document allowed",
             muted: true,
             activated_parent: true,
+            play_from: "parent",
             should_play: true,
           },
 
@@ -128,6 +140,7 @@
             name: "inaudible playback in unactivated document allowed",
             muted: true,
             activated_parent: false,
+            play_from: "parent",
             should_play: true,
           },
 
