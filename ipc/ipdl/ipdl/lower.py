@@ -609,9 +609,7 @@ def _cxxTypeNeedsMove(ipdltype):
         return True
 
     if ipdltype.isIPDL():
-        return (ipdltype.isArray() or
-                ipdltype.isEndpoint() or
-                ipdltype.isManagedEndpoint())
+        return ipdltype.isArray()
 
     return False
 
@@ -630,6 +628,29 @@ def _cxxTypeNeedsMoveForSend(ipdltype):
                 ipdltype.isByteBuf() or
                 ipdltype.isEndpoint() or
                 ipdltype.isManagedEndpoint())
+
+    return False
+
+
+# FIXME Bug 1547019 This should be the same as _cxxTypeNeedsMoveForSend, but
+#                   a lot of existing code needs to be updated and fixed before
+#                   we can do that.
+def _cxxTypeCanOnlyMove(ipdltype, visited=None):
+    if visited is None:
+        visited = set()
+
+    visited.add(ipdltype)
+
+    if ipdltype.isCxx():
+        return ipdltype.isMoveonly()
+
+    if ipdltype.isIPDL():
+        if ipdltype.isMaybe() or ipdltype.isArray():
+            return _cxxTypeCanOnlyMove(ipdltype.basetype, visited)
+        if ipdltype.isStruct() or ipdltype.isUnion():
+            return any(_cxxTypeCanOnlyMove(t, visited)
+                       for t in ipdltype.itercomponents() if t not in visited)
+        return ipdltype.isManagedEndpoint()
 
     return False
 
@@ -1655,6 +1676,8 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
 
     def visitProtocol(self, p):
         self.cppIncludeHeaders.append(_protocolHeaderName(self.protocol, '') + '.h')
+        self.cppIncludeHeaders.append(_protocolHeaderName(self.protocol, 'Parent') + '.h')
+        self.cppIncludeHeaders.append(_protocolHeaderName(self.protocol, 'Child') + '.h')
 
         # Forward declare our own actors.
         self.hdrfile.addthings([
@@ -2243,9 +2266,9 @@ before this struct.  Some types generate multiple kinds.'''
         self.fortype = fortype
         self.unqualifiedTypedefs = unqualifiedTypedefs
 
-    def maybeTypedef(self, fqname, name):
+    def maybeTypedef(self, fqname, name, templateargs=[]):
         if fqname != name or self.unqualifiedTypedefs:
-            self.usingTypedefs.append(Typedef(Type(fqname), name))
+            self.usingTypedefs.append(Typedef(Type(fqname), name, templateargs))
 
     def visitImportedCxxType(self, t):
         if t in self.visited:
@@ -2315,6 +2338,21 @@ before this struct.  Some types generate multiple kinds.'''
         self.visited.add(s)
         self.maybeTypedef('mozilla::ipc::FileDescriptor', 'FileDescriptor')
 
+    def visitEndpointType(self, s):
+        if s in self.visited:
+            return
+        self.visited.add(s)
+        self.maybeTypedef('mozilla::ipc::Endpoint', 'Endpoint', ['FooSide'])
+        self.visitActorType(s.actor)
+
+    def visitManagedEndpointType(self, s):
+        if s in self.visited:
+            return
+        self.visited.add(s)
+        self.maybeTypedef('mozilla::ipc::ManagedEndpoint', 'ManagedEndpoint',
+                          ['FooSide'])
+        self.visitActorType(s.actor)
+
     def visitUniquePtrType(self, s):
         if s in self.visited:
             return
@@ -2371,7 +2409,12 @@ def _generateCxxStruct(sd):
     constreftype = Type(sd.name, const=True, ref=True)
 
     def fieldsAsParamList():
-        return [Decl(f.inType(), f.argVar().name) for f in sd.fields_ipdl_order()]
+        # FIXME Bug 1547019 inType() should do the right thing once
+        #                   _cxxTypeCanOnlyMove is replaced with
+        #                   _cxxTypeNeedsMoveForSend
+        return [Decl(f.forceMoveType() if _cxxTypeCanOnlyMove(f.ipdltype)
+                     else f.inType(), f.argVar().name)
+                for f in sd.fields_ipdl_order()]
 
     # If this is an empty struct (no fields), then the default ctor
     # and "create-with-fields" ctors are equivalent.  So don't bother
@@ -2395,9 +2438,13 @@ def _generateCxxStruct(sd):
     valctor = ConstructorDefn(ConstructorDecl(sd.name,
                                               params=fieldsAsParamList(),
                                               force_inline=True))
-    valctor.memberinits = [ExprMemberInit(f.memberVar(),
-                                          args=[f.argVar()])
-                           for f in sd.fields_member_order()]
+    valctor.memberinits = []
+    for f in sd.fields_member_order():
+        arg = f.argVar()
+        if _cxxTypeCanOnlyMove(f.ipdltype):
+            arg = ExprMove(arg)
+        valctor.memberinits.append(ExprMemberInit(f.memberVar(), args=[arg]))
+
     struct.addstmts([valctor, Whitespace.NL])
 
     # The default copy, move, and assignment constructors, and the default
@@ -2666,12 +2713,13 @@ def _generateCxxUnion(ud):
     # Union(const T&) copy & Union(T&&) move ctors
     othervar = ExprVar('aOther')
     for c in ud.components:
-        copyctor = ConstructorDefn(ConstructorDecl(
-            ud.name, params=[Decl(c.inType(), othervar.name)]))
-        copyctor.addstmts([
-            StmtExpr(c.callCtor(othervar)),
-            StmtExpr(ExprAssn(mtypevar, c.enumvar()))])
-        cls.addstmts([copyctor, Whitespace.NL])
+        if not _cxxTypeCanOnlyMove(c.ipdltype):
+            copyctor = ConstructorDefn(ConstructorDecl(
+                ud.name, params=[Decl(c.inType(), othervar.name)]))
+            copyctor.addstmts([
+                StmtExpr(c.callCtor(othervar)),
+                StmtExpr(ExprAssn(mtypevar, c.enumvar()))])
+            cls.addstmts([copyctor, Whitespace.NL])
 
         if not _cxxTypeCanMove(c.ipdltype) or _cxxTypeNeedsMoveForSend(c.ipdltype):
             continue
@@ -2682,31 +2730,34 @@ def _generateCxxUnion(ud):
             StmtExpr(ExprAssn(mtypevar, c.enumvar()))])
         cls.addstmts([movector, Whitespace.NL])
 
+    unionNeedsMove = any(_cxxTypeCanOnlyMove(c.ipdltype) for c in ud.components)
+
     # Union(const Union&) copy ctor
-    copyctor = ConstructorDefn(ConstructorDecl(
-        ud.name, params=[Decl(inClsType, othervar.name)]))
-    othertype = ud.callType(othervar)
-    copyswitch = StmtSwitch(othertype)
-    for c in ud.components:
+    if not unionNeedsMove:
+        copyctor = ConstructorDefn(ConstructorDecl(
+            ud.name, params=[Decl(inClsType, othervar.name)]))
+        othertype = ud.callType(othervar)
+        copyswitch = StmtSwitch(othertype)
+        for c in ud.components:
+            copyswitch.addcase(
+                CaseLabel(c.enum()),
+                StmtBlock([
+                    StmtExpr(c.callCtor(
+                        ExprCall(ExprSelect(othervar,
+                                            '.', c.getConstTypeName())))),
+                    StmtBreak()
+                ]))
+        copyswitch.addcase(CaseLabel(tnonevar.name),
+                           StmtBlock([StmtBreak()]))
         copyswitch.addcase(
-            CaseLabel(c.enum()),
-            StmtBlock([
-                StmtExpr(c.callCtor(
-                    ExprCall(ExprSelect(othervar,
-                                        '.', c.getConstTypeName())))),
-                StmtBreak()
-            ]))
-    copyswitch.addcase(CaseLabel(tnonevar.name),
-                       StmtBlock([StmtBreak()]))
-    copyswitch.addcase(
-        DefaultLabel(),
-        StmtBlock([_logicError('unreached'), StmtReturn()]))
-    copyctor.addstmts([
-        StmtExpr(callAssertSanity(uvar=othervar)),
-        copyswitch,
-        StmtExpr(ExprAssn(mtypevar, othertype))
-    ])
-    cls.addstmts([copyctor, Whitespace.NL])
+            DefaultLabel(),
+            StmtBlock([_logicError('unreached'), StmtReturn()]))
+        copyctor.addstmts([
+            StmtExpr(callAssertSanity(uvar=othervar)),
+            copyswitch,
+            StmtExpr(ExprAssn(mtypevar, othertype))
+        ])
+        cls.addstmts([copyctor, Whitespace.NL])
 
     # Union(Union&&) move ctor
     movector = ConstructorDefn(ConstructorDecl(
@@ -2765,19 +2816,20 @@ def _generateCxxUnion(ud):
     # Union& operator= methods
     rhsvar = ExprVar('aRhs')
     for c in ud.components:
-        # Union& operator=(const T&)
-        opeq = MethodDefn(MethodDecl(
-            'operator=',
-            params=[Decl(c.inType(), rhsvar.name)],
-            ret=refClsType))
-        opeq.addstmts([
-            # might need to placement-delete old value first
-            maybeReconstruct(c, c.enumvar()),
-            StmtExpr(c.callOperatorEq(rhsvar)),
-            StmtExpr(ExprAssn(mtypevar, c.enumvar())),
-            StmtReturn(ExprDeref(ExprVar.THIS))
-        ])
-        cls.addstmts([opeq, Whitespace.NL])
+        if not _cxxTypeCanOnlyMove(c.ipdltype):
+            # Union& operator=(const T&)
+            opeq = MethodDefn(MethodDecl(
+                'operator=',
+                params=[Decl(c.inType(), rhsvar.name)],
+                ret=refClsType))
+            opeq.addstmts([
+                # might need to placement-delete old value first
+                maybeReconstruct(c, c.enumvar()),
+                StmtExpr(c.callOperatorEq(rhsvar)),
+                StmtExpr(ExprAssn(mtypevar, c.enumvar())),
+                StmtReturn(ExprDeref(ExprVar.THIS))
+            ])
+            cls.addstmts([opeq, Whitespace.NL])
 
         # Union& operator=(T&&)
         if not _cxxTypeCanMove(c.ipdltype) or _cxxTypeNeedsMoveForSend(c.ipdltype):
@@ -2797,40 +2849,41 @@ def _generateCxxUnion(ud):
         cls.addstmts([opeq, Whitespace.NL])
 
     # Union& operator=(const Union&)
-    opeq = MethodDefn(MethodDecl(
-        'operator=',
-        params=[Decl(inClsType, rhsvar.name)],
-        ret=refClsType))
-    rhstypevar = ExprVar('t')
-    opeqswitch = StmtSwitch(rhstypevar)
-    for c in ud.components:
-        case = StmtBlock()
-        case.addstmts([
-            maybeReconstruct(c, rhstypevar),
-            StmtExpr(c.callOperatorEq(
-                ExprCall(ExprSelect(rhsvar, '.', c.getConstTypeName())))),
-            StmtBreak()
+    if not unionNeedsMove:
+        opeq = MethodDefn(MethodDecl(
+            'operator=',
+            params=[Decl(inClsType, rhsvar.name)],
+            ret=refClsType))
+        rhstypevar = ExprVar('t')
+        opeqswitch = StmtSwitch(rhstypevar)
+        for c in ud.components:
+            case = StmtBlock()
+            case.addstmts([
+                maybeReconstruct(c, rhstypevar),
+                StmtExpr(c.callOperatorEq(
+                    ExprCall(ExprSelect(rhsvar, '.', c.getConstTypeName())))),
+                StmtBreak()
+            ])
+            opeqswitch.addcase(CaseLabel(c.enum()), case)
+        opeqswitch.addcase(
+            CaseLabel(tnonevar.name),
+            # The void cast prevents Coverity from complaining about missing return
+            # value checks.
+            StmtBlock([StmtExpr(ExprCast(callMaybeDestroy(rhstypevar), Type.VOID,
+                                         static=True)),
+                       StmtBreak()])
+        )
+        opeqswitch.addcase(
+            DefaultLabel(),
+            StmtBlock([_logicError('unreached'), StmtBreak()]))
+        opeq.addstmts([
+            StmtExpr(callAssertSanity(uvar=rhsvar)),
+            StmtDecl(Decl(typetype, rhstypevar.name), init=ud.callType(rhsvar)),
+            opeqswitch,
+            StmtExpr(ExprAssn(mtypevar, rhstypevar)),
+            StmtReturn(ExprDeref(ExprVar.THIS))
         ])
-        opeqswitch.addcase(CaseLabel(c.enum()), case)
-    opeqswitch.addcase(
-        CaseLabel(tnonevar.name),
-        # The void cast prevents Coverity from complaining about missing return
-        # value checks.
-        StmtBlock([StmtExpr(ExprCast(callMaybeDestroy(rhstypevar), Type.VOID,
-                                     static=True)),
-                   StmtBreak()])
-    )
-    opeqswitch.addcase(
-        DefaultLabel(),
-        StmtBlock([_logicError('unreached'), StmtBreak()]))
-    opeq.addstmts([
-        StmtExpr(callAssertSanity(uvar=rhsvar)),
-        StmtDecl(Decl(typetype, rhstypevar.name), init=ud.callType(rhsvar)),
-        opeqswitch,
-        StmtExpr(ExprAssn(mtypevar, rhstypevar)),
-        StmtReturn(ExprDeref(ExprVar.THIS))
-    ])
-    cls.addstmts([opeq, Whitespace.NL])
+        cls.addstmts([opeq, Whitespace.NL])
 
     # Union& operator=(Union&&)
     opeq = MethodDefn(MethodDecl(
@@ -2937,13 +2990,17 @@ def _generateCxxUnion(ud):
             StmtReturn(c.getConstValue())
         ])
 
-        readvalue = MethodDefn(MethodDecl(
-            'get', ret=Type.VOID, const=True,
-            params=[Decl(c.ptrToType(), 'aOutValue')]))
-        readvalue.addstmts([
-            StmtExpr(ExprAssn(ExprDeref(ExprVar('aOutValue')),
-                              ExprCall(getConstValueVar)))
-        ])
+        cls.addstmts([getvalue, getconstvalue])
+
+        if not _cxxTypeCanOnlyMove(c.ipdltype):
+            readvalue = MethodDefn(MethodDecl(
+                'get', ret=Type.VOID, const=True,
+                params=[Decl(c.ptrToType(), 'aOutValue')]))
+            readvalue.addstmts([
+                StmtExpr(ExprAssn(ExprDeref(ExprVar('aOutValue')),
+                                  ExprCall(getConstValueVar)))
+            ])
+            cls.addstmt(readvalue)
 
         optype = MethodDefn(MethodDecl('', typeop=c.refType(), force_inline=True))
         optype.addstmt(StmtReturn(ExprCall(getValueVar)))
@@ -2951,10 +3008,7 @@ def _generateCxxUnion(ud):
             '', const=True, typeop=c.constRefType(), force_inline=True))
         opconsttype.addstmt(StmtReturn(ExprCall(getConstValueVar)))
 
-        cls.addstmts([getvalue, getconstvalue, readvalue,
-                      optype, opconsttype,
-                      Whitespace.NL])
-
+        cls.addstmts([optype, opconsttype, Whitespace.NL])
     # private vars
     cls.addstmts([
         Label.PRIVATE,

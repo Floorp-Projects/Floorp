@@ -540,36 +540,57 @@ typedef ThreadSafeAutoRefCntWithRecording<recordreplay::Behavior::DontPreserve>
  * @param _class The name of the class implementing the method
  * @param _destroy A statement that is executed when the object's
  *   refcount drops to zero.
+ * @param _decl Name of the macro to be used for the return type of the
+ *   AddRef & Releas methods (typically NS_IMETHOD_ or NS_METHOD_).
+ * @param optional override Mark the AddRef & Release methods as overrides.
+ */
+#define NS_INLINE_DECL_REFCOUNTING_META(_class, _decl, _destroy, ...) \
+ public:                                                              \
+  _decl(MozExternalRefCountType) AddRef(void) __VA_ARGS__ {           \
+    MOZ_ASSERT_TYPE_OK_FOR_REFCOUNTING(_class)                        \
+    MOZ_ASSERT(int32_t(mRefCnt) >= 0, "illegal refcnt");              \
+    NS_ASSERT_OWNINGTHREAD(_class);                                   \
+    ++mRefCnt;                                                        \
+    NS_LOG_ADDREF(this, mRefCnt, #_class, sizeof(*this));             \
+    return mRefCnt;                                                   \
+  }                                                                   \
+  _decl(MozExternalRefCountType) Release(void) __VA_ARGS__ {          \
+    MOZ_ASSERT(int32_t(mRefCnt) > 0, "dup release");                  \
+    NS_ASSERT_OWNINGTHREAD(_class);                                   \
+    --mRefCnt;                                                        \
+    NS_LOG_RELEASE(this, mRefCnt, #_class);                           \
+    if (mRefCnt == 0) {                                               \
+      mRefCnt = 1; /* stabilize */                                    \
+      _destroy;                                                       \
+      return 0;                                                       \
+    }                                                                 \
+    return mRefCnt;                                                   \
+  }                                                                   \
+  typedef mozilla::FalseType HasThreadSafeRefCnt;                     \
+                                                                      \
+ protected:                                                           \
+  nsAutoRefCnt mRefCnt;                                               \
+  NS_DECL_OWNINGTHREAD                                                \
+ public:
+
+/**
+ * Use this macro to declare and implement the AddRef & Release methods for a
+ * given non-XPCOM <i>_class</i>.
+ *
+ * @param _class The name of the class implementing the method
+ * @param _destroy A statement that is executed when the object's
+ *   refcount drops to zero.
  * @param optional override Mark the AddRef & Release methods as overrides.
  */
 #define NS_INLINE_DECL_REFCOUNTING_WITH_DESTROY(_class, _destroy, ...) \
- public:                                                               \
-  NS_METHOD_(MozExternalRefCountType) AddRef(void) __VA_ARGS__ {       \
-    MOZ_ASSERT_TYPE_OK_FOR_REFCOUNTING(_class)                         \
-    MOZ_ASSERT(int32_t(mRefCnt) >= 0, "illegal refcnt");               \
-    NS_ASSERT_OWNINGTHREAD(_class);                                    \
-    ++mRefCnt;                                                         \
-    NS_LOG_ADDREF(this, mRefCnt, #_class, sizeof(*this));              \
-    return mRefCnt;                                                    \
-  }                                                                    \
-  NS_METHOD_(MozExternalRefCountType) Release(void) __VA_ARGS__ {      \
-    MOZ_ASSERT(int32_t(mRefCnt) > 0, "dup release");                   \
-    NS_ASSERT_OWNINGTHREAD(_class);                                    \
-    --mRefCnt;                                                         \
-    NS_LOG_RELEASE(this, mRefCnt, #_class);                            \
-    if (mRefCnt == 0) {                                                \
-      mRefCnt = 1; /* stabilize */                                     \
-      _destroy;                                                        \
-      return 0;                                                        \
-    }                                                                  \
-    return mRefCnt;                                                    \
-  }                                                                    \
-  typedef mozilla::FalseType HasThreadSafeRefCnt;                      \
-                                                                       \
- protected:                                                            \
-  nsAutoRefCnt mRefCnt;                                                \
-  NS_DECL_OWNINGTHREAD                                                 \
- public:
+  NS_INLINE_DECL_REFCOUNTING_META(_class, NS_METHOD_, _destroy, __VA_ARGS__)
+
+/**
+ * Like NS_INLINE_DECL_REFCOUNTING_WITH_DESTROY with AddRef & Release declared
+ * virtual.
+ */
+#define NS_INLINE_DECL_VIRTUAL_REFCOUNTING_WITH_DESTROY(_class, _destroy, ...) \
+  NS_INLINE_DECL_REFCOUNTING_META(_class, NS_IMETHOD_, _destroy, __VA_ARGS__)
 
 /**
  * Use this macro to declare and implement the AddRef & Release methods for a

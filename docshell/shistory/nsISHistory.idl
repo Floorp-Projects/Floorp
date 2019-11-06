@@ -6,7 +6,6 @@
 #include "nsISupports.idl"
 
 interface nsIBFCacheEntry;
-interface nsIDocShell;
 interface nsISHEntry;
 interface nsISHistoryListener;
 interface nsIURI;
@@ -149,11 +148,11 @@ interface nsISHistory: nsISupports
   void addEntry(in nsISHEntry aEntry, in boolean aPersist);
 
   /**
-   * Clear the reference to the toplevel docshell object that this SHistory
-   * object belongs to.
+   * Clear the reference to the toplevel browsing context object that this
+   * SHistory object belongs to.
    */
   [noscript, notxpcom]
-  void ClearRootDocShell();
+  void ClearRootBrowsingContext();
 
   /**
    * Update the index maintained by sessionHistory
@@ -248,4 +247,23 @@ interface nsISHistory: nsISupports
    */
   [noscript, notxpcom]
   void RemoveEntries(in nsDocshellIDArray aIDs, in long aStartIndex);
+
+  /**
+   * Collect docshellIDs from aEntry's children and remove those
+   * entries from history.
+   *
+   * @param aEntry           Children docshellID's will be collected from 
+   *                         this entry and passed to RemoveEntries as aIDs.
+  */
+  [noscript, notxpcom]
+  void RemoveFrameEntries(in nsISHEntry aEntry);
+
+  [noscript]
+  void Reload(in unsigned long aReloadFlags);
+
+  [notxpcom] void EnsureCorrectEntryAtCurrIndex(in nsISHEntry aEntry);
+  
+  [notxpcom] void EvictContentViewersOrReplaceEntry(in nsISHEntry aNewSHEntry, in bool aReplace);
+
+  nsISHEntry createEntry();
 };

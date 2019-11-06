@@ -192,17 +192,8 @@ class WebRenderCommandBuilder final {
       frame->AddProperty(WebRenderUserDataProperty::Key(), userDataTable);
     }
 
-    // TODO (miko): This is a slight hack. For OMTA, WebRenderAnimationData
-    // needs to be accessible with just (frame, display item type) -key,
-    // so a more specific per frame key cannot be used.
-    const uint32_t key =
-        T::Type() == WebRenderUserData::UserDataType::eAnimation
-            ? static_cast<uint32_t>(aItem->GetType())
-            : aItem->GetPerFrameKey();
-
-    RefPtr<WebRenderUserData>& data =
-        userDataTable->GetOrInsert(WebRenderUserDataKey(key, T::Type()));
-
+    RefPtr<WebRenderUserData>& data = userDataTable->GetOrInsert(
+        WebRenderUserDataKey(aItem->GetPerFrameKey(), T::Type()));
     if (!data) {
       data = new T(GetRenderRootStateManager(aRenderRoot), aItem);
       mWebRenderUserDatas.PutEntry(data);

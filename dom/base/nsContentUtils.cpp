@@ -9811,7 +9811,8 @@ static constexpr uint64_t kIdTotalBits = 53;
 static constexpr uint64_t kIdProcessBits = 22;
 static constexpr uint64_t kIdBits = kIdTotalBits - kIdProcessBits;
 
-/* static */ uint64_t GenerateProcessSpecificId(uint64_t aId) {
+/* static */
+uint64_t nsContentUtils::GenerateProcessSpecificId(uint64_t aId) {
   uint64_t processId = 0;
   if (XRE_IsContentProcess()) {
     ContentChild* cc = ContentChild::GetSingleton();

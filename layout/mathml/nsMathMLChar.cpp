@@ -1720,17 +1720,10 @@ class nsDisplayMathMLCharForeground final : public nsPaintedDisplayItem {
                                 uint16_t aIndex, bool aIsSelected)
       : nsPaintedDisplayItem(aBuilder, aFrame),
         mChar(aChar),
+        mIndex(aIndex),
         mIsSelected(aIsSelected) {
     MOZ_COUNT_CTOR(nsDisplayMathMLCharForeground);
   }
-
-  // Should have the same argument signature as the above ctor
-  static uint16_t CalculatePerFrameIndex(nsDisplayListBuilder* aBuilder,
-                                         nsIFrame* aFrame, nsMathMLChar* aChar,
-                                         uint16_t aIndex, bool aIsSelected) {
-    return aIndex;
-  }
-
 #ifdef NS_BUILD_REFCNT_LOGGING
   virtual ~nsDisplayMathMLCharForeground() {
     MOZ_COUNT_DTOR(nsDisplayMathMLCharForeground);
@@ -1765,8 +1758,11 @@ class nsDisplayMathMLCharForeground final : public nsPaintedDisplayItem {
     return GetBounds(aBuilder, &snap);
   }
 
+  virtual uint16_t CalculatePerFrameKey() const override { return mIndex; }
+
  private:
   nsMathMLChar* mChar;
+  uint16_t mIndex;
   bool mIsSelected;
 };
 
