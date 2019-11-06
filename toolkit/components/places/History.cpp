@@ -1893,10 +1893,6 @@ void History::AppendToRecentlyVisitedURIs(nsIURI* aURI, bool aHidden) {
   }
 }
 
-Result<Ok, nsresult> History::StartVisitedQuery(nsIURI* aURI) {
-  return ToResult(VisitedQuery::Start(aURI));
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 //// IHistory
 
@@ -2263,6 +2259,16 @@ History::IsURIVisited(nsIURI* aURI, mozIVisitedStatusCallback* aCallback) {
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
+}
+
+void History::StartPendingVisitedQueries(
+    const PendingVisitedQueries& aQueries) {
+  // TODO(emilio): Batch these if in the content process when sending them to
+  // the parent?
+  for (auto iter = aQueries.ConstIter(); !iter.Done(); iter.Next()) {
+    nsresult queryStatus = VisitedQuery::Start(iter.Get()->GetKey());
+    Unused << NS_WARN_IF(NS_FAILED(queryStatus));
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
