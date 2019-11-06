@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{ColorF, GlyphInstance, RasterSpace, Shadow};
-use api::units::{DevicePixelScale, LayoutToWorldTransform, LayoutVector2D};
+use api::units::{LayoutToWorldTransform, LayoutVector2D};
 use crate::scene_building::{CreateShadow, IsVisible};
 use crate::frame_builder::FrameBuildingState;
 use crate::glyph_rasterizer::{FontInstance, FontTransform, GlyphKey, FONT_SIZE_LIMIT};
@@ -17,7 +17,8 @@ use crate::render_task_graph::RenderTaskGraph;
 use crate::renderer::{MAX_VERTEX_TEXTURE_WIDTH};
 use crate::resource_cache::{ResourceCache};
 use crate::util::{MatrixHelpers};
-use crate::prim_store::{InternablePrimitive, PrimitiveInstanceKind};
+use crate::prim_store::{InternablePrimitive, PrimitiveInstanceKind, SpaceSnapper};
+use crate::clip_scroll_tree::{ClipScrollTree, SpatialNodeIndex};
 use std::ops;
 use std::sync::Arc;
 use crate::storage;
@@ -174,6 +175,7 @@ impl InternablePrimitive for TextRun {
             used_font: key.font.clone(),
             glyph_keys_range: storage::Range::empty(),
             reference_frame_relative_offset,
+            snapped_reference_frame_relative_offset: reference_frame_relative_offset,
             shadow: key.shadow,
             raster_space: RasterSpace::Screen,
         });
@@ -212,6 +214,7 @@ pub struct TextRunPrimitive {
     pub used_font: FontInstance,
     pub glyph_keys_range: storage::Range<GlyphKey>,
     pub reference_frame_relative_offset: LayoutVector2D,
+    pub snapped_reference_frame_relative_offset: LayoutVector2D,
     pub shadow: bool,
     pub raster_space: RasterSpace,
 }
@@ -220,10 +223,12 @@ impl TextRunPrimitive {
     pub fn update_font_instance(
         &mut self,
         specified_font: &FontInstance,
-        device_pixel_scale: DevicePixelScale,
+        surface: &SurfaceInfo,
+        spatial_node_index: SpatialNodeIndex,
         transform: &LayoutToWorldTransform,
         subpixel_mode: SubpixelMode,
         raster_space: RasterSpace,
+        clip_scroll_tree: &ClipScrollTree,
     ) -> bool {
         // If local raster space is specified, include that in the scale
         // of the glyphs that get rasterized.
@@ -235,7 +240,7 @@ impl TextRunPrimitive {
         let raster_scale = raster_space.local_scale().unwrap_or(1.0).max(0.001);
 
         // Get the current font size in device pixels
-        let mut device_font_size = specified_font.size.scale_by(device_pixel_scale.0 * raster_scale);
+        let mut device_font_size = specified_font.size.scale_by(surface.device_pixel_scale.0 * raster_scale);
 
         // Determine if rasterizing glyphs in local or screen space.
         let transform_glyphs = if raster_space != RasterSpace::Screen {
@@ -265,6 +270,30 @@ impl TextRunPrimitive {
 
         // Record the raster space the text needs to be snapped in.
         self.raster_space = raster_space;
+
+        // TODO(aosmond): Snapping really ought to happen during scene building
+        // as much as possible. This will allow clips to be already adjusted
+        // based on the snapping requirements of the primitive. This may affect
+        // complex clips that create a different task, and when we rasterize
+        // glyphs without the transform (because the shader doesn't have the
+        // snap offsets to adjust its clip). These rects are fairly conservative
+        // to begin with and do not appear to be causing significant issues at
+        // this time.
+        self.snapped_reference_frame_relative_offset = if !font_transform.is_identity() {
+            // Don't touch the reference frame relative offset. We'll let the
+            // shader do the snapping in device pixels.
+            self.reference_frame_relative_offset
+        } else {
+            // There may be an animation, so snap the reference frame relative
+            // offset such that it excludes the impact, if any.
+            let snap_to_device = SpaceSnapper::new_with_target(
+                surface.raster_spatial_node_index,
+                spatial_node_index,
+                surface.device_pixel_scale,
+                clip_scroll_tree,
+            );
+            snap_to_device.snap_vector(&self.reference_frame_relative_offset)
+        };
 
         // If the transform or device size is different, then the caller of
         // this method needs to know to rebuild the glyphs.
@@ -299,21 +328,23 @@ impl TextRunPrimitive {
         glyphs: &[GlyphInstance],
         transform: &LayoutToWorldTransform,
         surface: &SurfaceInfo,
+        spatial_node_index: SpatialNodeIndex,
         raster_space: RasterSpace,
         subpixel_mode: SubpixelMode,
         resource_cache: &mut ResourceCache,
         gpu_cache: &mut GpuCache,
         render_tasks: &mut RenderTaskGraph,
+        clip_scroll_tree: &ClipScrollTree,
         scratch: &mut PrimitiveScratchBuffer,
     ) {
-        let device_pixel_scale = surface.device_pixel_scale;
-
         let cache_dirty = self.update_font_instance(
             specified_font,
-            device_pixel_scale,
+            surface,
+            spatial_node_index,
             transform,
             subpixel_mode,
             raster_space,
+            clip_scroll_tree,
         );
 
         if self.glyph_keys_range.is_empty() || cache_dirty {
@@ -323,7 +354,7 @@ impl TextRunPrimitive {
                 glyphs.iter().map(|src| {
                     let src_point = src.point + prim_offset;
                     let world_offset = self.used_font.transform.transform(&src_point);
-                    let device_offset = device_pixel_scale.transform_point(world_offset);
+                    let device_offset = surface.device_pixel_scale.transform_point(world_offset);
                     GlyphKey::new(src.index, device_offset, subpx_dir)
                 }));
         }
@@ -351,5 +382,5 @@ fn test_struct_sizes() {
     assert_eq!(mem::size_of::<TextRun>(), 56, "TextRun size changed");
     assert_eq!(mem::size_of::<TextRunTemplate>(), 72, "TextRunTemplate size changed");
     assert_eq!(mem::size_of::<TextRunKey>(), 64, "TextRunKey size changed");
-    assert_eq!(mem::size_of::<TextRunPrimitive>(), 72, "TextRunPrimitive size changed");
+    assert_eq!(mem::size_of::<TextRunPrimitive>(), 80, "TextRunPrimitive size changed");
 }
