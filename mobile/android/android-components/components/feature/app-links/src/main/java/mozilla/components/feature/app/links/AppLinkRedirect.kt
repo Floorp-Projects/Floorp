@@ -12,8 +12,7 @@ import android.content.pm.ResolveInfo
  */
 data class AppLinkRedirect(
     val appIntent: Intent?,
-    val webUrl: String?,
-    val isFallback: Boolean,
+    val fallbackUrl: String?,
     val info: ResolveInfo? = null
 ) {
     /**
@@ -24,7 +23,7 @@ data class AppLinkRedirect(
     /**
      * If there is a fallback URL (should the intent fails).
      */
-    fun hasFallback() = webUrl != null && isFallback
+    fun hasFallback() = fallbackUrl != null
 
     /**
      * If the app link is a redirect (to an app or URL).

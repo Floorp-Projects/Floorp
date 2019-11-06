@@ -18,37 +18,34 @@ class AppLinkRedirectTest {
 
     @Test
     fun hasExternalApp() {
-        var appLink = AppLinkRedirect(appIntent = mock(), webUrl = null, isFallback = true)
+        var appLink = AppLinkRedirect(appIntent = mock(), fallbackUrl = null)
         assertTrue(appLink.hasExternalApp())
 
-        appLink = AppLinkRedirect(appIntent = null, webUrl = null, isFallback = true)
+        appLink = AppLinkRedirect(appIntent = null, fallbackUrl = null)
         assertFalse(appLink.hasExternalApp())
     }
 
     @Test
     fun hasFallback() {
-        var appLink = AppLinkRedirect(appIntent = mock(), webUrl = null, isFallback = true)
+        var appLink = AppLinkRedirect(appIntent = mock(), fallbackUrl = null)
         assertFalse(appLink.hasFallback())
 
-        appLink = AppLinkRedirect(appIntent = mock(), webUrl = "https://example.com", isFallback = false)
-        assertFalse(appLink.hasFallback())
-
-        appLink = AppLinkRedirect(appIntent = mock(), webUrl = "https://example.com", isFallback = true)
+        appLink = AppLinkRedirect(appIntent = mock(), fallbackUrl = "https://example.com")
         assertTrue(appLink.hasFallback())
     }
 
     @Test
     fun isRedirect() {
-        var appLink = AppLinkRedirect(appIntent = null, webUrl = null, isFallback = true)
+        var appLink = AppLinkRedirect(appIntent = null, fallbackUrl = null)
         assertFalse(appLink.isRedirect())
 
-        appLink = AppLinkRedirect(appIntent = mock(), webUrl = null, isFallback = true)
+        appLink = AppLinkRedirect(appIntent = mock(), fallbackUrl = null)
         assertTrue(appLink.isRedirect())
 
-        appLink = AppLinkRedirect(appIntent = null, webUrl = "https://example.com", isFallback = true)
+        appLink = AppLinkRedirect(appIntent = null, fallbackUrl = "https://example.com")
         assertTrue(appLink.isRedirect())
 
-        appLink = AppLinkRedirect(appIntent = mock(), webUrl = "https://example.com", isFallback = true)
+        appLink = AppLinkRedirect(appIntent = mock(), fallbackUrl = "https://example.com")
         assertTrue(appLink.isRedirect())
     }
 
@@ -59,10 +56,10 @@ class AppLinkRedirectTest {
         `when`(intent.data).thenReturn(uri)
         `when`(uri.scheme).thenReturn("market")
 
-        var appLink = AppLinkRedirect(appIntent = null, webUrl = "https://example.com", isFallback = true)
+        var appLink = AppLinkRedirect(appIntent = null, fallbackUrl = "https://example.com")
         assertFalse(appLink.isInstallable())
 
-        appLink = AppLinkRedirect(appIntent = intent, webUrl = "https://example.com", isFallback = true)
+        appLink = AppLinkRedirect(appIntent = intent, fallbackUrl = "https://example.com")
         assertTrue(appLink.isInstallable())
     }
 }

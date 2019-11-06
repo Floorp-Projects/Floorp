@@ -9,9 +9,11 @@ import android.content.Intent
 import android.net.Uri
 import androidx.fragment.app.FragmentManager
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import mozilla.components.browser.session.LegacySessionManager
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.Engine
+import mozilla.components.concept.engine.EngineSession
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
@@ -36,6 +38,8 @@ class AppLinksFeatureTest {
     private lateinit var mockUseCases: AppLinksUseCases
     private lateinit var mockGetRedirect: AppLinksUseCases.GetAppLinkRedirect
     private lateinit var mockOpenRedirect: AppLinksUseCases.OpenAppLinkRedirect
+    private lateinit var mockEngineSession: EngineSession
+    private lateinit var mockLegacySessionManager: LegacySessionManager
 
     private lateinit var feature: AppLinksFeature
 
@@ -48,18 +52,20 @@ class AppLinksFeatureTest {
         mockContext = mock()
 
         val engine = mock<Engine>()
-        mockSessionManager = spy(SessionManager(engine))
+        mockLegacySessionManager = mock()
+        mockSessionManager = spy(SessionManager(engine, delegate = mockLegacySessionManager))
         mockFragmentManager = mock()
         mockUseCases = mock()
+        mockEngineSession = mock()
 
         mockGetRedirect = mock()
         mockOpenRedirect = mock()
         `when`(mockUseCases.interceptedAppLinkRedirect).thenReturn(mockGetRedirect)
         `when`(mockUseCases.openAppLink).thenReturn(mockOpenRedirect)
 
-        val webRedirect = AppLinkRedirect(null, webUrl, false)
-        val appRedirect = AppLinkRedirect(Intent.parseUri(intentUrl, 0), null, false)
-        val appRedirectFromWebUrl = AppLinkRedirect(Intent.parseUri(webUrlWithAppLink, 0), null, false)
+        val webRedirect = AppLinkRedirect(null, webUrl)
+        val appRedirect = AppLinkRedirect(Intent.parseUri(intentUrl, 0), null)
+        val appRedirectFromWebUrl = AppLinkRedirect(Intent.parseUri(webUrlWithAppLink, 0), null)
 
         `when`(mockGetRedirect.invoke(webUrl)).thenReturn(webRedirect)
         `when`(mockGetRedirect.invoke(intentUrl)).thenReturn(appRedirect)
@@ -116,9 +122,9 @@ class AppLinksFeatureTest {
             useCases = mockUseCases
         )
 
-        subject.handleLoadRequest(session, webUrl, true)
+        subject.handleLoadRequest(session, webUrlWithAppLink, true)
 
-        verify(mockGetRedirect).invoke(webUrl)
+        verify(mockGetRedirect).invoke(webUrlWithAppLink)
         verifyNoMoreInteractions(mockOpenRedirect)
     }
 
@@ -135,7 +141,7 @@ class AppLinksFeatureTest {
         )
 
         val url = "$whitelistedScheme://example.com"
-        val whitelistedRedirect = AppLinkRedirect(Intent.parseUri(url, 0), url, false)
+        val whitelistedRedirect = AppLinkRedirect(Intent.parseUri(url, 0), url)
         `when`(mockGetRedirect.invoke(url)).thenReturn(whitelistedRedirect)
 
         subject.handleLoadRequest(session, url, true)
@@ -153,7 +159,7 @@ class AppLinksFeatureTest {
             useCases = mockUseCases
         )
         val mockSession = createSession(false)
-        `when`(mockSessionManager.findSessionById(ArgumentMatchers.anyString())).thenReturn(mockSession)
+        `when`(mockLegacySessionManager.findSessionById(ArgumentMatchers.anyString())).thenReturn(mockSession)
 
         feature.start()
 
@@ -205,14 +211,15 @@ class AppLinksFeatureTest {
         val mockDialog = spy(RedirectDialogFragment::class.java)
 
         val featureWithDialog =
-            AppLinksFeature(
+            spy(AppLinksFeature(
                 context = mockContext,
                 sessionManager = mockSessionManager,
                 useCases = mockUseCases,
                 fragmentManager = mockFragmentManager,
                 dialog = mockDialog
-            )
+            ))
 
+        `when`(mockLegacySessionManager.getOrCreateEngineSession(any())).thenReturn(mockEngineSession)
         featureWithDialog.start()
 
         userTapsOnSession(webUrl, true)
@@ -322,11 +329,28 @@ class AppLinksFeatureTest {
 
         val redirect = AppLinkRedirect(
             intent,
-            javascriptUri,
-            false)
+            javascriptUri)
 
         feature.handleRedirect(redirect, Session("https://www.amazon.ca"))
 
         verify(openAppUseCase, never()).invoke(redirect)
+    }
+
+    @Test
+    fun `Use the fallback URL when app is not installed`() {
+        val feature = spy(AppLinksFeature(
+                testContext,
+                sessionManager = mockSessionManager,
+                interceptLinkClicks = true,
+                useCases = mockUseCases
+        ))
+
+        val redirect = AppLinkRedirect(null, webUrl)
+        val session = Session(webUrl)
+
+        `when`(mockLegacySessionManager.getOrCreateEngineSession(any())).thenReturn(mockEngineSession)
+        feature.handleRedirect(redirect, session)
+
+        verify(feature).handleFallback(redirect, session)
     }
 }
