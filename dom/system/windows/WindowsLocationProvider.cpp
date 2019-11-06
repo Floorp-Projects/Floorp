@@ -12,7 +12,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/Telemetry.h"
-#include "mozilla/dom/PositionErrorBinding.h"
+#include "mozilla/dom/GeolocationPositionErrorBinding.h"
 
 namespace mozilla {
 namespace dom {
@@ -121,11 +121,11 @@ LocationEvent::OnStatusChanged(REFIID aReportType,
   uint16_t err;
   switch (aStatus) {
     case REPORT_ACCESS_DENIED:
-      err = PositionError_Binding::PERMISSION_DENIED;
+      err = GeolocationPositionError_Binding::PERMISSION_DENIED;
       break;
     case REPORT_NOT_SUPPORTED:
     case REPORT_ERROR:
-      err = PositionError_Binding::POSITION_UNAVAILABLE;
+      err = GeolocationPositionError_Binding::POSITION_UNAVAILABLE;
       break;
     default:
       return S_OK;

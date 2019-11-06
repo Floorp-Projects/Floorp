@@ -11,7 +11,7 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/LazyIdleThread.h"
-#include "mozilla/dom/PositionErrorBinding.h"
+#include "mozilla/dom/GeolocationPositionErrorBinding.h"
 #include "nsGeoPosition.h"
 #include "nsProxyRelease.h"
 #include "nsThreadUtils.h"
@@ -162,7 +162,7 @@ class GpsdLocationProvider::PollRunnable final : public Runnable {
         err = PollLoop5();
         break;
       default:
-        err = PositionError_Binding::POSITION_UNAVAILABLE;
+        err = GeolocationPositionError_Binding::POSITION_UNAVAILABLE;
         break;
     }
 
@@ -277,7 +277,7 @@ class GpsdLocationProvider::PollRunnable final : public Runnable {
 
     return err;
 #else
-    return PositionError_Binding::POSITION_UNAVAILABLE;
+    return GeolocationPositionError_Binding::POSITION_UNAVAILABLE;
 #endif  // GPSD_MAJOR_API_VERSION
   }
 
@@ -288,13 +288,13 @@ class GpsdLocationProvider::PollRunnable final : public Runnable {
       case EPERM:
         MOZ_FALLTHROUGH;
       case EROFS:
-        return PositionError_Binding::PERMISSION_DENIED;
+        return GeolocationPositionError_Binding::PERMISSION_DENIED;
       case ETIME:
         MOZ_FALLTHROUGH;
       case ETIMEDOUT:
-        return PositionError_Binding::TIMEOUT;
+        return GeolocationPositionError_Binding::TIMEOUT;
       default:
-        return PositionError_Binding::POSITION_UNAVAILABLE;
+        return GeolocationPositionError_Binding::POSITION_UNAVAILABLE;
     }
   }
 
