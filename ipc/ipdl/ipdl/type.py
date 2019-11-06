@@ -526,8 +526,9 @@ class FDType(IPDLType):
 
 
 class EndpointType(IPDLType):
-    def __init__(self, qname):
+    def __init__(self, qname, actor):
         self.qname = qname
+        self.actor = actor
 
     def isEndpoint(self): return True
 
@@ -539,8 +540,9 @@ class EndpointType(IPDLType):
 
 
 class ManagedEndpointType(IPDLType):
-    def __init__(self, qname):
+    def __init__(self, qname, actor):
         self.qname = qname
+        self.actor = actor
 
     def isManagedEndpoint(self): return True
 
@@ -793,25 +795,29 @@ class GatherDecls(TcheckVisitor):
             p.parentEndpointDecl = self.declare(
                 loc=p.loc,
                 type=EndpointType(QualifiedId(p.loc, 'Endpoint<' +
-                                              fullname + 'Parent>', ['mozilla', 'ipc'])),
+                                              fullname + 'Parent>', ['mozilla', 'ipc']),
+                                  ActorType(p.decl.type)),
                 shortname='Endpoint<' + p.name + 'Parent>')
             p.childEndpointDecl = self.declare(
                 loc=p.loc,
                 type=EndpointType(QualifiedId(p.loc, 'Endpoint<' +
-                                              fullname + 'Child>', ['mozilla', 'ipc'])),
+                                              fullname + 'Child>', ['mozilla', 'ipc']),
+                                  ActorType(p.decl.type)),
                 shortname='Endpoint<' + p.name + 'Child>')
 
             p.parentManagedEndpointDecl = self.declare(
                 loc=p.loc,
                 type=ManagedEndpointType(QualifiedId(p.loc, 'ManagedEndpoint<' +
                                                      fullname + 'Parent>',
-                                                     ['mozilla', 'ipc'])),
+                                                     ['mozilla', 'ipc']),
+                                         ActorType(p.decl.type)),
                 shortname='ManagedEndpoint<' + p.name + 'Parent>')
             p.childManagedEndpointDecl = self.declare(
                 loc=p.loc,
                 type=ManagedEndpointType(QualifiedId(p.loc, 'ManagedEndpoint<' +
                                                      fullname + 'Child>',
-                                                     ['mozilla', 'ipc'])),
+                                                     ['mozilla', 'ipc']),
+                                         ActorType(p.decl.type)),
                 shortname='ManagedEndpoint<' + p.name + 'Child>')
 
             # XXX ugh, this sucks.  but we need this information to compute

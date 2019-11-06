@@ -275,18 +275,16 @@ var ViewSourceContent = {
     }
 
     let shEntrySource = pageDescriptor.QueryInterface(Ci.nsISHEntry);
-    let shEntry = Cc[
-      "@mozilla.org/browser/session-history-entry;1"
-    ].createInstance(Ci.nsISHEntry);
+    let shistory = docShell.QueryInterface(Ci.nsIWebNavigation).sessionHistory
+      .legacySHistory;
+    let shEntry = shistory.createEntry();
     shEntry.URI = Services.io.newURI(viewSrcURL);
     shEntry.title = viewSrcURL;
     let systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
     shEntry.triggeringPrincipal = systemPrincipal;
     shEntry.setLoadTypeAsHistory();
     shEntry.cacheKey = shEntrySource.cacheKey;
-    docShell
-      .QueryInterface(Ci.nsIWebNavigation)
-      .sessionHistory.legacySHistory.addEntry(shEntry, true);
+    shistory.addEntry(shEntry, true);
   },
 
   /**

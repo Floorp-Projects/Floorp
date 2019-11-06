@@ -4112,13 +4112,6 @@ nsDisplayBackgroundImage::nsDisplayBackgroundImage(
   }
 }
 
-// Should have an identical argument signature to the above ctor
-uint16_t nsDisplayBackgroundImage::CalculatePerFrameIndex(
-    nsDisplayListBuilder* aBuilder, nsIFrame* aFrame, const InitData& aInitData,
-    nsIFrame* aFrameForBounds) {
-  return aInitData.layer;
-}
-
 nsDisplayBackgroundImage::~nsDisplayBackgroundImage() {
 #ifdef NS_BUILD_REFCNT_LOGGING
   MOZ_COUNT_DTOR(nsDisplayBackgroundImage);
@@ -4922,18 +4915,11 @@ nsDisplayTableBackgroundImage::nsDisplayTableBackgroundImage(
     nsDisplayListBuilder* aBuilder, nsIFrame* aFrame, const InitData& aData,
     nsIFrame* aCellFrame)
     : nsDisplayBackgroundImage(aBuilder, aFrame, aData, aCellFrame),
-      mStyleFrame(aCellFrame) {
+      mStyleFrame(aCellFrame),
+      mTableType(GetTableTypeFromFrame(mStyleFrame)) {
   if (aBuilder->IsRetainingDisplayList()) {
     mStyleFrame->AddDisplayItem(this);
   }
-}
-
-// Should have an identical argument signature to the above ctor
-uint16_t nsDisplayTableBackgroundImage::CalculatePerFrameIndex(
-    nsDisplayListBuilder* aBuilder, nsIFrame* aFrame, const InitData& aData,
-    nsIFrame* aCellFrame) {
-  return CalculateTablePerFrameKey(aData.layer,
-                                   GetTableTypeFromFrame(aCellFrame));
 }
 
 nsDisplayTableBackgroundImage::~nsDisplayTableBackgroundImage() {
@@ -5528,6 +5514,7 @@ nsDisplayCompositorHitTestInfo::nsDisplayCompositorHitTestInfo(
     const mozilla::gfx::CompositorHitTestInfo& aHitTestFlags, uint16_t aIndex,
     const mozilla::Maybe<nsRect>& aArea)
     : nsDisplayHitTestInfoItem(aBuilder, aFrame),
+      mIndex(aIndex),
       mAppUnitsPerDevPixel(mFrame->PresContext()->AppUnitsPerDevPixel()) {
   MOZ_COUNT_CTOR(nsDisplayCompositorHitTestInfo);
   // We should never even create this display item if we're not building
@@ -5543,29 +5530,15 @@ nsDisplayCompositorHitTestInfo::nsDisplayCompositorHitTestInfo(
   InitializeScrollTarget(aBuilder);
 }
 
-// Should have the same argument signature as the above ctor
-uint16_t nsDisplayCompositorHitTestInfo::CalculatePerFrameIndex(
-    nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-    const mozilla::gfx::CompositorHitTestInfo& aHitTestFlags, uint16_t aIndex,
-    const mozilla::Maybe<nsRect>& aArea) {
-  return aIndex;
-}
-
 nsDisplayCompositorHitTestInfo::nsDisplayCompositorHitTestInfo(
     nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
     mozilla::UniquePtr<HitTestInfo>&& aHitTestInfo)
     : nsDisplayHitTestInfoItem(aBuilder, aFrame),
+      mIndex(0),
       mAppUnitsPerDevPixel(mFrame->PresContext()->AppUnitsPerDevPixel()) {
   MOZ_COUNT_CTOR(nsDisplayCompositorHitTestInfo);
   SetHitTestInfo(std::move(aHitTestInfo));
   InitializeScrollTarget(aBuilder);
-}
-
-// Should have the same argument signature as the above ctor
-uint16_t nsDisplayCompositorHitTestInfo::CalculatePerFrameIndex(
-    nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-    mozilla::UniquePtr<HitTestInfo>&& aHitTestInfo) {
-  return 0;
 }
 
 void nsDisplayCompositorHitTestInfo::InitializeScrollTarget(
@@ -5620,6 +5593,10 @@ bool nsDisplayCompositorHitTestInfo::CreateWebRenderCommands(
   aBuilder.ClearHitTestInfo();
 
   return true;
+}
+
+uint16_t nsDisplayCompositorHitTestInfo::CalculatePerFrameKey() const {
+  return mIndex;
 }
 
 int32_t nsDisplayCompositorHitTestInfo::ZIndex() const {
@@ -6159,6 +6136,7 @@ nsDisplayWrapList::nsDisplayWrapList(
     : nsDisplayHitTestInfoItem(aBuilder, aFrame, aActiveScrolledRoot),
       mFrameActiveScrolledRoot(aBuilder->CurrentActiveScrolledRoot()),
       mOverrideZIndex(0),
+      mIndex(aIndex),
       mHasZIndexOverride(false),
       mClearingClipChain(aClearClipChain) {
   MOZ_COUNT_CTOR(nsDisplayWrapList);
@@ -6202,6 +6180,7 @@ nsDisplayWrapList::nsDisplayWrapList(nsDisplayListBuilder* aBuilder,
     : nsDisplayHitTestInfoItem(aBuilder, aFrame,
                                aBuilder->CurrentActiveScrolledRoot()),
       mOverrideZIndex(0),
+      mIndex(0),
       mHasZIndexOverride(false) {
   MOZ_COUNT_CTOR(nsDisplayWrapList);
 
@@ -6759,7 +6738,7 @@ nsDisplayBlendMode::nsDisplayBlendMode(
     uint16_t aIndex)
     : nsDisplayWrapList(aBuilder, aFrame, aList, aActiveScrolledRoot, true),
       mBlendMode(aBlendMode),
-      mIsBackgroundBlendMode(aIndex != 0) {
+      mIndex(aIndex) {
   MOZ_COUNT_CTOR(nsDisplayBlendMode);
 }
 
@@ -6841,7 +6820,7 @@ bool nsDisplayBlendMode::CanMerge(const nsDisplayItem* aItem) const {
   const nsDisplayBlendMode* item =
       static_cast<const nsDisplayBlendMode*>(aItem);
 
-  if (item->mIsBackgroundBlendMode || mIsBackgroundBlendMode) {
+  if (item->mIndex != 0 || mIndex != 0) {
     // Don't merge background-blend-mode items
     return false;
   }
@@ -6935,7 +6914,8 @@ nsDisplayOwnLayer::nsDisplayOwnLayer(
       mFlags(aFlags),
       mScrollbarData(aScrollbarData),
       mForceActive(aForceActive),
-      mWrAnimationId(0) {
+      mWrAnimationId(0),
+      mIndex(aIndex) {
   MOZ_COUNT_CTOR(nsDisplayOwnLayer);
 
   // For scroll thumb layers, override the AGR to be the thumb's AGR rather
@@ -7395,6 +7375,7 @@ nsDisplayFixedPosition::nsDisplayFixedPosition(
     const ActiveScrolledRoot* aContainerASR)
     : nsDisplayOwnLayer(aBuilder, aFrame, aList, aActiveScrolledRoot),
       mContainerASR(aContainerASR),
+      mIndex(0),
       mIsFixedBackground(false) {
   MOZ_COUNT_CTOR(nsDisplayFixedPosition);
   Init(aBuilder);
@@ -7407,6 +7388,7 @@ nsDisplayFixedPosition::nsDisplayFixedPosition(nsDisplayListBuilder* aBuilder,
     : nsDisplayOwnLayer(aBuilder, aFrame, aList,
                         aBuilder->CurrentActiveScrolledRoot()),
       mContainerASR(nullptr),  // XXX maybe this should be something?
+      mIndex(aIndex),
       mIsFixedBackground(true) {
   MOZ_COUNT_CTOR(nsDisplayFixedPosition);
   Init(aBuilder);
@@ -7542,7 +7524,8 @@ nsDisplayTableFixedPosition::nsDisplayTableFixedPosition(
     nsDisplayListBuilder* aBuilder, nsIFrame* aFrame, nsDisplayList* aList,
     uint16_t aIndex, nsIFrame* aAncestorFrame)
     : nsDisplayFixedPosition(aBuilder, aFrame, aList, aIndex),
-      mAncestorFrame(aAncestorFrame) {
+      mAncestorFrame(aAncestorFrame),
+      mTableType(GetTableTypeFromFrame(aAncestorFrame)) {
   if (aBuilder->IsRetainingDisplayList()) {
     mAncestorFrame->AddDisplayItem(this);
   }
@@ -8024,6 +8007,7 @@ nsDisplayTransform::nsDisplayTransform(nsDisplayListBuilder* aBuilder,
       mAnimatedGeometryRootForChildren(mAnimatedGeometryRoot),
       mAnimatedGeometryRootForScrollMetadata(mAnimatedGeometryRoot),
       mChildrenBuildingRect(aChildrenBuildingRect),
+      mIndex(aIndex),
       mIsTransformSeparator(true),
       mAllowAsyncAnimation(false) {
   MOZ_COUNT_CTOR(nsDisplayTransform);
@@ -8041,6 +8025,7 @@ nsDisplayTransform::nsDisplayTransform(nsDisplayListBuilder* aBuilder,
       mAnimatedGeometryRootForChildren(mAnimatedGeometryRoot),
       mAnimatedGeometryRootForScrollMetadata(mAnimatedGeometryRoot),
       mChildrenBuildingRect(aChildrenBuildingRect),
+      mIndex(aIndex),
       mIsTransformSeparator(false),
       mAllowAsyncAnimation(aAllowAsyncAnimation) {
   MOZ_COUNT_CTOR(nsDisplayTransform);
@@ -8058,6 +8043,7 @@ nsDisplayTransform::nsDisplayTransform(
       mAnimatedGeometryRootForChildren(mAnimatedGeometryRoot),
       mAnimatedGeometryRootForScrollMetadata(mAnimatedGeometryRoot),
       mChildrenBuildingRect(aChildrenBuildingRect),
+      mIndex(aIndex),
       mIsTransformSeparator(false),
       mAllowAsyncAnimation(false) {
   MOZ_COUNT_CTOR(nsDisplayTransform);

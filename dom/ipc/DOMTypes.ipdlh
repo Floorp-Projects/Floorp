@@ -11,6 +11,7 @@ include "mozilla/layers/LayersMessageUtils.h";
 include IPCBlob;
 include IPCStream;
 include ProtocolTypes;
+include protocol PSHEntry;
 
 using struct mozilla::void_t
   from "ipc/IPCMessageUtils.h";
@@ -34,6 +35,7 @@ using refcounted class nsIContentSecurityPolicy from "mozilla/dom/CSPMessageUtil
 using refcounted class nsIInputStream from "mozilla/ipc/IPCStreamUtils.h";
 using refcounted class nsIReferrerInfo from "mozilla/dom/ReferrerInfoUtils.h";
 using class mozilla::TimeStamp from "mozilla/TimeStamp.h";
+using refcounted class nsISHEntry from "nsISHEntry.h";
 
 namespace mozilla {
 namespace dom {
@@ -222,6 +224,7 @@ struct DocShellLoadStateInit
   bool InheritPrincipal;
   bool PrincipalIsExplicit;
   nsIPrincipal PrincipalToInherit;
+  nsIPrincipal StoragePrincipalToInherit;
   bool ForceAllowDataURI;
   bool OriginalFrameSrc;
   bool IsFormSubmission;
@@ -247,11 +250,12 @@ struct DocShellLoadStateInit
   nsIInputStream PostDataStream;
   nsIInputStream HeadersStream;
 
+  nsString SrcdocData; // useless without sourcedocshell 
+
   // Fields missing due to lack of need or serialization
   // nsCOMPtr<nsISHEntry> mSHEntry;
   // nsCOMPtr<nsIDocShell> mSourceDocShell;
   // bool mIsSrcDocLoad; // useless without sourcedocshell
-  // nsString mSrcdocData; // useless without sourcedocshell
   // nsIChannel pendingRedirectedChannel; // sent through other mechanism
 };
 
