@@ -448,6 +448,8 @@ class nsWindow final : public nsBaseWidget {
   bool mNeedsUpdatingEGLSurface;
   bool mCompositorInitiallyPaused;
 #endif
+  bool mWindowScaleFactorChanged;
+  int mWindowScaleFactor;
 
  private:
   void DestroyChildWindows();
