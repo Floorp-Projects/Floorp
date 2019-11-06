@@ -6445,6 +6445,13 @@
   value: 1500
   mirror: always
 
+# Mouse wheel scroll position is determined by GetMessagePos rather than
+# LPARAM msg value
+- name: mousewheel.ignore_cursor_position_in_lparam
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "network."
 #---------------------------------------------------------------------------

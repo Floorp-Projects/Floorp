@@ -331,9 +331,23 @@ void TestCreateVRWindow() {
     printf(
         "5. Simulating clicking outside the URL bar, which should "
         "send a keyboard blur event\n");
-    pt.x = 80;
+    pt.x = 20;
+    pt.y = 20;
     fnSendMsg(windowId, WM_LBUTTONDOWN, 0, POINTTOPOINTS(pt));
     fnSendMsg(windowId, WM_LBUTTONUP, 0, POINTTOPOINTS(pt));
+
+    ::Sleep(1000);
+
+    printf("6. Simulating scrolling the web content down and then up\n");
+
+    pt.x = 100;
+    pt.y = 100;
+    for (int i = -20; i < 10; ++i) {
+      fnSendMsg(windowId, WM_MOUSEWHEEL,
+                MAKELONG(0, (i < 0) ? -WHEEL_DELTA : WHEEL_DELTA),
+                POINTTOPOINTS(pt));
+      ::Sleep(100);
+    }
 
     ::Sleep(5000);
 
