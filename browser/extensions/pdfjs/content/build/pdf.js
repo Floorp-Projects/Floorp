@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.4.91';
-var pdfjsBuild = '72bd8e8b';
+var pdfjsVersion = '2.4.107';
+var pdfjsBuild = 'de77d668';
 
 var pdfjsSharedUtil = __w_pdfjs_require__(1);
 
@@ -1271,7 +1271,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise('GetDocRequest', {
     docId,
-    apiVersion: '2.4.91',
+    apiVersion: '2.4.107',
     source: {
       data: source.data,
       url: source.url,
@@ -3205,9 +3205,9 @@ const InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-const version = '2.4.91';
+const version = '2.4.107';
 exports.version = version;
-const build = '72bd8e8b';
+const build = 'de77d668';
 exports.build = build;
 
 /***/ }),
@@ -3477,7 +3477,6 @@ const LinkTarget = {
   TOP: 4
 };
 exports.LinkTarget = LinkTarget;
-const LinkTargetStringMap = ['', '_self', '_blank', '_parent', '_top'];
 
 function addLinkAttributes(link, {
   url,
@@ -3499,9 +3498,30 @@ function addLinkAttributes(link, {
     };
   }
 
-  const LinkTargetValues = Object.values(LinkTarget);
-  const targetIndex = LinkTargetValues.includes(target) ? target : LinkTarget.NONE;
-  link.target = LinkTargetStringMap[targetIndex];
+  let targetStr = '';
+
+  switch (target) {
+    case LinkTarget.NONE:
+      break;
+
+    case LinkTarget.SELF:
+      targetStr = '_self';
+      break;
+
+    case LinkTarget.BLANK:
+      targetStr = '_blank';
+      break;
+
+    case LinkTarget.PARENT:
+      targetStr = '_parent';
+      break;
+
+    case LinkTarget.TOP:
+      targetStr = '_top';
+      break;
+  }
+
+  link.target = targetStr;
   link.rel = typeof rel === 'string' ? rel : DEFAULT_LINK_REL;
 }
 
@@ -6462,10 +6482,15 @@ GlobalWorkerOptions.workerSrc = GlobalWorkerOptions.workerSrc === undefined ? ''
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.MessageHandler = MessageHandler;
+exports.MessageHandler = void 0;
 
 var _util = __w_pdfjs_require__(1);
 
+const CallbackKind = {
+  UNKNOWN: 0,
+  DATA: 1,
+  ERROR: 2
+};
 const StreamKind = {
   UNKNOWN: 0,
   CANCEL: 1,
@@ -6501,55 +6526,69 @@ function wrapReason(reason) {
   }
 }
 
-function MessageHandler(sourceName, targetName, comObj) {
-  this.sourceName = sourceName;
-  this.targetName = targetName;
-  this.comObj = comObj;
-  this.callbackId = 1;
-  this.streamId = 1;
-  this.postMessageTransfers = true;
-  this.streamSinks = Object.create(null);
-  this.streamControllers = Object.create(null);
-  let callbacksCapabilities = this.callbacksCapabilities = Object.create(null);
-  let ah = this.actionHandler = Object.create(null);
+class MessageHandler {
+  constructor(sourceName, targetName, comObj) {
+    this.sourceName = sourceName;
+    this.targetName = targetName;
+    this.comObj = comObj;
+    this.callbackId = 1;
+    this.streamId = 1;
+    this.postMessageTransfers = true;
+    this.streamSinks = Object.create(null);
+    this.streamControllers = Object.create(null);
+    this.callbackCapabilities = Object.create(null);
+    this.actionHandler = Object.create(null);
 
-  this._onComObjOnMessage = event => {
-    let data = event.data;
+    this._onComObjOnMessage = event => {
+      const data = event.data;
 
-    if (data.targetName !== this.sourceName) {
-      return;
-    }
-
-    if (data.stream) {
-      this._processStreamMessage(data);
-    } else if (data.isReply) {
-      let callbackId = data.callbackId;
-
-      if (data.callbackId in callbacksCapabilities) {
-        let callback = callbacksCapabilities[callbackId];
-        delete callbacksCapabilities[callbackId];
-
-        if ('reason' in data) {
-          callback.reject(wrapReason(data.reason));
-        } else {
-          callback.resolve(data.data);
-        }
-      } else {
-        throw new Error(`Cannot resolve callback ${callbackId}`);
+      if (data.targetName !== this.sourceName) {
+        return;
       }
-    } else if (data.action in ah) {
-      let action = ah[data.action];
+
+      if (data.stream) {
+        this._processStreamMessage(data);
+
+        return;
+      }
+
+      if (data.callback) {
+        const callbackId = data.callbackId;
+        const capability = this.callbackCapabilities[callbackId];
+
+        if (!capability) {
+          throw new Error(`Cannot resolve callback ${callbackId}`);
+        }
+
+        delete this.callbackCapabilities[callbackId];
+
+        if (data.callback === CallbackKind.DATA) {
+          capability.resolve(data.data);
+        } else if (data.callback === CallbackKind.ERROR) {
+          capability.reject(wrapReason(data.reason));
+        } else {
+          throw new Error('Unexpected callback case');
+        }
+
+        return;
+      }
+
+      const action = this.actionHandler[data.action];
+
+      if (!action) {
+        throw new Error(`Unknown action from worker: ${data.action}`);
+      }
 
       if (data.callbackId) {
-        let sourceName = this.sourceName;
-        let targetName = data.sourceName;
+        const sourceName = this.sourceName;
+        const targetName = data.sourceName;
         new Promise(function (resolve) {
           resolve(action(data.data));
         }).then(function (result) {
           comObj.postMessage({
             sourceName,
             targetName,
-            isReply: true,
+            callback: CallbackKind.DATA,
             callbackId: data.callbackId,
             data: result
           });
@@ -6557,51 +6596,52 @@ function MessageHandler(sourceName, targetName, comObj) {
           comObj.postMessage({
             sourceName,
             targetName,
-            isReply: true,
+            callback: CallbackKind.ERROR,
             callbackId: data.callbackId,
             reason: wrapReason(reason)
           });
         });
-      } else if (data.streamId) {
-        this._createStreamSink(data);
-      } else {
-        action(data.data);
+        return;
       }
-    } else {
-      throw new Error(`Unknown action from worker: ${data.action}`);
-    }
-  };
 
-  comObj.addEventListener('message', this._onComObjOnMessage);
-}
+      if (data.streamId) {
+        this._createStreamSink(data);
 
-MessageHandler.prototype = {
+        return;
+      }
+
+      action(data.data);
+    };
+
+    comObj.addEventListener('message', this._onComObjOnMessage);
+  }
+
   on(actionName, handler) {
-    var ah = this.actionHandler;
+    const ah = this.actionHandler;
 
     if (ah[actionName]) {
       throw new Error(`There is already an actionName called "${actionName}"`);
     }
 
     ah[actionName] = handler;
-  },
+  }
 
   send(actionName, data, transfers) {
-    this.postMessage({
+    this._postMessage({
       sourceName: this.sourceName,
       targetName: this.targetName,
       action: actionName,
       data
     }, transfers);
-  },
+  }
 
   sendWithPromise(actionName, data, transfers) {
-    var callbackId = this.callbackId++;
-    var capability = (0, _util.createPromiseCapability)();
-    this.callbacksCapabilities[callbackId] = capability;
+    const callbackId = this.callbackId++;
+    const capability = (0, _util.createPromiseCapability)();
+    this.callbackCapabilities[callbackId] = capability;
 
     try {
-      this.postMessage({
+      this._postMessage({
         sourceName: this.sourceName,
         targetName: this.targetName,
         action: actionName,
@@ -6613,16 +6653,16 @@ MessageHandler.prototype = {
     }
 
     return capability.promise;
-  },
+  }
 
   sendWithStream(actionName, data, queueingStrategy, transfers) {
-    let streamId = this.streamId++;
-    let sourceName = this.sourceName;
-    let targetName = this.targetName;
+    const streamId = this.streamId++;
+    const sourceName = this.sourceName;
+    const targetName = this.targetName;
     const comObj = this.comObj;
     return new _util.ReadableStream({
       start: controller => {
-        let startCapability = (0, _util.createPromiseCapability)();
+        const startCapability = (0, _util.createPromiseCapability)();
         this.streamControllers[streamId] = {
           controller,
           startCall: startCapability,
@@ -6630,7 +6670,8 @@ MessageHandler.prototype = {
           cancelCall: null,
           isClosed: false
         };
-        this.postMessage({
+
+        this._postMessage({
           sourceName,
           targetName,
           action: actionName,
@@ -6638,10 +6679,11 @@ MessageHandler.prototype = {
           data,
           desiredSize: controller.desiredSize
         }, transfers);
+
         return startCapability.promise;
       },
       pull: controller => {
-        let pullCapability = (0, _util.createPromiseCapability)();
+        const pullCapability = (0, _util.createPromiseCapability)();
         this.streamControllers[streamId].pullCall = pullCapability;
         comObj.postMessage({
           sourceName,
@@ -6654,7 +6696,7 @@ MessageHandler.prototype = {
       },
       cancel: reason => {
         (0, _util.assert)(reason instanceof Error, 'cancel must have a valid reason');
-        let cancelCapability = (0, _util.createPromiseCapability)();
+        const cancelCapability = (0, _util.createPromiseCapability)();
         this.streamControllers[streamId].cancelCall = cancelCapability;
         this.streamControllers[streamId].isClosed = true;
         comObj.postMessage({
@@ -6667,24 +6709,22 @@ MessageHandler.prototype = {
         return cancelCapability.promise;
       }
     }, queueingStrategy);
-  },
+  }
 
   _createStreamSink(data) {
-    let self = this;
-    let action = this.actionHandler[data.action];
-    let streamId = data.streamId;
-    let desiredSize = data.desiredSize;
-    let sourceName = this.sourceName;
-    let targetName = data.sourceName;
-    let capability = (0, _util.createPromiseCapability)();
+    const self = this;
+    const action = this.actionHandler[data.action];
+    const streamId = data.streamId;
+    const sourceName = this.sourceName;
+    const targetName = data.sourceName;
     const comObj = this.comObj;
-    let streamSink = {
+    const streamSink = {
       enqueue(chunk, size = 1, transfers) {
         if (this.isCancelled) {
           return;
         }
 
-        let lastDesiredSize = this.desiredSize;
+        const lastDesiredSize = this.desiredSize;
         this.desiredSize -= size;
 
         if (lastDesiredSize > 0 && this.desiredSize <= 0) {
@@ -6692,7 +6732,7 @@ MessageHandler.prototype = {
           this.ready = this.sinkCapability.promise;
         }
 
-        self.postMessage({
+        self._postMessage({
           sourceName,
           targetName,
           stream: StreamKind.ENQUEUE,
@@ -6733,11 +6773,11 @@ MessageHandler.prototype = {
         });
       },
 
-      sinkCapability: capability,
+      sinkCapability: (0, _util.createPromiseCapability)(),
       onPull: null,
       onCancel: null,
       isCancelled: false,
-      desiredSize,
+      desiredSize: data.desiredSize,
       ready: null
     };
     streamSink.sinkCapability.resolve();
@@ -6762,12 +6802,12 @@ MessageHandler.prototype = {
         reason: wrapReason(reason)
       });
     });
-  },
+  }
 
   _processStreamMessage(data) {
-    let sourceName = this.sourceName;
-    let targetName = data.sourceName;
     const streamId = data.streamId;
+    const sourceName = this.sourceName;
+    const targetName = data.sourceName;
     const comObj = this.comObj;
 
     switch (data.stream) {
@@ -6908,28 +6948,30 @@ MessageHandler.prototype = {
       default:
         throw new Error('Unexpected stream case');
     }
-  },
+  }
 
   async _deleteStreamController(streamId) {
     await Promise.all([this.streamControllers[streamId].startCall, this.streamControllers[streamId].pullCall, this.streamControllers[streamId].cancelCall].map(function (capability) {
       return capability && capability.promise.catch(function () {});
     }));
     delete this.streamControllers[streamId];
-  },
+  }
 
-  postMessage(message, transfers) {
+  _postMessage(message, transfers) {
     if (transfers && this.postMessageTransfers) {
       this.comObj.postMessage(message, transfers);
     } else {
       this.comObj.postMessage(message);
     }
-  },
+  }
 
   destroy() {
     this.comObj.removeEventListener('message', this._onComObjOnMessage);
   }
 
-};
+}
+
+exports.MessageHandler = MessageHandler;
 
 /***/ }),
 /* 13 */
