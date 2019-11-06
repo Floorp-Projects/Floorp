@@ -2607,7 +2607,7 @@ static bool NeedEnvironmentShapeGuard(JSObject* envObj) {
   // conditions. In that case, we pessimistically create the guard.
   CallObject* callObj = &envObj->as<CallObject>();
   JSFunction* fun = &callObj->callee();
-  if (!fun->hasScript() || fun->nonLazyScript()->funHasExtensibleScope()) {
+  if (!fun->hasScript() || fun->baseScript()->funHasExtensibleScope()) {
     return true;
   }
 
