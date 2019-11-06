@@ -96,10 +96,10 @@ class MediaPipeline : public sigslot::has_slots<> {
   void Shutdown_m();
 
   void UpdateTransport_m(const std::string& aTransportId,
-                         nsAutoPtr<MediaPipelineFilter> aFilter);
+                         UniquePtr<MediaPipelineFilter>&& aFilter);
 
   void UpdateTransport_s(const std::string& aTransportId,
-                         nsAutoPtr<MediaPipelineFilter> aFilter);
+                         UniquePtr<MediaPipelineFilter>&& aFilter);
 
   // Used only for testing; adds RTP header extension for RTP Stream Id with
   // the given id.
@@ -254,10 +254,10 @@ class MediaPipeline : public sigslot::has_slots<> {
   std::string mDescription;
 
   // Written in c'tor, all following accesses are on the STS thread.
-  nsAutoPtr<MediaPipelineFilter> mFilter;
-  const nsAutoPtr<webrtc::RtpHeaderParser> mRtpParser;
+  UniquePtr<MediaPipelineFilter> mFilter;
+  const UniquePtr<webrtc::RtpHeaderParser> mRtpParser;
 
-  nsAutoPtr<PacketDumper> mPacketDumper;
+  UniquePtr<PacketDumper> mPacketDumper;
 
  private:
   // Gets the current time as a DOMHighResTimeStamp
