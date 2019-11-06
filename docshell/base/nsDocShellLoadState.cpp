@@ -52,7 +52,6 @@ nsDocShellLoadState::nsDocShellLoadState(
   mOriginalFrameSrc = aLoadState.OriginalFrameSrc();
   mIsFormSubmission = aLoadState.IsFormSubmission();
   mLoadType = aLoadState.LoadType();
-  mSrcdocData.SetIsVoid(true);
   mTarget = aLoadState.Target();
   mLoadFlags = aLoadState.LoadFlags();
   mFirstParty = aLoadState.FirstParty();
@@ -66,11 +65,14 @@ nsDocShellLoadState::nsDocShellLoadState(
   mBaseURI = aLoadState.BaseURI();
   mTriggeringPrincipal = aLoadState.TriggeringPrincipal();
   mPrincipalToInherit = aLoadState.PrincipalToInherit();
+  mStoragePrincipalToInherit = aLoadState.StoragePrincipalToInherit();
   mCsp = aLoadState.Csp();
   mOriginalURIString = aLoadState.OriginalURIString();
   mCancelContentJSEpoch = aLoadState.CancelContentJSEpoch();
   mPostDataStream = aLoadState.PostDataStream();
   mHeadersStream = aLoadState.HeadersStream();
+  mSrcdocData = aLoadState.SrcdocData();
+  mResultPrincipalURI = aLoadState.ResultPrincipalURI();
 }
 
 nsDocShellLoadState::~nsDocShellLoadState() {}
@@ -321,6 +323,15 @@ nsIPrincipal* nsDocShellLoadState::PrincipalToInherit() const {
 void nsDocShellLoadState::SetPrincipalToInherit(
     nsIPrincipal* aPrincipalToInherit) {
   mPrincipalToInherit = aPrincipalToInherit;
+}
+
+nsIPrincipal* nsDocShellLoadState::StoragePrincipalToInherit() const {
+  return mStoragePrincipalToInherit;
+}
+
+void nsDocShellLoadState::SetStoragePrincipalToInherit(
+    nsIPrincipal* aStoragePrincipalToInherit) {
+  mStoragePrincipalToInherit = aStoragePrincipalToInherit;
 }
 
 void nsDocShellLoadState::SetCsp(nsIContentSecurityPolicy* aCsp) {
@@ -629,12 +640,15 @@ DocShellLoadStateInit nsDocShellLoadState::Serialize() {
   loadState.BaseURI() = mBaseURI;
   loadState.TriggeringPrincipal() = mTriggeringPrincipal;
   loadState.PrincipalToInherit() = mPrincipalToInherit;
+  loadState.StoragePrincipalToInherit() = mStoragePrincipalToInherit;
   loadState.Csp() = mCsp;
   loadState.OriginalURIString() = mOriginalURIString;
   loadState.CancelContentJSEpoch() = mCancelContentJSEpoch;
   loadState.ReferrerInfo() = mReferrerInfo;
   loadState.PostDataStream() = mPostDataStream;
   loadState.HeadersStream() = mHeadersStream;
+  loadState.SrcdocData() = mSrcdocData;
+  loadState.ResultPrincipalURI() = mResultPrincipalURI;
 
   return loadState;
 }
