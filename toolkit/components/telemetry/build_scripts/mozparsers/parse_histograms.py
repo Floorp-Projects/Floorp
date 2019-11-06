@@ -617,7 +617,10 @@ the histogram."""
         self._low = low
         self._high = high
         self._n_buckets = n_buckets
-        if allowlists is not None and self._n_buckets > 100 and type(self._n_buckets) is int:
+        max_n_buckets = 101 if self._kind in ['enumerated', 'categorical'] else 100
+        if (allowlists is not None
+            and self._n_buckets > max_n_buckets
+            and type(self._n_buckets) is int):
             if self._name not in allowlists['n_buckets']:
                 ParserError(
                     'New histogram "%s" is not permitted to have more than 100 buckets.\n'
