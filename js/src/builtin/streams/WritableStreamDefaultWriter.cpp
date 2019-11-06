@@ -528,5 +528,5 @@ static const JSFunctionSpec WritableStreamDefaultWriter_methods[] = {
     JS_FN("releaseLock", WritableStreamDefaultWriter_releaseLock, 0, 0),
     JS_FN("write", WritableStreamDefaultWriter_write, 1, 0), JS_FS_END};
 
-JS_STREAMS_CLASS_SPEC(WritableStreamDefaultWriter, 0, SlotCount,
+JS_STREAMS_CLASS_SPEC(WritableStreamDefaultWriter, 1, SlotCount,
                       ClassSpec::DontDefineConstructor, 0, JS_NULL_CLASS_OPS);
