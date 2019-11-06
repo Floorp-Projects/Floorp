@@ -309,3 +309,4 @@ load 1566684.html
 load 1579788.html
 load 1580307.html
 load 1581579.html
+pref(dom.paintWorklet.enabled,true) pref(dom.worklet.enabled,true) load 1593766.html
