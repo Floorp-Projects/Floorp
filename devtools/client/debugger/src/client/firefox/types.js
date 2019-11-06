@@ -186,6 +186,7 @@ export type Actions = {
   newQueuedSources: (QueuedSourceData[]) => void,
   fetchEventListeners: () => void,
   updateThreads: typeof actions.updateThreads,
+  ensureHasThread: typeof actions.ensureHasThread,
   setFramePositions: typeof actions.setFramePositions,
 };
 
@@ -256,6 +257,8 @@ export type DebuggerClient = {
     traits: any,
     getFront: string => Promise<*>,
     listProcesses: () => Promise<{ processes: ProcessDescriptor }>,
+    listAllWorkers: () => Promise<*>,
+    getWorker: any => Promise<*>,
     on: (string, Function) => void,
   },
   connect: () => Promise<*>,
