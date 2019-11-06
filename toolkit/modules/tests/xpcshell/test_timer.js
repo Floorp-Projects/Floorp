@@ -14,7 +14,7 @@ add_task(async function test_setTimeout() {
     100
   );
   Assert.equal(typeof timeout1, "number", "setTimeout returns a number");
-  Assert.ok(timeout1 > 0, "setTimeout returns a positive number");
+  Assert.greater(timeout1, 0, "setTimeout returns a positive number");
 
   imported.clearTimeout(timeout1);
 
@@ -32,7 +32,7 @@ add_task(async function test_setTimeout() {
     );
 
     Assert.equal(typeof timeout2, "number", "setTimeout returns a number");
-    Assert.ok(timeout2 > 0, "setTimeout returns a positive number");
+    Assert.greater(timeout2, 0, "setTimeout returns a positive number");
     Assert.notEqual(
       timeout1,
       timeout2,
@@ -49,7 +49,7 @@ add_task(async function test_setTimeoutWithTarget() {
     target
   );
   Assert.equal(typeof timeout1, "number", "setTimeout returns a number");
-  Assert.ok(timeout1 > 0, "setTimeout returns a positive number");
+  Assert.greater(timeout1, 0, "setTimeout returns a positive number");
 
   imported.clearTimeout(timeout1);
 
@@ -68,7 +68,7 @@ add_task(async function test_setTimeoutWithTarget() {
     );
 
     Assert.equal(typeof timeout2, "number", "setTimeout returns a number");
-    Assert.ok(timeout2 > 0, "setTimeout returns a positive number");
+    Assert.greater(timeout2, 0, "setTimeout returns a positive number");
     Assert.notEqual(
       timeout1,
       timeout2,
@@ -83,7 +83,7 @@ add_task(async function test_setInterval() {
     100
   );
   Assert.equal(typeof interval1, "number", "setInterval returns a number");
-  Assert.ok(interval1 > 0, "setTimeout returns a positive number");
+  Assert.greater(interval1, 0, "setTimeout returns a positive number");
 
   imported.clearInterval(interval1);
 
@@ -117,7 +117,7 @@ add_task(async function test_setIntervalWithTarget() {
     target
   );
   Assert.equal(typeof interval1, "number", "setInterval returns a number");
-  Assert.ok(interval1 > 0, "setTimeout returns a positive number");
+  Assert.greater(interval1, 0, "setTimeout returns a positive number");
 
   imported.clearInterval(interval1);
 
@@ -177,7 +177,7 @@ add_task(async function test_requestIdleCallback() {
     "number",
     "requestIdleCallback returns a number"
   );
-  Assert.ok(request1 > 0, "setTimeout returns a positive number");
+  Assert.greater(request1, 0, "setTimeout returns a positive number");
 
   imported.cancelIdleCallback(request1);
 
@@ -205,7 +205,11 @@ add_task(async function test_requestIdleCallback() {
       "number",
       "requestIdleCallback returns a number"
     );
-    Assert.ok(request2 > 0, "requestIdleCallback returns a positive number");
+    Assert.greater(
+      request2,
+      0,
+      "requestIdleCallback returns a positive number"
+    );
     Assert.notEqual(
       request1,
       request2,

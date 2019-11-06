@@ -15,8 +15,8 @@ async function testBody() {
   do_log_info("now: " + now / 1000000);
   do_log_info("startHibernation: " + startHibernation / 1000000);
   do_log_info("stopHibernation: " + stopHibernation / 1000000);
-  Assert.ok(startHibernation < now, "startHibernation ok");
-  Assert.ok(stopHibernation < now, "stopHibernation ok");
+  Assert.less(startHibernation, now, "startHibernation ok");
+  Assert.less(stopHibernation, now, "stopHibernation ok");
 
   // When the watchdog runs, it hibernates if there's been no activity for the
   // last 2 seconds, otherwise it sleeps for 1 second. As such, given perfect
@@ -42,8 +42,8 @@ async function testBody() {
   // making sure this behavior is roughly as expected on the macro scale,
   // so we add a 1 second fuzz factor here.
   const FUZZ_FACTOR = 1 * 1000 * 1000;
-  Assert.ok(stateChange > now + 10*1000*1000 - FUZZ_FACTOR, "stateChange ok");
-  Assert.ok(startHibernation > now + 2*1000*1000 - FUZZ_FACTOR, "startHibernation ok");
-  Assert.ok(startHibernation < now + 5*1000*1000 + FUZZ_FACTOR, "startHibernation ok");
-  Assert.ok(stopHibernation > now + 10*1000*1000 - FUZZ_FACTOR, "stopHibernation ok");
+  Assert.greater(stateChange, now + 10*1000*1000 - FUZZ_FACTOR, "stateChange ok");
+  Assert.greater(startHibernation, now + 2*1000*1000 - FUZZ_FACTOR, "startHibernation ok");
+  Assert.less(startHibernation, now + 5*1000*1000 + FUZZ_FACTOR, "startHibernation ok");
+  Assert.greater(stopHibernation, now + 10*1000*1000 - FUZZ_FACTOR, "stopHibernation ok");
 }

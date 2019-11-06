@@ -1053,7 +1053,7 @@ add_task(async function getTopFrencentSites_maxLimit() {
     links.length < MANY_LINKS,
     "query default limited to less than many"
   );
-  Assert.ok(links.length > 6, "query default to more than visible count");
+  Assert.greater(links.length, 6, "query default to more than visible count");
 });
 
 add_task(async function getTopFrencentSites_allowedProtocols() {

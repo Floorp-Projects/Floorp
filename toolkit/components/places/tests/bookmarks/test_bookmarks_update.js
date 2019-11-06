@@ -308,7 +308,7 @@ add_task(async function update_url() {
   checkBookmarkObject(bm);
   let lastModified = bm.lastModified;
   let frecency = frecencyForUrl(bm.url);
-  Assert.ok(frecency > 0, "Check frecency has been updated");
+  Assert.greater(frecency, 0, "Check frecency has been updated");
 
   bm = await PlacesUtils.bookmarks.update({
     guid: bm.guid,

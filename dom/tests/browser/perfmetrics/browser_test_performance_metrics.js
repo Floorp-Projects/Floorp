@@ -148,14 +148,14 @@ add_task(async function test() {
       let results = await ChromeUtils.requestPerformanceMetrics();
       exploreResults(results);
 
-      Assert.ok(workerDuration > 0, "Worker duration should be positive");
-      Assert.ok(workerTotal > 0, "Worker count should be positive");
-      Assert.ok(duration > 0, "Duration should be positive");
-      Assert.ok(total > 0, "Should get a positive count");
+      Assert.greater(workerDuration, 0, "Worker duration should be positive");
+      Assert.greater(workerTotal, 0, "Worker count should be positive");
+      Assert.greater(duration, 0, "Duration should be positive");
+      Assert.greater(total, 0, "Should get a positive count");
       Assert.ok(parentProcessEvent, "parent process sent back some events");
       Assert.ok(isTopLevel, "example.com as a top level window");
       Assert.ok(aboutMemoryFound, "about:memory");
-      Assert.ok(heapUsage > 0, "got some memory value reported");
+      Assert.greater(heapUsage, 0, "got some memory value reported");
       Assert.ok(sharedWorker, "We got some info from a shared worker");
       let numCounters = counterIds.length;
       Assert.ok(
@@ -185,8 +185,8 @@ add_task(async function test() {
         workerTotal > previousWorkerTotal,
         "Worker count should be positive"
       );
-      Assert.ok(duration > previousDuration, "Duration should be positive");
-      Assert.ok(total > previousTotal, "Should get a positive count");
+      Assert.greater(duration, previousDuration, "Duration should be positive");
+      Assert.greater(total, previousTotal, "Should get a positive count");
 
       // load a tab with a setInterval, we should get counters on TaskCategory::Timer
       await BrowserTestUtils.withNewTab(
@@ -196,7 +196,7 @@ add_task(async function test() {
           let previousTimerCalls = timerCalls;
           results = await ChromeUtils.requestPerformanceMetrics();
           exploreResults(results, tabId);
-          Assert.ok(timerCalls > previousTimerCalls, "Got timer calls");
+          Assert.greater(timerCalls, previousTimerCalls, "Got timer calls");
         }
       );
 
@@ -208,7 +208,7 @@ add_task(async function test() {
           let previousTimerCalls = timerCalls;
           results = await ChromeUtils.requestPerformanceMetrics();
           exploreResults(results, tabId);
-          Assert.ok(timerCalls > previousTimerCalls, "Got timer calls");
+          Assert.greater(timerCalls, previousTimerCalls, "Got timer calls");
         }
       );
 
@@ -219,7 +219,7 @@ add_task(async function test() {
           let tabId = gBrowser.selectedBrowser.outerWindowID;
           results = await ChromeUtils.requestPerformanceMetrics();
           exploreResults(results, tabId);
-          Assert.ok(mediaMemory > 0, "Got some memory used for media");
+          Assert.greater(mediaMemory, 0, "Got some memory used for media");
         }
       );
     }

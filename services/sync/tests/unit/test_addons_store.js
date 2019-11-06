@@ -611,7 +611,7 @@ add_task(async function test_ignore_system() {
     let addon = reconciler.getAddonStateFromSyncGUID(guid);
     Assert.notEqual(addon.id, SYSTEM_ADDON_ID);
   }
-  Assert.ok(num > 1, "should have seen at least one.");
+  Assert.greater(num, 1, "should have seen at least one.");
 });
 
 add_task(async function test_incoming_system() {
