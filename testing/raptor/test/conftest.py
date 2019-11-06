@@ -10,10 +10,10 @@ from argparse import Namespace
 # need this so raptor imports work both from /raptor and via mach
 here = os.path.abspath(os.path.dirname(__file__))
 
-from raptor.raptor import RaptorDesktopFirefox
+from raptor.raptor import Perftest, RaptorDesktopFirefox, Browsertime
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture
 def options(request):
     opts = {
         'app': 'firefox',
@@ -25,9 +25,28 @@ def options(request):
     return opts
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture
+def browsertime_options(options):
+    options['browsertime_node'] = 'browsertime_node'
+    options['browsertime_browsertimejs'] = 'browsertime_browsertimejs'
+    options['browsertime_ffmpeg'] = 'browsertime_ffmpeg'
+    options['browsertime_geckodriver'] = 'browsertime_geckodriver'
+    options['browsertime_chromedriver'] = 'browsertime_chromedriver'
+    options['browsertime_video'] = 'browsertime_video'
+    return options
+
+
+@pytest.fixture
 def raptor(options):
     return RaptorDesktopFirefox(**options)
+
+
+@pytest.fixture
+def mock_test():
+    return {
+        'name': 'raptor-firefox-tp6',
+        'test_url': '/dummy/url',
+    }
 
 
 @pytest.fixture(scope='session')
@@ -81,3 +100,49 @@ def create_args():
         return args
 
     return inner
+
+
+@pytest.fixture(scope='module')
+def ConcretePerftest():
+    class PerftestImplementation(Perftest):
+        def check_for_crashes(self):
+            super(PerftestImplementation, self).check_for_crashes()
+
+        def clean_up(self):
+            super(PerftestImplementation, self).clean_up()
+
+        def run_test(self, test, timeout):
+            super(PerftestImplementation, self).run_test(test, timeout)
+
+        def run_test_setup(self, test):
+            super(PerftestImplementation, self).run_test_setup(test)
+
+        def run_test_teardown(self, test):
+            super(PerftestImplementation, self).run_test_teardown(test)
+
+        def set_browser_test_prefs(self):
+            super(PerftestImplementation, self).set_browser_test_prefs()
+
+        def get_browser_meta(self):
+            return (), ()
+
+        def setup_chrome_args(self, test):
+            super(PerftestImplementation, self).setup_chrome_args(test)
+
+    return PerftestImplementation
+
+
+@pytest.fixture(scope='module')
+def ConcreteBrowsertime():
+    class BrowsertimeImplementation(Browsertime):
+        @property
+        def browsertime_args(self):
+            return []
+
+        def get_browser_meta(self):
+            return (), ()
+
+        def setup_chrome_args(self, test):
+            super(BrowsertimeImplementation, self).setup_chrome_args(test)
+
+    return BrowsertimeImplementation
