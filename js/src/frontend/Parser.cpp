@@ -1441,7 +1441,7 @@ LexicalScopeNode* Parser<FullParseHandler, Unit>::evalBody(
           continue;
         }
         MOZ_ASSERT(fun->allowSuperProperty());
-        MOZ_ASSERT(fun->nonLazyScript()->needsHomeObject());
+        MOZ_ASSERT(fun->baseScript()->needsHomeObject());
         break;
       }
     }
