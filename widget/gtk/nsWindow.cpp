@@ -3064,6 +3064,14 @@ void nsWindow::OnContainerFocusOutEvent(GdkEventFocus* aEvent) {
 
   DispatchDeactivateEvent();
 
+  if (mDrawInTitlebar) {
+    // DispatchDeactivateEvent() ultimately results in a call to
+    // nsGlobalWindowOuter::ActivateOrDeactivate(), which resets
+    // the mIsActive flag.  We call UpdateMozWindowActive() to keep
+    // the flag in sync with GDK_WINDOW_STATE_FOCUSED.
+    UpdateMozWindowActive();
+  }
+
   LOGFOCUS(("Done with container focus out [%p]\n", (void*)this));
 }
 
@@ -3329,6 +3337,9 @@ void nsWindow::OnWindowStateEvent(GtkWidget* aWidget,
     // *after* this window-state-event handler.
     mTitlebarBackdropState =
         !(aEvent->new_window_state & GDK_WINDOW_STATE_FOCUSED);
+
+    // keep mIsActive in sync with GDK_WINDOW_STATE_FOCUSED
+    UpdateMozWindowActive();
 
     ForceTitlebarRedraw();
   }
@@ -7396,6 +7407,19 @@ nsIFrame* nsWindow::GetFrame(void) {
   return view->GetFrame();
 }
 
+void nsWindow::UpdateMozWindowActive() {
+  // Update activation state for the :-moz-window-inactive pseudoclass.
+  // Normally, this follows focus; we override it here to follow
+  // GDK_WINDOW_STATE_FOCUSED.
+  mozilla::dom::Document* document = GetDocument();
+  if (document) {
+    nsPIDOMWindowOuter* window = document->GetWindow();
+    if (window) {
+      window->SetActive(!mTitlebarBackdropState);
+    }
+  }
+}
+
 void nsWindow::ForceTitlebarRedraw(void) {
   MOZ_ASSERT(mDrawInTitlebar, "We should not redraw invisible titlebar.");
 
@@ -7410,8 +7434,11 @@ void nsWindow::ForceTitlebarRedraw(void) {
 
   frame = FindTitlebarFrame(frame);
   if (frame) {
-    nsLayoutUtils::PostRestyleEvent(frame->GetContent()->AsElement(),
-                                    RestyleHint{0}, nsChangeHint_RepaintFrame);
+    nsIContent* content = frame->GetContent();
+    if (content) {
+      nsLayoutUtils::PostRestyleEvent(content->AsElement(), RestyleHint{0},
+                                      nsChangeHint_RepaintFrame);
+    }
   }
 }
 
