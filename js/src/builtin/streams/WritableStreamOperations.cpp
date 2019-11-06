@@ -14,10 +14,12 @@
 #include <stdint.h>  // uint32_t
 
 #include "jsapi.h"  // JS_ReportErrorASCII, JS_SetPrivate
+#include "jsfriendapi.h"  // js::GetErrorMessage, JSMSG_*
 
 #include "builtin/Promise.h"                 // js::PromiseObject
+#include "builtin/streams/MiscellaneousOperations.h"  // js::PromiseRejectedWithPendingError
 #include "builtin/streams/WritableStream.h"  // js::WritableStream
-#include "builtin/streams/WritableStreamDefaultController.h"  // js::WritableStreamDefaultController, js::WritableStream::controller
+#include "builtin/streams/WritableStreamDefaultController.h"  // js::WritableStreamDefaultController{,Close}, js::WritableStream::controller
 #include "builtin/streams/WritableStreamDefaultControllerOperations.h"  // js::WritableStreamControllerErrorSteps
 #include "builtin/streams/WritableStreamWriterOperations.h"  // js::WritableStreamDefaultWriterEnsureReadyPromiseRejected
 #include "js/CallArgs.h"     // JS::CallArgs{,FromVp}
@@ -191,6 +193,78 @@ JSObject* js::WritableStreamAbort(JSContext* cx,
     if (!WritableStreamStartErroring(cx, unwrappedStream, pendingReason)) {
       return nullptr;
     }
+  }
+
+  // Step 10: Return promise.
+  return promise;
+}
+
+/**
+ * Streams spec, 4.3.7.
+ *      WritableStreamClose ( stream )
+ *
+ * Note: The object (a promise) returned by this function is in the current
+ *       compartment and does not require special wrapping to be put to use.
+ */
+JSObject* js::WritableStreamClose(JSContext* cx,
+                                  Handle<WritableStream*> unwrappedStream) {
+  // Step 1: Let state be stream.[[state]].
+  // Step 2: If state is "closed" or "errored", return a promise rejected with a
+  //         TypeError exception.
+  if (unwrappedStream->closed() || unwrappedStream->errored()) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_WRITABLESTREAM_CLOSED_OR_ERRORED);
+    return PromiseRejectedWithPendingError(cx);
+  }
+
+  // Step 3: Assert: state is "writable" or "erroring".
+  MOZ_ASSERT(unwrappedStream->writable() ^ unwrappedStream->erroring());
+
+  // Step 4: Assert: ! WritableStreamCloseQueuedOrInFlight(stream) is false.
+  MOZ_ASSERT(!WritableStreamCloseQueuedOrInFlight(unwrappedStream));
+
+  // Step 5: Let promise be a new promise.
+  Rooted<PromiseObject*> promise(cx, PromiseObject::createSkippingExecutor(cx));
+  if (!promise) {
+    return nullptr;
+  }
+
+  // Step 6: Set stream.[[closeRequest]] to promise.
+  {
+    AutoRealm ar(cx, unwrappedStream);
+    Rooted<JSObject*> wrappedPromise(cx, promise);
+    if (!cx->compartment()->wrap(cx, &wrappedPromise)) {
+      return nullptr;
+    }
+
+    unwrappedStream->setCloseRequest(promise);
+  }
+
+  // Step 7: Let writer be stream.[[writer]].
+  // Step 8: If writer is not undefined, and stream.[[backpressure]] is true,
+  //         and state is "writable", resolve writer.[[readyPromise]] with
+  //         undefined.
+  if (unwrappedStream->hasWriter() && unwrappedStream->backpressure() &&
+      unwrappedStream->writable()) {
+    Rooted<WritableStreamDefaultWriter*> unwrappedWriter(
+        cx, UnwrapWriterFromStream(cx, unwrappedStream));
+    if (!unwrappedWriter) {
+      return nullptr;
+    }
+
+    if (!ResolveUnwrappedPromiseWithUndefined(
+            cx, unwrappedWriter->readyPromise())) {
+      return nullptr;
+    }
+  }
+
+  // Step 9: Perform
+  //         ! WritableStreamDefaultControllerClose(
+  //               stream.[[writableStreamController]]).
+  Rooted<WritableStreamDefaultController*> unwrappedController(
+      cx, unwrappedStream->controller());
+  if (!WritableStreamDefaultControllerClose(cx, unwrappedController)) {
+    return nullptr;
   }
 
   // Step 10: Return promise.
