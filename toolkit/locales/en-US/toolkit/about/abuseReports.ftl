@@ -60,22 +60,22 @@ abuse-report-messagebar-action-cancel = Cancel
 
 ## Abuse report reasons (optionally paired with related examples and/or suggestions)
 
-abuse-report-damage-reason = Damages my computer and data
+abuse-report-damage-reason-v2 = It damaged my computer or compromised my data
 abuse-report-damage-example = Example: Injected malware or stole data
 
-abuse-report-spam-reason = Creates spam or advertising
+abuse-report-spam-reason-v2 = It contains spam or inserts unwanted advertising
 abuse-report-spam-example = Example: Insert ads on webpages
 
-abuse-report-settings-reason = Changed my search engine, homepage, or new tab without informing or asking me
+abuse-report-settings-reason-v2 = It changed my search engine, homepage, or new tab without informing or asking me
 abuse-report-settings-suggestions = Before reporting the extension, you can try changing your settings:
 abuse-report-settings-suggestions-search = Change your default search settings
 abuse-report-settings-suggestions-homepage = Change your homepage and new tab
 
-abuse-report-deceptive-reason = Pretend to be something it’s not
+abuse-report-deceptive-reason-v2 = It claims to be something it’s not
 abuse-report-deceptive-example = Example: Misleading description or imagery
 
-abuse-report-broken-reason-extension = Doesn’t work, breaks websites, or slows { -brand-product-name } down
-abuse-report-broken-reason-theme = Doesn’t work or breaks browser display
+abuse-report-broken-reason-extension-v2 = It doesn’t work, breaks websites, or slows down { -brand-product-name }
+abuse-report-broken-reason-theme-v2 = It doesn’t work or breaks browser display
 abuse-report-broken-example =
   Example: Features are slow, hard to use, or don’t work; parts of websites won’t load or look unusual
 abuse-report-broken-suggestions-extension =
@@ -87,13 +87,13 @@ abuse-report-broken-suggestions-theme =
   to get a functionality issue resolved is to contact the theme developer.
   <a data-l10n-name="support-link">Visit the theme’s website</a> to get the developer information.
 
-abuse-report-policy-reason = Hateful, violent, or illegal content
+abuse-report-policy-reason-v2 = It contains hateful, violent, or illegal content
 abuse-report-policy-suggestions =
   Note: Copyright and trademark issues must be reported in a separate process.
   <a data-l10n-name="report-infringement-link">Use these instructions</a> to
   report the problem.
 
-abuse-report-unwanted-reason = Never wanted this extension and can’t get rid of it
+abuse-report-unwanted-reason-v2 = I never wanted it and don’t know how to get rid of it
 abuse-report-unwanted-example = Example: An application installed it without my permission
 
 abuse-report-other-reason = Something else
