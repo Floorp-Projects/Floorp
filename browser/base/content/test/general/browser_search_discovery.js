@@ -1,14 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-/* eslint-disable mozilla/no-arbitrary-setTimeout */
-
-// Bug 1588193 - BrowserTestUtils.waitForContentEvent now resolves slightly
-// earlier than before, so it no longer suffices to only wait for a single event
-// tick before checking if browser.engines has been updated. Instead we use a 1s
-// timeout, which may cause the test to take more time.
-requestLongerTimeout(2);
-
 add_task(async function() {
   let url =
     "http://mochi.test:8888/browser/browser/base/content/test/general/discovery.html";
@@ -81,7 +73,7 @@ async function searchDiscovery() {
     });
 
     await promiseLinkAdded;
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise(resolve => executeSoon(resolve));
 
     if (browser.engines) {
       info(`Found ${browser.engines.length} engines`);
@@ -120,7 +112,7 @@ async function searchDiscovery() {
   });
 
   await promiseLinkAdded;
-  await new Promise(resolve => setTimeout(resolve, 1000));
+  await new Promise(resolve => executeSoon(resolve));
 
   ok(browser.engines, "has engines");
   is(browser.engines.length, 1, "only one engine");
