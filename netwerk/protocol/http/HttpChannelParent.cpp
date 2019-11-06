@@ -2685,9 +2685,9 @@ nsresult HttpChannelParent::TriggerCrossProcessSwitch(nsIHttpChannel* aChannel,
         if (!cp) {
           return;
         }
-        cp->SendCrossProcessRedirect(self->mRedirectChannelId, uri, config,
-                                     loadInfoArgs, channelId, originalURI,
-                                     aIdentifier, redirectMode)
+        cp->SendCrossProcessRedirect(self->mRedirectChannelId, uri,
+                                     Some(config), loadInfoArgs, channelId,
+                                     originalURI, aIdentifier, redirectMode)
             ->Then(
                 GetCurrentThreadSerialEventTarget(), __func__,
                 [self](Tuple<nsresult, Maybe<LoadInfoArgs>>&& aResponse) {

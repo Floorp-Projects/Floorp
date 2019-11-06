@@ -526,9 +526,7 @@ void DocumentChannelParent::TriggerRedirectToRealChannel(
       return;
     }
 
-    MOZ_ASSERT(config);
-
-    cp->SendCrossProcessRedirect(mRedirectChannelId, uri, *config, loadInfoArgs,
+    cp->SendCrossProcessRedirect(mRedirectChannelId, uri, config, loadInfoArgs,
                                  channelId, originalURI, aIdentifier,
                                  redirectMode)
         ->Then(
