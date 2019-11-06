@@ -107,7 +107,6 @@ function waitForMessage(aMessage, browser) {
   checkFn.toSource = function() {
     return `function checkFn(event) {
       let message = ${aMessage.toSource()};
-      is(event.data, message, "Received: " + message);
       if (event.data == message) {
         return true;
       }
@@ -123,7 +122,12 @@ function waitForMessage(aMessage, browser) {
     /* capture */ true,
     checkFn,
     /* wantsUntrusted */ true
-  );
+  ).then(() => {
+    // An assertion in checkFn wouldn't be recorded as part of the test, so we
+    // use this assertion to confirm that we've successfully received the
+    // message (we'll only reach this point if that's the case).
+    ok(true, "Received message: " + aMessage);
+  });
 }
 
 function removePermission(url, permission) {
