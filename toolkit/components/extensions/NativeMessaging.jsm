@@ -97,7 +97,9 @@ var NativeApp = class extends EventEmitter {
           arguments: [hostInfo.path, context.extension.id],
           workdir: OS.Path.dirname(command),
           stderr: "pipe",
+          disclaim: true,
         };
+
         return Subprocess.call(subprocessOpts);
       })
       .then(proc => {
