@@ -15,16 +15,10 @@ types.addDictType("available-breakpoint-group", {
   name: "string",
   events: "array:available-breakpoint-event",
 });
-
 types.addDictType("available-breakpoint-event", {
   id: "string",
   name: "string",
 });
-
-types.addDictType("thread.frames", {
-  frames: "array:frame",
-});
-
 types.addDictType("paused-reason", {
   type: "string",
 
@@ -108,7 +102,7 @@ const threadSpec = generateActorSpec({
         start: Arg(0, "number"),
         count: Arg(1, "number"),
       },
-      response: RetVal("thread.frames"),
+      response: RetVal("json"),
     },
     interrupt: {
       request: {

@@ -82,10 +82,11 @@ const Types = (exports.__TypesForTests = [
     spec: "devtools/shared/specs/environment",
     front: "devtools/shared/fronts/environment",
   },
+  /* frame has old fashion client and no front */
   {
     types: ["frame"],
     spec: "devtools/shared/specs/frame",
-    front: "devtools/shared/fronts/frame",
+    front: null,
   },
   {
     types: ["framerate"],
