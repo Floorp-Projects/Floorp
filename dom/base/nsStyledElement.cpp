@@ -11,6 +11,7 @@
 #include "nsAttrValueInlines.h"
 #include "mozilla/dom/ElementInlines.h"
 #include "mozilla/dom/MutationEventBinding.h"
+#include "mozilla/dom/MutationObservers.h"
 #include "mozilla/InternalMutationEvent.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "nsDOMCSSDeclaration.h"

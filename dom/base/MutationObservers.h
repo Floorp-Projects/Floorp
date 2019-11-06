@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsNodeUtils_h___
-#define nsNodeUtils_h___
+#ifndef DOM_BASE_MUTATIONOBSERVERS_H_
+#define DOM_BASE_MUTATIONOBSERVERS_H_
 
 #include "nsIContent.h"  // for use in inline function (ParentChainChanged)
 #include "nsIMutationObserver.h"  // for use in inline function (ParentChainChanged)
@@ -146,8 +146,7 @@ class MutationObservers {
   static void NotifyAnimationMutated(mozilla::dom::Animation* aAnimation,
                                      AnimationMutationType aMutatedType);
 };
-
 }  // namespace dom
 }  // namespace mozilla
 
-#endif  // nsNodeUtils_h___
+#endif  // DOM_BASE_MUTATIONOBSERVERS_H_

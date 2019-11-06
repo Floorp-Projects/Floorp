@@ -44,7 +44,6 @@
 #include "nsIScriptSecurityManager.h"
 #include "mozilla/dom/XBLChildrenElement.h"
 
-#include "nsNodeUtils.h"
 #include "nsJSUtils.h"
 
 #include "mozilla/DeferredFinalize.h"

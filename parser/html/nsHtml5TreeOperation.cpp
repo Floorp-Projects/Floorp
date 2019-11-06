@@ -13,6 +13,7 @@
 #include "mozilla/dom/HTMLFormElement.h"
 #include "mozilla/dom/HTMLImageElement.h"
 #include "mozilla/dom/HTMLTemplateElement.h"
+#include "mozilla/dom/MutationObservers.h"
 #include "mozilla/dom/Text.h"
 #include "nsAttrName.h"
 #include "nsContentCreatorFunctions.h"
@@ -36,7 +37,6 @@
 #include "nsISupportsImpl.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
-#include "nsNodeUtils.h"
 #include "nsTextNode.h"
 #ifdef MOZ_XBL
 #  include "nsBindingManager.h"

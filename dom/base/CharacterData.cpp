@@ -18,6 +18,7 @@
 #include "mozilla/dom/BindContext.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLSlotElement.h"
+#include "mozilla/dom/MutationObservers.h"
 #include "mozilla/dom/ShadowRoot.h"
 #include "mozilla/dom/Document.h"
 #include "nsReadableUtils.h"
@@ -27,7 +28,6 @@
 #include "nsDOMString.h"
 #include "nsChangeHint.h"
 #include "nsCOMArray.h"
-#include "nsNodeUtils.h"
 #include "mozilla/dom/DirectionalityUtils.h"
 #ifdef MOZ_XBL
 #  include "nsBindingManager.h"
