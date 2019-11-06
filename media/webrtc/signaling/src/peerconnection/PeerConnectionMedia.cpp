@@ -581,16 +581,16 @@ void PeerConnectionMedia::ShutdownMediaTransport_s() {
 
 nsresult PeerConnectionMedia::AddTransceiver(
     JsepTransceiver* aJsepTransceiver, dom::MediaStreamTrack& aReceiveTrack,
-    dom::MediaStreamTrack* aSendTrack,
+    dom::MediaStreamTrack* aSendTrack, const PrincipalHandle& aPrincipalHandle,
     RefPtr<TransceiverImpl>* aTransceiverImpl) {
   if (!mCall) {
     mCall = WebRtcCallWrapper::Create();
   }
 
-  RefPtr<TransceiverImpl> transceiver =
-      new TransceiverImpl(mParent->GetHandle(), mTransportHandler,
-                          aJsepTransceiver, mMainThread.get(), mSTSThread.get(),
-                          &aReceiveTrack, aSendTrack, mCall.get());
+  RefPtr<TransceiverImpl> transceiver = new TransceiverImpl(
+      mParent->GetHandle(), mTransportHandler, aJsepTransceiver,
+      mMainThread.get(), mSTSThread.get(), &aReceiveTrack, aSendTrack,
+      mCall.get(), aPrincipalHandle);
 
   if (!transceiver->IsValid()) {
     return NS_ERROR_FAILURE;
