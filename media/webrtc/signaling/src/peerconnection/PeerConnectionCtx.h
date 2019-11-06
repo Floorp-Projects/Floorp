@@ -31,7 +31,7 @@ class WebrtcGlobalInformation;
 class PeerConnectionCtx {
  public:
   static nsresult InitializeGlobal(nsIThread* mainThread,
-                                   nsIEventTarget* stsThread);
+                                   nsISerialEventTarget* stsThread);
   static PeerConnectionCtx* GetInstance();
   static bool isActive();
   static void Destroy();
