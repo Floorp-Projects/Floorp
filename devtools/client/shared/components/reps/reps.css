@@ -383,7 +383,7 @@ button.jump-definition {
 /* Invoke getter button */
 
 button.invoke-getter {
-  mask: url("resource://devtools/client/shared/components/reps/images/input.svg")
+  mask: url(resource://devtools/client/shared/components/reps/images/input.svg)
     no-repeat;
   display: inline-block;
   background-color: var(--theme-icon-color);
