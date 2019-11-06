@@ -3,11 +3,6 @@
 
 /* Basic UI tests for the protections panel */
 
-"use strict";
-
-const TRACKING_PAGE =
-  "http://tracking.example.org/browser/browser/base/content/test/trackingUI/trackingPage.html";
-
 ChromeUtils.defineModuleGetter(
   this,
   "ContentBlockingAllowList",
@@ -24,7 +19,6 @@ add_task(async function setup() {
       ["browser.contentblocking.report.monitor.enabled", false],
       ["browser.contentblocking.report.lockwise.enabled", false],
       ["browser.contentblocking.report.proxy.enabled", false],
-      ["privacy.trackingprotection.enabled", true],
     ],
   });
   let oldCanRecord = Services.telemetry.canRecordExtended;
@@ -40,7 +34,7 @@ add_task(async function setup() {
 add_task(async function testToggleSwitch() {
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
-    TRACKING_PAGE
+    "https://example.com"
   );
   await openProtectionsPanel();
   let events = Services.telemetry.snapshotEvents(
@@ -55,11 +49,6 @@ add_task(async function testToggleSwitch() {
   is(buttonEvents.length, 1, "recorded telemetry for opening the popup");
 
   // Check the visibility of the "Site not working?" link.
-  await TestUtils.waitForCondition(() => {
-    return BrowserTestUtils.is_visible(
-      gProtectionsHandler._protectionsPopupTPSwitchBreakageLink
-    );
-  });
   ok(
     BrowserTestUtils.is_visible(
       gProtectionsHandler._protectionsPopupTPSwitchBreakageLink
