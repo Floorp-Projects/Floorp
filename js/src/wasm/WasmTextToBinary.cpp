@@ -5572,6 +5572,7 @@ static bool ResolveType(Resolver& r, AstBlockType& ty) {
       // No work needed, it always carries an index
       return true;
   }
+  MOZ_CRASH();
 }
 
 static bool ResolveExpr(Resolver& r, AstExpr& expr);
@@ -6300,6 +6301,7 @@ static bool EncodeBlockType(Encoder& e, AstBlockType& type) {
     case AstBlockType::Which::IsRef:
       return e.writeVarU32(type.ref().index());
   }
+  MOZ_CRASH();
 }
 
 static bool EncodeBlock(Encoder& e, AstBlock& b) {
