@@ -21,7 +21,7 @@ add_task(async function test() {
   );
 
   let resultCount = UrlbarTestUtils.getResultCount(window);
-  Assert.greater(resultCount, 0, "At least one result");
+  Assert.ok(resultCount > 0, "At least one result");
 
   for (let i = 0; i < resultCount; i++) {
     EventUtils.synthesizeKey("KEY_ArrowDown");
