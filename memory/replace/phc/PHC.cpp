@@ -870,30 +870,32 @@ static void* MaybePageAlloc(const Maybe<arena_id_t>& aArenaId, size_t aReqSize,
   void* ptr = nullptr;
   for (uintptr_t n = 0, i = size_t(gMut->Random64(lock)) % kMaxPageAllocs;
        n < kMaxPageAllocs; n++, i = (i + 1) % kMaxPageAllocs) {
-    if (gMut->IsPageAllocatable(lock, i, now)) {
-      void* pagePtr = gConst->PagePtr(i);
-      bool ok =
-#ifdef XP_WIN
-          !!VirtualAlloc(pagePtr, kPageSize, MEM_COMMIT, PAGE_READWRITE);
-#else
-          mprotect(pagePtr, kPageSize, PROT_READ | PROT_WRITE) == 0;
-#endif
-      size_t usableSize = sMallocTable.malloc_good_size(aReqSize);
-      if (ok) {
-        gMut->SetPageInUse(lock, i, aArenaId, usableSize, allocStack);
-        ptr = pagePtr;
-        if (aZero) {
-          memset(ptr, 0, usableSize);
-        } else {
-#ifdef DEBUG
-          memset(ptr, kAllocJunk, usableSize);
-#endif
-        }
-      }
-      LOG("PageAlloc(%zu) -> %p[%zu] (%zu) (z%zu), sAllocDelay <- %zu\n",
-          aReqSize, ptr, i, usableSize, size_t(aZero), size_t(newAllocDelay));
-      break;
+    if (!gMut->IsPageAllocatable(lock, i, now)) {
+      continue;
     }
+
+    void* pagePtr = gConst->PagePtr(i);
+    bool ok =
+#ifdef XP_WIN
+        !!VirtualAlloc(pagePtr, kPageSize, MEM_COMMIT, PAGE_READWRITE);
+#else
+        mprotect(pagePtr, kPageSize, PROT_READ | PROT_WRITE) == 0;
+#endif
+    size_t usableSize = sMallocTable.malloc_good_size(aReqSize);
+    if (ok) {
+      gMut->SetPageInUse(lock, i, aArenaId, usableSize, allocStack);
+      ptr = pagePtr;
+      if (aZero) {
+        memset(ptr, 0, usableSize);
+      } else {
+#ifdef DEBUG
+        memset(ptr, kAllocJunk, usableSize);
+#endif
+      }
+    }
+    LOG("PageAlloc(%zu) -> %p[%zu] (%zu) (z%zu), sAllocDelay <- %zu\n",
+        aReqSize, ptr, i, usableSize, size_t(aZero), size_t(newAllocDelay));
+    break;
   }
 
   if (!ptr) {
