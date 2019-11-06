@@ -315,10 +315,12 @@ function autocomplete(
 }
 
 function navigate(url: string): Promise<*> {
+  targets = { worker: {}, contentProcess: {} };
   return currentTarget.navigateTo({ url });
 }
 
 function reload(): Promise<*> {
+  targets = { worker: {}, contentProcess: {} };
   return currentTarget.reload();
 }
 
@@ -447,6 +449,12 @@ async function fetchSources(): Promise<Array<GeneratedSourceData>> {
   return sources;
 }
 
+async function fetchThreadSources(
+  thread: string
+): Promise<Array<GeneratedSourceData>> {
+  return getSources(lookupThreadFront(thread));
+}
+
 // Check if any of the targets were paused before we opened
 // the debugger. If one is paused. Fake a `pause` RDP event
 // by directly calling the client event listener.
@@ -483,25 +491,12 @@ async function updateThreads(type: ThreadType) {
     observeAsmJS: true,
   };
 
-  const oldActors = Object.keys(targets[type]);
-
   await updateTargets(type, {
     currentTarget,
     debuggerClient,
     targets,
     options,
   });
-
-  // Fetch the sources and install breakpoints on any new workers.
-  // NOTE: This runs in the background and fails quitely because it is
-  // pretty easy for sources to throw during the fetch if their thread
-  // shuts down, which would cause test failures.
-  for (const entry of Object.entries(targets[type])) {
-    const [actor, { threadFront }] = (entry: any);
-    if (!oldActors.includes(actor)) {
-      getSources(threadFront).catch(e => console.error(e));
-    }
-  }
 
   return Object.entries(targets[type]).map(([actor, target]) =>
     createThread((actor: any), (target: any))
@@ -596,6 +591,7 @@ const clientCommands = {
   pauseOnExceptions,
   toggleEventLogging,
   fetchSources,
+  fetchThreadSources,
   checkIfAlreadyPaused,
   registerSourceActor,
   fetchThreads,
