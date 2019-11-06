@@ -22,12 +22,12 @@ typedef CallbackObjectHolder<PositionErrorCallback,
                              nsIDOMGeoPositionErrorCallback>
     GeoPositionErrorCallback;
 
-class PositionError final : public nsWrapperCache {
+class GeolocationPositionError final : public nsWrapperCache {
  public:
-  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(PositionError)
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(PositionError)
+  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(GeolocationPositionError)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(GeolocationPositionError)
 
-  PositionError(Geolocation* aParent, int16_t aCode);
+  GeolocationPositionError(Geolocation* aParent, int16_t aCode);
 
   nsWrapperCache* GetParentObject() const;
 
@@ -42,7 +42,7 @@ class PositionError final : public nsWrapperCache {
   void NotifyCallback(const GeoPositionErrorCallback& callback);
 
  private:
-  ~PositionError();
+  ~GeolocationPositionError();
   int16_t mCode;
   RefPtr<Geolocation> mParent;
 };
