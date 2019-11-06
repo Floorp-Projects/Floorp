@@ -4030,41 +4030,66 @@ nsDOMWindowUtils::WrCapture() {
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::SetCompositionRecording(bool aValue) {
-  if (CompositorBridgeChild* cbc = GetCompositorBridge()) {
-    if (aValue) {
-      RefPtr<nsDOMWindowUtils> self = this;
-      cbc->SendBeginRecording(TimeStamp::Now())
-          ->Then(
-              GetCurrentThreadSerialEventTarget(), __func__,
-              [self](const bool& aSuccess) {
-                if (!aSuccess) {
-                  self->ReportErrorMessageForWindow(
-                      NS_LITERAL_STRING(
-                          "The composition recorder is already running."),
-                      "DOM", true);
-                }
-              },
-              [self](const mozilla::ipc::ResponseRejectReason&) {
-                self->ReportErrorMessageForWindow(
-                    NS_LITERAL_STRING(
-                        "Could not start the composition recorder."),
-                    "DOM", true);
-              });
-    } else {
-      bool success = false;
-      if (!cbc->SendEndRecording(&success)) {
-        ReportErrorMessageForWindow(
-            NS_LITERAL_STRING("Could not stop the composition recorder."),
-            "DOM", true);
-      } else if (!success) {
-        ReportErrorMessageForWindow(
-            NS_LITERAL_STRING("The composition recorder is not running."),
-            "DOM", true);
-      }
-    }
+nsDOMWindowUtils::SetCompositionRecording(bool aValue, Promise** aOutPromise) {
+  NS_ENSURE_ARG_POINTER(aOutPromise);
+  *aOutPromise = nullptr;
+
+  nsCOMPtr<nsPIDOMWindowOuter> outer = do_QueryReferent(mWindow);
+  NS_ENSURE_STATE(outer);
+  nsCOMPtr<nsPIDOMWindowInner> inner = outer->GetCurrentInnerWindow();
+  NS_ENSURE_STATE(inner);
+
+  ErrorResult err;
+  RefPtr<Promise> promise = Promise::Create(inner->AsGlobal(), err);
+  if (NS_WARN_IF(err.Failed())) {
+    return err.StealNSResult();
   }
 
+  CompositorBridgeChild* cbc = GetCompositorBridge();
+  if (NS_WARN_IF(!cbc)) {
+    promise->MaybeReject(NS_ERROR_UNEXPECTED);
+    promise.forget(aOutPromise);
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  if (aValue) {
+    cbc->SendBeginRecording(TimeStamp::Now())
+        ->Then(
+            GetCurrentThreadSerialEventTarget(), __func__,
+            [promise](const bool& aSuccess) {
+              if (aSuccess) {
+                promise->MaybeResolveWithUndefined();
+              } else {
+                promise->MaybeRejectWithDOMException(
+                    NS_ERROR_DOM_INVALID_STATE_ERR,
+                    "The composition recorder is already running.");
+              }
+            },
+            [promise](const mozilla::ipc::ResponseRejectReason&) {
+              promise->MaybeRejectWithDOMException(
+                  NS_ERROR_DOM_UNKNOWN_ERR,
+                  "Could not start the composition recorder.");
+            });
+  } else {
+    cbc->SendEndRecording()->Then(
+        GetCurrentThreadSerialEventTarget(), __func__,
+        [promise](const bool& aSuccess) {
+          if (aSuccess) {
+            promise->MaybeResolveWithUndefined();
+          } else {
+            promise->MaybeRejectWithDOMException(
+                NS_ERROR_DOM_INVALID_STATE_ERR,
+                "The composition recorder is not running.");
+          }
+        },
+        [promise](const mozilla::ipc::ResponseRejectReason&) {
+          promise->MaybeRejectWithDOMException(
+              NS_ERROR_DOM_UNKNOWN_ERR,
+              "Could not stop the composition recorder.");
+        });
+  }
+
+  promise.forget(aOutPromise);
   return NS_OK;
 }
 
@@ -4076,24 +4101,6 @@ nsDOMWindowUtils::SetTransactionLogging(bool aValue) {
   return NS_OK;
 }
 
-void nsDOMWindowUtils::ReportErrorMessageForWindow(
-    const nsAString& aErrorMessage, const char* aClassification,
-    bool aFromChrome) {
-  bool isPrivateWindow = false;
-
-  if (nsCOMPtr<nsPIDOMWindowOuter> window = do_QueryReferent(mWindow)) {
-    if (nsIPrincipal* principal =
-            nsGlobalWindowOuter::Cast(window)->GetPrincipal()) {
-      uint32_t privateBrowsingId = 0;
-
-      if (NS_SUCCEEDED(principal->GetPrivateBrowsingId(&privateBrowsingId))) {
-        isPrivateWindow = !!privateBrowsingId;
-      }
-    }
-  }
-  nsContentUtils::LogSimpleConsoleError(aErrorMessage, aClassification,
-                                        isPrivateWindow, aFromChrome);
-}
 
 NS_IMETHODIMP
 nsDOMWindowUtils::SetSystemFont(const nsACString& aFontName) {
