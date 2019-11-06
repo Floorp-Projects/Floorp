@@ -615,6 +615,7 @@ class nsFrame : public nsBox {
    */
   static bool ShouldApplyOverflowClipping(const nsIFrame* aFrame,
                                           const nsStyleDisplay* aDisp) {
+    MOZ_ASSERT(aDisp == aFrame->StyleDisplay(), "Wong display struct");
     // clip overflow:-moz-hidden-unscrollable, except for nsListControlFrame,
     // which is an nsHTMLScrollFrame.
     if (MOZ_UNLIKELY(aDisp->mOverflowX ==
@@ -628,7 +629,8 @@ class nsFrame : public nsBox {
     // clipping, because the scrollable frame will already clip overflowing
     // content, and because contain:paint should prevent all means of escaping
     // that clipping (e.g. because it forms a fixed-pos containing block).
-    if (aDisp->IsContainPaint() && !aFrame->IsScrollFrame()) {
+    if (aDisp->IsContainPaint() && !aFrame->IsScrollFrame() &&
+        aFrame->IsFrameOfType(eSupportsContainLayoutAndPaint)) {
       return true;
     }
 
