@@ -246,7 +246,8 @@ class CompositorBridgeParentBase : public PCompositorBridgeParent,
   virtual mozilla::ipc::IPCResult RecvAllPluginsCaptured() = 0;
   virtual mozilla::ipc::IPCResult RecvBeginRecording(
       const TimeStamp& aRecordingStart, BeginRecordingResolver&& aResolve) = 0;
-  virtual mozilla::ipc::IPCResult RecvEndRecording(bool* aOutSuccess) = 0;
+  virtual mozilla::ipc::IPCResult RecvEndRecording(
+      EndRecordingResolver&& aResolve) = 0;
   virtual mozilla::ipc::IPCResult RecvInitialize(
       const LayersId& rootLayerTreeId) = 0;
   virtual mozilla::ipc::IPCResult RecvGetFrameUniformity(
@@ -362,7 +363,8 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
   mozilla::ipc::IPCResult RecvBeginRecording(
       const TimeStamp& aRecordingStart,
       BeginRecordingResolver&& aResolve) override;
-  mozilla::ipc::IPCResult RecvEndRecording(bool* aOutSuccess) override;
+  mozilla::ipc::IPCResult RecvEndRecording(
+      EndRecordingResolver&& aResolve) override;
 
   void NotifyMemoryPressure() override;
   void AccumulateMemoryReport(wr::MemoryReport*) override;

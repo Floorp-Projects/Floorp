@@ -620,7 +620,8 @@ void WebRenderAPI::SetCompositionRecorder(
   RunOnRenderThread(std::move(event));
 }
 
-void WebRenderAPI::WriteCollectedFrames() {
+RefPtr<WebRenderAPI::WriteCollectedFramesPromise>
+WebRenderAPI::WriteCollectedFrames() {
   class WriteCollectedFramesEvent final : public RendererEvent {
    public:
     explicit WriteCollectedFramesEvent() {
@@ -631,11 +632,22 @@ void WebRenderAPI::WriteCollectedFrames() {
 
     void Run(RenderThread& aRenderThread, WindowId aWindowId) override {
       aRenderThread.WriteCollectedFramesForWindow(aWindowId);
+      mPromise.Resolve(true, __func__);
     }
+
+    RefPtr<WebRenderAPI::WriteCollectedFramesPromise> GetPromise() {
+      return mPromise.Ensure(__func__);
+    }
+
+   private:
+    MozPromiseHolder<WebRenderAPI::WriteCollectedFramesPromise> mPromise;
   };
 
   auto event = MakeUnique<WriteCollectedFramesEvent>();
+  auto promise = event->GetPromise();
+
   RunOnRenderThread(std::move(event));
+  return promise;
 }
 
 void TransactionBuilder::Clear() { wr_resource_updates_clear(mTxn); }
