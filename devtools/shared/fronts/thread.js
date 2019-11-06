@@ -9,9 +9,11 @@ const {
   FrontClassWithSpec,
   registerFront,
 } = require("devtools/shared/protocol");
+
 const { threadSpec } = require("devtools/shared/specs/thread");
 
 loader.lazyRequireGetter(this, "ObjectFront", "devtools/shared/fronts/object");
+loader.lazyRequireGetter(this, "FrameFront", "devtools/shared/fronts/frame");
 loader.lazyRequireGetter(
   this,
   "SourceFront",
@@ -63,6 +65,10 @@ class ThreadFront extends FrontClassWithSpec(threadSpec) {
         command + " command sent while not paused. Currently " + this._state
       );
     }
+  }
+
+  getFrames(start, count) {
+    return super.frames(start, count);
   }
 
   /**
@@ -212,19 +218,6 @@ class ThreadFront extends FrontClassWithSpec(threadSpec) {
   }
 
   /**
-   * Request frames from the callstack for the current thread.
-   *
-   * @param start integer
-   *        The number of the youngest stack frame to return (the youngest
-   *        frame is 0).
-   * @param count integer
-   *        The maximum number of frames to return, or null to return all
-   *        frames.
-   */
-  getFrames(start, count) {
-    return super.frames(start, count);
-  }
-  /**
    * attach to the thread actor.
    */
   async attach(options) {
@@ -247,15 +240,6 @@ class ThreadFront extends FrontClassWithSpec(threadSpec) {
     await super.detach();
     await onDetached;
     await this.destroy();
-  }
-
-  /**
-   * Request the frame environment.
-   *
-   * @param frameId string
-   */
-  getEnvironment(frameId) {
-    return this.client.request({ to: frameId, type: "getEnvironment" });
   }
 
   /**
@@ -285,6 +269,14 @@ class ThreadFront extends FrontClassWithSpec(threadSpec) {
       this[gripCacheName][id].valid = false;
     }
     this[gripCacheName] = {};
+  }
+
+  _clearFrameFronts() {
+    for (const front of this.poolChildren()) {
+      if (front instanceof FrameFront) {
+        this.unmanage(front);
+      }
+    }
   }
 
   /**
@@ -328,6 +320,7 @@ class ThreadFront extends FrontClassWithSpec(threadSpec) {
     // when it's initialized
     this._lastPausePacket = packet;
     this._clearPauseGrips();
+    this._clearFrameFronts();
   }
 
   getLastPausePacket() {
