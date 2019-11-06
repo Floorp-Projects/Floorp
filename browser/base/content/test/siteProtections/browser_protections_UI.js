@@ -42,6 +42,11 @@ add_task(async function testToggleSwitch() {
     gBrowser,
     TRACKING_PAGE
   );
+
+  await TestUtils.waitForCondition(() => {
+    return gProtectionsHandler._protectionsPopup.hasAttribute("blocking");
+  });
+
   await openProtectionsPanel();
   let events = Services.telemetry.snapshotEvents(
     Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS
