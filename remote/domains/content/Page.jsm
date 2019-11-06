@@ -14,6 +14,12 @@ const { UnsupportedError } = ChromeUtils.import(
   "chrome://remote/content/Error.jsm"
 );
 
+const {
+  LOAD_FLAGS_BYPASS_CACHE,
+  LOAD_FLAGS_BYPASS_PROXY,
+  LOAD_FLAGS_NONE,
+} = Ci.nsIWebNavigation;
+
 class Page extends ContentProcessDomain {
   constructor(session) {
     super(session);
@@ -84,8 +90,13 @@ class Page extends ContentProcessDomain {
     };
   }
 
-  async reload() {
-    this.docShell.reload(Ci.nsIWebNavigation.LOAD_FLAGS_NONE);
+  async reload({ ignoreCache }) {
+    let flags = LOAD_FLAGS_NONE;
+    if (ignoreCache) {
+      flags |= LOAD_FLAGS_BYPASS_CACHE;
+      flags |= LOAD_FLAGS_BYPASS_PROXY;
+    }
+    this.docShell.reload(flags);
   }
 
   getFrameTree() {
@@ -143,8 +154,8 @@ class Page extends ContentProcessDomain {
       case "pageshow":
         this.emit("Page.loadEventFired", { timestamp, frameId });
         // XXX this should most likely be sent differently
-        this.emit("Page.navigatedWithinDocument", { timestamp, frameId, url });
-        this.emit("Page.frameStoppedLoading", { timestamp, frameId });
+        this.emit("Page.navigatedWithinDocument", { frameId, url });
+        this.emit("Page.frameStoppedLoading", { frameId });
         break;
     }
   }

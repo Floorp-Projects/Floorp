@@ -206,20 +206,6 @@ void TabGroup::MaybeDestroy() {
   }
 }
 
-nsTArray<nsPIDOMWindowOuter*> TabGroup::GetTopLevelWindows() const {
-  MOZ_ASSERT(NS_IsMainThread());
-  nsTArray<nsPIDOMWindowOuter*> array;
-
-  for (nsPIDOMWindowOuter* outerWindow : mWindows) {
-    if (outerWindow->GetDocShell() &&
-        !outerWindow->GetInProcessScriptableParentOrNull()) {
-      array.AppendElement(outerWindow);
-    }
-  }
-
-  return array;
-}
-
 TabGroup::HashEntry::HashEntry(const nsACString* aKey)
     : nsCStringHashKey(aKey), mDocGroup(nullptr) {}
 

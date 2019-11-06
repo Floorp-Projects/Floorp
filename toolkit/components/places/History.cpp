@@ -371,19 +371,7 @@ class VisitedQuery final : public AsyncStatementCallback,
   static nsresult Start(nsIURI* aURI,
                         mozIVisitedStatusCallback* aCallback = nullptr) {
     MOZ_ASSERT(aURI, "Null URI");
-
-    // If we are a content process, always remote the request to the
-    // parent process.
-    if (XRE_IsContentProcess()) {
-      URIParams uri;
-      SerializeURI(aURI, uri);
-
-      mozilla::dom::ContentChild* cpc =
-          mozilla::dom::ContentChild::GetSingleton();
-      NS_ASSERTION(cpc, "Content Protocol is NULL!");
-      (void)cpc->SendStartVisitedQuery(uri);
-      return NS_OK;
-    }
+    MOZ_ASSERT(XRE_IsParentProcess());
 
     nsMainThreadPtrHandle<mozIVisitedStatusCallback> callback(
         new nsMainThreadPtrHolder<mozIVisitedStatusCallback>(
@@ -1893,10 +1881,6 @@ void History::AppendToRecentlyVisitedURIs(nsIURI* aURI, bool aHidden) {
   }
 }
 
-Result<Ok, nsresult> History::StartVisitedQuery(nsIURI* aURI) {
-  return ToResult(VisitedQuery::Start(aURI));
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 //// IHistory
 
@@ -2263,6 +2247,26 @@ History::IsURIVisited(nsIURI* aURI, mozIVisitedStatusCallback* aCallback) {
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
+}
+
+void History::StartPendingVisitedQueries(
+    const PendingVisitedQueries& aQueries) {
+  if (XRE_IsContentProcess()) {
+    nsTArray<URIParams> uris(aQueries.Count());
+    for (auto iter = aQueries.ConstIter(); !iter.Done(); iter.Next()) {
+      SerializeURI(iter.Get()->GetKey(), *uris.AppendElement());
+    }
+    auto* cpc = mozilla::dom::ContentChild::GetSingleton();
+    MOZ_ASSERT(cpc, "Content Protocol is NULL!");
+    Unused << cpc->SendStartVisitedQueries(uris);
+  } else {
+    // TODO(bug 1594368): We could do a single query, as long as we can
+    // then notify each URI individually.
+    for (auto iter = aQueries.ConstIter(); !iter.Done(); iter.Next()) {
+      nsresult queryStatus = VisitedQuery::Start(iter.Get()->GetKey());
+      Unused << NS_WARN_IF(NS_FAILED(queryStatus));
+    }
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

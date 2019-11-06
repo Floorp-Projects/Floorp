@@ -370,7 +370,8 @@ class VideoSessionConduit : public MediaSessionConduit {
    *         of failure
    */
   static RefPtr<VideoSessionConduit> Create(
-      RefPtr<WebRtcCallWrapper> aCall, nsCOMPtr<nsIEventTarget> aStsThread);
+      RefPtr<WebRtcCallWrapper> aCall,
+      nsCOMPtr<nsISerialEventTarget> aStsThread);
 
   enum FrameRequestType {
     FrameRequestNone,
@@ -489,7 +490,8 @@ class AudioSessionConduit : public MediaSessionConduit {
    *         of failure
    */
   static RefPtr<AudioSessionConduit> Create(
-      RefPtr<WebRtcCallWrapper> aCall, nsCOMPtr<nsIEventTarget> aStsThread);
+      RefPtr<WebRtcCallWrapper> aCall,
+      nsCOMPtr<nsISerialEventTarget> aStsThread);
 
   virtual ~AudioSessionConduit() {}
 

@@ -6,7 +6,7 @@
 /* import-globals-from common.js */
 
 // Configuration vars
-let homeURL = "https://www.mozilla.org/en-US/";
+let homeURL = "https://webxr.today/";
 // Bug 1586294 - Localize the privacy policy URL (Services.urlFormatter?)
 let privacyPolicyURL = "https://www.mozilla.org/en-US/privacy/firefox/";
 let reportIssueURL = "https://mzl.la/fxr";

@@ -43,7 +43,6 @@
 #include "nsIContentPolicy.h"
 #include "nsContentPolicyUtils.h"
 #include "nsError.h"
-#include "nsNodeUtils.h"
 #include "nsIScriptGlobalObject.h"
 #include "mozAutoDocUpdate.h"
 #include "nsMimeTypes.h"

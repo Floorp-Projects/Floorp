@@ -102,6 +102,7 @@
 #include "mozilla/dom/HTMLAllCollection.h"
 #include "mozilla/dom/HTMLMetaElement.h"
 #include "mozilla/dom/HTMLSharedElement.h"
+#include "mozilla/dom/MutationObservers.h"
 #include "mozilla/dom/Navigator.h"
 #include "mozilla/dom/Performance.h"
 #include "mozilla/dom/TreeOrderedArrayInlines.h"
@@ -120,7 +121,6 @@
 #include "mozilla/dom/PostMessageEvent.h"
 #include "mozilla/ipc/IdleSchedulerChild.h"
 #include "nsDOMString.h"
-#include "nsNodeUtils.h"
 #include "nsLayoutUtils.h"  // for GetFrameForPoint
 #include "nsIFrame.h"
 #include "nsIBrowserChild.h"
@@ -1887,7 +1887,7 @@ Document::Release() {
       return mRefCnt.get();
     }
     mRefCnt.incr(base);
-    nsNodeUtils::LastRelease(this);
+    LastRelease();
     mRefCnt.decr(base);
     if (shouldDelete) {
       mRefCnt.stabilizeForDeletion();
@@ -2187,7 +2187,7 @@ nsresult Document::Init() {
 
   // Prepend self as mutation-observer whether we need it or not (some
   // subclasses currently do, other don't). This is because the code in
-  // nsNodeUtils always notifies the first observer first, expecting the
+  // MutationObservers always notifies the first observer first, expecting the
   // first observer to be the document.
   slots->mMutationObservers.PrependElementUnlessExists(
       static_cast<nsIMutationObserver*>(this));
@@ -2330,7 +2330,7 @@ void Document::DisconnectNodeTree() {
         // now-stale value.
         mCachedRootElement = nullptr;
       }
-      nsNodeUtils::ContentRemoved(this, content, previousSibling);
+      MutationObservers::NotifyContentRemoved(this, content, previousSibling);
       content->UnbindFromTree();
     }
     MOZ_ASSERT(!mCachedRootElement,
@@ -7855,7 +7855,7 @@ already_AddRefed<nsINode> Document::ImportNode(nsINode& aNode, bool aDeep,
     case CDATA_SECTION_NODE:
     case COMMENT_NODE:
     case DOCUMENT_TYPE_NODE: {
-      return nsNodeUtils::Clone(imported, aDeep, mNodeInfoManager, nullptr, rv);
+      return imported->Clone(aDeep, mNodeInfoManager, nullptr, rv);
     }
     default: {
       NS_WARNING("Don't know how to clone this nodetype for importNode.");
@@ -9351,8 +9351,8 @@ nsINode* Document::AdoptNode(nsINode& aAdoptedNode, ErrorResult& rv) {
   }
 
   nsCOMArray<nsINode> nodesWithProperties;
-  nsNodeUtils::Adopt(adoptedNode, sameDocument ? nullptr : mNodeInfoManager,
-                     newScope, nodesWithProperties, rv);
+  adoptedNode->Adopt(sameDocument ? nullptr : mNodeInfoManager, newScope,
+                     nodesWithProperties, rv);
   if (rv.Failed()) {
     // Disconnect all nodes from their parents, since some have the old document
     // as their ownerDocument and some have this as their ownerDocument.

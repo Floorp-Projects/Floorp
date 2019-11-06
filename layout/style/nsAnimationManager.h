@@ -11,6 +11,7 @@
 #include "mozilla/EventForwards.h"
 #include "AnimationCommon.h"
 #include "mozilla/dom/Animation.h"
+#include "mozilla/dom/MutationObservers.h"
 #include "mozilla/Keyframe.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/TimeStamp.h"
@@ -117,7 +118,7 @@ class CSSAnimation final : public Animation {
   void SetAnimationIndex(uint64_t aIndex) {
     MOZ_ASSERT(IsTiedToMarkup());
     if (IsRelevant() && mAnimationIndex != aIndex) {
-      nsNodeUtils::AnimationChanged(this);
+      MutationObservers::NotifyAnimationChanged(this);
       PostUpdate();
     }
     mAnimationIndex = aIndex;

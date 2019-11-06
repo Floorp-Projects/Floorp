@@ -43,7 +43,6 @@
 #include "nsIContentPolicy.h"
 #include "nsContentPolicyUtils.h"
 #include "nsError.h"
-#include "nsNodeUtils.h"
 #include "nsIScriptGlobalObject.h"
 #include "mozAutoDocUpdate.h"
 #include "nsMimeTypes.h"
@@ -54,6 +53,7 @@
 #include "mozilla/dom/DocumentType.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLTemplateElement.h"
+#include "mozilla/dom/MutationObservers.h"
 #include "mozilla/dom/ProcessingInstruction.h"
 #include "mozilla/dom/ScriptLoader.h"
 #include "mozilla/dom/txMozillaXSLTProcessor.h"
@@ -369,7 +369,7 @@ nsXMLContentSink::OnTransformDone(nsresult aResult, Document* aResultDocument) {
     NS_ASSERTION(mDocument->ComputeIndexOf(rootElement) != -1,
                  "rootElement not in doc?");
     mDocument->BeginUpdate();
-    nsNodeUtils::ContentInserted(mDocument, rootElement);
+    MutationObservers::NotifyContentInserted(mDocument, rootElement);
     mDocument->EndUpdate();
   }
 

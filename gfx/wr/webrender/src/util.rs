@@ -246,6 +246,20 @@ impl ScaleOffset {
         )
     }
 
+    pub fn map_vector<F, T>(&self, vector: &Vector2D<f32, F>) -> Vector2D<f32, T> {
+        Vector2D::new(
+            vector.x * self.scale.x + self.offset.x,
+            vector.y * self.scale.y + self.offset.y,
+        )
+    }
+
+    pub fn unmap_vector<F, T>(&self, vector: &Vector2D<f32, F>) -> Vector2D<f32, T> {
+        Vector2D::new(
+            (vector.x - self.offset.x) / self.scale.x,
+            (vector.y - self.offset.y) / self.scale.y,
+        )
+    }
+
     pub fn to_transform<F, T>(&self) -> Transform3D<f32, F, T> {
         Transform3D::row_major(
             self.scale.x,

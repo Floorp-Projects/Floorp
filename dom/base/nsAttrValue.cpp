@@ -27,6 +27,7 @@
 #include "nsStyledElement.h"
 #include "nsIURI.h"
 #include "mozilla/dom/Document.h"
+#include "ReferrerInfo.h"
 #include <algorithm>
 
 using namespace mozilla;
@@ -1624,7 +1625,7 @@ bool nsAttrValue::ParseStyleAttribute(const nsAString& aString,
   }
 
   nsCOMPtr<nsIReferrerInfo> referrerInfo =
-      ReferrerInfo::CreateForInternalCSSResources(ownerDoc);
+      dom::ReferrerInfo::CreateForInternalCSSResources(ownerDoc);
   RefPtr<URLExtraData> data =
       new URLExtraData(baseURI, referrerInfo, principal);
   RefPtr<DeclarationBlock> decl = DeclarationBlock::FromCssText(

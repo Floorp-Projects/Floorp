@@ -1968,11 +1968,9 @@ nsresult nsListControlFrame::KeyDown(dom::Event* aKeyEvent) {
 
   AutoIncrementalSearchResetter incrementalSearchResetter;
 
-  // Don't check defaultPrevented value because other browsers don't prevent
-  // the key navigation of list control even if preventDefault() is called.
-  // XXXmats 2015-04-16: the above is not true anymore, Chrome prevents all
-  // XXXmats keyboard events, even tabbing, when preventDefault() is called
-  // XXXmats in onkeydown. That seems sub-optimal though.
+  if (aKeyEvent->DefaultPrevented()) {
+    return NS_OK;
+  }
 
   const WidgetKeyboardEvent* keyEvent =
       aKeyEvent->WidgetEventPtr()->AsKeyboardEvent();

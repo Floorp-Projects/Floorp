@@ -13,6 +13,7 @@
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/DocumentTimeline.h"
+#include "mozilla/dom/MutationObservers.h"
 #include "mozilla/AnimationEventDispatcher.h"
 #include "mozilla/AnimationTarget.h"
 #include "mozilla/AutoRestore.h"
@@ -61,8 +62,7 @@ class MOZ_RAII AutoMutationBatchForAnimation {
   explicit AutoMutationBatchForAnimation(
       const Animation& aAnimation MOZ_GUARD_OBJECT_NOTIFIER_PARAM) {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    Maybe<NonOwningAnimationTarget> target =
-        nsNodeUtils::GetTargetForAnimation(&aAnimation);
+    Maybe<NonOwningAnimationTarget> target = aAnimation.GetTargetForAnimation();
     if (!target) {
       return;
     }
@@ -82,6 +82,15 @@ class MOZ_RAII AutoMutationBatchForAnimation {
 // Animation interface:
 //
 // ---------------------------------------------------------------------------
+
+Maybe<NonOwningAnimationTarget> Animation::GetTargetForAnimation() const {
+  AnimationEffect* effect = GetEffect();
+  if (!effect || !effect->AsKeyframeEffect()) {
+    return Nothing();
+  }
+  return effect->AsKeyframeEffect()->GetTarget();
+}
+
 /* static */
 already_AddRefed<Animation> Animation::Constructor(
     const GlobalObject& aGlobal, AnimationEffect* aEffect,
@@ -113,7 +122,7 @@ void Animation::SetId(const nsAString& aId) {
     return;
   }
   mId = aId;
-  nsNodeUtils::AnimationChanged(this);
+  MutationObservers::NotifyAnimationChanged(this);
 }
 
 void Animation::SetEffect(AnimationEffect* aEffect) {
@@ -136,7 +145,7 @@ void Animation::SetEffectNoUpdate(AnimationEffect* aEffect) {
     // We need to notify observers now because once we set mEffect to null
     // we won't be able to find the target element to notify.
     if (mIsRelevant) {
-      nsNodeUtils::AnimationRemoved(this);
+      MutationObservers::NotifyAnimationRemoved(this);
     }
 
     // Break links with the old effect and then drop it.
@@ -167,7 +176,7 @@ void Animation::SetEffectNoUpdate(AnimationEffect* aEffect) {
     // If the target is different, the change notification will be ignored by
     // AutoMutationBatchForAnimation.
     if (wasRelevant && mIsRelevant) {
-      nsNodeUtils::AnimationChanged(this);
+      MutationObservers::NotifyAnimationChanged(this);
     }
 
     ReschedulePendingTasks();
@@ -253,7 +262,7 @@ void Animation::SetStartTime(const Nullable<TimeDuration>& aNewStartTime) {
 
   UpdateTiming(SeekFlag::DidSeek, SyncNotifyFlag::Async);
   if (IsRelevant()) {
-    nsNodeUtils::AnimationChanged(this);
+    MutationObservers::NotifyAnimationChanged(this);
   }
   PostUpdate();
 }
@@ -307,7 +316,7 @@ void Animation::SetCurrentTime(const TimeDuration& aSeekTime) {
 
   UpdateTiming(SeekFlag::DidSeek, SyncNotifyFlag::Async);
   if (IsRelevant()) {
-    nsNodeUtils::AnimationChanged(this);
+    MutationObservers::NotifyAnimationChanged(this);
   }
   PostUpdate();
 }
@@ -338,7 +347,7 @@ void Animation::SetPlaybackRate(double aPlaybackRate) {
   // - update the playback rate on animations on layers.
   UpdateTiming(SeekFlag::DidSeek, SyncNotifyFlag::Async);
   if (IsRelevant()) {
-    nsNodeUtils::AnimationChanged(this);
+    MutationObservers::NotifyAnimationChanged(this);
   }
   PostUpdate();
 }
@@ -383,7 +392,7 @@ void Animation::UpdatePlaybackRate(double aPlaybackRate) {
     // All we need to do is update observers so that, e.g. DevTools, report the
     // right information.
     if (IsRelevant()) {
-      nsNodeUtils::AnimationChanged(this);
+      MutationObservers::NotifyAnimationChanged(this);
     }
   } else if (playState == AnimationPlayState::Finished) {
     MOZ_ASSERT(mTimeline && !mTimeline->GetCurrentTimeAsDuration().IsNull(),
@@ -411,7 +420,7 @@ void Animation::UpdatePlaybackRate(double aPlaybackRate) {
     // timing.
     UpdateTiming(SeekFlag::NoSeek, SyncNotifyFlag::Async);
     if (IsRelevant()) {
-      nsNodeUtils::AnimationChanged(this);
+      MutationObservers::NotifyAnimationChanged(this);
     }
     PostUpdate();
   } else {
@@ -562,7 +571,7 @@ void Animation::Finish(ErrorResult& aRv) {
   }
   UpdateTiming(SeekFlag::DidSeek, SyncNotifyFlag::Sync);
   if (didChange && IsRelevant()) {
-    nsNodeUtils::AnimationChanged(this);
+    MutationObservers::NotifyAnimationChanged(this);
   }
   PostUpdate();
 }
@@ -974,9 +983,9 @@ void Animation::UpdateRelevance() {
 
   // Notify animation observers.
   if (wasRelevant && !mIsRelevant) {
-    nsNodeUtils::AnimationRemoved(this);
+    MutationObservers::NotifyAnimationRemoved(this);
   } else if (!wasRelevant && mIsRelevant) {
-    nsNodeUtils::AnimationAdded(this);
+    MutationObservers::NotifyAnimationAdded(this);
   }
 }
 
@@ -1349,7 +1358,7 @@ void Animation::PlayNoUpdate(ErrorResult& aRv, LimitBehavior aLimitBehavior) {
 
   UpdateTiming(SeekFlag::NoSeek, SyncNotifyFlag::Async);
   if (IsRelevant()) {
-    nsNodeUtils::AnimationChanged(this);
+    MutationObservers::NotifyAnimationChanged(this);
   }
 }
 
@@ -1397,7 +1406,7 @@ void Animation::Pause(ErrorResult& aRv) {
 
   UpdateTiming(SeekFlag::NoSeek, SyncNotifyFlag::Async);
   if (IsRelevant()) {
-    nsNodeUtils::AnimationChanged(this);
+    MutationObservers::NotifyAnimationChanged(this);
   }
 
   PostUpdate();
@@ -1445,7 +1454,7 @@ void Animation::ResumeAt(const TimeDuration& aReadyTime) {
   // If we had a pending playback rate, we will have now applied it so we need
   // to notify observers.
   if (hadPendingPlaybackRate && IsRelevant()) {
-    nsNodeUtils::AnimationChanged(this);
+    MutationObservers::NotifyAnimationChanged(this);
   }
 
   if (mReady) {

@@ -479,7 +479,35 @@ class TestParser(unittest.TestCase):
         parse_histograms.Histogram('TEST_HISTOGRAM_GV_STREAMING',
                                    histograms['TEST_HISTOGRAM_GV_STREAMING'],
                                    strict_type_checks=True)
+
         self.assertRaises(SystemExit, ParserError.exit_func)
+
+    def test_enumerated_histogram_with_100_buckets(self):
+        SAMPLE_HISTOGRAM = {
+            "TEST_100_BUCKETS_HISTOGRAM": {
+                "record_in_processes": ["main", "content", "socket"],
+                "alert_emails": ["team@mozilla.xyz"],
+                "bug_numbers": [1383793],
+                "expires_in_version": "never",
+                "kind": "enumerated",
+                "n_values": 100,
+                "products": ["firefox"],
+                "description": "Test histogram"
+            }
+        }
+        histograms = load_histogram(SAMPLE_HISTOGRAM)
+        parse_histograms.load_allowlist()
+
+        hist = parse_histograms.Histogram('TEST_100_BUCKETS_HISTOGRAM',
+                                          histograms['TEST_100_BUCKETS_HISTOGRAM'],
+                                          strict_type_checks=True)
+
+        ParserError.exit_func()
+        self.assertTrue(hist.expiration(), "never")
+        self.assertTrue(hist.kind(), "enumerated")
+        self.assertTrue(hist.n_buckets(), 101)
+        self.assertTrue(hist.record_in_processes, ["main", "content"])
+        self.assertTrue(hist.record_into_store, ["main"])
 
 
 if __name__ == '__main__':

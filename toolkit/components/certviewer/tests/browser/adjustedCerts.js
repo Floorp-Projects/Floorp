@@ -142,11 +142,6 @@ const adjustedCerts = [
         Critical: false,
       },
       {
-        sectionId: "ocsp-stapling",
-        sectionItems: [{ labelId: "required", info: false }],
-        Critical: false,
-      },
-      {
         sectionId: "subject-key-id",
         sectionItems: [
           {

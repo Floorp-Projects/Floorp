@@ -13239,35 +13239,6 @@ nsCommandManager* nsDocShell::GetCommandManager() {
 }
 
 NS_IMETHODIMP
-nsDocShell::GetIsOnlyToplevelInTabGroup(bool* aResult) {
-  MOZ_ASSERT(aResult);
-
-  nsPIDOMWindowOuter* outer = GetWindow();
-  MOZ_ASSERT(outer);
-
-  // If we are not toplevel then we are not the only toplevel window in the
-  // tab group.
-  if (outer->GetInProcessScriptableParentOrNull()) {
-    *aResult = false;
-    return NS_OK;
-  }
-
-  // If we have any other toplevel windows in our tab group, then we are not
-  // the only toplevel window in the tab group.
-  nsTArray<nsPIDOMWindowOuter*> toplevelWindows =
-      outer->TabGroup()->GetTopLevelWindows();
-  if (toplevelWindows.Length() > 1) {
-    *aResult = false;
-    return NS_OK;
-  }
-  MOZ_ASSERT(toplevelWindows.Length() == 1);
-  MOZ_ASSERT(toplevelWindows[0] == outer);
-
-  *aResult = true;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsDocShell::GetAwaitingLargeAlloc(bool* aResult) {
   MOZ_ASSERT(aResult);
   nsCOMPtr<nsIBrowserChild> browserChild = GetBrowserChild();
@@ -13370,6 +13341,12 @@ nsDocShell::GetColorMatrix(nsTArray<float>& aMatrix) {
 }
 
 #undef MATRIX_LENGTH
+
+NS_IMETHODIMP
+nsDocShell::GetIsForceReloading(bool* aForceReload) {
+  *aForceReload = IsForceReloading();
+  return NS_OK;
+}
 
 bool nsDocShell::IsForceReloading() { return IsForceReloadType(mLoadType); }
 

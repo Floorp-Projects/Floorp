@@ -240,11 +240,13 @@ class TestAgent {
   }
 
   void UpdateTransport(const std::string& aTransportId,
-                       nsAutoPtr<MediaPipelineFilter> aFilter) {
-    mozilla::SyncRunnable::DispatchToThread(
-        test_utils->sts_target(),
-        WrapRunnable(audio_pipeline_, &MediaPipeline::UpdateTransport_s,
-                     aTransportId, aFilter));
+                       UniquePtr<MediaPipelineFilter>&& aFilter) {
+    auto sync = MakeRefPtr<mozilla::SyncRunnable>(NS_NewRunnableFunction(
+        __func__, [pipeline = audio_pipeline_, aTransportId,
+                   filter = std::move(aFilter)]() mutable {
+          pipeline->UpdateTransport_s(aTransportId, std::move(filter));
+        }));
+    sync->DispatchToThread(test_utils->sts_target());
   }
 
   void Stop() {
@@ -322,8 +324,7 @@ class TestAgentSend : public TestAgent {
 
     audio_pipeline_ = audio_pipeline;
 
-    audio_pipeline_->UpdateTransport_m(aTransportId,
-                                       nsAutoPtr<MediaPipelineFilter>(nullptr));
+    audio_pipeline_->UpdateTransport_m(aTransportId, nullptr);
   }
 };
 
@@ -345,24 +346,24 @@ class TestAgentReceive : public TestAgent {
     audio_pipeline_ = new mozilla::MediaPipelineReceiveAudio(
         test_pc, transport_, nullptr, test_utils->sts_target(),
         static_cast<mozilla::AudioSessionConduit*>(audio_conduit_.get()),
-        nullptr);
+        nullptr, PRINCIPAL_HANDLE_NONE);
 
     audio_pipeline_->Start();
 
-    audio_pipeline_->UpdateTransport_m(aTransportId, bundle_filter_);
+    audio_pipeline_->UpdateTransport_m(aTransportId, std::move(bundle_filter_));
   }
 
-  void SetBundleFilter(nsAutoPtr<MediaPipelineFilter> filter) {
-    bundle_filter_ = filter;
+  void SetBundleFilter(UniquePtr<MediaPipelineFilter>&& filter) {
+    bundle_filter_ = std::move(filter);
   }
 
   void UpdateTransport_s(const std::string& aTransportId,
-                         nsAutoPtr<MediaPipelineFilter> filter) {
-    audio_pipeline_->UpdateTransport_s(aTransportId, filter);
+                         UniquePtr<MediaPipelineFilter>&& filter) {
+    audio_pipeline_->UpdateTransport_s(aTransportId, std::move(filter));
   }
 
  private:
-  nsAutoPtr<MediaPipelineFilter> bundle_filter_;
+  UniquePtr<MediaPipelineFilter> bundle_filter_;
 };
 
 class MediaPipelineTest : public ::testing::Test {
@@ -387,10 +388,8 @@ class MediaPipelineTest : public ::testing::Test {
 
   // Verify RTP and RTCP
   void TestAudioSend(bool aIsRtcpMux,
-                     nsAutoPtr<MediaPipelineFilter> initialFilter =
-                         nsAutoPtr<MediaPipelineFilter>(nullptr),
-                     nsAutoPtr<MediaPipelineFilter> refinedFilter =
-                         nsAutoPtr<MediaPipelineFilter>(nullptr),
+                     UniquePtr<MediaPipelineFilter>&& initialFilter = nullptr,
+                     UniquePtr<MediaPipelineFilter>&& refinedFilter = nullptr,
                      unsigned int ms_until_filter_update = 500,
                      unsigned int ms_of_traffic_after_answer = 10000) {
     bool bundle = !!(initialFilter);
@@ -398,7 +397,7 @@ class MediaPipelineTest : public ::testing::Test {
     // make any sense.
     ASSERT_FALSE(!aIsRtcpMux && bundle);
 
-    p2_.SetBundleFilter(initialFilter);
+    p2_.SetBundleFilter(std::move(initialFilter));
 
     // Setup transport flows
     InitTransports();
@@ -430,12 +429,12 @@ class MediaPipelineTest : public ::testing::Test {
       // Leaving refinedFilter not set implies we want to just update with
       // the other side's SSRC
       if (!refinedFilter) {
-        refinedFilter = new MediaPipelineFilter;
+        refinedFilter = MakeUnique<MediaPipelineFilter>();
         // Might not be safe, strictly speaking.
         refinedFilter->AddRemoteSSRC(p1_.GetLocalSSRC());
       }
 
-      p2_.UpdateTransport(transportId, refinedFilter);
+      p2_.UpdateTransport(transportId, std::move(refinedFilter));
     }
 
     // wait for some RTP/RTCP tx and rx to happen
@@ -465,13 +464,12 @@ class MediaPipelineTest : public ::testing::Test {
   }
 
   void TestAudioReceiverBundle(
-      bool bundle_accepted, nsAutoPtr<MediaPipelineFilter> initialFilter,
-      nsAutoPtr<MediaPipelineFilter> refinedFilter =
-          nsAutoPtr<MediaPipelineFilter>(nullptr),
+      bool bundle_accepted, UniquePtr<MediaPipelineFilter>&& initialFilter,
+      UniquePtr<MediaPipelineFilter>&& refinedFilter = nullptr,
       unsigned int ms_until_answer = 500,
       unsigned int ms_of_traffic_after_answer = 10000) {
-    TestAudioSend(true, initialFilter, refinedFilter, ms_until_answer,
-                  ms_of_traffic_after_answer);
+    TestAudioSend(true, std::move(initialFilter), std::move(refinedFilter),
+                  ms_until_answer, ms_of_traffic_after_answer);
   }
 
  protected:
@@ -561,16 +559,16 @@ TEST_F(MediaPipelineTest, TestAudioSendNoMux) { TestAudioSend(false); }
 TEST_F(MediaPipelineTest, TestAudioSendMux) { TestAudioSend(true); }
 
 TEST_F(MediaPipelineTest, TestAudioSendBundle) {
-  nsAutoPtr<MediaPipelineFilter> filter(new MediaPipelineFilter);
+  auto filter = MakeUnique<MediaPipelineFilter>();
   // These durations have to be _extremely_ long to have any assurance that
   // some RTCP will be sent at all. This is because the first RTCP packet
   // is sometimes sent before the transports are ready, which causes it to
   // be dropped.
   TestAudioReceiverBundle(
-      true, filter,
+      true, std::move(filter),
       // We do not specify the filter for the remote description, so it will be
       // set to something sane after a short time.
-      nsAutoPtr<MediaPipelineFilter>(), 10000, 10000);
+      nullptr, 10000, 10000);
 
   // Some packets should have been dropped, but not all
   ASSERT_GT(p1_.GetAudioRtpCountSent(), p2_.GetAudioRtpCountReceived());
@@ -579,9 +577,10 @@ TEST_F(MediaPipelineTest, TestAudioSendBundle) {
 }
 
 TEST_F(MediaPipelineTest, TestAudioSendEmptyBundleFilter) {
-  nsAutoPtr<MediaPipelineFilter> filter(new MediaPipelineFilter);
-  nsAutoPtr<MediaPipelineFilter> bad_answer_filter(new MediaPipelineFilter);
-  TestAudioReceiverBundle(true, filter, bad_answer_filter);
+  auto filter = MakeUnique<MediaPipelineFilter>();
+  auto bad_answer_filter = MakeUnique<MediaPipelineFilter>();
+  TestAudioReceiverBundle(true, std::move(filter),
+                          std::move(bad_answer_filter));
   // Filter is empty, so should drop everything.
   ASSERT_EQ(0, p2_.GetAudioRtpCountReceived());
 }

@@ -1810,7 +1810,7 @@ void HTMLMediaElement::SetSrcObject(DOMMediaStream* aValue) {
 
 bool HTMLMediaElement::Ended() {
   return (mDecoder && mDecoder->IsEnded()) ||
-         (mSrcStream && mSrcStreamPlaybackEnded);
+         (mSrcStream && mSrcStreamReportPlaybackEnded);
 }
 
 void HTMLMediaElement::GetCurrentSrc(nsAString& aCurrentSrc) {
@@ -4787,6 +4787,7 @@ class HTMLMediaElement::MediaStreamTrackListener
     }
     LOG(LogLevel::Debug, ("%p, mSrcStream %p became inactive", mElement.get(),
                           mElement->mSrcStream.get()));
+
     mElement->PlaybackEnded();
     mElement->UpdateReadyStateInternal();
   }
@@ -4839,6 +4840,7 @@ void HTMLMediaElement::UpdateSrcMediaStreamPlaying(uint32_t aFlags) {
 
   if (shouldPlay) {
     mSrcStreamPlaybackEnded = false;
+    mSrcStreamReportPlaybackEnded = false;
 
     if (mMediaStreamRenderer) {
       mMediaStreamRenderer->Start();
@@ -4915,6 +4917,8 @@ void HTMLMediaElement::SetupSrcMediaStreamPlayback(DOMMediaStream* aStream) {
                       &HTMLMediaElement::UpdateSrcStreamPotentiallyPlaying);
   mWatchManager.Watch(mSrcStreamPlaybackEnded,
                       &HTMLMediaElement::UpdateSrcStreamPotentiallyPlaying);
+  mWatchManager.Watch(mSrcStreamPlaybackEnded,
+                      &HTMLMediaElement::UpdateSrcStreamReportPlaybackEnded);
   mWatchManager.Watch(mMediaStreamRenderer->CurrentGraphTime(),
                       &HTMLMediaElement::UpdateSrcStreamTime);
   SetVolumeInternal();
@@ -4962,6 +4966,9 @@ void HTMLMediaElement::EndSrcMediaStreamPlayback() {
                           &HTMLMediaElement::UpdateSrcStreamPotentiallyPlaying);
     mWatchManager.Unwatch(mSrcStreamPlaybackEnded,
                           &HTMLMediaElement::UpdateSrcStreamPotentiallyPlaying);
+    mWatchManager.Unwatch(
+        mSrcStreamPlaybackEnded,
+        &HTMLMediaElement::UpdateSrcStreamReportPlaybackEnded);
     mWatchManager.Unwatch(mMediaStreamRenderer->CurrentGraphTime(),
                           &HTMLMediaElement::UpdateSrcStreamTime);
     mMediaStreamRenderer->Shutdown();
@@ -4972,6 +4979,7 @@ void HTMLMediaElement::EndSrcMediaStreamPlayback() {
   mMediaStreamTrackListener = nullptr;
   mSrcStreamTracksAvailable = false;
   mSrcStreamPlaybackEnded = false;
+  mSrcStreamReportPlaybackEnded = false;
   mSrcStreamVideoPrincipal = nullptr;
 
 #ifdef DEBUG
@@ -5302,6 +5310,10 @@ void HTMLMediaElement::PlaybackEnded() {
   }
 
   DispatchAsyncEvent(NS_LITERAL_STRING("ended"));
+}
+
+void HTMLMediaElement::UpdateSrcStreamReportPlaybackEnded() {
+  mSrcStreamReportPlaybackEnded = mSrcStreamPlaybackEnded;
 }
 
 void HTMLMediaElement::SeekStarted() {

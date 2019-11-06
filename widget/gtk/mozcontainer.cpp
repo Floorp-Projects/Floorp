@@ -140,31 +140,11 @@ void moz_container_put(MozContainer* container, GtkWidget* child_widget, gint x,
   gtk_widget_set_parent(child_widget, GTK_WIDGET(container));
 }
 
-/* static methods */
 #if defined(MOZ_WAYLAND)
-static gint moz_container_get_scale(MozContainer* container) {
-  static auto sGdkWindowGetScaleFactorPtr =
-      (gint(*)(GdkWindow*))dlsym(RTLD_DEFAULT, "gdk_window_get_scale_factor");
-
-  if (sGdkWindowGetScaleFactorPtr) {
-    GdkWindow* window = gtk_widget_get_window(GTK_WIDGET(container));
-    return (*sGdkWindowGetScaleFactorPtr)(window);
-  }
-
-  return 1;
-}
-
 void moz_container_move(MozContainer* container, int dx, int dy) {
   container->subsurface_dx = dx;
   container->subsurface_dy = dy;
   container->surface_position_update = true;
-}
-
-void moz_container_scale_update(MozContainer* container) {
-  if (container->surface) {
-    gint scale = moz_container_get_scale(container);
-    wl_surface_set_buffer_scale(container->surface, scale);
-  }
 }
 
 // This is called from layout/compositor code only with
@@ -329,19 +309,6 @@ static void moz_container_unmap_wayland(MozContainer* container) {
 
   LOGWAYLAND(("%s [%p]\n", __FUNCTION__, (void*)container));
 }
-
-void moz_container_scale_changed(MozContainer* container,
-                                 GtkAllocation* aAllocation) {
-  LOG(("moz_container_scale_changed [%p] surface %p eglwindow %p\n",
-       (void*)container, (void*)container->surface,
-       (void*)container->eglwindow));
-
-  if (!container->surface) {
-    return;
-  }
-
-  moz_container_scale_update(container);
-}
 #endif
 
 void moz_container_map(GtkWidget* widget) {
@@ -469,7 +436,6 @@ void moz_container_size_allocate(GtkWidget* widget, GtkAllocation* allocation) {
     // when offset changes (GdkWindow is maximized for instance).
     // see gtk-clutter-embed.c for reference.
     moz_container_move(MOZ_CONTAINER(widget), allocation->x, allocation->y);
-    moz_container_scale_update(MOZ_CONTAINER(widget));
 #endif
   }
 }
@@ -572,7 +538,8 @@ static void moz_container_add(GtkContainer* container, GtkWidget* widget) {
 }
 
 #ifdef MOZ_WAYLAND
-struct wl_surface* moz_container_get_wl_surface(MozContainer* container) {
+struct wl_surface* moz_container_get_wl_surface(MozContainer* container,
+                                                int scale) {
   LOGWAYLAND(("%s [%p] surface %p ready_to_draw %d\n", __FUNCTION__,
               (void*)container, (void*)container->surface,
               container->ready_to_draw));
@@ -601,7 +568,6 @@ struct wl_surface* moz_container_get_wl_surface(MozContainer* container) {
     gint x, y;
     gdk_window_get_position(window, &x, &y);
     moz_container_move(container, x, y);
-
     wl_subsurface_set_desync(container->subsurface);
 
     // Route input to parent wl_surface owned by Gtk+ so we get input
@@ -609,9 +575,6 @@ struct wl_surface* moz_container_get_wl_surface(MozContainer* container) {
     wl_region* region = wl_compositor_create_region(compositor);
     wl_surface_set_input_region(container->surface, region);
     wl_region_destroy(region);
-
-    wl_surface_set_buffer_scale(container->surface,
-                                moz_container_get_scale(container));
 
     wl_surface_commit(container->surface);
     wl_display_flush(waylandDisplay->GetDisplay());
@@ -634,25 +597,25 @@ struct wl_surface* moz_container_get_wl_surface(MozContainer* container) {
     }
   }
 
+  wl_surface_set_buffer_scale(container->surface, scale);
   return container->surface;
 }
 
-struct wl_egl_window* moz_container_get_wl_egl_window(MozContainer* container) {
+struct wl_egl_window* moz_container_get_wl_egl_window(MozContainer* container,
+                                                      int scale) {
   LOGWAYLAND(("%s [%p] eglwindow %p\n", __FUNCTION__, (void*)container,
               (void*)container->eglwindow));
 
   if (!container->eglwindow) {
-    wl_surface* surface = moz_container_get_wl_surface(container);
+    wl_surface* surface = moz_container_get_wl_surface(container, scale);
     if (!surface) {
       return nullptr;
     }
 
     GdkWindow* window = gtk_widget_get_window(GTK_WIDGET(container));
-    gint scale = moz_container_get_scale(container);
     container->eglwindow =
         wl_egl_window_create(surface, gdk_window_get_width(window) * scale,
                              gdk_window_get_height(window) * scale);
-    wl_surface_set_buffer_scale(surface, scale);
 
     LOGWAYLAND(("%s [%p] created eglwindow %p\n", __FUNCTION__,
                 (void*)container, (void*)container->eglwindow));

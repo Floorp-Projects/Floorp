@@ -54,7 +54,7 @@ void brush_vs(
     RectWithSize prim_rect,
     RectWithSize segment_rect,
     ivec4 prim_user_data,
-    int segment_user_data,
+    int specific_resource_address,
     mat4 transform,
     PictureTask pic_task,
     int brush_flags,
@@ -70,7 +70,7 @@ void brush_vs(
     vec2 texture_size = vec2(textureSize(sColor0, 0));
 #endif
 
-    ImageResource res = fetch_image_resource(segment_user_data);
+    ImageResource res = fetch_image_resource(specific_resource_address);
     vec2 uv0 = res.uv_rect.p0;
     vec2 uv1 = res.uv_rect.p1;
 
@@ -139,7 +139,7 @@ void brush_vs(
             // Since the screen space UVs specify an arbitrary quad, do
             // a bilinear interpolation to get the correct UV for this
             // local position.
-            f = get_image_quad_uv(segment_user_data, f);
+            f = get_image_quad_uv(specific_resource_address, f);
             break;
         }
         default:

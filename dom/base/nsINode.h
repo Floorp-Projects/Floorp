@@ -37,6 +37,8 @@
 
 class AttrArray;
 class nsAttrChildContentList;
+template <typename T>
+class nsCOMArray;
 class nsDOMAttributeMap;
 class nsIAnimationObserver;
 class nsIContent;
@@ -83,6 +85,7 @@ class DOMQuad;
 class DOMRectReadOnly;
 class Element;
 class EventHandlerNonNull;
+class MutationObservers;
 template <typename T>
 class Optional;
 class OwningNodeOrString;
@@ -353,7 +356,7 @@ class nsINode : public mozilla::dom::EventTarget {
   // always safe to call no matter which object it was invoked on.
   void AddSizeOfIncludingThis(nsWindowSizes& aSizes, size_t* aNodeSize) const;
 
-  friend class nsNodeUtils;
+  friend class mozilla::dom::MutationObservers;
   friend class nsNodeWeakReference;
   friend class nsNodeSupportsWeakRefTearoff;
   friend class AttrArray;
@@ -391,6 +394,11 @@ class nsINode : public mozilla::dom::EventTarget {
   bool IsContainerNode() const {
     return IsElement() || IsDocument() || IsDocumentFragment();
   }
+
+  /**
+   * Returns true if the node is a HTMLTemplate element.
+   */
+  bool IsTemplateElement() const { return IsHTMLElement(nsGkAtoms::_template); }
 
   bool IsSlotable() const { return IsElement() || IsText(); }
 
@@ -469,6 +477,13 @@ class nsINode : public mozilla::dom::EventTarget {
  public:
   mozilla::dom::ParentObject GetParentObject()
       const;  // Implemented in Document.h
+
+  /**
+   * Returns the first child of a node or the first child of
+   * a template element's content if the provided node is a
+   * template element.
+   */
+  nsIContent* GetFirstChildOfTemplateOrNode();
 
   /**
    * Return the scope chain parent for this node, for use in things
@@ -647,6 +662,11 @@ class nsINode : public mozilla::dom::EventTarget {
    */
   mozilla::dom::DocumentOrShadowRoot* GetUncomposedDocOrConnectedShadowRoot()
       const;
+
+  /**
+   * To be called when reference count of the node drops to zero.
+   */
+  void LastRelease();
 
   /**
    * The values returned by this function are the ones defined for
@@ -1037,6 +1057,95 @@ class nsINode : public mozilla::dom::EventTarget {
       s->mMutationObservers.RemoveElement(aMutationObserver);
     }
   }
+
+ private:
+  /**
+   * Walks aNode, its attributes and, if aDeep is true, its descendant nodes.
+   * If aClone is true the nodes will be cloned. If aNewNodeInfoManager is
+   * not null, it is used to create new nodeinfos for the nodes. Also reparents
+   * the XPConnect wrappers for the nodes into aReparentScope if non-null.
+   * aNodesWithProperties will be filled with all the nodes that have
+   * properties.
+   *
+   * @param aNode Node to adopt/clone.
+   * @param aClone If true the node will be cloned and the cloned node will
+   *               be returned.
+   * @param aDeep If true the function will be called recursively on
+   *              descendants of the node
+   * @param aNewNodeInfoManager The nodeinfo manager to use to create new
+   *                            nodeinfos for aNode and its attributes and
+   *                            descendants. May be null if the nodeinfos
+   *                            shouldn't be changed.
+   * @param aReparentScope Scope into which wrappers should be reparented, or
+   *                             null if no reparenting should be done.
+   * @param aNodesWithProperties All nodes (from amongst aNode and its
+   *                             descendants) with properties. If aClone is
+   *                             true every node will be followed by its
+   *                             clone. Null can be passed to prevent this from
+   *                             being populated.
+   * @param aParent If aClone is true the cloned node will be appended to
+   *                aParent's children. May be null. If not null then aNode
+   *                must be an nsIContent.
+   * @param aError The error, if any.
+   *
+   * @return If aClone is true then the cloned node will be returned,
+   *          unless an error occurred.  In error conditions, null
+   *          will be returned.
+   */
+  static already_AddRefed<nsINode> CloneAndAdopt(
+      nsINode* aNode, bool aClone, bool aDeep,
+      nsNodeInfoManager* aNewNodeInfoManager,
+      JS::Handle<JSObject*> aReparentScope,
+      nsCOMArray<nsINode>* aNodesWithProperties, nsINode* aParent,
+      mozilla::ErrorResult& aError);
+
+ public:
+  /**
+   * Walks the node, its attributes and descendant nodes. If aNewNodeInfoManager
+   * is not null, it is used to create new nodeinfos for the nodes. Also
+   * reparents the XPConnect wrappers for the nodes into aReparentScope if
+   * non-null. aNodesWithProperties will be filled with all the nodes that have
+   * properties.
+   *
+   * @param aNewNodeInfoManager The nodeinfo manager to use to create new
+   *                            nodeinfos for the node and its attributes and
+   *                            descendants. May be null if the nodeinfos
+   *                            shouldn't be changed.
+   * @param aReparentScope New scope for the wrappers, or null if no reparenting
+   *                       should be done.
+   * @param aNodesWithProperties All nodes (from amongst the node and its
+   *                             descendants) with properties.
+   * @param aError The error, if any.
+   */
+  void Adopt(nsNodeInfoManager* aNewNodeInfoManager,
+             JS::Handle<JSObject*> aReparentScope,
+             nsCOMArray<nsINode>& aNodesWithProperties,
+             mozilla::ErrorResult& aError);
+
+  /**
+   * Clones the node, its attributes and, if aDeep is true, its descendant nodes
+   * If aNewNodeInfoManager is not null, it is used to create new nodeinfos for
+   * the clones. aNodesWithProperties will be filled with all the nodes that
+   * have properties, and every node in it will be followed by its clone.
+   *
+   * @param aDeep If true the function will be called recursively on
+   *              descendants of the node
+   * @param aNewNodeInfoManager The nodeinfo manager to use to create new
+   *                            nodeinfos for the node and its attributes and
+   *                            descendants. May be null if the nodeinfos
+   *                            shouldn't be changed.
+   * @param aNodesWithProperties All nodes (from amongst the node and its
+   *                             descendants) with properties. Every node will
+   *                             be followed by its clone. Null can be passed to
+   *                             prevent this from being used.
+   * @param aError The error, if any.
+   *
+   * @return The newly created node.  Null in error conditions.
+   */
+  already_AddRefed<nsINode> Clone(bool aDeep,
+                                  nsNodeInfoManager* aNewNodeInfoManager,
+                                  nsCOMArray<nsINode>* aNodesWithProperties,
+                                  mozilla::ErrorResult& aError);
 
   /**
    * Clones this node. This needs to be overriden by all node classes. aNodeInfo

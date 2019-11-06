@@ -212,9 +212,9 @@ class SVGObserverUtils {
    * frame with observers and invalidate them instead.
    *
    * Note that this method is very different to e.g.
-   * nsNodeUtils::AttributeChanged which walks up the content node tree all the
-   * way to the root node (not stopping if it encounters a non-container SVG
-   * node) invalidating all mutation observers (not just
+   * MutationObservers::AttributeChanged which walks up the content node tree
+   * all the way to the root node (not stopping if it encounters a non-container
+   * SVG node) invalidating all mutation observers (not just
    * nsSVGRenderingObservers) on all nodes along the way (not just the first
    * node it finds with observers). In other words, by doing all the
    * things in parentheses in the preceding sentence, this method uses

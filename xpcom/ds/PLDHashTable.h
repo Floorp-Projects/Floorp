@@ -23,7 +23,7 @@
 using PLDHashNumber = mozilla::HashNumber;
 static const uint32_t kPLDHashNumberBits = mozilla::kHashNumberBits;
 
-#ifdef DEBUG
+#if defined(DEBUG) || defined(FUZZING)
 #define MOZ_HASH_TABLE_CHECKS_ENABLED 1
 #endif
 

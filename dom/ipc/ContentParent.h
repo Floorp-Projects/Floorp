@@ -963,7 +963,7 @@ class ContentParent final : public PContentParent,
 
   mozilla::ipc::IPCResult RecvGetShowPasswordSetting(bool* showPassword);
 
-  mozilla::ipc::IPCResult RecvStartVisitedQuery(const URIParams& uri);
+  mozilla::ipc::IPCResult RecvStartVisitedQueries(const nsTArray<URIParams>&);
 
   mozilla::ipc::IPCResult RecvSetURITitle(const URIParams& uri,
                                           const nsString& title);

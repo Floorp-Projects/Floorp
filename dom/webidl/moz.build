@@ -70,7 +70,7 @@ with Files("ConstantSourceNode.webidl"):
 with Files("ConvolverNode.webidl"):
     BUG_COMPONENT = ("Core", "Web Audio")
 
-with Files("Coordinates.webidl"):
+with Files("GeolocationCoordinates.webidl"):
     BUG_COMPONENT = ("Core", "DOM: Geolocation")
 
 with Files("Crypto.webidl"):
@@ -241,7 +241,7 @@ with Files("PointerEvent.webidl"):
 with Files("PopStateEvent.webidl*"):
     BUG_COMPONENT = ("Core", "DOM: Events")
 
-with Files("Position*"):
+with Files("GeolocationPosition*"):
     BUG_COMPONENT = ("Core", "DOM: Geolocation")
 
 with Files("ProfileTimelineMarker.webidl"):
@@ -428,7 +428,6 @@ WEBIDL_FILES = [
     'Console.webidl',
     'ConstantSourceNode.webidl',
     'ConvolverNode.webidl',
-    'Coordinates.webidl',
     'CreateOfferRequest.webidl',
     'CredentialManagement.webidl',
     'Crypto.webidl',
@@ -523,6 +522,9 @@ WEBIDL_FILES = [
     'GamepadServiceTest.webidl',
     'GamepadTouch.webidl',
     'Geolocation.webidl',
+    'GeolocationCoordinates.webidl',
+    'GeolocationPosition.webidl',
+    'GeolocationPositionError.webidl',
     'GeometryUtils.webidl',
     'GetUserMediaRequest.webidl',
     'Grid.webidl',
@@ -730,8 +732,6 @@ WEBIDL_FILES = [
     'Plugin.webidl',
     'PluginArray.webidl',
     'PointerEvent.webidl',
-    'Position.webidl',
-    'PositionError.webidl',
     'Presentation.webidl',
     'PresentationAvailability.webidl',
     'PresentationConnection.webidl',
