@@ -484,7 +484,12 @@ pref("media.videocontrols.picture-in-picture.video-toggle.always-show", false);
   pref("media.peerconnection.ice.trickle_grace_period", 5000);
   pref("media.peerconnection.ice.no_host", false);
   pref("media.peerconnection.ice.default_address_only", false);
-  pref("media.peerconnection.ice.obfuscate_host_addresses", false);
+  // See Bug 1581947 for Android hostname obfuscation
+  #if defined(MOZ_WIDGET_ANDROID)
+    pref("media.peerconnection.ice.obfuscate_host_addresses", false);
+  #else
+    pref("media.peerconnection.ice.obfuscate_host_addresses", true);
+  #endif
   pref("media.peerconnection.ice.proxy_only_if_behind_proxy", false);
   pref("media.peerconnection.ice.proxy_only", false);
   pref("media.peerconnection.turn.disable", false);
