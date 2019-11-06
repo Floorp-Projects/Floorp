@@ -498,25 +498,8 @@ def executable_name(name):
 
 @CommandProvider
 class SpiderMonkeyTests(MachCommandBase):
-    def has_js_binary(binary):
-        def has_binary(cls):
-            try:
-                name = binary + cls.substs['BIN_SUFFIX']
-            except BuildEnvironmentNotFoundException:
-                return False
-
-            path = os.path.join(cls.topobjdir, 'dist', 'bin', name)
-
-            has_binary.__doc__ = """
-    `{}` not found in <objdir>/dist/bin. Make sure you aren't using an artifact build
-    and try rebuilding with `ac_add_options --enable-js-shell`.
-    """.format(name).lstrip()
-
-            return os.path.isfile(path)
-        return has_binary
-
     @Command('jstests', category='testing',
-             description='Run SpiderMonkey JS tests in the JavaScript shell.')
+             description='Run SpiderMonkey JS tests in the JS shell.')
     @CommandArgument('--shell', help='The shell to be used')
     @CommandArgument('params', nargs=argparse.REMAINDER,
                      help="Extra arguments to pass down to the test harness.")
@@ -533,10 +516,11 @@ class SpiderMonkeyTests(MachCommandBase):
             js,
             '--jitflags=jstests',
         ] + params
+
         return subprocess.call(jstest_cmd)
 
     @Command('jit-test', category='testing',
-             description='Run SpiderMonkey jit-tests in the JavaScript shell.')
+             description='Run SpiderMonkey jit-tests in the JS shell.')
     @CommandArgument('--shell', help='The shell to be used')
     @CommandArgument('params', nargs=argparse.REMAINDER,
                      help="Extra arguments to pass down to the test harness.")
@@ -549,67 +533,65 @@ class SpiderMonkeyTests(MachCommandBase):
         js = shell or os.path.join(self.bindir, executable_name('js'))
         jittest_cmd = [
             python,
-            os.path.join(self.topsrcdir, 'js', 'src',
-                         'jit-test', 'jit_test.py'),
+            os.path.join(self.topsrcdir, 'js', 'src', 'jit-test', 'jit_test.py'),
             js,
         ] + params
 
         return subprocess.call(jittest_cmd)
 
     @Command('jsapi-tests', category='testing',
-             conditions=[has_js_binary('jsapi-tests')],
-             description='Run jsapi tests (JavaScript engine).')
+             description='Run SpiderMonkey JSAPI tests.')
     @CommandArgument('test_name', nargs='?', metavar='N',
                      help='Test to run. Can be a prefix or omitted. If '
                      'omitted, the entire test suite is executed.')
-    def run_jsapitests(self, **params):
+    def run_jsapitests(self, test_name=None):
         import subprocess
 
         jsapi_tests_cmd = [
             os.path.join(self.bindir, executable_name('jsapi-tests'))
         ]
-        if params['test_name']:
-            jsapi_tests_cmd.append(params['test_name'])
+        if test_name:
+            jsapi_tests_cmd.append(test_name)
 
         return subprocess.call(jsapi_tests_cmd)
 
-    @Command('check-spidermonkey', category='testing',
-             description='Run SpiderMonkey tests (JavaScript engine).')
-    @CommandArgument('--valgrind', action='store_true',
-                     help='Run jit-test suite with valgrind flag')
-    def run_checkspidermonkey(self, **params):
+    def run_check_js_msg(self):
         import subprocess
 
         self.virtualenv_manager.ensure()
         python = self.virtualenv_manager.python_path
 
-        js = os.path.join(self.bindir, executable_name('js'))
+        check_cmd = [
+            python,
+            os.path.join(self.topsrcdir, 'config', 'check_js_msg_encoding.py')
+        ]
 
+        return subprocess.call(check_cmd)
+
+    @Command('check-spidermonkey', category='testing',
+             description='Run SpiderMonkey tests (JavaScript engine).')
+    @CommandArgument('--valgrind', action='store_true',
+                     help='Run jit-test suite with valgrind flag')
+    def run_checkspidermonkey(self, valgrind=False):
         print('Running jit-tests')
         jittest_args = [
             '--no-slow',
             '--jitflags=all',
         ]
-        if params['valgrind']:
+        if valgrind:
             jittest_args.append('--valgrind')
-        jittest_result = self.run_jittests(js, jittest_args)
+        jittest_result = self.run_jittests(shell=None, params=jittest_args)
 
         print('running jstests')
-        jstest_result = self.run_jstests(js, [])
+        jstest_result = self.run_jstests(shell=None, params=[])
 
         print('running jsapi-tests')
         jsapi_tests_result = self.run_jsapitests(test_name=None)
 
         print('running check-js-msg-encoding')
-        check_js_msg_cmd = [python, os.path.join(
-            self.topsrcdir, 'config', 'check_js_msg_encoding.py')]
-        check_js_msg_result = subprocess.call(
-            check_js_msg_cmd, cwd=self.topsrcdir)
+        check_js_msg_result = self.run_check_js_msg()
 
-        all_passed = jittest_result and jstest_result and jsapi_tests_result and \
-            check_js_msg_result
-
-        return all_passed
+        return jittest_result and jstest_result and jsapi_tests_result and check_js_msg_result
 
 
 def get_jsshell_parser():
