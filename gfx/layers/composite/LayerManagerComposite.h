@@ -211,8 +211,6 @@ class HostLayerManager : public LayerManager {
    */
   void WriteCollectedFrames();
 
-  Maybe<CollectedFrames> GetCollectedFrames();
-
  protected:
   bool mDebugOverlayWantsNextFrame;
   nsTArray<ImageCompositeNotificationInfo> mImageCompositeNotifications;

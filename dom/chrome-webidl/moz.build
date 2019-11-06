@@ -39,7 +39,6 @@ WEBIDL_FILES = [
     'DebuggerNotificationObserver.webidl',
     'DebuggerUtils.webidl',
     'DocumentL10n.webidl',
-    'DOMCollectedFrames.webidl',
     'DominatorTree.webidl',
     'DOMLocalization.webidl',
     'Flex.webidl',
@@ -80,3 +79,4 @@ if CONFIG['MOZ_PLACES']:
 WEBIDL_FILES += [
     'PrioEncoder.webidl',
 ]
+

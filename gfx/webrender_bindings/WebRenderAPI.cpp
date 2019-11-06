@@ -620,8 +620,7 @@ void WebRenderAPI::SetCompositionRecorder(
   RunOnRenderThread(std::move(event));
 }
 
-RefPtr<WebRenderAPI::WriteCollectedFramesPromise>
-WebRenderAPI::WriteCollectedFrames() {
+void WebRenderAPI::WriteCollectedFrames() {
   class WriteCollectedFramesEvent final : public RendererEvent {
    public:
     explicit WriteCollectedFramesEvent() {
@@ -632,58 +631,11 @@ WebRenderAPI::WriteCollectedFrames() {
 
     void Run(RenderThread& aRenderThread, WindowId aWindowId) override {
       aRenderThread.WriteCollectedFramesForWindow(aWindowId);
-      mPromise.Resolve(true, __func__);
     }
-
-    RefPtr<WebRenderAPI::WriteCollectedFramesPromise> GetPromise() {
-      return mPromise.Ensure(__func__);
-    }
-
-   private:
-    MozPromiseHolder<WebRenderAPI::WriteCollectedFramesPromise> mPromise;
   };
 
   auto event = MakeUnique<WriteCollectedFramesEvent>();
-  auto promise = event->GetPromise();
-
   RunOnRenderThread(std::move(event));
-  return promise;
-}
-
-RefPtr<WebRenderAPI::GetCollectedFramesPromise>
-WebRenderAPI::GetCollectedFrames() {
-  class GetCollectedFramesEvent final : public RendererEvent {
-   public:
-    explicit GetCollectedFramesEvent() {
-      MOZ_COUNT_CTOR(GetCollectedFramesEvent);
-    }
-
-    ~GetCollectedFramesEvent() { MOZ_COUNT_DTOR(GetCollectedFramesEvent); };
-
-    void Run(RenderThread& aRenderThread, WindowId aWindowId) override {
-      Maybe<layers::CollectedFrames> frames =
-          aRenderThread.GetCollectedFramesForWindow(aWindowId);
-
-      if (frames) {
-        mPromise.Resolve(std::move(*frames), __func__);
-      } else {
-        mPromise.Reject(NS_ERROR_UNEXPECTED, __func__);
-      }
-    }
-
-    RefPtr<WebRenderAPI::GetCollectedFramesPromise> GetPromise() {
-      return mPromise.Ensure(__func__);
-    }
-
-   private:
-    MozPromiseHolder<WebRenderAPI::GetCollectedFramesPromise> mPromise;
-  };
-
-  auto event = MakeUnique<GetCollectedFramesEvent>();
-  auto promise = event->GetPromise();
-
-  RunOnRenderThread(std::move(event));
-  return promise;
 }
 
 void TransactionBuilder::Clear() { wr_resource_updates_clear(mTxn); }
