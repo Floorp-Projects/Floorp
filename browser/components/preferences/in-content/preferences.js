@@ -217,6 +217,8 @@ async function gotoPref(aCategory) {
     let friendlyName = internalPrefCategoryNameToFriendlyName(category);
     document.location.hash = friendlyName;
   }
+  let categoryChanged =
+    gLastCategory.category && gLastCategory.category != category;
   // Need to set the gLastCategory before setting categories.selectedItem since
   // the categories 'select' event will re-enter the gotoPref codepath.
   gLastCategory.category = category;
@@ -226,7 +228,9 @@ async function gotoPref(aCategory) {
   } else {
     categories.clearSelection();
   }
-  window.history.replaceState(category, document.title);
+  if (categoryChanged) {
+    window.history.replaceState(category, document.title);
+  }
 
   try {
     await init_category_if_required(category);
