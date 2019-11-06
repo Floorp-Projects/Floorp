@@ -49,6 +49,10 @@ raptor_description_schema = Schema({
         'app',
         test_description_schema['run-on-projects']
     ),
+    Optional('variants'): optionally_keyed_by(
+        'app',
+        test_description_schema['variants']
+    ),
     Optional('target'): optionally_keyed_by(
         'app',
         test_description_schema['target']
@@ -117,6 +121,7 @@ def split_apps(config, tests):
 @transforms.add
 def handle_keyed_by_app(config, tests):
     fields = [
+        'variants',
         'limit-platforms',
         'activity',
         'binary-path',

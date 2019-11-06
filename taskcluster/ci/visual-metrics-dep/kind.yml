@@ -20,7 +20,7 @@ only-for-attributes:
 
 job-template:
     description: "Run visual metrics calculations on Raptor"
-    run-on-projects: ['mozilla-central', 'try']
+    run-on-projects: []
     worker-type: t-linux-xlarge
 
     treeherder:
