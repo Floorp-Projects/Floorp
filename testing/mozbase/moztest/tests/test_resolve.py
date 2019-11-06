@@ -17,17 +17,28 @@ import pytest
 import mozpack.path as mozpath
 import mozunit
 from mozbuild.base import MozbuildObject
+from mozbuild.frontend.reader import BuildReader
+from mozbuild.test.common import MockConfig
 from mozfile import NamedTemporaryFile
 
 from moztest.resolve import (
+    BuildBackendLoader,
+    TestManifestLoader,
     TestResolver,
     TEST_SUITES,
 )
 
+here = os.path.abspath(os.path.dirname(__file__))
+data_path = os.path.join(here, 'data')
+
 
 @pytest.fixture(scope='module')
-def create_tests():
-    sourcedir = '/firefox'
+def topsrcdir():
+    return mozpath.join(data_path, 'srcdir')
+
+
+@pytest.fixture(scope='module')
+def create_tests(topsrcdir):
 
     def inner(*paths, **defaults):
         tests = defaultdict(list)
@@ -42,11 +53,11 @@ def create_tests():
             manifest = kwargs.pop('manifest', defaults.pop('manifest',
                                   mozpath.join(mozpath.dirname(path), manifest_name + '.ini')))
 
-            manifest_abspath = mozpath.join(sourcedir, manifest)
+            manifest_abspath = mozpath.join(topsrcdir, manifest)
             relpath = mozpath.relpath(path, mozpath.dirname(manifest))
             test = {
                 'name': relpath,
-                'path': mozpath.join(sourcedir, path),
+                'path': mozpath.join(topsrcdir, path),
                 'relpath': relpath,
                 'file_relpath': path,
                 'dir_relpath': mozpath.dirname(path),
@@ -87,7 +98,7 @@ def all_tests(create_tests):
             "flavor": "xpcshell",
             "generated-files": "head_update.js",
             "head": "head_update.js",
-            "manifest": "dragonfruit/elderberry/xpcshell_updater.ini",
+            "manifest": "dragonfruit/xpcshell.ini",
             "reason": "busted",
             "run-sequentially": "Launches application.",
             "skip-if": "os == 'android'",
@@ -115,7 +126,6 @@ def all_tests(create_tests):
             "flavor": "browser-chrome",
             "manifest": "juniper/browser.ini",
             "skip-if": "e10s  # broken",
-            "subsuite": "",
          }),
         ("kiwi/browser_devtools.js", {
             "flavor": "browser-chrome",
@@ -127,31 +137,32 @@ def all_tests(create_tests):
 
 
 @pytest.fixture(scope='module')
-def defaults():
+def defaults(topsrcdir):
     return {
-        "/firefox/dragonfruit/elderberry/xpcshell_updater.ini": {
+        mozpath.join(topsrcdir, "dragonfruit/elderberry/xpcshell_updater.ini"): {
             "support-files": "\ndata/**\nxpcshell_updater.ini"
         }
     }
 
 
-@pytest.fixture
-def resolver(tmpdir, all_tests, defaults):
+@pytest.fixture(params=[BuildBackendLoader, TestManifestLoader])
+def resolver(request, tmpdir, topsrcdir, all_tests, defaults):
     topobjdir = tmpdir.mkdir("objdir").strpath
+    loader_cls = request.param
 
-    with open(os.path.join(topobjdir, 'all-tests.pkl'), 'wb') as fh:
-        pickle.dump(all_tests, fh)
-    with open(os.path.join(topobjdir, 'test-defaults.pkl'), 'wb') as fh:
-        pickle.dump(defaults, fh)
+    if loader_cls == BuildBackendLoader:
+        with open(os.path.join(topobjdir, 'all-tests.pkl'), 'wb') as fh:
+            pickle.dump(all_tests, fh)
+        with open(os.path.join(topobjdir, 'test-defaults.pkl'), 'wb') as fh:
+            pickle.dump(defaults, fh)
 
-    o = MozbuildObject('/firefox', None, None, topobjdir=topobjdir)
-
-    # Monkey patch the test resolver to avoid tests failing to find make
-    # due to our fake topscrdir.
-    TestResolver._run_make = lambda *a, **b: None
-    resolver = o._spawn(TestResolver)
+    resolver = TestResolver(topsrcdir, None, None, topobjdir=topobjdir, loader_cls=loader_cls)
     resolver._puppeteer_loaded = True
     resolver._wpt_loaded = True
+
+    if loader_cls == TestManifestLoader:
+        config = MockConfig(topsrcdir)
+        resolver.load_tests.reader = BuildReader(config)
     return resolver
 
 
@@ -186,11 +197,14 @@ def test_resolve_multiple_paths(resolver):
 
 def test_resolve_support_files(resolver):
     expected_support_files = "\ndata/**\nxpcshell_updater.ini"
-    result = list(resolver.resolve_tests(paths=['dragonfruit']))
-    assert len(result) == 2
+    tests = list(resolver.resolve_tests(paths=['dragonfruit']))
+    assert len(tests) == 2
 
-    for test in result:
-        assert test['support-files'] == expected_support_files
+    for test in tests:
+        if test['manifest'].endswith('xpcshell_updater.ini'):
+            assert test['support-files'] == expected_support_files
+        else:
+            assert 'support-files' not in test
 
 
 def test_resolve_path_prefix(resolver):
