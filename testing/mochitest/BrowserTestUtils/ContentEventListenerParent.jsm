@@ -14,9 +14,17 @@ class ContentEventListenerParent extends JSWindowActorParent {
   receiveMessage(aMessage) {
     switch (aMessage.name) {
       case "ContentEventListener:Run": {
+        let browser = this.browsingContext.top.embedderElement;
+        if (!browser) {
+          break;
+        }
+        // Handle RDM.
+        if (browser.outerBrowser) {
+          browser = browser.outerBrowser;
+        }
         BrowserTestUtils._receivedContentEventListener(
           aMessage.data.listenerId,
-          this.browsingContext.top
+          browser
         );
         break;
       }

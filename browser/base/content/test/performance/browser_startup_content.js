@@ -98,7 +98,6 @@ const intermittently_loaded_whitelist = {
 
     // Test related
     "resource://testing-common/BrowserTestUtilsChild.jsm",
-    "resource://testing-common/ContentEventListenerChild.jsm",
   ]),
   frameScripts: new Set([]),
   processScripts: new Set([
