@@ -854,10 +854,7 @@
     }
 
     get hasContentOpener() {
-      if (this.isRemoteBrowser) {
-        return this.frameLoader.remoteTab.hasContentOpener;
-      }
-      return !!this.contentWindow.opener;
+      return !!this.browsingContext.opener;
     }
 
     get mStrBundle() {
