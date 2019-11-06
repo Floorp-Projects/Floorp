@@ -12,7 +12,7 @@ namespace mozilla {
 RemoteDecoderChild::RemoteDecoderChild(bool aRecreatedOnCrash)
     : mThread(RemoteDecoderManagerChild::GetManagerThread()),
       mRecreatedOnCrash(aRecreatedOnCrash),
-      mRawFramePool(4) {}
+      mRawFramePool(1, ShmemPool::PoolType::DynamicPool) {}
 
 void RemoteDecoderChild::HandleRejectionError(
     const ipc::ResponseRejectReason& aReason,
