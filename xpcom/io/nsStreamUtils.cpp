@@ -704,7 +704,7 @@ bool NS_InputStreamIsBuffered(nsIInputStream* aStream) {
   bool result = false;
   uint32_t n;
   nsresult rv = aStream->ReadSegments(TestInputStream, &result, 1, &n);
-  return result || NS_SUCCEEDED(rv);
+  return result || rv != NS_ERROR_NOT_IMPLEMENTED;
 }
 
 static nsresult TestOutputStream(nsIOutputStream* aOutStr, void* aClosure,
