@@ -816,7 +816,7 @@ child:
 
     async CrossProcessRedirect(uint32_t aRegistrarId,
                                nsIURI aURI,
-                               ReplacementChannelConfigInit config,
+                               ReplacementChannelConfigInit? config,
                                LoadInfoArgs? aLoadInfo,
                                uint64_t aChannelId,
                                nsIURI aOriginalURI,
