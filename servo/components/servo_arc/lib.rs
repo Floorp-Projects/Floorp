@@ -485,14 +485,6 @@ impl<T: ?Sized> Arc<T> {
         }
     }
 
-    /// Whether or not the `Arc` is a static reference.
-    #[inline]
-    pub fn is_static(&self) -> bool {
-        // Using a relaxed ordering to check for STATIC_REFCOUNT is safe, since
-        // `count` never changes between STATIC_REFCOUNT and other values.
-        self.inner().count.load(Relaxed) == STATIC_REFCOUNT
-    }
-
     /// Whether or not the `Arc` is uniquely owned (is the refcount 1?) and not
     /// a static reference.
     #[inline]
@@ -509,7 +501,10 @@ impl<T: ?Sized> Drop for Arc<T> {
     fn drop(&mut self) {
         // NOTE(emilio): If you change anything here, make sure that the
         // implementation in layout/style/ServoStyleConstsInlines.h matches!
-        if self.is_static() {
+        //
+        // Using a relaxed ordering to check for STATIC_REFCOUNT is safe, since
+        // `count` never changes between STATIC_REFCOUNT and other values.
+        if self.inner().count.load(Relaxed) == STATIC_REFCOUNT {
             return;
         }
 
