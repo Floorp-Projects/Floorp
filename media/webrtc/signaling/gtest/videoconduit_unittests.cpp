@@ -44,7 +44,7 @@ class VideoConduitTest : public ::testing::Test {
 
     mVideoConduit = new WebrtcVideoConduit(
         WebRtcCallWrapper::Create(UniquePtr<MockCall>(mCall)),
-        GetCurrentThreadSerialEventTarget());
+        GetCurrentThreadEventTarget());
     std::vector<unsigned int> ssrcs = {42};
     mVideoConduit->SetLocalSSRCs(ssrcs);
   }

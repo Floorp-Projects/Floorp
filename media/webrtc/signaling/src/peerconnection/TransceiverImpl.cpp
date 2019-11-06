@@ -33,10 +33,9 @@ using LocalDirection = MediaSessionConduitLocalDirection;
 
 TransceiverImpl::TransceiverImpl(
     const std::string& aPCHandle, MediaTransportHandler* aTransportHandler,
-    JsepTransceiver* aJsepTransceiver, nsISerialEventTarget* aMainThread,
-    nsISerialEventTarget* aStsThread, dom::MediaStreamTrack* aReceiveTrack,
-    dom::MediaStreamTrack* aSendTrack, WebRtcCallWrapper* aCallWrapper,
-    const PrincipalHandle& aPrincipalHandle)
+    JsepTransceiver* aJsepTransceiver, nsIEventTarget* aMainThread,
+    nsIEventTarget* aStsThread, dom::MediaStreamTrack* aReceiveTrack,
+    dom::MediaStreamTrack* aSendTrack, WebRtcCallWrapper* aCallWrapper)
     : mPCHandle(aPCHandle),
       mTransportHandler(aTransportHandler),
       mJsepTransceiver(aJsepTransceiver),
@@ -48,9 +47,9 @@ TransceiverImpl::TransceiverImpl(
       mSendTrack(aSendTrack),
       mCallWrapper(aCallWrapper) {
   if (IsVideo()) {
-    InitVideo(aPrincipalHandle);
+    InitVideo();
   } else {
-    InitAudio(aPrincipalHandle);
+    InitAudio();
   }
 
   if (!IsValid()) {
@@ -70,7 +69,7 @@ TransceiverImpl::~TransceiverImpl() = default;
 
 NS_IMPL_ISUPPORTS0(TransceiverImpl)
 
-void TransceiverImpl::InitAudio(const PrincipalHandle& aPrincipalHandle) {
+void TransceiverImpl::InitAudio() {
   mConduit = AudioSessionConduit::Create(mCallWrapper, mStsThread);
 
   if (!mConduit) {
@@ -83,11 +82,10 @@ void TransceiverImpl::InitAudio(const PrincipalHandle& aPrincipalHandle) {
 
   mReceivePipeline = new MediaPipelineReceiveAudio(
       mPCHandle, mTransportHandler, mMainThread.get(), mStsThread.get(),
-      static_cast<AudioSessionConduit*>(mConduit.get()), mReceiveTrack,
-      aPrincipalHandle);
+      static_cast<AudioSessionConduit*>(mConduit.get()), mReceiveTrack);
 }
 
-void TransceiverImpl::InitVideo(const PrincipalHandle& aPrincipalHandle) {
+void TransceiverImpl::InitVideo() {
   mConduit = VideoSessionConduit::Create(mCallWrapper, mStsThread);
 
   if (!mConduit) {
@@ -100,8 +98,7 @@ void TransceiverImpl::InitVideo(const PrincipalHandle& aPrincipalHandle) {
 
   mReceivePipeline = new MediaPipelineReceiveVideo(
       mPCHandle, mTransportHandler, mMainThread.get(), mStsThread.get(),
-      static_cast<VideoSessionConduit*>(mConduit.get()), mReceiveTrack,
-      aPrincipalHandle);
+      static_cast<VideoSessionConduit*>(mConduit.get()), mReceiveTrack);
 }
 
 nsresult TransceiverImpl::UpdateSinkIdentity(
@@ -152,11 +149,11 @@ nsresult TransceiverImpl::UpdateTransport() {
   }
 
   ASSERT_ON_THREAD(mMainThread);
-  UniquePtr<MediaPipelineFilter> filter;
+  nsAutoPtr<MediaPipelineFilter> filter;
 
   if (mJsepTransceiver->HasBundleLevel() &&
       mJsepTransceiver->mRecvTrack.GetNegotiatedDetails()) {
-    filter = MakeUnique<MediaPipelineFilter>();
+    filter = new MediaPipelineFilter;
 
     // Add remote SSRCs so we can distinguish which RTP packets actually
     // belong to this pipeline (also RTCP sender reports).
@@ -175,9 +172,9 @@ nsresult TransceiverImpl::UpdateTransport() {
   }
 
   mReceivePipeline->UpdateTransport_m(mJsepTransceiver->mTransport.mTransportId,
-                                      std::move(filter));
+                                      filter);
   mTransmitPipeline->UpdateTransport_m(
-      mJsepTransceiver->mTransport.mTransportId, nullptr);
+      mJsepTransceiver->mTransport.mTransportId, filter);
   return NS_OK;
 }
 
@@ -252,6 +249,21 @@ void TransceiverImpl::SetReceiveTrackMuted(bool aMuted) {
 
   // This sets the muted state for mReceiveTrack and all its clones.
   static_cast<RemoteTrackSource&>(mReceiveTrack->GetSource()).SetMuted(aMuted);
+}
+
+nsresult TransceiverImpl::UpdatePrincipal(nsIPrincipal* aPrincipal) {
+  if (mJsepTransceiver->IsStopped()) {
+    return NS_OK;
+  }
+
+  // This blasts away the existing principal.
+  // We only do this when we become certain that all tracks are safe to make
+  // accessible to the script principal.
+  static_cast<RemoteTrackSource&>(mReceiveTrack->GetSource())
+      .SetPrincipal(aPrincipal);
+
+  mReceivePipeline->SetPrincipalHandle_m(MakePrincipalHandle(aPrincipal));
+  return NS_OK;
 }
 
 void TransceiverImpl::ResetSync() {

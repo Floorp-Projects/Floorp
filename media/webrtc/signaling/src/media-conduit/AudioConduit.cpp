@@ -53,8 +53,7 @@ using LocalDirection = MediaSessionConduitLocalDirection;
  * Factory Method for AudioConduit
  */
 RefPtr<AudioSessionConduit> AudioSessionConduit::Create(
-    RefPtr<WebRtcCallWrapper> aCall,
-    nsCOMPtr<nsISerialEventTarget> aStsThread) {
+    RefPtr<WebRtcCallWrapper> aCall, nsCOMPtr<nsIEventTarget> aStsThread) {
   CSFLogDebug(LOGTAG, "%s ", __FUNCTION__);
   MOZ_ASSERT(NS_IsMainThread());
 
