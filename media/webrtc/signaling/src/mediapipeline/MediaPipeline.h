@@ -80,10 +80,9 @@ class MediaPipeline : public sigslot::has_slots<> {
  public:
   enum class DirectionType { TRANSMIT, RECEIVE };
   MediaPipeline(const std::string& aPc,
-                RefPtr<MediaTransportHandler> aTransportHandler,
-                DirectionType aDirection,
-                RefPtr<nsISerialEventTarget> aMainThread,
-                RefPtr<nsISerialEventTarget> aStsThread,
+                MediaTransportHandler* aTransportHandler,
+                DirectionType aDirection, nsCOMPtr<nsIEventTarget> aMainThread,
+                nsCOMPtr<nsIEventTarget> aStsThread,
                 RefPtr<MediaSessionConduit> aConduit);
 
   virtual void Start() = 0;
@@ -96,10 +95,10 @@ class MediaPipeline : public sigslot::has_slots<> {
   void Shutdown_m();
 
   void UpdateTransport_m(const std::string& aTransportId,
-                         UniquePtr<MediaPipelineFilter>&& aFilter);
+                         nsAutoPtr<MediaPipelineFilter> aFilter);
 
   void UpdateTransport_s(const std::string& aTransportId,
-                         UniquePtr<MediaPipelineFilter>&& aFilter);
+                         nsAutoPtr<MediaPipelineFilter> aFilter);
 
   // Used only for testing; adds RTP header extension for RTP Stream Id with
   // the given id.
@@ -124,7 +123,7 @@ class MediaPipeline : public sigslot::has_slots<> {
         const DOMHighResTimeStamp aTime);
 
     RtpCSRCStats(const uint32_t aCsrc, const DOMHighResTimeStamp aTime);
-    ~RtpCSRCStats() = default;
+    ~RtpCSRCStats(){};
     // Initialize a webidl representation suitable for adding to a report.
     //   This assumes that the webidl object is empty.
     // @param aWebidlObj the webidl binding object to popluate
@@ -148,7 +147,7 @@ class MediaPipeline : public sigslot::has_slots<> {
   // @param aId the stream id to use for populating inboundRtpStreamId field
   // @param aArr the array to append the stats objects to
   void GetContributingSourceStats(
-      const nsString& aInboundRtpStreamId,
+      const nsString& aInboundStreamId,
       FallibleTArray<dom::RTCRTPContributingSourceStats>& aArr) const;
 
   int32_t RtpPacketsSent() const { return mRtpPacketsSent; }
@@ -167,8 +166,8 @@ class MediaPipeline : public sigslot::has_slots<> {
   class PipelineTransport : public TransportInterface {
    public:
     // Implement the TransportInterface functions
-    explicit PipelineTransport(RefPtr<nsISerialEventTarget> aStsThread)
-        : mPipeline(nullptr), mStsThread(std::move(aStsThread)) {}
+    explicit PipelineTransport(nsIEventTarget* aStsThread)
+        : mPipeline(nullptr), mStsThread(aStsThread) {}
 
     void Attach(MediaPipeline* pipeline) { mPipeline = pipeline; }
     void Detach() { mPipeline = nullptr; }
@@ -178,11 +177,11 @@ class MediaPipeline : public sigslot::has_slots<> {
     virtual nsresult SendRtcpPacket(const uint8_t* aData, size_t aLen) override;
 
    private:
-    void SendRtpRtcpPacket_s(MediaPacket&& aPacket);
+    void SendRtpRtcpPacket_s(nsAutoPtr<MediaPacket> aPacket);
 
     // Creates a cycle, which we break with Detach
     RefPtr<MediaPipeline> mPipeline;
-    const RefPtr<nsISerialEventTarget> mStsThread;
+    const nsCOMPtr<nsIEventTarget> mStsThread;
   };
 
  protected:
@@ -195,7 +194,7 @@ class MediaPipeline : public sigslot::has_slots<> {
   void IncrementRtpPacketsSent(int aBytes);
   void IncrementRtcpPacketsSent();
   void IncrementRtpPacketsReceived(int aBytes);
-  virtual void OnRtpPacketReceived() {}
+  virtual void OnRtpPacketReceived(){};
   void IncrementRtcpPacketsReceived();
 
   virtual void SendPacket(MediaPacket&& packet);
@@ -205,7 +204,6 @@ class MediaPipeline : public sigslot::has_slots<> {
   void RtcpStateChange(const std::string& aTransportId, TransportLayer::State);
   virtual void CheckTransportStates();
   void PacketReceived(const std::string& aTransportId, MediaPacket& packet);
-  void AlpnNegotiated(const std::string& aAlpn, bool aPrivacyRequested);
 
   void RtpPacketReceived(MediaPacket& packet);
   void RtcpPacketReceived(MediaPacket& packet);
@@ -215,14 +213,10 @@ class MediaPipeline : public sigslot::has_slots<> {
 
   void SetDescription_s(const std::string& description);
 
-  // Called when ALPN is negotiated and is requesting privacy, so receive
-  // pipelines do not enter data into the graph under a content principal.
-  virtual void MakePrincipalPrivate_s() {}
-
   const DirectionType mDirection;
   size_t mLevel;
   std::string mTransportId;
-  const RefPtr<MediaTransportHandler> mTransportHandler;
+  RefPtr<MediaTransportHandler> mTransportHandler;
   RefPtr<MediaSessionConduit> mConduit;  // Our conduit. Written on the main
                                          // thread. Read on STS thread.
 
@@ -232,11 +226,11 @@ class MediaPipeline : public sigslot::has_slots<> {
 
   // Pointers to the threads we need. Initialized at creation
   // and used all over the place.
-  const RefPtr<nsISerialEventTarget> mMainThread;
-  const RefPtr<nsISerialEventTarget> mStsThread;
+  const nsCOMPtr<nsIEventTarget> mMainThread;
+  const nsCOMPtr<nsIEventTarget> mStsThread;
 
   // Created in c'tor. Referenced by the conduit.
-  const RefPtr<PipelineTransport> mTransport;
+  RefPtr<PipelineTransport> mTransport;
 
   // Only safe to access from STS thread.
   int32_t mRtpPacketsSent;
@@ -254,10 +248,10 @@ class MediaPipeline : public sigslot::has_slots<> {
   std::string mDescription;
 
   // Written in c'tor, all following accesses are on the STS thread.
-  UniquePtr<MediaPipelineFilter> mFilter;
-  const UniquePtr<webrtc::RtpHeaderParser> mRtpParser;
+  nsAutoPtr<MediaPipelineFilter> mFilter;
+  const nsAutoPtr<webrtc::RtpHeaderParser> mRtpParser;
 
-  UniquePtr<PacketDumper> mPacketDumper;
+  nsAutoPtr<PacketDumper> mPacketDumper;
 
  private:
   // Gets the current time as a DOMHighResTimeStamp
@@ -274,9 +268,9 @@ class MediaPipelineTransmit : public MediaPipeline {
  public:
   // Set aRtcpTransport to nullptr to use rtcp-mux
   MediaPipelineTransmit(const std::string& aPc,
-                        RefPtr<MediaTransportHandler> aTransportHandler,
-                        RefPtr<nsISerialEventTarget> aMainThread,
-                        RefPtr<nsISerialEventTarget> aStsThread, bool aIsVideo,
+                        MediaTransportHandler* aTransportHandler,
+                        nsCOMPtr<nsIEventTarget> aMainThread,
+                        nsCOMPtr<nsIEventTarget> aStsThread, bool aIsVideo,
                         RefPtr<MediaSessionConduit> aConduit);
 
   bool Transmitting() const;
@@ -304,7 +298,7 @@ class MediaPipelineTransmit : public MediaPipeline {
   // In non-compliance with the likely final spec, allow the new
   // track to be part of a different stream (since we don't support
   // multiple tracks of a type in a stream yet).  bug 1056650
-  virtual nsresult SetTrack(RefPtr<dom::MediaStreamTrack> aDomTrack);
+  virtual nsresult SetTrack(dom::MediaStreamTrack* aDomTrack);
 
   // Separate classes to allow ref counting
   class PipelineListener;
@@ -331,10 +325,15 @@ class MediaPipelineReceive : public MediaPipeline {
  public:
   // Set aRtcpTransport to nullptr to use rtcp-mux
   MediaPipelineReceive(const std::string& aPc,
-                       RefPtr<MediaTransportHandler> aTransportHandler,
-                       RefPtr<nsISerialEventTarget> aMainThread,
-                       RefPtr<nsISerialEventTarget> aStsThread,
+                       MediaTransportHandler* aTransportHandler,
+                       nsCOMPtr<nsIEventTarget> aMainThread,
+                       nsCOMPtr<nsIEventTarget> aStsThread,
                        RefPtr<MediaSessionConduit> aConduit);
+
+  // Sets the PrincipalHandle we set on the media chunks produced by this
+  // pipeline. Must be called on the main thread.
+  virtual void SetPrincipalHandle_m(
+      const PrincipalHandle& aPrincipalHandle) = 0;
 
  protected:
   ~MediaPipelineReceive();
@@ -345,18 +344,17 @@ class MediaPipelineReceive : public MediaPipeline {
 class MediaPipelineReceiveAudio : public MediaPipelineReceive {
  public:
   MediaPipelineReceiveAudio(const std::string& aPc,
-                            RefPtr<MediaTransportHandler> aTransportHandler,
-                            RefPtr<nsISerialEventTarget> aMainThread,
-                            RefPtr<nsISerialEventTarget> aStsThread,
+                            MediaTransportHandler* aTransportHandler,
+                            nsCOMPtr<nsIEventTarget> aMainThread,
+                            nsCOMPtr<nsIEventTarget> aStsThread,
                             RefPtr<AudioSessionConduit> aConduit,
-                            const RefPtr<dom::MediaStreamTrack>& aTrack,
-                            const PrincipalHandle& aPrincipalHandle);
+                            dom::MediaStreamTrack* aTrack);
 
   void DetachMedia() override;
 
   bool IsVideo() const override { return false; }
 
-  void MakePrincipalPrivate_s() override;
+  void SetPrincipalHandle_m(const PrincipalHandle& aPrincipalHandle) override;
 
   void Start() override;
   void Stop() override;
@@ -367,7 +365,7 @@ class MediaPipelineReceiveAudio : public MediaPipelineReceive {
   // Separate class to allow ref counting
   class PipelineListener;
 
-  const RefPtr<PipelineListener> mListener;
+  RefPtr<PipelineListener> mListener;
 };
 
 // A specialization of pipeline for reading from the network and
@@ -375,19 +373,18 @@ class MediaPipelineReceiveAudio : public MediaPipelineReceive {
 class MediaPipelineReceiveVideo : public MediaPipelineReceive {
  public:
   MediaPipelineReceiveVideo(const std::string& aPc,
-                            RefPtr<MediaTransportHandler> aTransportHandler,
-                            RefPtr<nsISerialEventTarget> aMainThread,
-                            RefPtr<nsISerialEventTarget> aStsThread,
+                            MediaTransportHandler* aTransportHandler,
+                            nsCOMPtr<nsIEventTarget> aMainThread,
+                            nsCOMPtr<nsIEventTarget> aStsThread,
                             RefPtr<VideoSessionConduit> aConduit,
-                            const RefPtr<dom::MediaStreamTrack>& aTrack,
-                            const PrincipalHandle& aPrincipalHandle);
+                            dom::MediaStreamTrack* aTrack);
 
   // Called on the main thread.
   void DetachMedia() override;
 
   bool IsVideo() const override { return true; }
 
-  void MakePrincipalPrivate_s() override;
+  void SetPrincipalHandle_m(const PrincipalHandle& aPrincipalHandle) override;
 
   void Start() override;
   void Stop() override;
@@ -402,7 +399,7 @@ class MediaPipelineReceiveVideo : public MediaPipelineReceive {
   class PipelineListener;
 
   const RefPtr<PipelineRenderer> mRenderer;
-  const RefPtr<PipelineListener> mListener;
+  RefPtr<PipelineListener> mListener;
 };
 
 }  // namespace mozilla

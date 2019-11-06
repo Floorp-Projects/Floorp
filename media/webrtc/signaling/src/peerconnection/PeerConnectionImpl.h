@@ -231,7 +231,7 @@ class PeerConnectionImpl final
   nsCOMPtr<nsIThread> GetMainThread() { return mThread; }
 
   // Get the STS thread
-  nsISerialEventTarget* GetSTSThread() {
+  nsIEventTarget* GetSTSThread() {
     PC_AUTO_ENTER_API_CALL_NO_CHECK();
     return mSTSThread;
   }
@@ -310,7 +310,7 @@ class PeerConnectionImpl final
       ErrorResult& rv);
 
   OwningNonNull<dom::MediaStreamTrack> CreateReceiveTrack(
-      SdpMediaSection::MediaType type, nsIPrincipal* aPrincipal);
+      SdpMediaSection::MediaType type);
 
   bool CheckNegotiationNeeded(ErrorResult& rv);
 
@@ -484,7 +484,7 @@ class PeerConnectionImpl final
 
   bool IsClosed() const;
   // called when DTLS connects; we only need this once
-  nsresult OnAlpnNegotiated(bool aPrivacyRequested);
+  nsresult OnAlpnNegotiated(const std::string& aAlpn);
 
   bool HasMedia() const;
 

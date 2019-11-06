@@ -836,8 +836,7 @@ void MediaTransportHandler::OnAlpnNegotiated(const std::string& aAlpn) {
     return;
   }
 
-  const bool privacyRequested = aAlpn == "c-webrtc";
-  SignalAlpnNegotiated(aAlpn, privacyRequested);
+  SignalAlpnNegotiated(aAlpn);
 }
 
 void MediaTransportHandler::OnGatheringStateChange(

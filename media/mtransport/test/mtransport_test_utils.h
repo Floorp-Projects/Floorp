@@ -12,7 +12,7 @@
 #include "nsCOMPtr.h"
 #include "nsNetCID.h"
 
-#include "nsISerialEventTarget.h"
+#include "nsIEventTarget.h"
 #include "nsPISocketTransportService.h"
 #include "nsServiceManagerUtils.h"
 
@@ -30,10 +30,10 @@ class MtransportTestUtils {
     MOZ_ASSERT(NS_SUCCEEDED(rv));
   }
 
-  nsISerialEventTarget* sts_target() { return sts_target_; }
+  nsIEventTarget* sts_target() { return sts_target_; }
 
  private:
-  nsCOMPtr<nsISerialEventTarget> sts_target_;
+  nsCOMPtr<nsIEventTarget> sts_target_;
   nsCOMPtr<nsPISocketTransportService> sts_;
 };
 

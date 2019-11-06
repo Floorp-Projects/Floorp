@@ -230,7 +230,7 @@ class WebrtcVideoConduit
   }
 
   WebrtcVideoConduit(RefPtr<WebRtcCallWrapper> aCall,
-                     nsCOMPtr<nsISerialEventTarget> aStsThread);
+                     nsCOMPtr<nsIEventTarget> aStsThread);
   virtual ~WebrtcVideoConduit();
 
   MediaConduitErrorCode InitMain();
@@ -300,13 +300,13 @@ class WebrtcVideoConduit
    */
   class CallStatistics {
    public:
-    explicit CallStatistics(nsCOMPtr<nsISerialEventTarget> aStatsThread)
+    explicit CallStatistics(nsCOMPtr<nsIEventTarget> aStatsThread)
         : mStatsThread(aStatsThread) {}
     void Update(const webrtc::Call::Stats& aStats);
     Maybe<DOMHighResTimeStamp> RttSec() const;
 
    protected:
-    const nsCOMPtr<nsISerialEventTarget> mStatsThread;
+    const nsCOMPtr<nsIEventTarget> mStatsThread;
 
    private:
     Maybe<DOMHighResTimeStamp> mRttSec = Nothing();
@@ -318,7 +318,7 @@ class WebrtcVideoConduit
    */
   class StreamStatistics {
    public:
-    explicit StreamStatistics(nsCOMPtr<nsISerialEventTarget> aStatsThread)
+    explicit StreamStatistics(nsCOMPtr<nsIEventTarget> aStatsThread)
         : mStatsThread(aStatsThread) {}
     void Update(const double aFrameRate, const double aBitrate,
                 const webrtc::RtcpPacketTypeCounter& aPacketCounts);
@@ -342,7 +342,7 @@ class WebrtcVideoConduit
     virtual bool IsSend() const { return false; };
 
    protected:
-    const nsCOMPtr<nsISerialEventTarget> mStatsThread;
+    const nsCOMPtr<nsIEventTarget> mStatsThread;
 
    private:
     bool mActive = false;
@@ -356,9 +356,9 @@ class WebrtcVideoConduit
    */
   class SendStreamStatistics : public StreamStatistics {
    public:
-    explicit SendStreamStatistics(nsCOMPtr<nsISerialEventTarget> aStatsThread)
+    explicit SendStreamStatistics(nsCOMPtr<nsIEventTarget> aStatsThread)
         : StreamStatistics(
-              std::forward<nsCOMPtr<nsISerialEventTarget>>(aStatsThread)) {}
+              std::forward<nsCOMPtr<nsIEventTarget>>(aStatsThread)) {}
     /**
      * Returns the calculate number of dropped frames
      */
@@ -400,10 +400,9 @@ class WebrtcVideoConduit
    */
   class ReceiveStreamStatistics : public StreamStatistics {
    public:
-    explicit ReceiveStreamStatistics(
-        nsCOMPtr<nsISerialEventTarget> aStatsThread)
+    explicit ReceiveStreamStatistics(nsCOMPtr<nsIEventTarget> aStatsThread)
         : StreamStatistics(
-              std::forward<nsCOMPtr<nsISerialEventTarget>>(aStatsThread)) {}
+              std::forward<nsCOMPtr<nsIEventTarget>>(aStatsThread)) {}
     uint32_t BytesSent() const;
     /**
      * Returns the number of discarded packets
@@ -477,7 +476,7 @@ class WebrtcVideoConduit
 
   // Socket transport service thread that runs stats queries against us. Any
   // thread.
-  const nsCOMPtr<nsISerialEventTarget> mStsThread;
+  const nsCOMPtr<nsIEventTarget> mStsThread;
 
   Mutex mMutex;
 

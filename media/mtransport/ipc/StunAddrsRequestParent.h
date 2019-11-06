@@ -42,7 +42,7 @@ class StunAddrsRequestParent : public PStunAddrsRequestParent {
   virtual void ActorDestroy(ActorDestroyReason why) override;
 
   nsCOMPtr<nsIThread> mMainThread;
-  nsCOMPtr<nsISerialEventTarget> mSTSThread;
+  nsCOMPtr<nsIEventTarget> mSTSThread;
 
   void GetStunAddrs_s();
   void SendStunAddrs_m(const NrIceStunAddrArray& addrs);
