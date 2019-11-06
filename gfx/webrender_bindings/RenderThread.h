@@ -16,6 +16,7 @@
 #include "mozilla/gfx/Point.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/DataMutex.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/webrender/webrender_ffi.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/webrender/WebRenderTypes.h"
@@ -270,6 +271,9 @@ class RenderThread final {
       UniquePtr<layers::WebRenderCompositionRecorder> aCompositionRecorder);
 
   void WriteCollectedFramesForWindow(wr::WindowId aWindowId);
+
+  Maybe<layers::CollectedFrames> GetCollectedFramesForWindow(
+      wr::WindowId aWindowId);
 
  private:
   explicit RenderThread(base::Thread* aThread);
