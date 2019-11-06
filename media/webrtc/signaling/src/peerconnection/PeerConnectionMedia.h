@@ -82,6 +82,7 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
   nsresult AddTransceiver(JsepTransceiver* aJsepTransceiver,
                           dom::MediaStreamTrack& aReceiveTrack,
                           dom::MediaStreamTrack* aSendTrack,
+                          const PrincipalHandle& aPrincipalHandle,
                           RefPtr<TransceiverImpl>* aTransceiverImpl);
 
   void GetTransmitPipelinesMatching(
@@ -109,14 +110,13 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
                             const PeerIdentity* aSinkIdentity);
   // this determines if any track is peerIdentity constrained
   bool AnyLocalTrackHasPeerIdentity() const;
-  // When we finally learn who is on the other end, we need to change the
-  // ownership on streams
-  void UpdateRemoteStreamPrincipals_m(nsIPrincipal* aPrincipal);
 
   bool AnyCodecHasPluginID(uint64_t aPluginID);
 
   const nsCOMPtr<nsIThread>& GetMainThread() const { return mMainThread; }
-  const nsCOMPtr<nsIEventTarget>& GetSTSThread() const { return mSTSThread; }
+  const nsCOMPtr<nsISerialEventTarget>& GetSTSThread() const {
+    return mSTSThread;
+  }
 
   // Used by PCImpl in a couple of places. Might be good to move that code in
   // here.
@@ -127,8 +127,8 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
   nsPIDOMWindowInner* GetWindow() const;
   already_AddRefed<nsIHttpChannelInternal> GetChannel() const;
 
-  void AlpnNegotiated_s(const std::string& aAlpn);
-  void AlpnNegotiated_m(const std::string& aAlpn);
+  void AlpnNegotiated_s(const std::string& aAlpn, bool aPrivacyRequested);
+  void AlpnNegotiated_m(bool aPrivacyRequested);
 
   // TODO: Move to PeerConnectionImpl
   RefPtr<WebRtcCallWrapper> mCall;
@@ -202,7 +202,7 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
   nsCOMPtr<nsIThread> mMainThread;
 
   // The STS thread.
-  nsCOMPtr<nsIEventTarget> mSTSThread;
+  nsCOMPtr<nsISerialEventTarget> mSTSThread;
 
   // Used whenever we need to dispatch a runnable to STS to tweak something
   // on our ICE ctx, but are not ready to do so at the moment (eg; we are

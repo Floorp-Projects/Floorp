@@ -7,8 +7,8 @@
 #include "nsGeoPosition.h"
 
 #include "mozilla/FloatingPoint.h"
-#include "mozilla/dom/PositionBinding.h"
-#include "mozilla/dom/CoordinatesBinding.h"
+#include "mozilla/dom/GeolocationPositionBinding.h"
+#include "mozilla/dom/GeolocationCoordinatesBinding.h"
 
 using mozilla::EqualOrBothNaN;
 using mozilla::IsNaN;
@@ -144,81 +144,86 @@ nsGeoPosition::GetCoords(nsIDOMGeoPositionCoords** aCoords) {
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(Position, mParent, mCoordinates)
-NS_IMPL_CYCLE_COLLECTING_ADDREF(Position)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(Position)
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Position)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(GeolocationPosition, mParent,
+                                      mCoordinates)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(GeolocationPosition)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(GeolocationPosition)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(GeolocationPosition)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-Position::Position(nsISupports* aParent, nsIDOMGeoPosition* aGeoPosition)
+GeolocationPosition::GeolocationPosition(nsISupports* aParent,
+                                         nsIDOMGeoPosition* aGeoPosition)
     : mParent(aParent), mGeoPosition(aGeoPosition) {}
 
-Position::~Position() {}
+GeolocationPosition::~GeolocationPosition() {}
 
-nsISupports* Position::GetParentObject() const { return mParent; }
+nsISupports* GeolocationPosition::GetParentObject() const { return mParent; }
 
-JSObject* Position::WrapObject(JSContext* aCx,
-                               JS::Handle<JSObject*> aGivenProto) {
-  return Position_Binding::Wrap(aCx, this, aGivenProto);
+JSObject* GeolocationPosition::WrapObject(JSContext* aCx,
+                                          JS::Handle<JSObject*> aGivenProto) {
+  return GeolocationPosition_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-Coordinates* Position::Coords() {
+GeolocationCoordinates* GeolocationPosition::Coords() {
   if (!mCoordinates) {
     nsCOMPtr<nsIDOMGeoPositionCoords> coords;
     mGeoPosition->GetCoords(getter_AddRefs(coords));
     MOZ_ASSERT(coords, "coords should not be null");
 
-    mCoordinates = new Coordinates(this, coords);
+    mCoordinates = new GeolocationCoordinates(this, coords);
   }
 
   return mCoordinates;
 }
 
-uint64_t Position::Timestamp() const {
+uint64_t GeolocationPosition::Timestamp() const {
   uint64_t rv;
 
   mGeoPosition->GetTimestamp(&rv);
   return rv;
 }
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(Coordinates, mPosition)
-NS_IMPL_CYCLE_COLLECTING_ADDREF(Coordinates)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(Coordinates)
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Coordinates)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(GeolocationCoordinates, mPosition)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(GeolocationCoordinates)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(GeolocationCoordinates)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(GeolocationCoordinates)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-Coordinates::Coordinates(Position* aPosition, nsIDOMGeoPositionCoords* aCoords)
+GeolocationCoordinates::GeolocationCoordinates(GeolocationPosition* aPosition,
+                                               nsIDOMGeoPositionCoords* aCoords)
     : mPosition(aPosition), mCoords(aCoords) {}
 
-Coordinates::~Coordinates() {}
+GeolocationCoordinates::~GeolocationCoordinates() {}
 
-Position* Coordinates::GetParentObject() const { return mPosition; }
-
-JSObject* Coordinates::WrapObject(JSContext* aCx,
-                                  JS::Handle<JSObject*> aGivenProto) {
-  return Coordinates_Binding::Wrap(aCx, this, aGivenProto);
+GeolocationPosition* GeolocationCoordinates::GetParentObject() const {
+  return mPosition;
 }
 
-#define GENERATE_COORDS_WRAPPED_GETTER(name) \
-  double Coordinates::name() const {         \
-    double rv;                               \
-    mCoords->Get##name(&rv);                 \
-    return rv;                               \
+JSObject* GeolocationCoordinates::WrapObject(
+    JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {
+  return GeolocationCoordinates_Binding::Wrap(aCx, this, aGivenProto);
+}
+
+#define GENERATE_COORDS_WRAPPED_GETTER(name)    \
+  double GeolocationCoordinates::name() const { \
+    double rv;                                  \
+    mCoords->Get##name(&rv);                    \
+    return rv;                                  \
   }
 
-#define GENERATE_COORDS_WRAPPED_GETTER_NULLABLE(name) \
-  Nullable<double> Coordinates::Get##name() const {   \
-    double value;                                     \
-    mCoords->Get##name(&value);                       \
-    Nullable<double> rv;                              \
-    if (!IsNaN(value)) {                              \
-      rv.SetValue(value);                             \
-    }                                                 \
-    return rv;                                        \
+#define GENERATE_COORDS_WRAPPED_GETTER_NULLABLE(name)          \
+  Nullable<double> GeolocationCoordinates::Get##name() const { \
+    double value;                                              \
+    mCoords->Get##name(&value);                                \
+    Nullable<double> rv;                                       \
+    if (!IsNaN(value)) {                                       \
+      rv.SetValue(value);                                      \
+    }                                                          \
+    return rv;                                                 \
   }
 
 GENERATE_COORDS_WRAPPED_GETTER(Latitude)

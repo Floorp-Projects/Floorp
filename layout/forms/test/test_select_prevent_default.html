@@ -49,10 +49,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=291082
         previousValue = element.value;
         otherKeys.forEach(function(key) {
           sendKey(key);
-          isnot(element.value, previousValue, "value should have changed while testing key " + key + " (id: " + id + ")");
+          // All these preventDefault on key down in various ways.
+          let shouldchange = id != "keydown" && id != "one" && id != "three";
+          (shouldchange ? isnot : is)(element.value, previousValue, "value should " + (shouldchange ? "" : "not ") + "have changed while testing key " + key + " (id: " + id + ")");
           previousValue = element.value;
-          });
         });
+      });
       SimpleTest.finish();
     });
   }

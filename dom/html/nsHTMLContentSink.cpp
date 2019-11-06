@@ -28,10 +28,10 @@
 #include "nsCRT.h"
 #include "prtime.h"
 #include "mozilla/Logging.h"
-#include "nsNodeUtils.h"
 #include "nsIContent.h"
 #include "mozilla/dom/CustomElementRegistry.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/MutationObservers.h"
 #include "mozilla/Preferences.h"
 
 #include "nsGenericHTMLElement.h"
@@ -872,7 +872,8 @@ void HTMLContentSink::NotifyInsert(nsIContent* aContent,
     // Note that aContent->OwnerDoc() may be different to mDocument already.
     MOZ_AUTO_DOC_UPDATE(aContent ? aContent->OwnerDoc() : mDocument.get(),
                         true);
-    nsNodeUtils::ContentInserted(NODE_FROM(aContent, mDocument), aChildContent);
+    MutationObservers::NotifyContentInserted(NODE_FROM(aContent, mDocument),
+                                             aChildContent);
     mLastNotificationTime = PR_Now();
   }
 

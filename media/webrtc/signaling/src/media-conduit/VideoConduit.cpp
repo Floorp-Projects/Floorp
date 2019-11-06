@@ -441,7 +441,8 @@ void WebrtcVideoConduit::ReceiveStreamStatistics::Update(
  * Factory Method for VideoConduit
  */
 RefPtr<VideoSessionConduit> VideoSessionConduit::Create(
-    RefPtr<WebRtcCallWrapper> aCall, nsCOMPtr<nsIEventTarget> aStsThread) {
+    RefPtr<WebRtcCallWrapper> aCall,
+    nsCOMPtr<nsISerialEventTarget> aStsThread) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aCall, "missing required parameter: aCall");
   CSFLogVerbose(LOGTAG, "%s", __FUNCTION__);
@@ -459,8 +460,8 @@ RefPtr<VideoSessionConduit> VideoSessionConduit::Create(
   return obj.forget();
 }
 
-WebrtcVideoConduit::WebrtcVideoConduit(RefPtr<WebRtcCallWrapper> aCall,
-                                       nsCOMPtr<nsIEventTarget> aStsThread)
+WebrtcVideoConduit::WebrtcVideoConduit(
+    RefPtr<WebRtcCallWrapper> aCall, nsCOMPtr<nsISerialEventTarget> aStsThread)
     : mTransportMonitor("WebrtcVideoConduit"),
       mStsThread(aStsThread),
       mMutex("WebrtcVideoConduit::mMutex"),

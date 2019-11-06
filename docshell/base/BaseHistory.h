@@ -23,14 +23,6 @@ class BaseHistory : public IHistory {
 
   BaseHistory() : mTrackedURIs(kTrackedUrisInitialSize) {}
 
-  // Starts a visited query, that eventually could call NotifyVisited if
-  // appropriate.
-  virtual Result<Ok, nsresult> StartVisitedQuery(nsIURI*) = 0;
-
-  // Cancels a visited query, if it is at all possible, because we know we won't
-  // use the results anymore.
-  virtual void CancelVisitedQueryIfPossible(nsIURI*) = 0;
-
   using ObserverArray = nsTObserverArray<dom::Link*>;
   struct ObservingLinks {
     ObserverArray mLinks;
@@ -41,12 +33,24 @@ class BaseHistory : public IHistory {
     }
   };
 
+  using PendingVisitedQueries = nsTHashtable<nsURIHashKey>;
+
+  // Starts all the queries in the pending queries list, potentially at the same
+  // time.
+  virtual void StartPendingVisitedQueries(const PendingVisitedQueries&) = 0;
+
  private:
   /**
    * Mark all links for the given URI in the given document as visited. Used
    * within NotifyVisited.
    */
   void NotifyVisitedForDocument(nsIURI*, dom::Document*, VisitedStatus);
+
+  void ScheduleVisitedQuery(nsIURI*);
+
+  // Cancels a visited query, if it is at all possible, because we know we won't
+  // use the results anymore.
+  void CancelVisitedQueryIfPossible(nsIURI*);
 
   /**
    * Dispatch a runnable for the document passed in which will call
@@ -58,6 +62,13 @@ class BaseHistory : public IHistory {
   // A map from URI to links that depend on that URI, and whether that URI is
   // known-to-be-visited-or-unvisited already.
   nsDataHashtable<nsURIHashKey, ObservingLinks> mTrackedURIs;
+
+ private:
+  // The set of pending URIs that we haven't queried yet but need to.
+  PendingVisitedQueries mPendingQueries;
+  // Whether we've successfully scheduled a runnable to call
+  // StartPendingVisitedQueries already.
+  bool mStartPendingVisitedQueriesScheduled = false;
 };
 
 }  // namespace mozilla

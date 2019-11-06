@@ -16,8 +16,7 @@ dictionary PositionOptions {
   [Clamp] unsigned long maximumAge = 0;
 };
 
-[NoInterfaceObject,
- Exposed=Window]
+[Exposed=Window]
 interface Geolocation {
   [Throws, NeedsCallerType]
   void getCurrentPosition(PositionCallback successCallback,
@@ -32,6 +31,6 @@ interface Geolocation {
   void clearWatch(long watchId);
 };
 
-callback PositionCallback = void (Position position);
+callback PositionCallback = void (GeolocationPosition position);
 
-callback PositionErrorCallback = void (PositionError positionError);
+callback PositionErrorCallback = void (GeolocationPositionError positionError);

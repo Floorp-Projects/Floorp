@@ -63,7 +63,7 @@ TEST_HARNESS_FILES.testing.mochitest.tests.junit += [
     'geckoview/src/androidTest/assets/www/simple_redirect.sjs',
 ]
 
-SPHINX_TREES['fennec'] = 'docs'
+#SPHINX_TREES['fennec'] = 'docs'
 
 with Files('docs/**'):
     SCHEDULES.exclusive = ['docs']
