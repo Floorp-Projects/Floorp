@@ -265,6 +265,10 @@ function initPage() {
     document.getElementById("netErrorButtonContainer").style.display = "none";
   }
 
+  // Dispatch this event only for tests.
+  let event = new CustomEvent("AboutNetErrorLoad", { bubbles: true });
+  document.dispatchEvent(event);
+
   setNetErrorMessageFromCode();
   let learnMoreLink = document.getElementById("learnMoreLink");
   let baseURL = RPMGetFormatURLPref("app.support.baseURL");
@@ -321,11 +325,6 @@ function initPage() {
       span.textContent = document.location.hostname;
     }
   }
-
-  // Dispatch this event only for tests. This should only be sent after we're
-  // done initializing the error page.
-  let event = new CustomEvent("AboutNetErrorLoad", { bubbles: true });
-  document.dispatchEvent(event);
 }
 
 function setupErrorUI() {

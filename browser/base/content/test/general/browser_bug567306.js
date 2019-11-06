@@ -14,7 +14,7 @@ add_task(async function() {
       "pageshow",
       true,
       event => {
-        return event.target.location != "about:blank";
+        return content.location.href != "about:blank";
       }
     ).then(function pageshowListener() {
       ok(

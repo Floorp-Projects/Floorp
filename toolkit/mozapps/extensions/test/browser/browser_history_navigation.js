@@ -153,8 +153,22 @@ async function expand_addon_element(aManager, aId) {
   addon.click();
 }
 
-function wait_for_page_load(browser) {
-  return BrowserTestUtils.browserLoaded(browser, false, "http://example.com/");
+function wait_for_page_show(browser) {
+  let promise = new Promise(resolve => {
+    let removeFunc;
+    let listener = () => {
+      removeFunc();
+      resolve();
+    };
+    removeFunc = BrowserTestUtils.addContentEventListener(
+      browser,
+      "pageshow",
+      listener,
+      {},
+      event => event.target.location == "http://example.com/"
+    );
+  });
+  return promise;
 }
 
 // Tests simple forward and back navigation and that the right heading and
@@ -386,7 +400,7 @@ add_task(async function test_navigate_back_from_website() {
   is_in_list(aManager, "addons://list/plugin", false, false);
 
   BrowserTestUtils.loadURI(gBrowser, "http://example.com/");
-  await wait_for_page_load(gBrowser.selectedBrowser);
+  await wait_for_page_show(gBrowser.selectedBrowser);
 
   info("Part 2");
 
@@ -410,7 +424,7 @@ add_task(async function test_navigate_back_from_website() {
         is_in_list(aManager, "addons://list/plugin", false, true);
 
         executeSoon(() => go_forward());
-        wait_for_page_load(gBrowser.selectedBrowser).then(() => {
+        wait_for_page_show(gBrowser.selectedBrowser).then(() => {
           info("Part 4");
 
           executeSoon(function() {
