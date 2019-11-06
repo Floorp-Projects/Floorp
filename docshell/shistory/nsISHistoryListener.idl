@@ -65,4 +65,14 @@ interface nsISHistoryListener : nsISupports
    * about pages) and when history.replaceState is called.
    */
   void OnHistoryReplaceEntry();
+
+
+  /**
+   * Called whenever a content viewer is evicted. A content viewer is evicted
+   * whenever a bfcache entry has timed out or the number of total content
+   * viewers has exceeded the global max. This is used for testing only.
+   *
+   * @param aNumEvicted - number of content viewers evicted
+   */
+  void OnContentViewerEvicted(in unsigned long aNumEvicted);
 };

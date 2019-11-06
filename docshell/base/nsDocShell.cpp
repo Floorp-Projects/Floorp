@@ -313,6 +313,7 @@ static void DecreasePrivateDocShellCount() {
 nsDocShell::nsDocShell(BrowsingContext* aBrowsingContext,
                        uint64_t aContentWindowID)
     : nsDocLoader(),
+      mHistoryID(aBrowsingContext->GetHistoryID()),
       mContentWindowID(aContentWindowID),
       mBrowsingContext(aBrowsingContext),
       mForcedCharset(nullptr),
@@ -391,12 +392,7 @@ nsDocShell::nsDocShell(BrowsingContext* aBrowsingContext,
       mSkipBrowsingContextDetachOnDestroy(false),
       mWatchedByDevtools(false),
       mIsNavigating(false) {
-  mHistoryID.m0 = 0;
-  mHistoryID.m1 = 0;
-  mHistoryID.m2 = 0;
   AssertOriginAttributesMatchPrivateBrowsing();
-
-  nsContentUtils::GenerateUUIDInPlace(mHistoryID);
 
   // If no outer window ID was provided, generate a new one.
   if (aContentWindowID == 0) {
@@ -433,7 +429,7 @@ nsDocShell::~nsDocShell() {
   Destroy();
 
   if (mSessionHistory) {
-    mSessionHistory->LegacySHistory()->ClearRootDocShell();
+    mSessionHistory->LegacySHistory()->ClearRootBrowsingContext();
   }
 
   if (--gDocShellCount == 0) {
@@ -839,15 +835,14 @@ void nsDocShell::MaybeHandleSubframeHistory(nsDocShellLoadState* aLoadState) {
   bool dynamicallyAddedChild = mDynamicallyCreated;
 
   if (!dynamicallyAddedChild && !oshe && currentSH) {
-    currentSH->HasDynamicallyAddedChild(&dynamicallyAddedChild);
-  }
-
-  if (!dynamicallyAddedChild) {
     // Only use the old SHEntry, if we're sure enough that
     // it wasn't originally for some other frame.
     nsCOMPtr<nsISHEntry> shEntry;
-    parentDS->GetChildSHEntry(mChildOffset, getter_AddRefs(shEntry));
-    aLoadState->SetSHEntry(shEntry);
+    currentSH->GetChildSHEntryIfHasNoDynamicallyAddedChild(
+        mChildOffset, getter_AddRefs(shEntry));
+    if (shEntry) {
+      aLoadState->SetSHEntry(shEntry);
+    }
   }
 
   // Make some decisions on the child frame's loadType based on the
@@ -3281,52 +3276,6 @@ nsDocShell::FindChildWithName(const nsAString& aName, bool aRecurse,
 }
 
 NS_IMETHODIMP
-nsDocShell::GetChildSHEntry(int32_t aChildOffset, nsISHEntry** aResult) {
-  nsresult rv = NS_OK;
-
-  NS_ENSURE_ARG_POINTER(aResult);
-  *aResult = nullptr;
-
-  // A nsISHEntry for a child is *only* available when the parent is in
-  // the progress of loading a document too...
-
-  if (mLSHE) {
-    /* Before looking for the subframe's url, check
-     * the expiration status of the parent. If the parent
-     * has expired from cache, then subframes will not be
-     * loaded from history in certain situations.
-     */
-    bool parentExpired = mLSHE->GetExpirationStatus();
-
-    /* Get the parent's Load Type so that it can be set on the child too.
-     * By default give a loadHistory value
-     */
-    uint32_t loadType = mLSHE->GetLoadType();
-    // If the user did a shift-reload on this frameset page,
-    // we don't want to load the subframes from history.
-    if (IsForceReloadType(loadType) || loadType == LOAD_REFRESH) {
-      return rv;
-    }
-
-    /* If the user pressed reload and the parent frame has expired
-     *  from cache, we do not want to load the child frame from history.
-     */
-    if (parentExpired && (loadType == LOAD_RELOAD_NORMAL)) {
-      // The parent has expired. Return null.
-      *aResult = nullptr;
-      return rv;
-    }
-
-    // Get the child subframe from session history.
-    rv = mLSHE->GetChildAt(aChildOffset, aResult);
-    if (*aResult) {
-      (*aResult)->SetLoadType(loadType);
-    }
-  }
-  return rv;
-}
-
-NS_IMETHODIMP
 nsDocShell::AddChildSHEntry(nsISHEntry* aCloneRef, nsISHEntry* aNewEntry,
                             int32_t aChildOffset, uint32_t aLoadType,
                             bool aCloneChildren) {
@@ -3591,17 +3540,7 @@ void nsDocShell::ClearFrameHistory(nsISHEntry* aEntry) {
     return;
   }
 
-  int32_t count = aEntry->GetChildCount();
-  AutoTArray<nsID, 16> ids;
-  for (int32_t i = 0; i < count; ++i) {
-    nsCOMPtr<nsISHEntry> child;
-    aEntry->GetChildAt(i, getter_AddRefs(child));
-    if (child) {
-      ids.AppendElement(child->DocshellID());
-    }
-  }
-  int32_t index = rootSH->Index();
-  rootSH->LegacySHistory()->RemoveEntries(ids, index);
+  rootSH->LegacySHistory()->RemoveFrameEntries(aEntry);
 }
 
 //-------------------------------------
@@ -8897,7 +8836,9 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
   if (mOSHE) {
     /* save current position of scroller(s) (bug 59774) */
     mOSHE->SetScrollPosition(scrollPos.x, scrollPos.y);
-    scrollRestorationIsManual = mOSHE->GetScrollRestorationIsManual();
+    DebugOnly<nsresult> rv =
+        mOSHE->GetScrollRestorationIsManual(&scrollRestorationIsManual);
+    MOZ_ASSERT(NS_SUCCEEDED(rv), "Didn't expect this to fail.");
     // Get the postdata and page ident from the current page, if
     // the new load is being done via normal means.  Note that
     // "normal means" can be checked for just by checking for
@@ -8924,8 +8865,10 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
 
   // If we're doing a history load, use its scroll restoration state.
   if (aLoadState->SHEntry()) {
-    scrollRestorationIsManual =
-        aLoadState->SHEntry()->GetScrollRestorationIsManual();
+    DebugOnly<nsresult> rv =
+        aLoadState->SHEntry()->GetScrollRestorationIsManual(
+            &scrollRestorationIsManual);
+    MOZ_ASSERT(NS_SUCCEEDED(rv), "Didn't expect this to fail.");
   }
 
   /* Assign mLSHE to mOSHE. This will either be a new entry created
@@ -9401,7 +9344,8 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
     if (aLoadState->SHEntry()) {
       // We're making history navigation or a reload. Make sure our history ID
       // points to the same ID as SHEntry's docshell ID.
-      mHistoryID = aLoadState->SHEntry()->DocshellID();
+      aLoadState->SHEntry()->GetDocshellID(mHistoryID);
+      mBrowsingContext->SetHistoryID(mHistoryID);
     }
   }
 
@@ -10864,16 +10808,8 @@ bool nsDocShell::OnNewURI(nsIURI* aURI, nsIChannel* aChannel,
   } else if (mSessionHistory && mLSHE && mURIResultedInDocument) {
     // Even if we don't add anything to SHistory, ensure the current index
     // points to the same SHEntry as our mLSHE.
-    int32_t index = mSessionHistory->LegacySHistory()->GetRequestedIndex();
-    if (index == -1) {
-      index = mSessionHistory->Index();
-    }
-    nsCOMPtr<nsISHEntry> currentSH;
-    mSessionHistory->LegacySHistory()->GetEntryAtIndex(
-        index, getter_AddRefs(currentSH));
-    if (currentSH != mLSHE) {
-      mSessionHistory->LegacySHistory()->ReplaceEntry(index, mLSHE);
-    }
+
+    mSessionHistory->LegacySHistory()->EnsureCorrectEntryAtCurrIndex(mLSHE);
   }
 
   // If this is a POST request, we do not want to include this in global
@@ -11167,15 +11103,19 @@ nsresult nsDocShell::UpdateURLAndHistory(Document* aDocument, nsIURI* aNewURI,
     nsPoint scrollPos = GetCurScrollPos();
     mOSHE->SetScrollPosition(scrollPos.x, scrollPos.y);
 
-    bool scrollRestorationIsManual = mOSHE->GetScrollRestorationIsManual();
+    bool scrollRestorationIsManual;
+    nsresult rv =
+        mOSHE->GetScrollRestorationIsManual(&scrollRestorationIsManual);
+    MOZ_ASSERT(NS_SUCCEEDED(rv), "Didn't expect this to fail.");
+
     nsCOMPtr<nsIContentSecurityPolicy> csp = aDocument->GetCsp();
 
     // Since we're not changing which page we have loaded, pass
     // true for aCloneChildren.
-    nsresult rv = AddToSessionHistory(
-        aNewURI, nullptr,
-        aDocument->NodePrincipal(),  // triggeringPrincipal
-        nullptr, nullptr, csp, true, getter_AddRefs(newSHEntry));
+    rv = AddToSessionHistory(aNewURI, nullptr,
+                             aDocument->NodePrincipal(),  // triggeringPrincipal
+                             nullptr, nullptr, csp, true,
+                             getter_AddRefs(newSHEntry));
     NS_ENSURE_SUCCESS(rv, rv);
 
     NS_ENSURE_TRUE(newSHEntry, NS_ERROR_FAILURE);
@@ -11242,19 +11182,8 @@ nsresult nsDocShell::UpdateURLAndHistory(Document* aDocument, nsIURI* aNewURI,
   // subtree that disables session history.
   RefPtr<ChildSHistory> rootSH = GetRootSessionHistory();
   if (rootSH) {
-    if (!aReplace) {
-      int32_t curIndex = rootSH->Index();
-      if (curIndex > -1) {
-        rootSH->LegacySHistory()->EvictOutOfRangeContentViewers(curIndex);
-      }
-    } else {
-      nsCOMPtr<nsISHEntry> rootSHEntry = nsSHistory::GetRootSHEntry(newSHEntry);
-
-      int32_t index = rootSH->LegacySHistory()->GetIndexOfEntry(rootSHEntry);
-      if (index > -1) {
-        rootSH->LegacySHistory()->ReplaceEntry(index, rootSHEntry);
-      }
-    }
+    rootSH->LegacySHistory()->EvictContentViewersOrReplaceEntry(newSHEntry,
+                                                                aReplace);
   }
 
   // Step 4: If the document's URI changed, update document's URI and update
@@ -11304,7 +11233,7 @@ NS_IMETHODIMP
 nsDocShell::GetCurrentScrollRestorationIsManual(bool* aIsManual) {
   *aIsManual = false;
   if (mOSHE) {
-    *aIsManual = mOSHE->GetScrollRestorationIsManual();
+    return mOSHE->GetScrollRestorationIsManual(aIsManual);
   }
 
   return NS_OK;
@@ -11394,24 +11323,19 @@ nsresult nsDocShell::AddToSessionHistory(
     // This is a subframe
     entry = mOSHE;
     if (entry) {
-      int32_t childCount = entry->GetChildCount();
-      // Remove all children of this entry
-      for (int32_t i = childCount - 1; i >= 0; i--) {
-        nsCOMPtr<nsISHEntry> child;
-        entry->GetChildAt(i, getter_AddRefs(child));
-        entry->RemoveChild(child);
-      }
-      entry->AbandonBFCacheEntry();
+      entry->ClearEntry();
     }
   }
 
   // Create a new entry if necessary.
   if (!entry) {
-    entry = components::SHEntry::Create();
+    nsCOMPtr<nsIWebNavigation> webnav = do_QueryInterface(root);
+    NS_ENSURE_TRUE(webnav, NS_ERROR_FAILURE);
 
-    if (!entry) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
+    RefPtr<ChildSHistory> shistory = webnav->GetSessionHistory();
+    entry = CreateSHEntryForDocShell(shistory ? shistory->LegacySHistory()
+                                              : nullptr);
+    NS_ENSURE_TRUE(entry, NS_ERROR_FAILURE);
   }
 
   // Get the post data & referrer
@@ -11425,7 +11349,7 @@ nsresult nsDocShell::AddToSessionHistory(
   nsCOMPtr<nsIPrincipal> principalToInherit = aPrincipalToInherit;
   nsCOMPtr<nsIPrincipal> storagePrincipalToInherit = aStoragePrincipalToInherit;
   nsCOMPtr<nsIContentSecurityPolicy> csp = aCsp;
-  bool expired = false;
+  bool expired = false;  // by default the page is not expired
   bool discardLayoutState = false;
   nsCOMPtr<nsICacheInfoChannel> cacheChannel;
   if (aChannel) {
@@ -11494,41 +11418,28 @@ nsresult nsDocShell::AddToSessionHistory(
     }
   }
 
-  // Title is set in nsDocShell::SetTitle()
-  entry->Create(aURI,                 // uri
-                EmptyString(),        // Title
-                inputStream,          // Post data stream
-                nullptr,              // LayoutHistory state
-                cacheKey,             // CacheKey
-                mContentTypeHint,     // Content-type
-                triggeringPrincipal,  // Channel or provided principal
-                principalToInherit, storagePrincipalToInherit, csp, mHistoryID,
-                mDynamicallyCreated);
+  nsAutoString srcdoc;
+  bool srcdocEntry = false;
+  nsCOMPtr<nsIURI> baseURI;
 
-  entry->SetOriginalURI(originalURI);
-  entry->SetResultPrincipalURI(resultPrincipalURI);
-  entry->SetLoadReplace(loadReplace);
-  entry->SetReferrerInfo(referrerInfo);
   nsCOMPtr<nsIInputStreamChannel> inStrmChan = do_QueryInterface(aChannel);
   if (inStrmChan) {
     bool isSrcdocChannel;
     inStrmChan->GetIsSrcdocChannel(&isSrcdocChannel);
     if (isSrcdocChannel) {
-      nsAutoString srcdoc;
       inStrmChan->GetSrcdocData(srcdoc);
-      entry->SetSrcdocData(srcdoc);
-      nsCOMPtr<nsIURI> baseURI;
+      srcdocEntry = true;
       inStrmChan->GetBaseURI(getter_AddRefs(baseURI));
-      entry->SetBaseURI(baseURI);
+    } else {
+      srcdoc.SetIsVoid(true);
     }
   }
   /* If cache got a 'no-store', ask SH not to store
    * HistoryLayoutState. By default, SH will set this
    * flag to true and save HistoryLayoutState.
    */
-  if (discardLayoutState) {
-    entry->SetSaveLayoutStateFlag(false);
-  }
+  bool saveLayoutState = !discardLayoutState;
+
   if (cacheChannel) {
     // Check if the page has expired from cache
     uint32_t expTime = 0;
@@ -11538,9 +11449,18 @@ nsresult nsDocShell::AddToSessionHistory(
       expired = true;
     }
   }
-  if (expired) {
-    entry->SetExpirationStatus(true);
-  }
+
+  // Title is set in nsDocShell::SetTitle()
+  entry->Create(aURI,                 // uri
+                EmptyString(),        // Title
+                inputStream,          // Post data stream
+                cacheKey,             // CacheKey
+                mContentTypeHint,     // Content-type
+                triggeringPrincipal,  // Channel or provided principal
+                principalToInherit, storagePrincipalToInherit, csp, HistoryID(),
+                mDynamicallyCreated, originalURI, resultPrincipalURI,
+                loadReplace, referrerInfo, srcdoc, srcdocEntry, baseURI,
+                saveLayoutState, expired);
 
   if (root == static_cast<nsIDocShellTreeItem*>(this) && mSessionHistory) {
     // If we need to clone our children onto the new session
@@ -11610,28 +11530,21 @@ nsresult nsDocShell::LoadHistoryEntry(nsISHEntry* aEntry, uint32_t aLoadType) {
   }
 
   NS_ENSURE_TRUE(aEntry, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsIURI> uri = aEntry->GetURI();
-  nsCOMPtr<nsIURI> originalURI = aEntry->GetOriginalURI();
-  nsCOMPtr<nsIURI> resultPrincipalURI = aEntry->GetResultPrincipalURI();
-  bool loadReplace = aEntry->GetLoadReplace();
-  nsCOMPtr<nsIInputStream> postData = aEntry->GetPostData();
-  nsAutoCString contentType;
-  aEntry->GetContentType(contentType);
-  nsCOMPtr<nsIPrincipal> triggeringPrincipal = aEntry->GetTriggeringPrincipal();
-  nsCOMPtr<nsIPrincipal> principalToInherit = aEntry->GetPrincipalToInherit();
-  nsCOMPtr<nsIPrincipal> storagePrincipalToInherit =
-      aEntry->GetStoragePrincipalToInherit();
-  nsCOMPtr<nsIContentSecurityPolicy> csp = aEntry->GetCsp();
-  nsCOMPtr<nsIReferrerInfo> referrerInfo = aEntry->GetReferrerInfo();
+  nsresult rv;
+  RefPtr<nsDocShellLoadState> loadState;
+  rv = aEntry->CreateLoadInfo(getter_AddRefs(loadState));
+  NS_ENSURE_SUCCESS(rv, rv);
+  // We are setting load type afterwards so we don't have to
+  // send it in an IPC message
+  loadState->SetLoadType(aLoadType);
 
   // Calling CreateAboutBlankContentViewer can set mOSHE to null, and if
   // that's the only thing holding a ref to aEntry that will cause aEntry to
   // die while we're loading it.  So hold a strong ref to aEntry here, just
   // in case.
   nsCOMPtr<nsISHEntry> kungFuDeathGrip(aEntry);
-  nsresult rv;
-  if (SchemeIsJavascript(uri)) {
+
+  if (SchemeIsJavascript(loadState->URI())) {
     // We're loading a URL that will execute script from inside asyncOpen.
     // Replace the current document with about:blank now to prevent
     // anything from the current document from leaking into any JavaScript
@@ -11639,9 +11552,9 @@ nsresult nsDocShell::LoadHistoryEntry(nsISHEntry* aEntry, uint32_t aLoadType) {
     // Don't cache the presentation if we're going to just reload the
     // current entry. Caching would lead to trying to save the different
     // content viewers in the same nsISHEntry object.
-    rv = CreateAboutBlankContentViewer(principalToInherit,
-                                       storagePrincipalToInherit, nullptr,
-                                       nullptr, aEntry != mOSHE);
+    rv = CreateAboutBlankContentViewer(loadState->PrincipalToInherit(),
+                                       loadState->StoragePrincipalToInherit(),
+                                       nullptr, nullptr, aEntry != mOSHE);
 
     if (NS_FAILED(rv)) {
       // The creation of the intermittent about:blank content
@@ -11650,11 +11563,13 @@ nsresult nsDocShell::LoadHistoryEntry(nsISHEntry* aEntry, uint32_t aLoadType) {
       return NS_OK;
     }
 
-    if (!triggeringPrincipal) {
+    if (!loadState->TriggeringPrincipal()) {
       // Ensure that we have a triggeringPrincipal.  Otherwise javascript:
       // URIs will pick it up from the about:blank page we just loaded,
       // and we don't really want even that in this case.
-      triggeringPrincipal = NullPrincipal::CreateWithInheritedAttributes(this);
+      nsCOMPtr<nsIPrincipal> principal =
+          NullPrincipal::CreateWithInheritedAttributes(this);
+      loadState->SetTriggeringPrincipal(principal);
     }
   }
 
@@ -11662,7 +11577,7 @@ nsresult nsDocShell::LoadHistoryEntry(nsISHEntry* aEntry, uint32_t aLoadType) {
    * reload or shift-reload, take user's permission before we
    * repost the data to the server.
    */
-  if ((aLoadType & LOAD_CMD_RELOAD) && postData) {
+  if ((aLoadType & LOAD_CMD_RELOAD) && loadState->PostDataStream()) {
     bool repost;
     rv = ConfirmRepost(&repost);
     if (NS_FAILED(rv)) {
@@ -11675,49 +11590,12 @@ nsresult nsDocShell::LoadHistoryEntry(nsISHEntry* aEntry, uint32_t aLoadType) {
     }
   }
 
-  // Do not inherit principal from document (security-critical!);
-  uint32_t flags = INTERNAL_LOAD_FLAGS_NONE;
-
-  nsAutoString srcdoc;
-  nsCOMPtr<nsIURI> baseURI;
-  if (aEntry->GetIsSrcdocEntry()) {
-    aEntry->GetSrcdocData(srcdoc);
-    baseURI = aEntry->GetBaseURI();
-    flags |= INTERNAL_LOAD_FLAGS_IS_SRCDOC;
-  } else {
-    srcdoc = VoidString();
-  }
-
   // If there is no valid triggeringPrincipal, we deny the load
-  MOZ_ASSERT(triggeringPrincipal,
+  MOZ_ASSERT(loadState->TriggeringPrincipal(),
              "need a valid triggeringPrincipal to load from history");
-  if (!triggeringPrincipal) {
+  if (!loadState->TriggeringPrincipal()) {
     return NS_ERROR_FAILURE;
   }
-
-  // Passing nullptr as aSourceDocShell gives the same behaviour as before
-  // aSourceDocShell was introduced. According to spec we should be passing
-  // the source browsing context that was used when the history entry was
-  // first created. bug 947716 has been created to address this issue.
-  Maybe<nsCOMPtr<nsIURI>> emplacedResultPrincipalURI;
-  emplacedResultPrincipalURI.emplace(std::move(resultPrincipalURI));
-
-  RefPtr<nsDocShellLoadState> loadState = new nsDocShellLoadState(uri);
-  loadState->SetReferrerInfo(referrerInfo);
-  loadState->SetOriginalURI(originalURI);
-  loadState->SetMaybeResultPrincipalURI(emplacedResultPrincipalURI);
-  loadState->SetLoadReplace(loadReplace);
-  loadState->SetTriggeringPrincipal(triggeringPrincipal);
-  loadState->SetPrincipalToInherit(principalToInherit);
-  loadState->SetLoadFlags(flags);
-  loadState->SetTypeHint(contentType);
-  loadState->SetPostDataStream(postData);
-  loadState->SetLoadType(aLoadType);
-  loadState->SetSHEntry(aEntry);
-  loadState->SetFirstParty(true);
-  loadState->SetSrcdocData(srcdoc);
-  loadState->SetBaseURI(baseURI);
-  loadState->SetCsp(csp);
 
   rv = InternalLoad(loadState,
                     nullptr,   // No nsIDocShell
@@ -11729,7 +11607,8 @@ nsresult nsDocShell::PersistLayoutHistoryState() {
   nsresult rv = NS_OK;
 
   if (mOSHE) {
-    bool scrollRestorationIsManual = mOSHE->GetScrollRestorationIsManual();
+    bool scrollRestorationIsManual;
+    Unused << mOSHE->GetScrollRestorationIsManual(&scrollRestorationIsManual);
     nsCOMPtr<nsILayoutHistoryState> layoutState;
     if (RefPtr<PresShell> presShell = GetPresShell()) {
       rv = presShell->CaptureHistoryState(getter_AddRefs(layoutState));
@@ -11767,7 +11646,7 @@ void nsDocShell::SetHistoryEntry(nsCOMPtr<nsISHEntry>* aPtr,
   // If we don't do this, then we can cache a content viewer on the wrong
   // cloned entry, and subsequently restore it at the wrong time.
 
-  nsISHEntry* newRootEntry = nsSHistory::GetRootSHEntry(aEntry);
+  nsCOMPtr<nsISHEntry> newRootEntry = nsSHistory::GetRootSHEntry(aEntry);
   if (newRootEntry) {
     // newRootEntry is now the new root entry.
     // Find the old root entry as well.

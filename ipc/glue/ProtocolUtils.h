@@ -876,6 +876,8 @@ class ManagedEndpoint {
 
   Maybe<int32_t> ActorId() const { return IsValid() ? Some(mId) : Nothing(); }
 
+  bool operator==(const ManagedEndpoint& _o) const { return mId == _o.mId; }
+
  private:
   friend struct IPC::ParamTraits<ManagedEndpoint<PFooSide>>;
 

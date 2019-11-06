@@ -40,6 +40,7 @@ class WebBrowserPersistRemoteDocument final
   using Attrs = WebBrowserPersistDocumentAttrs;
   WebBrowserPersistDocumentParent* mActor;
   Attrs mAttrs;
+  nsCOMPtr<nsISHEntry> mSHEntry;
   nsCOMPtr<nsIInputStream> mPostData;
   nsCOMPtr<nsIPrincipal> mPrincipal;
 

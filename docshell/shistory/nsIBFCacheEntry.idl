@@ -8,11 +8,9 @@
 /**
  * This interface lets you evict a document from the back/forward cache.
  */
-[scriptable, uuid(a576060e-c7df-4d81-aa8c-5b52bd6ad25d)]
+[scriptable, builtinclass, uuid(a576060e-c7df-4d81-aa8c-5b52bd6ad25d)]
 interface nsIBFCacheEntry : nsISupports
 {
   void RemoveFromBFCacheSync();
   void RemoveFromBFCacheAsync();
-
-  readonly attribute unsigned long long ID;
 };

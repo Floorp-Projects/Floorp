@@ -86,6 +86,8 @@ interface CanonicalBrowsingContext : BrowsingContext {
   [Throws]
   Promise<unsigned long long> changeFrameRemoteness(
       DOMString remoteType, unsigned long long pendingSwitchId);
+
+  readonly attribute nsISHistory? sessionHistory;
 };
 
 [Exposed=Window, ChromeOnly]
