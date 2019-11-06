@@ -1,9 +1,13 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { SearchTelemetry } = ChromeUtils.import(
   "resource:///modules/SearchTelemetry.jsm"
+);
+const { TelemetryTestUtils } = ChromeUtils.import(
+  "resource://testing-common/TelemetryTestUtils.jsm"
 );
 
 const TESTS = [
@@ -12,6 +16,18 @@ const TESTS = [
     trackingUrl:
       "https://www.google.com/search?q=test&ie=utf-8&oe=utf-8&client=firefox-b-1-ab",
     expectedSearchCountEntry: "google.in-content:sap:firefox-b-1-ab",
+    expectedAdKey: "google",
+    adUrls: [
+      "https://www.googleadservices.com/aclk=foobar",
+      "https://www.googleadservices.com/pagead/aclk=foobar",
+      "https://www.google.com/aclk=foobar",
+      "https://www.google.com/pagead/aclk=foobar",
+    ],
+    nonAdUrls: [
+      "https://www.googleadservices.com/?aclk=foobar",
+      "https://www.googleadservices.com/bar",
+      "https://www.google.com/image",
+    ],
   },
   {
     title: "Google search access point follow-on",
@@ -107,6 +123,54 @@ const TESTS = [
   },
 ];
 
+/**
+ * This function is primarily for testing the Ad URL regexps that are triggered
+ * when a URL is clicked on. These regexps are also used for the `with_ads`
+ * probe. However, we test the ad_clicks route as that is easier to hit.
+ *
+ * @param {string} serpUrl
+ *   The url to simulate where the page the click came from.
+ * @param {string} adUrl
+ *   The ad url to simulate being clicked.
+ * @param {string} [expectedAdKey]
+ *   The expected key to be logged for the scalar. Omit if no scalar should be
+ *   logged.
+ */
+async function testAdUrlClicked(serpUrl, adUrl, expectedAdKey) {
+  info(`Testing Ad URL: ${adUrl}`);
+  let channel = NetUtil.newChannel({
+    uri: NetUtil.newURI(adUrl),
+    triggeringPrincipal: Services.scriptSecurityManager.createContentPrincipal(
+      NetUtil.newURI(serpUrl),
+      {}
+    ),
+    loadUsingSystemPrincipal: true,
+  });
+  SearchTelemetry._contentHandler.observeActivity(
+    channel,
+    Ci.nsIHttpActivityObserver.ACTIVITY_TYPE_HTTP_TRANSACTION,
+    Ci.nsIHttpActivityObserver.ACTIVITY_SUBTYPE_RESPONSE_COMPLETE
+  );
+  // Since the content handler takes a moment to allow the channel information
+  // to settle down, wait the same amount of time here.
+  await new Promise(resolve => Services.tm.dispatchToMainThread(resolve));
+
+  const scalars = TelemetryTestUtils.getProcessScalars("parent", true, true);
+  if (!expectedAdKey) {
+    Assert.ok(
+      !("browser.search.ad_clicks" in scalars),
+      "Should not have recorded an ad click"
+    );
+  } else {
+    TelemetryTestUtils.assertKeyedScalar(
+      scalars,
+      "browser.search.ad_clicks",
+      expectedAdKey,
+      1
+    );
+  }
+}
+
 add_task(async function test_parsing_search_urls() {
   for (const test of TESTS) {
     info(`Running ${test.title}`);
@@ -122,6 +186,16 @@ add_task(async function test_parsing_search_urls() {
       test.expectedSearchCountEntry in hs,
       "The histogram must contain the correct key"
     );
+
+    if ("adUrls" in test) {
+      for (const adUrl of test.adUrls) {
+        await testAdUrlClicked(test.trackingUrl, adUrl, test.expectedAdKey);
+      }
+      for (const nonAdUrls of test.nonAdUrls) {
+        await testAdUrlClicked(test.trackingUrl, nonAdUrls);
+      }
+    }
+
     if (test.tearDown) {
       test.tearDown();
     }
