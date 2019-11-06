@@ -1001,13 +1001,29 @@ already_AddRefed<TransceiverImpl> PeerConnectionImpl::CreateTransceiverImpl(
     aSendTrack->AddPrincipalChangeObserver(this);
   }
 
+  // Set the principal used for the receive tracks. This makes the track
+  // data (audio/video samples) accessible to the receiving page. We're
+  // only certain that privacy has been requested if we're connected.
+  RefPtr<nsIPrincipal> principal;
+  Document* doc = GetWindow()->GetExtantDoc();
+  MOZ_ASSERT(doc);
+  const bool privacyRequested = mPrivacyRequested.valueOr(true);
+  if (privacyRequested) {
+    // We're either certain that we need isolation for the tracks, OR
+    // we're not sure and we can fix the track and pipeline in AlpnNegotiated.
+    principal =
+        NullPrincipal::CreateWithInheritedAttributes(doc->NodePrincipal());
+  } else {
+    principal = doc->NodePrincipal();
+  }
+
   OwningNonNull<dom::MediaStreamTrack> receiveTrack =
-      CreateReceiveTrack(aJsepTransceiver->GetMediaType());
+      CreateReceiveTrack(aJsepTransceiver->GetMediaType(), principal);
 
   RefPtr<TransceiverImpl> transceiverImpl;
-
-  aRv = mMedia->AddTransceiver(aJsepTransceiver, *receiveTrack, aSendTrack,
-                               &transceiverImpl);
+  aRv =
+      mMedia->AddTransceiver(aJsepTransceiver, *receiveTrack, aSendTrack,
+                             MakePrincipalHandle(principal), &transceiverImpl);
 
   return transceiverImpl.forget();
 }
@@ -1829,23 +1845,8 @@ static int GetDTMFToneCode(uint16_t c) {
 }
 
 OwningNonNull<dom::MediaStreamTrack> PeerConnectionImpl::CreateReceiveTrack(
-    SdpMediaSection::MediaType type) {
+    SdpMediaSection::MediaType type, nsIPrincipal* aPrincipal) {
   bool audio = (type == SdpMediaSection::MediaType::kAudio);
-
-  // Set the principal used for creating the tracks. This makes the track
-  // data (audio/video samples) accessible to the receiving page. We're
-  // only certain that privacy hasn't been requested if we're connected.
-  nsCOMPtr<nsIPrincipal> principal;
-  Document* doc = GetWindow()->GetExtantDoc();
-  MOZ_ASSERT(doc);
-  if (mPrivacyRequested.isSome() && !*mPrivacyRequested) {
-    principal = doc->NodePrincipal();
-  } else {
-    // we're either certain that we need isolation for the tracks, OR
-    // we're not sure and we can fix the track in SetDtlsConnected
-    principal =
-        NullPrincipal::CreateWithInheritedAttributes(doc->NodePrincipal());
-  }
 
   MediaTrackGraph* graph = MediaTrackGraph::GetInstance(
       audio ? MediaTrackGraph::AUDIO_THREAD_DRIVER
@@ -1857,13 +1858,13 @@ OwningNonNull<dom::MediaStreamTrack> PeerConnectionImpl::CreateReceiveTrack(
   if (audio) {
     RefPtr<SourceMediaTrack> source =
         graph->CreateSourceTrack(MediaSegment::AUDIO);
-    trackSource = new RemoteTrackSource(source, principal,
+    trackSource = new RemoteTrackSource(source, aPrincipal,
                                         NS_ConvertASCIItoUTF16("remote audio"));
     track = new AudioStreamTrack(GetWindow(), source, trackSource);
   } else {
     RefPtr<SourceMediaTrack> source =
         graph->CreateSourceTrack(MediaSegment::VIDEO);
-    trackSource = new RemoteTrackSource(source, principal,
+    trackSource = new RemoteTrackSource(source, aPrincipal,
                                         NS_ConvertASCIItoUTF16("remote video"));
     track = new VideoStreamTrack(GetWindow(), source, trackSource);
   }
