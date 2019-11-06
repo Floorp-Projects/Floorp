@@ -361,7 +361,7 @@ gfx.webrender:
       - kgupta@mozilla.com
     expires: never
 
-  render_time:
+  framebuild_time:
     type: timing_distribution
     time_unit: millisecond
     gecko_datapoint: WR_FRAMEBUILD_TIME
