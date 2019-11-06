@@ -20,6 +20,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/ServoBindingTypes.h"
 #include "mozilla/ServoUtils.h"
+#include "mozilla/ShadowParts.h"
 #include "mozilla/DeclarationBlock.h"
 #include "nsContentUtils.h"
 #include "nsReadableUtils.h"
@@ -281,6 +282,7 @@ void nsAttrValue::SetTo(const nsAttrValue& aOther) {
       cont->mValue.mColor = otherCont->mValue.mColor;
       break;
     }
+    case eShadowParts:
     case eCSSDeclaration: {
       MOZ_CRASH("These should be refcounted!");
     }
@@ -301,9 +303,10 @@ void nsAttrValue::SetTo(const nsAttrValue& aOther) {
       break;
     }
     case eIntMarginValue: {
-      if (otherCont->mValue.mIntMargin)
+      if (otherCont->mValue.mIntMargin) {
         cont->mValue.mIntMargin =
             new nsIntMargin(*otherCont->mValue.mIntMargin);
+      }
       break;
     }
     default: {
@@ -1155,12 +1158,23 @@ void nsAttrValue::ParseAtomArray(const nsAString& aValue) {
 void nsAttrValue::ParseStringOrAtom(const nsAString& aValue) {
   uint32_t len = aValue.Length();
   // Don't bother with atoms if it's an empty string since
-  // we can store those efficently anyway.
+  // we can store those efficiently anyway.
   if (len && len <= NS_ATTRVALUE_MAX_STRINGLENGTH_ATOM) {
     ParseAtom(aValue);
   } else {
     SetTo(aValue);
   }
+}
+
+void nsAttrValue::ParsePartMapping(const nsAString& aValue) {
+  ResetIfSet();
+  MiscContainer* cont = EnsureEmptyMiscContainer();
+
+  cont->mType = eShadowParts;
+  cont->mValue.mShadowParts = new ShadowParts(ShadowParts::Parse(aValue));
+  NS_ADDREF(cont);
+  SetMiscAtomOrString(&aValue);
+  MOZ_ASSERT(cont->mValue.mRefCount == 1);
 }
 
 void nsAttrValue::SetIntValueAndType(int32_t aValue, ValueType aType,
@@ -1738,6 +1752,12 @@ MiscContainer* nsAttrValue::ClearMiscContainer() {
           cont->Release();
           cont->Evict();
           NS_RELEASE(cont->mValue.mCSSDeclaration);
+          break;
+        }
+        case eShadowParts: {
+          MOZ_ASSERT(cont->mValue.mRefCount == 1);
+          cont->Release();
+          delete cont->mValue.mShadowParts;
           break;
         }
         case eURL: {

@@ -424,7 +424,7 @@ void nsLayoutStylesheetCache::InitSharedSheetsInParent() {
   // TODO(heycam): This won't be true on Windows unless we allow creating the
   // shared memory with SEC_RESERVE so that the pages are reserved but not
   // committed.
-  size_t pageSize = ipc::SharedMemory::SystemPageSize();
+  size_t pageSize = mozilla::ipc::SharedMemory::SystemPageSize();
   mUsedSharedMemory =
       (Servo_SharedMemoryBuilder_GetLength(builder.get()) + pageSize - 1) &
       ~(pageSize - 1);
