@@ -3619,6 +3619,7 @@ class Triplets extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureComponen
   render() {
     const {
       cards,
+      headerId,
       showCardPanel,
       showContent,
       sendUserActionTelemetry
@@ -3628,8 +3629,8 @@ class Triplets extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureComponen
     }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
       className: "trailheadCardsInner",
       "aria-hidden": !showContent
-    }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("h1", {
-      "data-l10n-id": "onboarding-welcome-header"
+    }, headerId && react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("h1", {
+      "data-l10n-id": headerId
     }), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
       className: `trailheadCardGrid${showContent ? " show" : ""}`
     }, cards.map(card => react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_templates_OnboardingMessage_OnboardingMessage__WEBPACK_IMPORTED_MODULE_1__["OnboardingCard"], _extends({
@@ -14697,12 +14698,14 @@ const helpers = {
   selectInterruptAndTriplets(message = {}, interruptCleared) {
     const hasInterrupt = interruptCleared === true ? false : Boolean(message.content);
     const hasTriplets = Boolean(message.bundle && message.bundle.length);
+    const tripletsHeaderId = message.tripletsHeaderId === undefined ? "onboarding-welcome-header" : message.tripletsHeaderId;
     const UTMTerm = message.utm_term || "";
     return {
       hasTriplets,
       hasInterrupt,
       interrupt: hasInterrupt ? message : null,
       triplets: hasTriplets ? message.bundle : null,
+      tripletsHeaderId,
       UTMTerm
     };
   },
@@ -14726,6 +14729,7 @@ class FirstRun_FirstRun extends external_React_default.a.PureComponent {
       hasTriplets: false,
       interrupt: undefined,
       triplets: undefined,
+      tripletsHeaderId: "",
       isInterruptVisible: false,
       isTripletsContainerVisible: false,
       isTripletsContentVisible: false,
@@ -14754,6 +14758,7 @@ class FirstRun_FirstRun extends external_React_default.a.PureComponent {
         hasInterrupt,
         interrupt,
         triplets,
+        tripletsHeaderId,
         UTMTerm
       } = helpers.selectInterruptAndTriplets(message, interruptCleared);
       return {
@@ -14763,6 +14768,7 @@ class FirstRun_FirstRun extends external_React_default.a.PureComponent {
         hasTriplets,
         interrupt,
         triplets,
+        tripletsHeaderId,
         isInterruptVisible: hasInterrupt,
         isTripletsContainerVisible: hasTriplets,
         isTripletsContentVisible: !(hasInterrupt || !hasTriplets),
@@ -14844,6 +14850,7 @@ class FirstRun_FirstRun extends external_React_default.a.PureComponent {
     const {
       interrupt,
       triplets,
+      tripletsHeaderId,
       isInterruptVisible,
       isTripletsContainerVisible,
       isTripletsContentVisible,
@@ -14866,6 +14873,7 @@ class FirstRun_FirstRun extends external_React_default.a.PureComponent {
     }) : null, hasTriplets ? external_React_default.a.createElement(Triplets["Triplets"], {
       document: props.document,
       cards: triplets,
+      headerId: tripletsHeaderId,
       showCardPanel: isTripletsContainerVisible,
       showContent: isTripletsContentVisible,
       hideContainer: this.closeTriplets,
