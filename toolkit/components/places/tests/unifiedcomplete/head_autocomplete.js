@@ -448,7 +448,7 @@ function makeActionURI(action, params) {
     encodedParams[key] = encodeURIComponent(params[key]);
   }
   let url = "moz-action:" + action + "," + JSON.stringify(encodedParams);
-  return NetUtil.newURI(url);
+  return Services.io.newURI(url);
 }
 
 // Creates a full "match" entry for a search result, suitable for passing as
