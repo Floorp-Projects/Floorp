@@ -1764,6 +1764,9 @@ set_define('MOZ_HAS_REMOTE', has_remote)
 # wasm sandboxing support
 # ==============================================================
 
+lucetc = check_prog('LUCETC', ['lucetc'],
+                    paths=toolchain_search_path, allow_missing=True)
+
 def wasm_sandboxing_libraries():
     return ('graphite',)
 
@@ -1772,9 +1775,12 @@ option('--with-wasm-sandboxed-libraries',
        nargs='+',
        choices=dependable(wasm_sandboxing_libraries))
 
-@depends('--with-wasm-sandboxed-libraries')
-def requires_wasm_sandboxing(libraries):
+@depends('--with-wasm-sandboxed-libraries', lucetc)
+def requires_wasm_sandboxing(libraries, lucetc):
     if libraries:
+        if not lucetc:
+            die('--with-wasm-sandboxed-libraries is enabled, but lucetc could '
+                'not be found.')
         return True
 
 set_config('MOZ_USING_WASM_SANDBOXING', requires_wasm_sandboxing)
