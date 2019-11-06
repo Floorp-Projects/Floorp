@@ -310,7 +310,7 @@ class PeerConnectionImpl final
       ErrorResult& rv);
 
   OwningNonNull<dom::MediaStreamTrack> CreateReceiveTrack(
-      SdpMediaSection::MediaType type);
+      SdpMediaSection::MediaType type, nsIPrincipal* aPrincipal);
 
   bool CheckNegotiationNeeded(ErrorResult& rv);
 
