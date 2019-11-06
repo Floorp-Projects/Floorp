@@ -64,6 +64,9 @@ add_task(async function testReportBreakageCancel() {
   Services.prefs.setBoolPref(TP_PREF, true);
 
   await BrowserTestUtils.withNewTab(TRACKING_PAGE, async function() {
+    await TestUtils.waitForCondition(() =>
+      gProtectionsHandler._protectionsPopup.hasAttribute("blocking")
+    );
     await openProtectionsPopup();
 
     let siteNotWorkingButton = document.getElementById(
@@ -206,13 +209,16 @@ async function testReportBreakage(url, tags, error = false) {
 
   Services.prefs.setStringPref(PREF_REPORT_BREAKAGE_URL, path);
 
+  await TestUtils.waitForCondition(() =>
+    gProtectionsHandler._protectionsPopup.hasAttribute("blocking")
+  );
   await openProtectionsPopup();
 
   let siteNotWorkingButton = document.getElementById(
     "protections-popup-tp-switch-breakage-link"
   );
-  await TestUtils.waitForCondition(
-    () => BrowserTestUtils.is_visible(siteNotWorkingButton),
+  ok(
+    BrowserTestUtils.is_visible(siteNotWorkingButton),
     "site not working button is visible"
   );
   let siteNotWorkingView = document.getElementById(
