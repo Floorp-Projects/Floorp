@@ -9,6 +9,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Update
 
 /**
  * Internal DAO for accessing [ManifestEntity] instances.
@@ -22,6 +23,10 @@ internal interface ManifestDao {
     @WorkerThread
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertManifest(manifest: ManifestEntity): Long
+
+    @WorkerThread
+    @Update
+    fun updateManifest(manifest: ManifestEntity)
 
     @WorkerThread
     @Query("DELETE FROM manifests WHERE start_url IN (:startUrls)")

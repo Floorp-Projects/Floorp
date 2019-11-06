@@ -18,6 +18,8 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.`when`
+import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 
@@ -51,6 +53,37 @@ class ManifestStorageTest {
 
         storage.saveManifest(manifest)
         verify(dao).insertManifest(any())
+        Unit
+    }
+
+    @Test
+    fun `update replaces the manifest as JSON`() = runBlocking {
+        val storage = spy(ManifestStorage(testContext))
+        val dao = mockDatabase(storage)
+        val manifest = WebAppManifest(name = "Firefox", startUrl = "https://firefox.com")
+        val existing = ManifestEntity(
+            manifest = manifest,
+            createdAt = 0,
+            updatedAt = 0
+        )
+
+        `when`(dao.getManifest("https://firefox.com")).thenReturn(existing)
+
+        storage.updateManifest(manifest)
+        verify(dao).updateManifest(any())
+        Unit
+    }
+
+    @Test
+    fun `update does not replace non-existed manifest`() = runBlocking {
+        val storage = spy(ManifestStorage(testContext))
+        val dao = mockDatabase(storage)
+        val manifest = WebAppManifest(name = "Firefox", startUrl = "https://firefox.com")
+
+        `when`(dao.getManifest("https://firefox.com")).thenReturn(null)
+
+        storage.updateManifest(manifest)
+        verify(dao, never()).updateManifest(any())
         Unit
     }
 

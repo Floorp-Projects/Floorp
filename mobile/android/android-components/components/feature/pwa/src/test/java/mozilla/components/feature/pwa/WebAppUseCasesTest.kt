@@ -29,7 +29,7 @@ class WebAppUseCasesTest {
         val sessionManager: SessionManager = mock()
         `when`(sessionManager.selectedSession).thenReturn(session)
 
-        val webAppUseCases = WebAppUseCases(testContext, sessionManager, mock())
+        val webAppUseCases = WebAppUseCases(testContext, sessionManager, mock<WebAppShortcutManager>())
         assertFalse(webAppUseCases.isInstallable())
     }
 
@@ -51,10 +51,14 @@ class WebAppUseCasesTest {
         val sessionManager: SessionManager = mock()
         `when`(sessionManager.selectedSession).thenReturn(session)
 
-        val webAppUseCases = WebAppUseCases(testContext, sessionManager, mock())
+        val shortcutManager: WebAppShortcutManager = mock()
+        `when`(shortcutManager.supportWebApps).thenReturn(true)
+
+        val webAppUseCases = WebAppUseCases(testContext, sessionManager, shortcutManager)
         assertTrue(webAppUseCases.isInstallable())
     }
 
+    @Suppress("Deprecation")
     @Test
     fun `isInstallable returns false if supportWebApps is false`() {
         val manifest = WebAppManifest(
@@ -73,7 +77,10 @@ class WebAppUseCasesTest {
         val sessionManager: SessionManager = mock()
         `when`(sessionManager.selectedSession).thenReturn(session)
 
-        val webAppUseCases = WebAppUseCases(testContext, sessionManager, mock(), supportWebApps = false)
-        assertFalse(webAppUseCases.isInstallable())
+        val shortcutManager: WebAppShortcutManager = mock()
+        `when`(shortcutManager.supportWebApps).thenReturn(false)
+
+        assertFalse(WebAppUseCases(testContext, sessionManager, shortcutManager).isInstallable())
+        assertFalse(WebAppUseCases(testContext, sessionManager, mock(), supportWebApps = false).isInstallable())
     }
 }
