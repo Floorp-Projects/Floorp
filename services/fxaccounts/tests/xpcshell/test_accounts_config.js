@@ -15,8 +15,8 @@ add_task(
       "http://example.com/"
     );
     Assert.equal(
-      await FxAccounts.config.promiseConnectAccountURI("test"),
-      "http://example.com/?service=sync&context=null&entrypoint=test&action=email"
+      await FxAccounts.config.promiseSignUpURI("test"),
+      "http://example.com/signup?service=sync&context=null&entrypoint=test"
     );
 
     Services.prefs.clearUserPref("identity.fxaccounts.remote.root");
@@ -30,7 +30,7 @@ add_task(async function test_non_https_remote_server_uri() {
     "http://example.com/"
   );
   await Assert.rejects(
-    FxAccounts.config.promiseConnectAccountURI(),
+    FxAccounts.config.promiseSignUpURI(),
     /Firefox Accounts server must use HTTPS/
   );
   Services.prefs.clearUserPref("identity.fxaccounts.remote.root");

@@ -28,7 +28,7 @@ describe("BookmarkPanelHub", () => {
       return fakeL10n;
     }); // eslint-disable-line prefer-arrow-callback
     globals.set("FxAccounts", {
-      config: { promiseConnectAccountURI: sandbox.stub() },
+      config: { promiseEmailFirstURI: sandbox.stub() },
     });
     isBrowserPrivateStub = sandbox.stub().returns(false);
     globals.set("PrivateBrowsingUtils", {

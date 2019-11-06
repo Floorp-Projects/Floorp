@@ -707,7 +707,7 @@ var gSync = {
   },
 
   async openFxAEmailFirstPage(entryPoint) {
-    const url = await FxAccounts.config.promiseConnectAccountURI(entryPoint);
+    const url = await FxAccounts.config.promiseEmailFirstURI(entryPoint);
     switchToTabHavingURI(url, true, { replaceQueryString: true });
   },
 

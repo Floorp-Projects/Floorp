@@ -133,6 +133,12 @@ var gSyncPane = {
       }
     }
 
+    FxAccounts.config
+      .promiseSignUpURI(this._getEntryPoint())
+      .then(signUpURI => {
+        document.getElementById("noFxaSignUp").setAttribute("href", signUpURI);
+      });
+
     this.updateWeavePrefs();
 
     // Notify observers that the UI is now ready
@@ -450,9 +456,7 @@ var gSyncPane = {
   },
 
   async signIn() {
-    const url = await FxAccounts.config.promiseConnectAccountURI(
-      this._getEntryPoint()
-    );
+    const url = await FxAccounts.config.promiseSignInURI(this._getEntryPoint());
     this.replaceTabWithUrl(url);
   },
 
@@ -464,7 +468,7 @@ var gSyncPane = {
     let entryPoint = this._getEntryPoint();
     const url =
       (await FxAccounts.config.promiseForceSigninURI(entryPoint)) ||
-      (await FxAccounts.config.promiseConnectAccountURI(entryPoint));
+      (await FxAccounts.config.promiseSignInURI(entryPoint));
     this.replaceTabWithUrl(url);
   },
 

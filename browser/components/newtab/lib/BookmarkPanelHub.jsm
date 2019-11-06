@@ -137,9 +137,7 @@ class _BookmarkPanelHub {
       recommendation.setAttribute("id", "cfrMessageContainer");
       recommendation.addEventListener("click", async e => {
         target.hidePopup();
-        const url = await FxAccounts.config.promiseConnectAccountURI(
-          "bookmark"
-        );
+        const url = await FxAccounts.config.promiseEmailFirstURI("bookmark");
         win.ownerGlobal.openLinkIn(url, "tabshifted", {
           private: false,
           triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal(
