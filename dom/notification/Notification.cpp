@@ -511,6 +511,14 @@ NotificationPermissionRequest::Run() {
       break;
   }
 
+  if (!mIsHandlingUserInput &&
+      !StaticPrefs::dom_webnotifications_requireuserinteraction()) {
+    nsCOMPtr<Document> doc = mWindow->GetExtantDoc();
+    if (doc) {
+      doc->WarnOnceAbout(Document::eNotificationsRequireUserGestureDeprecation);
+    }
+  }
+
   // Check this after checking the prompt prefs to make sure this pref overrides
   // those.  We rely on this for testing purposes.
   if (!isSystem && !blocked &&
