@@ -1842,6 +1842,10 @@ void ClientAuthDataRunnable::RunOnTargetThread() {
   if (mRV != SECSuccess) {
     return;
   }
+  mRV = CERT_FilterCertListByUsage(certList.get(), certUsageSSLClient, false);
+  if (mRV != SECSuccess) {
+    return;
+  }
   if (CERT_LIST_EMPTY(certList)) {
     return;
   }
