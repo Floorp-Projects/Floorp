@@ -176,7 +176,7 @@ class WebrtcAudioConduit : public AudioSessionConduit,
   void DeleteStreams() override {}
 
   WebrtcAudioConduit(RefPtr<WebRtcCallWrapper> aCall,
-                     nsCOMPtr<nsISerialEventTarget> aStsThread)
+                     nsCOMPtr<nsIEventTarget> aStsThread)
       : mTransportMonitor("WebrtcAudioConduit"),
         mTransmitterTransport(nullptr),
         mReceiverTransport(nullptr),
@@ -353,7 +353,7 @@ class WebrtcAudioConduit : public AudioSessionConduit,
   RtpSourceObserver mRtpSourceObserver;
 
   // Socket transport service thread. Any thread.
-  const nsCOMPtr<nsISerialEventTarget> mStsThread;
+  const nsCOMPtr<nsIEventTarget> mStsThread;
 
   // Accessed from mStsThread. Last successfully polled RTT
   Maybe<DOMHighResTimeStamp> mRttSec;

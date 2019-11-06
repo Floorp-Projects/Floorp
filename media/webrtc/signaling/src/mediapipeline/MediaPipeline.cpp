@@ -30,7 +30,6 @@
 #include "VideoStreamTrack.h"
 #include "VideoUtils.h"
 #include "mozilla/Logging.h"
-#include "mozilla/NullPrincipal.h"
 #include "mozilla/PeerIdentity.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/SharedThreadPool.h"
@@ -74,8 +73,8 @@ class AudioProxyThread {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AudioProxyThread)
 
-  explicit AudioProxyThread(RefPtr<AudioSessionConduit> aConduit)
-      : mConduit(std::move(aConduit)),
+  explicit AudioProxyThread(AudioSessionConduit* aConduit)
+      : mConduit(aConduit),
         mTaskQueue(new TaskQueue(
             GetMediaThreadPool(MediaThreadType::WEBRTC_DECODER), "AudioProxy")),
         mAudioConverter(nullptr) {
@@ -95,14 +94,13 @@ class AudioProxyThread {
     }
     if (aInputRate < 16000) {
       return 16000;
-    }
-    if (aInputRate < 32000) {
+    } else if (aInputRate < 32000) {
       return 32000;
-    }
-    if (aInputRate < 44100) {
+    } else if (aInputRate < 44100) {
       return 44100;
+    } else {
+      return 48000;
     }
-    return 48000;
   }
 
   // From an arbitrary AudioChunk at sampling-rate aRate, process the audio into
@@ -240,18 +238,18 @@ class AudioProxyThread {
 };
 
 MediaPipeline::MediaPipeline(const std::string& aPc,
-                             RefPtr<MediaTransportHandler> aTransportHandler,
+                             MediaTransportHandler* aTransportHandler,
                              DirectionType aDirection,
-                             RefPtr<nsISerialEventTarget> aMainThread,
-                             RefPtr<nsISerialEventTarget> aStsThread,
+                             nsCOMPtr<nsIEventTarget> aMainThread,
+                             nsCOMPtr<nsIEventTarget> aStsThread,
                              RefPtr<MediaSessionConduit> aConduit)
     : mDirection(aDirection),
       mLevel(0),
-      mTransportHandler(std::move(aTransportHandler)),
-      mConduit(std::move(aConduit)),
-      mMainThread(std::move(aMainThread)),
+      mTransportHandler(aTransportHandler),
+      mConduit(aConduit),
+      mMainThread(aMainThread),
       mStsThread(aStsThread),
-      mTransport(new PipelineTransport(std::move(aStsThread))),
+      mTransport(new PipelineTransport(aStsThread)),
       mRtpPacketsSent(0),
       mRtcpPacketsSent(0),
       mRtpPacketsReceived(0),
@@ -301,17 +299,17 @@ void MediaPipeline::DetachTransport_s() {
   mPacketDumper = nullptr;
 }
 
-void MediaPipeline::UpdateTransport_m(
-    const std::string& aTransportId, UniquePtr<MediaPipelineFilter>&& aFilter) {
-  mStsThread->Dispatch(NS_NewRunnableFunction(
-      __func__, [aTransportId, filter = std::move(aFilter),
-                 self = RefPtr<MediaPipeline>(this)]() mutable {
-        self->UpdateTransport_s(aTransportId, std::move(filter));
-      }));
+void MediaPipeline::UpdateTransport_m(const std::string& aTransportId,
+                                      nsAutoPtr<MediaPipelineFilter> aFilter) {
+  RUN_ON_THREAD(
+      mStsThread,
+      WrapRunnable(RefPtr<MediaPipeline>(this),
+                   &MediaPipeline::UpdateTransport_s, aTransportId, aFilter),
+      NS_DISPATCH_NORMAL);
 }
 
-void MediaPipeline::UpdateTransport_s(
-    const std::string& aTransportId, UniquePtr<MediaPipelineFilter>&& aFilter) {
+void MediaPipeline::UpdateTransport_s(const std::string& aTransportId,
+                                      nsAutoPtr<MediaPipelineFilter> aFilter) {
   ASSERT_ON_THREAD(mStsThread);
   if (!mSignalsConnected) {
     mTransportHandler->SignalStateChange.connect(
@@ -322,8 +320,6 @@ void MediaPipeline::UpdateTransport_s(
         this, &MediaPipeline::EncryptedPacketSending);
     mTransportHandler->SignalPacketReceived.connect(
         this, &MediaPipeline::PacketReceived);
-    mTransportHandler->SignalAlpnNegotiated.connect(
-        this, &MediaPipeline::AlpnNegotiated);
     mSignalsConnected = true;
   }
 
@@ -339,7 +335,7 @@ void MediaPipeline::UpdateTransport_s(
     // by receiving traffic.
     mFilter->Update(*aFilter);
   } else {
-    mFilter = std::move(aFilter);
+    mFilter = aFilter;
   }
 }
 
@@ -363,7 +359,7 @@ void MediaPipeline::AddRIDFilter_m(const std::string& aRid) {
 }
 
 void MediaPipeline::AddRIDFilter_s(const std::string& aRid) {
-  mFilter = MakeUnique<MediaPipelineFilter>();
+  mFilter = new MediaPipelineFilter;
   mFilter->AddRemoteRtpStreamId(aRid);
 }
 
@@ -642,13 +638,6 @@ void MediaPipeline::PacketReceived(const std::string& aTransportId,
   }
 }
 
-void MediaPipeline::AlpnNegotiated(const std::string& aAlpn,
-                                   bool aPrivacyRequested) {
-  if (aPrivacyRequested) {
-    MakePrincipalPrivate_s();
-  }
-}
-
 void MediaPipeline::EncryptedPacketSending(const std::string& aTransportId,
                                            MediaPacket& aPacket) {
   if (mTransportId == aTransportId) {
@@ -673,8 +662,8 @@ class MediaPipelineTransmit::PipelineListener
   friend class MediaPipelineTransmit;
 
  public:
-  explicit PipelineListener(RefPtr<MediaSessionConduit> aConduit)
-      : mConduit(std::move(aConduit)),
+  explicit PipelineListener(const RefPtr<MediaSessionConduit>& aConduit)
+      : mConduit(aConduit),
         mActive(false),
         mEnabled(false),
         mDirectConnect(false) {}
@@ -697,12 +686,12 @@ class MediaPipelineTransmit::PipelineListener
 
   // These are needed since nested classes don't have access to any particular
   // instance of the parent
-  void SetAudioProxy(RefPtr<AudioProxyThread> aProxy) {
-    mAudioProcessing = std::move(aProxy);
+  void SetAudioProxy(const RefPtr<AudioProxyThread>& aProxy) {
+    mAudioProcessing = aProxy;
   }
 
-  void SetVideoFrameConverter(RefPtr<VideoFrameConverter> aConverter) {
-    mConverter = std::move(aConverter);
+  void SetVideoFrameConverter(const RefPtr<VideoFrameConverter>& aConverter) {
+    mConverter = aConverter;
   }
 
   void OnVideoFrameConverted(const webrtc::VideoFrame& aVideoFrame) {
@@ -748,8 +737,8 @@ class MediaPipelineTransmit::PipelineListener
 // no cyclic dependencies between us and PipelineListener.
 class MediaPipelineTransmit::VideoFrameFeeder : public VideoConverterListener {
  public:
-  explicit VideoFrameFeeder(RefPtr<PipelineListener> aListener)
-      : mMutex("VideoFrameFeeder"), mListener(std::move(aListener)) {
+  explicit VideoFrameFeeder(const RefPtr<PipelineListener>& aListener)
+      : mMutex("VideoFrameFeeder"), mListener(aListener) {
     MOZ_COUNT_CTOR(VideoFrameFeeder);
   }
 
@@ -777,25 +766,24 @@ class MediaPipelineTransmit::VideoFrameFeeder : public VideoConverterListener {
 };
 
 MediaPipelineTransmit::MediaPipelineTransmit(
-    const std::string& aPc, RefPtr<MediaTransportHandler> aTransportHandler,
-    RefPtr<nsISerialEventTarget> aMainThread,
-    RefPtr<nsISerialEventTarget> aStsThread, bool aIsVideo,
-    RefPtr<MediaSessionConduit> aConduit)
-    : MediaPipeline(aPc, std::move(aTransportHandler), DirectionType::TRANSMIT,
-                    std::move(aMainThread), std::move(aStsThread),
-                    std::move(aConduit)),
+    const std::string& aPc, MediaTransportHandler* aTransportHandler,
+    nsCOMPtr<nsIEventTarget> aMainThread, nsCOMPtr<nsIEventTarget> aStsThread,
+    bool aIsVideo, RefPtr<MediaSessionConduit> aConduit)
+    : MediaPipeline(aPc, aTransportHandler, DirectionType::TRANSMIT,
+                    aMainThread, aStsThread, aConduit),
       mIsVideo(aIsVideo),
-      mListener(new PipelineListener(mConduit)),
+      mListener(new PipelineListener(aConduit)),
       mFeeder(aIsVideo ? MakeAndAddRef<VideoFrameFeeder>(mListener)
-                       : nullptr),  // For video we send frames to an
-                                    // async VideoFrameConverter that
-                                    // calls back to a VideoFrameFeeder
-                                    // that feeds I420 frames to
-                                    // VideoConduit.
+                       : nullptr)  // For video we send frames to an
+                                   // async VideoFrameConverter that
+                                   // calls back to a VideoFrameFeeder
+                                   // that feeds I420 frames to
+                                   // VideoConduit.
+      ,
       mTransmitting(false) {
   if (!IsVideo()) {
     mAudioProcessing = MakeAndAddRef<AudioProxyThread>(
-        static_cast<AudioSessionConduit*>(Conduit()));
+        static_cast<AudioSessionConduit*>(aConduit.get()));
     mListener->SetAudioProxy(mAudioProcessing);
   } else {  // Video
     mConverter = MakeAndAddRef<VideoFrameConverter>();
@@ -958,7 +946,7 @@ void MediaPipelineTransmit::TransportReady_s() {
   mListener->SetActive(true);
 }
 
-nsresult MediaPipelineTransmit::SetTrack(RefPtr<MediaStreamTrack> aDomTrack) {
+nsresult MediaPipelineTransmit::SetTrack(MediaStreamTrack* aDomTrack) {
   // MainThread, checked in calls we make
   if (aDomTrack) {
     nsString nsTrackId;
@@ -974,7 +962,7 @@ nsresult MediaPipelineTransmit::SetTrack(RefPtr<MediaStreamTrack> aDomTrack) {
   RefPtr<dom::MediaStreamTrack> oldTrack = mDomTrack;
   bool wasTransmitting = oldTrack && mTransmitting;
   Stop();
-  mDomTrack = std::move(aDomTrack);
+  mDomTrack = aDomTrack;
   SetDescription();
 
   if (wasTransmitting) {
@@ -985,23 +973,23 @@ nsresult MediaPipelineTransmit::SetTrack(RefPtr<MediaStreamTrack> aDomTrack) {
 
 nsresult MediaPipeline::PipelineTransport::SendRtpPacket(const uint8_t* aData,
                                                          size_t aLen) {
-  MediaPacket packet;
-  packet.Copy(aData, aLen, aLen + SRTP_MAX_EXPANSION);
-  packet.SetType(MediaPacket::RTP);
+  nsAutoPtr<MediaPacket> packet(new MediaPacket);
+  packet->Copy(aData, aLen, aLen + SRTP_MAX_EXPANSION);
+  packet->SetType(MediaPacket::RTP);
 
-  mStsThread->Dispatch(NS_NewRunnableFunction(
-      __func__,
-      [packet = std::move(packet),
-       self = RefPtr<MediaPipeline::PipelineTransport>(this)]() mutable {
-        self->SendRtpRtcpPacket_s(std::move(packet));
-      }));
+  RUN_ON_THREAD(
+      mStsThread,
+      WrapRunnable(RefPtr<MediaPipeline::PipelineTransport>(this),
+                   &MediaPipeline::PipelineTransport::SendRtpRtcpPacket_s,
+                   packet),
+      NS_DISPATCH_NORMAL);
 
   return NS_OK;
 }
 
 void MediaPipeline::PipelineTransport::SendRtpRtcpPacket_s(
-    MediaPacket&& aPacket) {
-  bool isRtp = aPacket.type() == MediaPacket::RTP;
+    nsAutoPtr<MediaPacket> aPacket) {
+  bool isRtp = aPacket->type() == MediaPacket::RTP;
 
   ASSERT_ON_THREAD(mStsThread);
   if (!mPipeline) {
@@ -1016,21 +1004,22 @@ void MediaPipeline::PipelineTransport::SendRtpRtcpPacket_s(
     return;
   }
 
-  aPacket.sdp_level() = Some(mPipeline->Level());
+  MediaPacket packet(std::move(*aPacket));
+  packet.sdp_level() = Some(mPipeline->Level());
 
   if (RtpLogger::IsPacketLoggingOn()) {
-    RtpLogger::LogPacket(aPacket, false, mPipeline->mDescription);
+    RtpLogger::LogPacket(packet, false, mPipeline->mDescription);
   }
 
   if (isRtp) {
     mPipeline->mPacketDumper->Dump(mPipeline->Level(),
                                    dom::mozPacketDumpType::Rtp, true,
-                                   aPacket.data(), aPacket.len());
-    mPipeline->IncrementRtpPacketsSent(aPacket.len());
+                                   packet.data(), packet.len());
+    mPipeline->IncrementRtpPacketsSent(packet.len());
   } else {
     mPipeline->mPacketDumper->Dump(mPipeline->Level(),
                                    dom::mozPacketDumpType::Rtcp, true,
-                                   aPacket.data(), aPacket.len());
+                                   packet.data(), packet.len());
     mPipeline->IncrementRtcpPacketsSent();
   }
 
@@ -1038,21 +1027,21 @@ void MediaPipeline::PipelineTransport::SendRtpRtcpPacket_s(
           ("%s sending %s packet", mPipeline->mDescription.c_str(),
            (isRtp ? "RTP" : "RTCP")));
 
-  mPipeline->SendPacket(std::move(aPacket));
+  mPipeline->SendPacket(std::move(packet));
 }
 
 nsresult MediaPipeline::PipelineTransport::SendRtcpPacket(const uint8_t* aData,
                                                           size_t aLen) {
-  MediaPacket packet;
-  packet.Copy(aData, aLen, aLen + SRTP_MAX_EXPANSION);
-  packet.SetType(MediaPacket::RTCP);
+  nsAutoPtr<MediaPacket> packet(new MediaPacket);
+  packet->Copy(aData, aLen, aLen + SRTP_MAX_EXPANSION);
+  packet->SetType(MediaPacket::RTCP);
 
-  mStsThread->Dispatch(NS_NewRunnableFunction(
-      __func__,
-      [packet = std::move(packet),
-       self = RefPtr<MediaPipeline::PipelineTransport>(this)]() mutable {
-        self->SendRtpRtcpPacket_s(std::move(packet));
-      }));
+  RUN_ON_THREAD(
+      mStsThread,
+      WrapRunnable(RefPtr<MediaPipeline::PipelineTransport>(this),
+                   &MediaPipeline::PipelineTransport::SendRtpRtcpPacket_s,
+                   packet),
+      NS_DISPATCH_NORMAL);
 
   return NS_OK;
 }
@@ -1173,14 +1162,13 @@ void MediaPipelineTransmit::PipelineListener::NewData(
 
 class GenericReceiveListener : public MediaTrackListener {
  public:
-  explicit GenericReceiveListener(RefPtr<nsISerialEventTarget> aMainThread,
-                                  const RefPtr<dom::MediaStreamTrack>& aTrack)
-      : mMainThread(std::move(aMainThread)),
-        mTrackSource(new nsMainThreadPtrHolder<RemoteTrackSource>(
+  explicit GenericReceiveListener(dom::MediaStreamTrack* aTrack)
+      : mTrackSource(new nsMainThreadPtrHolder<RemoteTrackSource>(
             "GenericReceiveListener::mTrackSource",
             &static_cast<RemoteTrackSource&>(aTrack->GetSource()))),
         mSource(mTrackSource->mStream),
         mIsAudio(aTrack->AsAudioStreamTrack()),
+        mPrincipalHandle(PRINCIPAL_HANDLE_NONE),
         mListening(false),
         mMaybeTrackNeedsUnmute(true) {
     MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
@@ -1213,7 +1201,7 @@ class GenericReceiveListener : public MediaTrackListener {
   void OnRtpReceived() {
     if (mMaybeTrackNeedsUnmute) {
       mMaybeTrackNeedsUnmute = false;
-      mMainThread->Dispatch(
+      NS_DispatchToMainThread(
           NewRunnableMethod("GenericReceiveListener::OnRtpReceived_m", this,
                             &GenericReceiveListener::OnRtpReceived_m));
     }
@@ -1236,42 +1224,63 @@ class GenericReceiveListener : public MediaTrackListener {
       mSource->Destroy();
     }
 
-    mMainThread->Dispatch(NewRunnableMethod("RemoteTrackSource::ForceEnded",
-                                            mTrackSource.get(),
-                                            &RemoteTrackSource::ForceEnded));
+    NS_DispatchToMainThread(NewRunnableMethod("RemoteTrackSource::ForceEnded",
+                                              mTrackSource.get(),
+                                              &RemoteTrackSource::ForceEnded));
+  }
+
+  // Must be called on the main thread
+  void SetPrincipalHandle_m(const PrincipalHandle& aPrincipalHandle) {
+    class Message : public ControlMessage {
+     public:
+      Message(GenericReceiveListener* aListener,
+              const PrincipalHandle& aPrincipalHandle)
+          : ControlMessage(nullptr),
+            mListener(aListener),
+            mPrincipalHandle(aPrincipalHandle) {}
+
+      void Run() override {
+        mListener->SetPrincipalHandle_mtg(mPrincipalHandle);
+      }
+
+      const RefPtr<GenericReceiveListener> mListener;
+      PrincipalHandle mPrincipalHandle;
+    };
+
+    mSource->GraphImpl()->AppendMessage(
+        MakeUnique<Message>(this, aPrincipalHandle));
+  }
+
+  // Must be called on the MediaTrackGraph thread
+  void SetPrincipalHandle_mtg(const PrincipalHandle& aPrincipalHandle) {
+    mPrincipalHandle = aPrincipalHandle;
   }
 
  protected:
-  const RefPtr<nsISerialEventTarget> mMainThread;
   const nsMainThreadPtrHandle<RemoteTrackSource> mTrackSource;
   const RefPtr<SourceMediaTrack> mSource;
   const bool mIsAudio;
-  // Main thread only.
+  PrincipalHandle mPrincipalHandle;
   bool mListening;
-  // Any thread.
   Atomic<bool> mMaybeTrackNeedsUnmute;
 };
 
 MediaPipelineReceive::MediaPipelineReceive(
-    const std::string& aPc, RefPtr<MediaTransportHandler> aTransportHandler,
-    RefPtr<nsISerialEventTarget> aMainThread,
-    RefPtr<nsISerialEventTarget> aStsThread,
+    const std::string& aPc, MediaTransportHandler* aTransportHandler,
+    nsCOMPtr<nsIEventTarget> aMainThread, nsCOMPtr<nsIEventTarget> aStsThread,
     RefPtr<MediaSessionConduit> aConduit)
-    : MediaPipeline(aPc, std::move(aTransportHandler), DirectionType::RECEIVE,
-                    std::move(aMainThread), std::move(aStsThread),
-                    std::move(aConduit)) {}
+    : MediaPipeline(aPc, aTransportHandler, DirectionType::RECEIVE, aMainThread,
+                    aStsThread, aConduit) {}
 
-MediaPipelineReceive::~MediaPipelineReceive() = default;
+MediaPipelineReceive::~MediaPipelineReceive() {}
 
 class MediaPipelineReceiveAudio::PipelineListener
     : public GenericReceiveListener {
  public:
-  PipelineListener(RefPtr<nsISerialEventTarget> aMainThread,
-                   const RefPtr<dom::MediaStreamTrack>& aTrack,
-                   RefPtr<MediaSessionConduit> aConduit,
-                   const PrincipalHandle& aPrincipalHandle)
-      : GenericReceiveListener(std::move(aMainThread), aTrack),
-        mConduit(std::move(aConduit)),
+  PipelineListener(dom::MediaStreamTrack* aTrack,
+                   const RefPtr<MediaSessionConduit>& aConduit)
+      : GenericReceiveListener(aTrack),
+        mConduit(aConduit),
         // AudioSession conduit only supports 16, 32, 44.1 and 48kHz
         // This is an artificial limitation, it would however require more
         // changes to support any rates. If the sampling rate is not-supported,
@@ -1283,9 +1292,7 @@ class MediaPipelineReceiveAudio::PipelineListener
         mTaskQueue(
             new TaskQueue(GetMediaThreadPool(MediaThreadType::WEBRTC_DECODER),
                           "AudioPipelineListener")),
-        mPlayedTicks(0),
-        mPrincipalHandle(aPrincipalHandle),
-        mForceSilence(false) {
+        mPlayedTicks(0) {
     mSource->SetAppendDataSourceRate(mRate);
     mSource->AddListener(this);
   }
@@ -1294,43 +1301,6 @@ class MediaPipelineReceiveAudio::PipelineListener
   void NotifyPull(MediaTrackGraph* aGraph, TrackTime aEndOfAppendedData,
                   TrackTime aDesiredTime) override {
     NotifyPullImpl(aDesiredTime);
-  }
-
-  void MakePrincipalPrivate_s() {
-    mForceSilence = true;
-
-    mMainThread->Dispatch(NS_NewRunnableFunction(
-        "MediaPipelineReceiveAudio::PipelineListener::MakePrincipalPrivate_s",
-        [self = RefPtr<PipelineListener>(this), this] {
-          class Message : public ControlMessage {
-           public:
-            Message(RefPtr<PipelineListener> aListener,
-                    const PrincipalHandle& aPrivatePrincipal)
-                : ControlMessage(nullptr),
-                  mListener(std::move(aListener)),
-                  mPrivatePrincipal(aPrivatePrincipal) {}
-
-            void Run() override {
-              mListener->mPrincipalHandle = mPrivatePrincipal;
-              mListener->mForceSilence = false;
-            }
-
-            const RefPtr<PipelineListener> mListener;
-            PrincipalHandle mPrivatePrincipal;
-          };
-
-          RefPtr<nsIPrincipal> privatePrincipal =
-              NullPrincipal::CreateWithInheritedAttributes(
-                  mTrackSource->GetPrincipal());
-          mTrackSource->SetPrincipal(privatePrincipal);
-
-          if (mSource->IsDestroyed()) {
-            return;
-          }
-
-          mSource->GraphImpl()->AppendMessage(
-              MakeUnique<Message>(this, MakePrincipalHandle(privatePrincipal)));
-        }));
   }
 
  private:
@@ -1387,29 +1357,25 @@ class MediaPipelineReceiveAudio::PipelineListener
           SharedBuffer::Create(samplesLength * sizeof(uint16_t));
       int16_t* samplesData = static_cast<int16_t*>(samples->Data());
       AudioSegment segment;
+      AutoTArray<int16_t*, 2> channels;
+      AutoTArray<const int16_t*, 2> outputChannels;
       size_t frames = samplesLength / channelCount;
-      if (mForceSilence) {
-        segment.AppendNullData(frames);
-      } else {
-        AutoTArray<int16_t*, 2> channels;
-        AutoTArray<const int16_t*, 2> outputChannels;
 
-        channels.SetLength(channelCount);
+      channels.SetLength(channelCount);
 
-        size_t offset = 0;
-        for (size_t i = 0; i < channelCount; i++) {
-          channels[i] = samplesData + offset;
-          offset += frames;
-        }
-
-        DeinterleaveAndConvertBuffer(scratchBuffer, frames, channelCount,
-                                     channels.Elements());
-
-        outputChannels.AppendElements(channels);
-
-        segment.AppendFrames(samples.forget(), outputChannels, frames,
-                             mPrincipalHandle);
+      size_t offset = 0;
+      for (size_t i = 0; i < channelCount; i++) {
+        channels[i] = samplesData + offset;
+        offset += frames;
       }
+
+      DeinterleaveAndConvertBuffer(scratchBuffer, frames, channelCount,
+                                   channels.Elements());
+
+      outputChannels.AppendElements(channels);
+
+      segment.AppendFrames(samples.forget(), outputChannels, frames,
+                           mPrincipalHandle);
 
       // Handle track not actually added yet or removed/finished
       if (TrackTime appended = mSource->AppendData(&segment)) {
@@ -1431,28 +1397,17 @@ class MediaPipelineReceiveAudio::PipelineListener
   const TrackRate mRate;
   const RefPtr<TaskQueue> mTaskQueue;
   // Number of frames of data that has been added to the SourceMediaTrack in
-  // the graph's rate. Graph thread only.
+  // the graph's rate.
   TrackTicks mPlayedTicks;
-  // Principal handle used when appending data to the SourceMediaTrack. Graph
-  // thread only.
-  PrincipalHandle mPrincipalHandle;
-  // Set to true on the sts thread if privacy is requested when ALPN was
-  // negotiated. Set to false again when mPrincipalHandle is private.
-  Atomic<bool> mForceSilence;
 };
 
 MediaPipelineReceiveAudio::MediaPipelineReceiveAudio(
-    const std::string& aPc, RefPtr<MediaTransportHandler> aTransportHandler,
-    RefPtr<nsISerialEventTarget> aMainThread,
-    RefPtr<nsISerialEventTarget> aStsThread,
-    RefPtr<AudioSessionConduit> aConduit,
-    const RefPtr<dom::MediaStreamTrack>& aTrack,
-    const PrincipalHandle& aPrincipalHandle)
-    : MediaPipelineReceive(aPc, std::move(aTransportHandler), aMainThread,
-                           std::move(aStsThread), std::move(aConduit)),
-      mListener(aTrack ? new PipelineListener(std::move(aMainThread), aTrack,
-                                              mConduit, aPrincipalHandle)
-                       : nullptr) {
+    const std::string& aPc, MediaTransportHandler* aTransportHandler,
+    nsCOMPtr<nsIEventTarget> aMainThread, nsCOMPtr<nsIEventTarget> aStsThread,
+    RefPtr<AudioSessionConduit> aConduit, dom::MediaStreamTrack* aTrack)
+    : MediaPipelineReceive(aPc, aTransportHandler, aMainThread, aStsThread,
+                           aConduit),
+      mListener(aTrack ? new PipelineListener(aTrack, mConduit) : nullptr) {
   mDescription = mPc + "| Receive audio";
 }
 
@@ -1463,9 +1418,10 @@ void MediaPipelineReceiveAudio::DetachMedia() {
   }
 }
 
-void MediaPipelineReceiveAudio::MakePrincipalPrivate_s() {
+void MediaPipelineReceiveAudio::SetPrincipalHandle_m(
+    const PrincipalHandle& aPrincipalHandle) {
   if (mListener) {
-    mListener->MakePrincipalPrivate_s();
+    mListener->SetPrincipalHandle_m(aPrincipalHandle);
   }
 }
 
@@ -1492,46 +1448,15 @@ void MediaPipelineReceiveAudio::OnRtpPacketReceived() {
 class MediaPipelineReceiveVideo::PipelineListener
     : public GenericReceiveListener {
  public:
-  PipelineListener(RefPtr<nsISerialEventTarget> aMainThread,
-                   const RefPtr<dom::MediaStreamTrack>& aTrack,
-                   const PrincipalHandle& aPrincipalHandle)
-      : GenericReceiveListener(std::move(aMainThread), aTrack),
+  explicit PipelineListener(dom::MediaStreamTrack* aTrack)
+      : GenericReceiveListener(aTrack),
         mImageContainer(
-            LayerManager::CreateImageContainer(ImageContainer::ASYNCHRONOUS)),
-        mMutex("MediaPipelineReceiveVideo::PipelineListener::mMutex"),
-        mPrincipalHandle(aPrincipalHandle) {
+            LayerManager::CreateImageContainer(ImageContainer::ASYNCHRONOUS)) {
     mSource->AddListener(this);
-  }
-
-  void MakePrincipalPrivate_s() {
-    {
-      MutexAutoLock lock(mMutex);
-      mForceDropFrames = true;
-    }
-
-    mMainThread->Dispatch(NS_NewRunnableFunction(
-        __func__, [self = RefPtr<PipelineListener>(this), this] {
-          RefPtr<nsIPrincipal> privatePrincipal =
-              NullPrincipal::CreateWithInheritedAttributes(
-                  mTrackSource->GetPrincipal());
-          mTrackSource->SetPrincipal(privatePrincipal);
-
-          MutexAutoLock lock(mMutex);
-          mPrincipalHandle = MakePrincipalHandle(privatePrincipal);
-          mForceDropFrames = false;
-        }));
   }
 
   void RenderVideoFrame(const webrtc::VideoFrameBuffer& aBuffer,
                         uint32_t aTimeStamp, int64_t aRenderTime) {
-    PrincipalHandle principal;
-    {
-      MutexAutoLock lock(mMutex);
-      if (mForceDropFrames) {
-        return;
-      }
-      principal = mPrincipalHandle;
-    }
     RefPtr<Image> image;
     if (aBuffer.type() == webrtc::VideoFrameBuffer::Type::kNative) {
       // We assume that only native handles are used with the
@@ -1576,17 +1501,12 @@ class MediaPipelineReceiveVideo::PipelineListener
 
     VideoSegment segment;
     auto size = image->GetSize();
-    segment.AppendFrame(image.forget(), size, principal);
+    segment.AppendFrame(image.forget(), size, mPrincipalHandle);
     mSource->AppendData(&segment);
   }
 
  private:
   RefPtr<layers::ImageContainer> mImageContainer;
-  Mutex mMutex;  // Protects the below members.
-  PrincipalHandle mPrincipalHandle;
-  // Set to true on the sts thread if privacy is requested when ALPN was
-  // negotiated. Set to false again when mPrincipalHandle is private.
-  bool mForceDropFrames = false;
 };
 
 class MediaPipelineReceiveVideo::PipelineRenderer
@@ -1609,20 +1529,15 @@ class MediaPipelineReceiveVideo::PipelineRenderer
 };
 
 MediaPipelineReceiveVideo::MediaPipelineReceiveVideo(
-    const std::string& aPc, RefPtr<MediaTransportHandler> aTransportHandler,
-    RefPtr<nsISerialEventTarget> aMainThread,
-    RefPtr<nsISerialEventTarget> aStsThread,
-    RefPtr<VideoSessionConduit> aConduit,
-    const RefPtr<dom::MediaStreamTrack>& aTrack,
-    const PrincipalHandle& aPrincipalHandle)
-    : MediaPipelineReceive(aPc, std::move(aTransportHandler), aMainThread,
-                           std::move(aStsThread), std::move(aConduit)),
+    const std::string& aPc, MediaTransportHandler* aTransportHandler,
+    nsCOMPtr<nsIEventTarget> aMainThread, nsCOMPtr<nsIEventTarget> aStsThread,
+    RefPtr<VideoSessionConduit> aConduit, dom::MediaStreamTrack* aTrack)
+    : MediaPipelineReceive(aPc, aTransportHandler, aMainThread, aStsThread,
+                           aConduit),
       mRenderer(new PipelineRenderer(this)),
-      mListener(aTrack ? new PipelineListener(std::move(aMainThread), aTrack,
-                                              aPrincipalHandle)
-                       : nullptr) {
+      mListener(aTrack ? new PipelineListener(aTrack) : nullptr) {
   mDescription = mPc + "| Receive video";
-  static_cast<VideoSessionConduit*>(mConduit.get())->AttachRenderer(mRenderer);
+  aConduit->AttachRenderer(mRenderer);
 }
 
 void MediaPipelineReceiveVideo::DetachMedia() {
@@ -1638,9 +1553,10 @@ void MediaPipelineReceiveVideo::DetachMedia() {
   }
 }
 
-void MediaPipelineReceiveVideo::MakePrincipalPrivate_s() {
+void MediaPipelineReceiveVideo::SetPrincipalHandle_m(
+    const PrincipalHandle& aPrincipalHandle) {
   if (mListener) {
-    mListener->MakePrincipalPrivate_s();
+    mListener->SetPrincipalHandle_m(aPrincipalHandle);
   }
 }
 

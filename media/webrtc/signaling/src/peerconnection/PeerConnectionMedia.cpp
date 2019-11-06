@@ -95,7 +95,7 @@ PeerConnectionMedia::PeerConnectionMedia(PeerConnectionImpl* parent)
       mTargetForDefaultLocalAddressLookupIsSet(false),
       mDestroyed(false) {
   if (XRE_IsContentProcess()) {
-    nsCOMPtr<nsISerialEventTarget> target =
+    nsCOMPtr<nsIEventTarget> target =
         mParent->GetWindow()
             ? mParent->GetWindow()->EventTargetFor(TaskCategory::Other)
             : nullptr;
@@ -581,16 +581,16 @@ void PeerConnectionMedia::ShutdownMediaTransport_s() {
 
 nsresult PeerConnectionMedia::AddTransceiver(
     JsepTransceiver* aJsepTransceiver, dom::MediaStreamTrack& aReceiveTrack,
-    dom::MediaStreamTrack* aSendTrack, const PrincipalHandle& aPrincipalHandle,
+    dom::MediaStreamTrack* aSendTrack,
     RefPtr<TransceiverImpl>* aTransceiverImpl) {
   if (!mCall) {
     mCall = WebRtcCallWrapper::Create();
   }
 
-  RefPtr<TransceiverImpl> transceiver = new TransceiverImpl(
-      mParent->GetHandle(), mTransportHandler, aJsepTransceiver,
-      mMainThread.get(), mSTSThread.get(), &aReceiveTrack, aSendTrack,
-      mCall.get(), aPrincipalHandle);
+  RefPtr<TransceiverImpl> transceiver =
+      new TransceiverImpl(mParent->GetHandle(), mTransportHandler,
+                          aJsepTransceiver, mMainThread.get(), mSTSThread.get(),
+                          &aReceiveTrack, aSendTrack, mCall.get());
 
   if (!transceiver->IsValid()) {
     return NS_ERROR_FAILURE;
@@ -756,18 +756,15 @@ void PeerConnectionMedia::OnCandidateFound_m(
   }
 }
 
-void PeerConnectionMedia::AlpnNegotiated_s(const std::string& aAlpn,
-                                           bool aPrivacyRequested) {
-  MOZ_DIAGNOSTIC_ASSERT((aAlpn == "c-webrtc") == aPrivacyRequested);
+void PeerConnectionMedia::AlpnNegotiated_s(const std::string& aAlpn) {
   GetMainThread()->Dispatch(
-      WrapRunnable(this, &PeerConnectionMedia::AlpnNegotiated_m,
-                   aPrivacyRequested),
+      WrapRunnable(this, &PeerConnectionMedia::AlpnNegotiated_m, aAlpn),
       NS_DISPATCH_NORMAL);
 }
 
-void PeerConnectionMedia::AlpnNegotiated_m(bool aPrivacyRequested) {
+void PeerConnectionMedia::AlpnNegotiated_m(const std::string& aAlpn) {
   if (mParent) {
-    mParent->OnAlpnNegotiated(aPrivacyRequested);
+    mParent->OnAlpnNegotiated(aAlpn);
   }
 }
 
@@ -790,6 +787,15 @@ bool PeerConnectionMedia::AnyLocalTrackHasPeerIdentity() const {
     }
   }
   return false;
+}
+
+void PeerConnectionMedia::UpdateRemoteStreamPrincipals_m(
+    nsIPrincipal* aPrincipal) {
+  ASSERT_ON_THREAD(mMainThread);
+
+  for (RefPtr<TransceiverImpl>& transceiver : mTransceivers) {
+    transceiver->UpdatePrincipal(aPrincipal);
+  }
 }
 
 void PeerConnectionMedia::UpdateSinkIdentity_m(

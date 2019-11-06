@@ -486,7 +486,7 @@ static nsresult RunLogClear() {
   }
 
   nsresult rv;
-  nsCOMPtr<nsISerialEventTarget> stsThread =
+  nsCOMPtr<nsIEventTarget> stsThread =
       do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &rv);
 
   if (NS_FAILED(rv)) {
