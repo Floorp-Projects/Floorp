@@ -30,10 +30,10 @@
 
         function activateDocument(testInfo) {
           // Click the window to activate if appropriate.
-          if (testInfo.activated_parent) {
+          if (testInfo.activated_from == "parent") {
             info(`activate parent's document`);
             SpecialPowers.wrap(document).notifyUserGestureActivation();
-          } else if (testInfo.activated_child) {
+          } else if (testInfo.activated_from == "child") {
             info(`activate child's document`);
             testInfo.childFrame.contentWindow.postMessage("click", "*");
           }
