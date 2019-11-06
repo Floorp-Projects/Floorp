@@ -2299,16 +2299,18 @@ struct WasmParseContext {
   LifoAlloc& lifo;
   UniqueChars* error;
   DtoaState* dtoaState;
+  AstModule* module;
   uintptr_t stackLimit;
   uint32_t nextSym;
   bool requiresDataCount;
 
   WasmParseContext(const char16_t* text, size_t textLen, uintptr_t stackLimit,
-                   LifoAlloc& lifo, UniqueChars* error)
+                   LifoAlloc& lifo, AstModule* module, UniqueChars* error)
       : ts(text, textLen),
         lifo(lifo),
         error(error),
         dtoaState(NewDtoaState()),
+        module(module),
         stackLimit(stackLimit),
         nextSym(0),
         requiresDataCount(false) {}
@@ -4174,14 +4176,14 @@ static bool ParseInlineImport(WasmParseContext& c, InlineImport* import) {
 }
 
 static bool ParseInlineExport(WasmParseContext& c, DefinitionKind kind,
-                              AstModule* module, AstRef ref) {
+                              AstRef ref) {
   WasmToken name;
   if (!c.ts.match(WasmToken::Text, &name, c.error)) {
     return false;
   }
 
   AstExport* exp = new (c.lifo) AstExport(name.text(), kind, ref);
-  return exp && module->append(exp);
+  return exp && c.module->append(exp);
 }
 
 static bool MaybeParseTypeUse(WasmParseContext& c, AstRef* funcType) {
@@ -4235,7 +4237,7 @@ static bool ParseFuncSig(WasmParseContext& c, AstFuncType* funcType) {
   return true;
 }
 
-static bool ParseFuncType(WasmParseContext& c, AstRef* ref, AstModule* module) {
+static bool ParseFuncType(WasmParseContext& c, AstRef* ref) {
   if (!MaybeParseTypeUse(c, ref)) {
     return false;
   }
@@ -4246,7 +4248,7 @@ static bool ParseFuncType(WasmParseContext& c, AstRef* ref, AstModule* module) {
       return false;
     }
     uint32_t funcTypeIndex;
-    if (!module->declare(std::move(funcType), &funcTypeIndex)) {
+    if (!c.module->declare(std::move(funcType), &funcTypeIndex)) {
       return false;
     }
     ref->setIndex(funcTypeIndex);
@@ -4255,7 +4257,7 @@ static bool ParseFuncType(WasmParseContext& c, AstRef* ref, AstModule* module) {
   return true;
 }
 
-static bool ParseFunc(WasmParseContext& c, AstModule* module) {
+static bool ParseFunc(WasmParseContext& c) {
   AstValTypeVector vars(c.lifo);
   AstValTypeVector args(c.lifo);
   AstValTypeVector results(c.lifo);
@@ -4267,7 +4269,7 @@ static bool ParseFunc(WasmParseContext& c, AstModule* module) {
   WasmToken openParen;
   if (c.ts.getIf(WasmToken::OpenParen, &openParen)) {
     if (c.ts.getIf(WasmToken::Import)) {
-      if (module->funcs().length()) {
+      if (c.module->funcs().length()) {
         c.ts.generateError(openParen, "import after function definition",
                            c.error);
         return false;
@@ -4282,21 +4284,21 @@ static bool ParseFunc(WasmParseContext& c, AstModule* module) {
       }
 
       AstRef funcType;
-      if (!ParseFuncType(c, &funcType, module)) {
+      if (!ParseFuncType(c, &funcType)) {
         return false;
       }
 
       auto* imp = new (c.lifo) AstImport(funcName, names.module.text(),
                                          names.field.text(), funcType);
-      return imp && module->append(imp);
+      return imp && c.module->append(imp);
     }
 
     if (c.ts.getIf(WasmToken::Export)) {
       AstRef ref =
           funcName.empty()
-              ? AstRef(module->numFuncImports() + module->funcs().length())
+              ? AstRef(c.module->numFuncImports() + c.module->funcs().length())
               : AstRef(funcName);
-      if (!ParseInlineExport(c, DefinitionKind::Function, module, ref)) {
+      if (!ParseInlineExport(c, DefinitionKind::Function, ref)) {
         return false;
       }
       if (!c.ts.match(WasmToken::CloseParen, c.error)) {
@@ -4359,8 +4361,8 @@ static bool ParseFunc(WasmParseContext& c, AstModule* module) {
 
   if (funcTypeRef.isInvalid()) {
     uint32_t funcTypeIndex;
-    if (!module->declare(AstFuncType(std::move(args), std::move(results)),
-                         &funcTypeIndex)) {
+    if (!c.module->declare(AstFuncType(std::move(args), std::move(results)),
+                           &funcTypeIndex)) {
       return false;
     }
     funcTypeRef.setIndex(funcTypeIndex);
@@ -4368,7 +4370,7 @@ static bool ParseFunc(WasmParseContext& c, AstModule* module) {
 
   auto* func = new (c.lifo) AstFunc(funcName, funcTypeRef, std::move(vars),
                                     std::move(locals), std::move(body));
-  return func && module->append(func);
+  return func && c.module->append(func);
 }
 
 static bool ParseGlobalType(WasmParseContext& c, AstValType* type,
@@ -4530,14 +4532,14 @@ static AstDataSegment* ParseDataSegment(WasmParseContext& c) {
   return new (c.lifo) AstDataSegment(offsetIfActive, std::move(fragments));
 }
 
-static bool ParseDataCount(WasmParseContext& c, AstModule* module) {
+static bool ParseDataCount(WasmParseContext& c) {
   WasmToken token;
   if (!c.ts.getIf(WasmToken::Index, &token)) {
     c.ts.generateError(token, "literal data segment count required", c.error);
     return false;
   }
 
-  return module->initDataCount(token.index());
+  return c.module->initDataCount(token.index());
 }
 
 static bool ParseLimits(WasmParseContext& c, Limits* limits,
@@ -4568,7 +4570,7 @@ static bool ParseLimits(WasmParseContext& c, Limits* limits,
   return true;
 }
 
-static bool ParseMemory(WasmParseContext& c, AstModule* module) {
+static bool ParseMemory(WasmParseContext& c) {
   AstName name = c.ts.getIfName();
 
   WasmToken openParen;
@@ -4590,13 +4592,13 @@ static bool ParseMemory(WasmParseContext& c, AstModule* module) {
       auto* imp =
           new (c.lifo) AstImport(name, names.module.text(), names.field.text(),
                                  DefinitionKind::Memory, memory);
-      return imp && module->append(imp);
+      return imp && c.module->append(imp);
     }
 
     if (c.ts.getIf(WasmToken::Export)) {
       AstRef ref =
-          name.empty() ? AstRef(module->memories().length()) : AstRef(name);
-      if (!ParseInlineExport(c, DefinitionKind::Memory, module, ref)) {
+          name.empty() ? AstRef(c.module->memories().length()) : AstRef(name);
+      if (!ParseInlineExport(c, DefinitionKind::Memory, ref)) {
         return false;
       }
       if (!c.ts.match(WasmToken::CloseParen, c.error)) {
@@ -4631,7 +4633,7 @@ static bool ParseMemory(WasmParseContext& c, AstModule* module) {
       }
 
       auto* segment = new (c.lifo) AstDataSegment(offset, std::move(fragments));
-      if (!segment || !module->append(segment)) {
+      if (!segment || !c.module->append(segment)) {
         return false;
       }
 
@@ -4641,8 +4643,8 @@ static bool ParseMemory(WasmParseContext& c, AstModule* module) {
       }
     }
 
-    if (!module->addMemory(name,
-                           Limits(pages, Some(pages), Shareable::False))) {
+    if (!c.module->addMemory(name,
+                             Limits(pages, Some(pages), Shareable::False))) {
       return false;
     }
 
@@ -4658,14 +4660,14 @@ static bool ParseMemory(WasmParseContext& c, AstModule* module) {
     return false;
   }
 
-  return module->addMemory(name, memory);
+  return c.module->addMemory(name, memory);
 }
 
 #ifdef ENABLE_WASM_GC
 // Custom section for experimental work.  The size of this section should always
 // be 1 byte, and that byte is a nonzero varint7 carrying the version number
 // being opted into.
-static bool ParseGcFeatureOptIn(WasmParseContext& c, AstModule* module) {
+static bool ParseGcFeatureOptIn(WasmParseContext& c) {
   WasmToken token;
   if (!c.ts.getIf(WasmToken::Index, &token)) {
     c.ts.generateError(token, "GC feature version number required", c.error);
@@ -4677,18 +4679,17 @@ static bool ParseGcFeatureOptIn(WasmParseContext& c, AstModule* module) {
     return false;
   }
 
-  return module->addGcFeatureOptIn(token.index());
+  return c.module->addGcFeatureOptIn(token.index());
 }
 #endif
 
-static bool ParseStartFunc(WasmParseContext& c, WasmToken token,
-                           AstModule* module) {
+static bool ParseStartFunc(WasmParseContext& c, WasmToken token) {
   AstRef func;
   if (!c.ts.matchRef(&func, c.error)) {
     return false;
   }
 
-  if (!module->setStartFunc(AstStartFunc(func))) {
+  if (!c.module->setStartFunc(AstStartFunc(func))) {
     c.ts.generateError(token, c.error);
     return false;
   }
@@ -4746,7 +4747,7 @@ static bool ParseTableSig(WasmParseContext& c, Limits* table,
   return ParseLimits(c, table, Shareable::False) && ParseElemType(c, tableKind);
 }
 
-static AstImport* ParseImport(WasmParseContext& c, AstModule* module) {
+static AstImport* ParseImport(WasmParseContext& c) {
   AstName name = c.ts.getIfName();
 
   WasmToken moduleName;
@@ -4817,7 +4818,7 @@ static AstImport* ParseImport(WasmParseContext& c, AstModule* module) {
       }
 
       AstRef funcTypeRef;
-      if (!ParseFuncType(c, &funcTypeRef, module)) {
+      if (!ParseFuncType(c, &funcTypeRef)) {
         return nullptr;
       }
       if (!c.ts.match(WasmToken::CloseParen, c.error)) {
@@ -4847,7 +4848,7 @@ static AstImport* ParseImport(WasmParseContext& c, AstModule* module) {
     }
 
     uint32_t funcTypeIndex;
-    if (!module->declare(std::move(funcType), &funcTypeIndex)) {
+    if (!c.module->declare(std::move(funcType), &funcTypeIndex)) {
       return nullptr;
     }
     funcTypeRef.setIndex(funcTypeIndex);
@@ -4936,8 +4937,7 @@ static AstExport* ParseExport(WasmParseContext& c) {
   return nullptr;
 }
 
-static bool ParseTable(WasmParseContext& c, WasmToken token,
-                       AstModule* module) {
+static bool ParseTable(WasmParseContext& c, WasmToken token) {
   AstName name = c.ts.getIfName();
 
   if (c.ts.getIf(WasmToken::OpenParen)) {
@@ -4960,7 +4960,7 @@ static bool ParseTable(WasmParseContext& c, WasmToken token,
       auto* import = new (c.lifo) AstImport(
           name, names.module.text(), names.field.text(), table, tableKind);
 
-      return import && module->append(import);
+      return import && c.module->append(import);
     }
 
     if (!c.ts.match(WasmToken::Export, c.error)) {
@@ -4969,8 +4969,8 @@ static bool ParseTable(WasmParseContext& c, WasmToken token,
     }
 
     AstRef ref =
-        name.empty() ? AstRef(module->tables().length()) : AstRef(name);
-    if (!ParseInlineExport(c, DefinitionKind::Table, module, ref)) {
+        name.empty() ? AstRef(c.module->tables().length()) : AstRef(name);
+    if (!ParseInlineExport(c, DefinitionKind::Table, ref)) {
       return false;
     }
     if (!c.ts.match(WasmToken::CloseParen, c.error)) {
@@ -4985,7 +4985,7 @@ static bool ParseTable(WasmParseContext& c, WasmToken token,
     if (!ParseTableSig(c, &table, &tableKind)) {
       return false;
     }
-    return module->addTable(name, table, tableKind);
+    return c.module->addTable(name, table, tableKind);
   }
 
   // Or: funcref (elem 1 2 ...)
@@ -5034,7 +5034,7 @@ static bool ParseTable(WasmParseContext& c, WasmToken token,
     return false;
   }
 
-  if (!module->addTable(
+  if (!c.module->addTable(
           name, Limits(numElements, Some(numElements), Shareable::False),
           tableKind)) {
     return false;
@@ -5048,7 +5048,7 @@ static bool ParseTable(WasmParseContext& c, WasmToken token,
   AstElemSegment* segment =
       new (c.lifo) AstElemSegment(AstElemSegmentKind::Active, AstRef(name),
                                   zero, ValType::FuncRef, std::move(elems));
-  return segment && module->append(segment);
+  return segment && c.module->append(segment);
 }
 
 static bool TryParseElemType(WasmParseContext& c, bool* isFunc, ValType* ty) {
@@ -5197,7 +5197,7 @@ static AstElemSegment* ParseElemSegment(WasmParseContext& c) {
                                      elemType, std::move(elems));
 }
 
-static bool ParseGlobal(WasmParseContext& c, AstModule* module) {
+static bool ParseGlobal(WasmParseContext& c) {
   AstName name = c.ts.getIfName();
 
   AstValType type;
@@ -5206,7 +5206,7 @@ static bool ParseGlobal(WasmParseContext& c, AstModule* module) {
   WasmToken openParen;
   if (c.ts.getIf(WasmToken::OpenParen, &openParen)) {
     if (c.ts.getIf(WasmToken::Import)) {
-      if (module->globals().length()) {
+      if (c.module->globals().length()) {
         c.ts.generateError(openParen, "import after global definition",
                            c.error);
         return false;
@@ -5227,13 +5227,14 @@ static bool ParseGlobal(WasmParseContext& c, AstModule* module) {
       auto* imp =
           new (c.lifo) AstImport(name, names.module.text(), names.field.text(),
                                  AstGlobal(AstName(), type, isMutable));
-      return imp && module->append(imp);
+      return imp && c.module->append(imp);
     }
 
     if (c.ts.getIf(WasmToken::Export)) {
-      size_t refIndex = module->numGlobalImports() + module->globals().length();
+      size_t refIndex =
+          c.module->numGlobalImports() + c.module->globals().length();
       AstRef ref = name.empty() ? AstRef(refIndex) : AstRef(name);
-      if (!ParseInlineExport(c, DefinitionKind::Global, module, ref)) {
+      if (!ParseInlineExport(c, DefinitionKind::Global, ref)) {
         return false;
       }
       if (!c.ts.match(WasmToken::CloseParen, c.error)) {
@@ -5254,10 +5255,10 @@ static bool ParseGlobal(WasmParseContext& c, AstModule* module) {
   }
 
   auto* glob = new (c.lifo) AstGlobal(name, type, isMutable, Some(init));
-  return glob && module->append(glob);
+  return glob && c.module->append(glob);
 }
 
-static AstModule* ParseBinaryModule(WasmParseContext& c, AstModule* module) {
+static AstModule* ParseBinaryModule(WasmParseContext& c) {
   // By convention with EncodeBinaryModule, a binary module only contains a
   // data section containing the raw bytes contained in the module.
   AstNameVector fragments(c.lifo);
@@ -5270,19 +5271,24 @@ static AstModule* ParseBinaryModule(WasmParseContext& c, AstModule* module) {
   }
 
   auto* data = new (c.lifo) AstDataSegment(nullptr, std::move(fragments));
-  if (!data || !module->append(data)) {
+  if (!data || !c.module->append(data)) {
     return nullptr;
   }
 
-  return module;
+  return c.module;
 }
 
 static AstModule* ParseModule(const char16_t* text, size_t textLen,
                               uintptr_t stackLimit, LifoAlloc& lifo,
                               UniqueChars* error, bool* binary) {
-  WasmParseContext c(text, textLen, stackLimit, lifo, error);
-
   *binary = false;
+
+  auto* module = new (lifo) AstModule(lifo);
+  if (!module) {
+    return nullptr;
+  }
+
+  WasmParseContext c(text, textLen, stackLimit, lifo, module, error);
 
   if (!c.ts.match(WasmToken::OpenParen, c.error)) {
     return nullptr;
@@ -5291,14 +5297,9 @@ static AstModule* ParseModule(const char16_t* text, size_t textLen,
     return nullptr;
   }
 
-  auto* module = new (c.lifo) AstModule(c.lifo);
-  if (!module) {
-    return nullptr;
-  }
-
   if (c.ts.peek().kind() == WasmToken::Text) {
     *binary = true;
-    return ParseBinaryModule(c, module);
+    return ParseBinaryModule(c);
   }
 
   while (c.ts.getIf(WasmToken::OpenParen)) {
@@ -5316,27 +5317,27 @@ static AstModule* ParseModule(const char16_t* text, size_t textLen,
         break;
       }
       case WasmToken::Start: {
-        if (!ParseStartFunc(c, section, module)) {
+        if (!ParseStartFunc(c, section)) {
           return nullptr;
         }
         break;
       }
       case WasmToken::Memory: {
-        if (!ParseMemory(c, module)) {
+        if (!ParseMemory(c)) {
           return nullptr;
         }
         break;
       }
 #ifdef ENABLE_WASM_GC
       case WasmToken::GcFeatureOptIn: {
-        if (!ParseGcFeatureOptIn(c, module)) {
+        if (!ParseGcFeatureOptIn(c)) {
           return nullptr;
         }
         break;
       }
 #endif
       case WasmToken::Global: {
-        if (!ParseGlobal(c, module)) {
+        if (!ParseGlobal(c)) {
           return nullptr;
         }
         break;
@@ -5349,13 +5350,13 @@ static AstModule* ParseModule(const char16_t* text, size_t textLen,
         break;
       }
       case WasmToken::DataCount: {
-        if (!ParseDataCount(c, module)) {
+        if (!ParseDataCount(c)) {
           return nullptr;
         }
         break;
       }
       case WasmToken::Import: {
-        AstImport* imp = ParseImport(c, module);
+        AstImport* imp = ParseImport(c);
         if (!imp || !module->append(imp)) {
           return nullptr;
         }
@@ -5369,7 +5370,7 @@ static AstModule* ParseModule(const char16_t* text, size_t textLen,
         break;
       }
       case WasmToken::Table: {
-        if (!ParseTable(c, section, module)) {
+        if (!ParseTable(c, section)) {
           return nullptr;
         }
         break;
@@ -5382,7 +5383,7 @@ static AstModule* ParseModule(const char16_t* text, size_t textLen,
         break;
       }
       case WasmToken::Func: {
-        if (!ParseFunc(c, module)) {
+        if (!ParseFunc(c)) {
           return nullptr;
         }
         break;
