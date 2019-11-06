@@ -143,7 +143,6 @@ export const features = new PrefsHelper("devtools.debugger.features", {
   showOverlay: ["Bool", "overlay"],
   inlinePreview: ["Bool", "inline-preview"],
   watchpoints: ["Bool", "watchpoints"],
-  windowlessServiceWorkers: ["Bool", "windowless-service-workers"],
 });
 
 export const asyncStore = asyncStoreHelper("debugger", {

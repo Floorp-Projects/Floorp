@@ -124,7 +124,7 @@ ServiceWorkerPrivate::~ServiceWorkerPrivate() {
 
 namespace {
 
-class CheckScriptEvaluationWithCallback final : public WorkerDebuggeeRunnable {
+class CheckScriptEvaluationWithCallback final : public WorkerRunnable {
   nsMainThreadPtrHandle<ServiceWorkerPrivate> mServiceWorkerPrivate;
   nsMainThreadPtrHandle<KeepAliveToken> mKeepAliveToken;
 
@@ -142,7 +142,7 @@ class CheckScriptEvaluationWithCallback final : public WorkerDebuggeeRunnable {
       ServiceWorkerPrivate* aServiceWorkerPrivate,
       KeepAliveToken* aKeepAliveToken,
       LifeCycleEventCallback* aScriptEvaluationCallback)
-      : WorkerDebuggeeRunnable(aWorkerPrivate, WorkerThreadModifyBusyCount),
+      : WorkerRunnable(aWorkerPrivate),
         mServiceWorkerPrivate(new nsMainThreadPtrHolder<ServiceWorkerPrivate>(
             "CheckScriptEvaluationWithCallback::mServiceWorkerPrivate",
             aServiceWorkerPrivate)),
