@@ -8,6 +8,7 @@
 #include "nsCharSeparatedTokenizer.h"
 #include "nsCSPUtils.h"
 #include "nsDocShell.h"
+#include "nsHttpChannel.h"
 #include "nsIChannel.h"
 #include "nsIConsoleService.h"
 #include "nsIContentSecurityPolicy.h"
@@ -215,9 +216,10 @@ bool FramingChecker::CheckFrameOptions(nsIChannel* aChannel,
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
   nsContentPolicyType contentType = loadInfo->GetExternalContentPolicyType();
 
-  // xfo check only makes sense for subdocument loads, if this is
+  // xfo check only makes sense for subdocument and object loads, if this is
   // not a load of such type, there is nothing to do here.
-  if (contentType != nsIContentPolicy::TYPE_SUBDOCUMENT) {
+  if (contentType != nsIContentPolicy::TYPE_SUBDOCUMENT &&
+      contentType != nsIContentPolicy::TYPE_OBJECT) {
     return true;
   }
 
@@ -237,6 +239,16 @@ bool FramingChecker::CheckFrameOptions(nsIChannel* aChannel,
   // xfo can only hang off an httpchannel, if this is not an httpChannel
   // then there is nothing to do here.
   if (!httpChannel) {
+    return true;
+  }
+
+  // ignore XFO checks on channels that will be redirected
+  uint32_t responseStatus;
+  rv = httpChannel->GetResponseStatus(&responseStatus);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return true;
+  }
+  if (mozilla::net::nsHttpChannel::IsRedirectStatus(responseStatus)) {
     return true;
   }
 
