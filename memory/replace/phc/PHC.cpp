@@ -1241,8 +1241,9 @@ class PHCBridge : public ReplaceMallocBridge {
       MutexAutoLock lock(GMut::sMutex);
       gMut->FillAddrInfo(lock, *i, aPtr, *aOut);
       LOG("IsPHCAllocation: %zu, %p, %zu, %zu, %zu\n", size_t(aOut->mKind),
-          aOut->mBaseAddr, aOut->mUsableSize, aOut->mAllocStack.mLength,
-          aOut->mFreeStack.mLength);
+          aOut->mBaseAddr, aOut->mUsableSize,
+          aOut->mAllocStack.isSome() ? aOut->mAllocStack->mLength : 0,
+          aOut->mFreeStack.isSome() ? aOut->mFreeStack->mLength : 0);
     }
     return true;
   }
