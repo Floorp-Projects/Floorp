@@ -49,6 +49,30 @@ const TESTS = [
     expectedSearchCountEntry: "bing.in-content:sap:MOZI",
   },
   {
+    setUp() {
+      Services.cookies.removeAll();
+      Services.cookies.add(
+        "www.bing.com",
+        "/",
+        "SRCHS",
+        "PC=MOZ",
+        false,
+        false,
+        false,
+        Date.now() + 1000 * 60 * 60,
+        {},
+        Ci.nsICookie.SAMESITE_NONE
+      );
+    },
+    tearDown() {
+      Services.cookies.removeAll();
+    },
+    title: "Bing search access point follow-on",
+    trackingUrl:
+      "https://www.bing.com/search?q=test&qs=n&form=QBRE&sp=-1&pq=&sc=0-0&sk=&cvid=CVID_VALUE",
+    expectedSearchCountEntry: "bing.in-content:sap-follow-on:MOZ",
+  },
+  {
     title: "Bing organic",
     trackingUrl:
       "https://www.bing.com/search?q=test&qs=n&form=QBLH&sp=-1&pq=&sc=0-0&sk=&cvid=CVID_VALUE",
@@ -86,6 +110,9 @@ const TESTS = [
 add_task(async function test_parsing_search_urls() {
   for (const test of TESTS) {
     info(`Running ${test.title}`);
+    if (test.setUp) {
+      test.setUp();
+    }
     SearchTelemetry.updateTrackingStatus({}, test.trackingUrl);
     const hs = Services.telemetry
       .getKeyedHistogramById("SEARCH_COUNTS")
@@ -95,5 +122,8 @@ add_task(async function test_parsing_search_urls() {
       test.expectedSearchCountEntry in hs,
       "The histogram must contain the correct key"
     );
+    if (test.tearDown) {
+      test.tearDown();
+    }
   }
 });

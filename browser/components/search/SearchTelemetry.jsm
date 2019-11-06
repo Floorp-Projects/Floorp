@@ -25,7 +25,8 @@ const SEARCH_AD_CLICKS_SCALAR = "browser.search.ad_clicks";
  * - {<string>} name
  *     Details for a particular provider with the string name.
  * - {regexp} <string>.regexp
- *     The regular expression used to match the url for the search providers main page.
+ *     The regular expression used to match the url for the search providers
+ *     main page.
  * - {string} <string>.queryParam
  *     The query parameter name that indicates a search has been made.
  * - {string} [<string>.codeParam]
@@ -33,11 +34,29 @@ const SEARCH_AD_CLICKS_SCALAR = "browser.search.ad_clicks";
  * - {array} [<string>.codePrefixes]
  *     An array of the possible string prefixes for a codeParam, indicating a
  *     partner search.
- * - {array} [<string>.followOnParams]
+ * - {array} [<string>.followonParams]
  *     An array of parameters name that indicates this is a follow-on search.
  * - {array} [<string>.extraAdServersRegexps]
  *     An array of regular expressions used to determine if a link on a search
- *     page mightbe an advert.
+ *     page might be an advert.
+ * - {array} [<object>.followonCookies]
+ *     An array of cookie details, which should look like:
+ *     - {string} [extraCodeParam]
+ *         The query parameter name that indicates an extra search provider's
+ *         code.
+ *     - {array} [<string>.extraCodePrefixes]
+ *         An array of the possible string prefixes for a codeParam, indicating
+ *         a partner search.
+ *     - {string} host
+ *         Host name to which the cookie is linked to.
+ *     - {string} name
+ *         Name of the cookie to look for that should contain the search
+ *         provider's code.
+ *     - {string} codeParam
+ *         The cookie parameter name that indicates a search provider's code.
+ *     - {array} <string>.codePrefixes
+ *         An array of the possible string prefixes for a codeParam, indicating
+ *         a partner search.
  */
 const SEARCH_PROVIDER_INFO = {
   google: {
@@ -72,6 +91,16 @@ const SEARCH_PROVIDER_INFO = {
     queryParam: "q",
     codeParam: "pc",
     codePrefixes: ["MOZ", "MZ"],
+    followonCookies: [
+      {
+        extraCodeParam: "form",
+        extraCodePrefixes: ["QBRE"],
+        host: "www.bing.com",
+        name: "SRCHS",
+        codeParam: "PC",
+        codePrefixes: ["MOZ", "MZ"],
+      },
+    ],
   },
 };
 
@@ -371,28 +400,40 @@ class TelemetryHandler {
         } else {
           type = "sap";
         }
-      } else if (provider == "bing") {
-        // Bing requires lots of extra work related to cookies.
-        let secondaryCode = queries.get("form");
-        // This code is used for all Bing follow-on searches.
-        if (secondaryCode == "QBRE") {
+      } else if (searchProviderInfo.followonCookies) {
+        // Especially Bing requires lots of extra work related to cookies.
+        for (let followonCookie of searchProviderInfo.followonCookies) {
+          if (followonCookie.extraCodeParam) {
+            let eCode = queries.get(followonCookie.extraCodeParam);
+            if (
+              !eCode ||
+              !followonCookie.extraCodePrefixes.some(p => eCode.startsWith(p))
+            ) {
+              continue;
+            }
+          }
+
+          // If this cookie is present, it's probably an SAP follow-on.
+          // This might be an organic follow-on in the same session, but there
+          // is no way to tell the difference.
           for (let cookie of Services.cookies.getCookiesFromHost(
-            "www.bing.com",
+            followonCookie.host,
             {}
           )) {
-            if (cookie.name == "SRCHS") {
-              // If this cookie is present, it's probably an SAP follow-on.
-              // This might be an organic follow-on in the same session,
-              // but there is no way to tell the difference.
-              if (
-                searchProviderInfo.codePrefixes.some(p =>
-                  cookie.value.startsWith("PC=" + p)
-                )
-              ) {
-                type = "sap-follow-on";
-                code = cookie.value.split("=")[1];
-                break;
-              }
+            if (cookie.name != followonCookie.name) {
+              continue;
+            }
+
+            let [cookieParam, cookieValue] = cookie.value
+              .split("=")
+              .map(p => p.trim());
+            if (
+              cookieParam == followonCookie.codeParam &&
+              followonCookie.codePrefixes.some(p => cookieValue.startsWith(p))
+            ) {
+              type = "sap-follow-on";
+              code = cookieValue;
+              break;
             }
           }
         }
