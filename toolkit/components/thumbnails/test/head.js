@@ -157,18 +157,17 @@ function whenLoaded(aElement, aCallback = next) {
  * @param aBlue The blue component's intensity.
  * @param aMessage The info message to print when comparing the pixel color.
  */
-function captureAndCheckColor(aRed, aGreen, aBlue, aMessage) {
+async function captureAndCheckColor(aRed, aGreen, aBlue, aMessage) {
   let browser = gBrowser.selectedBrowser;
   // We'll get oranges if the expiration filter removes the file during the
   // test.
   dontExpireThumbnailURLs([browser.currentURI.spec]);
 
   // Capture the screenshot.
-  PageThumbs.captureAndStore(browser, function() {
-    retrieveImageDataForURL(browser.currentURI.spec, function([r, g, b]) {
-      is("" + [r, g, b], "" + [aRed, aGreen, aBlue], aMessage);
-      next();
-    });
+  await PageThumbs.captureAndStore(browser);
+  retrieveImageDataForURL(browser.currentURI.spec, function([r, g, b]) {
+    is("" + [r, g, b], "" + [aRed, aGreen, aBlue], aMessage);
+    next();
   });
 }
 

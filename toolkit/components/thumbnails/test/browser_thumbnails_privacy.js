@@ -64,13 +64,12 @@ function testCombination(combi, url, aCombinations, aResult) {
   let tab = (gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, url));
   let browser = gBrowser.selectedBrowser;
 
-  BrowserTestUtils.browserLoaded(browser).then(() => {
+  BrowserTestUtils.browserLoaded(browser).then(async () => {
     let msg = JSON.stringify(combi) + " == " + aResult;
-    PageThumbs.shouldStoreThumbnail(browser, aIsSafeSite => {
-      is(aIsSafeSite, aResult, msg);
-      gBrowser.removeTab(tab);
-      // Continue with the next combination.
-      checkCombinations(aCombinations, aResult);
-    });
+    let aIsSafeSite = await PageThumbs.shouldStoreThumbnail(browser);
+    is(aIsSafeSite, aResult, msg);
+    gBrowser.removeTab(tab);
+    // Continue with the next combination.
+    checkCombinations(aCombinations, aResult);
   });
 }

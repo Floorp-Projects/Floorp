@@ -132,11 +132,9 @@ var gBrowserThumbnails = {
     if (!aBrowser.currentURI || !topSites.includes(aBrowser.currentURI.spec)) {
       return;
     }
-    this._shouldCapture(aBrowser, function(aResult) {
-      if (aResult) {
-        PageThumbs.captureAndStoreIfStale(aBrowser);
-      }
-    });
+    if (await this._shouldCapture(aBrowser)) {
+      await PageThumbs.captureAndStoreIfStale(aBrowser);
+    }
   },
 
   _delayedCapture: function Thumbnails_delayedCapture(aBrowser) {
@@ -163,16 +161,15 @@ var gBrowserThumbnails = {
     this._timeouts.set(aBrowser, { isTimeout: true, id: timeoutId });
   },
 
-  _shouldCapture: function Thumbnails_shouldCapture(aBrowser, aCallback) {
+  _shouldCapture: async function Thumbnails_shouldCapture(aBrowser) {
     // Capture only if it's the currently selected tab and not an about: page.
     if (
       aBrowser != gBrowser.selectedBrowser ||
       gBrowser.currentURI.schemeIs("about")
     ) {
-      aCallback(false);
-      return;
+      return false;
     }
-    PageThumbs.shouldStoreThumbnail(aBrowser, aCallback);
+    return PageThumbs.shouldStoreThumbnail(aBrowser);
   },
 
   _cancelDelayedCapture: function Thumbnails_cancelDelayedCapture(aBrowser) {

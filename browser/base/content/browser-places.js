@@ -314,7 +314,9 @@ var StarUI = {
     }
 
     let canvas = PageThumbs.createCanvas(window);
-    PageThumbs.captureToCanvas(gBrowser.selectedBrowser, canvas);
+    PageThumbs.captureToCanvas(gBrowser.selectedBrowser, canvas).catch(e =>
+      Cu.reportError(e)
+    );
     document.mozSetImageElement("editBookmarkPanelImageCanvas", canvas);
   },
 
