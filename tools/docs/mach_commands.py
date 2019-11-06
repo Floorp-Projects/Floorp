@@ -6,6 +6,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import yaml
 import os
+import subprocess
 import sys
 import multiprocessing
 from functools import partial
@@ -19,6 +20,15 @@ from mach.decorators import (
 )
 
 here = os.path.abspath(os.path.dirname(__file__))
+JSDOC_NOT_FOUND = """\
+JSDoc==3.5.5 is required to build the docs but was not found on your system.
+Please install it globally by running:
+
+    $ npm install -g jsdoc@3.5.5
+
+Bug 1498604 tracks bootstrapping jsdoc properly.
+Bug 1556460 tracks supporting newer versions of jsdoc.
+"""
 
 
 @CommandProvider
@@ -56,20 +66,8 @@ class Documentation(MachCommandBase):
                      help='Distribute the build over N processes in parallel.')
     def build_docs(self, path=None, fmt='html', outdir=None, auto_open=True,
                    serve=True, http=None, archive=False, upload=False, jobs=None):
-
-        from mozfile import which
-
-        if not which('jsdoc'):
-            return die("""\
-JSDoc is required to build the docs but was not found on your system. Please \
-install it globally by running:
-
-    $ npm install -g jsdoc
-
-JSDoc >= 3.5 is required to build the docs.
-
-Bug 1498604 tracks bootstrapping jsdoc properly.
-""")
+        if self.check_jsdoc():
+            return die(JSDOC_NOT_FOUND)
 
         self.activate_pipenv(os.path.join(here, 'Pipfile'))
 
@@ -226,6 +224,16 @@ Bug 1498604 tracks bootstrapping jsdoc properly.
         pprint(all_redirects, indent=1)
 
         s3_set_redirects(all_redirects)
+
+    def check_jsdoc(self):
+        try:
+            out = subprocess.check_output(['jsdoc', '--version'])
+            version = out.split()[1]
+        except subprocess.CalledProcessError:
+            version = None
+
+        if not version or not version.startswith('3.5'):
+            return 1
 
 
 def die(msg, exit_code=1):
