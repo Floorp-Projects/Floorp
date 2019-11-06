@@ -3117,9 +3117,6 @@ impl Renderer {
 
             self.unlock_external_images();
             self.active_documents = active_documents;
-
-            let _gm = self.gpu_profile.start_marker("end frame");
-            self.gpu_profile.end_frame();
         });
 
         if let Some(device_size) = device_size {
@@ -3231,6 +3228,8 @@ impl Renderer {
         self.gpu_cache_upload_time = 0;
 
         profile_timers.cpu_time.profile(|| {
+            let _gm = self.gpu_profile.start_marker("end frame");
+            self.gpu_profile.end_frame();
             if let Some(debug_renderer) = self.debug.try_get_mut() {
                 let small_screen = self.debug_flags.contains(DebugFlags::SMALL_SCREEN);
                 let scale = if small_screen { 1.6 } else { 1.0 };
