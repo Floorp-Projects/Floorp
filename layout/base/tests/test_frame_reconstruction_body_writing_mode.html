@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+  <meta charset="utf-8">
+  <title>
+    Test for Bug 1593752: Test we don't reframe the html element when
+    inserting a canonical body element with the same writing-mode.
+  </title>
+  <link rel="author" title="Ting-Yu Lin" href="tlin@mozilla.com">
+  <link rel="author" title="Mozilla" href="http://www.mozilla.org/">
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script>
+  SimpleTest.waitForExplicitFinish();
+
+  const utils = SpecialPowers.getDOMWindowUtils(window);
+
+  function runTest() {
+    document.documentElement.offsetTop;
+
+    // We expect to construct only the canonical body because its writing-mode
+    // is the same as html's writing-mode.
+    const expectedFrameConstructCount = utils.framesConstructed + 1;
+    document.body.before(document.createElement("body"));
+    document.documentElement.offsetTop;
+
+    is(utils.framesConstructed, expectedFrameConstructCount,
+       "We should not reframe <html>!");
+
+    SimpleTest.finish();
+  }
+  </script>
+  <body onload="runTest();"></body>
+</html>

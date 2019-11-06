@@ -1908,19 +1908,14 @@ class nsCSSFrameConstructor final : public nsFrameManager {
   // rebuild the entire subtree when we insert or append new content under
   // aFrame.
   //
-  // [aStartChild, aEndChild) is the range of the children to be inserted.
-  // aStartChild must be non-null; aEndChild may be null to indicate that we are
-  // appending the range includes all kids after aStartChild.
-  //
   // This is similar to WipeContainingBlock(), but is called before constructing
-  // any frame construction items. Any container frames which need reframing by
-  // checking only the content inserted or appended, not the style of the
-  // content, can add a check in this method.
+  // any frame construction items. Any container frames which need reframing
+  // regardless of the content inserted or appended can add a check in this
+  // method.
   //
   // @return true if we reconstructed the insertion parent frame; false
   // otherwise
-  bool WipeInsertionParent(nsContainerFrame* aFrame, nsIContent* aStartChild,
-                           nsIContent* aEndChild);
+  bool WipeInsertionParent(nsContainerFrame* aFrame);
 
   // Determine whether we need to wipe out what we just did and start over
   // because we're doing something like adding block kids to an inline frame
