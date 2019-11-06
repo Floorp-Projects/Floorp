@@ -1926,9 +1926,7 @@ class _ASRouter {
         });
         break;
       case ra.SHOW_FIREFOX_ACCOUNTS:
-        const url = await FxAccounts.config.promiseConnectAccountURI(
-          "snippets"
-        );
+        const url = await FxAccounts.config.promiseSignUpURI("snippets");
         // We want to replace the current tab.
         target.browser.ownerGlobal.openLinkIn(url, "current", {
           private: false,

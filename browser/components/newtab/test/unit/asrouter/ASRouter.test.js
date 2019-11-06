@@ -2026,9 +2026,7 @@ describe("ASRouter", () => {
     describe("#onMessage: SHOW_FIREFOX_ACCOUNTS", () => {
       beforeEach(() => {
         globals.set("FxAccounts", {
-          config: {
-            promiseConnectAccountURI: sandbox.stub().resolves("some/url"),
-          },
+          config: { promiseSignUpURI: sandbox.stub().resolves("some/url") },
         });
       });
       it("should call openLinkIn with the correct params on OPEN_URL", async () => {
