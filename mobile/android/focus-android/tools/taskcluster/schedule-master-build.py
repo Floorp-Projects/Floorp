@@ -167,7 +167,7 @@ def generate_task(name, description, command, dependencies=[], artifacts={}, sco
 
 if __name__ == "__main__":
 
-    queue = taskcluster.Queue({'rootUrl': os.environ['TASKCLUSTER_PROXY_URL']})
+    queue = taskcluster.Queue({'baseUrl': 'http://taskcluster/queue/v1'})
 
     buildTaskId, buildTask = generate_build_task()
     schedule_task(queue, buildTaskId, buildTask)

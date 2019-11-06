@@ -69,7 +69,7 @@ def make_decision_task(params):
 
 
 if __name__ == "__main__":
-    queue = taskcluster.Queue({'rootUrl': os.environ['TASKCLUSTER_PROXY_URL']})
+    queue = taskcluster.Queue({ 'baseUrl': 'http://taskcluster/queue/v1' })
 
     branch, head_rev = calculate_branch_and_head_rev(ROOT)
 

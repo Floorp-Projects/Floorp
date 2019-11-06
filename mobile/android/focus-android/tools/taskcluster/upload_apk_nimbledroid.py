@@ -7,7 +7,6 @@ This script talks to the taskcluster secrets service to obtain the
 Nimbledroid account key and upload Klar and Focus apk to Nimbledroid for perf analysis.
 """
 
-import os
 import taskcluster
 import requests
 import json
@@ -40,7 +39,7 @@ def uploadGeckoViewExampleApk(key):
 	uploadApk({'apk' : open('geckoview_example_nd.apk')},key)
 
 # Get JSON data from taskcluster secrets service
-secrets = taskcluster.Secrets({'rootUrl': os.environ['TASKCLUSTER_PROXY_URL']})
+secrets = taskcluster.Secrets({'baseUrl': 'http://taskcluster/secrets/v1'})
 data = secrets.get('project/focus/nimbledroid')
 
 # disable focus webview upload until https://github.com/mozilla-mobile/focus-android/issues/3574 is resolved

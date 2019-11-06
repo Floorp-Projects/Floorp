@@ -13,7 +13,7 @@ import os
 import taskcluster
 
 # Get JSON data from taskcluster secrets service
-secrets = taskcluster.Secrets({'rootUrl': os.environ['TASKCLUSTER_PROXY_URL']})
+secrets = taskcluster.Secrets({'baseUrl': 'http://taskcluster/secrets/v1'})
 data = secrets.get('project/focus/firebase')
 
 with open(os.path.join(os.path.dirname(__file__), '../../.firebase_token.json'), 'w') as file:

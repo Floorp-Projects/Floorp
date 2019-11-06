@@ -21,7 +21,7 @@ if len(sys.argv) != 2:
 	exit(1)
 
 # Get token for GitHub bot account from secrets service
-secrets = taskcluster.Secrets({'rootUrl': os.environ['TASKCLUSTER_PROXY_URL']})
+secrets = taskcluster.Secrets({'baseUrl': 'http://taskcluster/secrets/v1'})
 data = secrets.get('project/focus/github')
 token = data['secret']['botAccountToken']
 

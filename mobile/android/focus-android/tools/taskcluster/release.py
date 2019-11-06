@@ -127,7 +127,7 @@ def populate_chain_of_trust_required_but_unused_files():
 
 
 def release(apks, channel, commit, tag):
-    queue = taskcluster.Queue({'rootUrl': os.environ['TASKCLUSTER_PROXY_URL']})
+    queue = taskcluster.Queue({ 'baseUrl': 'http://taskcluster/queue/v1' })
 
     task_graph = {}
 
