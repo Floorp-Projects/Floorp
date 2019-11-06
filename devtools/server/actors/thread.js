@@ -1318,7 +1318,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     return stepFrame;
   },
 
-  frames: function(request) {
+  onFrames: function(request) {
     if (this.state !== "paused") {
       return {
         error: "wrongState",
@@ -1342,15 +1342,27 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     // frames if count is not defined.
     const frames = [];
     for (; frame && (!count || i < start + count); i++, frame = frame.older) {
-      const sourceActor = this.sources.createSourceActor(frame.script.source);
-      if (!sourceActor) {
-        continue;
+      const form = this._createFrameActor(frame).form();
+      form.depth = i;
+
+      let frameItem = null;
+
+      const frameSourceActor = this.sources.createSourceActor(
+        frame.script.source
+      );
+      if (frameSourceActor) {
+        form.where = {
+          actor: frameSourceActor.actorID,
+          line: form.where.line,
+          column: form.where.column,
+        };
+        frameItem = form;
       }
-      const frameActor = this._createFrameActor(frame, i);
-      frames.push(frameActor);
+      frames.push(frameItem);
     }
 
-    return { frames };
+    // Filter null values because createSourceActor can be falsey
+    return { frames: frames.filter(x => !!x) };
   },
 
   addAllSources() {
@@ -1521,7 +1533,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     const packet = {
       actor: this._pauseActor.actorID,
     };
-
     if (frame) {
       packet.frame = this._createFrameActor(frame).form();
     }
@@ -1619,12 +1630,12 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     return popped;
   },
 
-  _createFrameActor: function(frame, depth) {
+  _createFrameActor: function(frame) {
     if (frame.actor) {
       return frame.actor;
     }
 
-    const actor = new FrameActor(frame, this, depth);
+    const actor = new FrameActor(frame, this);
     this._frameActors.push(actor);
     this._framePool.addActor(actor);
     frame.actor = actor;
@@ -2189,6 +2200,7 @@ Object.assign(ThreadActor.prototype.requestTypes, {
   detach: ThreadActor.prototype.onDetach,
   reconfigure: ThreadActor.prototype.onReconfigure,
   resume: ThreadActor.prototype.onResume,
+  frames: ThreadActor.prototype.onFrames,
   interrupt: ThreadActor.prototype.onInterrupt,
   sources: ThreadActor.prototype.onSources,
   skipBreakpoints: ThreadActor.prototype.onSkipBreakpoints,
