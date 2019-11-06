@@ -6,72 +6,69 @@
 var gTests = [
   {
     name: "normal search (search service)",
-    testText: "test search",
+    text: "test search",
     expectText: "test+search",
   },
   {
     name: "?-prefixed search (search service)",
-    testText: "?   foo  ",
+    text: "?   foo  ",
     expectText: "foo",
   },
 ];
 
 add_task(async function setup() {
-  let engineAddedPromise = TestUtils.topicObserved(
-    "browser-search-engine-modified",
-    (subject, data) => {
-      return data == "engine-added";
-    }
+  let engine = await SearchTestUtils.promiseNewSearchEngine(
+    getRootDirectory(gTestPath) + "POSTSearchEngine.xml"
   );
-
-  const url =
-    "http://test:80/browser/browser/components/urlbar/tests/browser/POSTSearchEngine.xml";
-  await Services.search.addEngine(url, null, false);
-
-  let [subject, data] = await engineAddedPromise;
-
-  let engine = subject.QueryInterface(Ci.nsISearchEngine);
-  info("Observer: " + data + " for " + engine.name);
-
-  if (engine.name != "POST Search") {
-    Assert.ok(false, "Wrong search engine added");
-  }
-
+  let oldDefaultEngine = await Services.search.getDefault();
   await Services.search.setDefault(engine);
-
   registerCleanupFunction(async function() {
-    await Services.search.removeEngine(engine);
+    await Services.search.setDefault(oldDefaultEngine);
   });
 });
 
 add_task(async function() {
+  // Test both directly setting a value and pressing enter, or setting the
+  // value through input events, like the user would do.
+  const setValueFns = [
+    value => {
+      gURLBar.value = value;
+    },
+    value => {
+      return UrlbarTestUtils.promiseAutocompleteResultPopup({
+        window,
+        waitForFocus,
+        value,
+      });
+    },
+  ];
+
   for (let test of gTests) {
-    let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
-    let browser = tab.linkedBrowser;
+    info("Testing: " + test.name);
+    await BrowserTestUtils.withNewTab({ gBrowser }, async browser => {
+      for (let setValueFn of setValueFns) {
+        gURLBar.select();
+        await setValueFn(test.text);
+        EventUtils.synthesizeKey("KEY_Enter");
 
-    // Simulate a user entering search terms
-    gURLBar.value = test.testText;
-    gURLBar.focus();
-    EventUtils.synthesizeKey("KEY_Enter");
+        await BrowserTestUtils.browserLoaded(
+          browser,
+          false,
+          "http://mochi.test:8888/browser/browser/components/urlbar/tests/browser/print_postdata.sjs"
+        );
 
-    await BrowserTestUtils.browserLoaded(browser, false, url => {
-      return url != "about:blank";
+        let textContent = await ContentTask.spawn(browser, null, async () => {
+          return content.document.body.textContent;
+        });
+
+        Assert.ok(textContent, "search page loaded");
+        let needle = "searchterms=" + test.expectText;
+        Assert.equal(
+          textContent,
+          needle,
+          "The query POST data should be returned in the response"
+        );
+      }
     });
-
-    info("Page loaded: " + browser.currentURI.spec);
-
-    let textContent = await ContentTask.spawn(browser, null, async () => {
-      return content.document.body.textContent;
-    });
-
-    Assert.ok(textContent, "search page loaded");
-    let needle = "searchterms=" + test.expectText;
-    Assert.equal(
-      textContent,
-      needle,
-      "The query POST data should be returned in the response"
-    );
-
-    BrowserTestUtils.removeTab(tab);
   }
 });
