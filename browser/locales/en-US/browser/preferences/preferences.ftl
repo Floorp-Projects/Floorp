@@ -868,9 +868,11 @@ sync-connect-another-device = Connect another device
 
 privacy-header = Browser Privacy
 
-## Privacy Section - Forms
+## Privacy Section - Logins and Passwords
 
 logins-header = Logins and Passwords
+
+# Checkbox to control whether UI is shown to users to save or fill logins/passwords.
 forms-ask-to-save-logins =
     .label = Ask to save logins and passwords for websites
     .accesskey = r
@@ -884,6 +886,8 @@ forms-breach-alerts =
     .label = Show alerts about passwords for breached websites
     .accesskey = b
 forms-breach-alerts-learn-more-link = Learn more
+
+# Checkbox which controls filling saved logins into fields automatically when they appear, in some cases without user interaction.
 forms-fill-logins-and-passwords =
     .label = Autofill logins and passwords
     .accesskey = i
