@@ -1905,22 +1905,16 @@ static void DoSyncSample(PSLockRef aLock, RegisteredThread& aRegisteredThread,
 // Writes the components of a periodic sample to ActivePS's ProfileBuffer.
 // The ThreadId entry is already written in the main ProfileBuffer, its location
 // is `aSamplePos`, we can write the rest to `aBuffer` (which may be different).
-static void DoPeriodicSample(PSLockRef aLock,
-                             RegisteredThread& aRegisteredThread,
-                             ProfiledThreadData& aProfiledThreadData,
-                             const TimeStamp& aNow, const Registers& aRegs,
-                             uint64_t aSamplePos, ProfileBuffer& aBuffer) {
+static inline void DoPeriodicSample(PSLockRef aLock,
+                                    RegisteredThread& aRegisteredThread,
+                                    ProfiledThreadData& aProfiledThreadData,
+                                    const TimeStamp& aNow,
+                                    const Registers& aRegs, uint64_t aSamplePos,
+                                    ProfileBuffer& aBuffer) {
   // WARNING: this function runs within the profiler's "critical section".
 
   DoSharedSample(aLock, /* aIsSynchronous = */ false, aRegisteredThread, aRegs,
                  aSamplePos, aBuffer);
-
-  ThreadResponsiveness* resp = aProfiledThreadData.GetThreadResponsiveness();
-  if (resp && resp->HasData()) {
-    double delta = resp->GetUnresponsiveDuration(
-        (aNow - CorePS::ProcessStartTime()).ToMilliseconds());
-    aBuffer.AddEntry(ProfileBufferEntry::Responsiveness(delta));
-  }
 }
 
 // END sampling/unwinding code
@@ -2874,13 +2868,31 @@ void SamplerThread::Run() {
             buffer.AddEntry(ProfileBufferEntry::TimeBeforeCompactStack(
                 delta.ToMilliseconds()));
 
+            Maybe<double> unresponsiveDuration_ms;
+
             // Suspend the thread and collect its stack data in the local
             // buffer.
             mSampler.SuspendAndSampleAndResumeThread(
                 lock, *registeredThread, [&](const Registers& aRegs) {
                   DoPeriodicSample(lock, *registeredThread, *profiledThreadData,
                                    now, aRegs, samplePos, localProfileBuffer);
+
+                  if (resp && resp->HasData()) {
+                    unresponsiveDuration_ms =
+                        Some(resp->GetUnresponsiveDuration(
+                            (now - CorePS::ProcessStartTime())
+                                .ToMilliseconds()));
+                  }
                 });
+
+            // If we got responsiveness data, store it before the CompactStack.
+            // Note: It is not stored inside the CompactStack so that it doesn't
+            // get incorrectly duplicated when the thread is sleeping.
+            if (unresponsiveDuration_ms.isSome()) {
+              CorePS::CoreBlocksRingBuffer().PutObjects(
+                  ProfileBufferEntry::Kind::UnresponsiveDurationMs,
+                  *unresponsiveDuration_ms);
+            }
 
             // There *must* be a CompactStack after a TimeBeforeCompactStack;
             // but note that other entries may have been concurrently inserted
