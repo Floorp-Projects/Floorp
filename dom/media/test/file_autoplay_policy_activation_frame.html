@@ -18,6 +18,7 @@
         (event) => {
           if (event.data == "click") {
             SpecialPowers.wrap(document).notifyUserGestureActivation();
+            event.source.postMessage("activated", "*");
           } else if (event.data == "play-audible") {
             playAndPostResult(false, event.source);
           } else if (event.data == "play-muted") {
