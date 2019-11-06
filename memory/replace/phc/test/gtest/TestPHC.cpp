@@ -31,10 +31,10 @@ bool JeInfoEq(jemalloc_ptr_info_t& aInfo, PtrInfoTag aTag, void* aAddr,
       ;
 }
 
-char* GetPHCAllocation(size_t aSize) {
+uint8_t* GetPHCAllocation(size_t aSize) {
   // A crude but effective way to get a PHC allocation.
   for (int i = 0; i < 2000000; i++) {
-    char* p = (char*)malloc(aSize);
+    uint8_t* p = (uint8_t*)malloc(aSize);
     if (ReplaceMalloc::IsPHCAllocation(p, nullptr)) {
       return p;
     }
@@ -61,7 +61,7 @@ TEST(PHC, TestPHCBasics)
   ASSERT_TRUE(PHCInfoEq(phcInfo, phc::AddrInfo::Kind::Unknown, nullptr, 0,
                         false, false));
 
-  char* p = GetPHCAllocation(32);
+  uint8_t* p = GetPHCAllocation(32);
   if (!p) {
     MOZ_CRASH("failed to get a PHC allocation");
   }
@@ -122,8 +122,8 @@ TEST(PHC, TestPHCBasics)
 
 TEST(PHC, TestPHCDisabling)
 {
-  char* p = GetPHCAllocation(32);
-  char* q = GetPHCAllocation(32);
+  uint8_t* p = GetPHCAllocation(32);
+  uint8_t* q = GetPHCAllocation(32);
   if (!p || !q) {
     MOZ_CRASH("failed to get a PHC allocation");
   }
@@ -133,11 +133,11 @@ TEST(PHC, TestPHCDisabling)
   ASSERT_FALSE(ReplaceMalloc::IsPHCEnabledOnCurrentThread());
 
   // Test realloc() on a PHC allocation while PHC is disabled on the thread.
-  char* p2 = (char*)realloc(p, 128);
+  uint8_t* p2 = (uint8_t*)realloc(p, 128);
   // The small realloc is in-place.
   ASSERT_TRUE(p2 == p);
   ASSERT_TRUE(ReplaceMalloc::IsPHCAllocation(p2, nullptr));
-  char* p3 = (char*)realloc(p2, 8192);
+  uint8_t* p3 = (uint8_t*)realloc(p2, 8192);
   // The big realloc is not in-place, and the result is not a PHC allocation.
   ASSERT_TRUE(p3 != p2);
   ASSERT_FALSE(ReplaceMalloc::IsPHCAllocation(p3, nullptr));
@@ -147,7 +147,7 @@ TEST(PHC, TestPHCDisabling)
   free(q);
 
   // These must not be PHC allocations.
-  char* r = GetPHCAllocation(32);  // This will fail.
+  uint8_t* r = GetPHCAllocation(32);  // This will fail.
   ASSERT_FALSE(!!r);
 
   ReplaceMalloc::ReenablePHCOnCurrentThread();
