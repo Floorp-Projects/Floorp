@@ -5,7 +5,7 @@
 package org.mozilla.fenix.share
 
 import mozilla.components.concept.sync.Device
-import org.mozilla.fenix.share.listadapters.AndroidShareOption
+import org.mozilla.fenix.share.listadapters.AppShareOption
 
 /**
  * Interactor for the share screen.
@@ -37,7 +37,7 @@ class ShareInteractor(
         controller.handleShareToAllDevices(devices)
     }
 
-    override fun onShareToApp(appToShareTo: AndroidShareOption.App) {
+    override fun onShareToApp(appToShareTo: AppShareOption) {
         controller.handleShareToApp(appToShareTo)
     }
 }

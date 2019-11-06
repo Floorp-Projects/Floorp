@@ -10,11 +10,12 @@ apply from: "$project.rootDir/automation/gradle/versionCode.gradle"
 apply plugin: 'androidx.navigation.safeargs.kotlin'
 apply plugin: 'com.google.android.gms.oss-licenses-plugin'
 
-import com.android.build.gradle.internal.tasks.AppPreBuildTask
+
+import com.android.build.OutputFile
 import org.gradle.internal.logging.text.StyledTextOutput.Style
 import org.gradle.internal.logging.text.StyledTextOutputFactory
+
 import static org.gradle.api.tasks.testing.TestResult.ResultType
-import com.android.build.OutputFile
 
 android {
     compileSdkVersion 28
@@ -413,6 +414,7 @@ dependencies {
     implementation Deps.androidx_navigation_fragment
     implementation Deps.androidx_navigation_ui
     implementation Deps.androidx_recyclerview
+    implementation Deps.androidx_lifecycle_livedata
     implementation Deps.androidx_lifecycle_runtime
     implementation Deps.androidx_lifecycle_viewmodel
     implementation Deps.androidx_core

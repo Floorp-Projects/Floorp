@@ -26,7 +26,7 @@ import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.getRootView
 import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.nav
-import org.mozilla.fenix.share.listadapters.AndroidShareOption
+import org.mozilla.fenix.share.listadapters.AppShareOption
 
 /**
  * [ShareFragment] controller.
@@ -36,7 +36,7 @@ import org.mozilla.fenix.share.listadapters.AndroidShareOption
 interface ShareController {
     fun handleReauth()
     fun handleShareClosed()
-    fun handleShareToApp(app: AndroidShareOption.App)
+    fun handleShareToApp(app: AppShareOption)
     fun handleAddNewDevice()
     fun handleShareToDevice(device: Device)
     fun handleShareToAllDevices(devices: List<Device>)
@@ -72,7 +72,7 @@ class DefaultShareController(
         dismiss()
     }
 
-    override fun handleShareToApp(app: AndroidShareOption.App) {
+    override fun handleShareToApp(app: AppShareOption) {
         val intent = Intent(ACTION_SEND).apply {
             putExtra(EXTRA_TEXT, getShareText())
             type = "text/plain"

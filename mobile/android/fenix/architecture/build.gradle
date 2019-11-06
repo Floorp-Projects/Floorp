@@ -36,7 +36,8 @@ dependencies {
     implementation Deps.kotlin_stdlib
 
     implementation Deps.androidx_annotation
-    implementation Deps.androidx_lifecycle_extensions
+    implementation Deps.androidx_lifecycle_livedata
+    implementation Deps.androidx_lifecycle_viewmodel
     implementation Deps.mozilla_support_base
 
     implementation Deps.rxAndroid

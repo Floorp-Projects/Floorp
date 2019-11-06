@@ -17,7 +17,7 @@ import org.mozilla.fenix.share.viewholders.AppViewHolder
  */
 class AppShareAdapter(
     private val interactor: ShareToAppsInteractor
-) : ListAdapter<AndroidShareOption, AppViewHolder>(DiffCallback) {
+) : ListAdapter<AppShareOption, AppViewHolder>(DiffCallback) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AppViewHolder {
         val view = LayoutInflater.from(parent.context)
@@ -30,37 +30,26 @@ class AppShareAdapter(
         holder.bind(getItem(position))
     }
 
-    private object DiffCallback : DiffUtil.ItemCallback<AndroidShareOption>() {
-        override fun areItemsTheSame(oldItem: AndroidShareOption, newItem: AndroidShareOption) =
-            when (oldItem) {
-                AndroidShareOption.Invisible -> oldItem === newItem
-                is AndroidShareOption.App ->
-                    newItem is AndroidShareOption.App && oldItem.packageName == newItem.packageName
-            }
+    private object DiffCallback : DiffUtil.ItemCallback<AppShareOption>() {
+        override fun areItemsTheSame(oldItem: AppShareOption, newItem: AppShareOption) =
+            oldItem.packageName == newItem.packageName
 
-        @Suppress("DiffUtilEquals")
-        override fun areContentsTheSame(oldItem: AndroidShareOption, newItem: AndroidShareOption) =
+        override fun areContentsTheSame(oldItem: AppShareOption, newItem: AppShareOption) =
             oldItem == newItem
     }
 }
 
 /**
  * Represents an app that can be shared to.
+ *
+ * @property name Name of the app.
+ * @property icon Icon representing the share target.
+ * @property packageName Package of the app.
+ * @property activityName Activity that will be shared to.
  */
-sealed class AndroidShareOption {
-    object Invisible : AndroidShareOption()
-    /**
-     * Represents an app that can be shared to.
-     *
-     * @property name Name of the app.
-     * @property icon Icon representing the share target.
-     * @property packageName Package of the app.
-     * @property activityName Activity that will be shared to.
-     */
-    data class App(
-        val name: String,
-        val icon: Drawable,
-        val packageName: String,
-        val activityName: String
-    ) : AndroidShareOption()
-}
+data class AppShareOption(
+    val name: String,
+    val icon: Drawable,
+    val packageName: String,
+    val activityName: String
+)

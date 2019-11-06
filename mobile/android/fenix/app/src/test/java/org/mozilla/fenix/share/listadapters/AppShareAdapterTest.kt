@@ -14,7 +14,6 @@ import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
 import io.mockk.verifyOrder
-import kotlinx.android.synthetic.main.app_share_list_item.view.*
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -28,11 +27,11 @@ import org.robolectric.annotation.Config
 @Config(application = TestApplication::class)
 class AppShareAdapterTest {
 
-    private val appOptions = mutableListOf<AndroidShareOption>(
-        AndroidShareOption.App("App 0", mockk(), "package 0", "activity 0"),
-        AndroidShareOption.App("App 1", mockk(), "package 1", "activity 1")
+    private val appOptions = mutableListOf(
+        AppShareOption("App 0", mockk(), "package 0", "activity 0"),
+        AppShareOption("App 1", mockk(), "package 1", "activity 1")
     )
-    private val appOptionsEmpty = emptyList<AndroidShareOption>()
+    private val appOptionsEmpty = emptyList<AppShareOption>()
     private val interactor: ShareInteractor = mockk(relaxed = true)
 
     @Test
