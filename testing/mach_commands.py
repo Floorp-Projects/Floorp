@@ -840,15 +840,8 @@ class TestInfoCommand(MachCommandBase):
         name_idx = self.full_test_name.rfind('/')
         if name_idx > 0:
             self.short_name = self.full_test_name[name_idx + 1:]
-
-        # robo_name is short_name without ".java" - for robocop
-        self.robo_name = None
-        if self.short_name:
-            robo_idx = self.short_name.rfind('.java')
-            if robo_idx > 0:
-                self.robo_name = self.short_name[:robo_idx]
-            if self.short_name == self.test_name:
-                self.short_name = None
+        if self.short_name and self.short_name == self.test_name:
+            self.short_name = None
 
         if not (self.show_results or self.show_durations or self.show_tasks):
             # no need to determine ActiveData name if not querying
@@ -859,8 +852,7 @@ class TestInfoCommand(MachCommandBase):
         simple_names = [
             self.full_test_name,
             self.test_name,
-            self.short_name,
-            self.robo_name
+            self.short_name
         ]
         simple_names = [x for x in simple_names if x]
         searches = [
@@ -1091,8 +1083,6 @@ class TestInfoCommand(MachCommandBase):
             search = '%s,%s' % (search, self.test_name)
         if self.short_name:
             search = '%s,%s' % (search, self.short_name)
-        if self.robo_name:
-            search = '%s,%s' % (search, self.robo_name)
         payload = {'quicksearch': search,
                    'include_fields': 'id,summary'}
         response = requests.get('https://bugzilla.mozilla.org/rest/bug',
