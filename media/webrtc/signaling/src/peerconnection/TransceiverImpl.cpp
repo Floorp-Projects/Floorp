@@ -33,8 +33,8 @@ using LocalDirection = MediaSessionConduitLocalDirection;
 
 TransceiverImpl::TransceiverImpl(
     const std::string& aPCHandle, MediaTransportHandler* aTransportHandler,
-    JsepTransceiver* aJsepTransceiver, nsIEventTarget* aMainThread,
-    nsIEventTarget* aStsThread, dom::MediaStreamTrack* aReceiveTrack,
+    JsepTransceiver* aJsepTransceiver, nsISerialEventTarget* aMainThread,
+    nsISerialEventTarget* aStsThread, dom::MediaStreamTrack* aReceiveTrack,
     dom::MediaStreamTrack* aSendTrack, WebRtcCallWrapper* aCallWrapper,
     const PrincipalHandle& aPrincipalHandle)
     : mPCHandle(aPCHandle),
