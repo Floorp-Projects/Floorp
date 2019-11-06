@@ -78,7 +78,8 @@ export function connect(
  * @static
  */
 export function navigated() {
-  return async function({ panel }: ThunkArgs) {
+  return async function({ dispatch, panel }: ThunkArgs) {
+    await dispatch(updateThreads());
     panel.emit("reloaded");
   };
 }
