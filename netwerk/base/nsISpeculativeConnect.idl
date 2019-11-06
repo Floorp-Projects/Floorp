@@ -24,8 +24,8 @@ interface nsISpeculativeConnect : nsISupports
      * @param aURI the URI of the hinted transaction
      * @param aPrincipal the principal that will be used for opening the
      *        channel of the hinted transaction.
-     * @param aCallbacks any security callbacks for use with SSL for interfaces
-     *        such as nsIBadCertListener. May be null.
+     * @param aCallbacks any security callbacks for use with SSL for interfaces.
+     *        May be null.
      *
      */
     void speculativeConnect(in nsIURI aURI,

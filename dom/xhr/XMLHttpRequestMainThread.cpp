@@ -144,10 +144,6 @@ const nsCString kLiteralString_charset = NS_LITERAL_CSTRING("charset");
 const nsCString kLiteralString_UTF_8 = NS_LITERAL_CSTRING("UTF-8");
 }  // namespace
 
-// CIDs
-#define NS_BADCERTHANDLER_CONTRACTID \
-  "@mozilla.org/content/xmlhttprequest-bad-cert-handler;1"
-
 #define NS_PROGRESS_EVENT_INTERVAL 50
 #define MAX_SYNC_TIMEOUT_WHEN_UNLOADING 10000 /* 10 secs */
 
@@ -3363,42 +3359,33 @@ XMLHttpRequestMainThread::GetInterface(const nsIID& aIID, void** aResult) {
     }
   }
 
-  if (mFlagBackgroundRequest) {
-    nsCOMPtr<nsIInterfaceRequestor> badCertHandler(
-        do_CreateInstance(NS_BADCERTHANDLER_CONTRACTID, &rv));
-
-    // Ignore failure to get component, we may not have all its dependencies
-    // available
-    if (NS_SUCCEEDED(rv)) {
-      rv = badCertHandler->GetInterface(aIID, aResult);
-      if (NS_SUCCEEDED(rv)) return rv;
-    }
-  } else if (aIID.Equals(NS_GET_IID(nsIAuthPrompt)) ||
-             aIID.Equals(NS_GET_IID(nsIAuthPrompt2))) {
+  if (!mFlagBackgroundRequest && (aIID.Equals(NS_GET_IID(nsIAuthPrompt)) ||
+                                  aIID.Equals(NS_GET_IID(nsIAuthPrompt2)))) {
     nsCOMPtr<nsIPromptFactory> wwatch =
         do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Get the an auth prompter for our window so that the parenting
     // of the dialogs works as it should when using tabs.
-
     nsCOMPtr<nsPIDOMWindowOuter> window;
     if (GetOwner()) {
       window = GetOwner()->GetOuterWindow();
     }
-
     return wwatch->GetPrompt(window, aIID, reinterpret_cast<void**>(aResult));
   }
+
   // Now check for the various XHR non-DOM interfaces, except
   // nsIProgressEventSink and nsIChannelEventSink which we already
   // handled above.
-  else if (aIID.Equals(NS_GET_IID(nsIStreamListener))) {
+  if (aIID.Equals(NS_GET_IID(nsIStreamListener))) {
     *aResult = static_cast<nsIStreamListener*>(EnsureXPCOMifier().take());
     return NS_OK;
-  } else if (aIID.Equals(NS_GET_IID(nsIRequestObserver))) {
+  }
+  if (aIID.Equals(NS_GET_IID(nsIRequestObserver))) {
     *aResult = static_cast<nsIRequestObserver*>(EnsureXPCOMifier().take());
     return NS_OK;
-  } else if (aIID.Equals(NS_GET_IID(nsITimerCallback))) {
+  }
+  if (aIID.Equals(NS_GET_IID(nsITimerCallback))) {
     *aResult = static_cast<nsITimerCallback*>(EnsureXPCOMifier().take());
     return NS_OK;
   }
