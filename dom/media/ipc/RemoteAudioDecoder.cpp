@@ -138,7 +138,15 @@ MediaResult RemoteAudioDecoderParent::ProcessDecodedData(
     array.AppendElement(output);
   }
 
-  aDecodedData = std::move(array);
+  // With the new possiblity of batch decodes, we can't always move the
+  // results directly into DecodedOutputIPDL.  If there are already
+  // elements, we should append the new results.
+  if (aDecodedData.type() == DecodedOutputIPDL::TArrayOfRemoteAudioDataIPDL) {
+    aDecodedData.get_ArrayOfRemoteAudioDataIPDL().AppendElements(
+        std::move(array));
+  } else {
+    aDecodedData = std::move(array);
+  }
 
   return NS_OK;
 }
