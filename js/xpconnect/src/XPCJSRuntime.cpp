@@ -32,7 +32,6 @@
 #include "nsIPlatformInfo.h"
 #include "nsPIDOMWindow.h"
 #include "nsPrintfCString.h"
-#include "nsScriptSecurityManager.h"
 #include "nsThreadPool.h"
 #include "nsWindowSizes.h"
 #include "mozilla/Preferences.h"
@@ -1135,8 +1134,6 @@ void XPCJSRuntime::Shutdown(JSContext* cx) {
   xpc_DelocalizeRuntime(JS_GetRuntime(cx));
 
   JS::SetGCSliceCallback(cx, mPrevGCSliceCallback);
-
-  nsScriptSecurityManager::GetScriptSecurityManager()->ClearJSCallbacks(cx);
 
   // Shut down the helper threads
   gHelperThreads->Shutdown();
@@ -3047,8 +3044,6 @@ void XPCJSRuntime::Initialize(JSContext* cx) {
 
   // these jsids filled in later when we have a JSContext to work with.
   mStrIDs[0] = JSID_VOID;
-
-  nsScriptSecurityManager::GetScriptSecurityManager()->InitJSCallbacks(cx);
 
   // Unconstrain the runtime's threshold on nominal heap size, to avoid
   // triggering GC too often if operating continuously near an arbitrary
