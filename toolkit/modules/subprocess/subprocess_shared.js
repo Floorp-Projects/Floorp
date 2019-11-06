@@ -93,6 +93,12 @@ const SubprocessConstants = {
    *           @constant
    */
   ERROR_BAD_EXECUTABLE: 0xff7a0003,
+  /**
+   * @property {integer} ERROR_INVALID_OPTION
+   *           The operation failed because an invalid option was provided.
+   *           @constant
+   */
+  ERROR_INVALID_OPTION: 0xff7a0004,
 };
 
 Object.freeze(SubprocessConstants);
