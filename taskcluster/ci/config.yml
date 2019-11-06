@@ -310,10 +310,10 @@ workers:
             os: linux
             worker-type: '{alias}'
         b-win2012:
-            provisioner: aws-provisioner-v1
+            provisioner: 'gecko-{level}'
             implementation: generic-worker
             os: windows
-            worker-type: 'gecko-{level}-{alias}'
+            worker-type: '{alias}'
         images:
             provisioner: 'gecko-{level}'
             implementation: docker-worker
@@ -394,20 +394,20 @@ workers:
                     '3': 'gecko-{level}-t-osx-1014'
                     default: 'gecko-t-osx-1014'
         t-win10-64(|-gpu):
-            provisioner: aws-provisioner-v1
+            provisioner: 'gecko-t'
             implementation: generic-worker
             os: windows
-            worker-type: 'gecko-{alias}'
+            worker-type: '{alias}'
         t-win10-64(-hw|-ref-hw):
             provisioner: releng-hardware
             implementation: generic-worker
             os: windows
             worker-type: 'gecko-{alias}'
         t-win7-32(|-gpu):
-            provisioner: aws-provisioner-v1
+            provisioner: 'gecko-t'
             implementation: generic-worker
             os: windows
-            worker-type: 'gecko-{alias}'
+            worker-type: '{alias}'
         t-win64-aarch64-laptop:
             provisioner: bitbar
             implementation: generic-worker
