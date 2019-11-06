@@ -56,13 +56,25 @@ const CONFIG_PREFS = [
 ];
 
 var FxAccountsConfig = {
+  async promiseSignUpURI(entrypoint, extraParams = {}) {
+    return this._buildURL("signup", {
+      extraParams: { entrypoint, ...extraParams },
+    });
+  },
+
+  async promiseSignInURI(entrypoint, extraParams = {}) {
+    return this._buildURL("signin", {
+      extraParams: { entrypoint, ...extraParams },
+    });
+  },
+
   async promiseEmailURI(email, entrypoint, extraParams = {}) {
     return this._buildURL("", {
       extraParams: { entrypoint, email, ...extraParams },
     });
   },
 
-  async promiseConnectAccountURI(entrypoint, extraParams = {}) {
+  async promiseEmailFirstURI(entrypoint, extraParams = {}) {
     return this._buildURL("", {
       extraParams: { entrypoint, action: "email", ...extraParams },
     });
