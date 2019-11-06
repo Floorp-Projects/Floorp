@@ -101,7 +101,6 @@ class TabGroup final : public SchedulerGroup,
   // Count with 'aActiveOnly' = true
   uint32_t Count(bool aActiveOnly = false) const;
 
-  nsTArray<nsPIDOMWindowOuter*> GetTopLevelWindows() const;
   const nsTArray<nsPIDOMWindowOuter*>& GetWindows() { return mWindows; }
 
   // This method is always safe to call off the main thread. The nsIEventTarget
