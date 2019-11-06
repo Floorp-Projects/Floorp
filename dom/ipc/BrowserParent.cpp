@@ -3996,19 +3996,5 @@ mozilla::ipc::IPCResult BrowserParent::RecvIsWindowSupportingProtectedMedia(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult BrowserParent::RecvIsWindowSupportingWebVR(
-    const uint64_t& aOuterWindowID,
-    IsWindowSupportingWebVRResolver&& aResolve) {
-#ifdef XP_WIN
-  bool isFxrWindow =
-      FxRWindowManager::GetInstance()->IsFxRWindow(aOuterWindowID);
-  aResolve(!isFxrWindow);
-#else
-  aResolve(true);
-#endif
-
-  return IPC_OK();
-}
-
 }  // namespace dom
 }  // namespace mozilla
