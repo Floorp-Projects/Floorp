@@ -98,13 +98,13 @@ void moz_container_put(MozContainer* container, GtkWidget* child_widget, gint x,
 void moz_container_force_default_visual(MozContainer* container);
 
 #ifdef MOZ_WAYLAND
-struct wl_surface* moz_container_get_wl_surface(MozContainer* container);
-struct wl_egl_window* moz_container_get_wl_egl_window(MozContainer* container);
+struct wl_surface* moz_container_get_wl_surface(MozContainer* container,
+                                                int scale);
+struct wl_egl_window* moz_container_get_wl_egl_window(MozContainer* container,
+                                                      int scale);
 
 gboolean moz_container_has_wl_egl_window(MozContainer* container);
 gboolean moz_container_surface_needs_clear(MozContainer* container);
-void moz_container_scale_changed(MozContainer* container,
-                                 GtkAllocation* aAllocation);
 void moz_container_set_initial_draw_callback(
     MozContainer* container, std::function<void(void)> inital_draw_cb);
 void moz_container_move_resize(MozContainer* container, int dx, int dy,

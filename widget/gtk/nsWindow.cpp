@@ -1892,10 +1892,13 @@ void* nsWindow::GetNativeData(uint32_t aDataType) {
       return gfxPlatformGtk::GetPlatform()->GetCompositorDisplay();
 #endif  // MOZ_X11
     case NS_NATIVE_EGL_WINDOW: {
-      if (mIsX11Display)
+      if (mIsX11Display) {
         return mGdkWindow ? (void*)GDK_WINDOW_XID(mGdkWindow) : nullptr;
+      }
 #ifdef MOZ_WAYLAND
-      if (mContainer) return moz_container_get_wl_egl_window(mContainer);
+      if (mContainer) {
+        return moz_container_get_wl_egl_window(mContainer, GdkScaleFactor());
+      }
 #endif
       return nullptr;
     }
@@ -3437,13 +3440,6 @@ void nsWindow::OnCompositedChanged() {
 }
 
 void nsWindow::OnScaleChanged(GtkAllocation* aAllocation) {
-#ifdef MOZ_WAYLAND
-  if (mContainer && moz_container_has_wl_egl_window(mContainer)) {
-    // We need to resize wl_egl_window when scale changes.
-    moz_container_scale_changed(mContainer, aAllocation);
-  }
-#endif
-
   // This eventually propagate new scale to the PuppetWidgets
   OnDPIChanged();
 
@@ -7181,7 +7177,8 @@ void nsWindow::GetCompositorWidgetInitData(
 #ifdef MOZ_WAYLAND
 wl_surface* nsWindow::GetWaylandSurface() {
   if (mContainer)
-    return moz_container_get_wl_surface(MOZ_CONTAINER(mContainer));
+    return moz_container_get_wl_surface(MOZ_CONTAINER(mContainer),
+                                        GdkScaleFactor());
 
   NS_WARNING(
       "nsWindow::GetWaylandSurfaces(): We don't have any mContainer for "
