@@ -6,7 +6,6 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 from mozbuild.util import memoize
 
-from .taskcluster import get_root_url
 from .keyed_by import evaluate_keyed_by
 from .attributes import keymatch
 
@@ -91,13 +90,4 @@ def get_worker_type(graph_config, worker_type, level):
     """
     worker_config = _get(graph_config, worker_type, level)
 
-    # translate the provisionerId to 'ec2' everywhere but the original
-    # https://taskcluster.net deployment.  Once that deployment is no longer in
-    # use, this can be removed and all corresponding provisioners changed to
-    # `ec2`
-    root_url = get_root_url(False)
-    provisioner = worker_config["provisioner"]
-    if root_url != 'https://taskcluster.net' and provisioner == 'aws-provisioner-v1':
-        provisioner = 'ec2'
-
-    return provisioner, worker_config['worker-type']
+    return worker_config['provisioner'], worker_config['worker-type']
