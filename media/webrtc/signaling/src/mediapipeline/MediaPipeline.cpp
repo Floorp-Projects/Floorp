@@ -240,8 +240,8 @@ class AudioProxyThread {
 MediaPipeline::MediaPipeline(const std::string& aPc,
                              MediaTransportHandler* aTransportHandler,
                              DirectionType aDirection,
-                             nsCOMPtr<nsIEventTarget> aMainThread,
-                             nsCOMPtr<nsIEventTarget> aStsThread,
+                             nsCOMPtr<nsISerialEventTarget> aMainThread,
+                             nsCOMPtr<nsISerialEventTarget> aStsThread,
                              RefPtr<MediaSessionConduit> aConduit)
     : mDirection(aDirection),
       mLevel(0),
@@ -767,8 +767,9 @@ class MediaPipelineTransmit::VideoFrameFeeder : public VideoConverterListener {
 
 MediaPipelineTransmit::MediaPipelineTransmit(
     const std::string& aPc, MediaTransportHandler* aTransportHandler,
-    nsCOMPtr<nsIEventTarget> aMainThread, nsCOMPtr<nsIEventTarget> aStsThread,
-    bool aIsVideo, RefPtr<MediaSessionConduit> aConduit)
+    nsCOMPtr<nsISerialEventTarget> aMainThread,
+    nsCOMPtr<nsISerialEventTarget> aStsThread, bool aIsVideo,
+    RefPtr<MediaSessionConduit> aConduit)
     : MediaPipeline(aPc, aTransportHandler, DirectionType::TRANSMIT,
                     aMainThread, aStsThread, aConduit),
       mIsVideo(aIsVideo),
@@ -1238,7 +1239,8 @@ class GenericReceiveListener : public MediaTrackListener {
 
 MediaPipelineReceive::MediaPipelineReceive(
     const std::string& aPc, MediaTransportHandler* aTransportHandler,
-    nsCOMPtr<nsIEventTarget> aMainThread, nsCOMPtr<nsIEventTarget> aStsThread,
+    nsCOMPtr<nsISerialEventTarget> aMainThread,
+    nsCOMPtr<nsISerialEventTarget> aStsThread,
     RefPtr<MediaSessionConduit> aConduit)
     : MediaPipeline(aPc, aTransportHandler, DirectionType::RECEIVE, aMainThread,
                     aStsThread, aConduit) {}
@@ -1404,7 +1406,8 @@ class MediaPipelineReceiveAudio::PipelineListener
 
 MediaPipelineReceiveAudio::MediaPipelineReceiveAudio(
     const std::string& aPc, MediaTransportHandler* aTransportHandler,
-    nsCOMPtr<nsIEventTarget> aMainThread, nsCOMPtr<nsIEventTarget> aStsThread,
+    nsCOMPtr<nsISerialEventTarget> aMainThread,
+    nsCOMPtr<nsISerialEventTarget> aStsThread,
     RefPtr<AudioSessionConduit> aConduit, dom::MediaStreamTrack* aTrack,
     const PrincipalHandle& aPrincipalHandle)
     : MediaPipelineReceive(aPc, aTransportHandler, aMainThread, aStsThread,
@@ -1549,7 +1552,8 @@ class MediaPipelineReceiveVideo::PipelineRenderer
 
 MediaPipelineReceiveVideo::MediaPipelineReceiveVideo(
     const std::string& aPc, MediaTransportHandler* aTransportHandler,
-    nsCOMPtr<nsIEventTarget> aMainThread, nsCOMPtr<nsIEventTarget> aStsThread,
+    nsCOMPtr<nsISerialEventTarget> aMainThread,
+    nsCOMPtr<nsISerialEventTarget> aStsThread,
     RefPtr<VideoSessionConduit> aConduit, dom::MediaStreamTrack* aTrack,
     const PrincipalHandle& aPrincipalHandle)
     : MediaPipelineReceive(aPc, aTransportHandler, aMainThread, aStsThread,
