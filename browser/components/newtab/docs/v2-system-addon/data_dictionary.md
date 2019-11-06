@@ -198,7 +198,8 @@ Schema definitions/validations that can be used for tests can be found in `syste
   "locale": "en-US",
   "source": "NEWTAB_FOOTER_BAR",
   "message_id": "some_snippet_id",
-  "event": "IMPRESSION"
+  "event": "IMPRESSION",
+  "event_context": "{\"view\":\"application_menu\"}"
 }
 ```
 
@@ -214,6 +215,7 @@ Schema definitions/validations that can be used for tests can be found in `syste
 | `experiment_id` | [Optional] The unique identifier for a specific experiment. | :one:
 | `event_id` | [Required] An identifier shared by multiple performance pings that describe an entire request flow. | :one:
 | `event` | [Required] The type of event. Any user defined string ("click", "share", "delete", "more_items") | :one:
+| `event_context` | [Optional] A string to record the context of an AS Router event ping. Compound context values will be stringified by JSON.stringify| :one:
 | `highlight_type` | [Optional] Either ["bookmarks", "recommendation", "history"]. | :one:
 | `impression_id` | [Optional] The unique impression identifier for a specific client. | :one:
 | `ip` | [Auto populated by Onyx] The IP address of the client. | :two:

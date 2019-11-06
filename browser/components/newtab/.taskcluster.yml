@@ -14,8 +14,8 @@ tasks:
         then: ${event.after}
         else: ${event.pull_request.head.sha}
     in:
-    - provisionerId: aws-provisioner-v1
-      workerType: github-worker
+    - provisionerId: proj-misc
+      workerType: ci
       deadline: ${fromNow('1 day')}
       payload:
         maxRunTime: 7200

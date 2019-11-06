@@ -23,6 +23,7 @@ const FAKE_ROUTER_MESSAGE_PROVIDER = [{ id: "cfr", enabled: true }];
 const FAKE_ROUTER_MESSAGE_PROVIDER_COHORT = [
   { id: "cfr", enabled: true, cohort: "cohort_group" },
 ];
+const FAKE_TELEMETRY_ID = "foo123";
 
 describe("TelemetryFeed", () => {
   let globals;
@@ -101,6 +102,9 @@ describe("TelemetryFeed", () => {
     globals.set("ExtensionSettingsStore", fakeExtensionSettingsStore);
     globals.set("PingCentre", PingCentre);
     globals.set("UTEventReporting", UTEventReporting);
+    globals.set("ClientID", {
+      getClientID: sandbox.spy(async () => FAKE_TELEMETRY_ID),
+    });
     sandbox
       .stub(ASRouterPreferences, "providers")
       .get(() => FAKE_ROUTER_MESSAGE_PROVIDER);
@@ -115,9 +119,6 @@ describe("TelemetryFeed", () => {
   describe("#init", () => {
     it("should add .pingCentre, a PingCentre instance", () => {
       assert.instanceOf(instance.pingCentre, PingCentre);
-    });
-    it("should add .pingCentreForASRouter, a PingCentre instance", () => {
-      assert.instanceOf(instance.pingCentreForASRouter, PingCentre);
     });
     it("should add .utEvents, a UTEventReporting instance", () => {
       assert.instanceOf(instance.utEvents, UTEventReporting);
@@ -773,7 +774,7 @@ describe("TelemetryFeed", () => {
     });
   });
   describe("#applyCFRPolicy", () => {
-    it("should use client_id and message_id in prerelease", () => {
+    it("should use client_id and message_id in prerelease", async () => {
       globals.set("UpdateUtils", {
         getUpdateChannel() {
           return "nightly";
@@ -781,21 +782,19 @@ describe("TelemetryFeed", () => {
       });
       const data = {
         action: "cfr_user_event",
-        source: "CFR",
         event: "IMPRESSION",
-        client_id: "some_client_id",
-        impression_id: "some_impression_id",
         message_id: "cfr_message_01",
         bucket_id: "cfr_bucket_01",
       };
-      const ping = instance.applyCFRPolicy(data);
+      const { ping, pingType } = await instance.applyCFRPolicy(data);
 
-      assert.isUndefined(ping.client_id);
-      assert.propertyVal(ping, "impression_id", "n/a");
+      assert.equal(pingType, "cfr");
+      assert.isUndefined(ping.impression_id);
+      assert.propertyVal(ping, "client_id", FAKE_TELEMETRY_ID);
+      assert.propertyVal(ping, "bucket_id", "cfr_bucket_01");
       assert.propertyVal(ping, "message_id", "cfr_message_01");
-      assert.isUndefined(ping.bucket_id);
     });
-    it("should use impression_id and bucket_id in release", () => {
+    it("should use impression_id and bucket_id in release", async () => {
       globals.set("UpdateUtils", {
         getUpdateChannel() {
           return "release";
@@ -803,21 +802,19 @@ describe("TelemetryFeed", () => {
       });
       const data = {
         action: "cfr_user_event",
-        source: "CFR",
         event: "IMPRESSION",
-        client_id: "some_client_id",
-        impression_id: "some_impression_id",
         message_id: "cfr_message_01",
         bucket_id: "cfr_bucket_01",
       };
-      const ping = instance.applyCFRPolicy(data);
+      const { ping, pingType } = await instance.applyCFRPolicy(data);
 
+      assert.equal(pingType, "cfr");
+      assert.isUndefined(ping.client_id);
       assert.propertyVal(ping, "impression_id", FAKE_UUID);
-      assert.propertyVal(ping, "client_id", "n/a");
-      assert.propertyVal(ping, "message_id", "cfr_bucket_01");
-      assert.isUndefined(ping.bucket_id);
+      assert.propertyVal(ping, "message_id", "n/a");
+      assert.propertyVal(ping, "bucket_id", "cfr_bucket_01");
     });
-    it("should use client_id and message_id in the experiment cohort in release", () => {
+    it("should use client_id and message_id in the experiment cohort in release", async () => {
       globals.set("UpdateUtils", {
         getUpdateChannel() {
           return "release";
@@ -828,75 +825,76 @@ describe("TelemetryFeed", () => {
         .get(() => FAKE_ROUTER_MESSAGE_PROVIDER_COHORT);
       const data = {
         action: "cfr_user_event",
-        source: "CFR",
         event: "IMPRESSION",
-        client_id: "some_client_id",
-        impression_id: "some_impression_id",
         message_id: "cfr_message_01",
         bucket_id: "cfr_bucket_01",
       };
-      const ping = instance.applyCFRPolicy(data);
+      const { ping, pingType } = await instance.applyCFRPolicy(data);
 
-      assert.isUndefined(ping.client_id);
-      assert.propertyVal(ping, "impression_id", "n/a");
+      assert.equal(pingType, "cfr");
+      assert.isUndefined(ping.impression_id);
+      assert.propertyVal(ping, "client_id", FAKE_TELEMETRY_ID);
+      assert.propertyVal(ping, "bucket_id", "cfr_bucket_01");
       assert.propertyVal(ping, "message_id", "cfr_message_01");
-      assert.isUndefined(ping.bucket_id);
     });
   });
   describe("#applySnippetsPolicy", () => {
-    it("should drop client_id and unset impression_id", () => {
+    it("should include client_id", async () => {
       const data = {
         action: "snippets_user_event",
-        source: "SNIPPETS",
         event: "IMPRESSION",
-        client_id: "n/a",
-        impression_id: "some_impression_id",
         message_id: "snippets_message_01",
       };
-      const ping = instance.applySnippetsPolicy(data);
+      const { ping, pingType } = await instance.applySnippetsPolicy(data);
 
-      assert.isUndefined(ping.client_id);
-      assert.propertyVal(ping, "impression_id", "n/a");
+      assert.equal(pingType, "snippets");
+      assert.propertyVal(ping, "client_id", FAKE_TELEMETRY_ID);
       assert.propertyVal(ping, "message_id", "snippets_message_01");
     });
   });
   describe("#applyOnboardingPolicy", () => {
-    it("should drop client_id and unset impression_id", () => {
+    it("should include client_id", async () => {
       const data = {
         action: "onboarding_user_event",
-        source: "ONBOARDING",
         event: "CLICK_BUTTION",
-        client_id: "n/a",
-        impression_id: "some_impression_id",
         message_id: "onboarding_message_01",
       };
-      const ping = instance.applyOnboardingPolicy(data);
+      const { ping, pingType } = await instance.applyOnboardingPolicy(data);
 
-      assert.isUndefined(ping.client_id);
-      assert.propertyVal(ping, "impression_id", "n/a");
+      assert.equal(pingType, "onboarding");
+      assert.propertyVal(ping, "client_id", FAKE_TELEMETRY_ID);
       assert.propertyVal(ping, "message_id", "onboarding_message_01");
+    });
+  });
+  describe("#applyUndesiredEventPolicy", () => {
+    it("should exclude client_id and use impression_id", () => {
+      const data = {
+        action: "asrouter_undesired_event",
+        event: "RS_MISSING_DATA",
+      };
+      const { ping, pingType } = instance.applyUndesiredEventPolicy(data);
+
+      assert.equal(pingType, "undesired-events");
+      assert.isUndefined(ping.client_id);
+      assert.propertyVal(ping, "impression_id", FAKE_UUID);
     });
   });
   describe("#createASRouterEvent", () => {
     it("should create a valid AS Router event", async () => {
       const data = {
-        action: "snippet_user_event",
-        source: "SNIPPETS",
+        action: "snippets_user_event",
         event: "CLICK",
         message_id: "snippets_message_01",
       };
       const action = ac.ASRouterUserEvent(data);
-      const ping = await instance.createASRouterEvent(action);
+      const { ping } = await instance.createASRouterEvent(action);
 
       assert.validate(ping, ASRouterEventPing);
-      assert.propertyVal(ping, "client_id", "n/a");
-      assert.propertyVal(ping, "source", "SNIPPETS");
       assert.propertyVal(ping, "event", "CLICK");
     });
     it("should call applyCFRPolicy if action equals to cfr_user_event", async () => {
       const data = {
         action: "cfr_user_event",
-        source: "CFR",
         event: "IMPRESSION",
         message_id: "cfr_message_01",
       };
@@ -909,7 +907,6 @@ describe("TelemetryFeed", () => {
     it("should call applySnippetsPolicy if action equals to snippets_user_event", async () => {
       const data = {
         action: "snippets_user_event",
-        source: "SNIPPETS",
         event: "IMPRESSION",
         message_id: "snippets_message_01",
       };
@@ -922,7 +919,6 @@ describe("TelemetryFeed", () => {
     it("should call applyOnboardingPolicy if action equals to onboarding_user_event", async () => {
       const data = {
         action: "onboarding_user_event",
-        source: "ONBOARDING",
         event: "CLICK_BUTTON",
         message_id: "onboarding_message_01",
       };
@@ -931,6 +927,39 @@ describe("TelemetryFeed", () => {
       await instance.createASRouterEvent(action);
 
       assert.calledOnce(instance.applyOnboardingPolicy);
+    });
+    it("should call applyUndesiredEventPolicy if action equals to asrouter_undesired_event", async () => {
+      const data = {
+        action: "asrouter_undesired_event",
+        event: "UNDESIRED_EVENT",
+      };
+      sandbox.stub(instance, "applyUndesiredEventPolicy");
+      const action = ac.ASRouterUserEvent(data);
+      await instance.createASRouterEvent(action);
+
+      assert.calledOnce(instance.applyUndesiredEventPolicy);
+    });
+    it("should stringify event_context if it is an Object", async () => {
+      const data = {
+        action: "asrouter_undesired_event",
+        event: "UNDESIRED_EVENT",
+        event_context: { foo: "bar" },
+      };
+      const action = ac.ASRouterUserEvent(data);
+      const { ping } = await instance.createASRouterEvent(action);
+
+      assert.propertyVal(ping, "event_context", JSON.stringify({ foo: "bar" }));
+    });
+    it("should not stringify event_context if it is a String", async () => {
+      const data = {
+        action: "asrouter_undesired_event",
+        event: "UNDESIRED_EVENT",
+        event_context: "foo",
+      };
+      const action = ac.ASRouterUserEvent(data);
+      const { ping } = await instance.createASRouterEvent(action);
+
+      assert.propertyVal(ping, "event_context", "foo");
     });
   });
   describe("#sendEvent", () => {
@@ -974,19 +1003,6 @@ describe("TelemetryFeed", () => {
       assert.calledWith(instance.pingCentre.sendStructuredIngestionPing, event);
     });
   });
-  describe("#sendASRouterEvent", () => {
-    it("should call PingCentre for AS Router", async () => {
-      FakePrefs.prototype.prefs.telemetry = true;
-      const event = {};
-      instance = new TelemetryFeed();
-      sandbox.stub(instance.pingCentreForASRouter, "sendPing");
-
-      instance.sendASRouterEvent(event);
-
-      assert.calledWith(instance.pingCentreForASRouter.sendPing, event);
-    });
-  });
-
   describe("#setLoadTriggerInfo", () => {
     it("should call saveSessionPerfData w/load_trigger_{ts,type} data", () => {
       const stub = sandbox.stub(instance, "saveSessionPerfData");
@@ -1082,13 +1098,6 @@ describe("TelemetryFeed", () => {
     });
     it("should call .utEvents.uninit", () => {
       const stub = sandbox.stub(instance.utEvents, "uninit");
-
-      instance.uninit();
-
-      assert.calledOnce(stub);
-    });
-    it("should call .pingCentreForASRouter.uninit", () => {
-      const stub = sandbox.stub(instance.pingCentreForASRouter, "uninit");
 
       instance.uninit();
 
@@ -1563,13 +1572,14 @@ describe("TelemetryFeed", () => {
       sandbox.stub(global.gUUIDGenerator, "generateUUID").returns(fakeUUID);
       const feed = new TelemetryFeed();
       const url = feed._generateStructuredIngestionEndpoint(
+        "testNameSpace",
         "testPingType",
         "1"
       );
 
       assert.equal(
         url,
-        `${fakeEndpoint}/testPingType/1/${fakeUUIDWithoutBraces}`
+        `${fakeEndpoint}/testNameSpace/testPingType/1/${fakeUUIDWithoutBraces}`
       );
     });
   });
@@ -1593,6 +1603,35 @@ describe("TelemetryFeed", () => {
       instance.handleTrailheadEnrollEvent({ data });
 
       assert.notCalled(instance.utEvents.sendTrailheadEnrollEvent);
+    });
+  });
+  describe("#handleASRouterUserEvent", () => {
+    it("should call sendStructuredIngestionEvent on known pingTypes", async () => {
+      const data = {
+        action: "onboarding_user_event",
+        event: "IMPRESSION",
+        message_id: "12345",
+      };
+      instance = new TelemetryFeed();
+      sandbox.spy(instance, "sendStructuredIngestionEvent");
+
+      await instance.handleASRouterUserEvent({ data });
+
+      assert.calledOnce(instance.sendStructuredIngestionEvent);
+    });
+    it("should reportError on unknown pingTypes", async () => {
+      const data = {
+        action: "unknown_event",
+        event: "IMPRESSION",
+        message_id: "12345",
+      };
+      instance = new TelemetryFeed();
+      sandbox.spy(instance, "sendStructuredIngestionEvent");
+
+      await instance.handleASRouterUserEvent({ data });
+
+      assert.calledOnce(global.Cu.reportError);
+      assert.notCalled(instance.sendStructuredIngestionEvent);
     });
   });
 });
