@@ -509,5 +509,6 @@ class TestParser(unittest.TestCase):
         self.assertTrue(hist.record_in_processes, ["main", "content"])
         self.assertTrue(hist.record_into_store, ["main"])
 
+
 if __name__ == '__main__':
     mozunit.main()
