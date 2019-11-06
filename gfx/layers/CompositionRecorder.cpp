@@ -8,6 +8,9 @@
 #include "gfxUtils.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/gfxVars.h"
+#include "nsIInputStream.h"
+#include "nsIBinaryOutputStream.h"
+#include "nsIObjectOutputStream.h"
 
 #include <ctime>
 #include <iomanip>
@@ -72,6 +75,29 @@ void CompositionRecorder::WriteCollectedFrames() {
     i++;
   }
   mCollectedFrames.Clear();
+}
+
+CollectedFrames CompositionRecorder::GetCollectedFrames() {
+  nsTArray<CollectedFrame> frames;
+
+  TimeDuration delta = TimeStamp::NowUnfuzzed() - mRecordingStart;
+  double recordingStart = PR_Now() / 1000.0 - delta.ToMilliseconds();
+
+  for (RefPtr<RecordedFrame>& frame : mCollectedFrames) {
+    nsCString buffer;
+
+    RefPtr<DataSourceSurface> surf = frame->GetSourceSurface();
+    double offset = (frame->GetTimeStamp() - mRecordingStart).ToMilliseconds();
+
+    gfxUtils::EncodeSourceSurface(surf, ImageType::PNG, EmptyString(),
+                                  gfxUtils::eDataURIEncode, nullptr, &buffer);
+
+    frames.EmplaceBack(offset, std::move(buffer));
+  }
+
+  mCollectedFrames.Clear();
+
+  return CollectedFrames(recordingStart, std::move(frames));
 }
 
 void CompositionRecorder::ClearCollectedFrames() { mCollectedFrames.Clear(); }
