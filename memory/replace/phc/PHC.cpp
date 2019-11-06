@@ -532,25 +532,21 @@ class GMut {
     // also returns the arena ID (but only in debug builds).
     //
     // - NeverAllocated: must be 0.
-    // - InUse: can be any valid arena ID value.
-    // - Freed: can be any valid arena ID value.
+    // - InUse | Freed: can be any valid arena ID value.
     Maybe<arena_id_t> mArenaId;
 
     // The usable size, which could be bigger than the requested size.
     // - NeverAllocated: must be 0.
-    // - InUse: must be > 0.
-    // - Freed: must be > 0.
+    // - InUse | Freed: must be > 0.
     size_t mUsableSize;
 
     // The allocation stack.
     // - NeverAllocated: Nothing.
-    // - InUse: Some.
-    // - Freed: Some.
+    // - InUse | Freed: Some.
     Maybe<StackTrace> mAllocStack;
 
     // The free stack.
-    // - NeverAllocated: Nothing.
-    // - InUse: Some.
+    // - NeverAllocated | InUse: Nothing.
     // - Freed: Some.
     Maybe<StackTrace> mFreeStack;
 
