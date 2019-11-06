@@ -2655,7 +2655,7 @@
 
 - name: dom.webnotifications.requireuserinteraction
   type: RelaxedAtomicBool
-  value: @IS_EARLY_BETA_OR_EARLIER@
+  value: true
   mirror: always
 
 - name: dom.webnotifications.requireinteraction.enabled
