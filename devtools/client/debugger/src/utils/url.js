@@ -37,3 +37,7 @@ export const parse = memoize(function parse(url: string): any {
     return defaultUrl;
   }
 });
+
+export function sameOrigin(firstUrl, secondUrl) {
+  return parse(firstUrl).origin == parse(secondUrl).origin;
+}
