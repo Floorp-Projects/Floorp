@@ -28,10 +28,10 @@
 #include "nsCRT.h"
 #include "prtime.h"
 #include "mozilla/Logging.h"
-#include "nsNodeUtils.h"
 #include "nsIContent.h"
 #include "mozilla/dom/CustomElementRegistry.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/MutationObservers.h"
 #include "mozilla/Preferences.h"
 
 #include "nsGenericHTMLElement.h"

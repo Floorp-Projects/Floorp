@@ -18,6 +18,7 @@
 #include "mozilla/dom/AnimationEffect.h"
 #include "mozilla/dom/DocumentTimeline.h"
 #include "mozilla/dom/KeyframeEffect.h"
+#include "mozilla/dom/MutationObservers.h"
 
 #include "nsPresContext.h"
 #include "nsPresContextInlines.h"

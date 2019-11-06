@@ -22,7 +22,6 @@
 #include "nsGkAtoms.h"
 #include "nsCOMArray.h"
 #include "nsNameSpaceManager.h"
-#include "nsNodeUtils.h"
 #include "nsTextNode.h"
 #include "mozAutoDocUpdate.h"
 #include "nsWrapperCacheInlines.h"

@@ -46,7 +46,6 @@
 #include "nsJSPrincipals.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsAttrName.h"
-#include "nsNodeUtils.h"
 
 #include "nsNetCID.h"
 #include "nsIServiceManager.h"

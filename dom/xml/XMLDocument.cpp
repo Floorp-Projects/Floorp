@@ -35,7 +35,6 @@
 #include "nsIAuthPrompt.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsContentPolicyUtils.h"
-#include "nsNodeUtils.h"
 #include "nsIConsoleService.h"
 #include "nsIScriptError.h"
 #include "nsHTMLDocument.h"
