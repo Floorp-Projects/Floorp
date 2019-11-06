@@ -184,7 +184,8 @@ dom/bindings/export: layout/style/export
 toolkit/components/telemetry/export: layout/style/export
 
 ifdef ENABLE_CLANG_PLUGIN
-$(filter-out config/host build/unix/stdc++compat/% build/clang-plugin/%,$(compile_targets)): build/clang-plugin/host build/clang-plugin/tests/target-objects
+# Only target rules use the clang plugin.
+$(filter %/target %/target-objects,$(filter-out config/export config/host build/unix/stdc++compat/% build/clang-plugin/%,$(compile_targets))): build/clang-plugin/host build/clang-plugin/tests/target-objects
 build/clang-plugin/tests/target-objects: build/clang-plugin/host
 # clang-plugin tests require js-confdefs.h on js standalone builds and mozilla-config.h on
 # other builds, because they are -include'd.
