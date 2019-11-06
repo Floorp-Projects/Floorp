@@ -15,6 +15,7 @@
 #include "nsWrapperCache.h"
 #include "nsTHashtable.h"
 #include "nsHashKeys.h"
+#include "nsISHistory.h"
 
 class nsIDocShell;
 
@@ -60,6 +61,10 @@ class CanonicalBrowsingContext final : public BrowsingContext {
 
   already_AddRefed<WindowGlobalParent> GetEmbedderWindowGlobal() const;
 
+  nsISHistory* GetSessionHistory() { return mSessionHistory; }
+  void SetSessionHistory(nsISHistory* aSHistory) {
+    mSessionHistory = aSHistory;
+  }
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
 
@@ -144,6 +149,8 @@ class CanonicalBrowsingContext final : public BrowsingContext {
 
   // The current remoteness change which is in a pending state.
   RefPtr<PendingRemotenessChange> mPendingRemotenessChange;
+
+  nsCOMPtr<nsISHistory> mSessionHistory;
 };
 
 }  // namespace dom

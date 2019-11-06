@@ -46,6 +46,8 @@ include protocol PRemoteDecoderManager;
 include protocol PProfiler;
 include protocol PScriptCache;
 include protocol PSessionStorageObserver;
+include protocol PSHEntry;
+include protocol PSHistory;
 include protocol PBenchmarkStorage;
 include DOMTypes;
 include JavaScriptTypes;
@@ -329,6 +331,12 @@ struct PostMessageData
     bool isFromPrivateWindow;
 };
 
+union PSHEntryOrSharedID
+{
+  PSHEntry;
+  uint64_t;
+};
+
 /**
  * The PContent protocol is a top-level protocol between the UI process
  * and a content process. There is exactly one PContentParent/PContentChild pair
@@ -365,6 +373,8 @@ nested(upto inside_cpow) sync protocol PContent
     manages PScriptCache;
     manages PLoginReputation;
     manages PSessionStorageObserver;
+    manages PSHEntry;
+    manages PSHistory;
     manages PBenchmarkStorage;
 
     // Depending on exactly how the new browser is being created, it might be
@@ -835,6 +845,10 @@ child:
     async InitSandboxTesting(Endpoint<PSandboxTestingChild> aEndpoint);
 #endif
 
+    async DestroySHEntrySharedState(uint64_t aID);
+
+    async EvictContentViewers(uint64_t[] aToEvictSharedStateIDs);
+
 parent:
     async InitBackground(Endpoint<PBackgroundParent> aEndpoint);
 
@@ -910,6 +924,11 @@ parent:
     async PLoginReputation(URIParams formURI);
 
     async PSessionStorageObserver();
+
+    async PSHistory(BrowsingContext aContext);
+
+    // Clone from entry or use shared id.
+    sync PSHEntry(nullable PSHistory shistory, PSHEntryOrSharedID entryOrSharedID);
 
     async PBenchmarkStorage();
 
