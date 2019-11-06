@@ -101,6 +101,11 @@ dependencies {
 
     implementation project(':ui-autocomplete')
 
+    // Add a dependency on service-glean to simplify the testing workflow
+    // for engineers that want to test Gecko metrics exfiltrated via the Glean
+    // SDK. See bug 1592935 for more context.
+    implementation project(":service-glean")
+
     implementation project(':support-utils')
     implementation project(':feature-downloads')
     implementation project(':support-ktx')

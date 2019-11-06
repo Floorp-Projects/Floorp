@@ -6,6 +6,7 @@ package org.mozilla.samples.browser
 
 import android.app.Application
 import mozilla.components.browser.session.Session
+import mozilla.components.service.glean.Glean
 import mozilla.components.support.base.facts.Facts
 import mozilla.components.support.base.facts.processor.LogFactProcessor
 import mozilla.components.support.base.log.Log
@@ -25,6 +26,13 @@ class SampleApplication : Application() {
         if (!isMainProcess()) {
             return
         }
+
+        // IMPORTANT: the following lines initialize the Glean SDK but disable upload
+        // of pings. If, for testing purposes, upload is required to be on, change the
+        // next line to `Glean.setUploadEnabled(true)`
+        Glean.setUploadEnabled(false)
+
+        Glean.initialize(applicationContext)
 
         Facts.registerProcessor(LogFactProcessor())
 
