@@ -381,6 +381,12 @@ let ACTORS = {
     allFrames: true,
   },
 
+  Thumbnails: {
+    child: {
+      moduleURI: "resource://gre/actors/ThumbnailsChild.jsm",
+    },
+  },
+
   Zoom: {
     parent: {
       moduleURI: "resource://gre/actors/ZoomParent.jsm",
@@ -475,17 +481,6 @@ let LEGACY_ACTORS = {
     child: {
       module: "resource://gre/actors/SelectionSourceChild.jsm",
       messages: ["ViewSource:GetSelection"],
-    },
-  },
-
-  Thumbnails: {
-    child: {
-      module: "resource://gre/actors/ThumbnailsChild.jsm",
-      messages: [
-        "Browser:Thumbnail:Request",
-        "Browser:Thumbnail:CheckState",
-        "Browser:Thumbnail:GetOriginalURL",
-      ],
     },
   },
 

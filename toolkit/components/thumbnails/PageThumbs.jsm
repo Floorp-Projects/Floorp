@@ -12,8 +12,6 @@ const LATEST_STORAGE_VERSION = 3;
 const EXPIRATION_MIN_CHUNK_SIZE = 50;
 const EXPIRATION_INTERVAL_SECS = 3600;
 
-var gRemoteThumbId = 0;
-
 // If a request for a thumbnail comes in and we find one that is "stale"
 // (or don't find one at all) we automatically queue a request to generate a
 // new one.
@@ -175,11 +173,13 @@ var PageThumbs = {
 
     return new Promise(resolve => {
       let canvas = this.createCanvas(aBrowser.ownerGlobal);
-      this.captureToCanvas(aBrowser, canvas, () => {
-        canvas.toBlob(blob => {
-          resolve(blob, this.contentType);
-        });
-      });
+      this.captureToCanvas(aBrowser, canvas)
+        .then(() => {
+          canvas.toBlob(blob => {
+            resolve(blob, this.contentType);
+          });
+        })
+        .catch(e => Cu.reportError(e));
     });
   },
 
@@ -192,23 +192,19 @@ var PageThumbs = {
    * @param aCanvas The canvas to draw to. The thumbnail will be scaled to match
    *   the dimensions of this canvas. If callers pass a 0x0 canvas, the canvas
    *   will be resized to default thumbnail dimensions just prior to painting.
-   * @param aCallback (optional) A callback invoked once the thumbnail has been
-   *   rendered to aCanvas.
    * @param aArgs (optional) Additional named parameters:
    *   fullScale - request that a non-downscaled image be returned.
    */
-  captureToCanvas(aBrowser, aCanvas, aCallback, aArgs) {
+  async captureToCanvas(aBrowser, aCanvas, aArgs) {
     let telemetryCaptureTime = new Date();
     let args = {
       fullScale: aArgs ? aArgs.fullScale : false,
     };
-    this._captureToCanvas(aBrowser, aCanvas, args, aCanvas => {
+    return this._captureToCanvas(aBrowser, aCanvas, args).then(() => {
       Services.telemetry
         .getHistogramById("FX_THUMBNAILS_CAPTURE_TIME_MS")
         .add(new Date() - telemetryCaptureTime);
-      if (aCallback) {
-        aCallback(aCanvas);
-      }
+      return aCanvas;
     });
   },
 
@@ -220,69 +216,52 @@ var PageThumbs = {
    * content being displayed.
    *
    * @param aBrowser The target browser
-   * @param aCallback(aResult) A callback invoked once security checks have
-   *   completed. aResult is a boolean indicating the combined result of the
-   *   security checks performed.
    */
-  shouldStoreThumbnail(aBrowser, aCallback) {
+  async shouldStoreThumbnail(aBrowser) {
     // Don't capture in private browsing mode.
     if (PrivateBrowsingUtils.isBrowserPrivate(aBrowser)) {
-      aCallback(false);
-      return;
+      return false;
     }
     if (aBrowser.isRemoteBrowser) {
-      let mm = aBrowser.messageManager;
-      let resultFunc = function(aMsg) {
-        mm.removeMessageListener(
-          "Browser:Thumbnail:CheckState:Response",
-          resultFunc
+      if (aBrowser.browsingContext.currentWindowGlobal) {
+        let thumbnailsActor = aBrowser.browsingContext.currentWindowGlobal.getActor(
+          "Thumbnails"
         );
-        aCallback(aMsg.data.result);
-      };
-      mm.addMessageListener(
-        "Browser:Thumbnail:CheckState:Response",
-        resultFunc
-      );
-      try {
-        mm.sendAsyncMessage("Browser:Thumbnail:CheckState");
-      } catch (ex) {
-        Cu.reportError(ex);
-        // If the message manager is not able send our message, taking a content
-        // screenshot is also not going to work: return false.
-        resultFunc({ data: { result: false } });
+        return thumbnailsActor
+          .sendQuery("Browser:Thumbnail:CheckState")
+          .catch(err => {
+            return false;
+          });
       }
-    } else {
-      aCallback(
-        PageThumbUtils.shouldStoreContentThumbnail(
-          aBrowser.contentDocument,
-          aBrowser.docShell
-        )
-      );
+      return false;
     }
+    return PageThumbUtils.shouldStoreContentThumbnail(
+      aBrowser.contentDocument,
+      aBrowser.docShell
+    );
   },
 
   // The background thumbnail service captures to canvas but doesn't want to
   // participate in this service's telemetry, which is why this method exists.
-  _captureToCanvas(aBrowser, aCanvas, aArgs, aCallback) {
+  async _captureToCanvas(aBrowser, aCanvas, aArgs) {
     if (aBrowser.isRemoteBrowser) {
-      (async () => {
-        let data = await this._captureRemoteThumbnail(
-          aBrowser,
-          aCanvas.width,
-          aCanvas.height,
-          aArgs
-        );
-        let canvas = data.thumbnail;
-        let ctx = canvas.getContext("2d");
-        let imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        aCanvas.width = canvas.width;
-        aCanvas.height = canvas.height;
+      let thumbnail = await this._captureRemoteThumbnail(
+        aBrowser,
+        aCanvas.width,
+        aCanvas.height,
+        aArgs
+      );
+
+      // 'thumbnail' can be null if the browser has navigated away after starting
+      // the thumbnail request, so we check it here.
+      if (thumbnail) {
+        let ctx = thumbnail.getContext("2d");
+        let imgData = ctx.getImageData(0, 0, thumbnail.width, thumbnail.height);
+        aCanvas.width = thumbnail.width;
+        aCanvas.height = thumbnail.height;
         aCanvas.getContext("2d").putImageData(imgData, 0, 0);
-        if (aCallback) {
-          aCallback(aCanvas);
-        }
-      })();
-      return;
+      }
+      return aCanvas;
     }
     // The content is a local page, grab a thumbnail sync.
     PageThumbUtils.createSnapshotThumbnail(
@@ -290,10 +269,7 @@ var PageThumbs = {
       aCanvas,
       aArgs
     );
-
-    if (aCallback) {
-      aCallback(aCanvas);
-    }
+    return aCanvas;
   },
 
   /**
@@ -306,65 +282,48 @@ var PageThumbs = {
    *   fullScale - request that a non-downscaled image be returned.
    * @return a promise
    */
-  _captureRemoteThumbnail(aBrowser, aWidth, aHeight, aArgs) {
-    return new Promise(resolve => {
-      // The index we send with the request so we can identify the
-      // correct response.
-      let index = gRemoteThumbId++;
-
-      // Thumbnail request response handler
-      let mm = aBrowser.messageManager;
-
-      // Browser:Thumbnail:Response handler
-      let thumbFunc = function(aMsg) {
-        // Ignore events unrelated to our request
-        if (aMsg.data.id != index) {
-          return;
-        }
-
-        mm.removeMessageListener("Browser:Thumbnail:Response", thumbFunc);
-        let imageBlob = aMsg.data.thumbnail;
-        let doc = aBrowser.parentElement.ownerDocument;
-        let reader = new FileReader();
-        reader.addEventListener("loadend", function() {
-          let image = doc.createElementNS(PageThumbUtils.HTML_NAMESPACE, "img");
-          image.onload = function() {
-            let thumbnail = doc.createElementNS(
-              PageThumbUtils.HTML_NAMESPACE,
-              "canvas"
-            );
-            thumbnail.width = image.naturalWidth;
-            thumbnail.height = image.naturalHeight;
-            let ctx = thumbnail.getContext("2d");
-            ctx.drawImage(image, 0, 0);
-            resolve({
-              thumbnail,
-            });
-          };
-          image.src = reader.result;
-        });
-        // xxx wish there was a way to skip this encoding step
-        reader.readAsDataURL(imageBlob);
-      };
-
-      // Send a thumbnail request
-      mm.addMessageListener("Browser:Thumbnail:Response", thumbFunc);
-      mm.sendAsyncMessage("Browser:Thumbnail:Request", {
-        canvasWidth: aWidth,
-        canvasHeight: aHeight,
-        background: PageThumbUtils.THUMBNAIL_BG_COLOR,
-        id: index,
-        additionalArgs: aArgs,
-      });
-    });
+  async _captureRemoteThumbnail(aBrowser, aWidth, aHeight, aArgs) {
+    if (!aBrowser.browsingContext) {
+      return null;
+    }
+    let thumbnailsActor = aBrowser.browsingContext.currentWindowGlobal.getActor(
+      "Thumbnails"
+    );
+    let [contentWidth, contentHeight] = await thumbnailsActor.sendQuery(
+      "Browser:Thumbnail:ContentSize"
+    );
+    let fullScale = aArgs ? aArgs.fullScale : false;
+    let scale = fullScale
+      ? 1
+      : Math.min(Math.max(aWidth / contentWidth, aHeight / contentHeight), 1);
+    let image = await aBrowser.drawSnapshot(
+      0,
+      0,
+      contentWidth,
+      contentHeight,
+      scale,
+      PageThumbUtils.THUMBNAIL_BG_COLOR
+    );
+    if (aBrowser.parentElement) {
+      let doc = aBrowser.parentElement.ownerDocument;
+      let thumbnail = doc.createElementNS(
+        PageThumbUtils.HTML_NAMESPACE,
+        "canvas"
+      );
+      thumbnail.width = aWidth;
+      thumbnail.height = aHeight;
+      let ctx = thumbnail.getContext("2d");
+      ctx.drawImage(image, 0, 0);
+      return thumbnail;
+    }
+    return null;
   },
 
   /**
    * Captures a thumbnail for the given browser and stores it to the cache.
    * @param aBrowser The browser to capture a thumbnail for.
-   * @param aCallback The function to be called when finished (optional).
    */
-  captureAndStore: function PageThumbs_captureAndStore(aBrowser, aCallback) {
+  captureAndStore: async function PageThumbs_captureAndStore(aBrowser) {
     if (!this._prefEnabled()) {
       return;
     }
@@ -373,41 +332,30 @@ var PageThumbs = {
     let originalURL;
     let channelError = false;
 
-    (async () => {
-      if (!aBrowser.isRemoteBrowser) {
-        let channel = aBrowser.docShell.currentDocumentChannel;
-        originalURL = channel.originalURI.spec;
-        // see if this was an error response.
-        channelError = PageThumbUtils.isChannelErrorResponse(channel);
-      } else {
-        let resp = await new Promise(resolve => {
-          let mm = aBrowser.messageManager;
-          let respName = "Browser:Thumbnail:GetOriginalURL:Response";
-          mm.addMessageListener(respName, function onResp(msg) {
-            mm.removeMessageListener(respName, onResp);
-            resolve(msg.data);
-          });
-          mm.sendAsyncMessage("Browser:Thumbnail:GetOriginalURL");
-        });
-        originalURL = resp.originalURL || url;
-        channelError = resp.channelError;
-      }
+    if (!aBrowser.isRemoteBrowser) {
+      let channel = aBrowser.docShell.currentDocumentChannel;
+      originalURL = channel.originalURI.spec;
+      // see if this was an error response.
+      channelError = PageThumbUtils.isChannelErrorResponse(channel);
+    } else {
+      let thumbnailsActor = aBrowser.browsingContext.currentWindowGlobal.getActor(
+        "Thumbnails"
+      );
+      let resp = await thumbnailsActor.sendQuery(
+        "Browser:Thumbnail:GetOriginalURL"
+      );
 
-      let isSuccess = true;
-      try {
-        let blob = await this.captureToBlob(aBrowser);
-        let buffer = await TaskUtils.readBlob(blob);
-        await this._store(originalURL, url, buffer, channelError);
-      } catch (ex) {
-        Cu.reportError(
-          "Exception thrown during thumbnail capture: '" + ex + "'"
-        );
-        isSuccess = false;
-      }
-      if (aCallback) {
-        aCallback(isSuccess);
-      }
-    })();
+      originalURL = resp.originalURL || url;
+      channelError = resp.channelError;
+    }
+
+    try {
+      let blob = await this.captureToBlob(aBrowser);
+      let buffer = await TaskUtils.readBlob(blob);
+      await this._store(originalURL, url, buffer, channelError);
+    } catch (ex) {
+      Cu.reportError("Exception thrown during thumbnail capture: '" + ex + "'");
+    }
   },
 
   /**
@@ -417,33 +365,30 @@ var PageThumbs = {
    * such notifications if they want to be notified of an updated thumbnail.
    *
    * @param aBrowser The content window of this browser will be captured.
-   * @param aCallback The function to be called when finished (optional).
    */
-  captureAndStoreIfStale: function PageThumbs_captureAndStoreIfStale(
-    aBrowser,
-    aCallback
+  captureAndStoreIfStale: async function PageThumbs_captureAndStoreIfStale(
+    aBrowser
   ) {
+    if (!aBrowser.currentURI) {
+      return false;
+    }
     let url = aBrowser.currentURI.spec;
-    PageThumbsStorage.isFileRecentForURL(url).then(
-      recent => {
-        if (
-          !recent &&
-          // Careful, the call to PageThumbsStorage is async, so the browser may
-          // have navigated away from the URL or even closed.
-          aBrowser.currentURI &&
-          aBrowser.currentURI.spec == url
-        ) {
-          this.captureAndStore(aBrowser, aCallback);
-        } else if (aCallback) {
-          aCallback(true);
-        }
-      },
-      err => {
-        if (aCallback) {
-          aCallback(false);
-        }
-      }
-    );
+    let recent;
+    try {
+      recent = await PageThumbsStorage.isFileRecentForURL(url);
+    } catch {
+      return false;
+    }
+    if (
+      !recent &&
+      // Careful, the call to PageThumbsStorage is async, so the browser may
+      // have navigated away from the URL or even closed.
+      aBrowser.currentURI &&
+      aBrowser.currentURI.spec == url
+    ) {
+      await this.captureAndStore(aBrowser);
+    }
+    return true;
   },
 
   /**
@@ -456,42 +401,35 @@ var PageThumbs = {
    * @param aData An ArrayBuffer containing the image data.
    * @param aNoOverwrite If true and files for the URLs already exist, the files
    *                     will not be overwritten.
-   * @return {Promise}
    */
-  _store: function PageThumbs__store(
+  _store: async function PageThumbs__store(
     aOriginalURL,
     aFinalURL,
     aData,
     aNoOverwrite
   ) {
-    return (async function() {
-      let telemetryStoreTime = new Date();
-      await PageThumbsStorage.writeData(aFinalURL, aData, aNoOverwrite);
-      Services.telemetry
-        .getHistogramById("FX_THUMBNAILS_STORE_TIME_MS")
-        .add(new Date() - telemetryStoreTime);
+    let telemetryStoreTime = new Date();
+    await PageThumbsStorage.writeData(aFinalURL, aData, aNoOverwrite);
+    Services.telemetry
+      .getHistogramById("FX_THUMBNAILS_STORE_TIME_MS")
+      .add(new Date() - telemetryStoreTime);
 
-      Services.obs.notifyObservers(null, "page-thumbnail:create", aFinalURL);
-      // We've been redirected. Create a copy of the current thumbnail for
-      // the redirect source. We need to do this because:
-      //
-      // 1) Users can drag any kind of links onto the newtab page. If those
-      //    links redirect to a different URL then we want to be able to
-      //    provide thumbnails for both of them.
-      //
-      // 2) The newtab page should actually display redirect targets, only.
-      //    Because of bug 559175 this information can get lost when using
-      //    Sync and therefore also redirect sources appear on the newtab
-      //    page. We also want thumbnails for those.
-      if (aFinalURL != aOriginalURL) {
-        await PageThumbsStorage.copy(aFinalURL, aOriginalURL, aNoOverwrite);
-        Services.obs.notifyObservers(
-          null,
-          "page-thumbnail:create",
-          aOriginalURL
-        );
-      }
-    })();
+    Services.obs.notifyObservers(null, "page-thumbnail:create", aFinalURL);
+    // We've been redirected. Create a copy of the current thumbnail for
+    // the redirect source. We need to do this because:
+    //
+    // 1) Users can drag any kind of links onto the newtab page. If those
+    //    links redirect to a different URL then we want to be able to
+    //    provide thumbnails for both of them.
+    //
+    // 2) The newtab page should actually display redirect targets, only.
+    //    Because of bug 559175 this information can get lost when using
+    //    Sync and therefore also redirect sources appear on the newtab
+    //    page. We also want thumbnails for those.
+    if (aFinalURL != aOriginalURL) {
+      await PageThumbsStorage.copy(aFinalURL, aOriginalURL, aNoOverwrite);
+      Services.obs.notifyObservers(null, "page-thumbnail:create", aOriginalURL);
+    }
   },
 
   /**
