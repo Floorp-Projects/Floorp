@@ -15,7 +15,7 @@
         "byName": {},
         "byBlocks": {},
         "usedIds": {
-          "1": 1
+          "0": 0
         }
       }
     }
@@ -36,7 +36,7 @@
         "byName": {},
         "byBlocks": {},
         "usedIds": {
-          "1": 1
+          "0": 0
         }
       }
     }
@@ -57,7 +57,7 @@
         "byName": {},
         "byBlocks": {},
         "usedIds": {
-          "1": 1
+          "0": 0
         }
       }
     }
@@ -78,7 +78,7 @@
         "byName": {},
         "byBlocks": {},
         "usedIds": {
-          "1": 1
+          "0": 0
         }
       }
     }
@@ -99,7 +99,7 @@
         "byName": {},
         "byBlocks": {},
         "usedIds": {
-          "1": 1
+          "0": 0
         }
       }
     }
@@ -120,7 +120,7 @@
         "byName": {},
         "byBlocks": {},
         "usedIds": {
-          "1": 1
+          "0": 0
         }
       }
     }
@@ -141,7 +141,7 @@
         "byName": {},
         "byBlocks": {},
         "usedIds": {
-          "1": 1
+          "0": 0
         }
       }
     }
@@ -668,7 +668,8 @@
       "../../@babel/types/lib/validators/isPlaceholderType.js": 517,
       "../../@babel/types/lib/definitions/placeholders.js": 518,
       "../../webpack/buildin/harmony-module.js": 519,
-      "../../babel-loader/lib/index.js??ref--1!../../devtools-modules/src/saveAs.js": 520
+      "../../babel-loader/lib/index.js??ref--1!../../devtools-modules/src/saveAs.js": 520,
+      "../../punycode/punycode.js": 521
     },
     "usedIds": {
       "0": 0,
@@ -1191,7 +1192,8 @@
       "517": 517,
       "518": 518,
       "519": 519,
-      "520": 520
+      "520": 520,
+      "521": 521
     }
   },
   "chunks": {
