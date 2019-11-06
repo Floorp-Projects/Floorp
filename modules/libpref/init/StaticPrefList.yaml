@@ -6361,6 +6361,13 @@
   value: false
   mirror: always
 
+# Whether to show anti-spoof confirmation prompts when navigating to a url
+# with userinfo
+- name: network.auth.confirmAuth.enabled
+  type: bool
+  value: false
+  mirror: always
+
 # 0-Accept, 1-dontAcceptForeign, 2-dontAcceptAny, 3-limitForeign,
 # 4-rejectTracker
 # Keep the old default of accepting all cookies
