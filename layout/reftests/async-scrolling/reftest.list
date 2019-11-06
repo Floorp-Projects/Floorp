@@ -53,7 +53,7 @@ fuzzy-if(Android,0-6,0-4) fuzzy-if(skiaContent&&!Android,0-1,0-34) fuzzy-if(webr
 fuzzy-if(Android,0-6,0-4) fuzzy-if(webrender&&gtkWidget,64-64,24-24) fuzzy-if(webrender&&cocoaWidget,7-7,37-37) skip-if(!asyncPan) == offscreen-clipped-blendmode-2.html offscreen-clipped-blendmode-ref.html
 fuzzy-if(Android,0-6,0-4) skip == offscreen-clipped-blendmode-3.html offscreen-clipped-blendmode-ref.html # bug 1251588 - wrong AGR on mix-blend-mode item
 fuzzy-if(Android,0-6,0-4) fuzzy-if(webrender&&gtkWidget,64-64,24-24) fuzzy-if(webrender&&cocoaWidget,7-7,37-37) skip-if(!asyncPan) == offscreen-clipped-blendmode-4.html offscreen-clipped-blendmode-ref.html
-fuzzy-if(Android,0-7,0-1503) fuzzy-if(webrender&&gtkWidget,1-1,20-20) fuzzy-if(webrender&&cocoaWidget,1-1,19-19) skip-if(!asyncPan) == perspective-scrolling-1.html perspective-scrolling-1-ref.html
+fuzzy-if(Android,0-7,0-1600) fuzzy-if(webrender&&gtkWidget,1-1,20-20) fuzzy-if(webrender&&cocoaWidget,1-1,19-19) skip-if(!asyncPan) == perspective-scrolling-1.html perspective-scrolling-1-ref.html
 fuzzy-if(Android,0-7,0-4) skip-if(!asyncPan) == perspective-scrolling-2.html perspective-scrolling-2-ref.html
 fuzzy-if(Android,0-19,0-4) fuzzy-if(webrender&&gtkWidget,24-24,14-14) fuzzy-if(webrender&&cocoaWidget,13-13,39-39) skip-if(!asyncPan) == perspective-scrolling-3.html perspective-scrolling-3-ref.html
 fuzzy-if(Android,0-7,0-4) fuzzy-if(webrender&&gtkWidget,54-54,14-14) fuzzy-if(webrender&&cocoaWidget,20-20,40-40) skip-if(!asyncPan) == perspective-scrolling-4.html perspective-scrolling-4-ref.html
