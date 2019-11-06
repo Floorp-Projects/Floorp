@@ -286,9 +286,6 @@ bool TlsAgent::EnsureTlsSetup(PRFileDesc* modelSocket) {
   EXPECT_EQ(SECSuccess, rv);
   if (rv != SECSuccess) return false;
 
-  // All these tests depend on having this disabled to start with.
-  SetOption(SSL_ENABLE_EXTENDED_MASTER_SECRET, PR_FALSE);
-
   return true;
 }
 
