@@ -2539,7 +2539,7 @@ static bool ParseBlockType(WasmParseContext& c, AstBlockType* type) {
     return false;
   }
   if (vt.isValid()) {
-    type->setOneResult(vt);
+    type->setVoidToSingle(vt);
     return true;
   }
 
@@ -2551,9 +2551,9 @@ static bool ParseBlockType(WasmParseContext& c, AstBlockType* type) {
   if (ft.args().length() == 0 && ft.results().length() == 0) {
     // Nothing; `*type` is void and remains so
   } else if (ft.args().length() == 0 && ft.results().length() == 1) {
-    type->setOneResult(ft.results()[0]);
+    type->setVoidToSingle(ft.results()[0]);
   } else {
-    type->setRef(t);
+    type->setFunc(t);
   }
   return true;
 }
@@ -5563,12 +5563,12 @@ static bool ResolveType(Resolver& r, AstValType& vt) {
 
 static bool ResolveType(Resolver& r, AstBlockType& ty) {
   switch (ty.which()) {
-    case AstBlockType::Which::IsVoid:
+    case AstBlockType::Which::VoidToVoid:
       // No work needed, no data.
       return true;
-    case AstBlockType::Which::IsOneResult:
-      return ResolveType(r, ty.oneResult());
-    case AstBlockType::Which::IsRef:
+    case AstBlockType::Which::VoidToSingle:
+      return ResolveType(r, ty.voidToSingleType());
+    case AstBlockType::Which::Func:
       // No work needed, it always carries an index
       return true;
   }
@@ -6294,12 +6294,12 @@ static bool EncodeExprList(Encoder& e, const AstExprVector& v) {
 
 static bool EncodeBlockType(Encoder& e, AstBlockType& type) {
   switch (type.which()) {
-    case AstBlockType::Which::IsVoid:
+    case AstBlockType::Which::VoidToVoid:
       return e.writeFixedU8(uint8_t(TypeCode::BlockVoid));
-    case AstBlockType::Which::IsOneResult:
-      return e.writeValType(type.oneResult().type());
-    case AstBlockType::Which::IsRef:
-      return e.writeVarU32(type.ref().index());
+    case AstBlockType::Which::VoidToSingle:
+      return e.writeValType(type.voidToSingleType().type());
+    case AstBlockType::Which::Func:
+      return e.writeVarS32(type.funcType().index());
   }
   MOZ_CRASH();
 }
