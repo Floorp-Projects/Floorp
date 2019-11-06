@@ -7,10 +7,12 @@ package mozilla.components.lib.dataprotect
 import java.security.SecureRandom
 
 /**
+ * Generates a random key of specified [keyStrength].
+ *
  * @param keyStrength The strength of the generated key in bits
  */
 @Suppress("MagicNumber")
-internal fun generateEncryptionKey(keyStrength: Int): String {
+fun generateEncryptionKey(keyStrength: Int): String {
     require(keyStrength >= 256) { "Key strength must be at least 256 bits" }
     val bytes = ByteArray(keyStrength / 8)
     val random = SecureRandom()
