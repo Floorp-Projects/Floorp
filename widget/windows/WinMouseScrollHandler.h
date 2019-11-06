@@ -69,7 +69,7 @@ class MouseScrollHandler {
    * GetCurrentMessagePos() will be used.
    */
   static void InitEvent(nsWindowBase* aWidget, WidgetGUIEvent& aEvent,
-                        LayoutDeviceIntPoint* aPoint = nullptr);
+                        LPARAM* aPoint);
 
   /**
    * GetModifierKeyState() returns current modifier key state.
@@ -236,7 +236,7 @@ class MouseScrollHandler {
      *                          Otherwise, FALSE.
      */
     bool InitWheelEvent(nsWindowBase* aWidget, WidgetWheelEvent& aWheelEvent,
-                        const ModifierKeyState& aModKeyState);
+                        const ModifierKeyState& aModKeyState, LPARAM aLParam);
 
    private:
     static int32_t RoundDelta(double aDelta);

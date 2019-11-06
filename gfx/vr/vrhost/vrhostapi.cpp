@@ -280,10 +280,21 @@ void SendUIMessageToVRWindow(uint32_t nVRWindowID, uint32_t msg,
   HWND hwnd = VRWindowManager::GetManager()->GetHWND(nVRWindowID);
   if (hwnd != nullptr) {
     switch (msg) {
+      case WM_MOUSEWHEEL:
+        // For MOUSEWHEEL, the coordinates are supposed to be at Screen origin
+        // rather than window client origin.
+        // Make the conversion to screen coordinates before posting the message
+        // to the Fx window.
+        POINT pt;
+        POINTSTOPOINT(pt, MAKEPOINTS(lparam));
+        if (!::ClientToScreen(hwnd, &pt)) {
+          break;
+        }
+        // otherwise, fallthrough
+        lparam = POINTTOPOINTS(pt);
       case WM_MOUSEMOVE:
       case WM_LBUTTONDOWN:
       case WM_LBUTTONUP:
-      case WM_MOUSEWHEEL:
       case WM_CHAR:
       case WM_KEYDOWN:
       case WM_KEYUP:
