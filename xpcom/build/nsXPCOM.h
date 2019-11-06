@@ -63,9 +63,6 @@ struct Module;
  *                         component registry preferences and so on; or use
  *                         <CODE>nullptr</CODE> for the default behaviour.
  *
- * @param aInitJSContext   Whether the nsXPCJSContext should be initialized at
- *                         this point.
- *
  * @see NS_NewLocalFile
  * @see nsIFile
  * @see nsIDirectoryServiceProvider
@@ -78,8 +75,7 @@ struct Module;
  */
 XPCOM_API(nsresult)
 NS_InitXPCOM(nsIServiceManager** aResult, nsIFile* aBinDirectory,
-             nsIDirectoryServiceProvider* aAppFileLocationProvider,
-             bool aInitJSContext = true);
+             nsIDirectoryServiceProvider* aAppFileLocationProvider);
 
 /**
  * Initialize only minimal components of XPCOM. This ensures nsThreadManager,
