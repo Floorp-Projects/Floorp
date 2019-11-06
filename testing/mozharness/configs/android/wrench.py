@@ -2,10 +2,16 @@
 #
 # This configuration should be combined with suite definitions and other
 # mozharness configuration from android_common.py, or similar.
+import os
+
+tooltool_url = 'http://taskcluster/tooltool.mozilla-releng.net/'
+if os.environ.get('TASKCLUSTER_ROOT_URL', 'https://taskcluster.net') != 'https://taskcluster.net':
+    # Pre-point tooltool at staging cluster so we can run in parallel with legacy cluster
+    tooltool_url = 'http://taskcluster/tooltool.staging.mozilla-releng.net/'
 
 config = {
     "tooltool_manifest_path": "testing/config/tooltool-manifests/androidx86_7_0/releng.manifest",
-    "tooltool_servers": ['http://taskcluster/tooltool.mozilla-releng.net/'],
+    "tooltool_servers": [tooltool_url],
     "emulator_manifest": """
         [
         {
