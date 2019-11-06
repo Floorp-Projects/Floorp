@@ -38,6 +38,11 @@ import mozilla.components.concept.fetch.Request
 import mozilla.components.feature.downloads.ext.addCompletedDownload
 import mozilla.components.feature.downloads.ext.getDownloadExtra
 import mozilla.components.feature.downloads.ext.withResponse
+import mozilla.components.feature.downloads.facts.emitNotificationResumeFact
+import mozilla.components.feature.downloads.facts.emitNotificationPauseFact
+import mozilla.components.feature.downloads.facts.emitNotificationCancelFact
+import mozilla.components.feature.downloads.facts.emitNotificationRetryFact
+import mozilla.components.feature.downloads.facts.emitNotificationOpenFact
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -49,7 +54,7 @@ import kotlin.random.Random
  * Service that performs downloads through a fetch [Client] rather than through the native
  * Android download manager.
  *
- * To use this service, you must create a subclass in your application and it to the manifest.
+ * To use this service, you must create a subclass in your application and add it to the manifest.
  */
 @Suppress("TooManyFunctions", "LargeClass")
 abstract class AbstractFetchDownloadService : Service() {
@@ -93,6 +98,7 @@ abstract class AbstractFetchDownloadService : Service() {
                     ACTION_PAUSE -> {
                         currentDownloadJobState.status = DownloadJobStatus.PAUSED
                         currentDownloadJobState.job?.cancel()
+                        emitNotificationPauseFact()
                     }
 
                     ACTION_RESUME -> {
@@ -101,6 +107,8 @@ abstract class AbstractFetchDownloadService : Service() {
                         currentDownloadJobState.job = CoroutineScope(IO).launch {
                             startDownloadJob(currentDownloadJobState.state)
                         }
+
+                        emitNotificationResumeFact()
                     }
 
                     ACTION_CANCEL -> {
@@ -115,6 +123,8 @@ abstract class AbstractFetchDownloadService : Service() {
                             deleteDownloadingFile(currentDownloadJobState.state)
                             currentDownloadJobState.downloadDeleted = true
                         }
+
+                        emitNotificationCancelFact()
                     }
 
                     ACTION_TRY_AGAIN -> {
@@ -126,6 +136,8 @@ abstract class AbstractFetchDownloadService : Service() {
                         currentDownloadJobState.job = CoroutineScope(IO).launch {
                             startDownloadJob(currentDownloadJobState.state)
                         }
+
+                        emitNotificationRetryFact()
                     }
 
                     ACTION_OPEN -> {
@@ -134,6 +146,7 @@ abstract class AbstractFetchDownloadService : Service() {
                             filePath = currentDownloadJobState.state.filePath,
                             contentType = currentDownloadJobState.state.contentType
                         )
+                        emitNotificationOpenFact()
                     }
                 }
             }

@@ -153,6 +153,18 @@ Customizing SimpleDownloadDialogFragment.
         downloadsFeature.start()
   ```
 
+## Facts
+
+This component emits the following [Facts](../../support/base/README.md#Facts):
+
+| Action | Item            |  Description                                    |
+|--------|-----------------|-------------------------------------------------|
+| RESUME | notification    | The user resumes a download.                    |
+| PAUSE  | notification    | The user pauses a download.                     |
+| CANCEL | notification    | The user cancels a download.                    |
+| RETRY  | notification    | The user taps on retry when a download fails.   |
+| OPEN   | notification    | The user opens a downloaded file.               |
+
 ## License
 
     This Source Code Form is subject to the terms of the Mozilla Public
