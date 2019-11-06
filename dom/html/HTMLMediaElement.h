@@ -835,6 +835,14 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   void UpdateSrcStreamTime();
 
   /**
+   * Called after a tail dispatch when playback of mSrcStream ended, to comply
+   * with the spec where we must start reporting true for the ended attribute
+   * after the event loop returns to step 1. A MediaStream could otherwise be
+   * manipulated to end a HTMLMediaElement synchronously.
+   */
+  void UpdateSrcStreamReportPlaybackEnded();
+
+  /**
    * Called by our DOMMediaStream::TrackListener when a new MediaStreamTrack has
    * been added to the playback stream of |mSrcStream|.
    */
@@ -1329,6 +1337,12 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   // Reset to false if we start playing mSrcStream again.
   Watchable<bool> mSrcStreamPlaybackEnded = {
       false, "HTMLMediaElement::mSrcStreamPlaybackEnded"};
+
+  // Mirrors mSrcStreamPlaybackEnded after a tail dispatch when set to true,
+  // but may be be forced to false directly. To accomodate when an application
+  // ends playback synchronously by manipulating mSrcStream or its tracks,
+  // e.g., through MediaStream.removeTrack(), or MediaStreamTrack.stop().
+  bool mSrcStreamReportPlaybackEnded = false;
 
   // Holds a reference to the stream connecting this stream to the window
   // capture sink.
