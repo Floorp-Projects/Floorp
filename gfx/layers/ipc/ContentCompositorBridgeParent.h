@@ -96,9 +96,15 @@ class ContentCompositorBridgeParent final : public CompositorBridgeParentBase {
     return IPC_OK();
   }
 
-  mozilla::ipc::IPCResult RecvEndRecording(
-      EndRecordingResolver&& aResolve) override {
+  mozilla::ipc::IPCResult RecvEndRecordingToDisk(
+      EndRecordingToDiskResolver&& aResolve) override {
     aResolve(false);
+    return IPC_OK();
+  }
+
+  mozilla::ipc::IPCResult RecvEndRecordingToMemory(
+      EndRecordingToMemoryResolver&& aResolve) override {
+    aResolve(Nothing());
     return IPC_OK();
   }
 

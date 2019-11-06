@@ -35,6 +35,7 @@
 #include "mozilla/layers/ISurfaceAllocator.h"  // for ShmemAllocator
 #include "mozilla/layers/LayersMessages.h"     // for TargetConfig
 #include "mozilla/layers/MetricsSharingController.h"
+#include "mozilla/layers/PCompositorBridgeTypes.h"
 #include "mozilla/layers/PCompositorBridgeParent.h"
 #include "mozilla/layers/APZTestData.h"
 #include "mozilla/webrender/WebRenderTypes.h"
@@ -246,8 +247,10 @@ class CompositorBridgeParentBase : public PCompositorBridgeParent,
   virtual mozilla::ipc::IPCResult RecvAllPluginsCaptured() = 0;
   virtual mozilla::ipc::IPCResult RecvBeginRecording(
       const TimeStamp& aRecordingStart, BeginRecordingResolver&& aResolve) = 0;
-  virtual mozilla::ipc::IPCResult RecvEndRecording(
-      EndRecordingResolver&& aResolve) = 0;
+  virtual mozilla::ipc::IPCResult RecvEndRecordingToDisk(
+      EndRecordingToDiskResolver&& aResolve) = 0;
+  virtual mozilla::ipc::IPCResult RecvEndRecordingToMemory(
+      EndRecordingToMemoryResolver&& aResolve) = 0;
   virtual mozilla::ipc::IPCResult RecvInitialize(
       const LayersId& rootLayerTreeId) = 0;
   virtual mozilla::ipc::IPCResult RecvGetFrameUniformity(
@@ -363,8 +366,10 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
   mozilla::ipc::IPCResult RecvBeginRecording(
       const TimeStamp& aRecordingStart,
       BeginRecordingResolver&& aResolve) override;
-  mozilla::ipc::IPCResult RecvEndRecording(
-      EndRecordingResolver&& aResolve) override;
+  mozilla::ipc::IPCResult RecvEndRecordingToDisk(
+      EndRecordingToDiskResolver&& aResolve) override;
+  mozilla::ipc::IPCResult RecvEndRecordingToMemory(
+      EndRecordingToMemoryResolver&& aResolve) override;
 
   void NotifyMemoryPressure() override;
   void AccumulateMemoryReport(wr::MemoryReport*) override;
@@ -675,6 +680,11 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
    * Must run on the content main thread.
    */
   static void DeallocateLayerTreeId(LayersId aId);
+
+  /**
+   * Wrap the data structure to be sent over IPC.
+   */
+  Maybe<CollectedFramesParams> WrapCollectedFrames(CollectedFrames&& aFrames);
 
  protected:
   // Protected destructor, to discourage deletion outside of Release():
