@@ -8,8 +8,8 @@
 import type { Frame, ThreadId, GeneratedSourceData, Thread } from "../../types";
 import type {
   PausedPacket,
+  FramesResponse,
   FramePacket,
-  FrameFront,
   SourcePayload,
   ThreadFront,
   Target,
@@ -32,31 +32,28 @@ export function prepareSourcePayload(
 
 export function createFrame(
   thread: ThreadId,
-  frame: FramePacket | FrameFront,
+  frame: FramePacket,
   index: number = 0
 ): ?Frame {
   if (!frame) {
     return null;
   }
 
-  // TODO: Paused packet should return a frame front (Bug 1593846)
-  const data = frame.data || frame;
-
   const location = {
-    sourceId: clientCommands.getSourceForActor(data.where.actor),
-    line: data.where.line,
-    column: data.where.column,
+    sourceId: clientCommands.getSourceForActor(frame.where.actor),
+    line: frame.where.line,
+    column: frame.where.column,
   };
 
   return {
-    id: data.actor,
+    id: frame.actor,
     thread,
-    displayName: data.displayName,
+    displayName: frame.displayName,
     location,
     generatedLocation: location,
-    this: data.this,
+    this: frame.this,
     source: null,
-    scope: data.environment,
+    scope: frame.environment,
     index,
   };
 }
@@ -68,16 +65,16 @@ export function makeSourceId(source: SourcePayload) {
 export function createPause(
   thread: string,
   packet: PausedPacket,
-  frames: FramePacket[]
+  response: FramesResponse
 ): any {
   // NOTE: useful when the debugger is already paused
-  const frame = packet.frame || frames[0];
+  const frame = packet.frame || response.frames[0];
 
   return {
     ...packet,
     thread,
     frame: createFrame(thread, frame),
-    frames: frames.map((currentFrame, i) =>
+    frames: response.frames.map((currentFrame, i) =>
       createFrame(thread, currentFrame, i)
     ),
   };

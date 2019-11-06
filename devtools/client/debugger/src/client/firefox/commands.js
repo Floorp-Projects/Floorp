@@ -342,8 +342,8 @@ async function getFrameScopes(frame: Frame): Promise<*> {
     return frame.scope;
   }
 
-  const frameFront = lookupThreadFront(frame.thread).get(frame.id);
-  return frameFront.getEnvironment();
+  const sourceThreadFront = lookupThreadFront(frame.thread);
+  return sourceThreadFront.getEnvironment(frame.id);
 }
 
 function pauseOnExceptions(
