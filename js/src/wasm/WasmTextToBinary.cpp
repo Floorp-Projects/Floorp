@@ -2444,35 +2444,70 @@ static bool ParseValueTypeList(WasmParseContext& c, AstValTypeVector* vec) {
   return true;
 }
 
-static bool ParseBlockSignature(WasmParseContext& c, AstExprType* type) {
-  WasmToken token;
-  AstValType vt;
+// For ParseFuncSig: look ahead during parsing to avoid erroring out.
+enum class WithLookahead { False, True };
 
-  if (c.ts.getIf(WasmToken::OpenParen, &token)) {
-    if (c.ts.getIf(WasmToken::Result)) {
-      if (!ParseValType(c, &vt)) {
-        return false;
-      }
-      if (!c.ts.match(WasmToken::CloseParen, c.error)) {
-        return false;
-      }
-    } else {
-      c.ts.unget(token);
-      if (!MaybeParseValType(c, &vt)) {
-        return false;
-      }
+static bool ParseFuncSig(WasmParseContext& c, AstFuncType* funcType,
+                         WithLookahead withLookahead) {
+  AstValTypeVector args(c.lifo);
+  AstValTypeVector results(c.lifo);
+
+  WasmToken openParen;
+  for (;;) {
+    if (!c.ts.getIf(WasmToken::OpenParen, &openParen)) {
+      break;
     }
-  } else {
-    if (!MaybeParseValType(c, &vt)) {
+    if (c.ts.peek().kind() == WasmToken::Param) {
+      c.ts.get();
+      if (!ParseValueTypeList(c, &args)) {
+        return false;
+      }
+    } else if (c.ts.peek().kind() == WasmToken::Result) {
+      c.ts.get();
+      if (!ParseValueTypeList(c, &results)) {
+        return false;
+      }
+    } else if (withLookahead == WithLookahead::True) {
+      c.ts.unget(openParen);
+      break;
+    } else {
+      c.ts.generateError(c.ts.get(), c.error);
+      return false;
+    }
+    if (!c.ts.match(WasmToken::CloseParen, c.error)) {
       return false;
     }
   }
 
-  if (vt.isValid()) {
-    *type = AstExprType(vt);
-  } else {
-    *type = AstExprType(ExprType::Void);
+  *funcType = AstFuncType(std::move(args), std::move(results));
+  return true;
+}
+
+// For ParseAnonFuncType: allow more than one results.
+enum class MultiResult { False, True };
+
+// This guarantees that the ref has an index when we return and won't need to be
+// resolved later.  If `withLookahead` then whatever comes after the type does
+// not cause an error and is not consumed, and any number of results are
+// allowed.
+static bool ParseAnonFuncType(WasmParseContext& c, AstRef* ref,
+                              MultiResult multiResult,
+                              WithLookahead withLookahead) {
+  MOZ_ASSERT(ref->isInvalid());
+
+  AstFuncType funcType(c.lifo);
+  if (!ParseFuncSig(c, &funcType, withLookahead)) {
+    return false;
   }
+  if (multiResult == MultiResult::False && funcType.results().length() > 1) {
+    c.ts.generateError(c.ts.peek(), "too many results", c.error);
+    return false;
+  }
+  uint32_t funcTypeIndex;
+  if (!c.module->declare(std::move(funcType), &funcTypeIndex)) {
+    return false;
+  }
+  ref->setIndex(funcTypeIndex);
 
   return true;
 }
@@ -2498,6 +2533,31 @@ static bool MaybeMatchName(WasmParseContext& c, const AstName& name) {
   return true;
 }
 
+static bool ParseBlockType(WasmParseContext& c, AstBlockType* type) {
+  AstValType vt;
+  if (!MaybeParseValType(c, &vt)) {
+    return false;
+  }
+  if (vt.isValid()) {
+    type->setOneResult(vt);
+    return true;
+  }
+
+  AstRef t;
+  if (!ParseAnonFuncType(c, &t, MultiResult::True, WithLookahead::True)) {
+    return false;
+  }
+  const AstFuncType& ft = c.module->types()[t.index()]->asFuncType();
+  if (ft.args().length() == 0 && ft.results().length() == 0) {
+    // Nothing; `*type` is void and remains so
+  } else if (ft.args().length() == 0 && ft.results().length() == 1) {
+    type->setOneResult(ft.results()[0]);
+  } else {
+    type->setRef(t);
+  }
+  return true;
+}
+
 static AstBlock* ParseBlock(WasmParseContext& c, Op op, bool inParens) {
   AstExprVector exprs(c.lifo);
 
@@ -2514,8 +2574,8 @@ static AstBlock* ParseBlock(WasmParseContext& c, Op op, bool inParens) {
     }
   }
 
-  AstExprType type(ExprType::Limit);
-  if (!ParseBlockSignature(c, &type)) {
+  AstBlockType type;
+  if (!ParseBlockType(c, &type)) {
     return nullptr;
   }
 
@@ -2587,7 +2647,7 @@ static AstBranch* ParseBranch(WasmParseContext& c, Op op, bool inParens) {
     }
   }
 
-  return new (c.lifo) AstBranch(op, ExprType::Void, cond, target, value);
+  return new (c.lifo) AstBranch(op, cond, target, value);
 }
 
 static bool ParseArgs(WasmParseContext& c, AstExprVector* args) {
@@ -2617,7 +2677,7 @@ static AstCall* ParseCall(WasmParseContext& c, bool inParens) {
     }
   }
 
-  return new (c.lifo) AstCall(Op::Call, ExprType::Void, func, std::move(args));
+  return new (c.lifo) AstCall(Op::Call, func, std::move(args));
 }
 
 static AstCallIndirect* ParseCallIndirect(WasmParseContext& c, bool inParens) {
@@ -2659,8 +2719,8 @@ static AstCallIndirect* ParseCallIndirect(WasmParseContext& c, bool inParens) {
     return nullptr;
   }
 
-  return new (c.lifo) AstCallIndirect(targetTable, funcType, ExprType::Void,
-                                      std::move(args), index);
+  return new (c.lifo)
+      AstCallIndirect(targetTable, funcType, std::move(args), index);
 }
 
 static uint_fast8_t CountLeadingZeroes4(uint8_t x) {
@@ -3191,8 +3251,8 @@ static AstSelect* ParseSelect(WasmParseContext& c, bool inParens) {
 static AstIf* ParseIf(WasmParseContext& c, bool inParens) {
   AstName name = c.ts.getIfName();
 
-  AstExprType type(ExprType::Limit);
-  if (!ParseBlockSignature(c, &type)) {
+  AstBlockType type;
+  if (!ParseBlockType(c, &type)) {
     return nullptr;
   }
 
@@ -3938,8 +3998,7 @@ static AstExpr* ParseStructNew(WasmParseContext& c, bool inParens) {
   // An AstRef cast to AstValType turns into a Ref type, which is exactly what
   // we need here.
 
-  return new (c.lifo)
-      AstStructNew(typeDef, AstExprType(AstValType(typeDef)), std::move(args));
+  return new (c.lifo) AstStructNew(typeDef, std::move(args));
 }
 
 static AstExpr* ParseStructGet(WasmParseContext& c, bool inParens) {
@@ -3961,7 +4020,7 @@ static AstExpr* ParseStructGet(WasmParseContext& c, bool inParens) {
   // The field type is not available here, we must first resolve the type.
   // Fortunately, we don't need to inspect the result type of this operation.
 
-  return new (c.lifo) AstStructGet(typeDef, fieldDef, ExprType(), ptr);
+  return new (c.lifo) AstStructGet(typeDef, fieldDef, ptr);
 }
 
 static AstExpr* ParseStructSet(WasmParseContext& c, bool inParens) {
@@ -4203,57 +4262,15 @@ static bool MaybeParseTypeUse(WasmParseContext& c, AstRef* funcType) {
   return true;
 }
 
-static bool ParseFuncSig(WasmParseContext& c, AstFuncType* funcType) {
-  AstValTypeVector args(c.lifo);
-  AstValTypeVector results(c.lifo);
-
-  while (c.ts.getIf(WasmToken::OpenParen)) {
-    WasmToken token = c.ts.get();
-    switch (token.kind()) {
-      case WasmToken::Param:
-        if (!ParseValueTypeList(c, &args)) {
-          return false;
-        }
-        break;
-      case WasmToken::Result:
-        if (!ParseValueTypeList(c, &results)) {
-          return false;
-        }
-        if (results.length() > 1) {
-          c.ts.generateError(token, "too many results", c.error);
-          return false;
-        }
-        break;
-      default:
-        c.ts.generateError(token, c.error);
-        return false;
-    }
-    if (!c.ts.match(WasmToken::CloseParen, c.error)) {
-      return false;
-    }
-  }
-
-  *funcType = AstFuncType(std::move(args), std::move(results));
-  return true;
-}
-
 static bool ParseFuncType(WasmParseContext& c, AstRef* ref) {
   if (!MaybeParseTypeUse(c, ref)) {
     return false;
   }
-
   if (ref->isInvalid()) {
-    AstFuncType funcType(c.lifo);
-    if (!ParseFuncSig(c, &funcType)) {
+    if (!ParseAnonFuncType(c, ref, MultiResult::False, WithLookahead::False)) {
       return false;
     }
-    uint32_t funcTypeIndex;
-    if (!c.module->declare(std::move(funcType), &funcTypeIndex)) {
-      return false;
-    }
-    ref->setIndex(funcTypeIndex);
   }
-
   return true;
 }
 
@@ -4427,10 +4444,13 @@ static AstTypeDef* ParseTypeDef(WasmParseContext& c) {
   AstTypeDef* type = nullptr;
   if (c.ts.getIf(WasmToken::Func)) {
     AstFuncType funcType(c.lifo);
-    if (!ParseFuncSig(c, &funcType)) {
+    if (!ParseFuncSig(c, &funcType, WithLookahead::False)) {
       return nullptr;
     }
-
+    if (funcType.results().length() > 1) {
+      c.ts.generateError(c.ts.peek(), "too many results", c.error);
+      return nullptr;
+    }
     type = new (c.lifo) AstFuncType(name, std::move(funcType));
   } else if (c.ts.getIf(WasmToken::Struct)) {
     AstStructType st(c.lifo);
@@ -4842,16 +4862,10 @@ static AstImport* ParseImport(WasmParseContext& c) {
   }
 
   if (funcTypeRef.isInvalid()) {
-    AstFuncType funcType(c.lifo);
-    if (!ParseFuncSig(c, &funcType)) {
+    if (!ParseAnonFuncType(c, &funcTypeRef, MultiResult::False,
+                           WithLookahead::False)) {
       return nullptr;
     }
-
-    uint32_t funcTypeIndex;
-    if (!c.module->declare(std::move(funcType), &funcTypeIndex)) {
-      return nullptr;
-    }
-    funcTypeRef.setIndex(funcTypeIndex);
   }
 
   return new (c.lifo)
@@ -5547,15 +5561,17 @@ static bool ResolveType(Resolver& r, AstValType& vt) {
   return true;
 }
 
-static bool ResolveType(Resolver& r, AstExprType& et) {
-  if (et.isResolved()) {
-    return true;
+static bool ResolveType(Resolver& r, AstBlockType& ty) {
+  switch (ty.which()) {
+    case AstBlockType::Which::IsVoid:
+      // No work needed, no data.
+      return true;
+    case AstBlockType::Which::IsOneResult:
+      return ResolveType(r, ty.oneResult());
+    case AstBlockType::Which::IsRef:
+      // No work needed, it always carries an index
+      return true;
   }
-  if (!ResolveType(r, et.asAstValType())) {
-    return false;
-  }
-  et.resolve();
-  return true;
 }
 
 static bool ResolveExpr(Resolver& r, AstExpr& expr);
@@ -6275,15 +6291,15 @@ static bool EncodeExprList(Encoder& e, const AstExprVector& v) {
   return true;
 }
 
-static bool EncodeBlockType(Encoder& e, AstExprType& t) {
-  ExprType type = t.type();
-  static_assert(size_t(TypeCode::Limit) <= UINT8_MAX, "fits");
-  MOZ_ASSERT(size_t(type.code()) < size_t(TypeCode::Limit));
-  if (type.isRef()) {
-    return e.writeFixedU8(uint8_t(ExprType::Ref)) &&
-           e.writeVarU32(type.refTypeIndex());
+static bool EncodeBlockType(Encoder& e, AstBlockType& type) {
+  switch (type.which()) {
+    case AstBlockType::Which::IsVoid:
+      return e.writeFixedU8(uint8_t(TypeCode::BlockVoid));
+    case AstBlockType::Which::IsOneResult:
+      return e.writeValType(type.oneResult().type());
+    case AstBlockType::Which::IsRef:
+      return e.writeVarU32(type.ref().index());
   }
-  return e.writeFixedU8(uint8_t(type.code()));
 }
 
 static bool EncodeBlock(Encoder& e, AstBlock& b) {
