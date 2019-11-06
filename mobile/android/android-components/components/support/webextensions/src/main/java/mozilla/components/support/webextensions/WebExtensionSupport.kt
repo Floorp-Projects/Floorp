@@ -31,17 +31,35 @@ object WebExtensionSupport {
      * @param onNewTabOverride (optional) override of behaviour that should
      * be triggered when web extensions open a new tab e.g. when dispatching
      * to the store isn't sufficient while migrating from browser-session
-     * to browser-state.
+     * to browser-state. This is a lambda accepting the [WebExtension], the
+     * [EngineSession] to use, as well as the URL to load.
+     * @param onCloseTabOverride (optional) override of behaviour that should
+     * be triggered when web extensions close tabs e.g. when dispatching
+     * to the store isn't sufficient while migrating from browser-session
+     * to browser-state. This is a lambda  accepting the [WebExtension] and
+     * the session/tab ID to close.
      */
     fun initialize(
         engine: Engine,
         store: BrowserStore,
-        onNewTabOverride: ((WebExtension?, EngineSession, String) -> Unit)? = null
+        onNewTabOverride: ((WebExtension?, EngineSession, String) -> Unit)? = null,
+        onCloseTabOverride: ((WebExtension?, String) -> Unit)? = null
     ) {
         engine.registerWebExtensionDelegate(object : WebExtensionDelegate {
             override fun onNewTab(webExtension: WebExtension?, url: String, engineSession: EngineSession) {
                 onNewTabOverride?.invoke(webExtension, engineSession, url)
-                        ?: store.dispatch(TabListAction.AddTabAction(createTab(url)))
+                    ?: store.dispatch(TabListAction.AddTabAction(createTab(url)))
+            }
+
+            override fun onCloseTab(webExtension: WebExtension?, engineSession: EngineSession): Boolean {
+                val tab = store.state.tabs.find { it.engineState.engineSession === engineSession }
+                return if (tab != null) {
+                    onCloseTabOverride?.invoke(webExtension, tab.id)
+                        ?: store.dispatch(TabListAction.RemoveTabAction(tab.id))
+                    true
+                } else {
+                    false
+                }
             }
 
             override fun onInstalled(webExtension: WebExtension) {

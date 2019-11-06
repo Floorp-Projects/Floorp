@@ -36,6 +36,9 @@ class SampleApplication : Application() {
                 components.store,
                 onNewTabOverride = {
                     _, engineSession, url -> components.sessionManager.add(Session(url), true, engineSession)
+                },
+                onCloseTabOverride = {
+                    _, sessionId -> components.tabsUseCases.removeTab(sessionId)
                 }
             )
         } catch (e: UnsupportedOperationException) {

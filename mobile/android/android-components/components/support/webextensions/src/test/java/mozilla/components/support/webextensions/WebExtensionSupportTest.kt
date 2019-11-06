@@ -4,8 +4,16 @@
 
 package mozilla.components.support.webextensions
 
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.test.TestCoroutineDispatcher
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.setMain
+import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.action.WebExtensionAction
+import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
@@ -13,14 +21,34 @@ import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.concept.engine.webextension.WebExtensionDelegate
 import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
+import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.whenever
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.mockito.Mockito.never
+import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 
+@RunWith(AndroidJUnit4::class)
 class WebExtensionSupportTest {
+
+    private val testDispatcher = TestCoroutineDispatcher()
+
+    @Before
+    fun setup() {
+        Dispatchers.setMain(testDispatcher)
+    }
+
+    @After
+    fun tearDown() {
+        Dispatchers.resetMain()
+        testDispatcher.cleanupTestCoroutines()
+    }
 
     @Test
     fun `sets web extension delegate on engine`() {
@@ -62,6 +90,53 @@ class WebExtensionSupportTest {
 
         delegateCaptor.value.onNewTab(ext, "https://mozilla.org", engineSession)
         assertTrue(onNewTabCalled)
+    }
+
+    @Test
+    fun `reacts to tab being closed by removing tab from store`() {
+        val engine: Engine = mock()
+        val ext: WebExtension = mock()
+        val engineSession: EngineSession = mock()
+        val invalidEngineSession: EngineSession = mock()
+        val tabId = "testTabId"
+        val store = spy(BrowserStore(BrowserState(
+            tabs = listOf(
+                createTab(id = tabId, url = "https://www.mozilla.org")
+            )
+        )))
+        store.dispatch(EngineAction.LinkEngineSessionAction(tabId, engineSession)).joinBlocking()
+
+        val delegateCaptor = argumentCaptor<WebExtensionDelegate>()
+        WebExtensionSupport.initialize(engine, store)
+        verify(engine).registerWebExtensionDelegate(delegateCaptor.capture())
+
+        delegateCaptor.value.onCloseTab(ext, invalidEngineSession)
+        verify(store, never()).dispatch(TabListAction.RemoveTabAction(tabId))
+
+        delegateCaptor.value.onCloseTab(ext, engineSession)
+        verify(store).dispatch(TabListAction.RemoveTabAction(tabId))
+    }
+
+    @Test
+    fun `allows overriding onCloseTab behaviour`() {
+        val engine: Engine = mock()
+        val ext: WebExtension = mock()
+        val engineSession: EngineSession = mock()
+        var onCloseTabCalled = false
+        val tabId = "testTabId"
+        val store = spy(BrowserStore(BrowserState(
+            tabs = listOf(
+                createTab(id = tabId, url = "https://www.mozilla.org")
+            )
+        )))
+        store.dispatch(EngineAction.LinkEngineSessionAction(tabId, engineSession)).joinBlocking()
+
+        val delegateCaptor = argumentCaptor<WebExtensionDelegate>()
+        WebExtensionSupport.initialize(engine, store, onCloseTabOverride = { _, _ -> onCloseTabCalled = true })
+        verify(engine).registerWebExtensionDelegate(delegateCaptor.capture())
+
+        delegateCaptor.value.onCloseTab(ext, engineSession)
+        assertTrue(onCloseTabCalled)
     }
 
     @Test

@@ -79,6 +79,19 @@ permalink: /changelog/
 * **concept-sync**
   * Added new `LockableStore` to facilitate syncing of "lockable" stores (such as `SyncableLoginsStore`).
 
+* **engine**, **engine-gecko-***, **support-webextensions**
+  * Added support `browser.tabs.remove()` in web extensions.
+  ```kotlin
+  val engine = GeckoEngine(applicationContext, engineSettings)
+  engine.registerWebExtensionTabDelegate(object : WebExtensionTabDelegate {
+    override fun onCloseTab(webExtension: WebExtension?, engineSession: EngineSession) {
+      store.state.tabs.find { it.engineState.engineSession === engineSession }?.let {
+        store.dispatch(RemoveTabAction(tab.id))
+      }
+    }
+  }  
+  ```  
+
 # 19.0.1
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v19.0.0...v19.0.1)
