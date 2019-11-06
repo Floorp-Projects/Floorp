@@ -57,9 +57,9 @@
             android:layout_marginTop="8dp"
             android:scaleType="center"
             android:visibility="gone"
+            android:src="@drawable/mozac_ic_tracking_protection_on_no_trackers_blocked"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintStart_toEndOf="@id/mozac_browser_toolbar_empty_indicator"
-            android:src="@drawable/mozac_tracking_protection_state_list" />
+            app:layout_constraintStart_toEndOf="@id/mozac_browser_toolbar_empty_indicator" />
 
         <ImageView
             android:id="@+id/mozac_browser_toolbar_separator"
