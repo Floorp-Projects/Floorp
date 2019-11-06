@@ -323,10 +323,6 @@ class WindowSurfaceWayland : public WindowSurface {
 
   bool mIsMainThread;
 
-  // When new WaylandBuffer (wl_buffer) is send to wayland compositor
-  // (buffer switch or resize) we also need to set its scale factor.
-  bool mNeedScaleFactorUpdate;
-
   // Image caching strategy, see RenderingCacheMode for details.
   RenderingCacheMode mRenderingCacheMode;
 
