@@ -124,7 +124,7 @@ class MediaTransportHandler {
       std::unique_ptr<dom::RTCStatsReportInternal>&& aReport) = 0;
 
   sigslot::signal2<const std::string&, const CandidateInfo&> SignalCandidate;
-  sigslot::signal1<const std::string&> SignalAlpnNegotiated;
+  sigslot::signal2<const std::string&, bool> SignalAlpnNegotiated;
   sigslot::signal1<dom::RTCIceGatheringState> SignalGatheringStateChange;
   sigslot::signal1<dom::RTCIceConnectionState> SignalConnectionStateChange;
 

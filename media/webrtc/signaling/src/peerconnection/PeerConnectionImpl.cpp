@@ -1007,13 +1007,13 @@ already_AddRefed<TransceiverImpl> PeerConnectionImpl::CreateTransceiverImpl(
   RefPtr<nsIPrincipal> principal;
   Document* doc = GetWindow()->GetExtantDoc();
   MOZ_ASSERT(doc);
-  const bool privacyRequested = mPrivacyRequested.valueOr(true);
-  if (privacyRequested) {
-    // We're either certain that we need isolation for the tracks, OR
-    // we're not sure and we can fix the track and pipeline in AlpnNegotiated.
+  if (mPrivacyRequested.valueOr(false)) {
     principal =
         NullPrincipal::CreateWithInheritedAttributes(doc->NodePrincipal());
   } else {
+    // We're either certain that we don't need isolation for the tracks, OR
+    // we're not sure and the pipeline fixes the track later in
+    // MediaPipeline::AlpnNegotiated.
     principal = doc->NodePrincipal();
   }
 
@@ -1643,28 +1643,14 @@ PeerConnectionImpl::SetPeerIdentity(const nsAString& aPeerIdentity) {
   return NS_OK;
 }
 
-nsresult PeerConnectionImpl::OnAlpnNegotiated(const std::string& aAlpn) {
+nsresult PeerConnectionImpl::OnAlpnNegotiated(bool aPrivacyRequested) {
   PC_AUTO_ENTER_API_CALL(false);
   if (mPrivacyRequested.isSome()) {
+    MOZ_DIAGNOSTIC_ASSERT(*mPrivacyRequested == aPrivacyRequested);
     return NS_OK;
   }
 
-  mPrivacyRequested = Some(aAlpn == "c-webrtc");
-
-  // For this, as with mPrivacyRequested, once we've connected to a peer, we
-  // fixate on that peer.  Dealing with multiple peers or connections is more
-  // than this run-down wreck of an object can handle.
-  // Besides, this is only used to say if we have been connected ever.
-  if (!*mPrivacyRequested) {
-    // Neither side wants privacy
-    Document* doc = GetWindow()->GetExtantDoc();
-    if (!doc) {
-      CSFLogInfo(LOGTAG, "Can't update principal on streams; document gone");
-      return NS_ERROR_FAILURE;
-    }
-    mMedia->UpdateRemoteStreamPrincipals_m(doc->NodePrincipal());
-  }
-
+  mPrivacyRequested = Some(aPrivacyRequested);
   return NS_OK;
 }
 
