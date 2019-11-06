@@ -72,4 +72,43 @@ data class AddOn(
         val average: Float,
         val reviews: Int
     ) : Parcelable
+
+    /**
+     * Returns a list of id resources per each item on the [AddOn.permissions] list.
+     */
+    fun translatePermissions(): List<Int> {
+        return permissions.mapNotNull { it -> permissionToTranslation[it] }
+    }
+
+    companion object {
+        /**
+         * A map of permissions to translation string ids.
+         */
+        val permissionToTranslation = mapOf(
+            "privacy" to R.string.mozac_feature_addons_permissions_privacy_description,
+            "<all_urls>" to R.string.mozac_feature_addons_permissions_all_urls_description,
+            "tabs" to R.string.mozac_feature_addons_permissions_tabs_description,
+            "unlimitedStorage" to R.string.mozac_feature_addons_permissions_unlimited_storage_description,
+            "webNavigation" to R.string.mozac_feature_addons_permissions_web_navigation_description,
+            "bookmarks" to R.string.mozac_feature_addons_permissions_bookmarks_description,
+            "browserSettings" to R.string.mozac_feature_addons_permissions_browser_setting_description,
+            "browsingData" to R.string.mozac_feature_addons_permissions_browser_data_description,
+            "clipboardRead" to R.string.mozac_feature_addons_permissions_clipboard_read_description,
+            "clipboardWrite" to R.string.mozac_feature_addons_permissions_clipboard_write_description,
+            "downloads" to R.string.mozac_feature_addons_permissions_downloads_description,
+            "downloads.open" to R.string.mozac_feature_addons_permissions_downloads_open_description,
+            "find" to R.string.mozac_feature_addons_permissions_find_description,
+            "geolocation" to R.string.mozac_feature_addons_permissions_geolocation_description,
+            "history" to R.string.mozac_feature_addons_permissions_history_description,
+            "management" to R.string.mozac_feature_addons_permissions_management_description,
+            "nativeMessaging" to R.string.mozac_feature_addons_permissions_native_messaging_description,
+            "notifications" to R.string.mozac_feature_addons_permissions_notifications_description,
+            "pkcs11" to R.string.mozac_feature_addons_permissions_pkcs11_description,
+            "proxy" to R.string.mozac_feature_addons_permissions_proxy_description,
+            "sessions" to R.string.mozac_feature_addons_permissions_sessions_description,
+            "tabHide" to R.string.mozac_feature_addons_permissions_tab_hide_description,
+            "topSites" to R.string.mozac_feature_addons_permissions_top_sites_description,
+            "devtools" to R.string.mozac_feature_addons_permissions_top_sites_description
+        )
+    }
 }
