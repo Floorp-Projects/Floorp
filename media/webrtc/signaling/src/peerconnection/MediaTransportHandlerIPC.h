@@ -71,9 +71,8 @@ class MediaTransportHandlerIPC : public MediaTransportHandler {
 
   void UpdateNetworkState(bool aOnline) override;
 
-  RefPtr<StatsPromise> GetIceStats(
-      const std::string& aTransportId, DOMHighResTimeStamp aNow,
-      std::unique_ptr<dom::RTCStatsReportInternal>&& aReport) override;
+  RefPtr<dom::RTCStatsPromise> GetIceStats(const std::string& aTransportId,
+                                           DOMHighResTimeStamp aNow) override;
 
  private:
   friend class MediaTransportChild;

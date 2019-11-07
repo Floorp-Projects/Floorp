@@ -183,7 +183,6 @@
   "resource://testing-common/services/sync/utils.js": ["AccountState", "MockFxaStorageManager", "SyncTestingInfrastructure", "configureFxAccountIdentity", "configureIdentity", "encryptPayload", "makeFxAccountsInternalMock", "makeIdentityConfig", "promiseNamedTimer", "promiseZeroTimer", "sumHistogram", "syncTestLogging", "waitForZeroTimer"],
   "rest.js": ["RESTRequest", "RESTResponse", "TokenAuthenticatedRESTRequest"],
   "rotaryengine.js": ["RotaryEngine", "RotaryRecord", "RotaryStore", "RotaryTracker"],
-  "RTCStatsReport.jsm": ["convertToRTCStatsReport"],
   "Schemas.jsm": ["SchemaRoot", "Schemas"],
   "SearchShortcuts.jsm": ["checkHasSearchEngine", "getSearchProvider", "SEARCH_SHORTCUTS", "CUSTOM_SEARCH_SHORTCUTS", "SEARCH_SHORTCUTS_EXPERIMENT", "SEARCH_SHORTCUTS_SEARCH_ENGINES_PREF", "SEARCH_SHORTCUTS_HAVE_PINNED_PREF"],
   "SectionsManager.jsm": ["SectionsFeed", "SectionsManager"],

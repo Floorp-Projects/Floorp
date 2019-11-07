@@ -213,26 +213,21 @@ mozilla::ipc::IPCResult MediaTransportParent::RecvUpdateNetworkState(
 
 mozilla::ipc::IPCResult MediaTransportParent::RecvGetIceStats(
     const string& transportId, const double& now,
-    const RTCStatsReportInternal& reportIn, GetIceStatsResolver&& aResolve) {
-  // Copy, because we are handed a const reference (lame), and put in a
-  // unique_ptr because RTCStatsReportInternal doesn't have move semantics
-  // (also lame).
-  std::unique_ptr<dom::RTCStatsReportInternal> report(
-      new dom::RTCStatsReportInternal(reportIn));
-
-  mImpl->mHandler->GetIceStats(transportId, now, std::move(report))
+    GetIceStatsResolver&& aResolve) {
+  mImpl->mHandler->GetIceStats(transportId, now)
       ->Then(
           GetCurrentThreadSerialEventTarget(), __func__,
           // IPDL doesn't give us a reject function, so we cannot reject async,
           // so we are forced to resolve with an unmodified result. Laaaaaaame.
-          [aResolve = std::move(aResolve),
-           reportIn](MediaTransportHandler::StatsPromise::ResolveOrRejectValue&&
-                         aResult) {
+          [aResolve = std::move(aResolve)](
+              dom::RTCStatsPromise::ResolveOrRejectValue&& aResult) {
             if (aResult.IsResolve()) {
-              MovableRTCStatsReportInternal copy(*aResult.ResolveValue());
-              aResolve(copy);
+              aResolve(
+                  dom::NotReallyMovableButLetsPretendItIsRTCStatsCollection(
+                      *aResult.ResolveValue()));
             } else {
-              aResolve(MovableRTCStatsReportInternal(reportIn));
+              dom::NotReallyMovableButLetsPretendItIsRTCStatsCollection empty;
+              aResolve(empty);
             }
           });
 

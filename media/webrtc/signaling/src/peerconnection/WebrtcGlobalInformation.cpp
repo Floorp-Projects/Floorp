@@ -44,7 +44,6 @@ static const char* wgiLogTag = "WebrtcGlobalInformation";
 namespace mozilla {
 namespace dom {
 
-typedef Vector<nsAutoPtr<RTCStatsQuery>> RTCStatsQueries;
 typedef nsTArray<RTCStatsReportInternal> Stats;
 
 template <class Request, typename Callback, typename Result,
@@ -152,9 +151,7 @@ class StatsRequest
   const nsString mPcIdFilter;
   explicit StatsRequest(int aId, StatsRequestCallback& aCallback,
                         nsAString& aFilter)
-      : RequestManager(aId, aCallback), mPcIdFilter(aFilter) {
-    mResult.mReports.Construct();
-  }
+      : RequestManager(aId, aCallback), mPcIdFilter(aFilter) {}
 
  private:
   StatsRequest() = delete;
@@ -220,17 +217,18 @@ static PeerConnectionCtx* GetPeerConnectionCtx() {
 }
 
 MOZ_CAN_RUN_SCRIPT
-static void OnStatsReport_m(WebrtcGlobalChild* aThisChild, const int aRequestId,
-                            nsTArray<UniquePtr<RTCStatsQuery>>&& aQueryList) {
+static void OnStatsReport_m(
+    WebrtcGlobalChild* aThisChild, const int aRequestId,
+    nsTArray<UniquePtr<dom::RTCStatsReportInternal>>&& aReports) {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (aThisChild) {
     Stats stats;
 
     // Copy stats generated for the currently active PeerConnections
-    for (auto& query : aQueryList) {
-      if (query) {
-        stats.AppendElement(*query->report);
+    for (auto& report : aReports) {
+      if (report) {
+        stats.AppendElement(*report);
       }
     }
     // Reports saved for closed/destroyed PeerConnections
@@ -255,10 +253,9 @@ static void OnStatsReport_m(WebrtcGlobalChild* aThisChild, const int aRequestId,
     return;
   }
 
-  for (auto& query : aQueryList) {
-    if (query) {
-      request->mResult.mReports.Value().AppendElement(*(query->report),
-                                                      fallible);
+  for (auto& report : aReports) {
+    if (report) {
+      request->mResult.mReports.AppendElement(*report, fallible);
     }
   }
 
@@ -266,7 +263,7 @@ static void OnStatsReport_m(WebrtcGlobalChild* aThisChild, const int aRequestId,
   auto ctx = PeerConnectionCtx::GetInstance();
   if (ctx) {
     for (auto&& pc : ctx->mStatsForClosedPeerConnections) {
-      request->mResult.mReports.Value().AppendElement(pc, fallible);
+      request->mResult.mReports.AppendElement(pc, fallible);
     }
   }
 
@@ -309,7 +306,7 @@ static void RunStatsQuery(
     const std::map<const std::string, PeerConnectionImpl*>& aPeerConnections,
     const nsAString& aPcIdFilter, WebrtcGlobalChild* aThisChild,
     const int aRequestId) {
-  nsTArray<RefPtr<RTCStatsQueryPromise>> promises;
+  nsTArray<RefPtr<RTCStatsReportPromise>> promises;
 
   for (auto& idAndPc : aPeerConnections) {
     MOZ_ASSERT(idAndPc.second);
@@ -318,31 +315,31 @@ static void RunStatsQuery(
         aPcIdFilter.EqualsASCII(pc.GetIdAsAscii().c_str())) {
       if (pc.HasMedia()) {
         promises.AppendElement(
-            pc.GetStats(nullptr, true, false)
+            pc.GetStats(nullptr, true)
                 ->Then(
                     GetMainThreadSerialEventTarget(), __func__,
-                    [=](UniquePtr<RTCStatsQuery>&& aQuery) {
-                      return RTCStatsQueryPromise::CreateAndResolve(
-                          std::move(aQuery), __func__);
+                    [=](UniquePtr<dom::RTCStatsReportInternal>&& aReport) {
+                      return RTCStatsReportPromise::CreateAndResolve(
+                          std::move(aReport), __func__);
                     },
                     [=](nsresult aError) {
                       // Ignore errors! Just resolve with a nullptr.
-                      return RTCStatsQueryPromise::CreateAndResolve(
-                          UniquePtr<RTCStatsQuery>(), __func__);
+                      return RTCStatsReportPromise::CreateAndResolve(
+                          UniquePtr<dom::RTCStatsReportInternal>(), __func__);
                     }));
       }
     }
   }
 
-  RTCStatsQueryPromise::All(GetMainThreadSerialEventTarget(), promises)
+  RTCStatsReportPromise::All(GetMainThreadSerialEventTarget(), promises)
       ->Then(
           GetMainThreadSerialEventTarget(), __func__,
           // MOZ_CAN_RUN_SCRIPT_BOUNDARY because we're going to run that
           // function async anyway.
-          [aThisChild,
-           aRequestId](nsTArray<UniquePtr<RTCStatsQuery>>&& aQueries)
+          [aThisChild, aRequestId](
+              nsTArray<UniquePtr<dom::RTCStatsReportInternal>>&& aReports)
               MOZ_CAN_RUN_SCRIPT_BOUNDARY {
-                OnStatsReport_m(aThisChild, aRequestId, std::move(aQueries));
+                OnStatsReport_m(aThisChild, aRequestId, std::move(aReports));
               },
           [=](nsresult) { MOZ_CRASH(); });
 }
@@ -631,7 +628,7 @@ mozilla::ipc::IPCResult WebrtcGlobalParent::RecvGetStatsResult(
   }
 
   for (auto& s : Stats) {
-    request->mResult.mReports.Value().AppendElement(s, fallible);
+    request->mResult.mReports.AppendElement(s, fallible);
   }
 
   auto next = request->GetNextParent();
@@ -811,81 +808,71 @@ MOZ_IMPLICIT WebrtcGlobalChild::~WebrtcGlobalChild() {
   MOZ_COUNT_DTOR(WebrtcGlobalChild);
 }
 
-static void StoreLongTermICEStatisticsImpl_m(nsresult result,
-                                             RTCStatsQuery* query) {
+static void StoreLongTermICEStatisticsImpl_m(RTCStatsReportInternal* report) {
   using namespace Telemetry;
 
-  if (NS_FAILED(result) || !query->report->mIceCandidateStats.WasPassed()) {
-    return;
-  }
+  report->mClosed = true;
 
-  query->report->mClosed.Construct(true);
-
-  // Accumulate telemetry for various PER_CALL settings here.
-  if (query->report->mOutboundRtpStreamStats.WasPassed()) {
-    auto& array = query->report->mOutboundRtpStreamStats.Value();
-    for (decltype(array.Length()) i = 0; i < array.Length(); i++) {
-      auto& s = array[i];
-      bool isVideo = (s.mId.Value().Find("video") != -1);
-      if (!isVideo) {
-        continue;
-      }
-      if (s.mBitrateMean.WasPassed()) {
-        Accumulate(WEBRTC_VIDEO_ENCODER_BITRATE_AVG_PER_CALL_KBPS,
-                   uint32_t(s.mBitrateMean.Value() / 1000));
-      }
-      if (s.mBitrateStdDev.WasPassed()) {
-        Accumulate(WEBRTC_VIDEO_ENCODER_BITRATE_STD_DEV_PER_CALL_KBPS,
-                   uint32_t(s.mBitrateStdDev.Value() / 1000));
-      }
-      if (s.mFramerateMean.WasPassed()) {
-        Accumulate(WEBRTC_VIDEO_ENCODER_FRAMERATE_AVG_PER_CALL,
-                   uint32_t(s.mFramerateMean.Value()));
-      }
-      if (s.mFramerateStdDev.WasPassed()) {
-        Accumulate(WEBRTC_VIDEO_ENCODER_FRAMERATE_10X_STD_DEV_PER_CALL,
-                   uint32_t(s.mFramerateStdDev.Value() * 10));
-      }
-      if (s.mDroppedFrames.WasPassed() && !query->iceStartTime.IsNull()) {
-        double mins = (TimeStamp::Now() - query->iceStartTime).ToSeconds() / 60;
-        if (mins > 0) {
-          Accumulate(WEBRTC_VIDEO_ENCODER_DROPPED_FRAMES_PER_CALL_FPM,
-                     uint32_t(double(s.mDroppedFrames.Value()) / mins));
-        }
+  for (const auto& outboundRtpStats : report->mOutboundRtpStreamStats) {
+    bool isVideo = (outboundRtpStats.mId.Value().Find("video") != -1);
+    if (!isVideo) {
+      continue;
+    }
+    if (outboundRtpStats.mBitrateMean.WasPassed()) {
+      Accumulate(WEBRTC_VIDEO_ENCODER_BITRATE_AVG_PER_CALL_KBPS,
+                 uint32_t(outboundRtpStats.mBitrateMean.Value() / 1000));
+    }
+    if (outboundRtpStats.mBitrateStdDev.WasPassed()) {
+      Accumulate(WEBRTC_VIDEO_ENCODER_BITRATE_STD_DEV_PER_CALL_KBPS,
+                 uint32_t(outboundRtpStats.mBitrateStdDev.Value() / 1000));
+    }
+    if (outboundRtpStats.mFramerateMean.WasPassed()) {
+      Accumulate(WEBRTC_VIDEO_ENCODER_FRAMERATE_AVG_PER_CALL,
+                 uint32_t(outboundRtpStats.mFramerateMean.Value()));
+    }
+    if (outboundRtpStats.mFramerateStdDev.WasPassed()) {
+      Accumulate(WEBRTC_VIDEO_ENCODER_FRAMERATE_10X_STD_DEV_PER_CALL,
+                 uint32_t(outboundRtpStats.mFramerateStdDev.Value() * 10));
+    }
+    if (outboundRtpStats.mDroppedFrames.WasPassed() &&
+        report->mCallDurationMs.WasPassed()) {
+      double mins = report->mCallDurationMs.Value() / (1000 * 60);
+      if (mins > 0) {
+        Accumulate(
+            WEBRTC_VIDEO_ENCODER_DROPPED_FRAMES_PER_CALL_FPM,
+            uint32_t(double(outboundRtpStats.mDroppedFrames.Value()) / mins));
       }
     }
   }
 
-  if (query->report->mInboundRtpStreamStats.WasPassed()) {
-    auto& array = query->report->mInboundRtpStreamStats.Value();
-    for (decltype(array.Length()) i = 0; i < array.Length(); i++) {
-      auto& s = array[i];
-      bool isVideo = (s.mId.Value().Find("video") != -1);
-      if (!isVideo) {
-        continue;
-      }
-      if (s.mBitrateMean.WasPassed()) {
-        Accumulate(WEBRTC_VIDEO_DECODER_BITRATE_AVG_PER_CALL_KBPS,
-                   uint32_t(s.mBitrateMean.Value() / 1000));
-      }
-      if (s.mBitrateStdDev.WasPassed()) {
-        Accumulate(WEBRTC_VIDEO_DECODER_BITRATE_STD_DEV_PER_CALL_KBPS,
-                   uint32_t(s.mBitrateStdDev.Value() / 1000));
-      }
-      if (s.mFramerateMean.WasPassed()) {
-        Accumulate(WEBRTC_VIDEO_DECODER_FRAMERATE_AVG_PER_CALL,
-                   uint32_t(s.mFramerateMean.Value()));
-      }
-      if (s.mFramerateStdDev.WasPassed()) {
-        Accumulate(WEBRTC_VIDEO_DECODER_FRAMERATE_10X_STD_DEV_PER_CALL,
-                   uint32_t(s.mFramerateStdDev.Value() * 10));
-      }
-      if (s.mDiscardedPackets.WasPassed() && !query->iceStartTime.IsNull()) {
-        double mins = (TimeStamp::Now() - query->iceStartTime).ToSeconds() / 60;
-        if (mins > 0) {
-          Accumulate(WEBRTC_VIDEO_DECODER_DISCARDED_PACKETS_PER_CALL_PPM,
-                     uint32_t(double(s.mDiscardedPackets.Value()) / mins));
-        }
+  for (const auto& inboundRtpStats : report->mInboundRtpStreamStats) {
+    bool isVideo = (inboundRtpStats.mId.Value().Find("video") != -1);
+    if (!isVideo) {
+      continue;
+    }
+    if (inboundRtpStats.mBitrateMean.WasPassed()) {
+      Accumulate(WEBRTC_VIDEO_DECODER_BITRATE_AVG_PER_CALL_KBPS,
+                 uint32_t(inboundRtpStats.mBitrateMean.Value() / 1000));
+    }
+    if (inboundRtpStats.mBitrateStdDev.WasPassed()) {
+      Accumulate(WEBRTC_VIDEO_DECODER_BITRATE_STD_DEV_PER_CALL_KBPS,
+                 uint32_t(inboundRtpStats.mBitrateStdDev.Value() / 1000));
+    }
+    if (inboundRtpStats.mFramerateMean.WasPassed()) {
+      Accumulate(WEBRTC_VIDEO_DECODER_FRAMERATE_AVG_PER_CALL,
+                 uint32_t(inboundRtpStats.mFramerateMean.Value()));
+    }
+    if (inboundRtpStats.mFramerateStdDev.WasPassed()) {
+      Accumulate(WEBRTC_VIDEO_DECODER_FRAMERATE_10X_STD_DEV_PER_CALL,
+                 uint32_t(inboundRtpStats.mFramerateStdDev.Value() * 10));
+    }
+    if (inboundRtpStats.mDiscardedPackets.WasPassed() &&
+        report->mCallDurationMs.WasPassed()) {
+      double mins = report->mCallDurationMs.Value() / (1000 * 60);
+      if (mins > 0) {
+        Accumulate(
+            WEBRTC_VIDEO_DECODER_DISCARDED_PACKETS_PER_CALL_PPM,
+            uint32_t(double(inboundRtpStats.mDiscardedPackets.Value()) / mins));
       }
     }
   }
@@ -894,7 +881,7 @@ static void StoreLongTermICEStatisticsImpl_m(nsresult result,
 
   PeerConnectionCtx* ctx = GetPeerConnectionCtx();
   if (ctx) {
-    ctx->mStatsForClosedPeerConnections.AppendElement(*query->report, fallible);
+    ctx->mStatsForClosedPeerConnections.AppendElement(*report, fallible);
   }
 }
 
@@ -906,15 +893,13 @@ void WebrtcGlobalInformation::StoreLongTermICEStatistics(
     return;
   }
 
-  aPc.GetStats(nullptr, true, false)
+  aPc.GetStats(nullptr, true)
       ->Then(
           GetMainThreadSerialEventTarget(), __func__,
-          [=](UniquePtr<RTCStatsQuery>&& aQuery) {
-            StoreLongTermICEStatisticsImpl_m(NS_OK, aQuery.get());
+          [=](UniquePtr<dom::RTCStatsReportInternal>&& aReport) {
+            StoreLongTermICEStatisticsImpl_m(aReport.get());
           },
-          [=](nsresult aError) {
-            StoreLongTermICEStatisticsImpl_m(aError, nullptr);
-          });
+          [=](nsresult aError) {});
 }
 
 }  // namespace dom

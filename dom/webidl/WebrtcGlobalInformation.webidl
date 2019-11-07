@@ -5,7 +5,7 @@
  */
 
 dictionary WebrtcGlobalStatisticsReport {
-  sequence<RTCStatsReportInternal> reports;
+  sequence<RTCStatsReportInternal> reports = [];
 };
 
 callback WebrtcGlobalStatisticsCallback = void (WebrtcGlobalStatisticsReport reports);

@@ -36,6 +36,8 @@ class PeerConnectionImpl;
 class PeerConnectionMedia;
 class PCUuidGenerator;
 class MediaPipeline;
+class MediaPipelineReceive;
+class MediaPipelineTransmit;
 class MediaPipelineFilter;
 class JsepSession;
 
@@ -87,10 +89,11 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
 
   void GetTransmitPipelinesMatching(
       const dom::MediaStreamTrack* aTrack,
-      nsTArray<RefPtr<MediaPipeline>>* aPipelines);
+      nsTArray<RefPtr<MediaPipelineTransmit>>* aPipelines);
 
-  void GetReceivePipelinesMatching(const dom::MediaStreamTrack* aTrack,
-                                   nsTArray<RefPtr<MediaPipeline>>* aPipelines);
+  void GetReceivePipelinesMatching(
+      const dom::MediaStreamTrack* aTrack,
+      nsTArray<RefPtr<MediaPipelineReceive>>* aPipelines);
 
   std::string GetTransportIdMatching(const dom::MediaStreamTrack& aTrack) const;
 

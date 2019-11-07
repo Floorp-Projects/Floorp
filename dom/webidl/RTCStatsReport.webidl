@@ -140,35 +140,45 @@ dictionary RTCIceCandidateStats : RTCStats {
   DOMString proxied;
 };
 
-// This is the internal representation of the report in this implementation
-// to be received from c++
+// This is intended to be a list of dictionaries that inherit from RTCStats
+// (with some raw ICE candidates thrown in). Unfortunately, we cannot simply
+// store a sequence<RTCStats> because of slicing. So, we have to have a
+// separate list for each type. Used in c++ gecko code.
+dictionary RTCStatsCollection {
+  sequence<RTCInboundRtpStreamStats>        inboundRtpStreamStats = [];
+  sequence<RTCOutboundRtpStreamStats>       outboundRtpStreamStats = [];
+  sequence<RTCRemoteInboundRtpStreamStats>  remoteInboundRtpStreamStats = [];
+  sequence<RTCRemoteOutboundRtpStreamStats> remoteOutboundRtpStreamStats = [];
+  sequence<RTCRTPContributingSourceStats>   rtpContributingSourceStats = [];
+  sequence<RTCIceCandidatePairStats>        iceCandidatePairStats = [];
+  sequence<RTCIceCandidateStats>            iceCandidateStats = [];
+  sequence<RTCIceCandidateStats>            trickledIceCandidateStats = [];
+  sequence<DOMString>                       rawLocalCandidates = [];
+  sequence<DOMString>                       rawRemoteCandidates = [];
+};
 
-dictionary RTCStatsReportInternal {
-  DOMString                                 pcid = "";
-  sequence<RTCInboundRtpStreamStats>        inboundRtpStreamStats;
-  sequence<RTCOutboundRtpStreamStats>       outboundRtpStreamStats;
-  sequence<RTCRemoteInboundRtpStreamStats>  remoteInboundRtpStreamStats;
-  sequence<RTCRemoteOutboundRtpStreamStats> remoteOutboundRtpStreamStats;
-  sequence<RTCRTPContributingSourceStats>   rtpContributingSourceStats;
-  sequence<RTCIceCandidatePairStats>        iceCandidatePairStats;
-  sequence<RTCIceCandidateStats>            iceCandidateStats;
+// A collection of RTCStats dictionaries, plus some other info. Used by
+// WebrtcGlobalInformation for about:webrtc, and telemetry.
+dictionary RTCStatsReportInternal : RTCStatsCollection {
+  required DOMString                        pcid;
   DOMString                                 localSdp;
   DOMString                                 remoteSdp;
-  DOMHighResTimeStamp                       timestamp;
-  unsigned long                             iceRestarts;
-  unsigned long                             iceRollbacks;
+  required DOMHighResTimeStamp              timestamp;
+  double                                    callDurationMs;
+  required unsigned long                    iceRestarts;
+  required unsigned long                    iceRollbacks;
   boolean                                   offerer; // Is the PC the offerer
-  boolean                                   closed; // Is the PC now closed
-  sequence<RTCIceCandidateStats>            trickledIceCandidateStats;
-  sequence<DOMString>                       rawLocalCandidates;
-  sequence<DOMString>                       rawRemoteCandidates;
+  required boolean                          closed; // Is the PC now closed
 };
 
 [Pref="media.peerconnection.enabled",
- JSImplementation="@mozilla.org/dom/rtcstatsreport;1",
  Exposed=Window]
 interface RTCStatsReport {
-  readonly maplike<DOMString, object>;
+
+  // TODO(bug 1586109): Remove this once we no longer need to be able to
+  // construct empty RTCStatsReports from JS.
   [ChromeOnly]
-  readonly attribute DOMString mozPcid;
+  constructor();
+
+  readonly maplike<DOMString, object>;
 };

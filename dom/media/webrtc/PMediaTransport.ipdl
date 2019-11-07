@@ -14,8 +14,7 @@ using StringVector from "mozilla/media/webrtc/WebrtcIPCTraits.h";
 using CandidateInfo from "mozilla/media/webrtc/WebrtcIPCTraits.h";
 using DtlsDigestList from "mozilla/media/webrtc/WebrtcIPCTraits.h";
 using std::string from "ipc/IPCMessageUtils.h";
-using struct mozilla::dom::RTCStatsReportInternal from "mozilla/dom/RTCStatsReportBinding.h";
-using struct mozilla::dom::MovableRTCStatsReportInternal from "mozilla/media/webrtc/WebrtcGlobal.h";
+using struct mozilla::dom::NotReallyMovableButLetsPretendItIsRTCStatsCollection from "mozilla/dom/RTCStatsReportBinding.h";
 using WebrtcGlobalLog from "mozilla/media/webrtc/WebrtcGlobal.h";
 using mozilla::dom::RTCIceServer from "mozilla/dom/RTCConfigurationBinding.h";
 using mozilla::dom::RTCIceTransportPolicy from "mozilla/dom/RTCConfigurationBinding.h";
@@ -86,9 +85,7 @@ parent:
 
   async UpdateNetworkState(bool online);
 
-  async GetIceStats(string transportId,
-                    double now,
-                    RTCStatsReportInternal reportIn) returns (MovableRTCStatsReportInternal reportOut);
+  async GetIceStats(string transportId, double now) returns (NotReallyMovableButLetsPretendItIsRTCStatsCollection stats);
 
 child:
   async OnCandidate(string transportId, CandidateInfo candidateInfo);

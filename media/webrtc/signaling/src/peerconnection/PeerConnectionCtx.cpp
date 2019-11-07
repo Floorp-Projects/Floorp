@@ -178,10 +178,7 @@ template <typename T>
 static void RecordCommonRtpTelemetry(const T& list, const T& lastList,
                                      const bool isRemote) {
   using namespace Telemetry;
-  if (!list.WasPassed()) {
-    return;
-  }
-  for (const auto& s : list.Value()) {
+  for (const auto& s : list) {
     const bool isAudio = s.mKind.Value().Find("audio") != -1;
     if (s.mPacketsLost.WasPassed() && s.mPacketsReceived.WasPassed()) {
       if (const uint64_t total =
@@ -203,8 +200,8 @@ static void RecordCommonRtpTelemetry(const T& list, const T& lastList,
       Accumulate(id, s.mJitter.Value() * 1000);
     }
     // Record bandwidth telemetry
-    if (s.mBytesReceived.WasPassed() && lastList.WasPassed()) {
-      for (const auto& lastS : lastList.Value()) {
+    if (s.mBytesReceived.WasPassed()) {
+      for (const auto& lastS : lastList) {
         if (lastS.mId == s.mId) {
           int32_t deltaMs = s.mTimestamp.Value() - lastS.mTimestamp.Value();
           // In theory we're called every second, so delta *should* be in that
@@ -239,37 +236,35 @@ static void RecordCommonRtpTelemetry(const T& list, const T& lastList,
 //   STS,
 // - hence the there and back again approach.
 
-void PeerConnectionCtx::DeliverStats(RTCStatsQuery& aQuery) {
+void PeerConnectionCtx::DeliverStats(
+    UniquePtr<dom::RTCStatsReportInternal>&& aReport) {
   using namespace Telemetry;
 
-  std::unique_ptr<dom::RTCStatsReportInternal> report(std::move(aQuery.report));
   // First, get reports from a second ago, if any, for calculations below
-  std::unique_ptr<dom::RTCStatsReportInternal> lastReport;
+  UniquePtr<dom::RTCStatsReportInternal> lastReport;
   {
-    auto i = mLastReports.find(report->mPcid);
+    auto i = mLastReports.find(aReport->mPcid);
     if (i != mLastReports.end()) {
       lastReport = std::move(i->second);
     } else {
-      lastReport = std::make_unique<dom::RTCStatsReportInternal>();
+      lastReport = MakeUnique<dom::RTCStatsReportInternal>();
     }
   }
   // Record Telemetery
-  RecordCommonRtpTelemetry(report->mInboundRtpStreamStats,
+  RecordCommonRtpTelemetry(aReport->mInboundRtpStreamStats,
                            lastReport->mInboundRtpStreamStats, false);
-  RecordCommonRtpTelemetry(report->mRemoteInboundRtpStreamStats,
+  RecordCommonRtpTelemetry(aReport->mRemoteInboundRtpStreamStats,
                            lastReport->mRemoteInboundRtpStreamStats, true);
-  if (report->mRemoteInboundRtpStreamStats.WasPassed()) {
-    for (const auto& s : report->mRemoteInboundRtpStreamStats.Value()) {
-      if (s.mRoundTripTime.WasPassed()) {
-        const bool isAudio = s.mKind.Value().Find("audio") != -1;
-        HistogramID id = isAudio ? WEBRTC_AUDIO_QUALITY_OUTBOUND_RTT
-                                 : WEBRTC_VIDEO_QUALITY_OUTBOUND_RTT;
-        Accumulate(id, s.mRoundTripTime.Value() * 1000);
-      }
+  for (const auto& s : aReport->mRemoteInboundRtpStreamStats) {
+    if (s.mRoundTripTime.WasPassed()) {
+      const bool isAudio = s.mKind.Value().Find("audio") != -1;
+      HistogramID id = isAudio ? WEBRTC_AUDIO_QUALITY_OUTBOUND_RTT
+                               : WEBRTC_VIDEO_QUALITY_OUTBOUND_RTT;
+      Accumulate(id, s.mRoundTripTime.Value() * 1000);
     }
   }
 
-  mLastReports[report->mPcid] = std::move(report);
+  mLastReports[aReport->mPcid] = std::move(aReport);
 }
 
 void PeerConnectionCtx::EverySecondTelemetryCallback_m(nsITimer* timer,
@@ -279,15 +274,17 @@ void PeerConnectionCtx::EverySecondTelemetryCallback_m(nsITimer* timer,
 
   for (auto& idAndPc : GetInstance()->mPeerConnections) {
     if (idAndPc.second->HasMedia()) {
-      idAndPc.second->GetStats(nullptr, true, true)
+      idAndPc.second->GetStats(nullptr, true)
           ->Then(
               GetMainThreadSerialEventTarget(), __func__,
-              [=](UniquePtr<RTCStatsQuery>&& aQuery) {
+              [=](UniquePtr<dom::RTCStatsReportInternal>&& aReport) {
                 if (PeerConnectionCtx::isActive()) {
-                  PeerConnectionCtx::GetInstance()->DeliverStats(*aQuery);
+                  PeerConnectionCtx::GetInstance()->DeliverStats(
+                      std::move(aReport));
                 }
               },
               [=](nsresult aError) {});
+      idAndPc.second->RecordConduitTelemetry();
     }
   }
 }
