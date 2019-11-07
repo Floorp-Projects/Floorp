@@ -36,7 +36,6 @@ if CONFIG['MOZ_GECKO_PROFILER']:
         'gecko/ProfilerChild.cpp',
         'gecko/ProfilerIOInterposeObserver.cpp',
         'gecko/ProfilerParent.cpp',
-        'gecko/ThreadResponsiveness.cpp',
     ]
     if CONFIG['MOZ_REPLACE_MALLOC'] and CONFIG['MOZ_PROFILER_MEMORY']:
         SOURCES += [
