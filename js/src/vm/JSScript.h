@@ -1757,7 +1757,7 @@ setterLevel:                                                                  \
   IMMUTABLE_FLAG_GETTER_SETTER_CUSTOM_PUBLIC(FunctionHasThisBinding,
                                              hasThisBinding, HasThisBinding)
   // FunctionHasExtraBodyVarScope: custom logic below.
-  IMMUTABLE_FLAG_GETTER_SETTER(hasMappedArgsObj, HasMappedArgsObj)
+  IMMUTABLE_FLAG_GETTER(hasMappedArgsObj, HasMappedArgsObj)
   IMMUTABLE_FLAG_GETTER_SETTER(hasInnerFunctions, HasInnerFunctions)
   IMMUTABLE_FLAG_GETTER_SETTER_PUBLIC(needsHomeObject, NeedsHomeObject)
   IMMUTABLE_FLAG_GETTER_SETTER_PUBLIC(isDerivedClassConstructor,
