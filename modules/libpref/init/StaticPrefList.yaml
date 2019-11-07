@@ -6823,20 +6823,6 @@
   value: true
   mirror: always
 
-# IP addresses that are used by netlink service to check whether default route
-# is used for outgoing traffic. They are used just to check routing rules,
-# no packets are sent to those hosts. Initially, addresses of host
-# detectportal.firefox.com were used but they don't necessarily need to be
-# updated when addresses of this host change.
-- name: network.netlink.route.check.IPv4
-  type: String
-  value: "23.219.91.27"
-  mirror: never
-- name: network.netlink.route.check.IPv6
-  type: String
-  value: "2a02:26f0:40::17db:5b1b"
-  mirror: never
-
 #---------------------------------------------------------------------------
 # Prefs starting with "nglayout."
 #---------------------------------------------------------------------------
