@@ -137,10 +137,11 @@ add_task(async function asJPEGFormatAndQuality({ Page }) {
     info100.length > infoDefault.length,
     "Size of quality 100 is larger than default"
   );
-  ok(
-    info10.length < infoDefault.length,
-    "Size of quality 10 is smaller than default"
-  );
+  // Disabled due to bug 1594871
+  // ok(
+  //   info10.length < infoDefault.length,
+  //   "Size of quality 10 is smaller than default"
+  // );
 });
 
 async function getDevicePixelRatio() {
