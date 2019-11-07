@@ -52,8 +52,8 @@ function setUpSource(contextType, nodeType) {
 async function testRecord(source, mimeType) {
   const isOffline = source.context instanceof OfflineAudioContext;
   const recorder = new MediaRecorder(source, 0, {mimeType});
-  const extendedMimeType = `${mimeType || "audio/ogg"}; codecs=opus`;
   is(recorder.mimeType, mimeType, "Mime type is set");
+  const extendedMimeType = `${mimeType || "audio/ogg"}; codecs=opus`;
 
   recorder.onwarning = () => ok(false, "should not fire onwarning");
   recorder.onerror = () => ok(false, "should not fire onerror");
@@ -63,6 +63,9 @@ async function testRecord(source, mimeType) {
 
   recorder.start(1000);
   is("recording", recorder.state, "state should become recording after calling start()");
+  is(recorder.mimeType, mimeType, "Mime type is not changed by start()");
+
+  await new Promise(r => recorder.onstart = r);
   is(recorder.mimeType, extendedMimeType, "Mime type is fully defined");
 
   const chunks = [];
