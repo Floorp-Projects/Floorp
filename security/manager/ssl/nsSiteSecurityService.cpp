@@ -1056,6 +1056,7 @@ nsresult nsSiteSecurityService::ProcessPKPHeader(
                                         Nothing(),  // extraCertificates
                                         Nothing(),  // stapledOCSPResponse
                                         Nothing(),  // sctsFromTLSExtension
+                                        Nothing(),  // dcInfo
                                         aOriginAttributes,
                                         false  // don't store intermediates
                                         ) != mozilla::pkix::Success) {
