@@ -10,9 +10,6 @@
 #include "mozilla/AlreadyAddRefed.h"
 namespace mozilla {
 class TimeStamp;
-class TimeDurationValueCalculator;
-template <typename T> class BaseTimeDuration;
-typedef BaseTimeDuration<TimeDurationValueCalculator> TimeDuration;
 enum class EventQueuePriority;
 }
 %}
@@ -23,7 +20,6 @@ native EventQueuePriority(mozilla::EventQueuePriority);
 native nsIEventTargetPtr(nsIEventTarget*);
 native nsISerialEventTargetPtr(nsISerialEventTarget*);
 native TimeStamp(mozilla::TimeStamp);
-native TimeDuration(mozilla::TimeDuration);
 
 /**
  * This interface provides a high-level abstraction for an operating system
@@ -180,34 +176,6 @@ interface nsIThread : nsISerialEventTarget
    */
   [noscript] readonly attribute TimeStamp lastLongTaskEnd;
   [noscript] readonly attribute TimeStamp lastLongNonIdleTaskEnd;
-
-  /**
-   * Get information on the timing of the currently-running event.
-   *
-   * @param delay
-   *   The amount of time the current running event in the specified queue waited
-   *   to run. Will return TimeDuration() if the queue is empty or has not run any
-   *   new events since event delay monitoring started.  NOTE: delay will be
-   *   TimeDuration() if this thread uses a PrioritizedEventQueue (i.e. MainThread)
-   *   and the event priority is below Input.
-   * @param start
-   *   The time the currently running event began to run, or TimeStamp() if no
-   *   event is running.
-   */
-  [noscript] void getRunningEventDelay(out TimeDuration delay, out TimeStamp start);
-
-  /**
-   * Set information on the timing of the currently-running event.
-   * Overrides the values returned by getRunningEventDelay
-   *
-   * @param delay
-   *   Delay the running event spent in queues, or TimeDuration() if
-   *   there's no running event.
-   * @param start
-   *   The time the currently running event began to run, or TimeStamp() if no
-   *   event is running.
-   */
-  [noscript] void setRunningEventDelay(in TimeDuration delay, in TimeStamp start);
 
   [noscript] void setNameForWakeupTelemetry(in ACString name);
 };
