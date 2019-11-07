@@ -5,18 +5,18 @@
 categories:
     source_doc:
         - browser
-        - dom/dom
-        - gfx/gfx
+        - dom
+        - gfx
         - toolkit
         - dom/bindings/webidl
-        - modules/libpref/libpref
+        - modules/libpref
         - remote
         - services/common/services
     build_doc:
-        - python/mach
+        - mach
         - tools/try
         - build/buildsystem
-        - taskcluster/taskcluster
+        - taskcluster
     testing_doc:
         - testing/marionette
         - testing/geckodriver
@@ -27,12 +27,18 @@ categories:
         - tools/compare-locales
     python_doc:
         - mozbase
-        - python/python
+        - python
     fennec_doc:
         - mobile/android
 
 redirects:
     browser/browser: browser
+    dom/dom: dom
+    gfx/gfx: gfx
+    modules/libpref/libpref: modules/libpref
+    python/mach: mach
+    python/python: python
+    taskcluster/taskcluster: taskcluster
     testing/geckodriver/geckodriver: testing/geckodriver
     testing/marionette/marionette: testing/marionette
     toolkit/components/telemetry/telemetry: toolkit/components/telemetry

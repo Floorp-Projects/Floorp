@@ -42,7 +42,7 @@ if CONFIG['ENABLE_TESTS']:
 
 TEST_DIRS += ['tests']
 
-SPHINX_TREES['gfx'] = 'docs'
+SPHINX_TREES['/gfx'] = 'docs'
 
 with Files('docs/**'):
     SCHEDULES.exclusive = ['docs']
