@@ -81,20 +81,20 @@ gfxPlatformGtk::gfxPlatformGtk() {
   }
 
   mMaxGenericSubstitutions = UNINITIALIZED_VALUE;
-  mIsX11Display = GDK_IS_X11_DISPLAY(gdk_display_get_default());
-
+  mIsX11Display = gfxPlatform::IsHeadless()
+                      ? false
+                      : GDK_IS_X11_DISPLAY(gdk_display_get_default());
 #ifdef MOZ_X11
-  if (!gfxPlatform::IsHeadless() && XRE_IsParentProcess()) {
-    if (mIsX11Display && mozilla::Preferences::GetBool("gfx.xrender.enabled")) {
-      gfxVars::SetUseXRender(true);
-    }
+  if (mIsX11Display && XRE_IsParentProcess() &&
+      mozilla::Preferences::GetBool("gfx.xrender.enabled")) {
+    gfxVars::SetUseXRender(true);
   }
 #endif
 
   InitBackendPrefs(GetBackendPrefs());
 
 #ifdef MOZ_X11
-  if (gfxPlatform::IsHeadless() && mIsX11Display) {
+  if (mIsX11Display) {
     mCompositorDisplay = XOpenDisplay(nullptr);
     MOZ_ASSERT(mCompositorDisplay, "Failed to create compositor display!");
   } else {
@@ -132,7 +132,7 @@ void gfxPlatformGtk::FlushContentDrawing() {
 
 void gfxPlatformGtk::InitPlatformGPUProcessPrefs() {
 #ifdef MOZ_WAYLAND
-  if (!mIsX11Display) {
+  if (IsWaylandDisplay()) {
     FeatureState& gpuProc = gfxConfig::GetFeature(Feature::GPU_PROCESS);
     gpuProc.ForceDisable(FeatureStatus::Blocked,
                          "Wayland does not work in the GPU process",
@@ -745,7 +745,7 @@ class GtkVsyncSource final : public VsyncSource {
 
 already_AddRefed<gfx::VsyncSource> gfxPlatformGtk::CreateHardwareVsyncSource() {
 #  ifdef MOZ_WAYLAND
-  if (!mIsX11Display) {
+  if (IsWaylandDisplay()) {
     RefPtr<VsyncSource> vsyncSource = new GtkVsyncSource();
     VsyncSource::Display& display = vsyncSource->GetGlobalDisplay();
     static_cast<GtkVsyncSource::GLXDisplay&>(display).SetupWayland();
@@ -776,7 +776,7 @@ already_AddRefed<gfx::VsyncSource> gfxPlatformGtk::CreateHardwareVsyncSource() {
 
 #ifdef MOZ_WAYLAND
 bool gfxPlatformGtk::UseWaylandDMABufSurfaces() {
-  if (mIsX11Display) {
+  if (!IsWaylandDisplay()) {
     return false;
   }
   return widget::nsWaylandDisplay::IsDMABufEnabled();
