@@ -442,11 +442,9 @@ TypeSupport IsTypeSupportedImpl(const nsAString& aMIMEType) {
   return CanRecordVideoTrackWith(mime, aMIMEType);
 }
 
-nsString SelectMimeType(uint8_t aNumVideoTracks, uint8_t aNumAudioTracks,
+nsString SelectMimeType(bool aHasVideo, bool aHasAudio,
                         const nsString& aConstrainedMimeType) {
-  const bool hasVideo = aNumVideoTracks > 0;
-  const bool hasAudio = aNumAudioTracks > 0;
-  MOZ_ASSERT(hasVideo || hasAudio);
+  MOZ_ASSERT(aHasVideo || aHasAudio);
 
   Maybe<MediaContainerType> constrainedType =
       MakeMediaContainerType(aConstrainedMimeType);
@@ -455,10 +453,10 @@ nsString SelectMimeType(uint8_t aNumVideoTracks, uint8_t aNumAudioTracks,
   {
     // Select major type and container.
     if (constrainedType) {
-      MOZ_ASSERT_IF(hasVideo, constrainedType->Type().HasVideoMajorType());
+      MOZ_ASSERT_IF(aHasVideo, constrainedType->Type().HasVideoMajorType());
       MOZ_ASSERT(!constrainedType->Type().HasApplicationMajorType());
       majorType = constrainedType->Type().AsString();
-    } else if (hasVideo) {
+    } else if (aHasVideo) {
       majorType = NS_LITERAL_CSTRING(VIDEO_WEBM);
     } else {
       majorType = NS_LITERAL_CSTRING(AUDIO_OGG);
@@ -470,9 +468,9 @@ nsString SelectMimeType(uint8_t aNumVideoTracks, uint8_t aNumAudioTracks,
     if (constrainedType && constrainedType->ExtendedType().HaveCodecs()) {
       codecs = constrainedType->ExtendedType().Codecs().AsString();
     } else {
-      if (hasVideo && hasAudio) {
+      if (aHasVideo && aHasAudio) {
         codecs = NS_LITERAL_STRING("\"vp8, opus\"");
-      } else if (hasVideo) {
+      } else if (aHasVideo) {
         codecs = NS_LITERAL_STRING("vp8");
       } else {
         codecs = NS_LITERAL_STRING("opus");
@@ -483,10 +481,10 @@ nsString SelectMimeType(uint8_t aNumVideoTracks, uint8_t aNumAudioTracks,
   nsString result = NS_ConvertUTF8toUTF16(nsPrintfCString(
       "%s; codecs=%s", majorType.get(), NS_ConvertUTF16toUTF8(codecs).get()));
 
-  MOZ_ASSERT_IF(hasAudio,
+  MOZ_ASSERT_IF(aHasAudio,
                 CanRecordAudioTrackWith(MakeMediaContainerType(result),
                                         result) == TypeSupport::Supported);
-  MOZ_ASSERT_IF(hasVideo,
+  MOZ_ASSERT_IF(aHasVideo,
                 CanRecordVideoTrackWith(MakeMediaContainerType(result),
                                         result) == TypeSupport::Supported);
   return result;
@@ -645,6 +643,17 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
     RefPtr<Session> mSession;
   };
 
+  struct TrackTypeComparator {
+    enum Type {
+      AUDIO,
+      VIDEO,
+    };
+    static bool Equals(const RefPtr<MediaStreamTrack>& aTrack, Type aType) {
+      return (aType == AUDIO && aTrack->AsAudioStreamTrack()) ||
+             (aType == VIDEO && aTrack->AsVideoStreamTrack());
+    }
+  };
+
  public:
   Session(MediaRecorder* aRecorder,
           nsTArray<RefPtr<MediaStreamTrack>> aMediaStreamTracks,
@@ -653,7 +662,13 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
       : mRecorder(aRecorder),
         mMediaStreamTracks(std::move(aMediaStreamTracks)),
         mMainThread(mRecorder->GetOwner()->EventTargetFor(TaskCategory::Other)),
-        mMimeType(mRecorder->mMimeType),
+        mMimeType(SelectMimeType(
+            mMediaStreamTracks.Contains(TrackTypeComparator::VIDEO,
+                                        TrackTypeComparator()),
+            mRecorder->mAudioNode ||
+                mMediaStreamTracks.Contains(TrackTypeComparator::AUDIO,
+                                            TrackTypeComparator()),
+            mRecorder->mConstrainedMimeType)),
         mTimeslice(aTimeslice),
         mVideoBitsPerSecond(aVideoBitsPerSecond),
         mAudioBitsPerSecond(aAudioBitsPerSecond),
@@ -928,6 +943,7 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
   virtual ~Session() {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(mShutdownPromise);
+    MOZ_ASSERT(!mShutdownBlocker);
     LOG(LogLevel::Debug, ("Session.~Session (%p)", this));
   }
 
@@ -1183,6 +1199,8 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
           // event runnable since that dispatches synchronously (and may cause
           // js calls to methods depending on mRunningState).
           mRunningState = RunningState::Running;
+
+          mRecorder->mMimeType = mMimeType;
         }
         mRecorder->DispatchSimpleEvent(NS_LITERAL_STRING("start"));
       }
@@ -1494,46 +1512,32 @@ void MediaRecorder::Start(const Optional<uint32_t>& aTimeslice,
     }
   }
 
-  // 9. Let extendedMimeType be the value of recorder’s [[ConstrainedMimeType]]
-  //    slot.
-  nsString extendedMimeType = mConstrainedMimeType;
-
-  // 10. Modify extendedMimeType by adding media type, subtype and codecs
-  //     parameter reflecting the configuration used by the MediaRecorder to
-  //     record all tracks in tracks, if not already present. This MAY include
-  //     the profiles parameter [RFC6381] or further codec-specific parameters.
-  uint8_t numVideoTracks = 0;
-  uint8_t numAudioTracks = 0;
-  for (const auto& t : tracks) {
-    if (t->AsVideoStreamTrack() && numVideoTracks < UINT8_MAX) {
-      ++numVideoTracks;
-    } else if (t->AsAudioStreamTrack() && numAudioTracks < UINT8_MAX) {
+  // 9. If recorder’s [[ConstrainedBitsPerSecond]] slot is not undefined, set
+  //    recorder’s videoBitsPerSecond and audioBitsPerSecond attributes to
+  //    values the User Agent deems reasonable for the respective media types,
+  //    for recording all tracks in tracks, such that the sum of
+  //    videoBitsPerSecond and audioBitsPerSecond is close to the value of
+  //    recorder’s
+  //    [[ConstrainedBitsPerSecond]] slot.
+  if (mConstrainedBitsPerSecond) {
+    uint8_t numVideoTracks = 0;
+    uint8_t numAudioTracks = 0;
+    for (const auto& t : tracks) {
+      if (t->AsVideoStreamTrack() && numVideoTracks < UINT8_MAX) {
+        ++numVideoTracks;
+      } else if (t->AsAudioStreamTrack() && numAudioTracks < UINT8_MAX) {
+        ++numAudioTracks;
+      }
+    }
+    if (mAudioNode) {
+      MOZ_DIAGNOSTIC_ASSERT(!mStream);
       ++numAudioTracks;
     }
-  }
-  if (mAudioNode) {
-    MOZ_DIAGNOSTIC_ASSERT(!mStream);
-    ++numAudioTracks;
-  }
-  extendedMimeType =
-      SelectMimeType(numVideoTracks, numAudioTracks, extendedMimeType);
-
-  // 11. Set recorder’s mimeType attribute to extendedMimeType.
-  mMimeType = std::move(extendedMimeType);
-
-  // 12. If recorder’s [[ConstrainedBitsPerSecond]] slot is not undefined, set
-  //     recorder’s videoBitsPerSecond and audioBitsPerSecond attributes to
-  //     values the User Agent deems reasonable for the respective media types,
-  //     for recording all tracks in tracks, such that the sum of
-  //     videoBitsPerSecond and audioBitsPerSecond is close to the value of
-  //     recorder’s
-  //     [[ConstrainedBitsPerSecond]] slot.
-  if (mConstrainedBitsPerSecond) {
     SelectBitrates(*mConstrainedBitsPerSecond, numVideoTracks,
                    &mVideoBitsPerSecond, numAudioTracks, &mAudioBitsPerSecond);
   }
 
-  // 13. Let videoBitrate be the value of recorder’s videoBitsPerSecond
+  // 10. Let videoBitrate be the value of recorder’s videoBitsPerSecond
   //     attribute, and constrain the configuration of recorder to target an
   //     aggregate bitrate of videoBitrate bits per second for all video tracks
   //     recorder will be recording. videoBitrate is a hint for the encoder and
@@ -1541,7 +1545,7 @@ void MediaRecorder::Start(const Optional<uint32_t>& aTimeslice,
   //     long period of time.
   const uint32_t videoBitrate = mVideoBitsPerSecond;
 
-  // 14. Let audioBitrate be the value of recorder’s audioBitsPerSecond
+  // 11. Let audioBitrate be the value of recorder’s audioBitsPerSecond
   //     attribute, and constrain the configuration of recorder to target an
   //     aggregate bitrate of audioBitrate bits per second for all audio tracks
   //     recorder will be recording. audioBitrate is a hint for the encoder and
@@ -1549,7 +1553,7 @@ void MediaRecorder::Start(const Optional<uint32_t>& aTimeslice,
   //     long period of time.
   const uint32_t audioBitrate = mAudioBitsPerSecond;
 
-  // 15. Set recorder’s state to recording
+  // 12. Set recorder’s state to recording
   mState = RecordingState::Recording;
 
   MediaRecorderReporter::AddMediaRecorder(this);
