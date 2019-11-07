@@ -95,14 +95,20 @@ class Target extends Domain {
   closeTarget({ targetId }) {
     const { targets } = this.session.target;
     const target = targets.getById(targetId);
+
+    if (!target) {
+      throw new Error(`Unable to find target with id '${targetId}'`);
+    }
+
     TabManager.removeTab(target.tab);
   }
 
   attachToTarget({ targetId }) {
     const { targets } = this.session.target;
     const target = targets.getById(targetId);
+
     if (!target) {
-      return new Error(`Unable to find target with id '${targetId}'`);
+      throw new Error(`Unable to find target with id '${targetId}'`);
     }
 
     const tabSession = new TabSession(
