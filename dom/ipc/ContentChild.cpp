@@ -4220,6 +4220,10 @@ bool StartOpenBSDSandbox(GeckoProcessType type) {
       OpenBSDFindPledgeFilePath("pledge.content", pledgeFile);
       break;
 
+    case GeckoProcessType_GPU:
+      pledgeFile.Append("pledge.gpu");
+      break;
+
     default:
       MOZ_ASSERT(false, "unknown process type");
       return false;
