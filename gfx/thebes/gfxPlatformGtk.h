@@ -105,6 +105,9 @@ class gfxPlatformGtk : public gfxPlatform {
 #endif
 
   bool IsX11Display() { return mIsX11Display; }
+  bool IsWaylandDisplay() {
+    return !mIsX11Display && !gfxPlatform::IsHeadless();
+  }
 
  protected:
   void InitPlatformGPUProcessPrefs() override;
