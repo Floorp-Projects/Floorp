@@ -391,6 +391,12 @@ class MOZ_STACK_CLASS LanguageTag final {
   JSString* toString(JSContext* cx) const;
 
   /**
+   * Return the string representation of this language tag as a null-terminated
+   * C-string.
+   */
+  JS::UniqueChars toStringZ(JSContext* cx) const;
+
+  /**
    * Add likely-subtags to the language tag.
    *
    * Spec: <https://www.unicode.org/reports/tr35/#Likely_Subtags>
@@ -665,15 +671,30 @@ class MOZ_STACK_CLASS LanguageTagParser final {
       JSContext* cx, mozilla::Span<const char> extension,
       AttributesVector& attributes, KeywordsVector& keywords);
 
+  static JS::Result<bool> tryParse(JSContext* cx, LocaleChars& localeChars,
+                                   size_t localeLength, LanguageTag& tag);
+
  public:
   // Parse the input string as a language tag. Reports an error to the context
   // if the input can't be parsed completely.
   static bool parse(JSContext* cx, JSLinearString* locale, LanguageTag& tag);
 
+  // Parse the input string as a language tag. Reports an error to the context
+  // if the input can't be parsed completely.
+  static bool parse(JSContext* cx, mozilla::Span<const char> locale,
+                    LanguageTag& tag);
+
   // Parse the input string as a language tag. Returns Ok(true) if the input
   // could be completely parsed, Ok(false) if the input couldn't be parsed,
   // or Err() in case of internal error.
   static JS::Result<bool> tryParse(JSContext* cx, JSLinearString* locale,
+                                   LanguageTag& tag);
+
+  // Parse the input string as a language tag. Returns Ok(true) if the input
+  // could be completely parsed, Ok(false) if the input couldn't be parsed,
+  // or Err() in case of internal error.
+  static JS::Result<bool> tryParse(JSContext* cx,
+                                   mozilla::Span<const char> locale,
                                    LanguageTag& tag);
 
   // Parse the input string as the base-name parts (language, script, region,

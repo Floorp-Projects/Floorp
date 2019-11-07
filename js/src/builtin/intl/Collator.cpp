@@ -9,11 +9,13 @@
 #include "builtin/intl/Collator.h"
 
 #include "mozilla/Assertions.h"
+#include "mozilla/Span.h"
 
 #include "jsapi.h"
 
 #include "builtin/Array.h"
 #include "builtin/intl/CommonFunctions.h"
+#include "builtin/intl/LanguageTag.h"
 #include "builtin/intl/ScopedICUObject.h"
 #include "builtin/intl/SharedIntlData.h"
 #include "gc/FreeOp.h"
@@ -257,35 +259,30 @@ static UCollator* NewUCollator(JSContext* cx,
     }
     if (StringEqualsLiteral(usage, "search")) {
       // ICU expects search as a Unicode locale extension on locale.
-      // Unicode locale extensions must occur before private use extensions.
-      const char* oldLocale = locale.get();
-      const char* p;
-      size_t index;
-      size_t localeLen = strlen(oldLocale);
-      if ((p = strstr(oldLocale, "-x-"))) {
-        index = p - oldLocale;
-      } else {
-        index = localeLen;
-      }
-
-      const char* insert;
-      if ((p = strstr(oldLocale, "-u-")) &&
-          static_cast<size_t>(p - oldLocale) < index) {
-        index = p - oldLocale + 2;
-        insert = "-co-search";
-      } else {
-        insert = "-u-co-search";
-      }
-      size_t insertLen = strlen(insert);
-      char* newLocale = cx->pod_malloc<char>(localeLen + insertLen + 1);
-      if (!newLocale) {
+      intl::LanguageTag tag(cx);
+      if (!intl::LanguageTagParser::parse(
+              cx, mozilla::MakeStringSpan(locale.get()), tag)) {
         return nullptr;
       }
-      memcpy(newLocale, oldLocale, index);
-      memcpy(newLocale + index, insert, insertLen);
-      memcpy(newLocale + index + insertLen, oldLocale + index,
-             localeLen - index + 1);  // '\0'
-      locale = JS::UniqueChars(newLocale);
+
+      JS::RootedVector<intl::UnicodeExtensionKeyword> keywords(cx);
+
+      if (!keywords.emplaceBack("co", cx->names().search)) {
+        return nullptr;
+      }
+
+      // |ApplyUnicodeExtensionToTag| applies the new keywords to the front of
+      // the Unicode extension subtag. We're then relying on ICU to follow RFC
+      // 6067, which states that any trailing keywords using the same key
+      // should be ignored.
+      if (!intl::ApplyUnicodeExtensionToTag(cx, tag, keywords)) {
+        return nullptr;
+      }
+
+      locale = tag.toStringZ(cx);
+      if (!locale) {
+        return nullptr;
+      }
     } else {
       MOZ_ASSERT(StringEqualsLiteral(usage, "sort"));
     }
