@@ -29,6 +29,7 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.storage.memory.InMemoryHistoryStorage
 import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.Engine
+import mozilla.components.concept.fetch.Client
 import mozilla.components.feature.addons.amo.AddOnsCollectionsProvider
 import mozilla.components.feature.contextmenu.ContextMenuUseCases
 import mozilla.components.feature.customtabs.CustomTabIntentProcessor
@@ -72,7 +73,7 @@ open class DefaultComponents(private val applicationContext: Context) {
         SystemEngine(applicationContext, engineSettings)
     }
 
-    val client by lazy { HttpURLConnectionClient() }
+    open val client: Client by lazy { HttpURLConnectionClient() }
 
     val icons by lazy { BrowserIcons(applicationContext, client) }
 
