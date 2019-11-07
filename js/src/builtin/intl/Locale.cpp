@@ -360,17 +360,12 @@ static bool ApplyOptionsToTag(JSContext* cx, LanguageTag& tag,
 /**
  * ApplyUnicodeExtensionToTag( tag, options, relevantExtensionKeys )
  */
-static bool ApplyUnicodeExtensionToTag(JSContext* cx, LanguageTag& tag,
-                                       HandleLinearString calendar,
-                                       HandleLinearString collation,
-                                       HandleLinearString hourCycle,
-                                       HandleLinearString caseFirst,
-                                       HandleLinearString numeric,
-                                       HandleLinearString numberingSystem) {
+bool js::intl::ApplyUnicodeExtensionToTag(
+    JSContext* cx, LanguageTag& tag,
+    JS::HandleVector<intl::UnicodeExtensionKeyword> keywords) {
   // If no Unicode extensions were present in the options object, we can skip
   // everything below and directly return.
-  if (!calendar && !collation && !caseFirst && !hourCycle && !numeric &&
-      !numberingSystem) {
+  if (keywords.length() == 0) {
     return true;
   }
 
@@ -400,53 +395,32 @@ static bool ApplyUnicodeExtensionToTag(JSContext* cx, LanguageTag& tag,
     }
   }
 
-  using UnicodeKeyWithSeparator = const char(&)[UnicodeKeyLength + 3];
-
-  auto appendKeyword = [&newExtension](UnicodeKeyWithSeparator key,
-                                       JSLinearString* value) {
-    if (!newExtension.append(key, UnicodeKeyLength + 2)) {
-      return false;
-    }
-
-    JS::AutoCheckCannotGC nogc;
-    return value->hasLatin1Chars()
-               ? newExtension.append(value->latin1Chars(nogc), value->length())
-               : newExtension.append(value->twoByteChars(nogc),
-                                     value->length());
-  };
-
   // Append the new keywords before any existing keywords. That way any previous
   // keyword with the same key is detected as a duplicate when canonicalizing
   // the Unicode extension subtag and gets discarded.
 
-  if (calendar) {
-    if (!appendKeyword("-ca-", calendar)) {
+  for (const auto& keyword : keywords) {
+    UnicodeExtensionKeyword::UnicodeKeySpan key = keyword.key();
+    if (!newExtension.append('-')) {
       return false;
     }
-  }
-  if (collation) {
-    if (!appendKeyword("-co-", collation)) {
+    if (!newExtension.append(key.data(), key.size())) {
       return false;
     }
-  }
-  if (hourCycle) {
-    if (!appendKeyword("-hc-", hourCycle)) {
+    if (!newExtension.append('-')) {
       return false;
     }
-  }
-  if (caseFirst) {
-    if (!appendKeyword("-kf-", caseFirst)) {
-      return false;
-    }
-  }
-  if (numeric) {
-    if (!appendKeyword("-kn-", numeric)) {
-      return false;
-    }
-  }
-  if (numberingSystem) {
-    if (!appendKeyword("-nu-", numberingSystem)) {
-      return false;
+
+    JS::AutoCheckCannotGC nogc;
+    JSLinearString* type = keyword.type();
+    if (type->hasLatin1Chars()) {
+      if (!newExtension.append(type->latin1Chars(nogc), type->length())) {
+        return false;
+      }
+    } else {
+      if (!newExtension.append(type->twoByteChars(nogc), type->length())) {
+        return false;
+      }
     }
   }
 
@@ -558,15 +532,16 @@ static bool Locale(JSContext* cx, unsigned argc, Value* vp) {
       return false;
     }
 
-    // Step 13 (not applicable).
+    // Step 13.
+    JS::RootedVector<intl::UnicodeExtensionKeyword> keywords(cx);
 
-    // Steps 14, 16.
+    // Step 14.
     RootedLinearString calendar(cx);
     if (!GetStringOption(cx, options, cx->names().calendar, &calendar)) {
       return false;
     }
 
-    // Step 15.
+    // Steps 15-16.
     if (calendar) {
       if (!IsValidUnicodeExtensionValue(calendar)) {
         if (UniqueChars str = QuoteString(cx, calendar, '"')) {
@@ -576,15 +551,19 @@ static bool Locale(JSContext* cx, unsigned argc, Value* vp) {
         }
         return false;
       }
+
+      if (!keywords.emplaceBack("ca", calendar)) {
+        return false;
+      }
     }
 
-    // Steps 17, 19.
+    // Step 17.
     RootedLinearString collation(cx);
     if (!GetStringOption(cx, options, cx->names().collation, &collation)) {
       return false;
     }
 
-    // Step 18.
+    // Steps 18-19.
     if (collation) {
       if (!IsValidUnicodeExtensionValue(collation)) {
         if (UniqueChars str = QuoteString(cx, collation, '"')) {
@@ -594,14 +573,19 @@ static bool Locale(JSContext* cx, unsigned argc, Value* vp) {
         }
         return false;
       }
+
+      if (!keywords.emplaceBack("co", collation)) {
+        return false;
+      }
     }
 
-    // Steps 20-21.
+    // Step 20 (without validation).
     RootedLinearString hourCycle(cx);
     if (!GetStringOption(cx, options, cx->names().hourCycle, &hourCycle)) {
       return false;
     }
 
+    // Steps 20-21.
     if (hourCycle) {
       if (!StringEqualsLiteral(hourCycle, "h11") &&
           !StringEqualsLiteral(hourCycle, "h12") &&
@@ -614,14 +598,19 @@ static bool Locale(JSContext* cx, unsigned argc, Value* vp) {
         }
         return false;
       }
+
+      if (!keywords.emplaceBack("hc", hourCycle)) {
+        return false;
+      }
     }
 
-    // Steps 22-23.
+    // Step 22 (without validation).
     RootedLinearString caseFirst(cx);
     if (!GetStringOption(cx, options, cx->names().caseFirst, &caseFirst)) {
       return false;
     }
 
+    // Steps 22-23.
     if (caseFirst) {
       if (!StringEqualsLiteral(caseFirst, "upper") &&
           !StringEqualsLiteral(caseFirst, "lower") &&
@@ -633,22 +622,33 @@ static bool Locale(JSContext* cx, unsigned argc, Value* vp) {
         }
         return false;
       }
+
+      if (!keywords.emplaceBack("kf", caseFirst)) {
+        return false;
+      }
     }
 
-    // Steps 24-26.
+    // Steps 24-25.
     RootedLinearString numeric(cx);
     if (!GetBooleanOption(cx, options, cx->names().numeric, &numeric)) {
       return false;
     }
 
-    // Steps 27, 29.
+    // Step 26.
+    if (numeric) {
+      if (!keywords.emplaceBack("kn", numeric)) {
+        return false;
+      }
+    }
+
+    // Step 27.
     RootedLinearString numberingSystem(cx);
     if (!GetStringOption(cx, options, cx->names().numberingSystem,
                          &numberingSystem)) {
       return false;
     }
 
-    // Step 28.
+    // Steps 28-29.
     if (numberingSystem) {
       if (!IsValidUnicodeExtensionValue(numberingSystem)) {
         if (UniqueChars str = QuoteString(cx, numberingSystem, '"')) {
@@ -658,11 +658,14 @@ static bool Locale(JSContext* cx, unsigned argc, Value* vp) {
         }
         return false;
       }
+
+      if (!keywords.emplaceBack("nu", numberingSystem)) {
+        return false;
+      }
     }
 
     // Step 30.
-    if (!ApplyUnicodeExtensionToTag(cx, tag, calendar, collation, hourCycle,
-                                    caseFirst, numeric, numberingSystem)) {
+    if (!ApplyUnicodeExtensionToTag(cx, tag, keywords)) {
       return false;
     }
   }

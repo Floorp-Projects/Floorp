@@ -26,7 +26,9 @@
 
 #include "builtin/intl/CommonFunctions.h"
 #include "ds/Sort.h"
+#include "gc/Tracer.h"
 #include "js/Result.h"
+#include "js/TracingAPI.h"
 #include "js/Utility.h"
 #include "js/Vector.h"
 #include "unicode/uloc.h"
@@ -1629,6 +1631,10 @@ JS::Result<JSString*> ParseStandaloneISO639LanguageTag(JSContext* cx,
     return cx->alreadyReportedOOM();
   }
   return result;
+}
+
+void js::intl::UnicodeExtensionKeyword::trace(JSTracer* trc) {
+  TraceRoot(trc, &type_, "UnicodeExtensionKeyword::type");
 }
 
 }  // namespace intl

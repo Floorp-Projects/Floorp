@@ -31,6 +31,7 @@
 struct JSContext;
 class JSLinearString;
 class JSString;
+class JSTracer;
 
 namespace js {
 
@@ -717,6 +718,28 @@ MOZ_MUST_USE bool ParseStandaloneRegionTag(JS::Handle<JSLinearString*> str,
  */
 JS::Result<JSString*> ParseStandaloneISO639LanguageTag(
     JSContext* cx, JS::Handle<JSLinearString*> str);
+
+class UnicodeExtensionKeyword final {
+  char key_[LanguageTagLimits::UnicodeKeyLength];
+  JSLinearString* type_;
+
+ public:
+  using UnicodeKey = const char (&)[LanguageTagLimits::UnicodeKeyLength + 1];
+  using UnicodeKeySpan =
+      mozilla::Span<const char, LanguageTagLimits::UnicodeKeyLength>;
+
+  UnicodeExtensionKeyword(UnicodeKey key, JSLinearString* type)
+      : key_{key[0], key[1]}, type_(type) {}
+
+  UnicodeKeySpan key() const { return {key_, sizeof(key_)}; }
+  JSLinearString* type() const { return type_; }
+
+  void trace(JSTracer* trc);
+};
+
+extern MOZ_MUST_USE bool ApplyUnicodeExtensionToTag(
+    JSContext* cx, LanguageTag& tag,
+    JS::HandleVector<UnicodeExtensionKeyword> keywords);
 
 }  // namespace intl
 
