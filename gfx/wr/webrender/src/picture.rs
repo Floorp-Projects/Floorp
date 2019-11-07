@@ -1480,11 +1480,12 @@ impl TileCacheInstance {
                 false,
             );
 
-            if let Some(clip_chain_instance) = clip_chain_instance {
-                // TODO(gw): Maybe in future we can early out if the clip rect is None here,
-                //           signalling that the entire picture was clipped out?
-                self.local_clip_rect = clip_chain_instance.pic_clip_rect;
-            }
+            // Ensure that if the entire picture cache is clipped out, the local
+            // clip rect is zero. This makes sure we don't register any occluders
+            // that are actually off-screen.
+            self.local_clip_rect = clip_chain_instance.map_or(PictureRect::zero(), |clip_chain_instance| {
+                clip_chain_instance.pic_clip_rect
+            });
         }
 
         // If there are pending retained state, retrieve it.
