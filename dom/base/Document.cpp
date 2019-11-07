@@ -5684,9 +5684,9 @@ Element* Document::GetActiveElement() {
     if (bodyElement) {
       return bodyElement;
     }
-    // Special case to handle the transition to browser.xhtml where there is
-    // currently not a body element, but we need to match the XUL behavior.
-    // This should be removed when bug 1492582 is resolved.
+    // Special case to handle the transition to XHTML from XUL documents
+    // where there currently isn't a body element, but we need to match the
+    // XUL behavior. This should be removed when bug 1540278 is resolved.
     if (nsContentUtils::IsChromeDoc(this)) {
       Element* docElement = GetDocumentElement();
       if (docElement && docElement->IsXULElement()) {
