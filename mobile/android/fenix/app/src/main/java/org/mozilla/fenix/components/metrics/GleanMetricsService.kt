@@ -460,6 +460,8 @@ class GleanMetricsService(private val context: Context) : MetricsService {
         }
 
         setStartupMetrics()
+
+        context.settings().totalUriCount = 0
     }
 
     internal fun setStartupMetrics() {
