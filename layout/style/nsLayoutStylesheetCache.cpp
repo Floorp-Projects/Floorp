@@ -288,7 +288,7 @@ nsLayoutStylesheetCache::nsLayoutStylesheetCache() : mUsedSharedMemory(0) {
 #define STYLE_SHEET(identifier_, url_, shared_)                           \
   if (shared_) {                                                          \
     LoadSheetFromSharedMemory(url_, &m##identifier_##Sheet,               \
-                              eAgentSheetFeatures, mSharedMemory, header, \
+                              eAgentSheetFeatures, header, \
                               UserAgentStyleSheetID::identifier_);        \
   }
 #include "mozilla/UserAgentStyleSheetList.h"
@@ -299,7 +299,7 @@ nsLayoutStylesheetCache::nsLayoutStylesheetCache() : mUsedSharedMemory(0) {
 
 void nsLayoutStylesheetCache::LoadSheetFromSharedMemory(
     const char* aURL, RefPtr<StyleSheet>* aSheet, SheetParsingMode aParsingMode,
-    Shm* aSharedMemory, Header* aHeader, UserAgentStyleSheetID aSheetID) {
+    Header* aHeader, UserAgentStyleSheetID aSheetID) {
   auto i = size_t(aSheetID);
 
   auto sheet =
@@ -310,7 +310,7 @@ void nsLayoutStylesheetCache::LoadSheetFromSharedMemory(
 
   sheet->SetPrincipal(nsContentUtils::GetSystemPrincipal());
   sheet->SetURIs(uri, uri, uri);
-  sheet->SetSharedContents(aSharedMemory, aHeader->mSheets[i]);
+  sheet->SetSharedContents(aHeader->mSheets[i]);
   sheet->SetComplete();
 
   nsCOMPtr<nsIReferrerInfo> referrerInfo =
@@ -431,6 +431,17 @@ void nsLayoutStylesheetCache::InitSharedSheetsInParent() {
 }
 
 nsLayoutStylesheetCache::~nsLayoutStylesheetCache() {
+  // Ensure stylesheets are released _before_ the shared memory.
+#define STYLE_SHEET(identifier_, url_, shared_) \
+  m##identifier_##Sheet = nullptr;
+#include "mozilla/UserAgentStyleSheetList.h"
+#undef STYLE_SHEET
+
+  mChromePreferenceSheet = nullptr;
+  mContentPreferenceSheet = nullptr;
+  mUserChromeSheet = nullptr;
+  mUserContentSheet = nullptr;
+
   mozilla::UnregisterWeakMemoryReporter(this);
 }
 
