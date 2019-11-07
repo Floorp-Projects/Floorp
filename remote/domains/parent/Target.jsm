@@ -6,17 +6,17 @@
 
 var EXPORTED_SYMBOLS = ["Target"];
 
+const { ContextualIdentityService } = ChromeUtils.import(
+  "resource://gre/modules/ContextualIdentityService.jsm"
+);
 const { Domain } = ChromeUtils.import(
   "chrome://remote/content/domains/Domain.jsm"
 );
 const { TabManager } = ChromeUtils.import(
-  "chrome://remote/content/domains/parent/target/TabManager.jsm"
+  "chrome://remote/content/TabManager.jsm"
 );
 const { TabSession } = ChromeUtils.import(
   "chrome://remote/content/sessions/TabSession.jsm"
-);
-const { ContextualIdentityService } = ChromeUtils.import(
-  "resource://gre/modules/ContextualIdentityService.jsm"
 );
 
 let sessionIds = 1;

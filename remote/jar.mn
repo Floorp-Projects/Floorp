@@ -14,6 +14,8 @@ remote.jar:
   content/Protocol.jsm (Protocol.jsm)
   content/RecommendedPreferences.jsm (RecommendedPreferences.jsm)
   content/Sync.jsm (Sync.jsm)
+  content/TabManager.jsm (TabManager.jsm)
+  content/WindowManager.jsm (WindowManager.jsm)
 
   # sessions
   content/sessions/frame-script.js (sessions/frame-script.js)
@@ -54,7 +56,6 @@ remote.jar:
   content/domains/parent/page/DialogHandler.jsm (domains/parent/page/DialogHandler.jsm)
   content/domains/parent/Security.jsm (domains/parent/Security.jsm)
   content/domains/parent/Target.jsm (domains/parent/Target.jsm)
-  content/domains/parent/target/TabManager.jsm (domains/parent/target/TabManager.jsm)
 
   # transport layer
   content/server/HTTPD.jsm (../netwerk/test/httpserver/httpd.js)
