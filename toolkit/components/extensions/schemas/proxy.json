@@ -159,18 +159,6 @@
             "type": "object"
           }
         ]
-      },
-      {
-        "name": "onProxyError",
-        "type": "function",
-        "deprecated": "proxy.onProxyError has been deprecated and will be removed in Firefox 71. Use proxy.onError instead.",
-        "description": "Please use $(ref:proxy.onError).",
-        "parameters": [
-          {
-            "name": "error",
-            "type": "object"
-          }
-        ]
       }
     ]
   }
