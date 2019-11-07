@@ -116,7 +116,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "782fc39e560b"
+        "revision": "f805a84fd483"
     },
     "bg": {
         "platforms": [
@@ -218,7 +218,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "31daeaee9d90"
+        "revision": "1ac2f504cbc9"
     },
     "cak": {
         "platforms": [
@@ -405,7 +405,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "7398a81fb63c"
+        "revision": "4e30292f866f"
     },
     "es-CL": {
         "platforms": [
@@ -541,7 +541,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "b5bc40e80ed5"
+        "revision": "28cd2dd573eb"
     },
     "fr": {
         "platforms": [
@@ -677,7 +677,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "bf57d19e1a8e"
+        "revision": "1c195ce37c50"
     },
     "hi-IN": {
         "platforms": [
@@ -779,7 +779,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "029e5223ddfc"
+        "revision": "d93fc1a817bd"
     },
     "id": {
         "platforms": [
@@ -954,7 +954,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "7e491bd663c4"
+        "revision": "100bbad93350"
     },
     "lij": {
         "platforms": [
@@ -1124,7 +1124,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "d0f02ce8f348"
+        "revision": "3246e6d44166"
     },
     "nn-NO": {
         "platforms": [
@@ -1209,7 +1209,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "758df9cd2e71"
+        "revision": "226b3056c3c2"
     },
     "pt-PT": {
         "platforms": [
@@ -1617,6 +1617,6 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "53e1b207e308"
+        "revision": "6a85c9348c2a"
     }
 }
