@@ -53,9 +53,9 @@ enum class IsRemoveNotification {
 #  define COMPOSED_DOC_DECL
 #endif
 
-#  define CALL_BINDING_MANAGER(func_, params_) \
-    do {                                       \
-    } while (0)
+#define CALL_BINDING_MANAGER(func_, params_) \
+  do {                                       \
+  } while (0)
 
 // This macro expects the ownerDocument of content_ to be in scope as
 // |Document* doc|

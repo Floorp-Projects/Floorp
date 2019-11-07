@@ -1945,7 +1945,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(Document)
     return NS_SUCCESS_INTERRUPTED_TRAVERSE;
   }
 
-
   tmp->mExternalResourceMap.Traverse(&cb);
 
   // Traverse all Document pointer members.
@@ -6894,7 +6893,6 @@ bool Document::RemoveObserver(nsIDocumentObserver* aObserver) {
   return mObservers.Contains(aObserver);
 }
 
-
 void Document::BeginUpdate() {
   // If the document is going away, then it's probably okay to do things to it
   // in the wrong DocGroup. We're unlikely to run JS or do anything else
@@ -6906,7 +6904,6 @@ void Document::BeginUpdate() {
       !mIgnoreDocGroupMismatches) {
     mDocGroup->ValidateAccess();
   }
-
 
   ++mUpdateNestLevel;
   nsContentUtils::AddScriptBlocker();
@@ -6922,7 +6919,6 @@ void Document::EndUpdate() {
   nsContentUtils::RemoveScriptBlocker();
 
   --mUpdateNestLevel;
-
 
   MaybeInitializeFinalizeFrameLoaders();
   if (mXULBroadcastManager) {
@@ -7814,7 +7810,6 @@ Element* Document::GetBindingParent(nsINode& aNode) {
   return bindingParent ? bindingParent->AsElement() : nullptr;
 }
 
-
 Element* Document::GetAnonymousElementByAttribute(
     nsIContent* aElement, nsAtom* aAttrName,
     const nsAString& aAttrValue) const {
@@ -7827,9 +7822,7 @@ Element* Document::GetAnonymousElementByAttribute(Element& aElement,
   return nullptr;
 }
 
-nsINodeList* Document::GetAnonymousNodes(Element& aElement) {
-  return nullptr;
-}
+nsINodeList* Document::GetAnonymousNodes(Element& aElement) { return nullptr; }
 
 already_AddRefed<nsRange> Document::CreateRange(ErrorResult& rv) {
   RefPtr<nsRange> range = new nsRange(this);
@@ -9186,7 +9179,6 @@ nsINode* Document::AdoptNode(nsINode& aAdoptedNode, ErrorResult& rv) {
         parent->RemoveChildNode(adoptedNode->AsContent(), true);
       } else {
         MOZ_ASSERT(!adoptedNode->IsInUncomposedDoc());
-
       }
 
       break;
@@ -14073,7 +14065,6 @@ void Document::AddSizeOfNodeTree(nsINode& aNode, nsWindowSizes& aWindowSizes) {
       if (ShadowRoot* shadow = element->GetShadowRoot()) {
         AddSizeOfNodeTree(*shadow, aWindowSizes);
       }
-
     }
   }
 

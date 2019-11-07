@@ -1692,9 +1692,9 @@ already_AddRefed<nsIURI> SVGObserverUtils::GetBaseURLForLocalRef(
     nsIContent* bindingParent = content->GetBindingParent();
 
     if (bindingParent) {
-        MOZ_ASSERT(content->IsInNativeAnonymousSubtree(),
-                   "a non-native anonymous tree which is not from "
-                   "an XBL binding?");
+      MOZ_ASSERT(content->IsInNativeAnonymousSubtree(),
+                 "a non-native anonymous tree which is not from "
+                 "an XBL binding?");
     }
   }
 

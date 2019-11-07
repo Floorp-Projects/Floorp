@@ -96,7 +96,6 @@ struct MOZ_STACK_CLASS BindContext final {
     MOZ_ASSERT(mInComposedDoc, "Binding NAC in a disconnected subtree?");
   }
 
-
   bool CollectingDisplayedNodeDataDuringLoad() const {
     return mCollectingDisplayedNodeDataDuringLoad;
   }

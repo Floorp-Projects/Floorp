@@ -61,18 +61,18 @@ void IDTracker::ResetToURIFragmentID(nsIContent* aFromContent, nsIURI* aURI,
 
   nsIContent* bindingParent = aFromContent->GetBindingParent();
   if (bindingParent && !aFromContent->IsInShadowTree()) {
-      // This happens, for example, if aFromContent is part of the content
-      // inserted by a call to Document::InsertAnonymousContent, which we
-      // also want to handle.  (It also happens for <use>'s anonymous
-      // content etc.)
-      Element* anonRoot =
-          doc->GetAnonRootIfInAnonymousContentContainer(aFromContent);
-      if (anonRoot) {
-        mElement = nsContentUtils::MatchElementId(anonRoot, ref);
-        // We don't have watching working yet for anonymous content, so bail out
-        // here.
-        return;
-      }
+    // This happens, for example, if aFromContent is part of the content
+    // inserted by a call to Document::InsertAnonymousContent, which we
+    // also want to handle.  (It also happens for <use>'s anonymous
+    // content etc.)
+    Element* anonRoot =
+        doc->GetAnonRootIfInAnonymousContentContainer(aFromContent);
+    if (anonRoot) {
+      mElement = nsContentUtils::MatchElementId(anonRoot, ref);
+      // We don't have watching working yet for anonymous content, so bail out
+      // here.
+      return;
+    }
   }
 
   bool isEqualExceptRef;

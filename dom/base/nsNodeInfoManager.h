@@ -97,7 +97,6 @@ class nsNodeInfoManager final {
 
   void RemoveNodeInfo(mozilla::dom::NodeInfo* aNodeInfo);
 
-
   /**
    * Returns true if SVG nodes in this document have real SVG semantics.
    */

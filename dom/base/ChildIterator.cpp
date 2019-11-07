@@ -107,7 +107,6 @@ void FlattenedChildIterator::Init(bool aIgnoreXBL) {
       return;
     }
   }
-
 }
 
 bool FlattenedChildIterator::ComputeWhetherXBLIsInvolved() const {
