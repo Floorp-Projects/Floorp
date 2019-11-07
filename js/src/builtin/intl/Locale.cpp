@@ -26,6 +26,7 @@
 
 #include "builtin/intl/CommonFunctions.h"
 #include "builtin/intl/LanguageTag.h"
+#include "builtin/String.h"
 #include "gc/Rooting.h"
 #include "js/Conversions.h"
 #include "js/TypeDecls.h"
@@ -1334,5 +1335,47 @@ bool js::intl_TryValidateAndCanonicalizeLanguageTag(JSContext* cx,
     return false;
   }
   args.rval().setString(resultStr);
+  return true;
+}
+
+bool js::intl_ValidateAndCanonicalizeUnicodeExtensionType(JSContext* cx,
+                                                          unsigned argc,
+                                                          Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  MOZ_ASSERT(args.length() == 2);
+
+  RootedLinearString unicodeType(cx, args[0].toString()->ensureLinear(cx));
+  if (!unicodeType) {
+    return false;
+  }
+
+  RootedLinearString option(cx, args[1].toString()->ensureLinear(cx));
+  if (!option) {
+    return false;
+  }
+
+  if (!IsValidUnicodeExtensionValue(unicodeType)) {
+    UniqueChars optionChars = EncodeAscii(cx, option);
+    if (!optionChars) {
+      return false;
+    }
+
+    UniqueChars unicodeTypeChars = QuoteString(cx, unicodeType, '"');
+    if (!unicodeTypeChars) {
+      return false;
+    }
+
+    JS_ReportErrorNumberASCII(cx, js::GetErrorMessage, nullptr,
+                              JSMSG_INVALID_OPTION_VALUE, optionChars.get(),
+                              unicodeTypeChars.get());
+    return false;
+  }
+
+  JSString* result = StringToLowerCase(cx, unicodeType);
+  if (!result) {
+    return false;
+  }
+
+  args.rval().setString(result);
   return true;
 }

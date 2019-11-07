@@ -409,11 +409,11 @@ ignore-flag(--more-compartments) script test262/built-ins/Proxy/construct/return
 ignore-flag(--more-compartments) script test262/built-ins/Proxy/construct/return-not-object-throws-boolean-realm.js
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1560355
-skip script test262/intl402/DateTimeFormat/numbering-system-calendar-options.js
-skip script test262/intl402/DateTimeFormat/constructor-calendar-numberingSystem-order.js
-skip script test262/intl402/NumberFormat/numbering-system-options.js
-skip script test262/intl402/NumberFormat/constructor-numberingSystem-order.js
-skip script test262/intl402/NumberFormat/constructor-options-throwing-getters.js
+skip-if(release_or_beta) skip script test262/intl402/DateTimeFormat/numbering-system-calendar-options.js
+skip-if(release_or_beta) skip script test262/intl402/DateTimeFormat/constructor-calendar-numberingSystem-order.js
+skip-if(release_or_beta) skip script test262/intl402/NumberFormat/numbering-system-options.js
+skip-if(release_or_beta) skip script test262/intl402/NumberFormat/constructor-numberingSystem-order.js
+skip-if(release_or_beta) skip script test262/intl402/NumberFormat/constructor-options-throwing-getters.js
 
 # The relatedYear field type required by these tests is only supported in
 # nightly because the change hasn't been merged into the main spec yet.
