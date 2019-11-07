@@ -28,6 +28,9 @@
 
 #include "nsISupports.h"
 
+class nsIPrincipal;
+class nsIContentPermissionRequest;
+
 namespace mozilla {
 namespace dom {
 class Document;
@@ -41,9 +44,34 @@ class PermissionDelegateHandler final : nsISupports {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(PermissionDelegateHandler)
 
+  bool Initialize();
+
   /*
-   * Get permission state for permission api with aType, which applied
+   * Indicates if we has the right to make permission request with aType
+   */
+  bool HasPermissionDelegated(const nsACString& aType);
+
+  /*
+   * Get permission state, which applied permission delegate policy.
+   *
+   * @param aType the permission type to get
+   * @param aPermission out argument which will be a permission type that we
+   *                    will return from this function.
+   * @param aExactHostMatch whether to look for the exact host name or also for
+   *                        subdomains that can have the same permission.
+   */
+  nsresult GetPermission(const nsACString& aType, uint32_t* aPermission,
+                         bool aExactHostMatch);
+
+  /*
+   * Get permission state for permission api, which applied
    * permission delegate policy.
+   *
+   * @param aType the permission type to get
+   * @param aExactHostMatch whether to look for the exact host name or also for
+   *                        subdomains that can have the same permission.
+   * @param aPermission out argument which will be a permission type that we
+   *                    will return from this function.
    */
   nsresult GetPermissionForPermissionsAPI(const nsACString& aType,
                                           uint32_t* aPermission);
@@ -91,13 +119,18 @@ class PermissionDelegateHandler final : nsISupports {
   virtual ~PermissionDelegateHandler() = default;
 
   /*
-   *  Helper function to return the delegate info value for aPermissionName.
+   * Helper function to return the delegate info value for aPermissionName.
+   * @param aPermissionName the permission name to get
    */
   const PermissionDelegateInfo* GetPermissionDelegateInfo(
       const nsAString& aPermissionName) const;
 
   // A weak pointer to our document. Nulled out by DropDocumentReference.
   mozilla::dom::Document* mDocument;
+
+  nsCOMPtr<nsIPrincipal> mPrincipal;
+  nsCOMPtr<nsIPrincipal> mTopLevelPrincipal;
+  RefPtr<nsIPermissionManager> mPermissionManager;
 };
 
 #endif  // PermissionDelegateHandler_h__

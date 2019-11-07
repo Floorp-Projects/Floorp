@@ -15147,6 +15147,11 @@ PermissionDelegateHandler* Document::GetPermissionDelegateHandler() {
     mPermissionDelegateHandler =
         mozilla::MakeAndAddRef<PermissionDelegateHandler>(this);
   }
+
+  if (!mPermissionDelegateHandler->Initialize()) {
+    mPermissionDelegateHandler = nullptr;
+  }
+
   return mPermissionDelegateHandler;
 }
 
