@@ -60,8 +60,8 @@ def derive_misc_task(task, purpose, image, taskgraph, label_to_taskid):
     image_taskid = label_to_taskid['build-docker-image-' + image]
 
     task_def = {
-        'provisionerId': 'aws-provisioner-v1',
-        'workerType': 'gecko-misc',
+        'provisionerId': 'gecko-t',
+        'workerType': 'misc',
         'dependencies': [task.task_id, image_taskid],
         'created': {'relative-datestamp': '0 seconds'},
         'deadline': task.task['deadline'],

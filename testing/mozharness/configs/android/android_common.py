@@ -5,6 +5,11 @@
 
 import os
 
+tooltool_url = 'http://taskcluster/tooltool.mozilla-releng.net/'
+if os.environ.get('TASKCLUSTER_ROOT_URL', 'https://taskcluster.net') != 'https://taskcluster.net':
+    # Pre-point tooltool at staging cluster so we can run in parallel with legacy cluster
+    tooltool_url = 'http://taskcluster/tooltool.staging.mozilla-releng.net/'
+
 
 def WebglSuite(name):
     return {
@@ -43,7 +48,7 @@ config = {
         'run-tests',
     ],
     "tooltool_cache": os.environ.get("TOOLTOOL_CACHE"),
-    "tooltool_servers": ['http://taskcluster/tooltool.mozilla-releng.net/'],
+    "tooltool_servers": [tooltool_url],
     "hostutils_manifest_path": "testing/config/tooltool-manifests/linux64/hostutils.manifest",
     "avds_dir": "/builds/worker/workspace/build/.android",
     # "log_format": "%(levelname)8s - %(message)s",
