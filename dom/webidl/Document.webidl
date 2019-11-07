@@ -632,10 +632,6 @@ partial interface Document {
  * Document extensions to support devtools.
  */
 partial interface Document {
-  // Is the Document embedded in a Responsive Design Mode pane. This property
-  // is not propegated to descendant Documents upon settting.
-  [ChromeOnly]
-  attribute boolean inRDMPane;
   // Extension to give chrome JS the ability to set the window screen
   // orientation while in RDM.
   [ChromeOnly]
