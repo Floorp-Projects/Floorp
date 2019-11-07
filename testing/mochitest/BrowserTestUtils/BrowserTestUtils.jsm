@@ -1151,12 +1151,15 @@ var BrowserTestUtils = {
    *        event is the expected one, or false if it should be ignored and
    *        listening should continue. If not specified, the first event with
    *        the specified name resolves the returned promise.
-   * @param {bool} wantsUntrusted [optional]
+   * @param {bool} wantUntrusted [optional]
    *        Whether to accept untrusted events
    *
-   * @note Because this function is intended for testing, any error in checkFn
-   *       will cause the returned promise to be rejected instead of waiting for
-   *       the next event, since this is probably a bug in the test.
+   * @note As of bug 1588193, this function no longer rejects the returned
+   *       promise in the case of a checkFn error. Instead, since checkFn is now
+   *       called through eval in the content process, the error is thrown in
+   *       the listener created by ContentEventListenerChild. Work to improve
+   *       error handling (eg. to reject the promise as before and to preserve
+   *       the filename/stack) is being tracked in bug 1593811.
    *
    * @returns {Promise}
    */
@@ -1165,46 +1168,20 @@ var BrowserTestUtils = {
     eventName,
     capture = false,
     checkFn,
-    wantsUntrusted = false
+    wantUntrusted = false
   ) {
-    let parameters = {
-      eventName,
-      capture,
-      checkFnSource: checkFn ? checkFn.toSource() : null,
-      wantsUntrusted,
-    };
-    /* eslint-disable no-eval */
-    return ContentTask.spawn(browser, parameters, function({
-      eventName,
-      capture,
-      checkFnSource,
-      wantsUntrusted,
-    }) {
-      let checkFn;
-      if (checkFnSource) {
-        checkFn = eval(`(() => (${checkFnSource}))()`);
-      }
-      return new Promise((resolve, reject) => {
-        addEventListener(
-          eventName,
-          function listener(event) {
-            let completion = resolve;
-            try {
-              if (checkFn && !checkFn(event)) {
-                return;
-              }
-            } catch (e) {
-              completion = () => reject(e);
-            }
-            removeEventListener(eventName, listener, capture);
-            completion();
-          },
-          capture,
-          wantsUntrusted
-        );
-      });
+    return new Promise(resolve => {
+      let removeEventListener = this.addContentEventListener(
+        browser,
+        eventName,
+        () => {
+          removeEventListener();
+          resolve();
+        },
+        { capture, wantUntrusted },
+        checkFn
+      );
     });
-    /* eslint-enable no-eval */
   },
 
   /**
@@ -1261,7 +1238,10 @@ var BrowserTestUtils = {
   ) {
     let id = gListenerId++;
     let contentEventListeners = this._contentEventListeners;
-    contentEventListeners.set(id, { listener, browser });
+    contentEventListeners.set(id, {
+      listener,
+      browsingContext: browser.browsingContext,
+    });
 
     let eventListenerState = this._contentEventListenerSharedState;
     eventListenerState.set(id, {
@@ -1296,12 +1276,12 @@ var BrowserTestUtils = {
    * BrowserTestUtilsParent.jsm when a content event we were listening for
    * happens.
    */
-  _receivedContentEventListener(listenerId, browser) {
+  _receivedContentEventListener(listenerId, browsingContext) {
     let listenerData = this._contentEventListeners.get(listenerId);
     if (!listenerData) {
       return;
     }
-    if (listenerData.browser != browser) {
+    if (listenerData.browsingContext != browsingContext) {
       return;
     }
     listenerData.listener();
