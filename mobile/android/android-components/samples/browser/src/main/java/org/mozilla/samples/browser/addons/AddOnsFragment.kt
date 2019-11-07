@@ -133,7 +133,7 @@ class AddOnsFragment : Fragment(), View.OnClickListener {
                     .show()
             }
             R.id.add_on_item -> {
-                val intent = Intent(context, AddOnDetailsActivity::class.java)
+                val intent = Intent(context, InstalledAddOnDetailsActivity::class.java)
                 intent.putExtra("add_on", view.tag as AddOn)
                 context.startActivity(intent)
             }
