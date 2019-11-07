@@ -342,14 +342,22 @@ struct CmapSubtableFormat4
 	count--; /* Skip sentinel segment. */
       for (unsigned int i = 0; i < count; i++)
       {
+	hb_codepoint_t start = this->startCount[i];
+	hb_codepoint_t end = this->endCount[i];
 	unsigned int rangeOffset = this->idRangeOffset[i];
 	if (rangeOffset == 0)
-	  out->add_range (this->startCount[i], this->endCount[i]);
+	{
+	  for (hb_codepoint_t codepoint = start; codepoint <= end; codepoint++)
+	  {
+	    hb_codepoint_t gid = (codepoint + this->idDelta[i]) & 0xFFFFu;
+	    if (unlikely (!gid))
+	      continue;
+	    out->add (codepoint);
+	  }
+	}
 	else
 	{
-	  for (hb_codepoint_t codepoint = this->startCount[i];
-	       codepoint <= this->endCount[i];
-	       codepoint++)
+	  for (hb_codepoint_t codepoint = start; codepoint <= end; codepoint++)
 	  {
 	    unsigned int index = rangeOffset / 2 + (codepoint - this->startCount[i]) + i - this->segCount;
 	    if (unlikely (index >= this->glyphIdArrayLength))
@@ -522,10 +530,18 @@ struct CmapSubtableLongSegmented
 
   void collect_unicodes (hb_set_t *out) const
   {
-    for (unsigned int i = 0; i < this->groups.len; i++) {
-      out->add_range (this->groups[i].startCharCode,
-		      hb_min ((hb_codepoint_t) this->groups[i].endCharCode,
-			   (hb_codepoint_t) HB_UNICODE_MAX));
+    for (unsigned int i = 0; i < this->groups.len; i++)
+    {
+      hb_codepoint_t start = this->groups[i].startCharCode;
+      hb_codepoint_t end = hb_min ((hb_codepoint_t) this->groups[i].endCharCode,
+				   (hb_codepoint_t) HB_UNICODE_MAX);
+      for (hb_codepoint_t codepoint = start; codepoint <= end; codepoint++)
+      {
+	hb_codepoint_t gid = T::group_get_glyph (this->groups[i], codepoint);
+	if (unlikely (!gid))
+	  continue;
+	out->add (codepoint);
+      }
     }
   }
 
@@ -736,9 +752,7 @@ struct DefaultUVS : SortedArrayOf<UnicodeValueRange, HBUINT32>
 struct UVSMapping
 {
   int cmp (const hb_codepoint_t &codepoint) const
-  {
-    return unicodeValue.cmp (codepoint);
-  }
+  { return unicodeValue.cmp (codepoint); }
 
   bool sanitize (hb_sanitize_context_t *c) const
   {
@@ -1170,7 +1184,7 @@ struct cmap
 		    return true;
 
 		  return false;
-	        })
+		})
     ;
 
 

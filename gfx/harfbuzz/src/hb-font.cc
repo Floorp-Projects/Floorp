@@ -792,6 +792,29 @@ hb_font_get_nominal_glyph (hb_font_t *font,
 }
 
 /**
+ * hb_font_get_nominal_glyphs:
+ * @font: a font.
+ *
+ *
+ *
+ * Return value:
+ *
+ * Since: 2.6.3
+ **/
+unsigned int
+hb_font_get_nominal_glyphs (hb_font_t *font,
+			    unsigned int count,
+			    const hb_codepoint_t *first_unicode,
+			    unsigned int unicode_stride,
+			    hb_codepoint_t *first_glyph,
+			    unsigned int glyph_stride)
+{
+  return font->get_nominal_glyphs (count,
+				   first_unicode, unicode_stride,
+				   first_glyph, glyph_stride);
+}
+
+/**
  * hb_font_get_variation_glyph:
  * @font: a font.
  * @unicode:

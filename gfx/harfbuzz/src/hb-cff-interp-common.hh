@@ -220,17 +220,14 @@ struct number_t
   void init () { set_real (0.0); }
   void fini () {}
 
-  void set_int (int v)       { value = (double) v; }
-  int to_int () const        { return (int) value; }
+  void set_int (int v)       { value = v; }
+  int to_int () const        { return value; }
 
   void set_fixed (int32_t v) { value = v / 65536.0; }
-  int32_t to_fixed () const  { return (int32_t) (value * 65536.0); }
+  int32_t to_fixed () const  { return value * 65536.0; }
 
   void set_real (double v)   { value = v; }
   double to_real () const    { return value; }
-
-  int ceil () const          { return (int) ::ceil (value); }
-  int floor () const         { return (int) ::floor (value); }
 
   bool in_int_range () const
   { return ((double) (int16_t) to_int () == value); }
@@ -248,7 +245,7 @@ struct number_t
   }
 
   protected:
-  double	value;
+  double value;
 };
 
 /* byte string */

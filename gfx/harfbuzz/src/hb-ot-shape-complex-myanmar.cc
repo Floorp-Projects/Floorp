@@ -116,8 +116,8 @@ enum myanmar_syllable_type_t {
 
 static void
 setup_masks_myanmar (const hb_ot_shape_plan_t *plan HB_UNUSED,
-		   hb_buffer_t              *buffer,
-		   hb_font_t                *font HB_UNUSED)
+		     hb_buffer_t              *buffer,
+		     hb_font_t                *font HB_UNUSED)
 {
   HB_BUFFER_ALLOCATE_VAR (buffer, myanmar_category);
   HB_BUFFER_ALLOCATE_VAR (buffer, myanmar_position);

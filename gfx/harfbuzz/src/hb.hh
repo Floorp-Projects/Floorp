@@ -370,10 +370,12 @@ extern "C" void  hb_free_impl(void *ptr);
 #define getenv(Name) nullptr
 #endif
 
-#ifdef HB_NO_ERRNO
-static int errno = 0; /* Use something better? */
+#ifndef HB_NO_ERRNO
+#  include <errno.h>
 #else
-#include <errno.h>
+static int HB_UNUSED _hb_errno = 0;
+#  undef errno
+#  define errno _hb_errno
 #endif
 
 #if defined(HAVE_ATEXIT) && !defined(HB_USE_ATEXIT)

@@ -733,8 +733,8 @@ struct KerxSubTableHeader
 {
   typedef ExtendedTypes Types;
 
-  unsigned int tuple_count () const { return tupleCount; }
-  bool is_horizontal () const       { return !(coverage & Vertical); }
+  unsigned   tuple_count () const { return tupleCount; }
+  bool     is_horizontal () const { return !(coverage & Vertical); }
 
   enum Coverage
   {
