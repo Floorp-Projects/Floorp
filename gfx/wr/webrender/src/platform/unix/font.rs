@@ -420,14 +420,13 @@ impl FontContext {
         load_flags |= FT_LOAD_IGNORE_GLOBAL_ADVANCE_WIDTH;
 
         let (x_scale, y_scale) = font.transform.compute_scale().unwrap_or((1.0, 1.0));
-        let scale = font.oversized_scale_factor(x_scale, y_scale);
         let req_size = font.size.to_f64_px();
         let face_flags = unsafe { (*face).face_flags };
         let mut result = if (face_flags & (FT_FACE_FLAG_FIXED_SIZES as FT_Long)) != 0 &&
                             (face_flags & (FT_FACE_FLAG_SCALABLE as FT_Long)) == 0 &&
                             (load_flags & FT_LOAD_NO_BITMAP) == 0 {
             unsafe { FT_Set_Transform(face, ptr::null_mut(), ptr::null_mut()) };
-            self.choose_bitmap_size(face, req_size * y_scale / scale)
+            self.choose_bitmap_size(face, req_size * y_scale)
         } else {
             let mut shape = font.transform.invert_scale(x_scale, y_scale);
             if font.flags.contains(FontInstanceFlags::FLIP_X) {
@@ -452,8 +451,8 @@ impl FontContext {
                 FT_Set_Transform(face, &mut ft_shape, ptr::null_mut());
                 FT_Set_Char_Size(
                     face,
-                    (req_size * x_scale / scale * 64.0 + 0.5) as FT_F26Dot6,
-                    (req_size * y_scale / scale * 64.0 + 0.5) as FT_F26Dot6,
+                    (req_size * x_scale * 64.0 + 0.5) as FT_F26Dot6,
+                    (req_size * y_scale * 64.0 + 0.5) as FT_F26Dot6,
                     0,
                     0,
                 )
@@ -505,7 +504,7 @@ impl FontContext {
                 let y_size = unsafe { (*(*(*slot).face).size).metrics.y_ppem };
                 Some((slot, req_size as f32 / y_size as f32))
             }
-            FT_Glyph_Format::FT_GLYPH_FORMAT_OUTLINE => Some((slot, scale as f32)),
+            FT_Glyph_Format::FT_GLYPH_FORMAT_OUTLINE => Some((slot, 1.0)),
             _ => {
                 error!("Unsupported format");
                 debug!("format={:?}", format);

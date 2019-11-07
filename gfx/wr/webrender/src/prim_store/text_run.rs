@@ -242,24 +242,26 @@ impl TextRunPrimitive {
         // Get the current font size in device pixels
         let mut device_font_size = specified_font.size.scale_by(surface.device_pixel_scale.0 * raster_scale);
 
-        // Determine if rasterizing glyphs in local or screen space.
-        let transform_glyphs = if raster_space != RasterSpace::Screen {
-            // Ensure the font is supposed to be rasterized in screen-space.
-            false
-        } else if transform.has_perspective_component() || !transform.has_2d_inverse() {
-            // Only support transforms that can be coerced to simple 2D transforms.
-            false
+        // Check there is a valid transform that doesn't exceed the font size limit.
+        // Ensure the font is supposed to be rasterized in screen-space.
+        // Only support transforms that can be coerced to simple 2D transforms.
+        let (transform_glyphs, oversized) = if raster_space != RasterSpace::Screen ||
+            transform.has_perspective_component() || !transform.has_2d_inverse() {
+            (false, device_font_size.to_f64_px() > FONT_SIZE_LIMIT)
         } else if transform.exceeds_2d_scale(FONT_SIZE_LIMIT / device_font_size.to_f64_px()) {
+            (false, true)
+        } else {
+            (true, false)
+        };
+
+        if oversized {
             // Font sizes larger than the limit need to be scaled, thus can't use subpixels.
             // In this case we adjust the font size and raster space to ensure
             // we rasterize at the limit, to minimize the amount of scaling.
             let max_scale = (FONT_SIZE_LIMIT / device_font_size.to_f64_px()) as f32;
             raster_space = RasterSpace::Local(max_scale * raster_scale);
             device_font_size = device_font_size.scale_by(max_scale);
-            false
-        } else {
-            true
-        };
+        }
 
         // Get the font transform matrix (skew / scale) from the complete transform.
         let font_transform = if transform_glyphs {
@@ -316,6 +318,15 @@ impl TextRunPrimitive {
             !transform_glyphs
         {
             self.used_font.disable_subpixel_aa();
+
+            // Disable subpixel positioning for oversized glyphs to avoid
+            // thrashing the glyph cache with many subpixel variations of
+            // big glyph textures. A possible subpixel positioning error
+            // is small relative to the maximum font size and thus should
+            // not be very noticeable.
+            if oversized {
+                self.used_font.disable_subpixel_position();
+            }
         }
 
         cache_dirty
