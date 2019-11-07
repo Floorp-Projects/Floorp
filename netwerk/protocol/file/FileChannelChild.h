@@ -25,16 +25,8 @@ class FileChannelChild : public nsFileChannel,
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSICHILDCHANNEL
 
- protected:
-  virtual void ActorDestroy(ActorDestroyReason why) override;
-
  private:
   ~FileChannelChild() = default;
-  ;
-
-  void AddIPDLReference();
-
-  bool mIPCOpen;
 };
 
 }  // namespace net
