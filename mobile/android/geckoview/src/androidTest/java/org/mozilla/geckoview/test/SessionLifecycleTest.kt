@@ -11,6 +11,7 @@ import org.mozilla.geckoview.GeckoView
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.AssertCalled
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.ClosedSessionAtStart
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.NullDelegate
+import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDisplay
 import org.mozilla.geckoview.test.util.Callbacks
 import org.mozilla.geckoview.test.util.UiThreadUtils
 import org.junit.Ignore
@@ -459,6 +460,31 @@ class SessionLifecycleTest : BaseSessionTest() {
         }
 
         waitUntilCollected(createSession())
+    }
+
+    @WithDisplay(width = 100, height = 100)
+    @Test fun asyncScriptsSuspendedWhileInactive() {
+        mainSession.loadTestPath(HELLO_HTML_PATH)
+        mainSession.waitForPageStop()
+
+        // Deactivate the GeckoSession and confirm that rAF/setTimeout/etc callbacks do not run
+        mainSession.setActive(false)
+        mainSession.evaluateJS(
+            """function fail() {
+                 document.documentElement.style.backgroundColor = 'green';
+               }
+               requestAnimationFrame(fail);
+               setTimeout(fail, 1);
+               fetch("missing.html").catch(fail);""")
+        mainSession.waitForJS("new Promise(resolve => { resolve() })")
+        val isNotGreen = mainSession.evaluateJS("document.documentElement.style.backgroundColor !== 'green'") as Boolean
+        assertThat("requestAnimationFrame has not run yet", isNotGreen, equalTo(true))
+
+        // Reactivate the GeckoSession and confirm that rAF/setTimeout/etc callbacks now run
+        mainSession.setActive(true)
+        mainSession.waitForJS("new Promise(resolve => requestAnimationFrame(() => { resolve(); }))");
+        var isGreen = mainSession.evaluateJS("document.documentElement.style.backgroundColor === 'green'") as Boolean
+        assertThat("requestAnimationFrame has run", isGreen, equalTo(true))
     }
 
     private fun dumpHprof() {
