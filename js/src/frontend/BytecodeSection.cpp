@@ -65,14 +65,6 @@ bool GCThingList::finish(JSContext* cx, mozilla::Span<JS::GCCellPtr> array) {
       array[i] = JS::GCCellPtr(bi);
       return true;
     }
-    bool operator()(ObjLiteralCreationData& data) {
-      JSObject* obj = data.create(cx);
-      if (!obj) {
-        return false;
-      }
-      array[i] = JS::GCCellPtr(obj);
-      return true;
-    }
 
     bool operator()(RegExpCreationData& data) {
       RegExpObject* regexp = data.createRegExp(cx);
@@ -162,10 +154,6 @@ void CGResumeOffsetList::finish(mozilla::Span<uint32_t> array) {
   for (unsigned i = 0; i < length(); i++) {
     array[i] = list[i];
   }
-}
-
-JSObject* ObjLiteralCreationData::create(JSContext* cx) {
-  return InterpretObjLiteral(cx, atoms_, writer_);
 }
 
 BytecodeSection::BytecodeSection(JSContext* cx, uint32_t lineNum)
