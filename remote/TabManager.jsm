@@ -19,12 +19,16 @@ var TabManager = {
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
       userContextId,
     });
-    this.gBrowser.selectedTab = tab;
+    this.selectTab(tab);
 
     return tab;
   },
 
   removeTab(tab) {
     this.gBrowser.removeTab(tab);
+  },
+
+  selectTab(tab) {
+    this.gBrowser.selectedTab = tab;
   },
 };
