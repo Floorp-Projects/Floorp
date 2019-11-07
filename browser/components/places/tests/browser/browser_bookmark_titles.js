@@ -6,25 +6,30 @@
 
 var tests = [
   // Common page.
-  [
-    "http://example.com/browser/browser/components/places/tests/browser/dummy_page.html",
-    "Dummy test page",
-  ],
+  {
+    url:
+      "http://example.com/browser/browser/components/places/tests/browser/dummy_page.html",
+    title: "Dummy test page",
+    isError: false,
+  },
   // Data URI.
-  [
-    "data:text/html;charset=utf-8,<title>test%20data:%20url</title>",
-    "test data: url",
-  ],
+  {
+    url: "data:text/html;charset=utf-8,<title>test%20data:%20url</title>",
+    title: "test data: url",
+    isError: false,
+  },
   // about:neterror
-  [
-    "data:application/vnd.mozilla.xul+xml,",
-    "data:application/vnd.mozilla.xul+xml,",
-  ],
+  {
+    url: "data:application/vnd.mozilla.xul+xml,",
+    title: "data:application/vnd.mozilla.xul+xml,",
+    isError: true,
+  },
   // about:certerror
-  [
-    "https://untrusted.example.com/somepage.html",
-    "https://untrusted.example.com/somepage.html",
-  ],
+  {
+    url: "https://untrusted.example.com/somepage.html",
+    title: "https://untrusted.example.com/somepage.html",
+    isError: true,
+  },
 ];
 
 SpecialPowers.pushPrefEnv({
@@ -32,16 +37,20 @@ SpecialPowers.pushPrefEnv({
 });
 
 add_task(async function check_default_bookmark_title() {
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "http://www.example.com/"
+  );
   let browser = tab.linkedBrowser;
 
   // Test that a bookmark of each URI gets the corresponding default title.
-  for (let i = 0; i < tests.length; ++i) {
-    let [url, title] = tests[i];
-
-    // We use promisePageLoaded rather than BrowserTestUtils.browserLoaded - see
-    // note on function definition below.
-    let promiseLoaded = promisePageLoaded(browser);
+  for (let { url, title, isError } of tests) {
+    let promiseLoaded = BrowserTestUtils.browserLoaded(
+      browser,
+      false,
+      url,
+      isError
+    );
     BrowserTestUtils.loadURI(browser, url);
     await promiseLoaded;
 
@@ -64,11 +73,14 @@ add_task(async function check_default_bookmark_title() {
   // LOAD_FLAGS_BYPASS_CACHE isn't good enough. So clear the cache.
   Services.cache2.clear();
 
-  let [url, title] = tests[0];
+  let { url, title } = tests[0];
 
-  // We use promisePageLoaded rather than BrowserTestUtils.browserLoaded - see
-  // note on function definition below.
-  let promiseLoaded = promisePageLoaded(browser);
+  let promiseLoaded = BrowserTestUtils.browserLoaded(
+    browser,
+    false,
+    null,
+    true
+  );
   BrowserTestUtils.loadURI(browser, url);
   await promiseLoaded;
 
@@ -116,22 +128,4 @@ async function checkBookmark(url, expected_title) {
   );
 
   await PlacesUtils.bookmarks.remove(bookmark);
-}
-
-// BrowserTestUtils.browserLoaded doesn't work for the about pages, so use a
-// custom page load listener.
-function promisePageLoaded(browser) {
-  return ContentTask.spawn(browser, null, async function() {
-    await ContentTaskUtils.waitForEvent(
-      this,
-      "DOMContentLoaded",
-      true,
-      event => {
-        return (
-          event.originalTarget === content.document &&
-          event.target.location.href !== "about:blank"
-        );
-      }
-    );
-  });
 }
