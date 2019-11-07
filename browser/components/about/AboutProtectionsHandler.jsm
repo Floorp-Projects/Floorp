@@ -43,8 +43,6 @@ const MONITOR_API_ENDPOINT = "https://monitor.firefox.com/user/breach-stats";
 
 const SECURE_PROXY_ADDON_ID = "secure-proxy@mozilla.com";
 
-// TODO: there will be a monitor-specific scope for FxA access tokens, which we should be
-// using once it's implemented. See: https://github.com/mozilla/blurts-server/issues/1128
 const SCOPE_MONITOR = [
   "profile:uid",
   "https://identity.mozilla.com/apps/monitor",
