@@ -58,8 +58,11 @@ void ProxyCreated(ProxyAccessible* aProxy, uint32_t) {
   } else {
     // Non-top level proxies need proxy parents' children invalidated.
     ProxyAccessible* parent = aProxy->Parent();
-    nativeParent = GetNativeFromProxy(parent);
-    NS_ASSERTION(parent, "a non-top-level proxy is missing a parent?");
+    MOZ_ASSERT(parent ||
+                   // It's expected that an OOP iframe might not have a parent yet.
+                   (aProxy->IsDoc() && aProxy->AsDoc()->IsTopLevelInContentProcess()),
+               "a non-top-level proxy is missing a parent?");
+    nativeParent = parent ? GetNativeFromProxy(parent) : nullptr;
   }
 
   if (nativeParent) {
@@ -98,6 +101,21 @@ void ProxyDestroyed(ProxyAccessible* aProxy) {
 }
 
 void ProxyEvent(ProxyAccessible* aProxy, uint32_t aEventType) {
+  if (aEventType == nsIAccessibleEvent::EVENT_REORDER && aProxy->ChildrenCount() == 1 &&
+      aProxy->ChildAt(0)->IsDoc()) {
+    // This is a remote OuterDocAccessible. The reorder event indicates that Its
+    // embedded document has been added or changed. If the document itself is
+    // an existing Accessible, ProxyCreated won't have been called, so we won't
+    // have invalidated native children. This can happen for in-process iframes
+    // if the OuterDocAccessible is re-created (e.g. due to layout reflow).
+    // It always happens for out-of-process iframes, as we must always call
+    // ProxyCreated before DocAccessibleParent::AddChildDoc for those.
+    mozAccessible* wrapper = GetNativeFromProxy(aProxy);
+    if (wrapper) {
+      [wrapper invalidateChildren];
+    }
+  }
+
   // ignore everything but focus-changed, value-changed, caret and selection
   // events for now.
   if (aEventType != nsIAccessibleEvent::EVENT_FOCUS &&
