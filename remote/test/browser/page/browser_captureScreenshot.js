@@ -9,26 +9,28 @@ async function getDevicePixelRatio() {
   });
 }
 
-async function getImageDetails(client, image) {
-  return ContentTask.spawn(gBrowser.selectedBrowser, image, async function(
-    image
-  ) {
-    let infoPromise = new Promise(resolve => {
-      const img = new content.Image();
-      img.addEventListener(
-        "load",
-        () => {
-          resolve({
-            width: img.width,
-            height: img.height,
-          });
-        },
-        { once: true }
-      );
-      img.src = image;
-    });
-    return infoPromise;
-  });
+async function getImageDetails(format, data) {
+  return ContentTask.spawn(
+    gBrowser.selectedBrowser,
+    { format, data },
+    async function({ format, data }) {
+      return new Promise(resolve => {
+        const img = new content.Image();
+        img.addEventListener(
+          "load",
+          () => {
+            resolve({
+              width: img.width,
+              height: img.height,
+            });
+          },
+          { once: true }
+        );
+
+        img.src = `data:image/${format};base64,${data}`;
+      });
+    }
+  );
 }
 
 async function getViewportRect() {
@@ -42,33 +44,30 @@ async function getViewportRect() {
   });
 }
 
-add_task(async function documentSmallerThanViewport(client) {
+add_task(async function documentSmallerThanViewport({ Page }) {
   loadURL(toDataURL("<div>Hello world"));
 
-  const { Page } = client;
-
   info("Check that captureScreenshot() captures the viewport by default");
-  const screenshot = await Page.captureScreenshot();
+  const { data } = await Page.captureScreenshot();
+  ok(!!data, "Screenshot data is not empty");
 
   const scale = await getDevicePixelRatio();
   const viewportRect = await getViewportRect();
-  const { width, height } = await getImageDetails(client, screenshot);
-
+  const { width, height } = await getImageDetails("png", data);
   is(width, (viewportRect.width - viewportRect.left) * scale);
   is(height, (viewportRect.height - viewportRect.top) * scale);
 });
 
-add_task(async function documentLargerThanViewport(client) {
+add_task(async function documentLargerThanViewport({ Page }) {
   loadURL(toDataURL("<div style='margin: 100vh 100vw'>Hello world"));
 
-  const { Page } = client;
-
   info("Check that captureScreenshot() captures the viewport by default");
-  const screenshot = await Page.captureScreenshot();
+  const { data } = await Page.captureScreenshot();
+  ok(!!data, "Screenshot data is not empty");
 
   const scale = await getDevicePixelRatio();
   const viewportRect = await getViewportRect();
-  const { width, height } = await getImageDetails(client, screenshot);
+  const { width, height } = await getImageDetails("png", data);
 
   is(width, (viewportRect.width - viewportRect.left) * scale);
   is(height, (viewportRect.height - viewportRect.top) * scale);
