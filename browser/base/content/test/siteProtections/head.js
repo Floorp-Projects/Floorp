@@ -84,7 +84,7 @@ function checkClickTelemetry(objectName, value) {
       e[1] == "security.ui.protectionspopup" &&
       e[2] == "click" &&
       e[3] == objectName &&
-      (!value || e[4] == value)
+      e[4] === value
   );
   is(buttonEvents.length, 1, `recorded ${objectName} telemetry event`);
 }
