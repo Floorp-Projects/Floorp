@@ -2,45 +2,33 @@
 Mozilla Source Tree Documentation
 =================================
 
-Source code doc
-===============
-
 .. toctree::
+   :caption: Source code doc
    :maxdepth: 2
 
    {source_doc}
 
 
-Build
-=====
-
 .. toctree::
+   :caption: Build
    :maxdepth: 1
 
    {build_doc}
 
-
-Testing
-=======
-
 .. toctree::
+   :caption: Testing
    :maxdepth: 1
 
    {testing_doc}
 
-Python
-======
-
 .. toctree::
+   :caption: Python
    :maxdepth: 1
 
    {python_doc}
 
-
-Code quality
-============
-
 .. toctree::
+   :caption: Code quality
    :maxdepth: 1
 
    {code_quality_doc}
