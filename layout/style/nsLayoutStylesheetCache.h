@@ -124,9 +124,8 @@ class nsLayoutStylesheetCache final : public nsIObserver,
       mozilla::css::FailureAction aFailureAction);
   void LoadSheetFromSharedMemory(const char* aURL,
                                  RefPtr<mozilla::StyleSheet>* aSheet,
-                                 mozilla::css::SheetParsingMode aParsingMode,
-                                 Shm* aSharedMemory, Header* aHeader,
-                                 mozilla::UserAgentStyleSheetID aSheetID);
+                                 mozilla::css::SheetParsingMode,
+                                 Header*, mozilla::UserAgentStyleSheetID);
   void BuildPreferenceSheet(RefPtr<mozilla::StyleSheet>* aSheet,
                             const mozilla::PreferenceSheet::Prefs&);
 
