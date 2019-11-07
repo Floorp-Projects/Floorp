@@ -1,3 +1,18 @@
+Overview of changes leading to 2.6.4
+Monday, October 29, 2019
+====================================
+- Small bug fix.
+- Build fixes.
+
+
+Overview of changes leading to 2.6.3
+Monday, October 28, 2019
+====================================
+- Misc small fixes, mostly to build-related issues.
+- New API:
++hb_font_get_nominal_glyphs()
+
+
 Overview of changes leading to 2.6.2
 Monday, September 30, 2019
 ====================================

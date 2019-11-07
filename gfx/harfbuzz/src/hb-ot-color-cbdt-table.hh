@@ -51,12 +51,12 @@ struct SmallGlyphMetrics
     return_trace (c->check_struct (this));
   }
 
-  void get_extents (hb_glyph_extents_t *extents) const
+  void get_extents (hb_font_t *font, hb_glyph_extents_t *extents) const
   {
-    extents->x_bearing = bearingX;
-    extents->y_bearing = bearingY;
-    extents->width = width;
-    extents->height = - (hb_position_t) height;
+    extents->x_bearing = font->em_scale_x (bearingX);
+    extents->y_bearing = font->em_scale_y (bearingY);
+    extents->width = font->em_scale_x (width);
+    extents->height = font->em_scale_y (-height);
   }
 
   HBUINT8	height;
@@ -424,7 +424,7 @@ struct CBDT
 	      return false;
 	    const GlyphBitmapDataFormat17& glyphFormat17 =
 		StructAtOffset<GlyphBitmapDataFormat17> (this->cbdt, image_offset);
-	    glyphFormat17.glyphMetrics.get_extents (extents);
+	    glyphFormat17.glyphMetrics.get_extents (font, extents);
 	    break;
 	  }
 	  case 18: {
@@ -432,7 +432,7 @@ struct CBDT
 	      return false;
 	    const GlyphBitmapDataFormat18& glyphFormat18 =
 		StructAtOffset<GlyphBitmapDataFormat18> (this->cbdt, image_offset);
-	    glyphFormat18.glyphMetrics.get_extents (extents);
+	    glyphFormat18.glyphMetrics.get_extents (font, extents);
 	    break;
 	  }
 	  default:
@@ -453,7 +453,7 @@ struct CBDT
     }
 
     hb_blob_t* reference_png (hb_font_t      *font,
-				     hb_codepoint_t  glyph) const
+			      hb_codepoint_t  glyph) const
     {
       const void *base;
       const BitmapSizeTable &strike = this->cblc->choose_strike (font);

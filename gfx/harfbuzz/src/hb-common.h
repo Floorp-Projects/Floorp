@@ -425,6 +425,21 @@ typedef void (*hb_destroy_func_t) (void *user_data);
  */
 #define HB_FEATURE_GLOBAL_END	((unsigned int) -1)
 
+/**
+ * hb_feature_t:
+ * @tag: a feature tag
+ * @value: 0 disables the feature, non-zero (usually 1) enables the feature.
+ * For features implemented as lookup type 3 (like 'salt') the @value is a one
+ * based index into the alternates.
+ * @start: the cluster to start applying this feature setting (inclusive).
+ * @end: the cluster to end applying this feature setting (exclusive).
+ *
+ * The #hb_feature_t is the structure that holds information about requested
+ * feature application. The feature will be applied with the given value to all
+ * glyphs which are in clusters between @start (inclusive) and @end (exclusive).
+ * Setting start to @HB_FEATURE_GLOBAL_START and end to @HB_FEATURE_GLOBAL_END
+ * specifies that the feature always applies to the entire buffer.
+ */
 typedef struct hb_feature_t {
   hb_tag_t      tag;
   uint32_t      value;

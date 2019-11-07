@@ -84,6 +84,7 @@ HB_OT_TABLE (OT, VORG)
 #ifndef HB_NO_VAR
 HB_OT_TABLE (OT, fvar)
 HB_OT_TABLE (OT, avar)
+HB_OT_ACCELERATOR (OT, gvar)
 HB_OT_TABLE (OT, MVAR)
 #endif
 

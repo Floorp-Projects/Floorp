@@ -230,8 +230,8 @@ arabic_fallback_plan_init_win1256 (arabic_fallback_plan_t *fallback_plan HB_UNUS
     return false;
 
   const Manifest &manifest = reinterpret_cast<const Manifest&> (arabic_win1256_gsub_lookups.manifest);
-  static_assert (sizeof (arabic_win1256_gsub_lookups.manifestData) / sizeof (ManifestLookup)
-		 <= ARABIC_FALLBACK_MAX_LOOKUPS, "");
+  static_assert (sizeof (arabic_win1256_gsub_lookups.manifestData) ==
+		 ARABIC_FALLBACK_MAX_LOOKUPS * sizeof (ManifestLookup), "");
   /* TODO sanitize the table? */
 
   unsigned j = 0;

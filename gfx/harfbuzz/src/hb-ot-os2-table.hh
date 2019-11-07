@@ -134,8 +134,8 @@ struct OS2
     OBLIQUE		= 1u<<9
   };
 
-  bool is_italic () const        { return fsSelection & ITALIC; }
-  bool is_oblique () const       { return fsSelection & OBLIQUE; }
+  bool        is_italic () const { return fsSelection & ITALIC; }
+  bool       is_oblique () const { return fsSelection & OBLIQUE; }
   bool use_typo_metrics () const { return fsSelection & USE_TYPO_METRICS; }
 
   enum width_class_t {

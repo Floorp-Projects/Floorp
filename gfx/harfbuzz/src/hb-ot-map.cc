@@ -38,7 +38,7 @@
 void hb_ot_map_t::collect_lookups (unsigned int table_index, hb_set_t *lookups_out) const
 {
   for (unsigned int i = 0; i < lookups[table_index].length; i++)
-    hb_set_add (lookups_out, lookups[table_index][i].index);
+    lookups_out->add (lookups[table_index][i].index);
 }
 
 

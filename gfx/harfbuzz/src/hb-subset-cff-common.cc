@@ -68,8 +68,7 @@ hb_plan_subset_cff_fdselect (const hb_subset_plan_t *plan,
   {
     /* use hb_set to determine the subset of font dicts */
     hb_set_t *set = hb_set_create ();
-    if (set == &Null (hb_set_t))
-      return false;
+    if (unlikely (set == &Null (hb_set_t))) return false;
     hb_codepoint_t prev_fd = CFF_UNDEF_CODE;
     for (hb_codepoint_t i = 0; i < subset_num_glyphs; i++)
     {

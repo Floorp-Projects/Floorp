@@ -287,7 +287,7 @@ struct ResourceRecord
   { return CastR<OpenTypeFontFace> ((data_base+offset).arrayZ); }
 
   bool sanitize (hb_sanitize_context_t *c,
-			const void *data_base) const
+		 const void *data_base) const
   {
     TRACE_SANITIZE (this);
     return_trace (c->check_struct (this) &&

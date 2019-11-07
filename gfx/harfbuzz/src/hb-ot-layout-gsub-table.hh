@@ -452,20 +452,7 @@ struct MultipleSubstFormat1
     hb_sorted_vector_t<hb_codepoint_t> new_coverage;
     + hb_zip (this+coverage, sequence)
     | hb_filter (glyphset, hb_first)
-    | hb_filter ([this, c, out] (const OffsetTo<Sequence>& _)
-		 {
-		   auto *o = out->sequence.serialize_append (c->serializer);
-		   if (unlikely (!o)) return false;
-		   auto snap = c->serializer->snapshot ();
-		   bool ret = o->serialize_subset (c, _, this, out);
-		   if (!ret)
-		   {
-		     out->sequence.pop ();
-		     c->serializer->revert (snap);
-		   }
-		   return ret;
-		 },
-		 hb_second)
+    | hb_filter (subset_offset_array (c, out->sequence, this, out), hb_second)
     | hb_map (hb_first)
     | hb_map (glyph_map)
     | hb_sink (new_coverage)
@@ -675,20 +662,7 @@ struct AlternateSubstFormat1
     hb_sorted_vector_t<hb_codepoint_t> new_coverage;
     + hb_zip (this+coverage, alternateSet)
     | hb_filter (glyphset, hb_first)
-    | hb_filter ([this, c, out] (const OffsetTo<AlternateSet>& _)
-		 {
-		   auto *o = out->alternateSet.serialize_append (c->serializer);
-		   if (unlikely (!o)) return false;
-		   auto snap = c->serializer->snapshot ();
-		   bool ret = o->serialize_subset (c, _, this, out);
-		   if (!ret)
-		   {
-		     out->alternateSet.pop ();
-		     c->serializer->revert (snap);
-		   }
-		   return ret;
-		 },
-		 hb_second)
+    | hb_filter (subset_offset_array (c, out->alternateSet, this, out), hb_second)
     | hb_map (hb_first)
     | hb_map (glyph_map)
     | hb_sink (new_coverage)
@@ -948,19 +922,7 @@ struct LigatureSet
     if (unlikely (!c->serializer->extend_min (out))) return_trace (false);
 
     + hb_iter (ligature)
-    | hb_filter ([this, c, out] (const OffsetTo<Ligature>& _)
-		 {
-		   auto *o = out->ligature.serialize_append (c->serializer);
-		   if (unlikely (!o)) return false;
-		   auto snap = c->serializer->snapshot ();
-		   bool ret = o->serialize_subset (c, _, this, out);
-		   if (!ret)
-		   {
-		     out->ligature.pop ();
-		     c->serializer->revert (snap);
-		   }
-		   return ret;
-		 })
+    | hb_filter (subset_offset_array (c, out->ligature, this, out))
     | hb_drain
     ;
     return_trace (bool (out->ligature));
@@ -1074,20 +1036,7 @@ struct LigatureSubstFormat1
     hb_sorted_vector_t<hb_codepoint_t> new_coverage;
     + hb_zip (this+coverage, ligatureSet)
     | hb_filter (glyphset, hb_first)
-    | hb_filter ([this, c, out] (const OffsetTo<LigatureSet>& _)
-		 {
-		   auto *o = out->ligatureSet.serialize_append (c->serializer);
-		   if (unlikely (!o)) return false;
-		   auto snap = c->serializer->snapshot ();
-		   bool ret = o->serialize_subset (c, _, this, out);
-		   if (!ret)
-		   {
-		     out->ligatureSet.pop ();
-		     c->serializer->revert (snap);
-		   }
-		   return ret;
-		 },
-		 hb_second)
+    | hb_filter (subset_offset_array (c, out->ligatureSet, this, out), hb_second)
     | hb_map (hb_first)
     | hb_map (glyph_map)
     | hb_sink (new_coverage)

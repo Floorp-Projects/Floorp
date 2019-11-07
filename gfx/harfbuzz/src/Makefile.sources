@@ -136,6 +136,7 @@ HB_BASE_sources = \
 	hb-ot-tag.cc \
 	hb-ot-var-avar-table.hh \
 	hb-ot-var-fvar-table.hh \
+	hb-ot-var-gvar-table.hh \
 	hb-ot-var-hvar-table.hh \
 	hb-ot-var-mvar-table.hh \
 	hb-ot-var.cc \
@@ -162,7 +163,6 @@ HB_BASE_sources = \
 	hb-unicode.hh \
 	hb-utf.hh \
 	hb-vector.hh \
-	hb-warning.cc \
 	hb.hh \
 	$(NULL)
 

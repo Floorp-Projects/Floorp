@@ -81,7 +81,6 @@ UNIFIED_SOURCES += [
     'hb-subset-cff1.cc',
     'hb-subset-cff2.cc',
     'hb-unicode.cc',
-    'hb-warning.cc',
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk':

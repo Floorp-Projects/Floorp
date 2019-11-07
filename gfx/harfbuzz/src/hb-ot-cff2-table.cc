@@ -44,8 +44,8 @@ struct cff2_extents_param_t
     max_y.set_int (INT_MIN);
   }
 
-  void start_path ()         { path_open = true; }
-  void end_path ()           { path_open = false; }
+  void   start_path ()       { path_open = true; }
+  void     end_path ()       { path_open = false; }
   bool is_path_open () const { return path_open; }
 
   void update_bounds (const point_t &pt)
@@ -125,8 +125,8 @@ bool OT::cff2::accelerator_t::get_extents (hb_font_t *font,
   }
   else
   {
-    extents->x_bearing = (int32_t)param.min_x.floor ();
-    extents->width = (int32_t)param.max_x.ceil () - extents->x_bearing;
+    extents->x_bearing = font->em_scalef_x (param.min_x.to_real ());
+    extents->width = font->em_scalef_x (param.max_x.to_real () - param.min_x.to_real ());
   }
   if (param.min_y >= param.max_y)
   {
@@ -135,8 +135,8 @@ bool OT::cff2::accelerator_t::get_extents (hb_font_t *font,
   }
   else
   {
-    extents->y_bearing = (int32_t)param.max_y.ceil ();
-    extents->height = (int32_t)param.min_y.floor () - extents->y_bearing;
+    extents->y_bearing = font->em_scalef_y (param.max_y.to_real ());
+    extents->height = font->em_scalef_y (param.min_y.to_real () - param.max_y.to_real ());
   }
 
   return true;

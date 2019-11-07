@@ -264,8 +264,8 @@ struct _hb_has_null
 template <typename Type>
 struct _hb_has_null<Type, true>
 {
-  static const Type *get_null () { return &Null(Type); }
-  static Type *get_crap ()       { return &Crap(Type); }
+  static const Type *get_null () { return &Null (Type); }
+  static       Type *get_crap () { return &Crap (Type); }
 };
 
 template <typename Type, typename OffsetType=HBUINT16, bool has_null=true>
@@ -423,7 +423,7 @@ struct UnsizedArrayOf
   { return hb_array (arrayZ, len); }
   hb_array_t<const Type> as_array (unsigned int len) const
   { return hb_array (arrayZ, len); }
-  operator hb_array_t<Type> ()             { return as_array (); }
+  operator hb_array_t<      Type> ()       { return as_array (); }
   operator hb_array_t<const Type> () const { return as_array (); }
 
   template <typename T>
@@ -902,8 +902,8 @@ struct SortedArrayOf : ArrayOf<Type, LenType>
   { return *as_array ().bsearch (x, &not_found); }
   template <typename T>
   bool bfind (const T &x, unsigned int *i = nullptr,
-		     hb_bfind_not_found_t not_found = HB_BFIND_NOT_FOUND_DONT_STORE,
-		     unsigned int to_store = (unsigned int) -1) const
+	      hb_bfind_not_found_t not_found = HB_BFIND_NOT_FOUND_DONT_STORE,
+	      unsigned int to_store = (unsigned int) -1) const
   { return as_array ().bfind (x, i, not_found, to_store); }
 };
 

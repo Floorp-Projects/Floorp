@@ -588,8 +588,16 @@ hb_memcmp (const void *a, const void *b, unsigned int len)
   /* It's illegal to pass NULL to memcmp(), even if len is zero.
    * So, wrap it.
    * https://sourceware.org/bugzilla/show_bug.cgi?id=23878 */
-  if (!len) return 0;
+  if (unlikely (!len)) return 0;
   return memcmp (a, b, len);
+}
+
+static inline void *
+hb_memset (void *s, int c, unsigned int n)
+{
+  /* It's illegal to pass NULL to memset(), even if n is zero. */
+  if (unlikely (!n)) return 0;
+  return memset (s, c, n);
 }
 
 static inline bool

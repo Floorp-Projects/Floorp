@@ -1155,7 +1155,7 @@ struct cff1
     }
 
     bool is_valid () const { return blob != nullptr; }
-    bool is_CID () const { return topDict.is_CID (); }
+    bool   is_CID () const { return topDict.is_CID (); }
 
     bool is_predef_charset () const { return topDict.CharsetOffset <= ExpertSubsetCharset; }
 
@@ -1196,7 +1196,7 @@ struct cff1
 
   struct accelerator_t : accelerator_templ_t<cff1_private_dict_opset_t, cff1_private_dict_values_t>
   {
-    HB_INTERNAL bool get_extents (hb_codepoint_t glyph, hb_glyph_extents_t *extents) const;
+    HB_INTERNAL bool get_extents (hb_font_t *font, hb_codepoint_t glyph, hb_glyph_extents_t *extents) const;
     HB_INTERNAL bool get_seac_components (hb_codepoint_t glyph, hb_codepoint_t *base, hb_codepoint_t *accent) const;
   };
 
@@ -1225,25 +1225,25 @@ struct cff1
 
     bool is_predef_encoding () const { return topDict.EncodingOffset <= ExpertEncoding; }
 
-    hb_codepoint_t  glyph_to_code (hb_codepoint_t glyph) const
+    hb_codepoint_t glyph_to_code (hb_codepoint_t glyph) const
     {
       if (encoding != &Null(Encoding))
 	return encoding->get_code (glyph);
       else
       {
-	hb_codepoint_t  sid = glyph_to_sid (glyph);
+	hb_codepoint_t sid = glyph_to_sid (glyph);
 	if (sid == 0) return 0;
-	hb_codepoint_t  code = 0;
+	hb_codepoint_t code = 0;
 	switch (topDict.EncodingOffset)
 	{
-	  case  StandardEncoding:
-	    code = lookup_standard_encoding_for_code (sid);
-	    break;
-	  case  ExpertEncoding:
-	    code = lookup_expert_encoding_for_code (sid);
-	    break;
-	  default:
-	    break;
+	case StandardEncoding:
+	  code = lookup_standard_encoding_for_code (sid);
+	  break;
+	case ExpertEncoding:
+	  code = lookup_expert_encoding_for_code (sid);
+	  break;
+	default:
+	  break;
 	}
 	return code;
       }
