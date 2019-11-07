@@ -9,7 +9,6 @@ crate-type = ["staticlib", "rlib"]
 [dependencies]
 atomic = "0.4"
 bitflags = "1.0"
-core-foundation-sys = { version = "0.6" }
 coreaudio-sys-utils = { path = "coreaudio-sys-utils" }
 cubeb-backend = "0.6"
 libc = "0.2"
