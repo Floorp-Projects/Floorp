@@ -55,6 +55,11 @@
   text-decoration: underline;
 }
 
+.frames .location-async-cause {
+  grid-column: 1 / -1;
+  color: var(--theme-comment);
+}
+
 /******* Group styles *******/
 .frames-group {
   grid-column:1 / -1;
