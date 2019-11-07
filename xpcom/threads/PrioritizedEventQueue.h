@@ -49,10 +49,13 @@ class PrioritizedEventQueue final : public AbstractEventQueue {
   virtual ~PrioritizedEventQueue();
 
   void PutEvent(already_AddRefed<nsIRunnable>&& aEvent,
-                EventQueuePriority aPriority,
-                const MutexAutoLock& aProofOfLock) final;
+                EventQueuePriority aPriority, const MutexAutoLock& aProofOfLock,
+                mozilla::TimeDuration* aDelay = nullptr) final;
+  // See PrioritizedEventQueue.cpp for explanation of
+  // aHypotheticalInputEventDelay
   already_AddRefed<nsIRunnable> GetEvent(
-      EventQueuePriority* aPriority, const MutexAutoLock& aProofOfLock) final;
+      EventQueuePriority* aPriority, const MutexAutoLock& aProofOfLock,
+      mozilla::TimeDuration* aHypotheticalInputEventDelay = nullptr) final;
   void DidRunEvent(const MutexAutoLock& aProofOfLock);
 
   bool IsEmpty(const MutexAutoLock& aProofOfLock) final;
@@ -110,6 +113,9 @@ class PrioritizedEventQueue final : public AbstractEventQueue {
   // We need to drop the queue mutex when checking the idle deadline, so we keep
   // a pointer to it here.
   Mutex* mMutex = nullptr;
+
+  TimeDuration mLastEventDelay;
+  TimeStamp mLastEventStart;
 
 #ifndef RELEASE_OR_BETA
   // Pointer to a place where the most recently computed idle deadline is

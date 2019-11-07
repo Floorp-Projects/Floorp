@@ -131,17 +131,19 @@ bool ThreadEventQueue<InnerQueueT>::PutEventInternal(
 
 template <class InnerQueueT>
 already_AddRefed<nsIRunnable> ThreadEventQueue<InnerQueueT>::GetEvent(
-    bool aMayWait, EventQueuePriority* aPriority) {
+    bool aMayWait, EventQueuePriority* aPriority,
+    mozilla::TimeDuration* aLastEventDelay) {
   MutexAutoLock lock(mLock);
 
   nsCOMPtr<nsIRunnable> event;
   for (;;) {
     if (mNestedQueues.IsEmpty()) {
-      event = mBaseQueue->GetEvent(aPriority, lock);
+      event = mBaseQueue->GetEvent(aPriority, lock, aLastEventDelay);
     } else {
       // We always get events from the topmost queue when there are nested
       // queues.
-      event = mNestedQueues.LastElement().mQueue->GetEvent(aPriority, lock);
+      event = mNestedQueues.LastElement().mQueue->GetEvent(aPriority, lock,
+                                                           aLastEventDelay);
     }
 
     if (event || !aMayWait) {
@@ -261,8 +263,10 @@ void ThreadEventQueue<InnerQueueT>::PopEventQueue(nsIEventTarget* aTarget) {
   // Move events from the old queue to the new one.
   nsCOMPtr<nsIRunnable> event;
   EventQueuePriority prio;
-  while ((event = item.mQueue->GetEvent(&prio, lock))) {
-    prevQueue->PutEvent(event.forget(), prio, lock);
+  TimeDuration delay;
+  while ((event = item.mQueue->GetEvent(&prio, lock, &delay))) {
+    // preserve the event delay so far
+    prevQueue->PutEvent(event.forget(), prio, lock, &delay);
   }
 
   mNestedQueues.RemoveLastElement();
