@@ -390,8 +390,7 @@ class StyleSheet final : public nsICSSLoaderObserver, public nsWrapperCache {
   // Sets the contents of this style sheet to the specified aSharedRules
   // pointer, which must be a pointer somewhere in the aSharedMemory buffer
   // as previously returned by a ToShared() call.
-  void SetSharedContents(nsLayoutStylesheetCacheShm* aSharedMemory,
-                         const ServoCssRules* aSharedRules);
+  void SetSharedContents(const ServoCssRules* aSharedRules);
 
   // Whether this style sheet should not allow any modifications.
   //
