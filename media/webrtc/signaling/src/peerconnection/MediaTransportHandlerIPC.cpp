@@ -305,35 +305,35 @@ void MediaTransportHandlerIPC::UpdateNetworkState(bool aOnline) {
       [](const nsCString& aError) {});
 }
 
-RefPtr<MediaTransportHandler::StatsPromise>
-MediaTransportHandlerIPC::GetIceStats(
-    const std::string& aTransportId, DOMHighResTimeStamp aNow,
-    std::unique_ptr<dom::RTCStatsReportInternal>&& aReport) {
+RefPtr<dom::RTCStatsPromise> MediaTransportHandlerIPC::GetIceStats(
+    const std::string& aTransportId, DOMHighResTimeStamp aNow) {
   return mInitPromise->Then(
       mCallbackThread, __func__,
-      [aReport = std::move(aReport), aTransportId, aNow, this,
-       self = RefPtr<MediaTransportHandlerIPC>(this)](bool /*dummy*/) mutable {
+      [aTransportId, aNow, this,
+       self = RefPtr<MediaTransportHandlerIPC>(this)](bool /*dummy*/) {
         if (!mChild) {
-          return StatsPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
+          return dom::RTCStatsPromise::CreateAndReject(NS_ERROR_FAILURE,
+                                                       __func__);
         }
-        RefPtr<StatsPromise> promise =
-            mChild->SendGetIceStats(aTransportId, aNow, *aReport)
+        RefPtr<dom::RTCStatsPromise> promise =
+            mChild->SendGetIceStats(aTransportId, aNow)
                 ->Then(
                     mCallbackThread, __func__,
-                    [](const dom::MovableRTCStatsReportInternal& aReport) {
-                      std::unique_ptr<dom::RTCStatsReportInternal> report(
-                          new dom::RTCStatsReportInternal(aReport));
-                      return StatsPromise::CreateAndResolve(std::move(report),
-                                                            __func__);
+                    [](const dom::RTCStatsCollection& aStats) {
+                      UniquePtr<dom::RTCStatsCollection> stats(
+                          new dom::RTCStatsCollection(aStats));
+                      return dom::RTCStatsPromise::CreateAndResolve(
+                          std::move(stats), __func__);
                     },
                     [](ipc::ResponseRejectReason aReason) {
-                      return StatsPromise::CreateAndReject(NS_ERROR_FAILURE,
-                                                           __func__);
+                      return dom::RTCStatsPromise::CreateAndReject(
+                          NS_ERROR_FAILURE, __func__);
                     });
         return promise;
       },
       [](const nsCString& aError) {
-        return StatsPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
+        return dom::RTCStatsPromise::CreateAndReject(NS_ERROR_FAILURE,
+                                                     __func__);
       });
 }
 

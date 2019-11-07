@@ -192,9 +192,8 @@ class LoopbackTransport : public MediaTransportHandler {
 
   void UpdateNetworkState(bool aOnline) override {}
 
-  RefPtr<StatsPromise> GetIceStats(
-      const std::string& aTransportId, DOMHighResTimeStamp aNow,
-      std::unique_ptr<dom::RTCStatsReportInternal>&& aReport) override {
+  RefPtr<dom::RTCStatsPromise> GetIceStats(const std::string& aTransportId,
+                                           DOMHighResTimeStamp aNow) override {
     return nullptr;
   }
 
@@ -221,7 +220,8 @@ class TestAgent {
   TestAgent()
       : audio_config_(109, "opus", 48000, 2, false),
         audio_conduit_(mozilla::AudioSessionConduit::Create(
-            WebRtcCallWrapper::Create(), test_utils->sts_target())),
+            WebRtcCallWrapper::Create(dom::RTCStatsTimestampMaker()),
+            test_utils->sts_target())),
         audio_pipeline_(),
         transport_(new LoopbackTransport) {}
 

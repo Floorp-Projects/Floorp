@@ -97,9 +97,9 @@ class TransceiverImpl : public nsISupports {
   bool HasReceiveTrack(const dom::MediaStreamTrack* aReceiveTrack) const;
 
   // TODO: These are for stats; try to find a cleaner way.
-  RefPtr<MediaPipeline> GetSendPipeline();
+  RefPtr<MediaPipelineTransmit> GetSendPipeline();
 
-  RefPtr<MediaPipeline> GetReceivePipeline();
+  RefPtr<MediaPipelineReceive> GetReceivePipeline();
 
   std::string GetTransportId() const {
     return mJsepTransceiver->mTransport.mTransportId;

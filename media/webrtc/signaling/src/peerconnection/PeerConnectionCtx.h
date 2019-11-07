@@ -90,10 +90,9 @@ class PeerConnectionCtx {
   nsCOMPtr<nsITimer> mTelemetryTimer;
 
  private:
-  void DeliverStats(RTCStatsQuery& aQuery);
+  void DeliverStats(UniquePtr<dom::RTCStatsReportInternal>&& aReport);
 
-  std::map<nsString, std::unique_ptr<mozilla::dom::RTCStatsReportInternal>>
-      mLastReports;
+  std::map<nsString, UniquePtr<dom::RTCStatsReportInternal>> mLastReports;
   // We cannot form offers/answers properly until the Gecko Media Plugin stuff
   // has been initted, which is a complicated mess of thread dispatches,
   // including sync dispatches to main. So, we need to be able to queue up

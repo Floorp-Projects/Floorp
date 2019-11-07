@@ -42,6 +42,7 @@
 #include "mozilla/dom/RTCStatsReportBinding.h"
 #include "nsIPrincipal.h"
 #include "mozilla/PeerIdentity.h"
+#include "RTCStatsReport.h"
 
 namespace test {
 #ifdef USE_FAKE_PCOBSERVER
@@ -56,6 +57,8 @@ struct CandidateInfo;
 class DataChannel;
 class DtlsIdentity;
 class MediaPipeline;
+class MediaPipelineReceive;
+class MediaPipelineTransmit;
 class TransceiverImpl;
 
 namespace dom {
@@ -120,24 +123,6 @@ class PCUuidGenerator : public mozilla::JsepUuidGenerator {
   nsCOMPtr<nsIUUIDGenerator> mGenerator;
 };
 
-// Not an inner class so we can forward declare.
-class RTCStatsQuery {
- public:
-  explicit RTCStatsQuery(bool aInternalStats, bool aRecordTelemetry);
-  RTCStatsQuery(RTCStatsQuery&& aOrig) = default;
-  ~RTCStatsQuery();
-
-  std::unique_ptr<mozilla::dom::RTCStatsReportInternal> report;
-  // A timestamp to help with telemetry.
-  mozilla::TimeStamp iceStartTime;
-
-  bool internalStats;
-  bool recordTelemetry;
-  std::string transportId;
-  bool grabAllLevels;
-  DOMHighResTimeStamp now;
-};
-
 // This is a variation of Telemetry::AutoTimer that keeps a reference
 // count and records the elapsed time when the count falls to zero. The
 // elapsed time is recorded in seconds.
@@ -151,9 +136,6 @@ struct PeerConnectionAutoTimer {
   int64_t mRefCnt;
   TimeStamp mStart;
 };
-
-typedef MozPromise<UniquePtr<RTCStatsQuery>, nsresult, true>
-    RTCStatsQueryPromise;
 
 // Enter an API call and check that the state is OK,
 // the PC isn't closed, etc.
@@ -281,10 +263,7 @@ class PeerConnectionImpl final
     rv = SetRemoteDescription(aAction, NS_ConvertUTF16toUTF8(aSDP).get());
   }
 
-  NS_IMETHODIMP_TO_ERRORRESULT(GetStats, ErrorResult& rv,
-                               mozilla::dom::MediaStreamTrack* aSelector) {
-    rv = GetStats(aSelector);
-  }
+  already_AddRefed<dom::Promise> GetStats(dom::MediaStreamTrack* aSelector);
 
   NS_IMETHODIMP AddIceCandidate(const char* aCandidate, const char* aMid,
                                 const char* aUfrag,
@@ -491,9 +470,10 @@ class PeerConnectionImpl final
   // initialize telemetry for when calls start
   void startCallTelem();
 
-  RefPtr<RTCStatsQueryPromise> GetStats(dom::MediaStreamTrack* aSelector,
-                                        bool aInternalStats,
-                                        bool aRecordTelemetry);
+  RefPtr<dom::RTCStatsReportPromise> GetStats(dom::MediaStreamTrack* aSelector,
+                                              bool aInternalStats);
+
+  void RecordConduitTelemetry();
 
   // for monitoring changes in track ownership
   // PeerConnectionMedia can't do it because it doesn't know about principals
@@ -507,17 +487,19 @@ class PeerConnectionImpl final
   void DumpPacket_m(size_t level, dom::mozPacketDumpType type, bool sending,
                     UniquePtr<uint8_t[]>& packet, size_t size);
 
+  const dom::RTCStatsTimestampMaker& GetTimestampMaker() const {
+    return mTimestampMaker;
+  }
+
  private:
   virtual ~PeerConnectionImpl();
   PeerConnectionImpl(const PeerConnectionImpl& rhs);
   PeerConnectionImpl& operator=(PeerConnectionImpl);
-  nsresult BuildStatsQuery_m(mozilla::dom::MediaStreamTrack* aSelector,
-                             RTCStatsQuery* query);
-  static RefPtr<RTCStatsQueryPromise> ExecuteStatsQuery_s(
-      UniquePtr<RTCStatsQuery>&& query,
-      const nsTArray<RefPtr<MediaPipeline>>& aPipelines,
-      const RefPtr<MediaTransportHandler>& aTransportHandler);
 
+  RefPtr<dom::RTCStatsPromise> GetReceiverStats(
+      const RefPtr<MediaPipelineReceive>& aPipeline);
+  RefPtr<dom::RTCStatsPromise> GetSenderStats(
+      const RefPtr<MediaPipelineTransmit>& aPipeline);
   nsresult CalculateFingerprint(const std::string& algorithm,
                                 std::vector<uint8_t>* fingerprint) const;
   nsresult ConfigureJsepSessionCodecs();
@@ -540,8 +522,6 @@ class PeerConnectionImpl final
   RefPtr<MediaPipeline> GetMediaPipelineForTrack(
       dom::MediaStreamTrack& aRecvTrack);
 
-  nsresult GetTimeSinceEpoch(DOMHighResTimeStamp* result);
-
   // Shut down media - called on main thread only
   void ShutdownMedia();
 
@@ -561,11 +541,6 @@ class PeerConnectionImpl final
   already_AddRefed<TransceiverImpl> CreateTransceiverImpl(
       JsepTransceiver* aJsepTransceiver, dom::MediaStreamTrack* aSendTrack,
       ErrorResult& aRv);
-
-  // Sends an RTCStatsReport to JS. Must run on main thread.
-  static void DeliverStatsReportToPCObserver_m(
-      const std::string& pcHandle, nsresult result,
-      const nsAutoPtr<RTCStatsQuery>& query);
 
   // When ICE completes, we record a bunch of statistics that outlive the
   // PeerConnection. This is just telemetry right now, but this can also
@@ -689,6 +664,8 @@ class PeerConnectionImpl final
   // used to store the raw trickle candidate string for display
   // on the about:webrtc raw candidates table.
   std::vector<std::string> mRawTrickledCandidates;
+
+  dom::RTCStatsTimestampMaker mTimestampMaker;
 
  public:
   // these are temporary until the DataChannel Listen/Connect API is removed

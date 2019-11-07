@@ -586,7 +586,7 @@ nsresult PeerConnectionMedia::AddTransceiver(
     dom::MediaStreamTrack* aSendTrack, const PrincipalHandle& aPrincipalHandle,
     RefPtr<TransceiverImpl>* aTransceiverImpl) {
   if (!mCall) {
-    mCall = WebRtcCallWrapper::Create();
+    mCall = WebRtcCallWrapper::Create(mParent->GetTimestampMaker());
   }
 
   RefPtr<TransceiverImpl> transceiver = new TransceiverImpl(
@@ -618,7 +618,7 @@ nsresult PeerConnectionMedia::AddTransceiver(
 
 void PeerConnectionMedia::GetTransmitPipelinesMatching(
     const MediaStreamTrack* aTrack,
-    nsTArray<RefPtr<MediaPipeline>>* aPipelines) {
+    nsTArray<RefPtr<MediaPipelineTransmit>>* aPipelines) {
   for (RefPtr<TransceiverImpl>& transceiver : mTransceivers) {
     if (transceiver->HasSendTrack(aTrack)) {
       aPipelines->AppendElement(transceiver->GetSendPipeline());
@@ -628,7 +628,7 @@ void PeerConnectionMedia::GetTransmitPipelinesMatching(
 
 void PeerConnectionMedia::GetReceivePipelinesMatching(
     const MediaStreamTrack* aTrack,
-    nsTArray<RefPtr<MediaPipeline>>* aPipelines) {
+    nsTArray<RefPtr<MediaPipelineReceive>>* aPipelines) {
   for (RefPtr<TransceiverImpl>& transceiver : mTransceivers) {
     if (transceiver->HasReceiveTrack(aTrack)) {
       aPipelines->AppendElement(transceiver->GetReceivePipeline());
@@ -639,7 +639,8 @@ void PeerConnectionMedia::GetReceivePipelinesMatching(
 std::string PeerConnectionMedia::GetTransportIdMatching(
     const dom::MediaStreamTrack& aTrack) const {
   for (const RefPtr<TransceiverImpl>& transceiver : mTransceivers) {
-    if (transceiver->HasReceiveTrack(&aTrack)) {
+    if (transceiver->HasReceiveTrack(&aTrack) ||
+        transceiver->HasSendTrack(&aTrack)) {
       return transceiver->GetTransportId();
     }
   }

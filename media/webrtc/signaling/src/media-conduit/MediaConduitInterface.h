@@ -15,6 +15,7 @@
 #include "CodecConfig.h"
 #include "VideoTypes.h"
 #include "MediaConduitErrors.h"
+#include "RTCStatsReport.h"
 
 #include "ImageContainer.h"
 
@@ -160,6 +161,9 @@ class MediaSessionConduit {
   virtual MediaConduitErrorCode ReceivedRTCPPacket(const void* data,
                                                    int len) = 0;
 
+  virtual Maybe<DOMHighResTimeStamp> LastRtcpReceived() const = 0;
+  virtual DOMHighResTimeStamp GetNow() const = 0;
+
   virtual MediaConduitErrorCode StopTransmitting() = 0;
   virtual MediaConduitErrorCode StartTransmitting() = 0;
   virtual MediaConduitErrorCode StopReceiving() = 0;
@@ -258,7 +262,10 @@ class WebRtcCallWrapper : public RefCounted<WebRtcCallWrapper> {
  public:
   typedef webrtc::Call::Config Config;
 
-  static RefPtr<WebRtcCallWrapper> Create() { return new WebRtcCallWrapper(); }
+  static RefPtr<WebRtcCallWrapper> Create(
+      const dom::RTCStatsTimestampMaker& aTimestampMaker) {
+    return new WebRtcCallWrapper(aTimestampMaker);
+  }
 
   static RefPtr<WebRtcCallWrapper> Create(UniquePtr<webrtc::Call>&& aCall) {
     return new WebRtcCallWrapper(std::move(aCall));
@@ -300,12 +307,15 @@ class WebRtcCallWrapper : public RefCounted<WebRtcCallWrapper> {
     mConduits.erase(conduit);
   }
 
+  DOMHighResTimeStamp GetNow() const { return mTimestampMaker.GetNow(); }
+
   MOZ_DECLARE_REFCOUNTED_TYPENAME(WebRtcCallWrapper)
 
   rtc::scoped_refptr<webrtc::AudioDecoderFactory> mDecoderFactory;
 
  private:
-  WebRtcCallWrapper() {
+  explicit WebRtcCallWrapper(const dom::RTCStatsTimestampMaker& aTimestampMaker)
+      : mTimestampMaker(aTimestampMaker) {
     auto voice_engine = webrtc::VoiceEngine::Create();
     mDecoderFactory = webrtc::CreateBuiltinAudioDecoderFactory();
 
@@ -335,6 +345,7 @@ class WebRtcCallWrapper : public RefCounted<WebRtcCallWrapper> {
   // Allows conduits to know about one another, to avoid remote SSRC
   // collisions.
   std::set<MediaSessionConduit*> mConduits;
+  dom::RTCStatsTimestampMaker mTimestampMaker;
 };
 
 // Abstract base classes for external encoder/decoder.

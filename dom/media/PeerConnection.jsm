@@ -11,17 +11,11 @@ ChromeUtils.defineModuleGetter(
   "PeerConnectionIdp",
   "resource://gre/modules/media/PeerConnectionIdp.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  this,
-  "convertToRTCStatsReport",
-  "resource://gre/modules/media/RTCStatsReport.jsm"
-);
 
 const PC_CONTRACT = "@mozilla.org/dom/peerconnection;1";
 const PC_OBS_CONTRACT = "@mozilla.org/dom/peerconnectionobserver;1";
 const PC_ICE_CONTRACT = "@mozilla.org/dom/rtcicecandidate;1";
 const PC_SESSION_CONTRACT = "@mozilla.org/dom/rtcsessiondescription;1";
-const PC_STATS_CONTRACT = "@mozilla.org/dom/rtcstatsreport;1";
 const PC_STATIC_CONTRACT = "@mozilla.org/dom/peerconnectionstatic;1";
 const PC_SENDER_CONTRACT = "@mozilla.org/dom/rtpsender;1";
 const PC_RECEIVER_CONTRACT = "@mozilla.org/dom/rtpreceiver;1";
@@ -34,7 +28,6 @@ const PC_OBS_CID = Components.ID("{d1748d4c-7f6a-4dc5-add6-d55b7678537e}");
 const PC_ICE_CID = Components.ID("{02b9970c-433d-4cc2-923d-f7028ac66073}");
 const PC_SESSION_CID = Components.ID("{1775081b-b62d-4954-8ffe-a067bbf508a7}");
 const PC_MANAGER_CID = Components.ID("{7293e901-2be3-4c02-b4bd-cbef6fc24f78}");
-const PC_STATS_CID = Components.ID("{7fe6e18b-0da3-4056-bf3b-440ef3809e06}");
 const PC_STATIC_CID = Components.ID("{0fb47c47-a205-4583-a9fc-cbadf8c95880}");
 const PC_SENDER_CID = Components.ID("{4fff5d46-d827-4cd4-a970-8fd53977440e}");
 const PC_RECEIVER_CID = Components.ID("{d974b814-8fde-411c-8c45-b86791b81030}");
@@ -317,44 +310,6 @@ setupPrototype(RTCSessionDescription, {
   QueryInterface: ChromeUtils.generateQI([Ci.nsIDOMGlobalPropertyInitializer]),
 });
 
-class RTCStatsReport {
-  constructor(pc, dict) {
-    this._pc = pc;
-    this._win = pc._win;
-    this._pcid = dict.pcid;
-    this._report = convertToRTCStatsReport(dict);
-  }
-
-  setInternal(aKey, aObj) {
-    return this.__DOM_IMPL__.__set(aKey, aObj);
-  }
-
-  // Must be called after our webidl sandwich is made.
-
-  makeStatsPublic() {
-    for (const key in this._report) {
-      const value = this._report[key];
-      if (value.type == "local-candidate" || value.type == "remote-candidate") {
-        delete value.transportId;
-      }
-      this.setInternal(key, Cu.cloneInto(value, this._win));
-    }
-  }
-
-  get mozPcid() {
-    return this._pcid;
-  }
-
-  __onget(key, stat) {
-    return stat;
-  }
-}
-setupPrototype(RTCStatsReport, {
-  classID: PC_STATS_CID,
-  contractID: PC_STATS_CONTRACT,
-  QueryInterface: ChromeUtils.generateQI([]),
-});
-
 // Records PC related telemetry
 class PeerConnectionTelemetry {
   // Record which style(s) of invocation for getStats are used
@@ -570,13 +525,6 @@ class RTCPeerConnection {
 
     this.__DOM_IMPL__._innerObject = this;
     const observer = new this._win.PeerConnectionObserver(this.__DOM_IMPL__);
-
-    this._warnDeprecatedStatsRemoteAccessNullable = {
-      warn: key =>
-        this
-          .logWarning(`Detected soon-to-break getStats() use with key="${key}"! stat.isRemote goes away in Firefox 66, but won't warn there!\
- - See https://blog.mozilla.org/webrtc/getstats-isremote-66/`),
-    };
 
     // Add a reference to the PeerConnection to global list (before init).
     _globalPCList.addPC(this);
@@ -1882,19 +1830,7 @@ class RTCPeerConnection {
       this._pcTelemetry.recordGetStats();
     }
 
-    return this._auto(onSucc, onErr, () => this._getStats(selector));
-  }
-
-  async _getStats(selector) {
-    // getStats is allowed even in closed state.
-    return this._chain(
-      () =>
-        new Promise((resolve, reject) => {
-          this._onGetStatsSuccess = resolve;
-          this._onGetStatsFailure = reject;
-          this._impl.getStats(selector);
-        })
-    );
+    return this._auto(onSucc, onErr, () => this._impl.getStats(selector));
   }
 
   createDataChannel(
@@ -2173,20 +2109,6 @@ class PeerConnectionObserver {
     }
   }
 
-  onGetStatsSuccess(dict) {
-    let pc = this._dompc;
-    let chromeobj = new RTCStatsReport(pc, dict);
-    let webidlobj = pc._win.RTCStatsReport._create(pc._win, chromeobj);
-    chromeobj.makeStatsPublic();
-    pc._onGetStatsSuccess(webidlobj);
-  }
-
-  onGetStatsError(message) {
-    this._dompc._onGetStatsFailure(
-      this.newError({ name: "OperationError", message })
-    );
-  }
-
   onTransceiverNeeded(kind, transceiverImpl) {
     this._dompc._onTransceiverNeeded(kind, transceiverImpl);
   }
@@ -2393,10 +2315,10 @@ class RTCRtpSender {
 
   getStats() {
     if (this.track) {
-      return this._pc._async(async () => this._pc._getStats(this.track));
+      return this._pc._async(async () => this._pc._impl.getStats(this.track));
     }
-    return this._pc._win.Promise.resolve().then(() =>
-      this._pc._win.RTCStatsReport._create(this._pc._win, new Map())
+    return this._pc._win.Promise.resolve().then(
+      () => new this._pc._win.RTCStatsReport()
     );
   }
 
@@ -2749,7 +2671,6 @@ var EXPORTED_SYMBOLS = [
   "RTCRtpReceiver",
   "RTCRtpSender",
   "RTCRtpTransceiver",
-  "RTCStatsReport",
   "PeerConnectionObserver",
   "CreateOfferRequest",
 ];
