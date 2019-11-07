@@ -236,7 +236,6 @@ module.exports = {
       "dom/websocket/**",
       "dom/workers/**",
       "dom/worklet/**",
-      "dom/xbl/**",
       "dom/xml/**",
       "dom/xslt/**",
       "dom/xul/**",
