@@ -258,6 +258,7 @@ export type Frame = {
   originalVariables?: XScopeVariables,
   library?: string,
   index: number,
+  asyncCause?: string,
 };
 
 export type ChromeFrame = {

@@ -163,6 +163,13 @@ export default class FrameComponent extends Component<FrameComponentProps> {
         tabIndex={0}
         title={title}
       >
+        {frame.asyncCause && (
+          <span className="location-async-cause">
+            {selectable && <FrameIndent />}
+            {l10n.getFormatStr("stacktrace.asyncStack", frame.asyncCause)}
+            {selectable && <br className="clipboard-only" />}
+          </span>
+        )}
         {selectable && <FrameIndent />}
         <FrameTitle
           frame={frame}
