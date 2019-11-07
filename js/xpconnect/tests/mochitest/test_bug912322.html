@@ -11,8 +11,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=912322
   <script type="application/javascript">
 
   /** Test that XBL functions aren't exposed to the web. **/
-  funs = ['getAnonymousNodes', 'getAnonymousElementByAttribute',
-          'getBindingParent'];
+  funs = ['getAnonymousNodes', 'getBindingParent'];
   for (var f of funs) {
     ok(!(f in document), f + " should not be available to content");
     ok(f in SpecialPowers.wrap(document), f + " should be available to chrome via Xray");
