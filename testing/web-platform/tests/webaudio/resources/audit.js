@@ -1179,8 +1179,9 @@ window.Audit = (function() {
 
     // Run this task. |this| task will be passed into the user-supplied test
     // task function.
-    run() {
+    run(harnessTest) {
       this._state = TaskState.STARTED;
+      this._harnessTest = harnessTest;
       // Print out the task entry with label and description.
       _logPassed(
           '> [' + this._label + '] ' +
@@ -1229,12 +1230,7 @@ window.Audit = (function() {
     // WPT linter, so a thin wrapper around the harness's |step_timeout| is
     // used here.
     timeout(subTask, time) {
-      async_test((test) => {
-        test.step_timeout(() => {
-          subTask();
-          test.done();
-        }, time);
-      });
+      this._harnessTest.step_timeout(subTask, time);
     }
 
     isPassed() {
@@ -1324,7 +1320,7 @@ window.Audit = (function() {
         let task = this._tasks[this._taskSequence[taskIndex]];
         // Some tests assume that tasks run in sequence, which is provided by
         // promise_test().
-        promise_test(() => task.run(), `Executing "${task.label}"`);
+        promise_test((t) => task.run(t), `Executing "${task.label}"`);
       }
 
       // Schedule a summary report on completion.
