@@ -552,6 +552,16 @@ task printVariants {
                 engine: it.productFlavors.find { it.dimension == 'engine' }.name,
                 name: it.name,
         ]}
+        // AndroidTest is a special case not included above
+        variants.add([
+            apks: [[
+                abi: 'noarch',
+                fileName: 'app-geckoNightly-debug-androidTest.apk',
+            ]],
+            build_type: 'androidTest',
+            engine: 'geckoNightly',
+            name: 'androidTest',
+        ])
         println 'variants: ' + groovy.json.JsonOutput.toJson(variants)
     }
 }

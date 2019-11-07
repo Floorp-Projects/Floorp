@@ -2,6 +2,7 @@
 trust-domain: mobile
 treeherder:
     group-names:
+        'androidTest': 'Tasks related to the androidTest APK'
         'beta': 'Nightly-related tasks'
         'debug': 'Builds made for testing'
         'forPerformanceTest': 'Builds made for Raptor and other performance tests'

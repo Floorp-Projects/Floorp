@@ -33,6 +33,13 @@ display_help() {
     echo
 }
 
+get_abs_filename() {
+  # $1 : relative filename
+  relative_filename="$1"
+  echo "$(cd "$(dirname "$relative_filename")" && pwd)/$(basename "$relative_filename")"
+}
+
+
 # Basic parameter check
 if [[ $# -lt 1 ]]; then
     echo "Error: please provide at least one build variant (arm|x86)"
@@ -41,23 +48,24 @@ if [[ $# -lt 1 ]]; then
 fi
 
 device_type="$1"  # arm64-v8a | armeabi-v7a | x86_64 | x86
-if [[ ! -z "$2" ]]; then
-    num_shards=$2
+APK_APP="$2"
+APK_TEST="$3"
+if [[ ! -z "$4" ]]; then
+    num_shards=$4
 fi
 
 JAVA_BIN="/usr/bin/java"
 PATH_TEST="./automation/taskcluster/androidTest"
-PATH_APK="./app/build/outputs/apk/geckoNightly/debug"
 FLANK_BIN="/builds/worker/test-tools/flank.jar"
 
 echo
 echo "ACTIVATE SERVICE ACCT"
 echo
 # this is where the Google Testcloud project ID is set
-gcloud config set project "$GOOGLE_PROJECT" 
+gcloud config set project "$GOOGLE_PROJECT"
 echo
 
-gcloud auth activate-service-account --key-file "$GOOGLE_APPLICATION_CREDENTIALS" 
+gcloud auth activate-service-account --key-file "$GOOGLE_APPLICATION_CREDENTIALS"
 echo
 echo
 
@@ -66,7 +74,6 @@ echo
 set +e
 
 if [[ "${device_type}" =~ ^(arm64-v8a|armeabi-v7a|x86_64|x86)$ ]]; then
-    APK_APP="${PATH_APK}/app-geckoNightly-${device_type}-debug.apk"
     flank_template="${PATH_TEST}/flank-${device_type}.yml"
     echo "device_type: ${device_type}"
 else
@@ -74,8 +81,9 @@ else
     exitcode=1
 fi
 
-APK_TEST="./app/build/outputs/apk/androidTest/geckoNightly/debug/app-geckoNightly-debug-androidTest.apk"
-echo "APK_PATH: ${APK_PATH}"
+APK_APP="$(get_abs_filename $APK_APP)"
+APK_TEST="$(get_abs_filename $APK_TEST)"
+echo "APK_APP: ${APK_APP}"
 echo "APK_TEST: ${APK_TEST}"
 
 # function to exit script with exit code from test run.
@@ -92,7 +100,7 @@ function failure_check() {
 echo
 echo "FLANK VERSION"
 echo
-$JAVA_BIN -jar $FLANK_BIN --version 
+$JAVA_BIN -jar $FLANK_BIN --version
 echo
 echo
 
@@ -118,12 +126,9 @@ echo
 echo "RESULTS"
 echo
 ls -la ./results
-echo 
+echo
 echo
 
 echo "All UI test(s) have passed!"
 echo
 echo
-
-
-

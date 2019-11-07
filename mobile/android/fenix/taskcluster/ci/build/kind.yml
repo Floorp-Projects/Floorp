@@ -45,6 +45,19 @@ jobs:
         treeherder:
             symbol: debug(B)
 
+    android-test:
+        attributes:
+            code-review: true
+        run-on-tasks-for: [github-pull-request, github-push]
+        run:
+            geckoview-engine: geckoNightly
+            gradle-build-type: androidTest
+        apk-artifact-template:
+            # 2 differences here: "androidTest/" is added and "{gradle_build_type}" is forced to "debug"
+            path: '/builds/worker/checkouts/src/app/build/outputs/apk/androidTest/{geckoview_engine}/debug/{fileName}'
+        treeherder:
+            symbol: androidTest(B)
+
     performance-test:
         run:
             geckoview-engine: geckoNightly

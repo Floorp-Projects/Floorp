@@ -1,0 +1,50 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: taskgraph.loader.transform:loader
+
+transforms:
+    - fenix_taskgraph.transforms.test:transforms
+    - taskgraph.transforms.job:transforms
+    - taskgraph.transforms.task:transforms
+
+jobs:
+    x86:
+        attributes:
+            build-type: debug
+            code-review: true
+        dependencies:
+            signing: signing-debug
+            signing-android-test: signing-android-test
+        description: Test Fenix
+        include-pull-request-number: true
+        run-on-tasks-for: [github-pull-request, github-push]
+        run:
+            commands:
+                - [wget, {artifact-reference: '<signing/public/build/x86/geckoNightly/target.apk>'}, '-O', app.apk]
+                - [wget, {artifact-reference: '<signing-android-test/public/build/noarch/geckoNightly/target.apk>'}, '-O', android-test.apk]
+                - [automation/taskcluster/androidTest/ui-test.sh, x86, app.apk, android-test.apk, '-1']
+            secrets:
+                - name: project/mobile/fenix/firebase
+                  key: firebaseToken
+                  path: .firebase_token.json
+                  json: true
+            using: run-commands
+            use-caches: false
+        treeherder:
+            kind: test
+            platform: 'ui-test/opt'
+            symbol: debug(ui-test-x86)
+            tier: 2
+        worker:
+            docker-image: {in-tree: ui-tests}
+            max-run-time: 7200
+            env:
+                GOOGLE_APPLICATION_CREDENTIALS: '.firebase_token.json'
+                GOOGLE_PROJECT: moz-fenix
+            artifacts:
+                - name: public
+                  path: /build/fenix/results
+                  type: directory
+        worker-type: b-android
