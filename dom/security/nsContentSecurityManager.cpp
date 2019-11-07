@@ -909,6 +909,15 @@ NS_IMETHODIMP
 nsContentSecurityManager::AsyncOnChannelRedirect(
     nsIChannel* aOldChannel, nsIChannel* aNewChannel, uint32_t aRedirFlags,
     nsIAsyncVerifyRedirectCallback* aCb) {
+  // Since we compare the principal from the loadInfo to the URI's
+  // princicpal, it's possible that the checks fail when doing an internal
+  // redirect. We can just return early instead, since we should never
+  // need to block an internal redirect.
+  if (aRedirFlags & nsIChannelEventSink::REDIRECT_INTERNAL) {
+    aCb->OnRedirectVerifyCallback(NS_OK);
+    return NS_OK;
+  }
+
   nsCOMPtr<nsILoadInfo> loadInfo = aOldChannel->LoadInfo();
   nsresult rv = CheckChannel(aNewChannel);
   if (NS_SUCCEEDED(rv)) {
