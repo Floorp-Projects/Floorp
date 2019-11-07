@@ -102,7 +102,6 @@ nsresult nsClipboard::Init(void) {
 
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
   if (os) {
-    os->AddObserver(this, "quit-application", false);
     os->AddObserver(this, "xpcom-shutdown", false);
   }
 
