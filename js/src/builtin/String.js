@@ -217,6 +217,112 @@ function String_replace(searchValue, replaceValue) {
     return newString;
 }
 
+// String.prototype.replaceAll (Stage 3 proposal)
+// https://tc39.es/proposal-string-replaceall/
+//
+// String.prototype.replaceAll ( searchValue, replaceValue )
+function String_replaceAll(searchValue, replaceValue) {
+    // Step 1.
+    RequireObjectCoercible(this);
+
+    // Step 2.
+    if (searchValue !== undefined && searchValue !== null) {
+        // Steps 2.a-b.
+        if (IsRegExp(searchValue)) {
+            // Step 2.b.i.
+            var flags = searchValue.flags;
+
+            // Step 2.b.ii.
+            if (flags === undefined || flags === null) {
+                ThrowTypeError(JSMSG_FLAGS_UNDEFINED_OR_NULL);
+            }
+
+            // Step 2.b.iii.
+            if (!callFunction(std_String_includes, ToString(flags), "g")) {
+                ThrowTypeError(JSMSG_REQUIRES_GLOBAL_REGEXP, "replaceAll");
+            }
+        }
+
+        // Step 2.c.
+        var replacer = GetMethod(searchValue, std_replace);
+
+        // Step 2.b.
+        if (replacer !== undefined) {
+            return callContentFunction(replacer, searchValue, this, replaceValue);
+        }
+    }
+
+    // Step 3.
+    var string = ToString(this);
+
+    // Step 4.
+    var searchString = ToString(searchValue);
+
+    // Steps 5-6.
+    if (!IsCallable(replaceValue)) {
+        // Steps 7-16.
+        return StringReplaceAllString(string, searchString, ToString(replaceValue));
+    }
+
+    // Step 7.
+    var searchLength = searchString.length;
+
+    // Step 8.
+    var advanceBy = std_Math_max(1, searchLength);
+
+    // Step 9 (not needed in this implementation).
+
+    // Step 12.
+    var endOfLastMatch = 0;
+
+    // Step 13.
+    var result = "";
+
+    // Steps 10-11, 14.
+    var position = 0;
+    while (true) {
+        // Steps 10-11.
+        //
+        // StringIndexOf doesn't clamp the |position| argument to the input
+        // string length, i.e. |StringIndexOf("abc", "", 4)| returns -1,
+        // whereas |"abc".indexOf("", 4)| returns 3. That means we need to
+        // exit the loop when |nextPosition| is smaller than |position| and
+        // not just when |nextPosition| is -1.
+        var nextPosition = callFunction(std_String_indexOf, string, searchString, position);
+        if (nextPosition < position) {
+            break;
+        }
+        position = nextPosition;
+
+        // Step 14.a.
+        var replacement = ToString(callContentFunction(replaceValue, undefined, searchString,
+                                                       position, string));
+
+        // Step 14.b (not applicable).
+
+        // Step 14.c.
+        var stringSlice = Substring(string, endOfLastMatch, position - endOfLastMatch);
+
+        // Step 14.d.
+        result += stringSlice + replacement;
+
+        // Step 14.e.
+        endOfLastMatch = position + searchLength;
+
+        // Step 11.b.
+        position += advanceBy;
+    }
+
+    // Step 15.
+    if (endOfLastMatch < string.length) {
+        // Step 15.a.
+        result += Substring(string, endOfLastMatch, string.length - endOfLastMatch);
+    }
+
+    // Step 16.
+    return result;
+}
+
 function StringProtoHasNoSearch() {
     var ObjectProto = GetBuiltinPrototype("Object");
     var StringProto = GetBuiltinPrototype("String");

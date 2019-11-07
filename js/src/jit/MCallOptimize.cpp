@@ -116,6 +116,7 @@ static bool CanInlineCrossRealm(InlinableNative native) {
     case InlinableNative::IntlGuardToPluralRules:
     case InlinableNative::IntlGuardToRelativeTimeFormat:
     case InlinableNative::IsRegExpObject:
+    case InlinableNative::IsPossiblyWrappedRegExpObject:
     case InlinableNative::RegExpMatcher:
     case InlinableNative::RegExpSearcher:
     case InlinableNative::RegExpTester:
@@ -422,6 +423,8 @@ IonBuilder::InliningResult IonBuilder::inlineNativeCall(CallInfo& callInfo,
       return inlineRegExpTester(callInfo);
     case InlinableNative::IsRegExpObject:
       return inlineIsRegExpObject(callInfo);
+    case InlinableNative::IsPossiblyWrappedRegExpObject:
+      return inlineIsPossiblyWrappedRegExpObject(callInfo);
     case InlinableNative::RegExpPrototypeOptimizable:
       return inlineRegExpPrototypeOptimizable(callInfo);
     case InlinableNative::RegExpInstanceOptimizable:
@@ -2500,6 +2503,43 @@ IonBuilder::InliningResult IonBuilder::inlineIsRegExpObject(
 
   if (isRegExpObjectKnown) {
     pushConstant(BooleanValue(isRegExpObjectConstant));
+  } else {
+    MHasClass* hasClass = MHasClass::New(alloc(), arg, &RegExpObject::class_);
+    current->add(hasClass);
+    current->push(hasClass);
+  }
+
+  callInfo.setImplicitlyUsedUnchecked();
+  return InliningStatus_Inlined;
+}
+
+IonBuilder::InliningResult IonBuilder::inlineIsPossiblyWrappedRegExpObject(
+    CallInfo& callInfo) {
+  MOZ_ASSERT(!callInfo.constructing());
+  MOZ_ASSERT(callInfo.argc() == 1);
+
+  if (getInlineReturnType() != MIRType::Boolean) {
+    return InliningStatus_NotInlined;
+  }
+
+  MDefinition* arg = callInfo.getArg(0);
+  if (arg->type() != MIRType::Object) {
+    return InliningStatus_NotInlined;
+  }
+
+  TemporaryTypeSet* types = arg->resultTypeSet();
+  if (!types) {
+    return InliningStatus_NotInlined;
+  }
+
+  // Don't inline if the argument might be a wrapper.
+  if (types->forAllClasses(constraints(), IsProxyClass) !=
+      TemporaryTypeSet::ForAllResult::ALL_FALSE) {
+    return InliningStatus_NotInlined;
+  }
+
+  if (const JSClass* clasp = types->getKnownClass(constraints())) {
+    pushConstant(BooleanValue(clasp == &RegExpObject::class_));
   } else {
     MHasClass* hasClass = MHasClass::New(alloc(), arg, &RegExpObject::class_);
     current->add(hasClass);
