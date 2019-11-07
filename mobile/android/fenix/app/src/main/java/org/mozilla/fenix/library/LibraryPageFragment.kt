@@ -16,7 +16,9 @@ abstract class LibraryPageFragment<T> : Fragment() {
     abstract val selectedItems: Set<T>
 
     protected fun close() {
-        findNavController().popBackStack(R.id.libraryFragment, true)
+        if (!findNavController().popBackStack(R.id.libraryFragment, true)) {
+            findNavController().popBackStack(R.id.homeFragment, false)
+        }
     }
 
     protected fun openItemsInNewTab(private: Boolean = false, toUrl: (T) -> String?) {
