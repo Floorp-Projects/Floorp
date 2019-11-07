@@ -13,7 +13,7 @@
 namespace js {
 namespace jit {
 
-typedef void (*InstrCallback)(const char* text);
+using InstrCallback = void (*)(const char* text);
 
 extern void Disassemble(uint8_t* code, size_t length, InstrCallback callback);
 
