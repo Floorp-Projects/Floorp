@@ -120,7 +120,12 @@ class Page extends Domain {
     // because it is no longer needed.
     snapshot.close();
 
-    return canvas.toDataURL();
+    const url = canvas.toDataURL();
+
+    // only return the base64 encoded data without the data URL prefix
+    const data = url.substring(url.indexOf(",") + 1);
+
+    return { data };
   }
 
   async enable() {
