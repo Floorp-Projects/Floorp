@@ -45,7 +45,7 @@ class AppLinksFeature(
     private val sessionId: String? = null,
     private val interceptLinkClicks: Boolean = false,
     private val alwaysAllowedSchemes: Set<String> = setOf("mailto", "market", "sms", "tel"),
-    private val alwaysDeniedSchemes: Set<String> = setOf("javascript"),
+    private val alwaysDeniedSchemes: Set<String> = setOf("javascript", "about"),
     private val fragmentManager: FragmentManager? = null,
     private var dialog: RedirectDialogFragment = SimpleRedirectDialogFragment.newInstance(),
     private val useCases: AppLinksUseCases = AppLinksUseCases(context)
