@@ -13,7 +13,7 @@ add_task(async function test() {
 
   // initialization of expected titles
   let test_title = "Test title";
-  let app_name = document.documentElement.getAttribute("title");
+  let app_name = document.title;
   const isOSX = "nsILocalFileMac" in Ci;
   let page_with_title;
   let page_without_title;
