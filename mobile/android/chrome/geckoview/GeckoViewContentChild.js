@@ -40,6 +40,8 @@ class GeckoViewContentChild extends GeckoViewChildModule {
       Utils: "resource://gre/modules/sessionstore/Utils.jsm",
     });
 
+    this.timeoutsSuspended = false;
+
     this.messageManager.addMessageListener(
       "GeckoView:DOMFullscreenEntered",
       this
@@ -273,6 +275,15 @@ class GeckoViewContentChild extends GeckoViewChildModule {
         break;
 
       case "GeckoView:SetActive":
+        if (content) {
+          if (!aMsg.data.active) {
+            content.windowUtils.suspendTimeouts();
+            this.timeoutsSuspended = true;
+          } else if (this.timeoutsSuspended) {
+            content.windowUtils.resumeTimeouts();
+            this.timeoutsSuspended = false;
+          }
+        }
         if (content && aMsg.data.suspendMedia) {
           content.windowUtils.mediaSuspend = aMsg.data.active
             ? Ci.nsISuspendedTypes.NONE_SUSPENDED
