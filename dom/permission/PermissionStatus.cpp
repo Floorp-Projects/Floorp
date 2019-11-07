@@ -79,6 +79,10 @@ nsresult PermissionStatus::UpdateState() {
 
   PermissionDelegateHandler* permissionHandler =
       document->GetPermissionDelegateHandler();
+  if (NS_WARN_IF(!permissionHandler)) {
+    return NS_ERROR_FAILURE;
+  }
+
   nsresult rv = permissionHandler->GetPermissionForPermissionsAPI(
       PermissionNameToType(mName), &action);
   if (NS_WARN_IF(NS_FAILED(rv))) {
