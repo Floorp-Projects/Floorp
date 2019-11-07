@@ -525,9 +525,6 @@ LOCAL_INCLUDES += [
     '/xpcom/ds',
 ]
 
-if CONFIG['MOZ_XBL']:
-    LOCAL_INCLUDES += ['/dom/xbl']
-
 if CONFIG['MOZ_WEBRTC']:
     LOCAL_INCLUDES += [
         '/netwerk/sctp/datachannel',
