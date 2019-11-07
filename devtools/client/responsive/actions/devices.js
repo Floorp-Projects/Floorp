@@ -228,8 +228,8 @@ module.exports = {
 
       post(window, {
         type: "viewport-resize",
-        height: device.height,
-        width: device.width,
+        height: viewport.height,
+        width: viewport.width,
       });
       post(window, {
         type: "change-device",

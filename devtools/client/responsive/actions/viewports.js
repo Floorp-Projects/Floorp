@@ -6,6 +6,7 @@
 
 "use strict";
 
+const Services = require("Services");
 const asyncStorage = require("devtools/shared/async-storage");
 
 const {
@@ -107,9 +108,21 @@ module.exports = {
    * Rotate the viewport.
    */
   rotateViewport(id) {
-    return {
-      type: ROTATE_VIEWPORT,
-      id,
+    return async function(dispatch, getState) {
+      if (Services.prefs.getBoolPref("devtools.responsive.browserUI.enabled")) {
+        const viewport = getState().viewports[0];
+
+        post(window, {
+          type: "viewport-resize",
+          height: viewport.width,
+          width: viewport.height,
+        });
+      }
+
+      dispatch({
+        type: ROTATE_VIEWPORT,
+        id,
+      });
     };
   },
 
