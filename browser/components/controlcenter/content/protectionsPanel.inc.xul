@@ -49,6 +49,10 @@
           <label id="protections-popup-tp-switch-breakage-link"
                  class="text-link"
                  onclick="gProtectionsHandler.showSiteNotWorkingView(); gProtectionsHandler.recordClick('sitenotworking_link');">&protections.siteNotWorking.label;</label>
+          <label id="protections-popup-tp-switch-breakage-fixed-link"
+                 class="text-link"
+                 onclick="gProtectionsHandler.showSendReportView(); gProtectionsHandler.recordClick('sitenotworking_link', 'sitefixed');"
+                 data-l10n-id="protections-panel-sitefixedsendreport-label"></label>
         </vbox>
         <vbox class="protections-popup-tp-switch-box">
           <toolbarbutton id="protections-popup-tp-switch"

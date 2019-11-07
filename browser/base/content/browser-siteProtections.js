@@ -1176,6 +1176,12 @@ var gProtectionsHandler = {
       "protections-popup-tp-switch-breakage-link"
     ));
   },
+  get _protectionsPopupTPSwitchBreakageFixedLink() {
+    delete this._protectionsPopupTPSwitchBreakageFixedLink;
+    return (this._protectionsPopupTPSwitchBreakageFixedLink = document.getElementById(
+      "protections-popup-tp-switch-breakage-fixed-link"
+    ));
+  },
   get _protectionsPopupTPSwitchSection() {
     delete this._protectionsPopupTPSwitchSection;
     return (this._protectionsPopupTPSwitchSection = document.getElementById(
@@ -2211,6 +2217,10 @@ var gProtectionsHandler = {
       ContentBlockingAllowList.includes(gBrowser.selectedBrowser) ||
       !this._protectionsPopup.hasAttribute("blocking") ||
       !this._protectionsPopupTPSwitch.hasAttribute("enabled");
+    // The "Site Fixed?" link behaves similarly but for the opposite state.
+    this._protectionsPopupTPSwitchBreakageFixedLink.hidden =
+      !ContentBlockingAllowList.includes(gBrowser.selectedBrowser) ||
+      this._protectionsPopupTPSwitch.hasAttribute("enabled");
   },
 
   submitBreakageReport(uri) {
@@ -2271,6 +2281,7 @@ var gProtectionsHandler = {
     body += `${Cryptomining.PREF_ENABLED}: ${Services.prefs.getBoolPref(
       Cryptomining.PREF_ENABLED
     )}\n`;
+    body += `\nhasException: ${this.hasException}\n`;
 
     body += "\n**Comments**\n" + commentsTextarea.value;
 
@@ -2283,9 +2294,7 @@ var gProtectionsHandler = {
       }
     }
 
-    if (activatedBlockers.length) {
-      formData.set("labels", activatedBlockers.join(","));
-    }
+    formData.set("labels", activatedBlockers.join(","));
 
     this._protectionsPopupSendReportButton.disabled = true;
 

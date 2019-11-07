@@ -942,7 +942,8 @@ description#identity-popup-content-verifier,
   margin: 0;
 }
 
-#protections-popup-tp-switch-breakage-link {
+#protections-popup-tp-switch-breakage-link,
+#protections-popup-tp-switch-breakage-fixed-link {
   margin-top: calc(0.5 * var(--vertical-section-padding)) !important;
 }
 
