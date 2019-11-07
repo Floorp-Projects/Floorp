@@ -2241,16 +2241,14 @@ class EditorBase : public nsIEditor,
 
   /**
    * Helper method for scrolling the selection into view after
-   * an edit operation. aScrollToAnchor should be true if you
-   * want to scroll to the point where the selection was started.
-   * If false, it attempts to scroll the end of the selection into view.
+   * an edit operation.
    *
    * Editor methods *should* call this method instead of the versions
-   * in the various selection interfaces, since this version makes sure
-   * that the editor's sync/async settings for reflowing, painting, and
-   * scrolling match.
+   * in the various selection interfaces, since this makes sure that
+   * the editor's sync/async settings for reflowing, painting, and scrolling
+   * match.
    */
-  nsresult ScrollSelectionIntoView(bool aScrollToAnchor);
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult ScrollSelectionFocusIntoView();
 
   /**
    * Helper for GetPreviousNodeInternal() and GetNextNodeInternal().
