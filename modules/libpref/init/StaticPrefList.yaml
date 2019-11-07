@@ -3618,6 +3618,15 @@
   value: false
   mirror: once
 
+- name: gfx.webrender.compositor.max_update_rects
+  type: uint32_t
+#ifdef XP_WIN
+  value: 1
+#else
+  value: 0
+#endif
+  mirror: once
+
 - name: gfx.webrender.max-partial-present-rects
   type: uint32_t
   value: 0
