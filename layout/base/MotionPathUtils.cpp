@@ -439,17 +439,10 @@ static OffsetPathData GenerateOffsetPathData(const nsIFrame* aFrame) {
   const StyleOffsetPath& path = aFrame->StyleDisplay()->mOffsetPath;
   switch (path.tag) {
     case StyleOffsetPath::Tag::Path: {
-      // Here we only need to build a valid path for motion path, so
-      // using the default values of stroke-width, stoke-linecap, and fill-rule
-      // is fine for now because what we want is get the point and its normal
-      // vector along the path, instead of rendering it.
-      // FIXME: Use cache for main-thread in Bug 1484780.
-      RefPtr<gfx::PathBuilder> builder =
-          gfxPlatform::GetPlatform()
-              ->ScreenReferenceDrawTarget()
-              ->CreatePathBuilder(gfx::FillRule::FILL_WINDING);
       RefPtr<gfx::Path> gfxPath =
-          MotionPathUtils::BuildPath(path.AsPath(), builder);
+          aFrame->GetProperty(nsIFrame::OffsetPathCache());
+      MOZ_ASSERT(gfxPath,
+                 "Should have a valid cached gfx::Path for offset-path");
       return OffsetPathData::Path(path.AsPath(), gfxPath.forget());
     }
     case StyleOffsetPath::Tag::Ray:
