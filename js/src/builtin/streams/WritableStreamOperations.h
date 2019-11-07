@@ -26,9 +26,6 @@ extern JSObject* WritableStreamAbort(
     JSContext* cx, JS::Handle<WritableStream*> unwrappedStream,
     JS::Handle<JS::Value> reason);
 
-extern JSObject* WritableStreamClose(
-    JSContext* cx, JS::Handle<WritableStream*> unwrappedStream);
-
 extern MOZ_MUST_USE PromiseObject* WritableStreamAddWriteRequest(
     JSContext* cx, JS::Handle<WritableStream*> unwrappedStream);
 
