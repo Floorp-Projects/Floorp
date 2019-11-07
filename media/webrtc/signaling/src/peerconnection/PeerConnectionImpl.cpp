@@ -65,7 +65,6 @@
 #include "nsGlobalWindow.h"
 #include "nsDOMDataChannel.h"
 #include "mozilla/dom/Location.h"
-#include "mozilla/dom/Performance.h"
 #include "mozilla/NullPrincipal.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Telemetry.h"
@@ -92,7 +91,6 @@
 #include "mozilla/dom/RTCPeerConnectionBinding.h"
 #include "mozilla/dom/PeerConnectionImplBinding.h"
 #include "mozilla/dom/RTCDataChannelBinding.h"
-#include "mozilla/dom/PerformanceTiming.h"
 #include "mozilla/dom/PluginCrashedEvent.h"
 #include "MediaStreamTrack.h"
 #include "AudioStreamTrack.h"
@@ -221,14 +219,6 @@ class DataChannel;
 
 namespace mozilla {
 
-RTCStatsQuery::RTCStatsQuery(bool aInternal, bool aRecordTelemetry)
-    : internalStats(aInternal),
-      recordTelemetry(aRecordTelemetry),
-      grabAllLevels(false),
-      now(0.0) {}
-
-RTCStatsQuery::~RTCStatsQuery() {}
-
 void PeerConnectionAutoTimer::AddRef() { mRefCnt++; }
 
 void PeerConnectionAutoTimer::Release() {
@@ -328,6 +318,7 @@ PeerConnectionImpl::PeerConnectionImpl(const GlobalObject* aGlobal)
       mActiveOnWindow(false),
       mPacketDumpEnabled(false),
       mPacketDumpFlagsMutex("Packet dump flags mutex"),
+      mTimestampMaker(aGlobal),
       listenPort(0),
       connectPort(0),
       connectStr(nullptr) {
@@ -1507,52 +1498,35 @@ PeerConnectionImpl::SetRemoteDescription(int32_t action, const char* aSDP) {
   return NS_OK;
 }
 
-// WebRTC uses highres time relative to the UNIX epoch (Jan 1, 1970, UTC).
-
-nsresult PeerConnectionImpl::GetTimeSinceEpoch(DOMHighResTimeStamp* result) {
-  MOZ_ASSERT(NS_IsMainThread());
-  Performance* perf = mWindow->GetPerformance();
-  NS_ENSURE_TRUE(perf && perf->Timing(), NS_ERROR_UNEXPECTED);
-  *result = perf->Now() + perf->Timing()->NavigationStart();
-  return NS_OK;
-}
-
-class RTCStatsReportInternalConstruct : public RTCStatsReportInternal {
- public:
-  RTCStatsReportInternalConstruct(const nsString& pcid,
-                                  DOMHighResTimeStamp now) {
-    mPcid = pcid;
-    mRtpContributingSourceStats.Construct();
-    mInboundRtpStreamStats.Construct();
-    mOutboundRtpStreamStats.Construct();
-    mRemoteInboundRtpStreamStats.Construct();
-    mRemoteOutboundRtpStreamStats.Construct();
-    mIceCandidatePairStats.Construct();
-    mIceCandidateStats.Construct();
-    mTimestamp.Construct(now);
-    mTrickledIceCandidateStats.Construct();
-    mRawLocalCandidates.Construct();
-    mRawRemoteCandidates.Construct();
+already_AddRefed<dom::Promise> PeerConnectionImpl::GetStats(
+    MediaStreamTrack* aSelector) {
+  if (NS_FAILED(CheckApiState(false))) {
+    return nullptr;
   }
-};
 
-NS_IMETHODIMP
-PeerConnectionImpl::GetStats(MediaStreamTrack* aSelector) {
-  PC_AUTO_ENTER_API_CALL(true);
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(mWindow);
+  ErrorResult rv;
+  RefPtr<Promise> promise = Promise::Create(global, rv);
+  if (NS_WARN_IF(rv.Failed())) {
+    rv.StealNSResult();
+    return nullptr;
+  }
 
-  GetStats(aSelector, false, false)
+  GetStats(aSelector, false)
       ->Then(
           GetMainThreadSerialEventTarget(), __func__,
-          [handle = mHandle](UniquePtr<RTCStatsQuery>&& aQuery) {
-            DeliverStatsReportToPCObserver_m(
-                handle, NS_OK, nsAutoPtr<RTCStatsQuery>(aQuery.release()));
+          [promise,
+           window = mWindow](UniquePtr<dom::RTCStatsReportInternal>&& aReport) {
+            RefPtr<RTCStatsReport> report(new RTCStatsReport(window));
+            report->Incorporate(*aReport);
+            promise->MaybeResolve(std::move(report));
           },
-          [handle = mHandle](nsresult aError) {
-            DeliverStatsReportToPCObserver_m(handle, aError,
-                                             nsAutoPtr<RTCStatsQuery>());
+          [promise, window = mWindow](nsresult aError) {
+            RefPtr<RTCStatsReport> report(new RTCStatsReport(window));
+            promise->MaybeResolve(std::move(report));
           });
 
-  return NS_OK;
+  return promise.forget();
 }
 
 NS_IMETHODIMP
@@ -2589,55 +2563,312 @@ void PeerConnectionImpl::UpdateDefaultCandidate(
       defaultAddr, defaultPort, defaultRtcpAddr, defaultRtcpPort, transportId);
 }
 
-RefPtr<RTCStatsQueryPromise> PeerConnectionImpl::GetStats(
-    dom::MediaStreamTrack* aSelector, bool aInternalStats,
-    bool aRecordTelemetry) {
-  UniquePtr<RTCStatsQuery> query(
-      new RTCStatsQuery(aInternalStats, aRecordTelemetry));
-  nsresult rv = BuildStatsQuery_m(aSelector, query.get());
-  if (NS_FAILED(rv)) {
-    return RTCStatsQueryPromise::CreateAndReject(rv, __func__);
+// TODO(bug 1586109): Move this to RTCRtpReceiver.
+static UniquePtr<dom::RTCStatsCollection> GetReceiverStats_s(
+    const RefPtr<MediaPipelineReceive>& aPipeline) {
+  UniquePtr<dom::RTCStatsCollection> report(new dom::RTCStatsCollection);
+  auto asVideo = aPipeline->Conduit()->AsVideoSessionConduit();
+
+  nsString kind = asVideo.isNothing() ? NS_LITERAL_STRING("audio")
+                                      : NS_LITERAL_STRING("video");
+  nsString idstr = kind + NS_LITERAL_STRING("_");
+  idstr.AppendInt(static_cast<uint32_t>(aPipeline->Level()));
+
+  // TODO(@@NG):ssrcs handle Conduits having multiple stats at the same level
+  // This is pending spec work
+  // Gather pipeline stats.
+  nsString localId = NS_LITERAL_STRING("inbound_rtp_") + idstr;
+  nsString remoteId;
+  Maybe<uint32_t> ssrc;
+  unsigned int ssrcval;
+  if (aPipeline->Conduit()->GetRemoteSSRC(&ssrcval)) {
+    ssrc = Some(ssrcval);
   }
 
-  nsTArray<RefPtr<MediaPipeline>> pipelines;
-  // Gather up pipelines from mMedia so they may be inspected on STS
-  mMedia->GetTransmitPipelinesMatching(aSelector, &pipelines);
-  mMedia->GetReceivePipelinesMatching(aSelector, &pipelines);
-  if (!pipelines.Length()) {
-    CSFLogError(LOGTAG, "%s: Found no pipelines matching selector.",
-                __FUNCTION__);
+  RTCInboundRtpStreamStats mInboundRtp;
+  nsTArray<RTCRTPContributingSourceStats> mCsrcs;
+  // First, fill in remote stat with rtcp sender data, if present.
+  uint32_t packetsSent;
+  uint64_t bytesSent;
+  Maybe<DOMHighResTimeStamp> timestamp =
+      aPipeline->Conduit()->LastRtcpReceived();
+  if (timestamp.isSome() &&
+      aPipeline->Conduit()->GetRTCPSenderReport(&packetsSent, &bytesSent)) {
+    RTCRemoteOutboundRtpStreamStats s;
+    remoteId = NS_LITERAL_STRING("inbound_rtcp_") + idstr;
+    s.mTimestamp.Construct(*timestamp);
+    s.mId.Construct(remoteId);
+    s.mType.Construct(RTCStatsType::Remote_outbound_rtp);
+    ssrc.apply([&s](uint32_t aSsrc) { s.mSsrc.Construct(aSsrc); });
+    s.mMediaType.Construct(kind);  // mediaType is the old name for kind.
+    s.mKind.Construct(kind);
+    s.mLocalId.Construct(localId);
+    s.mPacketsSent.Construct(packetsSent);
+    s.mBytesSent.Construct(bytesSent);
+    report->mRemoteOutboundRtpStreamStats.AppendElement(s, fallible);
   }
 
-  return InvokeAsync(mSTSThread, __func__,
-                     [transportHandler = mMedia->mTransportHandler, pipelines,
-                      aQuery = std::move(query)]() mutable {
-                       return PeerConnectionImpl::ExecuteStatsQuery_s(
-                           std::move(aQuery), pipelines, transportHandler);
-                     });
+  // Then, fill in local side (with cross-link to remote only if present)
+  RTCInboundRtpStreamStats s;
+  // TODO(bug 1496533): Should we use the time of the most-recently received RTP
+  // packet? If so, what do we use if we haven't received any RTP? Now?
+  s.mTimestamp.Construct(aPipeline->GetNow());
+  s.mId.Construct(localId);
+  s.mType.Construct(RTCStatsType::Inbound_rtp);
+  ssrc.apply([&s](uint32_t aSsrc) { s.mSsrc.Construct(aSsrc); });
+  s.mMediaType.Construct(kind);  // mediaType is the old name for kind.
+  s.mKind.Construct(kind);
+  unsigned int jitterMs, packetsLost;
+  if (aPipeline->Conduit()->GetRTPReceiverStats(&jitterMs, &packetsLost)) {
+    s.mJitter.Construct(double(jitterMs) / 1000);
+    s.mPacketsLost.Construct(packetsLost);
+  }
+  if (remoteId.Length()) {
+    s.mRemoteId.Construct(remoteId);
+  }
+  s.mPacketsReceived.Construct(aPipeline->RtpPacketsReceived());
+  s.mBytesReceived.Construct(aPipeline->RtpBytesReceived());
+
+  // Fill in packet type statistics
+  webrtc::RtcpPacketTypeCounter counters;
+  if (aPipeline->Conduit()->GetRecvPacketTypeStats(&counters)) {
+    s.mNackCount.Construct(counters.nack_packets);
+    // Fill in video only packet type stats
+    if (asVideo) {
+      s.mFirCount.Construct(counters.fir_packets);
+      s.mPliCount.Construct(counters.pli_packets);
+    }
+  }
+  // Lastly, fill in video decoder stats if this is video
+  asVideo.apply([&s](auto conduit) {
+    double framerateMean;
+    double framerateStdDev;
+    double bitrateMean;
+    double bitrateStdDev;
+    uint32_t discardedPackets;
+    uint32_t framesDecoded;
+    if (conduit->GetVideoDecoderStats(&framerateMean, &framerateStdDev,
+                                      &bitrateMean, &bitrateStdDev,
+                                      &discardedPackets, &framesDecoded)) {
+      s.mFramerateMean.Construct(framerateMean);
+      s.mFramerateStdDev.Construct(framerateStdDev);
+      s.mBitrateMean.Construct(bitrateMean);
+      s.mBitrateStdDev.Construct(bitrateStdDev);
+      s.mDiscardedPackets.Construct(discardedPackets);
+      s.mFramesDecoded.Construct(framesDecoded);
+    }
+  });
+  report->mInboundRtpStreamStats.AppendElement(s, fallible);
+
+  // Fill in Contributing Source statistics
+  aPipeline->GetContributingSourceStats(localId,
+                                        report->mRtpContributingSourceStats);
+  return report;
 }
 
-nsresult PeerConnectionImpl::BuildStatsQuery_m(
-    mozilla::dom::MediaStreamTrack* aSelector, RTCStatsQuery* query) {
-  if (!HasMedia()) {
-    return NS_ERROR_UNEXPECTED;
+// TODO(bug 1586109): Move this to RTCRtpSender.
+static UniquePtr<dom::RTCStatsCollection> GetSenderStats_s(
+    const RefPtr<MediaPipelineTransmit>& aPipeline) {
+  UniquePtr<dom::RTCStatsCollection> report(new dom::RTCStatsCollection);
+  auto asVideo = aPipeline->Conduit()->AsVideoSessionConduit();
+
+  nsString kind = asVideo.isNothing() ? NS_LITERAL_STRING("audio")
+                                      : NS_LITERAL_STRING("video");
+  nsString idstr = kind + NS_LITERAL_STRING("_");
+  idstr.AppendInt(static_cast<uint32_t>(aPipeline->Level()));
+
+  // TODO(@@NG):ssrcs handle Conduits having multiple stats at the same level
+  // This is pending spec work
+  // Gather pipeline stats.
+  nsString localId = NS_LITERAL_STRING("outbound_rtp_") + idstr;
+  nsString remoteId;
+  Maybe<uint32_t> ssrc;
+  std::vector<unsigned int> ssrcvals = aPipeline->Conduit()->GetLocalSSRCs();
+  if (!ssrcvals.empty()) {
+    ssrc = Some(ssrcvals[0]);
+  }
+  {
+    // First, fill in remote stat with rtcp receiver data, if present.
+    // ReceiverReports have less information than SenderReports,
+    // so fill in what we can.
+    uint32_t jitterMs;
+    uint32_t packetsReceived;
+    uint64_t bytesReceived;
+    uint32_t packetsLost;
+    Maybe<double> rtt;
+    Maybe<DOMHighResTimeStamp> timestamp =
+        aPipeline->Conduit()->LastRtcpReceived();
+    if (timestamp.isSome() &&
+        aPipeline->Conduit()->GetRTCPReceiverReport(
+            &jitterMs, &packetsReceived, &bytesReceived, &packetsLost, &rtt)) {
+      remoteId = NS_LITERAL_STRING("outbound_rtcp_") + idstr;
+      RTCRemoteInboundRtpStreamStats s;
+      s.mTimestamp.Construct(*timestamp);
+      s.mId.Construct(remoteId);
+      s.mType.Construct(RTCStatsType::Remote_inbound_rtp);
+      ssrc.apply([&s](uint32_t aSsrc) { s.mSsrc.Construct(aSsrc); });
+      s.mMediaType.Construct(kind);  // mediaType is the old name for kind.
+      s.mKind.Construct(kind);
+      s.mJitter.Construct(double(jitterMs) / 1000);
+      s.mLocalId.Construct(localId);
+      s.mPacketsReceived.Construct(packetsReceived);
+      s.mBytesReceived.Construct(bytesReceived);
+      s.mPacketsLost.Construct(packetsLost);
+      rtt.apply([&s](auto r) { s.mRoundTripTime.Construct(r); });
+      report->mRemoteInboundRtpStreamStats.AppendElement(s, fallible);
+    }
+  }
+  // Then, fill in local side (with cross-link to remote only if present)
+  RTCOutboundRtpStreamStats s;
+  s.mTimestamp.Construct(aPipeline->GetNow());
+  s.mId.Construct(localId);
+  s.mType.Construct(RTCStatsType::Outbound_rtp);
+  ssrc.apply([&s](uint32_t aSsrc) { s.mSsrc.Construct(aSsrc); });
+  s.mMediaType.Construct(kind);  // mediaType is the old name for kind.
+  s.mKind.Construct(kind);
+  s.mRemoteId.Construct(remoteId);
+  s.mPacketsSent.Construct(aPipeline->RtpPacketsSent());
+  s.mBytesSent.Construct(aPipeline->RtpBytesSent());
+
+  // Fill in packet type statistics
+  webrtc::RtcpPacketTypeCounter counters;
+  if (aPipeline->Conduit()->GetSendPacketTypeStats(&counters)) {
+    s.mNackCount.Construct(counters.nack_packets);
+    // Fill in video only packet type stats
+    if (asVideo) {
+      s.mFirCount.Construct(counters.fir_packets);
+      s.mPliCount.Construct(counters.pli_packets);
+    }
   }
 
-  nsresult rv = GetTimeSinceEpoch(&(query->now));
-  if (NS_FAILED(rv)) {
-    CSFLogError(LOGTAG, "Could not build stats query, could not get timestamp");
-    return rv;
+  // Lastly, fill in video encoder stats if this is video
+  asVideo.apply([&s](auto conduit) {
+    double framerateMean;
+    double framerateStdDev;
+    double bitrateMean;
+    double bitrateStdDev;
+    uint32_t droppedFrames;
+    uint32_t framesEncoded;
+    Maybe<uint64_t> qpSum;
+    if (conduit->GetVideoEncoderStats(&framerateMean, &framerateStdDev,
+                                      &bitrateMean, &bitrateStdDev,
+                                      &droppedFrames, &framesEncoded, &qpSum)) {
+      s.mFramerateMean.Construct(framerateMean);
+      s.mFramerateStdDev.Construct(framerateStdDev);
+      s.mBitrateMean.Construct(bitrateMean);
+      s.mBitrateStdDev.Construct(bitrateStdDev);
+      s.mDroppedFrames.Construct(droppedFrames);
+      s.mFramesEncoded.Construct(framesEncoded);
+      qpSum.apply([&s](uint64_t aQp) { s.mQpSum.Construct(aQp); });
+    }
+  });
+  report->mOutboundRtpStreamStats.AppendElement(s, fallible);
+  return report;
+}
+
+RefPtr<dom::RTCStatsPromise> PeerConnectionImpl::GetReceiverStats(
+    const RefPtr<MediaPipelineReceive>& aPipeline) {
+  return InvokeAsync(mSTSThread, __func__, [aPipeline]() {
+    return dom::RTCStatsPromise::CreateAndResolve(GetReceiverStats_s(aPipeline),
+                                                  __func__);
+  });
+}
+
+RefPtr<dom::RTCStatsPromise> PeerConnectionImpl::GetSenderStats(
+    const RefPtr<MediaPipelineTransmit>& aPipeline) {
+  return InvokeAsync(mSTSThread, __func__, [aPipeline]() {
+    return dom::RTCStatsPromise::CreateAndResolve(GetSenderStats_s(aPipeline),
+                                                  __func__);
+  });
+}
+
+void PeerConnectionImpl::RecordConduitTelemetry() {
+  if (!mMedia) {
+    return;
   }
 
-  // We do not use the pcHandle here, since that's risky to expose to content.
-  query->report.reset(new RTCStatsReportInternalConstruct(
-      NS_ConvertASCIItoUTF16(mName.c_str()), query->now));
+  nsTArray<RefPtr<MediaPipelineReceive>> pipelines;
+  for (const auto& transceiver : mMedia->GetTransceivers()) {
+    if (transceiver->IsValid()) {
+      pipelines.AppendElement(transceiver->GetReceivePipeline());
+    }
+  }
 
-  query->iceStartTime = mIceStartTime;
-  query->report->mIceRestarts.Construct(mIceRestartCount);
-  query->report->mIceRollbacks.Construct(mIceRollbackCount);
+  mSTSThread->Dispatch(NS_NewRunnableFunction(__func__, [pipelines]() {
+    for (const auto& pipeline : pipelines) {
+      auto asVideo = pipeline->Conduit()->AsVideoSessionConduit();
+      if (asVideo) {
+        asVideo.value()->RecordTelemetry();
+      }
+    }
+  }));
+}
 
-  // Populate SDP on main
-  if (query->internalStats) {
+RefPtr<dom::RTCStatsReportPromise> PeerConnectionImpl::GetStats(
+    dom::MediaStreamTrack* aSelector, bool aInternalStats) {
+  nsTArray<RefPtr<dom::RTCStatsPromise>> promises;
+  DOMHighResTimeStamp now = mTimestampMaker.GetNow();
+
+  if (mMedia) {
+    nsTArray<RefPtr<MediaPipelineTransmit>> sendPipelines;
+    // Gather up pipelines from mMedia so they may be inspected on STS
+    // TODO(bug 1586109): Use RTCRtpSender for these instead.
+    mMedia->GetTransmitPipelinesMatching(aSelector, &sendPipelines);
+    if (!sendPipelines.Length()) {
+      CSFLogError(LOGTAG, "%s: Found no pipelines matching selector.",
+                  __FUNCTION__);
+    }
+
+    for (const auto& pipeline : sendPipelines) {
+      promises.AppendElement(GetSenderStats(pipeline));
+    }
+
+    nsTArray<RefPtr<MediaPipelineReceive>> recvPipelines;
+    // Gather up pipelines from mMedia so they may be inspected on STS
+    // TODO(bug 1586109): Use RTCRtpReceiver for these instead.
+    mMedia->GetReceivePipelinesMatching(aSelector, &recvPipelines);
+    if (!recvPipelines.Length()) {
+      CSFLogError(LOGTAG, "%s: Found no pipelines matching selector.",
+                  __FUNCTION__);
+    }
+
+    for (const auto& pipeline : recvPipelines) {
+      promises.AppendElement(GetReceiverStats(pipeline));
+    }
+
+    // TODO(bug 1586109): We need to move this is RTCRtpSender/Receiver, to make
+    // getStats on those objects work properly. It might be worth optimizing the
+    // null selector case, so we don't end up with bunches of copies of the same
+    // transport information in the final report.
+    std::string transportId;
+    if (aSelector) {
+      transportId = mMedia->GetTransportIdMatching(*aSelector);
+    }
+
+    promises.AppendElement(mTransportHandler->GetIceStats(transportId, now));
+  }
+
+  // This is what we're going to return; all the stuff in |promises| will be
+  // accumulated here.
+  UniquePtr<dom::RTCStatsReportInternal> report(
+      new dom::RTCStatsReportInternal);
+  report->mPcid = NS_ConvertASCIItoUTF16(mName.c_str());
+  // TODO(bug 1589416): We need to do better here.
+  if (!mIceStartTime.IsNull()) {
+    report->mCallDurationMs.Construct(
+        (TimeStamp::Now() - mIceStartTime).ToMilliseconds());
+  }
+  report->mIceRestarts = mIceRestartCount;
+  report->mIceRollbacks = mIceRollbackCount;
+  report->mClosed = false;
+  report->mTimestamp = now;
+
+  if (aInternalStats && mJsepSession) {
+    for (const auto& candidate : mRawTrickledCandidates) {
+      report->mRawRemoteCandidates.AppendElement(
+          NS_ConvertASCIItoUTF16(candidate.c_str()), fallible);
+    }
+
     if (mJsepSession) {
       // TODO we probably should report Current and Pending SDPs here
       // separately. Plus the raw SDP we got from JS (mLocalRequestedSDP).
@@ -2646,276 +2877,50 @@ nsresult PeerConnectionImpl::BuildStatsQuery_m(
           mJsepSession->GetLocalDescription(kJsepDescriptionPendingOrCurrent);
       std::string remoteDescription =
           mJsepSession->GetRemoteDescription(kJsepDescriptionPendingOrCurrent);
-      query->report->mLocalSdp.Construct(
+      report->mLocalSdp.Construct(
           NS_ConvertASCIItoUTF16(localDescription.c_str()));
-      query->report->mRemoteSdp.Construct(
+      report->mRemoteSdp.Construct(
           NS_ConvertASCIItoUTF16(remoteDescription.c_str()));
-      query->report->mOfferer.Construct(mJsepSession->IsOfferer());
-      for (const auto& candidate : mRawTrickledCandidates) {
-        query->report->mRawRemoteCandidates.Value().AppendElement(
-            NS_ConvertASCIItoUTF16(candidate.c_str()), fallible);
-      }
+      report->mOfferer.Construct(mJsepSession->IsOfferer());
     }
   }
 
-  if (aSelector) {
-    query->transportId = mMedia->GetTransportIdMatching(*aSelector);
-  }
-
-  if (!aSelector) {
-    query->grabAllLevels = true;
-  }
-
-  return NS_OK;
-}
-
-RefPtr<RTCStatsQueryPromise> PeerConnectionImpl::ExecuteStatsQuery_s(
-    UniquePtr<RTCStatsQuery>&& query,
-    const nsTArray<RefPtr<MediaPipeline>>& aPipelines,
-    const RefPtr<MediaTransportHandler>& aTransportHandler) {
-  // Gather stats from pipelines provided (can't touch mMedia + stream on STS)
-
-  for (size_t p = 0; p < aPipelines.Length(); ++p) {
-    MOZ_ASSERT(aPipelines[p]);
-    MOZ_ASSERT(aPipelines[p]->Conduit());
-    if (!aPipelines[p] || !aPipelines[p]->Conduit()) {
-      // continue if we don't have a valid conduit
-      continue;
-    }
-    const MediaPipeline& mp = *aPipelines[p];
-    auto asVideo = mp.Conduit()->AsVideoSessionConduit();
-
-    if (query->recordTelemetry && asVideo) {
-      asVideo.value()->RecordTelemetry();
-    }
-
-    nsString kind = asVideo.isNothing() ? NS_LITERAL_STRING("audio")
-                                        : NS_LITERAL_STRING("video");
-    nsString idstr = kind + NS_LITERAL_STRING("_");
-    idstr.AppendInt(static_cast<uint32_t>(p));
-
-    // TODO(@@NG):ssrcs handle Conduits having multiple stats at the same level
-    // This is pending spec work
-    // Gather pipeline stats.
-    switch (mp.Direction()) {
-      case MediaPipeline::DirectionType::TRANSMIT: {
-        nsString localId = NS_LITERAL_STRING("outbound_rtp_") + idstr;
-        nsString remoteId;
-        Maybe<uint32_t> ssrc;
-        std::vector<unsigned int> ssrcvals = mp.Conduit()->GetLocalSSRCs();
-        if (!ssrcvals.empty()) {
-          ssrc = Some(ssrcvals[0]);
-        }
-        {
-          // First, fill in remote stat with rtcp receiver data, if present.
-          // ReceiverReports have less information than SenderReports,
-          // so fill in what we can.
-          uint32_t jitterMs;
-          uint32_t packetsReceived;
-          uint64_t bytesReceived;
-          uint32_t packetsLost;
-          Maybe<double> rtt;
-          if (mp.Conduit()->GetRTCPReceiverReport(&jitterMs, &packetsReceived,
-                                                  &bytesReceived, &packetsLost,
-                                                  &rtt)) {
-            remoteId = NS_LITERAL_STRING("outbound_rtcp_") + idstr;
-            RTCRemoteInboundRtpStreamStats s;
-            // TODO Bug 1496533 - use reception time not query time
-            s.mTimestamp.Construct(query->now);
-            s.mId.Construct(remoteId);
-            s.mType.Construct(RTCStatsType::Remote_inbound_rtp);
-            ssrc.apply([&s](uint32_t aSsrc) { s.mSsrc.Construct(aSsrc); });
-            s.mMediaType.Construct(
-                kind);  // mediaType is the old name for kind.
-            s.mKind.Construct(kind);
-            s.mJitter.Construct(double(jitterMs) / 1000);
-            s.mLocalId.Construct(localId);
-            s.mPacketsReceived.Construct(packetsReceived);
-            s.mBytesReceived.Construct(bytesReceived);
-            s.mPacketsLost.Construct(packetsLost);
-            rtt.apply([&s](auto r) { s.mRoundTripTime.Construct(r); });
-            query->report->mRemoteInboundRtpStreamStats.Value().AppendElement(
-                s, fallible);
-          }
-        }
-        // Then, fill in local side (with cross-link to remote only if present)
-        {
-          RTCOutboundRtpStreamStats s;
-          // TODO Bug 1496533 - use reception time not query time
-          s.mTimestamp.Construct(query->now);
-          s.mId.Construct(localId);
-          s.mType.Construct(RTCStatsType::Outbound_rtp);
-          ssrc.apply([&s](uint32_t aSsrc) { s.mSsrc.Construct(aSsrc); });
-          s.mMediaType.Construct(kind);  // mediaType is the old name for kind.
-          s.mKind.Construct(kind);
-          s.mRemoteId.Construct(remoteId);
-          s.mPacketsSent.Construct(mp.RtpPacketsSent());
-          s.mBytesSent.Construct(mp.RtpBytesSent());
-
-          // Fill in packet type statistics
-          webrtc::RtcpPacketTypeCounter counters;
-          if (mp.Conduit()->GetSendPacketTypeStats(&counters)) {
-            s.mNackCount.Construct(counters.nack_packets);
-            // Fill in video only packet type stats
-            if (asVideo) {
-              s.mFirCount.Construct(counters.fir_packets);
-              s.mPliCount.Construct(counters.pli_packets);
-            }
-          }
-
-          // Lastly, fill in video encoder stats if this is video
-          asVideo.apply([&s](auto conduit) {
-            double framerateMean;
-            double framerateStdDev;
-            double bitrateMean;
-            double bitrateStdDev;
-            uint32_t droppedFrames;
-            uint32_t framesEncoded;
-            Maybe<uint64_t> qpSum;
-            if (conduit->GetVideoEncoderStats(
-                    &framerateMean, &framerateStdDev, &bitrateMean,
-                    &bitrateStdDev, &droppedFrames, &framesEncoded, &qpSum)) {
-              s.mFramerateMean.Construct(framerateMean);
-              s.mFramerateStdDev.Construct(framerateStdDev);
-              s.mBitrateMean.Construct(bitrateMean);
-              s.mBitrateStdDev.Construct(bitrateStdDev);
-              s.mDroppedFrames.Construct(droppedFrames);
-              s.mFramesEncoded.Construct(framesEncoded);
-              qpSum.apply([&s](uint64_t aQp) { s.mQpSum.Construct(aQp); });
-            }
-          });
-          query->report->mOutboundRtpStreamStats.Value().AppendElement(
-              s, fallible);
-        }
-        break;
-      }
-      case MediaPipeline::DirectionType::RECEIVE: {
-        nsString localId = NS_LITERAL_STRING("inbound_rtp_") + idstr;
-        nsString remoteId;
-        Maybe<uint32_t> ssrc;
-        unsigned int ssrcval;
-        if (mp.Conduit()->GetRemoteSSRC(&ssrcval)) {
-          ssrc = Some(ssrcval);
-        }
-        {
-          // First, fill in remote stat with rtcp sender data, if present.
-          uint32_t packetsSent;
-          uint64_t bytesSent;
-          if (mp.Conduit()->GetRTCPSenderReport(&packetsSent, &bytesSent)) {
-            remoteId = NS_LITERAL_STRING("inbound_rtcp_") + idstr;
-            RTCRemoteOutboundRtpStreamStats s;
-            // TODO Bug 1496533 - use reception time not query time
-            s.mTimestamp.Construct(query->now);
-            s.mId.Construct(remoteId);
-            s.mType.Construct(RTCStatsType::Remote_outbound_rtp);
-            ssrc.apply([&s](uint32_t aSsrc) { s.mSsrc.Construct(aSsrc); });
-            s.mMediaType.Construct(
-                kind);  // mediaType is the old name for kind.
-            s.mKind.Construct(kind);
-            s.mLocalId.Construct(localId);
-            s.mPacketsSent.Construct(packetsSent);
-            s.mBytesSent.Construct(bytesSent);
-            query->report->mRemoteOutboundRtpStreamStats.Value().AppendElement(
-                s, fallible);
-          }
-        }
-        // Then, fill in local side (with cross-link to remote only if present)
-        RTCInboundRtpStreamStats s;
-        s.mTimestamp.Construct(query->now);
-        s.mId.Construct(localId);
-        s.mType.Construct(RTCStatsType::Inbound_rtp);
-        ssrc.apply([&s](uint32_t aSsrc) { s.mSsrc.Construct(aSsrc); });
-        s.mMediaType.Construct(kind);  // mediaType is the old name for kind.
-        s.mKind.Construct(kind);
-        unsigned int jitterMs, packetsLost;
-        if (mp.Conduit()->GetRTPReceiverStats(&jitterMs, &packetsLost)) {
-          s.mJitter.Construct(double(jitterMs) / 1000);
-          s.mPacketsLost.Construct(packetsLost);
-        }
-        if (remoteId.Length()) {
-          s.mRemoteId.Construct(remoteId);
-        }
-        s.mPacketsReceived.Construct(mp.RtpPacketsReceived());
-        s.mBytesReceived.Construct(mp.RtpBytesReceived());
-
-        // Fill in packet type statistics
-        webrtc::RtcpPacketTypeCounter counters;
-        if (mp.Conduit()->GetRecvPacketTypeStats(&counters)) {
-          s.mNackCount.Construct(counters.nack_packets);
-          // Fill in video only packet type stats
-          if (asVideo) {
-            s.mFirCount.Construct(counters.fir_packets);
-            s.mPliCount.Construct(counters.pli_packets);
-          }
-        }
-        // Lastly, fill in video decoder stats if this is video
-        asVideo.apply([&s](auto conduit) {
-          double framerateMean;
-          double framerateStdDev;
-          double bitrateMean;
-          double bitrateStdDev;
-          uint32_t discardedPackets;
-          uint32_t framesDecoded;
-          if (conduit->GetVideoDecoderStats(
-                  &framerateMean, &framerateStdDev, &bitrateMean,
-                  &bitrateStdDev, &discardedPackets, &framesDecoded)) {
-            s.mFramerateMean.Construct(framerateMean);
-            s.mFramerateStdDev.Construct(framerateStdDev);
-            s.mBitrateMean.Construct(bitrateMean);
-            s.mBitrateStdDev.Construct(bitrateStdDev);
-            s.mDiscardedPackets.Construct(discardedPackets);
-            s.mFramesDecoded.Construct(framesDecoded);
-          }
-        });
-        query->report->mInboundRtpStreamStats.Value().AppendElement(s,
-                                                                    fallible);
-        // Fill in Contributing Source statistics
-        mp.GetContributingSourceStats(
-            localId, query->report->mRtpContributingSourceStats.Value());
-        break;
-      }
-    }
-  }
-
-  std::string transportId;
-  if (!query->grabAllLevels) {
-    transportId = query->transportId;
-  }
-  auto report = std::move(query->report);
-  auto now = query->now;
-
-  return aTransportHandler->GetIceStats(transportId, now, std::move(report))
+  return dom::RTCStatsPromise::All(mThread, promises)
       ->Then(
-          GetMainThreadSerialEventTarget(), __func__,
-          [query = std::move(query)](
-              std::unique_ptr<dom::RTCStatsReportInternal>&& aReport) mutable {
-            query->report = std::move(aReport);
-            return RTCStatsQueryPromise::CreateAndResolve(std::move(query),
-                                                          __func__);
+          mThread, __func__,
+          [report = std::move(report)](
+              const nsTArray<UniquePtr<dom::RTCStatsCollection>>&
+                  aStats) mutable {
+            for (const auto& stats : aStats) {
+              // Involves a lot of copying, since webidl dictionaries don't have
+              // move semantics. Oh well.
+              report->mIceCandidatePairStats.AppendElements(
+                  stats->mIceCandidatePairStats, fallible);
+              report->mIceCandidateStats.AppendElements(
+                  stats->mIceCandidateStats, fallible);
+              report->mInboundRtpStreamStats.AppendElements(
+                  stats->mInboundRtpStreamStats, fallible);
+              report->mOutboundRtpStreamStats.AppendElements(
+                  stats->mOutboundRtpStreamStats, fallible);
+              report->mRawLocalCandidates.AppendElements(
+                  stats->mRawLocalCandidates, fallible);
+              report->mRawRemoteCandidates.AppendElements(
+                  stats->mRawRemoteCandidates, fallible);
+              report->mRemoteInboundRtpStreamStats.AppendElements(
+                  stats->mRemoteInboundRtpStreamStats, fallible);
+              report->mRemoteOutboundRtpStreamStats.AppendElements(
+                  stats->mRemoteOutboundRtpStreamStats, fallible);
+              report->mRtpContributingSourceStats.AppendElements(
+                  stats->mRtpContributingSourceStats, fallible);
+              report->mTrickledIceCandidateStats.AppendElements(
+                  stats->mTrickledIceCandidateStats, fallible);
+            }
+            return dom::RTCStatsReportPromise::CreateAndResolve(
+                std::move(report), __func__);
           },
-          [](nsresult aError) {
-            return RTCStatsQueryPromise::CreateAndReject(aError, __func__);
+          [](nsresult rv) {
+            return dom::RTCStatsReportPromise::CreateAndReject(rv, __func__);
           });
-}
-
-void PeerConnectionImpl::DeliverStatsReportToPCObserver_m(
-    const std::string& pcHandle, nsresult result,
-    const nsAutoPtr<RTCStatsQuery>& query) {
-  // Is the PeerConnectionImpl still around?
-  PeerConnectionWrapper pcw(pcHandle);
-  if (pcw.impl()) {
-    JSErrorResult rv;
-    if (NS_SUCCEEDED(result)) {
-      pcw.impl()->mPCObserver->OnGetStatsSuccess(*query->report, rv);
-    } else {
-      pcw.impl()->mPCObserver->OnGetStatsError(
-          ObString("Failed to fetch statistics"), rv);
-    }
-
-    if (rv.Failed()) {
-      CSFLogError(LOGTAG, "Error firing stats observer callback");
-    }
-  }
 }
 
 void PeerConnectionImpl::RecordLongtermICEStatistics() {

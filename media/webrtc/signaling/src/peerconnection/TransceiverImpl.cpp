@@ -555,11 +555,11 @@ already_AddRefed<dom::MediaStreamTrack> TransceiverImpl::GetReceiveTrack() {
   return do_AddRef(mReceiveTrack);
 }
 
-RefPtr<MediaPipeline> TransceiverImpl::GetSendPipeline() {
+RefPtr<MediaPipelineTransmit> TransceiverImpl::GetSendPipeline() {
   return mTransmitPipeline;
 }
 
-RefPtr<MediaPipeline> TransceiverImpl::GetReceivePipeline() {
+RefPtr<MediaPipelineReceive> TransceiverImpl::GetReceivePipeline() {
   return mReceivePipeline;
 }
 

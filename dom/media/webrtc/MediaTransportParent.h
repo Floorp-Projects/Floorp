@@ -52,9 +52,9 @@ class MediaTransportParent : public dom::PMediaTransportParent {
                                               const string& ufrag,
                                               const string& obfuscatedAddress);
   mozilla::ipc::IPCResult RecvUpdateNetworkState(const bool& online);
-  mozilla::ipc::IPCResult RecvGetIceStats(
-      const string& transportId, const double& now,
-      const RTCStatsReportInternal& reportIn, GetIceStatsResolver&& aResolve);
+  mozilla::ipc::IPCResult RecvGetIceStats(const string& transportId,
+                                          const double& now,
+                                          GetIceStatsResolver&& aResolve);
 
   void ActorDestroy(ActorDestroyReason aWhy);
 

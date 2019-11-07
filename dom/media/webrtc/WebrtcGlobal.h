@@ -19,14 +19,16 @@ namespace dom {
 // webidl dictionaries don't have move semantics, which is something that ipdl
 // needs for async returns. So, we create a "moveable" subclass that just
 // copies. _Really_ lame, but it gets the job done.
-struct MovableRTCStatsReportInternal : public RTCStatsReportInternal {
-  MovableRTCStatsReportInternal() = default;
-  explicit MovableRTCStatsReportInternal(RTCStatsReportInternal&& aReport) {
-    RTCStatsReportInternal::operator=(aReport);
+struct NotReallyMovableButLetsPretendItIsRTCStatsCollection
+    : public RTCStatsCollection {
+  NotReallyMovableButLetsPretendItIsRTCStatsCollection() = default;
+  explicit NotReallyMovableButLetsPretendItIsRTCStatsCollection(
+      RTCStatsCollection&& aStats) {
+    RTCStatsCollection::operator=(aStats);
   }
-  explicit MovableRTCStatsReportInternal(
-      const RTCStatsReportInternal& aReport) {
-    RTCStatsReportInternal::operator=(aReport);
+  explicit NotReallyMovableButLetsPretendItIsRTCStatsCollection(
+      const RTCStatsCollection& aStats) {
+    RTCStatsCollection::operator=(aStats);
   }
 };
 }  // namespace dom
@@ -69,17 +71,54 @@ struct ParamTraits<mozilla::dom::RTCIceCandidateType>
           mozilla::dom::RTCIceCandidateType::EndGuard_> {};
 
 template <>
-struct ParamTraits<mozilla::dom::MovableRTCStatsReportInternal> {
-  typedef mozilla::dom::MovableRTCStatsReportInternal paramType;
+struct ParamTraits<
+    mozilla::dom::NotReallyMovableButLetsPretendItIsRTCStatsCollection> {
+  typedef mozilla::dom::NotReallyMovableButLetsPretendItIsRTCStatsCollection
+      paramType;
   static void Write(Message* aMsg, const paramType& aParam) {
-    WriteParam(
-        aMsg, static_cast<const mozilla::dom::RTCStatsReportInternal&>(aParam));
+    WriteParam(aMsg,
+               static_cast<const mozilla::dom::RTCStatsCollection&>(aParam));
   }
   static bool Read(const Message* aMsg, PickleIterator* aIter,
                    paramType* aResult) {
-    return ReadParam(
-        aMsg, aIter,
-        static_cast<mozilla::dom::RTCStatsReportInternal*>(aResult));
+    return ReadParam(aMsg, aIter,
+                     static_cast<mozilla::dom::RTCStatsCollection*>(aResult));
+  }
+};
+
+template <>
+struct ParamTraits<mozilla::dom::RTCStatsCollection> {
+  typedef mozilla::dom::RTCStatsCollection paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam) {
+    WriteParam(aMsg, aParam.mIceCandidatePairStats);
+    WriteParam(aMsg, aParam.mIceCandidateStats);
+    WriteParam(aMsg, aParam.mInboundRtpStreamStats);
+    WriteParam(aMsg, aParam.mOutboundRtpStreamStats);
+    WriteParam(aMsg, aParam.mRemoteInboundRtpStreamStats);
+    WriteParam(aMsg, aParam.mRemoteOutboundRtpStreamStats);
+    WriteParam(aMsg, aParam.mRtpContributingSourceStats);
+    WriteParam(aMsg, aParam.mTrickledIceCandidateStats);
+    WriteParam(aMsg, aParam.mRawLocalCandidates);
+    WriteParam(aMsg, aParam.mRawRemoteCandidates);
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter,
+                   paramType* aResult) {
+    if (!ReadParam(aMsg, aIter, &(aResult->mIceCandidatePairStats)) ||
+        !ReadParam(aMsg, aIter, &(aResult->mIceCandidateStats)) ||
+        !ReadParam(aMsg, aIter, &(aResult->mInboundRtpStreamStats)) ||
+        !ReadParam(aMsg, aIter, &(aResult->mOutboundRtpStreamStats)) ||
+        !ReadParam(aMsg, aIter, &(aResult->mRemoteInboundRtpStreamStats)) ||
+        !ReadParam(aMsg, aIter, &(aResult->mRemoteOutboundRtpStreamStats)) ||
+        !ReadParam(aMsg, aIter, &(aResult->mRtpContributingSourceStats)) ||
+        !ReadParam(aMsg, aIter, &(aResult->mTrickledIceCandidateStats)) ||
+        !ReadParam(aMsg, aIter, &(aResult->mRawLocalCandidates)) ||
+        !ReadParam(aMsg, aIter, &(aResult->mRawRemoteCandidates))) {
+      return false;
+    }
+
+    return true;
   }
 };
 
@@ -88,46 +127,33 @@ struct ParamTraits<mozilla::dom::RTCStatsReportInternal> {
   typedef mozilla::dom::RTCStatsReportInternal paramType;
 
   static void Write(Message* aMsg, const paramType& aParam) {
+    WriteParam(aMsg,
+               static_cast<const mozilla::dom::RTCStatsCollection&>(aParam));
     WriteParam(aMsg, aParam.mClosed);
-    WriteParam(aMsg, aParam.mIceCandidatePairStats);
-    WriteParam(aMsg, aParam.mIceCandidateStats);
-    WriteParam(aMsg, aParam.mInboundRtpStreamStats);
     WriteParam(aMsg, aParam.mLocalSdp);
-    WriteParam(aMsg, aParam.mOutboundRtpStreamStats);
     WriteParam(aMsg, aParam.mPcid);
-    WriteParam(aMsg, aParam.mRemoteInboundRtpStreamStats);
-    WriteParam(aMsg, aParam.mRemoteOutboundRtpStreamStats);
     WriteParam(aMsg, aParam.mRemoteSdp);
     WriteParam(aMsg, aParam.mTimestamp);
+    WriteParam(aMsg, aParam.mCallDurationMs);
     WriteParam(aMsg, aParam.mIceRestarts);
     WriteParam(aMsg, aParam.mIceRollbacks);
-    WriteParam(aMsg, aParam.mRtpContributingSourceStats);
     WriteParam(aMsg, aParam.mOfferer);
-    WriteParam(aMsg, aParam.mTrickledIceCandidateStats);
-    WriteParam(aMsg, aParam.mRawLocalCandidates);
-    WriteParam(aMsg, aParam.mRawRemoteCandidates);
   }
 
   static bool Read(const Message* aMsg, PickleIterator* aIter,
                    paramType* aResult) {
-    if (!ReadParam(aMsg, aIter, &(aResult->mClosed)) ||
-        !ReadParam(aMsg, aIter, &(aResult->mIceCandidatePairStats)) ||
-        !ReadParam(aMsg, aIter, &(aResult->mIceCandidateStats)) ||
-        !ReadParam(aMsg, aIter, &(aResult->mInboundRtpStreamStats)) ||
+    ;
+    if (!ReadParam(aMsg, aIter,
+                   static_cast<mozilla::dom::RTCStatsCollection*>(aResult)) ||
+        !ReadParam(aMsg, aIter, &(aResult->mClosed)) ||
         !ReadParam(aMsg, aIter, &(aResult->mLocalSdp)) ||
-        !ReadParam(aMsg, aIter, &(aResult->mOutboundRtpStreamStats)) ||
         !ReadParam(aMsg, aIter, &(aResult->mPcid)) ||
-        !ReadParam(aMsg, aIter, &(aResult->mRemoteInboundRtpStreamStats)) ||
-        !ReadParam(aMsg, aIter, &(aResult->mRemoteOutboundRtpStreamStats)) ||
         !ReadParam(aMsg, aIter, &(aResult->mRemoteSdp)) ||
         !ReadParam(aMsg, aIter, &(aResult->mTimestamp)) ||
+        !ReadParam(aMsg, aIter, &(aResult->mCallDurationMs)) ||
         !ReadParam(aMsg, aIter, &(aResult->mIceRestarts)) ||
         !ReadParam(aMsg, aIter, &(aResult->mIceRollbacks)) ||
-        !ReadParam(aMsg, aIter, &(aResult->mRtpContributingSourceStats)) ||
-        !ReadParam(aMsg, aIter, &(aResult->mOfferer)) ||
-        !ReadParam(aMsg, aIter, &(aResult->mTrickledIceCandidateStats)) ||
-        !ReadParam(aMsg, aIter, &(aResult->mRawLocalCandidates)) ||
-        !ReadParam(aMsg, aIter, &(aResult->mRawRemoteCandidates))) {
+        !ReadParam(aMsg, aIter, &(aResult->mOfferer))) {
       return false;
     }
 
