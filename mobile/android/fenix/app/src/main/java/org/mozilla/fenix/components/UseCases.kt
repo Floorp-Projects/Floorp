@@ -9,16 +9,15 @@ import mozilla.components.browser.search.SearchEngineManager
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Settings
-import mozilla.components.concept.fetch.Client
 import mozilla.components.feature.app.links.AppLinksUseCases
 import mozilla.components.feature.contextmenu.ContextMenuUseCases
 import mozilla.components.feature.downloads.DownloadsUseCases
+import mozilla.components.feature.pwa.WebAppShortcutManager
 import mozilla.components.feature.pwa.WebAppUseCases
 import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.session.SettingsUseCases
 import mozilla.components.feature.tabs.TabsUseCases
-import org.mozilla.fenix.FeatureFlags.progressiveWebApps
 import org.mozilla.fenix.test.Mockable
 
 /**
@@ -32,7 +31,7 @@ class UseCases(
     private val store: BrowserStore,
     private val engineSettings: Settings,
     private val searchEngineManager: SearchEngineManager,
-    private val httpClient: Client
+    private val shortcutManager: WebAppShortcutManager
 ) {
     /**
      * Use cases that provide engine interactions for a given browser session.
@@ -57,7 +56,7 @@ class UseCases(
     val appLinksUseCases by lazy { AppLinksUseCases(context.applicationContext) }
 
     val webAppUseCases by lazy {
-        WebAppUseCases(context, sessionManager, httpClient, supportWebApps = progressiveWebApps)
+        WebAppUseCases(context, sessionManager, shortcutManager)
     }
 
     val downloadUseCases by lazy { DownloadsUseCases(store) }

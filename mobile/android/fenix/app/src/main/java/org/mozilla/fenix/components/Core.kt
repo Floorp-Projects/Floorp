@@ -30,13 +30,14 @@ import mozilla.components.feature.customtabs.store.CustomTabsServiceStore
 import mozilla.components.feature.media.MediaFeature
 import mozilla.components.feature.media.RecordingDevicesNotificationFeature
 import mozilla.components.feature.media.state.MediaStateMachine
+import mozilla.components.feature.pwa.ManifestStorage
+import mozilla.components.feature.pwa.WebAppShortcutManager
 import mozilla.components.feature.session.HistoryDelegate
 import mozilla.components.feature.webcompat.WebCompatFeature
 import mozilla.components.service.sync.logins.AsyncLoginsStorageAdapter
 import mozilla.components.service.sync.logins.SyncableLoginsStore
 import org.mozilla.fenix.AppRequestInterceptor
 import org.mozilla.fenix.FeatureFlags
-import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.test.Mockable
 import java.io.File
@@ -141,7 +142,19 @@ class Core(private val context: Context) {
      * Icons component for loading, caching and processing website icons.
      */
     val icons by lazy {
-        BrowserIcons(context, context.components.core.client)
+        BrowserIcons(context, client)
+    }
+
+    /**
+     * Shortcut component for managing shortcuts on the device home screen.
+     */
+    val webAppShortcutManager by lazy {
+        WebAppShortcutManager(
+            context,
+            client,
+            webAppManifestStorage,
+            supportWebApps = FeatureFlags.progressiveWebApps
+        )
     }
 
     /**
@@ -155,6 +168,8 @@ class Core(private val context: Context) {
     val tabCollectionStorage by lazy { TabCollectionStorage(context, sessionManager) }
 
     val permissionStorage by lazy { PermissionStorage(context) }
+
+    val webAppManifestStorage by lazy { ManifestStorage(context) }
 
     val loginsStorage by lazy {
         SyncableLoginsStore(

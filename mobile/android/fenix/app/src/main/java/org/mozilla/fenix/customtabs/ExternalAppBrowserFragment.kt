@@ -18,6 +18,7 @@ import mozilla.components.concept.engine.manifest.getOrNull
 import mozilla.components.feature.contextmenu.ContextMenuCandidate
 import mozilla.components.feature.pwa.ext.getTrustedScope
 import mozilla.components.feature.pwa.ext.trustedOrigins
+import mozilla.components.feature.pwa.feature.ManifestUpdateFeature
 import mozilla.components.feature.pwa.feature.WebAppActivityFeature
 import mozilla.components.feature.pwa.feature.WebAppHideToolbarFeature
 import mozilla.components.feature.pwa.feature.WebAppSiteControlsFeature
@@ -26,6 +27,7 @@ import mozilla.components.feature.sitepermissions.SitePermissions
 import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.support.base.feature.BackHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
+import mozilla.components.support.ktx.android.arch.lifecycle.addObservers
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BaseBrowserFragment
 import org.mozilla.fenix.browser.CustomTabContextMenuCandidate
@@ -86,10 +88,18 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), BackHandler {
                 )
 
                 if (manifest != null) {
-                    activity.lifecycle.addObserver(
+                    activity.lifecycle.addObservers(
                         WebAppActivityFeature(
                             activity,
                             components.core.icons,
+                            manifest
+                        ),
+                        ManifestUpdateFeature(
+                            activity.applicationContext,
+                            requireComponents.core.sessionManager,
+                            requireComponents.core.webAppManifestStorage,
+                            requireComponents.core.webAppManifestStorage,
+                            customTabSessionId,
                             manifest
                         )
                     )
