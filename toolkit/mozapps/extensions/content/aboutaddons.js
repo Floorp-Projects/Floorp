@@ -607,6 +607,16 @@ class PanelList extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: "open" });
+    // Ensure that the element is hidden even if its main stylesheet hasn't
+    // loaded yet. On initial load, or with cache disabled, the element could
+    // briefly flicker before the stylesheet is loaded without this.
+    let style = document.createElement("style");
+    style.textContent = `
+      :host(:not([open])) {
+        display: none;
+      }
+    `;
+    this.shadowRoot.appendChild(style);
     this.shadowRoot.appendChild(importTemplate("panel-list"));
   }
 
