@@ -5462,7 +5462,7 @@ JSObject* js::HomeObjectSuperBase(JSContext* cx, HandleObject homeObj) {
 JSObject* js::SuperFunOperation(JSContext* cx, HandleObject callee) {
   MOZ_ASSERT(callee->as<JSFunction>().isClassConstructor());
   MOZ_ASSERT(
-      callee->as<JSFunction>().nonLazyScript()->isDerivedClassConstructor());
+      callee->as<JSFunction>().baseScript()->isDerivedClassConstructor());
 
   RootedObject superFun(cx);
 
