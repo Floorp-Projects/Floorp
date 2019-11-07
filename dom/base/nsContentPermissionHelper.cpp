@@ -563,8 +563,6 @@ ContentPermissionRequestBase::ContentPermissionRequestBase(
     return;
   }
 
-  mPermissionHandler = doc->GetPermissionDelegateHandler();
-
   mUserHadInteractedWithDocument = doc->UserHasInteracted();
 
   nsDOMNavigationTiming* navTiming = doc->GetNavigationTiming();
@@ -657,25 +655,8 @@ ContentPermissionRequestBase::CheckPromptPrefs() {
   return PromptResult::Pending;
 }
 
-bool ContentPermissionRequestBase::CheckPermissionDelegate() {
-  // There is case that ContentPermissionRequestBase is constructed without
-  // window, then mPermissionHandler will be null. So we only check permission
-  // delegate if we have non-null mPermissionHandler
-  if (mPermissionHandler &&
-      !mPermissionHandler->HasPermissionDelegated(mType)) {
-    return false;
-  }
-
-  return true;
-}
-
 nsresult ContentPermissionRequestBase::ShowPrompt(
     ContentPermissionRequestBase::PromptResult& aResult) {
-  if (!CheckPermissionDelegate()) {
-    aResult = PromptResult::Denied;
-    return NS_OK;
-  }
-
   aResult = CheckPromptPrefs();
 
   if (aResult != PromptResult::Pending) {
