@@ -1758,8 +1758,19 @@ fn audiounit_get_devices_of_type(devtype: DeviceType) -> Vec<AudioObjectID> {
 
     let mut devices_in_scope = Vec::new();
     for device in devices {
-        if get_channel_count(device, devtype).unwrap() > 0 {
-            devices_in_scope.push(device);
+        let label = match get_device_label(device, DeviceType::OUTPUT | DeviceType::INPUT) {
+            Ok(label) => label.into_string(),
+            Err(e) => format!("Unknown(error: {})", e),
+        };
+        let info = format!("{} ({})", device, label);
+
+        if let Ok(channels) = get_channel_count(device, devtype) {
+            cubeb_log!("device {} has {} {:?}-channels", info, channels, devtype);
+            if channels > 0 {
+                devices_in_scope.push(device);
+            }
+        } else {
+            cubeb_log!("Cannot get the channel count for device {}. Ignored.", info);
         }
     }
 
