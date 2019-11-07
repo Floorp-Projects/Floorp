@@ -35,6 +35,10 @@ async function startTest() {
       ok(false, 'Unexpected onstop callback fired');
     };
 
+    mediaRecorder.onstart = function() {
+      is(mediaRecorder.mimeType, expectedMimeType, 'Expected mime type');
+    };
+
     mediaRecorder.ondataavailable = function (evt) {
       info('ondataavailable fired');
       dataAvailableCount++;
@@ -75,7 +79,7 @@ async function startTest() {
 
     mediaRecorder.start(250);
     is(mediaRecorder.state, 'recording', 'Media recorder should be recording');
-    is(mediaRecorder.mimeType, expectedMimeType, 'Expected mime type');
+    is(mediaRecorder.mimeType, '', 'Expected mime type');
   } catch (err) {
     ok(false, 'Unexpected error fired with: ' + err);
     SimpleTest.finish();
