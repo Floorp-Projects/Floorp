@@ -5512,20 +5512,22 @@ void EventStateManager::RemoveNodeFromChainIfNeeded(EventStates aState,
       aState == NS_EVENT_STATE_HOVER ? mHoverContent : mActiveContent;
 
   MOZ_ASSERT(leaf);
-  // XBL Likes to unbind content without notifying, thus the
-  // NODE_IS_ANONYMOUS_ROOT check...
+  // These two NS_ASSERTIONS below can fail for Shadow DOM sometimes, and it's
+  // not clear how to best handle it, see
+  // https://github.com/whatwg/html/issues/4795 and bug 1551621.
   //
-  // This can also happen for Shadow DOM sometimes, and it's not clear how to
-  // best handle it, see https://github.com/whatwg/html/issues/4795 and
-  // bug 1551621.
+  // The NODE_IS_ANONYMOUS_ROOT is there because XBL used to remove content
+  // without notifying, but it shouldn't apply to NAC since
+  // NAC notifies (see NativeAnonymousContentRemoved).
   NS_ASSERTION(nsContentUtils::ContentIsFlattenedTreeDescendantOf(
                    leaf, aContentRemoved) ||
-                   leaf->SubtreeRoot()->HasFlag(NODE_IS_ANONYMOUS_ROOT),
+               leaf->SubtreeRoot()->HasFlag(NODE_IS_ANONYMOUS_ROOT),
                "Flat tree and active / hover chain got out of sync");
 
   nsIContent* newLeaf = aContentRemoved->GetFlattenedTreeParent();
-  MOZ_ASSERT_IF(newLeaf, newLeaf->IsElement() &&
-                             newLeaf->AsElement()->State().HasState(aState));
+  MOZ_ASSERT(!newLeaf || newLeaf->IsElement());
+  NS_ASSERTION(!newLeaf || newLeaf->AsElement()->State().HasState(aState),
+               "State got out of sync because of shadow DOM");
   if (aNotify) {
     SetContentState(newLeaf, aState);
   } else {
