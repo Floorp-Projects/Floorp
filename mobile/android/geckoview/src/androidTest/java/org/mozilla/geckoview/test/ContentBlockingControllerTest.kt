@@ -146,6 +146,7 @@ class ContentBlockingControllerTest : BaseSessionTest() {
         sessionRule.runtime.contentBlockingController.clearExceptionList()
     }
 
+    @Ignore //Bug 1581657 - ignore test to reduce frequent failures
     @Test
     fun getLog() {
         val category = ContentBlocking.AntiTracking.TEST
@@ -153,8 +154,6 @@ class ContentBlockingControllerTest : BaseSessionTest() {
         sessionRule.session.settings.useTrackingProtection = true
         sessionRule.session.loadTestPath(TRACKERS_PATH)
 
-        assumeThat(sessionRule.env.isDebugBuild,
-                   equalTo(false))
 
         sessionRule.waitForPageStop()
 
