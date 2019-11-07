@@ -1321,7 +1321,9 @@ nsresult HTMLEditor::InsertFromTransferable(nsITransferable* transferable,
   }
 
   // Try to scroll the selection into view if the paste succeeded
-  ScrollSelectionIntoView(false);
+  DebugOnly<nsresult> rvIgnored = ScrollSelectionFocusIntoView();
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+                       "ScrollSelectionFocusIntoView() failed, but ignored");
   return NS_OK;
 }
 

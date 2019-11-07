@@ -2325,6 +2325,17 @@ class nsLayoutUtils {
                                         mozilla::EffectSet* aEffectSet);
 
   /**
+   * A variant of the above HasAnimationOfPropertySet. This is especially for
+   * tranform-like properties with motion-path.
+   * For transform-like properties with motion-path, we need to check if
+   * offset-path has effect. If we don't have any animation on offset-path and
+   * offset-path is none, there is no effective motion-path, and so we don't
+   * care other offset-* properties. In this case, this function only checks the
+   * rest of transform-like properties (i.e. transform/translate/rotate/scale).
+   */
+  static bool HasAnimationOfTransformAndMotionPath(const nsIFrame* aFrame);
+
+  /**
    * Returns true if |aFrame| has an animation of |aProperty| which is
    * not overridden by !important rules.
    */

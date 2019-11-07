@@ -179,9 +179,6 @@
 #include "nsContentCreatorFunctions.h"
 
 #include "nsIScriptContext.h"
-#ifdef MOZ_XBL
-#  include "nsBindingManager.h"
-#endif
 #include "nsHTMLDocument.h"
 #include "nsIRequest.h"
 #include "mozilla/dom/BlobURLProtocolHandler.h"
@@ -1948,15 +1945,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(Document)
     return NS_SUCCESS_INTERRUPTED_TRAVERSE;
   }
 
-#ifdef MOZ_XBL
-  if (tmp->mMaybeEndOutermostXBLUpdateRunner) {
-    // The cached runnable keeps a reference to the document object..
-    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(
-        cb, "mMaybeEndOutermostXBLUpdateRunner.mObj");
-    cb.NoteXPCOMChild(ToSupports(tmp));
-  }
-#endif
-
   tmp->mExternalResourceMap.Traverse(&cb);
 
   // Traverse all Document pointer members.
@@ -2085,9 +2073,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Document)
 
   tmp->mCachedRootElement = nullptr;  // Avoid a dangling pointer
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDisplayDocument)
-#ifdef MOZ_XBL
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mMaybeEndOutermostXBLUpdateRunner)
-#endif
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDOMImplementation)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mImageMaps)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mCachedEncoder)
@@ -5913,22 +5898,6 @@ static inline void AssertNoStaleServoDataIn(nsINode& aSubtreeRoot) {
       continue;
     }
     MOZ_ASSERT(!element->HasServoData());
-#  ifdef MOZ_XBL
-    if (nsXBLBinding* binding = element->GetXBLBinding()) {
-      if (nsXBLBinding* bindingWithContent = binding->GetBindingWithContent()) {
-        nsIContent* content = bindingWithContent->GetAnonymousContent();
-        // Need to do this instead of just AssertNoStaleServoDataIn(*content),
-        // because the parent of the children of the <content> element isn't the
-        // <content> element, but the bound element, and that confuses
-        // GetNextNode a lot.
-        MOZ_ASSERT(!content->AsElement()->HasServoData());
-        for (nsINode* child = content->GetFirstChild(); child;
-             child = child->GetNextSibling()) {
-          AssertNoStaleServoDataIn(*child);
-        }
-      }
-    }
-#  endif
   }
 #endif
 }
@@ -6924,26 +6893,6 @@ bool Document::RemoveObserver(nsIDocumentObserver* aObserver) {
   return mObservers.Contains(aObserver);
 }
 
-#ifdef MOZ_XBL
-void Document::MaybeEndOutermostXBLUpdate() {
-  // Only call BindingManager()->EndOutermostUpdate() when
-  // we're not in an update and it is safe to run scripts.
-  if (mUpdateNestLevel == 0 && mInXBLUpdate) {
-    if (nsContentUtils::IsSafeToRunScript()) {
-      mInXBLUpdate = false;
-      BindingManager()->EndOutermostUpdate();
-    } else if (!mInDestructor) {
-      if (!mMaybeEndOutermostXBLUpdateRunner) {
-        mMaybeEndOutermostXBLUpdateRunner =
-            NewRunnableMethod("Document::MaybeEndOutermostXBLUpdate", this,
-                              &Document::MaybeEndOutermostXBLUpdate);
-      }
-      nsContentUtils::AddScriptRunner(mMaybeEndOutermostXBLUpdateRunner);
-    }
-  }
-}
-#endif
-
 void Document::BeginUpdate() {
   // If the document is going away, then it's probably okay to do things to it
   // in the wrong DocGroup. We're unlikely to run JS or do anything else
@@ -6955,13 +6904,6 @@ void Document::BeginUpdate() {
       !mIgnoreDocGroupMismatches) {
     mDocGroup->ValidateAccess();
   }
-
-#ifdef MOZ_XBL
-  if (mUpdateNestLevel == 0 && !mInXBLUpdate) {
-    mInXBLUpdate = true;
-    BindingManager()->BeginOutermostUpdate();
-  }
-#endif
 
   ++mUpdateNestLevel;
   nsContentUtils::AddScriptBlocker();
@@ -6977,12 +6919,6 @@ void Document::EndUpdate() {
   nsContentUtils::RemoveScriptBlocker();
 
   --mUpdateNestLevel;
-
-#ifdef MOZ_XBL
-  // This set of updates may have created XBL bindings.  Let the
-  // binding manager know we're done.
-  MaybeEndOutermostXBLUpdate();
-#endif
 
   MaybeInitializeFinalizeFrameLoaders();
   if (mXULBroadcastManager) {
@@ -7874,78 +7810,19 @@ Element* Document::GetBindingParent(nsINode& aNode) {
   return bindingParent ? bindingParent->AsElement() : nullptr;
 }
 
-#ifdef MOZ_XBL
-static Element* GetElementByAttribute(Element* aElement, nsAtom* aAttrName,
-                                      const nsAString& aAttrValue,
-                                      bool aUniversalMatch) {
-  if (aUniversalMatch ? aElement->HasAttr(kNameSpaceID_None, aAttrName)
-                      : aElement->AttrValueIs(kNameSpaceID_None, aAttrName,
-                                              aAttrValue, eCaseMatters)) {
-    return aElement;
-  }
-
-  for (nsIContent* child = aElement->GetFirstChild(); child;
-       child = child->GetNextSibling()) {
-    if (!child->IsElement()) {
-      continue;
-    }
-
-    Element* matchedElement = GetElementByAttribute(
-        child->AsElement(), aAttrName, aAttrValue, aUniversalMatch);
-    if (matchedElement) return matchedElement;
-  }
-
-  return nullptr;
-}
-#endif
-
 Element* Document::GetAnonymousElementByAttribute(
     nsIContent* aElement, nsAtom* aAttrName,
     const nsAString& aAttrValue) const {
-#ifdef MOZ_XBL
-  nsINodeList* nodeList = BindingManager()->GetAnonymousNodesFor(aElement);
-  if (!nodeList) return nullptr;
-
-  uint32_t length = nodeList->Length();
-
-  bool universalMatch = aAttrValue.EqualsLiteral("*");
-
-  for (uint32_t i = 0; i < length; ++i) {
-    Element* current = Element::FromNode(nodeList->Item(i));
-    if (!current) {
-      continue;
-    }
-
-    Element* matchedElm =
-        GetElementByAttribute(current, aAttrName, aAttrValue, universalMatch);
-    if (matchedElm) return matchedElm;
-  }
-
   return nullptr;
-#else
-  return nullptr;
-#endif
 }
 
 Element* Document::GetAnonymousElementByAttribute(Element& aElement,
                                                   const nsAString& aAttrName,
                                                   const nsAString& aAttrValue) {
-#ifdef MOZ_XBL
-  RefPtr<nsAtom> attribute = NS_Atomize(aAttrName);
-
-  return GetAnonymousElementByAttribute(&aElement, attribute, aAttrValue);
-#else
   return nullptr;
-#endif
 }
 
-nsINodeList* Document::GetAnonymousNodes(Element& aElement) {
-#ifdef MOZ_XBL
-  return BindingManager()->GetAnonymousNodesFor(&aElement);
-#else
-  return nullptr;
-#endif
-}
+nsINodeList* Document::GetAnonymousNodes(Element& aElement) { return nullptr; }
 
 already_AddRefed<nsRange> Document::CreateRange(ErrorResult& rv) {
   RefPtr<nsRange> range = new nsRange(this);
@@ -9302,16 +9179,6 @@ nsINode* Document::AdoptNode(nsINode& aAdoptedNode, ErrorResult& rv) {
         parent->RemoveChildNode(adoptedNode->AsContent(), true);
       } else {
         MOZ_ASSERT(!adoptedNode->IsInUncomposedDoc());
-
-#ifdef MOZ_XBL
-        // If we're adopting a node that's not in a document, it might still
-        // have a binding applied. Remove the binding from the element now
-        // that it's getting adopted into a new document.
-        // TODO Fully tear down the binding.
-        if (Element* element = Element::FromNode(adoptedNode)) {
-          element->SetXBLBinding(nullptr);
-        }
-#endif
       }
 
       break;
@@ -14198,15 +14065,6 @@ void Document::AddSizeOfNodeTree(nsINode& aNode, nsWindowSizes& aWindowSizes) {
       if (ShadowRoot* shadow = element->GetShadowRoot()) {
         AddSizeOfNodeTree(*shadow, aWindowSizes);
       }
-
-#ifdef MOZ_XBL
-      for (nsXBLBinding* binding = element->GetXBLBinding(); binding;
-           binding = binding->GetBaseBinding()) {
-        if (nsIContent* anonContent = binding->GetAnonymousContent()) {
-          AddSizeOfNodeTree(*anonContent, aWindowSizes);
-        }
-      }
-#endif
     }
   }
 

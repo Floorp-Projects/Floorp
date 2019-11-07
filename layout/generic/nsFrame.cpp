@@ -112,6 +112,7 @@
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/ServoStyleSetInlines.h"
 #include "mozilla/css/ImageLoader.h"
+#include "mozilla/dom/SVGPathData.h"
 #include "mozilla/dom/TouchEvent.h"
 #include "mozilla/gfx/Tools.h"
 #include "mozilla/layers/WebRenderUserData.h"
@@ -1335,6 +1336,30 @@ void nsFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
     PresContext()->SetBidiEnabled();
   }
 
+  // The following part is for caching offset-path:path(). We cache the
+  // flatten gfx path, so we don't have to rebuild and re-flattern it at
+  // each cycle if we have animations on offset-* with a fixed offset-path.
+  const StyleOffsetPath* oldPath =
+      aOldComputedStyle ? &aOldComputedStyle->StyleDisplay()->mOffsetPath
+                        : nullptr;
+  const StyleOffsetPath& newPath = StyleDisplay()->mOffsetPath;
+  if (!oldPath || *oldPath != newPath) {
+    if (newPath.IsPath()) {
+      // Here we only need to build a valid path for motion path, so
+      // using the default values of stroke-width, stoke-linecap, and fill-rule
+      // is fine for now because what we want is to get the point and its normal
+      // vector along the path, instead of rendering it.
+      RefPtr<gfx::PathBuilder> builder =
+          gfxPlatform::GetPlatform()
+              ->ScreenReferenceDrawTarget()
+              ->CreatePathBuilder(gfx::FillRule::FILL_WINDING);
+      SetProperty(nsIFrame::OffsetPathCache(),
+                  MotionPathUtils::BuildPath(newPath.AsPath(), builder).take());
+    } else if (oldPath) {
+      DeleteProperty(nsIFrame::OffsetPathCache());
+    }
+  }
+
   RemoveStateBits(NS_FRAME_SIMPLE_EVENT_REGIONS | NS_FRAME_SIMPLE_DISPLAYLIST);
 
   mMayHaveRoundedCorners = true;
@@ -1670,8 +1695,7 @@ bool nsIFrame::IsCSSTransformed(const nsStyleDisplay* aStyleDisplay) const {
 
 bool nsIFrame::HasAnimationOfTransform() const {
   return IsPrimaryFrame() &&
-         nsLayoutUtils::HasAnimationOfPropertySet(
-             this, nsCSSPropertyIDSet::TransformLikeProperties()) &&
+         nsLayoutUtils::HasAnimationOfTransformAndMotionPath(this) &&
          IsFrameOfType(eSupportsCSSTransforms);
 }
 

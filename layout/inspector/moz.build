@@ -38,6 +38,3 @@ LOCAL_INCLUDES += [
     '../style',
     '/dom/base',
 ]
-
-if CONFIG['MOZ_XBL']:
-    LOCAL_INCLUDES += ['/dom/xbl']

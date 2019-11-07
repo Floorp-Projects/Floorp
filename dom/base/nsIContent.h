@@ -21,9 +21,6 @@ class nsAttrValue;
 class nsAttrName;
 class nsTextFragment;
 class nsIFrame;
-#ifdef MOZ_XBL
-class nsXBLBinding;
-#endif
 class nsITextControlElement;
 
 namespace mozilla {
@@ -396,23 +393,6 @@ class nsIContent : public nsINode {
     const nsExtendedContentSlots* slots = GetExistingExtendedContentSlots();
     return slots ? slots->mBindingParent.get() : nullptr;
   }
-
-#ifdef MOZ_XBL
-  /**
-   * Gets the current XBL binding that is bound to this element.
-   *
-   * @return the current binding.
-   */
-  nsXBLBinding* GetXBLBinding() const {
-    if (!HasFlag(NODE_MAY_BE_IN_BINDING_MNGR)) {
-      return nullptr;
-    }
-
-    return DoGetXBLBinding();
-  }
-
-  virtual nsXBLBinding* DoGetXBLBinding() const = 0;
-#endif
 
   /**
    * Gets the ShadowRoot binding for this element.

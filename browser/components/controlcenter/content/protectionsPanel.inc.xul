@@ -310,6 +310,9 @@
             <label control="protections-popup-sendReportView-collection-comments">&contentBlocking.breakageReportView2.collection.comments.label;</label>
             <html:textarea id="protections-popup-sendReportView-collection-comments" aria-label="&contentBlocking.breakageReportView2.collection.comments.label;"/>
           </vbox>
+          <label id="protections-popup-sendReportView-report-error"
+            data-l10n-id="protections-panel-sendreportview-error"
+            hidden="true" role="alert"></label>
         </vbox>
         <vbox id="protections-popup-sendReportView-footer"
               class="panel-footer">

@@ -9851,9 +9851,8 @@ bool BytecodeEmitter::emitTree(
       break;
 
     case ParseNodeKind::RegExpExpr: {
-      ObjectBox* obj = pn->as<RegExpLiteral>().objbox();
       uint32_t index;
-      if (!perScriptData().gcThingList().append(obj, &index)) {
+      if (!perScriptData().gcThingList().append(&pn->as<RegExpLiteral>(), &index)) {
         return false;
       }
       if (!emitRegExp(index)) {

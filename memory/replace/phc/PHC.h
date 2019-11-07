@@ -63,17 +63,27 @@ class AddrInfo {
     GuardPage = 4,
   };
 
+  // The page kind.
   Kind mKind;
 
-  // The base address of the containing PHC allocation, if there is one.
+  // The starting address of the allocation.
+  // - Unknown | NeverAllocatedPage: nullptr.
+  // - InUsePage | FreedPage: the address of the allocation within the page.
   const void* mBaseAddr;
 
-  // The usable size of the containing PHC allocation, if there is one.
+  // The usable size, which could be bigger than the requested size.
+  // - Unknown | NeverAllocatePage: 0.
+  // - InUsePage | FreedPage: the usable size of the allocation within the page.
   size_t mUsableSize;
 
-  // The allocation and free stack traces of the containing PHC allocation, if
-  // there is one.
+  // The allocation stack.
+  // - Unknown | NeverAllocatedPage: Nothing.
+  // - InUsePage | FreedPage: Some.
   mozilla::Maybe<StackTrace> mAllocStack;
+
+  // The free stack.
+  // - Unknown | NeverAllocatedPage | InUsePage: Nothing.
+  // - FreedPage: Some.
   mozilla::Maybe<StackTrace> mFreeStack;
 
   // Default to no PHC info.

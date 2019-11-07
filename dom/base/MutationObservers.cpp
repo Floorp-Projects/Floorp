@@ -23,9 +23,6 @@
 #ifdef MOZ_XUL
 #  include "nsXULElement.h"
 #endif
-#ifdef MOZ_XBL
-#  include "nsBindingManager.h"
-#endif
 #include "nsGenericHTMLElement.h"
 #include "mozilla/AnimationTarget.h"
 #include "mozilla/Assertions.h"
@@ -56,14 +53,9 @@ enum class IsRemoveNotification {
 #  define COMPOSED_DOC_DECL
 #endif
 
-#ifdef MOZ_XBL
-#  define CALL_BINDING_MANAGER(func_, params_) \
-    doc->BindingManager()->func_ params_
-#else
-#  define CALL_BINDING_MANAGER(func_, params_) \
-    do {                                       \
-    } while (0)
-#endif
+#define CALL_BINDING_MANAGER(func_, params_) \
+  do {                                       \
+  } while (0)
 
 // This macro expects the ownerDocument of content_ to be in scope as
 // |Document* doc|

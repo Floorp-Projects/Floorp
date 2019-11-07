@@ -174,7 +174,7 @@ class WritableStream : public NativeObject {
       if (current == Writable) {
         MOZ_ASSERT(newState == Closed || newState == Erroring);
       } else if (current == Erroring) {
-        MOZ_ASSERT(newState == Errored);
+        MOZ_ASSERT(newState == Errored || newState == Closed);
       } else if (current == Closed || current == Errored) {
         MOZ_ASSERT_UNREACHABLE(
             "closed/errored stream shouldn't undergo state transitions");

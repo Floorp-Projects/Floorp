@@ -5210,8 +5210,8 @@
   "STARTUP_CACHE_REQUESTS": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["dothayer@mozilla.com"],
-    "expires_in_version": "73",
+    "alert_emails": ["dothayer@mozilla.com", "plawless@mozilla.com"],
+    "expires_in_version": "77",
     "kind": "categorical",
     "labels": ["HitMemory", "HitDisk", "Miss"],
     "bug_numbers": [1364235],
@@ -5221,8 +5221,8 @@
   "SCRIPT_PRELOADER_REQUESTS": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["dothayer@mozilla.com"],
-    "expires_in_version": "73",
+    "alert_emails": ["dothayer@mozilla.com", "plawless@mozilla.com"],
+    "expires_in_version": "77",
     "kind": "categorical",
     "labels": ["Hit", "HitChild", "Miss"],
     "bug_numbers": [1364235],
@@ -5232,8 +5232,8 @@
   "SCRIPT_PRELOADER_WAIT_TIME": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["dothayer@mozilla.com"],
-    "expires_in_version": "73",
+    "alert_emails": ["dothayer@mozilla.com", "plawless@mozilla.com"],
+    "expires_in_version": "77",
     "kind": "exponential",
     "high": 10000,
     "n_buckets": 20,

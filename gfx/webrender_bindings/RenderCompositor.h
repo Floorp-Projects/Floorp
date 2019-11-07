@@ -77,6 +77,7 @@ class RenderCompositor {
   virtual bool IsContextLost();
 
   virtual bool ShouldUseNativeCompositor() { return false; }
+  virtual uint32_t GetMaxUpdateRects() { return 0; }
 
   // Interface for wr::Compositor
   virtual void CompositorBeginFrame() {}

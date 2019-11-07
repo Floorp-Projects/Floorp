@@ -3618,6 +3618,15 @@
   value: false
   mirror: once
 
+- name: gfx.webrender.compositor.max_update_rects
+  type: uint32_t
+#ifdef XP_WIN
+  value: 1
+#else
+  value: 0
+#endif
+  mirror: once
+
 - name: gfx.webrender.max-partial-present-rects
   type: uint32_t
   value: 0
@@ -6445,6 +6454,13 @@
   value: 1500
   mirror: always
 
+# Mouse wheel scroll position is determined by GetMessagePos rather than
+# LPARAM msg value
+- name: mousewheel.ignore_cursor_position_in_lparam
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "network."
 #---------------------------------------------------------------------------
@@ -6480,6 +6496,13 @@
 # - true: They are allow to present http auth. dialog
 # - false: They are not allow to present http auth. dialog.
 - name: network.auth.non-web-content-triggered-resources-http-auth-allow
+  type: bool
+  value: false
+  mirror: always
+
+# Whether to show anti-spoof confirmation prompts when navigating to a url
+# with userinfo
+- name: network.auth.confirmAuth.enabled
   type: bool
   value: false
   mirror: always

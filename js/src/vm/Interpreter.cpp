@@ -4241,7 +4241,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     CASE(JSOP_SUPERBASE) {
       JSFunction& superEnvFunc = REGS.sp[-1].toObject().as<JSFunction>();
       MOZ_ASSERT(superEnvFunc.allowSuperProperty());
-      MOZ_ASSERT(superEnvFunc.nonLazyScript()->needsHomeObject());
+      MOZ_ASSERT(superEnvFunc.baseScript()->needsHomeObject());
       const Value& homeObjVal = superEnvFunc.getExtendedSlot(
           FunctionExtended::METHOD_HOMEOBJECT_SLOT);
 

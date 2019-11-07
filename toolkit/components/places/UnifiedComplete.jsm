@@ -513,7 +513,7 @@ function stripHttpAndTrim(spec, trimSlash = true) {
 function makeKeyForMatch(match) {
   // For autofill entries, we need to have a key based on the comment rather
   // than the value field, because the latter may have been trimmed.
-  if (match.hasOwnProperty("style") && match.style.includes("autofill")) {
+  if (match.style && match.style.includes("autofill")) {
     return [stripHttpAndTrim(match.comment), null];
   }
 
@@ -588,6 +588,28 @@ function substringAt(sourceStr, targetStr) {
 function substringAfter(sourceStr, targetStr) {
   let index = sourceStr.indexOf(targetStr);
   return index < 0 ? "" : sourceStr.substr(index + targetStr.length);
+}
+
+/**
+ * Makes a moz-action url for the given action and set of parameters.
+ *
+ * @param   type
+ *          The action type.
+ * @param   params
+ *          A JS object of action params.
+ * @returns A moz-action url as a string.
+ */
+function makeActionUrl(type, params) {
+  let encodedParams = {};
+  for (let key in params) {
+    // Strip null or undefined.
+    // Regardless, don't encode them or they would be converted to a string.
+    if (params[key] === null || params[key] === undefined) {
+      continue;
+    }
+    encodedParams[key] = encodeURIComponent(params[key]);
+  }
+  return `moz-action:${type},${JSON.stringify(encodedParams)}`;
 }
 
 /**
@@ -1324,7 +1346,7 @@ Search.prototype = {
           this._result.setDefaultIndex(0);
           this._addMatch({
             value,
-            finalCompleteValue: PlacesUtils.mozActionURI("searchengine", {
+            finalCompleteValue: makeActionUrl("searchengine", {
               engineName: engine.name,
               alias: aliasPreservingUserCase,
               input: value,
@@ -1633,7 +1655,7 @@ Search.prototype = {
     let value = url;
     if (this._enableActions) {
       style = "action " + style;
-      value = PlacesUtils.mozActionURI("keyword", {
+      value = makeActionUrl("keyword", {
         url,
         keyword,
         input: this._originalSearchString,
@@ -1778,7 +1800,7 @@ Search.prototype = {
     }
 
     this._addMatch({
-      value: PlacesUtils.mozActionURI("extension", {
+      value: makeActionUrl("extension", {
         content,
         keyword: this._heuristicToken,
       }),
@@ -1847,7 +1869,7 @@ Search.prototype = {
       match.type = UrlbarUtils.RESULT_GROUP.SUGGESTION;
     }
 
-    match.value = PlacesUtils.mozActionURI("searchengine", actionURLParams);
+    match.value = makeActionUrl("searchengine", actionURLParams);
     this._addMatch(match);
   },
 
@@ -1906,7 +1928,7 @@ Search.prototype = {
       let match = {
         // We include the deviceName in the action URL so we can render it in
         // the URLBar.
-        value: PlacesUtils.mozActionURI("remotetab", { url, deviceName }),
+        value: makeActionUrl("remotetab", { url, deviceName }),
         comment: title || url,
         style: "action remotetab",
         // we want frecency > FRECENCY_DEFAULT so it doesn't get pushed out
@@ -1950,7 +1972,7 @@ Search.prototype = {
         e.result == Cr.NS_ERROR_MALFORMED_URI &&
         !UrlbarPrefs.get("keyword.enabled")
       ) {
-        let value = PlacesUtils.mozActionURI("visiturl", {
+        let value = makeActionUrl("visiturl", {
           url: searchUrl,
           input: searchUrl,
         });
@@ -1996,7 +2018,7 @@ Search.prototype = {
       escapedURL
     );
 
-    let value = PlacesUtils.mozActionURI("visiturl", {
+    let value = makeActionUrl("visiturl", {
       url: escapedURL,
       input: searchUrl,
     });
@@ -2075,7 +2097,7 @@ Search.prototype = {
     }
 
     // Turn the match into a searchengine action with a favicon.
-    match.value = PlacesUtils.mozActionURI("searchengine", {
+    match.value = makeActionUrl("searchengine", {
       engineName: parseResult.engineName,
       input: parseResult.terms,
       searchQuery: parseResult.terms,
@@ -2426,7 +2448,7 @@ Search.prototype = {
       this.hasBehavior("openpage")
     ) {
       // Actions are enabled and the page is open.  Add a switch-to-tab result.
-      match.value = PlacesUtils.mozActionURI("switchtab", { url: match.value });
+      match.value = makeActionUrl("switchtab", { url: match.value });
       match.style = "action switchtab";
     } else if (
       this.hasBehavior("history") &&
