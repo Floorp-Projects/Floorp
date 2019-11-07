@@ -90,7 +90,11 @@ nsClipboard::~nsClipboard() {
 NS_IMPL_ISUPPORTS(nsClipboard, nsIClipboard, nsIObserver)
 
 nsresult nsClipboard::Init(void) {
-  if (gfxPlatformGtk::GetPlatform()->IsX11Display()) {
+  GdkDisplay* display = gdk_display_get_default();
+
+  // Create a nsRetrievalContext. If there's no default display
+  // create the X11 one as a fallback.
+  if (!display || GDK_IS_X11_DISPLAY(display)) {
     mContext = new nsRetrievalContextX11();
 #if defined(MOZ_WAYLAND)
   } else {

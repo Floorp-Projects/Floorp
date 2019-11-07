@@ -10,7 +10,6 @@
 #include <gdk/gdkx.h>
 #ifdef MOZ_WAYLAND
 #  include "nsWaylandDisplay.h"
-#  include "gfxPlatformGtk.h"
 #  include <wayland-egl.h>
 #endif
 #include <stdio.h>
@@ -168,7 +167,7 @@ void moz_container_class_init(MozContainerClass* klass) {
 
   widget_class->map = moz_container_map;
 #if defined(MOZ_WAYLAND)
-  if (gfxPlatformGtk::GetPlatform()->IsWaylandDisplay()) {
+  if (!GDK_IS_X11_DISPLAY(gdk_display_get_default())) {
     widget_class->map_event = moz_container_map_wayland;
   }
 #endif
@@ -193,7 +192,7 @@ void moz_container_init(MozContainer* container) {
   container->frame_callback_handler = nullptr;
   container->frame_callback_handler_surface_id = -1;
   // We can draw to x11 window any time.
-  container->ready_to_draw = gfxPlatformGtk::GetPlatform()->IsX11Display();
+  container->ready_to_draw = GDK_IS_X11_DISPLAY(gdk_display_get_default());
   container->surface_needs_clear = true;
   container->inital_draw_cb = nullptr;
   container->subsurface_dx = 0;
@@ -335,7 +334,7 @@ void moz_container_map(GtkWidget* widget) {
   if (gtk_widget_get_has_window(widget)) {
     gdk_window_show(gtk_widget_get_window(widget));
 #if defined(MOZ_WAYLAND)
-    if (gfxPlatformGtk::GetPlatform()->IsWaylandDisplay()) {
+    if (!GDK_IS_X11_DISPLAY(gdk_display_get_default())) {
       moz_container_map_wayland(widget, nullptr);
     }
 #endif
@@ -350,7 +349,7 @@ void moz_container_unmap(GtkWidget* widget) {
   if (gtk_widget_get_has_window(widget)) {
     gdk_window_hide(gtk_widget_get_window(widget));
 #if defined(MOZ_WAYLAND)
-    if (gfxPlatformGtk::GetPlatform()->IsWaylandDisplay()) {
+    if (!GDK_IS_X11_DISPLAY(gdk_display_get_default())) {
       moz_container_unmap_wayland(MOZ_CONTAINER(widget));
     }
 #endif
