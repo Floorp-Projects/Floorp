@@ -33,16 +33,6 @@ enum FailureAction { eCrash = 0, eLogToConsole };
 }  // namespace css
 }  // namespace mozilla
 
-// Reference counted wrapper around a base::SharedMemory that will store the
-// User Agent style sheets.
-struct nsLayoutStylesheetCacheShm final {
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(nsLayoutStylesheetCacheShm)
-  base::SharedMemory mShm;
-
- private:
-  ~nsLayoutStylesheetCacheShm() = default;
-};
-
 class nsLayoutStylesheetCache final : public nsIObserver,
                                       public nsIMemoryReporter {
  public:
@@ -88,7 +78,7 @@ class nsLayoutStylesheetCache final : public nsIObserver,
   // Returns the address of the shared memory segment that holds the shared UA
   // sheets.
   uintptr_t GetSharedMemoryAddress() {
-    return mSharedMemory ? uintptr_t(mSharedMemory->mShm.memory()) : 0;
+    return sSharedMemory ? uintptr_t(sSharedMemory->memory()) : 0;
   }
 
   // Size of the shared memory buffer we'll create to store the shared UA
@@ -144,15 +134,11 @@ class nsLayoutStylesheetCache final : public nsIObserver,
   RefPtr<mozilla::StyleSheet> mUserContentSheet;
 
   // Shared memory segment storing shared style sheets.
-  RefPtr<Shm> mSharedMemory;
+  static mozilla::StaticAutoPtr<base::SharedMemory> sSharedMemory;
 
   // How much of the shared memory buffer we ended up using.  Used for memory
-  // reporting.
-  size_t mUsedSharedMemory;
-
-  // The shared memory to use once the nsLayoutStylesheetCache instance is
-  // created.
-  static mozilla::StaticRefPtr<Shm> sSharedMemory;
+  // reporting in the parent process.
+  static size_t sUsedSharedMemory;
 };
 
 #endif
