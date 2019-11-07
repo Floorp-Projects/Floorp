@@ -2283,10 +2283,9 @@ nsresult TextEditor::SetUnmaskRangeInternal(uint32_t aStart, uint32_t aLength,
 
     // Scroll caret into the view since masking or unmasking character may
     // move caret to outside of the view.
-    ScrollSelectionIntoView(false);
-
-    if (NS_WARN_IF(Destroyed())) {
-      return NS_ERROR_EDITOR_DESTROYED;
+    nsresult rv = ScrollSelectionFocusIntoView();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
     }
   }
 

@@ -33,12 +33,12 @@ add_task(async function basic() {
   });
 
   let autofilledValue = TEST_ENGINE_ALIAS + " ";
-  let completedURL = PlacesUtils.mozActionURI("searchengine", {
+  let completedURL = makeActionURI("searchengine", {
     engineName: TEST_ENGINE_NAME,
     alias: TEST_ENGINE_ALIAS,
     input: autofilledValue,
     searchQuery: "",
-  });
+  }).spec;
   await check_autocomplete({
     search: TEST_ENGINE_ALIAS.substr(
       0,
@@ -75,12 +75,12 @@ add_task(async function preserveCase() {
   );
   let alias = search + TEST_ENGINE_ALIAS.substr(search.length);
   let autofilledValue = alias + " ";
-  let completedURL = PlacesUtils.mozActionURI("searchengine", {
+  let completedURL = makeActionURI("searchengine", {
     engineName: TEST_ENGINE_NAME,
     alias,
     input: autofilledValue,
     searchQuery: "",
-  });
+  }).spec;
   await check_autocomplete({
     search,
     autofilled: autofilledValue,

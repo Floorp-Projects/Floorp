@@ -9,7 +9,7 @@ job-defaults:
     run-on-projects:
         by-app:
             fenix: []
-            geckoview: ["integration", "try"]
+            geckoview: ["mozilla-central","integration", "try"]
             refbrow: []
     tier: 3
     target:

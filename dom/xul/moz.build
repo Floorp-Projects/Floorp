@@ -74,9 +74,6 @@ LOCAL_INCLUDES += [
     '/layout/xul/tree',
 ]
 
-if CONFIG['MOZ_XBL']:
-    LOCAL_INCLUDES += ['/dom/xbl']
-
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'

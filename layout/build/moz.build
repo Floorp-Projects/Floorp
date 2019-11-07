@@ -56,9 +56,6 @@ LOCAL_INCLUDES += [
     '/view',
 ]
 
-if CONFIG['MOZ_XBL']:
-    LOCAL_INCLUDES += ['/dom/xbl']
-
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     LOCAL_INCLUDES += [
         '/dom/system/windows',

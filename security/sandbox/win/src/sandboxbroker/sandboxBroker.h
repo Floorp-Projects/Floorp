@@ -43,7 +43,8 @@ class AbstractSandboxBroker {
 
   virtual bool SetSecurityLevelForPluginProcess(int32_t aSandboxLevel) = 0;
   enum SandboxLevel { LockDown, Restricted };
-  virtual bool SetSecurityLevelForGMPlugin(SandboxLevel aLevel) = 0;
+  virtual bool SetSecurityLevelForGMPlugin(SandboxLevel aLevel,
+                                           bool aIsRemoteLaunch = false) = 0;
 
   // File system permissions
   virtual bool AllowReadFile(wchar_t const* file) = 0;
@@ -88,7 +89,8 @@ class SandboxBroker : public AbstractSandboxBroker {
   bool SetSecurityLevelForRDDProcess() override;
 
   bool SetSecurityLevelForPluginProcess(int32_t aSandboxLevel) override;
-  bool SetSecurityLevelForGMPlugin(SandboxLevel aLevel) override;
+  bool SetSecurityLevelForGMPlugin(SandboxLevel aLevel,
+                                   bool aIsRemoteLaunch = false) override;
 
   // File system permissions
   bool AllowReadFile(wchar_t const* file) override;

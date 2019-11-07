@@ -19,7 +19,7 @@
 #include "builtin/streams/MiscellaneousOperations.h"  // js::MakeSizeAlgorithmFromSizeFunction, js::ReturnPromiseRejectedWithPendingError, js::ValidateAndNormalizeHighWaterMark
 #include "builtin/streams/WritableStreamDefaultControllerOperations.h"  // js::SetUpWritableStreamDefaultControllerFromUnderlyingSink
 #include "builtin/streams/WritableStreamDefaultWriter.h"  // js::CreateWritableStreamDefaultWriter
-#include "builtin/streams/WritableStreamOperations.h"  // js::WritableStreamAbort
+#include "builtin/streams/WritableStreamOperations.h"  // js::WritableStream{Abort,Close{,QueuedOrInFlight}}
 #include "js/CallArgs.h"  // JS::CallArgs{,FromVp}
 #include "js/Class.h"  // JS{Function,Property}Spec, JS_{FS,PS}_END, JSCLASS_PRIVATE_IS_NSISUPPORTS, JSCLASS_HAS_PRIVATE, JS_NULL_CLASS_OPS
 #include "js/RealmOptions.h"      // JS::RealmCreationOptions
@@ -42,6 +42,8 @@ using js::ReturnPromiseRejectedWithPendingError;
 using js::UnwrapAndTypeCheckThis;
 using js::WritableStream;
 using js::WritableStreamAbort;
+using js::WritableStreamClose;
+using js::WritableStreamCloseQueuedOrInFlight;
 
 using JS::CallArgs;
 using JS::CallArgsFromVp;
@@ -178,18 +180,19 @@ static bool WritableStream_locked(JSContext* cx, unsigned argc, Value* vp) {
 static bool WritableStream_abort(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
-  // Step 1: If ! WritableStream(this) is false, throw a TypeError exception.
+  // Step 1: If ! IsWritableStream(this) is false, return a promise rejected
+  //         with a TypeError exception.
   Rooted<WritableStream*> unwrappedStream(
       cx, UnwrapAndTypeCheckThis<WritableStream>(cx, args, "abort"));
   if (!unwrappedStream) {
-    return false;
+    return ReturnPromiseRejectedWithPendingError(cx, args);
   }
 
   // Step 2: If ! IsWritableStreamLocked(this) is true, return a promise
   //         rejected with a TypeError exception.
   if (unwrappedStream->isLocked()) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_CANT_ABORT_LOCKED_WRITABLESTREAM);
+                              JSMSG_CANT_USE_LOCKED_WRITABLESTREAM, "abort");
     return ReturnPromiseRejectedWithPendingError(cx, args);
   }
 
@@ -205,7 +208,47 @@ static bool WritableStream_abort(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 /**
- * Streams spec, 4.2.5.3. getWriter()
+ * Streams spec, 4.2.5.3. close()
+ */
+static bool WritableStream_close(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  // Step 1: If ! IsWritableStream(this) is false, return a promise rejected
+  //         with a TypeError exception.
+  Rooted<WritableStream*> unwrappedStream(
+      cx, UnwrapAndTypeCheckThis<WritableStream>(cx, args, "close"));
+  if (!unwrappedStream) {
+    return ReturnPromiseRejectedWithPendingError(cx, args);
+  }
+
+  // Step 2: If ! IsWritableStreamLocked(this) is true, return a promise
+  //         rejected with a TypeError exception.
+  if (unwrappedStream->isLocked()) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_CANT_USE_LOCKED_WRITABLESTREAM, "close");
+    return ReturnPromiseRejectedWithPendingError(cx, args);
+  }
+
+  // Step 3: If ! WritableStreamCloseQueuedOrInFlight(this) is true, return a
+  //         promise rejected with a TypeError exception.
+  if (WritableStreamCloseQueuedOrInFlight(unwrappedStream)) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_WRITABLESTREAM_CLOSE_CLOSING_OR_CLOSED);
+    return ReturnPromiseRejectedWithPendingError(cx, args);
+  }
+
+  // Step 4: Return ! WritableStreamClose(this).
+  JSObject* promise = WritableStreamClose(cx, unwrappedStream);
+  if (!promise) {
+    return false;
+  }
+
+  args.rval().setObject(*promise);
+  return true;
+}
+
+/**
+ * Streams spec, 4.2.5.4. getWriter()
  */
 static bool WritableStream_getWriter(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
@@ -228,6 +271,7 @@ static bool WritableStream_getWriter(JSContext* cx, unsigned argc, Value* vp) {
 
 static const JSFunctionSpec WritableStream_methods[] = {
     JS_FN("abort", WritableStream_abort, 1, 0),
+    JS_FN("close", WritableStream_close, 0, 0),
     JS_FN("getWriter", WritableStream_getWriter, 0, 0), JS_FS_END};
 
 static const JSPropertySpec WritableStream_properties[] = {

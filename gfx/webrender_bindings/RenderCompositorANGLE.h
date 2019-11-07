@@ -64,6 +64,7 @@ class RenderCompositorANGLE : public RenderCompositor {
   bool SurfaceOriginIsTopLeft() override { return true; }
 
   bool ShouldUseNativeCompositor() override;
+  uint32_t GetMaxUpdateRects() override;
 
   // Interface for wr::Compositor
   void CompositorBeginFrame() override;

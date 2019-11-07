@@ -513,8 +513,14 @@ class Browsertime(Perftest):
 
     __metaclass__ = ABCMeta
 
-    def __init__(self, *args, **kwargs):
-        for key in kwargs.keys():
+    @property
+    @abstractmethod
+    def browsertime_args(self):
+        pass
+
+    def __init__(self, app, binary, process_handler=None, **kwargs):
+        self.process_handler = process_handler or mozprocess.ProcessHandler
+        for key in list(kwargs):
             if key.startswith('browsertime_'):
                 value = kwargs.pop(key)
                 setattr(self, key, value)
@@ -524,7 +530,7 @@ class Browsertime(Perftest):
                                             'browsertime-results')
             return BrowsertimeResultsHandler(config, root_results_dir=root_results_dir)
 
-        super(Browsertime, self).__init__(*args, results_handler_class=klass, **kwargs)
+        super(Browsertime, self).__init__(app, binary, results_handler_class=klass, **kwargs)
         LOG.info("cwd: '{}'".format(os.getcwd()))
 
         # For debugging.
@@ -533,18 +539,13 @@ class Browsertime(Perftest):
                   "browsertime_ffmpeg",
                   "browsertime_geckodriver",
                   "browsertime_chromedriver"):
-            if not self.browsertime_video and k == "browsertime_ffmpeg":
-                continue
-            LOG.info("{}: {}".format(k, getattr(self, k)))
             try:
+                if not self.browsertime_video and k == "browsertime_ffmpeg":
+                    continue
+                LOG.info("{}: {}".format(k, getattr(self, k)))
                 LOG.info("{}: {}".format(k, os.stat(getattr(self, k))))
             except Exception as e:
                 LOG.info("{}: {}".format(k, e))
-
-    @property
-    @abstractmethod
-    def browsertime_args(self):
-        pass
 
     def build_browser_profile(self):
         super(Browsertime, self).build_browser_profile()
@@ -716,7 +717,7 @@ class Browsertime(Perftest):
         LOG.info('PATH: {}'.format(env['PATH']))
 
         try:
-            proc = mozprocess.ProcessHandler(cmd, env=env)
+            proc = self.process_handler(cmd, env=env)
             proc.run(timeout=bt_timeout,
                      outputTimeout=2*60)
             proc.wait()

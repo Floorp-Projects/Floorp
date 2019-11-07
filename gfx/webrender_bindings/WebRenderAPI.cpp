@@ -96,6 +96,7 @@ class NewRenderer : public RendererEvent {
             &WebRenderMallocEnclosingSizeOf, (uint32_t)wr::RenderRoot::Default,
             compositor->ShouldUseNativeCompositor() ? compositor.get()
                                                     : nullptr,
+            compositor->GetMaxUpdateRects(),
             compositor->GetMaxPartialPresentRects(), mDocHandle, &wrRenderer,
             mMaxTextureSize)) {
       // wr_window_new puts a message into gfxCriticalNote if it returns false

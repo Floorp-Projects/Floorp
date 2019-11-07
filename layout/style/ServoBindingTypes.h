@@ -117,9 +117,6 @@ class nsCSSPropertyIDSet;
 class nsCSSValue;
 class nsINode;
 class nsPresContext;
-#ifdef MOZ_XBL
-class nsXBLBinding;
-#endif
 struct nsFontFaceRuleContainer;
 struct nsTimingFunction;
 

@@ -413,6 +413,7 @@ STATIC_ATOMS = [
     Atom("event", "event"),
     Atom("events", "events"),
     Atom("excludeResultPrefixes", "exclude-result-prefixes"),
+    Atom("exportparts", "exportparts"),
     Atom("extends", "extends"),
     Atom("extensionElementPrefixes", "extension-element-prefixes"),
     Atom("face", "face"),

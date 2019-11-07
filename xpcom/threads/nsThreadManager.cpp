@@ -52,6 +52,7 @@ class BackgroundEventTarget final : public nsIEventTarget {
   ~BackgroundEventTarget() = default;
 
   nsCOMPtr<nsIThreadPool> mPool;
+  nsCOMPtr<nsIThreadPool> mIOPool;
 };
 
 NS_IMPL_ISUPPORTS(BackgroundEventTarget, nsIEventTarget)
@@ -75,31 +76,61 @@ nsresult BackgroundEventTarget::Init() {
   rv = pool->SetIdleThreadTimeout(300000);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // Initialize the background I/O event target.
+  nsCOMPtr<nsIThreadPool> ioPool(new nsThreadPool());
+  NS_ENSURE_TRUE(pool, NS_ERROR_FAILURE);
+
+  rv = ioPool->SetName(NS_LITERAL_CSTRING("BgIOThreadPool"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Use potentially more conservative stack size.
+  rv = ioPool->SetThreadStackSize(nsIThreadManager::kThreadPoolStackSize);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // For now just one thread. Can increase easily later if we want.
+  rv = ioPool->SetThreadLimit(1);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Leave threads alive for up to 5 minutes
+  rv = ioPool->SetIdleThreadTimeout(300000);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   pool.swap(mPool);
+  ioPool.swap(mIOPool);
 
   return NS_OK;
 }
 
 NS_IMETHODIMP_(bool)
 BackgroundEventTarget::IsOnCurrentThreadInfallible() {
-  return mPool->IsOnCurrentThread();
+  return mPool->IsOnCurrentThread() || mIOPool->IsOnCurrentThread();
 }
 
 NS_IMETHODIMP
 BackgroundEventTarget::IsOnCurrentThread(bool* aValue) {
-  return mPool->IsOnCurrentThread(aValue);
+  bool value = false;
+  if (NS_SUCCEEDED(mPool->IsOnCurrentThread(aValue)) && value) {
+    *aValue = value;
+    return NS_OK;
+  }
+  return mIOPool->IsOnCurrentThread(aValue);
 }
 
 NS_IMETHODIMP
 BackgroundEventTarget::Dispatch(already_AddRefed<nsIRunnable> aRunnable,
                                 uint32_t aFlags) {
-  return mPool->Dispatch(std::move(aRunnable), aFlags);
+  uint32_t flags = aFlags & ~NS_DISPATCH_EVENT_MAY_BLOCK;
+  if (aFlags & NS_DISPATCH_EVENT_MAY_BLOCK) {
+    return mIOPool->Dispatch(std::move(aRunnable), flags);
+  }
+  return mPool->Dispatch(std::move(aRunnable), flags);
 }
 
 NS_IMETHODIMP
 BackgroundEventTarget::DispatchFromScript(nsIRunnable* aRunnable,
                                           uint32_t aFlags) {
-  return mPool->Dispatch(aRunnable, aFlags);
+  nsCOMPtr<nsIRunnable> runnable(aRunnable);
+  return Dispatch(runnable.forget(), aFlags);
 }
 
 NS_IMETHODIMP
@@ -109,7 +140,12 @@ BackgroundEventTarget::DelayedDispatch(already_AddRefed<nsIRunnable> aRunnable,
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-nsresult BackgroundEventTarget::Shutdown() { return mPool->Shutdown(); }
+nsresult
+BackgroundEventTarget::Shutdown() {
+  mPool->Shutdown();
+  mIOPool->Shutdown();
+  return NS_OK;
+}
 
 extern "C" {
 // This uses the C language linkage because it's exposed to Rust

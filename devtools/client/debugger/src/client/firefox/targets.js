@@ -5,7 +5,8 @@
 // @flow
 
 import { addThreadEventListeners } from "./events";
-import { prefs } from "../../utils/prefs";
+import { prefs, features } from "../../utils/prefs";
+import { sameOrigin } from "../../utils/url";
 import type { DebuggerClient, Target } from "./types";
 import type { ThreadType } from "../../types";
 
@@ -64,12 +65,25 @@ async function attachTargets(type, targetLists, args) {
 }
 
 export async function updateWorkerTargets(type: ThreadType, args: Args) {
-  const { currentTarget } = args;
+  const { currentTarget, debuggerClient } = args;
   if (!currentTarget.isBrowsingContext || currentTarget.isContentProcess) {
     return;
   }
 
   const { workers } = await currentTarget.listWorkers();
+
+  if (features.windowlessServiceWorkers && currentTarget.url) {
+    const { service } = await debuggerClient.mainRoot.listAllWorkers();
+    for (const { active, id, url } of service) {
+      // Attach to any service workers that are same-origin with our target.
+      // For now, ignore service workers associated with cross-origin iframes.
+      if (active && sameOrigin(url, currentTarget.url)) {
+        const workerTarget = await debuggerClient.mainRoot.getWorker(id);
+        workers.push(workerTarget);
+      }
+    }
+  }
+
   await attachTargets(type, workers, args);
 }
 

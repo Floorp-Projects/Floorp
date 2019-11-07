@@ -33,7 +33,6 @@ headers = [
     "nsContentUtils.h",
     "nsNameSpaceManager.h",
     "nsMediaFeatures.h",
-    "nsXBLBinding.h",
     "GeckoProfiler.h",
 ]
 raw-lines = [

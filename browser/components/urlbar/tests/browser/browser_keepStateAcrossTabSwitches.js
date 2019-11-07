@@ -7,12 +7,11 @@
  * Verify user typed text remains in the URL bar when tab switching, even when
  * loads fail.
  */
-add_task(async function() {
+add_task(async function validURL() {
   let input = "i-definitely-dont-exist.example.com";
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
-    "about:blank",
-    false
+    "http://example.com/"
   );
   let browser = tab.linkedBrowser;
   // Note: Waiting on content document not being hidden because new tab pages can be preloaded,
@@ -22,7 +21,7 @@ add_task(async function() {
       return content.document && !content.document.hidden;
     });
   });
-  let errorPageLoaded = BrowserTestUtils.waitForErrorPage(tab.linkedBrowser);
+  let errorPageLoaded = BrowserTestUtils.waitForErrorPage(browser);
   gURLBar.value = input;
   gURLBar.select();
   EventUtils.sendKey("return");
@@ -38,7 +37,7 @@ add_task(async function() {
  * Invalid URIs fail differently (that is, immediately, in the loadURI call)
  * if keyword searches are turned off. Test that this works, too.
  */
-add_task(async function() {
+add_task(async function invalidURL() {
   let input = "To be or not to be-that is the question";
   await SpecialPowers.pushPrefEnv({ set: [["keyword.enabled", false]] });
   let tab = await BrowserTestUtils.openNewForegroundTab(

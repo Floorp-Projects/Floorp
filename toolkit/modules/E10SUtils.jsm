@@ -95,7 +95,7 @@ const NOT_REMOTE = null;
 
 // These must match any similar ones in ContentParent.h and ProcInfo.h
 const WEB_REMOTE_TYPE = "web";
-const FISSION_WEB_REMOTE_TYPE_PREFIX = "webIsolated=";
+const FISSION_WEB_REMOTE_TYPE = "webIsolated";
 const WEB_REMOTE_COOP_COEP_TYPE_PREFIX = "webCOOP+COEP=";
 const FILE_REMOTE_TYPE = "file";
 const EXTENSION_REMOTE_TYPE = "extension";
@@ -150,6 +150,7 @@ function validatedWebRemoteType(
   aPreferredRemoteType,
   aTargetUri,
   aCurrentUri,
+  aResultPrincipal,
   aRemoteSubframes
 ) {
   // To load into the Privileged Mozilla Content Process you must be https,
@@ -172,7 +173,7 @@ function validatedWebRemoteType(
   if (aRemoteSubframes && hasPotentiallyWebHandledScheme(aTargetUri)) {
     if (
       Services.appinfo.processType != Services.appinfo.PROCESS_TYPE_DEFAULT &&
-      Services.appinfo.remoteType.startsWith(FISSION_WEB_REMOTE_TYPE_PREFIX)
+      Services.appinfo.remoteType.startsWith(FISSION_WEB_REMOTE_TYPE + "=")
     ) {
       // If we're in a child process, assume we're OK to load this non-web
       // URL for now. We'll either load it externally or re-evaluate once
@@ -210,7 +211,18 @@ function validatedWebRemoteType(
   // If we're within a fission window, extract site information from the URI in
   // question, and use it to generate an isolated origin.
   if (aRemoteSubframes) {
-    let targetPrincipal = sm.createContentPrincipal(aTargetUri, {});
+    // To be consistent with remote types when using a principal vs. a URI,
+    // always clear OAs.
+    // FIXME: This should be accurate.
+    let originAttributes = {};
+
+    // Get a principal to use for isolation.
+    let targetPrincipal;
+    if (aResultPrincipal) {
+      targetPrincipal = sm.principalWithOA(aResultPrincipal, originAttributes);
+    } else {
+      targetPrincipal = sm.createContentPrincipal(aTargetUri, originAttributes);
+    }
 
     // If this is a special webCOOP+COEP= remote type that matches the
     // principal's siteOrigin, we don't want to override it with webIsolated=
@@ -223,7 +235,7 @@ function validatedWebRemoteType(
       return aPreferredRemoteType;
     }
 
-    return FISSION_WEB_REMOTE_TYPE_PREFIX + targetPrincipal.siteOrigin;
+    return `${FISSION_WEB_REMOTE_TYPE}=${targetPrincipal.siteOrigin}`;
   }
 
   if (!aPreferredRemoteType) {
@@ -376,7 +388,8 @@ var E10SUtils = {
     aMultiProcess,
     aRemoteSubframes,
     aPreferredRemoteType = DEFAULT_REMOTE_TYPE,
-    aCurrentUri
+    aCurrentUri = null,
+    aResultPrincipal = null
   ) {
     if (!aMultiProcess) {
       return NOT_REMOTE;
@@ -488,7 +501,8 @@ var E10SUtils = {
             aMultiProcess,
             aRemoteSubframes,
             aPreferredRemoteType,
-            aCurrentUri
+            aCurrentUri,
+            aResultPrincipal
           );
         }
 
@@ -496,6 +510,7 @@ var E10SUtils = {
           aPreferredRemoteType,
           aURI,
           aCurrentUri,
+          aResultPrincipal,
           aRemoteSubframes
         );
     }
@@ -537,7 +552,8 @@ var E10SUtils = {
       aMultiProcess,
       aRemoteSubframes,
       aPreferredRemoteType,
-      currentURI
+      currentURI,
+      aPrincipal
     );
   },
 

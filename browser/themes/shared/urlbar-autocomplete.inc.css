@@ -129,9 +129,14 @@
 }
 
 .urlbarView-row {
-  border-radius: 2px;
   fill: currentColor;
   fill-opacity: .6;
+  padding-block: 3px;
+}
+
+.urlbarView:not(.megabar) .urlbarView-row,
+.urlbarView.megabar .urlbarView-row-inner {
+  border-radius: 2px;
   padding-block: 6px;
   padding-inline-start: calc(@urlbarViewItemPaddingStart@);
 }
@@ -166,11 +171,13 @@
   direction: ltr !important;
 }
 
-.urlbarView-row:not([type=tip]):hover {
+.urlbarView:not(.megabar) .urlbarView-row:not([type=tip]):hover,
+.urlbarView.megabar .urlbarView-row:not([type=tip]):hover > .urlbarView-row-inner {
   background: var(--arrowpanel-dimmed);
 }
 
-.urlbarView-row:not([type=tip])[selected] {
+.urlbarView:not(.megabar) .urlbarView-row:not([type=tip])[selected],
+.urlbarView.megabar .urlbarView-row:not([type=tip])[selected] > .urlbarView-row-inner {
   background: var(--autocomplete-popup-highlight-background);
   color: var(--autocomplete-popup-highlight-color);
   fill-opacity: 1;
