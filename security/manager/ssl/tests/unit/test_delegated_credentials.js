@@ -63,7 +63,7 @@ add_connection_test(
   null,
   // We'll never |mHaveCipherSuiteAndProtocol|,
   // and therefore can't check IsDelegatedCredential
-  function() {}
+  null
 );
 
 // Test:

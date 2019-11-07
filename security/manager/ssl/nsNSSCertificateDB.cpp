@@ -1191,6 +1191,7 @@ nsresult VerifyCertAtTime(nsIX509Cert* aCert,
                                           Nothing(),  // extraCertificates
                                           Nothing(),  // stapledOCSPResponse
                                           Nothing(),  // sctsFromTLSExtension
+                                          Nothing(),  // dcInfo
                                           OriginAttributes(),
                                           false,  // don't save intermediates
                                           &evOidPolicy);

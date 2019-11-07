@@ -1104,7 +1104,7 @@ static void RebuildVerifiedCertificateInformation(PRFileDesc* fd,
   mozilla::pkix::Result rv = certVerifier->VerifySSLServerCert(
       cert, mozilla::pkix::Now(), infoObject, infoObject->GetHostName(),
       builtChain, flags, maybePeerCertsBytes, stapledOCSPResponse,
-      sctsFromTLSExtension, infoObject->GetOriginAttributes(),
+      sctsFromTLSExtension, Nothing(), infoObject->GetOriginAttributes(),
       saveIntermediates, &evOidPolicy,
       nullptr,  // OCSP stapling telemetry
       nullptr,  // key size telemetry

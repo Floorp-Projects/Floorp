@@ -73,6 +73,8 @@ namespace psm {
 const CertVerifier::Flags CertVerifier::FLAG_LOCAL_ONLY = 1;
 const CertVerifier::Flags CertVerifier::FLAG_MUST_BE_EV = 2;
 const CertVerifier::Flags CertVerifier::FLAG_TLS_IGNORE_STATUS_REQUEST = 4;
+static const unsigned int MIN_RSA_BITS = 2048;
+static const unsigned int MIN_RSA_BITS_WEAK = 1024;
 
 void CertificateTransparencyInfo::Reset() {
   enabled = false;
@@ -140,6 +142,35 @@ Result IsCertChainRootBuiltInRoot(const UniqueCERTCertList& chain,
     return Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
   return IsCertBuiltInRoot(root, result);
+}
+
+Result IsDelegatedCredentialAcceptable(const DelegatedCredentialInfo& dcInfo,
+                                       SECOidTag evOidPolicyTag) {
+  bool isRsa = dcInfo.scheme == ssl_sig_rsa_pss_rsae_sha256 ||
+               dcInfo.scheme == ssl_sig_rsa_pss_rsae_sha384 ||
+               dcInfo.scheme == ssl_sig_rsa_pss_rsae_sha512 ||
+               dcInfo.scheme == ssl_sig_rsa_pss_pss_sha256 ||
+               dcInfo.scheme == ssl_sig_rsa_pss_pss_sha384 ||
+               dcInfo.scheme == ssl_sig_rsa_pss_pss_sha512;
+
+  bool isEcdsa = dcInfo.scheme == ssl_sig_ecdsa_secp256r1_sha256 ||
+                 dcInfo.scheme == ssl_sig_ecdsa_secp384r1_sha384 ||
+                 dcInfo.scheme == ssl_sig_ecdsa_secp521r1_sha512;
+
+  size_t minRsaKeyBits =
+      evOidPolicyTag != SEC_OID_UNKNOWN ? MIN_RSA_BITS : MIN_RSA_BITS_WEAK;
+
+  if (isRsa && dcInfo.authKeyBits < minRsaKeyBits) {
+    return Result::ERROR_INADEQUATE_KEY_SIZE;
+  }
+
+  // Since we only support acceptable EC curves, no explicit
+  // |authKeyBits| check is needed.
+  if (!isRsa && !isEcdsa) {
+    return Result::ERROR_INVALID_KEY;
+  }
+
+  return Result::Success;
 }
 
 // The term "builtin root" traditionally refers to a root CA certificate that
@@ -438,9 +469,6 @@ bool CertVerifier::SHA1ModeMoreRestrictiveThanGivenMode(SHA1Mode mode) {
       return true;
   }
 }
-
-static const unsigned int MIN_RSA_BITS = 2048;
-static const unsigned int MIN_RSA_BITS_WEAK = 1024;
 
 Result CertVerifier::VerifyCert(
     CERTCertificate* cert, SECCertificateUsage usage, Time time, void* pinArg,
@@ -864,6 +892,7 @@ Result CertVerifier::VerifySSLServerCert(
     /*optional*/ const Maybe<nsTArray<nsTArray<uint8_t>>>& extraCertificates,
     /*optional*/ const Maybe<nsTArray<uint8_t>>& stapledOCSPResponse,
     /*optional*/ const Maybe<nsTArray<uint8_t>>& sctsFromTLS,
+    /*optional*/ const Maybe<DelegatedCredentialInfo>& dcInfo,
     /*optional*/ const OriginAttributes& originAttributes,
     /*optional*/ bool saveIntermediatesInPermanentDatabase,
     /*optional out*/ SECOidTag* evOidPolicy,
@@ -876,8 +905,10 @@ Result CertVerifier::VerifySSLServerCert(
   // XXX: MOZ_ASSERT(pinarg);
   MOZ_ASSERT(!hostname.IsEmpty());
 
+  SECOidTag evPolicyOidTag = SEC_OID_UNKNOWN;
+
   if (evOidPolicy) {
-    *evOidPolicy = SEC_OID_UNKNOWN;
+    *evOidPolicy = evPolicyOidTag;
   }
 
   if (hostname.IsEmpty()) {
@@ -890,7 +921,7 @@ Result CertVerifier::VerifySSLServerCert(
       VerifyCert(peerCert.get(), certificateUsageSSLServer, time, pinarg,
                  PromiseFlatCString(hostname).get(), builtChain, flags,
                  extraCertificates, stapledOCSPResponse, sctsFromTLS,
-                 originAttributes, evOidPolicy, ocspStaplingStatus,
+                 originAttributes, &evPolicyOidTag, ocspStaplingStatus,
                  keySizeStatus, sha1ModeResult, pinningTelemetryInfo, ctInfo);
   if (rv != Success) {
     if (rv == Result::ERROR_UNKNOWN_ISSUER &&
@@ -918,6 +949,13 @@ Result CertVerifier::VerifySSLServerCert(
       }
     }
     return rv;
+  }
+
+  if (dcInfo) {
+    rv = IsDelegatedCredentialAcceptable(*dcInfo, evPolicyOidTag);
+    if (rv != Success) {
+      return rv;
+    }
   }
 
   Input peerCertInput;
@@ -972,6 +1010,10 @@ Result CertVerifier::VerifySSLServerCert(
 
   if (saveIntermediatesInPermanentDatabase) {
     SaveIntermediateCerts(builtChain);
+  }
+
+  if (evOidPolicy) {
+    *evOidPolicy = evPolicyOidTag;
   }
 
   return Success;
