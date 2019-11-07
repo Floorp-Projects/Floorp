@@ -140,7 +140,7 @@ class RacyRegisteredThread final {
 // protected by the profiler state lock.
 class RegisteredThread final {
  public:
-  RegisteredThread(ThreadInfo* aInfo, nsIEventTarget* aThread, void* aStackTop);
+  RegisteredThread(ThreadInfo* aInfo, nsIThread* aThread, void* aStackTop);
   ~RegisteredThread();
 
   class RacyRegisteredThread& RacyRegisteredThread() {
@@ -179,6 +179,7 @@ class RegisteredThread final {
 
   const RefPtr<ThreadInfo> Info() const { return mThreadInfo; }
   const nsCOMPtr<nsIEventTarget> GetEventTarget() const { return mThread; }
+  void ResetMainThread(nsIThread* aThread) { mThread = aThread; }
 
   // Request that this thread start JS sampling. JS sampling won't actually
   // start until a subsequent PollJSSampling() call occurs *and* mContext has
@@ -254,7 +255,7 @@ class RegisteredThread final {
   const void* mStackTop;
 
   const RefPtr<ThreadInfo> mThreadInfo;
-  const nsCOMPtr<nsIEventTarget> mThread;
+  nsCOMPtr<nsIThread> mThread;
 
   // If this is a JS thread, this is its JSContext, which is required for any
   // JS sampling.
