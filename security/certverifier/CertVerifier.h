@@ -19,6 +19,7 @@
 #include "mozilla/UniquePtr.h"
 #include "nsString.h"
 #include "mozpkix/pkixtypes.h"
+#include "sslt.h"
 
 #if defined(_MSC_VER)
 #  pragma warning(push)
@@ -119,6 +120,20 @@ class CertificateTransparencyInfo {
   void Reset();
 };
 
+class DelegatedCredentialInfo {
+ public:
+  DelegatedCredentialInfo() : scheme(ssl_sig_none), authKeyBits(0) {}
+  DelegatedCredentialInfo(SSLSignatureScheme scheme, uint32_t authKeyBits)
+      : scheme(scheme), authKeyBits(authKeyBits) {}
+
+  // The signature scheme to be used in CertVerify. This tells us
+  // whether to interpret |authKeyBits| in an RSA or ECDSA context.
+  SSLSignatureScheme scheme;
+
+  // The size of the key, in bits.
+  uint32_t authKeyBits;
+};
+
 class NSSCertDBTrustDomain;
 
 class CertVerifier {
@@ -170,6 +185,7 @@ class CertVerifier {
       /*optional*/ const Maybe<nsTArray<uint8_t>>& stapledOCSPResponse =
           Nothing(),
       /*optional*/ const Maybe<nsTArray<uint8_t>>& sctsFromTLS = Nothing(),
+      /*optional*/ const Maybe<DelegatedCredentialInfo>& dcInfo = Nothing(),
       /*optional*/ const OriginAttributes& originAttributes =
           OriginAttributes(),
       /*optional*/ bool saveIntermediatesInPermanentDatabase = false,

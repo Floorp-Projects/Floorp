@@ -115,6 +115,7 @@
 #include "secport.h"
 #include "ssl.h"
 #include "sslerr.h"
+#include "sslexp.h"
 
 extern mozilla::LazyLogModule gPIPNSSLog;
 
@@ -461,6 +462,7 @@ class SSLServerCertVerificationJob : public Runnable {
                             const UniqueCERTCertList& peerCertChain,
                             Maybe<nsTArray<uint8_t>>& stapledOCSPResponse,
                             Maybe<nsTArray<uint8_t>>& sctsFromTLSExtension,
+                            Maybe<DelegatedCredentialInfo>& dcInfo,
                             uint32_t providerFlags, Time time, PRTime prtime,
                             uint32_t certVerifierFlags);
 
@@ -475,6 +477,7 @@ class SSLServerCertVerificationJob : public Runnable {
                                UniqueCERTCertList peerCertChain,
                                Maybe<nsTArray<uint8_t>>& stapledOCSPResponse,
                                Maybe<nsTArray<uint8_t>>& sctsFromTLSExtension,
+                               Maybe<DelegatedCredentialInfo>& dcInfo,
                                uint32_t providerFlags, Time time, PRTime prtime,
                                uint32_t certVerifierFlags);
   const RefPtr<SharedCertVerifier> mCertVerifier;
@@ -488,6 +491,7 @@ class SSLServerCertVerificationJob : public Runnable {
   const PRTime mPRTime;
   Maybe<nsTArray<uint8_t>> mStapledOCSPResponse;
   Maybe<nsTArray<uint8_t>> mSCTsFromTLSExtension;
+  Maybe<DelegatedCredentialInfo> mDCInfo;
 };
 
 SSLServerCertVerificationJob::SSLServerCertVerificationJob(
@@ -495,8 +499,9 @@ SSLServerCertVerificationJob::SSLServerCertVerificationJob(
     TransportSecurityInfo* infoObject, const UniqueCERTCertificate& cert,
     UniqueCERTCertList peerCertChain,
     Maybe<nsTArray<uint8_t>>& stapledOCSPResponse,
-    Maybe<nsTArray<uint8_t>>& sctsFromTLSExtension, uint32_t providerFlags,
-    Time time, PRTime prtime, uint32_t certVerifierFlags)
+    Maybe<nsTArray<uint8_t>>& sctsFromTLSExtension,
+    Maybe<DelegatedCredentialInfo>& dcInfo, uint32_t providerFlags, Time time,
+    PRTime prtime, uint32_t certVerifierFlags)
     : Runnable("psm::SSLServerCertVerificationJob"),
       mCertVerifier(certVerifier),
       mFdForLogging(fdForLogging),
@@ -508,7 +513,8 @@ SSLServerCertVerificationJob::SSLServerCertVerificationJob(
       mTime(time),
       mPRTime(prtime),
       mStapledOCSPResponse(std::move(stapledOCSPResponse)),
-      mSCTsFromTLSExtension(std::move(sctsFromTLSExtension)) {}
+      mSCTsFromTLSExtension(std::move(sctsFromTLSExtension)),
+      mDCInfo(std::move(dcInfo)) {}
 
 // This function assumes that we will only use the SPDY connection coalescing
 // feature on connections where we have negotiated SPDY using NPN. If we ever
@@ -1091,6 +1097,7 @@ Result AuthCertificate(CertVerifier& certVerifier,
                        UniqueCERTCertList& peerCertChain,
                        const Maybe<nsTArray<uint8_t>>& stapledOCSPResponse,
                        const Maybe<nsTArray<uint8_t>>& sctsFromTLSExtension,
+                       const Maybe<DelegatedCredentialInfo>& dcInfo,
                        uint32_t providerFlags, Time time,
                        uint32_t certVerifierFlags) {
   MOZ_ASSERT(infoObject);
@@ -1125,7 +1132,7 @@ Result AuthCertificate(CertVerifier& certVerifier,
   Result rv = certVerifier.VerifySSLServerCert(
       cert, time, infoObject, infoObject->GetHostName(), builtCertChain,
       certVerifierFlags, Some(peerCertsBytes), stapledOCSPResponse,
-      sctsFromTLSExtension, infoObject->GetOriginAttributes(),
+      sctsFromTLSExtension, dcInfo, infoObject->GetOriginAttributes(),
       saveIntermediates, &evOidPolicy, &ocspStaplingStatus, &keySizeStatus,
       &sha1ModeResult, &pinningTelemetryInfo, &certificateTransparencyInfo);
 
@@ -1145,8 +1152,9 @@ SECStatus SSLServerCertVerificationJob::Dispatch(
     TransportSecurityInfo* infoObject, const UniqueCERTCertificate& serverCert,
     const UniqueCERTCertList& peerCertChain,
     Maybe<nsTArray<uint8_t>>& stapledOCSPResponse,
-    Maybe<nsTArray<uint8_t>>& sctsFromTLSExtension, uint32_t providerFlags,
-    Time time, PRTime prtime, uint32_t certVerifierFlags) {
+    Maybe<nsTArray<uint8_t>>& sctsFromTLSExtension,
+    Maybe<DelegatedCredentialInfo>& dcInfo, uint32_t providerFlags, Time time,
+    PRTime prtime, uint32_t certVerifierFlags) {
   // Runs on the socket transport thread
   if (!certVerifier || !infoObject || !serverCert) {
     NS_ERROR("Invalid parameters for SSL server cert validation");
@@ -1171,7 +1179,7 @@ SECStatus SSLServerCertVerificationJob::Dispatch(
   RefPtr<SSLServerCertVerificationJob> job(new SSLServerCertVerificationJob(
       certVerifier, fdForLogging, infoObject, serverCert,
       std::move(peerCertChainCopy), stapledOCSPResponse, sctsFromTLSExtension,
-      providerFlags, time, prtime, certVerifierFlags));
+      dcInfo, providerFlags, time, prtime, certVerifierFlags));
 
   nsresult nrv = gCertVerificationThreadPool->Dispatch(job, NS_DISPATCH_NORMAL);
   if (NS_FAILED(nrv)) {
@@ -1315,9 +1323,10 @@ SSLServerCertVerificationJob::Run() {
           ("[%p] SSLServerCertVerificationJob::Run\n", mInfoObject.get()));
 
   TimeStamp jobStartTime = TimeStamp::Now();
-  Result rv = AuthCertificate(
-      *mCertVerifier, mInfoObject, mCert, mPeerCertChain, mStapledOCSPResponse,
-      mSCTsFromTLSExtension, mProviderFlags, mTime, mCertVerifierFlags);
+  Result rv =
+      AuthCertificate(*mCertVerifier, mInfoObject, mCert, mPeerCertChain,
+                      mStapledOCSPResponse, mSCTsFromTLSExtension, mDCInfo,
+                      mProviderFlags, mTime, mCertVerifierFlags);
   MOZ_ASSERT(
       (mPeerCertChain && rv == Success) || (!mPeerCertChain && rv != Success),
       "AuthCertificate() should take ownership of chain on failure");
@@ -1365,7 +1374,8 @@ SECStatus AuthCertificateHookInternal(
     TransportSecurityInfo* infoObject, const void* aPtrForLogging,
     const UniqueCERTCertificate& serverCert, UniqueCERTCertList& peerCertChain,
     Maybe<nsTArray<uint8_t>>& stapledOCSPResponse,
-    Maybe<nsTArray<uint8_t>>& sctsFromTLSExtension, uint32_t providerFlags,
+    Maybe<nsTArray<uint8_t>>& sctsFromTLSExtension,
+    Maybe<DelegatedCredentialInfo>& dcInfo, uint32_t providerFlags,
     uint32_t certVerifierFlags) {
   RefPtr<SharedCertVerifier> certVerifier(GetDefaultCertVerifier());
   if (!certVerifier) {
@@ -1410,8 +1420,8 @@ SECStatus AuthCertificateHookInternal(
   // because of the performance benefits of doing so.
   return SSLServerCertVerificationJob::Dispatch(
       certVerifier, aPtrForLogging, infoObject, serverCert, peerCertChain,
-      stapledOCSPResponse, sctsFromTLSExtension, providerFlags, Now(), PR_Now(),
-      certVerifierFlags);
+      stapledOCSPResponse, sctsFromTLSExtension, dcInfo, providerFlags, Now(),
+      PR_Now(), certVerifierFlags);
 }
 
 // Extracts whatever information we need out of fd (using SSL_*) and passes it
@@ -1482,11 +1492,25 @@ SECStatus AuthCertificateHook(void* arg, PRFileDesc* fd, PRBool checkSig,
     certVerifierFlags |= CertVerifier::FLAG_TLS_IGNORE_STATUS_REQUEST;
   }
 
+  // Get DC information
+  Maybe<DelegatedCredentialInfo> dcInfo;
+  SSLPreliminaryChannelInfo channelPreInfo;
+  SECStatus rv = SSL_GetPreliminaryChannelInfo(fd, &channelPreInfo,
+                                               sizeof(channelPreInfo));
+  if (rv != SECSuccess) {
+    PR_SetError(PR_INVALID_STATE_ERROR, 0);
+    return SECFailure;
+  }
+  if (channelPreInfo.peerDelegCred) {
+    dcInfo.emplace(DelegatedCredentialInfo(channelPreInfo.signatureScheme,
+                                           channelPreInfo.authKeyBits));
+  }
+
   socketInfo->SetCertVerificationWaiting();
   return AuthCertificateHookInternal(socketInfo, static_cast<const void*>(fd),
                                      serverCert, peerCertChain,
                                      stapledOCSPResponse, sctsFromTLSExtension,
-                                     providerFlags, certVerifierFlags);
+                                     dcInfo, providerFlags, certVerifierFlags);
 }
 
 // Make a cert chain from an array of ders.
@@ -1560,9 +1584,13 @@ SECStatus AuthCertificateHookWithInfo(
     certVerifierFlags |= CertVerifier::FLAG_TLS_IGNORE_STATUS_REQUEST;
   }
 
+  // Need to update Quic stack to reflect the PreliminaryInfo fields
+  // for Delegated Credentials.
+  Maybe<DelegatedCredentialInfo> dcInfo;
+
   return AuthCertificateHookInternal(
       infoObject, aPtrForLogging, cert, certChain, stapledOCSPResponse,
-      sctsFromTLSExtension, providerFlags, certVerifierFlags);
+      sctsFromTLSExtension, dcInfo, providerFlags, certVerifierFlags);
 }
 
 SSLServerCertVerificationResult::SSLServerCertVerificationResult(

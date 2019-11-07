@@ -25,7 +25,7 @@ using namespace mozilla::test;
 struct DelegatedCertHost {
   const char* mHostName;
   const char* mCertName;
-  const char* mDelegatedCertName;
+  const char* mDCKeyNick;
   bool mEnableDelegatedCredentials;
 };
 
@@ -33,12 +33,12 @@ const PRUint32 kDCValidFor = 60 * 60 * 24 * 7 /* 1 week (seconds) */;
 
 // {host, eeCert, dcCert, enableDC}
 const DelegatedCertHost sDelegatedCertHosts[] = {
-    {"delegated-enabled.example.com", "delegated-ee", "delegated-selfsigned",
-     true},
+    {"delegated-enabled.example.com", "delegated-ee", "delegated.key", true},
+    {"standard-enabled.example.com", "default-ee", "delegated.key", true},
     {"delegated-disabled.example.com", "delegated-ee",
-     /* anything non-null */ "delegated-selfsigned", false},
-    {"standard-enabled.example.com", "default-ee", "delegated-selfsigned",
-     true},
+     /* anything non-null */ "delegated.key", false},
+    {"delegated-weak.example.com", /* rsa default */ "default-ee",
+     "delegated-weak.key", true},
     {nullptr, nullptr, nullptr, false}};
 
 int32_t DoSNISocketConfig(PRFileDesc* aFd, const SECItem* aSrvNameArr,
@@ -60,13 +60,6 @@ int32_t DoSNISocketConfig(PRFileDesc* aFd, const SECItem* aSrvNameArr,
     return SSL_SNI_SEND_ALERT;
   }
 
-  UniqueCERTCertificate delegatedCert(
-      PK11_FindCertFromNickname(host->mDelegatedCertName, nullptr));
-  if (!delegatedCert) {
-    PrintPRError("PK11_FindCertFromNickname failed");
-    return SSL_SNI_SEND_ALERT;
-  }
-
   UniquePK11SlotInfo slot(PK11_GetInternalKeySlot());
   if (!slot) {
     PrintPRError("PK11_GetInternalKeySlot failed");
@@ -79,43 +72,68 @@ int32_t DoSNISocketConfig(PRFileDesc* aFd, const SECItem* aSrvNameArr,
                                        nullptr,
                                        /* DC */ nullptr,
                                        /* DC PrivKey */ nullptr};
-  UniqueSECKEYPrivateKey dcPriv(
-      PK11_FindKeyByDERCert(slot.get(), delegatedCert.get(), nullptr));
-  if (!dcPriv) {
-    PrintPRError("PK11_FindKeyByDERCert failed");
-    return SSL_SNI_SEND_ALERT;
-  }
-
-  UniqueSECKEYPublicKey dcPub(
-      SECKEY_ExtractPublicKey(&delegatedCert->subjectPublicKeyInfo));
-  if (!dcPub) {
-    PrintPRError("SECKEY_ExtractPublicKey failed");
-    return SSL_SNI_SEND_ALERT;
-  }
 
   UniqueSECKEYPrivateKey delegatorPriv(
       PK11_FindKeyByDERCert(slot.get(), delegatorCert.get(), nullptr));
-  if (!dcPriv) {
+  if (!delegatorPriv) {
     PrintPRError("PK11_FindKeyByDERCert failed");
     return SSL_SNI_SEND_ALERT;
   }
 
+  // Find the DC keypair by the file (nick) name.
   ScopedAutoSECItem dc;
+  UniqueSECKEYPrivateKey dcPriv;
   if (host->mEnableDelegatedCredentials) {
     if (gDebugLevel >= DEBUG_VERBOSE) {
       std::cerr << "Enabling a delegated credential for host "
                 << host->mHostName << std::endl;
     }
 
-    if (SSL_DelegateCredential(delegatorCert.get(), delegatorPriv.get(),
-                               dcPub.get(), ssl_sig_ecdsa_secp384r1_sha384,
-                               kDCValidFor, PR_Now(), &dc) != SECSuccess) {
-      PrintPRError("SSL_DelegateCredential failed");
+    if (PK11_NeedLogin(slot.get())) {
+      SECStatus rv = PK11_Authenticate(slot.get(), PR_TRUE, nullptr);
+      if (rv != SECSuccess) {
+        PrintPRError("PK11_Authenticate failed");
+        return SSL_SNI_SEND_ALERT;
+      }
+    }
+    UniqueSECKEYPrivateKeyList list(PK11_ListPrivKeysInSlot(
+        slot.get(), const_cast<char*>(host->mDCKeyNick), nullptr));
+    if (!list) {
+      PrintPRError("PK11_ListPrivKeysInSlot failed");
+      return SSL_SNI_SEND_ALERT;
+    }
+    SECKEYPrivateKeyListNode* node = PRIVKEY_LIST_HEAD(list);
+
+    dcPriv.reset(SECKEY_CopyPrivateKey(node->key));
+    if (!dcPriv) {
+      PrintPRError("PK11_ListPrivKeysInSlot could not find dcPriv");
       return SSL_SNI_SEND_ALERT;
     }
 
+    UniqueSECKEYPublicKey dcPub(SECKEY_ConvertToPublicKey(dcPriv.get()));
+    if (!dcPub) {
+      PrintPRError("SECKEY_ConvertToPublicKey failed");
+      return SSL_SNI_SEND_ALERT;
+    }
+
+    // Use an ECDSA DC unless we're testing weak keys.
+    SSLSignatureScheme certVerifyAlg = ssl_sig_ecdsa_secp384r1_sha384;
+    if (std::string(host->mHostName) == "delegated-weak.example.com") {
+      certVerifyAlg = ssl_sig_rsa_pss_rsae_sha256;
+    }
+
+    // Create and set the DC.
+    if (SSL_DelegateCredential(delegatorCert.get(), delegatorPriv.get(),
+                               dcPub.get(), certVerifyAlg, kDCValidFor,
+                               PR_Now(), &dc) != SECSuccess) {
+      PrintPRError("SSL_DelegateCredential failed");
+      return SSL_SNI_SEND_ALERT;
+    }
     extra_data.delegCred = &dc;
     extra_data.delegCredPrivKey = dcPriv.get();
+
+    // The list should only have a single key.
+    PORT_Assert(PRIVKEY_LIST_END(PRIVKEY_LIST_NEXT(node), list));
   }
 
   if (ConfigSecureServerWithNamedCert(aFd, host->mCertName, nullptr, nullptr,
