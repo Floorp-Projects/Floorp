@@ -195,7 +195,7 @@ internal class EngineObserver(
     override fun onWindowRequest(windowRequest: WindowRequest) {
         store?.dispatch(
             ContentAction.UpdateWindowRequestAction(
-                store.state.selectedTabId ?: session.id,
+                session.id,
                 windowRequest
             )
         )

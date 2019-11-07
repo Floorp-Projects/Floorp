@@ -45,8 +45,26 @@ class FlowKtTest {
         }
 
         assertEquals(
-                listOf("banana", "bus", "apple", "big", "coconut", "circle", "home"),
-                items
+            listOf("banana", "bus", "apple", "big", "coconut", "circle", "home"),
+            items
         )
+    }
+
+    @Test
+    fun `filterChanged operator`() {
+        val intFlow = flowOf(listOf(0), listOf(0, 1), listOf(0, 1, 2, 3), listOf(4), listOf(5, 6, 7, 8))
+        val identityItems = runBlocking { intFlow.filterChanged { item -> item }.toList() }
+        assertEquals(listOf(0, 1, 2, 3, 4, 5, 6, 7, 8), identityItems)
+
+        val moduloFlow = flowOf(listOf(1), listOf(1, 2), listOf(3, 4, 5), listOf(3, 4))
+        val moduloItems = runBlocking { moduloFlow.filterChanged { item -> item % 2 }.toList() }
+        assertEquals(listOf(1, 2, 3, 4, 5), moduloItems)
+
+        // Here we simulate a non-pure transform function (a function with a side-effect), causing
+        // the transformed values to be different for the same input.
+        var counter = 0
+        val sideEffectFlow = flowOf(listOf(0), listOf(0, 1), listOf(0, 1, 2, 3), listOf(4), listOf(5, 6, 7, 8))
+        val sideEffectItems = runBlocking { sideEffectFlow.filterChanged { item -> item + counter++ }.toList() }
+        assertEquals(listOf(0, 0, 1, 0, 1, 2, 3, 4, 5, 6, 7, 8), sideEffectItems)
     }
 }
