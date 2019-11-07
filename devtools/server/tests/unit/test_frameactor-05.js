@@ -42,7 +42,7 @@ function test_pause_frame() {
       // youngest actors should be popped..
       const expectPopped = frameResponse.frames
         .slice(0, 3)
-        .map(frame => frame.actor);
+        .map(frame => frame.actorID);
       expectPopped.sort();
 
       gThreadFront.once("paused", function(pausePacket) {
