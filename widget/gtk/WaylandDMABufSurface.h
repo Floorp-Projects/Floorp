@@ -111,6 +111,7 @@ class WaylandDMABufSurface {
   RefPtr<mozilla::gl::GLContext> mGL;
   EGLImageKHR mEGLImage;
   GLuint mGLFbo;
+  GLuint mTexture;
 
   bool mWLBufferAttached;
   bool mFastWLBufferCreation;

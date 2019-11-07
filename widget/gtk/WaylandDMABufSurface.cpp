@@ -319,9 +319,8 @@ bool WaylandDMABufSurface::CreateEGLImage(mozilla::gl::GLContext* aGLContext) {
   int savedFb = 0;
   aGLContext->fGetIntegerv(LOCAL_GL_FRAMEBUFFER_BINDING, &savedFb);
 
-  GLuint texture;
-  aGLContext->fGenTextures(1, &texture);
-  aGLContext->fBindTexture(LOCAL_GL_TEXTURE_2D, texture);
+  aGLContext->fGenTextures(1, &mTexture);
+  aGLContext->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexture);
   aGLContext->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_S,
                              LOCAL_GL_CLAMP_TO_EDGE);
   aGLContext->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_T,
@@ -336,14 +335,12 @@ bool WaylandDMABufSurface::CreateEGLImage(mozilla::gl::GLContext* aGLContext) {
   aGLContext->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, mGLFbo);
   aGLContext->fFramebufferTexture2D(LOCAL_GL_FRAMEBUFFER,
                                     LOCAL_GL_COLOR_ATTACHMENT0,
-                                    LOCAL_GL_TEXTURE_2D, texture, 0);
+                                    LOCAL_GL_TEXTURE_2D, mTexture, 0);
   bool ret = (aGLContext->fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER) ==
               LOCAL_GL_FRAMEBUFFER_COMPLETE);
   if (!ret) {
     NS_WARNING("WaylandDMABufSurface - FBO creation failed");
   }
-  aGLContext->fDeleteTextures(1, &texture);
-
   aGLContext->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, savedFb);
 
   mGL = aGLContext;
@@ -360,8 +357,10 @@ void WaylandDMABufSurface::ReleaseEGLImage() {
 
   if (mGLFbo) {
     if (mGL->MakeCurrent()) {
+      mGL->fDeleteTextures(1, &mTexture);
       mGL->fDeleteFramebuffers(1, &mGLFbo);
     }
+    mTexture = 0;
     mGLFbo = 0;
   }
 
