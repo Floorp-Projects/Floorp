@@ -735,14 +735,15 @@ class TestInfoCommand(MachCommandBase):
                 print("'%s' is too short for a test name!" % self.test_name)
                 continue
             self.set_test_name()
+            if self.show_bugs:
+                self.report_bugs()
+            self.set_activedata_test_name()
             if self.show_results:
                 self.report_test_results()
             if self.show_durations:
                 self.report_test_durations()
             if self.show_tasks:
                 self.report_test_tasks()
-            if self.show_bugs:
-                self.report_bugs()
 
     def find_in_hg_or_git(self, test_name):
         if self._hg:
@@ -772,7 +773,6 @@ class TestInfoCommand(MachCommandBase):
         # queries based on the specified test name.
 
         import posixpath
-        import re
 
         # full_test_name is full path to file in hg (or git)
         self.full_test_name = None
@@ -828,6 +828,9 @@ class TestInfoCommand(MachCommandBase):
         if not (self.show_results or self.show_durations or self.show_tasks):
             # no need to determine ActiveData name if not querying
             return
+
+    def set_activedata_test_name(self):
+        import re
 
         # activedata_test_name is name in ActiveData
         self.activedata_test_name = None
