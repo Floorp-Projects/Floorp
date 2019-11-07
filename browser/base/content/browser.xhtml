@@ -36,12 +36,13 @@
 #include browser-doctype.inc
 ]>
 
-<html id="main-window"
+<window id="main-window"
         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         xmlns:svg="http://www.w3.org/2000/svg"
         xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        xmlns="http://www.w3.org/1999/xhtml"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="&mainWindow.title;"
         title_normal="&mainWindow.title;"
 #ifdef XP_MACOSX
         title_privatebrowsing="&mainWindow.title;&mainWindow.titlemodifiermenuseparator;&mainWindow.titlePrivateBrowsingSuffix;"
@@ -68,19 +69,18 @@
         fullscreenbutton="true"
         sizemode="normal"
         retargetdocumentfocus="urlbar-input"
-        scrolling="false"
         persist="screenX screenY width height sizemode"
         data-l10n-sync="true">
-<head>
-  <link rel="localization" href="branding/brand.ftl"/>
-  <link rel="localization" href="browser/branding/sync-brand.ftl"/>
-  <link rel="localization" href="browser/browser.ftl"/>
-  <link rel="localization" href="browser/menubar.ftl"/>
-  <link rel="localization" href="browser/protectionsPanel.ftl"/>
-  <link rel="localization" href="browser/appmenu.ftl"/>
-  <link rel="localization" href="browser/readerView.ftl"/>
 
-  <title>&mainWindow.title;</title>
+<linkset>
+  <html:link rel="localization" href="branding/brand.ftl"/>
+  <html:link rel="localization" href="browser/branding/sync-brand.ftl"/>
+  <html:link rel="localization" href="browser/browser.ftl"/>
+  <html:link rel="localization" href="browser/menubar.ftl"/>
+  <html:link rel="localization" href="browser/protectionsPanel.ftl"/>
+  <html:link rel="localization" href="browser/appmenu.ftl"/>
+  <html:link rel="localization" href="browser/readerView.ftl"/>
+</linkset>
 
 # All JS files which are needed by browser.xhtml and other top level windows to
 # support MacOS specific features *must* go into the global-scripts.inc file so
@@ -122,12 +122,12 @@
   window.addEventListener("DOMContentLoaded",
     gBrowserInit.onDOMContentLoaded.bind(gBrowserInit), { once: true });
 </script>
-</head>
-<html:body xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
 # All sets except for popupsets (commands, keys, and stringbundles)
 # *must* go into the browser-sets.inc file so that they can be shared with other
 # top level windows in macWindow.inc.xul.
 #include browser-sets.inc
+
   <popupset id="mainPopupSet">
     <menupopup id="tabContextMenu"
                onpopupshowing="if (event.target == this) TabContextMenu.updateContextMenu(this);"
@@ -1418,5 +1418,4 @@
   </vbox>
 
   <html:div id="a11y-announcement" role="alert"/>
-</html:body>
-</html>
+</window>

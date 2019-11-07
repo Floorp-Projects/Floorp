@@ -252,11 +252,11 @@
 
 /* ::::: titlebar ::::: */
 
-#main-window[tabsintitlebar][sizemode="normal"] #navigator-toolbox > #titlebar {
+#main-window[tabsintitlebar][sizemode="normal"] > #navigator-toolbox > #titlebar {
   -moz-appearance: -moz-window-titlebar;
 }
 
-#main-window[tabsintitlebar][sizemode="maximized"] #navigator-toolbox > #titlebar {
+#main-window[tabsintitlebar][sizemode="maximized"] > #navigator-toolbox > #titlebar {
   -moz-appearance: -moz-window-titlebar-maximized;
 }
 
@@ -278,7 +278,7 @@
 }
 
 @media (-moz-windows-classic) {
-  #main-window[tabsintitlebar][sizemode="normal"] #navigator-toolbox > #titlebar > #toolbar-menubar {
+  #main-window[tabsintitlebar][sizemode="normal"] > #navigator-toolbox > #titlebar > #toolbar-menubar {
     margin-top: 4px;
   }
 }
