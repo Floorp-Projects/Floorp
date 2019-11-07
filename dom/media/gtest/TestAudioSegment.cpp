@@ -263,7 +263,7 @@ void fillChunkWithStereo(AudioChunk* c, int duration) {
   c->mBufferFormat = AUDIO_FORMAT_FLOAT32;
 }
 
-TEST(AudioSegment, FlushAfterZero)
+TEST(AudioSegment, FlushAfter_ZeroDuration)
 {
   AudioChunk c;
   fillChunkWithStereo<float>(&c, 10);
@@ -272,6 +272,32 @@ TEST(AudioSegment, FlushAfterZero)
   s.AppendAndConsumeChunk(&c);
   s.FlushAfter(0);
   EXPECT_EQ(s.GetDuration(), 0);
+}
+
+TEST(AudioSegment, FlushAfter_SmallerDuration)
+{
+  // It was crashing when the first chunk was silence (null) and FlushAfter
+  // was called for a duration, smaller or equal to the duration of the
+  // first chunk.
+  TrackTime duration = 10;
+  TrackTime smaller_duration = 8;
+  AudioChunk c1;
+  c1.SetNull(duration);
+  AudioChunk c2;
+  fillChunkWithStereo<float>(&c2, duration);
+
+  AudioSegment s;
+  s.AppendAndConsumeChunk(&c1);
+  s.AppendAndConsumeChunk(&c2);
+  s.FlushAfter(smaller_duration);
+  EXPECT_EQ(s.GetDuration(), smaller_duration) << "Check new duration";
+
+  TrackTime chunkByChunkDuration = 0;
+  for (AudioSegment::ChunkIterator iter(s); !iter.IsEnded(); iter.Next()) {
+    chunkByChunkDuration += iter->GetDuration();
+  }
+  EXPECT_EQ(s.GetDuration(), chunkByChunkDuration)
+      << "Confirm duration chunk by chunk";
 }
 
 }  // namespace audio_segment

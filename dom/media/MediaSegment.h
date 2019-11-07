@@ -451,19 +451,17 @@ class MediaSegmentBase : public MediaSegment {
     NS_ASSERTION(aKeep >= 0, "Can't keep negative duration");
     TrackTime t = aKeep;
     uint32_t i;
-    for (i = aStartIndex; i < mChunks.Length(); ++i) {
+    for (i = aStartIndex; i < mChunks.Length() && t; ++i) {
       Chunk* c = &mChunks[i];
       if (c->GetDuration() > t) {
         c->SliceTo(0, t);
         break;
       }
       t -= c->GetDuration();
-      if (t == 0) {
-        break;
-      }
     }
-    if (i + 1 < mChunks.Length()) {
-      mChunks.RemoveElementsAt(i + 1, mChunks.Length() - (i + 1));
+    // At this point `i` is already advanced due to last check in the loop.
+    if (i < mChunks.Length()) {
+      mChunks.RemoveElementsAt(i, mChunks.Length() - i);
     }
     MOZ_ASSERT(mChunks.Capacity() >= DEFAULT_SEGMENT_CAPACITY,
                "Capacity must be retained after removing chunks");
