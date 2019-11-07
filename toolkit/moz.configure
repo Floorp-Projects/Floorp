@@ -1771,6 +1771,9 @@ def requires_wasm_sandboxing(libraries):
 
 set_config('MOZ_USING_WASM_SANDBOXING', requires_wasm_sandboxing)
 
+lucetc = check_prog('LUCETC', ['lucetc'],
+                    paths=toolchain_search_path, when=requires_wasm_sandboxing)
+
 @depends('--with-wasm-sandboxed-libraries', target)
 def wasm_sandboxing(libraries, target):
     if not libraries:
