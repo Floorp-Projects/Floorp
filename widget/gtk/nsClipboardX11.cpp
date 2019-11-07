@@ -139,8 +139,7 @@ bool nsRetrievalContextX11::WaitForX11Content() {
   }
 
   GdkDisplay* gdkDisplay = gdk_display_get_default();
-  // gdk_display_get_default() returns null on headless
-  if (gdkDisplay && GDK_IS_X11_DISPLAY(gdkDisplay)) {
+  if (GDK_IS_X11_DISPLAY(gdkDisplay)) {
     Display* xDisplay = GDK_DISPLAY_XDISPLAY(gdkDisplay);
     checkEventContext context;
     context.cbWidget = nullptr;
