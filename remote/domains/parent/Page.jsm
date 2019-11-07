@@ -15,6 +15,12 @@ const { Domain } = ChromeUtils.import(
 const { UnsupportedError } = ChromeUtils.import(
   "chrome://remote/content/Error.jsm"
 );
+const { TabManager } = ChromeUtils.import(
+  "chrome://remote/content/TabManager.jsm"
+);
+const { WindowManager } = ChromeUtils.import(
+  "chrome://remote/content/WindowManager.jsm"
+);
 
 class Page extends Domain {
   constructor(session) {
@@ -147,16 +153,12 @@ class Page extends Domain {
     }
   }
 
-  bringToFront() {
-    const { browser } = this.session.target;
-    const navigator = browser.ownerGlobal;
-    const { gBrowser } = navigator;
+  async bringToFront() {
+    const { tab, window } = this.session.target;
 
-    // Focus the window responsible for this page.
-    navigator.focus();
-
-    // Select the corresponding tab
-    gBrowser.selectedTab = gBrowser.getTabForBrowser(browser);
+    // Focus the window, and select the corresponding tab
+    await WindowManager.focus(window);
+    TabManager.selectTab(tab);
   }
 
   /**
