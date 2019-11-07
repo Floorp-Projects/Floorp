@@ -127,6 +127,27 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
     return state;
   }
 
+  /**
+   * Returns the video that the user was last hovering with the mouse if it
+   * still exists.
+   *
+   * @return {Element} the <video> element that the user was last hovering,
+   * or null if there was no such <video>, or the <video> no longer exists.
+   */
+  getWeakOverVideo() {
+    let { weakOverVideo } = this.docState;
+    if (weakOverVideo) {
+      // Bug 800957 - Accessing weakrefs at the wrong time can cause us to
+      // throw NS_ERROR_XPC_BAD_CONVERT_NATIVE
+      try {
+        return weakOverVideo.get();
+      } catch (e) {
+        return null;
+      }
+    }
+    return null;
+  }
+
   handleEvent(event) {
     if (!event.isTrusted) {
       // We don't care about synthesized events that might be coming from
@@ -378,7 +399,7 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
       mozSystemGroup: true,
     });
     this.removeMouseButtonListeners();
-    let oldOverVideo = state.weakOverVideo && state.weakOverVideo.get();
+    let oldOverVideo = this.getWeakOverVideo();
     if (oldOverVideo) {
       this.onMouseLeaveVideo(oldOverVideo);
     }
@@ -434,9 +455,7 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
       return;
     }
 
-    let state = this.docState;
-
-    let video = state.weakOverVideo && state.weakOverVideo.get();
+    let video = this.getWeakOverVideo();
     if (!video) {
       return;
     }
@@ -472,6 +491,7 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
 
     let toggle = shadowRoot.getElementById("pictureInPictureToggleButton");
     if (this.isMouseOverToggle(toggle, event)) {
+      let state = this.docState;
       state.isClickingToggle = true;
       state.clickedElement = Cu.getWeakReference(event.originalTarget);
       event.stopImmediatePropagation();
@@ -547,9 +567,7 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
       // For mouseout events, if there's no relatedTarget (which normally
       // maps to the element that the mouse entered into) then this means that
       // we left the window.
-      let state = this.docState;
-
-      let video = state.weakOverVideo && state.weakOverVideo.get();
+      let video = this.getWeakOverVideo();
       if (!video) {
         return;
       }
@@ -612,7 +630,7 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
       }
     }
 
-    let oldOverVideo = state.weakOverVideo && state.weakOverVideo.get();
+    let oldOverVideo = this.getWeakOverVideo();
     if (oldOverVideo) {
       this.onMouseLeaveVideo(oldOverVideo);
     }
@@ -625,8 +643,7 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
    * @param {Element} video The video the mouse is over.
    */
   onMouseOverVideo(video, event) {
-    let state = this.docState;
-    let oldOverVideo = state.weakOverVideo && state.weakOverVideo.get();
+    let oldOverVideo = this.getWeakOverVideo();
     let shadowRoot = video.openOrClosedShadowRoot;
 
     // It seems from automated testing that if it's still very early on in the
@@ -653,6 +670,7 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
     //
     // We disable the toggle hiding timeout during testing to reduce
     // non-determinism from timers when testing the toggle.
+    let state = this.docState;
     if (!state.hideToggleDeferredTask && !this.toggleTesting) {
       state.hideToggleDeferredTask = new DeferredTask(() => {
         controlsOverlay.setAttribute("hidetoggle", true);
@@ -756,9 +774,7 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
    * @param {MouseEvent} event A contextmenu event.
    */
   checkContextMenu(event) {
-    let state = this.docState;
-
-    let video = state.weakOverVideo && state.weakOverVideo.get();
+    let video = this.getWeakOverVideo();
     if (!video) {
       return;
     }
@@ -813,7 +829,7 @@ class PictureInPictureChild extends JSWindowActorChild {
         break;
       }
       case "MozStopPictureInPicture": {
-        if (event.isTrusted && event.target === this.weakVideo) {
+        if (event.isTrusted && event.target === this.getWeakVideo()) {
           this.closePictureInPicture({ reason: "video-el-remove" });
         }
         break;
@@ -833,7 +849,19 @@ class PictureInPictureChild extends JSWindowActorChild {
         break;
       }
       case "volumechange": {
-        if (this.weakVideo.muted) {
+        let video = this.getWeakVideo();
+
+        // Just double-checking that we received the event for the right
+        // video element.
+        if (video !== event.target) {
+          Cu.reportError(
+            "PictureInPictureChild received volumechange for " +
+              "the wrong video!"
+          );
+          return;
+        }
+
+        if (video.muted) {
           this.sendAsyncMessage("PictureInPicture:Muting");
         } else {
           this.sendAsyncMessage("PictureInPicture:Unmuting");
@@ -843,16 +871,42 @@ class PictureInPictureChild extends JSWindowActorChild {
     }
   }
 
-  get weakVideo() {
+  /**
+   * Returns a reference to the <video> element being displayed in Picture-in-Picture
+   * mode.
+   *
+   * @return {Element} The <video> being displayed in Picture-in-Picture mode, or null
+   * if that <video> no longer exists.
+   */
+  getWeakVideo() {
     if (gWeakVideo) {
-      return gWeakVideo.get();
+      // Bug 800957 - Accessing weakrefs at the wrong time can cause us to
+      // throw NS_ERROR_XPC_BAD_CONVERT_NATIVE
+      try {
+        return gWeakVideo.get();
+      } catch (e) {
+        return null;
+      }
     }
     return null;
   }
 
-  get weakPlayerContent() {
+  /**
+   * Returns a reference to the inner window of the about:blank document that is
+   * cloning the originating <video> in the always-on-top player <xul:browser>.
+   *
+   * @return {Window} The inner window of the about:blank player <xul:browser>, or
+   * null if that window has been closed.
+   */
+  getWeakPlayerContent() {
     if (gWeakPlayerContent) {
-      return gWeakPlayerContent.get();
+      // Bug 800957 - Accessing weakrefs at the wrong time can cause us to
+      // throw NS_ERROR_XPC_BAD_CONVERT_NATIVE
+      try {
+        return gWeakPlayerContent.get();
+      } catch (e) {
+        return null;
+      }
     }
     return null;
   }
@@ -884,7 +938,7 @@ class PictureInPictureChild extends JSWindowActorChild {
       // Picture-in-Picture.
       await this.closePictureInPicture({ reason: "contextmenu" });
     } else {
-      if (this.weakVideo) {
+      if (this.getWeakVideo()) {
         // There's a pre-existing Picture-in-Picture window for a video
         // in this content process. Send a message to the parent to close
         // the Picture-in-Picture window.
@@ -910,7 +964,7 @@ class PictureInPictureChild extends JSWindowActorChild {
    * @return {Boolean}
    */
   inPictureInPicture(video) {
-    return this.weakVideo === video;
+    return this.getWeakVideo() === video;
   }
 
   /**
@@ -923,18 +977,20 @@ class PictureInPictureChild extends JSWindowActorChild {
    * window has unloaded.
    */
   async closePictureInPicture({ reason }) {
-    if (this.weakVideo) {
-      this.untrackOriginatingVideo(this.weakVideo);
+    let video = this.getWeakVideo();
+    if (video) {
+      this.untrackOriginatingVideo(video);
     }
     this.sendAsyncMessage("PictureInPicture:Close", {
       browingContextId: this.docShell.browsingContext.id,
       reason,
     });
 
-    if (this.weakPlayerContent) {
-      if (!this.weakPlayerContent.closed) {
+    let playerContent = this.getWeakPlayerContent();
+    if (playerContent) {
+      if (!playerContent.closed) {
         await new Promise(resolve => {
-          this.weakPlayerContent.addEventListener("unload", resolve, {
+          playerContent.addEventListener("unload", resolve, {
             once: true,
           });
         });
@@ -1020,7 +1076,7 @@ class PictureInPictureChild extends JSWindowActorChild {
    * away due to an unexpected error.
    */
   async setupPlayer() {
-    let originatingVideo = this.weakVideo;
+    let originatingVideo = this.getWeakVideo();
     if (!originatingVideo) {
       // If the video element has gone away before we've had a chance to set up
       // Picture-in-Picture for it, tell the parent to close the Picture-in-Picture
@@ -1065,9 +1121,10 @@ class PictureInPictureChild extends JSWindowActorChild {
     this.contentWindow.addEventListener(
       "unload",
       () => {
-        if (this.weakVideo) {
-          this.untrackOriginatingVideo(this.weakVideo);
-          this.weakVideo.stopCloningElementVisually();
+        let video = this.getWeakVideo();
+        if (video) {
+          this.untrackOriginatingVideo(video);
+          video.stopCloningElementVisually();
         }
         gWeakVideo = null;
       },
@@ -1078,28 +1135,28 @@ class PictureInPictureChild extends JSWindowActorChild {
   }
 
   play() {
-    let video = this.weakVideo;
+    let video = this.getWeakVideo();
     if (video) {
       video.play();
     }
   }
 
   pause() {
-    let video = this.weakVideo;
+    let video = this.getWeakVideo();
     if (video) {
       video.pause();
     }
   }
 
   mute() {
-    let video = this.weakVideo;
+    let video = this.getWeakVideo();
     if (video) {
       video.muted = true;
     }
   }
 
   unmute() {
-    let video = this.weakVideo;
+    let video = this.getWeakVideo();
     if (video) {
       video.muted = false;
     }
