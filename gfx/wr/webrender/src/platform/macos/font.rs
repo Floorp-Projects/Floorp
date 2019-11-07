@@ -491,8 +491,7 @@ impl FontContext {
 
     pub fn rasterize_glyph(&mut self, font: &FontInstance, key: &GlyphKey) -> GlyphRasterResult {
         let (x_scale, y_scale) = font.transform.compute_scale().unwrap_or((1.0, 1.0));
-        let scale = font.oversized_scale_factor(x_scale, y_scale);
-        let size = font.size.scale_by((y_scale / scale) as f32);
+        let size = font.size.scale_by(y_scale as f32);
         let ct_font = self.get_ct_font(font.font_key, size, &font.variations).ok_or(GlyphRasterError::LoadFailed)?;
         let glyph_type = if is_bitmap_font(&ct_font) {
             GlyphType::Bitmap
@@ -538,13 +537,13 @@ impl FontContext {
             (x_scale, y_scale / x_scale)
         };
 
-        let extra_strikes = font.get_extra_strikes(strike_scale / scale);
+        let extra_strikes = font.get_extra_strikes(strike_scale);
         let metrics = get_glyph_metrics(
             &ct_font,
             transform.as_ref(),
             glyph,
-            x_offset / scale,
-            y_offset / scale,
+            x_offset,
+            y_offset,
             extra_strikes as f64 * pixel_step,
         );
         if metrics.rasterized_width == 0 || metrics.rasterized_height == 0 {
@@ -634,8 +633,8 @@ impl FontContext {
 
             // CG Origin is bottom left, WR is top left. Need -y offset
             let mut draw_origin = CGPoint {
-                x: -metrics.rasterized_left as f64 + x_offset / scale,
-                y: metrics.rasterized_descent as f64 - y_offset / scale,
+                x: -metrics.rasterized_left as f64 + x_offset,
+                y: metrics.rasterized_descent as f64 - y_offset,
             };
 
             if let Some(transform) = transform {
@@ -719,8 +718,8 @@ impl FontContext {
             width: metrics.rasterized_width,
             height: metrics.rasterized_height,
             scale: match glyph_type {
-                GlyphType::Bitmap => (scale / y_scale) as f32,
-                GlyphType::Vector => scale as f32,
+                GlyphType::Bitmap => y_scale.recip() as f32,
+                GlyphType::Vector => 1.0,
             },
             format: match glyph_type {
                 GlyphType::Bitmap => GlyphFormat::ColorBitmap,
