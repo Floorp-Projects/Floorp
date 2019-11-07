@@ -107,6 +107,7 @@ EXPORTS.mozilla += [
     'ServoTraversalStatistics.h',
     'ServoTypes.h',
     'ServoUtils.h',
+    'ShadowParts.h',
     'StyleAnimationValue.h',
     'StyleColorInlines.h',
     'StyleSheet.h',
@@ -221,6 +222,7 @@ UNIFIED_SOURCES += [
     'ServoCSSRuleList.cpp',
     'ServoElementSnapshot.cpp',
     'ServoStyleSet.cpp',
+    'ShadowParts.cpp',
     'StreamLoader.cpp',
     'StyleAnimationValue.cpp',
     'StyleColor.cpp',
@@ -242,9 +244,6 @@ LOCAL_INCLUDES += [
     '/dom/xul',
     '/image',
 ]
-
-if CONFIG['MOZ_XBL']:
-    LOCAL_INCLUDES += ['/dom/xbl']
 
 JAR_MANIFESTS += ['jar.mn']
 

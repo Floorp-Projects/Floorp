@@ -373,7 +373,7 @@ void WorkletThread::Terminate() {
 }
 
 void WorkletThread::TerminateInternal() {
-  AssertIsOnWorkletThread();
+  MOZ_ASSERT(!CycleCollectedJSContext::Get() || IsOnWorkletThread());
 
   mExitLoop = true;
 

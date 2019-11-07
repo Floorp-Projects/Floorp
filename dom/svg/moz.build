@@ -259,8 +259,5 @@ LOCAL_INCLUDES += [
     '/layout/xul',
 ]
 
-if CONFIG['MOZ_XBL']:
-    LOCAL_INCLUDES += ['/dom/xbl']
-
 if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CXXFLAGS += ['-Wno-error=shadow']

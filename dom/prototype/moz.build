@@ -20,9 +20,6 @@ LOCAL_INCLUDES += [
     '/dom/xul',
 ]
 
-if CONFIG['MOZ_XBL']:
-    LOCAL_INCLUDES += ['/dom/xbl']
-
 MOCHITEST_CHROME_MANIFESTS += ['tests/chrome/chrome.ini']
 
 FINAL_LIBRARY = 'xul'

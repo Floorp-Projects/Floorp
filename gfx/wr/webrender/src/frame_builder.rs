@@ -503,7 +503,7 @@ impl FrameBuilder {
         // Determine if we will draw this frame with picture caching enabled. This depends on:
         // (1) If globally enabled when WR was initialized
         // (2) If current debug flags allow picture caching
-        // (3) [In future] Whether we are currently pinch zooming
+        // (3) Whether we are currently pinch zooming
         // (4) If any picture cache spatial nodes are not in the root coordinate system
         let picture_caching_is_enabled =
             scene.config.global_enable_picture_caching &&
@@ -512,7 +512,8 @@ impl FrameBuilder {
                 let spatial_node = &scene
                     .clip_scroll_tree
                     .spatial_nodes[spatial_node_index.0 as usize];
-                spatial_node.coordinate_system_id != CoordinateSystemId::root()
+                spatial_node.coordinate_system_id != CoordinateSystemId::root() ||
+                    spatial_node.is_ancestor_or_self_zooming
             });
 
         let mut composite_state = CompositeState::new(

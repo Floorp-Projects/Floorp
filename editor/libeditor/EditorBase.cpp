@@ -926,7 +926,7 @@ void EditorBase::EndPlaceholderTransaction() {
 
   if (mPlaceholderBatch == 1) {
     // By making the assumption that no reflow happens during the calls
-    // to EndUpdateViewBatch and ScrollSelectionIntoView, we are able to
+    // to EndUpdateViewBatch and ScrollSelectionFocusIntoView, we are able to
     // allow the selection to cache a frame offset which is used by the
     // caret drawing code. We only enable this cache here; at other times,
     // we have no way to know whether reflow invalidates it
@@ -937,9 +937,13 @@ void EditorBase::EndPlaceholderTransaction() {
     EndUpdateViewBatch();
     // make sure selection is in view
 
-    // After ScrollSelectionIntoView(), the pending notifications might be
+    // After ScrollSelectionFocusIntoView(), the pending notifications might be
     // flushed and PresShell/PresContext/Frames may be dead. See bug 418470.
-    ScrollSelectionIntoView(false);
+    // XXX Even if we're destroyed, we need to keep handling below because
+    //     this method changes a lot of status.  We should rewrite this safer.
+    DebugOnly<nsresult> rvIgnored = ScrollSelectionFocusIntoView();
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
+                         "ScrollSelectionFocusIntoView() failed, but Ignored");
 
     // cached for frame offset are Not available now
     SelectionRefPtr()->SetCanCacheFrameOffset(false);
@@ -2617,20 +2621,20 @@ void EditorBase::CloneAttributesWithTransaction(Element& aDestElement,
   }
 }
 
-nsresult EditorBase::ScrollSelectionIntoView(bool aScrollToAnchor) {
+nsresult EditorBase::ScrollSelectionFocusIntoView() {
   nsISelectionController* selectionController = GetSelectionController();
   if (!selectionController) {
     return NS_OK;
   }
 
-  int16_t region = nsISelectionController::SELECTION_FOCUS_REGION;
-  if (aScrollToAnchor) {
-    region = nsISelectionController::SELECTION_ANCHOR_REGION;
-  }
-  selectionController->ScrollSelectionIntoView(
-      nsISelectionController::SELECTION_NORMAL, region,
+  DebugOnly<nsresult> rvIgnored = selectionController->ScrollSelectionIntoView(
+      nsISelectionController::SELECTION_NORMAL,
+      nsISelectionController::SELECTION_FOCUS_REGION,
       nsISelectionController::SCROLL_OVERFLOW_HIDDEN);
-  return NS_OK;
+  NS_WARNING_ASSERTION(
+      NS_SUCCEEDED(rvIgnored),
+      "nsISelectionController::ScrollSelectionIntoView() failed, but ignored");
+  return NS_WARN_IF(Destroyed()) ? NS_ERROR_EDITOR_DESTROYED : NS_OK;
 }
 
 EditorRawDOMPoint EditorBase::FindBetterInsertionPoint(

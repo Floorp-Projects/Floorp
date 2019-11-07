@@ -108,11 +108,6 @@ DIRS += [
     'l10n',
 ]
 
-if CONFIG['MOZ_XBL']:
-    DIRS += ['xbl']
-else:
-    EXPORTS += ['xbl/stub/nsXBLBinding.h']
-
 if CONFIG['OS_ARCH'] == 'WINNT':
     DIRS += ['plugins/ipc/hangui']
 

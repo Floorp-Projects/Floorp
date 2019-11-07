@@ -267,6 +267,19 @@ bool nsLayoutUtils::HasAnimationOfPropertySet(
 }
 
 /* static */
+bool nsLayoutUtils::HasAnimationOfTransformAndMotionPath(
+    const nsIFrame* aFrame) {
+  return nsLayoutUtils::HasAnimationOfPropertySet(
+             aFrame,
+             nsCSSPropertyIDSet{eCSSProperty_transform, eCSSProperty_translate,
+                                eCSSProperty_rotate, eCSSProperty_scale,
+                                eCSSProperty_offset_path}) ||
+         (!aFrame->StyleDisplay()->mOffsetPath.IsNone() &&
+          nsLayoutUtils::HasAnimationOfPropertySet(
+              aFrame, nsCSSPropertyIDSet::MotionPathProperties()));
+}
+
+/* static */
 bool nsLayoutUtils::HasEffectiveAnimation(
     const nsIFrame* aFrame, const nsCSSPropertyIDSet& aPropertySet) {
   return HasMatchingAnimations(
@@ -298,6 +311,15 @@ nsCSSPropertyIDSet nsLayoutUtils::GetAnimationPropertiesForCompositor(
 
   for (const KeyframeEffect* effect : *effects) {
     properties |= effect->GetPropertiesForCompositor(*effects, aStyleFrame);
+  }
+
+  // If properties only have motion-path properties, we have to make sure they
+  // have effects. i.e. offset-path is not none or we have offset-path
+  // animations.
+  if (properties.IsSubsetOf(nsCSSPropertyIDSet::MotionPathProperties()) &&
+      !properties.HasProperty(eCSSProperty_offset_path) &&
+      aStyleFrame->StyleDisplay()->mOffsetPath.IsNone()) {
+    properties.Empty();
   }
 
   return properties;

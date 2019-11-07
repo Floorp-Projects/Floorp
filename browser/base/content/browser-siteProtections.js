@@ -1236,6 +1236,12 @@ var gProtectionsHandler = {
       "protections-popup-siteNotWorking-tp-switch"
     ));
   },
+  get _protectionsPopupSiteNotWorkingReportError() {
+    delete this._protectionsPopupSiteNotWorkingReportError;
+    return (this._protectionsPopupSiteNotWorkingReportError = document.getElementById(
+      "protections-popup-sendReportView-report-error"
+    ));
+  },
   get _protectionsPopupSendReportLearnMore() {
     delete this._protectionsPopupSendReportLearnMore;
     return (this._protectionsPopupSendReportLearnMore = document.getElementById(
@@ -1246,6 +1252,12 @@ var gProtectionsHandler = {
     delete this._protectionsPopupSendReportURL;
     return (this._protectionsPopupSendReportURL = document.getElementById(
       "protections-popup-sendReportView-collection-url"
+    ));
+  },
+  get _protectionsPopupSendReportButton() {
+    delete this._protectionsPopupSendReportButton;
+    return (this._protectionsPopupSendReportButton = document.getElementById(
+      "protections-popup-sendReportView-submit"
     ));
   },
   get _trackingProtectionIconTooltipLabel() {
@@ -2174,7 +2186,12 @@ var gProtectionsHandler = {
       "?" + this.reportURI.query,
       ""
     );
+    let commentsTextarea = document.getElementById(
+      "protections-popup-sendReportView-collection-comments"
+    );
+    commentsTextarea.value = "";
     this._protectionsPopupSendReportURL.value = urlWithoutQuery;
+    this._protectionsPopupSiteNotWorkingReportError.hidden = true;
     this._protectionsPopupMultiView.showSubView(
       "protections-popup-sendReportView"
     );
@@ -2192,6 +2209,7 @@ var gProtectionsHandler = {
     // ContentBlockingAllowList here.
     this._protectionsPopupTPSwitchBreakageLink.hidden =
       ContentBlockingAllowList.includes(gBrowser.selectedBrowser) ||
+      !this._protectionsPopup.hasAttribute("blocking") ||
       !this._protectionsPopupTPSwitch.hasAttribute("enabled");
   },
 
@@ -2269,28 +2287,31 @@ var gProtectionsHandler = {
       formData.set("labels", activatedBlockers.join(","));
     }
 
+    this._protectionsPopupSendReportButton.disabled = true;
+
     fetch(reportEndpoint, {
       method: "POST",
       credentials: "omit",
       body: formData,
     })
-      .then(function(response) {
+      .then(response => {
+        this._protectionsPopupSendReportButton.disabled = false;
         if (!response.ok) {
           Cu.reportError(
             `Content Blocking report to ${reportEndpoint} failed with status ${
               response.status
             }`
           );
+          this._protectionsPopupSiteNotWorkingReportError.hidden = false;
         } else {
-          // Clear the textarea value when the report is submitted
-          commentsTextarea.value = "";
+          this._protectionsPopup.hidePopup();
+          ConfirmationHint.show(this.iconBox, "breakageReport");
         }
       })
       .catch(Cu.reportError);
   },
 
   onSendReportClicked() {
-    this._protectionsPopup.hidePopup();
     this.submitBreakageReport(this.reportURI);
   },
 

@@ -259,17 +259,6 @@ BrowserHost::GetOsPid(int32_t* aOsPid) {
   return NS_OK;
 }
 
-/* readonly attribute boolean hasContentOpener; */
-NS_IMETHODIMP
-BrowserHost::GetHasContentOpener(bool* aHasContentOpener) {
-  if (!mRoot) {
-    *aHasContentOpener = false;
-    return NS_OK;
-  }
-  *aHasContentOpener = mRoot->GetHasContentOpener();
-  return NS_OK;
-}
-
 /* readonly attribute boolean hasPresented; */
 NS_IMETHODIMP
 BrowserHost::GetHasPresented(bool* aHasPresented) {

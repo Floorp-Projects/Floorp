@@ -179,7 +179,7 @@ void DCLayerTree::Bind(wr::NativeSurfaceId aId, wr::DeviceIntPoint* aOffset,
 
   const auto layer = it->second.get();
 
-  layer->CreateEGLSurfaceForCompositionSurface(aOffset);
+  layer->CreateEGLSurfaceForCompositionSurface(aDirtyRect, aOffset);
   MOZ_ASSERT(layer->GetEGLSurface() != EGL_NO_SURFACE);
   gl::GLContextEGL::Cast(mGL)->SetEGLSurfaceOverride(layer->GetEGLSurface());
   mCurrentId = Some(aId);
@@ -319,7 +319,7 @@ RefPtr<IDCompositionSurface> DCLayer::CreateCompositionSurface(
 }
 
 bool DCLayer::CreateEGLSurfaceForCompositionSurface(
-    wr::DeviceIntPoint* aOffset) {
+    wr::DeviceIntRect aDirtyRect, wr::DeviceIntPoint* aOffset) {
   MOZ_ASSERT(mCompositionSurface.get());
 
   HRESULT hr;
@@ -328,13 +328,36 @@ bool DCLayer::CreateEGLSurfaceForCompositionSurface(
   RefPtr<ID3D11Texture2D> backBuf;
   POINT offset;
 
-  hr = mCompositionSurface->BeginDraw(NULL, __uuidof(ID3D11Texture2D),
+  LayoutDeviceIntRect dirtyRect(aDirtyRect.origin.x, aDirtyRect.origin.y,
+                                aDirtyRect.size.width, aDirtyRect.size.height);
+  // Bind is sometimes called with a dirty rect that extends beyond the layer
+  // (bug 1593845).
+  dirtyRect = dirtyRect.Intersect(LayoutDeviceIntRect({}, mBufferSize));
+
+  RECT update_rect;
+  update_rect.left = dirtyRect.X();
+  update_rect.top = dirtyRect.Y();
+  update_rect.right = dirtyRect.XMost();
+  update_rect.bottom = dirtyRect.YMost();
+
+  RECT* rect = &update_rect;
+  if (StaticPrefs::gfx_webrender_compositor_max_update_rects_AtStartup() <= 0) {
+    // Update entire surface
+    rect = nullptr;
+  }
+
+  hr = mCompositionSurface->BeginDraw(rect, __uuidof(ID3D11Texture2D),
                                       (void**)getter_AddRefs(backBuf), &offset);
   if (FAILED(hr)) {
     gfxCriticalNote << "DCompositionSurface::BeginDraw failed: "
-                    << gfx::hexa(hr);
+                    << gfx::hexa(hr) << "dirtyRect: " << dirtyRect;
     return false;
   }
+
+  // DC includes the origin of the dirty / update rect in the draw offset,
+  // undo that here since WR expects it to be an absolute offset.
+  offset.x -= dirtyRect.X();
+  offset.y -= dirtyRect.Y();
 
   // Texture size could be diffrent from mBufferSize.
   D3D11_TEXTURE2D_DESC desc;

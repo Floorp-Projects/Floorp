@@ -29,9 +29,6 @@
 #include "nsChangeHint.h"
 #include "nsCOMArray.h"
 #include "mozilla/dom/DirectionalityUtils.h"
-#ifdef MOZ_XBL
-#  include "nsBindingManager.h"
-#endif
 #include "nsCCUncollectableMarker.h"
 #include "mozAutoDocUpdate.h"
 #include "nsTextNode.h"
@@ -515,10 +512,6 @@ void CharacterData::UnbindFromTree(bool aNullParent) {
 
   HandleShadowDOMRelatedRemovalSteps(aNullParent);
 
-#ifdef MOZ_XBL
-  Document* document = GetComposedDoc();
-#endif
-
   if (aNullParent) {
     if (IsRootOfNativeAnonymousSubtree()) {
       MutationObservers::NotifyNativeAnonymousChildListChange(this, true);
@@ -539,19 +532,6 @@ void CharacterData::UnbindFromTree(bool aNullParent) {
     // Begin keeping track of our subtree root.
     SetSubtreeRootPointer(aNullParent ? this : mParent->SubtreeRoot());
   }
-
-#ifdef MOZ_XBL
-  if (document && !GetContainingShadow()) {
-    // Notify XBL- & nsIAnonymousContentCreator-generated
-    // anonymous content that the document is changing.
-    // Unlike XBL, bindings for web components shadow DOM
-    // do not get uninstalled.
-    if (HasFlag(NODE_MAY_BE_IN_BINDING_MNGR)) {
-      nsContentUtils::AddScriptRunner(new RemoveFromBindingManagerRunnable(
-          document->BindingManager(), this, document));
-    }
-  }
-#endif
 
   nsExtendedContentSlots* slots = GetExistingExtendedContentSlots();
   if (slots) {

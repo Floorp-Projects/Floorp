@@ -29,5 +29,8 @@
     "python_doc": [
         "mozbase",
         "python/python"
+    ],
+    "fennec_doc": [
+        "mobile/android"
     ]
 }

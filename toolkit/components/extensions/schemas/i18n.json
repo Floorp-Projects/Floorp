@@ -12,6 +12,13 @@
           "default_locale": {
             "type": "string",
             "optional": "true"
+          },
+          "l10n_resources": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "optional": true
           }
         }
       }

@@ -241,19 +241,6 @@ class nsJSUtils {
       JSContext* aCx, mozilla::dom::Element* aElement,
       JS::MutableHandleVector<JSObject*> aScopeChain);
 
-#ifdef MOZ_XBL
-  // Returns a scope chain suitable for XBL execution.
-  //
-  // This is by default GetScopeChainForElemenet, but will be different if the
-  // <binding> element had the simpleScopeChain attribute.
-  //
-  // This is to prevent footguns like bug 1446342.
-  static bool GetScopeChainForXBL(
-      JSContext* aCx, mozilla::dom::Element* aBoundElement,
-      const nsXBLPrototypeBinding& aProtoBinding,
-      JS::MutableHandleVector<JSObject*> aScopeChain);
-#endif
-
   static void ResetTimeZone();
 
   static bool DumpEnabled();

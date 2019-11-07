@@ -27,7 +27,7 @@ const hideOnThemeType = addonType => addonType === "theme";
 
 // The reasons string used as a key in this Map is expected to stay in sync
 // with the reasons string used in the "abuseReports.ftl" locale file and
-// the suggestions templates included in abuse-reports-xulframe.html.
+// the suggestions templates included in abuse-report-frame.html.
 const ABUSE_REASONS = (window.ABUSE_REPORT_REASONS = {
   damage: {
     isExampleHidden: showOnAnyType,
@@ -69,14 +69,31 @@ const ABUSE_REASONS = (window.ABUSE_REPORT_REASONS = {
   },
 });
 
+// Maps the reason id to the last version of the related fluent id.
+// NOTE: when changing the localized string, increase the `-vN` suffix
+// in the abuseReports.ftl fluent file and update this mapping table.
+const REASON_L10N_STRING_MAPPING = {
+  "abuse-report-damage-reason": "abuse-report-damage-reason-v2",
+  "abuse-report-spam-reason": "abuse-report-spam-reason-v2",
+  "abuse-report-settings-reason": "abuse-report-settings-reason-v2",
+  "abuse-report-deceptive-reason": "abuse-report-deceptive-reason-v2",
+  "abuse-report-broken-reason-extension":
+    "abuse-report-broken-reason-extension-v2",
+  "abuse-report-broken-reason-theme": "abuse-report-broken-reason-theme-v2",
+  "abuse-report-policy-reason": "abuse-report-policy-reason-v2",
+  "abuse-report-unwanted-reason": "abuse-report-unwanted-reason-v2",
+};
+
 function getReasonL10nId(reason, addonType) {
-  let l10nId = `abuse-report-${reason}-reason`;
+  let reasonId = `abuse-report-${reason}-reason`;
   // Special case reasons that have a addonType-specific
   // l10n id.
   if (ABUSE_REASONS[reason].hasAddonTypeL10nId) {
-    l10nId += `-${addonType}`;
+    reasonId += `-${addonType}`;
   }
-  return l10nId;
+  // Map the reason to the corresponding versionized fluent string, using the
+  // mapping table above, if available.
+  return REASON_L10N_STRING_MAPPING[reasonId] || reasonId;
 }
 
 function getSuggestionsTemplate({ addonType, reason, supportURL }) {

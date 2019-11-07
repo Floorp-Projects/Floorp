@@ -94,11 +94,6 @@
 #include "nsSVGUtils.h"
 #include "nsTextNode.h"
 #include "nsUnicharUtils.h"
-#ifdef MOZ_XBL
-#  include "nsBindingManager.h"
-#  include "nsXBLBinding.h"
-#  include "nsXBLPrototypeBinding.h"
-#endif
 #include "nsWindowSizes.h"
 #include "mozilla/Preferences.h"
 #include "xpcpublic.h"
@@ -536,11 +531,6 @@ void nsINode::LastRelease() {
     UnsetFlags(NODE_HAS_LISTENERMANAGER);
   }
 
-#ifdef MOZ_XBL
-  NS_ASSERTION(
-      !Element::FromNode(this) || !Element::FromNode(this)->GetXBLBinding(),
-      "Node has binding on destruction");
-#endif
 
   ReleaseWrapper(this);
 

@@ -9,6 +9,7 @@ add_task(async function setup() {
       ["browser.contentblocking.report.monitor.enabled", false],
       ["browser.contentblocking.report.lockwise.enabled", false],
       ["browser.contentblocking.report.proxy.enabled", false],
+      ["browser.contentblocking.cfr-milestone.update-interval", 0],
     ],
   });
 });

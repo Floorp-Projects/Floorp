@@ -38,10 +38,6 @@
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 #include "nsTextNode.h"
-#ifdef MOZ_XBL
-#  include "nsBindingManager.h"
-#  include "nsXBLBinding.h"
-#endif
 
 using namespace mozilla;
 using mozilla::dom::Document;

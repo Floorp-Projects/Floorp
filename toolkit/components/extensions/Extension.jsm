@@ -58,6 +58,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   FileSource: "resource://gre/modules/L10nRegistry.jsm",
   L10nRegistry: "resource://gre/modules/L10nRegistry.jsm",
   LightweightThemeManager: "resource://gre/modules/LightweightThemeManager.jsm",
+  Localization: "resource://gre/modules/Localization.jsm",
   Log: "resource://gre/modules/Log.jsm",
   MessageChannel: "resource://gre/modules/MessageChannel.jsm",
   NetUtil: "resource://gre/modules/NetUtil.jsm",
@@ -382,6 +383,7 @@ class ExtensionData {
     this.id = null;
     this.uuid = null;
     this.localeData = null;
+    this.fluentL10n = null;
     this._promiseLocales = null;
 
     this.apiNames = new Set();
@@ -696,7 +698,7 @@ class ExtensionData {
       preprocessors: {},
     };
 
-    if (this.localeData) {
+    if (this.fluentL10n || this.localeData) {
       context.preprocessors.localize = (value, context) =>
         this.localize(value, locale);
     }
@@ -726,6 +728,19 @@ class ExtensionData {
 
     if (manifest && manifest.default_locale) {
       await this.initLocale();
+    }
+
+    // When parsing the manifest from an ExtensionData instance, we don't
+    // have isPrivileged, so ignore fluent localization in that pass.
+    // This means that fluent cannot be used to localize manifest properties
+    // read from the add-on manager (e.g., author, homepage, etc.)
+    if (manifest && manifest.l10n_resources && "isPrivileged" in this) {
+      if (this.isPrivileged) {
+        this.fluentL10n = new Localization(manifest.l10n_resources, true);
+      } else {
+        // Warn but don't make this fatal.
+        Cu.reportError("Ignoring l10n_resources in unprivileged extension");
+      }
     }
 
     if (this.manifest.theme) {
@@ -1110,8 +1125,23 @@ class ExtensionData {
     return this.localeData.localizeMessage(...args);
   }
 
-  localize(...args) {
-    return this.localeData.localize(...args);
+  localize(str, locale) {
+    // If the extension declares fluent resources in the manifest, try
+    // first to localize with fluent.  Also use the original webextension
+    // method (_locales/xx.json) so extensions can migrate bit by bit.
+    // Note also that fluent keys typically use hyphense, so hyphens are
+    // allowed in the __MSG_foo__ keys used by fluent, though they are
+    // not allowed in the keys used for json translations.
+    if (this.fluentL10n) {
+      str = str.replace(/__MSG_([-A-Za-z0-9@_]+?)__/g, (matched, message) => {
+        let translation = this.fluentL10n.formatValueSync(message);
+        return translation !== undefined ? translation : matched;
+      });
+    }
+    if (this.localeData) {
+      str = this.localeData.localize(str, locale);
+    }
+    return str;
   }
 
   // If a "default_locale" is specified in that manifest, returns it

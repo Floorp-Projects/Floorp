@@ -1,5 +1,6 @@
 from __future__ import absolute_import, unicode_literals
 from six import reraise
+from mock import MagicMock
 
 import os
 import sys
@@ -15,7 +16,11 @@ from mozrunner.errors import RunnerNotStartedError
 # need this so raptor imports work both from /raptor and via mach
 here = os.path.abspath(os.path.dirname(__file__))
 
-from raptor.raptor import RaptorDesktopFirefox, RaptorDesktopChrome, RaptorAndroid
+from raptor.raptor import (BrowsertimeDesktop,
+                           BrowsertimeAndroid,
+                           RaptorDesktopFirefox,
+                           RaptorDesktopChrome,
+                           RaptorAndroid)
 
 
 class TestBrowserThread(threading.Thread):
@@ -33,18 +38,23 @@ class TestBrowserThread(threading.Thread):
             self.exc = sys.exc_info()
 
 
-@pytest.mark.parametrize("raptor_class, app_name", [
+# Perftest tests
+@pytest.mark.parametrize("perftest_class, app_name", [
                          [RaptorDesktopFirefox, "firefox"],
                          [RaptorDesktopChrome, "chrome"],
                          [RaptorDesktopChrome, "chromium"],
                          [RaptorAndroid, "fennec"],
                          [RaptorAndroid, "geckoview"],
+                         [BrowsertimeDesktop, "firefox"],
+                         [BrowsertimeDesktop, "chrome"],
+                         [BrowsertimeDesktop, "chromium"],
+                         [BrowsertimeAndroid, "fennec"],
+                         [BrowsertimeAndroid, "geckoview"],
                          ])
-def test_build_profile(options, raptor_class, app_name, get_prefs):
+def test_build_profile(options, perftest_class, app_name, get_prefs):
     options['app'] = app_name
-    raptor = raptor_class(**options)
-
-    assert isinstance(raptor.profile, BaseProfile)
+    perftest_instance = perftest_class(**options)
+    assert isinstance(perftest_instance.profile, BaseProfile)
     if app_name != 'firefox':
         return
 
@@ -58,7 +68,7 @@ def test_build_profile(options, raptor_class, app_name, get_prefs):
     # This pref is set in raptor
     raptor_pref = 'user_pref("security.enable_java", false);'
 
-    prefs_file = os.path.join(raptor.profile.profile, 'user.js')
+    prefs_file = os.path.join(perftest_instance.profile.profile, 'user.js')
     with open(prefs_file, 'r') as fh:
         prefs = fh.read()
         for firefox_pref in firefox_prefs:
@@ -66,6 +76,98 @@ def test_build_profile(options, raptor_class, app_name, get_prefs):
         assert raptor_pref in prefs
 
 
+def test_perftest_host_ip(ConcretePerftest, options, get_prefs):
+    os.environ['HOST_IP'] = 'some_dummy_host_ip'
+    options['host'] = 'HOST_IP'
+
+    perftest = ConcretePerftest(**options)
+
+    assert perftest.config['host'] == os.environ['HOST_IP']
+
+
+@pytest.mark.parametrize('app_name, expected_e10s_flag', [
+    ['firefox', True],
+    ['fennec', False],
+    ['geckoview', True],
+])
+def test_e10s_enabling(ConcretePerftest, options, app_name, expected_e10s_flag):
+    options['app'] = app_name
+    perftest = ConcretePerftest(profile_class='firefox', **options)
+    assert perftest.config['e10s'] == expected_e10s_flag
+
+
+def test_profile_was_provided_locally(ConcretePerftest, options):
+    perftest = ConcretePerftest(**options)
+    assert os.path.isdir(perftest.config['local_profile_dir'])
+
+
+@pytest.mark.parametrize('profile_class, app, expected_profile', [
+    ['firefox', 'firefox', 'firefox'],
+    [None, 'firefox', 'firefox'],
+    ['firefox', None, 'firefox'],
+    ['firefox', 'fennec', 'firefox'],
+])
+def test_profile_class_assignation(ConcretePerftest,
+                                   options,
+                                   profile_class,
+                                   app,
+                                   expected_profile):
+    options['app'] = app
+    perftest = ConcretePerftest(profile_class=profile_class, **options)
+    assert perftest.profile_class == expected_profile
+
+
+def test_raptor_venv(ConcretePerftest, options):
+    perftest = ConcretePerftest(**options)
+    assert perftest.raptor_venv.endswith('raptor-venv')
+
+
+@pytest.mark.parametrize(
+    'run_local,'
+    'debug_mode,'
+    'post_startup_delay,'
+    'expected_post_startup_delay,'
+    'expected_debug_mode', [
+        [True, True, 1234, 1234, True],
+        [True, True, 12345, 3000, True],
+        [False, False, 1234, 1234, False],
+        [False, False, 12345, 12345, False],
+        [True, False, 1234, 1234, False],
+        [True, False, 12345, 12345, False],
+        [False, True, 1234, 1234, False],
+        [False, True, 12345, 12345, False],
+    ])
+def test_post_startup_delay(ConcretePerftest,
+                            options,
+                            run_local,
+                            debug_mode,
+                            post_startup_delay,
+                            expected_post_startup_delay,
+                            expected_debug_mode):
+    perftest = ConcretePerftest(
+        run_local=run_local,
+        debug_mode=debug_mode,
+        post_startup_delay=post_startup_delay,
+        **options
+    )
+    assert perftest.post_startup_delay == expected_post_startup_delay
+    assert perftest.debug_mode == expected_debug_mode
+
+
+@pytest.mark.parametrize('alert, expected_alert', [
+    ['test_to_alert_on', 'test_to_alert_on'],
+    [None, None],
+])
+def test_perftest_run_test_setup(ConcretePerftest, options, mock_test, alert, expected_alert):
+    perftest = ConcretePerftest(**options)
+    mock_test['alert_on'] = alert
+
+    perftest.run_test_setup(mock_test)
+
+    assert perftest.config['subtest_alert_on'] == expected_alert
+
+
+# Raptor tests
 @pytest.mark.parametrize('app', [
     'firefox',
     pytest.mark.xfail('chrome'),
@@ -106,6 +208,65 @@ def test_start_browser(get_binary, app):
 
     assert not raptor.runner.is_running()
     assert raptor.runner.returncode is not None
+
+
+# Browsertime tests
+def test_cmd_arguments(ConcreteBrowsertime, browsertime_options, mock_test):
+    dummy_process = MagicMock()
+    timeout = 125
+    expected_cmd = {
+        browsertime_options['browsertime_node'],
+        browsertime_options['browsertime_browsertimejs'],
+        '--firefox.geckodriverPath', browsertime_options['browsertime_geckodriver'],
+        '--chrome.chromedriverPath', browsertime_options['browsertime_chromedriver'],
+        '--browsertime.page_cycles', '1',
+        '--browsertime.url', mock_test['test_url'],
+        '--browsertime.page_cycle_delay', '1000',
+        '--browsertime.foreground_delay', '5000',
+        '--browsertime.post_startup_delay', str(timeout),
+        '--firefox.profileTemplate',
+        '--skipHar',
+        '--video', 'true',
+        '--visualMetrics', 'false',
+        '--timeouts.pageLoad', str(timeout),
+        '--timeouts.script', str(timeout),
+        '-vv',
+        '--resultDir',
+        '-n', '1',
+    }
+    browsertime = ConcreteBrowsertime(
+        post_startup_delay=timeout,
+        process_handler=dummy_process,
+        **browsertime_options
+    )
+
+    browsertime.run_test(mock_test, timeout)
+
+    # cmd is the first argument passed to the process_handler
+    assert expected_cmd.issubset(set(*dummy_process.call_args[0]))
+
+
+@pytest.mark.parametrize('arg, expected, page_cycles', [
+    ['-n', 1, None],
+    ['-n', 123, 123],
+])
+def test_browsertime_iterations(ConcreteBrowsertime, browsertime_options,
+                                mock_test, arg, expected, page_cycles):
+    dummy_process = MagicMock()
+    if page_cycles is not None:
+        mock_test['browser_cycles'] = page_cycles
+    browsertime = ConcreteBrowsertime(
+        post_startup_delay=expected,
+        process_handler=dummy_process,
+        **browsertime_options
+    )
+    browsertime.run_test(mock_test, expected)
+
+    # cmd is the first argument passed to the process_handler
+    unpacked_cmds = list(*dummy_process.call_args[0])
+    param_index = unpacked_cmds.index(arg) + 1
+    param_value = int(unpacked_cmds[param_index])
+    assert expected == param_value
 
 
 if __name__ == '__main__':

@@ -20,6 +20,7 @@
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/WheelEventBinding.h"
+#include "mozilla/StaticPrefs_mousewheel.h"
 
 #include <psapi.h>
 
@@ -303,21 +304,28 @@ nsresult MouseScrollHandler::SynthesizeNativeMouseScrollEvent(
 
 /* static */
 void MouseScrollHandler::InitEvent(nsWindowBase* aWidget,
-                                   WidgetGUIEvent& aEvent,
-                                   LayoutDeviceIntPoint* aPoint) {
+                                   WidgetGUIEvent& aEvent, LPARAM* aPoint) {
   NS_ENSURE_TRUE_VOID(aWidget);
-  LayoutDeviceIntPoint point;
-  if (aPoint) {
-    point = *aPoint;
+
+  // If a point is provided, use it; otherwise, get current message point or
+  // synthetic point
+  POINTS pointOnScreen;
+  if (aPoint != nullptr) {
+    pointOnScreen = MAKEPOINTS(*aPoint);
   } else {
-    POINTS pts = GetCurrentMessagePos();
-    POINT pt;
-    pt.x = pts.x;
-    pt.y = pts.y;
-    ::ScreenToClient(aWidget->GetWindowHandle(), &pt);
-    point.x = pt.x;
-    point.y = pt.y;
+    pointOnScreen = GetCurrentMessagePos();
   }
+
+  // InitEvent expects the point to be in window coordinates, so translate the
+  // point from screen coordinates.
+  POINT pointOnWindow;
+  POINTSTOPOINT(pointOnWindow, pointOnScreen);
+  ::ScreenToClient(aWidget->GetWindowHandle(), &pointOnWindow);
+
+  LayoutDeviceIntPoint point;
+  point.x = pointOnWindow.x;
+  point.y = pointOnWindow.y;
+
   aWidget->InitEvent(aEvent, &point);
 }
 
@@ -622,7 +630,8 @@ void MouseScrollHandler::HandleMouseWheelMessage(nsWindowBase* aWidget,
   RefPtr<nsWindowBase> kungFuDethGrip(aWidget);
 
   WidgetWheelEvent wheelEvent(true, eWheel, aWidget);
-  if (mLastEventInfo.InitWheelEvent(aWidget, wheelEvent, modKeyState)) {
+  if (mLastEventInfo.InitWheelEvent(aWidget, wheelEvent, modKeyState,
+                                    aLParam)) {
     MOZ_LOG(gMouseScrollLog, LogLevel::Info,
             ("MouseScroll::HandleMouseWheelMessage: dispatching "
              "eWheel event"));
@@ -680,10 +689,12 @@ void MouseScrollHandler::HandleScrollMessageAsMouseWheelMessage(
       return;
   }
   modKeyState.InitInputEvent(wheelEvent);
-  // XXX Current mouse position may not be same as when the original message
-  //     is received.  We need to know the actual mouse cursor position when
-  //     the original message was received.
-  InitEvent(aWidget, wheelEvent);
+
+  // Current mouse position may not be same as when the original message
+  // is received. However, this data is not available with the original
+  // message, which is why nullptr is passed in. We need to know the actual
+  // mouse cursor position when the original message was received.
+  InitEvent(aWidget, wheelEvent, nullptr);
 
   MOZ_LOG(
       gMouseScrollLog, LogLevel::Info,
@@ -789,13 +800,14 @@ int32_t MouseScrollHandler::LastEventInfo::RoundDelta(double aDelta) {
 
 bool MouseScrollHandler::LastEventInfo::InitWheelEvent(
     nsWindowBase* aWidget, WidgetWheelEvent& aWheelEvent,
-    const ModifierKeyState& aModKeyState) {
+    const ModifierKeyState& aModKeyState, LPARAM aLParam) {
   MOZ_ASSERT(aWheelEvent.mMessage == eWheel);
 
-  // XXX Why don't we use lParam value? We should use lParam value because
-  //     our internal message is always posted by original message handler.
-  //     So, GetMessagePos() may return different cursor position.
-  InitEvent(aWidget, aWheelEvent);
+  if (StaticPrefs::mousewheel_ignore_cursor_position_in_lparam()) {
+    InitEvent(aWidget, aWheelEvent, nullptr);
+  } else {
+    InitEvent(aWidget, aWheelEvent, &aLParam);
+  }
 
   aModKeyState.InitInputEvent(aWheelEvent);
 
@@ -1324,7 +1336,11 @@ bool MouseScrollHandler::Device::Elantech::HandleKeyMessage(
       WidgetCommandEvent appCommandEvent(
           true, (aWParam == VK_NEXT) ? nsGkAtoms::Forward : nsGkAtoms::Back,
           aWidget);
-      InitEvent(aWidget, appCommandEvent);
+
+      // In this scenario, the coordinate of the event isn't supplied, so pass
+      // nullptr as an argument to indicate using the coordinate from the last
+      // available window message.
+      InitEvent(aWidget, appCommandEvent, nullptr);
       aWidget->DispatchWindowEvent(&appCommandEvent);
     } else {
       MOZ_LOG(gMouseScrollLog, LogLevel::Info,

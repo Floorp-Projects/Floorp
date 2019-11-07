@@ -232,6 +232,7 @@
 #include "MMPrinter.h"
 #include "nsStreamUtils.h"
 #include "nsIAsyncInputStream.h"
+#include "xpcpublic.h"
 
 #include "mozilla/Sprintf.h"
 
@@ -1809,7 +1810,15 @@ bool ContentParent::ShouldKeepProcessAlive() {
   int32_t processesToKeepAlive = 0;
 
   nsAutoCString keepAlivePref("dom.ipc.keepProcessesAlive.");
-  keepAlivePref.Append(NS_ConvertUTF16toUTF8(mRemoteType));
+
+  if (StringBeginsWith(mRemoteType,
+                       NS_LITERAL_STRING(FISSION_WEB_REMOTE_TYPE)) &&
+      xpc::IsInAutomation()) {
+    keepAlivePref.Append(FISSION_WEB_REMOTE_TYPE);
+    keepAlivePref.AppendLiteral(".perOrigin");
+  } else {
+    keepAlivePref.Append(NS_ConvertUTF16toUTF8(mRemoteType));
+  }
   if (NS_FAILED(
           Preferences::GetInt(keepAlivePref.get(), &processesToKeepAlive))) {
     return false;
@@ -4947,10 +4956,6 @@ mozilla::ipc::IPCResult ContentParent::RecvCreateWindow(
       }
     }
   });
-
-  // Content has requested that we open this new content window, so
-  // we must have an opener.
-  newTab->SetHasContentOpener(true);
 
   BrowserParent::AutoUseNewTab aunt(newTab, &cwi.urlToLoad());
   const uint64_t nextRemoteTabId = ++sNextRemoteTabId;

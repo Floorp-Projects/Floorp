@@ -30,9 +30,6 @@
 #include "xpcpublic.h"
 #include "nsContentUtils.h"
 #include "nsGlobalWindow.h"
-#ifdef MOZ_XBL
-#  include "nsXBLPrototypeBinding.h"
-#endif
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/dom/BindingUtils.h"
@@ -619,31 +616,6 @@ bool nsJSUtils::GetScopeChainForElement(
 
   return true;
 }
-
-#ifdef MOZ_XBL
-/* static */
-bool nsJSUtils::GetScopeChainForXBL(
-    JSContext* aCx, Element* aElement,
-    const nsXBLPrototypeBinding& aProtoBinding,
-    JS::MutableHandleVector<JSObject*> aScopeChain) {
-  if (!aElement) {
-    return true;
-  }
-
-  if (!aProtoBinding.SimpleScopeChain()) {
-    return GetScopeChainForElement(aCx, aElement, aScopeChain);
-  }
-
-  if (!AddScopeChainItem(aCx, aElement, aScopeChain)) {
-    return false;
-  }
-
-  if (!AddScopeChainItem(aCx, aElement->OwnerDoc(), aScopeChain)) {
-    return false;
-  }
-  return true;
-}
-#endif
 
 /* static */
 void nsJSUtils::ResetTimeZone() { JS::ResetTimeZone(); }

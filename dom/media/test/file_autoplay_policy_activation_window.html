@@ -17,49 +17,63 @@
     <pre id="test">
       <script>
 
-        function testAutoplayInWindow(test_case, parent_window) {
-          log("testAutoplayInWindow: " + test_case.name);
-          playAndPostResult(test_case.muted, parent_window);
-        }
-
-        async function testAutoplayInChildFrame(test_case, parent_window) {
-          log("testAutoplayInChildFrame: " + test_case.name);
-          // Create a child iframe...
-          var frame = document.createElement("iframe");
-          var origin = test_case.same_origin_child
+        async function createChildFrame(testInfo) {
+          let frame = document.createElement("iframe");
+          let origin = testInfo.same_origin_child
             ? "http://mochi.test:8888" : "http://example.org";
           frame.src = origin + "/tests/dom/media/test/file_autoplay_policy_activation_frame.html";
           // Wait for it to load...
           document.body.appendChild(frame);
           is((await nextWindowMessage()).data, "ready", "Expected a 'ready' message");
-          // Click the iframe to activate if appropriate.
-          if (test_case.activated_child) {
-            frame.contentWindow.postMessage("click", "*");
+          return frame;
+        }
+
+        async function activateDocument(testInfo) {
+          // Click the window to activate if appropriate.
+          if (testInfo.activated_from == "parent") {
+            info(`activate parent's document`);
+            SpecialPowers.wrap(document).notifyUserGestureActivation();
+          } else if (testInfo.activated_from == "child") {
+            info(`activate child's document`);
+            testInfo.childFrame.contentWindow.postMessage("click", "*");
+            is((await nextWindowMessage()).data, "activated", "has activated child frame.");
           }
+        }
+
+        function testAutoplayInWindow(testInfo) {
+          info(`start autoplay from parent frame`);
+          playAndPostResult(testInfo.muted, testInfo.parentWindow);
+        }
+
+        async function testAutoplayInChildFrame(testInfo) {
+          info("start autoplay from " +  (testInfo.same_origin_child ? "same" : "cross")  + " origin child frame");
           // Ask the child iframe to try to play video.
-          let play_message = test_case.muted ? "play-muted" : "play-audible";
-          frame.contentWindow.postMessage(play_message, "*");
+          let play_message = testInfo.muted ? "play-muted" : "play-audible";
+          testInfo.childFrame.contentWindow.postMessage(play_message, "*");
           // Wait for the iframe to tell us whether it could play video.
           let result = await nextWindowMessage();
           // Report whether the iframe could play to the parent.
-          parent_window.postMessage(result.data, "*");
+          testInfo.parentWindow.postMessage(result.data, "*");
         }
 
         nextWindowMessage().then(
-          (event) => {
-            let test_case = event.data;
-            // Click the window to activate if appropriate.
-            if (test_case.activated_parent) {
-              SpecialPowers.wrap(document).notifyUserGestureActivation();
-            }
-            let parent_window = event.source;
-            if (test_case.same_origin_child === undefined) {
-              testAutoplayInWindow(test_case, parent_window);
-            } else {
-              testAutoplayInChildFrame(test_case, parent_window);
+          async (event) => {
+            let testInfo = event.data;
+            testInfo.parentWindow = event.source;
+            testInfo.childFrame = await createChildFrame(testInfo);
+
+            await activateDocument(testInfo);
+            switch (testInfo.play_from) {
+              case "parent":
+                testAutoplayInWindow(testInfo);
+                break;
+              case "child":
+                testAutoplayInChildFrame(testInfo);
+                break;
+              default:
+                ok(false, "Incorrect 'play_from' value!")
             }
           });
-
       </script>
     </pre>
   </body>

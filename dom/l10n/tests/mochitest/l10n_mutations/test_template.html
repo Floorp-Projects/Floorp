@@ -1,0 +1,37 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test L10n Mutations in Template elements</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <link rel="localization" href="crashreporter/aboutcrashes.ftl"/>
+  <script type="application/javascript">
+  "use strict";
+  SimpleTest.waitForExplicitFinish();
+
+  document.addEventListener("DOMContentLoaded", async () => {
+    await document.l10n.ready;
+    let template = document.getElementById("template");
+    let clone = document.importNode(template.content, true);
+    let span = clone.querySelector("span");
+    is(span.textContent.length, 0,
+      "Element has not been translated while in template");
+    document.body.appendChild(clone);
+
+    let verifyL10n = () => {
+      if (span.textContent.length > 0) {
+        window.removeEventListener("MozAfterPaint", verifyL10n);
+        SimpleTest.finish();
+      }
+    };
+    window.addEventListener("MozAfterPaint", verifyL10n);
+  });
+  </script>
+</head>
+<body>
+  <template id="template">
+    <span data-l10n-id="crash-reports-title"></span>
+  </template>
+</body>
+</html>

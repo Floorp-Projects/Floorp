@@ -440,7 +440,7 @@ pub enum SurfaceTextureDescriptor {
     /// surface identified by arbitrary id.
     NativeSurface {
         /// The arbitrary id of this surface.
-        id: NativeSurfaceId,
+        id: Option<NativeSurfaceId>,
         /// Size in device pixels of the native surface.
         size: DeviceIntSize,
     },
@@ -484,7 +484,7 @@ impl SurfaceTextureDescriptor {
             }
             SurfaceTextureDescriptor::NativeSurface { id, size } => {
                 ResolvedSurfaceTexture::NativeSurface {
-                    id: *id,
+                    id: id.expect("bug: native surface not allocated"),
                     size: *size,
                 }
             }
@@ -871,7 +871,7 @@ impl Tile {
             // the tile was previously a color, or not set, then just set
             // up a new texture cache handle.
             match self.surface.take() {
-                Some(TileSurface::Texture { descriptor, visibility_mask }) => {
+                Some(TileSurface::Texture { mut descriptor, visibility_mask }) => {
                     // If opacity changed, and this is a native OS compositor surface,
                     // it needs to be recreated.
                     // TODO(gw): This is a limitation of the DirectComposite APIs. It might
@@ -879,18 +879,17 @@ impl Tile {
                     //           a property on a surface, if we ever see pages where this
                     //           is changing frequently.
                     if opacity_changed {
-                        if let SurfaceTextureDescriptor::NativeSurface { id, size } = descriptor {
+                        if let SurfaceTextureDescriptor::NativeSurface { ref mut id, .. } = descriptor {
                             // Reset the dirty rect and tile validity in this case, to
                             // force the new tile to be completely redrawn.
                             self.dirty_rect = self.rect;
                             self.is_valid = false;
 
-                            state.composite_state.destroy_surface(id);
-                            state.composite_state.create_surface(
-                                id,
-                                size,
-                                self.is_opaque,
-                            );
+                            // If this tile has a currently allocated native surface, destroy it. It
+                            // will be re-allocated next time it's determined to be visible.
+                            if let Some(id) = id.take() {
+                                state.composite_state.destroy_surface(id);
+                            }
                         }
                     }
 
@@ -914,13 +913,13 @@ impl Tile {
                             }
                         }
                         CompositorKind::Native { .. } => {
-                            // For a new native OS surface, we need to queue up creation
-                            // of a native surface to be passed to the compositor interface.
-                            state.composite_state.create_surface(
-                                NativeSurfaceId(self.id.0 as u64),
-                                ctx.current_tile_size,
-                                self.is_opaque,
-                            )
+                            // Create a native surface surface descriptor, but don't allocate
+                            // a surface yet. The surface is allocated *after* occlusion
+                            // culling occurs, so that only visible tiles allocate GPU memory.
+                            SurfaceTextureDescriptor::NativeSurface {
+                                id: None,
+                                size: ctx.current_tile_size,
+                            }
                         }
                     };
 
@@ -1481,11 +1480,12 @@ impl TileCacheInstance {
                 false,
             );
 
-            if let Some(clip_chain_instance) = clip_chain_instance {
-                // TODO(gw): Maybe in future we can early out if the clip rect is None here,
-                //           signalling that the entire picture was clipped out?
-                self.local_clip_rect = clip_chain_instance.pic_clip_rect;
-            }
+            // Ensure that if the entire picture cache is clipped out, the local
+            // clip rect is zero. This makes sure we don't register any occluders
+            // that are actually off-screen.
+            self.local_clip_rect = clip_chain_instance.map_or(PictureRect::zero(), |clip_chain_instance| {
+                clip_chain_instance.pic_clip_rect
+            });
         }
 
         // If there are pending retained state, retrieve it.
@@ -3328,11 +3328,23 @@ impl PicturePrimitive {
                                 }
                             };
 
+                            let surface = tile.surface.as_mut().expect("no tile surface set!");
+
                             // If that draw rect is occluded by some set of tiles in front of it,
                             // then mark it as not visible and skip drawing. When it's not occluded
                             // it will fail this test, and get rasterized by the render task setup
                             // code below.
                             if frame_state.composite_state.is_tile_occluded(tile_cache.slice, tile_draw_rect) {
+                                // If this tile has an allocated native surface, free it, since it's completely
+                                // occluded. We will need to re-allocate this surface if it becomes visible,
+                                // but that's likely to be rare (e.g. when there is no content display list
+                                // for a frame or two during a tab switch).
+                                if let TileSurface::Texture { descriptor: SurfaceTextureDescriptor::NativeSurface { id, .. }, .. } = surface {
+                                    if let Some(id) = id.take() {
+                                        frame_state.composite_state.destroy_surface(id);
+                                    }
+                                }
+
                                 tile.is_visible = false;
                                 continue;
                             }
@@ -3346,8 +3358,6 @@ impl PicturePrimitive {
                             for image_key in &tile.current_descriptor.image_keys {
                                 frame_state.resource_cache.set_image_active(*image_key);
                             }
-
-                            let surface = tile.surface.as_mut().expect("no tile surface set!");
 
                             if frame_context.debug_flags.contains(DebugFlags::PICTURE_CACHING_DBG) {
                                 tile.root.draw_debug_rects(
@@ -3373,23 +3383,34 @@ impl PicturePrimitive {
                                 }
                             }
 
-                            if let TileSurface::Texture { descriptor: SurfaceTextureDescriptor::TextureCache { ref handle, .. }, .. } = surface {
-                                // Invalidate if the backing texture was evicted.
-                                if frame_state.resource_cache.texture_cache.is_allocated(handle) {
-                                    // Request the backing texture so it won't get evicted this frame.
-                                    // We specifically want to mark the tile texture as used, even
-                                    // if it's detected not visible below and skipped. This is because
-                                    // we maintain the set of tiles we care about based on visibility
-                                    // during pre_update. If a tile still exists after that, we are
-                                    // assuming that it's either visible or we want to retain it for
-                                    // a while in case it gets scrolled back onto screen soon.
-                                    // TODO(gw): Consider switching to manual eviction policy?
-                                    frame_state.resource_cache.texture_cache.request(handle, frame_state.gpu_cache);
-                                } else {
-                                    // If the texture was evicted on a previous frame, we need to assume
-                                    // that the entire tile rect is dirty.
-                                    tile.is_valid = false;
-                                    tile.dirty_rect = tile.rect;
+                            if let TileSurface::Texture { descriptor, .. } = surface {
+                                match descriptor {
+                                    SurfaceTextureDescriptor::TextureCache { ref handle, .. } => {
+                                        // Invalidate if the backing texture was evicted.
+                                        if frame_state.resource_cache.texture_cache.is_allocated(handle) {
+                                            // Request the backing texture so it won't get evicted this frame.
+                                            // We specifically want to mark the tile texture as used, even
+                                            // if it's detected not visible below and skipped. This is because
+                                            // we maintain the set of tiles we care about based on visibility
+                                            // during pre_update. If a tile still exists after that, we are
+                                            // assuming that it's either visible or we want to retain it for
+                                            // a while in case it gets scrolled back onto screen soon.
+                                            // TODO(gw): Consider switching to manual eviction policy?
+                                            frame_state.resource_cache.texture_cache.request(handle, frame_state.gpu_cache);
+                                        } else {
+                                            // If the texture was evicted on a previous frame, we need to assume
+                                            // that the entire tile rect is dirty.
+                                            tile.is_valid = false;
+                                            tile.dirty_rect = tile.rect;
+                                        }
+                                    }
+                                    SurfaceTextureDescriptor::NativeSurface { id, .. } => {
+                                        if id.is_none() {
+                                            // There is no current surface allocation, so ensure the entire tile is invalidated
+                                            tile.is_valid = false;
+                                            tile.dirty_rect = tile.rect;
+                                        }
+                                    }
                                 }
                             }
 
@@ -3402,13 +3423,23 @@ impl PicturePrimitive {
 
                             // Ensure that this texture is allocated.
                             if let TileSurface::Texture { ref mut descriptor, ref mut visibility_mask } = surface {
-                                if let SurfaceTextureDescriptor::TextureCache { ref mut handle } = descriptor {
-                                    if !frame_state.resource_cache.texture_cache.is_allocated(handle) {
-                                        frame_state.resource_cache.texture_cache.update_picture_cache(
-                                            tile_cache.current_tile_size,
-                                            handle,
-                                            frame_state.gpu_cache,
-                                        );
+                                match descriptor {
+                                    SurfaceTextureDescriptor::TextureCache { ref mut handle } => {
+                                        if !frame_state.resource_cache.texture_cache.is_allocated(handle) {
+                                            frame_state.resource_cache.texture_cache.update_picture_cache(
+                                                tile_cache.current_tile_size,
+                                                handle,
+                                                frame_state.gpu_cache,
+                                            );
+                                        }
+                                    }
+                                    SurfaceTextureDescriptor::NativeSurface { id, size } => {
+                                        if id.is_none() {
+                                            *id = Some(frame_state.composite_state.create_surface(
+                                                *size,
+                                                tile.is_opaque,
+                                            ));
+                                        }
                                     }
                                 }
 
@@ -4871,7 +4902,9 @@ impl CompositeState {
                 // possible for display port tiles to be created that never
                 // come on screen, and thus never get a native surface allocated.
                 if let Some(TileSurface::Texture { descriptor: SurfaceTextureDescriptor::NativeSurface { id, .. }, .. }) = tile.surface {
-                    self.destroy_surface(id);
+                    if let Some(id) = id {
+                        self.destroy_surface(id);
+                    }
                 }
             }
         }

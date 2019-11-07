@@ -10,10 +10,6 @@
 #include "nsContentUtils.h"
 #include "nsIURI.h"
 #include "nsIReferrerInfo.h"
-#ifdef MOZ_XBL
-#  include "nsBindingManager.h"
-#  include "nsXBLPrototypeBinding.h"
-#endif
 #include "nsEscape.h"
 #include "nsCycleCollectionParticipant.h"
 
@@ -65,53 +61,18 @@ void IDTracker::ResetToURIFragmentID(nsIContent* aFromContent, nsIURI* aURI,
 
   nsIContent* bindingParent = aFromContent->GetBindingParent();
   if (bindingParent && !aFromContent->IsInShadowTree()) {
-#ifdef MOZ_XBL
-    nsXBLBinding* binding = bindingParent->GetXBLBinding();
-    if (!binding) {
-#endif
-      // This happens, for example, if aFromContent is part of the content
-      // inserted by a call to Document::InsertAnonymousContent, which we
-      // also want to handle.  (It also happens for <use>'s anonymous
-      // content etc.)
-      Element* anonRoot =
-          doc->GetAnonRootIfInAnonymousContentContainer(aFromContent);
-      if (anonRoot) {
-        mElement = nsContentUtils::MatchElementId(anonRoot, ref);
-        // We don't have watching working yet for anonymous content, so bail out
-        // here.
-        return;
-      }
-#ifdef MOZ_XBL
-    } else {
-      bool isEqualExceptRef;
-      rv = aURI->EqualsExceptRef(binding->PrototypeBinding()->DocURI(),
-                                 &isEqualExceptRef);
-      if (NS_SUCCEEDED(rv) && isEqualExceptRef) {
-        // XXX sXBL/XBL2 issue
-        // Our content is an anonymous XBL element from a binding inside the
-        // same document that the referenced URI points to. In order to avoid
-        // the risk of ID collisions we restrict ourselves to anonymous
-        // elements from this binding; specifically, URIs that are relative to
-        // the binding document should resolve to the copy of the target
-        // element that has been inserted into the bound document.
-        // If the URI points to a different document we don't need this
-        // restriction.
-        nsINodeList* anonymousChildren =
-            doc->BindingManager()->GetAnonymousNodesFor(bindingParent);
-
-        if (anonymousChildren) {
-          uint32_t length = anonymousChildren->Length();
-          for (uint32_t i = 0; i < length && !mElement; ++i) {
-            mElement =
-                nsContentUtils::MatchElementId(anonymousChildren->Item(i), ref);
-          }
-        }
-
-        // We don't have watching working yet for XBL, so bail out here.
-        return;
-      }
+    // This happens, for example, if aFromContent is part of the content
+    // inserted by a call to Document::InsertAnonymousContent, which we
+    // also want to handle.  (It also happens for <use>'s anonymous
+    // content etc.)
+    Element* anonRoot =
+        doc->GetAnonRootIfInAnonymousContentContainer(aFromContent);
+    if (anonRoot) {
+      mElement = nsContentUtils::MatchElementId(anonRoot, ref);
+      // We don't have watching working yet for anonymous content, so bail out
+      // here.
+      return;
     }
-#endif
   }
 
   bool isEqualExceptRef;

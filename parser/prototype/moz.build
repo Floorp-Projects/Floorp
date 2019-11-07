@@ -21,6 +21,3 @@ FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [
     '/dom/xul',
 ]
-
-if CONFIG['MOZ_XBL']:
-    LOCAL_INCLUDES += ['/dom/xbl']

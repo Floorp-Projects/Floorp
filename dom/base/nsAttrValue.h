@@ -101,6 +101,10 @@ class nsAttrValue {
     eAtomArray,
     eDoubleValue,
     eIntMarginValue,
+    // eShadowParts is refcounted in the misc container, as we do copy attribute
+    // values quite a bit (for example to process style invalidation), and the
+    // underlying value could get expensive to copy.
+    eShadowParts,
     eSVGIntegerPair,
     eSVGTypesBegin = eSVGIntegerPair,
     eSVGOrient,
@@ -255,6 +259,13 @@ class nsAttrValue {
   void ParseAtom(const nsAString& aValue);
   void ParseAtomArray(const nsAString& aValue);
   void ParseStringOrAtom(const nsAString& aValue);
+
+  /**
+   * Parses an exportparts attribute.
+   *
+   * https://drafts.csswg.org/css-shadow-parts/#parsing-mapping-list
+   */
+  void ParsePartMapping(const nsAString&);
 
   /**
    * Structure for a mapping from int (enum) values to strings.  When you use

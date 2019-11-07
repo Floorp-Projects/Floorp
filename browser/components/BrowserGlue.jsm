@@ -2113,7 +2113,15 @@ BrowserGlue.prototype = {
 
     // Begin listening for incoming push messages.
     Services.tm.idleDispatchToMainThread(() => {
-      PushService.wrappedJSObject.ensureReady();
+      try {
+        PushService.wrappedJSObject.ensureReady();
+      } catch (ex) {
+        // NS_ERROR_NOT_AVAILABLE will get thrown for the PushService getter
+        // if the PushService is disabled.
+        if (ex.result != Cr.NS_ERROR_NOT_AVAILABLE) {
+          throw ex;
+        }
+      }
     });
 
     Services.tm.idleDispatchToMainThread(() => {
