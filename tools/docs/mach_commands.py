@@ -207,7 +207,7 @@ class Documentation(MachCommandBase):
         if project == 'main':
             key_prefixes.append('')
 
-        with open(os.path.join(here, 'redirects.yml'), 'r') as fh:
+        with open(os.path.join(here, 'config.yml'), 'r') as fh:
             redirects = yaml.safe_load(fh)['redirects']
 
         redirects = {k.strip("/"): v.strip("/") for k, v in redirects.items()}
