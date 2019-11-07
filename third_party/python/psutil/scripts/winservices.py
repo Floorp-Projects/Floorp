@@ -4,7 +4,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-"""
+r"""
 List all Windows services installed.
 
 $ python scripts/winservices.py
@@ -27,7 +27,6 @@ binpath: C:\Windows\system32\svchost.exe -k LocalServiceAndNoImpersonation
 Appinfo (Application Information)
 status: stopped, start: manual, username: LocalSystem, pid: None
 binpath: C:\Windows\system32\svchost.exe -k netsvcs
-
 ...
 """
 
