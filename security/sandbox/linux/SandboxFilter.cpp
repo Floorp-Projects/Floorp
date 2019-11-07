@@ -424,6 +424,10 @@ class SandboxPolicyCommon : public SandboxPolicyBase {
           return Trap(LStatTrap, mBroker);
         CASES_FOR_fstatat:
           return Trap(StatAtTrap, mBroker);
+        // Used by new libc and Rust's stdlib, if available.
+        // We don't have broker support yet so claim it does not exist.
+        case __NR_statx:
+          return Error(ENOSYS);
         case __NR_chmod:
           return Trap(ChmodTrap, mBroker);
         case __NR_link:
@@ -542,6 +546,10 @@ class SandboxPolicyCommon : public SandboxPolicyBase {
 #endif
             .Else(InvalidSyscall());
       }
+
+        // musl libc will set this up in pthreads support.
+      case __NR_membarrier:
+        return Allow();
 
       // Signal handling
 #if defined(ANDROID) || defined(MOZ_ASAN)
