@@ -109,7 +109,7 @@ BackgroundEventTarget::IsOnCurrentThreadInfallible() {
 NS_IMETHODIMP
 BackgroundEventTarget::IsOnCurrentThread(bool* aValue) {
   bool value = false;
-  if (NS_SUCCEEDED(mPool->IsOnCurrentThread(aValue)) && value) {
+  if (NS_SUCCEEDED(mPool->IsOnCurrentThread(&value)) && value) {
     *aValue = value;
     return NS_OK;
   }
