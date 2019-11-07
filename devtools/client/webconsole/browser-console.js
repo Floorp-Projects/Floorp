@@ -4,8 +4,9 @@
 
 "use strict";
 
-var Services = require("Services");
-var WebConsole = require("devtools/client/webconsole/webconsole");
+const Services = require("Services");
+const WebConsole = require("devtools/client/webconsole/webconsole");
+const { TargetList } = require("devtools/shared/resources/target-list");
 
 loader.lazyRequireGetter(this, "Telemetry", "devtools/client/shared/telemetry");
 loader.lazyRequireGetter(
@@ -40,6 +41,7 @@ class BrowserConsole extends WebConsole {
     super(null, iframeWindow, chromeWindow, true);
 
     this._browserConsoleTarget = target;
+    this._targetList = new TargetList(target.client.mainRoot, target);
     this._telemetry = new Telemetry();
     this._bcInitializer = null;
     this._bcDestroyer = null;
@@ -47,6 +49,10 @@ class BrowserConsole extends WebConsole {
 
   get currentTarget() {
     return this._browserConsoleTarget;
+  }
+
+  get targetList() {
+    return this._targetList;
   }
 
   /**
@@ -60,14 +66,17 @@ class BrowserConsole extends WebConsole {
       return this._bcInitializer;
     }
 
-    // Only add the shutdown observer if we've opened a Browser Console window.
-    ShutdownObserver.init();
+    this._bcInitializer = (async () => {
+      // Only add the shutdown observer if we've opened a Browser Console window.
+      ShutdownObserver.init();
 
-    // browserconsole is not connected with a toolbox so we pass -1 as the
-    // toolbox session id.
-    this._telemetry.toolOpened("browserconsole", -1, this);
+      // browserconsole is not connected with a toolbox so we pass -1 as the
+      // toolbox session id.
+      this._telemetry.toolOpened("browserconsole", -1, this);
 
-    this._bcInitializer = super.init();
+      await this.targetList.startListening(TargetList.ALL_TYPES);
+      await super.init();
+    })();
     return this._bcInitializer;
   }
 
@@ -87,6 +96,7 @@ class BrowserConsole extends WebConsole {
       // toolbox session id.
       this._telemetry.toolClosed("browserconsole", -1, this);
 
+      await this.targetList.stopListening(TargetList.ALL_TYPES);
       await super.destroy();
       await this.currentTarget.destroy();
       this.chromeWindow.close();

@@ -92,6 +92,10 @@ class WebConsole {
     return this.toolbox.target;
   }
 
+  get targetList() {
+    return this.toolbox.targetList;
+  }
+
   /**
    * Getter for the window that can provide various utilities that the web
    * console makes use of, like opening links, managing popups, etc.  In
