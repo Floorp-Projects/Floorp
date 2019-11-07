@@ -245,9 +245,6 @@ LOCAL_INCLUDES += [
     '/image',
 ]
 
-if CONFIG['MOZ_XBL']:
-    LOCAL_INCLUDES += ['/dom/xbl']
-
 JAR_MANIFESTS += ['jar.mn']
 
 RESOURCE_FILES += [

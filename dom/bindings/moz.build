@@ -93,9 +93,6 @@ LOCAL_INCLUDES += [
     '/media/webrtc/trunk/',
 ]
 
-if CONFIG['MOZ_XBL']:
-    LOCAL_INCLUDES += ['/dom/xbl']
-
 LOCAL_INCLUDES += ['/third_party/msgpack/include']
 
 DEFINES['GOOGLE_PROTOBUF_NO_RTTI'] = True

@@ -236,13 +236,6 @@ this.AppConstants = Object.freeze({
   false,
 #endif
 
-  MOZ_XBL:
-#ifdef MOZ_XBL
-  true,
-#else
-  false,
-#endif
-
   MOZ_SYSTEM_NSS:
 #ifdef MOZ_SYSTEM_NSS
   true,
