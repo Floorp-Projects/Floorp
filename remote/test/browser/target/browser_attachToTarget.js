@@ -3,6 +3,30 @@
 
 "use strict";
 
+add_task(async function raisesWithoutArguments({ Target }, _, tab) {
+  await getDiscoveredTargets(Target);
+
+  let errorThrown = false;
+  try {
+    await Target.attachToTarget();
+  } catch (e) {
+    errorThrown = true;
+  }
+  ok(errorThrown, "attachToTarget raised error without an argument");
+});
+
+add_task(async function raisesWithUnknownTargetId({ Target }, _, tab) {
+  await getDiscoveredTargets(Target);
+
+  let errorThrown = false;
+  try {
+    await Target.attachToTarget({ targetId: "-1" });
+  } catch (e) {
+    errorThrown = true;
+  }
+  ok(errorThrown, "attachToTarget raised error with unkown target id");
+});
+
 add_task(
   async function attachPageTarget({ Target }) {
     await getDiscoveredTargets(Target);

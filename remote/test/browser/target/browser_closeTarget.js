@@ -3,6 +3,30 @@
 
 "use strict";
 
+add_task(async function raisesWithoutArguments({ Target }, _, tab) {
+  await getDiscoveredTargets(Target);
+
+  let exceptionThrown = false;
+  try {
+    await Target.closeTarget();
+  } catch (e) {
+    exceptionThrown = true;
+  }
+  ok(exceptionThrown, "closeTarget raised error without an argument");
+});
+
+add_task(async function raisesWithUnknownTargetId({ Target }, _, tab) {
+  await getDiscoveredTargets(Target);
+
+  let exceptionThrown = false;
+  try {
+    await Target.closeTarget({ targetId: "-1" });
+  } catch (e) {
+    exceptionThrown = true;
+  }
+  ok(exceptionThrown, "closeTarget raised error with unkown target id");
+});
+
 add_task(async function triggersTargetDestroyed({ Target }, _, tab) {
   await getDiscoveredTargets(Target);
   const { targetInfo, newTab } = await openTab(Target);
