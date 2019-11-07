@@ -265,7 +265,6 @@ RemoteWorkerChild::RemoteWorkerChild(const RemoteWorkerData& aData)
 
 RemoteWorkerChild::~RemoteWorkerChild() {
 #ifdef DEBUG
-  MOZ_ASSERT(mTerminationPromise.IsEmpty());
   auto lock = mState.Lock();
   MOZ_ASSERT(lock->is<Terminated>());
 #endif
@@ -601,7 +600,7 @@ void RemoteWorkerChild::CreationSucceededOrFailedOnAnyThread(
         Unused << self->SendCreated(didCreationSucceed);
       });
 
-  Unused << GetOwningEventTarget()->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
+  GetOwningEventTarget()->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
 }
 
 void RemoteWorkerChild::CloseWorkerOnMainThread(State& aState) {
@@ -769,7 +768,16 @@ void RemoteWorkerChild::TransitionStateToTerminated(State& aState) {
     CancelAllPendingOps(aState);
   }
 
-  mTerminationPromise.ResolveIfExists(true, __func__);
+  if (GetOwningEventTarget()->IsOnCurrentThread()) {
+    mTerminationPromise.ResolveIfExists(true, __func__);
+  } else {
+    SelfHolder self = this;
+    nsCOMPtr<nsIRunnable> r =
+        NS_NewRunnableFunction(__func__, [self = std::move(self)] {
+          self->mTerminationPromise.ResolveIfExists(true, __func__);
+        });
+    GetOwningEventTarget()->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
+  }
 
   aState = VariantType<Terminated>();
 }
