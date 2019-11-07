@@ -3485,7 +3485,7 @@ class CGConstructorEnabled(CGAbstractMethod):
 
         iface = self.descriptor.interface
 
-        if not iface.isExposedOnMainThread():
+        if not iface.isExposedInWindow():
             exposedInWindowCheck = dedent(
                 """
                 MOZ_ASSERT(!NS_IsMainThread(), "Why did we even get called?");
@@ -3504,7 +3504,7 @@ class CGConstructorEnabled(CGAbstractMethod):
                 }
                 """, workerCondition=workerCondition.define())
             exposedInWorkerCheck = CGGeneric(exposedInWorkerCheck)
-            if iface.isExposedOnMainThread():
+            if iface.isExposedInWindow():
                 exposedInWorkerCheck = CGIfWrapper(exposedInWorkerCheck,
                                                    "!NS_IsMainThread()")
             body.append(exposedInWorkerCheck)
