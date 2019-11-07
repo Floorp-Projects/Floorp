@@ -17,7 +17,10 @@ const TEST_URL = TEST_ROOT + "file_favicon_change_not_in_document.html";
  * event after its href gets updated later.
  */
 add_task(async function() {
-  let extraTab = (gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser));
+  let extraTab = (gBrowser.selectedTab = BrowserTestUtils.addTab(
+    gBrowser,
+    TEST_ROOT
+  ));
   let domLinkAddedFired = 0;
   let domLinkChangedFired = 0;
   const linkAddedHandler = event => domLinkAddedFired++;
