@@ -8,9 +8,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsIObserver.h"
-#ifdef MOZ_XBL
-#  include "nsXBLDocumentInfo.h"
-#endif
 #include "nsJSThingHashtable.h"
 #include "nsInterfaceHashtable.h"
 #include "nsRefPtrHashtable.h"
@@ -63,11 +60,6 @@ class nsXULPrototypeCache : public nsIObserver {
   JSScript* GetScript(nsIURI* aURI);
   nsresult PutScript(nsIURI* aURI, JS::Handle<JSScript*> aScriptObject);
 
-#ifdef MOZ_XBL
-  nsXBLDocumentInfo* GetXBLDocumentInfo(nsIURI* aURL);
-
-  nsresult PutXBLDocumentInfo(nsXBLDocumentInfo* aDocumentInfo);
-#endif
 
   /**
    * Get a style sheet by URI. If the style sheet is not in the cache,
@@ -119,17 +111,11 @@ class nsXULPrototypeCache : public nsIObserver {
   static nsXULPrototypeCache* sInstance;
 
   using StyleSheetTable = nsRefPtrHashtable<nsURIHashKey, mozilla::StyleSheet>;
-#ifdef MOZ_XBL
-  using XBLDocTable = nsRefPtrHashtable<nsURIHashKey, nsXBLDocumentInfo>;
-#endif
 
   nsRefPtrHashtable<nsURIHashKey, nsXULPrototypeDocument>
       mPrototypeTable;  // owns the prototypes
   StyleSheetTable mStyleSheetTable;
   nsJSThingHashtable<nsURIHashKey, JSScript*> mScriptTable;
-#ifdef MOZ_XBL
-  XBLDocTable mXBLDocTable;
-#endif
 
   // URIs already written to the startup cache, to prevent double-caching.
   nsTHashtable<nsURIHashKey> mStartupCacheURITable;

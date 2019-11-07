@@ -69,11 +69,6 @@
 #endif
 
 #include "nsFrameLoader.h"
-#ifdef MOZ_XBL
-#  include "nsXBLPrototypeBinding.h"
-#  include "nsBindingManager.h"
-#  include "nsXBLBinding.h"
-#endif
 #include "nsPIDOMWindow.h"
 #include "nsSVGUtils.h"
 #include "nsLayoutUtils.h"
@@ -684,11 +679,6 @@ void FragmentOrElement::nsExtendedDOMSlots::TraverseExtendedSlots(
   NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(aCb, "mExtendedSlots->mShadowRoot");
   aCb.NoteXPCOMChild(NS_ISUPPORTS_CAST(nsIContent*, mShadowRoot));
 
-#ifdef MOZ_XBL
-  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(aCb, "mExtendedSlots->mXBLBinding");
-  aCb.NoteNativeChild(mXBLBinding,
-                      NS_CYCLE_COLLECTION_PARTICIPANT(nsXBLBinding));
-#endif
 
   if (mCustomElementData) {
     mCustomElementData->Traverse(aCb);
@@ -723,13 +713,6 @@ size_t FragmentOrElement::nsExtendedDOMSlots::SizeOfExcludingThis(
   // mShadowRoot should be handled during normal DOM tree memory reporting, just
   // like kids, siblings, etc.
 
-#ifdef MOZ_XBL
-  // We don't seem to have memory reporting for nsXBLBinding.  At least
-  // report the memory it's using directly.
-  if (mXBLBinding) {
-    n += aMallocSizeOf(mXBLBinding);
-  }
-#endif
 
   if (mCustomElementData) {
     n += mCustomElementData->SizeOfIncludingThis(aMallocSizeOf);
@@ -1091,13 +1074,6 @@ bool FragmentOrElement::IsLink(nsIURI** aURI) const {
   return false;
 }
 
-#ifdef MOZ_XBL
-nsXBLBinding* FragmentOrElement::DoGetXBLBinding() const {
-  MOZ_ASSERT(HasFlag(NODE_MAY_BE_IN_BINDING_MNGR));
-  const nsExtendedDOMSlots* slots = GetExistingExtendedDOMSlots();
-  return slots ? slots->mXBLBinding.get() : nullptr;
-}
-#endif
 
 nsIContent* nsIContent::GetContainingShadowHost() const {
   if (mozilla::dom::ShadowRoot* shadow = GetContainingShadow()) {
@@ -1169,11 +1145,6 @@ void FragmentOrElement::DestroyContent() {
     AsElement()->ClearServoData();
   }
 
-#ifdef MOZ_XBL
-  Document* document = OwnerDoc();
-  document->BindingManager()->RemovedFromDocument(this, document,
-                                                  nsBindingManager::eRunDtor);
-#endif
 
 #ifdef DEBUG
   uint32_t oldChildCount = GetChildCount();
@@ -1380,11 +1351,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(FragmentOrElement)
     tmp->ExtendedDOMSlots()->mShadowRoot = nullptr;
   }
 
-#ifdef MOZ_XBL
-  Document* doc = tmp->OwnerDoc();
-  doc->BindingManager()->RemovedFromDocument(tmp, doc,
-                                             nsBindingManager::eDoNotRunDtor);
-#endif
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
@@ -1610,11 +1576,6 @@ bool NodeHasActiveFrame(Document* aCurrentDoc, nsINode* aNode) {
          aNode->AsElement()->GetPrimaryFrame();
 }
 
-#ifdef MOZ_XBL
-bool OwnedByBindingManager(Document* aCurrentDoc, nsINode* aNode) {
-  return aNode->IsElement() && aNode->AsElement()->GetXBLBinding();
-}
-#endif
 
 // CanSkip checks if aNode is known-live, and if it is, returns true. If aNode
 // is in a known-live DOM tree, CanSkip may also remove other objects from
@@ -1632,9 +1593,6 @@ bool FragmentOrElement::CanSkip(nsINode* aNode, bool aRemovingAllowed) {
   Document* currentDoc = aNode->GetComposedDoc();
   if (currentDoc && IsCertainlyAliveNode(aNode, currentDoc) &&
       (!unoptimizable || NodeHasActiveFrame(currentDoc, aNode)
-#ifdef MOZ_XBL
-       || OwnedByBindingManager(currentDoc, aNode)
-#endif
            )) {
     MarkNodeChildren(aNode);
     return true;
@@ -1838,9 +1796,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(FragmentOrElement)
     return NS_SUCCESS_INTERRUPTED_TRAVERSE;
   }
 
-#ifdef MOZ_XBL
-  tmp->OwnerDoc()->BindingManager()->Traverse(tmp, cb);
-#endif
 
   // Check that whenever we have effect properties, MayHaveAnimations is set.
 #ifdef DEBUG

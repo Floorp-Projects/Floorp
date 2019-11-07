@@ -21,9 +21,6 @@
 #include "nsString.h"
 #include "mozilla/dom/NodeInfo.h"
 #include "mozilla/ClearOnShutdown.h"
-#ifdef MOZ_XBL
-#  include "mozilla/dom/XBLChildrenElement.h"
-#endif
 #include "mozilla/dom/Element.h"
 #include "mozilla/Preferences.h"
 
@@ -205,12 +202,6 @@ nsresult NS_NewElement(Element** aResult,
                                            ni->NodeType(), ni->GetExtraName());
     return NS_NewXMLElement(aResult, genericXMLNI.forget());
   }
-#ifdef MOZ_XBL
-  if (ns == kNameSpaceID_XBL && ni->Equals(nsGkAtoms::children)) {
-    NS_ADDREF(*aResult = new XBLChildrenElement(ni.forget()));
-    return NS_OK;
-  }
-#endif
 
   return NS_NewXMLElement(aResult, ni.forget());
 }
