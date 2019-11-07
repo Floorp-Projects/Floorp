@@ -61,6 +61,7 @@ const TRAILHEAD_CONFIG = {
   DID_SEE_ABOUT_WELCOME_PREF: "trailhead.firstrun.didSeeAboutWelcome",
   INTERRUPTS_EXPERIMENT_PREF: "trailhead.firstrun.interruptsExperiment",
   TRIPLETS_ENROLLED_PREF: "trailhead.firstrun.tripletsEnrolled",
+  DEFAULT_TRIPLET: "supercharge",
   BRANCHES: {
     interrupts: [
       ["modal_control"],
@@ -74,10 +75,9 @@ const TRAILHEAD_CONFIG = {
     triplets: [["supercharge"], ["payoff"], ["multidevice"], ["privacy"]],
   },
   EXPERIMENT_RATIOS: [["", 0], ["interrupts", 1], ["triplets", 0]],
-  // Per bug 1574003, for those who meet the targeting criteria of extended
-  // triplets, 95% users (control group) will see the extended triplets, and
-  // the rest 5% (holdback group) won't.
-  EXPERIMENT_RATIOS_FOR_EXTENDED_TRIPLETS: [["control", 95], ["holdback", 5]],
+  // Per bug 1589146, for those who meet the targeting criteria of extended
+  // triplets, 100% users (control group) will see the extended triplets
+  EXPERIMENT_RATIOS_FOR_EXTENDED_TRIPLETS: [["control", 100], ["holdback", 0]],
   EXTENDED_TRIPLETS_EXPERIMENT_PREF: "trailhead.extendedTriplets.experiment",
 };
 
@@ -989,6 +989,8 @@ class _ASRouter {
 
     if (overrideValue) {
       [interrupt, triplet] = overrideValue.split("-");
+    } else {
+      triplet = TRAILHEAD_CONFIG.DEFAULT_TRIPLET;
     }
 
     await this.setState({
@@ -1042,7 +1044,7 @@ class _ASRouter {
         `${userId}-interrupts-branch`,
         TRAILHEAD_CONFIG.BRANCHES.interrupts
       );
-      triplet = "supercharge";
+      triplet = TRAILHEAD_CONFIG.DEFAULT_TRIPLET;
       // For the triplets experiment or non-experiment experience,
       // we randomly assign a triplet and always use the "join" interrupt.
     } else if (experiment === "triplets") {
@@ -1054,7 +1056,7 @@ class _ASRouter {
     } else {
       // If the user is not in a trailhead-compabtible locale, return the join + supercharge (default) experience and no experiment.
       interrupt = "join";
-      triplet = "supercharge";
+      triplet = TRAILHEAD_CONFIG.DEFAULT_TRIPLET;
     }
 
     return { experiment, interrupt, triplet };
