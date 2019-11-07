@@ -1569,6 +1569,24 @@ static bool intrinsic_StringReplaceString(JSContext* cx, unsigned argc,
   return true;
 }
 
+static bool intrinsic_StringReplaceAllString(JSContext* cx, unsigned argc,
+                                             Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  MOZ_ASSERT(args.length() == 3);
+
+  RootedString string(cx, args[0].toString());
+  RootedString pattern(cx, args[1].toString());
+  RootedString replacement(cx, args[2].toString());
+  JSString* result =
+      str_replaceAll_string_raw(cx, string, pattern, replacement);
+  if (!result) {
+    return false;
+  }
+
+  args.rval().setString(result);
+  return true;
+}
+
 bool js::intrinsic_StringSplitString(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 2);
@@ -2480,6 +2498,9 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_INLINABLE_FN("IsRegExpObject",
                     intrinsic_IsInstanceOfBuiltin<RegExpObject>, 1, 0,
                     IsRegExpObject),
+    JS_INLINABLE_FN("IsPossiblyWrappedRegExpObject",
+                    intrinsic_IsPossiblyWrappedInstanceOfBuiltin<RegExpObject>,
+                    1, 0, IsPossiblyWrappedRegExpObject),
     JS_FN("CallRegExpMethodIfWrapped",
           CallNonGenericSelfhostedMethod<Is<RegExpObject>>, 2, 0),
     JS_INLINABLE_FN("RegExpMatcher", RegExpMatcher, 3, 0, RegExpMatcher),
@@ -2500,6 +2521,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("FlatStringSearch", FlatStringSearch, 2, 0),
     JS_INLINABLE_FN("StringReplaceString", intrinsic_StringReplaceString, 3, 0,
                     IntrinsicStringReplaceString),
+    JS_FN("StringReplaceAllString", intrinsic_StringReplaceAllString, 3, 0),
     JS_INLINABLE_FN("StringSplitString", intrinsic_StringSplitString, 2, 0,
                     IntrinsicStringSplitString),
     JS_FN("StringSplitStringLimit", intrinsic_StringSplitStringLimit, 3, 0),

@@ -88,6 +88,10 @@ JSString* str_replace_string_raw(JSContext* cx, HandleString string,
                                  HandleString pattern,
                                  HandleString replacement);
 
+JSString* str_replaceAll_string_raw(JSContext* cx, HandleString string,
+                                    HandleString pattern,
+                                    HandleString replacement);
+
 extern JSString* StringToLowerCase(JSContext* cx, HandleString string);
 
 extern JSString* StringToUpperCase(JSContext* cx, HandleString string);

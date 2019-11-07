@@ -786,6 +786,7 @@ class IonBuilder : public MIRGenerator,
   InliningResult inlineRegExpSearcher(CallInfo& callInfo);
   InliningResult inlineRegExpTester(CallInfo& callInfo);
   InliningResult inlineIsRegExpObject(CallInfo& callInfo);
+  InliningResult inlineIsPossiblyWrappedRegExpObject(CallInfo& callInfo);
   InliningResult inlineRegExpPrototypeOptimizable(CallInfo& callInfo);
   InliningResult inlineRegExpInstanceOptimizable(CallInfo& callInfo);
   InliningResult inlineGetFirstDollarIndex(CallInfo& callInfo);
