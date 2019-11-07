@@ -107,7 +107,7 @@ class DocumentChannelChild final : public PDocumentChannelChild,
   ~DocumentChannelChild() = default;
 
   RefPtr<ChannelEventQueue> mEventQueue;
-  nsCOMPtr<nsIChildChannel> mRedirectChannel;
+  nsCOMPtr<nsIChannel> mRedirectChannel;
   nsTArray<DocumentChannelRedirect> mRedirects;
 
   // Classified channel's matched information
