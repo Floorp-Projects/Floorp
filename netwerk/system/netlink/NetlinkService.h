@@ -86,14 +86,8 @@ class NetlinkService : public nsIRunnable {
   // A pipe to signal shutdown with.
   int mShutdownPipe[2];
 
-  // Is true if preference network.netlink.route.check.IPv4 was successfully
-  // parsed and stored to mRouteCheckIPv4
-  bool mDoRouteCheckIPv4;
+  // IP addresses that are used to check the route for public traffic.
   struct in_addr mRouteCheckIPv4;
-
-  // Is true if preference network.netlink.route.check.IPv6 was successfully
-  // parsed and stored to mRouteCheckIPv6
-  bool mDoRouteCheckIPv6;
   struct in6_addr mRouteCheckIPv6;
 
   pid_t mPid;
@@ -119,7 +113,7 @@ class NetlinkService : public nsIRunnable {
 
     // Updates mIsUp according to current mLink and mAddresses. Returns true if
     // the value has changed.
-    bool UpdateLinkStatus();
+    bool UpdateStatus();
 
     // NetlinkLink structure for this link
     nsAutoPtr<NetlinkLink> mLink;
