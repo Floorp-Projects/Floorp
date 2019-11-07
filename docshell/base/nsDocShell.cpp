@@ -9548,7 +9548,8 @@ static bool IsConsideredSameOriginForUIR(nsIPrincipal* aTriggeringPrincipal,
 
 static bool SchemeUsesDocChannel(nsIURI* aURI) {
   return SchemeIsHTTP(aURI) || SchemeIsHTTPS(aURI) || aURI->SchemeIs("moz") ||
-         SchemeIsData(aURI);
+         SchemeIsData(aURI) || SchemeIsFile(aURI) || SchemeIsFTP(aURI) ||
+         SchemeIsBlob(aURI);
 }
 
 /* static */ bool nsDocShell::CreateChannelForLoadState(
