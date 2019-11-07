@@ -129,24 +129,31 @@ class AppLinksFeatureTest {
     }
 
     @Test
-    fun `it tests for whitelisted schemes links when triggered by user clicking on a link`() {
+    fun `it tests for white and black listed schemes when triggered by user clicking on a link`() {
         val whitelistedScheme = "whitelisted"
+        val blacklistedScheme = "blacklisted"
         val session = createSession(false)
         val subject = AppLinksFeature(
             mockContext,
             mockSessionManager,
             interceptLinkClicks = false,
             alwaysAllowedSchemes = setOf(whitelistedScheme),
+            alwaysDeniedSchemes = setOf(blacklistedScheme),
             useCases = mockUseCases
         )
 
-        val url = "$whitelistedScheme://example.com"
-        val whitelistedRedirect = AppLinkRedirect(Intent.parseUri(url, 0), url)
-        `when`(mockGetRedirect.invoke(url)).thenReturn(whitelistedRedirect)
+        val blackListedUrl = "$blacklistedScheme://example.com"
+        val blacklistedRedirect = AppLinkRedirect(Intent.parseUri(blackListedUrl, 0), blackListedUrl)
+        `when`(mockGetRedirect.invoke(blackListedUrl)).thenReturn(blacklistedRedirect)
+        subject.handleLoadRequest(session, blackListedUrl, true)
+        verify(mockGetRedirect).invoke(blackListedUrl)
+        verify(mockOpenRedirect, never()).invoke(blacklistedRedirect)
 
-        subject.handleLoadRequest(session, url, true)
-
-        verify(mockGetRedirect).invoke(url)
+        val whiteListedUrl = "$whitelistedScheme://example.com"
+        val whitelistedRedirect = AppLinkRedirect(Intent.parseUri(whiteListedUrl, 0), whiteListedUrl)
+        `when`(mockGetRedirect.invoke(whiteListedUrl)).thenReturn(whitelistedRedirect)
+        subject.handleLoadRequest(session, whiteListedUrl, true)
+        verify(mockGetRedirect).invoke(whiteListedUrl)
         verify(mockOpenRedirect).invoke(whitelistedRedirect)
     }
 
