@@ -24,6 +24,7 @@
 
 #include "builtin/Array.h"
 #include "builtin/intl/CommonFunctions.h"
+#include "builtin/intl/LanguageTag.h"
 #include "builtin/intl/ScopedICUObject.h"
 #include "ds/Sort.h"
 #include "gc/FreeOp.h"
@@ -559,15 +560,53 @@ static UNumberFormatter* NewUNumberFormatter(
   if (!GetProperty(cx, internals, internals, cx->names().locale, &value)) {
     return nullptr;
   }
-  UniqueChars locale = intl::EncodeLocale(cx, value.toString());
+
+  // ICU expects numberingSystem as a Unicode locale extensions on locale.
+
+  intl::LanguageTag tag(cx);
+  {
+    JSLinearString* locale = value.toString()->ensureLinear(cx);
+    if (!locale) {
+      return nullptr;
+    }
+
+    if (!intl::LanguageTagParser::parse(cx, locale, tag)) {
+      return nullptr;
+    }
+  }
+
+  JS::RootedVector<intl::UnicodeExtensionKeyword> keywords(cx);
+
+  if (!GetProperty(cx, internals, internals, cx->names().numberingSystem,
+                   &value)) {
+    return nullptr;
+  }
+
+  {
+    JSLinearString* numberingSystem = value.toString()->ensureLinear(cx);
+    if (!numberingSystem) {
+      return nullptr;
+    }
+
+    if (!keywords.emplaceBack("nu", numberingSystem)) {
+      return nullptr;
+    }
+  }
+
+  // |ApplyUnicodeExtensionToTag| applies the new keywords to the front of
+  // the Unicode extension subtag. We're then relying on ICU to follow RFC
+  // 6067, which states that any trailing keywords using the same key
+  // should be ignored.
+  if (!intl::ApplyUnicodeExtensionToTag(cx, tag, keywords)) {
+    return nullptr;
+  }
+
+  UniqueChars locale = tag.toStringZ(cx);
   if (!locale) {
     return nullptr;
   }
 
   intl::NumberFormatterSkeleton skeleton(cx);
-
-  // We don't need to look at numberingSystem - it can only be set via
-  // the Unicode locale extension and is therefore already set on locale.
 
   if (!GetProperty(cx, internals, internals, cx->names().style, &value)) {
     return nullptr;
