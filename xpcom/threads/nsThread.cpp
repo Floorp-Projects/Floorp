@@ -601,7 +601,6 @@ nsThread::nsThread(NotNull<SynchronizedEventQueue*> aQueue,
       mShutdownRequired(false),
       mPriority(PRIORITY_NORMAL),
       mIsMainThread(aMainThread == MAIN_THREAD),
-      mIsAPoolThreadFree(nullptr),
       mCanInvokeJS(false),
       mCurrentEvent(nullptr),
       mCurrentEventStart(TimeStamp::Now()),
@@ -730,27 +729,6 @@ nsThread::DelayedDispatch(already_AddRefed<nsIRunnable> aEvent,
   NS_ENSURE_TRUE(mEventTarget, NS_ERROR_NOT_IMPLEMENTED);
 
   return mEventTarget->DelayedDispatch(std::move(aEvent), aDelayMs);
-}
-
-NS_IMETHODIMP
-nsThread::GetRunningEventDelay(TimeDuration* aDelay, TimeStamp* aStart) {
-  if (mIsAPoolThreadFree && *mIsAPoolThreadFree) {
-    // if there are unstarted threads in the pool, a new event to the
-    // pool would not be delayed at all (beyond thread start time)
-    *aDelay = TimeDuration();
-    *aStart = TimeStamp();
-  } else {
-    *aDelay = mLastEventDelay;
-    *aStart = mLastEventStart;
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsThread::SetRunningEventDelay(TimeDuration aDelay, TimeStamp aStart) {
-  mLastEventDelay = aDelay;
-  mLastEventStart = aStart;
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1153,8 +1131,7 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult) {
     // mNestedEventLoopDepth has been incremented, since that destructor can
     // also do work.
     EventQueuePriority priority;
-    nsCOMPtr<nsIRunnable> event =
-        mEvents->GetEvent(reallyWait, &priority, &mLastEventDelay);
+    nsCOMPtr<nsIRunnable> event = mEvents->GetEvent(reallyWait, &priority);
 
     *aResult = (event.get() != nullptr);
 
@@ -1189,8 +1166,6 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult) {
       // to run.
       DelayForChaosMode(ChaosFeature::TaskRunning, 1000);
 
-      mozilla::TimeStamp now = mozilla::TimeStamp::Now();
-
       if (mIsMainThread) {
         BackgroundHangMonitor().NotifyActivity();
       }
@@ -1199,7 +1174,7 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult) {
           mCurrentPerformanceCounter) {
         // This is a recursive call, we're saving the time
         // spent in the parent event if the runnable is linked to a DocGroup.
-        mozilla::TimeDuration duration = now - mCurrentEventStart;
+        mozilla::TimeDuration duration = TimeStamp::Now() - mCurrentEventStart;
         mCurrentPerformanceCounter->IncrementExecutionDuration(
             duration.ToMicroseconds());
       }
@@ -1239,10 +1214,10 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult) {
       bool recursiveEvent = mNestedEventLoopDepth > mCurrentEventLoopDepth;
       mCurrentEventLoopDepth = mNestedEventLoopDepth;
       if (mIsMainThread && !recursiveEvent) {
-        mCurrentEventStart = now;
+        mCurrentEventStart = mozilla::TimeStamp::Now();
       }
       RefPtr<mozilla::PerformanceCounter> currentPerformanceCounter;
-      mLastEventStart = now;
+      mCurrentEventStart = mozilla::TimeStamp::Now();
       mCurrentEvent = event;
       mCurrentPerformanceCounter = GetPerformanceCounter(event);
       currentPerformanceCounter = mCurrentPerformanceCounter;
@@ -1290,14 +1265,9 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult) {
         mCurrentEventLoopDepth = MaxValue<uint32_t>::value;
         mCurrentPerformanceCounter = nullptr;
       }
-    } else {
-      mLastEventDelay = TimeDuration();
-      mLastEventStart = TimeStamp();
-      if (aMayWait) {
-        MOZ_ASSERT(ShuttingDown(),
-                   "This should only happen when shutting down");
-        rv = NS_ERROR_UNEXPECTED;
-      }
+    } else if (aMayWait) {
+      MOZ_ASSERT(ShuttingDown(), "This should only happen when shutting down");
+      rv = NS_ERROR_UNEXPECTED;
     }
   }
 

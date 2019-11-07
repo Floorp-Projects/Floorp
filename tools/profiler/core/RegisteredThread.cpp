@@ -6,7 +6,7 @@
 
 #include "RegisteredThread.h"
 
-RegisteredThread::RegisteredThread(ThreadInfo* aInfo, nsIThread* aThread,
+RegisteredThread::RegisteredThread(ThreadInfo* aInfo, nsIEventTarget* aThread,
                                    void* aStackTop)
     : mRacyRegisteredThread(aInfo->ThreadId()),
       mPlatformData(AllocPlatformData(aInfo->ThreadId())),
@@ -17,9 +17,6 @@ RegisteredThread::RegisteredThread(ThreadInfo* aInfo, nsIThread* aThread,
       mJSSampling(INACTIVE),
       mJSFlags(0) {
   MOZ_COUNT_CTOR(RegisteredThread);
-
-  // NOTE: aThread can be null for the first thread, before the ThreadManager
-  // is initialized.
 
   // We don't have to guess on mac
 #if defined(GP_OS_darwin)

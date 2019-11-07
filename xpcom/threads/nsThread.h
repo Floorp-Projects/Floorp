@@ -14,7 +14,6 @@
 #include "nsThreadUtils.h"
 #include "nsString.h"
 #include "nsTObserverArray.h"
-#include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/MemoryReporting.h"
@@ -89,12 +88,6 @@ class nsThread : public nsIThreadInternal,
   // If this flag is true, then the nsThread was created using
   // nsIThreadManager::NewThread.
   bool ShutdownRequired() { return mShutdownRequired; }
-
-  // Lets GetRunningEventDelay() determine if the pool this is part
-  // of has an unstarted thread
-  void SetPoolThreadFreePtr(mozilla::Atomic<bool, mozilla::Relaxed>* aPtr) {
-    mIsAPoolThreadFree = aPtr;
-  }
 
   void SetScriptObserver(mozilla::CycleCollectedJSContext* aScriptObserver);
 
@@ -235,7 +228,6 @@ class nsThread : public nsIThreadInternal,
   int8_t mPriority;
 
   bool mIsMainThread;
-  mozilla::Atomic<bool, mozilla::Relaxed>* mIsAPoolThreadFree;
 
   // Set to true if this thread creates a JSRuntime.
   bool mCanInvokeJS;
@@ -245,17 +237,8 @@ class nsThread : public nsIThreadInternal,
   // Used to track which event is being executed by ProcessNextEvent
   nsCOMPtr<nsIRunnable> mCurrentEvent;
 
-  // When the current event started.  Note: recursive events use the time
-  // the outmost event started, so the entire recursion chain is considered
-  // one event.
   mozilla::TimeStamp mCurrentEventStart;
   mozilla::TimeStamp mNextIdleDeadline;
-
-  // The time the currently running event spent in event queues, and
-  // when it started running.  If no event is running, they are
-  // TimeDuration() & TimeStamp().
-  mozilla::TimeDuration mLastEventDelay;
-  mozilla::TimeStamp mLastEventStart;
 
 #ifdef EARLY_BETA_OR_EARLIER
   nsCString mNameForWakeupTelemetry;
