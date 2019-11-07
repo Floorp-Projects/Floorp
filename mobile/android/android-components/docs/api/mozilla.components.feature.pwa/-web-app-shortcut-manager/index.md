@@ -2,13 +2,24 @@
 
 # WebAppShortcutManager
 
-`class WebAppShortcutManager` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/pwa/src/main/java/mozilla/components/feature/pwa/WebAppShortcutManager.kt#L43)
+`class WebAppShortcutManager` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/pwa/src/main/java/mozilla/components/feature/pwa/WebAppShortcutManager.kt#L52)
+
+Helper to manage pinned shortcuts for websites.
+
+### Parameters
+
+`httpClient` - Fetch client used to load website icons.
+
+`storage` - Storage used to save web app manifests to disk.
+
+`supportWebApps` - If true, Progressive Web Apps will be pinnable.
+If false, all web sites will be bookmark shortcuts even if they have a manifest.
 
 ### Constructors
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `WebAppShortcutManager(context: <ERROR CLASS>, httpClient: `[`Client`](../../mozilla.components.concept.fetch/-client/index.md)`, storage: `[`ManifestStorage`](../-manifest-storage/index.md)` = ManifestStorage(context), supportWebApps: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = true)` |
+| [&lt;init&gt;](-init-.md) | `WebAppShortcutManager(context: <ERROR CLASS>, httpClient: `[`Client`](../../mozilla.components.concept.fetch/-client/index.md)`, storage: `[`ManifestStorage`](../-manifest-storage/index.md)`, supportWebApps: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = true)`<br>Helper to manage pinned shortcuts for websites. |
 
 ### Functions
 

@@ -2,13 +2,15 @@
 
 # ManifestStorage
 
-`class ManifestStorage` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/pwa/src/main/java/mozilla/components/feature/pwa/ManifestStorage.kt#L15)
+`class ManifestStorage` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/pwa/src/main/java/mozilla/components/feature/pwa/ManifestStorage.kt#L19)
+
+Disk storage for [WebAppManifest](../../mozilla.components.concept.engine.manifest/-web-app-manifest/index.md). Other components use this class to reload a saved manifest.
 
 ### Constructors
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `ManifestStorage(context: <ERROR CLASS>)` |
+| [&lt;init&gt;](-init-.md) | `ManifestStorage(context: <ERROR CLASS>)`<br>Disk storage for [WebAppManifest](../../mozilla.components.concept.engine.manifest/-web-app-manifest/index.md). Other components use this class to reload a saved manifest. |
 
 ### Functions
 
@@ -17,6 +19,7 @@
 | [loadManifest](load-manifest.md) | `suspend fun loadManifest(startUrl: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`WebAppManifest`](../../mozilla.components.concept.engine.manifest/-web-app-manifest/index.md)`?`<br>Load a Web App Manifest for the given URL from disk. If no manifest is found, null is returned. |
 | [removeManifests](remove-manifests.md) | `suspend fun removeManifests(startUrls: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`>): <ERROR CLASS>`<br>Delete all manifests associated with the list of URLs. |
 | [saveManifest](save-manifest.md) | `suspend fun saveManifest(manifest: `[`WebAppManifest`](../../mozilla.components.concept.engine.manifest/-web-app-manifest/index.md)`): <ERROR CLASS>`<br>Save a Web App Manifest to disk. |
+| [updateManifest](update-manifest.md) | `suspend fun updateManifest(manifest: `[`WebAppManifest`](../../mozilla.components.concept.engine.manifest/-web-app-manifest/index.md)`): <ERROR CLASS>`<br>Update an existing Web App Manifest on disk. |
 
 ### Extension Functions
 

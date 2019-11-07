@@ -3,3 +3,6 @@
 # &lt;init&gt;
 
 `ManifestStorage(context: <ERROR CLASS>)`
+
+Disk storage for [WebAppManifest](../../mozilla.components.concept.engine.manifest/-web-app-manifest/index.md). Other components use this class to reload a saved manifest.
+

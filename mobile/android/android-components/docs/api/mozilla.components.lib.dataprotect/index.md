@@ -15,3 +15,9 @@
 | Name | Summary |
 |---|---|
 | [KeystoreException](-keystore-exception/index.md) | `class KeystoreException : `[`GeneralSecurityException`](https://developer.android.com/reference/java/security/GeneralSecurityException.html)<br>Exception type thrown by {@link Keystore} when an error is encountered that is not otherwise covered by an existing sub-class to `GeneralSecurityException`. |
+
+### Functions
+
+| Name | Summary |
+|---|---|
+| [generateEncryptionKey](generate-encryption-key.md) | `fun generateEncryptionKey(keyStrength: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Generates a random key of specified [keyStrength](generate-encryption-key.md#mozilla.components.lib.dataprotect$generateEncryptionKey(kotlin.Int)/keyStrength). |
