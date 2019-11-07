@@ -112,9 +112,14 @@ nsresult nsClipboard::Init(void) {
 NS_IMETHODIMP
 nsClipboard::Observe(nsISupports* aSubject, const char* aTopic,
                      const char16_t* aData) {
-  // Save global clipboard content to CLIPBOARD_MANAGER
-  gtk_clipboard_store(gtk_clipboard_get(GDK_SELECTION_CLIPBOARD));
-  return NS_OK;
+  // Save global clipboard content to CLIPBOARD_MANAGER.
+  // gtk_clipboard_store() can run an event loop, so call from a dedicated
+  // runnable.
+  return SystemGroup::Dispatch(
+      TaskCategory::Other,
+      NS_NewRunnableFunction("gtk_clipboard_store()", []() {
+        gtk_clipboard_store(gtk_clipboard_get(GDK_SELECTION_CLIPBOARD));
+      }));
 }
 
 NS_IMETHODIMP
