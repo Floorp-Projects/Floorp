@@ -9,9 +9,6 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 const { Sqlite } = ChromeUtils.import("resource://gre/modules/Sqlite.jsm");
-const { requestIdleCallback } = ChromeUtils.import(
-  "resource://gre/modules/Timer.jsm"
-);
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const SCHEMA_VERSION = 1;
@@ -63,6 +60,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
 XPCOMUtils.defineLazyModuleGetters(this, {
   readAsyncStream: "resource://gre/modules/AsyncStreamReader.jsm",
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
+  DeferredTask: "resource://gre/modules/DeferredTask.jsm",
 });
 
 /**
@@ -127,6 +125,8 @@ TrackingDBService.prototype = {
   _xpcom_factory: XPCOMUtils.generateSingletonFactory(TrackingDBService),
   // This is the connection to the database, opened in _initialize and closed on _shutdown.
   _db: null,
+  waitingTasks: new Set(),
+  finishedShutdown: true,
 
   async ensureDB() {
     await this._initPromise;
@@ -160,19 +160,33 @@ TrackingDBService.prototype = {
       "TrackingDBService: Shutting down the content blocking database.",
       () => this._shutdown()
     );
-
+    this.finishedShutdown = false;
     this._db = db;
   },
 
   async _shutdown() {
     let db = await this.ensureDB();
+    this.finishedShutdown = true;
+    await Promise.all(Array.from(this.waitingTasks, task => task.finalize()));
     await db.close();
   },
 
   async recordContentBlockingLog(inputStream) {
+    if (this.finishedShutdown) {
+      // The database has already been closed.
+      return;
+    }
     /* import-globals-from AsyncStreamReader.jsm */
     let json = await readAsyncStream(inputStream);
-    requestIdleCallback(this.saveEvents.bind(this, json));
+    let task = new DeferredTask(async () => {
+      try {
+        await this.saveEvents(json);
+      } finally {
+        this.waitingTasks.delete(task);
+      }
+    }, 0);
+    task.arm();
+    this.waitingTasks.add(task);
   },
 
   identifyType(events) {
