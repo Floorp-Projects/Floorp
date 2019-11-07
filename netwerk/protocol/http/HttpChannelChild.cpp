@@ -3777,8 +3777,7 @@ void HttpChannelChild::CancelOnMainThread(nsresult aRv) {
   // Cancel is expected to preempt any other channel events, thus we put this
   // event in the front of mEventQ to make sure nsIStreamListener not receiving
   // any ODA/OnStopRequest callbacks.
-  UniquePtr<ChannelEvent> cancelEvent = MakeUnique<CancelEvent>(this, aRv);
-  mEventQ->PrependEvent(cancelEvent);
+  mEventQ->PrependEvent(MakeUnique<CancelEvent>(this, aRv));
   mEventQ->Resume();
 }
 
