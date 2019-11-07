@@ -190,7 +190,6 @@ class FragmentOrElement : public nsIContent {
      */
     RefPtr<ShadowRoot> mShadowRoot;
 
-
     /**
      * Web components custom element data.
      */

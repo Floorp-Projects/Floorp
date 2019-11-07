@@ -1810,7 +1810,6 @@ class Document : public nsINode,
 
   void DoUnblockOnload();
 
-
   void RetrieveRelevantHeaders(nsIChannel* aChannel);
 
   void TryChannelCharset(nsIChannel* aChannel, int32_t& aCharsetSource,
@@ -2387,7 +2386,6 @@ class Document : public nsINode,
     }
     DoUpdateSVGUseElementShadowTrees();
   }
-
 
   /**
    * Only to be used inside Gecko, you can't really do anything with the

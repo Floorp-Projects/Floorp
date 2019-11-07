@@ -117,7 +117,6 @@ static inline nsINode* GetFlattenedTreeParentNode(const nsINode* aNode) {
     }
   }
 
-
   MOZ_ASSERT(!parentAsContent->IsActiveChildrenElement(),
              "<xbl:children> isn't in the flattened tree");
 

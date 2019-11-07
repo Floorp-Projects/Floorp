@@ -57,7 +57,6 @@ nsNodeInfoManager::~nsNodeInfoManager() {
   // Note: mPrincipal may be null here if we never got inited correctly
   mPrincipal = nullptr;
 
-
   if (gNodeInfoManagerLeakPRLog)
     MOZ_LOG(gNodeInfoManagerLeakPRLog, LogLevel::Debug,
             ("NODEINFOMANAGER %p destroyed", this));
@@ -103,7 +102,6 @@ nsresult nsNodeInfoManager::Init(mozilla::dom::Document* aDocument) {
 
   mPrincipal = NullPrincipal::CreateWithoutOriginAttributes();
 
-
   mDefaultPrincipal = mPrincipal;
 
   mDocument = aDocument;
@@ -116,7 +114,6 @@ nsresult nsNodeInfoManager::Init(mozilla::dom::Document* aDocument) {
 }
 
 void nsNodeInfoManager::DropDocumentReference() {
-
   // This is probably not needed anymore.
   for (auto iter = mNodeInfoHash.Iter(); !iter.Done(); iter.Next()) {
     iter.Data()->mDocument = nullptr;
@@ -357,7 +354,6 @@ bool nsNodeInfoManager::InternalMathMLEnabled() {
 
 void nsNodeInfoManager::AddSizeOfIncludingThis(nsWindowSizes& aSizes) const {
   aSizes.mDOMOtherSize += aSizes.mState.mMallocSizeOf(this);
-
 
   // Measurement of the following members may be added later if DMD finds it
   // is worthwhile:

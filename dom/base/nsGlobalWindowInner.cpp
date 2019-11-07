@@ -184,7 +184,6 @@
 #include "nsNetCID.h"
 #include "nsIArray.h"
 
-
 #include "nsIDragService.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Selection.h"

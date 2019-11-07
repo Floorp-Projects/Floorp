@@ -241,7 +241,6 @@ class nsJSUtils {
       JSContext* aCx, mozilla::dom::Element* aElement,
       JS::MutableHandleVector<JSObject*> aScopeChain);
 
-
   static void ResetTimeZone();
 
   static bool DumpEnabled();

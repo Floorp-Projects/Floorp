@@ -371,7 +371,6 @@ void Element::SetTabIndex(int32_t aTabIndex, mozilla::ErrorResult& aError) {
   SetAttr(nsGkAtoms::tabindex, value, aError);
 }
 
-
 void Element::SetShadowRoot(ShadowRoot* aShadowRoot) {
   nsExtendedDOMSlots* slots = ExtendedDOMSlots();
   slots->mShadowRoot = aShadowRoot;
@@ -1013,8 +1012,7 @@ already_AddRefed<ShadowRoot> Element::AttachShadow(const ShadowRootInit& aInit,
    * 3. If context object is a shadow host, then throw
    *    an "InvalidStateError" DOMException.
    */
-  if (GetShadowRoot()
-  ) {
+  if (GetShadowRoot()) {
     aError.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return nullptr;
   }
@@ -1541,7 +1539,6 @@ nsresult Element::BindToTree(BindContext& aContext, nsINode& aParent) {
 
   UpdateEditableState(false);
 
-
   // Call BindToTree on shadow root children.
   nsresult rv;
   if (ShadowRoot* shadowRoot = GetShadowRoot()) {
@@ -1621,7 +1618,6 @@ nsresult Element::BindToTree(BindContext& aContext, nsINode& aParent) {
   MOZ_ASSERT(aParent.SubtreeRoot() == SubtreeRoot());
   return NS_OK;
 }
-
 
 bool WillDetachFromShadowOnUnbind(const Element& aElement, bool aNullParent) {
   // If our parent still is in a shadow tree by now, and we're not removing
@@ -1770,7 +1766,6 @@ void Element::UnbindFromTree(bool aNullParent) {
   }
 
   if (document) {
-
     // Disconnected must be enqueued whenever a connected custom element becomes
     // disconnected.
     CustomElementData* data = GetCustomElementData();
@@ -2299,7 +2294,6 @@ nsresult Element::SetAttrAndNotify(
     oldValue = aOldValue;
   }
 
-
   if (HasElementCreatedFromPrototypeAndHasUnmodifiedL10n() &&
       aNamespaceID == kNameSpaceID_None &&
       (aName == nsGkAtoms::datal10nid || aName == nsGkAtoms::datal10nargs)) {
@@ -2609,7 +2603,6 @@ nsresult Element::UnsetAttr(int32_t aNameSpaceID, nsAtom* aName, bool aNotify) {
 
   PostIdMaybeChange(aNameSpaceID, aName, nullptr);
 
-
   CustomElementDefinition* definition = GetCustomElementDefinition();
   // Only custom element which is in `custom` state could get the
   // CustomElementDefinition.
@@ -2729,7 +2722,6 @@ void Element::List(FILE* out, int32_t aIndent, const nsCString& aPrefix) const {
   }
 
   fputs(">\n", out);
-
 }
 
 void Element::DumpContent(FILE* out, int32_t aIndent, bool aDumpAll) const {
@@ -3749,7 +3741,6 @@ void Element::GetCustomInterface(nsGetterAddRefs<T> aResult) {
       return;
     }
   }
-
 }
 
 void Element::ClearServoData(Document* aDoc) {

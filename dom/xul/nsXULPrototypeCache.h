@@ -60,7 +60,6 @@ class nsXULPrototypeCache : public nsIObserver {
   JSScript* GetScript(nsIURI* aURI);
   nsresult PutScript(nsIURI* aURI, JS::Handle<JSScript*> aScriptObject);
 
-
   /**
    * Get a style sheet by URI. If the style sheet is not in the cache,
    * returns nullptr.

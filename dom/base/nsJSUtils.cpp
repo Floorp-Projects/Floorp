@@ -617,7 +617,6 @@ bool nsJSUtils::GetScopeChainForElement(
   return true;
 }
 
-
 /* static */
 void nsJSUtils::ResetTimeZone() { JS::ResetTimeZone(); }
 
