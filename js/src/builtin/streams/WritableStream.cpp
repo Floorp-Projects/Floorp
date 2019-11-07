@@ -180,11 +180,12 @@ static bool WritableStream_locked(JSContext* cx, unsigned argc, Value* vp) {
 static bool WritableStream_abort(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
-  // Step 1: If ! WritableStream(this) is false, throw a TypeError exception.
+  // Step 1: If ! IsWritableStream(this) is false, return a promise rejected
+  //         with a TypeError exception.
   Rooted<WritableStream*> unwrappedStream(
       cx, UnwrapAndTypeCheckThis<WritableStream>(cx, args, "abort"));
   if (!unwrappedStream) {
-    return false;
+    return ReturnPromiseRejectedWithPendingError(cx, args);
   }
 
   // Step 2: If ! IsWritableStreamLocked(this) is true, return a promise
