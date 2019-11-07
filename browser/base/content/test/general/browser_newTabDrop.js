@@ -209,10 +209,9 @@ async function drop(dragData, expectedURLs) {
     EventUtils
   );
 
-  // Since synthesizeDrop triggers the srcElement, need to use another button
-  // that should be visible.
-  let dragSrcElement = document.getElementById("sidebar-button");
-  ok(dragSrcElement, "Sidebar button exists");
+  // Since synthesizeDrop triggers the srcElement, need to use another button.
+  let dragSrcElement = document.getElementById("downloads-button");
+  ok(dragSrcElement, "Downloads button exists");
   let newTabButton = document.getElementById("new-tab-button");
   ok(newTabButton, "New Tab button exists");
 
