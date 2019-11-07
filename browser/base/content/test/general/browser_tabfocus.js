@@ -676,11 +676,6 @@ function compareFocusResults() {
           ? browser1.contentWindow
           : browser2.contentWindow;
     }
-    if (_expectedWindow == "main-window") {
-      // The browser window's body doesn't have an id set usually - set one now
-      // so it can be used for id comparisons below.
-      matchWindow.document.body.id = "main-window-body";
-    }
 
     var focusedElement = fm.focusedElement;
     is(
@@ -703,7 +698,13 @@ function compareFocusResults() {
     is(matchWindow.document.hasFocus(), true, currentTestName + " hasFocus");
     var expectedActive = _expectedElement;
     if (!expectedActive) {
-      expectedActive = getId(matchWindow.document.body);
+      // Documents that have a XUL document element currently have a different
+      // active element behavior than regular HTML documents. This test will
+      // need to be updated when bug 1492582 is fixed.
+      expectedActive =
+        matchWindow.document.documentElement instanceof XULElement
+          ? "main-window"
+          : getId(matchWindow.document.body);
     }
     is(
       getId(matchWindow.document.activeElement),

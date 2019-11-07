@@ -972,7 +972,7 @@
 
       var modifier = docElement.getAttribute("titlemodifier");
       if (docTitle) {
-        newTitle += docElement.getAttribute("titlepreface") || "";
+        newTitle += docElement.getAttribute("titlepreface");
         newTitle += docTitle;
         if (modifier) {
           newTitle += sep;
@@ -1358,7 +1358,10 @@
 
       // Don't focus the content area if something has been focused after the
       // tab switch was initiated.
-      if (gMultiProcessBrowser && document.activeElement != document.body) {
+      if (
+        gMultiProcessBrowser &&
+        document.activeElement != document.documentElement
+      ) {
         return;
       }
 

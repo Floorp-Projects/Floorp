@@ -8620,7 +8620,10 @@ var gPrivateBrowsingUI = {
     // Adjust the window's title
     let docElement = document.documentElement;
     if (!PrivateBrowsingUtils.permanentPrivateBrowsing) {
-      docElement.title = docElement.getAttribute("title_privatebrowsing");
+      docElement.setAttribute(
+        "title",
+        docElement.getAttribute("title_privatebrowsing")
+      );
       docElement.setAttribute(
         "titlemodifier",
         docElement.getAttribute("titlemodifier_privatebrowsing")
