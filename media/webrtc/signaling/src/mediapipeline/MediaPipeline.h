@@ -157,6 +157,8 @@ class MediaPipeline : public sigslot::has_slots<> {
   int32_t RtpPacketsReceived() const { return mRtpPacketsReceived; }
   int64_t RtpBytesReceived() const { return mRtpBytesReceived; }
   int32_t RtcpPacketsReceived() const { return mRtcpPacketsReceived; }
+  // Gets the current time as a DOMHighResTimeStamp
+  DOMHighResTimeStamp GetNow() const;
 
   MediaSessionConduit* Conduit() const { return mConduit; }
 
@@ -260,9 +262,6 @@ class MediaPipeline : public sigslot::has_slots<> {
   UniquePtr<PacketDumper> mPacketDumper;
 
  private:
-  // Gets the current time as a DOMHighResTimeStamp
-  static DOMHighResTimeStamp GetNow();
-
   bool IsRtp(const unsigned char* aData, size_t aLen) const;
   // Must be called on the STS thread.  Must be called after DetachMedia().
   void DetachTransport_s();
