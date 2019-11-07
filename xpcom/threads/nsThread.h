@@ -14,6 +14,7 @@
 #include "nsThreadUtils.h"
 #include "nsString.h"
 #include "nsTObserverArray.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/MemoryReporting.h"
@@ -88,6 +89,12 @@ class nsThread : public nsIThreadInternal,
   // If this flag is true, then the nsThread was created using
   // nsIThreadManager::NewThread.
   bool ShutdownRequired() { return mShutdownRequired; }
+
+  // Lets GetRunningEventDelay() determine if the pool this is part
+  // of has an unstarted thread
+  void SetPoolThreadFreePtr(mozilla::Atomic<bool, mozilla::Relaxed>* aPtr) {
+    mIsAPoolThreadFree = aPtr;
+  }
 
   void SetScriptObserver(mozilla::CycleCollectedJSContext* aScriptObserver);
 
@@ -228,6 +235,7 @@ class nsThread : public nsIThreadInternal,
   int8_t mPriority;
 
   bool mIsMainThread;
+  mozilla::Atomic<bool, mozilla::Relaxed>* mIsAPoolThreadFree;
 
   // Set to true if this thread creates a JSRuntime.
   bool mCanInvokeJS;
