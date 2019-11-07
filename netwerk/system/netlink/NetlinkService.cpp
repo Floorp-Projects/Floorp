@@ -20,6 +20,7 @@
 
 #include "mozilla/Base64.h"
 #include "mozilla/FileUtils.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/Telemetry.h"
@@ -40,13 +41,6 @@ namespace net {
 // period during which to absorb subsequent network change events, in
 // milliseconds
 static const unsigned int kNetworkChangeCoalescingPeriod = 1000;
-
-// IP addresses that are used to check the route for public traffic. They are
-// used just to check routing rules, no packets are sent to those hosts.
-// Initially, addresses of host detectportal.firefox.com were used but they
-// don't necessarily need to be updated when addresses of this host change.
-#define NETLINK_ROUTE_CHECK_IPV4 "23.219.91.27"
-#define NETLINK_ROUTE_CHECK_IPV6 "2a02:26f0:40::17db:5b1b"
 
 static LazyLogModule gNlSvcLog("NetlinkService");
 #define LOG(args) MOZ_LOG(gNlSvcLog, mozilla::LogLevel::Debug, args)
@@ -592,8 +586,8 @@ NetlinkService::LinkInfo::LinkInfo(NetlinkLink* aLink)
 
 NetlinkService::LinkInfo::~LinkInfo() {}
 
-bool NetlinkService::LinkInfo::UpdateStatus() {
-  LOG(("NetlinkService::LinkInfo::UpdateStatus"));
+bool NetlinkService::LinkInfo::UpdateLinkStatus() {
+  LOG(("NetlinkService::LinkInfo::UpdateLinkStatus"));
 
   bool oldIsUp = mIsUp;
   mIsUp = false;
@@ -625,6 +619,8 @@ NS_IMPL_ISUPPORTS(NetlinkService, nsIRunnable)
 NetlinkService::NetlinkService()
     : mMutex("NetlinkService::mMutex"),
       mInitialScanFinished(false),
+      mDoRouteCheckIPv4(false),
+      mDoRouteCheckIPv6(false),
       mMsgId(0),
       mLinkUp(true),
       mRecalculateNetworkId(false) {
@@ -762,6 +758,7 @@ void NetlinkService::OnLinkMessage(struct nlmsghdr* aNlh) {
   nsAutoCString linkName;
   link->GetName(linkName);
 
+  bool checkLinks = false;
   LinkInfo* linkInfo = nullptr;
   mLinks.Get(linkIndex, &linkInfo);
 
@@ -786,7 +783,10 @@ void NetlinkService::OnLinkMessage(struct nlmsghdr* aNlh) {
       }
 
       linkInfo->mLink = link.forget();
-      linkInfo->UpdateStatus();
+      if (linkInfo->UpdateLinkStatus()) {
+        // Link status has changed
+        checkLinks = true;
+      }
     }
   } else {
     if (!linkInfo) {
@@ -795,7 +795,58 @@ void NetlinkService::OnLinkMessage(struct nlmsghdr* aNlh) {
            linkName.get()));
     } else {
       LOG(("Removing link [index=%u, name=%s]", linkIndex, linkName.get()));
+      if (linkInfo->mIsUp) {
+        // We're removing link that is up, check link status
+        checkLinks = true;
+      }
       mLinks.Remove(linkIndex);
+    }
+  }
+
+  if (checkLinks) {
+    UpdateLinkStatus();
+  }
+}
+
+void NetlinkService::UpdateLinkStatus() {
+  if (!mInitialScanFinished) {
+    // Wait until we get all links via netlink
+    return;
+  }
+
+  LOG(("NetlinkService::UpdateLinkStatus"));
+
+  // Link is up when there is non-local address associated with it.
+  bool newLinkUp = false;
+
+  for (auto iter = mLinks.ConstIter(); !iter.Done(); iter.Next()) {
+    LinkInfo* linkInfo = iter.Data();
+    nsAutoCString linkName;
+    linkInfo->mLink->GetName(linkName);
+
+    if (linkInfo->mIsUp) {
+      LOG((" %s is up", linkName.get()));
+      newLinkUp = true;
+    } else {
+      LOG((" %s is down", linkName.get()));
+    }
+  }
+
+  if (mLinkUp != newLinkUp) {
+    RefPtr<NetlinkServiceListener> listener;
+    {
+      MutexAutoLock lock(mMutex);
+      listener = mListener;
+      mLinkUp = newLinkUp;
+    }
+    if (mLinkUp) {
+      if (listener) {
+        listener->OnLinkUp();
+      }
+    } else {
+      if (listener) {
+        listener->OnLinkDown();
+      }
     }
   }
 }
@@ -875,7 +926,8 @@ void NetlinkService::OnAddrMessage(struct nlmsghdr* aNlh) {
     }
   }
 
-  if (linkInfo->UpdateStatus()) {
+  if (linkInfo->UpdateLinkStatus()) {
+    UpdateLinkStatus();
     TriggerNetworkIDCalculation();
   } else {
     // Even if the link status hasn't changed, network ID might have changed
@@ -1147,6 +1199,7 @@ void NetlinkService::RemovePendingMsg() {
       // by the incoming messages.
       mInitialScanFinished = true;
 
+      UpdateLinkStatus();
       TriggerNetworkIDCalculation();
 
       // Link status should be known by now.
@@ -1241,22 +1294,25 @@ nsresult NetlinkService::Init(NetlinkServiceListener* aListener) {
 
   mListener = aListener;
 
-  if (inet_pton(AF_INET, NETLINK_ROUTE_CHECK_IPV4, &mRouteCheckIPv4) != 1) {
-    LOG(("Cannot parse address " NETLINK_ROUTE_CHECK_IPV4));
-    MOZ_DIAGNOSTIC_ASSERT(false,
-                          "Cannot parse address " NETLINK_ROUTE_CHECK_IPV4);
-    return NS_ERROR_UNEXPECTED;
+  nsAutoCString routecheckIP;
+
+  rv =
+      Preferences::GetCString("network.netlink.route.check.IPv4", routecheckIP);
+  if (NS_SUCCEEDED(rv)) {
+    if (inet_pton(AF_INET, routecheckIP.get(), &mRouteCheckIPv4) == 1) {
+      mDoRouteCheckIPv4 = true;
+    }
   }
 
-  if (inet_pton(AF_INET6, NETLINK_ROUTE_CHECK_IPV6, &mRouteCheckIPv6) != 1) {
-    LOG(("Cannot parse address ", NETLINK_ROUTE_CHECK_IPV6));
-    MOZ_DIAGNOSTIC_ASSERT(false,
-                          "Cannot parse address " NETLINK_ROUTE_CHECK_IPV6);
-    return NS_ERROR_UNEXPECTED;
+  rv =
+      Preferences::GetCString("network.netlink.route.check.IPv6", routecheckIP);
+  if (NS_SUCCEEDED(rv)) {
+    if (inet_pton(AF_INET6, routecheckIP.get(), &mRouteCheckIPv6) == 1) {
+      mDoRouteCheckIPv6 = true;
+    }
   }
 
   if (pipe(mShutdownPipe) == -1) {
-    LOG(("Cannot create pipe"));
     return NS_ERROR_FAILURE;
   }
 
@@ -1322,11 +1378,21 @@ int NetlinkService::GetPollWait() {
 
   double period = (TimeStamp::Now() - mTriggerTime).ToMilliseconds();
   if (period >= kNetworkChangeCoalescingPeriod) {
-    // Coalescing time has elapsed, send route check messages to find out where
-    // IPv4 and IPv6 traffic is routed and calculate network ID after the
-    // response is received.
-    EnqueueRtMsg(AF_INET, &mRouteCheckIPv4);
-    EnqueueRtMsg(AF_INET6, &mRouteCheckIPv6);
+    // Coalescing time has elapsed, do route check
+    if (!mDoRouteCheckIPv4 && !mDoRouteCheckIPv6) {
+      // If route checking is disabled for whatever reason, calculate ID now
+      CalculateNetworkID();
+      return -1;
+    }
+
+    // Otherwise send route check messages and calculate network ID after the
+    // response is received
+    if (mDoRouteCheckIPv4) {
+      EnqueueRtMsg(AF_INET, &mRouteCheckIPv4);
+    }
+    if (mDoRouteCheckIPv6) {
+      EnqueueRtMsg(AF_INET6, &mRouteCheckIPv6);
+    }
 
     // Return 0 to make sure we start sending enqueued messages immediately
     return 0;
@@ -1499,8 +1565,9 @@ bool NetlinkService::CalculateIDForFamily(uint8_t aFamily, SHA1Sum* aSHA1) {
   }
 
   if (!*routeCheckResultPtr) {
-    // If we don't have result for route check to mRouteCheckIPv4/6 host, the
-    // network is unreachable and there is no more to do.
+    // If we don't have result for route check to mRouteCheckIPv4/6 host. The
+    // network is either unreachable or the checking was disabled by removing IP
+    // from the preferences. In any case, there is no more to do.
     LOG(("There is no route check result."));
     return retval;
   }
@@ -1689,38 +1756,6 @@ void NetlinkService::ComputeDNSSuffixList() {
   MutexAutoLock lock(mMutex);
   mDNSSuffixList = std::move(suffixList);
 #endif
-}
-
-void NetlinkService::UpdateLinkStatus() {
-  LOG(("NetlinkService::UpdateLinkStatus"));
-
-  MOZ_ASSERT(!mRecalculateNetworkId);
-  MOZ_ASSERT(mInitialScanFinished);
-
-  // Link is up when we have a route for NETLINK_ROUTE_CHECK_IPV4 or
-  // NETLINK_ROUTE_CHECK_IPV6
-  bool newLinkUp = mIPv4RouteCheckResult || mIPv6RouteCheckResult;
-
-  if (mLinkUp == newLinkUp) {
-    LOG(("Link status hasn't changed [linkUp=%d]", mLinkUp));
-  } else {
-    LOG(("Link status has changed [linkUp=%d]", newLinkUp));
-    RefPtr<NetlinkServiceListener> listener;
-    {
-      MutexAutoLock lock(mMutex);
-      listener = mListener;
-      mLinkUp = newLinkUp;
-    }
-    if (mLinkUp) {
-      if (listener) {
-        listener->OnLinkUp();
-      }
-    } else {
-      if (listener) {
-        listener->OnLinkDown();
-      }
-    }
-  }
 }
 
 // Figure out the "network identification".
