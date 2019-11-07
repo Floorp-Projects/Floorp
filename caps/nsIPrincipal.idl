@@ -225,6 +225,12 @@ interface nsIPrincipal : nsISerializable
       }
     %}
 
+    /*
+    * Checks if the Principal's URI is contained in the given Pref
+    * @param pref    The pref to be checked
+    */
+    bool IsURIInPrefList(in string pref);
+
     /**
      * Returns the Flags of the Principals 
      * associated AboutModule, in case there is one.
