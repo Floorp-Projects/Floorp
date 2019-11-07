@@ -7,37 +7,36 @@
 #include "shell/jsrtfuzzing/jsrtfuzzing.h"
 
 #include "mozilla/ArrayUtils.h"  // mozilla::ArrayLength
-#include "mozilla/ScopeExit.h"
+#include "mozilla/Assertions.h"  // MOZ_CRASH
 #include "mozilla/Utf8.h"  // mozilla::Utf8Unit
+
+#include <stdio.h>  // fflush, fprintf, fputs
 
 #include "FuzzerDefs.h"
 #include "FuzzingInterface.h"
-
-#include "jsapi.h"
+#include "jsapi.h"  // JS_ClearPendingException, JS_IsExceptionPending, JS_SetProperty
 
 #include "js/CompilationAndEvaluation.h"  // JS::Evaluate
-#include "js/Equality.h"
+#include "js/CompileOptions.h"            // JS::CompileOptions
+#include "js/RootingAPI.h"                // JS::Rooted
 #include "js/SourceText.h"  // JS::Source{Ownership,Text}
-
+#include "js/Value.h"       // JS::Value
+#include "shell/jsshell.h"  // js::shell::{reportWarnings,PrintStackTrace,sArg{c,v}}
 #include "vm/Interpreter.h"
+#include "vm/JSContext.h"  // js::PrintError
 #include "vm/TypedArrayObject.h"
 
 #include "vm/ArrayBufferObject-inl.h"
 #include "vm/JSContext-inl.h"
-
-using namespace js;
-
-namespace js {
-namespace shell {
 
 static JSContext* gCx = nullptr;
 static std::string gFuzzModuleName;
 
 static void CrashOnPendingException() {
   if (JS_IsExceptionPending(gCx)) {
-    RootedValue exn(gCx);
+    JS::Rooted<JS::Value> exn(gCx);
     (void)JS_GetPendingException(gCx, &exn);
-    RootedObject stack(gCx, GetPendingExceptionStack(gCx));
+    JS::Rooted<JSObject*> stack(gCx, JS::GetPendingExceptionStack(gCx));
 
     JS_ClearPendingException(gCx);
 
@@ -46,9 +45,9 @@ static void CrashOnPendingException() {
       fprintf(stderr, "out of memory initializing ErrorReport\n");
       fflush(stderr);
     } else {
-      PrintError(gCx, stderr, report.toStringResult(), report.report(),
-                 reportWarnings);
-      if (!PrintStackTrace(gCx, stack)) {
+      js::PrintError(gCx, stderr, report.toStringResult(), report.report(),
+                     js::shell::reportWarnings);
+      if (!js::shell::PrintStackTrace(gCx, stack)) {
         fputs("(Unable to print stack trace)\n", stderr);
       }
     }
@@ -57,7 +56,7 @@ static void CrashOnPendingException() {
   }
 }
 
-int FuzzJSRuntimeStart(JSContext* cx, int* argc, char*** argv) {
+int js::shell::FuzzJSRuntimeStart(JSContext* cx, int* argc, char*** argv) {
   gCx = cx;
   gFuzzModuleName = getenv("FUZZER");
 
@@ -68,14 +67,14 @@ int FuzzJSRuntimeStart(JSContext* cx, int* argc, char*** argv) {
   }
 
 #ifdef LIBFUZZER
-  fuzzer::FuzzerDriver(&sArgc, &sArgv, FuzzJSRuntimeFuzz);
+  fuzzer::FuzzerDriver(&shell::sArgc, &shell::sArgv, FuzzJSRuntimeFuzz);
 #elif __AFL_COMPILER
   MOZ_CRASH("AFL is unsupported for JS runtime fuzzing integration");
 #endif
   return 0;
 }
 
-int FuzzJSRuntimeInit(int* argc, char*** argv) {
+int js::shell::FuzzJSRuntimeInit(int* argc, char*** argv) {
   JS::Rooted<JS::Value> v(gCx);
   JS::CompileOptions opts(gCx);
 
@@ -88,7 +87,7 @@ int FuzzJSRuntimeInit(int* argc, char*** argv) {
   return 0;
 }
 
-int FuzzJSRuntimeFuzz(const uint8_t* buf, size_t size) {
+int js::shell::FuzzJSRuntimeFuzz(const uint8_t* buf, size_t size) {
   if (!size) {
     return 0;
   }
@@ -129,6 +128,3 @@ int FuzzJSRuntimeFuzz(const uint8_t* buf, size_t size) {
 
   return 0;
 }
-
-}  // namespace shell
-}  // namespace js
