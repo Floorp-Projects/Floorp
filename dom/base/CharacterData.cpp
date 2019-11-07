@@ -512,7 +512,6 @@ void CharacterData::UnbindFromTree(bool aNullParent) {
 
   HandleShadowDOMRelatedRemovalSteps(aNullParent);
 
-
   if (aNullParent) {
     if (IsRootOfNativeAnonymousSubtree()) {
       MutationObservers::NotifyNativeAnonymousChildListChange(this, true);
@@ -533,7 +532,6 @@ void CharacterData::UnbindFromTree(bool aNullParent) {
     // Begin keeping track of our subtree root.
     SetSubtreeRootPointer(aNullParent ? this : mParent->SubtreeRoot());
   }
-
 
   nsExtendedContentSlots* slots = GetExistingExtendedContentSlots();
   if (slots) {

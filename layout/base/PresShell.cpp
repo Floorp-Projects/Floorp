@@ -1667,7 +1667,6 @@ void PresShell::EndObservingDocument() {
 char* nsPresShell_ReflowStackPointerTop;
 #endif
 
-
 nsresult PresShell::Initialize() {
   if (mIsDestroying) {
     return NS_OK;
@@ -1744,7 +1743,6 @@ nsresult PresShell::Initialize() {
     // nsAutoCauseReflowNotifier (which sets up a script blocker) going out of
     // scope may have killed us too
     NS_ENSURE_STATE(!mHaveShutDown);
-
 
     // XBLConstructorRunner might destroy us.
     NS_ENSURE_STATE(!mHaveShutDown);
@@ -4075,7 +4073,6 @@ void PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush) {
 
       mPresContext->RestyleManager()->ProcessPendingRestyles();
     }
-
 
     // Now those constructors or events might have posted restyle
     // events.  At the same time, we still need up-to-date style data.

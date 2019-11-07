@@ -224,7 +224,6 @@ class Element : public FragmentOrElement {
    */
   void SetTabIndex(int32_t aTabIndex, mozilla::ErrorResult& aError);
 
-
   /**
    * Sets the ShadowRoot binding for this element. The contents of the
    * binding is rendered in place of this node's children.
@@ -1957,7 +1956,6 @@ class Element : public FragmentOrElement {
   // Array containing all attributes for this element
   AttrArray mAttrs;
 };
-
 
 NS_DEFINE_STATIC_IID_ACCESSOR(Element, NS_ELEMENT_IID)
 
