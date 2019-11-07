@@ -7,10 +7,11 @@
 #include "nsGlobalWindowInner.h"
 #include "PermissionDelegateHandler.h"
 #include "nsPIDOMWindow.h"
-#include "nsIPermissionManager.h"
+#include "nsPermissionManager.h"
 #include "nsIPrincipal.h"
+#include "nsContentPermissionHelper.h"
 
-#include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs_permissions.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/FeaturePolicyUtils.h"
 
@@ -24,9 +25,12 @@ typedef PermissionDelegateHandler::PermissionDelegateInfo DelegateInfo;
 static const DelegateInfo sPermissionsMap[] = {
     // Permissions API map
     {"geo", u"geolocation", DelegatePolicy::eDelegateUseFeaturePolicy},
+    // The same with geo, but we support both to save some conversions between
+    // "geo" and "geolocation"
+    {"geolocation", u"geolocation", DelegatePolicy::eDelegateUseFeaturePolicy},
     {"desktop-notification", nullptr,
      DelegatePolicy::ePersistDeniedCrossOrigin},
-    {"persistent-storage", nullptr, DelegatePolicy::eDelegateUseIframeOrigin},
+    {"persistent-storage", nullptr, DelegatePolicy::ePersistDeniedCrossOrigin},
 };
 
 NS_IMPL_CYCLE_COLLECTION(PermissionDelegateHandler)
@@ -56,48 +60,97 @@ const DelegateInfo* PermissionDelegateHandler::GetPermissionDelegateInfo(
   return nullptr;
 }
 
-nsresult PermissionDelegateHandler::GetPermissionForPermissionsAPI(
-    const nsACString& aType, uint32_t* aPermission) {
+bool PermissionDelegateHandler::Initialize() {
   MOZ_ASSERT(mDocument);
+
+  mPermissionManager = nsPermissionManager::GetInstance();
+  if (!mPermissionManager) {
+    return false;
+  }
+
+  mPrincipal = mDocument->NodePrincipal();
+  nsPIDOMWindowInner* window = mDocument->GetInnerWindow();
+  nsGlobalWindowInner* innerWindow = nsGlobalWindowInner::Cast(window);
+  if (innerWindow) {
+    mTopLevelPrincipal = innerWindow->GetTopLevelAntiTrackingPrincipal();
+  }
+
+  return true;
+}
+
+static bool IsTopWindowContent(Document* aDocument) {
+  MOZ_ASSERT(aDocument);
+
+  BrowsingContext* browsingContext = aDocument->GetBrowsingContext();
+  return browsingContext && browsingContext->IsTopContent();
+}
+
+bool PermissionDelegateHandler::HasPermissionDelegated(
+    const nsACString& aType) {
+  MOZ_ASSERT(mDocument);
+
+  if (!StaticPrefs::permissions_delegation_enable()) {
+    return true;
+  }
+
+  // System principal should have right to make permission request
+  if (mPrincipal->IsSystemPrincipal()) {
+    return true;
+  }
 
   const DelegateInfo* info =
       GetPermissionDelegateInfo(NS_ConvertUTF8toUTF16(aType));
 
   // If the type is not in the supported list, auto denied
   if (!info) {
-    *aPermission = nsIPermissionManager::DENY_ACTION;
+    return false;
+  }
+
+  if (info->mPolicy == DelegatePolicy::eDelegateUseFeaturePolicy &&
+      info->mFeatureName) {
+    nsAutoString featureName(info->mFeatureName);
+    // Default allowlist for a feature used in permissions delegate should be
+    // set to eSelf, to ensure that permission is denied by default and only
+    // have the opportunity to request permission with allow attribute.
+    if (!FeaturePolicyUtils::IsFeatureAllowed(mDocument, featureName)) {
+      return false;
+    }
+  }
+
+  if (info->mPolicy == DelegatePolicy::ePersistDeniedCrossOrigin &&
+      !IsTopWindowContent(mDocument) &&
+      !mPrincipal->Subsumes(mTopLevelPrincipal)) {
+    return false;
+  }
+
+  return true;
+}
+
+nsresult PermissionDelegateHandler::GetPermission(const nsACString& aType,
+                                                  uint32_t* aPermission,
+                                                  bool aExactHostMatch) {
+  MOZ_ASSERT(mDocument);
+
+  if (mPrincipal->IsSystemPrincipal()) {
+    *aPermission = nsIPermissionManager::ALLOW_ACTION;
     return NS_OK;
   }
 
-  nsresult rv;
-  nsCOMPtr<nsIPermissionManager> permMgr =
-      do_GetService(NS_PERMISSIONMANAGER_CONTRACTID, &rv);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    *aPermission = nsIPermissionManager::DENY_ACTION;
-    return rv;
+  nsresult (NS_STDCALL nsIPermissionManager::*testPermission)(
+      nsIPrincipal*, const nsACString&, uint32_t*) =
+      aExactHostMatch ? &nsIPermissionManager::TestExactPermissionFromPrincipal
+                      : &nsIPermissionManager::TestPermissionFromPrincipal;
+
+  if (!StaticPrefs::permissions_delegation_enable()) {
+    return (mPermissionManager->*testPermission)(mPrincipal, aType,
+                                                 aPermission);
   }
 
-  nsCOMPtr<nsIPrincipal> principal = mDocument->NodePrincipal();
-  if (!Preferences::GetBool("permissions.delegation.enable", false)) {
-    return permMgr->TestPermissionFromPrincipal(principal, aType, aPermission);
-  }
+  const DelegateInfo* info =
+      GetPermissionDelegateInfo(NS_ConvertUTF8toUTF16(aType));
 
-  if (mDocument->GetWindow()->IsTopLevelWindow() ||
-      info->mPolicy == DelegatePolicy::eDelegateUseIframeOrigin) {
-    return permMgr->TestPermissionFromPrincipal(principal, aType, aPermission);
-  }
-
-  nsPIDOMWindowInner* window = mDocument->GetInnerWindow();
-  nsGlobalWindowInner* innerWindow = nsGlobalWindowInner::Cast(window);
-  nsIPrincipal* topPrincipal = innerWindow->GetTopLevelAntiTrackingPrincipal();
-
-  // Permission is delegated in same origin
-  if (principal->Subsumes(topPrincipal)) {
-    return permMgr->TestPermissionFromPrincipal(topPrincipal, aType,
-                                                aPermission);
-  }
-
-  if (info->mPolicy == DelegatePolicy::ePersistDeniedCrossOrigin) {
+  // If the type is not in the supported list, auto denied
+  if (!info) {
     *aPermission = nsIPermissionManager::DENY_ACTION;
     return NS_OK;
   }
@@ -114,5 +167,25 @@ nsresult PermissionDelegateHandler::GetPermissionForPermissionsAPI(
     }
   }
 
-  return permMgr->TestPermissionFromPrincipal(topPrincipal, aType, aPermission);
+  if (info->mPolicy == DelegatePolicy::ePersistDeniedCrossOrigin &&
+      !IsTopWindowContent(mDocument) &&
+      !mPrincipal->Subsumes(mTopLevelPrincipal)) {
+    *aPermission = nsIPermissionManager::DENY_ACTION;
+    return NS_OK;
+  }
+
+  nsIPrincipal* principal = mPrincipal;
+  if (mTopLevelPrincipal &&
+      (info->mPolicy == DelegatePolicy::eDelegateUseTopOrigin ||
+       (info->mPolicy == DelegatePolicy::eDelegateUseFeaturePolicy &&
+        StaticPrefs::dom_security_featurePolicy_enabled()))) {
+    principal = mTopLevelPrincipal;
+  }
+
+  return (mPermissionManager->*testPermission)(principal, aType, aPermission);
+}
+
+nsresult PermissionDelegateHandler::GetPermissionForPermissionsAPI(
+    const nsACString& aType, uint32_t* aPermission) {
+  return GetPermission(aType, aPermission, false);
 }
