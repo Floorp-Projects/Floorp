@@ -39,7 +39,9 @@ import mozilla.components.concept.engine.prompt.PromptRequest.MultipleChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.SingleChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.TextPrompt
 import mozilla.components.concept.engine.prompt.ShareData
-import mozilla.components.feature.prompts.FilePicker.Companion.FILE_PICKER_ACTIVITY_REQUEST_CODE
+import mozilla.components.feature.prompts.dialog.ChoiceDialogFragment
+import mozilla.components.feature.prompts.dialog.MultiButtonDialogFragment
+import mozilla.components.feature.prompts.file.FilePicker.Companion.FILE_PICKER_ACTIVITY_REQUEST_CODE
 import mozilla.components.feature.prompts.share.ShareDelegate
 import mozilla.components.support.test.any
 import mozilla.components.support.test.eq

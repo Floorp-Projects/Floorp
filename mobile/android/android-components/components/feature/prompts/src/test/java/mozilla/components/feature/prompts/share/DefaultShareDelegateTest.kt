@@ -23,12 +23,10 @@ import org.mockito.Mockito.verify
 class DefaultShareDelegateTest {
 
     private lateinit var shareDelegate: ShareDelegate
-    private lateinit var shareData: ShareData
 
     @Before
     fun setup() {
         shareDelegate = DefaultShareDelegate()
-        shareData = ShareData(title = "Title", text = "Text", url = null)
     }
 
     @Test
@@ -41,7 +39,7 @@ class DefaultShareDelegateTest {
 
         shareDelegate.showShareSheet(
             context,
-            shareData,
+            ShareData(title = "Title", text = "Text", url = null),
             onDismiss = { dismissed = true },
             onSuccess = { succeeded = true }
         )
@@ -61,7 +59,7 @@ class DefaultShareDelegateTest {
 
         shareDelegate.showShareSheet(
             context,
-            shareData,
+            ShareData(title = null, text = "Text", url = "https://example.com"),
             onDismiss = { dismissed = true },
             onSuccess = { succeeded = true }
         )

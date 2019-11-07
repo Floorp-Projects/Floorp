@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.feature.prompts
+package mozilla.components.feature.prompts.dialog
 
 import android.annotation.SuppressLint
 import android.app.Dialog
@@ -17,6 +17,7 @@ import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
+import mozilla.components.feature.prompts.R
 
 private const val KEY_MANY_ALERTS = "KEY_MANY_ALERTS"
 private const val KEY_USER_CHECK_BOX = "KEY_USER_CHECK_BOX"
@@ -25,7 +26,7 @@ private const val KEY_LABEL_INPUT = "KEY_LABEL_INPUT"
 private const val KEY_DEFAULT_INPUT_VALUE = "KEY_DEFAULT_INPUT_VALUE"
 
 /**
- * [android.support.v4.app.DialogFragment] implementation to display a
+ * [androidx.fragment.app.DialogFragment] implementation to display a
  * <a href="https://developer.mozilla.org/en-US/docs/Web/API/Window/prompt">Window.prompt()</a> with native dialogs.
  */
 internal class TextPromptDialogFragment : PromptDialogFragment(), TextWatcher {

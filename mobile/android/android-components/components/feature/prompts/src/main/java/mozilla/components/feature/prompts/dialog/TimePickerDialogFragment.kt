@@ -1,7 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-package mozilla.components.feature.prompts
+package mozilla.components.feature.prompts.dialog
 
 import android.annotation.SuppressLint
 import android.app.AlertDialog
@@ -22,6 +22,7 @@ import android.widget.DatePicker
 import android.widget.TimePicker
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.VisibleForTesting.PRIVATE
+import mozilla.components.feature.prompts.R
 import mozilla.components.feature.prompts.ext.day
 import mozilla.components.feature.prompts.ext.hour
 import mozilla.components.feature.prompts.ext.minute

@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.feature.prompts
+package mozilla.components.feature.prompts.file
 
 import android.app.Activity
 import android.app.Activity.RESULT_OK
@@ -17,10 +17,11 @@ import androidx.fragment.app.Fragment
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.prompt.PromptRequest.File
+import mozilla.components.feature.prompts.PromptContainer
+import mozilla.components.feature.prompts.consumePromptFrom
+import mozilla.components.support.base.feature.OnNeedToRequestPermissions
 import mozilla.components.support.base.feature.PermissionsFeature
 import mozilla.components.support.ktx.android.content.isPermissionGranted
-
-typealias OnNeedToRequestPermissions = (permissions: Array<String>) -> Unit
 
 /**
  * @property container The [Activity] or [Fragment] which hosts the file picker.
