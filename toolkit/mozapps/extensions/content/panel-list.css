@@ -1,7 +1,3 @@
-:host(:not([open])) {
-  display: none;
-}
-
 :host([showing]) {
   visibility: hidden;
 }
