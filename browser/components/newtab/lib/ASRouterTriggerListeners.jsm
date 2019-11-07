@@ -72,6 +72,15 @@ function checkURLMatch(aLocationURI, { hosts, matchPatternSet }, aRequest) {
   return false;
 }
 
+function createMatchPatternSet(patterns, flags = MATCH_PATTERN_OPTIONS) {
+  try {
+    return new MatchPatternSet(new Set(patterns), flags);
+  } catch (e) {
+    Cu.reportError(e);
+  }
+  return new MatchPatternSet([]);
+}
+
 /**
  * A Map from trigger IDs to singleton trigger listeners. Each listener must
  * have idempotent `init` and `uninit` methods.
@@ -95,17 +104,10 @@ this.ASRouterTriggerListeners = new Map([
           this._initialized = true;
         }
         if (patterns) {
-          if (this._matchPatternSet) {
-            this._matchPatternSet = new MatchPatternSet(
-              new Set([...this._matchPatternSet.patterns, ...patterns]),
-              MATCH_PATTERN_OPTIONS
-            );
-          } else {
-            this._matchPatternSet = new MatchPatternSet(
-              patterns,
-              MATCH_PATTERN_OPTIONS
-            );
-          }
+          this._matchPatternSet = createMatchPatternSet([
+            ...(this._matchPatternSet ? this._matchPatternSet.patterns : []),
+            ...patterns,
+          ]);
         }
         if (hosts) {
           hosts.forEach(h => this._hosts.add(h));
@@ -206,17 +208,10 @@ this.ASRouterTriggerListeners = new Map([
         }
         this._triggerHandler = triggerHandler;
         if (patterns) {
-          if (this._matchPatternSet) {
-            this._matchPatternSet = new MatchPatternSet(
-              new Set([...this._matchPatternSet.patterns, ...patterns]),
-              MATCH_PATTERN_OPTIONS
-            );
-          } else {
-            this._matchPatternSet = new MatchPatternSet(
-              patterns,
-              MATCH_PATTERN_OPTIONS
-            );
-          }
+          this._matchPatternSet = createMatchPatternSet([
+            ...(this._matchPatternSet ? this._matchPatternSet.patterns : []),
+            ...patterns,
+          ]);
         }
         if (this._hosts) {
           hosts.forEach(h => this._hosts.add(h));
@@ -356,17 +351,10 @@ this.ASRouterTriggerListeners = new Map([
         }
         this._triggerHandler = triggerHandler;
         if (patterns) {
-          if (this._matchPatternSet) {
-            this._matchPatternSet = new MatchPatternSet(
-              new Set([...this._matchPatternSet.patterns, ...patterns]),
-              MATCH_PATTERN_OPTIONS
-            );
-          } else {
-            this._matchPatternSet = new MatchPatternSet(
-              patterns,
-              MATCH_PATTERN_OPTIONS
-            );
-          }
+          this._matchPatternSet = createMatchPatternSet([
+            ...(this._matchPatternSet ? this._matchPatternSet.patterns : []),
+            ...patterns,
+          ]);
         }
         if (this._hosts) {
           hosts.forEach(h => this._hosts.add(h));

@@ -98,8 +98,8 @@ describe("ASRouterTriggerListeners", () => {
         globals.set(
           "MatchPatternSet",
           sandbox.stub().callsFake(patterns => ({
-            patterns: new Set(patterns),
-            matches: url => patterns.includes(url),
+            patterns,
+            matches: url => patterns.has(url),
           }))
         );
         sandbox.stub(global.Services.mm, "addMessageListener");
@@ -225,7 +225,7 @@ describe("ASRouterTriggerListeners", () => {
       beforeEach(() => {
         globals.set(
           "MatchPatternSet",
-          sandbox.stub().callsFake(patterns => ({ patterns }))
+          sandbox.stub().callsFake(patterns => ({ patterns: patterns || [] }))
         );
       });
       afterEach(() => {
@@ -235,7 +235,7 @@ describe("ASRouterTriggerListeners", () => {
         frequentVisitsListener.init(_triggerHandler, hosts, ["pattern"]);
 
         assert.calledOnce(window.MatchPatternSet);
-        assert.calledWithExactly(window.MatchPatternSet, ["pattern"], {
+        assert.calledWithExactly(window.MatchPatternSet, new Set(["pattern"]), {
           ignorePath: true,
         });
       });
@@ -248,6 +248,22 @@ describe("ASRouterTriggerListeners", () => {
           window.MatchPatternSet,
           new Set(["pattern", "foo"]),
           { ignorePath: true }
+        );
+      });
+      it("should handle bad arguments to MatchPatternSet", () => {
+        const badArgs = ["www.example.com"];
+        window.MatchPatternSet.withArgs(new Set(badArgs)).throws();
+        frequentVisitsListener.init(_triggerHandler, hosts, badArgs);
+
+        // Fails with an empty MatchPatternSet
+        assert.property(frequentVisitsListener._matchPatternSet, "patterns");
+
+        // Second try is succesful
+        frequentVisitsListener.init(_triggerHandler, hosts, ["foo"]);
+
+        assert.property(frequentVisitsListener._matchPatternSet, "patterns");
+        assert.isTrue(
+          frequentVisitsListener._matchPatternSet.patterns.has("foo")
         );
       });
     });
