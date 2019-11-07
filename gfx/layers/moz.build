@@ -568,6 +568,7 @@ IPDL_SOURCES += [
     'ipc/PAPZInputBridge.ipdl',
     'ipc/PCanvas.ipdl',
     'ipc/PCompositorBridge.ipdl',
+    'ipc/PCompositorBridgeTypes.ipdlh',
     'ipc/PCompositorManager.ipdl',
     'ipc/PImageBridge.ipdl',
     'ipc/PLayerTransaction.ipdl',
