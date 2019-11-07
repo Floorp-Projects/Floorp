@@ -985,6 +985,14 @@ impl TextureCache {
         self.entries.get_opt(handle).is_some()
     }
 
+    // Check if a given texture handle was last used as recently
+    // as the specified number of previous frames.
+    pub fn is_recently_used(&self, handle: &TextureCacheHandle, margin: usize) -> bool {
+        self.entries.get_opt(handle).map_or(false, |entry| {
+            entry.last_access.frame_id() + margin >= self.now.frame_id()
+        })
+    }
+
     // Return the allocated size of the texture handle's associated data,
     // or otherwise indicate the handle is invalid.
     pub fn get_allocated_size(&self, handle: &TextureCacheHandle) -> Option<usize> {
