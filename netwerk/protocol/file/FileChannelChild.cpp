@@ -15,8 +15,7 @@ namespace net {
 
 NS_IMPL_ISUPPORTS_INHERITED(FileChannelChild, nsFileChannel, nsIChildChannel)
 
-FileChannelChild::FileChannelChild(nsIURI* uri)
-    : nsFileChannel(uri), mIPCOpen(false) {}
+FileChannelChild::FileChannelChild(nsIURI* uri) : nsFileChannel(uri) {}
 
 NS_IMETHODIMP
 FileChannelChild::ConnectParent(uint32_t id) {
@@ -29,8 +28,6 @@ FileChannelChild::ConnectParent(uint32_t id) {
   if (!gNeckoChild->SendPFileChannelConstructor(this, id)) {
     return NS_ERROR_FAILURE;
   }
-
-  AddIPDLReference();
   return NS_OK;
 }
 
@@ -45,21 +42,11 @@ FileChannelChild::CompleteRedirectSetup(nsIStreamListener* listener,
     return rv;
   }
 
-  if (mIPCOpen) {
+  if (CanSend()) {
     Unused << Send__delete__(this);
   }
 
   return NS_OK;
-}
-
-void FileChannelChild::AddIPDLReference() {
-  AddRef();  // Released in NeckoChild::DeallocPFileChannelChild.
-  mIPCOpen = true;
-}
-
-void FileChannelChild::ActorDestroy(ActorDestroyReason why) {
-  MOZ_ASSERT(mIPCOpen);
-  mIPCOpen = false;
 }
 
 }  // namespace net
