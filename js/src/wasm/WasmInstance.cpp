@@ -569,12 +569,6 @@ inline int32_t WasmMemoryFill(T memBase, uint32_t memLen, uint32_t byteOffset,
   MOZ_RELEASE_ASSERT(size_t(segIndex) < instance->passiveDataSegments_.length(),
                      "ensured by validation");
 
-  // Zero length inits that are out-of-bounds do not trap, even if the segment
-  // has been dropped.
-  if (len == 0) {
-    return 0;
-  }
-
   if (!instance->passiveDataSegments_[segIndex]) {
     JS_ReportErrorNumberASCII(TlsContext.get(), GetErrorMessage, nullptr,
                               JSMSG_WASM_DROPPED_DATA_SEG);
@@ -600,6 +594,11 @@ inline int32_t WasmMemoryFill(T memBase, uint32_t memLen, uint32_t byteOffset,
   uint64_t srcOffsetLimit = uint64_t(srcOffset) + uint64_t(len);
 
   if (dstOffsetLimit > memLen || srcOffsetLimit > segLen) {
+    // Zero length inits that are out-of-bounds do not trap.
+    if (len == 0) {
+      return 0;
+    }
+
     JS_ReportErrorNumberASCII(TlsContext.get(), GetErrorMessage, nullptr,
                               JSMSG_WASM_OUT_OF_BOUNDS);
     return -1;
@@ -759,12 +758,6 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
   MOZ_RELEASE_ASSERT(size_t(segIndex) < instance->passiveElemSegments_.length(),
                      "ensured by validation");
 
-  // Zero length inits that are out-of-bounds do not trap, even if the segment
-  // has been dropped.
-  if (len == 0) {
-    return 0;
-  }
-
   if (!instance->passiveElemSegments_[segIndex]) {
     JS_ReportErrorNumberASCII(TlsContext.get(), GetErrorMessage, nullptr,
                               JSMSG_WASM_DROPPED_ELEM_SEG);
@@ -789,6 +782,11 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
   uint64_t srcOffsetLimit = uint64_t(srcOffset) + uint64_t(len);
 
   if (dstOffsetLimit > tableLen || srcOffsetLimit > segLen) {
+    // Zero length inits that are out-of-bounds do not trap.
+    if (len == 0) {
+      return 0;
+    }
+
     JS_ReportErrorNumberASCII(TlsContext.get(), GetErrorMessage, nullptr,
                               JSMSG_WASM_OUT_OF_BOUNDS);
     return -1;
