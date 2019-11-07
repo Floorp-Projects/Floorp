@@ -20,6 +20,12 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/ActorManagerParent.jsm"
 );
 
+ChromeUtils.defineModuleGetter(
+  this,
+  "CustomizableUI",
+  "resource:///modules/CustomizableUI.jsm"
+);
+
 XPCOMUtils.defineLazyServiceGetter(
   this,
   "PushService",
@@ -751,6 +757,7 @@ BrowserGlue.prototype = {
   _saveSession: false,
   _migrationImportsDefaultBookmarks: false,
   _placesBrowserInitComplete: false,
+  _isNewProfile: undefined,
 
   _setPrefToSaveSession: function BG__setPrefToSaveSession(aForce) {
     if (!this._saveSession && !aForce) {
@@ -2677,6 +2684,17 @@ BrowserGlue.prototype = {
         }
         this._idleService.addIdleObserver(this, this._bookmarksBackupIdleTime);
       }
+
+      if (this._isNewProfile) {
+        try {
+          // New profiles may have existing bookmarks (imported from another browser or
+          // copied into the profile) and we want to show the bookmark toolbar for them
+          // in some cases.
+          this._maybeToggleBookmarkToolbarVisibility();
+        } catch (ex) {
+          Cu.reportError(ex);
+        }
+      }
     })()
       .catch(ex => {
         Cu.reportError(ex);
@@ -2813,11 +2831,9 @@ BrowserGlue.prototype = {
         toolbarIsCustomized ||
         getToolbarFolderCount() > NUM_TOOLBAR_BOOKMARKS_TO_UNHIDE
       ) {
-        xulStore.setValue(
-          BROWSER_DOCURL,
-          "PersonalToolbar",
-          "collapsed",
-          "false"
+        CustomizableUI.setToolbarVisibility(
+          CustomizableUI.AREA_BOOKMARKS,
+          true
         );
       }
     }
@@ -2844,19 +2860,11 @@ BrowserGlue.prototype = {
     let currentUIVersion;
     if (Services.prefs.prefHasUserValue("browser.migration.version")) {
       currentUIVersion = Services.prefs.getIntPref("browser.migration.version");
+      this._isNewProfile = false;
     } else {
       // This is a new profile, nothing to migrate.
       Services.prefs.setIntPref("browser.migration.version", UI_VERSION);
-
-      try {
-        // New profiles may have existing bookmarks (imported from another browser or
-        // copied into the profile) and we want to show the bookmark toolbar for them
-        // in some cases.
-        this._maybeToggleBookmarkToolbarVisibility();
-      } catch (ex) {
-        Cu.reportError(ex);
-      }
-      return;
+      this._isNewProfile = true;
     }
 
     if (currentUIVersion >= UI_VERSION) {
