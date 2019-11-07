@@ -1,0 +1,149 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>
+    Test StreamFilter-monitored responses for ServiceWorker-intercepted requests
+  </title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<script>
+
+add_task(async () => {
+  SimpleTest.waitForExplicitFinish();
+
+  info("Setting prefs...")
+  await SpecialPowers.pushPrefEnv({
+    set: [
+        ["dom.serviceWorkers.exemptFromPerDomainMax", true],
+        ["dom.serviceWorkers.enabled", true],
+        ["dom.serviceWorkers.testing.enabled", true]
+      ]
+  });
+
+  info("Registering Service Worker...");
+  const registration =
+    await navigator.serviceWorker.register("streamfilter_worker.js");
+
+  SimpleTest.registerCleanupFunction(async function unregisterRegistration() {
+    await registration.unregister();
+  });
+
+  info("Waiting to Service Worker to activate and control the current page...");
+  await new Promise(resolve => {
+    const serviceWorker = registration.installing;
+
+    serviceWorker.onstatechange = () => {
+      if (serviceWorker.state == "activated") {
+        resolve();
+      }
+    };
+  });
+
+  ok(navigator.serviceWorker.controller, "Page is controlled");
+
+  info("Loading WebExtension...");
+  const webExtension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: ["webRequest", "webRequestBlocking", "<all_urls>"],
+    },
+
+    // This WebExtension only proxies a response's data through a StreamFilter;
+    // it doesn't modify the data itself in any way.
+    background() {
+      browser.webRequest.onBeforeRequest.addListener(
+        ({ requestId }) => {
+          const filter = browser.webRequest.filterResponseData(requestId);
+          const arrayBuffers = [];
+
+          filter.ondata = ({ data }) => {
+            arrayBuffers.push(data);
+          };
+
+          filter.onstop = () => {
+            new Blob(arrayBuffers).arrayBuffer().then(buffer => {
+              filter.write(buffer);
+              filter.close();
+            });
+          };
+        },
+        {
+          urls: ["<all_urls>"],
+          types: ["xmlhttprequest"]
+        },
+        ["blocking"],
+      );
+    },
+  });
+
+  SimpleTest.registerCleanupFunction(async function unloadWebExtension() {
+    await webExtension.unload();
+  });
+
+  info("Starting up WebExtension...");
+  await webExtension.startup();
+
+  info("Setup complete!");
+});
+
+const streamFilterServerUrl =
+  `${location.origin}/tests/dom/serviceworkers/test/streamfilter_server.sjs`;
+
+const requestUrlForServerQueryString = "syntheticResponse=0";
+
+// streamfilter_server.sjs is expected to respond to a request to this URL.
+const requestUrlForServer = `${streamFilterServerUrl}?${requestUrlForServerQueryString}`;
+
+const requestUrlForServiceWorkerQueryString = "syntheticResponse=1";
+
+// streamfilter_worker.js is expected to respond to a request to this URL.
+const requestUrlForServiceWorker = `${streamFilterServerUrl}?${requestUrlForServiceWorkerQueryString}`;
+
+// Returns a promise that resolves with the XHR's response text.
+function callXHR(requestUrl) {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.onload = () => { resolve(xhr.responseText); };
+    xhr.onerror = reject;
+    xhr.open("GET", requestUrl);
+    xhr.send();
+  });
+}
+
+// Returns a promise that resolves with the Fetch's response text.
+function callFetch(requestUrl) {
+  return fetch(requestUrl).then(response => response.text());
+}
+
+// The expected response text is always the query string (without the leading
+// "?") of the request URL.
+add_task(async function callXhrExpectServerResponse() {
+  info(`Performing XHR at ${requestUrlForServer}...`);
+  is(await callXHR(requestUrlForServer), requestUrlForServerQueryString,
+     "Server-supplied response for XHR completed successfully");
+});
+
+add_task(async function callXhrExpectServiceWorkerResponse() {
+  info(`Performing XHR at ${requestUrlForServiceWorker}...`);
+  is(await callXHR(requestUrlForServiceWorker), requestUrlForServiceWorkerQueryString,
+     "ServiceWorker-supplied response for XHR completed successfully");
+});
+
+add_task(async function callFetchExpectServerResponse() {
+  info(`Performing Fetch at ${requestUrlForServer}...`);
+  is(await callFetch(requestUrlForServer), requestUrlForServerQueryString,
+     "Server-supplied response for Fetch completed successfully");
+});
+
+add_task(async function callFetchExpectServiceWorkerResponse() {
+  info(`Performing Fetch at ${requestUrlForServiceWorker}...`);
+  is(await callFetch(requestUrlForServiceWorker), requestUrlForServiceWorkerQueryString,
+     "ServiceWorker-supplied response for Fetch completed successfully");
+});
+
+</script>
+</body>
+</html>
