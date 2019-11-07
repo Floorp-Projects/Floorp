@@ -240,4 +240,38 @@ TEST(AudioSegment, Test)
   TestDownmixStereo<int16_t>();
 }
 
+template <class T>
+void fillChunkWithStereo(AudioChunk* c, int duration) {
+  c->mDuration = duration;
+
+  AutoTArray<nsTArray<T>, 2> stereo;
+  stereo.SetLength(2);
+  T* ch1 = stereo[0].AppendElements(duration);
+  T* ch2 = stereo[1].AppendElements(duration);
+
+  for (int i = 0; i < duration; ++i) {
+    ch1[i] = GetHighValue<T>();
+    ch2[i] = GetHighValue<T>();
+  }
+
+  c->mBuffer = new mozilla::SharedChannelArrayBuffer<T>(&stereo);
+
+  c->mChannelData.SetLength(2);
+  c->mChannelData[0] = ch1;
+  c->mChannelData[1] = ch2;
+
+  c->mBufferFormat = AUDIO_FORMAT_FLOAT32;
+}
+
+TEST(AudioSegment, FlushAfterZero)
+{
+  AudioChunk c;
+  fillChunkWithStereo<float>(&c, 10);
+
+  AudioSegment s;
+  s.AppendAndConsumeChunk(&c);
+  s.FlushAfter(0);
+  EXPECT_EQ(s.GetDuration(), 0);
+}
+
 }  // namespace audio_segment

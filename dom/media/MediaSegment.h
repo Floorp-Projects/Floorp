@@ -246,7 +246,9 @@ class MediaSegmentBase : public MediaSegment {
       return;
     }
 
-    if (mChunks[0].IsNull()) {
+    if (!aNewEnd) {
+      Clear();
+    } else if (mChunks[0].IsNull()) {
       TrackTime extraToKeep = aNewEnd - mChunks[0].GetDuration();
       if (extraToKeep < 0) {
         // reduce the size of the Null, get rid of everthing else
