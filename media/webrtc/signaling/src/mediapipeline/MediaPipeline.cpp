@@ -1664,14 +1664,14 @@ void MediaPipelineReceiveVideo::OnRtpPacketReceived() {
   }
 }
 
-DOMHighResTimeStamp MediaPipeline::GetNow() {
-  return webrtc::Clock::GetRealTimeClock()->TimeInMilliseconds();
+DOMHighResTimeStamp MediaPipeline::GetNow() const {
+  return Conduit()->GetNow();
 }
 
 DOMHighResTimeStamp MediaPipeline::RtpCSRCStats::GetExpiryFromTime(
     const DOMHighResTimeStamp aTime) {
   // DOMHighResTimeStamp is a unit measured in ms
-  return aTime - EXPIRY_TIME_MILLISECONDS;
+  return aTime + EXPIRY_TIME_MILLISECONDS;
 }
 
 MediaPipeline::RtpCSRCStats::RtpCSRCStats(const uint32_t aCsrc,
