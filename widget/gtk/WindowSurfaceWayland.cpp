@@ -704,7 +704,7 @@ WindowBackBuffer* WindowSurfaceWayland::GetWaylandBufferWithSwitch() {
   // There's no buffer created yet or actual buffer is attached, get a new one.
   // Use DMABuf for fullscreen updates only.
   if (!mWaylandBuffer || mWaylandBuffer->IsAttached()) {
-    return SetNewWaylandBuffer(mUseDMABuf && mWaylandFullscreenDamage);
+    return SetNewWaylandBuffer(UseDMABufBackend() && mWaylandFullscreenDamage);
   }
 
   // Reuse existing buffer
