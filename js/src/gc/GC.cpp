@@ -6965,21 +6965,6 @@ inline void GCRuntime::checkZoneIsScheduled(Zone* zone, JS::GCReason reason,
 #endif
 }
 
-static double LinearInterpolate(double x, double x0, double y0, double x1,
-                                double y1) {
-  MOZ_ASSERT(x0 < x1);
-
-  if (x < x0) {
-    return y0;
-  }
-
-  if (x < x1) {
-    return y0 + (y1 - y0) * ((x - x0) / (x1 - x0));
-  }
-
-  return y1;
-}
-
 GCRuntime::IncrementalResult GCRuntime::budgetIncrementalGC(
     bool nonincrementalByAPI, JS::GCReason reason, SliceBudget& budget) {
   if (nonincrementalByAPI) {
@@ -7066,6 +7051,25 @@ GCRuntime::IncrementalResult GCRuntime::budgetIncrementalGC(
     return resetIncrementalGC(resetReason);
   }
 
+  return IncrementalResult::Ok;
+}
+
+static double LinearInterpolate(double x, double x0, double y0, double x1,
+                                double y1) {
+  MOZ_ASSERT(x0 < x1);
+
+  if (x < x0) {
+    return y0;
+  }
+
+  if (x < x1) {
+    return y0 + (y1 - y0) * ((x - x0) / (x1 - x0));
+  }
+
+  return y1;
+}
+
+void GCRuntime::maybeIncreaseSliceBudget(SliceBudget& budget) {
 #ifndef JS_MORE_DETERMINISTIC
   // Increase time budget for long-running incremental collections. Enforce a
   // minimum time budget that increases linearly with time/slice count up to a
@@ -7092,8 +7096,6 @@ GCRuntime::IncrementalResult GCRuntime::budgetIncrementalGC(
     }
   }
 #endif  // JS_MORE_DETERMINISTIC
-
-  return IncrementalResult::Ok;
 }
 
 static void ScheduleZones(GCRuntime* gc) {
@@ -7189,6 +7191,10 @@ MOZ_NEVER_INLINE GCRuntime::IncrementalResult GCRuntime::gcCycle(
 
   // Note that GC callbacks are allowed to re-enter GC.
   AutoCallGCCallbacks callCallbacks(*this);
+
+  // Increase slice budget for long running collections before it is recorded by
+  // AutoGCSlice.
+  maybeIncreaseSliceBudget(budget);
 
   ScheduleZones(this);
   gcstats::AutoGCSlice agc(stats(), scanZonesBeforeGC(),
