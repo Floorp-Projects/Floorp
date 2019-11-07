@@ -1915,7 +1915,7 @@ interface nsIDOMWindowUtils : nsISupports {
   /**
    * Toggle recording of composition on and off.
    */
-  void setCompositionRecording(in boolean aValue);
+  Promise setCompositionRecording(in boolean aValue);
 
   /**
    * Toggle transaction logging on and off.

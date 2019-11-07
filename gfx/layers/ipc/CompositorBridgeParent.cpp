@@ -2744,20 +2744,25 @@ mozilla::ipc::IPCResult CompositorBridgeParent::RecvBeginRecording(
 }
 
 mozilla::ipc::IPCResult CompositorBridgeParent::RecvEndRecording(
-    bool* aOutSuccess) {
+    EndRecordingResolver&& aResolve) {
   if (!mHaveCompositionRecorder) {
-    *aOutSuccess = false;
+    aResolve(false);
     return IPC_OK();
   }
 
   if (mLayerManager) {
     mLayerManager->WriteCollectedFrames();
+    aResolve(true);
   } else if (mWrBridge) {
-    mWrBridge->WriteCollectedFrames();
+    mWrBridge->WriteCollectedFrames()->Then(
+        MessageLoop::current()->SerialEventTarget(), __func__,
+        [resolve{aResolve}](const bool success) { resolve(success); },
+        [resolve{aResolve}]() { resolve(false); });
+  } else {
+    aResolve(false);
   }
 
   mHaveCompositionRecorder = false;
-  *aOutSuccess = true;
 
   return IPC_OK();
 }
