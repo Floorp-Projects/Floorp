@@ -6,9 +6,9 @@
 
 | Name | Summary |
 |---|---|
-| [ManifestStorage](-manifest-storage/index.md) | `class ManifestStorage` |
+| [ManifestStorage](-manifest-storage/index.md) | `class ManifestStorage`<br>Disk storage for [WebAppManifest](../mozilla.components.concept.engine.manifest/-web-app-manifest/index.md). Other components use this class to reload a saved manifest. |
 | [WebAppLauncherActivity](-web-app-launcher-activity/index.md) | `class WebAppLauncherActivity : AppCompatActivity`<br>This activity is launched by Web App shortcuts on the home screen. |
-| [WebAppShortcutManager](-web-app-shortcut-manager/index.md) | `class WebAppShortcutManager` |
+| [WebAppShortcutManager](-web-app-shortcut-manager/index.md) | `class WebAppShortcutManager`<br>Helper to manage pinned shortcuts for websites. |
 | [WebAppUseCases](-web-app-use-cases/index.md) | `class WebAppUseCases`<br>These use cases allow for adding a web app or web site to the homescreen. |
 
 ### Properties

@@ -13,8 +13,6 @@ to search the installed market place.
 
 It provides use cases to detect and open links openable in third party non-browser apps.
 
-It provides a [RequestInterceptor](../../mozilla.components.concept.engine.request/-request-interceptor/index.md) to do the detection and asking of consent.
-
 It requires: a [Context](#), and a [FragmentManager](#).
 
 A [Boolean](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) flag is provided at construction to allow the feature and use cases to be landed without

@@ -362,7 +362,8 @@
 | [mozilla.components.support.base.log.logger.Logger](../mozilla.components.support.base.log.logger/-logger/index.md) | A wrapper for the Log object providing a more convenient API for logging. |
 | [mozilla.components.service.sync.logins.LoginsStorageException](../mozilla.components.service.sync.logins/-logins-storage-exception.md) | The base class of all errors emitted by logins storage. |
 | [kotlin.Long](../mozilla.components.feature.downloads/kotlin.-long/index.md) (extensions in package mozilla.components.feature.downloads) |  |
-| [mozilla.components.feature.pwa.ManifestStorage](../mozilla.components.feature.pwa/-manifest-storage/index.md) |  |
+| [mozilla.components.feature.pwa.ManifestStorage](../mozilla.components.feature.pwa/-manifest-storage/index.md) | Disk storage for [WebAppManifest](../mozilla.components.concept.engine.manifest/-web-app-manifest/index.md). Other components use this class to reload a saved manifest. |
+| [mozilla.components.feature.pwa.feature.ManifestUpdateFeature](../mozilla.components.feature.pwa.feature/-manifest-update-feature/index.md) | Feature used to update the existing web app manifest and web app shortcut. |
 | [kotlin.collections.Map](../mozilla.components.support.ktx.android.org.json/kotlin.collections.-map/index.md) (extensions in package mozilla.components.support.ktx.android.org.json) |  |
 | [mozilla.components.support.android.test.Matchers](../mozilla.components.support.android.test/-matchers/index.md) | A collection of non-domain specific [Matcher](#)s. |
 | [mozilla.components.concept.engine.media.Media](../mozilla.components.concept.engine.media/-media/index.md) | Value type that represents a media element that is present on the currently displayed page in a session. |
@@ -673,7 +674,7 @@
 | [mozilla.components.feature.pwa.WebAppLauncherActivity](../mozilla.components.feature.pwa/-web-app-launcher-activity/index.md) | This activity is launched by Web App shortcuts on the home screen. |
 | [mozilla.components.concept.engine.manifest.WebAppManifest](../mozilla.components.concept.engine.manifest/-web-app-manifest/index.md) | The web app manifest provides information about an application (such as its name, author, icon, and description). |
 | [mozilla.components.concept.engine.manifest.WebAppManifestParser](../mozilla.components.concept.engine.manifest/-web-app-manifest-parser/index.md) | Parser for constructing a [WebAppManifest](../mozilla.components.concept.engine.manifest/-web-app-manifest/index.md) from JSON. |
-| [mozilla.components.feature.pwa.WebAppShortcutManager](../mozilla.components.feature.pwa/-web-app-shortcut-manager/index.md) |  |
+| [mozilla.components.feature.pwa.WebAppShortcutManager](../mozilla.components.feature.pwa/-web-app-shortcut-manager/index.md) | Helper to manage pinned shortcuts for websites. |
 | [mozilla.components.feature.pwa.feature.WebAppSiteControlsFeature](../mozilla.components.feature.pwa.feature/-web-app-site-controls-feature/index.md) | Displays site controls notification for fullscreen web apps. |
 | [mozilla.components.feature.pwa.WebAppUseCases](../mozilla.components.feature.pwa/-web-app-use-cases/index.md) | These use cases allow for adding a web app or web site to the homescreen. |
 | [mozilla.components.feature.webcompat.WebCompatFeature](../mozilla.components.feature.webcompat/-web-compat-feature/index.md) | Feature to enable website-hotfixing via the Web Compatibility System-Addon. |
