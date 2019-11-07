@@ -17,7 +17,7 @@ addRDMTask(
     info("content URL is " + contentURL);
 
     const contentInRDMPane = await ContentTask.spawn(browser, {}, function() {
-      return content.document.inRDMPane;
+      return content.docShell.browsingContext.inRDMPane;
     });
 
     ok(

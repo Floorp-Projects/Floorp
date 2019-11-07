@@ -218,7 +218,7 @@ var global = this;
 
   function setDocumentInRDMPane(inRDMPane) {
     // We don't propegate this property to descendent documents.
-    docShell.contentViewer.DOMDocument.inRDMPane = inRDMPane;
+    docShell.browsingContext.inRDMPane = inRDMPane;
   }
 
   function flushStyle() {
@@ -262,7 +262,6 @@ var global = this;
       if (flags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT) {
         return;
       }
-      setDocumentInRDMPane(true);
       // Notify the Responsive UI manager to set orientation state on a location change.
       // This is necessary since we want to ensure that the RDM Document's orientation
       // state persists throughout while RDM is opened.

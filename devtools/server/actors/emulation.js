@@ -463,7 +463,7 @@ const EmulationActor = protocol.ActorClassWithSpec(emulationSpec, {
 
   async setDocumentInRDMPane(inRDMPane) {
     if (this.docShell && this.docShell.document) {
-      this.docShell.document.inRDMPane = inRDMPane;
+      this.docShell.browsingContext.inRDMPane = inRDMPane;
     }
   },
 });
