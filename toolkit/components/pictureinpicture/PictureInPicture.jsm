@@ -79,36 +79,28 @@ class PictureInPictureParent extends JSWindowActorParent {
         break;
       }
       case "PictureInPicture:Playing": {
-        let player =
-          PictureInPicture.weakPipPlayer &&
-          PictureInPicture.weakPipPlayer.get();
+        let player = PictureInPicture.getWeakPipPlayer();
         if (player) {
           player.setIsPlayingState(true);
         }
         break;
       }
       case "PictureInPicture:Paused": {
-        let player =
-          PictureInPicture.weakPipPlayer &&
-          PictureInPicture.weakPipPlayer.get();
+        let player = PictureInPicture.getWeakPipPlayer();
         if (player) {
           player.setIsPlayingState(false);
         }
         break;
       }
       case "PictureInPicture:Muting": {
-        let player =
-          PictureInPicture.weakPipPlayer &&
-          PictureInPicture.weakPipPlayer.get();
+        let player = PictureInPicture.getWeakPipPlayer();
         if (player) {
           player.setIsMutedState(true);
         }
         break;
       }
       case "PictureInPicture:Unmuting": {
-        let player =
-          PictureInPicture.weakPipPlayer &&
-          PictureInPicture.weakPipPlayer.get();
+        let player = PictureInPicture.getWeakPipPlayer();
         if (player) {
           player.setIsMutedState(false);
         }
@@ -124,6 +116,32 @@ class PictureInPictureParent extends JSWindowActorParent {
  */
 
 var PictureInPicture = {
+  /**
+   * Returns the player window if one exists and if it hasn't yet been closed.
+   *
+   * @return {DOM Window} the player window if it exists and is not in the
+   * process of being closed. Returns null otherwise.
+   */
+  getWeakPipPlayer() {
+    let weakRef = this._weakPipPlayer;
+    if (weakRef) {
+      let playerWin;
+
+      // Bug 800957 - Accessing weakrefs at the wrong time can cause us to
+      // throw NS_ERROR_XPC_BAD_CONVERT_NATIVE
+      try {
+        playerWin = weakRef.get();
+      } catch (e) {
+        return null;
+      }
+
+      if (!playerWin.closed) {
+        return playerWin;
+      }
+    }
+    return null;
+  },
+
   /**
    * Called when the browser UI handles the View:PictureInPicture command via
    * the keyboard.
@@ -198,7 +216,7 @@ var PictureInPicture = {
     let parentWin = browser.ownerGlobal;
     this.browser = browser;
     let win = await this.openPipWindow(parentWin, videoData);
-    this.weakPipPlayer = Cu.getWeakReference(win);
+    this._weakPipPlayer = Cu.getWeakReference(win);
     win.setIsPlayingState(videoData.playing);
     win.setIsMutedState(videoData.isMuted);
 
@@ -228,7 +246,7 @@ var PictureInPicture = {
     );
 
     this.clearPipTabIcon();
-    delete this.weakPipPlayer;
+    delete this._weakPipPlayer;
     delete this.browser;
   },
 
