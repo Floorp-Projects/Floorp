@@ -15,8 +15,16 @@ add_task(async function documentSmallerThanViewport({ Page }) {
   const { mimeType, width, height } = await getImageDetails(data);
 
   is(mimeType, "image/png", "Screenshot has correct MIME type");
-  is(width, (viewportRect.width - viewportRect.left) * scale);
-  is(height, (viewportRect.height - viewportRect.top) * scale);
+  is(
+    width,
+    (viewportRect.width - viewportRect.left) * scale,
+    "Image has expected width"
+  );
+  is(
+    height,
+    (viewportRect.height - viewportRect.top) * scale,
+    "Image has expected height"
+  );
 });
 
 add_task(async function documentLargerThanViewport({ Page }) {
@@ -31,23 +39,28 @@ add_task(async function documentLargerThanViewport({ Page }) {
   const { mimeType, width, height } = await getImageDetails(data);
 
   is(mimeType, "image/png", "Screenshot has correct MIME type");
-  is(width, (viewportRect.width - viewportRect.left) * scale);
-  is(height, (viewportRect.height - viewportRect.top) * scale);
+  is(
+    width,
+    (viewportRect.width - viewportRect.left) * scale,
+    "Image has expected width"
+  );
+  is(
+    height,
+    (viewportRect.height - viewportRect.top) * scale,
+    "Image has expected height"
+  );
 });
 
 add_task(async function invalidFormat({ Page }) {
   loadURL(toDataURL("<div>Hello world"));
 
-  let exceptionThrown = false;
+  let errorThrown = false;
   try {
     await Page.captureScreenshot({ format: "foo" });
   } catch (e) {
-    exceptionThrown = true;
+    errorThrown = true;
   }
-  ok(
-    exceptionThrown,
-    "captureScreenshot raised error for invalid image format"
-  );
+  ok(errorThrown, "captureScreenshot raised error for invalid image format");
 });
 
 add_task(async function asJPEGFormat({ Page }) {
@@ -64,6 +77,70 @@ add_task(async function asJPEGFormat({ Page }) {
   is(mimeType, "image/jpeg", "Screenshot has correct MIME type");
   is(width, (viewportRect.width - viewportRect.left) * scale);
   is(height, (viewportRect.height - viewportRect.top) * scale);
+});
+
+add_task(async function asJPEGFormatAndQuality({ Page }) {
+  loadURL(toDataURL("<div>Hello world"));
+
+  info("Check that captureScreenshot() captures as JPEG format");
+  const imageDefault = await Page.captureScreenshot({ format: "jpeg" });
+  ok(!!imageDefault, "Screenshot data with default quality is not empty");
+
+  const image100 = await Page.captureScreenshot({
+    format: "jpeg",
+    quality: 100,
+  });
+  ok(!!image100, "Screenshot data with quality 100 is not empty");
+
+  const image10 = await Page.captureScreenshot({
+    format: "jpeg",
+    quality: 10,
+  });
+  ok(!!image10, "Screenshot data with quality 10 is not empty");
+
+  const infoDefault = await getImageDetails(imageDefault.data);
+  const info100 = await getImageDetails(image100.data);
+  const info10 = await getImageDetails(image10.data);
+
+  // All screenshots are of mimeType JPEG
+  is(
+    infoDefault.mimeType,
+    "image/jpeg",
+    "Screenshot with default quality has correct MIME type"
+  );
+  is(
+    info100.mimeType,
+    "image/jpeg",
+    "Screenshot with quality 100 has correct MIME type"
+  );
+  is(
+    info10.mimeType,
+    "image/jpeg",
+    "Screenshot with quality 10 has correct MIME type"
+  );
+
+  const scale = await getDevicePixelRatio();
+  const viewportRect = await getViewportRect();
+
+  // Images are all of the same dimension
+  is(infoDefault.width, (viewportRect.width - viewportRect.left) * scale);
+  is(infoDefault.height, (viewportRect.height - viewportRect.top) * scale);
+
+  is(info100.width, (viewportRect.width - viewportRect.left) * scale);
+  is(info100.height, (viewportRect.height - viewportRect.top) * scale);
+
+  is(info10.width, (viewportRect.width - viewportRect.left) * scale);
+  is(info10.height, (viewportRect.height - viewportRect.top) * scale);
+
+  // Images of different quality result in different content sizes
+  ok(
+    info100.length > infoDefault.length,
+    "Size of quality 100 is larger than default"
+  );
+  ok(
+    info10.length < infoDefault.length,
+    "Size of quality 10 is smaller than default"
+  );
 });
 
 async function getDevicePixelRatio() {
@@ -88,6 +165,7 @@ async function getImageDetails(image) {
               mimeType,
               width: img.width,
               height: img.height,
+              length: image.length,
             });
           },
           { once: true }
