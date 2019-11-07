@@ -99,7 +99,7 @@ with Files('tests/browser/*find*'):
     BUG_COMPONENT = ('Toolkit', 'Find Toolbar')
 
 with Files('tests/browser/browser_isSynthetic.js'):
-    BUG_COMPONENT = ('Firefox', 'Tabbed Browsing')
+    BUG_COMPONENT = ('Firefox', 'Tabbed Browser')
 
 with Files('tests/browser/*mediaPlayback*'):
     BUG_COMPONENT = ('Toolkit', 'XUL Widgets')
