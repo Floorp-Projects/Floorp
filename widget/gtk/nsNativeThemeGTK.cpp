@@ -31,7 +31,6 @@
 
 #include <gdk/gdkprivate.h>
 #include <gtk/gtk.h>
-#include <gtk/gtkx.h>
 
 #include "gfxContext.h"
 #include "gfxPlatformGtk.h"
@@ -864,7 +863,7 @@ static void DrawThemeWithCairo(gfxContext* aContext, DrawTarget* aDrawTarget,
                                const nsIntSize& aDrawSize,
                                GdkRectangle& aGDKRect,
                                nsITheme::Transparency aTransparency) {
-  bool isX11Display = GDK_IS_X11_DISPLAY(gdk_display_get_default());
+  bool isX11Display = gfxPlatformGtk::GetPlatform()->IsX11Display();
   static auto sCairoSurfaceSetDeviceScalePtr =
       (void (*)(cairo_surface_t*, double, double))dlsym(
           RTLD_DEFAULT, "cairo_surface_set_device_scale");
@@ -1202,7 +1201,7 @@ nsNativeThemeGTK::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
   if (!safeState) {
     // gdk_flush() call from expose event crashes Gtk+ on Wayland
     // (Gnome BZ #773307)
-    if (GDK_IS_X11_DISPLAY(gdk_display_get_default())) {
+    if (gfxPlatformGtk::GetPlatform()->IsX11Display()) {
       gdk_flush();
     }
     gLastGdkError = gdk_error_trap_pop();
