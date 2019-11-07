@@ -3567,8 +3567,12 @@ class HTMLEditor final : public TextEditor,
    */
   bool SetCaretInTableCell(dom::Element* aElement);
 
-  MOZ_CAN_RUN_SCRIPT
-  nsresult TabInTable(bool inIsShift, bool* outHandled);
+  /**
+   * HandleTabKeyPressInTable() handles "Tab" key press in table if selection
+   * is in a `<table>` element.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE EditActionResult
+  HandleTabKeyPressInTable(WidgetKeyboardEvent* aKeyboardEvent);
 
   /**
    * InsertPosition is an enum to indicate where the method should insert to.
