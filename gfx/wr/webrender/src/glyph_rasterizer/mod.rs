@@ -374,7 +374,7 @@ impl<'a> From<&'a LayoutToWorldTransform> for FontTransform {
 
 // Some platforms (i.e. Windows) may have trouble rasterizing glyphs above this size.
 // Ensure glyph sizes are reasonably limited to avoid that scenario.
-pub const FONT_SIZE_LIMIT: f64 = 512.0;
+pub const FONT_SIZE_LIMIT: f64 = 320.0;
 
 /// A mutable font instance description.
 ///
