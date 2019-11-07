@@ -18,6 +18,9 @@ const { TabManager } = ChromeUtils.import(
 const { TabSession } = ChromeUtils.import(
   "chrome://remote/content/sessions/TabSession.jsm"
 );
+const { WindowManager } = ChromeUtils.import(
+  "chrome://remote/content/WindowManager.jsm"
+);
 
 let sessionIds = 1;
 let browserContextIds = 1;
@@ -101,6 +104,19 @@ class Target extends Domain {
     }
 
     TabManager.removeTab(target.tab);
+  }
+
+  async activateTarget({ targetId }) {
+    const { targets, window } = this.session.target;
+    const target = targets.getById(targetId);
+
+    if (!target) {
+      throw new Error(`Unable to find target with id '${targetId}'`);
+    }
+
+    // Focus the window, and select the corresponding tab
+    await WindowManager.focus(window);
+    TabManager.selectTab(target.tab);
   }
 
   attachToTarget({ targetId }) {

@@ -41,3 +41,15 @@ async function openTab(Target) {
 
   return { targetInfo, newTab };
 }
+
+async function openWindow(Target) {
+  info("Create a new window and wait for the target to be created");
+
+  const targetCreated = Target.targetCreated();
+  const newWindow = await BrowserTestUtils.openNewBrowserWindow();
+  const newTab = newWindow.gBrowser.selectedTab;
+  const { targetInfo } = await targetCreated;
+  is(targetInfo.type, "page");
+
+  return { targetInfo, newWindow, newTab };
+}
