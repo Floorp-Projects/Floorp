@@ -23,6 +23,7 @@ add_task(async function() {
   await testCommandOrControlModifier(shortcuts);
   await testCtrlModifier(shortcuts);
   await testInvalidShortcutString(shortcuts);
+  await testNullShortcut(shortcuts);
   await testCmdShiftShortcut(shortcuts);
   await testTabCharacterShortcut(shortcuts);
   shortcuts.destroy();
@@ -408,6 +409,21 @@ function testInvalidShortcutString(shortcuts) {
 
   shortcuts.on("Cmmd+F", function() {});
   ok(true, "on() shouldn't throw when passing invalid shortcut string");
+}
+
+// Can happen on localized builds where the value of the localized string is
+// empty, eg `toolbox.elementPicker.key=`. See Bug 1569572.
+function testNullShortcut(shortcuts) {
+  info("Test null shortcut");
+
+  const shortcut = KeyShortcuts.parseElectronKey(window, null);
+  ok(!shortcut, "Passing a null object should return a null object");
+
+  const stringified = KeyShortcuts.stringify(shortcut);
+  is(stringified, "", "A null object should be stringified as an empty string");
+
+  shortcuts.on(null, function() {});
+  ok(true, "on() shouldn't throw when passing a null object");
 }
 
 /**
