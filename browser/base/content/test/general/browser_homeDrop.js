@@ -12,9 +12,10 @@ add_task(async function() {
     EventUtils
   );
 
-  // Since synthesizeDrop triggers the srcElement, need to use another button.
-  let dragSrcElement = document.getElementById("downloads-button");
-  ok(dragSrcElement, "Downloads button exists");
+  // Since synthesizeDrop triggers the srcElement, need to use another button
+  // that should be visible.
+  let dragSrcElement = document.getElementById("sidebar-button");
+  ok(dragSrcElement, "Sidebar button exists");
   let homeButton = document.getElementById("home-button");
   ok(homeButton, "home button present");
 
