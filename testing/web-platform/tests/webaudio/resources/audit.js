@@ -1186,9 +1186,12 @@ window.Audit = (function() {
           '> [' + this._label + '] ' +
           (this._description ? this._description : ''));
 
-      return new Promise(resolve => {
+      return new Promise((resolve, reject) => {
         this._resolve = resolve;
-        this._taskFunction(this, this.should.bind(this));
+        let result = this._taskFunction(this, this.should.bind(this));
+        if (result && typeof result.then === "function") {
+          result.then(undefined, reject);
+        }
       });
     }
 
