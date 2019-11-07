@@ -237,8 +237,17 @@ class nsThread : public nsIThreadInternal,
   // Used to track which event is being executed by ProcessNextEvent
   nsCOMPtr<nsIRunnable> mCurrentEvent;
 
+  // When the current event started.  Note: recursive events use the time
+  // the outmost event started, so the entire recursion chain is considered
+  // one event.
   mozilla::TimeStamp mCurrentEventStart;
   mozilla::TimeStamp mNextIdleDeadline;
+
+  // The time the currently running event spent in event queues, and
+  // when it started running.  If no event is running, they are
+  // TimeDuration() & TimeStamp().
+  mozilla::TimeDuration mLastEventDelay;
+  mozilla::TimeStamp mLastEventStart;
 
 #ifdef EARLY_BETA_OR_EARLIER
   nsCString mNameForWakeupTelemetry;
