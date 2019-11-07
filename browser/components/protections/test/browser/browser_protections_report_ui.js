@@ -31,6 +31,41 @@ add_task(async function setup() {
   });
 });
 
+add_task(async function test_button_display() {
+  let tab = await BrowserTestUtils.openNewForegroundTab({
+    url: "about:protections",
+    gBrowser,
+  });
+  let tabPromise = BrowserTestUtils.waitForNewTab(
+    gBrowser,
+    "about:preferences#privacy-trackingprotection"
+  );
+
+  await SpecialPowers.spawn(tab.linkedBrowser, [], async function() {
+    await ContentTaskUtils.waitForCondition(() => {
+      return content.document.querySelectorAll(".graph-bar").length;
+    }, "The graph has been built");
+
+    let protectionsButton = content.document.getElementById(
+      "manage-protections"
+    );
+    Assert.ok(
+      ContentTaskUtils.is_visible(protectionsButton),
+      "Button to manage protections is displayed"
+    );
+    await ContentTaskUtils.getEventUtils(content).synthesizeMouseAtCenter(
+      protectionsButton,
+      {},
+      content
+    );
+  });
+
+  let preferencesTab = await tabPromise;
+  ok(preferencesTab, "The preferences tab opened");
+  BrowserTestUtils.removeTab(tab);
+  BrowserTestUtils.removeTab(preferencesTab);
+});
+
 add_task(async function test_graph_display() {
   // This creates the schema.
   await TrackingDBService.saveEvents(JSON.stringify({}));
@@ -716,11 +751,11 @@ add_task(async function test_etp_custom_protections_off() {
       return etpCard.classList.contains("custom-not-blocking");
     }, "The custom protections warning card is showing");
 
-    let manageProtectionsCard = content.document.querySelector(
-      "#manage-protections"
+    let manageProtectionsButton = content.document.getElementById(
+      "manage-protections"
     );
     Assert.ok(
-      ContentTaskUtils.is_visible(manageProtectionsCard),
+      ContentTaskUtils.is_visible(manageProtectionsButton),
       "Button to manage protections is displayed"
     );
   });
