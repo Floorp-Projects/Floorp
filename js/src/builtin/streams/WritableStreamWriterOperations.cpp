@@ -24,6 +24,7 @@
 #include "js/Promise.h"                                // JS::PromiseState
 #include "js/Value.h"  // JS::Value, JS::{Int32,Null}Value
 #include "vm/Compartment.h"  // JS::Compartment
+#include "vm/Interpreter.h"  // js::GetAndClearException
 #include "vm/JSContext.h"    // JSContext
 
 #include "builtin/streams/MiscellaneousOperations-inl.h"  // js::ResolveUnwrappedPromiseWithUndefined
@@ -279,7 +280,7 @@ bool js::WritableStreamDefaultWriterRelease(
   Rooted<Value> releasedError(cx);
   JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                             JSMSG_WRITABLESTREAM_CANT_RELEASE_ALREADY_CLOSED);
-  if (!cx->isExceptionPending() || !cx->getPendingException(&releasedError)) {
+  if (!cx->isExceptionPending() || !GetAndClearException(cx, &releasedError)) {
     return false;
   }
 
