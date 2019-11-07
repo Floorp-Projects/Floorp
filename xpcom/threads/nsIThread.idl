@@ -196,5 +196,18 @@ interface nsIThread : nsISerialEventTarget
    */
   [noscript] void getRunningEventDelay(out TimeDuration delay, out TimeStamp start);
 
+  /**
+   * Set information on the timing of the currently-running event.
+   * Overrides the values returned by getRunningEventDelay
+   *
+   * @param delay
+   *   Delay the running event spent in queues, or TimeDuration() if
+   *   there's no running event.
+   * @param start
+   *   The time the currently running event began to run, or TimeStamp() if no
+   *   event is running.
+   */
+  [noscript] void setRunningEventDelay(in TimeDuration delay, in TimeStamp start);
+
   [noscript] void setNameForWakeupTelemetry(in ACString name);
 };

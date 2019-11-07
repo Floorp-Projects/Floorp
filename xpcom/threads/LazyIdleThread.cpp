@@ -406,6 +406,14 @@ LazyIdleThread::GetRunningEventDelay(TimeDuration* aDelay, TimeStamp* aStart) {
 }
 
 NS_IMETHODIMP
+LazyIdleThread::SetRunningEventDelay(TimeDuration aDelay, TimeStamp aStart) {
+  if (mThread) {
+    return mThread->SetRunningEventDelay(aDelay, aStart);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 LazyIdleThread::IsOnCurrentThread(bool* aIsOnCurrentThread) {
   if (mThread) {
     return mThread->IsOnCurrentThread(aIsOnCurrentThread);

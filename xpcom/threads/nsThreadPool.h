@@ -13,6 +13,7 @@
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
 #include "nsThreadUtils.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/EventQueue.h"
@@ -47,6 +48,7 @@ class nsThreadPool final : public nsIThreadPool, public nsIRunnable {
   nsCOMPtr<nsIThreadPoolListener> mListener;
   bool mShutdown;
   bool mRegressiveMaxIdleTime;
+  mozilla::Atomic<bool, mozilla::Relaxed> mIsAPoolThreadFree;
   nsCString mName;
   nsThreadPoolNaming mThreadNaming;
 };
