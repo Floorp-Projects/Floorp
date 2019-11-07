@@ -1303,6 +1303,7 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
                                 enclosing_size_of_op: VoidPtrToSizeFn,
                                 document_id: u32,
                                 compositor: *mut c_void,
+                                max_update_rects: usize,
                                 max_partial_present_rects: usize,
                                 out_handle: &mut *mut DocumentHandle,
                                 out_renderer: &mut *mut Renderer,
@@ -1358,7 +1359,7 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
 
     let compositor_config = if compositor != ptr::null_mut() {
         CompositorConfig::Native {
-            max_update_rects: 0,
+            max_update_rects,
             compositor: Box::new(WrCompositor(compositor)),
         }
     } else {
