@@ -33,9 +33,6 @@
 #include "nsCSSFrameConstructor.h"
 #include "nsPIWindowRoot.h"
 #include "nsIReflowCallback.h"
-#ifdef MOZ_XBL
-#  include "nsBindingManager.h"
-#endif
 #include "nsIDocShellTreeOwner.h"
 #include "nsIBaseWindow.h"
 #include "nsISound.h"
