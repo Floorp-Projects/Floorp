@@ -27,6 +27,9 @@ nsresult ReadCachedScript(StartupCache* cache, nsACString& uri, JSContext* cx,
     return rv;  // don't warn since NOT_AVAILABLE is an ok error
   }
   void* copy = malloc(len);
+  if (!copy) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
   memcpy(copy, buf, len);
   JS::TranscodeBuffer buffer;
   buffer.replaceRawBuffer(reinterpret_cast<uint8_t*>(copy), len);
