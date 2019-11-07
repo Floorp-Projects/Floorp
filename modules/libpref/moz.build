@@ -133,7 +133,7 @@ XPCOM_MANIFESTS += [
     'components.conf',
 ]
 
-SPHINX_TREES['libpref'] = 'docs'
+SPHINX_TREES['/modules/libpref'] = 'docs'
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
