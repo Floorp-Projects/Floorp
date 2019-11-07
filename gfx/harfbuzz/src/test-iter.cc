@@ -234,7 +234,7 @@ main (int argc, char **argv)
 	    {
 	      hb_set_t *set = hb_set_create ();
 	      for (unsigned int i = 0; i < temp1; ++i)
-	        hb_set_add (set, i);
+		hb_set_add (set, i);
 	      temp1++;
 	      return set;
 	    })

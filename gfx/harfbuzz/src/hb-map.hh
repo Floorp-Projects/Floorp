@@ -46,16 +46,13 @@ struct hb_hashmap_t
   static_assert (hb_is_integral (K) || hb_is_pointer (K), "");
   static_assert (hb_is_integral (V) || hb_is_pointer (V), "");
 
-  /* TODO If key type is a pointer, keep hash in item_t and use to:
-   * 1. avoid rehashing when resizing table, and
-   * 2. compare hash before comparing keys, for speed.
-   */
   struct item_t
   {
     K key;
     V value;
+    uint32_t hash;
 
-    void clear () { key = kINVALID; value = vINVALID; }
+    void clear () { key = kINVALID; value = vINVALID; hash = 0; }
 
     bool operator == (K o) { return hb_deref (key) == hb_deref (o); }
     bool operator == (const item_t &o) { return *this == o.key; }
@@ -137,7 +134,9 @@ struct hb_hashmap_t
     if (old_items)
       for (unsigned int i = 0; i < old_size; i++)
 	if (old_items[i].is_real ())
-	  set (old_items[i].key, old_items[i].value);
+	  set_with_hash (old_items[i].key,
+                         old_items[i].hash,
+                         old_items[i].value);
 
     free (old_items);
 
@@ -146,29 +145,9 @@ struct hb_hashmap_t
 
   void set (K key, V value)
   {
-    if (unlikely (!successful)) return;
-    if (unlikely (key == kINVALID)) return;
-    if ((occupancy + occupancy / 2) >= mask && !resize ()) return;
-    unsigned int i = bucket_for (key);
-
-    if (value == vINVALID && items[i].key != key)
-      return; /* Trying to delete non-existent key. */
-
-    if (!items[i].is_unused ())
-    {
-      occupancy--;
-      if (items[i].is_tombstone ())
-	population--;
-    }
-
-    items[i].key = key;
-    items[i].value = value;
-
-    occupancy++;
-    if (!items[i].is_tombstone ())
-      population++;
-
+    set_with_hash (key, hb_hash (key), value);
   }
+
   V get (K key) const
   {
     if (unlikely (!items)) return vINVALID;
@@ -237,14 +216,45 @@ struct hb_hashmap_t
 
   protected:
 
+  void set_with_hash (K key, uint32_t hash, V value)
+  {
+    if (unlikely (!successful)) return;
+    if (unlikely (key == kINVALID)) return;
+    if ((occupancy + occupancy / 2) >= mask && !resize ()) return;
+    unsigned int i = bucket_for_hash (key, hash);
+
+    if (value == vINVALID && items[i].key != key)
+      return; /* Trying to delete non-existent key. */
+
+    if (!items[i].is_unused ())
+    {
+      occupancy--;
+      if (items[i].is_tombstone ())
+	population--;
+    }
+
+    items[i].key = key;
+    items[i].value = value;
+    items[i].hash = hash;
+
+    occupancy++;
+    if (!items[i].is_tombstone ())
+      population++;
+  }
+
   unsigned int bucket_for (K key) const
   {
-    unsigned int i = hb_hash (key) % prime;
+    return bucket_for_hash (key, hb_hash (key));
+  }
+
+  unsigned int bucket_for_hash (K key, uint32_t hash) const
+  {
+    unsigned int i = hash % prime;
     unsigned int step = 0;
     unsigned int tombstone = (unsigned) -1;
     while (!items[i].is_unused ())
     {
-      if (items[i] == key)
+      if (items[i].hash == hash && items[i] == key)
 	return i;
       if (tombstone == (unsigned) -1 && items[i].is_tombstone ())
 	tombstone = i;

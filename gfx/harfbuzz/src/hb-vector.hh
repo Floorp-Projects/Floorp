@@ -302,8 +302,8 @@ struct hb_sorted_vector_t : hb_vector_t<Type>
   { return as_array ().bsearch (x, not_found); }
   template <typename T>
   bool bfind (const T &x, unsigned int *i = nullptr,
-		     hb_bfind_not_found_t not_found = HB_BFIND_NOT_FOUND_DONT_STORE,
-		     unsigned int to_store = (unsigned int) -1) const
+	      hb_bfind_not_found_t not_found = HB_BFIND_NOT_FOUND_DONT_STORE,
+	      unsigned int to_store = (unsigned int) -1) const
   { return as_array ().bfind (x, i, not_found, to_store); }
 };
 

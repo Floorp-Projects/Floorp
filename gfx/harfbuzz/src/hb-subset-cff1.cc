@@ -389,7 +389,7 @@ struct cff1_cs_opset_subr_subset_t : cff1_cs_opset_t<cff1_cs_opset_subr_subset_t
     byte_str_ref_t    str_ref = env.str_ref;
     env.call_subr (subrs, type);
     param.current_parsed_str->add_call_op (op, str_ref, env.context.subr_num);
-    hb_set_add (closure, env.context.subr_num);
+    closure->add (env.context.subr_num);
     param.set_current_str (env, true);
   }
 

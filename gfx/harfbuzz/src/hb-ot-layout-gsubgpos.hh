@@ -387,7 +387,7 @@ struct hb_ot_apply_context_t :
 	     skip == matcher_t::SKIP_NO))
 	{
 	  num_items--;
-	  match_glyph_data++;
+	  if (match_glyph_data) match_glyph_data++;
 	  return true;
 	}
 
@@ -414,7 +414,7 @@ struct hb_ot_apply_context_t :
 	     skip == matcher_t::SKIP_NO))
 	{
 	  num_items--;
-	  match_glyph_data++;
+	  if (match_glyph_data) match_glyph_data++;
 	  return true;
 	}
 
@@ -712,11 +712,9 @@ static inline bool intersects_array (const hb_set_t *glyphs,
 				     intersects_func_t intersects_func,
 				     const void *intersects_data)
 {
-  return
-  + hb_iter (values, count)
-  | hb_map ([&] (const HBUINT16 &_) { return intersects_func (glyphs, _, intersects_data); })
-  | hb_any
-  ;
+  for (const HBUINT16 &_ : + hb_iter (values, count))
+    if (intersects_func (glyphs, _, intersects_data)) return true;
+  return false;
 }
 
 
@@ -2002,6 +2000,83 @@ struct ChainRule
 					      lookup.arrayZ, lookup_context));
   }
 
+  template<typename Iterator,
+	   hb_requires (hb_is_iterator (Iterator))>
+  void serialize_array (hb_serialize_context_t *c,
+                        HBUINT16 len,
+                        Iterator it) const
+  {
+    c->copy (len);
+    for (const auto g : it)
+    {
+      HBUINT16 gid;
+      gid = g;
+      c->copy (gid);
+    }
+  }
+
+  ChainRule* copy (hb_serialize_context_t *c,
+		   const hb_map_t *backtrack_map,
+		   const hb_map_t *input_map = nullptr,
+		   const hb_map_t *lookahead_map = nullptr) const
+  {
+    TRACE_SERIALIZE (this);
+    auto *out = c->start_embed (this);
+    if (unlikely (!out)) return_trace (nullptr);
+
+    const hb_map_t *mapping = backtrack_map;
+    serialize_array (c, backtrack.len, + backtrack.iter ()
+				       | hb_map (mapping));
+
+    const HeadlessArrayOf<HBUINT16> &input = StructAfter<HeadlessArrayOf<HBUINT16>> (backtrack);
+    if (input_map) mapping = input_map;
+    serialize_array (c, input.lenP1, + input.iter ()
+				     | hb_map (mapping));
+
+    const ArrayOf<HBUINT16> &lookahead = StructAfter<ArrayOf<HBUINT16>> (input);
+    if (lookahead_map) mapping = lookahead_map;
+    serialize_array (c, lookahead.len, + lookahead.iter ()
+				       | hb_map (mapping));
+
+    const ArrayOf<LookupRecord> &lookup = StructAfter<ArrayOf<LookupRecord>> (lookahead);
+    c->copy (lookup);
+
+    return_trace (out);
+  }
+
+  bool subset (hb_subset_context_t *c,
+               const hb_map_t *backtrack_map = nullptr,
+               const hb_map_t *input_map = nullptr,
+               const hb_map_t *lookahead_map = nullptr) const
+  {
+    TRACE_SUBSET (this);
+
+    const HeadlessArrayOf<HBUINT16> &input = StructAfter<HeadlessArrayOf<HBUINT16>> (backtrack);
+    const ArrayOf<HBUINT16> &lookahead = StructAfter<ArrayOf<HBUINT16>> (input);
+
+    if (!backtrack_map)
+    {
+      const hb_set_t &glyphset = *c->plan->glyphset ();
+      if (!hb_all (backtrack, glyphset) ||
+          !hb_all (input, glyphset) ||
+          !hb_all (lookahead, glyphset))
+        return_trace (false);
+
+      copy (c->serializer, c->plan->glyph_map);
+    }
+    else
+    {
+      if (!hb_all (backtrack, backtrack_map) ||
+          !hb_all (input, input_map) ||
+          !hb_all (lookahead, lookahead_map))
+        return_trace (false);
+
+      copy (c->serializer, backtrack_map, input_map, lookahead_map);
+    }
+
+    return_trace (true);
+  }
+
   bool sanitize (hb_sanitize_context_t *c) const
   {
     TRACE_SANITIZE (this);
@@ -2081,6 +2156,40 @@ struct ChainRuleSet
     | hb_any
     )
     ;
+  }
+
+  bool subset (hb_subset_context_t *c,
+               const hb_map_t *backtrack_klass_map = nullptr,
+               const hb_map_t *input_klass_map = nullptr,
+               const hb_map_t *lookahead_klass_map = nullptr) const
+  {
+    TRACE_SUBSET (this);
+
+    auto snap = c->serializer->snapshot ();
+    auto *out = c->serializer->start_embed (*this);
+    if (unlikely (!c->serializer->extend_min (out))) return_trace (false);
+
+    for (const OffsetTo<ChainRule>& _ : rule)
+    {
+      if (!_) continue;
+      auto *o = out->rule.serialize_append (c->serializer);
+      if (unlikely (!o)) continue;
+
+      auto o_snap = c->serializer->snapshot ();
+      if (!o->serialize_subset (c, _, this, out,
+                                backtrack_klass_map,
+                                input_klass_map,
+                                lookahead_klass_map))
+      {
+        out->rule.pop ();
+        c->serializer->revert (o_snap);
+      }
+    }
+
+    bool ret = bool (out->rule);
+    if (!ret) c->serializer->revert (snap);
+
+    return_trace (ret);
   }
 
   bool sanitize (hb_sanitize_context_t *c) const
@@ -2175,8 +2284,25 @@ struct ChainContextFormat1
   bool subset (hb_subset_context_t *c) const
   {
     TRACE_SUBSET (this);
-    // TODO(subset)
-    return_trace (false);
+    const hb_set_t &glyphset = *c->plan->glyphset ();
+    const hb_map_t &glyph_map = *c->plan->glyph_map;
+
+    auto *out = c->serializer->start_embed (*this);
+    if (unlikely (!c->serializer->extend_min (out))) return_trace (false);
+    out->format = format;
+
+    hb_sorted_vector_t<hb_codepoint_t> new_coverage;
+    + hb_zip (this+coverage, ruleSet)
+    | hb_filter (glyphset, hb_first)
+    | hb_filter (subset_offset_array (c, out->ruleSet, this, out), hb_second)
+    | hb_map (hb_first)
+    | hb_map (glyph_map)
+    | hb_sink (new_coverage)
+    ;
+
+    out->coverage.serialize (c->serializer, out)
+		 .serialize (c->serializer, new_coverage.iter ());
+    return_trace (bool (new_coverage));
   }
 
   bool sanitize (hb_sanitize_context_t *c) const
@@ -2314,8 +2440,54 @@ struct ChainContextFormat2
   bool subset (hb_subset_context_t *c) const
   {
     TRACE_SUBSET (this);
-    // TODO(subset)
-    return_trace (false);
+    auto *out = c->serializer->start_embed (*this);
+    if (unlikely (!c->serializer->extend_min (out))) return_trace (false);
+    out->format = format;
+    out->coverage.serialize_subset (c, coverage, this, out);
+
+    hb_map_t backtrack_klass_map;
+    out->backtrackClassDef.serialize_subset (c, backtrackClassDef, this, out, &backtrack_klass_map);
+
+    // subset inputClassDef based on glyphs survived in Coverage subsetting
+    hb_map_t input_klass_map;
+    out->inputClassDef.serialize_subset (c, inputClassDef, this, out, &input_klass_map);
+
+    hb_map_t lookahead_klass_map;
+    out->lookaheadClassDef.serialize_subset (c, lookaheadClassDef, this, out, &lookahead_klass_map);
+
+    hb_vector_t<unsigned> rulesets;
+    bool ret = true;
+    for (const OffsetTo<ChainRuleSet>& _ : + hb_enumerate (ruleSet)
+					   | hb_filter (input_klass_map, hb_first)
+					   | hb_map (hb_second))
+    {
+      auto *o = out->ruleSet.serialize_append (c->serializer);
+      if (unlikely (!o))
+      {
+        ret = false;
+        break;
+      }
+      if (!o->serialize_subset (c, _, this, out,
+                                &backtrack_klass_map,
+                                &input_klass_map,
+                                &lookahead_klass_map))
+      {
+        rulesets.push (0);
+      }
+      else rulesets.push (1);
+    }
+
+    if (!ret) return_trace (ret);
+
+    //prune empty trailing ruleSets
+    unsigned count = rulesets.length;
+    while (count > 0 && rulesets[count-1] == 0)
+    {
+      out->ruleSet.pop ();
+      count--;
+    }
+
+    return_trace (bool (out->ruleSet));
   }
 
   bool sanitize (hb_sanitize_context_t *c) const
@@ -2457,11 +2629,46 @@ struct ChainContextFormat3
 					      lookup.len, lookup.arrayZ, lookup_context));
   }
 
+  template<typename Iterator,
+	   hb_requires (hb_is_iterator (Iterator))>
+  bool serialize_coverage_offsets (hb_subset_context_t *c,
+                                   Iterator it,
+				   const void* src_base,
+				   const void* dst_base) const
+  {
+    TRACE_SERIALIZE (this);
+    auto *out = c->serializer->start_embed<OffsetArrayOf<Coverage>> ();
+
+    if (unlikely (!c->serializer->allocate_size<HBUINT16> (HBUINT16::static_size))) return_trace (false);
+
+    + it
+    | hb_apply (subset_offset_array (c, *out, src_base, dst_base))
+    ;
+
+    return_trace (out->len);
+  }
+
   bool subset (hb_subset_context_t *c) const
   {
     TRACE_SUBSET (this);
-    // TODO(subset)
-    return_trace (false);
+
+    auto *out = c->serializer->start_embed (this);
+    if (unlikely (!out)) return_trace (false);
+    if (unlikely (!c->serializer->embed (this->format))) return_trace (false);
+
+    if (!serialize_coverage_offsets (c, backtrack.iter (), this, out))
+      return_trace (false);
+
+    const OffsetArrayOf<Coverage> &input = StructAfter<OffsetArrayOf<Coverage>> (backtrack);
+    if (!serialize_coverage_offsets (c, input.iter (), this, out))
+      return_trace (false);
+
+    const OffsetArrayOf<Coverage> &lookahead = StructAfter<OffsetArrayOf<Coverage>> (input);
+    if (!serialize_coverage_offsets (c, lookahead.iter (), this, out))
+      return_trace (false);
+
+    const ArrayOf<LookupRecord> &lookup = StructAfter<ArrayOf<LookupRecord>> (lookahead);
+    return_trace (c->serializer->copy (lookup));
   }
 
   bool sanitize (hb_sanitize_context_t *c) const

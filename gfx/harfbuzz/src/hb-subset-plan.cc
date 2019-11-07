@@ -34,38 +34,17 @@
 #include "hb-ot-var-fvar-table.hh"
 #include "hb-ot-stat-table.hh"
 
-static inline void
-_add_gid_and_children (const OT::glyf::accelerator_t &glyf,
-		       hb_codepoint_t gid,
-		       hb_set_t *gids_to_retain)
-{
-  if (gids_to_retain->has (gid))
-    // Already visited this gid, ignore.
-    return;
-
-  hb_set_add (gids_to_retain, gid);
-
-  OT::glyf::CompositeGlyphHeader::Iterator composite;
-  if (glyf.get_composite (gid, &composite))
-  {
-    do
-    {
-      _add_gid_and_children (glyf, (hb_codepoint_t) composite.current->glyphIndex, gids_to_retain);
-    } while (composite.move_to_next());
-  }
-}
-
 #ifndef HB_NO_SUBSET_CFF
 static inline void
 _add_cff_seac_components (const OT::cff1::accelerator_t &cff,
-	   hb_codepoint_t gid,
-	   hb_set_t *gids_to_retain)
+			  hb_codepoint_t gid,
+			  hb_set_t *gids_to_retain)
 {
   hb_codepoint_t base_gid, accent_gid;
   if (cff.get_seac_components (gid, &base_gid, &accent_gid))
   {
-    hb_set_add (gids_to_retain, base_gid);
-    hb_set_add (gids_to_retain, accent_gid);
+    gids_to_retain->add (base_gid);
+    gids_to_retain->add (accent_gid);
   }
 }
 #endif
@@ -92,7 +71,10 @@ _cmap_closure (hb_face_t           *face,
 	       const hb_set_t      *unicodes,
 	       hb_set_t            *glyphset)
 {
-  face->table.cmap->table->closure_glyphs (unicodes, glyphset);
+  OT::cmap::accelerator_t cmap;
+  cmap.init (face);
+  cmap.table->closure_glyphs (unicodes, glyphset);
+  cmap.fini ();
 }
 
 static inline void
@@ -151,7 +133,7 @@ _populate_gids_to_retain (hb_subset_plan_t* plan,
   hb_codepoint_t gid = HB_SET_VALUE_INVALID;
   while (plan->_glyphset_gsub->next (&gid))
   {
-    _add_gid_and_children (glyf, gid, plan->_glyphset);
+    glyf.add_gid_and_children (gid, plan->_glyphset);
 #ifndef HB_NO_SUBSET_CFF
     if (cff.is_valid ())
       _add_cff_seac_components (cff, gid, plan->_glyphset);

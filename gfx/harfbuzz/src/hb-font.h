@@ -459,6 +459,14 @@ hb_font_get_variation_glyph (hb_font_t *font,
 			     hb_codepoint_t unicode, hb_codepoint_t variation_selector,
 			     hb_codepoint_t *glyph);
 
+HB_EXTERN unsigned int
+hb_font_get_nominal_glyphs (hb_font_t *font,
+			    unsigned int count,
+			    const hb_codepoint_t *first_unicode,
+			    unsigned int unicode_stride,
+			    hb_codepoint_t *first_glyph,
+			    unsigned int glyph_stride);
+
 HB_EXTERN hb_position_t
 hb_font_get_glyph_h_advance (hb_font_t *font,
 			     hb_codepoint_t glyph);
@@ -649,8 +657,8 @@ hb_font_set_funcs (hb_font_t         *font,
 /* Be *very* careful with this function! */
 HB_EXTERN void
 hb_font_set_funcs_data (hb_font_t         *font,
-		        void              *font_data,
-		        hb_destroy_func_t  destroy);
+			void              *font_data,
+			hb_destroy_func_t  destroy);
 
 
 HB_EXTERN void

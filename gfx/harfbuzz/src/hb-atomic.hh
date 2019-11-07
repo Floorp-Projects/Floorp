@@ -212,18 +212,7 @@ static inline bool _hb_compare_and_swaplp (long *P, long O, long N)
 static_assert ((sizeof (long) == sizeof (void *)), "");
 
 
-#elif !defined(HB_NO_MT)
-
-#define HB_ATOMIC_INT_NIL 1 /* Warn that fallback implementation is in use. */
-
-#define _hb_memory_barrier()			do {} while (0)
-
-#define hb_atomic_int_impl_add(AI, V)		((*(AI) += (V)) - (V))
-
-#define hb_atomic_ptr_impl_cmpexch(P,O,N)	(* (void **) (P) == (void *) (O) ? (* (void **) (P) = (void *) (N), true) : false)
-
-
-#else /* HB_NO_MT */
+#elif defined(HB_NO_MT)
 
 #define hb_atomic_int_impl_add(AI, V)		((*(AI) += (V)) - (V))
 
@@ -231,6 +220,11 @@ static_assert ((sizeof (long) == sizeof (void *)), "");
 
 #define hb_atomic_ptr_impl_cmpexch(P,O,N)	(* (void **) (P) == (void *) (O) ? (* (void **) (P) = (void *) (N), true) : false)
 
+
+#else
+
+#error "Could not find any system to define atomic_int macros."
+#error "Check hb-atomic.hh for possible resolutions."
 
 #endif
 

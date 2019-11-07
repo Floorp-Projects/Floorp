@@ -167,8 +167,8 @@ struct KernOTSubTableHeader
   static constexpr bool apple = false;
   typedef AAT::ObsoleteTypes Types;
 
-  unsigned int tuple_count () const { return 0; }
-  bool is_horizontal () const { return (coverage & Horizontal); }
+  unsigned   tuple_count () const { return 0; }
+  bool     is_horizontal () const { return (coverage & Horizontal); }
 
   enum Coverage
   {
@@ -222,8 +222,8 @@ struct KernAATSubTableHeader
   static constexpr bool apple = true;
   typedef AAT::ObsoleteTypes Types;
 
-  unsigned int tuple_count () const { return 0; }
-  bool is_horizontal () const       { return !(coverage & Vertical); }
+  unsigned   tuple_count () const { return 0; }
+  bool     is_horizontal () const { return !(coverage & Vertical); }
 
   enum Coverage
   {
@@ -275,8 +275,8 @@ struct kern
 {
   static constexpr hb_tag_t tableTag = HB_OT_TAG_kern;
 
-  bool has_data () const { return u.version32; }
-  unsigned int get_type () const { return u.major; }
+  bool     has_data () const { return u.version32; }
+  unsigned get_type () const { return u.major; }
 
   bool has_state_machine () const
   {

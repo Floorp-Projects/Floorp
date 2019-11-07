@@ -548,7 +548,7 @@ struct subr_remap_t : hb_inc_bimap_t
     /* create a remapping of subroutine numbers from old to new.
      * no optimization based on usage counts. fonttools doesn't appear doing that either.
      */
-    
+
     hb_codepoint_t old_num = HB_SET_VALUE_INVALID;
     while (hb_set_next (closure, &old_num))
       add (old_num);
@@ -916,7 +916,7 @@ struct subr_subsetter_t
 				  hb_set_t *closure,
 				  const subr_subset_param_t &param)
   {
-    hb_set_add (closure, subr_num);
+    closure->add (subr_num);
     collect_subr_refs_in_str (subrs[subr_num], param);
   }
 
