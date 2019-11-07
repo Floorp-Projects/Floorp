@@ -455,10 +455,21 @@ NS_IMETHODIMP
 StreamFilterParent::OnStartRequest(nsIRequest* aRequest) {
   AssertIsMainThread();
 
+  // If a StreamFilter's request results in an external redirect, that
+  // StreamFilter should not monitor the redirected request's response (although
+  // an identical StreamFilter may be created for it). A StreamFilter should,
+  // however, monitor the response of an "internal" redirect (i.e. a
+  // browser-initiated rather than server-initiated redirect); in this case,
+  // mChannel must be replaced.
   if (aRequest != mChannel) {
-    RefPtr<net::DocumentChannelChild> docChild = do_QueryObject(mChannel);
-    if (docChild && docChild->GetRedirectChain().IsEmpty()) {
-      mChannel = do_QueryInterface(aRequest);
+    nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
+    nsCOMPtr<nsILoadInfo> loadInfo = channel ? channel->LoadInfo() : nullptr;
+
+    if (loadInfo && loadInfo->RedirectChain().IsEmpty()) {
+      MOZ_DIAGNOSTIC_ASSERT(
+          !loadInfo->RedirectChainIncludingInternalRedirects().IsEmpty(),
+          "We should be performing an internal redirect.");
+      mChannel = channel;
     } else {
       mDisconnected = true;
 
