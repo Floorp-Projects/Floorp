@@ -1524,6 +1524,8 @@ bool LanguageTagParser::canParseUnicodeExtension(
 
 bool LanguageTagParser::canParseUnicodeExtensionType(
     JSLinearString* unicodeType) {
+  MOZ_ASSERT(unicodeType->length() > 0, "caller must exclude empty strings");
+
   JS::AutoCheckCannotGC nogc;
   LocaleChars unicodeTypeChars = StringChars(unicodeType, nogc);
 
