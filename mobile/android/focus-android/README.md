@@ -28,9 +28,6 @@ Before you attempt to make a contribution please read the [Community Participati
 
 * [View current Issues](https://github.com/mozilla-mobile/focus-android/issues), [view current Pull Requests](https://github.com/mozilla-mobile/focus-android/pulls), or [file a security issue][sec issue].
 
-* IRC: [#focus (irc.mozilla.org)](https://wiki.mozilla.org/IRC) | [view logs](https://mozilla.logbot.info/focus/)
-(**We're available Monday-Friday, GMT and PST working hours**).
-
 * Opt-in to our Mailing List [firefox-focus-public@](https://mail.mozilla.org/listinfo/firefox-focus-public) to keep up to date.
 
 * [View the Wiki](https://github.com/mozilla-mobile/focus-android/wiki).
