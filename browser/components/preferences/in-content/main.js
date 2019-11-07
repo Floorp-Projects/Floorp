@@ -2561,7 +2561,8 @@ var gMainPane = {
       );
       if ("id" in handlerInfo.description) {
         params.description = await document.l10n.formatValue(
-          handlerInfo.description.id
+          handlerInfo.description.id,
+          handlerInfo.description.args
         );
       } else {
         params.description = handlerInfo.typeDescription.raw;
