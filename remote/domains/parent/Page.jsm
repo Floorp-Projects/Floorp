@@ -47,7 +47,7 @@ class Page extends Domain {
    * @param {Object} options
    * @param {Viewport=} options.clip (not supported)
    *     Capture the screenshot of a given region only.
-   * @param {string=} options.format (not supported)
+   * @param {string=} options.format
    *     Image compression format. Defaults to "png".
    * @param {number=} options.quality (not supported)
    *     Compression quality from range [0..100] (jpeg only). Defaults to 100.
@@ -56,11 +56,10 @@ class Page extends Domain {
    *     Base64-encoded image data.
    */
   async captureScreenshot(options = {}) {
+    const { format = "png" } = options;
+
     if (options.clip) {
       throw new UnsupportedError("clip not supported");
-    }
-    if (options.format) {
-      throw new UnsupportedError("format not supported");
     }
     if (options.fromSurface) {
       throw new UnsupportedError("fromSurface not supported");
@@ -120,7 +119,10 @@ class Page extends Domain {
     // because it is no longer needed.
     snapshot.close();
 
-    const url = canvas.toDataURL();
+    const url = canvas.toDataURL(`image/${format}`);
+    if (!url.startsWith(`data:image/${format}`)) {
+      throw new UnsupportedError(`Unsupported MIME type: image/${format}`);
+    }
 
     // only return the base64 encoded data without the data URL prefix
     const data = url.substring(url.indexOf(",") + 1);
