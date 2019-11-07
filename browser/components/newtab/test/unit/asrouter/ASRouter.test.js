@@ -2858,6 +2858,18 @@ describe("ASRouter", () => {
       assert.equal(Router.state.trailheadInterrupt, "join");
       assert.equal(Router.state.trailheadTriplet, "supercharge");
     });
+    it("should set default triplet when firstrun.branches pref not set", async () => {
+      sandbox.spy(Router, "setFirstRunStateFromPref");
+      getStringPrefStub.withArgs(TRAILHEAD_CONFIG.OVERRIDE_PREF).returns("");
+
+      await Router.init(channel, createFakeStorage(), dispatchStub);
+
+      assert.calledOnce(Router.setFirstRunStateFromPref);
+      assert.equal(
+        Router.state.trailheadTriplet,
+        TRAILHEAD_CONFIG.DEFAULT_TRIPLET
+      );
+    });
     it.skip("should call .setupTrailhead on init", async () => {
       sandbox.spy(Router, "setupTrailhead");
       sandbox
