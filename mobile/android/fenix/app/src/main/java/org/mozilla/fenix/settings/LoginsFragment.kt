@@ -36,8 +36,49 @@ import java.util.concurrent.Executors
 
 @Suppress("TooManyFunctions")
 class LoginsFragment : PreferenceFragmentCompat(), AccountObserver {
+
+    @TargetApi(M)
+    private lateinit var biometricPromptCallback: BiometricPrompt.AuthenticationCallback
+
+    @TargetApi(M)
+    private val executor = Executors.newSingleThreadExecutor()
+
+    @TargetApi(M)
+    private lateinit var biometricPrompt: BiometricPrompt
+
+    @TargetApi(M)
+    private lateinit var promptInfo: BiometricPrompt.PromptInfo
+
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.logins_preferences, rootKey)
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        biometricPromptCallback = object : BiometricPrompt.AuthenticationCallback() {
+
+            override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
+                // Authentication Error
+            }
+
+            override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
+                lifecycleScope.launch(Main) {
+                    navigateToSavedLoginsFragment()
+                }
+            }
+
+            override fun onAuthenticationFailed() {
+                // Authenticated Failed
+            }
+        }
+
+        biometricPrompt = BiometricPrompt(this, executor, biometricPromptCallback)
+
+        promptInfo = BiometricPrompt.PromptInfo.Builder()
+            .setTitle(getString(R.string.logins_biometric_prompt_message))
+            .setDeviceCredentialAllowed(true)
+            .build()
     }
 
     override fun onResume() {
@@ -48,7 +89,7 @@ class LoginsFragment : PreferenceFragmentCompat(), AccountObserver {
         val savedLoginsKey = getPreferenceKey(R.string.pref_key_saved_logins)
         findPreference<Preference>(savedLoginsKey)?.setOnPreferenceClickListener {
             if (Build.VERSION.SDK_INT >= M && isHardwareAvailable && hasBiometricEnrolled) {
-                showBiometricPrompt()
+                biometricPrompt.authenticate(promptInfo)
             } else {
                 verifyPinOrShowSetupWarning()
             }
@@ -135,37 +176,6 @@ class LoginsFragment : PreferenceFragmentCompat(), AccountObserver {
                 true
             }
         }
-    }
-
-    @TargetApi(M)
-    private fun showBiometricPrompt() {
-        val biometricPromptCallback = object : BiometricPrompt.AuthenticationCallback() {
-
-            override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
-                // Authentication Error
-            }
-
-            override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
-                lifecycleScope.launch(Main) {
-                    navigateToSavedLoginsFragment()
-                }
-            }
-
-            override fun onAuthenticationFailed() {
-                // Authenticated Failed
-            }
-        }
-
-        val executor = Executors.newSingleThreadExecutor()
-
-        val biometricPrompt = BiometricPrompt(this, executor, biometricPromptCallback)
-
-        val promptInfo = BiometricPrompt.PromptInfo.Builder()
-            .setTitle(getString(R.string.logins_biometric_prompt_message))
-            .setDeviceCredentialAllowed(true)
-            .build()
-
-        biometricPrompt.authenticate(promptInfo)
     }
 
     private fun verifyPinOrShowSetupWarning() {
