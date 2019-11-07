@@ -388,6 +388,7 @@ nsDocShell::nsDocShell(BrowsingContext* aBrowsingContext,
       mHasLoadedNonBlankURI(false),
       mBlankTiming(false),
       mTitleValidForCurrentURI(false),
+      mIsFrame(false),
       mSkipBrowsingContextDetachOnDestroy(false),
       mWatchedByDevtools(false),
       mIsNavigating(false) {
@@ -12086,6 +12087,8 @@ nsresult nsDocShell::EnsureFind() {
 
   return NS_OK;
 }
+
+bool nsDocShell::IsFrame() { return mIsFrame; }
 
 NS_IMETHODIMP
 nsDocShell::IsBeingDestroyed(bool* aDoomed) {
