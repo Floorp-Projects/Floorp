@@ -2745,10 +2745,6 @@ class Document : public nsINode,
    */
   bool HaveFiredDOMTitleChange() const { return mHaveFiredTitleChange; }
 
-  Element* GetAnonymousElementByAttribute(nsIContent* aElement,
-                                          nsAtom* aAttrName,
-                                          const nsAString& aAttrValue) const;
-
   /**
    * To batch DOMSubtreeModified, document needs to be informed when
    * a mutation event might be dispatched, even if the event isn't actually
@@ -3713,9 +3709,6 @@ class Document : public nsINode,
 
   // QuerySelector and QuerySelectorAll already defined on nsINode
   nsINodeList* GetAnonymousNodes(Element& aElement);
-  Element* GetAnonymousElementByAttribute(Element& aElement,
-                                          const nsAString& aAttrName,
-                                          const nsAString& aAttrValue);
   Element* GetBindingParent(nsINode& aNode);
 
   XPathExpression* CreateExpression(const nsAString& aExpression,

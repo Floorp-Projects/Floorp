@@ -382,9 +382,6 @@ partial interface Document {
   [Func="IsChromeOrXBL"]
   NodeList? getAnonymousNodes(Element elt);
   [Func="IsChromeOrXBL"]
-  Element? getAnonymousElementByAttribute(Element elt, DOMString attrName,
-                                          DOMString attrValue);
-  [Func="IsChromeOrXBL"]
   Element? getBindingParent(Node node);
   // Creates a new XUL element regardless of the document's default type.
   [CEReactions, NewObject, Throws, Func="IsChromeOrXBL"]
