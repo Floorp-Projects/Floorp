@@ -50,11 +50,12 @@ async function startTest() {
 
     mediaRecorder.start();
     is(mediaRecorder.state, 'recording', 'state should be recording');
-    is(mediaRecorder.mimeType, expectedMimeType, 'mimetype should be set');
+    is(mediaRecorder.mimeType, '', 'mimetype should be unset');
 
     await new Promise(r => mediaRecorder.onstart = r);
     mediaRecorder.onstart = unexpected;
     ok(true, 'start event fired');
+    is(mediaRecorder.mimeType, expectedMimeType, 'mimetype should be set');
 
     // Trigger an error
     stream.removeTrack(audioTrack);
