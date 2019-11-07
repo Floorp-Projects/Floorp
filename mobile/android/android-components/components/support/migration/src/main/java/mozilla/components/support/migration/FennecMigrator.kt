@@ -46,6 +46,11 @@ sealed class Migration(val currentVersion: Int) {
      * Migrates FxA state.
      */
     object FxA : Migration(currentVersion = 1)
+
+    /**
+     * Migrates Gecko(View) internal files.
+     */
+    object Gecko : Migration(currentVersion = 1)
 }
 
 /**
@@ -136,6 +141,16 @@ class FennecMigrator private constructor(
             }
             bookmarksStorage = storage
             migrations.add(VersionedMigration(Migration.Bookmarks, version))
+            return this
+        }
+
+        /**
+         * Enables the migration of Gecko internal files.
+         */
+        fun migrateGecko(
+            version: Int = Migration.Gecko.currentVersion
+        ): Builder {
+            migrations.add(VersionedMigration(Migration.Gecko, version))
             return this
         }
 
@@ -262,6 +277,7 @@ class FennecMigrator private constructor(
                 Migration.Bookmarks -> migrateBookmarks()
                 Migration.OpenTabs -> migrateOpenTabs()
                 Migration.FxA -> migrateFxA()
+                Migration.Gecko -> migrateGecko()
             }
 
             results[versionedMigration.migration] = when (migrationResult) {
@@ -382,6 +398,23 @@ class FennecMigrator private constructor(
                 logger.debug("Signed-in into a detected Fennec account")
                 result
             }
+        }
+    }
+
+    @SuppressWarnings("TooGenericExceptionCaught")
+    private fun migrateGecko(): Result<Unit> {
+        if (profile == null) {
+            crashReporter.submitCaughtException(IllegalStateException("Missing Profile path"))
+            return Result.Failure(IllegalStateException("Missing Profile path"))
+        }
+
+        return try {
+            logger.debug("Migrating gecko files...")
+            val result = GeckoMigration.migrate(profile.path)
+            logger.debug("Migrated gecko files.")
+            result
+        } catch (e: Exception) {
+            Result.Failure(e)
         }
     }
 }
