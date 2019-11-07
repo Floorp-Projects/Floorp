@@ -406,7 +406,7 @@ nsWindow::nsWindow() {
   mHandleTouchEvent = false;
 #endif
   mIsDragPopup = false;
-  mIsX11Display = GDK_IS_X11_DISPLAY(gdk_display_get_default());
+  mIsX11Display = gfxPlatformGtk::GetPlatform()->IsX11Display();
 
   mContainer = nullptr;
   mGdkWindow = nullptr;
@@ -778,8 +778,7 @@ double nsWindow::GetDefaultScaleInternal() {
 
 DesktopToLayoutDeviceScale nsWindow::GetDesktopToDeviceScale() {
 #ifdef MOZ_WAYLAND
-  GdkDisplay* gdkDisplay = gdk_display_get_default();
-  if (!GDK_IS_X11_DISPLAY(gdkDisplay)) {
+  if (!mIsX11Display) {
     return DesktopToLayoutDeviceScale(GdkScaleFactor());
   }
 #endif
@@ -790,14 +789,13 @@ DesktopToLayoutDeviceScale nsWindow::GetDesktopToDeviceScale() {
 
 DesktopToLayoutDeviceScale nsWindow::GetDesktopToDeviceScaleByScreen() {
 #ifdef MOZ_WAYLAND
-  GdkDisplay* gdkDisplay = gdk_display_get_default();
   // In Wayland there's no way to get absolute position of the window and use it
   // to determine the screen factor of the monitor on which the window is
   // placed. The window is notified of the current scale factor but not at this
   // point, so the GdkScaleFactor can return wrong value which can lead to wrong
   // popup placement. We need to use parent's window scale factor for the new
   // one.
-  if (!GDK_IS_X11_DISPLAY(gdkDisplay)) {
+  if (!mIsX11Display) {
     nsView* view = nsView::GetViewFor(this);
     if (view) {
       nsView* parentView = view->GetParent();
@@ -1511,7 +1509,7 @@ static void SetUserTimeAndStartupIDForActivatedWindow(GtkWidget* aWindow) {
 
 #if defined(MOZ_ENABLE_STARTUP_NOTIFICATION)
   // TODO - Implement for non-X11 Gtk backends (Bug 726479)
-  if (GDK_IS_X11_DISPLAY(gdk_display_get_default())) {
+  if (gfxPlatformGtk::GetPlatform()->IsX11Display()) {
     GdkWindow* gdkWindow = gtk_widget_get_window(aWindow);
 
     GdkScreen* screen = gdk_window_get_screen(gdkWindow);
@@ -1857,7 +1855,7 @@ void* nsWindow::GetNativeData(uint32_t aDataType) {
     case NS_NATIVE_DISPLAY: {
 #ifdef MOZ_X11
       GdkDisplay* gdkDisplay = gdk_display_get_default();
-      if (GDK_IS_X11_DISPLAY(gdkDisplay)) {
+      if (gdkDisplay && GDK_IS_X11_DISPLAY(gdkDisplay)) {
         return GDK_DISPLAY_XDISPLAY(gdkDisplay);
       }
 #endif /* MOZ_X11 */
@@ -7061,7 +7059,7 @@ nsWindow::CSDSupportLevel nsWindow::GetSystemCSDSupportLevel() {
   }
 
   // We use CSD titlebar mode on Wayland only
-  if (!GDK_IS_X11_DISPLAY(gdk_display_get_default())) {
+  if (gfxPlatformGtk::GetPlatform()->IsWaylandDisplay()) {
     sCSDSupportLevel = CSD_SUPPORT_CLIENT;
     return sCSDSupportLevel;
   }
