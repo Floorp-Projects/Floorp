@@ -21,6 +21,7 @@ customElements.define("x-el", class extends HTMLElement {
 </script>
 <x-el id="container" role="group"><label id="l1">label1</label></x-el>
 `;
+
 addAccessibleTask(snippet, async function(browser, accDoc) {
   let container = findAccessibleChildByID(accDoc, "container");
 
@@ -35,4 +36,29 @@ addAccessibleTask(snippet, async function(browser, accDoc) {
   });
 
   testChildrenIds(container, ["l1", "l2"]);
+});
+
+// Dynamically inserted not accessible custom element containing an accessible
+// in its shadow DOM.
+const snippet2 = `
+<script>
+customElements.define("x-el2", class extends HTMLElement {
+  constructor() {
+    super();
+    this.attachShadow({ mode: "open" });
+    this.shadowRoot.innerHTML = "<input id='input'>";
+  }
+});
+</script>
+<div role="group" id="container"></div>
+`;
+
+addAccessibleTask(snippet2, async function(browser, accDoc) {
+  let container = findAccessibleChildByID(accDoc, "container");
+
+  await contentSpawnMutation(browser, REORDER, function() {
+    content.document.getElementById("container").innerHTML = "<x-el2></x-el2>";
+  });
+
+  testChildrenIds(container, ["input"]);
 });
