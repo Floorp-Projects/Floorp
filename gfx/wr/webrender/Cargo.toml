@@ -26,7 +26,7 @@ webrender_build = { version = "0.0.1", path = "../webrender_build" }
 [dependencies]
 base64 = { optional = true, version = "0.10" }
 bincode = "1.0"
-bitflags = "1.0"
+bitflags = "1.2"
 byteorder = "1.0"
 cfg-if = "0.1.2"
 cstr = "0.1.2"
