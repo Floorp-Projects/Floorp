@@ -9,12 +9,12 @@ import io.mockk.mockk
 import mozilla.components.browser.engine.gecko.GeckoEngine
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.state.store.BrowserStore
-import mozilla.components.concept.fetch.Client
+import mozilla.components.feature.pwa.WebAppShortcutManager
 
 class TestCore(context: Context) : Core(context) {
 
     override val engine = mockk<GeckoEngine>(relaxed = true)
     override val sessionManager = SessionManager(engine)
-    override val client = mockk<Client>()
     override val store = mockk<BrowserStore>()
+    override val webAppShortcutManager = mockk<WebAppShortcutManager>()
 }
