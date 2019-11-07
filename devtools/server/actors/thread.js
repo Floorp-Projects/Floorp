@@ -1523,7 +1523,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     };
 
     if (frame) {
-      packet.frame = this._createFrameActor(frame).form();
+      packet.frame = this._createFrameActor(frame);
     }
 
     if (this.dbg.replaying) {
