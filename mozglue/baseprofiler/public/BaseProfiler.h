@@ -134,27 +134,24 @@ class SpliceableJSONWriter;
     MACRO(4, "privacy", Privacy,                                               \
           "Do not include user-identifiable information")                      \
                                                                                \
-    MACRO(5, "responsiveness", Responsiveness,                                 \
-          "Collect thread responsiveness information")                         \
-                                                                               \
-    MACRO(6, "screenshots", Screenshots,                                       \
+    MACRO(5, "screenshots", Screenshots,                                       \
           "Take a snapshot of the window on every composition")                \
                                                                                \
-    MACRO(7, "seqstyle", SequentialStyle,                                      \
+    MACRO(6, "seqstyle", SequentialStyle,                                      \
           "Disable parallel traversal in styling")                             \
                                                                                \
-    MACRO(8, "stackwalk", StackWalk,                                           \
+    MACRO(7, "stackwalk", StackWalk,                                           \
           "Walk the C++ stack, not available on all platforms")                \
                                                                                \
-    MACRO(9, "tasktracer", TaskTracer,                                         \
+    MACRO(8, "tasktracer", TaskTracer,                                         \
           "Start profiling with feature TaskTracer")                           \
                                                                                \
-    MACRO(10, "threads", Threads, "Profile the registered secondary threads")  \
+    MACRO(9, "threads", Threads, "Profile the registered secondary threads")   \
                                                                                \
-    MACRO(11, "trackopts", TrackOptimizations,                                 \
+    MACRO(10, "trackopts", TrackOptimizations,                                 \
           "Have the JavaScript engine track JIT optimizations")                \
                                                                                \
-    MACRO(12, "jstracer", JSTracer, "Enable tracing of the JavaScript engine") \
+    MACRO(11, "jstracer", JSTracer, "Enable tracing of the JavaScript engine") \
                                                                                \
     MACRO(14, "nostacksampling", NoStackSampling,                              \
           "Disable all stack sampling: Cancels \"js\", \"leaf\", "             \
