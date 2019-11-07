@@ -143,12 +143,16 @@ class ContentEventListenerChild extends JSWindowActorChild {
       // Cache the chrome event handler because this.docShell won't be
       // available during shut down.
       if (!this._chromeEventHandler) {
-        if (!this.docShell) {
-          throw new Error(
-            "Trying to add a new event listener for waitForContentEvent without a docshell"
-          );
+        try {
+          this._chromeEventHandler = this.docShell.chromeEventHandler;
+        } catch (error) {
+          if (error.name === "InvalidStateError") {
+            // We'll arrive here if we no longer have our manager, so we can
+            // just swallow this error.
+            continue;
+          }
+          throw error;
         }
-        this._chromeEventHandler = this.docShell.chromeEventHandler;
       }
 
       // Some windows, like top-level browser windows, maybe not have a chrome
