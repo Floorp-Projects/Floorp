@@ -5,15 +5,23 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "jit/Disassemble.h"
-#include "js/Printf.h"
+
+#include <stddef.h>  // size_t
+#include <stdint.h>  // uint8_t, int32_t
+
+#include "js/Printf.h"   // JS_smprintf
+#include "js/Utility.h"  // JS::UniqueChars
 
 #if defined(JS_JITSPEW)
 #  if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
-#    include "zydis/ZydisAPI.h"
+#    include "zydis/ZydisAPI.h"  // zydisDisassemble
 #  elif defined(JS_CODEGEN_ARM64)
-#    include "jit/arm64/vixl/Disasm-vixl.h"
+#    include "jit/arm/disasm/Disasm-arm.h"         // js::jit::disasm::*
+#    include "jit/arm64/vixl/Decoder-vixl.h"       // vixl::Decoder
+#    include "jit/arm64/vixl/Disasm-vixl.h"        // vixl::Disassembler
+#    include "jit/arm64/vixl/Instructions-vixl.h"  // vixl::Instruction
 #  elif defined(JS_CODEGEN_ARM)
-#    include "jit/arm/disasm/Disasm-arm.h"
+#    include "jit/arm/disasm/Disasm-arm.h"  // js::jit::disasm::*
 #  endif
 #endif
 
@@ -33,9 +41,9 @@ class ARM64Disassembler : public vixl::Disassembler {
   explicit ARM64Disassembler(InstrCallback callback) : callback_(callback) {}
 
  protected:
-  void ProcessOutput(const Instruction* instr) override {
-    UniqueChars formatted = JS_smprintf("0x%p  %08x  %s", instr,
-                                        instr->InstructionBits(), GetOutput());
+  void ProcessOutput(const vixl::Instruction* instr) override {
+    JS::UniqueChars formatted = JS_smprintf(
+        "0x%p  %08x  %s", instr, instr->InstructionBits(), GetOutput());
     callback_(formatted.get());
   }
 
@@ -72,7 +80,7 @@ void Disassemble(uint8_t* code, size_t length, InstrCallback callback) {
     buffer[0] = '\0';
     uint8_t* next_instr = instr + d.InstructionDecode(buffer, instr);
 
-    UniqueChars formatted =
+    JS::UniqueChars formatted =
         JS_smprintf("0x%p  %08x  %s\n", instr,
                     *reinterpret_cast<int32_t*>(instr), buffer.start());
     callback(formatted.get());
