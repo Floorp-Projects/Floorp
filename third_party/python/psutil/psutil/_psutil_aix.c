@@ -13,7 +13,9 @@
  *
  * Known limitations:
  * - psutil.Process.io_counters read count is always 0
+ * - psutil.Process.io_counters may not be available on older AIX versions
  * - psutil.Process.threads may not be available on older AIX versions
+ # - psutil.net_io_counters may not be available on older AIX versions
  * - reading basic process info may fail or return incorrect values when
  *   process is starting (see IBM APAR IV58499 - fixed in newer AIX versions)
  * - sockets and pipes may not be counted in num_fds (fixed in newer AIX
@@ -21,20 +23,21 @@
  *
  * Useful resources:
  * - proc filesystem: http://www-01.ibm.com/support/knowledgecenter/
- *       ssw_aix_61/com.ibm.aix.files/proc.htm
+ *       ssw_aix_72/com.ibm.aix.files/proc.htm
  * - libperfstat: http://www-01.ibm.com/support/knowledgecenter/
- *       ssw_aix_61/com.ibm.aix.files/libperfstat.h.htm
+ *       ssw_aix_72/com.ibm.aix.files/libperfstat.h.htm
  */
 
 #include <Python.h>
 
-#include <sys/types.h>
-#include <sys/stat.h>
+#include <sys/limits.h>
 #include <sys/proc.h>
-#include <sys/sysinfo.h>
 #include <sys/procfs.h>
 #include <sys/socket.h>
+#include <sys/stat.h>
+#include <sys/sysinfo.h>
 #include <sys/thread.h>
+#include <sys/types.h>
 #include <fcntl.h>
 #include <utmp.h>
 #include <utmpx.h>
@@ -46,6 +49,7 @@
 #include <arpa/inet.h>
 #include <net/if.h>
 #include <libperfstat.h>
+#include <unistd.h>
 
 #include "arch/aix/ifaddrs.h"
 #include "arch/aix/net_connections.h"
@@ -131,17 +135,14 @@ psutil_proc_basic_info(PyObject *self, PyObject *args) {
 
 
 /*
- * Return process name and args as a Python tuple.
+ * Return process name as a Python string.
  */
 static PyObject *
-psutil_proc_name_and_args(PyObject *self, PyObject *args) {
+psutil_proc_name(PyObject *self, PyObject *args) {
     int pid;
     char path[100];
     psinfo_t info;
     const char *procfs_path;
-    PyObject *py_name = NULL;
-    PyObject *py_args = NULL;
-    PyObject *py_retlist = NULL;
 
     if (! PyArg_ParseTuple(args, "is", &pid, &procfs_path))
         return NULL;
@@ -149,28 +150,143 @@ psutil_proc_name_and_args(PyObject *self, PyObject *args) {
     if (! psutil_file_to_struct(path, (void *)&info, sizeof(info)))
         return NULL;
 
-    py_name = PyUnicode_DecodeFSDefault(info.pr_fname);
-    if (!py_name)
+    return PyUnicode_DecodeFSDefaultAndSize(info.pr_fname, PRFNSZ);
+}
+
+
+/*
+ * Return process command line arguments as a Python list
+ */
+static PyObject *
+psutil_proc_args(PyObject *self, PyObject *args) {
+    int pid;
+    PyObject *py_retlist = PyList_New(0);
+    PyObject *py_arg = NULL;
+    struct procsinfo procbuf;
+    long arg_max;
+    char *argbuf = NULL;
+    char *curarg = NULL;
+    int ret;
+
+    if (py_retlist == NULL)
+        return NULL;
+    if (!PyArg_ParseTuple(args, "i", &pid))
         goto error;
-    py_args = PyUnicode_DecodeFSDefault(info.pr_psargs);
-    if (!py_args)
+    arg_max = sysconf(_SC_ARG_MAX);
+    argbuf = malloc(arg_max);
+    if (argbuf == NULL) {
+        PyErr_NoMemory();
         goto error;
-    py_retlist = Py_BuildValue("OO", py_name, py_args);
-    if (!py_retlist)
+    }
+
+    procbuf.pi_pid = pid;
+    ret = getargs(&procbuf, sizeof(struct procinfo), argbuf, ARG_MAX);
+    if (ret == -1) {
+        PyErr_SetFromErrno(PyExc_OSError);
         goto error;
-    Py_DECREF(py_name);
-    Py_DECREF(py_args);
+    }
+
+    curarg = argbuf;
+    /* getargs will always append an extra NULL to end the arg list,
+     * even if the buffer is not big enough (even though it is supposed
+     * to be) so the following 'while' is safe */
+    while (*curarg != '\0') {
+        py_arg = PyUnicode_DecodeFSDefault(curarg);
+        if (!py_arg)
+            goto error;
+        if (PyList_Append(py_retlist, py_arg))
+            goto error;
+        Py_DECREF(py_arg);
+        curarg = strchr(curarg, '\0') + 1;
+    }
+
+    free(argbuf);
+
     return py_retlist;
 
 error:
-    Py_XDECREF(py_name);
-    Py_XDECREF(py_args);
+    if (argbuf != NULL)
+        free(argbuf);
     Py_XDECREF(py_retlist);
+    Py_XDECREF(py_arg);
+    return NULL;
+}
+
+
+/*
+ * Return process environment variables as a Python dict
+ */
+static PyObject *
+psutil_proc_environ(PyObject *self, PyObject *args) {
+    int pid;
+    PyObject *py_retdict = PyDict_New();
+    PyObject *py_key = NULL;
+    PyObject *py_val = NULL;
+    struct procsinfo procbuf;
+    long env_max;
+    char *envbuf = NULL;
+    char *curvar = NULL;
+    char *separator = NULL;
+    int ret;
+
+    if (py_retdict == NULL)
+        return NULL;
+    if (!PyArg_ParseTuple(args, "i", &pid))
+        goto error;
+    env_max = sysconf(_SC_ARG_MAX);
+    envbuf = malloc(env_max);
+    if (envbuf == NULL) {
+        PyErr_NoMemory();
+        goto error;
+    }
+
+    procbuf.pi_pid = pid;
+    ret = getevars(&procbuf, sizeof(struct procinfo), envbuf, ARG_MAX);
+    if (ret == -1) {
+        PyErr_SetFromErrno(PyExc_OSError);
+        goto error;
+    }
+
+    curvar = envbuf;
+    /* getevars will always append an extra NULL to end the arg list,
+     * even if the buffer is not big enough (even though it is supposed
+     * to be) so the following 'while' is safe */
+    while (*curvar != '\0') {
+        separator = strchr(curvar, '=');
+        if (separator != NULL) {
+            py_key = PyUnicode_DecodeFSDefaultAndSize(
+                curvar,
+                (Py_ssize_t)(separator - curvar)
+            );
+            if (!py_key)
+                goto error;
+            py_val = PyUnicode_DecodeFSDefault(separator + 1);
+            if (!py_val)
+                goto error;
+            if (PyDict_SetItem(py_retdict, py_key, py_val))
+                goto error;
+            Py_DECREF(py_key);
+            Py_DECREF(py_val);
+        }
+        curvar = strchr(curvar, '\0') + 1;
+    }
+
+    free(envbuf);
+
+    return py_retdict;
+
+error:
+    if (envbuf != NULL)
+        free(envbuf);
+    Py_XDECREF(py_retdict);
+    Py_XDECREF(py_key);
+    Py_XDECREF(py_val);
     return NULL;
 }
 
 
 #ifdef CURR_VERSION_THREAD
+
 /*
  * Retrieves all threads used by process returning a list of tuples
  * including thread id, user time and system time.
@@ -236,8 +352,11 @@ error:
         free(threadt);
     return NULL;
 }
+
 #endif
 
+
+#ifdef CURR_VERSION_PROCESS
 
 static PyObject *
 psutil_proc_io_counters(PyObject *self, PyObject *args) {
@@ -261,6 +380,8 @@ psutil_proc_io_counters(PyObject *self, PyObject *args) {
                          procinfo.inBytes,    // XXX always 0
                          procinfo.outBytes);
 }
+
+#endif
 
 
 /*
@@ -468,6 +589,8 @@ error:
 }
 
 
+#if defined(CURR_VERSION_NETINTERFACE) && CURR_VERSION_NETINTERFACE >= 3
+
 /*
  * Return a list of tuples for network I/O statistics.
  */
@@ -536,6 +659,8 @@ error:
     Py_DECREF(py_retdict);
     return NULL;
 }
+
+#endif
 
 
 static PyObject*
@@ -617,6 +742,7 @@ psutil_boot_time(PyObject *self, PyObject *args) {
 static PyObject *
 psutil_per_cpu_times(PyObject *self, PyObject *args) {
     int ncpu, rc, i;
+    long ticks;
     perfstat_cpu_t *cpu = NULL;
     perfstat_id_t id;
     PyObject *py_retlist = PyList_New(0);
@@ -624,6 +750,13 @@ psutil_per_cpu_times(PyObject *self, PyObject *args) {
 
     if (py_retlist == NULL)
         return NULL;
+
+    /* get the number of ticks per second */
+    ticks = sysconf(_SC_CLK_TCK);
+    if (ticks < 0) {
+        PyErr_SetFromErrno(PyExc_OSError);
+        goto error;
+    }
 
     /* get the number of cpus in ncpu */
     ncpu = perfstat_cpu(NULL, NULL, sizeof(perfstat_cpu_t), 0);
@@ -650,10 +783,10 @@ psutil_per_cpu_times(PyObject *self, PyObject *args) {
     for (i = 0; i < ncpu; i++) {
         py_cputime = Py_BuildValue(
             "(dddd)",
-            (double)cpu[i].user,
-            (double)cpu[i].sys,
-            (double)cpu[i].idle,
-            (double)cpu[i].wait);
+            (double)cpu[i].user / ticks,
+            (double)cpu[i].sys / ticks,
+            (double)cpu[i].idle / ticks,
+            (double)cpu[i].wait / ticks);
         if (!py_cputime)
             goto error;
         if (PyList_Append(py_retlist, py_cputime))
@@ -859,8 +992,12 @@ PsutilMethods[] =
     // --- process-related functions
     {"proc_basic_info", psutil_proc_basic_info, METH_VARARGS,
      "Return process ppid, rss, vms, ctime, nice, nthreads, status and tty"},
-    {"proc_name_and_args", psutil_proc_name_and_args, METH_VARARGS,
-     "Return process name and args."},
+    {"proc_name", psutil_proc_name, METH_VARARGS,
+     "Return process name."},
+    {"proc_args", psutil_proc_args, METH_VARARGS,
+     "Return process command line arguments."},
+    {"proc_environ", psutil_proc_environ, METH_VARARGS,
+     "Return process environment variables."},
     {"proc_cpu_times", psutil_proc_cpu_times, METH_VARARGS,
      "Return process user and system CPU times."},
     {"proc_cred", psutil_proc_cred, METH_VARARGS,
@@ -869,8 +1006,10 @@ PsutilMethods[] =
     {"proc_threads", psutil_proc_threads, METH_VARARGS,
      "Return process threads"},
 #endif
+#ifdef CURR_VERSION_PROCESS
     {"proc_io_counters", psutil_proc_io_counters, METH_VARARGS,
      "Get process I/O counters."},
+#endif
     {"proc_num_ctx_switches", psutil_proc_num_ctx_switches, METH_VARARGS,
      "Get process I/O counters."},
 
@@ -889,8 +1028,10 @@ PsutilMethods[] =
      "Return system virtual memory usage statistics"},
     {"swap_mem", psutil_swap_mem, METH_VARARGS,
      "Return stats about swap memory, in bytes"},
+#if defined(CURR_VERSION_NETINTERFACE) && CURR_VERSION_NETINTERFACE >= 3
     {"net_io_counters", psutil_net_io_counters, METH_VARARGS,
      "Return a Python dict of tuples for network I/O statistics."},
+#endif
     {"net_connections", psutil_net_connections, METH_VARARGS,
      "Return system-wide connections"},
     {"net_if_stats", psutil_net_if_stats, METH_VARARGS,
@@ -914,6 +1055,10 @@ struct module_state {
 #define GETSTATE(m) ((struct module_state*)PyModule_GetState(m))
 #else
 #define GETSTATE(m) (&_state)
+#endif
+
+#ifdef __cplusplus
+extern "C" {
 #endif
 
 #if PY_MAJOR_VERSION >= 3
@@ -986,3 +1131,7 @@ void init_psutil_aix(void)
     return module;
 #endif
 }
+
+#ifdef __cplusplus
+}
+#endif
