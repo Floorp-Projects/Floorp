@@ -11,6 +11,7 @@
 #include "mozilla/TimeStamp.h"
 #include "nsISupportsImpl.h"
 #include "nsTArray.h"
+#include "nsString.h"
 
 namespace mozilla {
 
@@ -41,6 +42,28 @@ class RecordedFrame {
 };
 
 /**
+ * A recorded frame that has been encoded into a data: URI.
+ */
+struct CollectedFrame {
+  CollectedFrame(double aTimeOffset, nsCString&& aDataUri)
+      : mTimeOffset(aTimeOffset), mDataUri(std::move(aDataUri)) {}
+
+  double mTimeOffset;
+  nsCString mDataUri;
+};
+
+/**
+ * All of the frames collected during a composition recording session.
+ */
+struct CollectedFrames {
+  CollectedFrames(double aRecordingStart, nsTArray<CollectedFrame>&& aFrames)
+      : mRecordingStart(aRecordingStart), mFrames(std::move(aFrames)) {}
+
+  double mRecordingStart;
+  nsTArray<CollectedFrame> mFrames;
+};
+
+/**
  * A recorder for composited frames.
  *
  * This object collects frames sent to it by a |LayerManager| and writes them
@@ -62,6 +85,11 @@ class CompositionRecorder {
    * Write out the collected frames as a series of timestamped images.
    */
   void WriteCollectedFrames();
+
+  /**
+   * Return the collected frames as an array of their timestamps and contents.
+   */
+  CollectedFrames GetCollectedFrames();
 
  protected:
   void ClearCollectedFrames();
