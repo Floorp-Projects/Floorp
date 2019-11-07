@@ -63,7 +63,7 @@ AppPicker.prototype = {
       .setAttribute("value", description);
     document
       .getElementById("suggested-filename")
-      .setAttribute("value", filename);
+      .setAttribute("value", filename || "");
     document
       .getElementById("content-icon")
       .setAttribute(
