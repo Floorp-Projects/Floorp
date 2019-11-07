@@ -6,7 +6,7 @@
 #
 # Runs codesign commands to codesign a Firefox .app bundle and enable macOS
 # Hardened Runtime. Intended to be manually run by developers working on macOS
-# 10.14 who want to enable Hardened Runtime for manual testing. This is
+# 10.14+ who want to enable Hardened Runtime for manual testing. This is
 # provided as a stop-gap until automated build tooling is available that signs
 # binaries with a certificate generated during builds (bug 1522409). This
 # script requires macOS 10.14 because Hardened Runtime is only available for
@@ -26,7 +26,8 @@
 #   $ ./security/mac/hardenedruntime/codesign.bash \
 #         -a ~/Nightly.app \
 #         -i <MY-IDENTITY-STRING> \
-#         -e security/mac/hardenedruntime/developer.entitlements.xml
+#         -b security/mac/hardenedruntime/browser.developer.entitlements.xml
+#         -p security/mac/hardenedruntime/plugin-container.developer.entitlements.xml
 #   $ open ~/Nightly.app
 #
 
@@ -35,8 +36,9 @@ usage ()
   echo  "Usage: $0 "
   echo  "    -a <PATH-TO-BROWSER.app>"
   echo  "    -i <IDENTITY>"
-  echo  "    -e <ENTITLEMENTS-FILE>"
-  echo  "    [-o <OUTPUT-ZIP-FILE>]"
+  echo  "    -b <ENTITLEMENTS-FILE>"
+  echo  "    -p <CHILD-ENTITLEMENTS-FILE>"
+  echo  "    [-o <OUTPUT-DMG-FILE>]"
   exit -1
 }
 
@@ -54,19 +56,21 @@ if [ ${OSVERSION} \< 14 ]; then
     exit -1
 fi
 
-while getopts "a:i:e:o:" opt; do
+while getopts "a:i:b:o:p:" opt; do
   case ${opt} in
     a ) BUNDLE=$OPTARG ;;
     i ) IDENTITY=$OPTARG ;;
-    e ) ENTITLEMENTS_FILE=$OPTARG ;;
-    o ) OUTPUT_ZIP_FILE=$OPTARG ;;
+    b ) BROWSER_ENTITLEMENTS_FILE=$OPTARG ;;
+    p ) PLUGINCONTAINER_ENTITLEMENTS_FILE=$OPTARG ;;
+    o ) OUTPUT_DMG_FILE=$OPTARG ;;
     \? ) usage; exit -1 ;;
   esac
 done
 
 if [ -z "${BUNDLE}" ] ||
    [ -z "${IDENTITY}" ] ||
-   [ -z "${ENTITLEMENTS_FILE}" ]; then
+   [ -z "${PLUGINCONTAINER_ENTITLEMENTS_FILE}" ] ||
+   [ -z "${BROWSER_ENTITLEMENTS_FILE}" ]; then
     usage
     exit -1
 fi
@@ -77,25 +81,32 @@ if [ ! -d "${BUNDLE}" ]; then
   exit -1
 fi
 
-if [ ! -e "${ENTITLEMENTS_FILE}" ]; then
+if [ ! -e "${PLUGINCONTAINER_ENTITLEMENTS_FILE}" ]; then
   echo "Invalid entitlements file"
   usage
   exit -1
 fi
 
-# Zip file output flag is optional
-if [ ! -z "${OUTPUT_ZIP_FILE}" ] &&
-   [ -e "${OUTPUT_ZIP_FILE}" ]; then
-  echo "Output zip file ${OUTPUT_ZIP_FILE} exists. Please delete it first."
+if [ ! -e "${BROWSER_ENTITLEMENTS_FILE}" ]; then
+  echo "Invalid entitlements file"
+  usage
+  exit -1
+fi
+
+# DMG file output flag is optional
+if [ ! -z "${OUTPUT_DMG_FILE}" ] &&
+   [ -e "${OUTPUT_DMG_FILE}" ]; then
+  echo "Output dmg file ${OUTPUT_DMG_FILE} exists. Please delete it first."
   usage
   exit -1
 fi
 
 echo "-------------------------------------------------------------------------"
-echo "bundle:                        $BUNDLE"
-echo "identity:                      $IDENTITY"
-echo "browser entitlements file:     $ENTITLEMENTS_FILE"
-echo "output zip file (optional):    $OUTPUT_ZIP_FILE"
+echo "bundle:                              $BUNDLE"
+echo "identity:                            $IDENTITY"
+echo "browser entitlements file:           $BROWSER_ENTITLEMENTS_FILE"
+echo "plugin-container entitlements file:  $PLUGINCONTAINER_ENTITLEMENTS_FILE"
+echo "output dmg file (optional):          $OUTPUT_DMG_FILE"
 echo "-------------------------------------------------------------------------"
 
 # Clear extended attributes which cause codesign to fail
@@ -104,32 +115,52 @@ xattr -cr "${BUNDLE}"
 # Sign these binaries first. Signing of some binaries has an ordering
 # requirement where other binaries must be signed first.
 codesign --force -o runtime --verbose --sign "$IDENTITY" \
---entitlements ${ENTITLEMENTS_FILE} \
 "${BUNDLE}/Contents/MacOS/XUL" \
 "${BUNDLE}/Contents/MacOS/pingsender" \
-"${BUNDLE}"/Contents/MacOS/*.dylib \
-"${BUNDLE}"/Contents/MacOS/crashreporter.app/Contents/MacOS/minidump-analyzer \
-"${BUNDLE}"/Contents/MacOS/crashreporter.app/Contents/MacOS/crashreporter \
+"${BUNDLE}"/Contents/MacOS/*.dylib
+
+codesign --force -o runtime --verbose --sign "$IDENTITY" --deep \
+"${BUNDLE}"/Contents/MacOS/crashreporter.app
+
+codesign --force -o runtime --verbose --sign "$IDENTITY" --deep \
+"${BUNDLE}"/Contents/MacOS/updater.app
+
+# Sign firefox main exectuable
+codesign --force -o runtime --verbose --sign "$IDENTITY" --deep \
+--entitlements ${BROWSER_ENTITLEMENTS_FILE} \
 "${BUNDLE}"/Contents/MacOS/firefox-bin \
-"${BUNDLE}"/Contents/MacOS/plugin-container.app/Contents/MacOS/plugin-container \
-"${BUNDLE}"/Contents/MacOS/updater.app/Contents/MacOS/org.mozilla.updater \
 "${BUNDLE}"/Contents/MacOS/firefox
 
-# Sign all files in the .app
-find "${BUNDLE}" -type f -exec \
-codesign --force -o runtime --verbose --sign "$IDENTITY" \
---entitlements ${ENTITLEMENTS_FILE} {} \;
+# Sign gmp-clearkey files
+find "${BUNDLE}"/Contents/Resources/gmp-clearkey -type f -exec \
+codesign --force -o runtime --verbose --sign "$IDENTITY" {} \;
 
-# Sign the bundle
+# Sign the main bundle
 codesign --force -o runtime --verbose --sign "$IDENTITY" \
---entitlements ${ENTITLEMENTS_FILE} "${BUNDLE}"
+--entitlements ${BROWSER_ENTITLEMENTS_FILE} "${BUNDLE}"
+
+# Sign the plugin-container bundle with deep
+codesign --force -o runtime --verbose --sign "$IDENTITY" --deep \
+--entitlements ${PLUGINCONTAINER_ENTITLEMENTS_FILE} \
+"${BUNDLE}"/Contents/MacOS/plugin-container.app
 
 # Validate
 codesign -vvv --deep --strict "${BUNDLE}"
 
-# Zip up the bundle
-if [ ! -z "${OUTPUT_ZIP_FILE}" ]; then
-  echo "Zipping bundle to ${OUTPUT_ZIP_FILE}"
-  ditto -c -k "${BUNDLE}" "${OUTPUT_ZIP_FILE}"
-  echo "Done"
+# Create a DMG
+if [ ! -z "${OUTPUT_DMG_FILE}" ]; then
+  DISK_IMAGE_DIR=`mktemp -d`
+  TEMP_FILE=`mktemp`
+  TEMP_DMG=${TEMP_FILE}.dmg
+  NAME=`basename "${BUNDLE}"`
+
+  ditto "${BUNDLE}" "${DISK_IMAGE_DIR}/${NAME}"
+  hdiutil create -size 400m -fs HFS+ \
+    -volname Firefox -srcfolder "${DISK_IMAGE_DIR}" "${TEMP_DMG}"
+  hdiutil convert -format UDZO \
+    -o "${OUTPUT_DMG_FILE}" "${TEMP_DMG}"
+
+  rm ${TEMP_FILE}
+  rm ${TEMP_DMG}
+  rm -rf "${DISK_IMAGE_DIR}"
 fi
