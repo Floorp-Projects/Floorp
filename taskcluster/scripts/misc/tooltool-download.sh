@@ -22,7 +22,7 @@ if [ -n "$TASKCLUSTER_PROXY_URL" ]; then
     TOOLTOOL_HOST="tooltool.mozilla-releng.net"
     LEGACY_TC_ROOT_URL="https://taskcluster.net"
     if [ ${TASKCLUSTER_ROOT_URL:-${LEGACY_TC_ROOT_URL}} != ${LEGACY_TC_ROOT_URL} ]; then
-        TOOLTOOL_HOST="tooltool.staging.mozilla-releng.net"
+        TOOLTOOL_HOST="stage.tooltool.mozilla-releng.net"
     fi
     # When the worker has the relengapi proxy setup, use it.
     TOOLTOOL_DL_FLAGS="${TOOLTOOL_DL_FLAGS=} --tooltool-url=${TASKCLUSTER_PROXY_URL}/${TOOLTOOL_HOST}/"
