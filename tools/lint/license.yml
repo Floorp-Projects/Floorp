@@ -64,7 +64,11 @@ license:
         - python/mozlint/test/files/
         - python/mozrelease/mozrelease
         - security/generate_certdata.py
+        - security/mac/hardenedruntime/browser.developer.entitlements.xml
+        - security/mac/hardenedruntime/browser.production.entitlements.xml
         - security/mac/hardenedruntime/developer.entitlements.xml
+        - security/mac/hardenedruntime/plugin-container.developer.entitlements.xml
+        - security/mac/hardenedruntime/plugin-container.production.entitlements.xml
         - security/mac/hardenedruntime/production.entitlements.xml
         - services/sync/modules-testing/fxa_utils.js
         - servo/components/hashglobe/src/alloc.rs
