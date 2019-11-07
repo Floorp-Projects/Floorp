@@ -145,9 +145,10 @@ nsresult TextEditor::InsertTextFromTransferable(
   }
 
   // Try to scroll the selection into view if the paste/drop succeeded
-  ScrollSelectionIntoView(false);
-
-  return NS_OK;
+  nsresult rv = ScrollSelectionFocusIntoView();
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "ScrollSelectionFocusIntoView() failed");
+  return rv;
 }
 
 nsresult TextEditor::OnDrop(DragEvent* aDropEvent) {
@@ -350,9 +351,10 @@ nsresult TextEditor::OnDrop(DragEvent* aDropEvent) {
     }
   }
 
-  ScrollSelectionIntoView(false);
-
-  return NS_OK;
+  nsresult rv = ScrollSelectionFocusIntoView();
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "ScrollSelectionFocusIntoView() failed");
+  return rv;
 }
 
 nsresult TextEditor::PasteAsAction(int32_t aClipboardType,
