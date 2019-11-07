@@ -142,9 +142,11 @@ void moz_container_put(MozContainer* container, GtkWidget* child_widget, gint x,
 
 #if defined(MOZ_WAYLAND)
 void moz_container_move(MozContainer* container, int dx, int dy) {
+  LOGWAYLAND(("moz_container_move [%p] %d,%d\n", (void*)container, dx, dy));
+
   container->subsurface_dx = dx;
   container->subsurface_dy = dy;
-  container->surface_position_update = true;
+  container->surface_position_needs_update = true;
 }
 
 // This is called from layout/compositor code only with
@@ -197,7 +199,7 @@ void moz_container_init(MozContainer* container) {
   container->inital_draw_cb = nullptr;
   container->subsurface_dx = 0;
   container->subsurface_dy = 0;
-  container->surface_position_update = 0;
+  container->surface_position_needs_update = 0;
 #endif
 
   LOG(("%s [%p]\n", __FUNCTION__, (void*)container));
@@ -585,7 +587,7 @@ struct wl_surface* moz_container_get_wl_surface(MozContainer* container,
 
   // wl_subsurface_set_position is actually property of parent surface
   // which is effective when parent surface is commited.
-  if (container->surface_position_update) {
+  if (container->surface_position_needs_update) {
     wl_surface* parent_surface =
         moz_container_get_gtk_container_surface(container);
     if (parent_surface) {
@@ -593,7 +595,7 @@ struct wl_surface* moz_container_get_wl_surface(MozContainer* container,
                                  container->subsurface_dx,
                                  container->subsurface_dy);
       wl_surface_commit(parent_surface);
-      container->surface_position_update = true;
+      container->surface_position_needs_update = false;
     }
   }
 
