@@ -10,7 +10,7 @@ import os
 import sys
 
 __all__ = ["PY3", "long", "xrange", "unicode", "basestring", "u", "b",
-           "callable", "lru_cache", "which"]
+           "lru_cache", "which", "get_terminal_size"]
 
 PY3 = sys.version_info[0] == 3
 
@@ -36,14 +36,6 @@ else:
 
     def b(s):
         return s
-
-
-# removed in 3.0, reintroduced in 3.2
-try:
-    callable = callable
-except NameError:
-    def callable(obj):
-        return any("__call__" in klass.__dict__ for klass in type(obj).__mro__)
 
 
 # --- stdlib additions
@@ -247,3 +239,24 @@ except ImportError:
                     if _access_check(name, mode):
                         return name
         return None
+
+
+# python 3.3
+try:
+    from shutil import get_terminal_size
+except ImportError:
+    def get_terminal_size(fallback=(80, 24)):
+        try:
+            import fcntl
+            import termios
+            import struct
+        except ImportError:
+            return fallback
+        else:
+            try:
+                # This should work on Linux.
+                res = struct.unpack(
+                    'hh', fcntl.ioctl(1, termios.TIOCGWINSZ, '1234'))
+                return (res[1], res[0])
+            except Exception:
+                return fallback
