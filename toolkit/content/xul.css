@@ -24,10 +24,16 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"); /* set default namespace to XUL */
 @namespace html url("http://www.w3.org/1999/xhtml"); /* namespace for HTML elements */
 
+/* TODO: investigate unifying these two root selectors
+ * https://bugzilla.mozilla.org/show_bug.cgi?id=1592344
+ */
+*|*:root {
+  --animation-easing-function: cubic-bezier(.07, .95, 0, 1);
+}
+
 :root {
   text-rendering: optimizeLegibility;
   -moz-control-character-visibility: visible;
-  --animation-easing-function: cubic-bezier(.07, .95, 0, 1);
 }
 
 :root:-moz-locale-dir(rtl) {
@@ -39,13 +45,13 @@
    :: kinds of windows (not JUST browser windows) with toolbars
    ::::: */
 
-window[chromehidden~="menubar"] .chromeclass-menubar,
-window[chromehidden~="directories"] .chromeclass-directories,
-window[chromehidden~="status"] .chromeclass-status,
-window[chromehidden~="extrachrome"] .chromeclass-extrachrome,
-window[chromehidden~="location"] .chromeclass-location,
-window[chromehidden~="location"][chromehidden~="toolbar"] .chromeclass-toolbar,
-window[chromehidden~="toolbar"] .chromeclass-toolbar-additional {
+*|*:root[chromehidden~="menubar"] .chromeclass-menubar,
+*|*:root[chromehidden~="directories"] .chromeclass-directories,
+*|*:root[chromehidden~="status"] .chromeclass-status,
+*|*:root[chromehidden~="extrachrome"] .chromeclass-extrachrome,
+*|*:root[chromehidden~="location"] .chromeclass-location,
+*|*:root[chromehidden~="location"][chromehidden~="toolbar"] .chromeclass-toolbar,
+*|*:root[chromehidden~="toolbar"] .chromeclass-toolbar-additional {
   display: none;
 }
 
