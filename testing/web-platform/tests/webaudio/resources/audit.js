@@ -1189,9 +1189,10 @@ window.Audit = (function() {
 
       return new Promise((resolve, reject) => {
         this._resolve = resolve;
+        this._reject = reject;
         let result = this._taskFunction(this, this.should.bind(this));
         if (result && typeof result.then === "function") {
-          result.then(undefined, reject);
+          result.then(() => this.done()).catch(reject);
         }
       });
     }
@@ -1229,9 +1230,21 @@ window.Audit = (function() {
 
     // Runs |subTask| |time| milliseconds later. |setTimeout| is not allowed in
     // WPT linter, so a thin wrapper around the harness's |step_timeout| is
-    // used here.
+    // used here.  Returns a Promise which is resolved after |subTask| runs.
     timeout(subTask, time) {
-      this._harnessTest.step_timeout(subTask, time);
+      return new Promise(resolve => {
+        this._harnessTest.step_timeout(() => {
+          let result = subTask();
+          if (result && typeof result.then === "function") {
+            // Chain rejection directly to the harness test Promise, to report
+            // the rejection against the subtest even when the caller of
+            // timeout does not handle the rejection.
+            result.then(resolve, this._reject());
+          } else {
+            resolve();
+          }
+        }, time);
+      });
     }
 
     isPassed() {
@@ -1278,7 +1291,9 @@ window.Audit = (function() {
     }
 
     // |taskLabel| can be either a string or a dictionary. See Task constructor
-    // for the detail.
+    // for the detail.  If |taskFunction| returns a thenable, then the task
+    // is considered complete when the thenable is fulfilled; otherwise the
+    // task must be completed with an explicit call to |task.done()|.
     define(taskLabel, taskFunction) {
       let task = new Task(this, taskLabel, taskFunction);
       if (this._tasks.hasOwnProperty(task.label)) {
