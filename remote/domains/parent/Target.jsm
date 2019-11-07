@@ -95,7 +95,7 @@ class Target extends Domain {
   closeTarget({ targetId }) {
     const { targets } = this.session.target;
     const target = targets.getById(targetId);
-    target.window.gBrowser.removeTab(target.tab);
+    TabManager.removeTab(target.tab);
   }
 
   attachToTarget({ targetId }) {

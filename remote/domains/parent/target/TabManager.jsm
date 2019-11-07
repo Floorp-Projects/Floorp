@@ -9,14 +9,22 @@ var EXPORTED_SYMBOLS = ["TabManager"];
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 var TabManager = {
-  addTab({ userContextId }) {
+  get gBrowser() {
     const window = Services.wm.getMostRecentWindow("navigator:browser");
-    const { gBrowser } = window;
-    const tab = gBrowser.addTab("about:blank", {
+    return window.gBrowser;
+  },
+
+  addTab({ userContextId }) {
+    const tab = this.gBrowser.addTab("about:blank", {
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
       userContextId,
     });
-    gBrowser.selectedTab = tab;
+    this.gBrowser.selectedTab = tab;
+
     return tab;
+  },
+
+  removeTab(tab) {
+    this.gBrowser.removeTab(tab);
   },
 };

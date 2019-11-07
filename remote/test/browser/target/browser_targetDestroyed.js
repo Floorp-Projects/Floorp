@@ -3,15 +3,15 @@
 
 "use strict";
 
-add_task(async function triggersTargetDestroyed({ Target }, _, tab) {
+add_task(async function eventFiredWhenTabIsClosed({ Target }, _, tab) {
   await getDiscoveredTargets(Target);
-  const { targetInfo, newTab } = await openTab(Target);
+  const { newTab } = await openTab(Target);
 
   const tabClosed = BrowserTestUtils.waitForEvent(newTab, "TabClose");
   const targetDestroyed = Target.targetDestroyed();
 
-  info("Closing the target");
-  Target.closeTarget({ targetId: targetInfo.targetId });
+  info("Closing the tab");
+  BrowserTestUtils.removeTab(newTab);
 
   await tabClosed;
   info("Tab was closed");
