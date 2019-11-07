@@ -4177,9 +4177,6 @@ class Document : public nsINode,
 
   void SetPrototypeDocument(nsXULPrototypeDocument* aPrototype);
 
-  bool InRDMPane() const { return mInRDMPane; }
-  void SetInRDMPane(bool aInRDMPane) { mInRDMPane = aInRDMPane; }
-
   // Returns true if we use overlay scrollbars on the system wide or on the
   // given document.
   static bool UseOverlayScrollbars(const Document* aDocument);
@@ -5341,8 +5338,6 @@ class Document : public nsINode,
   // Cached TabSizes values for the document.
   int32_t mCachedTabSizeGeneration;
   nsTabSizes mCachedTabSizes;
-
-  bool mInRDMPane;
 
   // The principal to use for the storage area of this document.
   nsCOMPtr<nsIPrincipal> mIntrinsicStoragePrincipal;
