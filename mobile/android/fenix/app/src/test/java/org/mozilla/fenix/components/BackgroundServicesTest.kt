@@ -33,7 +33,7 @@ import org.mozilla.fenix.isInExperiment
 class BackgroundServicesTest {
     class TestableBackgroundServices(
         val context: Context
-    ) : BackgroundServices(context, mockk(), mockk()) {
+    ) : BackgroundServices(context, mockk(), mockk(), mockk()) {
         override fun makeAccountManager(
             context: Context,
             serverConfig: ServerConfig,

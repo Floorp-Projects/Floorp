@@ -57,6 +57,8 @@ class SignOutFragment : BottomSheetDialogFragment() {
 
         view.signOutDisconnect.setOnClickListener {
             lifecycleScope.launch {
+                requireComponents
+                    .backgroundServices.accountAbnormalities.userRequestedLogout()
                 accountManager.logoutAsync().await()
             }.invokeOnCompletion {
                 if (!findNavController().popBackStack(R.id.settingsFragment, false)) {

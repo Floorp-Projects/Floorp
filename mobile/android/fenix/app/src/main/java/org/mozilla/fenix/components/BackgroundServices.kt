@@ -25,6 +25,7 @@ import mozilla.components.feature.push.AutoPushSubscription
 import mozilla.components.feature.push.PushConfig
 import mozilla.components.feature.push.PushSubscriptionObserver
 import mozilla.components.feature.push.PushType
+import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.service.fxa.DeviceConfig
 import mozilla.components.service.fxa.ServerConfig
 import mozilla.components.service.fxa.SyncConfig
@@ -50,6 +51,7 @@ import java.util.FormatFlagsConversionMismatchException
 @Mockable
 class BackgroundServices(
     private val context: Context,
+    crashReporter: CrashReporter,
     historyStorage: PlacesHistoryStorage,
     bookmarkStorage: PlacesBookmarksStorage
 ) {
@@ -116,6 +118,8 @@ class BackgroundServices(
         context.components.analytics.metrics
     )
 
+    val accountAbnormalities = AccountAbnormalities(context, crashReporter)
+
     private val pushAccountObserver by lazy { push?.let { PushAccountObserver(it) } }
 
     val accountManager = makeAccountManager(context, serverConfig, deviceConfig, syncConfig)
@@ -171,6 +175,10 @@ class BackgroundServices(
         // Register a telemetry account observer to keep track of FxA auth metrics.
         accountManager.register(telemetryAccountObserver)
 
+        // Register an "abnormal fxa behaviour" middleware to keep track of events such as
+        // unexpected logouts.
+        accountManager.register(accountAbnormalities)
+
         // Enable push if it's configured.
         push?.let { autoPushFeature ->
             // Register the push account observer so we know how to update our push subscriptions.
@@ -206,7 +214,10 @@ class BackgroundServices(
                 }
             })
         }
-        accountManager.initAsync()
+        accountAbnormalities.accountManagerInitializedAsync(
+            accountManager,
+            accountManager.initAsync()
+        )
     }
 
     /**
