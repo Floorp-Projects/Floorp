@@ -1157,14 +1157,17 @@ nsresult VerifyCertAtTime(nsIX509Cert* aCert,
                           int64_t /*SECCertificateUsage*/ aUsage,
                           uint32_t aFlags, const nsACString& aHostname,
                           mozilla::pkix::Time aTime,
-                          nsIX509CertList** aVerifiedChain, bool* aHasEVPolicy,
+                          nsTArray<RefPtr<nsIX509Cert>>& aVerifiedChain,
+                          bool* aHasEVPolicy,
                           int32_t* /*PRErrorCode*/ _retval) {
   NS_ENSURE_ARG_POINTER(aCert);
   NS_ENSURE_ARG_POINTER(aHasEVPolicy);
-  NS_ENSURE_ARG_POINTER(aVerifiedChain);
   NS_ENSURE_ARG_POINTER(_retval);
 
-  *aVerifiedChain = nullptr;
+  if (!aVerifiedChain.IsEmpty()) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
   *aHasEVPolicy = false;
   *_retval = PR_UNKNOWN_ERROR;
 
@@ -1203,16 +1206,20 @@ nsresult VerifyCertAtTime(nsIX509Cert* aCert,
         OriginAttributes(), &evOidPolicy);
   }
 
-  nsCOMPtr<nsIX509CertList> nssCertList;
-  // This adopts the list
-  nssCertList = new nsNSSCertList(std::move(resultChain));
-  NS_ENSURE_TRUE(nssCertList, NS_ERROR_FAILURE);
+  if (result == mozilla::pkix::Success) {
+    nsresult rv = nsNSSCertificateDB::ConstructCertArrayFromUniqueCertList(
+        resultChain, aVerifiedChain);
+
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    if (evOidPolicy != SEC_OID_UNKNOWN) {
+      *aHasEVPolicy = true;
+    }
+  }
 
   *_retval = mozilla::pkix::MapResultToPRErrorCode(result);
-  if (result == mozilla::pkix::Success && evOidPolicy != SEC_OID_UNKNOWN) {
-    *aHasEVPolicy = true;
-  }
-  nssCertList.forget(aVerifiedChain);
 
   return NS_OK;
 }
@@ -1230,7 +1237,6 @@ class VerifyCertAtTimeTask final : public CryptoTask {
         mCallback(new nsMainThreadPtrHolder<nsICertVerificationCallback>(
             "nsICertVerificationCallback", aCallback)),
         mPRErrorCode(SEC_ERROR_LIBRARY_FAILURE),
-        mVerifiedCertList(nullptr),
         mHasEVPolicy(false) {}
 
  private:
@@ -1241,14 +1247,14 @@ class VerifyCertAtTimeTask final : public CryptoTask {
     }
     return VerifyCertAtTime(mCert, mUsage, mFlags, mHostname,
                             mozilla::pkix::TimeFromEpochInSeconds(mTime),
-                            getter_AddRefs(mVerifiedCertList), &mHasEVPolicy,
-                            &mPRErrorCode);
+                            mVerifiedCertList, &mHasEVPolicy, &mPRErrorCode);
   }
 
   virtual void CallCallback(nsresult rv) override {
     if (NS_FAILED(rv)) {
-      Unused << mCallback->VerifyCertFinished(SEC_ERROR_LIBRARY_FAILURE,
-                                              nullptr, false);
+      nsTArray<RefPtr<nsIX509Cert>> tmp;
+      Unused << mCallback->VerifyCertFinished(SEC_ERROR_LIBRARY_FAILURE, tmp,
+                                              false);
     } else {
       Unused << mCallback->VerifyCertFinished(mPRErrorCode, mVerifiedCertList,
                                               mHasEVPolicy);
@@ -1262,7 +1268,7 @@ class VerifyCertAtTimeTask final : public CryptoTask {
   uint64_t mTime;
   nsMainThreadPtrHandle<nsICertVerificationCallback> mCallback;
   int32_t mPRErrorCode;
-  nsCOMPtr<nsIX509CertList> mVerifiedCertList;
+  nsTArray<RefPtr<nsIX509Cert>> mVerifiedCertList;
   bool mHasEVPolicy;
 };
 
