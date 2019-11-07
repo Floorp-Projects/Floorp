@@ -4,8 +4,8 @@
 
 from __future__ import absolute_import, unicode_literals
 
-import json
 import os
+import yaml
 
 from mozbuild.base import MozbuildObject
 from mozbuild.frontend.reader import BuildReader
@@ -117,8 +117,8 @@ class _SphinxManager(object):
     def _synchronize_docs(self):
         m = InstallManifest()
 
-        with open(os.path.join(MAIN_DOC_PATH, "tree.json")) as json_data:
-            tree_config = json.load(json_data)
+        with open(os.path.join(MAIN_DOC_PATH, 'config.yml'), 'r') as fh:
+            tree_config = yaml.safe_load(fh)['categories']
 
         m.add_link(self.conf_py_path, 'conf.py')
 
@@ -169,8 +169,8 @@ class _SphinxManager(object):
         if indexes:
             # In case a new doc isn't categorized
             print(indexes)
-            raise Exception("Uncategorized documentation. Please add it in tools/docs/tree.json")
-        print(data)
+            raise Exception("Uncategorized documentation. Please add it in tools/docs/config.yml")
+
         data = data.format(**CATEGORIES)
 
         with open(os.path.join(self.staging_dir, 'index.rst'), 'wb') as fh:
