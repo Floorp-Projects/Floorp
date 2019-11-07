@@ -4,6 +4,7 @@
 
 package mozilla.components.feature.toolbar
 
+import android.graphics.Color
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineDispatcher
@@ -14,6 +15,7 @@ import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.action.TrackingProtectionAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.ContentState
+import mozilla.components.browser.state.state.CustomTabSessionState
 import mozilla.components.browser.state.state.SecurityInfoState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.TrackingProtectionState
@@ -21,6 +23,7 @@ import mozilla.components.browser.state.state.WebExtensionState
 import mozilla.components.browser.state.state.createCustomTab
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.concept.engine.webextension.BrowserAction
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.feature.toolbar.internal.URLRenderer
 import mozilla.components.support.test.any
@@ -29,6 +32,8 @@ import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.mockito.Mockito.never
@@ -147,33 +152,7 @@ class ToolbarPresenterTest {
 
         verify(toolbarPresenter.renderer).post("https://www.example.org")
         verify(toolbar).addBrowserAction(delegateCaptor.capture())
-        assertEquals("overridden_title", delegateCaptor.value.contentDescription)
-    }
-
-    @Test
-    fun `converting a WebExtension_BrowserAction to WebExtensionActionButton`() {
-        val toolbarPresenter = spy(ToolbarPresenter(mock(), mock()))
-        val onClick: () -> Unit = {}
-        val browserAction = WebExtensionBrowserAction(
-            "title",
-            enabled = true,
-            icon = mock(),
-            uri = "uri",
-            badgeText = "badgeText",
-            badgeTextColor = 1,
-            badgeBackgroundColor = 2,
-            onClick = onClick
-        )
-
-        val toolbarAction = toolbarPresenter.convertToToolbarAction(browserAction)
-
-        assertEquals(browserAction.title, toolbarAction.contentDescription)
-        assertEquals(browserAction.enabled, toolbarAction.enabled)
-        assertEquals(browserAction.icon, toolbarAction.imageDrawable)
-        assertEquals(browserAction.badgeText, toolbarAction.badgeText)
-        assertEquals(browserAction.badgeTextColor, toolbarAction.badgeTextColor)
-        assertEquals(browserAction.badgeBackgroundColor, toolbarAction.badgeBackgroundColor)
-        assertEquals(browserAction.onClick, toolbarAction.listener)
+        assertEquals("overridden_title", delegateCaptor.value.browserAction.title)
     }
 
     @Test
@@ -492,5 +471,57 @@ class ToolbarPresenterTest {
         verify(toolbar).setSearchTerms("")
         verify(toolbar).displayProgress(0)
         verify(toolbar).siteSecure = Toolbar.SiteSecurity.INSECURE
+    }
+
+    @Test
+    fun `WebExtensionBrowserAction is replaced when the web extension is already in the toolbar`() {
+        val toolbarPresenter = ToolbarPresenter(mock(), mock())
+
+        val browserAction = BrowserAction(
+            title = "title",
+            icon = mock(),
+            enabled = true,
+            badgeText = "badgeText",
+            badgeTextColor = Color.WHITE,
+            badgeBackgroundColor = Color.BLUE,
+            uri = "uri"
+        ) {}
+
+        val browserActionDisabled = BrowserAction(
+            title = "title",
+            icon = mock(),
+            enabled = false,
+            badgeText = "badgeText",
+            badgeTextColor = Color.WHITE,
+            badgeBackgroundColor = Color.BLUE,
+            uri = "uri"
+        ) {}
+
+        // Verify browser extension toolbar rendering
+        val browserExtensions = HashMap<String, WebExtensionState>()
+        browserExtensions["1"] = WebExtensionState(id = "1", browserAction = browserAction)
+        browserExtensions["2"] = WebExtensionState(id = "2", browserAction = browserActionDisabled)
+
+        val browserState = BrowserState(extensions = browserExtensions)
+        toolbarPresenter.renderWebExtensionActions(browserState, mock())
+
+        assertTrue(toolbarPresenter.webExtensionBrowserActions.size == 2)
+        assertTrue(toolbarPresenter.webExtensionBrowserActions["1"]!!.browserAction.enabled)
+        assertFalse(toolbarPresenter.webExtensionBrowserActions["2"]!!.browserAction.enabled)
+
+        // Verify tab with existing extension in the toolbar to update its BrowserAction
+        val tabExtensions = HashMap<String, WebExtensionState>()
+        tabExtensions["3"] = WebExtensionState(id = "1", browserAction = browserActionDisabled)
+
+        val tabSessionState = CustomTabSessionState(
+            content = mock(),
+            config = mock(),
+            extensionState = tabExtensions
+        )
+        toolbarPresenter.renderWebExtensionActions(browserState, tabSessionState)
+
+        assertTrue(toolbarPresenter.webExtensionBrowserActions.size == 2)
+        assertFalse(toolbarPresenter.webExtensionBrowserActions["1"]!!.browserAction.enabled)
+        assertFalse(toolbarPresenter.webExtensionBrowserActions["2"]!!.browserAction.enabled)
     }
 }
