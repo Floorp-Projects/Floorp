@@ -2,22 +2,34 @@
 <resources>
     <!-- Name of the "notification channel" used for displaying download notification. See https://developer.android.com/training/notify-user/channels -->
     <string name="mozac_feature_downloads_notification_channel">Prevzaté súbory</string>
-    <!-- Text shown on the first row of an ongoing download notification. -->
-    <string name="mozac_feature_downloads_ongoing_notification_title">Preberá sa</string>
-    <!-- Text shown on the second row of an ongoing download notification. -->
-    <string name="mozac_feature_downloads_ongoing_notification_text">Prebieha preberanie súboru</string>
 
+    <!-- Text shown on the second row of a paused download notification. -->
+    <string name="mozac_feature_downloads_paused_notification_text">Preberanie je pozastavené</string>
     <!-- Text shown on the second row of an completed download notification. The filename is shown on the first row. -->
-    <string name="mozac_feature_downloads_completed_notification_text">Preberanie bolo dokončené.</string>
+    <string name="mozac_feature_downloads_completed_notification_text2">Preberanie je dokončené</string>
     <!-- Text shown on the second row of an failed download notification. The filename is shown on the first row. -->
-    <string name="mozac_feature_downloads_failed_notification_text">Preberanie zlyhalo.</string>
+    <string name="mozac_feature_downloads_failed_notification_text2">Preberanie zlyhalo</string>
 
-    <!-- Alert dialog confirmation before download a file, this is the title. -->
-    <string name="mozac_feature_downloads_dialog_title">Prevziať súbor</string>
+    <!-- Alert dialog confirmation before download a file, this is the title. %1$s will be replaced with the name of the file. -->
+    <string name="mozac_feature_downloads_dialog_title2">Prevziať (%1$s)</string>
     <!-- Alert dialog confirmation before download a file, this is the positive action. -->
     <string name="mozac_feature_downloads_dialog_download">Prevziať</string>
     <!-- Alert dialog confirmation before download a file, this is the negative action. -->
     <string name="mozac_feature_downloads_dialog_cancel">Zrušiť</string>
     <!-- Error shown when the user is trying to download a invalid file. %1$s will be replaced with the name of the app. -->
     <string name="mozac_feature_downloads_file_not_supported2">Aplikácia %1$s nedokáže prevziať tento typ súboru</string>
+
+    <!-- Button that pauses the download when pressed -->
+    <string name="mozac_feature_downloads_button_pause">Pozastaviť</string>
+    <!-- Button that resumes the download when pressed -->
+    <string name="mozac_feature_downloads_button_resume">Pokračovať</string>
+    <!-- Button that cancels the download when pressed -->
+    <string name="mozac_feature_downloads_button_cancel">Zrušiť</string>
+    <!-- Button that opens the downloaded file when pressed -->
+    <string name="mozac_feature_downloads_button_open">Otvoriť</string>
+    <!-- Button that restarts the download after a failed attempt -->
+    <string name="mozac_feature_downloads_button_try_again">Skúsiť znova</string>
+
+    <!-- Content description for close button -->
+    <string name="mozac_feature_downloads_button_close">Zavrieť</string>
 </resources>
