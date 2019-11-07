@@ -601,6 +601,7 @@ nsThread::nsThread(NotNull<SynchronizedEventQueue*> aQueue,
       mShutdownRequired(false),
       mPriority(PRIORITY_NORMAL),
       mIsMainThread(aMainThread == MAIN_THREAD),
+      mIsAPoolThreadFree(nullptr),
       mCanInvokeJS(false),
       mCurrentEvent(nullptr),
       mCurrentEventStart(TimeStamp::Now()),
@@ -733,8 +734,22 @@ nsThread::DelayedDispatch(already_AddRefed<nsIRunnable> aEvent,
 
 NS_IMETHODIMP
 nsThread::GetRunningEventDelay(TimeDuration* aDelay, TimeStamp* aStart) {
-  *aDelay = mLastEventDelay;
-  *aStart = mLastEventStart;
+  if (mIsAPoolThreadFree && *mIsAPoolThreadFree) {
+    // if there are unstarted threads in the pool, a new event to the
+    // pool would not be delayed at all (beyond thread start time)
+    *aDelay = TimeDuration();
+    *aStart = TimeStamp();
+  } else {
+    *aDelay = mLastEventDelay;
+    *aStart = mLastEventStart;
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsThread::SetRunningEventDelay(TimeDuration aDelay, TimeStamp aStart) {
+  mLastEventDelay = aDelay;
+  mLastEventStart = aStart;
   return NS_OK;
 }
 
