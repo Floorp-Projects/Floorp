@@ -324,7 +324,6 @@ NS_InitXPCOM(nsIServiceManager** aResult, nsIFile* aBinDirectory,
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
-  AUTO_PROFILER_INIT2;
 
   // Init the SystemGroup for dispatching main thread runnables.
   SystemGroup::InitStatic();

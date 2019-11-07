@@ -3222,17 +3222,6 @@ static Vector<const char*> SplitAtCommas(const char* aString,
   return array;
 }
 
-void profiler_init_threadmanager() {
-  LOG("profiler_init_threadmanager");
-
-  PSAutoLock lock(gPSMutex);
-  RegisteredThread* registeredThread =
-      TLSRegisteredThread::RegisteredThread(lock);
-  if (!registeredThread->GetEventTarget()) {
-    registeredThread->ResetMainThread(NS_GetCurrentThreadNoCreate());
-  }
-}
-
 void profiler_init(void* aStackTop) {
   LOG("profiler_init");
 
