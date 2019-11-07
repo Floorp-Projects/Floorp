@@ -361,9 +361,8 @@ IPCResult DocumentChannelChild::RecvRedirectToRealChannel(
     if (NS_FAILED(rv)) {
       return IPC_OK();
     }
-
-    mRedirectChannel = childChannel;
   }
+  mRedirectChannel = newChannel;
 
   nsCOMPtr<nsIEventTarget> target = GetNeckoTarget();
   MOZ_ASSERT(target);
@@ -380,21 +379,33 @@ IPCResult DocumentChannelChild::RecvRedirectToRealChannel(
 
 NS_IMETHODIMP
 DocumentChannelChild::OnRedirectVerifyCallback(nsresult aStatusCode) {
-  if (mRedirectChannel) {
-    if (NS_SUCCEEDED(aStatusCode) && NS_SUCCEEDED(mStatus)) {
-      mRedirectChannel->CompleteRedirectSetup(mListener, nullptr);
-    } else {
-      nsCOMPtr<nsIChannel> channel = do_QueryInterface(mRedirectChannel);
-      channel->SetNotificationCallbacks(nullptr);
-    }
+  nsCOMPtr<nsIChannel> redirectChannel = std::move(mRedirectChannel);
+  RedirectToRealChannelResolver redirectResolver = std::move(mRedirectResolver);
+
+  // If we've already shut down, then just notify the parent that
+  // we're done.
+  if (NS_FAILED(mStatus)) {
+    redirectChannel->SetNotificationCallbacks(nullptr);
+    redirectResolver(aStatusCode);
+    return NS_OK;
   }
-  mRedirectChannel = nullptr;
 
-  mRedirectResolver(aStatusCode);
-  mRedirectResolver = nullptr;
+  nsresult rv = aStatusCode;
+  if (NS_SUCCEEDED(rv)) {
+    if (nsCOMPtr<nsIChildChannel> childChannel =
+            do_QueryInterface(redirectChannel)) {
+      rv = childChannel->CompleteRedirectSetup(mListener, nullptr);
+    } else {
+      rv = redirectChannel->AsyncOpen(mListener);
+    }
+  } else {
+    redirectChannel->SetNotificationCallbacks(nullptr);
+  }
 
-  if (NS_FAILED(aStatusCode)) {
-    ShutdownListeners(aStatusCode);
+  redirectResolver(rv);
+
+  if (NS_FAILED(rv)) {
+    ShutdownListeners(rv);
     return NS_OK;
   }
 
