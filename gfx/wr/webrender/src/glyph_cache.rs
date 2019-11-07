@@ -49,7 +49,16 @@ impl GlyphCacheEntry {
         if let GlyphCacheEntry::Cached(ref glyph) = *self {
             texture_cache.mark_unused(&glyph.texture_cache_handle);
         }
-    }}
+    }
+
+    fn is_recently_used(&self, texture_cache: &mut TextureCache) -> bool {
+        if let GlyphCacheEntry::Cached(ref glyph) = *self {
+            texture_cache.is_recently_used(&glyph.texture_cache_handle, 1)
+        } else {
+            false
+        }
+    }
+}
 
 #[allow(dead_code)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -78,23 +87,31 @@ impl GlyphKeyCache {
         &self.user_data.eviction_notice
     }
 
-    fn clear_glyphs(&mut self, texture_cache: &mut TextureCache) {
+    fn is_recently_used(&self, current_frame: FrameId) -> bool {
+        self.user_data.last_frame_used + 1 >= current_frame
+    }
+
+    fn clear_glyphs(&mut self, texture_cache: &mut TextureCache) -> usize {
+        let pruned = self.user_data.bytes_used;
         for (_, entry) in self.iter() {
             entry.mark_unused(texture_cache);
         }
         self.clear();
         self.user_data.bytes_used = 0;
+        pruned
     }
 
     fn prune_glyphs(
         &mut self,
+        skip_recent: bool,
         excess_bytes_used: usize,
         texture_cache: &mut TextureCache,
         render_task_cache: &RenderTaskCache,
     ) -> usize {
         let mut pruned = 0;
         self.retain(|_, entry| {
-            if pruned <= excess_bytes_used {
+            if pruned <= excess_bytes_used &&
+               (!skip_recent || !entry.is_recently_used(texture_cache)) {
                 match entry.get_allocated_size(texture_cache, render_task_cache) {
                     Some(size) => {
                         pruned += size;
@@ -243,15 +260,20 @@ impl GlyphCache {
             if self.bytes_used < self.max_bytes_used {
                 break;
             }
+            let recent = cache.is_recently_used(self.current_frame);
             let excess = self.bytes_used - self.max_bytes_used;
-            if excess >= cache.user_data.bytes_used {
+            if !recent && excess >= cache.user_data.bytes_used {
                 // If the excess is greater than the cache's size, just clear the whole thing.
-                cache.clear_glyphs(texture_cache);
-                self.bytes_used -= cache.user_data.bytes_used;
+                self.bytes_used -= cache.clear_glyphs(texture_cache);
             } else {
-                // Otherwise, just clear as little of the cache as needs to remove the excess
+                // Otherwise, just clear as little of the cache as needed to remove the excess
                 // and avoid rematerialization costs.
-                self.bytes_used -= cache.prune_glyphs(excess, texture_cache, render_task_cache);
+                self.bytes_used -= cache.prune_glyphs(
+                    recent,
+                    excess,
+                    texture_cache,
+                    render_task_cache,
+                );
             }
         }
     }
