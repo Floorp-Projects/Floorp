@@ -97,7 +97,7 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), BackHandler {
                         ManifestUpdateFeature(
                             activity.applicationContext,
                             requireComponents.core.sessionManager,
-                            requireComponents.core.webAppManifestStorage,
+                            requireComponents.core.webAppShortcutManager,
                             requireComponents.core.webAppManifestStorage,
                             customTabSessionId,
                             manifest
