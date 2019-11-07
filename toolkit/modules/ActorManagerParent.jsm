@@ -289,6 +289,17 @@ let ACTORS = {
     allFrames: true,
   },
 
+  KeyPressEventModelChecker: {
+    child: {
+      moduleURI: "resource://gre/actors/KeyPressEventModelCheckerChild.jsm",
+      events: {
+        CheckKeyPressEventModel: { capture: true, mozSystemGroup: true },
+      },
+    },
+
+    allFrames: true,
+  },
+
   LoginManager: {
     parent: {
       moduleURI: "resource://gre/modules/LoginManagerParent.jsm",
@@ -427,15 +438,6 @@ let LEGACY_ACTORS = {
     child: {
       module: "resource://gre/actors/ControllersChild.jsm",
       messages: ["ControllerCommands:Do", "ControllerCommands:DoWithParams"],
-    },
-  },
-
-  KeyPressEventModelChecker: {
-    child: {
-      module: "resource://gre/actors/KeyPressEventModelCheckerChild.jsm",
-      events: {
-        CheckKeyPressEventModel: { capture: true, mozSystemGroup: true },
-      },
     },
   },
 

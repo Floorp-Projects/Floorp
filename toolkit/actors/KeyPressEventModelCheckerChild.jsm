@@ -8,15 +8,12 @@
 
 var EXPORTED_SYMBOLS = ["KeyPressEventModelCheckerChild"];
 
-const { ActorChild } = ChromeUtils.import(
-  "resource://gre/modules/ActorChild.jsm"
-);
 const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-class KeyPressEventModelCheckerChild extends ActorChild {
+class KeyPressEventModelCheckerChild extends JSWindowActorChild {
   // Currently, the event is dispatched only when the document becomes editable
   // because of contenteditable.  If you need to add new editor which is in
   // designMode, you need to change MaybeDispatchCheckKeyPressEventModelEvent()
