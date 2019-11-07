@@ -47,6 +47,11 @@ then
   PARAMS="${PARAMS} --suffix-list"
 fi
 
+if [ -n "${DONTBUILD}" ]
+then
+  PARAMS="${PARAMS} -d"
+fi
+
 
 export ARTIFACTS_DIR="/home/worker/artifacts"
 mkdir -p "$ARTIFACTS_DIR"

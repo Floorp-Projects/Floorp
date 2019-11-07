@@ -20,6 +20,9 @@ Likewise for `DO_HPKP` and the HPKP checks, and `DO_BLOCKLIST` and the
 blocklist checks. Environment variables are used rather than command line
 arguments to make constructing taskcluster tasks easier.
 
+To prevent a full build when landing with Phabricator, set the `DONTBUILD`
+environment variable.
+
 ==Background==
 
 These scripts have been moved from
