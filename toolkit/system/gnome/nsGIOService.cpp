@@ -497,7 +497,19 @@ nsGIOService::GetAppForMimeType(const nsACString& aMimeType,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
+#if defined(__OpenBSD__) && defined(MOZ_SANDBOX)
+  // g_app_info_get_default_for_type will fail on OpenBSD's veiled filesystem
+  // since we most likely don't have direct access to the binaries that are
+  // registered as defaults for this type.  Fake it up by just executing
+  // xdg-open via gio-launch-desktop (which we do have access to) and letting
+  // it figure out which program to execute for this MIME type
+  GAppInfo* app_info = g_app_info_create_from_commandline(
+      "/usr/local/bin/xdg-open",
+      nsPrintfCString("System default for %s", content_type).get(),
+      G_APP_INFO_CREATE_NONE, NULL);
+#else
   GAppInfo* app_info = g_app_info_get_default_for_type(content_type, false);
+#endif
   if (app_info) {
     nsGIOMimeApp* mozApp = new nsGIOMimeApp(app_info);
     NS_ENSURE_TRUE(mozApp, NS_ERROR_OUT_OF_MEMORY);
