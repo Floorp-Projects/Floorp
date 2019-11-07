@@ -42,7 +42,6 @@
         xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns="http://www.w3.org/1999/xhtml"
-        title="&mainWindow.title;"
         title_normal="&mainWindow.title;"
 #ifdef XP_MACOSX
         title_privatebrowsing="&mainWindow.title;&mainWindow.titlemodifiermenuseparator;&mainWindow.titlePrivateBrowsingSuffix;"
@@ -79,6 +78,8 @@
   <link rel="localization" href="browser/protectionsPanel.ftl"/>
   <link rel="localization" href="browser/appmenu.ftl"/>
   <link rel="localization" href="browser/readerView.ftl"/>
+
+  <title>&mainWindow.title;</title>
 
 # All JS files which are needed by browser.xhtml and other top level windows to
 # support MacOS specific features *must* go into the global-scripts.inc file so
