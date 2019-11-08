@@ -10,6 +10,7 @@
 #include "AudioFocusManager.h"
 #include "MediaController.h"
 #include "MediaControlKeysManager.h"
+#include "MediaEventSource.h"
 #include "nsDataHashtable.h"
 #include "nsIObserver.h"
 #include "nsTArray.h"
@@ -48,6 +49,12 @@ class MediaControlService final : public nsIObserver {
 
   already_AddRefed<MediaController> GetLastAddedController();
 
+  // This event is used to generate a media event indicating media controller
+  // amount changed.
+  MediaEventSource<uint64_t>& MediaControllerAmountChangedEvent() {
+    return mMediaControllerAmountChangedEvent;
+  }
+
  private:
   MediaControlService();
   ~MediaControlService();
@@ -64,6 +71,7 @@ class MediaControlService final : public nsIObserver {
   AudioFocusManager mAudioFocusManager;
   MediaControlKeysManager mMediaControlKeysManager;
   RefPtr<MediaControlKeysEventListener> mMediaKeysHandlder;
+  MediaEventProducer<uint64_t> mMediaControllerAmountChangedEvent;
 };
 
 }  // namespace dom
