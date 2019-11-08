@@ -1400,6 +1400,15 @@ bool DocAccessible::PruneOrInsertSubtree(nsIContent* aRoot) {
       return true;
     }
 
+    // If the frame is an OuterDoc frame but this isn't an OuterDocAccessible,
+    // we need to recreate the Accessible. This can happen for embed or object
+    // elements if their embedded content changes to be web content.
+    if (frame && !acc->IsOuterDoc() &&
+        frame->AccessibleType() == eOuterDocType) {
+      ContentRemoved(aRoot);
+      return true;
+    }
+
     // The accessible can be reparented or reordered in its parent.
     // We schedule it for reinsertion. For example, a slotted element
     // can change its slot attribute to a different slot.
