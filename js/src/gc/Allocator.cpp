@@ -14,6 +14,7 @@
 #include "gc/Nursery.h"
 #include "jit/JitRealm.h"
 #include "threading/CpuCount.h"
+#include "util/Poison.h"
 #include "vm/JSContext.h"
 #include "vm/Runtime.h"
 #include "vm/StringType.h"

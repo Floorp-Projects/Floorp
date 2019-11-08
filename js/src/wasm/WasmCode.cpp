@@ -27,6 +27,7 @@
 #ifdef JS_ION_PERF
 #  include "jit/PerfSpewer.h"
 #endif
+#include "util/Poison.h"
 #ifdef MOZ_VTUNE
 #  include "vtune/VTuneWrapper.h"
 #endif

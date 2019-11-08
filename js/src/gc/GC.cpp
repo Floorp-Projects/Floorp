@@ -231,6 +231,7 @@
 #include "jit/MacroAssembler.h"
 #include "js/SliceBudget.h"
 #include "proxy/DeadObjectProxy.h"
+#include "util/Poison.h"
 #include "util/Windows.h"
 #include "vm/BigIntType.h"
 #include "vm/GeckoProfiler.h"

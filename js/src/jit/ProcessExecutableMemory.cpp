@@ -27,6 +27,7 @@
 #include "threading/LockGuard.h"
 #include "threading/Mutex.h"
 #include "util/Memory.h"
+#include "util/Poison.h"
 #include "util/Windows.h"
 #include "vm/MutexIDs.h"
 
