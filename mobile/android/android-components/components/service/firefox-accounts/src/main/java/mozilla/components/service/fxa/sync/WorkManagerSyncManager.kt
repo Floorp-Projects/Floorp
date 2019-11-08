@@ -26,7 +26,6 @@ import mozilla.appservices.syncmanager.SyncManager as RustSyncManager
 import mozilla.components.concept.sync.AuthException
 import mozilla.components.concept.sync.AuthExceptionType
 import mozilla.components.concept.sync.LockableStore
-import mozilla.components.lib.dataprotect.SecureAbove22Preferences
 import mozilla.components.service.fxa.FxaDeviceSettingsCache
 import mozilla.components.service.fxa.SyncAuthInfoCache
 import mozilla.components.service.fxa.SyncConfig
@@ -371,8 +370,14 @@ class WorkManagerSyncWorker(
         val passwordsKey = if (passwordStore == null) {
             null
         } else {
-            SecureAbove22Preferences(context).getString("passwords_key")
-                ?: throw IllegalStateException("'passwords_key' must be set if password sync is enabled")
+            val ks = GlobalSyncableStoreProvider.getKeyStorage()
+            require(ks != null) {
+                "GlobalSyncableStoreProvider must be configured with a key storage instance when syncing passwords"
+            }
+
+            ks.getString(SyncEngine.Passwords.nativeName) ?: throw IllegalStateException(
+                "Key for SyncEngine.Passwords must be present in the key storage if password sync is enabled"
+            )
         }
 
         // We're now ready to sync.

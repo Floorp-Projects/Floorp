@@ -67,8 +67,10 @@ sealed class SyncEngine(val nativeName: String) {
     object Bookmarks : SyncEngine("bookmarks")
 
     /**
-     * A 'logins/passwords' engine. When using this engine, make sure to set an encryption key used to unlock the store
-     * as 'passwords_key' via [SecureAbove22Preferences].
+     * A 'logins/passwords' engine.
+     *
+     * When using this engine, make sure to pass a [SecureAbove22Preferences] instance to
+     * [GlobalSyncableStoreProvider.configureKeyStorage] with a key storage instance that has a "passwords" key set.
      */
     object Passwords : SyncEngine("passwords")
 

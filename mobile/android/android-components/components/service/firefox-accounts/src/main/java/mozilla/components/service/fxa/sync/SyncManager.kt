@@ -5,6 +5,7 @@
 package mozilla.components.service.fxa.sync
 
 import mozilla.components.concept.sync.SyncableStore
+import mozilla.components.lib.dataprotect.SecureAbove22Preferences
 import mozilla.components.service.fxa.SyncConfig
 import mozilla.components.service.fxa.SyncEngine
 import mozilla.components.service.fxa.manager.SyncEnginesStorage
@@ -77,14 +78,30 @@ interface SyncStatusObserver {
  */
 object GlobalSyncableStoreProvider {
     private val stores: MutableMap<String, SyncableStore> = mutableMapOf()
+    private var keyStorage: SecureAbove22Preferences? = null
 
+    /**
+     * Configure an instance of [SyncableStore] for a [SyncEngine] enum.
+     * @param storePair A pair associating [SyncableStore] with a [SyncEngine].
+     */
     fun configureStore(storePair: Pair<SyncEngine, SyncableStore>) {
         stores[storePair.first.nativeName] = storePair.second
+    }
+
+    /**
+     * Set an instance of [SecureAbove22Preferences] used for accessing an encryption key for [SyncEngine.Passwords].
+     *
+     * @param ks An instance of [SecureAbove22Preferences].
+     */
+    fun configureKeyStorage(ks: SecureAbove22Preferences) {
+        keyStorage = ks
     }
 
     internal fun getStore(name: String): SyncableStore? {
         return stores[name]
     }
+
+    internal fun getKeyStorage() = keyStorage
 }
 
 /**

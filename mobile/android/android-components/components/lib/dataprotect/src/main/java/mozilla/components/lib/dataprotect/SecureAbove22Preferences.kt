@@ -11,12 +11,18 @@ import android.content.SharedPreferences
 import android.os.Build
 import android.os.Build.VERSION_CODES.M
 import android.util.Base64
-import androidx.annotation.VisibleForTesting
 import mozilla.components.support.base.log.logger.Logger
 import java.nio.charset.StandardCharsets
 import java.security.GeneralSecurityException
 
 private interface KeyValuePreferences {
+    /**
+     * Retrieves all key/value pairs present in the store.
+     *
+     * @return A [Map] containing all key/value pairs present in the store.
+     */
+    fun all(): Map<String, String>
+
     /**
      * Retrieves a stored [key]. See [putString] for storing a [key].
      *
@@ -52,19 +58,16 @@ private interface KeyValuePreferences {
  * in which case previously stored values will be lost as well. Applications are encouraged to instrument such events.
  *
  * @param context A [Context], used for accessing [SharedPreferences].
+ * @param name A name for this storage, used for isolating different instances of [SecureAbove22Preferences].
  */
-class SecureAbove22Preferences(context: Context) : KeyValuePreferences {
-    private val logger = Logger("SecureAbove22Preferences")
-
-    init {
-        migratePrefsIfNecessary(context)
-    }
-
+class SecureAbove22Preferences(context: Context, name: String) : KeyValuePreferences {
     private val impl = if (Build.VERSION.SDK_INT >= M) {
-        SecurePreferencesImpl23(context)
+        SecurePreferencesImpl23(context, name)
     } else {
-        InsecurePreferencesImpl21(context)
+        InsecurePreferencesImpl21(context, name)
     }
+
+    override fun all(): Map<String, String> = impl.all()
 
     override fun getString(key: String) = impl.getString(key)
 
@@ -73,48 +76,28 @@ class SecureAbove22Preferences(context: Context) : KeyValuePreferences {
     override fun remove(key: String) = impl.remove(key)
 
     override fun clear() = impl.clear()
-
-    /**
-     * Copies over [String] preferences from [plaintextPrefs].
-     */
-    @VisibleForTesting
-    @Suppress("ApplySharedPref")
-    internal fun migratePrefs(plaintextPrefs: SharedPreferences) {
-        plaintextPrefs.all.forEach {
-            if (it.value is String) {
-                putString(it.key, it.value as String)
-            } else {
-                logger.error(
-                    "Dropping key during migration because its value type isn't supported: ${it.key}"
-                )
-            }
-        }
-        // Using 'commit' here an not apply to speed up how quickly plaintext prefs are erased from disk.
-        plaintextPrefs.edit().clear().commit()
-    }
-
-    private fun migratePrefsIfNecessary(context: Context) {
-        // If we're running on an API level for which we support encryption, see if we have any plaintext values stored
-        // on disk. That indicates that we've hit an API upgrade situation - we just went from pre-M to post-M. Since
-        // we already have the plaintext keys, we can transparently migrate them to use the encrypted storage layer.
-        if (Build.VERSION.SDK_INT >= M) {
-            val plaintextPrefs = context.getSharedPreferences(KEY_PREFERENCES_PRE_M, MODE_PRIVATE)
-            if (plaintextPrefs.all.isNotEmpty()) {
-                migratePrefs(plaintextPrefs)
-            }
-        }
-    }
 }
-
-private const val KEY_PREFERENCES_POST_M = "key_preferences_post_m"
-private const val KEY_PREFERENCES_PRE_M = "key_preferences_pre_m"
 
 /**
  * A simple [KeyValuePreferences] implementation which entirely delegates to [SharedPreferences] and doesn't perform any
  * encryption/decryption.
  */
-private class InsecurePreferencesImpl21(context: Context) : KeyValuePreferences {
-    private val prefs = context.getSharedPreferences(KEY_PREFERENCES_PRE_M, MODE_PRIVATE)
+private class InsecurePreferencesImpl21(context: Context, name: String) : KeyValuePreferences {
+    companion object {
+        private const val SUFFIX = "_kp_pre_m"
+    }
+
+    private val prefs = context.getSharedPreferences("$name$SUFFIX", MODE_PRIVATE)
+
+    override fun all(): Map<String, String> {
+        return prefs.all.mapNotNull {
+            if (it.value is String) {
+                it.key to it.value as String
+            } else {
+                null
+            }
+        }.toMap()
+    }
 
     override fun getString(key: String) = prefs.getString(key, null)
 
@@ -129,14 +112,36 @@ private class InsecurePreferencesImpl21(context: Context) : KeyValuePreferences 
  * A [KeyValuePreferences] which is backed by [SharedPreferences] and performs encryption/decryption of values.
  */
 @TargetApi(M)
-private class SecurePreferencesImpl23(context: Context) : KeyValuePreferences {
+private class SecurePreferencesImpl23(context: Context, name: String) : KeyValuePreferences {
     companion object {
+        private const val SUFFIX = "_kp_post_m"
         private const val BASE_64_FLAGS = Base64.URL_SAFE or Base64.NO_PADDING
     }
 
     private val logger = Logger("SecurePreferencesImpl23")
-    private val prefs = context.getSharedPreferences(KEY_PREFERENCES_POST_M, MODE_PRIVATE)
+    private val prefs = context.getSharedPreferences("$name$SUFFIX", MODE_PRIVATE)
     private val keystore = Keystore(context.packageName)
+
+    init {
+        // Check if we have any plaintext values stored on disk. That indicates that we've hit an API upgrade situation.
+        // We just went from pre-M to post-M. Since we already have the plaintext keys, we can transparently migrate
+        // them to use the encrypted storage layer.
+        val insecureStorage = InsecurePreferencesImpl21(context, name)
+        // Copy over any old values.
+        insecureStorage.all().forEach {
+            putString(it.key, it.value)
+        }
+        // Erase old storage.
+        insecureStorage.clear()
+    }
+
+    override fun all(): Map<String, String> {
+        return prefs.all.keys.mapNotNull { key ->
+            getString(key)?.let { value ->
+                key to value
+            }
+        }.toMap()
+    }
 
     override fun getString(key: String): String? {
         // The fact that we're possibly generating a managed key here implies that this key could be lost after being
@@ -181,6 +186,7 @@ private class SecurePreferencesImpl23(context: Context) : KeyValuePreferences {
      * which stores it in system's secure storage layer exposed via [AndroidKeyStore].
      */
     private fun generateManagedKeyIfNecessary() {
+        // Do we need to check this on every access, or just during instantiation? Is the overhead here worth it?
         if (!keystore.available()) {
             keystore.generateKey()
         }

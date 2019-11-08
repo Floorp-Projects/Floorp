@@ -21,7 +21,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val prefs = SecureAbove22Preferences(this)
+        val prefs = SecureAbove22Preferences(this, "secret-data-storage")
 
         prepareProtectedData(prefs)
 

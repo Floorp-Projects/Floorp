@@ -19,7 +19,7 @@ permalink: /changelog/
   * Added new `SecureAbove22Preferences` helper class, which is an encryption-aware wrapper for `SharedPreferences`. Only actually encrypts stored values when running on API23+.
 
 * **service-firefox-accounts**
-  * Support for keeping `SyncEngine.Passwords` engine unlocked during sync.
+  * Support for keeping `SyncEngine.Passwords` engine unlocked during sync. If you're syncing this engine, you must use `SecureAbove22Preferences` to store encryption key (stored under "passwords" key), and pass an instance of these secure prefs to `GlobalSyncableStoreProvider.configureKeyStorage`.
 
 * **concept-sync**
   * Added new `LockableStore` to facilitate syncing of "lockable" stores (such as `SyncableLoginsStore`).
