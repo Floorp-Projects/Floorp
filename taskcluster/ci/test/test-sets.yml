@@ -520,6 +520,10 @@ android-x86_64-tests:
     - web-platform-tests-reftests
     - xpcshell
 
+android-x86_64-qr-tests:
+    - crashtest
+    - reftest
+
 devtools-tests:
     - mochitest-devtools-chrome
 

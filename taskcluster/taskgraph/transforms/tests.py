@@ -753,6 +753,9 @@ def set_treeherder_machine_platform(config, tests):
         if 'android' in test['test-platform'] and 'pgo/opt' in test['test-platform']:
             platform_new = test['test-platform'].replace('-pgo/opt', '/pgo')
             test['treeherder-machine-platform'] = platform_new
+        elif 'android-em-7.0-x86_64-qr' in test['test-platform']:
+            opt = test['test-platform'].split('/')[1]
+            test['treeherder-machine-platform'] = 'android-em-7-0-x86_64-qr/'+opt
         elif '-qr' in test['test-platform']:
             test['treeherder-machine-platform'] = test['test-platform']
         elif 'android-hw' in test['test-platform']:
@@ -823,7 +826,9 @@ def set_tier(config, tests):
                                          'macosx1014-64-qr/debug',
                                          'android-em-7.0-x86_64/opt',
                                          'android-em-7.0-x86_64/debug',
-                                         'android-em-7.0-x86/opt']:
+                                         'android-em-7.0-x86/opt',
+                                         'android-em-7.0-x86_64-qr/opt',
+                                         'android-em-7.0-x86_64-qr/debug']:
                 test['tier'] = 1
             else:
                 test['tier'] = 2
