@@ -19,7 +19,6 @@
 #include <time.h>
 
 #include "jstypes.h"
-#include "jsutil.h"
 
 #ifdef XP_WIN
 #  include <windef.h>

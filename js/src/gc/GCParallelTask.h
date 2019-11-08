@@ -11,9 +11,14 @@
 #include "mozilla/Move.h"
 
 #include "js/TypeDecls.h"
+#include "js/Utility.h"
 #include "threading/ProtectedData.h"
 
 namespace js {
+
+namespace gc {
+class GCRuntime;
+}
 
 class AutoLockHelperThreadState;
 struct HelperThread;

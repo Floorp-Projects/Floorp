@@ -212,7 +212,6 @@
 #include "jsapi.h"
 #include "jsfriendapi.h"
 #include "jstypes.h"
-#include "jsutil.h"
 
 #include "builtin/FinalizationGroupObject.h"
 #include "debugger/DebugAPI.h"

@@ -25,8 +25,6 @@
 // maintains a bunch of linked memory segments. In order to prevent malloc/free
 // thrashing, unused segments are deallocated when garbage collection occurs.
 
-#include "jsutil.h"
-
 #include "js/UniquePtr.h"
 #include "util/Memory.h"
 #include "util/Poison.h"

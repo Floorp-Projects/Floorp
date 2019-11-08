@@ -312,7 +312,10 @@
 #include "mozilla/DebugOnly.h"
 
 #include "gc/GCEnum.h"
+#include "js/AllocPolicy.h"
+#include "js/GCAPI.h"
 #include "js/HashTable.h"
+#include "js/HeapAPI.h"
 #include "js/SliceBudget.h"
 #include "threading/ProtectedData.h"
 

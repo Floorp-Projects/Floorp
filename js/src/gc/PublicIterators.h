@@ -18,6 +18,8 @@
 #include "gc/Zone.h"
 #include "vm/Compartment.h"
 
+struct JSRuntime;
+
 namespace JS {
 class JS_PUBLIC_API Realm;
 }

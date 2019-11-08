@@ -21,8 +21,6 @@
 #  include <unistd.h>
 #endif /* !defined(XP_WIN) */
 
-#include "jsutil.h"
-
 #include "js/Date.h"
 #include "threading/ExclusiveData.h"
 

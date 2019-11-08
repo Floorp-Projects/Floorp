@@ -11,8 +11,6 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/Sprintf.h"
 
-#include "jsutil.h"
-
 #include "gc/Marking.h"
 #include "jit/arm/disasm/Disasm-arm.h"
 #include "jit/arm/MacroAssembler-arm.h"

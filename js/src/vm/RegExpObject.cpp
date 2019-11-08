@@ -11,10 +11,6 @@
 
 #include <algorithm>
 
-#ifdef DEBUG
-#  include "jsutil.h"
-#endif
-
 #include "builtin/RegExp.h"
 #include "builtin/SelfHostingDefines.h"  // REGEXP_*_FLAG
 #include "frontend/TokenStream.h"

@@ -32,7 +32,6 @@
 #include "jsfriendapi.h"
 #include "jsnum.h"
 #include "jstypes.h"
-#include "jsutil.h"
 
 #include "js/Conversions.h"
 #include "js/Date.h"

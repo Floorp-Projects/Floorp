@@ -6,7 +6,7 @@
 
 #include "mozilla/Assertions.h"
 
-#include "jsutil.h"
+#include "js/Utility.h"
 #include "threading/posix/ThreadPlatformData.h"
 #include "threading/Thread.h"
 

@@ -17,7 +17,6 @@
 #include <stdio.h>   // FILE
 
 #include "jstypes.h"  // JS_BITS_PER_WORD, JS_PUBLIC_API
-#include "jsutil.h"   // JS_CRASH_DIAGNOSTICS
 
 #include "jit/IonTypes.h"      // jit::MIRType
 #include "js/GCAnnotations.h"  // JS_HAZ_GC_POINTER

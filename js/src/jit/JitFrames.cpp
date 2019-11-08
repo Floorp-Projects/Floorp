@@ -10,8 +10,6 @@
 
 #include <algorithm>
 
-#include "jsutil.h"
-
 #include "gc/Marking.h"
 #include "jit/BaselineDebugModeOSR.h"
 #include "jit/BaselineFrame.h"

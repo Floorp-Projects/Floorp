@@ -18,7 +18,6 @@
 
 #include "jsapi.h"        // for CallArgs, RootedObject, Rooted
 #include "jsfriendapi.h"  // for GetErrorMessage
-#include "jsutil.h"       // for Min
 
 #include "builtin/Array.h"       // for NewDenseCopiedArray
 #include "debugger/Debugger.h"   // for Completion, Debugger

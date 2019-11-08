@@ -25,7 +25,6 @@
 
 #include "jsnum.h"    // NumberToAtom
 #include "jstypes.h"  // JS_BIT
-#include "jsutil.h"   // Min
 
 #include "ds/Nestable.h"                         // Nestable
 #include "frontend/BytecodeControlStructures.h"  // NestableControl, BreakableControl, LabelControl, LoopControl, TryFinallyControl

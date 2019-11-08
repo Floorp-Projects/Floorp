@@ -15,9 +15,8 @@
 #include <stdint.h>
 #include <utility>
 
-#include "jsutil.h"
-
 #include "js/Initialization.h"
+#include "js/Utility.h"
 #include "threading/LockGuard.h"
 #include "threading/Mutex.h"
 #include "threading/ThreadId.h"
