@@ -159,7 +159,7 @@ async function testLoops({ threadFront, debuggee, targetFront }) {
     const consoleFront = await targetFront.getFront("console");
     const { result } = await consoleFront.evaluateJSAsync(input, {
       thread: threadFront.actor,
-      frameActor: packet.frame.actor,
+      frameActor: packet.frame.actorID,
     });
     return result;
   }
