@@ -1974,7 +1974,6 @@ class _ASRouter {
     } else {
       // On new tab, send cards if they match; othwerise send a snippet
       message = await this.handleMessageRequest({
-        provider: "onboarding",
         template: "extended_triplets",
       });
 
