@@ -298,9 +298,12 @@ var TestRunner = {
 
       // Calculate box region, convert to Rect
       let elementRect = element.getBoundingClientRect();
+      // ownerGlobal doesn't exist in content privileged windows.
+      // eslint-disable-next-line mozilla/use-ownerGlobal
+      let win = element.ownerDocument.defaultView;
       let rect = new Rect(
-        element.screenX * scale,
-        element.screenY * scale,
+        (win.mozInnerScreenX + elementRect.left) * scale,
+        (win.mozInnerScreenY + elementRect.top) * scale,
         elementRect.width * scale,
         elementRect.height * scale
       );
