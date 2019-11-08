@@ -29,6 +29,7 @@ bool GCRuntime::registerWithFinalizationGroup(JSContext* cx,
   auto ptr = map.lookupForAdd(target);
   if (!ptr) {
     if (!map.add(ptr, target, FinalizationRecordVector(target->zone()))) {
+      ReportOutOfMemory(cx);
       return false;
     }
   }
