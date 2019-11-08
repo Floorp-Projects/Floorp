@@ -55,8 +55,9 @@
     position: relative;
     display: inline-block;
     height: 2.5em;
-    left: 50%;
-    margin: 2em 0 0 -1.25em;
+    inset-inline-start: 50%;
+    margin-block: 2em 0;
+    margin-inline: -1.25em 0;
     font-size: 10px;
     text-indent: 999em;
     position: absolute;
@@ -72,7 +73,7 @@
     content: '';
     position: absolute;
     top: 0;
-    left: 1.125em;
+    inset-inline-start: 1.125em;
     width: 0.25em;
     height: 0.75em;
     border-radius: .2em;
@@ -99,7 +100,7 @@
 /*=Core detail
 --------------------------------------------------------------------------------------- */
 .pkt_ext_containersaved .pkt_ext_initload {
-    left: 0;
+    inset-inline-start: 0;
     position: absolute;
     top: 0;
     width: 100%;
@@ -147,7 +148,7 @@
     margin: 19px 0 4px;
     padding: 0;
     position: relative;
-    text-align: left;
+    text-align: start;
     text-transform: none;
 }
 @keyframes fade_in_out {
@@ -172,12 +173,12 @@
     display: none;
     font-size: 12px;
     font-weight: normal;
-    left: 6.4em;
+    inset-inline-start: 6.4em;
     max-width: 21em;
     opacity: 0;
     position: absolute;
     top: 2.7em;
-    text-align: left;
+    text-align: start;
     visibility: hidden;
 }
 .pkt_ext_container_finalerrorstate .pkt_ext_errordetail {
@@ -188,7 +189,7 @@
 .pkt_ext_containersaved .pkt_ext_logo {
     background: url(../img/pocketlogosolo@1x.png) center center no-repeat;
     display: block;
-    float: left;
+    float: inline-start;
     height: 40px;
     padding: 1.25em 1em;
     position: relative;
@@ -212,16 +213,16 @@
     }
 }
 .pkt_ext_containersaved .pkt_ext_topdetail {
-    float: left;
+    float: inline-start;
 }
 .pkt_ext_containersaved .pkt_ext_edit_msg {
     box-sizing: border-box;
     display: none;
     font-size: 0.75em;
-    left: auto;
+    inset-inline-start: auto;
     padding: 0 1.4em;
     position: absolute;
-    text-align: left;
+    text-align: start;
     top: 8.7em;
     width: 100%;
 }
@@ -259,18 +260,18 @@
     box-sizing: border-box;
     background: none;
     border: 0;
-    float: left;
+    float: inline-start;
     list-style: none;
     line-height: 0.8;
     height: auto;
-    padding-right: 0.4em;
+    padding-inline-end: 0.4em;
     width: auto;
 }
 .pkt_ext_containersaved .pkt_ext_item_actions li:before {
     content: none;
 }
 .pkt_ext_containersaved .pkt_ext_item_actions .pkt_ext_actions_separator {
-    border-left: 2px solid #777;
+    border-inline-start: 2px solid #777;
     height: 0.75em;
     margin-top: 0.3em;
     padding: 0;
@@ -288,8 +289,8 @@
     height: auto;
     margin: 0;
     padding: 0.5em;
-    float: left;
-    text-align: left;
+    float: inline-start;
+    text-align: start;
     text-decoration: none;
     text-transform: none;
 }
@@ -306,12 +307,12 @@
     cursor: default;
 }
 .pkt_ext_containersaved .pkt_ext_item_actions .pkt_ext_openpocket {
-    float: right;
-    padding-right: 0.7em;
-    text-align: right;
+    float: inline-end;
+    padding-inline-end: 0.7em;
+    text-align: end;
 }
 .pkt_ext_containersaved .pkt_ext_item_actions .pkt_ext_removeitem {
-    padding-left: 0;
+    padding-inline-start: 0;
 }
 .pkt_ext_containersaved  .pkt_ext_close {
     background: url(../img/tag_close@1x.png) center center no-repeat;
@@ -319,7 +320,7 @@
     display: block;
     font-size: 0.8em;
     height: 10px;
-    right: 0.5em;
+    inset-inline-end: 0.5em;
     overflow: hidden;
     position: absolute;
     text-align: center;
@@ -356,7 +357,7 @@
     box-sizing: border-box;
     flex: 1;
     background-color: #fff;
-    border-right: 1px solid #c3c3c3;
+    border-inline-end: 1px solid #c3c3c3;
     color: #333;
     display: block;
     float: none;
@@ -366,15 +367,14 @@
     overflow: hidden;
     padding: 0.25em 0.5em;
     width: 14em;
-    padding-left: 0.5em;
-    padding-right: 0.5em;
+    padding-inline: 0.5em;
 }
 .pkt_ext_containersaved .pkt_ext_tag_error .pkt_ext_tag_input_wrapper {
     border: 1px solid #d74345;
 }
 .pkt_ext_containersaved .pkt_ext_tag_input_wrapper .token-input-list {
     display: block;
-    left: 0;
+    inset-inline-start: 0;
     height: 1.7em;
     overflow: hidden;
     position: relative;
@@ -397,7 +397,7 @@
     background-color: #fff;
     color: #333;
     font-size: 14px;
-    float: left;
+    float: inline-start;
     line-height: normal;
     height: auto;
     min-height: 0;
@@ -443,7 +443,8 @@
 }
 .pkt_ext_containersaved .pkt_ext_tag_error .pkt_ext_btn {
     border: 1px solid #c3c3c3;
-    border-width: 1px 1px 1px 0;
+    border-block-width: 1px;
+    border-inline-width: 0 1px;
     height: 2.35em;
 }
 .pkt_ext_containersaved .autocomplete-suggestions {
@@ -459,7 +460,7 @@
     box-sizing: border-box;
     background: #ebebeb;
     clear: both;
-    left: 0;
+    inset-inline-start: 0;
     opacity: 0;
     min-height: 110px;
     position: fixed;
@@ -487,7 +488,7 @@
     font-style: normal;
     letter-spacing: normal;
     margin: 0.5em 0;
-    text-align: left;
+    text-align: start;
     text-transform: none;
 }
 .pkt_ext_containersaved .pkt_ext_recenttag_detail .pkt_ext_loadingspinner,
@@ -499,7 +500,7 @@
 .pkt_ext_containersaved .pkt_ext_suggestedtag_detail_loading .pkt_ext_loadingspinner {
     display: block;
     font-size: 6px;
-    left: 48%;
+    inset-inline-start: 48%;
 }
 .pkt_ext_containersaved .pkt_ext_recenttag_detail ul,
 .pkt_ext_containersaved .pkt_ext_suggestedtag_detail ul {
@@ -507,7 +508,7 @@
     margin: 0;
     height: 2em;
     overflow: hidden;
-    padding: 2px 0 0 0;
+    padding: 2px 0 0;
 }
 .pkt_ext_containersaved .pkt_ext_suggestedtag_detail ul {
     height: auto;
@@ -518,7 +519,7 @@
 .pkt_ext_containersaved .pkt_ext_recenttag_detail li,
 .pkt_ext_containersaved .pkt_ext_suggestedtag_detail li {
     background: none;
-    float: left;
+    float: inline-start;
     height: inherit;
     line-height: 1.5;
     list-style: none;
@@ -534,13 +535,13 @@
     color: #333;
     font-size: 0.8125em;
     line-height: 1.2;
-    left: auto;
+    inset-inline-start: auto;
     position: absolute;
-    text-align: left;
+    text-align: start;
     top: 2em;
 }
 .pkt_ext_containersaved .pkt_ext_suggestedtag_detail .suggestedtag_msg {
-    margin-right: 1.3em;
+    margin-inline-end: 1.3em;
 }
 .pkt_ext_containersaved .token_tag {
     border-radius: 4px;
@@ -551,7 +552,7 @@
     font-size: 14px;
     font-weight: normal;
     letter-spacing: normal;
-    margin-right: 0.5em;
+    margin-inline-end: 0.5em;
     padding: 0.125em 0.625em;
     text-decoration: none;
     text-transform: none;
@@ -617,7 +618,7 @@
     background: #fff;
     border: 1px solid #cdcdcd;
     margin-top: 0.5em;
-    left: 0 !important;
+    inset-inline-start: 0 !important;
     overflow-y: auto;
     top: 1.9em !important;
     z-index: 9000;
@@ -639,7 +640,7 @@
     letter-spacing: normal;
     list-style: none;
     padding: 0.75em;
-    text-align: left;
+    text-align: start;
     text-transform: none;
     width: inherit;
 }
@@ -656,7 +657,7 @@
     padding: 0;
 }
 .token-input-list li {
-    text-align: left;
+    text-align: start;
     list-style: none;
 }
 .token-input-list li input {
@@ -678,7 +679,7 @@
     display: block;
     width: auto;
     margin: 0 0.2em;
-    float: left;
+    float: inline-start;
 }
 .pkt_ext_containersaved .pkt_ext_tag_input_wrapper_disabled {
     position: relative;
@@ -691,7 +692,7 @@
 }
 .pkt_ext_containersaved .pkt_ext_tag_input_wrapper_disabled .pkt_ext_tag_input_blocker {
     height: 100%;
-    left: 0;
+    inset-inline-start: 0;
     position: absolute;
     top: 0;
     width: 100%;
@@ -718,7 +719,8 @@
     cursor: pointer;
     display: inline-block;
     height: 8px;
-    margin: 0 0 0 8px;
+    margin-block: 0;
+    margin-inline: 8px 0;
     overflow: hidden;
     width: 8px;
     text-indent: -99px;
@@ -778,16 +780,14 @@
 }
 .pkt_ext_saved_overflow .pkt_ext_item_actions li {
     float: none;
-    padding-left: 1em;
-    padding-right: 1em;
+    padding-inline: 1em;
     text-align: center;
 }
 .pkt_ext_saved_overflow .pkt_ext_item_actions .pkt_ext_removeitem,
 .pkt_ext_saved_overflow .pkt_ext_item_actions .pkt_ext_openpocket {
     float: none;
     text-align: center;
-    padding-left: 0;
-    padding-right: 0;
+    padding-inline: 0;
 }
 .pkt_ext_saved_overflow .pkt_ext_item_actions .pkt_ext_actions_separator {
     display: none;
@@ -804,9 +804,8 @@
 }
 .pkt_ext_container_finalerrorstate.pkt_ext_saved_overflow .pkt_ext_errordetail {
     box-sizing: border-box;
-    left: 0;
-    padding-left: 1em;
-    padding-right: 1em;
+    inset-inline-start: 0;
+    padding-inline: 1em;
     text-align: center;
     top: 8.3em;
     width: 100%;
@@ -873,7 +872,7 @@ button {
     height: 22px;
     width: 22px;
     top: -3px;
-    left: -28px;
+    inset-inline-start: -28px;
     content: "";
     background-image: url(../img/signup_firefoxlogo@2x.png);
     background-size: 22px 22px;
@@ -896,16 +895,10 @@ button {
 .pkt_ext_indent_bordered {
     margin: 15px 0;
     padding: 0 7px;
-    border-left: 4px solid rgba(68, 68, 68, .15);
-    text-align: left;
+    border-inline-start: 4px solid rgba(68, 68, 68, .15);
+    text-align: start;
     font-size: 13px;
     color: #313131;
-}
-
-[dir='rtl'] .pkt_ext_indent_bordered {
-  border-left: none;
-  border-right: 4px solid rgba(68, 68, 68, .15);
-  text-align: right;
 }
 
 .pkt_ext_indent_bordered > p {
