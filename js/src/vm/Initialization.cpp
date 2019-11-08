@@ -26,6 +26,7 @@
 #  include "unicode/uclean.h"
 #  include "unicode/utypes.h"
 #endif  // ENABLE_INTL_API
+#include "util/Poison.h"
 #include "vm/BigIntType.h"
 #include "vm/DateTime.h"
 #include "vm/HelperThreads.h"

@@ -15,6 +15,7 @@
 #include "js/Id.h"
 #include "js/RootingAPI.h"
 #include "js/Value.h"
+#include "util/Poison.h"
 
 /*
  * [SMDOC] GC Barriers

@@ -19,6 +19,7 @@
 #include "js/Debug.h"
 #include "js/ForOfIterator.h"  // JS::ForOfIterator
 #include "js/PropertySpec.h"
+#include "util/Poison.h"
 #include "vm/AsyncFunction.h"
 #include "vm/AsyncIteration.h"
 #include "vm/GeneratorObject.h"

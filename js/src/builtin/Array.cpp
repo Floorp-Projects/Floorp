@@ -27,6 +27,7 @@
 #include "js/Class.h"
 #include "js/Conversions.h"
 #include "js/PropertySpec.h"
+#include "util/Poison.h"
 #include "util/StringBuffer.h"
 #include "util/Text.h"
 #include "vm/ArgumentsObject.h"

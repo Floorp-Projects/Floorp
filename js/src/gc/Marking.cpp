@@ -24,6 +24,7 @@
 #include "jit/IonCode.h"
 #include "js/SliceBudget.h"
 #include "util/Memory.h"
+#include "util/Poison.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/ArrayObject.h"
 #include "vm/BigIntType.h"

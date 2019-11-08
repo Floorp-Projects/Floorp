@@ -24,6 +24,7 @@
 #include "gc/PublicIterators.h"
 #include "jit/JitFrames.h"
 #include "jit/JitRealm.h"
+#include "util/Poison.h"
 #include "vm/ArrayObject.h"
 #if defined(DEBUG)
 #  include "vm/EnvironmentObject.h"

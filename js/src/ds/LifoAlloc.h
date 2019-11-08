@@ -29,6 +29,7 @@
 
 #include "js/UniquePtr.h"
 #include "util/Memory.h"
+#include "util/Poison.h"
 
 namespace js {
 

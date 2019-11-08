@@ -18,6 +18,7 @@
 #include "jstypes.h"
 
 #include "js/Utility.h"
+#include "util/Poison.h"
 #include "util/Windows.h"
 #include "vm/HelperThreads.h"
 
