@@ -4413,7 +4413,13 @@ class BaseCompiler final : public BaseCompilerInterface {
           break;
       }
     }
-    MOZ_ASSERT(size == fr.dynamicHeight());
+    if (deadCode_) {
+      // Some stack allocation may be used to pass values along control flow
+      // edges without being accounted for on the value stack.
+      MOZ_ASSERT(size <= fr.dynamicHeight());
+    } else {
+      MOZ_ASSERT(size == fr.dynamicHeight());
+    }
   }
 
 #endif
