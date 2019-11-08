@@ -1307,7 +1307,8 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
                                 max_partial_present_rects: usize,
                                 out_handle: &mut *mut DocumentHandle,
                                 out_renderer: &mut *mut Renderer,
-                                out_max_texture_size: *mut i32)
+                                out_max_texture_size: *mut i32,
+                                enable_gpu_markers: bool)
                                 -> bool {
     assert!(unsafe { is_in_render_thread() });
 
@@ -1405,6 +1406,7 @@ pub extern "C" fn wr_window_new(window_id: WrWindowId,
         start_debug_server,
         surface_origin_is_top_left,
         compositor_config,
+        enable_gpu_markers,
         ..Default::default()
     };
 

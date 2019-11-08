@@ -98,7 +98,8 @@ class NewRenderer : public RendererEvent {
                                                     : nullptr,
             compositor->GetMaxUpdateRects(),
             compositor->GetMaxPartialPresentRects(), mDocHandle, &wrRenderer,
-            mMaxTextureSize)) {
+            mMaxTextureSize,
+            StaticPrefs::gfx_webrender_enable_gpu_markers_AtStartup())) {
       // wr_window_new puts a message into gfxCriticalNote if it returns false
       return;
     }
