@@ -77,6 +77,10 @@ static void moz_container_allocate_child(MozContainer* container,
                                          MozContainerChild* child);
 static MozContainerChild* moz_container_get_child(MozContainer* container,
                                                   GtkWidget* child);
+#ifdef MOZ_WAYLAND
+static wl_surface* moz_container_get_gtk_container_surface(
+    MozContainer* container);
+#endif
 
 /* public methods */
 
@@ -148,6 +152,22 @@ void moz_container_move(MozContainer* container, int dx, int dy) {
   container->subsurface_dx = dx;
   container->subsurface_dy = dy;
   container->surface_position_needs_update = true;
+
+  // Wayland subsurface is not created yet.
+  if (!container->subsurface) {
+    return;
+  }
+
+  // wl_subsurface_set_position is actually property of parent surface
+  // which is effective when parent surface is commited.
+  wl_surface* parent_surface =
+      moz_container_get_gtk_container_surface(container);
+  if (parent_surface) {
+    wl_subsurface_set_position(container->subsurface, container->subsurface_dx,
+                               container->subsurface_dy);
+    wl_surface_commit(parent_surface);
+    container->surface_position_needs_update = false;
+  }
 }
 
 // This is called from layout/compositor code only with
@@ -586,18 +606,9 @@ struct wl_surface* moz_container_get_wl_surface(MozContainer* container,
                 (void*)container->surface));
   }
 
-  // wl_subsurface_set_position is actually property of parent surface
-  // which is effective when parent surface is commited.
   if (container->surface_position_needs_update) {
-    wl_surface* parent_surface =
-        moz_container_get_gtk_container_surface(container);
-    if (parent_surface) {
-      wl_subsurface_set_position(container->subsurface,
-                                 container->subsurface_dx,
-                                 container->subsurface_dy);
-      wl_surface_commit(parent_surface);
-      container->surface_position_needs_update = false;
-    }
+    moz_container_move(container, container->subsurface_dx,
+                       container->subsurface_dy);
   }
 
   wl_surface_set_buffer_scale(container->surface, scale);
@@ -609,12 +620,14 @@ struct wl_egl_window* moz_container_get_wl_egl_window(MozContainer* container,
   LOGWAYLAND(("%s [%p] eglwindow %p\n", __FUNCTION__, (void*)container,
               (void*)container->eglwindow));
 
-  if (!container->eglwindow) {
-    wl_surface* surface = moz_container_get_wl_surface(container, scale);
-    if (!surface) {
-      return nullptr;
-    }
+  // Always call moz_container_get_wl_surface() to ensure underlying
+  // container->surface has correct scale and position.
+  wl_surface* surface = moz_container_get_wl_surface(container, scale);
+  if (!surface) {
+    return nullptr;
+  }
 
+  if (!container->eglwindow) {
     GdkWindow* window = gtk_widget_get_window(GTK_WIDGET(container));
     container->eglwindow =
         wl_egl_window_create(surface, gdk_window_get_width(window) * scale,
