@@ -5,49 +5,58 @@
 
 const {
   STUBS_UPDATE_ENV,
-  formatPacket,
-  formatStub,
-  formatFile,
   getStubFilePath,
+  getCleanedPacket,
+  writeStubsToFile,
 } = require("devtools/client/webconsole/test/browser/stub-generator-helpers");
 
 const TEST_URI =
   "http://example.com/browser/devtools/client/webconsole/test/browser/test-console-api.html";
+const STUB_FILE = "consoleApi.js";
 
 add_task(async function() {
   const isStubsUpdate = env.get(STUBS_UPDATE_ENV) == "true";
-  const filePath = getStubFilePath("consoleApi.js", env);
-  info(`${isStubsUpdate ? "Update" : "Check"} stubs at ${filePath}`);
+  info(`${isStubsUpdate ? "Update" : "Check"} ${STUB_FILE}`);
 
   const generatedStubs = await generateConsoleApiStubs();
 
   if (isStubsUpdate) {
-    const serializedStubs = formatFile(generatedStubs, "ConsoleMessage");
-    await OS.File.writeAtomic(filePath, serializedStubs);
-    ok(true, `${filePath} was successfully updated`);
+    await writeStubsToFile(
+      getStubFilePath(STUB_FILE, env, true),
+      generatedStubs
+    );
+    ok(true, `${STUB_FILE} was updated`);
     return;
   }
 
-  const existingStubs = require(filePath);
-  is(
-    generatedStubs.existingStubs.length,
-    existingStubs.stubPackets.length,
-    "There's the expected number of stub packets"
-  );
+  const existingStubs = require(getStubFilePath(STUB_FILE));
+  const FAILURE_MSG =
+    "The consoleApi stubs file needs to be updated by running " +
+    "`mach test devtools/client/webconsole/test/browser/" +
+    "browser_webconsole_stubs_console_api.js --headless " +
+    "--setenv WEBCONSOLE_STUBS_UPDATE=true`";
 
-  const repoStubFileContent = await OS.File.read(filePath, {
-    encoding: "utf-8",
-  });
-  is(generatedStubs, repoStubFileContent, "stubs file is up to date");
+  if (generatedStubs.size !== existingStubs.stubPackets.size) {
+    ok(false, FAILURE_MSG);
+    return;
+  }
 
-  if (generatedStubs != repoStubFileContent) {
-    ok(
-      false,
-      "The consoleApi stubs file needs to be updated by running " +
-        "`mach test devtools/client/webconsole/test/browser/" +
-        "browser_webconsole_stubs_console_api.js --headless " +
-        "--setenv WEBCONSOLE_STUBS_UPDATE=true`"
+  let failed = false;
+  for (const [key, packet] of generatedStubs) {
+    const packetStr = JSON.stringify(packet, null, 2);
+    const existingPacketStr = JSON.stringify(
+      existingStubs.stubPackets.get(key),
+      null,
+      2
     );
+    is(packetStr, existingPacketStr, `"${key}" packet has expected value`);
+    failed = failed || packetStr !== existingPacketStr;
+  }
+
+  if (failed) {
+    ok(false, FAILURE_MSG);
+  } else {
+    ok(true, "Stubs are up to date");
   }
 });
 
@@ -57,10 +66,7 @@ async function generateConsoleApiStubs() {
   const { getPrefsService } = require("devtools/client/webconsole/utils/prefs");
   getPrefsService({}).setBoolPref(PREFS.FILTER.LOG, false);
 
-  const stubs = {
-    preparedMessages: [],
-    packets: [],
-  };
+  const stubs = new Map();
 
   const toolbox = await openNewTabAndToolbox(TEST_URI, "webconsole");
 
@@ -69,8 +75,9 @@ async function generateConsoleApiStubs() {
       let i = 0;
       const listener = async res => {
         const callKey = keys[i];
-        stubs.packets.push(formatPacket(callKey, res));
-        stubs.preparedMessages.push(formatStub(callKey, res));
+
+        stubs.set(callKey, getCleanedPacket(callKey, res));
+
         if (++i === keys.length) {
           toolbox.target.activeConsole.off("consoleAPICall", listener);
           resolve();
@@ -94,8 +101,7 @@ async function generateConsoleApiStubs() {
 
   Services.prefs.clearUserPref(PREFS.FILTER.LOG);
   await closeTabAndToolbox().catch(() => {});
-
-  return formatFile(stubs, "ConsoleMessage");
+  return stubs;
 }
 
 function getCommands() {
@@ -109,7 +115,6 @@ function getCommands() {
     "console.clear()",
     "console.count('bar')",
     "console.assert(false, {message: 'foobar'})",
-    "console.log('hello \\nfrom \\rthe \\\"string world!')",
     "console.log('\xFA\u1E47\u0129\xE7\xF6d\xEA \u021B\u0115\u0219\u0165')",
     "console.dirxml(window)",
     "console.log('myarray', ['red', 'green', 'blue'])",
@@ -294,6 +299,10 @@ function getCommands() {
       console.countReset("test counter");
       console.countReset("test counter");
   `,
+    },
+    {
+      keys: ["console.log escaped characters"],
+      code: "console.log('hello \\nfrom \\rthe \\\"string world!')",
     }
   );
   return consoleApi;
