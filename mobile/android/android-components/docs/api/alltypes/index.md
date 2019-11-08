@@ -99,7 +99,7 @@
 | [mozilla.components.feature.awesomebar.provider.ClipboardSuggestionProvider](../mozilla.components.feature.awesomebar.provider/-clipboard-suggestion-provider/index.md) | An [AwesomeBar.SuggestionProvider](../mozilla.components.concept.awesomebar/-awesome-bar/-suggestion-provider/index.md) implementation that returns a suggestions for an URL in the clipboard (if there's any). |
 | [kotlin.collections.Collection](../mozilla.components.support.ktx.kotlin/kotlin.collections.-collection/index.md) (extensions in package mozilla.components.support.ktx.kotlin) |  |
 | [mozilla.components.support.base.facts.processor.CollectionProcessor](../mozilla.components.support.base.facts.processor/-collection-processor/index.md) | A [FactProcessor](../mozilla.components.support.base.facts/-fact-processor/index.md) implementation that keeps all [Fact](../mozilla.components.support.base.facts/-fact/index.md) objects in a list. |
-| [mozilla.components.feature.prompts.ColorItem](../mozilla.components.feature.prompts/-color-item/index.md) | Represents an item in the [BasicColorAdapter](#) list. |
+| [mozilla.components.feature.prompts.dialog.ColorItem](../mozilla.components.feature.prompts.dialog/-color-item/index.md) | Represents an item in the [BasicColorAdapter](#) list. |
 | [mozilla.components.browser.icons.processor.ColorProcessor](../mozilla.components.browser.icons.processor/-color-processor/index.md) | [IconProcessor](../mozilla.components.browser.icons.processor/-icon-processor/index.md) implementation to extract the dominant color from the icon. |
 | [mozilla.components.support.utils.ColorUtils](../mozilla.components.support.utils/-color-utils/index.md) |  |
 | [mozilla.components.service.glean.net.ConceptFetchHttpUploader](../mozilla.components.service.glean.net/-concept-fetch-http-uploader/index.md) | A simple ping Uploader, which implements a "send once" policy, never storing or attempting to send the ping again. This uses Android Component's `concept-fetch`. |
@@ -403,7 +403,6 @@
 | [mozilla.components.feature.downloads.manager.OnDownloadCompleted](../mozilla.components.feature.downloads.manager/-on-download-completed.md) |  |
 | [mozilla.components.ui.autocomplete.OnFilterListener](../mozilla.components.ui.autocomplete/-on-filter-listener.md) |  |
 | [mozilla.components.ui.autocomplete.OnKeyPreImeListener](../mozilla.components.ui.autocomplete/-on-key-pre-ime-listener.md) |  |
-| [mozilla.components.feature.prompts.OnNeedToRequestPermissions](../mozilla.components.feature.prompts/-on-need-to-request-permissions.md) |  |
 | [mozilla.components.support.base.feature.OnNeedToRequestPermissions](../mozilla.components.support.base.feature/-on-need-to-request-permissions.md) |  |
 | [mozilla.components.feature.readerview.OnReaderViewAvailableChange](../mozilla.components.feature.readerview/-on-reader-view-available-change.md) |  |
 | [mozilla.components.feature.qr.OnScanResult](../mozilla.components.feature.qr/-on-scan-result.md) |  |

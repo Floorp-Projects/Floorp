@@ -2,7 +2,7 @@
 
 # PromptFeature
 
-`class PromptFeature : `[`LifecycleAwareFeature`](../../mozilla.components.support.base.feature/-lifecycle-aware-feature/index.md)`, `[`PermissionsFeature`](../../mozilla.components.support.base.feature/-permissions-feature/index.md)`, Prompter` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/prompts/src/main/java/mozilla/components/feature/prompts/PromptFeature.kt#L79)
+`class PromptFeature : `[`LifecycleAwareFeature`](../../mozilla.components.support.base.feature/-lifecycle-aware-feature/index.md)`, `[`PermissionsFeature`](../../mozilla.components.support.base.feature/-permissions-feature/index.md)`, Prompter` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/prompts/src/main/java/mozilla/components/feature/prompts/PromptFeature.kt#L91)
 
 Feature for displaying native dialogs for html elements like: input type
 date, file, time, color, option, menu, authentication, confirmation and alerts.
@@ -28,7 +28,7 @@ the related [PromptRequest](../../mozilla.components.concept.engine.prompt/-prom
 
 | Name | Summary |
 |---|---|
-| [onNeedToRequestPermissions](on-need-to-request-permissions.md) | `val onNeedToRequestPermissions: `[`OnNeedToRequestPermissions`](../-on-need-to-request-permissions.md)<br>A callback invoked when permissions need to be requested before a prompt (e.g. a file picker) can be displayed. Once the request is completed, [onPermissionsResult](on-permissions-result.md) needs to be invoked. |
+| [onNeedToRequestPermissions](on-need-to-request-permissions.md) | `val onNeedToRequestPermissions: `[`OnNeedToRequestPermissions`](../../mozilla.components.support.base.feature/-on-need-to-request-permissions.md)<br>A callback invoked when permissions need to be requested before a prompt (e.g. a file picker) can be displayed. Once the request is completed, [onPermissionsResult](on-permissions-result.md) needs to be invoked. |
 
 ### Functions
 

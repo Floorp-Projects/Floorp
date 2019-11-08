@@ -39,6 +39,18 @@ https://addons.mozilla.org/en-US/firefox/
 | [updatedAt](updated-at.md) | `val updatedAt: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>The date of the last time the add-on was updated by its developer(s). |
 | [version](version.md) | `val version: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>The add-on version e.g "1.23.0". |
 
+### Functions
+
+| Name | Summary |
+|---|---|
+| [translatePermissions](translate-permissions.md) | `fun translatePermissions(): `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`>`<br>Returns a list of id resources per each item on the [AddOn.permissions](permissions.md) list. |
+
+### Companion Object Properties
+
+| Name | Summary |
+|---|---|
+| [permissionToTranslation](permission-to-translation.md) | `val permissionToTranslation: <ERROR CLASS>`<br>A map of permissions to translation string ids. |
+
 ### Extension Functions
 
 | Name | Summary |
