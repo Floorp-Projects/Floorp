@@ -1,7 +1,9 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`IssueList component renders some issues 1`] = `
-<ul>
+<ul
+  className="compatibility-issue-list"
+>
   <IssueItem
     deprecated={false}
     experimental={true}

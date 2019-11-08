@@ -2,7 +2,7 @@
 
 exports[`IssueItem component renders a deprecated issue of CSS property 1`] = `
 <li
-  className="compatibility-issue-item"
+  className="compatibility-issue-item compatibility-issue-item--deprecated"
   key="test-property"
 >
   <a
@@ -23,7 +23,7 @@ exports[`IssueItem component renders a deprecated issue of CSS property 1`] = `
 
 exports[`IssueItem component renders an experimental issue of CSS property 1`] = `
 <li
-  className="compatibility-issue-item"
+  className="compatibility-issue-item compatibility-issue-item--experimental"
   key="test-property"
 >
   <a
@@ -44,7 +44,7 @@ exports[`IssueItem component renders an experimental issue of CSS property 1`] =
 
 exports[`IssueItem component renders an issue which has both deprecated and experimental 1`] = `
 <li
-  className="compatibility-issue-item"
+  className="compatibility-issue-item compatibility-issue-item--deprecated compatibility-issue-item--experimental"
   key="test-property"
 >
   <a
@@ -58,14 +58,14 @@ exports[`IssueItem component renders an issue which has both deprecated and expe
   <span
     className="compatibility-issue-item__causes"
   >
-    (deprecated, experimental)
+    (deprecated,experimental)
   </span>
 </li>
 `;
 
 exports[`IssueItem component renders an unsupported issue of CSS property 1`] = `
 <li
-  className="compatibility-issue-item"
+  className="compatibility-issue-item compatibility-issue-item--unsupported"
   key="test-property"
 >
   <a
