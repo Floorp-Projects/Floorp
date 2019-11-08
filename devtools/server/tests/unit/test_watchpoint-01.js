@@ -22,7 +22,7 @@ async function testSetWatchpoint({ threadFront, debuggee, targetFront }) {
     const consoleFront = await targetFront.getFront("console");
     const { result } = await consoleFront.evaluateJSAsync(input, {
       thread: threadFront.actor,
-      frameActor: packet.frame.actorID,
+      frameActor: packet.frame.actor,
     });
     return result;
   }
