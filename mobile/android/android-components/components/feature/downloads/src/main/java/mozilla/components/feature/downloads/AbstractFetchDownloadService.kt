@@ -8,6 +8,7 @@ import android.annotation.TargetApi
 import android.app.DownloadManager.ACTION_DOWNLOAD_COMPLETE
 import android.app.DownloadManager.EXTRA_DOWNLOAD_ID
 import android.app.Service
+import android.content.ActivityNotFoundException
 import android.content.BroadcastReceiver
 import android.content.ContentValues
 import android.content.Context
@@ -20,6 +21,7 @@ import android.os.Environment
 import android.os.IBinder
 import android.os.ParcelFileDescriptor
 import android.provider.MediaStore
+import android.widget.Toast
 import androidx.annotation.VisibleForTesting
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.FileProvider
@@ -141,11 +143,17 @@ abstract class AbstractFetchDownloadService : Service() {
                     }
 
                     ACTION_OPEN -> {
-                        openFile(
+                        if (!openFile(
                             context = context,
                             filePath = currentDownloadJobState.state.filePath,
                             contentType = currentDownloadJobState.state.contentType
-                        )
+                        )) {
+                            Toast.makeText(applicationContext,
+                                applicationContext.getString(R.string.mozac_feature_downloads_could_not_open_file),
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+
                         emitNotificationOpenFact()
                     }
                 }
@@ -369,9 +377,9 @@ abstract class AbstractFetchDownloadService : Service() {
 
     companion object {
         /**
-         * Launches an intent to open the given file
+         * Launches an intent to open the given file, returns whether or not the file could be opened
          */
-        fun openFile(context: Context, filePath: String, contentType: String?) {
+        fun openFile(context: Context, filePath: String, contentType: String?): Boolean {
             // Create a new file with the location of the saved file to extract the correct path
             // `file` has the wrong path, so we must construct it based on the `fileName` and `dir.path`s
             val fileLocation = File(filePath)
@@ -386,7 +394,12 @@ abstract class AbstractFetchDownloadService : Service() {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION
             }
 
-            context.startActivity(newIntent)
+            return try {
+                context.startActivity(newIntent)
+                true
+            } catch (error: ActivityNotFoundException) {
+                false
+            }
         }
 
         private const val FILE_PROVIDER_EXTENSION = ".fileprovider"
