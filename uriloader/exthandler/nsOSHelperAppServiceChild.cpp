@@ -48,7 +48,7 @@ nsresult nsOSHelperAppServiceChild::ExternalProtocolHandlerExists(
   *aHandlerExists = false;
   rv = handlerSvc->ExistsForProtocol(scheme, aHandlerExists);
   LOG(
-      ("nsOSHelperAppServiceChild::OSProtocolHandlerExists(): "
+      ("nsOSHelperAppServiceChild::ExternalProtocolHandlerExists(): "
        "protocol: %s, result: %" PRId32,
        aProtocolScheme, static_cast<uint32_t>(rv)));
   mozilla::Unused << NS_WARN_IF(NS_FAILED(rv));
@@ -117,30 +117,7 @@ nsOSHelperAppServiceChild::GetMIMEInfoFromOS(const nsACString& aMIMEType,
 NS_IMETHODIMP
 nsOSHelperAppServiceChild::GetProtocolHandlerInfoFromOS(
     const nsACString& aScheme, bool* aFound, nsIHandlerInfo** aRetVal) {
-  MOZ_ASSERT(!aScheme.IsEmpty(), "No scheme was specified!");
-
-  nsresult rv =
-      OSProtocolHandlerExists(PromiseFlatCString(aScheme).get(), aFound);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  nsChildProcessMIMEInfo* handlerInfo =
-      new nsChildProcessMIMEInfo(aScheme, nsMIMEInfoBase::eProtocolInfo);
-  NS_ENSURE_TRUE(handlerInfo, NS_ERROR_OUT_OF_MEMORY);
-  NS_ADDREF(*aRetVal = handlerInfo);
-
-  if (!*aFound) {
-    // Code that calls this requires an object no matter whether the OS has
-    // something for us, so we return the empty object.
-    return NS_OK;
-  }
-
-  nsAutoString description;
-  rv = GetApplicationDescription(aScheme, description);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "GetApplicationDescription failed");
-  handlerInfo->SetDefaultDescription(description);
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsresult nsOSHelperAppServiceChild::GetFileTokenForPath(
