@@ -1,18 +1,15 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>while(true)</title>
-    <script>
-    </script>
-    <style>
-    </style>
+    <title>Wait for it...</title>
   </head>
   <body>
-  Try to go back to the initial page.
+  Try to go to another page.
   <script>
-    const start = Date.now();
     setTimeout(function() {
-      while (Date.now() - start < 3000);
+      const start = Date.now();
+      while (Date.now() - start < 5000);
+      window.dispatchEvent(new CustomEvent("LongLoopEnded"));
     }, 500);
   </script>
   </body>
