@@ -9,8 +9,8 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const worker = {
   active: PropTypes.bool,
   name: PropTypes.string.isRequired,
-  scope: PropTypes.string,
-  lastUpdateTime: PropTypes.number.isRequired,
+  scope: PropTypes.string.isRequired,
+  lastUpdateTime: PropTypes.number,
   url: PropTypes.string.isRequired,
   // registrationFront can be missing in e10s.
   registrationFront: PropTypes.object,
