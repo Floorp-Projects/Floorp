@@ -13,6 +13,8 @@
 
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/BrowserChild.h"
+#include "mozilla/dom/CanonicalBrowsingContext.h"
+#include "mozilla/dom/WindowGlobalParent.h"
 #include "nsXULAppAPI.h"
 
 #include "nsExternalHelperAppService.h"
@@ -107,6 +109,7 @@
 
 using namespace mozilla;
 using namespace mozilla::ipc;
+using namespace mozilla::dom;
 
 // Download Folder location constants
 #define NS_PREF_DOWNLOAD_DIR "browser.download.dir"
@@ -588,12 +591,9 @@ nsExternalHelperAppService::~nsExternalHelperAppService() {}
 
 nsresult nsExternalHelperAppService::DoContentContentProcessHelper(
     const nsACString& aMimeContentType, nsIRequest* aRequest,
-    nsIInterfaceRequestor* aContentContext, bool aForceSave,
+    BrowsingContext* aContentContext, bool aForceSave,
     nsIInterfaceRequestor* aWindowContext,
     nsIStreamListener** aStreamListener) {
-  nsCOMPtr<nsPIDOMWindowOuter> window = do_GetInterface(aContentContext);
-  NS_ENSURE_STATE(window);
-
   // We need to get a hold of a ContentChild so that we can begin forwarding
   // this data to the parent.  In the HTTP case, this is unfortunate, since
   // we're actually passing data from parent->child->parent wastefully, but
@@ -637,6 +637,14 @@ nsresult nsExternalHelperAppService::DoContentContentProcessHelper(
   Maybe<mozilla::net::LoadInfoArgs> loadInfoArgs;
   MOZ_ALWAYS_SUCCEEDS(LoadInfoToLoadInfoArgs(loadInfo, &loadInfoArgs));
 
+  nsCOMPtr<nsIPropertyBag2> props(do_QueryInterface(aRequest));
+  // Determine whether a new window was opened specifically for this request
+  bool shouldCloseWindow = false;
+  if (props) {
+    props->GetPropertyAsBool(NS_LITERAL_STRING("docshell.newWindowTarget"),
+                             &shouldCloseWindow);
+  }
+
   // Now we build a protocol for forwarding our data to the parent.  The
   // protocol will act as a listener on the child-side and create a "real"
   // helperAppService listener on the parent-side, via another call to
@@ -645,7 +653,7 @@ nsresult nsExternalHelperAppService::DoContentContentProcessHelper(
   MOZ_ALWAYS_TRUE(child->SendPExternalHelperAppConstructor(
       childListener, uriParams, loadInfoArgs, nsCString(aMimeContentType), disp,
       contentDisposition, fileName, aForceSave, contentLength, wasFileChannel,
-      referrerParams, mozilla::dom::BrowserChild::GetFrom(window)));
+      referrerParams, aContentContext, shouldCloseWindow));
 
   NS_ADDREF(*aStreamListener = childListener);
 
@@ -662,16 +670,12 @@ nsresult nsExternalHelperAppService::DoContentContentProcessHelper(
   return NS_OK;
 }
 
-NS_IMETHODIMP nsExternalHelperAppService::DoContent(
+NS_IMETHODIMP nsExternalHelperAppService::CreateListener(
     const nsACString& aMimeContentType, nsIRequest* aRequest,
-    nsIInterfaceRequestor* aContentContext, bool aForceSave,
+    BrowsingContext* aContentContext, bool aForceSave,
     nsIInterfaceRequestor* aWindowContext,
-    nsIStreamListener** aStreamListener) {
-  if (XRE_IsContentProcess()) {
-    return DoContentContentProcessHelper(aMimeContentType, aRequest,
-                                         aContentContext, aForceSave,
-                                         aWindowContext, aStreamListener);
-  }
+    nsExternalAppHandler** aStreamListener) {
+  MOZ_ASSERT(!XRE_IsContentProcess());
 
   nsAutoString fileName;
   nsAutoCString fileExtension;
@@ -798,6 +802,27 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(
 
   NS_ADDREF(*aStreamListener = handler);
   return NS_OK;
+}
+
+NS_IMETHODIMP nsExternalHelperAppService::DoContent(
+    const nsACString& aMimeContentType, nsIRequest* aRequest,
+    nsIInterfaceRequestor* aContentContext, bool aForceSave,
+    nsIInterfaceRequestor* aWindowContext,
+    nsIStreamListener** aStreamListener) {
+  nsCOMPtr<nsPIDOMWindowOuter> window = do_GetInterface(aContentContext);
+  RefPtr<BrowsingContext> bc = window ? window->GetBrowsingContext() : nullptr;
+
+  if (XRE_IsContentProcess()) {
+    return DoContentContentProcessHelper(aMimeContentType, aRequest, bc,
+                                         aForceSave, aWindowContext,
+                                         aStreamListener);
+  }
+
+  RefPtr<nsExternalAppHandler> handler;
+  nsresult rv = CreateListener(aMimeContentType, aRequest, bc, aForceSave,
+                               aWindowContext, getter_AddRefs(handler));
+  handler.forget(aStreamListener);
+  return rv;
 }
 
 NS_IMETHODIMP nsExternalHelperAppService::ApplyDecodingForExtension(
@@ -1141,18 +1166,18 @@ NS_INTERFACE_MAP_END
 
 nsExternalAppHandler::nsExternalAppHandler(
     nsIMIMEInfo* aMIMEInfo, const nsACString& aTempFileExtension,
-    nsIInterfaceRequestor* aContentContext,
-    nsIInterfaceRequestor* aWindowContext,
+    BrowsingContext* aBrowsingContext, nsIInterfaceRequestor* aWindowContext,
     nsExternalHelperAppService* aExtProtSvc,
     const nsAString& aSuggestedFilename, uint32_t aReason, bool aForceSave)
     : mMimeInfo(aMIMEInfo),
-      mContentContext(aContentContext),
+      mBrowsingContext(aBrowsingContext),
       mWindowContext(aWindowContext),
       mSuggestedFileName(aSuggestedFilename),
       mForceSave(aForceSave),
       mCanceled(false),
       mStopRequestIssued(false),
       mIsFileChannel(false),
+      mShouldCloseWindow(false),
       mReason(aReason),
       mTempFileIsExecutable(false),
       mTimeDownloadStarted(0),
@@ -1466,6 +1491,27 @@ void nsExternalAppHandler::MaybeApplyDecodingForExtension(
   encChannel->SetApplyConversion(applyConversion);
 }
 
+already_AddRefed<nsIInterfaceRequestor>
+nsExternalAppHandler::GetDialogParent() {
+  nsCOMPtr<nsIInterfaceRequestor> dialogParent = mWindowContext;
+
+  if (!dialogParent && mBrowsingContext) {
+    dialogParent = do_QueryInterface(mBrowsingContext->GetDOMWindow());
+  }
+  if (!dialogParent && mBrowsingContext && XRE_IsParentProcess()) {
+    WindowGlobalParent* parent =
+        mBrowsingContext->Canonical()->GetCurrentWindowGlobal();
+    if (parent) {
+      RefPtr<BrowserParent> browserParent = parent->GetBrowserParent();
+      if (browserParent && browserParent->GetOwnerElement()) {
+        dialogParent = do_QueryInterface(
+            browserParent->GetOwnerElement()->OwnerDoc()->GetWindow());
+      }
+    }
+  }
+  return dialogParent.forget();
+}
+
 NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest* request) {
   MOZ_ASSERT(request, "OnStartRequest without request?");
 
@@ -1495,15 +1541,17 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest* request) {
     aChannel->GetContentLength(&mContentLength);
   }
 
-  mMaybeCloseWindowHelper = new MaybeCloseWindowHelper(mContentContext);
+  mMaybeCloseWindowHelper = new MaybeCloseWindowHelper(mBrowsingContext);
+  mMaybeCloseWindowHelper->SetShouldCloseWindow(mShouldCloseWindow);
 
   nsCOMPtr<nsIPropertyBag2> props(do_QueryInterface(request, &rv));
   // Determine whether a new window was opened specifically for this request
   if (props) {
     bool tmp = false;
-    props->GetPropertyAsBool(NS_LITERAL_STRING("docshell.newWindowTarget"),
-                             &tmp);
-    mMaybeCloseWindowHelper->SetShouldCloseWindow(tmp);
+    if (NS_SUCCEEDED(props->GetPropertyAsBool(
+            NS_LITERAL_STRING("docshell.newWindowTarget"), &tmp))) {
+      mMaybeCloseWindowHelper->SetShouldCloseWindow(tmp);
+    }
   }
 
   // Now get the URI
@@ -1516,8 +1564,12 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest* request) {
   RetargetLoadNotifications(request);
 
   // Close the underlying DOMWindow if it was opened specifically for the
-  // download
-  mContentContext = mMaybeCloseWindowHelper->MaybeCloseWindow();
+  // download. We don't run this in the content process, since we have
+  // an instance running in the parent as well, which will handle this
+  // if needed.
+  if (!XRE_IsContentProcess()) {
+    mBrowsingContext = mMaybeCloseWindowHelper->MaybeCloseWindow();
+  }
 
   // In an IPC setting, we're allowing the child process, here, to make
   // decisions about decoding the channel (e.g. decompression).  It will
@@ -1633,7 +1685,8 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest* request) {
 
     // this will create a reference cycle (the dialog holds a reference to us as
     // nsIHelperAppLauncher), which will be broken in Cancel or CreateTransfer.
-    rv = mDialog->Show(this, GetDialogParent(), mReason);
+    nsCOMPtr<nsIInterfaceRequestor> dialogParent = GetDialogParent();
+    rv = mDialog->Show(this, dialogParent, mReason);
 
     // what do we do if the dialog failed? I guess we should call Cancel and
     // abort the load....
@@ -1785,25 +1838,24 @@ void nsExternalAppHandler::SendStatusChange(ErrorType type, nsresult rv,
                                     rv, msgText.get());
         } else if (XRE_IsParentProcess()) {
           // We don't have a listener.  Simply show the alert ourselves.
+          nsCOMPtr<nsIInterfaceRequestor> dialogParent = GetDialogParent();
           nsresult qiRv;
-          nsCOMPtr<nsIPrompt> prompter(
-              do_GetInterface(GetDialogParent(), &qiRv));
+          nsCOMPtr<nsIPrompt> prompter(do_GetInterface(dialogParent, &qiRv));
           nsAutoString title;
           bundle->FormatStringFromName("title", strings, title);
 
           MOZ_LOG(
               nsExternalHelperAppService::mLog, LogLevel::Debug,
-              ("mContentContext=0x%p, prompter=0x%p, qi rv=0x%08" PRIX32
+              ("mBrowsingContext=0x%p, prompter=0x%p, qi rv=0x%08" PRIX32
                ", title='%s', msg='%s'",
-               mContentContext.get(), prompter.get(),
+               mBrowsingContext.get(), prompter.get(),
                static_cast<uint32_t>(qiRv), NS_ConvertUTF16toUTF8(title).get(),
                NS_ConvertUTF16toUTF8(msgText).get()));
 
           // If we didn't have a prompter we will try and get a window
           // instead, get it's docshell and use it to alert the user.
           if (!prompter) {
-            nsCOMPtr<nsPIDOMWindowOuter> window(
-                do_GetInterface(GetDialogParent()));
+            nsCOMPtr<nsPIDOMWindowOuter> window(do_GetInterface(dialogParent));
             if (!window || !window->GetDocShell()) {
               return;
             }
@@ -1811,7 +1863,7 @@ void nsExternalAppHandler::SendStatusChange(ErrorType type, nsresult rv,
             prompter = do_GetInterface(window->GetDocShell(), &qiRv);
 
             MOZ_LOG(nsExternalHelperAppService::mLog, LogLevel::Debug,
-                    ("No prompter from mContentContext, using DocShell, "
+                    ("No prompter from mBrowsingContext, using DocShell, "
                      "window=0x%p, docShell=0x%p, "
                      "prompter=0x%p, qi rv=0x%08" PRIX32,
                      window.get(), window->GetDocShell(), prompter.get(),
@@ -2148,10 +2200,10 @@ void nsExternalAppHandler::RequestSaveDestination(
   // See Bug 249143
   RefPtr<nsExternalAppHandler> kungFuDeathGrip(this);
   nsCOMPtr<nsIHelperAppLauncherDialog> dlg(mDialog);
+  nsCOMPtr<nsIInterfaceRequestor> dialogParent = GetDialogParent();
 
-  rv =
-      dlg->PromptForSaveToFileAsync(this, GetDialogParent(), aDefaultFile.get(),
-                                    aFileExtension.get(), mForceSave);
+  rv = dlg->PromptForSaveToFileAsync(this, dialogParent, aDefaultFile.get(),
+                                     aFileExtension.get(), mForceSave);
   if (NS_FAILED(rv)) {
     Cancel(NS_BINDING_ABORTED);
   }

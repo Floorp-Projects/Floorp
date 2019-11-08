@@ -414,7 +414,7 @@ nsDefaultURIFixup::KeywordToURI(const nsACString& aKeyword,
     }
 
     RefPtr<nsIInputStream> postData;
-    Maybe<ipc::URIParams> uri;
+    Maybe<mozilla::ipc::URIParams> uri;
     nsAutoString providerName;
     if (!contentChild->SendKeywordToURI(keyword, aIsPrivateContext,
                                         &providerName, &postData, &uri)) {

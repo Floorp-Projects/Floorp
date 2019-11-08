@@ -979,6 +979,24 @@ parent:
 
     async PPSMContentDownloader(uint32_t aCertType);
 
+    // Creates a helper for forwarding data from an nsExternalAppHandler
+    // running in the content process, to one running in the parent
+    // process.
+    // Bug 1574372 aims to run nsExternalAppHandler entirely in the
+    // parent so that we can remove this.
+    //
+    // Serializes the uri, loadInfo, contentType, referrer, contentDisposition
+    // headers and contentLength of the channel so that we can make them
+    // available to the parent instance via a nsIChannel helper. Also
+    // passes whether the original channel was an instance of nsIFileChannel.
+    //
+    // aContext is the BrowsingContext that initiated the load, and created the
+    // channel.
+    //
+    // Pass true for aForceSave to always save this content to disk, regardless of
+    // nsIMIMEInfo and other such influences.
+    // Pass true for aShouldCloseWindow to specify that aContext was opened specifically
+    // for this load, and should be closed once we've handled it.
     async PExternalHelperApp(URIParams? uri,
                              LoadInfoArgs? loadInfoArgs,
                              nsCString aMimeContentType,
@@ -989,7 +1007,8 @@ parent:
                              int64_t aContentLength,
                              bool aWasFileChannel,
                              URIParams? aReferrer,
-                             nullable PBrowser aBrowser);
+                             BrowsingContext aContext,
+                             bool aShouldCloseWindow);
 
     async PHandlerService();
 
