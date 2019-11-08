@@ -49,13 +49,14 @@ class SearchEngineSelector {
   /**
    * @param {string} locale - Users locale.
    * @param {string} region - Users region.
+   * @param {string} channel - The update channel the application is running on.
    * @returns {object}
    *   An object with "engines" field, a sorted list of engines and
-   *   optionally "privateDefault" which is an object continaing the engine
-   *   details for the engine which should be the default in private mode.
+   *   optionally "privateDefault" which is an object containing the engine
+   *   details for the engine which should be the default in Private Browsing mode.
    */
-  fetchEngineConfiguration(locale, region = "default") {
-    log(`fetchEngineConfiguration ${region}:${locale}`);
+  fetchEngineConfiguration(locale, region, channel) {
+    log(`fetchEngineConfiguration ${region}:${locale}:${channel}`);
     let cohort = Services.prefs.getCharPref("browser.search.cohort", null);
     let engines = [];
     const lcLocale = locale.toLowerCase();
@@ -63,15 +64,22 @@ class SearchEngineSelector {
     for (let config of this.configuration) {
       const appliesTo = config.appliesTo || [];
       const applies = appliesTo.filter(section => {
+        if ("cohort" in section && cohort != section.cohort) {
+          return false;
+        }
+        if (
+          "application" in section &&
+          "channel" in section.application &&
+          !section.application.channel.includes(channel)
+        ) {
+          return false;
+        }
         let included =
           "included" in section &&
           this._isInSection(lcRegion, lcLocale, section.included);
         let excluded =
           "excluded" in section &&
           this._isInSection(lcRegion, lcLocale, section.excluded);
-        if ("cohort" in section && cohort != section.cohort) {
-          return false;
-        }
         return included && !excluded;
       });
 

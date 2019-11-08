@@ -16,6 +16,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   AddonTestUtils: "resource://testing-common/AddonTestUtils.jsm",
+  AppConstants: "resource://gre/modules/AppConstants.jsm",
   ObjectUtils: "resource://gre/modules/ObjectUtils.jsm",
   OS: "resource://gre/modules/osfile.jsm",
   SearchEngine: "resource://gre/modules/SearchEngine.jsm",
@@ -168,7 +169,10 @@ class SearchConfigTest {
       let engines = [];
       let configs = await engineSelector.fetchEngineConfiguration(
         locale,
-        region
+        region,
+        AppConstants.MOZ_APP_VERSION_DISPLAY.endsWith("esr")
+          ? "esr"
+          : AppConstants.MOZ_UPDATE_CHANNEL
       );
       for (let config of configs.engines) {
         let engine = await Services.search.makeEnginesFromConfig(config);
