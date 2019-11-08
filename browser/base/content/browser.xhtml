@@ -36,12 +36,12 @@
 #include browser-doctype.inc
 ]>
 
-<window id="main-window"
+<html id="main-window"
         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         xmlns:svg="http://www.w3.org/2000/svg"
         xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns="http://www.w3.org/1999/xhtml"
         title="&mainWindow.title;"
         title_normal="&mainWindow.title;"
 #ifdef XP_MACOSX
@@ -71,15 +71,13 @@
         retargetdocumentfocus="urlbar-input"
         persist="screenX screenY width height sizemode"
         data-l10n-sync="true">
-
-<linkset>
-  <html:link rel="localization" href="branding/brand.ftl"/>
-  <html:link rel="localization" href="browser/branding/sync-brand.ftl"/>
-  <html:link rel="localization" href="browser/browser.ftl"/>
-  <html:link rel="localization" href="browser/menubar.ftl"/>
-  <html:link rel="localization" href="browser/protectionsPanel.ftl"/>
-  <html:link rel="localization" href="browser/appmenu.ftl"/>
-</linkset>
+<head>
+  <link rel="localization" href="branding/brand.ftl"/>
+  <link rel="localization" href="browser/branding/sync-brand.ftl"/>
+  <link rel="localization" href="browser/browser.ftl"/>
+  <link rel="localization" href="browser/menubar.ftl"/>
+  <link rel="localization" href="browser/protectionsPanel.ftl"/>
+  <link rel="localization" href="browser/appmenu.ftl"/>
 
 # All JS files which are needed by browser.xhtml and other top level windows to
 # support MacOS specific features *must* go into the global-scripts.inc file so
@@ -121,12 +119,12 @@
   window.addEventListener("DOMContentLoaded",
     gBrowserInit.onDOMContentLoaded.bind(gBrowserInit), { once: true });
 </script>
-
+</head>
+<html:body xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 # All sets except for popupsets (commands, keys, and stringbundles)
 # *must* go into the browser-sets.inc file so that they can be shared with other
 # top level windows in macWindow.inc.xul.
 #include browser-sets.inc
-
   <popupset id="mainPopupSet">
     <menupopup id="tabContextMenu"
                onpopupshowing="if (event.target == this) TabContextMenu.updateContextMenu(this);"
@@ -686,7 +684,10 @@
   </popupset>
   <box id="appMenu-viewCache" hidden="true"/>
 
-  <toolbox id="navigator-toolbox">
+  <!-- Temporary wrapper until we move away from XUL flex to fix fullscreen
+       layout-->
+  <box>
+  <toolbox id="navigator-toolbox" flex="1">
 
     <vbox id="titlebar">
       <!-- Menu -->
@@ -1367,6 +1368,7 @@
       </toolbaritem>
     </toolbarpalette>
   </toolbox>
+  </box>
 
   <hbox id="fullscr-toggler" hidden="true"/>
 
@@ -1417,4 +1419,5 @@
   </vbox>
 
   <html:div id="a11y-announcement" role="alert"/>
-</window>
+</html:body>
+</html>

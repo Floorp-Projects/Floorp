@@ -4,7 +4,21 @@
 
 @namespace html url("http://www.w3.org/1999/xhtml");
 
+:root,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  overflow: -moz-hidden-unscrollable;
+}
+
 :root {
+  text-rendering: optimizeLegibility;
+  min-height: 95px;
+  min-width: 95px;
+
+  /* variables */
   --panelui-subview-transition-duration: 150ms;
   --lwt-additional-images: none;
   --lwt-background-alignment: right top;
@@ -13,6 +27,10 @@
   --toolbar-bgcolor: var(--toolbar-non-lwt-bgcolor);
   --toolbar-bgimage: var(--toolbar-non-lwt-bgimage);
   --toolbar-color: var(--toolbar-non-lwt-textcolor);
+}
+
+:root:-moz-locale-dir(rtl) {
+  direction: rtl;
 }
 
 :root:-moz-lwtheme {
@@ -32,6 +50,12 @@
 
 :root:-moz-lwtheme:-moz-window-inactive {
   background-color: var(--lwt-accent-color-inactive, var(--lwt-accent-color));
+}
+
+body {
+  display: -moz-box;
+  -moz-box-orient: vertical;
+  -moz-box-flex: 1;
 }
 
 /* Set additional backgrounds alignment relative to toolbox */
@@ -117,7 +141,6 @@ panelview[mainview] > .panel-header {
 
 .panel-viewcontainer.offscreen {
   display: block;
-  position: absolute;
 }
 
 .panel-viewstack {
@@ -258,7 +281,7 @@ toolbar[customizing] #whats-new-menu-button {
   display: none;
 }
 
-window:not([chromehidden~="toolbar"]) #nav-bar[nonemptyoverflow] > .overflow-button,
+:root:not([chromehidden~="toolbar"]) #nav-bar[nonemptyoverflow] > .overflow-button,
 #nav-bar[customizing] > .overflow-button {
   display: -moz-box;
 }
@@ -818,8 +841,7 @@ menupopup[emptyplacesresult="true"] > .hide-if-empty-places-result {
 }
 
 /* Hide extension toolbars that neglected to set the proper class */
-window[chromehidden~="location"][chromehidden~="toolbar"] toolbar:not(.chromeclass-menubar),
-window[chromehidden~="toolbar"] toolbar:not(#nav-bar):not(#TabsToolbar):not(#print-preview-toolbar):not(.chromeclass-menubar) {
+:root[chromehidden~="location"][chromehidden~="toolbar"] toolbar:not(.chromeclass-menubar) {
   display: none;
 }
 
