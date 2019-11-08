@@ -132,6 +132,16 @@ void MediaKeySystemAccessManager::CheckDoesWindowSupportProtectedMedia(
   // On other platforms windows should always support protected media.
 #ifdef XP_WIN
   RefPtr<BrowserChild> browser(BrowserChild::GetFrom(mWindow));
+  if (!browser) {
+    if (!XRE_IsParentProcess() || XRE_IsE10sParentProcess()) {
+      MOZ_CRASH("BrowserChild should only be unavailable with e10s off");
+    }
+
+    MKSAM_LOG_DEBUG("Allowing protected media on Windows with e10s off.");
+
+    OnDoesWindowSupportProtectedMedia(true, std::move(aRequest));
+    return;
+  }
 
   RefPtr<MediaKeySystemAccessManager> self(this);
 
@@ -156,6 +166,7 @@ void MediaKeySystemAccessManager::CheckDoesWindowSupportProtectedMedia(
           self->OnDoesWindowSupportProtectedMedia(false, std::move(request));
         }
       });
+
 #else
   // Non-Windows OS windows always support protected media.
   MKSAM_LOG_DEBUG(
