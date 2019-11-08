@@ -25,7 +25,8 @@ class nsDNSPrefetch final : public nsIDNSListener {
   NS_DECL_NSIDNSLISTENER
 
   nsDNSPrefetch(nsIURI* aURI, mozilla::OriginAttributes& aOriginAttributes,
-                nsIDNSListener* aListener, bool storeTiming);
+                nsIRequest::TRRMode aTRRMode, nsIDNSListener* aListener,
+                bool storeTiming);
   bool TimingsValid() const {
     return !mStartTimestamp.IsNull() && !mEndTimestamp.IsNull();
   }
@@ -46,11 +47,12 @@ class nsDNSPrefetch final : public nsIDNSListener {
   bool mIsHttps;
   mozilla::OriginAttributes mOriginAttributes;
   bool mStoreTiming;
+  nsIRequest::TRRMode mTRRMode;
   mozilla::TimeStamp mStartTimestamp;
   mozilla::TimeStamp mEndTimestamp;
   nsWeakPtr mListener;
 
-  nsresult Prefetch(uint16_t flags);
+  nsresult Prefetch(uint32_t flags);
 };
 
 #endif
