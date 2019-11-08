@@ -516,6 +516,15 @@ class FilterTypeSetPolicy final : public TypePolicy {
                                  MInstruction* ins) const override;
 };
 
+// Policy for MTypedArrayIndexToInt32. Operand is either Double or Int32.
+class TypedArrayIndexPolicy final : public TypePolicy {
+ public:
+  constexpr TypedArrayIndexPolicy() {}
+  SPECIALIZATION_DATA_;
+  MOZ_MUST_USE bool adjustInputs(TempAllocator& alloc,
+                                 MInstruction* def) const override;
+};
+
 #undef SPECIALIZATION_DATA_
 #undef INHERIT_DATA_
 #undef EMPTY_DATA_

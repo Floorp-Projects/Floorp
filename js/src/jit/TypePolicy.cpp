@@ -1218,6 +1218,21 @@ bool FilterTypeSetPolicy::adjustInputs(TempAllocator& alloc,
   return true;
 }
 
+bool TypedArrayIndexPolicy::adjustInputs(TempAllocator& alloc,
+                                         MInstruction* ins) const {
+  MOZ_ASSERT(ins->isTypedArrayIndexToInt32());
+  MIRType specialization = ins->typePolicySpecialization();
+
+  // MTypedArrayIndexToInt32 is specialized for int32 input types.
+  if (specialization == MIRType::Int32) {
+    return UnboxedInt32Policy<0>::staticAdjustInputs(alloc, ins);
+  }
+
+  // Otherwise convert input to double.
+  MOZ_ASSERT(specialization == MIRType::Double);
+  return DoublePolicy<0>::staticAdjustInputs(alloc, ins);
+}
+
 // Lists of all TypePolicy specializations which are used by MIR Instructions.
 #define TYPE_POLICY_LIST(_)         \
   _(AllDoublePolicy)                \
@@ -1241,7 +1256,8 @@ bool FilterTypeSetPolicy::adjustInputs(TempAllocator& alloc,
   _(ToDoublePolicy)                 \
   _(ToInt32Policy)                  \
   _(ToStringPolicy)                 \
-  _(TypeBarrierPolicy)
+  _(TypeBarrierPolicy)              \
+  _(TypedArrayIndexPolicy)
 
 #define TEMPLATE_TYPE_POLICY_LIST(_)                                          \
   _(BoxExceptPolicy<0, MIRType::Object>)                                      \
