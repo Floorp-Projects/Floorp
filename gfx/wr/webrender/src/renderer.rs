@@ -2306,7 +2306,10 @@ impl Renderer {
             }
         })?;
 
-        let debug_support = if device.supports_extension("GL_KHR_debug") {
+        let debug_method = if !options.enable_gpu_markers {
+            // The GPU markers are disabled.
+            GpuDebugMethod::None
+        } else if device.supports_extension("GL_KHR_debug") {
             GpuDebugMethod::KHR
         } else if device.supports_extension("GL_EXT_debug_marker") {
             GpuDebugMethod::MarkerEXT
@@ -2314,9 +2317,9 @@ impl Renderer {
             GpuDebugMethod::None
         };
 
-        info!("using {:?}", debug_support);
+        info!("using {:?}", debug_method);
 
-        let gpu_profile = GpuProfiler::new(Rc::clone(device.rc_gl()), debug_support);
+        let gpu_profile = GpuProfiler::new(Rc::clone(device.rc_gl()), debug_method);
         #[cfg(feature = "capture")]
         let read_fbo = device.create_fbo();
 
@@ -6164,6 +6167,7 @@ pub struct RendererOptions {
     pub surface_origin_is_top_left: bool,
     /// The configuration options defining how WR composites the final scene.
     pub compositor_config: CompositorConfig,
+    pub enable_gpu_markers: bool,
 }
 
 impl Default for RendererOptions {
@@ -6218,6 +6222,7 @@ impl Default for RendererOptions {
             dump_shader_source: None,
             surface_origin_is_top_left: false,
             compositor_config: CompositorConfig::default(),
+            enable_gpu_markers: true,
         }
     }
 }
