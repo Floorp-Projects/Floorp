@@ -21,6 +21,8 @@
 #include "js/TraceLoggerAPI.h"
 #include "threading/LockGuard.h"
 #include "util/Text.h"
+#include "vm/Activation.h"  // js::ActivationIterator
+#include "vm/FrameIter.h"  // js::JitFrameIter
 #include "vm/JSScript.h"
 #include "vm/Runtime.h"
 #include "vm/Time.h"

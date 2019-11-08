@@ -14,6 +14,7 @@
 #  include "jit/PerfSpewer.h"
 #endif
 #include "jit/VMFunctions.h"
+#include "vm/JitActivation.h"  // js::jit::JitActivation
 #include "vm/Realm.h"
 
 #include "jit/MacroAssembler-inl.h"

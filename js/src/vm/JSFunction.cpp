@@ -58,6 +58,7 @@
 #include "wasm/AsmJS.h"
 
 #include "debugger/DebugAPI-inl.h"
+#include "vm/FrameIter-inl.h"  // js::FrameIter::unaliasedForEachActual
 #include "vm/Interpreter-inl.h"
 #include "vm/JSScript-inl.h"
 #include "vm/Stack-inl.h"

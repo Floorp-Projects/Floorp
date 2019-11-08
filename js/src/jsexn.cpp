@@ -30,6 +30,7 @@
 #include "util/Memory.h"
 #include "util/StringBuffer.h"
 #include "vm/ErrorObject.h"
+#include "vm/FrameIter.h"  // js::NonBuiltinFrameIter
 #include "vm/GlobalObject.h"
 #include "vm/JSContext.h"
 #include "vm/JSFunction.h"

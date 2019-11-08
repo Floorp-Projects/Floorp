@@ -16,10 +16,12 @@
 #include "jit/RematerializedFrame.h"
 #include "js/Debug.h"
 #include "vm/EnvironmentObject.h"
+#include "vm/FrameIter.h"  // js::FrameIter
 #include "vm/JSContext.h"
 #include "vm/JSScript.h"
 
 #include "jit/BaselineFrame-inl.h"
+#include "jit/RematerializedFrame-inl.h"  // js::jit::RematerializedFrame::unsetIsDebuggee
 #include "vm/JSObject-inl.h"
 #include "vm/JSScript-inl.h"
 #include "vm/NativeObject-inl.h"
@@ -334,40 +336,6 @@ MOZ_ALWAYS_INLINE void InterpreterStack::popInlineFrame(InterpreterRegs& regs) {
   regs.sp[-1] = fp->returnValue();
   releaseFrame(fp);
   MOZ_ASSERT(regs.fp());
-}
-
-template <class Op>
-inline void FrameIter::unaliasedForEachActual(JSContext* cx, Op op) {
-  switch (data_.state_) {
-    case DONE:
-      break;
-    case INTERP:
-      interpFrame()->unaliasedForEachActual(op);
-      return;
-    case JIT:
-      MOZ_ASSERT(isJSJit());
-      if (jsJitFrame().isIonJS()) {
-        jit::MaybeReadFallback recover(cx, activation()->asJit(),
-                                       &jsJitFrame());
-        ionInlineFrames_.unaliasedForEachActual(cx, op, jit::ReadFrame_Actuals,
-                                                recover);
-      } else if (jsJitFrame().isBailoutJS()) {
-        // :TODO: (Bug 1070962) If we are introspecting the frame which is
-        // being bailed, then we might be in the middle of recovering
-        // instructions. Stacking computeInstructionResults implies that we
-        // might be recovering result twice. In the mean time, to avoid
-        // that, we just return Undefined values for instruction results
-        // which are not yet recovered.
-        jit::MaybeReadFallback fallback;
-        ionInlineFrames_.unaliasedForEachActual(cx, op, jit::ReadFrame_Actuals,
-                                                fallback);
-      } else {
-        MOZ_ASSERT(jsJitFrame().isBaselineJS());
-        jsJitFrame().unaliasedForEachActual(op, jit::ReadFrame_Actuals);
-      }
-      return;
-  }
-  MOZ_CRASH("Unexpected state");
 }
 
 inline HandleValue AbstractFramePtr::returnValue() const {
@@ -828,85 +796,6 @@ inline bool AbstractFramePtr::debuggerNeedsCheckPrimitiveReturn() const {
   return script()->isDerivedClassConstructor();
 }
 
-ActivationEntryMonitor::ActivationEntryMonitor(JSContext* cx)
-    : cx_(cx), entryMonitor_(cx->entryMonitor) {
-  cx->entryMonitor = nullptr;
-}
-
-ActivationEntryMonitor::ActivationEntryMonitor(JSContext* cx,
-                                               InterpreterFrame* entryFrame)
-    : ActivationEntryMonitor(cx) {
-  if (MOZ_UNLIKELY(entryMonitor_)) {
-    init(cx, entryFrame);
-  }
-}
-
-ActivationEntryMonitor::ActivationEntryMonitor(JSContext* cx,
-                                               jit::CalleeToken entryToken)
-    : ActivationEntryMonitor(cx) {
-  if (MOZ_UNLIKELY(entryMonitor_)) {
-    init(cx, entryToken);
-  }
-}
-
-ActivationEntryMonitor::~ActivationEntryMonitor() {
-  if (entryMonitor_) {
-    entryMonitor_->Exit(cx_);
-  }
-
-  cx_->entryMonitor = entryMonitor_;
-}
-
-Activation::Activation(JSContext* cx, Kind kind)
-    : cx_(cx),
-      compartment_(cx->compartment()),
-      prev_(cx->activation_),
-      prevProfiling_(prev_ ? prev_->mostRecentProfiling() : nullptr),
-      hideScriptedCallerCount_(0),
-      frameCache_(cx),
-      asyncStack_(cx, cx->asyncStackForNewActivations()),
-      asyncCause_(cx->asyncCauseForNewActivations),
-      asyncCallIsExplicit_(cx->asyncCallIsExplicit),
-      kind_(kind) {
-  cx->asyncStackForNewActivations() = nullptr;
-  cx->asyncCauseForNewActivations = nullptr;
-  cx->asyncCallIsExplicit = false;
-  cx->activation_ = this;
-}
-
-Activation::~Activation() {
-  MOZ_ASSERT_IF(isProfiling(), this != cx_->profilingActivation_);
-  MOZ_ASSERT(cx_->activation_ == this);
-  MOZ_ASSERT(hideScriptedCallerCount_ == 0);
-  cx_->activation_ = prev_;
-  cx_->asyncCauseForNewActivations = asyncCause_;
-  cx_->asyncStackForNewActivations() = asyncStack_;
-  cx_->asyncCallIsExplicit = asyncCallIsExplicit_;
-}
-
-bool Activation::isProfiling() const {
-  if (isInterpreter()) {
-    return asInterpreter()->isProfiling();
-  }
-
-  MOZ_ASSERT(isJit());
-  return asJit()->isProfiling();
-}
-
-Activation* Activation::mostRecentProfiling() {
-  if (isProfiling()) {
-    return this;
-  }
-  return prevProfiling_;
-}
-
-inline LiveSavedFrameCache* Activation::getLiveSavedFrameCache(JSContext* cx) {
-  if (!frameCache_.get().initialized() && !frameCache_.get().init(cx)) {
-    return nullptr;
-  }
-  return frameCache_.address();
-}
-
 InterpreterActivation::InterpreterActivation(RunState& state, JSContext* cx,
                                              InterpreterFrame* entryFrame)
     : Activation(cx, Interpreter),
@@ -963,89 +852,6 @@ inline bool InterpreterActivation::resumeGeneratorFrame(HandleFunction callee,
 
   MOZ_ASSERT(regs_.fp()->script()->compartment() == compartment_);
   return true;
-}
-
-/* static */ inline mozilla::Maybe<LiveSavedFrameCache::FramePtr>
-LiveSavedFrameCache::FramePtr::create(const FrameIter& iter) {
-  if (iter.done()) {
-    return mozilla::Nothing();
-  }
-
-  if (iter.isPhysicalJitFrame()) {
-    return mozilla::Some(FramePtr(iter.physicalJitFrame()));
-  }
-
-  if (!iter.hasUsableAbstractFramePtr()) {
-    return mozilla::Nothing();
-  }
-
-  auto afp = iter.abstractFramePtr();
-
-  if (afp.isInterpreterFrame()) {
-    return mozilla::Some(FramePtr(afp.asInterpreterFrame()));
-  }
-  if (afp.isWasmDebugFrame()) {
-    return mozilla::Some(FramePtr(afp.asWasmDebugFrame()));
-  }
-  if (afp.isRematerializedFrame()) {
-    return mozilla::Some(FramePtr(afp.asRematerializedFrame()));
-  }
-
-  MOZ_CRASH("unexpected frame type");
-}
-
-/* static */ inline LiveSavedFrameCache::FramePtr
-LiveSavedFrameCache::FramePtr::create(AbstractFramePtr afp) {
-  MOZ_ASSERT(afp);
-
-  if (afp.isBaselineFrame()) {
-    js::jit::CommonFrameLayout* common = afp.asBaselineFrame()->framePrefix();
-    return FramePtr(common);
-  }
-  if (afp.isInterpreterFrame()) {
-    return FramePtr(afp.asInterpreterFrame());
-  }
-  if (afp.isWasmDebugFrame()) {
-    return FramePtr(afp.asWasmDebugFrame());
-  }
-  if (afp.isRematerializedFrame()) {
-    return FramePtr(afp.asRematerializedFrame());
-  }
-
-  MOZ_CRASH("unexpected frame type");
-}
-
-struct LiveSavedFrameCache::FramePtr::HasCachedMatcher {
-  template <typename Frame>
-  bool operator()(Frame* f) const {
-    return f->hasCachedSavedFrame();
-  }
-};
-
-inline bool LiveSavedFrameCache::FramePtr::hasCachedSavedFrame() const {
-  return ptr.match(HasCachedMatcher());
-}
-
-struct LiveSavedFrameCache::FramePtr::SetHasCachedMatcher {
-  template <typename Frame>
-  void operator()(Frame* f) {
-    f->setHasCachedSavedFrame();
-  }
-};
-
-inline void LiveSavedFrameCache::FramePtr::setHasCachedSavedFrame() {
-  ptr.match(SetHasCachedMatcher());
-}
-
-struct LiveSavedFrameCache::FramePtr::ClearHasCachedMatcher {
-  template <typename Frame>
-  void operator()(Frame* f) {
-    f->clearHasCachedSavedFrame();
-  }
-};
-
-inline void LiveSavedFrameCache::FramePtr::clearHasCachedSavedFrame() {
-  ptr.match(ClearHasCachedMatcher());
 }
 
 } /* namespace js */
