@@ -2,6 +2,51 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/// # Brush vertex shaders memory layout
+///
+/// The overall memory layout is the same for all brush shaders.
+///
+/// The vertex shader receives a minimal amount of data from vertex attributes (packed into a single
+/// ivec4 per instance) and the rest is fetched from various uniform samplers using offsets decoded
+/// from the vertex attributes.
+///
+/// The diagram below shows the the various pieces of data fectched in the vertex shader:
+///
+///```ascii
+///                                                                         (sPrimitiveHeadersI)
+///                          (VBO)                                     +-----------------------+
+/// +----------------------------+      +----------------------------> | Int header            |
+/// | Instance vertex attributes |      |        (sPrimitiveHeadersF)  |                       |
+/// |                            |      |     +---------------------+  |   z                   |
+/// | x: prim_header_address    +-------+---> | Float header        |  |   specific_address  +-----+
+/// | y: picture_task_address   +---------+   |                     |  |   transform_address +---+ |
+/// |    clip_address           +-----+   |   |    local_rect       |  |   user_data           | | |
+/// | z: flags                   |    |   |   |    local_clip_rect  |  +-----------------------+ | |
+/// |    segment_index           |    |   |   +---------------------+                            | |
+/// | w: resource_address       +--+  |   |                                                      | |
+/// +----------------------------+ |  |   |                                 (sGpuCache)          | |
+///                                |  |   |         (sGpuCache)          +------------+          | |
+///                                |  |   |   +---------------+          | Transform  | <--------+ |
+///                (sGpuCache)     |  |   +-> | Picture task  |          +------------+            |
+///            +-------------+     |  |       |               |                                    |
+///            |  Resource   | <---+  |       |         ...   |                                    |
+///            |             |        |       +---------------+   +--------------------------------+
+///            |             |        |                           |
+///            +-------------+        |             (sGpuCache)   v                        (sGpuCache)
+///                                   |       +---------------+  +--------------+---------------+-+-+
+///                                   +-----> | Clip area     |  | Brush data   |  Segment data | | |
+///                                           |               |  |              |               | | |
+///                                           |         ...   |  |         ...  |          ...  | | | ...
+///                                           +---------------+  +--------------+---------------+-+-+
+///```
+///
+/// - Segment data address is obtained by combining the address stored in the int header and the
+///   segment index decoded from the vertex attributes.
+/// - Resource data is optional, some brush types (such as images) store some extra data there while
+///   other brush types don't use it.
+///
+
+
 #ifdef WR_VERTEX_SHADER
 
 void brush_vs(
