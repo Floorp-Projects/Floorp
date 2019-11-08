@@ -135,6 +135,11 @@ this.urlbar = class extends ExtensionAPI {
   getAPI(context) {
     return {
       urlbar: {
+        search(searchString) {
+          let window = windowTracker.getTopNormalWindow(context);
+          window.gURLBar.search(searchString);
+        },
+
         onBehaviorRequested: new EventManager({
           context,
           name: "urlbar.onBehaviorRequested",
