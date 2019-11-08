@@ -1,5 +1,3 @@
-// |reftest| skip-if(!Promise.allSettled)
-
 // Smoke test for `Promise.allSettled`, test262 should cover the function in
 // more detail.
 
