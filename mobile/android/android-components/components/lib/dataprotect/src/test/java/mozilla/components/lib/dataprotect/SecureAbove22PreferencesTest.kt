@@ -4,11 +4,11 @@
 
 package mozilla.components.lib.dataprotect
 
-import android.content.Context.MODE_PRIVATE
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -20,29 +20,45 @@ class SecureAbove22PreferencesTest {
     @Config(sdk = [21])
     @Test
     fun `CRUD tests API level 21 unencrypted`() {
-        val storage = SecureAbove22Preferences(testContext)
+        val storage = SecureAbove22Preferences(testContext, "hello")
+        val storage2 = SecureAbove22Preferences(testContext, "world")
 
         // no keys
         assertNull(storage.getString("hello"))
+        assertTrue(storage2.all().isEmpty())
 
         // single key
         storage.putString("hello", "world")
         assertEquals("world", storage.getString("hello"))
+        assertTrue(storage2.all().isEmpty())
 
         // single key, updated
         storage.putString("hello", "you")
         assertEquals("you", storage.getString("hello"))
+        assertTrue(storage2.all().isEmpty())
 
         // multiple keys
         storage.putString("test", "string")
         assertEquals("string", storage.getString("test"))
         assertEquals("you", storage.getString("hello"))
+        val all = storage.all()
+        assertEquals(2, all.size)
+        assertEquals("string", all["test"])
+        assertEquals("you", all["hello"])
+        assertTrue(storage2.all().isEmpty())
+
+        // clearing one storage doesn't affect another with a different name
+        storage2.putString("another", "test")
+        assertEquals(1, storage2.all().size)
+        storage2.clear()
+        assertEquals(2, storage.all().size)
 
         // key removal
         storage.remove("hello")
         assertNull(storage.getString("hello"))
         storage.remove("test")
         assertNull(storage.getString("test"))
+        assertTrue(storage2.all().isEmpty())
 
         // clearing
         storage.putString("one", "two")
@@ -51,39 +67,58 @@ class SecureAbove22PreferencesTest {
         assertEquals("four", storage.getString("three"))
         storage.putString("five", "six")
         assertEquals("six", storage.getString("five"))
+        assertTrue(storage2.all().isEmpty())
 
         storage.clear()
         assertNull(storage.getString("one"))
         assertNull(storage.getString("three"))
         assertNull(storage.getString("five"))
+        assertTrue(storage.all().isEmpty())
+        assertTrue(storage2.all().isEmpty())
     }
 
     @Config(sdk = [22])
     @Test
     fun `CRUD tests API level 22 unencrypted`() {
-        val storage = SecureAbove22Preferences(testContext)
+        val storage = SecureAbove22Preferences(testContext, "hello")
+        val storage2 = SecureAbove22Preferences(testContext, "world")
 
         // no keys
         assertNull(storage.getString("hello"))
+        assertTrue(storage2.all().isEmpty())
 
         // single key
         storage.putString("hello", "world")
         assertEquals("world", storage.getString("hello"))
+        assertTrue(storage2.all().isEmpty())
 
         // single key, updated
         storage.putString("hello", "you")
         assertEquals("you", storage.getString("hello"))
+        assertTrue(storage2.all().isEmpty())
 
         // multiple keys
         storage.putString("test", "string")
         assertEquals("string", storage.getString("test"))
         assertEquals("you", storage.getString("hello"))
+        val all = storage.all()
+        assertEquals(2, all.size)
+        assertEquals("string", all["test"])
+        assertEquals("you", all["hello"])
+        assertTrue(storage2.all().isEmpty())
+
+        // clearing one storage doesn't affect another with a different name
+        storage2.putString("another", "test")
+        assertEquals(1, storage2.all().size)
+        storage2.clear()
+        assertEquals(2, storage.all().size)
 
         // key removal
         storage.remove("hello")
         assertNull(storage.getString("hello"))
         storage.remove("test")
         assertNull(storage.getString("test"))
+        assertTrue(storage2.all().isEmpty())
 
         // clearing
         storage.putString("one", "two")
@@ -92,44 +127,33 @@ class SecureAbove22PreferencesTest {
         assertEquals("four", storage.getString("three"))
         storage.putString("five", "six")
         assertEquals("six", storage.getString("five"))
+        assertTrue(storage2.all().isEmpty())
 
         storage.clear()
         assertNull(storage.getString("one"))
         assertNull(storage.getString("three"))
         assertNull(storage.getString("five"))
+        assertTrue(storage.all().isEmpty())
+        assertTrue(storage2.all().isEmpty())
     }
 
-    @Config(sdk = [22])
+    @Config(sdk = [21])
     @Test
-    fun `pref migration`() {
-        // NB: this test is targeting 22, even though we're testing 22->23 migration scenario.
-        // Internally, `migratePrefs` simply writes values from the provided prefs into current prefs. If our encryption
-        // roundtrip tests worked, we could have tests that for sdk=23, but they do not (see https://github.com/mozilla-mobile/android-components/issues/4956),
-        // and so we're just testing this backed by regular SharedPreferences.
-        // This covers the core logic of migration, so it's an acceptable "hack".
+    fun `storage instances of the same name are interchangeable`() {
+        val storage = SecureAbove22Preferences(testContext, "hello")
+        val storage2 = SecureAbove22Preferences(testContext, "hello")
 
-        val plainPrefs = testContext.getSharedPreferences("test", MODE_PRIVATE)
-        val storage = SecureAbove22Preferences(testContext)
+        storage.putString("key1", "value1")
+        assertEquals("value1", storage2.getString("key1"))
 
-        // can migrate empty prefs
-        storage.migratePrefs(plainPrefs)
+        storage2.putString("something", "other")
+        assertEquals("other", storage.getString("something"))
 
-        // can migrate mixed prefs
-        plainPrefs
-            .edit()
-            .putString("hello", "world")
-            .putBoolean("some_flag", false)
-            .putString("another", "string")
-            .putInt("counter", 42)
-            .commit()
+        assertEquals(storage.all().size, storage2.all().size)
+        assertEquals(storage.all(), storage2.all())
 
-        storage.migratePrefs(plainPrefs)
-
-        assertEquals("world", storage.getString("hello"))
-        assertEquals("string", storage.getString("another"))
-
-        // original prefs empty after migrating
-        assertEquals(0, plainPrefs.all.size)
+        storage.clear()
+        assertTrue(storage2.all().isEmpty())
     }
 
     @Ignore("https://github.com/mozilla-mobile/android-components/issues/4956")
@@ -139,7 +163,7 @@ class SecureAbove22PreferencesTest {
         // TODO find out what this is; lockwise tests set it.
         Security.setProperty("crypto.policy", "unlimited")
 
-        val storage = SecureAbove22Preferences(testContext)
+        val storage = SecureAbove22Preferences(testContext, "test")
 
         // no keys
         assertNull(storage.getString("hello"))
