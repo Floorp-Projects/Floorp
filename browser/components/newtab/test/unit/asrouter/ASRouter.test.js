@@ -1388,7 +1388,6 @@ describe("ASRouter", () => {
         );
         handleMessageRequestStub
           .withArgs({
-            provider: "onboarding",
             template: "extended_triplets",
           })
           .resolves({ id: "foo" });
@@ -1409,7 +1408,6 @@ describe("ASRouter", () => {
         );
         handleMessageRequestStub
           .withArgs({
-            provider: "onboarding",
             template: "extended_triplets",
           })
           .resolves({ id: "foo" });
@@ -1421,7 +1419,6 @@ describe("ASRouter", () => {
 
         assert.calledTwice(handleMessageRequestStub);
         assert.calledWithExactly(handleMessageRequestStub, {
-          provider: "onboarding",
           template: "extended_triplets",
         });
         assert.calledWithExactly(handleMessageRequestStub, {
@@ -1435,7 +1432,6 @@ describe("ASRouter", () => {
         );
         handleMessageRequestStub
           .withArgs({
-            provider: "onboarding",
             template: "extended_triplets",
           })
           .resolves(null);
@@ -1449,7 +1445,6 @@ describe("ASRouter", () => {
         assert.notCalled(spy);
         assert.calledTwice(handleMessageRequestStub);
         assert.calledWithExactly(handleMessageRequestStub, {
-          provider: "onboarding",
           template: "extended_triplets",
         });
         assert.calledWithExactly(handleMessageRequestStub, {
