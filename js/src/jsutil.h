@@ -23,6 +23,7 @@
 #include "js/Utility.h"
 #include "js/Value.h"
 #include "util/BitArray.h"
+#include "util/Memory.h"
 #include "util/Poison.h"
 
 /* Crash diagnostics by default in debug and on nightly channel. */
@@ -40,16 +41,6 @@
 #else
 #  define JS_DIAGNOSTICS_ASSERT(expr) ((void)0)
 #endif
-
-static MOZ_ALWAYS_INLINE void* js_memcpy(void* dst_, const void* src_,
-                                         size_t len) {
-  char* dst = (char*)dst_;
-  const char* src = (const char*)src_;
-  MOZ_ASSERT_IF(dst >= src, (size_t)(dst - src) >= len);
-  MOZ_ASSERT_IF(src >= dst, (size_t)(src - dst) >= len);
-
-  return memcpy(dst, src, len);
-}
 
 namespace js {
 
@@ -69,37 +60,6 @@ static constexpr inline T Min(T t1, T t2) {
 template <class T>
 static constexpr inline T Max(T t1, T t2) {
   return t1 > t2 ? t1 : t2;
-}
-
-template <typename T, typename U>
-static constexpr U ComputeByteAlignment(T bytes, U alignment) {
-  static_assert(mozilla::IsUnsigned<U>::value,
-                "alignment amount must be unsigned");
-
-  return (alignment - (bytes % alignment)) % alignment;
-}
-
-template <typename T, typename U>
-static constexpr T AlignBytes(T bytes, U alignment) {
-  static_assert(mozilla::IsUnsigned<U>::value,
-                "alignment amount must be unsigned");
-
-  return bytes + ComputeByteAlignment(bytes, alignment);
-}
-
-/*****************************************************************************/
-
-// Placement-new elements of an array. This should optimize away for types with
-// trivial default initiation.
-template <typename T>
-static void DefaultInitializeElements(void* arrayPtr, size_t length) {
-  uintptr_t elem = reinterpret_cast<uintptr_t>(arrayPtr);
-  MOZ_ASSERT(elem % alignof(T) == 0);
-
-  for (size_t i = 0; i < length; ++i) {
-    new (reinterpret_cast<void*>(elem)) T;
-    elem += sizeof(T);
-  }
 }
 
 } /* namespace js */
