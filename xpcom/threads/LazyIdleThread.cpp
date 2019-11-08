@@ -396,6 +396,16 @@ LazyIdleThread::DelayedDispatch(already_AddRefed<nsIRunnable>, uint32_t) {
 }
 
 NS_IMETHODIMP
+LazyIdleThread::GetRunningEventDelay(TimeDuration* aDelay, TimeStamp* aStart) {
+  if (mThread) {
+    return mThread->GetRunningEventDelay(aDelay, aStart);
+  }
+  *aDelay = TimeDuration();
+  *aStart = TimeStamp();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 LazyIdleThread::IsOnCurrentThread(bool* aIsOnCurrentThread) {
   if (mThread) {
     return mThread->IsOnCurrentThread(aIsOnCurrentThread);

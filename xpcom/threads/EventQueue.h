@@ -23,10 +23,11 @@ class EventQueue final : public AbstractEventQueue {
   explicit EventQueue(EventQueuePriority aPriority);
 
   void PutEvent(already_AddRefed<nsIRunnable>&& aEvent,
-                EventQueuePriority aPriority,
-                const MutexAutoLock& aProofOfLock) final;
+                EventQueuePriority aPriority, const MutexAutoLock& aProofOfLock,
+                mozilla::TimeDuration* aDelay = nullptr) final;
   already_AddRefed<nsIRunnable> GetEvent(
-      EventQueuePriority* aPriority, const MutexAutoLock& aProofOfLock) final;
+      EventQueuePriority* aPriority, const MutexAutoLock& aProofOfLock,
+      mozilla::TimeDuration* aLastEventDelay = nullptr) final;
   void DidRunEvent(const MutexAutoLock& aProofOfLock) {}
 
   bool IsEmpty(const MutexAutoLock& aProofOfLock) final;
@@ -54,6 +55,11 @@ class EventQueue final : public AbstractEventQueue {
 
  private:
   mozilla::Queue<nsCOMPtr<nsIRunnable>> mQueue;
+#ifdef MOZ_GECKO_PROFILER
+  // This queue is only populated when the profiler is turned on.
+  mozilla::Queue<mozilla::TimeStamp> mDispatchTimes;
+  TimeDuration mLastEventDelay;
+#endif
 };
 
 }  // namespace mozilla

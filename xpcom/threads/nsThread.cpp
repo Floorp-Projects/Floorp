@@ -732,6 +732,13 @@ nsThread::DelayedDispatch(already_AddRefed<nsIRunnable> aEvent,
 }
 
 NS_IMETHODIMP
+nsThread::GetRunningEventDelay(TimeDuration* aDelay, TimeStamp* aStart) {
+  *aDelay = mLastEventDelay;
+  *aStart = mLastEventStart;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsThread::IsOnCurrentThread(bool* aResult) {
   if (mEventTarget) {
     return mEventTarget->IsOnCurrentThread(aResult);
@@ -1131,7 +1138,8 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult) {
     // mNestedEventLoopDepth has been incremented, since that destructor can
     // also do work.
     EventQueuePriority priority;
-    nsCOMPtr<nsIRunnable> event = mEvents->GetEvent(reallyWait, &priority);
+    nsCOMPtr<nsIRunnable> event =
+        mEvents->GetEvent(reallyWait, &priority, &mLastEventDelay);
 
     *aResult = (event.get() != nullptr);
 
@@ -1166,6 +1174,8 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult) {
       // to run.
       DelayForChaosMode(ChaosFeature::TaskRunning, 1000);
 
+      mozilla::TimeStamp now = mozilla::TimeStamp::Now();
+
       if (mIsMainThread) {
         BackgroundHangMonitor().NotifyActivity();
       }
@@ -1174,7 +1184,7 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult) {
           mCurrentPerformanceCounter) {
         // This is a recursive call, we're saving the time
         // spent in the parent event if the runnable is linked to a DocGroup.
-        mozilla::TimeDuration duration = TimeStamp::Now() - mCurrentEventStart;
+        mozilla::TimeDuration duration = now - mCurrentEventStart;
         mCurrentPerformanceCounter->IncrementExecutionDuration(
             duration.ToMicroseconds());
       }
@@ -1214,10 +1224,10 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult) {
       bool recursiveEvent = mNestedEventLoopDepth > mCurrentEventLoopDepth;
       mCurrentEventLoopDepth = mNestedEventLoopDepth;
       if (mIsMainThread && !recursiveEvent) {
-        mCurrentEventStart = mozilla::TimeStamp::Now();
+        mCurrentEventStart = now;
       }
       RefPtr<mozilla::PerformanceCounter> currentPerformanceCounter;
-      mCurrentEventStart = mozilla::TimeStamp::Now();
+      mLastEventStart = now;
       mCurrentEvent = event;
       mCurrentPerformanceCounter = GetPerformanceCounter(event);
       currentPerformanceCounter = mCurrentPerformanceCounter;
@@ -1265,9 +1275,14 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult) {
         mCurrentEventLoopDepth = MaxValue<uint32_t>::value;
         mCurrentPerformanceCounter = nullptr;
       }
-    } else if (aMayWait) {
-      MOZ_ASSERT(ShuttingDown(), "This should only happen when shutting down");
-      rv = NS_ERROR_UNEXPECTED;
+    } else {
+      mLastEventDelay = TimeDuration();
+      mLastEventStart = TimeStamp();
+      if (aMayWait) {
+        MOZ_ASSERT(ShuttingDown(),
+                   "This should only happen when shutting down");
+        rv = NS_ERROR_UNEXPECTED;
+      }
     }
   }
 
