@@ -39,7 +39,10 @@ struct StructuredCloneFile {
   FileType mType;
 
   // In IndexedDatabaseInlines.h
-  inline StructuredCloneFile();
+  inline explicit StructuredCloneFile(FileType aType, RefPtr<Blob> aBlob = {});
+
+  // In IndexedDatabaseInlines.h
+  inline explicit StructuredCloneFile(RefPtr<IDBMutableFile> aMutableFile);
 
   // In IndexedDatabaseInlines.h
   inline ~StructuredCloneFile();
@@ -61,17 +64,39 @@ struct StructuredCloneReadInfo {
   inline StructuredCloneReadInfo();
 
   // In IndexedDatabaseInlines.h
+  inline StructuredCloneReadInfo(JSStructuredCloneData&& aData,
+                                 nsTArray<StructuredCloneFile> aFiles,
+                                 IDBDatabase* aDatabase,
+                                 bool aHasPreprocessInfo);
+
+#ifdef NS_BUILD_REFCNT_LOGGING
+  // In IndexedDatabaseInlines.h
   inline ~StructuredCloneReadInfo();
 
   // In IndexedDatabaseInlines.h
-  inline StructuredCloneReadInfo(StructuredCloneReadInfo&& aOther);
+  //
+  // This custom implementation of the move ctor is only necessary because of
+  // MOZ_COUNT_CTOR. It is less efficient as the compiler-generated move ctor,
+  // since it unnecessarily clears elements on the source.
+  inline StructuredCloneReadInfo(StructuredCloneReadInfo&& aOther) noexcept;
 
   // In IndexedDatabaseInlines.h
-  inline StructuredCloneReadInfo& operator=(StructuredCloneReadInfo&& aOther);
+  //
+  // This custom implementation of the move assignment operator is only there
+  // for symmetry with the move ctor. It is less efficient as the
+  // compiler-generated move assignment operator, since it unnecessarily clears
+  // elements on the source.
+  inline StructuredCloneReadInfo& operator=(
+      StructuredCloneReadInfo&& aOther) noexcept;
+#else
+  StructuredCloneReadInfo(StructuredCloneReadInfo&& aOther) = default;
+  StructuredCloneReadInfo& operator=(StructuredCloneReadInfo&& aOther) =
+      default;
+#endif
 
-  // In IndexedDatabaseInlines.h
-  inline MOZ_IMPLICIT StructuredCloneReadInfo(
-      SerializedStructuredCloneReadInfo&& aOther);
+  StructuredCloneReadInfo(const StructuredCloneReadInfo& aOther) = delete;
+  StructuredCloneReadInfo& operator=(const StructuredCloneReadInfo& aOther) =
+      delete;
 
   // In IndexedDatabaseInlines.h
   inline size_t Size() const;

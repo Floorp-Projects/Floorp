@@ -8605,7 +8605,9 @@ nsresult DeserializeStructuredCloneFiles(
     token = tokenizer.nextToken();
     MOZ_ASSERT(!token.IsEmpty());
 
-    StructuredCloneFile* file = aResult.AppendElement();
+    auto* const file = aResult.EmplaceBack(StructuredCloneFile::eBlob);
+    MOZ_ASSERT(file);
+
     rv = DeserializeStructuredCloneFile(aFileManager, token, file);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
