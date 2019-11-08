@@ -57,7 +57,8 @@ class ThreadTargetSink {
 class SynchronizedEventQueue : public ThreadTargetSink {
  public:
   virtual already_AddRefed<nsIRunnable> GetEvent(
-      bool aMayWait, EventQueuePriority* aPriority) = 0;
+      bool aMayWait, EventQueuePriority* aPriority,
+      mozilla::TimeDuration* aLastEventDelay = nullptr) = 0;
   virtual void DidRunEvent() = 0;
   virtual bool HasPendingEvent() = 0;
 
