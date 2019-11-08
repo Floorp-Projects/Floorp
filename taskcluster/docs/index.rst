@@ -32,6 +32,6 @@ check out the :doc:`how-to section <how-tos>`.
     actions
     release-promotion
     versioncontrol
-    taskcluster-config
+    config
     how-tos
     reference
