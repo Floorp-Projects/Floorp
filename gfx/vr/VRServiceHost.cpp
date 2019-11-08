@@ -181,8 +181,8 @@ void VRServiceHost::ShutdownVRProcess() {
 #endif  // !defined(MOZ_WIDGET_ANDROID)
 
 void VRServiceHost::PuppetSubmit(const nsTArray<uint64_t>& aBuffer) {
+  mPuppetActive = true;
   if (mVRProcessEnabled) {
-    mPuppetActive = true;
     // TODO - Implement VR puppet support for VR process (Bug 1555188)
     MOZ_ASSERT(false);  // Not implemented
   } else {
@@ -199,8 +199,9 @@ void VRServiceHost::PuppetReset() {
     }
     // TODO - Implement VR puppet support for VR process (Bug 1555188)
     MOZ_ASSERT(false);  // Not implemented
-  } else {
+  } else if (mPuppetActive) {
     VRPuppetCommandBuffer::Get().Reset();
+    mPuppetActive = false;
   }
 }
 
@@ -218,7 +219,12 @@ bool VRServiceHost::PuppetHasEnded() {
     MOZ_ASSERT(false);  // Not implemented
     return false;
   }
-  return VRPuppetCommandBuffer::Get().HasEnded();
+
+  if (mPuppetActive) {
+    return VRPuppetCommandBuffer::Get().HasEnded();
+  }
+
+  return true;
 }
 
 }  // namespace gfx
