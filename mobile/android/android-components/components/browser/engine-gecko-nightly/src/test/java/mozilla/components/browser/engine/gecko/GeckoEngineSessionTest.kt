@@ -2063,7 +2063,8 @@ class GeckoEngineSessionTest {
     private fun mockLoadRequest(
         uri: String,
         target: Int = 0,
-        triggeredByRedirect: Boolean = false
+        triggeredByRedirect: Boolean = false,
+        hasUserGesture: Boolean = false
     ): GeckoSession.NavigationDelegate.LoadRequest {
         var flags = 0
         if (triggeredByRedirect) {
@@ -2074,9 +2075,10 @@ class GeckoEngineSessionTest {
             String::class.java,
             String::class.java,
             Int::class.java,
-            Int::class.java)
+            Int::class.java,
+            Boolean::class.java)
         constructor.isAccessible = true
 
-        return constructor.newInstance(uri, uri, target, flags)
+        return constructor.newInstance(uri, uri, target, flags, hasUserGesture)
     }
 }
