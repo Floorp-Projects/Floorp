@@ -52,20 +52,16 @@ class nsHTMLDNSPrefetch {
   static nsresult PrefetchLow(mozilla::dom::Link* aElement);
   static nsresult PrefetchHigh(
       const nsAString& host, bool isHttps,
-      const mozilla::OriginAttributes& aOriginAttributes,
-      nsIRequest::TRRMode aTRRMode);
+      const mozilla::OriginAttributes& aOriginAttributes);
   static nsresult PrefetchMedium(
       const nsAString& host, bool isHttps,
-      const mozilla::OriginAttributes& aOriginAttributes,
-      nsIRequest::TRRMode aTRRMode);
+      const mozilla::OriginAttributes& aOriginAttributes);
   static nsresult PrefetchLow(
       const nsAString& host, bool isHttps,
-      const mozilla::OriginAttributes& aOriginAttributes,
-      nsIRequest::TRRMode aTRRMode);
+      const mozilla::OriginAttributes& aOriginAttributes);
   static nsresult CancelPrefetchLow(
       const nsAString& host, bool isHttps,
-      const mozilla::OriginAttributes& aOriginAttributes,
-      nsIRequest::TRRMode aTRRMode, nsresult aReason);
+      const mozilla::OriginAttributes& aOriginAttributes, nsresult aReason);
   static nsresult CancelPrefetchLow(mozilla::dom::Link* aElement,
                                     nsresult aReason);
 
@@ -74,13 +70,13 @@ class nsHTMLDNSPrefetch {
  private:
   static nsresult Prefetch(const nsAString& host, bool isHttps,
                            const mozilla::OriginAttributes& aOriginAttributes,
-                           uint32_t flags);
-  static nsresult Prefetch(mozilla::dom::Link* aElement, uint32_t flags);
+                           uint16_t flags);
+  static nsresult Prefetch(mozilla::dom::Link* aElement, uint16_t flags);
   static nsresult CancelPrefetch(
       const nsAString& hostname, bool isHttps,
-      const mozilla::OriginAttributes& aOriginAttributes, uint32_t flags,
+      const mozilla::OriginAttributes& aOriginAttributes, uint16_t flags,
       nsresult aReason);
-  static nsresult CancelPrefetch(mozilla::dom::Link* aElement, uint32_t flags,
+  static nsresult CancelPrefetch(mozilla::dom::Link* aElement, uint16_t flags,
                                  nsresult aReason);
 
  public:
@@ -107,7 +103,7 @@ class nsHTMLDNSPrefetch {
     nsDeferrals();
 
     void Activate();
-    nsresult Add(uint32_t flags, mozilla::dom::Link* aElement);
+    nsresult Add(uint16_t flags, mozilla::dom::Link* aElement);
 
     void RemoveUnboundLinks();
 
@@ -129,7 +125,7 @@ class nsHTMLDNSPrefetch {
     static const int sMaxDeferredMask = (sMaxDeferred - 1);
 
     struct deferred_entry {
-      uint32_t mFlags;
+      uint16_t mFlags;
       // Link implementation clears this raw pointer in its destructor.
       mozilla::dom::Link* mElement;
     } mEntries[sMaxDeferred];
