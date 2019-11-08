@@ -39,6 +39,7 @@
 #include "js/Vector.h"
 #include "vm/MallocProvider.h"
 #include "wasm/WasmConstants.h"
+#include "wasm/WasmUtility.h"
 
 namespace js {
 
