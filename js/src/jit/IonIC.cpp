@@ -8,6 +8,7 @@
 
 #include "jit/CacheIRCompiler.h"
 #include "jit/Linker.h"
+#include "util/DiagnosticAssertions.h"
 
 #include "jit/MacroAssembler-inl.h"
 #include "vm/Interpreter-inl.h"

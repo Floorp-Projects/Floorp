@@ -23,6 +23,7 @@
 #include "gc/Policy.h"
 #include "jit/IonCode.h"
 #include "js/SliceBudget.h"
+#include "util/DiagnosticAssertions.h"
 #include "util/Memory.h"
 #include "util/Poison.h"
 #include "vm/ArgumentsObject.h"
