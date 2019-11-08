@@ -155,6 +155,22 @@ void Zone::setNeedsIncrementalBarrier(bool needs) {
 
 void Zone::beginSweepTypes() { types.beginSweep(); }
 
+template <class Pred>
+static void EraseIf(js::gc::WeakEntryVector& entries, Pred pred) {
+  auto* begin = entries.begin();
+  auto* const end = entries.end();
+
+  auto* newEnd = begin;
+  for (auto* p = begin; p != end; p++) {
+    if (!pred(*p)) {
+      *newEnd++ = *p;
+    }
+  }
+
+  size_t removed = end - newEnd;
+  entries.shrinkBy(removed);
+}
+
 static void SweepWeakEntryVectorWhileMinorSweeping(
     js::gc::WeakEntryVector& entries) {
   EraseIf(entries, [](js::gc::WeakMarkable& markable) -> bool {
