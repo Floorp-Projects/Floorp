@@ -80,11 +80,31 @@ class IssueItem extends PureComponent {
   }
 
   render() {
-    const { property, url } = this.props;
+    const {
+      deprecated,
+      experimental,
+      property,
+      unsupportedBrowsers,
+      url,
+    } = this.props;
+
+    const classes = ["compatibility-issue-item"];
+
+    if (deprecated) {
+      classes.push("compatibility-issue-item--deprecated");
+    }
+
+    if (experimental) {
+      classes.push("compatibility-issue-item--experimental");
+    }
+
+    if (unsupportedBrowsers.length) {
+      classes.push("compatibility-issue-item--unsupported");
+    }
 
     return dom.li(
       {
-        className: "compatibility-issue-item",
+        className: classes.join(" "),
         key: property,
         ...this._getTestDataAttributes(),
       },
