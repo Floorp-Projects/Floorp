@@ -26,13 +26,13 @@ with Files("browser/*geo_*"):
     BUG_COMPONENT = ("Core", "Geolocation")
 
 with Files("browser/browser_cancel_keydown_keypress_event.js"):
-    BUG_COMPONENT = ("Core", "User events and focus handling")
+    BUG_COMPONENT = ("Core", "DOM: UI Events & Focus Handling")
 
 with Files("browser/*local*"):
     BUG_COMPONENT = ("Core", "DOM: Core & HTML")
 
 with Files("browser/browser_test_focus_after_modal_state.js"):
-    BUG_COMPONENT = ("Core", "User events and focus handling")
+    BUG_COMPONENT = ("Core", "DOM: UI Events & Focus Handling")
 
 with Files("mochitest/ajax/**"):
     BUG_COMPONENT = ("Testing", "Mochitest")
@@ -83,7 +83,7 @@ with Files("mochitest/geolocation/**"):
     BUG_COMPONENT = ("Core", "Geolocation")
 
 with Files("mochitest/localstorage/**"):
-    BUG_COMPONENT = ("Core", "DOM: Web Storage")
+    BUG_COMPONENT = ("Core", "Storage: localStorage & sessionStorage")
 
 with Files("mochitest/orientation/**"):
     BUG_COMPONENT = ("Core", "DOM: Device Interfaces")
@@ -98,10 +98,10 @@ with Files("mochitest/script/**"):
     BUG_COMPONENT = ("Core", "DOM: Core & HTML")
 
 with Files("mochitest/sessionstorage/**"):
-    BUG_COMPONENT = ("Core", "DOM: Web Storage")
+    BUG_COMPONENT = ("Core", "Storage: localStorage & sessionStorage")
 
 with Files("mochitest/storageevent/**"):
-    BUG_COMPONENT = ("Core", "DOM: Web Storage")
+    BUG_COMPONENT = ("Core", "Storage: localStorage & sessionStorage")
 
 with Files("mochitest/webcomponents/**"):
     BUG_COMPONENT = ("Core", "DOM: Core & HTML")
@@ -116,7 +116,7 @@ with Files("reftest/*456008*"):
     BUG_COMPONENT = ("Core", "XML")
 
 with Files("reftest/*439965*"):
-    BUG_COMPONENT = ("Core", "Editor")
+    BUG_COMPONENT = ("Core", "DOM: Editor")
 
 with Files("reftest/*427779*"):
     BUG_COMPONENT = ("Core", "XML")
