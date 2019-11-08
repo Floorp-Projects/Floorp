@@ -425,19 +425,16 @@ static dom::FillMode GetAdjustedFillMode(const Animation& aAnimation) {
 }
 
 #ifdef DEBUG
-static bool HasMotionPathAnimations(const AnimationArray& aAnimations) {
-  // Actually, we don't need eCSSProperty_offset_path because the caller assumes
-  // offset-path is fixed. However, checking them together is fine.
-  nsCSSPropertyIDSet motionSet{
-      eCSSProperty_offset_path, eCSSProperty_offset_distance,
-      eCSSProperty_offset_rotate, eCSSProperty_offset_anchor};
+static bool HasTransformLikeAnimations(const AnimationArray& aAnimations) {
+  nsCSSPropertyIDSet transformSet =
+      nsCSSPropertyIDSet::TransformLikeProperties();
 
   for (const Animation& animation : aAnimations) {
     if (animation.isNotAnimating()) {
       continue;
     }
 
-    if (motionSet.HasProperty(animation.property())) {
+    if (transformSet.HasProperty(animation.property())) {
       return true;
     }
   }
@@ -491,7 +488,7 @@ AnimationStorageData AnimationHelper::ExtractAnimations(
       if (animation.property() == eCSSProperty_offset_path) {
         MOZ_ASSERT(currData->mBaseStyle,
                    "Fixed offset-path should have base style");
-        MOZ_ASSERT(HasMotionPathAnimations(aAnimations));
+        MOZ_ASSERT(HasTransformLikeAnimations(aAnimations));
 
         AnimationValue value{currData->mBaseStyle};
         const StyleOffsetPath& offsetPath = value.GetOffsetPathProperty();
