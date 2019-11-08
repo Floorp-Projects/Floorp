@@ -56,8 +56,8 @@ class DecodeToSurfaceRunnableFuzzing : public Runnable {
     if (!mSurface) return;
 
     if (mSurface->GetType() == SurfaceType::DATA) {
-      if (mSurface->GetFormat() == SurfaceFormat::B8G8R8X8 ||
-          mSurface->GetFormat() == SurfaceFormat::B8G8R8A8) {
+      if (mSurface->GetFormat() == SurfaceFormat::OS_RGBX ||
+          mSurface->GetFormat() == SurfaceFormat::OS_RGBA) {
         DUMMY_IF(IntSize(1, 1) == mSurface->GetSize());
         DUMMY_IF(IsSolidColor(mSurface, BGRAColor::Green(), 1));
       }

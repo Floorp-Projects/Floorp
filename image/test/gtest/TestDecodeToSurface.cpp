@@ -57,8 +57,8 @@ class DecodeToSurfaceRunnable : public Runnable {
     ASSERT_TRUE(mSurface != nullptr);
 
     EXPECT_TRUE(mSurface->IsDataSourceSurface());
-    EXPECT_TRUE(mSurface->GetFormat() == SurfaceFormat::B8G8R8X8 ||
-                mSurface->GetFormat() == SurfaceFormat::B8G8R8A8);
+    EXPECT_TRUE(mSurface->GetFormat() == SurfaceFormat::OS_RGBX ||
+                mSurface->GetFormat() == SurfaceFormat::OS_RGBA);
 
     if (outputSize) {
       EXPECT_EQ(*outputSize, mSurface->GetSize());
