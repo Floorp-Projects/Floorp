@@ -111,6 +111,7 @@ void MediaControlService::AddMediaController(
   mControllerHistory.AppendElement(cId);
   LOG("Add media controller %" PRId64 ", currentNum=%" PRId64, cId,
       GetControllersNum());
+  mMediaControllerAmountChangedEvent.Notify(GetControllersNum());
 }
 
 void MediaControlService::RemoveMediaController(
@@ -123,6 +124,7 @@ void MediaControlService::RemoveMediaController(
   mControllerHistory.RemoveElement(cId);
   LOG("Remove media controller %" PRId64 ", currentNum=%" PRId64, cId,
       GetControllersNum());
+  mMediaControllerAmountChangedEvent.Notify(GetControllersNum());
 }
 
 void MediaControlService::PlayAllControllers() const {
