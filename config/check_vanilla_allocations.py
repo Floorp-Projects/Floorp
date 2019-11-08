@@ -53,10 +53,10 @@ import buildconfig
 # this script could be buggy.  (Or the output format of |nm| might change in
 # the future.)
 #
-# So jsutil.cpp deliberately contains a (never-called) function that contains a
-# single use of all the vanilla allocation/free functions.  And this script
-# fails if it (a) finds uses of those functions in files other than jsutil.cpp,
-# *or* (b) fails to find them in jsutil.cpp.
+# So util/Utility.cpp deliberately contains a (never-called) function that
+# contains a single use of all the vanilla allocation/free functions.  And this
+# script fails if it (a) finds uses of those functions in files other than
+# util/Utility.cpp, *or* (b) fails to find them in util/Utility.cpp.
 
 # Tracks overall success of the test.
 has_failed = False
@@ -117,12 +117,13 @@ def main():
     # This regexp matches the relevant lines in the output of |nm|, which look
     # like the following.
     #
-    #   js/src/libjs_static.a:jsutil.o:              U malloc
+    #   js/src/libjs_static.a:Utility.o:              U malloc
     #
     alloc_fns_re = r'([^:/ ]+):\s+U (' + r'|'.join(alloc_fns) + r')'
 
-    # This tracks which allocation/free functions have been seen in jsutil.cpp.
-    jsutil_cpp = set([])
+    # This tracks which allocation/free functions have been seen in
+    # util/Utility.cpp.
+    util_Utility_cpp = set([])
 
     # Would it be helpful to emit detailed line number information after a failure?
     emit_line_info = False
@@ -166,26 +167,26 @@ def main():
             continue
 
         fn = m.group(2)
-        if filename == 'jsutil.o':
-            jsutil_cpp.add(fn)
+        if filename == 'Utility.o':
+            util_Utility_cpp.add(fn)
         else:
             # An allocation is present in a non-special file.  Fail!
             fail("'" + fn + "' present in " + filename)
             # Try to give more precise information about the offending code.
             emit_line_info = True
 
-    # Check that all functions we expect are used in jsutil.cpp.  (This will
-    # fail if the function-detection code breaks at any point.)
+    # Check that all functions we expect are used in util/Utility.cpp.  (This
+    # will fail if the function-detection code breaks at any point.)
     for fn in alloc_fns_unescaped:
-        if fn not in jsutil_cpp:
-            fail("'" + fn + "' isn't used as expected in jsutil.cpp")
+        if fn not in util_Utility_cpp:
+            fail("'" + fn + "' isn't used as expected in util/Utility.cpp")
         else:
-            jsutil_cpp.remove(fn)
+            util_Utility_cpp.remove(fn)
 
     # This should never happen, but check just in case.
-    if jsutil_cpp:
-        fail('unexpected allocation fns used in jsutil.cpp: ' +
-             ', '.join(jsutil_cpp))
+    if util_Utility_cpp:
+        fail('unexpected allocation fns used in util/Utility.cpp: ' +
+             ', '.join(util_Utility_cpp))
 
     # If we found any improper references to allocation functions, try to use
     # DWARF debug info to get more accurate line number information about the
@@ -193,7 +194,8 @@ def main():
     # precise when building with --enable-optimized.
     if emit_line_info:
         print('check_vanilla_allocations.py: Source lines with allocation calls:')
-        print('check_vanilla_allocations.py: Accurate in unoptimized builds; jsutil.cpp expected.')
+        print('check_vanilla_allocations.py: Accurate in unoptimized builds; '
+              'util/Utility.cpp expected.')
 
         # Run |nm|.  Options:
         # -u: show only undefined symbols
@@ -206,7 +208,7 @@ def main():
         # This regexp matches the relevant lines in the output of |nm -l|,
         # which look like the following.
         #
-        #       U malloc jsutil.cpp:117
+        #       U malloc util/Utility.cpp:117
         #
         alloc_lines_re = r'U ((' + r'|'.join(alloc_fns) + r').*)\s+(\S+:\d+)$'
 
