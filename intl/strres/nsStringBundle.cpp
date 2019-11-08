@@ -78,6 +78,7 @@ static const char kContentBundles[][52] = {
     "chrome://global/locale/security/csp.properties",
     "chrome://global/locale/security/security.properties",
     "chrome://global/locale/svg/svg.properties",
+    "chrome://global/locale/xbl.properties",
     "chrome://global/locale/xul.properties",
     "chrome://necko/locale/necko.properties",
 };
