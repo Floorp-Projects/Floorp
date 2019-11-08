@@ -51,8 +51,17 @@
         <activity
                 android:theme="@style/Theme.AppCompat.Light"
                 android:name=".addons.AddOnDetailsActivity"
+                android:label="@string/add_ons" />
+
+        <activity android:name=".addons.InstalledAddOnDetailsActivity"
                 android:label="@string/add_ons"
-                android:parentActivityName=".addons.AddOnsActivity" />
+                android:parentActivityName=".addons.AddOnsActivity"
+                android:theme="@style/Theme.AppCompat.Light" />
+
+        <activity
+                android:name=".addons.PermissionsDetailsActivity"
+                android:label="@string/add_ons"
+                android:theme="@style/Theme.AppCompat.Light" />
 
         <activity android:name=".IntentReceiverActivity">
             <intent-filter>
