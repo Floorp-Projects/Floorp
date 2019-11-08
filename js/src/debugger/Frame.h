@@ -21,9 +21,10 @@
 #include "debugger/Debugger.h"  // for ResumeMode, Handler, Debugger
 #include "gc/Barrier.h"         // for HeapPtr
 #include "gc/Rooting.h"         // for HandleDebuggerFrame, HandleNativeObject
+#include "vm/FrameIter.h"       // for FrameIter
 #include "vm/JSObject.h"        // for JSObject
 #include "vm/NativeObject.h"    // for NativeObject
-#include "vm/Stack.h"           // for FrameIter, AbstractFramePtr
+#include "vm/Stack.h"           // for AbstractFramePtr
 
 namespace js {
 

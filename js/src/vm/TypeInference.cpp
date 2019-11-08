@@ -31,6 +31,7 @@
 #include "js/UniquePtr.h"
 #include "util/DiagnosticAssertions.h"
 #include "util/Poison.h"
+#include "vm/FrameIter.h"  // js::AllScriptFramesIter
 #include "vm/HelperThreads.h"
 #include "vm/JSContext.h"
 #include "vm/JSObject.h"

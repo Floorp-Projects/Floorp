@@ -95,10 +95,7 @@ class RematerializedFrame {
 
   bool isDebuggee() const { return isDebuggee_; }
   void setIsDebuggee() { isDebuggee_ = true; }
-  void unsetIsDebuggee() {
-    MOZ_ASSERT(!script()->isDebuggee());
-    isDebuggee_ = false;
-  }
+  inline void unsetIsDebuggee();
 
   uint8_t* top() const { return top_; }
   JSScript* outerScript() const {

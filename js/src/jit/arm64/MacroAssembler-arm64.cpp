@@ -12,6 +12,7 @@
 #include "jit/BaselineFrame.h"
 #include "jit/MacroAssembler.h"
 #include "util/Memory.h"
+#include "vm/JitActivation.h"  // js::jit::JitActivation
 
 #include "jit/MacroAssembler-inl.h"
 

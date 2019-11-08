@@ -7,11 +7,14 @@
 #ifndef jit_Bailouts_h
 #define jit_Bailouts_h
 
+#include <stddef.h>  // size_t
+#include <stdint.h>  // uint8_t, uint32_t
+
 #include "jstypes.h"
 
 #include "jit/JitFrames.h"
 #include "jit/JSJitFrameIter.h"
-#include "vm/Stack.h"
+#include "wasm/WasmFrameIter.h"  // js::wasm::ExitOrJitEntryFPTag
 
 namespace js {
 namespace jit {
@@ -141,6 +144,9 @@ static_assert(!(FAKE_EXITFP_FOR_BAILOUT_ADDR & wasm::ExitOrJitEntryFPTag),
 // bailout handler.
 class BailoutStack;
 class InvalidationBailoutStack;
+
+class JitActivation;
+class JitActivationIterator;
 
 // Must be implemented by each architecture.
 

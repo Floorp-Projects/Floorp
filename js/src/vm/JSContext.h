@@ -22,6 +22,7 @@
 #include "js/Vector.h"
 #include "threading/ProtectedData.h"
 #include "util/StructuredSpewer.h"
+#include "vm/Activation.h"  // js::Activation
 #include "vm/ErrorReporting.h"
 #include "vm/MallocProvider.h"
 #include "vm/Runtime.h"
@@ -35,6 +36,7 @@ class AutoMaybeLeaveAtomsZone;
 class AutoRealm;
 
 namespace jit {
+class JitActivation;
 class JitContext;
 class DebugModeOSRVolatileJitFrameIter;
 }  // namespace jit
