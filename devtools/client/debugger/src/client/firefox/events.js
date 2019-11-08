@@ -16,7 +16,7 @@ import type {
 import { createPause, prepareSourcePayload } from "./create";
 import sourceQueue from "../../utils/source-queue";
 import { recordEvent } from "../../utils/telemetry";
-import { features } from "../../utils/prefs";
+import { prefs, features } from "../../utils/prefs";
 
 const {
   WorkersListener,
@@ -41,6 +41,10 @@ function addThreadEventListeners(thread: ThreadFront) {
   });
 }
 
+function attachAllTargets(currentTarget: Target) {
+  return prefs.fission && currentTarget.chrome && !currentTarget.isAddon;
+}
+
 function setupEvents(dependencies: Dependencies) {
   const { tabTarget, threadFront, debuggerClient } = dependencies;
   actions = dependencies.actions;
@@ -52,9 +56,7 @@ function setupEvents(dependencies: Dependencies) {
     threadListChanged("contentProcess")
   );
 
-  // If we are attaching to service workers we need to listen to worker changes
-  // everywhere in the browser.
-  if (features.windowlessServiceWorkers) {
+  if (features.windowlessServiceWorkers || attachAllTargets(tabTarget)) {
     const workersListener = new WorkersListener(debuggerClient.mainRoot);
     workersListener.addListener(() => threadListChanged("worker"));
   }
@@ -131,4 +133,4 @@ const clientEvents = {
   replayFramePositions,
 };
 
-export { setupEvents, clientEvents, addThreadEventListeners };
+export { setupEvents, clientEvents, addThreadEventListeners, attachAllTargets };
