@@ -22,15 +22,11 @@
 #include "js/Initialization.h"
 #include "js/Utility.h"
 #include "js/Value.h"
+#include "util/Poison.h"
 
 /* Crash diagnostics by default in debug and on nightly channel. */
 #if defined(DEBUG) || defined(NIGHTLY_BUILD)
 #  define JS_CRASH_DIAGNOSTICS 1
-#endif
-
-/* Enable poisoning in crash-diagnostics and zeal builds. */
-#if defined(JS_CRASH_DIAGNOSTICS) || defined(JS_GC_ZEAL)
-#  define JS_GC_POISONING 1
 #endif
 
 #if defined(JS_DEBUG)
@@ -156,157 +152,5 @@ static void DefaultInitializeElements(void* arrayPtr, size_t length) {
 }
 
 } /* namespace js */
-
-namespace mozilla {
-
-/**
- * Set the first |aNElem| T elements in |aDst| to |aSrc|.
- */
-template <typename T>
-static MOZ_ALWAYS_INLINE void PodSet(T* aDst, const T& aSrc, size_t aNElem) {
-  for (const T* dstend = aDst + aNElem; aDst < dstend; ++aDst) {
-    *aDst = aSrc;
-  }
-}
-
-} /* namespace mozilla */
-
-/*
- * Patterns used by SpiderMonkey to overwrite unused memory. If you are
- * accessing an object with one of these pattern, you probably have a dangling
- * pointer. These values should be odd, see the comment in IsThingPoisoned.
- *
- * Note: new patterns should also be added to the array in IsThingPoisoned!
- *
- * We try to keep our IRC bot, mrgiggles, up to date with these and other
- * patterns:
- * https://bitbucket.org/sfink/mrgiggles/src/default/plugins/knowledge/__init__.py
- */
-const uint8_t JS_FRESH_NURSERY_PATTERN = 0x2F;
-const uint8_t JS_SWEPT_NURSERY_PATTERN = 0x2B;
-const uint8_t JS_ALLOCATED_NURSERY_PATTERN = 0x2D;
-const uint8_t JS_FRESH_TENURED_PATTERN = 0x4F;
-const uint8_t JS_MOVED_TENURED_PATTERN = 0x49;
-const uint8_t JS_SWEPT_TENURED_PATTERN = 0x4B;
-const uint8_t JS_ALLOCATED_TENURED_PATTERN = 0x4D;
-const uint8_t JS_FREED_HEAP_PTR_PATTERN = 0x6B;
-const uint8_t JS_FREED_CHUNK_PATTERN = 0x8B;
-const uint8_t JS_FREED_ARENA_PATTERN = 0x9B;
-const uint8_t JS_SWEPT_TI_PATTERN = 0x6F;
-const uint8_t JS_FRESH_MARK_STACK_PATTERN = 0x9F;
-const uint8_t JS_RESET_VALUE_PATTERN = 0xBB;
-const uint8_t JS_POISONED_JSSCRIPT_DATA_PATTERN = 0xDB;
-const uint8_t JS_OOB_PARSE_NODE_PATTERN = 0xFF;
-const uint8_t JS_LIFO_UNDEFINED_PATTERN = 0xcd;
-const uint8_t JS_LIFO_UNINITIALIZED_PATTERN = 0xce;
-
-// Even ones
-const uint8_t JS_NEW_NATIVE_ITERATOR_PATTERN = 0xCC;
-const uint8_t JS_SCOPE_DATA_TRAILING_NAMES_PATTERN = 0xCC;
-
-/*
- * Ensure JS_SWEPT_CODE_PATTERN is a byte pattern that will crash immediately
- * when executed, so either an undefined instruction or an instruction that's
- * illegal in user mode.
- */
-#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64) || \
-    defined(JS_CODEGEN_NONE)
-#  define JS_SWEPT_CODE_PATTERN 0xED  // IN instruction, crashes in user mode.
-#elif defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64)
-#  define JS_SWEPT_CODE_PATTERN 0xA3  // undefined instruction
-#elif defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
-#  define JS_SWEPT_CODE_PATTERN 0x01  // undefined instruction
-#else
-#  error "JS_SWEPT_CODE_PATTERN not defined for this platform"
-#endif
-
-enum class MemCheckKind : uint8_t {
-  // Marks a region as poisoned. Memory sanitizers like ASan will crash when
-  // accessing it (both reads and writes).
-  MakeNoAccess,
-
-  // Marks a region as having undefined contents. In ASan builds this just
-  // unpoisons the memory. MSan and Valgrind can also use this to find
-  // reads of uninitialized memory.
-  MakeUndefined,
-};
-
-static MOZ_ALWAYS_INLINE void SetMemCheckKind(void* ptr, size_t bytes,
-                                              MemCheckKind kind) {
-  switch (kind) {
-    case MemCheckKind::MakeUndefined:
-      MOZ_MAKE_MEM_UNDEFINED(ptr, bytes);
-      return;
-    case MemCheckKind::MakeNoAccess:
-      MOZ_MAKE_MEM_NOACCESS(ptr, bytes);
-      return;
-  }
-  MOZ_CRASH("Invalid kind");
-}
-
-namespace js {
-
-static inline void PoisonImpl(void* ptr, uint8_t value, size_t num) {
-  // Without a valid Value tag, a poisoned Value may look like a valid
-  // floating point number. To ensure that we crash more readily when
-  // observing a poisoned Value, we make the poison an invalid ObjectValue.
-  // Unfortunately, this adds about 2% more overhead, so we can only enable
-  // it in debug.
-#if defined(DEBUG)
-  uintptr_t poison;
-  memset(&poison, value, sizeof(poison));
-#  if defined(JS_PUNBOX64)
-  poison = poison & ((uintptr_t(1) << JSVAL_TAG_SHIFT) - 1);
-#  endif
-  JS::Value v = js::PoisonedObjectValue(poison);
-
-  size_t value_count = num / sizeof(v);
-  size_t byte_count = num % sizeof(v);
-  mozilla::PodSet(reinterpret_cast<JS::Value*>(ptr), v, value_count);
-  if (byte_count) {
-    uint8_t* bytes = static_cast<uint8_t*>(ptr);
-    uint8_t* end = bytes + num;
-    mozilla::PodSet(end - byte_count, value, byte_count);
-  }
-#else   // !DEBUG
-  memset(ptr, value, num);
-#endif  // !DEBUG
-}
-
-// Unconditionally poison a region on memory.
-static inline void AlwaysPoison(void* ptr, uint8_t value, size_t num,
-                                MemCheckKind kind) {
-  PoisonImpl(ptr, value, num);
-  SetMemCheckKind(ptr, num, kind);
-}
-
-// JSGC_DISABLE_POISONING environment variable
-extern bool gDisablePoisoning;
-
-// Poison a region of memory in debug and nightly builds (plus builds where GC
-// zeal is configured). Can be disabled by setting the JSGC_DISABLE_POISONING
-// environment variable.
-static inline void Poison(void* ptr, uint8_t value, size_t num,
-                          MemCheckKind kind) {
-#if defined(JS_GC_POISONING)
-  if (!js::gDisablePoisoning) {
-    PoisonImpl(ptr, value, num);
-  }
-#endif
-  SetMemCheckKind(ptr, num, kind);
-}
-
-// Poison a region of memory in debug builds. Can be disabled by setting the
-// JSGC_DISABLE_POISONING environment variable.
-static inline void DebugOnlyPoison(void* ptr, uint8_t value, size_t num,
-                                   MemCheckKind kind) {
-#if defined(DEBUG)
-  Poison(ptr, value, num, kind);
-#else
-  SetMemCheckKind(ptr, num, kind);
-#endif
-}
-
-}  // namespace js
 
 #endif /* jsutil_h */
