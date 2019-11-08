@@ -8057,6 +8057,9 @@ class QuotaClient final : public mozilla::dom::quota::Client {
   // Runs on the PBackground thread. Checks to see if there's a queued
   // Maintenance to run.
   void ProcessMaintenanceQueue();
+
+  template <typename Condition>
+  static void InvalidateLiveDatabasesMatching(const Condition& aCondition);
 };
 
 class DeleteFilesRunnable final : public Runnable,
@@ -10384,12 +10387,11 @@ nsresult DatabaseConnection::UpdateRefcountFunction::WillCommit() {
                       DOM);
 
   DatabaseUpdateFunction function(this);
-  for (auto iter = mFileInfoEntries.ConstIter(); !iter.Done(); iter.Next()) {
-    auto key = iter.Key();
-    FileInfoEntry* value = iter.Data();
+  for (const auto& entry : mFileInfoEntries) {
+    FileInfoEntry* value = entry.GetData();
     MOZ_ASSERT(value);
 
-    if (value->mDelta && !function.Update(key, value->mDelta)) {
+    if (value->mDelta && !function.Update(entry.GetKey(), value->mDelta)) {
       break;
     }
   }
@@ -10414,8 +10416,8 @@ void DatabaseConnection::UpdateRefcountFunction::DidCommit() {
   AUTO_PROFILER_LABEL("DatabaseConnection::UpdateRefcountFunction::DidCommit",
                       DOM);
 
-  for (auto iter = mFileInfoEntries.ConstIter(); !iter.Done(); iter.Next()) {
-    FileInfoEntry* value = iter.Data();
+  for (const auto& entry : mFileInfoEntries) {
+    FileInfoEntry* value = entry.GetData();
 
     MOZ_ASSERT(value);
 
@@ -10465,9 +10467,8 @@ void DatabaseConnection::UpdateRefcountFunction::RollbackSavepoint() {
   MOZ_ASSERT(!IsOnBackgroundThread());
   MOZ_ASSERT(mInSavepoint);
 
-  for (auto iter = mSavepointEntriesIndex.ConstIter(); !iter.Done();
-       iter.Next()) {
-    auto value = iter.Data();
+  for (const auto& entry : mSavepointEntriesIndex) {
+    auto* const value = entry.GetData();
     value->mDelta -= value->mSavepointDelta;
   }
 
@@ -10552,12 +10553,12 @@ void DatabaseConnection::UpdateRefcountFunction::Reset() {
   // FileInfo implementation automatically removes unreferenced files, but it's
   // done asynchronously and with a delay. We want to remove them (and decrease
   // quota usage) before we fire the commit event.
-  for (auto iter = mFileInfoEntries.ConstIter(); !iter.Done(); iter.Next()) {
-    FileInfoEntry* value = iter.Data();
+  for (const auto& entry : mFileInfoEntries) {
+    FileInfoEntry* const value = entry.GetData();
 
     MOZ_ASSERT(value);
 
-    FileInfo* fileInfo = value->mFileInfo.forget().take();
+    FileInfo* const fileInfo = value->mFileInfo.forget().take();
 
     MOZ_ASSERT(fileInfo);
 
@@ -12262,13 +12263,9 @@ ConnectionPool::TransactionInfoPair::~TransactionInfoPair() {
 bool FullObjectStoreMetadata::HasLiveIndexes() const {
   AssertIsOnBackgroundThread();
 
-  for (auto iter = mIndexes.ConstIter(); !iter.Done(); iter.Next()) {
-    if (!iter.Data()->mDeleted) {
-      return true;
-    }
-  }
-
-  return false;
+  return std::any_of(mIndexes.cbegin(), mIndexes.cend(), [](const auto& entry) {
+    return !entry.GetData()->mDeleted;
+  });
 }
 
 already_AddRefed<FullDatabaseMetadata> FullDatabaseMetadata::Duplicate() const {
@@ -12284,35 +12281,36 @@ already_AddRefed<FullDatabaseMetadata> FullDatabaseMetadata::Duplicate() const {
   newMetadata->mNextObjectStoreId = mNextObjectStoreId;
   newMetadata->mNextIndexId = mNextIndexId;
 
-  for (auto iter = mObjectStores.ConstIter(); !iter.Done(); iter.Next()) {
-    auto key = iter.Key();
-    auto value = iter.Data();
+  for (const auto& objectStoreEntry : mObjectStores) {
+    const auto& objectStoreValue = objectStoreEntry.GetData();
 
     RefPtr<FullObjectStoreMetadata> newOSMetadata =
         new FullObjectStoreMetadata();
 
-    newOSMetadata->mCommonMetadata = value->mCommonMetadata;
-    newOSMetadata->mNextAutoIncrementId = value->mNextAutoIncrementId;
-    newOSMetadata->mCommittedAutoIncrementId = value->mCommittedAutoIncrementId;
+    newOSMetadata->mCommonMetadata = objectStoreValue->mCommonMetadata;
+    newOSMetadata->mNextAutoIncrementId =
+        objectStoreValue->mNextAutoIncrementId;
+    newOSMetadata->mCommittedAutoIncrementId =
+        objectStoreValue->mCommittedAutoIncrementId;
 
-    for (auto iter = value->mIndexes.ConstIter(); !iter.Done(); iter.Next()) {
-      auto key = iter.Key();
-      auto value = iter.Data();
+    for (const auto& indexEntry : objectStoreValue->mIndexes) {
+      const auto& value = indexEntry.GetData();
 
       RefPtr<FullIndexMetadata> newIndexMetadata = new FullIndexMetadata();
 
       newIndexMetadata->mCommonMetadata = value->mCommonMetadata;
 
-      if (NS_WARN_IF(
-              !newOSMetadata->mIndexes.Put(key, newIndexMetadata, fallible))) {
+      if (NS_WARN_IF(!newOSMetadata->mIndexes.Put(
+              indexEntry.GetKey(), newIndexMetadata, fallible))) {
         return nullptr;
       }
     }
 
-    MOZ_ASSERT(value->mIndexes.Count() == newOSMetadata->mIndexes.Count());
+    MOZ_ASSERT(objectStoreValue->mIndexes.Count() ==
+               newOSMetadata->mIndexes.Count());
 
-    if (NS_WARN_IF(
-            !newMetadata->mObjectStores.Put(key, newOSMetadata, fallible))) {
+    if (NS_WARN_IF(!newMetadata->mObjectStores.Put(objectStoreEntry.GetKey(),
+                                                   newOSMetadata, fallible))) {
       return nullptr;
     }
   }
@@ -13250,15 +13248,16 @@ PBackgroundIDBTransactionParent* Database::AllocPBackgroundIDBTransactionParent(
       }
     }
 
-    for (auto iter = objectStores.ConstIter(); !iter.Done(); iter.Next()) {
-      auto value = iter.Data();
-      MOZ_ASSERT(iter.Key());
-
-      if (name == value->mCommonMetadata.name() && !value->mDeleted) {
-        if (NS_WARN_IF(!fallibleObjectStores.AppendElement(value, fallible))) {
-          return nullptr;
-        }
-        break;
+    const auto foundIt = std::find_if(
+        objectStores.cbegin(), objectStores.cend(), [&name](const auto& entry) {
+          const auto& value = entry.GetData();
+          MOZ_ASSERT(entry.GetKey());
+          return name == value->mCommonMetadata.name() && !value->mDeleted;
+        });
+    if (foundIt != objectStores.cend()) {
+      if (NS_WARN_IF(!fallibleObjectStores.AppendElement(foundIt->GetData(),
+                                                         fallible))) {
+        return nullptr;
       }
     }
   }
@@ -14712,17 +14711,17 @@ mozilla::ipc::IPCResult VersionChangeTransaction::RecvDeleteObjectStore(
 
   foundMetadata->mDeleted = true;
 
-  bool isLastObjectStore = true;
   DebugOnly<bool> foundTargetId = false;
-  for (auto iter = dbMetadata->mObjectStores.Iter(); !iter.Done();
-       iter.Next()) {
-    if (uint64_t(aObjectStoreId) == iter.Key()) {
-      foundTargetId = true;
-    } else if (!iter.UserData()->mDeleted) {
-      isLastObjectStore = false;
-      break;
-    }
-  }
+  const bool isLastObjectStore = std::all_of(
+      dbMetadata->mObjectStores.begin(), dbMetadata->mObjectStores.end(),
+      [&foundTargetId, aObjectStoreId](const auto& objectStoreEntry) {
+        if (uint64_t(aObjectStoreId) == objectStoreEntry.GetKey()) {
+          foundTargetId = true;
+          return true;
+        }
+
+        return objectStoreEntry.GetData()->mDeleted;
+      });
   MOZ_ASSERT_IF(isLastObjectStore, foundTargetId);
 
   RefPtr<DeleteObjectStoreOp> op =
@@ -14902,17 +14901,18 @@ mozilla::ipc::IPCResult VersionChangeTransaction::RecvDeleteIndex(
 
   foundIndexMetadata->mDeleted = true;
 
-  bool isLastIndex = true;
   DebugOnly<bool> foundTargetId = false;
-  for (auto iter = foundObjectStoreMetadata->mIndexes.ConstIter(); !iter.Done();
-       iter.Next()) {
-    if (uint64_t(aIndexId) == iter.Key()) {
-      foundTargetId = true;
-    } else if (!iter.UserData()->mDeleted) {
-      isLastIndex = false;
-      break;
-    }
-  }
+  const bool isLastIndex =
+      std::all_of(foundObjectStoreMetadata->mIndexes.cbegin(),
+                  foundObjectStoreMetadata->mIndexes.cend(),
+                  [&foundTargetId, aIndexId](const auto& indexEntry) {
+                    if (uint64_t(aIndexId) == indexEntry.GetKey()) {
+                      foundTargetId = true;
+                      return true;
+                    }
+
+                    return indexEntry.GetData()->mDeleted;
+                  });
   MOZ_ASSERT_IF(isLastIndex, foundTargetId);
 
   RefPtr<DeleteIndexOp> op = new DeleteIndexOp(
@@ -16408,54 +16408,49 @@ void QuotaClient::ReleaseIOThreadObjects() {
   }
 }
 
-void QuotaClient::AbortOperations(const nsACString& aOrigin) {
+template <typename Condition>
+void QuotaClient::InvalidateLiveDatabasesMatching(const Condition& aCondition) {
   AssertIsOnBackgroundThread();
 
   if (!gLiveDatabaseHashtable) {
     return;
   }
 
+  // Invalidating a Database will cause it to be removed from the
+  // gLiveDatabaseHashtable entries' mLiveDatabases, and, if it was the last
+  // element in mLiveDatabases, to remove the whole hashtable entry. Therefore,
+  // we need to make a temporary list of the databases to invalidate to avoid
+  // iterator invalidation.
+
   nsTArray<RefPtr<Database>> databases;
 
-  for (auto iter = gLiveDatabaseHashtable->ConstIter(); !iter.Done();
-       iter.Next()) {
-    for (Database* database : iter.Data()->mLiveDatabases) {
-      if (aOrigin.IsVoid() || database->Origin() == aOrigin) {
+  for (const auto& liveDatabasesEntry : *gLiveDatabaseHashtable) {
+    for (Database* database : liveDatabasesEntry.GetData()->mLiveDatabases) {
+      if (aCondition(database)) {
         databases.AppendElement(database);
       }
     }
   }
 
-  for (Database* database : databases) {
+  for (const auto& database : databases) {
     database->Invalidate();
   }
+}
 
-  databases.Clear();
+void QuotaClient::AbortOperations(const nsACString& aOrigin) {
+  AssertIsOnBackgroundThread();
+
+  InvalidateLiveDatabasesMatching([&aOrigin](const auto& database) {
+    return aOrigin.IsVoid() || database->Origin() == aOrigin;
+  });
 }
 
 void QuotaClient::AbortOperationsForProcess(ContentParentId aContentParentId) {
   AssertIsOnBackgroundThread();
 
-  if (!gLiveDatabaseHashtable) {
-    return;
-  }
-
-  nsTArray<RefPtr<Database>> databases;
-
-  for (auto iter = gLiveDatabaseHashtable->ConstIter(); !iter.Done();
-       iter.Next()) {
-    for (Database* database : iter.Data()->mLiveDatabases) {
-      if (database->IsOwnedByProcess(aContentParentId)) {
-        databases.AppendElement(database);
-      }
-    }
-  }
-
-  for (Database* database : databases) {
-    database->Invalidate();
-  }
-
-  databases.Clear();
+  InvalidateLiveDatabasesMatching([aContentParentId](const auto& database) {
+    return database->IsOwnedByProcess(aContentParentId);
+  });
 }
 
 void QuotaClient::StartIdleMaintenance() {
@@ -16572,7 +16567,9 @@ void QuotaClient::ShutdownTimedOut() {
     data.Append("LiveDatabases: ");
     data.AppendInt(gLiveDatabaseHashtable->Count());
     data.Append(" (");
-
+    // TODO: This is a basic join-sequence-of-strings operation. Don't we have
+    // that available, i.e. something similar to
+    // https://searchfox.org/mozilla-central/source/security/sandbox/chromium/base/strings/string_util.cc#940
     nsTHashtable<nsCStringHashKey> ids;
 
     for (const auto& entry : *gLiveDatabaseHashtable) {
@@ -16614,10 +16611,9 @@ void QuotaClient::DeleteTimerCallback(nsITimer* aTimer, void* aClosure) {
   MOZ_ASSERT(self->mDeleteTimer);
   MOZ_ASSERT(SameCOMIdentity(self->mDeleteTimer, aTimer));
 
-  for (auto iter = self->mPendingDeleteInfos.ConstIter(); !iter.Done();
-       iter.Next()) {
-    auto key = iter.Key();
-    auto value = iter.Data();
+  for (const auto& pendingDeleteInfoEntry : self->mPendingDeleteInfos) {
+    const auto& key = pendingDeleteInfoEntry.GetKey();
+    const auto& value = pendingDeleteInfoEntry.GetData();
     MOZ_ASSERT(!value->IsEmpty());
 
     RefPtr<DeleteFilesRunnable> runnable =
@@ -17487,14 +17483,16 @@ nsresult Maintenance::BeginDatabaseMaintenance() {
       }
 
       if (gLiveDatabaseHashtable) {
-        for (auto iter = gLiveDatabaseHashtable->ConstIter(); !iter.Done();
-             iter.Next()) {
-          for (Database* database : iter.Data()->mLiveDatabases) {
-            if (database->FilePath() == aDatabasePath) {
-              return false;
-            }
-          }
-        }
+        return std::all_of(
+            gLiveDatabaseHashtable->cbegin(), gLiveDatabaseHashtable->cend(),
+            [&aDatabasePath](const auto& liveDatabasesEntry) {
+              const auto& liveDatabases =
+                  liveDatabasesEntry.GetData()->mLiveDatabases;
+              return std::all_of(liveDatabases.cbegin(), liveDatabases.cend(),
+                                 [&aDatabasePath](const auto& database) {
+                                   return database->FilePath() != aDatabasePath;
+                                 });
+            });
       }
 
       return true;
@@ -18685,9 +18683,8 @@ nsresult DatabaseOperationBase::GetUniqueIndexTableForObjectStore(
   UniqueIndexTable* const uniqueIndexTable = aMaybeUniqueIndexTable.ptr();
   MOZ_ASSERT(uniqueIndexTable);
 
-  for (auto iter = objectStoreMetadata->mIndexes.Iter(); !iter.Done();
-       iter.Next()) {
-    FullIndexMetadata* const value = iter.UserData();
+  for (const auto& indexEntry : objectStoreMetadata->mIndexes) {
+    FullIndexMetadata* const value = indexEntry.GetData();
     MOZ_ASSERT(!uniqueIndexTable->Get(value->mCommonMetadata.id()));
 
     if (NS_WARN_IF(!uniqueIndexTable->Put(value->mCommonMetadata.id(),
@@ -21278,20 +21275,18 @@ void OpenDatabaseOp::MetadataToSpec(DatabaseSpec& aSpec) {
 
   aSpec.metadata() = mMetadata->mCommonMetadata;
 
-  for (auto objectStoreIter = mMetadata->mObjectStores.ConstIter();
-       !objectStoreIter.Done(); objectStoreIter.Next()) {
-    FullObjectStoreMetadata* metadata = objectStoreIter.UserData();
-    MOZ_ASSERT(objectStoreIter.Key());
+  for (const auto& objectStoreEntry : mMetadata->mObjectStores) {
+    FullObjectStoreMetadata* metadata = objectStoreEntry.GetData();
+    MOZ_ASSERT(objectStoreEntry.GetKey());
     MOZ_ASSERT(metadata);
 
     // XXX This should really be fallible...
     ObjectStoreSpec* objectStoreSpec = aSpec.objectStores().AppendElement();
     objectStoreSpec->metadata() = metadata->mCommonMetadata;
 
-    for (auto indexIter = metadata->mIndexes.Iter(); !indexIter.Done();
-         indexIter.Next()) {
-      FullIndexMetadata* indexMetadata = indexIter.UserData();
-      MOZ_ASSERT(indexIter.Key());
+    for (const auto& indexEntry : metadata->mIndexes) {
+      FullIndexMetadata* indexMetadata = indexEntry.GetData();
+      MOZ_ASSERT(indexEntry.GetKey());
       MOZ_ASSERT(indexMetadata);
 
       // XXX This should really be fallible...
@@ -21331,9 +21326,8 @@ void OpenDatabaseOp::AssertMetadataConsistency(
 
   MOZ_ASSERT(thisDB->mObjectStores.Count() == otherDB->mObjectStores.Count());
 
-  for (auto objectStoreIter = thisDB->mObjectStores.ConstIter();
-       !objectStoreIter.Done(); objectStoreIter.Next()) {
-    FullObjectStoreMetadata* thisObjectStore = objectStoreIter.UserData();
+  for (const auto& objectStoreEntry : thisDB->mObjectStores) {
+    FullObjectStoreMetadata* thisObjectStore = objectStoreEntry.GetData();
     MOZ_ASSERT(thisObjectStore);
     MOZ_ASSERT(!thisObjectStore->mDeleted);
 
@@ -21367,9 +21361,8 @@ void OpenDatabaseOp::AssertMetadataConsistency(
     MOZ_ASSERT(thisObjectStore->mIndexes.Count() ==
                otherObjectStore->mIndexes.Count());
 
-    for (auto indexIter = thisObjectStore->mIndexes.Iter(); !indexIter.Done();
-         indexIter.Next()) {
-      FullIndexMetadata* thisIndex = indexIter.UserData();
+    for (const auto& indexEntry : thisObjectStore->mIndexes) {
+      FullIndexMetadata* thisIndex = indexEntry.GetData();
       MOZ_ASSERT(thisIndex);
       MOZ_ASSERT(!thisIndex->mDeleted);
 
