@@ -330,7 +330,8 @@ def old_configure(prepare_configure, prepare_configure_options, altered_path):
     if altered_path:
         env['PATH'] = altered_path
 
-    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                            env=env)
     while True:
         line = proc.stdout.readline()
         if not line:
