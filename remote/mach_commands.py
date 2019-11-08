@@ -8,6 +8,7 @@ from __future__ import (
     unicode_literals,
 )
 
+import json
 import sys
 import os
 import tempfile
@@ -182,8 +183,6 @@ class PuppeteerRunner(MozbuildObject):
     def __init__(self, *args, **kwargs):
         super(PuppeteerRunner, self).__init__(*args, **kwargs)
 
-        self.profile = mozprofile.Profile()
-
         self.remotedir = os.path.join(self.topsrcdir, "remote")
         self.puppeteerdir = os.path.join(self.remotedir, "test", "puppeteer")
 
@@ -208,47 +207,47 @@ class PuppeteerRunner(MozbuildObject):
         setup()
 
         binary = params.get("binary") or self.get_binary_path()
+        product = params.get("product", "firefox")
 
-        # currently runs against puppeteer-chrome
-        # but future intention is to run against puppeteer-firefox
-        # when it targets the Mozilla remote agent instead of Juggler
-        env = {"CHROME": binary,
-               "DUMPIO": "1"}
+        env = {"DUMPIO": "1"}
+        extra_options = {}
+        for k, v in params.get("extra_launcher_options", {}).items():
+            extra_options[k] = json.loads(v)
+
+        if product == "firefox":
+            env["BINARY"] = binary
+            command = ["run", "funit", "--verbose"]
+        elif product == "chrome":
+            command = ["run", "unit", "--verbose"]
 
         if params.get("jobs"):
             env["PPTR_PARALLEL_TESTS"] = str(params["jobs"])
-
         env["HEADLESS"] = str(params.get("headless", False))
 
-        prefs = params.get("extra_prefs", {})
+        prefs = {}
         for k, v in params.get("extra_prefs", {}).items():
             prefs[k] = mozprofile.Preferences.cast(v)
 
-        prefs.update({
-            # https://bugzilla.mozilla.org/show_bug.cgi?id=1544393
-            "remote.enabled": True,
-            # https://bugzilla.mozilla.org/show_bug.cgi?id=1543115
-            "browser.dom.window.dump.enabled": True,
-        })
+        if prefs:
+            extra_options["extraPrefs"] = prefs
 
-        self.profile.set_preferences(prefs)
+        if extra_options:
+            env["EXTRA_LAUNCH_OPTIONS"] = json.dumps(extra_options)
 
-        # PROFILE is a Puppeteer workaround (see ab302d6)
-        # for passing the --profile flag to Firefox
-        env["PROFILE"] = self.profile.profile
-
-        return npm("run", "unit", "--verbose", *tests,
-                   cwd=self.puppeteerdir,
-                   env=env)
+        return npm(*command, cwd=self.puppeteerdir, env=env)
 
 
 @CommandProvider
 class PuppeteerTest(MachCommandBase):
     @Command("puppeteer-test", category="testing",
              description="Run Puppeteer unit tests.")
+    @CommandArgument("--product",
+                     type=str,
+                     default="firefox",
+                     choices=["chrome", "firefox"])
     @CommandArgument("--binary",
                      type=str,
-                     help="Path to Firefox binary.  Defaults to local build.")
+                     help="Path to browser binary.  Defaults to local Firefox build.")
     @CommandArgument("-z", "--headless",
                      action="store_true",
                      help="Run browser in headless mode.")
@@ -257,6 +256,11 @@ class PuppeteerTest(MachCommandBase):
                      dest="extra_prefs",
                      metavar="<pref>=<value>",
                      help="Defines additional user preferences.")
+    @CommandArgument("--setopt",
+                     action="append",
+                     dest="extra_options",
+                     metavar="<option>=<value>",
+                     help="Defines additional options for `puppeteer.launch`.")
     @CommandArgument("-j",
                      dest="jobs",
                      type=int,
@@ -264,10 +268,13 @@ class PuppeteerTest(MachCommandBase):
                      help="Optionally run tests in parallel.")
     @CommandArgument("tests", nargs="*")
     def puppeteer_test(self, binary=None, headless=False, extra_prefs=None,
-                       jobs=1, tests=None, **kwargs):
+                       extra_options=None, jobs=1, tests=None, product="firefox", **kwargs):
         # moztest calls this programmatically with test objects or manifests
         if "test_objects" in kwargs and tests is not None:
             raise ValueError("Expected either 'test_objects' or 'tests'")
+
+        if product != "firefox" and extra_prefs is not None:
+            raise ValueError("User preferences are not recognized by %s" % product)
 
         if "test_objects" in kwargs:
             tests = []
@@ -281,23 +288,35 @@ class PuppeteerTest(MachCommandBase):
                 exit(EX_USAGE, "syntax error in --setpref={}".format(s))
             prefs[kv[0]] = kv[1].strip()
 
-        self.install_puppeteer()
+        options = {}
+        for s in (extra_options or []):
+            kv = s.split("=")
+            if len(kv) != 2:
+                exit(EX_USAGE, "syntax error in --setopt={}".format(s))
+            options[kv[0]] = kv[1].strip()
+
+        self.install_puppeteer(product)
 
         params = {"binary": binary,
                   "headless": headless,
                   "extra_prefs": prefs,
-                  "jobs": jobs}
+                  "product": product,
+                  "jobs": jobs,
+                  "extra_launcher_options": options}
         puppeteer = self._spawn(PuppeteerRunner)
         try:
             return puppeteer.run_test(*tests, **params)
         except Exception as e:
             exit(EX_SOFTWARE, e)
 
-    def install_puppeteer(self):
+    def install_puppeteer(self, product):
         setup()
+        env = {}
+        if product != "chrome":
+            env["PUPPETEER_SKIP_CHROMIUM_DOWNLOAD"] = "1"
         npm("install",
             cwd=os.path.join(self.topsrcdir, "remote", "test", "puppeteer"),
-            env={"PUPPETEER_SKIP_CHROMIUM_DOWNLOAD": "1"})
+            env=env)
 
 
 def exit(code, error=None):
