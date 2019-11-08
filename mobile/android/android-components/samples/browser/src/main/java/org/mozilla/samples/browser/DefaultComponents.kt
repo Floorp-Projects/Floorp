@@ -55,6 +55,8 @@ import org.mozilla.samples.browser.integration.FindInPageIntegration
 import org.mozilla.samples.browser.request.SampleRequestInterceptor
 import java.util.concurrent.TimeUnit
 
+private const val DAY_IN_MINUTES = 24 * 60L
+
 @Suppress("LargeClass")
 open class DefaultComponents(private val applicationContext: Context) {
 
@@ -114,7 +116,9 @@ open class DefaultComponents(private val applicationContext: Context) {
         }
     }
 
-    val addOnProvider by lazy { AddOnCollectionProvider(client = client) }
+    val addOnProvider by lazy {
+        AddOnCollectionProvider(applicationContext, client, maxCacheAgeInMinutes = DAY_IN_MINUTES)
+    }
 
     val sessionUseCases by lazy { SessionUseCases(sessionManager) }
 

@@ -12,13 +12,18 @@ import mozilla.components.concept.fetch.Response
 import mozilla.components.support.test.any
 import mozilla.components.support.test.file.loadResourceAsString
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.never
+import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
+import java.util.Date
 
 @RunWith(AndroidJUnit4::class)
 class AddOnCollectionProviderTest {
@@ -28,14 +33,13 @@ class AddOnCollectionProviderTest {
         val jsonResponse = loadResourceAsString("/collection.json")
         val mockedClient = mock<Client>()
         val mockedResponse = mock<Response>()
-        val mockedMockedBody = mock<Response.Body>()
-
-        whenever(mockedMockedBody.string(any())).thenReturn(jsonResponse)
-        whenever(mockedResponse.body).thenReturn(mockedMockedBody)
+        val mockedBody = mock<Response.Body>()
+        whenever(mockedBody.string(any())).thenReturn(jsonResponse)
+        whenever(mockedResponse.body).thenReturn(mockedBody)
         whenever(mockedResponse.status).thenReturn(200)
         whenever(mockedClient.fetch(any())).thenReturn(mockedResponse)
 
-        val provider = AddOnCollectionProvider(client = mockedClient)
+        val provider = AddOnCollectionProvider(testContext, client = mockedClient)
 
         runBlocking {
             val addOns = provider.getAvailableAddOns()
@@ -101,7 +105,7 @@ class AddOnCollectionProviderTest {
         whenever(mockedResponse.status).thenReturn(200)
         whenever(mockedClient.fetch(any())).thenReturn(mockedResponse)
 
-        val provider = AddOnCollectionProvider(client = mockedClient)
+        val provider = AddOnCollectionProvider(testContext, client = mockedClient)
 
         runBlocking {
             val addOns = provider.getAvailableAddOns()
@@ -141,11 +145,81 @@ class AddOnCollectionProviderTest {
         whenever(mockedResponse.status).thenReturn(500)
         whenever(mockedClient.fetch(any())).thenReturn(mockedResponse)
 
-        val provider = AddOnCollectionProvider(client = mockedClient)
+        val provider = AddOnCollectionProvider(testContext, client = mockedClient)
 
         runBlocking {
             val addOns = provider.getAvailableAddOns()
             assertTrue(addOns.isEmpty())
         }
+    }
+
+    @Test
+    fun `getAvailableAddOns - returns cached result only if allowed and not expired`() {
+        val jsonResponse = loadResourceAsString("/collection.json")
+        val mockedClient = mock<Client>()
+        val mockedResponse = mock<Response>()
+        val mockedBody = mock<Response.Body>()
+        whenever(mockedBody.string(any())).thenReturn(jsonResponse)
+        whenever(mockedResponse.body).thenReturn(mockedBody)
+        whenever(mockedResponse.status).thenReturn(200)
+        whenever(mockedClient.fetch(any())).thenReturn(mockedResponse)
+
+        val provider = spy(AddOnCollectionProvider(testContext, client = mockedClient))
+
+        runBlocking {
+            provider.getAvailableAddOns(false)
+            verify(provider, never()).readFromDiskCache()
+
+            whenever(provider.cacheExpired(testContext)).thenReturn(true)
+            provider.getAvailableAddOns(true)
+            verify(provider, never()).readFromDiskCache()
+
+            whenever(provider.cacheExpired(testContext)).thenReturn(false)
+            provider.getAvailableAddOns(true)
+            verify(provider).readFromDiskCache()
+        }
+    }
+
+    @Test
+    fun `getAvailableAddOns - writes response to cache if configured`() {
+        val jsonResponse = loadResourceAsString("/collection.json")
+        val mockedClient = mock<Client>()
+        val mockedResponse = mock<Response>()
+        val mockedBody = mock<Response.Body>()
+        whenever(mockedBody.string(any())).thenReturn(jsonResponse)
+        whenever(mockedResponse.body).thenReturn(mockedBody)
+        whenever(mockedResponse.status).thenReturn(200)
+        whenever(mockedClient.fetch(any())).thenReturn(mockedResponse)
+
+        val provider = spy(AddOnCollectionProvider(testContext, client = mockedClient))
+        val cachingProvider = spy(AddOnCollectionProvider(testContext, client = mockedClient, maxCacheAgeInMinutes = 1))
+
+        runBlocking {
+            provider.getAvailableAddOns()
+            verify(provider, never()).writeToDiskCache(jsonResponse)
+
+            cachingProvider.getAvailableAddOns()
+            verify(cachingProvider).writeToDiskCache(jsonResponse)
+        }
+    }
+
+    @Test
+    fun `getAvailableAddOns - cache expiration check`() {
+        var provider = spy(AddOnCollectionProvider(testContext, client = mock(), maxCacheAgeInMinutes = -1))
+        whenever(provider.getCacheLastUpdated(testContext)).thenReturn(Date().time)
+        assertTrue(provider.cacheExpired(testContext))
+
+        whenever(provider.getCacheLastUpdated(testContext)).thenReturn(-1)
+        assertTrue(provider.cacheExpired(testContext))
+
+        provider = spy(AddOnCollectionProvider(testContext, client = mock(), maxCacheAgeInMinutes = 10))
+        whenever(provider.getCacheLastUpdated(testContext)).thenReturn(-1)
+        assertTrue(provider.cacheExpired(testContext))
+
+        whenever(provider.getCacheLastUpdated(testContext)).thenReturn(Date().time - 60 * MINUTE_IN_MS)
+        assertTrue(provider.cacheExpired(testContext))
+
+        whenever(provider.getCacheLastUpdated(testContext)).thenReturn(Date().time + 60 * MINUTE_IN_MS)
+        assertFalse(provider.cacheExpired(testContext))
     }
 }

@@ -6,18 +6,28 @@
 
 package mozilla.components.feature.addons.amo
 
+import android.content.Context
+import android.util.AtomicFile
+import androidx.annotation.VisibleForTesting
 import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.Request
 import mozilla.components.concept.fetch.isSuccess
-import mozilla.components.feature.addons.AddOnsProvider
 import mozilla.components.feature.addons.AddOn
+import mozilla.components.feature.addons.AddOnsProvider
+import mozilla.components.support.base.log.logger.Logger
+import mozilla.components.support.ktx.util.readAndDeserialize
+import mozilla.components.support.ktx.util.writeString
 import org.json.JSONArray
 import org.json.JSONObject
+import java.io.File
 import java.io.IOException
+import java.util.Date
 
 internal const val API_VERSION = "api/v4"
 internal const val DEFAULT_SERVER_URL = "https://addons.mozilla.org"
 internal const val DEFAULT_COLLECTION_NAME = "7e8d6dc651b54ab385fb8791bf9dac"
+internal const val COLLECTION_FILE_NAME = "mozilla_components_addon_collection_%s.json"
+internal const val MINUTE_IN_MS = 60 * 1000
 
 /**
  * Provide access to the collections AMO API.
@@ -27,30 +37,91 @@ internal const val DEFAULT_COLLECTION_NAME = "7e8d6dc651b54ab385fb8791bf9dac"
  * or testing. Defaults to [DEFAULT_SERVER_URL].
  * @property collectionName The name of the collection to access, defaults
  * to [DEFAULT_COLLECTION_NAME].
+ * @property maxCacheAgeInMinutes maximum time (in minutes) the collection cache
+ * should remain valid. Defaults to -1, meaning no cache is being used by default.
  * @property client A reference of [Client] for interacting with the AMO HTTP api.
  */
 class AddOnCollectionProvider(
+    private val context: Context,
+    private val client: Client,
     private val serverURL: String = DEFAULT_SERVER_URL,
     private val collectionName: String = DEFAULT_COLLECTION_NAME,
-    private val client: Client
+    private val maxCacheAgeInMinutes: Long = -1
 ) : AddOnsProvider {
 
+    private val logger = Logger("AddOnCollectionProvider")
+
+    private val diskCacheLock = Any()
+
     /**
-     * Interacts with the collections endpoint to provide a list of available add-ons.
+     * Interacts with the collections endpoint to provide a list of available
+     * add-ons. May return a cached response, if available, not expired (see
+     * [maxCacheAgeInMinutes]) and allowed (see [allowCache]).
+     *
+     * @param allowCache whether or not the result may be provided
+     * from a previously cached response, defaults to true.
      * @throws IOException if the request could not be executed due to cancellation,
      * a connectivity problem or a timeout.
      */
     @Throws(IOException::class)
-    override suspend fun getAvailableAddOns(): List<AddOn> {
-        client.fetch(
-            Request(url = "$serverURL/$API_VERSION/accounts/account/mozilla/collections/$collectionName/addons")
-        ).use { response ->
-            return if (response.isSuccess) {
-                JSONObject(response.body.string(Charsets.UTF_8)).getAddOns()
-            } else {
-                emptyList()
+    override suspend fun getAvailableAddOns(allowCache: Boolean): List<AddOn> {
+        val cachedAddOns = if (allowCache && !cacheExpired(context)) {
+            readFromDiskCache()
+        } else {
+            null
+        }
+
+        return cachedAddOns ?: client.fetch(
+                Request(url = "$serverURL/$API_VERSION/accounts/account/mozilla/collections/$collectionName/addons")
+            )
+            .use { response ->
+                if (response.isSuccess) {
+                    val responseBody = response.body.string(Charsets.UTF_8)
+                    JSONObject(responseBody).getAddOns().also {
+                        if (maxCacheAgeInMinutes > 0) {
+                            writeToDiskCache(responseBody)
+                        }
+                    }
+                } else {
+                    logger.error("Failed to fetch addon collection. Status code: ${response.status}")
+                    emptyList()
+                }
+            }
+    }
+
+    @VisibleForTesting
+    internal fun writeToDiskCache(collectionResponse: String) {
+        synchronized(diskCacheLock) {
+            getCacheFile(context).writeString { collectionResponse }
+        }
+    }
+
+    @VisibleForTesting
+    internal fun readFromDiskCache(): List<AddOn>? {
+        synchronized(diskCacheLock) {
+            return getCacheFile(context).readAndDeserialize {
+                JSONObject(it).getAddOns()
             }
         }
+    }
+
+    @VisibleForTesting
+    internal fun cacheExpired(context: Context): Boolean {
+        return getCacheLastUpdated(context) < Date().time - maxCacheAgeInMinutes * MINUTE_IN_MS
+    }
+
+    @VisibleForTesting
+    internal fun getCacheLastUpdated(context: Context): Long {
+        val file = getBaseCacheFile(context)
+        return if (file.exists()) file.lastModified() else -1
+    }
+
+    private fun getCacheFile(context: Context): AtomicFile {
+        return AtomicFile(getBaseCacheFile(context))
+    }
+
+    private fun getBaseCacheFile(context: Context): File {
+        return File(context.filesDir, COLLECTION_FILE_NAME.format(collectionName))
     }
 }
 

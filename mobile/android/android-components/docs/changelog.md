@@ -12,6 +12,22 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
+* **feature-addons**
+  *  ⚠️ **This is a breaking change**:
+  * Renamed to `AddOnsCollectionsProvider` to `AddOnCollectionProvider` and added caching support:
+  ```Kotlin
+  val addOnsProvider by lazy {
+    // Keeps addon collection response cached and valid for one day
+    AddOnCollectionProvider(applicationContext, client, maxCacheAgeInMinutes = 24 * 60)      
+  }
+
+  // May return a cached result, if available
+  val addOns = addOnsProvider.getAvailableAddOns()
+
+  // Will never return a cached result
+  val addOns = addOnsProvider.getAvailableAddOns(allowCache = false)
+  ```
+
 # 21.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v20.0.0...v21.0.0)
