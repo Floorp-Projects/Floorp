@@ -256,6 +256,31 @@
       ] });
     }
 
+    // Ensure that embed elements recreate their Accessible if they started
+    // without an src and then an src is set later.
+    async function embedBecomesOuterDoc() {
+      let msg = "embedBecomesOuterDoc";
+      info(msg);
+
+      testAccessibleTree("c12", { SECTION: [
+        { TEXT: [] }
+      ] });
+
+      let events = waitForOrderedEvents([
+          [EVENT_HIDE, "embed"],
+          [EVENT_SHOW, "embed"],
+          [EVENT_REORDER, "c12"],
+        ], msg);
+      getNode("embed").src = "data:text/html,";
+      await events;
+
+      testAccessibleTree("c12", { SECTION: [
+        { INTERNAL_FRAME: [
+          { DOCUMENT: [] }
+        ] }
+      ] });
+    }
+
     async function doTest() {
       await hideDivFromInsideSpan();
 
@@ -278,6 +303,8 @@
       listItemReframe();
 
       await bodyReframe();
+
+      await embedBecomesOuterDoc();
 
       SimpleTest.finish();
     }
@@ -337,6 +364,8 @@
         <li id="li">Test</li>
     </ul>
   </div>
+
+  <div id="c12"><embed id="embed"></embed></div>
 
   <div id="c10">
     <iframe id="iframe"></iframe>
