@@ -271,6 +271,8 @@ class GeckoChildProcessHost : public ChildProcessHost,
   static StaticMutex sMutex;
 };
 
+nsCOMPtr<nsIEventTarget> GetIPCLauncher();
+
 } /* namespace ipc */
 } /* namespace mozilla */
 
