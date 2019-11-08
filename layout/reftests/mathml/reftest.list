@@ -143,7 +143,7 @@ fails-if(skiaContent&&OSX>=1010) == scale-stretchy-3.xhtml scale-stretchy-3-ref.
 == mpadded-5.html mpadded-5-ref.html
 == mpadded-1-2.html mpadded-1-2-ref.html
 == mpadded-6.html mpadded-6-ref.html
-random-if(gtkWidget) fails-if(geckoview&&webrender) == mpadded-7.html mpadded-7-ref.html # bug 1309430
+random-if(gtkWidget) fails-if(geckoview&&webrender&&device) == mpadded-7.html mpadded-7-ref.html # bug 1309430
 random-if(gtkWidget) == mpadded-8.html mpadded-8-ref.html # bug 1309430
 random-if(gtkWidget) == mpadded-9.html mpadded-9-ref.html # bug 1309430
 == scriptlevel-1.html scriptlevel-1-ref.html
@@ -282,11 +282,11 @@ fuzzy-if(d2d,0-7,0-1) == menclose-6-updiagonalstrike.html menclose-6-ref.html
 == menclose-6-phasorangle.html menclose-6-ref.html
 == mmultiscript-align.html mmultiscript-align-ref.html
 fails-if(winWidget) == subscript-italic-correction.html subscript-italic-correction-ref.html # bug 961482
-fails-if(Android&&!webrender) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mathvariant-1a.html mathvariant-1a-ref.html # Bug 1010679, Bug 1392106
-fails-if(Android&&!webrender) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mathvariant-1b.html mathvariant-1b-ref.html # Bug 1010679, Bug 1392106
-fails-if(Android&&!webrender) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mathvariant-1c.html mathvariant-1c-ref.html # Bug 1010679, Bug 1392106
+fails-if(Android&&emulator) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mathvariant-1a.html mathvariant-1a-ref.html # Bug 1010679, Bug 1392106
+fails-if(Android&&emulator) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mathvariant-1b.html mathvariant-1b-ref.html # Bug 1010679, Bug 1392106
+fails-if(Android&&emulator) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == mathvariant-1c.html mathvariant-1c-ref.html # Bug 1010679, Bug 1392106
 == mathvariant-1d.html mathvariant-1d-ref.html
-fails-if(Android&&!webrender) fails-if(OSX) == mathvariant-2.html mathvariant-2-ref.html # Bugs 1010678, 1010679
+fails-if(Android&&emulator) fails-if(OSX) == mathvariant-2.html mathvariant-2-ref.html # Bugs 1010678, 1010679
 pref(mathml.deprecated_style_attributes.disabled,false) == mathvariant-3.html mathvariant-3-ref.html
 == mathvariant-4.html mathvariant-4-ref.html
 pref(mathml.deprecated_style_attributes.disabled,false) == mathvariant-5.html mathvariant-5-ref.html
