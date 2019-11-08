@@ -7720,6 +7720,13 @@ bool GCRuntime::gcIfRequested() {
 }
 
 void js::gc::FinishGC(JSContext* cx, JS::GCReason reason) {
+  // Calling this when GC is suppressed won't have any effect.
+  MOZ_ASSERT(!cx->suppressGC);
+
+  // GC callbacks may run arbitrary code, including JS. Check this regardless of
+  // whether we GC for this invocation.
+  MOZ_ASSERT(cx->isNurseryAllocAllowed());
+
   if (JS::IsIncrementalGCInProgress(cx)) {
     JS::PrepareForIncrementalGC(cx);
     JS::FinishIncrementalGC(cx, reason);
