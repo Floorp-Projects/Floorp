@@ -2845,12 +2845,6 @@ void SamplerThread::Run() {
               }
             }
 
-            ThreadResponsiveness* resp =
-                profiledThreadData->GetThreadResponsiveness();
-            if (resp) {
-              resp->Update();
-            }
-
             AUTO_PROFILER_STATS(gecko_SamplerThread_Run_DoPeriodicSample);
 
             TimeStamp now = TimeStamp::NowUnfuzzed();
@@ -2877,12 +2871,193 @@ void SamplerThread::Run() {
                   DoPeriodicSample(lock, *registeredThread, *profiledThreadData,
                                    now, aRegs, samplePos, localProfileBuffer);
 
-                  if (resp && resp->HasData()) {
-                    unresponsiveDuration_ms =
-                        Some(resp->GetUnresponsiveDuration(
-                            (now - CorePS::ProcessStartTime())
-                                .ToMilliseconds()));
-                  }
+                  // For "responsiveness", we want the input delay - but if
+                  // there are no events in the input queue (or even if there
+                  // are), we're interested in how long the delay *would* be for
+                  // an input event now, which would be the time to finish the
+                  // current event + the delay caused by any events already in
+                  // the input queue (plus any High priority events).  Events at
+                  // lower priorities (in a PrioritizedEventQueue) than Input
+                  // count for input delay only for the duration that they're
+                  // running, since when they finish, any queued input event
+                  // would run.
+                  //
+                  // Unless we record the time state of all events and queue
+                  // states at all times, this is hard to precisely calculate,
+                  // but we can approximate it well in post-processing with
+                  // RunningEventDelay and RunningEventStart.
+                  //
+                  // RunningEventDelay is the time duration the event was queued
+                  // before starting execution.  RunningEventStart is the time
+                  // the event started. (Note: since we care about Input event
+                  // delays on MainThread, for PrioritizedEventQueues we return
+                  // 0 for RunningEventDelay if the currently running event has
+                  // a lower priority than Input (since Input events won't queue
+                  // behind them).
+                  //
+                  // To directly measure this we would need to record the time
+                  // at which the newest event currently in each queue at time X
+                  // (the sample time) finishes running.  This of course would
+                  // require looking into the future, or recording all this
+                  // state and then post-processing it later. If we were to
+                  // trace every event start and end we could do this, but it
+                  // would have significant overhead to do so (and buffer
+                  // usage).  From a recording of RunningEventDelays and
+                  // RunningEventStarts we can infer the actual delay:
+                  //
+                  // clang-format off
+                  // Event queue: <tail> D  :  C  :  B  : A <head>
+                  // Time inserted (ms): 40 :  20 : 10  : 0
+                  // Run Time (ms):      30 : 100 : 40  : 30
+                  //
+                  // 0    10   20   30   40   50   60   70   80   90  100  110  120  130  140  150  160  170
+                  // [A||||||||||||]
+                  //      ----------[B|||||||||||||||||]
+                  //           -------------------------[C|||||||||||||||||||||||||||||||||||||||||||||||]
+                  //                     -----------------------------------------------------------------[D|||||||||...]
+                  //
+                  // Calculate the delay of a new event added at time t: (run every sample)
+                  //    TimeSinceRunningEventBlockedInputEvents = RunningEventDelay + (now - RunningEventStart);
+                  //    effective_submission = now - TimeSinceRunningEventBlockedInputEvents;
+                  //    delta = (now - last_sample_time);
+                  //    last_sample_time = now;
+                  //    for (t=effective_submission to now) {
+                  //       delay[t] += delta;
+                  //    }
+                  //
+                  // Can be reduced in overhead by:
+                  //    TimeSinceRunningEventBlockedInputEvents = RunningEventDelay + (now - RunningEventStart);
+                  //    effective_submission = now - TimeSinceRunningEventBlockedInputEvents;
+                  //    if (effective_submission != last_submission) {
+                  //      delta = (now - last_submision);
+                  //      // this loop should be made to match each sample point in the range
+                  //      // intead of assuming 1ms sampling as this pseudocode does
+                  //      for (t=last_submission to effective_submission-1) {
+                  //         delay[t] += delta;
+                  //         delta -= 1; // assumes 1ms; adjust as needed to match for()
+                  //      }
+                  //      last_submission = effective_submission;
+                  //    }
+                  //
+                  // Time  Head of queue   Running Event  RunningEventDelay  Delay of       Effective     Started    Calc (submission->now add 10ms)  Final
+                  //                                                         hypothetical   Submission    Running @                                   result
+                  //                                                         event E
+                  // 0        Empty            A                0                30              0           0       @0=10                             30
+                  // 10         B              A                0                60              0           0       @0=20, @10=10                     60
+                  // 20         B              A                0               150              0           0       @0=30, @10=20, @20=10            150
+                  // 30         C              B               20               140             10          30       @10=20, @20=10, @30=0            140
+                  // 40         C              B               20               160                                  @10=30, @20=20...                160
+                  // 50         C              B               20               150                                                                   150
+                  // 60         C              B               20               140                                  @10=50, @20=40...                140
+                  // 70         D              C               50               130             20          70       @20=50, @30=40...                130
+                  // ...
+                  // 160        D              C               50                40                                  @20=140, @30=130...               40
+                  // 170      <empty>          D              140                30             40                   @40=140, @50=130... (rounding)    30
+                  // 180      <empty>          D              140                20             40                   @40=150                           20
+                  // 190      <empty>          D              140                10             40                   @40=160                           10
+                  // 200      <empty>        <empty>            0                 0             NA                                                      0
+                  //
+                  // Function Delay(t) = the time between t and the time at which a hypothetical
+                  // event e would start executing, if e was enqueued at time t.
+                  //
+                  // Delay(-1) = 0 // Before A was enqueued. No wait time, can start running
+                  //               // instantly.
+                  // Delay(0) = 30 // The hypothetical event e got enqueued just after A got
+                  //               // enqueued. It can start running at 30, when A is done.
+                  // Delay(5) = 25
+                  // Delay(10) = 60 // Can start running at 70, after both A and B are done.
+                  // Delay(19) = 51
+                  // Delay(20) = 150 // Can start running at 170, after A, B & C.
+                  // Delay(25) = 145
+                  // Delay(30) = 170 // Can start running at 200, after A, B, C & D.
+                  // Delay(120) = 80
+                  // Delay(200) = 0 // (assuming nothing was enqueued after D)
+                  //
+                  // For every event that gets enqueued, the Delay time will go up by the
+                  // event's running time at the time at which the event is enqueued.
+                  // The Delay function will be a sawtooth of the following shape:
+                  //
+                  //             |\           |...
+                  //             | \          |
+                  //        |\   |  \         |
+                  //        | \  |   \        |
+                  //     |\ |  \ |    \       |
+                  //  |\ | \|   \|     \      |
+                  //  | \|              \     |
+                  // _|                  \____|
+                  //
+                  //
+                  // A more complex example with a PrioritizedEventQueue:
+                  //
+                  // Event queue: <tail> D  :  C  :  B  : A <head>
+                  // Time inserted (ms): 40 :  20 : 10  : 0
+                  // Run Time (ms):      30 : 100 : 40  : 30
+                  // Priority:         Input: Norm: Norm: Norm
+                  //
+                  // 0    10   20   30   40   50   60   70   80   90  100  110  120  130  140  150  160  170
+                  // [A||||||||||||]
+                  //      ----------[B|||||||||||||||||]
+                  //           ----------------------------------------[C|||||||||||||||||||||||||||||||||||||||||||||||]
+                  //                     ---------------[D||||||||||||]
+                  //
+                  //
+                  // Time  Head of queue   Running Event  RunningEventDelay  Delay of       Effective   Started    Calc (submission->now add 10ms)   Final
+                  //                                                         hypothetical   Submission  Running @                                    result
+                  //                                                         event
+                  // 0        Empty            A                0                30              0           0       @0=10                             30
+                  // 10         B              A                0                20              0           0       @0=20, @10=10                     20
+                  // 20         B              A                0                10              0           0       @0=30, @10=20, @20=10             10
+                  // 30         C              B                0                40             30          30       @30=10                            40
+                  // 40         C              B                0                60             30                   @40=10, @30=20                    60
+                  // 50         C              B                0                50             30                   @50=10, @40=20, @30=30            50
+                  // 60         C              B                0                40             30                   @60=10, @50=20, @40=30, @30=40    40
+                  // 70         C              D               30                30             40          70       @60=20, @50=30, @40=40            30
+                  // 80         C              D               30                20             40          70       ...@50=40, @40=50                 20
+                  // 90         C              D               30                10             40          70       ...@60=40, @50=50, @40=60         10
+                  // 100      <empty>          C                0               100             100        100       @100=10                          100
+                  // 110      <empty>          C                0                90             100        100       @110=10, @100=20                  90
+
+                  //
+                  // For PrioritizedEventQueue, the definition of the Delay(t) function is adjusted: the hypothetical event e has Input priority.
+                  // Delay(-1) = 0 // Before A was enqueued. No wait time, can start running
+                  //               // instantly.
+                  // Delay(0) = 30 // The hypothetical input event e got enqueued just after A got
+                  //               // enqueued. It can start running at 30, when A is done.
+                  // Delay(5) = 25
+                  // Delay(10) = 20
+                  // Delay(25) = 5 // B has been queued, but e does not need to wait for B because e has Input priority and B does not.
+                  //               // So e can start running at 30, when A is done.
+                  // Delay(30) = 40 // Can start running at 70, after B is done.
+                  // Delay(40) = 60 // Can start at 100, after B and D are done (D is Input Priority)
+                  // Delay(80) = 20
+                  // Delay(100) = 100 // Wait for C to finish
+
+                  // clang-format on
+                  //
+                  // Alternatively we could insert (recycled instead of
+                  // allocated/freed) input events at every sample period
+                  // (1ms...), and use them to back-calculate the delay.  This
+                  // might also be somewhat expensive, and would require
+                  // guessing at the maximum delay, which would likely be in the
+                  // seconds, and so you'd need 1000's of pre-allocated events
+                  // per queue per thread - so there would be a memory impact as
+                  // well.
+
+                  TimeDuration currentEventDelay;
+                  TimeDuration currentEventRunning;
+                  registeredThread->GetRunningEventDelay(currentEventDelay,
+                                                         currentEventRunning);
+
+                  // Note: a different definition of responsiveness than the
+                  // 16ms event injection.
+
+                  // Don't suppress 0's for now; that can be a future
+                  // optimization.  We probably want one zero to be stored
+                  // before we start suppressing, which would be more
+                  // complex.
+                  unresponsiveDuration_ms =
+                      Some(currentEventDelay.ToMilliseconds() +
+                           currentEventRunning.ToMilliseconds());
                 });
 
             // If we got responsiveness data, store it before the CompactStack.
