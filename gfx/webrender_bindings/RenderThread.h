@@ -208,9 +208,6 @@ class RenderThread final {
   void NotifyNotUsed(uint64_t aExternalImageId);
 
   /// Can only be called from the render thread.
-  void NofityForUse(uint64_t aExternalImageId);
-
-  /// Can only be called from the render thread.
   void UnregisterExternalImageDuringShutdown(uint64_t aExternalImageId);
 
   /// Can only be called from the render thread.
@@ -278,6 +275,7 @@ class RenderThread final {
  private:
   explicit RenderThread(base::Thread* aThread);
 
+  void HandlePrepareForUse();
   void DeferredRenderTextureHostDestroy();
   void ShutDownTask(layers::SynchronousTask* aTask);
   void InitDeviceTask();
@@ -324,6 +322,10 @@ class RenderThread final {
 
   Mutex mRenderTextureMapLock;
   std::unordered_map<uint64_t, RefPtr<RenderTextureHost>> mRenderTextures;
+  // Hold RenderTextureHosts that are waiting for handling PrepareForUse().
+  // It is for ensuring that PrepareForUse() is called before
+  // RenderTextureHost::Lock().
+  std::list<RefPtr<RenderTextureHost>> mRenderTexturesPrepareForUse;
   // Used to remove all RenderTextureHost that are going to be removed by
   // a deferred callback and remove them right away without waiting for the
   // callback. On device reset we have to remove all GL related resources right
