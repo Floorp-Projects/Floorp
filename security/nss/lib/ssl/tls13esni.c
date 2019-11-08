@@ -728,7 +728,7 @@ tls13_ServerDecryptEsniXtn(const sslSocket *ss, const PRUint8 *in, unsigned int 
 {
     sslReader rdr = SSL_READER(in, inLen);
     PRUint64 suite;
-    const ssl3CipherSuiteDef *suiteDef;
+    const ssl3CipherSuiteDef *suiteDef = NULL;
     SSLAEADCipher aead = NULL;
     TLSExtension *keyShareExtension;
     TLS13KeyShareEntry *entry = NULL;

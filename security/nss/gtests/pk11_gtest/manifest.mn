@@ -14,6 +14,7 @@ CPPSRCS = \
       pk11_chacha20poly1305_unittest.cc \
       pk11_curve25519_unittest.cc \
       pk11_der_private_key_import_unittest.cc \
+      pk11_des_unittest.cc \
       pk11_ecdsa_unittest.cc \
       pk11_encrypt_derive_unittest.cc \
       pk11_export_unittest.cc \
