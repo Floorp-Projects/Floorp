@@ -139,8 +139,8 @@ dictionary WindowActorOptions {
   sequence<DOMString> remoteTypes;
 
   /** This fields are used for configuring individual sides of the actor. */
-  WindowActorSidedOptions parent = {};
-  WindowActorChildOptions child = {};
+  WindowActorSidedOptions parent;
+  WindowActorChildOptions child;
 };
 
 dictionary WindowActorSidedOptions {
@@ -149,7 +149,7 @@ dictionary WindowActorSidedOptions {
    * If not passed, the specified side cannot receive messages, but may send
    * them using `sendAsyncMessage` or `sendQuery`.
    */
-  ByteString moduleURI;
+  required ByteString moduleURI;
 };
 
 dictionary WindowActorChildOptions : WindowActorSidedOptions {

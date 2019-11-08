@@ -5,92 +5,14 @@
 "use strict";
 
 /**
- * This module implements logic for managing JavaScript actor instances bound to
- * message managers. It handles lazily instantiating those actors based on
- * DOM events, IPC messages, or observer notifications, and is meant to entirely
- * replace the existing concept of frame scripts.
+ * This module handles 2 types of JavaScript-implemented actors.
+ * The first is implementations of JSWindowActor, registered through DOM IPC
+ * infrastructure, and are fission-compatible.
+ * The second is legacy implementations of ActorChild/ActorParent, which are
+ * JS classes managed through this module and ActorManagerChild.jsm, which use the
+ * message manager.
  *
- * All actors must be registered in the parent process, before the first child
- * process starts. Once all actors have been registered, the actor data is
- * mangled into a form which can be handled efficiently during content process
- * startup, and shared with all content processes. Frame scripts in those
- * content processes attach that data to frame message managers via
- * ActorManagerChild, which handles instantiating and dispatching to those
- * actors as necessary.
- *
- *
- * Each actor is a class which lives in a JSM, and has a constructor which takes
- * a single message manager argument. Each actor may conceptually have both
- * Child and Parent variants, but only Child variants are currently implemented.
- * The parent and child variants live in separate JSMs, and have separate class
- * names, each of which have Child or Parent appended to their names, as
- * appropriate. For instance, the AudioPlayback actor has a child instance named
- * AudioPlaybackChild which lives in AudioPlaybackChild.jsm.
- *
- *
- * Actors are defined by calling ActorManagerParent.addActors, with an object
- * containing a property for each actor being defined, whose value is an object
- * describing how the actor should be loaded. That object may have the following
- * properties:
- *
- * - "child": The actor definition for the child side of the actor.
- *
- * Each "child" (or "parent", when it is implemented) actor definition may
- * contain the following properties:
- *
- * - "module": The URI from which the modules is loaded. This should be a
- *   resource: URI, ideally beginning with "resource://gre/actors/" or
- *   "resource:///actors/", with a filename matching the name of the actor for
- *   the given side. So, the child side of the AudioPlayback actor should live at
- *   "resource://gre/actors/AudioPlaybackChild.jsm".
- *
- * - "group": A group name which restricts the message managers to which this
- *   actor may be attached. This should match the "messagemanagergroup"
- *   attribute of a <browser> element. Frame scripts are responsible for
- *   attaching the appropriate actors to the appropriate browsers using
- *   ActorManagerChild.attach().
- *
- * - "events": An object containing a property for each event the actor will
- *   listen for, with an options object, as accepted by addEventListener, as its
- *   value. For each such property, an event listener will be added to the
- *   message manager[1] for the given event name, which delegates to the actor's
- *   handleEvent method.
- *
- * - "messages": An array of message manager message names. For each message
- *   name in the list, a message listener will be added to the frame message
- *   manager, and the messages it receives will be delegated to the actor's
- *   receiveMessage method.
- *
- * - "observers": An array of observer topics. A global observer will be added
- *   for each topic in the list, and observer notifications for it will be
- *   delegated to the actor's observe method. Note that observers are global in
- *   nature, and these notifications may therefore have nothing to do with the
- *   message manager the actor is bound to. The actor itself is responsible for
- *   filtering the notifications that apply to it.
- *
- *   These observers are automatically unregistered when the message manager is
- *   destroyed.
- *
- * - "matches": An array of URL match patterns (as accepted by the MatchPattern
- *   class in MatchPattern.webidl) which restrict which pages the actor may be
- *   instantiated for. If this is defined, the actor will only receive DOM
- *   events sent to windows which match this pattern, and will only receive
- *   message manager messages for frame message managers which are currently
- *   hosting a matching DOM window.
- *
- * - "allFrames": this modifies its behavior to allow it to match sub-frames
- *   as well as top-level frames. If "allFrames" is not specified, it will
- *   match only top-level frames.
- *
- * - "matchAboutBlank": If "matches" is specified, this modifies its behavior to
- *   allow it to match about:blank pages. See MozDocumentMatcher.webidl for more
- *   information.
- *
- * [1]: For actors which specify "matches" or "allFrames", the listener will be
- *      added to the DOM window rather than the frame message manager.
- *
- * If Fission is being simulated, and an actor needs to receive events from
- * sub-frames, it must use "allFrames".
+ * The lists of both types of actors start with documentation for that type of actor.
  */
 
 var EXPORTED_SYMBOLS = ["ActorManagerParent"];
@@ -102,6 +24,37 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const { DefaultMap } = ExtensionUtils;
 
+/**
+ * Fission-compatible JSWindowActor implementations.
+ * Each actor options object takes the form of a WindowActorOptions dictionary.
+ * Detailed documentation of these options is in JSWindowActor.webidl.
+ *
+ * Some brief "gotcha"s compared to the legacy type actors:
+ * - both parent and child sides can be specified; at least one must be
+ *   specified. Consider that you may not need both: code in the process
+ *   without a module can still request the JSWindowActor instance by name
+ *   (the key in the dictionary below) and send messages to the other process
+ *   using it - but it cannot listen for responses. Sometimes, this is
+ *   sufficient.
+ *
+ * - JSWindowActor supports `sendQuery`, which allows one process to ask the
+ *   other process for something. The other process replies via the return
+ *   value of `receiveMessage` in the actor, which also supports promises.
+ *   This reduces the need to have "manual" request/response message handling,
+ *   counters, etc.
+ *
+ * - any parent and child option object specified must contain a "moduleURI"
+ *   property. The module must export a class that inherits from
+ *   JSWindowActorChild (for the child side) or JSWindowActorParent (for the
+ *   parent side). The actor should live at resource://gre/actors/
+ *   (for toolkit/ ) or resource///actors/ (for browser/ ) uris.
+ *
+ * - messages are only sent between the parent and child pair of actors.
+ *   Therefore, unlike the legacy actors, it is not necessary to specify a list
+ *   of messages either actor is interested in. Messages sent using
+ *   the actor will always be passed to the `receiveMessage` implementation in
+ *   the other process.
+ */
 let ACTORS = {
   AudioPlayback: {
     parent: {
@@ -119,18 +72,10 @@ let ACTORS = {
   AutoComplete: {
     parent: {
       moduleURI: "resource://gre/actors/AutoCompleteParent.jsm",
-      messages: [
-        "FormAutoComplete:SelectBy",
-        "FormAutoComplete:SetSelectedIndex",
-        "FormAutoComplete:MaybeOpenPopup",
-        "FormAutoComplete:Invalidate",
-        "FormAutoComplete:ClosePopup",
-        "FormAutoComplete:Disconnect",
-        // These two messages are also used, but are currently synchronous calls
-        // through the per-process message manager.
-        // "FormAutoComplete:GetSelectedIndex",
-        // "FormAutoComplete:SelectBy"
-      ],
+      // These two messages are also used, but are currently synchronous calls
+      // through the per-process message manager.
+      // "FormAutoComplete:GetSelectedIndex",
+      // "FormAutoComplete:SelectBy"
     },
 
     child: {
@@ -150,11 +95,6 @@ let ACTORS = {
         compositionend: { capture: true },
         contextmenu: { capture: true },
       },
-      messages: [
-        "FormAutoComplete:HandleEnter",
-        "FormAutoComplete:PopupClosed",
-        "FormAutoComplete:PopupOpened",
-      ],
     },
 
     allFrames: true,
@@ -210,11 +150,6 @@ let ACTORS = {
   ExtFind: {
     child: {
       moduleURI: "resource://gre/actors/ExtFindChild.jsm",
-      messages: [
-        "ext-Finder:CollectResults",
-        "ext-Finder:HighlightResults",
-        "ext-Finder:ClearHighlighting",
-      ],
     },
 
     allFrames: true,
@@ -223,7 +158,6 @@ let ACTORS = {
   FindBar: {
     parent: {
       moduleURI: "resource://gre/actors/FindBarParent.jsm",
-      messages: ["Findbar:Keypress", "Findbar:Mouseup"],
     },
     child: {
       moduleURI: "resource://gre/actors/FindBarChild.jsm",
@@ -240,24 +174,6 @@ let ACTORS = {
   Finder: {
     child: {
       moduleURI: "resource://gre/actors/FinderChild.jsm",
-      messages: [
-        "Finder:CaseSensitive",
-        "Finder:EntireWord",
-        "Finder:Find",
-        "Finder:SetSearchStringToSelection",
-        "Finder:GetInitialSelection",
-        "Finder:Highlight",
-        "Finder:UpdateHighlightAndMatchCount",
-        "Finder:HighlightAllChange",
-        "Finder:EnableSelection",
-        "Finder:RemoveSelection",
-        "Finder:FocusContent",
-        "Finder:FindbarClose",
-        "Finder:FindbarOpen",
-        "Finder:KeyPress",
-        "Finder:MatchesCount",
-        "Finder:ModalHighlightChange",
-      ],
     },
 
     allFrames: true,
@@ -303,16 +219,6 @@ let ACTORS = {
   LoginManager: {
     parent: {
       moduleURI: "resource://gre/modules/LoginManagerParent.jsm",
-      messages: [
-        "PasswordManager:findLogins",
-        "PasswordManager:onFormSubmit",
-        "PasswordManager:onGeneratedPasswordFilledOrEdited",
-        "PasswordManager:insecureLoginFormPresent",
-        "PasswordManager:autoCompleteLogins",
-        "PasswordManager:removeLogin",
-        "PasswordManager:OpenPreferences",
-        "PasswordManager:formProcessed",
-      ],
     },
     child: {
       moduleURI: "resource://gre/modules/LoginManagerChild.jsm",
@@ -321,12 +227,6 @@ let ACTORS = {
         DOMFormHasPassword: {},
         DOMInputPasswordAdded: {},
       },
-      messages: [
-        "PasswordManager:fillForm",
-        "PasswordManager:fillGeneratedPassword",
-        "FormAutoComplete:PopupOpened",
-        "FormAutoComplete:PopupClosed",
-      ],
     },
 
     allFrames: true,
@@ -433,6 +333,94 @@ let ACTORS = {
   },
 };
 
+/*
+ * The following code implements logic for managing JavaScript actor instances
+ * bound to message managers. It handles lazily instantiating those actors based
+ * on DOM events, IPC messages, or observer notifications, and is meant to
+ * entirely replace the existing concept of frame scripts.
+ *
+ * All actors must be registered in the parent process, before the first child
+ * process starts. Once all actors have been registered, the actor data is
+ * mangled into a form which can be handled efficiently during content process
+ * startup, and shared with all content processes. Frame scripts in those
+ * content processes attach that data to frame message managers via
+ * ActorManagerChild, which handles instantiating and dispatching to those
+ * actors as necessary.
+ *
+ *
+ * Each actor is a class which lives in a JSM, and has a constructor which takes
+ * a single message manager argument. Each actor may conceptually have both
+ * Child and Parent variants, but only Child variants are currently implemented.
+ * The parent and child variants live in separate JSMs, and have separate class
+ * names, each of which have Child or Parent appended to their names, as
+ * appropriate. For instance, the AudioPlayback actor has a child instance named
+ * AudioPlaybackChild which lives in AudioPlaybackChild.jsm.
+ *
+ *
+ * Actors are defined by calling ActorManagerParent.addActors, with an object
+ * containing a property for each actor being defined, whose value is an object
+ * describing how the actor should be loaded. That object may have the following
+ * properties:
+ *
+ * - "child": The actor definition for the child side of the actor.
+ *
+ * Each "child" (or "parent", when it is implemented) actor definition may
+ * contain the following properties:
+ *
+ * - "module": The URI from which the modules is loaded. This should be a
+ *   resource: URI, ideally beginning with "resource://gre/actors/" or
+ *   "resource:///actors/", with a filename matching the name of the actor for
+ *   the given side. So, the child side of the AudioPlayback actor should live at
+ *   "resource://gre/actors/AudioPlaybackChild.jsm".
+ *
+ * - "group": A group name which restricts the message managers to which this
+ *   actor may be attached. This should match the "messagemanagergroup"
+ *   attribute of a <browser> element. Frame scripts are responsible for
+ *   attaching the appropriate actors to the appropriate browsers using
+ *   ActorManagerChild.attach().
+ *
+ * - "events": An object containing a property for each event the actor will
+ *   listen for, with an options object, as accepted by addEventListener, as its
+ *   value. For each such property, an event listener will be added to the
+ *   message manager[1] for the given event name, which delegates to the actor's
+ *   handleEvent method.
+ *
+ * - "messages": An array of message manager message names. For each message
+ *   name in the list, a message listener will be added to the frame message
+ *   manager, and the messages it receives will be delegated to the actor's
+ *   receiveMessage method.
+ *
+ * - "observers": An array of observer topics. A global observer will be added
+ *   for each topic in the list, and observer notifications for it will be
+ *   delegated to the actor's observe method. Note that observers are global in
+ *   nature, and these notifications may therefore have nothing to do with the
+ *   message manager the actor is bound to. The actor itself is responsible for
+ *   filtering the notifications that apply to it.
+ *
+ *   These observers are automatically unregistered when the message manager is
+ *   destroyed.
+ *
+ * - "matches": An array of URL match patterns (as accepted by the MatchPattern
+ *   class in MatchPattern.webidl) which restrict which pages the actor may be
+ *   instantiated for. If this is defined, the actor will only receive DOM
+ *   events sent to windows which match this pattern, and will only receive
+ *   message manager messages for frame message managers which are currently
+ *   hosting a matching DOM window.
+ *
+ * - "allFrames": this modifies its behavior to allow it to match sub-frames
+ *   as well as top-level frames. If "allFrames" is not specified, it will
+ *   match only top-level frames.
+ *
+ * - "matchAboutBlank": If "matches" is specified, this modifies its behavior to
+ *   allow it to match about:blank pages. See MozDocumentMatcher.webidl for more
+ *   information.
+ *
+ * [1]: For actors which specify "matches" or "allFrames", the listener will be
+ *      added to the DOM window rather than the frame message manager.
+ *
+ * If Fission is being simulated, and an actor needs to receive events from
+ * sub-frames, it must use "allFrames".
+ */
 let LEGACY_ACTORS = {
   Controllers: {
     child: {
