@@ -210,8 +210,6 @@
 
 .search-setting-button-compact {
   max-height: 32px;
-  /* For alignment with the Urlbar Go button. */
-  margin-inline-end: -2px !important;
   align-self: end;
 }
 

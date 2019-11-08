@@ -8,7 +8,7 @@
 %define urlbarViewPadding 4px
 %define urlbarViewIconMarginEnd (@identityBoxPaddingInline@ + @identityBoxMarginInlineEnd@)
 %define urlbarViewFaviconOffset (@urlbarViewPadding@ + 16px /* type icon width */ + @urlbarViewIconMarginEnd@)
-%define urlbarViewMarginInline 5px
+%define urlbarViewMarginInline 7px
 %define urlbarViewPaddingInline 30px
 %define urlbarViewItemPaddingStart (@urlbarViewPaddingInline@ - (/* type icon: */ 16px + @urlbarViewIconMarginEnd@))
 
@@ -399,18 +399,14 @@
   flex-wrap: wrap;
 }
 
-.urlbarView.megabar .search-one-offs {
-  padding-inline: @urlbarViewPaddingInline@;
-}
-
 #urlbar:not(.megabar) .search-one-offs {
-  padding-inline-start: var(--item-padding-start, 5px);
+  padding-inline-start: calc(var(--item-padding-start, 5px) - /* icon padding */ 8px);
   padding-inline-end: var(--item-padding-end, 5px);
 }
 
 #urlbar .search-panel-one-offs-container {
-  /* Make sure horizontally we can fit three buttons, empty space, settings. */
-  min-width: 200px;
+  /* Make sure horizontally we can fit four buttons, empty space, settings. */
+  min-width: calc(4 * /* one-off */ 32px + 3 * /* one-off end margin */ 8px + /* empty space */ 32px + /* settings icon with end padding */ 24px);
 }
 
 #urlbar .search-panel-header {
@@ -423,14 +419,25 @@
 
 #urlbar .search-panel-one-offs-header-label {
   white-space: nowrap;
-  padding-inline-end: 12px;
   margin: 0;
+  padding-inline-start: 8px;
+  padding-inline-end: 16px;
 }
 
 #urlbar .searchbar-engine-one-off-item {
   min-width: 32px;
   height: 32px;
-  margin: 0 4px;
+  margin-inline-end: 8px;
+}
+
+#urlbar .searchbar-engine-one-off-item:last-child {
+  /* This applies to both the last one-off and the compact settings button */
+  margin-inline-end: 0;
+}
+
+#urlbar .search-setting-button-compact {
+  /* Force empty space before the button */
+  margin-inline-start: calc(32px - /* settings start padding */ 8px );
 }
 
 #urlbar .search-one-offs-spacer {
