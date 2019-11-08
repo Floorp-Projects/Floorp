@@ -38,29 +38,39 @@
   <checkbox id="spoofEnglish"
             data-l10n-id="languages-customize-spoof-english"
             preference="privacy.spoof_english"/>
-  <box flex="1" style="display: grid; grid-template-rows: 1fr auto; grid-template-columns: 1fr auto;">
-    <richlistbox id="activeLanguages"
-                 seltype="multiple"
-                 onselect="gLanguagesDialog.onLanguageSelect();"/>
-    <vbox>
-      <button id="up" class="up" oncommand="gLanguagesDialog.moveUp();" disabled="true"
-              data-l10n-id="languages-customize-moveup"
-              preference="pref.browser.language.disable_button.up"/>
-      <button id="down" class="down" oncommand="gLanguagesDialog.moveDown();" disabled="true"
-              data-l10n-id="languages-customize-movedown"
-              preference="pref.browser.language.disable_button.down"/>
-      <button id="remove" oncommand="gLanguagesDialog.removeLanguage();" disabled="true"
-              data-l10n-id="languages-customize-remove"
-              preference="pref.browser.language.disable_button.remove"/>
-    </vbox>
-    <!-- This <vbox> is needed to position search tooltips correctly. -->
-    <vbox>
-      <menulist id="availableLanguages" oncommand="gLanguagesDialog.onAvailableLanguageSelect();"
-                data-l10n-id="languages-customize-select-language" data-l10n-attrs="placeholder">
-        <menupopup id="availableLanguagesPopup"/>
-      </menulist>
-    </vbox>
-    <button id="addButton" class="add-web-language" oncommand="gLanguagesDialog.addLanguage();" disabled="true"
-            data-l10n-id="languages-customize-add"/>
-  </box>
+  <grid flex="1">
+    <columns>
+      <column flex="1"/>
+      <column/>
+    </columns>
+    <rows>
+      <row flex="1">
+        <richlistbox id="activeLanguages" flex="1"
+                     seltype="multiple"
+                     onselect="gLanguagesDialog.onLanguageSelect();"/>
+        <vbox>
+          <button id="up" class="up" oncommand="gLanguagesDialog.moveUp();" disabled="true"
+                  data-l10n-id="languages-customize-moveup"
+                  preference="pref.browser.language.disable_button.up"/>
+          <button id="down" class="down" oncommand="gLanguagesDialog.moveDown();" disabled="true"
+                  data-l10n-id="languages-customize-movedown"
+                  preference="pref.browser.language.disable_button.down"/>
+          <button id="remove" oncommand="gLanguagesDialog.removeLanguage();" disabled="true"
+                  data-l10n-id="languages-customize-remove"
+                  preference="pref.browser.language.disable_button.remove"/>
+        </vbox>
+      </row>
+      <row>
+        <!-- This <vbox> is needed to position search tooltips correctly. -->
+        <vbox>
+          <menulist id="availableLanguages" oncommand="gLanguagesDialog.onAvailableLanguageSelect();"
+                    data-l10n-id="languages-customize-select-language" data-l10n-attrs="placeholder">
+            <menupopup id="availableLanguagesPopup"/>
+          </menulist>
+        </vbox>
+        <button id="addButton" class="add-web-language" oncommand="gLanguagesDialog.addLanguage();" disabled="true"
+                data-l10n-id="languages-customize-add"/>
+      </row>
+    </rows>
+  </grid>
 </dialog>
