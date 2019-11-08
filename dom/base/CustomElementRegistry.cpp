@@ -697,7 +697,7 @@ bool CustomElementRegistry::JSObjectToAtomArray(
   return true;
 }
 
-// https://html.spec.whatwg.org/multipage/scripting.html#element-definition
+// https://html.spec.whatwg.org/commit-snapshots/b48bb2238269d90ea4f455a52cdf29505aff3df0/#dom-customelementregistry-define
 void CustomElementRegistry::Define(
     JSContext* aCx, const nsAString& aName,
     CustomElementConstructor& aFunctionConstructor,
@@ -853,7 +853,7 @@ void CustomElementRegistry::Define(
     AutoSetRunningFlag as(this);
 
     /**
-     * 10.1. Let prototype be Get(constructor, "prototype"). Rethrow any
+     * 14.1. Let prototype be Get(constructor, "prototype"). Rethrow any
      * exceptions.
      */
     // The .prototype on the constructor passed could be an "expando" of a
@@ -866,7 +866,7 @@ void CustomElementRegistry::Define(
     }
 
     /**
-     * 10.2. If Type(prototype) is not Object, then throw a TypeError exception.
+     * 14.2. If Type(prototype) is not Object, then throw a TypeError exception.
      */
     if (!prototype.isObject()) {
       aRv.ThrowTypeError<MSG_NOT_OBJECT>(
@@ -875,12 +875,12 @@ void CustomElementRegistry::Define(
     }
 
     /**
-     * 10.3. Let lifecycleCallbacks be a map with the four keys
+     * 14.3. Let lifecycleCallbacks be a map with the four keys
      *       "connectedCallback", "disconnectedCallback", "adoptedCallback", and
      *       "attributeChangedCallback", each of which belongs to an entry whose
      *       value is null. The 'getCustomInterface' callback is also included
      *       for chrome usage.
-     * 10.4. For each of the four keys callbackName in lifecycleCallbacks:
+     * 14.4. For each of the four keys callbackName in lifecycleCallbacks:
      *       1. Let callbackValue be Get(prototype, callbackName). Rethrow any
      *          exceptions.
      *       2. If callbackValue is not undefined, then set the value of the
@@ -894,8 +894,7 @@ void CustomElementRegistry::Define(
     }
 
     /**
-     * 10.5. Let observedAttributes be an empty sequence<DOMString>.
-     * 10.6. If the value of the entry in lifecycleCallbacks with key
+     * 14.5. If the value of the entry in lifecycleCallbacks with key
      *       "attributeChangedCallback" is not null, then:
      *       1. Let observedAttributesIterable be Get(constructor,
      *          "observedAttributes"). Rethrow any exceptions.
@@ -939,7 +938,7 @@ void CustomElementRegistry::Define(
   }  // Unset mIsCustomDefinitionRunning
 
   /**
-   * 11. Let definition be a new custom element definition with name name,
+   * 15. Let definition be a new custom element definition with name name,
    *     local name localName, constructor constructor, prototype prototype,
    *     observed attributes observedAttributes, and lifecycle callbacks
    *     lifecycleCallbacks.
@@ -948,7 +947,7 @@ void CustomElementRegistry::Define(
   RefPtr<nsAtom> localNameAtom(NS_Atomize(localName));
 
   /**
-   * 12. Add definition to this CustomElementRegistry.
+   * 16. Add definition to this CustomElementRegistry.
    */
   if (!mConstructors.put(constructorUnwrapped, nameAtom)) {
     aRv.Throw(NS_ERROR_FAILURE);
@@ -967,12 +966,12 @@ void CustomElementRegistry::Define(
              "Number of entries should be the same");
 
   /**
-   * 13. 14. 15. Upgrade candidates
+   * 17. 18. 19. Upgrade candidates
    */
   UpgradeCandidates(nameAtom, def, aRv);
 
   /**
-   * 16. If this CustomElementRegistry's when-defined promise map contains an
+   * 20. If this CustomElementRegistry's when-defined promise map contains an
    *     entry with key name:
    *     1. Let promise be the value of that entry.
    *     2. Resolve promise with undefined.
