@@ -4,9 +4,13 @@
 
 package org.mozilla.fenix.settings
 
+import android.os.Build
 import android.os.Bundle
+import android.os.VibrationEffect
+import android.os.Vibrator
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.getSystemService
 import androidx.core.text.HtmlCompat
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.NavHostFragment.findNavController
@@ -25,8 +29,10 @@ class PairFragment : Fragment(R.layout.fragment_pair), BackHandler {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        pairInstructions.text = HtmlCompat.fromHtml(getString(R.string.pair_instructions),
-            HtmlCompat.FROM_HTML_MODE_LEGACY)
+        pairInstructions.text = HtmlCompat.fromHtml(
+            getString(R.string.pair_instructions),
+            HtmlCompat.FROM_HTML_MODE_LEGACY
+        )
 
         qrFeature.set(
             QrFeature(
@@ -40,8 +46,22 @@ class PairFragment : Fragment(R.layout.fragment_pair), BackHandler {
                         requireContext(),
                         pairingUrl
                     )
-                    findNavController(this@PairFragment)
-                        .popBackStack(R.id.turnOnSyncFragment, false)
+                    val vibrator = requireContext().getSystemService<Vibrator>()!!
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        vibrator.vibrate(
+                            VibrationEffect.createOneShot(
+                                VIBRATE_LENGTH,
+                                VibrationEffect.DEFAULT_AMPLITUDE
+                            )
+                        )
+                    } else {
+                        @Suppress("Deprecation")
+                        vibrator.vibrate(VIBRATE_LENGTH)
+                    }
+                    findNavController(this@PairFragment).popBackStack(
+                        R.id.turnOnSyncFragment,
+                        false
+                    )
                 }),
             owner = this,
             view = view
@@ -66,6 +86,7 @@ class PairFragment : Fragment(R.layout.fragment_pair), BackHandler {
 
     companion object {
         private const val REQUEST_CODE_CAMERA_PERMISSIONS = 1
+        private const val VIBRATE_LENGTH = 200L
     }
 
     override fun onRequestPermissionsResult(
