@@ -26,6 +26,7 @@ import mozilla.appservices.syncmanager.SyncManager as RustSyncManager
 import mozilla.components.concept.sync.AuthException
 import mozilla.components.concept.sync.AuthExceptionType
 import mozilla.components.concept.sync.LockableStore
+import mozilla.components.concept.sync.SyncableStore
 import mozilla.components.service.fxa.FxaDeviceSettingsCache
 import mozilla.components.service.fxa.SyncAuthInfoCache
 import mozilla.components.service.fxa.SyncConfig
@@ -275,7 +276,7 @@ class WorkManagerSyncWorker(
         return lastSyncedTs != 0L && (System.currentTimeMillis() - lastSyncedTs) < SYNC_STAGGER_BUFFER_MS
     }
 
-    @Suppress("ReturnCount", "LongMethod", "ComplexMethod")
+    @Suppress("ComplexMethod")
     override suspend fun doWork(): Result {
         logger.debug("Starting sync... Tagged as: ${params.tags}")
 
@@ -302,6 +303,35 @@ class WorkManagerSyncWorker(
             return Result.success()
         }
 
+        // We need a password storage encryption key, if password storage is configured to be synced. It needs to be
+        // unlocked for the duration of a sync.
+        val passwordStore = syncableStores.entries.find { it.key == SyncEngine.Passwords }?.value as? LockableStore
+        val passwordsKey = if (passwordStore == null) {
+            null
+        } else {
+            val ks = GlobalSyncableStoreProvider.getKeyStorage()
+            require(ks != null) {
+                "GlobalSyncableStoreProvider must be configured with a key storage instance when syncing passwords"
+            }
+
+            ks.getString(SyncEngine.Passwords.nativeName) ?: throw IllegalStateException(
+                "Key for SyncEngine.Passwords must be present in the key storage if password sync is enabled"
+            )
+        }
+
+        // Issue tracking moving locking/unlocking of storage layers to RustSyncManager:
+        // https://github.com/mozilla/application-services/issues/2102
+        return if (passwordStore != null) {
+            // We need to keep the store unlocked for the duration of the sync, as well as when we interact with
+            // setLogins API method.
+            passwordStore.unlocked(passwordsKey!!) { doSync(syncableStores) }
+        } else {
+            doSync(syncableStores)
+        }
+    }
+
+    @Suppress("LongMethod", "ComplexMethod")
+    private fun doSync(syncableStores: Map<SyncEngine, SyncableStore>): Result {
         // We need to tell RustSyncManager about instances of supported stores ('places' and 'logins').
         syncableStores.entries.forEach {
             // We're assuming all syncable stores live in Rust.
@@ -364,22 +394,6 @@ class WorkManagerSyncWorker(
         // to implement/reason about than worker reconfiguration.
         val deviceSettings = FxaDeviceSettingsCache(context).getCached()!!
 
-        // We need a password storage encryption key, if password storage is configured to be synced. It needs to be
-        // unlocked for the duration of a sync.
-        val passwordStore = syncableStores.entries.find { it.key == SyncEngine.Passwords }?.value as? LockableStore
-        val passwordsKey = if (passwordStore == null) {
-            null
-        } else {
-            val ks = GlobalSyncableStoreProvider.getKeyStorage()
-            require(ks != null) {
-                "GlobalSyncableStoreProvider must be configured with a key storage instance when syncing passwords"
-            }
-
-            ks.getString(SyncEngine.Passwords.nativeName) ?: throw IllegalStateException(
-                "Key for SyncEngine.Passwords must be present in the key storage if password sync is enabled"
-            )
-        }
-
         // We're now ready to sync.
         val syncParams = SyncParams(
             reason = reason.toRustSyncReason(),
@@ -390,13 +404,7 @@ class WorkManagerSyncWorker(
             deviceSettings = deviceSettings
         )
 
-        // Issue tracking moving locking/unlocking of storage layers to RustSyncManager:
-        // https://github.com/mozilla/application-services/issues/2102
-        val syncResult = if (passwordStore != null) {
-            passwordStore.unlocked(passwordsKey!!) { RustSyncManager.sync(syncParams) }
-        } else {
-            RustSyncManager.sync(syncParams)
-        }
+        val syncResult = RustSyncManager.sync(syncParams)
 
         // Persist the sync state; it may have changed during a sync, and RustSyncManager relies on us
         // to store it.
