@@ -8,7 +8,7 @@ tasks:
     - $let:
           taskgraph:
               branch: taskgraph
-              revision: 0c5a68749f9a7672a7e56604b69a7bd41b036614
+              revision: 8724fdf41562f6eea82d1b905072d4a7c1f5ebbf
           trustDomain: mobile
       in:
           $let:
@@ -129,8 +129,8 @@ tasks:
                                     else:
                                         name: "Decision Task for cron job ${cron.job_name}"
                                         description: 'Created by a [cron task](https://tools.taskcluster.net/tasks/${cron.task_id})'
-                      provisionerId: "aws-provisioner-v1"
-                      workerType: "mobile-${level}-decision"
+                      provisionerId: "mobile-${level}"
+                      workerType: "decision"
                       tags:
                           $if: 'tasks_for in ["github-push", "github-pull-request"]'
                           then:

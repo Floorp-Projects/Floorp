@@ -25,15 +25,15 @@ taskgraph:
 workers:
     aliases:
         b-android:
-            provisioner: aws-provisioner-v1
+            provisioner: 'mobile-{level}'
             implementation: docker-worker
             os: linux
-            worker-type: 'mobile-{level}-b-fenix'
+            worker-type: 'b-linux'
         images:
-            provisioner: aws-provisioner-v1
+            provisioner: 'mobile-{level}'
             implementation: docker-worker
             os: linux
-            worker-type: 'mobile-{level}-images'
+            worker-type: 'images'
         dep-signing:
             provisioner: scriptworker-prov-v1
             implementation: scriptworker-signing
