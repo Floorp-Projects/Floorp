@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <!-- App name for private browsing mode, only the "(Private)" portion should be localized. -->
-    <string name="app_name_private">Firefox Preview (Privat)</string>
+    <!-- App name for private browsing mode, only the "Private" portion should be localized. -->
+    <string name="app_name_private_2">Firefox Preview Privat</string>
 
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
@@ -93,6 +93,10 @@
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="browser_menu_powered_by">DITENAGAI OLEH %1$s</string>
 
+    <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="browser_menu_powered_by2">Diberdayakan oleh %1$s</string>
+
     <!-- Search Fragment -->
     <!-- Button in the search view that lets a user search by scanning a QR code -->
     <string name="search_scan_button">Pindai</string>
@@ -148,8 +152,8 @@
 
     <!-- Preference for advanced site permissions -->
     <string name="preferences_site_permissions">Izin situs</string>
-    <!-- Preference for launching links in a private tab-->
-    <string name="preferences_launch_links_in_private_mode">Luncurkan tautan di tab pribadi</string>
+    <!-- Preference for opening links in a private tab-->
+    <string name="preferences_open_links_in_a_private_tab">Buka tautan di tab pribadi</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Tambahkan pintasan penjelajahan pribadi</string>
     <!-- Preference for accessibility -->
@@ -178,6 +182,8 @@
     <string name="developer_tools_category">Perangkat pengembang</string>
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">Pengawakutuan jarak jauh melalui USB</string>
+    <!-- Preference title for switch preference to show search shortcuts -->
+    <string name="preferences_show_search_shortcuts">Tampilkan pintasan pencarian</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Tampilkan saran pencarian</string>
     <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
@@ -198,6 +204,8 @@
     <string name="preferences_sync_history">Riwayat</string>
     <!-- Preference for syncing bookmarks -->
     <string name="preferences_sync_bookmarks">Markah</string>
+    <!-- Preference for syncing logins -->
+    <string name="preferences_sync_logins">Log Masuk</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">Keluar</string>
     <!-- Preference displays and allows changing current FxA device name -->
@@ -368,6 +376,8 @@
     <string name="add_tab">Tambah tab</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
     <string name="close_tab">Tutup tab</string>
+    <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
+    <string name="close_tab_title">Tutup tab %s</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the open tabs menu when pressed -->
     <string name="open_tabs_menu">Buka menu tab</string>
     <!-- Open tabs menu item to close all tabs -->
@@ -556,6 +566,11 @@
     <!-- Label that indicates video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed">Video dan audio diizinkan</string>
 
+    <!-- Summary of delete browsing data on quit preference if it is set to on -->
+    <string name="delete_browsing_data_quit_on">Aktif</string>
+    <!-- Summary of delete browsing data on quit preference if it is set to off -->
+    <string name="delete_browsing_data_quit_off">Nonaktif</string>
+
     <!-- Collections -->
     <!-- Label to describe what collections are to a new user without any collections -->
     <string name="collections_description">Kumpulkan hal-hal yang penting bagi Anda. Untuk memulai, simpan tab terbuka ke koleksi baru.</string>
@@ -648,6 +663,8 @@
     <string name="notification_pbm_action_open">Buka</string>
     <!-- Notification action to delete all current private browsing sessions AND switch to Fenix (bring it to the foreground) -->
     <string name="notification_pbm_action_delete_and_open">Hapus dan Buka</string>
+    <!-- Name of the "Powered by Fenix" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="notification_powered_by_channel_name">Diberdayakan Oleh</string>
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">Koleksi dihapus</string>
     <!-- Text shown in snackbar when user renames a collection -->
@@ -656,6 +673,14 @@
     <string name="snackbar_tab_deleted">Tab dihapus</string>
     <!-- Text shown in snackbar when user deletes all tabs -->
     <string name="snackbar_tabs_deleted">Tab dihapus</string>
+    <!-- Text shown in snackbar when user closes a tab -->
+    <string name="snackbar_tab_closed">Tab ditutup</string>
+    <!-- Text shown in snackbar when user closes all tabs -->
+    <string name="snackbar_tabs_closed">Tab ditutup</string>
+    <!-- Text shown in snackbar when user closes a private tab -->
+    <string name="snackbar_private_tab_closed">Tab pribadi ditutup</string>
+    <!-- Text shown in snackbar when user closes all private tabs -->
+    <string name="snackbar_private_tabs_closed">Tab pribadi ditutup</string>
     <!-- Text shown in snackbar when user deletes all private tabs -->
     <string name="snackbar_private_tabs_deleted">Tab pribadi dihapus</string>
     <!-- Text for action to undo deleting a tab or collection shown in snackbar -->
@@ -746,6 +771,9 @@
     <string name="delete_browsing_data_prompt_allow">Hapus</string>
     <!-- Text for the snackbar confirmation that the data was deleted -->
     <string name="preferences_delete_browsing_data_snackbar">Data penjelajahan dihapus</string>
+
+    <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
+    <string name="deleting_browsing_data_in_progress">Menghapus data penjelajahan…</string>
 
     <!-- Onboarding -->
     <!-- Text for onboarding welcome message
@@ -897,7 +925,7 @@
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">Menghentikan iklan, video, dan konten lain dari luar yang memuat kode pelacakan. Dapat memengaruhi beberapa fungsionalitas situs web.</string>
     <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="etp_onboarding_message">Saat perisai berubah warna, %s memblokir pelacak di situs Web. Ketuk untuk membuka dan melihat apa yang diblokir.</string>
+    <string name="etp_onboarding_message_2">%s memblokir pelacak di situs ini ketika perisai berwarna ungu. Ketuk untuk melihat apa yang diblokir.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">Perlindungan DIAKTIFKAN untuk situs ini</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -926,6 +954,9 @@
     <string name="browser_toolbar_long_press_popup_paste_and_go">Tempelkan &amp; Kunjungi</string>
     <!-- Paste the text in the clipboard -->
     <string name="browser_toolbar_long_press_popup_paste">Tempel</string>
+  
+    <!-- Snackbar message shown after an URL has been copied to clipboard. -->
+    <string name="browser_toolbar_url_copied_to_clipboard_snackbar">URL disalin ke papan klip</string>
   
     <!-- Title text for the Add To Homescreen dialog -->
     <string name="add_to_homescreen_title">Tambahkan ke Beranda</string>
@@ -990,5 +1021,20 @@
     <string name="logins_doorhanger_save_confirmation">Simpan</string>
     <!-- Negative confirmation that Fenix should not save the new or updated login -->
     <string name="logins_doorhanger_save_dont_save">Jangan simpan</string>
-
+    <!-- Shown in snackbar to tell user that the password has been copied -->
+    <string name="logins_password_copied">Sandi disalin ke papan klip</string>
+    <!-- Shown in snackbar to tell user that the username has been copied -->
+    <string name="logins_username_copied">Nama pengguna disalin ke papan klip</string>
+    <!-- Shown in snackbar to tell user that the site has been copied -->
+    <string name="logins_site_copied">Situs disalin ke clipboard</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
+    <string name="saved_logins_copy_password">Salin sandi</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
+    <string name="saved_login_copy_username">Salin nama pengguna</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
+    <string name="saved_login_copy_site">Salin situs</string>
+    <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
+    <string name="saved_login_reveal_password">Tampilkan sandi</string>
+    <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
+    <string name="saved_login_hide_password">Sembunyikan sandi</string>
 </resources>
