@@ -32,7 +32,6 @@
 #include <new>
 
 #include "jsmath.h"
-#include "jsutil.h"
 
 #include "frontend/ParseNode.h"
 #include "frontend/Parser.h"

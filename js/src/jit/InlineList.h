@@ -7,7 +7,7 @@
 #ifndef jit_InlineList_h
 #define jit_InlineList_h
 
-#include "jsutil.h"
+#include "mozilla/Assertions.h"
 
 namespace js {
 

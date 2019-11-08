@@ -6,8 +6,6 @@
 
 #include "threading/Mutex.h"
 
-#include "jsutil.h"
-
 using namespace js;
 
 #ifdef DEBUG

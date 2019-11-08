@@ -11,8 +11,6 @@
 
 #include <algorithm>
 
-#include "jsutil.h"
-
 #include "js/Vector.h"
 
 namespace js {

@@ -9,8 +9,6 @@
 
 #include <stdio.h>
 
-#include "jsutil.h"
-
 #include "js/AllocPolicy.h"
 #include "js/Vector.h"
 

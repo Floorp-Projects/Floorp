@@ -9,8 +9,6 @@
 #include <algorithm>
 #include <stdarg.h>
 
-#include "jsutil.h"
-
 #include "util/Unicode.h"
 
 using namespace js;

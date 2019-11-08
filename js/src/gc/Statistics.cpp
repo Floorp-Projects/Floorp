@@ -16,8 +16,6 @@
 #include <stdio.h>
 #include <type_traits>
 
-#include "jsutil.h"
-
 #include "debugger/DebugAPI.h"
 #include "gc/GC.h"
 #include "gc/Memory.h"

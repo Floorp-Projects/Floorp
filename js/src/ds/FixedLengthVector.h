@@ -13,7 +13,7 @@
 
 #include <stddef.h>  // size_t
 
-#include "jsutil.h"        // js_free
+#include "js/Utility.h"    // js_free
 #include "vm/JSContext.h"  // JSContext
 
 namespace js {

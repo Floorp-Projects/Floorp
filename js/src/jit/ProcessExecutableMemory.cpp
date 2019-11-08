@@ -17,7 +17,6 @@
 
 #include "jsfriendapi.h"
 #include "jsmath.h"
-#include "jsutil.h"
 
 #include "gc/Memory.h"
 #ifdef JS_CODEGEN_ARM64

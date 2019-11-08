@@ -11,8 +11,6 @@
 
 #include <algorithm>
 
-#include "jsutil.h"
-
 #include "gc/Marking.h"
 #include "js/CharacterEncoding.h"
 #include "js/PropertySpec.h"

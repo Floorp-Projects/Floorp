@@ -14,8 +14,6 @@
 
 #include <algorithm>
 
-#include "jsutil.h"
-
 #include "builtin/MapObject.h"
 #include "debugger/DebugAPI.h"
 #include "gc/FreeOp.h"
