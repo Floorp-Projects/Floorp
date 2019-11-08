@@ -107,6 +107,7 @@ per-file-ignores =
     testing/firefox-ui/**/__init__.py: F401
     testing/marionette/**/__init__.py: F401
     testing/mochitest/tests/python/conftest.py: F811
+    testing/mozbase/manifestparser/tests/test_filters.py: E731
     testing/mozharness/configs/*: E124, E127, E128, E131, E231, E261, E265, E266, E501, W391
 
     # These paths contain Python-2 only syntax which cause errors since flake8

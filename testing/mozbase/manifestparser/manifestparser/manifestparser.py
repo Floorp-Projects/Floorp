@@ -201,8 +201,29 @@ class ManifestParser(object):
             test = data
             test['name'] = section
 
+            def relative_to_root(path):
+                # Microoptimization, because relpath is quite expensive.
+                # We know that rootdir is an absolute path or empty. If path
+                # starts with rootdir, then path is also absolute and the tail
+                # of the path is the relative path (possibly non-normalized,
+                # when here is unknown).
+                # For this to work rootdir needs to be terminated with a path
+                # separator, so that references to sibling directories with
+                # a common prefix don't get misscomputed (e.g. /root and
+                # /rootbeer/file).
+                # When the rootdir is unknown, the relpath needs to be left
+                # unchanged. We use an empty string as rootdir in that case,
+                # which leaves relpath unchanged after slicing.
+                if path.startswith(rootdir):
+                    return path[len(rootdir):]
+                else:
+                    return relpath(path, rootdir)
+
             # Will be None if the manifest being read is a file-like object.
             test['manifest'] = filename
+            test['manifest_relpath'] = None
+            if test['manifest']:
+                test['manifest_relpath'] = relative_to_root(normalize_path(test['manifest']))
 
             # determine the path
             path = test.get('path', section)
@@ -217,23 +238,7 @@ class ManifestParser(object):
                     path = os.path.join(here, path)
                     if '..' in path:
                         path = os.path.normpath(path)
-
-                # Microoptimization, because relpath is quite expensive.
-                # We know that rootdir is an absolute path or empty. If path
-                # starts with rootdir, then path is also absolute and the tail
-                # of the path is the relative path (possibly non-normalized,
-                # when here is unknown).
-                # For this to work rootdir needs to be terminated with a path
-                # separator, so that references to sibling directories with
-                # a common prefix don't get misscomputed (e.g. /root and
-                # /rootbeer/file).
-                # When the rootdir is unknown, the relpath needs to be left
-                # unchanged. We use an empty string as rootdir in that case,
-                # which leaves relpath unchanged after slicing.
-                if path.startswith(rootdir):
-                    _relpath = path[len(rootdir):]
-                else:
-                    _relpath = relpath(path, rootdir)
+                _relpath = relative_to_root(path)
 
             test['path'] = path
             test['relpath'] = _relpath
@@ -493,7 +498,15 @@ class ManifestParser(object):
             print('[%s]' % path, file=fp)
 
             # reserved keywords:
-            reserved = ['path', 'name', 'here', 'manifest', 'relpath', 'ancestor-manifest']
+            reserved = [
+                'path',
+                'name',
+                'here',
+                'manifest',
+                'manifest_relpath',
+                'relpath',
+                'ancestor-manifest'
+            ]
             for key in sorted(test.keys()):
                 if key in reserved:
                     continue
