@@ -25,6 +25,7 @@ module.exports = {
     do_load_module: false,
     do_note_exception: false,
     do_parse_document: false,
+    do_report_result: false,
     do_report_unexpected_exception: false,
     do_send_remote_message: false,
     do_test_finished: false,
