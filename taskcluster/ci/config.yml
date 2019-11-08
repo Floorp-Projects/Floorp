@@ -401,17 +401,11 @@ workers:
                 by-level:
                     '3': 'gecko-{level}-t-osx-1014'
                     default: 'gecko-t-osx-1014'
-        t-win10-64:
+        t-win10-64(|-gpu-s):
             provisioner: 'gecko-t'
             implementation: generic-worker
             os: windows
             worker-type: '{alias}'
-        # This worker isn't working with worker-manager
-        t-win10-64-gpu-s:
-            provisioner: 'aws-provisioner-v1'
-            implementation: generic-worker
-            os: windows
-            worker-type: 'gecko-t-{alias}'
         t-win10-64(-hw|-ref-hw):
             provisioner: releng-hardware
             implementation: generic-worker
