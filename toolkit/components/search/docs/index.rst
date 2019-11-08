@@ -8,3 +8,4 @@ This is documentation for the Search Service.
    :maxdepth: 2
 
    SearchEngineConfiguration
+   SearchConfigurationSchema
