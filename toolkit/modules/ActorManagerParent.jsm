@@ -27,33 +27,8 @@ const { DefaultMap } = ExtensionUtils;
 /**
  * Fission-compatible JSWindowActor implementations.
  * Each actor options object takes the form of a WindowActorOptions dictionary.
- * Detailed documentation of these options is in JSWindowActor.webidl.
- *
- * Some brief "gotcha"s compared to the legacy type actors:
- * - both parent and child sides can be specified; at least one must be
- *   specified. Consider that you may not need both: code in the process
- *   without a module can still request the JSWindowActor instance by name
- *   (the key in the dictionary below) and send messages to the other process
- *   using it - but it cannot listen for responses. Sometimes, this is
- *   sufficient.
- *
- * - JSWindowActor supports `sendQuery`, which allows one process to ask the
- *   other process for something. The other process replies via the return
- *   value of `receiveMessage` in the actor, which also supports promises.
- *   This reduces the need to have "manual" request/response message handling,
- *   counters, etc.
- *
- * - any parent and child option object specified must contain a "moduleURI"
- *   property. The module must export a class that inherits from
- *   JSWindowActorChild (for the child side) or JSWindowActorParent (for the
- *   parent side). The actor should live at resource://gre/actors/
- *   (for toolkit/ ) or resource///actors/ (for browser/ ) uris.
- *
- * - messages are only sent between the parent and child pair of actors.
- *   Therefore, unlike the legacy actors, it is not necessary to specify a list
- *   of messages either actor is interested in. Messages sent using
- *   the actor will always be passed to the `receiveMessage` implementation in
- *   the other process.
+ * Detailed documentation of these options is in dom/docs/Fission.rst,
+ * available at https://firefox-source-docs.mozilla.org/dom/Fission.html#jswindowactor
  */
 let ACTORS = {
   AudioPlayback: {
