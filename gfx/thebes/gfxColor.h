@@ -6,8 +6,8 @@
 #ifndef GFX_COLOR_H
 #define GFX_COLOR_H
 
-#include "mozilla/Attributes.h"   // for MOZ_ALWAYS_INLINE
-#include "mozilla/EndianUtils.h"  // for mozilla::NativeEndian::swapToBigEndian
+#include "mozilla/Attributes.h"  // for MOZ_ALWAYS_INLINE
+#include "mozilla/gfx/Types.h"   // for mozilla::gfx::SurfaceFormatBit
 
 /**
  * Fast approximate division by 255. It has the property that
@@ -35,7 +35,10 @@ uint8_t MOZ_ALWAYS_INLINE gfxPreMultiply(uint8_t c, uint8_t a) {
  */
 uint32_t MOZ_ALWAYS_INLINE gfxPackedPixelNoPreMultiply(uint8_t a, uint8_t r,
                                                        uint8_t g, uint8_t b) {
-  return (((a) << 24) | ((r) << 16) | ((g) << 8) | (b));
+  return (((a) << mozilla::gfx::SurfaceFormatBit::OS_A) |
+          ((r) << mozilla::gfx::SurfaceFormatBit::OS_R) |
+          ((g) << mozilla::gfx::SurfaceFormatBit::OS_G) |
+          ((b) << mozilla::gfx::SurfaceFormatBit::OS_B));
 }
 
 /**
@@ -49,8 +52,10 @@ uint32_t MOZ_ALWAYS_INLINE gfxPackedPixel(uint8_t a, uint8_t r, uint8_t g,
   else if (a == 0xFF) {
     return gfxPackedPixelNoPreMultiply(a, r, g, b);
   } else {
-    return ((a) << 24) | (gfxPreMultiply(r, a) << 16) |
-           (gfxPreMultiply(g, a) << 8) | (gfxPreMultiply(b, a));
+    return ((a) << mozilla::gfx::SurfaceFormatBit::OS_A) |
+           (gfxPreMultiply(r, a) << mozilla::gfx::SurfaceFormatBit::OS_R) |
+           (gfxPreMultiply(g, a) << mozilla::gfx::SurfaceFormatBit::OS_G) |
+           (gfxPreMultiply(b, a) << mozilla::gfx::SurfaceFormatBit::OS_B);
   }
 }
 
