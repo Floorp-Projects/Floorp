@@ -1125,7 +1125,8 @@ description#identity-popup-content-verifier,
   margin: 0;
 }
 
-#protections-popup-milestones-content:hover {
+#protections-popup-milestones-content:hover,
+#protections-popup-milestones-content:-moz-focusring {
   background-color: var(--arrowpanel-dimmed);
 }
 
