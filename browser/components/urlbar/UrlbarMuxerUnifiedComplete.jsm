@@ -75,13 +75,11 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
     if (!context.results.length) {
       return;
     }
-    // Look for an heuristic result.  If it's a preselected search result, use
-    // search buckets, otherwise use normal buckets.
+    // Look for an heuristic result.  If it's a search result, use search
+    // buckets, otherwise use normal buckets.
     let heuristicResult = context.results.find(r => r.heuristic);
     let buckets =
-      context.preselected &&
-      heuristicResult &&
-      heuristicResult.type == UrlbarUtils.RESULT_TYPE.SEARCH
+      heuristicResult && heuristicResult.type == UrlbarUtils.RESULT_TYPE.SEARCH
         ? UrlbarPrefs.get("matchBucketsSearch")
         : UrlbarPrefs.get("matchBuckets");
     logger.debug(`Buckets: ${buckets}`);
@@ -108,8 +106,7 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
 
         if (
           group == UrlbarUtils.RESULT_GROUP.HEURISTIC &&
-          result == heuristicResult &&
-          context.preselected
+          result == heuristicResult
         ) {
           // Handle the heuristic result.
           sortedResults.unshift(result);

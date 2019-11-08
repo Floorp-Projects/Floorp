@@ -115,7 +115,6 @@ add_task(async function test_preselectedHeuristic_singleProvider() {
   let providerName = registerBasicTestProvider(matches);
   let context = createContext(undefined, {
     providers: [providerName],
-    preselected: true,
   });
   let controller = new UrlbarController({
     browserWindow: {
@@ -173,7 +172,6 @@ add_task(async function test_preselectedHeuristic_multiProviders() {
 
   let context = createContext(undefined, {
     providers: [provider1Name, provider2Name],
-    preselected: true,
   });
   let controller = new UrlbarController({
     browserWindow: {
