@@ -32,6 +32,9 @@
 #include "ActorsChild.h"
 
 namespace {
+using namespace mozilla::dom::indexedDB;
+using namespace mozilla::ipc;
+
 // TODO: Move this to xpcom/ds.
 template <typename T, typename Range, typename Transformation>
 nsTHashtable<T> TransformToHashtable(const Range& aRange,
@@ -50,6 +53,17 @@ nsTHashtable<T> TransformToHashtable(const Range& aRange,
     res.PutEntry(aTransformation(item));
   }
   return res;
+}
+
+ThreadLocal* GetIndexedDBThreadLocal() {
+  BackgroundChildImpl::ThreadLocal* const threadLocal =
+      BackgroundChildImpl::GetThreadLocalForCurrentThread();
+  MOZ_ASSERT(threadLocal);
+
+  ThreadLocal* idbThreadLocal = threadLocal->mIndexedDBThreadLocal;
+  MOZ_ASSERT(idbThreadLocal);
+
+  return idbThreadLocal;
 }
 }  // namespace
 
@@ -81,7 +95,7 @@ IDBTransaction::IDBTransaction(IDBDatabase* const aDatabase,
     : DOMEventTargetHelper(aDatabase),
       mDatabase(aDatabase),
       mObjectStoreNames(aObjectStoreNames),
-      mLoggingSerialNumber(0),
+      mLoggingSerialNumber(GetIndexedDBThreadLocal()->NextTransactionSN(aMode)),
       mNextObjectStoreId(0),
       mNextIndexId(0),
       mAbortCode(NS_OK),
@@ -105,16 +119,6 @@ IDBTransaction::IDBTransaction(IDBDatabase* const aDatabase,
   aDatabase->AssertIsOnOwningThread();
 
   mBackgroundActor.mNormalBackgroundActor = nullptr;
-
-  BackgroundChildImpl::ThreadLocal* const threadLocal =
-      BackgroundChildImpl::GetThreadLocalForCurrentThread();
-  MOZ_ASSERT(threadLocal);
-
-  ThreadLocal* idbThreadLocal = threadLocal->mIndexedDBThreadLocal;
-  MOZ_ASSERT(idbThreadLocal);
-
-  const_cast<int64_t&>(mLoggingSerialNumber) =
-      idbThreadLocal->NextTransactionSN(aMode);
 
 #ifdef DEBUG
   if (!aObjectStoreNames.IsEmpty()) {
@@ -256,14 +260,7 @@ IDBTransaction* IDBTransaction::GetCurrent() {
 
   MOZ_ASSERT(BackgroundChild::GetForCurrentThread());
 
-  BackgroundChildImpl::ThreadLocal* const threadLocal =
-      BackgroundChildImpl::GetThreadLocalForCurrentThread();
-  MOZ_ASSERT(threadLocal);
-
-  ThreadLocal* idbThreadLocal = threadLocal->mIndexedDBThreadLocal;
-  MOZ_ASSERT(idbThreadLocal);
-
-  return idbThreadLocal->GetCurrentTransaction();
+  return GetIndexedDBThreadLocal()->GetCurrentTransaction();
 }
 
 #ifdef DEBUG
