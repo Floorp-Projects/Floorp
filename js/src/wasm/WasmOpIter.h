@@ -24,6 +24,7 @@
 
 #include "jit/AtomicOp.h"
 #include "js/Printf.h"
+#include "wasm/WasmUtility.h"
 #include "wasm/WasmValidate.h"
 
 namespace js {
