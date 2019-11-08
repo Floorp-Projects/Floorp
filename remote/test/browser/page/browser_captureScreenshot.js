@@ -4,7 +4,7 @@
 "use strict";
 
 add_task(async function documentSmallerThanViewport({ Page }) {
-  loadURL(toDataURL("<div>Hello world"));
+  await loadURL(toDataURL("<div>Hello world"));
 
   info("Check that captureScreenshot() captures the viewport by default");
   const { data } = await Page.captureScreenshot();
@@ -28,7 +28,7 @@ add_task(async function documentSmallerThanViewport({ Page }) {
 });
 
 add_task(async function documentLargerThanViewport({ Page }) {
-  loadURL(toDataURL("<div style='margin: 100vh 100vw'>Hello world"));
+  await loadURL(toDataURL("<div style='margin: 100vh 100vw'>Hello world"));
 
   info("Check that captureScreenshot() captures the viewport by default");
   const { data } = await Page.captureScreenshot();
@@ -52,7 +52,7 @@ add_task(async function documentLargerThanViewport({ Page }) {
 });
 
 add_task(async function invalidFormat({ Page }) {
-  loadURL(toDataURL("<div>Hello world"));
+  await loadURL(toDataURL("<div>Hello world"));
 
   let errorThrown = false;
   try {
@@ -64,7 +64,7 @@ add_task(async function invalidFormat({ Page }) {
 });
 
 add_task(async function asJPEGFormat({ Page }) {
-  loadURL(toDataURL("<div>Hello world"));
+  await loadURL(toDataURL("<div>Hello world"));
 
   info("Check that captureScreenshot() captures as JPEG format");
   const { data } = await Page.captureScreenshot({ format: "jpeg" });
@@ -80,7 +80,7 @@ add_task(async function asJPEGFormat({ Page }) {
 });
 
 add_task(async function asJPEGFormatAndQuality({ Page }) {
-  loadURL(toDataURL("<div>Hello world"));
+  await loadURL(toDataURL("<div>Hello world"));
 
   info("Check that captureScreenshot() captures as JPEG format");
   const imageDefault = await Page.captureScreenshot({ format: "jpeg" });
@@ -137,11 +137,10 @@ add_task(async function asJPEGFormatAndQuality({ Page }) {
     info100.length > infoDefault.length,
     "Size of quality 100 is larger than default"
   );
-  // Disabled due to bug 1594871
-  // ok(
-  //   info10.length < infoDefault.length,
-  //   "Size of quality 10 is smaller than default"
-  // );
+  ok(
+    info10.length < infoDefault.length,
+    "Size of quality 10 is smaller than default"
+  );
 });
 
 async function getDevicePixelRatio() {
