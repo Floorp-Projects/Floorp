@@ -47,6 +47,8 @@ menuitem[appHandlerIcon="plugin"] {
 
 .actionsMenu .menulist-icon {
   margin-inline-end: 3px;
+  height: 16px;
+  width: 16px;
 }
 
 .actionsMenu > menupopup > menuitem > .menu-iconic-left {
