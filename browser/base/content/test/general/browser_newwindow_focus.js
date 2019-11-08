@@ -53,7 +53,10 @@ add_task(async function test_focus_browser() {
 
       await BrowserTestUtils.synthesizeMouseAtCenter("#target", {}, browser);
       let newWin = await newWinPromise;
-      await BrowserTestUtils.contentPainted(newWin.gBrowser.selectedBrowser);
+      await BrowserTestUtils.waitForContentEvent(
+        newWin.gBrowser.selectedBrowser,
+        "MozAfterPaint"
+      );
       await delayedStartupPromise;
 
       let focusedElement = Services.focus.getFocusedElementForWindow(
@@ -95,7 +98,10 @@ add_task(async function test_no_steal_focus() {
       // content paints.
       newWin.gURLBar.focus();
 
-      await BrowserTestUtils.contentPainted(newWin.gBrowser.selectedBrowser);
+      await BrowserTestUtils.waitForContentEvent(
+        newWin.gBrowser.selectedBrowser,
+        "MozAfterPaint"
+      );
       await delayedStartupPromise;
 
       let focusedElement = Services.focus.getFocusedElementForWindow(

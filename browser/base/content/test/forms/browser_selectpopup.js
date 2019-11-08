@@ -825,7 +825,10 @@ async function performLargePopupTests(win) {
 
     position = positions.shift();
 
-    let contentPainted = BrowserTestUtils.contentPainted(browser);
+    let contentPainted = BrowserTestUtils.waitForContentEvent(
+      browser,
+      "MozAfterPaint"
+    );
     await ContentTask.spawn(browser, position, async function(contentPosition) {
       let select = content.document.getElementById("one");
       select.setAttribute("style", contentPosition || "");
