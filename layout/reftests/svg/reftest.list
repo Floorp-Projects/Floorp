@@ -31,8 +31,8 @@ include svg-integration/reftest.list
 
 == baseline-middle-01.svg pass.svg
 
-fails-if(Android&&webrender) == blend-color-burn.svg blend-color-burn-ref.svg
-fails-if(Android&&webrender) == blend-color-dodge.svg blend-color-dodge-ref.svg
+fails-if(Android&&webrender&&device) == blend-color-burn.svg blend-color-burn-ref.svg
+fails-if(Android&&webrender&&device) == blend-color-dodge.svg blend-color-dodge-ref.svg
 # == blend-color.svg blend-color-ref.svg
 random-if(Android&&webrender) == blend-darken.svg blend-darken-ref.svg
 random-if(Android&&webrender) == blend-difference.svg blend-difference-ref.svg
