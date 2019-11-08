@@ -100,6 +100,21 @@
         "description": "Enables or disables the engagement telemetry."
       }
     },
+    "functions": [
+      {
+        "name": "search",
+        "type": "function",
+        "async": true,
+        "description": "Starts a search in the urlbar in the current window.",
+        "parameters": [
+          {
+            "name": "searchString",
+            "type": "string",
+            "description": "The search string."
+          }
+        ]
+      }
+    ],
     "events": [
       {
         "name": "onBehaviorRequested",
