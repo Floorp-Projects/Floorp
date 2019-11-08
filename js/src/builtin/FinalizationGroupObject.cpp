@@ -215,19 +215,21 @@ bool FinalizationGroupObject::construct(JSContext* cx, unsigned argc,
     }
   }
 
-  FinalizationGroupObject* group =
-      NewObjectWithClassProto<FinalizationGroupObject>(cx, proto);
-  if (!group) {
-    return false;
-  }
-
-  auto registrations = cx->make_unique<ObjectWeakMap>(cx);
+  Rooted<UniquePtr<ObjectWeakMap>> registrations(
+      cx, cx->make_unique<ObjectWeakMap>(cx));
   if (!registrations) {
     return false;
   }
 
-  auto holdings = cx->make_unique<HoldingsVector>(cx->zone());
+  Rooted<UniquePtr<HoldingsVector>> holdings(
+      cx, cx->make_unique<HoldingsVector>(cx->zone()));
   if (!holdings) {
+    return false;
+  }
+
+  FinalizationGroupObject* group =
+      NewObjectWithClassProto<FinalizationGroupObject>(cx, proto);
+  if (!group) {
     return false;
   }
 
@@ -423,7 +425,12 @@ bool FinalizationGroupObject::addRegistration(
     }
   }
 
-  return recordsObject->append(record);
+  if (!recordsObject->append(record)) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
+
+  return true;
 }
 
 /* static */ void FinalizationGroupObject::removeRegistrationOnError(
