@@ -273,7 +273,7 @@ static bool EnumerateNativeProperties(JSContext* cx, HandleNativeObject pobj,
         return false;
       }
     }
-    ::Reverse(props.begin() + initialLength, props.end());
+    std::reverse(props.begin() + initialLength, props.end());
 
     enumerateSymbols = symbolsFound && (flags & JSITER_SYMBOLS);
   }
@@ -293,7 +293,7 @@ static bool EnumerateNativeProperties(JSContext* cx, HandleNativeObject pobj,
         }
       }
     }
-    ::Reverse(props.begin() + initialLength, props.end());
+    std::reverse(props.begin() + initialLength, props.end());
   }
 
   return true;

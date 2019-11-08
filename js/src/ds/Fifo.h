@@ -9,6 +9,8 @@
 
 #include "mozilla/Move.h"
 
+#include <algorithm>
+
 #include "jsutil.h"
 
 #include "js/Vector.h"
@@ -48,7 +50,7 @@ class Fifo {
   void fixup() {
     if (front_.empty() && !rear_.empty()) {
       front_.swap(rear_);
-      Reverse(front_.begin(), front_.end());
+      std::reverse(front_.begin(), front_.end());
     }
   }
 
