@@ -124,7 +124,7 @@
     display: block;
     height: 18px;
     margin-top: -9px;
-    right: -15px;
+    inset-inline-end: -15px;
     position: absolute;
     text-indent: -9999px;
     width: 18px;
@@ -167,13 +167,15 @@
 }
 .pkt_ext_introstory p {
     margin-bottom: 0;
-    text-align: left;
+    text-align: start;
 }
 .pkt_ext_introstoryone {
-    padding: 20px 18px 15px 20px;
+    padding-block: 20px 15px;
+    padding-inline: 20px 18px;
 }
 .pkt_ext_introstorytwo {
-    padding: 3px 0 0 20px;
+    padding-block: 3px 0;
+    padding-inline: 20px 0;
 }
 .pkt_ext_introstorytwo .pkt_ext_tagline {
     margin-bottom: 1.5em;
@@ -191,8 +193,12 @@
 .pkt_ext_introstoryone_img {
     background: url(../img/pocketsignup_button@1x.png) center right no-repeat;
     height: 82px;
-    padding: 0 0 0 0.7em;
+    padding-block: 0;
+    padding-inline: 0.7em 0;
     width: 82px;
+}
+.pkt_ext_introstoryone_img:dir(rtl) {
+    background-position-x: left;
 }
 @media (min-resolution: 1.1dppx) {
     .pkt_ext_introstoryone_img {
@@ -203,8 +209,12 @@
 .pkt_ext_introstorytwo_img {
     background: url(../img/pocketsignup_devices@1x.png) bottom right no-repeat;
     height: 110px;
-    padding: 1em 0 0 0.7em;
+    padding-block: 1em 0;
+    padding-inline: 0.7em 0;
     width: 124px;
+}
+.pkt_ext_introstorytwo_img:dir(rtl) {
+    background-position-x: left;
 }
 @media (min-resolution: 1.1dppx) {
     .pkt_ext_introstorytwo_img {
@@ -296,7 +306,7 @@
 .pkt_ext_containersignup .signup-btn-firefox .logo {
     background: url(../img/signup_firefoxlogo@1x.png) center center no-repeat;
     height: 2.6em;
-    left: 10px;
+    inset-inline-start: 10px;
     margin: 0;
     padding: 0;
     width: 22px;
@@ -344,20 +354,18 @@
 .pkt_ext_signup_overflow .signup-btn-email {
     font-size: 14px;
     min-width: 12.6em;
-    padding-left: 0.75em;
-    padding-right: 0.75em;
+    padding-inline: 0.75em;
 }
 .pkt_ext_signup_overflow .signup-btn-tryitnow .text,
 .pkt_ext_signup_overflow .signup-btn-firefox .text {
-    padding-left: 0;
-    padding-right: 0;
+    padding-inline: 0;
 }
 
 /*=Language overrides
 --------------------------------------------------------------------------------------- */
 .pkt_ext_signup_de .pkt_ext_introstoryone_img {
-    margin-right: -5px;
-    padding-left: 0;
+    margin-inline-end: -5px;
+    padding-inline-start: 0;
 }
 .pkt_ext_signup_de .pkt_ext_introstorytwo .pkt_ext_tagline,
 .pkt_ext_signup_es .pkt_ext_introstorytwo .pkt_ext_tagline,
@@ -382,7 +390,7 @@
 .pkt_ext_signup_ja .signup-btn-tryitnow .text,
 .pkt_ext_signup_ru .signup-btn-firefox .text,
 .pkt_ext_signup_ru .signup-btn-tryitnow .text {
-    left: 15px;
+    inset-inline-start: 15px;
 }
 .pkt_ext_signup_de .signup-btn-firefox .logo,
 .pkt_ext_signup_es .pkt_ext_signupdetail_hero .signup-btn-firefox .logo,
