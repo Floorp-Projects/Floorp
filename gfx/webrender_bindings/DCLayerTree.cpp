@@ -216,7 +216,7 @@ void DCLayerTree::CreateSurface(wr::NativeSurfaceId aId,
   }
 
   auto layer = MakeUnique<DCLayer>(this);
-  if (!layer->Initialize(aSize)) {
+  if (!layer->Initialize(aSize, aIsOpaque)) {
     gfxCriticalNote << "Failed to initialize DCLayer";
     return;
   }
@@ -270,7 +270,7 @@ DCLayer::DCLayer(DCLayerTree* aDCLayerTree)
 
 DCLayer::~DCLayer() { DestroyEGLSurface(); }
 
-bool DCLayer::Initialize(wr::DeviceIntSize aSize) {
+bool DCLayer::Initialize(wr::DeviceIntSize aSize, bool aIsOpaque) {
   if (aSize.width <= 0 || aSize.height <= 0) {
     return false;
   }
@@ -284,8 +284,7 @@ bool DCLayer::Initialize(wr::DeviceIntSize aSize) {
     return false;
   }
 
-  // XXX Always request alpha usage. But it could degrade performance.
-  mCompositionSurface = CreateCompositionSurface(aSize, /* aUseAlpha */ true);
+  mCompositionSurface = CreateCompositionSurface(aSize, aIsOpaque);
   if (!mCompositionSurface) {
     return false;
   }
@@ -300,11 +299,11 @@ bool DCLayer::Initialize(wr::DeviceIntSize aSize) {
 }
 
 RefPtr<IDCompositionSurface> DCLayer::CreateCompositionSurface(
-    wr::DeviceIntSize aSize, bool aUseAlpha) {
+    wr::DeviceIntSize aSize, bool aIsOpaque) {
   HRESULT hr;
   const auto dCompDevice = mDCLayerTree->GetCompositionDevice();
   const auto alphaMode =
-      aUseAlpha ? DXGI_ALPHA_MODE_PREMULTIPLIED : DXGI_ALPHA_MODE_IGNORE;
+      aIsOpaque ? DXGI_ALPHA_MODE_IGNORE : DXGI_ALPHA_MODE_PREMULTIPLIED;
   RefPtr<IDCompositionSurface> compositionSurface;
 
   hr = dCompDevice->CreateSurface(aSize.width, aSize.height,
