@@ -80,11 +80,6 @@ class TrackEncoder {
   /**
    * Encodes raw segments. Result data is returned in aData, and called on the
    * worker thread.
-   *
-   * @returns NS_OK on success. NS_ERROR_DOM_MEDIA_CANCELED if encoding has
-   *          been canceled or completed, signaling that the encoder will not
-   *          emit more data. Other NS_ERROR_* codes will be returned for fatal
-   *          errors.
    */
   virtual nsresult GetEncodedTrack(nsTArray<RefPtr<EncodedFrame>>& aData) = 0;
 
