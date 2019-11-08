@@ -24,6 +24,7 @@ const {
   ERRNO_INVALID_AUTH_NONCE,
   ERRNO_INVALID_AUTH_TIMESTAMP,
   ERRNO_INVALID_AUTH_TOKEN,
+  FX_OAUTH_CLIENT_ID,
   log,
 } = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
 const { Credentials } = ChromeUtils.import(
@@ -286,29 +287,6 @@ this.FxAccountsClient.prototype = {
   },
 
   /**
-   * Obtain an OAuth access token by authenticating using a session token.
-   *
-   * @param String sessionTokenHex
-   *        The session token encoded in hex
-   * @param String clientId
-   * @param String scopeString
-   *        List of space-separated scopes.
-   * @return {Promise<Object>} Object containing an `access_token`.
-   */
-  async oauthToken(sessionTokenHex, clientId, scopeString) {
-    const credentials = await deriveHawkCredentials(
-      sessionTokenHex,
-      "sessionToken"
-    );
-    const body = {
-      client_id: clientId,
-      grant_type: "fxa-credentials",
-      scope: scopeString,
-    };
-    return this._request("/oauth/token", "POST", credentials, body);
-  },
-
-  /**
    * Destroy an OAuth access token or refresh token.
    *
    * @param String clientId
@@ -481,9 +459,26 @@ this.FxAccountsClient.prototype = {
   async signCertificate(sessionTokenHex, serializedPublicKey, lifetime) {
     let creds = await deriveHawkCredentials(sessionTokenHex, "sessionToken");
 
+    // The FxA server has various special-case behaviours for sync clients.
+    // As a terrible hack, check whether sync is enabled and adjust the
+    // `service` parameter appropriately. This can go away once we stop using
+    // BrowserID for OAuth requests, after which sync will be the only user
+    // of these signed certs.
+    let service = FX_OAUTH_CLIENT_ID;
+    if (Services.prefs.prefHasUserValue("services.sync.username")) {
+      service = "sync";
+    }
+
     let body = { publicKey: serializedPublicKey, duration: lifetime };
     return Promise.resolve()
-      .then(_ => this._request("/certificate/sign", "POST", creds, body))
+      .then(_ =>
+        this._request(
+          `/certificate/sign?service=${service}`,
+          "POST",
+          creds,
+          body
+        )
+      )
       .then(
         resp => resp.cert,
         err => {
