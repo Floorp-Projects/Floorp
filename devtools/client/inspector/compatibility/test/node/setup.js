@@ -4,7 +4,16 @@
 
 "use strict";
 
+/* global global */
+
 // Configure enzyme with React 16 adapter.
 const Enzyme = require("enzyme");
 const Adapter = require("enzyme-adapter-react-16");
 Enzyme.configure({ adapter: new Adapter() });
+
+global.loader = {
+  lazyRequireGetter: (context, name, module, destructure) => {
+    const value = destructure ? require(module)[name] : require(module || name);
+    global[name] = value;
+  },
+};

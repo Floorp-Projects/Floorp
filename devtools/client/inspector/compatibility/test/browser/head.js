@@ -11,6 +11,10 @@ Services.scriptloader.loadSubScript(
   this
 );
 
+const {
+  toCamelCase,
+} = require("devtools/client/inspector/compatibility/utils/cases");
+
 async function openCompatibilityView() {
   info("Open the compatibility view");
   await pushPref("devtools.inspector.compatibility.enabled", true);
@@ -45,20 +49,19 @@ async function assertIssueList(panel, expectedIssues) {
     return;
   }
 
-  for (const expectedIssue of expectedIssues) {
-    info(`Check the issue for ${expectedIssue.property}`);
-    const issueEl = panel.querySelector(
-      `[data-qa-property=${expectedIssue.property}]`
-    );
-    ok(issueEl, `The element for ${expectedIssue.property} is displayed`);
+  const issueEls = panel.querySelectorAll("[data-qa-property]");
+
+  for (let i = 0; i < expectedIssues.length; i++) {
+    info(`Check an element at index[${i}]`);
+    const issueEl = issueEls[i];
+    const expectedIssue = expectedIssues[i];
 
     for (const [key, value] of Object.entries(expectedIssue)) {
-      const fieldEl = issueEl.querySelector(`[data-qa-key=${key}]`);
-      ok(fieldEl, `The element for ${key} is displayed`);
+      const datasetKey = toCamelCase(`qa-${key}`);
       is(
-        fieldEl.dataset.qaValue,
+        issueEl.dataset[datasetKey],
         JSON.stringify(value),
-        "The value is correct"
+        `The value of ${datasetKey} is correct`
       );
     }
   }
