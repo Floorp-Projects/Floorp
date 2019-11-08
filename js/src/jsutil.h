@@ -44,14 +44,6 @@
 
 namespace js {
 
-// An internal version of JS_IsInitialized() that returns whether SpiderMonkey
-// is currently initialized or is in the process of being initialized.
-inline bool IsInitialized() {
-  using namespace JS::detail;
-  return libraryInitState == InitState::Initializing ||
-         libraryInitState == InitState::Running;
-}
-
 template <class T>
 static constexpr inline T Min(T t1, T t2) {
   return t1 < t2 ? t1 : t2;
