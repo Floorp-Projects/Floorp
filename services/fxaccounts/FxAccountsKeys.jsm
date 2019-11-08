@@ -269,9 +269,7 @@ class FxAccountsKeys {
    * the next time it is needed.
    */
   invalidateCertificate() {
-    return this._fxia.withCurrentAccountState(async state => {
-      await state.updateUserAccountData({ cert: null });
-    });
+    return this._fxia.invalidateCertificate();
   }
 
   /**

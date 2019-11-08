@@ -621,7 +621,7 @@ add_task(async function test_getHAWKErrors() {
     uri
   ) {
     Assert.equal(method, "post");
-    Assert.equal(uri, "http://mockedserver:9999/certificate/sign");
+    Assert.equal(uri, "http://mockedserver:9999/certificate/sign?service=sync");
     return {
       status: 401,
       headers: { "content-type": "application/json" },
@@ -643,7 +643,7 @@ add_task(async function test_getHAWKErrors() {
     uri
   ) {
     Assert.equal(method, "post");
-    Assert.equal(uri, "http://mockedserver:9999/certificate/sign");
+    Assert.equal(uri, "http://mockedserver:9999/certificate/sign?service=sync");
     return {
       status: 200,
       headers: [],
