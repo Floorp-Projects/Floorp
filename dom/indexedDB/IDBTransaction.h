@@ -207,8 +207,6 @@ class IDBTransaction final : public DOMEventTargetHelper, public nsIRunnable {
     return mDatabase;
   }
 
-  IDBDatabase* Db() const { return Database(); }
-
   // Only for use by ProfilerHelpers.h
   const nsTArray<nsString>& ObjectStoreNamesInternal() const {
     AssertIsOnOwningThread();
@@ -242,21 +240,6 @@ class IDBTransaction final : public DOMEventTargetHelper, public nsIRunnable {
 
   nsIGlobalObject* GetParentObject() const;
 
-  IDBTransactionMode GetMode(ErrorResult& aRv) const;
-
-  DOMException* GetError() const;
-
-  already_AddRefed<IDBObjectStore> ObjectStore(const nsAString& aName,
-                                               ErrorResult& aRv);
-
-  void Abort(ErrorResult& aRv);
-
-  IMPL_EVENT_HANDLER(abort)
-  IMPL_EVENT_HANDLER(complete)
-  IMPL_EVENT_HANDLER(error)
-
-  already_AddRefed<DOMStringList> ObjectStoreNames() const;
-
   void FireCompleteOrAbortEvents(nsresult aResult);
 
   // Only for VERSION_CHANGE transactions.
@@ -276,6 +259,24 @@ class IDBTransaction final : public DOMEventTargetHelper, public nsIRunnable {
   // nsWrapperCache
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
+
+  // Methods bound via WebIDL.
+  IDBDatabase* Db() const { return Database(); }
+
+  IDBTransactionMode GetMode(ErrorResult& aRv) const;
+
+  DOMException* GetError() const;
+
+  already_AddRefed<IDBObjectStore> ObjectStore(const nsAString& aName,
+                                               ErrorResult& aRv);
+
+  void Abort(ErrorResult& aRv);
+
+  IMPL_EVENT_HANDLER(abort)
+  IMPL_EVENT_HANDLER(complete)
+  IMPL_EVENT_HANDLER(error)
+
+  already_AddRefed<DOMStringList> ObjectStoreNames() const;
 
   // EventTarget
   void GetEventTargetParent(EventChainPreVisitor& aVisitor) override;
