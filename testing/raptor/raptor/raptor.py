@@ -1694,7 +1694,7 @@ def main(args=sys.argv[1:]):
                     value = outer_kwargs.pop(key)
                     inner_kwargs[key] = value
 
-            if args.app == "firefox"or args.app in CHROMIUM_DISTROS:
+            if args.app == "firefox" or args.app in CHROMIUM_DISTROS:
                 klass = BrowsertimeDesktop
             else:
                 klass = BrowsertimeAndroid
