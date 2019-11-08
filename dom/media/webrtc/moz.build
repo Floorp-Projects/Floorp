@@ -57,6 +57,7 @@ if CONFIG['MOZ_WEBRTC']:
 
 PREPROCESSED_IPDL_SOURCES += [
     'PMediaTransport.ipdl',
+    'PWebrtcGlobal.ipdl',
 ]
 
 XPIDL_SOURCES += [
