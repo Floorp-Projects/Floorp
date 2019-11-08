@@ -275,6 +275,10 @@ button > hbox > label {
   margin: 0;
 }
 
+#activeLanguages {
+  height: 16em;
+}
+
 #activeLanguages > richlistitem {
   padding: 0.3em;
 }
