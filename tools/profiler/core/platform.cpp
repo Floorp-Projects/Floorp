@@ -225,8 +225,7 @@ static uint32_t AvailableFeatures() {
 // Default features common to all contexts (even if not available).
 static uint32_t DefaultFeatures() {
   return ProfilerFeature::Java | ProfilerFeature::JS | ProfilerFeature::Leaf |
-         ProfilerFeature::StackWalk | ProfilerFeature::Threads |
-         ProfilerFeature::Responsiveness;
+         ProfilerFeature::StackWalk | ProfilerFeature::Threads;
 }
 
 // Extra default features when MOZ_PROFILER_STARTUP is set (even if not
@@ -2348,8 +2347,7 @@ static void locked_profiler_stream_json_for_this_process(
       // java thread, we have to get thread id and name via JNI.
       RefPtr<ThreadInfo> threadInfo = new ThreadInfo(
           "Java Main Thread", 0, false, CorePS::ProcessStartTime());
-      ProfiledThreadData profiledThreadData(
-          threadInfo, nullptr, ActivePS::FeatureResponsiveness(aLock));
+      ProfiledThreadData profiledThreadData(threadInfo, nullptr);
       profiledThreadData.StreamJSON(*javaBuffer.get(), nullptr, aWriter,
                                     CorePS::ProcessName(aLock),
                                     CorePS::ProcessStartTime(), aSinceTime,
@@ -2439,6 +2437,7 @@ static char FeatureCategory(uint32_t aFeature) {
   return 'x';
 }
 
+// Doesn't exist if aExitCode is 0
 static void PrintUsageThenExit(int aExitCode) {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
@@ -2538,7 +2537,9 @@ static void PrintUsageThenExit(int aExitCode) {
 #endif
   );
 
-  exit(aExitCode);
+  if (aExitCode != 0) {
+    exit(aExitCode);
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -3236,7 +3237,8 @@ static uint32_t ParseFeature(const char* aFeature, bool aIsStartup) {
 #undef PARSE_FEATURE_BIT
 
   printf("\nUnrecognized feature \"%s\".\n\n", aFeature);
-  PrintUsageThenExit(1);
+  // Since we may have an old feature we don't implement anymore, don't exit
+  PrintUsageThenExit(0);
   return 0;
 }
 
@@ -3290,8 +3292,7 @@ static ProfilingStack* locked_register_thread(PSLockRef aLock,
     nsCOMPtr<nsIEventTarget> eventTarget = registeredThread->GetEventTarget();
     ProfiledThreadData* profiledThreadData = ActivePS::AddLiveProfiledThread(
         aLock, registeredThread.get(),
-        MakeUnique<ProfiledThreadData>(info, eventTarget,
-                                       ActivePS::FeatureResponsiveness(aLock)));
+        MakeUnique<ProfiledThreadData>(info, eventTarget));
 
     if (ActivePS::FeatureJS(aLock)) {
       // This StartJSSampling() call is on-thread, so we can poll manually to
@@ -3416,7 +3417,7 @@ void profiler_init(void* aStackTop) {
   MOZ_RELEASE_ASSERT(!CorePS::Exists());
 
   if (getenv("MOZ_PROFILER_HELP")) {
-    PrintUsageThenExit(0);  // terminates execution
+    PrintUsageThenExit(1);  // terminates execution
   }
 
   SharedLibraryInfo::Initialize();
@@ -3985,8 +3986,7 @@ static void locked_profiler_start(PSLockRef aLock, PowerOfTwo32 aCapacity,
       nsCOMPtr<nsIEventTarget> eventTarget = registeredThread->GetEventTarget();
       ProfiledThreadData* profiledThreadData = ActivePS::AddLiveProfiledThread(
           aLock, registeredThread.get(),
-          MakeUnique<ProfiledThreadData>(
-              info, eventTarget, ActivePS::FeatureResponsiveness(aLock)));
+          MakeUnique<ProfiledThreadData>(info, eventTarget));
       if (ActivePS::FeatureJS(aLock)) {
         registeredThread->StartJSSampling(ActivePS::JSFlags(aLock));
         if (info->ThreadId() == tid) {
