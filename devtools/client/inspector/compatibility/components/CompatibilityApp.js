@@ -29,7 +29,7 @@ class CompatibilityApp extends PureComponent {
 
     return dom.div(
       {
-        className: "theme-sidebar inspector-tabpanel",
+        className: "compatibility-app theme-sidebar inspector-tabpanel",
       },
       selectedNodeIssues.length
         ? IssueList({ issues: selectedNodeIssues })
