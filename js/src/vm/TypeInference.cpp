@@ -29,6 +29,7 @@
 #include "jit/OptimizationTracking.h"
 #include "js/MemoryMetrics.h"
 #include "js/UniquePtr.h"
+#include "util/DiagnosticAssertions.h"
 #include "util/Poison.h"
 #include "vm/HelperThreads.h"
 #include "vm/JSContext.h"

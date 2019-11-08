@@ -22,6 +22,7 @@
 #include "jit/BaselineJIT.h"
 #include "jit/JitScript.h"
 #include "js/HeapAPI.h"
+#include "util/DiagnosticAssertions.h"
 #include "vm/ArrayObject.h"
 #include "vm/BooleanObject.h"
 #include "vm/JSFunction.h"

@@ -13,6 +13,7 @@
 #include "gc/Zone.h"
 #include "jit/JitFrames.h"
 #include "proxy/Proxy.h"
+#include "util/DiagnosticAssertions.h"
 #include "vm/BigIntType.h"
 #include "vm/GlobalObject.h"
 #include "vm/HelperThreads.h"
