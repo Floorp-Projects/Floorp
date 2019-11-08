@@ -80,7 +80,8 @@ add_task(async function() {
 
   let { engines, privateDefault } = engineSelector.fetchEngineConfiguration(
     "en-US",
-    "us"
+    "us",
+    "default"
   );
   Assert.equal(
     privateDefault.engineName,
@@ -97,7 +98,8 @@ add_task(async function() {
 
   ({ engines, privateDefault } = engineSelector.fetchEngineConfiguration(
     "zh-CN",
-    "kz"
+    "kz",
+    "default"
   ));
   Assert.equal(engines.length, 2, "Correct engines are returns");
   Assert.equal(privateDefault, null, "There should be no privateDefault");
@@ -111,7 +113,8 @@ add_task(async function() {
   Services.prefs.setCharPref("browser.search.cohort", "acohortid");
   ({ engines, privateDefault } = engineSelector.fetchEngineConfiguration(
     "en-US",
-    "us"
+    "us",
+    "default"
   ));
   Assert.deepEqual(
     engines.map(obj => obj.engineName),
@@ -120,7 +123,9 @@ add_task(async function() {
   );
 
   ({ engines, privateDefault } = engineSelector.fetchEngineConfiguration(
-    "en-US"
+    "en-US",
+    "default",
+    "default"
   ));
   Assert.deepEqual(
     engines.map(obj => obj.engineName),

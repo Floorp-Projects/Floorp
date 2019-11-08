@@ -128,6 +128,61 @@ depending on the user's locale.
 You can specify ``"default"`` as a region in the configuration if
 the engine is to be included when no region is specified.
 
+Application Scoping
+===================
+
+An engine configuration may be scoped to a particular application.
+
+Channel
+=======
+
+One or more channels may be specified in an array to restrict a configuration
+to just those channels. The current known channels are:
+
+    - default: Self-builds of Firefox, or possibly some self-distributed versions.
+    - nightly: Firefox Nightly builds.
+    - aurora: Firefox Developer Edition
+    - beta: Firefox Beta
+    - release: The main Firefox release channel.
+    - esr: The ESR Channel. This will also match versions of Firefox where the
+      displayed version number includes ``esr``. We do this to include Linux
+      distributions and other manual builds of ESR.
+
+In the following example, ``web@ext`` would be set as default on the default
+channel only, whereas ``web1@ext`` would be set as default on release and esr
+channels.
+
+.. code-block:: js
+
+    {
+      "webExtension": {
+        "id": "web@ext"
+      },
+      "appliesTo": [{
+        "included": {
+          "everywhere": true
+          "default": "yes",
+          "application": {
+            "channel": ["default"]
+          }
+        }
+      ]}
+    },
+    {
+      "webExtension": {
+        "id": "web1@ext"
+      },
+      "appliesTo": [{
+        "included": {
+          "everywhere": true
+          "default": "yes",
+          "application": {
+            "channel": ["release", "esr"]
+          }
+        }
+      ]}
+    }
+
 Experiments
 ===========
 
