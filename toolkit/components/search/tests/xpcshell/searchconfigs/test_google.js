@@ -3,6 +3,10 @@
 
 "use strict";
 
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
+
 const test = new SearchConfigTest({
   identifier: "google",
   aliases: ["@google"],

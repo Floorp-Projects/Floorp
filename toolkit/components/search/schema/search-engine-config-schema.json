@@ -10,6 +10,9 @@
     "defaultPrivate": {
       "$ref": "#/definitions/defaultPrivate"
     },
+    "application": {
+      "$ref": "#/definitions/application"
+    },
     "orderHint": {
       "$ref": "#/definitions/orderHint"
     },
@@ -48,10 +51,10 @@
             "android"
           ]
         },
-        "channel": {
+        "branches": {
           "type": "array",
-          "title": "Channel",
-          "description": "Which channel this belongs to (not set = everywhere). For ESR this is also keyed from the display version.",
+          "title": "Branches",
+          "description": "Which branches this belongs to (not set = everywhere)",
           "items": {
             "type": "string",
             "enum": [
