@@ -10,12 +10,20 @@
 
 .compatibility-issue-list {
   list-style: none;
+  margin: 0;
+  padding: 0;
 }
 
 .compatibility-issue-item {
   display: flex;
   gap: var(--compatibility-base-unit);
   align-items: center;
+  padding-inline-start: calc(var(--compatibility-base-unit) * 2);
+  padding-block: calc(var(--compatibility-base-unit) * 2);
+}
+
+.compatibility-issue-item:not(:last-child) {
+  border-block-end: 1px solid var(--theme-splitter-color);
 }
 
 .compatibility-issue-item::before {
