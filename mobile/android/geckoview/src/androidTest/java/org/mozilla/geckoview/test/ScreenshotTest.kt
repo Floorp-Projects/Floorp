@@ -88,7 +88,11 @@ class ScreenshotTest : BaseSessionTest() {
         val screenshotFile = getComparisonScreenshot(SCREEN_WIDTH, SCREEN_HEIGHT)
 
         sessionRule.session.loadTestPath(COLORS_HTML_PATH)
-        sessionRule.waitForPageStop()
+        sessionRule.waitUntilCalled(object : Callbacks.ContentDelegate {
+            @AssertCalled(count = 1)
+            override fun onFirstContentfulPaint(session: GeckoSession) {
+            }
+        })
 
         sessionRule.display?.let {
             assertScreenshotResult(it.capturePixels(), screenshotFile)
@@ -101,7 +105,11 @@ class ScreenshotTest : BaseSessionTest() {
         val screenshotFile = getComparisonScreenshot(SCREEN_WIDTH, SCREEN_HEIGHT)
 
         sessionRule.session.loadTestPath(COLORS_HTML_PATH)
-        sessionRule.waitForPageStop()
+        sessionRule.waitUntilCalled(object : Callbacks.ContentDelegate {
+            @AssertCalled(count = 1)
+            override fun onFirstContentfulPaint(session: GeckoSession) {
+            }
+        })
 
         sessionRule.display?.let {
             val call1 = it.capturePixels()
