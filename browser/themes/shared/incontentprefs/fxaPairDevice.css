@@ -57,13 +57,9 @@
   align-items: center;
   flex-direction: column;
   width: 300px; /* Same as #qrContainer */
-	position: absolute;
-	top: 0;
-	bottom: 0;
-	left: 0;
-  right: 0;
-  margin-left: auto;
-  margin-right: auto;
+  position: absolute;
+  inset: 0;
+  margin-inline: auto;
   transition: opacity 250ms cubic-bezier(.07,.95,0,1);
   cursor: pointer;
 }
