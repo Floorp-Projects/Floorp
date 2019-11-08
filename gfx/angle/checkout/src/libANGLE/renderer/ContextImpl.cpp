@@ -109,6 +109,16 @@ void ContextImpl::stencilThenCoverStrokePathInstanced(const std::vector<gl::Path
     UNREACHABLE();
 }
 
+void ContextImpl::invalidateTexture(gl::TextureType target)
+{
+    UNREACHABLE();
+}
+
+angle::Result ContextImpl::onUnMakeCurrent(const gl::Context *context)
+{
+    return angle::Result::Continue;
+}
+
 void ContextImpl::setMemoryProgramCache(gl::MemoryProgramCache *memoryProgramCache)
 {
     mMemoryProgramCache = memoryProgramCache;
@@ -124,4 +134,5 @@ void ContextImpl::handleError(GLenum errorCode,
     errorStream << "Internal error: " << gl::FmtHex(errorCode) << ": " << message;
     mErrors->handleError(errorCode, errorStream.str().c_str(), file, function, line);
 }
+
 }  // namespace rx

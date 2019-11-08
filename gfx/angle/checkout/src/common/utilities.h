@@ -62,7 +62,8 @@ std::string ParseResourceName(const std::string &name, std::vector<unsigned int>
 // Find the child field which matches 'fullName' == var.name + "." + field.name.
 // Return nullptr if not found.
 const sh::ShaderVariable *FindShaderVarField(const sh::ShaderVariable &var,
-                                             const std::string &fullName);
+                                             const std::string &fullName,
+                                             GLuint *fieldIndexOut);
 
 // Find the range of index values in the provided indices pointer.  Primitive restart indices are
 // only counted in the range if primitive restart is disabled.
@@ -73,6 +74,20 @@ IndexRange ComputeIndexRange(DrawElementsType indexType,
 
 // Get the primitive restart index value for the given index type.
 GLuint GetPrimitiveRestartIndex(DrawElementsType indexType);
+
+// Get the primitive restart index value with the given C++ type.
+template <typename T>
+constexpr T GetPrimitiveRestartIndexFromType()
+{
+    return std::numeric_limits<T>::max();
+}
+
+static_assert(GetPrimitiveRestartIndexFromType<uint8_t>() == 0xFF,
+              "verify restart index for uint8_t values");
+static_assert(GetPrimitiveRestartIndexFromType<uint16_t>() == 0xFFFF,
+              "verify restart index for uint8_t values");
+static_assert(GetPrimitiveRestartIndexFromType<uint32_t>() == 0xFFFFFFFF,
+              "verify restart index for uint8_t values");
 
 bool IsTriangleMode(PrimitiveMode drawMode);
 
@@ -124,7 +139,8 @@ struct UniformTypeInfo final : angle::NonCopyable
                                      size_t externalSize,
                                      bool isSampler,
                                      bool isMatrixType,
-                                     bool isImageType);
+                                     bool isImageType,
+                                     const char *glslAsFloat);
 
     GLenum type;
     GLenum componentType;
@@ -141,6 +157,7 @@ struct UniformTypeInfo final : angle::NonCopyable
     bool isSampler;
     bool isMatrixType;
     bool isImageType;
+    const char *glslAsFloat;
 };
 
 inline constexpr UniformTypeInfo::UniformTypeInfo(GLenum type,
@@ -157,7 +174,8 @@ inline constexpr UniformTypeInfo::UniformTypeInfo(GLenum type,
                                                   size_t externalSize,
                                                   bool isSampler,
                                                   bool isMatrixType,
-                                                  bool isImageType)
+                                                  bool isImageType,
+                                                  const char *glslAsFloat)
     : type(type),
       componentType(componentType),
       textureType(textureType),
@@ -172,7 +190,8 @@ inline constexpr UniformTypeInfo::UniformTypeInfo(GLenum type,
       externalSize(externalSize),
       isSampler(isSampler),
       isMatrixType(isMatrixType),
-      isImageType(isImageType)
+      isImageType(isImageType),
+      glslAsFloat(glslAsFloat)
 {}
 
 const UniformTypeInfo &GetUniformTypeInfo(GLenum uniformType);
@@ -187,6 +206,14 @@ T GetClampedVertexCount(size_t vertexCount)
     static constexpr size_t kMax = static_cast<size_t>(std::numeric_limits<T>::max());
     return static_cast<T>(vertexCount > kMax ? kMax : vertexCount);
 }
+
+enum class PipelineType
+{
+    GraphicsPipeline = 0,
+    ComputePipeline  = 1,
+};
+
+PipelineType GetPipelineType(ShaderType shaderType);
 }  // namespace gl
 
 namespace egl

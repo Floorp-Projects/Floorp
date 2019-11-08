@@ -41,7 +41,9 @@ struct Format final : private angle::NonCopyable
                             GLuint pixelBytes,
                             GLuint componentAlignmentMask,
                             bool isBlock,
-                            bool isFixed);
+                            bool isFixed,
+                            bool isScaled,
+                            gl::VertexAttribType vertexAttribType);
 
     static const Format &Get(FormatID id) { return gFormatInfoTable[static_cast<int>(id)]; }
 
@@ -49,13 +51,16 @@ struct Format final : private angle::NonCopyable
 
     constexpr bool hasDepthOrStencilBits() const;
     constexpr bool isLUMA() const;
-    constexpr GLuint channelCount() const;
 
-    constexpr bool isInt() const;
+    constexpr bool isSint() const;
     constexpr bool isUint() const;
     constexpr bool isSnorm() const;
     constexpr bool isUnorm() const;
     constexpr bool isFloat() const;
+
+    constexpr bool isInt() const { return isSint() || isUint(); }
+    constexpr bool isNorm() const { return isSnorm() || isUnorm(); }
+    constexpr bool isPureInt() const { return isInt() && !isScaled; }
 
     bool operator==(const Format &other) const { return this->id == other.id; }
 
@@ -93,9 +98,28 @@ struct Format final : private angle::NonCopyable
     // 0x0.
     GLuint componentAlignmentMask;
 
+    GLuint channelCount;
+
     bool isBlock;
     bool isFixed;
+    bool isScaled;
+
+    // For vertex formats only. Returns the "type" value for glVertexAttribPointer etc.
+    gl::VertexAttribType vertexAttribType;
 };
+
+constexpr GLuint GetChannelCount(GLuint redBits,
+                                 GLuint greenBits,
+                                 GLuint blueBits,
+                                 GLuint alphaBits,
+                                 GLuint luminanceBits,
+                                 GLuint depthBits,
+                                 GLuint stencilBits)
+{
+    return (redBits > 0 ? 1 : 0) + (greenBits > 0 ? 1 : 0) + (blueBits > 0 ? 1 : 0) +
+           (alphaBits > 0 ? 1 : 0) + (luminanceBits > 0 ? 1 : 0) + (depthBits > 0 ? 1 : 0) +
+           (stencilBits > 0 ? 1 : 0);
+}
 
 constexpr Format::Format(FormatID id,
                          GLenum glFormat,
@@ -115,7 +139,9 @@ constexpr Format::Format(FormatID id,
                          GLuint pixelBytes,
                          GLuint componentAlignmentMask,
                          bool isBlock,
-                         bool isFixed)
+                         bool isFixed,
+                         bool isScaled,
+                         gl::VertexAttribType vertexAttribType)
     : id(id),
       glInternalFormat(glFormat),
       fboImplementationInternalFormat(fboFormat),
@@ -133,8 +159,17 @@ constexpr Format::Format(FormatID id,
       stencilBits(stencilBits),
       pixelBytes(pixelBytes),
       componentAlignmentMask(componentAlignmentMask),
+      channelCount(GetChannelCount(redBits,
+                                   greenBits,
+                                   blueBits,
+                                   alphaBits,
+                                   luminanceBits,
+                                   depthBits,
+                                   stencilBits)),
       isBlock(isBlock),
-      isFixed(isFixed)
+      isFixed(isFixed),
+      isScaled(isScaled),
+      vertexAttribType(vertexAttribType)
 {}
 
 constexpr bool Format::hasDepthOrStencilBits() const
@@ -149,13 +184,7 @@ constexpr bool Format::isLUMA() const
     return redBits == 0 && (luminanceBits > 0 || alphaBits > 0);
 }
 
-constexpr GLuint Format::channelCount() const
-{
-    return (redBits > 0) + (greenBits > 0) + (blueBits > 0) + (alphaBits > 0) +
-           (luminanceBits > 0) + (depthBits > 0) + (stencilBits > 0);
-}
-
-constexpr bool Format::isInt() const
+constexpr bool Format::isSint() const
 {
     return componentType == GL_INT;
 }

@@ -284,7 +284,7 @@ angle::Result Framebuffer11::blitImpl(const gl::Context *context,
 {
     if (blitRenderTarget)
     {
-        const gl::FramebufferAttachment *readBuffer = sourceFramebuffer->getReadColorbuffer();
+        const gl::FramebufferAttachment *readBuffer = sourceFramebuffer->getReadColorAttachment();
         ASSERT(readBuffer);
 
         RenderTargetD3D *readRenderTarget = nullptr;
@@ -332,7 +332,8 @@ angle::Result Framebuffer11::blitImpl(const gl::Context *context,
 
     if (blitDepth || blitStencil)
     {
-        const gl::FramebufferAttachment *readBuffer = sourceFramebuffer->getDepthOrStencilbuffer();
+        const gl::FramebufferAttachment *readBuffer =
+            sourceFramebuffer->getDepthOrStencilAttachment();
         ASSERT(readBuffer);
         RenderTargetD3D *readRenderTarget = nullptr;
         ANGLE_TRY(readBuffer->getRenderTarget(context, &readRenderTarget));

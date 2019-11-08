@@ -185,6 +185,6 @@ inline bool IsError(const egl::Error &err)
     return err.isError();
 }
 
-#include "Error.inl"
+#include "Error.inc"
 
 #endif  // LIBANGLE_ERROR_H_

@@ -771,7 +771,8 @@ std::string ParseResourceName(const std::string &name, std::vector<unsigned int>
 }
 
 const sh::ShaderVariable *FindShaderVarField(const sh::ShaderVariable &var,
-                                             const std::string &fullName)
+                                             const std::string &fullName,
+                                             GLuint *fieldIndexOut)
 {
     if (var.fields.empty())
     {
@@ -792,11 +793,12 @@ const sh::ShaderVariable *FindShaderVarField(const sh::ShaderVariable &var,
     {
         return nullptr;
     }
-    for (const auto &field : var.fields)
+    for (size_t field = 0; field < var.fields.size(); ++field)
     {
-        if (field.name == fieldName)
+        if (var.fields[field].name == fieldName)
         {
-            return &field;
+            *fieldIndexOut = static_cast<GLuint>(field);
+            return &var.fields[field];
         }
     }
     return nullptr;
@@ -891,6 +893,22 @@ unsigned int ElementTypeSize(GLenum elementType)
     }
 }
 
+PipelineType GetPipelineType(ShaderType type)
+{
+    switch (type)
+    {
+        case ShaderType::Vertex:
+        case ShaderType::Fragment:
+        case ShaderType::Geometry:
+            return PipelineType::GraphicsPipeline;
+        case ShaderType::Compute:
+            return PipelineType::ComputePipeline;
+        default:
+            UNREACHABLE();
+            return PipelineType::GraphicsPipeline;
+    }
+}
+
 }  // namespace gl
 
 namespace egl
@@ -952,6 +970,7 @@ bool IsExternalImageTarget(EGLenum target)
     switch (target)
     {
         case EGL_NATIVE_BUFFER_ANDROID:
+        case EGL_D3D11_TEXTURE_ANGLE:
             return true;
 
         default:
