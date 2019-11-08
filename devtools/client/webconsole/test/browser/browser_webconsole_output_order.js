@@ -12,7 +12,6 @@ const TEST_URI =
 
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
-  hud.ui.clearOutput();
 
   const messages = ["console.log('foo', 'bar');", "foo bar", "undefined"];
   const onMessages = waitForMessages({
