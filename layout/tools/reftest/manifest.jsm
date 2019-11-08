@@ -487,6 +487,9 @@ function BuildConditionSandbox(aURL) {
         // This is currently used to distinguish Android 4.0.3 (SDK version 15)
         // and later from Android 2.x
         sandbox.AndroidVersion = sysInfo.getPropertyAsInt32("version");
+
+        sandbox.emulator = readGfxInfo(gfxInfo, "adapterDeviceID").includes("Android Emulator");
+        sandbox.device = !sandbox.emulator;
     }
 
 #if MOZ_ASAN
