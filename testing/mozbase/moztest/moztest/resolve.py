@@ -499,7 +499,7 @@ class TestResolver(MozbuildObject):
                     if flavor != 'devtools' and test.get('flavor') != flavor:
                         continue
 
-                if subsuite and test.get('subsuite') != subsuite:
+                if subsuite and test.get('subsuite', 'undefined') != subsuite:
                     continue
 
                 if tags and not (tags & set(test.get('tags', '').split())):
@@ -673,7 +673,8 @@ class TestResolver(MozbuildObject):
 
             subsuite (str):
                 If specified will be used to filter returned tests to only be
-                in the subsuite specified.
+                in the subsuite specified. To filter only tests that *don't*
+                have any subsuite, pass the string 'undefined'.
 
             tags (list):
                 If specified, will be used to filter out tests that don't contain
