@@ -8,6 +8,8 @@
 
 #include "mozilla/MaybeOneOf.h"
 
+#include <algorithm>
+
 #include "builtin/BigInt.h"
 #include "builtin/Eval.h"
 #include "builtin/SelfHostingDefines.h"
@@ -1403,9 +1405,9 @@ static bool TryEnumerableOwnPropertiesNative(JSContext* cx, HandleObject obj,
       }
     }
 
-    // The (non-indexed) properties were visited in reverse iteration
-    // order, call Reverse() to ensure they appear in iteration order.
-    Reverse(properties.begin() + elements, properties.end());
+    // The (non-indexed) properties were visited in reverse iteration order,
+    // call std::reverse() to ensure they appear in iteration order.
+    std::reverse(properties.begin() + elements, properties.end());
   } else {
     MOZ_ASSERT(kind == EnumerableOwnPropertiesKind::Values ||
                kind == EnumerableOwnPropertiesKind::KeysAndValues);

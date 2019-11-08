@@ -16,6 +16,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/TemplateLib.h"
 
+#include <algorithm>
 #include <string.h>
 
 #include "jsapi.h"
@@ -535,7 +536,7 @@ bool js::SetIntegrityLevel(JSContext* cx, HandleObject obj,
         return false;
       }
     }
-    Reverse(shapes.begin(), shapes.end());
+    std::reverse(shapes.begin(), shapes.end());
 
     for (Shape* shape : shapes) {
       Rooted<StackShape> child(cx, StackShape(shape));
@@ -1549,7 +1550,7 @@ static bool InitializePropertiesFromCompatibleNativeObject(
         return false;
       }
     }
-    Reverse(shapes.begin(), shapes.end());
+    std::reverse(shapes.begin(), shapes.end());
 
     for (Shape* shapeToClone : shapes) {
       Rooted<StackShape> child(cx, StackShape(shapeToClone));

@@ -65,19 +65,6 @@ inline bool IsInitialized() {
 }
 
 template <class T>
-static inline void Reverse(T* beg, T* end) {
-  while (beg != end) {
-    if (--end == beg) {
-      return;
-    }
-    T tmp = *beg;
-    *beg = *end;
-    *end = tmp;
-    ++beg;
-  }
-}
-
-template <class T>
 static constexpr inline T Min(T t1, T t2) {
   return t1 < t2 ? t1 : t2;
 }
