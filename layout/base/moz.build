@@ -17,7 +17,7 @@ with Files('nsBidi*'):
     BUG_COMPONENT = ('Core', 'Layout: Text and Fonts')
 
 with Files('AccessibleCaret*'):
-    BUG_COMPONENT = ('Core', 'Selection')
+    BUG_COMPONENT = ('Core', 'DOM: Selection')
 
 XPIDL_SOURCES += [
     'nsILayoutHistoryState.idl',

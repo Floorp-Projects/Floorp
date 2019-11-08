@@ -124,7 +124,7 @@ with Files('RemoteSecurityUI.jsm'):
     BUG_COMPONENT = ('Firefox', 'Tabbed Browser')
 
 with Files('RemoteWebProgress.jsm'):
-    BUG_COMPONENT = ('Core', 'Document Navigation')
+    BUG_COMPONENT = ('Core', 'DOM: Navigation')
 
 with Files('ResponsivenessMonitor.jsm'):
     BUG_COMPONENT = ('Firefox', 'Migration')

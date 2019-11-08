@@ -1,5 +1,5 @@
 with Files('**'):
-    BUG_COMPONENT = ('Core', 'Document Navigation')
+    BUG_COMPONENT = ('Core', 'DOM: Navigation')
 
 with Files('browser/*_bug234628*'):
     BUG_COMPONENT = ('Core', 'Internationalization')
@@ -113,13 +113,13 @@ with Files('navigation/*13871.html'):
     BUG_COMPONENT = ('Core', 'Security')
 
 with Files('navigation/*386782*'):
-    BUG_COMPONENT = ('Core', 'Editor')
+    BUG_COMPONENT = ('Core', 'DOM: Editor')
 
 with Files('navigation/*430624*'):
-    BUG_COMPONENT = ('Core', 'Editor')
+    BUG_COMPONENT = ('Core', 'DOM: Editor')
 
 with Files('navigation/*430723*'):
-    BUG_COMPONENT = ('Core', 'User events and focus handling')
+    BUG_COMPONENT = ('Core', 'DOM: UI Events & Focus Handling')
 
 with Files('navigation/*child*'):
     BUG_COMPONENT = ('Core', 'Security')

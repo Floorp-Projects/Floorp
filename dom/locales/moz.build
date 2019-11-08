@@ -20,7 +20,7 @@ with Files("en-US/chrome/layout/css.properties"):
     BUG_COMPONENT = ("Core", "CSS Parsing and Computation")
 
 with Files("en-US/chrome/layout/htmlparser.properties"):
-    BUG_COMPONENT = ("Core", "HTML: Parser")
+    BUG_COMPONENT = ("Core", "DOM: HTML Parser")
 
 with Files("en-US/chrome/layout/layout_errors.properties"):
     BUG_COMPONENT = ("Core", "DOM: Animation")
