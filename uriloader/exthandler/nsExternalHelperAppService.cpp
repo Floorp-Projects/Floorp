@@ -49,8 +49,6 @@
 // used to access our datastore of user-configured helper applications
 #include "nsIHandlerService.h"
 #include "nsIMIMEInfo.h"
-#include "nsIRefreshURI.h"  // XXX needed to redirect according to Refresh: URI
-#include "nsIDocumentLoader.h"  // XXX needed to get orig. channel and assoc. refresh uri
 #include "nsIHelperAppLauncherDialog.h"
 #include "nsIContentDispatchChooser.h"
 #include "nsNetUtil.h"
@@ -1256,25 +1254,6 @@ void nsExternalAppHandler::RetargetLoadNotifications(nsIRequest* request) {
   nsCOMPtr<nsIChannel> aChannel = do_QueryInterface(request);
   if (!aChannel) return;
 
-  // we need to store off the original (pre redirect!) channel that initiated
-  // the load. We do this so later on, we can pass any refresh urls associated
-  // with the original channel back to the window context which started the
-  // whole process. More comments about that are listed below.... HACK ALERT:
-  // it's pretty bogus that we are getting the document channel from the doc
-  // loader. ideally we should be able to just use mChannel (the channel we are
-  // extracting content from) or the default load channel associated with the
-  // original load group. Unfortunately because a redirect may have occurred,
-  // the doc loader is the only one with a ptr to the original channel which is
-  // what we really want....
-
-  // Note that we need to do this before removing aChannel from the loadgroup,
-  // since that would mess with the original channel on the loader.
-  nsCOMPtr<nsIDocumentLoader> origContextLoader =
-      do_GetInterface(mContentContext);
-  if (origContextLoader) {
-    origContextLoader->GetDocumentChannel(getter_AddRefs(mOriginalChannel));
-  }
-
   bool isPrivate = NS_UsePrivateBrowsing(aChannel);
 
   nsCOMPtr<nsILoadGroup> oldLoadGroup;
@@ -1536,21 +1515,8 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest* request) {
   // window's docloader...
   RetargetLoadNotifications(request);
 
-  // Check to see if there is a refresh header on the original channel.
-  if (mOriginalChannel) {
-    nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(mOriginalChannel));
-    if (httpChannel) {
-      nsAutoCString refreshHeader;
-      Unused << httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("refresh"),
-                                               refreshHeader);
-      if (!refreshHeader.IsEmpty()) {
-        mMaybeCloseWindowHelper->SetShouldCloseWindow(false);
-      }
-    }
-  }
-
-  // Close the underlying DOMWindow if there is no refresh header
-  // and it was opened specifically for the download
+  // Close the underlying DOMWindow if it was opened specifically for the
+  // download
   mContentContext = mMaybeCloseWindowHelper->MaybeCloseWindow();
 
   // In an IPC setting, we're allowing the child process, here, to make
@@ -2263,13 +2229,6 @@ nsresult nsExternalAppHandler::ContinueSave(nsIFile* aNewFileLocation) {
     return rv;
   }
 
-  // now that the user has chosen the file location to save to, it's okay to
-  // fire the refresh tag if there is one. We don't want to do this before the
-  // save as dialog goes away because this dialog is modal and we do bad things
-  // if you try to load a web page in the underlying window while a modal dialog
-  // is still up.
-  ProcessAnyRefreshTags();
-
   return NS_OK;
 }
 
@@ -2279,10 +2238,6 @@ nsresult nsExternalAppHandler::ContinueSave(nsIFile* aNewFileLocation) {
 NS_IMETHODIMP nsExternalAppHandler::LaunchWithApplication(
     nsIFile* aApplication, bool aRememberThisPreference) {
   if (mCanceled) return NS_OK;
-
-  // user has chosen to launch using an application, fire any refresh tags
-  // now...
-  ProcessAnyRefreshTags();
 
   if (mMimeInfo && aApplication) {
     PlatformLocalHandlerApp_t* handlerApp =
@@ -2392,25 +2347,6 @@ NS_IMETHODIMP nsExternalAppHandler::Cancel(nsresult aReason) {
   mDialogProgressListener = nullptr;
 
   return NS_OK;
-}
-
-void nsExternalAppHandler::ProcessAnyRefreshTags() {
-  // one last thing, try to see if the original window context supports a
-  // refresh interface... Sometimes, when you download content that requires an
-  // external handler, there is a refresh header associated with the download.
-  // This refresh header points to a page the content provider wants the user to
-  // see after they download the content. How do we pass this refresh
-  // information back to the caller? For now, try to get the refresh URI
-  // interface. If the window context where the request originated came from
-  // supports this then we can force it to process the refresh information (if
-  // there is any) from this channel.
-  if (mContentContext && mOriginalChannel) {
-    nsCOMPtr<nsIRefreshURI> refreshHandler(do_GetInterface(mContentContext));
-    if (refreshHandler) {
-      refreshHandler->SetupRefreshURI(mOriginalChannel);
-    }
-    mOriginalChannel = nullptr;
-  }
 }
 
 bool nsExternalAppHandler::GetNeverAskFlagFromPref(const char* prefName,
