@@ -142,7 +142,7 @@
     var indexBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
     var indices = [];
-    for (var k = 0; k < terrainSize - k; k++) {
+    for (var k = 0; k < terrainSize - 1; k++) {
       for (var l = 0; l < terrainSize - 1; l++) {
         indices.push(k + terrainSize * l);
         indices.push(k + 1 + terrainSize * l);
@@ -290,7 +290,7 @@
 
     gl.uniformMatrix4fv(projectionUniformLoc, false, projectionMatrix);
 
-    gl.uniform1f(grassTextureSamplerUniformLoc, 0);
+    gl.uniform1i(grassTextureSamplerUniformLoc, 0);
 
     gl.clearColor(0.4, 0.6, 1.0, 0.5);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
