@@ -96,7 +96,7 @@ nsGIFDecoder2::nsGIFDecoder2(RasterImage* aImage)
   memset(&mGIFStruct, 0, sizeof(mGIFStruct));
 
   // Each color table will need to be unpacked.
-  mSwizzleFn = SwizzleRow(SurfaceFormat::R8G8B8, SurfaceFormat::OS_RGBA);
+  mSwizzleFn = SwizzleRow(SurfaceFormat::R8G8B8, SurfaceFormat::B8G8R8A8);
   MOZ_ASSERT(mSwizzleFn);
 }
 
@@ -191,9 +191,10 @@ nsresult nsGIFDecoder2::BeginImageFrame(const IntRect& aFrameRect,
     // The first frame may be displayed progressively.
     pipeFlags |= SurfacePipeFlags::PROGRESSIVE_DISPLAY;
 
-    format = hasTransparency ? SurfaceFormat::OS_RGBA : SurfaceFormat::OS_RGBX;
+    format =
+        hasTransparency ? SurfaceFormat::B8G8R8A8 : SurfaceFormat::B8G8R8X8;
   } else {
-    format = SurfaceFormat::OS_RGBA;
+    format = SurfaceFormat::B8G8R8A8;
   }
 
   Maybe<SurfacePipe> pipe = SurfacePipeFactory::CreateSurfacePipe(

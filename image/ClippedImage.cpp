@@ -255,7 +255,7 @@ Pair<ImgDrawResult, RefPtr<SourceSurface>> ClippedImage::GetFrameInternal(
     // Create a surface to draw into.
     RefPtr<DrawTarget> target =
         gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(
-            IntSize(aSize.width, aSize.height), SurfaceFormat::OS_RGBA);
+            IntSize(aSize.width, aSize.height), SurfaceFormat::B8G8R8A8);
     if (!target || !target->IsValid()) {
       NS_ERROR("Could not create a DrawTarget");
       return MakePair(ImgDrawResult::TEMPORARY_ERROR, RefPtr<SourceSurface>());
@@ -274,7 +274,7 @@ Pair<ImgDrawResult, RefPtr<SourceSurface>> ClippedImage::GetFrameInternal(
     // Actually draw. The callback will end up invoking DrawSingleTile.
     gfxUtils::DrawPixelSnapped(ctx, drawable, SizeDouble(aSize),
                                ImageRegion::Create(aSize),
-                               SurfaceFormat::OS_RGBA, SamplingFilter::LINEAR,
+                               SurfaceFormat::B8G8R8A8, SamplingFilter::LINEAR,
                                imgIContainer::FLAG_CLAMP);
 
     // Cache the resulting surface.
@@ -385,7 +385,7 @@ ClippedImage::Draw(gfxContext* aContext, const nsIntSize& aSize,
 
     // Draw.
     gfxUtils::DrawPixelSnapped(aContext, drawable, SizeDouble(aSize), aRegion,
-                               SurfaceFormat::OS_RGBA, aSamplingFilter,
+                               SurfaceFormat::B8G8R8A8, aSamplingFilter,
                                aOpacity);
 
     return result;
