@@ -109,7 +109,7 @@
                     "title": "Extra options used in running suite",
                     "items": {
                         "type": "string",
-                        "maxLength": 45
+                        "maxLength": 100
                     },
                     "uniqueItems": true,
                     "maxItems": 8
