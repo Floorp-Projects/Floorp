@@ -1311,14 +1311,21 @@ add_test(function test_resend_email() {
   });
 });
 
+Services.prefs.setCharPref(
+  "identity.fxaccounts.remote.oauth.uri",
+  "https://example.com/v1"
+);
+
 add_test(function test_getOAuthToken() {
   let fxa = new MockFxAccounts();
   let alice = getTestUser("alice");
   alice.verified = true;
   let oauthTokenCalled = false;
 
-  let client = fxa._internal.fxAccountsClient;
-  client.oauthToken = () => {
+  fxa._internal._d_signCertificate.resolve("cert1");
+
+  let client = fxa._internal.fxAccountsOAuthGrantClient;
+  client.getTokenFromAssertion = () => {
     oauthTokenCalled = true;
     return Promise.resolve({ access_token: "token" });
   };
@@ -1338,8 +1345,10 @@ add_test(function test_getOAuthTokenScoped() {
   alice.verified = true;
   let oauthTokenCalled = false;
 
-  let client = fxa._internal.fxAccountsClient;
-  client.oauthToken = (_1, _2, scopeString) => {
+  fxa._internal._d_signCertificate.resolve("cert1");
+
+  let client = fxa._internal.fxAccountsOAuthGrantClient;
+  client.getTokenFromAssertion = (_assertion, scopeString) => {
     equal(scopeString, "bar foo"); // scopes are sorted locally before request.
     oauthTokenCalled = true;
     return Promise.resolve({ access_token: "token" });
@@ -1360,8 +1369,10 @@ add_task(async function test_getOAuthTokenCached() {
   alice.verified = true;
   let numOauthTokenCalls = 0;
 
-  let client = fxa._internal.fxAccountsClient;
-  client.oauthToken = () => {
+  fxa._internal._d_signCertificate.resolve("cert1");
+
+  let client = fxa._internal.fxAccountsOAuthGrantClient;
+  client.getTokenFromAssertion = () => {
     numOauthTokenCalls += 1;
     return Promise.resolve({ access_token: "token" });
   };
@@ -1396,8 +1407,10 @@ add_task(async function test_getOAuthTokenCachedScopeNormalization() {
   alice.verified = true;
   let numOAuthTokenCalls = 0;
 
-  let client = fxa._internal.fxAccountsClient;
-  client.oauthToken = () => {
+  fxa._internal._d_signCertificate.resolve("cert1");
+
+  let client = fxa._internal.fxAccountsOAuthGrantClient;
+  client.getTokenFromAssertion = () => {
     numOAuthTokenCalls += 1;
     return Promise.resolve({ access_token: "token" });
   };
@@ -1433,10 +1446,6 @@ add_task(async function test_getOAuthTokenCachedScopeNormalization() {
   Assert.equal(result, "token");
 });
 
-Services.prefs.setCharPref(
-  "identity.fxaccounts.remote.oauth.uri",
-  "https://example.com/v1"
-);
 add_test(function test_getOAuthToken_invalid_param() {
   let fxa = new MockFxAccounts();
 
@@ -1458,6 +1467,9 @@ add_test(function test_getOAuthToken_invalid_scope_array() {
 add_test(function test_getOAuthToken_misconfigure_oauth_uri() {
   let fxa = new MockFxAccounts();
 
+  const prevServerURL = Services.prefs.getCharPref(
+    "identity.fxaccounts.remote.oauth.uri"
+  );
   Services.prefs.deleteBranch("identity.fxaccounts.remote.oauth.uri");
 
   fxa.getOAuthToken().catch(err => {
@@ -1465,7 +1477,7 @@ add_test(function test_getOAuthToken_misconfigure_oauth_uri() {
     // revert the pref
     Services.prefs.setCharPref(
       "identity.fxaccounts.remote.oauth.uri",
-      "https://example.com/v1"
+      prevServerURL
     );
     fxa.signOut().then(run_next_test);
   });
@@ -1501,8 +1513,10 @@ add_test(function test_getOAuthToken_error() {
   let alice = getTestUser("alice");
   alice.verified = true;
 
-  let client = fxa._internal.fxAccountsClient;
-  client.oauthToken = () => {
+  fxa._internal._d_signCertificate.resolve("cert1");
+
+  let client = fxa._internal.fxAccountsOAuthGrantClient;
+  client.getTokenFromAssertion = () => {
     return Promise.reject("boom");
   };
 
@@ -1511,6 +1525,40 @@ add_test(function test_getOAuthToken_error() {
       run_next_test();
     });
   });
+});
+
+add_task(async function test_getOAuthToken_authErrorRefreshesCertificate() {
+  let fxa = new MockFxAccounts();
+  let alice = getTestUser("alice");
+  alice.verified = true;
+
+  fxa._internal._d_signCertificate.resolve("cert1");
+
+  let client = fxa._internal.fxAccountsOAuthGrantClient;
+  let numTokenCalls = 0;
+  client.getTokenFromAssertion = () => {
+    numTokenCalls++;
+    // First time around, reject with a 401.
+    if (numTokenCalls == 1) {
+      return Promise.reject({
+        code: 401,
+        errno: 1104,
+      });
+    }
+    // Second time around, succeed.
+    if (numTokenCalls == 2) {
+      return Promise.resolve({ access_token: "token" });
+    }
+    throw new Error("too many token calls");
+  };
+
+  await fxa.setSignedInUser(alice);
+  let result = await fxa.getOAuthToken({ scope: "profile" });
+
+  Assert.equal(result, "token");
+
+  Assert.equal(numTokenCalls, 2);
+  Assert.equal(fxa._internal._getCertificateSigned_calls.length, 2);
 });
 
 add_task(async function test_listAttachedOAuthClients() {
