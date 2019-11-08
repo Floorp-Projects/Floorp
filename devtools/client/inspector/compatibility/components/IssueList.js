@@ -25,7 +25,10 @@ class IssueList extends PureComponent {
   render() {
     const { issues } = this.props;
 
-    return dom.ul({}, issues.map(issue => IssueItem({ ...issue })));
+    return dom.ul(
+      { className: "compatibility-issue-list" },
+      issues.map(issue => IssueItem({ ...issue }))
+    );
   }
 }
 

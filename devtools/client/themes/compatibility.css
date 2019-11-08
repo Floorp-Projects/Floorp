@@ -5,11 +5,35 @@
 :root {
   --compatibility-base-unit: 4px;
   --compatibility-cause-color: var(--theme-text-color-alt);
+  --compatibility-issue-icon-size: calc(var(--compatibility-base-unit) * 3);
+}
+
+.compatibility-issue-list {
+  list-style: none;
 }
 
 .compatibility-issue-item {
   display: flex;
   gap: var(--compatibility-base-unit);
+  align-items: center;
+}
+
+.compatibility-issue-item::before {
+  content: "";
+  width: var(--compatibility-issue-icon-size);
+  height: var(--compatibility-issue-icon-size);
+  background-size: var(--compatibility-issue-icon-size);
+  -moz-context-properties: fill;
+}
+
+.compatibility-issue-item--experimental::before,
+.compatibility-issue-item--unsupported::before {
+  background-image: url(chrome://devtools/skin/images/info.svg);
+}
+
+.compatibility-issue-item--deprecated::before {
+  background-image: url(chrome://devtools/skin/images/alert-small.svg);
+  fill: var(--theme-icon-warning-color);
 }
 
 .compatibility-issue-item__causes {
