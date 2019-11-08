@@ -144,7 +144,8 @@ OUT_DIR.mkdir(exist_ok=True)
 GN_ARGS = b'''
 # Build arguments go here.
 # See "gn args <out_dir> --list" for available build arguments.
-is_clang = false
+is_clang = true
+is_debug = false
 angle_enable_gl = false
 angle_enable_gl_null = false
 angle_enable_null = false
@@ -339,6 +340,7 @@ def append_arr(dest, name, vals, indent=0):
     return
 
 REGISTERED_DEFINES = {
+    'ANGLE_CAPTURE_ENABLED': True,
     'ANGLE_EGL_LIBRARY_NAME': False,
     'ANGLE_ENABLE_D3D11': True,
     'ANGLE_ENABLE_D3D9': True,
@@ -410,6 +412,12 @@ REGISTERED_DEFINES = {
     '_WIN32_WINNT': False,
     '_WINDOWS': False,
     '__STD_C': False,
+
+    # clang specific
+    'CR_CLANG_REVISION': True,
+    'NDEBUG': False,
+    'NVALGRIND': False,
+    '_HAS_NODISCARD': False,
 }
 
 # -
