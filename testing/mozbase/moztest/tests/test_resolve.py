@@ -208,8 +208,18 @@ def test_resolve_support_files(resolver):
 
 
 def test_resolve_path_prefix(resolver):
-    result = list(resolver._resolve(paths=['juniper']))
-    assert len(result) == 1
+    tests = list(resolver._resolve(paths=['juniper']))
+    assert len(tests) == 1
+
+    # relative manifest
+    tests = list(resolver._resolve(paths=['apple/a11y.ini']))
+    assert len(tests) == 1
+    assert tests[0]['name'] == 'test_a11y.html'
+
+    # absolute manifest
+    tests = list(resolver._resolve(paths=[os.path.join(resolver.topsrcdir, 'apple/a11y.ini')]))
+    assert len(tests) == 1
+    assert tests[0]['name'] == 'test_a11y.html'
 
 
 def test_cwd_children_only(resolver):

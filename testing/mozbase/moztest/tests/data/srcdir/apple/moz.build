@@ -1,1 +1,1 @@
-A11Y_MANIFESTS += ["mochitest.ini"]
+A11Y_MANIFESTS += ["a11y.ini"]
