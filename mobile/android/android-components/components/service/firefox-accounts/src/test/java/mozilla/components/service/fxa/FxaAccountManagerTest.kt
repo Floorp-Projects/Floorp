@@ -73,7 +73,7 @@ import kotlin.coroutines.CoroutineContext
 // are created. This is necessary because due to some build issues (native dependencies not available
 // within the test environment) we can't use fxaclient supplied implementation of FirefoxAccountShaped.
 // Instead, we express all of our account-related operations over an interface.
-open class TestableFxaAccountManager(
+internal open class TestableFxaAccountManager(
     context: Context,
     config: ServerConfig,
     private val storage: AccountStorage,
@@ -81,7 +81,7 @@ open class TestableFxaAccountManager(
     syncConfig: SyncConfig? = null,
     coroutineContext: CoroutineContext,
     private val block: () -> OAuthAccount = { mock() }
-) : FxaAccountManager(context, config, DeviceConfig("test", DeviceType.UNKNOWN, capabilities), syncConfig, emptySet(), coroutineContext) {
+) : FxaAccountManager(context, config, DeviceConfig("test", DeviceType.UNKNOWN, capabilities), syncConfig, emptySet(), null, coroutineContext) {
     override fun createAccount(config: ServerConfig): OAuthAccount {
         return block()
     }

@@ -41,6 +41,13 @@ permalink: /changelog/
 * **concept-sync**, **service-firefox-accounts**
   * `OAuthAccount@authorizeOAuthCode` method is now `authorizeOAuthCodeAsync`.
 
+* **service-firefox-accounts**
+  * For supported Android API levels (23+), `FxaAccountManager` can now be configured to encrypt persisted FxA state, via `secureStateAtRest` flag on passed-in `DeviceConfig`. Defaults to `false`. For lower API levels, setting `secureStateAtRest` will continue storing FxA state in plaintext. If the device is later upgraded to 23+, FxA state will be automatically migrated to an encrypted storage.
+  * FxA state is stored in application's data directory, in plaintext or encrypted-at-rest if configured via the `secureStateAtRest` flag. This state contains everything that's necessary to download and decrypt data stored in Firefox Sync.
+  * An instance of a `CrashReporter` may now be passed to the `FxaAccountManager`'s constructor. If configured, it will be used to report any detected abnormalities.
+  *  ⚠️ **This is a breaking change**:
+  * Several `FxaAccountManager` methods have been made internal, and are no longer part of the public API of this module: `createSyncManager`, `getAccountStorage`.
+
 # 21.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v20.0.0...v21.0.0)

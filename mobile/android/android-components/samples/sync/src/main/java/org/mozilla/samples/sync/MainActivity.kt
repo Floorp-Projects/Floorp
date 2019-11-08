@@ -73,7 +73,8 @@ class MainActivity :
                 DeviceConfig(
                     name = "A-C Sync Sample - ${System.currentTimeMillis()}",
                     type = DeviceType.MOBILE,
-                    capabilities = setOf(DeviceCapability.SEND_TAB)
+                    capabilities = setOf(DeviceCapability.SEND_TAB),
+                    secureStateAtRest = true
                 ),
                 SyncConfig(setOf(SyncEngine.History, SyncEngine.Bookmarks), syncPeriodInMinutes = 15L)
         )
