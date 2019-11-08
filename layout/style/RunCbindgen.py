@@ -29,8 +29,7 @@ def generate(output, cbindgen_crate_path, *in_tree_dependencies):
         "--lockfile",
         CARGO_LOCK,
         "--crate",
-        _get_crate_name(cbindgen_crate_path),
-        "--cpp-compat"
+        _get_crate_name(cbindgen_crate_path)
     ], env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     stdout, stderr = p.communicate()
