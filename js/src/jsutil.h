@@ -77,20 +77,6 @@ static inline void Reverse(T* beg, T* end) {
   }
 }
 
-template <class Container1, class Container2>
-static inline bool EqualContainers(const Container1& lhs,
-                                   const Container2& rhs) {
-  if (lhs.length() != rhs.length()) {
-    return false;
-  }
-  for (size_t i = 0, n = lhs.length(); i < n; i++) {
-    if (lhs[i] != rhs[i]) {
-      return false;
-    }
-  }
-  return true;
-}
-
 template <class T>
 static constexpr inline T Min(T t1, T t2) {
   return t1 < t2 ? t1 : t2;

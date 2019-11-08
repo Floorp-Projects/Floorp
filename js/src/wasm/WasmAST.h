@@ -25,6 +25,7 @@
 #include "js/HashTable.h"
 #include "js/Vector.h"
 #include "wasm/WasmTypes.h"
+#include "wasm/WasmUtility.h"
 
 namespace js {
 namespace wasm {
