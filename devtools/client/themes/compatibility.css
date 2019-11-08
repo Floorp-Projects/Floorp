@@ -8,6 +8,11 @@
   --compatibility-issue-icon-size: calc(var(--compatibility-base-unit) * 3);
 }
 
+.compatibility-app {
+  height: 100%;
+  overflow: auto;
+}
+
 .compatibility-issue-list {
   list-style: none;
   margin: 0;
