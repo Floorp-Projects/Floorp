@@ -12,6 +12,7 @@
 #include "jit/JitRealm.h"
 #include "jit/MacroAssembler.h"
 #include "jit/MoveEmitter.h"
+#include "util/Memory.h"
 
 #include "jit/MacroAssembler-inl.h"
 

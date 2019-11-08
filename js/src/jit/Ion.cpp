@@ -47,6 +47,7 @@
 #include "jit/WasmBCE.h"
 #include "js/Printf.h"
 #include "js/UniquePtr.h"
+#include "util/Memory.h"
 #include "util/Windows.h"
 #include "vm/HelperThreads.h"
 #include "vm/Realm.h"

@@ -16,6 +16,7 @@
 #include "js/RootingAPI.h"
 #include "js/TypeDecls.h"
 #include "js/UniquePtr.h"
+#include "util/Memory.h"
 #include "vm/ArrayObject.h"
 #include "vm/JSAtom.h"
 #include "vm/JSObject.h"

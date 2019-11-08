@@ -19,6 +19,7 @@
 #include "jit/MIRGenerator.h"
 #include "jit/OptimizationTracking.h"
 #include "js/Conversions.h"
+#include "util/Memory.h"
 #include "vm/TraceLogging.h"
 
 #include "jit/JitFrames-inl.h"

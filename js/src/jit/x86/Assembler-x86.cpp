@@ -7,6 +7,7 @@
 #include "jit/x86/Assembler-x86.h"
 
 #include "gc/Marking.h"
+#include "util/Memory.h"
 
 using namespace js;
 using namespace js::jit;

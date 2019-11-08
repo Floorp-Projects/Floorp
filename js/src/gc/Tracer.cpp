@@ -14,6 +14,7 @@
 #include "gc/GCInternals.h"
 #include "gc/PublicIterators.h"
 #include "gc/Zone.h"
+#include "util/Memory.h"
 #include "util/Text.h"
 #include "vm/BigIntType.h"
 #include "vm/JSFunction.h"

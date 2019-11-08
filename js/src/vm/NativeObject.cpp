@@ -20,6 +20,7 @@
 #include "js/CharacterEncoding.h"
 #include "js/Result.h"
 #include "js/Value.h"
+#include "util/Memory.h"
 #include "vm/EqualityOperations.h"  // js::SameValue
 #include "vm/TypedArrayObject.h"
 

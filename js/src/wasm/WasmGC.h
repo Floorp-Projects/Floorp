@@ -20,6 +20,7 @@
 #define wasm_gc_h
 
 #include "jit/MacroAssembler.h"
+#include "util/Memory.h"
 
 namespace js {
 namespace wasm {

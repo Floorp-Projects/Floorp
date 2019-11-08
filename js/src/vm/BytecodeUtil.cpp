@@ -32,6 +32,7 @@
 #include "js/CharacterEncoding.h"
 #include "js/Printf.h"
 #include "js/Symbol.h"
+#include "util/Memory.h"
 #include "util/StringBuffer.h"
 #include "util/Text.h"
 #include "vm/BytecodeLocation.h"

@@ -11,6 +11,7 @@
 
 #include "jit/AtomicOp.h"
 #include "jit/shared/Assembler-shared.h"
+#include "util/Memory.h"
 
 // This file declares LIR instructions that are common to every platform.
 

@@ -21,6 +21,7 @@
 #include "jit/MIRGraph.h"
 #include "jit/Registers.h"
 #include "jit/Safepoints.h"
+#include "util/Memory.h"
 
 namespace js {
 namespace jit {

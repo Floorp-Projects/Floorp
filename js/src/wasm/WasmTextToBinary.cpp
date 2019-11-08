@@ -30,6 +30,7 @@
 #include "js/HashTable.h"
 #include "js/Printf.h"
 #include "util/DoubleToString.h"
+#include "util/Memory.h"
 #include "wasm/WasmAST.h"
 #include "wasm/WasmTypes.h"
 #include "wasm/WasmValidate.h"

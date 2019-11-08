@@ -15,6 +15,8 @@
 #include "jstypes.h"
 #include "jsutil.h"
 
+#include "util/Memory.h"
+
 using namespace js;
 
 #if MOZ_LITTLE_ENDIAN

@@ -22,6 +22,7 @@
 #include "jit/shared/Assembler-shared.h"
 #include "js/HashTable.h"
 #include "threading/ExclusiveData.h"
+#include "util/Memory.h"
 #include "vm/MutexIDs.h"
 #include "wasm/WasmGC.h"
 #include "wasm/WasmTypes.h"
