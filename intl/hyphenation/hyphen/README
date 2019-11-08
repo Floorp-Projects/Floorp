@@ -1,0 +1,134 @@
+Hyphen - hyphenation library to use converted TeX hyphenation patterns
+ 
+(C) 1998 Raph Levien
+(C) 2001 ALTLinux, Moscow
+(C) 2006, 2007, 2008, 2010, 2011 László Németh
+ 
+This was part of libHnj library by Raph Levien.
+ 
+Peter Novodvorsky from ALTLinux cut hyphenation part from libHnj
+to use it in OpenOffice.org.
+ 
+Compound word and non-standard hyphenation support by László Németh.
+  
+License is the original LibHnj license:
+LibHnj is dual licensed under LGPL and MPL (see also README.libhnj).
+
+Because LGPL allows GPL relicensing, COPYING contains now 
+LGPL/GPL/MPL tri-license for explicit Mozilla source compatibility.
+
+Original Libhnj source with OOo's patches are managed by Rene Engelhard
+and Chris Halls at Debian:
+
+http://packages.debian.org/stable/libdevel/libhnj-dev
+and http://packages.debian.org/unstable/source/libhnj
+
+
+OTHER FILES
+
+This distribution is the source of the en_US hyphenation patterns
+"hyph_en_US.dic", too. See README_hyph_en_US.txt.
+
+Source files of hyph_en_US.dic in the distribution:
+
+hyphen.tex (en_US hyphenation patterns from plain TeX)
+
+  Source: http://tug.ctan.org/text-archive/macros/plain/base/hyphen.tex
+
+tbhyphext.tex: hyphenation exception log from TugBoat archive
+
+  Source of the hyphenation exception list: 
+  http://www.ctan.org/tex-archive/info/digests/tugboat/tb0hyf.tex
+
+  Generated with the hyphenex script
+  (http://www.ctan.org/tex-archive/info/digests/tugboat/hyphenex.sh)
+
+  sh hyphenex.sh <tb0hyf.tex >tbhyphext.tex
+
+
+INSTALLATION
+
+autoreconf -fvi
+./configure
+make
+make install
+
+UNIT TESTS (WITH VALGRIND DEBUGGER)
+
+make check
+VALGRIND=memcheck make check
+
+USAGE
+
+./example hyph_en_US.dic mywords.txt
+
+or (under Linux)
+
+echo example | ./example hyph_en_US.dic /dev/stdin
+
+NOTE: In the case of Unicode encoded input, convert your words
+to lowercase before hyphenation (under UTF-8 console environment):
+
+cat mywords.txt | awk '{print tolower($0)}' >mywordslow.txt
+
+BUILD DLL USING CROSS-COMPILATION
+
+./configure --host i586-mingw32 --prefix=/tmp/hyphen-dll
+make
+make install
+
+DEVELOPMENT
+
+See README.hyphen for hyphenation algorithm, README.nonstandard
+and doc/tb87nemeth.pdf for non-standard hyphenation,
+README.compound for compound word hyphenation, and tests/*.
+
+Description of the dictionary format:
+
+First line contains the character encoding (ISO8859-x, UTF-8).
+
+Possible options in the following lines:
+
+LEFTHYPHENMIN num          minimal hyphenation distance from the left word end
+RIGHTHYPHENMIN num         minimal hyphation distance from the right word end
+COMPOUNDLEFTHYPHENMIN num  min. hyph. dist. from the left compound word boundary
+COMPOUNDRIGHTHYPHENMIN num min. hyph. dist. from the right comp. word boundary
+
+hyphenation patterns       see README.* files
+
+NEXTWORD                   separate the two compound sets (see README.compound)
+
+Default values:
+Without explicite declarations, hyphenmin fields of dict struct
+are zeroes, but in this case the lefthyphenmin and righthyphenmin
+will be the default 2 under the hyphenation (for backward compatibility).
+
+Comments
+
+Use percent sign at the beginning of the lines to add comments to your
+hpyhenation patterns (after the character encoding in the first line):
+
+% comment
+
+*****************************************************************************
+* Warning! Correct working of Libhnj *needs* prepared hyphenation patterns. *
+
+For example, generating hyph_en_US.dic from "hyphen.us" TeX patterns:
+    
+perl substrings.pl hyphen.us hyph_en_US.dic ISO8859-1
+
+or with default LEFTHYPHENMIN and RIGHTHYPHENMIN values:
+
+perl substrings.pl hyphen.us hyph_en_US.dic ISO8859-1 2 3
+perl substrings.pl hyphen.gb hyph_en_GB.dic ISO8859-1 3 3
+****************************************************************************
+
+OTHERS
+
+Java hyphenation: Peter B. West (Folio project) implements a hyphenator with
+non standard hyphenation facilities based on extended Libhnj. The HyFo module
+is released in binary form as jar files and in source form as zip files.
+See http://sourceforge.net/project/showfiles.php?group_id=119136
+
+László Németh
+<nemeth (at) numbertext (dot) org>
