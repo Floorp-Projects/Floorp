@@ -1,0 +1,122 @@
+Non-standard hyphenation
+------------------------
+
+Some languages use non-standard hyphenation; `discretionary'
+character changes at hyphenation points. For example,
+Catalan: paral·lel -> paral-lel,
+Dutch: omaatje -> oma-tje,
+German (before the new orthography): Schiffahrt -> Schiff-fahrt,
+Hungarian: asszonnyal -> asz-szony-nyal (multiple occurance!)
+Swedish: tillata -> till-lata.
+
+Using this extended library, you can define 
+non-standard hyphenation patterns. For example:
+
+l·1l/l=l
+a1atje./a=t,1,3
+.schif1fahrt/ff=f,5,2
+.as3szon/sz=sz,2,3
+n1nyal./ny=ny,1,3
+.til1lata./ll=l,3,2
+
+or with narrow boundaries:
+
+l·1l/l=,1,2
+a1atje./a=,1,1
+.schif1fahrt/ff=,5,1
+.as3szon/sz=,2,1
+n1nyal./ny=,1,1
+.til1lata./ll=,3,1
+
+Note: Libhnj uses modified patterns by preparing substrings.pl.
+Unfortunatelly, now the conversion step can generate bad non-standard
+patterns (non-standard -> standard pattern conversion), so using
+narrow boundaries may be better for recent Libhnj. For example,
+substrings.pl generates a few bad patterns for Hungarian hyphenation
+patterns resulting bad non-standard hyphenation in a few cases. Using narrow
+boundaries solves this problem. Java HyFo module can check this problem.
+
+Syntax of the non-standard hyphenation patterns
+------------------------------------------------
+
+pat1tern/change[,start,cut]
+
+If this pattern matches the word, and this pattern win (see README.hyphen)
+in the change region of the pattern, then pattern[start, start + cut - 1]
+substring will be replaced with the "change".
+
+For example, a German ff -> ff-f hyphenation:
+
+f1f/ff=f 
+
+or with expansion
+
+f1f/ff=f,1,2
+
+will change every "ff" with "ff=f" at hyphenation.
+
+A more real example:
+
+% simple ff -> f-f hyphenation
+f1f
+% Schiffahrt -> Schiff-fahrt hyphenation
+% 
+schif3fahrt/ff=f,5,2
+
+Specification
+
+- Pattern: matching patterns of the original Liang's algorithm
+  - patterns must contain only one hyphenation point at change region
+    signed with an one-digit odd number (1, 3, 5, 7 or 9).
+    These point may be at subregion boundaries: schif3fahrt/ff=,5,1
+  - only the greater value guarantees the win (don't mix non-standard and
+    non-standard patterns with the same value, for example
+    instead of f3f and schif3fahrt/ff=f,5,2 use f3f and schif5fahrt/ff=f,5,2)
+
+- Change: new characters.
+  Arbitrary character sequence. Equal sign (=) signs hyphenation points
+  for OpenOffice.org (like in the example). (In a possible German LaTeX
+  preprocessor, ff could be replaced with "ff, for a Hungarian one, ssz
+  with `ssz, according to the German and Hungarian Babel settings.)
+
+- Start: starting position of the change region.
+  - begins with 1 (not 0): schif3fahrt/ff=f,5,2
+  - start dot doesn't matter: .schif3fahrt/ff=f,5,2
+  - numbers don't matter: .s2c2h2i2f3f2ahrt/ff=f,5,2
+  - In UTF-8 encoding, use Unicode character positions: Ã¶ssze/sz=sz,2,3
+    ("össze" looks "Ã¶ssze" in an ISO 8859-1 8-bit editor). 
+
+- Cut: length of the removed character sequence in the original word.
+  - In UTF-8 encoding, use Unicode character length: paralÂ·1lel/l=l,5,3
+    ("paral·lel" looks "paralÂ·1lel" in an ISO 8859-1 8-bit editor).
+
+Dictionary developing
+---------------------
+
+There hasn't been extended PatGen pattern generator for non-standard
+hyphenation patterns, yet.
+
+Fortunatelly, non-standard hyphenation points are forbidden in the PatGen
+generated hyphenation patterns, so with a little patch can be develop
+non-standard hyphenation patterns also in this case.
+
+Warning: If you use UTF-8 Unicode encoding in your patterns, call
+substrings.pl with UTF-8 parameter to calculate right
+character positions for non-standard hyphenation:
+
+./substrings.pl input output UTF-8
+
+Programming
+-----------
+
+Use hyphenate2() or hyphenate3() to handle non-standard hyphenation.
+See hyphen.h for the documentation of the hyphenate*() functions.
+See example.c for processing the output of the hyphenate*() functions.
+
+Warning: change characters are lower cased in the source, so you may need
+case conversion of the change characters based on input word case detection.
+For example, see OpenOffice.org source
+(lingucomponent/source/hyphenator/altlinuxhyph/hyphen/hyphenimp.cxx).
+
+László Németh
+<nemeth (at) openoffice.org>

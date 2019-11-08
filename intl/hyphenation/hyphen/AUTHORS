@@ -1,0 +1,17 @@
+Libhnj was written by Raph Levien <raph at acm dot org>.
+
+Original Libhnj source with OOo's patches are managed by Rene Engelhard and
+Chris Halls at Debian: http://packages.debian.org/stable/libdevel/libhnj-dev
+and http://packages.debian.org/unstable/source/libhnj
+
+This subset of Libhnj was extended by
+Peter Novodvorsky <nidd at alt-linux dot org> (OOo integration),
+László Németh <nemeth at numbertext dot org> (non-standard and compound
+hyphenation with Unicode support),
+Nanning Buitenhuis <nanning at elvenkind dot com> (substrings.c)
+
+Write bug reports to László Németh or in the bug tracker of hunspell.sf.net.
+
+---
+Please contact Raph Levien for information about licensing for
+proprietary applications.
