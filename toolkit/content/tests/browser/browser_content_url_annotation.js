@@ -54,21 +54,13 @@ add_task(async function test_content_url_annotation() {
       ok(browser.isRemoteBrowser, "Should be a remote browser");
 
       // file_redirect.html should send us to file_redirect_to.html
-      let promise = ContentTask.spawn(browser, {}, async function() {
-        dump("ContentTask starting...\n");
-        await new Promise(resolve => {
-          addEventListener(
-            "RedirectDone",
-            function listener() {
-              dump("Got RedirectDone\n");
-              removeEventListener("RedirectDone", listener);
-              resolve();
-            },
-            true,
-            true
-          );
-        });
-      });
+      let promise = BrowserTestUtils.waitForContentEvent(
+        browser,
+        "RedirectDone",
+        true,
+        null,
+        true
+      );
       BrowserTestUtils.loadURI(browser, url);
       await promise;
 
