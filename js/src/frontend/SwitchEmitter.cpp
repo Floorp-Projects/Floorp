@@ -12,12 +12,12 @@
 #include <algorithm>  // std::min, std::max
 
 #include "jstypes.h"  // JS_BIT
-#include "jsutil.h"  // NumWordsForBitArrayOfLength, IsBitArrayElementSet, SetBitArrayElement
 
 #include "frontend/BytecodeEmitter.h"  // BytecodeEmitter
 #include "frontend/SharedContext.h"    // StatementKind
 #include "frontend/SourceNotes.h"      // SrcNote, SRC_*
 #include "js/TypeDecls.h"              // jsbytecode
+#include "util/BitArray.h"
 #include "vm/BytecodeUtil.h"  // SET_JUMP_OFFSET, JUMP_OFFSET_LEN, SET_RESUMEINDEX
 #include "vm/Opcodes.h"       // JSOP_*
 #include "vm/Runtime.h"       // ReportOutOfMemory
