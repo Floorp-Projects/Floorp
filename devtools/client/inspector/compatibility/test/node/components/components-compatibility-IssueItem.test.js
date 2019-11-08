@@ -16,7 +16,7 @@ const IssueItem = React.createFactory(
 );
 
 describe("IssueItem component", () => {
-  it("renders an issue of CSS property", () => {
+  it("renders an unsupported issue of CSS property", () => {
     const item = shallow(
       IssueItem({
         type: MDNCompatibility.ISSUE_TYPE.CSS_PROPERTY,
@@ -27,6 +27,48 @@ describe("IssueItem component", () => {
         unsupportedBrowsers: [
           { id: "firefox", name: "Firefox", version: "70", status: "nightly" },
         ],
+      })
+    );
+    expect(item).toMatchSnapshot();
+  });
+
+  it("renders a deprecated issue of CSS property", () => {
+    const item = shallow(
+      IssueItem({
+        type: MDNCompatibility.ISSUE_TYPE.CSS_PROPERTY,
+        property: "test-property",
+        url: "test-url",
+        deprecated: true,
+        experimental: false,
+        unsupportedBrowsers: [],
+      })
+    );
+    expect(item).toMatchSnapshot();
+  });
+
+  it("renders an experimental issue of CSS property", () => {
+    const item = shallow(
+      IssueItem({
+        type: MDNCompatibility.ISSUE_TYPE.CSS_PROPERTY,
+        property: "test-property",
+        url: "test-url",
+        deprecated: false,
+        experimental: true,
+        unsupportedBrowsers: [],
+      })
+    );
+    expect(item).toMatchSnapshot();
+  });
+
+  it("renders an issue which has both deprecated and experimental", () => {
+    const item = shallow(
+      IssueItem({
+        type: MDNCompatibility.ISSUE_TYPE.CSS_PROPERTY,
+        property: "test-property",
+        url: "test-url",
+        deprecated: true,
+        experimental: true,
+        unsupportedBrowsers: [],
       })
     );
     expect(item).toMatchSnapshot();
