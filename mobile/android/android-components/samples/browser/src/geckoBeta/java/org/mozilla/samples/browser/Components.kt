@@ -17,16 +17,18 @@ import org.mozilla.geckoview.GeckoRuntimeSettings
  * Helper class for lazily instantiating components needed by the application.
  */
 class Components(applicationContext: Context) : DefaultComponents(applicationContext) {
-    override val engine: Engine by lazy {
+    private val runtime by lazy {
         // Allow for exfiltrating Gecko metrics through the Glean SDK.
         val builder = GeckoRuntimeSettings.Builder()
         builder.telemetryDelegate(GeckoAdapter())
-        val runtime = GeckoRuntime.create(applicationContext, builder.build())
+        GeckoRuntime.create(applicationContext, builder.build())
+    }
 
+    override val engine: Engine by lazy {
         GeckoEngine(applicationContext, engineSettings, runtime).also {
             WebCompatFeature.install(it)
         }
     }
 
-    override val client by lazy { GeckoViewFetchClient(applicationContext) }
+    override val client by lazy { GeckoViewFetchClient(applicationContext, runtime) }
 }
