@@ -578,6 +578,11 @@ static const unsigned MaxElemSegments = 10000000;
 static const unsigned MaxTableLength = 10000000;
 static const unsigned MaxLocals = 50000;
 static const unsigned MaxParams = 1000;
+#ifdef ENABLE_WASM_MULTI_VALUE
+static const unsigned MaxResults = 1000;
+#else
+static const unsigned MaxResults = 1;
+#endif
 static const unsigned MaxStructFields = 1000;
 static const unsigned MaxMemoryMaximumPages = 65536;
 static const unsigned MaxStringBytes = 100000;
@@ -590,6 +595,11 @@ static const unsigned MaxTableInitialLength = 10000000;
 static const unsigned MaxBrTableElems = 1000000;
 static const unsigned MaxMemoryInitialPages = 16384;
 static const unsigned MaxCodeSectionBytes = MaxModuleBytes;
+
+// FIXME: Temporary limit to function result counts.  Replace with MaxResults:
+// bug 1585909.
+
+static const unsigned MaxFuncResults = 1;
 
 // A magic value of the FramePointer to indicate after a return to the entry
 // stub that an exception has been caught and that we should throw.
