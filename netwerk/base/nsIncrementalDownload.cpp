@@ -372,6 +372,16 @@ nsIncrementalDownload::SetLoadFlags(nsLoadFlags loadFlags) {
 }
 
 NS_IMETHODIMP
+nsIncrementalDownload::GetTRRMode(nsIRequest::TRRMode* aTRRMode) {
+  return GetTRRModeImpl(aTRRMode);
+}
+
+NS_IMETHODIMP
+nsIncrementalDownload::SetTRRMode(nsIRequest::TRRMode aTRRMode) {
+  return SetTRRModeImpl(aTRRMode);
+}
+
+NS_IMETHODIMP
 nsIncrementalDownload::GetLoadGroup(nsILoadGroup** loadGroup) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
