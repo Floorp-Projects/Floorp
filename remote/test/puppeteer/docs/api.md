@@ -31,6 +31,7 @@
   * [puppeteer.errors](#puppeteererrors)
   * [puppeteer.executablePath()](#puppeteerexecutablepath)
   * [puppeteer.launch([options])](#puppeteerlaunchoptions)
+  * [puppeteer.product](#puppeteerproduct)
 - [class: BrowserFetcher](#class-browserfetcher)
   * [browserFetcher.canDownload(revision)](#browserfetchercandownloadrevision)
   * [browserFetcher.download(revision[, progressCallback])](#browserfetcherdownloadrevision-progresscallback)
@@ -388,6 +389,7 @@ If Puppeteer doesn't find them in the environment during the installation step, 
 - `PUPPETEER_DOWNLOAD_HOST` - overwrite URL prefix that is used to download Chromium. Note: this includes protocol and might even include path prefix. Defaults to `https://storage.googleapis.com`.
 - `PUPPETEER_CHROMIUM_REVISION` - specify a certain version of Chromium you'd like Puppeteer to use. See [puppeteer.launch([options])](#puppeteerlaunchoptions) on how executable path is inferred. **BEWARE**: Puppeteer is only [guaranteed to work](https://github.com/GoogleChrome/puppeteer/#q-why-doesnt-puppeteer-vxxx-work-with-chromium-vyyy) with the bundled Chromium, use at your own risk.
 - `PUPPETEER_EXECUTABLE_PATH` - specify an executable path to be used in `puppeteer.launch`. See [puppeteer.launch([options])](#puppeteerlaunchoptions) on how the executable path is inferred. **BEWARE**: Puppeteer is only [guaranteed to work](https://github.com/GoogleChrome/puppeteer/#q-why-doesnt-puppeteer-vxxx-work-with-chromium-vyyy) with the bundled Chromium, use at your own risk.
+- `PUPPETEER_PRODUCT` - specify which browser you'd like Puppeteer to use. Must be one of `chrome` or `firefox`. This is exposed in [`puppeteer.product`](#puppeteerproduct)
 
 > **NOTE** PUPPETEER_* env variables are not accounted for in the [`puppeteer-core`](https://www.npmjs.com/package/puppeteer-core) package.
 
@@ -428,12 +430,13 @@ The following is a typical example of using Puppeteer to drive automation:
 ```js
 const puppeteer = require('puppeteer');
 
-puppeteer.launch().then(async browser => {
+(async () => {
+  const browser = await puppeteer.launch();
   const page = await browser.newPage();
   await page.goto('https://www.google.com');
   // other actions...
   await browser.close();
-});
+})();
 ```
 
 #### puppeteer.connect(options)
@@ -481,13 +484,14 @@ devices can be found in [lib/DeviceDescriptors.js](https://github.com/GoogleChro
 const puppeteer = require('puppeteer');
 const iPhone = puppeteer.devices['iPhone 6'];
 
-puppeteer.launch().then(async browser => {
+(async () => {
+  const browser = await puppeteer.launch();
   const page = await browser.newPage();
   await page.emulate(iPhone);
   await page.goto('https://www.google.com');
   // other actions...
   await browser.close();
-});
+})();
 ```
 
 > **NOTE** The old way (Puppeteer versions <= v1.14.0) devices can be obtained with `require('puppeteer/DeviceDescriptors')`.
@@ -525,7 +529,7 @@ try {
 - `options` <[Object]>  Set of configurable options to set on the browser. Can have the following fields:
   - `ignoreHTTPSErrors` <[boolean]> Whether to ignore HTTPS errors during navigation. Defaults to `false`.
   - `headless` <[boolean]> Whether to run browser in [headless mode](https://developers.google.com/web/updates/2017/04/headless-chrome). Defaults to `true` unless the `devtools` option is `true`.
-  - `executablePath` <[string]> Path to a Chromium or Chrome executable to run instead of the bundled Chromium. If `executablePath` is a relative path, then it is resolved relative to [current working directory](https://nodejs.org/api/process.html#process_process_cwd). **BEWARE**: Puppeteer is only [guaranteed to work](https://github.com/GoogleChrome/puppeteer/#q-why-doesnt-puppeteer-vxxx-work-with-chromium-vyyy) with the bundled Chromium, use at your own risk.
+  - `executablePath` <[string]> Path to a browser executable to run instead of the bundled Chromium. If `executablePath` is a relative path, then it is resolved relative to [current working directory](https://nodejs.org/api/process.html#process_process_cwd). **BEWARE**: Puppeteer is only [guaranteed to work](https://github.com/GoogleChrome/puppeteer/#q-why-doesnt-puppeteer-vxxx-work-with-chromium-vyyy) with the bundled Chromium, use at your own risk.
   - `slowMo` <[number]> Slows down Puppeteer operations by the specified amount of milliseconds. Useful so that you can see what is going on.
   - `defaultViewport` <?[Object]> Sets a consistent viewport for each page. Defaults to an 800x600 viewport. `null` disables the default viewport.
     - `width` <[number]> page width in pixels.
@@ -534,8 +538,8 @@ try {
     - `isMobile` <[boolean]> Whether the `meta viewport` tag is taken into account. Defaults to `false`.
     - `hasTouch`<[boolean]> Specifies if viewport supports touch events. Defaults to `false`
     - `isLandscape` <[boolean]> Specifies if viewport is in landscape mode. Defaults to `false`.
-  - `args` <[Array]<[string]>> Additional arguments to pass to the browser instance. The list of Chromium flags can be found [here](http://peter.sh/experiments/chromium-command-line-switches/).
-  - `ignoreDefaultArgs` <[boolean]|[Array]<[string]>> If `true`, then do not use [`puppeteer.defaultArgs()`](#puppeteerdefaultargs-options). If an array is given, then filter out the given default arguments. Dangerous option; use with care. Defaults to `false`.
+  - `args` <[Array]<[string]>> Additional arguments to pass to the browser instance. The list of Chromium flags can be found [here](http://peter.sh/experiments/chromium-command-line-switches/), and here is the list of [Firefox flags](https://developer.mozilla.org/en-US/docs/Mozilla/Command_Line_Options).
+  - `ignoreDefaultArgs` <[boolean]|[Array]<[string]>> If `true`, then do not use [`puppeteer.defaultArgs()`](#puppeteerdefaultargsoptions). If an array is given, then filter out the given default arguments. Dangerous option; use with care. Defaults to `false`.
   - `handleSIGINT` <[boolean]> Close the browser process on Ctrl-C. Defaults to `true`.
   - `handleSIGTERM` <[boolean]> Close the browser process on SIGTERM. Defaults to `true`.
   - `handleSIGHUP` <[boolean]> Close the browser process on SIGHUP. Defaults to `true`.
@@ -545,6 +549,7 @@ try {
   - `env` <[Object]> Specify environment variables that will be visible to the browser. Defaults to `process.env`.
   - `devtools` <[boolean]> Whether to auto-open a DevTools panel for each tab. If this option is `true`, the `headless` option will be set `false`.
   - `pipe` <[boolean]> Connects to the browser over a pipe instead of a WebSocket. Defaults to `false`.
+  - `extraPrefs` <[Object]> Additional [preferences](https://developer.mozilla.org/en-US/docs/Mozilla/Preferences/Preference_reference) that can be passed to Firefox (see `PUPPETEER_PRODUCT`)
 - returns: <[Promise]<[Browser]>> Promise which resolves to browser instance.
 
 
@@ -562,6 +567,12 @@ const browser = await puppeteer.launch({
 > In [puppeteer.launch([options])](#puppeteerlaunchoptions) above, any mention of Chromium also applies to Chrome.
 >
 > See [`this article`](https://www.howtogeek.com/202825/what%E2%80%99s-the-difference-between-chromium-and-chrome/) for a description of the differences between Chromium and Chrome. [`This article`](https://chromium.googlesource.com/chromium/src/+/lkgr/docs/chromium_browser_vs_google_chrome.md) describes some differences for Linux users.
+
+#### puppeteer.product
+- returns: <[string]> returns the name of the browser that is under automation ("chrome" or "firefox")
+
+The product is set by the `PUPPETEER_PRODUCT` environment variable and defaults to `chrome`. Firefox support is experimental.
+
 
 ### class: BrowserFetcher
 
@@ -630,18 +641,20 @@ An example of using a [Browser] to create a [Page]:
 ```js
 const puppeteer = require('puppeteer');
 
-puppeteer.launch().then(async browser => {
+(async () => {
+  const browser = await puppeteer.launch();
   const page = await browser.newPage();
   await page.goto('https://example.com');
   await browser.close();
-});
+})();
 ```
 
 An example of disconnecting from and reconnecting to a [Browser]:
 ```js
 const puppeteer = require('puppeteer');
 
-puppeteer.launch().then(async browser => {
+(async () => {
+  const browser = await puppeteer.launch();
   // Store the endpoint to be able to reconnect to Chromium
   const browserWSEndpoint = browser.wsEndpoint();
   // Disconnect puppeteer from Chromium
@@ -651,7 +664,7 @@ puppeteer.launch().then(async browser => {
   const browser2 = await puppeteer.connect({browserWSEndpoint});
   // Close Chromium
   await browser2.close();
-});
+})();
 ```
 #### event: 'disconnected'
 Emitted when Puppeteer gets disconnected from the Chromium instance. This might happen because of one of the following:
@@ -697,13 +710,15 @@ Closes Chromium and all of its pages (if any were opened). The [Browser] object 
 Creates a new incognito browser context. This won't share cookies/cache with other browser contexts.
 
 ```js
-const browser = await puppeteer.launch();
-// Create a new incognito browser context.
-const context = await browser.createIncognitoBrowserContext();
-// Create a new page in a pristine context.
-const page = await context.newPage();
-// Do stuff
-await page.goto('https://example.com');
+(async () => {
+  const browser = await puppeteer.launch();
+  // Create a new incognito browser context.
+  const context = await browser.createIncognitoBrowserContext();
+  // Create a new page in a pristine context.
+  const page = await context.newPage();
+  // Do stuff
+  await page.goto('https://example.com');
+})();
 ```
 
 #### browser.defaultBrowserContext()
@@ -918,12 +933,13 @@ This example creates a page, navigates it to a URL, and then saves a screenshot:
 ```js
 const puppeteer = require('puppeteer');
 
-puppeteer.launch().then(async browser => {
+(async () => {
+  const browser = await puppeteer.launch();
   const page = await browser.newPage();
   await page.goto('https://example.com');
   await page.screenshot({path: 'screenshot.png'});
   await browser.close();
-});
+})();
 ```
 
 The Page class emits various events (described below) which can be handled using any of Node's native [`EventEmitter`](https://nodejs.org/api/events.html#events_class_eventemitter) methods, such as `on`, `once` or `removeListener`.
@@ -1269,13 +1285,14 @@ To aid emulation, puppeteer provides a list of device descriptors which can be o
 const puppeteer = require('puppeteer');
 const iPhone = puppeteer.devices['iPhone 6'];
 
-puppeteer.launch().then(async browser => {
+(async () => {
+  const browser = await puppeteer.launch();
   const page = await browser.newPage();
   await page.emulate(iPhone);
   await page.goto('https://www.google.com');
   // other actions...
   await browser.close();
-});
+})();
 ```
 
 List of all available devices is available in the source code: [DeviceDescriptors.js](https://github.com/GoogleChrome/puppeteer/blob/master/lib/DeviceDescriptors.js).
@@ -1452,7 +1469,8 @@ An example of adding an `md5` function into the page:
 const puppeteer = require('puppeteer');
 const crypto = require('crypto');
 
-puppeteer.launch().then(async browser => {
+(async () => {
+  const browser = await puppeteer.launch();
   const page = await browser.newPage();
   page.on('console', msg => console.log(msg.text()));
   await page.exposeFunction('md5', text =>
@@ -1465,7 +1483,7 @@ puppeteer.launch().then(async browser => {
     console.log(`md5 of ${myString} is ${myHash}`);
   });
   await browser.close();
-});
+})();
 ```
 
 An example of adding a `window.readfile` function into the page:
@@ -1474,7 +1492,8 @@ An example of adding a `window.readfile` function into the page:
 const puppeteer = require('puppeteer');
 const fs = require('fs');
 
-puppeteer.launch().then(async browser => {
+(async () => {
+  const browser = await puppeteer.launch();
   const page = await browser.newPage();
   page.on('console', msg => console.log(msg.text()));
   await page.exposeFunction('readfile', async filePath => {
@@ -1493,8 +1512,7 @@ puppeteer.launch().then(async browser => {
     console.log(content);
   });
   await browser.close();
-});
-
+})();
 ```
 
 #### page.focus(selector)
@@ -1862,7 +1880,8 @@ An example of a naïve request interceptor that aborts all image requests:
 ```js
 const puppeteer = require('puppeteer');
 
-puppeteer.launch().then(async browser => {
+(async () => {
+  const browser = await puppeteer.launch();
   const page = await browser.newPage();
   await page.setRequestInterception(true);
   page.on('request', interceptedRequest => {
@@ -1873,7 +1892,7 @@ puppeteer.launch().then(async browser => {
   });
   await page.goto('https://example.com');
   await browser.close();
-});
+})();
 ```
 
 > **NOTE** Enabling request interception disables page caching.
@@ -2036,13 +2055,14 @@ The `waitForFunction` can be used to observe viewport size change:
 ```js
 const puppeteer = require('puppeteer');
 
-puppeteer.launch().then(async browser => {
+(async () => {
+  const browser = await puppeteer.launch();
   const page = await browser.newPage();
   const watchDog = page.waitForFunction('window.innerWidth < 100');
   await page.setViewport({width: 50, height: 50});
   await watchDog;
   await browser.close();
-});
+})();
 ```
 
 To pass arguments from node.js to the predicate of `page.waitForFunction` function:
@@ -2118,16 +2138,18 @@ This method works across navigations:
 ```js
 const puppeteer = require('puppeteer');
 
-puppeteer.launch().then(async browser => {
+(async () => {
+  const browser = await puppeteer.launch();
   const page = await browser.newPage();
   let currentURL;
   page
     .waitForSelector('img')
     .then(() => console.log('First URL with image: ' + currentURL));
-  for (currentURL of ['https://example.com', 'https://google.com', 'https://bbc.com'])
+  for (currentURL of ['https://example.com', 'https://google.com', 'https://bbc.com']) {
     await page.goto(currentURL);
+  }
   await browser.close();
-});
+})();
 ```
 Shortcut for [page.mainFrame().waitForSelector(selector[, options])](#framewaitforselectorselector-options).
 
@@ -2147,16 +2169,18 @@ This method works across navigations:
 ```js
 const puppeteer = require('puppeteer');
 
-puppeteer.launch().then(async browser => {
+(async () => {
+  const browser = await puppeteer.launch();
   const page = await browser.newPage();
   let currentURL;
   page
     .waitForXPath('//img')
     .then(() => console.log('First URL with image: ' + currentURL));
-  for (currentURL of ['https://example.com', 'https://google.com', 'https://bbc.com'])
+  for (currentURL of ['https://example.com', 'https://google.com', 'https://bbc.com']) {
     await page.goto(currentURL);
+  }
   await browser.close();
-});
+})();
 ```
 Shortcut for [page.mainFrame().waitForXPath(xpath[, options])](#framewaitforxpathxpath-options).
 
@@ -2214,7 +2238,7 @@ The Accessibility class provides methods for inspecting Chromium's accessibility
 
 Accessibility is a very platform-specific thing. On different platforms, there are different screen readers that might have wildly different output.
 
-Blink - Chrome's rendering engine - has a concept of "accessibility tree", which is than translated into different platform-specific APIs. Accessibility namespace gives users
+Blink - Chrome's rendering engine - has a concept of "accessibility tree", which is then translated into different platform-specific APIs. Accessibility namespace gives users
 access to the Blink Accessibility Tree.
 
 Most of the accessibility tree gets filtered out when converting from Blink AX Tree to Platform-specific AX-Tree or by assistive technologies themselves. By default, Puppeteer tries to approximate this filtering, exposing only the "interesting" nodes of the tree.
@@ -2498,7 +2522,8 @@ An example of using `Dialog` class:
 ```js
 const puppeteer = require('puppeteer');
 
-puppeteer.launch().then(async browser => {
+(async () => {
+  const browser = await puppeteer.launch();
   const page = await browser.newPage();
   page.on('dialog', async dialog => {
     console.log(dialog.message());
@@ -2506,7 +2531,7 @@ puppeteer.launch().then(async browser => {
     await browser.close();
   });
   page.evaluate(() => alert('1'));
-});
+})();
 ```
 
 #### dialog.accept([promptText])
@@ -2560,7 +2585,8 @@ An example of dumping frame tree:
 ```js
 const puppeteer = require('puppeteer');
 
-puppeteer.launch().then(async browser => {
+(async () => {
+  const browser = await puppeteer.launch();
   const page = await browser.newPage();
   await page.goto('https://www.google.com/chrome/browser/canary.html');
   dumpFrameTree(page.mainFrame(), '');
@@ -2568,10 +2594,11 @@ puppeteer.launch().then(async browser => {
 
   function dumpFrameTree(frame, indent) {
     console.log(indent + frame.url());
-    for (let child of frame.childFrames())
+    for (const child of frame.childFrames()) {
       dumpFrameTree(child, indent + '  ');
+    }
   }
-});
+})();
 ```
 
 An example of getting text from an iframe element:
@@ -2897,13 +2924,14 @@ The `waitForFunction` can be used to observe viewport size change:
 ```js
 const puppeteer = require('puppeteer');
 
-puppeteer.launch().then(async browser => {
+(async () => {
+  const browser = await puppeteer.launch();
   const page = await browser.newPage();
   const watchDog = page.mainFrame().waitForFunction('window.innerWidth < 100');
   page.setViewport({width: 50, height: 50});
   await watchDog;
   await browser.close();
-});
+})();
 ```
 
 To pass arguments from node.js to the predicate of `page.waitForFunction` function:
@@ -2952,16 +2980,18 @@ This method works across navigations:
 ```js
 const puppeteer = require('puppeteer');
 
-puppeteer.launch().then(async browser => {
+(async () => {
+  const browser = await puppeteer.launch();
   const page = await browser.newPage();
   let currentURL;
   page.mainFrame()
     .waitForSelector('img')
     .then(() => console.log('First URL with image: ' + currentURL));
-  for (currentURL of ['https://example.com', 'https://google.com', 'https://bbc.com'])
+  for (currentURL of ['https://example.com', 'https://google.com', 'https://bbc.com']) {
     await page.goto(currentURL);
+  }
   await browser.close();
-});
+})();
 ```
 
 #### frame.waitForXPath(xpath[, options])
@@ -2980,16 +3010,18 @@ This method works across navigations:
 ```js
 const puppeteer = require('puppeteer');
 
-puppeteer.launch().then(async browser => {
+(async () => {
+  const browser = await puppeteer.launch();
   const page = await browser.newPage();
   let currentURL;
   page.mainFrame()
     .waitForXPath('//img')
     .then(() => console.log('First URL with image: ' + currentURL));
-  for (currentURL of ['https://example.com', 'https://google.com', 'https://bbc.com'])
+  for (currentURL of ['https://example.com', 'https://google.com', 'https://bbc.com']) {
     await page.goto(currentURL);
+  }
   await browser.close();
-});
+})();
 ```
 
 ### class: ExecutionContext
@@ -3179,13 +3211,14 @@ ElementHandle represents an in-page DOM element. ElementHandles can be created w
 ```js
 const puppeteer = require('puppeteer');
 
-puppeteer.launch().then(async browser => {
+(async () => {
+  const browser = await puppeteer.launch();
   const page = await browser.newPage();
   await page.goto('https://example.com');
   const hrefElement = await page.$('a');
   await hrefElement.click();
   // ...
-});
+})();
 ```
 
 ElementHandle prevents DOM element from garbage collection unless the handle is [disposed](#elementhandledispose). ElementHandles are auto-disposed when their origin frame gets navigated.
