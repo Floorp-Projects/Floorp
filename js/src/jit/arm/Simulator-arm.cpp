@@ -2354,44 +2354,34 @@ typedef double (*Prototype_Double_DoubleDoubleDoubleDouble)(double arg0,
                                                             double arg2,
                                                             double arg3);
 
-typedef int32_t (*Prototype_General_Pointer)(int32_t);
-typedef int32_t (*Prototype_General_PointerGeneral)(int32_t, int32_t);
-typedef int32_t (*Prototype_General_PointerGeneralGeneral)(int32_t, int32_t,
-                                                           int32_t);
-typedef int32_t (*Prototype_General_PointerGeneralGeneralGeneralGeneral)(
-    int32_t, int32_t, int32_t, int32_t, int32_t);
-typedef int32_t (*Prototype_General_PointerGeneralGeneralGeneralGeneralGeneral)(
+typedef int32_t (*Prototype_Int32_General)(int32_t);
+typedef int32_t (*Prototype_Int32_GeneralInt32)(int32_t, int32_t);
+typedef int32_t (*Prototype_Int32_GeneralInt32Int32)(int32_t, int32_t, int32_t);
+typedef int32_t (*Prototype_Int32_GeneralInt32Int32Int32Int32)(int32_t, int32_t,
+                                                               int32_t, int32_t,
+                                                               int32_t);
+typedef int32_t (*Prototype_Int32_GeneralInt32Int32Int32Int32Int32)(
     int32_t, int32_t, int32_t, int32_t, int32_t, int32_t);
-typedef int32_t (*Prototype_General_PointerGeneralGeneralGeneralPointer)(
+typedef int32_t (*Prototype_Int32_GeneralInt32Int32Int32General)(
     int32_t, int32_t, int32_t, int32_t, int32_t);
-typedef int32_t (*Prototype_General_PointerGeneralGeneralInt64)(int32_t,
-                                                                int32_t,
-                                                                int32_t,
-                                                                int64_t);
-typedef int32_t (*Prototype_General_PointerGeneralGeneralPointer)(int32_t,
-                                                                  int32_t,
-                                                                  int32_t,
-                                                                  int32_t);
-typedef int32_t (*Prototype_General_PointerGeneralInt64Int64)(int32_t, int32_t,
-                                                              int64_t, int64_t);
-typedef int32_t (*Prototype_General_PointerGeneralPointerGeneral)(int32_t,
-                                                                  int32_t,
-                                                                  int32_t,
-                                                                  int32_t);
-typedef int32_t (*Prototype_General_PointerGeneralPointerGeneralGeneral)(
+typedef int32_t (*Prototype_Int32_GeneralInt32Int32Int64)(int32_t, int32_t,
+                                                          int32_t, int64_t);
+typedef int32_t (*Prototype_Int32_GeneralInt32Int32General)(int32_t, int32_t,
+                                                            int32_t, int32_t);
+typedef int32_t (*Prototype_Int32_GeneralInt32Int64Int64)(int32_t, int32_t,
+                                                          int64_t, int64_t);
+typedef int32_t (*Prototype_Int32_GeneralInt32GeneralInt32)(int32_t, int32_t,
+                                                            int32_t, int32_t);
+typedef int32_t (*Prototype_Int32_GeneralInt32GeneralInt32Int32)(
     int32_t, int32_t, int32_t, int32_t, int32_t);
-typedef int32_t (*Prototype_General_PointerPointer)(int32_t, int32_t);
-typedef int32_t (*Prototype_General_PointerPointerGeneralGeneral)(int32_t,
-                                                                  int32_t,
-                                                                  int32_t,
-                                                                  int32_t);
-typedef int32_t (*Prototype_Pointer_PointerGeneral)(int32_t, int32_t);
-typedef int32_t (*Prototype_Pointer_PointerGeneralGeneral)(int32_t, int32_t,
-                                                           int32_t);
-typedef int32_t (*Prototype_Pointer_PointerGeneralGeneralPointer)(int32_t,
-                                                                  int32_t,
-                                                                  int32_t,
-                                                                  int32_t);
+typedef int32_t (*Prototype_Int32_GeneralGeneral)(int32_t, int32_t);
+typedef int32_t (*Prototype_Int32_GeneralGeneralInt32Int32)(int32_t, int32_t,
+                                                            int32_t, int32_t);
+typedef int32_t (*Prototype_General_GeneralInt32)(int32_t, int32_t);
+typedef int32_t (*Prototype_General_GeneralInt32Int32)(int32_t, int32_t,
+                                                       int32_t);
+typedef int32_t (*Prototype_General_GeneralInt32Int32General)(int32_t, int32_t,
+                                                              int32_t, int32_t);
 
 // Fill the volatile registers with scratch values.
 //
