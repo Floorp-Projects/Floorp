@@ -23,24 +23,9 @@
 #include "js/Utility.h"
 #include "js/Value.h"
 #include "util/BitArray.h"
+#include "util/DiagnosticAssertions.h"
 #include "util/Memory.h"
 #include "util/Poison.h"
-
-/* Crash diagnostics by default in debug and on nightly channel. */
-#if defined(DEBUG) || defined(NIGHTLY_BUILD)
-#  define JS_CRASH_DIAGNOSTICS 1
-#endif
-
-#if defined(JS_DEBUG)
-#  define JS_DIAGNOSTICS_ASSERT(expr) MOZ_ASSERT(expr)
-#elif defined(JS_CRASH_DIAGNOSTICS)
-#  define JS_DIAGNOSTICS_ASSERT(expr)         \
-    do {                                      \
-      if (MOZ_UNLIKELY(!(expr))) MOZ_CRASH(); \
-    } while (0)
-#else
-#  define JS_DIAGNOSTICS_ASSERT(expr) ((void)0)
-#endif
 
 namespace js {
 
