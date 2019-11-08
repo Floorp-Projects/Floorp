@@ -15,16 +15,6 @@
         "included": { "everywhere": true },
         "default": "yes"
       }, {
-        "included": { "everywhere": true },
-        "application": {
-          "channel": ["esr"]
-        },
-        "searchUrlGetParams": {
-          "client": "firefox-b-e",
-          "q": "{searchTerms}"
-        },
-        "telemetryId": "google-b-e"
-      }, {
         "included": {
           "regions": ["ru", "tr", "by", "kz"],
           "locales": {
@@ -36,42 +26,10 @@
         "default": "no"
       }, {
         "included": {
-          "regions": ["ru", "tr", "by", "kz"],
-          "locales": {
-            "matches": ["ru", "tr", "be", "kk"],
-            "startsWith": ["en"]
-          },
-          "telemetryId": "google"
-        },
-        "application": {
-          "channel": ["esr"]
-        },
-        "searchUrlGetParams": {
-          "client": "firefox-b-e",
-          "q": "{searchTerms}"
-        },
-        "default": "no"
-      }, {
-        "included": {
           "regions": ["cn"],
           "locales": {
             "matches": ["zh-CN"]
           }
-        },
-        "default": "no"
-      }, {
-        "included": {
-          "regions": ["cn"],
-          "locales": {
-            "matches": ["zh-CN"]
-          }
-        },
-        "application": {
-          "channel": ["esr"]
-        },
-        "searchUrlGetParams": {
-          "client": "firefox-b-e",
-          "q": "{searchTerms}"
         },
         "default": "no"
       }, {
@@ -81,16 +39,6 @@
           "q": "{searchTerms}"
         },
         "telemetryId": "google-b-1-d"
-      },  {
-        "included": { "regions": ["us"] },
-        "application": {
-          "channel": ["esr"]
-        },
-        "searchUrlGetParams": {
-          "client": "firefox-b-1-e",
-          "q": "{searchTerms}"
-        },
-        "telemetryId": "google-b-1-e"
       }]
     },
     {

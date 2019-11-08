@@ -116,8 +116,7 @@ add_task(async function() {
 
     const { engines, privateDefault } = engineSelector.fetchEngineConfiguration(
       "us",
-      "en-US",
-      "default"
+      "en-US"
     );
     let names = engines.map(obj => obj.engineName);
     Assert.deepEqual(
