@@ -300,7 +300,7 @@ class nsWindow final : public nsBaseWidget {
                                const mozilla::WidgetKeyboardEvent& aEvent,
                                nsTArray<mozilla::CommandInt>& aCommands,
                                uint32_t aGeckoKeyCode, uint32_t aNativeKeyCode);
-  virtual void GetEditCommands(
+  virtual bool GetEditCommands(
       NativeKeyBindingsType aType, const mozilla::WidgetKeyboardEvent& aEvent,
       nsTArray<mozilla::CommandInt>& aCommands) override;
 

@@ -454,8 +454,12 @@ class WidgetKeyboardEvent : public WidgetInputEvent {
   /**
    * Retrieves edit commands from mWidget only for aType.  This shouldn't be
    * called when the instance is an untrusted event or doesn't have widget.
+   *
+   * @return            false if some resource is not available to get
+   *                    commands unexpectedly.  Otherwise, true even if
+   *                    retrieved command is nothing.
    */
-  void InitEditCommandsFor(nsIWidget::NativeKeyBindingsType aType);
+  bool InitEditCommandsFor(nsIWidget::NativeKeyBindingsType aType);
 
   /**
    * PreventNativeKeyBindings() makes the instance to not cause any edit

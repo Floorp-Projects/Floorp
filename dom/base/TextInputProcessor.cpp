@@ -999,12 +999,18 @@ nsresult TextInputProcessor::PrepareKeyboardEventToDispatch(
       //      since it checks whether it's called in the main process to
       //      avoid performance issues so that we need to initialize each
       //      command manually here.
-      aKeyboardEvent.InitEditCommandsFor(
-          nsIWidget::NativeKeyBindingsForSingleLineEditor);
-      aKeyboardEvent.InitEditCommandsFor(
-          nsIWidget::NativeKeyBindingsForMultiLineEditor);
-      aKeyboardEvent.InitEditCommandsFor(
-          nsIWidget::NativeKeyBindingsForRichTextEditor);
+      if (NS_WARN_IF(!aKeyboardEvent.InitEditCommandsFor(
+              nsIWidget::NativeKeyBindingsForSingleLineEditor))) {
+        return NS_ERROR_NOT_AVAILABLE;
+      }
+      if (NS_WARN_IF(!aKeyboardEvent.InitEditCommandsFor(
+              nsIWidget::NativeKeyBindingsForMultiLineEditor))) {
+        return NS_ERROR_NOT_AVAILABLE;
+      }
+      if (NS_WARN_IF(!aKeyboardEvent.InitEditCommandsFor(
+              nsIWidget::NativeKeyBindingsForRichTextEditor))) {
+        return NS_ERROR_NOT_AVAILABLE;
+      }
     } else {
       aKeyboardEvent.PreventNativeKeyBindings();
     }

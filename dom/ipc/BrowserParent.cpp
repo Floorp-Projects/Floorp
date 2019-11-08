@@ -1610,8 +1610,9 @@ mozilla::ipc::IPCResult BrowserParent::RecvRequestNativeKeyBindings(
     return IPC_OK();
   }
 
-  localEvent.InitEditCommandsFor(keyBindingsType);
-  *aCommands = localEvent.EditCommandsConstRef(keyBindingsType);
+  if (localEvent.InitEditCommandsFor(keyBindingsType)) {
+    *aCommands = localEvent.EditCommandsConstRef(keyBindingsType);
+  }
 
   return IPC_OK();
 }

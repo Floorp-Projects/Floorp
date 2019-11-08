@@ -2217,11 +2217,12 @@ nsresult nsIWidget::OnWindowedPluginKeyEvent(
 
 void nsIWidget::PostHandleKeyEvent(mozilla::WidgetKeyboardEvent* aEvent) {}
 
-void nsIWidget::GetEditCommands(nsIWidget::NativeKeyBindingsType aType,
+bool nsIWidget::GetEditCommands(nsIWidget::NativeKeyBindingsType aType,
                                 const WidgetKeyboardEvent& aEvent,
                                 nsTArray<CommandInt>& aCommands) {
   MOZ_ASSERT(aEvent.IsTrusted());
   MOZ_ASSERT(aCommands.IsEmpty());
+  return true;
 }
 
 already_AddRefed<nsIBidiKeyboard> nsIWidget::CreateBidiKeyboard() {
