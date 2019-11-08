@@ -6,6 +6,8 @@
 
 /* Various JS utility functions. */
 
+#include "js/Utility.h"
+
 #include "mozilla/Assertions.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Maybe.h"
@@ -15,7 +17,6 @@
 
 #include "jstypes.h"
 
-#include "js/Utility.h"
 #include "util/Poison.h"
 #include "util/Windows.h"
 #include "vm/HelperThreads.h"

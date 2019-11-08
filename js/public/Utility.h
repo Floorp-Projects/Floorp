@@ -95,7 +95,7 @@ namespace oom {
  * off-thread script parsing without causing an OOM in the active thread first.
  *
  * Getter/Setter functions to encapsulate mozilla::ThreadLocal, implementation
- * is in jsutil.cpp.
+ * is in util/Utility.cpp.
  */
 #  if defined(DEBUG) || defined(JS_OOM_BREAKPOINT)
 
