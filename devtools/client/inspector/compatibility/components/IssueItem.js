@@ -8,7 +8,22 @@ const Services = require("Services");
 const { PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 
+loader.lazyRequireGetter(
+  this,
+  "openDocLink",
+  "devtools/client/shared/link",
+  true
+);
+
 const Types = require("../types");
+
+// For test
+loader.lazyRequireGetter(
+  this,
+  "toSnakeCase",
+  "devtools/client/inspector/compatibility/utils/cases",
+  true
+);
 
 class IssueItem extends PureComponent {
   static get propTypes() {
@@ -17,38 +32,49 @@ class IssueItem extends PureComponent {
     };
   }
 
-  _isTesting() {
-    return Services.prefs.getBoolPref("devtools.testing", false);
+  constructor(props) {
+    super(props);
+    this._onLinkClicked = this._onLinkClicked.bind(this);
+  }
+
+  _onLinkClicked(e) {
+    const { url } = this.props;
+
+    e.preventDefault();
+    e.stopPropagation();
+    openDocLink(url);
+  }
+
+  _getTestDataAttributes() {
+    const testDataSet = {};
+
+    if (Services.prefs.getBoolPref("devtools.testing", false)) {
+      for (const [key, value] of Object.entries(this.props)) {
+        const datasetKey = `data-qa-${toSnakeCase(key)}`;
+        testDataSet[datasetKey] = JSON.stringify(value);
+      }
+    }
+
+    return testDataSet;
   }
 
   render() {
-    const { property, type } = this.props;
-
-    const qaDatasetForLi = this._isTesting()
-      ? { "data-qa-property": property }
-      : {};
+    const { property, url } = this.props;
 
     return dom.li(
       {
-        key: `${property}:${type}`,
-        ...qaDatasetForLi,
+        key: property,
+        ...this._getTestDataAttributes(),
       },
-      Object.entries(this.props).map(([key, value]) => {
-        const qaDatasetForField = this._isTesting()
-          ? {
-              "data-qa-key": key,
-              "data-qa-value": JSON.stringify(value),
-            }
-          : {};
-
-        return dom.div(
-          {
-            key,
-            ...qaDatasetForField,
-          },
-          `${key}:${JSON.stringify(value)}`
-        );
-      })
+      dom.a(
+        {
+          className: "compatibility-issue-item__mdn-link devtools-monospace",
+          href: url,
+          title: url,
+          onClick: e => this._onLinkClicked(e),
+        },
+        property
+      )
     );
   }
 }
