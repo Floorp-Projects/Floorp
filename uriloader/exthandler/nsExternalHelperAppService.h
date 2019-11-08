@@ -402,15 +402,6 @@ class nsExternalAppHandler final : public nsIStreamListener,
   nsresult ContinueSave(nsIFile* aFile);
 
   /**
-   * After we're done prompting the user for any information, if the original
-   * channel had a refresh url associated with it (which might point to a
-   * "thank you for downloading" kind of page, then process that....It is safe
-   * to invoke this method multiple times. We'll clear mOriginalChannel after
-   * it's called and this ensures we won't call it again....
-   */
-  void ProcessAnyRefreshTags();
-
-  /**
    * Notify our nsITransfer object that we are done with the download.  This is
    * always called after the target file has been closed.
    *
@@ -450,8 +441,6 @@ class nsExternalAppHandler final : public nsIStreamListener,
    */
   nsCOMPtr<nsITransfer> mTransfer;
 
-  nsCOMPtr<nsIChannel> mOriginalChannel; /**< in the case of a redirect, this
-                                            will be the pre-redirect channel. */
   nsCOMPtr<nsIHelperAppLauncherDialog> mDialog;
 
   /**
