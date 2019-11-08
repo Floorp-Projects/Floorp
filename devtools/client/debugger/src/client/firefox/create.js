@@ -32,7 +32,7 @@ export function prepareSourcePayload(
 
 export function createFrame(
   thread: ThreadId,
-  frame: FrameFront,
+  frame: FramePacket | FrameFront,
   index: number = 0
 ): ?Frame {
   if (!frame) {
@@ -45,8 +45,10 @@ export function createFrame(
     column: frame.where.column,
   };
 
+  const id = frame.data ? frame.actorID : frame.actor;
+
   return {
-    id: frame.actorID,
+    id,
     thread,
     displayName: frame.displayName,
     location,
@@ -65,7 +67,7 @@ export function makeSourceId(source: SourcePayload) {
 export function createPause(
   thread: string,
   packet: PausedPacket,
-  frames: FrameFront[]
+  frames: FramePacket[]
 ): any {
   // NOTE: useful when the debugger is already paused
   const frame = packet.frame || frames[0];
