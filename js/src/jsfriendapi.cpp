@@ -25,6 +25,7 @@
 #include "js/Proxy.h"
 #include "js/Wrapper.h"
 #include "proxy/DeadObjectProxy.h"
+#include "util/Poison.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/DateObject.h"
 #include "vm/JSContext.h"

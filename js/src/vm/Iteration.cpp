@@ -29,6 +29,7 @@
 #include "gc/Marking.h"
 #include "js/PropertySpec.h"
 #include "js/Proxy.h"
+#include "util/Poison.h"
 #include "vm/BytecodeUtil.h"
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"

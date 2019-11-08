@@ -47,6 +47,7 @@
 #include "js/Utility.h"
 #include "js/Wrapper.h"
 #include "util/Memory.h"
+#include "util/Poison.h"
 #include "util/StringBuffer.h"
 #include "util/Text.h"
 #include "vm/ArgumentsObject.h"

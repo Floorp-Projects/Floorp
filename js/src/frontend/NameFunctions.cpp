@@ -14,6 +14,7 @@
 #include "frontend/ParseNode.h"
 #include "frontend/ParseNodeVisitor.h"
 #include "frontend/SharedContext.h"
+#include "util/Poison.h"
 #include "util/StringBuffer.h"
 #include "vm/JSFunction.h"
 
