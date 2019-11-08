@@ -38,7 +38,7 @@ function test_pause_frame() {
     gThreadFront.once("paused", function(packet2) {
       const poppedFrames = packet2.poppedFrames;
       Assert.equal(typeof poppedFrames, typeof []);
-      Assert.ok(poppedFrames.includes(packet1.frame.actor));
+      Assert.ok(poppedFrames.includes(packet1.frame.actorID));
       gThreadFront.resume().then(function() {
         finishClient(gClient);
       });
