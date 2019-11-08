@@ -16,6 +16,7 @@
 #include "mozilla/TemplateLib.h"
 #include "mozilla/TypeTraits.h"
 
+#include <algorithm>
 #include <new>
 #include <stddef.h>  // size_t
 
@@ -1026,7 +1027,7 @@ class LifoAllocPolicy {
       return nullptr;
     }
     MOZ_ASSERT(!(oldSize & mozilla::tl::MulOverflowMask<sizeof(T)>::value));
-    memcpy(n, p, Min(oldSize * sizeof(T), newSize * sizeof(T)));
+    memcpy(n, p, std::min(oldSize * sizeof(T), newSize * sizeof(T)));
     return n;
   }
   template <typename T>

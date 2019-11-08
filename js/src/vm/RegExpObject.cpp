@@ -9,6 +9,8 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/PodOperations.h"
 
+#include <algorithm>
+
 #ifdef DEBUG
 #  include "jsutil.h"
 #endif
@@ -588,21 +590,21 @@ bool RegExpShared::dumpBytecode(JSContext* cx, MutableHandleRegExpShared re,
 #  define ADVANCE(NAME)                 \
     fprintf(stderr, "\n");              \
     pc += irregexp::BC_##NAME##_LENGTH; \
-    maxPc = js::Max(maxPc, pc);         \
+    maxPc = std::max(maxPc, pc);        \
     break;
 #  define STOP(NAME)                    \
     fprintf(stderr, "\n");              \
     pc += irregexp::BC_##NAME##_LENGTH; \
     break;
-#  define JUMP(NAME, OFFSET)                   \
-    fprintf(stderr, "\n");                     \
-    maxPc = js::Max(maxPc, byteCode + OFFSET); \
-    pc += irregexp::BC_##NAME##_LENGTH;        \
+#  define JUMP(NAME, OFFSET)                    \
+    fprintf(stderr, "\n");                      \
+    maxPc = std::max(maxPc, byteCode + OFFSET); \
+    pc += irregexp::BC_##NAME##_LENGTH;         \
     break;
-#  define BRANCH(NAME, OFFSET)                              \
-    fprintf(stderr, "\n");                                  \
-    pc += irregexp::BC_##NAME##_LENGTH;                     \
-    maxPc = js::Max(maxPc, js::Max(pc, byteCode + OFFSET)); \
+#  define BRANCH(NAME, OFFSET)                                \
+    fprintf(stderr, "\n");                                    \
+    pc += irregexp::BC_##NAME##_LENGTH;                       \
+    maxPc = std::max(maxPc, std::max(pc, byteCode + OFFSET)); \
     break;
 
   // Bytecode has no end marker, we need to calculate the bytecode length by

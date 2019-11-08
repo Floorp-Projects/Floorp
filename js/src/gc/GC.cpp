@@ -201,6 +201,7 @@
 #include "mozilla/TypeTraits.h"
 #include "mozilla/Unused.h"
 
+#include <algorithm>
 #include <initializer_list>
 #include <string.h>
 #ifndef XP_WIN
@@ -2296,8 +2297,8 @@ static size_t CellUpdateBackgroundTaskCount() {
   }
 
   size_t targetTaskCount = HelperThreadState().cpuCount / 2;
-  return Min(Max(targetTaskCount, MinCellUpdateBackgroundTasks),
-             MaxCellUpdateBackgroundTasks);
+  return std::min(std::max(targetTaskCount, MinCellUpdateBackgroundTasks),
+                  MaxCellUpdateBackgroundTasks);
 }
 
 static bool CanUpdateKindInBackground(AllocKind kind) {
@@ -5910,7 +5911,7 @@ static const size_t MaxWeakCacheSweepTasks = 8;
 
 static size_t WeakCacheSweepTaskCount() {
   size_t targetTaskCount = HelperThreadState().cpuCount;
-  return Min(targetTaskCount, MaxWeakCacheSweepTasks);
+  return std::min(targetTaskCount, MaxWeakCacheSweepTasks);
 }
 
 IncrementalProgress GCRuntime::sweepWeakCaches(JSFreeOp* fop,

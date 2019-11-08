@@ -14,6 +14,8 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Variant.h"
 
+#include <algorithm>
+
 #include "jsutil.h"
 
 #include "gc/Rooting.h"
@@ -649,7 +651,7 @@ class InterpreterFrame {
     }
 
     if (isConstructing()) {
-      unsigned pushedArgs = Max(numFormalArgs(), numActualArgs());
+      unsigned pushedArgs = std::max(numFormalArgs(), numActualArgs());
       return argv()[pushedArgs];
     }
     return UndefinedValue();

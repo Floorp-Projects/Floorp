@@ -9,6 +9,8 @@
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/TemplateLib.h"
 
+#include <algorithm>
+
 #include "jit/Ion.h"
 #include "jit/IonAnalysis.h"
 #include "jit/JitSpewer.h"
@@ -384,7 +386,7 @@ static bool IsExponentInteresting(const Range* r) {
 
   // Otherwise, if the bounds are conservatively rounded across a power-of-two
   // boundary, the exponent may imply a tighter range.
-  return FloorLog2(Max(Abs(r->lower()), Abs(r->upper()))) > r->exponent();
+  return FloorLog2(std::max(Abs(r->lower()), Abs(r->upper()))) > r->exponent();
 }
 
 void Range::dump(GenericPrinter& out) const {
@@ -497,8 +499,8 @@ Range* Range::intersect(TempAllocator& alloc, const Range* lhs,
     return new (alloc) Range(*lhs);
   }
 
-  int32_t newLower = Max(lhs->lower_, rhs->lower_);
-  int32_t newUpper = Min(lhs->upper_, rhs->upper_);
+  int32_t newLower = std::max(lhs->lower_, rhs->lower_);
+  int32_t newUpper = std::min(lhs->upper_, rhs->upper_);
 
   // If upper < lower, then we have conflicting constraints. Consider:
   //
@@ -527,7 +529,7 @@ Range* Range::intersect(TempAllocator& alloc, const Range* lhs,
   NegativeZeroFlag newMayIncludeNegativeZero =
       NegativeZeroFlag(lhs->canBeNegativeZero_ && rhs->canBeNegativeZero_);
 
-  uint16_t newExponent = Min(lhs->max_exponent_, rhs->max_exponent_);
+  uint16_t newExponent = std::min(lhs->max_exponent_, rhs->max_exponent_);
 
   // NaN is a special value which is neither greater than infinity or less than
   // negative infinity. When we intersect two ranges like [?, 0] and [0, ?], we
@@ -577,8 +579,8 @@ Range* Range::intersect(TempAllocator& alloc, const Range* lhs,
 }
 
 void Range::unionWith(const Range* other) {
-  int32_t newLower = Min(lower_, other->lower_);
-  int32_t newUpper = Max(upper_, other->upper_);
+  int32_t newLower = std::min(lower_, other->lower_);
+  int32_t newUpper = std::max(upper_, other->upper_);
 
   bool newHasInt32LowerBound =
       hasInt32LowerBound_ && other->hasInt32LowerBound_;
@@ -590,7 +592,7 @@ void Range::unionWith(const Range* other) {
   NegativeZeroFlag newMayIncludeNegativeZero =
       NegativeZeroFlag(canBeNegativeZero_ || other->canBeNegativeZero_);
 
-  uint16_t newExponent = Max(max_exponent_, other->max_exponent_);
+  uint16_t newExponent = std::max(max_exponent_, other->max_exponent_);
 
   rawInitialize(newLower, newHasInt32LowerBound, newUpper,
                 newHasInt32UpperBound, newCanHaveFractionalPart,
@@ -667,7 +669,7 @@ static uint16_t ExponentImpliedByDouble(double d) {
 
   // Otherwise take the exponent part and clamp it at zero, since the Range
   // class doesn't track fractional ranges.
-  return uint16_t(Max(int_fast16_t(0), ExponentComponent(d)));
+  return uint16_t(std::max(int_fast16_t(0), ExponentComponent(d)));
 }
 
 void Range::setDouble(double l, double h) {
@@ -698,7 +700,7 @@ void Range::setDouble(double l, double h) {
   // Infer max_exponent_.
   uint16_t lExp = ExponentImpliedByDouble(l);
   uint16_t hExp = ExponentImpliedByDouble(h);
-  max_exponent_ = Max(lExp, hExp);
+  max_exponent_ = std::max(lExp, hExp);
 
   canHaveFractionalPart_ = ExcludesFractionalParts;
   canBeNegativeZero_ = ExcludesNegativeZero;
@@ -707,7 +709,7 @@ void Range::setDouble(double l, double h) {
   // fractional part if the range crosses through the neighborhood of zero. We
   // won't have a fractional value if the value is always beyond the point at
   // which double precision can't represent fractional values.
-  uint16_t minExp = Min(lExp, hExp);
+  uint16_t minExp = std::min(lExp, hExp);
   bool includesNegative = IsNaN(l) || l < 0;
   bool includesPositive = IsNaN(h) || h > 0;
   bool crossesZero = includesNegative && includesPositive;
@@ -754,7 +756,7 @@ Range* Range::add(TempAllocator& alloc, const Range* lhs, const Range* rhs) {
 
   // The exponent is at most one greater than the greater of the operands'
   // exponents, except for NaN and infinity cases.
-  uint16_t e = Max(lhs->max_exponent_, rhs->max_exponent_);
+  uint16_t e = std::max(lhs->max_exponent_, rhs->max_exponent_);
   if (e <= Range::MaxFiniteExponent) {
     ++e;
   }
@@ -785,7 +787,7 @@ Range* Range::sub(TempAllocator& alloc, const Range* lhs, const Range* rhs) {
 
   // The exponent is at most one greater than the greater of the operands'
   // exponents, except for NaN and infinity cases.
-  uint16_t e = Max(lhs->max_exponent_, rhs->max_exponent_);
+  uint16_t e = std::max(lhs->max_exponent_, rhs->max_exponent_);
   if (e <= Range::MaxFiniteExponent) {
     ++e;
   }
@@ -809,14 +811,14 @@ Range* Range::and_(TempAllocator& alloc, const Range* lhs, const Range* rhs) {
   // If both numbers can be negative, result can be negative in the whole range
   if (lhs->lower() < 0 && rhs->lower() < 0) {
     return Range::NewInt32Range(alloc, INT32_MIN,
-                                Max(lhs->upper(), rhs->upper()));
+                                std::max(lhs->upper(), rhs->upper()));
   }
 
   // Only one of both numbers can be negative.
   // - result can't be negative
   // - Upper bound is minimum of both upper range,
   int32_t lower = 0;
-  int32_t upper = Min(lhs->upper(), rhs->upper());
+  int32_t upper = std::min(lhs->upper(), rhs->upper());
 
   // EXCEPT when upper bound of non negative number is max value,
   // because negative value can return the whole max value.
@@ -867,22 +869,22 @@ Range* Range::or_(TempAllocator& alloc, const Range* lhs, const Range* rhs) {
 
   if (lhs->lower() >= 0 && rhs->lower() >= 0) {
     // Both operands are non-negative, so the result won't be less than either.
-    lower = Max(lhs->lower(), rhs->lower());
+    lower = std::max(lhs->lower(), rhs->lower());
     // The result will have leading zeros where both operands have leading
     // zeros. CountLeadingZeroes32 of a non-negative int32 will at least be 1 to
     // account for the bit of sign.
-    upper = int32_t(UINT32_MAX >> Min(CountLeadingZeroes32(lhs->upper()),
-                                      CountLeadingZeroes32(rhs->upper())));
+    upper = int32_t(UINT32_MAX >> std::min(CountLeadingZeroes32(lhs->upper()),
+                                           CountLeadingZeroes32(rhs->upper())));
   } else {
     // The result will have leading ones where either operand has leading ones.
     if (lhs->upper() < 0) {
       unsigned leadingOnes = CountLeadingZeroes32(~lhs->lower());
-      lower = Max(lower, ~int32_t(UINT32_MAX >> leadingOnes));
+      lower = std::max(lower, ~int32_t(UINT32_MAX >> leadingOnes));
       upper = -1;
     }
     if (rhs->upper() < 0) {
       unsigned leadingOnes = CountLeadingZeroes32(~rhs->lower());
-      lower = Max(lower, ~int32_t(UINT32_MAX >> leadingOnes));
+      lower = std::max(lower, ~int32_t(UINT32_MAX >> leadingOnes));
       upper = -1;
     }
   }
@@ -937,8 +939,8 @@ Range* Range::xor_(TempAllocator& alloc, const Range* lhs, const Range* rhs) {
     // result, so we can take the minimum between the two.
     unsigned lhsLeadingZeros = CountLeadingZeroes32(lhsUpper);
     unsigned rhsLeadingZeros = CountLeadingZeroes32(rhsUpper);
-    upper = Min(rhsUpper | int32_t(UINT32_MAX >> lhsLeadingZeros),
-                lhsUpper | int32_t(UINT32_MAX >> rhsLeadingZeros));
+    upper = std::min(rhsUpper | int32_t(UINT32_MAX >> lhsLeadingZeros),
+                     lhsUpper | int32_t(UINT32_MAX >> rhsLeadingZeros));
   }
 
   // If we bitwise-negated one (but not both) of the operands above, apply the
@@ -992,8 +994,9 @@ Range* Range::mul(TempAllocator& alloc, const Range* lhs, const Range* rhs) {
   int64_t c = (int64_t)lhs->upper() * (int64_t)rhs->lower();
   int64_t d = (int64_t)lhs->upper() * (int64_t)rhs->upper();
   return new (alloc)
-      Range(Min(Min(a, b), Min(c, d)), Max(Max(a, b), Max(c, d)),
-            newCanHaveFractionalPart, newMayIncludeNegativeZero, exponent);
+      Range(std::min(std::min(a, b), std::min(c, d)),
+            std::max(std::max(a, b), std::max(c, d)), newCanHaveFractionalPart,
+            newMayIncludeNegativeZero, exponent);
 }
 
 Range* Range::lsh(TempAllocator& alloc, const Range* lhs, int32_t c) {
@@ -1094,11 +1097,11 @@ Range* Range::abs(TempAllocator& alloc, const Range* op) {
   // Abs never produces a negative zero.
   NegativeZeroFlag canBeNegativeZero = ExcludesNegativeZero;
 
-  return new (alloc)
-      Range(Max(Max(int32_t(0), l), u == INT32_MIN ? INT32_MAX : -u), true,
-            Max(Max(int32_t(0), u), l == INT32_MIN ? INT32_MAX : -l),
-            op->hasInt32Bounds() && l != INT32_MIN, canHaveFractionalPart,
-            canBeNegativeZero, op->max_exponent_);
+  return new (alloc) Range(
+      std::max(std::max(int32_t(0), l), u == INT32_MIN ? INT32_MAX : -u), true,
+      std::max(std::max(int32_t(0), u), l == INT32_MIN ? INT32_MAX : -l),
+      op->hasInt32Bounds() && l != INT32_MIN, canHaveFractionalPart,
+      canBeNegativeZero, op->max_exponent_);
 }
 
 Range* Range::min(TempAllocator& alloc, const Range* lhs, const Range* rhs) {
@@ -1112,12 +1115,12 @@ Range* Range::min(TempAllocator& alloc, const Range* lhs, const Range* rhs) {
   NegativeZeroFlag newMayIncludeNegativeZero =
       NegativeZeroFlag(lhs->canBeNegativeZero_ || rhs->canBeNegativeZero_);
 
-  return new (alloc) Range(Min(lhs->lower_, rhs->lower_),
+  return new (alloc) Range(std::min(lhs->lower_, rhs->lower_),
                            lhs->hasInt32LowerBound_ && rhs->hasInt32LowerBound_,
-                           Min(lhs->upper_, rhs->upper_),
+                           std::min(lhs->upper_, rhs->upper_),
                            lhs->hasInt32UpperBound_ || rhs->hasInt32UpperBound_,
                            newCanHaveFractionalPart, newMayIncludeNegativeZero,
-                           Max(lhs->max_exponent_, rhs->max_exponent_));
+                           std::max(lhs->max_exponent_, rhs->max_exponent_));
 }
 
 Range* Range::max(TempAllocator& alloc, const Range* lhs, const Range* rhs) {
@@ -1131,12 +1134,12 @@ Range* Range::max(TempAllocator& alloc, const Range* lhs, const Range* rhs) {
   NegativeZeroFlag newMayIncludeNegativeZero =
       NegativeZeroFlag(lhs->canBeNegativeZero_ || rhs->canBeNegativeZero_);
 
-  return new (alloc) Range(Max(lhs->lower_, rhs->lower_),
+  return new (alloc) Range(std::max(lhs->lower_, rhs->lower_),
                            lhs->hasInt32LowerBound_ || rhs->hasInt32LowerBound_,
-                           Max(lhs->upper_, rhs->upper_),
+                           std::max(lhs->upper_, rhs->upper_),
                            lhs->hasInt32UpperBound_ && rhs->hasInt32UpperBound_,
                            newCanHaveFractionalPart, newMayIncludeNegativeZero,
-                           Max(lhs->max_exponent_, rhs->max_exponent_));
+                           std::max(lhs->max_exponent_, rhs->max_exponent_));
 }
 
 Range* Range::floor(TempAllocator& alloc, const Range* op) {
@@ -1186,10 +1189,10 @@ Range* Range::sign(TempAllocator& alloc, const Range* op) {
     return nullptr;
   }
 
-  return new (alloc)
-      Range(Max(Min(op->lower_, 1), -1), Max(Min(op->upper_, 1), -1),
-            Range::ExcludesFractionalParts,
-            NegativeZeroFlag(op->canBeNegativeZero()), 0);
+  return new (alloc) Range(std::max(std::min(op->lower_, 1), -1),
+                           std::max(std::min(op->upper_, 1), -1),
+                           Range::ExcludesFractionalParts,
+                           NegativeZeroFlag(op->canBeNegativeZero()), 0);
 }
 
 Range* Range::NaNToZero(TempAllocator& alloc, const Range* op) {
@@ -1569,8 +1572,8 @@ void MMod::computeRange(TempAllocator& alloc) {
   if (unsigned_) {
     // The result of an unsigned mod will never be unsigned-greater than
     // either operand.
-    uint32_t lhsBound = Max<uint32_t>(lhs.lower(), lhs.upper());
-    uint32_t rhsBound = Max<uint32_t>(rhs.lower(), rhs.upper());
+    uint32_t lhsBound = std::max<uint32_t>(lhs.lower(), lhs.upper());
+    uint32_t rhsBound = std::max<uint32_t>(rhs.lower(), rhs.upper());
 
     // If either range crosses through -1 as a signed value, it could be
     // the maximum unsigned value when interpreted as unsigned. If the range
@@ -1589,7 +1592,7 @@ void MMod::computeRange(TempAllocator& alloc) {
     --rhsBound;
 
     // This gives us two upper bounds, so we can take the best one.
-    setRange(Range::NewUInt32Range(alloc, 0, Min(lhsBound, rhsBound)));
+    setRange(Range::NewUInt32Range(alloc, 0, std::min(lhsBound, rhsBound)));
     return;
   }
 
@@ -1601,7 +1604,7 @@ void MMod::computeRange(TempAllocator& alloc) {
   if (a == 0 && b == 0) {
     return;
   }
-  int64_t rhsAbsBound = Max(a, b);
+  int64_t rhsAbsBound = std::max(a, b);
 
   // If the value is known to be integer, less-than abs(rhs) is equivalent
   // to less-than-or-equal abs(rhs)-1. This is important for being able to
@@ -1613,10 +1616,10 @@ void MMod::computeRange(TempAllocator& alloc) {
   // Next, the absolute value of the result will never be greater than the
   // absolute value of lhs.
   int64_t lhsAbsBound =
-      Max(Abs<int64_t>(lhs.lower()), Abs<int64_t>(lhs.upper()));
+      std::max(Abs<int64_t>(lhs.lower()), Abs<int64_t>(lhs.upper()));
 
   // This gives us two upper bounds, so we can take the best one.
-  int64_t absBound = Min(lhsAbsBound, rhsAbsBound);
+  int64_t absBound = std::min(lhsAbsBound, rhsAbsBound);
 
   // Now consider the sign of the result.
   // If lhs is non-negative, the result will be non-negative.
@@ -1635,7 +1638,7 @@ void MMod::computeRange(TempAllocator& alloc) {
 
   setRange(new (alloc) Range(lower, upper, newCanHaveFractionalPart,
                              newMayIncludeNegativeZero,
-                             Min(lhs.exponent(), rhs.exponent())));
+                             std::min(lhs.exponent(), rhs.exponent())));
 }
 
 void MDiv::computeRange(TempAllocator& alloc) {
@@ -2721,23 +2724,23 @@ MDefinition::TruncateKind MBinaryBitwiseInstruction::operandTruncateKind(
 
 MDefinition::TruncateKind MLimitedTruncate::operandTruncateKind(
     size_t index) const {
-  return Min(truncateKind(), truncateLimit_);
+  return std::min(truncateKind(), truncateLimit_);
 }
 
 MDefinition::TruncateKind MAdd::operandTruncateKind(size_t index) const {
   // This operator is doing some arithmetic. If its result is truncated,
   // it's an indirect truncate for its operands.
-  return Min(truncateKind(), IndirectTruncate);
+  return std::min(truncateKind(), IndirectTruncate);
 }
 
 MDefinition::TruncateKind MSub::operandTruncateKind(size_t index) const {
   // See the comment in MAdd::operandTruncateKind.
-  return Min(truncateKind(), IndirectTruncate);
+  return std::min(truncateKind(), IndirectTruncate);
 }
 
 MDefinition::TruncateKind MMul::operandTruncateKind(size_t index) const {
   // See the comment in MAdd::operandTruncateKind.
-  return Min(truncateKind(), IndirectTruncate);
+  return std::min(truncateKind(), IndirectTruncate);
 }
 
 MDefinition::TruncateKind MToDouble::operandTruncateKind(size_t index) const {
@@ -2760,11 +2763,11 @@ MDefinition::TruncateKind MStoreTypedArrayElementHole::operandTruncateKind(
 }
 
 MDefinition::TruncateKind MDiv::operandTruncateKind(size_t index) const {
-  return Min(truncateKind(), TruncateAfterBailouts);
+  return std::min(truncateKind(), TruncateAfterBailouts);
 }
 
 MDefinition::TruncateKind MMod::operandTruncateKind(size_t index) const {
-  return Min(truncateKind(), TruncateAfterBailouts);
+  return std::min(truncateKind(), TruncateAfterBailouts);
 }
 
 MDefinition::TruncateKind MCompare::operandTruncateKind(size_t index) const {
@@ -2916,7 +2919,7 @@ static MDefinition::TruncateKind ComputeRequestedTruncateKind(
 
     MDefinition::TruncateKind consumerKind =
         consumer->operandTruncateKind(consumer->indexOf(*use));
-    kind = Min(kind, consumerKind);
+    kind = std::min(kind, consumerKind);
     if (kind == MDefinition::NoTruncate) {
       break;
     }
@@ -2924,7 +2927,7 @@ static MDefinition::TruncateKind ComputeRequestedTruncateKind(
 
   // We cannot do full trunction on guarded instructions.
   if (candidate->isGuard() || candidate->isGuardRangeBailouts()) {
-    kind = Min(kind, MDefinition::TruncateAfterBailouts);
+    kind = std::min(kind, MDefinition::TruncateAfterBailouts);
   }
 
   // If the value naturally produces an int32 value (before bailout checks)
@@ -2958,7 +2961,7 @@ static MDefinition::TruncateKind ComputeRequestedTruncateKind(
         candidate->canRecoverOnBailout()) {
       *shouldClone = true;
     } else {
-      kind = Min(kind, MDefinition::TruncateAfterBailouts);
+      kind = std::min(kind, MDefinition::TruncateAfterBailouts);
     }
   }
 

@@ -11,6 +11,8 @@
 #include "mozilla/Range.h"
 #include "mozilla/ScopeExit.h"
 
+#include <algorithm>
+
 #include "jsnum.h"
 #include "jstypes.h"
 #include "jsutil.h"
@@ -753,7 +755,7 @@ bool js::Stringify(JSContext* cx, MutableHandleValue vp, JSObject* replacer_,
       // size, the set will naturally resize to accommodate them.
       const uint32_t MaxInitialSize = 32;
       Rooted<GCHashSet<jsid>> idSet(
-          cx, GCHashSet<jsid>(cx, Min(len, MaxInitialSize)));
+          cx, GCHashSet<jsid>(cx, std::min(len, MaxInitialSize)));
 
       /* Step 4b(iii)(4). */
       uint32_t k = 0;
@@ -831,7 +833,7 @@ bool js::Stringify(JSContext* cx, MutableHandleValue vp, JSObject* replacer_,
     /* Step 6. */
     double d;
     MOZ_ALWAYS_TRUE(ToInteger(cx, space, &d));
-    d = Min(10.0, d);
+    d = std::min(10.0, d);
     if (d >= 1 && !gap.appendN(' ', uint32_t(d))) {
       return false;
     }
@@ -841,7 +843,7 @@ bool js::Stringify(JSContext* cx, MutableHandleValue vp, JSObject* replacer_,
     if (!str) {
       return false;
     }
-    size_t len = Min(size_t(10), str->length());
+    size_t len = std::min(size_t(10), str->length());
     if (!gap.appendSubstring(str, 0, len)) {
       return false;
     }

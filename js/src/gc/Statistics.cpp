@@ -11,6 +11,7 @@
 #include "mozilla/Sprintf.h"
 #include "mozilla/TimeStamp.h"
 
+#include <algorithm>
 #include <stdarg.h>
 #include <stdio.h>
 #include <type_traits>
@@ -225,7 +226,7 @@ void Statistics::sccDurations(TimeDuration* total,
   *total = *maxPause = 0;
   for (size_t i = 0; i < sccTimes.length(); i++) {
     *total += sccTimes[i];
-    *maxPause = Max(*maxPause, sccTimes[i]);
+    *maxPause = std::max(*maxPause, sccTimes[i]);
   }
 }
 

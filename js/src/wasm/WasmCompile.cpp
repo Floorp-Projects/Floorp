@@ -21,6 +21,8 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/Unused.h"
 
+#include <algorithm>
+
 #include "jit/ProcessExecutableMemory.h"
 #include "util/Text.h"
 #include "wasm/WasmBaselineCompile.h"
@@ -387,7 +389,7 @@ static bool TieringBeneficial(uint32_t codeSize) {
   // The number of cores we will use is bounded both by the CPU count and the
   // worker count.
 
-  uint32_t cores = Min(cpuCount, workers);
+  uint32_t cores = std::min(cpuCount, workers);
 
   SystemClass cls = ClassifySystem();
 
@@ -664,7 +666,7 @@ class StreamingDecoder {
   size_t currentOffset() const { return d_.currentOffset(); }
 
   bool waitForBytes(size_t numBytes) {
-    numBytes = Min(numBytes, d_.bytesRemain());
+    numBytes = std::min(numBytes, d_.bytesRemain());
     const uint8_t* requiredEnd = d_.currentPosition() + numBytes;
     auto codeBytesEnd = codeBytesEnd_.lock();
     while (codeBytesEnd < requiredEnd) {

@@ -6,6 +6,8 @@
 
 #include "jit/BacktrackingAllocator.h"
 
+#include <algorithm>
+
 #include "jit/BitSet.h"
 #include "js/Printf.h"
 
@@ -2781,7 +2783,7 @@ size_t BacktrackingAllocator::maximumSpillWeight(
     const LiveBundleVector& bundles) {
   size_t maxWeight = 0;
   for (size_t i = 0; i < bundles.length(); i++) {
-    maxWeight = Max(maxWeight, computeSpillWeight(bundles[i]));
+    maxWeight = std::max(maxWeight, computeSpillWeight(bundles[i]));
   }
   return maxWeight;
 }

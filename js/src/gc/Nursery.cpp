@@ -12,6 +12,8 @@
 #include "mozilla/Move.h"
 #include "mozilla/Unused.h"
 
+#include <algorithm>
+
 #include "jsutil.h"
 
 #include "builtin/MapObject.h"
@@ -1302,7 +1304,7 @@ void js::Nursery::poisonAndInitCurrentChunk(size_t extent) {
   if (gc->hasZealMode(ZealMode::GenerationalGC) || !isSubChunkMode()) {
     chunk(currentChunk_).poisonAndInit(runtime());
   } else {
-    extent = Min(capacity_, extent);
+    extent = std::min(capacity_, extent);
     MOZ_ASSERT(extent <= NurseryChunkUsableSize);
     chunk(currentChunk_).poisonAndInit(runtime(), extent);
   }
@@ -1311,8 +1313,8 @@ void js::Nursery::poisonAndInitCurrentChunk(size_t extent) {
 MOZ_ALWAYS_INLINE void js::Nursery::setCurrentEnd() {
   MOZ_ASSERT_IF(isSubChunkMode(),
                 currentChunk_ == 0 && currentEnd_ <= chunk(0).end());
-  currentEnd_ =
-      chunk(currentChunk_).start() + Min(capacity_, NurseryChunkUsableSize);
+  currentEnd_ = chunk(currentChunk_).start() +
+                std::min({capacity_, NurseryChunkUsableSize});
   if (canAllocateStrings_) {
     currentStringEnd_ = currentEnd_;
   }
@@ -1386,9 +1388,9 @@ void js::Nursery::maybeResizeNursery(JS::GCReason reason) {
   // If one of these conditions is true then we always shrink or grow the
   // nursery. This way the thresholds still have an effect even if the goal
   // seeking says the current size is ideal.
-  size_t lowLimit = Max(minNurseryBytes, capacity() / 2);
+  size_t lowLimit = std::max(minNurseryBytes, capacity() / 2);
   size_t highLimit =
-      Min(maxNurseryBytes, (CheckedInt<size_t>(capacity()) * 2).value());
+      std::min(maxNurseryBytes, (CheckedInt<size_t>(capacity()) * 2).value());
   newCapacity = roundSize(mozilla::Clamp(newCapacity, lowLimit, highLimit));
 
   if (capacity() < maxNurseryBytes && promotionRate > GrowThreshold &&
@@ -1443,8 +1445,8 @@ size_t js::Nursery::roundSize(size_t size) {
   if (size >= ChunkSize) {
     size = Round(size, ChunkSize);
   } else {
-    size = Min(Round(size, SubChunkStep),
-               RoundDown(NurseryChunkUsableSize, SubChunkStep));
+    size = std::min(Round(size, SubChunkStep),
+                    RoundDown(NurseryChunkUsableSize, SubChunkStep));
   }
   MOZ_ASSERT(size >= ArenaSize);
   return size;
@@ -1462,7 +1464,8 @@ void js::Nursery::growAllocableSpace(size_t newCapacity) {
     MOZ_ASSERT(currentChunk_ == 0);
 
     // The remainder of the chunk may have been decommitted.
-    if (!chunk(0).markPagesInUseHard(Min(newCapacity, ChunkSize - ArenaSize))) {
+    if (!chunk(0).markPagesInUseHard(
+            std::min(newCapacity, ChunkSize - ArenaSize))) {
       // The OS won't give us the memory we need, we can't grow.
       return;
     }
@@ -1470,7 +1473,8 @@ void js::Nursery::growAllocableSpace(size_t newCapacity) {
     // The capacity has changed and since we were in sub-chunk mode we need to
     // update the poison values / asan infomation for the now-valid region of
     // this chunk.
-    size_t poisonSize = Min(newCapacity, NurseryChunkUsableSize) - capacity();
+    size_t poisonSize =
+        std::min({newCapacity, NurseryChunkUsableSize}) - capacity();
     // Don't poison the trailer.
     MOZ_ASSERT(capacity() + poisonSize <= NurseryChunkUsableSize);
     chunk(0).poisonRange(capacity(), poisonSize, JS_FRESH_NURSERY_PATTERN,
@@ -1540,9 +1544,10 @@ void js::Nursery::shrinkAllocableSpace(size_t newCapacity) {
 
   if (isSubChunkMode()) {
     MOZ_ASSERT(currentChunk_ == 0);
-    chunk(0).poisonRange(newCapacity,
-                         Min(oldCapacity, NurseryChunkUsableSize) - newCapacity,
-                         JS_SWEPT_NURSERY_PATTERN, MemCheckKind::MakeNoAccess);
+    chunk(0).poisonRange(
+        newCapacity,
+        std::min({oldCapacity, NurseryChunkUsableSize}) - newCapacity,
+        JS_SWEPT_NURSERY_PATTERN, MemCheckKind::MakeNoAccess);
 
     AutoLockHelperThreadState lock;
     decommitTask.queueRange(capacity_, chunk(0), lock);

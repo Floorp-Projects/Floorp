@@ -8,6 +8,8 @@
 
 #include "mozilla/ScopeExit.h"
 
+#include <algorithm>
+
 #include "jsutil.h"
 
 #include "gc/Marking.h"
@@ -803,7 +805,7 @@ static void TraceThisAndArguments(JSTracer* trc, const JSJitFrameIter& frame,
     nformals = fun->nargs();
   }
 
-  size_t newTargetOffset = Max(nargs, fun->nargs());
+  size_t newTargetOffset = std::max(nargs, fun->nargs());
 
   Value* argv = layout->argv();
 

@@ -6,6 +6,8 @@
 
 #include "js/MemoryMetrics.h"
 
+#include <algorithm>
+
 #include "gc/GC.h"
 #include "gc/Heap.h"
 #include "gc/Nursery.h"
@@ -134,7 +136,7 @@ static void StoreStringChars(char* buffer, size_t bufferSize, JSString* str) {
 
 NotableStringInfo::NotableStringInfo(JSString* str, const StringInfo& info)
     : StringInfo(info), length(str->length()) {
-  size_t bufferSize = Min(str->length() + 1, size_t(MAX_SAVED_CHARS));
+  size_t bufferSize = std::min(str->length() + 1, size_t(MAX_SAVED_CHARS));
   buffer.reset(js_pod_malloc<char>(bufferSize));
   if (!buffer) {
     MOZ_CRASH("oom");

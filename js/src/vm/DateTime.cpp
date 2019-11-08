@@ -311,7 +311,7 @@ int32_t js::DateTimeInfo::getOrComputeValue(RangeCache& range, int64_t seconds,
 
   if (range.startSeconds <= seconds) {
     int64_t newEndSeconds =
-        Min(range.endSeconds + RangeExpansionAmount, MaxTimeT);
+        std::min({range.endSeconds + RangeExpansionAmount, MaxTimeT});
     if (newEndSeconds >= seconds) {
       int32_t endOffsetMilliseconds = (this->*compute)(newEndSeconds);
       if (endOffsetMilliseconds == range.offsetMilliseconds) {
@@ -335,7 +335,7 @@ int32_t js::DateTimeInfo::getOrComputeValue(RangeCache& range, int64_t seconds,
   }
 
   int64_t newStartSeconds =
-      Max<int64_t>(range.startSeconds - RangeExpansionAmount, MinTimeT);
+      std::max<int64_t>({range.startSeconds - RangeExpansionAmount, MinTimeT});
   if (newStartSeconds <= seconds) {
     int32_t startOffsetMilliseconds = (this->*compute)(newStartSeconds);
     if (startOffsetMilliseconds == range.offsetMilliseconds) {

@@ -21,6 +21,8 @@
 #include "mozilla/BinarySearch.h"
 #include "mozilla/EnumeratedRange.h"
 
+#include <algorithm>
+
 #include "jit/ExecutableAllocator.h"
 #ifdef JS_ION_PERF
 #  include "jit/PerfSpewer.h"
@@ -694,7 +696,7 @@ bool LazyStubTier::createMany(const Uint32Vector& funcExportIndices,
 
   if (!stubSegments_.length() ||
       !stubSegments_[lastStubSegmentIndex_]->hasSpace(codeLength)) {
-    size_t newSegmentSize = Max(codeLength, ExecutableCodePageSize);
+    size_t newSegmentSize = std::max(codeLength, ExecutableCodePageSize);
     UniqueLazyStubSegment newSegment =
         LazyStubSegment::create(codeTier, newSegmentSize);
     if (!newSegment) {

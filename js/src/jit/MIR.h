@@ -17,6 +17,8 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/MacroForEach.h"
 
+#include <algorithm>
+
 #include "jit/AtomicOp.h"
 #include "jit/BaselineIC.h"
 #include "jit/FixedList.h"
@@ -3741,7 +3743,7 @@ class MToDouble : public MToFPInstruction {
 
   TruncateKind truncateKind() const { return implicitTruncate_; }
   void setTruncateKind(TruncateKind kind) {
-    implicitTruncate_ = Max(implicitTruncate_, kind);
+    implicitTruncate_ = std::max(implicitTruncate_, kind);
   }
 
   MOZ_MUST_USE bool writeRecoverData(
@@ -4809,7 +4811,7 @@ class MBinaryArithInstruction : public MBinaryInstruction,
   bool isTruncated() const { return implicitTruncate_ == Truncate; }
   TruncateKind truncateKind() const { return implicitTruncate_; }
   void setTruncateKind(TruncateKind kind) {
-    implicitTruncate_ = Max(implicitTruncate_, kind);
+    implicitTruncate_ = std::max(implicitTruncate_, kind);
   }
 };
 

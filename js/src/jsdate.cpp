@@ -24,6 +24,7 @@
 #include "mozilla/Sprintf.h"
 #include "mozilla/TextUtils.h"
 
+#include <algorithm>
 #include <math.h>
 #include <string.h>
 
@@ -799,7 +800,7 @@ static bool ParseDigitsN(size_t n, size_t* result, const CharT* s, size_t* i,
                          size_t limit) {
   size_t init = *i;
 
-  if (ParseDigits(result, s, i, Min(limit, init + n))) {
+  if (ParseDigits(result, s, i, std::min(limit, init + n))) {
     return (*i - init) == n;
   }
 
@@ -819,7 +820,7 @@ static bool ParseDigitsNOrLess(size_t n, size_t* result, const CharT* s,
                                size_t* i, size_t limit) {
   size_t init = *i;
 
-  if (ParseDigits(result, s, i, Min(limit, init + n))) {
+  if (ParseDigits(result, s, i, std::min(limit, init + n))) {
     return ((*i - init) > 0) && ((*i - init) <= n);
   }
 

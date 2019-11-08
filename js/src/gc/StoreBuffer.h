@@ -355,8 +355,8 @@ class StoreBuffer {
     // overlap.
     void merge(const SlotsEdge& other) {
       MOZ_ASSERT(overlaps(other));
-      uint32_t end = Max(start_ + count_, other.start_ + other.count_);
-      start_ = Min(start_, other.start_);
+      uint32_t end = std::max(start_ + count_, other.start_ + other.count_);
+      start_ = std::min(start_, other.start_);
       count_ = end - start_;
     }
 

@@ -7,6 +7,8 @@
 #ifndef jit_BaselineFrame_h
 #define jit_BaselineFrame_h
 
+#include <algorithm>
+
 #include "jit/JitFrames.h"
 #include "vm/Stack.h"
 
@@ -205,7 +207,7 @@ class BaselineFrame {
     if (isConstructing()) {
       return *(Value*)(reinterpret_cast<const uint8_t*>(this) +
                        BaselineFrame::Size() +
-                       offsetOfArg(Max(numFormalArgs(), numActualArgs())));
+                       offsetOfArg(std::max(numFormalArgs(), numActualArgs())));
     }
     return UndefinedValue();
   }

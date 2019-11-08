@@ -11,6 +11,7 @@
 #include "mozilla/EndianUtils.h"
 #include "mozilla/WrappingOperations.h"
 
+#include <algorithm>
 #include <string.h>
 #include <type_traits>
 
@@ -352,10 +353,12 @@ template <typename DataType, typename BufferPtrType>
 struct DataViewIO {
   typedef typename DataToRepType<DataType>::result ReadWriteType;
 
+  static constexpr auto alignMask =
+      std::min<size_t>(MOZ_ALIGNOF(void*), sizeof(DataType)) - 1;
+
   static void fromBuffer(DataType* dest, BufferPtrType unalignedBuffer,
                          bool wantSwap) {
-    MOZ_ASSERT((reinterpret_cast<uintptr_t>(dest) &
-                (Min<size_t>(MOZ_ALIGNOF(void*), sizeof(DataType)) - 1)) == 0);
+    MOZ_ASSERT((reinterpret_cast<uintptr_t>(dest) & alignMask) == 0);
     Memcpy((uint8_t*)dest, unalignedBuffer, sizeof(ReadWriteType));
     if (wantSwap) {
       ReadWriteType* rwDest = reinterpret_cast<ReadWriteType*>(dest);
@@ -365,8 +368,7 @@ struct DataViewIO {
 
   static void toBuffer(BufferPtrType unalignedBuffer, const DataType* src,
                        bool wantSwap) {
-    MOZ_ASSERT((reinterpret_cast<uintptr_t>(src) &
-                (Min<size_t>(MOZ_ALIGNOF(void*), sizeof(DataType)) - 1)) == 0);
+    MOZ_ASSERT((reinterpret_cast<uintptr_t>(src) & alignMask) == 0);
     ReadWriteType temp = *reinterpret_cast<const ReadWriteType*>(src);
     if (wantSwap) {
       temp = swapBytes(temp);

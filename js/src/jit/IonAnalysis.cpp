@@ -6,6 +6,7 @@
 
 #include "jit/IonAnalysis.h"
 
+#include <algorithm>
 #include <utility>  // for ::std::pair
 
 #include "jit/AliasAnalysis.h"
@@ -1240,7 +1241,7 @@ bool jit::EliminateDeadResumePointOperands(MIRGenerator* mir, MIRGraph& graph) {
           maxDefinition = UINT32_MAX;
           break;
         }
-        maxDefinition = Max(maxDefinition, def->id());
+        maxDefinition = std::max(maxDefinition, def->id());
       }
       if (maxDefinition == UINT32_MAX) {
         continue;
@@ -3659,8 +3660,8 @@ static bool TryEliminateBoundsCheck(BoundsCheckMap& checks, size_t blockIndex,
   // Update the dominating check to cover both ranges, denormalizing the
   // result per the constant offset in the index.
   int32_t newMinimum, newMaximum;
-  if (!SafeSub(Min(minimumA, minimumB), sumA.constant, &newMinimum) ||
-      !SafeSub(Max(maximumA, maximumB), sumA.constant, &newMaximum)) {
+  if (!SafeSub(std::min(minimumA, minimumB), sumA.constant, &newMinimum) ||
+      !SafeSub(std::max(maximumA, maximumB), sumA.constant, &newMaximum)) {
     return false;
   }
 

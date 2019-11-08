@@ -12,6 +12,7 @@
 #include "mozilla/OperatorNewExtensions.h"
 #include "mozilla/TypeTraits.h"
 
+#include <algorithm>
 #include <utility>
 
 #include "ds/LifoAlloc.h"
@@ -99,7 +100,7 @@ class JitAllocPolicy {
       return n;
     }
     MOZ_ASSERT(!(oldSize & mozilla::tl::MulOverflowMask<sizeof(T)>::value));
-    memcpy(n, p, Min(oldSize * sizeof(T), newSize * sizeof(T)));
+    memcpy(n, p, std::min(oldSize * sizeof(T), newSize * sizeof(T)));
     return n;
   }
   template <typename T>

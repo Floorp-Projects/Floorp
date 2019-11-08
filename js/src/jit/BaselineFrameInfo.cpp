@@ -6,6 +6,8 @@
 
 #include "jit/BaselineFrameInfo.h"
 
+#include <algorithm>
+
 #include "jit/BaselineIC.h"
 #ifdef DEBUG
 #  include "jit/BytecodeAnalysis.h"
@@ -23,7 +25,8 @@ bool CompilerFrameInfo::init(TempAllocator& alloc) {
   // scope.
   size_t extra = script->isGlobalCode() ? 1 : 0;
   size_t nstack =
-      Max(script->nslots() - script->nfixed(), size_t(MinJITStackSize)) + extra;
+      std::max(script->nslots() - script->nfixed(), size_t(MinJITStackSize)) +
+      extra;
   if (!stack.init(alloc, nstack)) {
     return false;
   }

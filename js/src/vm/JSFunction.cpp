@@ -16,6 +16,7 @@
 #include "mozilla/Range.h"
 #include "mozilla/Utf8.h"
 
+#include <algorithm>
 #include <string.h>
 
 #include "jsapi.h"
@@ -1445,7 +1446,7 @@ bool JSFunction::finishBoundFunctionInit(JSContext* cx, HandleFunction bound,
       return false;
     }
 
-    length = Max(0.0, targetLength.toNumber() - argCount);
+    length = std::max(0.0, targetLength.toNumber() - argCount);
   } else {
     // 19.2.3.2 Function.prototype.bind, step 5.
     bool hasLength;
@@ -1462,7 +1463,8 @@ bool JSFunction::finishBoundFunctionInit(JSContext* cx, HandleFunction bound,
       }
 
       if (targetLength.isNumber()) {
-        length = Max(0.0, JS::ToInteger(targetLength.toNumber()) - argCount);
+        length =
+            std::max(0.0, JS::ToInteger(targetLength.toNumber()) - argCount);
       }
     }
 

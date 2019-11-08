@@ -9,6 +9,8 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/TimeStamp.h"
 
+#include <algorithm>
+
 #include "gc/RelocationOverlay.h"
 #include "gc/ZoneAllocator.h"
 #include "vm/MutexIDs.h"
@@ -32,8 +34,8 @@ static constexpr float LowFrequencyEagerAllocTriggerFactor = 0.9f;
  * reduce the trigger threshold.
  */
 static constexpr float MinHeapGrowthFactor =
-    1.0f / Min(HighFrequencyEagerAllocTriggerFactor,
-               LowFrequencyEagerAllocTriggerFactor);
+    1.0f / std::min(HighFrequencyEagerAllocTriggerFactor,
+                    LowFrequencyEagerAllocTriggerFactor);
 
 GCSchedulingTunables::GCSchedulingTunables()
     : gcMaxBytes_(0),
@@ -414,11 +416,11 @@ size_t GCHeapThreshold::computeZoneTriggerBytes(
   size_t baseMin = gckind == GC_SHRINK
                        ? tunables.minEmptyChunkCount(lock) * ChunkSize
                        : tunables.gcZoneAllocThresholdBase();
-  size_t base = Max(lastBytes, baseMin);
+  size_t base = std::max(lastBytes, baseMin);
   float trigger = float(base) * growthFactor;
   float triggerMax =
       float(tunables.gcMaxBytes()) / tunables.nonIncrementalFactor();
-  return size_t(Min(triggerMax, trigger));
+  return size_t(std::min(triggerMax, trigger));
 }
 
 void GCHeapThreshold::updateAfterGC(size_t lastBytes, JSGCInvocationKind gckind,
@@ -436,7 +438,7 @@ size_t MallocHeapThreshold::computeZoneTriggerBytes(float growthFactor,
                                                     size_t lastBytes,
                                                     size_t baseBytes,
                                                     const AutoLockGC& lock) {
-  return size_t(float(Max(lastBytes, baseBytes)) * growthFactor);
+  return size_t(float(std::max(lastBytes, baseBytes)) * growthFactor);
 }
 
 void MallocHeapThreshold::updateAfterGC(size_t lastBytes, size_t baseBytes,

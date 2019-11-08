@@ -28,6 +28,7 @@
 #include "mozilla/Utf8.h"  // mozilla::Utf8Unit
 #include "mozilla/Variant.h"
 
+#include <algorithm>
 #include <new>
 
 #include "jsmath.h"
@@ -5674,8 +5675,8 @@ static bool CheckSwitchRange(FunctionValidatorShared& f, ParseNode* stmt,
       return false;
     }
 
-    *low = Min(*low, i);
-    *high = Max(*high, i);
+    *low = std::min(*low, i);
+    *high = std::max(*high, i);
   }
 
   int64_t i64 = (int64_t(*high) - int64_t(*low)) + 1;

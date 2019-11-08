@@ -6,6 +6,8 @@
 
 #include "jit/BaselineFrame-inl.h"
 
+#include <algorithm>
+
 #include "debugger/DebugAPI.h"
 #include "jit/BaselineJIT.h"
 #include "jit/Ion.h"
@@ -33,7 +35,7 @@ void BaselineFrame::trace(JSTracer* trc, const JSJitFrameIter& frameIterator) {
   if (isFunctionFrame()) {
     TraceRoot(trc, &thisArgument(), "baseline-this");
 
-    unsigned numArgs = js::Max(numActualArgs(), numFormalArgs());
+    unsigned numArgs = std::max(numActualArgs(), numFormalArgs());
     TraceRootRange(trc, numArgs + isConstructing(), argv(), "baseline-args");
   }
 

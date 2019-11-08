@@ -18,6 +18,8 @@
 
 #include "wasm/WasmInstance.h"
 
+#include <algorithm>
+
 #include "jit/AtomicOperations.h"
 #include "jit/Disassemble.h"
 #include "jit/InlinableNatives.h"
@@ -199,7 +201,7 @@ bool Instance::callImport(JSContext* cx, uint32_t funcImportIndex,
 
   const ValTypeVector& importArgs = fi.funcType().args();
 
-  size_t numKnownArgs = Min(importArgs.length(), importFun->nargs());
+  size_t numKnownArgs = std::min(importArgs.length(), importFun->nargs());
   for (uint32_t i = 0; i < numKnownArgs; i++) {
     TypeSet::Type type = TypeSet::UnknownType();
     switch (importArgs[i].code()) {
@@ -1646,7 +1648,7 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args) {
   // stored in the first element of the array (which, therefore, must have
   // length >= 1).
   Vector<ExportArg, 8> exportArgs(cx);
-  if (!exportArgs.resize(Max<size_t>(1, funcType->args().length()))) {
+  if (!exportArgs.resize(std::max<size_t>(1, funcType->args().length()))) {
     return false;
   }
 
