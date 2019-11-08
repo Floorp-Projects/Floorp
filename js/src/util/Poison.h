@@ -20,9 +20,9 @@
 #include <string.h>
 
 #include "jstypes.h"
-#include "jsutil.h"  // JS_CRASH_DIAGNOSTICS
 
 #include "js/Value.h"
+#include "util/DiagnosticAssertions.h"
 
 /* Enable poisoning in crash-diagnostics and zeal builds. */
 #if defined(JS_CRASH_DIAGNOSTICS) || defined(JS_GC_ZEAL)
