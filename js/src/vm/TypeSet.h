@@ -27,6 +27,7 @@
 #include "js/Utility.h"      // UniqueChars
 #include "js/Value.h"        // JSVAL_TYPE_*
 #include "js/Vector.h"       // js::Vector
+#include "util/DiagnosticAssertions.h"
 #include "vm/TaggedProto.h"  // js::TaggedProto
 
 struct JS_PUBLIC_API JSContext;
