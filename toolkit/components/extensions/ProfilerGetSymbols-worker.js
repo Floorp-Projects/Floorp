@@ -20,11 +20,7 @@ importScripts(
 // the wasm code, and returns the symbol table or an error. Then it shuts down
 // itself.
 
-const {
-  CompactSymbolTable,
-  WasmMemBuffer,
-  get_compact_symbol_table,
-} = wasm_bindgen;
+const { WasmMemBuffer, get_compact_symbol_table } = wasm_bindgen;
 
 // Read an open OS.File instance into the Uint8Array dataBuf.
 function readFileInto(file, dataBuf) {
@@ -77,39 +73,23 @@ onmessage = async e => {
       debugFile.close();
     }
 
-    const output = new CompactSymbolTable();
-    let succeeded;
     try {
-      succeeded = get_compact_symbol_table(
-        binaryData,
-        debugData,
-        breakpadId,
-        output
-      );
-    } catch (e) {
-      succeeded = false;
-    }
-
-    binaryData.free();
-    if (debugData != binaryData) {
-      debugData.free();
-    }
-
-    if (!succeeded) {
+      let output = get_compact_symbol_table(binaryData, debugData, breakpadId);
+      const result = [
+        output.take_addr(),
+        output.take_index(),
+        output.take_buffer(),
+      ];
       output.free();
-      throw new Error("get_compact_symbol_table returned false");
+      postMessage({ result }, result.map(r => r.buffer));
+    } finally {
+      binaryData.free();
+      if (debugData != binaryData) {
+        debugData.free();
+      }
     }
-
-    const result = [
-      output.take_addr(),
-      output.take_index(),
-      output.take_buffer(),
-    ];
-    output.free();
-
-    postMessage({ result }, result.map(r => r.buffer));
   } catch (error) {
-    postMessage({ error: error.toString() });
+    postMessage({ error });
   }
   close();
 };
