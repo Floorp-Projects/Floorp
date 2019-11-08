@@ -1,8 +1,14 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+const ACTOR = "Bug422543";
+
+let getActor = browser => {
+  return browser.browsingContext.currentWindowGlobal.getActor(ACTOR);
+};
+
 add_task(async function runTests() {
-  if (!SpecialPowers.getBoolPref("fission.sessionHistoryInParent")) {
+  if (!Services.prefs.getBoolPref("fission.sessionHistoryInParent")) {
     await setupAsync();
     let browser = gBrowser.selectedBrowser;
     // Now that we're set up, initialize our frame script.
@@ -55,57 +61,55 @@ add_task(async function runTests() {
     ok(!(await notifyReloadAsync()), "reloading has been canceled");
     await checkListenersAsync("reload", "saw the reload notification");
 
-    function listenOnce(message, arg = {}) {
-      return new Promise(resolve => {
-        let mm = gBrowser.selectedBrowser.messageManager;
-        mm.addMessageListener(message + ":return", function listener(msg) {
-          mm.removeMessageListener(message + ":return", listener);
-          resolve(msg.data);
-        });
-
-        mm.sendAsyncMessage(message, arg);
-      });
+    function sendQuery(message, arg = {}) {
+      return getActor(gBrowser.selectedBrowser).sendQuery(message, arg);
     }
 
     function checkListenersAsync(aLast, aMessage) {
-      return listenOnce("bug422543:getListenerStatus").then(
-        listenerStatuses => {
-          is(listenerStatuses[0], aLast, aMessage);
-          is(listenerStatuses[1], aLast, aMessage);
-        }
-      );
+      return sendQuery("getListenerStatus").then(listenerStatuses => {
+        is(listenerStatuses[0], aLast, aMessage);
+        is(listenerStatuses[1], aLast, aMessage);
+      });
     }
 
     function resetListenersAsync() {
-      return listenOnce("bug422543:resetListeners");
+      return sendQuery("resetListeners");
     }
 
     function notifyReloadAsync() {
-      return listenOnce("bug422543:notifyReload").then(({ rval }) => {
+      return sendQuery("notifyReload").then(({ rval }) => {
         return rval;
       });
     }
 
     function setListenerRetvalAsync(num, val) {
-      return listenOnce("bug422543:setRetval", { num, val });
+      return sendQuery("setRetval", { num, val });
     }
 
-    function setupAsync() {
-      return BrowserTestUtils.openNewForegroundTab(
+    async function setupAsync() {
+      let tab = await BrowserTestUtils.openNewForegroundTab(
         gBrowser,
         "http://mochi.test:8888"
-      ).then(function(tab) {
-        let browser = tab.linkedBrowser;
-        registerCleanupFunction(async function() {
-          await listenOnce("bug422543:cleanup");
-          gBrowser.removeTab(tab);
-        });
+      );
 
-        browser.messageManager.loadFrameScript(
-          getRootDirectory(gTestPath) + "file_bug422543_script.js",
-          false
-        );
+      let base = getRootDirectory(gTestPath).slice(0, -1);
+      ChromeUtils.registerWindowActor(ACTOR, {
+        parent: {
+          moduleURI: `${base}/Bug422543Parent.jsm`,
+        },
+        child: {
+          moduleURI: `${base}/Bug422543Child.jsm`,
+        },
       });
+
+      registerCleanupFunction(async () => {
+        await sendQuery("cleanup");
+        gBrowser.removeTab(tab);
+
+        ChromeUtils.unregisterWindowActor(ACTOR);
+      });
+
+      await sendQuery("init");
     }
     return;
   }
@@ -163,36 +167,35 @@ add_task(async function runTests() {
   checkListeners("reload", "saw the reload notification");
 });
 
-function SHistoryListener() {}
-
-SHistoryListener.prototype = {
-  retval: true,
-  last: "initial",
+class SHistoryListener {
+  constructor() {
+    this.retval = true;
+    this.last = "initial";
+  }
 
   OnHistoryNewEntry(aNewURI) {
     this.last = "newentry";
-  },
+  }
 
   OnHistoryGotoIndex() {
     this.last = "gotoindex";
-  },
+  }
 
   OnHistoryPurge() {
     this.last = "purge";
-  },
+  }
 
   OnHistoryReload() {
     this.last = "reload";
     return this.retval;
-  },
+  }
 
-  OnHistoryReplaceEntry() {},
-
-  QueryInterface: ChromeUtils.generateQI([
-    Ci.nsISHistoryListener,
-    Ci.nsISupportsWeakReference,
-  ]),
-};
+  OnHistoryReplaceEntry() {}
+}
+SHistoryListener.prototype.QueryInterface = ChromeUtils.generateQI([
+  Ci.nsISHistoryListener,
+  Ci.nsISupportsWeakReference,
+]);
 
 let listeners = [new SHistoryListener(), new SHistoryListener()];
 
@@ -215,38 +218,37 @@ function setListenerRetval(num, val) {
   listeners[num].retval = val;
 }
 
-function setup() {
-  return BrowserTestUtils.openNewForegroundTab(
+async function setup() {
+  let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
     "http://mochi.test:8888"
-  ).then(function(tab) {
-    let browser = tab.linkedBrowser;
-    registerCleanupFunction(async function() {
-      for (let listener of listeners) {
-        browser.browsingContext.sessionHistory.removeSHistoryListener(listener);
-      }
-      gBrowser.removeTab(tab);
-    });
+  );
+
+  let browser = tab.linkedBrowser;
+  registerCleanupFunction(async function() {
     for (let listener of listeners) {
-      browser.browsingContext.sessionHistory.addSHistoryListener(listener);
+      browser.browsingContext.sessionHistory.removeSHistoryListener(listener);
     }
+    gBrowser.removeTab(tab);
   });
+  for (let listener of listeners) {
+    browser.browsingContext.sessionHistory.addSHistoryListener(listener);
+  }
 }
 
 function whenPageShown(aBrowser, aNavigation) {
-  let listener = ContentTask.spawn(aBrowser, null, function() {
-    return new Promise(resolve => {
-      addEventListener(
-        "pageshow",
-        function onLoad() {
-          removeEventListener("pageshow", onLoad, true);
-          resolve();
-        },
-        true
-      );
-    });
+  let promise = new Promise(resolve => {
+    let unregister = BrowserTestUtils.addContentEventListener(
+      aBrowser,
+      "pageshow",
+      () => {
+        unregister();
+        resolve();
+      },
+      { capture: true }
+    );
   });
 
   aNavigation();
-  return listener;
+  return promise;
 }
