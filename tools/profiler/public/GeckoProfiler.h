@@ -30,6 +30,7 @@
 // avoid the need for many #ifdefs.
 
 #  define AUTO_PROFILER_INIT
+#  define AUTO_PROFILER_INIT2
 
 #  define PROFILER_REGISTER_THREAD(name)
 #  define PROFILER_UNREGISTER_THREAD()
@@ -300,8 +301,12 @@ static constexpr mozilla::PowerOfTwo32 PROFILER_DEFAULT_STARTUP_ENTRIES =
 // (except profiler_start(), which will call profiler_init() if it hasn't
 // already run).
 void profiler_init(void* stackTop);
+void profiler_init_threadmanager();
 
+// Call this as early as possible
 #  define AUTO_PROFILER_INIT mozilla::AutoProfilerInit PROFILER_RAII
+// Call this after the nsThreadManager is Init()ed
+#  define AUTO_PROFILER_INIT2 mozilla::AutoProfilerInit2 PROFILER_RAII
 
 // Clean up the profiler module, stopping it if required. This function may
 // also save a shutdown profile if requested. No profiler calls should happen
@@ -955,6 +960,17 @@ class MOZ_RAII AutoProfilerInit {
   }
 
   ~AutoProfilerInit() { profiler_shutdown(); }
+
+ private:
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
+class MOZ_RAII AutoProfilerInit2 {
+ public:
+  explicit AutoProfilerInit2(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM) {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    profiler_init_threadmanager();
+  }
 
  private:
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
