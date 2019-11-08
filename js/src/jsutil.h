@@ -77,25 +77,6 @@ static inline void Reverse(T* beg, T* end) {
   }
 }
 
-template <class T, class Pred>
-static inline T* RemoveIf(T* begin, T* end, Pred pred) {
-  T* result = begin;
-  for (T* p = begin; p != end; p++) {
-    if (!pred(*p)) {
-      *result++ = *p;
-    }
-  }
-  return result;
-}
-
-template <class Container, class Pred>
-static inline size_t EraseIf(Container& c, Pred pred) {
-  auto newEnd = RemoveIf(c.begin(), c.end(), pred);
-  size_t removed = c.end() - newEnd;
-  c.shrinkBy(removed);
-  return removed;
-}
-
 template <class Container1, class Container2>
 static inline bool EqualContainers(const Container1& lhs,
                                    const Container2& rhs) {
