@@ -200,12 +200,10 @@ class Worker extends PureComponent {
         )
       : null;
 
-    const scope = worker.scope
-      ? span(
-          { title: worker.scope, className: "worker__scope js-sw-scope" },
-          this.formatScope(worker.scope)
-        )
-      : null;
+    const scope = span(
+      { title: worker.scope, className: "worker__scope js-sw-scope" },
+      this.formatScope(worker.scope)
+    );
 
     return li(
       { className: "worker js-sw-container" },
