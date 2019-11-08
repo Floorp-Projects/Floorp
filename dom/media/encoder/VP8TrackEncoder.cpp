@@ -339,11 +339,8 @@ nsresult VP8TrackEncoder::PrepareRawFrame(VideoChunk& aChunk) {
       Destroy();
       nsresult rv = Init(imgSize.width, imgSize.height, intrinsicSize.width,
                          intrinsicSize.height);
-      if (NS_FAILED(rv)) {
-        VP8LOG(LogLevel::Error, "Failed to recreate VP8 encoder.");
-        return rv;
-      }
       VP8LOG(LogLevel::Info, "Recreated VP8 encoder.");
+      NS_ENSURE_SUCCESS(rv, rv);
     }
   }
 
@@ -451,7 +448,7 @@ nsresult VP8TrackEncoder::GetEncodedTrack(
   MOZ_ASSERT(mInitialized || mCanceled);
 
   if (mCanceled || mEncodingComplete) {
-    return NS_ERROR_DOM_MEDIA_CANCELED;
+    return NS_ERROR_FAILURE;
   }
 
   if (!mInitialized) {
