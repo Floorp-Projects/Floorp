@@ -76,7 +76,7 @@ void Sampler::Disable(PSLockRef aLock) {}
 template <typename Func>
 void Sampler::SuspendAndSampleAndResumeThread(
     PSLockRef aLock, const RegisteredThread& aRegisteredThread,
-    const Func& aProcessRegs) {
+    const TimeStamp& aNow, const Func& aProcessRegs) {
   thread_act_t samplee_thread =
       aRegisteredThread.GetPlatformData()->ProfiledThread();
 
@@ -119,7 +119,7 @@ void Sampler::SuspendAndSampleAndResumeThread(
     regs.mFP = reinterpret_cast<Address>(state.REGISTER_FIELD(bp));
     regs.mLR = 0;
 
-    aProcessRegs(regs);
+    aProcessRegs(regs, aNow);
   }
 
 #undef REGISTER_FIELD
