@@ -116,7 +116,7 @@ void MacroAssembler::appendSignatureType(MoveOp::Type type) {
       signature_ |= ArgType_General;
       break;
     case MoveOp::DOUBLE:
-      signature_ |= ArgType_Double;
+      signature_ |= ArgType_Float64;
       break;
     case MoveOp::FLOAT32:
       signature_ |= ArgType_Float32;
