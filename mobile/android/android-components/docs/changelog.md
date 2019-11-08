@@ -24,6 +24,17 @@ permalink: /changelog/
 * **concept-sync**
   * Added new `LockableStore` to facilitate syncing of "lockable" stores (such as `SyncableLoginsStore`).
 
+* **feature-sitepermissions**
+  * Added a new get operator to `SitePermissions` to facilitate the retrieval of permissions.
+  ```Kotlin
+    val sitePermissions = SitePermissions(
+            "dev.mozilla.org",
+            notification = ALLOWED,
+            savedAt = 0)
+
+    sitePermissions[Permission.LOCATION] //  ALLOWED will be returned
+  ```
+
 # 20.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v19.0.0...v20.0.0)
