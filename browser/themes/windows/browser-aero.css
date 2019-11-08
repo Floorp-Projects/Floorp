@@ -9,8 +9,8 @@
 @media (-moz-os-version: windows-win7),
        (-moz-os-version: windows-win8) {
   @media (-moz-windows-classic: 0) {
-    #main-window[sizemode="normal"] > #navigator-toolbox > #titlebar > #toolbar-menubar:not([autohide="true"]) > #menubar-items,
-    #main-window[sizemode="normal"] > #navigator-toolbox > #titlebar > #toolbar-menubar[autohide="true"][inactive] + #TabsToolbar > .toolbar-items {
+    #main-window[sizemode="normal"] #navigator-toolbox > #titlebar > #toolbar-menubar:not([autohide="true"]) > #menubar-items,
+    #main-window[sizemode="normal"] #navigator-toolbox > #titlebar > #toolbar-menubar[autohide="true"][inactive] + #TabsToolbar > .toolbar-items {
       margin-top: 1px;
     }
     /**
@@ -288,7 +288,7 @@
   @media (-moz-os-version: windows-win8) {
     /* Artificially draw window borders that are covered by lwtheme, see bug 591930.
      * Borders for win7 are below, win10 doesn't need them. */
-    #main-window[sizemode="normal"] > #navigator-toolbox:-moz-lwtheme {
+    #main-window[sizemode="normal"] #navigator-toolbox:-moz-lwtheme {
       border-top: 1px solid @glassShadowColor@;
     }
   }
@@ -362,13 +362,13 @@
 
   /* Artificially draw window borders that are covered by lwtheme, see bug 591930.
    * We use a different border for win8, and this is not necessary on win10+ */
-  #main-window[sizemode="normal"] > #navigator-toolbox:-moz-lwtheme {
+  #main-window[sizemode="normal"] #navigator-toolbox:-moz-lwtheme {
     border-top: 1px solid @glassActiveBorderColor@;
     padding-top: 1px;
     box-shadow: 0 1px 0 rgba(255,255,255,.6) inset;
   }
 
-  #main-window[sizemode="normal"] > #navigator-toolbox:-moz-lwtheme:-moz-window-inactive {
+  #main-window[sizemode="normal"] #navigator-toolbox:-moz-lwtheme:-moz-window-inactive {
     border-top-color: @glassInactiveBorderColor@;
   }
 }
@@ -384,13 +384,13 @@
     }
 
     /* Render a window top border for lwthemes: */
-    #main-window[tabsintitlebar][sizemode="normal"] > #navigator-toolbox:-moz-lwtheme {
+    #main-window[tabsintitlebar][sizemode="normal"] #navigator-toolbox:-moz-lwtheme {
       background-image: linear-gradient(to bottom,
             @glassActiveBorderColor@ 0, @glassActiveBorderColor@ 1px,
             rgba(255,255,255,.6) 1px, rgba(255,255,255,.6) 2px, transparent 2px);
     }
 
-    #main-window[tabsintitlebar][sizemode="normal"] > #navigator-toolbox:-moz-lwtheme:-moz-window-inactive {
+    #main-window[tabsintitlebar][sizemode="normal"] #navigator-toolbox:-moz-lwtheme:-moz-window-inactive {
       background-image: linear-gradient(to bottom,
             @glassInactiveBorderColor@ 0, @glassInactiveBorderColor@ 1px,
             rgba(255,255,255,.6) 1px, rgba(255,255,255,.6) 2px, transparent 2px);
