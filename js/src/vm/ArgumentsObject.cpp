@@ -13,6 +13,7 @@
 #include "gc/FreeOp.h"
 #include "jit/JitFrames.h"
 #include "js/StableStringChars.h"
+#include "util/BitArray.h"
 #include "vm/AsyncFunction.h"
 #include "vm/GlobalObject.h"
 #include "vm/Stack.h"

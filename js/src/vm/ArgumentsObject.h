@@ -10,6 +10,7 @@
 #include "mozilla/MemoryReporting.h"
 
 #include "gc/Barrier.h"
+#include "util/BitArray.h"
 #include "vm/NativeObject.h"
 
 namespace js {
