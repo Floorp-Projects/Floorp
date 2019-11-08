@@ -20,6 +20,7 @@
         'pk11_cipherop_unittest.cc',
         'pk11_curve25519_unittest.cc',
         'pk11_der_private_key_import_unittest.cc',
+        'pk11_des_unittest.cc',
         'pk11_ecdsa_unittest.cc',
         'pk11_encrypt_derive_unittest.cc',
         'pk11_find_certs_unittest.cc',
