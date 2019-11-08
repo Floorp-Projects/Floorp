@@ -62,9 +62,10 @@ class IDBTransaction final : public DOMEventTargetHelper, public nsIRunnable {
   enum ReadyState { INITIAL = 0, LOADING, COMMITTING, DONE };
 
  private:
+  // TODO: Only non-const because of Bug 1575173.
   RefPtr<IDBDatabase> mDatabase;
   RefPtr<DOMException> mError;
-  nsTArray<nsString> mObjectStoreNames;
+  const nsTArray<nsString> mObjectStoreNames;
   nsTArray<RefPtr<IDBObjectStore>> mObjectStores;
   nsTArray<RefPtr<IDBObjectStore>> mDeletedObjectStores;
   RefPtr<StrongWorkerRef> mWorkerRef;
@@ -88,12 +89,12 @@ class IDBTransaction final : public DOMEventTargetHelper, public nsIRunnable {
   nsresult mAbortCode;
   uint32_t mPendingRequestCount;
 
-  nsString mFilename;
-  uint32_t mLineNo;
-  uint32_t mColumn;
+  const nsString mFilename;
+  const uint32_t mLineNo;
+  const uint32_t mColumn;
 
   ReadyState mReadyState;
-  Mode mMode;
+  const Mode mMode;
 
   bool mCreating;
   bool mRegistered;
@@ -269,7 +270,8 @@ class IDBTransaction final : public DOMEventTargetHelper, public nsIRunnable {
 
  private:
   IDBTransaction(IDBDatabase* aDatabase,
-                 const nsTArray<nsString>& aObjectStoreNames, Mode aMode);
+                 const nsTArray<nsString>& aObjectStoreNames, Mode aMode,
+                 nsString aFilename, uint32_t aLineNo, uint32_t aColumn);
   ~IDBTransaction();
 
   void AbortInternal(nsresult aAbortCode,
