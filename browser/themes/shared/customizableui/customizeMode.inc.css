@@ -280,6 +280,10 @@ toolbarpaletteitem[place=toolbar] > toolbarspring {
   margin-bottom: 5px;
 }
 
+toolbarpaletteitem > #search-container > #searchbar > .searchbar-textbox {
+  visibility: hidden; /* Hide searchbar placeholder text in customize mode */
+}
+
 #wrapper-edit-controls > #edit-controls > toolbarbutton > .toolbarbutton-icon {
   opacity: 1; /* To ensure these buttons always look enabled in customize mode */
 }
