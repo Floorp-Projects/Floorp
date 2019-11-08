@@ -170,7 +170,7 @@ static bool ToLength(JSContext* cx, HandleValue v, uint64_t* out) {
   if (d <= 0.0) {
     *out = 0;
   } else {
-    *out = uint64_t(Min(d, DOUBLE_INTEGRAL_PRECISION_LIMIT - 1));
+    *out = uint64_t(std::min(d, DOUBLE_INTEGRAL_PRECISION_LIMIT - 1));
   }
   return true;
 }
@@ -584,8 +584,8 @@ static bool DeletePropertiesOrThrow(JSContext* cx, HandleObject obj,
       !obj->as<NativeObject>().denseElementsAreSealed()) {
     if (len <= UINT32_MAX) {
       // Skip forward to the initialized elements of this array.
-      len = Min(uint32_t(len),
-                obj->as<ArrayObject>().getDenseInitializedLength());
+      len = std::min(uint32_t(len),
+                     obj->as<ArrayObject>().getDenseInitializedLength());
     }
   }
 
@@ -961,7 +961,7 @@ bool js::ArraySetLength(JSContext* cx, Handle<ArrayObject*> arr, HandleId id,
   // invariant.  (Capacity was already reduced during element deletion, if
   // necessary.)
   ObjectElements* header = arr->getElementsHeader();
-  header->initializedLength = Min(header->initializedLength, newLen);
+  header->initializedLength = std::min(header->initializedLength, newLen);
 
   if (!arr->isExtensible()) {
     arr->shrinkCapacityToInitializedLength(cx);
@@ -1281,7 +1281,8 @@ static bool ArrayJoinDenseKernel(JSContext* cx, SeparatorOp sepOp,
   // length > initLength we rely on the second loop to add the
   // other elements.
   MOZ_ASSERT(*numProcessed == 0);
-  uint64_t initLength = Min<uint64_t>(obj->getDenseInitializedLength(), length);
+  uint64_t initLength =
+      std::min<uint64_t>(obj->getDenseInitializedLength(), length);
   MOZ_ASSERT(initLength <= UINT32_MAX,
              "initialized length shouldn't exceed UINT32_MAX");
   uint32_t initLengthClamped = uint32_t(initLength);
@@ -2838,7 +2839,7 @@ static ArrayObject* CopyDenseArrayElements(JSContext* cx,
              "initialized length shouldn't exceed UINT32_MAX");
   uint32_t newlength = 0;
   if (initlen > begin) {
-    newlength = Min<uint32_t>(initlen - begin, count);
+    newlength = std::min<uint32_t>(initlen - begin, count);
   }
 
   ArrayObject* narr = NewFullyAllocatedArrayTryReuseGroup(cx, obj, newlength);
@@ -2866,7 +2867,7 @@ static bool CopyArrayElements(JSContext* cx, HandleObject obj, uint64_t begin,
   // Use dense storage for new indexed properties where possible.
   {
     uint32_t index = 0;
-    uint32_t limit = Min<uint32_t>(count, JSID_INT_MAX);
+    uint32_t limit = std::min<uint32_t>(count, JSID_INT_MAX);
     for (; index < limit; index++) {
       bool hole;
       if (!CheckForInterrupt(cx) ||
@@ -2937,9 +2938,9 @@ static bool array_splice_impl(JSContext* cx, unsigned argc, Value* vp,
   /* Step 4. */
   uint64_t actualStart;
   if (relativeStart < 0) {
-    actualStart = Max(len + relativeStart, 0.0);
+    actualStart = std::max(len + relativeStart, 0.0);
   } else {
-    actualStart = Min(relativeStart, double(len));
+    actualStart = std::min(relativeStart, double(len));
   }
 
   /* Step 5. */
@@ -2959,7 +2960,7 @@ static bool array_splice_impl(JSContext* cx, unsigned argc, Value* vp,
 
     /* Step 7.c. */
     actualDeleteCount =
-        Min(Max(deleteCountDouble, 0.0), double(len - actualStart));
+        std::min(std::max(deleteCountDouble, 0.0), double(len - actualStart));
 
     /* Step 8. */
     uint32_t insertCount = args.length() - 2;
@@ -3616,7 +3617,7 @@ static bool ArraySliceDenseKernel(JSContext* cx, ArrayObject* arr,
   uint32_t count = end - begin;
   size_t initlen = arr->getDenseInitializedLength();
   if (initlen > begin) {
-    uint32_t newlength = Min<uint32_t>(initlen - begin, count);
+    uint32_t newlength = std::min<uint32_t>(initlen - begin, count);
     if (newlength > 0) {
       if (!result->ensureElements(cx, newlength)) {
         return false;

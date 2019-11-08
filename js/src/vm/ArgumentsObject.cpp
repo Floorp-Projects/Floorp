@@ -8,6 +8,8 @@
 
 #include "mozilla/PodOperations.h"
 
+#include <algorithm>
+
 #include "gc/FreeOp.h"
 #include "jit/JitFrames.h"
 #include "js/StableStringChars.h"
@@ -74,7 +76,8 @@ static void CopyStackFrameArguments(const AbstractFramePtr frame,
   MOZ_ASSERT_IF(frame.isInterpreterFrame(),
                 !frame.asInterpreterFrame()->runningInJit());
 
-  MOZ_ASSERT(Max(frame.numActualArgs(), frame.numFormalArgs()) == totalArgs);
+  MOZ_ASSERT(std::max(frame.numActualArgs(), frame.numFormalArgs()) ==
+             totalArgs);
 
   /* Copy arguments. */
   Value* src = frame.argv();
@@ -148,7 +151,7 @@ struct CopyJitFrameArgs {
         jit::CalleeTokenToFunction(frame_->calleeToken())->nargs();
     MOZ_ASSERT(numActuals <= totalArgs);
     MOZ_ASSERT(numFormals <= totalArgs);
-    MOZ_ASSERT(Max(numActuals, numFormals) == totalArgs);
+    MOZ_ASSERT(std::max(numActuals, numFormals) == totalArgs);
 
     /* Copy all arguments. */
     Value* src = frame_->argv() + 1; /* +1 to skip this. */
@@ -189,7 +192,7 @@ struct CopyScriptFrameIterArgs {
     unsigned numFormals = iter_.calleeTemplate()->nargs();
     MOZ_ASSERT(numActuals <= totalArgs);
     MOZ_ASSERT(numFormals <= totalArgs);
-    MOZ_ASSERT(Max(numActuals, numFormals) == totalArgs);
+    MOZ_ASSERT(std::max(numActuals, numFormals) == totalArgs);
 
     if (numActuals < numFormals) {
       GCPtrValue* dst = dstBase + numActuals;
@@ -285,7 +288,7 @@ ArgumentsObject* ArgumentsObject::create(JSContext* cx, HandleFunction callee,
   RootedObjectGroup group(cx, templateObj->group());
 
   unsigned numFormals = callee->nargs();
-  unsigned numArgs = Max(numActuals, numFormals);
+  unsigned numArgs = std::max(numActuals, numFormals);
   unsigned numBytes = ArgumentsData::bytesRequired(numArgs);
 
   Rooted<ArgumentsObject*> obj(cx);
@@ -390,7 +393,7 @@ ArgumentsObject* ArgumentsObject::finishForIonPure(JSContext* cx,
 
   unsigned numActuals = frame->numActualArgs();
   unsigned numFormals = callee->nargs();
-  unsigned numArgs = Max(numActuals, numFormals);
+  unsigned numArgs = std::max(numActuals, numFormals);
   unsigned numBytes = ArgumentsData::bytesRequired(numArgs);
 
   ArgumentsData* data = reinterpret_cast<ArgumentsData*>(

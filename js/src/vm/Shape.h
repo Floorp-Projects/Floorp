@@ -15,6 +15,8 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/TemplateLib.h"
 
+#include <algorithm>
+
 #include "jsapi.h"
 #include "jsfriendapi.h"
 #include "jstypes.h"
@@ -1238,7 +1240,7 @@ class Shape : public gc::TenuredCell {
     // layout. This means all non-native object shapes have nfixed == 0 and
     // slotSpan == 0.
     uint32_t free = clasp->isProxy() ? 0 : JSSLOT_FREE(clasp);
-    return hasMissingSlot() ? free : Max(free, maybeSlot() + 1);
+    return hasMissingSlot() ? free : std::max(free, maybeSlot() + 1);
   }
 
   uint32_t slotSpan() const { return slotSpan(getObjectClass()); }

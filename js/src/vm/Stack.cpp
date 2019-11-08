@@ -6,6 +6,7 @@
 
 #include "vm/Stack-inl.h"
 
+#include <algorithm>
 #include <utility>
 
 #include "debugger/DebugAPI.h"
@@ -345,7 +346,7 @@ void InterpreterFrame::trace(JSTracer* trc, Value* sp, jsbytecode* pc) {
     TraceRootRange(trc, 2, argv_ - 2, "fp callee and this");
 
     // Trace arguments.
-    unsigned argc = Max(numActualArgs(), numFormalArgs());
+    unsigned argc = std::max(numActualArgs(), numFormalArgs());
     TraceRootRange(trc, argc + isConstructing(), argv_, "fp argv");
   } else {
     // Trace newTarget.

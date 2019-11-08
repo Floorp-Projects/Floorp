@@ -10,6 +10,8 @@
 #include "mozilla/Range.h"
 #include "mozilla/Unused.h"
 
+#include <algorithm>
+
 #include "vm/JSObject-inl.h"
 #include "vm/StringType-inl.h"
 
@@ -58,7 +60,7 @@ bool StringBuffer::inflateChars() {
    * value >= sInlineCapacity. Since Latin1CharBuffer::sInlineCapacity >
    * TwoByteCharBuffer::sInlineCapacitychars, we'd always malloc here.
    */
-  size_t capacity = Max(reserved_, latin1Chars().length());
+  size_t capacity = std::max(reserved_, latin1Chars().length());
   if (!twoByte.reserve(capacity)) {
     return false;
   }

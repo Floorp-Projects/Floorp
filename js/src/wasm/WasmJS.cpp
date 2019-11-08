@@ -23,6 +23,8 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/RangedPtr.h"
 
+#include <algorithm>
+
 #include "builtin/Promise.h"
 #include "builtin/TypedObject.h"
 #include "gc/FreeOp.h"
@@ -1122,7 +1124,7 @@ static SharedCompileArgs InitCompileArgs(JSContext* cx,
 static bool ReportCompileWarnings(JSContext* cx,
                                   const UniqueCharsVector& warnings) {
   // Avoid spamming the console.
-  size_t numWarnings = Min<size_t>(warnings.length(), 3);
+  size_t numWarnings = std::min<size_t>(warnings.length(), 3);
 
   for (size_t i = 0; i < numWarnings; i++) {
     if (!JS_ReportErrorFlagsAndNumberASCII(
@@ -3314,7 +3316,7 @@ class CompileStreamTask : public PromiseHelperTask, public JS::StreamConsumer {
       }
       case Code: {
         size_t copyLength =
-            Min<size_t>(length, codeBytes_.end() - codeBytesEnd_);
+            std::min<size_t>(length, codeBytes_.end() - codeBytesEnd_);
         memcpy(codeBytesEnd_, begin, copyLength);
         codeBytesEnd_ += copyLength;
 

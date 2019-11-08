@@ -10,6 +10,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 
+#include <algorithm>
 #include <stdint.h>
 
 #include "jsfriendapi.h"
@@ -731,7 +732,7 @@ class NativeObject : public JSObject {
 
   uint32_t numUsedFixedSlots() const {
     uint32_t nslots = lastProperty()->slotSpan(getClass());
-    return Min(nslots, numFixedSlots());
+    return std::min(nslots, numFixedSlots());
   }
 
   uint32_t slotSpan() const {

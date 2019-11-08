@@ -10,6 +10,8 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/MathAlgorithms.h"
 
+#include <algorithm>
+
 #include "jit/shared/Assembler-shared.h"
 
 namespace js {
@@ -390,7 +392,7 @@ class AssemblerBuffer {
     // If it is sufficiently far from the start and end of the buffer,
     // use the finger to start midway through the list.
     int finger_dist = abs(offset - finger_offset);
-    if (finger_dist < Min(offset, int(bufferSize - offset))) {
+    if (finger_dist < std::min(offset, int(bufferSize - offset))) {
       if (finger_offset < offset) {
         return getInstForwards(off, finger, finger_offset, true);
       }

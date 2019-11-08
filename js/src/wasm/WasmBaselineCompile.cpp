@@ -111,6 +111,7 @@
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Maybe.h"
 
+#include <algorithm>
 #include <utility>
 
 #include "jit/AtomicOp.h"
@@ -1670,7 +1671,7 @@ class BaseStackFrame final : public BaseStackFrameAllocator {
 #else
     masm.Push(r);
 #endif
-    maxFramePushed_ = Max(maxFramePushed_, masm.framePushed());
+    maxFramePushed_ = std::max(maxFramePushed_, masm.framePushed());
     MOZ_ASSERT(stackBefore + StackSizeOfPtr == currentStackHeight());
     return currentStackHeight();
   }
@@ -1683,7 +1684,7 @@ class BaseStackFrame final : public BaseStackFrameAllocator {
 #else
     masm.Push(r);
 #endif
-    maxFramePushed_ = Max(maxFramePushed_, masm.framePushed());
+    maxFramePushed_ = std::max(maxFramePushed_, masm.framePushed());
     MOZ_ASSERT(stackBefore + StackSizeOfFloat == currentStackHeight());
     return currentStackHeight();
   }
@@ -1696,7 +1697,7 @@ class BaseStackFrame final : public BaseStackFrameAllocator {
 #else
     masm.Push(r);
 #endif
-    maxFramePushed_ = Max(maxFramePushed_, masm.framePushed());
+    maxFramePushed_ = std::max(maxFramePushed_, masm.framePushed());
     MOZ_ASSERT(stackBefore + StackSizeOfDouble == currentStackHeight());
     return currentStackHeight();
   }
@@ -1787,7 +1788,7 @@ class BaseStackFrame final : public BaseStackFrameAllocator {
 #else
       masm.reserveStack(bytes);
 #endif
-      maxFramePushed_ = Max(maxFramePushed_, masm.framePushed());
+      maxFramePushed_ = std::max(maxFramePushed_, masm.framePushed());
     }
     return end;
   }
