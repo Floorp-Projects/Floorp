@@ -391,14 +391,17 @@ nsresult HeadlessWidget::AttachNativeKeyEvent(WidgetKeyboardEvent& aEvent) {
   return bindings.AttachNativeKeyEvent(aEvent);
 }
 
-void HeadlessWidget::GetEditCommands(NativeKeyBindingsType aType,
+bool HeadlessWidget::GetEditCommands(NativeKeyBindingsType aType,
                                      const WidgetKeyboardEvent& aEvent,
                                      nsTArray<CommandInt>& aCommands) {
   // Validate the arguments.
-  nsIWidget::GetEditCommands(aType, aEvent, aCommands);
+  if (NS_WARN_IF(!nsIWidget::GetEditCommands(aType, aEvent, aCommands))) {
+    return false;
+  }
 
   HeadlessKeyBindings& bindings = HeadlessKeyBindings::GetInstance();
   bindings.GetEditCommands(aType, aEvent, aCommands);
+  return true;
 }
 
 nsresult HeadlessWidget::DispatchEvent(WidgetGUIEvent* aEvent,
