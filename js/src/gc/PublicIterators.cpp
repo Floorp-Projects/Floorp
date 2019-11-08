@@ -145,13 +145,12 @@ template <typename T, typename Callback>
 static void IterateScriptsImpl(JSContext* cx, Realm* realm, void* data,
                                Callback scriptCallback) {
   MOZ_ASSERT(!cx->suppressGC);
-  AutoEmptyNursery empty(cx);
-  AutoPrepareForTracing prep(cx);
+  AutoEmptyNurseryAndPrepareForTracing prep(cx);
   JS::AutoSuppressGCAnalysis nogc;
 
   if (realm) {
     Zone* zone = realm->zone();
-    for (auto iter = zone->cellIter<T>(empty); !iter.done(); iter.next()) {
+    for (auto iter = zone->cellIter<T>(prep); !iter.done(); iter.next()) {
       T* script = iter;
       if (script->realm() != realm) {
         continue;
@@ -160,7 +159,7 @@ static void IterateScriptsImpl(JSContext* cx, Realm* realm, void* data,
     }
   } else {
     for (ZonesIter zone(cx->runtime(), SkipAtoms); !zone.done(); zone.next()) {
-      for (auto iter = zone->cellIter<T>(empty); !iter.done(); iter.next()) {
+      for (auto iter = zone->cellIter<T>(prep); !iter.done(); iter.next()) {
         T* script = iter;
         DoScriptCallback(cx, data, script, scriptCallback, nogc);
       }
