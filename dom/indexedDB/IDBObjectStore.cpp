@@ -2353,27 +2353,20 @@ void IDBObjectStore::RefreshSpec(bool aMayDelete) {
 
   const nsTArray<ObjectStoreSpec>& objectStores = dbSpec->objectStores();
 
-  bool found = false;
+  const auto foundIt = std::find_if(objectStores.cbegin(), objectStores.cend(),
+                                    [id = Id()](const auto& objSpec) {
+                                      return objSpec.metadata().id() == id;
+                                    });
+  const bool found = foundIt != objectStores.cend();
+  if (found) {
+    mSpec = &*foundIt;
 
-  for (uint32_t objCount = objectStores.Length(), objIndex = 0;
-       objIndex < objCount; objIndex++) {
-    const ObjectStoreSpec& objSpec = objectStores[objIndex];
+    for (auto& index : mIndexes) {
+      index->RefreshMetadata(aMayDelete);
+    }
 
-    if (objSpec.metadata().id() == Id()) {
-      mSpec = &objSpec;
-
-      for (uint32_t idxCount = mIndexes.Length(), idxIndex = 0;
-           idxIndex < idxCount; idxIndex++) {
-        mIndexes[idxIndex]->RefreshMetadata(aMayDelete);
-      }
-
-      for (uint32_t idxCount = mDeletedIndexes.Length(), idxIndex = 0;
-           idxIndex < idxCount; idxIndex++) {
-        mDeletedIndexes[idxIndex]->RefreshMetadata(false);
-      }
-
-      found = true;
-      break;
+    for (auto& index : mDeletedIndexes) {
+      index->RefreshMetadata(false);
     }
   }
 

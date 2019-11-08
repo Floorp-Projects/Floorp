@@ -88,24 +88,16 @@ void IDBIndex::RefreshMetadata(bool aMayDelete) {
   AssertIsOnOwningThread();
   MOZ_ASSERT_IF(mDeletedMetadata, mMetadata == mDeletedMetadata);
 
-  const nsTArray<IndexMetadata>& indexes = mObjectStore->Spec().indexes();
-
-  bool found = false;
-
-  for (uint32_t count = indexes.Length(), index = 0; index < count; index++) {
-    const IndexMetadata& metadata = indexes[index];
-
-    if (metadata.id() == Id()) {
-      mMetadata = &metadata;
-
-      found = true;
-      break;
-    }
-  }
+  const auto& indexes = mObjectStore->Spec().indexes();
+  const auto foundIt = std::find_if(
+      indexes.cbegin(), indexes.cend(),
+      [id = Id()](const auto& metadata) { return metadata.id() == id; });
+  const bool found = foundIt != indexes.cend();
 
   MOZ_ASSERT_IF(!aMayDelete && !mDeletedMetadata, found);
 
   if (found) {
+    mMetadata = &*foundIt;
     MOZ_ASSERT(mMetadata != mDeletedMetadata);
     mDeletedMetadata = nullptr;
   } else {
