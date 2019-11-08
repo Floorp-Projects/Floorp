@@ -1485,6 +1485,7 @@ def ubsan(options):
     default_checks = [
         'bool',
         'bounds',
+        'integer-divide-by-zero',
         'vla-bound',
     ]
 
