@@ -1,5 +1,3 @@
-// |reftest| skip-if(release_or_beta)
-
 var AsyncGenerator = async function*(){}.constructor;
 
 function assertSyntaxError(code) {

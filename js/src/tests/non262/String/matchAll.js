@@ -1,5 +1,3 @@
-// |reftest| skip-if(!String.prototype.matchAll)
-
 // Basic surface tests.
 
 assertEq(typeof String.prototype.matchAll, "function");
