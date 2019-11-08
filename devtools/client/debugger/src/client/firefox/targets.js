@@ -4,11 +4,10 @@
 
 // @flow
 
-import { addThreadEventListeners } from "./events";
-import { prefs, features } from "../../utils/prefs";
+import { addThreadEventListeners, attachAllTargets } from "./events";
+import { features } from "../../utils/prefs";
 import { sameOrigin } from "../../utils/url";
 import type { DebuggerClient, Target } from "./types";
-import type { ThreadType } from "../../types";
 
 // $FlowIgnore
 const { defaultThreadOptions } = require("devtools/client/shared/thread-utils");
@@ -16,16 +15,16 @@ const { defaultThreadOptions } = require("devtools/client/shared/thread-utils");
 type Args = {
   currentTarget: Target,
   debuggerClient: DebuggerClient,
-  targets: { [ThreadType]: { [string]: Target } },
+  targets: { [string]: Target },
   options: Object,
 };
 
-async function attachTargets(type, targetLists, args) {
+async function attachTargets(targetLists, args) {
   const { targets } = args;
 
-  for (const actor of Object.keys(targets[type])) {
+  for (const actor of Object.keys(targets)) {
     if (!targetLists.some(target => target.targetForm.threadActor == actor)) {
-      delete targets[type][actor];
+      delete targets[actor];
     }
   }
 
@@ -34,10 +33,10 @@ async function attachTargets(type, targetLists, args) {
       await targetFront.attach();
 
       const threadActorID = targetFront.targetForm.threadActor;
-      if (targets[type][threadActorID]) {
+      if (targets[threadActorID]) {
         continue;
       }
-      targets[type][threadActorID] = targetFront;
+      targets[threadActorID] = targetFront;
 
       // Content process targets have already been attached by the toolbox.
       // And the thread front has been initialized from there.
@@ -64,10 +63,10 @@ async function attachTargets(type, targetLists, args) {
   }
 }
 
-export async function updateWorkerTargets(type: ThreadType, args: Args) {
+async function listWorkerTargets(args: Args) {
   const { currentTarget, debuggerClient } = args;
   if (!currentTarget.isBrowsingContext || currentTarget.isContentProcess) {
-    return;
+    return [];
   }
 
   const { workers } = await currentTarget.listWorkers();
@@ -82,15 +81,36 @@ export async function updateWorkerTargets(type: ThreadType, args: Args) {
         workers.push(workerTarget);
       }
     }
+  } else if (attachAllTargets(currentTarget)) {
+    const {
+      other,
+      service,
+      shared,
+    } = await debuggerClient.mainRoot.listAllWorkers();
+
+    for (const { workerTargetFront, url } of [...other, ...shared]) {
+      // subprocess workers are ignored because they take several seconds to
+      // attach to when opening the browser toolbox. See bug 1594597.
+      if (!url.includes("subprocess_worker")) {
+        workers.push(workerTargetFront);
+      }
+    }
+
+    for (const { active, id } of service) {
+      if (active) {
+        const workerTarget = await debuggerClient.mainRoot.getWorker(id);
+        workers.push(workerTarget);
+      }
+    }
   }
 
-  await attachTargets(type, workers, args);
+  return workers;
 }
 
-export async function updateProcessTargets(type: ThreadType, args: Args) {
+async function listProcessTargets(args: Args) {
   const { currentTarget, debuggerClient } = args;
-  if (!prefs.fission || !currentTarget.chrome || currentTarget.isAddon) {
-    return;
+  if (!attachAllTargets(currentTarget)) {
+    return [];
   }
 
   const { processes } = await debuggerClient.mainRoot.listProcesses();
@@ -100,15 +120,11 @@ export async function updateProcessTargets(type: ThreadType, args: Args) {
       .map(descriptor => descriptor.getTarget())
   );
 
-  await attachTargets(type, targets, args);
+  return targets;
 }
 
-export async function updateTargets(type: ThreadType, args: Args) {
-  if (type == "worker") {
-    await updateWorkerTargets(type, args);
-  } else if (type == "contentProcess") {
-    await updateProcessTargets(type, args);
-  } else {
-    throw new Error(`Unable to fetch targts for ${type}`);
-  }
+export async function updateTargets(args: Args) {
+  const workers = await listWorkerTargets(args);
+  const processes = await listProcessTargets(args);
+  await attachTargets([...workers, ...processes], args);
 }

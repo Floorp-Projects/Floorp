@@ -6,7 +6,6 @@
 
 import { differenceBy } from "lodash";
 import type { Action, ThunkArgs } from "./types";
-import type { ThreadType } from "../types";
 import { removeSourceActors } from "./source-actors";
 import { newGeneratedSources } from "./sources";
 
@@ -17,10 +16,10 @@ import {
   getSourceActorsForThread,
 } from "../selectors";
 
-export function updateThreads(type: ?ThreadType) {
+export function updateThreads() {
   return async function({ dispatch, getState, client }: ThunkArgs) {
     const cx = getContext(getState());
-    const threads = await client.fetchThreads(type);
+    const threads = await client.fetchThreads();
 
     const currentThreads = getThreads(getState());
 
@@ -61,8 +60,7 @@ export function ensureHasThread(thread: string) {
   return async function({ dispatch, getState, client }: ThunkArgs) {
     const currentThreads = getAllThreads(getState());
     if (!currentThreads.some(t => t.actor == thread)) {
-      await dispatch(updateThreads("worker"));
-      await dispatch(updateThreads("contentProcess"));
+      await dispatch(updateThreads());
     }
   };
 }
