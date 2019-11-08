@@ -10,6 +10,7 @@
 
 #include "angle_gl.h"
 #include "common/debug.h"
+#include "compiler/translator/Common.h"
 #include "compiler/translator/Diagnostics.h"
 
 namespace sh
@@ -182,18 +183,21 @@ void TDirectiveHandler::handleExtension(const angle::pp::SourceLocation &loc,
     }
 }
 
-void TDirectiveHandler::handleVersion(const angle::pp::SourceLocation &loc, int version)
+void TDirectiveHandler::handleVersion(const angle::pp::SourceLocation &loc,
+                                      int version,
+                                      ShShaderSpec spec)
 {
-    if (version == 100 || version == 300 || version == 310)
+    if (((version == 100 || version == 300 || version == 310) && !IsDesktopGLSpec(spec)) ||
+        (version == 330 && IsDesktopGLSpec(spec)))
     {
         mShaderVersion = version;
     }
     else
     {
-        std::stringstream stream;
+        std::stringstream stream = sh::InitializeStream<std::stringstream>();
         stream << version;
         std::string str = stream.str();
-        mDiagnostics.error(loc, "version number not supported", str.c_str());
+        mDiagnostics.error(loc, "client/version number not supported", str.c_str());
     }
 }
 

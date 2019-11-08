@@ -29,8 +29,11 @@
     OP(OES_EGL_image_external_essl3)             \
     OP(OES_standard_derivatives)                 \
     OP(OES_texture_storage_multisample_2d_array) \
+    OP(OES_texture_3D)                           \
+    OP(OVR_multiview)                            \
     OP(OVR_multiview2)                           \
-    OP(ANGLE_multi_draw)
+    OP(ANGLE_multi_draw)                         \
+    OP(ANGLE_base_vertex_base_instance)
 
 namespace sh
 {

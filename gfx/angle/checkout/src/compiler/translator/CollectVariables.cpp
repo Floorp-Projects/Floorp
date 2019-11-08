@@ -175,6 +175,8 @@ class CollectVariablesTraverser : public TIntermTraverser
     bool mVertexIDAdded;
     bool mPointSizeAdded;
     bool mDrawIDAdded;
+    bool mBaseVertexAdded;
+    bool mBaseInstanceAdded;
 
     // Vertex Shader and Geometry Shader builtins
     bool mPositionAdded;
@@ -233,6 +235,8 @@ CollectVariablesTraverser::CollectVariablesTraverser(
       mVertexIDAdded(false),
       mPointSizeAdded(false),
       mDrawIDAdded(false),
+      mBaseVertexAdded(false),
+      mBaseInstanceAdded(false),
       mPositionAdded(false),
       mPointCoordAdded(false),
       mFrontFacingAdded(false),
@@ -489,6 +493,12 @@ void CollectVariablesTraverser::visitSymbol(TIntermSymbol *symbol)
             case EvqDrawID:
                 recordBuiltInAttributeUsed(symbol->variable(), &mDrawIDAdded);
                 return;
+            case EvqBaseVertex:
+                recordBuiltInAttributeUsed(symbol->variable(), &mBaseVertexAdded);
+                return;
+            case EvqBaseInstance:
+                recordBuiltInAttributeUsed(symbol->variable(), &mBaseInstanceAdded);
+                return;
             case EvqLastFragData:
                 recordBuiltInVaryingUsed(symbol->variable(), &mLastFragDataAdded, mInputVaryings);
                 return;
@@ -554,7 +564,8 @@ void CollectVariablesTraverser::visitSymbol(TIntermSymbol *symbol)
                 else
                 {
                     ASSERT(mShaderType == GL_VERTEX_SHADER &&
-                           IsExtensionEnabled(mExtensionBehavior, TExtension::OVR_multiview2));
+                           (IsExtensionEnabled(mExtensionBehavior, TExtension::OVR_multiview2) ||
+                            IsExtensionEnabled(mExtensionBehavior, TExtension::OVR_multiview)));
                 }
                 break;
             default:

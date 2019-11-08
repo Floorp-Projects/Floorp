@@ -938,6 +938,26 @@ bool ValidateTexStorage2DMultisample(Context *context,
                                                height);
 }
 
+bool ValidateTexStorageMem2DMultisampleEXT(Context *context,
+                                           TextureType target,
+                                           GLsizei samples,
+                                           GLenum internalFormat,
+                                           GLsizei width,
+                                           GLsizei height,
+                                           GLboolean fixedSampleLocations,
+                                           GLuint memory,
+                                           GLuint64 offset)
+{
+    if (!context->getExtensions().memoryObject)
+    {
+        context->validationError(GL_INVALID_OPERATION, kExtensionNotEnabled);
+        return false;
+    }
+
+    UNIMPLEMENTED();
+    return false;
+}
+
 bool ValidateGetMultisamplefv(Context *context, GLenum pname, GLuint index, GLfloat *val)
 {
     if (context->getClientVersion() < ES_3_1)
@@ -1733,7 +1753,7 @@ bool ValidateMemoryBarrier(Context *context, GLbitfield barriers)
         GL_PIXEL_BUFFER_BARRIER_BIT | GL_TEXTURE_UPDATE_BARRIER_BIT | GL_BUFFER_UPDATE_BARRIER_BIT |
         GL_FRAMEBUFFER_BARRIER_BIT | GL_TRANSFORM_FEEDBACK_BARRIER_BIT |
         GL_ATOMIC_COUNTER_BARRIER_BIT | GL_SHADER_STORAGE_BARRIER_BIT;
-    if ((barriers & ~supported_barrier_bits) != 0)
+    if (barriers == 0 || (barriers & ~supported_barrier_bits) != 0)
     {
         context->validationError(GL_INVALID_VALUE, kInvalidMemoryBarrierBit);
         return false;
@@ -1759,7 +1779,7 @@ bool ValidateMemoryBarrierByRegion(Context *context, GLbitfield barriers)
                                         GL_SHADER_IMAGE_ACCESS_BARRIER_BIT |
                                         GL_SHADER_STORAGE_BARRIER_BIT |
                                         GL_TEXTURE_FETCH_BARRIER_BIT | GL_UNIFORM_BARRIER_BIT;
-    if ((barriers & ~supported_barrier_bits) != 0)
+    if (barriers == 0 || (barriers & ~supported_barrier_bits) != 0)
     {
         context->validationError(GL_INVALID_VALUE, kInvalidMemoryBarrierBit);
         return false;
@@ -1856,6 +1876,27 @@ bool ValidateTexStorage3DMultisampleOES(Context *context,
 
     return ValidateTexStorageMultisample(context, target, samples, sizedinternalformat, width,
                                          height);
+}
+
+bool ValidateTexStorageMem3DMultisampleEXT(Context *context,
+                                           TextureType target,
+                                           GLsizei samples,
+                                           GLenum internalFormat,
+                                           GLsizei width,
+                                           GLsizei height,
+                                           GLsizei depth,
+                                           GLboolean fixedSampleLocations,
+                                           GLuint memory,
+                                           GLuint64 offset)
+{
+    if (!context->getExtensions().memoryObject)
+    {
+        context->validationError(GL_INVALID_OPERATION, kExtensionNotEnabled);
+        return false;
+    }
+
+    UNIMPLEMENTED();
+    return false;
 }
 
 bool ValidateGetProgramResourceLocationIndexEXT(Context *context,

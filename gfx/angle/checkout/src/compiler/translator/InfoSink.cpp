@@ -69,7 +69,7 @@ TInfoSinkBase &TInfoSinkBase::operator<<(const TType &type)
 
 void TInfoSinkBase::location(int file, int line)
 {
-    TPersistStringStream stream;
+    TPersistStringStream stream = sh::InitializeStream<TPersistStringStream>();
     if (line)
         stream << file << ":" << line;
     else
