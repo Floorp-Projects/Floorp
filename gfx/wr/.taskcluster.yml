@@ -64,7 +64,12 @@ tasks:
             image: 'staktrace/webrender-test:debian-v3'
             env:
               RUST_BACKTRACE: 'full'
-              RUSTFLAGS: '--deny warnings'
+              #############################################################
+              ### Temporarily disable until https://bugzil.la/1564873 lands
+              ### in order to unblock https://bugzil.la/1575648 (which is
+              ### time-critical)
+              # RUSTFLAGS: '--deny warnings'
+              #############################################################
             command:
               - /bin/bash
               - '--login'
@@ -91,7 +96,12 @@ tasks:
             image: 'staktrace/webrender-test:debian-v3'
             env:
               RUST_BACKTRACE: 'full'
-              RUSTFLAGS: '--deny warnings'
+              #############################################################
+              ### Temporarily disable until https://bugzil.la/1564873 lands
+              ### in order to unblock https://bugzil.la/1575648 (which is
+              ### time-critical)
+              # RUSTFLAGS: '--deny warnings'
+              #############################################################
             command:
               - /bin/bash
               - '--login'
@@ -135,7 +145,12 @@ tasks:
                   source $HOME/servotidy-venv/bin/activate
                   servo-tidy
                   export RUST_BACKTRACE=full
-                  export RUSTFLAGS='--deny warnings'
+                  #############################################################
+                  ### Temporarily disable until https://bugzil.la/1564873 lands
+                  ### in order to unblock https://bugzil.la/1575648 (which is
+                  ### time-critical)
+                  # export RUSTFLAGS='--deny warnings'
+                  #############################################################
                   export PKG_CONFIG_PATH="/usr/local/opt/zlib/lib/pkgconfig:$PKG_CONFIG_PATH"
                   echo 'exec make -j1 "$@"' > $HOME/make # See #2638
                   chmod +x $HOME/make
@@ -164,7 +179,12 @@ tasks:
                   source $HOME/servotidy-venv/bin/activate
                   servo-tidy
                   export RUST_BACKTRACE=full
-                  export RUSTFLAGS='--deny warnings'
+                  #############################################################
+                  ### Temporarily disable until https://bugzil.la/1564873 lands
+                  ### in order to unblock https://bugzil.la/1575648 (which is
+                  ### time-critical)
+                  # export RUSTFLAGS='--deny warnings'
+                  #############################################################
                   export PKG_CONFIG_PATH="/usr/local/opt/zlib/lib/pkgconfig:$PKG_CONFIG_PATH"
                   echo 'exec make -j1 "$@"' > $HOME/make # See #2638
                   chmod +x $HOME/make
