@@ -15,11 +15,11 @@ refcounted protocol PExternalHelperApp
   manager PContent;
 
 parent:
-  async OnStartRequest(nsCString entityID, PBrowser windowContext);
+  async OnStartRequest(nsCString entityID);
   async OnDataAvailable(nsCString data, uint64_t offset, uint32_t count);
   async OnStopRequest(nsresult code);
 
-  async DivertToParentUsing(PChannelDiverter diverter, PBrowser windowContext);
+  async DivertToParentUsing(PChannelDiverter diverter);
 
 child:
   async Cancel(nsresult aStatus);

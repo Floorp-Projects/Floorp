@@ -912,7 +912,10 @@ void BrowsingContext::Close(CallerType aCallerType, ErrorResult& aError) {
   //       DOMWindowClose event (which happens in the process where the
   //       document for this browsing context is loaded).
   //       See https://bugzilla.mozilla.org/show_bug.cgi?id=1516343.
-  if (ContentChild* cc = ContentChild::GetSingleton()) {
+  if (GetDOMWindow()) {
+    nsGlobalWindowOuter::Cast(GetDOMWindow())
+        ->CloseOuter(aCallerType == CallerType::System);
+  } else if (ContentChild* cc = ContentChild::GetSingleton()) {
     cc->SendWindowClose(this, aCallerType == CallerType::System);
   } else if (ContentParent* cp = Canonical()->GetContentParent()) {
     Unused << cp->SendWindowClose(this, aCallerType == CallerType::System);

@@ -36,8 +36,7 @@ class ExternalHelperAppChild : public PExternalHelperAppChild,
  private:
   virtual ~ExternalHelperAppChild();
   MOZ_MUST_USE nsresult DivertToParent(nsIDivertableChannel* divertable,
-                                       nsIRequest* request,
-                                       BrowserChild* browserChild);
+                                       nsIRequest* request);
 
   RefPtr<nsExternalAppHandler> mHandler;
   nsresult mStatus;

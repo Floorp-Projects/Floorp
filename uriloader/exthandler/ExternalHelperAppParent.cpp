@@ -19,6 +19,8 @@
 #include "nsNetUtil.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/net/ChannelDiverterParent.h"
+#include "mozilla/dom/CanonicalBrowsingContext.h"
+#include "mozilla/dom/WindowGlobalParent.h"
 
 #include "mozilla/Unused.h"
 
@@ -61,33 +63,11 @@ ExternalHelperAppParent::ExternalHelperAppParent(
   }
 }
 
-already_AddRefed<nsIInterfaceRequestor> GetWindowFromBrowserParent(
-    PBrowserParent* aBrowser) {
-  if (!aBrowser) {
-    return nullptr;
-  }
-
-  nsCOMPtr<nsIInterfaceRequestor> window;
-  BrowserParent* browserParent = BrowserParent::GetFrom(aBrowser);
-  if (browserParent->GetOwnerElement()) {
-    window = do_QueryInterface(
-        browserParent->GetOwnerElement()->OwnerDoc()->GetWindow());
-  }
-
-  return window.forget();
-}
-
-void UpdateContentContext(nsIStreamListener* aListener,
-                          PBrowserParent* aBrowser) {
-  MOZ_ASSERT(aListener);
-  nsCOMPtr<nsIInterfaceRequestor> window = GetWindowFromBrowserParent(aBrowser);
-  static_cast<nsExternalAppHandler*>(aListener)->SetContentContext(window);
-}
-
 void ExternalHelperAppParent::Init(
     const Maybe<mozilla::net::LoadInfoArgs>& aLoadInfoArgs,
     const nsCString& aMimeContentType, const bool& aForceSave,
-    const Maybe<URIParams>& aReferrer, PBrowserParent* aBrowser) {
+    const Maybe<URIParams>& aReferrer, BrowsingContext* aContext,
+    const bool& aShouldCloseWindow) {
   mozilla::ipc::LoadInfoArgsToLoadInfo(aLoadInfoArgs,
                                        getter_AddRefs(mLoadInfo));
 
@@ -100,21 +80,23 @@ void ExternalHelperAppParent::Init(
     SetPropertyAsInterface(NS_LITERAL_STRING("docshell.internalReferrer"),
                            referrer);
 
-  nsCOMPtr<nsIInterfaceRequestor> window;
-  if (aBrowser) {
-    BrowserParent* browserParent = BrowserParent::GetFrom(aBrowser);
-    if (browserParent->GetOwnerElement())
-      window = do_QueryInterface(
-          browserParent->GetOwnerElement()->OwnerDoc()->GetWindow());
-
-    bool isPrivate = false;
-    nsCOMPtr<nsILoadContext> loadContext = browserParent->GetLoadContext();
-    loadContext->GetUsePrivateBrowsing(&isPrivate);
-    SetPrivate(isPrivate);
+  WindowGlobalParent* parent = aContext->Canonical()->GetCurrentWindowGlobal();
+  if (parent) {
+    RefPtr<BrowserParent> browser = parent->GetBrowserParent();
+    if (browser) {
+      bool isPrivate = false;
+      nsCOMPtr<nsILoadContext> loadContext = browser->GetLoadContext();
+      loadContext->GetUsePrivateBrowsing(&isPrivate);
+      SetPrivate(isPrivate);
+    }
   }
 
-  helperAppService->DoContent(aMimeContentType, this, window, aForceSave,
-                              nullptr, getter_AddRefs(mListener));
+  helperAppService->CreateListener(aMimeContentType, this, aContext, aForceSave,
+                                   nullptr, getter_AddRefs(mListener));
+
+  if (mListener && aShouldCloseWindow) {
+    mListener->SetShouldCloseWindow();
+  }
 }
 
 void ExternalHelperAppParent::ActorDestroy(ActorDestroyReason why) {
@@ -128,11 +110,9 @@ void ExternalHelperAppParent::Delete() {
 }
 
 mozilla::ipc::IPCResult ExternalHelperAppParent::RecvOnStartRequest(
-    const nsCString& entityID, PBrowserParent* contentContext) {
+    const nsCString& entityID) {
   MOZ_ASSERT(!mDiverted,
              "child forwarding callbacks after request was diverted");
-
-  UpdateContentContext(mListener, contentContext);
 
   mEntityID = entityID;
   mPending = true;
@@ -171,9 +151,8 @@ mozilla::ipc::IPCResult ExternalHelperAppParent::RecvOnStopRequest(
 }
 
 mozilla::ipc::IPCResult ExternalHelperAppParent::RecvDivertToParentUsing(
-    PChannelDiverterParent* diverter, PBrowserParent* contentContext) {
+    PChannelDiverterParent* diverter) {
   MOZ_ASSERT(diverter);
-  UpdateContentContext(mListener, contentContext);
   auto p = static_cast<mozilla::net::ChannelDiverterParent*>(diverter);
   p->DivertTo(this);
 #ifdef DEBUG
