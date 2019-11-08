@@ -15,8 +15,8 @@ tasks:
     then:
       created: {$fromNow: ''}
       deadline: {$fromNow: '2 hours'}
-      provisionerId: aws-provisioner-v1
-      workerType: github-worker
+      provisionerId: mobile-1
+      workerType: b-linux
       scopes: []
       routes: []
       payload:
@@ -66,13 +66,13 @@ tasks:
         taskGroupId: {$eval: as_slugid("decision_task")}
         created: {$fromNow: ''}
         deadline: {$fromNow: '2 hours'}
-        provisionerId: aws-provisioner-v1
-        workerType: github-worker
+        provisionerId: mobile-3
+        workerType: b-linux
         routes:
           - 'notify.irc-channel.#android-ci.on-any'
         scopes:
-          - queue:create-task:aws-provisioner-v1/github-worker
-          - queue:scheduler-id:taskcluster-github
+          - queue:create-task:mobile-3/b-linux
+          - queue:scheduler-id:mobile-level-3
           - secrets:get:project/focus/firebase
           - secrets:get:project/focus/nimbledroid
           - queue:route:notify.irc-channel.#android-ci.on-any
@@ -121,7 +121,7 @@ tasks:
         decision_task_id: {$eval: as_slugid("decision_task")}
         expires_in: {$fromNow: '1 year'}
         repository: https://github.com/mozilla-mobile/focus-android
-        scheduler_id: taskcluster-github
+        scheduler_id: mobile-level-3
       in:
         taskId: ${decision_task_id}
         taskGroupId: ${decision_task_id}  # Must be explicit because of Chain of Trust
@@ -129,14 +129,14 @@ tasks:
         deadline: {$fromNow: '2 hours'}
         expires: ${expires_in}
         schedulerId: ${scheduler_id}   # Must be explicit because of Chain of Trust
-        provisionerId: aws-provisioner-v1
-        workerType: gecko-focus   # This workerType has ChainOfTrust enabled
+        provisionerId: mobile-3
+        workerType: b-linux
         requires: all-completed   # Must be explicit because of Chain of Trust
         priority: highest
         retries: 5
         scopes:
           - queue:scheduler-id:${scheduler_id}
-          - queue:create-task:highest:aws-provisioner-v1/gecko-focus
+          - queue:create-task:highest:mobile-3/b-linux
           - queue:create-task:highest:scriptworker-prov-v1/mobile-signing-v1
           - queue:create-task:highest:scriptworker-prov-v1/mobile-pushapk-v1
           - project:mobile:focus:releng:signing:cert:release-signing
@@ -204,7 +204,7 @@ tasks:
         decision_task_id: {$eval: as_slugid("decision_task")}
         expires_in: {$fromNow: '1 year'}
         repository: https://github.com/mozilla-mobile/focus-android
-        scheduler_id: focus-nightly-sched
+        scheduler_id: mobile-level-3
       in:
         taskId: ${decision_task_id}
         taskGroupId: ${decision_task_id}  # Must be explicit because of Chain of Trust
@@ -212,14 +212,14 @@ tasks:
         deadline: {$fromNow: '2 hours'}
         expires: ${expires_in}
         schedulerId: ${scheduler_id}    # Must be explicit because of Chain of Trust
-        provisionerId: aws-provisioner-v1
-        workerType: gecko-focus   # This workerType has ChainOfTrust enabled
+        provisionerId: mobile-3
+        workerType: b-linux
         requires: all-completed   # Must be explicit because of Chain of Trust
         priority: medium
         retries: 5
         scopes:
           - queue:scheduler-id:${scheduler_id}
-          - queue:create-task:highest:aws-provisioner-v1/gecko-focus
+          - queue:create-task:highest:mobile-3/b-linux
           - queue:create-task:highest:scriptworker-prov-v1/mobile-signing-v1
           - queue:create-task:highest:scriptworker-prov-v1/mobile-pushapk-v1
           - project:mobile:focus:releng:signing:cert:release-signing

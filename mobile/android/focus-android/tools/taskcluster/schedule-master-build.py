@@ -127,14 +127,14 @@ def generate_task(name, description, command, dependencies=[], artifacts={}, sco
     deadline = taskcluster.fromNow('1 day')
 
     return {
-        "workerType": "github-worker",
+        "workerType": "b-linux",
         "taskGroupId": TASK_ID,
         "expires": taskcluster.stringDate(expires),
         "retries": 5,
         "created": taskcluster.stringDate(created),
         "tags": {},
         "priority": "lowest",
-        "schedulerId": "taskcluster-github",
+        "schedulerId": "mobile-level-3",
         "deadline": taskcluster.stringDate(deadline),
         "dependencies": [TASK_ID] + dependencies,
         "routes": routes,
@@ -155,7 +155,7 @@ def generate_task(name, description, command, dependencies=[], artifacts={}, sco
             "artifacts": artifacts,
             "deadline": taskcluster.stringDate(deadline)
         },
-        "provisionerId": "aws-provisioner-v1",
+        "provisionerId": "mobile-3",
         "metadata": {
             "name": name,
             "description": description,

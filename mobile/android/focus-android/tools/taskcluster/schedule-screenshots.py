@@ -30,14 +30,14 @@ def generate_screenshot_task(locales):
 	deadline = taskcluster.fromNow('1 day')
 
 	return {
-	    "workerType": "github-worker",
+	    "workerType": "b-linux",
 	    "taskGroupId": TASK_ID,
 	    "expires": taskcluster.stringDate(expires),
 	    "retries": 5,
 	    "created": taskcluster.stringDate(created),
 	    "tags": {},
 	    "priority": "lowest",
-	    "schedulerId": "taskcluster-github",
+	    "schedulerId": "mobile-level-1",
 	    "deadline": taskcluster.stringDate(deadline),
 	    "dependencies": [ TASK_ID ],
 	    "routes": [],
@@ -67,7 +67,7 @@ def generate_screenshot_task(locales):
 	        },
 	        "deadline": taskcluster.stringDate(deadline)
 	    },
-		"provisionerId": "aws-provisioner-v1",
+		"provisionerId": "mobile-1",
 		"metadata": {
 			"name": "Screenshots for locales: %s" % parameters,
 			"description": "Generating screenshots of Focus for Android in the specified locales (%s)" % parameters,
