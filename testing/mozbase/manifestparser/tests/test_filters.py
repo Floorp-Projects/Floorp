@@ -1,22 +1,24 @@
 #!/usr/bin/env python
-# flake8: noqa
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 
-from copy import deepcopy
 import os
+from copy import deepcopy
+from pprint import pprint
 
+import mozpack.path as mozpath
 import mozunit
 import pytest
 
 from manifestparser.filters import (
+    enabled,
+    fail_if,
+    filterlist,
+    pathprefix,
+    run_if,
+    skip_if,
     subsuite,
     tags,
-    skip_if,
-    run_if,
-    fail_if,
-    enabled,
-    filterlist,
 )
 
 here = os.path.dirname(os.path.abspath(__file__))
@@ -97,17 +99,50 @@ def test_filters_run_in_order():
     assert [i for i in fl] == [a, b, c, d, e, f]
 
 
+@pytest.fixture(scope='module')
+def create_tests():
+
+    def inner(*paths, **defaults):
+        tests = []
+        for path in paths:
+            if isinstance(path, tuple):
+                path, kwargs = path
+            else:
+                kwargs = {}
+
+            path = mozpath.normpath(path)
+            manifest = kwargs.pop('manifest', defaults.pop('manifest',
+                                  mozpath.join(mozpath.dirname(path), 'manifest.ini')))
+            test = {
+                'name': mozpath.basename(path),
+                'path': '/root/' + path,
+                'relpath': path,
+                'manifest': '/root/' + manifest,
+                'manifest_relpath': manifest,
+            }
+            test.update(**defaults)
+            test.update(**kwargs)
+            tests.append(test)
+
+        # dump tests to stdout for easier debugging on failure
+        print("The 'create_tests' fixture returned:")
+        pprint(tests, indent=2)
+        return tests
+
+    return inner
+
+
 @pytest.fixture
-def tests():
-    return (
-        {"name": "test0"},
-        {"name": "test1", "skip-if": "foo == 'bar'"},
-        {"name": "test2", "run-if": "foo == 'bar'"},
-        {"name": "test3", "fail-if": "foo == 'bar'"},
-        {"name": "test4", "disabled": "some reason"},
-        {"name": "test5", "subsuite": "baz"},
-        {"name": "test6", "subsuite": "baz,foo == 'bar'"},
-        {"name": "test7", "tags": "foo bar"},
+def tests(create_tests):
+    return create_tests(
+        "test0",
+        ("test1", {"skip-if": "foo == 'bar'"}),
+        ("test2", {"run-if": "foo == 'bar'"}),
+        ("test3", {"fail-if": "foo == 'bar'"}),
+        ("test4", {"disabled": "some reason"}),
+        ("test5", {"subsuite": "baz"}),
+        ("test6", {"subsuite": "baz,foo == 'bar'"}),
+        ("test7", {"tags": "foo bar"}),
     )
 
 
@@ -191,6 +226,43 @@ def test_tags(tests):
     tests = list(ftags2(tests, {}))
     assert len(tests) == 1
     assert ref[7] in tests
+
+
+def test_pathprefix(create_tests):
+    tests = create_tests(
+        'test0',
+        'subdir/test1',
+        'subdir/test2',
+        ('subdir/test3', {'manifest': 'manifest.ini'}),
+    )
+
+    def names(items):
+        return sorted(i['name'] for i in items)
+
+    # relative directory
+    prefix = pathprefix('subdir')
+    filtered = prefix(tests, {})
+    assert names(filtered) == ['test1', 'test2', 'test3']
+
+    # absolute directory
+    prefix = pathprefix(['/root/subdir'])
+    filtered = prefix(tests, {})
+    assert names(filtered) == ['test1', 'test2', 'test3']
+
+    # relative manifest
+    prefix = pathprefix(['subdir/manifest.ini'])
+    filtered = prefix(tests, {})
+    assert names(filtered) == ['test1', 'test2']
+
+    # absolute manifest
+    prefix = pathprefix(['/root/subdir/manifest.ini'])
+    filtered = prefix(tests, {})
+    assert names(filtered) == ['test1', 'test2']
+
+    # mixed test and manifest
+    prefix = pathprefix(['subdir/test2', 'manifest.ini'])
+    filtered = prefix(tests, {})
+    assert names(filtered) == ['test0', 'test2', 'test3']
 
 
 if __name__ == '__main__':

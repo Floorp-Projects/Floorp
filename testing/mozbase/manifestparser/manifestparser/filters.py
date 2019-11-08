@@ -374,7 +374,7 @@ class pathprefix(InstanceFilter):
     """
     Removes tests that don't start with any of the given test paths.
 
-    :param paths: A list of test paths to filter on
+    :param paths: A list of test paths (or manifests) to filter on
     """
 
     def __init__(self, paths):
@@ -388,12 +388,20 @@ class pathprefix(InstanceFilter):
             for tp in self.paths:
                 tp = os.path.normpath(tp)
 
-                path = test['relpath']
-                if os.path.isabs(tp):
-                    path = test['path']
+                if tp.endswith('.ini'):
+                    mpath = test['manifest'] if os.path.isabs(tp) else test['manifest_relpath']
 
-                if not os.path.normpath(path).startswith(tp):
-                    continue
+                    # only return tests that are in this manifest
+                    if os.path.normpath(mpath) != tp:
+                        continue
+                else:
+                    # only return tests that start with this path
+                    path = test['relpath']
+                    if os.path.isabs(tp):
+                        path = test['path']
+
+                    if not os.path.normpath(path).startswith(tp):
+                        continue
 
                 # any test path that points to a single file will be run no
                 # matter what, even if it's disabled
