@@ -22,6 +22,7 @@
 #include "js/Initialization.h"
 #include "js/Utility.h"
 #include "js/Value.h"
+#include "util/BitArray.h"
 #include "util/Poison.h"
 
 /* Crash diagnostics by default in debug and on nightly channel. */
@@ -87,56 +88,6 @@ static constexpr T AlignBytes(T bytes, U alignment) {
 }
 
 /*****************************************************************************/
-
-/* A bit array is an array of bits represented by an array of words (size_t). */
-
-static const size_t BitArrayElementBits = sizeof(size_t) * CHAR_BIT;
-
-static inline unsigned NumWordsForBitArrayOfLength(size_t length) {
-  return (length + (BitArrayElementBits - 1)) / BitArrayElementBits;
-}
-
-static inline unsigned BitArrayIndexToWordIndex(size_t length,
-                                                size_t bitIndex) {
-  unsigned wordIndex = bitIndex / BitArrayElementBits;
-  MOZ_ASSERT(wordIndex < length);
-  return wordIndex;
-}
-
-static inline size_t BitArrayIndexToWordMask(size_t i) {
-  return size_t(1) << (i % BitArrayElementBits);
-}
-
-static inline bool IsBitArrayElementSet(const size_t* array, size_t length,
-                                        size_t i) {
-  return array[BitArrayIndexToWordIndex(length, i)] &
-         BitArrayIndexToWordMask(i);
-}
-
-static inline bool IsAnyBitArrayElementSet(const size_t* array, size_t length) {
-  unsigned numWords = NumWordsForBitArrayOfLength(length);
-  for (unsigned i = 0; i < numWords; ++i) {
-    if (array[i]) {
-      return true;
-    }
-  }
-  return false;
-}
-
-static inline void SetBitArrayElement(size_t* array, size_t length, size_t i) {
-  array[BitArrayIndexToWordIndex(length, i)] |= BitArrayIndexToWordMask(i);
-}
-
-static inline void ClearBitArrayElement(size_t* array, size_t length,
-                                        size_t i) {
-  array[BitArrayIndexToWordIndex(length, i)] &= ~BitArrayIndexToWordMask(i);
-}
-
-static inline void ClearAllBitArrayElements(size_t* array, size_t length) {
-  for (unsigned i = 0; i < length; ++i) {
-    array[i] = 0;
-  }
-}
 
 // Placement-new elements of an array. This should optimize away for types with
 // trivial default initiation.
