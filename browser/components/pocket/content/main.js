@@ -636,6 +636,7 @@ var pktUI = (function() {
       }
       pktUIMessaging.sendResponseMessageToPanel(panelId, _initL10NMessageId, {
         strings,
+        dir: Services.locale.isAppLocaleRTL ? "rtl" : "ltr",
       });
     });
   }
