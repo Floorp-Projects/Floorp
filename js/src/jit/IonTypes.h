@@ -716,8 +716,8 @@ enum ABIArgType {
   ArgType_General = 0x1,
   ArgType_Double = 0x2,
   ArgType_Float32 = 0x3,
-  ArgType_Int64 = 0x4,
-  ArgType_Pointer = 0x5,
+  ArgType_Int32 = 0x4,
+  ArgType_Int64 = 0x5,
 
   RetType_Shift = 0x0,
   ArgType_Shift = 0x3,
@@ -844,52 +844,48 @@ enum ABIFunctionType {
                                       (ArgType_Int64 << (ArgType_Shift * 3)) |
                                       (ArgType_Int64 << (ArgType_Shift * 4)),
 
-  Args_General_Pointer =
-      detail::MakeABIFunctionType(ArgType_General, {ArgType_Pointer}),
-  Args_General_PointerGeneral = detail::MakeABIFunctionType(
-      ArgType_General, {ArgType_Pointer, ArgType_General}),
-  Args_General_PointerGeneralGeneral = detail::MakeABIFunctionType(
-      ArgType_General, {ArgType_Pointer, ArgType_General, ArgType_General}),
-  Args_General_PointerGeneralGeneralGeneralGeneral =
-      detail::MakeABIFunctionType(
-          ArgType_General, {ArgType_Pointer, ArgType_General, ArgType_General,
-                            ArgType_General, ArgType_General}),
-  Args_General_PointerGeneralGeneralGeneralGeneralGeneral =
-      detail::MakeABIFunctionType(
-          ArgType_General, {ArgType_Pointer, ArgType_General, ArgType_General,
-                            ArgType_General, ArgType_General, ArgType_General}),
-  Args_General_PointerGeneralGeneralGeneralPointer =
-      detail::MakeABIFunctionType(
-          ArgType_General, {ArgType_Pointer, ArgType_General, ArgType_General,
-                            ArgType_General, ArgType_Pointer}),
-  Args_General_PointerGeneralGeneralInt64 = detail::MakeABIFunctionType(
+  Args_Int32_General =
+      detail::MakeABIFunctionType(ArgType_Int32, {ArgType_General}),
+  Args_Int32_GeneralInt32 = detail::MakeABIFunctionType(
+      ArgType_Int32, {ArgType_General, ArgType_Int32}),
+  Args_Int32_GeneralInt32Int32 = detail::MakeABIFunctionType(
+      ArgType_Int32, {ArgType_General, ArgType_Int32, ArgType_Int32}),
+  Args_Int32_GeneralInt32Int32Int32Int32 = detail::MakeABIFunctionType(
+      ArgType_Int32, {ArgType_General, ArgType_Int32, ArgType_Int32,
+                      ArgType_Int32, ArgType_Int32}),
+  Args_Int32_GeneralInt32Int32Int32Int32Int32 = detail::MakeABIFunctionType(
+      ArgType_Int32, {ArgType_General, ArgType_Int32, ArgType_Int32,
+                      ArgType_Int32, ArgType_Int32, ArgType_Int32}),
+  Args_Int32_GeneralInt32Int32Int32General = detail::MakeABIFunctionType(
+      ArgType_Int32, {ArgType_General, ArgType_Int32, ArgType_Int32,
+                      ArgType_Int32, ArgType_General}),
+  Args_Int32_GeneralInt32Int32Int64 = detail::MakeABIFunctionType(
+      ArgType_Int32,
+      {ArgType_General, ArgType_Int32, ArgType_Int32, ArgType_Int64}),
+  Args_Int32_GeneralInt32Int32General = detail::MakeABIFunctionType(
+      ArgType_Int32,
+      {ArgType_General, ArgType_Int32, ArgType_Int32, ArgType_General}),
+  Args_Int32_GeneralInt32Int64Int64 = detail::MakeABIFunctionType(
+      ArgType_Int32,
+      {ArgType_General, ArgType_Int32, ArgType_Int64, ArgType_Int64}),
+  Args_Int32_GeneralInt32GeneralInt32 = detail::MakeABIFunctionType(
+      ArgType_Int32,
+      {ArgType_General, ArgType_Int32, ArgType_General, ArgType_Int32}),
+  Args_Int32_GeneralInt32GeneralInt32Int32 = detail::MakeABIFunctionType(
+      ArgType_Int32, {ArgType_General, ArgType_Int32, ArgType_General,
+                      ArgType_Int32, ArgType_Int32}),
+  Args_Int32_GeneralGeneral = detail::MakeABIFunctionType(
+      ArgType_Int32, {ArgType_General, ArgType_General}),
+  Args_Int32_GeneralGeneralInt32Int32 = detail::MakeABIFunctionType(
+      ArgType_Int32,
+      {ArgType_General, ArgType_General, ArgType_Int32, ArgType_Int32}),
+  Args_General_GeneralInt32 = detail::MakeABIFunctionType(
+      ArgType_General, {ArgType_General, ArgType_Int32}),
+  Args_General_GeneralInt32Int32 = detail::MakeABIFunctionType(
+      ArgType_General, {ArgType_General, ArgType_Int32, ArgType_Int32}),
+  Args_General_GeneralInt32Int32General = detail::MakeABIFunctionType(
       ArgType_General,
-      {ArgType_Pointer, ArgType_General, ArgType_General, ArgType_Int64}),
-  Args_General_PointerGeneralGeneralPointer = detail::MakeABIFunctionType(
-      ArgType_General,
-      {ArgType_Pointer, ArgType_General, ArgType_General, ArgType_Pointer}),
-  Args_General_PointerGeneralInt64Int64 = detail::MakeABIFunctionType(
-      ArgType_General,
-      {ArgType_Pointer, ArgType_General, ArgType_Int64, ArgType_Int64}),
-  Args_General_PointerGeneralPointerGeneral = detail::MakeABIFunctionType(
-      ArgType_General,
-      {ArgType_Pointer, ArgType_General, ArgType_Pointer, ArgType_General}),
-  Args_General_PointerGeneralPointerGeneralGeneral =
-      detail::MakeABIFunctionType(
-          ArgType_General, {ArgType_Pointer, ArgType_General, ArgType_Pointer,
-                            ArgType_General, ArgType_General}),
-  Args_General_PointerPointer = detail::MakeABIFunctionType(
-      ArgType_General, {ArgType_Pointer, ArgType_Pointer}),
-  Args_General_PointerPointerGeneralGeneral = detail::MakeABIFunctionType(
-      ArgType_General,
-      {ArgType_Pointer, ArgType_Pointer, ArgType_General, ArgType_General}),
-  Args_Pointer_PointerGeneral = detail::MakeABIFunctionType(
-      ArgType_Pointer, {ArgType_Pointer, ArgType_General}),
-  Args_Pointer_PointerGeneralGeneral = detail::MakeABIFunctionType(
-      ArgType_Pointer, {ArgType_Pointer, ArgType_General, ArgType_General}),
-  Args_Pointer_PointerGeneralGeneralPointer = detail::MakeABIFunctionType(
-      ArgType_Pointer,
-      {ArgType_Pointer, ArgType_General, ArgType_General, ArgType_Pointer}),
+      {ArgType_General, ArgType_Int32, ArgType_Int32, ArgType_General}),
 };
 
 static constexpr ABIFunctionType MakeABIFunctionType(
