@@ -2354,8 +2354,8 @@ bool js::intrinsic_ArrayNativeSort(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   /* Re-create any holes that sorted to the end of the array. */
-  while (len > n) {
-    if (!CheckForInterrupt(cx) || !DeletePropertyOrThrow(cx, obj, --len)) {
+  for (uint32_t i = n; i < len; i++) {
+    if (!CheckForInterrupt(cx) || !DeletePropertyOrThrow(cx, obj, i)) {
       return false;
     }
   }
